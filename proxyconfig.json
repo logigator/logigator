@@ -1,0 +1,11 @@
+{
+  "/api/*": {
+    "target": "http://api.logigator-local-dev.com/",
+    "secure": false,
+    "logLevel": "debug",
+    "changeOrigin": true,
+    "pathRewrite": {
+      "^/api": ""
+    }
+  }
+}
