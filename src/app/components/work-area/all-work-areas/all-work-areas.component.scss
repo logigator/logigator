@@ -1,0 +1,7 @@
+@import "variables";
+
+div {
+	background-color: aquamarine;
+	width: 100%;
+	height: calc(100% - #{$toolbar-height});
+}

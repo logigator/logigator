@@ -1,0 +1,29 @@
+@import "variables";
+
+#navbar {
+	background-color: $toolbar-background;
+	color: $toolbar-color;
+	position: static;
+
+	width: 100%;
+	height: $toolbar-height;
+
+	display: grid;
+	grid-template-columns: 100px 150px 300px auto 50px 50px;
+
+	div {
+		display: flex;
+		flex-direction: row;
+		justify-content: flex-start;
+		align-items: center;
+
+		div {
+			margin-right: 20px;
+
+			&:hover {
+				color: white;
+				cursor: pointer;
+			}
+		}
+	}
+}

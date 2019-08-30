@@ -30,6 +30,11 @@
 						"styles": [
 							"src/styles.scss"
 						],
+						"stylePreprocessorOptions": {
+							"includePaths": [
+								"src/"
+							]
+						},
 						"scripts": [],
 						"webWorkerTsConfig": "tsconfig.worker.json"
 					},
