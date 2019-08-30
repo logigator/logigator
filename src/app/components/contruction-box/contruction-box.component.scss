@@ -4,7 +4,9 @@ div {
 	background-color: bisque;
 
 	position: absolute;
+	top: $toolbar-height + 10px;
+  	left: 10px;
 
-	width: 300px;
+	width: $construction-box-width;
 	height: 80%;
 }

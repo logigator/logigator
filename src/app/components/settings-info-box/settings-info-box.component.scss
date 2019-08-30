@@ -1,0 +1,12 @@
+@import "variables";
+
+div {
+  background-color: brown;
+
+  position: absolute;
+  bottom: 10px;
+  right: 10px;
+
+  width: $settings-info-box-width;
+  height: 50%
+}

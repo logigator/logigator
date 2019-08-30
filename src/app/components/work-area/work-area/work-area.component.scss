@@ -1,0 +1,11 @@
+@import "variables";
+
+div {
+	width: 100%;
+	height: calc(100% - #{$toolbar-height});
+
+	position: fixed;
+	top: $toolbar-height;
+
+	background-color: lightcyan;
+}

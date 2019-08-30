@@ -1,7 +1,38 @@
 @import "variables";
 
-div {
-	background-color: aquamarine;
+.main-area {
 	width: 100%;
 	height: calc(100% - #{$toolbar-height});
+
+	#tabs {
+		position: relative;
+		left: calc(#{$construction-box-width} + 15px);
+
+		width: fit-content;
+
+		display: flex;
+		flex-direction: row;
+		justify-content: flex-start;
+
+		.tab {
+			background-color: $tab-background-color;
+			width: 140px;
+			height: 30px;
+
+			display: flex;
+			align-items: center;
+			flex-direction: row;
+			justify-content: center;
+
+			border-bottom-left-radius: 5px;
+			border-bottom-right-radius: 5px;
+
+			margin-left: 0.5rem;
+
+			p {
+				user-select: none;
+				margin: 0;
+			}
+		}
+	}
 }
