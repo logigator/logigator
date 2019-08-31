@@ -11,14 +11,15 @@
 		<div>Copy</div>
 		<div>Cut</div>
 		<div>Delete</div>
-		<div>zurück</div>
-		<div>vor</div>
+		<div (click)="undo()">zurück</div>
+		<div (click)="redo()">vor</div>
 	</div>
 
 	<div id="edit-options">
 		<div>wire</div>
 		<div>connect wire</div>
 		<div>select</div>
+		<div (click)="test()">test</div>
 	</div>
 
 	<div>start sim</div>

@@ -4,7 +4,7 @@ export interface Component {
 	inputs: number[];
 	outputs: number[];
 
-	name: string;
+	name?: string;
 	posX: number;
 	posY: number;
 	startPosX?: number;

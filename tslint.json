@@ -1,6 +1,9 @@
 {
 	"extends": "tslint:recommended",
 	"rules": {
+		"forin": {
+			"severity": "none"
+		},
 		"variable-name": {
 			"options": [
 				"allow-leading-underscore",
