@@ -16,6 +16,7 @@
 
 		.tab {
 			background-color: $tab-background-color;
+			color: $tab-font-color;
 			width: 140px;
 			height: 30px;
 
@@ -29,9 +30,26 @@
 
 			margin-left: 0.5rem;
 
+			&:hover {
+				cursor: pointer;
+				color: $tab-hover-font-color;
+				background-color: $tab-hover-background-color;
+			}
+
 			p {
 				user-select: none;
 				margin: 0;
+			}
+		}
+
+		.tab-active {
+			color: $tab-active-font-color;
+			background-color: $tab-active-background-color;
+
+			&:hover {
+				cursor: default;
+				color: $tab-active-hover-font-color;
+				background-color: $tab-active-hover-background-color;
 			}
 		}
 	}

@@ -4,21 +4,23 @@ import { NgModule } from '@angular/core';
 import { AppComponent } from './app.component';
 import { ToolbarComponent } from './components/toolbar/toolbar.component';
 import { SettingsInfoBoxComponent } from './components/settings-info-box/settings-info-box.component';
-import { ContructionBoxComponent } from './components/contruction-box/contruction-box.component';
+import { ConstructionBoxComponent } from './components/contruction-box/construction-box.component';
 import { AllWorkAreasComponent } from './components/work-area/all-work-areas/all-work-areas.component';
 import { WorkAreaComponent } from './components/work-area/work-area/work-area.component';
+import {ReactiveFormsModule} from '@angular/forms';
 
 @NgModule({
 	declarations: [
 		AppComponent,
 		ToolbarComponent,
 		SettingsInfoBoxComponent,
-		ContructionBoxComponent,
+		ConstructionBoxComponent,
 		AllWorkAreasComponent,
 		WorkAreaComponent
 	],
 	imports: [
-		BrowserModule
+		BrowserModule,
+		ReactiveFormsModule
 	],
 	providers: [],
 	bootstrap: [AppComponent]

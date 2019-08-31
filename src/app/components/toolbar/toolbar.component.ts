@@ -1,15 +1,22 @@
 import { Component, OnInit } from '@angular/core';
+import {WorkMode} from '../../models/work-modes';
+import {WorkModeService} from '../../services/work-mode/work-mode.service';
 
 @Component({
 	selector: 'app-toolbar',
 	templateUrl: './toolbar.component.html',
 	styleUrls: ['./toolbar.component.scss']
 })
-export class ToolbarComponent implements OnInit {
+export class ToolbarComponent {
 
-	constructor() { }
+	constructor(private workModeService: WorkModeService) { }
 
-	ngOnInit() {
+	public setWorkMode(mode: WorkMode) {
+		this.workModeService.setWorkMode(mode);
+	}
+
+	public get currentWorkMode(): WorkMode {
+		return this.workModeService.currentWorkMode;
 	}
 
 }
