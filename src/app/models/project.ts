@@ -20,9 +20,8 @@ export class Project {
 		this._oldState = projectState;
 		this._currState = projectState.copy();
 		this.actions = [];
-		for (let i = 0; i < this.MAX_ACTIONS; i++) {
+		for (let i = 0; i < this.MAX_ACTIONS; i++)
 			this.actions.push(null);
-		}
 		this.currActionPointer = -1;
 	}
 
@@ -55,9 +54,8 @@ export class Project {
 	}
 
 	public stepBack(): void {
-		if (this.currActionPointer < 0) {
+		if (this.currActionPointer < 0)
 			return;
-		}
 		this.currActionPointer--;
 		this._currState = this._oldState.copy();
 		for (let i = 0; i <= this.currActionPointer; i++) {
@@ -66,9 +64,8 @@ export class Project {
 	}
 
 	public stepForward(): void {
-		if (this.currActionPointer >= this.MAX_ACTIONS) {
+		if (this.currActionPointer >= this.MAX_ACTIONS)
 			return;
-		}
 		Project.applyAction(this._currState, this.actions[++this.currActionPointer]);
 	}
 

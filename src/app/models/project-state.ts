@@ -77,9 +77,8 @@ export class ProjectState {
 				components: []
 			}
 		};
-		for (const comp of this._model.board.components) {
+		for (const comp of this._model.board.components)
 			outModel.board.components.push(Object.assign({}, comp));
-		}
 		return new ProjectState(this.compProvService, outModel);
 	}
 

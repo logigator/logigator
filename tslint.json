@@ -1,6 +1,7 @@
 {
 	"extends": "tslint:recommended",
 	"rules": {
+		"curly": false,
 		"forin": {
 			"severity": "none"
 		},
