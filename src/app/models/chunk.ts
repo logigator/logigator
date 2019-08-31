@@ -1,3 +1,5 @@
+import {Component} from './component';
+
 export interface Chunk {
-	ids: number[];
+	ids: Component[];
 }

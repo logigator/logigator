@@ -29,20 +29,20 @@ export class ProjectState {
 		}
 	}
 
-	public addComponent(compTypeId: number, posX: number, posY: number): void {
+	public addComponent(comp: Component): void {
 		const newComp: Component = {
 			id: this.getNextId(),
-			typeId: compTypeId,
-			name: this.compProvService.getComponentNameById(compTypeId),
-			posX,
-			posY,
+			typeId: comp.typeId,
+			name: comp.name,
+			posX: comp.posX,
+			posY: comp.posY,
 			inputs: [],	// TODO fill in
 			outputs: []
 		};
 		this._model.board.components.push(newComp);
 	}
 
-	public removeComponent(elemId: number): void {
+	public removeComponent(comp: Component): void {
 		// TODO implement search by chunk
 		// const comp = this.getComponentById(elemId);
 		// for (const input of comp.inputs) {
@@ -53,11 +53,10 @@ export class ProjectState {
 		// 	const nextComp = this.getComponentById(output);
 		// 	nextComp.inputs = nextComp.inputs.filter(value => value !== output);
 		// }
-		this._model.board.components = this._model.board.components.filter(c => c.id !== elemId);
+		this._model.board.components = this._model.board.components.filter(c => c.id !== comp.id);
 	}
 
-	public moveComponent(elemId: number, newPosX: number, newPosY: number): void {
-		const comp = this.getComponentById(elemId);
+	public moveComponent(comp: Component, newPosX: number, newPosY: number): void {
 		comp.posX = newPosX;
 		comp.posY = newPosY;
 	}

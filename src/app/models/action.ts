@@ -1,3 +1,5 @@
+import {Component} from './component';
+
 export interface Action {
 	name: 'addComp' |
 		'addWire' |
@@ -10,7 +12,7 @@ export interface Action {
 		'movText' |
 		'conWire' |	// TODO connect Wire
 		'setComp';	// TODO component settings
-	objId: number;
+	component: Component;
 	posX?: number;
 	posY?: number;
 }

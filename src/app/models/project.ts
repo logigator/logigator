@@ -29,15 +29,15 @@ export class Project {
 		switch (action.name) {
 			case 'addComp':
 			case 'addWire':
-				projectState.addComponent(action.objId, action.posX, action.posY);
+				projectState.addComponent(action.component);
 				break;
 			case 'remComp':
 			case 'remWire':
-				projectState.removeComponent(action.objId);
+				projectState.removeComponent(action.component);
 				break;
 			case 'movComp':
 			case 'movWire':
-				projectState.moveComponent(action.objId, action.posX, action.posY);
+				projectState.moveComponent(action.component, action.posX, action.posY);
 				break;
 		}
 	}

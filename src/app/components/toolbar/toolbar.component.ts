@@ -1,11 +1,12 @@
-import { Component, OnInit } from '@angular/core';
+import {Component as AngularComp, OnInit} from '@angular/core';
 import {Project} from '../../models/project';
 import {ComponentProviderService} from '../../services/component-provider/component-provider.service';
 import {TestModel} from '../../models/tests/test-model';
 import {ProjectState} from '../../models/project-state';
 import {Action} from '../../models/action';
+import {Component} from '../../models/component';
 
-@Component({
+@AngularComp({
 	selector: 'app-toolbar',
 	templateUrl: './toolbar.component.html',
 	styleUrls: ['./toolbar.component.scss']
@@ -24,10 +25,15 @@ export class ToolbarComponent implements OnInit {
 
 	public test(): void {
 		const action: Action = {
-			objId: 2,
 			name: 'addComp',
-			posX: 5,
-			posY: 5
+			component: {
+				id: -1,
+				typeId: 2,
+				inputs: [],
+				outputs: [],
+				posX: 5,
+				posY: 5
+			}
 		};
 		this.project.newState(action);
 		console.log('old: ', this.project.oldState.model.board.components);
