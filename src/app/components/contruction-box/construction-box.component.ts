@@ -1,30 +1,18 @@
-import {Component, OnInit} from '@angular/core';
+import {Component} from '@angular/core';
 import {ComponentProviderService} from '../../services/component-provider/component-provider.service';
 import {WorkModeService} from '../../services/work-mode/work-mode.service';
 import {WorkMode} from '../../models/work-modes';
-import {FormControl} from '@angular/forms';
-import {Observable} from 'rxjs';
-import {debounceTime} from 'rxjs/operators';
 
 @Component({
 	selector: 'app-construction-box',
 	templateUrl: './construction-box.component.html',
 	styleUrls: ['./construction-box.component.scss']
 })
-export class ConstructionBoxComponent implements OnInit {
+export class ConstructionBoxComponent {
 
-	public searchFormControl: FormControl;
-
-	public searchText$: Observable<string>;
+	public searchText = '';
 
 	constructor(private componentProviderService: ComponentProviderService, private workModeService: WorkModeService) { }
-
-	ngOnInit(): void {
-		this.searchFormControl = new FormControl('');
-		this.searchText$ = this.searchFormControl.valueChanges.pipe(
-			debounceTime(400)
-		);
-	}
 
 	public get allAvailableComponents(): {id: number, name: string}[] {
 		return this.componentProviderService.getAllComponents();

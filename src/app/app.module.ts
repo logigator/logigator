@@ -7,7 +7,7 @@ import { SettingsInfoBoxComponent } from './components/settings-info-box/setting
 import { ConstructionBoxComponent } from './components/contruction-box/construction-box.component';
 import { AllWorkAreasComponent } from './components/work-area/all-work-areas/all-work-areas.component';
 import { WorkAreaComponent } from './components/work-area/work-area/work-area.component';
-import {ReactiveFormsModule} from '@angular/forms';
+import {FormsModule} from '@angular/forms';
 
 @NgModule({
 	declarations: [
@@ -20,7 +20,7 @@ import {ReactiveFormsModule} from '@angular/forms';
 	],
 	imports: [
 		BrowserModule,
-		ReactiveFormsModule
+		FormsModule
 	],
 	providers: [],
 	bootstrap: [AppComponent]
