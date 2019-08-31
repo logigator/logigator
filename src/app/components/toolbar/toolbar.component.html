@@ -1,28 +1,31 @@
-<div id="navbar">
+<div id="toolbar">
 
 	<div>LOGO</div>
 
 	<div id="file-options">
-		<div>Save</div>
-		<div>Open</div>
+		<button class="icon-button toolbar-button">Save</button>
+		<button class="icon-button toolbar-button">Open</button>
 	</div>
 
 	<div id="project-options">
-		<div>Copy</div>
-		<div>Cut</div>
-		<div>Delete</div>
-		<div>zurück</div>
-		<div>vor</div>
+		<button class="icon-button toolbar-button">Copy</button>
+		<button class="icon-button toolbar-button">Cut</button>
+		<button class="icon-button toolbar-button">Delete</button>
+		<button class="icon-button toolbar-button">zurück</button>
+		<button class="icon-button toolbar-button">vor</button>
 	</div>
 
 	<div id="edit-options">
-		<div>wire</div>
-		<div>connect wire</div>
-		<div>select</div>
+		<button class="icon-button toolbar-button" (click)="setWorkMode('buildWire')" [class.toolbar-button-active]="currentWorkMode === 'buildWire'">wire</button>
+		<button class="icon-button toolbar-button" (click)="setWorkMode('connectWire')" [class.toolbar-button-active]="currentWorkMode === 'connectWire'">connect wire</button>
+		<button class="icon-button toolbar-button" (click)="setWorkMode('select')" [class.toolbar-button-active]="currentWorkMode === 'select'">select</button>
 	</div>
 
-	<div>start sim</div>
-
-	<div>settings</div>
+	<div>
+		<button class="icon-button toolbar-button">start sim</button>
+	</div>
+	<div>
+		<button class="icon-button toolbar-button">settings</button>
+	</div>
 
 </div>

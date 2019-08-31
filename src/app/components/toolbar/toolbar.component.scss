@@ -1,8 +1,7 @@
 @import "variables";
 
-#navbar {
+#toolbar {
 	background-color: $toolbar-background;
-	color: $toolbar-color;
 	position: static;
 
 	width: 100%;
@@ -17,12 +16,29 @@
 		justify-content: flex-start;
 		align-items: center;
 
-		div {
-			margin-right: 20px;
+		.toolbar-button {
+			background-color: $toolbar-icon-button-background-color;
+			color: $toolbar-icon-button-font-color;
+			height: $toolbar-height;
+			width: $toolbar-height;
+			border: none;
+			cursor: pointer;
+			padding: 0;
+			outline: none;
 
 			&:hover {
-				color: white;
-				cursor: pointer;
+				color: $toolbar-icon-button-hover-font-color;
+				background-color: $toolbar-icon-button-hover-background-color;
+			}
+		}
+
+		.toolbar-button-active {
+			color: $toolbar-icon-button-active-font-color;
+			background-color: $toolbar-icon-button-active-background-color;
+
+			&:hover {
+				color: $toolbar-icon-button-active-hover-font-color;
+				background-color: $toolbar-icon-button-active-hover-background-color;
 			}
 		}
 	}
