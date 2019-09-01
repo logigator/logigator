@@ -28,9 +28,12 @@ export class WorkAreaComponent implements OnInit, OnDestroy {
 
 	ngOnInit() {
 		this._allViews = [];
-		this.initPixi();
-		this.initPixiTicker();
-		this.initEmptyView();
+
+		this.ngZone.runOutsideAngular(() => {
+			this.initPixi();
+			this.initPixiTicker();
+			this.initEmptyView();
+		});
 	}
 
 	private initPixi() {
@@ -57,14 +60,12 @@ export class WorkAreaComponent implements OnInit, OnDestroy {
 	}
 
 	private initPixiTicker() {
-		this.ngZone.runOutsideAngular(() => {
-			this._pixiTicker = new PIXI.Ticker();
-			this._pixiTicker.add(() => {
-				this._activeView.updateZoomPan();
-				this._pixiRenderer.render(this._activeView);
-			});
-			this._pixiTicker.start();
+		this._pixiTicker = new PIXI.Ticker();
+		this._pixiTicker.add(() => {
+			this._activeView.updateZoomPan();
+			this._pixiRenderer.render(this._activeView);
 		});
+		this._pixiTicker.start();
 	}
 
 	ngOnDestroy(): void {

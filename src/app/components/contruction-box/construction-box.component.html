@@ -1,11 +1,11 @@
 <div id="construction-box">
 	<input id="component-search" placeholder="Suchen" type="text" [(ngModel)]="searchText">
-		<ng-container *ngFor="let comp of allAvailableComponents; trackBy: availableComponentsTrackBy">
-			<div class="component-to-select"
-			     *ngIf="searchText == '' || comp.name.includes(searchText)"
-			     (click)="selectComponent(comp.id)"
-			     [class.active-selected-component]="currentWorkMode === 'buildComponent' && currentSelectedComponent === comp.id">
-				<p>{{comp.name}}</p>
-			</div>
-		</ng-container>
+	<ng-container *ngFor="let comp of allAvailableComponents; trackBy: availableComponentsTrackBy">
+		<div class="component-to-select"
+		     *ngIf="searchText == '' || comp.name.includes(searchText)"
+		     (click)="selectComponent(comp.id)"
+		     [class.active-selected-component]="currentWorkMode === 'buildComponent' && currentSelectedComponent === comp.id">
+			<p>{{comp.name}}</p>
+		</div>
+	</ng-container>
 </div>

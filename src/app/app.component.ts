@@ -1,4 +1,4 @@
-import {Component, OnInit, Renderer2} from '@angular/core';
+import {Component, NgZone, OnInit, Renderer2} from '@angular/core';
 
 @Component({
 	selector: 'app-root',
@@ -7,13 +7,14 @@ import {Component, OnInit, Renderer2} from '@angular/core';
 })
 export class AppComponent implements OnInit {
 
-	constructor(private renderer2: Renderer2) {}
+	constructor(private renderer2: Renderer2, private ngZone: NgZone) {}
 
 	ngOnInit(): void {
-		this.renderer2.listen('document', 'contextmenu', (e: MouseEvent) => {
-			e.preventDefault();
+		this.ngZone.runOutsideAngular(() => {
+			this.renderer2.listen('document', 'contextmenu', (e: MouseEvent) => {
+				e.preventDefault();
+			});
 		});
 	}
-
 
 }
