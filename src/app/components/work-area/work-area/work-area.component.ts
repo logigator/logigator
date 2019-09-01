@@ -3,6 +3,7 @@ import * as PIXI from 'pixi.js';
 import {View} from './view';
 import {fromEvent, Subject} from 'rxjs';
 import {takeUntil} from 'rxjs/operators';
+import {Grid} from './grid';
 
 @Component({
 	selector: 'app-work-area',
@@ -31,6 +32,7 @@ export class WorkAreaComponent implements OnInit, OnDestroy {
 
 		this.ngZone.runOutsideAngular(() => {
 			this.initPixi();
+			this.initGridGeneration();
 			this.initPixiTicker();
 			this.initEmptyView();
 		});
@@ -51,6 +53,11 @@ export class WorkAreaComponent implements OnInit, OnDestroy {
 		).subscribe(() => {
 			this._pixiRenderer.resize(this._pixiCanvasContainer.nativeElement.offsetWidth, this._pixiCanvasContainer.nativeElement.offsetHeight);
 		});
+	}
+
+	private initGridGeneration() {
+		Grid.setRenderer(this._pixiRenderer);
+		Grid.generateGridTexture();
 	}
 
 	private initEmptyView() {

@@ -1,6 +1,7 @@
 import * as PIXI from 'pixi.js';
 import {InputManager} from './input-manager';
 import {ZoomPan} from './zoom-pan';
+import {Grid} from './grid';
 
 export class View extends PIXI.Container {
 
@@ -14,7 +15,7 @@ export class View extends PIXI.Container {
 
 	private _htmlContainer: HTMLElement;
 
-	private posRect = new PIXI.Graphics();
+	private _gridSprites: PIXI.Sprite[][] = [];
 
 	constructor(projectId: number, htmlContainer: HTMLElement) {
 		super();
@@ -28,22 +29,23 @@ export class View extends PIXI.Container {
 		this._inputManager = new InputManager(this._htmlContainer);
 		this._zoomPan = new ZoomPan(this._view);
 
-		this.posRect.beginFill(0);
-		for (let i = 0; i < 100; i++) {
-			for (let j = 0; j < 100; j++) {
-				this.posRect.drawRect(i * 100, j * 100, 10, 10 );
-			}
-		}
-		this._view.addChild(this.posRect);
+		this.updateChunks();
 	}
 
 	public static createEmptyView(projectId: number, htmlContainer: HTMLElement): View {
 		return new View(projectId, htmlContainer);
 	}
 
+	private updateChunks() {
+		const currentlyOnScreen = this._zoomPan.isOnScreen(this._htmlContainer.offsetHeight, this._htmlContainer.offsetWidth);
+
+		// TODO: load grid chunks
+	}
+
 	public updateZoomPan() {
 		if (this._inputManager.isDragging) {
 			this._zoomPan.translateBy(this._inputManager.mouseDX, this._inputManager.mouseDY);
+			this.updateChunks();
 			this._inputManager.clearMouseDelta();
 		}
 
