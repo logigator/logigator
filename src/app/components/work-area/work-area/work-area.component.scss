@@ -1,11 +1,87 @@
 @import "variables";
 
-div {
+.main-area {
 	width: 100%;
 	height: calc(100% - #{$toolbar-height});
 
-	position: fixed;
-	top: $toolbar-height;
+	#canvas-container {
+		width: 100%;
+		height: calc(100% - #{$toolbar-height});
 
-	background-color: lightcyan;
+		position: fixed;
+		top: $toolbar-height;
+
+		background-color: lightcyan;
+	}
+
+	#tabs {
+		position: relative;
+		left: calc(#{$construction-box-width} + 15px);
+
+		width: fit-content;
+
+		display: flex;
+		flex-direction: row;
+		justify-content: flex-start;
+
+		.tab {
+			background-color: $tab-background-color;
+			color: $tab-font-color;
+			width: 140px;
+			height: 30px;
+
+			display: flex;
+			align-items: center;
+			flex-direction: row;
+			justify-content: center;
+
+			border-bottom-left-radius: 5px;
+			border-bottom-right-radius: 5px;
+
+			margin-left: 0.5rem;
+
+			&:hover {
+				cursor: pointer;
+				color: $tab-hover-font-color;
+				background-color: $tab-hover-background-color;
+			}
+
+			p {
+				user-select: none;
+				margin: 0;
+			}
+		}
+
+		.tab-active {
+			color: $tab-active-font-color;
+			background-color: $tab-active-background-color;
+
+			&:hover {
+				cursor: default;
+				color: $tab-active-hover-font-color;
+				background-color: $tab-active-hover-background-color;
+			}
+		}
+	}
 }
+
+
+//.main-area {
+//	width: 100%;
+//	height: calc(100% - #{$toolbar-height});
+//
+//	position: fixed;
+//	top: $toolbar-height;
+//
+//	background-color: lightcyan;
+//}
+//
+//div {
+//	width: 100%;
+//	height: calc(100% - #{$toolbar-height});
+//
+//	position: fixed;
+//	top: $toolbar-height;
+//
+//	background-color: lightcyan;
+//}
