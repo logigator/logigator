@@ -15,9 +15,9 @@ export class WorkAreaComponent implements OnInit, OnDestroy {
 
 	private _pixiTicker: PIXI.Ticker;
 
-	private _activeView: View;
+	public activeView: View;
 
-	private _allViews: View[];
+	public allViews: View[];
 
 	private _destroy = new Subject<any>();
 
@@ -27,7 +27,7 @@ export class WorkAreaComponent implements OnInit, OnDestroy {
 	constructor(private renderer2: Renderer2, private ngZone: NgZone) { }
 
 	ngOnInit() {
-		this._allViews = [];
+		this.allViews = [];
 
 		this.ngZone.runOutsideAngular(() => {
 			this.initPixi();
@@ -55,17 +55,38 @@ export class WorkAreaComponent implements OnInit, OnDestroy {
 
 	private initEmptyView() {
 		const emptyView = View.createEmptyView(0, this._pixiCanvasContainer.nativeElement);
-		this._allViews.push(emptyView);
-		this._activeView = emptyView;
+		this.allViews.push(View.createEmptyView(1, this._pixiCanvasContainer.nativeElement));
+		this.allViews.push(emptyView);
+		this.activeView = emptyView;
 	}
 
 	private initPixiTicker() {
 		this._pixiTicker = new PIXI.Ticker();
 		this._pixiTicker.add(() => {
-			this._activeView.updateZoomPan();
-			this._pixiRenderer.render(this._activeView);
+				this.activeView.updateZoomPan();
+				this._pixiRenderer.render(this.activeView);
 		});
 		this._pixiTicker.start();
+	}
+
+	public switchActiveView(toSwitchToId: number) {
+		const newActiveIndex = this.allViews.findIndex(view => view.projectId === toSwitchToId);
+		this.activeView = this.allViews[newActiveIndex];
+	}
+
+	public closeView(id: number) {
+		// TODO: ask if the user wants to save
+		if (this.allViews.length <= 1) return;
+
+		const toClose = this.allViews[this.allViews.findIndex(view => view.projectId === id)];
+		this.allViews = this.allViews.filter(view => view.projectId !== toClose.projectId);
+
+		if (toClose === this.activeView) {
+			this.activeView = this.allViews[0];
+		}
+
+		toClose.destroy();
+
 	}
 
 	ngOnDestroy(): void {

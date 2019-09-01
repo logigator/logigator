@@ -30,15 +30,16 @@
 			width: 140px;
 			height: 30px;
 
-			display: flex;
+			display: grid;
 			align-items: center;
-			flex-direction: row;
-			justify-content: center;
+			grid-template-columns: auto 20px;
 
 			border-bottom-left-radius: 5px;
 			border-bottom-right-radius: 5px;
 
 			margin-left: 0.5rem;
+
+			text-align: center;
 
 			&:hover {
 				cursor: pointer;
@@ -49,6 +50,13 @@
 			p {
 				user-select: none;
 				margin: 0;
+			}
+
+			span {
+				&:hover {
+					color: red;
+					cursor: pointer;
+				}
 			}
 		}
 

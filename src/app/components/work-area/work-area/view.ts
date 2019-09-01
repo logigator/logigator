@@ -42,7 +42,6 @@ export class View extends PIXI.Container {
 	}
 
 	public updateZoomPan() {
-		console.log(this._zoomPan.isOnScreen(this._htmlContainer.offsetHeight, this._htmlContainer.offsetWidth));
 		if (this._inputManager.isDragging) {
 			this._zoomPan.translateBy(this._inputManager.mouseDX, this._inputManager.mouseDY);
 			this._inputManager.clearMouseDelta();
@@ -53,6 +52,10 @@ export class View extends PIXI.Container {
 		} else if (this._inputManager.isZoomOut) {
 			this._zoomPan.zoomBy(1.15, this._inputManager.mouseX, this._inputManager.mouseY);
 		}
+	}
+
+	public get projectId(): number {
+		return this._projectId;
 	}
 
 	public destroy() {

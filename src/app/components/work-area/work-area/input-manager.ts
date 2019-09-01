@@ -27,9 +27,6 @@ export class InputManager {
 			takeUntil(this._destroySubject)
 		).subscribe((e: MouseEvent) => this.mouseMoveHandler(e));
 
-		fromEvent(this._htmlContainer, 'mouseup').pipe(
-			takeUntil(this._destroySubject)
-		).subscribe((e: MouseEvent) => this.mouseUpHandler(e));
 		fromEvent(window, 'mouseup').pipe(
 			takeUntil(this._destroySubject)
 		).subscribe((e: MouseEvent) => this.mouseUpHandler(e));
@@ -51,11 +48,11 @@ export class InputManager {
 	}
 
 	private mouseUpHandler(event: MouseEvent) {
-		if (event.button !== 2) return;
 		event.preventDefault();
 
 		this._mouseDown = false;
 		this._mouseMoved = false;
+		this.clearMouseDelta();
 	}
 
 	private mouseMoveHandler(event: MouseEvent) {
