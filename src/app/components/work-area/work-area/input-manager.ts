@@ -1,7 +1,6 @@
 import {fromEvent, Subject} from 'rxjs';
 import {takeUntil} from 'rxjs/operators';
 
-
 export class InputManager {
 
 	private _htmlContainer: HTMLElement;
@@ -15,6 +14,8 @@ export class InputManager {
 	private _mouseY = 0;
 	private _mouseDX = 0;
 	private _mouseDY = 0;
+	private _wheelUp: boolean;
+	private _wheelDown: boolean;
 
 	constructor(htmlContainer: HTMLElement) {
 		this._htmlContainer = htmlContainer;
@@ -72,6 +73,12 @@ export class InputManager {
 
 	private mouseWheelHandler(event: WheelEvent) {
 		event.preventDefault();
+
+		if (event.deltaY < 0) {
+			this._wheelDown = true;
+		} else if (event.deltaY > 0) {
+			this._wheelUp = true;
+		}
 	}
 
 	public clearMouseDelta() {
@@ -105,6 +112,18 @@ export class InputManager {
 
 	public get mouseY(): number {
 		return this._mouseY;
+	}
+
+	public get isZoomIn(): boolean {
+		const toReturn = this._wheelUp;
+		this._wheelUp = false;
+		return toReturn;
+	}
+
+	public get isZoomOut(): boolean {
+		const toReturn = this._wheelDown;
+		this._wheelDown = false;
+		return toReturn;
 	}
 
 	public destroy() {
