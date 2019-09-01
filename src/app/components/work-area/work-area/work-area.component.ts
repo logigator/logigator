@@ -1,5 +1,6 @@
-import {Component, ElementRef, OnDestroy, OnInit, Renderer2, ViewChild} from '@angular/core';
+import {Component, ElementRef, NgZone, OnDestroy, OnInit, Renderer2, ViewChild} from '@angular/core';
 import * as PIXI from 'pixi.js';
+import {View} from './view';
 import {fromEvent, Subject} from 'rxjs';
 import {takeUntil} from 'rxjs/operators';
 
@@ -10,53 +11,87 @@ import {takeUntil} from 'rxjs/operators';
 })
 export class WorkAreaComponent implements OnInit, OnDestroy {
 
-	private destroy: Subject<any> = new Subject<any>();
+	private _pixiRenderer: PIXI.Renderer;
 
-	private pixiRenderer: PIXI.Renderer;
-	private mainStage: PIXI.Container;
+	private _pixiTicker: PIXI.Ticker;
 
-	private pixiTicker: PIXI.Ticker;
+	public activeView: View;
+
+	public allViews: View[];
+
+	private _destroy = new Subject<any>();
 
 	@ViewChild('pixiCanvasContainer', {static: true})
-	private pixiCanvasContainer: ElementRef<HTMLDivElement>;
+	private _pixiCanvasContainer: ElementRef<HTMLDivElement>;
 
-	constructor(private renderer2: Renderer2) { }
+	constructor(private renderer2: Renderer2, private ngZone: NgZone) { }
 
 	ngOnInit() {
-		this.initPixi();
-		this.initPixiTicker();
+		this.allViews = [];
+
+		this.ngZone.runOutsideAngular(() => {
+			this.initPixi();
+			this.initPixiTicker();
+			this.initEmptyView();
+		});
 	}
 
 	private initPixi() {
-		this.pixiRenderer = new PIXI.Renderer({
-			height: this.pixiCanvasContainer.nativeElement.offsetHeight,
-			width: this.pixiCanvasContainer.nativeElement.offsetWidth,
+		this._pixiRenderer = new PIXI.Renderer({
+			height: this._pixiCanvasContainer.nativeElement.offsetHeight,
+			width: this._pixiCanvasContainer.nativeElement.offsetWidth,
 			antialias: true,
+			backgroundColor: 0xffffff,
 			resolution: window.devicePixelRatio || 1
 		});
-		this.renderer2.appendChild(this.pixiCanvasContainer.nativeElement, this.pixiRenderer.view);
-		this.mainStage = new PIXI.Container();
+		this.renderer2.appendChild(this._pixiCanvasContainer.nativeElement, this._pixiRenderer.view);
 
 		fromEvent(window, 'resize').pipe(
-			takeUntil(this.destroy)
-		).subscribe(_ => {
-			this.pixiRenderer.resize(this.pixiCanvasContainer.nativeElement.offsetWidth, this.pixiCanvasContainer.nativeElement.offsetHeight);
+			takeUntil(this._destroy)
+		).subscribe(() => {
+			this._pixiRenderer.resize(this._pixiCanvasContainer.nativeElement.offsetWidth, this._pixiCanvasContainer.nativeElement.offsetHeight);
 		});
+	}
+
+	private initEmptyView() {
+		const emptyView = View.createEmptyView(0, this._pixiCanvasContainer.nativeElement);
+		this.allViews.push(View.createEmptyView(1, this._pixiCanvasContainer.nativeElement));
+		this.allViews.push(emptyView);
+		this.activeView = emptyView;
 	}
 
 	private initPixiTicker() {
-		this.pixiTicker = new PIXI.Ticker();
-		this.pixiTicker.add(() => {
-			this.pixiRenderer.render(this.mainStage);
+		this._pixiTicker = new PIXI.Ticker();
+		this._pixiTicker.add(() => {
+				this.activeView.updateZoomPan();
+				this._pixiRenderer.render(this.activeView);
 		});
-		this.pixiTicker.start();
+		this._pixiTicker.start();
+	}
 
-		// TODO: subscribe to active tab and pause/start the ticker (rendering)
+	public switchActiveView(toSwitchToId: number) {
+		const newActiveIndex = this.allViews.findIndex(view => view.projectId === toSwitchToId);
+		this.activeView = this.allViews[newActiveIndex];
+	}
+
+	public closeView(id: number) {
+		// TODO: ask if the user wants to save
+		if (this.allViews.length <= 1) return;
+
+		const toClose = this.allViews[this.allViews.findIndex(view => view.projectId === id)];
+		this.allViews = this.allViews.filter(view => view.projectId !== toClose.projectId);
+
+		if (toClose === this.activeView) {
+			this.activeView = this.allViews[0];
+		}
+
+		toClose.destroy();
+
 	}
 
 	ngOnDestroy(): void {
-		this.destroy.next();
-		this.destroy.unsubscribe();
+		this._destroy.next();
+		this._destroy.unsubscribe();
 	}
 
 }
