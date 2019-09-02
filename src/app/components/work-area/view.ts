@@ -1,17 +1,16 @@
 import * as PIXI from 'pixi.js';
-import {InputManager} from './input-manager';
+import {ZoomPanInputManager} from './zoom-pan-input-manager';
 import {ZoomPan} from './zoom-pan';
 import {Grid} from './grid';
+import InteractionEvent = PIXI.interaction.InteractionEvent;
 
 export class View extends PIXI.Container {
 
 	private _projectId: number;
 
-	private _view: PIXI.Container;
-
 	private _zoomPan: ZoomPan;
 
-	private _inputManager: InputManager;
+	private _zoomPanInputManager: ZoomPanInputManager;
 
 	private _htmlContainer: HTMLElement;
 
@@ -23,13 +22,13 @@ export class View extends PIXI.Container {
 		this._htmlContainer = htmlContainer;
 		this.interactive = true;
 
-		this._view = new PIXI.Container();
-		this.addChild(this._view);
+		this._zoomPanInputManager = new ZoomPanInputManager(this._htmlContainer);
+		this._zoomPan = new ZoomPan(this);
 
-		this._inputManager = new InputManager(this._htmlContainer);
-		this._zoomPan = new ZoomPan(this._view);
-
+		this.addChild(Grid.generateGridSprite());
 		this.updateChunks();
+
+		this.addEventListeners();
 	}
 
 	public static createEmptyView(projectId: number, htmlContainer: HTMLElement): View {
@@ -37,23 +36,32 @@ export class View extends PIXI.Container {
 	}
 
 	private updateChunks() {
-		const currentlyOnScreen = this._zoomPan.isOnScreen(this._htmlContainer.offsetHeight, this._htmlContainer.offsetWidth);
-
+		let currentlyOnScreen = this._zoomPan.isOnScreen(this._htmlContainer.offsetHeight, this._htmlContainer.offsetWidth);
+		currentlyOnScreen = {
+			start: Grid.getGridPosForPixelPos(currentlyOnScreen.start),
+			end: Grid.getGridPosForPixelPos(currentlyOnScreen.end)
+		};
 		// TODO: show / hide chunks
 	}
 
 	public updateZoomPan() {
-		if (this._inputManager.isDragging) {
-			this._zoomPan.translateBy(this._inputManager.mouseDX, this._inputManager.mouseDY);
+		if (this._zoomPanInputManager.isDragging) {
+			this._zoomPan.translateBy(this._zoomPanInputManager.mouseDX, this._zoomPanInputManager.mouseDY);
 			this.updateChunks();
-			this._inputManager.clearMouseDelta();
+			this._zoomPanInputManager.clearMouseDelta();
 		}
 
-		if (this._inputManager.isZoomIn) {
-			this._zoomPan.zoomBy(0.9, this._inputManager.mouseX, this._inputManager.mouseY);
-		} else if (this._inputManager.isZoomOut) {
-			this._zoomPan.zoomBy(1.15, this._inputManager.mouseX, this._inputManager.mouseY);
+		if (this._zoomPanInputManager.isZoomIn) {
+			this._zoomPan.zoomBy(0.9, this._zoomPanInputManager.mouseX, this._zoomPanInputManager.mouseY);
+		} else if (this._zoomPanInputManager.isZoomOut) {
+			this._zoomPan.zoomBy(1.15, this._zoomPanInputManager.mouseX, this._zoomPanInputManager.mouseY);
 		}
+	}
+
+	public addEventListeners() {
+		this.on('click', (e: InteractionEvent) => {
+			// console.log(Grid.getGridPosForPixelPos(e.data.getLocalPosition(this)));
+		});
 	}
 
 	public get projectId(): number {
@@ -61,7 +69,7 @@ export class View extends PIXI.Container {
 	}
 
 	public destroy() {
-		this._inputManager.destroy();
+		this._zoomPanInputManager.destroy();
 		super.destroy({
 			children: true
 		});

@@ -1,7 +1,7 @@
 import {fromEvent, Subject} from 'rxjs';
 import {takeUntil} from 'rxjs/operators';
 
-export class InputManager {
+export class ZoomPanInputManager {
 
 	private _htmlContainer: HTMLElement;
 

@@ -26,18 +26,19 @@ export class Grid {
 				graphics.drawRect(i * this.GRID_WIDTH_HEIGHT, j * this.GRID_WIDTH_HEIGHT, 2, 2);
 			}
 		}
-		this._gridTexture = this._renderer.generateTexture(graphics, PIXI.SCALE_MODES.LINEAR, window.devicePixelRatio * 2);
+		this._gridTexture = this._renderer.generateTexture(graphics, PIXI.SCALE_MODES.LINEAR, window.devicePixelRatio);
 	}
 
 	public static generateGridSprite(): PIXI.Sprite {
 		return new PIXI.Sprite(this._gridTexture);
 	}
 
-	public static getGridPosForPixelPos(x: number, y: number): {x: number, y: number} {
-		return {
-			x: Math.round(x / this.GRID_WIDTH_HEIGHT),
-			y: Math.round(y / this.GRID_WIDTH_HEIGHT)
-		};
+	public static getGridPosForPixelPos(point: PIXI.Point): PIXI.Point {
+		return new PIXI.Point(Math.round(point.x / this.GRID_WIDTH_HEIGHT), Math.round(point.y / this.GRID_WIDTH_HEIGHT));
+	}
+
+	public static getPixelPosForGridPos(point: PIXI.Point): PIXI.Point {
+		return new PIXI.Point(point.x * this.GRID_WIDTH_HEIGHT, point.y * this.GRID_WIDTH_HEIGHT);
 	}
 
 }

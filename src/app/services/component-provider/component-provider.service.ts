@@ -29,8 +29,6 @@ export class ComponentProviderService {
 
 	public insertPixiRenderer(renderer: PIXI.Renderer) {
 		this._renderer = renderer;
-		this.generateTextureForComponent(0);
-		console.log(this._components);
 	}
 
 	public generateTextureForComponent(id: number) {
