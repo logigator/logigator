@@ -2,30 +2,31 @@ import {ProjectState} from './project-state';
 import {ProjectModel} from './project-model';
 import {Action} from './action';
 import {ComponentProviderService} from '../services/component-provider/component-provider.service';
+import {Component} from './component';
 
 export class Project {
 
 	private MAX_ACTIONS = 2;
 
-	private id: number;
-	private name: string;
+	private _id: number;
+	private _name: string;
 
 	private _oldState: ProjectState;
-	private actions: Action[];
-	private currActionPointer: number;
+	private _actions: Action[];
+	private _currActionPointer: number;
 
 	private _currState: ProjectState;
 
 	public constructor(private compProvService: ComponentProviderService, projectState: ProjectState) {
 		this._oldState = projectState;
 		this._currState = projectState.copy();
-		this.actions = [];
+		this._actions = [];
 		for (let i = 0; i < this.MAX_ACTIONS; i++)
-			this.actions.push(null);
-		this.currActionPointer = -1;
+			this._actions.push(null);
+		this._currActionPointer = -1;
 	}
 
-	public static applyAction(projectState: ProjectState, action: Action): void {
+	protected static applyAction(projectState: ProjectState, action: Action): void {
 		switch (action.name) {
 			case 'addComp':
 			case 'addWire':
@@ -33,7 +34,7 @@ export class Project {
 				break;
 			case 'remComp':
 			case 'remWire':
-				projectState.removeComponent(action.component);
+				projectState.removeComponent(action.id);
 				break;
 			case 'movComp':
 			case 'movWire':
@@ -42,31 +43,63 @@ export class Project {
 		}
 	}
 
-	public newState(action: Action): void {
+	public addComponent(typeId: number, posX: number, posY: number): void {
+		this.newState({
+			name: 'addComp',
+			component: {
+				id: -1,
+				typeId,
+				inputs: [],
+				outputs: [],
+				posX,
+				posY
+			}
+		});
+	}
+
+	public removeComponent(component: Component): void {
+		this.removeComponentById(component.id);
+	}
+
+	public removeComponentById(id: number): void {
+		this.newState({
+			name: 'remComp',
+			id
+		});
+	}
+
+	public moveComponent(component: Component): void {
+		this.newState({
+			name: 'movComp',
+			component
+		});
+	}
+
+	private newState(action: Action): void {
 		Project.applyAction(this._currState, action);
-		if (this.currActionPointer >= this.MAX_ACTIONS) {
-			Project.applyAction(this._oldState, this.actions[0]);
-			this.actions.shift();
+		if (this._currActionPointer >= this.MAX_ACTIONS) {
+			Project.applyAction(this._oldState, this._actions[0]);
+			this._actions.shift();
 		} else {
-			this.currActionPointer++;
+			this._currActionPointer++;
 		}
-		this.actions[this.currActionPointer] = action;
+		this._actions[this._currActionPointer] = action;
 	}
 
 	public stepBack(): void {
-		if (this.currActionPointer < 0)
+		if (this._currActionPointer < 0)
 			return;
-		this.currActionPointer--;
+		this._currActionPointer--;
 		this._currState = this._oldState.copy();
-		for (let i = 0; i <= this.currActionPointer; i++) {
-			Project.applyAction(this._currState, this.actions[i]);
+		for (let i = 0; i <= this._currActionPointer; i++) {
+			Project.applyAction(this._currState, this._actions[i]);
 		}
 	}
 
 	public stepForward(): void {
-		if (this.currActionPointer >= this.MAX_ACTIONS)
+		if (this._currActionPointer >= this.MAX_ACTIONS)
 			return;
-		Project.applyAction(this._currState, this.actions[++this.currActionPointer]);
+		Project.applyAction(this._currState, this._actions[++this._currActionPointer]);
 	}
 
 	get oldState(): ProjectState {

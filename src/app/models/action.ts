@@ -12,7 +12,8 @@ export interface Action {
 		'movText' |
 		'conWire' |	// TODO connect Wire
 		'setComp';	// TODO component settings
-	component: Component;
+	component?: Component;
+	id?: number;
 	posX?: number;
 	posY?: number;
 }

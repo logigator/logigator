@@ -6,26 +6,26 @@ import {ComponentProviderService} from '../services/component-provider/component
 export class ProjectState {
 
 	private _model: ProjectModel;
-	private highestTakenId = 0;
-	private chunks: Chunk[][];
+	private _highestTakenId = 0;
+	private _chunks: Chunk[][];
 
 	private CHUNK_SIZE = 16;
 
 	public constructor(private compProvService: ComponentProviderService, model: ProjectModel, highestId?: number) {
 		this._model = model;
 		if (highestId) {
-			this.highestTakenId = highestId;
+			this._highestTakenId = highestId;
 		} else {
 			for (let i = 0; model.board.components.find(c => c.id === i); i++) {
-				this.highestTakenId = i;
+				this._highestTakenId = i;
 			}
 		}
-		this.chunks = [];
+		this._chunks = [];
 		this.loadAllIntoChunks();
 	}
 
 	public getNextId(): number {
-		return ++this.highestTakenId;
+		return ++this._highestTakenId;
 	}
 
 	public loadAllIntoChunks(): void {
@@ -38,28 +38,28 @@ export class ProjectState {
 		const chunkX = Math.floor(component.posX / this.CHUNK_SIZE);
 		const chunkY = Math.floor(component.posY / this.CHUNK_SIZE);
 		this.createChunk(chunkX, chunkY);
-		this.chunks[chunkX][chunkY].components.push(component);
+		this._chunks[chunkX][chunkY].components.push(component);
 	}
 
-	public removeFromChunks(component: Component): void {
-		// TODO break when found and checks surrounding chunks
-		for (const chunkArr of this.chunks) {
+	public removeFromChunks(componentId: number): void {
+		// TODO break when found and checks surrounding _chunks
+		for (const chunkArr of this._chunks) {
 			for (const chunk of chunkArr) {
-				chunk.components = chunk.components.filter(comp => comp.id !== component.id);
+				chunk.components = chunk.components.filter(comp => comp.id !== componentId);
 			}
 		}
 	}
 
 	private createChunk(x: number, y: number): void {
-		if (this.chunks[x] && this.chunks[x][y])
+		if (this._chunks[x] && this._chunks[x][y])
 			return;
 		for (let i = 0; i <= x; i++)
-			if (!this.chunks[i])
-				this.chunks[i] = [];
+			if (!this._chunks[i])
+				this._chunks[i] = [];
 		for (let i = 0; i <= y; i++)
-			if (!this.chunks[x][y] && this.chunks[x][y] !== undefined)
-				this.chunks[x].push(undefined);
-		this.chunks[x][y] = {
+			if (!this._chunks[x][y] && this._chunks[x][y] !== undefined)
+				this._chunks[x].push(undefined);
+		this._chunks[x][y] = {
 			components: []
 		};
 	}
@@ -78,7 +78,7 @@ export class ProjectState {
 		this.loadIntoChunks(newComp);
 	}
 
-	public removeComponent(comp: Component): void {
+	public removeComponent(componentId: number): void {
 		// TODO implement search by chunk
 		// const comp = this.getComponentById(elemId);
 		// for (const input of comp.inputs) {
@@ -89,8 +89,8 @@ export class ProjectState {
 		// 	const nextComp = this.getComponentById(output);
 		// 	nextComp.inputs = nextComp.inputs.filter(value => value !== output);
 		// }
-		this._model.board.components = this._model.board.components.filter(c => c.id !== comp.id);
-		this.removeFromChunks(comp);
+		this._model.board.components = this._model.board.components.filter(c => c.id !== componentId);
+		this.removeFromChunks(componentId);
 	}
 
 	public moveComponent(comp: Component, newPosX: number, newPosY: number): void {
@@ -105,7 +105,7 @@ export class ProjectState {
 	}
 
 	public copy(): ProjectState {
-		// TODO copy chunks
+		// TODO copy _chunks
 		// TODO make cleaner/faster
 		const outModel: ProjectModel = {
 			id: this._model.id,
@@ -115,11 +115,11 @@ export class ProjectState {
 		};
 		for (const comp of this._model.board.components)
 			outModel.board.components.push(Object.assign({}, comp));
-		return new ProjectState(this.compProvService, outModel, this.highestTakenId);
+		return new ProjectState(this.compProvService, outModel, this._highestTakenId);
 	}
 
 	public componentsInChunk(x: number, y: number): Component[] {
-		return this.chunks[x][y].components;
+		return this._chunks[x][y].components;
 	}
 
 	get model(): ProjectModel {

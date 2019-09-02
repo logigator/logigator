@@ -34,18 +34,7 @@ export class ToolbarComponent implements OnInit {
 	}
 
 	public test(): void {
-		const action: Action = {
-			name: 'addComp',
-			component: {
-				id: -1,
-				typeId: 2,
-				inputs: [],
-				outputs: [],
-				posX: 5,
-				posY: 5
-			}
-		};
-		this.project.newState(action);
+		this.project.addComponent(2, 5, 5);
 		console.log('old: ', this.project.oldState.model.board.components);
 		console.log('new: ', this.project.currState.model.board.components);
 		// console.log(this.project.oldState.model.board.components.length, this.project.currState.model.board.components.length);
