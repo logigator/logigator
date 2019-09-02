@@ -6,19 +6,24 @@ export class Grid {
 
 	private static _gridTexture: PIXI.Texture;
 
-	private static GRID_CHUNK_SIZE = 40;
-	private static GRID_SIZE = 20;
+	private static _gridChunkSize: number;
+
+	private static GRID_WIDTH_HEIGHT = 20;
 
 	public static setRenderer(renderer: PIXI.Renderer) {
 		this._renderer = renderer;
 	}
 
+	public static setChunkSize(size: number) {
+		this._gridChunkSize = size;
+	}
+
 	public static generateGridTexture() {
 		const graphics = new PIXI.Graphics();
 		graphics.beginFill(0);
-		for (let i = 0; i < this.GRID_CHUNK_SIZE; i++) {
-			for (let j = 0; j < this.GRID_CHUNK_SIZE; j++) {
-				graphics.drawRect(i * this.GRID_SIZE, j * this.GRID_SIZE, 2, 2);
+		for (let i = 0; i < this._gridChunkSize; i++) {
+			for (let j = 0; j < this._gridChunkSize; j++) {
+				graphics.drawRect(i * this.GRID_WIDTH_HEIGHT, j * this.GRID_WIDTH_HEIGHT, 2, 2);
 			}
 		}
 		this._gridTexture = this._renderer.generateTexture(graphics, PIXI.SCALE_MODES.LINEAR, window.devicePixelRatio * 2);
@@ -28,7 +33,11 @@ export class Grid {
 		return new PIXI.Sprite(this._gridTexture);
 	}
 
-	public static get gridChunkSize(): number {
-		return this.GRID_SIZE * this.GRID_CHUNK_SIZE;
+	public static getGridPosForPixelPos(x: number, y: number): {x: number, y: number} {
+		return {
+			x: Math.round(x / this.GRID_WIDTH_HEIGHT),
+			y: Math.round(y / this.GRID_WIDTH_HEIGHT)
+		};
 	}
+
 }

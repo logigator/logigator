@@ -42,7 +42,8 @@ export class WorkAreaComponent implements OnInit, OnDestroy {
 		this._pixiRenderer = new PIXI.Renderer({
 			height: this._pixiCanvasContainer.nativeElement.offsetHeight,
 			width: this._pixiCanvasContainer.nativeElement.offsetWidth,
-			antialias: true,
+			antialias: false,
+			powerPreference: 'high-performance',
 			backgroundColor: 0xffffff,
 			resolution: window.devicePixelRatio || 1
 		});
@@ -57,6 +58,7 @@ export class WorkAreaComponent implements OnInit, OnDestroy {
 
 	private initGridGeneration() {
 		Grid.setRenderer(this._pixiRenderer);
+		Grid.setChunkSize(50);
 		Grid.generateGridTexture();
 	}
 

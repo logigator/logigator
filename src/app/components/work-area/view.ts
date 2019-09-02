@@ -15,7 +15,7 @@ export class View extends PIXI.Container {
 
 	private _htmlContainer: HTMLElement;
 
-	private _gridSprites: PIXI.Sprite[][] = [];
+	private _chunks: PIXI.ParticleContainer[][];
 
 	constructor(projectId: number, htmlContainer: HTMLElement) {
 		super();
@@ -39,7 +39,7 @@ export class View extends PIXI.Container {
 	private updateChunks() {
 		const currentlyOnScreen = this._zoomPan.isOnScreen(this._htmlContainer.offsetHeight, this._htmlContainer.offsetWidth);
 
-		// TODO: load grid chunks
+		// TODO: show / hide chunks
 	}
 
 	public updateZoomPan() {
