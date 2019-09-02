@@ -4,6 +4,7 @@ import {View} from './view';
 import {fromEvent, Subject} from 'rxjs';
 import {takeUntil} from 'rxjs/operators';
 import {Grid} from './grid';
+import {ComponentProviderService} from '../../services/component-provider/component-provider.service';
 
 @Component({
 	selector: 'app-work-area',
@@ -25,13 +26,14 @@ export class WorkAreaComponent implements OnInit, OnDestroy {
 	@ViewChild('pixiCanvasContainer', {static: true})
 	private _pixiCanvasContainer: ElementRef<HTMLDivElement>;
 
-	constructor(private renderer2: Renderer2, private ngZone: NgZone) { }
+	constructor(private renderer2: Renderer2, private ngZone: NgZone, private componentProviderService: ComponentProviderService) { }
 
 	ngOnInit() {
 		this.allViews = [];
 
 		this.ngZone.runOutsideAngular(() => {
 			this.initPixi();
+			this.componentProviderService.insertPixiRenderer(this._pixiRenderer);
 			this.initGridGeneration();
 			this.initPixiTicker();
 			this.initEmptyView();

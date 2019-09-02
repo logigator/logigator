@@ -1,42 +1,45 @@
 import { Injectable } from '@angular/core';
+import {ComponentType} from '../../models/component-type';
+import {wire} from '../../models/component-types/wire';
+import {not} from '../../models/component-types/not';
+import {and} from '../../models/component-types/and';
+import {or} from '../../models/component-types/or';
+import {xor} from '../../models/component-types/xor';
 
 @Injectable({
 	providedIn: 'root'
 })
 export class ComponentProviderService {
 
-	private basicComponents = {
-		0: 'Wire',
-		1: '1',
-		2: '&',
-		3: '≥1',
-		4: '=1'
-	};
+	private _components: Map<number, ComponentType> = new Map([
+		[0, wire],
+		[1, not],
+		[2, and],
+		[3, or],
+		[4, xor],
+	]);
 
-	private allComponents;
+	private _renderer: PIXI.Renderer;
 
 	constructor() { }
 
-	public getComponentNameById(id: number): string {
-		if (this.basicComponents.hasOwnProperty(id)) {
-			return this.basicComponents[id];
-		}
-		return '';
+	public getComponentById(id: number): ComponentType {
+		return this._components.get(id);
 	}
 
-	public getAllComponents(): {id: number, name: string}[] {
-		if (this.allComponents) {
-			return this.allComponents;
-		}
-		const allComponents = [];
-		Object.keys(this.basicComponents).forEach(comp => {
-			allComponents.push({
-				id: Number(comp),
-				name: this.basicComponents[comp]
-			});
-		});
-		this.allComponents = allComponents.filter(comp => comp.id !== 0);
-		return this.allComponents;
-		// TODO get user created components from server and cache them
+	public insertPixiRenderer(renderer: PIXI.Renderer) {
+		this._renderer = renderer;
+		this.generateTextureForComponent(0);
+		console.log(this._components);
 	}
+
+	public generateTextureForComponent(id: number) {
+		const comp = this._components.get(id);
+		comp.texture = comp.generateComponentTexture(this._renderer);
+	}
+
+	public getAllComponents(): Map<number, ComponentType> {
+		return this._components;
+	}
+
 }
