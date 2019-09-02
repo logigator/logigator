@@ -8,7 +8,7 @@ export class ProjectState {
 	private _highestTakenId = 0;
 	private _chunks: Chunk[][];
 
-	private CHUNK_SIZE = 16;
+	private CHUNK_SIZE = 50;
 
 	public constructor(model: ProjectModel, highestId?: number) {
 		this._model = model;
@@ -41,8 +41,8 @@ export class ProjectState {
 	}
 
 	public loadIntoChunks(component: Component): void {
-		const chunkX = Math.floor(component.posX / this.CHUNK_SIZE);
-		const chunkY = Math.floor(component.posY / this.CHUNK_SIZE);
+		const chunkX = this.gridPosToChunk(component.posX);
+		const chunkY = this.gridPosToChunk(component.posY);
 		this.createChunk(chunkX, chunkY);
 		this._chunks[chunkX][chunkY].components.push(component);
 	}
@@ -107,6 +107,24 @@ export class ProjectState {
 
 	public componentsInChunk(x: number, y: number): Component[] {
 		return this._chunks[x][y].components;
+	}
+
+
+	public onScreenChunks(startX: number, startY: number, endX: number, endY: number): {x: number, y: number}[] {
+		const out: {x: number, y: number}[] = [];
+		const startChunkX = this.gridPosToChunk(startX);
+		const startChunkY = this.gridPosToChunk(startY);
+		const endChunkX = this.gridPosToChunk(endX);
+		const endChunkY = this.gridPosToChunk(endY);
+		for (let x = startChunkX; x <= endChunkX; x++)
+			for (let y = startChunkY; y <= endChunkY; y++)
+				if ((x < endChunkX || endX % this.CHUNK_SIZE !== 0) && (y < endChunkY || endY % this.CHUNK_SIZE !== 0))
+					out.push({x, y});
+		return out;
+	}
+
+	private gridPosToChunk(pos: number): number {
+		return Math.floor(pos / this.CHUNK_SIZE);
 	}
 
 	get model(): ProjectModel {

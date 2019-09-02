@@ -101,6 +101,10 @@ export class Project {
 		Project.applyAction(this._currState, this._actions[++this._currActionPointer]);
 	}
 
+	public onScreenChunks(startX: number, startY: number, endX: number, endY: number): {x: number, y: number}[] {
+		return this.currState.onScreenChunks(startX, startY, endX, endY);
+	}
+
 	public getChunks(): Chunk[][] {
 		return this.currState.chunks;
 	}
