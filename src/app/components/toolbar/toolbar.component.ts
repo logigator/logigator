@@ -24,15 +24,16 @@ export class ToolbarComponent implements OnInit {
 		console.log('new: ', this.project.currState.model.board.components);
 	}
 
-	public test(): void {
-		let arr: Chunk[];
-		arr = [];
-		console.log()
-		for (let i = 0; i < 3; i++) {
+	public benchmark(): void {
+		const start = Date.now();
+		const arr: Chunk[] = [];
+		for (let i = 0; i < 1e7; i++) {
 			arr.push(undefined);
 		}
-		console.log(arr);
-		return;
+		console.log(Date.now() - start);
+	}
+
+	public test(): void {
 		const action: Action = {
 			name: 'addComp',
 			component: {

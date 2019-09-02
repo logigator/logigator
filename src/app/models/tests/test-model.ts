@@ -13,7 +13,7 @@ export class TestModel {
 					outputs: [
 						1
 					],
-					posX: 1,
+					posX: 17,
 					posY: 1
 				},
 				{
@@ -26,7 +26,7 @@ export class TestModel {
 						3
 					],
 					posX: 1,
-					posY: 1
+					posY: 20
 				},
 				{
 					id: 3,
@@ -37,8 +37,8 @@ export class TestModel {
 					outputs: [
 						2
 					],
-					posX: 1,
-					posY: 1
+					posX: 40,
+					posY: 40
 				},
 				{
 					id: 2,
