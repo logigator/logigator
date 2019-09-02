@@ -1,14 +1,13 @@
 import {Chunk} from './chunk';
 import {ProjectModel} from './project-model';
 import {Component} from './component';
+import {environment} from '../../environments/environment';
 
 export class ProjectState {
 
 	private _model: ProjectModel;
 	private _highestTakenId = 0;
 	private _chunks: Chunk[][];
-
-	private CHUNK_SIZE = 50;
 
 	public constructor(model: ProjectModel, highestId?: number) {
 		this._model = model;
@@ -82,9 +81,9 @@ export class ProjectState {
 		this.removeFromChunks(componentId);
 	}
 
-	public moveComponent(comp: Component, newPosX: number, newPosY: number): void {
-		comp.posX = newPosX;
-		comp.posY = newPosY;
+	public moveComponent(comp: Component, difX: number, difY: number): void {
+		comp.posX += difX;
+		comp.posY += difY;
 	}
 
 	public getComponentById(compId: number): Component {
@@ -118,13 +117,13 @@ export class ProjectState {
 		const endChunkY = this.gridPosToChunk(endY);
 		for (let x = startChunkX; x <= endChunkX; x++)
 			for (let y = startChunkY; y <= endChunkY; y++)
-				if ((x < endChunkX || endX % this.CHUNK_SIZE !== 0) && (y < endChunkY || endY % this.CHUNK_SIZE !== 0))
+				if ((x < endChunkX || endX % environment.chunkSize !== 0) && (y < endChunkY || endY % environment.chunkSize !== 0))
 					out.push({x, y});
 		return out;
 	}
 
 	private gridPosToChunk(pos: number): number {
-		return Math.floor(pos / this.CHUNK_SIZE);
+		return Math.floor(pos / environment.chunkSize);
 	}
 
 	get model(): ProjectModel {

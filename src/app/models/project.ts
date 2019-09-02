@@ -1,8 +1,8 @@
 import {ProjectState} from './project-state';
 import {Action} from './action';
-import {ComponentProviderService} from '../services/component-provider/component-provider.service';
 import {Component} from './component';
 import {Chunk} from './chunk';
+import {Observable, Subject} from 'rxjs';
 
 export class Project {
 	private MAX_ACTIONS = 2;
@@ -16,13 +16,16 @@ export class Project {
 
 	private _currState: ProjectState;
 
-	public constructor(private compProvService: ComponentProviderService, projectState: ProjectState) {
+	private changeSubject: Subject<any>;
+
+	public constructor(projectState: ProjectState) {
 		this._oldState = projectState;
 		this._currState = projectState.copy();
 		this._actions = [];
 		for (let i = 0; i < this.MAX_ACTIONS; i++)
 			this._actions.push(null);
 		this._currActionPointer = -1;
+		this.changeSubject = new Subject<any>();
 	}
 
 	protected static applyAction(projectState: ProjectState, action: Action): void {
@@ -42,6 +45,7 @@ export class Project {
 		}
 	}
 
+	// TODO return component
 	public addComponent(typeId: number, posX: number, posY: number): void {
 		this.newState({
 			name: 'addComp',
@@ -67,11 +71,17 @@ export class Project {
 		});
 	}
 
-	public moveComponent(component: Component): void {
+	public moveComponent(component: Component, difX: number, difY: number): void {
 		this.newState({
 			name: 'movComp',
-			component
+			component,
+			posX: difX,
+			posY: difY
 		});
+	}
+
+	public moveComponentById(id: number, difX: number, difY: number): void {
+		this.moveComponent(this._currState.getComponentById(id), difX, difY);
 	}
 
 	private newState(action: Action): void {
@@ -96,7 +106,7 @@ export class Project {
 	}
 
 	public stepForward(): void {
-		if (this._currActionPointer >= this.MAX_ACTIONS)
+		if (this._currActionPointer >= this.MAX_ACTIONS || !this._actions[this._currActionPointer + 1])
 			return;
 		Project.applyAction(this._currState, this._actions[++this._currActionPointer]);
 	}
@@ -107,6 +117,10 @@ export class Project {
 
 	public getChunks(): Chunk[][] {
 		return this.currState.chunks;
+	}
+
+	get changes(): Observable<any> {
+		return this.changeSubject.asObservable();
 	}
 
 	get oldState(): ProjectState {

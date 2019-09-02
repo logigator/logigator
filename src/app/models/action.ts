@@ -16,4 +16,6 @@ export interface Action {
 	id?: number;
 	posX?: number;
 	posY?: number;
+	startPosX?: number;
+	startPosY?: number;
 }
