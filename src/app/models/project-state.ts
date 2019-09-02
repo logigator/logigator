@@ -7,15 +7,19 @@ export class ProjectState {
 
 	private _model: ProjectModel;
 	private highestTakenId = 0;
-	private chunks: Chunk[]; // 2D array?
+	private chunks: Chunk[][];
 
 	private CHUNK_SIZE = 16;
 
-	public constructor(private compProvService: ComponentProviderService, model: ProjectModel) {
+	public constructor(private compProvService: ComponentProviderService, model: ProjectModel, highestId?: number) {
 		this._model = model;
 		this.loadIntoChunks();
-		for (let i = 0; model.board.components.find(c => c.id === i); i++) {
-			this.highestTakenId = i;
+		if (highestId) {
+			this.highestTakenId = highestId;
+		} else {
+			for (let i = 0; model.board.components.find(c => c.id === i); i++) {
+				this.highestTakenId = i;
+			}
 		}
 	}
 
@@ -25,7 +29,20 @@ export class ProjectState {
 
 	public loadIntoChunks(): void {
 		for (const component of this._model.board.components) {
-			// TODO
+			const chunkX = Math.floor(component.posX);
+			const chunkY = Math.floor(component.posY);
+
+		}
+	}
+
+	private createChunk(x: number, y: number): void {
+		for (let i = 0; i < x; i++) {
+			if (!this.chunks[i])
+				this.chunks[i] = [];
+		}
+		for (let i = 0; i < y; i++) {
+			if (!this.chunks[x][y])
+				this.chunks[x].push();
 		}
 	}
 
@@ -78,7 +95,7 @@ export class ProjectState {
 		};
 		for (const comp of this._model.board.components)
 			outModel.board.components.push(Object.assign({}, comp));
-		return new ProjectState(this.compProvService, outModel);
+		return new ProjectState(this.compProvService, outModel, this.highestTakenId);
 	}
 
 	get model(): ProjectModel {

@@ -5,6 +5,7 @@ import {TestModel} from '../../models/tests/test-model';
 import {ProjectState} from '../../models/project-state';
 import {Action} from '../../models/action';
 import {Component} from '../../models/component';
+import {Chunk} from '../../models/chunk';
 
 @AngularComp({
 	selector: 'app-toolbar',
@@ -24,6 +25,14 @@ export class ToolbarComponent implements OnInit {
 	}
 
 	public test(): void {
+		let arr: Chunk[];
+		arr = [];
+		console.log()
+		for (let i = 0; i < 3; i++) {
+			arr.push(undefined);
+		}
+		console.log(arr);
+		return;
 		const action: Action = {
 			name: 'addComp',
 			component: {
