@@ -1,11 +1,10 @@
 import {ProjectState} from './project-state';
-import {ProjectModel} from './project-model';
 import {Action} from './action';
 import {ComponentProviderService} from '../services/component-provider/component-provider.service';
 import {Component} from './component';
+import {Chunk} from './chunk';
 
 export class Project {
-
 	private MAX_ACTIONS = 2;
 
 	private _id: number;
@@ -102,11 +101,23 @@ export class Project {
 		Project.applyAction(this._currState, this._actions[++this._currActionPointer]);
 	}
 
+	public getChunks(): Chunk[][] {
+		return this.currState.chunks;
+	}
+
 	get oldState(): ProjectState {
 		return this._oldState;
 	}
 
 	get currState(): ProjectState {
 		return this._currState;
+	}
+
+	get id(): number {
+		return this._id;
+	}
+
+	get name(): string {
+		return this._name;
 	}
 }

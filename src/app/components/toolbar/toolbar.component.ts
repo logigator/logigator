@@ -3,8 +3,6 @@ import {Project} from '../../models/project';
 import {ComponentProviderService} from '../../services/component-provider/component-provider.service';
 import {TestModel} from '../../models/tests/test-model';
 import {ProjectState} from '../../models/project-state';
-import {Action} from '../../models/action';
-import {Component} from '../../models/component';
 import {Chunk} from '../../models/chunk';
 
 @AngularComp({
@@ -19,7 +17,7 @@ export class ToolbarComponent implements OnInit {
 	constructor(private compProvService: ComponentProviderService) { }
 
 	ngOnInit() {
-		this.project = new Project(this.compProvService, new ProjectState(this.compProvService, TestModel.basicModel));
+		this.project = new Project(this.compProvService, new ProjectState(TestModel.basicModel));
 		console.log('old: ', this.project.oldState.model.board.components);
 		console.log('new: ', this.project.currState.model.board.components);
 	}

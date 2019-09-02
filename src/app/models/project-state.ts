@@ -1,7 +1,6 @@
 import {Chunk} from './chunk';
 import {ProjectModel} from './project-model';
 import {Component} from './component';
-import {ComponentProviderService} from '../services/component-provider/component-provider.service';
 
 export class ProjectState {
 
@@ -11,17 +10,24 @@ export class ProjectState {
 
 	private CHUNK_SIZE = 16;
 
-	public constructor(private compProvService: ComponentProviderService, model: ProjectModel, highestId?: number) {
+	public constructor(model: ProjectModel, highestId?: number) {
 		this._model = model;
 		if (highestId) {
 			this._highestTakenId = highestId;
 		} else {
-			for (let i = 0; model.board.components.find(c => c.id === i); i++) {
-				this._highestTakenId = i;
-			}
+			this._highestTakenId = this.findHighestTakenId();
 		}
 		this._chunks = [];
 		this.loadAllIntoChunks();
+	}
+
+	private findHighestTakenId(): number {
+		let out = 0;
+		for (const comp of this.model.board.components) {
+			if (comp.id > out)
+				out = comp.id;
+		}
+		return out;
 	}
 
 	public getNextId(): number {
@@ -65,30 +71,13 @@ export class ProjectState {
 	}
 
 	public addComponent(comp: Component): void {
-		const newComp: Component = {
-			id: this.getNextId(),
-			typeId: comp.typeId,
-			name: comp.name,
-			posX: comp.posX,
-			posY: comp.posY,
-			inputs: [],	// TODO fill in
-			outputs: []
-		};
-		this._model.board.components.push(newComp);
-		this.loadIntoChunks(newComp);
+		comp.id = this.getNextId();
+		this._model.board.components.push(comp);
+		this.loadIntoChunks(comp);
 	}
 
 	public removeComponent(componentId: number): void {
 		// TODO implement search by chunk
-		// const comp = this.getComponentById(elemId);
-		// for (const input of comp.inputs) {
-		// 	const prevComp = this.getComponentById(input);
-		// 	prevComp.outputs = prevComp.outputs.filter(value => value !== input);
-		// }
-		// for (const output of comp.outputs) {
-		// 	const nextComp = this.getComponentById(output);
-		// 	nextComp.inputs = nextComp.inputs.filter(value => value !== output);
-		// }
 		this._model.board.components = this._model.board.components.filter(c => c.id !== componentId);
 		this.removeFromChunks(componentId);
 	}
@@ -97,8 +86,6 @@ export class ProjectState {
 		comp.posX = newPosX;
 		comp.posY = newPosY;
 	}
-
-
 
 	public getComponentById(compId: number): Component {
 		return this._model.board.components.find(c => c.id === compId);
@@ -115,7 +102,7 @@ export class ProjectState {
 		};
 		for (const comp of this._model.board.components)
 			outModel.board.components.push(Object.assign({}, comp));
-		return new ProjectState(this.compProvService, outModel, this._highestTakenId);
+		return new ProjectState(outModel, this._highestTakenId);
 	}
 
 	public componentsInChunk(x: number, y: number): Component[] {
@@ -124,5 +111,9 @@ export class ProjectState {
 
 	get model(): ProjectModel {
 		return this._model;
+	}
+
+	get chunks(): Chunk[][] {
+		return this._chunks;
 	}
 }
