@@ -40,13 +40,13 @@ export class Project {
 				break;
 			case 'movComp':
 			case 'movWire':
-				projectState.moveComponent(action.component, action.posX, action.posY);
+				projectState.moveComponent(action.component, action.pos);
 				break;
 		}
 	}
 
 	// TODO return component
-	public addComponent(typeId: number, posX: number, posY: number): void {
+	public addComponent(typeId: number, pos: PIXI.Point): void {
 		this.newState({
 			name: 'addComp',
 			component: {
@@ -54,8 +54,7 @@ export class Project {
 				typeId,
 				inputs: [],
 				outputs: [],
-				posX,
-				posY
+				pos
 			}
 		});
 	}
@@ -71,17 +70,16 @@ export class Project {
 		});
 	}
 
-	public moveComponent(component: Component, difX: number, difY: number): void {
+	public moveComponent(component: Component, dif: PIXI.Point): void {
 		this.newState({
 			name: 'movComp',
 			component,
-			posX: difX,
-			posY: difY
+			pos: dif
 		});
 	}
 
-	public moveComponentById(id: number, difX: number, difY: number): void {
-		this.moveComponent(this._currState.getComponentById(id), difX, difY);
+	public moveComponentById(id: number, dif: PIXI.Point): void {
+		this.moveComponent(this._currState.getComponentById(id), dif);
 	}
 
 	private newState(action: Action): void {
@@ -111,8 +109,8 @@ export class Project {
 		Project.applyAction(this._currState, this._actions[++this._currActionPointer]);
 	}
 
-	public onScreenChunks(startX: number, startY: number, endX: number, endY: number): {x: number, y: number}[] {
-		return this.currState.onScreenChunks(startX, startY, endX, endY);
+	public onScreenChunks(startPos: PIXI.Point, endPos: PIXI.Point): {x: number, y: number}[] {
+		return this.currState.onScreenChunks(startPos, endPos);
 	}
 
 	public getChunks(): Chunk[][] {

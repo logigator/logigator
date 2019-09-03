@@ -5,8 +5,6 @@ export interface Component {
 	outputs: number[];
 
 	name?: string;
-	posX: number;
-	posY: number;
-	startPosX?: number;
-	startPosY?: number;
+	pos: PIXI.Point;
+	startPos?: PIXI.Point;
 }

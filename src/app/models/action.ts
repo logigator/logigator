@@ -1,4 +1,5 @@
 import {Component} from './component';
+import * as PIXI from 'pixi.js';
 
 export interface Action {
 	name: 'addComp' |
@@ -14,8 +15,6 @@ export interface Action {
 		'setComp';	// TODO component settings
 	component?: Component;
 	id?: number;
-	posX?: number;
-	posY?: number;
-	startPosX?: number;
-	startPosY?: number;
+	pos?: PIXI.Point;
+	startPos?: PIXI.Point;
 }
