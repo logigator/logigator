@@ -1,3 +1,5 @@
 export const environment = {
-	production: true
+	production: false,
+	chunkSize: 20,
+	gridPixelWidth: 20
 };

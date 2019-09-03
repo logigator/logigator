@@ -5,6 +5,8 @@ import {fromEvent, Subject} from 'rxjs';
 import {takeUntil} from 'rxjs/operators';
 import {Grid} from './grid';
 import {ComponentProviderService} from '../../services/component-provider/component-provider.service';
+import {ProjectsService} from '../../services/projects/projects.service';
+import {WorkModeService} from '../../services/work-mode/work-mode.service';
 
 @Component({
 	selector: 'app-work-area',
@@ -26,7 +28,13 @@ export class WorkAreaComponent implements OnInit, OnDestroy {
 	@ViewChild('pixiCanvasContainer', {static: true})
 	private _pixiCanvasContainer: ElementRef<HTMLDivElement>;
 
-	constructor(private renderer2: Renderer2, private ngZone: NgZone, private componentProviderService: ComponentProviderService) { }
+	constructor(
+		private renderer2: Renderer2,
+		private ngZone: NgZone,
+		private componentProviderService: ComponentProviderService,
+		private projectsService: ProjectsService,
+		private workModeService: WorkModeService
+	) { }
 
 	ngOnInit() {
 		this.allViews = [];
@@ -60,13 +68,24 @@ export class WorkAreaComponent implements OnInit, OnDestroy {
 
 	private initGridGeneration() {
 		Grid.setRenderer(this._pixiRenderer);
-		Grid.setChunkSize(50);
 		Grid.generateGridTexture();
 	}
 
 	private initEmptyView() {
-		const emptyView = View.createEmptyView(0, this._pixiCanvasContainer.nativeElement);
-		this.allViews.push(View.createEmptyView(1, this._pixiCanvasContainer.nativeElement));
+		const emptyView = View.createEmptyView(
+			0,
+			this._pixiCanvasContainer.nativeElement,
+			this.projectsService,
+			this.componentProviderService,
+			this.workModeService
+		);
+		this.allViews.push(View.createEmptyView(
+			1,
+			this._pixiCanvasContainer.nativeElement,
+			this.projectsService,
+			this.componentProviderService,
+			this.workModeService
+		));
 		this.allViews.push(emptyView);
 		this.activeView = emptyView;
 	}

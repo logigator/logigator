@@ -1,4 +1,5 @@
 import * as PIXI from 'pixi.js';
+import {environment} from '../../../environments/environment';
 
 export class Grid {
 
@@ -6,27 +7,24 @@ export class Grid {
 
 	private static _gridTexture: PIXI.Texture;
 
-	private static _gridChunkSize: number;
-
-	private static GRID_WIDTH_HEIGHT = 20;
-
 	public static setRenderer(renderer: PIXI.Renderer) {
 		this._renderer = renderer;
-	}
-
-	public static setChunkSize(size: number) {
-		this._gridChunkSize = size;
 	}
 
 	public static generateGridTexture() {
 		const graphics = new PIXI.Graphics();
 		graphics.beginFill(0);
-		for (let i = 0; i < this._gridChunkSize; i++) {
-			for (let j = 0; j < this._gridChunkSize; j++) {
-				graphics.drawRect(i * this.GRID_WIDTH_HEIGHT, j * this.GRID_WIDTH_HEIGHT, 2, 2);
+		for (let i = 0; i < environment.chunkSize; i++) {
+			for (let j = 0; j < environment.chunkSize; j++) {
+				graphics.drawRect(i * environment.gridPixelWidth, j * environment.gridPixelWidth, 1.5, 1.5);
 			}
 		}
-		this._gridTexture = this._renderer.generateTexture(graphics, PIXI.SCALE_MODES.LINEAR, window.devicePixelRatio);
+		this._gridTexture = this._renderer.generateTexture(
+			graphics,
+			PIXI.SCALE_MODES.LINEAR,
+			window.devicePixelRatio * 1.5,
+			new PIXI.Rectangle(0, 0, environment.chunkSize * environment.gridPixelWidth + 2, environment.chunkSize * environment.gridPixelWidth + 2)
+		);
 	}
 
 	public static generateGridSprite(): PIXI.Sprite {
@@ -34,11 +32,11 @@ export class Grid {
 	}
 
 	public static getGridPosForPixelPos(point: PIXI.Point): PIXI.Point {
-		return new PIXI.Point(Math.round(point.x / this.GRID_WIDTH_HEIGHT), Math.round(point.y / this.GRID_WIDTH_HEIGHT));
+		return new PIXI.Point(Math.round(point.x / environment.gridPixelWidth), Math.round(point.y / environment.gridPixelWidth));
 	}
 
 	public static getPixelPosForGridPos(point: PIXI.Point): PIXI.Point {
-		return new PIXI.Point(point.x * this.GRID_WIDTH_HEIGHT, point.y * this.GRID_WIDTH_HEIGHT);
+		return new PIXI.Point(point.x * environment.gridPixelWidth, point.y * environment.gridPixelWidth);
 	}
 
 }

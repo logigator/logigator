@@ -6,7 +6,7 @@ export const wire: ComponentType = {
 	symbol: '',
 	description: '',
 	texture: null,
-	generateComponentTexture: (renderer: PIXI.Renderer): PIXI.Texture => {
+	generateComponentTexture: (renderer: PIXI.Renderer, symbol: string): PIXI.Texture => {
 		// for wire this will never be implemented, because wires are drawn as needed
 		return null;
 	}
