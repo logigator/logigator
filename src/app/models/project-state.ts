@@ -73,16 +73,20 @@ export class ProjectState {
 		};
 	}
 
-	public addComponent(comp: Component): void {
+	public addComponent(comp: Component): Component {
 		comp.id = this.getNextId();
 		this._model.board.components.push(comp);
 		this.loadIntoChunks(comp);
+		return comp;
 	}
 
-	public removeComponent(componentId: number): void {
+	public removeComponent(componentId: number): Component {
 		// TODO implement search by chunk
-		this._model.board.components = this._model.board.components.filter(c => c.id !== componentId);
+		const outCompIndex = this._model.board.components.findIndex(c => c.id === componentId);
+		const outComp = this._model.board.components[outCompIndex];
+		this._model.board.components = this._model.board.components.slice(outCompIndex, 1);
 		this.removeFromChunks(componentId);
+		return outComp;
 	}
 
 	public moveComponent(comp: Component, dif: PIXI.Point): void {

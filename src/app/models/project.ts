@@ -5,12 +5,26 @@ import {Chunk} from './chunk';
 import {Observable, Subject} from 'rxjs';
 
 export class Project {
+
+	private static readonly REVERSE_ACTION: Map<string, string> = new Map([
+		['addComp', 'remComp'],
+		['addWire', 'remWire'],
+		['addText', 'remText'],
+		['remComp', 'addComp'],
+		['remWire', 'addWire'],
+		['remText', 'addText'],
+		['movComp', 'movComp'],
+		['movWire', 'movWire'],
+		['movText', 'movText'],
+		['conWire', ''],
+		['setComp', 'setComp']
+	]);
+
 	private MAX_ACTIONS = 2;
 
 	private _id: number;
 	private _name: string;
 
-	private _oldState: ProjectState;
 	private _actions: Action[];
 	private _currActionPointer: number;
 
@@ -19,8 +33,7 @@ export class Project {
 	private changeSubject: Subject<Action>;
 
 	public constructor(projectState: ProjectState) {
-		this._oldState = projectState;
-		this._currState = projectState.copy();
+		this._currState = projectState;
 		this._actions = [];
 		for (let i = 0; i < this.MAX_ACTIONS; i++)
 			this._actions.push(null);
@@ -36,7 +49,7 @@ export class Project {
 				break;
 			case 'remComp':
 			case 'remWire':
-				projectState.removeComponent(action.id);
+				projectState.removeComponent(action.component.id);
 				break;
 			case 'movComp':
 			case 'movWire':
@@ -45,18 +58,28 @@ export class Project {
 		}
 	}
 
-	// TODO return component
-	public addComponent(typeId: number, pos: PIXI.Point): void {
+	protected static reverseAction(action: Action): Action {
+		const revAction = {...action};
+		// @ts-ignore
+		revAction.name = Project.REVERSE_ACTION.get(action.name);
+		return revAction;
+	}
+
+	// TODO test return id
+	public addComponent(typeId: number, pos: PIXI.Point): Component {
+		const comp = {
+			id: -1,
+			typeId,
+			inputs: [],
+			outputs: [],
+			pos
+		};
+		this._currState.addComponent(comp);
 		this.newState({
 			name: 'addComp',
-			component: {
-				id: -1,
-				typeId,
-				inputs: [],
-				outputs: [],
-				pos
-			}
+			component: comp
 		});
+		return comp;
 	}
 
 	public removeComponent(component: Component): void {
@@ -64,9 +87,10 @@ export class Project {
 	}
 
 	public removeComponentById(id: number): void {
+		const comp = this._currState.removeComponent(id);
 		this.newState({
 			name: 'remComp',
-			id
+			component: comp
 		});
 	}
 
@@ -83,9 +107,9 @@ export class Project {
 	}
 
 	private newState(action: Action): void {
-		Project.applyAction(this._currState, action);
+		// Project.applyAction(this._currState, action);
 		if (this._currActionPointer >= this.MAX_ACTIONS) {
-			Project.applyAction(this._oldState, this._actions[0]);
+			// Project.applyAction(this._oldState, this._actions[0]);
 			this._actions.shift();
 		} else {
 			this._currActionPointer++;
@@ -93,20 +117,21 @@ export class Project {
 		this._actions[this._currActionPointer] = action;
 	}
 
-	public stepBack(): void {
+	public stepBack(): Action[] {
 		if (this._currActionPointer < 0)
 			return;
 		this._currActionPointer--;
-		this._currState = this._oldState.copy();
 		for (let i = 0; i <= this._currActionPointer; i++) {
-			Project.applyAction(this._currState, this._actions[i]);
+			// Project.applyAction(this._currState, this._actions[i]);
 		}
+		return [];
 	}
 
-	public stepForward(): void {
+	public stepForward(): Action[] {
 		if (this._currActionPointer >= this.MAX_ACTIONS || !this._actions[this._currActionPointer + 1])
 			return;
-		Project.applyAction(this._currState, this._actions[++this._currActionPointer]);
+		// Project.applyAction(this._currState, this._actions[++this._currActionPointer]);
+		return [];
 	}
 
 	public onScreenChunks(startPos: PIXI.Point, endPos: PIXI.Point): {x: number, y: number}[] {
@@ -119,10 +144,6 @@ export class Project {
 
 	get changes(): Observable<Action> {
 		return this.changeSubject.asObservable();
-	}
-
-	get oldState(): ProjectState {
-		return this._oldState;
 	}
 
 	get currState(): ProjectState {

@@ -1,4 +1,5 @@
 import {ProjectModel} from '../project-model';
+import * as PIXI from 'pixi.js';
 
 export class TestModel {
 
