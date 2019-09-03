@@ -16,7 +16,7 @@ export class Project {
 
 	private _currState: ProjectState;
 
-	private changeSubject: Subject<any>;
+	private changeSubject: Subject<Action>;
 
 	public constructor(projectState: ProjectState) {
 		this._oldState = projectState;
@@ -25,7 +25,7 @@ export class Project {
 		for (let i = 0; i < this.MAX_ACTIONS; i++)
 			this._actions.push(null);
 		this._currActionPointer = -1;
-		this.changeSubject = new Subject<any>();
+		this.changeSubject = new Subject<Action>();
 	}
 
 	protected static applyAction(projectState: ProjectState, action: Action): void {
@@ -117,7 +117,7 @@ export class Project {
 		return this.currState.chunks;
 	}
 
-	get changes(): Observable<any> {
+	get changes(): Observable<Action> {
 		return this.changeSubject.asObservable();
 	}
 

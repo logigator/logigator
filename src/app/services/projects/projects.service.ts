@@ -1,6 +1,7 @@
 import { Injectable } from '@angular/core';
 import {Project} from '../../models/project';
 import {Observable} from 'rxjs';
+import {Action} from '../../models/action';
 
 @Injectable({
 	providedIn: 'root'
@@ -12,7 +13,7 @@ export class ProjectsService {
 
 	constructor() { }
 
-	public subscribeToChanges(id: number): Observable<any> {
+	public subscribeToChanges(id: number): Observable<Action> {
 		return this.projects.find(p => p.id === id).changes;
 	}
 
