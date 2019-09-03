@@ -2,8 +2,8 @@ import * as PIXI from 'pixi.js';
 
 export class ZoomPan {
 
-	private static MAX_ZOOM_IN = 3.2;
-	private static MAX_ZOOM_OUT = 0.75;
+	private static MAX_ZOOM_IN = 2.5;
+	private static MAX_ZOOM_OUT = 0.5;
 
 	private _view: PIXI.Container;
 

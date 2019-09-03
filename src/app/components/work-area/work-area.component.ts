@@ -68,7 +68,6 @@ export class WorkAreaComponent implements OnInit, OnDestroy {
 
 	private initGridGeneration() {
 		Grid.setRenderer(this._pixiRenderer);
-		Grid.generateGridTexture();
 	}
 
 	private initEmptyView() {
