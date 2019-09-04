@@ -8,22 +8,25 @@ import {ProjectsService} from '../../services/projects/projects.service';
 import {ComponentProviderService} from '../../services/component-provider/component-provider.service';
 import {WorkModeService} from '../../services/work-mode/work-mode.service';
 import {Component} from '../../models/component';
+import {ViewInteractionManager} from './view-interaction-manager';
 
 export class View extends PIXI.Container {
 
-	private _projectId: number;
+	private readonly _projectId: number;
 
 	private _zoomPan: ZoomPan;
 
 	private _zoomPanInputManager: ZoomPanInputManager;
 
-	private _htmlContainer: HTMLElement;
+	private _viewInteractionManager: ViewInteractionManager;
 
-	private _projectsService: ProjectsService;
+	private readonly _htmlContainer: HTMLElement;
 
-	private _componentProviderService: ComponentProviderService;
+	private readonly _projectsService: ProjectsService;
 
-	private _workModeService: WorkModeService;
+	private readonly _componentProviderService: ComponentProviderService;
+
+	private readonly _workModeService: WorkModeService;
 
 	private _chunks: PIXI.ParticleContainer[][];
 
@@ -49,8 +52,9 @@ export class View extends PIXI.Container {
 		this._workModeService = workModeService;
 		this.interactive = true;
 
-		this._zoomPanInputManager = new ZoomPanInputManager(this._htmlContainer);
 		this._zoomPan = new ZoomPan(this);
+		this._zoomPanInputManager = new ZoomPanInputManager(this._htmlContainer);
+		this._viewInteractionManager = new ViewInteractionManager(this);
 
 		this._selectRect = new PIXI.Graphics();
 
@@ -82,26 +86,32 @@ export class View extends PIXI.Container {
 
 	public updateZoomPan() {
 		let needsChunkUpdate = false;
+		let needsGridGraphicsUpdate = false;
 		if (this._zoomPanInputManager.isDragging) {
 			needsChunkUpdate = this._zoomPan.translateBy(this._zoomPanInputManager.mouseDX, this._zoomPanInputManager.mouseDY) || needsChunkUpdate;
 			this._zoomPanInputManager.clearMouseDelta();
 		}
 
 		if (this._zoomPanInputManager.isZoomIn) {
-			needsChunkUpdate = this._zoomPan.zoomBy(0.75, this._zoomPanInputManager.mouseX, this._zoomPanInputManager.mouseY) || needsChunkUpdate;
-			this.grid.destroy();
-			this.grid = Grid.generateGridGraphics(this._zoomPan.currentScale);
-			this.addChild(this.grid);
+			needsGridGraphicsUpdate = this._zoomPan.zoomBy(0.75, this._zoomPanInputManager.mouseX, this._zoomPanInputManager.mouseY);
+			needsChunkUpdate = needsGridGraphicsUpdate || needsGridGraphicsUpdate;
 		} else if (this._zoomPanInputManager.isZoomOut) {
-			needsChunkUpdate = this._zoomPan.zoomBy(1.25, this._zoomPanInputManager.mouseX, this._zoomPanInputManager.mouseY) || needsChunkUpdate;
-			this.grid.destroy();
-			this.grid = Grid.generateGridGraphics(this._zoomPan.currentScale);
-			this.addChild(this.grid);
+			needsGridGraphicsUpdate = this._zoomPan.zoomBy(1.25, this._zoomPanInputManager.mouseX, this._zoomPanInputManager.mouseY);
+			needsChunkUpdate = needsGridGraphicsUpdate || needsGridGraphicsUpdate;
 		}
 
 		if (needsChunkUpdate) {
 			this.updateChunks();
+			if (needsGridGraphicsUpdate) {
+				this.updateGridGraphics();
+			}
 		}
+	}
+
+	private updateGridGraphics() {
+		this.grid.destroy();
+		this.grid = Grid.generateGridGraphics(this._zoomPan.currentScale);
+		this.addChild(this.grid);
 	}
 
 	public addEventListeners() {
