@@ -1,3 +1,5 @@
+import {Element} from './element';
+
 export interface Chunk {
-	ids: number[];
+	elements: Element[];
 }
