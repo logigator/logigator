@@ -1,44 +1,48 @@
 import * as PIXI from 'pixi.js';
+import {environment} from '../../../environments/environment';
 
 export class Grid {
 
 	private static _renderer: PIXI.Renderer;
 
-	private static _gridTexture: PIXI.Texture;
-
-	private static _gridChunkSize: number;
-
-	private static GRID_WIDTH_HEIGHT = 20;
+	private static _gridGeometries: Map<number, PIXI.GraphicsGeometry> = new Map();
 
 	public static setRenderer(renderer: PIXI.Renderer) {
 		this._renderer = renderer;
 	}
 
-	public static setChunkSize(size: number) {
-		this._gridChunkSize = size;
-	}
-
-	public static generateGridTexture() {
+	private static getGridGeometry(scale: number): PIXI.GraphicsGeometry {
+		if (this._gridGeometries.has(scale)) {
+			return this._gridGeometries.get(scale);
+		}
 		const graphics = new PIXI.Graphics();
 		graphics.beginFill(0);
-		for (let i = 0; i < this._gridChunkSize; i++) {
-			for (let j = 0; j < this._gridChunkSize; j++) {
-				graphics.drawRect(i * this.GRID_WIDTH_HEIGHT, j * this.GRID_WIDTH_HEIGHT, 2, 2);
+		for (let i = 0; i < environment.chunkSize; i++) {
+			for (let j = 0; j < environment.chunkSize; j++) {
+				graphics.drawRect(i * environment.gridPixelWidth, j * environment.gridPixelWidth, 1 / scale, 1 / scale);
 			}
 		}
-		this._gridTexture = this._renderer.generateTexture(graphics, PIXI.SCALE_MODES.LINEAR, window.devicePixelRatio);
+		this._gridGeometries.set(scale, graphics.geometry);
+		return graphics.geometry;
 	}
 
-	public static generateGridSprite(): PIXI.Sprite {
-		return new PIXI.Sprite(this._gridTexture);
+	public static generateGridGraphics(scale): PIXI.Graphics {
+		const graphics = new PIXI.Graphics(this.getGridGeometry(scale));
+		graphics.hitArea = new PIXI.Rectangle(
+			0,
+			0,
+			environment.chunkSize * environment.gridPixelWidth,
+			environment.chunkSize * environment.gridPixelWidth
+		);
+		return graphics;
 	}
 
 	public static getGridPosForPixelPos(point: PIXI.Point): PIXI.Point {
-		return new PIXI.Point(Math.round(point.x / this.GRID_WIDTH_HEIGHT), Math.round(point.y / this.GRID_WIDTH_HEIGHT));
+		return new PIXI.Point(Math.round(point.x / environment.gridPixelWidth), Math.round(point.y / environment.gridPixelWidth));
 	}
 
 	public static getPixelPosForGridPos(point: PIXI.Point): PIXI.Point {
-		return new PIXI.Point(point.x * this.GRID_WIDTH_HEIGHT, point.y * this.GRID_WIDTH_HEIGHT);
+		return new PIXI.Point(point.x * environment.gridPixelWidth, point.y * environment.gridPixelWidth);
 	}
 
 }

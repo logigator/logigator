@@ -3,36 +3,70 @@ import {ZoomPanInputManager} from './zoom-pan-input-manager';
 import {ZoomPan} from './zoom-pan';
 import {Grid} from './grid';
 import InteractionEvent = PIXI.interaction.InteractionEvent;
+import {ComponentSprite} from '../../models/component-sprite';
+import {ProjectsService} from '../../services/projects/projects.service';
+import {ComponentProviderService} from '../../services/component-provider/component-provider.service';
+import {WorkModeService} from '../../services/work-mode/work-mode.service';
+import {Component} from '../../models/component';
+import {ViewInteractionManager} from './view-interaction-manager';
 
 export class View extends PIXI.Container {
 
-	private _projectId: number;
+	private readonly _projectId: number;
 
 	private _zoomPan: ZoomPan;
 
 	private _zoomPanInputManager: ZoomPanInputManager;
 
-	private _htmlContainer: HTMLElement;
+	private _viewInteractionManager: ViewInteractionManager;
+
+	private readonly _htmlContainer: HTMLElement;
+
+	private readonly _projectsService: ProjectsService;
+
+	private readonly _componentProviderService: ComponentProviderService;
+
+	public readonly workModeService: WorkModeService;
 
 	private _chunks: PIXI.ParticleContainer[][];
 
-	constructor(projectId: number, htmlContainer: HTMLElement) {
+	private _allComponents: Map<number, ComponentSprite> = new Map();
+
+	private grid: PIXI.Graphics;
+
+	constructor(
+		projectId: number,
+		htmlContainer: HTMLElement,
+		projectsService: ProjectsService,
+		compProviderService: ComponentProviderService,
+		workModeService: WorkModeService
+	) {
 		super();
 		this._projectId = projectId;
 		this._htmlContainer = htmlContainer;
+		this._projectsService = projectsService;
+		this._componentProviderService = compProviderService;
+		this.workModeService = workModeService;
 		this.interactive = true;
 
-		this._zoomPanInputManager = new ZoomPanInputManager(this._htmlContainer);
 		this._zoomPan = new ZoomPan(this);
+		this._zoomPanInputManager = new ZoomPanInputManager(this._htmlContainer);
+		this._viewInteractionManager = new ViewInteractionManager(this);
 
-		this.addChild(Grid.generateGridSprite());
+		this.grid = Grid.generateGridGraphics(this._zoomPan.currentScale);
+		this.addChild(this.grid);
 		this.updateChunks();
 
-		this.addEventListeners();
 	}
 
-	public static createEmptyView(projectId: number, htmlContainer: HTMLElement): View {
-		return new View(projectId, htmlContainer);
+	public static createEmptyView(
+		projectId: number,
+		htmlContainer: HTMLElement,
+		projectsService: ProjectsService,
+		compProviderService: ComponentProviderService,
+		workModeService: WorkModeService
+	): View {
+		return new View(projectId, htmlContainer, projectsService, compProviderService, workModeService);
 	}
 
 	private updateChunks() {
@@ -41,31 +75,73 @@ export class View extends PIXI.Container {
 			start: Grid.getGridPosForPixelPos(currentlyOnScreen.start),
 			end: Grid.getGridPosForPixelPos(currentlyOnScreen.end)
 		};
-		// TODO: show / hide chunks
+		// TODO: show / hide chunks, notify projects Service
 	}
 
 	public updateZoomPan() {
+		let needsChunkUpdate = false;
+		let needsGridGraphicsUpdate = false;
 		if (this._zoomPanInputManager.isDragging) {
-			this._zoomPan.translateBy(this._zoomPanInputManager.mouseDX, this._zoomPanInputManager.mouseDY);
-			this.updateChunks();
+			needsChunkUpdate = this._zoomPan.translateBy(this._zoomPanInputManager.mouseDX, this._zoomPanInputManager.mouseDY) || needsChunkUpdate;
 			this._zoomPanInputManager.clearMouseDelta();
 		}
 
 		if (this._zoomPanInputManager.isZoomIn) {
-			this._zoomPan.zoomBy(0.9, this._zoomPanInputManager.mouseX, this._zoomPanInputManager.mouseY);
+			needsGridGraphicsUpdate = this._zoomPan.zoomBy(0.75, this._zoomPanInputManager.mouseX, this._zoomPanInputManager.mouseY);
+			needsChunkUpdate = needsGridGraphicsUpdate || needsGridGraphicsUpdate;
 		} else if (this._zoomPanInputManager.isZoomOut) {
-			this._zoomPan.zoomBy(1.15, this._zoomPanInputManager.mouseX, this._zoomPanInputManager.mouseY);
+			needsGridGraphicsUpdate = this._zoomPan.zoomBy(1.25, this._zoomPanInputManager.mouseX, this._zoomPanInputManager.mouseY);
+			needsChunkUpdate = needsGridGraphicsUpdate || needsGridGraphicsUpdate;
+		}
+
+		if (needsChunkUpdate) {
+			this.updateChunks();
+			if (needsGridGraphicsUpdate) {
+				this.updateGridGraphics();
+			}
 		}
 	}
 
-	public addEventListeners() {
-		this.on('click', (e: InteractionEvent) => {
-			// console.log(Grid.getGridPosForPixelPos(e.data.getLocalPosition(this)));
-		});
+	private updateGridGraphics() {
+		this.grid.destroy();
+		this.grid = Grid.generateGridGraphics(this._zoomPan.currentScale);
+		this.addChild(this.grid);
+	}
+
+	public placeComponent(point: PIXI.Point, componentTypeId: number) {
+		const compType = this._componentProviderService.getComponentById(componentTypeId);
+		if (!compType.texture) {
+			this._componentProviderService.generateTextureForComponent(componentTypeId);
+		}
+		const sprite = new PIXI.Sprite(compType.texture);
+		// TODO: notify projectsService, ask for chunk + calculate pos on chunk
+
+		sprite.position = Grid.getPixelPosForGridPos(point);
+		this.addChild(sprite);
+
+		const comp = this.addComponentTest(this.workModeService.currentComponentToBuild, point);
+		const compSprite = {component: comp, sprite};
+		this._allComponents.set(comp.id, compSprite);
+
+		this._viewInteractionManager.addEventListenersToNewComponent(compSprite);
 	}
 
 	public get projectId(): number {
 		return this._projectId;
+	}
+
+	// just for testing, until project-service works
+	private id = 0;
+	private addComponentTest(type: number, pos: PIXI.Point): Component {
+		return {
+			id: ++this.id,
+			typeId: type,
+			posX: pos.x,
+			posY: pos.y,
+			outputs: [],
+			inputs: [],
+			name: ''
+		};
 	}
 
 	public destroy() {

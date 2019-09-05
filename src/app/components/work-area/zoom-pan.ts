@@ -2,6 +2,9 @@ import * as PIXI from 'pixi.js';
 
 export class ZoomPan {
 
+	private static MAX_ZOOM_IN = 2.5;
+	private static MAX_ZOOM_OUT = 0.5;
+
 	private _view: PIXI.Container;
 
 	private _scale = 1;
@@ -10,22 +13,38 @@ export class ZoomPan {
 		this._view = view;
 	}
 
-	public translateBy(dx: number, dy: number) {
-		if (this.positionX + dx > 0) {
+	/**
+	 * Translates the view by the input values.
+	 * @return true if something was actually moved
+	 */
+	public translateBy(dx: number, dy: number): boolean {
+		if (this.positionX + dx > 2) {
 			dx = 0;
 		}
-		if (this.positionY + dy > 0) {
+		if (this.positionY + dy > 2) {
 			dy = 0;
 		}
 		this._view.x += dx;
 		this._view.y += dy;
+
+		return (dx !== 0 && dy !== 0);
 	}
 
-	public zoomBy(scaleMultiplier: number, scaleCenterX: number, scaleCenterY: number) {
+	/**
+	 * zooms by a given factor to a given point
+	 * @return true if something was actually moved
+	 */
+	public zoomBy(scaleMultiplier: number, scaleCenterX: number, scaleCenterY: number): boolean {
 		const posX = (scaleCenterX - this._view.x) / this._view.scale.x;
 		const posY = (scaleCenterY - this._view.y) / this._view.scale.y;
 
-		this._scale = this._view.scale.x * scaleMultiplier;
+		const newScale = this._view.scale.x * scaleMultiplier;
+
+		if (newScale <= ZoomPan.MAX_ZOOM_OUT || newScale >= ZoomPan.MAX_ZOOM_IN) {
+			return false;
+		}
+
+		this._scale = newScale;
 
 		const newPosX = posX * this._scale + this._view.x;
 		const newPosY = posY * this._scale + this._view.y;
@@ -42,6 +61,8 @@ export class ZoomPan {
 		if (this.positionY > 0) {
 			this._view.y = 0;
 		}
+
+		return true;
 	}
 
 	public isOnScreen(canvasHeight: number, canvasWidth: number): {start: PIXI.Point, end: PIXI.Point} {

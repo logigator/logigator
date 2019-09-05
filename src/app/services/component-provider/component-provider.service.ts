@@ -33,7 +33,7 @@ export class ComponentProviderService {
 
 	public generateTextureForComponent(id: number) {
 		const comp = this._components.get(id);
-		comp.texture = comp.generateComponentTexture(this._renderer);
+		comp.texture = comp.generateComponentTexture(this._renderer, comp.symbol);
 	}
 
 	public getAllComponents(): Map<number, ComponentType> {
