@@ -1,3 +1,52 @@
+//toolbar-styles
 $toolbar-background: lightgreen;
-$toolbar-color: black;
 $toolbar-height: 50px;
+
+$toolbar-icon-button-background-color: lightgreen;
+$toolbar-icon-button-font-color: black;
+
+$toolbar-icon-button-hover-font-color: white;
+$toolbar-icon-button-hover-background-color: lightgreen;
+
+$toolbar-icon-button-active-font-color: red;
+$toolbar-icon-button-active-background-color: lightgreen;
+
+$toolbar-icon-button-active-hover-font-color: red;
+$toolbar-icon-button-active-hover-background-color: lightgreen;
+
+
+//project-tab-styles
+$tab-background-color: lightblue;
+$tab-font-color: black;
+
+$tab-hover-font-color: black;
+$tab-hover-background-color: blue;
+
+$tab-active-font-color: black;
+$tab-active-background-color: green;
+
+$tab-active-hover-font-color: black;
+$tab-active-hover-background-color: green;
+
+
+
+//construction-box-styles
+$construction-box-width: 200px;
+
+$construction-box-background-color: bisque;
+$construction-box-search-background-color: white;
+
+$construction-box-component-font-color: black;
+
+$construction-box-component-hover-background-color: lightgreen;
+$construction-box-component-hover-font-color: black;
+
+$construction-box-component-active-background-color: lightcyan;
+$construction-box-component-active-font-color: black;
+
+$construction-box-component-active-hover-font-color: black;
+$construction-box-component-active-hover-background-color: lightcyan;
+
+
+$settings-info-box-width: 150px;
+
