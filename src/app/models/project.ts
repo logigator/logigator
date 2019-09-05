@@ -7,18 +7,18 @@ import * as PIXI from 'pixi.js';
 
 export class Project {
 
-	private static readonly REVERSE_ACTION: Map<ActionType, ActionType> = new Map([
-		['addComp', 'remComp'],
-		['addWire', 'remWire'],
-		['addText', 'remText'],
-		['remComp', 'addComp'],
-		['remWire', 'addWire'],
-		['remText', 'addText'],
-		['movComp', 'movComp'],
-		['movWire', 'movWire'],
-		['movText', 'movText'],
-		['conWire', 'remWire'],
-		['setComp', 'setComp']
+	private static readonly REVERSE_ACTION: Map<ActionType, ActionType[]> = new Map<ActionType, ActionType[]>([
+		['addComp', ['remComp']],
+		['addWire', ['remWire']],
+		['addText', ['remText']],
+		['remComp', ['addComp']],
+		['remWire', ['addWire']],
+		['remText', ['addText']],
+		['movComp', ['movComp']],
+		['movWire', ['movWire']],
+		['movText', ['movText']],
+		['conWire', ['remWire']],
+		['setComp', ['setComp']]
 	]);
 
 	private MAX_ACTIONS = 2;
@@ -42,6 +42,12 @@ export class Project {
 		this.changeSubject = new Subject<Action>();
 	}
 
+	protected static applyActions(projectState: ProjectState, actions: Action[]): void {
+		for (const action of actions) {
+			Project.applyAction(projectState, action);
+		}
+	}
+
 	protected static applyAction(projectState: ProjectState, action: Action): void {
 		switch (action.name) {
 			case 'addComp':
@@ -59,9 +65,10 @@ export class Project {
 		}
 	}
 
-	protected static reverseAction(action: Action): Action {
-		const revAction = {...action};
-		revAction.name = Project.REVERSE_ACTION.get(action.name);
+	// TODO make the complicated ones like connectWire
+	protected static reverseAction(action: Action): Action[] {
+		const revAction = [{...action}];
+		revAction[0].name = Project.REVERSE_ACTION.get(action.name)[0];
 		return revAction;
 	}
 
@@ -120,17 +127,19 @@ export class Project {
 	public stepBack(): Action[] {
 		if (this._currActionPointer < 0)
 			return;
-		Project.applyAction(this._currState, Project.reverseAction(this._actions[this._currActionPointer]));
+		const backActions = Project.reverseAction(this._actions[this._currActionPointer]);
+		for (const backAction of backActions) {
+			Project.applyAction(this._currState, backAction);
+		}
 		this._currActionPointer--;
-		return [];
+		return backActions;
 	}
 
 	public stepForward(): Action[] {
 		if (this._currActionPointer >= this.MAX_ACTIONS || !this._actions[this._currActionPointer + 1])
 			return;
 		Project.applyAction(this._currState, this._actions[++this._currActionPointer]);
-		// Project.applyAction(this._currState, this._actions[++this._currActionPointer]);
-		return [];
+		return [this._actions[this._currActionPointer]];
 	}
 
 	public onScreenChunks(startPos: PIXI.Point, endPos: PIXI.Point): {x: number, y: number}[] {

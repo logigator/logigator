@@ -15,25 +15,25 @@ export class ToolbarComponent implements OnInit {
 
 	ngOnInit() {
 		this.project = new Project(new ProjectState(TestModel.basicModel));
-		this.project.addComponent(2, new PIXI.Point(1, 2));
-		this.project.addComponent(2, new PIXI.Point(1, 2));
-		this.project.addComponent(2, new PIXI.Point(1, 2));
-		this.project.addComponent(2, new PIXI.Point(1, 2));
-		this.project.addComponent(2, new PIXI.Point(1, 2));
 	}
 
 	public test(): void {
+		this.project.addComponent(2, new PIXI.Point(1, 2));
+		console.log(this.project.currState.model.board.components);
+	}
+
+	public test1(): void {
 		this.project.removeComponentById(Math.floor(Math.random() * this.project.currState.model.board.components.length));
 		console.log(this.project.currState.model.board.components);
 	}
 
 	public undo(): void {
-		this.project.stepBack();
+		console.log(this.project.stepBack());
 		console.log(this.project.currState.model.board.components);
 	}
 
 	public redo(): void {
-		this.project.stepForward();
+		console.log(this.project.stepForward());
 		console.log(this.project.currState.model.board.components);
 	}
 
