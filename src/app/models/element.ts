@@ -1,10 +1,9 @@
-export interface Component {
+export interface Element {
 	id: number;
 	typeId: number;
 	inputs: number[];
 	outputs: number[];
 
-	name?: string;
 	pos: PIXI.Point;
-	startPos?: PIXI.Point;
+	endPos?: PIXI.Point;
 }

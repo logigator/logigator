@@ -1,9 +1,9 @@
-import {Component} from './component';
+import {Element} from './element';
 
 export interface ProjectModel {
 	id: number;
 	board: {
 		// links: number
-		components: Component[];
+		elements: Element[];
 	};
 }

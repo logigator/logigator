@@ -18,23 +18,17 @@ export class ToolbarComponent implements OnInit {
 	}
 
 	public test(): void {
-		this.project.addComponent(2, new PIXI.Point(1, 2));
-		console.log(this.project.currState.model.board.components);
 	}
 
 	public test1(): void {
-		this.project.removeComponentById(Math.floor(Math.random() * this.project.currState.model.board.components.length));
-		console.log(this.project.currState.model.board.components);
 	}
 
 	public undo(): void {
-		console.log(this.project.stepBack());
-		console.log(this.project.currState.model.board.components);
+		this.project.stepBack();
 	}
 
 	public redo(): void {
-		console.log(this.project.stepForward());
-		console.log(this.project.currState.model.board.components);
+		this.project.stepForward();
 	}
 
 }

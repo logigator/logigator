@@ -6,7 +6,7 @@ export class TestModel {
 	public static basicModel: ProjectModel = {
 		id: 0,
 		board: {
-			components: [
+			elements: [
 				{
 					id: 0,
 					typeId: 1,

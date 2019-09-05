@@ -1,8 +1,9 @@
 import {Chunk} from './chunk';
 import {ProjectModel} from './project-model';
-import {Component} from './component';
+import {Element} from './element';
 import {environment} from '../../environments/environment';
 import * as PIXI from 'pixi.js';
+import {Project} from './project';
 
 export class ProjectState {
 
@@ -10,8 +11,8 @@ export class ProjectState {
 	private _highestTakenId = 0;
 	private _chunks: Chunk[][];
 
-	public constructor(model: ProjectModel, highestId?: number) {
-		this._model = model;
+	public constructor(model?: ProjectModel, highestId?: number) {
+		this._model = model || {id: 100, board: {elements: []}};
 		if (highestId) {
 			this._highestTakenId = highestId;
 		} else {
@@ -21,15 +22,11 @@ export class ProjectState {
 		this.loadAllIntoChunks();
 	}
 
-	private static gridPosToChunk(pos: number): number {
-		return Math.floor(pos / environment.chunkSize);
-	}
-
 	private findHighestTakenId(): number {
 		let out = 0;
-		for (const comp of this.model.board.components) {
-			if (comp.id > out)
-				out = comp.id;
+		for (const elem of this.model.board.elements) {
+			if (elem.id > out)
+				out = elem.id;
 		}
 		return out;
 	}
@@ -39,25 +36,25 @@ export class ProjectState {
 	}
 
 	public loadAllIntoChunks(): void {
-		for (const component of this._model.board.components) {
-			this.loadIntoChunks(component);
+		for (const element of this._model.board.elements) {
+			this.loadIntoChunks(element);
 		}
 	}
 
-	public loadIntoChunks(component: Component): void {
-		const chunkX = ProjectState.gridPosToChunk(component.pos.x);
-		const chunkY = ProjectState.gridPosToChunk(component.pos.y);
+	public loadIntoChunks(element: Element): void {
+		const chunkX = Project.gridPosToChunk(element.pos.x);
+		const chunkY = Project.gridPosToChunk(element.pos.y);
 		this.createChunk(chunkX, chunkY);
-		this._chunks[chunkX][chunkY].components.push(component);
+		this._chunks[chunkX][chunkY].elements.push(element);
 	}
 
-	public removeFromChunks(componentId: number): void {
+	public removeFromChunks(elementId: number): void {
 		// TODO break when found and checks surrounding _chunks
 		for (const chunkArr of this._chunks) {
 			for (const chunk of chunkArr) {
 				if (!chunk)
 					continue;
-				chunk.components = chunk.components.filter(comp => comp.id !== componentId);
+				chunk.elements = chunk.elements.filter(elem => elem.id !== elementId);
 			}
 		}
 	}
@@ -72,35 +69,35 @@ export class ProjectState {
 			if (!this._chunks[x][y] && this._chunks[x][y] !== undefined)
 				this._chunks[x].push(undefined);
 		this._chunks[x][y] = {
-			components: []
+			elements: []
 		};
 	}
 
-	public addComponent(comp: Component): Component {
-		comp.id = this.getNextId();
-		this._model.board.components.push(comp);
-		this.loadIntoChunks(comp);
-		return comp;
+	public addElement(elem: Element): Element {
+		elem.id = this.getNextId();
+		this._model.board.elements.push(elem);
+		this.loadIntoChunks(elem);
+		return elem;
 	}
 
-	public removeComponent(componentId: number): Component {
+	public removeElement(elementId: number): Element {
 		// TODO implement search by chunk
-		const outCompIndex = this._model.board.components.findIndex(c => c.id === componentId);
-		if (outCompIndex < 0)
+		const outElemIndex = this._model.board.elements.findIndex(c => c.id === elementId);
+		if (outElemIndex < 0)
 			return null;
-		const outComp = this._model.board.components[outCompIndex];
-		this._model.board.components.splice(outCompIndex, 1);
-		this.removeFromChunks(componentId);
-		return outComp;
+		const outElem = this._model.board.elements[outElemIndex];
+		this._model.board.elements.splice(outElemIndex, 1);
+		this.removeFromChunks(elementId);
+		return outElem;
 	}
 
-	public moveComponent(comp: Component, dif: PIXI.Point): void {
-		comp.pos.x += dif.x;
-		comp.pos.y += dif.y;
+	public moveElement(elem: Element, dif: PIXI.Point): void {
+		elem.pos.x += dif.x;
+		elem.pos.y += dif.y;
 	}
 
-	public getComponentById(compId: number): Component {
-		return this._model.board.components.find(c => c.id === compId);
+	public getElementById(elemId: number): Element {
+		return this._model.board.elements.find(c => c.id === elemId);
 	}
 
 	public copy(): ProjectState {
@@ -109,30 +106,16 @@ export class ProjectState {
 		const outModel: ProjectModel = {
 			id: this._model.id,
 			board: {
-				components: []
+				elements: []
 			}
 		};
-		for (const comp of this._model.board.components)
-			outModel.board.components.push(Object.assign({}, comp));
+		for (const elem of this._model.board.elements)
+			outModel.board.elements.push(Object.assign({}, elem));
 		return new ProjectState(outModel, this._highestTakenId);
 	}
 
-	public componentsInChunk(x: number, y: number): Component[] {
-		return this._chunks[x][y].components;
-	}
-
-
-	public onScreenChunks(startPos: PIXI.Point, endPos: PIXI.Point): {x: number, y: number}[] {
-		const out: {x: number, y: number}[] = [];
-		const startChunkX = ProjectState.gridPosToChunk(startPos.x);
-		const startChunkY = ProjectState.gridPosToChunk(startPos.y);
-		const endChunkX = ProjectState.gridPosToChunk(endPos.x);
-		const endChunkY = ProjectState.gridPosToChunk(endPos.y);
-		for (let x = startChunkX; x <= endChunkX; x++)
-			for (let y = startChunkY; y <= endChunkY; y++)
-				if ((x < endChunkX || endPos.x % environment.chunkSize !== 0) && (y < endChunkY || endPos.y % environment.chunkSize !== 0))
-					out.push({x, y});
-		return out;
+	public elementsInChunk(x: number, y: number): Element[] {
+		return this._chunks[x][y].elements;
 	}
 
 	get model(): ProjectModel {

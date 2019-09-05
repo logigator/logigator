@@ -1,9 +1,10 @@
 import {ProjectState} from './project-state';
 import {Action, ActionType} from './action';
-import {Component} from './component';
+import {Element} from './element';
 import {Chunk} from './chunk';
 import {Observable, Subject} from 'rxjs';
 import * as PIXI from 'pixi.js';
+import {environment} from '../../environments/environment';
 
 export class Project {
 
@@ -31,7 +32,7 @@ export class Project {
 
 	private _currState: ProjectState;
 
-	private changeSubject: Subject<Action>;
+	private changeSubject: Subject<Action[]>;
 
 	public constructor(projectState: ProjectState) {
 		this._currState = projectState;
@@ -39,7 +40,32 @@ export class Project {
 		for (let i = 0; i < this.MAX_ACTIONS; i++)
 			this._actions.push(null);
 		this._currActionPointer = -1;
-		this.changeSubject = new Subject<Action>();
+		this.changeSubject = new Subject<Action[]>();
+	}
+
+
+	public static chunksToRender(startPos: PIXI.Point, endPos: PIXI.Point): {x: number, y: number}[] {
+		// TODO return all chunks to render
+		return Project.onScreenChunks(startPos, endPos);
+	}
+
+	// TODO auslagern
+	public static onScreenChunks(startPos: PIXI.Point, endPos: PIXI.Point): {x: number, y: number}[] {
+		const out: {x: number, y: number}[] = [];
+		const startChunkX = Project.gridPosToChunk(startPos.x);
+		const startChunkY = Project.gridPosToChunk(startPos.y);
+		const endChunkX = Project.gridPosToChunk(endPos.x);
+		const endChunkY = Project.gridPosToChunk(endPos.y);
+		for (let x = startChunkX; x <= endChunkX; x++)
+			for (let y = startChunkY; y <= endChunkY; y++)
+				if ((x < endChunkX || endPos.x % environment.chunkSize !== 0) && (y < endChunkY || endPos.y % environment.chunkSize !== 0))
+					out.push({x, y});
+		return out;
+	}
+
+	// TODO auslagern
+	public static gridPosToChunk(pos: number): number {
+		return Math.floor(pos / environment.chunkSize);
 	}
 
 	protected static applyActions(projectState: ProjectState, actions: Action[]): void {
@@ -52,15 +78,15 @@ export class Project {
 		switch (action.name) {
 			case 'addComp':
 			case 'addWire':
-				projectState.addComponent(action.component);
+				projectState.addElement(action.element);
 				break;
 			case 'remComp':
 			case 'remWire':
-				projectState.removeComponent(action.component.id);
+				projectState.removeElement(action.element.id);
 				break;
 			case 'movComp':
 			case 'movWire':
-				projectState.moveComponent(action.component, action.pos);
+				projectState.moveElement(action.element, action.pos);
 				break;
 		}
 	}
@@ -72,45 +98,45 @@ export class Project {
 		return revAction;
 	}
 
-	// TODO test return id
-	public addComponent(typeId: number, pos: PIXI.Point): Component {
-		const comp = {
+	public addElement(typeId: number, pos: PIXI.Point, endPos?: PIXI.Point): Element {
+		const elem = {
 			id: -1,
 			typeId,
 			inputs: [],
 			outputs: [],
-			pos
+			pos,
+			endPos
 		};
-		this._currState.addComponent(comp);
+		this._currState.addElement(elem);
 		this.newState({
 			name: 'addComp',
-			component: comp
+			element: elem
 		});
-		return comp;
+		return elem;
 	}
 
-	public removeComponent(component: Component): void {
-		this.removeComponentById(component.id);
+	public removeElement(element: Element): void {
+		this.removeElementById(element.id);
 	}
 
-	public removeComponentById(id: number): void {
-		const comp = this._currState.removeComponent(id);
+	public removeElementById(id: number): void {
+		const elem = this._currState.removeElement(id);
 		this.newState({
 			name: 'remComp',
-			component: comp
+			element: elem
 		});
 	}
 
-	public moveComponent(component: Component, dif: PIXI.Point): void {
+	public moveElement(element: Element, dif: PIXI.Point): void {
 		this.newState({
 			name: 'movComp',
-			component,
+			element,
 			pos: dif
 		});
 	}
 
-	public moveComponentById(id: number, dif: PIXI.Point): void {
-		this.moveComponent(this._currState.getComponentById(id), dif);
+	public moveElementById(id: number, dif: PIXI.Point): void {
+		this.moveElement(this._currState.getElementById(id), dif);
 	}
 
 	private newState(action: Action): void {
@@ -132,6 +158,7 @@ export class Project {
 			Project.applyAction(this._currState, backAction);
 		}
 		this._currActionPointer--;
+		this.changeSubject.next(backActions);
 		return backActions;
 	}
 
@@ -139,18 +166,16 @@ export class Project {
 		if (this._currActionPointer >= this.MAX_ACTIONS || !this._actions[this._currActionPointer + 1])
 			return;
 		Project.applyAction(this._currState, this._actions[++this._currActionPointer]);
-		return [this._actions[this._currActionPointer]];
-	}
-
-	public onScreenChunks(startPos: PIXI.Point, endPos: PIXI.Point): {x: number, y: number}[] {
-		return this.currState.onScreenChunks(startPos, endPos);
+		const outActions = [this._actions[this._currActionPointer]];
+		this.changeSubject.next(outActions);
+		return outActions;
 	}
 
 	public getChunks(): Chunk[][] {
 		return this.currState.chunks;
 	}
 
-	get changes(): Observable<Action> {
+	get changes(): Observable<Action[]> {
 		return this.changeSubject.asObservable();
 	}
 

@@ -1,5 +1,5 @@
-import {Component} from './component';
+import {Element} from './element';
 
 export interface Chunk {
-	components: Component[];
+	elements: Element[];
 }

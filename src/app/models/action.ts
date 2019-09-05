@@ -1,4 +1,4 @@
-import {Component} from './component';
+import {Element} from './element';
 import * as PIXI from 'pixi.js';
 
 export type ActionType = 'addComp' |
@@ -15,7 +15,7 @@ export type ActionType = 'addComp' |
 
 export interface Action {
 	name: ActionType;	// TODO component settings
-	component?: Component;
+	element?: Element;
 	id?: number;
 	pos?: PIXI.Point;
 	startPos?: PIXI.Point;
