@@ -2,12 +2,11 @@ import * as PIXI from 'pixi.js';
 import {ZoomPanInputManager} from './zoom-pan-input-manager';
 import {ZoomPan} from './zoom-pan';
 import {Grid} from './grid';
-import InteractionEvent = PIXI.interaction.InteractionEvent;
 import {ComponentSprite} from '../../models/component-sprite';
 import {ProjectsService} from '../../services/projects/projects.service';
 import {ComponentProviderService} from '../../services/component-provider/component-provider.service';
 import {WorkModeService} from '../../services/work-mode/work-mode.service';
-import {Component} from '../../models/component';
+import {Element} from '../../models/element';
 import {ViewInteractionManager} from './view-interaction-manager';
 
 export class View extends PIXI.Container {
@@ -132,15 +131,13 @@ export class View extends PIXI.Container {
 
 	// just for testing, until project-service works
 	private id = 0;
-	private addComponentTest(type: number, pos: PIXI.Point): Component {
+	private addComponentTest(type: number, pos: PIXI.Point): Element {
 		return {
 			id: ++this.id,
 			typeId: type,
-			posX: pos.x,
-			posY: pos.y,
+			pos,
 			outputs: [],
-			inputs: [],
-			name: ''
+			inputs: []
 		};
 	}
 

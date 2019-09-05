@@ -83,7 +83,7 @@ export class ViewInteractionManager {
 
 	private handleMouseClickComponent(e: InteractionEvent, comp: ComponentSprite) {
 		if (this._view.workModeService.currentWorkMode === 'select') {
-			// TODO: select component
+			// TODO: select element
 		} else {
 			e.stopPropagation();
 		}
