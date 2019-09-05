@@ -1,12 +1,12 @@
 import { TestBed } from '@angular/core/testing';
 
-import { ComponentProviderService } from './component-provider.service';
+import { ElementProviderService } from './element-provider.service';
 
-describe('ComponentProviderService', () => {
+describe('ElementProviderService', () => {
 	beforeEach(() => TestBed.configureTestingModule({}));
 
 	it('should be created', () => {
-		const service: ComponentProviderService = TestBed.get(ComponentProviderService);
+		const service: ElementProviderService = TestBed.get(ElementProviderService);
 		expect(service).toBeTruthy();
 	});
 });

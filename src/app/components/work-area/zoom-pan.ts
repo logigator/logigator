@@ -18,14 +18,22 @@ export class ZoomPan {
 	 * @return true if something was actually moved
 	 */
 	public translateBy(dx: number, dy: number): boolean {
-		if (this.positionX + dx > 2) {
+		if (this.positionX + dx > 0) {
 			dx = 0;
 		}
-		if (this.positionY + dy > 2) {
+		if (this.positionY + dy > 0) {
 			dy = 0;
 		}
+
 		this._view.x += dx;
 		this._view.y += dy;
+
+		if (this._view.x > 0) {
+			this._view.x = 0;
+		}
+		if (this._view.y > 0) {
+			this._view.y = 0;
+		}
 
 		return (dx !== 0 && dy !== 0);
 	}

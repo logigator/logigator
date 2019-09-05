@@ -34,11 +34,12 @@ export class Grid {
 			environment.chunkSize * environment.gridPixelWidth,
 			environment.chunkSize * environment.gridPixelWidth
 		);
+		graphics.name = 'grid';
 		return graphics;
 	}
 
 	public static getGridPosForPixelPos(point: PIXI.Point): PIXI.Point {
-		return new PIXI.Point(Math.round(point.x / environment.gridPixelWidth), Math.round(point.y / environment.gridPixelWidth));
+		return new PIXI.Point(Math.floor(point.x / environment.gridPixelWidth), Math.floor(point.y / environment.gridPixelWidth));
 	}
 
 	public static getPixelPosForGridPos(point: PIXI.Point): PIXI.Point {

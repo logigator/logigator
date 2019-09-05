@@ -4,9 +4,10 @@ import {View} from './view';
 import {fromEvent, Subject} from 'rxjs';
 import {takeUntil} from 'rxjs/operators';
 import {Grid} from './grid';
-import {ComponentProviderService} from '../../services/component-provider/component-provider.service';
+import {ElementProviderService} from '../../services/component-provider/element-provider.service';
 import {ProjectsService} from '../../services/projects/projects.service';
 import {WorkModeService} from '../../services/work-mode/work-mode.service';
+import {Project} from '../../models/project';
 
 @Component({
 	selector: 'app-work-area',
@@ -15,13 +16,13 @@ import {WorkModeService} from '../../services/work-mode/work-mode.service';
 })
 export class WorkAreaComponent implements OnInit, OnDestroy {
 
+	private _allViews: Map<number, View>;
+
 	private _pixiRenderer: PIXI.Renderer;
 
 	private _pixiTicker: PIXI.Ticker;
 
 	public activeView: View;
-
-	public allViews: View[];
 
 	private _destroy = new Subject<any>();
 
@@ -31,20 +32,24 @@ export class WorkAreaComponent implements OnInit, OnDestroy {
 	constructor(
 		private renderer2: Renderer2,
 		private ngZone: NgZone,
-		private componentProviderService: ComponentProviderService,
+		private componentProviderService: ElementProviderService,
 		private projectsService: ProjectsService,
 		private workModeService: WorkModeService
 	) { }
 
 	ngOnInit() {
-		this.allViews = [];
+		this._allViews = new Map<number, View>();
 
 		this.ngZone.runOutsideAngular(() => {
 			this.initPixi();
 			this.componentProviderService.insertPixiRenderer(this._pixiRenderer);
 			this.initGridGeneration();
 			this.initPixiTicker();
-			this.initEmptyView();
+		});
+
+		this.projectsService.onProjectOpened.subscribe(projectId => {
+			this.openProject(projectId);
+			this._pixiTicker.start(); // start ticker after a project was opened
 		});
 	}
 
@@ -70,23 +75,20 @@ export class WorkAreaComponent implements OnInit, OnDestroy {
 		Grid.setRenderer(this._pixiRenderer);
 	}
 
-	private initEmptyView() {
-		const emptyView = View.createEmptyView(
-			0,
+	public get allProjects(): Map<number, Project> {
+		return this.projectsService.allProjects;
+	}
+
+	private openProject(projectId: number) {
+		const newView = View.createEmptyView(
+			projectId,
 			this._pixiCanvasContainer.nativeElement,
 			this.projectsService,
 			this.componentProviderService,
 			this.workModeService
 		);
-		this.allViews.push(View.createEmptyView(
-			1,
-			this._pixiCanvasContainer.nativeElement,
-			this.projectsService,
-			this.componentProviderService,
-			this.workModeService
-		));
-		this.allViews.push(emptyView);
-		this.activeView = emptyView;
+		this._allViews.set(projectId, newView);
+		this.activeView = newView;
 	}
 
 	private initPixiTicker() {
@@ -95,25 +97,27 @@ export class WorkAreaComponent implements OnInit, OnDestroy {
 				this.activeView.updateZoomPan();
 				this._pixiRenderer.render(this.activeView);
 		});
-		this._pixiTicker.start();
 	}
 
 	public switchActiveView(toSwitchToId: number) {
-		const newActiveIndex = this.allViews.findIndex(view => view.projectId === toSwitchToId);
-		this.activeView = this.allViews[newActiveIndex];
+		this.projectsService.switchToProject(toSwitchToId);
+		this.activeView = this._allViews.get(toSwitchToId);
 	}
 
-	public closeView(id: number) {
-		// TODO: ask if the user wants to save
-		if (this.allViews.length <= 1) return;
+	public closeView(id: number, event: MouseEvent) {
+		event.stopPropagation();
 
-		const toClose = this.allViews[this.allViews.findIndex(view => view.projectId === id)];
-		this.allViews = this.allViews.filter(view => view.projectId !== toClose.projectId);
+		// TODO: ask if the user wants to save
+		if (this._allViews.size <= 1) return;
+
+		const toClose = this._allViews.get(id);
+		this._allViews.delete(id);
 
 		if (toClose === this.activeView) {
-			this.activeView = this.allViews[0];
+			this.switchActiveView(this._allViews.values().next().value.projectId);
 		}
 
+		this.projectsService.closeProject(id);
 		toClose.destroy();
 
 	}
