@@ -14,7 +14,7 @@ export type ActionType = 'addComp' |
 	'setComp';
 
 export interface Action {
-	name: ActionType;	// TODO component settings
+	name: ActionType;	// TODO element settings
 	element?: Element;
 	id?: number;
 	pos?: PIXI.Point;
