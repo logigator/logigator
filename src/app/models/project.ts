@@ -1,12 +1,13 @@
 import {ProjectState} from './project-state';
-import {Action} from './action';
+import {Action, ActionType} from './action';
 import {Component} from './component';
 import {Chunk} from './chunk';
 import {Observable, Subject} from 'rxjs';
+import * as PIXI from 'pixi.js';
 
 export class Project {
 
-	private static readonly REVERSE_ACTION: Map<string, string> = new Map([
+	private static readonly REVERSE_ACTION: Map<ActionType, ActionType> = new Map([
 		['addComp', 'remComp'],
 		['addWire', 'remWire'],
 		['addText', 'remText'],
@@ -16,7 +17,7 @@ export class Project {
 		['movComp', 'movComp'],
 		['movWire', 'movWire'],
 		['movText', 'movText'],
-		['conWire', ''],
+		['conWire', 'remWire'],
 		['setComp', 'setComp']
 	]);
 
@@ -60,7 +61,6 @@ export class Project {
 
 	protected static reverseAction(action: Action): Action {
 		const revAction = {...action};
-		// @ts-ignore
 		revAction.name = Project.REVERSE_ACTION.get(action.name);
 		return revAction;
 	}
@@ -120,16 +120,15 @@ export class Project {
 	public stepBack(): Action[] {
 		if (this._currActionPointer < 0)
 			return;
+		Project.applyAction(this._currState, Project.reverseAction(this._actions[this._currActionPointer]));
 		this._currActionPointer--;
-		for (let i = 0; i <= this._currActionPointer; i++) {
-			// Project.applyAction(this._currState, this._actions[i]);
-		}
 		return [];
 	}
 
 	public stepForward(): Action[] {
 		if (this._currActionPointer >= this.MAX_ACTIONS || !this._actions[this._currActionPointer + 1])
 			return;
+		Project.applyAction(this._currState, this._actions[++this._currActionPointer]);
 		// Project.applyAction(this._currState, this._actions[++this._currActionPointer]);
 		return [];
 	}

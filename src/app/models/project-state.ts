@@ -2,6 +2,7 @@ import {Chunk} from './chunk';
 import {ProjectModel} from './project-model';
 import {Component} from './component';
 import {environment} from '../../environments/environment';
+import * as PIXI from 'pixi.js';
 
 export class ProjectState {
 
@@ -54,6 +55,8 @@ export class ProjectState {
 		// TODO break when found and checks surrounding _chunks
 		for (const chunkArr of this._chunks) {
 			for (const chunk of chunkArr) {
+				if (!chunk)
+					continue;
 				chunk.components = chunk.components.filter(comp => comp.id !== componentId);
 			}
 		}
@@ -83,8 +86,10 @@ export class ProjectState {
 	public removeComponent(componentId: number): Component {
 		// TODO implement search by chunk
 		const outCompIndex = this._model.board.components.findIndex(c => c.id === componentId);
+		if (outCompIndex < 0)
+			return null;
 		const outComp = this._model.board.components[outCompIndex];
-		this._model.board.components = this._model.board.components.slice(outCompIndex, 1);
+		this._model.board.components.splice(outCompIndex, 1);
 		this.removeFromChunks(componentId);
 		return outComp;
 	}
