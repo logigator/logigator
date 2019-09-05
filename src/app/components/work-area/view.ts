@@ -26,14 +26,11 @@ export class View extends PIXI.Container {
 
 	private readonly _componentProviderService: ComponentProviderService;
 
-	private readonly _workModeService: WorkModeService;
+	public readonly workModeService: WorkModeService;
 
 	private _chunks: PIXI.ParticleContainer[][];
 
 	private _allComponents: Map<number, ComponentSprite> = new Map();
-
-	private _drawingSelectRect = false;
-	private _selectRect: PIXI.Graphics;
 
 	private grid: PIXI.Graphics;
 
@@ -49,20 +46,17 @@ export class View extends PIXI.Container {
 		this._htmlContainer = htmlContainer;
 		this._projectsService = projectsService;
 		this._componentProviderService = compProviderService;
-		this._workModeService = workModeService;
+		this.workModeService = workModeService;
 		this.interactive = true;
 
 		this._zoomPan = new ZoomPan(this);
 		this._zoomPanInputManager = new ZoomPanInputManager(this._htmlContainer);
 		this._viewInteractionManager = new ViewInteractionManager(this);
 
-		this._selectRect = new PIXI.Graphics();
-
 		this.grid = Grid.generateGridGraphics(this._zoomPan.currentScale);
 		this.addChild(this.grid);
 		this.updateChunks();
 
-		this.addEventListeners();
 	}
 
 	public static createEmptyView(
@@ -114,59 +108,10 @@ export class View extends PIXI.Container {
 		this.addChild(this.grid);
 	}
 
-	public addEventListeners() {
-		this.on('click', (e: InteractionEvent) => {
-			if (this._workModeService.currentWorkMode === 'buildComponent') {
-				this.placeComponent(Grid.getGridPosForPixelPos(e.data.getLocalPosition(this)));
-			}
-		});
-		this.on('pointerdown', (e: InteractionEvent) => {
-			if (this._workModeService.currentWorkMode === 'select' && e.data.button === 0) {
-				this._drawingSelectRect = true;
-				this._selectRect.position = e.data.getLocalPosition(this);
-				this._selectRect.width = 0;
-				this._selectRect.height = 0;
-				this._selectRect.beginFill(0, 0.3);
-				this._selectRect.drawRect(0, 0, 1, 1);
-				this.addChild(this._selectRect);
-			}
-		});
-		this.on('pointerup', (e: InteractionEvent) => this.handlePointerUp(e));
-		this.on('pointerupoutside', (e: InteractionEvent) => this.handlePointerUp(e));
-		this.on('pointermove', (e: InteractionEvent) => {
-			if (this._drawingSelectRect) {
-				const rectSize = e.data.getLocalPosition(this);
-				rectSize.x -= this._selectRect.x;
-				rectSize.y -= this._selectRect.y;
-				this._selectRect.width = rectSize.x;
-				this._selectRect.height = rectSize.y;
-			}
-		});
-	}
-
-	private handlePointerUp(e: InteractionEvent) {
-		if (this._drawingSelectRect) {
-			this._drawingSelectRect = false;
-
-			const inSelection = {
-				start: Grid.getGridPosForPixelPos(this._selectRect.position),
-				end: Grid.getGridPosForPixelPos(new PIXI.Point(
-					this._selectRect.position.x + this._selectRect.width,
-					this._selectRect.position.y + this._selectRect.height)
-				)
-			};
-
-			// TODO: notify selection service
-
-			this._selectRect.clear();
-			this.removeChild(this._selectRect);
-		}
-	}
-
-	private placeComponent(point: PIXI.Point) {
-		const compType = this._componentProviderService.getComponentById(this._workModeService.currentComponentToBuild);
+	public placeComponent(point: PIXI.Point) {
+		const compType = this._componentProviderService.getComponentById(this.workModeService.currentComponentToBuild);
 		if (!compType.texture) {
-			this._componentProviderService.generateTextureForComponent(this._workModeService.currentComponentToBuild);
+			this._componentProviderService.generateTextureForComponent(this.workModeService.currentComponentToBuild);
 		}
 		const sprite = new PIXI.Sprite(compType.texture);
 		// TODO: notify projectsService, ask for chunk + calculate pos on chunk
@@ -174,7 +119,7 @@ export class View extends PIXI.Container {
 		sprite.position = Grid.getPixelPosForGridPos(point);
 		this.addChild(sprite);
 
-		const comp = this.addComponentTest(this._workModeService.currentComponentToBuild, point);
+		const comp = this.addComponentTest(this.workModeService.currentComponentToBuild, point);
 		const compSprite = {component: comp, sprite};
 		this._allComponents.set(comp.id, compSprite);
 
@@ -184,7 +129,7 @@ export class View extends PIXI.Container {
 	private addListenersToNewComponent(compSprite: ComponentSprite) {
 		compSprite.sprite.interactive = true;
 		compSprite.sprite.on('click', (e: InteractionEvent) => {
-			if (this._workModeService.currentWorkMode === 'select') {
+			if (this.workModeService.currentWorkMode === 'select') {
 				// TODO: select component
 			} else {
 				e.stopPropagation();
