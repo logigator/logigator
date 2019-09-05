@@ -108,10 +108,10 @@ export class View extends PIXI.Container {
 		this.addChild(this.grid);
 	}
 
-	public placeComponent(point: PIXI.Point) {
-		const compType = this._componentProviderService.getComponentById(this.workModeService.currentComponentToBuild);
+	public placeComponent(point: PIXI.Point, componentTypeId: number) {
+		const compType = this._componentProviderService.getComponentById(componentTypeId);
 		if (!compType.texture) {
-			this._componentProviderService.generateTextureForComponent(this.workModeService.currentComponentToBuild);
+			this._componentProviderService.generateTextureForComponent(componentTypeId);
 		}
 		const sprite = new PIXI.Sprite(compType.texture);
 		// TODO: notify projectsService, ask for chunk + calculate pos on chunk
@@ -123,21 +123,7 @@ export class View extends PIXI.Container {
 		const compSprite = {component: comp, sprite};
 		this._allComponents.set(comp.id, compSprite);
 
-		this.addListenersToNewComponent(compSprite);
-	}
-
-	private addListenersToNewComponent(compSprite: ComponentSprite) {
-		compSprite.sprite.interactive = true;
-		compSprite.sprite.on('click', (e: InteractionEvent) => {
-			if (this.workModeService.currentWorkMode === 'select') {
-				// TODO: select component
-			} else {
-				e.stopPropagation();
-			}
-		});
-		// compSprite.sprite.on('pointerdown', () => this._currentlyDraggingComponent = compSprite.component.id);
-		// compSprite.sprite.on('pointerup', (e: InteractionEvent) => this.componentDragEnd(e));
-		// compSprite.sprite.on('pointerupoutside', (e: InteractionEvent) => this.componentDragEnd(e));
+		this._viewInteractionManager.addEventListenersToNewComponent(compSprite);
 	}
 
 	public get projectId(): number {
