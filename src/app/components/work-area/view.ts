@@ -30,6 +30,7 @@ export class View extends PIXI.Container {
 	public readonly workModeService: WorkModeService;
 
 	private _chunks: PIXI.Container[][] = [];
+	private _gridGraphics: PIXI.Graphics[][] = [];
 
 	private _allElements: Map<number, ElementSprite> = new Map();
 
@@ -75,11 +76,16 @@ export class View extends PIXI.Container {
 			end: Grid.getGridPosForPixelPos(currentlyOnScreen.end)
 		};
 		this._chunksToRender = Project.chunksToRender(currentlyOnScreen.start, currentlyOnScreen.end);
+		// console.log(currentlyOnScreen)
 		this._chunksToRender.forEach(chunk => {
 			if (this.createChunk(chunk.x, chunk.y)) {
 				this._chunks[chunk.x][chunk.y].position = Grid.getPixelPosForGridPos(new PIXI.Point(chunk.x * environment.chunkSize, chunk.y * environment.chunkSize));
 				this.addChild(this._chunks[chunk.x][chunk.y]);
-				this._chunks[chunk.x][chunk.y].addChild(Grid.generateGridGraphics(this._zoomPan.currentScale));
+				this._chunks[chunk.x][chunk.y].addChild(this._gridGraphics[chunk.x][chunk.y]);
+			} else {
+				this._gridGraphics[chunk.x][chunk.y].destroy();
+				this._gridGraphics[chunk.x][chunk.y] = Grid.generateGridGraphics(this._zoomPan.currentScale);
+				this._chunks[chunk.x][chunk.y].addChild(this._gridGraphics[chunk.x][chunk.y]);
 			}
 		});
 		// TODO: show / hide chunks
@@ -89,45 +95,41 @@ export class View extends PIXI.Container {
 		if (this._chunks[x] && this._chunks[x][y])
 			return false;
 		for (let i = 0; i <= x; i++)
-			if (!this._chunks[i])
+			if (!this._chunks[i]) {
 				this._chunks[i] = [];
+				this._gridGraphics[i] = [];
+			}
 		for (let i = 0; i <= y; i++)
-			if (!this._chunks[x][y] && this._chunks[x][y] !== undefined)
+			if (!this._chunks[x][y] && this._chunks[x][y] !== undefined) {
+				this._gridGraphics[x].push(undefined);
 				this._chunks[x].push(undefined);
+			}
+		this._gridGraphics[x][y] = Grid.generateGridGraphics(this._zoomPan.currentScale);
 		this._chunks[x][y] = new PIXI.Container();
+		const text = new PIXI.Text(x  + ' ' + y);
+		text.x = 20 * 10;
+		text.y = 20 * 10;
+		this._chunks[x][y].addChild(text);
 		return true;
 	}
 
 	public updateZoomPan() {
 		let needsChunkUpdate = false;
-		let needsGridGraphicsUpdate = false;
 		if (this._zoomPanInputManager.isDragging) {
-			needsChunkUpdate = this._zoomPan.translateBy(this._zoomPanInputManager.mouseDX, this._zoomPanInputManager.mouseDY) || needsChunkUpdate;
+			this._zoomPan.translateBy(this._zoomPanInputManager.mouseDX, this._zoomPanInputManager.mouseDY);
 			this._zoomPanInputManager.clearMouseDelta();
+			needsChunkUpdate = true;
 		}
 
 		if (this._zoomPanInputManager.isZoomIn) {
-			needsGridGraphicsUpdate = this._zoomPan.zoomBy(0.75, this._zoomPanInputManager.mouseX, this._zoomPanInputManager.mouseY);
-			needsChunkUpdate = needsGridGraphicsUpdate || needsGridGraphicsUpdate;
+			needsChunkUpdate = this._zoomPan.zoomBy(0.75, this._zoomPanInputManager.mouseX, this._zoomPanInputManager.mouseY) || needsChunkUpdate;
 		} else if (this._zoomPanInputManager.isZoomOut) {
-			needsGridGraphicsUpdate = this._zoomPan.zoomBy(1.25, this._zoomPanInputManager.mouseX, this._zoomPanInputManager.mouseY);
-			needsChunkUpdate = needsGridGraphicsUpdate || needsGridGraphicsUpdate;
+			needsChunkUpdate = this._zoomPan.zoomBy(1.25, this._zoomPanInputManager.mouseX, this._zoomPanInputManager.mouseY) || needsChunkUpdate;
 		}
 
 		if (needsChunkUpdate) {
 			this.updateChunks();
-			if (needsGridGraphicsUpdate) {
-				this.updateGridGraphics();
-			}
 		}
-	}
-
-	private updateGridGraphics() {
-		this._chunksToRender.forEach(chunk => {
-			this._chunks[chunk.x][chunk.y].children.find(child => child.name === 'grid').destroy();
-			const grid = Grid.generateGridGraphics(this._zoomPan.currentScale);
-			this._chunks[chunk.x][chunk.y].addChild(grid);
-		});
 	}
 
 	public placeComponent(point: PIXI.Point, elementTypeId: number) {
