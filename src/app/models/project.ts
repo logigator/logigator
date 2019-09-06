@@ -99,6 +99,30 @@ export class Project {
 		return revAction;
 	}
 
+	public getOpenActions(): Action[] {
+		const out: Action[] = [];
+		for (const element of this.allElements) {
+			if (element.typeId === 0) {
+				out.push({
+					name: 'addWire',
+					id: element.id,
+					pos: element.pos,
+					endPos: element.endPos,
+					element
+				});
+			} else {
+				out.push({
+					name: 'addComp',
+					id: element.id,
+					pos: element.pos,
+					endPos: element.endPos,
+					element
+				});
+			}
+		}
+		return out;
+	}
+
 	public addElement(typeId: number, pos: PIXI.Point, endPos?: PIXI.Point): Element {
 		const elem = {
 			id: -1,
@@ -109,10 +133,17 @@ export class Project {
 			endPos
 		};
 		this._currState.addElement(elem);
-		this.newState({
-			name: 'addComp',
-			element: elem
-		});
+		if (elem.typeId === 0) {
+			this.newState({
+				name: 'addWire',
+				element: elem
+			});
+		} else {
+			this.newState({
+				name: 'addComp',
+				element: elem
+			});
+		}
 		return elem;
 	}
 
@@ -122,18 +153,33 @@ export class Project {
 
 	public removeElementById(id: number): void {
 		const elem = this._currState.removeElement(id);
-		this.newState({
-			name: 'remComp',
-			element: elem
-		});
+		if (elem.typeId === 0) {
+			this.newState({
+				name: 'remWire',
+				element: elem
+			});
+		} else {
+			this.newState({
+				name: 'remComp',
+				element: elem
+			});
+		}
 	}
 
-	public moveElement(element: Element, dif: PIXI.Point): void {
-		this.newState({
-			name: 'movComp',
-			element,
-			pos: dif
-		});
+	public moveElement(elem: Element, dif: PIXI.Point): void {
+		if (elem.typeId === 0) {
+			this.newState({
+				name: 'movWire',
+				element: elem,
+				pos: dif
+			});
+		} else {
+			this.newState({
+				name: 'movComp',
+				element: elem,
+				pos: dif
+			});
+		}
 	}
 
 	public moveElementById(id: number, dif: PIXI.Point): void {
@@ -174,6 +220,10 @@ export class Project {
 
 	public getChunks(): Chunk[][] {
 		return this.currState.chunks;
+	}
+
+	public get allElements(): Element[] {
+		return this._currState.model.board.elements;
 	}
 
 	get changes(): Observable<Action[]> {
