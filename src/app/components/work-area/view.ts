@@ -138,14 +138,16 @@ export class View extends PIXI.Container {
 			this._elementProviderService.generateTextureForElement(elementTypeId);
 		}
 		const sprite = new PIXI.Sprite(elemType.texture);
-		// TODO: notify projectsService, ask for chunk + calculate pos on chunk
-
 		sprite.position = Grid.getPixelPosForGridPos(point);
+
+		// TODO: calc grid pos on chunk
 		this.addChild(sprite);
 
-		const elem = this.addComponentTest(this.workModeService.currentComponentToBuild, point);
-		const elemSprite = {component: elem, sprite};
-		this._allElements.set(elem.id, elemSprite);
+		const element = this._projectsService.allProjects.get(this.projectId).addElement(elementTypeId, point);
+
+
+		const elemSprite = {element, sprite};
+		this._allElements.set(element.id, elemSprite);
 
 		this._viewInteractionManager.addEventListenersToNewElement(elemSprite);
 	}
