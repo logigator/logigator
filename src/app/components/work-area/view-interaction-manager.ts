@@ -2,7 +2,7 @@ import {View} from './view';
 import {Grid} from './grid';
 import * as PIXI from 'pixi.js';
 import InteractionEvent = PIXI.interaction.InteractionEvent;
-import {ComponentSprite} from '../../models/component-sprite';
+import {ElementSprite} from '../../models/element-sprite';
 
 export class ViewInteractionManager {
 
@@ -26,9 +26,9 @@ export class ViewInteractionManager {
 		this._view.on('pointermove', (e: InteractionEvent) => this.handlePointerMoveOnView(e));
 	}
 
-	public addEventListenersToNewComponent(compSprite: ComponentSprite) {
-		compSprite.sprite.interactive = true;
-		compSprite.sprite.on('click', (e: InteractionEvent) => this.handleMouseClickComponent(e, compSprite));
+	public addEventListenersToNewElement(elemSprite: ElementSprite) {
+		elemSprite.sprite.interactive = true;
+		elemSprite.sprite.on('click', (e: InteractionEvent) => this.handleMouseClickElement(e, elemSprite));
 	}
 
 	private handleMouseClickOnView(e: InteractionEvent) {
@@ -81,7 +81,7 @@ export class ViewInteractionManager {
 		}
 	}
 
-	private handleMouseClickComponent(e: InteractionEvent, comp: ComponentSprite) {
+	private handleMouseClickElement(e: InteractionEvent, elem: ElementSprite) {
 		if (this._view.workModeService.currentWorkMode === 'select') {
 			// TODO: select element
 		} else {

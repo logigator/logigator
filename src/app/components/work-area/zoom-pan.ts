@@ -13,21 +13,16 @@ export class ZoomPan {
 		this._view = view;
 	}
 
-	/**
-	 * Translates the view by the input values.
-	 * @return true if something was actually moved
-	 */
-	public translateBy(dx: number, dy: number): boolean {
-		if (this.positionX + dx > 2) {
-			dx = 0;
-		}
-		if (this.positionY + dy > 2) {
-			dy = 0;
-		}
+	public translateBy(dx: number, dy: number) {
 		this._view.x += dx;
 		this._view.y += dy;
 
-		return (dx !== 0 && dy !== 0);
+		if (this._view.x > 0) {
+			this._view.x = 0;
+		}
+		if (this._view.y > 0) {
+			this._view.y = 0;
+		}
 	}
 
 	/**
@@ -67,7 +62,7 @@ export class ZoomPan {
 
 	public isOnScreen(canvasHeight: number, canvasWidth: number): {start: PIXI.Point, end: PIXI.Point} {
 		return {
-			start: new PIXI.Point(-this.positionX, -this.positionY),
+			start: new PIXI.Point(-this.positionX / this.currentScale, -this.positionY / this.currentScale),
 			end: new PIXI.Point((canvasWidth - this.positionX) / this.currentScale, (canvasHeight - this.positionY) / this.currentScale)
 		};
 	}

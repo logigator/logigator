@@ -1,8 +1,8 @@
 import {Component} from '@angular/core';
-import {ComponentProviderService} from '../../services/component-provider/component-provider.service';
+import {ElementProviderService} from '../../services/component-provider/element-provider.service';
 import {WorkModeService} from '../../services/work-mode/work-mode.service';
 import {WorkMode} from '../../models/work-modes';
-import {ComponentType} from '../../models/component-type';
+import {ElementType} from '../../models/element-type';
 
 @Component({
 	selector: 'app-construction-box',
@@ -13,10 +13,10 @@ export class ConstructionBoxComponent {
 
 	public searchText = '';
 
-	constructor(private componentProviderService: ComponentProviderService, private workModeService: WorkModeService) { }
+	constructor(private componentProviderService: ElementProviderService, private workModeService: WorkModeService) { }
 
-	public get allAvailableComponents(): Map<number, ComponentType> {
-		return this.componentProviderService.getAllComponents();
+	public get allAvailableComponents(): Map<number, ElementType> {
+		return this.componentProviderService.getAllElements();
 	}
 
 	public availableComponentsTrackBy(index, item) {

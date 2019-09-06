@@ -1,13 +1,13 @@
 import * as PIXI from 'pixi.js';
-import {ComponentType} from '../component-type';
+import {ElementType} from '../element-type';
 import {environment} from '../../../environments/environment';
 
-export const and: ComponentType = {
+export const and: ElementType = {
 	name: 'and',
 	symbol: '&',
 	description: '',
 	texture: null,
-	generateComponentTexture: (renderer: PIXI.Renderer, symbol: string): PIXI.Texture => {
+	generateElementTexture: (renderer: PIXI.Renderer, symbol: string): PIXI.Texture => {
 		const graphics = new PIXI.Graphics();
 		graphics.beginFill(0);
 		graphics.drawRect(0, 0, environment.gridPixelWidth * 2, environment.gridPixelWidth * 2);

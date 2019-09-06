@@ -1,6 +1,6 @@
 import * as PIXI from 'pixi.js';
 
-export interface ComponentSprite {
+export interface ElementSprite {
 	element?: Element;
 	sprite: PIXI.Sprite;
 }

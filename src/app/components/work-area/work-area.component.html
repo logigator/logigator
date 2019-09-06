@@ -2,11 +2,11 @@
 	<div id="canvas-container" #pixiCanvasContainer></div>
 	<div id="tabs">
 		<div class="tab"
-		     *ngFor="let project of allViews"
-		     (click)="switchActiveView(project.projectId)"
-		     [class.tab-active]="project.projectId === activeView.projectId">
-			<p>{{project.projectId}}</p>
-			<span (click)="closeView(project.projectId)">x</span>
+		     *ngFor="let project of allProjects | keyvalue"
+		     (click)="switchActiveView(project.key)"
+		     [class.tab-active]="project.key === activeView?.projectId">
+			<p>{{project.key}}</p>
+			<span (click)="closeView(project.key, $event)">x</span>
 		</div>
 	</div>
 </div>

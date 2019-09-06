@@ -34,8 +34,9 @@ export class Project {
 
 	private changeSubject: Subject<Action[]>;
 
-	public constructor(projectState: ProjectState) {
+	public constructor(projectState: ProjectState, id?: number) {
 		this._currState = projectState;
+		this._id = id;
 		this._actions = [];
 		for (let i = 0; i < this.MAX_ACTIONS; i++)
 			this._actions.push(null);
@@ -44,13 +45,13 @@ export class Project {
 	}
 
 
-	public static chunksToRender(startPos: PIXI.Point, endPos: PIXI.Point): {x: number, y: number}[] {
+	public static chunksToRender(start: PIXI.Point, end: PIXI.Point): {x: number, y: number}[] {
 		// TODO return all chunks to render
-		return Project.onScreenChunks(startPos, endPos);
+		return Project.inRectChunks(start, end);
 	}
 
 	// TODO auslagern
-	public static onScreenChunks(startPos: PIXI.Point, endPos: PIXI.Point): {x: number, y: number}[] {
+	public static inRectChunks(startPos: PIXI.Point, endPos: PIXI.Point): {x: number, y: number}[] {
 		const out: {x: number, y: number}[] = [];
 		const startChunkX = Project.gridPosToChunk(startPos.x);
 		const startChunkY = Project.gridPosToChunk(startPos.y);
