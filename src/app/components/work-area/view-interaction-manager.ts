@@ -56,15 +56,15 @@ export class ViewInteractionManager {
 		if (this._drawingSelectRect) {
 			this._drawingSelectRect = false;
 
-			const inSelection = {
-				start: Grid.getGridPosForPixelPos(this._selectRect.position),
-				end: Grid.getGridPosForPixelPos(new PIXI.Point(
+			this._view.selectionService.selectFromRect(
+				this._view.projectsService.allProjects.get(this._view.projectId),
+				Grid.getGridPosForPixelPos(this._selectRect.position),
+				Grid.getGridPosForPixelPos(new PIXI.Point(
 					this._selectRect.position.x + this._selectRect.width,
 					this._selectRect.position.y + this._selectRect.height)
 				)
-			};
-
-			// TODO: notify selection service
+			);
+			// TODO: mark as selected
 
 			this._selectRect.clear();
 			this._view.removeChild(this._selectRect);
@@ -83,7 +83,8 @@ export class ViewInteractionManager {
 
 	private handleMouseClickElement(e: InteractionEvent, elem: ElementSprite) {
 		if (this._view.workModeService.currentWorkMode === 'select') {
-			// TODO: select element
+			this._view.selectionService.selectComponent(elem.element.id);
+			// TODO: mark as selected
 		} else {
 			e.stopPropagation();
 		}

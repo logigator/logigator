@@ -1,10 +1,9 @@
 import {Component, OnInit} from '@angular/core';
 import {Project} from '../../models/project';
-import {TestModel} from '../../models/tests/test-model';
-import {ProjectState} from '../../models/project-state';
 import {WorkMode} from '../../models/work-modes';
 import {WorkModeService} from '../../services/work-mode/work-mode.service';
 import * as PIXI from 'pixi.js';
+import {ProjectsService} from '../../services/projects/projects.service';
 
 @Component({
 	selector: 'app-toolbar',
@@ -13,12 +12,9 @@ import * as PIXI from 'pixi.js';
 })
 export class ToolbarComponent implements OnInit {
 
-	private project: Project;
-
-	constructor(private workModeService: WorkModeService) { }
+	constructor(private workModeService: WorkModeService, private projectService: ProjectsService) { }
 
 	ngOnInit() {
-		this.project = new Project(new ProjectState(TestModel.basicModel));
 	}
 
 	public test(): void {
@@ -36,10 +32,11 @@ export class ToolbarComponent implements OnInit {
 	}
 
 	public undo(): void {
-		this.project.stepBack();
+		this.projectService.currProject.stepBack();
 	}
 
 	public redo(): void {
-		this.project.stepForward();
+		this.projectService.currProject.stepForward();
 	}
+
 }

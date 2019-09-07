@@ -16,6 +16,7 @@ export class SelectionService {
 		const possibleChunkCoords = Project.inRectChunks(start, end);
 		const ids = this._selectedIds.get(project.id);
 		for (const chunkCoord of possibleChunkCoords) {
+			console.log(project.getChunks()[chunkCoord.x][chunkCoord.y].elements);
 			for (const elem of project.getChunks()[chunkCoord.x][chunkCoord.y].elements) {
 				if (elem.endPos) {
 					if (elem.pos.x < end.x && elem.endPos.x > start.x && elem.pos.y < end.y && elem.endPos.y > start.y) {
