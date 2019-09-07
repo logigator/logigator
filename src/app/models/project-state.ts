@@ -87,6 +87,29 @@ export class ProjectState {
 		elem.pos.y += dif.y;
 	}
 
+	public connectWires(wire0: Element, wire1: Element, intersection: PIXI.Point): Element[] {
+		const out = this.splitWire(wire0, intersection);
+		return out.concat(this.splitWire(wire1, intersection));
+	}
+
+	private splitWire(wire: Element, pos: PIXI.Point): Element[] {
+		// TODO when wire goes from right to left (correct when placing -> Leo ok?)
+		if (!(pos.y === wire.pos.y && pos.x > wire.pos.x && pos.x < wire.endPos.x) &&
+			!(pos.x === wire.pos.x && pos.y > wire.pos.y && pos.y < wire.endPos.y))
+			return [wire];
+		const newWire = {
+			id: -1,
+			typeId: 0,
+			inputs: [],
+			outputs: [],
+			pos,
+			endPos: wire.endPos
+		};
+		wire.endPos = pos;
+		this.addElement(newWire);
+		return [wire, newWire];
+	}
+
 	public getElementById(elemId: number): Element {
 		return this._model.board.elements.find(c => c.id === elemId);
 	}
