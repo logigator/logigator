@@ -44,12 +44,6 @@ export class Project {
 		this.changeSubject = new Subject<Action[]>();
 	}
 
-
-	public static chunksToRender(start: PIXI.Point, end: PIXI.Point): {x: number, y: number}[] {
-		// TODO return all chunks to render
-		return Project.inRectChunks(start, end);
-	}
-
 	// TODO auslagern
 	public static inRectChunks(startPos: PIXI.Point, endPos: PIXI.Point): {x: number, y: number}[] {
 		const out: {x: number, y: number}[] = [];
@@ -59,8 +53,8 @@ export class Project {
 		const endChunkY = Project.gridPosToChunk(endPos.y);
 		for (let x = startChunkX; x <= endChunkX; x++)
 			for (let y = startChunkY; y <= endChunkY; y++)
-				if ((x < endChunkX || endPos.x % environment.chunkSize !== 0) && (y < endChunkY || endPos.y % environment.chunkSize !== 0))
-					out.push({x, y});
+				// if ((x < endChunkX || endPos.x % environment.chunkSize !== 0) && (y < endChunkY || endPos.y % environment.chunkSize !== 0))
+				out.push({x, y});
 		return out;
 	}
 
@@ -99,6 +93,43 @@ export class Project {
 		return revAction;
 	}
 
+	public getOpenActions(): Action[] {
+		const out: Action[] = [];
+		for (const element of this.allElements) {
+			if (element.typeId === 0) {
+				out.push({
+					name: 'addWire',
+					id: element.id,
+					pos: element.pos,
+					endPos: element.endPos,
+					element
+				});
+			} else {
+				out.push({
+					name: 'addComp',
+					id: element.id,
+					pos: element.pos,
+					endPos: element.endPos,
+					element
+				});
+			}
+		}
+		return out;
+	}
+
+	public chunksToRender(start: PIXI.Point, end: PIXI.Point): {x: number, y: number}[] {
+		const out = Project.inRectChunks(start, end);
+		for (const chunk of this._currState.chunksFromCoords(out)) {
+			for (const elem of chunk.elements) {
+				const chunkX = Project.gridPosToChunk(elem.pos.x);
+				const chunkY = Project.gridPosToChunk(elem.pos.y);
+				if (!out.find(c => c.x === chunkX && c.y === chunkY))
+					out.push({x: chunkX, y: chunkY});
+			}
+		}
+		return out;
+	}
+
 	public addElement(typeId: number, pos: PIXI.Point, endPos?: PIXI.Point): Element {
 		const elem = {
 			id: -1,
@@ -109,10 +140,17 @@ export class Project {
 			endPos
 		};
 		this._currState.addElement(elem);
-		this.newState({
-			name: 'addComp',
-			element: elem
-		});
+		if (elem.typeId === 0) {
+			this.newState({
+				name: 'addWire',
+				element: elem
+			});
+		} else {
+			this.newState({
+				name: 'addComp',
+				element: elem
+			});
+		}
 		return elem;
 	}
 
@@ -122,18 +160,33 @@ export class Project {
 
 	public removeElementById(id: number): void {
 		const elem = this._currState.removeElement(id);
-		this.newState({
-			name: 'remComp',
-			element: elem
-		});
+		if (elem.typeId === 0) {
+			this.newState({
+				name: 'remWire',
+				element: elem
+			});
+		} else {
+			this.newState({
+				name: 'remComp',
+				element: elem
+			});
+		}
 	}
 
-	public moveElement(element: Element, dif: PIXI.Point): void {
-		this.newState({
-			name: 'movComp',
-			element,
-			pos: dif
-		});
+	public moveElement(elem: Element, dif: PIXI.Point): void {
+		if (elem.typeId === 0) {
+			this.newState({
+				name: 'movWire',
+				element: elem,
+				pos: dif
+			});
+		} else {
+			this.newState({
+				name: 'movComp',
+				element: elem,
+				pos: dif
+			});
+		}
 	}
 
 	public moveElementById(id: number, dif: PIXI.Point): void {
@@ -174,6 +227,10 @@ export class Project {
 
 	public getChunks(): Chunk[][] {
 		return this.currState.chunks;
+	}
+
+	public get allElements(): Element[] {
+		return this._currState.model.board.elements;
 	}
 
 	get changes(): Observable<Action[]> {

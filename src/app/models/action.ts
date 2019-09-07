@@ -18,5 +18,5 @@ export interface Action {
 	element?: Element;
 	id?: number;
 	pos?: PIXI.Point;
-	startPos?: PIXI.Point;
+	endPos?: PIXI.Point;
 }
