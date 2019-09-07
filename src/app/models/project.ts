@@ -88,9 +88,17 @@ export class Project {
 
 	// TODO make the complicated ones like connectWire
 	protected static reverseAction(action: Action): Action[] {
-		const revAction = [{...action}];
-		revAction[0].name = Project.REVERSE_ACTION.get(action.name)[0];
-		return revAction;
+		const revActions = [{...action}];
+		revActions[0].name = Project.REVERSE_ACTION.get(action.name)[0];
+		for (const revAction of revActions) {
+			revAction.pos = action.pos ? action.pos.clone() : undefined;
+			revAction.endPos = action.endPos ? action.endPos.clone() : undefined;
+			if (revAction.name === 'movComp' || revAction.name === 'movWire') {
+				revAction.pos.x *= -1;
+				revAction.pos.y *= -1;
+			}
+		}
+		return revActions;
 	}
 
 	public getOpenActions(): Action[] {
@@ -174,6 +182,7 @@ export class Project {
 	}
 
 	public moveElement(elem: Element, dif: PIXI.Point): void {
+		this.currState.moveElement(elem, dif);
 		if (elem.typeId === 0) {
 			this.newState({
 				name: 'movWire',
