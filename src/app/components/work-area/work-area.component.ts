@@ -8,6 +8,7 @@ import {ElementProviderService} from '../../services/component-provider/element-
 import {ProjectsService} from '../../services/projects/projects.service';
 import {WorkModeService} from '../../services/work-mode/work-mode.service';
 import {Project} from '../../models/project';
+import {SelectionService} from '../../services/selection/selection.service';
 
 @Component({
 	selector: 'app-work-area',
@@ -34,7 +35,8 @@ export class WorkAreaComponent implements OnInit, OnDestroy {
 		private ngZone: NgZone,
 		private componentProviderService: ElementProviderService,
 		private projectsService: ProjectsService,
-		private workModeService: WorkModeService
+		private workModeService: WorkModeService,
+		private selectionService: SelectionService
 	) { }
 
 	ngOnInit() {
@@ -45,11 +47,13 @@ export class WorkAreaComponent implements OnInit, OnDestroy {
 			this.componentProviderService.insertPixiRenderer(this._pixiRenderer);
 			this.initGridGeneration();
 			this.initPixiTicker();
-		});
 
-		this.projectsService.onProjectOpened.subscribe(projectId => {
-			this.openProject(projectId);
-			this._pixiTicker.start(); // start ticker after a project was opened
+			this.projectsService.onProjectOpened.subscribe(projectId => {
+				this.ngZone.runOutsideAngular(() => {
+					this.openProject(projectId);
+					this._pixiTicker.start(); // start ticker after a project was opened
+				});
+			});
 		});
 	}
 
@@ -85,7 +89,8 @@ export class WorkAreaComponent implements OnInit, OnDestroy {
 			this._pixiCanvasContainer.nativeElement,
 			this.projectsService,
 			this.componentProviderService,
-			this.workModeService
+			this.workModeService,
+			this.selectionService
 		);
 		this._allViews.set(projectId, newView);
 		this.activeView = newView;

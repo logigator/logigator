@@ -14,6 +14,7 @@ export class SelectionService {
 	public selectFromRect(project: Project, start: PIXI.Point, end: PIXI.Point): number[] {
 		const possibleChunkCoords = Project.inRectChunks(start, end);
 		for (const chunkCoord of possibleChunkCoords) {
+			console.log(project.getChunks()[chunkCoord.x][chunkCoord.y].elements);
 			for (const elem of project.getChunks()[chunkCoord.x][chunkCoord.y].elements) {
 				if (elem.pos.x < end.x && elem.endPos.x > start.x && elem.pos.y < end.y && elem.endPos.y > start.y) {
 					if (!this._selectedIds.find(id => id === elem.id))

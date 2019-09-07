@@ -11,8 +11,8 @@
 		<button class="icon-button toolbar-button">Copy</button>
 		<button class="icon-button toolbar-button">Cut</button>
 		<button class="icon-button toolbar-button">Delete</button>
-		<button class="icon-button toolbar-button">zurück</button>
-		<button class="icon-button toolbar-button">vor</button>
+		<button class="icon-button toolbar-button" (click)="undo()">zurück</button>
+		<button class="icon-button toolbar-button" (click)="redo()">vor</button>
 	</div>
 
 	<div id="edit-options">

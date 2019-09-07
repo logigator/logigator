@@ -22,7 +22,7 @@ export class Project {
 		['setComp', ['setComp']]
 	]);
 
-	private MAX_ACTIONS = 2;
+	private MAX_ACTIONS = 2000;
 
 	private _id: number;
 	private _name: string;
