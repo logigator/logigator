@@ -1,38 +1,47 @@
 import { Injectable } from '@angular/core';
 import * as PIXI from 'pixi.js';
 import {Project} from '../../models/project';
+import {ProjectsService} from '../projects/projects.service';
 
 @Injectable({
 	providedIn: 'root'
 })
 export class SelectionService {
 
-	private _selectedIds: number[];
+	private _selectedIds: Map<number, number[]> = new Map<number, number[]>();
 
-	constructor() { }
+	constructor(private projectsService: ProjectsService) { }
 
 	public selectFromRect(project: Project, start: PIXI.Point, end: PIXI.Point): number[] {
 		const possibleChunkCoords = Project.inRectChunks(start, end);
+		const ids = this._selectedIds.get(project.id);
 		for (const chunkCoord of possibleChunkCoords) {
 			for (const elem of project.getChunks()[chunkCoord.x][chunkCoord.y].elements) {
-				if (elem.pos.x < end.x && elem.endPos.x > start.x && elem.pos.y < end.y && elem.endPos.y > start.y) {
-					if (!this._selectedIds.find(id => id === elem.id))
-						this._selectedIds.push(elem.id);
+				if (elem.endPos) {
+					if (elem.pos.x < end.x && elem.endPos.x > start.x && elem.pos.y < end.y && elem.endPos.y > start.y) {
+						if (!ids.find(id => id === elem.id))
+							ids.push(elem.id);
+					}
+				} else { // TODO make endPos mandatory
+					if (elem.pos.x < end.x && elem.pos.y < end.y) {
+						if (!ids.find(id => id === elem.id))
+							ids.push(elem.id);
+					}
 				}
 			}
 		}
-		return this._selectedIds;
+		return ids;
 	}
 
-	public selectComponent(id: number): void {
-		this._selectedIds = [id];
+	public selectComponent(id: number, projectId?: number): void {
+		this._selectedIds.set(projectId || this.projectsService.currProject.id, [id]);
 	}
 
-	public isSingleSelect(): boolean {
-		return this._selectedIds.length === 1;
+	public isSingleSelect(projectId?: number): boolean {
+		return this._selectedIds.get(projectId || this.projectsService.currProject.id).length === 1;
 	}
 
-	get selectedIds(): number[] {
-		return this._selectedIds;
+	public selectedIds(projectId?: number): number[] {
+		return this._selectedIds.get(projectId || this.projectsService.currProject.id);
 	}
 }
