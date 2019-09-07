@@ -69,8 +69,8 @@ export class ProjectState {
 		};
 	}
 
-	public addElement(elem: Element): Element {
-		elem.id = this.getNextId();
+	public addElement(elem: Element, id?: number): Element {
+		elem.id = id || this.getNextId();
 		this._model.board.elements.push(elem);
 		this.loadIntoChunks(elem);
 		return elem;

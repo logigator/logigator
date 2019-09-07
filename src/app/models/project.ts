@@ -73,7 +73,7 @@ export class Project {
 		switch (action.name) {
 			case 'addComp':
 			case 'addWire':
-				projectState.addElement(action.element);
+				projectState.addElement(action.element, action.element.id);
 				break;
 			case 'remComp':
 			case 'remWire':
