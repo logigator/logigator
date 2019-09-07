@@ -16,6 +16,7 @@ export type ActionType = 'addComp' |
 export interface Action {
 	name: ActionType;	// TODO element settings
 	element?: Element;
+	element1?: Element;
 	id?: number;
 	pos?: PIXI.Point;
 	endPos?: PIXI.Point;

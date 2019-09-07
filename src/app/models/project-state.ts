@@ -93,9 +93,7 @@ export class ProjectState {
 	}
 
 	private splitWire(wire: Element, pos: PIXI.Point): Element[] {
-		// TODO when wire goes from right to left (correct when placing -> Leo ok?)
-		if (!(pos.y === wire.pos.y && pos.x > wire.pos.x && pos.x < wire.endPos.x) &&
-			!(pos.x === wire.pos.x && pos.y > wire.pos.y && pos.y < wire.endPos.y))
+		if (!Project.isPointOnWireNoEdge(wire, pos))
 			return [wire];
 		const newWire = {
 			id: -1,
