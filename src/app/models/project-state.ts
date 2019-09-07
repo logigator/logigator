@@ -48,14 +48,10 @@ export class ProjectState {
 		this._chunks[chunkX][chunkY].elements.push(element);
 	}
 
-	public removeFromChunks(elementId: number): void {
-		// TODO break when found and checks surrounding _chunks
-		for (const chunkArr of this._chunks) {
-			for (const chunk of chunkArr) {
-				if (!chunk)
-					continue;
-				chunk.elements = chunk.elements.filter(elem => elem.id !== elementId);
-			}
+	public removeFromChunks(element: Element): void {
+		const chunkCoords = Project.inRectChunks(element.pos, element.endPos || element.pos);
+		for (const chunk of this.chunksFromCoords(chunkCoords)) {
+			chunk.elements = chunk.elements.filter(elem => elem.id !== element.id);
 		}
 	}
 
@@ -81,13 +77,12 @@ export class ProjectState {
 	}
 
 	public removeElement(elementId: number): Element {
-		// TODO implement search by chunk
 		const outElemIndex = this._model.board.elements.findIndex(c => c.id === elementId);
 		if (outElemIndex < 0)
 			return null;
 		const outElem = this._model.board.elements[outElemIndex];
 		this._model.board.elements.splice(outElemIndex, 1);
-		this.removeFromChunks(elementId);
+		this.removeFromChunks(outElem);
 		return outElem;
 	}
 
@@ -116,6 +111,16 @@ export class ProjectState {
 
 	public elementsInChunk(x: number, y: number): Element[] {
 		return this._chunks[x][y].elements;
+	}
+
+	public chunksFromCoords(chunkCoords: {x: number, y: number}[]): Chunk[] {
+		const out: Chunk[] = [];
+		for (const coords of chunkCoords) {
+			if (!this._chunks[coords.x] || !this._chunks[coords.x][coords.y])
+				continue;
+			out.push(this._chunks[coords.x][coords.y]);
+		}
+		return out;
 	}
 
 	get model(): ProjectModel {

@@ -41,5 +41,5 @@ export class ToolbarComponent implements OnInit {
 
 	public redo(): void {
 		this.project.stepForward();
-  }
+	}
 }

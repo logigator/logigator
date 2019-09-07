@@ -75,7 +75,7 @@ export class View extends PIXI.Container {
 			start: Grid.getGridPosForPixelPos(currentlyOnScreen.start),
 			end: Grid.getGridPosForPixelPos(currentlyOnScreen.end)
 		};
-		this._chunksToRender = Project.chunksToRender(currentlyOnScreen.start, currentlyOnScreen.end);
+		this._chunksToRender = this._projectsService.currProject.chunksToRender(currentlyOnScreen.start, currentlyOnScreen.end);
 		// console.log(currentlyOnScreen)
 		this._chunksToRender.forEach(chunk => {
 			if (this.createChunk(chunk.x, chunk.y)) {
