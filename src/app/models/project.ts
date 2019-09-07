@@ -104,23 +104,13 @@ export class Project {
 	public getOpenActions(): Action[] {
 		const out: Action[] = [];
 		for (const element of this.allElements) {
-			if (element.typeId === 0) {
-				out.push({
-					name: 'addWire',
-					id: element.id,
-					pos: element.pos,
-					endPos: element.endPos,
-					element
-				});
-			} else {
-				out.push({
-					name: 'addComp',
-					id: element.id,
-					pos: element.pos,
-					endPos: element.endPos,
-					element
-				});
-			}
+			out.push({
+				name: element.typeId === 0 ? 'addWire' : 'addComp',
+				id: element.id,
+				pos: element.pos,
+				endPos: element.endPos,
+				element
+			});
 		}
 		return out;
 	}
@@ -148,17 +138,10 @@ export class Project {
 			endPos
 		};
 		this._currState.addElement(elem);
-		if (elem.typeId === 0) {
-			this.newState({
-				name: 'addWire',
-				element: elem
-			});
-		} else {
-			this.newState({
-				name: 'addComp',
-				element: elem
-			});
-		}
+		this.newState({
+			name: elem.typeId === 0 ? 'addWire' : 'addComp',
+			element: elem
+		});
 		return elem;
 	}
 
@@ -168,34 +151,19 @@ export class Project {
 
 	public removeElementById(id: number): void {
 		const elem = this._currState.removeElement(id);
-		if (elem.typeId === 0) {
-			this.newState({
-				name: 'remWire',
-				element: elem
-			});
-		} else {
-			this.newState({
-				name: 'remComp',
-				element: elem
-			});
-		}
+		this.newState({
+			name: elem.typeId === 0 ? 'remWire' : 'remComp',
+			element: elem
+		});
 	}
 
 	public moveElement(elem: Element, dif: PIXI.Point): void {
 		this.currState.moveElement(elem, dif);
-		if (elem.typeId === 0) {
-			this.newState({
-				name: 'movWire',
-				element: elem,
-				pos: dif
-			});
-		} else {
-			this.newState({
-				name: 'movComp',
-				element: elem,
-				pos: dif
-			});
-		}
+		this.newState({
+			name: elem.typeId === 0 ? 'movWire' : 'movComp',
+			element: elem,
+			pos: dif
+		});
 	}
 
 	public moveElementById(id: number, dif: PIXI.Point): void {
