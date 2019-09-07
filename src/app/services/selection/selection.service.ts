@@ -17,9 +17,16 @@ export class SelectionService {
 		const ids = this._selectedIds.get(project.id);
 		for (const chunkCoord of possibleChunkCoords) {
 			for (const elem of project.getChunks()[chunkCoord.x][chunkCoord.y].elements) {
-				if (elem.pos.x < end.x && elem.endPos.x > start.x && elem.pos.y < end.y && elem.endPos.y > start.y) {
-					if (!ids.find(id => id === elem.id))
-						ids.push(elem.id);
+				if (elem.endPos) {
+					if (elem.pos.x < end.x && elem.endPos.x > start.x && elem.pos.y < end.y && elem.endPos.y > start.y) {
+						if (!ids.find(id => id === elem.id))
+							ids.push(elem.id);
+					}
+				} else { // TODO make endPos mandatory
+					if (elem.pos.x < end.x && elem.pos.y < end.y) {
+						if (!ids.find(id => id === elem.id))
+							ids.push(elem.id);
+					}
 				}
 			}
 		}
