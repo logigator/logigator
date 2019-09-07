@@ -13,11 +13,7 @@ export class ProjectState {
 
 	public constructor(model?: ProjectModel, highestId?: number) {
 		this._model = model || {id: 100, board: {elements: []}};
-		if (highestId) {
-			this._highestTakenId = highestId;
-		} else {
-			this._highestTakenId = this.findHighestTakenId();
-		}
+		this._highestTakenId = highestId || this.findHighestTakenId();
 		this._chunks = [];
 		this.loadAllIntoChunks();
 	}
