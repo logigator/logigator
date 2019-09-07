@@ -47,4 +47,11 @@ export class Grid {
 		return new PIXI.Point(point.x * environment.gridPixelWidth, point.y * environment.gridPixelWidth);
 	}
 
+	public static getLocalChunkPixelPosForGridPos(point: PIXI.Point): PIXI.Point {
+		const newPoint = point.clone();
+		newPoint.x %= environment.chunkSize;
+		newPoint.y %= environment.chunkSize;
+		return Grid.getPixelPosForGridPos(newPoint);
+	}
+
 }

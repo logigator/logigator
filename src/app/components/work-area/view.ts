@@ -34,7 +34,7 @@ export class View extends PIXI.Container {
 
 	private _allElements: Map<number, ElementSprite> = new Map();
 
-	private _chunksToRender: {x: number, y: number}[];
+	private _chunksToRender: {x: number, y: number}[] = [];
 
 	constructor(
 		projectId: number,
@@ -56,7 +56,6 @@ export class View extends PIXI.Container {
 		this._viewInteractionManager = new ViewInteractionManager(this);
 
 		this.updateChunks();
-
 	}
 
 	public static createEmptyView(
@@ -70,25 +69,31 @@ export class View extends PIXI.Container {
 	}
 
 	private updateChunks() {
-		let currentlyOnScreen = this._zoomPan.isOnScreen(this._htmlContainer.offsetHeight, this._htmlContainer.offsetWidth);
-		currentlyOnScreen = {
-			start: Grid.getGridPosForPixelPos(currentlyOnScreen.start),
-			end: Grid.getGridPosForPixelPos(currentlyOnScreen.end)
-		};
-		this._chunksToRender = Project.chunksToRender(currentlyOnScreen.start, currentlyOnScreen.end);
-		// console.log(currentlyOnScreen)
-		this._chunksToRender.forEach(chunk => {
+		const currentlyOnScreen = this._zoomPan.isOnScreen(this._htmlContainer.offsetHeight, this._htmlContainer.offsetWidth);
+		const chunksToRender = Project.chunksToRender(
+			Grid.getGridPosForPixelPos(currentlyOnScreen.start),
+			Grid.getGridPosForPixelPos(currentlyOnScreen.end)
+		);
+		chunksToRender.forEach(chunk => {
 			if (this.createChunk(chunk.x, chunk.y)) {
-				this._chunks[chunk.x][chunk.y].position = Grid.getPixelPosForGridPos(new PIXI.Point(chunk.x * environment.chunkSize, chunk.y * environment.chunkSize));
+				this._chunks[chunk.x][chunk.y].position = Grid.getPixelPosForGridPos(
+					new PIXI.Point(chunk.x * environment.chunkSize, chunk.y * environment.chunkSize)
+				);
 				this.addChild(this._chunks[chunk.x][chunk.y]);
 				this._chunks[chunk.x][chunk.y].addChild(this._gridGraphics[chunk.x][chunk.y]);
 			} else {
 				this._gridGraphics[chunk.x][chunk.y].destroy();
 				this._gridGraphics[chunk.x][chunk.y] = Grid.generateGridGraphics(this._zoomPan.currentScale);
 				this._chunks[chunk.x][chunk.y].addChild(this._gridGraphics[chunk.x][chunk.y]);
+				this._chunks[chunk.x][chunk.y].visible = true;
 			}
 		});
-		// TODO: show / hide chunks
+		for (const oldChunk of this._chunksToRender) {
+			if (!chunksToRender.find(toRender => toRender.x === oldChunk.x && toRender.y === oldChunk.y)) {
+				this._chunks[oldChunk.x][oldChunk.y].visible = false;
+			}
+		}
+		this._chunksToRender = chunksToRender;
 	}
 
 	private createChunk(x: number, y: number): boolean {
@@ -132,19 +137,17 @@ export class View extends PIXI.Container {
 		}
 	}
 
-	public placeComponent(point: PIXI.Point, elementTypeId: number) {
+	public placeComponent(position: PIXI.Point, elementTypeId: number) {
 		const elemType = this._elementProviderService.getComponentById(elementTypeId);
 		if (!elemType.texture) {
 			this._elementProviderService.generateTextureForElement(elementTypeId);
 		}
 		const sprite = new PIXI.Sprite(elemType.texture);
-		sprite.position = Grid.getPixelPosForGridPos(point);
+		sprite.position = Grid.getLocalChunkPixelPosForGridPos(position);
 
-		// TODO: calc grid pos on chunk
-		this.addChild(sprite);
+		this._chunks[Project.gridPosToChunk(position.x)][Project.gridPosToChunk(position.y)].addChild(sprite);
 
-		const element = this._projectsService.allProjects.get(this.projectId).addElement(elementTypeId, point);
-
+		const element = this._projectsService.allProjects.get(this.projectId).addElement(elementTypeId, position);
 
 		const elemSprite = {element, sprite};
 		this._allElements.set(element.id, elemSprite);
@@ -154,18 +157,6 @@ export class View extends PIXI.Container {
 
 	public get projectId(): number {
 		return this._projectId;
-	}
-
-	// just for testing, until project-service works
-	private id = 0;
-	private addComponentTest(type: number, pos: PIXI.Point): Element {
-		return {
-			id: ++this.id,
-			typeId: type,
-			pos,
-			outputs: [],
-			inputs: []
-		};
 	}
 
 	public destroy() {
