@@ -50,4 +50,11 @@ export class TestModel {
 			]
 		}
 	};
+
+	public static emptyModel: ProjectModel = {
+		id: 0,
+		board: {
+			elements: []
+		}
+	};
 }

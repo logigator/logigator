@@ -34,7 +34,7 @@ export class View extends PIXI.Container {
 	private _chunks: PIXI.Container[][] = [];
 	private _gridGraphics: PIXI.Graphics[][] = [];
 
-	private _allElements: Map<number, ElementSprite> = new Map();
+	public allElements: Map<number, ElementSprite> = new Map();
 
 	private _chunksToRender: {x: number, y: number}[] = [];
 
@@ -164,7 +164,7 @@ export class View extends PIXI.Container {
 		this._chunks[Project.gridPosToChunk(element.pos.x)][Project.gridPosToChunk(element.pos.y)].addChild(sprite);
 
 		const elemSprite = {element, sprite};
-		this._allElements.set(element.id, elemSprite);
+		this.allElements.set(element.id, elemSprite);
 
 		this._viewInteractionManager.addEventListenersToNewElement(elemSprite);
 	}
@@ -187,8 +187,8 @@ export class View extends PIXI.Container {
 			case 'addWire':
 				break;
 			case 'remComp':
-				this._allElements.get(action.element.id).sprite.destroy();
-				this._allElements.delete(action.element.id);
+				this.allElements.get(action.element.id).sprite.destroy();
+				this.allElements.delete(action.element.id);
 				break;
 			case 'remWire':
 				break;

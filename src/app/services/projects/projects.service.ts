@@ -16,8 +16,8 @@ export class ProjectsService {
 	private _projectOpenedSubject = new ReplaySubject<number>(1);
 
 	constructor() {
-		const project = new Project(new ProjectState(TestModel.basicModel), 0);
-		const project2 = new Project(new ProjectState(TestModel.basicModel), 2);
+		const project = new Project(new ProjectState(TestModel.emptyModel), 0);
+		const project2 = new Project(new ProjectState(TestModel.emptyModel), 2);
 
 		this._projects.set(0, project);
 		this._projectOpenedSubject.next(0);

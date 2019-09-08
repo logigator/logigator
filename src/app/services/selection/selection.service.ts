@@ -41,6 +41,10 @@ export class SelectionService {
 	}
 
 	public selectedIds(projectId?: number): number[] {
-		return this._selectedIds.get(projectId || this.projectsService.currProject.id);
+		return this._selectedIds.get(projectId || this.projectsService.currProject.id) || [];
+	}
+
+	public clearSelection(projectId?: number) {
+		this._selectedIds.delete(projectId || this.projectsService.currProject.id);
 	}
 }
