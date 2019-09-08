@@ -4,6 +4,9 @@ import {environment} from '../../../environments/environment';
 
 export const and: ElementType = {
 	name: 'and',
+	numInputs: 2,
+	numOutputs: 1,
+	hasVariableInputs: true,
 	symbol: '&',
 	description: '',
 	texture: null,

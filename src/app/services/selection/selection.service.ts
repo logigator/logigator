@@ -14,19 +14,15 @@ export class SelectionService {
 	constructor(private projectsService: ProjectsService) { }
 
 	public selectFromRect(project: Project, start: PIXI.Point, end: PIXI.Point): number[] {
+		CollisionFunctions.correctPosOrder(start, end);
 		this._selectedIds.set(project.id, []);
 		const ids = this._selectedIds.get(project.id);
 		const possibleChunkCoords = CollisionFunctions.inRectChunks(start, end);
 		for (const chunk of project.currState.chunksFromCoords(possibleChunkCoords)) {
 			for (const elem of chunk.elements) {
-				if (elem.endPos) {
-					if (elem.pos.x < end.x && elem.endPos.x > start.x && elem.pos.y < end.y && elem.endPos.y > start.y) {
+				if (CollisionFunctions.isRectInRect(elem.pos, elem.endPos, start, end)) {
+					if (!ids.find(id => id === elem.id))
 						ids.push(elem.id);
-					}
-				} else { // TODO make endPos mandatory
-					if (elem.pos.x < end.x && elem.pos.x > start.x && elem.pos.y < end.y && elem.pos.y > start.y) {
-						ids.push(elem.id);
-					}
 				}
 			}
 		}

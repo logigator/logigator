@@ -4,6 +4,9 @@ import {environment} from '../../../environments/environment';
 
 export const not: ElementType = {
 	name: 'not',
+	numInputs: 1,
+	numOutputs: 1,
+	hasVariableInputs: false,
 	symbol: '1',
 	description: '',
 	texture: null,

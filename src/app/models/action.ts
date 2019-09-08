@@ -7,9 +7,7 @@ export type ActionType = 'addComp' |
 	'remComp' |
 	'remWire' |
 	'remText' |
-	'movComp' |
-	'movWire' |
-	'movText' |
+	'movMult' |
 	'conWire' |
 	'dcoWire' |
 	'setComp';

@@ -11,6 +11,8 @@ import {xor} from '../../models/element-types/xor';
 })
 export class ElementProviderService {
 
+	public static staticInstance: ElementProviderService;
+
 	private _elements: Map<number, ElementType> = new Map([
 		[0, wire],
 		[1, not],
@@ -21,9 +23,11 @@ export class ElementProviderService {
 
 	private _renderer: PIXI.Renderer;
 
-	constructor() { }
+	constructor() {
+		ElementProviderService.staticInstance = this;
+	}
 
-	public getComponentById(id: number): ElementType {
+	public getElementById(id: number): ElementType {
 		return this._elements.get(id);
 	}
 

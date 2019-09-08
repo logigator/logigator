@@ -91,10 +91,7 @@ export class ViewInteractionManager {
 					new PIXI.Point(this._lastMousePos.x - this._moveStartPos.x, this._lastMousePos.y - this._moveStartPos.y)
 				);
 
-				//TODO: tell project Service
-				const movePossible = false;
-
-				if (movePossible) {
+				if (this._view.projectsService.currProject.moveElementsById(this._view.selectionService.selectedIds(), movedDif)) {
 					this._view.removeChild(this._selectRect);
 					this.clearSelection();
 					delete this._moveStartPos;
@@ -167,7 +164,7 @@ export class ViewInteractionManager {
 
 	private selectInRect(start: PIXI.Point, end: PIXI.Point) {
 		this.clearSelection();
-		const selected = this._view.selectionService.selectFromRect(this._view.projectsService.currProject , start, end);
+		const selected = this._view.selectionService.selectFromRect(this._view.projectsService.currProject, start, end);
 		selected.forEach(id => {
 			this._view.allElements.get(id).sprite.tint = 0x8a8a8a;
 		});
