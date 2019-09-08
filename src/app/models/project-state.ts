@@ -69,10 +69,12 @@ export class ProjectState {
 			};
 	}
 
-	private isFreeSpace(startPos: PIXI.Point, endPos: PIXI.Point): boolean {
+	private isFreeSpace(startPos: PIXI.Point, endPos: PIXI.Point, except?: Element[]): boolean {
 		const chunks = this.chunksFromCoords(CollisionFunctions.inRectChunks(startPos, endPos));
 		for (const chunk of chunks) {
 			for (const elem of chunk.elements) {
+				if (except && except.find(e => e.id === elem.id))
+					continue;
 				if (CollisionFunctions.isRectInRect(startPos, endPos, elem.pos, elem.endPos))
 					return false;
 			}
@@ -99,14 +101,19 @@ export class ProjectState {
 		return outElem;
 	}
 
-	public moveElement(element: Element, dif: PIXI.Point): boolean {
-		if (!this.isFreeSpace(element.pos, element.endPos))
-			return false;
+	public moveElement(element: Element, dif: PIXI.Point, except?: Element[]): boolean {
 		this.removeFromChunks(element);
 		element.pos.x += dif.x;
 		element.pos.y += dif.y;
 		element.endPos.x += dif.x;
 		element.endPos.y += dif.y;
+		if (!this.isFreeSpace(element.pos, element.endPos, except)) {
+			element.pos.x -= dif.x;
+			element.pos.y -= dif.y;
+			element.endPos.x -= dif.x;
+			element.endPos.y -= dif.y;
+			return false;
+		}
 		this.loadIntoChunks(element);
 		return true;
 	}

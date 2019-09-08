@@ -151,11 +151,13 @@ export class View extends PIXI.Container {
 
 	public placeComponent(position: PIXI.Point, elementTypeId: number) {
 		const elem = this.placeComponentInModel(position, elementTypeId);
+		if (!elem)
+			return;
 		this.placeComponentOnView(elem);
 	}
 
 	private placeComponentOnView(element: Element) {
-		const elemType = this._elementProviderService.getComponentById(element.typeId);
+		const elemType = this._elementProviderService.getElementById(element.typeId);
 		if (!elemType.texture) {
 			this._elementProviderService.generateTextureForElement(element.typeId);
 		}
@@ -193,8 +195,11 @@ export class View extends PIXI.Container {
 				break;
 			case 'remWire':
 				break;
-			case 'movComp':
-			case 'movWire':
+			case 'movMult':
+				action.others.forEach(element => {
+					const elemSprite = this.allElements.get(element.id);
+					elemSprite.sprite.position = Grid.getLocalChunkPixelPosForGridPos(element.pos);
+				});
 				break;
 		}
 	}

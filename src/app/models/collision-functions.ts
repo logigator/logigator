@@ -32,8 +32,8 @@ export abstract class CollisionFunctions {
 	public static inRectChunks(_startPos: PIXI.Point, _endPos: PIXI.Point): {x: number, y: number}[] {
 		const startPos = _startPos.clone();
 		const endPos = _endPos.clone();
-		const out: {x: number, y: number}[] = [];
 		CollisionFunctions.correctPosOrder(startPos, endPos);
+		const out: {x: number, y: number}[] = [];
 		const startChunkX = CollisionFunctions.gridPosToChunk(startPos.x);
 		const startChunkY = CollisionFunctions.gridPosToChunk(startPos.y);
 		const endChunkX = CollisionFunctions.gridPosToChunk(endPos.x);
@@ -46,8 +46,8 @@ export abstract class CollisionFunctions {
 	}
 
 	public static isRectInRect(startPos0: PIXI.Point, endPos0: PIXI.Point, startPos1: PIXI.Point, endPos1: PIXI.Point): boolean {
-		return startPos0.x < endPos1.x && startPos0.y < endPos1.y &&
-			endPos0.x > startPos1.x && endPos0.y > startPos1.y;
+		return startPos0.x <= endPos1.x && startPos0.y <= endPos1.y &&
+			endPos0.x >= startPos1.x && endPos0.y >= startPos1.y;
 	}
 
 	public static correctPosOrder(startPos: PIXI.Point, endPos: PIXI.Point): void {

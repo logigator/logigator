@@ -26,8 +26,8 @@ export class TestModel {
 					outputs: [
 						3
 					],
-					pos: new PIXI.Point(10, 10),
-					endPos: new PIXI.Point(30, 10)
+					pos: new PIXI.Point(30, 30),
+					endPos: new PIXI.Point(50, 30)
 				},
 				{
 					id: 3,
@@ -38,8 +38,8 @@ export class TestModel {
 					outputs: [
 						2
 					],
-					pos: new PIXI.Point(20, 5),
-					endPos: new PIXI.Point(20, 15)
+					pos: new PIXI.Point(40, 25),
+					endPos: new PIXI.Point(40, 35)
 				},
 				{
 					id: 2,

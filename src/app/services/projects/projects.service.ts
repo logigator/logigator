@@ -10,12 +10,15 @@ import {TestModel} from '../../models/tests/test-model';
 })
 export class ProjectsService {
 
+	public static staticInstance: ProjectsService;
+
 	private _projects: Map<number, Project> = new Map<number, Project>();
 	private _currProject: Project;
 
 	private _projectOpenedSubject = new ReplaySubject<number>(1);
 
 	constructor() {
+		ProjectsService.staticInstance = this;
 		const project = new Project(new ProjectState(), 0);
 		const project2 = new Project(new ProjectState(TestModel.basicModel), 2);
 
@@ -28,6 +31,7 @@ export class ProjectsService {
 			this._projects.set(2, project2);
 			this._projectOpenedSubject.next(2);
 			this._currProject = project2;
+			this._currProject.getOpenActions();
 		}, 1000);
 	}
 

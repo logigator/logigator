@@ -4,6 +4,9 @@ import {environment} from '../../../environments/environment';
 
 export const xor: ElementType = {
 	name: 'xor',
+	numInputs: 2,
+	numOutputs: 1,
+	hasVariableInputs: false,
 	symbol: '=1',
 	description: '',
 	texture: null,

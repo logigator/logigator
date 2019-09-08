@@ -6,6 +6,7 @@ import {Observable, Subject} from 'rxjs';
 import * as PIXI from 'pixi.js';
 import {environment} from '../../environments/environment';
 import {CollisionFunctions} from './collision-functions';
+import {ElementProviderService} from '../services/component-provider/element-provider.service';
 
 export class Project {
 
@@ -16,9 +17,7 @@ export class Project {
 		['remComp', ['addComp']],
 		['remWire', ['addWire']],
 		['remText', ['addText']],
-		['movComp', ['movComp']],
-		['movWire', ['movWire']],
-		['movText', ['movText']],
+		['movMult', ['movMult']],
 		['conWire', ['dcoWire']],
 		['dcoWire', ['conWire']],
 		['setComp', ['setComp']]
@@ -62,8 +61,7 @@ export class Project {
 			case 'remWire':
 				projectState.removeElement(action.element.id);
 				break;
-			case 'movComp':
-			case 'movWire':
+			case 'movMult':
 				projectState.moveElement(action.element, action.pos);
 				break;
 			case 'conWire':
@@ -83,7 +81,7 @@ export class Project {
 		for (const revAction of revActions) {
 			revAction.pos = action.pos ? action.pos.clone() : undefined;
 			revAction.endPos = action.endPos ? action.endPos.clone() : undefined;
-			if (revAction.name === 'movComp' || revAction.name === 'movWire') {
+			if (revAction.name === 'movMult') {
 				revAction.pos.x *= -1;
 				revAction.pos.y *= -1;
 			}
@@ -119,6 +117,7 @@ export class Project {
 				element
 			});
 		}
+		this.changeSubject.next(out);
 		return out;
 	}
 
@@ -136,6 +135,11 @@ export class Project {
 	}
 
 	public addElement(typeId: number, pos: PIXI.Point, endPos?: PIXI.Point): Element {
+		if (!endPos) {
+			const type = ElementProviderService.staticInstance.getElementById(typeId);
+			endPos = new PIXI.Point(pos.x + environment.componentWidth,
+									pos.y + Math.max(type.numInputs, type.numOutputs));
+		}
 		CollisionFunctions.correctPosOrder(pos, endPos);
 		const elem = {
 			id: -1,
@@ -170,7 +174,7 @@ export class Project {
 		if (!this.currState.moveElement(elem, dif))
 			return false;
 		const action: Action = {
-			name: elem.typeId === 0 ? 'movWire' : 'movComp',
+			name: 'movMult',
 			element: elem,
 			pos: dif
 		};
@@ -179,8 +183,28 @@ export class Project {
 		return true;
 	}
 
-	public moveElementById(id: number, dif: PIXI.Point): void {
-		this.moveElement(this._currState.getElementById(id), dif);
+	public moveElementById(id: number, dif: PIXI.Point): boolean {
+		return this.moveElement(this._currState.getElementById(id), dif);
+	}
+
+	public moveElementsById(ids: number[], dif: PIXI.Point): boolean {
+		const elements: Element[] = [];
+		for (const id of ids) {
+			const elem = this._currState.getElementById(id);
+			elements.push(elem);
+		}
+		for (const elem of elements) {
+			if (!this.currState.moveElement(elem, dif, elements))
+				return false;
+		}
+		const action: Action = {
+			name: 'movMult',
+			others: elements,
+			pos: dif
+		};
+		this.newState(action);
+		this.changeSubject.next([action]);
+		return true;
 	}
 
 	public connectWires(pos: PIXI.Point): void {
