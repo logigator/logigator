@@ -169,11 +169,13 @@ export class Project {
 	public moveElement(elem: Element, dif: PIXI.Point): boolean {
 		if (!this.currState.moveElement(elem, dif))
 			return false;
-		this.newState({
+		const action: Action = {
 			name: elem.typeId === 0 ? 'movWire' : 'movComp',
 			element: elem,
 			pos: dif
-		});
+		};
+		this.newState(action);
+		this.changeSubject.next([action]);
 		return true;
 	}
 

@@ -42,7 +42,8 @@ export class ProjectState {
 		const chunkCoords = CollisionFunctions.inRectChunks(element.pos, element.endPos);
 		for (const coord of chunkCoords) {
 			this.createChunk(coord.x, coord.y);
-			this._chunks[coord.x][coord.y].elements.push(element);
+			if (!this._chunks[coord.x][coord.y].elements.find(e => e.id === element.id))
+				this._chunks[coord.x][coord.y].elements.push(element);
 		}
 	}
 
@@ -62,9 +63,10 @@ export class ProjectState {
 		for (let i = 0; i <= y; i++)
 			if (!this._chunks[x][y] && this._chunks[x][y] !== undefined)
 				this._chunks[x].push(undefined);
-		this._chunks[x][y] = {
-			elements: []
-		};
+		if (!this._chunks[x][y])
+			this._chunks[x][y] = {
+				elements: []
+			};
 	}
 
 	private isFreeSpace(startPos: PIXI.Point, endPos: PIXI.Point): boolean {
@@ -97,13 +99,15 @@ export class ProjectState {
 		return outElem;
 	}
 
-	public moveElement(elem: Element, dif: PIXI.Point): boolean {
-		if (!this.isFreeSpace(elem.pos, elem.endPos))
+	public moveElement(element: Element, dif: PIXI.Point): boolean {
+		if (!this.isFreeSpace(element.pos, element.endPos))
 			return false;
-		elem.pos.x += dif.x;
-		elem.pos.y += dif.y;
-		elem.endPos.x += dif.x;
-		elem.endPos.y += dif.y;
+		this.removeFromChunks(element);
+		element.pos.x += dif.x;
+		element.pos.y += dif.y;
+		element.endPos.x += dif.x;
+		element.endPos.y += dif.y;
+		this.loadIntoChunks(element);
 		return true;
 	}
 
