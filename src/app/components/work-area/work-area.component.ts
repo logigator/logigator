@@ -4,11 +4,9 @@ import {View} from './view';
 import {fromEvent, Subject} from 'rxjs';
 import {takeUntil} from 'rxjs/operators';
 import {Grid} from './grid';
-import {ElementProviderService} from '../../services/component-provider/element-provider.service';
+import {ElementProviderService} from '../../services/element-provider/element-provider.service';
 import {ProjectsService} from '../../services/projects/projects.service';
-import {WorkModeService} from '../../services/work-mode/work-mode.service';
 import {Project} from '../../models/project';
-import {SelectionService} from '../../services/selection/selection.service';
 
 @Component({
 	selector: 'app-work-area',
@@ -34,9 +32,7 @@ export class WorkAreaComponent implements OnInit, OnDestroy {
 		private renderer2: Renderer2,
 		private ngZone: NgZone,
 		private componentProviderService: ElementProviderService,
-		private projectsService: ProjectsService,
-		private workModeService: WorkModeService,
-		private selectionService: SelectionService
+		private projectsService: ProjectsService
 	) { }
 
 	ngOnInit() {
@@ -84,14 +80,7 @@ export class WorkAreaComponent implements OnInit, OnDestroy {
 	}
 
 	private openProject(projectId: number) {
-		const newView = View.createEmptyView(
-			projectId,
-			this._pixiCanvasContainer.nativeElement,
-			this.projectsService,
-			this.componentProviderService,
-			this.workModeService,
-			this.selectionService
-		);
+		const newView = new View(projectId, this._pixiCanvasContainer.nativeElement);
 		this._allViews.set(projectId, newView);
 		this.activeView = newView;
 	}

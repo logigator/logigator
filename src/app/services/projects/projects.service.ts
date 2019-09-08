@@ -31,7 +31,6 @@ export class ProjectsService {
 			this._projects.set(2, project2);
 			this._projectOpenedSubject.next(2);
 			this._currProject = project2;
-			this._currProject.getOpenActions();
 		}, 1000);
 	}
 

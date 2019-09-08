@@ -6,7 +6,7 @@ import {Observable, Subject} from 'rxjs';
 import * as PIXI from 'pixi.js';
 import {environment} from '../../environments/environment';
 import {CollisionFunctions} from './collision-functions';
-import {ElementProviderService} from '../services/component-provider/element-provider.service';
+import {ElementProviderService} from '../services/element-provider/element-provider.service';
 
 export class Project {
 
@@ -117,7 +117,6 @@ export class Project {
 				element
 			});
 		}
-		this.changeSubject.next(out);
 		return out;
 	}
 

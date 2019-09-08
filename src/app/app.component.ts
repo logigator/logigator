@@ -1,4 +1,5 @@
 import {Component, NgZone, OnInit, Renderer2} from '@angular/core';
+import {SelectionService} from './services/selection/selection.service';
 
 @Component({
 	selector: 'app-root',
@@ -7,7 +8,7 @@ import {Component, NgZone, OnInit, Renderer2} from '@angular/core';
 })
 export class AppComponent implements OnInit {
 
-	constructor(private renderer2: Renderer2, private ngZone: NgZone) {}
+	constructor(private renderer2: Renderer2, private ngZone: NgZone, private selectionService: SelectionService) {}
 
 	ngOnInit(): void {
 		this.ngZone.runOutsideAngular(() => {

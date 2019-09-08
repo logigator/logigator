@@ -4,13 +4,10 @@ import {ZoomPan} from './zoom-pan';
 import {Grid} from './grid';
 import {ElementSprite} from '../../models/element-sprite';
 import {ProjectsService} from '../../services/projects/projects.service';
-import {ElementProviderService} from '../../services/component-provider/element-provider.service';
-import {WorkModeService} from '../../services/work-mode/work-mode.service';
+import {ElementProviderService} from '../../services/element-provider/element-provider.service';
 import {Element} from '../../models/element';
 import {ViewInteractionManager} from './view-interaction-manager';
-import {Project} from '../../models/project';
 import {environment} from '../../../environments/environment';
-import {SelectionService} from '../../services/selection/selection.service';
 import {Subscription} from 'rxjs';
 import {Action} from '../../models/action';
 import {CollisionFunctions} from '../../models/collision-functions';
@@ -27,11 +24,6 @@ export class View extends PIXI.Container {
 
 	private readonly _htmlContainer: HTMLElement;
 
-	public readonly projectsService: ProjectsService;
-	private readonly _elementProviderService: ElementProviderService;
-	public readonly workModeService: WorkModeService;
-	public readonly selectionService: SelectionService;
-
 	private _chunks: PIXI.Container[][] = [];
 	private _gridGraphics: PIXI.Graphics[][] = [];
 
@@ -41,21 +33,10 @@ export class View extends PIXI.Container {
 
 	private _notificationsFromProjectServiceSubscription: Subscription;
 
-	constructor(
-		projectId: number,
-		htmlContainer: HTMLElement,
-		projectsService: ProjectsService,
-		compProviderService: ElementProviderService,
-		workModeService: WorkModeService,
-		selectionService: SelectionService
-	) {
+	constructor(projectId: number, htmlContainer: HTMLElement) {
 		super();
 		this._projectId = projectId;
 		this._htmlContainer = htmlContainer;
-		this.projectsService = projectsService;
-		this._elementProviderService = compProviderService;
-		this.workModeService = workModeService;
-		this.selectionService = selectionService;
 		this.interactive = true;
 
 		this._zoomPan = new ZoomPan(this);
@@ -63,37 +44,23 @@ export class View extends PIXI.Container {
 		this._viewInteractionManager = new ViewInteractionManager(this);
 
 		this._notificationsFromProjectServiceSubscription =
-			this.projectsService.subscribeToChanges(this.projectId)
+			ProjectsService.staticInstance.subscribeToChanges(this.projectId)
 				.subscribe((actions: Action[]) => this.applyActionsToView(actions));
 
+		this.applyActionsToView(
+			ProjectsService.staticInstance.allProjects.get(this.projectId).getOpenActions()
+		);
 		this.updateChunks();
-	}
-
-	public static createEmptyView(
-		projectId: number,
-		htmlContainer: HTMLElement,
-		projectsService: ProjectsService,
-		compProviderService: ElementProviderService,
-		workModeService: WorkModeService,
-		selectionService: SelectionService
-	): View {
-		return new View(projectId, htmlContainer, projectsService, compProviderService, workModeService, selectionService);
 	}
 
 	private updateChunks() {
 		const currentlyOnScreen = this._zoomPan.isOnScreen(this._htmlContainer.offsetHeight, this._htmlContainer.offsetWidth);
-		const chunksToRender = this.projectsService.currProject.chunksToRender(
+		const chunksToRender = ProjectsService.staticInstance.currProject.chunksToRender(
 			Grid.getGridPosForPixelPos(currentlyOnScreen.start),
 			Grid.getGridPosForPixelPos(currentlyOnScreen.end)
 		);
 		chunksToRender.forEach(chunk => {
-			if (this.createChunk(chunk.x, chunk.y)) {
-				this._chunks[chunk.x][chunk.y].position = Grid.getPixelPosForGridPos(
-					new PIXI.Point(chunk.x * environment.chunkSize, chunk.y * environment.chunkSize)
-				);
-				this.addChild(this._chunks[chunk.x][chunk.y]);
-				this._chunks[chunk.x][chunk.y].addChild(this._gridGraphics[chunk.x][chunk.y]);
-			} else {
+			if (!this.createChunkIfNeeded(chunk.x, chunk.y)) {
 				this._gridGraphics[chunk.x][chunk.y].destroy();
 				this._gridGraphics[chunk.x][chunk.y] = Grid.generateGridGraphics(this._zoomPan.currentScale);
 				this._chunks[chunk.x][chunk.y].addChild(this._gridGraphics[chunk.x][chunk.y]);
@@ -130,6 +97,18 @@ export class View extends PIXI.Container {
 		return true;
 	}
 
+	private createChunkIfNeeded(chunkX, chunkY): boolean {
+		if (this.createChunk(chunkX, chunkY)) {
+			this._chunks[chunkX][chunkY].position = Grid.getPixelPosForGridPos(
+				new PIXI.Point(chunkX * environment.chunkSize, chunkY * environment.chunkSize)
+			);
+			this.addChild(this._chunks[chunkX][chunkY]);
+			this._chunks[chunkX][chunkY].addChild(this._gridGraphics[chunkX][chunkY]);
+			return true;
+		}
+		return false;
+	}
+
 	public updateZoomPan() {
 		let needsChunkUpdate = false;
 		if (this._zoomPanInputManager.isDragging) {
@@ -157,14 +136,18 @@ export class View extends PIXI.Container {
 	}
 
 	private placeComponentOnView(element: Element) {
-		const elemType = this._elementProviderService.getElementById(element.typeId);
+		const elemType = ElementProviderService.staticInstance.getElementById(element.typeId);
 		if (!elemType.texture) {
-			this._elementProviderService.generateTextureForElement(element.typeId);
+			ElementProviderService.staticInstance.generateTextureForElement(element.typeId);
 		}
 		const sprite = new PIXI.Sprite(elemType.texture);
 		sprite.position = Grid.getLocalChunkPixelPosForGridPos(element.pos);
 
-		this._chunks[CollisionFunctions.gridPosToChunk(element.pos.x)][CollisionFunctions.gridPosToChunk(element.pos.y)].addChild(sprite);
+		const chunkX = CollisionFunctions.gridPosToChunk(element.pos.x);
+		const chunkY = CollisionFunctions.gridPosToChunk(element.pos.y);
+
+		this.createChunkIfNeeded(chunkX, chunkY);
+		this._chunks[chunkX][chunkY].addChild(sprite);
 
 		const elemSprite = {element, sprite};
 		this.allElements.set(element.id, elemSprite);
@@ -173,7 +156,7 @@ export class View extends PIXI.Container {
 	}
 
 	private placeComponentInModel(position: PIXI.Point, elementTypeId: number): Element {
-		return this.projectsService.allProjects.get(this.projectId).addElement(elementTypeId, position);
+		return ProjectsService.staticInstance.allProjects.get(this.projectId).addElement(elementTypeId, position);
 	}
 
 	private applyActionsToView(actions: Action[]) {
@@ -196,12 +179,23 @@ export class View extends PIXI.Container {
 			case 'remWire':
 				break;
 			case 'movMult':
-				action.others.forEach(element => {
-					const elemSprite = this.allElements.get(element.id);
-					elemSprite.sprite.position = Grid.getLocalChunkPixelPosForGridPos(element.pos);
-				});
+				this.moveMultipleAction(action);
 				break;
 		}
+	}
+
+	private moveMultipleAction(action: Action) {
+		action.others.forEach(element => {
+			const elemSprite = this.allElements.get(element.id);
+			const chunkX = CollisionFunctions.gridPosToChunk(element.pos.x);
+			const chunkY = CollisionFunctions.gridPosToChunk(element.pos.y);
+			this.createChunkIfNeeded(chunkX, chunkY);
+			if (elemSprite.sprite.parent !== this._chunks[chunkX][chunkY]) {
+				elemSprite.sprite.parent.removeChild(elemSprite.sprite);
+				this._chunks[chunkX][chunkY].addChild(elemSprite.sprite);
+			}
+			elemSprite.sprite.position = Grid.getLocalChunkPixelPosForGridPos(element.pos);
+		});
 	}
 
 	public get projectId(): number {

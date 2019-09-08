@@ -1,5 +1,5 @@
 import {Component} from '@angular/core';
-import {ElementProviderService} from '../../services/component-provider/element-provider.service';
+import {ElementProviderService} from '../../services/element-provider/element-provider.service';
 import {WorkModeService} from '../../services/work-mode/work-mode.service';
 import {WorkMode} from '../../models/work-modes';
 import {ElementType} from '../../models/element-type';

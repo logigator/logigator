@@ -9,9 +9,13 @@ import {CollisionFunctions} from '../../models/collision-functions';
 })
 export class SelectionService {
 
+	public static staticInstance: SelectionService;
+
 	private _selectedIds: Map<number, number[]> = new Map<number, number[]>();
 
-	constructor(private projectsService: ProjectsService) { }
+	constructor(private projectsService: ProjectsService) {
+		SelectionService.staticInstance = this;
+	}
 
 	public selectFromRect(project: Project, start: PIXI.Point, end: PIXI.Point): number[] {
 		CollisionFunctions.correctPosOrder(start, end);

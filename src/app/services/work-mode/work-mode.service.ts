@@ -6,10 +6,14 @@ import {WorkMode} from '../../models/work-modes';
 })
 export class WorkModeService {
 
+	public static staticInstance: WorkModeService;
+
 	private _currentWorkMode: WorkMode = 'select';
 	private _currentComponentTypeToBuild: number = undefined;
 
-	constructor() { }
+	constructor() {
+		WorkModeService.staticInstance = this;
+	}
 
 	public setWorkMode(mode: WorkMode, componentTypeToBuild?: number) {
 		this._currentWorkMode = mode;
