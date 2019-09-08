@@ -73,10 +73,23 @@ export class Project {
 		return wire.pos.x === wire.endPos.x;
 	}
 
+	public static correctPosOrder(startPos: PIXI.Point, endPos: PIXI.Point): void {
+		if (startPos.x > endPos.x) {
+			const startX = startPos.x;
+			startPos.x = endPos.x;
+			endPos.x = startX;
+		}
+		if (startPos.y > endPos.y) {
+			const startY = startPos.y;
+			startPos.y = endPos.y;
+			endPos.y = startY;
+		}
+	}
 
 	// TODO auslagern
 	public static inRectChunks(startPos: PIXI.Point, endPos: PIXI.Point): {x: number, y: number}[] {
 		const out: {x: number, y: number}[] = [];
+		Project.correctPosOrder(startPos, endPos);
 		const startChunkX = Project.gridPosToChunk(startPos.x);
 		const startChunkY = Project.gridPosToChunk(startPos.y);
 		const endChunkX = Project.gridPosToChunk(endPos.x);
@@ -88,7 +101,6 @@ export class Project {
 		return out;
 	}
 
-	// TODO auslagern
 	public static gridPosToChunk(pos: number): number {
 		return Math.floor(pos / environment.chunkSize);
 	}
