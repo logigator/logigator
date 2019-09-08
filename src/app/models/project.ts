@@ -5,6 +5,7 @@ import {Chunk} from './chunk';
 import {Observable, Subject} from 'rxjs';
 import * as PIXI from 'pixi.js';
 import {environment} from '../../environments/environment';
+import {CollisionFunctions} from './collision-functions';
 
 export class Project {
 
@@ -45,66 +46,6 @@ export class Project {
 		this.changeSubject = new Subject<Action[]>();
 	}
 
-	// TODO auslagern
-	public static isPointOnWire(wire: Element, point: PIXI.Point): boolean {
-		return point.y === wire.pos.y && point.y === wire.endPos.y &&
-			(point.x >= wire.pos.x && point.x <= wire.endPos.x || point.x <= wire.pos.x && point.x >= wire.endPos.x)
-			||
-			point.x === wire.pos.x && point.x === wire.endPos.x &&
-			(point.y >= wire.pos.y && point.y <= wire.endPos.y || point.y <= wire.pos.y && point.y >= wire.endPos.y);
-	}
-
-	// TODO auslagern
-	public static isPointOnWireNoEdge(wire: Element, point: PIXI.Point): boolean {
-		return point.y === wire.pos.y && point.y === wire.endPos.y &&
-			(point.x > wire.pos.x && point.x < wire.endPos.x || point.x < wire.pos.x && point.x > wire.endPos.x)
-			||
-			point.x === wire.pos.x && point.x === wire.endPos.x &&
-			(point.y > wire.pos.y && point.y < wire.endPos.y || point.y < wire.pos.y && point.y > wire.endPos.y);
-	}
-
-	// TODO auslagern
-	public static isHorizontal(wire: Element): boolean {
-		return wire.pos.y === wire.endPos.y;
-	}
-
-	// TODO auslagern
-	public static isVertical(wire: Element): boolean {
-		return wire.pos.x === wire.endPos.x;
-	}
-
-	public static correctPosOrder(startPos: PIXI.Point, endPos: PIXI.Point): void {
-		if (startPos.x > endPos.x) {
-			const startX = startPos.x;
-			startPos.x = endPos.x;
-			endPos.x = startX;
-		}
-		if (startPos.y > endPos.y) {
-			const startY = startPos.y;
-			startPos.y = endPos.y;
-			endPos.y = startY;
-		}
-	}
-
-	// TODO auslagern
-	public static inRectChunks(startPos: PIXI.Point, endPos: PIXI.Point): {x: number, y: number}[] {
-		const out: {x: number, y: number}[] = [];
-		Project.correctPosOrder(startPos, endPos);
-		const startChunkX = Project.gridPosToChunk(startPos.x);
-		const startChunkY = Project.gridPosToChunk(startPos.y);
-		const endChunkX = Project.gridPosToChunk(endPos.x);
-		const endChunkY = Project.gridPosToChunk(endPos.y);
-		for (let x = startChunkX; x <= endChunkX; x++)
-			for (let y = startChunkY; y <= endChunkY; y++)
-				// if ((x < endChunkX || endPos.x % environment.chunkSize !== 0) && (y < endChunkY || endPos.y % environment.chunkSize !== 0))
-				out.push({x, y});
-		return out;
-	}
-
-	public static gridPosToChunk(pos: number): number {
-		return Math.floor(pos / environment.chunkSize);
-	}
-
 	protected static applyActions(projectState: ProjectState, actions: Action[]): void {
 		for (const action of actions) {
 			Project.applyAction(projectState, action);
@@ -136,7 +77,6 @@ export class Project {
 		}
 	}
 
-	// TODO make the complicated ones like connectWire
 	protected static reverseAction(action: Action): Action[] {
 		const revActions = [{...action}];
 		revActions[0].name = Project.REVERSE_ACTION.get(action.name)[0];
@@ -150,7 +90,6 @@ export class Project {
 		}
 		return revActions;
 	}
-
 
 	private static connectWiresToActions(oldWires, newWires): Action[] {
 		const outActions: Action[] = [];
@@ -184,11 +123,11 @@ export class Project {
 	}
 
 	public chunksToRender(start: PIXI.Point, end: PIXI.Point): {x: number, y: number}[] {
-		const out = Project.inRectChunks(start, end);
+		const out = CollisionFunctions.inRectChunks(start, end);
 		for (const chunk of this._currState.chunksFromCoords(out)) {
 			for (const elem of chunk.elements) {
-				const chunkX = Project.gridPosToChunk(elem.pos.x);
-				const chunkY = Project.gridPosToChunk(elem.pos.y);
+				const chunkX = CollisionFunctions.gridPosToChunk(elem.pos.x);
+				const chunkY = CollisionFunctions.gridPosToChunk(elem.pos.y);
 				if (!out.find(c => c.x === chunkX && c.y === chunkY))
 					out.push({x: chunkX, y: chunkY});
 			}
@@ -197,6 +136,7 @@ export class Project {
 	}
 
 	public addElement(typeId: number, pos: PIXI.Point, endPos?: PIXI.Point): Element {
+		CollisionFunctions.correctPosOrder(pos, endPos);
 		const elem = {
 			id: -1,
 			typeId,
@@ -205,7 +145,8 @@ export class Project {
 			pos,
 			endPos
 		};
-		this._currState.addElement(elem);
+		if (!this._currState.addElement(elem))
+			return null;
 		this.newState({
 			name: elem.typeId === 0 ? 'addWire' : 'addComp',
 			element: elem
@@ -225,13 +166,17 @@ export class Project {
 		});
 	}
 
-	public moveElement(elem: Element, dif: PIXI.Point): void {
-		this.currState.moveElement(elem, dif);
-		this.newState({
+	public moveElement(elem: Element, dif: PIXI.Point): boolean {
+		if (!this.currState.moveElement(elem, dif))
+			return false;
+		const action: Action = {
 			name: elem.typeId === 0 ? 'movWire' : 'movComp',
 			element: elem,
 			pos: dif
-		});
+		};
+		this.newState(action);
+		this.changeSubject.next([action]);
+		return true;
 	}
 
 	public moveElementById(id: number, dif: PIXI.Point): void {

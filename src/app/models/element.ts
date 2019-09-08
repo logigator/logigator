@@ -5,5 +5,5 @@ export interface Element {
 	outputs: number[];
 
 	pos: PIXI.Point;
-	endPos?: PIXI.Point;
+	endPos: PIXI.Point;
 }
