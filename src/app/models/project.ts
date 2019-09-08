@@ -114,7 +114,12 @@ export class Project {
 				projectState.moveElement(action.element, action.pos);
 				break;
 			case 'conWire':
-				projectState.connectWires(action.element, action.element1, action.pos);
+				const wiresOnPointCon = projectState.wiresOnPoint(action.pos);
+				projectState.connectWires(wiresOnPointCon[0], wiresOnPointCon[1], action.pos);
+				break;
+			case 'dcoWire':
+				const wiresOnPointDco = projectState.wiresOnPoint(action.pos);
+				projectState.disconnectWires(wiresOnPointDco);
 				break;
 		}
 	}
@@ -129,8 +134,6 @@ export class Project {
 			if (revAction.name === 'movComp' || revAction.name === 'movWire') {
 				revAction.pos.x *= -1;
 				revAction.pos.y *= -1;
-			} else if (revAction.name === 'conWire') {
-				// TODO
 			}
 		}
 		return revActions;
@@ -138,16 +141,13 @@ export class Project {
 
 
 	private static connectWiresToActions(oldWires, newWires): Action[] {
-		const outActions: Action[] = [
-			{
+		const outActions: Action[] = [];
+		for (const oldWire of oldWires) {
+			outActions.push({
 				name: 'remComp',
-				element: oldWires[0]
-			},
-			{
-				name: 'remComp',
-				element: oldWires[1]
-			}
-		];
+				element: oldWire
+			});
+		}
 		for (const newWire of newWires) {
 			outActions.push({
 				name: 'addComp',
@@ -227,37 +227,37 @@ export class Project {
 	}
 
 	public connectWires(pos: PIXI.Point): void {
-		const wiresToConnect = this.wiresOnPoint(pos);
+		const wiresToConnect = this._currState.wiresOnPoint(pos);
 		if (wiresToConnect.length !== 2) {
-			console.log('tf you doin?');
+			console.log('tf you doin while connecting?');
 			console.log(wiresToConnect);
 			return;
 		}
 		const newWires = this.currState.connectWires(wiresToConnect[0], wiresToConnect[1], pos);
 		this.newState({
 			name: 'conWire',
-			element: wiresToConnect[0],
-			element1: wiresToConnect[1],
 			pos
 		});
 		this.changeSubject.next(Project.connectWiresToActions(wiresToConnect, newWires));
 	}
 
-	private wiresOnPoint(pos: PIXI.Point): Element[] {
-		const chunkX = Project.gridPosToChunk(pos.x);
-		const chunkY = Project.gridPosToChunk(pos.y);
-		const outWires: Element[] = [];
-		for (const elem of this.getChunks()[chunkX][chunkY].elements) {
-			if (elem.typeId === 0 && Project.isPointOnWire(elem, pos))
-				outWires.push(elem);
+	public disconnectWires(pos: PIXI.Point): void {
+		const wiresOnPoint = this._currState.wiresOnPoint(pos);
+		if (wiresOnPoint.length !== 4) {
+			console.log('tf you doin while disconnecting?');
+			console.log(wiresOnPoint);
+			return;
 		}
-		return outWires;
+		const newWires = this._currState.disconnectWires(wiresOnPoint);
+		this.newState({
+			name: 'dcoWire',
+			pos
+		});
+		this.changeSubject.next(Project.connectWiresToActions(wiresOnPoint, newWires));
 	}
 
 	private newState(action: Action): void {
-		// Project.applyAction(this._currState, action);
 		if (this._currActionPointer >= this.MAX_ACTIONS) {
-			// Project.applyAction(this._oldState, this._actions[0]);
 			this._actions.shift();
 		} else {
 			this._currActionPointer++;

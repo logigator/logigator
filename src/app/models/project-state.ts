@@ -67,6 +67,7 @@ export class ProjectState {
 	}
 
 	public addElement(elem: Element, id?: number): Element {
+		// TODO check if something is there
 		elem.id = id || this.getNextId();
 		this._model.board.elements.push(elem);
 		this.loadIntoChunks(elem);
@@ -84,6 +85,7 @@ export class ProjectState {
 	}
 
 	public moveElement(elem: Element, dif: PIXI.Point): void {
+		// TODO check if something is there
 		elem.pos.x += dif.x;
 		elem.pos.y += dif.y;
 	}
@@ -107,6 +109,21 @@ export class ProjectState {
 		wire.endPos = pos;
 		this.addElement(newWire);
 		return [wire, newWire];
+	}
+
+	public disconnectWires(wires: Element[]): Element[] {
+		const outWires: Element[] = [];
+		for (const wire0 of wires) {
+			for (const wire1 of wires) {
+				if (wire0 === wire1)
+					continue;
+				const merged = this.mergeWires(wire0, wire1);
+				if (!merged)
+					continue;
+				outWires.push(merged);
+			}
+		}
+		return outWires;
 	}
 
 	public mergeWires(wire0: Element, wire1: Element): Element {
@@ -138,6 +155,17 @@ export class ProjectState {
 		this.removeElement(wire1.id);
 		this.addElement(newElem, newElem.id);
 		return newElem;
+	}
+
+	public wiresOnPoint(pos: PIXI.Point): Element[] {
+		const chunkX = Project.gridPosToChunk(pos.x);
+		const chunkY = Project.gridPosToChunk(pos.y);
+		const outWires: Element[] = [];
+		for (const elem of this._chunks[chunkX][chunkY].elements) {
+			if (elem.typeId === 0 && Project.isPointOnWire(elem, pos))
+				outWires.push(elem);
+		}
+		return outWires;
 	}
 
 	public getElementById(elemId: number): Element {
