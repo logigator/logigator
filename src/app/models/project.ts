@@ -18,7 +18,8 @@ export class Project {
 		['movComp', ['movComp']],
 		['movWire', ['movWire']],
 		['movText', ['movText']],
-		['conWire', ['remWire']],
+		['conWire', ['dcoWire']],
+		['dcoWire', ['conWire']],
 		['setComp', ['setComp']]
 	]);
 
@@ -61,6 +62,17 @@ export class Project {
 			point.x === wire.pos.x && point.x === wire.endPos.x &&
 			(point.y > wire.pos.y && point.y < wire.endPos.y || point.y < wire.pos.y && point.y > wire.endPos.y);
 	}
+
+	// TODO auslagern
+	public static isHorizontal(wire: Element): boolean {
+		return wire.pos.y === wire.endPos.y;
+	}
+
+	// TODO auslagern
+	public static isVertical(wire: Element): boolean {
+		return wire.pos.x === wire.endPos.x;
+	}
+
 
 	// TODO auslagern
 	public static inRectChunks(startPos: PIXI.Point, endPos: PIXI.Point): {x: number, y: number}[] {
@@ -117,6 +129,8 @@ export class Project {
 			if (revAction.name === 'movComp' || revAction.name === 'movWire') {
 				revAction.pos.x *= -1;
 				revAction.pos.y *= -1;
+			} else if (revAction.name === 'conWire') {
+				// TODO
 			}
 		}
 		return revActions;
@@ -216,6 +230,7 @@ export class Project {
 		const wiresToConnect = this.wiresOnPoint(pos);
 		if (wiresToConnect.length !== 2) {
 			console.log('tf you doin?');
+			console.log(wiresToConnect);
 			return;
 		}
 		const newWires = this.currState.connectWires(wiresToConnect[0], wiresToConnect[1], pos);

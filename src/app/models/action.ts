@@ -10,7 +10,8 @@ export type ActionType = 'addComp' |
 	'movComp' |
 	'movWire' |
 	'movText' |
-	'conWire' |	// TODO connect Wire
+	'conWire' |
+	'dcoWire' |
 	'setComp';
 
 export interface Action {

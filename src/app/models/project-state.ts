@@ -38,10 +38,11 @@ export class ProjectState {
 	}
 
 	public loadIntoChunks(element: Element): void {
-		const chunkX = Project.gridPosToChunk(element.pos.x);
-		const chunkY = Project.gridPosToChunk(element.pos.y);
-		this.createChunk(chunkX, chunkY);
-		this._chunks[chunkX][chunkY].elements.push(element);
+		const chunkCoords = Project.inRectChunks(element.pos, element.endPos || element.pos);
+		for (const coord of chunkCoords) {
+			this.createChunk(coord.x, coord.y);
+			this._chunks[coord.x][coord.y].elements.push(element);
+		}
 	}
 
 	public removeFromChunks(element: Element): void {
@@ -106,6 +107,37 @@ export class ProjectState {
 		wire.endPos = pos;
 		this.addElement(newWire);
 		return [wire, newWire];
+	}
+
+	public mergeWires(wire0: Element, wire1: Element): Element {
+		if (!(Project.isPointOnWire(wire0, wire1.pos) || Project.isPointOnWire(wire0, wire1.endPos))) {
+			return null;
+		}
+		const newElem: Element = {
+			id: wire0.id,
+			typeId: 0,
+			inputs: [],
+			outputs: [],
+			pos: undefined,
+			endPos: undefined
+		};
+		if (Project.isVertical(wire0) && Project.isVertical(wire1) && wire0.pos.x === wire1.pos.x) {
+			const start = Math.min(wire0.pos.y, wire0.endPos.y, wire1.pos.y, wire1.endPos.y);
+			const end = Math.max(wire0.pos.y, wire0.endPos.y, wire1.pos.y, wire1.endPos.y);
+			newElem.pos = new PIXI.Point(wire0.pos.x, start);
+			newElem.endPos = new PIXI.Point(wire0.pos.x, end);
+		} else if (Project.isHorizontal(wire0) && Project.isHorizontal(wire1) && wire0.pos.y === wire1.pos.y) {
+			const start = Math.min(wire0.pos.x, wire0.endPos.x, wire1.pos.x, wire1.endPos.x);
+			const end = Math.max(wire0.pos.x, wire0.endPos.x, wire1.pos.x, wire1.endPos.x);
+			newElem.pos = new PIXI.Point(start, wire0.pos.y);
+			newElem.endPos = new PIXI.Point(end, wire0.pos.y);
+		} else {
+			return null;
+		}
+		this.removeElement(wire0.id);
+		this.removeElement(wire1.id);
+		this.addElement(newElem, newElem.id);
+		return newElem;
 	}
 
 	public getElementById(elemId: number): Element {
