@@ -87,7 +87,9 @@ export class Project {
 	}
 
 	// TODO auslagern
-	public static inRectChunks(startPos: PIXI.Point, endPos: PIXI.Point): {x: number, y: number}[] {
+	public static inRectChunks(_startPos: PIXI.Point, _endPos: PIXI.Point): {x: number, y: number}[] {
+		const startPos = _startPos.clone();
+		const endPos = _endPos.clone();
 		const out: {x: number, y: number}[] = [];
 		Project.correctPosOrder(startPos, endPos);
 		const startChunkX = Project.gridPosToChunk(startPos.x);
@@ -99,6 +101,12 @@ export class Project {
 				// if ((x < endChunkX || endPos.x % environment.chunkSize !== 0) && (y < endChunkY || endPos.y % environment.chunkSize !== 0))
 				out.push({x, y});
 		return out;
+	}
+
+	// TODO auslagern
+	public static isRectInRect(startPos0: PIXI.Point, endPos0: PIXI.Point, startPos1: PIXI.Point, endPos1: PIXI.Point): boolean {
+		return startPos0.x < endPos1.x && startPos0.y < endPos1.y &&
+			endPos0.x > startPos1.x && endPos0.y > startPos1.y;
 	}
 
 	public static gridPosToChunk(pos: number): number {
@@ -136,7 +144,6 @@ export class Project {
 		}
 	}
 
-	// TODO make the complicated ones like connectWire
 	protected static reverseAction(action: Action): Action[] {
 		const revActions = [{...action}];
 		revActions[0].name = Project.REVERSE_ACTION.get(action.name)[0];
@@ -150,7 +157,6 @@ export class Project {
 		}
 		return revActions;
 	}
-
 
 	private static connectWiresToActions(oldWires, newWires): Action[] {
 		const outActions: Action[] = [];
@@ -197,6 +203,7 @@ export class Project {
 	}
 
 	public addElement(typeId: number, pos: PIXI.Point, endPos?: PIXI.Point): Element {
+		Project.correctPosOrder(pos, endPos);
 		const elem = {
 			id: -1,
 			typeId,
@@ -205,7 +212,8 @@ export class Project {
 			pos,
 			endPos
 		};
-		this._currState.addElement(elem);
+		if (!this._currState.addElement(elem))
+			return null;
 		this.newState({
 			name: elem.typeId === 0 ? 'addWire' : 'addComp',
 			element: elem
@@ -225,13 +233,15 @@ export class Project {
 		});
 	}
 
-	public moveElement(elem: Element, dif: PIXI.Point): void {
-		this.currState.moveElement(elem, dif);
+	public moveElement(elem: Element, dif: PIXI.Point): boolean {
+		if (!this.currState.moveElement(elem, dif))
+			return false;
 		this.newState({
 			name: elem.typeId === 0 ? 'movWire' : 'movComp',
 			element: elem,
 			pos: dif
 		});
+		return true;
 	}
 
 	public moveElementById(id: number, dif: PIXI.Point): void {

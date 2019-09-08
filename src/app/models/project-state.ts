@@ -38,7 +38,7 @@ export class ProjectState {
 	}
 
 	public loadIntoChunks(element: Element): void {
-		const chunkCoords = Project.inRectChunks(element.pos, element.endPos || element.pos);
+		const chunkCoords = Project.inRectChunks(element.pos, element.endPos);
 		for (const coord of chunkCoords) {
 			this.createChunk(coord.x, coord.y);
 			this._chunks[coord.x][coord.y].elements.push(element);
@@ -46,7 +46,7 @@ export class ProjectState {
 	}
 
 	public removeFromChunks(element: Element): void {
-		const chunkCoords = Project.inRectChunks(element.pos, element.endPos || element.pos);
+		const chunkCoords = Project.inRectChunks(element.pos, element.endPos);
 		for (const chunk of this.chunksFromCoords(chunkCoords)) {
 			chunk.elements = chunk.elements.filter(elem => elem.id !== element.id);
 		}
@@ -66,8 +66,20 @@ export class ProjectState {
 		};
 	}
 
+	private isFreeSpace(startPos: PIXI.Point, endPos: PIXI.Point): boolean {
+		const chunks = this.chunksFromCoords(Project.inRectChunks(startPos, endPos));
+		for (const chunk of chunks) {
+			for (const elem of chunk.elements) {
+				if (Project.isRectInRect(startPos, endPos, elem.pos, elem.endPos))
+					return false;
+			}
+		}
+		return true;
+	}
+
 	public addElement(elem: Element, id?: number): Element {
-		// TODO check if something is there
+		if (!this.isFreeSpace(elem.pos, elem.endPos))
+			return null;
 		elem.id = id || this.getNextId();
 		this._model.board.elements.push(elem);
 		this.loadIntoChunks(elem);
@@ -84,10 +96,14 @@ export class ProjectState {
 		return outElem;
 	}
 
-	public moveElement(elem: Element, dif: PIXI.Point): void {
-		// TODO check if something is there
+	public moveElement(elem: Element, dif: PIXI.Point): boolean {
+		if (!this.isFreeSpace(elem.pos, elem.endPos))
+			return false;
 		elem.pos.x += dif.x;
 		elem.pos.y += dif.y;
+		elem.endPos.x += dif.x;
+		elem.endPos.y += dif.y;
+		return true;
 	}
 
 	public connectWires(wire0: Element, wire1: Element, intersection: PIXI.Point): Element[] {
