@@ -5,6 +5,7 @@ import {Chunk} from './chunk';
 import {Observable, Subject} from 'rxjs';
 import * as PIXI from 'pixi.js';
 import {environment} from '../../environments/environment';
+import {CollisionFunctions} from './collision-functions';
 
 export class Project {
 
@@ -18,7 +19,8 @@ export class Project {
 		['movComp', ['movComp']],
 		['movWire', ['movWire']],
 		['movText', ['movText']],
-		['conWire', ['remWire']],
+		['conWire', ['dcoWire']],
+		['dcoWire', ['conWire']],
 		['setComp', ['setComp']]
 	]);
 
@@ -44,39 +46,6 @@ export class Project {
 		this.changeSubject = new Subject<Action[]>();
 	}
 
-	// TODO auslagern
-	public static correctPosOrder(startPos: PIXI.Point, endPos: PIXI.Point): void {
-		if (startPos.x > endPos.x) {
-			const startX = startPos.x;
-			startPos.x = endPos.x;
-			endPos.x = startX;
-		}
-		if (startPos.y > endPos.y) {
-			const startY = startPos.y;
-			startPos.y = endPos.y;
-			endPos.y = startY;
-		}
-	}
-
-	// TODO auslagern
-	public static inRectChunks(startPos: PIXI.Point, endPos: PIXI.Point): {x: number, y: number}[] {
-		const out: {x: number, y: number}[] = [];
-		Project.correctPosOrder(startPos, endPos);
-		const startChunkX = Project.gridPosToChunk(startPos.x);
-		const startChunkY = Project.gridPosToChunk(startPos.y);
-		const endChunkX = Project.gridPosToChunk(endPos.x);
-		const endChunkY = Project.gridPosToChunk(endPos.y);
-		for (let x = startChunkX; x <= endChunkX; x++)
-			for (let y = startChunkY; y <= endChunkY; y++)
-				// if ((x < endChunkX || endPos.x % environment.chunkSize !== 0) && (y < endChunkY || endPos.y % environment.chunkSize !== 0))
-				out.push({x, y});
-		return out;
-	}
-
-	public static gridPosToChunk(pos: number): number {
-		return Math.floor(pos / environment.chunkSize);
-	}
-
 	protected static applyActions(projectState: ProjectState, actions: Action[]): void {
 		for (const action of actions) {
 			Project.applyAction(projectState, action);
@@ -87,7 +56,7 @@ export class Project {
 		switch (action.name) {
 			case 'addComp':
 			case 'addWire':
-				projectState.addElement(action.element);
+				projectState.addElement(action.element, action.element.id);
 				break;
 			case 'remComp':
 			case 'remWire':
@@ -97,46 +66,68 @@ export class Project {
 			case 'movWire':
 				projectState.moveElement(action.element, action.pos);
 				break;
+			case 'conWire':
+				const wiresOnPointCon = projectState.wiresOnPoint(action.pos);
+				projectState.connectWires(wiresOnPointCon[0], wiresOnPointCon[1], action.pos);
+				break;
+			case 'dcoWire':
+				const wiresOnPointDco = projectState.wiresOnPoint(action.pos);
+				projectState.disconnectWires(wiresOnPointDco);
+				break;
 		}
 	}
 
-	// TODO make the complicated ones like connectWire
 	protected static reverseAction(action: Action): Action[] {
-		const revAction = [{...action}];
-		revAction[0].name = Project.REVERSE_ACTION.get(action.name)[0];
-		return revAction;
+		const revActions = [{...action}];
+		revActions[0].name = Project.REVERSE_ACTION.get(action.name)[0];
+		for (const revAction of revActions) {
+			revAction.pos = action.pos ? action.pos.clone() : undefined;
+			revAction.endPos = action.endPos ? action.endPos.clone() : undefined;
+			if (revAction.name === 'movComp' || revAction.name === 'movWire') {
+				revAction.pos.x *= -1;
+				revAction.pos.y *= -1;
+			}
+		}
+		return revActions;
+	}
+
+	private static connectWiresToActions(oldWires, newWires): Action[] {
+		const outActions: Action[] = [];
+		for (const oldWire of oldWires) {
+			outActions.push({
+				name: 'remComp',
+				element: oldWire
+			});
+		}
+		for (const newWire of newWires) {
+			outActions.push({
+				name: 'addComp',
+				element: newWire
+			});
+		}
+		return outActions;
 	}
 
 	public getOpenActions(): Action[] {
 		const out: Action[] = [];
 		for (const element of this.allElements) {
-			if (element.typeId === 0) {
-				out.push({
-					name: 'addWire',
-					id: element.id,
-					pos: element.pos,
-					endPos: element.endPos,
-					element
-				});
-			} else {
-				out.push({
-					name: 'addComp',
-					id: element.id,
-					pos: element.pos,
-					endPos: element.endPos,
-					element
-				});
-			}
+			out.push({
+				name: element.typeId === 0 ? 'addWire' : 'addComp',
+				id: element.id,
+				pos: element.pos,
+				endPos: element.endPos,
+				element
+			});
 		}
 		return out;
 	}
 
 	public chunksToRender(start: PIXI.Point, end: PIXI.Point): {x: number, y: number}[] {
-		const out = Project.inRectChunks(start, end);
+		const out = CollisionFunctions.inRectChunks(start, end);
 		for (const chunk of this._currState.chunksFromCoords(out)) {
 			for (const elem of chunk.elements) {
-				const chunkX = Project.gridPosToChunk(elem.pos.x);
-				const chunkY = Project.gridPosToChunk(elem.pos.y);
+				const chunkX = CollisionFunctions.gridPosToChunk(elem.pos.x);
+				const chunkY = CollisionFunctions.gridPosToChunk(elem.pos.y);
 				if (!out.find(c => c.x === chunkX && c.y === chunkY))
 					out.push({x: chunkX, y: chunkY});
 			}
@@ -145,6 +136,7 @@ export class Project {
 	}
 
 	public addElement(typeId: number, pos: PIXI.Point, endPos?: PIXI.Point): Element {
+		CollisionFunctions.correctPosOrder(pos, endPos);
 		const elem = {
 			id: -1,
 			typeId,
@@ -153,18 +145,12 @@ export class Project {
 			pos,
 			endPos
 		};
-		this._currState.addElement(elem);
-		if (elem.typeId === 0) {
-			this.newState({
-				name: 'addWire',
-				element: elem
-			});
-		} else {
-			this.newState({
-				name: 'addComp',
-				element: elem
-			});
-		}
+		if (!this._currState.addElement(elem))
+			return null;
+		this.newState({
+			name: elem.typeId === 0 ? 'addWire' : 'addComp',
+			element: elem
+		});
 		return elem;
 	}
 
@@ -174,43 +160,61 @@ export class Project {
 
 	public removeElementById(id: number): void {
 		const elem = this._currState.removeElement(id);
-		if (elem.typeId === 0) {
-			this.newState({
-				name: 'remWire',
-				element: elem
-			});
-		} else {
-			this.newState({
-				name: 'remComp',
-				element: elem
-			});
-		}
+		this.newState({
+			name: elem.typeId === 0 ? 'remWire' : 'remComp',
+			element: elem
+		});
 	}
 
-	public moveElement(elem: Element, dif: PIXI.Point): void {
-		if (elem.typeId === 0) {
-			this.newState({
-				name: 'movWire',
-				element: elem,
-				pos: dif
-			});
-		} else {
-			this.newState({
-				name: 'movComp',
-				element: elem,
-				pos: dif
-			});
-		}
+	public moveElement(elem: Element, dif: PIXI.Point): boolean {
+		if (!this.currState.moveElement(elem, dif))
+			return false;
+		const action: Action = {
+			name: elem.typeId === 0 ? 'movWire' : 'movComp',
+			element: elem,
+			pos: dif
+		};
+		this.newState(action);
+		this.changeSubject.next([action]);
+		return true;
 	}
 
 	public moveElementById(id: number, dif: PIXI.Point): void {
 		this.moveElement(this._currState.getElementById(id), dif);
 	}
 
+	public connectWires(pos: PIXI.Point): void {
+		const wiresToConnect = this._currState.wiresOnPoint(pos);
+		if (wiresToConnect.length !== 2) {
+			console.log('tf you doin while connecting?');
+			console.log(wiresToConnect);
+			return;
+		}
+		const newWires = this.currState.connectWires(wiresToConnect[0], wiresToConnect[1], pos);
+		this.newState({
+			name: 'conWire',
+			pos
+		});
+		this.changeSubject.next(Project.connectWiresToActions(wiresToConnect, newWires));
+	}
+
+	public disconnectWires(pos: PIXI.Point): void {
+		const wiresOnPoint = this._currState.wiresOnPoint(pos);
+		if (wiresOnPoint.length !== 4) {
+			console.log('tf you doin while disconnecting?');
+			console.log(wiresOnPoint);
+			return;
+		}
+		const newWires = this._currState.disconnectWires(wiresOnPoint);
+		this.newState({
+			name: 'dcoWire',
+			pos
+		});
+		this.changeSubject.next(Project.connectWiresToActions(wiresOnPoint, newWires));
+	}
+
 	private newState(action: Action): void {
-		// Project.applyAction(this._currState, action);
 		if (this._currActionPointer >= this.MAX_ACTIONS) {
-			// Project.applyAction(this._oldState, this._actions[0]);
 			this._actions.shift();
 		} else {
 			this._currActionPointer++;

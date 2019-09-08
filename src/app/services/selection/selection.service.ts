@@ -2,6 +2,7 @@ import { Injectable } from '@angular/core';
 import * as PIXI from 'pixi.js';
 import {Project} from '../../models/project';
 import {ProjectsService} from '../projects/projects.service';
+import {CollisionFunctions} from '../../models/collision-functions';
 
 @Injectable({
 	providedIn: 'root'
@@ -15,7 +16,7 @@ export class SelectionService {
 	public selectFromRect(project: Project, start: PIXI.Point, end: PIXI.Point): number[] {
 		this._selectedIds.set(project.id, []);
 		const ids = this._selectedIds.get(project.id);
-		const possibleChunkCoords = Project.inRectChunks(start, end);
+		const possibleChunkCoords = CollisionFunctions.inRectChunks(start, end);
 		for (const chunk of project.currState.chunksFromCoords(possibleChunkCoords)) {
 			for (const elem of chunk.elements) {
 				if (elem.endPos) {

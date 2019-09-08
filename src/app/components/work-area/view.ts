@@ -13,6 +13,7 @@ import {environment} from '../../../environments/environment';
 import {SelectionService} from '../../services/selection/selection.service';
 import {Subscription} from 'rxjs';
 import {Action} from '../../models/action';
+import {CollisionFunctions} from '../../models/collision-functions';
 
 export class View extends PIXI.Container {
 
@@ -161,7 +162,7 @@ export class View extends PIXI.Container {
 		const sprite = new PIXI.Sprite(elemType.texture);
 		sprite.position = Grid.getLocalChunkPixelPosForGridPos(element.pos);
 
-		this._chunks[Project.gridPosToChunk(element.pos.x)][Project.gridPosToChunk(element.pos.y)].addChild(sprite);
+		this._chunks[CollisionFunctions.gridPosToChunk(element.pos.x)][CollisionFunctions.gridPosToChunk(element.pos.y)].addChild(sprite);
 
 		const elemSprite = {element, sprite};
 		this.allElements.set(element.id, elemSprite);

@@ -19,7 +19,9 @@
 		<button class="icon-button toolbar-button" (click)="setWorkMode('buildWire')" [class.toolbar-button-active]="currentWorkMode === 'buildWire'">wire</button>
 		<button class="icon-button toolbar-button" (click)="setWorkMode('connectWire')" [class.toolbar-button-active]="currentWorkMode === 'connectWire'">connect wire</button>
 		<button class="icon-button toolbar-button" (click)="setWorkMode('select')" [class.toolbar-button-active]="currentWorkMode === 'select'">select</button>
+		<button (click)="printElements()">print Elements</button>
 		<button (click)="test()">test</button>
+		<button (click)="test1()">test1</button>
 	</div>
 
 	<div>
