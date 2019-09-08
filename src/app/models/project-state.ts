@@ -4,6 +4,7 @@ import {Element} from './element';
 import {environment} from '../../environments/environment';
 import * as PIXI from 'pixi.js';
 import {Project} from './project';
+import {CollisionFunctions} from './collision-functions';
 
 export class ProjectState {
 
@@ -38,7 +39,7 @@ export class ProjectState {
 	}
 
 	public loadIntoChunks(element: Element): void {
-		const chunkCoords = Project.inRectChunks(element.pos, element.endPos);
+		const chunkCoords = CollisionFunctions.inRectChunks(element.pos, element.endPos);
 		for (const coord of chunkCoords) {
 			this.createChunk(coord.x, coord.y);
 			this._chunks[coord.x][coord.y].elements.push(element);
@@ -46,7 +47,7 @@ export class ProjectState {
 	}
 
 	public removeFromChunks(element: Element): void {
-		const chunkCoords = Project.inRectChunks(element.pos, element.endPos);
+		const chunkCoords = CollisionFunctions.inRectChunks(element.pos, element.endPos);
 		for (const chunk of this.chunksFromCoords(chunkCoords)) {
 			chunk.elements = chunk.elements.filter(elem => elem.id !== element.id);
 		}
@@ -67,10 +68,10 @@ export class ProjectState {
 	}
 
 	private isFreeSpace(startPos: PIXI.Point, endPos: PIXI.Point): boolean {
-		const chunks = this.chunksFromCoords(Project.inRectChunks(startPos, endPos));
+		const chunks = this.chunksFromCoords(CollisionFunctions.inRectChunks(startPos, endPos));
 		for (const chunk of chunks) {
 			for (const elem of chunk.elements) {
-				if (Project.isRectInRect(startPos, endPos, elem.pos, elem.endPos))
+				if (CollisionFunctions.isRectInRect(startPos, endPos, elem.pos, elem.endPos))
 					return false;
 			}
 		}
@@ -112,7 +113,7 @@ export class ProjectState {
 	}
 
 	private splitWire(wire: Element, pos: PIXI.Point): Element[] {
-		if (!Project.isPointOnWireNoEdge(wire, pos))
+		if (!CollisionFunctions.isPointOnWireNoEdge(wire, pos))
 			return [wire];
 		const newWire = {
 			id: -1,
@@ -143,7 +144,7 @@ export class ProjectState {
 	}
 
 	public mergeWires(wire0: Element, wire1: Element): Element {
-		if (!(Project.isPointOnWire(wire0, wire1.pos) || Project.isPointOnWire(wire0, wire1.endPos))) {
+		if (!(CollisionFunctions.isPointOnWire(wire0, wire1.pos) || CollisionFunctions.isPointOnWire(wire0, wire1.endPos))) {
 			return null;
 		}
 		const newElem: Element = {
@@ -154,12 +155,12 @@ export class ProjectState {
 			pos: undefined,
 			endPos: undefined
 		};
-		if (Project.isVertical(wire0) && Project.isVertical(wire1) && wire0.pos.x === wire1.pos.x) {
+		if (CollisionFunctions.isVertical(wire0) && CollisionFunctions.isVertical(wire1) && wire0.pos.x === wire1.pos.x) {
 			const start = Math.min(wire0.pos.y, wire0.endPos.y, wire1.pos.y, wire1.endPos.y);
 			const end = Math.max(wire0.pos.y, wire0.endPos.y, wire1.pos.y, wire1.endPos.y);
 			newElem.pos = new PIXI.Point(wire0.pos.x, start);
 			newElem.endPos = new PIXI.Point(wire0.pos.x, end);
-		} else if (Project.isHorizontal(wire0) && Project.isHorizontal(wire1) && wire0.pos.y === wire1.pos.y) {
+		} else if (CollisionFunctions.isHorizontal(wire0) && CollisionFunctions.isHorizontal(wire1) && wire0.pos.y === wire1.pos.y) {
 			const start = Math.min(wire0.pos.x, wire0.endPos.x, wire1.pos.x, wire1.endPos.x);
 			const end = Math.max(wire0.pos.x, wire0.endPos.x, wire1.pos.x, wire1.endPos.x);
 			newElem.pos = new PIXI.Point(start, wire0.pos.y);
@@ -174,11 +175,11 @@ export class ProjectState {
 	}
 
 	public wiresOnPoint(pos: PIXI.Point): Element[] {
-		const chunkX = Project.gridPosToChunk(pos.x);
-		const chunkY = Project.gridPosToChunk(pos.y);
+		const chunkX = CollisionFunctions.gridPosToChunk(pos.x);
+		const chunkY = CollisionFunctions.gridPosToChunk(pos.y);
 		const outWires: Element[] = [];
 		for (const elem of this._chunks[chunkX][chunkY].elements) {
-			if (elem.typeId === 0 && Project.isPointOnWire(elem, pos))
+			if (elem.typeId === 0 && CollisionFunctions.isPointOnWire(elem, pos))
 				outWires.push(elem);
 		}
 		return outWires;
