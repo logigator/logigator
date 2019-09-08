@@ -13,11 +13,7 @@ export class ProjectState {
 
 	public constructor(model?: ProjectModel, highestId?: number) {
 		this._model = model || {id: 100, board: {elements: []}};
-		if (highestId) {
-			this._highestTakenId = highestId;
-		} else {
-			this._highestTakenId = this.findHighestTakenId();
-		}
+		this._highestTakenId = highestId || this.findHighestTakenId();
 		this._chunks = [];
 		this.loadAllIntoChunks();
 	}
@@ -42,10 +38,11 @@ export class ProjectState {
 	}
 
 	public loadIntoChunks(element: Element): void {
-		const chunkX = Project.gridPosToChunk(element.pos.x);
-		const chunkY = Project.gridPosToChunk(element.pos.y);
-		this.createChunk(chunkX, chunkY);
-		this._chunks[chunkX][chunkY].elements.push(element);
+		const chunkCoords = Project.inRectChunks(element.pos, element.endPos || element.pos);
+		for (const coord of chunkCoords) {
+			this.createChunk(coord.x, coord.y);
+			this._chunks[coord.x][coord.y].elements.push(element);
+		}
 	}
 
 	public removeFromChunks(element: Element): void {
@@ -69,8 +66,9 @@ export class ProjectState {
 		};
 	}
 
-	public addElement(elem: Element): Element {
-		elem.id = this.getNextId();
+	public addElement(elem: Element, id?: number): Element {
+		// TODO check if something is there
+		elem.id = id || this.getNextId();
 		this._model.board.elements.push(elem);
 		this.loadIntoChunks(elem);
 		return elem;
@@ -87,8 +85,87 @@ export class ProjectState {
 	}
 
 	public moveElement(elem: Element, dif: PIXI.Point): void {
+		// TODO check if something is there
 		elem.pos.x += dif.x;
 		elem.pos.y += dif.y;
+	}
+
+	public connectWires(wire0: Element, wire1: Element, intersection: PIXI.Point): Element[] {
+		const out = this.splitWire(wire0, intersection);
+		return out.concat(this.splitWire(wire1, intersection));
+	}
+
+	private splitWire(wire: Element, pos: PIXI.Point): Element[] {
+		if (!Project.isPointOnWireNoEdge(wire, pos))
+			return [wire];
+		const newWire = {
+			id: -1,
+			typeId: 0,
+			inputs: [],
+			outputs: [],
+			pos,
+			endPos: wire.endPos
+		};
+		wire.endPos = pos;
+		this.addElement(newWire);
+		return [wire, newWire];
+	}
+
+	public disconnectWires(wires: Element[]): Element[] {
+		const outWires: Element[] = [];
+		for (const wire0 of wires) {
+			for (const wire1 of wires) {
+				if (wire0 === wire1)
+					continue;
+				const merged = this.mergeWires(wire0, wire1);
+				if (!merged)
+					continue;
+				outWires.push(merged);
+			}
+		}
+		return outWires;
+	}
+
+	public mergeWires(wire0: Element, wire1: Element): Element {
+		if (!(Project.isPointOnWire(wire0, wire1.pos) || Project.isPointOnWire(wire0, wire1.endPos))) {
+			return null;
+		}
+		const newElem: Element = {
+			id: wire0.id,
+			typeId: 0,
+			inputs: [],
+			outputs: [],
+			pos: undefined,
+			endPos: undefined
+		};
+		if (Project.isVertical(wire0) && Project.isVertical(wire1) && wire0.pos.x === wire1.pos.x) {
+			const start = Math.min(wire0.pos.y, wire0.endPos.y, wire1.pos.y, wire1.endPos.y);
+			const end = Math.max(wire0.pos.y, wire0.endPos.y, wire1.pos.y, wire1.endPos.y);
+			newElem.pos = new PIXI.Point(wire0.pos.x, start);
+			newElem.endPos = new PIXI.Point(wire0.pos.x, end);
+		} else if (Project.isHorizontal(wire0) && Project.isHorizontal(wire1) && wire0.pos.y === wire1.pos.y) {
+			const start = Math.min(wire0.pos.x, wire0.endPos.x, wire1.pos.x, wire1.endPos.x);
+			const end = Math.max(wire0.pos.x, wire0.endPos.x, wire1.pos.x, wire1.endPos.x);
+			newElem.pos = new PIXI.Point(start, wire0.pos.y);
+			newElem.endPos = new PIXI.Point(end, wire0.pos.y);
+		} else {
+			return null;
+		}
+		this.removeElement(wire0.id);
+		this.removeElement(wire1.id);
+		this.addElement(newElem, newElem.id);
+		return newElem;
+	}
+
+	public wiresOnPoint(pos: PIXI.Point): Element[] {
+		const chunkX = Project.gridPosToChunk(pos.x);
+		const chunkY = Project.gridPosToChunk(pos.y);
+		const outWires: Element[] = [];
+		for (const elem of this._chunks[chunkX][chunkY].elements) {
+			if (elem.typeId === 0 && Project.isPointOnWire(elem, pos))
+				outWires.push(elem);
+		}
+		return outWires;
 	}
 
 	public getElementById(elemId: number): Element {

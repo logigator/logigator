@@ -17,6 +17,19 @@ export class ToolbarComponent implements OnInit {
 	ngOnInit() {
 	}
 
+	public printElements(): void {
+		console.log(this.projectService.currProject.allElements);
+	}
+
+	private printWires(): void {
+		console.log('wires');
+		for (const elem of this.projectService.currProject.allElements) {
+			if (elem.typeId === 0) {
+				console.log(elem.pos, elem.endPos);
+			}
+		}
+	}
+
 	public test(): void {
 	}
 
