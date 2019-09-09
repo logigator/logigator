@@ -62,7 +62,9 @@ export class Project {
 				projectState.removeElement(action.element.id);
 				break;
 			case 'movMult':
-				projectState.moveElement(action.element, action.pos);
+				for (const elem of action.others) {
+					projectState.moveElement(elem, action.pos);
+				}
 				break;
 			case 'conWire':
 				const wiresOnPointCon = projectState.wiresOnPoint(action.pos);
