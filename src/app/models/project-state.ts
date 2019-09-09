@@ -69,7 +69,7 @@ export class ProjectState {
 			};
 	}
 
-	private isFreeSpace(startPos: PIXI.Point, endPos: PIXI.Point, except?: Element[]): boolean {
+	public isFreeSpace(startPos: PIXI.Point, endPos: PIXI.Point, except?: Element[]): boolean {
 		const chunks = this.chunksFromCoords(CollisionFunctions.inRectChunks(startPos, endPos));
 		for (const chunk of chunks) {
 			for (const elem of chunk.elements) {
@@ -107,11 +107,12 @@ export class ProjectState {
 		element.pos.y += dif.y;
 		element.endPos.x += dif.x;
 		element.endPos.y += dif.y;
-		if (!this.isFreeSpace(element.pos, element.endPos, except)) {
+		if (except && !this.isFreeSpace(element.pos, element.endPos, except)) {
 			element.pos.x -= dif.x;
 			element.pos.y -= dif.y;
 			element.endPos.x -= dif.x;
 			element.endPos.y -= dif.y;
+			this.loadIntoChunks(element);
 			return false;
 		}
 		this.loadIntoChunks(element);
@@ -145,7 +146,7 @@ export class ProjectState {
 			for (const wire1 of wires) {
 				if (wire0 === wire1)
 					continue;
-				const merged = this.mergeWires(wire0, wire1);
+				const merged = this.mergeWires(wire0, wire1).newElem;
 				if (!merged)
 					continue;
 				outWires.push(merged);
@@ -154,7 +155,7 @@ export class ProjectState {
 		return outWires;
 	}
 
-	public mergeWires(wire0: Element, wire1: Element): Element {
+	public mergeWires(wire0: Element, wire1: Element): {newElem: Element, oldElems: Element[]} {
 		if (!(CollisionFunctions.isPointOnWire(wire0, wire1.pos) || CollisionFunctions.isPointOnWire(wire0, wire1.endPos))) {
 			return null;
 		}
@@ -182,7 +183,7 @@ export class ProjectState {
 		this.removeElement(wire0.id);
 		this.removeElement(wire1.id);
 		this.addElement(newElem, newElem.id);
-		return newElem;
+		return {newElem, oldElems: [wire0, wire1]};
 	}
 
 	public wiresOnPoint(pos: PIXI.Point): Element[] {

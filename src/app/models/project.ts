@@ -62,6 +62,7 @@ export class Project {
 				projectState.removeElement(action.element.id);
 				break;
 			case 'movMult':
+				console.log(action);
 				for (const elem of action.others) {
 					projectState.moveElement(elem, action.pos);
 				}
@@ -195,9 +196,20 @@ export class Project {
 			elements.push(elem);
 		}
 		for (const elem of elements) {
-			if (!this.currState.moveElement(elem, dif, elements))
+			if (!this.currState.isFreeSpace(elem.pos, elem.endPos, elements))
 				return false;
 		}
+		let dir = 1;
+		for (let i = 0; i < elements.length && i > -1; i += dir) {
+			if (dir === 1 && !this.currState.moveElement(elements[i], dif, elements)) {
+				dir = -1;
+				continue;
+			}
+			if (dir === -1)
+				this.currState.moveElement(elements[i], new PIXI.Point(dif.x * -1, dif.y * -1));
+		}
+		if (dir === -1)
+			return false;
 		const action: Action = {
 			name: 'movMult',
 			others: elements,

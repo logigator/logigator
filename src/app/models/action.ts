@@ -16,6 +16,7 @@ export interface Action {
 	name: ActionType;	// TODO element settings
 	element?: Element;
 	others?: Element[];
+	oldElements?: Element[];
 	id?: number;
 	pos?: PIXI.Point;
 	endPos?: PIXI.Point;
