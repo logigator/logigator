@@ -54,4 +54,11 @@ export class Grid {
 		return Grid.getPixelPosForGridPos(newPoint);
 	}
 
+	public static getPixelPosForPixelPosOnGridWire(point: PIXI.Point): PIXI.Point {
+		const gridPos = Grid.getGridPosForPixelPos(point);
+		gridPos.x += 0.5;
+		gridPos.y += 0.5;
+		return Grid.getPixelPosForGridPos(gridPos);
+	}
+
 }

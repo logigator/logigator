@@ -6,13 +6,19 @@ import {ElementSprite} from '../../models/element-sprite';
 import {WorkModeService} from '../../services/work-mode/work-mode.service';
 import {SelectionService} from '../../services/selection/selection.service';
 import {ProjectsService} from '../../services/projects/projects.service';
+import {CollisionFunctions} from '../../models/collision-functions';
 
 export class ViewInteractionManager {
 
 	private _view: View;
 
-	private _moveStartPos: PIXI.Point;
+	private _actionStartPos: PIXI.Point;
 	private _lastMousePos: PIXI.Point;
+
+	private _newWireDir: 'hor' | 'ver';
+	private _drawingNewWire = false;
+	private _newWire: PIXI.Graphics;
+
 	private _currentlyDraggingMultiple = false;
 	private _drawingSelectRect = false;
 	private _selectRect: PIXI.Graphics;
@@ -20,6 +26,7 @@ export class ViewInteractionManager {
 	constructor(view: View) {
 		this._view = view;
 		this._selectRect = new PIXI.Graphics();
+		this._newWire = new PIXI.Graphics();
 
 		this.addEventListenersToView();
 		this.addEventListenersToSelectRect();
@@ -56,10 +63,10 @@ export class ViewInteractionManager {
 		if (WorkModeService.staticInstance.currentWorkMode === 'select' && e.data.button === 0) {
 			if (e.target === this._view) {
 
-				if (this._moveStartPos) {
+				if (this._actionStartPos) {
 					this.resetSelectionToOldPosition();
 				}
-				delete this._moveStartPos;
+				delete this._actionStartPos;
 				this.clearSelection();
 				this._drawingSelectRect = true;
 				this._view.removeChild(this._selectRect);
@@ -70,6 +77,11 @@ export class ViewInteractionManager {
 				this._selectRect.beginFill(0, 0.3);
 				this._selectRect.drawRect(0, 0, 1, 1);
 			}
+		} else if (WorkModeService.staticInstance.currentWorkMode === 'buildWire' && e.data.button === 0) {
+			this._drawingNewWire = true;
+			this._actionStartPos = Grid.getPixelPosForPixelPosOnGridWire(e.data.getLocalPosition(this._view));
+			this._newWire.position = this._actionStartPos;
+			this._view.addChild(this._newWire);
 		}
 	}
 
@@ -91,15 +103,38 @@ export class ViewInteractionManager {
 				this._currentlyDraggingMultiple = false;
 
 				const movedDif = Grid.getGridPosForPixelPos(
-					new PIXI.Point(this._lastMousePos.x - this._moveStartPos.x, this._lastMousePos.y - this._moveStartPos.y)
+					new PIXI.Point(this._lastMousePos.x - this._actionStartPos.x, this._lastMousePos.y - this._actionStartPos.y)
 				);
 
 				if (ProjectsService.staticInstance.currProject.moveElementsById(SelectionService.staticInstance.selectedIds(), movedDif)) {
 					this._view.removeChild(this._selectRect);
 					this.clearSelection();
-					delete this._moveStartPos;
+					delete this._actionStartPos;
 				}
 			}
+		} else if (WorkModeService.staticInstance.currentWorkMode === 'buildWire') {
+			this._drawingNewWire = false;
+			const wire1StartPos = Grid.getGridPosForPixelPos(this._actionStartPos);
+			const wire2EndPos =  Grid.getGridPosForPixelPos(e.data.getLocalPosition(this._view));
+			let wire1End2StartPos;
+			switch (this._newWireDir) {
+				case 'hor':
+					wire1End2StartPos = new PIXI.Point(wire2EndPos.x, wire1StartPos.y);
+					break;
+				case 'ver':
+					wire1End2StartPos = new PIXI.Point(wire1StartPos.x, wire2EndPos.y);
+					break;
+			}
+			// add wire one
+			if (wire1End2StartPos.x !== wire2EndPos.x || wire1End2StartPos.y !== wire2EndPos.y) {
+				console.log(wire1StartPos);
+				console.log(wire1End2StartPos);
+				console.log(wire2EndPos);
+				// second
+			}
+			this._newWire.clear();
+			this._view.removeChild(this._newWire);
+			delete this._newWireDir;
 		}
 	}
 
@@ -123,6 +158,38 @@ export class ViewInteractionManager {
 
 				this._lastMousePos = currentMousePos;
 			}
+		} else if (WorkModeService.staticInstance.currentWorkMode === 'buildWire') {
+			if (this._drawingNewWire) {
+				const currentMousePos = Grid.getPixelPosForPixelPosOnGridWire(e.data.getLocalPosition(this._view));
+				const endPos = new PIXI.Point(currentMousePos.x - this._actionStartPos.x, currentMousePos.y - this._actionStartPos.y);
+				this.setDirForNewWire(currentMousePos);
+				this._newWire.clear();
+				this._newWire.lineStyle(4);
+				this._newWire.drawRect(0, 0, 0, 0);
+				switch (this._newWireDir) {
+					case 'hor':
+						this._newWire.lineTo(endPos.x, 0);
+						this._newWire.lineTo(endPos.x, endPos.y);
+						break;
+					case 'ver':
+						this._newWire.lineTo(0, endPos.y);
+						this._newWire.lineTo(endPos.x, endPos.y);
+						break;
+				}
+			}
+		}
+	}
+
+	private setDirForNewWire(currentMousePos) {
+		if (!this._newWireDir && CollisionFunctions.distance(this._actionStartPos, currentMousePos) >= 1) {
+			if (this._actionStartPos.x === currentMousePos.x) {
+				this._newWireDir = 'ver';
+			} else if (this._actionStartPos.y === currentMousePos.y) {
+				this._newWireDir = 'hor';
+			} else {
+
+				this._newWireDir = 'ver';
+			}
 		}
 	}
 
@@ -130,8 +197,8 @@ export class ViewInteractionManager {
 		if (WorkModeService.staticInstance.currentWorkMode === 'select') {
 			this._currentlyDraggingMultiple = true;
 			this._lastMousePos = e.data.getLocalPosition(this._view);
-			if (!this._moveStartPos) {
-				this._moveStartPos = this._lastMousePos;
+			if (!this._actionStartPos) {
+				this._actionStartPos = this._lastMousePos;
 			}
 		}
 	}
