@@ -82,6 +82,16 @@ export class ProjectState {
 		return true;
 	}
 
+	public allSpacesFree(elements: Element[], dif: PIXI.Point): boolean {
+		for (const elem of elements) {
+			const newStartPos = new PIXI.Point(elem.pos.x + dif.x, elem.pos.y + dif.y);
+			const newEndPos = new PIXI.Point(elem.endPos.x + dif.x, elem.endPos.y + dif.y);
+			if (!this.isFreeSpace(newStartPos, newEndPos, elements))
+				return false;
+		}
+		return true;
+	}
+
 	public addElement(elem: Element, id?: number): Element {
 		if (!this.isFreeSpace(elem.pos, elem.endPos))
 			return null;
@@ -101,6 +111,7 @@ export class ProjectState {
 		return outElem;
 	}
 
+	// when except param is undefined it will not check for collision
 	public moveElement(element: Element, dif: PIXI.Point, except?: Element[]): boolean {
 		this.removeFromChunks(element);
 		element.pos.x += dif.x;
@@ -155,8 +166,28 @@ export class ProjectState {
 		return outWires;
 	}
 
+	// TODO test, use
+	public mergeGivenWires(elements: Element[]): {newElem: Element, oldElems: Element[]}[] {
+		const out: {newElem: Element, oldElems: Element[]}[] = [];
+		for (const elem of elements) {
+			if (elem.id !== 0)
+				continue;
+			const chunks = this.chunksFromCoords(CollisionFunctions.inRectChunks(elem.pos, elem.endPos));
+			const doneOthers: Element[] = [];
+			for (const chunk of chunks) {
+				for (const other of chunk.elements) {
+					if (!doneOthers.find(e => e.id === other.id) && this.mergeWires(elem, other))
+						doneOthers.push(other);
+				}
+			}
+		}
+		return [];
+	}
+
 	public mergeWires(wire0: Element, wire1: Element): {newElem: Element, oldElems: Element[]} {
-		if (!(CollisionFunctions.isPointOnWire(wire0, wire1.pos) || CollisionFunctions.isPointOnWire(wire0, wire1.endPos))) {
+		if (!(CollisionFunctions.isPointOnWire(wire0, wire1.pos) ||
+			CollisionFunctions.isPointOnWire(wire0, wire1.endPos) ||
+			wire0.id === wire1.id)) {
 			return null;
 		}
 		const newElem: Element = {
@@ -199,6 +230,10 @@ export class ProjectState {
 
 	public getElementById(elemId: number): Element {
 		return this._model.board.elements.find(c => c.id === elemId);
+	}
+
+	public getElementsById(ids: number[]): Element[] {
+		return this._model.board.elements.filter(e => ids.find(id => id === e.id));
 	}
 
 	public copy(): ProjectState {

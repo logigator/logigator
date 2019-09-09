@@ -23,13 +23,14 @@ export class Project {
 		['setComp', ['setComp']]
 	]);
 
-	private MAX_ACTIONS = 2000;
+	private MAX_ACTIONS = 100;
 
 	private _id: number;
 	private _name: string;
 
 	private _actions: Action[];
 	private _currActionPointer: number;
+	private _currMaxActionPointer: number;
 
 	private _currState: ProjectState;
 
@@ -42,6 +43,7 @@ export class Project {
 		for (let i = 0; i < this.MAX_ACTIONS; i++)
 			this._actions.push(null);
 		this._currActionPointer = -1;
+		this._currMaxActionPointer = -1;
 		this.changeSubject = new Subject<Action[]>();
 	}
 
@@ -62,7 +64,6 @@ export class Project {
 				projectState.removeElement(action.element.id);
 				break;
 			case 'movMult':
-				console.log(action);
 				for (const elem of action.others) {
 					projectState.moveElement(elem, action.pos);
 				}
@@ -172,44 +173,13 @@ export class Project {
 		});
 	}
 
-	public moveElement(elem: Element, dif: PIXI.Point): boolean {
-		if (!this.currState.moveElement(elem, dif))
-			return false;
-		const action: Action = {
-			name: 'movMult',
-			element: elem,
-			pos: dif
-		};
-		this.newState(action);
-		this.changeSubject.next([action]);
-		return true;
-	}
-
-	public moveElementById(id: number, dif: PIXI.Point): boolean {
-		return this.moveElement(this._currState.getElementById(id), dif);
-	}
-
 	public moveElementsById(ids: number[], dif: PIXI.Point): boolean {
-		const elements: Element[] = [];
-		for (const id of ids) {
-			const elem = this._currState.getElementById(id);
-			elements.push(elem);
-		}
-		for (const elem of elements) {
-			if (!this.currState.isFreeSpace(elem.pos, elem.endPos, elements))
-				return false;
-		}
-		let dir = 1;
-		for (let i = 0; i < elements.length && i > -1; i += dir) {
-			if (dir === 1 && !this.currState.moveElement(elements[i], dif, elements)) {
-				dir = -1;
-				continue;
-			}
-			if (dir === -1)
-				this.currState.moveElement(elements[i], new PIXI.Point(dif.x * -1, dif.y * -1));
-		}
-		if (dir === -1)
+		const elements = this._currState.getElementsById(ids);
+		if (!this._currState.allSpacesFree(elements, dif))
 			return false;
+		for (const elem of elements) {
+			this._currState.moveElement(elem, dif);
+		}
 		const action: Action = {
 			name: 'movMult',
 			others: elements,
@@ -256,6 +226,7 @@ export class Project {
 		} else {
 			this._currActionPointer++;
 		}
+		this._currMaxActionPointer = this._currActionPointer;
 		this._actions[this._currActionPointer] = action;
 	}
 
@@ -272,7 +243,7 @@ export class Project {
 	}
 
 	public stepForward(): Action[] {
-		if (this._currActionPointer >= this.MAX_ACTIONS || !this._actions[this._currActionPointer + 1])
+		if (this._currActionPointer >= this.MAX_ACTIONS || this._currActionPointer === this._currMaxActionPointer)
 			return;
 		Project.applyAction(this._currState, this._actions[++this._currActionPointer]);
 		const outActions = [this._actions[this._currActionPointer]];
