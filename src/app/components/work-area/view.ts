@@ -128,6 +128,17 @@ export class View extends PIXI.Container {
 		}
 	}
 
+	public placeWires(positions: {start: PIXI.Point, end: PIXI.Point}[]) {
+		console.log(positions);
+		positions.forEach(w => {
+			const e = ProjectsService.staticInstance.allProjects.get(this.projectId).addElement(0, w.start, w.end);
+			// TODO: @alex should add multiple / not return null
+			if (e) {
+				this.placeWireOnView(e);
+			}
+		});
+	}
+
 	public placeComponent(position: PIXI.Point, elementTypeId: number) {
 		const elem = this.placeComponentInModel(position, elementTypeId);
 		if (!elem)
@@ -155,6 +166,26 @@ export class View extends PIXI.Container {
 		this._viewInteractionManager.addEventListenersToNewElement(elemSprite);
 	}
 
+	private placeWireOnView(element: Element) {
+		const chunkX = CollisionFunctions.gridPosToChunk(element.pos.x);
+		const chunkY = CollisionFunctions.gridPosToChunk(element.pos.y);
+
+		const endPos = Grid.getPixelPosForGridPosWire(element.endPos);
+		const startPos = Grid.getPixelPosForGridPosWire(element.pos);
+
+		const graphics = new PIXI.Graphics();
+		graphics.lineStyle(3);
+		graphics.position = Grid.getLocalChunkPixelPosForGridPosWireStart(element.pos);
+		graphics.moveTo(0, 0);
+		graphics.lineTo(endPos.x - startPos.x, endPos.y - startPos.y);
+
+		this.createChunkIfNeeded(chunkX, chunkY);
+		this._chunks[chunkX][chunkY].addChild(graphics);
+
+		const elemSprite = {element, sprite: graphics};
+		this.allElements.set(element.id, elemSprite);
+	}
+
 	private placeComponentInModel(position: PIXI.Point, elementTypeId: number): Element {
 		return ProjectsService.staticInstance.allProjects.get(this.projectId).addElement(elementTypeId, position);
 	}
@@ -171,6 +202,7 @@ export class View extends PIXI.Container {
 				this.placeComponentOnView(action.element);
 				break;
 			case 'addWire':
+				this.placeWireOnView(action.element);
 				break;
 			case 'remComp':
 				this.allElements.get(action.element.id).sprite.destroy();
@@ -194,7 +226,11 @@ export class View extends PIXI.Container {
 				elemSprite.sprite.parent.removeChild(elemSprite.sprite);
 				this._chunks[chunkX][chunkY].addChild(elemSprite.sprite);
 			}
-			elemSprite.sprite.position = Grid.getLocalChunkPixelPosForGridPos(element.pos);
+			if (element.typeId === 0) {
+				elemSprite.sprite.position = Grid.getLocalChunkPixelPosForGridPosWireStart(element.pos);
+			} else {
+				elemSprite.sprite.position = Grid.getLocalChunkPixelPosForGridPos(element.pos);
+			}
 		});
 	}
 

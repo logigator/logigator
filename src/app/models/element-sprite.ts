@@ -3,5 +3,5 @@ import {Element} from './element';
 
 export interface ElementSprite {
 	element?: Element;
-	sprite: PIXI.Sprite;
+	sprite: PIXI.Sprite | PIXI.Graphics;
 }
