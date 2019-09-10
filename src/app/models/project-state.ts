@@ -158,7 +158,6 @@ export class ProjectState {
 		return outWires;
 	}
 
-	// TODO test, use
 	public mergeGivenWires(elements: Element[]): {newElem: Element, oldElems: Element[]}[] {
 		const out: {newElem: Element, oldElems: Element[]}[] = [];
 		for (const elem of elements) {
@@ -168,8 +167,13 @@ export class ProjectState {
 			const doneOthers: Element[] = [];
 			for (const chunk of chunks) {
 				for (const other of chunk.elements) {
-					if (!doneOthers.find(e => e.id === other.id) && this.mergeWires(elem, other))
-						doneOthers.push(other);
+					if (!doneOthers.find(e => e.id === other.id) && elem.id !== other.id) {
+						const changes = this.mergeWires(elem, other);
+						if (changes) {
+							out.push(changes);
+							doneOthers.push(other);
+						}
+					}
 				}
 			}
 		}

@@ -47,36 +47,6 @@ export class Project {
 		this.changeSubject = new Subject<Action[]>();
 	}
 
-	protected static applyActions(projectState: ProjectState, actions: Action[]): void {
-		actions.forEach(action => Project.applyAction(projectState, action));
-	}
-
-	protected static applyAction(projectState: ProjectState, action: Action): void {
-		switch (action.name) {
-			case 'addComp':
-			case 'addWire':
-				projectState.addElement(action.element, action.element.id);
-				break;
-			case 'remComp':
-			case 'remWire':
-				projectState.removeElement(action.element.id);
-				break;
-			case 'movMult':
-				for (const elem of action.others) {
-					projectState.moveElement(elem, action.pos);
-				}
-				break;
-			case 'conWire':
-				const wiresOnPointCon = projectState.wiresOnPoint(action.pos);
-				projectState.connectWires(wiresOnPointCon[0], wiresOnPointCon[1], action.pos);
-				break;
-			case 'dcoWire':
-				const wiresOnPointDco = projectState.wiresOnPoint(action.pos);
-				projectState.disconnectWires(wiresOnPointDco);
-				break;
-		}
-	}
-
 	protected static reverseActions(actions: Action[]): Action[] {
 		const out: Action[] = [];
 		for (let i = actions.length - 1; i > -1; i--) {
@@ -127,6 +97,43 @@ export class Project {
 		};
 	}
 
+
+	protected applyActions(actions: Action[]): void {
+		const newElements: Element[] = [];
+		actions.forEach(action => {
+			this.applyAction(action);
+			if (action.name[0] === 'a')
+				newElements.push(action.element);
+		});
+		this._currState.mergeGivenWires(newElements);
+	}
+
+	protected applyAction(action: Action): void {
+		switch (action.name) {
+			case 'addComp':
+			case 'addWire':
+				this._currState.addElement(action.element, action.element.id);
+				break;
+			case 'remComp':
+			case 'remWire':
+				this._currState.removeElement(action.element.id);
+				break;
+			case 'movMult':
+				for (const elem of action.others) {
+					this._currState.moveElement(elem, action.pos);
+				}
+				break;
+			case 'conWire':
+				const wiresOnPointCon = this._currState.wiresOnPoint(action.pos);
+				this._currState.connectWires(wiresOnPointCon[0], wiresOnPointCon[1], action.pos);
+				break;
+			case 'dcoWire':
+				const wiresOnPointDco = this._currState.wiresOnPoint(action.pos);
+				this._currState.disconnectWires(wiresOnPointDco);
+				break;
+		}
+	}
+
 	public getOpenActions(): Action[] {
 		const out: Action[] = [];
 		for (const element of this.allElements) {
@@ -172,8 +179,11 @@ export class Project {
 			return null;
 		this._currState.addElement(wire0);
 		this._currState.addElement(wire1);
-		const actions: Action[] = this.autoMerge([wire0, wire1]);
+		const actions: Action[] = [];
 		actions.push({ name: 'addWire', element: wire0 }, { name: 'addWire', element: wire1 });
+		actions.push(...this.autoMerge([wire0, wire1]));
+		console.log(actions);
+		this.changeSubject.next(actions);
 		this.newState(actions);
 		return [wire0, wire1];
 	}
@@ -292,9 +302,7 @@ export class Project {
 		if (this._currActionPointer < 0)
 			return;
 		const backActions = Project.reverseActions(this._actions[this._currActionPointer]);
-		for (const backAction of backActions) {
-			Project.applyAction(this._currState, backAction);
-		}
+		this.applyActions(backActions);
 		this._currActionPointer--;
 		this.changeSubject.next(backActions);
 		return backActions;
@@ -303,7 +311,7 @@ export class Project {
 	public stepForward(): Action[] {
 		if (this._currActionPointer >= this.MAX_ACTIONS || this._currActionPointer === this._currMaxActionPointer)
 			return;
-		Project.applyActions(this._currState, this._actions[++this._currActionPointer]);
+		this.applyActions(this._actions[++this._currActionPointer]);
 		const outActions = this._actions[this._currActionPointer];
 		this.changeSubject.next(outActions);
 		return outActions;
