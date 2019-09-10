@@ -66,4 +66,8 @@ export abstract class CollisionFunctions {
 	public static gridPosToChunk(pos: number): number {
 		return Math.floor(pos / environment.chunkSize);
 	}
+
+	public static distance(p1: PIXI.Point, p2: PIXI.Point): number {
+		return Math.sqrt((p1.x - p2.x) ** 2 + (p1.y - p2.y) ** 2);
+	}
 }

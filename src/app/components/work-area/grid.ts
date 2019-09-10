@@ -1,5 +1,6 @@
 import * as PIXI from 'pixi.js';
 import {environment} from '../../../environments/environment';
+import Point = PIXI.Point;
 
 export class Grid {
 
@@ -52,6 +53,24 @@ export class Grid {
 		newPoint.x %= environment.chunkSize;
 		newPoint.y %= environment.chunkSize;
 		return Grid.getPixelPosForGridPos(newPoint);
+	}
+
+	public static getLocalChunkPixelPosForGridPosWireStart(point: PIXI.Point): PIXI.Point {
+		const newPoint = point.clone();
+		newPoint.x += 0.5;
+		newPoint.y += 0.5;
+		return Grid.getLocalChunkPixelPosForGridPos(newPoint);
+	}
+
+	public static getPixelPosForGridPosWire(point: PIXI.Point): PIXI.Point {
+		return Grid.getPixelPosForGridPos(new Point(point.x + 0.5, point.y + 0.5));
+	}
+
+	public static getPixelPosForPixelPosOnGridWire(point: PIXI.Point): PIXI.Point {
+		const gridPos = Grid.getGridPosForPixelPos(point);
+		gridPos.x += 0.5;
+		gridPos.y += 0.5;
+		return Grid.getPixelPosForGridPos(gridPos);
 	}
 
 }
