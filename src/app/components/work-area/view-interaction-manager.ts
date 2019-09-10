@@ -248,7 +248,7 @@ export class ViewInteractionManager {
 	}
 
 	private resetSelectionToOldPosition() {
-		SelectionService.staticInstance.selectedIds().forEach(id => {
+		SelectionService.staticInstance.selectedIds(this._view.projectId).forEach(id => {
 			const elemSprite = this._view.allElements.get(id);
 			if (elemSprite.element.typeId === 0) {
 				elemSprite.sprite.position = Grid.getLocalChunkPixelPosForGridPosWireStart(elemSprite.element.pos);
@@ -282,6 +282,7 @@ export class ViewInteractionManager {
 	}
 
 	private onWorkModeChanged(newMode: WorkMode) {
+		this.resetSelectionToOldPosition();
 		this.clearSelection();
 		delete this._actionStartPos;
 		delete this._newWireDir;
