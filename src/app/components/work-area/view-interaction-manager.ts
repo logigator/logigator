@@ -7,10 +7,14 @@ import {WorkModeService} from '../../services/work-mode/work-mode.service';
 import {SelectionService} from '../../services/selection/selection.service';
 import {ProjectsService} from '../../services/projects/projects.service';
 import {CollisionFunctions} from '../../models/collision-functions';
+import {WorkMode} from '../../models/work-modes';
+import {Subscription} from 'rxjs';
 
 export class ViewInteractionManager {
 
 	private _view: View;
+
+	private _workModeSubscription: Subscription;
 
 	private _actionStartPos: PIXI.Point;
 	private _lastMousePos: PIXI.Point;
@@ -30,6 +34,8 @@ export class ViewInteractionManager {
 
 		this.addEventListenersToView();
 		this.addEventListenersToSelectRect();
+
+		this._workModeSubscription = WorkModeService.staticInstance.currentWorkMode$.subscribe((mode) => this.onWorkModeChanged(mode));
 	}
 
 	private addEventListenersToView() {
@@ -253,7 +259,7 @@ export class ViewInteractionManager {
 	}
 
 	private clearSelection() {
-		SelectionService.staticInstance.selectedIds().forEach(id => {
+		SelectionService.staticInstance.selectedIds(this._view.projectId).forEach(id => {
 			this._view.allElements.get(id).sprite.tint = 0xffffff;
 		});
 		SelectionService.staticInstance.clearSelection();
@@ -269,7 +275,25 @@ export class ViewInteractionManager {
 
 	private selectSingleComp(elem: ElementSprite) {
 		this.clearSelection();
+		delete this._actionStartPos;
+		this._view.removeChild(this._selectRect);
 		elem.sprite.tint = 0x8a8a8a;
 		SelectionService.staticInstance.selectComponent(elem.element.id);
+	}
+
+	private onWorkModeChanged(newMode: WorkMode) {
+		this.clearSelection();
+		delete this._actionStartPos;
+		delete this._newWireDir;
+		delete this._lastMousePos;
+		this._drawingSelectRect = false;
+		this._drawingSelectRect = false;
+		this._currentlyDraggingMultiple = false;
+		this._view.removeChild(this._selectRect);
+		this._view.removeChild(this._newWire);
+	}
+
+	public destroy() {
+		this._workModeSubscription.unsubscribe();
 	}
 }

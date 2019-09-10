@@ -34,11 +34,11 @@ export class ProjectsService {
 		}, 1000);
 	}
 
-	public subscribeToChanges(id: number): Observable<Action[]> {
-		return this._projects.get(id).changes;
+	public onProjectChanges$(projectId: number): Observable<Action[]> {
+		return this._projects.get(projectId).changes;
 	}
 
-	public get onProjectOpened(): Observable<number> {
+	public get onProjectOpened$(): Observable<number> {
 		return this._projectOpenedSubject.asObservable();
 	}
 

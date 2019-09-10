@@ -44,7 +44,7 @@ export class View extends PIXI.Container {
 		this._viewInteractionManager = new ViewInteractionManager(this);
 
 		this._notificationsFromProjectServiceSubscription =
-			ProjectsService.staticInstance.subscribeToChanges(this.projectId)
+			ProjectsService.staticInstance.onProjectChanges$(this.projectId)
 				.subscribe((actions: Action[]) => this.applyActionsToView(actions));
 
 		this.applyActionsToView(
@@ -255,6 +255,7 @@ export class View extends PIXI.Container {
 	public destroy() {
 		this._notificationsFromProjectServiceSubscription.unsubscribe();
 		this._zoomPanInputManager.destroy();
+		this._viewInteractionManager.destroy();
 		super.destroy({
 			children: true
 		});
