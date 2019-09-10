@@ -116,7 +116,7 @@ export class Project {
 		return outActions;
 	}
 
-	private static genNewElement(typeId: number, pos: PIXI.Point, endPos: PIXI.Point): Element {
+	public static genNewElement(typeId: number, pos: PIXI.Point, endPos: PIXI.Point): Element {
 		return {
 			id: -1,
 			typeId,
@@ -159,17 +159,22 @@ export class Project {
 	}
 
 	public addWire(_pos: PIXI.Point, _cornerPos: PIXI.Point, _endPos?: PIXI.Point): Element[] {
-		if (!_endPos)
-			return [this.addElement(0, _pos, _cornerPos)];
+		if (!_endPos) {
+			const elem = this.addElement(0, _pos, _cornerPos);
+			return elem ? [elem] : null;
+		}
 		const wire0 = Project.genNewElement(0, _pos.clone(), _cornerPos.clone());
 		const wire1 = Project.genNewElement(0, _cornerPos.clone(), _endPos.clone());
 		CollisionFunctions.correctPosOrder(wire0.pos, wire0.endPos);
 		CollisionFunctions.correctPosOrder(wire1.pos, wire1.endPos);
-		if (!this._currState.isFreeSpace(_pos, _cornerPos) || _endPos && !this._currState.isFreeSpace(_cornerPos, _endPos))
+		if (!this._currState.isFreeSpace(wire0.pos, wire0.endPos, true) ||
+			!this._currState.isFreeSpace(wire1.pos, wire1.endPos, true))
 			return null;
 		this._currState.addElement(wire0);
 		this._currState.addElement(wire1);
-		this.newState([{ name: 'addWire', element: wire0 }, { name: 'addWire', element: wire1 }]);
+		const actions: Action[] = this.autoMerge([wire0, wire1]);
+		actions.push({ name: 'addWire', element: wire0 }, { name: 'addWire', element: wire1 });
+		this.newState(actions);
 		return [wire0, wire1];
 	}
 
@@ -185,9 +190,10 @@ export class Project {
 		}
 		CollisionFunctions.correctPosOrder(pos, endPos);
 		const elem = Project.genNewElement(typeId, pos, endPos);
-		if (!this._currState.isFreeSpace(elem.pos, elem.endPos))
+		if (!this._currState.isFreeSpace(elem.pos, elem.endPos, typeId === 0))
 			return null;
 		this._currState.addElement(elem);
+		this._currState.mergeGivenWires([elem]);
 		this.newState([{
 			name: elem.typeId === 0 ? 'addWire' : 'addComp',
 			element: elem
@@ -252,6 +258,24 @@ export class Project {
 			pos
 		}]);
 		this.changeSubject.next(Project.connectWiresToActions(wiresOnPoint, newWires));
+	}
+
+	private autoMerge(elements: Element[]): Action[] {
+		const out: Action[] = [];
+		const elemChanges: {newElem: Element, oldElems: Element[]}[] = this._currState.mergeGivenWires(elements);
+		for (const change of elemChanges) {
+			for (const oldElem of change.oldElems) {
+				out.push({
+					name: oldElem.typeId === 0 ? 'remWire' : 'remComp',
+					element: oldElem
+				});
+			}
+			out.push({
+				name: change.newElem.typeId === 0 ? 'addWire' : 'addComp',
+				element: change.newElem
+			});
+		}
+		return out;
 	}
 
 	private newState(actions: Action[]): void {
