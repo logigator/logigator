@@ -93,8 +93,6 @@ export class ProjectState {
 	}
 
 	public addElement(elem: Element, id?: number): Element {
-		if (!this.isFreeSpace(elem.pos, elem.endPos))
-			return null;
 		elem.id = id || this.getNextId();
 		this._model.board.elements.push(elem);
 		this.loadIntoChunks(elem);

@@ -116,6 +116,17 @@ export class Project {
 		return outActions;
 	}
 
+	private static genNewElement(typeId: number, pos: PIXI.Point, endPos: PIXI.Point): Element {
+		return {
+			id: -1,
+			typeId,
+			inputs: [],
+			outputs: [],
+			pos,
+			endPos
+		};
+	}
+
 	public getOpenActions(): Action[] {
 		const out: Action[] = [];
 		for (const element of this.allElements) {
@@ -143,6 +154,23 @@ export class Project {
 		return out;
 	}
 
+	public addElements(elements: Element[]): boolean {
+		return false;
+	}
+
+	public addWire(_pos: PIXI.Point, _cornerPos: PIXI.Point, _endPos?: PIXI.Point): Element[] {
+		const wire0 = Project.genNewElement(0, _pos.clone(), _cornerPos.clone());
+		const wire1 = Project.genNewElement(0, _cornerPos.clone(), _endPos.clone());
+		CollisionFunctions.correctPosOrder(wire0.pos, wire0.endPos);
+		CollisionFunctions.correctPosOrder(wire1.pos, wire1.endPos);
+		if (!this._currState.isFreeSpace(_pos, _cornerPos) || _endPos && !this._currState.isFreeSpace(_cornerPos, _endPos))
+			return null;
+		this._currState.addElement(wire0);
+		this._currState.addElement(wire1);
+		this.newState([{ name: 'addWire', element: wire0 }, { name: 'addWire', element: wire1 }]);
+		return [wire0, wire1];
+	}
+
 	public addElement(typeId: number, pos: PIXI.Point, endPos?: PIXI.Point): Element {
 		if (!endPos) {
 			const type = ElementProviderService.staticInstance.getElementById(typeId);
@@ -150,20 +178,14 @@ export class Project {
 									pos.y + Math.max(type.numInputs, type.numOutputs));
 		}
 		CollisionFunctions.correctPosOrder(pos, endPos);
-		const elem = {
-			id: -1,
-			typeId,
-			inputs: [],
-			outputs: [],
-			pos,
-			endPos
-		};
-		if (!this._currState.addElement(elem))
+		const elem = Project.genNewElement(typeId, pos, endPos);
+		if (!this._currState.isFreeSpace(elem.pos, elem.endPos))
 			return null;
-		this.newState({
+		this._currState.addElement(elem);
+		this.newState([{
 			name: elem.typeId === 0 ? 'addWire' : 'addComp',
 			element: elem
-		});
+		}]);
 		return elem;
 	}
 
@@ -173,10 +195,10 @@ export class Project {
 
 	public removeElementById(id: number): void {
 		const elem = this._currState.removeElement(id);
-		this.newState({
+		this.newState([{
 			name: elem.typeId === 0 ? 'remWire' : 'remComp',
 			element: elem
-		});
+		}]);
 	}
 
 	public moveElementsById(ids: number[], dif: PIXI.Point): boolean {
@@ -191,7 +213,7 @@ export class Project {
 			others: elements,
 			pos: dif
 		};
-		this.newState(action);
+		this.newState([action]);
 		this.changeSubject.next([action]);
 		return true;
 	}
@@ -204,10 +226,10 @@ export class Project {
 			return;
 		}
 		const newWires = this.currState.connectWires(wiresToConnect[0], wiresToConnect[1], pos);
-		this.newState({
+		this.newState([{
 			name: 'conWire',
 			pos
-		});
+		}]);
 		this.changeSubject.next(Project.connectWiresToActions(wiresToConnect, newWires));
 	}
 
@@ -219,10 +241,10 @@ export class Project {
 			return;
 		}
 		const newWires = this._currState.disconnectWires(wiresOnPoint);
-		this.newState({
+		this.newState([{
 			name: 'dcoWire',
 			pos
-		});
+		}]);
 		this.changeSubject.next(Project.connectWiresToActions(wiresOnPoint, newWires));
 	}
 
