@@ -73,4 +73,9 @@ export class Grid {
 		return Grid.getPixelPosForGridPos(gridPos);
 	}
 
+	public static getPixelPosOnGridForPixelPos(point: PIXI.Point): PIXI.Point {
+		const gridPos = Grid.getGridPosForPixelPos(point);
+		return Grid.getPixelPosForGridPos(gridPos);
+	}
+
 }

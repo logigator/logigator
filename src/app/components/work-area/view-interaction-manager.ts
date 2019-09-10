@@ -198,7 +198,7 @@ export class ViewInteractionManager {
 			this._selectRect.width = rectEndPos.x - this._selectRect.x;
 			this._selectRect.height = rectEndPos.y -= this._selectRect.y;
 		} else if (this._currentlyDraggingMultiple) {
-			const currentMousePos = e.data.getLocalPosition(this._view);
+			const currentMousePos = Grid.getPixelPosOnGridForPixelPos(e.data.getLocalPosition(this._view));
 			const dx = currentMousePos.x - this._lastMousePos.x;
 			const dy = currentMousePos.y - this._lastMousePos.y;
 
@@ -226,7 +226,7 @@ export class ViewInteractionManager {
 	private handlePointerDownOnSelectRect(e: InteractionEvent) {
 		if (WorkModeService.staticInstance.currentWorkMode === 'select') {
 			this._currentlyDraggingMultiple = true;
-			this._lastMousePos = e.data.getLocalPosition(this._view);
+			this._lastMousePos = Grid.getPixelPosOnGridForPixelPos(e.data.getLocalPosition(this._view));
 			if (!this._actionStartPos) {
 				this._actionStartPos = this._lastMousePos;
 			}
