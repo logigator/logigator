@@ -34,18 +34,18 @@ export class SelectionService {
 	}
 
 	public selectComponent(id: number, projectId?: number): void {
-		this._selectedIds.set(projectId || this.projectsService.currProject.id, [id]);
+		this._selectedIds.set(projectId === undefined ? this.projectsService.currProject.id : projectId, [id]);
 	}
 
 	public isSingleSelect(projectId?: number): boolean {
-		return this._selectedIds.get(projectId || this.projectsService.currProject.id).length === 1;
-	}
+		return this._selectedIds.get(projectId === undefined ? this.projectsService.currProject.id : projectId).length === 1;
+}
 
 	public selectedIds(projectId?: number): number[] {
-		return this._selectedIds.get(projectId || this.projectsService.currProject.id) || [];
+		return this._selectedIds.get(projectId === undefined ? this.projectsService.currProject.id : projectId) || [];
 	}
 
 	public clearSelection(projectId?: number) {
-		this._selectedIds.delete(projectId || this.projectsService.currProject.id);
+		this._selectedIds.delete(projectId === undefined ? this.projectsService.currProject.id : projectId);
 	}
 }

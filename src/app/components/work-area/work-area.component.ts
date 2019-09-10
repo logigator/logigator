@@ -44,7 +44,7 @@ export class WorkAreaComponent implements OnInit, OnDestroy {
 			this.initGridGeneration();
 			this.initPixiTicker();
 
-			this.projectsService.onProjectOpened.subscribe(projectId => {
+			this.projectsService.onProjectOpened$.subscribe(projectId => {
 				this.ngZone.runOutsideAngular(() => {
 					this.openProject(projectId);
 					this._pixiTicker.start(); // start ticker after a project was opened

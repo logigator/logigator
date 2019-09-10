@@ -171,11 +171,15 @@ export class Project {
 		return [wire0, wire1];
 	}
 
-	public addElement(typeId: number, pos: PIXI.Point, endPos?: PIXI.Point): Element {
-		if (!endPos) {
+	public addElement(typeId: number, _pos: PIXI.Point, _endPos?: PIXI.Point): Element {
+		const pos = _pos.clone();
+		let endPos;
+		if (!_endPos) {
 			const type = ElementProviderService.staticInstance.getElementById(typeId);
 			endPos = new PIXI.Point(pos.x + environment.componentWidth,
 									pos.y + Math.max(type.numInputs, type.numOutputs));
+		} else {
+			endPos = _endPos.clone();
 		}
 		CollisionFunctions.correctPosOrder(pos, endPos);
 		const elem = Project.genNewElement(typeId, pos, endPos);
