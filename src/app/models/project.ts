@@ -23,13 +23,14 @@ export class Project {
 		['setComp', ['setComp']]
 	]);
 
-	private MAX_ACTIONS = 2000;
+	private MAX_ACTIONS = 100;
 
 	private _id: number;
 	private _name: string;
 
-	private _actions: Action[];
+	private _actions: Action[][];
 	private _currActionPointer: number;
+	private _currMaxActionPointer: number;
 
 	private _currState: ProjectState;
 
@@ -42,13 +43,12 @@ export class Project {
 		for (let i = 0; i < this.MAX_ACTIONS; i++)
 			this._actions.push(null);
 		this._currActionPointer = -1;
+		this._currMaxActionPointer = -1;
 		this.changeSubject = new Subject<Action[]>();
 	}
 
 	protected static applyActions(projectState: ProjectState, actions: Action[]): void {
-		for (const action of actions) {
-			Project.applyAction(projectState, action);
-		}
+		actions.forEach(action => Project.applyAction(projectState, action));
 	}
 
 	protected static applyAction(projectState: ProjectState, action: Action): void {
@@ -75,6 +75,14 @@ export class Project {
 				projectState.disconnectWires(wiresOnPointDco);
 				break;
 		}
+	}
+
+	protected static reverseActions(actions: Action[]): Action[] {
+		const out: Action[] = [];
+		for (let i = actions.length; i > -1; i--) {
+			out.push(...Project.reverseAction(actions[i]));
+		}
+		return out;
 	}
 
 	protected static reverseAction(action: Action): Action[] {
@@ -108,6 +116,17 @@ export class Project {
 		return outActions;
 	}
 
+	private static genNewElement(typeId: number, pos: PIXI.Point, endPos: PIXI.Point): Element {
+		return {
+			id: -1,
+			typeId,
+			inputs: [],
+			outputs: [],
+			pos,
+			endPos
+		};
+	}
+
 	public getOpenActions(): Action[] {
 		const out: Action[] = [];
 		for (const element of this.allElements) {
@@ -135,6 +154,23 @@ export class Project {
 		return out;
 	}
 
+	public addElements(elements: Element[]): boolean {
+		return false;
+	}
+
+	public addWire(_pos: PIXI.Point, _cornerPos: PIXI.Point, _endPos?: PIXI.Point): Element[] {
+		const wire0 = Project.genNewElement(0, _pos.clone(), _cornerPos.clone());
+		const wire1 = Project.genNewElement(0, _cornerPos.clone(), _endPos.clone());
+		CollisionFunctions.correctPosOrder(wire0.pos, wire0.endPos);
+		CollisionFunctions.correctPosOrder(wire1.pos, wire1.endPos);
+		if (!this._currState.isFreeSpace(_pos, _cornerPos) || _endPos && !this._currState.isFreeSpace(_cornerPos, _endPos))
+			return null;
+		this._currState.addElement(wire0);
+		this._currState.addElement(wire1);
+		this.newState([{ name: 'addWire', element: wire0 }, { name: 'addWire', element: wire1 }]);
+		return [wire0, wire1];
+	}
+
 	public addElement(typeId: number, _pos: PIXI.Point, _endPos?: PIXI.Point): Element {
 		const pos = _pos.clone();
 		let endPos;
@@ -146,20 +182,14 @@ export class Project {
 			endPos = _endPos.clone();
 		}
 		CollisionFunctions.correctPosOrder(pos, endPos);
-		const elem = {
-			id: -1,
-			typeId,
-			inputs: [],
-			outputs: [],
-			pos,
-			endPos
-		};
-		if (!this._currState.addElement(elem))
+		const elem = Project.genNewElement(typeId, pos, endPos);
+		if (!this._currState.isFreeSpace(elem.pos, elem.endPos))
 			return null;
-		this.newState({
+		this._currState.addElement(elem);
+		this.newState([{
 			name: elem.typeId === 0 ? 'addWire' : 'addComp',
 			element: elem
-		});
+		}]);
 		return elem;
 	}
 
@@ -169,45 +199,25 @@ export class Project {
 
 	public removeElementById(id: number): void {
 		const elem = this._currState.removeElement(id);
-		this.newState({
+		this.newState([{
 			name: elem.typeId === 0 ? 'remWire' : 'remComp',
 			element: elem
-		});
-	}
-
-	public moveElement(elem: Element, dif: PIXI.Point): boolean {
-		if (!this.currState.moveElement(elem, dif))
-			return false;
-		const action: Action = {
-			name: 'movMult',
-			element: elem,
-			pos: dif
-		};
-		this.newState(action);
-		this.changeSubject.next([action]);
-		return true;
-	}
-
-	public moveElementById(id: number, dif: PIXI.Point): boolean {
-		return this.moveElement(this._currState.getElementById(id), dif);
+		}]);
 	}
 
 	public moveElementsById(ids: number[], dif: PIXI.Point): boolean {
-		const elements: Element[] = [];
-		for (const id of ids) {
-			const elem = this._currState.getElementById(id);
-			elements.push(elem);
-		}
+		const elements = this._currState.getElementsById(ids);
+		if (!this._currState.allSpacesFree(elements, dif))
+			return false;
 		for (const elem of elements) {
-			if (!this.currState.moveElement(elem, dif, elements))
-				return false;
+			this._currState.moveElement(elem, dif);
 		}
 		const action: Action = {
 			name: 'movMult',
 			others: elements,
 			pos: dif
 		};
-		this.newState(action);
+		this.newState([action]);
 		this.changeSubject.next([action]);
 		return true;
 	}
@@ -220,10 +230,10 @@ export class Project {
 			return;
 		}
 		const newWires = this.currState.connectWires(wiresToConnect[0], wiresToConnect[1], pos);
-		this.newState({
+		this.newState([{
 			name: 'conWire',
 			pos
-		});
+		}]);
 		this.changeSubject.next(Project.connectWiresToActions(wiresToConnect, newWires));
 	}
 
@@ -235,26 +245,27 @@ export class Project {
 			return;
 		}
 		const newWires = this._currState.disconnectWires(wiresOnPoint);
-		this.newState({
+		this.newState([{
 			name: 'dcoWire',
 			pos
-		});
+		}]);
 		this.changeSubject.next(Project.connectWiresToActions(wiresOnPoint, newWires));
 	}
 
-	private newState(action: Action): void {
+	private newState(actions: Action[]): void {
 		if (this._currActionPointer >= this.MAX_ACTIONS) {
 			this._actions.shift();
 		} else {
 			this._currActionPointer++;
 		}
-		this._actions[this._currActionPointer] = action;
+		this._currMaxActionPointer = this._currActionPointer;
+		this._actions[this._currActionPointer] = actions;
 	}
 
 	public stepBack(): Action[] {
 		if (this._currActionPointer < 0)
 			return;
-		const backActions = Project.reverseAction(this._actions[this._currActionPointer]);
+		const backActions = Project.reverseActions(this._actions[this._currActionPointer]);
 		for (const backAction of backActions) {
 			Project.applyAction(this._currState, backAction);
 		}
@@ -264,10 +275,10 @@ export class Project {
 	}
 
 	public stepForward(): Action[] {
-		if (this._currActionPointer >= this.MAX_ACTIONS || !this._actions[this._currActionPointer + 1])
+		if (this._currActionPointer >= this.MAX_ACTIONS || this._currActionPointer === this._currMaxActionPointer)
 			return;
-		Project.applyAction(this._currState, this._actions[++this._currActionPointer]);
-		const outActions = [this._actions[this._currActionPointer]];
+		Project.applyActions(this._currState, this._actions[++this._currActionPointer]);
+		const outActions = this._actions[this._currActionPointer];
 		this.changeSubject.next(outActions);
 		return outActions;
 	}

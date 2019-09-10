@@ -31,6 +31,11 @@ export class ToolbarComponent implements OnInit {
 	}
 
 	public test(): void {
+		const test = new Array(10);
+		for (let i = 0; i < 6; i++) {
+			test[i] = Math.random();
+		}
+		console.log(test);
 	}
 
 	public test1(): void {
