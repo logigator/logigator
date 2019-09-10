@@ -28,7 +28,7 @@ export class Project {
 	private _id: number;
 	private _name: string;
 
-	private _actions: Action[];
+	private _actions: Action[][];
 	private _currActionPointer: number;
 	private _currMaxActionPointer: number;
 
@@ -48,9 +48,7 @@ export class Project {
 	}
 
 	protected static applyActions(projectState: ProjectState, actions: Action[]): void {
-		for (const action of actions) {
-			Project.applyAction(projectState, action);
-		}
+		actions.forEach(action => Project.applyAction(projectState, action));
 	}
 
 	protected static applyAction(projectState: ProjectState, action: Action): void {
@@ -77,6 +75,14 @@ export class Project {
 				projectState.disconnectWires(wiresOnPointDco);
 				break;
 		}
+	}
+
+	protected static reverseActions(actions: Action[]): Action[] {
+		const out: Action[] = [];
+		for (let i = actions.length; i > -1; i--) {
+			out.push(...Project.reverseAction(actions[i]));
+		}
+		return out;
 	}
 
 	protected static reverseAction(action: Action): Action[] {
@@ -220,20 +226,20 @@ export class Project {
 		this.changeSubject.next(Project.connectWiresToActions(wiresOnPoint, newWires));
 	}
 
-	private newState(action: Action): void {
+	private newState(actions: Action[]): void {
 		if (this._currActionPointer >= this.MAX_ACTIONS) {
 			this._actions.shift();
 		} else {
 			this._currActionPointer++;
 		}
 		this._currMaxActionPointer = this._currActionPointer;
-		this._actions[this._currActionPointer] = action;
+		this._actions[this._currActionPointer] = actions;
 	}
 
 	public stepBack(): Action[] {
 		if (this._currActionPointer < 0)
 			return;
-		const backActions = Project.reverseAction(this._actions[this._currActionPointer]);
+		const backActions = Project.reverseActions(this._actions[this._currActionPointer]);
 		for (const backAction of backActions) {
 			Project.applyAction(this._currState, backAction);
 		}
@@ -245,8 +251,8 @@ export class Project {
 	public stepForward(): Action[] {
 		if (this._currActionPointer >= this.MAX_ACTIONS || this._currActionPointer === this._currMaxActionPointer)
 			return;
-		Project.applyAction(this._currState, this._actions[++this._currActionPointer]);
-		const outActions = [this._actions[this._currActionPointer]];
+		Project.applyActions(this._currState, this._actions[++this._currActionPointer]);
+		const outActions = this._actions[this._currActionPointer];
 		this.changeSubject.next(outActions);
 		return outActions;
 	}
