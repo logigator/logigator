@@ -65,7 +65,7 @@ export class View extends PIXI.Container {
 				this._gridGraphics[chunk.x][chunk.y] = Grid.generateGridGraphics(this.zoomPan.currentScale);
 				this._chunks[chunk.x][chunk.y].children.forEach(child => {
 					const elemSprite = this.allElements.get(Number(child.name));
-					if (elemSprite.element.typeId === 0 && elemSprite.sprite instanceof PIXI.Graphics) {
+					if (elemSprite && elemSprite.element.typeId === 0 && elemSprite.sprite instanceof PIXI.Graphics) {
 						elemSprite.sprite.clear();
 						this.addLineToWireGraphics(
 							elemSprite.sprite,
@@ -159,6 +159,7 @@ export class View extends PIXI.Container {
 		}
 		const sprite = new PIXI.Sprite(elemType.texture);
 		sprite.position = Grid.getLocalChunkPixelPosForGridPos(element.pos);
+		sprite.name = element.id.toString();
 
 		const chunkX = CollisionFunctions.gridPosToChunk(element.pos.x);
 		const chunkY = CollisionFunctions.gridPosToChunk(element.pos.y);
