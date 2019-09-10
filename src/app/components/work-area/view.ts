@@ -139,14 +139,10 @@ export class View extends PIXI.Container {
 		}
 	}
 
-	public placeWires(positions: {start: PIXI.Point, end: PIXI.Point}[]) {
-		positions.forEach(w => {
-			const e = ProjectsService.staticInstance.allProjects.get(this.projectId).addElement(0, w.start, w.end);
-			// TODO: @alex should add multiple / not return null
-			if (e) {
-				this.placeWireOnView(e);
-			}
-		});
+	public placeWires(start: PIXI.Point, middle: PIXI.Point, end?: PIXI.Point) {
+		const elements = ProjectsService.staticInstance.allProjects.get(this.projectId).addWire(start, middle, end);
+		if (!elements) return;
+		elements.forEach(e => this.placeWireOnView(e));
 	}
 
 	public placeComponent(position: PIXI.Point, elementTypeId: number) {

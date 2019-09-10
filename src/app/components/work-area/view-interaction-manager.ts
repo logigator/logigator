@@ -9,6 +9,7 @@ import {ProjectsService} from '../../services/projects/projects.service';
 import {CollisionFunctions} from '../../models/collision-functions';
 import {WorkMode} from '../../models/work-modes';
 import {Subscription} from 'rxjs';
+import {wire} from '../../models/element-types/wire';
 
 export class ViewInteractionManager {
 
@@ -145,7 +146,7 @@ export class ViewInteractionManager {
 	private addWire(e: InteractionEvent) {
 		this._drawingNewWire = false;
 		const wire1StartPos = Grid.getGridPosForPixelPos(this._actionStartPos);
-		const wire2EndPos = Grid.getGridPosForPixelPos(e.data.getLocalPosition(this._view));
+		let wire2EndPos = Grid.getGridPosForPixelPos(e.data.getLocalPosition(this._view));
 		let wire1End2StartPos;
 		switch (this._newWireDir) {
 			case 'hor':
@@ -157,11 +158,10 @@ export class ViewInteractionManager {
 			default:
 				return;
 		}
-		const wires = [{start: wire1StartPos, end: wire1End2StartPos}];
-		if (wire1End2StartPos.x !== wire2EndPos.x || wire1End2StartPos.y !== wire2EndPos.y) {
-			wires.push({start: wire1End2StartPos, end: wire2EndPos});
+		if (!(wire1End2StartPos.x !== wire2EndPos.x || wire1End2StartPos.y !== wire2EndPos.y)) {
+			wire2EndPos = undefined;
 		}
-		this._view.placeWires(wires);
+		this._view.placeWires(wire1StartPos, wire1End2StartPos, wire2EndPos);
 
 		this._newWire.clear();
 		this._view.removeChild(this._newWire);

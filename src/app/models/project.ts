@@ -79,7 +79,7 @@ export class Project {
 
 	protected static reverseActions(actions: Action[]): Action[] {
 		const out: Action[] = [];
-		for (let i = actions.length; i > -1; i--) {
+		for (let i = actions.length - 1; i > -1; i--) {
 			out.push(...Project.reverseAction(actions[i]));
 		}
 		return out;
@@ -159,6 +159,8 @@ export class Project {
 	}
 
 	public addWire(_pos: PIXI.Point, _cornerPos: PIXI.Point, _endPos?: PIXI.Point): Element[] {
+		if (!_endPos)
+			return [this.addElement(0, _pos, _cornerPos)];
 		const wire0 = Project.genNewElement(0, _pos.clone(), _cornerPos.clone());
 		const wire1 = Project.genNewElement(0, _cornerPos.clone(), _endPos.clone());
 		CollisionFunctions.correctPosOrder(wire0.pos, wire0.endPos);
