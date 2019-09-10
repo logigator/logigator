@@ -16,7 +16,7 @@ export class View extends PIXI.Container {
 
 	private readonly _projectId: number;
 
-	private _zoomPan: ZoomPan;
+	public zoomPan: ZoomPan;
 
 	private _zoomPanInputManager: ZoomPanInputManager;
 
@@ -39,7 +39,7 @@ export class View extends PIXI.Container {
 		this._htmlContainer = htmlContainer;
 		this.interactive = true;
 
-		this._zoomPan = new ZoomPan(this);
+		this.zoomPan = new ZoomPan(this);
 		this._zoomPanInputManager = new ZoomPanInputManager(this._htmlContainer);
 		this._viewInteractionManager = new ViewInteractionManager(this);
 
@@ -54,7 +54,7 @@ export class View extends PIXI.Container {
 	}
 
 	private updateChunks() {
-		const currentlyOnScreen = this._zoomPan.isOnScreen(this._htmlContainer.offsetHeight, this._htmlContainer.offsetWidth);
+		const currentlyOnScreen = this.zoomPan.isOnScreen(this._htmlContainer.offsetHeight, this._htmlContainer.offsetWidth);
 		const chunksToRender = ProjectsService.staticInstance.currProject.chunksToRender(
 			Grid.getGridPosForPixelPos(currentlyOnScreen.start),
 			Grid.getGridPosForPixelPos(currentlyOnScreen.end)
@@ -62,7 +62,18 @@ export class View extends PIXI.Container {
 		chunksToRender.forEach(chunk => {
 			if (!this.createChunkIfNeeded(chunk.x, chunk.y)) {
 				this._gridGraphics[chunk.x][chunk.y].destroy();
-				this._gridGraphics[chunk.x][chunk.y] = Grid.generateGridGraphics(this._zoomPan.currentScale);
+				this._gridGraphics[chunk.x][chunk.y] = Grid.generateGridGraphics(this.zoomPan.currentScale);
+				this._chunks[chunk.x][chunk.y].children.forEach(child => {
+					const elemSprite = this.allElements.get(Number(child.name));
+					if (elemSprite.element.typeId === 0 && elemSprite.sprite instanceof PIXI.Graphics) {
+						elemSprite.sprite.clear();
+						this.addLineToWireGraphics(
+							elemSprite.sprite,
+							Grid.getPixelPosForGridPosWire(elemSprite.element.endPos),
+							Grid.getPixelPosForGridPosWire(elemSprite.element.pos)
+						);
+					}
+				});
 				this._chunks[chunk.x][chunk.y].addChild(this._gridGraphics[chunk.x][chunk.y]);
 				this._chunks[chunk.x][chunk.y].visible = true;
 			}
@@ -88,7 +99,7 @@ export class View extends PIXI.Container {
 				this._gridGraphics[x].push(undefined);
 				this._chunks[x].push(undefined);
 			}
-		this._gridGraphics[x][y] = Grid.generateGridGraphics(this._zoomPan.currentScale);
+		this._gridGraphics[x][y] = Grid.generateGridGraphics(this.zoomPan.currentScale);
 		this._chunks[x][y] = new PIXI.Container();
 		const text = new PIXI.Text(x  + ' ' + y);
 		text.x = 20 * 10;
@@ -112,15 +123,15 @@ export class View extends PIXI.Container {
 	public updateZoomPan() {
 		let needsChunkUpdate = false;
 		if (this._zoomPanInputManager.isDragging) {
-			this._zoomPan.translateBy(this._zoomPanInputManager.mouseDX, this._zoomPanInputManager.mouseDY);
+			this.zoomPan.translateBy(this._zoomPanInputManager.mouseDX, this._zoomPanInputManager.mouseDY);
 			this._zoomPanInputManager.clearMouseDelta();
 			needsChunkUpdate = true;
 		}
 
 		if (this._zoomPanInputManager.isZoomIn) {
-			needsChunkUpdate = this._zoomPan.zoomBy(0.75, this._zoomPanInputManager.mouseX, this._zoomPanInputManager.mouseY) || needsChunkUpdate;
+			needsChunkUpdate = this.zoomPan.zoomBy(0.75, this._zoomPanInputManager.mouseX, this._zoomPanInputManager.mouseY) || needsChunkUpdate;
 		} else if (this._zoomPanInputManager.isZoomOut) {
-			needsChunkUpdate = this._zoomPan.zoomBy(1.25, this._zoomPanInputManager.mouseX, this._zoomPanInputManager.mouseY) || needsChunkUpdate;
+			needsChunkUpdate = this.zoomPan.zoomBy(1.25, this._zoomPanInputManager.mouseX, this._zoomPanInputManager.mouseY) || needsChunkUpdate;
 		}
 
 		if (needsChunkUpdate) {
@@ -129,7 +140,6 @@ export class View extends PIXI.Container {
 	}
 
 	public placeWires(positions: {start: PIXI.Point, end: PIXI.Point}[]) {
-		console.log(positions);
 		positions.forEach(w => {
 			const e = ProjectsService.staticInstance.allProjects.get(this.projectId).addElement(0, w.start, w.end);
 			// TODO: @alex should add multiple / not return null
@@ -174,16 +184,21 @@ export class View extends PIXI.Container {
 		const startPos = Grid.getPixelPosForGridPosWire(element.pos);
 
 		const graphics = new PIXI.Graphics();
-		graphics.lineStyle(3);
 		graphics.position = Grid.getLocalChunkPixelPosForGridPosWireStart(element.pos);
-		graphics.moveTo(0, 0);
-		graphics.lineTo(endPos.x - startPos.x, endPos.y - startPos.y);
+		graphics.name = element.id.toString();
+		this.addLineToWireGraphics(graphics, endPos, startPos);
 
 		this.createChunkIfNeeded(chunkX, chunkY);
 		this._chunks[chunkX][chunkY].addChild(graphics);
 
 		const elemSprite = {element, sprite: graphics};
 		this.allElements.set(element.id, elemSprite);
+	}
+
+	private addLineToWireGraphics(graphics: PIXI.Graphics, endPos: PIXI.Point, startPos: PIXI.Point) {
+		graphics.lineStyle(1 / this.zoomPan.currentScale);
+		graphics.moveTo(0, 0);
+		graphics.lineTo(endPos.x - startPos.x, endPos.y - startPos.y);
 	}
 
 	private placeComponentInModel(position: PIXI.Point, elementTypeId: number): Element {
@@ -205,10 +220,9 @@ export class View extends PIXI.Container {
 				this.placeWireOnView(action.element);
 				break;
 			case 'remComp':
+			case 'remWire':
 				this.allElements.get(action.element.id).sprite.destroy();
 				this.allElements.delete(action.element.id);
-				break;
-			case 'remWire':
 				break;
 			case 'movMult':
 				this.moveMultipleAction(action);
