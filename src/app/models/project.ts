@@ -1,5 +1,5 @@
 import {ProjectState} from './project-state';
-import {Action, Actions, ActionType} from './action';
+import {Action, Actions} from './action';
 import {Element} from './element';
 import {Chunk} from './chunk';
 import {Observable, Subject} from 'rxjs';
@@ -7,7 +7,6 @@ import * as PIXI from 'pixi.js';
 import {environment} from '../../environments/environment';
 import {CollisionFunctions} from './collision-functions';
 import {ElementProviderService} from '../services/element-provider/element-provider.service';
-import {ElementType} from './element-type';
 
 export class Project {
 
@@ -72,7 +71,7 @@ export class Project {
 			if (action.name[0] === 'r')
 				newElements = newElements.filter(e => e.id !== action.element.id);
 		});
-		this._currState.mergeGivenWires(newElements);
+		this._currState.mergeToBoard(newElements);
 	}
 
 	protected applyAction(action: Action): void {
@@ -234,7 +233,7 @@ export class Project {
 
 	private autoMerge(elements: Element[]): Action[] {
 		const out: Action[] = [];
-		const elemChanges: {newElem: Element, oldElems: Element[]}[] = this._currState.mergeGivenWires(elements);
+		const elemChanges: {newElem: Element, oldElems: Element[]}[] = this._currState.mergeToBoard(elements);
 		for (const change of elemChanges) {
 			for (const oldElem of change.oldElems) {
 				out.push({ name: 'remWire', element: oldElem });

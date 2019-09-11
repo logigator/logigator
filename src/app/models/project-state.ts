@@ -1,7 +1,6 @@
 import {Chunk} from './chunk';
 import {ProjectModel} from './project-model';
 import {Element} from './element';
-import {environment} from '../../environments/environment';
 import * as PIXI from 'pixi.js';
 import {Project} from './project';
 import {CollisionFunctions} from './collision-functions';
@@ -158,7 +157,7 @@ export class ProjectState {
 		return outWires;
 	}
 
-	public mergeGivenWires(elements: Element[]): {newElem: Element, oldElems: Element[]}[] {
+	public mergeToBoard(elements: Element[]): {newElem: Element, oldElems: Element[]}[] {
 		const out: {newElem: Element, oldElems: Element[]}[] = [];
 		for (const elem of elements) {
 			if (elem.typeId !== 0)
@@ -186,14 +185,8 @@ export class ProjectState {
 			wire0.id === wire1.id)) {
 			return null;
 		}
-		const newElem: Element = {
-			id: wire0.id,
-			typeId: 0,
-			inputs: [],
-			outputs: [],
-			pos: undefined,
-			endPos: undefined
-		};
+		const newElem = Project.genNewElement(0, undefined, undefined);
+		newElem.id = wire0.id;
 		if (CollisionFunctions.isVertical(wire0) && CollisionFunctions.isVertical(wire1) && wire0.pos.x === wire1.pos.x) {
 			const start = Math.min(wire0.pos.y, wire0.endPos.y, wire1.pos.y, wire1.endPos.y);
 			const end = Math.max(wire0.pos.y, wire0.endPos.y, wire1.pos.y, wire1.endPos.y);
