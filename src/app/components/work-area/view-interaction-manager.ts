@@ -145,6 +145,7 @@ export class ViewInteractionManager {
 
 	private addWire(e: InteractionEvent) {
 		this._drawingNewWire = false;
+		if (!this._actionStartPos) return;
 		const wire1StartPos = Grid.getGridPosForPixelPos(this._actionStartPos);
 		let wire2EndPos = Grid.getGridPosForPixelPos(e.data.getLocalPosition(this._view));
 		let wire1End2StartPos;
