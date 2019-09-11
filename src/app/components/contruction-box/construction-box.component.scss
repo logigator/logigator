@@ -1,14 +1,11 @@
+@import "themes";
 @import "variables";
 
 #construction-box {
 	background-color: $construction-box-background-color;
 
-	position: absolute;
-	top: $toolbar-height + 10px;
-  	left: 10px;
-
-	width: $construction-box-width;
-	height: 80%;
+	height: 100%;
+	width: 100%;
 
 	#component-search {
 		width: 100%;

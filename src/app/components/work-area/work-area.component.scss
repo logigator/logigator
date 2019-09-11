@@ -1,3 +1,4 @@
+@import "themes";
 @import "variables";
 
 .main-area {
@@ -7,16 +8,13 @@
 	#canvas-container {
 		width: 100%;
 		height: calc(100% - #{$toolbar-height});
-
 		position: fixed;
-		top: $toolbar-height;
-
 		cursor: crosshair;
 	}
 
 	#tabs {
 		position: relative;
-		left: calc(#{$construction-box-width} + 15px);
+		left: 0.5rem;
 
 		width: fit-content;
 
@@ -72,24 +70,3 @@
 		}
 	}
 }
-
-
-//.main-area {
-//	width: 100%;
-//	height: calc(100% - #{$toolbar-height});
-//
-//	position: fixed;
-//	top: $toolbar-height;
-//
-//	background-color: lightcyan;
-//}
-//
-//div {
-//	width: 100%;
-//	height: calc(100% - #{$toolbar-height});
-//
-//	position: fixed;
-//	top: $toolbar-height;
-//
-//	background-color: lightcyan;
-//}
