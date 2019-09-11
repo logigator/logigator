@@ -69,11 +69,12 @@ export class ProjectState {
 			};
 	}
 
-	public isFreeSpace(startPos: PIXI.Point, endPos: PIXI.Point, except?: Element[]): boolean {
+	// TODO not check elements twice
+	public isFreeSpace(startPos: PIXI.Point, endPos: PIXI.Point, isWire?: boolean, except?: Element[]): boolean {
 		const chunks = this.chunksFromCoords(CollisionFunctions.inRectChunks(startPos, endPos));
 		for (const chunk of chunks) {
 			for (const elem of chunk.elements) {
-				if (except && except.find(e => e.id === elem.id))
+				if (except && except.find(e => e.id === elem.id) || isWire && elem.typeId === 0)
 					continue;
 				if (CollisionFunctions.isRectInRect(startPos, endPos, elem.pos, elem.endPos))
 					return false;
@@ -86,7 +87,7 @@ export class ProjectState {
 		for (const elem of elements) {
 			const newStartPos = new PIXI.Point(elem.pos.x + dif.x, elem.pos.y + dif.y);
 			const newEndPos = new PIXI.Point(elem.endPos.x + dif.x, elem.endPos.y + dif.y);
-			if (!this.isFreeSpace(newStartPos, newEndPos, elements))
+			if (!this.isFreeSpace(newStartPos, newEndPos, elem.typeId === 0, elements))
 				return false;
 		}
 		return true;
@@ -116,7 +117,7 @@ export class ProjectState {
 		element.pos.y += dif.y;
 		element.endPos.x += dif.x;
 		element.endPos.y += dif.y;
-		if (except && !this.isFreeSpace(element.pos, element.endPos, except)) {
+		if (except && !this.isFreeSpace(element.pos, element.endPos, element.typeId === 0, except)) {
 			element.pos.x -= dif.x;
 			element.pos.y -= dif.y;
 			element.endPos.x -= dif.x;
@@ -136,14 +137,7 @@ export class ProjectState {
 	private splitWire(wire: Element, pos: PIXI.Point): Element[] {
 		if (!CollisionFunctions.isPointOnWireNoEdge(wire, pos))
 			return [wire];
-		const newWire = {
-			id: -1,
-			typeId: 0,
-			inputs: [],
-			outputs: [],
-			pos,
-			endPos: wire.endPos
-		};
+		const newWire = Project.genNewElement(0, pos, wire.endPos);
 		wire.endPos = pos;
 		this.addElement(newWire);
 		return [wire, newWire];
@@ -164,22 +158,26 @@ export class ProjectState {
 		return outWires;
 	}
 
-	// TODO test, use
 	public mergeGivenWires(elements: Element[]): {newElem: Element, oldElems: Element[]}[] {
 		const out: {newElem: Element, oldElems: Element[]}[] = [];
 		for (const elem of elements) {
-			if (elem.id !== 0)
+			if (elem.typeId !== 0)
 				continue;
 			const chunks = this.chunksFromCoords(CollisionFunctions.inRectChunks(elem.pos, elem.endPos));
 			const doneOthers: Element[] = [];
 			for (const chunk of chunks) {
 				for (const other of chunk.elements) {
-					if (!doneOthers.find(e => e.id === other.id) && this.mergeWires(elem, other))
-						doneOthers.push(other);
+					if (!doneOthers.find(e => e.id === other.id) && elem.id !== other.id) {
+						const changes = this.mergeWires(elem, other);
+						if (changes) {
+							out.push(changes);
+							doneOthers.push(other);
+						}
+					}
 				}
 			}
 		}
-		return [];
+		return out;
 	}
 
 	public mergeWires(wire0: Element, wire1: Element): {newElem: Element, oldElems: Element[]} {
