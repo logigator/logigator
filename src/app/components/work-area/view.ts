@@ -140,16 +140,11 @@ export class View extends PIXI.Container {
 	}
 
 	public placeWires(start: PIXI.Point, middle: PIXI.Point, end?: PIXI.Point) {
-		const elements = ProjectsService.staticInstance.allProjects.get(this.projectId).addWire(start, middle, end);
-		if (!elements) return;
-		elements.forEach(e => this.placeWireOnView(e));
+		ProjectsService.staticInstance.allProjects.get(this.projectId).addWire(start, middle, end);
 	}
 
 	public placeComponent(position: PIXI.Point, elementTypeId: number) {
-		const elem = this.placeComponentInModel(position, elementTypeId);
-		if (!elem)
-			return;
-		this.placeComponentOnView(elem);
+		return ProjectsService.staticInstance.allProjects.get(this.projectId).addElement(elementTypeId, position);
 	}
 
 	private placeComponentOnView(element: Element) {
@@ -196,10 +191,6 @@ export class View extends PIXI.Container {
 		graphics.lineStyle(1 / this.zoomPan.currentScale);
 		graphics.moveTo(0, 0);
 		graphics.lineTo(endPos.x - startPos.x, endPos.y - startPos.y);
-	}
-
-	private placeComponentInModel(position: PIXI.Point, elementTypeId: number): Element {
-		return ProjectsService.staticInstance.allProjects.get(this.projectId).addElement(elementTypeId, position);
 	}
 
 	private applyActionsToView(actions: Action[]) {
