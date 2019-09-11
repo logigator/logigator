@@ -182,7 +182,6 @@ export class Project {
 		const actions: Action[] = [];
 		actions.push({ name: 'addWire', element: wire0 }, { name: 'addWire', element: wire1 });
 		actions.push(...this.autoMerge([wire0, wire1]));
-		console.log(actions);
 		this.changeSubject.next(actions);
 		this.newState(actions);
 		return [wire0, wire1];
@@ -204,10 +203,13 @@ export class Project {
 			return null;
 		this._currState.addElement(elem);
 		this._currState.mergeGivenWires([elem]);
-		this.newState([{
+		const actions: Action[] = [{
 			name: elem.typeId === 0 ? 'addWire' : 'addComp',
 			element: elem
-		}]);
+		}];
+		actions.push(...this.autoMerge([elem]));
+		this.newState(actions);
+		this.changeSubject.next(actions);
 		return elem;
 	}
 
@@ -217,10 +219,12 @@ export class Project {
 
 	public removeElementById(id: number): void {
 		const elem = this._currState.removeElement(id);
-		this.newState([{
+		const action: Action = {
 			name: elem.typeId === 0 ? 'remWire' : 'remComp',
 			element: elem
-		}]);
+		};
+		this.newState([action]);
+		this.changeSubject.next([action]);
 	}
 
 	public moveElementsById(ids: number[], dif: PIXI.Point): boolean {
