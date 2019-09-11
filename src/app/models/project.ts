@@ -7,6 +7,7 @@ import * as PIXI from 'pixi.js';
 import {environment} from '../../environments/environment';
 import {CollisionFunctions} from './collision-functions';
 import {ElementProviderService} from '../services/element-provider/element-provider.service';
+import {ElementType} from './element-type';
 
 export class Project {
 
@@ -86,7 +87,10 @@ export class Project {
 		return outActions;
 	}
 
-	public static genNewElement(typeId: number, pos: PIXI.Point, endPos: PIXI.Point): Element {
+	public static genNewElement(typeId: number, _pos: PIXI.Point, _endPos: PIXI.Point): Element {
+		const pos = _pos.clone();
+		const endPos = _endPos ? _endPos.clone() : Project.calcEndPos(pos, typeId);
+		CollisionFunctions.correctPosOrder(pos, endPos);
 		return {
 			id: -1,
 			typeId,
@@ -95,6 +99,12 @@ export class Project {
 			pos,
 			endPos
 		};
+	}
+
+	private static calcEndPos(pos: PIXI.Point, typeId: number) {
+		const type = ElementProviderService.staticInstance.getElementById(typeId);
+		return new PIXI.Point(pos.x + environment.componentWidth,
+			pos.y + Math.max(type.numInputs, type.numOutputs));
 	}
 
 
@@ -170,39 +180,37 @@ export class Project {
 			const elem = this.addElement(0, _pos, _cornerPos);
 			return elem ? [elem] : null;
 		}
-		const wire0 = Project.genNewElement(0, _pos.clone(), _cornerPos.clone());
-		const wire1 = Project.genNewElement(0, _cornerPos.clone(), _endPos.clone());
-		CollisionFunctions.correctPosOrder(wire0.pos, wire0.endPos);
-		CollisionFunctions.correctPosOrder(wire1.pos, wire1.endPos);
-		if (!this._currState.isFreeSpace(wire0.pos, wire0.endPos, true) ||
-			!this._currState.isFreeSpace(wire1.pos, wire1.endPos, true))
+		const {wire0, wire1} = this.gen2Wires(_pos, _cornerPos, _endPos);
+		if (!this._currState.allSpacesFree([wire0, wire1], new PIXI.Point(0, 0)))
 			return null;
 		this._currState.addElement(wire0);
 		this._currState.addElement(wire1);
-		const actions: Action[] = [];
-		actions.push({ name: 'addWire', element: wire0 }, { name: 'addWire', element: wire1 });
-		actions.push(...this.autoMerge([wire0, wire1]));
+		const actions = this.actionsFromWires([wire0, wire1]);
 		this.changeSubject.next(actions);
 		this.newState(actions);
 		return [wire0, wire1];
 	}
 
+	private actionsFromWires(wires: Element[]) {
+		const actions: Action[] = [];
+		wires.forEach(wire => actions.push({name: 'addWire', element: wire}));
+		actions.push(...this.autoMerge(wires));
+		return actions;
+	}
+
+	private gen2Wires(_pos: PIXI.Point, _cornerPos: PIXI.Point, _endPos: PIXI.Point) {
+		const wire0 = Project.genNewElement(0, _pos.clone(), _cornerPos.clone());
+		const wire1 = Project.genNewElement(0, _cornerPos.clone(), _endPos.clone());
+		CollisionFunctions.correctPosOrder(wire0.pos, wire0.endPos);
+		CollisionFunctions.correctPosOrder(wire1.pos, wire1.endPos);
+		return {wire0, wire1};
+	}
+
 	public addElement(typeId: number, _pos: PIXI.Point, _endPos?: PIXI.Point): Element {
-		const pos = _pos.clone();
-		let endPos;
-		if (!_endPos) {
-			const type = ElementProviderService.staticInstance.getElementById(typeId);
-			endPos = new PIXI.Point(pos.x + environment.componentWidth,
-									pos.y + Math.max(type.numInputs, type.numOutputs));
-		} else {
-			endPos = _endPos.clone();
-		}
-		CollisionFunctions.correctPosOrder(pos, endPos);
-		const elem = Project.genNewElement(typeId, pos, endPos);
+		const elem = Project.genNewElement(typeId, _pos, _endPos);
 		if (!this._currState.isFreeSpace(elem.pos, elem.endPos, typeId === 0))
 			return null;
 		this._currState.addElement(elem);
-		this._currState.mergeGivenWires([elem]);
 		const actions: Action[] = [{
 			name: elem.typeId === 0 ? 'addWire' : 'addComp',
 			element: elem
@@ -234,13 +242,14 @@ export class Project {
 		for (const elem of elements) {
 			this._currState.moveElement(elem, dif);
 		}
-		const action: Action = {
+		const actions: Action[] = [{
 			name: 'movMult',
 			others: elements,
 			pos: dif
-		};
-		this.newState([action]);
-		this.changeSubject.next([action]);
+		}];
+		actions.push(...this.autoMerge(elements));
+		this.newState(actions);
+		this.changeSubject.next(actions);
 		return true;
 	}
 
@@ -279,15 +288,9 @@ export class Project {
 		const elemChanges: {newElem: Element, oldElems: Element[]}[] = this._currState.mergeGivenWires(elements);
 		for (const change of elemChanges) {
 			for (const oldElem of change.oldElems) {
-				out.push({
-					name: oldElem.typeId === 0 ? 'remWire' : 'remComp',
-					element: oldElem
-				});
+				out.push({ name: 'remWire', element: oldElem });
 			}
-			out.push({
-				name: change.newElem.typeId === 0 ? 'addWire' : 'addComp',
-				element: change.newElem
-			});
+			out.push({ name: 'addWire', element: change.newElem });
 		}
 		return out;
 	}
@@ -306,8 +309,8 @@ export class Project {
 		if (this._currActionPointer < 0)
 			return;
 		const backActions = Project.reverseActions(this._actions[this._currActionPointer]);
-		this.applyActions(backActions);
 		this._currActionPointer--;
+		this.applyActions(backActions);
 		this.changeSubject.next(backActions);
 		return backActions;
 	}
@@ -315,8 +318,8 @@ export class Project {
 	public stepForward(): Action[] {
 		if (this._currActionPointer >= this.MAX_ACTIONS || this._currActionPointer === this._currMaxActionPointer)
 			return;
-		this.applyActions(this._actions[++this._currActionPointer]);
-		const outActions = this._actions[this._currActionPointer];
+		const outActions = this._actions[++this._currActionPointer];
+		this.applyActions(outActions);
 		this.changeSubject.next(outActions);
 		return outActions;
 	}
