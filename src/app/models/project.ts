@@ -64,11 +64,13 @@ export class Project {
 	}
 
 	protected applyActions(actions: Action[]): void {
-		const newElements: Element[] = [];
+		let newElements: Element[] = [];
 		actions.forEach(action => {
 			this.applyAction(action);
-			if (action.name[0] === 'a')
+			if (action.name[0] === 'a' || action.name[0] === 'm')
 				newElements.push(action.element);
+			if (action.name[0] === 'r')
+				newElements = newElements.filter(e => e.id !== action.element.id);
 		});
 		this._currState.mergeGivenWires(newElements);
 	}

@@ -42,9 +42,8 @@ export class ProjectState {
 		const chunkCoords = CollisionFunctions.inRectChunks(element.pos, element.endPos);
 		for (const coord of chunkCoords) {
 			this.createChunk(coord.x, coord.y);
-			if (!this._chunks[coord.x][coord.y].elements.find(e => e.id === element.id)) {
+			if (!this._chunks[coord.x][coord.y].elements.find(e => e.id === element.id))
 				this._chunks[coord.x][coord.y].elements.push(element);
-			}
 		}
 	}
 
@@ -102,8 +101,6 @@ export class ProjectState {
 	}
 
 	public removeElement(elementId: number): Element {
-		if (elementId === 5)
-			console.log('asdf');
 		const outElemIndex = this._model.board.elements.findIndex(c => c.id === elementId);
 		if (outElemIndex < 0)
 			return null;

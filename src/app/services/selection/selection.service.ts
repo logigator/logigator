@@ -30,7 +30,6 @@ export class SelectionService {
 				}
 			}
 		}
-		console.log(ids);
 		return ids;
 	}
 
