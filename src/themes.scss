@@ -1,51 +1,41 @@
-//toolbar-styles
-$toolbar-background: lightgreen;
+$themes: (
+	light: (
+		primary-text: black,
+		secondary-text: white,
+		toolbar: green,
+		construction-box-background: grey,
+		tab-active: green,
+		tab-inactive: grey,
+		boxes-background: darkgrey
+	),
+	dark: (
+		primary-text: black,
+		secondary-text: white,
+		toolbar: green,
+		construction-box-background: grey,
+		tab-active: green,
+		tab-inactive: grey,
+		boxes-background: darkgrey
+	)
+);
 
-$toolbar-icon-button-background-color: lightgreen;
-$toolbar-icon-button-font-color: black;
+@mixin themify() {
+	@each $theme, $map in $themes {
 
-$toolbar-icon-button-hover-font-color: white;
-$toolbar-icon-button-hover-background-color: lightgreen;
+		:host-context(.theme-#{$theme}) & {
+			$theme-map: () !global;
+			@each $key, $submap in $map {
+				$value: map-get(map-get($themes, $theme), '#{$key}');
+				$theme-map: map-merge($theme-map, ($key: $value)) !global;
+			}
 
-$toolbar-icon-button-active-font-color: red;
-$toolbar-icon-button-active-background-color: lightgreen;
+			@content;
+			$theme-map: null !global;
+		}
 
-$toolbar-icon-button-active-hover-font-color: red;
-$toolbar-icon-button-active-hover-background-color: lightgreen;
+	}
+}
 
-
-//project-tab-styles
-$tab-background-color: lightblue;
-$tab-font-color: black;
-
-$tab-hover-font-color: black;
-$tab-hover-background-color: blue;
-
-$tab-active-font-color: black;
-$tab-active-background-color: green;
-
-$tab-active-hover-font-color: black;
-$tab-active-hover-background-color: green;
-
-
-
-//construction-box-styles
-$construction-box-width: 200px;
-
-$construction-box-background-color: bisque;
-$construction-box-search-background-color: white;
-
-$construction-box-component-font-color: black;
-
-$construction-box-component-hover-background-color: lightgreen;
-$construction-box-component-hover-font-color: black;
-
-$construction-box-component-active-background-color: lightcyan;
-$construction-box-component-active-font-color: black;
-
-$construction-box-component-active-hover-font-color: black;
-$construction-box-component-active-hover-background-color: lightcyan;
-
-
-$settings-info-box-width: 150px;
-
+@function themed($key) {
+	@return map-get($theme-map, $key);
+}

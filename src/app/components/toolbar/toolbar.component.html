@@ -1,34 +1,48 @@
 <div id="toolbar">
 
-	<div>LOGO</div>
+	<img src="/assets/logo.svg">
 
-	<div id="file-options">
-		<button class="icon-button toolbar-button">Save</button>
-		<button class="icon-button toolbar-button">Open</button>
-	</div>
+	<div>
+		<button class="toolbar-button save no-margin"></button>
 
-	<div id="project-options">
-		<button class="icon-button toolbar-button">Copy</button>
-		<button class="icon-button toolbar-button">Cut</button>
-		<button class="icon-button toolbar-button">Delete</button>
-		<button class="icon-button toolbar-button" (click)="undo()">zurück</button>
-		<button class="icon-button toolbar-button" (click)="redo()">vor</button>
-	</div>
+		<div class="divider"></div>
 
-	<div id="edit-options">
-		<button class="icon-button toolbar-button" (click)="setWorkMode('buildWire')" [class.toolbar-button-active]="currentWorkMode === 'buildWire'">wire</button>
-		<button class="icon-button toolbar-button" (click)="setWorkMode('connectWire')" [class.toolbar-button-active]="currentWorkMode === 'connectWire'">connect wire</button>
-		<button class="icon-button toolbar-button" (click)="setWorkMode('select')" [class.toolbar-button-active]="currentWorkMode === 'select'">select</button>
+		<button class="toolbar-button paste"></button>
+		<button class="toolbar-button copy"></button>
+		<button class="toolbar-button cut"></button>
+		<button class="toolbar-button delete no-margin"></button>
+
+		<div class="divider"></div>
+
+		<button class="toolbar-button undo" (click)="undo()"></button>
+		<button class="toolbar-button redo no-margin" (click)="redo()"></button>
+
+		<div class="divider"></div>
+
+		<button class="toolbar-button text"></button>
+		<button class="toolbar-button wire" (click)="setWorkMode('buildWire')"></button>
+		<button class="toolbar-button conn-wire" (click)="setWorkMode('connectWire')"></button>
+		<button class="toolbar-button select" (click)="setWorkMode('select')"></button>
+
+		<!--for testing-->
 		<button (click)="printElements()">print Elements</button>
 		<button (click)="test()">test</button>
 		<button (click)="test1()">test1</button>
 	</div>
 
-	<div>
-		<button class="icon-button toolbar-button">start sim</button>
-	</div>
-	<div>
-		<button class="icon-button toolbar-button">settings</button>
-	</div>
+	<div class="toolbar-end">
+		<button class="toolbar-button sim-start"></button>
+		<button class="toolbar-button sim-pause"></button>
+		<button class="toolbar-button sim-step"></button>
+		<button class="toolbar-button sim-stop no-margin"></button>
 
+		<div class="divider"></div>
+
+		<button class="toolbar-button zoom-out"></button>
+		<button class="toolbar-button zoom-in no-margin"></button>
+
+		<div class="divider"></div>
+
+		<button class="toolbar-button settings"></button>
+	</div>
 </div>

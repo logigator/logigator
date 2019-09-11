@@ -1,12 +1,38 @@
 @import "themes";
+@import "variables";
 
-div {
-  background-color: brown;
+.box {
+	position: absolute;
+	right: 0;
+	top: calc(#{$toolbar-height} + #{$tab-height} + 0.5rem);
 
-  position: absolute;
-  bottom: 10px;
-  right: 10px;
+	width: $settings-info-box-width;
+	height: $settings-info-box-height;
 
-  width: $settings-info-box-width;
-  height: 50%
+	display: grid;
+	grid-template-rows: 3rem auto;
+
+	.header {
+		height: 100%;
+		display: flex;
+		flex-direction: row;
+		align-items: center;
+		justify-content: center;
+
+		h2 {
+			margin: 0;
+		}
+
+		@include themify() {
+			background-color: themed('toolbar');
+			color: themed('primary-text');
+		}
+	}
+
+	.content {
+		@include themify() {
+			background-color: themed('boxes-background');
+			color: themed('secondary-text');
+		}
+	}
 }
