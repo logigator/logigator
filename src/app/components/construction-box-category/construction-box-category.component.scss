@@ -1,0 +1,37 @@
+@import "variables";
+@import "themes";
+
+.box {
+	width: $construction-box-width - 1rem;
+	margin: auto;
+	margin-bottom: 0.8rem;
+
+	.header {
+		height: 2.3rem;
+		display: flex;
+		flex-direction: row;
+		align-items: center;
+		justify-content: center;
+
+		@include themify() {
+			background-color: themed('toolbar');
+			color: themed('primary-text');
+		}
+
+		h2 {
+			margin: 0;
+		}
+	}
+
+	.content {
+		@include themify() {
+			background-color: themed('boxes-background');
+			color: themed('secondary-text');
+		}
+
+		.no-components {
+			padding: 0.5rem;
+			text-align: center;
+		}
+	}
+}

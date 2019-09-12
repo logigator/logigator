@@ -1,0 +1,18 @@
+<div class="box">
+	<div class="header">
+		<h2>{{categoryName}}</h2>
+	</div>
+	<div class="content">
+		<ng-container *ngIf="components.size > 0; else noComponents">
+			<ng-container *ngFor="let comp of components | keyvalue; trackBy: componentsTrackBy">
+				<div>
+					{{comp.value.name}}
+				</div>
+			</ng-container>
+		</ng-container>
+	</div>
+</div>
+
+<ng-template #noComponents>
+	<div class="no-components">There are no components in this category.</div>
+</ng-template>

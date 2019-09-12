@@ -1,0 +1,32 @@
+@import "themes";
+@import "variables";
+
+#construction-box {
+	@include themify() {
+		background-color: themed('construction-box-background');
+	}
+
+	height: 100%;
+	width: 100%;
+
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+
+	#component-search {
+		width: $construction-box-width - 1rem;
+		height: 2.5rem;
+		font-size: 16px;
+		padding: 1.25rem;
+		outline: none;
+		border: none;
+		border-radius: 1.25rem;
+		margin-top: 0.5rem;
+		margin-bottom: 0.5rem;
+
+		@include themify() {
+			background-color: themed('search-background');
+			color: themed('secondary-text');
+		}
+	}
+}
