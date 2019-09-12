@@ -49,7 +49,7 @@ export class Project {
 		};
 	}
 
-	private static gen2Wires(_pos: PIXI.Point, _cornerPos: PIXI.Point, _endPos: PIXI.Point) {
+	private static gen2Wires(_pos: PIXI.Point, _cornerPos: PIXI.Point, _endPos: PIXI.Point): {wire0: Element, wire1: Element} {
 		const wire0 = Project.genNewElement(0, _pos, _cornerPos);
 		const wire1 = Project.genNewElement(0, _cornerPos, _endPos);
 		CollisionFunctions.correctPosOrder(wire0.pos, wire0.endPos);
@@ -57,7 +57,7 @@ export class Project {
 		return {wire0, wire1};
 	}
 
-	private static calcEndPos(pos: PIXI.Point, typeId: number) {
+	private static calcEndPos(pos: PIXI.Point, typeId: number): PIXI.Point {
 		const type = ElementProviderService.staticInstance.getElementById(typeId);
 		return new PIXI.Point(pos.x + environment.componentWidth,
 			pos.y + Math.max(type.numInputs, type.numOutputs));
@@ -74,7 +74,6 @@ export class Project {
 			else if (action.name[0] === 'm')
 				newElements.push(...action.others);
 		});
-		this._currState.mergeToBoard(newElements);
 	}
 
 	protected applyAction(action: Action): void {
@@ -132,16 +131,16 @@ export class Project {
 			return null;
 		this._currState.addElement(wire0);
 		this._currState.addElement(wire1);
-		const actions = this.actionsFromWires([wire0, wire1]);
-		this.changeSubject.next(actions);
+		const actions = this.actionsFromAddWires([wire0, wire1]);
 		this.newState(actions);
+		this.changeSubject.next(actions);
 		return [wire0, wire1];
 	}
 
-	private actionsFromWires(wires: Element[]) {
+	private actionsFromAddWires(wires: Element[]): Action[] {
 		const actions: Action[] = [];
 		wires.forEach(wire => actions.push({name: 'addWire', element: wire}));
-		actions.push(...this.autoMerge(wires));
+		actions.push(...this.autoAssemble(wires));
 		return actions;
 	}
 
@@ -160,7 +159,7 @@ export class Project {
 			name: elem.typeId === 0 ? 'addWire' : 'addComp',
 			element: elem
 		}];
-		actions.push(...this.autoMerge([elem]));
+		actions.push(...this.autoAssemble([elem]));
 		this.newState(actions);
 		this.changeSubject.next(actions);
 		return elem;
@@ -194,7 +193,7 @@ export class Project {
 			others: elements,
 			pos: dif
 		}];
-		actions.push(...this.autoMerge(elements));
+		actions.push(...this.autoAssemble(elements));
 		this.newState(actions);
 		this.changeSubject.next(actions);
 		return true;
@@ -202,38 +201,75 @@ export class Project {
 
 	public toggleWireConnection(pos: PIXI.Point): void {
 		const wiresOnPoint = this._currState.wiresOnPoint(pos);
+		let actions: Action[];
 		if (wiresOnPoint.length === 2) {
-			this.connectWires(wiresOnPoint, pos);
+			actions = this.connectWires(pos, wiresOnPoint);
 		} else if (wiresOnPoint.length === 4) {
-			this.disconnectWires(wiresOnPoint);
+			actions = this.disconnectWires(wiresOnPoint);
 		} else {
 			console.log('where are you clicking??', wiresOnPoint);
 		}
+		this.newState(actions);
+		this.changeSubject.next(actions);
 	}
 
-	private connectWires(wiresToConnect: Element[], pos: PIXI.Point): void {
+	private connectWires(pos: PIXI.Point, wiresToConnect?: Element[]): Action[] {
+		if (!wiresToConnect)
+			wiresToConnect = this._currState.wiresOnPoint(pos);
 		const newWires = this.currState.connectWires(wiresToConnect[0], wiresToConnect[1], pos);
-		const outActions = Actions.connectWiresToActions(wiresToConnect, newWires);
-		this.newState(outActions);
-		this.changeSubject.next(outActions);
+		return Actions.connectWiresToActions(wiresToConnect, newWires);
 	}
 
-	private disconnectWires(wiresOnPoint: Element[]): void {
+	private disconnectWires(wiresOnPoint: Element[]): Action[] {
 		const newWires = this._currState.disconnectWires(wiresOnPoint);
-		const outActions = Actions.connectWiresToActions(wiresOnPoint, newWires);
-		this.newState(outActions);
-		this.changeSubject.next(outActions);
+		return Actions.connectWiresToActions(wiresOnPoint, newWires);
 	}
 
-	private autoMerge(elements: Element[]): Action[] {
+	private autoConnect(elements: Element[]): Action[] {
 		const out: Action[] = [];
+		for (const elem of elements) {
+			const others = this._currState.elementsInChunks(elem.pos, elem.endPos);
+			for (const other of others) {
+				const actions = this.connectWithEdge(other, elem);
+				if (actions)
+					out.push(...actions);
+			}
+		}
+		return out;
+	}
+
+	private connectWithEdge(other, elem): Action[] {
+		if (CollisionFunctions.isPointOnWireNoEdge(other, elem.pos))
+			return this.connectWires(elem.pos, [elem, other]);
+		else if (CollisionFunctions.isPointOnWireNoEdge(other, elem.endPos))
+			return this.connectWires(elem.endPos, [elem, other]);
+		else if (CollisionFunctions.isPointOnWireNoEdge(elem, other.pos))
+			return this.connectWires(other.pos, [elem, other]);
+		else if (CollisionFunctions.isPointOnWireNoEdge(other, elem.endPos))
+			return this.connectWires(other.endPos, [elem, other]);
+		return null;
+	}
+
+	private autoMerge(elements: Element[]): {actions: Action[], elements: Element[]} {
+		const out: Action[] = [];
+		let outElements = [...elements];
 		const elemChanges: {newElem: Element, oldElems: Element[]}[] = this._currState.mergeToBoard(elements);
 		for (const change of elemChanges) {
 			for (const oldElem of change.oldElems) {
 				out.push({ name: 'remWire', element: oldElem });
+				outElements = outElements.filter(e => e.id !== oldElem.id);
 			}
 			out.push({ name: 'addWire', element: change.newElem });
+			outElements.push(change.newElem);
 		}
+		return {actions: out, elements: outElements};
+	}
+
+	private autoAssemble(elements: Element[]): Action[] {
+		const out: Action[] = [];
+		const merged = this.autoMerge(elements);
+		out.push(...merged.actions);
+		out.push(...this.autoConnect(merged.elements));
 		return out;
 	}
 

@@ -68,16 +68,13 @@ export class ProjectState {
 			};
 	}
 
-	// TODO not check elements twice
 	public isFreeSpace(startPos: PIXI.Point, endPos: PIXI.Point, isWire?: boolean, except?: Element[]): boolean {
-		const chunks = this.chunksFromCoords(CollisionFunctions.inRectChunks(startPos, endPos));
-		for (const chunk of chunks) {
-			for (const elem of chunk.elements) {
-				if (except && except.find(e => e.id === elem.id) || isWire && elem.typeId === 0)
-					continue;
-				if (CollisionFunctions.isRectInRect(startPos, endPos, elem.pos, elem.endPos))
-					return false;
-			}
+		const others = this.elementsInChunks(startPos, endPos);
+		for (const elem of others) {
+			if (except && except.find(e => e.id === elem.id) || isWire && elem.typeId === 0)
+				continue;
+			if (CollisionFunctions.isRectInRect(startPos, endPos, elem.pos, elem.endPos))
+				return false;
 		}
 		return true;
 	}
@@ -90,6 +87,18 @@ export class ProjectState {
 				return false;
 		}
 		return true;
+	}
+
+	public elementsInChunks(startPos: PIXI.Point, endPos: PIXI.Point): Element[] {
+		const out: Element[] = [];
+		const chunks = this.chunksFromCoords(CollisionFunctions.inRectChunks(startPos, endPos));
+		for (const chunk of chunks) {
+			for (const elem of chunk.elements) {
+				if (!out.find(e => e.id === elem.id))
+					out.push(elem);
+			}
+		}
+		return out;
 	}
 
 	public addElement(elem: Element, id?: number): Element {
@@ -166,16 +175,12 @@ export class ProjectState {
 		for (const elem of elements) {
 			if (elem.typeId !== 0)
 				continue;
-			const chunks = this.chunksFromCoords(CollisionFunctions.inRectChunks(elem.pos, elem.endPos));
-			const doneOthers: Element[] = [];
-			for (const chunk of chunks) {
-				for (const other of chunk.elements) {
-					if (!doneOthers.find(e => e.id === other.id) && elem.id !== other.id) {
-						const changes = this.mergeWires(elem, other);
-						if (changes) {
-							out.push(changes);
-							doneOthers.push(other);
-						}
+			const others = this.elementsInChunks(elem.pos, elem.endPos);
+			for (const other of others) {
+				if (elem.id !== other.id) {
+					const changes = this.mergeWires(elem, other);
+					if (changes) {
+						out.push(changes);
 					}
 				}
 			}
