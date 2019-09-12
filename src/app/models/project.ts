@@ -67,10 +67,12 @@ export class Project {
 		let newElements: Element[] = [];
 		actions.forEach(action => {
 			this.applyAction(action);
-			if (action.name[0] === 'a' || action.name[0] === 'm')
+			if (action.name[0] === 'a')
 				newElements.push(action.element);
-			if (action.name[0] === 'r')
+			else if (action.name[0] === 'r')
 				newElements = newElements.filter(e => e.id !== action.element.id);
+			else if (action.name[0] === 'm')
+				newElements.push(...action.others);
 		});
 		this._currState.mergeToBoard(newElements);
 	}
@@ -187,6 +189,8 @@ export class Project {
 	}
 
 	public moveElementsById(ids: number[], dif: PIXI.Point): boolean {
+		if (dif.x === 0 && dif.y === 0)
+			return true;
 		const elements = this._currState.getElementsById(ids);
 		if (!this._currState.allSpacesFree(elements, dif))
 			return false;
