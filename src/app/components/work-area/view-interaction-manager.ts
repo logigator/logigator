@@ -174,7 +174,7 @@ export class ViewInteractionManager {
 			const endPos = new PIXI.Point(currentMousePos.x - this._actionStartPos.x, currentMousePos.y - this._actionStartPos.y);
 			this.setDirForNewWire(currentMousePos);
 			this._newWire.clear();
-			this._newWire.lineStyle(1 / this._view.zoomPan.currentScale);
+			this._newWire.lineStyle(1 / this._view.zoomPan.currentScale, 0x27AE60);
 			this._newWire.moveTo(0, 0);
 			switch (this._newWireDir) {
 				case 'hor':

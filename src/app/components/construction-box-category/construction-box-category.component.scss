@@ -12,6 +12,8 @@
 		flex-direction: row;
 		align-items: center;
 		justify-content: center;
+		border-top-right-radius: 0.5rem;
+		border-top-left-radius: 0.5rem;
 
 		@include themify() {
 			background-color: themed('toolbar');
@@ -24,6 +26,11 @@
 	}
 
 	.content {
+		display: flex;
+		flex-direction: row;
+		flex-wrap: wrap;
+		padding-bottom: 0.4rem;
+
 		@include themify() {
 			background-color: themed('boxes-background');
 			color: themed('secondary-text');
@@ -32,6 +39,39 @@
 		.no-components {
 			padding: 0.5rem;
 			text-align: center;
+		}
+
+		.component-to-select {
+			width: ($construction-box-width - 1rem - 1.6rem) / 3;
+			height: ($construction-box-width - 1rem - 1.6rem) / 3;
+			margin: 0.4rem 0 0 0.4rem;
+			border: 1px solid;
+			border-radius: 0.2rem;
+			text-align: center;
+			line-height: ($construction-box-width - 1rem - 1.6rem) / 3;
+			font-size: 17pt;
+
+			@include themify() {
+				border-color: themed('secondary-text');
+				color: themed('secondary-text');
+
+				&:hover {
+					border-color: themed('component-select-hover');
+					color: themed('component-select-hover');
+				}
+			}
+		}
+
+		.active-selected-component {
+			@include themify() {
+				border-color: themed('component-active');
+				color: themed('component-active');
+
+				&:hover {
+					border-color: themed('component-active');
+					color: themed('component-active');
+				}
+			}
 		}
 	}
 }

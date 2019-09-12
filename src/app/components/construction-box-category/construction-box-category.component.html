@@ -5,8 +5,11 @@
 	<div class="content">
 		<ng-container *ngIf="components.size > 0; else noComponents">
 			<ng-container *ngFor="let comp of components | keyvalue; trackBy: componentsTrackBy">
-				<div>
-					{{comp.value.name}}
+				<div class="component-to-select"
+				     *ngIf="comp.key !== 0 && (searchText == '' || comp.value.name.includes(searchText))"
+				     (click)="selectComponent(comp.key)"
+				     [class.active-selected-component]="currentWorkMode === 'buildComponent' && currentSelectedComponent === comp.key">
+					{{comp.value.symbol}}
 				</div>
 			</ng-container>
 		</ng-container>

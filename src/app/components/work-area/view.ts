@@ -188,7 +188,7 @@ export class View extends PIXI.Container {
 	}
 
 	private addLineToWireGraphics(graphics: PIXI.Graphics, endPos: PIXI.Point, startPos: PIXI.Point) {
-		graphics.lineStyle(1 / this.zoomPan.currentScale);
+		graphics.lineStyle(1 / this.zoomPan.currentScale, 0x27AE60);
 		graphics.moveTo(0, 0);
 		graphics.lineTo(endPos.x - startPos.x, endPos.y - startPos.y);
 	}

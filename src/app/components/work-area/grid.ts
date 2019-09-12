@@ -17,7 +17,7 @@ export class Grid {
 			return this._gridGeometries.get(scale);
 		}
 		const graphics = new PIXI.Graphics();
-		graphics.beginFill(0);
+		graphics.beginFill(0x196030);
 		for (let i = 0; i < environment.chunkSize; i++) {
 			for (let j = 0; j < environment.chunkSize; j++) {
 				graphics.drawRect(i * environment.gridPixelWidth, j * environment.gridPixelWidth, 1 / scale / window.devicePixelRatio, 1 / scale / window.devicePixelRatio);

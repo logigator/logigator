@@ -1,23 +1,27 @@
 $themes: (
 	light: (
 		primary-text: black,
-		secondary-text: white,
-		toolbar: green,
-		construction-box-background: #5f8058,
-		tab-active: green,
-		tab-inactive: #b9b9b9,
-		boxes-background: #848484,
-		search-background: #b2b2b2
+		secondary-text: black,
+		toolbar: #2ED573,
+		construction-box-background: #FFF,
+		tab-active: #2ED573,
+		tab-inactive: #E5E5E5,
+		boxes-background: #E5E5E5,
+		search-background: #E5E5E5,
+		component-select-hover: #959595,
+		component-active: #2ED573
 	),
 	dark: (
 		primary-text: black,
-		secondary-text: white,
-		toolbar: green,
-		construction-box-background: #5f8058,
-		tab-active: green,
-		tab-inactive: #b9b9b9,
-		boxes-background: #848484,
-		search-background: #b2b2b2
+		secondary-text: #EFEFEF,
+		toolbar: #27AE60,
+		construction-box-background: #1A1A1A,
+		tab-active: #27AE60,
+		tab-inactive: #5D5D5D,
+		boxes-background: #5D5D5D,
+		search-background: #5D5D5D,
+		component-select-hover: #dbdbdb,
+		component-active: #27AE60
 	)
 );
 
