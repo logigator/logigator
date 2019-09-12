@@ -63,13 +63,13 @@ export class Actions {
 		const outActions: Action[] = [];
 		for (const oldWire of oldWires) {
 			outActions.push({
-				name: 'remComp',
+				name: 'remWire',
 				element: oldWire
 			});
 		}
 		for (const newWire of newWires) {
 			outActions.push({
-				name: 'addComp',
+				name: 'addWire',
 				element: newWire
 			});
 		}

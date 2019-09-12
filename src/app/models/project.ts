@@ -67,10 +67,12 @@ export class Project {
 		let newElements: Element[] = [];
 		actions.forEach(action => {
 			this.applyAction(action);
-			if (action.name[0] === 'a' || action.name[0] === 'm')
+			if (action.name[0] === 'a')
 				newElements.push(action.element);
-			if (action.name[0] === 'r')
+			else if (action.name[0] === 'r')
 				newElements = newElements.filter(e => e.id !== action.element.id);
+			else if (action.name[0] === 'm')
+				newElements.push(...action.others);
 		});
 		this._currState.mergeToBoard(newElements);
 	}
@@ -156,7 +158,9 @@ export class Project {
 	}
 
 	public addElement(typeId: number, _pos: PIXI.Point, _endPos?: PIXI.Point): Element {
-		const elem = Project.genNewElement(typeId, _pos, Project.calcEndPos(_pos, typeId));
+		if (typeId === 0 && !_endPos)
+			return null;
+		const elem = Project.genNewElement(typeId, _pos, _endPos || Project.calcEndPos(_pos, typeId));
 		if (!this._currState.isFreeSpace(elem.pos, elem.endPos, typeId === 0))
 			return null;
 		this._currState.addElement(elem);
@@ -185,6 +189,8 @@ export class Project {
 	}
 
 	public moveElementsById(ids: number[], dif: PIXI.Point): boolean {
+		if (dif.x === 0 && dif.y === 0)
+			return true;
 		const elements = this._currState.getElementsById(ids);
 		if (!this._currState.allSpacesFree(elements, dif))
 			return false;
@@ -214,7 +220,8 @@ export class Project {
 			name: 'conWire',
 			pos
 		}]);
-		this.changeSubject.next(Actions.connectWiresToActions(wiresToConnect, newWires));
+		const outActions = Actions.connectWiresToActions(wiresToConnect, newWires);
+		this.changeSubject.next(outActions);
 	}
 
 	public disconnectWires(pos: PIXI.Point): void {
