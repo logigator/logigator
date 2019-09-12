@@ -136,10 +136,12 @@ export class ProjectState {
 	private splitWire(wire: Element, pos: PIXI.Point): Element[] {
 		if (!CollisionFunctions.isPointOnWireNoEdge(wire, pos))
 			return [wire];
-		const newWire = Project.genNewElement(0, pos, wire.endPos);
-		wire.endPos = pos;
-		this.addElement(newWire);
-		return [wire, newWire];
+		const newWire0 = Project.genNewElement(0, wire.pos, pos);
+		const newWire1 = Project.genNewElement(0, pos, wire.endPos);
+		this.removeElement(wire.id);
+		this.addElement(newWire0);
+		this.addElement(newWire1);
+		return [newWire0, newWire1];
 	}
 
 	public disconnectWires(wires: Element[]): Element[] {

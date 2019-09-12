@@ -1,15 +1,14 @@
 import {Element} from './element';
 import * as PIXI from 'pixi.js';
 
-export type ActionType = 'addComp' |
+export type ActionType =
+	'addComp' |
 	'addWire' |
 	'addText' |
 	'remComp' |
 	'remWire' |
 	'remText' |
 	'movMult' |
-	'conWire' |
-	'dcoWire' |
 	'setComp';
 
 export interface Action {
@@ -32,8 +31,6 @@ export class Actions {
 		['remWire', ['addWire']],
 		['remText', ['addText']],
 		['movMult', ['movMult']],
-		['conWire', ['dcoWire']],
-		['dcoWire', ['conWire']],
 		['setComp', ['setComp']]
 	]);
 

@@ -92,14 +92,6 @@ export class Project {
 					this._currState.moveElement(elem, action.pos);
 				}
 				break;
-			case 'conWire':
-				const wiresOnPointCon = this._currState.wiresOnPoint(action.pos);
-				this._currState.connectWires(wiresOnPointCon[0], wiresOnPointCon[1], action.pos);
-				break;
-			case 'dcoWire':
-				const wiresOnPointDco = this._currState.wiresOnPoint(action.pos);
-				this._currState.disconnectWires(wiresOnPointDco);
-				break;
 		}
 	}
 
@@ -130,10 +122,6 @@ export class Project {
 		return out;
 	}
 
-	public addElements(elements: Element[]): boolean {
-		return false;
-	}
-
 	public addWire(_pos: PIXI.Point, _cornerPos: PIXI.Point, _endPos?: PIXI.Point): Element[] {
 		if (!_endPos) {
 			const elem = this.addElement(0, _pos, _cornerPos);
@@ -155,6 +143,10 @@ export class Project {
 		wires.forEach(wire => actions.push({name: 'addWire', element: wire}));
 		actions.push(...this.autoMerge(wires));
 		return actions;
+	}
+
+	public addElements(elements: Element[]): boolean {
+		return false;
 	}
 
 	public addElement(typeId: number, _pos: PIXI.Point, _endPos?: PIXI.Point): Element {
@@ -216,11 +208,8 @@ export class Project {
 			return;
 		}
 		const newWires = this.currState.connectWires(wiresToConnect[0], wiresToConnect[1], pos);
-		this.newState([{
-			name: 'conWire',
-			pos
-		}]);
 		const outActions = Actions.connectWiresToActions(wiresToConnect, newWires);
+		this.newState(outActions);
 		this.changeSubject.next(outActions);
 	}
 
@@ -232,10 +221,8 @@ export class Project {
 			return;
 		}
 		const newWires = this._currState.disconnectWires(wiresOnPoint);
-		this.newState([{
-			name: 'dcoWire',
-			pos
-		}]);
+		const outActions = Actions.connectWiresToActions(wiresOnPoint, newWires);
+		this.newState(outActions);
 		this.changeSubject.next(Actions.connectWiresToActions(wiresOnPoint, newWires));
 	}
 
