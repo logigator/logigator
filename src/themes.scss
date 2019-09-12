@@ -25,8 +25,7 @@ $themes: (
 		:host-context(.theme-#{$theme}) & {
 			$theme-map: () !global;
 			@each $key, $submap in $map {
-				$value: map-get(map-get($themes, $theme), '#{$key}');
-				$theme-map: map-merge($theme-map, ($key: $value)) !global;
+				$theme-map: map-merge($theme-map, ($key: $submap)) !global;
 			}
 
 			@content;
