@@ -146,14 +146,16 @@ export class ProjectState {
 
 	public disconnectWires(wires: Element[]): Element[] {
 		const outWires: Element[] = [];
+		const doneWires: Element[] = [];
 		for (const wire0 of wires) {
 			for (const wire1 of wires) {
-				if (wire0 === wire1)
+				if (wire0 === wire1 || doneWires.find(w => w.id === wire0.id || w.id === wire1.id))
 					continue;
-				const merged = this.mergeWires(wire0, wire1).newElem;
-				if (!merged)
+				const merged = this.mergeWires(wire0, wire1);
+				if (!merged || !merged.newElem)
 					continue;
-				outWires.push(merged);
+				outWires.push(merged.newElem);
+				doneWires.push(wire0, wire1);
 			}
 		}
 		return outWires;

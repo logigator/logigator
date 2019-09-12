@@ -200,30 +200,29 @@ export class Project {
 		return true;
 	}
 
-	public connectWires(pos: PIXI.Point): void {
-		const wiresToConnect = this._currState.wiresOnPoint(pos);
-		if (wiresToConnect.length !== 2) {
-			console.log('tf you doin while connecting?');
-			console.log(wiresToConnect);
-			return;
+	public toggleWireConnection(pos: PIXI.Point): void {
+		const wiresOnPoint = this._currState.wiresOnPoint(pos);
+		if (wiresOnPoint.length === 2) {
+			this.connectWires(wiresOnPoint, pos);
+		} else if (wiresOnPoint.length === 4) {
+			this.disconnectWires(wiresOnPoint);
+		} else {
+			console.log('where are you clicking??', wiresOnPoint);
 		}
+	}
+
+	private connectWires(wiresToConnect: Element[], pos: PIXI.Point): void {
 		const newWires = this.currState.connectWires(wiresToConnect[0], wiresToConnect[1], pos);
 		const outActions = Actions.connectWiresToActions(wiresToConnect, newWires);
 		this.newState(outActions);
 		this.changeSubject.next(outActions);
 	}
 
-	public disconnectWires(pos: PIXI.Point): void {
-		const wiresOnPoint = this._currState.wiresOnPoint(pos);
-		if (wiresOnPoint.length !== 4) {
-			console.log('tf you doin while disconnecting?');
-			console.log(wiresOnPoint);
-			return;
-		}
+	private disconnectWires(wiresOnPoint: Element[]): void {
 		const newWires = this._currState.disconnectWires(wiresOnPoint);
 		const outActions = Actions.connectWiresToActions(wiresOnPoint, newWires);
 		this.newState(outActions);
-		this.changeSubject.next(Actions.connectWiresToActions(wiresOnPoint, newWires));
+		this.changeSubject.next(outActions);
 	}
 
 	private autoMerge(elements: Element[]): Action[] {
