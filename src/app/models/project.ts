@@ -1,5 +1,5 @@
 import {ProjectState} from './project-state';
-import {Action, ActionType} from './action';
+import {Action, Actions} from './action';
 import {Element} from './element';
 import {Chunk} from './chunk';
 import {Observable, Subject} from 'rxjs';
@@ -9,19 +9,6 @@ import {CollisionFunctions} from './collision-functions';
 import {ElementProviderService} from '../services/element-provider/element-provider.service';
 
 export class Project {
-
-	private static readonly REVERSE_ACTION: Map<ActionType, ActionType[]> = new Map<ActionType, ActionType[]>([
-		['addComp', ['remComp']],
-		['addWire', ['remWire']],
-		['addText', ['remText']],
-		['remComp', ['addComp']],
-		['remWire', ['addWire']],
-		['remText', ['addText']],
-		['movMult', ['movMult']],
-		['conWire', ['dcoWire']],
-		['dcoWire', ['conWire']],
-		['setComp', ['setComp']]
-	]);
 
 	private MAX_ACTIONS = 100;
 
@@ -47,46 +34,10 @@ export class Project {
 		this.changeSubject = new Subject<Action[]>();
 	}
 
-	protected static reverseActions(actions: Action[]): Action[] {
-		const out: Action[] = [];
-		for (let i = actions.length - 1; i > -1; i--) {
-			out.push(...Project.reverseAction(actions[i]));
-		}
-		return out;
-	}
-
-	protected static reverseAction(action: Action): Action[] {
-		const revActions = [{...action}];
-		revActions[0].name = Project.REVERSE_ACTION.get(action.name)[0];
-		for (const revAction of revActions) {
-			revAction.pos = action.pos ? action.pos.clone() : undefined;
-			revAction.endPos = action.endPos ? action.endPos.clone() : undefined;
-			if (revAction.name === 'movMult') {
-				revAction.pos.x *= -1;
-				revAction.pos.y *= -1;
-			}
-		}
-		return revActions;
-	}
-
-	private static connectWiresToActions(oldWires, newWires): Action[] {
-		const outActions: Action[] = [];
-		for (const oldWire of oldWires) {
-			outActions.push({
-				name: 'remComp',
-				element: oldWire
-			});
-		}
-		for (const newWire of newWires) {
-			outActions.push({
-				name: 'addComp',
-				element: newWire
-			});
-		}
-		return outActions;
-	}
-
-	public static genNewElement(typeId: number, pos: PIXI.Point, endPos: PIXI.Point): Element {
+	public static genNewElement(typeId: number, _pos: PIXI.Point, _endPos: PIXI.Point): Element {
+		const pos = _pos.clone();
+		const endPos = _endPos ? _endPos.clone() : Project.calcEndPos(pos, typeId);
+		CollisionFunctions.correctPosOrder(pos, endPos);
 		return {
 			id: -1,
 			typeId,
@@ -97,15 +48,30 @@ export class Project {
 		};
 	}
 
+	private static gen2Wires(_pos: PIXI.Point, _cornerPos: PIXI.Point, _endPos: PIXI.Point) {
+		const wire0 = Project.genNewElement(0, _pos.clone(), _cornerPos.clone());
+		const wire1 = Project.genNewElement(0, _cornerPos.clone(), _endPos.clone());
+		CollisionFunctions.correctPosOrder(wire0.pos, wire0.endPos);
+		CollisionFunctions.correctPosOrder(wire1.pos, wire1.endPos);
+		return {wire0, wire1};
+	}
+
+	private static calcEndPos(pos: PIXI.Point, typeId: number) {
+		const type = ElementProviderService.staticInstance.getElementById(typeId);
+		return new PIXI.Point(pos.x + environment.componentWidth,
+			pos.y + Math.max(type.numInputs, type.numOutputs));
+	}
 
 	protected applyActions(actions: Action[]): void {
-		const newElements: Element[] = [];
+		let newElements: Element[] = [];
 		actions.forEach(action => {
 			this.applyAction(action);
-			if (action.name[0] === 'a')
+			if (action.name[0] === 'a' || action.name[0] === 'm')
 				newElements.push(action.element);
+			if (action.name[0] === 'r')
+				newElements = newElements.filter(e => e.id !== action.element.id);
 		});
-		this._currState.mergeGivenWires(newElements);
+		this._currState.mergeToBoard(newElements);
 	}
 
 	protected applyAction(action: Action): void {
@@ -170,39 +136,29 @@ export class Project {
 			const elem = this.addElement(0, _pos, _cornerPos);
 			return elem ? [elem] : null;
 		}
-		const wire0 = Project.genNewElement(0, _pos.clone(), _cornerPos.clone());
-		const wire1 = Project.genNewElement(0, _cornerPos.clone(), _endPos.clone());
-		CollisionFunctions.correctPosOrder(wire0.pos, wire0.endPos);
-		CollisionFunctions.correctPosOrder(wire1.pos, wire1.endPos);
-		if (!this._currState.isFreeSpace(wire0.pos, wire0.endPos, true) ||
-			!this._currState.isFreeSpace(wire1.pos, wire1.endPos, true))
+		const {wire0, wire1} = Project.gen2Wires(_pos, _cornerPos, _endPos);
+		if (!this._currState.allSpacesFree([wire0, wire1], new PIXI.Point(0, 0)))
 			return null;
 		this._currState.addElement(wire0);
 		this._currState.addElement(wire1);
-		const actions: Action[] = [];
-		actions.push({ name: 'addWire', element: wire0 }, { name: 'addWire', element: wire1 });
-		actions.push(...this.autoMerge([wire0, wire1]));
+		const actions = this.actionsFromWires([wire0, wire1]);
 		this.changeSubject.next(actions);
 		this.newState(actions);
 		return [wire0, wire1];
 	}
 
+	private actionsFromWires(wires: Element[]) {
+		const actions: Action[] = [];
+		wires.forEach(wire => actions.push({name: 'addWire', element: wire}));
+		actions.push(...this.autoMerge(wires));
+		return actions;
+	}
+
 	public addElement(typeId: number, _pos: PIXI.Point, _endPos?: PIXI.Point): Element {
-		const pos = _pos.clone();
-		let endPos;
-		if (!_endPos) {
-			const type = ElementProviderService.staticInstance.getElementById(typeId);
-			endPos = new PIXI.Point(pos.x + environment.componentWidth,
-									pos.y + Math.max(type.numInputs, type.numOutputs));
-		} else {
-			endPos = _endPos.clone();
-		}
-		CollisionFunctions.correctPosOrder(pos, endPos);
-		const elem = Project.genNewElement(typeId, pos, endPos);
+		const elem = Project.genNewElement(typeId, _pos, _endPos);
 		if (!this._currState.isFreeSpace(elem.pos, elem.endPos, typeId === 0))
 			return null;
 		this._currState.addElement(elem);
-		this._currState.mergeGivenWires([elem]);
 		const actions: Action[] = [{
 			name: elem.typeId === 0 ? 'addWire' : 'addComp',
 			element: elem
@@ -234,13 +190,14 @@ export class Project {
 		for (const elem of elements) {
 			this._currState.moveElement(elem, dif);
 		}
-		const action: Action = {
+		const actions: Action[] = [{
 			name: 'movMult',
 			others: elements,
 			pos: dif
-		};
-		this.newState([action]);
-		this.changeSubject.next([action]);
+		}];
+		actions.push(...this.autoMerge(elements));
+		this.newState(actions);
+		this.changeSubject.next(actions);
 		return true;
 	}
 
@@ -256,7 +213,7 @@ export class Project {
 			name: 'conWire',
 			pos
 		}]);
-		this.changeSubject.next(Project.connectWiresToActions(wiresToConnect, newWires));
+		this.changeSubject.next(Actions.connectWiresToActions(wiresToConnect, newWires));
 	}
 
 	public disconnectWires(pos: PIXI.Point): void {
@@ -271,23 +228,17 @@ export class Project {
 			name: 'dcoWire',
 			pos
 		}]);
-		this.changeSubject.next(Project.connectWiresToActions(wiresOnPoint, newWires));
+		this.changeSubject.next(Actions.connectWiresToActions(wiresOnPoint, newWires));
 	}
 
 	private autoMerge(elements: Element[]): Action[] {
 		const out: Action[] = [];
-		const elemChanges: {newElem: Element, oldElems: Element[]}[] = this._currState.mergeGivenWires(elements);
+		const elemChanges: {newElem: Element, oldElems: Element[]}[] = this._currState.mergeToBoard(elements);
 		for (const change of elemChanges) {
 			for (const oldElem of change.oldElems) {
-				out.push({
-					name: oldElem.typeId === 0 ? 'remWire' : 'remComp',
-					element: oldElem
-				});
+				out.push({ name: 'remWire', element: oldElem });
 			}
-			out.push({
-				name: change.newElem.typeId === 0 ? 'addWire' : 'addComp',
-				element: change.newElem
-			});
+			out.push({ name: 'addWire', element: change.newElem });
 		}
 		return out;
 	}
@@ -305,9 +256,9 @@ export class Project {
 	public stepBack(): Action[] {
 		if (this._currActionPointer < 0)
 			return;
-		const backActions = Project.reverseActions(this._actions[this._currActionPointer]);
-		this.applyActions(backActions);
+		const backActions = Actions.reverseActions(this._actions[this._currActionPointer]);
 		this._currActionPointer--;
+		this.applyActions(backActions);
 		this.changeSubject.next(backActions);
 		return backActions;
 	}
@@ -315,8 +266,8 @@ export class Project {
 	public stepForward(): Action[] {
 		if (this._currActionPointer >= this.MAX_ACTIONS || this._currActionPointer === this._currMaxActionPointer)
 			return;
-		this.applyActions(this._actions[++this._currActionPointer]);
-		const outActions = this._actions[this._currActionPointer];
+		const outActions = this._actions[++this._currActionPointer];
+		this.applyActions(outActions);
 		this.changeSubject.next(outActions);
 		return outActions;
 	}
