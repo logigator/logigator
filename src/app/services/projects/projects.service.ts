@@ -31,7 +31,7 @@ export class ProjectsService {
 			this._projects.set(2, project2);
 			this._projectOpenedSubject.next(2);
 			this._currProject = project2;
-		}, 1000);
+		}, 10);
 	}
 
 	public onProjectChanges$(projectId: number): Observable<Action[]> {

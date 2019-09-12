@@ -220,7 +220,8 @@ export class Project {
 			name: 'conWire',
 			pos
 		}]);
-		this.changeSubject.next(Actions.connectWiresToActions(wiresToConnect, newWires));
+		const outActions = Actions.connectWiresToActions(wiresToConnect, newWires);
+		this.changeSubject.next(outActions);
 	}
 
 	public disconnectWires(pos: PIXI.Point): void {
