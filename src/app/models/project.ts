@@ -35,9 +35,10 @@ export class Project {
 	}
 
 	public static genNewElement(typeId: number, _pos: PIXI.Point, _endPos: PIXI.Point): Element {
-		const pos = _pos.clone();
-		const endPos = _endPos ? _endPos.clone() : Project.calcEndPos(pos, typeId);
-		CollisionFunctions.correctPosOrder(pos, endPos);
+		const pos = _pos ? _pos.clone() : undefined;
+		const endPos = _endPos ? _endPos.clone() : undefined;
+		if (pos && endPos)
+			CollisionFunctions.correctPosOrder(pos, endPos);
 		return {
 			id: -1,
 			typeId,
@@ -49,8 +50,8 @@ export class Project {
 	}
 
 	private static gen2Wires(_pos: PIXI.Point, _cornerPos: PIXI.Point, _endPos: PIXI.Point) {
-		const wire0 = Project.genNewElement(0, _pos.clone(), _cornerPos.clone());
-		const wire1 = Project.genNewElement(0, _cornerPos.clone(), _endPos.clone());
+		const wire0 = Project.genNewElement(0, _pos, _cornerPos);
+		const wire1 = Project.genNewElement(0, _cornerPos, _endPos);
 		CollisionFunctions.correctPosOrder(wire0.pos, wire0.endPos);
 		CollisionFunctions.correctPosOrder(wire1.pos, wire1.endPos);
 		return {wire0, wire1};
@@ -155,7 +156,7 @@ export class Project {
 	}
 
 	public addElement(typeId: number, _pos: PIXI.Point, _endPos?: PIXI.Point): Element {
-		const elem = Project.genNewElement(typeId, _pos, _endPos);
+		const elem = Project.genNewElement(typeId, _pos, Project.calcEndPos(_pos, typeId));
 		if (!this._currState.isFreeSpace(elem.pos, elem.endPos, typeId === 0))
 			return null;
 		this._currState.addElement(elem);
