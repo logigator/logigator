@@ -245,7 +245,7 @@ export class Project {
 			return this.connectWires(elem.endPos, [elem, other]);
 		else if (CollisionFunctions.isPointOnWireNoEdge(elem, other.pos))
 			return this.connectWires(other.pos, [elem, other]);
-		else if (CollisionFunctions.isPointOnWireNoEdge(other, elem.endPos))
+		else if (CollisionFunctions.isPointOnWireNoEdge(elem, other.endPos))
 			return this.connectWires(other.endPos, [elem, other]);
 		return null;
 	}

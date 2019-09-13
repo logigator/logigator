@@ -148,7 +148,7 @@ export class ProjectState {
 		const newWire0 = Project.genNewElement(0, wire.pos, pos);
 		const newWire1 = Project.genNewElement(0, pos, wire.endPos);
 		this.removeElement(wire.id);
-		this.addElement(newWire0);
+		this.addElement(newWire0, wire.id);
 		this.addElement(newWire1);
 		return [newWire0, newWire1];
 	}
