@@ -264,6 +264,7 @@ export class Project {
 	private autoMerge(elements: Element[]): {actions: Action[], elements: Element[]} {
 		const out: Action[] = [];
 		let outElements = [...elements];
+		this.pushWiresOnEdges(outElements);
 		const elemChanges: {newElem: Element, oldElems: Element[]}[] = this._currState.mergeToBoard(elements);
 		for (const change of elemChanges) {
 			for (const oldElem of change.oldElems) {
@@ -274,6 +275,14 @@ export class Project {
 			outElements.push(change.newElem);
 		}
 		return {actions: out, elements: outElements};
+	}
+
+	private pushWiresOnEdges(outElements) {
+		for (const elem of outElements) {
+			if (elem.typeId !== 0) continue;
+			outElements.push(...this._currState.wiresOnPoint(elem.pos));
+			outElements.push(...this._currState.wiresOnPoint(elem.endPos));
+		}
 	}
 
 	private autoAssemble(elements: Element[]): Action[] {
