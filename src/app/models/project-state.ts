@@ -233,7 +233,7 @@ export class ProjectState {
 	}
 
 	public getElementsById(ids: number[]): Element[] {
-		return this._model.board.elements.filter(e => ids.find(id => id === e.id));
+		return this._model.board.elements.filter(e => ids.includes(e.id));
 	}
 
 	public copy(): ProjectState {

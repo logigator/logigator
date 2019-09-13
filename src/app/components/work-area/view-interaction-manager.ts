@@ -25,7 +25,8 @@ export class ViewInteractionManager {
 	private _drawingNewWire = false;
 	private _newWire: PIXI.Graphics;
 
-	private _currentlyDraggingMultiple = false;
+	private _isSingleSelected: boolean;
+	private _currentlyDragging = false;
 	private _drawingSelectRect = false;
 	private _selectRect: PIXI.Graphics;
 
@@ -55,7 +56,7 @@ export class ViewInteractionManager {
 
 	public addEventListenersToNewElement(elemSprite: ElementSprite) {
 		elemSprite.sprite.interactive = true;
-		elemSprite.sprite.on('click', (e: InteractionEvent) => this.handleMouseClickElement(e, elemSprite));
+		elemSprite.sprite.on('pointerdown', (e: InteractionEvent) => this.handlePointerDownOnElement(e, elemSprite));
 	}
 
 	private handleMouseClickOnView(e: InteractionEvent) {
@@ -129,16 +130,16 @@ export class ViewInteractionManager {
 			if (SelectionService.staticInstance.selectedIds().length === 0) {
 				this._view.removeChild(this._selectRect);
 			}
-		} else if (this._currentlyDraggingMultiple) {
-			this._currentlyDraggingMultiple = false;
+		} else if (this._currentlyDragging) {
+			this._currentlyDragging = false;
 
 			const movedDif = Grid.getGridPosForPixelPos(
 				new PIXI.Point(this._lastMousePos.x - this._actionStartPos.x, this._lastMousePos.y - this._actionStartPos.y)
 			);
-
 			if (ProjectsService.staticInstance.currProject.moveElementsById(SelectionService.staticInstance.selectedIds(), movedDif)) {
 				this._view.removeChild(this._selectRect);
 				this.clearSelection();
+				this._isSingleSelected = false;
 				delete this._actionStartPos;
 			}
 		}
@@ -199,7 +200,7 @@ export class ViewInteractionManager {
 			const rectEndPos = e.data.getLocalPosition(this._view);
 			this._selectRect.width = rectEndPos.x - this._selectRect.x;
 			this._selectRect.height = rectEndPos.y -= this._selectRect.y;
-		} else if (this._currentlyDraggingMultiple) {
+		} else if (this._currentlyDragging) {
 			const currentMousePos = Grid.getPixelPosOnGridForPixelPos(e.data.getLocalPosition(this._view));
 			const dx = currentMousePos.x - this._lastMousePos.x;
 			const dy = currentMousePos.y - this._lastMousePos.y;
@@ -227,17 +228,17 @@ export class ViewInteractionManager {
 
 	private handlePointerDownOnSelectRect(e: InteractionEvent) {
 		if (WorkModeService.staticInstance.currentWorkMode === 'select') {
-			this._currentlyDraggingMultiple = true;
-			this._lastMousePos = Grid.getPixelPosOnGridForPixelPos(e.data.getLocalPosition(this._view));
-			if (!this._actionStartPos) {
-				this._actionStartPos = this._lastMousePos;
-			}
+			this.startDragging(e);
 		}
 	}
 
-	private handleMouseClickElement(e: InteractionEvent, elem: ElementSprite) {
+	private handlePointerDownOnElement(e: InteractionEvent, elem: ElementSprite) {
 		if (WorkModeService.staticInstance.currentWorkMode === 'select') {
-			this.selectSingleComp(elem);
+			if (this._isSingleSelected) {
+				this.startDragging(e);
+			} else {
+				this.selectSingleComp(elem);
+			}
 		}
 	}
 
@@ -260,11 +261,20 @@ export class ViewInteractionManager {
 		});
 	}
 
+	private startDragging(e: InteractionEvent) {
+		this._currentlyDragging = true;
+		this._lastMousePos = Grid.getPixelPosOnGridForPixelPos(e.data.getLocalPosition(this._view));
+		if (!this._actionStartPos) {
+			this._actionStartPos = this._lastMousePos;
+		}
+	}
+
 	private clearSelection() {
 		SelectionService.staticInstance.selectedIds(this._view.projectId).forEach(id => {
 			this._view.allElements.get(id).sprite.tint = 0xffffff;
 		});
 		SelectionService.staticInstance.clearSelection();
+		this._isSingleSelected = false;
 	}
 
 	private selectInRect(start: PIXI.Point, end: PIXI.Point) {
@@ -277,6 +287,7 @@ export class ViewInteractionManager {
 
 	private selectSingleComp(elem: ElementSprite) {
 		this.clearSelection();
+		this._isSingleSelected = true;
 		delete this._actionStartPos;
 		this._view.removeChild(this._selectRect);
 		elem.sprite.tint = 0x8a8a8a;
@@ -291,7 +302,7 @@ export class ViewInteractionManager {
 		delete this._lastMousePos;
 		this._drawingSelectRect = false;
 		this._drawingSelectRect = false;
-		this._currentlyDraggingMultiple = false;
+		this._currentlyDragging = false;
 		this._view.removeChild(this._selectRect);
 		this._view.removeChild(this._newWire);
 	}
