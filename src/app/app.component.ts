@@ -1,5 +1,5 @@
-import {Component, NgZone, OnInit, Renderer2} from '@angular/core';
-import {SelectionService} from './services/selection/selection.service';
+import {Component, ElementRef, NgZone, OnInit, Renderer2, ViewChild} from '@angular/core';
+import {ThemingService} from './services/theming/theming.service';
 
 @Component({
 	selector: 'app-root',
@@ -8,7 +8,10 @@ import {SelectionService} from './services/selection/selection.service';
 })
 export class AppComponent implements OnInit {
 
-	constructor(private renderer2: Renderer2, private ngZone: NgZone, private selectionService: SelectionService) {}
+	@ViewChild('appRoot', {static: true})
+	private appRoot: ElementRef<HTMLDivElement>;
+
+	constructor(private renderer2: Renderer2, private ngZone: NgZone, private theming: ThemingService) {}
 
 	ngOnInit(): void {
 		this.ngZone.runOutsideAngular(() => {
@@ -16,6 +19,8 @@ export class AppComponent implements OnInit {
 				e.preventDefault();
 			});
 		});
+
+		this.renderer2.addClass(this.appRoot.nativeElement, this.theming.themeClass);
 	}
 
 }

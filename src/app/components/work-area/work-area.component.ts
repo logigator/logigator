@@ -7,6 +7,7 @@ import {Grid} from './grid';
 import {ElementProviderService} from '../../services/element-provider/element-provider.service';
 import {ProjectsService} from '../../services/projects/projects.service';
 import {Project} from '../../models/project';
+import {ThemingService} from '../../services/theming/theming.service';
 
 @Component({
 	selector: 'app-work-area',
@@ -32,7 +33,8 @@ export class WorkAreaComponent implements OnInit, OnDestroy {
 		private renderer2: Renderer2,
 		private ngZone: NgZone,
 		private componentProviderService: ElementProviderService,
-		private projectsService: ProjectsService
+		private projectsService: ProjectsService,
+		private theming: ThemingService
 	) { }
 
 	ngOnInit() {
@@ -59,7 +61,7 @@ export class WorkAreaComponent implements OnInit, OnDestroy {
 			width: this._pixiCanvasContainer.nativeElement.offsetWidth,
 			antialias: false,
 			powerPreference: 'high-performance',
-			backgroundColor: 0x2B2B2B,
+			backgroundColor: this.theming.getEditorColor('background'),
 			resolution: window.devicePixelRatio || 1
 		});
 		this.renderer2.appendChild(this._pixiCanvasContainer.nativeElement, this._pixiRenderer.view);

@@ -1,6 +1,6 @@
 @import "variables";
 
-.app-root {
+#app-root {
 	position: relative;
 	width: 100%;
 	height: calc(100% - #{$toolbar-height});

@@ -11,6 +11,7 @@ import {environment} from '../../../environments/environment';
 import {Subscription} from 'rxjs';
 import {Action} from '../../models/action';
 import {CollisionFunctions} from '../../models/collision-functions';
+import {ThemingService} from '../../services/theming/theming.service';
 
 export class View extends PIXI.Container {
 
@@ -188,7 +189,7 @@ export class View extends PIXI.Container {
 	}
 
 	private addLineToWireGraphics(graphics: PIXI.Graphics, endPos: PIXI.Point, startPos: PIXI.Point) {
-		graphics.lineStyle(1 / this.zoomPan.currentScale, 0x27AE60);
+		graphics.lineStyle(1 / this.zoomPan.currentScale, ThemingService.staticInstance.getEditorColor('wire'));
 		graphics.moveTo(0, 0);
 		graphics.lineTo(endPos.x - startPos.x, endPos.y - startPos.y);
 	}

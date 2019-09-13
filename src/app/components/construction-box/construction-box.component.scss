@@ -1,6 +1,8 @@
 @import "themes";
 @import "variables";
 
+$search-height: 3.5rem;
+
 #construction-box {
 	@include themify() {
 		background-color: themed('construction-box-background');
@@ -15,7 +17,7 @@
 
 	#component-search {
 		width: $construction-box-width - 1rem;
-		height: 2.5rem;
+		height: $search-height - 1rem;
 		font-size: 16px;
 		padding: 1.25rem;
 		outline: none;
@@ -28,5 +30,13 @@
 			background-color: themed('search-background');
 			color: themed('secondary-text');
 		}
+	}
+
+	.scroll-container {
+		width: 100%;
+		height: calc(100vh - #{$toolbar-height} - #{$search-height});
+		overflow: auto;
+
+		@include scrollbar(5px)
 	}
 }
