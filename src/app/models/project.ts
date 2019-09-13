@@ -238,7 +238,9 @@ export class Project {
 		return out;
 	}
 
-	private connectWithEdge(other, elem): Action[] {
+	private connectWithEdge(other: Element, elem: Element): Action[] {
+		if (other.typeId !== 0 || elem.typeId !== 0)
+			return null;
 		if (CollisionFunctions.isPointOnWireNoEdge(other, elem.pos))
 			return this.connectWires(elem.pos, [elem, other]);
 		else if (CollisionFunctions.isPointOnWireNoEdge(other, elem.endPos))

@@ -73,7 +73,9 @@ export class ProjectState {
 		for (const elem of others) {
 			if (except && except.find(e => e.id === elem.id) || isWire && elem.typeId === 0)
 				continue;
-			if (CollisionFunctions.isRectInRect(startPos, endPos, elem.pos, elem.endPos))
+			if (isWire && CollisionFunctions.isRectInRectLightBorder(elem.pos, elem.endPos, startPos, endPos))
+				return false;
+			if (!isWire && CollisionFunctions.isRectInRectNoBorder(startPos, endPos, elem.pos, elem.endPos))
 				return false;
 		}
 		return true;
