@@ -209,7 +209,7 @@ export class Project {
 		if (wiresOnPoint.length === 2) {
 			actions = this.connectWires(pos, wiresOnPoint);
 		} else if (wiresOnPoint.length === 4) {
-			actions = this.disconnectWires(wiresOnPoint);
+			actions = this.disconnectWires(pos, wiresOnPoint);
 		} else {
 			console.log('where are you clicking??', wiresOnPoint);
 		}
@@ -222,14 +222,14 @@ export class Project {
 			wiresToConnect = this._currState.wiresOnPoint(pos);
 		const newWires = this.currState.connectWires(wiresToConnect[0], wiresToConnect[1], pos);
 		const actions = Actions.connectWiresToActions(wiresToConnect, newWires);
-		actions.push({name: 'conWire'});
+		actions.push({name: 'conWire', pos});
 		return actions;
 	}
 
-	private disconnectWires(wiresOnPoint: Element[]): Action[] {
+	private disconnectWires(pos: PIXI.Point, wiresOnPoint: Element[]): Action[] {
 		const newWires = this._currState.disconnectWires(wiresOnPoint);
 		const actions = Actions.connectWiresToActions(wiresOnPoint, newWires);
-		actions.push({name: 'dcoWire'});
+		actions.push({name: 'dcoWire', pos});
 		return actions;
 	}
 
