@@ -1,7 +1,8 @@
 import {Element} from './element';
 import * as PIXI from 'pixi.js';
 
-export type ActionType = 'addComp' |
+export type ActionType =
+	'addComp' |
 	'addWire' |
 	'addText' |
 	'remComp' |

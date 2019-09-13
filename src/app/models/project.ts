@@ -50,7 +50,7 @@ export class Project {
 		};
 	}
 
-	private static gen2Wires(_pos: PIXI.Point, _cornerPos: PIXI.Point, _endPos: PIXI.Point) {
+	private static gen2Wires(_pos: PIXI.Point, _cornerPos: PIXI.Point, _endPos: PIXI.Point): {wire0: Element, wire1: Element} {
 		const wire0 = Project.genNewElement(0, _pos, _cornerPos);
 		const wire1 = Project.genNewElement(0, _cornerPos, _endPos);
 		CollisionFunctions.correctPosOrder(wire0.pos, wire0.endPos);
@@ -58,7 +58,7 @@ export class Project {
 		return {wire0, wire1};
 	}
 
-	private static calcEndPos(pos: PIXI.Point, typeId: number) {
+	private static calcEndPos(pos: PIXI.Point, typeId: number): PIXI.Point {
 		const type = ElementProviderService.staticInstance.getElementById(typeId);
 		return new PIXI.Point(pos.x + environment.componentWidth,
 			pos.y + Math.max(type.numInputs, type.numOutputs));
@@ -75,7 +75,6 @@ export class Project {
 			else if (action.name[0] === 'm')
 				newElements.push(...action.others);
 		});
-		this._currState.mergeToBoard(newElements);
 	}
 
 	protected applyAction(action: Action): void {
@@ -94,12 +93,8 @@ export class Project {
 				}
 				break;
 			case 'conWire':
-				const wiresOnPointCon = this._currState.wiresOnPoint(action.pos);
-				this._currState.connectWires(wiresOnPointCon[0], wiresOnPointCon[1], action.pos);
 				break;
 			case 'dcoWire':
-				const wiresOnPointDco = this._currState.wiresOnPoint(action.pos);
-				this._currState.disconnectWires(wiresOnPointDco);
 				break;
 		}
 	}
@@ -131,10 +126,6 @@ export class Project {
 		return out;
 	}
 
-	public addElements(elements: Element[]): boolean {
-		return false;
-	}
-
 	public addWire(_pos: PIXI.Point, _cornerPos: PIXI.Point, _endPos?: PIXI.Point): Element[] {
 		if (!_endPos) {
 			const elem = this.addElement(0, _pos, _cornerPos);
@@ -145,17 +136,21 @@ export class Project {
 			return null;
 		this._currState.addElement(wire0);
 		this._currState.addElement(wire1);
-		const actions = this.actionsFromWires([wire0, wire1]);
-		this.changeSubject.next(actions);
+		const actions = this.actionsFromAddWires([wire0, wire1]);
 		this.newState(actions);
+		this.changeSubject.next(actions);
 		return [wire0, wire1];
 	}
 
-	private actionsFromWires(wires: Element[]) {
+	private actionsFromAddWires(wires: Element[]): Action[] {
 		const actions: Action[] = [];
 		wires.forEach(wire => actions.push({name: 'addWire', element: wire}));
-		actions.push(...this.autoMerge(wires));
+		actions.push(...this.autoAssemble(wires));
 		return actions;
+	}
+
+	public addElements(elements: Element[]): boolean {
+		return false;
 	}
 
 	public addElement(typeId: number, _pos: PIXI.Point, _endPos?: PIXI.Point): Element {
@@ -169,7 +164,7 @@ export class Project {
 			name: elem.typeId === 0 ? 'addWire' : 'addComp',
 			element: elem
 		}];
-		actions.push(...this.autoMerge([elem]));
+		actions.push(...this.autoAssemble([elem]));
 		this.newState(actions);
 		this.changeSubject.next(actions);
 		return elem;
@@ -203,52 +198,89 @@ export class Project {
 			others: elements,
 			pos: dif
 		}];
-		actions.push(...this.autoMerge(elements));
+		actions.push(...this.autoAssemble(elements));
 		this.newState(actions);
 		this.changeSubject.next(actions);
 		return true;
 	}
 
-	public connectWires(pos: PIXI.Point): void {
-		const wiresToConnect = this._currState.wiresOnPoint(pos);
-		if (wiresToConnect.length !== 2) {
-			console.log('tf you doin while connecting?');
-			console.log(wiresToConnect);
-			return;
-		}
-		const newWires = this.currState.connectWires(wiresToConnect[0], wiresToConnect[1], pos);
-		this.newState([{
-			name: 'conWire',
-			pos
-		}]);
-		const outActions = Actions.connectWiresToActions(wiresToConnect, newWires);
-		this.changeSubject.next(outActions);
-	}
-
-	public disconnectWires(pos: PIXI.Point): void {
+	public toggleWireConnection(pos: PIXI.Point): void {
 		const wiresOnPoint = this._currState.wiresOnPoint(pos);
-		if (wiresOnPoint.length !== 4) {
-			console.log('tf you doin while disconnecting?');
-			console.log(wiresOnPoint);
-			return;
+		let actions: Action[];
+		if (wiresOnPoint.length === 2) {
+			actions = this.connectWires(pos, wiresOnPoint);
+		} else if (wiresOnPoint.length === 4) {
+			actions = this.disconnectWires(pos, wiresOnPoint);
+		} else {
+			console.log('where are you clicking??', wiresOnPoint);
 		}
-		const newWires = this._currState.disconnectWires(wiresOnPoint);
-		this.newState([{
-			name: 'dcoWire',
-			pos
-		}]);
-		this.changeSubject.next(Actions.connectWiresToActions(wiresOnPoint, newWires));
+		this.newState(actions);
+		this.changeSubject.next(actions);
 	}
 
-	private autoMerge(elements: Element[]): Action[] {
+	private connectWires(pos: PIXI.Point, wiresToConnect?: Element[]): Action[] {
+		if (!wiresToConnect)
+			wiresToConnect = this._currState.wiresOnPoint(pos);
+		const newWires = this.currState.connectWires(wiresToConnect[0], wiresToConnect[1], pos);
+		const actions = Actions.connectWiresToActions(wiresToConnect, newWires);
+		actions.push({name: 'conWire', pos});
+		return actions;
+	}
+
+	private disconnectWires(pos: PIXI.Point, wiresOnPoint: Element[]): Action[] {
+		const newWires = this._currState.disconnectWires(wiresOnPoint);
+		const actions = Actions.connectWiresToActions(wiresOnPoint, newWires);
+		actions.push({name: 'dcoWire', pos});
+		return actions;
+	}
+
+	private autoConnect(elements: Element[]): Action[] {
 		const out: Action[] = [];
+		for (const elem of elements) {
+			const others = this._currState.elementsInChunks(elem.pos, elem.endPos);
+			for (const other of others) {
+				const actions = this.connectWithEdge(other, elem);
+				if (actions)
+					out.push(...actions);
+			}
+		}
+		return out;
+	}
+
+	private connectWithEdge(other: Element, elem: Element): Action[] {
+		if (other.typeId !== 0 || elem.typeId !== 0)
+			return null;
+		if (CollisionFunctions.isPointOnWireNoEdge(other, elem.pos))
+			return this.connectWires(elem.pos, [elem, other]);
+		else if (CollisionFunctions.isPointOnWireNoEdge(other, elem.endPos))
+			return this.connectWires(elem.endPos, [elem, other]);
+		else if (CollisionFunctions.isPointOnWireNoEdge(elem, other.pos))
+			return this.connectWires(other.pos, [elem, other]);
+		else if (CollisionFunctions.isPointOnWireNoEdge(elem, other.endPos))
+			return this.connectWires(other.endPos, [elem, other]);
+		return null;
+	}
+
+	private autoMerge(elements: Element[]): {actions: Action[], elements: Element[]} {
+		const out: Action[] = [];
+		let outElements = [...elements];
 		const elemChanges: {newElem: Element, oldElems: Element[]}[] = this._currState.mergeToBoard(elements);
 		for (const change of elemChanges) {
 			for (const oldElem of change.oldElems) {
 				out.push({ name: 'remWire', element: oldElem });
+				outElements = outElements.filter(e => e.id !== oldElem.id);
 			}
 			out.push({ name: 'addWire', element: change.newElem });
+			outElements.push(change.newElem);
 		}
+		return {actions: out, elements: outElements};
+	}
+
+	private autoAssemble(elements: Element[]): Action[] {
+		const out: Action[] = [];
+		const merged = this.autoMerge(elements);
+		out.push(...merged.actions);
+		out.push(...this.autoConnect(merged.elements));
 		return out;
 	}
 

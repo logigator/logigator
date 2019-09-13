@@ -195,6 +195,8 @@ export class View extends PIXI.Container {
 	}
 
 	private applyActionsToView(actions: Action[]) {
+		if (!actions)
+			return;
 		for (const action of actions) {
 			this.applyAction(action);
 		}

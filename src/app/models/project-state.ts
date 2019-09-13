@@ -68,16 +68,15 @@ export class ProjectState {
 			};
 	}
 
-	// TODO not check elements twice
 	public isFreeSpace(startPos: PIXI.Point, endPos: PIXI.Point, isWire?: boolean, except?: Element[]): boolean {
-		const chunks = this.chunksFromCoords(CollisionFunctions.inRectChunks(startPos, endPos));
-		for (const chunk of chunks) {
-			for (const elem of chunk.elements) {
-				if (except && except.find(e => e.id === elem.id) || isWire && elem.typeId === 0)
-					continue;
-				if (CollisionFunctions.isRectInRect(startPos, endPos, elem.pos, elem.endPos))
-					return false;
-			}
+		const others = this.elementsInChunks(startPos, endPos);
+		for (const elem of others) {
+			if (except && except.find(e => e.id === elem.id) || isWire && elem.typeId === 0)
+				continue;
+			if (isWire && CollisionFunctions.isRectInRectLightBorder(elem.pos, elem.endPos, startPos, endPos))
+				return false;
+			if (!isWire && CollisionFunctions.isRectInRectNoBorder(startPos, endPos, elem.pos, elem.endPos))
+				return false;
 		}
 		return true;
 	}
@@ -90,6 +89,18 @@ export class ProjectState {
 				return false;
 		}
 		return true;
+	}
+
+	public elementsInChunks(startPos: PIXI.Point, endPos: PIXI.Point): Element[] {
+		const out: Element[] = [];
+		const chunks = this.chunksFromCoords(CollisionFunctions.inRectChunks(startPos, endPos));
+		for (const chunk of chunks) {
+			for (const elem of chunk.elements) {
+				if (!out.find(e => e.id === elem.id))
+					out.push(elem);
+			}
+		}
+		return out;
 	}
 
 	public addElement(elem: Element, id?: number): Element {
@@ -136,22 +147,26 @@ export class ProjectState {
 	private splitWire(wire: Element, pos: PIXI.Point): Element[] {
 		if (!CollisionFunctions.isPointOnWireNoEdge(wire, pos))
 			return [wire];
-		const newWire = Project.genNewElement(0, pos, wire.endPos);
-		wire.endPos = pos;
-		this.addElement(newWire);
-		return [wire, newWire];
+		const newWire0 = Project.genNewElement(0, wire.pos, pos);
+		const newWire1 = Project.genNewElement(0, pos, wire.endPos);
+		this.removeElement(wire.id);
+		this.addElement(newWire0, wire.id);
+		this.addElement(newWire1);
+		return [newWire0, newWire1];
 	}
 
 	public disconnectWires(wires: Element[]): Element[] {
 		const outWires: Element[] = [];
+		const doneWires: Element[] = [];
 		for (const wire0 of wires) {
 			for (const wire1 of wires) {
-				if (wire0 === wire1)
+				if (wire0 === wire1 || doneWires.find(w => w.id === wire0.id || w.id === wire1.id))
 					continue;
-				const merged = this.mergeWires(wire0, wire1).newElem;
-				if (!merged)
+				const merged = this.mergeWires(wire0, wire1);
+				if (!merged || !merged.newElem)
 					continue;
-				outWires.push(merged);
+				outWires.push(merged.newElem);
+				doneWires.push(wire0, wire1);
 			}
 		}
 		return outWires;
@@ -162,16 +177,12 @@ export class ProjectState {
 		for (const elem of elements) {
 			if (elem.typeId !== 0)
 				continue;
-			const chunks = this.chunksFromCoords(CollisionFunctions.inRectChunks(elem.pos, elem.endPos));
-			const doneOthers: Element[] = [];
-			for (const chunk of chunks) {
-				for (const other of chunk.elements) {
-					if (!doneOthers.find(e => e.id === other.id) && elem.id !== other.id) {
-						const changes = this.mergeWires(elem, other);
-						if (changes) {
-							out.push(changes);
-							doneOthers.push(other);
-						}
+			const others = this.elementsInChunks(elem.pos, elem.endPos);
+			for (const other of others) {
+				if (elem.id !== other.id) {
+					const changes = this.mergeWires(elem, other);
+					if (changes) {
+						out.push(changes);
 					}
 				}
 			}
