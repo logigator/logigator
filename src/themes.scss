@@ -1,0 +1,72 @@
+$themes: (
+	light: (
+		primary-text: black,
+		secondary-text: black,
+		toolbar: #2ED573,
+		construction-box-background: #FFF,
+		tab-active: #2ED573,
+		tab-inactive: #E5E5E5,
+		boxes-background: #E5E5E5,
+		search-background: #E5E5E5,
+		component-select-hover: #959595,
+		component-active: #2ED573,
+		scrollbar-scroll: #2ED573,
+		scrollbar-background: #FFF
+	),
+	dark: (
+		primary-text: black,
+		secondary-text: #EFEFEF,
+		toolbar: #27AE60,
+		construction-box-background: #1A1A1A,
+		tab-active: #27AE60,
+		tab-inactive: #5D5D5D,
+		boxes-background: #5D5D5D,
+		search-background: #5D5D5D,
+		component-select-hover: #dbdbdb,
+		component-active: #27AE60,
+		scrollbar-scroll: #27AE60,
+		scrollbar-background: #1A1A1A
+	)
+);
+
+@mixin themify() {
+	@each $theme, $map in $themes {
+
+		:host-context(.theme-#{$theme}) & {
+			$theme-map: () !global;
+			@each $key, $submap in $map {
+				$theme-map: map-merge($theme-map, ($key: $submap)) !global;
+			}
+
+			@content;
+			$theme-map: null !global;
+		}
+
+	}
+}
+
+@function themed($key) {
+	@return map-get($theme-map, $key);
+}
+
+@mixin scrollbar($width) {
+	&::-webkit-scrollbar-track
+	{
+		@include themify() {
+			background-color: themed('scrollbar-background');
+		}
+	}
+
+	&::-webkit-scrollbar
+	{
+		width: $width;
+	}
+
+	&::-webkit-scrollbar-thumb
+	{
+		border-radius: 2px;
+		@include themify() {
+			background-color: themed('scrollbar-scroll');
+		}
+	}
+}

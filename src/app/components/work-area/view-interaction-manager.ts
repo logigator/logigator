@@ -10,6 +10,7 @@ import {CollisionFunctions} from '../../models/collision-functions';
 import {WorkMode} from '../../models/work-modes';
 import {Subscription} from 'rxjs';
 import {wire} from '../../models/element-types/wire';
+import {ThemingService} from '../../services/theming/theming.service';
 
 export class ViewInteractionManager {
 
@@ -111,7 +112,7 @@ export class ViewInteractionManager {
 			this._selectRect.width = 0;
 			this._selectRect.height = 0;
 			this._selectRect.clear();
-			this._selectRect.beginFill(0, 0.3);
+			this._selectRect.beginFill(ThemingService.staticInstance.getEditorColor('selectRect'), 0.3);
 			this._selectRect.drawRect(0, 0, 1, 1);
 		}
 	}
@@ -175,7 +176,7 @@ export class ViewInteractionManager {
 			const endPos = new PIXI.Point(currentMousePos.x - this._actionStartPos.x, currentMousePos.y - this._actionStartPos.y);
 			this.setDirForNewWire(currentMousePos);
 			this._newWire.clear();
-			this._newWire.lineStyle(1 / this._view.zoomPan.currentScale);
+			this._newWire.lineStyle(1 / this._view.zoomPan.currentScale, ThemingService.staticInstance.getEditorColor('wire'));
 			this._newWire.moveTo(0, 0);
 			switch (this._newWireDir) {
 				case 'hor':

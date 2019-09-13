@@ -4,9 +4,10 @@ import { NgModule } from '@angular/core';
 import { AppComponent } from './app.component';
 import { ToolbarComponent } from './components/toolbar/toolbar.component';
 import { SettingsInfoBoxComponent } from './components/settings-info-box/settings-info-box.component';
-import { ConstructionBoxComponent } from './components/contruction-box/construction-box.component';
+import { ConstructionBoxComponent } from './components/construction-box/construction-box.component';
 import { WorkAreaComponent } from './components/work-area/work-area.component';
 import {FormsModule} from '@angular/forms';
+import {ConstructionBoxCategoryComponent} from './components/construction-box-category/construction-box-category.component';
 
 @NgModule({
 	declarations: [
@@ -14,6 +15,7 @@ import {FormsModule} from '@angular/forms';
 		ToolbarComponent,
 		SettingsInfoBoxComponent,
 		ConstructionBoxComponent,
+		ConstructionBoxCategoryComponent,
 		WorkAreaComponent
 	],
 	imports: [

@@ -1,0 +1,15 @@
+<div id="construction-box">
+	<input id="component-search" placeholder="Suchen" type="text" [(ngModel)]="searchText">
+	<div class="scroll-container">
+		<app-construction-box-category
+			categoryName="Basic Components"
+			[components]="preDefinedComponents"
+			[searchText]="searchText"
+		></app-construction-box-category>
+		<app-construction-box-category
+			categoryName="User Defined"
+			[components]="userDefinedComponents"
+			[searchText]="searchText"
+		></app-construction-box-category>
+	</div>
+</div>

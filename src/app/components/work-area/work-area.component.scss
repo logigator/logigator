@@ -1,95 +1,77 @@
+@import "themes";
 @import "variables";
 
 .main-area {
 	width: 100%;
-	height: calc(100% - #{$toolbar-height});
+	height: 100%;
 
 	#canvas-container {
-		width: 100%;
+		width: calc(100% - #{$construction-box-width});
 		height: calc(100% - #{$toolbar-height});
-
 		position: fixed;
-		top: $toolbar-height;
-
 		cursor: crosshair;
 	}
 
 	#tabs {
-		position: relative;
-		left: calc(#{$construction-box-width} + 15px);
-
-		width: fit-content;
-
+		position: absolute;
+		width: calc(100% - 0.3rem - #{$construction-box-width});
+		margin-left: 0.3rem;
 		display: flex;
 		flex-direction: row;
 		justify-content: flex-start;
+		overflow: hidden;
 
 		.tab {
-			background-color: $tab-background-color;
-			color: $tab-font-color;
-			width: 140px;
-			height: 30px;
+			@include themify() {
+				background-color: themed('tab-inactive');
+				color: themed('primary-text');
+			}
 
-			display: grid;
+			height: $tab-height;
+			width: 12rem;
+
+			display: flex;
+			flex-direction: row;
+			justify-content: space-between;
 			align-items: center;
-			grid-template-columns: auto 20px;
+
+			padding: 0 0.3rem 0 0.4rem;
 
 			border-bottom-left-radius: 5px;
 			border-bottom-right-radius: 5px;
 
-			margin-left: 0.5rem;
-
-			text-align: center;
-
-			&:hover {
-				cursor: pointer;
-				color: $tab-hover-font-color;
-				background-color: $tab-hover-background-color;
-			}
+			margin-right: 0.5rem;
 
 			p {
 				user-select: none;
 				margin: 0;
 			}
 
-			span {
+			.tab-close {
+				border-radius: 50%;
+				width: 1rem;
+				height: 1rem;
+				background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 8 8'><path stroke='rgba(0, 0, 0)' stroke-linecap='square' stroke-width='1' d='M2 2 L6 6 M6 2 L2 6'></path></svg>");
+
 				&:hover {
-					color: red;
-					cursor: pointer;
+					@include themify() {
+						background-color: lighten(themed('tab-inactive'), 10%);
+					}
 				}
 			}
 		}
 
 		.tab-active {
-			color: $tab-active-font-color;
-			background-color: $tab-active-background-color;
+			@include themify() {
+				background-color: themed('tab-active');
+				color: themed('primary-text');
 
-			&:hover {
-				cursor: default;
-				color: $tab-active-hover-font-color;
-				background-color: $tab-active-hover-background-color;
+				.tab-close {
+					&:hover {
+						background-color: lighten(themed('tab-active'), 10%);
+					}
+				}
 			}
 		}
 	}
 }
-
-
-//.main-area {
-//	width: 100%;
-//	height: calc(100% - #{$toolbar-height});
-//
-//	position: fixed;
-//	top: $toolbar-height;
-//
-//	background-color: lightcyan;
-//}
-//
-//div {
-//	width: 100%;
-//	height: calc(100% - #{$toolbar-height});
-//
-//	position: fixed;
-//	top: $toolbar-height;
-//
-//	background-color: lightcyan;
-//}

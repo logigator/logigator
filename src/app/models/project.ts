@@ -23,9 +23,10 @@ export class Project {
 
 	private changeSubject: Subject<Action[]>;
 
-	public constructor(projectState: ProjectState, id?: number) {
+	public constructor(projectState: ProjectState, id?: number, name?: string) {
 		this._currState = projectState;
 		this._id = id;
+		this._name = name;
 		this._actions = [];
 		for (let i = 0; i < this.MAX_ACTIONS; i++)
 			this._actions.push(null);

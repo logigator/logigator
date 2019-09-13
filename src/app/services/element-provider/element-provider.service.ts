@@ -13,13 +13,15 @@ export class ElementProviderService {
 
 	public static staticInstance: ElementProviderService;
 
-	private _elements: Map<number, ElementType> = new Map([
+	private _predefinedElements: Map<number, ElementType> = new Map([
 		[0, wire],
 		[1, not],
 		[2, and],
 		[3, or],
 		[4, xor],
 	]);
+
+	private _userDefinedElements: Map<number, ElementType> = new Map<number, ElementType>();
 
 	private _renderer: PIXI.Renderer;
 
@@ -28,7 +30,10 @@ export class ElementProviderService {
 	}
 
 	public getElementById(id: number): ElementType {
-		return this._elements.get(id);
+		if (this._predefinedElements.has(id)) {
+			return this._predefinedElements.get(id);
+		}
+		return this._userDefinedElements.get(id);
 	}
 
 	public insertPixiRenderer(renderer: PIXI.Renderer) {
@@ -36,12 +41,21 @@ export class ElementProviderService {
 	}
 
 	public generateTextureForElement(id: number) {
-		const comp = this._elements.get(id);
+		let comp;
+		if (this._predefinedElements.has(id)) {
+			comp = this._predefinedElements.get(id);
+		} else {
+			comp = this._userDefinedElements.get(id);
+		}
 		comp.texture = comp.generateElementTexture(this._renderer, comp.symbol);
 	}
 
-	public getAllElements(): Map<number, ElementType> {
-		return this._elements;
+	public getPreDefinedElements(): Map<number, ElementType> {
+		return this._predefinedElements;
+	}
+
+	public getUserDefinedElements(): Map<number, ElementType> {
+		return this._userDefinedElements;
 	}
 
 }

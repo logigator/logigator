@@ -5,8 +5,8 @@
 		     *ngFor="let project of allProjects | keyvalue"
 		     (click)="switchActiveView(project.key)"
 		     [class.tab-active]="project.key === activeView?.projectId">
-			<p>{{project.key}}</p>
-			<span (click)="closeView(project.key, $event)">x</span>
+			<p>{{project.value.name}}</p>
+			<span class="tab-close" (click)="closeView(project.key, $event)"></span>
 		</div>
 	</div>
 </div>
