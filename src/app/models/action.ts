@@ -9,6 +9,8 @@ export type ActionType =
 	'remWire' |
 	'remText' |
 	'movMult' |
+	'conWire' |
+	'dcoWire' |
 	'setComp';
 
 export interface Action {
@@ -31,6 +33,8 @@ export class Actions {
 		['remWire', ['addWire']],
 		['remText', ['addText']],
 		['movMult', ['movMult']],
+		['conWire', ['dcoWire']],
+		['dcoWire', ['conWire']],
 		['setComp', ['setComp']]
 	]);
 

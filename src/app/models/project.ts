@@ -91,6 +91,10 @@ export class Project {
 					this._currState.moveElement(elem, action.pos);
 				}
 				break;
+			case 'conWire':
+				break;
+			case 'dcoWire':
+				break;
 		}
 	}
 
@@ -217,12 +221,16 @@ export class Project {
 		if (!wiresToConnect)
 			wiresToConnect = this._currState.wiresOnPoint(pos);
 		const newWires = this.currState.connectWires(wiresToConnect[0], wiresToConnect[1], pos);
-		return Actions.connectWiresToActions(wiresToConnect, newWires);
+		const actions = Actions.connectWiresToActions(wiresToConnect, newWires);
+		actions.push({name: 'conWire'});
+		return actions;
 	}
 
 	private disconnectWires(wiresOnPoint: Element[]): Action[] {
 		const newWires = this._currState.disconnectWires(wiresOnPoint);
-		return Actions.connectWiresToActions(wiresOnPoint, newWires);
+		const actions = Actions.connectWiresToActions(wiresOnPoint, newWires);
+		actions.push({name: 'dcoWire'});
+		return actions;
 	}
 
 	private autoConnect(elements: Element[]): Action[] {
