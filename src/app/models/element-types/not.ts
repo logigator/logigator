@@ -13,7 +13,7 @@ export const not: ElementType = {
 	generateElementTexture: (renderer: PIXI.Renderer, symbol: string): PIXI.Texture => {
 		const graphics = new PIXI.Graphics();
 		graphics.beginFill(0xff0000);
-		graphics.drawRect(0, 0, environment.gridPixelWidth * 2, environment.gridPixelWidth * 2);
+		graphics.drawRect(0, 0, environment.gridPixelWidth * 2, environment.gridPixelWidth);
 		return renderer.generateTexture(graphics, PIXI.SCALE_MODES.LINEAR, window.devicePixelRatio);
 	}
 };
