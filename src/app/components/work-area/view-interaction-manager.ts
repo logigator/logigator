@@ -12,6 +12,8 @@ import {Subscription} from 'rxjs';
 import {wire} from '../../models/element-types/wire';
 import {ThemingService} from '../../services/theming/theming.service';
 import {ElementProviderService} from '../../services/element-provider/element-provider.service';
+import {Component} from '@angular/core';
+import {CompSpriteGenerator} from './comp-sprite-generator';
 
 export class ViewInteractionManager {
 
@@ -270,10 +272,7 @@ export class ViewInteractionManager {
 		this._draggingNewComp = true;
 		const typeId = WorkModeService.staticInstance.currentComponentToBuild;
 		const elemType = ElementProviderService.staticInstance.getElementById(typeId);
-		if (!elemType.texture) {
-			ElementProviderService.staticInstance.generateTextureForElement(typeId);
-		}
-		this._newCompSprite = new PIXI.Sprite(elemType.texture);
+		this._newCompSprite = CompSpriteGenerator.getComponentSprite(elemType.symbol, elemType.numInputs, 0, this._view.zoomPan.currentScale);
 		this._newCompSprite.position = Grid.getPixelPosOnGridForPixelPos(e.data.getLocalPosition(this._view));
 		this._view.addChild(this._newCompSprite);
 	}

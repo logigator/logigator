@@ -4,15 +4,14 @@ import {environment} from '../../../environments/environment';
 
 export class CompSpriteGenerator {
 
-	public static getComponentSprite(symbol: string, inputs: number, rotaion: number, scale: number): PIXI.Sprite | PIXI.Graphics {
-		const graphics = new PIXI.Graphics();
+	public static updateGraphics(symbol: string, inputs: number, rotation: number, scale: number, graphics: PIXI.Graphics) {
 		graphics.lineStyle(1 / scale, ThemingService.staticInstance.getEditorColor('wire'));
 		graphics.beginFill(ThemingService.staticInstance.getEditorColor('background'));
 		graphics.moveTo(0, 0);
 
 		let width;
 		let height;
-		if (rotaion === 0 || rotaion === 2) {
+		if (rotation === 0 || rotation === 2) {
 			width = environment.gridPixelWidth * 2;
 			height = environment.gridPixelWidth * inputs;
 		} else {
@@ -23,7 +22,7 @@ export class CompSpriteGenerator {
 
 		graphics.beginFill(ThemingService.staticInstance.getEditorColor('wire'));
 
-		switch (rotaion) {
+		switch (rotation) {
 			case 0:
 				CompSpriteGenerator.rotation0(inputs, height, width, graphics);
 				break;
@@ -38,6 +37,8 @@ export class CompSpriteGenerator {
 				break;
 		}
 
+		graphics.removeChildren(0);
+
 		const text = new PIXI.BitmapText(symbol, {
 			font: {
 				name: 'Louis George Café',
@@ -51,6 +52,11 @@ export class CompSpriteGenerator {
 		graphics.addChild(text);
 
 		return graphics;
+	}
+
+	public static getComponentSprite(symbol: string, inputs: number, rotation: number, scale: number): PIXI.Sprite | PIXI.Graphics {
+		const graphics = new PIXI.Graphics();
+		return CompSpriteGenerator.updateGraphics(symbol, inputs, rotation, scale, graphics);
 	}
 
 	private static rotation0(inputs: number, height: number, width: number, graphics: PIXI.Graphics) {
