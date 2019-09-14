@@ -12,6 +12,8 @@ import {Subscription} from 'rxjs';
 import {wire} from '../../models/element-types/wire';
 import {ThemingService} from '../../services/theming/theming.service';
 import {ElementProviderService} from '../../services/element-provider/element-provider.service';
+import {Component} from '@angular/core';
+import {CompSpriteGenerator} from './comp-sprite-generator';
 
 export class ViewInteractionManager {
 
@@ -63,12 +65,6 @@ export class ViewInteractionManager {
 		elemSprite.sprite.on('pointerdown', (e: InteractionEvent) => this.handlePointerDownOnElement(e, elemSprite));
 	}
 
-	private handleMouseClickOnView(e: InteractionEvent) {
-		if (WorkModeService.staticInstance.currentWorkMode === 'buildComponent') {
-
-		}
-	}
-
 	private handlePointerDownOnView(e: InteractionEvent) {
 		if (WorkModeService.staticInstance.currentWorkMode === 'select' && e.data.button === 0) {
 			this.addSelectRectOrResetSelection(e);
@@ -101,6 +97,22 @@ export class ViewInteractionManager {
 			this.drawNewWire(e);
 		} else if (this._draggingNewComp) {
 			this.dragNewComp(e);
+		}
+	}
+
+	private handlePointerDownOnSelectRect(e: InteractionEvent) {
+		if (WorkModeService.staticInstance.currentWorkMode === 'select') {
+			this.startDragging(e);
+		}
+	}
+
+	private handlePointerDownOnElement(e: InteractionEvent, elem: ElementSprite) {
+		if (WorkModeService.staticInstance.currentWorkMode === 'select') {
+			if (this._isSingleSelected) {
+				this.startDragging(e);
+			} else {
+				this.selectSingleComp(elem);
+			}
 		}
 	}
 
@@ -260,10 +272,7 @@ export class ViewInteractionManager {
 		this._draggingNewComp = true;
 		const typeId = WorkModeService.staticInstance.currentComponentToBuild;
 		const elemType = ElementProviderService.staticInstance.getElementById(typeId);
-		if (!elemType.texture) {
-			ElementProviderService.staticInstance.generateTextureForElement(typeId);
-		}
-		this._newCompSprite = new PIXI.Sprite(elemType.texture);
+		this._newCompSprite = CompSpriteGenerator.getComponentSprite(elemType.symbol, elemType.numInputs, elemType.rotation, this._view.zoomPan.currentScale);
 		this._newCompSprite.position = Grid.getPixelPosOnGridForPixelPos(e.data.getLocalPosition(this._view));
 		this._view.addChild(this._newCompSprite);
 	}
@@ -282,22 +291,6 @@ export class ViewInteractionManager {
 		this._view.removeChild(this._newCompSprite);
 		this._newCompSprite.destroy();
 		this._draggingNewComp = false;
-	}
-
-	private handlePointerDownOnSelectRect(e: InteractionEvent) {
-		if (WorkModeService.staticInstance.currentWorkMode === 'select') {
-			this.startDragging(e);
-		}
-	}
-
-	private handlePointerDownOnElement(e: InteractionEvent, elem: ElementSprite) {
-		if (WorkModeService.staticInstance.currentWorkMode === 'select') {
-			if (this._isSingleSelected) {
-				this.startDragging(e);
-			} else {
-				this.selectSingleComp(elem);
-			}
-		}
 	}
 
 	private applyDraggingPositionChangeToSelection(dx: number, dy: number) {

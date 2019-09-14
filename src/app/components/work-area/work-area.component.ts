@@ -40,7 +40,8 @@ export class WorkAreaComponent implements OnInit, OnDestroy {
 	ngOnInit() {
 		this._allViews = new Map<number, View>();
 
-		this.ngZone.runOutsideAngular(() => {
+		this.ngZone.runOutsideAngular(async () => {
+			await this.loadPixiFont();
 			this.initPixi();
 			this.componentProviderService.insertPixiRenderer(this._pixiRenderer);
 			this.initGridGeneration();
@@ -70,6 +71,14 @@ export class WorkAreaComponent implements OnInit, OnDestroy {
 			takeUntil(this._destroy)
 		).subscribe(() => {
 			this._pixiRenderer.resize(this._pixiCanvasContainer.nativeElement.offsetWidth, this._pixiCanvasContainer.nativeElement.offsetHeight);
+		});
+	}
+
+	private loadPixiFont(): Promise<void> {
+		return new Promise<void>(resolve => {
+			const loader = PIXI.Loader.shared;
+			loader.add('luis_george_cafe', '/assets/fonts/louis_george_cafe_bitmap/font.fnt')
+				.load(() => resolve());
 		});
 	}
 

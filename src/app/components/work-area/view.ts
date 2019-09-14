@@ -12,6 +12,7 @@ import {Subscription} from 'rxjs';
 import {Action} from '../../models/action';
 import {CollisionFunctions} from '../../models/collision-functions';
 import {ThemingService} from '../../services/theming/theming.service';
+import {CompSpriteGenerator} from './comp-sprite-generator';
 
 export class View extends PIXI.Container {
 
@@ -68,13 +69,10 @@ export class View extends PIXI.Container {
 				this._gridGraphics[chunk.x][chunk.y] = Grid.generateGridGraphics(this.zoomPan.currentScale);
 				this._chunks[chunk.x][chunk.y].children.forEach(child => {
 					const elemSprite = this.allElements.get(Number(child.name));
-					if (elemSprite && elemSprite.element.typeId === 0 && elemSprite.sprite instanceof PIXI.Graphics) {
-						elemSprite.sprite.clear();
-						this.addLineToWireGraphics(
-							elemSprite.sprite,
-							Grid.getPixelPosForGridPosWire(elemSprite.element.endPos),
-							Grid.getPixelPosForGridPosWire(elemSprite.element.pos)
-						);
+					if (elemSprite && elemSprite.element.typeId === 0) {
+						this.updateWireSprite(elemSprite.element, elemSprite.sprite as PIXI.Graphics);
+					} else if (elemSprite) {
+						this.updateComponentSprite(elemSprite.element, elemSprite.sprite as PIXI.Graphics);
 					}
 				});
 				this._chunks[chunk.x][chunk.y].addChildAt(this._gridGraphics[chunk.x][chunk.y], 0);
@@ -87,6 +85,21 @@ export class View extends PIXI.Container {
 			}
 		}
 		this._chunksToRender = chunksToRender;
+	}
+
+	private updateWireSprite(element: Element, graphics: PIXI.Graphics) {
+		graphics.clear();
+		this.addLineToWireGraphics(
+			graphics,
+			Grid.getPixelPosForGridPosWire(element.endPos),
+			Grid.getPixelPosForGridPosWire(element.pos)
+		);
+	}
+
+	private updateComponentSprite(element: Element, graphics: PIXI.Graphics) {
+		graphics.clear();
+		const elemType = ElementProviderService.staticInstance.getElementById(element.typeId);
+		CompSpriteGenerator.updateGraphics(elemType.symbol, elemType.numInputs, 0, this.zoomPan.currentScale, graphics);
 	}
 
 	private createChunk(x: number, y: number): boolean {
@@ -152,10 +165,7 @@ export class View extends PIXI.Container {
 
 	private placeComponentOnView(element: Element) {
 		const elemType = ElementProviderService.staticInstance.getElementById(element.typeId);
-		if (!elemType.texture) {
-			ElementProviderService.staticInstance.generateTextureForElement(element.typeId);
-		}
-		const sprite = new PIXI.Sprite(elemType.texture);
+		const sprite = CompSpriteGenerator.getComponentSprite(elemType.symbol, elemType.numInputs, elemType.rotation, this.zoomPan.currentScale);
 		sprite.position = Grid.getLocalChunkPixelPosForGridPos(element.pos);
 		sprite.name = element.id.toString();
 
