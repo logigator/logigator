@@ -11,6 +11,7 @@ import {WorkMode} from '../../models/work-modes';
 import {Subscription} from 'rxjs';
 import {wire} from '../../models/element-types/wire';
 import {ThemingService} from '../../services/theming/theming.service';
+import {ElementProviderService} from '../../services/element-provider/element-provider.service';
 
 export class ViewInteractionManager {
 
@@ -20,6 +21,9 @@ export class ViewInteractionManager {
 
 	private _actionStartPos: PIXI.Point;
 	private _lastMousePos: PIXI.Point;
+
+	private _newCompSprite: PIXI.DisplayObject;
+	private _draggingNewComp = false;
 
 	private _newWireDir: 'hor' | 'ver';
 	private _drawingNewWire = false;
@@ -42,7 +46,6 @@ export class ViewInteractionManager {
 	}
 
 	private addEventListenersToView() {
-		this._view.on('click', (e: InteractionEvent) => this.handleMouseClickOnView(e));
 		this._view.on('pointerdown', (e: InteractionEvent) => this.handlePointerDownOnView(e));
 		this._view.on('pointerup', (e: InteractionEvent) => this.handlePointerUpOnView(e));
 		this._view.on('pointerupoutside', (e: InteractionEvent) => this.handlePointerUpOnView(e));
@@ -62,10 +65,7 @@ export class ViewInteractionManager {
 
 	private handleMouseClickOnView(e: InteractionEvent) {
 		if (WorkModeService.staticInstance.currentWorkMode === 'buildComponent') {
-			this._view.placeComponent(
-				Grid.getGridPosForPixelPos(e.data.getLocalPosition(this._view)),
-				WorkModeService.staticInstance.currentComponentToBuild
-			);
+
 		}
 	}
 
@@ -76,6 +76,11 @@ export class ViewInteractionManager {
 			this.startDrawingNewWire(e);
 		} else if (WorkModeService.staticInstance.currentWorkMode === 'connectWire' && e.data.button === 0) {
 			this.connectOrDisconnectWires(e);
+		} else if (WorkModeService.staticInstance.currentWorkMode === 'buildComponent'
+			&& WorkModeService.staticInstance.currentComponentToBuild !== 0
+			&& e.data.button === 0
+		) {
+			this.startDraggingNewComponent(e);
 		}
 	}
 
@@ -84,6 +89,8 @@ export class ViewInteractionManager {
 			this.selectOrApplyMove();
 		} else if (WorkModeService.staticInstance.currentWorkMode === 'buildWire' && e.data.button === 0) {
 			this.addWire(e);
+		} else if (this._draggingNewComp) {
+			this.placeNewComp();
 		}
 	}
 
@@ -92,6 +99,8 @@ export class ViewInteractionManager {
 			this.drawSelectRectOrMove(e);
 		} else if (WorkModeService.staticInstance.currentWorkMode === 'buildWire') {
 			this.drawNewWire(e);
+		} else if (this._draggingNewComp) {
+			this.dragNewComp(e);
 		}
 	}
 
@@ -245,6 +254,34 @@ export class ViewInteractionManager {
 				this._newWireDir = 'ver';
 			}
 		}
+	}
+
+	private startDraggingNewComponent(e: InteractionEvent) {
+		this._draggingNewComp = true;
+		const typeId = WorkModeService.staticInstance.currentComponentToBuild;
+		const elemType = ElementProviderService.staticInstance.getElementById(typeId);
+		if (!elemType.texture) {
+			ElementProviderService.staticInstance.generateTextureForElement(typeId);
+		}
+		this._newCompSprite = new PIXI.Sprite(elemType.texture);
+		this._newCompSprite.position = Grid.getPixelPosOnGridForPixelPos(e.data.getLocalPosition(this._view));
+		this._view.addChild(this._newCompSprite);
+	}
+
+	private dragNewComp(e: InteractionEvent) {
+		this._newCompSprite.position = Grid.getPixelPosOnGridForPixelPos(e.data.getLocalPosition(this._view));
+	}
+
+	private placeNewComp() {
+		if (this._newCompSprite.position.x > 0 && this._newCompSprite.position.y > 0) {
+			this._view.placeComponent(
+				Grid.getGridPosForPixelPos(this._newCompSprite.position),
+				WorkModeService.staticInstance.currentComponentToBuild
+			);
+		}
+		this._view.removeChild(this._newCompSprite);
+		this._newCompSprite.destroy();
+		this._draggingNewComp = false;
 	}
 
 	private handlePointerDownOnSelectRect(e: InteractionEvent) {
