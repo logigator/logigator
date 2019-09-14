@@ -51,6 +51,7 @@ export class ViewInteractionManager {
 
 	private addEventListenersToSelectRect() {
 		this._selectRect.interactive = true;
+		this._selectRect.zIndex = 10;
 		this._selectRect.on('pointerdown', (e: InteractionEvent) => this.handlePointerDownOnSelectRect(e));
 	}
 
@@ -260,11 +261,10 @@ export class ViewInteractionManager {
 	private resetSelectionToOldPosition() {
 		SelectionService.staticInstance.selectedIds(this._view.projectId).forEach(id => {
 			const elemSprite = this._view.allElements.get(id);
-			if (elemSprite.element.typeId === 0) {
-				elemSprite.sprite.position = Grid.getLocalChunkPixelPosForGridPosWireStart(elemSprite.element.pos);
-			} else {
-				elemSprite.sprite.position = Grid.getLocalChunkPixelPosForGridPos(elemSprite.element.pos);
-			}
+			this._view.removeChild(elemSprite.sprite);
+
+			this._view.addToCorrectChunk(elemSprite.sprite, elemSprite.element.pos);
+			this._view.setLocalChunkPos(elemSprite.element, elemSprite.sprite);
 		});
 	}
 
@@ -291,6 +291,15 @@ export class ViewInteractionManager {
 		selected.forEach(id => {
 			const element = this._view.allElements.get(id);
 			element.sprite.tint = 0x8a8a8a;
+
+			element.sprite.parent.removeChild(element.sprite);
+			this._view.addChild(element.sprite);
+
+			if (element.element.typeId === 0) {
+				element.sprite.position = Grid.getPixelPosForGridPosWire(element.element.pos);
+			} else {
+				element.sprite.position = Grid.getPixelPosForGridPos(element.element.pos);
+			}
 		});
 	}
 
@@ -300,6 +309,8 @@ export class ViewInteractionManager {
 		delete this._actionStartPos;
 		this._view.removeChild(this._selectRect);
 		elem.sprite.tint = 0x8a8a8a;
+		elem.sprite.parent.removeChild(elem.sprite);
+		this._view.addChild(elem.sprite);
 		SelectionService.staticInstance.selectComponent(elem.element.id);
 	}
 

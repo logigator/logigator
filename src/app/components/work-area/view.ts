@@ -40,6 +40,7 @@ export class View extends PIXI.Container {
 		this._projectId = projectId;
 		this._htmlContainer = htmlContainer;
 		this.interactive = true;
+		this.sortableChildren = true;
 
 		this.zoomPan = new ZoomPan(this);
 		this._zoomPanInputManager = new ZoomPanInputManager(this._htmlContainer);
@@ -76,7 +77,7 @@ export class View extends PIXI.Container {
 						);
 					}
 				});
-				this._chunks[chunk.x][chunk.y].addChild(this._gridGraphics[chunk.x][chunk.y]);
+				this._chunks[chunk.x][chunk.y].addChildAt(this._gridGraphics[chunk.x][chunk.y], 0);
 				this._chunks[chunk.x][chunk.y].visible = true;
 			}
 		});
@@ -116,7 +117,7 @@ export class View extends PIXI.Container {
 				new PIXI.Point(chunkX * environment.chunkSize, chunkY * environment.chunkSize)
 			);
 			this.addChild(this._chunks[chunkX][chunkY]);
-			this._chunks[chunkX][chunkY].addChild(this._gridGraphics[chunkX][chunkY]);
+			this._chunks[chunkX][chunkY].addChildAt(this._gridGraphics[chunkX][chunkY], 0);
 			return true;
 		}
 		return false;
@@ -158,11 +159,7 @@ export class View extends PIXI.Container {
 		sprite.position = Grid.getLocalChunkPixelPosForGridPos(element.pos);
 		sprite.name = element.id.toString();
 
-		const chunkX = CollisionFunctions.gridPosToChunk(element.pos.x);
-		const chunkY = CollisionFunctions.gridPosToChunk(element.pos.y);
-
-		this.createChunkIfNeeded(chunkX, chunkY);
-		this._chunks[chunkX][chunkY].addChild(sprite);
+		this.addToCorrectChunk(sprite, element.pos);
 
 		const elemSprite = {element, sprite};
 		this.allElements.set(element.id, elemSprite);
@@ -171,8 +168,6 @@ export class View extends PIXI.Container {
 	}
 
 	private placeWireOnView(element: Element) {
-		const chunkX = CollisionFunctions.gridPosToChunk(element.pos.x);
-		const chunkY = CollisionFunctions.gridPosToChunk(element.pos.y);
 
 		const endPos = Grid.getPixelPosForGridPosWire(element.endPos);
 		const startPos = Grid.getPixelPosForGridPosWire(element.pos);
@@ -182,8 +177,7 @@ export class View extends PIXI.Container {
 		graphics.name = element.id.toString();
 		this.addLineToWireGraphics(graphics, endPos, startPos);
 
-		this.createChunkIfNeeded(chunkX, chunkY);
-		this._chunks[chunkX][chunkY].addChild(graphics);
+		this.addToCorrectChunk(graphics, element.pos);
 
 		const elemSprite = {element, sprite: graphics};
 		this.allElements.set(element.id, elemSprite);
@@ -196,9 +190,6 @@ export class View extends PIXI.Container {
 	}
 
 	private addConnectionPoint(pos: PIXI.Point) {
-		const chunkX = CollisionFunctions.gridPosToChunk(pos.x);
-		const chunkY = CollisionFunctions.gridPosToChunk(pos.y);
-
 		const pixelPos = Grid.getLocalChunkPixelPosForGridPosWireStart(pos);
 		pixelPos.x -= 4;
 		pixelPos.y -= 4;
@@ -208,9 +199,7 @@ export class View extends PIXI.Container {
 		graphics.drawRect(0, 0, 8, 8);
 		graphics.position = pixelPos;
 		graphics.name = 'wireConnPoint';
-
-		this.createChunkIfNeeded(chunkX, chunkY);
-		this._chunks[chunkX][chunkY].addChild(graphics);
+		this.addToCorrectChunk(graphics, pos);
 
 		this._connectionPoints.set(`${pos.x}:${pos.y}`, graphics);
 	}
@@ -256,19 +245,25 @@ export class View extends PIXI.Container {
 	private moveMultipleAction(action: Action) {
 		action.others.forEach(element => {
 			const elemSprite = this.allElements.get(element.id);
-			const chunkX = CollisionFunctions.gridPosToChunk(element.pos.x);
-			const chunkY = CollisionFunctions.gridPosToChunk(element.pos.y);
-			this.createChunkIfNeeded(chunkX, chunkY);
-			if (elemSprite.sprite.parent !== this._chunks[chunkX][chunkY]) {
-				elemSprite.sprite.parent.removeChild(elemSprite.sprite);
-				this._chunks[chunkX][chunkY].addChild(elemSprite.sprite);
-			}
-			if (element.typeId === 0) {
-				elemSprite.sprite.position = Grid.getLocalChunkPixelPosForGridPosWireStart(element.pos);
-			} else {
-				elemSprite.sprite.position = Grid.getLocalChunkPixelPosForGridPos(element.pos);
-			}
+			this.addToCorrectChunk(elemSprite.sprite, element.pos);
+			this.setLocalChunkPos(element, elemSprite.sprite);
 		});
+	}
+
+	public setLocalChunkPos(element: Element, sprite: PIXI.DisplayObject) {
+		if (element.typeId === 0) {
+			sprite.position = Grid.getLocalChunkPixelPosForGridPosWireStart(element.pos);
+		} else {
+			sprite.position = Grid.getLocalChunkPixelPosForGridPos(element.pos);
+		}
+	}
+
+	public addToCorrectChunk(sprite: PIXI.DisplayObject, pos: PIXI.Point) {
+		const chunkX = CollisionFunctions.gridPosToChunk(pos.x);
+		const chunkY = CollisionFunctions.gridPosToChunk(pos.y);
+
+		this.createChunkIfNeeded(chunkX, chunkY);
+		this._chunks[chunkX][chunkY].addChild(sprite);
 	}
 
 	public get projectId(): number {
