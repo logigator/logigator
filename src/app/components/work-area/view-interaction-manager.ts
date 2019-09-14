@@ -272,7 +272,7 @@ export class ViewInteractionManager {
 		this._draggingNewComp = true;
 		const typeId = WorkModeService.staticInstance.currentComponentToBuild;
 		const elemType = ElementProviderService.staticInstance.getElementById(typeId);
-		this._newCompSprite = CompSpriteGenerator.getComponentSprite(elemType.symbol, elemType.numInputs, 0, this._view.zoomPan.currentScale);
+		this._newCompSprite = CompSpriteGenerator.getComponentSprite(elemType.symbol, elemType.numInputs, elemType.rotation, this._view.zoomPan.currentScale);
 		this._newCompSprite.position = Grid.getPixelPosOnGridForPixelPos(e.data.getLocalPosition(this._view));
 		this._view.addChild(this._newCompSprite);
 	}

@@ -5,4 +5,5 @@ export interface ElementType {
 	hasVariableInputs: boolean;
 	symbol: string;
 	description: string;
+	rotation: number;
 }

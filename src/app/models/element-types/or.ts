@@ -6,5 +6,6 @@ export const or: ElementType = {
 	numOutputs: 1,
 	hasVariableInputs: true,
 	symbol: '≥1',
-	description: ''
+	description: '',
+	rotation: 0
 };

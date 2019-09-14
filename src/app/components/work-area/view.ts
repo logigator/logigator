@@ -165,7 +165,7 @@ export class View extends PIXI.Container {
 
 	private placeComponentOnView(element: Element) {
 		const elemType = ElementProviderService.staticInstance.getElementById(element.typeId);
-		const sprite = CompSpriteGenerator.getComponentSprite(elemType.symbol, elemType.numInputs, 0, this.zoomPan.currentScale);
+		const sprite = CompSpriteGenerator.getComponentSprite(elemType.symbol, elemType.numInputs, elemType.rotation, this.zoomPan.currentScale);
 		sprite.position = Grid.getLocalChunkPixelPosForGridPos(element.pos);
 		sprite.name = element.id.toString();
 

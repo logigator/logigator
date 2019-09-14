@@ -6,5 +6,6 @@ export const xor: ElementType = {
 	numOutputs: 1,
 	hasVariableInputs: false,
 	symbol: '=1',
-	description: ''
+	description: '',
+	rotation: 0
 };
