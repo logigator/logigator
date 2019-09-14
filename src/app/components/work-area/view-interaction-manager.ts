@@ -73,11 +73,13 @@ export class ViewInteractionManager {
 			this.addSelectRectOrResetSelection(e);
 		} else if (WorkModeService.staticInstance.currentWorkMode === 'buildWire' && e.data.button === 0) {
 			this.startDrawingNewWire(e);
+		} else if (WorkModeService.staticInstance.currentWorkMode === 'connectWire' && e.data.button === 0) {
+			this.connectOrDisconnectWires(e);
 		}
 	}
 
 	private handlePointerUpOnView(e: InteractionEvent) {
-		if (WorkModeService.staticInstance.currentWorkMode === 'select') {
+		if (WorkModeService.staticInstance.currentWorkMode === 'select' && e.data.button === 0) {
 			this.selectOrApplyMove();
 		} else if (WorkModeService.staticInstance.currentWorkMode === 'buildWire' && e.data.button === 0) {
 			this.addWire(e);
@@ -143,6 +145,11 @@ export class ViewInteractionManager {
 				delete this._actionStartPos;
 			}
 		}
+	}
+
+	private connectOrDisconnectWires(e: InteractionEvent) {
+		const pos = Grid.getGridPosForPixelPos(e.data.getLocalPosition(this._view));
+		ProjectsService.staticInstance.currProject.toggleWireConnection(pos);
 	}
 
 	private addWire(e: InteractionEvent) {
@@ -271,7 +278,8 @@ export class ViewInteractionManager {
 
 	private clearSelection() {
 		SelectionService.staticInstance.selectedIds(this._view.projectId).forEach(id => {
-			this._view.allElements.get(id).sprite.tint = 0xffffff;
+			const element = this._view.allElements.get(id);
+			element.sprite.tint = 0xffffff;
 		});
 		SelectionService.staticInstance.clearSelection();
 		this._isSingleSelected = false;
@@ -281,7 +289,8 @@ export class ViewInteractionManager {
 		this.clearSelection();
 		const selected = SelectionService.staticInstance.selectFromRect(ProjectsService.staticInstance.currProject, start, end);
 		selected.forEach(id => {
-			this._view.allElements.get(id).sprite.tint = 0x8a8a8a;
+			const element = this._view.allElements.get(id);
+			element.sprite.tint = 0x8a8a8a;
 		});
 	}
 

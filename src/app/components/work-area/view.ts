@@ -27,6 +27,7 @@ export class View extends PIXI.Container {
 
 	private _chunks: PIXI.Container[][] = [];
 	private _gridGraphics: PIXI.Graphics[][] = [];
+	private _connectionPoints: Map<string, PIXI.Graphics> = new Map();
 
 	public allElements: Map<number, ElementSprite> = new Map();
 
@@ -194,6 +195,31 @@ export class View extends PIXI.Container {
 		graphics.lineTo(endPos.x - startPos.x, endPos.y - startPos.y);
 	}
 
+	private addConnectionPoint(pos: PIXI.Point) {
+		const chunkX = CollisionFunctions.gridPosToChunk(pos.x);
+		const chunkY = CollisionFunctions.gridPosToChunk(pos.y);
+
+		const pixelPos = Grid.getLocalChunkPixelPosForGridPosWireStart(pos);
+		pixelPos.x -= 4;
+		pixelPos.y -= 4;
+
+		const graphics = new PIXI.Graphics();
+		graphics.beginFill(ThemingService.staticInstance.getEditorColor('wire'));
+		graphics.drawRect(0, 0, 8, 8);
+		graphics.position = pixelPos;
+		graphics.name = 'wireConnPoint';
+
+		this.createChunkIfNeeded(chunkX, chunkY);
+		this._chunks[chunkX][chunkY].addChild(graphics);
+
+		this._connectionPoints.set(`${pos.x}:${pos.y}`, graphics);
+	}
+
+	private removeConnectionPoint(pos: PIXI.Point) {
+		this._connectionPoints.get(`${pos.x}:${pos.y}`).destroy();
+		this._connectionPoints.delete(`${pos.x}:${pos.y}`);
+	}
+
 	private applyActionsToView(actions: Action[]) {
 		if (!actions)
 			return;
@@ -214,6 +240,12 @@ export class View extends PIXI.Container {
 			case 'remWire':
 				this.allElements.get(action.element.id).sprite.destroy();
 				this.allElements.delete(action.element.id);
+				break;
+			case 'conWire':
+				this.addConnectionPoint(action.pos);
+				break;
+			case 'dcoWire':
+				this.removeConnectionPoint(action.pos);
 				break;
 			case 'movMult':
 				this.moveMultipleAction(action);
