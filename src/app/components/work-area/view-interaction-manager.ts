@@ -63,12 +63,6 @@ export class ViewInteractionManager {
 		elemSprite.sprite.on('pointerdown', (e: InteractionEvent) => this.handlePointerDownOnElement(e, elemSprite));
 	}
 
-	private handleMouseClickOnView(e: InteractionEvent) {
-		if (WorkModeService.staticInstance.currentWorkMode === 'buildComponent') {
-
-		}
-	}
-
 	private handlePointerDownOnView(e: InteractionEvent) {
 		if (WorkModeService.staticInstance.currentWorkMode === 'select' && e.data.button === 0) {
 			this.addSelectRectOrResetSelection(e);
@@ -101,6 +95,22 @@ export class ViewInteractionManager {
 			this.drawNewWire(e);
 		} else if (this._draggingNewComp) {
 			this.dragNewComp(e);
+		}
+	}
+
+	private handlePointerDownOnSelectRect(e: InteractionEvent) {
+		if (WorkModeService.staticInstance.currentWorkMode === 'select') {
+			this.startDragging(e);
+		}
+	}
+
+	private handlePointerDownOnElement(e: InteractionEvent, elem: ElementSprite) {
+		if (WorkModeService.staticInstance.currentWorkMode === 'select') {
+			if (this._isSingleSelected) {
+				this.startDragging(e);
+			} else {
+				this.selectSingleComp(elem);
+			}
 		}
 	}
 
@@ -282,22 +292,6 @@ export class ViewInteractionManager {
 		this._view.removeChild(this._newCompSprite);
 		this._newCompSprite.destroy();
 		this._draggingNewComp = false;
-	}
-
-	private handlePointerDownOnSelectRect(e: InteractionEvent) {
-		if (WorkModeService.staticInstance.currentWorkMode === 'select') {
-			this.startDragging(e);
-		}
-	}
-
-	private handlePointerDownOnElement(e: InteractionEvent, elem: ElementSprite) {
-		if (WorkModeService.staticInstance.currentWorkMode === 'select') {
-			if (this._isSingleSelected) {
-				this.startDragging(e);
-			} else {
-				this.selectSingleComp(elem);
-			}
-		}
 	}
 
 	private applyDraggingPositionChangeToSelection(dx: number, dy: number) {

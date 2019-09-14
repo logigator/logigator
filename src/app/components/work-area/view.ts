@@ -12,6 +12,7 @@ import {Subscription} from 'rxjs';
 import {Action} from '../../models/action';
 import {CollisionFunctions} from '../../models/collision-functions';
 import {ThemingService} from '../../services/theming/theming.service';
+import {CompSpriteGenerator} from './comp-sprite-generator';
 
 export class View extends PIXI.Container {
 
@@ -152,10 +153,8 @@ export class View extends PIXI.Container {
 
 	private placeComponentOnView(element: Element) {
 		const elemType = ElementProviderService.staticInstance.getElementById(element.typeId);
-		if (!elemType.texture) {
-			ElementProviderService.staticInstance.generateTextureForElement(element.typeId);
-		}
-		const sprite = new PIXI.Sprite(elemType.texture);
+		console.log(element);
+		const sprite = CompSpriteGenerator.getComponentSprite(elemType.symbol, 10, 1, this.zoomPan.currentScale);
 		sprite.position = Grid.getLocalChunkPixelPosForGridPos(element.pos);
 		sprite.name = element.id.toString();
 
