@@ -109,6 +109,13 @@ export class ViewInteractionManager {
 				this.resetSelectionToOldPosition();
 			}
 			delete this._actionStartPos;
+			if (SelectionService.staticInstance.selectedIds().length > 0) {
+				SelectionService.staticInstance.selectedIds().forEach(id => {
+					const element = this._view.allElements.get(id);
+					this._view.addToCorrectChunk(element.sprite, element.element.pos);
+					this._view.setLocalChunkPos(element.element, element.sprite);
+				});
+			}
 			this.clearSelection();
 			this._drawingSelectRect = true;
 			this._view.removeChild(this._selectRect);
@@ -136,9 +143,13 @@ export class ViewInteractionManager {
 		} else if (this._currentlyDragging) {
 			this._currentlyDragging = false;
 
-			const movedDif = Grid.getGridPosForPixelPos(
-				new PIXI.Point(this._lastMousePos.x - this._actionStartPos.x, this._lastMousePos.y - this._actionStartPos.y)
-			);
+			let endPos;
+			if (this._isSingleSelected) {
+				endPos = Grid.getGridPosForPixelPos(this._lastMousePos);
+			} else {
+				endPos = Grid.getGridPosForPixelPos(this._selectRect.position);
+			}
+			const movedDif = new PIXI.Point(endPos.x - this._actionStartPos.x, endPos.y - this._actionStartPos.y);
 			if (ProjectsService.staticInstance.currProject.moveElementsById(SelectionService.staticInstance.selectedIds(), movedDif)) {
 				this._view.removeChild(this._selectRect);
 				this.clearSelection();
@@ -213,11 +224,13 @@ export class ViewInteractionManager {
 			const dx = currentMousePos.x - this._lastMousePos.x;
 			const dy = currentMousePos.y - this._lastMousePos.y;
 
-			this._selectRect.position.x += dx;
-			this._selectRect.position.y += dy;
-			this.applyDraggingPositionChangeToSelection(dx, dy);
+			if (dx !== 0 || dy !== 0) {
+				this._selectRect.position.x += dx;
+				this._selectRect.position.y += dy;
+				this.applyDraggingPositionChangeToSelection(dx, dy);
 
-			this._lastMousePos = currentMousePos;
+				this._lastMousePos = currentMousePos;
+			}
 		}
 	}
 
@@ -272,7 +285,11 @@ export class ViewInteractionManager {
 		this._currentlyDragging = true;
 		this._lastMousePos = Grid.getPixelPosOnGridForPixelPos(e.data.getLocalPosition(this._view));
 		if (!this._actionStartPos) {
-			this._actionStartPos = this._lastMousePos;
+			if (this._isSingleSelected) {
+				this._actionStartPos = Grid.getGridPosForPixelPos(this._lastMousePos);
+			} else {
+				this._actionStartPos = Grid.getGridPosForPixelPos(this._selectRect.position);
+			}
 		}
 	}
 
@@ -310,6 +327,7 @@ export class ViewInteractionManager {
 		this._view.removeChild(this._selectRect);
 		elem.sprite.tint = 0x8a8a8a;
 		elem.sprite.parent.removeChild(elem.sprite);
+		elem.sprite.position = Grid.getPixelPosForGridPos(elem.element.pos)
 		this._view.addChild(elem.sprite);
 		SelectionService.staticInstance.selectComponent(elem.element.id);
 	}
