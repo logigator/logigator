@@ -35,7 +35,7 @@ export class ZoomPanInputManager {
 			takeUntil(this._destroySubject)
 		).subscribe((e: MouseEvent) => this.mouseDownHandler(e));
 
-		fromEvent(this._htmlContainer, 'mousewheel').pipe(
+		fromEvent(this._htmlContainer, 'wheel').pipe(
 			takeUntil(this._destroySubject)
 		).subscribe((e: WheelEvent) => this.mouseWheelHandler(e));
 	}
