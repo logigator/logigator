@@ -3,8 +3,13 @@
 	<div class="scroll-container">
 		<app-construction-box-category
 			categoryName="Basic Components"
-			[components]="preDefinedComponents"
+			[components]="basicComponents"
 			[searchText]="searchText"
+		></app-construction-box-category>
+		<app-construction-box-category
+				categoryName="IO Components"
+				[components]="ioComponents"
+				[searchText]="searchText"
 		></app-construction-box-category>
 		<app-construction-box-category
 			categoryName="User Defined"

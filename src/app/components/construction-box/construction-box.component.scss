@@ -8,7 +8,7 @@ $search-height: 3.5rem;
 		background-color: themed('construction-box-background');
 	}
 
-	height: 100%;
+	height: calc(100vh - #{$page-header-height});
 	width: 100%;
 
 	display: flex;
@@ -22,7 +22,7 @@ $search-height: 3.5rem;
 		padding: 1.25rem;
 		outline: none;
 		border: none;
-		border-radius: 1.25rem;
+		border-radius: 0.25rem;
 		margin-top: 0.5rem;
 		margin-bottom: 0.5rem;
 

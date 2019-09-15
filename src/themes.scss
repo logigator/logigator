@@ -2,30 +2,30 @@ $themes: (
 	light: (
 		primary-text: black,
 		secondary-text: black,
-		toolbar: #2ED573,
-		construction-box-background: #FFF,
-		tab-active: #2ED573,
-		tab-inactive: #E5E5E5,
-		boxes-background: #E5E5E5,
-		search-background: #E5E5E5,
-		component-select-hover: #959595,
-		component-active: #2ED573,
-		scrollbar-scroll: #2ED573,
-		scrollbar-background: #FFF
+		toolbar: #2ECC71,
+		construction-box-background: #F5F5F5,
+		tab-active: #2ECC71,
+		tab-inactive: #979797,
+		boxes-background: #F5F5F5,
+		search-background: #979797,
+		component-select-hover: #979797,
+		component-active: #2ECC71,
+		scrollbar-scroll: #2ECC71,
+		scrollbar-background: #F5F5F5
 	),
 	dark: (
 		primary-text: black,
-		secondary-text: #EFEFEF,
+		secondary-text: #efefef,
 		toolbar: #27AE60,
-		construction-box-background: #1A1A1A,
+		construction-box-background: #2B2B2B,
 		tab-active: #27AE60,
 		tab-inactive: #5D5D5D,
-		boxes-background: #5D5D5D,
+		boxes-background: #2B2B2B,
 		search-background: #5D5D5D,
-		component-select-hover: #dbdbdb,
+		component-select-hover: #5D5D5D,
 		component-active: #27AE60,
 		scrollbar-scroll: #27AE60,
-		scrollbar-background: #1A1A1A
+		scrollbar-background: #5D5D5D
 	)
 );
 

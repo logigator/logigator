@@ -8,6 +8,7 @@ import { ConstructionBoxComponent } from './components/construction-box/construc
 import { WorkAreaComponent } from './components/work-area/work-area.component';
 import {FormsModule} from '@angular/forms';
 import {ConstructionBoxCategoryComponent} from './components/construction-box-category/construction-box-category.component';
+import { TopBarComponent } from './components/top-bar/top-bar.component';
 
 @NgModule({
 	declarations: [
@@ -16,7 +17,8 @@ import {ConstructionBoxCategoryComponent} from './components/construction-box-ca
 		SettingsInfoBoxComponent,
 		ConstructionBoxComponent,
 		ConstructionBoxCategoryComponent,
-		WorkAreaComponent
+		WorkAreaComponent,
+		TopBarComponent
 	],
 	imports: [
 		BrowserModule,

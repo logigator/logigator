@@ -1,0 +1,84 @@
+@import "variables";
+@import "themes";
+
+#top-bar {
+	@include themify() {
+		background-color: themed('toolbar');
+		color: themed('primary-text');
+		border-bottom: 1px solid themed('boxes-background');
+	}
+
+	width: 100%;
+	height: $top-bar-height;
+
+	display: grid;
+	grid-template-columns: #{$construction-box-width - 3rem} auto 350px;
+
+	img {
+		width: 80%;
+		justify-self: center;
+		align-self: center;
+	}
+
+	.main-menu {
+		height: 90%;
+		display: grid;
+		grid-template-rows: auto #{$top-bar-height / 2.5};
+
+		.project-title {
+			font-size: 15pt;
+			margin: 0;
+			align-self: end;
+		}
+
+		.menu-entries {
+			display: flex;
+			flex-direction: row;
+			justify-content: flex-start;
+			align-items: center;
+
+			p {
+				margin: 0;
+				margin-right: 0.5rem;
+			}
+		}
+	}
+
+	.login-register {
+		display: flex;
+		flex-direction: row;
+		align-items: center;
+		justify-content: flex-end;
+
+		p {
+			font-size: 15pt;
+			margin: 0;
+		}
+
+		.divider {
+			border-left: 1px solid black;
+			height:  $toolbar-height - 25px;
+			padding: 0;
+			margin-right: 1rem;
+			margin-left: 1rem;
+		}
+
+		.settings {
+			background-image: url("/assets/icons/settings.svg");
+
+			height: $top-bar-height / 2;
+			width: $top-bar-height / 2;
+			border: none;
+			cursor: pointer;
+			padding: 0;
+			margin-right: 0.7rem;
+			margin-left: 0.7rem;
+			outline: none;
+			background-size: cover;
+
+			@include themify() {
+				background-color: themed('toolbar');
+			}
+		}
+	}
+}

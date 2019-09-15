@@ -12,20 +12,14 @@
 	height: $toolbar-height;
 
 	display: grid;
-	grid-template-columns: #{$construction-box-width} auto 350px;
+	grid-template-columns: auto 350px;
 
-	img {
-		width: 80%;
-		justify-self: center;
-		align-self: center;
-	}
-
-	div {
+	.toolbar-buttons {
 		display: flex;
 		flex-direction: row;
 		justify-content: flex-start;
 		align-items: center;
-		padding-left: 0.5rem;
+		padding-left: #{($construction-box-width - 3rem) * 0.1};
 
 		.toolbar-button {
 			height: $toolbar-height - 20px;
@@ -121,13 +115,18 @@
 		.zoom-in {
 			background-image: url("/assets/icons/zoom-in.svg");
 		}
-
-		.settings {
-			background-image: url("/assets/icons/settings.svg");
-		}
 	}
 
 	.toolbar-end {
+		display: flex;
+		flex-direction: row;
 		justify-content: flex-end;
+		align-items: center;
+		font-size: 14pt;
+		padding-right: 0.7rem;
+
+		p {
+			margin: 0;
+		}
 	}
 }

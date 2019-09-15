@@ -13,11 +13,15 @@ export class ConstructionBoxComponent {
 
 	constructor(private componentProviderService: ElementProviderService) { }
 
-	public get preDefinedComponents(): Map<number, ElementType> {
-		return this.componentProviderService.getPreDefinedElements();
+	public get basicComponents(): Map<number, ElementType> {
+		return this.componentProviderService.basicElements;
+	}
+
+	public get ioComponents(): Map<number, ElementType> {
+		return this.componentProviderService.ioElements;
 	}
 
 	public get userDefinedComponents(): Map<number, ElementType> {
-		return this.componentProviderService.getUserDefinedElements();
+		return this.componentProviderService.userDefinedElements;
 	}
 }

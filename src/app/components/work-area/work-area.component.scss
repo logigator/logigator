@@ -7,7 +7,7 @@
 
 	#canvas-container {
 		width: calc(100% - #{$construction-box-width});
-		height: calc(100% - #{$toolbar-height});
+		height: calc(100vh - #{$page-header-height});
 		position: fixed;
 		cursor: crosshair;
 	}

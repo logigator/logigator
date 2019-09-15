@@ -4,7 +4,6 @@ import {View} from './view';
 import {fromEvent, Subject} from 'rxjs';
 import {takeUntil} from 'rxjs/operators';
 import {Grid} from './grid';
-import {ElementProviderService} from '../../services/element-provider/element-provider.service';
 import {ProjectsService} from '../../services/projects/projects.service';
 import {Project} from '../../models/project';
 import {ThemingService} from '../../services/theming/theming.service';
@@ -32,7 +31,6 @@ export class WorkAreaComponent implements OnInit, OnDestroy {
 	constructor(
 		private renderer2: Renderer2,
 		private ngZone: NgZone,
-		private componentProviderService: ElementProviderService,
 		private projectsService: ProjectsService,
 		private theming: ThemingService
 	) { }
@@ -43,7 +41,6 @@ export class WorkAreaComponent implements OnInit, OnDestroy {
 		this.ngZone.runOutsideAngular(async () => {
 			await this.loadPixiFont();
 			this.initPixi();
-			this.componentProviderService.insertPixiRenderer(this._pixiRenderer);
 			this.initGridGeneration();
 			this.initPixiTicker();
 
@@ -92,8 +89,10 @@ export class WorkAreaComponent implements OnInit, OnDestroy {
 
 	private openProject(projectId: number) {
 		const newView = new View(projectId, this._pixiCanvasContainer.nativeElement);
-		this._allViews.set(projectId, newView);
-		this.activeView = newView;
+		this.ngZone.run(() => {
+			this._allViews.set(projectId, newView);
+			this.activeView = newView;
+		});
 	}
 
 	private initPixiTicker() {

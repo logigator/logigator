@@ -26,6 +26,10 @@ export class ConstructionBoxCategoryComponent {
 		return item.key;
 	}
 
+	public isInSearchResult(toSearch: string): boolean {
+		return toSearch.toLowerCase().includes(this.searchText.trim().toLowerCase());
+	}
+
 	public selectComponent(id: number) {
 		this.workModeService.setWorkMode('buildComponent', id);
 	}
