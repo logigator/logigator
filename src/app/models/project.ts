@@ -154,7 +154,7 @@ export class Project {
 	}
 
 	public addElement(typeId: number, _pos: PIXI.Point, _endPos?: PIXI.Point): Element {
-		if (typeId === 0 && !_endPos)
+		if (typeId === 0 && !_endPos || _pos.equals(_endPos))
 			return null;
 		const elem = Project.genNewElement(typeId, _pos, _endPos || Project.calcEndPos(_pos, typeId));
 		if (!this._currState.isFreeSpace(elem.pos, elem.endPos, typeId === 0))
@@ -188,6 +188,7 @@ export class Project {
 		if (dif.x === 0 && dif.y === 0)
 			return true;
 		const elements = this._currState.getElementsById(ids);
+		const changed = this.withWiresOnEdges(elements);
 		if (!this._currState.allSpacesFree(elements, dif))
 			return false;
 		for (const elem of elements) {
@@ -198,7 +199,7 @@ export class Project {
 			others: elements,
 			pos: dif
 		}];
-		actions.push(...this.autoAssemble(elements));
+		actions.push(...this.autoAssemble(changed));
 		this.newState(actions);
 		this.changeSubject.next(actions);
 		return true;
@@ -236,15 +237,29 @@ export class Project {
 
 	private autoConnect(elements: Element[]): Action[] {
 		const out: Action[] = [];
-		for (const elem of elements) {
+		// tslint:disable-next-line:prefer-for-of
+		for (let i = 0; i < elements.length; i++) {
+			const elem = elements[i];
 			const others = this._currState.elementsInChunks(elem.pos, elem.endPos);
 			for (const other of others) {
 				const actions = this.connectWithEdge(other, elem);
-				if (actions)
+				if (actions) {
 					out.push(...actions);
+					elements = this.applyActionsToArray(actions, elements);
+				}
 			}
 		}
 		return out;
+	}
+
+	private applyActionsToArray(actions: Action[], elements: Element[]): Element[] {
+		for (const action of actions) {
+			if (action.name[0] === 'a')
+				elements.push(action.element);
+			if (action.name[0] === 'r')
+				elements = elements.filter(e => e.id !== action.element.id);
+		}
+		return elements;
 	}
 
 	private connectWithEdge(other: Element, elem: Element): Action[] {
@@ -264,7 +279,6 @@ export class Project {
 	private autoMerge(elements: Element[]): {actions: Action[], elements: Element[]} {
 		const out: Action[] = [];
 		let outElements = [...elements];
-		this.pushWiresOnEdges(outElements);
 		const elemChanges: {newElem: Element, oldElems: Element[]}[] = this._currState.mergeToBoard(elements);
 		for (const change of elemChanges) {
 			for (const oldElem of change.oldElems) {
@@ -277,12 +291,22 @@ export class Project {
 		return {actions: out, elements: outElements};
 	}
 
-	private pushWiresOnEdges(outElements) {
-		for (const elem of outElements) {
-			if (elem.typeId !== 0) continue;
-			outElements.push(...this._currState.wiresOnPoint(elem.pos));
-			outElements.push(...this._currState.wiresOnPoint(elem.endPos));
+	private withWiresOnEdges(elements: Element[]): Element[] {
+		const out = [...elements];
+		for (const element of elements) {
+			if (element.typeId !== 0) continue;
+			const elemsOnPos = this._currState.wiresOnPoint(element.pos);
+			elemsOnPos.forEach(elem => {
+				if (!out.includes(elem))
+					out.push(elem);
+			});
+			const elemsOnEndPos = this._currState.wiresOnPoint(element.endPos);
+			elemsOnEndPos.forEach(elem => {
+				if (!out.includes(elem))
+					out.push(elem);
+			});
 		}
+		return out;
 	}
 
 	private autoAssemble(elements: Element[]): Action[] {

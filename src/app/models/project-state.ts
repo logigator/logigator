@@ -179,7 +179,7 @@ export class ProjectState {
 				continue;
 			const others = this.elementsInChunks(elem.pos, elem.endPos);
 			for (const other of others) {
-				if (elem.id !== other.id) {
+				if (elem.id !== other.id && !out.find(o => o.oldElems.find(e => e.id === elem.id || e.id === other.id))) {
 					const changes = this.mergeWires(elem, other);
 					if (changes) {
 						out.push(changes);
@@ -196,6 +196,9 @@ export class ProjectState {
 			wire0.id === wire1.id)) {
 			return null;
 		}
+		if (wire0.pos.equals(wire1.endPos) && this.wiresOnPoint(wire0.pos).length > 2 ||
+			wire1.pos.equals(wire0.endPos) && this.wiresOnPoint(wire1.pos).length > 2)
+			return null;
 		const newElem = Project.genNewElement(0, undefined, undefined);
 		newElem.id = wire0.id;
 		if (CollisionFunctions.isVertical(wire0) && CollisionFunctions.isVertical(wire1) && wire0.pos.x === wire1.pos.x) {
@@ -221,7 +224,7 @@ export class ProjectState {
 		const chunkX = CollisionFunctions.gridPosToChunk(pos.x);
 		const chunkY = CollisionFunctions.gridPosToChunk(pos.y);
 		const outWires: Element[] = [];
-		for (const elem of this._chunks[chunkX][chunkY].elements) {
+		for (const elem of this.elementsInChunk(chunkX, chunkY)) {
 			if (elem.typeId === 0 && CollisionFunctions.isPointOnWire(elem, pos))
 				outWires.push(elem);
 		}
@@ -251,7 +254,7 @@ export class ProjectState {
 	}
 
 	public elementsInChunk(x: number, y: number): Element[] {
-		return this._chunks[x][y].elements;
+		return this._chunks[x] && this._chunks[x][y] ? this._chunks[x][y].elements : [];
 	}
 
 	public chunksFromCoords(chunkCoords: {x: number, y: number}[]): Chunk[] {
