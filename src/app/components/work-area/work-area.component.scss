@@ -55,7 +55,7 @@
 
 				&:hover {
 					@include themify() {
-						background-color: lighten(themed('tab-inactive'), 10%);
+						background-color: lighten(themed('tab-inactive'), 5%);
 					}
 				}
 			}
@@ -68,7 +68,7 @@
 
 				.tab-close {
 					&:hover {
-						background-color: lighten(themed('tab-active'), 10%);
+						background-color: lighten(themed('tab-active'), 5%);
 					}
 				}
 			}
