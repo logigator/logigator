@@ -174,6 +174,7 @@ export class ProjectState {
 	}
 
 	public mergeToBoard(elements: Element[]): {newElem: Element, oldElems: Element[]}[] {
+		console.log('mtb', elements);
 		const out: {newElem: Element, oldElems: Element[]}[] = [];
 		// tslint:disable-next-line:prefer-for-of
 		for (let i = 0; i < elements.length; i++) {
@@ -183,7 +184,9 @@ export class ProjectState {
 			const others = this.elementsInChunks(elem.pos, elem.endPos);
 			for (const other of others) {
 				if (elem.id !== other.id) {
+					console.log('bout to merge', elem, other);
 					const changes = this.mergeWires(elem, other);
+					console.log('merged', changes);
 					if (changes) {
 						out.push(changes);
 						elements = Actions.applyChangeToArray(changes, elements);
@@ -195,11 +198,10 @@ export class ProjectState {
 	}
 
 	public mergeWires(wire0: Element, wire1: Element): {newElem: Element, oldElems: Element[]} {
-		if (!(CollisionFunctions.isPointOnWire(wire0, wire1.pos) ||
-			CollisionFunctions.isPointOnWire(wire0, wire1.endPos) ||
-			wire0.id === wire1.id)) {
+		if (wire0.id === wire1.id)
 			return null;
-		}
+		if (!CollisionFunctions.doWiresOverlap(wire0, wire1))
+			return null;
 		if (wire0.pos.equals(wire1.endPos) && this.wiresOnPoint(wire0.pos).length > 2 ||
 			wire1.pos.equals(wire0.endPos) && this.wiresOnPoint(wire1.pos).length > 2)
 			return null;

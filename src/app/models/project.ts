@@ -65,16 +65,7 @@ export class Project {
 	}
 
 	protected applyActions(actions: Action[]): void {
-		let newElements: Element[] = [];
-		actions.forEach(action => {
-			this.applyAction(action);
-			if (action.name[0] === 'a')
-				newElements.push(action.element);
-			else if (action.name[0] === 'r')
-				newElements = newElements.filter(e => e.id !== action.element.id);
-			else if (action.name[0] === 'm')
-				newElements.push(...action.others);
-		});
+		actions.forEach(action => this.applyAction(action));
 	}
 
 	protected applyAction(action: Action): void {
@@ -270,14 +261,7 @@ export class Project {
 		const out: Action[] = [];
 		let outElements = [...elements];
 		const elemChanges: {newElem: Element, oldElems: Element[]}[] = this._currState.mergeToBoard(elements);
-		for (const change of elemChanges) {
-			for (const oldElem of change.oldElems) {
-				out.push({ name: 'remWire', element: oldElem });
-				outElements = outElements.filter(e => e.id !== oldElem.id);
-			}
-			out.push({ name: 'addWire', element: change.newElem });
-			outElements.push(change.newElem);
-		}
+		outElements = Actions.applyChangeOnArrayAndActions(elemChanges, out, outElements);
 		return {actions: out, elements: outElements};
 	}
 

@@ -94,4 +94,18 @@ export class Actions {
 		elements.push(change.newElem);
 		return elements;
 	}
+
+	public static applyChangeOnArrayAndActions(
+		elemChanges: { newElem: Element; oldElems: Element[] }[], out: Action[], outElements: Element[]
+	): Element[] {
+		for (const change of elemChanges) {
+			for (const oldElem of change.oldElems) {
+				out.push({name: 'remWire', element: oldElem});
+				outElements = outElements.filter(e => e.id !== oldElem.id);
+			}
+			out.push({name: 'addWire', element: change.newElem});
+			outElements.push(change.newElem);
+		}
+		return outElements;
+	}
 }
