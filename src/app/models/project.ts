@@ -240,6 +240,9 @@ export class Project {
 				}
 			}
 		}
+		// if (out.length > 0) {
+		// 	return out.concat(this.mergeToBoard(out.map(o => o.newElem)));
+		// }
 		return out;
 	}
 
@@ -260,7 +263,7 @@ export class Project {
 	private autoMerge(elements: Element[]): {actions: Action[], elements: Element[]} {
 		const out: Action[] = [];
 		let outElements = [...elements];
-		const elemChanges: {newElem: Element, oldElems: Element[]}[] = this._currState.mergeToBoard(elements);
+		const elemChanges = this._currState.mergeToBoard(elements);
 		outElements = Actions.applyChangeOnArrayAndActions(elemChanges, out, outElements);
 		return {actions: out, elements: outElements};
 	}

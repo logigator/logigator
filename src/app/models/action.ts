@@ -88,10 +88,8 @@ export class Actions {
 	}
 
 	public static applyChangeToArray(change: {newElem: Element, oldElems: Element[]}, elements: Element[]): Element[] {
-		for (const oldElem of change.oldElems) {
-			elements = elements.filter(e => e.id !== oldElem.id);
-		}
-		elements.push(change.newElem);
+		elements = elements.filter(e => !change.oldElems.find(o => o.id === e.id));
+		// elements.push(change.newElem); // don't know if needed, prob not
 		return elements;
 	}
 
@@ -107,5 +105,15 @@ export class Actions {
 			outElements.push(change.newElem);
 		}
 		return outElements;
+	}
+
+	public static printActions(actions: Action[]): void {
+		actions.forEach(a => {
+			if (a.element)
+				console.log(a.name, a.element.id, a.element.pos, a.element.endPos);
+			else
+				console.log(a.name, a.pos, a.endPos);
+
+		});
 	}
 }

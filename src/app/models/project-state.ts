@@ -174,7 +174,6 @@ export class ProjectState {
 	}
 
 	public mergeToBoard(elements: Element[]): {newElem: Element, oldElems: Element[]}[] {
-		console.log('mtb', elements);
 		const out: {newElem: Element, oldElems: Element[]}[] = [];
 		// tslint:disable-next-line:prefer-for-of
 		for (let i = 0; i < elements.length; i++) {
@@ -184,15 +183,17 @@ export class ProjectState {
 			const others = this.elementsInChunks(elem.pos, elem.endPos);
 			for (const other of others) {
 				if (elem.id !== other.id) {
-					console.log('bout to merge', elem, other);
-					const changes = this.mergeWires(elem, other);
-					console.log('merged', changes);
-					if (changes) {
-						out.push(changes);
-						elements = Actions.applyChangeToArray(changes, elements);
+					const change = this.mergeWires(elem, other);
+					if (change) {
+						out.push(change);
+						elements = Actions.applyChangeToArray(change, elements);
+						break;
 					}
 				}
 			}
+		}
+		if (out.length > 0) {
+			return out.concat(this.mergeToBoard(out.map(o => o.newElem)));
 		}
 		return out;
 	}
