@@ -2,8 +2,8 @@
 @import "themes";
 
 .box {
-	width: $construction-box-width - 1rem;
-	margin: auto;
+	width: $construction-box-width - 0.75rem;
+	margin-left: 0.25rem;
 	margin-bottom: 0.8rem;
 
 	.header {
@@ -12,8 +12,8 @@
 		flex-direction: row;
 		align-items: center;
 		justify-content: center;
-		border-top-right-radius: 0.5rem;
-		border-top-left-radius: 0.5rem;
+		border-top-right-radius: 0.25rem;
+		border-top-left-radius: 0.25rem;
 
 		@include themify() {
 			background-color: themed('toolbar');
@@ -34,6 +34,7 @@
 		@include themify() {
 			background-color: themed('boxes-background');
 			color: themed('secondary-text');
+			border: 4px solid themed('toolbar');
 		}
 
 		.no-components {
@@ -42,14 +43,25 @@
 		}
 
 		.component-to-select {
-			width: ($construction-box-width - 1rem - 1.6rem) / 3;
-			height: ($construction-box-width - 1rem - 1.6rem) / 3;
-			margin: 0.4rem 0 0 0.4rem;
-			border: 1px solid;
-			border-radius: 0.2rem;
+			width: ($construction-box-width - 3.5rem) / 3;
+			height: ($construction-box-width) / 3;
+			margin-left: 0.5rem;
+			margin-top: 0.5rem;
+
+			display: grid;
+			grid-template-rows: (($construction-box-width - 3.5rem) / 3) auto;
 			text-align: center;
-			line-height: ($construction-box-width - 1rem - 1.6rem) / 3;
-			font-size: 17pt;
+
+			div {
+				border: 2px solid;
+				border-radius: 0.25rem;
+				line-height: (($construction-box-width - 3.5rem) / 3);
+				font-size: 17pt;
+			}
+
+			p {
+				margin: 0;
+			}
 
 			@include themify() {
 				border-color: themed('secondary-text');

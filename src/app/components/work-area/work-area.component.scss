@@ -7,15 +7,15 @@
 
 	#canvas-container {
 		width: calc(100% - #{$construction-box-width});
-		height: calc(100% - #{$toolbar-height});
+		height: calc(100vh - #{$page-header-height});
 		position: fixed;
 		cursor: crosshair;
 	}
 
 	#tabs {
 		position: absolute;
-		width: calc(100% - 0.3rem - #{$construction-box-width});
-		margin-left: 0.3rem;
+		width: calc(100% - 1rem - #{$construction-box-width});
+		margin-left: 1rem;
 		display: flex;
 		flex-direction: row;
 		justify-content: flex-start;
@@ -55,7 +55,7 @@
 
 				&:hover {
 					@include themify() {
-						background-color: lighten(themed('tab-inactive'), 10%);
+						background-color: lighten(themed('tab-inactive'), 5%);
 					}
 				}
 			}
@@ -68,7 +68,7 @@
 
 				.tab-close {
 					&:hover {
-						background-color: lighten(themed('tab-active'), 10%);
+						background-color: lighten(themed('tab-active'), 5%);
 					}
 				}
 			}

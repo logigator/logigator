@@ -3,11 +3,10 @@
 
 .box {
 	position: absolute;
-	right: 0;
-	top: calc(#{$toolbar-height} + #{$tab-height} + 0.5rem);
+	right: 0.5rem;
+	bottom: 0.5rem;
 
 	width: $settings-info-box-width;
-	height: $settings-info-box-height;
 
 	display: grid;
 	grid-template-rows: 3rem auto;
@@ -33,6 +32,52 @@
 		@include themify() {
 			background-color: themed('boxes-background');
 			color: themed('secondary-text');
+			border: 4px solid themed('toolbar');
 		}
+
+		padding: 0.5rem;
+
+		.property {
+			height: 2.5rem;
+			display: flex;
+			flex-direction: row;
+			justify-content: space-between;
+			align-items: center;
+			padding-bottom: 0.75rem;
+
+			p {
+				margin: 0;
+				align-self: flex-end;
+			}
+
+			input {
+				outline: none;
+				border: none;
+				padding: 0.25rem;
+				font-size: 13pt;
+				width: 40%;
+				@include themify() {
+					border-bottom: 1px solid themed('secondary-text');
+					color: themed('secondary-text');
+					background-color: themed('boxes-background');
+				}
+			}
+
+			select {
+				width: 40%;
+				font-size: 13pt;
+				outline: none;
+				border: none;
+			}
+		}
+
+		.description {
+			h6 {
+				font-size: 12pt;
+				margin: 0;
+				margin-bottom: 0.2rem;
+			}
+		}
+
 	}
 }
