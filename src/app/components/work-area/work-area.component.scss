@@ -14,8 +14,8 @@
 
 	#tabs {
 		position: absolute;
-		width: calc(100% - 0.3rem - #{$construction-box-width});
-		margin-left: 0.3rem;
+		width: calc(100% - 1rem - #{$construction-box-width});
+		margin-left: 1rem;
 		display: flex;
 		flex-direction: row;
 		justify-content: flex-start;

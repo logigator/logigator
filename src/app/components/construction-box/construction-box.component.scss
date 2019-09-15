@@ -16,7 +16,7 @@ $search-height: 3.5rem;
 	align-items: center;
 
 	#component-search {
-		width: $construction-box-width - 1rem;
+		width: $construction-box-width - 0.5rem;
 		height: $search-height - 1rem;
 		font-size: 16px;
 		padding: 1.25rem;
@@ -42,9 +42,10 @@ $search-height: 3.5rem;
 	}
 
 	.scroll-container {
-		width: 100%;
+		width: $construction-box-width;
 		height: calc(100vh - #{$toolbar-height} - #{$search-height});
 		overflow: auto;
+		margin: auto;
 
 		@include scrollbar(5px)
 	}

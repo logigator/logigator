@@ -10,8 +10,8 @@ $themes: (
 		search-background: #979797,
 		component-select-hover: #979797,
 		component-active: #2ECC71,
-		scrollbar-scroll: #2ECC71,
-		scrollbar-background: #F5F5F5
+		scrollbar: #979797,
+		top-bar-divider: #979797
 	),
 	dark: (
 		primary-text: black,
@@ -24,8 +24,8 @@ $themes: (
 		search-background: #5D5D5D,
 		component-select-hover: #5D5D5D,
 		component-active: #27AE60,
-		scrollbar-scroll: #27AE60,
-		scrollbar-background: #5D5D5D
+		scrollbar: #5D5D5D,
+		top-bar-divider: #5D5D5D
 	)
 );
 
@@ -60,7 +60,7 @@ $themes: (
 	&::-webkit-scrollbar-track
 	{
 		@include themify() {
-			background-color: themed('scrollbar-background');
+			background-color: themed('construction-box-background');
 		}
 	}
 
@@ -73,7 +73,7 @@ $themes: (
 	{
 		border-radius: 2px;
 		@include themify() {
-			background-color: themed('scrollbar-scroll');
+			background-color: themed('scrollbar');
 		}
 	}
 }

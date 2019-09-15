@@ -5,7 +5,7 @@
 	@include themify() {
 		background-color: themed('toolbar');
 		color: themed('primary-text');
-		border-bottom: 1px solid themed('boxes-background');
+		border-bottom: 1px solid themed('top-bar-divider');
 	}
 
 	width: 100%;
@@ -40,6 +40,15 @@
 			p {
 				margin: 0;
 				margin-right: 0.5rem;
+				padding: 0.1rem 0.2rem 0.1rem 0.2rem;
+				border-radius: 0.2rem;
+
+				&:hover {
+					cursor: pointer;
+					@include themify() {
+						background-color: lighten(themed('toolbar'), 5%);
+					}
+				}
 			}
 		}
 	}

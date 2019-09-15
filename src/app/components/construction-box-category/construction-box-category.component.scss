@@ -2,8 +2,8 @@
 @import "themes";
 
 .box {
-	width: $construction-box-width - 1rem;
-	margin: auto;
+	width: $construction-box-width - 0.75rem;
+	margin-left: 0.25rem;
 	margin-bottom: 0.8rem;
 
 	.header {
