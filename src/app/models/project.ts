@@ -245,21 +245,11 @@ export class Project {
 				const actions = this.connectWithEdge(other, elem);
 				if (actions) {
 					out.push(...actions);
-					elements = this.applyActionsToArray(actions, elements);
+					elements = Actions.applyActionsToArray(actions, elements);
 				}
 			}
 		}
 		return out;
-	}
-
-	private applyActionsToArray(actions: Action[], elements: Element[]): Element[] {
-		for (const action of actions) {
-			if (action.name[0] === 'a')
-				elements.push(action.element);
-			if (action.name[0] === 'r')
-				elements = elements.filter(e => e.id !== action.element.id);
-		}
-		return elements;
 	}
 
 	private connectWithEdge(other: Element, elem: Element): Action[] {

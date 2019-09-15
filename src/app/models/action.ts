@@ -76,4 +76,22 @@ export class Actions {
 		}
 		return outActions;
 	}
+
+	public static applyActionsToArray(actions: Action[], elements: Element[]): Element[] {
+		for (const action of actions) {
+			if (action.name[0] === 'a')
+				elements.push(action.element);
+			if (action.name[0] === 'r')
+				elements = elements.filter(e => e.id !== action.element.id);
+		}
+		return elements;
+	}
+
+	public static applyChangeToArray(change: {newElem: Element, oldElems: Element[]}, elements: Element[]): Element[] {
+		for (const oldElem of change.oldElems) {
+			elements = elements.filter(e => e.id !== oldElem.id);
+		}
+		elements.push(change.newElem);
+		return elements;
+	}
 }

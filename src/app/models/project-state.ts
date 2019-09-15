@@ -4,6 +4,7 @@ import {Element} from './element';
 import * as PIXI from 'pixi.js';
 import {Project} from './project';
 import {CollisionFunctions} from './collision-functions';
+import {Actions} from './action';
 
 export class ProjectState {
 
@@ -174,15 +175,18 @@ export class ProjectState {
 
 	public mergeToBoard(elements: Element[]): {newElem: Element, oldElems: Element[]}[] {
 		const out: {newElem: Element, oldElems: Element[]}[] = [];
-		for (const elem of elements) {
+		// tslint:disable-next-line:prefer-for-of
+		for (let i = 0; i < elements.length; i++) {
+			const elem = elements[i];
 			if (elem.typeId !== 0)
 				continue;
 			const others = this.elementsInChunks(elem.pos, elem.endPos);
 			for (const other of others) {
-				if (elem.id !== other.id && !out.find(o => o.oldElems.find(e => e.id === elem.id || e.id === other.id))) {
+				if (elem.id !== other.id) {
 					const changes = this.mergeWires(elem, other);
 					if (changes) {
 						out.push(changes);
+						elements = Actions.applyChangeToArray(changes, elements);
 					}
 				}
 			}
