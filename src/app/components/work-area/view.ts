@@ -67,12 +67,15 @@ export class View extends PIXI.Container {
 			if (!this.createChunkIfNeeded(chunk.x, chunk.y)) {
 				this._gridGraphics[chunk.x][chunk.y].destroy();
 				this._gridGraphics[chunk.x][chunk.y] = Grid.generateGridGraphics(this.zoomPan.currentScale);
-				this._chunks[chunk.x][chunk.y].children.forEach(child => {
+				this._chunks[chunk.x][chunk.y].children.forEach((child: PIXI.Graphics) => {
 					const elemSprite = this.allElements.get(Number(child.name));
 					if (elemSprite && elemSprite.element.typeId === 0) {
 						this.updateWireSprite(elemSprite.element, elemSprite.sprite as PIXI.Graphics);
 					} else if (elemSprite) {
 						this.updateComponentSprite(elemSprite.element, elemSprite.sprite as PIXI.Graphics);
+					}
+					if (child.name === 'wireConnPoint') {
+						this.updateConnectionPoint(child);
 					}
 				});
 				this._chunks[chunk.x][chunk.y].addChildAt(this._gridGraphics[chunk.x][chunk.y], 0);
@@ -145,7 +148,7 @@ export class View extends PIXI.Container {
 		}
 
 		if (this._zoomPanInputManager.isZoomIn) {
-			needsChunkUpdate = this.zoomPan.zoomBy(0.75, this._zoomPanInputManager.mouseX, this._zoomPanInputManager.mouseY) || needsChunkUpdate;
+			needsChunkUpdate = this.zoomPan.zoomBy(0.8, this._zoomPanInputManager.mouseX, this._zoomPanInputManager.mouseY) || needsChunkUpdate;
 		} else if (this._zoomPanInputManager.isZoomOut) {
 			needsChunkUpdate = this.zoomPan.zoomBy(1.25, this._zoomPanInputManager.mouseX, this._zoomPanInputManager.mouseY) || needsChunkUpdate;
 		}
@@ -201,17 +204,29 @@ export class View extends PIXI.Container {
 
 	private addConnectionPoint(pos: PIXI.Point) {
 		const pixelPos = Grid.getLocalChunkPixelPosForGridPosWireStart(pos);
-		pixelPos.x -= 4;
-		pixelPos.y -= 4;
+		pixelPos.x -= 2.5 / this.zoomPan.currentScale;
+		pixelPos.y -= 2.5 / this.zoomPan.currentScale;
 
 		const graphics = new PIXI.Graphics();
-		graphics.beginFill(ThemingService.staticInstance.getEditorColor('wire'));
-		graphics.drawRect(0, 0, 8, 8);
 		graphics.position = pixelPos;
 		graphics.name = 'wireConnPoint';
+		this.updateConnectionPoint(graphics);
 		this.addToCorrectChunk(graphics, pos);
 
 		this._connectionPoints.set(`${pos.x}:${pos.y}`, graphics);
+	}
+
+	private updateConnectionPoint(graphics: PIXI.Graphics) {
+		const pos = Grid.getLocalChunkPixelPosForGridPosWireStart(Grid.getGridPosForPixelPos(graphics.position));
+		const size = this.zoomPan.currentScale < 0.5 ? 3 : 5;
+
+		pos.x -= size / 2 / this.zoomPan.currentScale;
+		pos.y -= size / 2 / this.zoomPan.currentScale;
+
+		graphics.clear();
+		graphics.position = pos;
+		graphics.beginFill(ThemingService.staticInstance.getEditorColor('wire'));
+		graphics.drawRect(0, 0, size / this.zoomPan.currentScale / window.devicePixelRatio, size / this.zoomPan.currentScale / window.devicePixelRatio);
 	}
 
 	private removeConnectionPoint(pos: PIXI.Point) {
