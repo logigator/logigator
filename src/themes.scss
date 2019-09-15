@@ -32,6 +32,8 @@ $themes: (
 @mixin themify() {
 	@each $theme, $map in $themes {
 
+		$themeForTestFunction: $theme !global;
+
 		:host-context(.theme-#{$theme}) & {
 			$theme-map: () !global;
 			@each $key, $submap in $map {
@@ -40,6 +42,7 @@ $themes: (
 
 			@content;
 			$theme-map: null !global;
+			$themeForTestFunction: null !global;
 		}
 
 	}
@@ -47,6 +50,10 @@ $themes: (
 
 @function themed($key) {
 	@return map-get($theme-map, $key);
+}
+
+@function isTheme($theme) {
+	@return $themeForTestFunction == $theme;
 }
 
 @mixin scrollbar($width) {

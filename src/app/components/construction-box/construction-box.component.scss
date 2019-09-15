@@ -25,10 +25,19 @@ $search-height: 3.5rem;
 		border-radius: 0.25rem;
 		margin-top: 0.5rem;
 		margin-bottom: 0.5rem;
+		background: url("/assets/icons/search.svg") no-repeat;
+		background-position: right;
+		background-origin: content-box;
 
 		@include themify() {
 			background-color: themed('search-background');
 			color: themed('secondary-text');
+
+			&::placeholder {
+				@if(isTheme('dark')) {
+					color: darken(themed('secondary-text'), 10%);
+				}
+			}
 		}
 	}
 
