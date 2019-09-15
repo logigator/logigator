@@ -227,23 +227,6 @@ export class Project {
 	}
 
 	private autoConnect(elements: Element[]): {actions: Action[], elements: Element[]} {
-		// const out: Action[] = [];
-		// // tslint:disable-next-line:prefer-for-of
-		// for (let i = 0; i < elements.length; i++) {
-		// 	const elem = elements[i];
-		// 	const others = this._currState.elementsInChunks(elem.pos, elem.endPos);
-		// 	for (const other of others) {
-		// 		const actions = this.connectWithEdge(other, elem);
-		// 		if (actions) {
-		// 			out.push(...actions);
-		// 			elements = Actions.applyActionsToArray(actions, elements);
-		// 		}
-		// 	}
-		// }
-		// // if (out.length > 0) {
-		// // 	return out.concat(this.mergeToBoard(out.map(o => o.newElem)));
-		// // }
-		// return out;
 		const out: Action[] = [];
 		let outElements = [...elements];
 		const elemChanges = this._currState.connectToBoard(elements);
@@ -281,8 +264,8 @@ export class Project {
 		const out: Action[] = [];
 		const merged = this.autoMerge(elements);
 		out.push(...merged.actions);
-		const connected = this.autoConnect(merged.elements);
-		out.push(...connected.actions);
+		// const connected = this.autoConnect(elements);
+		// out.push(...connected.actions);
 		return out;
 	}
 

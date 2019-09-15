@@ -164,17 +164,18 @@ export class ProjectState {
 				if (wire0 === wire1 || doneWires.find(w => w.id === wire0.id || w.id === wire1.id))
 					continue;
 				const merged = this.mergeWires(wire0, wire1);
-				if (!merged || !merged.newElem)
+				if (!merged || !merged.newElems[0])
 					continue;
-				outWires.push(merged.newElem);
+				outWires.push(merged.newElems[0]);
 				doneWires.push(wire0, wire1);
 			}
 		}
 		return outWires;
 	}
 
-	public actionToBoard(elements: Element[], func: (elem: Element, other: Element) => ChangeType): ChangeType[] {
-		const out: ChangeType[] = [];
+	public actionToBoard(elements: Element[], func: (elem: Element, other: Element) => ChangeType): ChangeType {
+		let out: ChangeType = {newElems: [], oldElems: []};
+		let resultElements: Element[] = [];
 		// tslint:disable-next-line:prefer-for-of
 		for (let i = 0; i < elements.length; i++) {
 			const elem = elements[i];
@@ -182,24 +183,26 @@ export class ProjectState {
 				continue;
 			const others = this.elementsInChunks(elem.pos, elem.endPos);
 			for (const other of others) {
-				if (elem.id !== other.id) {
-					const change = func(elem, other);
-					if (change) {
-						out.push(change);
-						elements = Actions.applyChangeToArray(change, elements);
-						break;
-					}
+				if (elem.id === other.id)
+					continue;
+				const change = func(elem, other);
+				console.log(change);
+				if (change) {
+					resultElements = resultElements.filter(r => !change.oldElems.find(o => o.id === r.id));
+					elements = elements.filter(e => !change.oldElems.find(o => o.id === e.id));
+					out = Actions.pushChange(out, change);
+					change.newElems.forEach(e => resultElements.push(e));
 				}
 			}
 		}
-		if (out.length > 0) {
-			return out.concat(this.actionToBoard(out.map(o => o.newElem), func));
+		if (out.newElems.length > 0) {
+			return Actions.pushChange(out, this.actionToBoard(resultElements, func));
 		}
 		return out;
 	}
 
-	public mergeToBoard(elements: Element[]): ChangeType[] {
-		return this.actionToBoard(elements, this.mergeWires);
+	public mergeToBoard(elements: Element[]): ChangeType {
+		return this.actionToBoard(elements, this.mergeWires.bind(this));
 	}
 
 	public mergeWires(wire0: Element, wire1: Element): ChangeType {
@@ -228,10 +231,10 @@ export class ProjectState {
 		this.removeElement(wire0.id);
 		this.removeElement(wire1.id);
 		this.addElement(newElem, newElem.id);
-		return {newElem, oldElems: [wire0, wire1]};
+		return {newElems: [newElem], oldElems: [wire0, wire1]};
 	}
 
-	public connectToBoard(elements: Element[]): ChangeType[] {
+	public connectToBoard(elements: Element[]): ChangeType {
 		return this.actionToBoard(elements, this.connectWithEdge.bind(this));
 	}
 
@@ -249,7 +252,7 @@ export class ProjectState {
 			pos = other.endPos;
 		else
 			return null;
-		return {newElem: this.connectWires(elem, other, elem.pos)[0], oldElems: [elem, other]};
+		return {newElems: this.connectWires(elem, other, pos), oldElems: [elem, other]};
 	}
 
 	public wiresOnPoint(pos: PIXI.Point): Element[] {

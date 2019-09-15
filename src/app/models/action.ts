@@ -14,7 +14,7 @@ export type ActionType =
 	'setComp';
 
 export interface ChangeType {
-	newElem: Element;
+	newElems: Element[];
 	oldElems: Element[];
 }
 
@@ -98,17 +98,23 @@ export class Actions {
 		return elements;
 	}
 
+	public static pushChange(changes: ChangeType, newChange: ChangeType): ChangeType {
+		newChange.newElems.forEach(e => changes.newElems.push(e));
+		newChange.oldElems.forEach(e => changes.oldElems.push(e));
+		return changes;
+	}
+
 	public static applyChangeOnArrayAndActions(
-		elemChanges: { newElem: Element; oldElems: Element[] }[], out: Action[], outElements: Element[]
+		changes: ChangeType, out: Action[], outElements: Element[]
 	): Element[] {
-		for (const change of elemChanges) {
-			for (const oldElem of change.oldElems) {
-				out.push({name: 'remWire', element: oldElem});
-				outElements = outElements.filter(e => e.id !== oldElem.id);
-			}
-			out.push({name: 'addWire', element: change.newElem});
-			outElements.push(change.newElem);
-		}
+		changes.oldElems.forEach(e => {
+			out.push({name: 'remWire', element: e});
+			outElements = outElements.filter(o => o.id !== e.id);
+		});
+		changes.newElems.forEach(e => {
+			out.push({name: 'addWire', element: e});
+			outElements.push(e);
+		});
 		return outElements;
 	}
 
