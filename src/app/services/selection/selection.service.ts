@@ -1,4 +1,4 @@
-import { Injectable } from '@angular/core';
+import {Injectable, NgZone} from '@angular/core';
 import * as PIXI from 'pixi.js';
 import {Project} from '../../models/project';
 import {ProjectsService} from '../projects/projects.service';
@@ -13,7 +13,7 @@ export class SelectionService {
 
 	private _selectedIds: Map<number, number[]> = new Map<number, number[]>();
 
-	constructor(private projectsService: ProjectsService) {
+	constructor(private projectsService: ProjectsService, private ngZone: NgZone) {
 		SelectionService.staticInstance = this;
 	}
 
@@ -34,15 +34,25 @@ export class SelectionService {
 	}
 
 	public selectComponent(id: number, projectId?: number): void {
-		this._selectedIds.set(projectId === undefined ? this.projectsService.currProject.id : projectId, [id]);
+		this.ngZone.run(() => {
+			this._selectedIds.set(projectId === undefined ? this.projectsService.currProject.id : projectId, [id]);
+		});
 	}
 
 	public isSingleSelect(projectId?: number): boolean {
-		return this._selectedIds.get(projectId === undefined ? this.projectsService.currProject.id : projectId).length === 1;
+		const id = projectId === undefined ? this.projectsService.currProject.id : projectId;
+		if (this._selectedIds.has(id)) {
+			return this._selectedIds.get(id).length === 1;
+		}
+		return false;
 }
 
 	public selectedIds(projectId?: number): number[] {
-		return this._selectedIds.get(projectId === undefined ? this.projectsService.currProject.id : projectId) || [];
+		const id = projectId === undefined ? this.projectsService.currProject.id : projectId;
+		if (this._selectedIds.has(id)) {
+			return this._selectedIds.get(id);
+		}
+		return [];
 	}
 
 	public clearSelection(projectId?: number) {

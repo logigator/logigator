@@ -5,6 +5,10 @@
 		<app-construction-box></app-construction-box>
 		<app-work-area></app-work-area>
 	</div>
-	<app-settings-info-box></app-settings-info-box>
+	<app-settings-info-box *ngIf="showSettingsInfoBox"
+	                       [selectedCompTypeId]="selectedCompTypeId"
+	                       [selectedCompId]="selectedCompId"
+	                       [selectionMode]="selectionMode">
+	</app-settings-info-box>
 </div>
 
