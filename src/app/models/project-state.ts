@@ -4,7 +4,7 @@ import {Element} from './element';
 import * as PIXI from 'pixi.js';
 import {Project} from './project';
 import {CollisionFunctions} from './collision-functions';
-import {Actions} from './action';
+import {Action, Actions, ChangeType} from './action';
 
 export class ProjectState {
 
@@ -173,8 +173,8 @@ export class ProjectState {
 		return outWires;
 	}
 
-	public mergeToBoard(elements: Element[]): {newElem: Element, oldElems: Element[]}[] {
-		const out: {newElem: Element, oldElems: Element[]}[] = [];
+	public actionToBoard(elements: Element[], func: (elem: Element, other: Element) => ChangeType): ChangeType[] {
+		const out: ChangeType[] = [];
 		// tslint:disable-next-line:prefer-for-of
 		for (let i = 0; i < elements.length; i++) {
 			const elem = elements[i];
@@ -183,7 +183,7 @@ export class ProjectState {
 			const others = this.elementsInChunks(elem.pos, elem.endPos);
 			for (const other of others) {
 				if (elem.id !== other.id) {
-					const change = this.mergeWires(elem, other);
+					const change = func(elem, other);
 					if (change) {
 						out.push(change);
 						elements = Actions.applyChangeToArray(change, elements);
@@ -193,12 +193,16 @@ export class ProjectState {
 			}
 		}
 		if (out.length > 0) {
-			return out.concat(this.mergeToBoard(out.map(o => o.newElem)));
+			return out.concat(this.actionToBoard(out.map(o => o.newElem), func));
 		}
 		return out;
 	}
 
-	public mergeWires(wire0: Element, wire1: Element): {newElem: Element, oldElems: Element[]} {
+	public mergeToBoard(elements: Element[]): ChangeType[] {
+		return this.actionToBoard(elements, this.mergeWires);
+	}
+
+	public mergeWires(wire0: Element, wire1: Element): ChangeType {
 		if (wire0.id === wire1.id)
 			return null;
 		if (!CollisionFunctions.doWiresOverlap(wire0, wire1))
@@ -225,6 +229,27 @@ export class ProjectState {
 		this.removeElement(wire1.id);
 		this.addElement(newElem, newElem.id);
 		return {newElem, oldElems: [wire0, wire1]};
+	}
+
+	public connectToBoard(elements: Element[]): ChangeType[] {
+		return this.actionToBoard(elements, this.connectWithEdge.bind(this));
+	}
+
+	private connectWithEdge(other: Element, elem: Element): ChangeType {
+		if (other.typeId !== 0 || elem.typeId !== 0)
+			return null;
+		let pos: PIXI.Point;
+		if (CollisionFunctions.isPointOnWireNoEdge(other, elem.pos))
+			pos = elem.pos;
+		else if (CollisionFunctions.isPointOnWireNoEdge(other, elem.endPos))
+			pos = elem.endPos;
+		else if (CollisionFunctions.isPointOnWireNoEdge(elem, other.pos))
+			pos = other.pos;
+		else if (CollisionFunctions.isPointOnWireNoEdge(elem, other.endPos))
+			pos = other.endPos;
+		else
+			return null;
+		return {newElem: this.connectWires(elem, other, elem.pos)[0], oldElems: [elem, other]};
 	}
 
 	public wiresOnPoint(pos: PIXI.Point): Element[] {

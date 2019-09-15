@@ -1,5 +1,5 @@
 import {ProjectState} from './project-state';
-import {Action, Actions} from './action';
+import {Action, Actions, ChangeType} from './action';
 import {Element} from './element';
 import {Chunk} from './chunk';
 import {Observable, Subject} from 'rxjs';
@@ -226,38 +226,29 @@ export class Project {
 		return actions;
 	}
 
-	private autoConnect(elements: Element[]): Action[] {
-		const out: Action[] = [];
-		// tslint:disable-next-line:prefer-for-of
-		for (let i = 0; i < elements.length; i++) {
-			const elem = elements[i];
-			const others = this._currState.elementsInChunks(elem.pos, elem.endPos);
-			for (const other of others) {
-				const actions = this.connectWithEdge(other, elem);
-				if (actions) {
-					out.push(...actions);
-					elements = Actions.applyActionsToArray(actions, elements);
-				}
-			}
-		}
-		// if (out.length > 0) {
-		// 	return out.concat(this.mergeToBoard(out.map(o => o.newElem)));
+	private autoConnect(elements: Element[]): {actions: Action[], elements: Element[]} {
+		// const out: Action[] = [];
+		// // tslint:disable-next-line:prefer-for-of
+		// for (let i = 0; i < elements.length; i++) {
+		// 	const elem = elements[i];
+		// 	const others = this._currState.elementsInChunks(elem.pos, elem.endPos);
+		// 	for (const other of others) {
+		// 		const actions = this.connectWithEdge(other, elem);
+		// 		if (actions) {
+		// 			out.push(...actions);
+		// 			elements = Actions.applyActionsToArray(actions, elements);
+		// 		}
+		// 	}
 		// }
-		return out;
-	}
-
-	private connectWithEdge(other: Element, elem: Element): Action[] {
-		if (other.typeId !== 0 || elem.typeId !== 0)
-			return null;
-		if (CollisionFunctions.isPointOnWireNoEdge(other, elem.pos))
-			return this.connectWires(elem.pos, [elem, other]);
-		else if (CollisionFunctions.isPointOnWireNoEdge(other, elem.endPos))
-			return this.connectWires(elem.endPos, [elem, other]);
-		else if (CollisionFunctions.isPointOnWireNoEdge(elem, other.pos))
-			return this.connectWires(other.pos, [elem, other]);
-		else if (CollisionFunctions.isPointOnWireNoEdge(elem, other.endPos))
-			return this.connectWires(other.endPos, [elem, other]);
-		return null;
+		// // if (out.length > 0) {
+		// // 	return out.concat(this.mergeToBoard(out.map(o => o.newElem)));
+		// // }
+		// return out;
+		const out: Action[] = [];
+		let outElements = [...elements];
+		const elemChanges = this._currState.connectToBoard(elements);
+		outElements = Actions.applyChangeOnArrayAndActions(elemChanges, out, outElements);
+		return {actions: out, elements: outElements};
 	}
 
 	private autoMerge(elements: Element[]): {actions: Action[], elements: Element[]} {
@@ -290,7 +281,8 @@ export class Project {
 		const out: Action[] = [];
 		const merged = this.autoMerge(elements);
 		out.push(...merged.actions);
-		out.push(...this.autoConnect(merged.elements));
+		const connected = this.autoConnect(merged.elements);
+		out.push(...connected.actions);
 		return out;
 	}
 

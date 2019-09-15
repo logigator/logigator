@@ -13,6 +13,11 @@ export type ActionType =
 	'dcoWire' |
 	'setComp';
 
+export interface ChangeType {
+	newElem: Element;
+	oldElems: Element[];
+}
+
 export interface Action {
 	name: ActionType;	// TODO element settings
 	element?: Element;
@@ -87,7 +92,7 @@ export class Actions {
 		return elements;
 	}
 
-	public static applyChangeToArray(change: {newElem: Element, oldElems: Element[]}, elements: Element[]): Element[] {
+	public static applyChangeToArray(change: ChangeType, elements: Element[]): Element[] {
 		elements = elements.filter(e => !change.oldElems.find(o => o.id === e.id));
 		// elements.push(change.newElem); // don't know if needed, prob not
 		return elements;
