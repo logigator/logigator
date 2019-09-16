@@ -76,4 +76,10 @@ $themes: (
 			background-color: themed('scrollbar');
 		}
 	}
+
+	scrollbar-width: thin;
+	@include themify() {
+		scrollbar-color: themed('scrollbar') themed('construction-box-background');
+	}
+
 }
