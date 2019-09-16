@@ -145,7 +145,9 @@ export class Project {
 	}
 
 	public addElement(typeId: number, _pos: PIXI.Point, _endPos?: PIXI.Point): Element {
-		if (typeId === 0 && !_endPos || _pos.equals(_endPos))
+		if (typeId === 0 && !_endPos)
+			return null;
+		if (typeId === 0 && _pos.equals(_endPos))
 			return null;
 		const elem = Project.genNewElement(typeId, _pos, _endPos || Project.calcEndPos(_pos, typeId));
 		if (!this._currState.isFreeSpace(elem.pos, elem.endPos, typeId === 0))
