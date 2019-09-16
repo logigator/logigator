@@ -76,6 +76,9 @@ export class ProjectState {
 				continue;
 			if (isWire && CollisionFunctions.isRectInRectLightBorder(elem.pos, elem.endPos, startPos, endPos))
 				return false;
+			if (!isWire && elem.typeId === 0 && CollisionFunctions.isRectInRectLightBorder(startPos, endPos, elem.pos, elem.endPos)) {
+				return false;
+			}
 			if (!isWire && CollisionFunctions.isRectInRectNoBorder(startPos, endPos, elem.pos, elem.endPos))
 				return false;
 		}
