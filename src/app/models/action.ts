@@ -13,6 +13,11 @@ export type ActionType =
 	'dcoWire' |
 	'setComp';
 
+export interface ChangeType {
+	newElems: Element[];
+	oldElems: Element[];
+}
+
 export interface Action {
 	name: ActionType;	// TODO element settings
 	element?: Element;
@@ -75,5 +80,52 @@ export class Actions {
 			});
 		}
 		return outActions;
+	}
+
+	public static applyActionsToArray(actions: Action[], elements: Element[]): Element[] {
+		for (const action of actions) {
+			if (action.name[0] === 'a')
+				elements.push(action.element);
+			if (action.name[0] === 'r')
+				elements = elements.filter(e => e.id !== action.element.id);
+		}
+		return elements;
+	}
+
+	public static applyChangeToArray(change: ChangeType, elements: Element[]): Element[] {
+		elements = elements.filter(e => !change.oldElems.find(o => o.id === e.id));
+		return elements;
+	}
+
+	public static pushChange(changes: ChangeType, newChange: ChangeType): ChangeType {
+		newChange.newElems.forEach(e => changes.newElems.push(e));
+		newChange.oldElems.forEach(e => changes.oldElems.push(e));
+		return changes;
+	}
+
+	public static applyChangeOnArrayAndActions(
+		changes: ChangeType[], out: Action[], outElements: Element[]
+	): Element[] {
+		changes.forEach(change => {
+			change.oldElems.forEach(e => {
+				out.push({name: 'remWire', element: e});
+				outElements = outElements.filter(o => o.id !== e.id);
+			});
+			change.newElems.forEach(e => {
+				out.push({name: 'addWire', element: e});
+				outElements.push(e);
+			});
+		});
+		return outElements;
+	}
+
+	public static printActions(actions: Action[]): void {
+		actions.forEach(a => {
+			if (a.element)
+				console.log(a.name, a.element.id, a.element.pos, a.element.endPos);
+			else
+				console.log(a.name, a.pos, a.endPos);
+
+		});
 	}
 }

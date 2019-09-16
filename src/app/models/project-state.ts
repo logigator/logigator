@@ -4,6 +4,7 @@ import {Element} from './element';
 import * as PIXI from 'pixi.js';
 import {Project} from './project';
 import {CollisionFunctions} from './collision-functions';
+import {Action, Actions, ChangeType} from './action';
 
 export class ProjectState {
 
@@ -163,39 +164,51 @@ export class ProjectState {
 				if (wire0 === wire1 || doneWires.find(w => w.id === wire0.id || w.id === wire1.id))
 					continue;
 				const merged = this.mergeWires(wire0, wire1);
-				if (!merged || !merged.newElem)
+				if (!merged || !merged.newElems[0])
 					continue;
-				outWires.push(merged.newElem);
+				outWires.push(merged.newElems[0]);
 				doneWires.push(wire0, wire1);
 			}
 		}
 		return outWires;
 	}
 
-	public mergeToBoard(elements: Element[]): {newElem: Element, oldElems: Element[]}[] {
-		const out: {newElem: Element, oldElems: Element[]}[] = [];
-		for (const elem of elements) {
+	public actionToBoard(elements: Element[], func: (elem: Element, other: Element) => ChangeType): ChangeType[] {
+		const out: ChangeType[] = [];
+		// tslint:disable-next-line:prefer-for-of
+		while (elements.length > 0) {
+			const elem = elements[0];
+			elements.shift();
 			if (elem.typeId !== 0)
 				continue;
 			const others = this.elementsInChunks(elem.pos, elem.endPos);
 			for (const other of others) {
-				if (elem.id !== other.id) {
-					const changes = this.mergeWires(elem, other);
-					if (changes) {
-						out.push(changes);
-					}
+				if (elem.id === other.id)
+					continue;
+				const change = func(elem, other);
+				if (change) {
+					elements = elements.filter(e => e.id !== other.id);
+					elements.push(change.newElems[0]);
+					out.push(change);
+					break;
 				}
 			}
 		}
 		return out;
 	}
 
-	public mergeWires(wire0: Element, wire1: Element): {newElem: Element, oldElems: Element[]} {
-		if (!(CollisionFunctions.isPointOnWire(wire0, wire1.pos) ||
-			CollisionFunctions.isPointOnWire(wire0, wire1.endPos) ||
-			wire0.id === wire1.id)) {
+	public mergeToBoard(elements: Element[]): ChangeType[] {
+		return this.actionToBoard(elements, this.mergeWires.bind(this));
+	}
+
+	public mergeWires(wire0: Element, wire1: Element): ChangeType {
+		if (wire0.id === wire1.id)
 			return null;
-		}
+		if (!CollisionFunctions.doWiresOverlap(wire0, wire1))
+			return null;
+		if (wire0.pos.equals(wire1.endPos) && this.wiresOnPoint(wire0.pos).length > 2 ||
+			wire1.pos.equals(wire0.endPos) && this.wiresOnPoint(wire1.pos).length > 2)
+			return null;
 		const newElem = Project.genNewElement(0, undefined, undefined);
 		newElem.id = wire0.id;
 		if (CollisionFunctions.isVertical(wire0) && CollisionFunctions.isVertical(wire1) && wire0.pos.x === wire1.pos.x) {
@@ -214,14 +227,35 @@ export class ProjectState {
 		this.removeElement(wire0.id);
 		this.removeElement(wire1.id);
 		this.addElement(newElem, newElem.id);
-		return {newElem, oldElems: [wire0, wire1]};
+		return {newElems: [newElem], oldElems: [wire0, wire1]};
+	}
+
+	public connectToBoard(elements: Element[]): ChangeType[] {
+		return this.actionToBoard(elements, this.connectWithEdge.bind(this));
+	}
+
+	private connectWithEdge(other: Element, elem: Element): ChangeType {
+		if (other.typeId !== 0 || elem.typeId !== 0)
+			return null;
+		let pos: PIXI.Point;
+		if (CollisionFunctions.isPointOnWireNoEdge(other, elem.pos))
+			pos = elem.pos;
+		else if (CollisionFunctions.isPointOnWireNoEdge(other, elem.endPos))
+			pos = elem.endPos;
+		else if (CollisionFunctions.isPointOnWireNoEdge(elem, other.pos))
+			pos = other.pos;
+		else if (CollisionFunctions.isPointOnWireNoEdge(elem, other.endPos))
+			pos = other.endPos;
+		else
+			return null;
+		return {newElems: this.connectWires(elem, other, pos), oldElems: [elem, other]};
 	}
 
 	public wiresOnPoint(pos: PIXI.Point): Element[] {
 		const chunkX = CollisionFunctions.gridPosToChunk(pos.x);
 		const chunkY = CollisionFunctions.gridPosToChunk(pos.y);
 		const outWires: Element[] = [];
-		for (const elem of this._chunks[chunkX][chunkY].elements) {
+		for (const elem of this.elementsInChunk(chunkX, chunkY)) {
 			if (elem.typeId === 0 && CollisionFunctions.isPointOnWire(elem, pos))
 				outWires.push(elem);
 		}
@@ -251,7 +285,7 @@ export class ProjectState {
 	}
 
 	public elementsInChunk(x: number, y: number): Element[] {
-		return this._chunks[x][y].elements;
+		return this._chunks[x] && this._chunks[x][y] ? this._chunks[x][y].elements : [];
 	}
 
 	public chunksFromCoords(chunkCoords: {x: number, y: number}[]): Chunk[] {

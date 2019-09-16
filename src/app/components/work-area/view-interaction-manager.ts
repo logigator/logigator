@@ -330,8 +330,8 @@ export class ViewInteractionManager {
 
 	private clearSelection() {
 		SelectionService.staticInstance.selectedIds(this._view.projectId).forEach(id => {
-			const element = this._view.allElements.get(id);
-			element.sprite.tint = 0xffffff;
+			if (this._view.allElements.has(id)) // stürzt sonst ab wenn dinge aus der selection gelöscht werden.
+				this._view.allElements.get(id).sprite.tint = 0xffffff;
 		});
 		SelectionService.staticInstance.clearSelection(this._view.projectId);
 		this._isSingleSelected = false;

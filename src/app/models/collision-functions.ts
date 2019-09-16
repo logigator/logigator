@@ -5,6 +5,13 @@ import {environment} from '../../environments/environment';
 
 export abstract class CollisionFunctions {
 
+	public static doWiresOverlap(wire0: Element, wire1: Element): boolean {
+		return CollisionFunctions.isPointOnWire(wire0, wire1.pos) ||
+			CollisionFunctions.isPointOnWire(wire0, wire1.endPos) ||
+			CollisionFunctions.isPointOnWire(wire1, wire0.pos) ||
+			CollisionFunctions.isPointOnWire(wire1, wire0.endPos);
+	}
+
 	public static isPointOnWire(wire: Element, point: PIXI.Point): boolean {
 		return point.y === wire.pos.y && point.y === wire.endPos.y &&
 			(point.x >= wire.pos.x && point.x <= wire.endPos.x || point.x <= wire.pos.x && point.x >= wire.endPos.x)
@@ -40,7 +47,6 @@ export abstract class CollisionFunctions {
 		const endChunkY = CollisionFunctions.gridPosToChunk(endPos.y);
 		for (let x = startChunkX; x <= endChunkX; x++)
 			for (let y = startChunkY; y <= endChunkY; y++)
-				// if ((x < endChunkX || endPos.x % environment.chunkSize !== 0) && (y < endChunkY || endPos.y % environment.chunkSize !== 0))
 				out.push({x, y});
 		return out;
 	}

@@ -25,7 +25,7 @@ export class ToolbarComponent implements OnInit {
 		console.log('wires');
 		for (const elem of this.projectService.currProject.allElements) {
 			if (elem.typeId === 0) {
-				console.log(elem.pos, elem.endPos);
+				console.log(elem.id, elem.pos, elem.endPos);
 			}
 		}
 	}
