@@ -5,6 +5,7 @@ import * as PIXI from 'pixi.js';
 import {Project} from './project';
 import {CollisionFunctions} from './collision-functions';
 import {Action, Actions, ChangeType} from './action';
+import {Subject} from 'rxjs';
 
 export class ProjectState {
 
@@ -12,11 +13,17 @@ export class ProjectState {
 	private _highestTakenId = 0;
 	private _chunks: Chunk[][];
 
+	private changeSubject: Subject<Action[]>;
+
 	public constructor(model?: ProjectModel, highestId?: number) {
 		this._model = model || {id: 100, board: {elements: []}};
 		this._highestTakenId = highestId || this.findHighestTakenId();
 		this._chunks = [];
 		this.loadAllIntoChunks();
+	}
+
+	public setChangeSubject(changeSubject: Subject<Action[]>): void {
+		this.changeSubject = changeSubject;
 	}
 
 	private findHighestTakenId(): number {
@@ -111,6 +118,10 @@ export class ProjectState {
 		elem.id = id || this.getNextId();
 		this._model.board.elements.push(elem);
 		this.loadIntoChunks(elem);
+		this.changeSubject.next([{
+			name: 'conWire',
+			pos: new PIXI.Point(0, 0)
+		}]);
 		return elem;
 	}
 
@@ -166,7 +177,7 @@ export class ProjectState {
 			for (const wire1 of wires) {
 				if (wire0 === wire1 || doneWires.find(w => w.id === wire0.id || w.id === wire1.id))
 					continue;
-				const merged = this.mergeWires(wire0, wire1);
+				const merged = this.mergeWires(wire0, wire1, true);
 				if (!merged || !merged.newElems[0])
 					continue;
 				outWires.push(merged.newElems[0]);
@@ -204,13 +215,13 @@ export class ProjectState {
 		return this.actionToBoard(elements, this.mergeWires.bind(this));
 	}
 
-	public mergeWires(wire0: Element, wire1: Element): ChangeType {
+	public mergeWires(wire0: Element, wire1: Element, doDisconnect?: boolean): ChangeType {
 		if (wire0.id === wire1.id)
 			return null;
 		if (!CollisionFunctions.doWiresOverlap(wire0, wire1))
 			return null;
-		if (wire0.pos.equals(wire1.endPos) && this.wiresOnPoint(wire0.pos).length > 2 ||
-			wire1.pos.equals(wire0.endPos) && this.wiresOnPoint(wire1.pos).length > 2)
+		if (!doDisconnect && (wire0.pos.equals(wire1.endPos) && this.wiresOnPoint(wire0.pos).length > 2 ||
+			wire1.pos.equals(wire0.endPos) && this.wiresOnPoint(wire1.pos).length > 2))
 			return null;
 		const newElem = Project.genNewElement(0, undefined, undefined);
 		newElem.id = wire0.id;

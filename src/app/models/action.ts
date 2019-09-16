@@ -120,6 +120,8 @@ export class Actions {
 	}
 
 	public static printActions(actions: Action[]): void {
+		if (!actions)
+			return;
 		actions.forEach(a => {
 			if (a.element)
 				console.log(a.name, a.element.id, a.element.pos, a.element.endPos);

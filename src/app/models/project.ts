@@ -33,6 +33,7 @@ export class Project {
 		this._currActionPointer = -1;
 		this._currMaxActionPointer = -1;
 		this.changeSubject = new Subject<Action[]>();
+		this._currState.setChangeSubject(this.changeSubject);
 	}
 
 	public static genNewElement(typeId: number, _pos: PIXI.Point, _endPos: PIXI.Point): Element {
