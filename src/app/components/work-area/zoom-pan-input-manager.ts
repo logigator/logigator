@@ -58,13 +58,13 @@ export class ZoomPanInputManager {
 	private mouseMoveHandler(event: MouseEvent) {
 		event.preventDefault();
 
-		this._mouseX = event.pageX / window.devicePixelRatio - this._htmlContainer.offsetLeft;
-		this._mouseY = event.pageY / window.devicePixelRatio - this._htmlContainer.offsetTop;
+		this._mouseX = event.pageX - this._htmlContainer.offsetLeft;
+		this._mouseY = event.pageY - this._htmlContainer.offsetTop;
 
 		if (this._mouseDown) {
 			this._mouseMoved = true;
-			this._mouseDX += event.movementX / window.devicePixelRatio ** 2;
-			this._mouseDY += event.movementY / window.devicePixelRatio ** 2;
+			this._mouseDX += event.movementX / window.devicePixelRatio;
+			this._mouseDY += event.movementY / window.devicePixelRatio;
 		}
 	}
 

@@ -226,7 +226,7 @@ export class View extends PIXI.Container {
 		graphics.clear();
 		graphics.position = pos;
 		graphics.beginFill(ThemingService.staticInstance.getEditorColor('wire'));
-		graphics.drawRect(0, 0, size / this.zoomPan.currentScale / window.devicePixelRatio, size / this.zoomPan.currentScale / window.devicePixelRatio);
+		graphics.drawRect(0, 0, size / this.zoomPan.currentScale, size / this.zoomPan.currentScale);
 	}
 
 	private removeConnectionPoint(pos: PIXI.Point) {

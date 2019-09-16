@@ -21,7 +21,7 @@ export class Grid {
 		graphics.beginFill(ThemingService.staticInstance.getEditorColor('grid'));
 		for (let i = 0; i < environment.chunkSize; i++) {
 			for (let j = 0; j < environment.chunkSize; j++) {
-				graphics.drawRect(i * environment.gridPixelWidth, j * environment.gridPixelWidth, 1 / scale / window.devicePixelRatio, 1 / scale / window.devicePixelRatio);
+				graphics.drawRect(i * environment.gridPixelWidth, j * environment.gridPixelWidth, 1 / scale, 1 / scale);
 			}
 		}
 		// graphics.drawRect(0, 0, 1, 20 * 20)
