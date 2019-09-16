@@ -60,7 +60,8 @@ export class WorkAreaComponent implements OnInit, OnDestroy {
 			antialias: false,
 			powerPreference: 'high-performance',
 			backgroundColor: this.theming.getEditorColor('background'),
-			resolution: 1
+			resolution: window.devicePixelRatio || 1,
+			autoDensity: true
 		});
 		this.renderer2.appendChild(this._pixiCanvasContainer.nativeElement, this._pixiRenderer.view);
 
