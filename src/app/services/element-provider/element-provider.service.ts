@@ -13,7 +13,7 @@ export class ElementProviderService {
 
 	public static staticInstance: ElementProviderService;
 
-	private _predefinedElements: Map<number, ElementType> = new Map([
+	private _basicElements: Map<number, ElementType> = new Map([
 		[0, wire],
 		[1, not],
 		[2, and],
@@ -21,40 +21,30 @@ export class ElementProviderService {
 		[4, xor],
 	]);
 
-	private _userDefinedElements: Map<number, ElementType> = new Map<number, ElementType>();
+	private _ioElements: Map<number, ElementType> = new Map<number, ElementType>();
 
-	private _renderer: PIXI.Renderer;
+	private _userDefinedElements: Map<number, ElementType> = new Map<number, ElementType>();
 
 	constructor() {
 		ElementProviderService.staticInstance = this;
 	}
 
 	public getElementById(id: number): ElementType {
-		if (this._predefinedElements.has(id)) {
-			return this._predefinedElements.get(id);
+		if (this._basicElements.has(id)) {
+			return this._basicElements.get(id);
 		}
-		return this._userDefinedElements.get(id);
+		return this._ioElements.get(id);
 	}
 
-	public insertPixiRenderer(renderer: PIXI.Renderer) {
-		this._renderer = renderer;
+	public get basicElements(): Map<number, ElementType> {
+		return this._basicElements;
 	}
 
-	public generateTextureForElement(id: number) {
-		let comp;
-		if (this._predefinedElements.has(id)) {
-			comp = this._predefinedElements.get(id);
-		} else {
-			comp = this._userDefinedElements.get(id);
-		}
-		comp.texture = comp.generateElementTexture(this._renderer, comp.symbol);
+	public get ioElements(): Map<number, ElementType> {
+		return this._ioElements;
 	}
 
-	public getPreDefinedElements(): Map<number, ElementType> {
-		return this._predefinedElements;
-	}
-
-	public getUserDefinedElements(): Map<number, ElementType> {
+	public get userDefinedElements(): Map<number, ElementType> {
 		return this._userDefinedElements;
 	}
 

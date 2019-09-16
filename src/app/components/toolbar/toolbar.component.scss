@@ -12,39 +12,53 @@
 	height: $toolbar-height;
 
 	display: grid;
-	grid-template-columns: #{$construction-box-width} auto 350px;
+	grid-template-columns: auto 250px;
 
-	img {
-		width: 80%;
-		justify-self: center;
-		align-self: center;
-	}
-
-	div {
+	.toolbar-buttons {
 		display: flex;
 		flex-direction: row;
 		justify-content: flex-start;
 		align-items: center;
-		padding-left: 0.5rem;
+		padding-left: #{($construction-box-width - 3rem) * 0.1};
 
 		.toolbar-button {
-			height: $toolbar-height - 20px;
-			width: $toolbar-height - 20px;
+			height: $toolbar-height - 10px;
+			width: $toolbar-height - 10px;
 			margin-right: 0.7rem;
 			border: none;
 			cursor: pointer;
-			padding: 0;
+			padding: 0.2rem;
 			outline: none;
 			background-size: cover;
+			background-origin: content-box;
+			background-repeat: no-repeat;
+			border-radius: 0.2rem;
 
 			@include themify() {
 				background-color: themed('toolbar');
+			}
+
+			&:hover {
+				cursor: default;
+				@include themify() {
+					background-color: lighten(themed('toolbar'), 5%);
+				}
+			}
+		}
+
+		.active-button {
+			@include themify() {
+				background-color: lighten(themed('toolbar'), 15%);
+
+				&:hover {
+					background-color: lighten(themed('toolbar'), 15%);
+				}
 			}
 		}
 
 		.divider {
 			border-left: 1px solid black;
-			height:  $toolbar-height - 25px;
+			height:  $toolbar-height - 20px;
 			padding: 0;
 			margin-right: 1rem;
 			margin-left: 1rem;
@@ -121,13 +135,18 @@
 		.zoom-in {
 			background-image: url("/assets/icons/zoom-in.svg");
 		}
-
-		.settings {
-			background-image: url("/assets/icons/settings.svg");
-		}
 	}
 
 	.toolbar-end {
+		display: flex;
+		flex-direction: row;
 		justify-content: flex-end;
+		align-items: center;
+		font-size: 14pt;
+		padding-right: 0.7rem;
+
+		p {
+			margin: 0;
+		}
 	}
 }

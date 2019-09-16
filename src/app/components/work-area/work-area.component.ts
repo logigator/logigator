@@ -4,7 +4,6 @@ import {View} from './view';
 import {fromEvent, Subject} from 'rxjs';
 import {takeUntil} from 'rxjs/operators';
 import {Grid} from './grid';
-import {ElementProviderService} from '../../services/element-provider/element-provider.service';
 import {ProjectsService} from '../../services/projects/projects.service';
 import {Project} from '../../models/project';
 import {ThemingService} from '../../services/theming/theming.service';
@@ -32,7 +31,6 @@ export class WorkAreaComponent implements OnInit, OnDestroy {
 	constructor(
 		private renderer2: Renderer2,
 		private ngZone: NgZone,
-		private componentProviderService: ElementProviderService,
 		private projectsService: ProjectsService,
 		private theming: ThemingService
 	) { }
@@ -40,9 +38,9 @@ export class WorkAreaComponent implements OnInit, OnDestroy {
 	ngOnInit() {
 		this._allViews = new Map<number, View>();
 
-		this.ngZone.runOutsideAngular(() => {
+		this.ngZone.runOutsideAngular(async () => {
+			await this.loadPixiFont();
 			this.initPixi();
-			this.componentProviderService.insertPixiRenderer(this._pixiRenderer);
 			this.initGridGeneration();
 			this.initPixiTicker();
 
@@ -73,6 +71,14 @@ export class WorkAreaComponent implements OnInit, OnDestroy {
 		});
 	}
 
+	private loadPixiFont(): Promise<void> {
+		return new Promise<void>(resolve => {
+			const loader = PIXI.Loader.shared;
+			loader.add('luis_george_cafe', '/assets/fonts/louis_george_cafe_bitmap/font.fnt')
+				.load(() => resolve());
+		});
+	}
+
 	private initGridGeneration() {
 		Grid.setRenderer(this._pixiRenderer);
 	}
@@ -83,8 +89,10 @@ export class WorkAreaComponent implements OnInit, OnDestroy {
 
 	private openProject(projectId: number) {
 		const newView = new View(projectId, this._pixiCanvasContainer.nativeElement);
-		this._allViews.set(projectId, newView);
-		this.activeView = newView;
+		this.ngZone.run(() => {
+			this._allViews.set(projectId, newView);
+			this.activeView = newView;
+		});
 	}
 
 	private initPixiTicker() {

@@ -6,8 +6,9 @@ import { ToolbarComponent } from './components/toolbar/toolbar.component';
 import { SettingsInfoBoxComponent } from './components/settings-info-box/settings-info-box.component';
 import { ConstructionBoxComponent } from './components/construction-box/construction-box.component';
 import { WorkAreaComponent } from './components/work-area/work-area.component';
-import {FormsModule} from '@angular/forms';
+import {FormsModule, ReactiveFormsModule} from '@angular/forms';
 import {ConstructionBoxCategoryComponent} from './components/construction-box-category/construction-box-category.component';
+import { TopBarComponent } from './components/top-bar/top-bar.component';
 
 @NgModule({
 	declarations: [
@@ -16,11 +17,13 @@ import {ConstructionBoxCategoryComponent} from './components/construction-box-ca
 		SettingsInfoBoxComponent,
 		ConstructionBoxComponent,
 		ConstructionBoxCategoryComponent,
-		WorkAreaComponent
+		WorkAreaComponent,
+		TopBarComponent
 	],
 	imports: [
 		BrowserModule,
-		FormsModule
+		FormsModule,
+		ReactiveFormsModule
 	],
 	providers: [],
 	bootstrap: [AppComponent]

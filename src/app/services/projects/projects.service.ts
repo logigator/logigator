@@ -15,7 +15,7 @@ export class ProjectsService {
 	private _projects: Map<number, Project> = new Map<number, Project>();
 	private _currProject: Project;
 
-	private _projectOpenedSubject = new ReplaySubject<number>(1);
+	private _projectOpenedSubject = new ReplaySubject<number>(2);
 
 	constructor() {
 		ProjectsService.staticInstance = this;

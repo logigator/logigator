@@ -6,10 +6,13 @@
 		<ng-container *ngIf="components.size > 0; else noComponents">
 			<ng-container *ngFor="let comp of components | keyvalue; trackBy: componentsTrackBy">
 				<div class="component-to-select"
-				     *ngIf="comp.key !== 0 && (searchText == '' || comp.value.name.includes(searchText))"
+				     *ngIf="comp.key !== 0 && (searchText == '' || isInSearchResult(comp.value.name))"
 				     (click)="selectComponent(comp.key)"
 				     [class.active-selected-component]="currentWorkMode === 'buildComponent' && currentSelectedComponent === comp.key">
-					{{comp.value.symbol}}
+					<div>
+						{{comp.value.symbol}}
+					</div>
+					<p>{{comp.value.name}}</p>
 				</div>
 			</ng-container>
 		</ng-container>
@@ -17,5 +20,5 @@
 </div>
 
 <ng-template #noComponents>
-	<div class="no-components">There are no components in this category. There are no components in this category. There are no components in this category. There are no components in this  There are no components in this category. There are no components in this category. There are no components in this category. There are no components in this category. ThThere are no components in this category. There are no components in this category. There are no components in this category. There are no components in this category. ThThere are no components in this category. There are no components in this category. There are no components in this category. There are no components in this category. ThThere are no components in this category. There are no components in this category. There are no components in this category. There are no components in this category. ThThere are no components in this category. There are no components in this category. There are no components in this category. There are no components in this category. ThThere are no components in this category. There are no components in this category. There are no components in this category. There are no components in this category. Thcategory. There are no components in this category.</div>
+	<div class="no-components">There are no components in this category There are no components in this categoryThere are no components in this categoryThere are no components in this categoryThere are no components in this categoryThere are no components in this categoryThere are no components in this categoryThere are no components in this categoryThere are no components in this categoryThere are no components in this categoryThere are no components in this categoryThere are no components in this categoryThere are no components in this categoryThere are no components in this categoryThere are no components in this categoryThere are no components in this categoryThere are no components in this categoryThere are no components in this categoryThere are no components in this categoryThere are no components in this categoryThere are no components in this categoryThere are no components in this categoryThere are no components in this categoryThere are no components in this categoryThere are no components in this categoryThere are no components in this categoryThere are no components in this categoryThere are no components in this categoryThere are no components in this categoryThere are no components in this categoryThere are no components in this categoryThere are no components in this categoryThere are no components in this categoryThere are no components in this category.</div>
 </ng-template>

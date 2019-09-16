@@ -33,7 +33,7 @@ export class ZoomPan {
 		const posX = (scaleCenterX - this._view.x) / this._view.scale.x;
 		const posY = (scaleCenterY - this._view.y) / this._view.scale.y;
 
-		const newScale = this._view.scale.x * scaleMultiplier;
+		const newScale = Math.round(this._view.scale.x * scaleMultiplier * 100000000) / 100000000;
 
 		if (newScale <= ZoomPan.MAX_ZOOM_OUT || newScale >= ZoomPan.MAX_ZOOM_IN) {
 			return false;

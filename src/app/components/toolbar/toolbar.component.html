@@ -1,15 +1,13 @@
 <div id="toolbar">
 
-	<img src="/assets/logo.svg">
-
-	<div>
+	<div class="toolbar-buttons">
 		<button class="toolbar-button save no-margin"></button>
 
 		<div class="divider"></div>
 
-		<button class="toolbar-button paste"></button>
 		<button class="toolbar-button copy"></button>
 		<button class="toolbar-button cut"></button>
+		<button class="toolbar-button paste"></button>
 		<button class="toolbar-button delete no-margin"></button>
 
 		<div class="divider"></div>
@@ -19,10 +17,15 @@
 
 		<div class="divider"></div>
 
-		<button class="toolbar-button text"></button>
-		<button class="toolbar-button wire" (click)="setWorkMode('buildWire')"></button>
-		<button class="toolbar-button conn-wire" (click)="setWorkMode('connectWire')"></button>
-		<button class="toolbar-button select" (click)="setWorkMode('select')"></button>
+		<button class="toolbar-button zoom-out"></button>
+		<button class="toolbar-button zoom-in no-margin"></button>
+
+		<div class="divider"></div>
+
+		<button class="toolbar-button wire" (click)="setWorkMode('buildWire')" [class.active-button]="currentWorkMode === 'buildWire'"></button>
+		<button class="toolbar-button conn-wire" (click)="setWorkMode('connectWire')" [class.active-button]="currentWorkMode === 'connectWire'"></button>
+		<button class="toolbar-button select" (click)="setWorkMode('select')" [class.active-button]="currentWorkMode === 'select'"></button>
+		<button class="toolbar-button text" [class.active-button]="currentWorkMode === 'text'"></button>
 
 		<!--for testing-->
 		<button (click)="printElements()">print Elements</button>
@@ -31,18 +34,6 @@
 	</div>
 
 	<div class="toolbar-end">
-		<button class="toolbar-button sim-start"></button>
-		<button class="toolbar-button sim-pause"></button>
-		<button class="toolbar-button sim-step"></button>
-		<button class="toolbar-button sim-stop no-margin"></button>
-
-		<div class="divider"></div>
-
-		<button class="toolbar-button zoom-out"></button>
-		<button class="toolbar-button zoom-in no-margin"></button>
-
-		<div class="divider"></div>
-
-		<button class="toolbar-button settings"></button>
+		<p>Start Simulation</p>
 	</div>
 </div>
