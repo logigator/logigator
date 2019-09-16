@@ -264,8 +264,8 @@ export class Project {
 		const out: Action[] = [];
 		const merged = this.autoMerge(elements);
 		out.push(...merged.actions);
-		// const connected = this.autoConnect(elements);
-		// out.push(...connected.actions);
+		const connected = this.autoConnect(merged.elements);
+		out.push(...connected.actions);
 		return out;
 	}
 

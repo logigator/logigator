@@ -47,7 +47,6 @@ export abstract class CollisionFunctions {
 		const endChunkY = CollisionFunctions.gridPosToChunk(endPos.y);
 		for (let x = startChunkX; x <= endChunkX; x++)
 			for (let y = startChunkY; y <= endChunkY; y++)
-				// if ((x < endChunkX || endPos.x % environment.chunkSize !== 0) && (y < endChunkY || endPos.y % environment.chunkSize !== 0))
 				out.push({x, y});
 		return out;
 	}

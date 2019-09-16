@@ -173,12 +173,12 @@ export class ProjectState {
 		return outWires;
 	}
 
-	public actionToBoard(elements: Element[], func: (elem: Element, other: Element) => ChangeType): ChangeType {
-		let out: ChangeType = {newElems: [], oldElems: []};
-		let resultElements: Element[] = [];
+	public actionToBoard(elements: Element[], func: (elem: Element, other: Element) => ChangeType): ChangeType[] {
+		const out: ChangeType[] = [];
 		// tslint:disable-next-line:prefer-for-of
-		for (let i = 0; i < elements.length; i++) {
-			const elem = elements[i];
+		while (elements.length > 0) {
+			const elem = elements[0];
+			elements.shift();
 			if (elem.typeId !== 0)
 				continue;
 			const others = this.elementsInChunks(elem.pos, elem.endPos);
@@ -186,22 +186,18 @@ export class ProjectState {
 				if (elem.id === other.id)
 					continue;
 				const change = func(elem, other);
-				console.log(change);
 				if (change) {
-					resultElements = resultElements.filter(r => !change.oldElems.find(o => o.id === r.id));
-					elements = elements.filter(e => !change.oldElems.find(o => o.id === e.id));
-					out = Actions.pushChange(out, change);
-					change.newElems.forEach(e => resultElements.push(e));
+					elements = elements.filter(e => e.id !== other.id);
+					elements.push(change.newElems[0]);
+					out.push(change);
+					break;
 				}
 			}
-		}
-		if (out.newElems.length > 0) {
-			return Actions.pushChange(out, this.actionToBoard(resultElements, func));
 		}
 		return out;
 	}
 
-	public mergeToBoard(elements: Element[]): ChangeType {
+	public mergeToBoard(elements: Element[]): ChangeType[] {
 		return this.actionToBoard(elements, this.mergeWires.bind(this));
 	}
 
@@ -234,7 +230,7 @@ export class ProjectState {
 		return {newElems: [newElem], oldElems: [wire0, wire1]};
 	}
 
-	public connectToBoard(elements: Element[]): ChangeType {
+	public connectToBoard(elements: Element[]): ChangeType[] {
 		return this.actionToBoard(elements, this.connectWithEdge.bind(this));
 	}
 

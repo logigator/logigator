@@ -94,7 +94,6 @@ export class Actions {
 
 	public static applyChangeToArray(change: ChangeType, elements: Element[]): Element[] {
 		elements = elements.filter(e => !change.oldElems.find(o => o.id === e.id));
-		// elements.push(change.newElem); // don't know if needed, prob not
 		return elements;
 	}
 
@@ -105,15 +104,17 @@ export class Actions {
 	}
 
 	public static applyChangeOnArrayAndActions(
-		changes: ChangeType, out: Action[], outElements: Element[]
+		changes: ChangeType[], out: Action[], outElements: Element[]
 	): Element[] {
-		changes.oldElems.forEach(e => {
-			out.push({name: 'remWire', element: e});
-			outElements = outElements.filter(o => o.id !== e.id);
-		});
-		changes.newElems.forEach(e => {
-			out.push({name: 'addWire', element: e});
-			outElements.push(e);
+		changes.forEach(change => {
+			change.oldElems.forEach(e => {
+				out.push({name: 'remWire', element: e});
+				outElements = outElements.filter(o => o.id !== e.id);
+			});
+			change.newElems.forEach(e => {
+				out.push({name: 'addWire', element: e});
+				outElements.push(e);
+			});
 		});
 		return outElements;
 	}
