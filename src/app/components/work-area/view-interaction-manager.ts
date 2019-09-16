@@ -272,7 +272,12 @@ export class ViewInteractionManager {
 		this._draggingNewComp = true;
 		const typeId = WorkModeService.staticInstance.currentComponentToBuild;
 		const elemType = ElementProviderService.staticInstance.getElementById(typeId);
-		this._newCompSprite = CompSpriteGenerator.getComponentSprite(elemType.symbol, elemType.numInputs, elemType.rotation, this._view.zoomPan.currentScale);
+		this._newCompSprite = CompSpriteGenerator.getComponentSprite(
+			elemType.symbol,
+			elemType.numInputs,
+			elemType.rotation,
+			this._view.zoomPan.currentScale
+		);
 		this._newCompSprite.position = Grid.getPixelPosOnGridForPixelPos(e.data.getLocalPosition(this._view));
 		this._view.addChild(this._newCompSprite);
 	}
@@ -328,11 +333,12 @@ export class ViewInteractionManager {
 			const element = this._view.allElements.get(id);
 			element.sprite.tint = 0xffffff;
 		});
-		SelectionService.staticInstance.clearSelection();
+		SelectionService.staticInstance.clearSelection(this._view.projectId);
 		this._isSingleSelected = false;
 	}
 
 	private selectInRect(start: PIXI.Point, end: PIXI.Point) {
+		if (start.x === end.x && start.y === end.y) return;
 		this.clearSelection();
 		const selected = SelectionService.staticInstance.selectFromRect(ProjectsService.staticInstance.currProject, start, end);
 		selected.forEach(id => {
@@ -357,7 +363,7 @@ export class ViewInteractionManager {
 		this._view.removeChild(this._selectRect);
 		elem.sprite.tint = 0x8a8a8a;
 		elem.sprite.parent.removeChild(elem.sprite);
-		elem.sprite.position = Grid.getPixelPosForGridPos(elem.element.pos)
+		elem.sprite.position = Grid.getPixelPosForGridPos(elem.element.pos);
 		this._view.addChild(elem.sprite);
 		SelectionService.staticInstance.selectComponent(elem.element.id);
 	}
