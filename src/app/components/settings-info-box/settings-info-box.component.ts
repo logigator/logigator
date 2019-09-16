@@ -59,7 +59,10 @@ export class SettingsInfoBoxComponent implements OnChanges, OnDestroy {
 	}
 
 	private initInstance() {
-
+		this.propertiesFrom = this.formBuilder.group({
+			numInputs: [],
+			rotation: []
+		});
 	}
 
 	ngOnDestroy(): void {
