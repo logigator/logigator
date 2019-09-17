@@ -13,6 +13,7 @@ import { FileDropdownComponent } from './components/top-bar-dropdowns/file-dropd
 import { EditDropdownComponent } from './components/top-bar-dropdowns/edit-dropdown/edit-dropdown.component';
 import { ViewDropdownComponent } from './components/top-bar-dropdowns/view-dropdown/view-dropdown.component';
 import { HelpDropdownComponent } from './components/top-bar-dropdowns/help-dropdown/help-dropdown.component';
+import { SettingsDropdownComponent } from './components/top-bar-dropdowns/settings-dropdown/settings-dropdown.component';
 
 @NgModule({
 	declarations: [
@@ -26,7 +27,8 @@ import { HelpDropdownComponent } from './components/top-bar-dropdowns/help-dropd
 		FileDropdownComponent,
 		EditDropdownComponent,
 		ViewDropdownComponent,
-		HelpDropdownComponent
+		HelpDropdownComponent,
+		SettingsDropdownComponent
 	],
 	imports: [
 		BrowserModule,

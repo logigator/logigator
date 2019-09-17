@@ -11,6 +11,7 @@ export class TopBarComponent implements OnInit {
 	public fileDropdownOpen = false;
 	public viewDropdownOpen = false;
 	public helpDropdownOpen = false;
+	public settingsDropdownOpen = false;
 
 	constructor() { }
 
@@ -30,6 +31,7 @@ export class TopBarComponent implements OnInit {
 		this.fileDropdownOpen = false;
 		this.viewDropdownOpen = false;
 		this.helpDropdownOpen = false;
+		this.settingsDropdownOpen = false;
 	}
 
 }

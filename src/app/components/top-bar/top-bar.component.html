@@ -28,7 +28,8 @@
 		<p class="login">Login</p>
 		<div class="divider"></div>
 		<p class="register">Register</p>
-		<button class="settings"></button>
+		<div (click)="closeDropdowns(); settingsDropdownOpen = true;" class="settings"></div>
+		<app-settings-dropdown (requestClosed)="closeDropdowns()" *ngIf="settingsDropdownOpen"></app-settings-dropdown>
 	</div>
 
 </div>
