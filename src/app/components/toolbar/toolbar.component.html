@@ -8,7 +8,7 @@
 		<button class="toolbar-button copy"></button>
 		<button class="toolbar-button cut"></button>
 		<button class="toolbar-button paste"></button>
-		<button class="toolbar-button delete no-margin"></button>
+		<button class="toolbar-button delete no-margin" (click)="delete()"></button>
 
 		<div class="divider"></div>
 
@@ -17,8 +17,8 @@
 
 		<div class="divider"></div>
 
-		<button class="toolbar-button zoom-out"></button>
-		<button class="toolbar-button zoom-in no-margin"></button>
+		<button class="toolbar-button zoom-out" (click)="zoomOut()"></button>
+		<button class="toolbar-button zoom-in no-margin" (click)="zoomIn()"></button>
 
 		<div class="divider"></div>
 

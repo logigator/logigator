@@ -7,13 +7,11 @@ import {WorkModeService} from '../../services/work-mode/work-mode.service';
 import {SelectionService} from '../../services/selection/selection.service';
 import {ProjectsService} from '../../services/projects/projects.service';
 import {CollisionFunctions} from '../../models/collision-functions';
-import {WorkMode} from '../../models/work-modes';
-import {Subscription} from 'rxjs';
-import {wire} from '../../models/element-types/wire';
+import {merge, Subscription} from 'rxjs';
 import {ThemingService} from '../../services/theming/theming.service';
 import {ElementProviderService} from '../../services/element-provider/element-provider.service';
-import {Component} from '@angular/core';
 import {CompSpriteGenerator} from './comp-sprite-generator';
+import {ProjectInteractionService} from '../../services/project-interaction/project-interaction.service';
 
 export class ViewInteractionManager {
 
@@ -44,7 +42,10 @@ export class ViewInteractionManager {
 		this.addEventListenersToView();
 		this.addEventListenersToSelectRect();
 
-		this._workModeSubscription = WorkModeService.staticInstance.currentWorkMode$.subscribe((mode) => this.onWorkModeChanged(mode));
+		this._workModeSubscription = merge(
+			WorkModeService.staticInstance.currentWorkMode$,
+			ProjectInteractionService.staticInstance.onElementsDelete$
+		).subscribe(_ => this.cleanUp());
 	}
 
 	private addEventListenersToView() {
@@ -308,6 +309,7 @@ export class ViewInteractionManager {
 
 	private resetSelectionToOldPosition() {
 		SelectionService.staticInstance.selectedIds(this._view.projectId).forEach(id => {
+			if (!this._view.allElements.has(id)) return;
 			const elemSprite = this._view.allElements.get(id);
 			this._view.removeChild(elemSprite.sprite);
 
@@ -368,7 +370,7 @@ export class ViewInteractionManager {
 		SelectionService.staticInstance.selectComponent(elem.element.id);
 	}
 
-	private onWorkModeChanged(newMode: WorkMode) {
+	private cleanUp() {
 		this.resetSelectionToOldPosition();
 		this.clearSelection();
 		delete this._actionStartPos;
