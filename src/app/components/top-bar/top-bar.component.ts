@@ -34,4 +34,8 @@ export class TopBarComponent implements OnInit {
 		this.settingsDropdownOpen = false;
 	}
 
+	public get dropdownOpen(): boolean {
+		return this.editDropdownOpen || this.fileDropdownOpen || this.viewDropdownOpen || this.helpDropdownOpen || this.settingsDropdownOpen;
+	}
+
 }
