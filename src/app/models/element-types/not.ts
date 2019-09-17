@@ -1,7 +1,7 @@
 import {ElementType} from '../element-type';
 
 export const not: ElementType = {
-	name: 'not',
+	name: 'NOT Gate',
 	numInputs: 1,
 	numOutputs: 1,
 	hasVariableInputs: false,

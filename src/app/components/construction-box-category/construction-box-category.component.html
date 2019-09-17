@@ -10,7 +10,7 @@
 				     (click)="selectComponent(comp.key)"
 				     [class.active-selected-component]="currentWorkMode === 'buildComponent' && currentSelectedComponent === comp.key">
 					<div>
-						{{comp.value.symbol}}
+						<p>{{comp.value.symbol}}</p>
 					</div>
 					<p>{{comp.value.name}}</p>
 				</div>
