@@ -1,5 +1,5 @@
 import {Component, EventEmitter, OnInit, Output} from '@angular/core';
-import {ThemingService} from "../../../services/theming/theming.service";
+import {ThemingService} from '../../../services/theming/theming.service';
 
 @Component({
 	selector: 'app-settings-dropdown',

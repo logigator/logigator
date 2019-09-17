@@ -10,7 +10,7 @@ export class ProjectInteractionService {
 
 	public static staticInstance: ProjectInteractionService;
 
-	private _zoomNotifierSubject = new Subject<'in' | 'out'>();
+	private _zoomNotifierSubject = new Subject<'in' | 'out' | '100'>();
 	private _deleteNotifierSubject = new Subject<void>();
 
 	constructor(private projectsService: ProjectsService, private selection: SelectionService) {
@@ -25,12 +25,16 @@ export class ProjectInteractionService {
 		this._zoomNotifierSubject.next('out');
 	}
 
+	public zoom100() {
+		this._zoomNotifierSubject.next('100');
+	}
+
 	public deleteSelection() {
 		this.projectsService.currProject.removeElementsById(this.selection.selectedIds());
 		this._deleteNotifierSubject.next();
 	}
 
-	public get onZoomChangeClick$(): Observable<'in' | 'out'> {
+	public get onZoomChangeClick$(): Observable<'in' | 'out', '100'> {
 		return  this._zoomNotifierSubject.asObservable();
 	}
 

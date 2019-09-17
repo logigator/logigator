@@ -166,21 +166,22 @@ export class View extends PIXI.Container {
 		}
 	}
 
-	private applyZoom(dir: 'in' | 'out', centerX?: number, centerY?: number): boolean {
+	private applyZoom(dir: 'in' | 'out' | '100', centerX?: number, centerY?: number): boolean {
 		if (!centerX || !centerY) {
 			centerX = this._htmlContainer.offsetWidth / 2;
 			centerY = this._htmlContainer.offsetHeight / 2;
 		}
-		let multi: number;
 		if (dir === 'in') {
-			multi = 1.25;
+			return this.zoomPan.zoomBy(1.25, centerX, centerY);
+		} else if (dir === 'out') {
+			return this.zoomPan.zoomBy(0.8, centerX, centerY);
 		} else {
-			multi = 0.8;
+			return this.zoomPan.zoomTo100(centerX, centerY);
 		}
-		return this.zoomPan.zoomBy(multi, centerX, centerY);
+
 	}
 
-	private onZoomClick(dir: 'in' | 'out') {
+	private onZoomClick(dir: 'in' | 'out' | '100') {
 		if (this.applyZoom(dir)) {
 			this.updateChunks();
 		}

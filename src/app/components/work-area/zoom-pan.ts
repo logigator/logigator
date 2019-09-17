@@ -30,10 +30,17 @@ export class ZoomPan {
 	 * @return true if something was actually moved
 	 */
 	public zoomBy(scaleMultiplier: number, scaleCenterX: number, scaleCenterY: number): boolean {
+		const newScale = Math.round(this._view.scale.x * scaleMultiplier * 100000000) / 100000000;
+		return this.zoomTo(newScale, scaleCenterX, scaleCenterY);
+	}
+
+	public zoomTo100(scaleCenterX: number, scaleCenterY: number): boolean {
+		return this.zoomTo(1, scaleCenterX, scaleCenterY);
+	}
+
+	private zoomTo(newScale: number, scaleCenterX: number, scaleCenterY: number): boolean {
 		const posX = (scaleCenterX - this._view.x) / this._view.scale.x;
 		const posY = (scaleCenterY - this._view.y) / this._view.scale.y;
-
-		const newScale = Math.round(this._view.scale.x * scaleMultiplier * 100000000) / 100000000;
 
 		if (newScale <= ZoomPan.MAX_ZOOM_OUT || newScale >= ZoomPan.MAX_ZOOM_IN) {
 			return false;

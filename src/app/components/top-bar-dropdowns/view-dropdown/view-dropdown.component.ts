@@ -1,5 +1,5 @@
 import {Component, EventEmitter, OnInit, Output} from '@angular/core';
-import {ProjectInteractionService} from "../../../services/project-interaction/project-interaction.service";
+import {ProjectInteractionService} from '../../../services/project-interaction/project-interaction.service';
 
 @Component({
 	selector: 'app-view-dropdown',
@@ -27,6 +27,11 @@ export class ViewDropdownComponent implements OnInit {
 
 	public zoomOut() {
 		this.projectInteractions.zoomOut();
+		this.close();
+	}
+
+	public zoom100() {
+		this.projectInteractions.zoom100();
 		this.close();
 	}
 }
