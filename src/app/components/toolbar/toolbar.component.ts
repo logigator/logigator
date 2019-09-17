@@ -4,6 +4,7 @@ import {WorkMode} from '../../models/work-modes';
 import {WorkModeService} from '../../services/work-mode/work-mode.service';
 import * as PIXI from 'pixi.js';
 import {ProjectsService} from '../../services/projects/projects.service';
+import {ProjectInteractionService} from '../../services/project-interaction/project-interaction.service';
 
 @Component({
 	selector: 'app-toolbar',
@@ -12,7 +13,11 @@ import {ProjectsService} from '../../services/projects/projects.service';
 })
 export class ToolbarComponent implements OnInit {
 
-	constructor(private workModeService: WorkModeService, private projectService: ProjectsService) { }
+	constructor(
+		private workModeService: WorkModeService,
+		private projectService: ProjectsService,
+		private projectInteraction: ProjectInteractionService
+	) { }
 
 	ngOnInit() {
 	}
@@ -54,4 +59,15 @@ export class ToolbarComponent implements OnInit {
 		this.projectService.currProject.stepForward();
 	}
 
+	public zoomIn() {
+		this.projectInteraction.zoomIn();
+	}
+
+	public zoomOut() {
+		this.projectInteraction.zoomOut();
+	}
+
+	public delete() {
+		this.projectInteraction.deleteSelection();
+	}
 }

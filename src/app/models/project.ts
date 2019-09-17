@@ -177,6 +177,20 @@ export class Project {
 		this.changeSubject.next([action]);
 	}
 
+	public removeElementsById(ids: number[]): void {
+		const actions: Action[] = [];
+		ids.forEach(id => {
+			const elem = this._currState.removeElement(id);
+			const action: Action = {
+				name: elem.typeId === 0 ? 'remWire' : 'remComp',
+				element: elem
+			};
+			actions.push(action);
+		});
+		this.newState(actions);
+		this.changeSubject.next(actions);
+	}
+
 	public moveElementsById(ids: number[], dif: PIXI.Point): boolean {
 		if (dif.x === 0 && dif.y === 0)
 			return true;

@@ -8,11 +8,13 @@ import {ElementProviderService} from '../../services/element-provider/element-pr
 import {Element} from '../../models/element';
 import {ViewInteractionManager} from './view-interaction-manager';
 import {environment} from '../../../environments/environment';
-import {Subscription} from 'rxjs';
-import {Action, Actions} from '../../models/action';
+import {Subject} from 'rxjs';
+import {Action} from '../../models/action';
 import {CollisionFunctions} from '../../models/collision-functions';
 import {ThemingService} from '../../services/theming/theming.service';
 import {CompSpriteGenerator} from './comp-sprite-generator';
+import {ProjectInteractionService} from '../../services/project-interaction/project-interaction.service';
+import {filter, takeUntil} from 'rxjs/operators';
 
 export class View extends PIXI.Container {
 
@@ -34,7 +36,7 @@ export class View extends PIXI.Container {
 
 	private _chunksToRender: {x: number, y: number}[] = [];
 
-	private _notificationsFromProjectServiceSubscription: Subscription;
+	private _destroySubject =  new Subject<void>();
 
 	constructor(projectId: number, htmlContainer: HTMLElement) {
 		super();
@@ -47,9 +49,14 @@ export class View extends PIXI.Container {
 		this._zoomPanInputManager = new ZoomPanInputManager(this._htmlContainer);
 		this._viewInteractionManager = new ViewInteractionManager(this);
 
-		this._notificationsFromProjectServiceSubscription =
-			ProjectsService.staticInstance.onProjectChanges$(this.projectId)
-				.subscribe((actions: Action[]) => this.applyActionsToView(actions));
+		ProjectsService.staticInstance.onProjectChanges$(this.projectId).pipe(
+			takeUntil(this._destroySubject)
+		).subscribe((actions: Action[]) => this.applyActionsToView(actions));
+
+		ProjectInteractionService.staticInstance.onZoomChangeClick$.pipe(
+			filter(_ => this.projectId === ProjectsService.staticInstance.currProject.id),
+			takeUntil(this._destroySubject)
+		).subscribe((dir => this.onZoomClick(dir)));
 
 		this.applyActionsToView(
 			ProjectsService.staticInstance.allProjects.get(this.projectId).getOpenActions()
@@ -63,6 +70,7 @@ export class View extends PIXI.Container {
 			Grid.getGridPosForPixelPos(currentlyOnScreen.start),
 			Grid.getGridPosForPixelPos(currentlyOnScreen.end)
 		);
+
 		chunksToRender.forEach(chunk => {
 			if (!this.createChunkIfNeeded(chunk.x, chunk.y)) {
 				this._gridGraphics[chunk.x][chunk.y].destroy();
@@ -148,12 +156,32 @@ export class View extends PIXI.Container {
 		}
 
 		if (this._zoomPanInputManager.isZoomIn) {
-			needsChunkUpdate = this.zoomPan.zoomBy(0.8, this._zoomPanInputManager.mouseX, this._zoomPanInputManager.mouseY) || needsChunkUpdate;
+			needsChunkUpdate = this.applyZoom('out', this._zoomPanInputManager.mouseX, this._zoomPanInputManager.mouseY) || needsChunkUpdate;
 		} else if (this._zoomPanInputManager.isZoomOut) {
-			needsChunkUpdate = this.zoomPan.zoomBy(1.25, this._zoomPanInputManager.mouseX, this._zoomPanInputManager.mouseY) || needsChunkUpdate;
+			needsChunkUpdate = this.applyZoom('in', this._zoomPanInputManager.mouseX, this._zoomPanInputManager.mouseY) || needsChunkUpdate;
 		}
 
 		if (needsChunkUpdate) {
+			this.updateChunks();
+		}
+	}
+
+	private applyZoom(dir: 'in' | 'out', centerX?: number, centerY?: number): boolean {
+		if (!centerX || !centerY) {
+			centerX = this._htmlContainer.offsetWidth / 2;
+			centerY = this._htmlContainer.offsetHeight / 2;
+		}
+		let multi: number;
+		if (dir === 'in') {
+			multi = 1.25;
+		} else {
+			multi = 0.8;
+		}
+		return this.zoomPan.zoomBy(multi, centerX, centerY);
+	}
+
+	private onZoomClick(dir: 'in' | 'out') {
+		if (this.applyZoom(dir)) {
 			this.updateChunks();
 		}
 	}
@@ -298,7 +326,8 @@ export class View extends PIXI.Container {
 	}
 
 	public destroy() {
-		this._notificationsFromProjectServiceSubscription.unsubscribe();
+		this._destroySubject.next();
+		this._destroySubject.unsubscribe();
 		this._zoomPanInputManager.destroy();
 		this._viewInteractionManager.destroy();
 		super.destroy({
