@@ -32,10 +32,10 @@ export class ShortcutsService {
 
 		let result = '';
 		if (config.ctrl) {
-			result += 'CTRL+';
+			result += 'Ctrl+';
 		}
 		if (config.alt) {
-			result += 'ALT+';
+			result += 'Alt+';
 		}
 		if (config.shift) {
 			result += 'Shift+';

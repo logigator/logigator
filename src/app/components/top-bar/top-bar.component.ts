@@ -26,7 +26,7 @@ export class TopBarComponent implements OnInit {
 		}
 	}
 
-	private closeDropdowns() {
+	public closeDropdowns() {
 		this.editDropdownOpen = false;
 		this.fileDropdownOpen = false;
 		this.viewDropdownOpen = false;
