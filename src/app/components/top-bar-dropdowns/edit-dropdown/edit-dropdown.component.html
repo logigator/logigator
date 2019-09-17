@@ -2,23 +2,21 @@
 </div>
 
 <div class="dropdown">
-	<div>
+	<div (click)="undo()">
 		Undo
 		<span>Strg+Z</span>
 	</div>
-	<div>
+	<div (click)="redo()">
 		Redo
 		<span>Strg+Shift+Z</span>
 	</div>
 	<hr>
-	<div>
+	<div (click)="copy()">
 		Copy
+		<span>Strg+C</span>
 	</div>
-	<div>
+	<div (click)="paste()">
 		Paste
-	</div>
-	<hr>
-	<div>
-		Screenshot
+		<span>Strg+V</span>
 	</div>
 </div>

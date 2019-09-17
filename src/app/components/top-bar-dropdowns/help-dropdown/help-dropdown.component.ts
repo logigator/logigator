@@ -20,6 +20,7 @@ export class HelpDropdownComponent implements OnInit {
 	}
 
 	public help() {
+		window.alert('UwU');
 		this.close();
 	}
 }

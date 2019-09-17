@@ -1,4 +1,5 @@
 import {Component, EventEmitter, OnInit, Output} from '@angular/core';
+import {ProjectInteractionService} from "../../../services/project-interaction/project-interaction.service";
 
 @Component({
 	selector: 'app-view-dropdown',
@@ -10,7 +11,7 @@ export class ViewDropdownComponent implements OnInit {
 	@Output()
 	public requestClosed: EventEmitter<any> = new EventEmitter();
 
-	constructor() { }
+	constructor(private projectInteractions: ProjectInteractionService) { }
 
 	ngOnInit() {
 	}
@@ -20,10 +21,12 @@ export class ViewDropdownComponent implements OnInit {
 	}
 
 	public zoomIn() {
+		this.projectInteractions.zoomIn();
 		this.close();
 	}
 
 	public zoomOut() {
+		this.projectInteractions.zoomOut();
 		this.close();
 	}
 }

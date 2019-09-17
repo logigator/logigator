@@ -1,4 +1,5 @@
 import {Component, EventEmitter, OnInit, Output} from '@angular/core';
+import {ProjectsService} from "../../../services/projects/projects.service";
 
 @Component({
 	selector: 'app-file-dropdown',
@@ -10,7 +11,7 @@ export class FileDropdownComponent implements OnInit {
 	@Output()
 	public requestClosed: EventEmitter<any> = new EventEmitter();
 
-	constructor() { }
+	constructor(private projectsService: ProjectsService) { }
 
 	ngOnInit() {
 	}
