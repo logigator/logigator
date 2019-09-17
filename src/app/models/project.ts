@@ -225,7 +225,7 @@ export class Project {
 	private disconnectWires(pos: PIXI.Point, wiresOnPoint: Element[]): Action[] {
 		const newWires = this._currState.disconnectWires(wiresOnPoint);
 		const actions = Actions.connectWiresToActions(wiresOnPoint, newWires);
-		actions.push({name: 'dcoWire', pos});
+		// actions.push({name: 'dcoWire', pos});
 		return actions;
 	}
 
@@ -267,6 +267,7 @@ export class Project {
 		const out: Action[] = [];
 		const merged = this.autoMerge(elements);
 		out.push(...merged.actions);
+		console.log('inbetween');
 		const connected = this.autoConnect(merged.elements);
 		out.push(...connected.actions);
 		return out;

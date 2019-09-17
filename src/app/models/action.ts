@@ -45,6 +45,7 @@ export class Actions {
 
 	public static reverseActions(actions: Action[]): Action[] {
 		const out: Action[] = [];
+		// TODO crashes when actions is undefined
 		for (let i = actions.length - 1; i > -1; i--) {
 			out.push(...Actions.reverseAction(actions[i]));
 		}
