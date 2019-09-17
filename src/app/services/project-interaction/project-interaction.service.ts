@@ -35,7 +35,7 @@ export class ProjectInteractionService {
 	}
 
 	public get onZoomChangeClick$(): Observable<'in' | 'out' | '100'> {
-		return  this._zoomNotifierSubject.asObservable();
+		return this._zoomNotifierSubject.asObservable();
 	}
 
 	public get onElementsDelete$(): Observable<void> {
