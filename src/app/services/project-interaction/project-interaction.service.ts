@@ -34,7 +34,7 @@ export class ProjectInteractionService {
 		this._deleteNotifierSubject.next();
 	}
 
-	public get onZoomChangeClick$(): Observable<'in' | 'out', '100'> {
+	public get onZoomChangeClick$(): Observable<'in' | 'out' | '100'> {
 		return  this._zoomNotifierSubject.asObservable();
 	}
 

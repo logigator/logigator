@@ -4,19 +4,24 @@
 <div class="dropdown">
 	<div (click)="undo()">
 		Undo
-		<span>Strg+Z</span>
+		<span>{{'undo' | shortcutText}}</span>
 	</div>
 	<div (click)="redo()">
 		Redo
-		<span>Strg+Shift+Z</span>
+		<span>{{'redo' | shortcutText}}</span>
 	</div>
 	<hr>
 	<div (click)="copy()">
 		Copy
-		<span>Strg+C</span>
+		<span>{{'copy' | shortcutText}}</span>
 	</div>
 	<div (click)="paste()">
 		Paste
-		<span>Strg+V</span>
+		<span>{{'paste' | shortcutText}}</span>
+	</div>
+	<hr>
+	<div (click)="delete()">
+		Delete
+		<span>{{'delete' | shortcutText}}</span>
 	</div>
 </div>

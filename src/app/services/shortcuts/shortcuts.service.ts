@@ -25,6 +25,25 @@ export class ShortcutsService {
 		this.applyAction(action);
 	}
 
+	public getShortcutText(action: ShortcutAction) {
+		const config = this._shortcutMap[action];
+
+		if (!config) return '';
+
+		let result = '';
+		if (config.ctrl) {
+			result += 'CTRL+';
+		}
+		if (config.alt) {
+			result += 'ALT+';
+		}
+		if (config.shift) {
+			result += 'Shift+';
+		}
+		const key = config.keyCode.replace('Key', '');
+		return result + key;
+	}
+
 	private getShortcutActionFromEvent(e: KeyboardEvent): ShortcutAction | null {
 		for (const action in this._shortcutMap) {
 			const shortcutConfig = this._shortcutMap[action];

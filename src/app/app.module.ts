@@ -14,6 +14,7 @@ import { EditDropdownComponent } from './components/top-bar-dropdowns/edit-dropd
 import { ViewDropdownComponent } from './components/top-bar-dropdowns/view-dropdown/view-dropdown.component';
 import { HelpDropdownComponent } from './components/top-bar-dropdowns/help-dropdown/help-dropdown.component';
 import { SettingsDropdownComponent } from './components/top-bar-dropdowns/settings-dropdown/settings-dropdown.component';
+import { ShortcutTextPipe } from './pipes/shortcut-text/shortcut-text.pipe';
 
 @NgModule({
 	declarations: [
@@ -28,7 +29,8 @@ import { SettingsDropdownComponent } from './components/top-bar-dropdowns/settin
 		EditDropdownComponent,
 		ViewDropdownComponent,
 		HelpDropdownComponent,
-		SettingsDropdownComponent
+		SettingsDropdownComponent,
+		ShortcutTextPipe
 	],
 	imports: [
 		BrowserModule,
