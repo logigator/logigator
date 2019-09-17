@@ -1,5 +1,6 @@
 import {Component, EventEmitter, OnInit, Output} from '@angular/core';
 import {ProjectsService} from '../../../services/projects/projects.service';
+import {ProjectInteractionService} from '../../../services/project-interaction/project-interaction.service';
 
 @Component({
 	selector: 'app-edit-dropdown',
@@ -11,7 +12,7 @@ export class EditDropdownComponent implements OnInit {
 	@Output()
 	public requestClosed: EventEmitter<any> = new EventEmitter();
 
-	constructor(private projectService: ProjectsService) { }
+	constructor(private projectService: ProjectsService, private projectInteraction: ProjectInteractionService) { }
 
 	ngOnInit() {
 	}
@@ -35,6 +36,11 @@ export class EditDropdownComponent implements OnInit {
 	}
 
 	public paste() {
+		this.close();
+	}
+
+	public delete() {
+		this.projectInteraction.deleteSelection();
 		this.close();
 	}
 }

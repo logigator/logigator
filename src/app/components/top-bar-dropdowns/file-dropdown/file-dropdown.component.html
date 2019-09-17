@@ -4,7 +4,7 @@
 	</div>
 	<div (click)="newComponent()">
 		New Component
-		<span>Strg+N</span>
+		<span>{{'newComp' | shortcutText}}</span>
 	</div>
 	<hr>
 	<div (click)="openProject()">
@@ -12,7 +12,7 @@
 	</div>
 	<div (click)="saveProject()">
 		Save
-		<span>Strg+S</span>
+		<span>{{'save' | shortcutText}}</span>
 	</div>
 	<hr>
 	<div (click)="screenshot()">
