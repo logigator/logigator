@@ -27,6 +27,7 @@
 
 		.project-title {
 			font-size: 15pt;
+            padding-left: 0.17rem;
 			margin: 0;
 			align-self: end;
 		}
@@ -36,19 +37,23 @@
 			flex-direction: row;
 			justify-content: flex-start;
 			align-items: center;
+			position: relative;
 
-			p {
-				margin: 0;
-				margin-right: 0.5rem;
-				padding: 0.1rem 0.2rem 0.1rem 0.2rem;
-				border-radius: 0.2rem;
+			div {
+				p {
+					margin: 0 0.5rem 0 0;
+					padding: 0.1rem 0.2rem 0.1rem 0.2rem;
+					border-radius: 0.2rem;
 
-				&:hover {
-					cursor: pointer;
-					@include themify() {
-						background-color: lighten(themed('toolbar'), 5%);
+					&:hover {
+						cursor: pointer;
+						@include themify() {
+							background-color: lighten(themed('toolbar'), 5%);
+						}
 					}
 				}
+
+				z-index: 200;
 			}
 		}
 	}

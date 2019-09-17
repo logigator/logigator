@@ -5,10 +5,22 @@
 	<div class="main-menu">
 		<p class="project-title">Projekttitel</p>
 		<div class="menu-entries">
-			<p>File</p>
-			<p>Edit</p>
-			<p>View</p>
-			<p>Help</p>
+			<div>
+				<p (mouseover)="dropdownHover('fileDropdownOpen')" (click)="closeDropdowns(); fileDropdownOpen = true;">File</p>
+			</div>
+			<app-file-dropdown (requestClosed)="closeDropdowns()" *ngIf="fileDropdownOpen"></app-file-dropdown>
+			<div>
+				<p (mouseover)="dropdownHover('editDropdownOpen')" (click)="closeDropdowns(); editDropdownOpen = true;">Edit</p>
+			</div>
+			<app-edit-dropdown (requestClosed)="closeDropdowns()" *ngIf="editDropdownOpen"></app-edit-dropdown>
+			<div>
+				<p (mouseover)="dropdownHover('viewDropdownOpen')" (click)="closeDropdowns(); viewDropdownOpen = true;">View</p>
+			</div>
+			<app-view-dropdown (requestClosed)="closeDropdowns()" *ngIf="viewDropdownOpen"></app-view-dropdown>
+			<div>
+				<p (mouseover)="dropdownHover('helpDropdownOpen')" (click)="closeDropdowns(); helpDropdownOpen = true;">Help</p>
+			</div>
+			<app-help-dropdown (requestClosed)="closeDropdowns()" *ngIf="helpDropdownOpen"></app-help-dropdown>
 		</div>
 	</div>
 
