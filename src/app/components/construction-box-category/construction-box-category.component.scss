@@ -31,6 +31,7 @@
 		grid-template-columns: 1fr 1fr 1fr;
 		padding: 0.5rem;
 		text-align: center;
+		user-select: none;
 
 		@include themify() {
 			background-color: themed('boxes-background');

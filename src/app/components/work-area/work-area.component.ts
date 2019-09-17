@@ -44,6 +44,9 @@ export class WorkAreaComponent implements OnInit, OnDestroy {
 			this.initGridGeneration();
 			this.initPixiTicker();
 
+			this.renderer2.listen(this._pixiCanvasContainer.nativeElement, 'contextmenu', (e: MouseEvent) => {
+				e.preventDefault();
+			});
 			this.projectsService.onProjectOpened$.subscribe(projectId => {
 				this.ngZone.runOutsideAngular(() => {
 					this.openProject(projectId);

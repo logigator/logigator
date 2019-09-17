@@ -30,12 +30,6 @@ export class AppComponent implements OnInit, OnDestroy {
 	) {}
 
 	ngOnInit(): void {
-		this.ngZone.runOutsideAngular(() => {
-			this.renderer2.listen('document', 'contextmenu', (e: MouseEvent) => {
-				e.preventDefault();
-			});
-		});
-
 		this.renderer2.addClass(this.appRoot.nativeElement, this.theming.themeClass);
 		this.listenToShortcuts();
 	}
@@ -43,7 +37,9 @@ export class AppComponent implements OnInit, OnDestroy {
 	private listenToShortcuts() {
 		fromEvent(this.document, 'keydown').pipe(
 			takeUntil(this._destroySubject)
-		).subscribe((e: KeyboardEvent) => this.shortcuts.eventListener(e));
+		).subscribe((e: KeyboardEvent) => {
+			this.shortcuts.keyDownListener(e);
+		});
 	}
 
 	public get showSettingsInfoBox(): boolean {

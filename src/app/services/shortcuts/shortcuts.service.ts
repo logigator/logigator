@@ -19,9 +19,11 @@ export class ShortcutsService {
 		private projects: ProjectsService
 	) { }
 
-	public eventListener(e: KeyboardEvent) {
+	public keyDownListener(e: KeyboardEvent) {
 		const action = this.getShortcutActionFromEvent(e);
 		if (!action) return;
+		e.preventDefault();
+		e.stopPropagation();
 		this.applyAction(action);
 	}
 
@@ -40,15 +42,14 @@ export class ShortcutsService {
 		if (config.shift) {
 			result += 'Shift+';
 		}
-		const key = config.keyCode.replace('Key', '');
-		return result + key;
+		return result + config.key;
 	}
 
 	private getShortcutActionFromEvent(e: KeyboardEvent): ShortcutAction | null {
 		for (const action in this._shortcutMap) {
 			const shortcutConfig = this._shortcutMap[action];
 			if (shortcutConfig &&
-				e.code === shortcutConfig.keyCode &&
+				e.key.toUpperCase() === shortcutConfig.key.toUpperCase() &&
 				e.shiftKey === !!shortcutConfig.shift &&
 				e.ctrlKey === !!shortcutConfig.ctrl &&
 				e.altKey === !!shortcutConfig.alt

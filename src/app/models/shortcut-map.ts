@@ -20,7 +20,7 @@ export type ShortcutMap =  {
 };
 
 export interface ShortcutConfig {
-	keyCode: string;
+	key: string;
 	alt?: boolean;
 	ctrl?: boolean;
 	shift?: boolean;

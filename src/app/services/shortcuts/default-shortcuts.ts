@@ -2,52 +2,52 @@ import {ShortcutMap} from '../../models/shortcut-map';
 
 export const defaultShortcuts: ShortcutMap = {
 	copy: {
-		keyCode: 'KeyC',
+		key: 'C',
 		ctrl: true
 	},
 	paste: {
-		keyCode: 'KeyV',
+		key: 'V',
 		ctrl: true
 	},
 	cut: {
-		keyCode: 'KeyX',
+		key: 'X',
 		ctrl: true
 	},
 	delete: {
-		keyCode: 'Delete'
+		key: 'Delete'
 	},
 	undo: {
-		keyCode: 'KeyZ',
+		key: 'Z',
 		ctrl: true
 	},
 	redo: {
-		keyCode: 'KeyY',
+		key: 'Y',
 		ctrl: true,
 	},
 	zoom100: {
-		keyCode: 'Digit0',
+		key: '0',
 		ctrl: true,
 	},
 	zoomIn: null,
 	zoomOut: null,
 	connWireMode: {
-		keyCode: 'KeyC',
+		key: 'C',
 		alt: true
 	},
 	wireMode: {
-		keyCode: 'KeyW',
+		key: 'W',
 		alt: true
 	},
 	selectMode: {
-		keyCode: 'KeyS',
+		key: 'S',
 		alt: true
 	},
 	newComp: {
-		keyCode: 'KeyN',
+		key: 'N',
 		ctrl: true
 	},
 	textMode: {
-		keyCode: 'KeyT',
+		key: 'T',
 		alt: true
 	},
 	save: null,
