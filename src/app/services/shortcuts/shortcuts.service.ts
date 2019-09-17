@@ -26,7 +26,7 @@ export class ShortcutsService {
 	}
 
 	private getShortcutActionFromEvent(e: KeyboardEvent): ShortcutAction | null {
-		for (const action: ShortcutAction in this._shortcutMap) {
+		for (const action in this._shortcutMap) {
 			const shortcutConfig = this._shortcutMap[action];
 			if (shortcutConfig &&
 				e.code === shortcutConfig.keyCode &&
@@ -34,7 +34,7 @@ export class ShortcutsService {
 				e.ctrlKey === !!shortcutConfig.ctrl &&
 				e.altKey === !!shortcutConfig.alt
 			) {
-				return action;
+				return action as ShortcutAction;
 			}
 		}
 		return null;
