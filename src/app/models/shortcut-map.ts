@@ -8,6 +8,7 @@ export type ShortcutAction =
 	'zoomIn' |
 	'zoomOut' |
 	'zoom100' |
+	'fullscreen' |
 	'wireMode' |
 	'connWireMode' |
 	'selectMode' |

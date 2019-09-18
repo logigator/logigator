@@ -4,6 +4,7 @@ import {ShortcutAction, ShortcutMap} from '../../models/shortcut-map';
 import {WorkModeService} from '../work-mode/work-mode.service';
 import {ProjectInteractionService} from '../project-interaction/project-interaction.service';
 import {ProjectsService} from '../projects/projects.service';
+import {ThemingService} from '../theming/theming.service';
 
 @Injectable({
 	providedIn: 'root'
@@ -16,7 +17,8 @@ export class ShortcutsService {
 	constructor(
 		private workMode: WorkModeService,
 		private projectInteraction: ProjectInteractionService,
-		private projects: ProjectsService
+		private projects: ProjectsService,
+		private theming: ThemingService
 	) { }
 
 	public keyDownListener(e: KeyboardEvent) {
@@ -88,6 +90,9 @@ export class ShortcutsService {
 				break;
 			case 'zoom100':
 				this.projectInteraction.zoom100();
+				break;
+			case 'fullscreen':
+				this.theming.requestFullscreen();
 				break;
 			case 'undo':
 				this.projects.currProject.stepBack();

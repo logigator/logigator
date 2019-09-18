@@ -1,6 +1,7 @@
 import {Inject, Injectable} from '@angular/core';
 import {DOCUMENT} from '@angular/common';
 import {EditorColorKey, EditorColors, Theme} from '../../models/theming';
+import {Observable, Subject} from 'rxjs';
 
 @Injectable({
 	providedIn: 'root'
@@ -10,6 +11,8 @@ export class ThemingService {
 	public static staticInstance: ThemingService;
 
 	private _currentTheme: Theme;
+
+	private _requestFullscreenSubject = new Subject<void>();
 
 	private _editorColor: EditorColors = {
 		light: {
@@ -52,5 +55,13 @@ export class ThemingService {
 
 	public get currentTheme(): Theme {
 		return this._currentTheme;
+	}
+
+	public requestFullscreen() {
+		this._requestFullscreenSubject.next();
+	}
+
+	public get onRequestFullscreen$(): Observable<void> {
+		return this._requestFullscreenSubject.asObservable();
 	}
 }
