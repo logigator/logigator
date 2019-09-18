@@ -11,6 +11,7 @@ export type ActionType =
 	'movMult' |
 	'conWire' |
 	'dcoWire' |
+	'movWire' |
 	'setComp';
 
 export interface ChangeType {
@@ -40,6 +41,7 @@ export class Actions {
 		['movMult', ['movMult']],
 		['conWire', ['dcoWire']],
 		['dcoWire', ['conWire']],
+		['movWire', ['movWire']],
 		['setComp', ['setComp']]
 	]);
 

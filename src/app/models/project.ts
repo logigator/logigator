@@ -199,6 +199,10 @@ export class Project {
 		return true;
 	}
 
+	public moveConnectionPoints(cons: PIXI.Point[], dif: PIXI.Point): boolean {
+
+	}
+
 	public toggleWireConnection(pos: PIXI.Point): void {
 		const wiresOnPoint = this._currState.wiresOnPoint(pos);
 		let actions: Action[];
