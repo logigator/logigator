@@ -13,7 +13,7 @@ export class SettingsDropdownComponent implements OnInit {
 
 	public reloadPopupActive = '';
 
-	constructor(private theming: ThemingService) { }
+	constructor(public theming: ThemingService) { }
 
 	ngOnInit() {
 	}

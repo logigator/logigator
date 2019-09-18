@@ -33,7 +33,7 @@ export class PopupComponent implements OnInit {
 	private elementRef: ElementRef<HTMLElement>;
 
 	@HostListener('document:keydown.escape')
-	private onKeyDown() {
+	public onKeyDown() {
 		this.closeInside();
 	}
 
