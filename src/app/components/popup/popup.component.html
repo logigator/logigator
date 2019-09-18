@@ -1,0 +1,9 @@
+<div class="popup" (click)="closeOutside($event)" #outsideRef>
+	<div class="content" >
+		<div class="header">
+			<p>Hi du da</p>
+			<img src="assets/icons/close.svg" (click)="closeInside()">
+		</div>
+		<template [ngTemplateOutlet]="content"></template>
+	</div>
+</div>

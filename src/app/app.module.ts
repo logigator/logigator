@@ -15,6 +15,7 @@ import { ViewDropdownComponent } from './components/top-bar-dropdowns/view-dropd
 import { HelpDropdownComponent } from './components/top-bar-dropdowns/help-dropdown/help-dropdown.component';
 import { SettingsDropdownComponent } from './components/top-bar-dropdowns/settings-dropdown/settings-dropdown.component';
 import { ShortcutTextPipe } from './pipes/shortcut-text/shortcut-text.pipe';
+import { PopupComponent } from './components/popup/popup.component';
 
 @NgModule({
 	declarations: [
@@ -30,7 +31,8 @@ import { ShortcutTextPipe } from './pipes/shortcut-text/shortcut-text.pipe';
 		ViewDropdownComponent,
 		HelpDropdownComponent,
 		SettingsDropdownComponent,
-		ShortcutTextPipe
+		ShortcutTextPipe,
+		PopupComponent
 	],
 	imports: [
 		BrowserModule,
