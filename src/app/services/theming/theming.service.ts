@@ -35,10 +35,7 @@ export class ThemingService {
 	}
 
 	private loadTheme() {
-		this._currentTheme = localStorage.getItem('theme') as any;
-		if (!this._currentTheme) {
-			this._currentTheme = 'dark';
-		}
+		this._currentTheme = (localStorage.getItem('theme') || 'dark') as Theme;
 	}
 
 	public setTheme(theme: Theme) {
@@ -58,7 +55,7 @@ export class ThemingService {
 	}
 
 	public get pendingTheme(): Theme {
-		return localStorage.getItem('theme') || 'dark' as any;
+		return (localStorage.getItem('theme') || 'dark') as Theme;
 	}
 
 	public requestFullscreen() {

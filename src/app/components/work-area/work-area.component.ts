@@ -18,15 +18,21 @@ export class WorkAreaComponent implements OnInit, OnDestroy {
 	private _allViews: Map<number, View>;
 
 	private _pixiRenderer: PIXI.Renderer;
+	private _pixiWindowRenderer: PIXI.Renderer;
 
 	private _pixiTicker: PIXI.Ticker;
+	private _pixiWindowTicker: PIXI.Ticker;
 
 	public activeView: View;
+	public activeWindowView: View;
 
 	private _destroy = new Subject<any>();
 
 	@ViewChild('pixiCanvasContainer', {static: true})
 	private _pixiCanvasContainer: ElementRef<HTMLDivElement>;
+
+	@ViewChild('pixiWindowCanvasContainer', {static: true})
+	private _pixiWindowCanvasContainer: ElementRef<HTMLDivElement>;
 
 	constructor(
 		private renderer2: Renderer2,
@@ -41,16 +47,23 @@ export class WorkAreaComponent implements OnInit, OnDestroy {
 		this.ngZone.runOutsideAngular(async () => {
 			await this.loadPixiFont();
 			this.initPixi();
-			this.initGridGeneration();
 			this.initPixiTicker();
 
 			this.renderer2.listen(this._pixiCanvasContainer.nativeElement, 'contextmenu', (e: MouseEvent) => {
 				e.preventDefault();
 			});
+			this.renderer2.listen(this._pixiWindowCanvasContainer.nativeElement, 'contextmenu', (e: MouseEvent) => {
+				e.preventDefault();
+			});
+
 			this.projectsService.onProjectOpened$.subscribe(projectId => {
 				this.ngZone.runOutsideAngular(() => {
 					this.openProject(projectId);
 					this._pixiTicker.start(); // start ticker after a project was opened
+
+					this.activeWindowView = new View(projectId, this._pixiWindowCanvasContainer.nativeElement);
+					this.activeWindowView.interactive = false;
+					this._pixiWindowTicker.start();
 				});
 			});
 		});
@@ -66,12 +79,25 @@ export class WorkAreaComponent implements OnInit, OnDestroy {
 			resolution: Math.ceil(window.devicePixelRatio || 1),
 			autoDensity: true
 		});
+
+		this._pixiWindowRenderer = new PIXI.Renderer({
+			height: this._pixiWindowCanvasContainer.nativeElement.offsetHeight,
+			width: this._pixiWindowCanvasContainer.nativeElement.offsetWidth,
+			antialias: false,
+			powerPreference: 'high-performance',
+			backgroundColor: this.theming.getEditorColor('background'),
+			resolution: Math.ceil(window.devicePixelRatio || 1),
+			autoDensity: true
+		});
+
 		this.renderer2.appendChild(this._pixiCanvasContainer.nativeElement, this._pixiRenderer.view);
+		this.renderer2.appendChild(this._pixiWindowCanvasContainer.nativeElement, this._pixiWindowRenderer.view);
 
 		fromEvent(window, 'resize').pipe(
 			takeUntil(this._destroy)
 		).subscribe(() => {
 			this._pixiRenderer.resize(this._pixiCanvasContainer.nativeElement.offsetWidth, this._pixiCanvasContainer.nativeElement.offsetHeight);
+			this._pixiWindowRenderer.resize(this._pixiWindowCanvasContainer.nativeElement.offsetWidth, this._pixiWindowCanvasContainer.nativeElement.offsetHeight);
 		});
 	}
 
@@ -81,10 +107,6 @@ export class WorkAreaComponent implements OnInit, OnDestroy {
 			loader.add('luis_george_cafe', '/assets/fonts/louis_george_cafe_bitmap/font.fnt')
 				.load(() => resolve());
 		});
-	}
-
-	private initGridGeneration() {
-		Grid.setRenderer(this._pixiRenderer);
 	}
 
 	public get allProjects(): Map<number, Project> {
@@ -104,6 +126,12 @@ export class WorkAreaComponent implements OnInit, OnDestroy {
 		this._pixiTicker.add(() => {
 				this.activeView.updateZoomPan();
 				this._pixiRenderer.render(this.activeView);
+		});
+
+		this._pixiWindowTicker = new PIXI.Ticker();
+		this._pixiWindowTicker.add(() => {
+			this.activeWindowView.updateZoomPan();
+			this._pixiWindowRenderer.render(this.activeWindowView);
 		});
 	}
 
