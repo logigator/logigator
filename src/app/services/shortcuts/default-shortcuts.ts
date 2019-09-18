@@ -30,6 +30,11 @@ export const defaultShortcuts: ShortcutMap = {
 	},
 	zoomIn: null,
 	zoomOut: null,
+	fullscreen: {
+		key: 'F',
+		ctrl: true,
+		shift: true
+	},
 	connWireMode: {
 		key: 'C',
 		alt: true

@@ -32,6 +32,10 @@ export class AppComponent implements OnInit, OnDestroy {
 	ngOnInit(): void {
 		this.renderer2.addClass(this.appRoot.nativeElement, this.theming.themeClass);
 		this.listenToShortcuts();
+
+		this.theming.onRequestFullscreen$.pipe(
+			takeUntil(this._destroySubject)
+		).subscribe(_ => this.onRequestFullscreen());
 	}
 
 	private listenToShortcuts() {
@@ -62,6 +66,19 @@ export class AppComponent implements OnInit, OnDestroy {
 			return null;
 		}
 		return this.selection.selectedIds()[0];
+	}
+
+	private onRequestFullscreen() {
+		const elem = this.appRoot.nativeElement as any;
+		if (elem.requestFullscreen) {
+			elem.requestFullscreen();
+		} else if (elem.mozRequestFullScreen) { /* Firefox */
+			elem.mozRequestFullScreen();
+		} else if (elem.webkitRequestFullscreen) { /* Chrome, Safari & Opera */
+			elem.webkitRequestFullscreen();
+		} else if (elem.msRequestFullscreen) { /* IE/Edge */
+			elem.msRequestFullscreen();
+		}
 	}
 
 	ngOnDestroy(): void {

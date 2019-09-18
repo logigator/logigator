@@ -1,5 +1,6 @@
 import {Component, EventEmitter, OnInit, Output} from '@angular/core';
 import {ProjectInteractionService} from '../../../services/project-interaction/project-interaction.service';
+import {ThemingService} from '../../../services/theming/theming.service';
 
 @Component({
 	selector: 'app-view-dropdown',
@@ -11,7 +12,7 @@ export class ViewDropdownComponent implements OnInit {
 	@Output()
 	public requestClosed: EventEmitter<any> = new EventEmitter();
 
-	constructor(private projectInteractions: ProjectInteractionService) { }
+	constructor(private projectInteractions: ProjectInteractionService, private theming: ThemingService) { }
 
 	ngOnInit() {
 	}
@@ -32,6 +33,11 @@ export class ViewDropdownComponent implements OnInit {
 
 	public zoom100() {
 		this.projectInteractions.zoom100();
+		this.close();
+	}
+
+	public fullscreen() {
+		this.theming.requestFullscreen();
 		this.close();
 	}
 }
