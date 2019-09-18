@@ -11,7 +11,7 @@ export class SettingsDropdownComponent implements OnInit {
 	@Output()
 	public requestClosed: EventEmitter<any> = new EventEmitter();
 
-	public isDark = this.theming.currentTheme === 'dark';
+	public reloadPopupActive = '';
 
 	constructor(private theming: ThemingService) { }
 
@@ -22,13 +22,33 @@ export class SettingsDropdownComponent implements OnInit {
 		this.requestClosed.emit();
 	}
 
-	public setTheme() {
-		if (this.isDark) {
+	public reloadClose() {
+		this.reloadPopupActive = '';
+	}
+
+	public reloadPostponed() {
+		this.processPending();
+		this.reloadClose();
+	}
+
+	public reloadConfirm() {
+		this.processPending();
+		window.location.reload();
+	}
+
+	private setTheme() {
+		if (this.theming.pendingTheme === 'dark') {
 			this.theming.setTheme('light');
-			this.isDark = false;
 		} else {
 			this.theming.setTheme('dark');
-			this.isDark = true;
+		}
+	}
+
+	private processPending() {
+		switch (this.reloadPopupActive) {
+			case 'theme':
+				this.setTheme();
+				break;
 		}
 	}
 }

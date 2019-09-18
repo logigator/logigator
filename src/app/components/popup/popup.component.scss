@@ -23,16 +23,22 @@
 		min-height: 5rem;
 		z-index: 600;
 
+		.body {
+			padding: 0.3rem;
+		}
+
 		.header {
 			display: flex;
 
 			@include themify() {
 				background-color: themed('toolbar');
+				color: themed('primary-text');
 			}
 
 			width: 100%;
 			text-align: center;
-			font-size: 15pt;
+			font-size: 24px;
+			font-weight: 700;
 			justify-content: space-between;
 			padding-bottom: 2px;
 			align-items: center;

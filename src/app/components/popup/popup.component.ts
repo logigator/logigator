@@ -21,7 +21,10 @@ export class PopupComponent implements OnInit {
 	public requestClose: EventEmitter<any> = new EventEmitter();
 
 	@Input()
-	public content: TemplateRef<any>;
+	public title: string;
+
+	@Input()
+	public content ?: TemplateRef<any>;
 
 	@Input()
 	public closeOnClickOutside ? = true;

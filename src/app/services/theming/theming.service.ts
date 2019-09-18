@@ -57,6 +57,10 @@ export class ThemingService {
 		return this._currentTheme;
 	}
 
+	public get pendingTheme(): Theme {
+		return localStorage.getItem('theme') || 'dark' as any;
+	}
+
 	public requestFullscreen() {
 		this._requestFullscreenSubject.next();
 	}
