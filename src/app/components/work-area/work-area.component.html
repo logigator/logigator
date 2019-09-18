@@ -1,9 +1,5 @@
 <div class="main-area">
 	<div id="canvas-container" #pixiCanvasContainer></div>
-	<div class="window-container">
-		<div class="header"><p>Komponente XY</p><img src="assets/icons/close.svg"></div>
-		<div class="canvas-window-container" #pixiWindowCanvasContainer></div>
-	</div>
 	<div id="tabs">
 		<div class="tab"
 		     *ngFor="let project of allProjects | keyvalue"
@@ -14,3 +10,4 @@
 		</div>
 	</div>
 </div>
+<app-window-work-area [projectIdToOpen]="0" [dragBoundingContainer]="pixiCanvasContainer"></app-window-work-area>

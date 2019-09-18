@@ -1,1 +1,7 @@
-<p>window-work-area works!</p>
+<div class="window-container" #popup>
+	<div class="header" (mousedown)="mouseDownHeader($event)">
+		<p>{{componentName}}</p>
+		<img src="assets/icons/close.svg" (click)="close()">
+	</div>
+	<div class="canvas-window-container" #canvasContainer></div>
+</div>
