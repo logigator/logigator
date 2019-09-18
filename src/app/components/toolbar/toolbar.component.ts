@@ -31,7 +31,6 @@ export class ToolbarComponent implements OnInit {
 	}
 
 	public test(): void {
-		this.projectService.currProject.toggleWireConnection(new PIXI.Point(51, 30));
 	}
 
 	public test1(): void {

@@ -186,10 +186,8 @@ export class ProjectState {
 
 	public actionToBoard(elements: Element[], func: (elem: Element, other: Element) => ChangeType): ChangeType[] {
 		const out: ChangeType[] = [];
-		// tslint:disable-next-line:prefer-for-of
 		while (elements.length > 0) {
-			const elem = elements[0];
-			elements.shift();
+			const elem = elements.shift();
 			if (elem.typeId !== 0)
 				continue;
 			const others = this.elementsInChunks(elem.pos, elem.endPos);
@@ -217,9 +215,15 @@ export class ProjectState {
 			return null;
 		if (!CollisionFunctions.doWiresOverlap(wire0, wire1))
 			return null;
-		if (!doDisconnect && (wire0.pos.equals(wire1.endPos) && this.wiresOnPoint(wire0.pos).length > 2 ||
-			wire1.pos.equals(wire0.endPos) && this.wiresOnPoint(wire1.pos).length > 2))
-			return null;
+		if (!doDisconnect) {
+			if (wire0.pos.equals(wire1.endPos) && this.wiresOnPoint(wire0.pos).length > 2) {
+				this.pushConnection(wire0.pos);
+				return null;
+			} else if (wire1.pos.equals(wire0.endPos) && this.wiresOnPoint(wire1.pos).length > 2) {
+				this.pushConnection(wire1.pos);
+				return null;
+			}
+		}
 		const newElem = Project.genNewElement(0, undefined, undefined);
 		newElem.id = wire0.id;
 		if (CollisionFunctions.isVertical(wire0) && CollisionFunctions.isVertical(wire1) && wire0.pos.x === wire1.pos.x) {
@@ -250,7 +254,6 @@ export class ProjectState {
 	}
 
 	private connectWithEdge(other: Element, elem: Element): ChangeType {
-		console.log('conWithEdge');
 		if (other.typeId !== 0 || elem.typeId !== 0)
 			return null;
 		let pos: PIXI.Point;
@@ -264,7 +267,6 @@ export class ProjectState {
 			pos = other.endPos;
 		else
 			return null;
-		console.log('conWithEdge', pos);
 		this.pushConnection(pos);
 		return {newElems: this.connectWires(elem, other, pos), oldElems: [elem, other]};
 	}
@@ -285,11 +287,9 @@ export class ProjectState {
 		const chunkY = CollisionFunctions.gridPosToChunk(pos.y);
 		const chunk = this.chunk(chunkX, chunkY);
 		if (!chunk) {
-			console.log('how should there be a connection when there is not even a loaded chunk?');
 			return;
 		}
 		if (this.chunkHasCon(pos, chunk)) {
-			console.log('adiofuhgodsun g');
 			return;
 		}
 		chunk.connectionPoints.push(pos.clone());
@@ -302,7 +302,6 @@ export class ProjectState {
 	private removeConnection(pos: PIXI.Point): void {
 		const chunk = this.chunkWithCon(pos);
 		if (!chunk) {
-			console.log('you try to remove a connection from a chunk that does not even exist wtf??');
 			return;
 		}
 		chunk.connectionPoints = chunk.connectionPoints.filter(c => !c.equals(pos));

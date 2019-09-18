@@ -265,9 +265,9 @@ export class Project {
 
 	private autoAssemble(elements: Element[]): Action[] {
 		const out: Action[] = [];
+		// debugger;
 		const merged = this.autoMerge(elements);
 		out.push(...merged.actions);
-		console.log('inbetween');
 		const connected = this.autoConnect(merged.elements);
 		out.push(...connected.actions);
 		return out;

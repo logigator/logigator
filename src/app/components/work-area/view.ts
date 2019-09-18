@@ -234,7 +234,20 @@ export class View extends PIXI.Container {
 		this._connectionPoints.delete(`${pos.x}:${pos.y}`);
 	}
 
+	public nextStep(): void {
+		if (this.actions.length < 1) {
+			console.log('no steps left');
+			return;
+		}
+		console.log(this.actions[0]);
+		this.applyAction(this.actions[0]);
+		this.actions.shift();
+	}
+
+	private actions: Action[] = [];
 	private applyActionsToView(actions: Action[]) {
+		// this.actions.push(...actions);
+		// return;
 		console.log('incoming actions');
 		Actions.printActions(actions);
 		if (!actions)
