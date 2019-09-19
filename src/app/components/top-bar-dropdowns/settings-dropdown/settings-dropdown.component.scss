@@ -23,6 +23,10 @@
 	right: 0;
 	top: $top-bar-height;
 
+	&.hidden {
+		display: none;
+	}
+
 	@include themify() {
 		background-color: themed('top-bar-dropdown-background');
 		color: themed('secondary-text');
@@ -59,19 +63,5 @@
 				border-color: lighten(themed('secondary-text'), 10);
 			}
 		}
-	}
-}
-
-.shortcut-settings-popup {
-	div {
-		max-height: 70vh;
-		margin-left: 2rem;
-		margin-right: 2rem;
-		overflow: auto;
-		@include scrollbar(3px);
-	}
-
-	button {
-		margin-bottom: 1rem;
 	}
 }

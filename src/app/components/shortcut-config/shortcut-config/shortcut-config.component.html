@@ -1,1 +1,4 @@
-<app-single-shortcut-config *ngFor="let shortcut of shortcutMap | keyvalue"></app-single-shortcut-config>
+<div class="shortcut-config">
+	<app-single-shortcut-config *ngFor="let shortcut of shortcutMap | keyvalue" [shortcut]="shortcut.key"></app-single-shortcut-config>
+	<button (click)="close()">Save</button>
+</div>

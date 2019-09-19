@@ -1,1 +1,6 @@
-<p>single-shortcut-config works!</p>
+<div>
+	<p>{{shortcutDescription}}</p>
+	<div class="shortcut-input" [class.recording]="isRecording">
+		<input [(ngModel)]="shortcutText" readonly (click)="startRecording()">
+	</div>
+</div>

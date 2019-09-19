@@ -26,3 +26,7 @@ export interface ShortcutConfig {
 	ctrl?: boolean;
 	shift?: boolean;
 }
+
+export type ShortcutDescriptionMap = {
+	[A in ShortcutAction]: string;
+};

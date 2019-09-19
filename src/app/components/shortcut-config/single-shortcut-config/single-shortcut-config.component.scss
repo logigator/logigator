@@ -1,0 +1,41 @@
+@import "themes";
+
+div {
+	width: 23vw;
+	display: flex;
+	flex-direction: row;
+	justify-content: space-between;
+	align-items: center;
+	min-height: 3rem;
+
+	p {
+		margin: 0;
+		max-width: 50%;
+		font-size: 13pt;
+
+		@include themify() {
+			color: themed('secondary-text');
+		}
+	}
+
+	.shortcut-input {
+		width: 45%;
+
+		&.recording {
+			@include themify() {
+				input {
+					outline: 3px solid themed('toolbar');
+				}
+			}
+		}
+
+		input {
+			width: 100%;
+			padding: 0.25rem;
+			outline: none;
+			border: none;
+			border-radius: 0.25rem;
+			font-size: 13pt;
+		}
+	}
+}

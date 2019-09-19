@@ -5,6 +5,7 @@ import {WorkModeService} from '../work-mode/work-mode.service';
 import {ProjectInteractionService} from '../project-interaction/project-interaction.service';
 import {ProjectsService} from '../projects/projects.service';
 import {ThemingService} from '../theming/theming.service';
+import {shortcutDescriptions} from './shortcut-descriptions';
 
 @Injectable({
 	providedIn: 'root'
@@ -48,6 +49,10 @@ export class ShortcutsService {
 
 	public get shortcutMap(): ShortcutMap {
 		return this._shortcutMap;
+	}
+
+	public getShortcutDescription(action: ShortcutAction) {
+		return shortcutDescriptions[action];
 	}
 
 	private getShortcutActionFromEvent(e: KeyboardEvent): ShortcutAction | null {

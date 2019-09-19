@@ -13,6 +13,8 @@ export class SettingsDropdownComponent {
 	@Output()
 	public requestClosed: EventEmitter<any> = new EventEmitter();
 
+	public showDropDown = true;
+
 	public reloadPopupActive = false;
 	public changeShortcutPopupActive = false;
 
