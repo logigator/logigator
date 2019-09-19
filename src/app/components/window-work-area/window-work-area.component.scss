@@ -2,14 +2,15 @@
 
 .window-container {
 	@include themify() {
-		background-color: themed('boxes-background');
-		border: 2px solid themed('toolbar');
+		background-color: themed('toolbar');
 	}
 
+	display: none;
 	user-select: none;
 	border-radius: 0.25rem;
-	width: 30vw;
-	height: 30vh;
+	width: 500px;
+	height: 300px;
+	padding: 2px;
 	position: fixed;
 	bottom: 0;
 	right: 0;

@@ -4,6 +4,7 @@ import {View} from '../../models/rendering/view';
 import {ProjectsService} from '../../services/projects/projects.service';
 import {Project} from '../../models/project';
 import {WorkArea} from '../../models/rendering/work-area';
+import {WindowWorkAreaComponent} from "../window-work-area/window-work-area.component";
 
 @Component({
 	selector: 'app-work-area',
@@ -18,6 +19,9 @@ export class WorkAreaComponent extends WorkArea implements OnInit, OnDestroy {
 
 	@ViewChild('pixiCanvasContainer', {static: true})
 	private _pixiCanvasContainer: ElementRef<HTMLDivElement>;
+
+	@ViewChild('pixiWindowContainer', {static: true})
+	private _pixiWindowContainer: WindowWorkAreaComponent;
 
 	constructor(
 		private renderer2: Renderer2,
@@ -71,6 +75,8 @@ export class WorkAreaComponent extends WorkArea implements OnInit, OnDestroy {
 	public switchActiveView(toSwitchToId: number) {
 		this.projectsService.switchToProject(toSwitchToId);
 		this.activeView = this._allViews.get(toSwitchToId);
+
+		this._pixiWindowContainer.show();
 	}
 
 	public closeView(id: number, event: MouseEvent) {

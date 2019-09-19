@@ -1,7 +1,7 @@
 <div class="window-container" #popup>
-	<div class="header" (mousedown)="mouseDownHeader($event)">
+	<div class="header" #header>
 		<p>{{componentName}}</p>
-		<img src="assets/icons/close.svg" (click)="close()">
+		<img src="assets/icons/close.svg" (click)="hide()">
 	</div>
 	<div class="canvas-window-container" #canvasContainer></div>
 </div>
