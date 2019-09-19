@@ -27,7 +27,7 @@
 		background-color: themed('top-bar-dropdown-background');
 		color: themed('secondary-text');
 
-		div {
+		.theme {
 			padding: 0.5rem;
 			border-radius: 0.2rem;
 
@@ -39,6 +39,11 @@
 				float: right;
 				margin-left: 3rem;
 			}
+		}
+
+		.shortcuts {
+			padding: 0.5rem;
+			border-radius: 0.2rem;
 		}
 
 		hr {
@@ -54,5 +59,19 @@
 				border-color: lighten(themed('secondary-text'), 10);
 			}
 		}
+	}
+}
+
+.shortcut-settings-popup {
+	div {
+		max-height: 70vh;
+		margin-left: 2rem;
+		margin-right: 2rem;
+		overflow: auto;
+		@include scrollbar(3px);
+	}
+
+	button {
+		margin-bottom: 1rem;
 	}
 }

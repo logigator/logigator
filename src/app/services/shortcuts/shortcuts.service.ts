@@ -11,7 +11,6 @@ import {ThemingService} from '../theming/theming.service';
 })
 export class ShortcutsService {
 
-	// config could be loaded
 	private _shortcutMap: ShortcutMap = defaultShortcuts;
 
 	constructor(
@@ -45,6 +44,10 @@ export class ShortcutsService {
 			result += 'Shift+';
 		}
 		return result + config.key;
+	}
+
+	public get shortcutMap(): ShortcutMap {
+		return this._shortcutMap;
 	}
 
 	private getShortcutActionFromEvent(e: KeyboardEvent): ShortcutAction | null {
