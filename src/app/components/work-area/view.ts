@@ -230,8 +230,11 @@ export class View extends PIXI.Container {
 	}
 
 	private removeConnectionPoint(pos: PIXI.Point) {
-		this._connectionPoints.get(`${pos.x}:${pos.y}`).destroy();
-		this._connectionPoints.delete(`${pos.x}:${pos.y}`);
+		const key = `${pos.x}:${pos.y}`;
+		if (!this._connectionPoints.has(key))
+			return;
+		this._connectionPoints.get(key).destroy();
+		this._connectionPoints.delete(key);
 	}
 
 	public nextStep(): void {

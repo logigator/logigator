@@ -171,7 +171,8 @@ export class ViewInteractionManager {
 				endPos = Grid.getGridPosForPixelPos(this._selectRect.position);
 			}
 			const movedDif = new PIXI.Point(endPos.x - this._actionStartPos.x, endPos.y - this._actionStartPos.y);
-			if (ProjectsService.staticInstance.currProject.moveElementsById(SelectionService.staticInstance.selectedIds(), movedDif)) {
+			if (ProjectsService.staticInstance.currProject.moveElementsById(
+				SelectionService.staticInstance.selectedIds(), movedDif, SelectionService.staticInstance.selectedConnections())) {
 				this._view.removeChild(this._selectRect);
 				this.clearSelection();
 				this._isSingleSelected = false;

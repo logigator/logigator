@@ -52,6 +52,19 @@ export class ProjectState {
 			if (!this._chunks[coord.x][coord.y].elements.find(e => e.id === element.id))
 				this._chunks[coord.x][coord.y].elements.push(element);
 		}
+		this.addConIfPossible(element.pos);
+		this.addConIfPossible(element.endPos);
+	}
+
+	public loadConIntoChunks(con: PIXI.Point): void {
+		const chunkCoords = CollisionFunctions.inRectChunks(con, con);
+		for (const coord of chunkCoords) {
+			this.createChunk(coord.x, coord.y);
+			if (!this._chunks[coord.x][coord.y].connectionPoints.find(cp => cp.equals(con))) {
+				this._chunks[coord.x][coord.y].connectionPoints.push(con);
+				this.changeSubject.next([{name: 'conWire', pos: con}]);
+			}
+		}
 	}
 
 	public removeFromChunks(element: Element): void {
@@ -59,6 +72,16 @@ export class ProjectState {
 		for (const chunk of this.chunksFromCoords(chunkCoords)) {
 			chunk.elements = chunk.elements.filter(elem => elem.id !== element.id);
 		}
+		this.removeConIfExists(element.pos);
+		this.removeConIfExists(element.endPos);
+	}
+
+	public removeConFromChunks(con: PIXI.Point): void {
+		const chunkCoords = CollisionFunctions.inRectChunks(con, con);
+		for (const chunk of this.chunksFromCoords(chunkCoords)) {
+			chunk.connectionPoints = chunk.connectionPoints.filter(cp => !cp.equals(con));
+		}
+		this.changeSubject.next([{name: 'dcoWire', pos: con}]);
 	}
 
 	private createChunk(x: number, y: number): void {
@@ -149,6 +172,13 @@ export class ProjectState {
 		}
 		this.loadIntoChunks(element);
 		return true;
+	}
+
+	public moveConnectionPoint(con: PIXI.Point, dif: PIXI.Point): void {
+		this.removeConFromChunks(con);
+		con.x += dif.x;
+		con.y += dif.y;
+		this.loadConIntoChunks(con);
 	}
 
 	public connectWires(wire0: Element, wire1: Element, intersection: PIXI.Point): Element[] {
@@ -282,7 +312,17 @@ export class ProjectState {
 		return outWires;
 	}
 
+	private addConIfPossible(pos: PIXI.Point): void {
+		if (this.wiresOnPoint(pos).length > 2)
+			this.loadConIntoChunks(pos);
+	}
+
+	private removeConIfExists(pos: PIXI.Point): void {
+		this.removeConFromChunks(pos);
+	}
+
 	private pushConnection(pos: PIXI.Point): void {
+		return;
 		const chunkX = CollisionFunctions.gridPosToChunk(pos.x);
 		const chunkY = CollisionFunctions.gridPosToChunk(pos.y);
 		const chunk = this.chunk(chunkX, chunkY);
@@ -292,23 +332,16 @@ export class ProjectState {
 		if (this.chunkHasCon(pos, chunk)) {
 			return;
 		}
-		chunk.connectionPoints.push(pos.clone());
-		this.changeSubject.next([{
-			name: 'conWire',
-			pos
-		}]);
+		this.loadConIntoChunks(pos.clone());
 	}
 
 	private removeConnection(pos: PIXI.Point): void {
+		return;
 		const chunk = this.chunkWithCon(pos);
 		if (!chunk) {
 			return;
 		}
-		chunk.connectionPoints = chunk.connectionPoints.filter(c => !c.equals(pos));
-		this.changeSubject.next([{
-			name: 'dcoWire',
-			pos
-		}]);
+		this.removeConFromChunks(pos);
 	}
 
 	private chunkWithCon(pos: PIXI.Point): Chunk {

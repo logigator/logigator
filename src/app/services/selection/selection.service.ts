@@ -66,7 +66,7 @@ export class SelectionService {
 
 	public selectedConnections(projectId?: number): PIXI.Point[] {
 		const id = projectId === undefined ? this.projectsService.currProject.id : projectId;
-		if (this._selectedIds.has(id)) {
+		if (this._selectedConnections.has(id)) {
 			return this._selectedConnections.get(id);
 		}
 		return [];

@@ -178,7 +178,7 @@ export class Project {
 		this.changeSubject.next([action]);
 	}
 
-	public moveElementsById(ids: number[], dif: PIXI.Point): boolean {
+	public moveElementsById(ids: number[], dif: PIXI.Point, conPoints?: PIXI.Point[]): boolean {
 		if (dif.x === 0 && dif.y === 0)
 			return true;
 		const elements = this._currState.getElementsById(ids);
@@ -194,13 +194,22 @@ export class Project {
 			pos: dif
 		}];
 		actions.push(...this.autoAssemble(changed));
+		// TODO remove completely?
 		this.newState(actions);
 		this.changeSubject.next(actions);
 		return true;
 	}
 
-	public moveConnectionPoints(cons: PIXI.Point[], dif: PIXI.Point): boolean {
-
+	private moveConnectionPoints(cons: PIXI.Point[], dif: PIXI.Point): Action[] {
+		if (!cons || cons.length === 0)
+			return [];
+		const actions: Action[] = [];
+		cons.forEach(con => {
+			actions.push({name: 'dcoWire', pos: con.clone()});
+			this._currState.moveConnectionPoint(con, dif);
+			actions.push({name: 'conWire', pos: con});
+		});
+		return actions;
 	}
 
 	public toggleWireConnection(pos: PIXI.Point): void {
@@ -221,15 +230,15 @@ export class Project {
 		if (!wiresToConnect)
 			wiresToConnect = this._currState.wiresOnPoint(pos);
 		const newWires = this.currState.connectWires(wiresToConnect[0], wiresToConnect[1], pos);
+		this._currState.loadConIntoChunks(pos);
 		const actions = Actions.connectWiresToActions(wiresToConnect, newWires);
-		actions.push({name: 'conWire', pos});
 		return actions;
 	}
 
 	private disconnectWires(pos: PIXI.Point, wiresOnPoint: Element[]): Action[] {
 		const newWires = this._currState.disconnectWires(wiresOnPoint);
+		this._currState.removeConFromChunks(pos);
 		const actions = Actions.connectWiresToActions(wiresOnPoint, newWires);
-		// actions.push({name: 'dcoWire', pos});
 		return actions;
 	}
 
@@ -269,7 +278,6 @@ export class Project {
 
 	private autoAssemble(elements: Element[]): Action[] {
 		const out: Action[] = [];
-		// debugger;
 		const merged = this.autoMerge(elements);
 		out.push(...merged.actions);
 		const connected = this.autoConnect(merged.elements);
