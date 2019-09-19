@@ -174,7 +174,7 @@ export class Project {
 		this.newState([action]);
 	}
 
-	public moveElementsById(ids: number[], dif: PIXI.Point, conPoints?: PIXI.Point[]): boolean {
+	public moveElementsById(ids: number[], dif: PIXI.Point): boolean {
 		if (dif.x === 0 && dif.y === 0)
 			return true;
 		const elements = this._currState.getElementsById(ids);

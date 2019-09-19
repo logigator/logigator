@@ -229,7 +229,7 @@ export class ProjectState {
 				const change = func(elem, other);
 				if (change) {
 					elements = elements.filter(e => e.id !== other.id);
-					elements.push(change.newElems[0]);
+					elements.push(...change.newElems);
 					out.push(change);
 					break;
 				}
