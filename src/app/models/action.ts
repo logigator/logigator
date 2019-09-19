@@ -11,6 +11,7 @@ export type ActionType =
 	'movMult' |
 	'conWire' |
 	'dcoWire' |
+	'movWire' |
 	'setComp';
 
 export interface ChangeType {
@@ -40,11 +41,13 @@ export class Actions {
 		['movMult', ['movMult']],
 		['conWire', ['dcoWire']],
 		['dcoWire', ['conWire']],
+		['movWire', ['movWire']],
 		['setComp', ['setComp']]
 	]);
 
 	public static reverseActions(actions: Action[]): Action[] {
 		const out: Action[] = [];
+		// TODO crashes when actions is undefined
 		for (let i = actions.length - 1; i > -1; i--) {
 			out.push(...Actions.reverseAction(actions[i]));
 		}
@@ -120,6 +123,8 @@ export class Actions {
 	}
 
 	public static printActions(actions: Action[]): void {
+		if (!actions)
+			return;
 		actions.forEach(a => {
 			if (a.element)
 				console.log(a.name, a.element.id, a.element.pos, a.element.endPos);
