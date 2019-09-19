@@ -33,7 +33,6 @@ export class Project {
 		this._currActionPointer = -1;
 		this._currMaxActionPointer = -1;
 		this.changeSubject = new Subject<Action[]>();
-		this._currState.setChangeSubject(this.changeSubject);
 	}
 
 	public static genNewElement(typeId: number, _pos: PIXI.Point, _endPos: PIXI.Point): Element {
@@ -73,15 +72,15 @@ export class Project {
 		switch (action.name) {
 			case 'addComp':
 			case 'addWire':
-				this._currState.addElement(action.element, action.element.id);
+				this._currState.addElement(action.element, action.element.id, true);
 				break;
 			case 'remComp':
 			case 'remWire':
-				this._currState.removeElement(action.element.id);
+				this._currState.removeElement(action.element.id, true);
 				break;
 			case 'movMult':
 				for (const elem of action.others) {
-					this._currState.moveElement(elem, action.pos);
+					this._currState.moveElement(elem, action.pos, true);
 				}
 				break;
 			case 'conWire':
@@ -130,7 +129,6 @@ export class Project {
 		this._currState.addElement(wire1);
 		const actions = this.actionsFromAddWires([wire0, wire1]);
 		this.newState(actions);
-		this.changeSubject.next(actions);
 		return [wire0, wire1];
 	}
 
@@ -160,7 +158,6 @@ export class Project {
 		}];
 		actions.push(...this.autoAssemble([elem]));
 		this.newState(actions);
-		this.changeSubject.next(actions);
 		return elem;
 	}
 
@@ -175,7 +172,6 @@ export class Project {
 			element: elem
 		};
 		this.newState([action]);
-		this.changeSubject.next([action]);
 	}
 
 	public moveElementsById(ids: number[], dif: PIXI.Point, conPoints?: PIXI.Point[]): boolean {
@@ -194,9 +190,7 @@ export class Project {
 			pos: dif
 		}];
 		actions.push(...this.autoAssemble(changed));
-		// TODO remove completely?
 		this.newState(actions);
-		this.changeSubject.next(actions);
 		return true;
 	}
 
@@ -223,21 +217,18 @@ export class Project {
 			console.log('where are you clicking??', wiresOnPoint);
 		}
 		this.newState(actions);
-		this.changeSubject.next(actions);
 	}
 
 	private connectWires(pos: PIXI.Point, wiresToConnect?: Element[]): Action[] {
 		if (!wiresToConnect)
 			wiresToConnect = this._currState.wiresOnPoint(pos);
 		const newWires = this.currState.connectWires(wiresToConnect[0], wiresToConnect[1], pos);
-		this._currState.loadConIntoChunks(pos);
 		const actions = Actions.connectWiresToActions(wiresToConnect, newWires);
 		return actions;
 	}
 
 	private disconnectWires(pos: PIXI.Point, wiresOnPoint: Element[]): Action[] {
 		const newWires = this._currState.disconnectWires(wiresOnPoint);
-		this._currState.removeConFromChunks(pos);
 		const actions = Actions.connectWiresToActions(wiresOnPoint, newWires);
 		return actions;
 	}
@@ -286,13 +277,19 @@ export class Project {
 	}
 
 	private newState(actions: Action[]): void {
+		if (!actions) {
+			return;
+		}
 		if (this._currActionPointer >= this.MAX_ACTIONS) {
 			this._actions.shift();
 		} else {
 			this._currActionPointer++;
 		}
 		this._currMaxActionPointer = this._currActionPointer;
+		actions.push(...this._currState.specialActions);
+		this._currState.specialActions = [];
 		this._actions[this._currActionPointer] = actions;
+		this.changeSubject.next(actions);
 	}
 
 	public stepBack(): Action[] {
@@ -302,6 +299,7 @@ export class Project {
 		this._currActionPointer--;
 		this.applyActions(backActions);
 		this.changeSubject.next(backActions);
+		this._currState.specialActions = [];
 		return backActions;
 	}
 
@@ -311,6 +309,7 @@ export class Project {
 		const outActions = this._actions[++this._currActionPointer];
 		this.applyActions(outActions);
 		this.changeSubject.next(outActions);
+		this._currState.specialActions = [];
 		return outActions;
 	}
 
