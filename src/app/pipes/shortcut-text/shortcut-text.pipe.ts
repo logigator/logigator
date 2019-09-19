@@ -10,7 +10,7 @@ export class ShortcutTextPipe implements PipeTransform {
 	constructor(private shortcuts: ShortcutsService) {}
 
 	transform(value: ShortcutAction): string {
-		return this.shortcuts.getShortcutText(value);
+		return this.shortcuts.getShortcutTextForAction(value);
 	}
 
 }

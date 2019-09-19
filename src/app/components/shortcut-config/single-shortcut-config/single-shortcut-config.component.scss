@@ -1,12 +1,11 @@
 @import "themes";
 
 div {
-	width: 23vw;
+	width: 35vw;
 	display: flex;
 	flex-direction: row;
 	justify-content: space-between;
 	align-items: center;
-	min-height: 3rem;
 
 	p {
 		margin: 0;
@@ -18,24 +17,60 @@ div {
 		}
 	}
 
-	.shortcut-input {
+	.shortcut-input-container {
 		width: 45%;
+		height: 2.25rem;
+		margin-bottom: 0.75rem;
+		border-radius: 0.25rem;
 
-		&.recording {
+		.shortcut-input {
+			width: 100%;
+			height: 100%;
+			border: none;
+			outline: none;
+			border-radius: 0.25rem;
+			padding: 0.5rem;
+			font-size: 13pt;
+			user-select: none;
+			transition: width 0.2s;
+		}
+
+		.save {
+			display: block;
+			height: 100%;
+			width: 0;
+			border-bottom-right-radius: 0.25rem;
+			border-top-right-radius: 0.25rem;
+			transition: width 0.2s;
+
 			@include themify() {
-				input {
-					outline: 3px solid themed('toolbar');
+				background-color: themed('toolbar');
+
+				&:hover {
+					cursor: pointer;
+					background-color: lighten(themed('toolbar'), 5%);
 				}
 			}
 		}
 
-		input {
-			width: 100%;
-			padding: 0.25rem;
-			outline: none;
-			border: none;
-			border-radius: 0.25rem;
-			font-size: 13pt;
+		&.recording {
+			@include themify() {
+				box-shadow: 0 0 0 3px themed('toolbar');
+			}
+
+			.shortcut-input {
+				border-bottom-right-radius: 0;
+				border-top-right-radius: 0;
+				width: 80%;
+			}
+
+			.save {
+				background-image: url("/assets/icons/check.svg");
+				background-repeat: no-repeat;
+				background-size: 60%;
+				background-position: center;
+				width: 20%;
+			}
 		}
 	}
 }

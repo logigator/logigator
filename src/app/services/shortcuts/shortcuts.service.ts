@@ -1,6 +1,6 @@
 import { Injectable } from '@angular/core';
 import {defaultShortcuts} from './default-shortcuts';
-import {ShortcutAction, ShortcutMap} from '../../models/shortcut-map';
+import {ShortcutAction, ShortcutConfig, ShortcutMap} from '../../models/shortcut-map';
 import {WorkModeService} from '../work-mode/work-mode.service';
 import {ProjectInteractionService} from '../project-interaction/project-interaction.service';
 import {ProjectsService} from '../projects/projects.service';
@@ -29,11 +29,14 @@ export class ShortcutsService {
 		this.applyAction(action);
 	}
 
-	public getShortcutText(action: ShortcutAction) {
+	public getShortcutTextForAction(action: ShortcutAction) {
 		const config = this._shortcutMap[action];
 
 		if (!config) return '';
+		return this.getShortcutText(config);
+	}
 
+	public getShortcutText(config: ShortcutConfig) {
 		let result = '';
 		if (config.ctrl) {
 			result += 'Ctrl+';
@@ -44,7 +47,11 @@ export class ShortcutsService {
 		if (config.shift) {
 			result += 'Shift+';
 		}
-		return result + config.key;
+
+		let key = config.key.toUpperCase();
+		if (key === ' ') key = 'SPACE';
+
+		return result + key;
 	}
 
 	public get shortcutMap(): ShortcutMap {
@@ -53,6 +60,15 @@ export class ShortcutsService {
 
 	public getShortcutDescription(action: ShortcutAction) {
 		return shortcutDescriptions[action];
+	}
+
+	public getShortcutConfigFromEvent(event: KeyboardEvent): ShortcutConfig {
+		return {
+			key: event.key.toUpperCase(),
+			shift: event.shiftKey,
+			ctrl: event.ctrlKey,
+			alt: event.altKey
+		};
 	}
 
 	private getShortcutActionFromEvent(e: KeyboardEvent): ShortcutAction | null {
