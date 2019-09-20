@@ -26,7 +26,7 @@ export class SingleShortcutConfigComponent implements OnInit {
 	}
 
 	@HostListener('window:click', ['$event'])
-	private onWindowClick(e: MouseEvent) {
+	public onWindowClick(e: MouseEvent) {
 		if (!this.inputContainer.nativeElement.contains(e.target as Node)) {
 			this.isRecording = false;
 		}
