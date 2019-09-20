@@ -71,8 +71,8 @@ export class ProjectState {
 				this._chunks[coord.x][coord.y].elements.push(element);
 		}
 		if (!consChecked) {
-			this.addConIfPossible(element.pos);
-			this.addConIfPossible(element.endPos);
+			// this.addConIfPossible(element.pos);
+			// this.addConIfPossible(element.endPos);
 		}
 	}
 
@@ -82,8 +82,8 @@ export class ProjectState {
 			chunk.elements = chunk.elements.filter(elem => elem.id !== element.id);
 		}
 		if (!consChecked) {
-			this.removeConFromChunks(element.pos);
-			this.removeConFromChunks(element.endPos);
+			// this.removeConFromChunks(element.pos);
+			// this.removeConFromChunks(element.endPos);
 		}
 	}
 
@@ -93,10 +93,10 @@ export class ProjectState {
 			this.loadConIntoChunks(pos);
 	}
 
-	private chunkHasCon(chunk: Chunk, pos: PIXI.Point): boolean {
-		return !!chunk.connectionPoints.find(cp => cp.equals(pos));
+	private removeConIfPossible(pos: PIXI.Point): void {
+		if (this.wiresOnPoint(pos).length < 3)
+			this.removeConFromChunks(pos);
 	}
-
 
 	private loadConIntoChunks(con: PIXI.Point): void {
 		const chunkCoords = CollisionFunctions.inRectChunks(con, con);
@@ -123,6 +123,26 @@ export class ProjectState {
 		this.specialActions.push({name: 'dcoWire', pos: con.clone()});
 	}
 
+	public loadConnectionPoints(elements: Element[], chunk?: Chunk): void {
+		console.log('loadConPoints', elements, chunk);
+		if (chunk) {
+			chunk.connectionPoints.forEach(cp => {
+				this.removeConIfPossible(cp);
+			});
+		} else {
+			elements.forEach(elem => {
+				this.removeConIfPossible(elem.pos);
+				this.removeConIfPossible(elem.endPos);
+			});
+		}
+		elements.forEach(elem => {
+			// this.removeConIfPossible(elem.pos);
+			// this.removeConIfPossible(elem.endPos);
+			this.addConIfPossible(elem.pos);
+			this.addConIfPossible(elem.endPos);
+		});
+	}
+
 	public elementsInChunks(startPos: PIXI.Point, endPos: PIXI.Point): Element[] {
 		const out: Element[] = [];
 		const chunks = this.chunksFromCoords(CollisionFunctions.inRectChunks(startPos, endPos));
@@ -133,6 +153,10 @@ export class ProjectState {
 			}
 		}
 		return out;
+	}
+
+	private chunkHasCon(chunk: Chunk, pos: PIXI.Point): boolean {
+		return !!chunk.connectionPoints.find(cp => cp.equals(pos));
 	}
 
 
@@ -188,8 +212,8 @@ export class ProjectState {
 		Elements.move(element, dif);
 		this.loadIntoChunks(element);
 		if (!consChecked) {
-			this.addConIfPossible(new PIXI.Point(element.pos.x - dif.x, element.pos.y - dif.y));
-			this.addConIfPossible(new PIXI.Point(element.endPos.x - dif.x, element.endPos.y - dif.y));
+			// this.addConIfPossible(new PIXI.Point(element.pos.x - dif.x, element.pos.y - dif.y));
+			// this.addConIfPossible(new PIXI.Point(element.endPos.x - dif.x, element.endPos.y - dif.y));
 		}
 		return true;
 	}

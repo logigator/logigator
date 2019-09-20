@@ -157,18 +157,22 @@ export class Project {
 	public removeElementsById(ids: number[]): void {
 		const actions: Action[] = [];
 		const onEdges: Element[] = [];
+		const elems: Element[] = new Array(ids.length);
+		let i = 0;
 		ids.forEach(id => {
-			const elem = this._currState.removeElement(id, true);
+			const elem = this._currState.removeElement(id, false);
+			elems[i++] = elem;
 			const action: Action = {
 				name: elem.typeId === 0 ? 'remWire' : 'remComp',
 				element: elem
 			};
-			onEdges.push(...this._currState.wiresOnPoint(elem.pos).concat(this._currState.wiresOnPoint(elem.endPos)));
 			actions.push(action);
+		});
+		elems.forEach(elem => {
+			onEdges.push(...this._currState.wiresOnPoint(elem.pos).concat(this._currState.wiresOnPoint(elem.endPos)));
 		});
 		actions.push(...this.autoAssemble(onEdges));
 		this.newState(actions);
-		this._changeSubject.next(actions);
 	}
 
 
@@ -209,11 +213,13 @@ export class Project {
 
 	private connectWires(pos: PIXI.Point, wiresToConnect: Element[]): Action[] {
 		const newWires = this.currState.connectWires(wiresToConnect[0], wiresToConnect[1], pos);
+		this._currState.loadConnectionPoints(newWires);
 		return Actions.connectWiresToActions(wiresToConnect, newWires);
 	}
 
 	private disconnectWires(wiresOnPoint: Element[]): Action[] {
 		const newWires = this._currState.disconnectWires(wiresOnPoint);
+		this._currState.loadConnectionPoints(newWires);
 		return Actions.connectWiresToActions(wiresOnPoint, newWires);
 	}
 
@@ -225,6 +231,7 @@ export class Project {
 		out.push(...merged.actions);
 		const connected = this.autoConnect(merged.elements);
 		out.push(...connected.actions);
+		this._currState.loadConnectionPoints(connected.elements);
 		return out;
 	}
 

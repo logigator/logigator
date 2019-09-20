@@ -9,7 +9,7 @@ import {Element} from '../element';
 import {ViewInteractionManager} from './view-interaction-manager';
 import {environment} from '../../../environments/environment';
 import {Subject} from 'rxjs';
-import {Action} from '../action';
+import {Action, Actions} from '../action';
 import {CollisionFunctions} from '../collision-functions';
 import {ThemingService} from '../../services/theming/theming.service';
 import {CompSpriteGenerator} from './comp-sprite-generator';
@@ -267,6 +267,8 @@ export class View extends PIXI.Container {
 	}
 
 	private applyActionsToView(actions: Action[]) {
+		console.log('incoming actions');
+		Actions.printActions(actions);
 		if (!actions)
 			return;
 		for (const action of actions) {
