@@ -176,29 +176,19 @@ export class Project {
 		return elem;
 	}
 
-	public removeElement(element: Element): void {
-		this.removeElementById(element.id);
-	}
-
-	public removeElementById(id: number): void {
-		const elem = this._currState.removeElement(id);
-		const action: Action = {
-			name: elem.typeId === 0 ? 'remWire' : 'remComp',
-			element: elem
-		};
-		this.newState([action]);
-	}
-
 	public removeElementsById(ids: number[]): void {
 		const actions: Action[] = [];
+		const onEdges: Element[] = [];
 		ids.forEach(id => {
-			const elem = this._currState.removeElement(id);
+			const elem = this._currState.removeElement(id, true);
 			const action: Action = {
 				name: elem.typeId === 0 ? 'remWire' : 'remComp',
 				element: elem
 			};
+			onEdges.push(...this._currState.wiresOnPoint(elem.pos).concat(this._currState.wiresOnPoint(elem.endPos)));
 			actions.push(action);
 		});
+		actions.push(...this.autoAssemble(onEdges));
 		this.newState(actions);
 		this.changeSubject.next(actions);
 	}
