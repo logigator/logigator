@@ -53,6 +53,7 @@ export class SingleShortcutConfigComponent implements OnInit {
 	}
 
 	public get changedShortcutSettings(): { [key: string]: ShortcutConfig } {
+		if (!this._newShortcutConfig) return {};
 		const toReturn = {};
 		toReturn[this.shortcut] = this._newShortcutConfig;
 		return toReturn;

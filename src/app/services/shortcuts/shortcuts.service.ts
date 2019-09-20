@@ -19,7 +19,21 @@ export class ShortcutsService {
 		private projectInteraction: ProjectInteractionService,
 		private projects: ProjectsService,
 		private theming: ThemingService
-	) { }
+	) {
+		this.loadShortcutSettings();
+	}
+
+	private loadShortcutSettings() {
+		// TODO: load
+	}
+
+	public setShortcutConfig(newConfig: {[key: string]: ShortcutConfig}) {
+		this._shortcutMap = {
+			...this.shortcutMap,
+			...newConfig
+		};
+		// TODO: save new config to server
+	}
 
 	public keyDownListener(e: KeyboardEvent) {
 		const action = this.getShortcutActionFromEvent(e);
