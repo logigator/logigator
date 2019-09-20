@@ -28,6 +28,6 @@ export class CopyService {
 	}
 
 	get copiedElements(): Element[] {
-		return this._copiedElements;
+		return this.copyElements(this._copiedElements);
 	}
 }
