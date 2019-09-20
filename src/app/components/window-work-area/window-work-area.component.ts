@@ -15,12 +15,23 @@ import {takeUntil} from 'rxjs/operators';
 import {ElementProviderService} from '../../services/element-provider/element-provider.service';
 import {ProjectsService} from '../../services/projects/projects.service';
 
+type Border = 'move' | 'top-left' | 'top-right' | 'bottom-left' | 'bottom-right' | 'right' | 'left' | 'top' | 'bottom';
+
 @Component({
 	selector: 'app-window-work-area',
 	templateUrl: './window-work-area.component.html',
 	styleUrls: ['./window-work-area.component.scss']
 })
 export class WindowWorkAreaComponent extends WorkArea implements OnInit, OnDestroy {
+
+	constructor(
+		private renderer2: Renderer2,
+		private ngZone: NgZone,
+		private elemProvider: ElementProviderService,
+		private projects: ProjectsService
+	) {
+		super();
+	}
 
 	@Input()
 	projectIdToOpen: number;
@@ -41,17 +52,41 @@ export class WindowWorkAreaComponent extends WorkArea implements OnInit, OnDestr
 
 	public componentName: string;
 
-	private _currentlyDragging: 'move' | 'top-left' | 'top-right' | 'bottom-left' | 'bottom-right' | 'right' | 'left' | 'top' | 'bottom';
+	private _currentlyDragging: Border;
 
 	private _bounding: HTMLElement;
 
-	constructor(
-		private renderer2: Renderer2,
-		private ngZone: NgZone,
-		private elemProvider: ElementProviderService,
-		private projects: ProjectsService
-	) {
-		super();
+	private static getBoarderCollision(offsetX: number, offsetY: number, element: HTMLElement, borderWidth: number = 7): Border {
+		if (offsetX >= 0 && offsetX <= borderWidth) {
+			if (offsetY >= 0 && offsetY <= borderWidth) {
+				return 'top-left';
+			} else if (offsetY >= element.offsetHeight - borderWidth
+				&& offsetY <= element.offsetHeight) {
+				return 'bottom-left';
+			} else {
+				return 'left';
+			}
+		} else if (offsetY >= 0 && offsetY <= borderWidth) {
+			if (offsetX >= element.offsetWidth - borderWidth
+				&& offsetX <= element.offsetWidth) {
+				return 'top-right';
+			} else {
+				return 'top';
+			}
+		} else if (offsetY >= element.offsetHeight - borderWidth
+			&& offsetY <= element.offsetHeight) {
+			if (offsetX >= element.offsetWidth - borderWidth
+				&& offsetX <= element.offsetWidth) {
+				return 'bottom-right';
+			} else {
+				return 'bottom';
+			}
+		} else if (offsetX >= element.offsetWidth - borderWidth
+			&& offsetX <= element.offsetWidth) {
+			return 'right';
+		} else {
+			return null;
+		}
 	}
 
 	ngOnInit() {
@@ -76,6 +111,10 @@ export class WindowWorkAreaComponent extends WorkArea implements OnInit, OnDestr
 			fromEvent(this._popup.nativeElement, 'mousedown').pipe(
 				takeUntil(this._destroySubject)
 			).subscribe((e: MouseEvent) => this.mouseDown(e));
+
+			fromEvent(this._popup.nativeElement, 'mousemove').pipe(
+				takeUntil(this._destroySubject)
+			).subscribe((e: MouseEvent) => this.pointerOver(e));
 		});
 	}
 
@@ -84,7 +123,45 @@ export class WindowWorkAreaComponent extends WorkArea implements OnInit, OnDestr
 		this.componentName = this.projects.allProjects.get(projectId).id.toString();
 	}
 
-	public mouseMove(event: MouseEvent) {
+	private pointerOver(event: MouseEvent) {
+		if (this._currentlyDragging)
+			return;
+
+		if (event.target === this._header.nativeElement) {
+			this.renderer2.setStyle(this._popup.nativeElement, 'cursor', 'move');
+			return;
+		}
+
+		switch (WindowWorkAreaComponent.getBoarderCollision(event.layerX, event.layerY, this._popup.nativeElement)) {
+			case 'top':
+				this.renderer2.setStyle(this._popup.nativeElement, 'cursor', 'n-resize');
+				break;
+			case 'right':
+				this.renderer2.setStyle(this._popup.nativeElement, 'cursor', 'e-resize');
+				break;
+			case 'bottom':
+				this.renderer2.setStyle(this._popup.nativeElement, 'cursor', 's-resize');
+				break;
+			case 'left':
+				this.renderer2.setStyle(this._popup.nativeElement, 'cursor', 'w-resize');
+				break;
+			case 'bottom-left':
+				this.renderer2.setStyle(this._popup.nativeElement, 'cursor', 'sw-resize');
+				break;
+			case 'bottom-right':
+				this.renderer2.setStyle(this._popup.nativeElement, 'cursor', 'se-resize');
+				this._popup.nativeElement.style.cursor = 'se-resize';
+				break;
+			case 'top-left':
+				this.renderer2.setStyle(this._popup.nativeElement, 'cursor', 'nw-resize');
+				break;
+			case 'top-right':
+				this.renderer2.setStyle(this._popup.nativeElement, 'cursor', 'ne-resize');
+				break;
+		}
+	}
+
+	private mouseMove(event: MouseEvent) {
 		if (this._currentlyDragging) {
 			const changeX = event.movementX / window.devicePixelRatio;
 			const changeY = event.movementY / window.devicePixelRatio;
@@ -108,6 +185,7 @@ export class WindowWorkAreaComponent extends WorkArea implements OnInit, OnDestr
 						this.renderer2.setStyle(this._popup.nativeElement, 'width', this._popup.nativeElement.offsetWidth - changeX + 'px');
 					}
 					this._pixiRenderer.resize(this._pixiCanvasContainer.nativeElement.offsetWidth, this._pixiCanvasContainer.nativeElement.offsetHeight);
+					this._view.updateChunks();
 					break;
 				case 'top-right':
 					if (!this.collision_top(newY, changeY)) {
@@ -118,6 +196,7 @@ export class WindowWorkAreaComponent extends WorkArea implements OnInit, OnDestr
 						this.renderer2.setStyle(this._popup.nativeElement, 'width', this._popup.nativeElement.offsetWidth + changeX + 'px');
 					}
 					this._pixiRenderer.resize(this._pixiCanvasContainer.nativeElement.offsetWidth, this._pixiCanvasContainer.nativeElement.offsetHeight);
+					this._view.updateChunks();
 					break;
 				case 'bottom-left':
 					if (!this.collision_bottom(newY, changeY)) {
@@ -128,6 +207,7 @@ export class WindowWorkAreaComponent extends WorkArea implements OnInit, OnDestr
 						this.renderer2.setStyle(this._popup.nativeElement, 'width', this._popup.nativeElement.offsetWidth - changeX + 'px');
 					}
 					this._pixiRenderer.resize(this._pixiCanvasContainer.nativeElement.offsetWidth, this._pixiCanvasContainer.nativeElement.offsetHeight);
+					this._view.updateChunks();
 					break;
 				case 'bottom-right':
 					if (!this.collision_bottom(newY, changeY)) {
@@ -137,24 +217,28 @@ export class WindowWorkAreaComponent extends WorkArea implements OnInit, OnDestr
 						this.renderer2.setStyle(this._popup.nativeElement, 'width', this._popup.nativeElement.offsetWidth + changeX + 'px');
 					}
 					this._pixiRenderer.resize(this._pixiCanvasContainer.nativeElement.offsetWidth, this._pixiCanvasContainer.nativeElement.offsetHeight);
+					this._view.updateChunks();
 					break;
 				case 'top':
 					if (!this.collision_top(newY, changeY)) {
 						this.renderer2.setStyle(this._popup.nativeElement, 'top', newY + 'px');
 						this.renderer2.setStyle(this._popup.nativeElement, 'height', this._popup.nativeElement.offsetHeight - changeY + 'px');
 						this._pixiRenderer.resize(this._pixiCanvasContainer.nativeElement.offsetWidth, this._pixiCanvasContainer.nativeElement.offsetHeight);
+						this._view.updateChunks();
 					}
 					break;
 				case 'right':
 					if (!this.collision_right(newX, changeX)) {
 						this.renderer2.setStyle(this._popup.nativeElement, 'width', this._popup.nativeElement.offsetWidth + changeX + 'px');
 						this._pixiRenderer.resize(this._pixiCanvasContainer.nativeElement.offsetWidth, this._pixiCanvasContainer.nativeElement.offsetHeight);
+						this._view.updateChunks();
 					}
 					break;
 				case 'bottom':
 					if (!this.collision_bottom(newY, changeY)) {
 						this.renderer2.setStyle(this._popup.nativeElement, 'height', this._popup.nativeElement.offsetHeight + changeY + 'px');
 						this._pixiRenderer.resize(this._pixiCanvasContainer.nativeElement.offsetWidth, this._pixiCanvasContainer.nativeElement.offsetHeight);
+						this._view.updateChunks();
 					}
 					break;
 				case 'left':
@@ -162,6 +246,7 @@ export class WindowWorkAreaComponent extends WorkArea implements OnInit, OnDestr
 						this.renderer2.setStyle(this._popup.nativeElement, 'left', newX + 'px');
 						this.renderer2.setStyle(this._popup.nativeElement, 'width', this._popup.nativeElement.offsetWidth - changeX + 'px');
 						this._pixiRenderer.resize(this._pixiCanvasContainer.nativeElement.offsetWidth, this._pixiCanvasContainer.nativeElement.offsetHeight);
+						this._view.updateChunks();
 					}
 					break;
 			}
@@ -186,62 +271,18 @@ export class WindowWorkAreaComponent extends WorkArea implements OnInit, OnDestr
 			|| (changeY && this._popup.nativeElement.offsetHeight + changeY <= 100);
 	}
 
-	public mouseDown(event: MouseEvent) {
-		const borderWidth = 2;
-
+	private mouseDown(event: MouseEvent) {
 		if (event.button !== 0)
 			return;
 
-		if (event.offsetX >= 0 && event.offsetX <= borderWidth) {
-			if (event.offsetY >= 0 && event.offsetY <= borderWidth) {
-				// top-left
-				console.log('top-left');
-				this._currentlyDragging = 'top-left';
-			} else if (event.offsetY >= this._popup.nativeElement.offsetHeight - borderWidth
-					&& event.offsetY <= this._popup.nativeElement.offsetHeight) {
-				// bottom-left
-				console.log('bottom-left');
-				this._currentlyDragging = 'bottom-left';
-			} else {
-				// left
-				console.log('left');
-				this._currentlyDragging = 'left';
-			}
-		} else if (event.offsetY >= 0 && event.offsetY <= borderWidth) {
-			if (event.offsetX >= this._popup.nativeElement.offsetWidth - borderWidth
-					&& event.offsetX <= this._popup.nativeElement.offsetWidth) {
-				// top-right
-				console.log('top-right');
-				this._currentlyDragging = 'top-right';
-			} else {
-				// top
-				console.log('top');
-				this._currentlyDragging = 'top';
-			}
-		} else if (event.offsetY >= this._popup.nativeElement.offsetHeight - borderWidth
-				&& event.offsetY <= this._popup.nativeElement.offsetHeight) {
-			if (event.offsetX >= this._popup.nativeElement.offsetWidth - borderWidth
-					&& event.offsetX <= this._popup.nativeElement.offsetWidth) {
-				// bottom-right
-				console.log('bottom-right');
-				this._currentlyDragging = 'bottom-right';
-			} else {
-				// bottom
-				console.log('bottom');
-				this._currentlyDragging = 'bottom';
-			}
-		} else if (event.offsetX >= this._popup.nativeElement.offsetWidth - borderWidth
-				&& event.offsetX <= this._popup.nativeElement.offsetWidth) {
-			// right
-			console.log('right');
-			this._currentlyDragging = 'right';
-		} else if (event.target === this._header.nativeElement) {
-			console.log('move');
+		const b = WindowWorkAreaComponent.getBoarderCollision(event.layerX, event.layerY, this._popup.nativeElement);
+		if (b)
+			this._currentlyDragging = b;
+		else if (event.target === this._header.nativeElement)
 			this._currentlyDragging = 'move';
-		}
 	}
 
-	public mouseUp(event: MouseEvent) {
+	private mouseUp(event: MouseEvent) {
 		this._currentlyDragging = undefined;
 	}
 
@@ -254,6 +295,7 @@ export class WindowWorkAreaComponent extends WorkArea implements OnInit, OnDestr
 		this.renderer2.setStyle(this._popup.nativeElement, 'display', 'block');
 		this._pixiRenderer.resize(this._pixiCanvasContainer.nativeElement.offsetWidth, this._pixiCanvasContainer.nativeElement.offsetHeight);
 		this._pixiTicker.start();
+		this._view.updateChunks();
 	}
 
 	ngOnDestroy(): void {
