@@ -1,8 +1,6 @@
 import {Component, OnInit} from '@angular/core';
-import {Project} from '../../models/project';
 import {WorkMode} from '../../models/work-modes';
 import {WorkModeService} from '../../services/work-mode/work-mode.service';
-import * as PIXI from 'pixi.js';
 import {ProjectsService} from '../../services/projects/projects.service';
 import {ProjectInteractionService} from '../../services/project-interaction/project-interaction.service';
 
