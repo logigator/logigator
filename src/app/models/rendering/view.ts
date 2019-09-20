@@ -101,16 +101,8 @@ export class View extends PIXI.Container {
 		});
 		SelectionService.staticInstance.selectedConnections(this.projectId).forEach(point => {
 			const graphics = this.connectionPoints.get(`${point.x}:${point.y}`);
-
 			const pos = Grid.getPixelPosForPixelPosOnGridWire(graphics.position);
-			const size = this.zoomPan.currentScale < 0.5 ? 3 : 5;
-			pos.x -= size / 2 / this.zoomPan.currentScale;
-			pos.y -= size / 2 / this.zoomPan.currentScale;
-
-			graphics.clear();
-			graphics.position = pos;
-			graphics.beginFill(ThemingService.staticInstance.getEditorColor('wire'));
-			graphics.drawRect(0, 0, size / this.zoomPan.currentScale, size / this.zoomPan.currentScale);
+			this.drawConnectionPoint(graphics, pos);
 		});
 		for (const oldChunk of this._chunksToRender) {
 			if (!chunksToRender.find(toRender => toRender.x === oldChunk.x && toRender.y === oldChunk.y)) {
@@ -118,6 +110,24 @@ export class View extends PIXI.Container {
 			}
 		}
 		this._chunksToRender = chunksToRender;
+	}
+
+	private drawConnectionPoint(graphics, pos) {
+		const size = this.calcConnPointSize();
+		graphics.clear();
+		graphics.position = this.adjustConnPointPosToSize(pos, size);
+		graphics.beginFill(ThemingService.staticInstance.getEditorColor('wire'));
+		graphics.drawRect(0, 0, size / this.zoomPan.currentScale, size / this.zoomPan.currentScale);
+	}
+
+	public calcConnPointSize(): number {
+		return this.zoomPan.currentScale < 0.5 ? 3 : 5;
+	}
+
+	public adjustConnPointPosToSize(pos: PIXI.Point, size: number): PIXI.Point {
+		pos.x -= size / 2 / this.zoomPan.currentScale;
+		pos.y -= size / 2 / this.zoomPan.currentScale;
+		return pos;
 	}
 
 	private updateWireSprite(element: Element, graphics: PIXI.Graphics) {
@@ -269,15 +279,7 @@ export class View extends PIXI.Container {
 
 	private updateConnectionPoint(graphics: PIXI.Graphics) {
 		const pos = Grid.getLocalChunkPixelPosForGridPosWireStart(Grid.getGridPosForPixelPos(graphics.position));
-		const size = this.zoomPan.currentScale < 0.5 ? 3 : 5;
-
-		pos.x -= size / 2 / this.zoomPan.currentScale;
-		pos.y -= size / 2 / this.zoomPan.currentScale;
-
-		graphics.clear();
-		graphics.position = pos;
-		graphics.beginFill(ThemingService.staticInstance.getEditorColor('wire'));
-		graphics.drawRect(0, 0, size / this.zoomPan.currentScale, size / this.zoomPan.currentScale);
+		this.drawConnectionPoint(graphics, pos);
 	}
 
 	private removeConnectionPoint(pos: PIXI.Point) {

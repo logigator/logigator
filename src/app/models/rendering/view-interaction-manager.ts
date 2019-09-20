@@ -15,7 +15,7 @@ import {ProjectInteractionService} from '../../services/project-interaction/proj
 
 export class ViewInteractionManager {
 
-	private _view: View;
+	private readonly _view: View;
 
 	private _workModeSubscription: Subscription;
 
@@ -27,12 +27,12 @@ export class ViewInteractionManager {
 
 	private _newWireDir: 'hor' | 'ver';
 	private _drawingNewWire = false;
-	private _newWire: PIXI.Graphics;
+	private readonly _newWire: PIXI.Graphics;
 
 	private _isSingleSelected: boolean;
 	private _currentlyDragging = false;
 	private _drawingSelectRect = false;
-	private _selectRect: PIXI.Graphics;
+	private readonly _selectRect: PIXI.Graphics;
 
 	constructor(view: View) {
 		this._view = view;
@@ -332,11 +332,8 @@ export class ViewInteractionManager {
 			this._view.addToCorrectChunk(sprite, point);
 
 			const pos = Grid.getLocalChunkPixelPosForGridPosWireStart(point);
-			const size = this._view.zoomPan.currentScale < 0.5 ? 3 : 5;
-
-			pos.x -= size / 2 / this._view.zoomPan.currentScale;
-			pos.y -= size / 2 / this._view.zoomPan.currentScale;
-			sprite.position = pos;
+			const size = this._view.calcConnPointSize();
+			sprite.position = this._view.adjustConnPointPosToSize(pos, size);
 		});
 	}
 
@@ -354,12 +351,12 @@ export class ViewInteractionManager {
 
 	private clearSelection() {
 		SelectionService.staticInstance.selectedIds(this._view.projectId).forEach(id => {
-			if (this._view.allElements.has(id)) // stürzt sonst ab wenn dinge aus der selection gelöscht werden.
+			if (this._view.allElements.has(id))
 				this._view.allElements.get(id).sprite.tint = 0xffffff;
 		});
 		SelectionService.staticInstance.selectedConnections(this._view.projectId).forEach(point => {
 			const key = `${point.x}:${point.y}`;
-			if (this._view.connectionPoints.has(key)) // stürzt sonst ab wenn dinge aus der selection gelöscht werden.
+			if (this._view.connectionPoints.has(key))
 				this._view.connectionPoints.get(key).tint = 0xffffff;
 		});
 		SelectionService.staticInstance.clearSelection(this._view.projectId);
@@ -389,10 +386,8 @@ export class ViewInteractionManager {
 			element.parent.removeChild(element);
 			this._view.addChild(element);
 			const pos = Grid.getPixelPosForGridPosWire(point);
-			const size = this._view.zoomPan.currentScale < 0.5 ? 3 : 5;
-			pos.x -= size / 2 / this._view.zoomPan.currentScale;
-			pos.y -= size / 2 / this._view.zoomPan.currentScale;
-			element.position = pos;
+			const size = this._view.calcConnPointSize();
+			element.position = this._view.adjustConnPointPosToSize(pos, size);
 		});
 	}
 
