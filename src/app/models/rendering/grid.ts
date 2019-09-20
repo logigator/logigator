@@ -5,13 +5,7 @@ import {ThemingService} from '../../services/theming/theming.service';
 
 export class Grid {
 
-	private static _renderer: PIXI.Renderer;
-
 	private static _gridGeometries: Map<number, PIXI.GraphicsGeometry> = new Map();
-
-	public static setRenderer(renderer: PIXI.Renderer) {
-		this._renderer = renderer;
-	}
 
 	private static getGridGeometry(scale: number): PIXI.GraphicsGeometry {
 		if (this._gridGeometries.has(scale)) {

@@ -18,6 +18,7 @@ import { ShortcutTextPipe } from './pipes/shortcut-text/shortcut-text.pipe';
 import { PopupComponent } from './components/popup/popup.component';
 import { SingleShortcutConfigComponent } from './components/shortcut-config/single-shortcut-config/single-shortcut-config.component';
 import { ShortcutConfigComponent } from './components/shortcut-config/shortcut-config/shortcut-config.component';
+import { WindowWorkAreaComponent } from './components/window-work-area/window-work-area.component';
 
 @NgModule({
 	declarations: [
@@ -37,6 +38,8 @@ import { ShortcutConfigComponent } from './components/shortcut-config/shortcut-c
 		PopupComponent,
 		SingleShortcutConfigComponent,
 		ShortcutConfigComponent
+		PopupComponent,
+		WindowWorkAreaComponent
 	],
 	imports: [
 		BrowserModule,

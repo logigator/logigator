@@ -1,52 +1,48 @@
 import {Component, ElementRef, NgZone, OnDestroy, OnInit, Renderer2, ViewChild} from '@angular/core';
 import * as PIXI from 'pixi.js';
-import {View} from './view';
-import {fromEvent, Subject} from 'rxjs';
-import {takeUntil} from 'rxjs/operators';
-import {Grid} from './grid';
+import {View} from '../../models/rendering/view';
 import {ProjectsService} from '../../services/projects/projects.service';
 import {Project} from '../../models/project';
-import {ThemingService} from '../../services/theming/theming.service';
+import {WorkArea} from '../../models/rendering/work-area';
+import {WindowWorkAreaComponent} from "../window-work-area/window-work-area.component";
 
 @Component({
 	selector: 'app-work-area',
 	templateUrl: './work-area.component.html',
 	styleUrls: ['./work-area.component.scss']
 })
-export class WorkAreaComponent implements OnInit, OnDestroy {
+export class WorkAreaComponent extends WorkArea implements OnInit, OnDestroy {
 
 	private _allViews: Map<number, View>;
 
-	private _pixiRenderer: PIXI.Renderer;
-
-	private _pixiTicker: PIXI.Ticker;
-
 	public activeView: View;
-
-	private _destroy = new Subject<any>();
 
 	@ViewChild('pixiCanvasContainer', {static: true})
 	private _pixiCanvasContainer: ElementRef<HTMLDivElement>;
 
+	@ViewChild('pixiWindowContainer', {static: true})
+	private _pixiWindowContainer: WindowWorkAreaComponent;
+
 	constructor(
 		private renderer2: Renderer2,
 		private ngZone: NgZone,
-		private projectsService: ProjectsService,
-		private theming: ThemingService
-	) { }
+		private projectsService: ProjectsService
+	) {
+		super();
+	}
 
 	ngOnInit() {
 		this._allViews = new Map<number, View>();
 
 		this.ngZone.runOutsideAngular(async () => {
 			await this.loadPixiFont();
-			this.initPixi();
-			this.initGridGeneration();
-			this.initPixiTicker();
-
-			this.renderer2.listen(this._pixiCanvasContainer.nativeElement, 'contextmenu', (e: MouseEvent) => {
-				e.preventDefault();
+			this.preventContextMenu(this._pixiCanvasContainer, this.renderer2);
+			this.initPixi(this._pixiCanvasContainer, this.renderer2);
+			this.initPixiTicker(() => {
+				this.activeView.updateZoomPan();
+				this._pixiRenderer.render(this.activeView);
 			});
+
 			this.projectsService.onProjectOpened$.subscribe(projectId => {
 				this.ngZone.runOutsideAngular(() => {
 					this.openProject(projectId);
@@ -56,35 +52,12 @@ export class WorkAreaComponent implements OnInit, OnDestroy {
 		});
 	}
 
-	private initPixi() {
-		this._pixiRenderer = new PIXI.Renderer({
-			height: this._pixiCanvasContainer.nativeElement.offsetHeight,
-			width: this._pixiCanvasContainer.nativeElement.offsetWidth,
-			antialias: false,
-			powerPreference: 'high-performance',
-			backgroundColor: this.theming.getEditorColor('background'),
-			resolution: Math.ceil(window.devicePixelRatio || 1),
-			autoDensity: true
-		});
-		this.renderer2.appendChild(this._pixiCanvasContainer.nativeElement, this._pixiRenderer.view);
-
-		fromEvent(window, 'resize').pipe(
-			takeUntil(this._destroy)
-		).subscribe(() => {
-			this._pixiRenderer.resize(this._pixiCanvasContainer.nativeElement.offsetWidth, this._pixiCanvasContainer.nativeElement.offsetHeight);
-		});
-	}
-
 	private loadPixiFont(): Promise<void> {
 		return new Promise<void>(resolve => {
 			const loader = PIXI.Loader.shared;
 			loader.add('luis_george_cafe', '/assets/fonts/louis_george_cafe_bitmap/font.fnt')
 				.load(() => resolve());
 		});
-	}
-
-	private initGridGeneration() {
-		Grid.setRenderer(this._pixiRenderer);
 	}
 
 	public get allProjects(): Map<number, Project> {
@@ -99,17 +72,11 @@ export class WorkAreaComponent implements OnInit, OnDestroy {
 		});
 	}
 
-	private initPixiTicker() {
-		this._pixiTicker = new PIXI.Ticker();
-		this._pixiTicker.add(() => {
-				this.activeView.updateZoomPan();
-				this._pixiRenderer.render(this.activeView);
-		});
-	}
-
 	public switchActiveView(toSwitchToId: number) {
 		this.projectsService.switchToProject(toSwitchToId);
 		this.activeView = this._allViews.get(toSwitchToId);
+
+		this._pixiWindowContainer.show();
 	}
 
 	public closeView(id: number, event: MouseEvent) {
@@ -131,8 +98,7 @@ export class WorkAreaComponent implements OnInit, OnDestroy {
 	}
 
 	ngOnDestroy(): void {
-		this._destroy.next();
-		this._destroy.unsubscribe();
+		super.destroy();
 	}
 
 }
