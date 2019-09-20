@@ -1,6 +1,6 @@
 <div class="box">
 	<div class="header">
-		<h2>{{elemType.name}}</h2>
+		<h2>{{elemType?.name}}</h2>
 	</div>
 	<div class="content" [formGroup]="propertiesFrom">
 		<div class="property">
@@ -18,7 +18,7 @@
 		</div>
 		<div class="description">
 			<h6>Description:</h6>
-			{{elemType.description}}
+			{{elemType?.description}}
 		</div>
 	</div>
 </div>

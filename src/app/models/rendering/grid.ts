@@ -5,13 +5,7 @@ import {ThemingService} from '../../services/theming/theming.service';
 
 export class Grid {
 
-	private static _renderer: PIXI.Renderer;
-
 	private static _gridGeometries: Map<number, PIXI.GraphicsGeometry> = new Map();
-
-	public static setRenderer(renderer: PIXI.Renderer) {
-		this._renderer = renderer;
-	}
 
 	private static getGridGeometry(scale: number): PIXI.GraphicsGeometry {
 		if (this._gridGeometries.has(scale)) {
@@ -21,7 +15,7 @@ export class Grid {
 		graphics.beginFill(ThemingService.staticInstance.getEditorColor('grid'));
 		for (let i = 0; i < environment.chunkSize; i++) {
 			for (let j = 0; j < environment.chunkSize; j++) {
-				graphics.drawRect(i * environment.gridPixelWidth, j * environment.gridPixelWidth, 1 / scale / window.devicePixelRatio, 1 / scale / window.devicePixelRatio);
+				graphics.drawRect(i * environment.gridPixelWidth, j * environment.gridPixelWidth, 1 / scale, 1 / scale);
 			}
 		}
 		// graphics.drawRect(0, 0, 1, 20 * 20)

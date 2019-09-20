@@ -1,7 +1,7 @@
 import {ElementType} from '../element-type';
 
 export const xor: ElementType = {
-	name: 'xor',
+	name: 'XOR Gate',
 	numInputs: 2,
 	numOutputs: 1,
 	hasVariableInputs: false,

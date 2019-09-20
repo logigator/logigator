@@ -1,0 +1,24 @@
+<div class="dropdown">
+	<div (click)="undo()">
+		Undo
+		<span>{{'undo' | shortcutText}}</span>
+	</div>
+	<div (click)="redo()">
+		Redo
+		<span>{{'redo' | shortcutText}}</span>
+	</div>
+	<hr>
+	<div (click)="copy()">
+		Copy
+		<span>{{'copy' | shortcutText}}</span>
+	</div>
+	<div (click)="paste()">
+		Paste
+		<span>{{'paste' | shortcutText}}</span>
+	</div>
+	<hr>
+	<div (click)="delete()">
+		Delete
+		<span>{{'delete' | shortcutText}}</span>
+	</div>
+</div>

@@ -1,6 +1,7 @@
 import {Inject, Injectable} from '@angular/core';
 import {DOCUMENT} from '@angular/common';
 import {EditorColorKey, EditorColors, Theme} from '../../models/theming';
+import {Observable, Subject} from 'rxjs';
 
 @Injectable({
 	providedIn: 'root'
@@ -10,6 +11,8 @@ export class ThemingService {
 	public static staticInstance: ThemingService;
 
 	private _currentTheme: Theme;
+
+	private _requestFullscreenSubject = new Subject<void>();
 
 	private _editorColor: EditorColors = {
 		light: {
@@ -32,10 +35,7 @@ export class ThemingService {
 	}
 
 	private loadTheme() {
-		this._currentTheme = localStorage.getItem('theme') as any;
-		if (!this._currentTheme) {
-			this._currentTheme = 'dark';
-		}
+		this._currentTheme = (localStorage.getItem('theme') || 'dark') as Theme;
 	}
 
 	public setTheme(theme: Theme) {
@@ -48,5 +48,21 @@ export class ThemingService {
 
 	public getEditorColor(key: EditorColorKey): number {
 		return this._editorColor[this._currentTheme][key];
+	}
+
+	public get currentTheme(): Theme {
+		return this._currentTheme;
+	}
+
+	public get pendingTheme(): Theme {
+		return (localStorage.getItem('theme') || 'dark') as Theme;
+	}
+
+	public requestFullscreen() {
+		this._requestFullscreenSubject.next();
+	}
+
+	public get onRequestFullscreen$(): Observable<void> {
+		return this._requestFullscreenSubject.asObservable();
 	}
 }

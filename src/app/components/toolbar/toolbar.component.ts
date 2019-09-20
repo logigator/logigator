@@ -4,6 +4,7 @@ import {WorkMode} from '../../models/work-modes';
 import {WorkModeService} from '../../services/work-mode/work-mode.service';
 import * as PIXI from 'pixi.js';
 import {ProjectsService} from '../../services/projects/projects.service';
+import {ProjectInteractionService} from '../../services/project-interaction/project-interaction.service';
 
 @Component({
 	selector: 'app-toolbar',
@@ -12,7 +13,11 @@ import {ProjectsService} from '../../services/projects/projects.service';
 })
 export class ToolbarComponent implements OnInit {
 
-	constructor(private workModeService: WorkModeService, private projectService: ProjectsService) { }
+	constructor(
+		private workModeService: WorkModeService,
+		private projectService: ProjectsService,
+		private projectInteraction: ProjectInteractionService
+	) { }
 
 	ngOnInit() {
 	}
@@ -25,13 +30,12 @@ export class ToolbarComponent implements OnInit {
 		console.log('wires');
 		for (const elem of this.projectService.currProject.allElements) {
 			if (elem.typeId === 0) {
-				console.log(elem.pos, elem.endPos);
+				console.log(elem.id, elem.pos, elem.endPos);
 			}
 		}
 	}
 
 	public test(): void {
-		this.projectService.currProject.toggleWireConnection(new PIXI.Point(51, 30));
 	}
 
 	public test1(): void {
@@ -54,4 +58,15 @@ export class ToolbarComponent implements OnInit {
 		this.projectService.currProject.stepForward();
 	}
 
+	public zoomIn() {
+		this.projectInteraction.zoomIn();
+	}
+
+	public zoomOut() {
+		this.projectInteraction.zoomOut();
+	}
+
+	public delete() {
+		this.projectInteraction.deleteSelection();
+	}
 }

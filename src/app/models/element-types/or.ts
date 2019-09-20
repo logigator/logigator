@@ -1,7 +1,7 @@
 import {ElementType} from '../element-type';
 
 export const or: ElementType = {
-	name: 'or',
+	name: 'OR Gate',
 	numInputs: 2,
 	numOutputs: 1,
 	hasVariableInputs: true,

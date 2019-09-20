@@ -26,10 +26,12 @@
 	}
 
 	.content {
-		display: flex;
-		flex-direction: row;
-		flex-wrap: wrap;
-		padding-bottom: 0.4rem;
+		display: grid;
+		grid-gap: 0.5rem;
+		grid-template-columns: 1fr 1fr 1fr;
+		padding: 0.5rem;
+		text-align: center;
+		user-select: none;
 
 		@include themify() {
 			background-color: themed('boxes-background');
@@ -38,29 +40,34 @@
 		}
 
 		.no-components {
-			padding: 0.5rem;
-			text-align: center;
+			grid-column: 1 / -1;
 		}
 
 		.component-to-select {
-			width: ($construction-box-width - 3.5rem) / 3;
-			height: ($construction-box-width) / 3;
-			margin-left: 0.5rem;
-			margin-top: 0.5rem;
-
-			display: grid;
-			grid-template-rows: (($construction-box-width - 3.5rem) / 3) auto;
-			text-align: center;
+			height: fit-content;
 
 			div {
-				border: 2px solid;
-				border-radius: 0.25rem;
-				line-height: (($construction-box-width - 3.5rem) / 3);
+				position: relative;
+				border: 1px solid;
+				//border-radius: 0.25rem;
 				font-size: 17pt;
+				width: 100%;
+				padding-top: 100%;
+
+				p {
+					top: calc(50% - 0.2rem);
+					left: 0;
+					bottom: 0;
+					right: 0;
+					position: absolute;
+					font-size: 17pt;
+					line-height: 0;
+				}
 			}
 
 			p {
-				margin: 0;
+				font-size: 10pt;
+				margin: 0.25rem 0 0 0;
 			}
 
 			@include themify() {

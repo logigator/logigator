@@ -1,0 +1,21 @@
+<div class="dropdown">
+	<div (click)="newProject()">
+		New Project
+	</div>
+	<div (click)="newComponent()">
+		New Component
+		<span>{{'newComp' | shortcutText}}</span>
+	</div>
+	<hr>
+	<div (click)="openProject()">
+		Open
+	</div>
+	<div (click)="saveProject()">
+		Save
+		<span>{{'save' | shortcutText}}</span>
+	</div>
+	<hr>
+	<div (click)="screenshot()">
+		Screenshot
+	</div>
+</div>

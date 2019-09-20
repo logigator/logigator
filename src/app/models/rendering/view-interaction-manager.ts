@@ -2,22 +2,20 @@ import {View} from './view';
 import {Grid} from './grid';
 import * as PIXI from 'pixi.js';
 import InteractionEvent = PIXI.interaction.InteractionEvent;
-import {ElementSprite} from '../../models/element-sprite';
+import {ElementSprite} from '../element-sprite';
 import {WorkModeService} from '../../services/work-mode/work-mode.service';
 import {SelectionService} from '../../services/selection/selection.service';
 import {ProjectsService} from '../../services/projects/projects.service';
-import {CollisionFunctions} from '../../models/collision-functions';
-import {WorkMode} from '../../models/work-modes';
-import {Subscription} from 'rxjs';
-import {wire} from '../../models/element-types/wire';
+import {CollisionFunctions} from '../collision-functions';
+import {merge, Subscription} from 'rxjs';
 import {ThemingService} from '../../services/theming/theming.service';
 import {ElementProviderService} from '../../services/element-provider/element-provider.service';
-import {Component} from '@angular/core';
 import {CompSpriteGenerator} from './comp-sprite-generator';
+import {ProjectInteractionService} from '../../services/project-interaction/project-interaction.service';
 
 export class ViewInteractionManager {
 
-	private _view: View;
+	private readonly _view: View;
 
 	private _workModeSubscription: Subscription;
 
@@ -29,12 +27,12 @@ export class ViewInteractionManager {
 
 	private _newWireDir: 'hor' | 'ver';
 	private _drawingNewWire = false;
-	private _newWire: PIXI.Graphics;
+	private readonly _newWire: PIXI.Graphics;
 
 	private _isSingleSelected: boolean;
 	private _currentlyDragging = false;
 	private _drawingSelectRect = false;
-	private _selectRect: PIXI.Graphics;
+	private readonly _selectRect: PIXI.Graphics;
 
 	constructor(view: View) {
 		this._view = view;
@@ -44,7 +42,10 @@ export class ViewInteractionManager {
 		this.addEventListenersToView();
 		this.addEventListenersToSelectRect();
 
-		this._workModeSubscription = WorkModeService.staticInstance.currentWorkMode$.subscribe((mode) => this.onWorkModeChanged(mode));
+		this._workModeSubscription = merge(
+			WorkModeService.staticInstance.currentWorkMode$,
+			ProjectInteractionService.staticInstance.onElementsDelete$
+		).subscribe(_ => this.cleanUp());
 	}
 
 	private addEventListenersToView() {
@@ -171,7 +172,9 @@ export class ViewInteractionManager {
 				endPos = Grid.getGridPosForPixelPos(this._selectRect.position);
 			}
 			const movedDif = new PIXI.Point(endPos.x - this._actionStartPos.x, endPos.y - this._actionStartPos.y);
-			if (ProjectsService.staticInstance.currProject.moveElementsById(SelectionService.staticInstance.selectedIds(), movedDif)) {
+			if (ProjectsService.staticInstance.currProject.moveElementsById(
+				SelectionService.staticInstance.selectedIds(), movedDif)
+			) {
 				this._view.removeChild(this._selectRect);
 				this.clearSelection();
 				this._isSingleSelected = false;
@@ -272,7 +275,12 @@ export class ViewInteractionManager {
 		this._draggingNewComp = true;
 		const typeId = WorkModeService.staticInstance.currentComponentToBuild;
 		const elemType = ElementProviderService.staticInstance.getElementById(typeId);
-		this._newCompSprite = CompSpriteGenerator.getComponentSprite(elemType.symbol, elemType.numInputs, elemType.rotation, this._view.zoomPan.currentScale);
+		this._newCompSprite = CompSpriteGenerator.getComponentSprite(
+			elemType.symbol,
+			elemType.numInputs,
+			elemType.rotation,
+			this._view.zoomPan.currentScale
+		);
 		this._newCompSprite.position = Grid.getPixelPosOnGridForPixelPos(e.data.getLocalPosition(this._view));
 		this._view.addChild(this._newCompSprite);
 	}
@@ -299,15 +307,33 @@ export class ViewInteractionManager {
 			sprite.position.x += dx;
 			sprite.position.y += dy;
 		});
+		SelectionService.staticInstance.selectedConnections().forEach(point => {
+			const sprite = this._view.connectionPoints.get(`${point.x}:${point.y}`);
+			sprite.position.x += dx;
+			sprite.position.y += dy;
+		});
 	}
 
 	private resetSelectionToOldPosition() {
 		SelectionService.staticInstance.selectedIds(this._view.projectId).forEach(id => {
+			if (!this._view.allElements.has(id)) return;
 			const elemSprite = this._view.allElements.get(id);
 			this._view.removeChild(elemSprite.sprite);
 
 			this._view.addToCorrectChunk(elemSprite.sprite, elemSprite.element.pos);
 			this._view.setLocalChunkPos(elemSprite.element, elemSprite.sprite);
+		});
+		SelectionService.staticInstance.selectedConnections(this._view.projectId).forEach(point => {
+			const key = `${point.x}:${point.y}`;
+			if (!this._view.connectionPoints.has(key)) return;
+			const sprite = this._view.connectionPoints.get(key);
+			this._view.removeChild(sprite);
+
+			this._view.addToCorrectChunk(sprite, point);
+
+			const pos = Grid.getLocalChunkPixelPosForGridPosWireStart(point);
+			const size = this._view.calcConnPointSize();
+			sprite.position = this._view.adjustConnPointPosToSize(pos, size);
 		});
 	}
 
@@ -325,14 +351,20 @@ export class ViewInteractionManager {
 
 	private clearSelection() {
 		SelectionService.staticInstance.selectedIds(this._view.projectId).forEach(id => {
-			const element = this._view.allElements.get(id);
-			element.sprite.tint = 0xffffff;
+			if (this._view.allElements.has(id))
+				this._view.allElements.get(id).sprite.tint = 0xffffff;
 		});
-		SelectionService.staticInstance.clearSelection();
+		SelectionService.staticInstance.selectedConnections(this._view.projectId).forEach(point => {
+			const key = `${point.x}:${point.y}`;
+			if (this._view.connectionPoints.has(key))
+				this._view.connectionPoints.get(key).tint = 0xffffff;
+		});
+		SelectionService.staticInstance.clearSelection(this._view.projectId);
 		this._isSingleSelected = false;
 	}
 
 	private selectInRect(start: PIXI.Point, end: PIXI.Point) {
+		if (start.x === end.x && start.y === end.y) return;
 		this.clearSelection();
 		const selected = SelectionService.staticInstance.selectFromRect(ProjectsService.staticInstance.currProject, start, end);
 		selected.forEach(id => {
@@ -348,6 +380,15 @@ export class ViewInteractionManager {
 				element.sprite.position = Grid.getPixelPosForGridPos(element.element.pos);
 			}
 		});
+		SelectionService.staticInstance.selectedConnections().forEach(point => {
+			const element = this._view.connectionPoints.get(`${point.x}:${point.y}`);
+			element.tint = 0x8a8a8a;
+			element.parent.removeChild(element);
+			this._view.addChild(element);
+			const pos = Grid.getPixelPosForGridPosWire(point);
+			const size = this._view.calcConnPointSize();
+			element.position = this._view.adjustConnPointPosToSize(pos, size);
+		});
 	}
 
 	private selectSingleComp(elem: ElementSprite) {
@@ -357,12 +398,12 @@ export class ViewInteractionManager {
 		this._view.removeChild(this._selectRect);
 		elem.sprite.tint = 0x8a8a8a;
 		elem.sprite.parent.removeChild(elem.sprite);
-		elem.sprite.position = Grid.getPixelPosForGridPos(elem.element.pos)
+		elem.sprite.position = Grid.getPixelPosForGridPos(elem.element.pos);
 		this._view.addChild(elem.sprite);
 		SelectionService.staticInstance.selectComponent(elem.element.id);
 	}
 
-	private onWorkModeChanged(newMode: WorkMode) {
+	private cleanUp() {
 		this.resetSelectionToOldPosition();
 		this.clearSelection();
 		delete this._actionStartPos;

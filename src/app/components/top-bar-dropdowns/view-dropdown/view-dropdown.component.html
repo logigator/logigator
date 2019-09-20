@@ -1,0 +1,19 @@
+<div class="dropdown">
+	<div (click)="zoomIn()">
+		Zoom In
+		<span>{{'zoomIn' | shortcutText}}</span>
+	</div>
+	<div (click)="zoomOut()">
+		Zoom Out
+		<span>{{'zoomOut' | shortcutText}}</span>
+	</div>
+	<div (click)="zoom100()">
+		100%
+		<span>{{'zoom100' | shortcutText}}</span>
+	</div>
+	<hr>
+	<div (click)="fullscreen()">
+		Fullscreen
+		<span>{{'fullscreen' | shortcutText}}</span>
+	</div>
+</div>

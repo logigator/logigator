@@ -9,6 +9,16 @@ import { WorkAreaComponent } from './components/work-area/work-area.component';
 import {FormsModule, ReactiveFormsModule} from '@angular/forms';
 import {ConstructionBoxCategoryComponent} from './components/construction-box-category/construction-box-category.component';
 import { TopBarComponent } from './components/top-bar/top-bar.component';
+import { FileDropdownComponent } from './components/top-bar-dropdowns/file-dropdown/file-dropdown.component';
+import { EditDropdownComponent } from './components/top-bar-dropdowns/edit-dropdown/edit-dropdown.component';
+import { ViewDropdownComponent } from './components/top-bar-dropdowns/view-dropdown/view-dropdown.component';
+import { HelpDropdownComponent } from './components/top-bar-dropdowns/help-dropdown/help-dropdown.component';
+import { SettingsDropdownComponent } from './components/top-bar-dropdowns/settings-dropdown/settings-dropdown.component';
+import { ShortcutTextPipe } from './pipes/shortcut-text/shortcut-text.pipe';
+import { PopupComponent } from './components/popup/popup.component';
+import { SingleShortcutConfigComponent } from './components/shortcut-config/single-shortcut-config/single-shortcut-config.component';
+import { ShortcutConfigComponent } from './components/shortcut-config/shortcut-config/shortcut-config.component';
+import { WindowWorkAreaComponent } from './components/window-work-area/window-work-area.component';
 
 @NgModule({
 	declarations: [
@@ -18,7 +28,18 @@ import { TopBarComponent } from './components/top-bar/top-bar.component';
 		ConstructionBoxComponent,
 		ConstructionBoxCategoryComponent,
 		WorkAreaComponent,
-		TopBarComponent
+		TopBarComponent,
+		FileDropdownComponent,
+		EditDropdownComponent,
+		ViewDropdownComponent,
+		HelpDropdownComponent,
+		SettingsDropdownComponent,
+		ShortcutTextPipe,
+		PopupComponent,
+		SingleShortcutConfigComponent,
+		ShortcutConfigComponent,
+		PopupComponent,
+		WindowWorkAreaComponent
 	],
 	imports: [
 		BrowserModule,
