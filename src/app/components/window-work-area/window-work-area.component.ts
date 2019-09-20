@@ -53,6 +53,7 @@ export class WindowWorkAreaComponent extends WorkArea implements OnInit, OnDestr
 	public componentName: string;
 
 	private _currentlyDragging: Border;
+	private _draggingPos = [0, 0];
 
 	private _bounding: HTMLElement;
 
@@ -129,7 +130,7 @@ export class WindowWorkAreaComponent extends WorkArea implements OnInit, OnDestr
 					let newLoc = (this._bounding.offsetTop + this._bounding.offsetHeight) - this._popup.nativeElement.offsetHeight;
 					if (this.collision_top(newLoc))
 						newLoc = this._bounding.offsetTop;
-					this.renderer2.setStyle(this._popup.nativeElement, 'top', newLoc+ 'px');
+					this.renderer2.setStyle(this._popup.nativeElement, 'top', newLoc + 'px');
 				}
 			});
 		});
@@ -180,10 +181,12 @@ export class WindowWorkAreaComponent extends WorkArea implements OnInit, OnDestr
 
 	private mouseMove(event: MouseEvent) {
 		if (this._currentlyDragging) {
-			const changeX = event.movementX / window.devicePixelRatio;
-			const changeY = event.movementY / window.devicePixelRatio;
-			const newX = this._popup.nativeElement.offsetLeft + event.movementX / window.devicePixelRatio;
-			const newY = this._popup.nativeElement.offsetTop + event.movementY / window.devicePixelRatio;
+			const changeX = event.screenX - this._draggingPos[0];
+			const changeY = event.screenY - this._draggingPos[1];
+			this._draggingPos = [ event.screenX, event.screenY ];
+
+			const newX = this._popup.nativeElement.offsetLeft + changeX;
+			const newY = this._popup.nativeElement.offsetTop + changeY;
 
 			switch (this._currentlyDragging) {
 				case 'move':
@@ -293,10 +296,13 @@ export class WindowWorkAreaComponent extends WorkArea implements OnInit, OnDestr
 			return;
 
 		const b = WindowWorkAreaComponent.getBoarderCollision(event.layerX, event.layerY, this._popup.nativeElement);
-		if (b)
+		if (b) {
 			this._currentlyDragging = b;
-		else if (event.target === this._header.nativeElement)
+			this._draggingPos = [ event.screenX, event.screenY ];
+		} else if (event.target === this._header.nativeElement) {
 			this._currentlyDragging = 'move';
+			this._draggingPos = [ event.screenX, event.screenY ];
+		}
 	}
 
 	private mouseUp(event: MouseEvent) {
