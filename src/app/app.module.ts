@@ -37,7 +37,7 @@ import { WindowWorkAreaComponent } from './components/window-work-area/window-wo
 		ShortcutTextPipe,
 		PopupComponent,
 		SingleShortcutConfigComponent,
-		ShortcutConfigComponent
+		ShortcutConfigComponent,
 		PopupComponent,
 		WindowWorkAreaComponent
 	],
