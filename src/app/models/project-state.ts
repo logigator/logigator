@@ -122,11 +122,11 @@ export class ProjectState {
 		return true;
 	}
 
-	public allSpacesFree(elements: Element[], dif: PIXI.Point): boolean {
+	public allSpacesFree(elements: Element[], dif: PIXI.Point, except?: Element[]): boolean {
 		for (const elem of elements) {
 			const newStartPos = new PIXI.Point(elem.pos.x + dif.x, elem.pos.y + dif.y);
 			const newEndPos = new PIXI.Point(elem.endPos.x + dif.x, elem.endPos.y + dif.y);
-			if (!this.isFreeSpace(newStartPos, newEndPos, elem.typeId === 0, elements))
+			if (!this.isFreeSpace(newStartPos, newEndPos, elem.typeId === 0, except))
 				return false;
 		}
 		return true;

@@ -284,6 +284,8 @@ export class View extends PIXI.Container {
 				break;
 			case 'remComp':
 			case 'remWire':
+				if (!this.allElements.has(action.element.id))
+					break;
 				this.allElements.get(action.element.id).sprite.destroy();
 				this.allElements.delete(action.element.id);
 				break;

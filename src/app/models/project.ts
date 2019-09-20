@@ -140,7 +140,22 @@ export class Project {
 	}
 
 	public addElements(elements: Element[]): boolean {
-		return false;
+		if (!this._currState.allSpacesFree(elements, new PIXI.Point(0, 0)))
+			return false;
+		const changed = this.withWiresOnEdges(elements);
+		const actions: Action[] = new Array(elements.length);
+		let i = 0;
+		elements.forEach(elem => {
+			this._currState.addElement(elem);
+			actions[i] = {
+				name: elem.typeId === 0 ? 'addWire' : 'addComp',
+				element: elem
+			};
+			i++;
+		});
+		actions.push(...this.autoAssemble(changed));
+		this.newState(actions);
+		return true;
 	}
 
 	public addElement(typeId: number, _pos: PIXI.Point, _endPos?: PIXI.Point): Element {
@@ -193,7 +208,7 @@ export class Project {
 			return true;
 		const elements = this._currState.getElementsById(ids);
 		const changed = this.withWiresOnEdges(elements);
-		if (!this._currState.allSpacesFree(elements, dif))
+		if (!this._currState.allSpacesFree(elements, dif, elements))
 			return false;
 		for (const elem of elements) {
 			this._currState.moveElement(elem, dif);
