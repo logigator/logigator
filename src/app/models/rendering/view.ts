@@ -64,7 +64,7 @@ export class View extends PIXI.Container {
 		this.updateChunks();
 	}
 
-	private updateChunks() {
+	public updateChunks() {
 		const currentlyOnScreen = this.zoomPan.isOnScreen(this._htmlContainer.offsetHeight, this._htmlContainer.offsetWidth);
 		const chunksToRender = ProjectsService.staticInstance.currProject.chunksToRender(
 			Grid.getGridPosForPixelPos(currentlyOnScreen.start),
