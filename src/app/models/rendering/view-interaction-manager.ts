@@ -173,7 +173,8 @@ export class ViewInteractionManager {
 			}
 			const movedDif = new PIXI.Point(endPos.x - this._actionStartPos.x, endPos.y - this._actionStartPos.y);
 			if (ProjectsService.staticInstance.currProject.moveElementsById(
-				SelectionService.staticInstance.selectedIds(), movedDif)) {
+				SelectionService.staticInstance.selectedIds(), movedDif)
+			) {
 				this._view.removeChild(this._selectRect);
 				this.clearSelection();
 				this._isSingleSelected = false;
@@ -306,6 +307,11 @@ export class ViewInteractionManager {
 			sprite.position.x += dx;
 			sprite.position.y += dy;
 		});
+		SelectionService.staticInstance.selectedConnections().forEach(point => {
+			const sprite = this._view.connectionPoints.get(`${point.x}:${point.y}`);
+			sprite.position.x += dx;
+			sprite.position.y += dy;
+		});
 	}
 
 	private resetSelectionToOldPosition() {
@@ -316,6 +322,21 @@ export class ViewInteractionManager {
 
 			this._view.addToCorrectChunk(elemSprite.sprite, elemSprite.element.pos);
 			this._view.setLocalChunkPos(elemSprite.element, elemSprite.sprite);
+		});
+		SelectionService.staticInstance.selectedConnections(this._view.projectId).forEach(point => {
+			const key = `${point.x}:${point.y}`;
+			if (!this._view.connectionPoints.has(key)) return;
+			const sprite = this._view.connectionPoints.get(key);
+			this._view.removeChild(sprite);
+
+			this._view.addToCorrectChunk(sprite, point);
+
+			const pos = Grid.getLocalChunkPixelPosForGridPosWireStart(point);
+			const size = this._view.zoomPan.currentScale < 0.5 ? 3 : 5;
+
+			pos.x -= size / 2 / this._view.zoomPan.currentScale;
+			pos.y -= size / 2 / this._view.zoomPan.currentScale;
+			sprite.position = pos;
 		});
 	}
 
@@ -335,6 +356,11 @@ export class ViewInteractionManager {
 		SelectionService.staticInstance.selectedIds(this._view.projectId).forEach(id => {
 			if (this._view.allElements.has(id)) // stürzt sonst ab wenn dinge aus der selection gelöscht werden.
 				this._view.allElements.get(id).sprite.tint = 0xffffff;
+		});
+		SelectionService.staticInstance.selectedConnections(this._view.projectId).forEach(point => {
+			const key = `${point.x}:${point.y}`;
+			if (this._view.connectionPoints.has(key)) // stürzt sonst ab wenn dinge aus der selection gelöscht werden.
+				this._view.connectionPoints.get(key).tint = 0xffffff;
 		});
 		SelectionService.staticInstance.clearSelection(this._view.projectId);
 		this._isSingleSelected = false;
@@ -356,6 +382,17 @@ export class ViewInteractionManager {
 			} else {
 				element.sprite.position = Grid.getPixelPosForGridPos(element.element.pos);
 			}
+		});
+		SelectionService.staticInstance.selectedConnections().forEach(point => {
+			const element = this._view.connectionPoints.get(`${point.x}:${point.y}`);
+			element.tint = 0x8a8a8a;
+			element.parent.removeChild(element);
+			this._view.addChild(element);
+			const pos = Grid.getPixelPosForGridPosWire(point);
+			const size = this._view.zoomPan.currentScale < 0.5 ? 3 : 5;
+			pos.x -= size / 2 / this._view.zoomPan.currentScale;
+			pos.y -= size / 2 / this._view.zoomPan.currentScale;
+			element.position = pos;
 		});
 	}
 
