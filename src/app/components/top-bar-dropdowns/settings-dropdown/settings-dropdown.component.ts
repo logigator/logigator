@@ -1,38 +1,46 @@
 import {Component, EventEmitter, OnInit, Output} from '@angular/core';
 import {ThemingService} from '../../../services/theming/theming.service';
+import {ShortcutMap} from '../../../models/shortcut-map';
+import {ShortcutsService} from '../../../services/shortcuts/shortcuts.service';
 
 @Component({
 	selector: 'app-settings-dropdown',
 	templateUrl: './settings-dropdown.component.html',
 	styleUrls: ['./settings-dropdown.component.scss']
 })
-export class SettingsDropdownComponent implements OnInit {
+export class SettingsDropdownComponent {
 
 	@Output()
 	public requestClosed: EventEmitter<any> = new EventEmitter();
 
-	public reloadPopupActive = '';
+	public showDropDown = true;
 
-	constructor(public theming: ThemingService) { }
+	public reloadPopupActive = false;
+	public changeShortcutPopupActive = false;
 
-	ngOnInit() {
-	}
+	constructor(private theming: ThemingService) {}
 
 	public close() {
 		this.requestClosed.emit();
 	}
 
+	public shortcutSettingsClose() {
+		this.close();
+		this.changeShortcutPopupActive = false;
+	}
+
 	public reloadClose() {
-		this.reloadPopupActive = '';
+		this.close();
+		this.reloadPopupActive = false;
 	}
 
 	public reloadPostponed() {
-		this.processPending();
+		this.setTheme();
 		this.reloadClose();
 	}
 
 	public reloadConfirm() {
-		this.processPending();
+		this.setTheme();
 		window.location.reload();
 	}
 
@@ -41,14 +49,6 @@ export class SettingsDropdownComponent implements OnInit {
 			this.theming.setTheme('light');
 		} else {
 			this.theming.setTheme('dark');
-		}
-	}
-
-	private processPending() {
-		switch (this.reloadPopupActive) {
-			case 'theme':
-				this.setTheme();
-				break;
 		}
 	}
 }

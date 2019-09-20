@@ -1,15 +1,27 @@
-<div class="dropdown">
-	<div>
-		<input type="checkbox" (click)="reloadPopupActive = 'theme'" [checked]="this.theming.pendingTheme === 'dark'">
+<div class="dropdown" [class.hidden]="!showDropDown">
+	<div class="theme">
+		<input type="checkbox" (click)="reloadPopupActive = true;" [checked]="this.theming.pendingTheme === 'dark'">
 		<label>Dark mode</label>
 	</div>
-	<app-popup *ngIf="reloadPopupActive" (requestClose)="reloadClose()" title="Reload required" [closeOnClickOutside]="false">
-		<p>For this change to take effect, the editor has to be reloaded.</p>
-		<p>Do you want to reload this page now?</p>
-		<button (click)="reloadConfirm()">Yes</button>
-		<button (click)="reloadPostponed()">No, I'll reload later</button>
-		<button (click)="reloadClose()">Cancel</button>
-	</app-popup>
+	<div class="shortcuts">
+		<button (click)="changeShortcutPopupActive = true; showDropDown = false;">Customize Shortcuts</button>
+	</div>
 </div>
+<app-popup *ngIf="reloadPopupActive" (requestClose)="reloadClose()" title="Reload required" [closeOnClickOutside]="false">
+	<p>For this change to take effect, the editor has to be reloaded.</p>
+	<p>Do you want to reload this page now?</p>
+	<button (click)="reloadConfirm()">Yes</button>
+	<button (click)="reloadPostponed()">No, I'll reload later</button>
+	<button (click)="reloadClose()">Cancel</button>
+</app-popup>
+<app-popup *ngIf="changeShortcutPopupActive"
+           [closeOnClickOutside]="false"
+           (requestClose)="shortcutSettingsClose()"
+           title="Customize Shortcuts"
+           class="shortcut-settings-popup">
+	<div>
+		<app-shortcut-config (requestClose)="close()"></app-shortcut-config>
+	</div>
+</app-popup>
 
 

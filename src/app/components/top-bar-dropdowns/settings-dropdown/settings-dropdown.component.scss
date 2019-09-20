@@ -23,11 +23,15 @@
 	right: 0;
 	top: $top-bar-height;
 
+	&.hidden {
+		display: none;
+	}
+
 	@include themify() {
 		background-color: themed('top-bar-dropdown-background');
 		color: themed('secondary-text');
 
-		div {
+		.theme {
 			padding: 0.5rem;
 			border-radius: 0.2rem;
 
@@ -39,6 +43,11 @@
 				float: right;
 				margin-left: 3rem;
 			}
+		}
+
+		.shortcuts {
+			padding: 0.5rem;
+			border-radius: 0.2rem;
 		}
 
 		hr {

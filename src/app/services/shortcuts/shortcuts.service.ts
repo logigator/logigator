@@ -1,17 +1,17 @@
 import { Injectable } from '@angular/core';
 import {defaultShortcuts} from './default-shortcuts';
-import {ShortcutAction, ShortcutMap} from '../../models/shortcut-map';
+import {ShortcutAction, ShortcutConfig, ShortcutMap} from '../../models/shortcut-map';
 import {WorkModeService} from '../work-mode/work-mode.service';
 import {ProjectInteractionService} from '../project-interaction/project-interaction.service';
 import {ProjectsService} from '../projects/projects.service';
 import {ThemingService} from '../theming/theming.service';
+import {shortcutDescriptions} from './shortcut-descriptions';
 
 @Injectable({
 	providedIn: 'root'
 })
 export class ShortcutsService {
 
-	// config could be loaded
 	private _shortcutMap: ShortcutMap = defaultShortcuts;
 
 	constructor(
@@ -19,7 +19,21 @@ export class ShortcutsService {
 		private projectInteraction: ProjectInteractionService,
 		private projects: ProjectsService,
 		private theming: ThemingService
-	) { }
+	) {
+		this.loadShortcutSettings();
+	}
+
+	private loadShortcutSettings() {
+		// TODO: load
+	}
+
+	public setShortcutConfig(newConfig: {[key: string]: ShortcutConfig}) {
+		this._shortcutMap = {
+			...this.shortcutMap,
+			...newConfig
+		};
+		// TODO: save new config to server
+	}
 
 	public keyDownListener(e: KeyboardEvent) {
 		const action = this.getShortcutActionFromEvent(e);
@@ -29,11 +43,14 @@ export class ShortcutsService {
 		this.applyAction(action);
 	}
 
-	public getShortcutText(action: ShortcutAction) {
+	public getShortcutTextForAction(action: ShortcutAction) {
 		const config = this._shortcutMap[action];
 
 		if (!config) return '';
+		return this.getShortcutText(config);
+	}
 
+	public getShortcutText(config: ShortcutConfig) {
 		let result = '';
 		if (config.ctrl) {
 			result += 'Ctrl+';
@@ -44,7 +61,28 @@ export class ShortcutsService {
 		if (config.shift) {
 			result += 'Shift+';
 		}
-		return result + config.key;
+
+		let key = config.key.toUpperCase();
+		if (key === ' ') key = 'SPACE';
+
+		return result + key;
+	}
+
+	public get shortcutMap(): ShortcutMap {
+		return this._shortcutMap;
+	}
+
+	public getShortcutDescription(action: ShortcutAction) {
+		return shortcutDescriptions[action];
+	}
+
+	public getShortcutConfigFromEvent(event: KeyboardEvent): ShortcutConfig {
+		return {
+			key: event.key.toUpperCase(),
+			shift: event.shiftKey,
+			ctrl: event.ctrlKey,
+			alt: event.altKey
+		};
 	}
 
 	private getShortcutActionFromEvent(e: KeyboardEvent): ShortcutAction | null {
