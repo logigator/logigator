@@ -115,6 +115,23 @@ export class WindowWorkAreaComponent extends WorkArea implements OnInit, OnDestr
 			fromEvent(this._popup.nativeElement, 'mousemove').pipe(
 				takeUntil(this._destroySubject)
 			).subscribe((e: MouseEvent) => this.pointerOver(e));
+
+			fromEvent(window, 'resize').pipe(
+				takeUntil(this._destroySubject)
+			).subscribe((e: MouseEvent) => {
+				if (this.collision_right(this._popup.nativeElement.offsetLeft)) {
+					let newLoc = (this._bounding.offsetLeft + this._bounding.offsetWidth) - this._popup.nativeElement.offsetWidth;
+					if (this.collision_left(newLoc))
+						newLoc = this._bounding.offsetLeft;
+					this.renderer2.setStyle(this._popup.nativeElement, 'left', newLoc + 'px');
+				}
+				if (this.collision_bottom(this._popup.nativeElement.offsetTop)) {
+					let newLoc = (this._bounding.offsetTop + this._bounding.offsetHeight) - this._popup.nativeElement.offsetHeight;
+					if (this.collision_top(newLoc))
+						newLoc = this._bounding.offsetTop;
+					this.renderer2.setStyle(this._popup.nativeElement, 'top', newLoc+ 'px');
+				}
+			});
 		});
 	}
 
