@@ -1,6 +1,6 @@
 import {Chunk} from './chunk';
 import {ProjectModel} from './project-model';
-import {Element} from './element';
+import {Element, Elements} from './element';
 import * as PIXI from 'pixi.js';
 import {Project} from './project';
 import {CollisionFunctions} from './collision-functions';
@@ -164,10 +164,7 @@ export class ProjectState {
 	// when except param is undefined it will not check for collision
 	public moveElement(element: Element, dif: PIXI.Point, consChecked?: boolean): boolean {
 		this.removeFromChunks(element);
-		element.pos.x += dif.x;
-		element.pos.y += dif.y;
-		element.endPos.x += dif.x;
-		element.endPos.y += dif.y;
+		Elements.move(element, dif);
 		this.loadIntoChunks(element);
 		if (!consChecked) {
 			this.addConIfPossible(new PIXI.Point(element.pos.x - dif.x, element.pos.y - dif.y));

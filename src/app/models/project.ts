@@ -1,6 +1,6 @@
 import {ProjectState} from './project-state';
 import {Action, Actions, ChangeType} from './action';
-import {Element} from './element';
+import {Element, Elements} from './element';
 import {Chunk} from './chunk';
 import {Observable, Subject} from 'rxjs';
 import * as PIXI from 'pixi.js';
@@ -139,13 +139,16 @@ export class Project {
 		return actions;
 	}
 
-	public addElements(elements: Element[]): boolean {
-		if (!this._currState.allSpacesFree(elements, new PIXI.Point(0, 0)))
+	public addElements(elements: Element[], dif?: PIXI.Point): boolean {
+		if (!dif)
+			dif = new PIXI.Point(0, 0);
+		if (!this._currState.allSpacesFree(elements, dif))
 			return false;
 		const changed = this.withWiresOnEdges(elements);
 		const actions: Action[] = new Array(elements.length);
 		let i = 0;
 		elements.forEach(elem => {
+			Elements.move(elem, dif);
 			this._currState.addElement(elem);
 			actions[i] = {
 				name: elem.typeId === 0 ? 'addWire' : 'addComp',

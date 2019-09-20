@@ -16,4 +16,11 @@ export class Elements {
 		out.endPos = element.endPos.clone();
 		return out;
 	}
+
+	public static move(element: Element, dif: PIXI.Point): void {
+		element.pos.x += dif.x;
+		element.pos.y += dif.y;
+		element.endPos.x += dif.x;
+		element.endPos.y += dif.y;
+	}
 }
