@@ -23,7 +23,7 @@ export class ThemingService {
 		},
 		dark: {
 			background: 0x2B2B2B,
-			grid: 0x196030,
+			grid: 0x1C8045,
 			wire: 0x27AE60,
 			selectRect: 0
 		}
