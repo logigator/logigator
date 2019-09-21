@@ -317,7 +317,7 @@ export class WindowWorkAreaComponent extends WorkArea implements OnInit, OnDestr
 	public show() {
 		this.renderer2.setStyle(this._popup.nativeElement, 'display', 'block');
 		this._pixiRenderer.resize(this._pixiCanvasContainer.nativeElement.offsetWidth, this._pixiCanvasContainer.nativeElement.offsetHeight);
-		this._pixiTicker.start();
+		this.ngZone.runOutsideAngular(() => this._pixiTicker.start());
 		this._view.updateChunks();
 	}
 
