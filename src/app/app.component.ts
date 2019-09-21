@@ -46,6 +46,10 @@ export class AppComponent implements OnInit, OnDestroy {
 		});
 	}
 
+	public get isSimulationMode(): boolean {
+		return this.workMode.currentWorkMode === 'simulation';
+	}
+
 	public get showSettingsInfoBox(): boolean {
 		return this.workMode.currentWorkMode === 'buildComponent' || this.selection.isSingleSelect();
 	}

@@ -5,6 +5,9 @@ import {ProjectsService} from '../../services/projects/projects.service';
 import {Project} from '../../models/project';
 import {WorkArea} from '../../models/rendering/work-area';
 import {WindowWorkAreaComponent} from "../window-work-area/window-work-area.component";
+import {distinctUntilChanged, map, pairwise, takeUntil} from 'rxjs/operators';
+import {WorkMode} from '../../models/work-modes';
+import {WorkModeService} from '../../services/work-mode/work-mode.service';
 
 @Component({
 	selector: 'app-work-area',
@@ -26,7 +29,8 @@ export class WorkAreaComponent extends WorkArea implements OnInit, OnDestroy {
 	constructor(
 		private renderer2: Renderer2,
 		private ngZone: NgZone,
-		private projectsService: ProjectsService
+		private projectsService: ProjectsService,
+		private workMode: WorkModeService
 	) {
 		super();
 	}
@@ -43,13 +47,21 @@ export class WorkAreaComponent extends WorkArea implements OnInit, OnDestroy {
 				this._pixiRenderer.render(this.activeView);
 			});
 
-			this.projectsService.onProjectOpened$.subscribe(projectId => {
+			this.projectsService.onProjectOpened$.pipe(
+				takeUntil(this._destroySubject)
+			).subscribe(projectId => {
 				this.ngZone.runOutsideAngular(() => {
 					this.openProject(projectId);
 					this._pixiTicker.start(); // start ticker after a project was opened
 				});
 			});
 		});
+
+		this.workMode.currentWorkMode$.pipe(
+			takeUntil(this._destroySubject),
+			map((mode) => mode === 'simulation'),
+			distinctUntilChanged()
+		).subscribe(isSim => this.isSimulationModeChanged(isSim));
 	}
 
 	private loadPixiFont(): Promise<void> {
@@ -62,6 +74,26 @@ export class WorkAreaComponent extends WorkArea implements OnInit, OnDestroy {
 
 	public get allProjects(): Map<number, Project> {
 		return this.projectsService.allProjects;
+	}
+
+	public get isSimulationMode(): boolean {
+		return this.workMode.currentWorkMode === 'simulation';
+	}
+
+	private isSimulationModeChanged(simulation: boolean) {
+		if (simulation) {
+			this.renderer2.setStyle(this._pixiCanvasContainer.nativeElement, 'width', '100%');
+			this.projectsService.allProjects.forEach(proj => {
+				if (proj.type === 'project') {
+					this.switchActiveView(proj.id);
+				}
+			});
+		} else {
+			this.renderer2.removeStyle(this._pixiCanvasContainer.nativeElement, 'width');
+		}
+		if (this._pixiRenderer) {
+			this._pixiRenderer.resize(this._pixiCanvasContainer.nativeElement.offsetWidth, this._pixiCanvasContainer.nativeElement.offsetHeight);
+		}
 	}
 
 	private openProject(projectId: number) {

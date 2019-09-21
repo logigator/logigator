@@ -1,13 +1,15 @@
 <div class="main-area">
 	<div id="canvas-container" #pixiCanvasContainer></div>
 	<div id="tabs">
-		<div class="tab"
-		     *ngFor="let project of allProjects | keyvalue"
-		     (click)="switchActiveView(project.key)"
-		     [class.tab-active]="project.key === activeView?.projectId">
-			<p>{{project.value.name}}</p>
-			<span class="tab-close" (click)="closeView(project.key, $event)"></span>
-		</div>
+		<ng-container *ngFor="let project of allProjects | keyvalue">
+			<div class="tab"
+			     *ngIf="!isSimulationMode || project.value.type === 'project'"
+			     (click)="switchActiveView(project.key)"
+			     [class.tab-active]="project.key === activeView?.projectId">
+				<p>{{project.value.name}}</p>
+				<span class="tab-close" (click)="closeView(project.key, $event)"></span>
+			</div>
+		</ng-container>
 	</div>
 </div>
 <app-window-work-area [projectIdToOpen]="0" [dragBoundingContainer]="pixiCanvasContainer" #pixiWindowContainer></app-window-work-area>

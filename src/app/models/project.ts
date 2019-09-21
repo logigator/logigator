@@ -14,6 +14,7 @@ export class Project {
 
 	private _id: number;
 	private _name: string;
+	private _type: 'project' | 'comp';
 
 	private _actions: Action[][];
 	private _currActionPointer: number;
@@ -23,10 +24,11 @@ export class Project {
 
 	private changeSubject: Subject<Action[]>;
 
-	public constructor(projectState: ProjectState, id?: number, name?: string) {
+	public constructor(projectState: ProjectState, id?: number, name?: string, type: 'project' | 'comp' = 'comp') {
 		this._currState = projectState;
 		this._id = id;
 		this._name = name;
+		this._type = type;
 		this._actions = [];
 		for (let i = 0; i < this.MAX_ACTIONS; i++)
 			this._actions.push(null);
@@ -349,5 +351,9 @@ export class Project {
 
 	get name(): string {
 		return this._name;
+	}
+
+	get type(): 'project' | 'comp' {
+		return this._type;
 	}
 }
