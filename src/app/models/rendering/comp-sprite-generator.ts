@@ -43,7 +43,8 @@ export class CompSpriteGenerator {
 			font: {
 				name: 'Louis George Café',
 				size: environment.gridPixelWidth + 4
-			}
+			},
+			tint: ThemingService.staticInstance.getEditorColor('fontTint')
 		});
 
 		text.position.x = (width / 2) - 5;

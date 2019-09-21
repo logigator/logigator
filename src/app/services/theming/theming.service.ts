@@ -19,13 +19,15 @@ export class ThemingService {
 			background: 0xF5F5F5,
 			grid: 0x248945,
 			wire: 0x2ED573,
-			selectRect: 0
+			selectRect: 0,
+			fontTint: 0
 		},
 		dark: {
 			background: 0x2B2B2B,
 			grid: 0x1C8045,
 			wire: 0x27AE60,
-			selectRect: 0
+			selectRect: 0,
+			fontTint: 0xFFFFFF
 		}
 	};
 

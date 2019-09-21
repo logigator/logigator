@@ -73,12 +73,20 @@
 			background-image: url("/assets/icons/save_new.svg");
 		}
 
+		.open {
+			background-image: url("/assets/icons/folder.svg");
+		}
+
+		.new-comp {
+			background-image: url("/assets/icons/new-component.svg");
+		}
+
 		.paste {
 			background-image: url("/assets/icons/clipboard.svg");
 		}
 
 		.copy {
-			background-image: url("/assets/icons/files.svg");
+			background-image: url("/assets/icons/clipboard.svg");
 		}
 
 		.cut {
@@ -110,7 +118,7 @@
 		}
 
 		.select {
-			background-image: url("/assets/icons/target.svg");
+			background-image: url("/assets/icons/selection1.svg");
 		}
 
 		.sim-start {
