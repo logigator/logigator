@@ -16,6 +16,7 @@ import {CompSpriteGenerator} from './comp-sprite-generator';
 import {ProjectInteractionService} from '../../services/project-interaction/project-interaction.service';
 import {filter, takeUntil} from 'rxjs/operators';
 import {SelectionService} from '../../services/selection/selection.service';
+import {SimulationViewInteractionManager} from './simulation-view-interaction-manager';
 
 export class View extends PIXI.Container {
 
@@ -23,9 +24,12 @@ export class View extends PIXI.Container {
 
 	public zoomPan: ZoomPan;
 
+	private readonly _onlySimMode: boolean;
+
 	private _zoomPanInputManager: ZoomPanInputManager;
 
 	private _viewInteractionManager: ViewInteractionManager;
+	private _simViewInteractionManager: SimulationViewInteractionManager;
 
 	private readonly _htmlContainer: HTMLElement;
 
@@ -39,16 +43,20 @@ export class View extends PIXI.Container {
 
 	private _destroySubject =  new Subject<void>();
 
-	constructor(projectId: number, htmlContainer: HTMLElement) {
+	constructor(projectId: number, htmlContainer: HTMLElement, onlySimMode = false) {
 		super();
 		this._projectId = projectId;
 		this._htmlContainer = htmlContainer;
 		this.interactive = true;
 		this.sortableChildren = true;
+		this._onlySimMode = onlySimMode;
 
 		this.zoomPan = new ZoomPan(this);
 		this._zoomPanInputManager = new ZoomPanInputManager(this._htmlContainer);
-		this._viewInteractionManager = new ViewInteractionManager(this);
+		if (!this._onlySimMode) {
+			this._viewInteractionManager = new ViewInteractionManager(this);
+		}
+		this._simViewInteractionManager = new SimulationViewInteractionManager(this);
 
 		ProjectsService.staticInstance.onProjectChanges$(this.projectId).pipe(
 			takeUntil(this._destroySubject)
@@ -238,7 +246,10 @@ export class View extends PIXI.Container {
 		const elemSprite = {element, sprite};
 		this.allElements.set(element.id, elemSprite);
 
-		this._viewInteractionManager.addEventListenersToNewElement(elemSprite);
+		if (!this._onlySimMode) {
+			this._viewInteractionManager.addEventListenersToNewElement(elemSprite);
+		}
+		this._simViewInteractionManager.addEventListenersToNewElement(elemSprite);
 	}
 
 	private placeWireOnView(element: Element) {
@@ -356,7 +367,9 @@ export class View extends PIXI.Container {
 		this._destroySubject.next();
 		this._destroySubject.unsubscribe();
 		this._zoomPanInputManager.destroy();
-		this._viewInteractionManager.destroy();
+		if (!this._onlySimMode) {
+			this._viewInteractionManager.destroy();
+		}
 		super.destroy({
 			children: true
 		});

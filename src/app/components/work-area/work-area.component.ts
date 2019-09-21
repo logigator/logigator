@@ -76,9 +76,18 @@ export class WorkAreaComponent extends WorkArea implements OnInit, OnDestroy {
 		return this.projectsService.allProjects;
 	}
 
+	public get isSimulationMode(): boolean {
+		return this.workMode.currentWorkMode === 'simulation';
+	}
+
 	private isSimulationModeChanged(simulation: boolean) {
 		if (simulation) {
 			this.renderer2.setStyle(this._pixiCanvasContainer.nativeElement, 'width', '100%');
+			this.projectsService.allProjects.forEach(proj => {
+				if (proj.type === 'project') {
+					this.switchActiveView(proj.id);
+				}
+			});
 		} else {
 			this.renderer2.removeStyle(this._pixiCanvasContainer.nativeElement, 'width');
 		}
