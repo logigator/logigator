@@ -6,6 +6,7 @@ import {ShortcutsService} from './services/shortcuts/shortcuts.service';
 import {fromEvent, Subject} from 'rxjs';
 import {DOCUMENT} from '@angular/common';
 import {takeUntil} from 'rxjs/operators';
+import {ProjectsService} from './services/projects/projects.service';
 
 @Component({
 	selector: 'app-root',
@@ -26,6 +27,7 @@ export class AppComponent implements OnInit, OnDestroy {
 		private workMode: WorkModeService,
 		private selection: SelectionService,
 		private shortcuts: ShortcutsService,
+		private projects: ProjectsService,
 		@Inject(DOCUMENT) private document: HTMLDocument
 	) {}
 
@@ -51,7 +53,7 @@ export class AppComponent implements OnInit, OnDestroy {
 	}
 
 	public get showSettingsInfoBox(): boolean {
-		return this.workMode.currentWorkMode === 'buildComponent' || this.selection.isSingleSelect();
+		return this.workMode.currentWorkMode === 'buildComponent' ||  (this.projects.currProject && this.selection.isSingleSelect());
 	}
 
 	public get selectionMode(): 'type' | 'placed' {

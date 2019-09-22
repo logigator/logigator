@@ -24,11 +24,11 @@ export class Project {
 
 	private changeSubject: Subject<Action[]>;
 
-	public constructor(projectState: ProjectState, id?: number, name?: string, type: 'project' | 'comp' = 'comp') {
+	public constructor(projectState: ProjectState, config: {id?: number, name?: string, type?: 'project' | 'comp'}) {
 		this._currState = projectState;
-		this._id = id;
-		this._name = name;
-		this._type = type;
+		this._id = config.id;
+		this._name = config.name;
+		this._type = config.type || 'comp';
 		this._actions = [];
 		for (let i = 0; i < this.MAX_ACTIONS; i++)
 			this._actions.push(null);

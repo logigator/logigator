@@ -4,7 +4,6 @@ import * as PIXI from 'pixi.js';
 export class TestModel {
 
 	public static basicModel: ProjectModel = {
-		id: 0,
 		board: {
 			elements: [
 				{
@@ -56,7 +55,6 @@ export class TestModel {
 	};
 
 	public static emptyModel: ProjectModel = {
-		id: 0,
 		board: {
 			elements: []
 		}

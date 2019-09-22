@@ -4,6 +4,7 @@ import {Observable, ReplaySubject} from 'rxjs';
 import {Action} from '../../models/action';
 import {ProjectState} from '../../models/project-state';
 import {TestModel} from '../../models/tests/test-model';
+import {ProjectResolveService} from '../project-resolve/project-resolve.service';
 
 @Injectable({
 	providedIn: 'root'
@@ -17,21 +18,14 @@ export class ProjectsService {
 
 	private _projectOpenedSubject = new ReplaySubject<number>(2);
 
-	constructor() {
+	constructor(private projectsResolve: ProjectResolveService) {
 		ProjectsService.staticInstance = this;
-		const project = new Project(new ProjectState(), 0, 'Projekt', 'project');
-		const project2 = new Project(new ProjectState(TestModel.basicModel), 2, 'Komponente 1');
 
-		this._projects.set(0, project);
-		this._projectOpenedSubject.next(0);
-		this._currProject = project;
-
-		// to simulate that the project was opened later, for testing
-		setTimeout(() => {
-			this._projects.set(2, project2);
-			this._projectOpenedSubject.next(2);
-			this._currProject = project2;
-		}, 10);
+		this.projectsResolve.getProjectToOpenOnLoad().then(project => {
+			this._projects.set(0, project);
+			this._projectOpenedSubject.next(0);
+			this._currProject = project;
+		}).catch(e => console.log(e));
 	}
 
 	public onProjectChanges$(projectId: number): Observable<Action[]> {

@@ -19,6 +19,7 @@ import { PopupComponent } from './components/popup/popup.component';
 import { SingleShortcutConfigComponent } from './components/shortcut-config/single-shortcut-config/single-shortcut-config.component';
 import { ShortcutConfigComponent } from './components/shortcut-config/shortcut-config/shortcut-config.component';
 import { WindowWorkAreaComponent } from './components/window-work-area/window-work-area.component';
+import {HttpClientModule} from '@angular/common/http';
 
 @NgModule({
 	declarations: [
@@ -44,6 +45,7 @@ import { WindowWorkAreaComponent } from './components/window-work-area/window-wo
 	imports: [
 		BrowserModule,
 		FormsModule,
+		HttpClientModule,
 		ReactiveFormsModule
 	],
 	providers: [],
