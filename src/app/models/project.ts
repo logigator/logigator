@@ -20,7 +20,7 @@ export class Project {
 
 	private _changeSubject: Subject<Action[]>;
 
-
+	public dirty = false;
 
 	public constructor(projectState: ProjectState, id?: number, name?: string) {
 		this._currState = projectState;
@@ -269,6 +269,7 @@ export class Project {
 		actions.push(...this._currState.specialActions);
 		this._currState.specialActions = [];
 		this._actions[this._currActionPointer] = actions;
+		this.dirty = true;
 		this._changeSubject.next(actions);
 	}
 
