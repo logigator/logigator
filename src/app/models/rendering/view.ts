@@ -79,39 +79,39 @@ export class View extends PIXI.Container {
 			Grid.getGridPosForPixelPos(currentlyOnScreen.start),
 			Grid.getGridPosForPixelPos(currentlyOnScreen.end)
 		);
-
-		chunksToRender.forEach(chunk => {
-			if (!this.createChunkIfNeeded(chunk.x, chunk.y)) {
-				this._gridGraphics[chunk.x][chunk.y].destroy();
-				this._gridGraphics[chunk.x][chunk.y] = Grid.generateGridGraphics(this.zoomPan.currentScale);
-				this._chunks[chunk.x][chunk.y].children.forEach((child: PIXI.Graphics) => {
-					const elemSprite = this.allElements.get(Number(child.name));
-					if (elemSprite && elemSprite.element.typeId === 0) {
-						this.updateWireSprite(elemSprite.element, elemSprite.sprite as PIXI.Graphics);
-					} else if (elemSprite) {
-						this.updateComponentSprite(elemSprite.element, elemSprite.sprite as PIXI.Graphics);
-					}
-					if (child.name === 'wireConnPoint') {
-						this.updateConnectionPoint(child);
-					}
-				});
-				this._chunks[chunk.x][chunk.y].addChildAt(this._gridGraphics[chunk.x][chunk.y], 0);
-				this._chunks[chunk.x][chunk.y].visible = true;
-			}
-		});
-		SelectionService.staticInstance.selectedIds(this.projectId).forEach(id => {
-			const elemSprite = this.allElements.get(id);
+		for (let i = 0; i < chunksToRender.length; i++) {
+			if (this.createChunkIfNeeded(chunksToRender[i].x, chunksToRender[i].y)) continue;
+			this._gridGraphics[chunksToRender[i].x][chunksToRender[i].y].destroy();
+			this._gridGraphics[chunksToRender[i].x][chunksToRender[i].y] = Grid.generateGridGraphics(this.zoomPan.currentScale);
+			this._chunks[chunksToRender[i].x][chunksToRender[i].y].children.forEach((child: PIXI.Graphics) => {
+				const elemSprite = this.allElements.get(Number(child.name));
+				if (elemSprite && elemSprite.element.typeId === 0) {
+					this.updateWireSprite(elemSprite.element, elemSprite.sprite as PIXI.Graphics);
+				} else if (elemSprite) {
+					this.updateComponentSprite(elemSprite.element, elemSprite.sprite as PIXI.Graphics);
+				}
+				if (child.name === 'wireConnPoint') {
+					this.updateConnectionPoint(child);
+				}
+			});
+			this._chunks[chunksToRender[i].x][chunksToRender[i].y].addChildAt(this._gridGraphics[chunksToRender[i].x][chunksToRender[i].y], 0);
+			this._chunks[chunksToRender[i].x][chunksToRender[i].y].visible = true;
+		}
+		const selectedIds = SelectionService.staticInstance.selectedIds(this.projectId);
+		for (let i = 0; i < selectedIds.length; i++) {
+			const elemSprite = this.allElements.get(selectedIds[i]);
 			if (elemSprite.element.typeId === 0) {
 				this.updateWireSprite(elemSprite.element, elemSprite.sprite as PIXI.Graphics);
 			} else if (elemSprite) {
 				this.updateComponentSprite(elemSprite.element, elemSprite.sprite as PIXI.Graphics);
 			}
-		});
-		SelectionService.staticInstance.selectedConnections(this.projectId).forEach(point => {
-			const graphics = this.connectionPoints.get(`${point.x}:${point.y}`);
+		}
+		const selectedConnections = SelectionService.staticInstance.selectedConnections(this.projectId)
+		for (let i = 0; i < selectedConnections.length; i++) {
+			const graphics = this.connectionPoints.get(`${selectedConnections[i].x}:${selectedConnections[i].y}`);
 			const pos = Grid.getPixelPosForPixelPosOnGridWire(graphics.position);
 			this.drawConnectionPoint(graphics, pos);
-		});
+		}
 		for (const oldChunk of this._chunksToRender) {
 			if (!chunksToRender.find(toRender => toRender.x === oldChunk.x && toRender.y === oldChunk.y)) {
 				this._chunks[oldChunk.x][oldChunk.y].visible = false;
