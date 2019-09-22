@@ -235,7 +235,7 @@ export class Project {
 		out.push(...merged.actions);
 		const connected = this.autoConnect(merged.elements);
 		out.push(...connected.actions);
-		this._currState.loadConnectionPoints(elements.concat(connected.elements));
+		this._currState.loadConnectionPoints(connected.elements);
 		return out;
 	}
 
@@ -250,7 +250,7 @@ export class Project {
 	private autoMerge(elements: Element[]): {actions: Action[], elements: Element[]} {
 		const out: Action[] = [];
 		let outElements = [...elements];
-		const elemChanges = this._currState.mergeToBoard(outElements);
+		const elemChanges = this._currState.mergeToBoard(elements);
 		outElements = Actions.applyChangeOnArrayAndActions(elemChanges, out, outElements);
 		return {actions: out, elements: outElements};
 	}
