@@ -42,20 +42,22 @@ export class Project {
 		switch (action.name) {
 			case 'addComp':
 			case 'addWire':
-				this._currState.addElement(action.element, action.element.id, true);
+				this._currState.addElement(action.element, action.element.id);
 				break;
 			case 'remComp':
 			case 'remWire':
-				this._currState.removeElement(action.element.id, true);
+				this._currState.removeElement(action.element.id);
 				break;
 			case 'movMult':
 				for (const elem of action.others) {
-					this._currState.moveElement(elem, action.pos, true);
+					this._currState.moveElement(elem, action.pos);
 				}
 				break;
 			case 'conWire':
+				this._currState.loadConIntoChunks(action.pos);
 				break;
 			case 'dcoWire':
+				this._currState.removeConFromChunks(action.pos);
 				break;
 		}
 	}
@@ -157,20 +159,21 @@ export class Project {
 	public removeElementsById(ids: number[]): void {
 		const actions: Action[] = [];
 		const onEdges: Element[] = [];
-		const elems: Element[] = new Array(ids.length);
+		const elements: Element[] = new Array(ids.length);
 		let i = 0;
 		ids.forEach(id => {
-			const elem = this._currState.removeElement(id, false);
-			elems[i++] = elem;
+			const elem = this._currState.removeElement(id);
+			elements[i++] = elem;
 			const action: Action = {
 				name: elem.typeId === 0 ? 'remWire' : 'remComp',
 				element: elem
 			};
 			actions.push(action);
 		});
-		elems.forEach(elem => {
+		elements.forEach(elem => {
 			onEdges.push(...this._currState.wiresOnPoint(elem.pos).concat(this._currState.wiresOnPoint(elem.endPos)));
 		});
+		this._currState.loadConnectionPoints(elements);
 		actions.push(...this.autoAssemble(onEdges));
 		this.newState(actions);
 	}
@@ -231,7 +234,7 @@ export class Project {
 		out.push(...merged.actions);
 		const connected = this.autoConnect(merged.elements);
 		out.push(...connected.actions);
-		this._currState.loadConnectionPoints(connected.elements);
+		this._currState.loadConnectionPoints(elements.concat(connected.elements));
 		return out;
 	}
 
@@ -246,7 +249,7 @@ export class Project {
 	private autoMerge(elements: Element[]): {actions: Action[], elements: Element[]} {
 		const out: Action[] = [];
 		let outElements = [...elements];
-		const elemChanges = this._currState.mergeToBoard(elements);
+		const elemChanges = this._currState.mergeToBoard(outElements);
 		outElements = Actions.applyChangeOnArrayAndActions(elemChanges, out, outElements);
 		return {actions: out, elements: outElements};
 	}
@@ -254,9 +257,8 @@ export class Project {
 
 
 	private newState(actions: Action[]): void {
-		if (!actions) {
+		if (!actions)
 			return;
-		}
 		if (this._currActionPointer >= this._maxActionCount) {
 			this._actions.shift();
 		} else {

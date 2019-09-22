@@ -36,6 +36,16 @@ export class ToolbarComponent implements OnInit {
 				console.log(elem.id, elem.pos, elem.endPos);
 			}
 		}
+		console.log('connectionPoints');
+		for (const chunks of this.projectService.currProject.currState.chunks) {
+			for (const chunk of chunks) {
+				if (!chunk)
+					continue;
+				for (const cp of chunk.connectionPoints) {
+					console.log(cp);
+				}
+			}
+		}
 	}
 
 	public test(): void {

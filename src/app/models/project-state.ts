@@ -63,42 +63,34 @@ export class ProjectState {
 			};
 	}
 
-	public loadIntoChunks(element: Element, consChecked?: boolean): void {
+	public loadIntoChunks(element: Element): void {
 		const chunkCoords = CollisionFunctions.inRectChunks(element.pos, element.endPos);
 		for (const coord of chunkCoords) {
 			this.createChunk(coord.x, coord.y);
 			if (!this._chunks[coord.x][coord.y].elements.find(e => e.id === element.id))
 				this._chunks[coord.x][coord.y].elements.push(element);
 		}
-		if (!consChecked) {
-			// this.addConIfPossible(element.pos);
-			// this.addConIfPossible(element.endPos);
-		}
 	}
 
-	private removeFromChunks(element: Element, consChecked?: boolean): void {
+	private removeFromChunks(element: Element): void {
 		const chunkCoords = CollisionFunctions.inRectChunks(element.pos, element.endPos);
 		for (const chunk of this.chunksFromCoords(chunkCoords)) {
 			chunk.elements = chunk.elements.filter(elem => elem.id !== element.id);
 		}
-		if (!consChecked) {
-			// this.removeConFromChunks(element.pos);
-			// this.removeConFromChunks(element.endPos);
-		}
 	}
 
 
-	private addConIfPossible(pos: PIXI.Point): void {
+	private addConnectionPoint(pos: PIXI.Point): void {
 		if (this.wiresOnPoint(pos).length > 2)
 			this.loadConIntoChunks(pos);
 	}
 
-	private removeConIfPossible(pos: PIXI.Point): void {
+	private removeConnectionPoint(pos: PIXI.Point): void {
 		if (this.wiresOnPoint(pos).length < 3)
 			this.removeConFromChunks(pos);
 	}
 
-	private loadConIntoChunks(con: PIXI.Point): void {
+	public loadConIntoChunks(con: PIXI.Point): void {
 		const chunkCoords = CollisionFunctions.inRectChunks(con, con);
 		for (const coord of chunkCoords) {
 			this.createChunk(coord.x, coord.y);
@@ -109,7 +101,7 @@ export class ProjectState {
 		}
 	}
 
-	private removeConFromChunks(con: PIXI.Point): void {
+	public removeConFromChunks(con: PIXI.Point): void {
 		const chunkX = CollisionFunctions.gridPosToChunk(con.x);
 		const chunkY = CollisionFunctions.gridPosToChunk(con.y);
 		let conIndex = -1;
@@ -124,22 +116,19 @@ export class ProjectState {
 	}
 
 	public loadConnectionPoints(elements: Element[], chunk?: Chunk): void {
-		console.log('loadConPoints', elements, chunk);
 		if (chunk) {
 			chunk.connectionPoints.forEach(cp => {
-				this.removeConIfPossible(cp);
+				this.removeConnectionPoint(cp);
 			});
 		} else {
 			elements.forEach(elem => {
-				this.removeConIfPossible(elem.pos);
-				this.removeConIfPossible(elem.endPos);
+				this.removeConnectionPoint(elem.pos);
+				this.removeConnectionPoint(elem.endPos);
 			});
 		}
 		elements.forEach(elem => {
-			// this.removeConIfPossible(elem.pos);
-			// this.removeConIfPossible(elem.endPos);
-			this.addConIfPossible(elem.pos);
-			this.addConIfPossible(elem.endPos);
+			this.addConnectionPoint(elem.pos);
+			this.addConnectionPoint(elem.endPos);
 		});
 	}
 
@@ -189,32 +178,28 @@ export class ProjectState {
 
 
 
-	public addElement(elem: Element, id?: number, consChecked?: boolean): Element {
+	public addElement(elem: Element, id?: number): Element {
 		elem.id = id || this.getNextId();
 		this._model.board.elements.push(elem);
-		this.loadIntoChunks(elem, consChecked);
+		this.loadIntoChunks(elem);
 		return elem;
 	}
 
-	public removeElement(elementId: number, consChecked?: boolean): Element {
+	public removeElement(elementId: number): Element {
 		const outElemIndex = this._model.board.elements.findIndex(c => c.id === elementId);
 		if (outElemIndex < 0)
 			return null;
 		const outElem = this._model.board.elements[outElemIndex];
 		this._model.board.elements.splice(outElemIndex, 1);
-		this.removeFromChunks(outElem, consChecked);
+		this.removeFromChunks(outElem);
 		return outElem;
 	}
 
 	// when except param is undefined it will not check for collision
-	public moveElement(element: Element, dif: PIXI.Point, consChecked?: boolean): boolean {
+	public moveElement(element: Element, dif: PIXI.Point): boolean {
 		this.removeFromChunks(element);
 		Elements.move(element, dif);
 		this.loadIntoChunks(element);
-		if (!consChecked) {
-			// this.addConIfPossible(new PIXI.Point(element.pos.x - dif.x, element.pos.y - dif.y));
-			// this.addConIfPossible(new PIXI.Point(element.endPos.x - dif.x, element.endPos.y - dif.y));
-		}
 		return true;
 	}
 
@@ -398,6 +383,10 @@ export class ProjectState {
 
 	public chunk(x: number, y: number): Chunk {
 		return this._chunks[x] ? this._chunks[x][y] : null;
+	}
+
+	get chunks(): Chunk[][] {
+		return this._chunks;
 	}
 
 	get model(): ProjectModel {
