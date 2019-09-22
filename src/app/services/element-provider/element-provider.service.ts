@@ -5,9 +5,7 @@ import {not} from '../../models/element-types/not';
 import {and} from '../../models/element-types/and';
 import {or} from '../../models/element-types/or';
 import {xor} from '../../models/element-types/xor';
-import {HttpClient} from '@angular/common/http';
-import {HttpResponseData} from '../../models/http-responses/http-response-data';
-import {ComponentInfoResponse} from '../../models/http-responses/component-info-response';
+import {ProjectSaveManagementService} from '../project-save-management/project-save-management.service';
 
 @Injectable({
 	providedIn: 'root'
@@ -28,23 +26,11 @@ export class ElementProviderService {
 
 	private _userDefinedElements: Map<number, ElementType> = new Map<number, ElementType>();
 
-	constructor(private httpClient: HttpClient) {
+	constructor(private projectSaveManagement: ProjectSaveManagementService) {
 		ElementProviderService.staticInstance = this;
 
-		this.httpClient.get<HttpResponseData<ComponentInfoResponse[]>>('/api/project/get-all-components-info').subscribe(data => {
-			data.result.forEach(elem => {
-				const elemType: ElementType = {
-					description: elem.description,
-					name: elem.name,
-					rotation: 0,
-					hasVariableInputs: false,
-					symbol: elem.symbol,
-					numInputs: 2,
-					numOutputs: 1,
-					category: 'user'
-				};
-				this._userDefinedElements.set(elem.pk_id, elemType);
-			});
+		this.projectSaveManagement.getAllAvailableCustomElements().then(elems => {
+			this._userDefinedElements = elems;
 		});
 	}
 

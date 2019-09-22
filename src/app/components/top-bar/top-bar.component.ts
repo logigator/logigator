@@ -20,8 +20,8 @@ export class TopBarComponent implements OnInit {
 	}
 
 	public get mainProjectName(): string {
-		if (!this.projectService.mainProjectInfo) return '';
-		return this.projectService.mainProjectInfo.name;
+		if (!this.projectService.mainProject) return '';
+		return this.projectService.mainProject.name;
 	}
 
 	public dropdownHover(comp: keyof TopBarComponent) {

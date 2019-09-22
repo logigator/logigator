@@ -6,7 +6,6 @@ import {Observable, Subject} from 'rxjs';
 import * as PIXI from 'pixi.js';
 import {environment} from '../../environments/environment';
 import {CollisionFunctions} from './collision-functions';
-import {ElementProviderService} from '../services/element-provider/element-provider.service';
 
 export class Project {
 
@@ -61,9 +60,8 @@ export class Project {
 	}
 
 	private static calcEndPos(pos: PIXI.Point, typeId: number): PIXI.Point {
-		const type = ElementProviderService.staticInstance.getElementById(typeId);
 		return new PIXI.Point(pos.x + environment.componentWidth,
-			pos.y + Math.max(type.numInputs, type.numOutputs));
+			pos.y + Math.max(2, 2));
 	}
 
 	protected applyActions(actions: Action[]): void {

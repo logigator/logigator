@@ -2,7 +2,7 @@ import { Injectable } from '@angular/core';
 import {Project} from '../../models/project';
 import {Observable, ReplaySubject} from 'rxjs';
 import {Action} from '../../models/action';
-import {ProjectResolveService} from '../project-resolve/project-resolve.service';
+import {ProjectSaveManagementService} from '../project-save-management/project-save-management.service';
 
 @Injectable({
 	providedIn: 'root'
@@ -16,32 +16,35 @@ export class ProjectsService {
 
 	private _mainProject: Project;
 
+	private _currentlyOpening: number[] = [];
+
 	private _projectOpenedSubject = new ReplaySubject<number>(2);
 
-	constructor(private projectsResolve: ProjectResolveService) {
+	constructor(private projectSaveManagementService: ProjectSaveManagementService) {
 		ProjectsService.staticInstance = this;
 
-		this.projectsResolve.getProjectToOpenOnLoad().then(project => {
+		this.projectSaveManagementService.getProjectToOpenOnLoad().then(project => {
 			this._projects.set(project.id, project);
 			this._projectOpenedSubject.next(project.id);
 			this._currProject = project;
 			this._mainProject = project;
-		}).catch(e => console.log(e));
+		});
 	}
 
-	public get mainProjectInfo(): Project {
+	public get mainProject(): Project {
 		return this._mainProject;
 	}
 
 	public async openComponent(id: number) {
-		if (this.allProjects.has(id)) return;
-		const project = await this.projectsResolve.openComponent(id);
-		this._projects.set(id, project);
+		if (this.allProjects.has(id) || this._currentlyOpening.includes(id)) return;
+		this._currentlyOpening.push(id);
+		const proj = await this.projectSaveManagementService.openComponent(id);
+		this._projects.set(id, proj);
 		this._projectOpenedSubject.next(id);
+		this._currentlyOpening = this._currentlyOpening.filter(o => id !== o);
 	}
 
 	public onProjectChanges$(projectId: number): Observable<Action[]> {
-		console.log(this._projects);
 		return this._projects.get(projectId).changes;
 	}
 
@@ -63,5 +66,9 @@ export class ProjectsService {
 
 	public closeProject(id: number) {
 		this._projects.delete(id);
+	}
+
+	public saveAll() {
+		this.projectSaveManagementService.save(Array.from(this.allProjects.values()));
 	}
 }

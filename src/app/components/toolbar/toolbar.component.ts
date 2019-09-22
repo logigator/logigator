@@ -67,4 +67,8 @@ export class ToolbarComponent implements OnInit {
 	public delete() {
 		this.projectInteraction.deleteSelection();
 	}
+
+	public save() {
+		this.projectService.saveAll();
+	}
 }
