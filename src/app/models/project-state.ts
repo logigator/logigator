@@ -95,7 +95,7 @@ export class ProjectState {
 		for (const coord of chunkCoords) {
 			this.createChunk(coord.x, coord.y);
 			if (!this.chunkHasCon(this._chunks[coord.x][coord.y], con)) {
-				this._chunks[coord.x][coord.y].connectionPoints.push(con);
+				this._chunks[coord.x][coord.y].connectionPoints.push(con.clone());
 				this.specialActions.push({name: 'conWire', pos: con.clone()});
 			}
 		}
@@ -115,12 +115,15 @@ export class ProjectState {
 		this.specialActions.push({name: 'dcoWire', pos: con.clone()});
 	}
 
-	public loadConnectionPoints(elements: Element[], chunk?: Chunk): void {
-		if (chunk) {
-			chunk.connectionPoints.forEach(cp => {
-				this.removeConnectionPoint(cp);
-			});
-		} else {
+	public removeAllConnectionPoints(elements: Element[]): void {
+		elements.forEach(elem => {
+			this.removeConFromChunks(elem.pos);
+			this.removeConFromChunks(elem.endPos);
+		});
+	}
+
+	public loadConnectionPoints(elements: Element[], allRemoved?: boolean): void {
+		if (!allRemoved) {
 			elements.forEach(elem => {
 				this.removeConnectionPoint(elem.pos);
 				this.removeConnectionPoint(elem.endPos);

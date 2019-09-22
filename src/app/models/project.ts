@@ -186,6 +186,7 @@ export class Project {
 		const changed = this._currState.withWiresOnEdges(elements);
 		if (!this._currState.allSpacesFree(elements, dif, elements))
 			return false;
+		this._currState.removeAllConnectionPoints(elements);
 		for (const elem of elements) {
 			this._currState.moveElement(elem, dif);
 		}
