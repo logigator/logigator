@@ -97,6 +97,7 @@ export class WorkAreaComponent extends WorkArea implements OnInit, OnDestroy {
 	}
 
 	private openProject(projectId: number) {
+		console.log(projectId);
 		const newView = new View(projectId, this._pixiCanvasContainer.nativeElement);
 		this.ngZone.run(() => {
 			this._allViews.set(projectId, newView);
@@ -108,7 +109,7 @@ export class WorkAreaComponent extends WorkArea implements OnInit, OnDestroy {
 		this.projectsService.switchToProject(toSwitchToId);
 		this.activeView = this._allViews.get(toSwitchToId);
 
-		this._pixiWindowContainer.show();
+		// this._pixiWindowContainer.show();
 	}
 
 	public closeView(id: number, event: MouseEvent) {

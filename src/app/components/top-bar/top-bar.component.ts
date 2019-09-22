@@ -1,4 +1,5 @@
 import { Component, OnInit } from '@angular/core';
+import {ProjectsService} from '../../services/projects/projects.service';
 
 @Component({
 	selector: 'app-top-bar',
@@ -13,9 +14,14 @@ export class TopBarComponent implements OnInit {
 	public helpDropdownOpen = false;
 	public settingsDropdownOpen = false;
 
-	constructor() { }
+	constructor(private projectService: ProjectsService) { }
 
 	ngOnInit() {
+	}
+
+	public get mainProjectName(): string {
+		if (!this.projectService.mainProjectInfo) return '';
+		return this.projectService.mainProjectInfo.name;
 	}
 
 	public dropdownHover(comp: keyof TopBarComponent) {

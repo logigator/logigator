@@ -68,6 +68,7 @@
 			p {
 				font-size: 10pt;
 				margin: 0.25rem 0 0 0;
+				word-break: break-word;
 			}
 
 			@include themify() {

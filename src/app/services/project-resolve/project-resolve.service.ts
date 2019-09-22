@@ -3,10 +3,11 @@ import {Project} from '../../models/project';
 import {ProjectState} from '../../models/project-state';
 import {HttpClient} from '@angular/common/http';
 import {map} from 'rxjs/operators';
-import {HttpResponseData} from '../../models/http-response-data';
 import {ProjectModel} from '../../models/project-model';
 import {Element} from '../../models/element';
 import * as PIXI from 'pixi.js';
+import {HttpResponseData} from '../../models/http-responses/http-response-data';
+import {OpenProjectResponse} from '../../models/http-responses/open-project-response';
 
 
 @Injectable({
@@ -24,10 +25,24 @@ export class ProjectResolveService {
 		}
 	}
 
+	public openComponent(id: number): Promise<Project> {
+		return this.http.get<HttpResponseData<OpenProjectResponse>>(`/api/project/open/${id}`).pipe(
+			map(response => {
+				const project = this.getProjectModelFromJson(response.result.project.data);
+				return new Project(new ProjectState(project), {
+					id,
+					name: response.result.project.name,
+					type: 'comp'
+				});
+			})
+		).toPromise();
+	}
+
 	private createEmptyProject(): Promise<Project> {
 		return Promise.resolve(new Project(new ProjectState(), {
 			type: 'project',
-			name: 'New Project'
+			name: 'New Project',
+			id: 0
 		}));
 	}
 
@@ -40,19 +55,19 @@ export class ProjectResolveService {
 		if (Number.isNaN(id)) {
 			return Promise.reject('Invalid Url');
 		}
-		return this.http.post<HttpResponseData<{project: string}>>(`/api/project/open`, {id}).pipe(
+		return this.http.get<HttpResponseData<OpenProjectResponse>>(`/api/project/open/${id}`).pipe(
 			map(response => {
-				const project = this.getProjectModelFromJson(response.result.project);
+				const project = this.getProjectModelFromJson(response.result.project.data);
 				return new Project(new ProjectState(project), {
 					id,
-					name: 'jaa'
+					name: response.result.project.name,
+					type: 'project'
 				});
 			})
 		).toPromise();
 	}
 
 	private getProjectModelFromJson(data: any): ProjectModel {
-		data = JSON.parse(data);
 		if (!data.hasOwnProperty('board')) {
 			return {
 				board: {

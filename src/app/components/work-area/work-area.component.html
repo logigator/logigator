@@ -7,7 +7,7 @@
 			     (click)="switchActiveView(project.key)"
 			     [class.tab-active]="project.key === activeView?.projectId">
 				<p>{{project.value.name}}</p>
-				<span class="tab-close" (click)="closeView(project.key, $event)"></span>
+				<span *ngIf="project.value.type !== 'project'" class="tab-close" (click)="closeView(project.key, $event)"></span>
 			</div>
 		</ng-container>
 	</div>

@@ -20,5 +20,6 @@
 			<h6>Description:</h6>
 			{{elemType?.description}}
 		</div>
+		<button *ngIf="elemType.category === 'user'" (click)="editComponentClick()">Edit</button>
 	</div>
 </div>
