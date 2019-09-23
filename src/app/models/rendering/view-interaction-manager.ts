@@ -12,12 +12,15 @@ import {ThemingService} from '../../services/theming/theming.service';
 import {ElementProviderService} from '../../services/element-provider/element-provider.service';
 import {CompSpriteGenerator} from './comp-sprite-generator';
 import {ProjectInteractionService} from '../../services/project-interaction/project-interaction.service';
+import {filter} from 'rxjs/operators';
+import {CopyService} from '../../services/copy/copy.service';
 
 export class ViewInteractionManager {
 
 	private readonly _view: View;
 
 	private _workModeSubscription: Subscription;
+	private _pasteSubscription: Subscription;
 
 	private _actionStartPos: PIXI.Point;
 	private _lastMousePos: PIXI.Point;
@@ -44,8 +47,13 @@ export class ViewInteractionManager {
 
 		this._workModeSubscription = merge(
 			WorkModeService.staticInstance.currentWorkMode$,
-			ProjectInteractionService.staticInstance.onElementsDelete$
+			ProjectInteractionService.staticInstance.onElementsDelete$,
+			ProjectInteractionService.staticInstance.onPaste$
 		).subscribe(_ => this.cleanUp());
+
+		this._pasteSubscription = ProjectInteractionService.staticInstance.onPaste$.pipe(
+			filter(_ => this._view.projectId === ProjectsService.staticInstance.currProject.id)
+		).subscribe(_ => this.onPaste());
 	}
 
 	private addEventListenersToView() {
@@ -389,6 +397,11 @@ export class ViewInteractionManager {
 			const size = this._view.calcConnPointSize();
 			element.position = this._view.adjustConnPointPosToSize(pos, size);
 		});
+	}
+
+	private onPaste() {
+		console.log(CopyService.staticInstance.getCopiedElementsBoundingBox());
+		console.log(CopyService.staticInstance.copiedElements);
 	}
 
 	private selectSingleComp(elem: ElementSprite) {
