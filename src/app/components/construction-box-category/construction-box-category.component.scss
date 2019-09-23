@@ -12,11 +12,11 @@
 		flex-direction: row;
 		align-items: center;
 		justify-content: center;
-		border-top-right-radius: 0.25rem;
-		border-top-left-radius: 0.25rem;
+		border-top-left-radius: border('radius');
+		border-top-right-radius: border('radius');
 
 		@include themify() {
-			background-color: themed('toolbar');
+			background-color: themed('secondary');
 			color: themed('primary-text');
 		}
 
@@ -32,11 +32,13 @@
 		padding: 0.5rem;
 		text-align: center;
 		user-select: none;
+		border-bottom-left-radius: border('radius');
+		border-bottom-right-radius: border('radius');
 
 		@include themify() {
-			background-color: themed('boxes-background');
-			color: themed('secondary-text');
-			border: 4px solid themed('toolbar');
+			background-color: themed('background');
+			color: themed('primary-text');
+			border: border('width') solid themed('secondary');
 		}
 
 		.no-components {
@@ -60,38 +62,42 @@
 					bottom: 0;
 					right: 0;
 					position: absolute;
-					font-size: 17pt;
+					font-size: 1.5rem;
 					line-height: 0;
 				}
 			}
 
 			p {
-				font-size: 10pt;
+				font-size: 0.9rem;
 				margin: 0.25rem 0 0 0;
 				word-break: break-word;
 			}
 
 			@include themify() {
-				border-color: themed('secondary-text');
-				color: themed('secondary-text');
+				border-color: themed('secondary');
+				color: themed('primary-text');
 
 				&:hover {
-					border-color: themed('component-select-hover');
-					color: themed('component-select-hover');
+					border-color: themed('secondary');
+					color: themed('secondary');
 				}
 			}
 		}
 
 		.active-selected-component {
 			@include themify() {
-				border-color: themed('component-active');
-				color: themed('component-active');
+				border-color: themed('primary');
+				color: themed('primary');
 
 				&:hover {
-					border-color: themed('component-active');
-					color: themed('component-active');
+					border-color: themed('primary');
+					color: themed('primary');
 				}
 			}
 		}
+	}
+
+	h2{
+		font-size: 1.2rem;
 	}
 }

@@ -3,9 +3,8 @@
 
 #top-bar {
 	@include themify() {
-		background-color: themed('toolbar');
-		color: themed('primary-text');
-		border-bottom: 1px solid themed('top-bar-divider');
+		background-color: themed('primary');
+		color: themed('secondary-text');
 	}
 
 	width: 100%;
@@ -61,7 +60,7 @@
 					&:hover {
 						cursor: pointer;
 						@include themify() {
-							background-color: lighten(themed('toolbar'), 5%);
+							background-color: lighten(themed('background'), 5%);
 						}
 					}
 				}
@@ -105,7 +104,7 @@
 			background-size: cover;
 
 			@include themify() {
-				background-color: themed('toolbar');
+				background-color: themed('background');
 			}
 		}
 	}

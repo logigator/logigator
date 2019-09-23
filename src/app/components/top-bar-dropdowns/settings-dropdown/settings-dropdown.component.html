@@ -7,7 +7,7 @@
 		<button (click)="changeShortcutPopupActive = true; showDropDown = false;">Customize Shortcuts</button>
 	</div>
 </div>
-<app-popup *ngIf="reloadPopupActive" (requestClose)="reloadClose()" title="Reload required" [closeOnClickOutside]="false">
+<app-popup class="confirm-mode-popup" *ngIf="reloadPopupActive" (requestClose)="reloadClose()" title="Reload required" [closeOnClickOutside]="false">
 	<p>For this change to take effect, the editor has to be reloaded.</p>
 	<p>Do you want to reload this page now?</p>
 	<button (click)="reloadConfirm()">Yes</button>

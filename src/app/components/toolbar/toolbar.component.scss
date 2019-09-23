@@ -3,7 +3,7 @@
 
 .toolbar {
 	@include themify() {
-		background-color: themed('toolbar');
+		background-color: themed('secondary');
 		color: themed('primary-text');
 	}
 
@@ -35,20 +35,20 @@
 		&:hover {
 			cursor: default;
 			@include themify() {
-				background-color: lighten(themed('toolbar'), 5%);
+				background-color: themed('background');
 			}
 		}
 	}
 
-	.active-button {
-		@include themify() {
-			background-color: lighten(themed('toolbar'), 15%);
+		.active-button {
+			@include themify() {
+				background-color: lighten(themed('background'), 15%);
 
-			&:hover {
-				background-color: lighten(themed('toolbar'), 15%);
+				&:hover {
+					background-color: lighten(themed('background'), 15%);
+				}
 			}
 		}
-	}
 
 	.divider {
 		border-left: 1px solid black;

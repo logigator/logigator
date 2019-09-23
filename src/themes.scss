@@ -1,35 +1,30 @@
 $themes: (
 	light: (
 		primary-text: black,
-		secondary-text: black,
-		toolbar: #2ECC71,
-		construction-box-background: #F5F5F5,
-		tab-active: #2ECC71,
-		tab-inactive: #979797,
-		boxes-background: #F5F5F5,
-		search-background: #979797,
-		component-select-hover: #979797,
-		component-active: #2ECC71,
-		scrollbar: #979797,
-		top-bar-divider: #979797,
-		top-bar-dropdown-background: #979797
+		secondary-text: #F5F5F5,
+		primary: #2ECC71,
+		secondary: #979797,
+		background: #F5F5F5,
+		inactive: #5D5D5D,
 	),
 	dark: (
-		primary-text: black,
-		secondary-text: #efefef,
-		toolbar: #27AE60,
-		construction-box-background: #2B2B2B,
-		tab-active: #27AE60,
-		tab-inactive: #5D5D5D,
-		boxes-background: #2B2B2B,
-		search-background: #5D5D5D,
-		component-select-hover: #5D5D5D,
-		component-active: #27AE60,
-		scrollbar: #5D5D5D,
-		top-bar-divider: #5D5D5D,
-		top-bar-dropdown-background: #5D5D5D
+		primary-text: #efefef,
+		secondary-text: black,
+		primary: #27AE60,
+		secondary: #5D5D5D,
+		background: #2B2B2B,
+		inactive: #979797
 	)
 );
+
+$border-styles: (
+	width: 2px,
+	radius: 3px
+);
+
+@function border($key) {
+	@return map-get($border-styles, $key);
+}
 
 @mixin themify() {
 	@each $theme, $map in $themes {
@@ -62,7 +57,7 @@ $themes: (
 	&::-webkit-scrollbar-track
 	{
 		@include themify() {
-			background-color: themed('construction-box-background');
+			background-color: themed('background');
 		}
 	}
 
@@ -75,13 +70,13 @@ $themes: (
 	{
 		border-radius: 2px;
 		@include themify() {
-			background-color: themed('scrollbar');
+			background-color: themed('secondary');
 		}
 	}
 
 	scrollbar-width: thin;
 	@include themify() {
-		scrollbar-color: themed('scrollbar') themed('construction-box-background');
+		scrollbar-color: themed('secondary') themed('background');
 	}
 
 }

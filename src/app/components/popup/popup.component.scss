@@ -14,8 +14,8 @@
 
 	.content {
 		@include themify() {
-			background-color: themed('boxes-background');
-			border: 2px solid themed('toolbar');
+			background-color: themed('background');
+			border: border('radius') solid themed('secondary');
 		}
 
 		border-radius: 0.25rem;
@@ -32,7 +32,7 @@
 			display: flex;
 
 			@include themify() {
-				background-color: themed('toolbar');
+				background-color: themed('background');
 				color: themed('primary-text');
 			}
 
@@ -56,7 +56,7 @@
 				padding: 0.3rem;
 				&:hover {
 					@include themify() {
-						background-color: lighten(themed('toolbar'), 10);
+						background-color: lighten(themed('background'), 10);
 					}
 				}
 			}
