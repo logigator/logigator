@@ -1,16 +1,6 @@
 @import "themes";
 @import "variables";
 
-.background {
-	position: fixed;
-	top: 0;
-	left: 0;
-	width: 100%;
-	height: 100%;
-	background-color: rgba(0, 0, 0, 0);
-	z-index: 100;
-}
-
 .dropdown {
 	position: absolute;
 	z-index: 200;
@@ -21,10 +11,6 @@
 	flex-direction: column;
 	right: 0;
 	top: $top-bar-height;
-
-	&.hidden {
-		display: none;
-	}
 
 	@include themify() {
 		background-color: themed('background');
@@ -40,11 +26,6 @@
 
 			&:hover {
 				background-color: themed('secondary');
-			}
-
-			span {
-				float: right;
-				margin-left: 3rem;
 			}
 		}
 
