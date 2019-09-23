@@ -25,7 +25,13 @@
 
 		.body {
 			padding: 0.3rem;
-			color: white;
+			@include themify() {
+				@if isTheme('dark') {
+					color: white;
+				} @else {
+					color: black;
+				}
+			}
 		}
 
 		.header {

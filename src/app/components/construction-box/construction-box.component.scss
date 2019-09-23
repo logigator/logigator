@@ -34,12 +34,12 @@ $search-height: 3.5rem;
 			color: themed('primary-text');
 
 			&::placeholder {
-				@if(isTheme('dark')) {
+				@if (isTheme('dark')) {
 					color: darken(themed('inactive'), 10%);
+					background-image: url("/assets/icons/search_light.svg");
+				} @else {
+					background-image: url("/assets/icons/search.svg");
 				}
-				background-image: url("/assets/icons/search_light.svg");
-			} @else {
-				background-image: url("/assets/icons/search.svg");
 			}
 		}
 	}
