@@ -33,24 +33,27 @@ $search-height: 3.5rem;
 			background-color: themed('secondary');
 			color: themed('primary-text');
 
-			&::placeholder {
-				@if(isTheme('dark')) {
-					color: darken(themed('inactive'), 10%);
-				}
+			@if (isTheme('dark')) {
 				background-image: url("/assets/icons/search_light.svg");
 			} @else {
 				background-image: url("/assets/icons/search.svg");
 			}
+
+			&::placeholder {
+				@if (isTheme('dark')) {
+					color: darken(themed('inactive'), 10%);
+				}
+			}
 		}
-	}
 
-	.scroll-container {
-		width: $construction-box-width;
-		height: calc(100vh - #{$toolbar-height} - #{$search-height});
-		overflow: auto;
-		margin: auto;
-		overflow-x: hidden;
+		.scroll-container {
+			width: $construction-box-width;
+			height: calc(100vh - #{$toolbar-height} - #{$search-height});
+			overflow: auto;
+			margin: auto;
+			overflow-x: hidden;
 
-		@include scrollbar(5px)
+			@include scrollbar(5px)
+		}
 	}
 }
