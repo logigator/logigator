@@ -45,15 +45,15 @@ $search-height: 3.5rem;
 				}
 			}
 		}
+	}
 
-		.scroll-container {
-			width: $construction-box-width;
-			height: calc(100vh - #{$toolbar-height} - #{$search-height});
-			overflow: auto;
-			margin: auto;
-			overflow-x: hidden;
+	.scroll-container {
+		width: $construction-box-width;
+		height: calc(100vh - #{$toolbar-height} - #{$search-height});
+		overflow: auto;
+		margin: auto;
+		overflow-x: hidden;
 
-			@include scrollbar(5px)
-		}
+		@include scrollbar(5px)
 	}
 }
