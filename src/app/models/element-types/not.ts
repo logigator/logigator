@@ -7,5 +7,6 @@ export const not: ElementType = {
 	hasVariableInputs: false,
 	symbol: '1',
 	description: 'i am a not',
-	rotation: 0
+	rotation: 0,
+	category: 'basic'
 };

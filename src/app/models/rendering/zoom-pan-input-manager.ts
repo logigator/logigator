@@ -35,7 +35,7 @@ export class ZoomPanInputManager {
 			takeUntil(this._destroySubject)
 		).subscribe((e: MouseEvent) => this.mouseDownHandler(e));
 
-		fromEvent(this._htmlContainer, 'wheel').pipe(
+		fromEvent(this._htmlContainer, 'wheel', {passive: true}).pipe(
 			takeUntil(this._destroySubject)
 		).subscribe((e: WheelEvent) => this.mouseWheelHandler(e));
 	}
@@ -58,8 +58,8 @@ export class ZoomPanInputManager {
 	private mouseMoveHandler(event: MouseEvent) {
 		event.preventDefault();
 
-		const _mouseX = event.pageX - this._htmlContainer.offsetLeft;
-		const _mouseY = event.pageY - this._htmlContainer.offsetTop;
+		const _mouseX = event.offsetX;
+		const _mouseY = event.offsetY;
 
 		if (this._mouseDown) {
 			this._mouseMoved = true;
@@ -72,8 +72,6 @@ export class ZoomPanInputManager {
 	}
 
 	private mouseWheelHandler(event: WheelEvent) {
-		event.preventDefault();
-
 		if (event.deltaY < 0) {
 			this._wheelDown = true;
 		} else if (event.deltaY > 0) {

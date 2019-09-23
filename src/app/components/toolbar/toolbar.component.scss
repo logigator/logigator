@@ -15,6 +15,53 @@
 	display: grid;
 	grid-template-columns: auto 250px;
 
+	.toolbar-button {
+		height: $toolbar-height - 10px;
+		width: $toolbar-height - 10px;
+		margin-right: 0.7rem;
+		border: none;
+		cursor: pointer;
+		padding: 0.2rem;
+		outline: none;
+		background-size: cover;
+		background-origin: content-box;
+		background-repeat: no-repeat;
+		border-radius: 0.2rem;
+
+		@include themify() {
+			background-color: themed('toolbar');
+		}
+
+		&:hover {
+			cursor: default;
+			@include themify() {
+				background-color: lighten(themed('toolbar'), 5%);
+			}
+		}
+	}
+
+	.active-button {
+		@include themify() {
+			background-color: lighten(themed('toolbar'), 15%);
+
+			&:hover {
+				background-color: lighten(themed('toolbar'), 15%);
+			}
+		}
+	}
+
+	.divider {
+		border-left: 1px solid black;
+		height:  $toolbar-height - 20px;
+		padding: 0;
+		margin-right: 1rem;
+		margin-left: 1rem;
+	}
+
+	.no-margin {
+		margin-right: 0;
+	}
+
 	.toolbar-buttons {
 		display: flex;
 		flex-direction: row;
@@ -22,55 +69,16 @@
 		align-items: center;
 		padding-left: #{($construction-box-width - 3rem) * 0.1};
 
-		.toolbar-button {
-			height: $toolbar-height - 10px;
-			width: $toolbar-height - 10px;
-			margin-right: 0.7rem;
-			border: none;
-			cursor: pointer;
-			padding: 0.2rem;
-			outline: none;
-			background-size: cover;
-			background-origin: content-box;
-			background-repeat: no-repeat;
-			border-radius: 0.2rem;
-
-			@include themify() {
-				background-color: themed('toolbar');
-			}
-
-			&:hover {
-				cursor: default;
-				@include themify() {
-					background-color: lighten(themed('toolbar'), 5%);
-				}
-			}
-		}
-
-		.active-button {
-			@include themify() {
-				background-color: lighten(themed('toolbar'), 15%);
-
-				&:hover {
-					background-color: lighten(themed('toolbar'), 15%);
-				}
-			}
-		}
-
-		.divider {
-			border-left: 1px solid black;
-			height:  $toolbar-height - 20px;
-			padding: 0;
-			margin-right: 1rem;
-			margin-left: 1rem;
-		}
-
-		.no-margin {
-			margin-right: 0;
-		}
-
 		.save {
 			background-image: url("/assets/icons/save_new.svg");
+		}
+
+		.open {
+			background-image: url("/assets/icons/folder.svg");
+		}
+
+		.new-comp {
+			background-image: url("/assets/icons/new-component.svg");
 		}
 
 		.paste {
@@ -78,7 +86,7 @@
 		}
 
 		.copy {
-			background-image: url("/assets/icons/files.svg");
+			background-image: url("/assets/icons/clipboard.svg");
 		}
 
 		.cut {
@@ -110,7 +118,7 @@
 		}
 
 		.select {
-			background-image: url("/assets/icons/target.svg");
+			background-image: url("/assets/icons/selection1.svg");
 		}
 
 		.sim-start {
@@ -148,6 +156,28 @@
 
 		p {
 			margin: 0;
+		}
+
+		.start-sim {
+			&:hover {
+				cursor: pointer;
+			}
+		}
+
+		.play {
+			background-image: url("/assets/icons/control-play.svg");
+		}
+
+		.pause {
+			background-image: url("/assets/icons/control-pause.svg");
+		}
+
+		.step {
+			background-image: url("/assets/icons/angle-right.svg");
+		}
+
+		.stop {
+			background-image: url("/assets/icons/control-stop.svg");
 		}
 	}
 }

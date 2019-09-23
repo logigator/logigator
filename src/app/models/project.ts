@@ -10,6 +10,7 @@ export class Project {
 
 	private readonly _id: number;
 	private _name: string;
+	private _type: 'project' | 'comp';
 
 	private _currState: ProjectState;
 
@@ -22,11 +23,12 @@ export class Project {
 
 	public dirty = false;
 
-	public constructor(projectState: ProjectState, id?: number, name?: string) {
+	public constructor(projectState: ProjectState, config: {id?: number, name?: string, type?: 'project' | 'comp'}) {
 		this._currState = projectState;
-		this._id = id;
-		this._name = name;
 		this._actions = new Array(this._maxActionCount);
+		this._id = config.id;
+		this._name = config.name;
+		this._type = config.type || 'comp';
 		this._currActionPointer = -1;
 		this._currMaxActionPointer = -1;
 		this._changeSubject = new Subject<Action[]>();
@@ -318,5 +320,9 @@ export class Project {
 
 	set name(value: string) {
 		this._name = value;
+  }
+
+	get type(): 'project' | 'comp' {
+		return this._type;
 	}
 }

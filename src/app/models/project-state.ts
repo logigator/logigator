@@ -18,7 +18,7 @@ export class ProjectState {
 
 
 	public constructor(model?: ProjectModel, highestId?: number) {
-		this._model = model || {id: 100, board: {elements: []}};
+		this._model = model || {board: {elements: []}};
 		this._highestTakenId = highestId || this.findHighestTakenId();
 		this._chunks = [];
 		this.loadAllIntoChunks();
@@ -360,7 +360,6 @@ export class ProjectState {
 		// TODO copy _chunks
 		// TODO make cleaner/faster
 		const outModel: ProjectModel = {
-			id: this._model.id,
 			board: {
 				elements: []
 			}

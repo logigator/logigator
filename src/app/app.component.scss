@@ -10,5 +10,9 @@
 		height: calc(100% - #{$page-header-height});
 		display: grid;
 		grid-template-columns: $construction-box-width auto;
+
+		&.simulation-mode {
+			display: block;
+		}
 	}
 }

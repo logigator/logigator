@@ -7,5 +7,6 @@ export const xor: ElementType = {
 	hasVariableInputs: false,
 	symbol: '=1',
 	description: '',
-	rotation: 0
+	rotation: 0,
+	category: 'basic'
 };

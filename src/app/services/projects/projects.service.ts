@@ -2,8 +2,7 @@ import { Injectable } from '@angular/core';
 import {Project} from '../../models/project';
 import {Observable, ReplaySubject} from 'rxjs';
 import {Action} from '../../models/action';
-import {ProjectState} from '../../models/project-state';
-import {TestModel} from '../../models/tests/test-model';
+import {ProjectSaveManagementService} from '../project-save-management/project-save-management.service';
 
 @Injectable({
 	providedIn: 'root'
@@ -15,23 +14,34 @@ export class ProjectsService {
 	private _projects: Map<number, Project> = new Map<number, Project>();
 	private _currProject: Project;
 
+	private _mainProject: Project;
+
+	private _currentlyOpening: number[] = [];
+
 	private _projectOpenedSubject = new ReplaySubject<number>(2);
 
-	constructor() {
+	constructor(private projectSaveManagementService: ProjectSaveManagementService) {
 		ProjectsService.staticInstance = this;
-		const project = new Project(new ProjectState(), 0, 'Projekt');
-		const project2 = new Project(new ProjectState(TestModel.basicModel), 2, 'Komponente 1');
 
-		this._projects.set(0, project);
-		this._projectOpenedSubject.next(0);
-		this._currProject = project;
+		this.projectSaveManagementService.getProjectToOpenOnLoad().then(project => {
+			this._projects.set(project.id, project);
+			this._projectOpenedSubject.next(project.id);
+			this._currProject = project;
+			this._mainProject = project;
+		});
+	}
 
-		// to simulate that the project was opened later, for testing
-		setTimeout(() => {
-			this._projects.set(2, project2);
-			this._projectOpenedSubject.next(2);
-			this._currProject = project2;
-		}, 10);
+	public get mainProject(): Project {
+		return this._mainProject;
+	}
+
+	public async openComponent(id: number) {
+		if (this.allProjects.has(id) || this._currentlyOpening.includes(id)) return;
+		this._currentlyOpening.push(id);
+		const proj = await this.projectSaveManagementService.openComponent(id);
+		this._projects.set(id, proj);
+		this._projectOpenedSubject.next(id);
+		this._currentlyOpening = this._currentlyOpening.filter(o => id !== o);
 	}
 
 	public onProjectChanges$(projectId: number): Observable<Action[]> {
@@ -56,5 +66,9 @@ export class ProjectsService {
 
 	public closeProject(id: number) {
 		this._projects.delete(id);
+	}
+
+	public saveAll() {
+		this.projectSaveManagementService.save(Array.from(this.allProjects.values()));
 	}
 }

@@ -18,7 +18,7 @@ export class SettingsDropdownComponent {
 	public reloadPopupActive = false;
 	public changeShortcutPopupActive = false;
 
-	constructor(private theming: ThemingService) {}
+	constructor(public theming: ThemingService) {}
 
 	public close() {
 		this.requestClosed.emit();

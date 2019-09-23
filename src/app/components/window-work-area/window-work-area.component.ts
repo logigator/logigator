@@ -53,6 +53,7 @@ export class WindowWorkAreaComponent extends WorkArea implements OnInit, OnDestr
 	public componentName: string;
 
 	private _currentlyDragging: Border;
+	private _draggingPos = [0, 0];
 
 	private _bounding: HTMLElement;
 
@@ -98,7 +99,6 @@ export class WindowWorkAreaComponent extends WorkArea implements OnInit, OnDestr
 				this._view.updateZoomPan();
 				this._pixiRenderer.render(this._view);
 			});
-			this.openProject(this.projectIdToOpen);
 
 			fromEvent(window, 'mousemove').pipe(
 				takeUntil(this._destroySubject)
@@ -115,11 +115,28 @@ export class WindowWorkAreaComponent extends WorkArea implements OnInit, OnDestr
 			fromEvent(this._popup.nativeElement, 'mousemove').pipe(
 				takeUntil(this._destroySubject)
 			).subscribe((e: MouseEvent) => this.pointerOver(e));
+
+			fromEvent(window, 'resize').pipe(
+				takeUntil(this._destroySubject)
+			).subscribe((e: MouseEvent) => {
+				if (this.collision_right(this._popup.nativeElement.offsetLeft)) {
+					let newLoc = (this._bounding.offsetLeft + this._bounding.offsetWidth) - this._popup.nativeElement.offsetWidth;
+					if (this.collision_left(newLoc))
+						newLoc = this._bounding.offsetLeft;
+					this.renderer2.setStyle(this._popup.nativeElement, 'left', newLoc + 'px');
+				}
+				if (this.collision_bottom(this._popup.nativeElement.offsetTop)) {
+					let newLoc = (this._bounding.offsetTop + this._bounding.offsetHeight) - this._popup.nativeElement.offsetHeight;
+					if (this.collision_top(newLoc))
+						newLoc = this._bounding.offsetTop;
+					this.renderer2.setStyle(this._popup.nativeElement, 'top', newLoc + 'px');
+				}
+			});
 		});
 	}
 
 	private openProject(projectId: number) {
-		this._view = new View(projectId, this._pixiCanvasContainer.nativeElement);
+		this._view = new View(projectId, this._pixiCanvasContainer.nativeElement, true);
 		this.componentName = this.projects.allProjects.get(projectId).id.toString();
 	}
 
@@ -163,10 +180,12 @@ export class WindowWorkAreaComponent extends WorkArea implements OnInit, OnDestr
 
 	private mouseMove(event: MouseEvent) {
 		if (this._currentlyDragging) {
-			const changeX = event.movementX / window.devicePixelRatio;
-			const changeY = event.movementY / window.devicePixelRatio;
-			const newX = this._popup.nativeElement.offsetLeft + event.movementX / window.devicePixelRatio;
-			const newY = this._popup.nativeElement.offsetTop + event.movementY / window.devicePixelRatio;
+			const changeX = event.screenX - this._draggingPos[0];
+			const changeY = event.screenY - this._draggingPos[1];
+			this._draggingPos = [ event.screenX, event.screenY ];
+
+			const newX = this._popup.nativeElement.offsetLeft + changeX;
+			const newY = this._popup.nativeElement.offsetTop + changeY;
 
 			switch (this._currentlyDragging) {
 				case 'move':
@@ -276,10 +295,13 @@ export class WindowWorkAreaComponent extends WorkArea implements OnInit, OnDestr
 			return;
 
 		const b = WindowWorkAreaComponent.getBoarderCollision(event.layerX, event.layerY, this._popup.nativeElement);
-		if (b)
+		if (b) {
 			this._currentlyDragging = b;
-		else if (event.target === this._header.nativeElement)
+			this._draggingPos = [ event.screenX, event.screenY ];
+		} else if (event.target === this._header.nativeElement) {
 			this._currentlyDragging = 'move';
+			this._draggingPos = [ event.screenX, event.screenY ];
+		}
 	}
 
 	private mouseUp(event: MouseEvent) {
@@ -289,12 +311,15 @@ export class WindowWorkAreaComponent extends WorkArea implements OnInit, OnDestr
 	public hide() {
 		this.renderer2.setStyle(this._popup.nativeElement, 'display', 'none');
 		this._pixiTicker.stop();
+		this._view.destroy();
+		delete this._view;
 	}
 
 	public show() {
 		this.renderer2.setStyle(this._popup.nativeElement, 'display', 'block');
 		this._pixiRenderer.resize(this._pixiCanvasContainer.nativeElement.offsetWidth, this._pixiCanvasContainer.nativeElement.offsetHeight);
-		this._pixiTicker.start();
+		this.ngZone.runOutsideAngular(() => this._pixiTicker.start());
+		this.openProject(this.projectIdToOpen);
 		this._view.updateChunks();
 	}
 

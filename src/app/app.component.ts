@@ -1,4 +1,4 @@
-import {Component, ElementRef, Inject, NgZone, OnDestroy, OnInit, Renderer2, ViewChild} from '@angular/core';
+import {Component, DoCheck, ElementRef, Inject, NgZone, OnDestroy, OnInit, Renderer2, ViewChild} from '@angular/core';
 import {ThemingService} from './services/theming/theming.service';
 import {SelectionService} from './services/selection/selection.service';
 import {WorkModeService} from './services/work-mode/work-mode.service';
@@ -6,6 +6,7 @@ import {ShortcutsService} from './services/shortcuts/shortcuts.service';
 import {fromEvent, Subject} from 'rxjs';
 import {DOCUMENT} from '@angular/common';
 import {takeUntil} from 'rxjs/operators';
+import {ProjectsService} from './services/projects/projects.service';
 
 @Component({
 	selector: 'app-root',
@@ -26,6 +27,7 @@ export class AppComponent implements OnInit, OnDestroy {
 		private workMode: WorkModeService,
 		private selection: SelectionService,
 		private shortcuts: ShortcutsService,
+		private projects: ProjectsService,
 		@Inject(DOCUMENT) private document: HTMLDocument
 	) {}
 
@@ -46,8 +48,12 @@ export class AppComponent implements OnInit, OnDestroy {
 		});
 	}
 
+	public get isSimulationMode(): boolean {
+		return this.workMode.currentWorkMode === 'simulation';
+	}
+
 	public get showSettingsInfoBox(): boolean {
-		return this.workMode.currentWorkMode === 'buildComponent' || this.selection.isSingleSelect();
+		return this.workMode.currentWorkMode === 'buildComponent' ||  (this.projects.currProject && this.selection.isSingleSelect());
 	}
 
 	public get selectionMode(): 'type' | 'placed' {

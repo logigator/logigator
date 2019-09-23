@@ -7,5 +7,6 @@ export const wire: ElementType = {
 	hasVariableInputs: false,
 	symbol: '',
 	description: '',
-	rotation: 0
+	rotation: 0,
+	category: 'basic'
 };
