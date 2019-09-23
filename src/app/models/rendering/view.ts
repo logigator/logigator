@@ -106,7 +106,7 @@ export class View extends PIXI.Container {
 				this.updateComponentSprite(elemSprite.element, elemSprite.sprite as PIXI.Graphics);
 			}
 		}
-		const selectedConnections = SelectionService.staticInstance.selectedConnections(this.projectId)
+		const selectedConnections = SelectionService.staticInstance.selectedConnections(this.projectId);
 		for (let i = 0; i < selectedConnections.length; i++) {
 			const graphics = this.connectionPoints.get(`${selectedConnections[i].x}:${selectedConnections[i].y}`);
 			const pos = Grid.getPixelPosForPixelPosOnGridWire(graphics.position);
