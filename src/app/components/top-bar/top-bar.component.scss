@@ -4,7 +4,7 @@
 #top-bar {
 	@include themify() {
 		background-color: themed('primary');
-		color: themed('secondary-text');
+		color: black;
 	}
 
 	width: 100%;
@@ -104,7 +104,7 @@
 			background-size: cover;
 
 			@include themify() {
-				background-color: themed('background');
+				background-color: themed('primary');
 			}
 		}
 	}
