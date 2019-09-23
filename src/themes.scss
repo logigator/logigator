@@ -19,7 +19,7 @@ $themes: (
 
 $border-styles: (
 	width: 2px,
-	radius: 3px
+	radius: 0.2rem
 );
 
 @function border($key) {

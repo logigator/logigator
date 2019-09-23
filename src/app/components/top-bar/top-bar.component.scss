@@ -38,7 +38,7 @@
 		grid-template-rows: auto #{$top-bar-height / 2.5};
 
 		.project-title {
-			font-size: 15pt;
+			font-size: 1.2rem;
             padding-left: 0.17rem;
 			margin: 0;
 			align-self: end;
@@ -55,7 +55,7 @@
 				p {
 					margin: 0 0.5rem 0 0;
 					padding: 0.1rem 0.2rem 0.1rem 0.2rem;
-					border-radius: 0.2rem;
+					border-radius: border('radius');
 
 					&:hover {
 						cursor: pointer;
@@ -78,7 +78,7 @@
 		flex: auto;
 
 		p {
-			font-size: 15pt;
+			font-size: 1.2rem;
 			margin: 0;
 		}
 
