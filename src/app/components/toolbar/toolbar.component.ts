@@ -3,6 +3,8 @@ import {WorkMode} from '../../models/work-modes';
 import {WorkModeService} from '../../services/work-mode/work-mode.service';
 import {ProjectsService} from '../../services/projects/projects.service';
 import {ProjectInteractionService} from '../../services/project-interaction/project-interaction.service';
+import {CopyService} from '../../services/copy/copy.service';
+import {SelectionService} from '../../services/selection/selection.service';
 
 @Component({
 	selector: 'app-toolbar',
@@ -14,7 +16,8 @@ export class ToolbarComponent implements OnInit {
 	constructor(
 		private workModeService: WorkModeService,
 		private projectService: ProjectsService,
-		private projectInteraction: ProjectInteractionService
+		private projectInteraction: ProjectInteractionService,
+		private copyService: CopyService
 	) { }
 
 	ngOnInit() {
@@ -31,12 +34,24 @@ export class ToolbarComponent implements OnInit {
 				console.log(elem.id, elem.pos, elem.endPos);
 			}
 		}
+		console.log('connectionPoints');
+		for (const chunks of this.projectService.currProject.currState.chunks) {
+			for (const chunk of chunks) {
+				if (!chunk)
+					continue;
+				for (const cp of chunk.connectionPoints) {
+					console.log(cp);
+				}
+			}
+		}
 	}
 
 	public test(): void {
+		CopyService.staticInstance.copyIds(SelectionService.staticInstance.selectedIds());
 	}
 
 	public test1(): void {
+		this.projectService.currProject.addElements(CopyService.staticInstance.copiedElements);
 		this.printWires();
 	}
 
