@@ -4,12 +4,12 @@ import {HttpResponseData} from '../../models/http-responses/http-response-data';
 import {OpenProjectResponse} from '../../models/http-responses/open-project-response';
 import {map} from 'rxjs/operators';
 import {ProjectModel} from '../../models/project-model';
-import {Element} from '../../models/element';
 import * as PIXI from 'pixi.js';
 import {HttpClient} from '@angular/common/http';
 import {ElementType} from '../../models/element-type';
 import {ComponentInfoResponse} from '../../models/http-responses/component-info-response';
 import {ProjectState} from '../../models/project-state';
+import {ElementProviderService} from '../element-provider/element-provider.service';
 
 @Injectable({
 	providedIn: 'root'
@@ -18,7 +18,7 @@ export class ProjectSaveManagementService {
 
 	private _projectSource: 'server' | 'share' | 'file';
 
-	constructor(private http: HttpClient) { }
+	constructor(private http: HttpClient, private elemProvService: ElementProviderService) { }
 
 	public getProjectToOpenOnLoad(): Promise<Project> {
 		if (location.pathname === '/') {
@@ -26,6 +26,7 @@ export class ProjectSaveManagementService {
 		} else {
 			return this.openProjectFromServer();
 		}
+		this.elemProvService.setUserDefinedTypes(this.getAllAvailableCustomElements());
 	}
 
 	public getAllAvailableCustomElements(): Promise<Map<number, ElementType>> {
@@ -135,13 +136,14 @@ export class ProjectSaveManagementService {
 		}
 
 		data.board.elements = data.board.elements.map(e => {
-			const elem: Element = {
+			const elem = {
 				id: e.id,
 				typeId: e.typeId,
 				inputs: e.inputs,
 				outputs: e.outputs,
 				pos: new PIXI.Point(e.pos.x, e.pos.y),
-				endPos: new PIXI.Point(e.endPos.x, e.endPos.y)
+				endPos: new PIXI.Point(e.endPos.x, e.endPos.y),
+				rotation: e.rotation
 			};
 			return elem;
 		});

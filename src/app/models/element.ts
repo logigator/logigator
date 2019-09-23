@@ -1,16 +1,17 @@
 import * as PIXI from 'pixi.js';
 import {CollisionFunctions} from './collision-functions';
-import {ElementProviderService} from '../services/element-provider/element-provider.service';
 import {environment} from '../../environments/environment';
+import {ElementProviderService} from '../services/element-provider/element-provider.service';
 
 export interface Element {
 	id: number;
 	typeId: number;
-	inputs: number[];
-	outputs: number[];
+	numInputs: number;
+	numOutputs: number;
 
 	pos: PIXI.Point;
 	endPos: PIXI.Point;
+	rotation?: number;
 }
 
 export class Elements {
@@ -30,6 +31,7 @@ export class Elements {
 	}
 
 	public static genNewElement(typeId: number, _pos: PIXI.Point, _endPos: PIXI.Point): Element {
+		const type = ElementProviderService.staticInstance.getElementById(typeId);
 		const pos = _pos ? _pos.clone() : undefined;
 		const endPos = _endPos ? _endPos.clone() : undefined;
 		if (pos && endPos)
@@ -37,10 +39,11 @@ export class Elements {
 		return {
 			id: -1,
 			typeId,
-			inputs: [],
-			outputs: [],
+			numInputs: type.numInputs,
+			numOutputs: type.numOutputs,
 			pos,
-			endPos
+			endPos,
+			rotation: type.rotation
 		};
 	}
 
@@ -52,9 +55,15 @@ export class Elements {
 		return {wire0, wire1};
 	}
 
-	public static calcEndPos(pos: PIXI.Point, typeId: number): PIXI.Point {
-		return new PIXI.Point(pos.x + environment.componentWidth,
-			pos.y + Math.max(1, 2));
+	public static calcEndPos(pos: PIXI.Point, numInputs: number, numOutputs: number, rotation?: number): PIXI.Point {
+		if (rotation === undefined) rotation = 0;
+		if (rotation % 2 === 0) {
+			return new PIXI.Point(pos.x + environment.componentWidth,
+				pos.y + Math.max(numInputs, numOutputs));
+		} else {
+			return new PIXI.Point(pos.x + Math.max(numInputs, numOutputs),
+				pos.y + environment.componentWidth);
+		}
 	}
 
 	public static mergeCheckedWiresVertical(wire0: Element, wire1: Element, newElem) {

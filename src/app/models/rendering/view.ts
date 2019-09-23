@@ -150,7 +150,7 @@ export class View extends PIXI.Container {
 	private updateComponentSprite(element: Element, graphics: PIXI.Graphics) {
 		graphics.clear();
 		const elemType = ElementProviderService.staticInstance.getElementById(element.typeId);
-		CompSpriteGenerator.updateGraphics(elemType.symbol, elemType.numInputs, 0, this.zoomPan.currentScale, graphics);
+		CompSpriteGenerator.updateGraphics(elemType.symbol, elemType.numInputs, element.rotation, this.zoomPan.currentScale, graphics);
 	}
 
 	private createChunk(x: number, y: number): boolean {
@@ -231,13 +231,15 @@ export class View extends PIXI.Container {
 		ProjectsService.staticInstance.allProjects.get(this.projectId).addWire(start, middle, end);
 	}
 
-	public placeComponent(position: PIXI.Point, elementTypeId: number) {
-		return ProjectsService.staticInstance.allProjects.get(this.projectId).addElement(elementTypeId, position);
+	public placeComponent(position: PIXI.Point, typeId: number) {
+		const type = ElementProviderService.staticInstance.getElementById(typeId);
+		const project = ProjectsService.staticInstance.allProjects.get(this.projectId);
+		return project.addElement(typeId, type.rotation, type.numInputs, type.numOutputs, position);
 	}
 
 	private placeComponentOnView(element: Element) {
 		const elemType = ElementProviderService.staticInstance.getElementById(element.typeId);
-		const sprite = CompSpriteGenerator.getComponentSprite(elemType.symbol, elemType.numInputs, elemType.rotation, this.zoomPan.currentScale);
+		const sprite = CompSpriteGenerator.getComponentSprite(elemType.symbol, elemType.numInputs, element.rotation, this.zoomPan.currentScale);
 		sprite.position = Grid.getLocalChunkPixelPosForGridPos(element.pos);
 		sprite.name = element.id.toString();
 
@@ -333,6 +335,8 @@ export class View extends PIXI.Container {
 				break;
 			case 'movMult':
 				this.moveMultipleAction(action);
+				break;
+			case 'rotComp':
 				break;
 		}
 	}

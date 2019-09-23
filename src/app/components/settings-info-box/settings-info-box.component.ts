@@ -63,9 +63,14 @@ export class SettingsInfoBoxComponent implements OnChanges, OnDestroy {
 	}
 
 	private initInstance() {
+		const element = this.projects.currProject.currState.getElementById(this.selectedCompId);
+		this.elemType = this.elemProvider.getElementById(element.typeId);
 		this.propertiesFrom = this.formBuilder.group({
-			numInputs: [],
-			rotation: []
+			numInputs: [element.numInputs],
+			rotation: [element.rotation]
+		});
+		this.formSubscription = this.propertiesFrom.valueChanges.subscribe((data: any) => {
+			this.projects.currProject.rotateComponent(this.selectedCompId, Number(data.rotation));
 		});
 	}
 

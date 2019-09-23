@@ -61,6 +61,9 @@ export class Project {
 			case 'dcoWire':
 				this._currState.removeConFromChunks(action.pos);
 				break;
+			case 'rotComp':
+				this._currState.rotateComp(action.element, action.rotation);
+				break;
 		}
 	}
 
@@ -69,7 +72,6 @@ export class Project {
 		for (const element of this.allElements) {
 			out.push({
 				name: element.typeId === 0 ? 'addWire' : 'addComp',
-				id: element.id,
 				pos: element.pos,
 				endPos: element.endPos,
 				element
@@ -117,12 +119,14 @@ export class Project {
 		return true;
 	}
 
-	public addElement(typeId: number, _pos: PIXI.Point, _endPos?: PIXI.Point): Element {
+	public addElement(typeId: number, rotation: number, numInputs: number, numOutputs: number, _pos: PIXI.Point, _endPos?: PIXI.Point):
+		Element {
 		if (typeId === 0 && !_endPos)
 			return null;
 		if (typeId === 0 && _pos.equals(_endPos))
 			return null;
-		const elem = Elements.genNewElement(typeId, _pos, _endPos || Elements.calcEndPos(_pos, typeId));
+		const elem = Elements.genNewElement(typeId, _pos,
+			_endPos || Elements.calcEndPos(_pos, numInputs, numOutputs, rotation));
 		if (!this._currState.isFreeSpace(elem.pos, elem.endPos, typeId === 0))
 			return null;
 		this._currState.addElement(elem);
@@ -137,7 +141,7 @@ export class Project {
 
 	public addWire(_pos: PIXI.Point, _cornerPos: PIXI.Point, _endPos?: PIXI.Point): Element[] {
 		if (!_endPos) {
-			const elem = this.addElement(0, _pos, _cornerPos);
+			const elem = this.addElement(0, undefined, 0, 0, _pos, _cornerPos);
 			return elem ? [elem] : null;
 		}
 		const {wire0, wire1} = Elements.gen2Wires(_pos, _cornerPos, _endPos);
@@ -198,6 +202,26 @@ export class Project {
 			pos: dif
 		}];
 		actions.push(...this.autoAssemble(changed));
+		this.newState(actions);
+		return true;
+	}
+
+
+	public rotateComponent(id: number, rotation: number): boolean {
+		const element = this._currState.getElementById(id);
+		const actions: Action[] = [{
+			name: 'rotComp',
+			element,
+			rotation: element.rotation
+		}];
+		if (element.typeId === 0)
+			return;
+		const newEndPos = Elements.calcEndPos(element.pos, element.numInputs, element.numOutputs, rotation);
+		if (!this._currState.isFreeSpace(element.pos, newEndPos, false, [element])) {
+			return false;
+		}
+		this._currState.rotateComp(element, rotation, newEndPos);
+		actions.push(...this.autoAssemble([element]));
 		this.newState(actions);
 		return true;
 	}
@@ -320,7 +344,7 @@ export class Project {
 
 	set name(value: string) {
 		this._name = value;
-  }
+	}
 
 	get type(): 'project' | 'comp' {
 		return this._type;

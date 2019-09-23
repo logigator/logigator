@@ -206,6 +206,10 @@ export class ProjectState {
 		return true;
 	}
 
+	public rotateComp(element: Element, rotation: number, endPos?: PIXI.Point): void {
+		element.rotation = rotation;
+		element.endPos = endPos || Elements.calcEndPos(element.pos, element.numInputs, element.numOutputs, rotation);
+	}
 
 
 	public connectWires(wire0: Element, wire1: Element, intersection: PIXI.Point): Element[] {
