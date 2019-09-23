@@ -32,7 +32,7 @@
 			display: flex;
 
 			@include themify() {
-				background-color: themed('secondary');
+				border-bottom: border('width') solid themed('secondary');
 			}
 
 			width: 100%;

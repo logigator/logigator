@@ -16,8 +16,11 @@
 		padding: 0.5rem;
 
 		@include themify() {
-			background-color: themed('secondary');
+			background-color: themed('background');
 			color: themed('primary-text');
+			border-top: border('width') solid themed('secondary');
+			border-left: border('width') solid themed('secondary');
+			border-right: border('width') solid themed('secondary');
 		}
 
 		h2 {

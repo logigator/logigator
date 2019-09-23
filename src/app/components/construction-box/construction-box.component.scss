@@ -20,7 +20,6 @@ $search-height: 3.5rem;
 		font-size: 0.9rem;
 		padding: 1.25rem;
 		outline: none;
-		border: none;
 		border-radius: border('radius');
 		margin-left: 0.25rem;
 		margin-top: 0.5rem;
@@ -30,7 +29,8 @@ $search-height: 3.5rem;
 		background-origin: content-box;
 
 		@include themify() {
-			background-color: themed('secondary');
+			border: border(width) solid themed(secondary);
+			background-color: themed('background');
 			color: themed('primary-text');
 
 			@if (isTheme('dark')) {
