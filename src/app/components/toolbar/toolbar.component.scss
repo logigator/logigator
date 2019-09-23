@@ -1,7 +1,7 @@
 @import "themes";
 @import "variables";
 
-#toolbar {
+.toolbar {
 	@include themify() {
 		background-color: themed('secondary');
 		color: themed('primary-text');
@@ -12,40 +12,33 @@
 	height: $toolbar-height;
 	user-select: none;
 
-	display: grid;
-	grid-template-columns: auto 250px;
+	display: flex;
 
-	.toolbar-buttons {
-		display: flex;
-		flex-direction: row;
-		justify-content: flex-start;
-		align-items: center;
-		padding-left: #{($construction-box-width - 3rem) * 0.1};
+	.toolbar-button {
+		height: calc(#{$toolbar-height} - 0.4rem);
+		width: calc(#{$toolbar-height} - 0.4rem);
+		margin: 0.1rem;
+		margin-top: 0.2rem;
+		margin-bottom: 0.2rem;
+		border: none;
+		padding: 0.4rem;
+		outline: none;
+		background-size: contain;
+		background-origin: content-box;
+		background-repeat: no-repeat;
+		border-radius: 0.2rem;
 
-		.toolbar-button {
-			height: $toolbar-height - 10px;
-			width: $toolbar-height - 10px;
-			margin-right: 0.7rem;
-			border: none;
-			cursor: pointer;
-			padding: 0.2rem;
-			outline: none;
-			background-size: cover;
-			background-origin: content-box;
-			background-repeat: no-repeat;
-			border-radius: 0.2rem;
+		@include themify() {
+			background-color: themed('toolbar');
+		}
 
+		&:hover {
+			cursor: default;
 			@include themify() {
 				background-color: themed('background');
 			}
-
-			&:hover {
-				cursor: default;
-				@include themify() {
-					background-color: lighten(themed('background'), 5%);
-				}
-			}
 		}
+	}
 
 		.active-button {
 			@include themify() {
@@ -57,20 +50,32 @@
 			}
 		}
 
-		.divider {
-			border-left: 1px solid black;
-			height:  $toolbar-height - 20px;
-			padding: 0;
-			margin-right: 1rem;
-			margin-left: 1rem;
-		}
+	.divider {
+		border-left: 1px solid black;
+		height:  $toolbar-height - 20px;
+		padding: 0;
+		margin-right: 0.5rem;
+		margin-left: 0.5rem;
+	}
 
-		.no-margin {
-			margin-right: 0;
-		}
+	.toolbar-buttons {
+		display: flex;
+		flex-direction: row;
+		justify-content: flex-start;
+		flex-shrink: 0;
+		align-items: center;
+		padding-left: 0.5rem;
 
 		.save {
 			background-image: url("/assets/icons/save_new.svg");
+		}
+
+		.open {
+			background-image: url("/assets/icons/folder.svg");
+		}
+
+		.new-comp {
+			background-image: url("/assets/icons/new-component.svg");
 		}
 
 		.paste {
@@ -78,7 +83,7 @@
 		}
 
 		.copy {
-			background-image: url("/assets/icons/files.svg");
+			background-image: url("/assets/icons/clipboard.svg");
 		}
 
 		.cut {
@@ -110,7 +115,7 @@
 		}
 
 		.select {
-			background-image: url("/assets/icons/target.svg");
+			background-image: url("/assets/icons/selection1.svg");
 		}
 
 		.sim-start {
@@ -145,9 +150,32 @@
 		align-items: center;
 		font-size: 14pt;
 		padding-right: 0.7rem;
+		flex: auto;
 
 		p {
 			margin: 0;
+		}
+
+		.start-sim {
+			&:hover {
+				cursor: pointer;
+			}
+		}
+
+		.play {
+			background-image: url("/assets/icons/control-play.svg");
+		}
+
+		.pause {
+			background-image: url("/assets/icons/control-pause.svg");
+		}
+
+		.step {
+			background-image: url("/assets/icons/angle-right.svg");
+		}
+
+		.stop {
+			background-image: url("/assets/icons/control-stop.svg");
 		}
 	}
 }

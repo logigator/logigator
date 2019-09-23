@@ -7,5 +7,6 @@ export const and: ElementType = {
 	hasVariableInputs: true,
 	symbol: '&',
 	description: '',
-	rotation: 0
+	rotation: 0,
+	category: 'basic'
 };

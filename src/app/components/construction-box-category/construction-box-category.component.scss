@@ -50,7 +50,7 @@
 
 			div {
 				position: relative;
-				border: 1px solid;
+				outline: 1px solid;
 				//border-radius: 0.25rem;
 				font-size: 17pt;
 				width: 100%;
@@ -70,6 +70,7 @@
 			p {
 				font-size: 0.9rem;
 				margin: 0.25rem 0 0 0;
+				word-break: break-word;
 			}
 
 			@include themify() {

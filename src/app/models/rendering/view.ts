@@ -9,13 +9,14 @@ import {Element} from '../element';
 import {ViewInteractionManager} from './view-interaction-manager';
 import {environment} from '../../../environments/environment';
 import {Subject} from 'rxjs';
-import {Action} from '../action';
+import {Action, Actions} from '../action';
 import {CollisionFunctions} from '../collision-functions';
 import {ThemingService} from '../../services/theming/theming.service';
 import {CompSpriteGenerator} from './comp-sprite-generator';
 import {ProjectInteractionService} from '../../services/project-interaction/project-interaction.service';
 import {filter, takeUntil} from 'rxjs/operators';
 import {SelectionService} from '../../services/selection/selection.service';
+import {SimulationViewInteractionManager} from './simulation-view-interaction-manager';
 
 export class View extends PIXI.Container {
 
@@ -23,9 +24,12 @@ export class View extends PIXI.Container {
 
 	public zoomPan: ZoomPan;
 
+	private readonly _onlySimMode: boolean;
+
 	private _zoomPanInputManager: ZoomPanInputManager;
 
 	private _viewInteractionManager: ViewInteractionManager;
+	private _simViewInteractionManager: SimulationViewInteractionManager;
 
 	private readonly _htmlContainer: HTMLElement;
 
@@ -39,16 +43,20 @@ export class View extends PIXI.Container {
 
 	private _destroySubject =  new Subject<void>();
 
-	constructor(projectId: number, htmlContainer: HTMLElement) {
+	constructor(projectId: number, htmlContainer: HTMLElement, onlySimMode = false) {
 		super();
 		this._projectId = projectId;
 		this._htmlContainer = htmlContainer;
 		this.interactive = true;
 		this.sortableChildren = true;
+		this._onlySimMode = onlySimMode;
 
 		this.zoomPan = new ZoomPan(this);
 		this._zoomPanInputManager = new ZoomPanInputManager(this._htmlContainer);
-		this._viewInteractionManager = new ViewInteractionManager(this);
+		if (!this._onlySimMode) {
+			this._viewInteractionManager = new ViewInteractionManager(this);
+		}
+		this._simViewInteractionManager = new SimulationViewInteractionManager(this);
 
 		ProjectsService.staticInstance.onProjectChanges$(this.projectId).pipe(
 			takeUntil(this._destroySubject)
@@ -71,39 +79,39 @@ export class View extends PIXI.Container {
 			Grid.getGridPosForPixelPos(currentlyOnScreen.start),
 			Grid.getGridPosForPixelPos(currentlyOnScreen.end)
 		);
-
-		chunksToRender.forEach(chunk => {
-			if (!this.createChunkIfNeeded(chunk.x, chunk.y)) {
-				this._gridGraphics[chunk.x][chunk.y].destroy();
-				this._gridGraphics[chunk.x][chunk.y] = Grid.generateGridGraphics(this.zoomPan.currentScale);
-				this._chunks[chunk.x][chunk.y].children.forEach((child: PIXI.Graphics) => {
-					const elemSprite = this.allElements.get(Number(child.name));
-					if (elemSprite && elemSprite.element.typeId === 0) {
-						this.updateWireSprite(elemSprite.element, elemSprite.sprite as PIXI.Graphics);
-					} else if (elemSprite) {
-						this.updateComponentSprite(elemSprite.element, elemSprite.sprite as PIXI.Graphics);
-					}
-					if (child.name === 'wireConnPoint') {
-						this.updateConnectionPoint(child);
-					}
-				});
-				this._chunks[chunk.x][chunk.y].addChildAt(this._gridGraphics[chunk.x][chunk.y], 0);
-				this._chunks[chunk.x][chunk.y].visible = true;
-			}
-		});
-		SelectionService.staticInstance.selectedIds(this.projectId).forEach(id => {
-			const elemSprite = this.allElements.get(id);
+		for (let i = 0; i < chunksToRender.length; i++) {
+			if (this.createChunkIfNeeded(chunksToRender[i].x, chunksToRender[i].y)) continue;
+			this._gridGraphics[chunksToRender[i].x][chunksToRender[i].y].destroy();
+			this._gridGraphics[chunksToRender[i].x][chunksToRender[i].y] = Grid.generateGridGraphics(this.zoomPan.currentScale);
+			this._chunks[chunksToRender[i].x][chunksToRender[i].y].children.forEach((child: PIXI.Graphics) => {
+				const elemSprite = this.allElements.get(Number(child.name));
+				if (elemSprite && elemSprite.element.typeId === 0) {
+					this.updateWireSprite(elemSprite.element, elemSprite.sprite as PIXI.Graphics);
+				} else if (elemSprite) {
+					this.updateComponentSprite(elemSprite.element, elemSprite.sprite as PIXI.Graphics);
+				}
+				if (child.name === 'wireConnPoint') {
+					this.updateConnectionPoint(child);
+				}
+			});
+			this._chunks[chunksToRender[i].x][chunksToRender[i].y].addChildAt(this._gridGraphics[chunksToRender[i].x][chunksToRender[i].y], 0);
+			this._chunks[chunksToRender[i].x][chunksToRender[i].y].visible = true;
+		}
+		const selectedIds = SelectionService.staticInstance.selectedIds(this.projectId);
+		for (let i = 0; i < selectedIds.length; i++) {
+			const elemSprite = this.allElements.get(selectedIds[i]);
 			if (elemSprite.element.typeId === 0) {
 				this.updateWireSprite(elemSprite.element, elemSprite.sprite as PIXI.Graphics);
 			} else if (elemSprite) {
 				this.updateComponentSprite(elemSprite.element, elemSprite.sprite as PIXI.Graphics);
 			}
-		});
-		SelectionService.staticInstance.selectedConnections(this.projectId).forEach(point => {
-			const graphics = this.connectionPoints.get(`${point.x}:${point.y}`);
+		}
+		const selectedConnections = SelectionService.staticInstance.selectedConnections(this.projectId);
+		for (let i = 0; i < selectedConnections.length; i++) {
+			const graphics = this.connectionPoints.get(`${selectedConnections[i].x}:${selectedConnections[i].y}`);
 			const pos = Grid.getPixelPosForPixelPosOnGridWire(graphics.position);
 			this.drawConnectionPoint(graphics, pos);
-		});
+		}
 		for (const oldChunk of this._chunksToRender) {
 			if (!chunksToRender.find(toRender => toRender.x === oldChunk.x && toRender.y === oldChunk.y)) {
 				this._chunks[oldChunk.x][oldChunk.y].visible = false;
@@ -238,7 +246,10 @@ export class View extends PIXI.Container {
 		const elemSprite = {element, sprite};
 		this.allElements.set(element.id, elemSprite);
 
-		this._viewInteractionManager.addEventListenersToNewElement(elemSprite);
+		if (!this._onlySimMode) {
+			this._viewInteractionManager.addEventListenersToNewElement(elemSprite);
+		}
+		this._simViewInteractionManager.addEventListenersToNewElement(elemSprite);
 	}
 
 	private placeWireOnView(element: Element) {
@@ -291,6 +302,8 @@ export class View extends PIXI.Container {
 	}
 
 	private applyActionsToView(actions: Action[]) {
+		// console.log('incoming actions');
+		// Actions.printActions(actions);
 		if (!actions)
 			return;
 		for (const action of actions) {
@@ -356,7 +369,9 @@ export class View extends PIXI.Container {
 		this._destroySubject.next();
 		this._destroySubject.unsubscribe();
 		this._zoomPanInputManager.destroy();
-		this._viewInteractionManager.destroy();
+		if (!this._onlySimMode) {
+			this._viewInteractionManager.destroy();
+		}
 		super.destroy({
 			children: true
 		});

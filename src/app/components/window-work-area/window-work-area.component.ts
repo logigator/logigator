@@ -99,7 +99,6 @@ export class WindowWorkAreaComponent extends WorkArea implements OnInit, OnDestr
 				this._view.updateZoomPan();
 				this._pixiRenderer.render(this._view);
 			});
-			this.openProject(this.projectIdToOpen);
 
 			fromEvent(window, 'mousemove').pipe(
 				takeUntil(this._destroySubject)
@@ -137,7 +136,7 @@ export class WindowWorkAreaComponent extends WorkArea implements OnInit, OnDestr
 	}
 
 	private openProject(projectId: number) {
-		this._view = new View(projectId, this._pixiCanvasContainer.nativeElement);
+		this._view = new View(projectId, this._pixiCanvasContainer.nativeElement, true);
 		this.componentName = this.projects.allProjects.get(projectId).id.toString();
 	}
 
@@ -312,12 +311,15 @@ export class WindowWorkAreaComponent extends WorkArea implements OnInit, OnDestr
 	public hide() {
 		this.renderer2.setStyle(this._popup.nativeElement, 'display', 'none');
 		this._pixiTicker.stop();
+		this._view.destroy();
+		delete this._view;
 	}
 
 	public show() {
 		this.renderer2.setStyle(this._popup.nativeElement, 'display', 'block');
 		this._pixiRenderer.resize(this._pixiCanvasContainer.nativeElement.offsetWidth, this._pixiCanvasContainer.nativeElement.offsetHeight);
-		this._pixiTicker.start();
+		this.ngZone.runOutsideAngular(() => this._pixiTicker.start());
+		this.openProject(this.projectIdToOpen);
 		this._view.updateChunks();
 	}
 

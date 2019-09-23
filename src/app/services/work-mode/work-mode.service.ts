@@ -1,6 +1,6 @@
 import { Injectable } from '@angular/core';
 import {WorkMode} from '../../models/work-modes';
-import {Observable, Subject} from 'rxjs';
+import {BehaviorSubject, Observable} from 'rxjs';
 import {distinctUntilChanged} from 'rxjs/operators';
 
 @Injectable({
@@ -13,7 +13,7 @@ export class WorkModeService {
 	private _currentWorkMode: WorkMode = 'select';
 	private _currentComponentTypeToBuild: number = undefined;
 
-	private _workModeSubject = new Subject<WorkMode>();
+	private _workModeSubject = new BehaviorSubject<WorkMode>('select');
 
 	constructor() {
 		WorkModeService.staticInstance = this;
