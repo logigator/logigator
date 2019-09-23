@@ -16,7 +16,7 @@
 		padding: 0.5rem;
 
 		@include themify() {
-			background-color: themed('background');
+			background-color: themed('secondary');
 			color: themed('primary-text');
 			border-top: border('width') solid themed('secondary');
 			border-left: border('width') solid themed('secondary');
