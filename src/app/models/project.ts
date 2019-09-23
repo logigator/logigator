@@ -62,7 +62,7 @@ export class Project {
 				this._currState.removeConFromChunks(action.pos);
 				break;
 			case 'rotComp':
-				this._currState.rotateComp(action.element, action.rotation);
+				this._currState.rotateComp(action.element, action.numbers[0]);
 				break;
 		}
 	}
@@ -212,7 +212,7 @@ export class Project {
 		const actions: Action[] = [{
 			name: 'rotComp',
 			element,
-			rotation: element.rotation
+			numbers: [rotation, element.rotation]
 		}];
 		if (element.typeId === 0)
 			return;

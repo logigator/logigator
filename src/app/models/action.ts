@@ -26,7 +26,7 @@ export interface Action {
 	others?: Element[];
 	pos?: PIXI.Point;
 	endPos?: PIXI.Point;
-	rotation?: number;
+	numbers?: number[]; // for rotation 0: new, 1: old
 }
 
 export class Actions {
@@ -64,6 +64,8 @@ export class Actions {
 			if (revAction.name === 'movMult') {
 				revAction.pos.x *= -1;
 				revAction.pos.y *= -1;
+			} else if (revAction.name === 'rotComp') {
+				revAction.numbers = [...action.numbers].reverse();
 			}
 		}
 		return revActions;
@@ -128,7 +130,7 @@ export class Actions {
 			return;
 		actions.forEach(a => {
 			if (a.element)
-				console.log(a.name, a.element.id, a.element.pos, a.element.endPos);
+				console.log(a.name, a.element.id, a.element.pos, a.element.endPos, a.numbers);
 			else
 				console.log(a.name, a.pos, a.endPos);
 
