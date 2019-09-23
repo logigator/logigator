@@ -10,29 +10,35 @@ div {
 	p {
 		margin: 0;
 		max-width: 50%;
-		font-size: 13pt;
+		font-size: 0.9rem;
 
 		@include themify() {
-			color: themed('secondary-text');
+			color: themed('primary-text');
 		}
 	}
 
 	.shortcut-input-container {
 		width: 45%;
 		height: 2.25rem;
-		margin-bottom: 0.75rem;
-		border-radius: 0.25rem;
+		margin-top: 0.5rem;
+		margin-bottom: 0.5rem;
+		border-radius: border('radius');
 
 		.shortcut-input {
 			width: 100%;
 			height: 100%;
 			border: none;
 			outline: none;
-			border-radius: 0.25rem;
+			border-radius: border('radius');
 			padding: 0.5rem;
-			font-size: 13pt;
+			font-size: 0.9rem;
 			user-select: none;
 			transition: width 0.2s;
+
+			@include themify() {
+				background-color: themed('secondary');
+				color: themed('primary-text');
+			}
 		}
 
 		.save {
@@ -44,7 +50,7 @@ div {
 			transition: width 0.2s;
 
 			@include themify() {
-				background-color: themed('background');
+				background-color: themed('primary-text');
 
 				&:hover {
 					cursor: pointer;

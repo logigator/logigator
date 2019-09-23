@@ -1,7 +1,7 @@
 <div class="dropdown" [class.hidden]="!showDropDown">
 	<div class="theme">
-		<input type="checkbox" (click)="reloadPopupActive = true;" [checked]="this.theming.pendingTheme === 'dark'">
 		<label>Dark mode</label>
+		<input type="checkbox" (click)="reloadPopupActive = true;" [checked]="this.theming.pendingTheme === 'dark'">
 	</div>
 	<div class="shortcuts">
 		<button (click)="changeShortcutPopupActive = true; showDropDown = false;">Customize Shortcuts</button>
@@ -10,9 +10,11 @@
 <app-popup class="confirm-mode-popup" *ngIf="reloadPopupActive" (requestClose)="reloadClose()" title="Reload required" [closeOnClickOutside]="false">
 	<p>For this change to take effect, the editor has to be reloaded.</p>
 	<p>Do you want to reload this page now?</p>
-	<button (click)="reloadConfirm()">Yes</button>
-	<button (click)="reloadPostponed()">No, I'll reload later</button>
-	<button (click)="reloadClose()">Cancel</button>
+	<div class="buttons">
+		<button (click)="reloadConfirm()">Yes</button>
+		<button (click)="reloadPostponed()">No, I'll reload later</button>
+		<button (click)="reloadClose()">Cancel</button>
+	</div>
 </app-popup>
 <app-popup *ngIf="changeShortcutPopupActive"
            [closeOnClickOutside]="false"
