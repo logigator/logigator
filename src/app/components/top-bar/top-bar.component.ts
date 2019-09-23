@@ -1,5 +1,8 @@
 import { Component, OnInit } from '@angular/core';
 import {ProjectsService} from '../../services/projects/projects.service';
+import {UserService} from '../../services/user/user.service';
+import {Observable} from 'rxjs';
+import {UserInfo} from '../../models/http-responses/user-info';
 
 @Component({
 	selector: 'app-top-bar',
@@ -14,9 +17,12 @@ export class TopBarComponent implements OnInit {
 	public helpDropdownOpen = false;
 	public settingsDropdownOpen = false;
 
-	constructor(private projectService: ProjectsService) { }
+	constructor(private projectService: ProjectsService, private userService: UserService) { }
 
-	ngOnInit() {
+	ngOnInit() {}
+
+	public get userInfo$(): Observable<UserInfo> {
+		return this.userService.userInfo$;
 	}
 
 	public get mainProjectName(): string {

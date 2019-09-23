@@ -25,11 +25,17 @@
 	</div>
 
 	<div class="login-register">
-		<p class="login">Login</p>
-		<div class="divider"></div>
-		<p class="register">Register</p>
+		<ng-container *ngIf="userInfo$ | async as userInfo; else loginRegister">
+			<p>{{userInfo.user.username}}</p>
+		</ng-container>
 		<div (click)="closeDropdowns(); settingsDropdownOpen = true;" class="settings"></div>
 		<app-settings-dropdown (requestClosed)="closeDropdowns()" *ngIf="settingsDropdownOpen"></app-settings-dropdown>
 	</div>
 
 </div>
+
+<ng-template #loginRegister>
+	<p class="login">Login</p>
+	<div class="divider"></div>
+	<p class="register">Register</p>
+</ng-template>
