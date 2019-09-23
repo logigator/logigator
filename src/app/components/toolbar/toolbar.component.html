@@ -1,27 +1,26 @@
-<div id="toolbar">
+<div class="toolbar">
 
 	<div class="toolbar-buttons">
-
 		<button class="toolbar-button save" aria-label="Save" (click)="save()"></button>
 		<button class="toolbar-button open" aria-label="Save"></button>
-		<button class="toolbar-button new-comp no-margin" aria-label="Save"></button>
+		<button class="toolbar-button new-comp" aria-label="Save"></button>
 
 		<div class="divider"></div>
 
 		<button class="toolbar-button copy" aria-label="Copy"></button>
 		<button class="toolbar-button cut" aria-label="Cut"></button>
 		<button class="toolbar-button paste" aria-label="Paste"></button>
-		<button class="toolbar-button delete no-margin" (click)="delete()" aria-label="Delete"></button>
+		<button class="toolbar-button delete" (click)="delete()" aria-label="Delete"></button>
 
 		<div class="divider"></div>
 
 		<button class="toolbar-button undo" (click)="undo()" aria-label="Undo"></button>
-		<button class="toolbar-button redo no-margin" (click)="redo()" aria-label="Redo"></button>
+		<button class="toolbar-button redo" (click)="redo()" aria-label="Redo"></button>
 
 		<div class="divider"></div>
 
 		<button class="toolbar-button zoom-out" (click)="zoomOut()" aria-label="Zoom Out"></button>
-		<button class="toolbar-button zoom-in no-margin" (click)="zoomIn()" aria-label="Zoom In"></button>
+		<button class="toolbar-button zoom-in" (click)="zoomIn()" aria-label="Zoom In"></button>
 
 		<div class="divider"></div>
 
@@ -42,7 +41,7 @@
 			<button class="toolbar-button play"></button>
 			<button class="toolbar-button step"></button>
 			<button class="toolbar-button pause"></button>
-			<button class="toolbar-button stop no-margin"></button>
+			<button class="toolbar-button stop"></button>
 		</ng-container>
 	</div>
 </div>

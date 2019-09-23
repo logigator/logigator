@@ -12,8 +12,7 @@
 	height: $top-bar-height;
 	user-select: none;
 
-	display: grid;
-	grid-template-columns: #{$construction-box-width - 3rem} auto 350px;
+	display: flex;
 
 	.background {
 		position: fixed;
@@ -26,9 +25,12 @@
 	}
 
 	a {
-		width: 80%;
-		justify-self: center;
-		align-self: center;
+		img {
+			height: 100%;
+		}
+
+		padding: 0.7rem;
+		height: 100%;
 	}
 
 	.main-menu {
@@ -74,6 +76,7 @@
 		flex-direction: row;
 		align-items: center;
 		justify-content: flex-end;
+		flex: auto;
 
 		p {
 			font-size: 15pt;
