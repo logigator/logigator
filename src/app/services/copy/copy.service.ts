@@ -10,6 +10,7 @@ export class CopyService {
 	public static staticInstance: CopyService;
 
 	private _copiedElements: Element[] = [];
+	private _copiedConPoints: PIXI.Point[] = [];
 
 	constructor() {
 		CopyService.staticInstance = this;
@@ -27,7 +28,19 @@ export class CopyService {
 		return this._copiedElements;
 	}
 
+	public copyConPoints(points: PIXI.Point[]): PIXI.Point[] {
+		this._copiedConPoints = new Array(points.length);
+		for (let i = 0; i < points.length; i++) {
+			this._copiedConPoints[i] = points[i].clone();
+		}
+		return this._copiedConPoints;
+	}
+
 	get copiedElements(): Element[] {
 		return this.copyElements(this._copiedElements);
+	}
+
+	get copiedConPoints(): PIXI.Point[] {
+		return this.copyConPoints(this._copiedConPoints);
 	}
 }

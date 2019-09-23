@@ -45,6 +45,8 @@ export class ProjectState {
 		for (const element of this._model.board.elements) {
 			this.loadIntoChunks(element);
 		}
+		// TODO test
+		this.loadConnectionPoints(this._model.board.elements);
 	}
 
 	private createChunk(x: number, y: number): void {
