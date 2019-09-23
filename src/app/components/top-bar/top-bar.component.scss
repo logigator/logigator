@@ -55,12 +55,14 @@
 				p {
 					margin: 0 0.5rem 0 0;
 					padding: 0.1rem 0.2rem 0.1rem 0.2rem;
-					border-radius: border('radius');
+					border-top-right-radius: border('radius');
+					border-top-left-radius: border('radius');
 
 					&:hover {
 						cursor: pointer;
 						@include themify() {
-							background-color: lighten(themed('background'), 5%);
+							background-color: themed('secondary');
+							color: themed('primary-text');
 						}
 					}
 				}

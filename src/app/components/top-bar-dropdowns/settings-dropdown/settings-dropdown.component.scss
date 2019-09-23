@@ -19,7 +19,6 @@
 	min-height: 10rem;
 	display: flex;
 	flex-direction: column;
-	border-radius: 0.2rem;
 	right: 0;
 	top: $top-bar-height;
 
@@ -28,15 +27,19 @@
 	}
 
 	@include themify() {
-		background-color: themed('secondary');
-		color: themed('secondary-text');
+		background-color: themed('background');
+		color: themed('primary-text');
+		border: border('width') solid themed(secondary);
+		border-radius: border('radius');
 
-		.theme {
+		.switch {
+			display: flex;
+			flex-direction: row;
+			justify-content: space-between;
 			padding: 0.5rem;
-			border-radius: 0.2rem;
 
 			&:hover {
-				background-color: lighten(themed('secondary'), 10);
+				background-color: themed('secondary');
 			}
 
 			span {
@@ -45,9 +48,8 @@
 			}
 		}
 
-		.shortcuts {
+		.link {
 			padding: 0.5rem;
-			border-radius: 0.2rem;
 		}
 
 		hr {
@@ -57,16 +59,12 @@
 			border-bottom-width: 1px;
 			border-style: solid;
 
-			@if (isTheme('dark')) {
-				border-color: darken(themed('secondary-text'), 10);
-			} @else {
-				border-color: lighten(themed('secondary-text'), 10);
-			}
+			border-color: themed('secondary');
 		}
 	}
 }
 
-.buttons{
+.buttons {
 	width: 100%;
 	display: flex;
 	justify-content: space-between;

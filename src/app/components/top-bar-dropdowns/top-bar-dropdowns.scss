@@ -8,19 +8,22 @@
 	min-height: 1rem;
 	display: flex;
 	flex-direction: column;
-	border-radius: 0.2rem;
 	user-select: none;
+	font-size: 0.9rem;
 
 	@include themify() {
 		background-color: themed('background');
-		color: themed('secondary-text');
+		color: themed('primary-text');
+		border: solid themed('secondary') border('width');
+		border-top-right-radius: border('radius');
+		border-bottom-left-radius: border('radius');
+		border-bottom-right-radius: border('radius');
 
 		div {
 			padding: 0.5rem;
-			border-radius: border('radius');
 
 			&:hover {
-				background-color: lighten(themed('secondary'), 10);
+				background-color: themed('secondary');
 			}
 
 			span {
@@ -36,11 +39,7 @@
 			border-bottom-width: 1px;
 			border-style: solid;
 
-			@if (isTheme('dark')) {
-				border-color: darken(themed('secondary-text'), 10);
-			} @else {
-				border-color: lighten(themed('secondary-text'), 10);
-			}
+			border-color: themed('secondary');
 		}
 	}
 }

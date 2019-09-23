@@ -1,10 +1,20 @@
 <div class="dropdown" [class.hidden]="!showDropDown">
-	<div class="theme">
+	<div class="switch">
 		<label>Dark mode</label>
 		<input type="checkbox" (click)="reloadPopupActive = true;" [checked]="this.theming.pendingTheme === 'dark'">
 	</div>
-	<div class="shortcuts">
+	<hr>
+	<div class="switch">
+		<label>Show grid</label>
+		<input type="checkbox">
+	</div>
+	<hr>
+	<div class="link">
 		<button (click)="changeShortcutPopupActive = true; showDropDown = false;">Customize Shortcuts</button>
+	</div>
+	<hr>
+	<div class="link">
+		<button>Account settings</button>
 	</div>
 </div>
 <app-popup class="confirm-mode-popup" *ngIf="reloadPopupActive" (requestClose)="reloadClose()" title="Reload required" [closeOnClickOutside]="false">
