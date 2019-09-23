@@ -337,6 +337,8 @@ export class View extends PIXI.Container {
 				this.moveMultipleAction(action);
 				break;
 			case 'rotComp':
+			case 'numInpt':
+				this.updateComponent(action);
 				break;
 		}
 	}
@@ -347,6 +349,11 @@ export class View extends PIXI.Container {
 			this.addToCorrectChunk(elemSprite.sprite, element.pos);
 			this.setLocalChunkPos(element, elemSprite.sprite);
 		});
+	}
+
+	private updateComponent(action: Action) {
+		const elemSprite = this.allElements.get(action.element.id);
+		this.updateComponentSprite(action.element, elemSprite.sprite as PIXI.Graphics);
 	}
 
 	public setLocalChunkPos(element: Element, sprite: PIXI.DisplayObject) {

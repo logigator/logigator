@@ -3,6 +3,7 @@ import {Grid} from './grid';
 import * as PIXI from 'pixi.js';
 import InteractionEvent = PIXI.interaction.InteractionEvent;
 import {ElementSprite} from '../element-sprite';
+import {Element} from '../element';
 import {WorkModeService} from '../../services/work-mode/work-mode.service';
 import {SelectionService} from '../../services/selection/selection.service';
 import {ProjectsService} from '../../services/projects/projects.service';
@@ -29,7 +30,7 @@ export class ViewInteractionManager {
 	private _drawingNewWire = false;
 	private readonly _newWire: PIXI.Graphics;
 
-	private _isSingleSelected: boolean;
+	private _singleSelectedElement: Element;
 	private _currentlyDragging = false;
 	private _drawingSelectRect = false;
 	private readonly _selectRect: PIXI.Graphics;
@@ -109,7 +110,7 @@ export class ViewInteractionManager {
 
 	private handlePointerDownOnElement(e: InteractionEvent, elem: ElementSprite) {
 		if (WorkModeService.staticInstance.currentWorkMode === 'select') {
-			if (this._isSingleSelected) {
+			if (this._singleSelectedElement === elem.element) {
 				this.startDragging(e);
 			} else {
 				this.selectSingleComp(elem);
@@ -126,7 +127,6 @@ export class ViewInteractionManager {
 
 	private addSelectRectOrResetSelection(e: PIXI.interaction.InteractionEvent) {
 		if (e.target === this._view) {
-
 			if (this._actionStartPos) {
 				this.resetSelectionToOldPosition();
 			}
@@ -166,7 +166,7 @@ export class ViewInteractionManager {
 			this._currentlyDragging = false;
 
 			let endPos;
-			if (this._isSingleSelected) {
+			if (this._singleSelectedElement) {
 				endPos = Grid.getGridPosForPixelPos(this._lastMousePos);
 			} else {
 				endPos = Grid.getGridPosForPixelPos(this._selectRect.position);
@@ -177,7 +177,7 @@ export class ViewInteractionManager {
 			) {
 				this._view.removeChild(this._selectRect);
 				this.clearSelection();
-				this._isSingleSelected = false;
+				delete this._singleSelectedElement;
 				delete this._actionStartPos;
 			}
 		}
@@ -341,7 +341,7 @@ export class ViewInteractionManager {
 		this._currentlyDragging = true;
 		this._lastMousePos = Grid.getPixelPosOnGridForPixelPos(e.data.getLocalPosition(this._view));
 		if (!this._actionStartPos) {
-			if (this._isSingleSelected) {
+			if (this._singleSelectedElement) {
 				this._actionStartPos = Grid.getGridPosForPixelPos(this._lastMousePos);
 			} else {
 				this._actionStartPos = Grid.getGridPosForPixelPos(this._selectRect.position);
@@ -360,7 +360,7 @@ export class ViewInteractionManager {
 				this._view.connectionPoints.get(key).tint = 0xffffff;
 		});
 		SelectionService.staticInstance.clearSelection(this._view.projectId);
-		this._isSingleSelected = false;
+		delete this._singleSelectedElement;
 	}
 
 	private selectInRect(start: PIXI.Point, end: PIXI.Point) {
@@ -392,8 +392,9 @@ export class ViewInteractionManager {
 	}
 
 	private selectSingleComp(elem: ElementSprite) {
+		this.resetSelectionToOldPosition();
 		this.clearSelection();
-		this._isSingleSelected = true;
+		this._singleSelectedElement = elem.element;
 		delete this._actionStartPos;
 		this._view.removeChild(this._selectRect);
 		elem.sprite.tint = 0x8a8a8a;
