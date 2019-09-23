@@ -53,9 +53,8 @@ export class Elements {
 	}
 
 	public static calcEndPos(pos: PIXI.Point, typeId: number): PIXI.Point {
-		const type = ElementProviderService.staticInstance.getElementById(typeId);
 		return new PIXI.Point(pos.x + environment.componentWidth,
-			pos.y + Math.max(type.numInputs, type.numOutputs));
+			pos.y + Math.max(1, 2));
 	}
 
 	public static mergeCheckedWiresVertical(wire0: Element, wire1: Element, newElem) {
