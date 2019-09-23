@@ -25,6 +25,7 @@
 
 		.body {
 			padding: 0.3rem;
+			color: white;
 		}
 
 		.header {
@@ -48,10 +49,11 @@
 			}
 
 			img {
-				margin-right: 0.11rem;
+				margin-right: 1px;
 				border-radius: 0.25rem;
-				width: 1.3rem;
-				height: 1.3rem;
+				//width: 1.3rem;
+				height: 27px;
+				padding: 0.3rem;
 				&:hover {
 					@include themify() {
 						background-color: lighten(themed('toolbar'), 10);
