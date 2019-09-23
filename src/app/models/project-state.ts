@@ -211,6 +211,12 @@ export class ProjectState {
 		element.endPos = endPos || Elements.calcEndPos(element.pos, element.numInputs, element.numOutputs, rotation);
 	}
 
+	public setNumInputs(element: Element, numInputs: number, endPos?: PIXI.Point): void {
+		element.numInputs = numInputs;
+		element.endPos = endPos || Elements.calcEndPos(element.pos, numInputs, element.numOutputs, element.rotation);
+	}
+
+
 
 	public connectWires(wire0: Element, wire1: Element, intersection: PIXI.Point): Element[] {
 		const out = this.splitWire(wire0, intersection);

@@ -64,6 +64,9 @@ export class Project {
 			case 'rotComp':
 				this._currState.rotateComp(action.element, action.numbers[0]);
 				break;
+			case 'numInpt':
+				this._currState.setNumInputs(action.element, action.numbers[0]);
+				break;
 		}
 	}
 
@@ -209,18 +212,36 @@ export class Project {
 
 	public rotateComponent(id: number, rotation: number): boolean {
 		const element = this._currState.getElementById(id);
+		if (element.typeId === 0)
+			return;
 		const actions: Action[] = [{
 			name: 'rotComp',
 			element,
 			numbers: [rotation, element.rotation]
 		}];
+		const newEndPos = Elements.calcEndPos(element.pos, element.numInputs, element.numOutputs, rotation);
+		if (!this._currState.isFreeSpace(element.pos, newEndPos, false, [element]))
+			return false;
+		this._currState.rotateComp(element, rotation, newEndPos);
+		actions.push(...this.autoAssemble([element]));
+		this.newState(actions);
+		return true;
+	}
+
+
+	public setNumInputs(id: number, numInputs: number): boolean  {
+		const element = this._currState.getElementById(id);
 		if (element.typeId === 0)
 			return;
-		const newEndPos = Elements.calcEndPos(element.pos, element.numInputs, element.numOutputs, rotation);
-		if (!this._currState.isFreeSpace(element.pos, newEndPos, false, [element])) {
+		const actions: Action[] = [{
+			name: 'numInpt',
+			element,
+			numbers: [numInputs, element.numInputs]
+		}];
+		const newEndPos = Elements.calcEndPos(element.pos, numInputs, element.numOutputs, element.rotation);
+		if (!this._currState.isFreeSpace(element.pos, newEndPos, false, [element]))
 			return false;
-		}
-		this._currState.rotateComp(element, rotation, newEndPos);
+		this._currState.setNumInputs(element, numInputs, newEndPos);
 		actions.push(...this.autoAssemble([element]));
 		this.newState(actions);
 		return true;

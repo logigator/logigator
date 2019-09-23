@@ -11,9 +11,8 @@ export type ActionType =
 	'movMult' |
 	'conWire' |
 	'dcoWire' |
-	'movWire' |
 	'rotComp' |
-	'setComp';
+	'numInpt';
 
 export interface ChangeType {
 	newElems: Element[];
@@ -41,9 +40,8 @@ export class Actions {
 		['movMult', ['movMult']],
 		['conWire', ['dcoWire']],
 		['dcoWire', ['conWire']],
-		['movWire', ['movWire']],
 		['rotComp', ['rotComp']],
-		['setComp', ['setComp']]
+		['numInpt', ['numInpt']]
 	]);
 
 	public static reverseActions(actions: Action[]): Action[] {
@@ -64,7 +62,7 @@ export class Actions {
 			if (revAction.name === 'movMult') {
 				revAction.pos.x *= -1;
 				revAction.pos.y *= -1;
-			} else if (revAction.name === 'rotComp') {
+			} else if (revAction.name === 'rotComp' || revAction.name === 'numInpt') {
 				revAction.numbers = [...action.numbers].reverse();
 			}
 		}
