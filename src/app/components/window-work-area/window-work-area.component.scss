@@ -16,7 +16,7 @@
 
 	.window-container {
 		@include themify() {
-			background-color: themed('toolbar');
+			background-color: themed('background');
 		}
 
 		width: 100%;
@@ -34,7 +34,7 @@
 			display: flex;
 
 			@include themify() {
-				background-color: themed('toolbar');
+				background-color: themed('background');
 				color: themed('primary-text');
 			}
 
@@ -60,7 +60,7 @@
 
 				&:hover {
 					@include themify() {
-						background-color: lighten(themed('toolbar'), 10);
+						background-color: lighten(themed('background'), 10);
 					}
 				}
 			}

@@ -12,15 +12,15 @@
 	user-select: none;
 
 	@include themify() {
-		background-color: themed('top-bar-dropdown-background');
+		background-color: themed('background');
 		color: themed('secondary-text');
 
 		div {
 			padding: 0.5rem;
-			border-radius: 0.2rem;
+			border-radius: border('radius');
 
 			&:hover {
-				background-color: lighten(themed('top-bar-dropdown-background'), 10);
+				background-color: lighten(themed('secondary'), 10);
 			}
 
 			span {

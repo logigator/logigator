@@ -23,16 +23,16 @@
 		}
 
 		@include themify() {
-			background-color: themed('toolbar');
+			background-color: themed('background');
 			color: themed('primary-text');
 		}
 	}
 
 	.content {
 		@include themify() {
-			background-color: themed('boxes-background');
+			background-color: themed('background');
 			color: themed('secondary-text');
-			border: 4px solid themed('toolbar');
+			border: 4px solid themed('secondary');
 		}
 
 		padding: 0.5rem;
@@ -59,7 +59,7 @@
 				@include themify() {
 					border-bottom: 1px solid themed('secondary-text');
 					color: themed('secondary-text');
-					background-color: themed('boxes-background');
+					background-color: themed('background');
 				}
 			}
 

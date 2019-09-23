@@ -44,18 +44,18 @@ div {
 			transition: width 0.2s;
 
 			@include themify() {
-				background-color: themed('toolbar');
+				background-color: themed('background');
 
 				&:hover {
 					cursor: pointer;
-					background-color: lighten(themed('toolbar'), 5%);
+					background-color: lighten(themed('background'), 5%);
 				}
 			}
 		}
 
 		&.recording {
 			@include themify() {
-				box-shadow: 0 0 0 3px themed('toolbar');
+				box-shadow: 0 0 0 3px themed('background');
 			}
 
 			.shortcut-input {
