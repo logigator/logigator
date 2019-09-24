@@ -83,6 +83,18 @@ export class ToolbarComponent implements OnInit {
 		this.projectInteraction.deleteSelection();
 	}
 
+	public copy() {
+		this.projectInteraction.copySelection();
+	}
+
+	public cut() {
+		this.projectInteraction.cutSelection();
+	}
+
+	public paste() {
+		this.projectInteraction.paste();
+	}
+
 	public save() {
 		this.projectService.saveAll();
 	}

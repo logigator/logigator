@@ -117,9 +117,14 @@ export class ShortcutsService {
 				this.projectInteraction.deleteSelection();
 				break;
 			case 'copy':
+				this.projectInteraction.copySelection();
+				break;
 			case 'cut':
+				this.projectInteraction.cutSelection();
+				break;
 			case 'paste':
-					break;
+				this.projectInteraction.paste();
+				break;
 			case 'zoomIn':
 				this.projectInteraction.zoomIn();
 				break;

@@ -3,17 +3,15 @@
 
 #top-bar {
 	@include themify() {
-		background-color: themed('toolbar');
-		color: themed('primary-text');
-		border-bottom: 1px solid themed('top-bar-divider');
+		background-color: themed('primary');
+		color: black;
 	}
 
 	width: 100%;
 	height: $top-bar-height;
 	user-select: none;
 
-	display: grid;
-	grid-template-columns: #{$construction-box-width - 3rem} auto 350px;
+	display: flex;
 
 	.background {
 		position: fixed;
@@ -26,9 +24,12 @@
 	}
 
 	a {
-		width: 80%;
-		justify-self: center;
-		align-self: center;
+		img {
+			height: 100%;
+		}
+
+		padding: 0.7rem;
+		height: 100%;
 	}
 
 	.main-menu {
@@ -37,7 +38,7 @@
 		grid-template-rows: auto #{$top-bar-height / 2.5};
 
 		.project-title {
-			font-size: 15pt;
+			font-size: 1.2rem;
             padding-left: 0.17rem;
 			margin: 0;
 			align-self: end;
@@ -54,12 +55,14 @@
 				p {
 					margin: 0 0.5rem 0 0;
 					padding: 0.1rem 0.2rem 0.1rem 0.2rem;
-					border-radius: 0.2rem;
+					border-top-right-radius: border('radius');
+					border-top-left-radius: border('radius');
 
 					&:hover {
 						cursor: pointer;
 						@include themify() {
-							background-color: lighten(themed('toolbar'), 5%);
+							background-color: themed('secondary');
+							color: themed('primary-text');
 						}
 					}
 				}
@@ -74,9 +77,10 @@
 		flex-direction: row;
 		align-items: center;
 		justify-content: flex-end;
+		flex: auto;
 
 		p {
-			font-size: 15pt;
+			font-size: 1.2rem;
 			margin: 0;
 		}
 
@@ -102,7 +106,7 @@
 			background-size: cover;
 
 			@include themify() {
-				background-color: themed('toolbar');
+				background-color: themed('primary');
 			}
 		}
 	}

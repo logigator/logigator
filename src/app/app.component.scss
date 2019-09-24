@@ -8,8 +8,7 @@
 		top: $page-header-height;
 		width: 100%;
 		height: calc(100% - #{$page-header-height});
-		display: grid;
-		grid-template-columns: $construction-box-width auto;
+		display: flex;
 
 		&.simulation-mode {
 			display: block;

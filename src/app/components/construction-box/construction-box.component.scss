@@ -5,7 +5,7 @@ $search-height: 3.5rem;
 
 #construction-box {
 	@include themify() {
-		background-color: themed('construction-box-background');
+		background-color: themed('background');
 	}
 
 	height: calc(100vh - #{$page-header-height});
@@ -13,16 +13,16 @@ $search-height: 3.5rem;
 
 	display: flex;
 	flex-direction: column;
-	align-items: center;
 
 	#component-search {
-		width: $construction-box-width - 0.5rem;
+		width: $construction-box-width - 0.75rem;
 		height: $search-height - 1rem;
-		font-size: 16px;
+		font-size: 0.9rem;
 		padding: 1.25rem;
 		outline: none;
 		border: none;
-		border-radius: 0.25rem;
+		border-radius: border('radius');
+		margin-left: 0.25rem;
 		margin-top: 0.5rem;
 		margin-bottom: 0.5rem;
 		background-position: right;
@@ -30,16 +30,19 @@ $search-height: 3.5rem;
 		background-origin: content-box;
 
 		@include themify() {
-			background-color: themed('search-background');
-			color: themed('secondary-text');
+			background-color: themed('secondary');
+			color: themed('primary-text');
 
-			@if(isTheme('dark')) {
-				&::placeholder {
-					color: darken(themed('secondary-text'), 10%);
-				}
+			@if (isTheme('dark')) {
 				background-image: url("/assets/icons/search_light.svg");
 			} @else {
 				background-image: url("/assets/icons/search.svg");
+			}
+
+			&::placeholder {
+				@if (isTheme('dark')) {
+					color: darken(themed('inactive'), 10%);
+				}
 			}
 		}
 	}

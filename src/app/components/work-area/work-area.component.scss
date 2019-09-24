@@ -24,8 +24,11 @@
 
 		.tab {
 			@include themify() {
-				background-color: themed('tab-inactive');
+				background-color: themed('background');
 				color: themed('primary-text');
+				border-left: themed('border-width') solid themed('secondary');
+				border-right: themed('border-width') solid themed('secondary');
+				border-bottom: themed('border-width') solid themed('secondary');
 			}
 
 			height: $tab-height;
@@ -38,14 +41,15 @@
 
 			padding: 0 0.3rem 0 0.4rem;
 
-			border-bottom-left-radius: 5px;
-			border-bottom-right-radius: 5px;
+			border-bottom-left-radius: border('radius');
+			border-bottom-right-radius: border('radius');
 
 			margin-right: 0.5rem;
 
 			p {
 				user-select: none;
 				margin: 0;
+				font-size: 0.9rem;
 			}
 
 			.tab-close {
@@ -56,7 +60,7 @@
 
 				&:hover {
 					@include themify() {
-						background-color: lighten(themed('tab-inactive'), 5%);
+						background-color: lighten(themed('background'), 5%);
 					}
 				}
 			}
@@ -64,12 +68,12 @@
 
 		.tab-active {
 			@include themify() {
-				background-color: themed('tab-active');
+				background-color: themed('secondary');
 				color: themed('primary-text');
 
 				.tab-close {
 					&:hover {
-						background-color: lighten(themed('tab-active'), 5%);
+						background-color: lighten(themed('secondary'), 5%);
 					}
 				}
 			}

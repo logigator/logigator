@@ -14,50 +14,51 @@
 
 	.content {
 		@include themify() {
-			background-color: themed('boxes-background');
-			border: 2px solid themed('toolbar');
+			background-color: themed('background');
+			border: border('width') solid themed('secondary');
+			color: themed('primary-text');
 		}
 
-		border-radius: 0.25rem;
+		border-radius: border('radius');
 		min-width: 10rem;
 		min-height: 5rem;
 		z-index: 600;
 
 		.body {
-			padding: 0.3rem;
+			padding: 0.5rem;
 		}
 
 		.header {
 			display: flex;
 
 			@include themify() {
-				background-color: themed('toolbar');
-				color: themed('primary-text');
+				background-color: themed('secondary');
 			}
 
 			width: 100%;
 			text-align: center;
-			font-size: 24px;
-			font-weight: 700;
+			font-size: 1.2rem;
+			font-weight: normal;
 			justify-content: space-between;
-			padding-bottom: 2px;
 			align-items: center;
-
-			p {
-				margin: 0 0 0 0.3rem;
-			}
+			padding: 0.5rem;
 
 			img {
-				margin-right: 0.11rem;
+				margin-right: 1px;
 				border-radius: 0.25rem;
-				width: 1.3rem;
-				height: 1.3rem;
+				//width: 1.3rem;
+				height: 27px;
+				padding: 0.3rem;
 				&:hover {
 					@include themify() {
-						background-color: lighten(themed('toolbar'), 10);
+						background-color: lighten(themed('background'), 10);
 					}
 				}
 			}
 		}
 	}
+
+
 }
+
+

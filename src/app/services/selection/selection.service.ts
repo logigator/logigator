@@ -1,8 +1,8 @@
 import {Injectable, NgZone} from '@angular/core';
-import * as PIXI from 'pixi.js';
 import {Project} from '../../models/project';
 import {ProjectsService} from '../projects/projects.service';
 import {CollisionFunctions} from '../../models/collision-functions';
+import * as PIXI from 'pixi.js';
 
 @Injectable({
 	providedIn: 'root'

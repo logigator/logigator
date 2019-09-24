@@ -11,17 +11,19 @@
 		display: flex;
 		flex-direction: row;
 		align-items: center;
-		justify-content: center;
-		border-top-right-radius: 0.25rem;
-		border-top-left-radius: 0.25rem;
+		border-top-left-radius: border('radius');
+		border-top-right-radius: border('radius');
+		padding: 0.5rem;
 
 		@include themify() {
-			background-color: themed('toolbar');
+			background-color: themed('secondary');
 			color: themed('primary-text');
 		}
 
 		h2 {
 			margin: 0;
+			font-weight: normal;
+			font-size: 1.2rem;
 		}
 	}
 
@@ -30,13 +32,14 @@
 		grid-gap: 0.5rem;
 		grid-template-columns: 1fr 1fr 1fr;
 		padding: 0.5rem;
-		text-align: center;
 		user-select: none;
+		border-bottom-left-radius: border('radius');
+		border-bottom-right-radius: border('radius');
 
 		@include themify() {
-			background-color: themed('boxes-background');
-			color: themed('secondary-text');
-			border: 4px solid themed('toolbar');
+			background-color: themed('background');
+			color: themed('primary-text');
+			border: border('width') solid themed('secondary');
 		}
 
 		.no-components {
@@ -47,10 +50,11 @@
 			height: fit-content;
 
 			div {
+				text-align: center;
 				position: relative;
+				//outline: 1px solid;
 				border: 1px solid;
-				//border-radius: 0.25rem;
-				font-size: 17pt;
+				border-radius: border('radius');
 				width: 100%;
 				padding-top: 100%;
 
@@ -60,36 +64,37 @@
 					bottom: 0;
 					right: 0;
 					position: absolute;
-					font-size: 17pt;
+					font-size: 1.2rem;
 					line-height: 0;
 				}
 			}
 
 			p {
-				font-size: 10pt;
+				text-align: center;
+				font-size: 0.9rem;
 				margin: 0.25rem 0 0 0;
 				word-break: break-word;
 			}
 
 			@include themify() {
-				border-color: themed('secondary-text');
-				color: themed('secondary-text');
+				border-color: themed('secondary');
+				color: themed('primary-text');
 
 				&:hover {
-					border-color: themed('component-select-hover');
-					color: themed('component-select-hover');
+					border-color: themed('secondary');
+					color: themed('secondary');
 				}
 			}
 		}
 
 		.active-selected-component {
 			@include themify() {
-				border-color: themed('component-active');
-				color: themed('component-active');
+				border-color: themed('primary');
+				color: themed('primary');
 
 				&:hover {
-					border-color: themed('component-active');
-					color: themed('component-active');
+					border-color: themed('primary');
+					color: themed('primary');
 				}
 			}
 		}

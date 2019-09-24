@@ -11,6 +11,13 @@
 	display: grid;
 	grid-template-rows: 3rem auto;
 
+	@include themify() {
+		background-color: themed('background');
+		color: themed('primary-text');
+		border: border('width') solid themed('secondary');
+		border-radius: border('radius');
+	}
+
 	.header {
 		height: 100%;
 		display: flex;
@@ -18,23 +25,18 @@
 		align-items: center;
 		justify-content: center;
 
-		h2 {
-			margin: 0;
+		@include themify() {
+			background-color: themed('secondary');
 		}
 
-		@include themify() {
-			background-color: themed('toolbar');
-			color: themed('primary-text');
+		h2 {
+			margin: 0;
+			font-size: 1.2rem;
+			font-weight: normal;
 		}
 	}
 
 	.content {
-		@include themify() {
-			background-color: themed('boxes-background');
-			color: themed('secondary-text');
-			border: 4px solid themed('toolbar');
-		}
-
 		padding: 0.5rem;
 
 		.property {
@@ -54,26 +56,32 @@
 				outline: none;
 				border: none;
 				padding: 0.25rem;
-				font-size: 13pt;
+				font-size: 0.9rem;
 				width: 40%;
 				@include themify() {
-					border-bottom: 1px solid themed('secondary-text');
-					color: themed('secondary-text');
-					background-color: themed('boxes-background');
+					border-bottom: 1px solid themed('primary-text');
+					color: themed('primary-text');
+					background-color: themed('background');
 				}
 			}
 
 			select {
 				width: 40%;
-				font-size: 13pt;
+				font-size: 0.9rem;
 				outline: none;
 				border: none;
+
+				@include themify() {
+					border-bottom: 1px solid themed('primary-text');
+					color: themed('primary-text');
+					background-color: themed('background');
+				}
 			}
 		}
 
 		.description {
 			h6 {
-				font-size: 12pt;
+				font-size: 0.9rem;
 				margin: 0;
 				margin-bottom: 0.2rem;
 			}

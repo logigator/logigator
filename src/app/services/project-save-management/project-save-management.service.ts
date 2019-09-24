@@ -10,6 +10,8 @@ import {ElementType} from '../../models/element-type';
 import {ComponentInfoResponse} from '../../models/http-responses/component-info-response';
 import {ProjectState} from '../../models/project-state';
 import {ElementProviderService} from '../element-provider/element-provider.service';
+import {UserService} from '../user/user.service';
+import {Observable} from 'rxjs';
 
 @Injectable({
 	providedIn: 'root'
@@ -18,7 +20,7 @@ export class ProjectSaveManagementService {
 
 	private _projectSource: 'server' | 'share' | 'file';
 
-	constructor(private http: HttpClient, private elemProvService: ElementProviderService) { }
+	constructor(private http: HttpClient, private elemProvService: ElementProviderService, private user: UserService) { }
 
 	public getProjectToOpenOnLoad(): Promise<Project> {
 		if (location.pathname === '/') {
@@ -29,7 +31,15 @@ export class ProjectSaveManagementService {
 		this.elemProvService.setUserDefinedTypes(this.getAllAvailableCustomElements());
 	}
 
-	public getAllAvailableCustomElements(): Promise<Map<number, ElementType>> {
+	public async getAllAvailableCustomElements(): Promise<Map<number, ElementType>> {
+		let elemMap = new Map<number, ElementType>();
+		if (this.user.isLoggedIn) {
+			elemMap = await this.getComponentsFromServer().toPromise();
+		}
+		return elemMap;
+	}
+
+	private getComponentsFromServer(): Observable<Map<number, ElementType>> {
 		return this.http.get<HttpResponseData<ComponentInfoResponse[]>>('/api/project/get-all-components-info').pipe(
 			map(data => {
 				const newElemTypes = new Map<number, ElementType>();
@@ -48,7 +58,7 @@ export class ProjectSaveManagementService {
 				});
 				return newElemTypes;
 			})
-		).toPromise();
+		);
 	}
 
 	public save(projects: Project[]) {
