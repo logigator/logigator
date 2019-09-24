@@ -18,8 +18,8 @@ $themes: (
 );
 
 $border-styles: (
-	width: 2px,
-	radius: 0.2rem
+	width: 1px,
+	radius: 0.1rem
 );
 
 @function border($key) {
