@@ -51,19 +51,12 @@ export class CopyService {
 		return this.copyConPoints(this._copiedConPoints);
 	}
 
-	private sortSelection(): Element[] {
-		return this._copiedElements.sort((a, b) => {
-			if (a.pos.x < b.pos.x || a.pos.y < b.pos.y) return -1;
-			if (a.pos.x > b.pos.x || a.pos.y > b.pos.y) return 1;
-			return 0;
-		});
-	}
-
-	public getCopiedElementsBoundingBox(): {start: PIXI.Point, end: PIXI.Point} {
-		const sorted = this.sortSelection();
-		return {
-			start: sorted[0].pos.clone(),
-			end: sorted[sorted.length - 1].endPos.clone()
-		};
+	public getCopiedElementsBoundingBox(): PIXI.Rectangle {
+		const bounds = new PIXI.Bounds();
+		for (let i = 0; i < this._copiedElements.length; i++) {
+			bounds.addPoint(this._copiedElements[i].pos);
+			bounds.addPoint(this.copiedElements[i].endPos);
+		}
+		return bounds.getRectangle(PIXI.Rectangle.EMPTY);
 	}
 }

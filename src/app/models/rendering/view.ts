@@ -270,7 +270,7 @@ export class View extends PIXI.Container {
 		this.allElements.set(element.id, elemSprite);
 	}
 
-	private addLineToWireGraphics(graphics: PIXI.Graphics, endPos: PIXI.Point, startPos: PIXI.Point) {
+	public addLineToWireGraphics(graphics: PIXI.Graphics, endPos: PIXI.Point, startPos: PIXI.Point) {
 		graphics.lineStyle(1 / this.zoomPan.currentScale, ThemingService.staticInstance.getEditorColor('wire'));
 		graphics.moveTo(0, 0);
 		graphics.lineTo(endPos.x - startPos.x, endPos.y - startPos.y);
