@@ -150,7 +150,9 @@ export class View extends PIXI.Container {
 	private updateComponentSprite(element: Element, graphics: PIXI.Graphics) {
 		graphics.clear();
 		const elemType = ElementProviderService.staticInstance.getElementById(element.typeId);
-		CompSpriteGenerator.updateGraphics(elemType.symbol, elemType.numInputs, element.rotation, this.zoomPan.currentScale, graphics);
+		CompSpriteGenerator.updateGraphics(
+			elemType.symbol, elemType.numInputs, element.numOutputs, element.rotation, this.zoomPan.currentScale, graphics
+		);
 	}
 
 	private createChunk(x: number, y: number): boolean {
@@ -239,7 +241,9 @@ export class View extends PIXI.Container {
 
 	private placeComponentOnView(element: Element) {
 		const elemType = ElementProviderService.staticInstance.getElementById(element.typeId);
-		const sprite = CompSpriteGenerator.getComponentSprite(elemType.symbol, elemType.numInputs, element.rotation, this.zoomPan.currentScale);
+		const sprite = CompSpriteGenerator.getComponentSprite(
+			elemType.symbol, elemType.numInputs, element.numOutputs, element.rotation, this.zoomPan.currentScale
+		);
 		sprite.position = Grid.getLocalChunkPixelPosForGridPos(element.pos);
 		sprite.name = element.id.toString();
 

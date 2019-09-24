@@ -286,6 +286,7 @@ export class ViewInteractionManager {
 		this._newCompSprite = CompSpriteGenerator.getComponentSprite(
 			elemType.symbol,
 			elemType.numInputs,
+			elemType.numOutputs,
 			elemType.rotation,
 			this._view.zoomPan.currentScale
 		);
