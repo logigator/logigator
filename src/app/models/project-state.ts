@@ -45,6 +45,8 @@ export class ProjectState {
 		for (const element of this._model.board.elements) {
 			this.loadIntoChunks(element);
 		}
+		// TODO test
+		this.loadConnectionPoints(this._model.board.elements);
 	}
 
 	private createChunk(x: number, y: number): void {
@@ -204,6 +206,16 @@ export class ProjectState {
 		Elements.move(element, dif);
 		this.loadIntoChunks(element);
 		return true;
+	}
+
+	public rotateComp(element: Element, rotation: number, endPos?: PIXI.Point): void {
+		element.rotation = rotation;
+		element.endPos = endPos || Elements.calcEndPos(element.pos, element.numInputs, element.numOutputs, rotation);
+	}
+
+	public setNumInputs(element: Element, numInputs: number, endPos?: PIXI.Point): void {
+		element.numInputs = numInputs;
+		element.endPos = endPos || Elements.calcEndPos(element.pos, numInputs, element.numOutputs, element.rotation);
 	}
 
 

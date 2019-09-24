@@ -2,7 +2,7 @@ import {Component, Input, OnChanges, OnDestroy, OnInit, SimpleChanges} from '@an
 import {ElementProviderService} from '../../services/element-provider/element-provider.service';
 import {ElementType} from '../../models/element-type';
 import {ProjectsService} from '../../services/projects/projects.service';
-import {FormGroup, FormControl, FormBuilder} from '@angular/forms';
+import {FormGroup, FormBuilder} from '@angular/forms';
 import {Subscription} from 'rxjs';
 
 @Component({
@@ -63,9 +63,19 @@ export class SettingsInfoBoxComponent implements OnChanges, OnDestroy {
 	}
 
 	private initInstance() {
+		const element = this.projects.currProject.currState.getElementById(this.selectedCompId);
+		this.elemType = this.elemProvider.getElementById(element.typeId);
 		this.propertiesFrom = this.formBuilder.group({
-			numInputs: [],
-			rotation: []
+			numInputs: [element.numInputs],
+			rotation: [element.rotation]
+		});
+		this.formSubscription = this.propertiesFrom.valueChanges.subscribe((data: any) => {
+			if (data.rotation !== element.rotation) {
+				this.projects.currProject.rotateComponent(this.selectedCompId, Number(data.rotation));
+			}
+			if (data.numInputs !== element.numInputs) {
+				this.projects.currProject.setNumInputs(this.selectedCompId, data.numInputs);
+			}
 		});
 	}
 

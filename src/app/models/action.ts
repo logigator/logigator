@@ -11,8 +11,8 @@ export type ActionType =
 	'movMult' |
 	'conWire' |
 	'dcoWire' |
-	'movWire' |
-	'setComp';
+	'rotComp' |
+	'numInpt';
 
 export interface ChangeType {
 	newElems: Element[];
@@ -23,10 +23,9 @@ export interface Action {
 	name: ActionType;	// TODO element settings
 	element?: Element;
 	others?: Element[];
-	oldElements?: Element[];
-	id?: number;
 	pos?: PIXI.Point;
 	endPos?: PIXI.Point;
+	numbers?: number[]; // for rotation 0: new, 1: old
 }
 
 export class Actions {
@@ -41,8 +40,8 @@ export class Actions {
 		['movMult', ['movMult']],
 		['conWire', ['dcoWire']],
 		['dcoWire', ['conWire']],
-		['movWire', ['movWire']],
-		['setComp', ['setComp']]
+		['rotComp', ['rotComp']],
+		['numInpt', ['numInpt']]
 	]);
 
 	public static reverseActions(actions: Action[]): Action[] {
@@ -63,6 +62,8 @@ export class Actions {
 			if (revAction.name === 'movMult') {
 				revAction.pos.x *= -1;
 				revAction.pos.y *= -1;
+			} else if (revAction.name === 'rotComp' || revAction.name === 'numInpt') {
+				revAction.numbers = [...action.numbers].reverse();
 			}
 		}
 		return revActions;
@@ -127,7 +128,7 @@ export class Actions {
 			return;
 		actions.forEach(a => {
 			if (a.element)
-				console.log(a.name, a.element.id, a.element.pos, a.element.endPos);
+				console.log(a.name, a.element.id, a.element.pos, a.element.endPos, a.numbers);
 			else
 				console.log(a.name, a.pos, a.endPos);
 

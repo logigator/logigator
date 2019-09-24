@@ -5,7 +5,6 @@ import {not} from '../../models/element-types/not';
 import {and} from '../../models/element-types/and';
 import {or} from '../../models/element-types/or';
 import {xor} from '../../models/element-types/xor';
-import {ProjectSaveManagementService} from '../project-save-management/project-save-management.service';
 
 @Injectable({
 	providedIn: 'root'
@@ -26,10 +25,12 @@ export class ElementProviderService {
 
 	private _userDefinedElements: Map<number, ElementType> = new Map<number, ElementType>();
 
-	constructor(private projectSaveManagement: ProjectSaveManagementService) {
+	constructor() {
 		ElementProviderService.staticInstance = this;
+	}
 
-		this.projectSaveManagement.getAllAvailableCustomElements().then(elems => {
+	public setUserDefinedTypes(prom: Promise<Map<number, ElementType>>): void {
+		prom.then(elems => {
 			this._userDefinedElements = elems;
 		});
 	}

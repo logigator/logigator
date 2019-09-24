@@ -12,6 +12,7 @@ export class CopyService {
 	public static staticInstance: CopyService;
 
 	private _copiedElements: Element[] = [];
+	private _copiedConPoints: PIXI.Point[] = [];
 
 	private _copiedConPoints: PIXI.Point[];
 
