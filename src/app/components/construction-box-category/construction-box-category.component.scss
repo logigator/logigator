@@ -18,6 +18,9 @@
 		@include themify() {
 			background-color: themed('secondary');
 			color: themed('primary-text');
+			border-top: border('width') solid themed('secondary');
+			border-left: border('width') solid themed('secondary');
+			border-right: border('width') solid themed('secondary');
 		}
 
 		h2 {
@@ -29,9 +32,9 @@
 
 	.content {
 		display: grid;
-		grid-gap: 0.5rem;
+		grid-gap: 1.2rem;
 		grid-template-columns: 1fr 1fr 1fr;
-		padding: 0.5rem;
+		padding: 1.2rem;
 		user-select: none;
 		border-bottom-left-radius: border('radius');
 		border-bottom-right-radius: border('radius');
