@@ -48,8 +48,6 @@ export class ZoomPanInputManager {
 	}
 
 	private mouseUpHandler(event: MouseEvent) {
-		event.preventDefault();
-
 		this._mouseDown = false;
 		this._mouseMoved = false;
 		this.clearMouseDelta();
