@@ -47,7 +47,6 @@ export class ToolbarComponent implements OnInit {
 	}
 
 	public test(): void {
-		CopyService.staticInstance.copyIds(SelectionService.staticInstance.selectedIds());
 	}
 
 	public test1(): void {
