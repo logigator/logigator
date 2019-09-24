@@ -14,10 +14,6 @@ export class CopyService {
 	private _copiedElements: Element[] = [];
 	private _copiedConPoints: PIXI.Point[] = [];
 
-	private _copiedConPoints: PIXI.Point[];
-
-	private _sortedElements: Element[];
-
 	constructor(private selection: SelectionService) {
 		CopyService.staticInstance = this;
 	}
@@ -66,8 +62,8 @@ export class CopyService {
 	public getCopiedElementsBoundingBox(): {start: PIXI.Point, end: PIXI.Point} {
 		const sorted = this.sortSelection();
 		return {
-			start: this._sortedElements[0].pos.clone(),
-			end: this._sortedElements[this._sortedElements.length - 1].endPos.clone()
+			start: sorted[0].pos.clone(),
+			end: sorted[sorted.length - 1].endPos.clone()
 		};
 	}
 }

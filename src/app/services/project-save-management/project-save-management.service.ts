@@ -22,13 +22,16 @@ export class ProjectSaveManagementService {
 
 	constructor(private http: HttpClient, private elemProvService: ElementProviderService, private user: UserService) { }
 
-	public getProjectToOpenOnLoad(): Promise<Project> {
+	public async getProjectToOpenOnLoad(): Promise<Project> {
+		let project;
 		if (location.pathname === '/') {
-			return this.createEmptyProject();
+			project = await this.createEmptyProject();
+			this.elemProvService.setUserDefinedTypes(this.getAllAvailableCustomElements());
 		} else {
-			return this.openProjectFromServer();
+			project = await this.openProjectFromServer();
+			this.elemProvService.setUserDefinedTypes(this.getAllAvailableCustomElements());
 		}
-		this.elemProvService.setUserDefinedTypes(this.getAllAvailableCustomElements());
+		return project;
 	}
 
 	public async getAllAvailableCustomElements(): Promise<Map<number, ElementType>> {
@@ -94,6 +97,9 @@ export class ProjectSaveManagementService {
 		if (this._projectSource === 'server') {
 			return this.http.get<HttpResponseData<OpenProjectResponse>>(`/api/project/open/${id}`).pipe(
 				map(response => {
+					if (Number(response.result.project.is_component) === 0) {
+						throw Error('Cannot open project as component');
+					}
 					const project = this.getProjectModelFromJson(response.result.project.data);
 					return new Project(new ProjectState(project), {
 						id,
@@ -126,6 +132,9 @@ export class ProjectSaveManagementService {
 		this._projectSource = 'server';
 		return this.http.get<HttpResponseData<OpenProjectResponse>>(`/api/project/open/${id}`).pipe(
 			map(response => {
+				if (Number(response.result.project.is_component) === 1) {
+					throw Error('Cannot open component as project');
+				}
 				const project = this.getProjectModelFromJson(response.result.project.data);
 				return new Project(new ProjectState(project), {
 					id,

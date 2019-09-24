@@ -11,12 +11,11 @@ import {HttpResponseData} from '../../models/http-responses/http-response-data';
 })
 export class UserService {
 
-	private readonly _isLoggedIn;
+	private _isLoggedIn;
 
 	private _userInfo$: Observable<UserInfo>;
 
 	constructor(@Inject(DOCUMENT) private document: Document, private http: HttpClient) {
-		this._isLoggedIn = this.getLoginStateFromCookie;
 		this.getUserInfoFromServer();
 	}
 
@@ -41,6 +40,9 @@ export class UserService {
 	}
 
 	public get isLoggedIn(): boolean {
+		if (this._isLoggedIn === undefined) {
+			this._isLoggedIn = this.getLoginStateFromCookie;
+		}
 		return this._isLoggedIn;
 	}
 
