@@ -55,7 +55,7 @@ export class CopyService {
 		const bounds = new PIXI.Bounds();
 		for (let i = 0; i < this._copiedElements.length; i++) {
 			bounds.addPoint(this._copiedElements[i].pos);
-			bounds.addPoint(this.copiedElements[i].endPos);
+			bounds.addPoint(this._copiedElements[i].endPos);
 		}
 		return bounds.getRectangle(PIXI.Rectangle.EMPTY);
 	}

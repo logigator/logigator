@@ -120,7 +120,7 @@ export class View extends PIXI.Container {
 		this._chunksToRender = chunksToRender;
 	}
 
-	private drawConnectionPoint(graphics, pos) {
+	public drawConnectionPoint(graphics, pos) {
 		const size = this.calcConnPointSize();
 		graphics.clear();
 		graphics.position = this.adjustConnPointPosToSize(pos, size);
@@ -133,9 +133,10 @@ export class View extends PIXI.Container {
 	}
 
 	public adjustConnPointPosToSize(pos: PIXI.Point, size: number): PIXI.Point {
-		pos.x -= size / 2 / this.zoomPan.currentScale;
-		pos.y -= size / 2 / this.zoomPan.currentScale;
-		return pos;
+		return new PIXI.Point(
+			pos.x - size / 2 / this.zoomPan.currentScale,
+			pos.y - size / 2 / this.zoomPan.currentScale
+		);
 	}
 
 	private updateWireSprite(element: Element, graphics: PIXI.Graphics) {

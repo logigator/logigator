@@ -40,6 +40,7 @@ export class ViewInteractionManager {
 	private readonly _selectRect: PIXI.Graphics;
 
 	private _pastingElements: ElementSprite[] = [];
+	private _pastingConnPoints: PIXI.Graphics[] = [];
 
 	constructor(view: View) {
 		this._view = view;
@@ -322,6 +323,10 @@ export class ViewInteractionManager {
 				this._pastingElements[i].sprite.position.x += dx;
 				this._pastingElements[i].sprite.position.y += dy;
 			}
+			for (let i = 0; i < this._pastingConnPoints.length; i++) {
+				this._pastingConnPoints[i].position.x += dx;
+				this._pastingConnPoints[i].position.y += dy;
+			}
 			return;
 		}
 		SelectionService.staticInstance.selectedIds().forEach(id => {
@@ -417,6 +422,8 @@ export class ViewInteractionManager {
 		if (this._currentlyPasting) return;
 		this.cleanUp();
 		this._currentlyPasting = true;
+		const copiedElements = CopyService.staticInstance.copiedElements;
+		const copiedConnPts = CopyService.staticInstance.copiedConPoints;
 		const bounding = CopyService.staticInstance.getCopiedElementsBoundingBox();
 		const pasteRectPos = this.calcPasteRectPos();
 		const pasteRectSizePixel = Grid.getPixelPosForGridPos(new PIXI.Point(bounding.width + 2, bounding.height + 2));
@@ -425,13 +432,12 @@ export class ViewInteractionManager {
 		this._selectRect.height = pasteRectSizePixel.y;
 		this._view.addChild(this._selectRect);
 
+		console.log(bounding);
 		const elementPosOffset = this.calcPasteRectOffset(bounding, pasteRectPos);
-		const copiedElements = CopyService.staticInstance.copiedElements;
-		this.addPastingElementsToView(copiedElements, elementPosOffset);
+		this.addPastingElementsToView(copiedElements, copiedConnPts, elementPosOffset);
 	}
 
-	private addPastingElementsToView(copiedElems: Element[], offset: PIXI.Point) {
-		this._pastingElements = [];
+	private addPastingElementsToView(copiedElems: Element[], copiedConnPts: PIXI.Point[], offset: PIXI.Point) {
 		for (let i = 0; i < copiedElems.length; i++) {
 			if (copiedElems[i].typeId === 0) {
 				const graphics = new PIXI.Graphics();
@@ -459,6 +465,15 @@ export class ViewInteractionManager {
 				});
 			}
 		}
+
+		for (let i = 0; i < copiedConnPts.length; i++) {
+			const pos = Grid.getPixelPosForGridPosWire(new PIXI.Point(copiedConnPts[i].x + offset.x, copiedConnPts[i].y + offset.y));
+			const graphics = new PIXI.Graphics();
+			graphics.position = pos;
+			this._view.drawConnectionPoint(graphics, pos);
+			this._view.addChild(graphics);
+			this._pastingConnPoints.push(graphics);
+		}
 	}
 
 	private cancelPasting() {
@@ -466,6 +481,10 @@ export class ViewInteractionManager {
 		for (let i = 0; i < this._pastingElements.length; i++) {
 			this._pastingElements[i].sprite.destroy();
 		}
+		for (let i = 0; i < this._pastingConnPoints.length; i++) {
+			this._pastingConnPoints[i].destroy();
+		}
+		this._pastingConnPoints = [];
 		this._pastingElements = [];
 	}
 
