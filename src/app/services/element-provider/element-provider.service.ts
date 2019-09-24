@@ -29,10 +29,8 @@ export class ElementProviderService {
 		ElementProviderService.staticInstance = this;
 	}
 
-	public setUserDefinedTypes(prom: Promise<Map<number, ElementType>>): void {
-		prom.then(elems => {
-			this._userDefinedElements = elems;
-		});
+	public async setUserDefinedTypes(prom: Promise<Map<number, ElementType>>): Promise<void> {
+		this._userDefinedElements = await prom;
 	}
 
 	public getElementById(id: number): ElementType {
@@ -40,8 +38,10 @@ export class ElementProviderService {
 			return this._basicElements.get(id);
 		} else if (this._ioElements.has(id)) {
 			return this._ioElements.get(id);
+		} else if (this._userDefinedElements.has(id)) {
+			return this._userDefinedElements.get(id);
 		}
-		return this._userDefinedElements.get(id);
+		throw Error('Component not found. Project might be corrupted');
 	}
 
 	public get basicElements(): Map<number, ElementType> {

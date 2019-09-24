@@ -25,9 +25,9 @@ export class ProjectsService {
 
 		this.projectSaveManagementService.getProjectToOpenOnLoad().then(project => {
 			this._projects.set(project.id, project);
-			this._projectOpenedSubject.next(project.id);
 			this._currProject = project;
 			this._mainProject = project;
+			this._projectOpenedSubject.next(project.id);
 		});
 	}
 

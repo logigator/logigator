@@ -5,6 +5,7 @@ import {UserInfo} from '../../models/http-responses/user-info';
 import {map, share, switchMap} from 'rxjs/operators';
 import {HttpClient} from '@angular/common/http';
 import {HttpResponseData} from '../../models/http-responses/http-response-data';
+import {ErrorHandlingService} from '../error-handling/error-handling.service';
 
 @Injectable({
 	providedIn: 'root'
@@ -15,7 +16,7 @@ export class UserService {
 
 	private _userInfo$: Observable<UserInfo>;
 
-	constructor(@Inject(DOCUMENT) private document: Document, private http: HttpClient) {
+	constructor(@Inject(DOCUMENT) private document: Document, private http: HttpClient, private errorHandling: ErrorHandlingService) {
 		this.getUserInfoFromServer();
 	}
 
@@ -25,7 +26,8 @@ export class UserService {
 				if (!isLoggedIn) return of(undefined);
 
 				return this.http.get<HttpResponseData<UserInfo>>('/api/user/get').pipe(
-					map(response => response.result)
+					map(response => response.result),
+					this.errorHandling.catchErrorOperator('Unaable to get user info', undefined)
 				);
 			})
 		);
