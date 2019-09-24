@@ -420,7 +420,7 @@ export class ViewInteractionManager {
 	}
 
 	private onPaste() {
-		if (this._currentlyPasting) return;
+		if (this._currentlyPasting || CopyService.staticInstance.copiedElements.length === 0) return;
 		this.cleanUp();
 		this._currentlyPasting = true;
 		const copiedElements = CopyService.staticInstance.copiedElements;
@@ -455,10 +455,9 @@ export class ViewInteractionManager {
 				const type = ElementProviderService.staticInstance.getElementById(copiedElems[i].typeId);
 				const sprite = CompSpriteGenerator.getComponentSprite(
 					type.symbol,
-					copiedElems[i].numInputs, copiedElems[i].rotation, this._view.zoomPan.currentScale
+					copiedElems[i].numInputs, copiedElems[i].numOutputs, copiedElems[i].rotation, this._view.zoomPan.currentScale
 				);
 				sprite.position = Grid.getPixelPosForGridPos(new PIXI.Point(copiedElems[i].pos.x + offset.x, copiedElems[i].pos.y + offset.y));
-				console.log(offset);
 				this._view.addChild(sprite);
 				this._pastingElements.push({
 					element: copiedElems[i],
@@ -490,12 +489,12 @@ export class ViewInteractionManager {
 	}
 
 	private calcPasteRectPos(): PIXI.Point {
-		const gridPastePos = Grid.getGridPosForPixelPos(
-			new PIXI.Point(Math.abs(this._view.zoomPan.positionX), Math.abs(this._view.zoomPan.positionY))
+		return Grid.getGridPosForPixelPos(
+			new PIXI.Point(
+				(this._view.htmlContainer.offsetWidth / 3 - this._view.zoomPan.positionX) / this._view.zoomPan.currentScale,
+				(this._view.htmlContainer.offsetHeight / 3 - this._view.zoomPan.positionY) / this._view.zoomPan.currentScale
+			)
 		);
-		gridPastePos.x += 4;
-		gridPastePos.y += 4;
-		return gridPastePos;
 	}
 
 	private calcPasteRectOffset(bounding: PIXI.Rectangle, pasteRectPos: PIXI.Point): PIXI.Point {

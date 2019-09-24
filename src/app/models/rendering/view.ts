@@ -31,7 +31,7 @@ export class View extends PIXI.Container {
 	private _viewInteractionManager: ViewInteractionManager;
 	private _simViewInteractionManager: SimulationViewInteractionManager;
 
-	private readonly _htmlContainer: HTMLElement;
+	public readonly htmlContainer: HTMLElement;
 
 	private _chunks: PIXI.Container[][] = [];
 	private _gridGraphics: PIXI.Graphics[][] = [];
@@ -46,13 +46,13 @@ export class View extends PIXI.Container {
 	constructor(projectId: number, htmlContainer: HTMLElement, onlySimMode = false) {
 		super();
 		this._projectId = projectId;
-		this._htmlContainer = htmlContainer;
+		this.htmlContainer = htmlContainer;
 		this.interactive = true;
 		this.sortableChildren = true;
 		this._onlySimMode = onlySimMode;
 
 		this.zoomPan = new ZoomPan(this);
-		this._zoomPanInputManager = new ZoomPanInputManager(this._htmlContainer);
+		this._zoomPanInputManager = new ZoomPanInputManager(this.htmlContainer);
 		if (!this._onlySimMode) {
 			this._viewInteractionManager = new ViewInteractionManager(this);
 		}
@@ -74,7 +74,7 @@ export class View extends PIXI.Container {
 	}
 
 	public updateChunks() {
-		const currentlyOnScreen = this.zoomPan.isOnScreen(this._htmlContainer.offsetHeight, this._htmlContainer.offsetWidth);
+		const currentlyOnScreen = this.zoomPan.isOnScreen(this.htmlContainer.offsetHeight, this.htmlContainer.offsetWidth);
 		const chunksToRender = ProjectsService.staticInstance.currProject.chunksToRender(
 			Grid.getGridPosForPixelPos(currentlyOnScreen.start),
 			Grid.getGridPosForPixelPos(currentlyOnScreen.end)
@@ -211,8 +211,8 @@ export class View extends PIXI.Container {
 
 	private applyZoom(dir: 'in' | 'out' | '100', centerX?: number, centerY?: number): boolean {
 		if (!centerX || !centerY) {
-			centerX = this._htmlContainer.offsetWidth / 2;
-			centerY = this._htmlContainer.offsetHeight / 2;
+			centerX = this.htmlContainer.offsetWidth / 2;
+			centerY = this.htmlContainer.offsetHeight / 2;
 		}
 		if (dir === 'in') {
 			return this.zoomPan.zoomBy(1.25, centerX, centerY);

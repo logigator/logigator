@@ -43,6 +43,7 @@ export class ProjectInteractionService {
 	public cutSelection() {
 		this.copy.copySelection();
 		this.projectsService.currProject.removeElementsById(this.selection.selectedIds());
+		this._deleteNotifierSubject.next();
 	}
 
 	public paste() {

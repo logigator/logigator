@@ -20,6 +20,7 @@ export class CopyService {
 
 	public copySelection() {
 		const elementIds = this.selection.selectedIds();
+		if (elementIds.length === 0) return;
 		this.copyIds(elementIds);
 		this.copyConPoints(this.selection.selectedConnections());
 	}
