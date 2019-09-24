@@ -8,7 +8,7 @@ import {WorkModeService} from '../../services/work-mode/work-mode.service';
 import {SelectionService} from '../../services/selection/selection.service';
 import {ProjectsService} from '../../services/projects/projects.service';
 import {CollisionFunctions} from '../collision-functions';
-import {merge, Subscription} from 'rxjs';
+import {merge, of, Subscription} from 'rxjs';
 import {ThemingService} from '../../services/theming/theming.service';
 import {ElementProviderService} from '../../services/element-provider/element-provider.service';
 import {CompSpriteGenerator} from './comp-sprite-generator';
@@ -432,7 +432,6 @@ export class ViewInteractionManager {
 		this._selectRect.height = pasteRectSizePixel.y;
 		this._view.addChild(this._selectRect);
 
-		console.log(bounding);
 		const elementPosOffset = this.calcPasteRectOffset(bounding, pasteRectPos);
 		this.addPastingElementsToView(copiedElements, copiedConnPts, elementPosOffset);
 	}
@@ -441,7 +440,7 @@ export class ViewInteractionManager {
 		for (let i = 0; i < copiedElems.length; i++) {
 			if (copiedElems[i].typeId === 0) {
 				const graphics = new PIXI.Graphics();
-				graphics.position =  Grid.getPixelPosForGridPosWire(new PIXI.Point(copiedElems[i].pos.x + offset.x, copiedElems[i].pos.y + offset.y));
+				graphics.position = Grid.getPixelPosForGridPosWire(new PIXI.Point(copiedElems[i].pos.x + offset.x, copiedElems[i].pos.y + offset.y));
 				this._view.addLineToWireGraphics(
 					graphics,
 					Grid.getPixelPosForGridPosWire(copiedElems[i].endPos), Grid.getPixelPosForGridPosWire(copiedElems[i].pos)
@@ -457,7 +456,8 @@ export class ViewInteractionManager {
 					type.symbol,
 					copiedElems[i].numInputs, copiedElems[i].rotation, this._view.zoomPan.currentScale
 				);
-				sprite.position =  Grid.getPixelPosForGridPos(new PIXI.Point(copiedElems[i].pos.x + offset.x, copiedElems[i].pos.y + offset.y));
+				sprite.position = Grid.getPixelPosForGridPos(new PIXI.Point(copiedElems[i].pos.x + offset.x, copiedElems[i].pos.y + offset.y));
+				console.log(offset);
 				this._view.addChild(sprite);
 				this._pastingElements.push({
 					element: copiedElems[i],
