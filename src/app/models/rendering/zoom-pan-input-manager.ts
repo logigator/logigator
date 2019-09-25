@@ -1,5 +1,5 @@
 import {fromEvent, Subject} from 'rxjs';
-import {takeUntil} from 'rxjs/operators';
+import {filter, takeUntil} from 'rxjs/operators';
 
 export class ZoomPanInputManager {
 
@@ -31,6 +31,11 @@ export class ZoomPanInputManager {
 			takeUntil(this._destroySubject)
 		).subscribe((e: MouseEvent) => this.mouseUpHandler(e));
 
+		fromEvent(window, 'contextmenu').pipe(
+			takeUntil(this._destroySubject),
+			filter(() => this._mouseMoved)
+		).subscribe((e: MouseEvent) => e.preventDefault());
+
 		fromEvent(this._htmlContainer, 'mousedown').pipe(
 			takeUntil(this._destroySubject)
 		).subscribe((e: MouseEvent) => this.mouseDownHandler(e));
@@ -43,13 +48,12 @@ export class ZoomPanInputManager {
 	private mouseDownHandler(event: MouseEvent) {
 		if (event.button !== 2) return;
 		event.preventDefault();
-
 		this._mouseDown = true;
 	}
 
 	private mouseUpHandler(event: MouseEvent) {
 		this._mouseDown = false;
-		this._mouseMoved = false;
+		setTimeout(() => this._mouseMoved = false, 1);
 		this.clearMouseDelta();
 	}
 

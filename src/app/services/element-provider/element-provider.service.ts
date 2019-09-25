@@ -29,8 +29,8 @@ export class ElementProviderService {
 		ElementProviderService.staticInstance = this;
 	}
 
-	public async setUserDefinedTypes(prom: Promise<Map<number, ElementType>>): Promise<void> {
-		this._userDefinedElements = await prom;
+	public setUserDefinedTypes(elements: Map<number, ElementType>) {
+		this._userDefinedElements = elements;
 	}
 
 	public getElementById(id: number): ElementType {

@@ -2,7 +2,8 @@ export interface ElementType {
 	name: string;
 	numInputs: number;
 	numOutputs: number;
-	hasVariableInputs: boolean;
+	readonly maxInputs: number;
+	readonly minInputs: number;
 	symbol: string;
 	description: string;
 	rotation: number;

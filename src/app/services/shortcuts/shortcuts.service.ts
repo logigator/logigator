@@ -143,6 +143,9 @@ export class ShortcutsService {
 			case 'redo':
 				this.projects.currProject.stepForward();
 				break;
+			case 'save':
+				this.projects.saveAll();
+				break;
 		}
 	}
 }

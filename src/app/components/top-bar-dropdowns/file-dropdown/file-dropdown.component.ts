@@ -1,5 +1,5 @@
 import {Component, EventEmitter, OnInit, Output} from '@angular/core';
-import {ProjectsService} from "../../../services/projects/projects.service";
+import {ProjectsService} from '../../../services/projects/projects.service';
 
 @Component({
 	selector: 'app-file-dropdown',

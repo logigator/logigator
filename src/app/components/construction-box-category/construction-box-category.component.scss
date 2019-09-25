@@ -32,9 +32,9 @@
 
 	.content {
 		display: grid;
-		grid-gap: 1.2rem;
+		grid-gap: 0.7rem;
 		grid-template-columns: 1fr 1fr 1fr;
-		padding: 1.2rem;
+		padding: 0.7rem;
 		user-select: none;
 		border-bottom-left-radius: border('radius');
 		border-bottom-right-radius: border('radius');

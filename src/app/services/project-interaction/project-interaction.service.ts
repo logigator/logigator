@@ -3,6 +3,7 @@ import {Observable, Subject} from 'rxjs';
 import {ProjectsService} from '../projects/projects.service';
 import {SelectionService} from '../selection/selection.service';
 import {CopyService} from '../copy/copy.service';
+import {WorkModeService} from '../work-mode/work-mode.service';
 
 @Injectable({
 	providedIn: 'root'
@@ -15,7 +16,12 @@ export class ProjectInteractionService {
 	private _deleteNotifierSubject = new Subject<void>();
 	private _pasteNotifierSubject = new Subject<void>();
 
-	constructor(private projectsService: ProjectsService, private selection: SelectionService, private copy: CopyService) {
+	constructor(
+		private projectsService: ProjectsService,
+		private selection: SelectionService,
+		private copy: CopyService,
+		private workMode: WorkModeService
+	) {
 		ProjectInteractionService.staticInstance = this;
 	}
 
@@ -47,6 +53,7 @@ export class ProjectInteractionService {
 	}
 
 	public paste() {
+		this.workMode.setWorkMode('select');
 		this._pasteNotifierSubject.next();
 	}
 

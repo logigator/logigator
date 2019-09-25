@@ -7,11 +7,12 @@ import {ProjectModel} from '../../models/project-model';
 import * as PIXI from 'pixi.js';
 import {HttpClient} from '@angular/common/http';
 import {ElementType} from '../../models/element-type';
+import {Element} from '../../models/element';
 import {ComponentInfoResponse} from '../../models/http-responses/component-info-response';
 import {ProjectState} from '../../models/project-state';
 import {ElementProviderService} from '../element-provider/element-provider.service';
 import {UserService} from '../user/user.service';
-import {EMPTY, Observable, of} from 'rxjs';
+import {Observable} from 'rxjs';
 import {ErrorHandlingService} from '../error-handling/error-handling.service';
 
 @Injectable({
@@ -32,10 +33,10 @@ export class ProjectSaveManagementService {
 		let project;
 		if (location.pathname === '/') {
 			project = Promise.resolve(this.createEmptyProject());
-			await this.elemProvService.setUserDefinedTypes(this.getAllAvailableCustomElements());
+			this.elemProvService.setUserDefinedTypes(await this.getAllAvailableCustomElements());
 		} else {
 			project = this.openProjectFromServer();
-			await this.elemProvService.setUserDefinedTypes(this.getAllAvailableCustomElements());
+			this.elemProvService.setUserDefinedTypes(await this.getAllAvailableCustomElements());
 		}
 		return project;
 	}
@@ -57,13 +58,14 @@ export class ProjectSaveManagementService {
 						description: elem.description,
 						name: elem.name,
 						rotation: 0,
-						hasVariableInputs: false,
+						minInputs: 2,
+						maxInputs: 2,
 						symbol: elem.symbol,
 						numInputs: 2,
 						numOutputs: 1,
 						category: 'user'
 					};
-					newElemTypes.set(elem.pk_id, elemType);
+					newElemTypes.set(Number(elem.pk_id), elemType);
 				});
 				return newElemTypes;
 			}),
@@ -94,8 +96,7 @@ export class ProjectSaveManagementService {
 	}
 
 	private saveSingleProject(project: Project): Promise<HttpResponseData<{success: boolean}>> {
-		return this.http.post<HttpResponseData<{success: boolean}>>('/api/project/save', {
-			id: project.id,
+		return this.http.post<HttpResponseData<{success: boolean}>>(`/api/project/save/${project.id}`, {
 			data: project.currState.model
 		}).toPromise();
 	}
@@ -109,7 +110,7 @@ export class ProjectSaveManagementService {
 					}
 					const project = this.getProjectModelFromJson(response.result.project.data);
 					return new Project(new ProjectState(project), {
-						id,
+						id: Number(id),
 						name: response.result.project.name,
 						type: 'comp'
 					});
@@ -148,7 +149,7 @@ export class ProjectSaveManagementService {
 				}
 				const project = this.getProjectModelFromJson(response.result.project.data);
 				return new Project(new ProjectState(project), {
-					id,
+					id: Number(id),
 					name: response.result.project.name,
 					type: 'project'
 				});
@@ -176,11 +177,11 @@ export class ProjectSaveManagementService {
 		}
 
 		data.board.elements = data.board.elements.map(e => {
-			const elem = {
+			const elem: Element = {
 				id: e.id,
 				typeId: e.typeId,
-				inputs: e.inputs,
-				outputs: e.outputs,
+				numOutputs: e.numOutputs,
+				numInputs: e.numInputs,
 				pos: new PIXI.Point(e.pos.x, e.pos.y),
 				endPos: new PIXI.Point(e.endPos.x, e.endPos.y),
 				rotation: e.rotation

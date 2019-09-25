@@ -55,5 +55,8 @@ export const defaultShortcuts: ShortcutMap = {
 		key: 'T',
 		alt: true
 	},
-	save: null,
+	save: {
+		key: 'S',
+		ctrl: true
+	},
 };

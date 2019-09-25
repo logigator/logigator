@@ -4,7 +4,7 @@ import {View} from '../../models/rendering/view';
 import {ProjectsService} from '../../services/projects/projects.service';
 import {Project} from '../../models/project';
 import {WorkArea} from '../../models/rendering/work-area';
-import {WindowWorkAreaComponent} from "../window-work-area/window-work-area.component";
+import {WindowWorkAreaComponent} from '../window-work-area/window-work-area.component';
 import {distinctUntilChanged, map, pairwise, takeUntil} from 'rxjs/operators';
 import {WorkMode} from '../../models/work-modes';
 import {WorkModeService} from '../../services/work-mode/work-mode.service';
@@ -101,6 +101,7 @@ export class WorkAreaComponent extends WorkArea implements OnInit, OnDestroy {
 		this.ngZone.run(() => {
 			this._allViews.set(projectId, newView);
 			this.activeView = newView;
+			this.projectsService.switchToProject(projectId);
 		});
 	}
 
