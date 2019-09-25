@@ -1,8 +1,8 @@
-install:
-	- "npm install"
+install: 
+  - "npm install"
 language: node_js
-node_js:
-	- node
-script:
-	- "npm run build"
+node_js: 
+  - node
+script: 
+  - "npm run build"
 sudo: required
