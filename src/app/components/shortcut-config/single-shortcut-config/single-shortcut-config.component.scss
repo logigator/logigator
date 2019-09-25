@@ -71,11 +71,17 @@ div {
 			}
 
 			.save {
-				background-image: url("/assets/icons/check.svg");
-				background-repeat: no-repeat;
-				background-size: 60%;
-				background-position: center;
-				width: 20%;
+				@include themify() {
+					@if (isTheme('dark')) {
+						background-image: url("/assets/icons/dark/search.svg");
+					} @else {
+						background-image: url("/assets/icons/light/search.svg");
+					}
+					background-repeat: no-repeat;
+					background-size: 60%;
+					background-position: center;
+					width: 20%;
+				}
 			}
 		}
 	}

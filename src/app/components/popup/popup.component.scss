@@ -34,6 +34,23 @@
 			@include themify() {
 				background-color: themed('secondary');
 				border-bottom: border('width') solid themed('secondary');
+
+				@if (isTheme('dark')) {
+					.dark {
+						display: block;
+					}
+					.light {
+						display: none;
+					}
+				} @else {
+					.dark {
+						display: none;
+					}
+					.light {
+						display: block;
+					}
+				}
+
 			}
 
 			width: 100%;
@@ -50,6 +67,7 @@
 				//width: 1.3rem;
 				height: 27px;
 				padding: 0.3rem;
+
 				&:hover {
 					@include themify() {
 						background-color: lighten(themed('background'), 10);

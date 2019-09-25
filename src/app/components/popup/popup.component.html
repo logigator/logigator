@@ -2,7 +2,8 @@
 	<div class="content">
 		<div class="header">
 			<div>{{ title }}</div>
-			<img src="assets/icons/close.svg" (click)="closeInside()">
+			<img src="../../../assets/icons/dark/close.svg" (click)="closeInside()" class="dark">
+			<img src="../../../assets/icons/light/close.svg" (click)="closeInside()" class="light">
 		</div>
 		<div class="body">
 			<template [ngTemplateOutlet]="content"></template>
