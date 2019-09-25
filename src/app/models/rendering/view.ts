@@ -176,6 +176,7 @@ export class View extends PIXI.Container {
 			container: new PIXI.Container(),
 			scaledFor: this.zoomPan.currentScale
 		};
+		this._chunks[x][y].container.sortableChildren = false;
 		const text = new PIXI.Text(x  + ' ' + y);
 		text.x = 20 * 10;
 		text.y = 20 * 10;

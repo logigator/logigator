@@ -64,7 +64,6 @@ export class ViewInteractionManager {
 		this._view.on('pointerdown', (e: InteractionEvent) => this.handlePointerDownOnView(e));
 		this._view.on('pointerup', (e: InteractionEvent) => this.handlePointerUpOnView(e));
 		this._view.on('pointerupoutside', (e: InteractionEvent) => this.handlePointerUpOnView(e));
-		this._view.on('pointermove', (e: InteractionEvent) => this.handlePointerMoveOnView(e));
 	}
 
 	private addEventListenersToSelectRect() {
@@ -91,6 +90,7 @@ export class ViewInteractionManager {
 		) {
 			this.startDraggingNewComponent(e);
 		}
+		this._view.on('pointermove', (e1: InteractionEvent) => this.handlePointerMoveOnView(e1));
 	}
 
 	private handlePointerUpOnView(e: InteractionEvent) {
@@ -101,6 +101,7 @@ export class ViewInteractionManager {
 		} else if (this._draggingNewComp) {
 			this.placeNewComp();
 		}
+		this._view.removeListener('pointermove');
 	}
 
 	private handlePointerMoveOnView(e: InteractionEvent) {
