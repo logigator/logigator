@@ -270,7 +270,7 @@ export class Project {
 
 	private disconnectWires(wiresOnPoint: Element[]): Action[] {
 		const newWires = this._currState.disconnectWires(wiresOnPoint);
-		this._currState.loadConnectionPoints(newWires);
+		this._currState.loadConnectionPoints(newWires.concat(wiresOnPoint));
 		return Actions.connectWiresToActions(wiresOnPoint, newWires);
 	}
 
