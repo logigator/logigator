@@ -17,6 +17,7 @@ import {ProjectInteractionService} from '../../services/project-interaction/proj
 import {filter, takeUntil} from 'rxjs/operators';
 import {SelectionService} from '../../services/selection/selection.service';
 import {SimulationViewInteractionManager} from './simulation-view-interaction-manager';
+import {RendererChunkData} from './renderer-chunk-data';
 
 export class View extends PIXI.Container {
 
@@ -33,8 +34,7 @@ export class View extends PIXI.Container {
 
 	public readonly htmlContainer: HTMLElement;
 
-	private _chunks: PIXI.Container[][] = [];
-	private _gridGraphics: PIXI.Graphics[][] = [];
+	private _chunks: RendererChunkData[][] = [];
 
 	public connectionPoints: Map<string, PIXI.Graphics> = new Map();
 	public allElements: Map<number, ElementSprite> = new Map();
@@ -81,21 +81,25 @@ export class View extends PIXI.Container {
 		);
 		for (let i = 0; i < chunksToRender.length; i++) {
 			if (this.createChunkIfNeeded(chunksToRender[i].x, chunksToRender[i].y)) continue;
-			this._gridGraphics[chunksToRender[i].x][chunksToRender[i].y].destroy();
-			this._gridGraphics[chunksToRender[i].x][chunksToRender[i].y] = Grid.generateGridGraphics(this.zoomPan.currentScale);
-			this._chunks[chunksToRender[i].x][chunksToRender[i].y].children.forEach((child: PIXI.Graphics) => {
-				const elemSprite = this.allElements.get(Number(child.name));
+			const chunk = this._chunks[chunksToRender[i].x][chunksToRender[i].y];
+			chunk.container.visible = true;
+			if (chunk.scaledFor === this.zoomPan.currentScale) continue;
+			chunk.scaledFor = this.zoomPan.currentScale;
+			chunk.gridGraphics.destroy();
+			chunk.gridGraphics = Grid.generateGridGraphics(this.zoomPan.currentScale);
+			const chunkElems = chunk.container.children;
+			for (let e = 0; e < chunkElems.length; e++) {
+				const elemSprite = this.allElements.get(Number(chunkElems[e].name));
 				if (elemSprite && elemSprite.element.typeId === 0) {
 					this.updateWireSprite(elemSprite.element, elemSprite.sprite as PIXI.Graphics);
 				} else if (elemSprite) {
 					this.updateComponentSprite(elemSprite.element, elemSprite.sprite as PIXI.Graphics);
 				}
-				if (child.name === 'wireConnPoint') {
-					this.updateConnectionPoint(child);
+				if (chunkElems[e].name === 'wireConnPoint') {
+					this.updateConnectionPoint(chunkElems[e] as PIXI.Graphics);
 				}
-			});
-			this._chunks[chunksToRender[i].x][chunksToRender[i].y].addChildAt(this._gridGraphics[chunksToRender[i].x][chunksToRender[i].y], 0);
-			this._chunks[chunksToRender[i].x][chunksToRender[i].y].visible = true;
+			}
+			chunk.container.addChildAt(chunk.gridGraphics, 0);
 		}
 		const selectedIds = SelectionService.staticInstance.selectedIds(this.projectId);
 		for (let i = 0; i < selectedIds.length; i++) {
@@ -114,7 +118,7 @@ export class View extends PIXI.Container {
 		}
 		for (const oldChunk of this._chunksToRender) {
 			if (!chunksToRender.find(toRender => toRender.x === oldChunk.x && toRender.y === oldChunk.y)) {
-				this._chunks[oldChunk.x][oldChunk.y].visible = false;
+				this._chunks[oldChunk.x][oldChunk.y].container.visible = false;
 			}
 		}
 		this._chunksToRender = chunksToRender;
@@ -162,29 +166,31 @@ export class View extends PIXI.Container {
 		for (let i = 0; i <= x; i++)
 			if (!this._chunks[i]) {
 				this._chunks[i] = [];
-				this._gridGraphics[i] = [];
 			}
 		for (let i = 0; i <= y; i++)
 			if (!this._chunks[x][y] && this._chunks[x][y] !== undefined) {
-				this._gridGraphics[x].push(undefined);
 				this._chunks[x].push(undefined);
 			}
-		this._gridGraphics[x][y] = Grid.generateGridGraphics(this.zoomPan.currentScale);
-		this._chunks[x][y] = new PIXI.Container();
+		this._chunks[x][y] = {
+			gridGraphics: Grid.generateGridGraphics(this.zoomPan.currentScale),
+			container: new PIXI.Container(),
+			scaledFor: this.zoomPan.currentScale
+		};
 		const text = new PIXI.Text(x  + ' ' + y);
 		text.x = 20 * 10;
 		text.y = 20 * 10;
-		this._chunks[x][y].addChild(text);
+		this._chunks[x][y].container.addChild(text);
 		return true;
 	}
 
 	private createChunkIfNeeded(chunkX, chunkY): boolean {
 		if (this.createChunk(chunkX, chunkY)) {
-			this._chunks[chunkX][chunkY].position = Grid.getPixelPosForGridPos(
+			const chunk = this._chunks[chunkX][chunkY];
+			chunk.container.position = Grid.getPixelPosForGridPos(
 				new PIXI.Point(chunkX * environment.chunkSize, chunkY * environment.chunkSize)
 			);
-			this.addChild(this._chunks[chunkX][chunkY]);
-			this._chunks[chunkX][chunkY].addChildAt(this._gridGraphics[chunkX][chunkY], 0);
+			this.addChild(chunk.container);
+			chunk.container.addChildAt(chunk.gridGraphics, 0);
 			return true;
 		}
 		return false;
@@ -225,6 +231,7 @@ export class View extends PIXI.Container {
 	}
 
 	private onZoomClick(dir: 'in' | 'out' | '100') {
+		console.log(PIXI.utils.TextureCache);
 		if (this.applyZoom(dir)) {
 			this.updateChunks();
 		}
@@ -374,7 +381,7 @@ export class View extends PIXI.Container {
 		const chunkY = CollisionFunctions.gridPosToChunk(pos.y);
 
 		this.createChunkIfNeeded(chunkX, chunkY);
-		this._chunks[chunkX][chunkY].addChild(sprite);
+		this._chunks[chunkX][chunkY].container.addChild(sprite);
 	}
 
 	public get projectId(): number {

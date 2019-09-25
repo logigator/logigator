@@ -58,6 +58,7 @@ export class CompSpriteGenerator {
 	// tslint:disable-next-line:max-line-length
 	public static getComponentSprite(symbol: string, inputs: number, outputs: number, rotation: number, scale: number): PIXI.Sprite | PIXI.Graphics {
 		const graphics = new PIXI.Graphics();
+		graphics.interactiveChildren = false;
 		return CompSpriteGenerator.updateGraphics(symbol, inputs, outputs, rotation, scale, graphics);
 	}
 
