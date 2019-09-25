@@ -79,4 +79,35 @@ export class Elements {
 		newElem.pos = new PIXI.Point(start, wire0.pos.y);
 		newElem.endPos = new PIXI.Point(end, wire0.pos.y);
 	}
+
+	public static wireEnds(element: Element): PIXI.Point[] {
+		if (element.id === 0)
+			return [element.pos, element.endPos];
+		const out: PIXI.Point[] = [];
+		if (element.rotation === 0) {
+			for (let i = 0; i < element.numInputs; i++)
+				out.push(new PIXI.Point(element.pos.x - 1, element.pos.y + i));
+			for (let i = 0; i < element.numOutputs; i++)
+				out.push(new PIXI.Point(element.endPos.x, element.pos.y + i));
+		}
+		if (element.rotation === 1) {
+			for (let i = 0; i < element.numInputs; i++)
+				out.push(new PIXI.Point(element.endPos.x - 1 - i, element.pos.y - 1));
+			for (let i = 0; i < element.numOutputs; i++)
+				out.push(new PIXI.Point(element.endPos.x - 1 - i, element.endPos.y));
+		}
+		if (element.rotation === 2) {
+			for (let i = 0; i < element.numInputs; i++)
+				out.push(new PIXI.Point(element.endPos.x, element.endPos.y - 1 - i));
+			for (let i = 0; i < element.numOutputs; i++)
+				out.push(new PIXI.Point(element.pos.x - 1, element.endPos.y - 1 - i));
+		}
+		if (element.rotation === 3) {
+			for (let i = 0; i < element.numInputs; i++)
+				out.push(new PIXI.Point(element.pos.x + i, element.endPos.y));
+			for (let i = 0; i < element.numOutputs; i++)
+				out.push(new PIXI.Point(element.pos.x + i, element.pos.y - 1));
+		}
+		return out;
+	}
 }
