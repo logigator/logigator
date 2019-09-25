@@ -5,7 +5,7 @@
 	<div class="content" [formGroup]="propertiesFrom">
 		<div class="property">
 			<p>Inputs:</p>
-			<input type="number" formControlName="numInputs" min="1">
+			<input type="number" formControlName="numInputs" [min]="elemType.minInputs" [max]="elemType.maxInputs">
 		</div>
 		<div class="property">
 			<p>Direction:</p>

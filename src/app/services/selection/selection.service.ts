@@ -73,7 +73,10 @@ export class SelectionService {
 	}
 
 	public clearSelection(projectId?: number) {
-		this._selectedIds.delete(projectId === undefined ? this.projectsService.currProject.id : projectId);
-		this._selectedConnections.delete(projectId === undefined ? this.projectsService.currProject.id : projectId);
+		this.ngZone.run(() => {
+			this._selectedIds.delete(projectId === undefined ? this.projectsService.currProject.id : projectId);
+			this._selectedConnections.delete(projectId === undefined ? this.projectsService.currProject.id : projectId);
+		});
+
 	}
 }

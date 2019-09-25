@@ -152,7 +152,7 @@ export class View extends PIXI.Container {
 		graphics.clear();
 		const elemType = ElementProviderService.staticInstance.getElementById(element.typeId);
 		CompSpriteGenerator.updateGraphics(
-			elemType.symbol, elemType.numInputs, element.numOutputs, element.rotation, this.zoomPan.currentScale, graphics
+			elemType.symbol, element.numInputs, element.numOutputs, element.rotation, this.zoomPan.currentScale, graphics
 		);
 	}
 

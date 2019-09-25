@@ -58,13 +58,14 @@ export class ProjectSaveManagementService {
 						description: elem.description,
 						name: elem.name,
 						rotation: 0,
-						hasVariableInputs: false,
+						minInputs: 2,
+						maxInputs: 2,
 						symbol: elem.symbol,
 						numInputs: 2,
 						numOutputs: 1,
 						category: 'user'
 					};
-					newElemTypes.set(elem.pk_id, elemType);
+					newElemTypes.set(Number(elem.pk_id), elemType);
 				});
 				return newElemTypes;
 			}),
@@ -109,7 +110,7 @@ export class ProjectSaveManagementService {
 					}
 					const project = this.getProjectModelFromJson(response.result.project.data);
 					return new Project(new ProjectState(project), {
-						id,
+						id: Number(id),
 						name: response.result.project.name,
 						type: 'comp'
 					});
@@ -148,7 +149,7 @@ export class ProjectSaveManagementService {
 				}
 				const project = this.getProjectModelFromJson(response.result.project.data);
 				return new Project(new ProjectState(project), {
-					id,
+					id: Number(id),
 					name: response.result.project.name,
 					type: 'project'
 				});
