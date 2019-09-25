@@ -152,7 +152,7 @@ export class View extends PIXI.Container {
 		graphics.clear();
 		const elemType = ElementProviderService.staticInstance.getElementById(element.typeId);
 		CompSpriteGenerator.updateGraphics(
-			elemType.symbol, elemType.numInputs, element.numOutputs, element.rotation, this.zoomPan.currentScale, graphics
+			elemType.symbol, element.numInputs, element.numOutputs, element.rotation, this.zoomPan.currentScale, graphics
 		);
 	}
 
@@ -357,6 +357,7 @@ export class View extends PIXI.Container {
 	}
 
 	private updateComponent(action: Action) {
+		console.log(action)
 		const elemSprite = this.allElements.get(action.element.id);
 		this.updateComponentSprite(action.element, elemSprite.sprite as PIXI.Graphics);
 	}
