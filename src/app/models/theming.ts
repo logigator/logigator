@@ -1,6 +1,6 @@
 export type Theme = 'light' | 'dark';
 
-export type EditorColorKey = 'background' | 'wire' | 'grid' | 'selectRect' | 'fontTint';
+export type EditorColorKey = 'background' | 'wire' | 'grid' | 'selectRect' | 'fontTint' | 'selectTint';
 
 export type EditorColors =  {
 	[T in Theme]: {

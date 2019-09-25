@@ -397,7 +397,7 @@ export class ViewInteractionManager {
 		const selected = SelectionService.staticInstance.selectFromRect(ProjectsService.staticInstance.currProject, start, end);
 		selected.forEach(id => {
 			const element = this._view.allElements.get(id);
-			element.sprite.tint = 0x8a8a8a;
+			element.sprite.tint = ThemingService.staticInstance.getEditorColor('selectTint');
 
 			element.sprite.parent.removeChild(element.sprite);
 			this._view.addChild(element.sprite);
@@ -410,7 +410,7 @@ export class ViewInteractionManager {
 		});
 		SelectionService.staticInstance.selectedConnections().forEach(point => {
 			const element = this._view.connectionPoints.get(`${point.x}:${point.y}`);
-			element.tint = 0x8a8a8a;
+			element.tint = ThemingService.staticInstance.getEditorColor('selectTint');
 			element.parent.removeChild(element);
 			this._view.addChild(element);
 			const pos = Grid.getPixelPosForGridPosWire(point);
@@ -510,7 +510,7 @@ export class ViewInteractionManager {
 		this._singleSelectedElement = elem.element;
 		delete this._actionStartPos;
 		this._view.removeChild(this._selectRect);
-		elem.sprite.tint = 0x8a8a8a;
+		elem.sprite.tint = ThemingService.staticInstance.getEditorColor('selectTint');
 		elem.sprite.parent.removeChild(elem.sprite);
 		elem.sprite.position = Grid.getPixelPosForGridPos(elem.element.pos);
 		this._view.addChild(elem.sprite);

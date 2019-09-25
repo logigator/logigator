@@ -20,6 +20,7 @@ export class ThemingService {
 			grid: 0x248945,
 			wire: 0x2ED573,
 			selectRect: 0,
+			selectTint: 0xd1d1d1,
 			fontTint: 0
 		},
 		dark: {
@@ -27,6 +28,7 @@ export class ThemingService {
 			grid: 0x1C8045,
 			wire: 0x27AE60,
 			selectRect: 0,
+			selectTint: 0x8a8a8a,
 			fontTint: 0xFFFFFF
 		}
 	};
