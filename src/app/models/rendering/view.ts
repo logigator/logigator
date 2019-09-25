@@ -357,7 +357,6 @@ export class View extends PIXI.Container {
 	}
 
 	private updateComponent(action: Action) {
-		console.log(action)
 		const elemSprite = this.allElements.get(action.element.id);
 		this.updateComponentSprite(action.element, elemSprite.sprite as PIXI.Graphics);
 	}
