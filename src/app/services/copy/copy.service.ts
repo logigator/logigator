@@ -53,7 +53,7 @@ export class CopyService {
 	}
 
 	public getCopiedElementsBoundingBox(): PIXI.Rectangle {
-		this.copyElements(this.copiedElements); //wtf i dont know why
+		this.copyElements(this.copiedElements); // wtf i dont know why
 		const bounds = new PIXI.Bounds();
 		for (let i = 0; i < this._copiedElements.length; i++) {
 			bounds.addPoint(this._copiedElements[i].pos);

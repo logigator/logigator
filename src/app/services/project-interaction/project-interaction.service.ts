@@ -16,7 +16,12 @@ export class ProjectInteractionService {
 	private _deleteNotifierSubject = new Subject<void>();
 	private _pasteNotifierSubject = new Subject<void>();
 
-	constructor(private projectsService: ProjectsService, private selection: SelectionService, private copy: CopyService, private workMode: WorkModeService) {
+	constructor(
+		private projectsService: ProjectsService,
+		private selection: SelectionService,
+		private copy: CopyService,
+		private workMode: WorkModeService
+	) {
 		ProjectInteractionService.staticInstance = this;
 	}
 

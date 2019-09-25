@@ -29,7 +29,7 @@ export class ElementProviderService {
 		ElementProviderService.staticInstance = this;
 	}
 
-	public setUserDefinedTypes(elements: Map<number, ElementType>){
+	public setUserDefinedTypes(elements: Map<number, ElementType>) {
 		this._userDefinedElements = elements;
 	}
 
