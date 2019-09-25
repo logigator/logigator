@@ -53,7 +53,7 @@ export class ZoomPanInputManager {
 
 	private mouseUpHandler(event: MouseEvent) {
 		this._mouseDown = false;
-		setTimeout(() => this._mouseMoved = false, 0);
+		setTimeout(() => this._mouseMoved = false, 1);
 		this.clearMouseDelta();
 	}
 
