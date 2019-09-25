@@ -8,5 +8,6 @@ branches:
 node_js: 
   - node
 script: 
+  - "ng lint"
   - "npm run build"
 sudo: required
