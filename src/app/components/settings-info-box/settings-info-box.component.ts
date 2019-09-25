@@ -66,6 +66,7 @@ export class SettingsInfoBoxComponent implements OnChanges, OnDestroy {
 
 	private initInstance() {
 		const element = this.projects.currProject.currState.getElementById(this.selectedCompId);
+		this.selectedCompTypeId = element.typeId;
 		this.elemType = this.elemProvider.getElementById(element.typeId);
 		this.propertiesFrom = this.formBuilder.group({
 			numInputs: [element.numInputs],

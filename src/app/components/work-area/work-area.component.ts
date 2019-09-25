@@ -101,6 +101,7 @@ export class WorkAreaComponent extends WorkArea implements OnInit, OnDestroy {
 		this.ngZone.run(() => {
 			this._allViews.set(projectId, newView);
 			this.activeView = newView;
+			this.projectsService.switchToProject(projectId);
 		});
 	}
 
