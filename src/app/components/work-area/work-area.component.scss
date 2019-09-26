@@ -15,7 +15,7 @@
 
 	#tabs {
 		position: absolute;
-		width: calc(100% - 1rem - #{$construction-box-width});
+		max-width: calc(100% - 1rem - #{$construction-box-width});
 		margin-left: 1rem;
 		display: flex;
 		flex-direction: row;
