@@ -4,6 +4,7 @@ import {Element, Elements} from './element';
 import {Observable, Subject} from 'rxjs';
 import * as PIXI from 'pixi.js';
 import {CollisionFunctions} from './collision-functions';
+import {Log} from './tests/logs';
 
 export class Project {
 
@@ -23,6 +24,8 @@ export class Project {
 
 	public dirty = false;
 
+	public log: Log;
+
 	public constructor(projectState: ProjectState, config: {id?: number, name?: string, type?: 'project' | 'comp'}) {
 		this._currState = projectState;
 		this._actions = new Array(this._maxActionCount);
@@ -32,9 +35,17 @@ export class Project {
 		this._currActionPointer = -1;
 		this._currMaxActionPointer = -1;
 		this._changeSubject = new Subject<Action[]>();
+
+		this.log = new Log(this, true);
 	}
 
-
+	public static empty(): Project {
+		return new Project(new ProjectState(), {
+			type: 'project',
+			name: 'New Project',
+			id: 0
+		});
+	}
 
 	private applyActions(actions: Action[]): void {
 		actions.forEach(action => this.applyAction(action));
@@ -105,6 +116,7 @@ export class Project {
 			dif = new PIXI.Point(0, 0);
 		if (!this._currState.allSpacesFree(elements, dif))
 			return false;
+		this.log.call('addElements', arguments);
 		const actions: Action[] = new Array(elements.length);
 		let i = 0;
 		elements.forEach(elem => {
@@ -132,6 +144,7 @@ export class Project {
 			_endPos || Elements.calcEndPos(_pos, numInputs, numOutputs, rotation));
 		if (!this._currState.isFreeSpace(elem.pos, elem.endPos, typeId === 0, Elements.wireEnds(elem)))
 			return null;
+		this.log.call('addElement', arguments);
 		this._currState.addElement(elem);
 		const actions: Action[] = [{
 			name: Elements.addActionName(elem),
@@ -150,6 +163,7 @@ export class Project {
 		const {wire0, wire1} = Elements.gen2Wires(_pos, _cornerPos, _endPos);
 		if (!this._currState.allSpacesFree([wire0, wire1], new PIXI.Point(0, 0)))
 			return null;
+		this.log.call('addWire', arguments);
 		this._currState.addElement(wire0);
 		this._currState.addElement(wire1);
 		const actions = this.actionsFromAddWires([wire0, wire1]);
@@ -166,6 +180,7 @@ export class Project {
 
 
 	public removeElementsById(ids: number[]): void {
+		this.log.call('removeElementsById', arguments);
 		const actions: Action[] = [];
 		const onEdges: Element[] = [];
 		const elements: Element[] = new Array(ids.length);
@@ -197,6 +212,7 @@ export class Project {
 		const changed = this._currState.withWiresOnEdges(elements);
 		if (!this._currState.allSpacesFree(elements, dif, elements))
 			return false;
+		this.log.call('moveElementsById', arguments);
 		this._currState.removeAllConnectionPoints(elements);
 		for (const elem of elements) {
 			this._currState.moveElement(elem, dif);
@@ -225,6 +241,7 @@ export class Project {
 		const newEndPos = Elements.calcEndPos(element.pos, element.numInputs, element.numOutputs, rotation);
 		if (!this._currState.isFreeSpace(element.pos, newEndPos, false, Elements.wireEnds(element, rotation), [element]))
 			return false;
+		this.log.call('rotateComponent', arguments);
 		this._currState.rotateComp(element, rotation, newEndPos);
 		actions.push(...this.autoAssemble(changed));
 		this.newState(actions);
@@ -245,6 +262,7 @@ export class Project {
 		const newEndPos = Elements.calcEndPos(element.pos, numInputs, element.numOutputs, element.rotation);
 		if (!this._currState.isFreeSpace(element.pos, newEndPos, false, Elements.wireEnds(element, undefined, numInputs), [element]))
 			return false;
+		this.log.call('setNumInputs', arguments);
 		this._currState.setNumInputs(element, numInputs, newEndPos);
 		actions.push(...this.autoAssemble(changed));
 		this.newState(actions);
@@ -254,6 +272,7 @@ export class Project {
 
 
 	public toggleWireConnection(pos: PIXI.Point): void {
+		this.log.call('toggleWireConnection', arguments);
 		const wiresOnPoint = this._currState.wiresOnPoint(pos);
 		let actions: Action[];
 		if (wiresOnPoint.length === 2) {
@@ -327,6 +346,7 @@ export class Project {
 	public stepBack(): Action[] {
 		if (this._currActionPointer < 0)
 			return;
+		this.log.call('stepBack', arguments);
 		const backActions = Actions.reverseActions(this._actions[this._currActionPointer]);
 		this._currActionPointer--;
 		this.applyActions(backActions);
@@ -338,6 +358,7 @@ export class Project {
 	public stepForward(): Action[] {
 		if (this._currActionPointer >= this._maxActionCount || this._currActionPointer === this._currMaxActionPointer)
 			return;
+		this.log.call('stepForward', arguments);
 		const outActions = this._actions[++this._currActionPointer];
 		this.applyActions(outActions);
 		this._changeSubject.next(outActions);

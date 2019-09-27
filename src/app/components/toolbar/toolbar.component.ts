@@ -3,6 +3,8 @@ import {WorkMode} from '../../models/work-modes';
 import {WorkModeService} from '../../services/work-mode/work-mode.service';
 import {ProjectsService} from '../../services/projects/projects.service';
 import {ProjectInteractionService} from '../../services/project-interaction/project-interaction.service';
+import {Test} from '../../models/tests/tests';
+import {ManuallyLogged} from '../../models/tests/logs';
 
 @Component({
 	selector: 'app-toolbar',
@@ -18,6 +20,15 @@ export class ToolbarComponent implements OnInit {
 	) { }
 
 	ngOnInit() {
+	}
+
+	public printCalls(): void {
+		console.log(this.projectService.currProject.log.stringify());
+	}
+
+	public runCalls(): void {
+		const test = new Test(this.projectService.currProject);
+		test.runLoggedTests(ManuallyLogged.firstAllRound);
 	}
 
 	public setWorkMode(mode: WorkMode) {
