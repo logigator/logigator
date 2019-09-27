@@ -43,7 +43,7 @@ export class Elements {
 		element.endPos.y += dif.y;
 	}
 
-	public static genNewElement(typeId: number, _pos: PIXI.Point, _endPos: PIXI.Point): Element {
+	public static genNewElement(typeId: number, _pos: PIXI.Point, _endPos: PIXI.Point, rotation?: number): Element {
 		const type = ElementProviderService.staticInstance.getElementById(typeId);
 		const pos = _pos ? _pos.clone() : undefined;
 		const endPos = _endPos ? _endPos.clone() : undefined;
@@ -56,7 +56,7 @@ export class Elements {
 			numOutputs: type.numOutputs,
 			pos,
 			endPos,
-			rotation: type.rotation
+			rotation: rotation || type.rotation
 		};
 	}
 
@@ -69,7 +69,7 @@ export class Elements {
 	}
 
 	public static calcEndPos(pos: PIXI.Point, numInputs: number, numOutputs: number, rotation?: number): PIXI.Point {
-		if (rotation === undefined) rotation = 0;
+		if (rotation === undefined || rotation === null) rotation = 0;
 		if (rotation % 2 === 0) {
 			return new PIXI.Point(pos.x + environment.componentWidth,
 				pos.y + Math.max(numInputs, numOutputs));

@@ -22,13 +22,19 @@ export class ToolbarComponent implements OnInit {
 	ngOnInit() {
 	}
 
+	public printElements(): void {
+		for (const elem of this.projectService.currProject.allElements) {
+			console.log(elem);
+		}
+	}
+
 	public printCalls(): void {
 		console.log(this.projectService.currProject.log.stringify());
 	}
 
 	public runCalls(): void {
 		const test = new Test(this.projectService.currProject);
-		test.runLoggedTests(ManuallyLogged.firstAllRound);
+		test.runLoggedTests(ManuallyLogged.firstAllRound, true);
 	}
 
 	public setWorkMode(mode: WorkMode) {

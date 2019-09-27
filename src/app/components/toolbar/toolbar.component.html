@@ -29,6 +29,7 @@
 		<button class="toolbar-button select" (click)="setWorkMode('select')" [class.active-button]="currentWorkMode === 'select'" aria-label="Select"></button>
 		<button class="toolbar-button text" [class.active-button]="currentWorkMode === 'text'" aria-label="Place Text"></button>
 
+		<button (click)="printElements()">print elements</button>
 		<button (click)="printCalls()">print calls</button>
 		<button (click)="runCalls()">run calls</button>
 	</div>

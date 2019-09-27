@@ -141,7 +141,7 @@ export class Project {
 		if (typeId === 0 && _pos.equals(_endPos))
 			return null;
 		const elem = Elements.genNewElement(typeId, _pos,
-			_endPos || Elements.calcEndPos(_pos, numInputs, numOutputs, rotation));
+			_endPos || Elements.calcEndPos(_pos, numInputs, numOutputs, rotation), rotation);
 		if (!this._currState.isFreeSpace(elem.pos, elem.endPos, typeId === 0, Elements.wireEnds(elem)))
 			return null;
 		this.log.call('addElement', arguments);
