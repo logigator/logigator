@@ -106,14 +106,17 @@ export class ProjectState {
 	public removeConFromChunks(con: PIXI.Point): void {
 		const chunkX = CollisionFunctions.gridPosToChunk(con.x);
 		const chunkY = CollisionFunctions.gridPosToChunk(con.y);
+		const chunk = this.chunk(chunkX, chunkY);
+		if (!chunk)
+			return;
 		let conIndex = -1;
-		for (let i = 0; i < this.chunk(chunkX, chunkY).connectionPoints.length; i++) {
-			if (this.chunk(chunkX, chunkY).connectionPoints[i].equals(con))
+		for (let i = 0; i < chunk.connectionPoints.length; i++) {
+			if (chunk.connectionPoints[i].equals(con))
 				conIndex = i;
 		}
 		if (conIndex < 0)
 			return;
-		this.chunk(chunkX, chunkY).connectionPoints.splice(conIndex, 1);
+		chunk.connectionPoints.splice(conIndex, 1);
 		this.specialActions.push({name: 'dcoWire', pos: con.clone()});
 	}
 
