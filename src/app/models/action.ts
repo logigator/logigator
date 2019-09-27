@@ -1,4 +1,4 @@
-import {Element} from './element';
+import {Element, Elements} from './element';
 import * as PIXI from 'pixi.js';
 
 export type ActionType =
@@ -112,11 +112,11 @@ export class Actions {
 	): Element[] {
 		changes.forEach(change => {
 			change.oldElems.forEach(e => {
-				out.push({name: 'remWire', element: e});
+				out.push({name: Elements.remActionName(e), element: e});
 				outElements = outElements.filter(o => o.id !== e.id);
 			});
 			change.newElems.forEach(e => {
-				out.push({name: 'addWire', element: e});
+				out.push({name: Elements.addActionName(e), element: e});
 				outElements.push(e);
 			});
 		});

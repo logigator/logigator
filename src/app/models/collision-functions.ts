@@ -1,4 +1,4 @@
-import {Element} from './element';
+import {Element, Elements} from './element';
 import * as PIXI from 'pixi.js';
 import {Project} from './project';
 import {environment} from '../../environments/environment';
@@ -28,6 +28,14 @@ export abstract class CollisionFunctions {
 			(point.y > wire.pos.y && point.y < wire.endPos.y || point.y < wire.pos.y && point.y > wire.endPos.y);
 	}
 
+	public static elemHasWirePoint(elem: Element, pos: PIXI.Point): boolean {
+		for (const endPoint of Elements.wireEnds(elem)) {
+			if (pos.equals(endPoint))
+				return true;
+		}
+		return false;
+	}
+
 	public static isHorizontal(wire: Element): boolean {
 		return wire.pos.y === wire.endPos.y;
 	}
@@ -39,7 +47,7 @@ export abstract class CollisionFunctions {
 	public static inRectChunks(_startPos: PIXI.Point, _endPos: PIXI.Point): {x: number, y: number}[] {
 		const startPos = _startPos.clone();
 		const endPos = _endPos.clone();
-		CollisionFunctions.correctPosOrder(startPos, endPos);
+		Elements.correctPosOrder(startPos, endPos);
 		const out: {x: number, y: number}[] = [];
 		const startChunkX = CollisionFunctions.gridPosToChunk(startPos.x);
 		const startChunkY = CollisionFunctions.gridPosToChunk(startPos.y);
@@ -64,19 +72,6 @@ export abstract class CollisionFunctions {
 	public static isRectInRectNoBorder(startPos0: PIXI.Point, endPos0: PIXI.Point, startPos1: PIXI.Point, endPos1: PIXI.Point): boolean {
 		return startPos0.x < endPos1.x && startPos0.y < endPos1.y &&
 			endPos0.x > startPos1.x && endPos0.y > startPos1.y;
-	}
-
-	public static correctPosOrder(startPos: PIXI.Point, endPos: PIXI.Point): void {
-		if (startPos.x > endPos.x) {
-			const startX = startPos.x;
-			startPos.x = endPos.x;
-			endPos.x = startX;
-		}
-		if (startPos.y > endPos.y) {
-			const startY = startPos.y;
-			startPos.y = endPos.y;
-			endPos.y = startY;
-		}
 	}
 
 	public static gridPosToChunk(pos: number): number {

@@ -3,6 +3,7 @@ import {Project} from '../../models/project';
 import {ProjectsService} from '../projects/projects.service';
 import {CollisionFunctions} from '../../models/collision-functions';
 import * as PIXI from 'pixi.js';
+import {Elements} from '../../models/element';
 
 @Injectable({
 	providedIn: 'root'
@@ -19,7 +20,7 @@ export class SelectionService {
 	}
 
 	public selectFromRect(project: Project, start: PIXI.Point, end: PIXI.Point): number[] {
-		CollisionFunctions.correctPosOrder(start, end);
+		Elements.correctPosOrder(start, end);
 		this._selectedIds.set(project.id, []);
 		this._selectedConnections.set(project.id, []);
 		const ids = this._selectedIds.get(project.id);

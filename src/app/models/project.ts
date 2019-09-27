@@ -74,7 +74,7 @@ export class Project {
 		const out: Action[] = [];
 		for (const element of this.allElements) {
 			out.push({
-				name: element.typeId === 0 ? 'addWire' : 'addComp',
+				name: Elements.addActionName(element),
 				pos: element.pos,
 				endPos: element.endPos,
 				element
@@ -111,7 +111,7 @@ export class Project {
 			Elements.move(elem, dif);
 			this._currState.addElement(elem);
 			actions[i] = {
-				name: elem.typeId === 0 ? 'addWire' : 'addComp',
+				name: Elements.addActionName(elem),
 				element: elem
 			};
 			i++;
@@ -134,7 +134,7 @@ export class Project {
 			return null;
 		this._currState.addElement(elem);
 		const actions: Action[] = [{
-			name: elem.typeId === 0 ? 'addWire' : 'addComp',
+			name: Elements.addActionName(elem),
 			element: elem
 		}];
 		actions.push(...this.autoAssemble([elem]));
@@ -174,15 +174,16 @@ export class Project {
 			const elem = this._currState.removeElement(id);
 			elements[i++] = elem;
 			const action: Action = {
-				name: elem.typeId === 0 ? 'remWire' : 'remComp',
+				name: Elements.remActionName(elem),
 				element: elem
 			};
 			actions.push(action);
 		});
 		elements.forEach(elem => {
-			onEdges.push(...this._currState.wiresOnPoint(elem.pos).concat(this._currState.wiresOnPoint(elem.endPos)));
+			for (const pos of Elements.wireEnds(elem)) {
+				onEdges.push(...this._currState.wiresOnPoint(pos));
+			}
 		});
-		this._currState.loadConnectionPoints(elements);
 		actions.push(...this.autoAssemble(onEdges));
 		this.newState(actions);
 	}
@@ -282,14 +283,14 @@ export class Project {
 		out.push(...merged.actions);
 		const connected = this.autoConnect(merged.elements);
 		out.push(...connected.actions);
-		this._currState.loadConnectionPoints(connected.elements);
+		this._currState.loadConnectionPoints(connected.elements.concat(elements));
 		return out;
 	}
 
 	private autoConnect(elements: Element[]): {actions: Action[], elements: Element[]} {
 		const out: Action[] = [];
 		let outElements = [...elements];
-		const elemChanges = this._currState.connectToBoard(elements);
+		const elemChanges = this._currState.connectToBoard([...elements]);
 		outElements = Actions.applyChangeOnArrayAndActions(elemChanges, out, outElements);
 		return {actions: out, elements: outElements};
 	}
@@ -297,7 +298,7 @@ export class Project {
 	private autoMerge(elements: Element[]): {actions: Action[], elements: Element[]} {
 		const out: Action[] = [];
 		let outElements = [...elements];
-		const elemChanges = this._currState.mergeToBoard(elements);
+		const elemChanges = this._currState.mergeToBoard([...elements]);
 		outElements = Actions.applyChangeOnArrayAndActions(elemChanges, out, outElements);
 		return {actions: out, elements: outElements};
 	}

@@ -1,7 +1,7 @@
 import * as PIXI from 'pixi.js';
-import {CollisionFunctions} from './collision-functions';
 import {environment} from '../../environments/environment';
 import {ElementProviderService} from '../services/element-provider/element-provider.service';
+import {ActionType} from './action';
 
 export interface Element {
 	id: number;
@@ -15,6 +15,19 @@ export interface Element {
 }
 
 export class Elements {
+
+	public static correctPosOrder(startPos: PIXI.Point, endPos: PIXI.Point): void {
+		if (startPos.x > endPos.x) {
+			const startX = startPos.x;
+			startPos.x = endPos.x;
+			endPos.x = startX;
+		}
+		if (startPos.y > endPos.y) {
+			const startY = startPos.y;
+			startPos.y = endPos.y;
+			endPos.y = startY;
+		}
+	}
 
 	public static clone(element: Element): Element {
 		const out = {...element};
@@ -35,7 +48,7 @@ export class Elements {
 		const pos = _pos ? _pos.clone() : undefined;
 		const endPos = _endPos ? _endPos.clone() : undefined;
 		if (pos && endPos)
-			CollisionFunctions.correctPosOrder(pos, endPos);
+			Elements.correctPosOrder(pos, endPos);
 		return {
 			id: -1,
 			typeId,
@@ -50,8 +63,8 @@ export class Elements {
 	public static gen2Wires(_pos: PIXI.Point, _cornerPos: PIXI.Point, _endPos: PIXI.Point): {wire0: Element, wire1: Element} {
 		const wire0 = Elements.genNewElement(0, _pos, _cornerPos);
 		const wire1 = Elements.genNewElement(0, _cornerPos, _endPos);
-		CollisionFunctions.correctPosOrder(wire0.pos, wire0.endPos);
-		CollisionFunctions.correctPosOrder(wire1.pos, wire1.endPos);
+		Elements.correctPosOrder(wire0.pos, wire0.endPos);
+		Elements.correctPosOrder(wire1.pos, wire1.endPos);
 		return {wire0, wire1};
 	}
 
@@ -64,6 +77,14 @@ export class Elements {
 			return new PIXI.Point(pos.x + Math.max(numInputs, numOutputs),
 				pos.y + environment.componentWidth);
 		}
+	}
+
+	public static addActionName(elem: Element): ActionType {
+		return elem.typeId === 0 ? 'addWire' : 'addComp';
+	}
+
+	public static remActionName(elem: Element): ActionType {
+		return elem.typeId === 0 ? 'remWire' : 'remComp';
 	}
 
 	public static mergeCheckedWiresVertical(wire0: Element, wire1: Element, newElem) {
@@ -81,7 +102,7 @@ export class Elements {
 	}
 
 	public static wireEnds(element: Element): PIXI.Point[] {
-		if (element.id === 0)
+		if (element.typeId === 0)
 			return [element.pos, element.endPos];
 		const out: PIXI.Point[] = [];
 		if (element.rotation === 0) {
