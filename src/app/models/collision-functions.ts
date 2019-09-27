@@ -77,6 +77,15 @@ export abstract class CollisionFunctions {
 			endPos0.x > startPos1.x && endPos0.y > startPos1.y;
 	}
 
+	public static isElementInFloatRect(element: Element, startPos: PIXI.Point, endPos: PIXI.Point): boolean {
+		if (element.typeId !== 0) {
+			return CollisionFunctions.isRectInRectLightBorder(element.pos, element.endPos, startPos, endPos);
+		} else {
+			return element.pos.x + 0.5 <= endPos.x && element.pos.y + 0.5 <= endPos.y &&
+				element.endPos.x + 0.5 > startPos.x && element.endPos.y + 0.5 > startPos.y;
+		}
+	}
+
 	public static isRectInRectNoBorder(startPos0: PIXI.Point, endPos0: PIXI.Point, startPos1: PIXI.Point, endPos1: PIXI.Point): boolean {
 		return startPos0.x < endPos1.x && startPos0.y < endPos1.y &&
 			endPos0.x > startPos1.x && endPos0.y > startPos1.y;
