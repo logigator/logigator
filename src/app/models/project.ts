@@ -184,6 +184,7 @@ export class Project {
 				onEdges.push(...this._currState.wiresOnPoint(pos));
 			}
 		});
+		this._currState.loadConnectionPoints(elements);
 		actions.push(...this.autoAssemble(onEdges));
 		this.newState(actions);
 	}

@@ -45,12 +45,11 @@ export class ProjectState {
 		for (const element of this._model.board.elements) {
 			this.loadIntoChunks(element);
 		}
-		// TODO test
 		this.loadConnectionPoints(this._model.board.elements);
 	}
 
 	private createChunk(x: number, y: number): void {
-		if (this._chunks[x] && this._chunks[x][y])
+		if (this._chunks[x] && this._chunks[x][y] || x < 0 || y < 0)
 			return;
 		for (let i = 0; i <= x; i++)
 			if (!this._chunks[i])
@@ -66,7 +65,7 @@ export class ProjectState {
 	}
 
 	public loadIntoChunks(element: Element): void {
-		const chunkCoords = CollisionFunctions.inRectChunks(element.pos, element.endPos);
+		const chunkCoords = CollisionFunctions.inRectChunks(element.pos, element.endPos, Elements.wireEnds(element));
 		for (const coord of chunkCoords) {
 			this.createChunk(coord.x, coord.y);
 			if (!this._chunks[coord.x][coord.y].elements.find(e => e.id === element.id))
