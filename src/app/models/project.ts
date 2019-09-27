@@ -220,11 +220,12 @@ export class Project {
 			element,
 			numbers: [rotation, element.rotation]
 		}];
+		const changed = this._currState.withWiresOnEdges([element]);
 		const newEndPos = Elements.calcEndPos(element.pos, element.numInputs, element.numOutputs, rotation);
 		if (!this._currState.isFreeSpace(element.pos, newEndPos, false, [element]))
 			return false;
 		this._currState.rotateComp(element, rotation, newEndPos);
-		actions.push(...this.autoAssemble([element]));
+		actions.push(...this.autoAssemble(changed));
 		this.newState(actions);
 		return true;
 	}
@@ -239,11 +240,12 @@ export class Project {
 			element,
 			numbers: [numInputs, element.numInputs]
 		}];
+		const changed = this._currState.withWiresOnEdges([element]);
 		const newEndPos = Elements.calcEndPos(element.pos, numInputs, element.numOutputs, element.rotation);
 		if (!this._currState.isFreeSpace(element.pos, newEndPos, false, [element]))
 			return false;
 		this._currState.setNumInputs(element, numInputs, newEndPos);
-		actions.push(...this.autoAssemble([element]));
+		actions.push(...this.autoAssemble(changed));
 		this.newState(actions);
 		return true;
 	}
