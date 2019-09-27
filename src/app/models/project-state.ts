@@ -184,7 +184,7 @@ export class ProjectState {
 				}
 			}
 		}
-		return true;
+		return !(startPos.x < 0 || startPos.y < 0);
 	}
 
 	public allSpacesFree(elements: Element[], dif: PIXI.Point, except?: Element[]): boolean {
