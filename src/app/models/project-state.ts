@@ -159,7 +159,7 @@ export class ProjectState {
 
 
 
-	public isFreeSpace(startPos: PIXI.Point, endPos: PIXI.Point, isWire?: boolean, except?: Element[]): boolean {
+	public isFreeSpace(startPos: PIXI.Point, endPos: PIXI.Point, isWire?: boolean, wireEnds?: PIXI.Point[], except?: Element[]): boolean {
 		const others = this.elementsInChunks(startPos, endPos);
 		for (const elem of others) {
 			if (except && except.find(e => e.id === elem.id) || isWire && elem.typeId === 0)
@@ -171,6 +171,18 @@ export class ProjectState {
 			}
 			if (!isWire && CollisionFunctions.isRectInRectNoBorder(startPos, endPos, elem.pos, elem.endPos))
 				return false;
+			if (wireEnds) {
+				for (const pos of wireEnds) {
+					if (CollisionFunctions.isPointInRect(pos, elem.pos, elem.endPos))
+						return false;
+				}
+			}
+			if (!isWire && elem.typeId !== 0) {
+				for (const pos of Elements.wireEnds(elem)) {
+					if (CollisionFunctions.isPointInRect(pos, startPos, endPos))
+						return false;
+				}
+			}
 		}
 		return true;
 	}
@@ -179,7 +191,7 @@ export class ProjectState {
 		for (const elem of elements) {
 			const newStartPos = new PIXI.Point(elem.pos.x + dif.x, elem.pos.y + dif.y);
 			const newEndPos = new PIXI.Point(elem.endPos.x + dif.x, elem.endPos.y + dif.y);
-			if (!this.isFreeSpace(newStartPos, newEndPos, elem.typeId === 0, except))
+			if (!this.isFreeSpace(newStartPos, newEndPos, elem.typeId === 0, Elements.wireEnds(elem), except))
 				return false;
 		}
 		return true;

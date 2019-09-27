@@ -130,7 +130,7 @@ export class Project {
 			return null;
 		const elem = Elements.genNewElement(typeId, _pos,
 			_endPos || Elements.calcEndPos(_pos, numInputs, numOutputs, rotation));
-		if (!this._currState.isFreeSpace(elem.pos, elem.endPos, typeId === 0))
+		if (!this._currState.isFreeSpace(elem.pos, elem.endPos, typeId === 0, Elements.wireEnds(elem)))
 			return null;
 		this._currState.addElement(elem);
 		const actions: Action[] = [{
@@ -222,7 +222,7 @@ export class Project {
 		}];
 		const changed = this._currState.withWiresOnEdges([element]);
 		const newEndPos = Elements.calcEndPos(element.pos, element.numInputs, element.numOutputs, rotation);
-		if (!this._currState.isFreeSpace(element.pos, newEndPos, false, [element]))
+		if (!this._currState.isFreeSpace(element.pos, newEndPos, false, Elements.wireEnds(element, rotation), [element]))
 			return false;
 		this._currState.rotateComp(element, rotation, newEndPos);
 		actions.push(...this.autoAssemble(changed));
@@ -242,7 +242,7 @@ export class Project {
 		}];
 		const changed = this._currState.withWiresOnEdges([element]);
 		const newEndPos = Elements.calcEndPos(element.pos, numInputs, element.numOutputs, element.rotation);
-		if (!this._currState.isFreeSpace(element.pos, newEndPos, false, [element]))
+		if (!this._currState.isFreeSpace(element.pos, newEndPos, false, Elements.wireEnds(element, undefined, numInputs), [element]))
 			return false;
 		this._currState.setNumInputs(element, numInputs, newEndPos);
 		actions.push(...this.autoAssemble(changed));

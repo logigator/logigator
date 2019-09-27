@@ -59,7 +59,7 @@ export abstract class CollisionFunctions {
 		return out;
 	}
 
-	public static isRectInRect(startPos0: PIXI.Point, endPos0: PIXI.Point, startPos1: PIXI.Point, endPos1: PIXI.Point): boolean {
+	public static isRectOnRect(startPos0: PIXI.Point, endPos0: PIXI.Point, startPos1: PIXI.Point, endPos1: PIXI.Point): boolean {
 		return startPos0.x <= endPos1.x && startPos0.y <= endPos1.y &&
 			endPos0.x >= startPos1.x && endPos0.y >= startPos1.y;
 	}
@@ -72,6 +72,10 @@ export abstract class CollisionFunctions {
 	public static isRectInRectNoBorder(startPos0: PIXI.Point, endPos0: PIXI.Point, startPos1: PIXI.Point, endPos1: PIXI.Point): boolean {
 		return startPos0.x < endPos1.x && startPos0.y < endPos1.y &&
 			endPos0.x > startPos1.x && endPos0.y > startPos1.y;
+	}
+
+	public static isPointInRect(pos: PIXI.Point, startPos: PIXI.Point, endPos: PIXI.Point): boolean {
+		return pos.x >= startPos.x && pos.x < endPos.x && pos.y >= startPos.y && pos.y < endPos.y;
 	}
 
 	public static gridPosToChunk(pos: number): number {
