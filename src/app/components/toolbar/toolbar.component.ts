@@ -3,8 +3,8 @@ import {WorkMode} from '../../models/work-modes';
 import {WorkModeService} from '../../services/work-mode/work-mode.service';
 import {ProjectsService} from '../../services/projects/projects.service';
 import {ProjectInteractionService} from '../../services/project-interaction/project-interaction.service';
-import {Test} from '../../models/tests/tests';
-import {ManuallyLogged} from '../../models/tests/logs';
+import {Test} from '../../../../tests/auto-tests/tests';
+import {ManuallyLogged} from '../../../../tests/auto-tests/logs';
 
 @Component({
 	selector: 'app-toolbar',
@@ -33,8 +33,8 @@ export class ToolbarComponent implements OnInit {
 	}
 
 	public runTests(): void {
-		for (const func in ManuallyLogged) {
-			Test.runAndCheck(func);
+		for (const name in ManuallyLogged) {
+			Test.runAndCheck(name);
 		}
 		// e.g. Test.runAndCheck('autoConnect');
 	}

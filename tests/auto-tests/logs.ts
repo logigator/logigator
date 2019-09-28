@@ -1,8 +1,8 @@
-import {Project} from '../project';
+import {Project} from '../../src/app/models/project';
 import * as PIXI from 'pixi.js';
-import {ProjectState} from '../project-state';
+import {ProjectState} from '../../src/app/models/project-state';
 
-export class Log {
+export class BoardRecorder {
 
 	private readonly _project: Project;
 
@@ -50,7 +50,7 @@ export class Log {
 		const args = this._args[index];
 		const arr = [];
 		for (const p in args)
-			arr.push(Log.correctType(args[p]));
+			arr.push(BoardRecorder.correctType(args[p]));
 		if (printing)
 			console.log('calling', name, 'with', ...arr);
 		this._project[name](...arr);

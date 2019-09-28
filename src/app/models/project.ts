@@ -4,7 +4,7 @@ import {Element, Elements} from './element';
 import {Observable, Subject} from 'rxjs';
 import * as PIXI from 'pixi.js';
 import {CollisionFunctions} from './collision-functions';
-import {Log} from './tests/logs';
+import {BoardRecorder} from '../../../tests/auto-tests/logs';
 
 export class Project {
 
@@ -24,7 +24,7 @@ export class Project {
 
 	public dirty = false;
 
-	public log: Log;
+	public log: BoardRecorder;
 
 	public constructor(projectState: ProjectState, config: {id?: number, name?: string, type?: 'project' | 'comp'}) {
 		this._currState = projectState;
@@ -36,7 +36,7 @@ export class Project {
 		this._currMaxActionPointer = -1;
 		this._changeSubject = new Subject<Action[]>();
 
-		this.log = new Log(this, true);
+		this.log = new BoardRecorder(this, true);
 	}
 
 	public static empty(): Project {

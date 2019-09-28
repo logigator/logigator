@@ -1,11 +1,11 @@
-import {Project} from '../project';
-import {Log, ManuallyLogged} from './logs';
+import {Project} from '../../src/app/models/project';
+import {BoardRecorder, ManuallyLogged} from './logs';
 
 export class Test {
 
 	private readonly _name: string;
 	private readonly _project: Project;
-	private _log: Log;
+	private _log: BoardRecorder;
 
 	constructor(name: string, project?: Project) {
 		this._name = name;
@@ -23,7 +23,7 @@ export class Test {
 	}
 
 	public runLoggedTests(testData: string, printing?: boolean): void {
-		this._log = new Log(this._project, false, testData);
+		this._log = new BoardRecorder(this._project, false, testData);
 		this._log.doAllCalls(printing);
 	}
 
