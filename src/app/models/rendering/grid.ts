@@ -39,6 +39,10 @@ export class Grid {
 		return new PIXI.Point(Math.floor(point.x / environment.gridPixelWidth), Math.floor(point.y / environment.gridPixelWidth));
 	}
 
+	public static getFloatGridPosForPixelPos(point: PIXI.Point): PIXI.Point {
+		return new PIXI.Point(point.x / environment.gridPixelWidth, point.y / environment.gridPixelWidth);
+	}
+
 	public static getPixelPosForGridPos(point: PIXI.Point): PIXI.Point {
 		return new PIXI.Point(point.x * environment.gridPixelWidth, point.y * environment.gridPixelWidth);
 	}

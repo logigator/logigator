@@ -28,7 +28,7 @@ export class SelectionService {
 		const possibleChunkCoords = CollisionFunctions.inRectChunks(start, end);
 		for (const chunk of project.currState.chunksFromCoords(possibleChunkCoords)) {
 			for (const elem of chunk.elements) {
-				if (CollisionFunctions.isRectInRectLightBorder(elem.pos, elem.endPos, start, end)) {
+				if (CollisionFunctions.isElementInFloatRect(elem, start, end)) {
 					if (!ids.find(id => id === elem.id))
 						ids.push(elem.id);
 				}

@@ -44,7 +44,7 @@ export abstract class CollisionFunctions {
 		return wire.pos.x === wire.endPos.x;
 	}
 
-	public static inRectChunks(_startPos: PIXI.Point, _endPos: PIXI.Point): {x: number, y: number}[] {
+	public static inRectChunks(_startPos: PIXI.Point, _endPos: PIXI.Point, wireEnds?: PIXI.Point[]): {x: number, y: number}[] {
 		const startPos = _startPos.clone();
 		const endPos = _endPos.clone();
 		Elements.correctPosOrder(startPos, endPos);
@@ -56,6 +56,14 @@ export abstract class CollisionFunctions {
 		for (let x = startChunkX; x <= endChunkX; x++)
 			for (let y = startChunkY; y <= endChunkY; y++)
 				out.push({x, y});
+		if (wireEnds) {
+			wireEnds.forEach(wireEnd => {
+				const chunkX = CollisionFunctions.gridPosToChunk(wireEnd.x);
+				const chunkY = CollisionFunctions.gridPosToChunk(wireEnd.y);
+				if (!out.find(c => c.x === chunkX && c.y === chunkY))
+					out.push({x: chunkX, y: chunkY});
+			});
+		}
 		return out;
 	}
 
@@ -67,6 +75,15 @@ export abstract class CollisionFunctions {
 	public static isRectInRectLightBorder(startPos0: PIXI.Point, endPos0: PIXI.Point, startPos1: PIXI.Point, endPos1: PIXI.Point): boolean {
 		return startPos0.x <= endPos1.x && startPos0.y <= endPos1.y &&
 			endPos0.x > startPos1.x && endPos0.y > startPos1.y;
+	}
+
+	public static isElementInFloatRect(element: Element, startPos: PIXI.Point, endPos: PIXI.Point): boolean {
+		if (element.typeId !== 0) {
+			return CollisionFunctions.isRectInRectLightBorder(element.pos, element.endPos, startPos, endPos);
+		} else {
+			return element.pos.x + 0.5 <= endPos.x && element.pos.y + 0.5 <= endPos.y &&
+				element.endPos.x + 0.5 > startPos.x && element.endPos.y + 0.5 > startPos.y;
+		}
 	}
 
 	public static isRectInRectNoBorder(startPos0: PIXI.Point, endPos0: PIXI.Point, startPos1: PIXI.Point, endPos1: PIXI.Point): boolean {

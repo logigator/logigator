@@ -157,8 +157,8 @@ export class ViewInteractionManager {
 	private selectOrApplyMove() {
 		if (this._drawingSelectRect) {
 			this._drawingSelectRect = false;
-			const selectStart = Grid.getGridPosForPixelPos(this._selectRect.position);
-			const selectEnd = Grid.getGridPosForPixelPos(new PIXI.Point(
+			const selectStart = Grid.getFloatGridPosForPixelPos(this._selectRect.position);
+			const selectEnd = Grid.getFloatGridPosForPixelPos(new PIXI.Point(
 				this._selectRect.position.x + this._selectRect.width,
 				this._selectRect.position.y + this._selectRect.height)
 			);
