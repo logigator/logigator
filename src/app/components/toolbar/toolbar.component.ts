@@ -13,6 +13,8 @@ import {ManuallyLogged} from '../../../../tests/auto-tests/logs';
 })
 export class ToolbarComponent implements OnInit {
 
+	private test: Test;
+
 	constructor(
 		private workModeService: WorkModeService,
 		private projectService: ProjectsService,
@@ -36,7 +38,11 @@ export class ToolbarComponent implements OnInit {
 		for (const name in ManuallyLogged) {
 			Test.runAndCheck(name, false);
 		}
-		// e.g. Test.runAndCheck('autoConnect');
+		// e.g. this.test = new Test('bugfix', this.projectService.currProject, ManuallyLogged.rotateNumInputs);
+	}
+
+	public runStep(): void {
+		this.test.runStep(true);
 	}
 
 	public setWorkMode(mode: WorkMode) {

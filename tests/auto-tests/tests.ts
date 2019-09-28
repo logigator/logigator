@@ -7,9 +7,14 @@ export class Test {
 	private readonly _project: Project;
 	private _log: BoardRecorder;
 
-	constructor(name: string, project?: Project) {
+	private _lastStep = 0;
+
+	constructor(name: string, project?: Project, testData?: string) {
 		this._name = name;
 		this._project = project || Project.empty();
+		if (testData) {
+			this._log = new BoardRecorder(this._project, true, testData);
+		}
 	}
 
 	public static runAndCheck(name: string, printing?: boolean): void {
@@ -22,8 +27,13 @@ export class Test {
 		test.checkEquality();
 	}
 
+	public runStep(printing?: boolean): void {
+		this._log.doCall(this._lastStep++, printing);
+	}
+
 	public runLoggedTests(testData: string, printing?: boolean): void {
-		this._log = new BoardRecorder(this._project, false, testData);
+		if (!this._log)
+			this._log = new BoardRecorder(this._project, false, testData);
 		this._log.doAllCalls(printing);
 	}
 
