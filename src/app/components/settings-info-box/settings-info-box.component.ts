@@ -74,10 +74,14 @@ export class SettingsInfoBoxComponent implements OnChanges, OnDestroy {
 		});
 		this.formSubscription = this.propertiesFrom.valueChanges.subscribe((data: any) => {
 			if (data.rotation !== element.rotation) {
-				this.projects.currProject.rotateComponent(this.selectedCompId, Number(data.rotation));
+				if (!this.projects.currProject.rotateComponent(this.selectedCompId, Number(data.rotation))) {
+					this.propertiesFrom.controls.rotation.setValue(element.rotation);
+				}
 			}
 			if (data.numInputs !== element.numInputs && data.numInputs <= this.elemType.maxInputs && data.numInputs >= this.elemType.minInputs) {
-				this.projects.currProject.setNumInputs(this.selectedCompId, data.numInputs);
+				if (!this.projects.currProject.setNumInputs(this.selectedCompId, data.numInputs)) {
+					this.propertiesFrom.controls.numInputs.setValue(element.numInputs);
+				}
 			}
 		});
 	}
