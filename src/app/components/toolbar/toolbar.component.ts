@@ -25,9 +25,7 @@ export class ToolbarComponent implements OnInit {
 	}
 
 	public printElements(): void {
-		for (const elem of this.projectService.currProject.allElements) {
-			console.log(elem);
-		}
+		this.projectService.currProject.allElements.forEach(console.log);
 	}
 
 	public printCalls(): void {
@@ -35,14 +33,16 @@ export class ToolbarComponent implements OnInit {
 	}
 
 	public runTests(): void {
-		for (const name in ManuallyLogged) {
-			Test.runAndCheck(name, false);
-		}
-		// e.g. this.test = new Test('bugfix', this.projectService.currProject, ManuallyLogged.rotateNumInputs);
+		this.test = new Test('bugfix', this.projectService.currProject, ManuallyLogged.THECRASH);
+		// for (const name in ManuallyLogged) {
+		// 	Test.runAndCheck(name, false);
+		// }
 	}
 
 	public runStep(): void {
+		// for (let i = 0; i < 2000; i++) {
 		this.test.runStep(true);
+		// }
 	}
 
 	public setWorkMode(mode: WorkMode) {
