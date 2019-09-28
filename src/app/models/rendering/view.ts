@@ -18,6 +18,7 @@ import {filter, takeUntil} from 'rxjs/operators';
 import {SelectionService} from '../../services/selection/selection.service';
 import {SimulationViewInteractionManager} from './simulation-view-interaction-manager';
 import {RendererChunkData} from './renderer-chunk-data';
+import {RenderTicker} from './render-ticker';
 
 export class View extends PIXI.Container {
 
@@ -25,9 +26,9 @@ export class View extends PIXI.Container {
 
 	public zoomPan: ZoomPan;
 
-	private readonly _onlySimMode: boolean;
+	public ticker: RenderTicker;
 
-	private _zoomPanInputManager: ZoomPanInputManager;
+	private readonly _onlySimMode: boolean;
 
 	private _viewInteractionManager: ViewInteractionManager;
 	private _simViewInteractionManager: SimulationViewInteractionManager;
@@ -43,16 +44,16 @@ export class View extends PIXI.Container {
 
 	private _destroySubject =  new Subject<void>();
 
-	constructor(projectId: number, htmlContainer: HTMLElement, onlySimMode = false) {
+	constructor(projectId: number, htmlContainer: HTMLElement, ticker: RenderTicker, onlySimMode = false) {
 		super();
 		this._projectId = projectId;
 		this.htmlContainer = htmlContainer;
+		this.ticker = ticker;
 		this.interactive = true;
 		this.sortableChildren = true;
 		this._onlySimMode = onlySimMode;
 
 		this.zoomPan = new ZoomPan(this);
-		this._zoomPanInputManager = new ZoomPanInputManager(this.htmlContainer);
 		if (!this._onlySimMode) {
 			this._viewInteractionManager = new ViewInteractionManager(this);
 		}
@@ -205,26 +206,7 @@ export class View extends PIXI.Container {
 		);
 	}
 
-	public updateZoomPan() {
-		let needsChunkUpdate = false;
-		if (this._zoomPanInputManager.isDragging) {
-			this.zoomPan.translateBy(this._zoomPanInputManager.mouseDX, this._zoomPanInputManager.mouseDY);
-			this._zoomPanInputManager.clearMouseDelta();
-			needsChunkUpdate = true;
-		}
-
-		if (this._zoomPanInputManager.isZoomIn) {
-			needsChunkUpdate = this.applyZoom('out', this._zoomPanInputManager.mouseX, this._zoomPanInputManager.mouseY) || needsChunkUpdate;
-		} else if (this._zoomPanInputManager.isZoomOut) {
-			needsChunkUpdate = this.applyZoom('in', this._zoomPanInputManager.mouseX, this._zoomPanInputManager.mouseY) || needsChunkUpdate;
-		}
-
-		if (needsChunkUpdate) {
-			this.updateChunks();
-		}
-	}
-
-	private applyZoom(dir: 'in' | 'out' | '100', centerX?: number, centerY?: number): boolean {
+	public applyZoom(dir: 'in' | 'out' | '100', centerX?: number, centerY?: number): boolean {
 		if (!centerX || !centerY) {
 			centerX = this.htmlContainer.offsetWidth / 2;
 			centerY = this.htmlContainer.offsetHeight / 2;
@@ -240,7 +222,6 @@ export class View extends PIXI.Container {
 	}
 
 	private onZoomClick(dir: 'in' | 'out' | '100') {
-		console.log(PIXI.utils.TextureCache);
 		if (this.applyZoom(dir)) {
 			this.updateChunks();
 		}
@@ -362,6 +343,7 @@ export class View extends PIXI.Container {
 				this.updateComponent(action);
 				break;
 		}
+		this.ticker.singleFrame();
 	}
 
 	private moveMultipleAction(action: Action) {
@@ -400,7 +382,6 @@ export class View extends PIXI.Container {
 	public destroy() {
 		this._destroySubject.next();
 		this._destroySubject.unsubscribe();
-		this._zoomPanInputManager.destroy();
 		if (!this._onlySimMode) {
 			this._viewInteractionManager.destroy();
 		}

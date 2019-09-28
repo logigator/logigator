@@ -3,6 +3,9 @@ import {fromEvent, Subject} from 'rxjs';
 import {takeUntil} from 'rxjs/operators';
 import {ElementRef, Renderer2} from '@angular/core';
 import {ThemingService} from '../../services/theming/theming.service';
+import {RenderTicker} from './render-ticker';
+import {ZoomPanInputManager} from './zoom-pan-input-manager';
+import {View} from './view';
 
 export abstract class WorkArea {
 
@@ -12,7 +15,9 @@ export abstract class WorkArea {
 
 	protected _pixiRenderer: PIXI.Renderer;
 
-	protected _pixiTicker: PIXI.Ticker;
+	protected _ticker = new RenderTicker();
+
+	protected _zoomPanInputManager: ZoomPanInputManager;
 
 	protected _destroySubject = new Subject<any>();
 
@@ -51,12 +56,33 @@ export abstract class WorkArea {
 			.load(() => WorkArea.pixiFontLoaded$.next());
 	}
 
-	protected initPixiTicker(tickFunction: () => void) {
-		this._pixiTicker = new PIXI.Ticker();
-		this._pixiTicker.add(tickFunction);
+	protected initZoomPan(canvasContainer: ElementRef<HTMLDivElement>) {
+		this._zoomPanInputManager = new ZoomPanInputManager(canvasContainer.nativeElement);
+		this._zoomPanInputManager.interactionStart$.pipe(takeUntil(this._destroySubject)).subscribe(() => this._ticker.start());
+		this._zoomPanInputManager.interactionEnd$.pipe(takeUntil(this._destroySubject)).subscribe(() => this._ticker.stop());
+	}
+
+	public updateZoomPan(view: View) {
+		let needsChunkUpdate = false;
+		if (this._zoomPanInputManager.isDragging) {
+			view.zoomPan.translateBy(this._zoomPanInputManager.mouseDX, this._zoomPanInputManager.mouseDY);
+			this._zoomPanInputManager.clearMouseDelta();
+			needsChunkUpdate = true;
+		}
+
+		if (this._zoomPanInputManager.isZoomIn) {
+			needsChunkUpdate = view.applyZoom('out', this._zoomPanInputManager.mouseX, this._zoomPanInputManager.mouseY) || needsChunkUpdate;
+		} else if (this._zoomPanInputManager.isZoomOut) {
+			needsChunkUpdate = view.applyZoom('in', this._zoomPanInputManager.mouseX, this._zoomPanInputManager.mouseY) || needsChunkUpdate;
+		}
+
+		if (needsChunkUpdate) {
+			view.updateChunks();
+		}
 	}
 
 	protected destroy() {
+		this._zoomPanInputManager.destroy();
 		this._destroySubject.next();
 		this._destroySubject.unsubscribe();
 	}

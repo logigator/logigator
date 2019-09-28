@@ -38,9 +38,11 @@ export class WorkAreaComponent extends WorkArea implements OnInit, OnDestroy {
 
 		this.ngZone.runOutsideAngular(async () => {
 			this.preventContextMenu(this._pixiCanvasContainer, this.renderer2);
+			this.initZoomPan(this._pixiCanvasContainer);
 			this.initPixi(this._pixiCanvasContainer, this.renderer2);
-			this.initPixiTicker(() => {
-				this.activeView.updateZoomPan();
+			this._ticker.setTickerFunction(() => {
+				//console.log('asd');
+				this.updateZoomPan(this.activeView);
 				this._pixiRenderer.render(this.activeView);
 			});
 
@@ -49,7 +51,7 @@ export class WorkAreaComponent extends WorkArea implements OnInit, OnDestroy {
 			).subscribe(projectId => {
 				this.ngZone.runOutsideAngular(() => {
 					this.openProject(projectId);
-					this._pixiTicker.start(); // start ticker after a project was opened
+					this._ticker.singleFrame();
 				});
 			});
 		});
@@ -86,7 +88,7 @@ export class WorkAreaComponent extends WorkArea implements OnInit, OnDestroy {
 	}
 
 	private openProject(projectId: number) {
-		const newView = new View(projectId, this._pixiCanvasContainer.nativeElement);
+		const newView = new View(projectId, this._pixiCanvasContainer.nativeElement, this._ticker);
 		this.ngZone.run(() => {
 			this._allViews.set(projectId, newView);
 			this.activeView = newView;

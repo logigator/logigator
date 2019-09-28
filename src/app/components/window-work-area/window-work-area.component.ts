@@ -14,6 +14,7 @@ import {fromEvent} from 'rxjs';
 import {takeUntil} from 'rxjs/operators';
 import {ElementProviderService} from '../../services/element-provider/element-provider.service';
 import {ProjectsService} from '../../services/projects/projects.service';
+import {RenderTicker} from '../../models/rendering/render-ticker';
 
 type Border = 'move' | 'top-left' | 'top-right' | 'bottom-left' | 'bottom-right' | 'right' | 'left' | 'top' | 'bottom';
 
@@ -95,8 +96,8 @@ export class WindowWorkAreaComponent extends WorkArea implements OnInit, OnDestr
 		this.ngZone.runOutsideAngular(async () => {
 			this.preventContextMenu(this._pixiCanvasContainer, this.renderer2);
 			this.initPixi(this._pixiCanvasContainer, this.renderer2);
-			this.initPixiTicker(() => {
-				this._view.updateZoomPan();
+			RenderTicker.windowWorkAreaTicker.setTickerFunction(() => {
+				this.updateZoomPan(this._view);
 				this._pixiRenderer.render(this._view);
 			});
 
@@ -136,7 +137,7 @@ export class WindowWorkAreaComponent extends WorkArea implements OnInit, OnDestr
 	}
 
 	private openProject(projectId: number) {
-		this._view = new View(projectId, this._pixiCanvasContainer.nativeElement, true);
+		this._view = new View(projectId, this._pixiCanvasContainer.nativeElement, this._ticker, true);
 		this.componentName = this.projects.allProjects.get(projectId).id.toString();
 	}
 
@@ -310,7 +311,6 @@ export class WindowWorkAreaComponent extends WorkArea implements OnInit, OnDestr
 
 	public hide() {
 		this.renderer2.setStyle(this._popup.nativeElement, 'display', 'none');
-		this._pixiTicker.stop();
 		this._view.destroy();
 		delete this._view;
 	}
@@ -318,7 +318,7 @@ export class WindowWorkAreaComponent extends WorkArea implements OnInit, OnDestr
 	public show() {
 		this.renderer2.setStyle(this._popup.nativeElement, 'display', 'block');
 		this._pixiRenderer.resize(this._pixiCanvasContainer.nativeElement.offsetWidth, this._pixiCanvasContainer.nativeElement.offsetHeight);
-		this.ngZone.runOutsideAngular(() => this._pixiTicker.start());
+		this.ngZone.runOutsideAngular(() => RenderTicker.windowWorkAreaTicker.start());
 		this.openProject(this.projectIdToOpen);
 		this._view.updateChunks();
 	}

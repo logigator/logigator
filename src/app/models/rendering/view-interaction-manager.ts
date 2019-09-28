@@ -90,6 +90,7 @@ export class ViewInteractionManager {
 		) {
 			this.startDraggingNewComponent(e);
 		}
+		this._view.ticker.singleFrame();
 		this._view.on('pointermove', (e1: InteractionEvent) => this.handlePointerMoveOnView(e1));
 	}
 
@@ -101,6 +102,7 @@ export class ViewInteractionManager {
 		} else if (this._draggingNewComp) {
 			this.placeNewComp();
 		}
+		this._view.ticker.start();
 		this._view.removeListener('pointermove');
 	}
 
@@ -112,11 +114,13 @@ export class ViewInteractionManager {
 		} else if (this._draggingNewComp) {
 			this.dragNewComp(e);
 		}
+		this._view.ticker.singleFrame();
 	}
 
 	private handlePointerDownOnSelectRect(e: InteractionEvent) {
 		if (WorkModeService.staticInstance.currentWorkMode === 'select' || this._currentlyPasting) {
 			this.startDragging(e);
+			this._view.ticker.singleFrame();
 		}
 	}
 
@@ -127,6 +131,7 @@ export class ViewInteractionManager {
 			} else {
 				this.selectSingleComp(elem);
 			}
+			this._view.ticker.singleFrame();
 		}
 	}
 
@@ -531,6 +536,7 @@ export class ViewInteractionManager {
 		this._currentlyPasting = false;
 		this._view.removeChild(this._selectRect);
 		this._view.removeChild(this._newWire);
+		this._view.ticker.singleFrame();
 	}
 
 	public destroy() {

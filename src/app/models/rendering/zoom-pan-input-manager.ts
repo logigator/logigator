@@ -1,4 +1,4 @@
-import {fromEvent, Subject} from 'rxjs';
+import {fromEvent, Observable, Subject} from 'rxjs';
 import {filter, takeUntil} from 'rxjs/operators';
 
 export class ZoomPanInputManager {
@@ -6,6 +6,8 @@ export class ZoomPanInputManager {
 	private _htmlContainer: HTMLElement;
 
 	private _destroySubject = new Subject<any>();
+	private _interactionStart = new Subject<void>();
+	private _interactionEnd = new Subject<void>();
 
 	private _mouseDown = false;
 	private _mouseMoved = false;
@@ -49,10 +51,12 @@ export class ZoomPanInputManager {
 		if (event.button !== 2) return;
 		event.preventDefault();
 		this._mouseDown = true;
+		this._interactionStart.next();
 	}
 
 	private mouseUpHandler(event: MouseEvent) {
 		this._mouseDown = false;
+		this._interactionEnd.next();
 		setTimeout(() => this._mouseMoved = false, 1);
 		this.clearMouseDelta();
 	}
@@ -74,11 +78,13 @@ export class ZoomPanInputManager {
 	}
 
 	private mouseWheelHandler(event: WheelEvent) {
+		this._interactionStart.next();
 		if (event.deltaY < 0) {
 			this._wheelDown = true;
 		} else if (event.deltaY > 0) {
 			this._wheelUp = true;
 		}
+		this._interactionEnd.next();
 	}
 
 	public clearMouseDelta() {
@@ -124,6 +130,14 @@ export class ZoomPanInputManager {
 		const toReturn = this._wheelDown;
 		this._wheelDown = false;
 		return toReturn;
+	}
+
+	public get interactionStart$(): Observable<void> {
+		return this._interactionStart.asObservable();
+	}
+
+	public get interactionEnd$(): Observable<void> {
+		return this._interactionEnd.asObservable();
 	}
 
 	public destroy() {
