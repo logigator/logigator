@@ -1,17 +1,40 @@
 import {Project} from '../project';
-import {Log} from './logs';
+import {Log, ManuallyLogged} from './logs';
 
 export class Test {
 
-	private _project: Project;
+	private readonly _name: string;
+	private readonly _project: Project;
+	private _log: Log;
 
-	constructor(project?: Project) {
+	constructor(name: string, project?: Project) {
+		this._name = name;
 		this._project = project || Project.empty();
 	}
 
+	public static runAndCheck(name: string, printing?: boolean): void {
+		if (!ManuallyLogged.hasOwnProperty(name)) {
+			console.log(`Log ${name} does not exist`);
+			return;
+		}
+		const test = new Test(name);
+		test.runLoggedTests(ManuallyLogged[name], printing);
+		test.checkEquality();
+	}
+
 	public runLoggedTests(testData: string, printing?: boolean): void {
-		const log = new Log(this._project, false, testData);
-		log.doAllCalls(printing);
+		this._log = new Log(this._project, false, testData);
+		this._log.doAllCalls(printing);
+	}
+
+	public checkEquality(): void {
+		if (this._project.currState.equals(this._log.expectedState)) {
+			console.log(`${this._name} succeeded`);
+		} else {
+			console.log(`${this._name} failed`);
+			console.log('expected', this._log.expectedState);
+			console.log('received', this._project.currState);
+		}
 	}
 
 }

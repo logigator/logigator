@@ -36,6 +36,21 @@ export class Elements {
 		return out;
 	}
 
+	public static equals(elem0: Element, elem1: Element): boolean {
+		for (const k in elem0) {
+			if (k === 'id')
+				continue;
+			if (elem0[k].x !== undefined && elem0[k].y !== undefined) {
+				if (!(elem0[k].x === elem1[k].x && elem0[k].y === elem1[k].y))
+					return false;
+			} else {
+				if (elem0[k] !== elem1[k])
+					return false;
+			}
+		}
+		return true;
+	}
+
 	public static move(element: Element, dif: PIXI.Point): void {
 		element.pos.x += dif.x;
 		element.pos.y += dif.y;
