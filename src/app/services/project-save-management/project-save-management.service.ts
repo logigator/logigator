@@ -121,6 +121,21 @@ export class ProjectSaveManagementService {
 		).toPromise();
 	}
 
+	public newComponent(name: string, symbol: string, description: string = ''): Promise<number> {
+		return this.http.post<HttpResponseData<{id: number}>>('/api/project/create', {
+			name,
+			isComponent: true,
+			symbol,
+			description
+		}).pipe(
+			map(response => response.result.id),
+			this.errorHandling.catchErrorOperatorDynamicMessage(
+				(err: any) => `Unable to create component: ${err.error.error.description}`,
+				undefined
+			)
+		).toPromise();
+	}
+
 	private createEmptyProject(): Project {
 		return new Project(new ProjectState(), {
 			type: 'project',

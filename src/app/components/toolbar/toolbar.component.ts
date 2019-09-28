@@ -3,6 +3,7 @@ import {WorkMode} from '../../models/work-modes';
 import {WorkModeService} from '../../services/work-mode/work-mode.service';
 import {ProjectsService} from '../../services/projects/projects.service';
 import {ProjectInteractionService} from '../../services/project-interaction/project-interaction.service';
+import {NgForm} from '@angular/forms';
 
 @Component({
 	selector: 'app-toolbar',
@@ -10,6 +11,8 @@ import {ProjectInteractionService} from '../../services/project-interaction/proj
 	styleUrls: ['./toolbar.component.scss']
 })
 export class ToolbarComponent implements OnInit {
+
+	public newComponentPopup = false;
 
 	constructor(
 		private workModeService: WorkModeService,
@@ -26,6 +29,11 @@ export class ToolbarComponent implements OnInit {
 
 	public get currentWorkMode(): WorkMode {
 		return this.workModeService.currentWorkMode;
+	}
+
+	public newComponent(form: NgForm): void {
+		this.projectService.newComponent(form.form.value.name, form.form.value.symbol);
+		this.newComponentPopup = false;
 	}
 
 	public undo(): void {

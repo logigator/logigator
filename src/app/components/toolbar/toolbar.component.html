@@ -3,8 +3,8 @@
 	<div class="toolbar-buttons">
 		<ng-container *ngIf="currentWorkMode !== 'simulation'">
 			<button class="toolbar-button save" aria-label="Save" (click)="save()"></button>
-			<button class="toolbar-button open" aria-label="Save"></button>
-			<button class="toolbar-button new-comp" aria-label="Save"></button>
+			<button class="toolbar-button open" aria-label="Open"></button>
+			<button class="toolbar-button new-comp" aria-label="New Component" (click)="newComponentPopup = true"></button>
 
 			<div class="divider"></div>
 
@@ -49,3 +49,16 @@
 		<p (click)="setWorkMode('select')" *ngIf="currentWorkMode === 'simulation'" class="start-sim">Exit Simulation</p>
 	</div>
 </div>
+<app-popup *ngIf="newComponentPopup" (requestClose)="newComponentPopup = false" title="New Component">
+	<form #newComponentForm="ngForm" (ngSubmit)="newComponent(newComponentForm)" class="new-component-form" autocomplete="off">
+		<label for="new-component-form-name">Name</label>
+		<input type="text" name="name" id="new-component-form-name" ngModel required>
+		<br>
+
+		<label for="new-component-form-symbol">Symbol</label>
+		<input type="text" name="symbol" id="new-component-form-symbol" ngModel required>
+		<br>
+
+		<button type="submit" [disabled]="newComponentForm.invalid">Create</button>
+	</form>
+</app-popup>
