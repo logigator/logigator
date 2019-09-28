@@ -16,7 +16,7 @@ export class Project {
 	private _currState: ProjectState;
 
 	private readonly _actions: Action[][];
-	private _maxActionCount = 10;
+	private _maxActionCount = 1000;
 	private _currActionPointer: number;
 	private _currMaxActionPointer: number;
 
@@ -180,7 +180,7 @@ export class Project {
 
 
 	public removeElementsById(ids: number[]): void {
-		this.log.call('removeElementsById', arguments);
+		this.log.call('removeElementsById', arguments, -1, 0);
 		const actions: Action[] = [];
 		const onEdges: Element[] = [];
 		const elements: Element[] = new Array(ids.length);
@@ -212,7 +212,7 @@ export class Project {
 		const changed = this._currState.withWiresOnEdges(elements);
 		if (!this._currState.allSpacesFree(elements, dif, elements))
 			return false;
-		this.log.call('moveElementsById', arguments);
+		this.log.call('moveElementsById', arguments, -1, 0);
 		this._currState.removeAllConnectionPoints(elements);
 		for (const elem of elements) {
 			this._currState.moveElement(elem, dif);
@@ -241,7 +241,7 @@ export class Project {
 		const newEndPos = Elements.calcEndPos(element.pos, element.numInputs, element.numOutputs, rotation);
 		if (!this._currState.isFreeSpace(element.pos, newEndPos, false, Elements.wireEnds(element, rotation), [element]))
 			return false;
-		this.log.call('rotateComponent', arguments);
+		this.log.call('rotateComponent', arguments, 0);
 		this._currState.rotateComp(element, rotation, newEndPos);
 		actions.push(...this.autoAssemble(changed));
 		this.newState(actions);
@@ -262,7 +262,7 @@ export class Project {
 		const newEndPos = Elements.calcEndPos(element.pos, numInputs, element.numOutputs, element.rotation);
 		if (!this._currState.isFreeSpace(element.pos, newEndPos, false, Elements.wireEnds(element, undefined, numInputs), [element]))
 			return false;
-		this.log.call('setNumInputs', arguments);
+		this.log.call('setNumInputs', arguments, 0);
 		this._currState.setNumInputs(element, numInputs, newEndPos);
 		actions.push(...this.autoAssemble(changed));
 		this.newState(actions);

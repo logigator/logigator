@@ -34,7 +34,7 @@ export class ToolbarComponent implements OnInit {
 
 	public runTests(): void {
 		for (const name in ManuallyLogged) {
-			Test.runAndCheck(name);
+			Test.runAndCheck(name, false);
 		}
 		// e.g. Test.runAndCheck('autoConnect');
 	}
