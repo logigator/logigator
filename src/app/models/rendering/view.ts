@@ -87,6 +87,7 @@ export class View extends PIXI.Container {
 			chunk.scaledFor = this.zoomPan.currentScale;
 			chunk.gridGraphics.destroy();
 			chunk.gridGraphics = Grid.generateGridGraphics(this.zoomPan.currentScale);
+			chunk.gridGraphics.position = this.getChunkPos(chunksToRender[i].x, chunksToRender[i].y);
 			const chunkElems = chunk.container.children;
 			for (let e = 0; e < chunkElems.length; e++) {
 				const elemSprite = this.allElements.get(Number(chunkElems[e].name));
@@ -99,7 +100,7 @@ export class View extends PIXI.Container {
 					this.updateConnectionPoint(chunkElems[e] as PIXI.Graphics);
 				}
 			}
-			chunk.container.addChild(chunk.gridGraphics);
+			this.addChildAt(chunk.gridGraphics, 0);
 		}
 		const selectedIds = SelectionService.staticInstance.selectedIds(this.projectId);
 		for (let i = 0; i < selectedIds.length; i++) {
@@ -177,9 +178,10 @@ export class View extends PIXI.Container {
 			scaledFor: this.zoomPan.currentScale
 		};
 		this._chunks[x][y].container.sortableChildren = false;
+		this._chunks[x][y].gridGraphics.sortableChildren = false;
 		const text = new PIXI.Text(x  + ' ' + y);
-		text.x = 20 * 10;
-		text.y = 20 * 10;
+		text.x = (environment.chunkSize * environment.gridPixelWidth) / 2;
+		text.y = (environment.chunkSize * environment.gridPixelWidth) / 2;
 		this._chunks[x][y].container.addChild(text);
 		return true;
 	}
@@ -187,14 +189,20 @@ export class View extends PIXI.Container {
 	private createChunkIfNeeded(chunkX, chunkY): boolean {
 		if (this.createChunk(chunkX, chunkY)) {
 			const chunk = this._chunks[chunkX][chunkY];
-			chunk.container.position = Grid.getPixelPosForGridPos(
-				new PIXI.Point(chunkX * environment.chunkSize, chunkY * environment.chunkSize)
-			);
-			this.addChild(chunk.container);
-			chunk.container.addChild(chunk.gridGraphics);
+			const chunkPos = this.getChunkPos(chunkX, chunkY);
+			chunk.container.position = chunkPos;
+			chunk.gridGraphics.position = chunkPos;
+			this.addChildAt(chunk.gridGraphics, 0);
+			this.addChildAt(chunk.container, 1);
 			return true;
 		}
 		return false;
+	}
+
+	private getChunkPos(chunkX: number, chunkY: number): PIXI.Point {
+		return Grid.getPixelPosForGridPos(
+			new PIXI.Point(chunkX * environment.chunkSize, chunkY * environment.chunkSize)
+		);
 	}
 
 	public updateZoomPan() {
