@@ -99,7 +99,7 @@ export class View extends PIXI.Container {
 					this.updateConnectionPoint(chunkElems[e] as PIXI.Graphics);
 				}
 			}
-			chunk.container.addChildAt(chunk.gridGraphics, 0);
+			chunk.container.addChild(chunk.gridGraphics);
 		}
 		const selectedIds = SelectionService.staticInstance.selectedIds(this.projectId);
 		for (let i = 0; i < selectedIds.length; i++) {
@@ -191,7 +191,7 @@ export class View extends PIXI.Container {
 				new PIXI.Point(chunkX * environment.chunkSize, chunkY * environment.chunkSize)
 			);
 			this.addChild(chunk.container);
-			chunk.container.addChildAt(chunk.gridGraphics, 0);
+			chunk.container.addChild(chunk.gridGraphics);
 			return true;
 		}
 		return false;

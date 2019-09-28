@@ -1,12 +1,10 @@
 import {Component, ElementRef, NgZone, OnDestroy, OnInit, Renderer2, ViewChild} from '@angular/core';
-import * as PIXI from 'pixi.js';
 import {View} from '../../models/rendering/view';
 import {ProjectsService} from '../../services/projects/projects.service';
 import {Project} from '../../models/project';
 import {WorkArea} from '../../models/rendering/work-area';
 import {WindowWorkAreaComponent} from '../window-work-area/window-work-area.component';
-import {distinctUntilChanged, map, pairwise, takeUntil} from 'rxjs/operators';
-import {WorkMode} from '../../models/work-modes';
+import {distinctUntilChanged, map, takeUntil} from 'rxjs/operators';
 import {WorkModeService} from '../../services/work-mode/work-mode.service';
 
 @Component({
@@ -39,7 +37,6 @@ export class WorkAreaComponent extends WorkArea implements OnInit, OnDestroy {
 		this._allViews = new Map<number, View>();
 
 		this.ngZone.runOutsideAngular(async () => {
-			await this.loadPixiFont();
 			this.preventContextMenu(this._pixiCanvasContainer, this.renderer2);
 			this.initPixi(this._pixiCanvasContainer, this.renderer2);
 			this.initPixiTicker(() => {
@@ -62,14 +59,6 @@ export class WorkAreaComponent extends WorkArea implements OnInit, OnDestroy {
 			map((mode) => mode === 'simulation'),
 			distinctUntilChanged()
 		).subscribe(isSim => this.isSimulationModeChanged(isSim));
-	}
-
-	private loadPixiFont(): Promise<void> {
-		return new Promise<void>(resolve => {
-			const loader = PIXI.Loader.shared;
-			loader.add('luis_george_cafe', '/assets/fonts/louis_george_cafe_bitmap/font.fnt')
-				.load(() => resolve());
-		});
 	}
 
 	public get allProjects(): Map<number, Project> {

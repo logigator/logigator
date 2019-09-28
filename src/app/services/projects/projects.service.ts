@@ -1,8 +1,10 @@
 import { Injectable } from '@angular/core';
 import {Project} from '../../models/project';
-import {Observable, ReplaySubject} from 'rxjs';
+import {EMPTY, Observable, ReplaySubject} from 'rxjs';
 import {Action} from '../../models/action';
 import {ProjectSaveManagementService} from '../project-save-management/project-save-management.service';
+import {delayWhen} from 'rxjs/operators';
+import {WorkArea} from '../../models/rendering/work-area';
 
 @Injectable({
 	providedIn: 'root'
@@ -49,7 +51,14 @@ export class ProjectsService {
 	}
 
 	public get onProjectOpened$(): Observable<number> {
-		return this._projectOpenedSubject.asObservable();
+		return this._projectOpenedSubject.asObservable().pipe(
+			delayWhen((value, index) => {
+				if (index === 0) {
+					return WorkArea.pixiFontLoaded$;
+				}
+				return EMPTY;
+			})
+		);
 	}
 
 	public switchToProject(id: number): void {

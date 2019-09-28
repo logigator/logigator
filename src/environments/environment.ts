@@ -4,8 +4,8 @@
 
 export const environment = {
 	production: false,
-	chunkSize: 20,
-	gridPixelWidth: 20,
+	chunkSize: 16,
+	gridPixelWidth: 16,
 	componentWidth: 2
 };
 

@@ -6,6 +6,10 @@ import {ThemingService} from '../../services/theming/theming.service';
 
 export abstract class WorkArea {
 
+	private static _loadedPixiFont = false;
+
+	public static pixiFontLoaded$ = new Subject<void>();
+
 	protected _pixiRenderer: PIXI.Renderer;
 
 	protected _pixiTicker: PIXI.Ticker;
@@ -13,6 +17,7 @@ export abstract class WorkArea {
 	protected _destroySubject = new Subject<any>();
 
 	protected initPixi(canvasContainer: ElementRef<HTMLDivElement>, renderer2: Renderer2) {
+		this.loadPixiFont();
 		this._pixiRenderer = new PIXI.Renderer({
 			height: canvasContainer.nativeElement.offsetHeight,
 			width: canvasContainer.nativeElement.offsetWidth,
@@ -36,6 +41,14 @@ export abstract class WorkArea {
 		renderer2.listen(canvasContainer.nativeElement, 'contextmenu', (e: MouseEvent) => {
 			e.preventDefault();
 		});
+	}
+
+	private loadPixiFont() {
+		if (WorkArea._loadedPixiFont === true) return;
+		WorkArea._loadedPixiFont = true;
+		const loader = PIXI.Loader.shared;
+		loader.add('luis_george_cafe', '/assets/fonts/louis_george_cafe_bitmap/font.fnt')
+			.load(() => WorkArea.pixiFontLoaded$.next());
 	}
 
 	protected initPixiTicker(tickFunction: () => void) {

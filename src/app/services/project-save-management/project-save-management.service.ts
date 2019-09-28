@@ -102,26 +102,23 @@ export class ProjectSaveManagementService {
 	}
 
 	public openComponent(id: number): Promise<Project> {
-		if (this._projectSource === 'server') {
-			return this.http.get<HttpResponseData<OpenProjectResponse>>(`/api/project/open/${id}`).pipe(
-				map(response => {
-					if (Number(response.result.project.is_component) === 0) {
-						throw Error('isProj');
-					}
-					const project = this.getProjectModelFromJson(response.result.project.data);
-					return new Project(new ProjectState(project), {
-						id: Number(id),
-						name: response.result.project.name,
-						type: 'comp'
-					});
-				}),
-				this.errorHandling.catchErrorOperatorDynamicMessage((err: any) => {
-					if (err === 'isProj') return 'Unable to open Project as Component';
-					return err.error.error.description;
-				}, undefined)
-			).toPromise();
-		}
-		return Promise.resolve() as any;
+		return this.http.get<HttpResponseData<OpenProjectResponse>>(`/api/project/open/${id}`).pipe(
+			map(response => {
+				if (Number(response.result.project.is_component) === 0) {
+					throw Error('isProj');
+				}
+				const project = this.getProjectModelFromJson(response.result.project.data);
+				return new Project(new ProjectState(project), {
+					id: Number(id),
+					name: response.result.project.name,
+					type: 'comp'
+				});
+			}),
+			this.errorHandling.catchErrorOperatorDynamicMessage((err: any) => {
+				if (err === 'isProj') return 'Unable to open Project as Component';
+				return err.error.error.description;
+			}, undefined)
+		).toPromise();
 	}
 
 	private createEmptyProject(): Project {
