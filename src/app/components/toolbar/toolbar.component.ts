@@ -4,6 +4,7 @@ import {WorkModeService} from '../../services/work-mode/work-mode.service';
 import {ProjectsService} from '../../services/projects/projects.service';
 import {ProjectInteractionService} from '../../services/project-interaction/project-interaction.service';
 import {Test} from '../../models/tests/tests';
+import {ManuallyLogged} from '../../models/tests/logs';
 
 @Component({
 	selector: 'app-toolbar',
@@ -32,7 +33,10 @@ export class ToolbarComponent implements OnInit {
 	}
 
 	public runTests(): void {
-		Test.runAndCheck('autoConnect');
+		for (const func in ManuallyLogged) {
+			Test.runAndCheck(func);
+		}
+		// e.g. Test.runAndCheck('autoConnect');
 	}
 
 	public setWorkMode(mode: WorkMode) {

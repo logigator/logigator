@@ -300,6 +300,7 @@ export class Project {
 
 
 	private autoAssemble(elements: Element[]): Action[] {
+		Elements.removeDuplicates(elements);
 		const out: Action[] = [];
 		const merged = this.autoMerge(elements);
 		out.push(...merged.actions);
