@@ -221,28 +221,6 @@
 					background-image: url("/assets/icons/light/zoom-in.svg");
 				}
 			}
-		}
-	}
-
-	.toolbar-end {
-		display: flex;
-		flex-direction: row;
-		justify-content: flex-end;
-		align-items: center;
-		font-size: 1.2rem;
-		padding-right: 0.7rem;
-		flex: auto;
-
-		p {
-			margin: 0;
-		}
-
-		.start-sim {
-			&:hover {
-				cursor: pointer;
-			}
-		}
-		@include themify() {
 
 			.play {
 				@if (isTheme('dark')) {
@@ -274,6 +252,26 @@
 				} @else {
 					background-image: url("/assets/icons/light/control-stop.svg");
 				}
+			}
+		}
+	}
+
+	.toolbar-end {
+		display: flex;
+		flex-direction: row;
+		justify-content: flex-end;
+		align-items: center;
+		font-size: 1.2rem;
+		padding-right: 0.7rem;
+		flex: auto;
+
+		p {
+			margin: 0;
+		}
+
+		.start-sim {
+			&:hover {
+				cursor: pointer;
 			}
 		}
 	}
