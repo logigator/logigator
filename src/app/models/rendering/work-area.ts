@@ -39,6 +39,7 @@ export abstract class WorkArea {
 			takeUntil(this._destroySubject)
 		).subscribe(() => {
 			this._pixiRenderer.resize(canvasContainer.nativeElement.offsetWidth, canvasContainer.nativeElement.offsetHeight);
+			this._ticker.singleFrame();
 		});
 	}
 

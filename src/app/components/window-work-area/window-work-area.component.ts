@@ -95,8 +95,10 @@ export class WindowWorkAreaComponent extends WorkArea implements OnInit, OnDestr
 		this._bounding = this.dragBoundingContainer instanceof ElementRef ? this.dragBoundingContainer.nativeElement : this.dragBoundingContainer;
 		this.ngZone.runOutsideAngular(async () => {
 			this.preventContextMenu(this._pixiCanvasContainer, this.renderer2);
+			this.initZoomPan(this._pixiCanvasContainer);
 			this.initPixi(this._pixiCanvasContainer, this.renderer2);
-			RenderTicker.windowWorkAreaTicker.setTickerFunction(() => {
+			this._ticker.setTickerFunction(() => {
+				if (!this._view) return;
 				this.updateZoomPan(this._view);
 				this._pixiRenderer.render(this._view);
 			});
@@ -318,7 +320,7 @@ export class WindowWorkAreaComponent extends WorkArea implements OnInit, OnDestr
 	public show() {
 		this.renderer2.setStyle(this._popup.nativeElement, 'display', 'block');
 		this._pixiRenderer.resize(this._pixiCanvasContainer.nativeElement.offsetWidth, this._pixiCanvasContainer.nativeElement.offsetHeight);
-		this.ngZone.runOutsideAngular(() => RenderTicker.windowWorkAreaTicker.start());
+		this.ngZone.runOutsideAngular(() => this._ticker.singleFrame());
 		this.openProject(this.projectIdToOpen);
 		this._view.updateChunks();
 	}

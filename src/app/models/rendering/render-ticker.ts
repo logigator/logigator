@@ -1,7 +1,5 @@
 export class RenderTicker {
 
-	public static windowWorkAreaTicker = new RenderTicker();
-
 	private _tickerFn: () => void;
 
 	private _requestId: number;
