@@ -1,5 +1,6 @@
-import {ApplicationRef, ComponentFactoryResolver, EmbeddedViewRef, Injectable, Injector} from '@angular/core';
+import {ApplicationRef, ComponentFactoryResolver, EmbeddedViewRef, Injectable, Injector, Type} from '@angular/core';
 import {PopupComponent} from '../../components/popup/popup/popup.component';
+import {PopupContentComp} from '../../components/popup/popup-contents/popup-content-comp';
 
 @Injectable({
 	providedIn: 'root'
@@ -12,7 +13,7 @@ export class PopupService {
 		private injector: Injector
 	) { }
 
-	public showPopup(popupContentComp: any, title: string, closeOnClickOutside = true): Promise<void> {
+	public showPopup(popupContentComp: Type<PopupContentComp>, title: string, closeOnClickOutside = true): Promise<void> {
 		return new Promise<void>(resolve => {
 			const popupFactory = this.componentFactoryResolver.resolveComponentFactory(PopupComponent);
 			const popupRef = popupFactory.create(this.injector);
