@@ -6,6 +6,7 @@ import {ProjectInteractionService} from '../../services/project-interaction/proj
 import {NgForm} from '@angular/forms';
 import {PopupService} from '../../services/popup/popup.service';
 import {NewComponentComponent} from '../popup/popup-contents/new-component/new-component.component';
+import {OpenProjectComponent} from '../popup/popup-contents/open/open-project.component';
 
 @Component({
 	selector: 'app-toolbar',
@@ -70,5 +71,9 @@ export class ToolbarComponent implements OnInit {
 
 	public save() {
 		this.projectService.saveAll();
+	}
+
+	public open() {
+		this.popupService.showPopup(OpenProjectComponent, 'Open Project', true);
 	}
 }

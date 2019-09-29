@@ -23,6 +23,8 @@ import { WindowWorkAreaComponent } from './components/window-work-area/window-wo
 import {HttpClientModule} from '@angular/common/http';
 import { ReloadQuestionComponent } from './components/popup/popup-contents/relaod-question/reload-question.component';
 import { NewComponentComponent } from './components/popup/popup-contents/new-component/new-component.component';
+import { OpenProjectComponent } from './components/popup/popup-contents/open/open-project.component';
+import { SaveAsComponent } from './components/popup/popup-contents/save-as/save-as.component';
 
 @NgModule({
 	declarations: [
@@ -45,13 +47,17 @@ import { NewComponentComponent } from './components/popup/popup-contents/new-com
 		PopupComponent,
 		WindowWorkAreaComponent,
 		ReloadQuestionComponent,
-		NewComponentComponent
+		NewComponentComponent,
+		OpenProjectComponent,
+		SaveAsComponent
 	],
 	entryComponents: [
 		PopupComponent,
 		ShortcutConfigComponent,
 		ReloadQuestionComponent,
-		NewComponentComponent
+		NewComponentComponent,
+		OpenProjectComponent,
+		SaveAsComponent
 	],
 	imports: [
 		BrowserModule,

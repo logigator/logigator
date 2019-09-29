@@ -45,9 +45,9 @@ export class PopupComponent implements OnInit {
 
 	ngOnInit() {
 		const contentComp = this._viewContRef.createComponent(this.contentComp);
-		const subscription = contentComp.instance.requestClose.subscribe(() => {
+		const subscription = contentComp.instance.requestClose.subscribe(output => {
 			subscription.unsubscribe();
-			this.requestClose.emit();
+			this.requestClose.emit(output);
 		});
 	}
 

@@ -14,6 +14,8 @@ import {ElementProviderService} from '../element-provider/element-provider.servi
 import {UserService} from '../user/user.service';
 import {Observable} from 'rxjs';
 import {ErrorHandlingService} from '../error-handling/error-handling.service';
+import {PopupService} from '../popup/popup.service';
+import {SaveAsComponent} from '../../components/popup/popup-contents/save-as/save-as.component';
 
 @Injectable({
 	providedIn: 'root'
@@ -26,7 +28,8 @@ export class ProjectSaveManagementService {
 		private http: HttpClient,
 		private elemProvService: ElementProviderService,
 		private user: UserService,
-		private errorHandling: ErrorHandlingService
+		private errorHandling: ErrorHandlingService,
+		private popup: PopupService
 	) { }
 
 	public async getProjectToOpenOnLoad(): Promise<Project> {
@@ -114,7 +117,7 @@ export class ProjectSaveManagementService {
 
 	public save(projects: Project[]) {
 		if (!this._projectSource) {
-			this.saveAs(projects);
+			this.saveAs();
 			return;
 		}
 
@@ -123,20 +126,29 @@ export class ProjectSaveManagementService {
 				this.saveProjectsToServer(projects);
 				break;
 			case 'file':
-				// download file
+				this.exportToFile(projects);
 				break;
 		}
 	}
 
-	public async saveAs(projects: Project[]) {
-		// show save as dialog
-		// this.save(projects);
+	public saveAs() {
+		this.popup.showPopup(SaveAsComponent, 'Save Project', false);
+	}
+
+	public exportToFile(projects: Project[]) {
+		// need function to get all needed projects to export
+	}
+
+	public openFromFile(): Project {
+		this._projectSource = 'file';
+		return this.createEmptyProject();
 	}
 
 	private saveProjectsToServer(projects: Project[]): Promise<any> {
 		const allPromises = [];
 		projects.forEach(proj => {
-			allPromises.push(this.saveSingleProject(proj));
+			if (proj.dirty) allPromises.push(this.saveSingleProject(proj));
+			proj.dirty = false;
 		});
 		return Promise.all(allPromises);
 	}
@@ -161,7 +173,7 @@ export class ProjectSaveManagementService {
 				});
 			}),
 			this.errorHandling.catchErrorOperatorDynamicMessage((err: any) => {
-				if (err === 'isProj') return 'Unable to open Project as Component';
+				if (err.message === 'isProj') return 'Unable to open Project as Component';
 				return err.error.error.description;
 			}, undefined)
 		).toPromise();
@@ -214,7 +226,7 @@ export class ProjectSaveManagementService {
 				throw err;
 			}),
 			this.errorHandling.catchErrorOperatorDynamicMessage((err: any) => {
-				if (err === 'isComp') return 'Unable to open Component as Project';
+				if (err.message === 'isComp') return 'Unable to open Component as Project';
 				return err.error.error.description;
 			}, this.createEmptyProject())
 		).toPromise();

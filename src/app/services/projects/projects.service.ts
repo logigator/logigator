@@ -1,6 +1,6 @@
 import { Injectable } from '@angular/core';
 import {Project} from '../../models/project';
-import {EMPTY, Observable, ReplaySubject} from 'rxjs';
+import {Observable, of, ReplaySubject, Subject} from 'rxjs';
 import {Action} from '../../models/action';
 import {ProjectSaveManagementService} from '../project-save-management/project-save-management.service';
 import {delayWhen} from 'rxjs/operators';
@@ -20,7 +20,8 @@ export class ProjectsService {
 
 	private _currentlyOpening: number[] = [];
 
-	private _projectOpenedSubject = new ReplaySubject<number>(2);
+	private _projectOpenedSubject = new ReplaySubject<number>();
+	private _projectClosedSubject = new Subject<number>();
 
 	constructor(private projectSaveManagementService: ProjectSaveManagementService) {
 		ProjectsService.staticInstance = this;
@@ -46,6 +47,15 @@ export class ProjectsService {
 		this._currentlyOpening = this._currentlyOpening.filter(o => id !== o);
 	}
 
+	public openFile() {
+		this.allProjects.forEach((value, key) => this.closeProject(key));
+		const project = this.projectSaveManagementService.openFromFile();
+		this._projects.set(project.id, project);
+		this._currProject = project;
+		this._mainProject = project;
+		this._projectOpenedSubject.next(project.id);
+	}
+
 	public onProjectChanges$(projectId: number): Observable<Action[]> {
 		return this._projects.get(projectId).changes;
 	}
@@ -56,9 +66,13 @@ export class ProjectsService {
 				if (index === 0) {
 					return WorkArea.pixiFontLoaded$;
 				}
-				return EMPTY;
+				return of(undefined);
 			})
 		);
+	}
+
+	public get onProjectClosed$(): Observable<number> {
+		return this._projectClosedSubject.asObservable();
 	}
 
 	public switchToProject(id: number): void {
@@ -74,6 +88,7 @@ export class ProjectsService {
 	}
 
 	public closeProject(id: number) {
+		this._projectClosedSubject.next(id);
 		this._projects.delete(id);
 	}
 
