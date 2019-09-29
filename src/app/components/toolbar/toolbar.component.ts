@@ -33,16 +33,16 @@ export class ToolbarComponent implements OnInit {
 	}
 
 	public runTests(): void {
-		this.test = new Test('bugfix', this.projectService.currProject, ManuallyLogged.THECRASH);
-		// for (const name in ManuallyLogged) {
-		// 	Test.runAndCheck(name, false);
-		// }
+		// this.test = new Test('bugfix', this.projectService.currProject, ManuallyLogged.reducedCrash);
+		for (const name in ManuallyLogged) {
+			Test.runAndCheck(name, false);
+		}
 	}
 
 	public runStep(): void {
-		// for (let i = 0; i < 2000; i++) {
-		this.test.runStep(true);
-		// }
+		for (let i = 0; i < 2000; i++) {
+			this.test.runStep(true);
+		}
 	}
 
 	public setWorkMode(mode: WorkMode) {

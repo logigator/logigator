@@ -324,9 +324,6 @@ export class View extends PIXI.Container {
 		for (const action of actions) {
 			this.applyAction(action);
 		}
-		if (this.allElements.size !== ProjectsService.staticInstance.currProject.allElements.length) {
-			debugger
-		}
 	}
 
 	private applyAction(action: Action) {
