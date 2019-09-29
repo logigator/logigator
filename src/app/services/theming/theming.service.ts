@@ -36,6 +36,7 @@ export class ThemingService {
 	constructor(@Inject(DOCUMENT) private document: HTMLDocument) {
 		ThemingService.staticInstance = this;
 		this.loadTheme();
+		this.document.body.classList.add(this.themeClass);
 	}
 
 	private loadTheme() {
