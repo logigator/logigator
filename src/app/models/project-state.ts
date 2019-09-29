@@ -418,6 +418,10 @@ export class ProjectState {
 		return this._chunks[x] ? this._chunks[x][y] : null;
 	}
 
+	get allElements(): Element[] {
+		return this.model.board.elements;
+	}
+
 	get chunks(): Chunk[][] {
 		return this._chunks;
 	}

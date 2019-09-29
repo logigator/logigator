@@ -357,7 +357,7 @@ export class Project {
 
 
 	get allElements(): Element[] {
-		return this._currState.model.board.elements;
+		return this._currState.allElements;
 	}
 
 	get changes(): Observable<Action[]> {

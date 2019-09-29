@@ -14,7 +14,7 @@ export interface Element {
 	rotation?: number;
 }
 
-export class Elements {
+export abstract class Elements {
 
 	public static correctPosOrder(startPos: PIXI.Point, endPos: PIXI.Point): void {
 		if (startPos.x > endPos.x) {
@@ -134,6 +134,19 @@ export class Elements {
 				out.push(new PIXI.Point(element.pos.x + i, element.pos.y - 1));
 		}
 		return out;
+	}
+
+	public static isInput(element: Element, pos: PIXI.Point): boolean {
+		switch (element.rotation) {
+			case 0:
+				return pos.x < element.pos.x;
+			case 1:
+				return pos.y < element.pos.y;
+			case 2:
+				return pos.x >= element.endPos.x;
+			case 3:
+				return pos.y >= element.endPos.y;
+		}
 	}
 
 	public static removeDuplicates(elements: Element[]): void {

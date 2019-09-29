@@ -3,6 +3,7 @@ import {WorkMode} from '../../models/work-modes';
 import {WorkModeService} from '../../services/work-mode/work-mode.service';
 import {ProjectsService} from '../../services/projects/projects.service';
 import {ProjectInteractionService} from '../../services/project-interaction/project-interaction.service';
+import {StateCompilerService} from '../../services/state-compiler/state-compiler.service';
 
 @Component({
 	selector: 'app-toolbar',
@@ -14,7 +15,8 @@ export class ToolbarComponent implements OnInit {
 	constructor(
 		private workModeService: WorkModeService,
 		private projectService: ProjectsService,
-		private projectInteraction: ProjectInteractionService
+		private projectInteraction: ProjectInteractionService,
+		private stateCompiler: StateCompilerService
 	) { }
 
 	ngOnInit() {
