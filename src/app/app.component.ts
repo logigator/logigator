@@ -32,7 +32,6 @@ export class AppComponent implements OnInit, OnDestroy {
 	) {}
 
 	ngOnInit(): void {
-		this.renderer2.addClass(this.appRoot.nativeElement, this.theming.themeClass);
 		this.listenToShortcuts();
 
 		this.theming.onRequestFullscreen$.pipe(

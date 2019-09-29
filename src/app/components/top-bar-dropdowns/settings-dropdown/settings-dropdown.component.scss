@@ -12,6 +12,10 @@
 	right: 0;
 	top: $top-bar-height;
 
+	&.hidden {
+		display: none;
+	}
+
 	@include themify() {
 		background-color: themed('background');
 		color: themed('primary-text');
@@ -43,10 +47,4 @@
 			border-color: themed('secondary');
 		}
 	}
-}
-
-.buttons {
-	width: 100%;
-	display: flex;
-	justify-content: space-between;
 }

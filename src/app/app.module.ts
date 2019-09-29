@@ -15,11 +15,12 @@ import { ViewDropdownComponent } from './components/top-bar-dropdowns/view-dropd
 import { HelpDropdownComponent } from './components/top-bar-dropdowns/help-dropdown/help-dropdown.component';
 import { SettingsDropdownComponent } from './components/top-bar-dropdowns/settings-dropdown/settings-dropdown.component';
 import { ShortcutTextPipe } from './pipes/shortcut-text/shortcut-text.pipe';
-import { PopupComponent } from './components/popup/popup.component';
-import { SingleShortcutConfigComponent } from './components/shortcut-config/single-shortcut-config/single-shortcut-config.component';
-import { ShortcutConfigComponent } from './components/shortcut-config/shortcut-config/shortcut-config.component';
+import { PopupComponent } from './components/popup/popup/popup.component';
+import { SingleShortcutConfigComponent } from './components/popup/popup-contents/shortcut-config/single-shortcut-config/single-shortcut-config.component';
+import { ShortcutConfigComponent } from './components/popup/popup-contents/shortcut-config/shortcut-config/shortcut-config.component';
 import { WindowWorkAreaComponent } from './components/window-work-area/window-work-area.component';
 import {HttpClientModule} from '@angular/common/http';
+import { ReloadQuestionComponent } from './components/popup/popup-contents/relaod-question/reload-question.component';
 
 @NgModule({
 	declarations: [
@@ -40,7 +41,13 @@ import {HttpClientModule} from '@angular/common/http';
 		SingleShortcutConfigComponent,
 		ShortcutConfigComponent,
 		PopupComponent,
-		WindowWorkAreaComponent
+		WindowWorkAreaComponent,
+		ReloadQuestionComponent
+	],
+	entryComponents: [
+		PopupComponent,
+		ShortcutConfigComponent,
+		ReloadQuestionComponent
 	],
 	imports: [
 		BrowserModule,
