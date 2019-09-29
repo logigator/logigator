@@ -2,6 +2,7 @@ import { Injectable } from '@angular/core';
 import {WorkMode} from '../../models/work-modes';
 import {BehaviorSubject, Observable} from 'rxjs';
 import {distinctUntilChanged} from 'rxjs/operators';
+import {ProjectSaveManagementService} from '../project-save-management/project-save-management.service';
 
 @Injectable({
 	providedIn: 'root'
@@ -15,11 +16,16 @@ export class WorkModeService {
 
 	private _workModeSubject = new BehaviorSubject<WorkMode>('select');
 
-	constructor() {
+	constructor(private projectSaveManagement: ProjectSaveManagementService) {
 		WorkModeService.staticInstance = this;
+
+		if (projectSaveManagement.isShare) {
+			this.setWorkMode('simulation');
+		}
 	}
 
 	public setWorkMode(mode: WorkMode, componentTypeToBuild?: number) {
+		if (this.projectSaveManagement.isShare) return;
 		this._currentWorkMode = mode;
 		this._workModeSubject.next(mode);
 		if (componentTypeToBuild) {

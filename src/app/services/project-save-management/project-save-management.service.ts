@@ -31,14 +31,20 @@ export class ProjectSaveManagementService {
 
 	public async getProjectToOpenOnLoad(): Promise<Project> {
 		let project;
-		if (location.pathname === '/') {
-			project = Promise.resolve(this.createEmptyProject());
-			this.elemProvService.setUserDefinedTypes(await this.getAllAvailableCustomElements());
-		} else {
+		if (location.pathname.startsWith('/board')) {
 			project = this.openProjectFromServer();
+			this.elemProvService.setUserDefinedTypes(await this.getAllAvailableCustomElements());
+		} else if (location.pathname.startsWith('/share')) {
+			// open share
+		} else {
+			project = Promise.resolve(this.createEmptyProject());
 			this.elemProvService.setUserDefinedTypes(await this.getAllAvailableCustomElements());
 		}
 		return project;
+	}
+
+	public get isShare(): boolean {
+		return location.pathname.startsWith('/share/');
 	}
 
 	public async getAllAvailableCustomElements(): Promise<Map<number, ElementType>> {
@@ -108,16 +114,23 @@ export class ProjectSaveManagementService {
 
 	public save(projects: Project[]) {
 		if (!this._projectSource) {
-			this.saveAs();
+			this.saveAs(projects);
 			return;
 		}
 
-		if (this._projectSource === 'server') {
-			this.saveProjectsToServer(projects);
+		switch (this._projectSource) {
+			case 'server':
+				this.saveProjectsToServer(projects);
+				break;
+			case 'file':
+				// download file
+				break;
 		}
 	}
 
-	public saveAs() {
+	public async saveAs(projects: Project[]) {
+		// show save as dialog
+		// this.save(projects);
 	}
 
 	private saveProjectsToServer(projects: Project[]): Promise<any> {
@@ -179,9 +192,6 @@ export class ProjectSaveManagementService {
 
 	private openProjectFromServer(): Promise<Project> {
 		const path = location.pathname;
-		if (!path.startsWith('/board/')) {
-			return Promise.reject('Invalid Url');
-		}
 		const id = Number(path.substr(path.lastIndexOf('/') + 1));
 		if (Number.isNaN(id)) {
 			return Promise.reject('Invalid Url');
@@ -200,9 +210,7 @@ export class ProjectSaveManagementService {
 				});
 			}),
 			catchError(err => {
-				if (err === 'isComp') {
-					delete this._projectSource;
-				}
+				delete this._projectSource;
 				throw err;
 			}),
 			this.errorHandling.catchErrorOperatorDynamicMessage((err: any) => {

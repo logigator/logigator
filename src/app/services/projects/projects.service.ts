@@ -5,7 +5,6 @@ import {Action} from '../../models/action';
 import {ProjectSaveManagementService} from '../project-save-management/project-save-management.service';
 import {delayWhen} from 'rxjs/operators';
 import {WorkArea} from '../../models/rendering/work-area';
-import {ElementProviderService} from '../element-provider/element-provider.service';
 
 @Injectable({
 	providedIn: 'root'

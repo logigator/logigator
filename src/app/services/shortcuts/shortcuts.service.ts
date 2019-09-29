@@ -5,7 +5,7 @@ import {WorkModeService} from '../work-mode/work-mode.service';
 import {ProjectInteractionService} from '../project-interaction/project-interaction.service';
 import {ProjectsService} from '../projects/projects.service';
 import {ThemingService} from '../theming/theming.service';
-import {shortcutDescriptions} from './shortcut-descriptions';
+import {shortcutDescriptions, shortcutsUsableInSimulation} from './shortcut-descriptions';
 
 @Injectable({
 	providedIn: 'root'
@@ -37,7 +37,7 @@ export class ShortcutsService {
 
 	public keyDownListener(e: KeyboardEvent) {
 		const action = this.getShortcutActionFromEvent(e);
-		if (!action) return;
+		if (!action || (this.workMode.currentWorkMode === 'simulation' && !shortcutsUsableInSimulation[action])) return;
 		e.preventDefault();
 		e.stopPropagation();
 		this.applyAction(action);
