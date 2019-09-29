@@ -73,6 +73,39 @@ export class ProjectSaveManagementService {
 		);
 	}
 
+	public async addComponent(name: string, symbol: string) {
+		if (!name)
+			name = 'New Component';
+
+		const elementProvider = ElementProviderService.staticInstance;
+		let duplicate = 0;
+
+		while (Array.from(elementProvider.userDefinedElements.values())
+			.map(x => x.name)
+			.includes((duplicate === 0) ? name : `${name}-${duplicate}`)) {
+			duplicate++;
+		}
+		name = (duplicate === 0) ? name : `${name}-${duplicate}`;
+
+		let id;
+		if (this.user.isLoggedIn) {
+			id = await this.newComponentOnServer(name, symbol);
+			if (!id) return;
+		}
+
+		elementProvider.addUserDefinedElement({
+			description: '',
+			name,
+			rotation: 0,
+			minInputs: 0,
+			maxInputs: 0,
+			symbol,
+			numInputs: 0,
+			numOutputs: 0,
+			category: 'user'
+		}, id);
+	}
+
 	public save(projects: Project[]) {
 		if (!this._projectSource) {
 			this.saveAs();
@@ -121,7 +154,7 @@ export class ProjectSaveManagementService {
 		).toPromise();
 	}
 
-	public newComponent(name: string, symbol: string, description: string = ''): Promise<number> {
+	private newComponentOnServer(name: string, symbol: string, description: string = ''): Promise<number> {
 		return this.http.post<HttpResponseData<{id: number}>>('/api/project/create', {
 			name,
 			isComponent: true,

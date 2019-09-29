@@ -2,6 +2,7 @@ import { Component, OnInit } from '@angular/core';
 import {PopupContentComp} from '../popup-content-comp';
 import {FormBuilder, FormGroup, Validators} from '@angular/forms';
 import {ProjectsService} from '../../../../services/projects/projects.service';
+import {ProjectSaveManagementService} from '../../../../services/project-save-management/project-save-management.service';
 
 @Component({
 	selector: 'app-new-component',
@@ -12,7 +13,7 @@ export class NewComponentComponent extends PopupContentComp implements OnInit {
 
 	public newCompForm: FormGroup;
 
-	constructor(private formBuilder: FormBuilder, private projects: ProjectsService) {
+	constructor(private formBuilder: FormBuilder, private projects: ProjectsService, private saveManagement: ProjectSaveManagementService) {
 		super();
 	}
 
@@ -25,7 +26,7 @@ export class NewComponentComponent extends PopupContentComp implements OnInit {
 
 	public async fromSubmitClick() {
 		if (this.newCompForm.invalid) return;
-		await this.projects.newComponent(this.newCompForm.controls.compName.value, this.newCompForm.controls.compSymbol.value);
+		await this.saveManagement.addComponent(this.newCompForm.controls.compName.value, this.newCompForm.controls.compSymbol.value);
 		this.requestClose.emit();
 	}
 

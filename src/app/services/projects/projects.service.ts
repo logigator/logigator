@@ -62,37 +62,6 @@ export class ProjectsService {
 		);
 	}
 
-	public async newComponent(name: string, symbol: string) {
-		if (!name)
-			name = 'New Component';
-
-		const elementProvider = ElementProviderService.staticInstance;
-		let duplicate = 0;
-
-		while (Array.from(elementProvider.userDefinedElements.values())
-			.map(x => x.name)
-			.includes((duplicate === 0) ? name : `${name}-${duplicate}`)) {
-			duplicate++;
-		}
-		name = (duplicate === 0) ? name : `${name}-${duplicate}`;
-
-		const id = await this.projectSaveManagementService.newComponent(name, symbol);
-		if (!id)
-			return;
-
-		elementProvider.setUserDefinedTypes(elementProvider.userDefinedElements.set(id, {
-			description: '',
-			name,
-			rotation: 0,
-			minInputs: 0,
-			maxInputs: 0,
-			symbol,
-			numInputs: 0,
-			numOutputs: 0,
-			category: 'user'
-		}));
-	}
-
 	public switchToProject(id: number): void {
 		this._currProject = this._projects.get(id);
 	}

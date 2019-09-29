@@ -16,6 +16,7 @@ import { HelpDropdownComponent } from './components/top-bar-dropdowns/help-dropd
 import { SettingsDropdownComponent } from './components/top-bar-dropdowns/settings-dropdown/settings-dropdown.component';
 import { ShortcutTextPipe } from './pipes/shortcut-text/shortcut-text.pipe';
 import { PopupComponent } from './components/popup/popup/popup.component';
+// tslint:disable-next-line:max-line-length
 import { SingleShortcutConfigComponent } from './components/popup/popup-contents/shortcut-config/single-shortcut-config/single-shortcut-config.component';
 import { ShortcutConfigComponent } from './components/popup/popup-contents/shortcut-config/shortcut-config/shortcut-config.component';
 import { WindowWorkAreaComponent } from './components/window-work-area/window-work-area.component';

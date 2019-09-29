@@ -33,6 +33,10 @@ export class ElementProviderService {
 		this._userDefinedElements = elements;
 	}
 
+	public addUserDefinedElement(element: ElementType, id: number) {
+		this._userDefinedElements.set(id, element);
+	}
+
 	public getElementById(id: number): ElementType {
 		if (this._basicElements.has(id)) {
 			return this._basicElements.get(id);
