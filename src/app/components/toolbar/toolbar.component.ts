@@ -4,6 +4,8 @@ import {WorkModeService} from '../../services/work-mode/work-mode.service';
 import {ProjectsService} from '../../services/projects/projects.service';
 import {ProjectInteractionService} from '../../services/project-interaction/project-interaction.service';
 import {NgForm} from '@angular/forms';
+import {PopupService} from '../../services/popup/popup.service';
+import {NewComponentComponent} from '../popup/popup-contents/new-component/new-component.component';
 
 @Component({
 	selector: 'app-toolbar',
@@ -12,12 +14,11 @@ import {NgForm} from '@angular/forms';
 })
 export class ToolbarComponent implements OnInit {
 
-	public newComponentPopup = false;
-
 	constructor(
 		private workModeService: WorkModeService,
 		private projectService: ProjectsService,
-		private projectInteraction: ProjectInteractionService
+		private projectInteraction: ProjectInteractionService,
+		private popupService: PopupService
 	) { }
 
 	ngOnInit() {
@@ -31,9 +32,8 @@ export class ToolbarComponent implements OnInit {
 		return this.workModeService.currentWorkMode;
 	}
 
-	public newComponent(form: NgForm): void {
-		this.projectService.newComponent(form.form.value.name, form.form.value.symbol);
-		this.newComponentPopup = false;
+	public newComponent(): void {
+		this.popupService.showPopup(NewComponentComponent, 'New Component', false);
 	}
 
 	public undo(): void {

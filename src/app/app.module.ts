@@ -21,6 +21,7 @@ import { ShortcutConfigComponent } from './components/popup/popup-contents/short
 import { WindowWorkAreaComponent } from './components/window-work-area/window-work-area.component';
 import {HttpClientModule} from '@angular/common/http';
 import { ReloadQuestionComponent } from './components/popup/popup-contents/relaod-question/reload-question.component';
+import { NewComponentComponent } from './components/popup/popup-contents/new-component/new-component.component';
 
 @NgModule({
 	declarations: [
@@ -42,12 +43,14 @@ import { ReloadQuestionComponent } from './components/popup/popup-contents/relao
 		ShortcutConfigComponent,
 		PopupComponent,
 		WindowWorkAreaComponent,
-		ReloadQuestionComponent
+		ReloadQuestionComponent,
+		NewComponentComponent
 	],
 	entryComponents: [
 		PopupComponent,
 		ShortcutConfigComponent,
-		ReloadQuestionComponent
+		ReloadQuestionComponent,
+		NewComponentComponent
 	],
 	imports: [
 		BrowserModule,

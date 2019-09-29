@@ -1,0 +1,11 @@
+<form [formGroup]="newCompForm" (ngSubmit)="fromSubmitClick()" class="new-component-form" autocomplete="off">
+	<label for="new-component-form-name">Name</label>
+	<input type="text" name="name" id="new-component-form-name" formControlName="compName">
+	<br>
+
+	<label for="new-component-form-symbol">Symbol</label>
+	<input type="text" name="symbol" id="new-component-form-symbol" formControlName="compSymbol">
+	<br>
+
+	<button type="submit" [disabled]="newCompForm.invalid">Create</button>
+</form>
