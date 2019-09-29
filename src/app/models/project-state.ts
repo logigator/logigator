@@ -74,7 +74,7 @@ export class ProjectState {
 	}
 
 	private removeFromChunks(element: Element): void {
-		const chunkCoords = CollisionFunctions.inRectChunks(element.pos, element.endPos);
+		const chunkCoords = CollisionFunctions.inRectChunks(element.pos, element.endPos, Elements.wireEnds(element));
 		for (const chunk of this.chunksFromCoords(chunkCoords)) {
 			chunk.elements = chunk.elements.filter(elem => elem.id !== element.id);
 		}

@@ -15,7 +15,7 @@ export class Project {
 	private _currState: ProjectState;
 
 	private readonly _actions: Action[][];
-	private _maxActionCount = 10;
+	private _maxActionCount = 1000;
 	private _currActionPointer: number;
 	private _currMaxActionPointer: number;
 
@@ -32,6 +32,14 @@ export class Project {
 		this._currActionPointer = -1;
 		this._currMaxActionPointer = -1;
 		this._changeSubject = new Subject<Action[]>();
+	}
+
+	public static empty(): Project {
+		return new Project(new ProjectState(), {
+			type: 'project',
+			name: 'New Project',
+			id: 0
+		});
 	}
 
 
@@ -129,7 +137,7 @@ export class Project {
 		if (typeId === 0 && _pos.equals(_endPos))
 			return null;
 		const elem = Elements.genNewElement(typeId, _pos,
-			_endPos || Elements.calcEndPos(_pos, numInputs, numOutputs, rotation));
+			_endPos || Elements.calcEndPos(_pos, numInputs, numOutputs, rotation), rotation, numInputs);
 		if (!this._currState.isFreeSpace(elem.pos, elem.endPos, typeId === 0, Elements.wireEnds(elem)))
 			return null;
 		this._currState.addElement(elem);
@@ -281,6 +289,7 @@ export class Project {
 
 
 	private autoAssemble(elements: Element[]): Action[] {
+		Elements.removeDuplicates(elements);
 		const out: Action[] = [];
 		const merged = this.autoMerge(elements);
 		out.push(...merged.actions);
