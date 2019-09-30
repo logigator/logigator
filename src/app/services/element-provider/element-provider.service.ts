@@ -9,6 +9,7 @@ import {input} from '../../models/element-types/plug/input';
 import {output} from '../../models/element-types/plug/output';
 import {button} from '../../models/element-types/io/button';
 import {lever} from '../../models/element-types/io/lever';
+import {butt} from '../../models/element-types/plug/butt';
 
 @Injectable({
 	providedIn: 'root'
@@ -27,7 +28,8 @@ export class ElementProviderService {
 
 	private _plugElements: Map<number, ElementType> = new Map([
 		[10, input],
-		[11, output]
+		[11, output],
+		[12, butt]
 	]);
 
 	private _ioElements: Map<number, ElementType> = new Map([

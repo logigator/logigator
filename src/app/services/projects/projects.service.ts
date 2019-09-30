@@ -80,4 +80,8 @@ export class ProjectsService {
 	public saveAll() {
 		this.projectSaveManagementService.save(Array.from(this.allProjects.values()));
 	}
+
+	public getProjectById(id: number): Project {
+		return this._projects.get(id);
+	}
 }

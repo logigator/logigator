@@ -1,7 +1,6 @@
 import {Element} from '../element';
 
 export interface SimulationUnit {
-	id: number;
 	typeId: number;
 	inputs: number[];
 	outputs: number[];
@@ -13,10 +12,9 @@ export abstract class SimulationUnits {
 		return element.typeId === 0
 			? undefined
 			: {
-				id: element.id,
 				typeId: element.typeId,
-				inputs: [],
-				outputs: []
+				inputs: new Array(element.numInputs),
+				outputs: new Array(element.numOutputs)
 			};
 	}
 }
