@@ -1,2 +1,6 @@
-<p>open works!</p>
-<button (click)="openFile()">Open</button>
+<form (ngSubmit)="openFile()">
+	<p>Open File</p>
+	<input type="file" (change)="inputFileChanged($event)">
+	<button type="submit">Open</button>
+</form>
+

@@ -16,6 +16,8 @@ import {Observable} from 'rxjs';
 import {ErrorHandlingService} from '../error-handling/error-handling.service';
 import {PopupService} from '../popup/popup.service';
 import {SaveAsComponent} from '../../components/popup/popup-contents/save-as/save-as.component';
+import {ComponentLocalFile, ProjectLocalFile} from '../../models/project-local-file';
+import * as FileSaver from 'file-saver';
 
 @Injectable({
 	providedIn: 'root'
@@ -136,10 +138,35 @@ export class ProjectSaveManagementService {
 	}
 
 	public exportToFile(projects: Project[]) {
-		// need function to get all needed projects to export
+		// TODO: need function to get all needed projects to export
+		const mainProject = projects.find(p => p.type === 'project');
+		const components = projects.filter(p => p.type === 'comp');
+		const modelToSave: ProjectLocalFile = {
+			mainProject: {
+				id: mainProject.id,
+				name: mainProject.name,
+				data: mainProject.currState.model
+			},
+			components: components.map(c => {
+				const type = this.elemProvService.getElementById(c.id);
+				return {
+					data: c.currState.model,
+					type
+				} as ComponentLocalFile;
+			}) as ComponentLocalFile[]
+		};
+		const blob = new Blob([JSON.stringify(modelToSave)], {type: 'application/json;charset=utf-8'});
+		FileSaver.saveAs(blob, `${mainProject.name}.json`);
 	}
 
-	public openFromFile(): Project {
+	public openFromFile(content: string): Project {
+		let parsedFile: ProjectLocalFile;
+		try {
+			parsedFile = JSON.parse(content);
+		} catch (e) {
+			this.errorHandling.showErrorMessage('Invalid File');
+			return;
+		}
 		this._projectSource = 'file';
 		return this.createEmptyProject();
 	}

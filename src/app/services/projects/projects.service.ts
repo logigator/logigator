@@ -47,9 +47,10 @@ export class ProjectsService {
 		this._currentlyOpening = this._currentlyOpening.filter(o => id !== o);
 	}
 
-	public openFile() {
+	public openFile(content: string) {
+		const project = this.projectSaveManagementService.openFromFile(content);
+		if (!project) return;
 		this.allProjects.forEach((value, key) => this.closeProject(key));
-		const project = this.projectSaveManagementService.openFromFile();
 		this._projects.set(project.id, project);
 		this._currProject = project;
 		this._mainProject = project;

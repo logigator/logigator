@@ -30,4 +30,8 @@ export class ErrorHandlingService {
 			);
 		};
 	}
+
+	public showErrorMessage(message: string) {
+		console.error(message);
+	}
 }
