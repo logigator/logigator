@@ -1,10 +1,14 @@
 import { Injectable } from '@angular/core';
 import {ElementType} from '../../models/element-type';
-import {wire} from '../../models/element-types/wire';
-import {not} from '../../models/element-types/not';
-import {and} from '../../models/element-types/and';
-import {or} from '../../models/element-types/or';
-import {xor} from '../../models/element-types/xor';
+import {wire} from '../../models/element-types/basic/wire';
+import {not} from '../../models/element-types/basic/not';
+import {and} from '../../models/element-types/basic/and';
+import {or} from '../../models/element-types/basic/or';
+import {xor} from '../../models/element-types/basic/xor';
+import {input} from '../../models/element-types/plug/input';
+import {output} from '../../models/element-types/plug/output';
+import {button} from '../../models/element-types/io/button';
+import {lever} from '../../models/element-types/io/lever';
 
 @Injectable({
 	providedIn: 'root'
@@ -18,10 +22,18 @@ export class ElementProviderService {
 		[1, not],
 		[2, and],
 		[3, or],
-		[4, xor],
+		[4, xor]
 	]);
 
-	private _ioElements: Map<number, ElementType> = new Map<number, ElementType>();
+	private _plugElements: Map<number, ElementType> = new Map([
+		[10, input],
+		[11, output]
+	]);
+
+	private _ioElements: Map<number, ElementType> = new Map([
+		[20, button],
+		[21, lever]
+	]);
 
 	private _userDefinedElements: Map<number, ElementType> = new Map<number, ElementType>();
 
@@ -36,6 +48,8 @@ export class ElementProviderService {
 	public getElementById(id: number): ElementType {
 		if (this._basicElements.has(id)) {
 			return this._basicElements.get(id);
+		} else if (this._plugElements.has(id)) {
+			return this._plugElements.get(id);
 		} else if (this._ioElements.has(id)) {
 			return this._ioElements.get(id);
 		} else if (this._userDefinedElements.has(id)) {
@@ -48,6 +62,10 @@ export class ElementProviderService {
 		return this._basicElements;
 	}
 
+	public get plugElements(): Map<number, ElementType> {
+		return this._plugElements;
+	}
+
 	public get ioElements(): Map<number, ElementType> {
 		return this._ioElements;
 	}
@@ -55,5 +73,4 @@ export class ElementProviderService {
 	public get userDefinedElements(): Map<number, ElementType> {
 		return this._userDefinedElements;
 	}
-
 }

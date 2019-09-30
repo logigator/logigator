@@ -15,7 +15,7 @@ export class StateCompilerService {
 	}
 
 	// TODO just starting, do not even know outputs structure
-	public compile(state: ProjectState): void {
+	public compile(state: ProjectState): SimulationUnit[] {
 		const simulationUnits: SimulationUnit[] = [];
 		for (const element of state.allElements) {
 			const unit = SimulationUnits.fromElement(element);
@@ -24,12 +24,12 @@ export class StateCompilerService {
 				this.setUnitsInterfaces(state, element, unit);
 			}
 		}
-		console.log(simulationUnits);
+		return simulationUnits;
 	}
 
 	private setUnitsInterfaces(state: ProjectState, element: Element, unit: SimulationUnit): void {
 		for (const wireEndPos of Elements.wireEnds(element)) {
-			// TODO output gets cover by opposites inputs
+			// TODO output gets covered by opposites inputs
 			if (Elements.isInput(element, wireEndPos)) {
 				const connected = this.connectedToPos(state, wireEndPos, true, [unit.id]);
 				for (const con of connected) {

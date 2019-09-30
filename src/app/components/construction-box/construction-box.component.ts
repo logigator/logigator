@@ -17,6 +17,10 @@ export class ConstructionBoxComponent {
 		return this.componentProviderService.basicElements;
 	}
 
+	public get plugComponents(): Map<number, ElementType> {
+		return this.componentProviderService.plugElements;
+	}
+
 	public get ioComponents(): Map<number, ElementType> {
 		return this.componentProviderService.ioElements;
 	}
