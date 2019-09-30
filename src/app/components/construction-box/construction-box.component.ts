@@ -1,6 +1,7 @@
 import {Component} from '@angular/core';
 import {ElementProviderService} from '../../services/element-provider/element-provider.service';
-import {ElementType} from '../../models/element-type';
+import {ElementType} from '../../models/element-types/element-type';
+import {ProjectsService} from '../../services/projects/projects.service';
 
 @Component({
 	selector: 'app-construction-box',
@@ -11,7 +12,12 @@ export class ConstructionBoxComponent {
 
 	public searchText = '';
 
-	constructor(private componentProviderService: ElementProviderService) { }
+	constructor(private componentProviderService: ElementProviderService, private projects: ProjectsService) { }
+
+	public get showPlugComponents(): boolean {
+		if (!this.projects.currProject) return false;
+		return this.projects.currProject.type === 'comp';
+	}
 
 	public get basicComponents(): Map<number, ElementType> {
 		return this.componentProviderService.basicElements;

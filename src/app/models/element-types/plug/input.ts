@@ -1,4 +1,4 @@
-import {ElementType} from '../../element-type';
+import {ElementType} from '../element-type';
 
 export const input: ElementType = {
 	name: 'Input Plug',

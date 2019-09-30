@@ -1,5 +1,5 @@
 import { Injectable } from '@angular/core';
-import {ElementType} from '../../models/element-type';
+import {ElementType} from '../../models/element-types/element-type';
 import {wire} from '../../models/element-types/basic/wire';
 import {not} from '../../models/element-types/basic/not';
 import {and} from '../../models/element-types/basic/and';
