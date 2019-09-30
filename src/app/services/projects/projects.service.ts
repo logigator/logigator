@@ -42,6 +42,10 @@ export class ProjectsService {
 		if (this.allProjects.has(id) || this._currentlyOpening.includes(id)) return;
 		this._currentlyOpening.push(id);
 		const proj = await this.projectSaveManagementService.openComponent(id);
+		if (!proj) {
+			this._currentlyOpening = this._currentlyOpening.filter(o => id !== o);
+			return;
+		}
 		this._projects.set(id, proj);
 		this._projectOpenedSubject.next(id);
 		this._currentlyOpening = this._currentlyOpening.filter(o => id !== o);

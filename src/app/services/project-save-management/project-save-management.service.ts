@@ -26,6 +26,8 @@ export class ProjectSaveManagementService {
 
 	private _projectSource: 'server' | 'share' | 'file';
 
+	private _localComponentCache = new Map<number, OpenProjectResponse>();
+
 	constructor(
 		private http: HttpClient,
 		private elemProvService: ElementProviderService,
@@ -102,6 +104,21 @@ export class ProjectSaveManagementService {
 		if (this.user.isLoggedIn) {
 			id = await this.newComponentOnServer(name, symbol);
 			if (!id) return;
+		} else {
+			id = this.findFreeId();
+			this._localComponentCache.set(id, {
+				project: {
+					data: {
+						board: {
+							elements: []
+						}
+					},
+					name,
+					symbol,
+					description: '',
+					is_component: 1
+				}
+			});
 		}
 
 		elementProvider.addUserDefinedElement({
@@ -115,6 +132,12 @@ export class ProjectSaveManagementService {
 			numOutputs: 0,
 			category: 'user'
 		}, id);
+	}
+
+	private findFreeId(): number {
+		let id = 1000;
+		while (this._localComponentCache.has(id)) id++;
+		return id;
 	}
 
 	public save(projects: Project[]) {
@@ -150,12 +173,13 @@ export class ProjectSaveManagementService {
 			components: components.map(c => {
 				const type = this.elemProvService.getElementById(c.id);
 				return {
+					typeId: c.id,
 					data: c.currState.model,
 					type
 				} as ComponentLocalFile;
 			}) as ComponentLocalFile[]
 		};
-		const blob = new Blob([JSON.stringify(modelToSave)], {type: 'application/json;charset=utf-8'});
+		const blob = new Blob([JSON.stringify(modelToSave, null, 2)], {type: 'application/json;charset=utf-8'});
 		FileSaver.saveAs(blob, `${mainProject.name}.json`);
 	}
 
@@ -167,8 +191,36 @@ export class ProjectSaveManagementService {
 			this.errorHandling.showErrorMessage('Invalid File');
 			return;
 		}
+		parsedFile.components.forEach(c => {
+			this._localComponentCache.set(c.typeId, {
+				project: {
+					name: c.type.name,
+					data: this.getProjectModelFromJson(c.data),
+					pk_id: c.typeId,
+					description: c.type.description,
+					symbol: c.type.symbol,
+					is_component: 1,
+				}
+			});
+			this.elemProvService.addUserDefinedElement({
+				symbol: c.type.symbol,
+				description: c.type.description,
+				name: c.type.name,
+				category: 'user',
+				rotation: c.type.rotation,
+				numOutputs: c.type.numOutputs,
+				numInputs: c.type.numInputs,
+				maxInputs: c.type.maxInputs,
+				minInputs: c.type.minInputs
+			}, c.typeId);
+		});
+		const mainModel = this.getProjectModelFromJson(parsedFile.mainProject.data);
 		this._projectSource = 'file';
-		return this.createEmptyProject();
+		return new Project(new ProjectState(mainModel), {
+			type: 'project',
+			name: parsedFile.mainProject.name,
+			id: parsedFile.mainProject.id
+		});
 	}
 
 	private saveProjectsToServer(projects: Project[]): Promise<any> {
@@ -187,6 +239,16 @@ export class ProjectSaveManagementService {
 	}
 
 	public openComponent(id: number): Promise<Project> {
+		if (this._localComponentCache.has(id)) {
+			const cacheData = this._localComponentCache.get(id).project;
+			const project = new Project(new ProjectState(cacheData.data), {
+				id: Number(id),
+				name: cacheData.name,
+				type: 'comp'
+			});
+			return Promise.resolve(project);
+		}
+
 		return this.http.get<HttpResponseData<OpenProjectResponse>>(`/api/project/open/${id}`).pipe(
 			map(response => {
 				if (Number(response.result.project.is_component) === 0) {

@@ -11,6 +11,7 @@ export interface ProjectLocalFile {
 }
 
 export interface ComponentLocalFile {
+	typeId: number;
 	type: ElementType;
 	data: ProjectModel;
 }
