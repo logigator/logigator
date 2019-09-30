@@ -43,7 +43,7 @@ export class Elements {
 		element.endPos.y += dif.y;
 	}
 
-	public static genNewElement(typeId: number, _pos: PIXI.Point, _endPos: PIXI.Point): Element {
+	public static genNewElement(typeId: number, _pos: PIXI.Point, _endPos: PIXI.Point, rotation?: number, numInputs?: number): Element {
 		const type = ElementProviderService.staticInstance.getElementById(typeId);
 		const pos = _pos ? _pos.clone() : undefined;
 		const endPos = _endPos ? _endPos.clone() : undefined;
@@ -52,11 +52,11 @@ export class Elements {
 		return {
 			id: -1,
 			typeId,
-			numInputs: type.numInputs,
+			numInputs: numInputs || type.numInputs,
 			numOutputs: type.numOutputs,
 			pos,
 			endPos,
-			rotation: type.rotation
+			rotation: rotation || type.rotation
 		};
 	}
 
@@ -134,5 +134,15 @@ export class Elements {
 				out.push(new PIXI.Point(element.pos.x + i, element.pos.y - 1));
 		}
 		return out;
+	}
+
+	public static removeDuplicates(elements: Element[]): void {
+		for (let i = 0; i < elements.length - 1; i++) {
+			for (let j = i + 1; j < elements.length; j++) {
+				if (elements[i].id === elements[j].id) {
+					elements.splice(j, 1);
+				}
+			}
+		}
 	}
 }
