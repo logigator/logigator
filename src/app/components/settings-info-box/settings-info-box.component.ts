@@ -1,6 +1,6 @@
 import {Component, Input, OnChanges, OnDestroy, OnInit, SimpleChanges} from '@angular/core';
 import {ElementProviderService} from '../../services/element-provider/element-provider.service';
-import {ElementType} from '../../models/element-type';
+import {ElementType} from '../../models/element-types/element-type';
 import {ProjectsService} from '../../services/projects/projects.service';
 import {FormGroup, FormBuilder} from '@angular/forms';
 import {Subscription} from 'rxjs';
