@@ -98,6 +98,6 @@ export class ProjectsService {
 	}
 
 	public saveAll() {
-		this.projectSaveManagementService.save(Array.from(this.allProjects.values()));
+		this.projectSaveManagementService.saveProjects(Array.from(this.allProjects.values()));
 	}
 }
