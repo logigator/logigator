@@ -20,7 +20,7 @@ export class StateCompilerService {
 	}
 
 	// TODO check for recursion: userDefComp cannot include itself
-	public compile(state: ProjectState): SimulationUnit[] {
+	public compile(state: ProjectState, lowestId?: number, plugLinks?: Map<number, number>): Map<SimulationUnit, Element> {
 		const simulationUnits: Map<SimulationUnit, Element> = new Map<SimulationUnit, Element>();
 		for (const element of state.allElements) {
 			const unit = SimulationUnits.fromElement(element);
@@ -28,13 +28,22 @@ export class StateCompilerService {
 				simulationUnits.set(unit, element);
 			}
 		}
-		this.setUnitsInterfaces(state, simulationUnits);
-		// this.dissolveUserDefined(simulationUnits, state.highestTakenId);
-		return [...simulationUnits.keys()];
+		const highestLinkId = this.setUnitsInterfaces(state, simulationUnits, lowestId);
+		for (const simUnit of simulationUnits.keys()) {
+			if (this.elementProvider.isPlugElement(simUnit.typeId)) {
+				simulationUnits.delete(simUnit);
+			}
+		}
+		this.dissolveUserDefined(simulationUnits, highestLinkId + 1);
+		return simulationUnits;
 	}
 
-	private setUnitsInterfaces(state: ProjectState, units: Map<SimulationUnit, Element>): void {
-		let highestLinkId = 0;
+	private setUnitsInterfaces(
+		state: ProjectState, units: Map<SimulationUnit, Element>,
+		lowestId?: number,
+		plugLinks?: Map<number, number>):
+		number {
+		let highestLinkId = lowestId || 0;
 		const unitsOnLinks: Map<PIXI.Point[], number> = new Map<PIXI.Point[], number>();
 		for (const unit of units.keys()) {
 			const element = units.get(unit);
@@ -42,18 +51,23 @@ export class StateCompilerService {
 			for (const wireEndPos of Elements.wireEnds(element)) {
 				// TODO output gets covered by opposites inputs
 				const connected = this.connectedToPos(state, wireEndPos, []);
-				const linkId = this.mapHas(unitsOnLinks, connected)
-					? this.mapGet(unitsOnLinks, connected)
-					: ++highestLinkId;
-				unitsOnLinks.set(connected, linkId);
-				if (Elements.isInput(element, wireEndPos)) {
-					unit.inputs[wireEndIndex] = linkId;
+				if (this.elementProvider.isPlugElement(unit.typeId)) {
+					unitsOnLinks.set(connected, plugLinks.get(wireEndIndex));
 				} else {
-					unit.outputs[wireEndIndex - element.numInputs] = linkId;
+					const linkId = this.mapHas(unitsOnLinks, connected)
+						? this.mapGet(unitsOnLinks, connected)
+						: ++highestLinkId;
+					unitsOnLinks.set(connected, linkId);
+					if (Elements.isInput(element, wireEndPos)) {
+						unit.inputs[wireEndIndex] = linkId;
+					} else {
+						unit.outputs[wireEndIndex - element.numInputs] = linkId;
+					}
 				}
 				wireEndIndex++;
 			}
 		}
+		return highestLinkId;
 	}
 
 	private connectedToPos(state: ProjectState, pos: PIXI.Point, coveredPoints?: {id: number, pos: PIXI.Point}[]): PIXI.Point[] {
@@ -111,18 +125,24 @@ export class StateCompilerService {
 
 
 	// TODO test
-	private dissolveUserDefined(userDefUnits: SimulationUnit[], highestId: number): number {
-		for (const userDefUnit of userDefUnits) {
-			if (this.elementProvider.getElementById(userDefUnit.typeId).category !== 'user')
+	// TODO go deeper than one layer
+	private dissolveUserDefined(units: Map<SimulationUnit, Element>, lowestId: number): number {
+		for (const [unit, element] of units.entries()) {
+			if (this.elementProvider.isUserElement(unit.typeId))
 				return;
-			const unitsState = this.projects.getProjectById(userDefUnit.typeId).currState;
-			const units = this.compile(unitsState);
-			for (const unit of units) {
-				// unit.id = ++highestId;
-
+			const plugLinks: Map<number, number> = new Map<number, number>();
+			let wireIndex = 0;
+			for (const plugLink of unit.inputs.concat(unit.outputs)) {
+				plugLinks.set(wireIndex++, plugLink);
 			}
+			const unitsState = this.projects.getProjectById(unit.typeId).currState;
+			const insideUnits = this.compile(unitsState, lowestId, plugLinks);
+			insideUnits.forEach((v, k) => {
+				units.set(k, v);
+			});
+			units.delete(unit);
 		}
-		return highestId;
+		return lowestId;
 	}
 
 	// private isInputPlug(units: SimulationUnit[], id: number): boolean {

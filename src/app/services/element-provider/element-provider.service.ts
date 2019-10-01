@@ -60,6 +60,30 @@ export class ElementProviderService {
 		throw Error('Component not found. Project might be corrupted');
 	}
 
+	public isBasicElement(id: number): boolean {
+		return this._basicElements.has(id);
+	}
+
+	public isIoElement(id: number): boolean {
+		return this._ioElements.has(id);
+	}
+
+	public isPlugElement(id: number): boolean {
+		return this._plugElements.has(id);
+	}
+
+	public isInputElement(id: number): boolean {
+		return this._plugElements.has(id) && id === 10;
+	}
+
+	public isOutputElement(id: number): boolean {
+		return this._plugElements.has(id) && id === 11;
+	}
+
+	public isUserElement(id: number): boolean {
+		return this._userDefinedElements.has(id);
+	}
+
 	public get basicElements(): Map<number, ElementType> {
 		return this._basicElements;
 	}

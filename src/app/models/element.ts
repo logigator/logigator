@@ -12,6 +12,8 @@ export interface Element {
 	pos: PIXI.Point;
 	endPos: PIXI.Point;
 	rotation?: number;
+
+	plugIndex?: number;
 }
 
 export abstract class Elements {
@@ -56,7 +58,8 @@ export abstract class Elements {
 			numOutputs: type.numOutputs,
 			pos,
 			endPos,
-			rotation: rotation || type.rotation
+			rotation: rotation || type.rotation,
+			plugIndex: ElementProviderService.staticInstance.isPlugElement(typeId) ? 0 : undefined
 		};
 	}
 
