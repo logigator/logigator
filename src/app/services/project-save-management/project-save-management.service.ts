@@ -12,12 +12,10 @@ import {ComponentInfoResponse} from '../../models/http-responses/component-info-
 import {ProjectState} from '../../models/project-state';
 import {ElementProviderService} from '../element-provider/element-provider.service';
 import {UserService} from '../user/user.service';
-import {Observable} from 'rxjs';
 import {ErrorHandlingService} from '../error-handling/error-handling.service';
 import {PopupService} from '../popup/popup.service';
 import {SaveAsComponent} from '../../components/popup/popup-contents/save-as/save-as.component';
-import {ComponentLocalFile, ProjectLocalFile} from '../../models/project-local-file';
-import * as FileSaver from 'file-saver';
+import {ComponentLocalFile} from '../../models/project-local-file';
 import {ProjectModelResponse} from '../../models/http-responses/project-model-response';
 import {CreateProjectResponse} from '../../models/http-responses/create-project-response';
 
@@ -29,6 +27,8 @@ export class ProjectSaveManagementService {
 	private _projectSource: 'server' | 'share';
 
 	private _mappings = new Map<number, {database: number, model: number}[]>();
+	private _allComponentsOnServer = new Map<number, ElementType>();
+	private _componentsFromLocalFile = new Map<number, ComponentLocalFile>();
 
 	constructor(
 		private http: HttpClient,
@@ -52,23 +52,51 @@ export class ProjectSaveManagementService {
 		return project;
 	}
 
-	public addCustomComponent(name: string, symbol: string) {
+	public async addCustomComponent(name: string, symbol: string, description = '') {
+		if (!name)
+			name = 'New Component';
 
+		const elementProvider = ElementProviderService.staticInstance;
+		let duplicate = 0;
+
+		while (Array.from(elementProvider.userDefinedElements.values())
+			.map(x => x.name)
+			.includes((duplicate === 0) ? name : `${name}-${duplicate}`)) {
+			duplicate++;
+		}
+		name = (duplicate === 0) ? name : `${name}-${duplicate}`;
+
+		let id;
+		if (this.user.isLoggedIn) {
+			id = await this.newCustomComponentOnServer(name, symbol, description);
+			this.elemProvService.addUserDefinedElement({
+				numOutputs: 0,
+				maxInputs: 0,
+				name,
+				description,
+				symbol,
+				numInputs: 0,
+				minInputs: 0,
+				category: 'user',
+				rotation: 0
+			}, id);
+			if (!id) return;
+		}
 	}
 
 	public openFromFile(content: string): Project {
-
+		return this.createEmptyProject();
 	}
 
 	public exportToFile(allOpenProjects: Project[]) {
-
+		const mainProject = allOpenProjects.find(p => p.type === 'project');
 	}
 
-	public async saveAsNewProjectServer(projects: Project[], name: string) {
+	public async saveAsNewProjectServer(projects: Project[], name: string): Promise<Project> {
 		const mainProject = projects.find(p => p.type === 'project');
 		const components = projects.filter(p => p.type === 'comp');
 		const newId = await this.createProjectServer(name);
-		if (!newId) return ;
+		if (!newId) return;
 		this._projectSource = 'server';
 		const newProject = new Project(new ProjectState(mainProject.currState.model), {
 			name,
@@ -137,6 +165,21 @@ export class ProjectSaveManagementService {
 		return location.pathname.startsWith('/share/');
 	}
 
+	private newCustomComponentOnServer(name: string, symbol: string, description: string = ''): Promise<number> {
+		return this.http.post<HttpResponseData<{id: number}>>('/api/project/create', {
+			name,
+			isComponent: true,
+			symbol,
+			description
+		}).pipe(
+			map(response => response.result.id),
+			this.errorHandling.catchErrorOperatorDynamicMessage(
+				(err: any) => `Unable to create component: ${err.error.error.description}`,
+				undefined
+			)
+		).toPromise();
+	}
+
 	private saveProjectsToServer(projects: Project[]): Promise<any> {
 		const allPromises = [];
 		projects.forEach(proj => {
@@ -148,7 +191,7 @@ export class ProjectSaveManagementService {
 
 	private saveSingleProjectToServer(project: Project): Promise<HttpResponseData<{success: boolean}>> {
 		const mappings = this._mappings.get(project.id) || [];
-		//TODO map back
+		// TODO map back
 		return this.http.post<HttpResponseData<{success: boolean}>>(`/api/project/save/${project.id}`, {
 			data: {
 				...project.currState.model,
@@ -179,6 +222,7 @@ export class ProjectSaveManagementService {
 					};
 					newElemTypes.set(Number(elem.pk_id), elemType);
 				});
+				this._allComponentsOnServer = newElemTypes;
 				return newElemTypes;
 			}),
 			this.errorHandling.catchErrorOperator('Cannot get Components from Server', new Map<number, ElementType>()),

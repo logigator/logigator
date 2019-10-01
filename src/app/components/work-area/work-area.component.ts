@@ -106,7 +106,7 @@ export class WorkAreaComponent extends WorkArea implements OnInit, OnDestroy {
 		// this._pixiWindowContainer.show();
 	}
 
-	private tabCloseClicked(id: number, event: MouseEvent) {
+	public tabCloseClicked(id: number, event: MouseEvent) {
 		event.stopPropagation();
 		if (this._allViews.size <= 1) return;
 		this.projectsService.closeProject(id);
