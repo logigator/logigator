@@ -31,10 +31,13 @@ export class ToolbarComponent implements OnInit {
 	}
 
 	public undo(): void {
-		this.projectService.currProject.stepBack();
+		console.log('~~~~');
+		this.stateCompiler.compile(this.projectService.currProject.currState).forEach(console.log);
+		// this.projectService.currProject.stepBack();
 	}
 
 	public redo(): void {
+		console.log(this.projectService.currProject.allElements);
 		this.projectService.currProject.stepForward();
 	}
 

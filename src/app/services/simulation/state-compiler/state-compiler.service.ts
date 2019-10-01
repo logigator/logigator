@@ -19,8 +19,12 @@ export class StateCompilerService {
 		StateCompilerService.staticInstance = this;
 	}
 
+	public compile(state: ProjectState): SimulationUnit[] {
+		return [...this.mappedCompile(state).keys()];
+	}
+
 	// TODO check for recursion: userDefComp cannot include itself
-	public compile(state: ProjectState, lowestId?: number, plugLinks?: Map<number, number>): Map<SimulationUnit, Element> {
+	private mappedCompile(state: ProjectState, lowestId?: number, plugLinks?: Map<number, number>): Map<SimulationUnit, Element> {
 		const simulationUnits: Map<SimulationUnit, Element> = new Map<SimulationUnit, Element>();
 		for (const element of state.allElements) {
 			const unit = SimulationUnits.fromElement(element);
@@ -28,7 +32,8 @@ export class StateCompilerService {
 				simulationUnits.set(unit, element);
 			}
 		}
-		const highestLinkId = this.setUnitsInterfaces(state, simulationUnits, lowestId);
+		plugLinks = plugLinks || new Map<number, number>();
+		const highestLinkId = this.setUnitsInterfaces(state, simulationUnits, lowestId, plugLinks);
 		for (const simUnit of simulationUnits.keys()) {
 			if (this.elementProvider.isPlugElement(simUnit.typeId)) {
 				simulationUnits.delete(simUnit);
@@ -39,21 +44,23 @@ export class StateCompilerService {
 	}
 
 	private setUnitsInterfaces(
-		state: ProjectState, units: Map<SimulationUnit, Element>,
+		state: ProjectState,
+		units: Map<SimulationUnit, Element>,
 		lowestId?: number,
 		plugLinks?: Map<number, number>):
 		number {
 		let highestLinkId = lowestId || 0;
 		const unitsOnLinks: Map<PIXI.Point[], number> = new Map<PIXI.Point[], number>();
-		for (const unit of units.keys()) {
-			const element = units.get(unit);
+		// let plugIndex = 0;
+		this.fillPlugsInUnitsOnLinks(state, unitsOnLinks, units, plugLinks);
+		for (const [unit, element] of units.entries()) {
 			let wireEndIndex = 0;
 			for (const wireEndPos of Elements.wireEnds(element)) {
 				// TODO output gets covered by opposites inputs
-				const connected = this.connectedToPos(state, wireEndPos, []);
 				if (this.elementProvider.isPlugElement(unit.typeId)) {
-					unitsOnLinks.set(connected, plugLinks.get(wireEndIndex));
+					// unitsOnLinks.set(connected, plugLinks.get(plugIndex++));
 				} else {
+					const connected = this.connectedToPos(state, wireEndPos, []);
 					const linkId = this.mapHas(unitsOnLinks, connected)
 						? this.mapGet(unitsOnLinks, connected)
 						: ++highestLinkId;
@@ -68,6 +75,22 @@ export class StateCompilerService {
 			}
 		}
 		return highestLinkId;
+	}
+
+	private fillPlugsInUnitsOnLinks(
+		state: ProjectState,
+		unitsOnLinks: Map<PIXI.Point[], number>,
+		units: Map<SimulationUnit, Element>,
+		plugLinks?: Map<number, number>): void {
+		let plugIndex = 0;
+		for (const [unit, element] of units.entries()) {
+			if (!this.elementProvider.isPlugElement(unit.typeId))
+				continue;
+			for (const wireEndPos of Elements.wireEnds(element)) {
+				const connected = this.connectedToPos(state, wireEndPos, []);
+				unitsOnLinks.set(connected, plugLinks.get(plugIndex++));
+			}
+		}
 	}
 
 	private connectedToPos(state: ProjectState, pos: PIXI.Point, coveredPoints?: {id: number, pos: PIXI.Point}[]): PIXI.Point[] {
@@ -125,25 +148,24 @@ export class StateCompilerService {
 
 
 	// TODO test
-	// TODO go deeper than one layer
 	private dissolveUserDefined(units: Map<SimulationUnit, Element>, lowestId: number): number {
 		for (const [unit, element] of units.entries()) {
 			if (!this.elementProvider.isUserElement(unit.typeId))
 				continue;
-			this.dissolveSingle(unit, lowestId, units);
+			this.dissolveSingle(units, unit, lowestId);
 			units.delete(unit);
 		}
 		return lowestId;
 	}
 
-	private dissolveSingle(unit: SimulationUnit, lowestId: number, units: Map<SimulationUnit, Element>): void {
+	private dissolveSingle(units: Map<SimulationUnit, Element>, unit: SimulationUnit, lowestId: number): void {
 		const plugLinks: Map<number, number> = new Map<number, number>();
 		let wireIndex = 0;
 		for (const plugLink of unit.inputs.concat(unit.outputs)) {
 			plugLinks.set(wireIndex++, plugLink);
 		}
 		const unitsState = this.projects.getProjectById(unit.typeId).currState;
-		const insideUnits = this.compile(unitsState, lowestId, plugLinks);
+		const insideUnits = this.mappedCompile(unitsState, lowestId, plugLinks);
 		insideUnits.forEach((v, k) => {
 			units.set(k, v);
 		});

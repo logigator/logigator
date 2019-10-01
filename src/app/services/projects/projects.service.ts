@@ -5,6 +5,8 @@ import {Action} from '../../models/action';
 import {ProjectSaveManagementService} from '../project-save-management/project-save-management.service';
 import {delayWhen} from 'rxjs/operators';
 import {WorkArea} from '../../models/rendering/work-area';
+import {ProjectState} from '../../models/project-state';
+import {TestModel} from '../../models/tests/test-model';
 
 @Injectable({
 	providedIn: 'root'
@@ -24,6 +26,19 @@ export class ProjectsService {
 
 	constructor(private projectSaveManagementService: ProjectSaveManagementService) {
 		ProjectsService.staticInstance = this;
+
+		// const main = new Project(new ProjectState(TestModel.mainModel), {id: 1000, name: 'main', type: 'project'});
+		// const comp = new Project(new ProjectState(TestModel.compModel), {id: 1001, name: 'mycomp', type: 'comp'});
+		const main = Project.empty('main');
+		const comp = Project.empty('mycomp');
+		comp.type = 'comp';
+		this._projects.set(1000, main);
+		this._projects.set(1001, comp);
+		this._projectOpenedSubject.next(1000);
+		this._projectOpenedSubject.next(1001);
+
+		this._mainProject = main;
+		this._currProject = main;
 
 		this.projectSaveManagementService.getProjectToOpenOnLoad().then(project => {
 			this._projects.set(project.id, project);

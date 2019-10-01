@@ -35,10 +35,10 @@ export class Project {
 		this._changeSubject = new Subject<Action[]>();
 	}
 
-	public static empty(): Project {
+	public static empty(name?: string): Project {
 		return new Project(new ProjectState(), {
 			type: 'project',
-			name: 'New Project',
+			name: name || 'New Project',
 			id: 0
 		});
 	}
@@ -383,6 +383,10 @@ export class Project {
 
 	get type(): 'project' | 'comp' {
 		return this._type;
+	}
+
+	set type(value: 'project' | 'comp') {
+		this._type = value;
 	}
 
 	get numInputs() {
