@@ -4,6 +4,7 @@ import {Element, Elements} from './element';
 import {Observable, Subject} from 'rxjs';
 import * as PIXI from 'pixi.js';
 import {CollisionFunctions} from './collision-functions';
+import {ElementProviderService} from '../services/element-provider/element-provider.service';
 
 export class Project {
 
@@ -357,7 +358,7 @@ export class Project {
 
 
 	get allElements(): Element[] {
-		return this._currState.model.board.elements;
+		return this._currState.allElements;
 	}
 
 	get changes(): Observable<Action[]> {
@@ -382,5 +383,13 @@ export class Project {
 
 	get type(): 'project' | 'comp' {
 		return this._type;
+	}
+
+	get numInputs() {
+		return this._currState.numInputs;
+	}
+
+	get numOutputs() {
+		return this._currState.numOutputs;
 	}
 }

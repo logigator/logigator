@@ -4,6 +4,7 @@ import {Element, Elements} from './element';
 import * as PIXI from 'pixi.js';
 import {CollisionFunctions} from './collision-functions';
 import {Action, ChangeType} from './action';
+import {ElementProviderService} from '../services/element-provider/element-provider.service';
 
 export class ProjectState {
 
@@ -15,6 +16,8 @@ export class ProjectState {
 
 	public specialActions: Action[] = [];
 
+	public numInputs = 0;
+	public numOutputs = 0;
 
 
 	public constructor(model?: ProjectModel, highestId?: number) {
@@ -201,6 +204,11 @@ export class ProjectState {
 	public addElement(elem: Element, id?: number): Element {
 		elem.id = id || this.getNextId();
 		this._model.board.elements.push(elem);
+		if (ElementProviderService.staticInstance.isInputElement(elem.typeId)) {
+			this.numInputs++;
+		} else if (ElementProviderService.staticInstance.isOutputElement(elem.typeId)) {
+			this.numOutputs++;
+		}
 		this.loadIntoChunks(elem);
 		return elem;
 	}
@@ -211,6 +219,11 @@ export class ProjectState {
 			return null;
 		const outElem = this._model.board.elements[outElemIndex];
 		this._model.board.elements.splice(outElemIndex, 1);
+		if (ElementProviderService.staticInstance.isInputElement(outElem.typeId)) {
+			this.numInputs--;
+		} else if (ElementProviderService.staticInstance.isOutputElement(outElem.typeId)) {
+			this.numOutputs--;
+		}
 		this.removeFromChunks(outElem);
 		return outElem;
 	}
@@ -414,8 +427,28 @@ export class ProjectState {
 		return out;
 	}
 
+
+	public inputOutputCount(): {numInputs: number, numOutputs: number} {
+		let numInputs = 0;
+		let numOutputs = 0;
+		this.allElements.forEach(e => {
+			if (ElementProviderService.staticInstance.isInputElement(e.typeId)) {
+				numInputs++;
+			} else if (ElementProviderService.staticInstance.isInputElement(e.typeId)) {
+				numOutputs++;
+			}
+		});
+		this.numInputs = numInputs;
+		this.numOutputs = numOutputs;
+		return {numInputs, numOutputs};
+	}
+
 	public chunk(x: number, y: number): Chunk {
 		return this._chunks[x] ? this._chunks[x][y] : null;
+	}
+
+	get allElements(): Element[] {
+		return this.model.board.elements;
 	}
 
 	get chunks(): Chunk[][] {
