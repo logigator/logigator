@@ -82,10 +82,36 @@ export class ProjectSaveManagementService {
 			}, id);
 			if (!id) return;
 		} else {
-			// TODO: create component in local map
+			const newIndex = this.findNextLocalCompId();
+			const newComp: ComponentLocalFile = {
+				typeId: newIndex,
+				data: {
+					board: {
+						elements: []
+					}
+				},
+				type: {
+					numOutputs: 0,
+					maxInputs: 0,
+					name,
+					description,
+					symbol,
+					numInputs: 0,
+					minInputs: 0,
+					category: 'user',
+					rotation: 0
+				}
+			};
+			this._componentsFromLocalFile.set(newIndex, newComp);
+			this.elemProvService.addUserDefinedElement(newComp.type, newIndex);
 		}
 	}
 
+	private findNextLocalCompId(): number {
+		let id = 500;
+		while (this._componentsFromLocalFile.has(500)) id++;
+		return id;
+	}
 	public openFromFile(content: string): Project {
 		let parsedFile: ProjectLocalFile;
 		try {
@@ -339,9 +365,7 @@ export class ProjectSaveManagementService {
 				});
 			}),
 			catchError(err => {
-				if (err === 'isComp') {
-					delete this._projectSource;
-				}
+				delete this._projectSource;
 				throw err;
 			}),
 			this.errorHandling.catchErrorOperatorDynamicMessage((err: any) => {
