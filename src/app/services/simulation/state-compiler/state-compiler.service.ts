@@ -128,28 +128,24 @@ export class StateCompilerService {
 	// TODO go deeper than one layer
 	private dissolveUserDefined(units: Map<SimulationUnit, Element>, lowestId: number): number {
 		for (const [unit, element] of units.entries()) {
-			if (this.elementProvider.isUserElement(unit.typeId))
-				return;
-			const plugLinks: Map<number, number> = new Map<number, number>();
-			let wireIndex = 0;
-			for (const plugLink of unit.inputs.concat(unit.outputs)) {
-				plugLinks.set(wireIndex++, plugLink);
-			}
-			const unitsState = this.projects.getProjectById(unit.typeId).currState;
-			const insideUnits = this.compile(unitsState, lowestId, plugLinks);
-			insideUnits.forEach((v, k) => {
-				units.set(k, v);
-			});
+			if (!this.elementProvider.isUserElement(unit.typeId))
+				continue;
+			this.dissolveSingle(unit, lowestId, units);
 			units.delete(unit);
 		}
 		return lowestId;
 	}
 
-	// private isInputPlug(units: SimulationUnit[], id: number): boolean {
-	// 	return this.elementProvider.getElementById(units.find(u => u.id === id).typeId).name === 'Input Plug';
-	// }
-	//
-	// private isOutputPlug(units: SimulationUnit[], id: number): boolean {
-	// 	return this.elementProvider.getElementById(units.find(u => u.id === id).typeId).name === 'Output Plug';
-	// }
+	private dissolveSingle(unit: SimulationUnit, lowestId: number, units: Map<SimulationUnit, Element>): void {
+		const plugLinks: Map<number, number> = new Map<number, number>();
+		let wireIndex = 0;
+		for (const plugLink of unit.inputs.concat(unit.outputs)) {
+			plugLinks.set(wireIndex++, plugLink);
+		}
+		const unitsState = this.projects.getProjectById(unit.typeId).currState;
+		const insideUnits = this.compile(unitsState, lowestId, plugLinks);
+		insideUnits.forEach((v, k) => {
+			units.set(k, v);
+		});
+	}
 }
