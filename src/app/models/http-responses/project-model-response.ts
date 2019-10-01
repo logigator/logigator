@@ -1,8 +1,10 @@
 import {ProjectModel} from '../project-model';
 
 export interface ProjectModelResponse extends ProjectModel {
-	mappings: {
-		database: number,
-		model: number
-	}[];
+	mappings: ModelDatabaseMap[];
+}
+
+export interface ModelDatabaseMap {
+	database: number;
+	model: number;
 }

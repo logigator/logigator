@@ -37,6 +37,12 @@ export class ElementProviderService {
 		this._userDefinedElements.set(id, element);
 	}
 
+	public clearElementsFromFile() {
+		for (const key of this.userDefinedElements.keys()) {
+			if (key < 1000 && key >= 500) this.userDefinedElements.delete(key);
+		}
+	}
+
 	public getElementById(id: number): ElementType {
 		if (this._basicElements.has(id)) {
 			return this._basicElements.get(id);
