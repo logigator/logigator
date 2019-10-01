@@ -120,6 +120,7 @@ export class ProjectSaveManagementService {
 			this.errorHandling.showErrorMessage('Invalid File');
 			return;
 		}
+		delete this._projectSource;
 		this.elemProvService.clearElementsFromFile();
 		parsedFile.components.forEach(c => {
 			this._componentsFromLocalFile.set(c.typeId, c);
@@ -134,8 +135,12 @@ export class ProjectSaveManagementService {
 	}
 
 	public async exportToFile(allOpenProjects: Project[], name?: string) {
+		const cache = new Map<number, Project>();
+		for (const project of allOpenProjects) {
+			if (project.id >= 1000) cache.set(project.id, project);
+		}
 		const mainProject = allOpenProjects.find(p => p.type === 'project');
-		const deps = Array.from((await this.buildDependencyTree(mainProject, new Map<number, Project>())).values());
+		const deps = Array.from((await this.buildDependencyTree(mainProject, new Map<number, Project>(), cache)).values());
 		const mapping: ModelDatabaseMap[] = [];
 		for (let i = 0; i < deps.length; i++) {
 			mapping.push({
@@ -162,12 +167,20 @@ export class ProjectSaveManagementService {
 		FileSaver.saveAs(blob, `${mainProject.name}.json`);
 	}
 
-	private async buildDependencyTree(project: Project, resolved: Map<number, Project>): Promise<Map<number, Project>> {
+	private async buildDependencyTree(
+		project: Project,
+		resolved: Map<number, Project>,
+		cachedProjects: Map<number, Project>): Promise<Map<number, Project>> {
 		for (const element of project.currState.model.board.elements) {
 			if (element.typeId >= 500 && !resolved.has(element.typeId)) {
-				const proj = await this.openComponent(element.typeId);
+				let proj;
+				if (cachedProjects.has(element.typeId)) {
+					proj = cachedProjects.get(element.typeId);
+				} else {
+					proj = await this.openComponent(element.typeId);
+				}
 				resolved.set(element.typeId, proj);
-				resolved = new Map([...resolved, ...(await this.buildDependencyTree(proj, resolved))]);
+				resolved = new Map([...resolved, ...(await this.buildDependencyTree(proj, resolved, cachedProjects))]);
 			}
 		}
 		return resolved;
@@ -175,26 +188,12 @@ export class ProjectSaveManagementService {
 
 	public async saveAsNewProjectServer(projects: Project[], name: string): Promise<Project> {
 		const mainProject = projects.find(p => p.type === 'project');
-		const components = projects.filter(p => p.type === 'comp');
-		// TODO: build dependency tree and if comp is found on server update, if not create, map all ids to new database ids
-		const newId = await this.createProjectServer(name);
-		if (!newId) return;
-		this._projectSource = 'server';
-		const newProject = new Project(new ProjectState(mainProject.currState.model), {
-			name,
-			id: newId,
-			type: 'project'
-		});
-		newProject.dirty = true;
-		try {
-			await this.saveProjects([newProject]);
-			this.saveProjects(components);
-			return newProject;
-		} catch (e) {
-			delete this._projectSource;
-			this.errorHandling.showErrorMessage('Unable to save new Project');
-			return null;
+		const cache = new Map<number, Project>();
+		for (const project of projects) {
+			if (project.id >= 1000) cache.set(project.id, project);
 		}
+		const deps = Array.from((await this.buildDependencyTree(mainProject, new Map<number, Project>(), cache)).values());
+		// todo: create 500-1000 in database, map to new ids, save
 	}
 
 	private async createProjectServer(name: string): Promise<number> {
@@ -259,7 +258,7 @@ export class ProjectSaveManagementService {
 			symbol,
 			description
 		}).pipe(
-			map(response => response.result.id),
+			map(response => Number(response.result.id)),
 			this.errorHandling.catchErrorOperatorDynamicMessage(
 				(err: any) => `Unable to create component: ${err.error.error.description}`,
 				undefined

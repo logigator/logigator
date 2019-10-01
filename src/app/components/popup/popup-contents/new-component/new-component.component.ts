@@ -24,9 +24,9 @@ export class NewComponentComponent extends PopupContentComp implements OnInit {
 		});
 	}
 
-	public async fromSubmitClick() {
+	public fromSubmitClick() {
 		if (this.newCompForm.invalid) return;
-		await this.saveManagement.addCustomComponent(this.newCompForm.controls.compName.value, this.newCompForm.controls.compSymbol.value);
+		this.saveManagement.addCustomComponent(this.newCompForm.controls.compName.value, this.newCompForm.controls.compSymbol.value);
 		this.requestClose.emit();
 	}
 
