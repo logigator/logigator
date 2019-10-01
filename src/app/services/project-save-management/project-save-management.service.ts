@@ -15,9 +15,11 @@ import {UserService} from '../user/user.service';
 import {ErrorHandlingService} from '../error-handling/error-handling.service';
 import {PopupService} from '../popup/popup.service';
 import {SaveAsComponent} from '../../components/popup/popup-contents/save-as/save-as.component';
-import {ComponentLocalFile} from '../../models/project-local-file';
+import {ComponentLocalFile, ProjectLocalFile} from '../../models/project-local-file';
 import {ProjectModelResponse} from '../../models/http-responses/project-model-response';
 import {CreateProjectResponse} from '../../models/http-responses/create-project-response';
+import {SaveProjectRequest} from '../../models/http-requests/save-project-request';
+import * as FileSaver from 'file-saver';
 
 @Injectable({
 	providedIn: 'root'
@@ -27,7 +29,6 @@ export class ProjectSaveManagementService {
 	private _projectSource: 'server' | 'share';
 
 	private _mappings = new Map<number, {database: number, model: number}[]>();
-	private _allComponentsOnServer = new Map<number, ElementType>();
 	private _componentsFromLocalFile = new Map<number, ComponentLocalFile>();
 
 	constructor(
@@ -88,8 +89,39 @@ export class ProjectSaveManagementService {
 		return this.createEmptyProject();
 	}
 
-	public exportToFile(allOpenProjects: Project[]) {
+	public async exportToFile(allOpenProjects: Project[]) {
 		const mainProject = allOpenProjects.find(p => p.type === 'project');
+		const deps = Array.from((await this.buildDependencyTree(mainProject, new Map<number, Project>())).values());
+		// map ids to be 500+
+
+		const modelToSave: ProjectLocalFile = {
+			mainProject: {
+				id: mainProject.id,
+				name: mainProject.name,
+				data: mainProject.currState.model
+			},
+			components: deps.map(c => {
+				const type = this.elemProvService.getElementById(c.id);
+				return {
+					typeId: c.id,
+					data: c.currState.model,
+					type
+				} as ComponentLocalFile;
+			}) as ComponentLocalFile[]
+		};
+		const blob = new Blob([JSON.stringify(modelToSave, null, 2)], {type: 'application/json;charset=utf-8'});
+		FileSaver.saveAs(blob, `${mainProject.name}.json`);
+	}
+
+	private async buildDependencyTree(project: Project, resolved: Map<number, Project>): Promise<Map<number, Project>> {
+		for (const element of project.currState.model.board.elements) {
+			if (element.typeId >= 500 && !resolved.has(element.typeId)) {
+				const proj = await this.openComponent(element.typeId);
+				resolved.set(element.typeId, proj);
+				resolved = new Map([...resolved, ...(await this.buildDependencyTree(proj, resolved))]);
+			}
+		}
+		return resolved;
 	}
 
 	public async saveAsNewProjectServer(projects: Project[], name: string): Promise<Project> {
@@ -192,12 +224,18 @@ export class ProjectSaveManagementService {
 	private saveSingleProjectToServer(project: Project): Promise<HttpResponseData<{success: boolean}>> {
 		const mappings = this._mappings.get(project.id) || [];
 		// TODO map back
-		return this.http.post<HttpResponseData<{success: boolean}>>(`/api/project/save/${project.id}`, {
+
+		const body: SaveProjectRequest = {
 			data: {
 				...project.currState.model,
 				...{mappings}
 			}
-		}).toPromise();
+		};
+		if (project.type === 'comp') {
+			body.num_inputs = 1;
+			body.num_outputs = 1;
+		}
+		return this.http.post<HttpResponseData<{success: boolean}>>(`/api/project/save/${project.id}`, body).toPromise();
 	}
 
 	private getCustomElementsFromServer(): Promise<Map<number, ElementType>> {
@@ -222,7 +260,6 @@ export class ProjectSaveManagementService {
 					};
 					newElemTypes.set(Number(elem.pk_id), elemType);
 				});
-				this._allComponentsOnServer = newElemTypes;
 				return newElemTypes;
 			}),
 			this.errorHandling.catchErrorOperator('Cannot get Components from Server', new Map<number, ElementType>()),
