@@ -3,7 +3,7 @@ import {Project} from '../../models/project';
 import {Observable, of, ReplaySubject, Subject} from 'rxjs';
 import {Action} from '../../models/action';
 import {ProjectSaveManagementService} from '../project-save-management/project-save-management.service';
-import {delayWhen} from 'rxjs/operators';
+import {delayWhen, tap} from 'rxjs/operators';
 import {WorkArea} from '../../models/rendering/work-area';
 import {SaveAsComponent} from '../../components/popup/popup-contents/save-as/save-as.component';
 import {PopupService} from '../popup/popup.service';
@@ -54,6 +54,7 @@ export class ProjectsService {
 	}
 
 	public newProject() {
+		this.projectSaveManagementService.resetProjectSource();
 		const project = this.projectSaveManagementService.createEmptyProject();
 		this.allProjects.forEach((value, key) => this.closeProject(key));
 		this._projects.set(project.id, project);
@@ -104,6 +105,7 @@ export class ProjectsService {
 	}
 
 	public closeProject(id: number) {
+		this.projectSaveManagementService.saveComponent(this._projects.get(id));
 		this._projectClosedSubject.next(id);
 		this._projects.delete(id);
 	}

@@ -1,5 +1,5 @@
 import * as PIXI from 'pixi.js';
-import {fromEvent, Subject} from 'rxjs';
+import {fromEvent, ReplaySubject, Subject} from 'rxjs';
 import {takeUntil} from 'rxjs/operators';
 import {ElementRef, Renderer2} from '@angular/core';
 import {ThemingService} from '../../services/theming/theming.service';
@@ -11,7 +11,7 @@ export abstract class WorkArea {
 
 	private static _loadedPixiFont = false;
 
-	public static pixiFontLoaded$ = new Subject<void>();
+	public static pixiFontLoaded$ = new ReplaySubject<void>(1);
 
 	protected _pixiRenderer: PIXI.Renderer;
 

@@ -2,6 +2,7 @@ import { Component, OnInit } from '@angular/core';
 import {PopupContentComp} from '../popup-content-comp';
 import {ProjectSaveManagementService} from '../../../../services/project-save-management/project-save-management.service';
 import {Project} from '../../../../models/project';
+import {UserService} from '../../../../services/user/user.service';
 
 @Component({
 	selector: 'app-save-as',
@@ -12,12 +13,16 @@ export class SaveAsComponent extends PopupContentComp<Project[]> implements OnIn
 
 	public projectName: string;
 
-	constructor(private projectSaveManagement: ProjectSaveManagementService) {
+	constructor(private projectSaveManagement: ProjectSaveManagementService, private user: UserService) {
 		super();
 	}
 
 	ngOnInit() {
 		this.projectName = this.inputFromOpener.find(p => p.type === 'project').name;
+	}
+
+	public get isLoggedIn(): boolean {
+		return this.user.isLoggedIn;
 	}
 
 	public async saveToServer() {

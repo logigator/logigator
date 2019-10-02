@@ -2,7 +2,4 @@
 
 <input type="text" [(ngModel)]="projectName">
 <button (click)="exportProject()">Download Project File</button>
-<button (click)="saveToServer()">save in cloud</button>
-
-download / export button
-save to server form if logged in
+<button (click)="saveToServer()" *ngIf="isLoggedIn">save in cloud</button>
