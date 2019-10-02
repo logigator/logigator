@@ -13,22 +13,28 @@ export class PopupService {
 		private injector: Injector
 	) { }
 
-	public showPopup(popupContentComp: Type<PopupContentComp>, title: string, closeOnClickOutside = true): Promise<void> {
+	public showPopup(
+		popupContentComp: Type<PopupContentComp>,
+		title: string,
+		closeOnClickOutside: boolean,
+		contentComponentInput?: any
+	): Promise<any> {
 		return new Promise<void>(resolve => {
 			const popupFactory = this.componentFactoryResolver.resolveComponentFactory(PopupComponent);
 			const popupRef = popupFactory.create(this.injector);
 			popupRef.instance.title = title;
 			popupRef.instance.closeOnClickOutside = closeOnClickOutside;
+			popupRef.instance.contentCompInput = contentComponentInput;
 			popupRef.instance.contentComp = this.componentFactoryResolver.resolveComponentFactory(popupContentComp);
 			this.appRef.attachView(popupRef.hostView);
 			const domElem = (popupRef.hostView as EmbeddedViewRef<any>).rootNodes[0] as HTMLElement;
 			document.body.appendChild(domElem);
 
-			const subscription = popupRef.instance.requestClose.subscribe(() => {
+			const subscription = popupRef.instance.requestClose.subscribe(output => {
 				this.appRef.detachView(popupRef.hostView);
 				popupRef.destroy();
 				subscription.unsubscribe();
-				resolve();
+				resolve(output);
 			});
 		});
 	}

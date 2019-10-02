@@ -3,7 +3,9 @@ import {WorkMode} from '../../models/work-modes';
 import {WorkModeService} from '../../services/work-mode/work-mode.service';
 import {ProjectsService} from '../../services/projects/projects.service';
 import {ProjectInteractionService} from '../../services/project-interaction/project-interaction.service';
-import {StateCompilerService} from '../../services/simulation/state-compiler/state-compiler.service';
+import {PopupService} from '../../services/popup/popup.service';
+import {NewComponentComponent} from '../popup/popup-contents/new-component/new-component.component';
+import {OpenProjectComponent} from '../popup/popup-contents/open/open-project.component';
 
 @Component({
 	selector: 'app-toolbar',
@@ -16,7 +18,7 @@ export class ToolbarComponent implements OnInit {
 		private workModeService: WorkModeService,
 		private projectService: ProjectsService,
 		private projectInteraction: ProjectInteractionService,
-		private stateCompiler: StateCompilerService
+		private popupService: PopupService
 	) { }
 
 	ngOnInit() {
@@ -28,6 +30,10 @@ export class ToolbarComponent implements OnInit {
 
 	public get currentWorkMode(): WorkMode {
 		return this.workModeService.currentWorkMode;
+	}
+
+	public newComponent(): void {
+		this.popupService.showPopup(NewComponentComponent, 'New Component', false);
 	}
 
 	public undo(): void {
@@ -64,5 +70,9 @@ export class ToolbarComponent implements OnInit {
 
 	public save() {
 		this.projectService.saveAll();
+	}
+
+	public open() {
+		this.popupService.showPopup(OpenProjectComponent, 'Open Project', true);
 	}
 }

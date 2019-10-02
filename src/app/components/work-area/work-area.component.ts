@@ -54,6 +54,9 @@ export class WorkAreaComponent extends WorkArea implements OnInit, OnDestroy {
 					this._ticker.singleFrame();
 				});
 			});
+			this.projectsService.onProjectClosed$.pipe(
+				takeUntil(this._destroySubject)
+			).subscribe(id => this.closeView(id));
 		});
 
 		this.workMode.currentWorkMode$.pipe(
@@ -103,22 +106,24 @@ export class WorkAreaComponent extends WorkArea implements OnInit, OnDestroy {
 		// this._pixiWindowContainer.show();
 	}
 
-	public closeView(id: number, event: MouseEvent) {
+	public tabCloseClicked(id: number, event: MouseEvent) {
 		event.stopPropagation();
-
-		// TODO: ask if the user wants to save
 		if (this._allViews.size <= 1) return;
+		this.projectsService.closeProject(id);
+	}
 
+	public closeView(id: number) {
 		const toClose = this._allViews.get(id);
 		this._allViews.delete(id);
-
 		if (toClose === this.activeView) {
-			this.switchActiveView(this._allViews.values().next().value.projectId);
+			const toSwitchTo = this._allViews.values().next().value;
+			if (toSwitchTo) {
+				this.switchActiveView(toSwitchTo.projectId);
+			} else {
+				delete this.activeView;
+			}
 		}
-
-		this.projectsService.closeProject(id);
 		toClose.destroy();
-
 	}
 
 	ngOnDestroy(): void {

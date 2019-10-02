@@ -226,6 +226,7 @@ export class View extends PIXI.Container {
 	private onZoomClick(dir: 'in' | 'out' | '100') {
 		if (this.applyZoom(dir)) {
 			this.updateChunks();
+			this.ticker.singleFrame();
 		}
 	}
 

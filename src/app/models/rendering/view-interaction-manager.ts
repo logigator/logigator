@@ -294,9 +294,10 @@ export class ViewInteractionManager {
 	}
 
 	private startDraggingNewComponent(e: InteractionEvent) {
-		this._draggingNewComp = true;
 		const typeId = WorkModeService.staticInstance.currentComponentToBuild;
 		const elemType = ElementProviderService.staticInstance.getElementById(typeId);
+		// if (elemType.numInputs === 0 || elemType.numOutputs === 0) return;
+		this._draggingNewComp = true;
 		this._newCompSprite = CompSpriteGenerator.getComponentSprite(
 			elemType.symbol,
 			elemType.numInputs,

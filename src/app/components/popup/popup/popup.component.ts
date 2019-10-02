@@ -28,6 +28,9 @@ export class PopupComponent implements OnInit {
 	public contentComp: ComponentFactory<PopupContentComp>;
 
 	@Input()
+	public contentCompInput: any;
+
+	@Input()
 	public closeOnClickOutside: boolean;
 
 	@ViewChild('contentComponentInsert', {read: ViewContainerRef, static: true})
@@ -45,9 +48,10 @@ export class PopupComponent implements OnInit {
 
 	ngOnInit() {
 		const contentComp = this._viewContRef.createComponent(this.contentComp);
-		const subscription = contentComp.instance.requestClose.subscribe(() => {
+		contentComp.instance.inputFromOpener = this.contentCompInput;
+		const subscription = contentComp.instance.requestClose.subscribe(output => {
 			subscription.unsubscribe();
-			this.requestClose.emit();
+			this.requestClose.emit(output);
 		});
 	}
 

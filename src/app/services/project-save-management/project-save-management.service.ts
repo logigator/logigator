@@ -6,21 +6,26 @@ import {catchError, map} from 'rxjs/operators';
 import {ProjectModel} from '../../models/project-model';
 import * as PIXI from 'pixi.js';
 import {HttpClient} from '@angular/common/http';
-import {ElementType} from '../../models/element-types/element-type';
-import {Element} from '../../models/element';
+import {Element, Elements} from '../../models/element';
 import {ComponentInfoResponse} from '../../models/http-responses/component-info-response';
 import {ProjectState} from '../../models/project-state';
 import {ElementProviderService} from '../element-provider/element-provider.service';
 import {UserService} from '../user/user.service';
-import {Observable} from 'rxjs';
 import {ErrorHandlingService} from '../error-handling/error-handling.service';
+import {ComponentLocalFile, ProjectLocalFile} from '../../models/project-local-file';
+import {ModelDatabaseMap, ProjectModelResponse} from '../../models/http-responses/project-model-response';
+import {CreateProjectResponse} from '../../models/http-responses/create-project-response';
+import {SaveProjectRequest} from '../../models/http-requests/save-project-request';
+import * as FileSaver from 'file-saver';
+import {ElementType} from '../../models/element-types/element-type';
 
 @Injectable({
 	providedIn: 'root'
 })
 export class ProjectSaveManagementService {
 
-	private _projectSource: 'server' | 'share' | 'file';
+	private _projectSource: 'server' | 'share';
+	private _componentsFromLocalFile = new Map<number, ComponentLocalFile>();
 
 	constructor(
 		private http: HttpClient,
@@ -31,83 +36,275 @@ export class ProjectSaveManagementService {
 
 	public async getProjectToOpenOnLoad(): Promise<Project> {
 		let project;
-		if (location.pathname === '/') {
-			project = Promise.resolve(this.createEmptyProject());
-			this.elemProvService.setUserDefinedTypes(await this.getAllAvailableCustomElements());
+		if (location.pathname.startsWith('/board')) {
+			project = this.openProjectFromServerOnLoad();
+			this.elemProvService.setUserDefinedTypes(await this.getCustomElementsFromServer());
+		} else if (location.pathname.startsWith('/share')) {
+			// open share
 		} else {
-			project = this.openProjectFromServer();
-			this.elemProvService.setUserDefinedTypes(await this.getAllAvailableCustomElements());
+			window.history.pushState(null, null, '/');
+			project = Promise.resolve(this.createEmptyProject());
+			this.elemProvService.setUserDefinedTypes(await this.getCustomElementsFromServer());
 		}
 		return project;
 	}
 
-	public async getAllAvailableCustomElements(): Promise<Map<number, ElementType>> {
-		let elemMap = new Map<number, ElementType>();
-		if (this.user.isLoggedIn) {
-			elemMap = await this.getComponentsFromServer().toPromise();
+	public get isFirstSave(): boolean {
+		return !this._projectSource;
+	}
+
+	public async addCustomComponent(name: string, symbol: string, description = '') {
+		if (!name)
+			name = 'New Component';
+
+		const elementProvider = ElementProviderService.staticInstance;
+		let duplicate = 0;
+
+		while (Array.from(elementProvider.userDefinedElements.values())
+			.map(x => x.name)
+			.includes((duplicate === 0) ? name : `${name}-${duplicate}`)) {
+			duplicate++;
 		}
-		return elemMap;
+		name = (duplicate === 0) ? name : `${name}-${duplicate}`;
+
+		let id;
+		if (this.user.isLoggedIn) {
+			id = await this.newCustomComponentOnServer(name, symbol, description);
+			if (!id) return;
+			this.elemProvService.addUserDefinedElement({
+				numOutputs: 0,
+				maxInputs: 0,
+				name,
+				description,
+				symbol,
+				numInputs: 0,
+				minInputs: 0,
+				category: 'user',
+				rotation: 0
+			}, id);
+		} else {
+			const newIndex = this.findNextLocalCompId();
+			const newComp: ComponentLocalFile = {
+				typeId: newIndex,
+				data: {
+					board: {
+						elements: []
+					}
+				},
+				type: {
+					numOutputs: 0,
+					maxInputs: 0,
+					name,
+					description,
+					symbol,
+					numInputs: 0,
+					minInputs: 0,
+					category: 'user',
+					rotation: 0
+				}
+			};
+			this._componentsFromLocalFile.set(newIndex, newComp);
+			this.elemProvService.addUserDefinedElement(newComp.type, newIndex);
+		}
 	}
 
-	private getComponentsFromServer(): Observable<Map<number, ElementType>> {
-		return this.http.get<HttpResponseData<ComponentInfoResponse[]>>('/api/project/get-all-components-info').pipe(
-			map(data => {
-				const newElemTypes = new Map<number, ElementType>();
-				data.result.forEach(elem => {
-					const elemType: ElementType = {
-						description: elem.description,
-						name: elem.name,
-						rotation: 0,
-						minInputs: 2,
-						maxInputs: 2,
-						symbol: elem.symbol,
-						numInputs: 2,
-						numOutputs: 1,
-						category: 'user'
-					};
-					newElemTypes.set(Number(elem.pk_id), elemType);
-				});
-				return newElemTypes;
-			}),
-			this.errorHandling.catchErrorOperator('Cannot get Components from Server', new Map<number, ElementType>()),
-		);
+	public async saveComponent(project: Project) {
+		if (!project.dirty) return;
+		if (project.id < 1000 && this._componentsFromLocalFile.has(project.id)) {
+			const compLocalFile = this._componentsFromLocalFile.get(project.id);
+			compLocalFile.data = project.currState.model;
+		} else if (this._projectSource === 'server') {
+			if (await this.saveSingleProjectToServer(project)) {
+				this.errorHandling.showInfo(`Saved component ${project.name} on Server`);
+			}
+		}
 	}
 
-	public save(projects: Project[]) {
-		if (!this._projectSource) {
-			this.saveAs();
+	private findNextLocalCompId(): number {
+		let id = 500;
+		while (this._componentsFromLocalFile.has(id)) id++;
+		return id;
+	}
+	public openFromFile(content: string): Project {
+		let parsedFile: ProjectLocalFile;
+		try {
+			parsedFile = JSON.parse(content);
+		} catch (e) {
+			this.errorHandling.showErrorMessage('Invalid File');
 			return;
 		}
+		delete this._projectSource;
+		this.elemProvService.clearElementsFromFile();
+		parsedFile.components.forEach(c => {
+			this._componentsFromLocalFile.set(c.typeId, c);
+			this.elemProvService.addUserDefinedElement(c.type, c.typeId);
+		});
+		const mainModel = this.getProjectModelFromJson(parsedFile.mainProject.data as ProjectModelResponse);
+		window.history.pushState(null, null, `/local/${parsedFile.mainProject.name}`);
+		return new Project(new ProjectState(mainModel), {
+			type: 'project',
+			name: parsedFile.mainProject.name,
+			id: parsedFile.mainProject.id
+		});
+	}
 
+	public async exportToFile(allOpenProjects: Project[], name?: string) {
+		const cache = new Map<number, Project>();
+		for (const project of allOpenProjects) {
+			if (project.id >= 1000) cache.set(project.id, project);
+		}
+		const mainProject = allOpenProjects.find(p => p.type === 'project');
+		const deps = Array.from((await this.buildDependencyTree(mainProject, new Map<number, Project>(), cache)).values());
+		const mapping: ModelDatabaseMap[] = [];
+		for (let i = 0; i < deps.length; i++) {
+			mapping.push({
+				model: deps[i].id,
+				database: 501 + i
+			});
+		}
+		const modelToSave: ProjectLocalFile = {
+			mainProject: {
+				id: 500,
+				name: name || mainProject.name,
+				data: this.applyMappingsLoad(mainProject.currState.model, mapping)
+			},
+			components: deps.map(c => {
+				const type = this.elemProvService.getElementById(c.id);
+				if (!type.name.endsWith('-local')) {
+					type.name = type.name + '-local';
+				}
+				return {
+					typeId: mapping.find(m => m.model === c.id).database,
+					data: this.applyMappingsLoad(c.currState.model, mapping),
+					type
+				} as ComponentLocalFile;
+			}) as ComponentLocalFile[]
+		};
+		const blob = new Blob([JSON.stringify(modelToSave, null, 2)], {type: 'application/json;charset=utf-8'});
+		FileSaver.saveAs(blob, `${name || mainProject.name}.json`);
+		this.errorHandling.showInfo('Exported Project and all needed Components');
+	}
+
+	private async buildDependencyTree(
+		project: Project,
+		resolved: Map<number, Project>,
+		cachedProjects: Map<number, Project>): Promise<Map<number, Project>> {
+		for (const element of project.currState.model.board.elements) {
+			if (element.typeId >= 500 && !resolved.has(element.typeId)) {
+				let proj;
+				if (cachedProjects.has(element.typeId)) {
+					proj = cachedProjects.get(element.typeId);
+				} else {
+					proj = await this.openComponent(element.typeId);
+				}
+				resolved.set(element.typeId, proj);
+				resolved = new Map([...resolved, ...(await this.buildDependencyTree(proj, resolved, cachedProjects))]);
+			}
+		}
+		return resolved;
+	}
+
+	public resetProjectSource() {
+		delete this._projectSource;
+	}
+
+	public async saveAsNewProjectServer(projects: Project[], name: string): Promise<Project> {
+		const mainProject = projects.find(p => p.type === 'project');
+		const cache = new Map<number, Project>();
+		for (const project of projects) {
+			if (project.id >= 1000) cache.set(project.id, project);
+		}
+		const deps = Array.from((await this.buildDependencyTree(mainProject, new Map<number, Project>(), cache)).values());
+		const createdComps: Promise<number>[] = [];
+		for (const dep of deps) {
+			if (dep.id < 1000 && dep.id >= 500) {
+				const type = this.elemProvService.getElementById(dep.id);
+				createdComps.push(this.newCustomComponentOnServer(dep.name, type.symbol, type.description));
+			}
+		}
+		let mainProjectId = mainProject.id;
+		if (mainProject.id < 1000) {
+			mainProjectId = await this.createProjectServer(name || mainProject.name);
+		}
+		const ids = await Promise.all(createdComps);
+		let currentDbIdIndex = 0;
+		const mappings: ModelDatabaseMap[] = [];
+		for (let i = 0; i < deps.length; i++) {
+			if (deps[i].id < 1000 && deps[i].id >= 500) {
+				mappings.push({
+					database: ids[currentDbIdIndex],
+					model: deps[i].id
+				});
+				currentDbIdIndex++;
+			}
+		}
+		const projectsToSave: Project[] = [];
+		const mainProjToSave = new Project(new ProjectState(this.applyMappingsLoad(mainProject.currState.model, mappings)), {
+			type: 'project',
+			name: name || mainProject.name,
+			id: mainProjectId
+		});
+		mainProjToSave.dirty = true;
+		projectsToSave.push(mainProjToSave);
+		for (const dep of deps) {
+			const id = mappings.find(m => m.model === dep.id).database || dep.id;
+			const proj = new Project(new ProjectState(this.applyMappingsLoad(dep.currState.model, mappings)), {
+				id: mappings.find(m => m.model === dep.id).database || dep.id,
+				name: dep.name,
+				type: 'comp'
+			});
+			if (id >= 1000) this.elemProvService.addUserDefinedElement(this.elemProvService.getElementById(dep.id), id);
+			proj.dirty = true;
+			projectsToSave.push(proj);
+		}
+		this.elemProvService.clearElementsFromFile();
+		this._componentsFromLocalFile.clear();
+		await this.saveProjectsToServer(projectsToSave);
+		window.history.pushState(null, null, `/board/${mainProjectId}`);
+		this.errorHandling.showInfo(`Saved Project ${mainProjToSave.name}`);
+		return mainProjToSave;
+	}
+
+	private async createProjectServer(name: string): Promise<number> {
+		return this.http.post<HttpResponseData<CreateProjectResponse>>('/api/project/create', {
+			name,
+			isComponent: false
+		}).pipe(
+			map(r => Number(r.result.id)),
+			this.errorHandling.catchErrorOperator('Cannot create Projecct', undefined)
+		).toPromise();
+	}
+
+	public async saveProjects(projects: Project[]) {
 		if (this._projectSource === 'server') {
-			this.saveProjectsToServer(projects);
+			if (await this.saveProjectsToServer(projects)) {
+				this.errorHandling.showInfo('Saved Project and all open Components');
+			}
 		}
 	}
 
-	public saveAs() {
-	}
-
-	private saveProjectsToServer(projects: Project[]): Promise<any> {
-		const allPromises = [];
-		projects.forEach(proj => {
-			allPromises.push(this.saveSingleProject(proj));
-		});
-		return Promise.all(allPromises);
-	}
-
-	private saveSingleProject(project: Project): Promise<HttpResponseData<{success: boolean}>> {
-		return this.http.post<HttpResponseData<{success: boolean}>>(`/api/project/save/${project.id}`, {
-			data: project.currState.model
-		}).toPromise();
-	}
-
-	public openComponent(id: number): Promise<Project> {
+	public async openComponent(id: number): Promise<Project> {
+		if (id < 1000) {
+			if (!this._componentsFromLocalFile.has(id)) {
+				this.errorHandling.showErrorMessage('Unable to open Component');
+				return Promise.resolve(undefined);
+			}
+			const data = this._componentsFromLocalFile.get(id);
+			const project = new Project(new ProjectState(this.getProjectModelFromJson(data.data as ProjectModelResponse)), {
+				type: 'comp',
+				name: data.type.name,
+				id: data.typeId
+			});
+			return Promise.resolve(project);
+		}
 		return this.http.get<HttpResponseData<OpenProjectResponse>>(`/api/project/open/${id}`).pipe(
 			map(response => {
 				if (Number(response.result.project.is_component) === 0) {
 					throw Error('isProj');
 				}
-				const project = this.getProjectModelFromJson(response.result.project.data);
+				let project = this.getProjectModelFromJson(response.result.project.data);
+				project = this.applyMappingsLoad(project, response.result.project.data.mappings);
+				project = this.removeMappingsFromModel(project as ProjectModelResponse);
 				return new Project(new ProjectState(project), {
 					id: Number(id),
 					name: response.result.project.name,
@@ -115,36 +312,127 @@ export class ProjectSaveManagementService {
 				});
 			}),
 			this.errorHandling.catchErrorOperatorDynamicMessage((err: any) => {
-				if (err === 'isProj') return 'Unable to open Project as Component';
+				if (err.message === 'isProj') return 'Unable to open Project as Component';
 				return err.error.error.description;
 			}, undefined)
 		).toPromise();
 	}
 
-	private createEmptyProject(): Project {
-		return new Project(new ProjectState(), {
-			type: 'project',
-			name: 'New Project',
-			id: 0
-		});
+	public get isShare(): boolean {
+		return location.pathname.startsWith('/share/');
 	}
 
-	private openProjectFromServer(): Promise<Project> {
-		const path = location.pathname;
-		if (!path.startsWith('/board/')) {
-			return Promise.reject('Invalid Url');
+	private newCustomComponentOnServer(name: string, symbol: string, description: string = ''): Promise<number> {
+		return this.http.post<HttpResponseData<{id: number}>>('/api/project/create', {
+			name,
+			isComponent: true,
+			symbol,
+			description
+		}).pipe(
+			map(response => Number(response.result.id)),
+			this.errorHandling.catchErrorOperatorDynamicMessage(
+				(err: any) => `Unable to create component: ${err.error.error.description}`,
+				undefined
+			)
+		).toPromise();
+	}
+
+	private saveProjectsToServer(projects: Project[]): Promise<any> {
+		const allPromises = [];
+		projects.forEach(proj => {
+			if (proj.dirty) allPromises.push(this.saveSingleProjectToServer(proj));
+			proj.dirty = false;
+		});
+		return Promise.all(allPromises);
+	}
+
+	private saveSingleProjectToServer(project: Project): Promise<HttpResponseData<{success: boolean}>> {
+		const mappings: ModelDatabaseMap[] = [];
+		project.currState.model.board.elements.forEach(el => {
+			if (el.typeId >= 500 && !mappings.find(m => m.model === el.typeId)) {
+				mappings.push({
+					database: el.typeId,
+					model: el.typeId
+				});
+			}
+		});
+
+		const body: SaveProjectRequest = {
+			data: {
+				...project.currState.model,
+				...{mappings}
+			}
+		};
+		if (project.type === 'comp') {
+			const type = this.elemProvService.getElementById(project.id);
+			body.num_inputs = type.numInputs;
+			body.num_outputs = type.numOutputs;
 		}
+		return this.http.post<HttpResponseData<{success: boolean}>>(`/api/project/save/${project.id}`, body).pipe(
+			this.errorHandling.catchErrorOperator('Unable to save Component or Project on Server', undefined)
+		).toPromise();
+	}
+
+	private getCustomElementsFromServer(): Promise<Map<number, ElementType>> {
+		if (!this.user.isLoggedIn) {
+			this.errorHandling.showErrorMessage('Cannot get Components, Not logged in');
+			return Promise.resolve(new Map());
+		}
+		return this.http.get<HttpResponseData<ComponentInfoResponse[]>>('/api/project/get-all-components-info').pipe(
+			map(data => {
+				const newElemTypes = new Map<number, ElementType>();
+				data.result.forEach(elem => {
+					elem.num_inputs = Number(elem.num_inputs);
+					elem.num_outputs = Number(elem.num_outputs);
+					const elemType: ElementType = {
+						description: elem.description,
+						name: elem.name,
+						rotation: 0,
+						minInputs: elem.num_inputs,
+						maxInputs: elem.num_inputs,
+						symbol: elem.symbol,
+						numInputs: elem.num_inputs,
+						numOutputs: elem.num_outputs,
+						category: 'user'
+					};
+					newElemTypes.set(Number(elem.pk_id), elemType);
+				});
+				return newElemTypes;
+			}),
+			this.errorHandling.catchErrorOperator('Cannot get Components from Server', new Map<number, ElementType>()),
+		).toPromise();
+	}
+
+	private getProjectIdToLoadFromUrl(): number {
+		const path = location.pathname;
 		const id = Number(path.substr(path.lastIndexOf('/') + 1));
 		if (Number.isNaN(id)) {
-			return Promise.reject('Invalid Url');
+			return null;
 		}
+		return id;
+	}
+
+	private openProjectFromServerOnLoad(): Promise<Project> {
+		const id = this.getProjectIdToLoadFromUrl();
+		if (!id) {
+			this.errorHandling.showErrorMessage('Invalid Url');
+			window.history.pushState(null, null, '/');
+			return Promise.resolve(this.createEmptyProject());
+		}
+		return this.openProjectFromServer(id);
+	}
+
+	private async openProjectFromServer(id: number): Promise<Project> {
 		this._projectSource = 'server';
 		return this.http.get<HttpResponseData<OpenProjectResponse>>(`/api/project/open/${id}`).pipe(
 			map(response => {
 				if (Number(response.result.project.is_component) === 1) {
 					throw Error('isComp');
 				}
-				const project = this.getProjectModelFromJson(response.result.project.data);
+				let project = this.getProjectModelFromJson(response.result.project.data);
+				project = this.applyMappingsLoad(project, response.result.project.data.mappings);
+				project = this.removeMappingsFromModel(project as ProjectModelResponse);
+				this.errorHandling.showInfo(`Opened Project ${response.result.project.name}`);
 				return new Project(new ProjectState(project), {
 					id: Number(id),
 					name: response.result.project.name,
@@ -152,19 +440,50 @@ export class ProjectSaveManagementService {
 				});
 			}),
 			catchError(err => {
-				if (err === 'isComp') {
-					delete this._projectSource;
-				}
+				window.history.pushState(null, null, '/');
+				delete this._projectSource;
 				throw err;
 			}),
 			this.errorHandling.catchErrorOperatorDynamicMessage((err: any) => {
-				if (err === 'isComp') return 'Unable to open Component as Project';
+				if (err.message === 'isComp') return 'Unable to open Component as Project';
 				return err.error.error.description;
 			}, this.createEmptyProject())
 		).toPromise();
 	}
 
-	private getProjectModelFromJson(data: any): ProjectModel {
+	private applyMappingsLoad(model: ProjectModel, mappings: ModelDatabaseMap[]): ProjectModel {
+		const clonedModel: ProjectModel = {
+			board: {
+				elements: []
+			}
+		};
+		model.board.elements.forEach(el => {
+			const newEl = Elements.clone(el);
+			const toMapTo = mappings.find(mapping => mapping.model === el.typeId);
+			if (toMapTo) {
+				newEl.typeId = toMapTo.database;
+			}
+			clonedModel.board.elements.push(newEl);
+		});
+		return clonedModel;
+	}
+
+	private removeMappingsFromModel(model: ProjectModelResponse): ProjectModel {
+		if (model.mappings) {
+			delete model.mappings;
+		}
+		return model;
+	}
+
+	public createEmptyProject(): Project {
+		return new Project(new ProjectState(), {
+			type: 'project',
+			name: 'NewProject',
+			id: 0
+		});
+	}
+
+	private getProjectModelFromJson(data: ProjectModelResponse): ProjectModel {
 		if (!data.hasOwnProperty('board')) {
 			return {
 				board: {
@@ -172,7 +491,6 @@ export class ProjectSaveManagementService {
 				}
 			};
 		}
-
 		data.board.elements = data.board.elements.map(e => {
 			const elem: Element = {
 				id: e.id,

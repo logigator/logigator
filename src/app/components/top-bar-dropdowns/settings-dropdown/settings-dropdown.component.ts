@@ -24,7 +24,7 @@ export class SettingsDropdownComponent {
 
 	public async showCustomizeShortcuts() {
 		this.showDropDown = false;
-		await this.popupService.showPopup(ShortcutConfigComponent, 'Customize Shortcuts');
+		await this.popupService.showPopup(ShortcutConfigComponent, 'Customize Shortcuts', false);
 		this.close();
 	}
 

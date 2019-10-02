@@ -3,8 +3,8 @@
 	<div class="toolbar-buttons">
 		<ng-container *ngIf="currentWorkMode !== 'simulation'">
 			<button class="toolbar-button save" aria-label="Save" (click)="save()"></button>
-			<button class="toolbar-button open" aria-label="Save"></button>
-			<button class="toolbar-button new-comp" aria-label="Save"></button>
+			<button class="toolbar-button open" aria-label="Open" (click)="open()"></button>
+			<button class="toolbar-button new-comp" aria-label="New Component" (click)="newComponent()"></button>
 
 			<div class="divider"></div>
 

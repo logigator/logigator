@@ -1,5 +1,4 @@
 import { Injectable } from '@angular/core';
-import {ElementType} from '../../models/element-types/element-type';
 import {wire} from '../../models/element-types/basic/wire';
 import {not} from '../../models/element-types/basic/not';
 import {and} from '../../models/element-types/basic/and';
@@ -10,6 +9,8 @@ import {output} from '../../models/element-types/plug/output';
 import {button} from '../../models/element-types/io/button';
 import {lever} from '../../models/element-types/io/lever';
 import {butt} from '../../models/element-types/plug/butt';
+import {ErrorHandlingService} from '../error-handling/error-handling.service';
+import {ElementType} from '../../models/element-types/element-type';
 
 @Injectable({
 	providedIn: 'root'
@@ -39,12 +40,22 @@ export class ElementProviderService {
 
 	private _userDefinedElements: Map<number, ElementType> = new Map<number, ElementType>();
 
-	constructor() {
+	constructor(private errorHandler: ErrorHandlingService) {
 		ElementProviderService.staticInstance = this;
 	}
 
 	public setUserDefinedTypes(elements: Map<number, ElementType>) {
 		this._userDefinedElements = elements;
+	}
+
+	public addUserDefinedElement(element: ElementType, id: number) {
+		this._userDefinedElements.set(id, element);
+	}
+
+	public clearElementsFromFile() {
+		for (const key of this.userDefinedElements.keys()) {
+			if (key < 1000 && key >= 500) this.userDefinedElements.delete(key);
+		}
 	}
 
 	public getElementById(id: number): ElementType {
@@ -57,7 +68,7 @@ export class ElementProviderService {
 		} else if (this._userDefinedElements.has(id)) {
 			return this._userDefinedElements.get(id);
 		}
-		throw Error('Component not found. Project might be corrupted');
+		this.errorHandler.showErrorMessage('Component not found, project might be corrupted');
 	}
 
 	public isBasicElement(id: number): boolean {
