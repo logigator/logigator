@@ -155,7 +155,6 @@ export class ProjectSaveManagementService {
 		}
 		const mainProject = allOpenProjects.find(p => p.type === 'project');
 		const deps = Array.from((await this.buildDependencyTree(mainProject, new Map<number, Project>(), cache)).values());
-		debugger
 		const mapping: ModelDatabaseMap[] = [];
 		for (let i = 0; i < deps.length; i++) {
 			mapping.push({
