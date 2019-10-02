@@ -7,9 +7,15 @@
 			[searchText]="searchText"
 		></app-construction-box-category>
 		<app-construction-box-category
-				categoryName="IO Components"
-				[components]="ioComponents"
-				[searchText]="searchText"
+			*ngIf="showPlugComponents"
+			categoryName="Plug Components"
+			[components]="plugComponents"
+			[searchText]="searchText"
+		></app-construction-box-category>
+		<app-construction-box-category
+			categoryName="IO Components"
+			[components]="ioComponents"
+			[searchText]="searchText"
 		></app-construction-box-category>
 		<app-construction-box-category
 			categoryName="User Defined"

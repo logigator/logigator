@@ -12,9 +12,11 @@ export interface Element {
 	pos: PIXI.Point;
 	endPos: PIXI.Point;
 	rotation?: number;
+
+	plugIndex?: number;
 }
 
-export class Elements {
+export abstract class Elements {
 
 	public static correctPosOrder(startPos: PIXI.Point, endPos: PIXI.Point): void {
 		if (startPos.x > endPos.x) {
@@ -43,7 +45,7 @@ export class Elements {
 		element.endPos.y += dif.y;
 	}
 
-	public static genNewElement(typeId: number, _pos: PIXI.Point, _endPos: PIXI.Point): Element {
+	public static genNewElement(typeId: number, _pos: PIXI.Point, _endPos: PIXI.Point, rotation?: number, numInputs?: number): Element {
 		const type = ElementProviderService.staticInstance.getElementById(typeId);
 		const pos = _pos ? _pos.clone() : undefined;
 		const endPos = _endPos ? _endPos.clone() : undefined;
@@ -52,11 +54,12 @@ export class Elements {
 		return {
 			id: -1,
 			typeId,
-			numInputs: type.numInputs,
+			numInputs: numInputs || type.numInputs,
 			numOutputs: type.numOutputs,
 			pos,
 			endPos,
-			rotation: type.rotation
+			rotation: rotation || type.rotation,
+			plugIndex: ElementProviderService.staticInstance.isPlugElement(typeId) ? 0 : undefined
 		};
 	}
 
@@ -134,5 +137,28 @@ export class Elements {
 				out.push(new PIXI.Point(element.pos.x + i, element.pos.y - 1));
 		}
 		return out;
+	}
+
+	public static isInput(element: Element, pos: PIXI.Point): boolean {
+		switch (element.rotation) {
+			case 0:
+				return pos.x < element.pos.x;
+			case 1:
+				return pos.y < element.pos.y;
+			case 2:
+				return pos.x >= element.endPos.x;
+			case 3:
+				return pos.y >= element.endPos.y;
+		}
+	}
+
+	public static removeDuplicates(elements: Element[]): void {
+		for (let i = 0; i < elements.length - 1; i++) {
+			for (let j = i + 1; j < elements.length; j++) {
+				if (elements[i].id === elements[j].id) {
+					elements.splice(j, 1);
+				}
+			}
+		}
 	}
 }

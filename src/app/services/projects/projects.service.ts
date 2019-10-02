@@ -123,4 +123,8 @@ export class ProjectsService {
 			await this.projectSaveManagementService.saveProjects(Array.from(this.allProjects.values()));
 		}
 	}
+
+	public getProjectById(id: number): Project {
+		return this._projects.get(id);
+	}
 }

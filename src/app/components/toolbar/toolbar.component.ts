@@ -3,7 +3,6 @@ import {WorkMode} from '../../models/work-modes';
 import {WorkModeService} from '../../services/work-mode/work-mode.service';
 import {ProjectsService} from '../../services/projects/projects.service';
 import {ProjectInteractionService} from '../../services/project-interaction/project-interaction.service';
-import {NgForm} from '@angular/forms';
 import {PopupService} from '../../services/popup/popup.service';
 import {NewComponentComponent} from '../popup/popup-contents/new-component/new-component.component';
 import {OpenProjectComponent} from '../popup/popup-contents/open/open-project.component';

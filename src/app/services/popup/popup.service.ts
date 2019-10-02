@@ -19,6 +19,7 @@ export class PopupService {
 		closeOnClickOutside: boolean,
 		contentComponentInput?: any
 	): Promise<any> {
+	public showPopup(popupContentComp: Type<PopupContentComp>, title: string, closeOnClickOutside = true): Promise<void> {
 		return new Promise<void>(resolve => {
 			const popupFactory = this.componentFactoryResolver.resolveComponentFactory(PopupComponent);
 			const popupRef = popupFactory.create(this.injector);

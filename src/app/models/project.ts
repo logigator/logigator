@@ -4,6 +4,7 @@ import {Element, Elements} from './element';
 import {Observable, Subject} from 'rxjs';
 import * as PIXI from 'pixi.js';
 import {CollisionFunctions} from './collision-functions';
+import {ElementProviderService} from '../services/element-provider/element-provider.service';
 
 export class Project {
 
@@ -15,7 +16,7 @@ export class Project {
 	private _currState: ProjectState;
 
 	private readonly _actions: Action[][];
-	private _maxActionCount = 10;
+	private _maxActionCount = 1000;
 	private _currActionPointer: number;
 	private _currMaxActionPointer: number;
 
@@ -32,6 +33,14 @@ export class Project {
 		this._currActionPointer = -1;
 		this._currMaxActionPointer = -1;
 		this._changeSubject = new Subject<Action[]>();
+	}
+
+	public static empty(): Project {
+		return new Project(new ProjectState(), {
+			type: 'project',
+			name: 'New Project',
+			id: 0
+		});
 	}
 
 
@@ -129,7 +138,7 @@ export class Project {
 		if (typeId === 0 && _pos.equals(_endPos))
 			return null;
 		const elem = Elements.genNewElement(typeId, _pos,
-			_endPos || Elements.calcEndPos(_pos, numInputs, numOutputs, rotation));
+			_endPos || Elements.calcEndPos(_pos, numInputs, numOutputs, rotation), rotation, numInputs);
 		if (!this._currState.isFreeSpace(elem.pos, elem.endPos, typeId === 0, Elements.wireEnds(elem)))
 			return null;
 		this._currState.addElement(elem);
@@ -281,6 +290,7 @@ export class Project {
 
 
 	private autoAssemble(elements: Element[]): Action[] {
+		Elements.removeDuplicates(elements);
 		const out: Action[] = [];
 		const merged = this.autoMerge(elements);
 		out.push(...merged.actions);
@@ -348,7 +358,7 @@ export class Project {
 
 
 	get allElements(): Element[] {
-		return this._currState.model.board.elements;
+		return this._currState.allElements;
 	}
 
 	get changes(): Observable<Action[]> {
@@ -373,5 +383,13 @@ export class Project {
 
 	get type(): 'project' | 'comp' {
 		return this._type;
+	}
+
+	get numInputs() {
+		return this._currState.numInputs;
+	}
+
+	get numOutputs() {
+		return this._currState.numOutputs;
 	}
 }
