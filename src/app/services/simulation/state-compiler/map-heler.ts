@@ -1,4 +1,4 @@
-import {SimulationUnit} from '../../../models/simulation/SimulationUnit';
+import {SimulationUnit, SimulationUnits} from '../../../models/simulation/SimulationUnit';
 import {Element} from '../../../models/element';
 
 export abstract class MapHeler {
@@ -27,7 +27,15 @@ export abstract class MapHeler {
 		return undefined;
 	}
 
-	public static keyToValue(map: Map<SimulationUnit, Element>, val: Element): SimulationUnit {
+	public static valueToKey(map: Map<SimulationUnit, Element>, val: Element): SimulationUnit {
 		return [...map.keys()].find(k => map.get(k) === val);
+	}
+
+	public static cloneMap(map: Map<SimulationUnit, Element>): Map<SimulationUnit, Element> {
+		const out = new Map<SimulationUnit, Element>();
+		for (const [key, val] of map.entries()) {
+			out.set(SimulationUnits.clone(key), val);
+		}
+		return out;
 	}
 }

@@ -82,6 +82,10 @@ export abstract class Elements {
 		}
 	}
 
+	public static otherWirePos(wire: Element, pos: PIXI.Point): PIXI.Point {
+		return wire.pos.equals(pos) ? wire.endPos : wire.pos;
+	}
+
 	public static addActionName(elem: Element): ActionType {
 		return elem.typeId === 0 ? 'addWire' : 'addComp';
 	}

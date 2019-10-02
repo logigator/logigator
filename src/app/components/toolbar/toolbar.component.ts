@@ -33,6 +33,11 @@ export class ToolbarComponent implements OnInit {
 	public undo(): void {
 		console.log('~~~~');
 		this.stateCompiler.compile(this.projectService.currProject.currState).forEach(console.log);
+		const start = Date.now();
+		// for (let i = 0; i < 10000; i++) {
+		// 	this.stateCompiler.compile(this.projectService.currProject.currState);
+		// }
+		console.log(Date.now() - start);
 		// this.projectService.currProject.stepBack();
 	}
 
