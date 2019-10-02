@@ -33,4 +33,8 @@ export class SettingsDropdownComponent {
 		await this.popupService.showPopup(ReloadQuestionComponent, 'Reload Required', false);
 		this.close();
 	}
+
+	public changeGridVisibility() {
+		this.theming.showGrid = !this.theming.showGrid;
+	}
 }

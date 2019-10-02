@@ -24,15 +24,8 @@ export class Grid {
 		return graphics.geometry;
 	}
 
-	public static generateGridGraphics(scale): PIXI.Graphics {
-		const graphics = new PIXI.Graphics(this.getGridGeometry(scale));
-		graphics.hitArea = new PIXI.Rectangle(
-			0,
-			0,
-			environment.chunkSize * environment.gridPixelWidth,
-			environment.chunkSize * environment.gridPixelWidth
-		);
-		return graphics;
+	public static generateGridGraphics(scale: number): PIXI.Graphics {
+		return new PIXI.Graphics(this.getGridGeometry(scale));
 	}
 
 	public static getGridPosForPixelPos(point: PIXI.Point): PIXI.Point {

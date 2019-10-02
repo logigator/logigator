@@ -6,7 +6,7 @@
 	<hr>
 	<div class="switch">
 		<label>Show grid</label>
-		<input type="checkbox">
+		<input type="checkbox" (click)="changeGridVisibility()" [checked]="this.theming.showGrid">
 	</div>
 	<hr>
 	<div class="link">
