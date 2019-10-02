@@ -4,6 +4,7 @@ import {SimulationUnit, SimulationUnits} from '../../../models/simulation/Simula
 import {Element, Elements} from '../../../models/element';
 import {ElementProviderService} from '../../element-provider/element-provider.service';
 import {ProjectsService} from '../../projects/projects.service';
+import {MapHeler} from './map-heler';
 
 @Injectable({
 	providedIn: 'root'
@@ -20,12 +21,22 @@ export class StateCompilerService {
 	}
 
 	public compile(state: ProjectState): SimulationUnit[] {
-		return [...this.mappedCompile(state).simUnits.keys()];
+		return [...this.compileInner(state).simUnits.keys()];
 	}
 
 	// TODO check for recursion: userDefComp cannot include itself
-	private mappedCompile(state: ProjectState, lowestId?: number, plugLinks?: Map<number, number>):
+	private compileInner(state: ProjectState, lowestId?: number, plugLinks?: Map<number, number>):
 		{simUnits: Map<SimulationUnit, Element>, replacements: Map<number, number>} {
+
+		plugLinks = plugLinks || new Map<number, number>();
+		const simulationUnits = this.generateUnits(state);
+		const {highestLinkId, replacements} = this.setAllLinks(state, simulationUnits, lowestId, plugLinks);
+		this.deletePlugElements(simulationUnits);
+		this.dissolveUserDefined(simulationUnits, highestLinkId + 1);
+		return {simUnits: simulationUnits, replacements};
+	}
+
+	private generateUnits(state: ProjectState) {
 		const simulationUnits: Map<SimulationUnit, Element> = new Map<SimulationUnit, Element>();
 		for (const element of state.allElements) {
 			const unit = SimulationUnits.fromElement(element);
@@ -33,29 +44,30 @@ export class StateCompilerService {
 				simulationUnits.set(unit, element);
 			}
 		}
-		plugLinks = plugLinks || new Map<number, number>();
-		const ret = this.setUnitsInterfaces(state, simulationUnits, lowestId, plugLinks);
-		const highestLinkId = ret.highestLinkId;
-		const replacements = ret.replacements;
+		return simulationUnits;
+	}
+
+	private deletePlugElements(simulationUnits) {
 		for (const simUnit of simulationUnits.keys()) {
 			if (this.elementProvider.isPlugElement(simUnit.typeId)) {
 				simulationUnits.delete(simUnit);
 			}
 		}
-		this.dissolveUserDefined(simulationUnits, highestLinkId + 1);
-		return {simUnits: simulationUnits, replacements};
 	}
 
-	private setUnitsInterfaces(
+	private setAllLinks(
 		state: ProjectState,
 		units: Map<SimulationUnit, Element>,
 		lowestId?: number,
 		plugLinks?: Map<number, number>):
 		{highestLinkId: number, replacements: Map<number, number>} {
+
 		let highestLinkId = lowestId || 0;
 		const unitsOnLinks: Map<PIXI.Point[], number> = new Map<PIXI.Point[], number>();
 		const replacements = new Map<number, number>();
+
 		this.fillPlugsInUnitsOnLinks(state, unitsOnLinks, units, plugLinks);
+
 		for (const [unit, element] of units.entries()) {
 			let wireEndIndex = 0;
 			for (const wireEndPos of Elements.wireEnds(element)) {
@@ -64,19 +76,19 @@ export class StateCompilerService {
 				if (this.elementProvider.isPlugElement(unit.typeId)) {
 					this.calcReplacements(unit, connected, state, element, units, replacements);
 				} else {
-					// TODO output gets covered by opposites inputs
 					highestLinkId = this.setUnitLink(unitsOnLinks, connected, highestLinkId, element, wireEndPos, unit, wireEndIndex);
 				}
 
 				wireEndIndex++;
 			}
 		}
+
 		return {highestLinkId, replacements};
 	}
 
 	private setUnitLink(unitsOnLinks: Map<PIXI.Point[], number>, connected, highestLinkId, element, wireEndPos, unit, wireEndIndex: number) {
-		const linkId = this.mapHas(unitsOnLinks, connected)
-			? this.mapGet(unitsOnLinks, connected)
+		const linkId = MapHeler.mapHas(unitsOnLinks, connected)
+			? MapHeler.mapGet(unitsOnLinks, connected)
 			: ++highestLinkId;
 		unitsOnLinks.set(connected, linkId);
 		if (Elements.isInput(element, wireEndPos)) {
@@ -97,13 +109,9 @@ export class StateCompilerService {
 			}
 		}
 		for (const otherPlug of otherPlugs) {
-			const u = this.keyToValue(units, otherPlug);
+			const u = MapHeler.keyToValue(units, otherPlug);
 			replacements.set(unit.inputs.concat(unit.outputs)[0], u.inputs.concat(u.outputs)[0]);
 		}
-	}
-
-	private keyToValue(map: Map<SimulationUnit, Element>, val: Element): SimulationUnit {
-		return [...map.keys()].find(k => map.get(k) === val);
 	}
 
 	private fillPlugsInUnitsOnLinks(
@@ -111,6 +119,7 @@ export class StateCompilerService {
 		unitsOnLinks: Map<PIXI.Point[], number>,
 		units: Map<SimulationUnit, Element>,
 		plugLinks?: Map<number, number>): void {
+
 		let plugIndex = 0;
 		for (const [unit, element] of units.entries()) {
 			if (!this.elementProvider.isPlugElement(unit.typeId))
@@ -153,31 +162,6 @@ export class StateCompilerService {
 			numbers.push(id);
 	}
 
-	private mapHas(map: Map<PIXI.Point[], number>, points: PIXI.Point[]): boolean {
-		outer: for (const key of map.keys()) {
-			for (const point of key) {
-				if (!points.find(p => p.equals(point))) {
-					continue outer;
-				}
-			}
-			return true;
-		}
-		return false;
-	}
-
-	private mapGet(map: Map<PIXI.Point[], number>, points: PIXI.Point[]): number {
-		outer: for (const key of map.keys()) {
-			for (const point of key) {
-				if (!points.find(p => p.equals(point))) {
-					continue outer;
-				}
-			}
-			return map.get(key);
-		}
-		return undefined;
-	}
-
-
 
 	// TODO test
 	private dissolveUserDefined(units: Map<SimulationUnit, Element>, lowestId: number) {
@@ -198,29 +182,21 @@ export class StateCompilerService {
 			plugLinks.set(wireIndex++, plugLink);
 		}
 		const unitsState = this.projects.getProjectById(unit.typeId).currState;
-		const ret = this.mappedCompile(unitsState, lowestId, plugLinks);
-		const insideUnits = ret.simUnits;
-		const replacements = ret.replacements;
-		insideUnits.forEach((v, k) => {
+		const {simUnits, replacements} = this.compileInner(unitsState, lowestId, plugLinks);
+		simUnits.forEach((v, k) => {
 			units.set(k, v);
 		});
 		this.doReplacements(units, replacements);
 	}
 
 	private doReplacements(units: Map<SimulationUnit, Element>, replacements) {
-		console.log(replacements);
 		for (const u of units.keys()) {
 			for (const [from, to] of replacements) {
-				for (let i = 0; i < u.inputs.length; i++) {
-					if (u.inputs[i] === from) {
-						u.inputs[i] = to;
-					}
-				}
-				for (let i = 0; i < u.outputs.length; i++) {
-					if (u.outputs[i] === from) {
-						u.outputs[i] = to;
-					}
-				}
+				[u.inputs, u.outputs].forEach(interfaces => {
+					for (let i = 0; i < interfaces.length; i++)
+						if (interfaces[i] === from)
+							interfaces[i] = to;
+				});
 			}
 		}
 	}
