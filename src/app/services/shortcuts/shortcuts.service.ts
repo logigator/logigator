@@ -6,6 +6,8 @@ import {ProjectInteractionService} from '../project-interaction/project-interact
 import {ProjectsService} from '../projects/projects.service';
 import {ThemingService} from '../theming/theming.service';
 import {shortcutDescriptions, shortcutsUsableInSimulation} from './shortcut-descriptions';
+import {PopupService} from '../popup/popup.service';
+import {NewComponentComponent} from '../../components/popup/popup-contents/new-component/new-component.component';
 
 @Injectable({
 	providedIn: 'root'
@@ -18,7 +20,8 @@ export class ShortcutsService {
 		private workMode: WorkModeService,
 		private projectInteraction: ProjectInteractionService,
 		private projects: ProjectsService,
-		private theming: ThemingService
+		private theming: ThemingService,
+		private popup: PopupService
 	) {
 		this.loadShortcutSettings();
 	}
@@ -145,6 +148,9 @@ export class ShortcutsService {
 				break;
 			case 'save':
 				this.projects.saveAll();
+				break;
+			case 'newComp':
+				this.popup.showPopup(NewComponentComponent, 'New Component', false);
 				break;
 		}
 	}
