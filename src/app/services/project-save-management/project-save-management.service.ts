@@ -18,6 +18,7 @@ import {ModelDatabaseMap, ProjectModelResponse} from '../../models/http-response
 import {CreateProjectResponse} from '../../models/http-responses/create-project-response';
 import {SaveProjectRequest} from '../../models/http-requests/save-project-request';
 import * as FileSaver from 'file-saver';
+import {main} from '@angular/compiler-cli/src/main';
 
 @Injectable({
 	providedIn: 'root'
@@ -69,6 +70,7 @@ export class ProjectSaveManagementService {
 		let id;
 		if (this.user.isLoggedIn) {
 			id = await this.newCustomComponentOnServer(name, symbol, description);
+			if (!id) return;
 			this.elemProvService.addUserDefinedElement({
 				numOutputs: 0,
 				maxInputs: 0,
@@ -80,7 +82,6 @@ export class ProjectSaveManagementService {
 				category: 'user',
 				rotation: 0
 			}, id);
-			if (!id) return;
 		} else {
 			const newIndex = this.findNextLocalCompId();
 			const newComp: ComponentLocalFile = {
@@ -109,7 +110,7 @@ export class ProjectSaveManagementService {
 
 	private findNextLocalCompId(): number {
 		let id = 500;
-		while (this._componentsFromLocalFile.has(500)) id++;
+		while (this._componentsFromLocalFile.has(id)) id++;
 		return id;
 	}
 	public openFromFile(content: string): Project {
@@ -156,6 +157,9 @@ export class ProjectSaveManagementService {
 			},
 			components: deps.map(c => {
 				const type = this.elemProvService.getElementById(c.id);
+				if (!type.name.endsWith('-local')) {
+					type.name = type.name + '-local';
+				}
 				return {
 					typeId: mapping.find(m => m.model === c.id).database,
 					data: this.applyMappingsLoad(c.currState.model, mapping),
@@ -193,7 +197,52 @@ export class ProjectSaveManagementService {
 			if (project.id >= 1000) cache.set(project.id, project);
 		}
 		const deps = Array.from((await this.buildDependencyTree(mainProject, new Map<number, Project>(), cache)).values());
-		// todo: create 500-1000 in database, map to new ids, save
+		const createdComps: Promise<number>[] = [];
+		for (const dep of deps) {
+			if (dep.id < 1000 && dep.id >= 500) {
+				const type = this.elemProvService.getElementById(dep.id);
+				createdComps.push(this.newCustomComponentOnServer(dep.name, type.symbol, type.description));
+			}
+		}
+		let mainProjectId = mainProject.id;
+		if (mainProject.id < 1000) {
+			mainProjectId = await this.createProjectServer(name || mainProject.name);
+		}
+		const ids = await Promise.all(createdComps);
+		let currentDbIdIndex = 0;
+		const mappings: ModelDatabaseMap[] = [];
+		for (let i = 0; i < deps.length; i++) {
+			if (deps[i].id < 1000 && deps[i].id >= 500) {
+				mappings.push({
+					database: ids[currentDbIdIndex],
+					model: deps[i].id
+				});
+				currentDbIdIndex++;
+			}
+		}
+		const projectsToSave: Project[] = [];
+		const mainProjToSave = new Project(new ProjectState(this.applyMappingsLoad(mainProject.currState.model, mappings)), {
+			type: 'project',
+			name: name || mainProject.name,
+			id: mainProjectId
+		});
+		mainProjToSave.dirty = true;
+		projectsToSave.push(mainProjToSave);
+		for (const dep of deps) {
+			const id = mappings.find(m => m.model === dep.id).database || dep.id;
+			const proj = new Project(new ProjectState(this.applyMappingsLoad(dep.currState.model, mappings)), {
+				id: mappings.find(m => m.model === dep.id).database || dep.id,
+				name: dep.name,
+				type: 'comp'
+			});
+			if (id >= 1000) this.elemProvService.addUserDefinedElement(this.elemProvService.getElementById(dep.id), id);
+			proj.dirty = true;
+			projectsToSave.push(proj);
+		}
+		this.elemProvService.clearElementsFromFile();
+		this._componentsFromLocalFile.clear();
+		await this.saveProjectsToServer(projectsToSave);
+		return mainProjToSave;
 	}
 
 	private async createProjectServer(name: string): Promise<number> {
@@ -293,8 +342,9 @@ export class ProjectSaveManagementService {
 			}
 		};
 		if (project.type === 'comp') {
-			body.num_inputs = 1;
-			body.num_outputs = 1;
+			const type = this.elemProvService.getElementById(project.id);
+			body.num_inputs = type.numInputs;
+			body.num_outputs = type.numOutputs;
 		}
 		return this.http.post<HttpResponseData<{success: boolean}>>(`/api/project/save/${project.id}`, body).toPromise();
 	}
@@ -369,7 +419,7 @@ export class ProjectSaveManagementService {
 			}),
 			this.errorHandling.catchErrorOperatorDynamicMessage((err: any) => {
 				if (err === 'isComp') return 'Unable to open Component as Project';
-				return err;
+				return err.error.error.description;
 			}, this.createEmptyProject())
 		).toPromise();
 	}
@@ -398,7 +448,7 @@ export class ProjectSaveManagementService {
 		return model;
 	}
 
-	private createEmptyProject(): Project {
+	public createEmptyProject(): Project {
 		return new Project(new ProjectState(), {
 			type: 'project',
 			name: 'NewProject',

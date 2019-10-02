@@ -3,6 +3,7 @@ import {ProjectsService} from '../../../services/projects/projects.service';
 import {ProjectSaveManagementService} from '../../../services/project-save-management/project-save-management.service';
 import {OpenProjectComponent} from '../../popup/popup-contents/open/open-project.component';
 import {PopupService} from '../../../services/popup/popup.service';
+import {NewComponentComponent} from '../../popup/popup-contents/new-component/new-component.component';
 
 @Component({
 	selector: 'app-file-dropdown',
@@ -28,10 +29,12 @@ export class FileDropdownComponent implements OnInit {
 	}
 
 	public newProject() {
+		this.projectsService.newProject();
 		this.close();
 	}
 
 	public newComponent() {
+		this.popupService.showPopup(NewComponentComponent, 'New Component', false);
 		this.close();
 	}
 
@@ -41,6 +44,7 @@ export class FileDropdownComponent implements OnInit {
 	}
 
 	public saveProject() {
+		this.projectsService.saveAll();
 		this.close();
 	}
 

@@ -5,6 +5,7 @@ import {not} from '../../models/element-types/not';
 import {and} from '../../models/element-types/and';
 import {or} from '../../models/element-types/or';
 import {xor} from '../../models/element-types/xor';
+import {ErrorHandlingService} from '../error-handling/error-handling.service';
 
 @Injectable({
 	providedIn: 'root'
@@ -25,7 +26,7 @@ export class ElementProviderService {
 
 	private _userDefinedElements: Map<number, ElementType> = new Map<number, ElementType>();
 
-	constructor() {
+	constructor(private errorHandler: ErrorHandlingService) {
 		ElementProviderService.staticInstance = this;
 	}
 
@@ -51,7 +52,7 @@ export class ElementProviderService {
 		} else if (this._userDefinedElements.has(id)) {
 			return this._userDefinedElements.get(id);
 		}
-		throw Error('Component not found. Project might be corrupted');
+		this.errorHandler.showErrorMessage('Component not found, project might be corrupted');
 	}
 
 	public get basicElements(): Map<number, ElementType> {

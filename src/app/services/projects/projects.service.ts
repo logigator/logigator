@@ -53,6 +53,15 @@ export class ProjectsService {
 		this._currentlyOpening = this._currentlyOpening.filter(o => id !== o);
 	}
 
+	public newProject() {
+		const project = this.projectSaveManagementService.createEmptyProject();
+		this.allProjects.forEach((value, key) => this.closeProject(key));
+		this._projects.set(project.id, project);
+		this._currProject = project;
+		this._mainProject = project;
+		this._projectOpenedSubject.next(project.id);
+	}
+
 	public openFile(content: string) {
 		const project = this.projectSaveManagementService.openFromFile(content);
 		if (!project) return;
@@ -103,7 +112,7 @@ export class ProjectsService {
 		if (this.projectSaveManagementService.isFirstSave) {
 			const newMainProject = await this.popup.showPopup(SaveAsComponent, 'Save Project', false, Array.from(this.allProjects.values()));
 			if (newMainProject) {
-				this.closeProject(this._mainProject.id);
+				this.allProjects.forEach((value, key) => this.closeProject(key));
 				this._mainProject = newMainProject;
 				this._projects.set(newMainProject.id, newMainProject);
 				this._projectOpenedSubject.next(newMainProject.id);
