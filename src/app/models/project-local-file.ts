@@ -1,5 +1,5 @@
 import {ProjectModel} from './project-model';
-import {ElementType} from './element-type';
+import {ElementType} from './element-types/element-type';
 
 export interface ProjectLocalFile {
 	mainProject: {

@@ -6,7 +6,6 @@ import {catchError, map} from 'rxjs/operators';
 import {ProjectModel} from '../../models/project-model';
 import * as PIXI from 'pixi.js';
 import {HttpClient} from '@angular/common/http';
-import {ElementType} from '../../models/element-type';
 import {Element, Elements} from '../../models/element';
 import {ComponentInfoResponse} from '../../models/http-responses/component-info-response';
 import {ProjectState} from '../../models/project-state';
@@ -18,6 +17,7 @@ import {ModelDatabaseMap, ProjectModelResponse} from '../../models/http-response
 import {CreateProjectResponse} from '../../models/http-responses/create-project-response';
 import {SaveProjectRequest} from '../../models/http-requests/save-project-request';
 import * as FileSaver from 'file-saver';
+import {ElementType} from '../../models/element-types/element-type';
 
 @Injectable({
 	providedIn: 'root'

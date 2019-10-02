@@ -1,5 +1,4 @@
 import { Injectable } from '@angular/core';
-import {ElementType} from '../../models/element-type';
 import {wire} from '../../models/element-types/basic/wire';
 import {not} from '../../models/element-types/basic/not';
 import {and} from '../../models/element-types/basic/and';
@@ -10,6 +9,8 @@ import {output} from '../../models/element-types/plug/output';
 import {button} from '../../models/element-types/io/button';
 import {lever} from '../../models/element-types/io/lever';
 import {butt} from '../../models/element-types/plug/butt';
+import {ErrorHandlingService} from '../error-handling/error-handling.service';
+import {ElementType} from '../../models/element-types/element-type';
 
 @Injectable({
 	providedIn: 'root'
