@@ -1,0 +1,21 @@
+{
+	"compilerOptions": {
+		"baseUrl": "./",
+		"module": "commonjs",
+		"target": "es5",
+		"moduleResolution": "node",
+		"sourceMap": true,
+		"experimentalDecorators": true,
+		"lib": [
+			"es6",
+			"es2017.object",
+			"es2016.array.include"
+		]
+	},
+	"files": [
+		"run-project-tests.ts"
+	],
+	"exclude": [
+		"node_modules"
+	]
+}
