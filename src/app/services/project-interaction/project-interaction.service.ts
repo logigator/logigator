@@ -59,6 +59,16 @@ export class ProjectInteractionService {
 		this._pasteNotifierSubject.next();
 	}
 
+	public undoForCurrent() {
+		this.projectsService.currProject.stepBack();
+		this.projectsService.inputsOutputsCustomComponentChanged(this.projectsService.currProject.id);
+	}
+
+	public redoForCurrent() {
+		this.projectsService.currProject.stepForward();
+		this.projectsService.inputsOutputsCustomComponentChanged(this.projectsService.currProject.id);
+	}
+
 	public get onZoomChangeClick$(): Observable<'in' | 'out' | '100'> {
 		return this._zoomNotifierSubject.asObservable();
 	}

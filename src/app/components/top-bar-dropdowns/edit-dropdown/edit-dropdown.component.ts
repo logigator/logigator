@@ -12,7 +12,7 @@ export class EditDropdownComponent implements OnInit {
 	@Output()
 	public requestClosed: EventEmitter<any> = new EventEmitter();
 
-	constructor(private projectService: ProjectsService, private projectInteraction: ProjectInteractionService) { }
+	constructor(private projectInteraction: ProjectInteractionService) { }
 
 	ngOnInit() {
 	}
@@ -22,12 +22,12 @@ export class EditDropdownComponent implements OnInit {
 	}
 
 	public undo() {
-		this.projectService.currProject.stepBack();
+		this.projectInteraction.undoForCurrent();
 		this.close();
 	}
 
 	public redo() {
-		this.projectService.currProject.stepForward();
+		this.projectInteraction.redoForCurrent();
 		this.close();
 	}
 

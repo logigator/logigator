@@ -1,11 +1,11 @@
 <div class="dropdown">
 	<div (click)="undo()">
 		Undo
-		<span>{{'undo' | shortcutText}}</span>
+		<span>{{'undoForCurrent' | shortcutText}}</span>
 	</div>
 	<div (click)="redo()">
 		Redo
-		<span>{{'redo' | shortcutText}}</span>
+		<span>{{'redoForCurrent' | shortcutText}}</span>
 	</div>
 	<hr>
 	<div (click)="copy()">
