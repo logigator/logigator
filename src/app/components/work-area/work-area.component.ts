@@ -102,6 +102,7 @@ export class WorkAreaComponent extends WorkArea implements OnInit, OnDestroy {
 	public switchActiveView(toSwitchToId: number) {
 		this.projectsService.switchToProject(toSwitchToId);
 		this.activeView = this._allViews.get(toSwitchToId);
+		this._ticker.singleFrame();
 
 		// this._pixiWindowContainer.show();
 	}

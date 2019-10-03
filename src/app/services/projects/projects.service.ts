@@ -62,6 +62,7 @@ export class ProjectsService {
 		const compProject = this.allProjects.get(projectId);
 		if (!compProject || compProject.type !== 'comp') return;
 		const elemType = this.elementProvider.getElementById(projectId);
+		compProject.currState.inputOutputCount();
 		elemType.minInputs = compProject.numInputs;
 		elemType.maxInputs = compProject.numInputs;
 		elemType.numInputs = compProject.numInputs;
@@ -120,9 +121,10 @@ export class ProjectsService {
 	}
 
 	public closeProject(id: number) {
-		this.projectSaveManagementService.saveComponent(this._projects.get(id));
-		this._projectClosedSubject.next(id);
-		this._projects.delete(id);
+		this.projectSaveManagementService.saveComponent(this._projects.get(id)).then(() => {
+			this._projectClosedSubject.next(id);
+			this._projects.delete(id);
+		}).catch();
 	}
 
 	public async saveAll() {

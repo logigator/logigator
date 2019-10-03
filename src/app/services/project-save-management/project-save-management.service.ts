@@ -116,6 +116,8 @@ export class ProjectSaveManagementService {
 		} else if (this.user.isLoggedIn) {
 			if (await this.saveSingleProjectToServer(project)) {
 				this.errorHandling.showInfo(`Saved component ${project.name} on Server`);
+			} else {
+				throw Error();
 			}
 		}
 	}
@@ -275,12 +277,17 @@ export class ProjectSaveManagementService {
 		).toPromise();
 	}
 
-	public async saveProjects(projects: Project[]) {
+	public saveProjects(projects: Project[]) {
+		const mainProject = projects.find(p => p.type === 'project');
 		if (this._projectSource === 'server') {
-			if (await this.saveProjectsToServer(projects)) {
-				this.errorHandling.showInfo('Saved Project and all open Components');
-			}
+			this.saveSingleProjectToServer(mainProject);
 		}
+		const comps = projects.filter(p => p.type === 'comp');
+		const savePromises = [];
+		for (const comp of comps) {
+			savePromises.push(this.saveComponent(comp));
+		}
+		Promise.all(savePromises).then(() => this.errorHandling.showInfo('Saved Project and all open Components'));
 	}
 
 	public async openComponent(id: number): Promise<Project> {
@@ -364,9 +371,9 @@ export class ProjectSaveManagementService {
 			}
 		};
 		if (project.type === 'comp') {
-			const type = this.elemProvService.getElementById(project.id);
-			body.num_inputs = type.numInputs;
-			body.num_outputs = type.numOutputs;
+			project.currState.inputOutputCount();
+			body.num_inputs = project.numInputs;
+			body.num_outputs = project.numOutputs;
 		}
 		return this.http.post<HttpResponseData<{success: boolean}>>(`/api/project/save/${project.id}`, body).pipe(
 			this.errorHandling.catchErrorOperator('Unable to save Component or Project on Server', undefined)

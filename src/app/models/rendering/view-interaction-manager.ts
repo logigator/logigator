@@ -179,6 +179,7 @@ export class ViewInteractionManager {
 				if (ProjectsService.staticInstance.currProject.addElements(
 					elementsToPaste, new PIXI.Point(endPos.x - elementsToPaste[0].pos.x, endPos.y - elementsToPaste[0].pos.y))
 				) {
+					ProjectsService.staticInstance.inputsOutputsCustomComponentChanged(this._view.projectId);
 					this._view.removeChild(this._selectRect);
 					this.cancelPasting();
 					delete this._singleSelectedElement;
@@ -320,7 +321,9 @@ export class ViewInteractionManager {
 				Grid.getGridPosForPixelPos(this._newCompSprite.position),
 				typeIdToBuild
 			);
-			ProjectsService.staticInstance.inputsOutputsCustomComponentChanged(this._view.projectId);
+			if (ElementProviderService.staticInstance.isPlugElement(typeIdToBuild)) {
+				ProjectsService.staticInstance.inputsOutputsCustomComponentChanged(this._view.projectId);
+			}
 		}
 		this._view.removeChild(this._newCompSprite);
 		this._newCompSprite.destroy();

@@ -39,6 +39,7 @@ export class ProjectInteractionService {
 
 	public deleteSelection() {
 		this.projectsService.currProject.removeElementsById(this.selection.selectedIds());
+		this.projectsService.inputsOutputsCustomComponentChanged(this.projectsService.currProject.id);
 		this._deleteNotifierSubject.next();
 	}
 
@@ -49,6 +50,7 @@ export class ProjectInteractionService {
 	public cutSelection() {
 		this.copy.copySelection();
 		this.projectsService.currProject.removeElementsById(this.selection.selectedIds());
+		this.projectsService.inputsOutputsCustomComponentChanged(this.projectsService.currProject.id);
 		this._deleteNotifierSubject.next();
 	}
 
