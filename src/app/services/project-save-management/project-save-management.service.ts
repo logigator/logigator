@@ -43,7 +43,7 @@ export class ProjectSaveManagementService {
 			// open share
 		} else {
 			window.history.pushState(null, null, '/');
-			project = Promise.resolve(this.createEmptyProject());
+			project = Promise.resolve(Project.empty());
 			this.elemProvService.setUserDefinedTypes(await this.getCustomElementsFromServer());
 		}
 		return project;
@@ -417,7 +417,7 @@ export class ProjectSaveManagementService {
 		if (!id) {
 			this.errorHandling.showErrorMessage('Invalid Url');
 			window.history.pushState(null, null, '/');
-			return Promise.resolve(this.createEmptyProject());
+			return Promise.resolve(Project.empty());
 		}
 		return this.openProjectFromServer(id);
 	}
@@ -447,7 +447,7 @@ export class ProjectSaveManagementService {
 			this.errorHandling.catchErrorOperatorDynamicMessage((err: any) => {
 				if (err.message === 'isComp') return 'Unable to open Component as Project';
 				return err.error.error.description;
-			}, this.createEmptyProject())
+			}, Project.empty())
 		).toPromise();
 	}
 
@@ -473,14 +473,6 @@ export class ProjectSaveManagementService {
 			delete model.mappings;
 		}
 		return model;
-	}
-
-	public createEmptyProject(): Project {
-		return new Project(new ProjectState(), {
-			type: 'project',
-			name: 'NewProject',
-			id: 0
-		});
 	}
 
 	private getProjectModelFromJson(data: ProjectModelResponse): ProjectModel {

@@ -38,7 +38,7 @@ export class Project {
 	public static empty(): Project {
 		return new Project(new ProjectState(), {
 			type: 'project',
-			name: 'New Project',
+			name: 'NewProject',
 			id: 0
 		});
 	}

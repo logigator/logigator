@@ -7,6 +7,7 @@ import {delayWhen, tap} from 'rxjs/operators';
 import {WorkArea} from '../../models/rendering/work-area';
 import {SaveAsComponent} from '../../components/popup/popup-contents/save-as/save-as.component';
 import {PopupService} from '../popup/popup.service';
+import {ElementProviderService} from '../element-provider/element-provider.service';
 
 @Injectable({
 	providedIn: 'root'
@@ -25,7 +26,11 @@ export class ProjectsService {
 	private _projectOpenedSubject = new ReplaySubject<number>();
 	private _projectClosedSubject = new Subject<number>();
 
-	constructor(private projectSaveManagementService: ProjectSaveManagementService, private popup: PopupService) {
+	constructor(
+		private projectSaveManagementService: ProjectSaveManagementService,
+		private popup: PopupService,
+		private elementProvider: ElementProviderService
+	) {
 		ProjectsService.staticInstance = this;
 
 		this.projectSaveManagementService.getProjectToOpenOnLoad().then(project => {
@@ -53,9 +58,19 @@ export class ProjectsService {
 		this._currentlyOpening = this._currentlyOpening.filter(o => id !== o);
 	}
 
+	public inputsOutputsCustomComponentChanged(projectId: number) {
+		const compProject = this.allProjects.get(projectId);
+		if (!compProject || compProject.type !== 'comp') return;
+		const elemType = this.elementProvider.getElementById(projectId);
+		elemType.minInputs = compProject.numInputs;
+		elemType.maxInputs = compProject.numInputs;
+		elemType.numInputs = compProject.numInputs;
+		elemType.numOutputs = compProject.numOutputs;
+	}
+
 	public newProject() {
 		this.projectSaveManagementService.resetProjectSource();
-		const project = this.projectSaveManagementService.createEmptyProject();
+		const project = Project.empty();
 		this.allProjects.forEach((value, key) => this.closeProject(key));
 		this._projects.set(project.id, project);
 		this._currProject = project;

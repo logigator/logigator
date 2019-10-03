@@ -296,7 +296,7 @@ export class ViewInteractionManager {
 	private startDraggingNewComponent(e: InteractionEvent) {
 		const typeId = WorkModeService.staticInstance.currentComponentToBuild;
 		const elemType = ElementProviderService.staticInstance.getElementById(typeId);
-		// if (elemType.numInputs === 0 || elemType.numOutputs === 0) return;
+		if (elemType.numInputs === 0 && elemType.numOutputs === 0) return;
 		this._draggingNewComp = true;
 		this._newCompSprite = CompSpriteGenerator.getComponentSprite(
 			elemType.symbol,
@@ -315,10 +315,12 @@ export class ViewInteractionManager {
 
 	private placeNewComp() {
 		if (this._newCompSprite.position.x > 0 && this._newCompSprite.position.y > 0) {
+			const typeIdToBuild = WorkModeService.staticInstance.currentComponentToBuild;
 			this._view.placeComponent(
 				Grid.getGridPosForPixelPos(this._newCompSprite.position),
-				WorkModeService.staticInstance.currentComponentToBuild
+				typeIdToBuild
 			);
+			ProjectsService.staticInstance.inputsOutputsCustomComponentChanged(this._view.projectId);
 		}
 		this._view.removeChild(this._newCompSprite);
 		this._newCompSprite.destroy();
