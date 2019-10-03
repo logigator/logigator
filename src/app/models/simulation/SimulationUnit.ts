@@ -25,4 +25,8 @@ export abstract class SimulationUnits {
 			outputs: [...unit.outputs]
 		};
 	}
+
+	public static concatIO(unit: SimulationUnit): number[] {
+		return unit.inputs.concat(unit.outputs);
+	}
 }

@@ -30,10 +30,12 @@ export class StateCompilerService {
 	}
 
 	// TODO check for recursion: userDefComp cannot include itself
-	private compileInner(state: ProjectState, plugLinks?: Map<number, number>):
+	// private compileInner(state: ProjectState, plugLinks?: Map<number, number>):
+	private compileInner(state: ProjectState, unit?: SimulationUnit):
 		{simUnits: Map<SimulationUnit, Element>, replacements: Map<number, number>} {
 
-		plugLinks = plugLinks || new Map<number, number>();
+		console.log('compInner', unit);
+		// plugLinks = plugLinks || new Map<number, number>();
 		let simulationUnits;
 		if (this._udcCache.has(state)) {
 			const {startId, units} = this._udcCache.get(state);
@@ -42,16 +44,15 @@ export class StateCompilerService {
 		} else {
 			simulationUnits = this.generateUnits(state);
 		}
-		const replacements = this.setAllLinks(state, simulationUnits, plugLinks);
+		const replacements = this.setAllLinks(state, simulationUnits, unit);
 		this.deletePlugElements(simulationUnits);
 		this.dissolveUdcs(simulationUnits);
 		return {simUnits: simulationUnits, replacements};
 	}
 
 	private setUdcCache(state: ProjectState, map: Map<SimulationUnit, Element>, startId: number): void {
-		console.log('setCache', startId, state.allElements.length);
+		console.log('set cache startId', startId, map);
 		this._udcCache.set(state, {startId, units: MapHeler.cloneMap(map)});
-		console.log('cache now has', this._udcCache.size);
 	}
 
 	private generateUnits(state: ProjectState): Map<SimulationUnit, Element> {
@@ -76,12 +77,13 @@ export class StateCompilerService {
 	private setAllLinks(
 		state: ProjectState,
 		units: Map<SimulationUnit, Element>,
-		plugLinks?: Map<number, number>): Map<number, number> {
+		// plugLinks?: Map<number, number>): Map<number, number> {
+		outerUnit?: SimulationUnit): Map<number, number> {
 
 		const linksOnUnits: Map<PIXI.Point[], number> = new Map<PIXI.Point[], number>();
 		const replacements = new Map<number, number>();
 
-		this.fillPlugsInUnitsOnLinks(state, linksOnUnits, units, plugLinks);
+		this.fillPlugsInUnitsOnLinks(state, linksOnUnits, units, outerUnit);
 		const startId = this._highestLinkId;
 		let idsLoaded = false;
 
@@ -117,7 +119,6 @@ export class StateCompilerService {
 	}
 
 	private updateCachedIds(startId: number, units: Map<SimulationUnit, Element>, linksOnUnits: Map<PIXI.Point[], number>): void {
-		console.log('updateIds', startId, units.size);
 		const idDif = this._highestLinkId - startId;
 		for (const unit of units.keys()) {
 			if (this.elementProvider.isPlugElement(unit.typeId)) {
@@ -156,7 +157,7 @@ export class StateCompilerService {
 		}
 		for (const otherPlug of otherPlugs) {
 			const u = MapHeler.valueToKey(units, otherPlug);
-			replacements.set(unit.inputs.concat(unit.outputs)[0], u.inputs.concat(u.outputs)[0]);
+			replacements.set(SimulationUnits.concatIO(unit)[0], SimulationUnits.concatIO(u)[0]);
 		}
 	}
 
@@ -164,7 +165,8 @@ export class StateCompilerService {
 		state: ProjectState,
 		unitsOnLinks: Map<PIXI.Point[], number>,
 		units: Map<SimulationUnit, Element>,
-		plugLinks?: Map<number, number>): void {
+		// plugLinks?: Map<number, number>): void {
+		outerUnit?: SimulationUnit): void {
 
 		let plugIndex = 0;
 		for (const [unit, element] of units.entries()) {
@@ -173,9 +175,9 @@ export class StateCompilerService {
 			for (const wireEndPos of Elements.wireEnds(element)) {
 				const connected = this.connectedToPos(state, wireEndPos, []);
 				const index = plugIndex++;
-				unitsOnLinks.set(connected, plugLinks.get(index));
-				unit.inputs = [plugLinks.get(index)];
-				unit.outputs = [plugLinks.get(index)];
+				unitsOnLinks.set(connected, SimulationUnits.concatIO(outerUnit)[index]);
+				unit.inputs = [SimulationUnits.concatIO(outerUnit)[index]];
+				unit.outputs = [SimulationUnits.concatIO(outerUnit)[index]];
 			}
 		}
 	}
@@ -218,16 +220,14 @@ export class StateCompilerService {
 	}
 
 	private dissolveSingle(units: Map<SimulationUnit, Element>, unit: SimulationUnit) {
-		const plugLinks: Map<number, number> = new Map<number, number>();
-		let wireIndex = 0;
-		for (const plugLink of unit.inputs.concat(unit.outputs)) {
-			plugLinks.set(wireIndex++, plugLink);
-		}
+		// const plugLinks: Map<number, number> = new Map<number, number>();
+		// let wireIndex = 0;
+		// for (const plugLink of unit.inputs.concat(unit.outputs)) {
+		// 	plugLinks.set(wireIndex++, plugLink);
+		// }
 		const unitsState = this.projects.getProjectById(unit.typeId).currState;
-		const {simUnits, replacements} = this.compileInner(unitsState, plugLinks);
+		const {simUnits, replacements} = this.compileInner(unitsState, unit);
 		simUnits.forEach((v, k) => {
-			if (units.has(k))
-				debugger
 			units.set(k, v);
 		});
 		this.doReplacements(units, replacements);
