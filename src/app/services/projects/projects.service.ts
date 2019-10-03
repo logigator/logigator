@@ -25,6 +25,7 @@ export class ProjectsService {
 
 	private _projectOpenedSubject = new ReplaySubject<number>();
 	private _projectClosedSubject = new Subject<number>();
+	private _projectSwitchSubject = new Subject<number>();
 
 	constructor(
 		private projectSaveManagementService: ProjectSaveManagementService,
@@ -46,7 +47,11 @@ export class ProjectsService {
 	}
 
 	public async openComponent(id: number) {
-		if (this.allProjects.has(id) || this._currentlyOpening.includes(id)) return;
+		if (this.allProjects.has(id)) {
+			this.switchToProject(id);
+			return;
+		}
+		if (this._currentlyOpening.includes(id)) return;
 		this._currentlyOpening.push(id);
 		const proj = await this.projectSaveManagementService.openComponent(id);
 		if (!proj) {
@@ -108,8 +113,13 @@ export class ProjectsService {
 		return this._projectClosedSubject.asObservable();
 	}
 
+	public get onProjectSwitch$(): Observable<number> {
+		return this._projectSwitchSubject.asObservable();
+	}
+
 	public switchToProject(id: number): void {
 		this._currProject = this._projects.get(id);
+		this._projectSwitchSubject.next(id);
 	}
 
 	public get currProject(): Project {

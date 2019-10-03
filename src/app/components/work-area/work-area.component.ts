@@ -57,13 +57,17 @@ export class WorkAreaComponent extends WorkArea implements OnInit, OnDestroy {
 			this.projectsService.onProjectClosed$.pipe(
 				takeUntil(this._destroySubject)
 			).subscribe(id => this.closeView(id));
-		});
 
-		this.workMode.currentWorkMode$.pipe(
-			takeUntil(this._destroySubject),
-			map((mode) => mode === 'simulation'),
-			distinctUntilChanged()
-		).subscribe(isSim => this.isSimulationModeChanged(isSim));
+			this.projectsService.onProjectSwitch$.pipe(
+				takeUntil(this._destroySubject)
+			).subscribe(id => this.onProjectSwitch(id));
+
+			this.workMode.currentWorkMode$.pipe(
+				takeUntil(this._destroySubject),
+				map((mode) => mode === 'simulation'),
+				distinctUntilChanged()
+			).subscribe(isSim => this.isSimulationModeChanged(isSim));
+		});
 	}
 
 	public get allProjects(): Map<number, Project> {
@@ -79,7 +83,7 @@ export class WorkAreaComponent extends WorkArea implements OnInit, OnDestroy {
 			this.renderer2.setStyle(this._pixiCanvasContainer.nativeElement, 'width', '100%');
 			this.projectsService.allProjects.forEach(proj => {
 				if (proj.type === 'project') {
-					this.switchActiveView(proj.id);
+					this.switchToProject(proj.id);
 				}
 			});
 		} else {
@@ -99,12 +103,13 @@ export class WorkAreaComponent extends WorkArea implements OnInit, OnDestroy {
 		});
 	}
 
-	public switchActiveView(toSwitchToId: number) {
+	public switchToProject(toSwitchToId: number) {
 		this.projectsService.switchToProject(toSwitchToId);
-		this.activeView = this._allViews.get(toSwitchToId);
-		this._ticker.singleFrame();
+	}
 
-		// this._pixiWindowContainer.show();
+	private onProjectSwitch(id: number) {
+		this.activeView = this._allViews.get(id);
+		this._ticker.singleFrame();
 	}
 
 	public tabCloseClicked(id: number, event: MouseEvent) {
@@ -119,7 +124,7 @@ export class WorkAreaComponent extends WorkArea implements OnInit, OnDestroy {
 		if (toClose === this.activeView) {
 			const toSwitchTo = this._allViews.values().next().value;
 			if (toSwitchTo) {
-				this.switchActiveView(toSwitchTo.projectId);
+				this.switchToProject(toSwitchTo.projectId);
 			} else {
 				delete this.activeView;
 			}
