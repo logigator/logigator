@@ -31,7 +31,7 @@ export class ToolbarComponent {
 		private workModeService: WorkModeService,
 		private projectService: ProjectsService,
 		private projectInteraction: ProjectInteractionService,
-   	private popupService: PopupService 
+		private popupService: PopupService
 	) {}
 
 	// #!if DEBUG === 'true'
