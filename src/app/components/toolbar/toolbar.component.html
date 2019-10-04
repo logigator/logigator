@@ -29,10 +29,16 @@
 		<button class="toolbar-button select" (click)="setWorkMode('select')" [class.active-button]="currentWorkMode === 'select'" aria-label="Select"></button>
 		<button class="toolbar-button text" [class.active-button]="currentWorkMode === 'text'" aria-label="Place Text"></button>
 
-		<button (click)="printElements()">print elements</button>
-		<button (click)="printCalls()">print calls</button>
-		<button (click)="runTests()">run tests</button>
-		<button (click)="runStep()">run step</button>
+		<ng-container *ngIf="showDebugButtons">
+			<button (click)="printElements()">print elements</button>
+		</ng-container>
+
+		<ng-container *ngIf="showRecordButtons">
+			<button (click)="printCalls()">print calls</button>
+			<button (click)="runTests()">run tests</button>
+			<button (click)="runStep()">run step</button>
+		</ng-container>
+
 	</div>
 
 	<div class="toolbar-end">

@@ -5,7 +5,7 @@ createFakeDom();
 
 import {ElementProviderService} from '../src/app/services/element-provider/element-provider.service';
 import {Test} from './auto-tests/tests';
-import {ManuallyLogged} from './auto-tests/logs';
+import {ManuallyLogged} from './auto-tests/board-recorder';
 
 
 // for static instance to have a value

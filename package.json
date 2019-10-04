@@ -2,9 +2,11 @@
 	"name": "logigator-editor",
 	"version": "0.0.0",
 	"scripts": {
+		"start": "cross-env PROJECT_RECORDER=false DEBUG=true npm run run",
+		"project-recorder": "cross-env PROJECT_RECORDER=true DEBUG=true npm run run",
 		"ng": "ng",
-		"start": "ng serve --port 8202 --disableHostCheck --proxy-config proxyconfig.json",
-		"build": "ng build --prod",
+		"run": "ng serve --port 8202 --disableHostCheck --proxy-config proxyconfig.json",
+		"build": "cross-env PROJECT_RECORDER=false DEBUG=false ng build --prod",
 		"test": "ng test",
 		"lint": "ng lint",
 		"e2e": "ng e2e",
@@ -20,22 +22,24 @@
 		"@angular/platform-browser": "~8.2.3",
 		"@angular/platform-browser-dynamic": "~8.2.3",
 		"@angular/router": "~8.2.3",
-		"@types/jsdom": "^12.2.4",
 		"pixi.js": "^5.1.2",
 		"rxjs": "~6.4.0",
 		"tslib": "^1.10.0",
 		"zone.js": "~0.9.1"
 	},
 	"devDependencies": {
+		"@angular-builders/custom-webpack": "^8.2.0",
 		"@angular-devkit/build-angular": "~0.803.0",
 		"@angular/cli": "~8.3.0",
 		"@angular/compiler-cli": "~8.2.3",
 		"@angular/language-service": "~8.2.3",
 		"@types/jasmine": "~3.3.8",
 		"@types/jasminewd2": "~2.0.3",
+		"@types/jsdom": "^12.2.4",
 		"@types/node": "~8.9.4",
 		"canvas": "^2.6.0",
 		"codelyzer": "^5.0.0",
+		"cross-env": "^6.0.3",
 		"jasmine-core": "~3.4.0",
 		"jasmine-spec-reporter": "~4.2.1",
 		"jsdom": "^15.1.1",
@@ -47,6 +51,7 @@
 		"protractor": "~5.4.0",
 		"ts-node": "~7.0.0",
 		"tslint": "~5.15.0",
-		"typescript": "~3.5.3"
+		"typescript": "~3.5.3",
+		"webpack-preprocessor-loader": "^1.1.2"
 	}
 }

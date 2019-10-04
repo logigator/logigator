@@ -3,33 +3,42 @@ import {WorkMode} from '../../models/work-modes';
 import {WorkModeService} from '../../services/work-mode/work-mode.service';
 import {ProjectsService} from '../../services/projects/projects.service';
 import {ProjectInteractionService} from '../../services/project-interaction/project-interaction.service';
+// #!project_recorder
 import {Test} from '../../../../tests/auto-tests/tests';
-import {ManuallyLogged} from '../../../../tests/auto-tests/logs';
+// #!project_recorder
+import {ManuallyLogged} from '../../../../tests/auto-tests/board-recorder';
 
 @Component({
 	selector: 'app-toolbar',
 	templateUrl: './toolbar.component.html',
 	styleUrls: ['./toolbar.component.scss']
 })
-export class ToolbarComponent implements OnInit {
+export class ToolbarComponent {
 
+	// #!project_recorder
 	private test: Test;
+
+	// #!project_recorder
+	public showRecordButtons = true;
+
+	// #!debug
+	public showDebugButtons = true;
 
 	constructor(
 		private workModeService: WorkModeService,
 		private projectService: ProjectsService,
 		private projectInteraction: ProjectInteractionService
-	) { }
+	) {}
 
-	ngOnInit() {
-	}
-
+	// #!if DEBUG === 'true'
 	public printElements(): void {
 		this.projectService.currProject.allElements.forEach(console.log);
 	}
+	// #!endif
 
+	// #!if PROJECT_RECORDER === 'true'
 	public printCalls(): void {
-		console.log(this.projectService.currProject.log.stringify());
+		console.log(this.projectService.currProject.boardRecorder.stringify());
 	}
 
 	public runTests(): void {
@@ -44,6 +53,7 @@ export class ToolbarComponent implements OnInit {
 			this.test.runStep(true);
 		}
 	}
+	// #!endif
 
 	public setWorkMode(mode: WorkMode) {
 		this.workModeService.setWorkMode(mode);

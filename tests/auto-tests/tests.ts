@@ -1,5 +1,5 @@
 import {Project} from '../../src/app/models/project';
-import {BoardRecorder, ManuallyLogged} from './logs';
+import {BoardRecorder, ManuallyLogged} from './board-recorder';
 
 export class Test {
 
