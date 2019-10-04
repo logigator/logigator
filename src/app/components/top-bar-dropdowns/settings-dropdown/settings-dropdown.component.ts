@@ -1,7 +1,8 @@
 import {Component, EventEmitter, OnInit, Output} from '@angular/core';
 import {ThemingService} from '../../../services/theming/theming.service';
-import {ShortcutMap} from '../../../models/shortcut-map';
-import {ShortcutsService} from '../../../services/shortcuts/shortcuts.service';
+import {PopupService} from '../../../services/popup/popup.service';
+import {ShortcutConfigComponent} from '../../popup/popup-contents/shortcut-config/shortcut-config/shortcut-config.component';
+import {ReloadQuestionComponent} from '../../popup/popup-contents/relaod-question/reload-question.component';
 
 @Component({
 	selector: 'app-settings-dropdown',
@@ -15,40 +16,25 @@ export class SettingsDropdownComponent {
 
 	public showDropDown = true;
 
-	public reloadPopupActive = false;
-	public changeShortcutPopupActive = false;
-
-	constructor(public theming: ThemingService) {}
+	constructor(public theming: ThemingService, private popupService: PopupService) {}
 
 	public close() {
 		this.requestClosed.emit();
 	}
 
-	public shortcutSettingsClose() {
+	public async showCustomizeShortcuts() {
+		this.showDropDown = false;
+		await this.popupService.showPopup(ShortcutConfigComponent, 'Customize Shortcuts', false);
 		this.close();
-		this.changeShortcutPopupActive = false;
 	}
 
-	public reloadClose() {
+	public async showReloadPopup() {
+		this.showDropDown = false;
+		await this.popupService.showPopup(ReloadQuestionComponent, 'Reload Required', false);
 		this.close();
-		this.reloadPopupActive = false;
 	}
 
-	public reloadPostponed() {
-		this.setTheme();
-		this.reloadClose();
-	}
-
-	public reloadConfirm() {
-		this.setTheme();
-		window.location.reload();
-	}
-
-	private setTheme() {
-		if (this.theming.pendingTheme === 'dark') {
-			this.theming.setTheme('light');
-		} else {
-			this.theming.setTheme('dark');
-		}
+	public changeGridVisibility() {
+		this.theming.showGrid = !this.theming.showGrid;
 	}
 }

@@ -1,12 +1,10 @@
 import {Component, ElementRef, NgZone, OnDestroy, OnInit, Renderer2, ViewChild} from '@angular/core';
-import * as PIXI from 'pixi.js';
 import {View} from '../../models/rendering/view';
 import {ProjectsService} from '../../services/projects/projects.service';
 import {Project} from '../../models/project';
 import {WorkArea} from '../../models/rendering/work-area';
 import {WindowWorkAreaComponent} from '../window-work-area/window-work-area.component';
-import {distinctUntilChanged, map, pairwise, takeUntil} from 'rxjs/operators';
-import {WorkMode} from '../../models/work-modes';
+import {distinctUntilChanged, map, takeUntil} from 'rxjs/operators';
 import {WorkModeService} from '../../services/work-mode/work-mode.service';
 
 @Component({
@@ -39,11 +37,12 @@ export class WorkAreaComponent extends WorkArea implements OnInit, OnDestroy {
 		this._allViews = new Map<number, View>();
 
 		this.ngZone.runOutsideAngular(async () => {
-			await this.loadPixiFont();
 			this.preventContextMenu(this._pixiCanvasContainer, this.renderer2);
+			this.initZoomPan(this._pixiCanvasContainer);
 			this.initPixi(this._pixiCanvasContainer, this.renderer2);
-			this.initPixiTicker(() => {
-				this.activeView.updateZoomPan();
+			this._ticker.setTickerFunction(() => {
+				if (!this.activeView) return;
+				this.updateZoomPan(this.activeView);
 				this._pixiRenderer.render(this.activeView);
 			});
 
@@ -52,9 +51,12 @@ export class WorkAreaComponent extends WorkArea implements OnInit, OnDestroy {
 			).subscribe(projectId => {
 				this.ngZone.runOutsideAngular(() => {
 					this.openProject(projectId);
-					this._pixiTicker.start(); // start ticker after a project was opened
+					this._ticker.singleFrame();
 				});
 			});
+			this.projectsService.onProjectClosed$.pipe(
+				takeUntil(this._destroySubject)
+			).subscribe(id => this.closeView(id));
 		});
 
 		this.workMode.currentWorkMode$.pipe(
@@ -62,14 +64,6 @@ export class WorkAreaComponent extends WorkArea implements OnInit, OnDestroy {
 			map((mode) => mode === 'simulation'),
 			distinctUntilChanged()
 		).subscribe(isSim => this.isSimulationModeChanged(isSim));
-	}
-
-	private loadPixiFont(): Promise<void> {
-		return new Promise<void>(resolve => {
-			const loader = PIXI.Loader.shared;
-			loader.add('luis_george_cafe', '/assets/fonts/louis_george_cafe_bitmap/font.fnt')
-				.load(() => resolve());
-		});
 	}
 
 	public get allProjects(): Map<number, Project> {
@@ -97,7 +91,7 @@ export class WorkAreaComponent extends WorkArea implements OnInit, OnDestroy {
 	}
 
 	private openProject(projectId: number) {
-		const newView = new View(projectId, this._pixiCanvasContainer.nativeElement);
+		const newView = new View(projectId, this._pixiCanvasContainer.nativeElement, this._ticker);
 		this.ngZone.run(() => {
 			this._allViews.set(projectId, newView);
 			this.activeView = newView;
@@ -112,22 +106,24 @@ export class WorkAreaComponent extends WorkArea implements OnInit, OnDestroy {
 		// this._pixiWindowContainer.show();
 	}
 
-	public closeView(id: number, event: MouseEvent) {
+	public tabCloseClicked(id: number, event: MouseEvent) {
 		event.stopPropagation();
-
-		// TODO: ask if the user wants to save
 		if (this._allViews.size <= 1) return;
+		this.projectsService.closeProject(id);
+	}
 
+	public closeView(id: number) {
 		const toClose = this._allViews.get(id);
 		this._allViews.delete(id);
-
 		if (toClose === this.activeView) {
-			this.switchActiveView(this._allViews.values().next().value.projectId);
+			const toSwitchTo = this._allViews.values().next().value;
+			if (toSwitchTo) {
+				this.switchActiveView(toSwitchTo.projectId);
+			} else {
+				delete this.activeView;
+			}
 		}
-
-		this.projectsService.closeProject(id);
 		toClose.destroy();
-
 	}
 
 	ngOnDestroy(): void {

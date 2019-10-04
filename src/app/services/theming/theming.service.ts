@@ -12,6 +12,9 @@ export class ThemingService {
 
 	private _currentTheme: Theme;
 
+	private _showGrid = true;
+	private _showGridChangeSubject = new Subject<boolean>();
+
 	private _requestFullscreenSubject = new Subject<void>();
 
 	private _editorColor: EditorColors = {
@@ -36,6 +39,7 @@ export class ThemingService {
 	constructor(@Inject(DOCUMENT) private document: HTMLDocument) {
 		ThemingService.staticInstance = this;
 		this.loadTheme();
+		this.document.body.classList.add(this.themeClass);
 	}
 
 	private loadTheme() {
@@ -60,6 +64,19 @@ export class ThemingService {
 
 	public get pendingTheme(): Theme {
 		return (localStorage.getItem('theme') || 'dark') as Theme;
+	}
+
+	public get showGrid(): boolean {
+		return this._showGrid;
+	}
+
+	public set showGrid(value: boolean) {
+		this._showGrid = value;
+		this._showGridChangeSubject.next(value);
+	}
+
+	public get showGridChanges$(): Observable<boolean> {
+		return this._showGridChangeSubject.asObservable();
 	}
 
 	public requestFullscreen() {

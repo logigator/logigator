@@ -1,0 +1,5 @@
+<p>save-as works!</p>
+
+<input type="text" [(ngModel)]="projectName">
+<button (click)="exportProject()">Download Project File</button>
+<button (click)="saveToServer()" *ngIf="isLoggedIn">save in cloud</button>

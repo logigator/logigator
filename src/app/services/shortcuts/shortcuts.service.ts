@@ -5,7 +5,9 @@ import {WorkModeService} from '../work-mode/work-mode.service';
 import {ProjectInteractionService} from '../project-interaction/project-interaction.service';
 import {ProjectsService} from '../projects/projects.service';
 import {ThemingService} from '../theming/theming.service';
-import {shortcutDescriptions} from './shortcut-descriptions';
+import {shortcutDescriptions, shortcutsUsableInSimulation} from './shortcut-descriptions';
+import {PopupService} from '../popup/popup.service';
+import {NewComponentComponent} from '../../components/popup/popup-contents/new-component/new-component.component';
 
 @Injectable({
 	providedIn: 'root'
@@ -18,7 +20,8 @@ export class ShortcutsService {
 		private workMode: WorkModeService,
 		private projectInteraction: ProjectInteractionService,
 		private projects: ProjectsService,
-		private theming: ThemingService
+		private theming: ThemingService,
+		private popup: PopupService
 	) {
 		this.loadShortcutSettings();
 	}
@@ -37,7 +40,7 @@ export class ShortcutsService {
 
 	public keyDownListener(e: KeyboardEvent) {
 		const action = this.getShortcutActionFromEvent(e);
-		if (!action) return;
+		if (!action || (this.workMode.currentWorkMode === 'simulation' && !shortcutsUsableInSimulation[action])) return;
 		e.preventDefault();
 		e.stopPropagation();
 		this.applyAction(action);
@@ -145,6 +148,9 @@ export class ShortcutsService {
 				break;
 			case 'save':
 				this.projects.saveAll();
+				break;
+			case 'newComp':
+				this.popup.showPopup(NewComponentComponent, 'New Component', false);
 				break;
 		}
 	}

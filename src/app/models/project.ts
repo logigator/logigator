@@ -6,6 +6,7 @@ import * as PIXI from 'pixi.js';
 import {CollisionFunctions} from './collision-functions';
 // #!project_recorder
 import {BoardRecorder} from '../../../tests/auto-tests/board-recorder';
+import {ElementProviderService} from '../services/element-provider/element-provider.service';
 
 export class Project {
 
@@ -40,6 +41,14 @@ export class Project {
 
 		// #!project_recorder
 		this.boardRecorder = new BoardRecorder(this, true);
+	}
+
+	public static empty(): Project {
+		return new Project(new ProjectState(), {
+			type: 'project',
+			name: 'New Project',
+			id: 0
+		});
 	}
 
 	public static empty(): Project {
@@ -391,7 +400,7 @@ export class Project {
 
 
 	get allElements(): Element[] {
-		return this._currState.model.board.elements;
+		return this._currState.allElements;
 	}
 
 	get changes(): Observable<Action[]> {
@@ -416,5 +425,13 @@ export class Project {
 
 	get type(): 'project' | 'comp' {
 		return this._type;
+	}
+
+	get numInputs() {
+		return this._currState.numInputs;
+	}
+
+	get numOutputs() {
+		return this._currState.numOutputs;
 	}
 }

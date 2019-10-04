@@ -7,6 +7,9 @@ import {ProjectInteractionService} from '../../services/project-interaction/proj
 import {Test} from '../../../../tests/auto-tests/tests';
 // #!project_recorder
 import {ManuallyLogged} from '../../../../tests/auto-tests/board-recorder';
+import {PopupService} from '../../services/popup/popup.service';
+import {NewComponentComponent} from '../popup/popup-contents/new-component/new-component.component';
+import {OpenProjectComponent} from '../popup/popup-contents/open/open-project.component';
 
 @Component({
 	selector: 'app-toolbar',
@@ -27,7 +30,8 @@ export class ToolbarComponent {
 	constructor(
 		private workModeService: WorkModeService,
 		private projectService: ProjectsService,
-		private projectInteraction: ProjectInteractionService
+		private projectInteraction: ProjectInteractionService,
+   	private popupService: PopupService 
 	) {}
 
 	// #!if DEBUG === 'true'
@@ -61,6 +65,10 @@ export class ToolbarComponent {
 
 	public get currentWorkMode(): WorkMode {
 		return this.workModeService.currentWorkMode;
+	}
+
+	public newComponent(): void {
+		this.popupService.showPopup(NewComponentComponent, 'New Component', false);
 	}
 
 	public undo(): void {
@@ -97,5 +105,9 @@ export class ToolbarComponent {
 
 	public save() {
 		this.projectService.saveAll();
+	}
+
+	public open() {
+		this.popupService.showPopup(OpenProjectComponent, 'Open Project', true);
 	}
 }

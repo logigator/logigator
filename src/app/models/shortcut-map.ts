@@ -30,3 +30,7 @@ export interface ShortcutConfig {
 export type ShortcutDescriptionMap = {
 	[A in ShortcutAction]: string;
 };
+
+export type ShortcutUsableInSimulationMap = {
+	[A in ShortcutAction]: boolean;
+};

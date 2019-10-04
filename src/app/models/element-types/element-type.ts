@@ -7,5 +7,5 @@ export interface ElementType {
 	symbol: string;
 	description: string;
 	rotation: number;
-	category: 'basic' | 'io' | 'user';
+	category: 'basic' | 'plug' | 'io' | 'user';
 }

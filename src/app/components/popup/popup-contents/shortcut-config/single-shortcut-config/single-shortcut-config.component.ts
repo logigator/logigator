@@ -1,6 +1,6 @@
 import {ChangeDetectorRef, Component, ElementRef, HostListener, Input, OnInit, ViewChild} from '@angular/core';
-import {ShortcutsService} from '../../../services/shortcuts/shortcuts.service';
-import {ShortcutAction, ShortcutConfig} from '../../../models/shortcut-map';
+import {ShortcutsService} from '../../../../../services/shortcuts/shortcuts.service';
+import {ShortcutAction, ShortcutConfig} from '../../../../../models/shortcut-map';
 
 @Component({
 	selector: 'app-single-shortcut-config',

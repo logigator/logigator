@@ -1,33 +1,28 @@
 <div class="toolbar">
 
 	<div class="toolbar-buttons">
-		<button class="toolbar-button save" aria-label="Save" (click)="save()"></button>
-		<button class="toolbar-button open" aria-label="Save"></button>
-		<button class="toolbar-button new-comp" aria-label="Save"></button>
+		<ng-container *ngIf="currentWorkMode !== 'simulation'">
+			<button class="toolbar-button save" aria-label="Save" (click)="save()"></button>
+			<button class="toolbar-button open" aria-label="Open" (click)="open()"></button>
+			<button class="toolbar-button new-comp" aria-label="New Component" (click)="newComponent()"></button>
 
-		<div class="divider"></div>
+			<div class="divider"></div>
 
-		<button class="toolbar-button copy" aria-label="Copy" (click)="copy()"></button>
-		<button class="toolbar-button cut" aria-label="Cut" (click)="cut()"></button>
-		<button class="toolbar-button paste" aria-label="Paste" (click)="paste()"></button>
-		<button class="toolbar-button delete" (click)="delete()" aria-label="Delete"></button>
+			<button class="toolbar-button copy" aria-label="Copy" (click)="copy()"></button>
+			<button class="toolbar-button cut" aria-label="Cut" (click)="cut()"></button>
+			<button class="toolbar-button paste" aria-label="Paste" (click)="paste()"></button>
+			<button class="toolbar-button delete" (click)="delete()" aria-label="Delete"></button>
 
-		<div class="divider"></div>
+			<div class="divider"></div>
 
-		<button class="toolbar-button undo" (click)="undo()" aria-label="Undo"></button>
-		<button class="toolbar-button redo" (click)="redo()" aria-label="Redo"></button>
+			<button class="toolbar-button undo" (click)="undo()" aria-label="Undo"></button>
+			<button class="toolbar-button redo" (click)="redo()" aria-label="Redo"></button>
 
-		<div class="divider"></div>
+			<div class="divider"></div>
+		</ng-container>
 
 		<button class="toolbar-button zoom-out" (click)="zoomOut()" aria-label="Zoom Out"></button>
 		<button class="toolbar-button zoom-in" (click)="zoomIn()" aria-label="Zoom In"></button>
-
-		<div class="divider"></div>
-
-		<button class="toolbar-button wire" (click)="setWorkMode('buildWire')" [class.active-button]="currentWorkMode === 'buildWire'" aria-label="Place Wire"></button>
-		<button class="toolbar-button conn-wire" (click)="setWorkMode('connectWire')" [class.active-button]="currentWorkMode === 'connectWire'" aria-label="Connect Wire"></button>
-		<button class="toolbar-button select" (click)="setWorkMode('select')" [class.active-button]="currentWorkMode === 'select'" aria-label="Select"></button>
-		<button class="toolbar-button text" [class.active-button]="currentWorkMode === 'text'" aria-label="Place Text"></button>
 
 		<ng-container *ngIf="showDebugButtons">
 			<button (click)="printElements()">print elements</button>
@@ -38,16 +33,29 @@
 			<button (click)="runTests()">run tests</button>
 			<button (click)="runStep()">run step</button>
 		</ng-container>
-
 	</div>
 
-	<div class="toolbar-end">
-		<p (click)="setWorkMode('simulation')" *ngIf="currentWorkMode !== 'simulation'" class="start-sim">Start Simulation</p>
+		<ng-container *ngIf="currentWorkMode !== 'simulation'">
+			<div class="divider"></div>
+			<button class="toolbar-button wire" (click)="setWorkMode('buildWire')" [class.active-button]="currentWorkMode === 'buildWire'" aria-label="Place Wire"></button>
+			<button class="toolbar-button conn-wire" (click)="setWorkMode('connectWire')" [class.active-button]="currentWorkMode === 'connectWire'" aria-label="Connect Wire"></button>
+			<button class="toolbar-button select" (click)="setWorkMode('select')" [class.active-button]="currentWorkMode === 'select'" aria-label="Select"></button>
+			<button class="toolbar-button text" [class.active-button]="currentWorkMode === 'text'" aria-label="Place Text"></button>
+		</ng-container>
+
 		<ng-container *ngIf="currentWorkMode === 'simulation'">
+			<div class="divider"></div>
+
 			<button class="toolbar-button play"></button>
 			<button class="toolbar-button step"></button>
 			<button class="toolbar-button pause"></button>
 			<button class="toolbar-button stop"></button>
 		</ng-container>
+
+	</div>
+
+	<div class="toolbar-end">
+		<p (click)="setWorkMode('simulation')" *ngIf="currentWorkMode !== 'simulation'" class="start-sim">Start Simulation</p>
+		<p (click)="setWorkMode('select')" *ngIf="currentWorkMode === 'simulation'" class="start-sim">Exit Simulation</p>
 	</div>
 </div>

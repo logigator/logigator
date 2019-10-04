@@ -49,7 +49,7 @@ export const defaultShortcuts: ShortcutMap = {
 	},
 	newComp: {
 		key: 'N',
-		ctrl: true
+		alt: true
 	},
 	textMode: {
 		key: 'T',
