@@ -1,7 +1,7 @@
 import {SimulationUnit, SimulationUnits} from '../../../models/simulation/SimulationUnit';
 import {Element} from '../../../models/element';
 
-export abstract class MapHeler {
+export abstract class MapHelper {
 
 	public static mapHas(map: Map<PIXI.Point[], number>, points: PIXI.Point[]): boolean {
 		outer: for (const key of map.keys()) {
