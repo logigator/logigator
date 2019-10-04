@@ -51,14 +51,6 @@ export class Project {
 		});
 	}
 
-	public static empty(): Project {
-		return new Project(new ProjectState(), {
-			type: 'project',
-			name: 'New Project',
-			id: 0
-		});
-	}
-
 	private applyActions(actions: Action[]): void {
 		actions.forEach(action => this.applyAction(action));
 	}

@@ -24,19 +24,9 @@
 		<button class="toolbar-button zoom-out" (click)="zoomOut()" aria-label="Zoom Out"></button>
 		<button class="toolbar-button zoom-in" (click)="zoomIn()" aria-label="Zoom In"></button>
 
-		<ng-container *ngIf="showDebugButtons">
-			<button (click)="printElements()">print elements</button>
-		</ng-container>
-
-		<ng-container *ngIf="showRecordButtons">
-			<button (click)="printCalls()">print calls</button>
-			<button (click)="runTests()">run tests</button>
-			<button (click)="runStep()">run step</button>
-		</ng-container>
-	</div>
-
 		<ng-container *ngIf="currentWorkMode !== 'simulation'">
 			<div class="divider"></div>
+
 			<button class="toolbar-button wire" (click)="setWorkMode('buildWire')" [class.active-button]="currentWorkMode === 'buildWire'" aria-label="Place Wire"></button>
 			<button class="toolbar-button conn-wire" (click)="setWorkMode('connectWire')" [class.active-button]="currentWorkMode === 'connectWire'" aria-label="Connect Wire"></button>
 			<button class="toolbar-button select" (click)="setWorkMode('select')" [class.active-button]="currentWorkMode === 'select'" aria-label="Select"></button>
@@ -50,6 +40,16 @@
 			<button class="toolbar-button step"></button>
 			<button class="toolbar-button pause"></button>
 			<button class="toolbar-button stop"></button>
+		</ng-container>
+
+		<ng-container *ngIf="showDebugButtons">
+			<button (click)="printElements()">print elements</button>
+		</ng-container>
+
+		<ng-container *ngIf="showRecordButtons">
+			<button (click)="printCalls()">print calls</button>
+			<button (click)="runTests()">run tests</button>
+			<button (click)="runStep()">run step</button>
 		</ng-container>
 
 	</div>
