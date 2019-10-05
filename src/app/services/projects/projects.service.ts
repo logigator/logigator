@@ -31,7 +31,7 @@ export class ProjectsService {
 	constructor(
 		private projectSaveManagementService: ProjectSaveManagementService,
 		private popup: PopupService,
-		private elementProvider: ElementProviderService
+		private elementProvider: ElementProviderService,
 		private errorHandling: ErrorHandlingService
 	) {
 		ProjectsService.staticInstance = this;

@@ -37,7 +37,7 @@ export class ToolbarComponent implements OnInit {
 	}
 
 	public undo(): void {
-		this.projectInteraction.redoForCurrent()
+		this.projectInteraction.redoForCurrent();
 	}
 
 	public redo(): void {
