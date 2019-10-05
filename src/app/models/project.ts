@@ -261,11 +261,6 @@ export class Project {
 	}
 
 
-	public updateInputsOutputs(): void {
-		// TODO
-	}
-
-
 
 	public toggleWireConnection(pos: PIXI.Point): void {
 		const wiresOnPoint = this._currState.wiresOnPoint(pos);

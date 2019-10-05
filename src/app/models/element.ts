@@ -116,29 +116,31 @@ export abstract class Elements {
 		if (numInputs === undefined)
 			numInputs = element.numInputs;
 		const out: PIXI.Point[] = [];
-		if (rotation === 0) {
-			for (let i = 0; i < numInputs; i++)
-				out.push(new PIXI.Point(element.pos.x - 1, element.pos.y + i));
-			for (let i = 0; i < element.numOutputs; i++)
-				out.push(new PIXI.Point(element.endPos.x, element.pos.y + i));
-		}
-		if (rotation === 1) {
-			for (let i = 0; i < numInputs; i++)
-				out.push(new PIXI.Point(element.endPos.x - 1 - i, element.pos.y - 1));
-			for (let i = 0; i < element.numOutputs; i++)
-				out.push(new PIXI.Point(element.endPos.x - 1 - i, element.endPos.y));
-		}
-		if (rotation === 2) {
-			for (let i = 0; i < numInputs; i++)
-				out.push(new PIXI.Point(element.endPos.x, element.endPos.y - 1 - i));
-			for (let i = 0; i < element.numOutputs; i++)
-				out.push(new PIXI.Point(element.pos.x - 1, element.endPos.y - 1 - i));
-		}
-		if (rotation === 3) {
-			for (let i = 0; i < numInputs; i++)
-				out.push(new PIXI.Point(element.pos.x + i, element.endPos.y));
-			for (let i = 0; i < element.numOutputs; i++)
-				out.push(new PIXI.Point(element.pos.x + i, element.pos.y - 1));
+		switch (rotation) {
+			case 0:
+				for (let i = 0; i < numInputs; i++)
+					out.push(new PIXI.Point(element.pos.x - 1, element.pos.y + i));
+				for (let i = 0; i < element.numOutputs; i++)
+					out.push(new PIXI.Point(element.endPos.x, element.pos.y + i));
+				break;
+			case 1:
+				for (let i = 0; i < numInputs; i++)
+					out.push(new PIXI.Point(element.endPos.x - 1 - i, element.pos.y - 1));
+				for (let i = 0; i < element.numOutputs; i++)
+					out.push(new PIXI.Point(element.endPos.x - 1 - i, element.endPos.y));
+				break;
+			case 2:
+				for (let i = 0; i < numInputs; i++)
+					out.push(new PIXI.Point(element.endPos.x, element.endPos.y - 1 - i));
+				for (let i = 0; i < element.numOutputs; i++)
+					out.push(new PIXI.Point(element.pos.x - 1, element.endPos.y - 1 - i));
+				break;
+			case 3:
+				for (let i = 0; i < numInputs; i++)
+					out.push(new PIXI.Point(element.pos.x + i, element.endPos.y));
+				for (let i = 0; i < element.numOutputs; i++)
+					out.push(new PIXI.Point(element.pos.x + i, element.pos.y - 1));
+				break;
 		}
 		return out;
 	}
