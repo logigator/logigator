@@ -7,6 +7,8 @@ import {delayWhen, tap} from 'rxjs/operators';
 import {WorkArea} from '../../models/rendering/work-area';
 import {SaveAsComponent} from '../../components/popup/popup-contents/save-as/save-as.component';
 import {PopupService} from '../popup/popup.service';
+import {ElementProviderService} from '../element-provider/element-provider.service';
+import {ErrorHandlingService} from '../error-handling/error-handling.service';
 
 @Injectable({
 	providedIn: 'root'
@@ -24,8 +26,14 @@ export class ProjectsService {
 
 	private _projectOpenedSubject = new ReplaySubject<number>();
 	private _projectClosedSubject = new Subject<number>();
+	private _projectSwitchSubject = new Subject<number>();
 
-	constructor(private projectSaveManagementService: ProjectSaveManagementService, private popup: PopupService) {
+	constructor(
+		private projectSaveManagementService: ProjectSaveManagementService,
+		private popup: PopupService,
+		private elementProvider: ElementProviderService,
+		private errorHandling: ErrorHandlingService
+	) {
 		ProjectsService.staticInstance = this;
 
 		this.projectSaveManagementService.getProjectToOpenOnLoad().then(project => {
@@ -41,7 +49,11 @@ export class ProjectsService {
 	}
 
 	public async openComponent(id: number) {
-		if (this.allProjects.has(id) || this._currentlyOpening.includes(id)) return;
+		if (this.allProjects.has(id)) {
+			this.switchToProject(id);
+			return;
+		}
+		if (this._currentlyOpening.includes(id)) return;
 		this._currentlyOpening.push(id);
 		const proj = await this.projectSaveManagementService.openComponent(id);
 		if (!proj) {
@@ -51,11 +63,24 @@ export class ProjectsService {
 		this._projects.set(id, proj);
 		this._projectOpenedSubject.next(id);
 		this._currentlyOpening = this._currentlyOpening.filter(o => id !== o);
+		this.errorHandling.showInfo(`Opened Component ${proj.name}`);
+	}
+
+	public inputsOutputsCustomComponentChanged(projectId: number) {
+		const compProject = this.allProjects.get(projectId);
+		if (!compProject || compProject.type !== 'comp') return;
+		const elemType = this.elementProvider.getElementById(projectId);
+		compProject.currState.inputOutputCount();
+		elemType.minInputs = compProject.numInputs;
+		elemType.maxInputs = compProject.numInputs;
+		elemType.numInputs = compProject.numInputs;
+		elemType.numOutputs = compProject.numOutputs;
+		this._projects.forEach(p => p.updateInputsOutputs(projectId));
 	}
 
 	public newProject() {
 		this.projectSaveManagementService.resetProjectSource();
-		const project = this.projectSaveManagementService.createEmptyProject();
+		const project = Project.empty();
 		this.allProjects.forEach((value, key) => this.closeProject(key));
 		this._projects.set(project.id, project);
 		this._currProject = project;
@@ -92,8 +117,13 @@ export class ProjectsService {
 		return this._projectClosedSubject.asObservable();
 	}
 
+	public get onProjectSwitch$(): Observable<number> {
+		return this._projectSwitchSubject.asObservable();
+	}
+
 	public switchToProject(id: number): void {
 		this._currProject = this._projects.get(id);
+		this._projectSwitchSubject.next(id);
 	}
 
 	public get currProject(): Project {
@@ -105,9 +135,10 @@ export class ProjectsService {
 	}
 
 	public closeProject(id: number) {
-		this.projectSaveManagementService.saveComponent(this._projects.get(id));
-		this._projectClosedSubject.next(id);
-		this._projects.delete(id);
+		this.projectSaveManagementService.saveComponent(this._projects.get(id)).then(() => {
+			this._projectClosedSubject.next(id);
+			this._projects.delete(id);
+		}).catch();
 	}
 
 	public async saveAll() {

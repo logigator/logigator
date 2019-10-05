@@ -72,11 +72,11 @@ export class ToolbarComponent {
 	}
 
 	public undo(): void {
-		this.projectService.currProject.stepBack();
+		this.projectInteraction.redoForCurrent();
 	}
 
 	public redo(): void {
-		this.projectService.currProject.stepForward();
+		this.projectInteraction.undoForCurrent();
 	}
 
 	public zoomIn() {

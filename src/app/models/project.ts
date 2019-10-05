@@ -46,7 +46,7 @@ export class Project {
 	public static empty(): Project {
 		return new Project(new ProjectState(), {
 			type: 'project',
-			name: 'New Project',
+			name: 'NewProject',
 			id: 0
 		});
 	}
@@ -284,6 +284,25 @@ export class Project {
 		actions.push(...this.autoAssemble(changed));
 		this.newState(actions);
 		return true;
+	}
+
+
+	public updateInputsOutputs(typeId?: number): void {
+		const actions: Action[] = [];
+		for (const elem of this.allElements) {
+			if (elem.typeId === typeId || !typeId && ElementProviderService.staticInstance.isUserElement(elem.typeId)) {
+				this._currState.updateNumInputsOutputs(elem);
+				actions.push({
+					name: 'remComp',
+					element: elem
+				});
+				actions.push({
+					name: 'addComp',
+					element: elem
+				});
+			}
+		}
+		this._changeSubject.next(actions);
 	}
 
 

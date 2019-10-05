@@ -141,10 +141,10 @@ export class ShortcutsService {
 				this.theming.requestFullscreen();
 				break;
 			case 'undo':
-				this.projects.currProject.stepBack();
+				this.projectInteraction.undoForCurrent();
 				break;
 			case 'redo':
-				this.projects.currProject.stepForward();
+				this.projectInteraction.redoForCurrent();
 				break;
 			case 'save':
 				this.projects.saveAll();

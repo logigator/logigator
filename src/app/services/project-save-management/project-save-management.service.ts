@@ -43,7 +43,7 @@ export class ProjectSaveManagementService {
 			// open share
 		} else {
 			window.history.pushState(null, null, '/');
-			project = Promise.resolve(this.createEmptyProject());
+			project = Promise.resolve(Project.empty());
 			this.elemProvService.setUserDefinedTypes(await this.getCustomElementsFromServer());
 		}
 		return project;
@@ -113,9 +113,11 @@ export class ProjectSaveManagementService {
 		if (project.id < 1000 && this._componentsFromLocalFile.has(project.id)) {
 			const compLocalFile = this._componentsFromLocalFile.get(project.id);
 			compLocalFile.data = project.currState.model;
-		} else if (this._projectSource === 'server') {
+		} else if (this.user.isLoggedIn) {
 			if (await this.saveSingleProjectToServer(project)) {
 				this.errorHandling.showInfo(`Saved component ${project.name} on Server`);
+			} else {
+				throw Error();
 			}
 		}
 	}
@@ -275,12 +277,17 @@ export class ProjectSaveManagementService {
 		).toPromise();
 	}
 
-	public async saveProjects(projects: Project[]) {
+	public saveProjects(projects: Project[]) {
+		const mainProject = projects.find(p => p.type === 'project');
 		if (this._projectSource === 'server') {
-			if (await this.saveProjectsToServer(projects)) {
-				this.errorHandling.showInfo('Saved Project and all open Components');
-			}
+			this.saveSingleProjectToServer(mainProject);
 		}
+		const comps = projects.filter(p => p.type === 'comp');
+		const savePromises = [];
+		for (const comp of comps) {
+			savePromises.push(this.saveComponent(comp));
+		}
+		Promise.all(savePromises).then(() => this.errorHandling.showInfo('Saved Project and all open Components'));
 	}
 
 	public async openComponent(id: number): Promise<Project> {
@@ -364,9 +371,9 @@ export class ProjectSaveManagementService {
 			}
 		};
 		if (project.type === 'comp') {
-			const type = this.elemProvService.getElementById(project.id);
-			body.num_inputs = type.numInputs;
-			body.num_outputs = type.numOutputs;
+			project.currState.inputOutputCount();
+			body.num_inputs = project.numInputs;
+			body.num_outputs = project.numOutputs;
 		}
 		return this.http.post<HttpResponseData<{success: boolean}>>(`/api/project/save/${project.id}`, body).pipe(
 			this.errorHandling.catchErrorOperator('Unable to save Component or Project on Server', undefined)
@@ -417,7 +424,7 @@ export class ProjectSaveManagementService {
 		if (!id) {
 			this.errorHandling.showErrorMessage('Invalid Url');
 			window.history.pushState(null, null, '/');
-			return Promise.resolve(this.createEmptyProject());
+			return Promise.resolve(Project.empty());
 		}
 		return this.openProjectFromServer(id);
 	}
@@ -447,7 +454,7 @@ export class ProjectSaveManagementService {
 			this.errorHandling.catchErrorOperatorDynamicMessage((err: any) => {
 				if (err.message === 'isComp') return 'Unable to open Component as Project';
 				return err.error.error.description;
-			}, this.createEmptyProject())
+			}, Project.empty())
 		).toPromise();
 	}
 
@@ -473,14 +480,6 @@ export class ProjectSaveManagementService {
 			delete model.mappings;
 		}
 		return model;
-	}
-
-	public createEmptyProject(): Project {
-		return new Project(new ProjectState(), {
-			type: 'project',
-			name: 'NewProject',
-			id: 0
-		});
 	}
 
 	private getProjectModelFromJson(data: ProjectModelResponse): ProjectModel {
