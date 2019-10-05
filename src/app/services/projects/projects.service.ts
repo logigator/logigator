@@ -72,6 +72,7 @@ export class ProjectsService {
 		elemType.maxInputs = compProject.numInputs;
 		elemType.numInputs = compProject.numInputs;
 		elemType.numOutputs = compProject.numOutputs;
+		this._projects.forEach(p => p.updateInputsOutputs(projectId));
 	}
 
 	public newProject() {
