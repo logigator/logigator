@@ -261,7 +261,7 @@ export class Project {
 	}
 
 
-	public updateInputsOutputs(typeId: number): void {
+	public updateInputsOutputs(typeId?: number): void {
 		for (const elem of this.allElements) {
 			if (elem.typeId === typeId || !typeId && ElementProviderService.staticInstance.isUserElement(elem.typeId)) {
 				this._currState.updateNumInputsOutputs(elem);
