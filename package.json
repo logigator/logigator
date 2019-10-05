@@ -34,12 +34,12 @@
 		"@angular/cli": "~8.3.0",
 		"@angular/compiler-cli": "~8.2.3",
 		"@angular/language-service": "~8.2.3",
+		"@types/file-saver": "^2.0.1",
 		"@types/jasmine": "~3.3.8",
 		"@types/jasminewd2": "~2.0.3",
 		"@types/jsdom": "^12.2.4",
 		"@types/node": "~8.9.4",
 		"canvas": "^2.6.0",
-		"@types/file-saver": "^2.0.1",
 		"codelyzer": "^5.0.0",
 		"cross-env": "^6.0.3",
 		"jasmine-core": "~3.4.0",
@@ -51,9 +51,10 @@
 		"karma-jasmine": "~2.0.1",
 		"karma-jasmine-html-reporter": "^1.4.0",
 		"protractor": "~5.4.0",
+		"source-map-loader": "^0.2.4",
 		"ts-node": "~7.0.0",
 		"tslint": "~5.15.0",
 		"typescript": "~3.5.3",
-		"webpack-preprocessor-loader": "^1.1.2"
+		"webpack-preprocessor-loader": "github:logigator/preprocessor-loader"
 	}
 }

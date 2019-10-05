@@ -1,6 +1,6 @@
 module.exports = (config, options) => {
 	config.module.rules.unshift({
-		test: /\.ts$/,
+		test: /\.tsx?$/,
 		use: [
 			{
 				loader: 'webpack-preprocessor-loader',
@@ -13,9 +13,9 @@ module.exports = (config, options) => {
 						PROJECT_RECORDER: process.env.PROJECT_RECORDER,
 						DEBUG: process.env.DEBUG
 					},
-					verbose: false,
+					verbose: true,
 				}
-			}
+			},
 		]
 	});
 
