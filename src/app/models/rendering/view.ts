@@ -143,7 +143,6 @@ export class View extends PIXI.Container {
 			Grid.getGridPosForPixelPos(currentlyOnScreen.end)
 		);
 		for (const chunkP of chunksToRender) {
-			console.log(chunkP);
 			const chunk = this._chunks[chunkP.x][chunkP.y];
 			if (show) {
 				chunk.gridGraphics.destroy();

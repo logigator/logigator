@@ -39,6 +39,7 @@ export class ProjectInteractionService {
 
 	public deleteSelection() {
 		this.projectsService.currProject.removeElementsById(this.selection.selectedIds());
+		this.projectsService.inputsOutputsCustomComponentChanged(this.projectsService.currProject.id);
 		this._deleteNotifierSubject.next();
 	}
 
@@ -49,12 +50,23 @@ export class ProjectInteractionService {
 	public cutSelection() {
 		this.copy.copySelection();
 		this.projectsService.currProject.removeElementsById(this.selection.selectedIds());
+		this.projectsService.inputsOutputsCustomComponentChanged(this.projectsService.currProject.id);
 		this._deleteNotifierSubject.next();
 	}
 
 	public paste() {
 		this.workMode.setWorkMode('select');
 		this._pasteNotifierSubject.next();
+	}
+
+	public undoForCurrent() {
+		this.projectsService.currProject.stepBack();
+		this.projectsService.inputsOutputsCustomComponentChanged(this.projectsService.currProject.id);
+	}
+
+	public redoForCurrent() {
+		this.projectsService.currProject.stepForward();
+		this.projectsService.inputsOutputsCustomComponentChanged(this.projectsService.currProject.id);
 	}
 
 	public get onZoomChangeClick$(): Observable<'in' | 'out' | '100'> {

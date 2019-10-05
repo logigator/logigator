@@ -4,7 +4,7 @@
 		<ng-container *ngFor="let project of allProjects | keyvalue">
 			<div class="tab"
 			     *ngIf="!isSimulationMode || project.value.type === 'project'"
-			     (click)="switchActiveView(project.key)"
+			     (click)="switchToProject(project.key)"
 			     [class.tab-active]="project.key === activeView?.projectId">
 				<p>{{project.value.name}}</p>
 				<span *ngIf="project.value.type !== 'project'" class="tab-close" (click)="tabCloseClicked(project.key, $event)"></span>
