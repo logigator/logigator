@@ -25,6 +25,8 @@ import { ReloadQuestionComponent } from './components/popup/popup-contents/relao
 import { NewComponentComponent } from './components/popup/popup-contents/new-component/new-component.component';
 import { OpenProjectComponent } from './components/popup/popup-contents/open/open-project.component';
 import { SaveAsComponent } from './components/popup/popup-contents/save-as/save-as.component';
+import {ToastNoAnimationModule, ToastrModule} from 'ngx-toastr';
+import {BrowserAnimationsModule} from '@angular/platform-browser/animations';
 
 @NgModule({
 	declarations: [
@@ -63,7 +65,14 @@ import { SaveAsComponent } from './components/popup/popup-contents/save-as/save-
 		BrowserModule,
 		FormsModule,
 		HttpClientModule,
-		ReactiveFormsModule
+		ReactiveFormsModule,
+		BrowserAnimationsModule,
+		ToastrModule.forRoot({
+			positionClass: 'toastr-position',
+			easeTime: 100,
+			timeOut: 5000,
+			tapToDismiss: true
+		}),
 	],
 	providers: [],
 	bootstrap: [AppComponent]

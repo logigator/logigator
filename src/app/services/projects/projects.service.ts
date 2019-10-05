@@ -7,6 +7,7 @@ import {delayWhen, tap} from 'rxjs/operators';
 import {WorkArea} from '../../models/rendering/work-area';
 import {SaveAsComponent} from '../../components/popup/popup-contents/save-as/save-as.component';
 import {PopupService} from '../popup/popup.service';
+import {ErrorHandlingService} from '../error-handling/error-handling.service';
 
 @Injectable({
 	providedIn: 'root'
@@ -25,7 +26,11 @@ export class ProjectsService {
 	private _projectOpenedSubject = new ReplaySubject<number>();
 	private _projectClosedSubject = new Subject<number>();
 
-	constructor(private projectSaveManagementService: ProjectSaveManagementService, private popup: PopupService) {
+	constructor(
+		private projectSaveManagementService: ProjectSaveManagementService,
+		private popup: PopupService,
+		private errorHandling: ErrorHandlingService
+	) {
 		ProjectsService.staticInstance = this;
 
 		this.projectSaveManagementService.getProjectToOpenOnLoad().then(project => {
@@ -51,6 +56,7 @@ export class ProjectsService {
 		this._projects.set(id, proj);
 		this._projectOpenedSubject.next(id);
 		this._currentlyOpening = this._currentlyOpening.filter(o => id !== o);
+		this.errorHandling.showInfo(`Opened Component ${proj.name}`);
 	}
 
 	public newProject() {

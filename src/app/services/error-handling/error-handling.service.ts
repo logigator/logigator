@@ -1,19 +1,20 @@
 import { Injectable } from '@angular/core';
 import {catchError} from 'rxjs/operators';
 import {Observable, of} from 'rxjs';
+import {ToastrService} from 'ngx-toastr';
 
 @Injectable({
 	providedIn: 'root'
 })
 export class ErrorHandlingService {
 
-	constructor() { }
+	constructor(private toastr: ToastrService) { }
 
 	public catchErrorOperator<T>(errorMessage: string, toEmit: any) {
 		return (source: Observable<T>) => {
 			return source.pipe(
 				catchError(err => {
-					console.error(errorMessage);
+					this.showErrorMessage(errorMessage);
 					return of(toEmit);
 				})
 			);
@@ -24,7 +25,7 @@ export class ErrorHandlingService {
 		return (source: Observable<T>) => {
 			return source.pipe(
 				catchError(err => {
-					console.error(msgFn(err));
+					this.showErrorMessage(msgFn(err));
 					return of(toEmit);
 				})
 			);
@@ -32,10 +33,12 @@ export class ErrorHandlingService {
 	}
 
 	public showErrorMessage(message: string) {
+		this.toastr.error(message);
 		console.error(message);
 	}
 
 	public showInfo(message: string) {
+		this.toastr.info(message);
 		console.log(message);
 	}
 }

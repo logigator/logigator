@@ -6,6 +6,7 @@ $themes: (
 		secondary: #d1d1d1,
 		background: #F5F5F5,
 		inactive: #5D5D5D,
+		error: #DD3138
 	),
 	dark: (
 		primary-text: #efefef,
@@ -13,7 +14,8 @@ $themes: (
 		primary: #27AE60,
 		secondary: #5D5D5D,
 		background: #2B2B2B,
-		inactive: #979797
+		inactive: #979797,
+		error: #DD3138
 	)
 );
 
@@ -31,15 +33,28 @@ $border-styles: (
 
 		$themeForTestFunction: $theme !global;
 
-		:host-context(.theme-#{$theme}) & {
-			$theme-map: () !global;
-			@each $key, $submap in $map {
-				$theme-map: map-merge($theme-map, ($key: $submap)) !global;
-			}
+		@if(&) {
+			:host-context(.theme-#{$theme}) & {
+				$theme-map: () !global;
+				@each $key, $submap in $map {
+					$theme-map: map-merge($theme-map, ($key: $submap)) !global;
+				}
 
-			@content;
-			$theme-map: null !global;
-			$themeForTestFunction: null !global;
+				@content;
+				$theme-map: null !global;
+				$themeForTestFunction: null !global;
+			}
+		} @else {
+			.theme-#{$theme} {
+				$theme-map: () !global;
+				@each $key, $submap in $map {
+					$theme-map: map-merge($theme-map, ($key: $submap)) !global;
+				}
+
+				@content;
+				$theme-map: null !global;
+				$themeForTestFunction: null !global;
+			}
 		}
 
 	}
