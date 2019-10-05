@@ -8,6 +8,7 @@ import {WorkArea} from '../../models/rendering/work-area';
 import {SaveAsComponent} from '../../components/popup/popup-contents/save-as/save-as.component';
 import {PopupService} from '../popup/popup.service';
 import {ElementProviderService} from '../element-provider/element-provider.service';
+import {ErrorHandlingService} from '../error-handling/error-handling.service';
 
 @Injectable({
 	providedIn: 'root'
@@ -31,6 +32,7 @@ export class ProjectsService {
 		private projectSaveManagementService: ProjectSaveManagementService,
 		private popup: PopupService,
 		private elementProvider: ElementProviderService
+		private errorHandling: ErrorHandlingService
 	) {
 		ProjectsService.staticInstance = this;
 
@@ -61,6 +63,7 @@ export class ProjectsService {
 		this._projects.set(id, proj);
 		this._projectOpenedSubject.next(id);
 		this._currentlyOpening = this._currentlyOpening.filter(o => id !== o);
+		this.errorHandling.showInfo(`Opened Component ${proj.name}`);
 	}
 
 	public inputsOutputsCustomComponentChanged(projectId: number) {
