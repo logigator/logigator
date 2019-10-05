@@ -19,12 +19,16 @@ export class ProjectState {
 	public numInputs = 0;
 	public numOutputs = 0;
 
+	private elementProvider: ElementProviderService;
+
 
 	public constructor(model?: ProjectModel, highestId?: number) {
 		this._model = model || {board: {elements: []}};
 		this._highestTakenId = highestId || this.findHighestTakenId();
 		this._chunks = [];
 		this.loadAllIntoChunks();
+
+		this.elementProvider = ElementProviderService.staticInstance;
 	}
 
 
@@ -204,9 +208,9 @@ export class ProjectState {
 	public addElement(elem: Element, id?: number): Element {
 		elem.id = id || this.getNextId();
 		this._model.board.elements.push(elem);
-		if (ElementProviderService.staticInstance.isInputElement(elem.typeId)) {
+		if (this.elementProvider.isInputElement(elem.typeId)) {
 			this.numInputs++;
-		} else if (ElementProviderService.staticInstance.isOutputElement(elem.typeId)) {
+		} else if (this.elementProvider.isOutputElement(elem.typeId)) {
 			this.numOutputs++;
 		}
 		this.loadIntoChunks(elem);
@@ -219,9 +223,9 @@ export class ProjectState {
 			return null;
 		const outElem = this._model.board.elements[outElemIndex];
 		this._model.board.elements.splice(outElemIndex, 1);
-		if (ElementProviderService.staticInstance.isInputElement(outElem.typeId)) {
+		if (this.elementProvider.isInputElement(outElem.typeId)) {
 			this.numInputs--;
-		} else if (ElementProviderService.staticInstance.isOutputElement(outElem.typeId)) {
+		} else if (this.elementProvider.isOutputElement(outElem.typeId)) {
 			this.numOutputs--;
 		}
 		this.removeFromChunks(outElem);
@@ -244,6 +248,13 @@ export class ProjectState {
 	public setNumInputs(element: Element, numInputs: number, endPos?: PIXI.Point): void {
 		element.numInputs = numInputs;
 		element.endPos = endPos || Elements.calcEndPos(element.pos, numInputs, element.numOutputs, element.rotation);
+	}
+
+
+	public updateNumInputsOutputs(element: Element): void {
+		element.numInputs = this.elementProvider.getElementById(element.typeId).numInputs;
+		element.numOutputs = this.elementProvider.getElementById(element.typeId).numOutputs;
+		element.endPos = Elements.calcEndPos(element.pos, element.numInputs, element.numOutputs, element.rotation);
 	}
 
 
@@ -432,9 +443,9 @@ export class ProjectState {
 		let numInputs = 0;
 		let numOutputs = 0;
 		this.allElements.forEach(e => {
-			if (ElementProviderService.staticInstance.isInputElement(e.typeId)) {
+			if (this.elementProvider.isInputElement(e.typeId)) {
 				numInputs++;
-			} else if (ElementProviderService.staticInstance.isOutputElement(e.typeId)) {
+			} else if (this.elementProvider.isInputElement(e.typeId)) {
 				numOutputs++;
 			}
 		});

@@ -261,6 +261,15 @@ export class Project {
 	}
 
 
+	public updateInputsOutputs(typeId?: number): void {
+		for (const elem of this.allElements) {
+			if (elem.typeId === typeId || !typeId && ElementProviderService.staticInstance.isUserElement(elem.typeId)) {
+				this._currState.updateNumInputsOutputs(elem);
+			}
+		}
+	}
+
+
 
 	public toggleWireConnection(pos: PIXI.Point): void {
 		const wiresOnPoint = this._currState.wiresOnPoint(pos);
