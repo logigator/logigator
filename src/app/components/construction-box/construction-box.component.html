@@ -2,23 +2,23 @@
 	<input id="component-search" placeholder="Search" type="text" [(ngModel)]="searchText" aria-label="Search">
 	<div class="scroll-container">
 		<app-construction-box-category
-			categoryName="Basic Components"
+			categoryName="CONST_BOX_CATEGORIES.BASIC"
 			[components]="basicComponents"
 			[searchText]="searchText"
 		></app-construction-box-category>
 		<app-construction-box-category
 			*ngIf="showPlugComponents"
-			categoryName="Plug Components"
+			categoryName="CONST_BOX_CATEGORIES.PLUG"
 			[components]="plugComponents"
 			[searchText]="searchText"
 		></app-construction-box-category>
 		<app-construction-box-category
-			categoryName="IO Components"
+			categoryName="CONST_BOX_CATEGORIES.IO"
 			[components]="ioComponents"
 			[searchText]="searchText"
 		></app-construction-box-category>
 		<app-construction-box-category
-			categoryName="User Defined"
+			categoryName="CONST_BOX_CATEGORIES.USER"
 			[components]="userDefinedComponents"
 			[searchText]="searchText"
 		></app-construction-box-category>

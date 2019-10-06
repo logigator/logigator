@@ -44,10 +44,6 @@ export class SingleShortcutConfigComponent implements OnInit {
 		this.shortcutText = this.shortcuts.getShortcutText(this._newShortcutConfig);
 	}
 
-	public get shortcutDescription(): string {
-		return this.shortcuts.getShortcutDescription(this.shortcut);
-	}
-
 	public startRecording() {
 		this.isRecording = true;
 	}

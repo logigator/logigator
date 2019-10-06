@@ -24,13 +24,13 @@ export class SettingsDropdownComponent {
 
 	public async showCustomizeShortcuts() {
 		this.showDropDown = false;
-		await this.popupService.showPopup(ShortcutConfigComponent, 'Customize Shortcuts', false);
+		await this.popupService.showPopup(ShortcutConfigComponent, 'POPUP.SHORTCUTS.TITLE', false);
 		this.close();
 	}
 
 	public async showReloadPopup() {
 		this.showDropDown = false;
-		await this.popupService.showPopup(ReloadQuestionComponent, 'Reload Required', false);
+		await this.popupService.showPopup(ReloadQuestionComponent, 'POPUP.RELOAD.TITLE', false);
 		this.close();
 	}
 

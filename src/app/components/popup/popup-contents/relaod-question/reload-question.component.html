@@ -1,7 +1,6 @@
-<p>For this change to take effect, the editor has to be reloaded.</p>
-<p>Do you want to reload this page now?</p>
+<p [innerHTML]="'POPUP.RELOAD.QUESTION' | translate"></p>
 <div class="buttons">
-	<button (click)="reloadConfirm()">Yes</button>
-	<button (click)="reloadPostponed()">No, I'll reload later</button>
-	<button (click)="close()">Cancel</button>
+	<button (click)="reloadConfirm()">{{'POPUP.RELOAD.YES' | translate}}</button>
+	<button (click)="reloadPostponed()">{{'POPUP.RELOAD.POSTPONE' | translate}}</button>
+	<button (click)="close()">{{'POPUP.RELOAD.CANCEL' | translate}}</button>
 </div>
