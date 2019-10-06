@@ -7,6 +7,7 @@ import {fromEvent, Subject} from 'rxjs';
 import {DOCUMENT} from '@angular/common';
 import {takeUntil} from 'rxjs/operators';
 import {ProjectsService} from './services/projects/projects.service';
+import {TranslateService} from '@ngx-translate/core';
 
 @Component({
 	selector: 'app-root',
@@ -28,8 +29,11 @@ export class AppComponent implements OnInit, OnDestroy {
 		private selection: SelectionService,
 		private shortcuts: ShortcutsService,
 		private projects: ProjectsService,
-		@Inject(DOCUMENT) private document: HTMLDocument
-	) {}
+		@Inject(DOCUMENT) private document: HTMLDocument,
+		private translate: TranslateService
+	) {
+		this.initTranslation();
+	}
 
 	ngOnInit(): void {
 		this.listenToShortcuts();
@@ -84,6 +88,12 @@ export class AppComponent implements OnInit, OnDestroy {
 		} else if (elem.msRequestFullscreen) { /* IE/Edge */
 			elem.msRequestFullscreen();
 		}
+	}
+
+	private initTranslation() {
+		this.translate.addLangs(['en', 'de']);
+		this.translate.setDefaultLang('en');
+		this.translate.use('en');
 	}
 
 	ngOnDestroy(): void {

@@ -2,6 +2,9 @@ import {Component, Input} from '@angular/core';
 import {ElementType} from '../../models/element-types/element-type';
 import {WorkMode} from '../../models/work-modes';
 import {WorkModeService} from '../../services/work-mode/work-mode.service';
+import {TranslateService} from '@ngx-translate/core';
+import {Observable} from 'rxjs';
+import {map} from 'rxjs/operators';
 
 @Component({
 	selector: 'app-construction-box-category',
@@ -19,15 +22,17 @@ export class ConstructionBoxCategoryComponent {
 	@Input()
 	public searchText: string;
 
-	constructor(private workModeService: WorkModeService) { }
+	constructor(private workModeService: WorkModeService, private translate: TranslateService) { }
 
 	public componentsTrackBy(index, item) {
 		if (!item) return null;
 		return item.key;
 	}
 
-	public isInSearchResult(toSearch: string): boolean {
-		return toSearch.toLowerCase().includes(this.searchText.trim().toLowerCase());
+	public isInSearchResult(toSearch: string): Observable<boolean> {
+		return this.translate.get(toSearch).pipe(
+			map(translated => translated.toLowerCase().includes(this.searchText.trim().toLowerCase()))
+		);
 	}
 
 	public selectComponent(id: number) {

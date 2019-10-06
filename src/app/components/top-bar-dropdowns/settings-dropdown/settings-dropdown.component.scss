@@ -33,6 +33,23 @@
 			}
 		}
 
+		.select {
+			display: flex;
+			flex-direction: row;
+			justify-content: space-between;
+			padding: 0.5rem;
+
+			select {
+				width: 40%;
+				font-size: 0.9rem;
+				outline: none;
+				border: none;
+				border-bottom: 1px solid themed('primary-text');
+				color: themed('primary-text');
+				background-color: themed('background');
+			}
+		}
+
 		.link {
 			padding: 0.5rem;
 		}

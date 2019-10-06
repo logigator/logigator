@@ -32,10 +32,17 @@ export class EditDropdownComponent implements OnInit {
 	}
 
 	public copy() {
+		this.projectInteraction.copySelection();
 		this.close();
 	}
 
 	public paste() {
+		this.projectInteraction.paste();
+		this.close();
+	}
+
+	public cut() {
+		this.projectInteraction.cutSelection();
 		this.close();
 	}
 

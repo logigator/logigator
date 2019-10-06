@@ -33,7 +33,7 @@ export class ToolbarComponent implements OnInit {
 	}
 
 	public newComponent(): void {
-		this.popupService.showPopup(NewComponentComponent, 'New Component', false);
+		this.popupService.showPopup(NewComponentComponent, 'POPUP.NEW_COMP.TITLE', false);
 	}
 
 	public undo(): void {

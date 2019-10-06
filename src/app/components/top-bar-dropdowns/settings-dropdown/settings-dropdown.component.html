@@ -1,19 +1,27 @@
 <div class="dropdown" [class.hidden]="!showDropDown">
 	<div class="switch">
-		<label>Dark mode</label>
+		<label>{{'DROPDOWN.SETTINGS.DARK_MODE' | translate}}</label>
 		<input type="checkbox" (click)="showReloadPopup()" [checked]="this.theming.pendingTheme === 'dark'">
 	</div>
 	<hr>
 	<div class="switch">
-		<label>Show grid</label>
+		<label>{{'DROPDOWN.SETTINGS.SHOW_GRID' | translate}}</label>
 		<input type="checkbox" (click)="changeGridVisibility()" [checked]="this.theming.showGrid">
 	</div>
 	<hr>
-	<div class="link">
-		<button (click)="showCustomizeShortcuts()">Customize Shortcuts</button>
+	<div class="select">
+		<label>{{'DROPDOWN.SETTINGS.LANGUAGE' | translate}}</label>
+		<select [(ngModel)]="currentLang" (ngModelChange)="languageChange()">
+			<option value="en">{{'LANGUAGE.EN' | translate}}</option>
+			<option value="de">{{'LANGUAGE.DE' | translate}}</option>
+		</select>
 	</div>
 	<hr>
 	<div class="link">
-		<button>Account settings</button>
+		<button (click)="showCustomizeShortcuts()">{{'DROPDOWN.SETTINGS.SHORTCUTS' | translate}}</button>
+	</div>
+	<hr>
+	<div class="link">
+		<button>{{'DROPDOWN.SETTINGS.ACCOUNT' | translate}}</button>
 	</div>
 </div>

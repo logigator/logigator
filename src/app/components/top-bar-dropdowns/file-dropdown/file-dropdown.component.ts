@@ -34,7 +34,7 @@ export class FileDropdownComponent implements OnInit {
 	}
 
 	public newComponent() {
-		this.popupService.showPopup(NewComponentComponent, 'New Component', false);
+		this.popupService.showPopup(NewComponentComponent, 'POPUP.NEW_COMP.TITLE', false);
 		this.close();
 	}
 

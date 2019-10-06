@@ -5,7 +5,7 @@ import {WorkModeService} from '../work-mode/work-mode.service';
 import {ProjectInteractionService} from '../project-interaction/project-interaction.service';
 import {ProjectsService} from '../projects/projects.service';
 import {ThemingService} from '../theming/theming.service';
-import {shortcutDescriptions, shortcutsUsableInSimulation} from './shortcut-descriptions';
+import {shortcutsUsableInSimulation} from './shortcut-usable-in-modes';
 import {PopupService} from '../popup/popup.service';
 import {NewComponentComponent} from '../../components/popup/popup-contents/new-component/new-component.component';
 
@@ -73,10 +73,6 @@ export class ShortcutsService {
 
 	public get shortcutMap(): ShortcutMap {
 		return this._shortcutMap;
-	}
-
-	public getShortcutDescription(action: ShortcutAction) {
-		return shortcutDescriptions[action];
 	}
 
 	public getShortcutConfigFromEvent(event: KeyboardEvent): ShortcutConfig {
@@ -150,7 +146,7 @@ export class ShortcutsService {
 				this.projects.saveAll();
 				break;
 			case 'newComp':
-				this.popup.showPopup(NewComponentComponent, 'New Component', false);
+				this.popup.showPopup(NewComponentComponent, 'POPUP.NEW_COMP.TITLE', false);
 				break;
 		}
 	}
