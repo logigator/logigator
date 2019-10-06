@@ -90,25 +90,57 @@ export class StateCompilerService {
 		if (this._udcCache.has(state)) {
 			this.copyCache(state);
 			replacements = this.updateCachedIds(state, outerUnit);
+			console.log(replacements);
 		} else {
 			const linksOnUnits = new Map<PIXI.Point[], number>();
 			compiledComp = {
 				startId: this._highestLinkId,
 				units,
-				connectedToPlug: new Map<number, {side: number[], index: number}[]>()
+				connectedToPlug: new Map<number, {compIndex: number, wireIndex: number}[]>()
 			};
-			const linkConToPlug = this.fillPlugsInUnitsOnLinks(state, linksOnUnits, units, outerUnit);
-			replacements = this.calcAllLinks(state, units, linksOnUnits, compiledComp.connectedToPlug, linkConToPlug);
+			const plugsOnLinks = this.fillPlugsInUnitsOnLinks(state, linksOnUnits, units, outerUnit);
+			replacements = this.calcAllLinks(state, units, linksOnUnits, compiledComp.connectedToPlug, plugsOnLinks);
+			compiledComp.connectedToPlug = this.calcPlugConnections(units, replacements);
+			console.log('setCache', compiledComp.connectedToPlug);
+			this.setUdcCache(state, compiledComp);
 		}
 		return replacements;
 	}
+
+	private calcPlugConnections(units: Map<SimulationUnit, Element>, replacements: Map<number, number>):
+		Map<number, {compIndex: number, wireIndex: number}[]> {
+
+		const out = new Map<number, {compIndex: number, wireIndex: number}[]>();
+		let compIndex = 0;
+		this.doReplacements(units, replacements);
+		for (const [unit, element] of units) {
+			if (this.elementProvider.isPlugElement(unit.typeId)) {
+				const linkId = SimulationUnits.concatIO(unit)[0];
+				out.set(compIndex, []);
+				const oppoCompIndex = 0;
+				for (const oppositeUnit of units.keys()) {
+					if (this.elementProvider.isPlugElement(oppositeUnit.typeId) || oppositeUnit === unit)
+						continue;
+					const allCons = SimulationUnits.concatIO(oppositeUnit);
+					for (let i = 0; i < allCons.length; i++) {
+						if (allCons[i] === linkId) {
+							out.get(compIndex).push({compIndex: oppoCompIndex, wireIndex: i});
+						}
+					}
+				}
+			}
+			compIndex++;
+		}
+		return out;
+	}
+
 
 	private calcAllLinks(
 		state: ProjectState,
 		units: Map<SimulationUnit, Element>,
 		linksOnUnits: Map<PIXI.Point[], number>,
-		connectedToPlug: Map<number, {side: number[], index: number}[]>,
-		linkConToPlug: Map<number, number[]>):
+		connectedToPlug: Map<number, {compIndex: number, wireIndex: number}[]>,
+		plugsOnLink: Map<number, number[]>):
 		Map<number, number> {
 
 		const replacements = new Map<number, number>();
@@ -123,9 +155,10 @@ export class StateCompilerService {
 					this.calcReplacements(unit, connected, state, units, replacements);
 				} else {
 					const connected = this.connectedToPos(state, wireEndPos, []);
-					const {linkId, con} = this.setUnitLink(linksOnUnits, connected, element, unit, wireEndIndex, linkConToPlug);
-					if (con) {
-						for (const plugId of linkConToPlug.get(linkId)) {
+					const {linkId, index} = this.setUnitLink(linksOnUnits, connected, element, unit, wireEndIndex, plugsOnLink);
+					if (index !== undefined) {
+						const con = {compIndex: unitIndex, wireIndex: index};
+						for (const plugId of plugsOnLink.get(linkId)) {
 							if (connectedToPlug.has(plugId)) {
 								connectedToPlug.get(plugId).push(con);
 							} else {
@@ -166,7 +199,9 @@ export class StateCompilerService {
 		for (const absPlugIndex of plugIndexes) {
 			const connected = compiledComp.connectedToPlug.get(absPlugIndex);
 			for (const con of connected) {
-				con.side[con.index] = SimulationUnits.concatIO(outerUnit)[plugIndex];
+				const u = [...compiledComp.units.keys()][con.compIndex];
+				const arr = con.wireIndex < u.inputs.length ? u.inputs : u.outputs;
+				arr[con.wireIndex] = SimulationUnits.concatIO(outerUnit)[plugIndex];
 			}
 			this.calcReplacements(compiledComp.units[absPlugIndex], connected, state, compiledComp.units, replacements);
 			plugIndex++;
@@ -177,10 +212,10 @@ export class StateCompilerService {
 	private setUnitLink(
 		linksOnUnits: Map<PIXI.Point[], number>,
 		connected, element, unit,
-		wireEndIndex: number, linkConToPlug: Map<number, number[]>):
-		{linkId: number, con: {side: number[], index: number}} {
+		wireEndIndex: number, plugsOnLink: Map<number, number[]>):
+		{linkId: number, index: number} {
 
-		const out: {linkId: number, con: {side: number[], index: number}} = {linkId: undefined, con: undefined};
+		const out: {linkId: number, index: number} = {linkId: undefined, index: undefined};
 		let linkId;
 		if (MapHelper.mapHas(linksOnUnits, connected)) {
 			linkId = MapHelper.mapGet(linksOnUnits, connected);
@@ -198,8 +233,8 @@ export class StateCompilerService {
 			index = wireEndIndex - element.numInputs;
 		}
 		side[index] = linkId;
-		if (linkConToPlug.has(linkId)) {
-			out.con = {side, index};
+		if (plugsOnLink.has(linkId)) {
+			out.index = index;
 		}
 		out.linkId = linkId;
 		return out;
@@ -230,22 +265,23 @@ export class StateCompilerService {
 
 		const out = new Map<number, number[]>();
 		let plugIndex = 0;
+		let allUnitsIndex = -1;
 		for (const [unit, element] of units.entries()) {
+			allUnitsIndex++;
 			if (!this.elementProvider.isPlugElement(unit.typeId))
 				continue;
-			for (const wireEndPos of Elements.wireEnds(element)) {
-				const connected = this.connectedToPos(state, wireEndPos, []);
-				const absIndex = plugIndex++;
-				if (outerUnit)
-					unitsOnLinks.set(connected, SimulationUnits.concatIO(outerUnit)[absIndex]);
-				const val = SimulationUnits.concatIO(outerUnit)[absIndex];
-				unit.inputs = [val];
-				unit.outputs = [val];
-				if (out.has(val)) {
-					out.get(val).push(absIndex);
-				} else {
-					out.set(val, [absIndex]);
-				}
+			const wireEndPos = Elements.wireEnds(element)[0];
+			const connected = this.connectedToPos(state, wireEndPos, []);
+			const absIndex = plugIndex++;
+			if (outerUnit)
+				unitsOnLinks.set(connected, SimulationUnits.concatIO(outerUnit)[absIndex]);
+			const val = SimulationUnits.concatIO(outerUnit)[absIndex];
+			unit.inputs = [val];
+			unit.outputs = [val];
+			if (out.has(val)) {
+				out.get(val).push(allUnitsIndex);
+			} else {
+				out.set(val, [allUnitsIndex]);
 			}
 		}
 		return out;

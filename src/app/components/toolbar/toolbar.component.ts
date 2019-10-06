@@ -34,14 +34,20 @@ export class ToolbarComponent implements OnInit {
 		console.log('~~~~');
 		this.stateCompiler.compile(this.projectService.currProject.currState).forEach(console.log);
 		const start = Date.now();
-		for (let i = 0; i < 10000; i++) {
-			this.stateCompiler.compile(this.projectService.currProject.currState);
-		}
+		// for (let i = 0; i < 10000; i++) {
+		// 	this.stateCompiler.compile(this.projectService.currProject.currState);
+		// }
 		console.log(Date.now() - start);
 		// this.projectService.currProject.stepBack();
 	}
 
 	public redo(): void {
+		const test0 = [0, 1, 2];
+		const test1 = [3, 4, 5];
+		const all = test0.concat(test1);
+		all[2] = 20;
+		console.log(all, test0, test1);
+		return;
 		console.log(this.projectService.currProject.allElements);
 		this.projectService.currProject.stepForward();
 	}
