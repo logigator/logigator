@@ -3,7 +3,7 @@ import {Directive, ElementRef, EventEmitter, Input, NgZone, OnDestroy, OnInit, O
 @Directive({
 	selector: '[appOutsideNgZoneEvent]'
 })
-export class OutsideNgZoneEventDirective implements OnInit, OnDestroy{
+export class OutsideNgZoneEventDirective implements OnInit, OnDestroy {
 
 	private handler: ($event?: Event) => any;
 
