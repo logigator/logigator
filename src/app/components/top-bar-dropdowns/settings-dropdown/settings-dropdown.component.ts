@@ -10,7 +10,7 @@ import {TranslateService} from '@ngx-translate/core';
 	templateUrl: './settings-dropdown.component.html',
 	styleUrls: ['./settings-dropdown.component.scss']
 })
-export class SettingsDropdownComponent implements OnInit{
+export class SettingsDropdownComponent implements OnInit {
 
 	@Output()
 	public requestClosed: EventEmitter<any> = new EventEmitter();
