@@ -1,4 +1,4 @@
-import {Component, EventEmitter, OnInit, Output} from '@angular/core';
+import {ChangeDetectionStrategy, Component, EventEmitter, OnInit, Output} from '@angular/core';
 import {ThemingService} from '../../../services/theming/theming.service';
 import {PopupService} from '../../../services/popup/popup.service';
 import {ShortcutConfigComponent} from '../../popup/popup-contents/shortcut-config/shortcut-config/shortcut-config.component';
@@ -8,7 +8,8 @@ import {TranslateService} from '@ngx-translate/core';
 @Component({
 	selector: 'app-settings-dropdown',
 	templateUrl: './settings-dropdown.component.html',
-	styleUrls: ['./settings-dropdown.component.scss']
+	styleUrls: ['./settings-dropdown.component.scss'],
+	changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class SettingsDropdownComponent implements OnInit {
 

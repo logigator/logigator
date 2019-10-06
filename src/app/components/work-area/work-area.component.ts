@@ -1,4 +1,13 @@
-import {Component, ElementRef, NgZone, OnDestroy, OnInit, Renderer2, ViewChild} from '@angular/core';
+import {
+	ChangeDetectionStrategy,
+	Component,
+	ElementRef,
+	NgZone,
+	OnDestroy,
+	OnInit,
+	Renderer2,
+	ViewChild
+} from '@angular/core';
 import {View} from '../../models/rendering/view';
 import {ProjectsService} from '../../services/projects/projects.service';
 import {Project} from '../../models/project';

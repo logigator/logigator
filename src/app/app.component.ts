@@ -36,11 +36,13 @@ export class AppComponent implements OnInit, OnDestroy {
 	}
 
 	ngOnInit(): void {
-		this.listenToShortcuts();
+		this.ngZone.runOutsideAngular(() => {
+			this.listenToShortcuts();
 
-		this.theming.onRequestFullscreen$.pipe(
-			takeUntil(this._destroySubject)
-		).subscribe(_ => this.onRequestFullscreen());
+			this.theming.onRequestFullscreen$.pipe(
+				takeUntil(this._destroySubject)
+			).subscribe(_ => this.onRequestFullscreen());
+		});
 	}
 
 	private listenToShortcuts() {

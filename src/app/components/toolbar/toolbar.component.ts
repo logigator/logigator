@@ -1,4 +1,4 @@
-import {Component, OnInit} from '@angular/core';
+import {ChangeDetectionStrategy, ChangeDetectorRef, Component, OnInit} from '@angular/core';
 import {WorkMode} from '../../models/work-modes';
 import {WorkModeService} from '../../services/work-mode/work-mode.service';
 import {ProjectsService} from '../../services/projects/projects.service';
@@ -6,6 +6,8 @@ import {ProjectInteractionService} from '../../services/project-interaction/proj
 import {PopupService} from '../../services/popup/popup.service';
 import {NewComponentComponent} from '../popup/popup-contents/new-component/new-component.component';
 import {OpenProjectComponent} from '../popup/popup-contents/open/open-project.component';
+import {Observable} from 'rxjs';
+import {tap} from 'rxjs/operators';
 
 @Component({
 	selector: 'app-toolbar',

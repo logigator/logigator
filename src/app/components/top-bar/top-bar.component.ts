@@ -1,4 +1,4 @@
-import { Component, OnInit } from '@angular/core';
+import {ChangeDetectionStrategy, Component, OnInit} from '@angular/core';
 import {ProjectsService} from '../../services/projects/projects.service';
 import {UserService} from '../../services/user/user.service';
 import {Observable} from 'rxjs';
@@ -7,7 +7,8 @@ import {UserInfo} from '../../models/http-responses/user-info';
 @Component({
 	selector: 'app-top-bar',
 	templateUrl: './top-bar.component.html',
-	styleUrls: ['./top-bar.component.scss']
+	styleUrls: ['./top-bar.component.scss'],
+	changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class TopBarComponent implements OnInit {
 

@@ -1,4 +1,4 @@
-import {Component, EventEmitter, OnInit, Output} from '@angular/core';
+import {ChangeDetectionStrategy, Component, EventEmitter, OnInit, Output} from '@angular/core';
 import {ProjectsService} from '../../../services/projects/projects.service';
 import {ProjectSaveManagementService} from '../../../services/project-save-management/project-save-management.service';
 import {OpenProjectComponent} from '../../popup/popup-contents/open/open-project.component';
@@ -8,7 +8,8 @@ import {NewComponentComponent} from '../../popup/popup-contents/new-component/ne
 @Component({
 	selector: 'app-file-dropdown',
 	templateUrl: './file-dropdown.component.html',
-	styleUrls: ['../top-bar-dropdowns.scss', './file-dropdown.component.scss']
+	styleUrls: ['../top-bar-dropdowns.scss', './file-dropdown.component.scss'],
+	changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class FileDropdownComponent implements OnInit {
 

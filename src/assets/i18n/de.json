@@ -35,13 +35,13 @@
 		"SETTINGS": {
 			"DARK_MODE": "Dark Mode",
 			"SHOW_GRID": "Show Grid",
-			"LANGUAGE": "Language",
+			"LANGUAGE": "Sprache",
 			"SHORTCUTS": "Customize Shortcuts",
 			"ACCOUNT": "Account Settings"
 		}
 	},
 	"TOOLBAR": {
-		"START_SIM": "Start Simulation",
+		"START_SIM": "Simulation starten",
 		"EXIT_SIM": "Exit Simulation"
 	},
 	"TOP_BAR": {
@@ -50,7 +50,7 @@
 	},
 	"CONST_BOX_CATEGORIES": {
 		"BASIC": "Basic Components",
-		"IO": "IO Components",
+		"IO": "IO Komponenten",
 		"PLUG": "Plug Components",
 		"USER": "User Defined"
 	},
@@ -94,8 +94,8 @@
 		}
 	},
 	"SETTINGS_INFO": {
-		"INPUTS": "Inputs",
-		"DIRECTION": "Direction",
+		"INPUTS": "Eingänge",
+		"DIRECTION": "Richtung",
 		"DIRECTIONS": {
 			"LEFT": "Left",
 			"DOWN": "Down",

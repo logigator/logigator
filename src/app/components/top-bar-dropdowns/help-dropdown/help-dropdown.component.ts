@@ -1,9 +1,10 @@
-import {Component, EventEmitter, OnInit, Output} from '@angular/core';
+import {ChangeDetectionStrategy, Component, EventEmitter, OnInit, Output} from '@angular/core';
 
 @Component({
 	selector: 'app-help-dropdown',
 	templateUrl: './help-dropdown.component.html',
-	styleUrls: ['../top-bar-dropdowns.scss', './help-dropdown.component.scss']
+	styleUrls: ['../top-bar-dropdowns.scss', './help-dropdown.component.scss'],
+	changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class HelpDropdownComponent implements OnInit {
 

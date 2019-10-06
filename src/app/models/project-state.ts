@@ -445,7 +445,7 @@ export class ProjectState {
 		this.allElements.forEach(e => {
 			if (this.elementProvider.isInputElement(e.typeId)) {
 				numInputs++;
-			} else if (this.elementProvider.isInputElement(e.typeId)) {
+			} else if (this.elementProvider.isOutputElement(e.typeId)) {
 				numOutputs++;
 			}
 		});

@@ -30,6 +30,7 @@ import {BrowserAnimationsModule} from '@angular/platform-browser/animations';
 import {MissingTranslationHandler, TranslateLoader, TranslateModule} from '@ngx-translate/core';
 import {createTranslateLoader} from './models/translation/translation-loader-factory';
 import {AppMissingTranslationHandler} from './models/translation/missing-translation-handler';
+import { OutsideNgZoneEventDirective } from './directives/outside-ng-zone-event/outside-ng-zone-event.directive';
 
 @NgModule({
 	declarations: [
@@ -54,7 +55,8 @@ import {AppMissingTranslationHandler} from './models/translation/missing-transla
 		ReloadQuestionComponent,
 		NewComponentComponent,
 		OpenProjectComponent,
-		SaveAsComponent
+		SaveAsComponent,
+		OutsideNgZoneEventDirective
 	],
 	entryComponents: [
 		PopupComponent,

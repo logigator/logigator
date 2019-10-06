@@ -1,20 +1,23 @@
 import {
-	Component, ComponentFactory,
+	ChangeDetectionStrategy,
+	Component,
+	ComponentFactory,
 	ElementRef,
 	EventEmitter,
 	HostListener,
 	Input,
 	OnInit,
 	Output,
-	TemplateRef,
-	ViewChild, ViewContainerRef
+	ViewChild,
+	ViewContainerRef
 } from '@angular/core';
 import {PopupContentComp} from '../popup-contents/popup-content-comp';
 
 @Component({
 	selector: 'app-popup',
 	templateUrl: './popup.component.html',
-	styleUrls: ['./popup.component.scss']
+	styleUrls: ['./popup.component.scss'],
+	changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class PopupComponent implements OnInit {
 
