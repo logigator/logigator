@@ -9,6 +9,14 @@
 		<input type="checkbox" (click)="changeGridVisibility()" [checked]="this.theming.showGrid">
 	</div>
 	<hr>
+	<div class="select">
+		<label>{{'DROPDOWN.SETTINGS.LANGUAGE' | translate}}</label>
+		<select [(ngModel)]="currentLang" (ngModelChange)="languageChange()">
+			<option value="en">{{'LANGUAGE.EN' | translate}}</option>
+			<option value="de">{{'LANGUAGE.DE' | translate}}</option>
+		</select>
+	</div>
+	<hr>
 	<div class="link">
 		<button (click)="showCustomizeShortcuts()">{{'DROPDOWN.SETTINGS.SHORTCUTS' | translate}}</button>
 	</div>

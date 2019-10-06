@@ -3,20 +3,30 @@ import {ThemingService} from '../../../services/theming/theming.service';
 import {PopupService} from '../../../services/popup/popup.service';
 import {ShortcutConfigComponent} from '../../popup/popup-contents/shortcut-config/shortcut-config/shortcut-config.component';
 import {ReloadQuestionComponent} from '../../popup/popup-contents/relaod-question/reload-question.component';
+import {TranslateService} from '@ngx-translate/core';
 
 @Component({
 	selector: 'app-settings-dropdown',
 	templateUrl: './settings-dropdown.component.html',
 	styleUrls: ['./settings-dropdown.component.scss']
 })
-export class SettingsDropdownComponent {
+export class SettingsDropdownComponent implements OnInit{
 
 	@Output()
 	public requestClosed: EventEmitter<any> = new EventEmitter();
 
 	public showDropDown = true;
+	public currentLang: string;
 
-	constructor(public theming: ThemingService, private popupService: PopupService) {}
+	constructor(public theming: ThemingService, private popupService: PopupService, private translation: TranslateService) {}
+
+	ngOnInit(): void {
+		this.currentLang = this.translation.currentLang;
+	}
+
+	public languageChange() {
+		this.translation.use(this.currentLang);
+	}
 
 	public close() {
 		this.requestClosed.emit();

@@ -1,3 +1,148 @@
 {
-
+	"LANGUAGE": {
+		"DE": "Deutsch",
+		"EN": "Englisch"
+	},
+	"DROPDOWN": {
+		"FILE": {
+			"TITLE": "Datei",
+			"NEW_PROJECT": "Neues Projekt",
+			"NEW_COMPONENT": "Neue Komponente",
+			"OPEN": "Öffnen",
+			"SAVE": "Speichern",
+			"EXPORT": "In Datei Exportieren",
+			"SCREENSHOT": "Screenshot"
+		},
+		"EDIT": {
+			"TITLE": "Bearbeiten",
+			"UNDO": "Rückgängig",
+			"REDO": "Vorwärts",
+			"COPY": "Kopieren",
+			"PASTE": "Einfügen",
+			"CUT": "Auschneiden",
+			"DELETE": "Löschen"
+		},
+		"VIEW": {
+			"TITLE": "Ansicht",
+			"ZOOM_IN": "Zoom in",
+			"ZOOM_OUT": "Zoom out",
+			"100": "100%",
+			"FULLSCREEN": "Fullscreen"
+		},
+		"HELP": {
+			"TITLE": "Hilfe"
+		},
+		"SETTINGS": {
+			"DARK_MODE": "Dark Mode",
+			"SHOW_GRID": "Show Grid",
+			"LANGUAGE": "Language",
+			"SHORTCUTS": "Customize Shortcuts",
+			"ACCOUNT": "Account Settings"
+		}
+	},
+	"TOOLBAR": {
+		"START_SIM": "Start Simulation",
+		"EXIT_SIM": "Exit Simulation"
+	},
+	"TOP_BAR": {
+		"LOGIN": "Einloggen",
+		"REGISTER": "Registrieren"
+	},
+	"CONST_BOX_CATEGORIES": {
+		"BASIC": "Basic Components",
+		"IO": "IO Components",
+		"PLUG": "Plug Components",
+		"USER": "User Defined"
+	},
+	"POPUP": {
+		"NEW_COMP": {
+			"TITLE": "New Component",
+			"NAME": "Name",
+			"SYMBOL": "Symbol"
+		},
+		"SAVE": {
+			"TITLE": "Save Project"
+		},
+		"RELOAD": {
+			"TITLE": "Reload Required",
+			"QUESTION": "For this change to take effect, the editor has to be reloaded.<br>Do you want to reload this page now?",
+			"YES": "Yes",
+			"POSTPONE": "No, I'll reload later",
+			"CANCEL": "Cancel"
+		},
+		"SHORTCUTS": {
+			"TITLE": "Customize Shortcuts",
+			"SAVE": "Save",
+			"DESCRIPTION": {
+				"copy": "Copy",
+				"paste": "Paste",
+				"cut": "Cut",
+				"delete": "Delete selected items",
+				"undo": "Undo",
+				"redo": "Redo",
+				"zoom100": "Zoom to 100%",
+				"zoomIn": "Zoom in",
+				"zoomOut": "Zoom out",
+				"fullscreen": "enter fullscreen mode",
+				"connWireMode": "Connect wires mode",
+				"wireMode": "Place wires mode",
+				"selectMode": "selection mode",
+				"newComp": "Create new custom component",
+				"textMode": "text mode",
+				"save": "Save"
+			}
+		}
+	},
+	"SETTINGS_INFO": {
+		"INPUTS": "Inputs",
+		"DIRECTION": "Direction",
+		"DIRECTIONS": {
+			"LEFT": "Left",
+			"DOWN": "Down",
+			"UP": "Up",
+			"RIGHT": "Right"
+		},
+		"DESCRIPTION": "Description",
+		"EDIT": "Edit"
+	},
+	"ELEMENT_TYPE": {
+		"BASIC": {
+			"AND": {
+				"NAME": "AND Gate",
+				"DESCRIPTION": ""
+			},
+			"NOT": {
+				"NAME": "NOT Gate",
+				"DESCRIPTION": "I am a not"
+			},
+			"OR": {
+				"NAME": "OR Gate",
+				"DESCRIPTION": ""
+			},
+			"XOR": {
+				"NAME": "XOR Gate",
+				"DESCRIPTION": ""
+			}
+		},
+		"IO": {
+			"BUTTON": {
+				"NAME": "Button",
+				"DESCRIPTION": ""
+			},
+			"LEVER": {
+				"NAME": "Lever",
+				"DESCRIPTION": ""
+			}
+		},
+		"PLUG": {
+			"INPUT": {
+				"NAME": "Input Plug",
+				"DESCRIPTION": "Place this where the inputs of you self-defined components should be"
+			},
+			"OUTPUT": {
+				"NAME": "Output Plug",
+				"DESCRIPTION": "Place this where the outputs of you self-defined components should be"
+			}
+		}
+	}
 }

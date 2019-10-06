@@ -1,6 +1,11 @@
 {
+	"LANGUAGE": {
+		"DE": "German",
+		"EN": "English"
+	},
 	"DROPDOWN": {
 		"FILE": {
+			"TITLE": "File",
 			"NEW_PROJECT": "New Project",
 			"NEW_COMPONENT": "New Component",
 			"OPEN": "Open",
@@ -9,24 +14,28 @@
 			"SCREENSHOT": "Screenshot"
 		},
 		"EDIT": {
+			"TITLE": "Edit",
 			"UNDO": "Undo",
 			"REDO": "Redo",
 			"COPY": "Copy",
 			"PASTE": "Paste",
+			"CUT": "Cut",
 			"DELETE": "Delete"
 		},
 		"VIEW": {
+			"TITLE": "View",
 			"ZOOM_IN": "Zoom in",
 			"ZOOM_OUT": "Zoom out",
 			"100": "100%",
 			"FULLSCREEN": "Fullscreen"
 		},
 		"HELP": {
-
+			"TITLE": "Help"
 		},
 		"SETTINGS": {
 			"DARK_MODE": "Dark Mode",
 			"SHOW_GRID": "Show Grid",
+			"LANGUAGE": "Language",
 			"SHORTCUTS": "Customize Shortcuts",
 			"ACCOUNT": "Account Settings"
 		}
@@ -34,6 +43,10 @@
 	"TOOLBAR": {
 		"START_SIM": "Start Simulation",
 		"EXIT_SIM": "Exit Simulation"
+	},
+	"TOP_BAR": {
+		"LOGIN": "Login",
+		"REGISTER": "Register"
 	},
 	"CONST_BOX_CATEGORIES": {
 		"BASIC": "Basic Components",
