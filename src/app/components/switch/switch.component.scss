@@ -1,0 +1,9 @@
+div {
+	width: 3rem;
+	height: 1rem;
+	background-color: red;
+
+	&.on {
+		background-color: green;
+	}
+}

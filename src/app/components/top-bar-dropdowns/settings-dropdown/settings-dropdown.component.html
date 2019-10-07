@@ -6,7 +6,7 @@
 	<hr>
 	<div class="switch">
 		<label>{{'DROPDOWN.SETTINGS.SHOW_GRID' | translate}}</label>
-		<input type="checkbox" (click)="changeGridVisibility()" [checked]="this.theming.showGrid">
+		<app-switch [(ngModel)]="this.theming.showGrid"></app-switch>
 	</div>
 	<hr>
 	<div class="select">

@@ -31,6 +31,7 @@ import {MissingTranslationHandler, TranslateLoader, TranslateModule} from '@ngx-
 import {createTranslateLoader} from './models/translation/translation-loader-factory';
 import {AppMissingTranslationHandler} from './models/translation/missing-translation-handler';
 import { OutsideNgZoneEventDirective } from './directives/outside-ng-zone-event/outside-ng-zone-event.directive';
+import { SwitchComponent } from './components/switch/switch.component';
 
 @NgModule({
 	declarations: [
@@ -56,7 +57,8 @@ import { OutsideNgZoneEventDirective } from './directives/outside-ng-zone-event/
 		NewComponentComponent,
 		OpenProjectComponent,
 		SaveAsComponent,
-		OutsideNgZoneEventDirective
+		OutsideNgZoneEventDirective,
+		SwitchComponent
 	],
 	entryComponents: [
 		PopupComponent,
