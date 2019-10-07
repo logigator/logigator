@@ -4,6 +4,7 @@ import {SimulationUnit, SimulationUnits} from '../../../models/simulation/Simula
 import {Element, Elements} from '../../../models/element';
 import {ElementProviderService} from '../../element-provider/element-provider.service';
 import {ProjectsService} from '../../projects/projects.service';
+import {WorkerCommunicationService} from '../worker-communication/worker-communication.service';
 
 @Injectable({
 	providedIn: 'root'

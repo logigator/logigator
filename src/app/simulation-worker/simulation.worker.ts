@@ -2,5 +2,6 @@
 
 addEventListener('message', ({ data }) => {
 	const response = `worker response to ${data}`;
+	console.log(data);
 	postMessage(response);
 });
