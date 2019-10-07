@@ -21,7 +21,7 @@ export type ShortcutMap =  {
 };
 
 export interface ShortcutConfig {
-	key: string;
+	key_code: string;
 	alt?: boolean;
 	ctrl?: boolean;
 	shift?: boolean;

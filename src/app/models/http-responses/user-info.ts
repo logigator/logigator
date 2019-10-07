@@ -1,3 +1,5 @@
+import {ShortcutAction} from '../shortcut-map';
+
 export interface UserInfo {
 	user: {
 		username: string;
@@ -5,6 +7,12 @@ export interface UserInfo {
 		login_type: string;
 		profile_image: string;
 	};
-	shortcuts: [];
+	shortcuts: {
+		name: ShortcutAction
+		alt: boolean;
+		ctrl: boolean;
+		shift: boolean;
+		key_code: string,
+	}[];
 }
 
