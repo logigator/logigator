@@ -40,13 +40,14 @@ export abstract class Elements {
 
 	public static equals(elem0: Element, elem1: Element): boolean {
 		for (const k in elem0) {
-			if (k === 'id')
-				continue;
-			if (elem0[k].x !== undefined && elem0[k].y !== undefined) {
+			if (k === 'id' || k === 'plugIndex') continue;
+			if (elem0[k] && elem0[k].x !== undefined && elem0[k].y !== undefined) {
 				if (!(elem0[k].x === elem1[k].x && elem0[k].y === elem1[k].y))
 					return false;
 			} else {
-				if (elem0[k] !== elem1[k])
+				const v0 = elem0[k] === undefined || elem0[k] === null ? undefined : elem0[k];
+				const v1 = elem1[k] === undefined || elem1[k] === null ? undefined : elem1[k];
+				if (v0 !== v1)
 					return false;
 			}
 		}
