@@ -9,6 +9,7 @@
 
 # dependencies
 /node_modules
+/WASM/emscripten/
 
 # profiling files
 chrome-profiler-events*.json

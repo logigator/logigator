@@ -5,6 +5,9 @@
 		"ng": "ng",
 		"start": "ng serve --port 8202 --disableHostCheck --proxy-config proxyconfig.json",
 		"build": "ng build --prod",
+		"postinstall": "run-script-os",
+		"postinstall:win32": "WASM\\install_win32.bat",
+		"postinstall:default": "./WASM/install_unix.sh",
 		"test": "ng test",
 		"lint": "ng lint",
 		"e2e": "ng e2e"
@@ -47,6 +50,7 @@
 		"karma-jasmine": "~2.0.1",
 		"karma-jasmine-html-reporter": "^1.4.0",
 		"protractor": "~5.4.0",
+		"run-script-os": "^1.0.7",
 		"ts-node": "~7.0.0",
 		"tslint": "~5.15.0",
 		"typescript": "~3.5.3"
