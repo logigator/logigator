@@ -1,24 +1,24 @@
 <div id="construction-box">
-	<input id="component-search" placeholder="Search" type="text" [(ngModel)]="searchText" aria-label="Search">
+	<input id="component-search" [placeholder]="'CONST_BOX.SEARCH' | translate" type="text" [(ngModel)]="searchText" aria-label="Search">
 	<div class="scroll-container">
 		<app-construction-box-category
-			categoryName="CONST_BOX_CATEGORIES.BASIC"
+			categoryName="CONST_BOX.CATEGORIES.BASIC"
 			[components]="basicComponents"
 			[searchText]="searchText"
 		></app-construction-box-category>
 		<app-construction-box-category
 			*ngIf="showPlugComponents"
-			categoryName="CONST_BOX_CATEGORIES.PLUG"
+			categoryName="CONST_BOX.CATEGORIES.PLUG"
 			[components]="plugComponents"
 			[searchText]="searchText"
 		></app-construction-box-category>
 		<app-construction-box-category
-			categoryName="CONST_BOX_CATEGORIES.IO"
+			categoryName="CONST_BOX.CATEGORIES.IO"
 			[components]="ioComponents"
 			[searchText]="searchText"
 		></app-construction-box-category>
 		<app-construction-box-category
-			categoryName="CONST_BOX_CATEGORIES.USER"
+			categoryName="CONST_BOX.CATEGORIES.USER"
 			[components]="userDefinedComponents"
 			[searchText]="searchText"
 		></app-construction-box-category>

@@ -40,7 +40,7 @@ export class FileDropdownComponent implements OnInit {
 	}
 
 	public openProject() {
-		this.popupService.showPopup(OpenProjectComponent, 'Open Project', true);
+		this.popupService.showPopup(OpenProjectComponent, 'POPUP.OPEN.TITLE', true);
 		this.close();
 	}
 

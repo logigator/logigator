@@ -44,8 +44,4 @@ export class SettingsDropdownComponent implements OnInit {
 		await this.popupService.showPopup(ReloadQuestionComponent, 'POPUP.RELOAD.TITLE', false);
 		this.close();
 	}
-
-	public changeGridVisibility() {
-		this.theming.showGrid = !this.theming.showGrid;
-	}
 }

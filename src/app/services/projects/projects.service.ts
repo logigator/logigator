@@ -143,7 +143,7 @@ export class ProjectsService {
 
 	public async saveAll() {
 		if (this.projectSaveManagementService.isFirstSave) {
-			const newMainProject = await this.popup.showPopup(SaveAsComponent, 'POPUP.NEW_COMP.SAVE', false, Array.from(this.allProjects.values()));
+			const newMainProject = await this.popup.showPopup(SaveAsComponent, 'POPUP.SAVE.TITLE', false, Array.from(this.allProjects.values()));
 			if (newMainProject) {
 				this.allProjects.forEach((value, key) => this.closeProject(key));
 				this._mainProject = newMainProject;

@@ -1,67 +1,77 @@
 {
 	"LANGUAGE": {
-		"DE": "Deutsch",
-		"EN": "Englisch"
+		"DE": "German",
+		"EN": "English"
 	},
 	"DROPDOWN": {
 		"FILE": {
-			"TITLE": "Datei",
-			"NEW_PROJECT": "Neues Projekt",
-			"NEW_COMPONENT": "Neue Komponente",
-			"OPEN": "Öffnen",
-			"SAVE": "Speichern",
-			"EXPORT": "In Datei Exportieren",
+			"TITLE": "File",
+			"NEW_PROJECT": "New Project",
+			"NEW_COMPONENT": "New Component",
+			"OPEN": "Open",
+			"SAVE": "Save",
+			"EXPORT": "Export to file",
 			"SCREENSHOT": "Screenshot"
 		},
 		"EDIT": {
-			"TITLE": "Bearbeiten",
-			"UNDO": "Rückgängig",
-			"REDO": "Vorwärts",
-			"COPY": "Kopieren",
-			"PASTE": "Einfügen",
-			"CUT": "Auschneiden",
-			"DELETE": "Löschen"
+			"TITLE": "Edit",
+			"UNDO": "Undo",
+			"REDO": "Redo",
+			"COPY": "Copy",
+			"PASTE": "Paste",
+			"CUT": "Cut",
+			"DELETE": "Delete"
 		},
 		"VIEW": {
-			"TITLE": "Ansicht",
+			"TITLE": "View",
 			"ZOOM_IN": "Zoom in",
 			"ZOOM_OUT": "Zoom out",
 			"100": "100%",
 			"FULLSCREEN": "Fullscreen"
 		},
 		"HELP": {
-			"TITLE": "Hilfe"
+			"TITLE": "Help"
 		},
 		"SETTINGS": {
 			"DARK_MODE": "Dark Mode",
 			"SHOW_GRID": "Show Grid",
-			"LANGUAGE": "Sprache",
+			"LANGUAGE": "Language",
 			"SHORTCUTS": "Customize Shortcuts",
 			"ACCOUNT": "Account Settings"
 		}
 	},
 	"TOOLBAR": {
-		"START_SIM": "Simulation starten",
+		"START_SIM": "Start Simulation",
 		"EXIT_SIM": "Exit Simulation"
 	},
 	"TOP_BAR": {
-		"LOGIN": "Einloggen",
-		"REGISTER": "Registrieren"
+		"LOGIN": "Login",
+		"REGISTER": "Register"
 	},
-	"CONST_BOX_CATEGORIES": {
-		"BASIC": "Basic Components",
-		"IO": "IO Komponenten",
-		"PLUG": "Plug Components",
-		"USER": "User Defined"
+	"CONST_BOX": {
+		"SEARCH": "Search",
+		"CATEGORIES": {
+			"BASIC": "Basic Components",
+			"IO": "IO Components",
+			"PLUG": "Plug Components",
+			"USER": "User Defined"
+		}
 	},
 	"POPUP": {
 		"NEW_COMP": {
 			"TITLE": "New Component",
 			"NAME": "Name",
-			"SYMBOL": "Symbol"
+			"SYMBOL": "Symbol",
+			"CREATE": "Create"
 		},
 		"SAVE": {
-			"TITLE": "Save Project"
+			"TITLE": "Save Project",
+			"NAME": "Name",
+			"DOWNLOAD": "Download Project File",
+			"CLOUD": "Save in Cloud"
+		},
+		"OPEN": {
+			"TITLE": "Open Project"
 		},
 		"RELOAD": {
 			"TITLE": "Reload Required",
@@ -94,8 +104,8 @@
 		}
 	},
 	"SETTINGS_INFO": {
-		"INPUTS": "Eingänge",
-		"DIRECTION": "Richtung",
+		"INPUTS": "Inputs",
+		"DIRECTION": "Direction",
 		"DIRECTIONS": {
 			"LEFT": "Left",
 			"DOWN": "Down",
