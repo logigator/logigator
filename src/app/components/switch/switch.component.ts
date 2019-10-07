@@ -18,11 +18,11 @@ export class SwitchComponent implements OnChanges, ControlValueAccessor {
 
 	public state: boolean;
 
-	private onChange = (value: boolean) => {};
-	private onTouched = () => {};
-
 	@Input()
 	public checked: boolean;
+
+	private onChange = (value: boolean) => {};
+	private onTouched = () => {};
 
 	constructor(private cdr: ChangeDetectorRef) { }
 

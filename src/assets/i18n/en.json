@@ -48,20 +48,30 @@
 		"LOGIN": "Login",
 		"REGISTER": "Register"
 	},
-	"CONST_BOX_CATEGORIES": {
-		"BASIC": "Basic Components",
-		"IO": "IO Components",
-		"PLUG": "Plug Components",
-		"USER": "User Defined"
+	"CONST_BOX": {
+		"SEARCH": "Search",
+		"CATEGORIES": {
+			"BASIC": "Basic Components",
+			"IO": "IO Components",
+			"PLUG": "Plug Components",
+			"USER": "User Defined"
+		}
 	},
 	"POPUP": {
 		"NEW_COMP": {
 			"TITLE": "New Component",
 			"NAME": "Name",
-			"SYMBOL": "Symbol"
+			"SYMBOL": "Symbol",
+			"CREATE": "Create"
 		},
 		"SAVE": {
-			"TITLE": "Save Project"
+			"TITLE": "Save Project",
+			"NAME": "Name",
+			"DOWNLOAD": "Download Project File",
+			"CLOUD": "Save in Cloud"
+		},
+		"OPEN": {
+			"TITLE": "Open Project"
 		},
 		"RELOAD": {
 			"TITLE": "Reload Required",
