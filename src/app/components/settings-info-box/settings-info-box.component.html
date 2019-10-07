@@ -17,9 +17,9 @@
 			</select>
 		</div>
 		<div class="description">
-			<h6>{{'SETTINGS_INFO.DESCRIPTION' | translate}}</h6>
+			<h6>{{'SETTINGS_INFO.DESCRIPTION' | translate}}:</h6>
 			{{elemType?.description | translate}}
 		</div>
-		<button *ngIf="elemType.category === 'user'" (click)="editComponentClick()">{{'SETTINGS_INFO.EDIT' | translate}}</button>
+		<button class="btn-outline secondary small edit" *ngIf="elemType.category === 'user'" (click)="editComponentClick()">{{'SETTINGS_INFO.EDIT' | translate}}</button>
 	</div>
 </div>
