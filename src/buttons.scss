@@ -9,6 +9,9 @@
 	&:hover {
 		cursor: pointer;
 	}
+	&:disabled {
+		cursor: default;
+	}
 }
 
 @function secondaryButtonBgColor() {
@@ -79,6 +82,9 @@
 			&:active {
 				background-color: themed('primary');
 			}
+			&:disabled {
+				background-color: rgba(themed('primary'), 0.7) !important;
+			}
 		}
 
 		&.secondary {
@@ -92,6 +98,9 @@
 			&:active {
 				background-color: secondaryButtonBgColor();
 			}
+			&:disabled {
+				background-color: rgba(secondaryButtonBgColor(), 0.7) !important;
+			}
 		}
 
 		&.danger {
@@ -104,6 +113,9 @@
 			}
 			&:active {
 				background-color: themed('error');
+			}
+			&:disabled {
+				background-color: rgba(themed('error'), 0.7) !important;
 			}
 		}
 	}
