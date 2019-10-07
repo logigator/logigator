@@ -32,6 +32,7 @@ import {createTranslateLoader} from './models/translation/translation-loader-fac
 import {AppMissingTranslationHandler} from './models/translation/missing-translation-handler';
 import { OutsideNgZoneEventDirective } from './directives/outside-ng-zone-event/outside-ng-zone-event.directive';
 import { SwitchComponent } from './components/switch/switch.component';
+import { UnsavedChangesComponent } from './components/popup/popup-contents/unsaved-changes/unsaved-changes.component';
 
 @NgModule({
 	declarations: [
@@ -58,7 +59,8 @@ import { SwitchComponent } from './components/switch/switch.component';
 		OpenProjectComponent,
 		SaveAsComponent,
 		OutsideNgZoneEventDirective,
-		SwitchComponent
+		SwitchComponent,
+		UnsavedChangesComponent
 	],
 	entryComponents: [
 		PopupComponent,
@@ -66,7 +68,8 @@ import { SwitchComponent } from './components/switch/switch.component';
 		ReloadQuestionComponent,
 		NewComponentComponent,
 		OpenProjectComponent,
-		SaveAsComponent
+		SaveAsComponent,
+		UnsavedChangesComponent
 	],
 	imports: [
 		BrowserModule,

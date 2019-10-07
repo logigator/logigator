@@ -34,7 +34,7 @@ export class ToolbarComponent implements OnInit {
 		return this.workModeService.currentWorkMode;
 	}
 
-	public newComponent(): void {
+	public async newComponent() {
 		this.popupService.showPopup(NewComponentComponent, 'POPUP.NEW_COMP.TITLE', false);
 	}
 
@@ -74,7 +74,9 @@ export class ToolbarComponent implements OnInit {
 		this.projectService.saveAll();
 	}
 
-	public open() {
-		this.popupService.showPopup(OpenProjectComponent, 'Open Project', true);
+	public async open() {
+		if (await this.projectService.askToSave()) {
+			this.popupService.showPopup(OpenProjectComponent, 'POPUP.OPEN.TITLE', true);
+		}
 	}
 }

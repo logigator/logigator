@@ -29,9 +29,11 @@ export class FileDropdownComponent implements OnInit {
 		this.requestClosed.emit();
 	}
 
-	public newProject() {
-		this.projectsService.newProject();
+	public async newProject() {
 		this.close();
+		if (await this.projectsService.askToSave()) {
+			await this.projectsService.newProject();
+		}
 	}
 
 	public newComponent() {
@@ -39,9 +41,11 @@ export class FileDropdownComponent implements OnInit {
 		this.close();
 	}
 
-	public openProject() {
-		this.popupService.showPopup(OpenProjectComponent, 'POPUP.OPEN.TITLE', true);
+	public async openProject() {
 		this.close();
+		if (await this.projectsService.askToSave()) {
+			this.popupService.showPopup(OpenProjectComponent, 'POPUP.OPEN.TITLE', true);
+		}
 	}
 
 	public saveProject() {

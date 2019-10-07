@@ -101,6 +101,12 @@
 				"textMode": "text mode",
 				"save": "Save"
 			}
+		},
+		"UNSAVED_CHANGES": {
+			"TITLE": "Unsaved Changes",
+			"QUESTION": "The current project has unsaved changes, by opening a other project, this changes will be lost!",
+			"OK": "Ok",
+			"CANCEL": "Cancel"
 		}
 	},
 	"SETTINGS_INFO": {

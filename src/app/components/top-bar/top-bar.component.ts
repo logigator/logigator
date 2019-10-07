@@ -7,8 +7,7 @@ import {UserInfo} from '../../models/http-responses/user-info';
 @Component({
 	selector: 'app-top-bar',
 	templateUrl: './top-bar.component.html',
-	styleUrls: ['./top-bar.component.scss'],
-	changeDetection: ChangeDetectionStrategy.OnPush
+	styleUrls: ['./top-bar.component.scss']
 })
 export class TopBarComponent implements OnInit {
 

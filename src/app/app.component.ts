@@ -43,6 +43,9 @@ export class AppComponent implements OnInit, OnDestroy {
 				takeUntil(this._destroySubject)
 			).subscribe(_ => this.onRequestFullscreen());
 		});
+		fromEvent(window, 'beforeunload').pipe(
+			takeUntil(this._destroySubject)
+		).subscribe((e) => this.onTabClose(e as Event));
 	}
 
 	private listenToShortcuts() {
@@ -89,6 +92,13 @@ export class AppComponent implements OnInit, OnDestroy {
 			elem.webkitRequestFullscreen();
 		} else if (elem.msRequestFullscreen) { /* IE/Edge */
 			elem.msRequestFullscreen();
+		}
+	}
+
+	private onTabClose(e: Event) {
+		if (this.projects.hasUnsavedProjects) {
+			e.preventDefault();
+			e.returnValue = true;
 		}
 	}
 

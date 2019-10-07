@@ -35,6 +35,7 @@ export class ShortcutsService {
 
 	private async loadShortcutSettings() {
 		const userInfo = await this.user.userInfo$.toPromise();
+		if (!userInfo) return;
 		const customConfig: {[key: string]: ShortcutConfig} = {};
 		userInfo.shortcuts.forEach(s => {
 			customConfig[s.name] = {
