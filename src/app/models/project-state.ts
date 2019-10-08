@@ -473,7 +473,7 @@ export class ProjectState {
 		this.allElements.forEach(e => {
 			if (ElementProviderService.staticInstance.isInputElement(e.typeId)) {
 				numInputs++;
-			} else if (ElementProviderService.staticInstance.isInputElement(e.typeId)) {
+			} else if (ElementProviderService.staticInstance.isOutputElement(e.typeId)) {
 				numOutputs++;
 			}
 		});

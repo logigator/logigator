@@ -26,6 +26,7 @@ export class ProjectSaveManagementService {
 
 	private _projectSource: 'server' | 'share';
 	private _componentsFromLocalFile = new Map<number, ComponentLocalFile>();
+	private _cloudProjectCache = new Map<number, OpenProjectResponse>();
 
 	constructor(
 		private http: HttpClient,
@@ -304,25 +305,31 @@ export class ProjectSaveManagementService {
 			});
 			return Promise.resolve(project);
 		}
+		if (this._cloudProjectCache.has(id))
+			return Promise.resolve(this.componentFromServerResponse(this._cloudProjectCache.get(id)));
 		return this.http.get<HttpResponseData<OpenProjectResponse>>(`/api/project/open/${id}`).pipe(
-			map(response => {
-				if (Number(response.result.project.is_component) === 0) {
-					throw Error('isProj');
-				}
-				let project = this.getProjectModelFromJson(response.result.project.data);
-				project = this.applyMappingsLoad(project, response.result.project.data.mappings);
-				project = this.removeMappingsFromModel(project as ProjectModelResponse);
-				return new Project(new ProjectState(project), {
-					id: Number(id),
-					name: response.result.project.name,
-					type: 'comp'
-				});
-			}),
+			map(response => this.componentFromServerResponse(response.result)),
 			this.errorHandling.catchErrorOperatorDynamicMessage((err: any) => {
 				if (err.message === 'isProj') return 'Unable to open Project as Component';
 				return err.error.error.description;
 			}, undefined)
 		).toPromise();
+	}
+
+	private componentFromServerResponse(openProRes: OpenProjectResponse): Project {
+		if (Number(openProRes.project.is_component) === 0) {
+			throw Error('isProj');
+		}
+		const id = Number(openProRes.project.pk_id);
+		let project = this.getProjectModelFromJson(openProRes.project.data);
+		project = this.applyMappingsLoad(project, openProRes.project.data.mappings);
+		project = this.removeMappingsFromModel(project as ProjectModelResponse);
+		this._cloudProjectCache.set(id, openProRes);
+		return new Project(new ProjectState(project), {
+			id: Number(id),
+			name: openProRes.project.name,
+			type: 'comp'
+		});
 	}
 
 	public get isShare(): boolean {
@@ -375,6 +382,8 @@ export class ProjectSaveManagementService {
 			body.num_inputs = project.numInputs;
 			body.num_outputs = project.numOutputs;
 		}
+		const currentlyInCache = this._cloudProjectCache.get(project.id);
+		currentlyInCache.project.data = body.data;
 		return this.http.post<HttpResponseData<{success: boolean}>>(`/api/project/save/${project.id}`, body).pipe(
 			this.errorHandling.catchErrorOperator('Unable to save Component or Project on Server', undefined)
 		).toPromise();
@@ -431,21 +440,10 @@ export class ProjectSaveManagementService {
 
 	private async openProjectFromServer(id: number): Promise<Project> {
 		this._projectSource = 'server';
+		if (this._cloudProjectCache.has(id))
+			return Promise.resolve(this.projectFromServerResponse(this._cloudProjectCache.get(id)));
 		return this.http.get<HttpResponseData<OpenProjectResponse>>(`/api/project/open/${id}`).pipe(
-			map(response => {
-				if (Number(response.result.project.is_component) === 1) {
-					throw Error('isComp');
-				}
-				let project = this.getProjectModelFromJson(response.result.project.data);
-				project = this.applyMappingsLoad(project, response.result.project.data.mappings);
-				project = this.removeMappingsFromModel(project as ProjectModelResponse);
-				this.errorHandling.showInfo(`Opened Project ${response.result.project.name}`);
-				return new Project(new ProjectState(project), {
-					id: Number(id),
-					name: response.result.project.name,
-					type: 'project'
-				});
-			}),
+			map(response => this.projectFromServerResponse(response.result)),
 			catchError(err => {
 				window.history.pushState(null, null, '/');
 				delete this._projectSource;
@@ -456,6 +454,23 @@ export class ProjectSaveManagementService {
 				return err.error.error.description;
 			}, Project.empty())
 		).toPromise();
+	}
+
+	private projectFromServerResponse(openProResp: OpenProjectResponse): Project {
+		if (Number(openProResp.project.is_component) === 1) {
+			throw Error('isComp');
+		}
+		const id = Number(openProResp.project.pk_id);
+		let project = this.getProjectModelFromJson(openProResp.project.data);
+		project = this.applyMappingsLoad(project, openProResp.project.data.mappings);
+		project = this.removeMappingsFromModel(project as ProjectModelResponse);
+		this.errorHandling.showInfo(`Opened Project ${openProResp.project.name}`);
+		this._cloudProjectCache.set(id, openProResp);
+		return new Project(new ProjectState(project), {
+			id: Number(id),
+			name: openProResp.project.name,
+			type: 'project'
+		});
 	}
 
 	private applyMappingsLoad(model: ProjectModel, mappings: ModelDatabaseMap[]): ProjectModel {
