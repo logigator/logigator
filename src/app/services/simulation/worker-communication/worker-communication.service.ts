@@ -29,7 +29,7 @@ export class WorkerCommunicationService {
 		// this._worker.addEventListener('message', console.log);
 	}
 
-	public start(): boolean {
+	public init(): boolean {
 		const project = this.projectsService.mainProject;
 		// this changes in a future version of stateCompiler
 		this._compiledBoard = this.stateCompiler.compile(project.currState);
@@ -70,8 +70,6 @@ export class WorkerCommunicationService {
 		this._worker.postMessage(request);
 		this._userInputChanges.clear();
 	}
-
-	// public startDebug(): void {}
 
 	public singleStep(): void {
 		const request: WasmRequest = {
