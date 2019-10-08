@@ -19,16 +19,11 @@ export class ProjectState {
 	public numInputs = 0;
 	public numOutputs = 0;
 
-	private elementProvider: ElementProviderService;
-
-
 	public constructor(model?: ProjectModel, highestId?: number) {
 		this._model = model || {board: {elements: []}};
 		this._highestTakenId = highestId || this.findHighestTakenId();
 		this._chunks = [];
 		this.loadAllIntoChunks();
-
-		this.elementProvider = ElementProviderService.staticInstance;
 	}
 
 
