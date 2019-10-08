@@ -10,4 +10,4 @@ cd WASM\emscripten || exit /b 1
 @CALL emsdk install latest
 @CALL emsdk activate latest
 
-@CALLemsdk_env.bat --build=Release
+@CALL emsdk_env.bat --build=Release
