@@ -208,9 +208,9 @@ export class ProjectState {
 	public addElement(elem: Element, id?: number): Element {
 		elem.id = id || this.getNextId();
 		this._model.board.elements.push(elem);
-		if (this.elementProvider.isInputElement(elem.typeId)) {
+		if (ElementProviderService.staticInstance.isInputElement(elem.typeId)) {
 			this.numInputs++;
-		} else if (this.elementProvider.isOutputElement(elem.typeId)) {
+		} else if (ElementProviderService.staticInstance.isOutputElement(elem.typeId)) {
 			this.numOutputs++;
 		}
 		this.loadIntoChunks(elem);
@@ -223,9 +223,9 @@ export class ProjectState {
 			return null;
 		const outElem = this._model.board.elements[outElemIndex];
 		this._model.board.elements.splice(outElemIndex, 1);
-		if (this.elementProvider.isInputElement(outElem.typeId)) {
+		if (ElementProviderService.staticInstance.isInputElement(outElem.typeId)) {
 			this.numInputs--;
-		} else if (this.elementProvider.isOutputElement(outElem.typeId)) {
+		} else if (ElementProviderService.staticInstance.isOutputElement(outElem.typeId)) {
 			this.numOutputs--;
 		}
 		this.removeFromChunks(outElem);
@@ -252,8 +252,8 @@ export class ProjectState {
 
 
 	public updateNumInputsOutputs(element: Element): void {
-		element.numInputs = this.elementProvider.getElementById(element.typeId).numInputs;
-		element.numOutputs = this.elementProvider.getElementById(element.typeId).numOutputs;
+		element.numInputs = ElementProviderService.staticInstance.getElementById(element.typeId).numInputs;
+		element.numOutputs = ElementProviderService.staticInstance.getElementById(element.typeId).numOutputs;
 		element.endPos = Elements.calcEndPos(element.pos, element.numInputs, element.numOutputs, element.rotation);
 	}
 
@@ -424,6 +424,34 @@ export class ProjectState {
 		return new ProjectState(outModel, this._highestTakenId);
 	}
 
+	public equals(other: ProjectState): boolean {
+		if (other._model.board.elements.length !== this._model.board.elements.length)
+			return false;
+		for (let i = 0; i < this._model.board.elements.length; i++) {
+			if (!other._model.board.elements.find(e => Elements.equals(e, this._model.board.elements[i])))
+				return false;
+		}
+		for (let i = 0; i < this._chunks.length; i++) {
+			for (let j = 0; j < this._chunks[i].length; j++) {
+				const ownChunk = this._chunks[i][j];
+				const otherChunk = other._chunks[i][j]; // might crash when test failing, did not happen but possible
+				if (otherChunk.elements.length !== ownChunk.elements.length ||
+					otherChunk.connectionPoints.length !== ownChunk.connectionPoints.length)
+					return false;
+				for (let k = 0; k < ownChunk.elements.length; k++) {
+					if (!otherChunk.elements.find(e => Elements.equals(e, ownChunk.elements[k])))
+						return false;
+				}
+				for (let k = 0; k < ownChunk.connectionPoints.length; k++) {
+					const ownCp = ownChunk.connectionPoints[k];
+					if (!otherChunk.connectionPoints.find(cp => cp.x === ownCp.x && cp.y === ownCp.y))
+						return false;
+				}
+			}
+		}
+		return true;
+	}
+
 	public elementsInChunk(x: number, y: number): Element[] {
 		return this._chunks[x] && this._chunks[x][y] ? this._chunks[x][y].elements : [];
 	}
@@ -443,9 +471,9 @@ export class ProjectState {
 		let numInputs = 0;
 		let numOutputs = 0;
 		this.allElements.forEach(e => {
-			if (this.elementProvider.isInputElement(e.typeId)) {
+			if (ElementProviderService.staticInstance.isInputElement(e.typeId)) {
 				numInputs++;
-			} else if (this.elementProvider.isOutputElement(e.typeId)) {
+			} else if (ElementProviderService.staticInstance.isInputElement(e.typeId)) {
 				numOutputs++;
 			}
 		});
