@@ -6,19 +6,19 @@
 		<p class="project-title">{{mainProjectName}}</p>
 		<div class="menu-entries">
 			<div>
-				<p (mouseover)="dropdownHover('fileDropdownOpen')" (click)="closeDropdowns(); fileDropdownOpen = true;">File</p>
+				<p (mouseover)="dropdownHover('fileDropdownOpen')" (click)="closeDropdowns(); fileDropdownOpen = true;">{{'DROPDOWN.FILE.TITLE' | translate}}</p>
 				<app-file-dropdown (requestClosed)="closeDropdowns()" *ngIf="fileDropdownOpen"></app-file-dropdown>
 			</div>
 			<div>
-				<p (mouseover)="dropdownHover('editDropdownOpen')" (click)="closeDropdowns(); editDropdownOpen = true;">Edit</p>
+				<p (mouseover)="dropdownHover('editDropdownOpen')" (click)="closeDropdowns(); editDropdownOpen = true;">{{'DROPDOWN.EDIT.TITLE' | translate}}</p>
 				<app-edit-dropdown (requestClosed)="closeDropdowns()" *ngIf="editDropdownOpen"></app-edit-dropdown>
 			</div>
 			<div>
-				<p (mouseover)="dropdownHover('viewDropdownOpen')" (click)="closeDropdowns(); viewDropdownOpen = true;">View</p>
+				<p (mouseover)="dropdownHover('viewDropdownOpen')" (click)="closeDropdowns(); viewDropdownOpen = true;">{{'DROPDOWN.VIEW.TITLE' | translate}}</p>
 				<app-view-dropdown (requestClosed)="closeDropdowns()" *ngIf="viewDropdownOpen"></app-view-dropdown>
 			</div>
 			<div>
-				<p (mouseover)="dropdownHover('helpDropdownOpen')" (click)="closeDropdowns(); helpDropdownOpen = true;">Help</p>
+				<p (mouseover)="dropdownHover('helpDropdownOpen')" (click)="closeDropdowns(); helpDropdownOpen = true;">{{'DROPDOWN.HELP.TITLE' | translate}}</p>
 				<app-help-dropdown (requestClosed)="closeDropdowns()" *ngIf="helpDropdownOpen"></app-help-dropdown>
 			</div>
 		</div>
@@ -35,7 +35,7 @@
 </div>
 
 <ng-template #loginRegister>
-	<p class="login">Login</p>
+	<p class="login">{{'TOP_BAR.LOGIN' | translate}}</p>
 	<div class="divider"></div>
-	<p class="register">Register</p>
+	<p class="register">{{'TOP_BAR.REGISTER' | translate}}</p>
 </ng-template>

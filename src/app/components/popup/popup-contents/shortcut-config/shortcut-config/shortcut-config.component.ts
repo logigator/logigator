@@ -1,4 +1,4 @@
-import {Component, OnInit, QueryList, ViewChildren} from '@angular/core';
+import {ChangeDetectionStrategy, Component, OnInit, QueryList, ViewChildren} from '@angular/core';
 import {ShortcutMap} from '../../../../../models/shortcut-map';
 import {ShortcutsService} from '../../../../../services/shortcuts/shortcuts.service';
 import {SingleShortcutConfigComponent} from '../single-shortcut-config/single-shortcut-config.component';
@@ -7,7 +7,8 @@ import {PopupContentComp} from '../../popup-content-comp';
 @Component({
 	selector: 'app-shortcut-config',
 	templateUrl: './shortcut-config.component.html',
-	styleUrls: ['./shortcut-config.component.scss']
+	styleUrls: ['./shortcut-config.component.scss'],
+	changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class ShortcutConfigComponent extends PopupContentComp implements OnInit {
 

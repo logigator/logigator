@@ -1,11 +1,12 @@
-import {Component, EventEmitter, OnInit, Output} from '@angular/core';
+import {ChangeDetectionStrategy, Component, EventEmitter, OnInit, Output} from '@angular/core';
 import {ProjectInteractionService} from '../../../services/project-interaction/project-interaction.service';
 import {ThemingService} from '../../../services/theming/theming.service';
 
 @Component({
 	selector: 'app-view-dropdown',
 	templateUrl: './view-dropdown.component.html',
-	styleUrls: ['../top-bar-dropdowns.scss', './view-dropdown.component.scss']
+	styleUrls: ['../top-bar-dropdowns.scss', './view-dropdown.component.scss'],
+	changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class ViewDropdownComponent implements OnInit {
 

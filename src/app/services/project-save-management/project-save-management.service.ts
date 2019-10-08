@@ -113,7 +113,7 @@ export class ProjectSaveManagementService {
 		if (project.id < 1000 && this._componentsFromLocalFile.has(project.id)) {
 			const compLocalFile = this._componentsFromLocalFile.get(project.id);
 			compLocalFile.data = project.currState.model;
-		} else if (this.user.isLoggedIn) {
+		} else if (this.user.isLoggedIn && project.id >= 1000) {
 			if (await this.saveSingleProjectToServer(project)) {
 				this.errorHandling.showInfo(`Saved component ${project.name} on Server`);
 			} else {

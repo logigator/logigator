@@ -20,13 +20,19 @@ import { PopupComponent } from './components/popup/popup/popup.component';
 import { SingleShortcutConfigComponent } from './components/popup/popup-contents/shortcut-config/single-shortcut-config/single-shortcut-config.component';
 import { ShortcutConfigComponent } from './components/popup/popup-contents/shortcut-config/shortcut-config/shortcut-config.component';
 import { WindowWorkAreaComponent } from './components/window-work-area/window-work-area.component';
-import {HttpClientModule} from '@angular/common/http';
+import {HttpClient, HttpClientModule} from '@angular/common/http';
 import { ReloadQuestionComponent } from './components/popup/popup-contents/relaod-question/reload-question.component';
 import { NewComponentComponent } from './components/popup/popup-contents/new-component/new-component.component';
 import { OpenProjectComponent } from './components/popup/popup-contents/open/open-project.component';
 import { SaveAsComponent } from './components/popup/popup-contents/save-as/save-as.component';
-import {ToastNoAnimationModule, ToastrModule} from 'ngx-toastr';
+import {ToastrModule} from 'ngx-toastr';
 import {BrowserAnimationsModule} from '@angular/platform-browser/animations';
+import {MissingTranslationHandler, TranslateLoader, TranslateModule} from '@ngx-translate/core';
+import {createTranslateLoader} from './models/translation/translation-loader-factory';
+import {AppMissingTranslationHandler} from './models/translation/missing-translation-handler';
+import { OutsideNgZoneEventDirective } from './directives/outside-ng-zone-event/outside-ng-zone-event.directive';
+import { SwitchComponent } from './components/switch/switch.component';
+import { UnsavedChangesComponent } from './components/popup/popup-contents/unsaved-changes/unsaved-changes.component';
 
 @NgModule({
 	declarations: [
@@ -51,7 +57,10 @@ import {BrowserAnimationsModule} from '@angular/platform-browser/animations';
 		ReloadQuestionComponent,
 		NewComponentComponent,
 		OpenProjectComponent,
-		SaveAsComponent
+		SaveAsComponent,
+		OutsideNgZoneEventDirective,
+		SwitchComponent,
+		UnsavedChangesComponent
 	],
 	entryComponents: [
 		PopupComponent,
@@ -59,7 +68,8 @@ import {BrowserAnimationsModule} from '@angular/platform-browser/animations';
 		ReloadQuestionComponent,
 		NewComponentComponent,
 		OpenProjectComponent,
-		SaveAsComponent
+		SaveAsComponent,
+		UnsavedChangesComponent
 	],
 	imports: [
 		BrowserModule,
@@ -73,6 +83,17 @@ import {BrowserAnimationsModule} from '@angular/platform-browser/animations';
 			timeOut: 5000,
 			tapToDismiss: true
 		}),
+		TranslateModule.forRoot({
+			loader: {
+				provide: TranslateLoader,
+				useFactory: createTranslateLoader,
+				deps: [HttpClient]
+			},
+			missingTranslationHandler: {
+				provide: MissingTranslationHandler,
+				useClass: AppMissingTranslationHandler
+			}
+		})
 	],
 	providers: [],
 	bootstrap: [AppComponent]

@@ -1,11 +1,11 @@
-import {Component, EventEmitter, OnInit, Output} from '@angular/core';
-import {ProjectsService} from '../../../services/projects/projects.service';
+import {ChangeDetectionStrategy, Component, EventEmitter, OnInit, Output} from '@angular/core';
 import {ProjectInteractionService} from '../../../services/project-interaction/project-interaction.service';
 
 @Component({
 	selector: 'app-edit-dropdown',
 	templateUrl: './edit-dropdown.component.html',
-	styleUrls: ['../top-bar-dropdowns.scss', './edit-dropdown.component.scss']
+	styleUrls: ['../top-bar-dropdowns.scss', './edit-dropdown.component.scss'],
+	changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class EditDropdownComponent implements OnInit {
 
@@ -32,10 +32,17 @@ export class EditDropdownComponent implements OnInit {
 	}
 
 	public copy() {
+		this.projectInteraction.copySelection();
 		this.close();
 	}
 
 	public paste() {
+		this.projectInteraction.paste();
+		this.close();
+	}
+
+	public cut() {
+		this.projectInteraction.cutSelection();
 		this.close();
 	}
 

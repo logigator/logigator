@@ -1,17 +1,9 @@
-@import '~bootstrap/scss/functions';
-@import '~bootstrap/scss/variables';
-@import '~bootstrap/scss/mixins';
-@import '~ngx-toastr/toastr-bs4-alert';
 @import "variables";
 @import "themes";
+@import "toastr";
+@import "buttons";
 
-@font-face {
-	font-family: 'louis_george_cafregular';
-	src: url('/assets/fonts/louis_george_cafe-webfont.woff2') format('woff2'),
-	url('/assets/fonts/louis_george_cafe-webfont.woff') format('woff');
-	font-weight: normal;
-	font-style: normal;
-}
+@import url('https://fonts.googleapis.com/css?family=Nunito&display=swap');
 
 html, body {
 	margin: 0;
@@ -23,45 +15,6 @@ html, body {
 
 * {
 	box-sizing: border-box;
-	font-family: louis_george_cafregular, Arial, sans-serif;
+	font-family: Nunito, Arial, sans-serif;
 	font-size: 100%;
-}
-
-.toastr-position {
-	left: $construction-box-width + 0.5rem;
-	bottom: 0.5rem;
-}
-
-.ngx-toastr {
-	padding: 0.75rem 0.5rem !important;
-	border: none !important;
-	border-radius: 0 !important;
-	background-position: 0.75rem center !important;
-	background-size: 1.75rem !important;
-
-	.toast-message {
-		margin-left: 2.75rem;
-	}
-}
-
-@include themify() {
-	.toast-error {
-		@if isTheme('light') {
-			background-image: url("/assets/icons/light/alert.svg");
-		} @else {
-			background-image: url("/assets/icons/dark/alert.svg");
-		}
-		color: themed('primary-text');
-		background-color: themed('error');
-	}
-
-	.toast-info {
-		@if isTheme('light') {
-			background-image: url("/assets/icons/light/check.svg");
-		} @else {
-			background-image: url("/assets/icons/dark/check.svg");
-		}
-		color: themed('primary-text');
-		background-color: themed('secondary');
-	}
 }

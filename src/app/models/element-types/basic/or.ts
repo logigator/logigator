@@ -1,13 +1,13 @@
 import {ElementType} from '../element-type';
 
 export const or: ElementType = {
-	name: 'OR Gate',
+	name: 'ELEMENT_TYPE.BASIC.OR.NAME',
 	numInputs: 2,
 	numOutputs: 1,
 	minInputs: 2,
 	maxInputs: 5,
 	symbol: '≥1',
-	description: '',
+	description: 'ELEMENT_TYPE.BASIC.OR.DESCRIPTION',
 	rotation: 0,
 	category: 'basic'
 };

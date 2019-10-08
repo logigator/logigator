@@ -1,4 +1,4 @@
-import {Component, OnInit} from '@angular/core';
+import {ChangeDetectionStrategy, ChangeDetectorRef, Component, OnInit} from '@angular/core';
 import {WorkMode} from '../../models/work-modes';
 import {WorkModeService} from '../../services/work-mode/work-mode.service';
 import {ProjectsService} from '../../services/projects/projects.service';
@@ -10,6 +10,8 @@ import {ManuallyLogged} from '../../../../tests/auto-tests/board-recorder';
 import {PopupService} from '../../services/popup/popup.service';
 import {NewComponentComponent} from '../popup/popup-contents/new-component/new-component.component';
 import {OpenProjectComponent} from '../popup/popup-contents/open/open-project.component';
+import {Observable} from 'rxjs';
+import {tap} from 'rxjs/operators';
 
 @Component({
 	selector: 'app-toolbar',
@@ -67,8 +69,8 @@ export class ToolbarComponent {
 		return this.workModeService.currentWorkMode;
 	}
 
-	public newComponent(): void {
-		this.popupService.showPopup(NewComponentComponent, 'New Component', false);
+	public async newComponent() {
+		this.popupService.showPopup(NewComponentComponent, 'POPUP.NEW_COMP.TITLE', false);
 	}
 
 	public undo(): void {
@@ -107,7 +109,9 @@ export class ToolbarComponent {
 		this.projectService.saveAll();
 	}
 
-	public open() {
-		this.popupService.showPopup(OpenProjectComponent, 'Open Project', true);
+	public async open() {
+		if (await this.projectService.askToSave()) {
+			this.popupService.showPopup(OpenProjectComponent, 'POPUP.OPEN.TITLE', true);
+		}
 	}
 }

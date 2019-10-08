@@ -7,6 +7,7 @@ import {fromEvent, Subject} from 'rxjs';
 import {DOCUMENT} from '@angular/common';
 import {takeUntil} from 'rxjs/operators';
 import {ProjectsService} from './services/projects/projects.service';
+import {TranslateService} from '@ngx-translate/core';
 
 @Component({
 	selector: 'app-root',
@@ -28,15 +29,23 @@ export class AppComponent implements OnInit, OnDestroy {
 		private selection: SelectionService,
 		private shortcuts: ShortcutsService,
 		private projects: ProjectsService,
-		@Inject(DOCUMENT) private document: HTMLDocument
-	) {}
+		@Inject(DOCUMENT) private document: HTMLDocument,
+		private translate: TranslateService
+	) {
+		this.initTranslation();
+	}
 
 	ngOnInit(): void {
-		this.listenToShortcuts();
+		this.ngZone.runOutsideAngular(() => {
+			this.listenToShortcuts();
 
-		this.theming.onRequestFullscreen$.pipe(
+			this.theming.onRequestFullscreen$.pipe(
+				takeUntil(this._destroySubject)
+			).subscribe(_ => this.onRequestFullscreen());
+		});
+		fromEvent(window, 'beforeunload').pipe(
 			takeUntil(this._destroySubject)
-		).subscribe(_ => this.onRequestFullscreen());
+		).subscribe((e) => this.onTabClose(e as Event));
 	}
 
 	private listenToShortcuts() {
@@ -84,6 +93,19 @@ export class AppComponent implements OnInit, OnDestroy {
 		} else if (elem.msRequestFullscreen) { /* IE/Edge */
 			elem.msRequestFullscreen();
 		}
+	}
+
+	private onTabClose(e: Event) {
+		if (this.projects.hasUnsavedProjects) {
+			e.preventDefault();
+			e.returnValue = true;
+		}
+	}
+
+	private initTranslation() {
+		this.translate.addLangs(['en', 'de']);
+		this.translate.setDefaultLang('en');
+		this.translate.use('en');
 	}
 
 	ngOnDestroy(): void {

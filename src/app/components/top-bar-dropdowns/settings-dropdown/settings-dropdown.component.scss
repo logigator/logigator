@@ -25,11 +25,26 @@
 		.switch {
 			display: flex;
 			flex-direction: row;
+			align-items: center;
+			justify-content: space-between;
+			padding: 0.5rem;
+		}
+
+		.select {
+			display: flex;
+			flex-direction: row;
+			align-items: center;
 			justify-content: space-between;
 			padding: 0.5rem;
 
-			&:hover {
-				background-color: themed('secondary');
+			select {
+				width: 40%;
+				font-size: 0.9rem;
+				outline: none;
+				border: none;
+				border-bottom: 1px solid themed('primary-text');
+				color: themed('primary-text');
+				background-color: themed('background');
 			}
 		}
 

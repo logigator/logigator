@@ -9,6 +9,7 @@ import {SaveAsComponent} from '../../components/popup/popup-contents/save-as/sav
 import {PopupService} from '../popup/popup.service';
 import {ElementProviderService} from '../element-provider/element-provider.service';
 import {ErrorHandlingService} from '../error-handling/error-handling.service';
+import {UnsavedChangesComponent} from '../../components/popup/popup-contents/unsaved-changes/unsaved-changes.component';
 
 @Injectable({
 	providedIn: 'root'
@@ -78,24 +79,46 @@ export class ProjectsService {
 		this._projects.forEach(p => p.updateInputsOutputs(projectId));
 	}
 
-	public newProject() {
+	public get hasUnsavedProjects(): boolean {
+		const projects = Array.from(this._projects.values());
+		for (const project of projects) {
+			if (project.dirty) return true;
+		}
+		return false;
+	}
+
+	// returns if projects can be closed
+	public async askToSave(): Promise<boolean> {
+		if (!this.hasUnsavedProjects) return Promise.resolve(true);
+		return await this.popup.showPopup(UnsavedChangesComponent, 'POPUP.UNSAVED_CHANGES.TITLE', false);
+	}
+
+	public async newProject() {
 		this.projectSaveManagementService.resetProjectSource();
 		const project = Project.empty();
-		this.allProjects.forEach((value, key) => this.closeProject(key));
+		for (const proj of this.allProjects.entries()) {
+			await this.closeProject(proj[0]);
+		}
 		this._projects.set(project.id, project);
 		this._currProject = project;
 		this._mainProject = project;
 		this._projectOpenedSubject.next(project.id);
 	}
 
-	public openFile(content: string) {
+	public async openFile(content: string) {
 		const project = this.projectSaveManagementService.openFromFile(content);
 		if (!project) return;
-		this.allProjects.forEach((value, key) => this.closeProject(key));
+		await this.closeAllProjects();
 		this._projects.set(project.id, project);
 		this._currProject = project;
 		this._mainProject = project;
 		this._projectOpenedSubject.next(project.id);
+	}
+
+	private async closeAllProjects() {
+		for (const proj of this.allProjects.entries()) {
+			await this.closeProject(proj[0]);
+		}
 	}
 
 	public onProjectChanges$(projectId: number): Observable<Action[]> {
@@ -134,18 +157,17 @@ export class ProjectsService {
 		return this._projects;
 	}
 
-	public closeProject(id: number) {
-		this.projectSaveManagementService.saveComponent(this._projects.get(id)).then(() => {
-			this._projectClosedSubject.next(id);
-			this._projects.delete(id);
-		}).catch();
+	public async closeProject(id: number) {
+		await this.projectSaveManagementService.saveComponent(this._projects.get(id));
+		this._projectClosedSubject.next(id);
+		this._projects.delete(id);
 	}
 
 	public async saveAll() {
 		if (this.projectSaveManagementService.isFirstSave) {
-			const newMainProject = await this.popup.showPopup(SaveAsComponent, 'Save Project', false, Array.from(this.allProjects.values()));
+			const newMainProject = await this.popup.showPopup(SaveAsComponent, 'POPUP.SAVE.TITLE', false, Array.from(this.allProjects.values()));
 			if (newMainProject) {
-				this.allProjects.forEach((value, key) => this.closeProject(key));
+				await this.closeAllProjects();
 				this._mainProject = newMainProject;
 				this._projects.set(newMainProject.id, newMainProject);
 				this._projectOpenedSubject.next(newMainProject.id);

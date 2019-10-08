@@ -1,13 +1,26 @@
-import {ChangeDetectorRef, Component, ElementRef, HostListener, Input, OnInit, ViewChild} from '@angular/core';
+import {
+	ChangeDetectionStrategy,
+	ChangeDetectorRef,
+	Component,
+	ElementRef,
+	Input,
+	NgZone,
+	OnDestroy,
+	OnInit,
+	ViewChild
+} from '@angular/core';
 import {ShortcutsService} from '../../../../../services/shortcuts/shortcuts.service';
 import {ShortcutAction, ShortcutConfig} from '../../../../../models/shortcut-map';
+import {fromEvent, Subject, Subscription} from 'rxjs';
+import {takeUntil} from 'rxjs/operators';
 
 @Component({
 	selector: 'app-single-shortcut-config',
 	templateUrl: './single-shortcut-config.component.html',
-	styleUrls: ['./single-shortcut-config.component.scss']
+	styleUrls: ['./single-shortcut-config.component.scss'],
+	changeDetection: ChangeDetectionStrategy.OnPush
 })
-export class SingleShortcutConfigComponent implements OnInit {
+export class SingleShortcutConfigComponent implements OnInit, OnDestroy {
 
 	@Input()
 	public shortcut: ShortcutAction;
@@ -19,16 +32,26 @@ export class SingleShortcutConfigComponent implements OnInit {
 	public isRecording = false;
 	private _newShortcutConfig: ShortcutConfig;
 
-	constructor(private shortcuts: ShortcutsService) { }
+	private _destroySubject = new Subject();
+
+	constructor(private shortcuts: ShortcutsService, private ngZone: NgZone, private cdr: ChangeDetectorRef) { }
 
 	ngOnInit() {
 		this.shortcutText = this.shortcuts.getShortcutTextForAction(this.shortcut);
+		this.ngZone.runOutsideAngular(() => {
+			fromEvent(window, 'click').pipe(
+				takeUntil(this._destroySubject)
+			).subscribe(e => this.onWindowClick(e as MouseEvent));
+			fromEvent(this.inputContainer.nativeElement, 'keydown').pipe(
+				takeUntil(this._destroySubject)
+			).subscribe(e => this.onKeyDown(e as KeyboardEvent));
+		});
 	}
 
-	@HostListener('window:click', ['$event'])
 	public onWindowClick(e: MouseEvent) {
 		if (!this.inputContainer.nativeElement.contains(e.target as Node)) {
 			this.isRecording = false;
+			this.cdr.detectChanges();
 		}
 	}
 
@@ -42,10 +65,7 @@ export class SingleShortcutConfigComponent implements OnInit {
 		e.stopPropagation();
 		this._newShortcutConfig = this.shortcuts.getShortcutConfigFromEvent(e);
 		this.shortcutText = this.shortcuts.getShortcutText(this._newShortcutConfig);
-	}
-
-	public get shortcutDescription(): string {
-		return this.shortcuts.getShortcutDescription(this.shortcut);
+		this.cdr.detectChanges();
 	}
 
 	public startRecording() {
@@ -59,4 +79,8 @@ export class SingleShortcutConfigComponent implements OnInit {
 		return toReturn;
 	}
 
+	ngOnDestroy(): void {
+		this._destroySubject.next();
+		this._destroySubject.unsubscribe();
+	}
 }

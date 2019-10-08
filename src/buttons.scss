@@ -1,0 +1,167 @@
+@import "themes";
+
+.btn {
+	padding: 0.4rem 0.75rem;
+	border-radius: 0.1rem;
+	border: none;
+	outline: none;
+
+	&:hover {
+		cursor: pointer;
+	}
+	&:disabled {
+		cursor: default;
+	}
+}
+
+@function secondaryButtonBgColor() {
+	@if(isTheme('dark')) {
+		@return lighten(themed('secondary'), 35%);
+	} @else {
+		@return darken(themed('secondary'), 35%)
+	}
+}
+
+@include themify() {
+	.btn-outline {
+		@extend .btn;
+		background: none;
+
+		&.primary {
+			border: 1px solid themed('primary');
+			color: themed('primary');
+
+			&:hover {
+				transition: background-color 100ms;
+				background-color: rgba(themed('primary'), 0.1);
+			}
+			&:active {
+				background-color: rgba(themed('primary'), 0.2);
+			}
+		}
+
+		&.secondary {
+			border: 1px solid secondaryButtonBgColor();
+			color: secondaryButtonBgColor();
+
+			&:hover {
+				transition: background-color 100ms;
+				background-color: rgba(secondaryButtonBgColor(), 0.1);
+			}
+			&:active {
+				background-color: rgba(secondaryButtonBgColor(), 0.2);
+			}
+		}
+
+		&.danger {
+			border: 1px solid themed('error');
+			color: themed('error');
+
+			&:hover {
+				transition: background-color 100ms;
+				background-color: rgba(themed('error'), 0.1);
+			}
+			&:active {
+				background-color: rgba(themed('error'), 0.2);
+			}
+		}
+	}
+
+	.btn-raised {
+		@extend .btn;
+		box-shadow: 2px 2px 6px 0 rgba(0, 0, 0, 0.3);
+
+		&.primary {
+			color: themed('secondary-text');
+			background-color: themed('primary');
+
+			&:hover {
+				transition: background-color 100ms;
+				background-color: rgba(themed('primary'), 0.7);
+			}
+			&:active {
+				background-color: themed('primary');
+			}
+			&:disabled {
+				background-color: rgba(themed('primary'), 0.7) !important;
+			}
+		}
+
+		&.secondary {
+			color: themed('secondary-text');
+			background-color: secondaryButtonBgColor();
+
+			&:hover {
+				transition: background-color 100ms;
+				background-color: rgba(secondaryButtonBgColor(), 0.7);
+			}
+			&:active {
+				background-color: secondaryButtonBgColor();
+			}
+			&:disabled {
+				background-color: rgba(secondaryButtonBgColor(), 0.7) !important;
+			}
+		}
+
+		&.danger {
+			color: themed('secondary-text');
+			background-color: themed('error');
+
+			&:hover {
+				transition: background-color 100ms;
+				background-color: rgba(themed('error'), 0.7);
+			}
+			&:active {
+				background-color: themed('error');
+			}
+			&:disabled {
+				background-color: rgba(themed('error'), 0.7) !important;
+			}
+		}
+	}
+
+	.btn-normal {
+		@extend .btn;
+		background: none;
+
+		&.primary {
+			color: themed('primary');
+
+			&:hover {
+				transition: background-color 100ms;
+				background-color: rgba(themed('primary'), 0.1);
+			}
+			&:active {
+				background-color: rgba(themed('primary'), 0.2)
+			}
+		}
+
+		&.secondary {
+			color: secondaryButtonBgColor();
+
+			&:hover {
+				transition: background-color 100ms;
+				background-color: rgba(secondaryButtonBgColor(), 0.1);
+			}
+			&:active {
+				background-color: rgba(secondaryButtonBgColor(), 0.2)
+			}
+		}
+
+		&.danger {
+			color: themed('error');
+
+			&:hover {
+				transition: background-color 100ms;
+				background-color: rgba(themed('error'), 0.1);
+			}
+			&:active {
+				background-color: rgba(themed('error'), 0.2)
+			}
+		}
+	}
+}
+
+.small.btn {
+	padding: 0.2rem 0.6rem;
+}
