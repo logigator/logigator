@@ -3,11 +3,9 @@
 	"version": "0.0.0",
 	"scripts": {
 		"ng": "ng",
-		"start": "ng serve --port 8202 --disableHostCheck --proxy-config proxyconfig.json",
-		"build": "ng build --prod",
-		"install": "run-script-os",
-		"install:win32": "WASM\\install_win32.bat",
-		"install:default": "./WASM/install_unix.sh",
+		"start": "npm run wasm-build && ng serve --port 8202 --disableHostCheck --proxy-config proxyconfig.json",
+		"build": "npm run wasm-build && ng build --prod",
+		"wasm-build": "npm explore logigator-simulation -- npm run build-wasm",
 		"test": "ng test",
 		"lint": "ng lint",
 		"e2e": "ng e2e"
@@ -30,13 +28,15 @@
 		"pixi.js": "^5.1.2",
 		"rxjs": "~6.4.0",
 		"tslib": "^1.10.0",
-		"zone.js": "~0.9.1"
+		"zone.js": "~0.9.1",
+		"run-script-os": "^1.0.7"
 	},
 	"devDependencies": {
 		"@angular-devkit/build-angular": "~0.803.0",
 		"@angular/cli": "~8.3.0",
 		"@angular/compiler-cli": "~8.2.3",
 		"@angular/language-service": "~8.2.3",
+		"@types/emscripten": "^1.38.0",
 		"@types/file-saver": "^2.0.1",
 		"@types/jasmine": "~3.3.8",
 		"@types/jasminewd2": "~2.0.3",
@@ -49,11 +49,10 @@
 		"karma-coverage-istanbul-reporter": "~2.0.1",
 		"karma-jasmine": "~2.0.1",
 		"karma-jasmine-html-reporter": "^1.4.0",
+		"logigator-simulation": "github:logigator/logigator-simulation",
 		"protractor": "~5.4.0",
-		"run-script-os": "^1.0.7",
 		"ts-node": "~7.0.0",
 		"tslint": "~5.15.0",
-		"typescript": "~3.5.3",
-		"logigator-simulation": "github:logigator/logigator-simulation"
+		"typescript": "~3.5.3"
 	}
 }

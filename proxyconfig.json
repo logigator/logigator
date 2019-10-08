@@ -7,5 +7,6 @@
 		"pathRewrite": {
 			"^/api": ""
 		}
-	}
+	},
+	"/simulation.wasm": "/assets"
 }

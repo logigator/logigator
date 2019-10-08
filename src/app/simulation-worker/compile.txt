@@ -1,1 +1,1 @@
-em++ -Os --bind -s STRICT=1 -s ALLOW_MEMORY_GROWTH=1 -s MALLOC=emmalloc -s MODULARIZE=1 -s EXPORT_ES6=1 -o ../../assets/simulation.js simulation.cpp
+em++ -O0 --bind -s WASM=1 -s MODULARIZE=1 -s EXPORT_NAME=SimulationModule -s ALLOW_MEMORY_GROWTH=1 -s MALLOC=emmalloc -o src/assets/simulation.js src/app/simulation-worker/simulation.cpp

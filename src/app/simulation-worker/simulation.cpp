@@ -2,6 +2,7 @@
 #include <emscripten/bind.h>
 
 int test() {
+	std::printf("Hello");
 	return 254;
 }
 
