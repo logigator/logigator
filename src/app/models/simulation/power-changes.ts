@@ -1,1 +1,2 @@
-export type PowerChanges = Map<Element, boolean>;
+export type PowerChangesIn = Map<number, boolean>;
+export type PowerChangesOut = Map<Element, boolean>;

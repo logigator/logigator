@@ -1,9 +1,9 @@
 import { Injectable } from '@angular/core';
-import {Observable} from 'rxjs';
-import {PowerChanges} from '../../../models/simulation/power-changes';
+import {Observable, Subject} from 'rxjs';
+import {PowerChangesOut} from '../../../models/simulation/power-changes';
 import {ProjectsService} from '../../projects/projects.service';
 import {StateCompilerService} from '../state-compiler/state-compiler.service';
-import {WasmRequest} from '../../../models/simulation/wasm-interface';
+import {WasmRequest, WasmResponse} from '../../../models/simulation/wasm-interface';
 import {SimulationUnits} from '../../../models/simulation/simulation-unit';
 
 @Injectable({
@@ -11,7 +11,7 @@ import {SimulationUnits} from '../../../models/simulation/simulation-unit';
 })
 export class WorkerCommunicationService {
 
-	private _powerSubjects: Map<number, Observable<PowerChanges>>;
+	private _powerSubjects: Map<number, Subject<PowerChangesOut>>;
 	private readonly _worker: Worker;
 
 	private _frameTime: number;
@@ -24,9 +24,28 @@ export class WorkerCommunicationService {
 		private projectsService: ProjectsService,
 		private stateCompiler: StateCompilerService
 	) {
-		this._worker = new Worker('../../../simulation-_worker/simulation._worker', { type: 'module' });
+		this._worker = new Worker('../../../simulation-worker/simulation.worker', { type: 'module' });
 		// this._worker.postMessage({kek: '_worker'});
-		// this._worker.addEventListener('message', console.log);
+		this._worker.addEventListener('message', (event) => this.handleResponse(event as any));
+	}
+
+	private handleResponse(event: any): void {
+		const data = event.data as WasmResponse;
+		if (data.success) {
+			const powerChangesOut = new Map<number, PowerChangesOut>();
+			for (const [link, state] of data.state) {
+				// for (const obj of this.stateCompiler.elementsOnLink.get(link)) {
+				// 	if (!powerChangesOut.has(obj.projectId))
+				// 		powerChangesOut.set(obj.projectId, new Map<Element, boolean>());
+				// 	powerChangesOut.get(obj.projectId).set(obj.element, state);
+				// }
+			}
+			for (const [k, v] of powerChangesOut.entries()) {
+				this._powerSubjects.get(k).next(v);
+			}
+		} else {
+			console.error(data.error);
+		}
 	}
 
 	public init(): boolean {
@@ -94,7 +113,7 @@ export class WorkerCommunicationService {
 		}
 	}
 
-	public boardState(projectId: number): Observable<PowerChanges> {
-		return this._powerSubjects.get(projectId);
+	public boardState(projectId: number): Observable<PowerChangesOut> {
+		return this._powerSubjects.get(projectId).asObservable();
 	}
 }
