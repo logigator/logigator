@@ -3,9 +3,9 @@ import {WorkMode} from '../../models/work-modes';
 import {WorkModeService} from '../../services/work-mode/work-mode.service';
 import {ProjectsService} from '../../services/projects/projects.service';
 import {ProjectInteractionService} from '../../services/project-interaction/project-interaction.service';
-// #!project_recorder
+// #!debug
 import {Test} from '../../../../tests/auto-tests/tests';
-// #!project_recorder
+// #!debug
 import {ManuallyLogged} from '../../../../tests/auto-tests/board-recorder';
 import {PopupService} from '../../services/popup/popup.service';
 import {NewComponentComponent} from '../popup/popup-contents/new-component/new-component.component';
@@ -20,7 +20,7 @@ import {tap} from 'rxjs/operators';
 })
 export class ToolbarComponent {
 
-	// #!project_recorder
+	// #!debug
 	private test: Test;
 
 	constructor(
@@ -34,9 +34,7 @@ export class ToolbarComponent {
 	public printElements(): void {
 		this.projectService.currProject.allElements.forEach(console.log);
 	}
-	// #!endif
 
-	// #!if PROJECT_RECORDER === 'true'
 	public printCalls(): void {
 		console.log(this.projectService.currProject.boardRecorder.stringify());
 	}

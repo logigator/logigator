@@ -22,6 +22,8 @@ module.exports = (config, options) => {
 		return;
 	}
 
+	angularCompilerPlugin.options.directTemplateLoading = false;
+
 	addTransformerToAngularCompilerPlugin(angularCompilerPlugin, templateLoaderTransformer);
 
 	return config;
@@ -32,10 +34,10 @@ const preprocessorConfig = {
 	options: {
 		debug:  process.env.DEBUG === 'true',
 		directives: {
-			project_recorder: process.env.PROJECT_RECORDER === 'true'
+			electron: process.env.ELECTRON === 'true'
 		},
 		params: {
-			PROJECT_RECORDER: process.env.PROJECT_RECORDER,
+			ELECTRON: process.env.ELECTRON,
 			DEBUG: process.env.DEBUG
 		},
 		verbose: true,
