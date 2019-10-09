@@ -23,12 +23,6 @@ export class ToolbarComponent {
 	// #!project_recorder
 	private test: Test;
 
-	// #!project_recorder
-	public showRecordButtons = true;
-
-	// #!debug
-	public showDebugButtons = true;
-
 	constructor(
 		private workModeService: WorkModeService,
 		private projectService: ProjectsService,

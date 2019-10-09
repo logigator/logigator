@@ -6,7 +6,8 @@ export const templateLoaderTransformer = <T extends ts.Node>(context: ts.Transfo
 			if (ts.isDecorator(node) && (node.expression as ts.CallExpression).expression.getText() === 'Component') {
 				const arg = (node.expression as ts.CallExpression).arguments[0] as ts.ObjectLiteralExpression;
 				const templateProp = arg.properties.find(p => p.name.getText() === 'templateUrl') as ts.PropertyAssignment;
-				ts.createCall(ts.createIdentifier('require'), [], []);
+				templateProp.initializer = ts.createCall(ts.createIdentifier('require'), [], [templateProp.initializer]);
+				return node;
 			}
 			return ts.visitEachChild(node, visit, context);
 		}
