@@ -3,9 +3,8 @@
 	"version": "0.0.0",
 	"scripts": {
 		"ng": "ng",
-		"start": "npm run wasm-build && ng serve --port 8202 --disableHostCheck --proxy-config proxyconfig.json",
-		"build": "npm run wasm-build && ng build --prod",
-		"wasm-build": "npm explore logigator-simulation -- npm run build-wasm",
+		"start": "ng serve --port 8202 --disableHostCheck --proxy-config proxyconfig.json",
+		"build": "ng build --prod",
 		"test": "ng test",
 		"lint": "ng lint",
 		"e2e": "ng e2e"
@@ -28,8 +27,7 @@
 		"pixi.js": "^5.1.2",
 		"rxjs": "~6.4.0",
 		"tslib": "^1.10.0",
-		"zone.js": "~0.9.1",
-		"run-script-os": "^1.0.7"
+		"zone.js": "~0.9.1"
 	},
 	"devDependencies": {
 		"@angular-devkit/build-angular": "~0.803.0",
@@ -49,7 +47,7 @@
 		"karma-coverage-istanbul-reporter": "~2.0.1",
 		"karma-jasmine": "~2.0.1",
 		"karma-jasmine-html-reporter": "^1.4.0",
-		"logigator-simulation": "github:logigator/logigator-simulation",
+		"logigator-simulation": "github:logigator/logigator-simulation#development",
 		"protractor": "~5.4.0",
 		"ts-node": "~7.0.0",
 		"tslint": "~5.15.0",

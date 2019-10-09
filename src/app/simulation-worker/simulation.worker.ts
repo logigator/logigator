@@ -4,19 +4,19 @@ interface SimulationModule {
 	test(): number;
 }
 
-declare var SimulationModule: SimulationModule & EmscriptenModule;
+importScripts('/assets/wasm/logigator-simulation.js');
 
-importScripts('/assets/simulation.js');
+const SimulationModule: SimulationModule & EmscriptenModule = Module as any;
+
+Module.onRuntimeInitialized = () => {
+	console.log(SimulationModule.test());
+};
 
 addEventListener('message', ({ data }) => {
 	const response = `worker response to ${data}`;
 	console.log(data);
 	postMessage(response);
 });
-
-SimulationModule.onRuntimeInitialized = () => {
-	console.log(SimulationModule.test());
-};
 
 /*fetch('assets/simulation.wasm').then(response =>
 	response.arrayBuffer()

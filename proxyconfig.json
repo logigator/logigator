@@ -8,5 +8,5 @@
 			"^/api": ""
 		}
 	},
-	"/simulation.wasm": "/assets"
+	"/logigator-simulation.wasm": "/assets/wasm"
 }

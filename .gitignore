@@ -9,7 +9,8 @@
 
 # dependencies
 /node_modules
-/WASM/emscripten/
+/src/assets/wasm/*
+!/src/assets/wasm/.gitkeep
 
 # profiling files
 chrome-profiler-events*.json
