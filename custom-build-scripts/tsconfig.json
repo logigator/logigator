@@ -1,0 +1,24 @@
+{
+	"compilerOptions": {
+		"module": "commonjs",
+		"target": "es5",
+		"sourceMap": false,
+		"skipLibCheck": true,
+		"outDir": "./dist",
+		"rootDir": ".",
+		"moduleResolution": "node",
+		"lib": ["es2018"],
+		"types": [
+			"node"
+		]
+	},
+	"files": [
+		"custom-webpack.config.ts"
+	],
+	"include": [
+		"./**/*.ts"
+	],
+	"exclude": [
+		"node_modules"
+	]
+}

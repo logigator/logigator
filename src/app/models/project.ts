@@ -4,7 +4,7 @@ import {Element, Elements} from './element';
 import {Observable, Subject} from 'rxjs';
 import * as PIXI from 'pixi.js';
 import {CollisionFunctions} from './collision-functions';
-// #!project_recorder
+// #!debug
 import {BoardRecorder} from '../../../tests/auto-tests/board-recorder';
 import {ElementProviderService} from '../services/element-provider/element-provider.service';
 
@@ -26,7 +26,7 @@ export class Project {
 
 	public dirty = false;
 
-	// #!project_recorder
+	// #!debug
 	public boardRecorder: BoardRecorder;
 
 	public constructor(projectState: ProjectState, config: {id?: number, name?: string, type?: 'project' | 'comp'}) {
@@ -39,7 +39,7 @@ export class Project {
 		this._currMaxActionPointer = -1;
 		this._changeSubject = new Subject<Action[]>();
 
-		// #!project_recorder
+		// #!debug
 		this.boardRecorder = new BoardRecorder(this, true);
 	}
 
@@ -121,7 +121,7 @@ export class Project {
 		if (!this._currState.allSpacesFree(elements, dif))
 			return false;
 
-		// #!project_recorder
+		// #!debug
 		this.boardRecorder.call('addElements', arguments, -1, -1, 0);
 		const actions: Action[] = new Array(elements.length);
 		let i = 0;
@@ -151,7 +151,7 @@ export class Project {
 		if (!this._currState.isFreeSpace(elem.pos, elem.endPos, typeId === 0, Elements.wireEnds(elem)))
 			return null;
 
-		// #!project_recorder
+		// #!debug
 		this.boardRecorder.call('addElement', arguments);
 		this._currState.addElement(elem);
 		const actions: Action[] = [{
@@ -172,7 +172,7 @@ export class Project {
 		if (!this._currState.allSpacesFree([wire0, wire1], new PIXI.Point(0, 0)))
 			return null;
 
-		// #!project_recorder
+		// #!debug
 		this.boardRecorder.call('addWire', arguments);
 		this._currState.addElement(wire0);
 		this._currState.addElement(wire1);
@@ -190,7 +190,7 @@ export class Project {
 
 
 	public removeElementsById(ids: number[]): void {
-		// #!project_recorder
+		// #!debug
 		this.boardRecorder.call('removeElementsById', arguments, -1, 0);
 		const actions: Action[] = [];
 		const onEdges: Element[] = [];
@@ -224,7 +224,7 @@ export class Project {
 		if (!this._currState.allSpacesFree(elements, dif, elements))
 			return false;
 
-		// #!project_recorder
+		// #!debug
 		this.boardRecorder.call('moveElementsById', arguments, -1, 0);
 		this._currState.removeAllConnectionPoints(elements);
 		for (const elem of elements) {
@@ -255,7 +255,7 @@ export class Project {
 		if (!this._currState.isFreeSpace(element.pos, newEndPos, false, Elements.wireEnds(element, rotation), [element]))
 			return false;
 
-		// #!project_recorder
+		// #!debug
 		this.boardRecorder.call('rotateComponent', arguments, 0);
 		this._currState.rotateComp(element, rotation, newEndPos);
 		actions.push(...this.autoAssemble(changed));
@@ -278,7 +278,7 @@ export class Project {
 		if (!this._currState.isFreeSpace(element.pos, newEndPos, false, Elements.wireEnds(element, undefined, numInputs), [element]))
 			return false;
 
-		// #!project_recorder
+		// #!debug
 		this.boardRecorder.call('setNumInputs', arguments, 0);
 		this._currState.setNumInputs(element, numInputs, newEndPos);
 		actions.push(...this.autoAssemble(changed));
@@ -308,7 +308,7 @@ export class Project {
 
 
 	public toggleWireConnection(pos: PIXI.Point): void {
-		// #!project_recorder
+		// #!debug
 		this.boardRecorder.call('toggleWireConnection', arguments);
 		const wiresOnPoint = this._currState.wiresOnPoint(pos);
 		let actions: Action[];
@@ -385,7 +385,7 @@ export class Project {
 		if (this._currActionPointer < 0)
 			return;
 
-		// #!project_recorder
+		// #!debug
 		this.boardRecorder.call('stepBack', arguments);
 		const backActions = Actions.reverseActions(this._actions[this._currActionPointer]);
 		this._currActionPointer--;
@@ -399,7 +399,7 @@ export class Project {
 		if (this._currActionPointer >= this._maxActionCount || this._currActionPointer === this._currMaxActionPointer)
 			return;
 
-		// #!project_recorder
+		// #!debug
 		this.boardRecorder.call('stepForward', arguments);
 		const outActions = this._actions[++this._currActionPointer];
 		this.applyActions(outActions);

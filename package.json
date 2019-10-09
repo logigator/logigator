@@ -2,15 +2,14 @@
 	"name": "logigator-editor",
 	"version": "0.0.0",
 	"scripts": {
-		"start": "cross-env PROJECT_RECORDER=false DEBUG=true npm run run",
-		"project-recorder": "cross-env PROJECT_RECORDER=true DEBUG=true npm run run",
-		"ng": "ng",
-		"run": "ng serve --port 8202 --disableHostCheck --proxy-config proxyconfig.json",
-		"build": "cross-env PROJECT_RECORDER=false DEBUG=false ng build --prod",
+		"start": "env-cmd.cmd -e dev-web --use-shell \"npm run build-custom-build-scripts && npm run ng:serve\"",
+		"start:prod": "env-cmd.cmd -e prod-web --use-shell \"npm run build-custom-build-scripts && npm run ng:serve -- -c production\"",
+		"ng:serve": "ng serve --port 8202 --disableHostCheck --proxy-config proxyconfig.json",
+		"build:web": "env-cmd -e prod-web --use-shell \"npm run build-custom-build-scripts && ng build --prod \"",
 		"test": "ng test",
 		"lint": "ng lint",
 		"e2e": "ng e2e",
-		"test-project": "ts-node --project tests/tsconfig.project-tests.json tests/run-project-tests.ts"
+		"build-custom-build-scripts": "tsc -p custom-build-scripts/tsconfig.json"
 	},
 	"private": true,
 	"dependencies": {
@@ -38,6 +37,7 @@
 		"@angular/cli": "~8.3.0",
 		"@angular/compiler-cli": "~8.2.3",
 		"@angular/language-service": "~8.2.3",
+		"@ngtools/webpack": "^8.3.8",
 		"@types/file-saver": "^2.0.1",
 		"@types/jasmine": "~3.3.8",
 		"@types/jasminewd2": "~2.0.3",
@@ -45,7 +45,8 @@
 		"@types/node": "~8.9.4",
 		"canvas": "^2.6.0",
 		"codelyzer": "^5.0.0",
-		"cross-env": "^6.0.3",
+		"env-cmd": "^10.0.1",
+		"html-loader": "^0.5.5",
 		"jasmine-core": "~3.4.0",
 		"jasmine-spec-reporter": "~4.2.1",
 		"jsdom": "^15.1.1",

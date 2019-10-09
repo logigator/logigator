@@ -42,15 +42,14 @@
 			<button class="toolbar-button stop"></button>
 		</ng-container>
 
-		<ng-container *ngIf="showDebugButtons">
-			<button (click)="printElements()">print elements</button>
-		</ng-container>
+		<!-- #!debug -->
+		<button (click)="printElements()">print elements</button>
 
-		<ng-container *ngIf="showRecordButtons">
-			<button (click)="printCalls()">print calls</button>
-			<button (click)="runTests()">run tests</button>
-			<button (click)="runStep()">run step</button>
-		</ng-container>
+		<!-- #!if DEBUG === 'true' -->
+		<button (click)="printCalls()">print calls</button>
+		<button (click)="runTests()">run tests</button>
+		<button (click)="runStep()">run step</button>
+		<!-- #!endif -->
 
 	</div>
 
