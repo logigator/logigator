@@ -18,7 +18,7 @@
 					"builder": "@angular-builders/custom-webpack:browser",
 					"options": {
 						"customWebpackConfig": {
-							"path": "./custom-webpack.config.js"
+							"path": "./custom-build-scripts/dist/custom-webpack.config.js"
 						},
 						"outputPath": "dist/logigator-editor",
 						"index": "src/index.html",
@@ -77,7 +77,7 @@
 					"builder": "@angular-builders/custom-webpack:dev-server",
 					"options": {
 						"customWebpackConfig": {
-							"path": "./custom-webpack.config.js"
+							"path": "./custom-build-scripts/dist/custom-webpack.config.js"
 						},
 						"browserTarget": "logigator-editor:build"
 					},
