@@ -33,6 +33,7 @@ import {AppMissingTranslationHandler} from './models/translation/missing-transla
 import { OutsideNgZoneEventDirective } from './directives/outside-ng-zone-event/outside-ng-zone-event.directive';
 import { SwitchComponent } from './components/switch/switch.component';
 import { UnsavedChangesComponent } from './components/popup/popup-contents/unsaved-changes/unsaved-changes.component';
+import { InputComponent } from './components/input/input.component';
 
 @NgModule({
 	declarations: [
@@ -60,7 +61,8 @@ import { UnsavedChangesComponent } from './components/popup/popup-contents/unsav
 		SaveAsComponent,
 		OutsideNgZoneEventDirective,
 		SwitchComponent,
-		UnsavedChangesComponent
+		UnsavedChangesComponent,
+		InputComponent
 	],
 	entryComponents: [
 		PopupComponent,

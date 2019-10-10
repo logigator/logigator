@@ -1,0 +1,10 @@
+<div class="input-group">
+	<input
+		[type]="type"
+		[name]="label"
+		[id]="label + 'id'"
+		[(ngModel)]="state"
+		(ngModelChange)="stateChange()"
+		[disabled]="disabled">
+	<label [for]="label + 'id'">{{label}}</label>
+</div>

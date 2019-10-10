@@ -53,17 +53,17 @@
 			}
 
 			input {
-				outline: none;
-				border: none;
-				padding: 0.25rem;
-				font-size: 0.9rem;
-				width: 40%;
-				@include themify() {
-					border-bottom: 1px solid themed('primary-text');
-					color: themed('primary-text');
-					background-color: themed('background');
-				}
-			}
+				 outline: none;
+				 border: none;
+				 padding: 0.25rem;
+				 font-size: 0.9rem;
+				 width: 40%;
+				 @include themify() {
+					 border-bottom: 1px solid themed('primary-text');
+					 color: themed('primary-text');
+					 background-color: themed('background');
+				 }
+			 }
 
 			select {
 				width: 40%;
