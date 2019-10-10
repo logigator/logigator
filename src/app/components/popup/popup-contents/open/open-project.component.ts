@@ -1,7 +1,10 @@
 import { Component, OnInit } from '@angular/core';
 import {PopupContentComp} from '../popup-content-comp';
 import {ProjectsService} from '../../../../services/projects/projects.service';
-import {FormBuilder, FormGroup} from '@angular/forms';
+import {UserService} from '../../../../services/user/user.service';
+import {ProjectSaveManagementService} from '../../../../services/project-save-management/project-save-management.service';
+import {Observable} from 'rxjs';
+import {ProjectInfoResponse} from '../../../../models/http-responses/project-info-response';
 
 @Component({
 	selector: 'app-open-project',
@@ -11,16 +14,33 @@ import {FormBuilder, FormGroup} from '@angular/forms';
 export class OpenProjectComponent extends PopupContentComp implements OnInit {
 
 	public fileToOpen: File;
+	public allProjectsInfo: Observable<ProjectInfoResponse[]>;
 
-	constructor(private projects: ProjectsService, private formBuilder: FormBuilder) {
+	constructor(
+		private projects: ProjectsService,
+		private user: UserService,
+		private projectSave: ProjectSaveManagementService
+	) {
 		super();
 	}
 
 	ngOnInit() {
+		this.allProjectsInfo = this.projectSave.getAllProjectsInfoFromServer();
+	}
+
+	public get isLoggedIn(): boolean {
+		return this.user.isLoggedIn;
 	}
 
 	public inputFileChanged(event) {
 		this.fileToOpen = event.target.files[0];
+	}
+
+	public openServer(project: ProjectInfoResponse) {
+		// #!debug
+		window.open(`http://editor.logigator-local-dev.com/board/${project.pk_id}`, '_blank');
+		// #!production
+		window.open(`https://editor.logigator.com/board/${project.pk_id}`, '_blank');
 	}
 
 	public openFile() {

@@ -1,6 +1,34 @@
-<form (ngSubmit)="openFile()">
-	<p>Open File</p>
-	<input type="file" (change)="inputFileChanged($event)">
-	<button type="submit">Open</button>
-</form>
-
+<div class="open">
+	<div class="open-server" *ngIf="isLoggedIn && allProjectsInfo | async as allProjects">
+		<h2>{{'POPUP.OPEN.OPEN_CLOUD' | translate}}</h2>
+		<table>
+			<thead>
+				<tr>
+					<th class="name">{{'POPUP.OPEN.TABLE_NAME' | translate}}</th>
+					<th class="last-edit">{{'POPUP.OPEN.TABLE_EDITED' | translate}}</th>
+					<th class="open">{{'POPUP.OPEN.TABLE_OPEN' | translate}}</th>
+				</tr>
+			</thead>
+			<tbody>
+				<tr *ngFor="let p of allProjects" class="single-project-server">
+					<td class="name">{{p.name}}</td>
+					<td class="last-edit">{{p.last_edited}}</td>
+					<td class="open">
+						<button class="btn-outline primary small" (click)="openServer(p)">{{'POPUP.OPEN.OPEN' | translate}}</button>
+					</td>
+				</tr>
+			</tbody>
+		</table>
+	</div>
+	<form (ngSubmit)="openFile()">
+		<h2>{{'POPUP.OPEN.OPEN_FILE' | translate}}</h2>
+		<div class="file-upload-row">
+			<div class="file-upload">
+				<label for="file-upload" class="file-upload-label btn-outline primary">{{'POPUP.OPEN.UPLOAD' | translate}}</label>
+				<input id="file-upload" type="file" (change)="inputFileChanged($event)"/>
+				<p>{{fileToOpen?.name}}</p>
+			</div>
+			<button type="submit" class="btn-outline primary">{{'POPUP.OPEN.OPEN' | translate}}</button>
+		</div>
+	</form>
+</div>

@@ -18,6 +18,8 @@ import {CreateProjectResponse} from '../../models/http-responses/create-project-
 import {SaveProjectRequest} from '../../models/http-requests/save-project-request';
 import * as FileSaver from 'file-saver';
 import {ElementType} from '../../models/element-types/element-type';
+import {Observable} from 'rxjs';
+import {ProjectInfoResponse} from '../../models/http-responses/project-info-response';
 
 @Injectable({
 	providedIn: 'root'
@@ -52,6 +54,13 @@ export class ProjectSaveManagementService {
 
 	public get isFirstSave(): boolean {
 		return !this._projectSource;
+	}
+
+	public getAllProjectsInfoFromServer(): Observable<ProjectInfoResponse[]> {
+		return this.http.get<HttpResponseData<ProjectInfoResponse[]>>('/api/project/get-all-projects-info').pipe(
+			this.errorHandling.catchErrorOperator('Unable to get Projects from Server', undefined),
+			map(r => r.result)
+		);
 	}
 
 	public async addCustomComponent(name: string, symbol: string, description = '') {

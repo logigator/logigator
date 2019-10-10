@@ -34,6 +34,7 @@ const preprocessorConfig = {
 	options: {
 		debug:  process.env.DEBUG === 'true',
 		directives: {
+			production:  process.env.DEBUG === 'false',
 			electron: process.env.ELECTRON === 'true'
 		},
 		params: {

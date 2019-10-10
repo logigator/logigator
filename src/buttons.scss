@@ -72,7 +72,7 @@
 		box-shadow: 2px 2px 6px 0 rgba(0, 0, 0, 0.3);
 
 		&.primary {
-			color: themed('secondary-text');
+			color: themed('button-text');
 			background-color: themed('primary');
 
 			&:hover {
@@ -88,7 +88,7 @@
 		}
 
 		&.secondary {
-			color: themed('secondary-text');
+			color: themed('button-text');
 			background-color: secondaryButtonBgColor();
 
 			&:hover {
@@ -104,7 +104,7 @@
 		}
 
 		&.danger {
-			color: themed('secondary-text');
+			color: themed('button-text');
 			background-color: themed('error');
 
 			&:hover {
