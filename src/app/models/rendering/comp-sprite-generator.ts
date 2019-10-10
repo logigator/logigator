@@ -41,7 +41,7 @@ export class CompSpriteGenerator {
 
 		const text = new PIXI.BitmapText(symbol, {
 			font: {
-				name: 'Louis George Café',
+				name: 'Nunito',
 				size: environment.gridPixelWidth + 4
 			},
 			tint: ThemingService.staticInstance.getEditorColor('fontTint')

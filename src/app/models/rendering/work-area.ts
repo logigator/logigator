@@ -53,7 +53,7 @@ export abstract class WorkArea {
 		if (WorkArea._loadedPixiFont === true) return;
 		WorkArea._loadedPixiFont = true;
 		const loader = PIXI.Loader.shared;
-		loader.add('luis_george_cafe', '/assets/fonts/louis_george_cafe_bitmap/font.fnt')
+		loader.add('Nunito', '/assets/Nunito_Bitmap/font.fnt')
 			.load(() => WorkArea.pixiFontLoaded$.next());
 	}
 
