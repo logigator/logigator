@@ -8,6 +8,13 @@ module.exports = (config, options) => {
 			preprocessorConfig
 		]
 	});
+
+	// const t = config.module.rules.find(r => {
+	// 	return r.include && r.test.source ===  /\.scss$|\.sass$/.source && r.include.find(i => i.endsWith('styles.scss'));
+	// });
+	// t.use.unshift(preprocessorConfig);
+	// console.log(t);
+
 	config.module.rules.push({
 		test: /\.html?$/,
 		use: [
@@ -15,6 +22,12 @@ module.exports = (config, options) => {
 			preprocessorConfig
 		]
 	});
+
+	if (process.env.ELECTRON === 'true') {
+		config.target = 'electron-renderer';
+	} else {
+		config.target = 'web';
+	}
 
 	const angularCompilerPlugin = findAngularCompilerPlugin(config);
 	if (!angularCompilerPlugin) {
@@ -26,6 +39,7 @@ module.exports = (config, options) => {
 
 	addTransformerToAngularCompilerPlugin(angularCompilerPlugin, templateLoaderTransformer);
 
+	// console.log(config.module.rules);
 	return config;
 };
 
