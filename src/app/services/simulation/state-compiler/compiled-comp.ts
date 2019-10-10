@@ -6,5 +6,6 @@ export interface CompiledComp {
 	units: Map<SimulationUnit, Element>;
 	// linksOnUnits: Map<PIXI.Point[], number>;
 	connectedToPlug: Map<number, {compIndex: number, wireIndex: number}[]>;
+	plugToPlug: Map<number, {compIndex: number, wireIndex: number}[]>;
 	// elemsAtPlug: Map<SimulationUnit, Element[]>;
 }

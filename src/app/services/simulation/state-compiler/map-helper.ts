@@ -31,11 +31,28 @@ export abstract class MapHelper {
 		return [...map.keys()].find(k => map.get(k) === val);
 	}
 
-	public static cloneMap(map: Map<SimulationUnit, Element>): Map<SimulationUnit, Element> {
+	public static cloneMapSimUnits(map: Map<SimulationUnit, Element>): Map<SimulationUnit, Element> {
 		const out = new Map<SimulationUnit, Element>();
 		for (const [key, val] of map.entries()) {
 			out.set(SimulationUnits.clone(key), val);
 		}
 		return out;
+	}
+
+	public static cloneMap<K, V>(map: Map<K, V>): Map<K, V> {
+		const out = new Map<K, V>();
+		for (const [key, val] of map.entries()) {
+			out.set(key, val);
+		}
+		return out;
+	}
+
+	public static replaceAll(map: Map<number, number>, from: number, to: number): void {
+		for (let [key, val] of map.entries()) {
+			if (key === from)
+				key = to;
+			if (val === from)
+				val = to;
+		}
 	}
 }
