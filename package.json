@@ -33,6 +33,7 @@
 		"@ngx-translate/http-loader": "^4.0.0",
 		"bootstrap": "^4.3.1",
 		"file-saver": "^2.0.2",
+		"ngx-electron": "^2.1.1",
 		"ngx-toastr": "^11.1.0",
 		"pixi.js": "^5.1.2",
 		"rxjs": "~6.4.0",
@@ -68,6 +69,6 @@
 		"tslint": "~5.15.0",
 		"typescript": "~3.5.3",
 		"wait-on": "^3.3.0",
-		"webpack-preprocessor-loader": "github:logigator/preprocessor-loader"
+		"webpack-preprocessor-loader": "^1.1.2"
 	}
 }

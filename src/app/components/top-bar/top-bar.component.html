@@ -1,9 +1,18 @@
 <div id="top-bar">
 	<div (click)="closeDropdowns()" *ngIf="dropdownOpen" class="background"></div>
 
+	<!-- #!web -->
 	<a href="https://logigator.com/" target="_blank" rel="noopener"><img alt="Logigator" src="/assets/logo.svg"></a>
+
+	<!-- #!electron -->
+	<img alt="Logigator" src="/assets/logo.svg">
+
+
 	<div class="main-menu">
+
+		<!-- #!web -->
 		<p class="project-title">{{mainProjectName}}</p>
+
 		<div class="menu-entries">
 			<div>
 				<p (mouseover)="dropdownHover('fileDropdownOpen')" (click)="closeDropdowns(); fileDropdownOpen = true;">{{'DROPDOWN.FILE.TITLE' | translate}}</p>
@@ -24,12 +33,22 @@
 		</div>
 	</div>
 
-	<div class="login-register">
-		<ng-container *ngIf="userInfo$ | async as userInfo; else loginRegister">
-			<p>{{userInfo.user.username}}</p>
-		</ng-container>
-		<div (click)="closeDropdowns(); settingsDropdownOpen = true;" class="settings"></div>
-		<app-settings-dropdown (requestClosed)="closeDropdowns()" *ngIf="settingsDropdownOpen"></app-settings-dropdown>
+	<div class="top-bar-end">
+		<div class="login-register">
+			<ng-container *ngIf="userInfo$ | async as userInfo; else loginRegister">
+				<p>{{userInfo.user.username}}</p>
+			</ng-container>
+			<div (click)="closeDropdowns(); settingsDropdownOpen = true;" class="settings"></div>
+			<app-settings-dropdown (requestClosed)="closeDropdowns()" *ngIf="settingsDropdownOpen"></app-settings-dropdown>
+		</div>
+
+		<!-- #! ELECTRON === ''true -->
+		<div class="window-buttons">
+			<div class="minimize" (click)="minimize()"></div>
+			<div class="maximize" (click)="maximizeWin()"></div>
+			<div class="close" (click)="close()"></div>
+		</div>
+		<!-- #!endif -->
 	</div>
 
 </div>

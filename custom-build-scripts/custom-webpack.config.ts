@@ -1,13 +1,14 @@
 import {AngularCompilerPlugin} from '@ngtools/webpack';
 import {templateLoaderTransformer} from './template-loader-transformer';
+import {tsPreprocessorTransformer} from './ts-preprocessor-transformer';
 
 module.exports = (config, options) => {
-	config.module.rules.unshift({
-		test: /\.tsx?$/,
-		use: [
-			preprocessorConfig
-		]
-	});
+	// config.module.rules.unshift({
+	// 	test: /\.tsx?$/,
+	// 	use: [
+	// 		preprocessorConfig
+	// 	]
+	// });
 	config.module.rules.push({
 		test:  /\.scss$|\.sass$/,
 		use: [
@@ -36,6 +37,7 @@ module.exports = (config, options) => {
 
 	angularCompilerPlugin.options.directTemplateLoading = false;
 
+	addTransformerToAngularCompilerPlugin(angularCompilerPlugin, tsPreprocessorTransformer(preprocessorConfig.options));
 	addTransformerToAngularCompilerPlugin(angularCompilerPlugin, templateLoaderTransformer);
 
 	return config;
@@ -54,7 +56,7 @@ const preprocessorConfig = {
 			ELECTRON: process.env.ELECTRON,
 			DEBUG: process.env.DEBUG
 		},
-		verbose: true,
+		verbose: false,
 	}
 };
 

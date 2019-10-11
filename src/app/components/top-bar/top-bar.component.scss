@@ -32,9 +32,25 @@
 		height: 100%;
 	}
 
+	// #!if ELECTRON === 'true'
+	img {
+		height: 50%;
+		align-self: center;
+		margin: 0 0.5rem 0 0.5rem;
+	}
+	// #!endif
+
 	.main-menu {
+		// #!web
 		height: 90%;
+
+		// #!electron
+		height: 100%;
+
 		display: grid;
+		align-self: center;
+
+		// #!web
 		grid-template-rows: auto #{$top-bar-height / 2.5};
 
 		.project-title {
@@ -52,9 +68,19 @@
 			position: relative;
 
 			div {
+				// #!electron
+				height: 100%;
+
 				p {
-					margin: 0 0.5rem 0 0;
+					height: 100%;
+					line-height: $top-bar-height;
+
+					// #!web
 					padding: 0.1rem 0.2rem 0.1rem 0.2rem;
+					// #!electron
+					padding: 0rem 0.2rem 0rem 0.2rem;
+
+					margin: 0 0.5rem 0 0;
 					border-top-right-radius: border('radius');
 					border-top-left-radius: border('radius');
 
@@ -72,43 +98,78 @@
 		}
 	}
 
-	.login-register {
+	.top-bar-end {
+		-webkit-app-region: drag;
+		width: 100%;
 		display: flex;
 		flex-direction: row;
-		align-items: center;
 		justify-content: flex-end;
-		flex: auto;
 
-		p {
-			font-size: 1.2rem;
-			margin: 0;
+		.login-register {
+			display: flex;
+			flex-direction: row;
+			align-items: center;
+			justify-content: flex-end;
+			-webkit-app-region: no-drag;
+
+			p {
+				// #!web
+				font-size: 1.2rem;
+				margin: 0;
+			}
+
+			.divider {
+				border-left: 1px solid black;
+				height:  $toolbar-height - 25px;
+				padding: 0;
+				margin-right: 1rem;
+				margin-left: 1rem;
+			}
+
+			.settings {
+				// #!if ELECTRON === 'true'
+				height: $top-bar-height  / 1.5;
+				width: $top-bar-height / 1.5;
+				// #!else
+				height: $top-bar-height / 2;
+				width: $top-bar-height / 2;
+				// #!endif
+
+				border: none;
+				cursor: pointer;
+				padding: 0;
+				margin-right: 0.7rem;
+				margin-left: 0.7rem;
+				outline: none;
+				background-size: cover;
+
+				background-image: url('/assets/icons/light/settings.svg');
+
+				@include themify() {
+					background-color: themed('primary');
+				}
+			}
 		}
 
-		.divider {
-			border-left: 1px solid black;
-			height:  $toolbar-height - 25px;
-			padding: 0;
-			margin-right: 1rem;
-			margin-left: 1rem;
-		}
+		.window-buttons {
+			display: flex;
+			flex-direction: row;
+			-webkit-app-region: no-drag;
 
-		.settings {
-
-
-			height: $top-bar-height / 2;
-			width: $top-bar-height / 2;
-			border: none;
-			cursor: pointer;
-			padding: 0;
-			margin-right: 0.7rem;
-			margin-left: 0.7rem;
-			outline: none;
-			background-size: cover;
-
-			background-image: url('/assets/icons/light/settings.svg');
-
-			@include themify() {
-				background-color: themed('primary');
+			.minimize {
+				width: $top-bar-height;
+				height: $top-bar-height;
+				background-color: #efefef;
+			}
+			.maximize {
+				width: $top-bar-height;
+				height: $top-bar-height;
+				background-color: #5D5D5D;
+			}
+			.close {
+				width: $top-bar-height;
+				height: $top-bar-height;
+				background-color: red;
 			}
 		}
 	}
