@@ -69,6 +69,6 @@
 		"tslint": "~5.15.0",
 		"typescript": "~3.5.3",
 		"wait-on": "^3.3.0",
-		"webpack-preprocessor-loader": "^1.1.2"
+		"webpack-preprocessor-loader": "github:logigator/preprocessor-loader"
 	}
 }

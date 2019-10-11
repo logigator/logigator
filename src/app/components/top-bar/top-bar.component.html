@@ -42,7 +42,7 @@
 			<app-settings-dropdown (requestClosed)="closeDropdowns()" *ngIf="settingsDropdownOpen"></app-settings-dropdown>
 		</div>
 
-		<!-- #! ELECTRON === ''true -->
+		<!-- #!if ELECTRON === 'true' -->
 		<div class="window-buttons">
 			<div class="minimize" (click)="minimize()"></div>
 			<div class="maximize" (click)="maximizeWin()"></div>

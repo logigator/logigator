@@ -3,7 +3,6 @@ import {ProjectsService} from '../../services/projects/projects.service';
 import {UserService} from '../../services/user/user.service';
 import {Observable} from 'rxjs';
 import {UserInfo} from '../../models/http-responses/user-info';
-// #!electron
 import { ElectronService } from 'ngx-electron';
 
 @Component({
@@ -20,7 +19,6 @@ export class TopBarComponent implements OnInit {
 	public settingsDropdownOpen = false;
 
 	constructor(
-		// #!electron
 		private electronService: ElectronService,
 		private projectService: ProjectsService,
 		private userService: UserService
@@ -31,6 +29,27 @@ export class TopBarComponent implements OnInit {
 	public get userInfo$(): Observable<UserInfo> {
 		return this.userService.userInfo$;
 	}
+
+	// #!if ELECTRON === 'true'
+	public minimize() {
+		this.electronService.remote.getCurrentWindow().minimize();
+	}
+
+	maximizeWin() {
+		if (this.electronService.remote.getCurrentWindow().isMaximized()) {
+			this.electronService.remote.getCurrentWindow().unmaximize();
+		} else {
+			this.electronService.remote.getCurrentWindow().maximize();
+		}
+	}
+
+	async close() {
+		const canClose = await this.projectService.askToSave();
+		if (canClose) {
+			this.electronService.remote.getCurrentWindow().close();
+		}
+	}
+	// #!endif
 
 	public get mainProjectName(): string {
 		if (!this.projectService.mainProject) return '';
@@ -56,26 +75,5 @@ export class TopBarComponent implements OnInit {
 	public get dropdownOpen(): boolean {
 		return this.editDropdownOpen || this.fileDropdownOpen || this.viewDropdownOpen || this.helpDropdownOpen || this.settingsDropdownOpen;
 	}
-
-	// #!if ELECTRON === 'true'
-	public minimize() {
-		this.electronService.remote.getCurrentWindow().minimize();
-	}
-
-	maximizeWin() {
-		if (this.electronService.remote.getCurrentWindow().isMaximized()) {
-			this.electronService.remote.getCurrentWindow().unmaximize();
-		} else {
-			this.electronService.remote.getCurrentWindow().maximize();
-		}
-	}
-
-	async close() {
-		const canClose = await this.projectService.askToSave();
-		if (canClose) {
-			this.electronService.remote.getCurrentWindow().close();
-		}
-	}
-	// #!endif
 
 }
