@@ -25,9 +25,9 @@
 @include themify() {
 	.toast-error {
 		@if isTheme('light') {
-			background-image: url("/src/assets/icons/light/alert.svg");
+			background-image: url("/assets/icons/light/alert.svg");
 		} @else {
-			background-image: url("/src/assets/icons/dark/alert.svg");
+			background-image: url("/assets/icons/dark/alert.svg");
 		}
 		color: themed('primary-text');
 		background-color: themed('error');
@@ -35,9 +35,9 @@
 
 	.toast-info {
 		@if isTheme('light') {
-			background-image: url("/src/assets/icons/light/check.svg");
+			background-image: url("/assets/icons/light/check.svg");
 		} @else {
-			background-image: url("/src/assets/icons/dark/check.svg");
+			background-image: url("/assets/icons/dark/check.svg");
 		}
 		color: themed('primary-text');
 		background-color: themed('secondary');
