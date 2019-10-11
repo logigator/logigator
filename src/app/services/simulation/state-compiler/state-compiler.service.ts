@@ -208,6 +208,7 @@ export class StateCompilerService {
 
 		const replacements = new Map<number, number>();
 		let plugIndex = 0;
+		debugger
 		for (const absPlugIndex of plugIndexes) {
 			const connected = compiledComp.connectedToPlug.get(absPlugIndex);
 			for (const con of connected) {
@@ -216,15 +217,12 @@ export class StateCompilerService {
 				const index = con.wireIndex < u.inputs.length ? con.wireIndex : con.wireIndex - u.inputs.length;
 				arr[index] = SimulationUnits.concatIO(outerUnit)[plugIndex];
 			}
-			// if (compiledComp.plugToPlug.has(absPlugIndex)) {
-			// 	const conPlug = compiledComp.plugToPlug.get(absPlugIndex);
-			// 	for (const con of conPlug) {
-			// 		const u = [...compiledComp.units.keys()][con.compIndex];
-			// 		const arr = con.wireIndex < u.inputs.length ? u.inputs : u.outputs;
-			// 		const index = con.wireIndex < u.inputs.length ? con.wireIndex : con.wireIndex - u.inputs.length;
-			// 		replacements.set(SimulationUnits.concatIO(outerUnit)[plugIndex], arr[index]);
-			// 	}
-			// }
+			const conPlug = compiledComp.plugToPlug.get(absPlugIndex);
+			const unit = [...compiledComp.units.keys()][absPlugIndex];
+			for (const con of conPlug) {
+				const u = [...compiledComp.units.keys()][con.compIndex];
+				replacements.set(SimulationUnits.concatIO(unit)[0], SimulationUnits.concatIO(u)[0]);
+			}
 			// this.calcReplacements(compiledComp.units[absPlugIndex], connected, state, compiledComp.units, replacements);
 			plugIndex++;
 		}
