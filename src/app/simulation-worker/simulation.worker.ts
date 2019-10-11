@@ -1,5 +1,7 @@
 /// <reference lib="webworker" />
 
+import {output} from '../models/element-types/plug/output';
+
 interface SimulationModule {
 	lengthBytesUTF8(input: string): number;
 	stringToUTF8(str: string, outPtr: number, maxBytesToWrite: number): number;
@@ -8,9 +10,12 @@ interface SimulationModule {
 	initComponents(count: number): number;
 	initComponent(index: number, type: string, inputs: number, outputs: number, inputCount: number, outputCount: number): number;
 	initBoard(): number;
-	start(ticks: number): number;
+	start(): number;
+	startManual(ticks: number): number;
+	startTimeout(ms: number): number;
 	stop(): number;
 	getCurrentSpeed(): number;
+	getLinks(): number;
 }
 
 importScripts('/assets/wasm/logigator-simulation.js');
@@ -18,38 +23,130 @@ importScripts('/assets/wasm/logigator-simulation.js');
 const SimulationModule: SimulationModule & EmscriptenModule = Module as any;
 
 Module.onRuntimeInitialized = () => {
-	console.log(SimulationModule.initLinks(8));
-	console.log(SimulationModule.initComponents(1));
-
-	let index = 0;
-	[
-		{
-			type: 'AND',
-			inputs: new Int32Array([1, 2]),
-			outputs: new Int32Array([3])
-		}
-	].forEach((x) => {
-		const inputs = _arrayToHeap(x.inputs);
-		const outputs = _arrayToHeap(x.outputs);
-
-		console.log(inputs);
-		console.log(outputs);
-
-		console.log(SimulationModule.initComponent(index++, x.type, inputs, outputs, x.inputs.length, x.outputs.length));
-		console.log(SimulationModule.initBoard());
-
-		while (true) {
-			console.log(SimulationModule.start(4000000));
-			console.log(SimulationModule.getCurrentSpeed());
-		}
+	initBoard({
+		links: 10,
+		components: [
+			{
+				type: 'AND',
+				inputs: [
+					8, 9
+				],
+				outputs: [
+					0
+				]
+			},
+			{
+				type: 'NOT',
+				inputs: [
+					8
+				],
+				outputs: [
+					1
+				]
+			},
+			{
+				type: 'NOT',
+				inputs: [
+					8
+				],
+				outputs: [
+					2
+				]
+			},
+			{
+				type: 'XOR',
+				inputs: [
+					1, 2
+				],
+				outputs: [
+					3
+				]
+			},
+			{
+				type: 'AND',
+				inputs: [
+					1, 2
+				],
+				outputs: [
+					4
+				]
+			},
+			{
+				type: 'XOR',
+				inputs: [
+					0, 3
+				],
+				outputs: [
+					5
+				]
+			},
+			{
+				type: 'AND',
+				inputs: [
+					0, 3
+				],
+				outputs: [
+					6
+				]
+			},
+			{
+				type: 'OR',
+				inputs: [
+					4, 6
+				],
+				outputs: [
+					7
+				]
+			}
+		]
 	});
 
-	const map = new Map<number, number>();
-	SimulationModule.HEAP8.forEach((y, z) => {
-		if (y !== 0) map.set(z, y);
-	});
-	console.log(map);
+	SimulationModule.startManual(100);
+	SimulationModule.test();
+	console.log(getLinks());
 };
+
+function initBoard(board: any) {
+	SimulationModule.initLinks(board.links);
+	SimulationModule.initComponents(board.components.length);
+
+	board.components.forEach((x, i) => {
+		x.inputs = new Int32Array(x.inputs);
+		x.outputs = new Int32Array(x.outputs);
+
+		const inputPtr = _arrayToHeap(x.inputs);
+		const outputPtr = _arrayToHeap(x.outputs);
+
+		SimulationModule.initComponent(i, x.type, inputPtr, outputPtr, x.inputs.length, x.outputs.length);
+	});
+	SimulationModule.initBoard();
+}
+
+function getLinks() {
+	const ptr = SimulationModule.getLinks();
+
+	const data = SimulationModule.HEAP8.slice(ptr, ptr + 10);
+	SimulationModule._free(ptr);
+	return data;
+}
+
+function runTimeout(target: number) {
+	while (true) {
+		SimulationModule.startTimeout(target);
+		console.log(SimulationModule.getCurrentSpeed());
+	}
+}
+
+function runForTarget(target: number) {
+	let ticks = 1;
+	while (true) {
+		const prev = performance.now();
+		SimulationModule.startManual(ticks);
+
+		ticks *= target / (performance.now() - prev);
+		console.log(SimulationModule.getCurrentSpeed());
+	}
+}
 
 function _arrayToHeap(typedArray) {
 	const numBytes = typedArray.length * typedArray.BYTES_PER_ELEMENT;
@@ -57,6 +154,14 @@ function _arrayToHeap(typedArray) {
 	const heapBytes = new Uint8Array(SimulationModule.HEAPU8.buffer, ptr, numBytes);
 	heapBytes.set(new Uint8Array(typedArray.buffer));
 	return ptr;
+}
+
+function printHeap() {
+	const map = new Map<number, number>();
+	SimulationModule.HEAP8.forEach((y, z) => {
+		if (y !== 0) map.set(z, y);
+	});
+	console.log(map);
 }
 
 addEventListener('message', ({ data }) => {

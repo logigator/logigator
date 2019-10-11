@@ -4,7 +4,10 @@
 	"scripts": {
 		"ng": "ng",
 		"start": "ng serve --port 8202 --disableHostCheck --proxy-config proxyconfig.json",
-		"build": "ng build --prod",
+		"build": "npm run wasm-build && ng build --prod",
+		"wasm-build": "run-script-os",
+		"wasm-build:win32": "copy /Y node_modules\\logigator-simulation\\webAssembly\\dist\\* src\\assets\\wasm",
+		"wasm-build:default": "cp node_modules/logigator-simulation/webAssembly/dist/* src/assets/wasm",
 		"test": "ng test",
 		"lint": "ng lint",
 		"e2e": "ng e2e"
@@ -25,6 +28,7 @@
 		"file-saver": "^2.0.2",
 		"ngx-toastr": "^11.1.0",
 		"pixi.js": "^5.1.2",
+		"run-script-os": "^1.0.7",
 		"rxjs": "~6.4.0",
 		"tslib": "^1.10.0",
 		"zone.js": "~0.9.1"
