@@ -96,7 +96,7 @@ export class AppComponent implements OnInit, OnDestroy {
 	}
 
 	private onTabClose(e: Event) {
-		// #!if DEBUG === 'false'
+		// #!if DEBUG === 'false' || ELECTRON === 'true'
 		if (this.projects.hasUnsavedProjects) {
 			e.preventDefault();
 			e.returnValue = true;
