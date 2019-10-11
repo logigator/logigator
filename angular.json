@@ -32,19 +32,81 @@
 							"src/site.webmanifest",
 							"src/browserconfig.xml"
 						],
-						"styles": [
-							"src/styles.scss"
-						],
 						"stylePreprocessorOptions": {
 							"includePaths": [
-								"src/"
+								"src/styles/web"
 							]
 						},
 						"scripts": [],
 						"webWorkerTsConfig": "tsconfig.worker.json"
 					},
 					"configurations": {
-						"production": {
+						"dev-electron": {
+							"styles": [
+								"src/styles/electron/styles.scss"
+							],
+							"stylePreprocessorOptions": {
+								"includePaths": [
+									"src/styles/electron"
+								]
+							}
+						},
+						"dev-web": {
+							"styles": [
+								"src/styles/web/styles.scss"
+							],
+							"stylePreprocessorOptions": {
+								"includePaths": [
+									"src/styles/web"
+								]
+							}
+						},
+						"prod-electron": {
+							"styles": [
+								"src/styles/electron/styles.scss"
+							],
+							"stylePreprocessorOptions": {
+								"includePaths": [
+									"src/styles/electron"
+								]
+							},
+							"fileReplacements": [
+								{
+									"replace": "src/environments/environment.ts",
+									"with": "src/environments/environment.prod.ts"
+								}
+							],
+							"optimization": true,
+							"outputHashing": "all",
+							"sourceMap": false,
+							"extractCss": true,
+							"namedChunks": false,
+							"aot": true,
+							"extractLicenses": true,
+							"vendorChunk": false,
+							"buildOptimizer": true,
+							"budgets": [
+								{
+									"type": "initial",
+									"maximumWarning": "2mb",
+									"maximumError": "5mb"
+								},
+								{
+									"type": "anyComponentStyle",
+									"maximumWarning": "6kb",
+									"maximumError": "10kb"
+								}
+							]
+						},
+						"prod-web": {
+							"styles": [
+								"src/styles/web/styles.scss"
+							],
+							"stylePreprocessorOptions": {
+								"includePaths": [
+									"src/styles/web"
+								]
+							},
 							"fileReplacements": [
 								{
 									"replace": "src/environments/environment.ts",
@@ -81,11 +143,20 @@
 						"customWebpackConfig": {
 							"path": "./custom-build-scripts/dist/custom-webpack.config.js"
 						},
-						"browserTarget": "logigator-editor:build"
+						"browserTarget": "logigator-editor:build:dev-web"
 					},
 					"configurations": {
-						"production": {
-							"browserTarget": "logigator-editor:build:production"
+						"prod-web": {
+							"browserTarget": "logigator-editor:build:prod-web"
+						},
+						"prod-electron": {
+							"browserTarget": "logigator-editor:build:prod-electron"
+						},
+						"dev-web": {
+							"browserTarget": "logigator-editor:build:dev-web"
+						},
+						"dev-electron": {
+							"browserTarget": "logigator-editor:build:dev-electron"
 						}
 					}
 				},
