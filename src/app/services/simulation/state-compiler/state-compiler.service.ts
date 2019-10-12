@@ -1,6 +1,6 @@
 import {Injectable} from '@angular/core';
 import {ProjectState} from '../../../models/project-state';
-import {SimulationUnit, SimulationUnits} from '../../../models/simulation/SimulationUnit';
+import {SimulationUnit, SimulationUnits} from '../../../models/simulation/simulation-unit';
 import {Element, Elements} from '../../../models/element';
 import {ElementProviderService} from '../../element-provider/element-provider.service';
 import {ProjectsService} from '../../projects/projects.service';
