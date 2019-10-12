@@ -13,7 +13,10 @@
 		]
 	},
 	"files": [
-		"custom-webpack.config.ts"
+		"custom-webpack.config.ts",
+		"create-dist-package.ts",
+		"package-app.ts",
+		"add-protocols-to-index.ts"
 	],
 	"include": [
 		"./**/*.ts"
