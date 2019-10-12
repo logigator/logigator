@@ -1,7 +1,8 @@
 /// <reference lib="webworker" />
 
-import {Board, BoardState, Pointer, TypedArray, WorkerMethod, SimulationModule} from '../models/simulation/Types';
-
+import {Board, BoardState} from '../models/simulation/board';
+import {SimulationModule, TypedArray} from '../models/simulation/simulation-module';
+import {Pointer, WasmMethod} from '../models/simulation/wasm-interface';
 
 let initialized = false;
 importScripts('/assets/wasm/logigator-simulation.js');
@@ -31,7 +32,8 @@ class SimulationWorker {
 			const inputPtr = this._arrayToHeap(inputs);
 			const outputPtr = this._arrayToHeap(outputs);
 
-			SimulationModule.initComponent(i, x.type, inputPtr, outputPtr, x.inputs.length, x.outputs.length);
+			// @ts-ignore
+			SimulationModule.initComponent(i, x.typeId, inputPtr, outputPtr, x.inputs.length, x.outputs.length);
 		});
 		SimulationModule.initBoard();
 		this._board = board;
@@ -124,19 +126,19 @@ addEventListener('message', ({ data }) => {
 	let error: string;
 
 	switch (data.method) {
-		case WorkerMethod.single:
+		case WasmMethod.single:
 			worker.startManual(data.ticks ? data.ticks : 1);
 			break;
-		case WorkerMethod.cont:
+		case WasmMethod.cont:
 			data.time ? worker.start(data.time) : worker.start();
 			break;
-		case WorkerMethod.stop:
+		case WasmMethod.stop:
 			worker.stop();
 			break;
-		case WorkerMethod.pause:
+		case WasmMethod.pause:
 			worker.stop();
 			break;
-		case WorkerMethod.init:
+		case WasmMethod.init:
 			if (worker) {
 				error = 'Already initialized.';
 				break;
@@ -171,6 +173,7 @@ const test = () => {
 		links: 10,
 		components: [
 			{
+				// @ts-ignore
 				type: 'AND',
 				inputs: [
 					8, 9
@@ -180,6 +183,7 @@ const test = () => {
 				]
 			},
 			{
+				// @ts-ignore
 				type: 'NOT',
 				inputs: [
 					8
@@ -189,6 +193,7 @@ const test = () => {
 				]
 			},
 			{
+				// @ts-ignore
 				type: 'NOT',
 				inputs: [
 					8
@@ -198,6 +203,7 @@ const test = () => {
 				]
 			},
 			{
+				// @ts-ignore
 				type: 'XOR',
 				inputs: [
 					1, 2
@@ -207,6 +213,7 @@ const test = () => {
 				]
 			},
 			{
+				// @ts-ignore
 				type: 'AND',
 				inputs: [
 					1, 2
@@ -216,6 +223,7 @@ const test = () => {
 				]
 			},
 			{
+				// @ts-ignore
 				type: 'XOR',
 				inputs: [
 					0, 3
@@ -225,6 +233,7 @@ const test = () => {
 				]
 			},
 			{
+				// @ts-ignore
 				type: 'AND',
 				inputs: [
 					0, 3
@@ -234,6 +243,7 @@ const test = () => {
 				]
 			},
 			{
+				// @ts-ignore
 				type: 'OR',
 				inputs: [
 					4, 6

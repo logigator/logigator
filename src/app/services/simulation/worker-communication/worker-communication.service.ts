@@ -1,10 +1,9 @@
-import { Injectable } from '@angular/core';
+import {Injectable} from '@angular/core';
 import {Observable, Subject} from 'rxjs';
 import {PowerChangesOut} from '../../../models/simulation/power-changes';
 import {ProjectsService} from '../../projects/projects.service';
 import {StateCompilerService} from '../state-compiler/state-compiler.service';
-import {WasmRequest, WasmResponse} from '../../../models/simulation/wasm-interface';
-import {SimulationUnits} from '../../../models/simulation/simulation-unit';
+import {WasmMethod, WasmRequest, WasmResponse} from '../../../models/simulation/wasm-interface';
 
 @Injectable({
 	providedIn: 'root'
@@ -33,7 +32,7 @@ export class WorkerCommunicationService {
 		const data = event.data as WasmResponse;
 		if (data.success) {
 			const powerChangesOut = new Map<number, PowerChangesOut>();
-			for (const [link, state] of data.state) {
+			for (const state of data.state) {
 				// for (const obj of this.stateCompiler.elementsOnLink.get(link)) {
 				// 	if (!powerChangesOut.has(obj.projectId))
 				// 		powerChangesOut.set(obj.projectId, new Map<Element, boolean>());
@@ -60,7 +59,7 @@ export class WorkerCommunicationService {
 			components
 		};
 		const request: WasmRequest = {
-			method: 'init',
+			method: WasmMethod.init,
 			board
 		};
 		this._worker.postMessage(request);
@@ -68,21 +67,21 @@ export class WorkerCommunicationService {
 
 	public stop(): void {
 		const request: WasmRequest = {
-			method: 'stop'
+			method: WasmMethod.stop
 		};
 		this._worker.postMessage(request);
 	}
 
 	public pause(): void {
 		const request: WasmRequest = {
-			method: 'pause'
+			method: WasmMethod.pause
 		};
 		this._worker.postMessage(request);
 	}
 
 	public continue(): void {
 		const request: WasmRequest = {
-			method: 'cont',
+			method: WasmMethod.cont,
 			time: this._frameTime,
 			userInputs: this._userInputChanges
 		};
@@ -92,7 +91,7 @@ export class WorkerCommunicationService {
 
 	public singleStep(): void {
 		const request: WasmRequest = {
-			method: 'single',
+			method: WasmMethod.single,
 			userInputs: this._userInputChanges
 		};
 		this._worker.postMessage(request);
