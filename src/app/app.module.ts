@@ -35,6 +35,10 @@ import { SwitchComponent } from './components/switch/switch.component';
 import { UnsavedChangesComponent } from './components/popup/popup-contents/unsaved-changes/unsaved-changes.component';
 import { InputComponent } from './components/input/input.component';
 import { NgxElectronModule } from 'ngx-electron';
+// #!electron
+import { LoginComponent } from './components/popup/popup-contents/login/login.component';
+// #!electron
+import { RegisterComponent } from './components/popup/popup-contents/register/register.component';
 
 @NgModule({
 	declarations: [
@@ -63,7 +67,11 @@ import { NgxElectronModule } from 'ngx-electron';
 		OutsideNgZoneEventDirective,
 		SwitchComponent,
 		UnsavedChangesComponent,
-		InputComponent
+		InputComponent,
+		// #!electron
+		LoginComponent,
+		// #!electron
+		RegisterComponent
 	],
 	entryComponents: [
 		PopupComponent,
@@ -72,7 +80,11 @@ import { NgxElectronModule } from 'ngx-electron';
 		NewComponentComponent,
 		OpenProjectComponent,
 		SaveAsComponent,
-		UnsavedChangesComponent
+		UnsavedChangesComponent,
+		// #!electron
+		LoginComponent,
+		// #!electron
+		RegisterComponent
 	],
 	imports: [
 		NgxElectronModule,

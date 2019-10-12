@@ -120,6 +120,12 @@
 				margin: 0;
 			}
 
+			.login, .register {
+				&:hover {
+					cursor: pointer;
+				}
+			}
+
 			.divider {
 				border-left: 1px solid black;
 				height:  $toolbar-height - 25px;

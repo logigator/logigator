@@ -2,15 +2,19 @@ import {BrowserWindow, app, protocol} from 'electron';
 import * as path from 'path';
 import * as url from 'url';
 import * as fs from 'fs';
+import {AuthenticationHandler} from './authentication-handler';
 
 const args = process.argv.slice(1);
 const serve = args.some(val => val === '--serve');
 
 let win: BrowserWindow;
+let authHandler: AuthenticationHandler;
 
 try {
+	authHandler = new AuthenticationHandler();
+
 	app.on('ready', () => {
-		if (!serve) registerProtocols();
+		if (!serve) registerFileProtocols();
 		createWindow();
 	});
 
@@ -57,13 +61,15 @@ function createWindow() {
 		}));
 	}
 
+	authHandler.initLoginListeners(win);
+
 	win.on('closed', () => {
 		win = null;
 	});
 
 }
 
-function registerProtocols() {
+function registerFileProtocols() {
 	protocol.registerBufferProtocol('jsmod', (request, callback) => {
 		fs.readFile(path.join(__dirname, '..', 'logigator-editor', request.url.replace('jsmod://', '').replace(/\/$/, '')), (err, data) => {
 			callback({

@@ -54,7 +54,7 @@
 </div>
 
 <ng-template #loginRegister>
-	<p class="login">{{'TOP_BAR.LOGIN' | translate}}</p>
+	<p class="login" (click)="login()">{{'TOP_BAR.LOGIN' | translate}}</p>
 	<div class="divider"></div>
-	<p class="register">{{'TOP_BAR.REGISTER' | translate}}</p>
+	<p class="register" (click)="register()">{{'TOP_BAR.REGISTER' | translate}}</p>
 </ng-template>

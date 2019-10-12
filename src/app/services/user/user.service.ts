@@ -6,6 +6,7 @@ import {map, share, switchMap} from 'rxjs/operators';
 import {HttpClient} from '@angular/common/http';
 import {HttpResponseData} from '../../models/http-responses/http-response-data';
 import {ErrorHandlingService} from '../error-handling/error-handling.service';
+import {ElectronService} from 'ngx-electron';
 
 @Injectable({
 	providedIn: 'root'
@@ -16,7 +17,12 @@ export class UserService {
 
 	private _userInfo$: Observable<UserInfo>;
 
-	constructor(@Inject(DOCUMENT) private document: Document, private http: HttpClient, private errorHandling: ErrorHandlingService) {
+	constructor(
+		@Inject(DOCUMENT) private document: Document,
+		private http: HttpClient,
+		private errorHandling: ErrorHandlingService,
+		private electronService: ElectronService
+	) {
 		this.getUserInfoFromServer();
 	}
 
@@ -50,5 +56,23 @@ export class UserService {
 
 	public get userInfo$(): Observable<UserInfo> {
 		return this._userInfo$;
+	}
+
+	public loginTwitter() {
+		this.loginSocial('twitter');
+	}
+
+	public loginGoogle() {
+		this.loginSocial('google');
+	}
+
+	private loginSocial(type: 'google' | 'twitter') {
+		this.electronService.ipcRenderer.send('login' + type);
+		this.electronService.ipcRenderer.once('login' + type + 'Response', ((event, args) => {
+			if (args === 'success') {
+				this.getUserInfoFromServer();
+			}
+			this.errorHandling.showErrorMessage('Error while logging in');
+		}));
 	}
 }

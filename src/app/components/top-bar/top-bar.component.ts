@@ -4,6 +4,11 @@ import {UserService} from '../../services/user/user.service';
 import {Observable} from 'rxjs';
 import {UserInfo} from '../../models/http-responses/user-info';
 import { ElectronService } from 'ngx-electron';
+import {PopupService} from '../../services/popup/popup.service';
+// #!electron
+import {LoginComponent} from '../popup/popup-contents/login/login.component';
+// #!electron
+import {RegisterComponent} from '../popup/popup-contents/register/register.component';
 
 @Component({
 	selector: 'app-top-bar',
@@ -21,13 +26,30 @@ export class TopBarComponent implements OnInit {
 	constructor(
 		private electronService: ElectronService,
 		private projectService: ProjectsService,
-		private userService: UserService
+		private userService: UserService,
+		private popup: PopupService
 	) { }
 
 	ngOnInit() {}
 
 	public get userInfo$(): Observable<UserInfo> {
 		return this.userService.userInfo$;
+	}
+
+	public login() {
+		// #!electron
+		this.popup.showPopup(LoginComponent, 'Login', true);
+
+		// #!web
+		window.open('https://logigator.com/login', '_blank');
+	}
+
+	public register() {
+		// #!electron
+		this.popup.showPopup(RegisterComponent, 'Register', true);
+
+		// #!web
+		window.open('https://logigator.com/register', '_blank');
 	}
 
 	// #!if ELECTRON === 'true'
