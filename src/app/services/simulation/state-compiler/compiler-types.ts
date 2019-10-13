@@ -15,6 +15,10 @@ interface CompPlugByIndex {
 	wireIndex: number;
 }
 type ConnectedToPlugByIndex = Map<number, CompPlugByIndex[]>;
+interface PosOfElem {
+	id: number;
+	pos: PIXI.Point;
+}
 
 type WiresOnLinks = Map<number, Element[]>;
 type WiresOnLinksInProject = Map<number, WiresOnLinks>;
@@ -27,6 +31,6 @@ type WireEndsOnLinksInProject = Map<number, WireEndsOnLinks>;
 
 export {UnitToElement, UdcInnerData, AbsPlugIdsOnLinks,
 	LinksOnWireEnds, CompPlugByIndex, Replacement,
-	ConnectedToPlugByIndex, ReplacementById,
+	ConnectedToPlugByIndex, ReplacementById, PosOfElem,
 	WiresOnLinks, WiresOnLinksInProject,
 	WireEndOnComp, WireEndsOnLinks, WireEndsOnLinksInProject};
