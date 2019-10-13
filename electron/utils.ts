@@ -5,16 +5,12 @@ export function getApiUrl(): string {
 	return 'https://api.logigator.com';
 }
 
-export function getCookieDomain(): string {
-	if (process.env.LOCAL_API) return 'http://localhost:8202';
-	return '.logigator.com';
-}
-
 export function getHttpFilterRewriteUrl(): OnBeforeSendHeadersFilter {
 	return {
 		urls: [
 			'https://localhost:8202/api/*',
-			'http://localhost:8202/api/*'
+			'http://localhost:8202/api/*',
+			'http://logi/api/*'
 		]
 	};
 }

@@ -1,6 +1,6 @@
-import { ipcMain, BrowserWindow, Event, session } from 'electron';
+import { ipcMain, BrowserWindow, Event } from 'electron';
 import fetch from 'node-fetch';
-import {getApiUrl, getCookieDomain} from './utils';
+import {getApiUrl} from './utils';
 import {Storage} from './storage';
 import {AuthUrlResponse} from './models/AuthUrlResponse';
 
@@ -33,20 +33,18 @@ export class AuthenticationHandler {
 			delete this._cookieValidUntilUntil;
 			delete this._authCookie;
 		} else {
-			session.defaultSession.cookies.set({
-				url: getCookieDomain(),
-				name: 'isLoggedIn',
-				value: 'true',
-			});
+			// tslint:disable-next-line:no-string-literal
+			global['isLoggedIn'] = {
+				data: 'true'
+			};
 		}
 	}
 
-	public async setLoggedIn(cookie: string) {
-		await session.defaultSession.cookies.set({
-			url: getCookieDomain(),
-			name: 'isLoggedIn',
-			value: 'true',
-		});
+	public setLoggedIn(cookie: string) {
+		// tslint:disable-next-line:no-string-literal
+		global['isLoggedIn'] = {
+			data: 'true'
+		};
 		this._authCookie = cookie;
 		const expires = cookie.substring(cookie.indexOf('expires=') + 8);
 		this._cookieValidUntilUntil = new Date(expires.substring(0, expires.indexOf('; ')));
@@ -71,15 +69,16 @@ export class AuthenticationHandler {
 				}
 			});
 		} catch (e) {
-			win.close();
+			if (win) win.close();
 			this.sendLoginResponse(false, 'google');
 		}
 	}
 
 	private async onTwitterLogin() {
+		let win: BrowserWindow;
 		try {
 			const url = await this.getSocialLoginUrl('twitter');
-			const win = this.openSocialLoginPopupWindow(url);
+			win = this.openSocialLoginPopupWindow(url);
 			win.webContents.on('will-redirect', async (event, redirectUrl: string) => {
 				if (!redirectUrl.includes('api.twitter.com')) {
 					const query = new URLSearchParams(new URL(redirectUrl).search);
@@ -88,6 +87,7 @@ export class AuthenticationHandler {
 				}
 			});
 		} catch (e) {
+			if (win) win.close();
 			this.sendLoginResponse(false, 'twitter');
 		}
 	}
@@ -99,7 +99,10 @@ export class AuthenticationHandler {
 		delete this._authCookie;
 		delete this._cookieValidUntilUntil;
 
-		session.defaultSession.cookies.remove(getCookieDomain(), 'isLoggedIn');
+		// tslint:disable-next-line:no-string-literal
+		global['isLoggedIn'] = {
+			data: 'true'
+		};
 
 		if (!Storage.has('authCookie') || !Storage.has('cookieValidUntilUntil')) return;
 		Storage.remove('authCookie');
@@ -156,7 +159,6 @@ export class AuthenticationHandler {
 			body: JSON.stringify({ oauth_token, oauth_verifier }),
 			headers: { 'Content-Type': 'application/json' }
 		});
-		console.log(await resp.json());
 		if (!resp.ok) {
 			this.sendLoginResponse(false, 'twitter');
 			return;

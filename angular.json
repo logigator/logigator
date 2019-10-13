@@ -73,7 +73,7 @@
 							"fileReplacements": [
 								{
 									"replace": "src/environments/environment.ts",
-									"with": "src/environments/environment.prod.ts"
+									"with": "src/environments/environment.prod-electron.ts"
 								}
 							],
 							"optimization": true,
@@ -110,7 +110,7 @@
 							"fileReplacements": [
 								{
 									"replace": "src/environments/environment.ts",
-									"with": "src/environments/environment.prod.ts"
+									"with": "src/environments/environment.prod-web.ts"
 								}
 							],
 							"optimization": true,

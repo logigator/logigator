@@ -7,6 +7,7 @@ import {HttpClient} from '@angular/common/http';
 import {HttpResponseData} from '../../models/http-responses/http-response-data';
 import {ErrorHandlingService} from '../error-handling/error-handling.service';
 import {ElectronService} from 'ngx-electron';
+import {environment} from '../../../environments/environment';
 
 @Injectable({
 	providedIn: 'root'
@@ -26,11 +27,11 @@ export class UserService {
 	}
 
 	private getUserInfoFromServer() {
+		console.log('getting user info');
 		this._userInfo$ = of(this.isLoggedIn).pipe(
 			switchMap(isLoggedIn => {
 				if (!isLoggedIn) return of(undefined);
-
-				return this.http.get<HttpResponseData<UserInfo>>('/api/user/get').pipe(
+				return this.http.get<HttpResponseData<UserInfo>>(environment.apiPrefix + '/api/user/get').pipe(
 					map(response => response.result),
 					this.errorHandling.catchErrorOperator('Unaable to get user info', undefined)
 				);
@@ -68,12 +69,7 @@ export class UserService {
 	}
 
 	public logout() {
-		const cookies = document.cookie.split(';');
-		cookies.forEach(c => {
-			const eqPos = c.indexOf('=');
-			const name = eqPos > -1 ? c.substr(0, eqPos) : c;
-			document.cookie = name + '=;expires=Thu, 01 Jan 1970 00:00:00 GMT';
-		});
+		this.electronService.remote.getGlobal('isLoggedIn').data = 'false';
 
 		this.electronService.ipcRenderer.send('logout');
 		this.getUserInfoFromServer();
@@ -81,6 +77,9 @@ export class UserService {
 	// #!endif
 
 	public get isLoggedIn(): boolean {
+		if (this.electronService.isElectronApp) {
+			return this.electronService.remote.getGlobal('isLoggedIn').data === 'true';
+		}
 		const isLoggedIn = this.document.cookie.match('(^|[^;]+)\\s*' + 'isLoggedIn' + '\\s*=\\s*([^;]+)');
 		if (!isLoggedIn) {
 			return false;

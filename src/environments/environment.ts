@@ -6,7 +6,8 @@ export const environment = {
 	production: false,
 	chunkSize: 16,
 	gridPixelWidth: 16,
-	componentWidth: 2
+	componentWidth: 2,
+	apiPrefix: ''
 };
 
 /*
@@ -16,4 +17,4 @@ export const environment = {
  * This import should be commented out in production mode because it will have a negative impact
  * on performance if an error is thrown.
  */
-// import 'zone.js/dist/zone-error';  // Included with Angular CLI.
+import 'zone.js/dist/zone-error';  // Included with Angular CLI.

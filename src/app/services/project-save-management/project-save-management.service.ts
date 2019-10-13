@@ -20,6 +20,7 @@ import * as FileSaver from 'file-saver';
 import {ElementType} from '../../models/element-types/element-type';
 import {Observable} from 'rxjs';
 import {ProjectInfoResponse} from '../../models/http-responses/project-info-response';
+import {environment} from '../../../environments/environment';
 
 @Injectable({
 	providedIn: 'root'
@@ -68,7 +69,7 @@ export class ProjectSaveManagementService {
 	}
 
 	public getAllProjectsInfoFromServer(): Observable<ProjectInfoResponse[]> {
-		return this.http.get<HttpResponseData<ProjectInfoResponse[]>>('/api/project/get-all-projects-info').pipe(
+		return this.http.get<HttpResponseData<ProjectInfoResponse[]>>(environment.apiPrefix + '/api/project/get-all-projects-info').pipe(
 			this.errorHandling.catchErrorOperator('Unable to get Projects from Server', undefined),
 			map(r => r.result)
 		);
@@ -293,7 +294,7 @@ export class ProjectSaveManagementService {
 	}
 
 	private async createProjectServer(name: string): Promise<number> {
-		return this.http.post<HttpResponseData<CreateProjectResponse>>('/api/project/create', {
+		return this.http.post<HttpResponseData<CreateProjectResponse>>(environment.apiPrefix + '/api/project/create', {
 			name,
 			isComponent: false
 		}).pipe(
@@ -331,7 +332,7 @@ export class ProjectSaveManagementService {
 		}
 		if (this._cloudProjectCache.has(id))
 			return Promise.resolve(this.componentFromServerResponse(this._cloudProjectCache.get(id)));
-		return this.http.get<HttpResponseData<OpenProjectResponse>>(`/api/project/open/${id}`).pipe(
+		return this.http.get<HttpResponseData<OpenProjectResponse>>(`${environment.apiPrefix}/api/project/open/${id}`).pipe(
 			map(response => this.componentFromServerResponse(response.result)),
 			this.errorHandling.catchErrorOperatorDynamicMessage((err: any) => {
 				if (err.message === 'isProj') return 'Unable to open Project as Component';
@@ -361,7 +362,7 @@ export class ProjectSaveManagementService {
 	}
 
 	private newCustomComponentOnServer(name: string, symbol: string, description: string = ''): Promise<number> {
-		return this.http.post<HttpResponseData<{id: number}>>('/api/project/create', {
+		return this.http.post<HttpResponseData<{id: number}>>(environment.apiPrefix + '/api/project/create', {
 			name,
 			isComponent: true,
 			symbol,
@@ -408,7 +409,7 @@ export class ProjectSaveManagementService {
 		}
 		const currentlyInCache = this._cloudProjectCache.get(project.id);
 		currentlyInCache.project.data = body.data;
-		return this.http.post<HttpResponseData<{success: boolean}>>(`/api/project/save/${project.id}`, body).pipe(
+		return this.http.post<HttpResponseData<{success: boolean}>>(`${environment.apiPrefix}/api/project/save/${project.id}`, body).pipe(
 			this.errorHandling.catchErrorOperator('Unable to save Component or Project on Server', undefined)
 		).toPromise();
 	}
@@ -417,7 +418,7 @@ export class ProjectSaveManagementService {
 		if (!this.user.isLoggedIn) {
 			return Promise.resolve(new Map());
 		}
-		return this.http.get<HttpResponseData<ComponentInfoResponse[]>>('/api/project/get-all-components-info').pipe(
+		return this.http.get<HttpResponseData<ComponentInfoResponse[]>>(environment.apiPrefix + '/api/project/get-all-components-info').pipe(
 			map(data => {
 				const newElemTypes = new Map<number, ElementType>();
 				data.result.forEach(elem => {
@@ -467,7 +468,7 @@ export class ProjectSaveManagementService {
 		this._projectSource = 'server';
 		if (this._cloudProjectCache.has(id))
 			return Promise.resolve(this.projectFromServerResponse(this._cloudProjectCache.get(id)));
-		return this.http.get<HttpResponseData<OpenProjectResponse>>(`/api/project/open/${id}`).pipe(
+		return this.http.get<HttpResponseData<OpenProjectResponse>>(`${environment.apiPrefix}/api/project/open/${id}`).pipe(
 			map(response => this.projectFromServerResponse(response.result)),
 			catchError(err => {
 				// #!web
