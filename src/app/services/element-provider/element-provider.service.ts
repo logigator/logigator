@@ -58,6 +58,10 @@ export class ElementProviderService {
 		}
 	}
 
+	public clearUserDefinedElements() {
+		this.userDefinedElements.clear();
+	}
+
 	public getElementById(id: number): ElementType {
 		if (this._basicElements.has(id)) {
 			return this._basicElements.get(id);

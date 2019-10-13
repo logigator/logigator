@@ -1,4 +1,4 @@
-import { Injectable } from '@angular/core';
+import {Injectable, NgZone} from '@angular/core';
 import {Project} from '../../models/project';
 import {HttpResponseData} from '../../models/http-responses/http-response-data';
 import {OpenProjectResponse} from '../../models/http-responses/open-project-response';
@@ -34,12 +34,16 @@ export class ProjectSaveManagementService {
 		private http: HttpClient,
 		private elemProvService: ElementProviderService,
 		private user: UserService,
-		private errorHandling: ErrorHandlingService
+		private errorHandling: ErrorHandlingService,
+		private ngZone: NgZone
 	) {
-		this.user.userLoginStateIn$.pipe(
-			filter(state => state)
-		).subscribe(async () => {
-			this.elemProvService.setUserDefinedTypes(await this.getCustomElementsFromServer());
+		this.ngZone.run(() => {
+			this.user.userLoginState$.pipe(
+				filter(state => state)
+			).subscribe(async () => {
+
+				this.elemProvService.setUserDefinedTypes(await this.getCustomElementsFromServer());
+			});
 		});
 	}
 
@@ -51,6 +55,7 @@ export class ProjectSaveManagementService {
 		} else if (location.pathname.startsWith('/share')) {
 			// open share
 		} else {
+			// #!web
 			window.history.pushState(null, null, '/');
 			project = Promise.resolve(Project.empty());
 			this.elemProvService.setUserDefinedTypes(await this.getCustomElementsFromServer());
@@ -158,6 +163,8 @@ export class ProjectSaveManagementService {
 			this.elemProvService.addUserDefinedElement(c.type, c.typeId);
 		});
 		const mainModel = this.getProjectModelFromJson(parsedFile.mainProject.data as ProjectModelResponse);
+
+		// #!web
 		window.history.pushState(null, null, `/local/${parsedFile.mainProject.name}`);
 		return new Project(new ProjectState(mainModel), {
 			type: 'project',
@@ -278,6 +285,8 @@ export class ProjectSaveManagementService {
 		this.elemProvService.clearElementsFromFile();
 		this._componentsFromLocalFile.clear();
 		await this.saveProjectsToServer(projectsToSave);
+
+		// #!web
 		window.history.pushState(null, null, `/board/${mainProjectId}`);
 		this.errorHandling.showInfo(`Saved Project ${mainProjToSave.name}`);
 		return mainProjToSave;
@@ -406,7 +415,6 @@ export class ProjectSaveManagementService {
 
 	private getCustomElementsFromServer(): Promise<Map<number, ElementType>> {
 		if (!this.user.isLoggedIn) {
-			this.errorHandling.showErrorMessage('Cannot get Components, Not logged in');
 			return Promise.resolve(new Map());
 		}
 		return this.http.get<HttpResponseData<ComponentInfoResponse[]>>('/api/project/get-all-components-info').pipe(
@@ -447,6 +455,8 @@ export class ProjectSaveManagementService {
 		const id = this.getProjectIdToLoadFromUrl();
 		if (!id) {
 			this.errorHandling.showErrorMessage('Invalid Url');
+
+			// #!web
 			window.history.pushState(null, null, '/');
 			return Promise.resolve(Project.empty());
 		}
@@ -460,6 +470,7 @@ export class ProjectSaveManagementService {
 		return this.http.get<HttpResponseData<OpenProjectResponse>>(`/api/project/open/${id}`).pipe(
 			map(response => this.projectFromServerResponse(response.result)),
 			catchError(err => {
+				// #!web
 				window.history.pushState(null, null, '/');
 				delete this._projectSource;
 				throw err;

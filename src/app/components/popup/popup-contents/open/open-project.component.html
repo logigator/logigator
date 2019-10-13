@@ -25,7 +25,7 @@
 		<div class="file-upload-row">
 			<div class="file-upload">
 				<label for="file-upload" class="file-upload-label btn-outline primary">{{'POPUP.OPEN.UPLOAD' | translate}}</label>
-				<input id="file-upload" type="file" (change)="inputFileChanged($event)"/>
+				<input id="file-upload" type="file" accept="application/json" (change)="inputFileChanged($event)"/>
 				<p>{{fileToOpen?.name}}</p>
 			</div>
 			<button type="submit" class="btn-outline primary">{{'POPUP.OPEN.OPEN' | translate}}</button>

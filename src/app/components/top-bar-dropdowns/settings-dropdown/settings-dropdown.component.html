@@ -24,4 +24,13 @@
 	<div class="link">
 		<button class="btn-outline secondary small">{{'DROPDOWN.SETTINGS.ACCOUNT' | translate}}</button>
 	</div>
+
+	<!-- #!if ELECTRON === 'true' -->
+	<ng-container *ngIf="isLoggedIn">
+		<hr>
+		<div class="link">
+			<button class="btn-outline secondary small" (click)="logout()">{{'DROPDOWN.SETTINGS.LOGOUT' | translate}}</button>
+		</div>
+	</ng-container>
+	<!-- #!endif -->
 </div>

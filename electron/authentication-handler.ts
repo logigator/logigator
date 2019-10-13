@@ -18,6 +18,7 @@ export class AuthenticationHandler {
 		ipcMain.on('logingoogle', () => this.onGoogleLogin());
 		ipcMain.on('logintwitter', () => this.onTwitterLogin());
 		ipcMain.on('loginemail', (event, args) => this.onEmailLogin(args));
+		ipcMain.on('logout', () => this.onLogout());
 	}
 
 	public readSavedLoginState() {
@@ -92,6 +93,17 @@ export class AuthenticationHandler {
 	}
 
 	private async onEmailLogin(args: {email: string, password: string}) {
+	}
+
+	private onLogout() {
+		delete this._authCookie;
+		delete this._cookieValidUntilUntil;
+
+		session.defaultSession.cookies.remove(getCookieDomain(), 'isLoggedIn');
+
+		if (!Storage.has('authCookie') || !Storage.has('cookieValidUntilUntil')) return;
+		Storage.remove('authCookie');
+		Storage.remove('cookieValidUntilUntil');
 	}
 
 	private async getSocialLoginUrl(type: 'google' | 'twitter'): Promise<string> {

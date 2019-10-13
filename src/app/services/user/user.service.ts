@@ -38,22 +38,7 @@ export class UserService {
 		);
 	}
 
-	public get isLoggedIn(): boolean {
-		const isLoggedIn = this.document.cookie.match('(^|[^;]+)\\s*' + 'isLoggedIn' + '\\s*=\\s*([^;]+)');
-		if (!isLoggedIn) {
-			return false;
-		}
-		return isLoggedIn[0] !== '' && isLoggedIn[0].endsWith('true');
-	}
-
-	public get userInfo$(): Observable<UserInfo> {
-		return this._userInfo$;
-	}
-
-	public get userLoginStateIn$(): Observable<boolean> {
-		return this._userLoginStateInSubject.asObservable();
-	}
-
+	// #!if ELECTRON === 'true'
 	public loginTwitter() {
 		this.login('twitter').catch(() => this.errorHandling.showErrorMessage('Error while logging in'));
 	}
@@ -80,5 +65,34 @@ export class UserService {
 			}));
 		});
 
+	}
+
+	public logout() {
+		const cookies = document.cookie.split(';');
+		cookies.forEach(c => {
+			const eqPos = c.indexOf('=');
+			const name = eqPos > -1 ? c.substr(0, eqPos) : c;
+			document.cookie = name + '=;expires=Thu, 01 Jan 1970 00:00:00 GMT';
+		});
+
+		this.electronService.ipcRenderer.send('logout');
+		this.getUserInfoFromServer();
+	}
+	// #!endif
+
+	public get isLoggedIn(): boolean {
+		const isLoggedIn = this.document.cookie.match('(^|[^;]+)\\s*' + 'isLoggedIn' + '\\s*=\\s*([^;]+)');
+		if (!isLoggedIn) {
+			return false;
+		}
+		return isLoggedIn[0] !== '' && isLoggedIn[0].endsWith('true');
+	}
+
+	public get userInfo$(): Observable<UserInfo> {
+		return this._userInfo$;
+	}
+
+	public get userLoginState$(): Observable<boolean> {
+		return this._userLoginStateInSubject.asObservable();
 	}
 }
