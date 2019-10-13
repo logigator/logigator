@@ -9,7 +9,6 @@
 		"types": []
 	},
 	"include": [
-		"src/**/*.worker.ts",
-		"node_modules/@types/emscripten"
+		"src/**/*.worker.ts"
 	]
 }

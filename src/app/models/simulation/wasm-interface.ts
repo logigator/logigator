@@ -1,4 +1,4 @@
-import {Board} from './board';
+import {Board, BoardStatus} from './board';
 import {PowerChangesIn} from './power-changes';
 
 export type Pointer = number;
@@ -8,7 +8,8 @@ export enum WasmMethod {
 	cont,
 	stop,
 	pause,
-	init
+	init,
+	status
 }
 
 export interface WasmRequest {
@@ -22,7 +23,7 @@ export interface WasmRequest {
 export interface WasmResponse {
 	method: WasmMethod;
 	success: boolean;
-	state: Array<boolean>;
-	tick: number;
+	state: Int8Array;
+	status?: BoardStatus;
 	error?: string;
 }
