@@ -16,6 +16,17 @@ interface CompPlugByIndex {
 }
 type ConnectedToPlugByIndex = Map<number, CompPlugByIndex[]>;
 
+type WiresOnLinks = Map<number, Element[]>;
+type WiresOnLinksInProject = Map<number, WiresOnLinks>;
+interface WireEndOnComp {
+	component: Element;
+	wireIndex: number;
+}
+type WireEndsOnLinks = Map<number, WireEndOnComp[]>;
+type WireEndsOnLinksInProject = Map<number, WireEndsOnLinks>;
+
 export {UnitToElement, UdcInnerData, AbsPlugIdsOnLinks,
 	LinksOnWireEnds, CompPlugByIndex, Replacement,
-	ConnectedToPlugByIndex, ReplacementById};
+	ConnectedToPlugByIndex, ReplacementById,
+	WiresOnLinks, WiresOnLinksInProject,
+	WireEndOnComp, WireEndsOnLinks, WireEndsOnLinksInProject};

@@ -13,8 +13,9 @@ import {
 	LinksOnWireEnds,
 	Replacement, ReplacementById,
 	UdcInnerData,
-	UnitToElement
+	UnitToElement, WireEndOnComp, WireEndsOnLinks, WireEndsOnLinksInProject, WiresOnLinks, WiresOnLinksInProject
 } from './compiler-types';
+import {Project} from '../../../models/project';
 
 @Injectable({
 	providedIn: 'root'
@@ -24,6 +25,8 @@ export class StateCompilerService {
 	public static staticInstance: StateCompilerService;
 
 	private _highestLinkId: number;
+	private _wiresOnLinks: WiresOnLinksInProject;
+	private _wireEndsOnLinks: WireEndsOnLinksInProject;
 	private _udcCache: Map<ProjectState, CompiledComp>;
 
 	constructor(
@@ -44,13 +47,20 @@ export class StateCompilerService {
 		return simUnits;
 	}
 
-	public compile(state: ProjectState): SimulationUnit[] {
-		this._udcCache = new Map<ProjectState, CompiledComp>();
+	public compile(project: Project): SimulationUnit[] {
+		// this._udcCache = new Map<ProjectState, CompiledComp>();
+		const state = project.currState;
 		this._highestLinkId = 0;
+		this.initElemsOnLinks(project.id);
 		return [...this.compileInner(state).units.keys()];
 	}
 
-	// TODO check for recursion: userDefComp cannot include itself
+	private initElemsOnLinks(id: number) {
+		this._wiresOnLinks = new Map<number, WiresOnLinks>([[id, new Map<number, Element[]>()]]);
+		this._wireEndsOnLinks = new Map<number, WireEndsOnLinks>([[id, new Map<number, WireEndOnComp[]>()]]);
+	}
+
+// TODO check for recursion: userDefComp cannot include itself
 	private compileInner(state: ProjectState, outerUnit?: SimulationUnit): UdcInnerData {
 		let units;
 		if (this._udcCache.has(state)) {
