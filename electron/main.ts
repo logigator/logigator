@@ -1,8 +1,9 @@
-import {BrowserWindow, app, protocol} from 'electron';
+import {BrowserWindow, app, protocol, session} from 'electron';
 import * as path from 'path';
 import * as url from 'url';
 import * as fs from 'fs';
 import {AuthenticationHandler} from './authentication-handler';
+import {getApiUrl, getHttpFilterRewriteUrl, getHttpFilterSetCookie} from './utils';
 
 const args = process.argv.slice(1);
 const serve = args.some(val => val === '--serve');
@@ -15,18 +16,16 @@ try {
 
 	app.on('ready', () => {
 		if (!serve) registerFileProtocols();
+
+		registerHttpInterceptor();
+		authHandler.readSavedLoginState();
 		createWindow();
+		authHandler.initLoginListeners(win);
 	});
 
 	app.on('window-all-closed', () => {
 		if (process.platform !== 'darwin') {
 			app.quit();
-		}
-	});
-
-	app.on('activate', () => {
-		if (win === null) {
-			createWindow();
 		}
 	});
 
@@ -37,11 +36,12 @@ try {
 
 function createWindow() {
 	win = new BrowserWindow({
-		width: 1000,
+		width: 1400,
 		height: 725,
 		minWidth: 1000,
 		minHeight: 725,
 		webPreferences: {
+			webSecurity: false,
 			nodeIntegration: true
 		},
 		frame: false
@@ -60,8 +60,6 @@ function createWindow() {
 			slashes: true
 		}));
 	}
-
-	authHandler.initLoginListeners(win);
 
 	win.on('closed', () => {
 		win = null;
@@ -85,5 +83,30 @@ function registerFileProtocols() {
 		}
 		const requestedFile = request.url.substr(request.url.indexOf('/assets'));
 		callback(path.join(__dirname, '..', 'logigator-editor', requestedFile));
+	});
+}
+
+function registerHttpInterceptor() {
+	session.defaultSession.webRequest.onBeforeRequest(getHttpFilterRewriteUrl(), (details, callback) => {
+		const rewriteUrl = getApiUrl() + details.url.substring(details.url.indexOf('/api') + 4);
+		callback({
+			redirectURL: rewriteUrl
+		});
+	});
+
+	session.defaultSession.webRequest.onBeforeSendHeaders(getHttpFilterSetCookie(), (details, callback) => {
+		// tslint:disable-next-line:no-string-literal
+		details.requestHeaders['Cookie'] = authHandler.cookies;
+
+		callback({
+			requestHeaders: details.requestHeaders
+		});
+	});
+
+	session.defaultSession.webRequest.onHeadersReceived(getHttpFilterSetCookie(), (details, callback) => {
+		callback({
+			statusLine: details.statusLine,
+			responseHeaders: details.responseHeaders
+		});
 	});
 }

@@ -1,6 +1,6 @@
 import {Inject, Injectable} from '@angular/core';
 import {DOCUMENT} from '@angular/common';
-import {Observable, of} from 'rxjs';
+import {Observable, of, Subject} from 'rxjs';
 import {UserInfo} from '../../models/http-responses/user-info';
 import {map, share, switchMap} from 'rxjs/operators';
 import {HttpClient} from '@angular/common/http';
@@ -13,9 +13,8 @@ import {ElectronService} from 'ngx-electron';
 })
 export class UserService {
 
-	private _isLoggedIn;
-
 	private _userInfo$: Observable<UserInfo>;
+	private _userLoginStateInSubject = new Subject<boolean>();
 
 	constructor(
 		@Inject(DOCUMENT) private document: Document,
@@ -39,7 +38,7 @@ export class UserService {
 		);
 	}
 
-	private get getLoginStateFromCookie(): boolean {
+	public get isLoggedIn(): boolean {
 		const isLoggedIn = this.document.cookie.match('(^|[^;]+)\\s*' + 'isLoggedIn' + '\\s*=\\s*([^;]+)');
 		if (!isLoggedIn) {
 			return false;
@@ -47,32 +46,39 @@ export class UserService {
 		return isLoggedIn[0] !== '' && isLoggedIn[0].endsWith('true');
 	}
 
-	public get isLoggedIn(): boolean {
-		if (this._isLoggedIn === undefined) {
-			this._isLoggedIn = this.getLoginStateFromCookie;
-		}
-		return this._isLoggedIn;
-	}
-
 	public get userInfo$(): Observable<UserInfo> {
 		return this._userInfo$;
 	}
 
+	public get userLoginStateIn$(): Observable<boolean> {
+		return this._userLoginStateInSubject.asObservable();
+	}
+
 	public loginTwitter() {
-		this.loginSocial('twitter');
+		this.login('twitter').catch(() => this.errorHandling.showErrorMessage('Error while logging in'));
 	}
 
 	public loginGoogle() {
-		this.loginSocial('google');
+		this.login('google').catch(() => this.errorHandling.showErrorMessage('Error while logging in'));
 	}
 
-	private loginSocial(type: 'google' | 'twitter') {
-		this.electronService.ipcRenderer.send('login' + type);
-		this.electronService.ipcRenderer.once('login' + type + 'Response', ((event, args) => {
-			if (args === 'success') {
-				this.getUserInfoFromServer();
-			}
-			this.errorHandling.showErrorMessage('Error while logging in');
-		}));
+	public loginEmail(email: string, password: string): Promise<string> {
+		return this.login('email', {email, password});
+	}
+
+	private login(type: 'google' | 'twitter' | 'email', credentials?: {email: string, password: string}): Promise<string> {
+		this.electronService.ipcRenderer.send('login' + type, credentials);
+		return new Promise<string>((resolve, reject) => {
+			this.electronService.ipcRenderer.once('login' + type + 'Response', ((event, args) => {
+				if (args === 'success') {
+					this._userLoginStateInSubject.next(true);
+					this.getUserInfoFromServer();
+					resolve();
+					return;
+				}
+				reject(args);
+			}));
+		});
+
 	}
 }

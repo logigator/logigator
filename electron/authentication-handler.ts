@@ -1,11 +1,14 @@
-import { ipcMain, WebContents, BrowserWindow} from 'electron';
+import { ipcMain, BrowserWindow, Event, session } from 'electron';
 import fetch from 'node-fetch';
-import {getApiUrl} from './utils';
+import {getApiUrl, getCookieDomain} from './utils';
+import {Storage} from './storage';
 import {AuthUrlResponse} from './models/AuthUrlResponse';
 
 export class AuthenticationHandler {
 
 	private _mainWindow: BrowserWindow;
+	private _authCookie: string;
+	private _cookieValidUntilUntil: Date;
 
 	constructor() {
 	}
@@ -17,14 +20,57 @@ export class AuthenticationHandler {
 		ipcMain.on('loginemail', (event, args) => this.onEmailLogin(args));
 	}
 
+	public readSavedLoginState() {
+		if (!Storage.has('authCookie') || !Storage.has('cookieValidUntilUntil')) return;
+
+		this._authCookie = Storage.get('authCookie');
+		this._cookieValidUntilUntil = new Date(Storage.get('cookieValidUntilUntil'));
+
+		if (this._cookieValidUntilUntil.getTime() <= Date.now()) {
+			Storage.remove('authCookie');
+			Storage.remove('cookieValidUntilUntil');
+			delete this._cookieValidUntilUntil;
+			delete this._authCookie;
+		} else {
+			session.defaultSession.cookies.set({
+				url: getCookieDomain(),
+				name: 'isLoggedIn',
+				value: 'true',
+			});
+		}
+	}
+
+	public async setLoggedIn(cookie: string) {
+		await session.defaultSession.cookies.set({
+			url: getCookieDomain(),
+			name: 'isLoggedIn',
+			value: 'true',
+		});
+		this._authCookie = cookie;
+		const expires = cookie.substring(cookie.indexOf('expires=') + 8);
+		this._cookieValidUntilUntil = new Date(expires.substring(0, expires.indexOf('; ')));
+		Storage.set('authCookie', this._authCookie);
+		Storage.set('cookieValidUntilUntil', this._cookieValidUntilUntil.toISOString());
+	}
+
+	public get cookies(): string {
+		return this._authCookie || '';
+	}
+
 	private async onGoogleLogin() {
+		let win: BrowserWindow;
 		try {
 			const url = await this.getSocialLoginUrl('google');
-			const win = this.openSocialLoginPopupWindow(url);
-			win.webContents.on('will-navigate', (event, redirectUrl: string) => {
-
+			win = this.openSocialLoginPopupWindow(url);
+			win.webContents.on('will-redirect', async (event: Event, redirectUrl: string) => {
+				if (!redirectUrl.includes('accounts.google.com')) {
+					const query = new URLSearchParams(new URL(redirectUrl).search);
+					this.verifyGoogleCredentials(query.get('code'));
+					win.close();
+				}
 			});
 		} catch (e) {
+			win.close();
 			this.sendLoginResponse(false, 'google');
 		}
 	}
@@ -33,8 +79,12 @@ export class AuthenticationHandler {
 		try {
 			const url = await this.getSocialLoginUrl('twitter');
 			const win = this.openSocialLoginPopupWindow(url);
-			win.webContents.on('will-navigate', (event, redirectUrl: string) => {
-
+			win.webContents.on('will-redirect', async (event, redirectUrl: string) => {
+				if (!redirectUrl.includes('api.twitter.com')) {
+					const query = new URLSearchParams(new URL(redirectUrl).search);
+					this.verifyTwitterCredentials(query.get('oauth_token'), query.get('oauth_verifier'));
+					win.close();
+				}
 			});
 		} catch (e) {
 			this.sendLoginResponse(false, 'twitter');
@@ -50,8 +100,8 @@ export class AuthenticationHandler {
 		return data.result.url;
 	}
 
-	private sendLoginResponse(succeeded: boolean, type: 'google' | 'twitter' | 'email') {
-		this._mainWindow.webContents.send('login' + type + 'Response', succeeded ? 'success' : undefined);
+	private sendLoginResponse(succeeded: boolean, type: 'google' | 'twitter' | 'email', errorMsg?: any) {
+		this._mainWindow.webContents.send('login' + type + 'Response', succeeded ? 'success' : errorMsg);
 	}
 
 	private openSocialLoginPopupWindow(url: string): BrowserWindow {
@@ -72,6 +122,35 @@ export class AuthenticationHandler {
 		win.setMenu(null);
 		win.setMenuBarVisibility(false);
 		return win;
+	}
+
+	private async verifyGoogleCredentials(code: string) {
+		const resp = await fetch(getApiUrl() + '/auth/verify-google-credentials', {
+			method: 'post',
+			body: JSON.stringify({ code }),
+			headers: { 'Content-Type': 'application/json' }
+		});
+		if (!resp.ok) {
+			this.sendLoginResponse(false, 'google');
+			return;
+		}
+		await this.setLoggedIn(resp.headers.raw()['set-cookie'].find(c => c.includes('auth-token')));
+		this.sendLoginResponse(true, 'google');
+	}
+
+	private async verifyTwitterCredentials(oauth_token: string, oauth_verifier: string) {
+		const resp = await fetch(getApiUrl() + '/auth/verify-twitter-credentials', {
+			method: 'post',
+			body: JSON.stringify({ oauth_token, oauth_verifier }),
+			headers: { 'Content-Type': 'application/json' }
+		});
+		console.log(await resp.json());
+		if (!resp.ok) {
+			this.sendLoginResponse(false, 'twitter');
+			return;
+		}
+		await this.setLoggedIn(resp.headers.raw()['set-cookie'].find(c => c.includes('auth-token')));
+		this.sendLoginResponse(true, 'twitter');
 	}
 
 	public get isLoggedIn(): boolean {

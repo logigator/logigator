@@ -2,7 +2,7 @@ import { Injectable } from '@angular/core';
 import {Project} from '../../models/project';
 import {HttpResponseData} from '../../models/http-responses/http-response-data';
 import {OpenProjectResponse} from '../../models/http-responses/open-project-response';
-import {catchError, map} from 'rxjs/operators';
+import {catchError, filter, map} from 'rxjs/operators';
 import {ProjectModel} from '../../models/project-model';
 import * as PIXI from 'pixi.js';
 import {HttpClient} from '@angular/common/http';
@@ -35,7 +35,13 @@ export class ProjectSaveManagementService {
 		private elemProvService: ElementProviderService,
 		private user: UserService,
 		private errorHandling: ErrorHandlingService
-	) { }
+	) {
+		this.user.userLoginStateIn$.pipe(
+			filter(state => state)
+		).subscribe(async () => {
+			this.elemProvService.setUserDefinedTypes(await this.getCustomElementsFromServer());
+		});
+	}
 
 	public async getProjectToOpenOnLoad(): Promise<Project> {
 		let project;

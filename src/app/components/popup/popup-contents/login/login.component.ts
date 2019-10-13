@@ -26,4 +26,12 @@ export class LoginComponent extends PopupContentComp implements OnInit {
 		this.requestClose.emit();
 	}
 
+	public loginEmail(email: string, password: string) {
+		this.user.loginEmail(email, password)
+			.then(() => this.requestClose.emit())
+			.catch(err => {
+				// TODO: Show error in UI
+			});
+	}
+
 }
