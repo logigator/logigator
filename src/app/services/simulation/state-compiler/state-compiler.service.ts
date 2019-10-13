@@ -6,6 +6,15 @@ import {ElementProviderService} from '../../element-provider/element-provider.se
 import {ProjectsService} from '../../projects/projects.service';
 import {MapHelper} from './map-helper';
 import {CompiledComp} from './compiled-comp';
+import {
+	AbsPlugIdsOnLinks,
+	CompPlugByIndex,
+	ConnectedToPlugByIndex,
+	LinksOnWireEnds,
+	Replacement, ReplacementById,
+	UdcInnerData,
+	UnitToElement
+} from './compiler-types';
 
 @Injectable({
 	providedIn: 'root'
@@ -24,27 +33,36 @@ export class StateCompilerService {
 		StateCompilerService.staticInstance = this;
 	}
 
+	private static generateUnits(state: ProjectState): UnitToElement {
+		const simUnits: UnitToElement = new Map<SimulationUnit, Element>();
+		for (const element of state.allElements) {
+			const unit = SimulationUnits.fromElement(element);
+			if (unit) {
+				simUnits.set(unit, element);
+			}
+		}
+		return simUnits;
+	}
+
 	public compile(state: ProjectState): SimulationUnit[] {
 		this._udcCache = new Map<ProjectState, CompiledComp>();
 		this._highestLinkId = 0;
-		return [...this.compileInner(state).simUnits.keys()];
+		return [...this.compileInner(state).units.keys()];
 	}
 
 	// TODO check for recursion: userDefComp cannot include itself
-	private compileInner(state: ProjectState, unit?: SimulationUnit):
-		{simUnits: Map<SimulationUnit, Element>, replacements: Map<number, number>} {
-
-		let simulationUnits;
+	private compileInner(state: ProjectState, outerUnit?: SimulationUnit): UdcInnerData {
+		let units;
 		if (this._udcCache.has(state)) {
-			simulationUnits = this._udcCache.get(state).units;
+			units = this._udcCache.get(state).units;
 		} else {
-			simulationUnits = this.generateUnits(state);
+			units = StateCompilerService.generateUnits(state);
 		}
-		const replacements = this.setAllLinks(state, simulationUnits, unit);
+		const replacements = this.setAllLinks(state, units, outerUnit);
 		this.copyCache(state);
-		this.deletePlugElements(simulationUnits);
-		this.dissolveUdcs(simulationUnits);
-		return {simUnits: simulationUnits, replacements};
+		this.deletePlugElements(units);
+		this.dissolveUdcs(units);
+		return {units, replacements};
 	}
 
 	private setUdcCache(state: ProjectState, compiledComp: CompiledComp): void {
@@ -60,97 +78,117 @@ export class StateCompilerService {
 		this.setUdcCache(state, this._udcCache.get(state));
 	}
 
-	private generateUnits(state: ProjectState): Map<SimulationUnit, Element> {
-		const simulationUnits: Map<SimulationUnit, Element> = new Map<SimulationUnit, Element>();
-		for (const element of state.allElements) {
-			const unit = SimulationUnits.fromElement(element);
-			if (unit) {
-				simulationUnits.set(unit, element);
-			}
-		}
-		return simulationUnits;
-	}
-
-	private deletePlugElements(simulationUnits) {
-		for (const simUnit of simulationUnits.keys()) {
+	private deletePlugElements(simUnits: UnitToElement) {
+		for (const simUnit of simUnits.keys()) {
 			if (this.elementProvider.isPlugElement(simUnit.typeId)) {
-				simulationUnits.delete(simUnit);
+				simUnits.delete(simUnit);
 			}
 		}
 	}
 
 	private setAllLinks(
 		state: ProjectState,
-		units: Map<SimulationUnit, Element>,
+		units: UnitToElement,
 		outerUnit?: SimulationUnit):
-		Map<number, number> {
+		Replacement {
 
 		let compiledComp: CompiledComp;
-		let replacements: Map<number, number>;
 
 		if (this._udcCache.has(state)) {
-			replacements = this.updateCachedIds(state, outerUnit);
+			return this.updateCachedIds(state, outerUnit);
 		} else {
-			const linksOnUnits = new Map<PIXI.Point[], number>();
 			compiledComp = {
 				startId: this._highestLinkId,
 				units,
-				connectedToPlug: new Map<number, {compIndex: number, wireIndex: number}[]>(),
+				connectedToPlug: new Map<number, CompPlugByIndex[]>(),
 				replacements: undefined
 			};
-			let plugsOnLinks = new Map<number, number[]>();
-			if (outerUnit)
-				plugsOnLinks = this.fillPlugsInUnitsOnLinks(state, linksOnUnits, units, outerUnit);
-			const ret = this.calcAllLinks(state, units, linksOnUnits, compiledComp.connectedToPlug, plugsOnLinks);
-			replacements = ret.replacements;
-			const {connectedToPlug, plugToPlug} = this.calcPlugConnections(units, replacements);
-			compiledComp.connectedToPlug = connectedToPlug;
-			compiledComp.replacements = ret.replacementPos;
-			this.setUdcCache(state, compiledComp);
+			return this.setNoncachedLinks(outerUnit, state, compiledComp);
 		}
+	}
+
+	private setNoncachedLinks(
+		outerUnit: SimulationUnit, state: ProjectState, compiledComp: CompiledComp):
+		Replacement {
+		const linksOnWireEnds: LinksOnWireEnds = new Map<PIXI.Point[], number>();
+		const units = compiledComp.units;
+		let plugsOnLinks: AbsPlugIdsOnLinks = new Map<number, number[]>();
+		if (outerUnit)
+			plugsOnLinks = this.fillPlugsInLinksOnWireEnds(state, linksOnWireEnds, units, outerUnit);
+		const ret = this.calcAllLinks(state, units, linksOnWireEnds, compiledComp.connectedToPlug, plugsOnLinks);
+		const replacements = ret.replacements;
+		compiledComp.connectedToPlug = this.calcPlugConsForCache(units, replacements);
+		compiledComp.replacements = ret.replacementPos;
+		this.setUdcCache(state, compiledComp);
 		return replacements;
 	}
 
-	private calcPlugConnections(units: Map<SimulationUnit, Element>, replacements: Map<number, number>):
-		{connectedToPlug: Map<number, {compIndex: number, wireIndex: number}[]>,
-		plugToPlug: Map<number, {compIndex: number, wireIndex: number}[]>} {
+	private fillPlugsInLinksOnWireEnds(
+		state: ProjectState,
+		linksOnWireEnds: LinksOnWireEnds,
+		units: UnitToElement,
+		outerUnit: SimulationUnit):
+		AbsPlugIdsOnLinks {
 
-		const connectedToPlug = new Map<number, {compIndex: number, wireIndex: number}[]>();
-		const plugToPlug = new Map<number, {compIndex: number, wireIndex: number}[]>();
+		const out: AbsPlugIdsOnLinks = new Map<number, number[]>();
+		let absPlugIndex = 0;
+		let absUnitIndex = -1;
+		for (const [unit, element] of units.entries()) {
+			absUnitIndex++;
+			if (!this.elementProvider.isPlugElement(unit.typeId))
+				continue;
+			const wireEndPos = Elements.wireEnds(element)[0];
+			const connected = this.connectedToPos(state, wireEndPos, []);
+			const absIndex = absPlugIndex++;
+			const link = SimulationUnits.concatIO(outerUnit)[absIndex];
+			linksOnWireEnds.set(connected, link);
+			unit.inputs = [link];
+			unit.outputs = [link];
+			if (out.has(link)) {
+				out.get(link).push(absUnitIndex);
+			} else {
+				out.set(link, [absUnitIndex]);
+			}
+		}
+		return out;
+	}
+
+	private calcPlugConsForCache(units: UnitToElement, replacements: Replacement):
+		ConnectedToPlugByIndex {
+
+		const connectedToPlug: ConnectedToPlugByIndex = new Map<number, CompPlugByIndex[]>();
 		let compIndex = 0;
 		this.doReplacements(units, replacements);
-		for (const [unit, element] of units) {
+		for (const unit of units.keys()) {
 			if (this.elementProvider.isPlugElement(unit.typeId)) {
 				const linkId = SimulationUnits.concatIO(unit)[0];
 				connectedToPlug.set(compIndex, []);
-				plugToPlug.set(compIndex, []);
 				let oppoCompIndex = -1;
 				for (const oppositeUnit of units.keys()) {
 					oppoCompIndex++;
-					if (oppositeUnit === unit) continue;
-					const map = this.elementProvider.isPlugElement(oppositeUnit.typeId)
-						? plugToPlug : connectedToPlug;
+					if (this.elementProvider.isPlugElement(oppositeUnit.typeId) || oppositeUnit === unit)
+						continue;
 					const allCons = SimulationUnits.concatIO(oppositeUnit);
 					for (let i = 0; i < allCons.length; i++) {
 						if (allCons[i] === linkId) {
-							map.get(compIndex).push({compIndex: oppoCompIndex, wireIndex: i});
+							connectedToPlug.get(compIndex).push({compIndex: oppoCompIndex, wireIndex: i});
 						}
 					}
 				}
 			}
 			compIndex++;
 		}
-		return {connectedToPlug, plugToPlug};
+		return connectedToPlug;
 	}
 
 
 	private calcAllLinks(
 		state: ProjectState,
-		units: Map<SimulationUnit, Element>,
-		linksOnUnits: Map<PIXI.Point[], number>,
-		connectedToPlug: Map<number, {compIndex: number, wireIndex: number}[]>,
-		plugsOnLink: Map<number, number[]>):
-		{replacements: Map<number, number>, replacementPos: Map<number, number[]>} {
+		units: UnitToElement,
+		linksOnWireEnds: LinksOnWireEnds,
+		connectedToPlug: ConnectedToPlugByIndex,
+		plugsOnLink: AbsPlugIdsOnLinks):
+		{replacements: Replacement, replacementPos: ReplacementById} {
 
 		const replacements = new Map<number, number>();
 		const replacementPos = new Map<number, number[]>();
@@ -160,13 +198,12 @@ export class StateCompilerService {
 		for (const [unit, element] of units.entries()) {
 			let wireEndIndex = 0;
 			for (const wireEndPos of Elements.wireEnds(element)) {
-
 				if (this.elementProvider.isPlugElement(unit.typeId)) {
 					const connected = this.connectedToPos(state, wireEndPos, []);
 					this.calcReplacements(unit, connected, state, units, replacements, replacementPos, plugIndex++);
 				} else {
 					const connected = this.connectedToPos(state, wireEndPos, []);
-					const {linkId, index} = this.setUnitLink(linksOnUnits, connected, element, unit, wireEndIndex, plugsOnLink);
+					const {linkId, index} = this.setUnitLink(linksOnWireEnds, connected, element, unit, wireEndIndex, plugsOnLink);
 					if (index !== undefined) {
 						const con = {compIndex: unitIndex, wireIndex: index};
 						for (const plugId of plugsOnLink.get(linkId)) {
@@ -186,7 +223,7 @@ export class StateCompilerService {
 		return {replacements, replacementPos};
 	}
 
-	private updateCachedIds(state: ProjectState, outerUnit: SimulationUnit): Map<number, number> {
+	private updateCachedIds(state: ProjectState, outerUnit: SimulationUnit): Replacement {
 		const compiledComp = this._udcCache.get(state);
 		const idDif = this._highestLinkId - compiledComp.startId;
 
@@ -222,34 +259,31 @@ export class StateCompilerService {
 		for (const [fromPlug, toPlugs] of compiledComp.replacements.entries()) {
 			replacements.set(outerPugs[fromPlug], outerPugs[toPlugs[toPlugs.length - 1]]);
 		}
-		console.log('repl', replacements);
 		return replacements;
 	}
 
 	private setUnitLink(
-		linksOnUnits: Map<PIXI.Point[], number>,
+		linksOnWireEnds: LinksOnWireEnds,
 		connected, element, unit,
-		wireEndIndex: number, plugsOnLink: Map<number, number[]>):
+		wireEndIndex: number, plugsOnLink: AbsPlugIdsOnLinks):
 		{linkId: number, index: number} {
 
 		const out: {linkId: number, index: number} = {linkId: undefined, index: undefined};
 		let linkId;
-		if (MapHelper.mapHas(linksOnUnits, connected)) {
-			linkId = MapHelper.mapGet(linksOnUnits, connected);
+		if (MapHelper.mapHas(linksOnWireEnds, connected)) {
+			linkId = MapHelper.mapGet(linksOnWireEnds, connected);
 		} else {
 			linkId = ++this._highestLinkId;
 		}
-		linksOnUnits.set(connected, linkId);
-		let side: number[];
+		linksOnWireEnds.set(connected, linkId);
 		let index: number;
 		if (wireEndIndex < element.numInputs) {
-			side = unit.inputs;
 			index = wireEndIndex;
+			unit.inputs[index] = linkId;
 		} else {
-			side = unit.outputs;
 			index = wireEndIndex - element.numInputs;
+			unit.outputs[index] = linkId;
 		}
-		side[index] = linkId;
 		if (plugsOnLink.has(linkId)) {
 			out.index = index;
 		}
@@ -259,7 +293,7 @@ export class StateCompilerService {
 
 	private calcReplacements(
 		unit, connected, state: ProjectState,
-		units: Map<SimulationUnit, Element>,
+		units: UnitToElement,
 		replacements, replacementPos, unitIndex) {
 
 		const element = units.get(unit);
@@ -282,36 +316,6 @@ export class StateCompilerService {
 			const u = MapHelper.valueToKey(units, otherPlug);
 			replacements.set(SimulationUnits.concatIO(unit)[0], SimulationUnits.concatIO(u)[0]);
 		}
-	}
-
-	private fillPlugsInUnitsOnLinks(
-		state: ProjectState,
-		unitsOnLinks: Map<PIXI.Point[], number>,
-		units: Map<SimulationUnit, Element>,
-		outerUnit: SimulationUnit):
-		Map<number, number[]> {
-
-		const out = new Map<number, number[]>();
-		let plugIndex = 0;
-		let allUnitsIndex = -1;
-		for (const [unit, element] of units.entries()) {
-			allUnitsIndex++;
-			if (!this.elementProvider.isPlugElement(unit.typeId))
-				continue;
-			const wireEndPos = Elements.wireEnds(element)[0];
-			const connected = this.connectedToPos(state, wireEndPos, []);
-			const absIndex = plugIndex++;
-			unitsOnLinks.set(connected, SimulationUnits.concatIO(outerUnit)[absIndex]);
-			const val = SimulationUnits.concatIO(outerUnit)[absIndex];
-			unit.inputs = [val];
-			unit.outputs = [val];
-			if (out.has(val)) {
-				out.get(val).push(allUnitsIndex);
-			} else {
-				out.set(val, [allUnitsIndex]);
-			}
-		}
-		return out;
 	}
 
 	private connectedToPos(state: ProjectState, pos: PIXI.Point, coveredPoints?: {id: number, pos: PIXI.Point}[]): PIXI.Point[] {
@@ -339,8 +343,7 @@ export class StateCompilerService {
 	}
 
 
-	// TODO test
-	private dissolveUdcs(units: Map<SimulationUnit, Element>): Map<number, number> {
+	private dissolveUdcs(units: UnitToElement): Map<number, number> {
 		const out = new Map<number, number>();
 		for (const unit of units.keys()) {
 			if (!this.elementProvider.isUserElement(unit.typeId))
@@ -351,16 +354,16 @@ export class StateCompilerService {
 		return out;
 	}
 
-	private dissolveSingle(units: Map<SimulationUnit, Element>, unit: SimulationUnit) {
-		const unitsState = this.projects.getProjectById(unit.typeId).currState;
-		const {simUnits, replacements} = this.compileInner(unitsState, unit);
-		simUnits.forEach((v, k) => {
-			units.set(k, v);
+	private dissolveSingle(otherUnits: UnitToElement, outerUnit: SimulationUnit) {
+		const unitsState = this.projects.getProjectById(outerUnit.typeId).currState;
+		const {units, replacements} = this.compileInner(unitsState, outerUnit);
+		units.forEach((v, k) => {
+			otherUnits.set(k, v);
 		});
 		this.doReplacements(units, replacements);
 	}
 
-	private doReplacements(units: Map<SimulationUnit, Element>, replacements) {
+	private doReplacements(units: UnitToElement, replacements) {
 		for (const u of units.keys()) {
 			for (const [from, to] of replacements) {
 				[u.inputs, u.outputs].forEach(arr => {

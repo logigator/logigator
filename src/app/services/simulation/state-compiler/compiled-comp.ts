@@ -1,9 +1,8 @@
-import {SimulationUnit} from '../../../models/simulation/SimulationUnit';
-import {Element} from '../../../models/element';
+import {ConnectedToPlugByIndex, UnitToElement} from './compiler-types';
 
 export interface CompiledComp {
 	startId: number;
-	units: Map<SimulationUnit, Element>;
-	connectedToPlug: Map<number, {compIndex: number, wireIndex: number}[]>;
+	units: UnitToElement;
+	connectedToPlug: ConnectedToPlugByIndex;
 	replacements: Map<number, number[]>;
 }
