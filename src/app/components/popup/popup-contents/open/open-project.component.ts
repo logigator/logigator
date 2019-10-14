@@ -44,6 +44,7 @@ export class OpenProjectComponent extends PopupContentComp implements OnInit {
 	}
 
 	public openFile() {
+		if (this.fileToOpen.type !== 'application/json') return;
 		const reader = new FileReader();
 		reader.readAsText(this.fileToOpen, 'UTF-8');
 		reader.onload = (event: any) => {

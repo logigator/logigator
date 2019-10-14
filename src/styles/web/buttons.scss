@@ -38,6 +38,11 @@
 			&:active {
 				background-color: rgba(themed('primary'), 0.2);
 			}
+			&:disabled {
+				color: rgba(themed('primary'), 0.7) !important;
+				border: 1px solid rgba(themed('primary'), 0.7) !important;
+				background: none !important;
+			}
 		}
 
 		&.secondary {
@@ -51,6 +56,11 @@
 			&:active {
 				background-color: rgba(secondaryButtonBgColor(), 0.2);
 			}
+			&:disabled {
+				color: rgba(secondaryButtonBgColor(), 0.7) !important;
+				border: 1px solid rgba(secondaryButtonBgColor(), 0.7) !important;
+				background: none !important;
+			}
 		}
 
 		&.danger {
@@ -63,6 +73,11 @@
 			}
 			&:active {
 				background-color: rgba(themed('error'), 0.2);
+			}
+			&:disabled {
+				color: rgba(themed('error'), 0.7) !important;
+				border: 1px solid rgba(themed('error'), 0.7) !important;
+				background: none !important;
 			}
 		}
 	}

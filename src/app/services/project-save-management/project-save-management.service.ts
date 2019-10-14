@@ -21,6 +21,8 @@ import {ElementType} from '../../models/element-types/element-type';
 import {Observable} from 'rxjs';
 import {ProjectInfoResponse} from '../../models/http-responses/project-info-response';
 import {environment} from '../../../environments/environment';
+import {ElectronService} from 'ngx-electron';
+import {saveLocalFile} from './save-local-file';
 
 @Injectable({
 	providedIn: 'root'
@@ -36,13 +38,13 @@ export class ProjectSaveManagementService {
 		private elemProvService: ElementProviderService,
 		private user: UserService,
 		private errorHandling: ErrorHandlingService,
-		private ngZone: NgZone
+		private ngZone: NgZone,
+		private electronService: ElectronService
 	) {
 		this.ngZone.run(() => {
 			this.user.userLoginState$.pipe(
 				filter(state => state)
 			).subscribe(async () => {
-
 				this.elemProvService.setUserDefinedTypes(await this.getCustomElementsFromServer());
 			});
 		});
@@ -153,25 +155,24 @@ export class ProjectSaveManagementService {
 		let parsedFile: ProjectLocalFile;
 		try {
 			parsedFile = JSON.parse(content);
+			delete this._projectSource;
+			this.elemProvService.clearElementsFromFile();
+			parsedFile.components.forEach(c => {
+				this._componentsFromLocalFile.set(c.typeId, c);
+				this.elemProvService.addUserDefinedElement(c.type, c.typeId);
+			});
+			const mainModel = this.getProjectModelFromJson(parsedFile.mainProject.data as ProjectModelResponse);
+
+			// #!web
+			window.history.pushState(null, null, `/local/${parsedFile.mainProject.name}`);
+			return new Project(new ProjectState(mainModel), {
+				type: 'project',
+				name: parsedFile.mainProject.name,
+				id: parsedFile.mainProject.id
+			});
 		} catch (e) {
 			this.errorHandling.showErrorMessage('Invalid File');
-			return;
 		}
-		delete this._projectSource;
-		this.elemProvService.clearElementsFromFile();
-		parsedFile.components.forEach(c => {
-			this._componentsFromLocalFile.set(c.typeId, c);
-			this.elemProvService.addUserDefinedElement(c.type, c.typeId);
-		});
-		const mainModel = this.getProjectModelFromJson(parsedFile.mainProject.data as ProjectModelResponse);
-
-		// #!web
-		window.history.pushState(null, null, `/local/${parsedFile.mainProject.name}`);
-		return new Project(new ProjectState(mainModel), {
-			type: 'project',
-			name: parsedFile.mainProject.name,
-			id: parsedFile.mainProject.id
-		});
 	}
 
 	public async exportToFile(allOpenProjects: Project[], name?: string) {
@@ -206,9 +207,8 @@ export class ProjectSaveManagementService {
 				} as ComponentLocalFile;
 			}) as ComponentLocalFile[]
 		};
-		const blob = new Blob([JSON.stringify(modelToSave, null, 2)], {type: 'application/json;charset=utf-8'});
-		FileSaver.saveAs(blob, `${name || mainProject.name}.json`);
-		this.errorHandling.showInfo('Exported Project and all needed Components');
+		if (await saveLocalFile(modelToSave, name || mainProject.name, this.electronService))
+			this.errorHandling.showInfo('Exported Project and all needed Components');
 	}
 
 	private async buildDependencyTree(

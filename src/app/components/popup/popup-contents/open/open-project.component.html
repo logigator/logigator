@@ -28,7 +28,7 @@
 				<input id="file-upload" type="file" accept="application/json" (change)="inputFileChanged($event)"/>
 				<p>{{fileToOpen?.name}}</p>
 			</div>
-			<button type="submit" class="btn-outline primary">{{'POPUP.OPEN.OPEN' | translate}}</button>
+			<button type="submit" class="btn-outline primary" [disabled]="!fileToOpen || fileToOpen.type !== 'application/json'">{{'POPUP.OPEN.OPEN' | translate}}</button>
 		</div>
 	</form>
 </div>

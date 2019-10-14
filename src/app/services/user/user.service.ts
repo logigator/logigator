@@ -77,7 +77,7 @@ export class UserService {
 	// #!endif
 
 	public get isLoggedIn(): boolean {
-		if (this.electronService.isElectronApp) {
+		if (this.electronService.isElectronApp && this.electronService.remote.getGlobal('isLoggedIn')) {
 			return this.electronService.remote.getGlobal('isLoggedIn').data === 'true';
 		}
 		const isLoggedIn = this.document.cookie.match('(^|[^;]+)\\s*' + 'isLoggedIn' + '\\s*=\\s*([^;]+)');
