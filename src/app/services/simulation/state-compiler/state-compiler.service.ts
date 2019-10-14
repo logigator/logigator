@@ -56,7 +56,8 @@ export class StateCompilerService {
 		this._highestLinkId = 0;
 		this._currId = project.id;
 		this.initElemsOnLinks(project.id);
-		return [...this.compileInner(state).units.keys()];
+		const {units, replacements} = this.compileInner(state);
+		return [...units.keys()];
 	}
 
 	private initElemsOnLinks(id: number) {
@@ -130,11 +131,12 @@ export class StateCompilerService {
 		if (outerUnit)
 			plugsOnLinks = this.fillPlugsInLinksOnWireEnds(state, linksOnWireEnds, units, outerUnit);
 		const ret = this.calcAllLinks(state, units, linksOnWireEnds, compiledComp.connectedToPlug, plugsOnLinks);
-		const replacements = ret.replacements;
-		compiledComp.connectedToPlug = this.calcPlugConsForCache(units, replacements);
+		// this.doReplacements(units, ret.replacements);
+		// this.doElemOnLinksReplacements(this._currId, ret.replacements);
+		compiledComp.connectedToPlug = this.calcPlugConsForCache(units);
 		compiledComp.replacements = ret.replacementPos;
 		this.setUdcCache(state, compiledComp);
-		return replacements;
+		return ret.replacements;
 	}
 
 	private fillPlugsInLinksOnWireEnds(
@@ -167,12 +169,11 @@ export class StateCompilerService {
 		return out;
 	}
 
-	private calcPlugConsForCache(units: UnitToElement, replacements: Replacement):
+	private calcPlugConsForCache(units: UnitToElement):
 		ConnectedToPlugByIndex {
 
 		const connectedToPlug: ConnectedToPlugByIndex = new Map<number, CompPlugByIndex[]>();
 		let compIndex = 0;
-		this.doReplacements(units, replacements);
 		for (const unit of units.keys()) {
 			if (this.elementProvider.isPlugElement(unit.typeId)) {
 				const linkId = SimulationUnits.concatIO(unit)[0];
@@ -285,8 +286,6 @@ export class StateCompilerService {
 
 		const out: {linkId: number, index: number} = {linkId: undefined, index: undefined};
 		let linkId;
-		if (this._currId === 1001)
-			debugger
 		if (MapHelper.mapHas(linksOnWireEnds, connected)) {
 			linkId = MapHelper.mapGet(linksOnWireEnds, connected);
 		} else {
@@ -356,7 +355,6 @@ export class StateCompilerService {
 			coveredPoints.push({id: elem.id, pos});
 			if (setElems && !this._elemsOnConCache.find(e => e.component.id === elem.id))
 				this._elemsOnConCache.push({component: elem, wireIndex: Elements.wireEndIndex(elem, pos)});
-			// this.pushIfNonExistent(coveredPoints, {id: elem.id, pos});
 			if (elem.typeId === 0) {
 				const oppoPos = Elements.otherWirePos(elem, pos);
 				for (const otherPos of this.connectedToPos(state, oppoPos, false, coveredPoints)) {
@@ -397,18 +395,36 @@ export class StateCompilerService {
 		units.forEach((v, k) => {
 			otherUnits.set(k, v);
 		});
-		this.doReplacements(units, replacements);
+		this.doReplacements(otherUnits, replacements);
+		this.doElemOnLinksReplacements(this._currId, replacements);
 	}
 
-	private doReplacements(units: UnitToElement, replacements) {
+	private doReplacements(units: UnitToElement, replacements: Replacement) {
 		for (const u of units.keys()) {
-			for (const [from, to] of replacements) {
+			for (const [from, to] of replacements.entries()) {
 				[u.inputs, u.outputs].forEach(arr => {
 					for (let i = 0; i < arr.length; i++)
 						if (arr[i] === from)
 							arr[i] = to;
 				});
 			}
+		}
+	}
+
+	private doElemOnLinksReplacements(typeId: number, replacements: Replacement) {
+		const wireOnLinks = this._wiresOnLinks.get(typeId);
+		const wireEndsOnLinks = this._wireEndsOnLinks.get(typeId);
+		for (const [from, to] of replacements.entries()) {
+			[wireOnLinks, wireEndsOnLinks].forEach(map => {
+				if (map.has(from)) {
+					if (!map.has(to)) {
+						map.set(to, []);
+					}
+					// @ts-ignore
+					map.get(to).push(...map.get(from));
+					map.delete(from);
+				}
+			});
 		}
 	}
 
