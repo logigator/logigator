@@ -461,10 +461,10 @@ export class ProjectSaveManagementService {
 			window.history.pushState(null, null, '/');
 			return Promise.resolve(Project.empty());
 		}
-		return this.openProjectFromServer(id);
+		return this.openProjectFromServer(id, true);
 	}
 
-	private async openProjectFromServer(id: number): Promise<Project> {
+	public async openProjectFromServer(id: number, emptyProjectOnFailure: boolean): Promise<Project> {
 		this._projectSource = 'server';
 		if (this._cloudProjectCache.has(id))
 			return Promise.resolve(this.projectFromServerResponse(this._cloudProjectCache.get(id)));
@@ -479,7 +479,7 @@ export class ProjectSaveManagementService {
 			this.errorHandling.catchErrorOperatorDynamicMessage((err: any) => {
 				if (err.message === 'isComp') return 'Unable to open Component as Project';
 				return err.error.error.description;
-			}, Project.empty())
+			}, emptyProjectOnFailure ? Project.empty() : undefined)
 		).toPromise();
 	}
 
