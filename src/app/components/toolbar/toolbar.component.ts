@@ -66,11 +66,11 @@ export class ToolbarComponent {
 	}
 
 	public undo(): void {
-		this.projectInteraction.redoForCurrent();
+		this.projectInteraction.undoForCurrent();
 	}
 
 	public redo(): void {
-		this.projectInteraction.undoForCurrent();
+		this.projectInteraction.redoForCurrent();
 	}
 
 	public zoomIn() {

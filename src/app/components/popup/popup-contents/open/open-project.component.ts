@@ -37,13 +37,12 @@ export class OpenProjectComponent extends PopupContentComp implements OnInit {
 	}
 
 	public openServer(project: ProjectInfoResponse) {
-		// #!debug
-		window.open(`http://editor.logigator-local-dev.com/board/${project.pk_id}`, '_blank');
-		// #!production
-		window.open(`https://editor.logigator.com/board/${project.pk_id}`, '_blank');
+		this.projects.openProjectServer(Number(project.pk_id));
+		this.requestClose.emit();
 	}
 
 	public openFile() {
+		if (this.fileToOpen.type !== 'application/json') return;
 		const reader = new FileReader();
 		reader.readAsText(this.fileToOpen, 'UTF-8');
 		reader.onload = (event: any) => {

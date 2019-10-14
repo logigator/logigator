@@ -25,8 +25,6 @@ export class WorkAreaComponent extends WorkArea implements OnInit, OnDestroy {
 
 	private _allViews: Map<number, View>;
 
-	public activeView: View;
-
 	@ViewChild('pixiCanvasContainer', {static: true})
 	private _pixiCanvasContainer: ElementRef<HTMLDivElement>;
 
@@ -50,9 +48,9 @@ export class WorkAreaComponent extends WorkArea implements OnInit, OnDestroy {
 			this.initZoomPan(this._pixiCanvasContainer);
 			this.initPixi(this._pixiCanvasContainer, this.renderer2);
 			this._ticker.setTickerFunction(() => {
-				if (!this.activeView) return;
-				this.updateZoomPan(this.activeView);
-				this._pixiRenderer.render(this.activeView);
+				if (!this._activeView) return;
+				this.updateZoomPan(this._activeView);
+				this._pixiRenderer.render(this._activeView);
 			});
 
 			this.projectsService.onProjectOpened$.pipe(
@@ -87,6 +85,10 @@ export class WorkAreaComponent extends WorkArea implements OnInit, OnDestroy {
 		return this.workMode.currentWorkMode === 'simulation';
 	}
 
+	public get activeView(): View {
+		return this._activeView;
+	}
+
 	private isSimulationModeChanged(simulation: boolean) {
 		if (simulation) {
 			this.renderer2.setStyle(this._pixiCanvasContainer.nativeElement, 'width', '100%');
@@ -107,7 +109,7 @@ export class WorkAreaComponent extends WorkArea implements OnInit, OnDestroy {
 		const newView = new View(projectId, this._pixiCanvasContainer.nativeElement, this._ticker);
 		this.ngZone.run(() => {
 			this._allViews.set(projectId, newView);
-			this.activeView = newView;
+			this._activeView = newView;
 			this.projectsService.switchToProject(projectId);
 		});
 	}
@@ -117,7 +119,7 @@ export class WorkAreaComponent extends WorkArea implements OnInit, OnDestroy {
 	}
 
 	private onProjectSwitch(id: number) {
-		this.activeView = this._allViews.get(id);
+		this._activeView = this._allViews.get(id);
 		this._ticker.singleFrame();
 	}
 
@@ -130,12 +132,12 @@ export class WorkAreaComponent extends WorkArea implements OnInit, OnDestroy {
 	public closeView(id: number) {
 		const toClose = this._allViews.get(id);
 		this._allViews.delete(id);
-		if (toClose === this.activeView) {
+		if (toClose === this._activeView) {
 			const toSwitchTo = this._allViews.values().next().value;
 			if (toSwitchTo) {
 				this.switchToProject(toSwitchTo.projectId);
 			} else {
-				delete this.activeView;
+				delete this._activeView;
 			}
 		}
 		toClose.destroy();

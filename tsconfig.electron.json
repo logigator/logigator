@@ -1,0 +1,30 @@
+{
+	"compilerOptions": {
+		"baseUrl": "./electron",
+		"outDir": "./dist/electron",
+		"sourceMap": false,
+		"declaration": false,
+		"downlevelIteration": true,
+		"experimentalDecorators": true,
+		"module": "commonjs",
+		"moduleResolution": "node",
+		"importHelpers": true,
+		"target": "es5",
+		"typeRoots": [
+			"node_modules/@types"
+		],
+		"lib": [
+			"es2018"
+		]
+	},
+	"files": [
+		"./electron/main.ts"
+	],
+	"include": [
+		"./electron/**/*.ts"
+	],
+	"exclude": [
+		"node_modules",
+		"**/*.spec.ts"
+	]
+}

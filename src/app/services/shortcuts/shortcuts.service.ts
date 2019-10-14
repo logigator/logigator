@@ -11,6 +11,7 @@ import {NewComponentComponent} from '../../components/popup/popup-contents/new-c
 import {HttpClient} from '@angular/common/http';
 import {ErrorHandlingService} from '../error-handling/error-handling.service';
 import {UserService} from '../user/user.service';
+import {environment} from '../../../environments/environment';
 
 @Injectable({
 	providedIn: 'root'
@@ -56,7 +57,7 @@ export class ShortcutsService {
 			...this.shortcutMap,
 			...newConfig
 		};
-		this.http.post('/api/user/update', {
+		this.http.post(environment.apiPrefix + '/api/user/update', {
 			shortcuts: newConfig
 		}).pipe(
 			this.errorHandling.catchErrorOperator('Error while Saving Shortcuts', undefined)

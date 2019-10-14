@@ -1,8 +1,8 @@
-import { Injectable } from '@angular/core';
+import {Injectable, NgZone} from '@angular/core';
 import {Project} from '../../models/project';
 import {HttpResponseData} from '../../models/http-responses/http-response-data';
 import {OpenProjectResponse} from '../../models/http-responses/open-project-response';
-import {catchError, map} from 'rxjs/operators';
+import {catchError, filter, map} from 'rxjs/operators';
 import {ProjectModel} from '../../models/project-model';
 import * as PIXI from 'pixi.js';
 import {HttpClient} from '@angular/common/http';
@@ -20,6 +20,9 @@ import * as FileSaver from 'file-saver';
 import {ElementType} from '../../models/element-types/element-type';
 import {Observable} from 'rxjs';
 import {ProjectInfoResponse} from '../../models/http-responses/project-info-response';
+import {environment} from '../../../environments/environment';
+import {ElectronService} from 'ngx-electron';
+import {saveLocalFile} from './save-local-file';
 
 @Injectable({
 	providedIn: 'root'
@@ -34,8 +37,18 @@ export class ProjectSaveManagementService {
 		private http: HttpClient,
 		private elemProvService: ElementProviderService,
 		private user: UserService,
-		private errorHandling: ErrorHandlingService
-	) { }
+		private errorHandling: ErrorHandlingService,
+		private ngZone: NgZone,
+		private electronService: ElectronService
+	) {
+		this.ngZone.run(() => {
+			this.user.userLoginState$.pipe(
+				filter(state => state)
+			).subscribe(async () => {
+				this.elemProvService.setUserDefinedTypes(await this.getCustomElementsFromServer());
+			});
+		});
+	}
 
 	public async getProjectToOpenOnLoad(): Promise<Project> {
 		let project;
@@ -45,6 +58,7 @@ export class ProjectSaveManagementService {
 		} else if (location.pathname.startsWith('/share')) {
 			// open share
 		} else {
+			// #!web
 			window.history.pushState(null, null, '/');
 			project = Promise.resolve(Project.empty());
 			this.elemProvService.setUserDefinedTypes(await this.getCustomElementsFromServer());
@@ -57,7 +71,7 @@ export class ProjectSaveManagementService {
 	}
 
 	public getAllProjectsInfoFromServer(): Observable<ProjectInfoResponse[]> {
-		return this.http.get<HttpResponseData<ProjectInfoResponse[]>>('/api/project/get-all-projects-info').pipe(
+		return this.http.get<HttpResponseData<ProjectInfoResponse[]>>(environment.apiPrefix + '/api/project/get-all-projects-info').pipe(
 			this.errorHandling.catchErrorOperator('Unable to get Projects from Server', undefined),
 			map(r => r.result)
 		);
@@ -141,23 +155,24 @@ export class ProjectSaveManagementService {
 		let parsedFile: ProjectLocalFile;
 		try {
 			parsedFile = JSON.parse(content);
+			delete this._projectSource;
+			this.elemProvService.clearElementsFromFile();
+			parsedFile.components.forEach(c => {
+				this._componentsFromLocalFile.set(c.typeId, c);
+				this.elemProvService.addUserDefinedElement(c.type, c.typeId);
+			});
+			const mainModel = this.getProjectModelFromJson(parsedFile.mainProject.data as ProjectModelResponse);
+
+			// #!web
+			window.history.pushState(null, null, `/local/${parsedFile.mainProject.name}`);
+			return new Project(new ProjectState(mainModel), {
+				type: 'project',
+				name: parsedFile.mainProject.name,
+				id: parsedFile.mainProject.id
+			});
 		} catch (e) {
 			this.errorHandling.showErrorMessage('Invalid File');
-			return;
 		}
-		delete this._projectSource;
-		this.elemProvService.clearElementsFromFile();
-		parsedFile.components.forEach(c => {
-			this._componentsFromLocalFile.set(c.typeId, c);
-			this.elemProvService.addUserDefinedElement(c.type, c.typeId);
-		});
-		const mainModel = this.getProjectModelFromJson(parsedFile.mainProject.data as ProjectModelResponse);
-		window.history.pushState(null, null, `/local/${parsedFile.mainProject.name}`);
-		return new Project(new ProjectState(mainModel), {
-			type: 'project',
-			name: parsedFile.mainProject.name,
-			id: parsedFile.mainProject.id
-		});
 	}
 
 	public async exportToFile(allOpenProjects: Project[], name?: string) {
@@ -192,9 +207,8 @@ export class ProjectSaveManagementService {
 				} as ComponentLocalFile;
 			}) as ComponentLocalFile[]
 		};
-		const blob = new Blob([JSON.stringify(modelToSave, null, 2)], {type: 'application/json;charset=utf-8'});
-		FileSaver.saveAs(blob, `${name || mainProject.name}.json`);
-		this.errorHandling.showInfo('Exported Project and all needed Components');
+		if (await saveLocalFile(modelToSave, name || mainProject.name, this.electronService))
+			this.errorHandling.showInfo('Exported Project and all needed Components');
 	}
 
 	private async buildDependencyTree(
@@ -272,13 +286,15 @@ export class ProjectSaveManagementService {
 		this.elemProvService.clearElementsFromFile();
 		this._componentsFromLocalFile.clear();
 		await this.saveProjectsToServer(projectsToSave);
+
+		// #!web
 		window.history.pushState(null, null, `/board/${mainProjectId}`);
 		this.errorHandling.showInfo(`Saved Project ${mainProjToSave.name}`);
 		return mainProjToSave;
 	}
 
 	private async createProjectServer(name: string): Promise<number> {
-		return this.http.post<HttpResponseData<CreateProjectResponse>>('/api/project/create', {
+		return this.http.post<HttpResponseData<CreateProjectResponse>>(environment.apiPrefix + '/api/project/create', {
 			name,
 			isComponent: false
 		}).pipe(
@@ -316,7 +332,7 @@ export class ProjectSaveManagementService {
 		}
 		if (this._cloudProjectCache.has(id))
 			return Promise.resolve(this.componentFromServerResponse(this._cloudProjectCache.get(id)));
-		return this.http.get<HttpResponseData<OpenProjectResponse>>(`/api/project/open/${id}`).pipe(
+		return this.http.get<HttpResponseData<OpenProjectResponse>>(`${environment.apiPrefix}/api/project/open/${id}`).pipe(
 			map(response => this.componentFromServerResponse(response.result)),
 			this.errorHandling.catchErrorOperatorDynamicMessage((err: any) => {
 				if (err.message === 'isProj') return 'Unable to open Project as Component';
@@ -346,7 +362,7 @@ export class ProjectSaveManagementService {
 	}
 
 	private newCustomComponentOnServer(name: string, symbol: string, description: string = ''): Promise<number> {
-		return this.http.post<HttpResponseData<{id: number}>>('/api/project/create', {
+		return this.http.post<HttpResponseData<{id: number}>>(environment.apiPrefix + '/api/project/create', {
 			name,
 			isComponent: true,
 			symbol,
@@ -393,17 +409,16 @@ export class ProjectSaveManagementService {
 		}
 		const currentlyInCache = this._cloudProjectCache.get(project.id);
 		currentlyInCache.project.data = body.data;
-		return this.http.post<HttpResponseData<{success: boolean}>>(`/api/project/save/${project.id}`, body).pipe(
+		return this.http.post<HttpResponseData<{success: boolean}>>(`${environment.apiPrefix}/api/project/save/${project.id}`, body).pipe(
 			this.errorHandling.catchErrorOperator('Unable to save Component or Project on Server', undefined)
 		).toPromise();
 	}
 
 	private getCustomElementsFromServer(): Promise<Map<number, ElementType>> {
 		if (!this.user.isLoggedIn) {
-			this.errorHandling.showErrorMessage('Cannot get Components, Not logged in');
 			return Promise.resolve(new Map());
 		}
-		return this.http.get<HttpResponseData<ComponentInfoResponse[]>>('/api/project/get-all-components-info').pipe(
+		return this.http.get<HttpResponseData<ComponentInfoResponse[]>>(environment.apiPrefix + '/api/project/get-all-components-info').pipe(
 			map(data => {
 				const newElemTypes = new Map<number, ElementType>();
 				data.result.forEach(elem => {
@@ -441,19 +456,22 @@ export class ProjectSaveManagementService {
 		const id = this.getProjectIdToLoadFromUrl();
 		if (!id) {
 			this.errorHandling.showErrorMessage('Invalid Url');
+
+			// #!web
 			window.history.pushState(null, null, '/');
 			return Promise.resolve(Project.empty());
 		}
-		return this.openProjectFromServer(id);
+		return this.openProjectFromServer(id, true);
 	}
 
-	private async openProjectFromServer(id: number): Promise<Project> {
+	public async openProjectFromServer(id: number, emptyProjectOnFailure: boolean): Promise<Project> {
 		this._projectSource = 'server';
 		if (this._cloudProjectCache.has(id))
 			return Promise.resolve(this.projectFromServerResponse(this._cloudProjectCache.get(id)));
-		return this.http.get<HttpResponseData<OpenProjectResponse>>(`/api/project/open/${id}`).pipe(
+		return this.http.get<HttpResponseData<OpenProjectResponse>>(`${environment.apiPrefix}/api/project/open/${id}`).pipe(
 			map(response => this.projectFromServerResponse(response.result)),
 			catchError(err => {
+				// #!web
 				window.history.pushState(null, null, '/');
 				delete this._projectSource;
 				throw err;
@@ -461,7 +479,7 @@ export class ProjectSaveManagementService {
 			this.errorHandling.catchErrorOperatorDynamicMessage((err: any) => {
 				if (err.message === 'isComp') return 'Unable to open Component as Project';
 				return err.error.error.description;
-			}, Project.empty())
+			}, emptyProjectOnFailure ? Project.empty() : undefined)
 		).toPromise();
 	}
 

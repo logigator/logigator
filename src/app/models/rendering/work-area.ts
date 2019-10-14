@@ -21,6 +21,8 @@ export abstract class WorkArea {
 
 	protected _destroySubject = new Subject<any>();
 
+	protected _activeView: View;
+
 	protected initPixi(canvasContainer: ElementRef<HTMLDivElement>, renderer2: Renderer2) {
 		this.loadPixiFont();
 		this._pixiRenderer = new PIXI.Renderer({
@@ -39,6 +41,7 @@ export abstract class WorkArea {
 			takeUntil(this._destroySubject)
 		).subscribe(() => {
 			this._pixiRenderer.resize(canvasContainer.nativeElement.offsetWidth, canvasContainer.nativeElement.offsetHeight);
+			if (this._activeView) this._activeView.updateChunks();
 			this._ticker.singleFrame();
 		});
 	}

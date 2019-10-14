@@ -96,9 +96,7 @@ export class ProjectsService {
 	public async newProject() {
 		this.projectSaveManagementService.resetProjectSource();
 		const project = Project.empty();
-		for (const proj of this.allProjects.entries()) {
-			await this.closeProject(proj[0]);
-		}
+		await this.closeAllProjects();
 		this._projects.set(project.id, project);
 		this._currProject = project;
 		this._mainProject = project;
@@ -107,6 +105,16 @@ export class ProjectsService {
 
 	public async openFile(content: string) {
 		const project = this.projectSaveManagementService.openFromFile(content);
+		if (!project) return;
+		await this.closeAllProjects();
+		this._projects.set(project.id, project);
+		this._currProject = project;
+		this._mainProject = project;
+		this._projectOpenedSubject.next(project.id);
+	}
+
+	public async openProjectServer(id: number) {
+		const project = await this.projectSaveManagementService.openProjectFromServer(id, false);
 		if (!project) return;
 		await this.closeAllProjects();
 		this._projects.set(project.id, project);

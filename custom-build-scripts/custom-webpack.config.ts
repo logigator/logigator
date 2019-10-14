@@ -9,12 +9,24 @@ module.exports = (config, options) => {
 		]
 	});
 	config.module.rules.push({
+		test:  /\.scss$|\.sass$/,
+		use: [
+			preprocessorConfig
+		]
+	});
+	config.module.rules.push({
 		test: /\.html?$/,
 		use: [
 			'html-loader',
 			preprocessorConfig
 		]
 	});
+
+	if (process.env.ELECTRON === 'true') {
+		config.target = 'electron-renderer';
+	} else {
+		config.target = 'web';
+	}
 
 	const angularCompilerPlugin = findAngularCompilerPlugin(config);
 	if (!angularCompilerPlugin) {
@@ -35,7 +47,8 @@ const preprocessorConfig = {
 		debug:  process.env.DEBUG === 'true',
 		directives: {
 			production:  process.env.DEBUG === 'false',
-			electron: process.env.ELECTRON === 'true'
+			electron: process.env.ELECTRON === 'true',
+			web: process.env.ELECTRON === 'false'
 		},
 		params: {
 			ELECTRON: process.env.ELECTRON,
