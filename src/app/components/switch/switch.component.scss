@@ -17,7 +17,7 @@
 		height: calc(1.5rem - 4px);
 		border-radius: 50%;
 		position: relative;
-		left: 0;
+		left: 1.5rem;
 		transition: left 100ms;
 		@include themify() {
 			background-color: themed('primary');
@@ -26,7 +26,7 @@
 
 	&.off {
 		.bubble {
-			left: 1.5rem;
+			left: 0;
 			@include themify() {
 				background-color: themed('error');
 			}

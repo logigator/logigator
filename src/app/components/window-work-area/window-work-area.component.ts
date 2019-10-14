@@ -49,8 +49,6 @@ export class WindowWorkAreaComponent extends WorkArea implements OnInit, OnDestr
 	@ViewChild('header', {static: true})
 	private _header: ElementRef<HTMLDivElement>;
 
-	private _view: View;
-
 	public componentName: string;
 
 	private _currentlyDragging: Border;
@@ -98,9 +96,9 @@ export class WindowWorkAreaComponent extends WorkArea implements OnInit, OnDestr
 			this.initZoomPan(this._pixiCanvasContainer);
 			this.initPixi(this._pixiCanvasContainer, this.renderer2);
 			this._ticker.setTickerFunction(() => {
-				if (!this._view) return;
-				this.updateZoomPan(this._view);
-				this._pixiRenderer.render(this._view);
+				if (!this._activeView) return;
+				this.updateZoomPan(this._activeView);
+				this._pixiRenderer.render(this._activeView);
 			});
 
 			fromEvent(window, 'mousemove').pipe(
@@ -139,7 +137,7 @@ export class WindowWorkAreaComponent extends WorkArea implements OnInit, OnDestr
 	}
 
 	private openProject(projectId: number) {
-		this._view = new View(projectId, this._pixiCanvasContainer.nativeElement, this._ticker, true);
+		this._activeView = new View(projectId, this._pixiCanvasContainer.nativeElement, this._ticker, true);
 		this.componentName = this.projects.allProjects.get(projectId).id.toString();
 	}
 
@@ -207,7 +205,7 @@ export class WindowWorkAreaComponent extends WorkArea implements OnInit, OnDestr
 						this.renderer2.setStyle(this._popup.nativeElement, 'width', this._popup.nativeElement.offsetWidth - changeX + 'px');
 					}
 					this._pixiRenderer.resize(this._pixiCanvasContainer.nativeElement.offsetWidth, this._pixiCanvasContainer.nativeElement.offsetHeight);
-					this._view.updateChunks();
+					this._activeView.updateChunks();
 					break;
 				case 'top-right':
 					if (!this.collision_top(newY, changeY)) {
@@ -218,7 +216,7 @@ export class WindowWorkAreaComponent extends WorkArea implements OnInit, OnDestr
 						this.renderer2.setStyle(this._popup.nativeElement, 'width', this._popup.nativeElement.offsetWidth + changeX + 'px');
 					}
 					this._pixiRenderer.resize(this._pixiCanvasContainer.nativeElement.offsetWidth, this._pixiCanvasContainer.nativeElement.offsetHeight);
-					this._view.updateChunks();
+					this._activeView.updateChunks();
 					break;
 				case 'bottom-left':
 					if (!this.collision_bottom(newY, changeY)) {
@@ -229,7 +227,7 @@ export class WindowWorkAreaComponent extends WorkArea implements OnInit, OnDestr
 						this.renderer2.setStyle(this._popup.nativeElement, 'width', this._popup.nativeElement.offsetWidth - changeX + 'px');
 					}
 					this._pixiRenderer.resize(this._pixiCanvasContainer.nativeElement.offsetWidth, this._pixiCanvasContainer.nativeElement.offsetHeight);
-					this._view.updateChunks();
+					this._activeView.updateChunks();
 					break;
 				case 'bottom-right':
 					if (!this.collision_bottom(newY, changeY)) {
@@ -239,28 +237,28 @@ export class WindowWorkAreaComponent extends WorkArea implements OnInit, OnDestr
 						this.renderer2.setStyle(this._popup.nativeElement, 'width', this._popup.nativeElement.offsetWidth + changeX + 'px');
 					}
 					this._pixiRenderer.resize(this._pixiCanvasContainer.nativeElement.offsetWidth, this._pixiCanvasContainer.nativeElement.offsetHeight);
-					this._view.updateChunks();
+					this._activeView.updateChunks();
 					break;
 				case 'top':
 					if (!this.collision_top(newY, changeY)) {
 						this.renderer2.setStyle(this._popup.nativeElement, 'top', newY + 'px');
 						this.renderer2.setStyle(this._popup.nativeElement, 'height', this._popup.nativeElement.offsetHeight - changeY + 'px');
 						this._pixiRenderer.resize(this._pixiCanvasContainer.nativeElement.offsetWidth, this._pixiCanvasContainer.nativeElement.offsetHeight);
-						this._view.updateChunks();
+						this._activeView.updateChunks();
 					}
 					break;
 				case 'right':
 					if (!this.collision_right(newX, changeX)) {
 						this.renderer2.setStyle(this._popup.nativeElement, 'width', this._popup.nativeElement.offsetWidth + changeX + 'px');
 						this._pixiRenderer.resize(this._pixiCanvasContainer.nativeElement.offsetWidth, this._pixiCanvasContainer.nativeElement.offsetHeight);
-						this._view.updateChunks();
+						this._activeView.updateChunks();
 					}
 					break;
 				case 'bottom':
 					if (!this.collision_bottom(newY, changeY)) {
 						this.renderer2.setStyle(this._popup.nativeElement, 'height', this._popup.nativeElement.offsetHeight + changeY + 'px');
 						this._pixiRenderer.resize(this._pixiCanvasContainer.nativeElement.offsetWidth, this._pixiCanvasContainer.nativeElement.offsetHeight);
-						this._view.updateChunks();
+						this._activeView.updateChunks();
 					}
 					break;
 				case 'left':
@@ -268,7 +266,7 @@ export class WindowWorkAreaComponent extends WorkArea implements OnInit, OnDestr
 						this.renderer2.setStyle(this._popup.nativeElement, 'left', newX + 'px');
 						this.renderer2.setStyle(this._popup.nativeElement, 'width', this._popup.nativeElement.offsetWidth - changeX + 'px');
 						this._pixiRenderer.resize(this._pixiCanvasContainer.nativeElement.offsetWidth, this._pixiCanvasContainer.nativeElement.offsetHeight);
-						this._view.updateChunks();
+						this._activeView.updateChunks();
 					}
 					break;
 			}
@@ -313,8 +311,8 @@ export class WindowWorkAreaComponent extends WorkArea implements OnInit, OnDestr
 
 	public hide() {
 		this.renderer2.setStyle(this._popup.nativeElement, 'display', 'none');
-		this._view.destroy();
-		delete this._view;
+		this._activeView.destroy();
+		delete this._activeView;
 	}
 
 	public show() {
@@ -322,7 +320,7 @@ export class WindowWorkAreaComponent extends WorkArea implements OnInit, OnDestr
 		this._pixiRenderer.resize(this._pixiCanvasContainer.nativeElement.offsetWidth, this._pixiCanvasContainer.nativeElement.offsetHeight);
 		this.ngZone.runOutsideAngular(() => this._ticker.singleFrame());
 		this.openProject(this.projectIdToOpen);
-		this._view.updateChunks();
+		this._activeView.updateChunks();
 	}
 
 	ngOnDestroy(): void {
