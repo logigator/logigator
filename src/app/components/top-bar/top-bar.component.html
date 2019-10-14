@@ -34,6 +34,10 @@
 	</div>
 
 	<div class="top-bar-end">
+
+		<!-- #!electron -->
+		<p class="electron-project-name">{{mainProjectName}}</p>
+
 		<div class="login-register">
 			<ng-container *ngIf="userInfo$ | async as userInfo; else loginRegister">
 				<p>{{userInfo.user.username}}</p>

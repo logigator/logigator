@@ -34,6 +34,7 @@
 
 	// #!if ELECTRON === 'true'
 	img {
+		-webkit-app-region: drag;
 		height: 50%;
 		align-self: center;
 		margin: 0 0.5rem 0 0.5rem;
@@ -106,6 +107,14 @@
 		display: flex;
 		flex-direction: row;
 		justify-content: flex-end;
+
+		.electron-project-name {
+			height: 100%;
+			margin: 0;
+			text-align: center;
+			flex-grow: 1;
+			line-height: $top-bar-height;
+		}
 
 		.login-register {
 			display: flex;
