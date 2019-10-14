@@ -23,8 +23,11 @@ Module.onRuntimeInitialized = () => {
 addEventListener('message', ({ data }: {data: WasmRequest}) => {
 	if (!initialized)
 		postMessage({
+			method: data.method,
+			success: false,
+			state: new Int8Array(0),
 			error: 'WebAssembly not initialized yet.'
-		});
+		} as WasmResponse);
 
 	console.log(data);
 	let error: string;
@@ -62,7 +65,8 @@ addEventListener('message', ({ data }: {data: WasmRequest}) => {
 			} as WasmResponse);
 			return;
 		default:
-			return;
+			error = 'Method not found.';
+			break;
 	}
 
 	if (error)
