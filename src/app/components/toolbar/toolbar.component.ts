@@ -39,6 +39,8 @@ export class ToolbarComponent implements OnInit {
 		// }
 		console.log(Date.now() - start);
 		// this.projectService.currProject.stepBack();
+		console.log(this.stateCompiler.wiresOnLinks);
+		console.log(this.stateCompiler.wireEndsOnLinks);
 	}
 
 	public redo(): void {

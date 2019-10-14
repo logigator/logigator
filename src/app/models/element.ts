@@ -167,4 +167,14 @@ export abstract class Elements {
 			}
 		}
 	}
+
+	public static wireEndIndex(element: Element, pos: PIXI.Point): number {
+		const wireEnds = this.wireEnds(element);
+		for (let i = 0; i < wireEnds.length; i++) {
+			if (wireEnds[i].equals(pos)) {
+				return i;
+			}
+		}
+		return -1;
+	}
 }

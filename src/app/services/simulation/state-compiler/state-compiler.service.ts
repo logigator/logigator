@@ -30,7 +30,7 @@ export class StateCompilerService {
 	private _udcCache: Map<ProjectState, CompiledComp> = new Map<ProjectState, CompiledComp>();
 
 	private _currId: number;
-	private _elemsOnConCache: Element[] = [];
+	private _elemsOnConCache: WireEndOnComp[] = [];
 
 	constructor(
 		private elementProvider: ElementProviderService,
@@ -285,22 +285,23 @@ export class StateCompilerService {
 
 		const out: {linkId: number, index: number} = {linkId: undefined, index: undefined};
 		let linkId;
+		if (this._currId === 1001)
+			debugger
 		if (MapHelper.mapHas(linksOnWireEnds, connected)) {
 			linkId = MapHelper.mapGet(linksOnWireEnds, connected);
 		} else {
 			linkId = ++this._highestLinkId;
+		}
+		if (!this._wiresOnLinks.get(this._currId).has(linkId)) {
 			this._wiresOnLinks.get(this._currId).set(linkId, []);
 			this._wireEndsOnLinks.get(this._currId).set(linkId, []);
 		}
-		this._elemsOnConCache.forEach(elem => {
-			if (elem.typeId === 0) {
-				if (!this._wiresOnLinks.get(this._currId).get(linkId).find(e => e.id === elem.id))
-					this._wiresOnLinks.get(this._currId).get(linkId).push(elem);
+		this._elemsOnConCache.forEach(wireEndComp => {
+			if (wireEndComp.component.typeId === 0) {
+				if (!this._wiresOnLinks.get(this._currId).get(linkId).find(e => e.id === wireEndComp.component.id))
+					this._wiresOnLinks.get(this._currId).get(linkId).push(wireEndComp.component);
 			} else {
-				this._wireEndsOnLinks.get(this._currId).get(linkId).push({
-					component: elem,
-					wireIndex: wireEndIndex
-				});
+				this._wireEndsOnLinks.get(this._currId).get(linkId).push(wireEndComp);
 			}
 		});
 		linksOnWireEnds.set(connected, linkId);
@@ -353,8 +354,8 @@ export class StateCompilerService {
 			if (coveredPoints.find(p => p.id === elem.id && p.pos.equals(pos)))
 				continue;
 			coveredPoints.push({id: elem.id, pos});
-			if (setElems && !this._elemsOnConCache.find(e => e.id === elem.id))
-				this._elemsOnConCache.push(elem);
+			if (setElems && !this._elemsOnConCache.find(e => e.component.id === elem.id))
+				this._elemsOnConCache.push({component: elem, wireIndex: Elements.wireEndIndex(elem, pos)});
 			// this.pushIfNonExistent(coveredPoints, {id: elem.id, pos});
 			if (elem.typeId === 0) {
 				const oppoPos = Elements.otherWirePos(elem, pos);
@@ -389,6 +390,8 @@ export class StateCompilerService {
 		const unitsState = this.projects.getProjectById(outerUnit.typeId).currState;
 		const typeId = this._currId;
 		this._currId = outerUnit.typeId;
+		this._wiresOnLinks.set(outerUnit.typeId, new Map<number, Element[]>());
+		this._wireEndsOnLinks.set(outerUnit.typeId, new Map<number, WireEndOnComp[]>());
 		const {units, replacements} = this.compileInner(unitsState, outerUnit);
 		this._currId = typeId;
 		units.forEach((v, k) => {
