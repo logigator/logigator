@@ -38,14 +38,26 @@ export class ElementProviderService {
 		[21, lever]
 	]);
 
-	private _userDefinedElements: Map<number, ElementType> = new Map<number, ElementType>();
+	private _userDefinedElements: Map<number, ElementType> = new Map<number, ElementType>([
+		[1001, {
+			name: 'mycomp',
+			category: 'user',
+			numInputs: 2,
+			numOutputs: 1,
+			description: 'descr',
+			maxInputs: 2,
+			minInputs: 2,
+			rotation: 0,
+			symbol: 'my'
+		}]
+	]);
 
 	constructor(private errorHandler: ErrorHandlingService) {
 		ElementProviderService.staticInstance = this;
 	}
 
 	public setUserDefinedTypes(elements: Map<number, ElementType>) {
-		this._userDefinedElements = elements;
+		// this._userDefinedElements = elements;
 	}
 
 	public addUserDefinedElement(element: ElementType, id: number) {

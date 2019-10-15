@@ -368,6 +368,17 @@ export class ProjectState {
 		return outWires;
 	}
 
+	public componentsOnPoint(pos: PIXI.Point): Element[] {
+		const chunkX = CollisionFunctions.gridPosToChunk(pos.x);
+		const chunkY = CollisionFunctions.gridPosToChunk(pos.y);
+		const outWires: Element[] = [];
+		for (const elem of this.elementsInChunk(chunkX, chunkY)) {
+			if (elem.typeId !== 0 && CollisionFunctions.isPointOnWire(elem, pos))
+				outWires.push(elem);
+		}
+		return outWires;
+	}
+
 	public wireEndsOnPoint(pos: PIXI.Point): Element[] {
 		const chunkX = CollisionFunctions.gridPosToChunk(pos.x);
 		const chunkY = CollisionFunctions.gridPosToChunk(pos.y);

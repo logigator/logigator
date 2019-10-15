@@ -43,13 +43,15 @@ export class Project {
 		this.boardRecorder = new BoardRecorder(this, true);
 	}
 
-	public static empty(): Project {
+	public static empty(name?: string): Project {
 		return new Project(new ProjectState(), {
 			type: 'project',
-			name: 'NewProject',
+			name: name || 'New Project',
 			id: 0
 		});
 	}
+
+
 
 	private applyActions(actions: Action[]): void {
 		actions.forEach(action => this.applyAction(action));
@@ -436,6 +438,10 @@ export class Project {
 
 	get type(): 'project' | 'comp' {
 		return this._type;
+	}
+
+	set type(value: 'project' | 'comp') {
+		this._type = value;
 	}
 
 	get numInputs() {

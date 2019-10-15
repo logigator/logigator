@@ -17,4 +17,16 @@ export abstract class SimulationUnits {
 				outputs: new Array(element.numOutputs)
 			};
 	}
+
+	public static clone(unit: SimulationUnit): SimulationUnit {
+		return {
+			typeId: unit.typeId,
+			inputs: [...unit.inputs],
+			outputs: [...unit.outputs]
+		};
+	}
+
+	public static concatIO(unit: SimulationUnit): number[] {
+		return unit.inputs.concat(unit.outputs);
+	}
 }
