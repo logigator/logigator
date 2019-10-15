@@ -1,0 +1,69 @@
+@import "themes";
+
+.open {
+	margin: 1rem 1.5rem;
+	width: 30rem;
+
+	.open-server {
+		table {
+			width: 30rem;
+			text-align: left;
+			table-layout: fixed;
+
+			tbody {
+				@include scrollbar(4px);
+				display: block;
+				width: 30rem;
+				overflow: auto;
+				max-height: 50vh;
+			}
+
+			tr {
+				height: 2.5rem;
+			}
+
+			.name {
+				width: 40%;
+			}
+
+			.last-edit {
+				width: 40%;
+			}
+
+			.open {
+				width: 12%;
+				text-align: center;
+
+				button {
+					height: 2rem;
+				}
+			}
+		}
+	}
+
+	.file-upload-row {
+		width: 100%;
+		display: flex;
+		align-items: center;
+		flex-direction: row;
+		justify-content: space-between;
+
+		.file-upload {
+			display: flex;
+			flex-direction: row;
+			align-items: center;
+
+			input[type="file"] {
+				display: none;
+			}
+			.file-upload-label {
+				display: inline-block;
+			}
+
+			p {
+				margin: 0 0.5rem;
+				word-break: break-word;
+			}
+		}
+	}
+}

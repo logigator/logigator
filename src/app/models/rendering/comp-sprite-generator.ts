@@ -41,18 +41,24 @@ export class CompSpriteGenerator {
 
 		const text = new PIXI.BitmapText(symbol, {
 			font: {
-				name: 'Louis George Café',
+				name: 'Nunito',
 				size: environment.gridPixelWidth + 4
 			},
 			tint: ThemingService.staticInstance.getEditorColor('fontTint')
 		});
 
-		text.position.x = (width / 2) - 5;
-		text.position.y = (height / 2) - 13;
+		text.anchor = 0.5;
+		text.position.x = width / 2;
+		text.position.y = height / 2;
 
 		graphics.addChild(text);
 
 		return graphics;
+	}
+
+	private static calcFontSize(length: number): number {
+		if (length <= 2) return environment.gridPixelWidth + 3;
+		return environment.gridPixelWidth / 1.2;
 	}
 
 	// tslint:disable-next-line:max-line-length

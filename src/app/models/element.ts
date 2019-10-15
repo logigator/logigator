@@ -38,6 +38,22 @@ export abstract class Elements {
 		return out;
 	}
 
+	public static equals(elem0: Element, elem1: Element): boolean {
+		for (const k in elem0) {
+			if (k === 'id' || k === 'plugIndex') continue;
+			if (elem0[k] && elem0[k].x !== undefined && elem0[k].y !== undefined) {
+				if (!(elem0[k].x === elem1[k].x && elem0[k].y === elem1[k].y))
+					return false;
+			} else {
+				const v0 = elem0[k] === undefined || elem0[k] === null ? undefined : elem0[k];
+				const v1 = elem1[k] === undefined || elem1[k] === null ? undefined : elem1[k];
+				if (v0 !== v1)
+					return false;
+			}
+		}
+		return true;
+	}
+
 	public static move(element: Element, dif: PIXI.Point): void {
 		element.pos.x += dif.x;
 		element.pos.y += dif.y;
@@ -72,7 +88,7 @@ export abstract class Elements {
 	}
 
 	public static calcEndPos(pos: PIXI.Point, numInputs: number, numOutputs: number, rotation?: number): PIXI.Point {
-		if (rotation === undefined) rotation = 0;
+		if (rotation === undefined || rotation === null) rotation = 0;
 		if (rotation % 2 === 0) {
 			return new PIXI.Point(pos.x + environment.componentWidth,
 				pos.y + Math.max(numInputs, numOutputs));

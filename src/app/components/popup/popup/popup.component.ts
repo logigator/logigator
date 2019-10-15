@@ -1,20 +1,23 @@
 import {
-	Component, ComponentFactory,
+	ChangeDetectionStrategy,
+	Component,
+	ComponentFactory,
 	ElementRef,
 	EventEmitter,
 	HostListener,
 	Input,
 	OnInit,
 	Output,
-	TemplateRef,
-	ViewChild, ViewContainerRef
+	ViewChild,
+	ViewContainerRef
 } from '@angular/core';
 import {PopupContentComp} from '../popup-contents/popup-content-comp';
 
 @Component({
 	selector: 'app-popup',
 	templateUrl: './popup.component.html',
-	styleUrls: ['./popup.component.scss']
+	styleUrls: ['./popup.component.scss'],
+	changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class PopupComponent implements OnInit {
 
@@ -26,6 +29,9 @@ export class PopupComponent implements OnInit {
 
 	@Input()
 	public contentComp: ComponentFactory<PopupContentComp>;
+
+	@Input()
+	public contentCompInput: any;
 
 	@Input()
 	public closeOnClickOutside: boolean;
@@ -45,9 +51,10 @@ export class PopupComponent implements OnInit {
 
 	ngOnInit() {
 		const contentComp = this._viewContRef.createComponent(this.contentComp);
-		const subscription = contentComp.instance.requestClose.subscribe(() => {
+		contentComp.instance.inputFromOpener = this.contentCompInput;
+		const subscription = contentComp.instance.requestClose.subscribe(output => {
 			subscription.unsubscribe();
-			this.requestClose.emit();
+			this.requestClose.emit(output);
 		});
 	}
 

@@ -21,12 +21,12 @@ export type ShortcutMap =  {
 };
 
 export interface ShortcutConfig {
-	key: string;
+	key_code: string;
 	alt?: boolean;
 	ctrl?: boolean;
 	shift?: boolean;
 }
 
-export type ShortcutDescriptionMap = {
-	[A in ShortcutAction]: string;
+export type ShortcutUsableInSimulationMap = {
+	[A in ShortcutAction]: boolean;
 };

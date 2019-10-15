@@ -1,21 +1,24 @@
 <div class="dropdown">
 	<div (click)="newProject()">
-		New Project
+		{{'DROPDOWN.FILE.NEW_PROJECT' | translate}}
 	</div>
 	<div (click)="newComponent()">
-		New Component
+		{{'DROPDOWN.FILE.NEW_COMPONENT' | translate}}
 		<span>{{'newComp' | shortcutText}}</span>
 	</div>
 	<hr>
 	<div (click)="openProject()">
-		Open
+		{{'DROPDOWN.FILE.OPEN' | translate}}
 	</div>
 	<div (click)="saveProject()">
-		Save
+		{{'DROPDOWN.FILE.SAVE' | translate}}
 		<span>{{'save' | shortcutText}}</span>
+	</div>
+	<div (click)="exportProject()">
+		{{'DROPDOWN.FILE.EXPORT' | translate}}
 	</div>
 	<hr>
 	<div (click)="screenshot()">
-		Screenshot
+		{{'DROPDOWN.FILE.SCREENSHOT' | translate}}
 	</div>
 </div>

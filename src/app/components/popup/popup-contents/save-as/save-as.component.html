@@ -1,0 +1,6 @@
+<div>
+	<app-input [label]="'POPUP.SAVE.NAME' | translate" [(ngModel)]="projectName"></app-input>
+
+	<button class="btn-raised primary" (click)="exportProject()">{{'POPUP.SAVE.DOWNLOAD' | translate}}</button>
+	<button class="btn-raised primary" (click)="saveToServer()" *ngIf="isLoggedIn">{{'POPUP.SAVE.CLOUD' | translate}}</button>
+</div>

@@ -20,8 +20,25 @@ import { PopupComponent } from './components/popup/popup/popup.component';
 import { SingleShortcutConfigComponent } from './components/popup/popup-contents/shortcut-config/single-shortcut-config/single-shortcut-config.component';
 import { ShortcutConfigComponent } from './components/popup/popup-contents/shortcut-config/shortcut-config/shortcut-config.component';
 import { WindowWorkAreaComponent } from './components/window-work-area/window-work-area.component';
-import {HttpClientModule} from '@angular/common/http';
+import {HttpClient, HttpClientModule} from '@angular/common/http';
 import { ReloadQuestionComponent } from './components/popup/popup-contents/relaod-question/reload-question.component';
+import { NewComponentComponent } from './components/popup/popup-contents/new-component/new-component.component';
+import { OpenProjectComponent } from './components/popup/popup-contents/open/open-project.component';
+import { SaveAsComponent } from './components/popup/popup-contents/save-as/save-as.component';
+import {ToastrModule} from 'ngx-toastr';
+import {BrowserAnimationsModule} from '@angular/platform-browser/animations';
+import {MissingTranslationHandler, TranslateLoader, TranslateModule} from '@ngx-translate/core';
+import {createTranslateLoader} from './models/translation/translation-loader-factory';
+import {AppMissingTranslationHandler} from './models/translation/missing-translation-handler';
+import { OutsideNgZoneEventDirective } from './directives/outside-ng-zone-event/outside-ng-zone-event.directive';
+import { SwitchComponent } from './components/switch/switch.component';
+import { UnsavedChangesComponent } from './components/popup/popup-contents/unsaved-changes/unsaved-changes.component';
+import { InputComponent } from './components/input/input.component';
+import { NgxElectronModule } from 'ngx-electron';
+// #!electron
+import { LoginComponent } from './components/popup/popup-contents/login/login.component';
+// #!electron
+import { RegisterComponent } from './components/popup/popup-contents/register/register.component';
 
 @NgModule({
 	declarations: [
@@ -43,18 +60,56 @@ import { ReloadQuestionComponent } from './components/popup/popup-contents/relao
 		ShortcutConfigComponent,
 		PopupComponent,
 		WindowWorkAreaComponent,
-		ReloadQuestionComponent
+		ReloadQuestionComponent,
+		NewComponentComponent,
+		OpenProjectComponent,
+		SaveAsComponent,
+		OutsideNgZoneEventDirective,
+		SwitchComponent,
+		UnsavedChangesComponent,
+		InputComponent,
+		// #!electron
+		LoginComponent,
+		// #!electron
+		RegisterComponent
 	],
 	entryComponents: [
 		PopupComponent,
 		ShortcutConfigComponent,
-		ReloadQuestionComponent
+		ReloadQuestionComponent,
+		NewComponentComponent,
+		OpenProjectComponent,
+		SaveAsComponent,
+		UnsavedChangesComponent,
+		// #!electron
+		LoginComponent,
+		// #!electron
+		RegisterComponent
 	],
 	imports: [
+		NgxElectronModule,
 		BrowserModule,
 		FormsModule,
 		HttpClientModule,
-		ReactiveFormsModule
+		ReactiveFormsModule,
+		BrowserAnimationsModule,
+		ToastrModule.forRoot({
+			positionClass: 'toastr-position',
+			easeTime: 100,
+			timeOut: 5000,
+			tapToDismiss: true
+		}),
+		TranslateModule.forRoot({
+			loader: {
+				provide: TranslateLoader,
+				useFactory: createTranslateLoader,
+				deps: [HttpClient]
+			},
+			missingTranslationHandler: {
+				provide: MissingTranslationHandler,
+				useClass: AppMissingTranslationHandler
+			}
+		})
 	],
 	providers: [],
 	bootstrap: [AppComponent]

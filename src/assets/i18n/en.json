@@ -1,0 +1,172 @@
+{
+	"LANGUAGE": {
+		"DE": "German",
+		"EN": "English"
+	},
+	"DROPDOWN": {
+		"FILE": {
+			"TITLE": "File",
+			"NEW_PROJECT": "New Project",
+			"NEW_COMPONENT": "New Component",
+			"OPEN": "Open",
+			"SAVE": "Save",
+			"EXPORT": "Export to file",
+			"SCREENSHOT": "Screenshot"
+		},
+		"EDIT": {
+			"TITLE": "Edit",
+			"UNDO": "Undo",
+			"REDO": "Redo",
+			"COPY": "Copy",
+			"PASTE": "Paste",
+			"CUT": "Cut",
+			"DELETE": "Delete"
+		},
+		"VIEW": {
+			"TITLE": "View",
+			"ZOOM_IN": "Zoom in",
+			"ZOOM_OUT": "Zoom out",
+			"100": "100%",
+			"FULLSCREEN": "Fullscreen"
+		},
+		"HELP": {
+			"TITLE": "Help"
+		},
+		"SETTINGS": {
+			"DARK_MODE": "Dark Mode",
+			"SHOW_GRID": "Show Grid",
+			"LANGUAGE": "Language",
+			"SHORTCUTS": "Customize Shortcuts",
+			"ACCOUNT": "Account Settings",
+			"LOGOUT": "Logout"
+		}
+	},
+	"TOOLBAR": {
+		"START_SIM": "Start Simulation",
+		"EXIT_SIM": "Exit Simulation"
+	},
+	"TOP_BAR": {
+		"LOGIN": "Login",
+		"REGISTER": "Register"
+	},
+	"CONST_BOX": {
+		"SEARCH": "Search",
+		"CATEGORIES": {
+			"BASIC": "Basic Components",
+			"IO": "IO Components",
+			"PLUG": "Plug Components",
+			"USER": "User Defined"
+		}
+	},
+	"POPUP": {
+		"NEW_COMP": {
+			"TITLE": "New Component",
+			"NAME": "Name",
+			"SYMBOL": "Symbol",
+			"CREATE": "CREATE"
+		},
+		"SAVE": {
+			"TITLE": "Save Project",
+			"NAME": "Name",
+			"DOWNLOAD": "DOWNLOAD FILE",
+			"CLOUD": "SAVE IN CLOUD"
+		},
+		"OPEN": {
+			"TITLE": "Open Project",
+			"OPEN": "OPEN",
+			"UPLOAD": "Upload File",
+			"TABLE_OPEN": "Open",
+			"TABLE_EDITED": "Last edited",
+			"TABLE_NAME": "Name",
+			"OPEN_FILE": "Open from File",
+			"OPEN_CLOUD": "Open from Cloud"
+		},
+		"RELOAD": {
+			"TITLE": "Reload Required",
+			"QUESTION": "For this change to take effect, the editor has to be reloaded.<br>Do you want to reload this page now?",
+			"YES": "YES",
+			"POSTPONE": "RELOAD LATER",
+			"CANCEL": "CANCEL"
+		},
+		"SHORTCUTS": {
+			"TITLE": "Customize Shortcuts",
+			"SAVE": "SAVE",
+			"DESCRIPTION": {
+				"copy": "Copy",
+				"paste": "Paste",
+				"cut": "Cut",
+				"delete": "Delete selected items",
+				"undo": "Undo",
+				"redo": "Redo",
+				"zoom100": "Zoom to 100%",
+				"zoomIn": "Zoom in",
+				"zoomOut": "Zoom out",
+				"fullscreen": "enter fullscreen mode",
+				"connWireMode": "Connect wires mode",
+				"wireMode": "Place wires mode",
+				"selectMode": "selection mode",
+				"newComp": "Create new custom component",
+				"textMode": "text mode",
+				"save": "Save"
+			}
+		},
+		"UNSAVED_CHANGES": {
+			"TITLE": "Unsaved Changes",
+			"QUESTION": "The current project has unsaved changes, by opening another project, these changes will be lost!",
+			"OK": "CONTINUE ANYWAYS",
+			"CANCEL": "CANCEL"
+		}
+	},
+	"SETTINGS_INFO": {
+		"INPUTS": "Inputs",
+		"DIRECTION": "Direction",
+		"DIRECTIONS": {
+			"LEFT": "Left",
+			"DOWN": "Down",
+			"UP": "Up",
+			"RIGHT": "Right"
+		},
+		"DESCRIPTION": "Description",
+		"EDIT": "Edit"
+	},
+	"ELEMENT_TYPE": {
+		"BASIC": {
+			"AND": {
+				"NAME": "AND Gate",
+				"DESCRIPTION": ""
+			},
+			"NOT": {
+				"NAME": "NOT Gate",
+				"DESCRIPTION": "I am a not"
+			},
+			"OR": {
+				"NAME": "OR Gate",
+				"DESCRIPTION": ""
+			},
+			"XOR": {
+				"NAME": "XOR Gate",
+				"DESCRIPTION": ""
+			}
+		},
+		"IO": {
+			"BUTTON": {
+				"NAME": "Button",
+				"DESCRIPTION": ""
+			},
+			"LEVER": {
+				"NAME": "Lever",
+				"DESCRIPTION": ""
+			}
+		},
+		"PLUG": {
+			"INPUT": {
+				"NAME": "Input Plug",
+				"DESCRIPTION": "Place this where the inputs of you self-defined components should be"
+			},
+			"OUTPUT": {
+				"NAME": "Output Plug",
+				"DESCRIPTION": "Place this where the outputs of you self-defined components should be"
+			}
+		}
+	}
+}

@@ -68,6 +68,12 @@ export class View extends PIXI.Container {
 			takeUntil(this._destroySubject)
 		).subscribe((dir => this.onZoomClick(dir)));
 
+		ThemingService.staticInstance.showGridChanges$.pipe(
+			takeUntil(this._destroySubject)
+		).subscribe(show => {
+			this.onGridShowChange(show);
+		});
+
 		this.applyActionsToView(
 			ProjectsService.staticInstance.allProjects.get(this.projectId).getOpenActions()
 		);
@@ -84,12 +90,15 @@ export class View extends PIXI.Container {
 			if (this.createChunkIfNeeded(chunksToRender[i].x, chunksToRender[i].y)) continue;
 			const chunk = this._chunks[chunksToRender[i].x][chunksToRender[i].y];
 			chunk.container.visible = true;
-			chunk.gridGraphics.visible = true;
+			chunk.gridGraphics.visible = ThemingService.staticInstance.showGrid;
 			if (chunk.scaledFor === this.zoomPan.currentScale) continue;
 			chunk.scaledFor = this.zoomPan.currentScale;
-			chunk.gridGraphics.destroy();
-			chunk.gridGraphics = Grid.generateGridGraphics(this.zoomPan.currentScale);
-			chunk.gridGraphics.position = this.getChunkPos(chunksToRender[i].x, chunksToRender[i].y);
+			if (ThemingService.staticInstance.showGrid) {
+				chunk.gridGraphics.destroy();
+				chunk.gridGraphics = Grid.generateGridGraphics(this.zoomPan.currentScale);
+				chunk.gridGraphics.position = this.getChunkPos(chunksToRender[i].x, chunksToRender[i].y);
+				this.addChildAt(chunk.gridGraphics, 0);
+			}
 			const chunkElems = chunk.container.children;
 			for (let e = 0; e < chunkElems.length; e++) {
 				const elemSprite = this.allElements.get(Number(chunkElems[e].name));
@@ -102,7 +111,6 @@ export class View extends PIXI.Container {
 					this.updateConnectionPoint(chunkElems[e] as PIXI.Graphics);
 				}
 			}
-			this.addChildAt(chunk.gridGraphics, 0);
 		}
 		const selectedIds = SelectionService.staticInstance.selectedIds(this.projectId);
 		for (let i = 0; i < selectedIds.length; i++) {
@@ -126,6 +134,26 @@ export class View extends PIXI.Container {
 			}
 		}
 		this._chunksToRender = chunksToRender;
+	}
+
+	private onGridShowChange(show: boolean) {
+		const currentlyOnScreen = this.zoomPan.isOnScreen(this.htmlContainer.offsetHeight, this.htmlContainer.offsetWidth);
+		const chunksToRender = ProjectsService.staticInstance.currProject.chunksToRender(
+			Grid.getGridPosForPixelPos(currentlyOnScreen.start),
+			Grid.getGridPosForPixelPos(currentlyOnScreen.end)
+		);
+		for (const chunkP of chunksToRender) {
+			const chunk = this._chunks[chunkP.x][chunkP.y];
+			if (show) {
+				chunk.gridGraphics.destroy();
+				chunk.gridGraphics = Grid.generateGridGraphics(this.zoomPan.currentScale);
+				chunk.gridGraphics.position = this.getChunkPos(chunkP.x, chunkP.y);
+				this.addChildAt(chunk.gridGraphics, 0);
+			} else {
+				chunk.gridGraphics.visible = false;
+			}
+		}
+		this.ticker.singleFrame();
 	}
 
 	public drawConnectionPoint(graphics, pos) {
@@ -181,7 +209,14 @@ export class View extends PIXI.Container {
 			scaledFor: this.zoomPan.currentScale
 		};
 		this._chunks[x][y].container.sortableChildren = false;
+		this._chunks[x][y].container.hitArea = new PIXI.Rectangle(
+			0,
+			0,
+			environment.chunkSize * environment.gridPixelWidth,
+			environment.chunkSize * environment.gridPixelWidth
+		);
 		this._chunks[x][y].gridGraphics.sortableChildren = false;
+		this._chunks[x][y].gridGraphics.visible = ThemingService.staticInstance.showGrid;
 		const text = new PIXI.Text(x  + ' ' + y);
 		text.x = (environment.chunkSize * environment.gridPixelWidth) / 2;
 		text.y = (environment.chunkSize * environment.gridPixelWidth) / 2;
@@ -226,6 +261,7 @@ export class View extends PIXI.Container {
 	private onZoomClick(dir: 'in' | 'out' | '100') {
 		if (this.applyZoom(dir)) {
 			this.updateChunks();
+			this.ticker.singleFrame();
 		}
 	}
 

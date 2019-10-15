@@ -1,14 +1,15 @@
-import {Component, Input, OnChanges, OnDestroy, OnInit, SimpleChanges} from '@angular/core';
+import {ChangeDetectionStrategy, Component, Input, OnChanges, OnDestroy, SimpleChanges} from '@angular/core';
 import {ElementProviderService} from '../../services/element-provider/element-provider.service';
 import {ElementType} from '../../models/element-types/element-type';
 import {ProjectsService} from '../../services/projects/projects.service';
-import {FormGroup, FormBuilder} from '@angular/forms';
+import {FormBuilder, FormGroup} from '@angular/forms';
 import {Subscription} from 'rxjs';
 
 @Component({
 	selector: 'app-settings-info-box',
 	templateUrl: './settings-info-box.component.html',
-	styleUrls: ['./settings-info-box.component.scss']
+	styleUrls: ['./settings-info-box.component.scss'],
+	changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class SettingsInfoBoxComponent implements OnChanges, OnDestroy {
 

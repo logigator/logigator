@@ -19,7 +19,6 @@ export class ProjectState {
 	public numInputs = 0;
 	public numOutputs = 0;
 
-
 	public constructor(model?: ProjectModel, highestId?: number) {
 		this._model = model || {board: {elements: []}};
 		this._highestTakenId = highestId || this.findHighestTakenId();
@@ -247,6 +246,13 @@ export class ProjectState {
 	}
 
 
+	public updateNumInputsOutputs(element: Element): void {
+		element.numInputs = ElementProviderService.staticInstance.getElementById(element.typeId).numInputs;
+		element.numOutputs = ElementProviderService.staticInstance.getElementById(element.typeId).numOutputs;
+		element.endPos = Elements.calcEndPos(element.pos, element.numInputs, element.numOutputs, element.rotation);
+	}
+
+
 
 	public connectWires(wire0: Element, wire1: Element, intersection: PIXI.Point): Element[] {
 		const out = wire0.typeId === 0 ? this.splitWire(wire0, intersection) : [];
@@ -424,6 +430,34 @@ export class ProjectState {
 		return new ProjectState(outModel, this._highestTakenId);
 	}
 
+	public equals(other: ProjectState): boolean {
+		if (other._model.board.elements.length !== this._model.board.elements.length)
+			return false;
+		for (let i = 0; i < this._model.board.elements.length; i++) {
+			if (!other._model.board.elements.find(e => Elements.equals(e, this._model.board.elements[i])))
+				return false;
+		}
+		for (let i = 0; i < this._chunks.length; i++) {
+			for (let j = 0; j < this._chunks[i].length; j++) {
+				const ownChunk = this._chunks[i][j];
+				const otherChunk = other._chunks[i][j]; // might crash when test failing, did not happen but possible
+				if (otherChunk.elements.length !== ownChunk.elements.length ||
+					otherChunk.connectionPoints.length !== ownChunk.connectionPoints.length)
+					return false;
+				for (let k = 0; k < ownChunk.elements.length; k++) {
+					if (!otherChunk.elements.find(e => Elements.equals(e, ownChunk.elements[k])))
+						return false;
+				}
+				for (let k = 0; k < ownChunk.connectionPoints.length; k++) {
+					const ownCp = ownChunk.connectionPoints[k];
+					if (!otherChunk.connectionPoints.find(cp => cp.x === ownCp.x && cp.y === ownCp.y))
+						return false;
+				}
+			}
+		}
+		return true;
+	}
+
 	public elementsInChunk(x: number, y: number): Element[] {
 		return this._chunks[x] && this._chunks[x][y] ? this._chunks[x][y].elements : [];
 	}
@@ -445,7 +479,7 @@ export class ProjectState {
 		this.allElements.forEach(e => {
 			if (ElementProviderService.staticInstance.isInputElement(e.typeId)) {
 				numInputs++;
-			} else if (ElementProviderService.staticInstance.isInputElement(e.typeId)) {
+			} else if (ElementProviderService.staticInstance.isOutputElement(e.typeId)) {
 				numOutputs++;
 			}
 		});

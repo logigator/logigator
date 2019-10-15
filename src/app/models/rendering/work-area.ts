@@ -1,5 +1,5 @@
 import * as PIXI from 'pixi.js';
-import {fromEvent, Subject} from 'rxjs';
+import {fromEvent, ReplaySubject, Subject} from 'rxjs';
 import {takeUntil} from 'rxjs/operators';
 import {ElementRef, Renderer2} from '@angular/core';
 import {ThemingService} from '../../services/theming/theming.service';
@@ -11,7 +11,7 @@ export abstract class WorkArea {
 
 	private static _loadedPixiFont = false;
 
-	public static pixiFontLoaded$ = new Subject<void>();
+	public static pixiFontLoaded$ = new ReplaySubject<void>(1);
 
 	protected _pixiRenderer: PIXI.Renderer;
 
@@ -20,6 +20,8 @@ export abstract class WorkArea {
 	protected _zoomPanInputManager: ZoomPanInputManager;
 
 	protected _destroySubject = new Subject<any>();
+
+	protected _activeView: View;
 
 	protected initPixi(canvasContainer: ElementRef<HTMLDivElement>, renderer2: Renderer2) {
 		this.loadPixiFont();
@@ -39,6 +41,7 @@ export abstract class WorkArea {
 			takeUntil(this._destroySubject)
 		).subscribe(() => {
 			this._pixiRenderer.resize(canvasContainer.nativeElement.offsetWidth, canvasContainer.nativeElement.offsetHeight);
+			if (this._activeView) this._activeView.updateChunks();
 			this._ticker.singleFrame();
 		});
 	}
@@ -53,7 +56,7 @@ export abstract class WorkArea {
 		if (WorkArea._loadedPixiFont === true) return;
 		WorkArea._loadedPixiFont = true;
 		const loader = PIXI.Loader.shared;
-		loader.add('luis_george_cafe', '/assets/fonts/louis_george_cafe_bitmap/font.fnt')
+		loader.add('Nunito', '/assets/Nunito_Bitmap/font.fnt')
 			.load(() => WorkArea.pixiFontLoaded$.next());
 	}
 

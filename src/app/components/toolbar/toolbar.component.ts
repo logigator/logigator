@@ -1,26 +1,57 @@
-import {Component, OnInit} from '@angular/core';
+import {ChangeDetectionStrategy, ChangeDetectorRef, Component, OnInit} from '@angular/core';
 import {WorkMode} from '../../models/work-modes';
 import {WorkModeService} from '../../services/work-mode/work-mode.service';
 import {ProjectsService} from '../../services/projects/projects.service';
 import {ProjectInteractionService} from '../../services/project-interaction/project-interaction.service';
-import {StateCompilerService} from '../../services/simulation/state-compiler/state-compiler.service';
+// #!debug
+import {Test} from '../../../../tests/auto-tests/tests';
+// #!debug
+import {ManuallyLogged} from '../../../../tests/auto-tests/board-recorder';
+import {PopupService} from '../../services/popup/popup.service';
+import {NewComponentComponent} from '../popup/popup-contents/new-component/new-component.component';
+import {OpenProjectComponent} from '../popup/popup-contents/open/open-project.component';
+import {Observable} from 'rxjs';
+import {tap} from 'rxjs/operators';
 
 @Component({
 	selector: 'app-toolbar',
 	templateUrl: './toolbar.component.html',
 	styleUrls: ['./toolbar.component.scss']
 })
-export class ToolbarComponent implements OnInit {
+export class ToolbarComponent {
+
+	// #!debug
+	private test: Test;
 
 	constructor(
 		private workModeService: WorkModeService,
 		private projectService: ProjectsService,
 		private projectInteraction: ProjectInteractionService,
-		private stateCompiler: StateCompilerService
-	) { }
+		private popupService: PopupService
+	) {}
 
-	ngOnInit() {
+	// #!if DEBUG === 'true'
+	public printElements(): void {
+		this.projectService.currProject.allElements.forEach(console.log);
 	}
+
+	public printCalls(): void {
+		console.log(this.projectService.currProject.boardRecorder.stringify());
+	}
+
+	public runTests(): void {
+		// this.test = new Test('bugfix', this.projectService.currProject, ManuallyLogged.reducedCrash);
+		for (const name in ManuallyLogged) {
+			Test.runAndCheck(name, false);
+		}
+	}
+
+	public runStep(): void {
+		for (let i = 0; i < 2000; i++) {
+			this.test.runStep(true);
+		}
+	}
+	// #!endif
 
 	public setWorkMode(mode: WorkMode) {
 		this.workModeService.setWorkMode(mode);
@@ -30,24 +61,16 @@ export class ToolbarComponent implements OnInit {
 		return this.workModeService.currentWorkMode;
 	}
 
+	public async newComponent() {
+		this.popupService.showPopup(NewComponentComponent, 'POPUP.NEW_COMP.TITLE', false);
+	}
+
 	public undo(): void {
-		console.log('~~~~');
-		this.stateCompiler.compile(this.projectService.currProject).forEach(console.log);
-		const start = Date.now();
-		// for (let i = 0; i < 10000; i++) {
-		// 	this.stateCompiler.compile(this.projectService.currProject);
-		// }
-		console.log(Date.now() - start);
-		// this.projectService.currProject.stepBack();
-		console.log(this.stateCompiler.wiresOnLinks);
-		console.log(this.stateCompiler.wireEndsOnLinks);
+		this.projectInteraction.undoForCurrent();
 	}
 
 	public redo(): void {
-		console.log(this.stateCompiler.wiresOnLinks.get(0));
-		console.log(this.stateCompiler.wireEndsOnLinks.get(0));
-		console.log(this.projectService.currProject.allElements);
-		this.projectService.currProject.stepForward();
+		this.projectInteraction.redoForCurrent();
 	}
 
 	public zoomIn() {
@@ -76,5 +99,11 @@ export class ToolbarComponent implements OnInit {
 
 	public save() {
 		this.projectService.saveAll();
+	}
+
+	public async open() {
+		if (await this.projectService.askToSave()) {
+			this.popupService.showPopup(OpenProjectComponent, 'POPUP.OPEN.TITLE', true);
+		}
 	}
 }

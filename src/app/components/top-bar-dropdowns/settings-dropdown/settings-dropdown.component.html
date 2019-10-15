@@ -1,19 +1,36 @@
 <div class="dropdown" [class.hidden]="!showDropDown">
 	<div class="switch">
-		<label>Dark mode</label>
-		<input type="checkbox" (click)="showReloadPopup()" [checked]="this.theming.pendingTheme === 'dark'">
+		<label>{{'DROPDOWN.SETTINGS.DARK_MODE' | translate}}</label>
+		<app-switch (click)="showReloadPopup()" [checked]="this.theming.pendingTheme === 'dark'"></app-switch>
 	</div>
 	<hr>
 	<div class="switch">
-		<label>Show grid</label>
-		<input type="checkbox">
+		<label>{{'DROPDOWN.SETTINGS.SHOW_GRID' | translate}}</label>
+		<app-switch [(ngModel)]="this.theming.showGrid"></app-switch>
+	</div>
+	<hr>
+	<div class="select">
+		<label>{{'DROPDOWN.SETTINGS.LANGUAGE' | translate}}</label>
+		<select [(ngModel)]="currentLang" (ngModelChange)="languageChange()">
+			<option value="en">{{'LANGUAGE.EN' | translate}}</option>
+			<option value="de">{{'LANGUAGE.DE' | translate}}</option>
+		</select>
 	</div>
 	<hr>
 	<div class="link">
-		<button (click)="showCustomizeShortcuts()">Customize Shortcuts</button>
+		<button class="btn-outline secondary small" (click)="showCustomizeShortcuts()">{{'DROPDOWN.SETTINGS.SHORTCUTS' | translate}}</button>
 	</div>
 	<hr>
 	<div class="link">
-		<button>Account settings</button>
+		<button class="btn-outline secondary small">{{'DROPDOWN.SETTINGS.ACCOUNT' | translate}}</button>
 	</div>
+
+	<!-- #!if ELECTRON === 'true' -->
+	<ng-container *ngIf="isLoggedIn">
+		<hr>
+		<div class="link">
+			<button class="btn-outline secondary small" (click)="logout()">{{'DROPDOWN.SETTINGS.LOGOUT' | translate}}</button>
+		</div>
+	</ng-container>
+	<!-- #!endif -->
 </div>

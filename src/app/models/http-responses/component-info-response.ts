@@ -5,4 +5,6 @@ export interface ComponentInfoResponse {
 	symbol: string;
 	last_edited: string;
 	created_on: string;
+	num_inputs: number;
+	num_outputs: number;
 }

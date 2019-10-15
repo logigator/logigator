@@ -6,6 +6,7 @@ $search-height: 3.5rem;
 #construction-box {
 	@include themify() {
 		background-color: themed('background');
+		border-right: border('width') solid themed('secondary');
 	}
 
 	height: calc(100vh - #{$page-header-height});

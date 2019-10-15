@@ -1,0 +1,12 @@
+.unsaved-changes {
+	margin: 2rem 1.5rem;
+
+	.buttons {
+		display: flex;
+		justify-content: flex-end;
+
+		button {
+			margin-left: 0.5rem;
+		}
+	}
+}

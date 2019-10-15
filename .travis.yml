@@ -1,13 +1,13 @@
-install: 
+install:
   - "npm install"
 language: node_js
 branches:
   only:
     - master
     - development
-node_js: 
+node_js:
   - node
-script: 
+script:
   - "ng lint"
-  - "npm run build"
+  - "npm run build:web"
 sudo: required

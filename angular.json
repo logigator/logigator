@@ -15,8 +15,11 @@
 			"prefix": "app",
 			"architect": {
 				"build": {
-					"builder": "@angular-devkit/build-angular:browser",
+					"builder": "@angular-builders/custom-webpack:browser",
 					"options": {
+						"customWebpackConfig": {
+							"path": "./custom-build-scripts/dist/custom-webpack.config.js"
+						},
 						"outputPath": "dist/logigator-editor",
 						"index": "src/index.html",
 						"main": "src/main.ts",
@@ -25,25 +28,89 @@
 						"aot": false,
 						"assets": [
 							"src/favicon.ico",
-							"src/assets"
-						],
-						"styles": [
-							"src/styles.scss"
+							"src/assets",
+							"src/site.webmanifest",
+							"src/browserconfig.xml"
 						],
 						"stylePreprocessorOptions": {
 							"includePaths": [
-								"src/"
+								"src/styles/web"
 							]
 						},
 						"scripts": [],
 						"webWorkerTsConfig": "tsconfig.worker.json"
 					},
 					"configurations": {
-						"production": {
+						"dev-electron": {
+							"styles": [
+								"src/styles/electron/styles.scss"
+							],
+							"stylePreprocessorOptions": {
+								"includePaths": [
+									"src/styles/electron"
+								]
+							}
+						},
+						"dev-web": {
+							"styles": [
+								"src/styles/web/styles.scss"
+							],
+							"stylePreprocessorOptions": {
+								"includePaths": [
+									"src/styles/web"
+								]
+							}
+						},
+						"prod-electron": {
+							"styles": [
+								"src/styles/electron/styles.scss"
+							],
+							"stylePreprocessorOptions": {
+								"includePaths": [
+									"src/styles/electron"
+								]
+							},
 							"fileReplacements": [
 								{
 									"replace": "src/environments/environment.ts",
-									"with": "src/environments/environment.prod.ts"
+									"with": "src/environments/environment.prod-electron.ts"
+								}
+							],
+							"optimization": true,
+							"outputHashing": "all",
+							"sourceMap": false,
+							"extractCss": true,
+							"namedChunks": false,
+							"aot": true,
+							"extractLicenses": true,
+							"vendorChunk": false,
+							"buildOptimizer": true,
+							"budgets": [
+								{
+									"type": "initial",
+									"maximumWarning": "2mb",
+									"maximumError": "5mb"
+								},
+								{
+									"type": "anyComponentStyle",
+									"maximumWarning": "6kb",
+									"maximumError": "10kb"
+								}
+							]
+						},
+						"prod-web": {
+							"styles": [
+								"src/styles/web/styles.scss"
+							],
+							"stylePreprocessorOptions": {
+								"includePaths": [
+									"src/styles/web"
+								]
+							},
+							"fileReplacements": [
+								{
+									"replace": "src/environments/environment.ts",
+									"with": "src/environments/environment.prod-web.ts"
 								}
 							],
 							"optimization": true,
@@ -71,13 +138,25 @@
 					}
 				},
 				"serve": {
-					"builder": "@angular-devkit/build-angular:dev-server",
+					"builder": "@angular-builders/custom-webpack:dev-server",
 					"options": {
-						"browserTarget": "logigator-editor:build"
+						"customWebpackConfig": {
+							"path": "./custom-build-scripts/dist/custom-webpack.config.js"
+						},
+						"browserTarget": "logigator-editor:build:dev-web"
 					},
 					"configurations": {
-						"production": {
-							"browserTarget": "logigator-editor:build:production"
+						"prod-web": {
+							"browserTarget": "logigator-editor:build:prod-web"
+						},
+						"prod-electron": {
+							"browserTarget": "logigator-editor:build:prod-electron"
+						},
+						"dev-web": {
+							"browserTarget": "logigator-editor:build:dev-web"
+						},
+						"dev-electron": {
+							"browserTarget": "logigator-editor:build:dev-electron"
 						}
 					}
 				},
@@ -96,7 +175,9 @@
 						"karmaConfig": "karma.conf.js",
 						"assets": [
 							"src/favicon.ico",
-							"src/assets"
+							"src/assets",
+							"src/site.webmanifest",
+							"src/browserconfig.xml"
 						],
 						"styles": [
 							"src/styles.scss"
