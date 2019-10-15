@@ -172,7 +172,7 @@ export class ShortcutsService {
 				this.ngZone.run(() => this.projects.saveAll());
 				break;
 			case 'newComp':
-				this.popup.showPopup(NewComponentComponent, 'POPUP.NEW_COMP.TITLE', false);
+				this.ngZone.run(() => this.popup.showPopup(NewComponentComponent, 'POPUP.NEW_COMP.TITLE', false));
 				break;
 		}
 	}

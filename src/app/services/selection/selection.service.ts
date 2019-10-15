@@ -1,4 +1,4 @@
-import {Injectable, NgZone} from '@angular/core';
+import {ApplicationRef, Injectable, NgZone} from '@angular/core';
 import {Project} from '../../models/project';
 import {ProjectsService} from '../projects/projects.service';
 import {CollisionFunctions} from '../../models/collision-functions';
@@ -15,7 +15,7 @@ export class SelectionService {
 	private _selectedIds: Map<number, number[]> = new Map<number, number[]>();
 	private _selectedConnections: Map<number, PIXI.Point[]> = new Map<number, PIXI.Point[]>();
 
-	constructor(private projectsService: ProjectsService, private ngZone: NgZone) {
+	constructor(private projectsService: ProjectsService, private ngZone: NgZone, private appRef: ApplicationRef) {
 		SelectionService.staticInstance = this;
 	}
 
@@ -40,6 +40,7 @@ export class SelectionService {
 				}
 			}
 		}
+		this.appRef.tick();
 		return ids;
 	}
 

@@ -27,7 +27,6 @@ export class UserService {
 	}
 
 	private getUserInfoFromServer() {
-		console.log('getting user info');
 		this._userInfo$ = of(this.isLoggedIn).pipe(
 			switchMap(isLoggedIn => {
 				if (!isLoggedIn) return of(undefined);
