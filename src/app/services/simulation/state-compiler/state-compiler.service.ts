@@ -54,13 +54,17 @@ export class StateCompilerService {
 		const state = project.currState;
 		this._highestLinkId = 0;
 		this._currId = project.id;
-		this.initElemsOnLinks(project.id);
+		this.initElemsOnLinks(project.id.toString());
 		return [...this.compileInner(state).units.keys()];
 	}
 
-	private initElemsOnLinks(id: number) {
-		this._wiresOnLinks = new Map<number, WiresOnLinks>([[id, new Map<number, Element[]>()]]);
-		this._wireEndsOnLinks = new Map<number, WireEndsOnLinks>([[id, new Map<number, WireEndOnComp[]>()]]);
+	public clearCache(): void {
+		this._udcCache = new Map<ProjectState, CompiledComp>();
+	}
+
+	private initElemsOnLinks(identifier: string) {
+		this._wiresOnLinks = new Map<string, WiresOnLinks>([[identifier, new Map<number, Element[]>()]]);
+		this._wireEndsOnLinks = new Map<string, WireEndsOnLinks>([[identifier, new Map<number, WireEndOnComp[]>()]]);
 	}
 
 	private compileInner(state: ProjectState, outerUnit?: SimulationUnit): UdcInnerData {

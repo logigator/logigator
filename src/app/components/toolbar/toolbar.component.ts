@@ -12,6 +12,7 @@ import {NewComponentComponent} from '../popup/popup-contents/new-component/new-c
 import {OpenProjectComponent} from '../popup/popup-contents/open/open-project.component';
 import {Observable} from 'rxjs';
 import {tap} from 'rxjs/operators';
+import {StateCompilerService} from '../../services/simulation/state-compiler/state-compiler.service';
 
 @Component({
 	selector: 'app-toolbar',
@@ -27,7 +28,8 @@ export class ToolbarComponent {
 		private workModeService: WorkModeService,
 		private projectService: ProjectsService,
 		private projectInteraction: ProjectInteractionService,
-		private popupService: PopupService
+		private popupService: PopupService,
+		private stateCompiler: StateCompilerService
 	) {}
 
 	// #!if DEBUG === 'true'
@@ -66,10 +68,15 @@ export class ToolbarComponent {
 	}
 
 	public undo(): void {
+		console.log(this.stateCompiler.compile(this.projectService.currProject));
+		console.log(this.stateCompiler.wiresOnLinks);
+		console.log(this.stateCompiler.wireEndsOnLinks);
+		return
 		this.projectInteraction.undoForCurrent();
 	}
 
 	public redo(): void {
+		this.stateCompiler.clearCache();
 		this.projectInteraction.redoForCurrent();
 	}
 

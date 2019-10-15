@@ -21,13 +21,14 @@ interface PosOfElem {
 }
 
 type WiresOnLinks = Map<number, Element[]>;
-type WiresOnLinksInProject = Map<number, WiresOnLinks>;
+type WiresOnLinksInProject = Map<string, WiresOnLinks>;
 interface WireEndOnComp {
 	component: Element;
 	wireIndex: number;
 }
 type WireEndsOnLinks = Map<number, WireEndOnComp[]>;
-type WireEndsOnLinksInProject = Map<number, WireEndsOnLinks>;
+type WireEndsOnLinksInProject = Map<string, WireEndsOnLinks>;
+// string looks like this: 'projId:compId-projId'
 
 export {UnitToElement, UdcInnerData, AbsPlugIdsOnLinks,
 	LinksOnWireEnds, CompPlugByIndex, Replacement,
