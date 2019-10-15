@@ -45,6 +45,9 @@ export class ViewInteractionManager {
 	constructor(view: View) {
 		this._view = view;
 		this._selectRect = new PIXI.Graphics();
+		this._selectRect.beginFill(ThemingService.staticInstance.getEditorColor('selectRect'), 0.3);
+		this._selectRect.drawRect(0, 0, 1, 1);
+
 		this._newWire = new PIXI.Graphics();
 
 		this.addEventListenersToView();
@@ -153,9 +156,6 @@ export class ViewInteractionManager {
 			this._selectRect.position = e.data.getLocalPosition(this._view);
 			this._selectRect.width = 0;
 			this._selectRect.height = 0;
-			this._selectRect.clear();
-			this._selectRect.beginFill(ThemingService.staticInstance.getEditorColor('selectRect'), 0.3);
-			this._selectRect.drawRect(0, 0, 1, 1);
 		}
 	}
 
@@ -438,7 +438,6 @@ export class ViewInteractionManager {
 		const copiedElements = CopyService.staticInstance.copiedElements;
 		const copiedConnPts = CopyService.staticInstance.copiedConPoints;
 		const bounding = CopyService.staticInstance.getCopiedElementsBoundingBox();
-		//debugger
 		const pasteRectPos = this.calcPasteRectPos();
 		const pasteRectSizePixel = Grid.getPixelPosForGridPos(new PIXI.Point(bounding.width + 2, bounding.height + 2));
 		this._selectRect.position = Grid.getPixelPosForGridPos(new PIXI.Point(pasteRectPos.x - 1, pasteRectPos.y - 1));
