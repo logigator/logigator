@@ -50,11 +50,11 @@ div {
 			transition: width 0.2s;
 
 			@include themify() {
-				background-color: themed('primary-text');
+				background-color: darken(themed('background'), 5%);
 
 				&:hover {
 					cursor: pointer;
-					background-color: lighten(themed('background'), 5%);
+					background-color: lighten(themed('background'), 10%);
 				}
 			}
 		}
@@ -73,9 +73,9 @@ div {
 			.save {
 				@include themify() {
 					@if (isTheme('dark')) {
-						background-image: url("/assets/icons/dark/search.svg");
+						background-image: url("/assets/icons/dark/check.svg");
 					} @else {
-						background-image: url("/assets/icons/light/search.svg");
+						background-image: url("/assets/icons/light/check.svg");
 					}
 					background-repeat: no-repeat;
 					background-size: 60%;

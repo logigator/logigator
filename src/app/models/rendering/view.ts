@@ -217,10 +217,10 @@ export class View extends PIXI.Container {
 		);
 		this._chunks[x][y].gridGraphics.sortableChildren = false;
 		this._chunks[x][y].gridGraphics.visible = ThemingService.staticInstance.showGrid;
-		const text = new PIXI.Text(x  + ' ' + y);
-		text.x = (environment.chunkSize * environment.gridPixelWidth) / 2;
-		text.y = (environment.chunkSize * environment.gridPixelWidth) / 2;
-		this._chunks[x][y].container.addChild(text);
+		// const text = new PIXI.Text(x  + ' ' + y);
+		// text.x = (environment.chunkSize * environment.gridPixelWidth) / 2;
+		// text.y = (environment.chunkSize * environment.gridPixelWidth) / 2;
+		// this._chunks[x][y].container.addChild(text);
 		return true;
 	}
 
