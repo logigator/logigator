@@ -16,7 +16,6 @@ import {
 	UnitToElement, WireEndOnComp, WireEndsOnLinks, WireEndsOnLinksInProject, WiresOnLinks, WiresOnLinksInProject
 } from './compiler-types';
 import {Project} from '../../../models/project';
-import {debug} from 'util';
 
 @Injectable({
 	providedIn: 'root'
@@ -52,13 +51,11 @@ export class StateCompilerService {
 	}
 
 	public compile(project: Project): SimulationUnit[] {
-		// this._udcCache = new Map<ProjectState, CompiledComp>();
 		const state = project.currState;
 		this._highestLinkId = 0;
 		this._currId = project.id;
 		this.initElemsOnLinks(project.id);
-		const {units, replacements} = this.compileInner(state);
-		return [...units.keys()];
+		return [...this.compileInner(state).units.keys()];
 	}
 
 	private initElemsOnLinks(id: number) {
@@ -66,7 +63,6 @@ export class StateCompilerService {
 		this._wireEndsOnLinks = new Map<number, WireEndsOnLinks>([[id, new Map<number, WireEndOnComp[]>()]]);
 	}
 
-// TODO check for recursion: userDefComp cannot include itself
 	private compileInner(state: ProjectState, outerUnit?: SimulationUnit): UdcInnerData {
 		let units;
 		if (outerUnit && this._udcCache.has(state)) {
@@ -132,8 +128,6 @@ export class StateCompilerService {
 		if (outerUnit)
 			plugsOnLinks = this.fillPlugsInLinksOnWireEnds(state, linksOnWireEnds, units, outerUnit);
 		const ret = this.calcAllLinks(state, units, linksOnWireEnds, compiledComp.connectedToPlug, plugsOnLinks);
-		// this.doReplacements(units, ret.replacements);
-		// this.doElemOnLinksReplacements(this._currId, ret.replacements);
 		compiledComp.connectedToPlug = this.calcPlugConsForCache(units);
 		compiledComp.replacements = ret.replacementPos;
 		this.setUdcCache(state, compiledComp);
