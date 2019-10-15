@@ -16,6 +16,7 @@ import {
 	UnitToElement, WireEndOnComp, WireEndsOnLinks, WireEndsOnLinksInProject, WiresOnLinks, WiresOnLinksInProject
 } from './compiler-types';
 import {Project} from '../../../models/project';
+import {debug} from 'util';
 
 @Injectable({
 	providedIn: 'root'
@@ -68,7 +69,7 @@ export class StateCompilerService {
 // TODO check for recursion: userDefComp cannot include itself
 	private compileInner(state: ProjectState, outerUnit?: SimulationUnit): UdcInnerData {
 		let units;
-		if (this._udcCache.has(state)) {
+		if (outerUnit && this._udcCache.has(state)) {
 			units = this._udcCache.get(state).units;
 		} else {
 			units = StateCompilerService.generateUnits(state);
@@ -109,7 +110,7 @@ export class StateCompilerService {
 
 		let compiledComp: CompiledComp;
 
-		if (this._udcCache.has(state)) {
+		if (outerUnit && this._udcCache.has(state)) {
 			return this.updateCachedIds(state, outerUnit);
 		} else {
 			compiledComp = {
@@ -251,6 +252,7 @@ export class StateCompilerService {
 			}
 			[unit.inputs, unit.outputs].forEach(arr => {
 				for (let i = 0; i < arr.length; i++) {
+					this.addToWireOnLinkKeys(outerUnit.typeId, arr[i], arr[i] + idDif);
 					arr[i] += idDif;
 					this._highestLinkId = Math.max(this._highestLinkId, arr[i]);
 				}
@@ -267,6 +269,8 @@ export class StateCompilerService {
 				const u = allUnits[con.compIndex];
 				const arr = con.wireIndex < u.inputs.length ? u.inputs : u.outputs;
 				const index = con.wireIndex < u.inputs.length ? con.wireIndex : con.wireIndex - u.inputs.length;
+				this.addToWireOnLinkKeys(outerUnit.typeId, arr[index],
+					SimulationUnits.concatIO(outerUnit)[plugIndex]);
 				arr[index] = SimulationUnits.concatIO(outerUnit)[plugIndex];
 			}
 			plugIndex++;
@@ -276,6 +280,18 @@ export class StateCompilerService {
 			replacements.set(outerPugs[fromPlug], outerPugs[toPlugs[toPlugs.length - 1]]);
 		}
 		return replacements;
+	}
+
+	private addToWireOnLinkKeys(typeId: number, from: number, to: number) {
+		[this._wiresOnLinks.get(typeId),
+			this._wireEndsOnLinks.get(typeId)].forEach(map => {
+			if (map.has(from)) {
+				// @ts-ignore
+				map.set(to, map.get(from));
+			} else {
+				console.error('why does this not exist?', map, from);
+			}
+		});
 	}
 
 	private setUnitLink(
@@ -388,8 +404,10 @@ export class StateCompilerService {
 		const unitsState = this.projects.getProjectById(outerUnit.typeId).currState;
 		const typeId = this._currId;
 		this._currId = outerUnit.typeId;
-		this._wiresOnLinks.set(outerUnit.typeId, new Map<number, Element[]>());
-		this._wireEndsOnLinks.set(outerUnit.typeId, new Map<number, WireEndOnComp[]>());
+		if (!this._wiresOnLinks.has(outerUnit.typeId)) {
+			this._wiresOnLinks.set(outerUnit.typeId, new Map<number, Element[]>());
+			this._wireEndsOnLinks.set(outerUnit.typeId, new Map<number, WireEndOnComp[]>());
+		}
 		const {units, replacements} = this.compileInner(unitsState, outerUnit);
 		this._currId = typeId;
 		units.forEach((v, k) => {
@@ -415,6 +433,8 @@ export class StateCompilerService {
 		const wireOnLinks = this._wiresOnLinks.get(typeId);
 		const wireEndsOnLinks = this._wireEndsOnLinks.get(typeId);
 		for (const [from, to] of replacements.entries()) {
+			if (from === to)
+				continue;
 			[wireOnLinks, wireEndsOnLinks].forEach(map => {
 				if (map.has(from)) {
 					if (!map.has(to)) {
