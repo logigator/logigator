@@ -438,6 +438,7 @@ export class ViewInteractionManager {
 		const copiedElements = CopyService.staticInstance.copiedElements;
 		const copiedConnPts = CopyService.staticInstance.copiedConPoints;
 		const bounding = CopyService.staticInstance.getCopiedElementsBoundingBox();
+		//debugger
 		const pasteRectPos = this.calcPasteRectPos();
 		const pasteRectSizePixel = Grid.getPixelPosForGridPos(new PIXI.Point(bounding.width + 2, bounding.height + 2));
 		this._selectRect.position = Grid.getPixelPosForGridPos(new PIXI.Point(pasteRectPos.x - 1, pasteRectPos.y - 1));
