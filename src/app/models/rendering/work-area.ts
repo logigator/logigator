@@ -23,6 +23,14 @@ export abstract class WorkArea {
 
 	protected _activeView: View;
 
+	protected constructor() {
+		this._ticker.setTickerFunction(() => {
+			if (!this._activeView) return;
+			this.updateZoomPan();
+			this._pixiRenderer.render(this._activeView);
+		});
+	}
+
 	protected initPixi(canvasContainer: ElementRef<HTMLDivElement>, renderer2: Renderer2) {
 		this.loadPixiFont();
 		this._pixiRenderer = new PIXI.Renderer({
@@ -66,22 +74,28 @@ export abstract class WorkArea {
 		this._zoomPanInputManager.interactionEnd$.pipe(takeUntil(this._destroySubject)).subscribe(() => this._ticker.stop());
 	}
 
-	public updateZoomPan(view: View) {
+	private updateZoomPan() {
 		let needsChunkUpdate = false;
 		if (this._zoomPanInputManager.isDragging) {
-			view.zoomPan.translateBy(this._zoomPanInputManager.mouseDX, this._zoomPanInputManager.mouseDY);
+			this._activeView.zoomPan.translateBy(this._zoomPanInputManager.mouseDX, this._zoomPanInputManager.mouseDY);
 			this._zoomPanInputManager.clearMouseDelta();
 			needsChunkUpdate = true;
 		}
 
-		if (this._zoomPanInputManager.isZoomIn) {
-			needsChunkUpdate = view.applyZoom('out', this._zoomPanInputManager.mouseX, this._zoomPanInputManager.mouseY) || needsChunkUpdate;
-		} else if (this._zoomPanInputManager.isZoomOut) {
-			needsChunkUpdate = view.applyZoom('in', this._zoomPanInputManager.mouseX, this._zoomPanInputManager.mouseY) || needsChunkUpdate;
+		if (this._zoomPanInputManager.isZoomIn &&
+			this._activeView.applyZoom('out', this._zoomPanInputManager.mouseX, this._zoomPanInputManager.mouseY)) {
+				needsChunkUpdate = true;
+				this._activeView.updateSelectedElementsScale();
+				this._activeView.updatePastingElementsScale();
+		} else if (this._zoomPanInputManager.isZoomOut &&
+			this._activeView.applyZoom('in', this._zoomPanInputManager.mouseX, this._zoomPanInputManager.mouseY)) {
+				needsChunkUpdate = true;
+				this._activeView.updateSelectedElementsScale();
+				this._activeView.updatePastingElementsScale();
 		}
 
 		if (needsChunkUpdate) {
-			view.updateChunks();
+			this._activeView.updateChunks();
 		}
 	}
 

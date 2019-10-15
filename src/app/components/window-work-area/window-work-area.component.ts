@@ -95,11 +95,6 @@ export class WindowWorkAreaComponent extends WorkArea implements OnInit, OnDestr
 			this.preventContextMenu(this._pixiCanvasContainer, this.renderer2);
 			this.initZoomPan(this._pixiCanvasContainer);
 			this.initPixi(this._pixiCanvasContainer, this.renderer2);
-			this._ticker.setTickerFunction(() => {
-				if (!this._activeView) return;
-				this.updateZoomPan(this._activeView);
-				this._pixiRenderer.render(this._activeView);
-			});
 
 			fromEvent(window, 'mousemove').pipe(
 				takeUntil(this._destroySubject)

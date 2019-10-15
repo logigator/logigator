@@ -39,8 +39,8 @@ export class ViewInteractionManager {
 	private _currentlyPasting = false;
 	private readonly _selectRect: PIXI.Graphics;
 
-	private _pastingElements: ElementSprite[] = [];
-	private _pastingConnPoints: PIXI.Graphics[] = [];
+	public pastingElements: ElementSprite[] = [];
+	public pastingConnPoints: PIXI.Graphics[] = [];
 
 	constructor(view: View) {
 		this._view = view;
@@ -128,7 +128,7 @@ export class ViewInteractionManager {
 	}
 
 	private handlePointerDownOnElement(e: InteractionEvent, elem: ElementSprite) {
-		if (WorkModeService.staticInstance.currentWorkMode === 'select') {
+		if (WorkModeService.staticInstance.currentWorkMode === 'select' && e.data.button === 0) {
 			if (this._singleSelectedElement === elem.element) {
 				this.startDragging(e);
 			} else {
@@ -174,8 +174,8 @@ export class ViewInteractionManager {
 		} else if (this._currentlyDragging) {
 			this._currentlyDragging = false;
 			if (this._currentlyPasting) {
-				const elementsToPaste = this._pastingElements.map(es => es.element);
-				const endPos = Grid.getGridPosForPixelPos(this._pastingElements[0].sprite.position);
+				const elementsToPaste = this.pastingElements.map(es => es.element);
+				const endPos = Grid.getGridPosForPixelPos(this.pastingElements[0].sprite.position);
 				if (ProjectsService.staticInstance.currProject.addElements(
 					elementsToPaste, new PIXI.Point(endPos.x - elementsToPaste[0].pos.x, endPos.y - elementsToPaste[0].pos.y))
 				) {
@@ -332,13 +332,13 @@ export class ViewInteractionManager {
 
 	private applyDraggingPositionChangeToSelection(dx: number, dy: number) {
 		if (this._currentlyPasting) {
-			for (let i = 0; i < this._pastingElements.length; i++) {
-				this._pastingElements[i].sprite.position.x += dx;
-				this._pastingElements[i].sprite.position.y += dy;
+			for (let i = 0; i < this.pastingElements.length; i++) {
+				this.pastingElements[i].sprite.position.x += dx;
+				this.pastingElements[i].sprite.position.y += dy;
 			}
-			for (let i = 0; i < this._pastingConnPoints.length; i++) {
-				this._pastingConnPoints[i].position.x += dx;
-				this._pastingConnPoints[i].position.y += dy;
+			for (let i = 0; i < this.pastingConnPoints.length; i++) {
+				this.pastingConnPoints[i].position.x += dx;
+				this.pastingConnPoints[i].position.y += dy;
 			}
 			return;
 		}
@@ -459,7 +459,7 @@ export class ViewInteractionManager {
 					Grid.getPixelPosForGridPosWire(copiedElems[i].endPos), Grid.getPixelPosForGridPosWire(copiedElems[i].pos)
 				);
 				this._view.addChild(graphics);
-				this._pastingElements.push({
+				this.pastingElements.push({
 					element: copiedElems[i],
 					sprite: graphics
 				});
@@ -471,7 +471,7 @@ export class ViewInteractionManager {
 				);
 				sprite.position = Grid.getPixelPosForGridPos(new PIXI.Point(copiedElems[i].pos.x + offset.x, copiedElems[i].pos.y + offset.y));
 				this._view.addChild(sprite);
-				this._pastingElements.push({
+				this.pastingElements.push({
 					element: copiedElems[i],
 					sprite
 				});
@@ -484,20 +484,20 @@ export class ViewInteractionManager {
 			graphics.position = pos;
 			this._view.drawConnectionPoint(graphics, pos);
 			this._view.addChild(graphics);
-			this._pastingConnPoints.push(graphics);
+			this.pastingConnPoints.push(graphics);
 		}
 	}
 
 	private cancelPasting() {
 		this._currentlyPasting = false;
-		for (let i = 0; i < this._pastingElements.length; i++) {
-			this._pastingElements[i].sprite.destroy();
+		for (let i = 0; i < this.pastingElements.length; i++) {
+			this.pastingElements[i].sprite.destroy();
 		}
-		for (let i = 0; i < this._pastingConnPoints.length; i++) {
-			this._pastingConnPoints[i].destroy();
+		for (let i = 0; i < this.pastingConnPoints.length; i++) {
+			this.pastingConnPoints[i].destroy();
 		}
-		this._pastingConnPoints = [];
-		this._pastingElements = [];
+		this.pastingConnPoints = [];
+		this.pastingElements = [];
 	}
 
 	private calcPasteRectPos(): PIXI.Point {

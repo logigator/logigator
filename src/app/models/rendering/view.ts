@@ -112,6 +112,16 @@ export class View extends PIXI.Container {
 				}
 			}
 		}
+		for (const oldChunk of this._chunksToRender) {
+			if (!chunksToRender.find(toRender => toRender.x === oldChunk.x && toRender.y === oldChunk.y)) {
+				this._chunks[oldChunk.x][oldChunk.y].container.visible = false;
+				this._chunks[oldChunk.x][oldChunk.y].gridGraphics.visible = false;
+			}
+		}
+		this._chunksToRender = chunksToRender;
+	}
+
+	public updateSelectedElementsScale() {
 		const selectedIds = SelectionService.staticInstance.selectedIds(this.projectId);
 		for (let i = 0; i < selectedIds.length; i++) {
 			const elemSprite = this.allElements.get(selectedIds[i]);
@@ -127,13 +137,20 @@ export class View extends PIXI.Container {
 			const pos = Grid.getPixelPosForPixelPosOnGridWire(graphics.position);
 			this.drawConnectionPoint(graphics, pos);
 		}
-		for (const oldChunk of this._chunksToRender) {
-			if (!chunksToRender.find(toRender => toRender.x === oldChunk.x && toRender.y === oldChunk.y)) {
-				this._chunks[oldChunk.x][oldChunk.y].container.visible = false;
-				this._chunks[oldChunk.x][oldChunk.y].gridGraphics.visible = false;
+	}
+
+	public updatePastingElementsScale() {
+		for (const elemSprite of this._viewInteractionManager.pastingElements) {
+			if (elemSprite.element.typeId === 0) {
+				this.updateWireSprite(elemSprite.element, elemSprite.sprite as PIXI.Graphics);
+			} else {
+				this.updateComponentSprite(elemSprite.element, elemSprite.sprite as PIXI.Graphics);
 			}
 		}
-		this._chunksToRender = chunksToRender;
+		for (const graphics of this._viewInteractionManager.pastingConnPoints) {
+			const pos = Grid.getPixelPosForPixelPosOnGridWire(graphics.position);
+			this.drawConnectionPoint(graphics, pos);
+		}
 	}
 
 	private onGridShowChange(show: boolean) {
