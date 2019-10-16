@@ -54,7 +54,7 @@ export class FileDropdownComponent implements OnInit {
 	}
 
 	public exportProject() {
-		this.projectSave.exportToFile(Array.from(this.projectsService.allProjects.values()));
+		this.projectSave.exportToFile(this.projectsService.mainProject);
 		this.close();
 	}
 

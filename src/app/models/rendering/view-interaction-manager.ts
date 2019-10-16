@@ -1,4 +1,4 @@
-import {View} from './view';
+import {EditorView} from './editor-view';
 import {Grid} from './grid';
 import * as PIXI from 'pixi.js';
 import InteractionEvent = PIXI.interaction.InteractionEvent;
@@ -18,7 +18,7 @@ import {CopyService} from '../../services/copy/copy.service';
 
 export class ViewInteractionManager {
 
-	private readonly _view: View;
+	private readonly _view: EditorView;
 
 	private _workModeSubscription: Subscription;
 	private _pasteSubscription: Subscription;
@@ -42,7 +42,7 @@ export class ViewInteractionManager {
 	public pastingElements: ElementSprite[] = [];
 	public pastingConnPoints: PIXI.Graphics[] = [];
 
-	constructor(view: View) {
+	constructor(view: EditorView) {
 		this._view = view;
 		this._selectRect = new PIXI.Graphics();
 		this._selectRect.beginFill(ThemingService.staticInstance.getEditorColor('selectRect'), 0.3);

@@ -112,7 +112,7 @@
 		},
 		"UNSAVED_CHANGES": {
 			"TITLE": "Unsaved Changes",
-			"QUESTION": "The current project has unsaved changes, by opening another project, these changes will be lost!",
+			"QUESTION": "The current project has unsaved changes, by opening another project, these changes may be lost!",
 			"OK": "CONTINUE ANYWAYS",
 			"CANCEL": "CANCEL"
 		}

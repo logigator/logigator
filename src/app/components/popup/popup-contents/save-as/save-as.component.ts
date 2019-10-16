@@ -9,7 +9,7 @@ import {UserService} from '../../../../services/user/user.service';
 	templateUrl: './save-as.component.html',
 	styleUrls: ['./save-as.component.scss']
 })
-export class SaveAsComponent extends PopupContentComp<Project[]> implements OnInit {
+export class SaveAsComponent extends PopupContentComp<Project> implements OnInit {
 
 	public projectName: string;
 
@@ -18,7 +18,7 @@ export class SaveAsComponent extends PopupContentComp<Project[]> implements OnIn
 	}
 
 	ngOnInit() {
-		this.projectName = this.inputFromOpener.find(p => p.type === 'project').name;
+		this.projectName = this.inputFromOpener.name;
 	}
 
 	public get isLoggedIn(): boolean {
