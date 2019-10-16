@@ -32,7 +32,7 @@ export class UserService {
 				if (!isLoggedIn) return of(undefined);
 				return this.http.get<HttpResponseData<UserInfo>>(environment.apiPrefix + '/api/user/get').pipe(
 					map(response => response.result),
-					this.errorHandling.catchErrorOperator('Unaable to get user info', undefined)
+					this.errorHandling.catchErrorOperator('Unable to get user info', undefined)
 				);
 			})
 		);
