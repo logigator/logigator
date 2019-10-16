@@ -66,15 +66,10 @@ export class ToolbarComponent {
 	}
 
 	public undo(): void {
-		console.log(this.stateCompiler.compile(this.projectService.currProject));
-		console.log(this.stateCompiler.wiresOnLinks);
-		console.log(this.stateCompiler.wireEndsOnLinks);
-		return
 		this.projectInteraction.undoForCurrent();
 	}
 
 	public redo(): void {
-		this.stateCompiler.clearCache();
 		this.projectInteraction.redoForCurrent();
 	}
 
