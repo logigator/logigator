@@ -32,6 +32,17 @@ export class ErrorHandlingService {
 		};
 	}
 
+	public showErrorMessageOnErrorOperator<T>(errorMessage: string) {
+		return (source: Observable<T>) => {
+			return source.pipe(
+				catchError(err => {
+					this.showErrorMessage(errorMessage);
+					throw err;
+				})
+			);
+		};
+	}
+
 	public showErrorMessage(message: string) {
 		this.toastr.error(message);
 		console.error(message);

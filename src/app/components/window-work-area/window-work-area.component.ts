@@ -8,7 +8,7 @@ import {
 	Renderer2,
 	ViewChild
 } from '@angular/core';
-import {View} from '../../models/rendering/view';
+import {EditorView} from '../../models/rendering/editor-view';
 import {WorkArea} from '../../models/rendering/work-area';
 import {fromEvent} from 'rxjs';
 import {takeUntil} from 'rxjs/operators';
@@ -95,11 +95,6 @@ export class WindowWorkAreaComponent extends WorkArea implements OnInit, OnDestr
 			this.preventContextMenu(this._pixiCanvasContainer, this.renderer2);
 			this.initZoomPan(this._pixiCanvasContainer);
 			this.initPixi(this._pixiCanvasContainer, this.renderer2);
-			this._ticker.setTickerFunction(() => {
-				if (!this._activeView) return;
-				this.updateZoomPan(this._activeView);
-				this._pixiRenderer.render(this._activeView);
-			});
 
 			fromEvent(window, 'mousemove').pipe(
 				takeUntil(this._destroySubject)
@@ -137,7 +132,7 @@ export class WindowWorkAreaComponent extends WorkArea implements OnInit, OnDestr
 	}
 
 	private openProject(projectId: number) {
-		this._activeView = new View(projectId, this._pixiCanvasContainer.nativeElement, this._ticker, true);
+		// this._activeView = new EditorView(projectId, this._pixiCanvasContainer.nativeElement, this._ticker);
 		this.componentName = this.projects.allProjects.get(projectId).id.toString();
 	}
 

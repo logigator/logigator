@@ -66,7 +66,9 @@ export class ShortcutsService {
 
 	public keyDownListener(e: KeyboardEvent) {
 		const action = this.getShortcutActionFromEvent(e);
-		if (!action || (this.workMode.currentWorkMode === 'simulation' && !shortcutsUsableInSimulation[action])) return;
+		if (!action ||
+			this.popup.isPopupOpened ||
+			(this.workMode.currentWorkMode === 'simulation' && !shortcutsUsableInSimulation[action])) return;
 		e.preventDefault();
 		e.stopPropagation();
 		this.applyAction(action);
