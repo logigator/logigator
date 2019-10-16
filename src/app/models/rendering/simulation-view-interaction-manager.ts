@@ -1,14 +1,14 @@
-import {View} from './view';
 import {ElementSprite} from '../element-sprite';
 import * as PIXI from 'pixi.js';
 import InteractionEvent = PIXI.interaction.InteractionEvent;
 import {WorkModeService} from '../../services/work-mode/work-mode.service';
+import {SimulationView} from './simulation-view';
 
 export class SimulationViewInteractionManager {
 
-	private _view: View;
+	private _view: SimulationView;
 
-	constructor(view: View) {
+	constructor(view: SimulationView) {
 		this._view = view;
 	}
 

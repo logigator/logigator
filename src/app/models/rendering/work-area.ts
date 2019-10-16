@@ -6,6 +6,7 @@ import {ThemingService} from '../../services/theming/theming.service';
 import {RenderTicker} from './render-ticker';
 import {ZoomPanInputManager} from './zoom-pan-input-manager';
 import {View} from './view';
+import {EditorView} from './editor-view';
 
 export abstract class WorkArea {
 
@@ -22,6 +23,14 @@ export abstract class WorkArea {
 	protected _destroySubject = new Subject<any>();
 
 	protected _activeView: View;
+
+	protected constructor() {
+		this._ticker.setTickerFunction(() => {
+			if (!this._activeView) return;
+			this.updateZoomPan();
+			this._pixiRenderer.render(this._activeView);
+		});
+	}
 
 	protected initPixi(canvasContainer: ElementRef<HTMLDivElement>, renderer2: Renderer2) {
 		this.loadPixiFont();
@@ -66,22 +75,35 @@ export abstract class WorkArea {
 		this._zoomPanInputManager.interactionEnd$.pipe(takeUntil(this._destroySubject)).subscribe(() => this._ticker.stop());
 	}
 
-	public updateZoomPan(view: View) {
+	private updateZoomPan() {
 		let needsChunkUpdate = false;
 		if (this._zoomPanInputManager.isDragging) {
-			view.zoomPan.translateBy(this._zoomPanInputManager.mouseDX, this._zoomPanInputManager.mouseDY);
+			this._activeView.zoomPan.translateBy(this._zoomPanInputManager.mouseDX, this._zoomPanInputManager.mouseDY);
 			this._zoomPanInputManager.clearMouseDelta();
 			needsChunkUpdate = true;
 		}
 
-		if (this._zoomPanInputManager.isZoomIn) {
-			needsChunkUpdate = view.applyZoom('out', this._zoomPanInputManager.mouseX, this._zoomPanInputManager.mouseY) || needsChunkUpdate;
-		} else if (this._zoomPanInputManager.isZoomOut) {
-			needsChunkUpdate = view.applyZoom('in', this._zoomPanInputManager.mouseX, this._zoomPanInputManager.mouseY) || needsChunkUpdate;
+		if (this._zoomPanInputManager.isZoomIn &&
+			this._activeView.applyZoom('out', this._zoomPanInputManager.mouseX, this._zoomPanInputManager.mouseY)) {
+				needsChunkUpdate = true;
+				this.updateSelectedZoomScale();
+		} else if (this._zoomPanInputManager.isZoomOut &&
+			this._activeView.applyZoom('in', this._zoomPanInputManager.mouseX, this._zoomPanInputManager.mouseY)) {
+				needsChunkUpdate = true;
+				this.updateSelectedZoomScale();
 		}
 
 		if (needsChunkUpdate) {
-			view.updateChunks();
+			this._activeView.updateChunks();
+		}
+	}
+
+	private updateSelectedZoomScale() {
+		if (this._activeView.constructor.name === 'EditorView') {
+			// @ts-ignore
+			this._activeView.updateSelectedElementsScale();
+			// @ts-ignore
+			this._activeView.updatePastingElementsScale();
 		}
 	}
 
