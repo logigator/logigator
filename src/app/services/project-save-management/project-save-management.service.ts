@@ -180,7 +180,13 @@ export class ProjectSaveManagementService {
 			if (project.id >= 1000) cache.set(project.id, project);
 		}
 		const mainProject = allOpenProjects.find(p => p.type === 'project');
-		const deps = Array.from((await this.buildDependencyTree(mainProject, new Map<number, Project>(), cache)).values());
+		let deps;
+		try {
+			deps = Array.from((await this.buildDependencyTree(mainProject, new Map<number, Project>(), cache)).values());
+		} catch (e) {
+			this.errorHandling.showErrorMessage('Unable resolve dependencies of Project');
+			return;
+		}
 		const mapping: ModelDatabaseMap[] = [];
 		for (let i = 0; i < deps.length; i++) {
 			mapping.push({
@@ -239,7 +245,13 @@ export class ProjectSaveManagementService {
 		for (const project of projects) {
 			if (project.id >= 1000) cache.set(project.id, project);
 		}
-		const deps = Array.from((await this.buildDependencyTree(mainProject, new Map<number, Project>(), cache)).values());
+		let deps;
+		try {
+			deps = Array.from((await this.buildDependencyTree(mainProject, new Map<number, Project>(), cache)).values());
+		} catch (e) {
+			this.errorHandling.showErrorMessage('Unable resolve dependencies of Project');
+			return;
+		}
 		const createdComps: Promise<number>[] = [];
 		for (const dep of deps) {
 			if (dep.id < 1000 && dep.id >= 500) {
@@ -250,8 +262,10 @@ export class ProjectSaveManagementService {
 		let mainProjectId = mainProject.id;
 		if (mainProject.id < 1000) {
 			mainProjectId = await this.createProjectServer(name || mainProject.name);
+			if (mainProjectId === undefined) return;
 		}
 		const ids = await Promise.all(createdComps);
+		if (!ids.every(id => id !== undefined)) return;
 		let currentDbIdIndex = 0;
 		const mappings: ModelDatabaseMap[] = [];
 		for (let i = 0; i < deps.length; i++) {
@@ -272,9 +286,15 @@ export class ProjectSaveManagementService {
 		mainProjToSave.dirty = true;
 		projectsToSave.push(mainProjToSave);
 		for (const dep of deps) {
-			const id = mappings.find(m => m.model === dep.id).database || dep.id;
+			const singleMapping = mappings.find(m => m.model === dep.id);
+			let id;
+			if (singleMapping) {
+				id = singleMapping.database;
+			} else {
+				id = dep.id;
+			}
 			const proj = new Project(new ProjectState(this.applyMappingsLoad(dep.currState.model, mappings)), {
-				id: mappings.find(m => m.model === dep.id).database || dep.id,
+				id,
 				name: dep.name,
 				type: 'comp'
 			});
@@ -289,6 +309,7 @@ export class ProjectSaveManagementService {
 		// #!web
 		window.history.pushState(null, null, `/board/${mainProjectId}`);
 		this.errorHandling.showInfo(`Saved Project ${mainProjToSave.name}`);
+		this._projectSource = 'server';
 		return mainProjToSave;
 	}
 
@@ -304,13 +325,15 @@ export class ProjectSaveManagementService {
 
 	public saveProjects(projects: Project[]) {
 		const mainProject = projects.find(p => p.type === 'project');
-		if (this._projectSource === 'server') {
-			this.saveSingleProjectToServer(mainProject);
+		const savePromises = [];
+		if (this._projectSource === 'server' && mainProject.dirty) {
+			savePromises.push(this.saveSingleProjectToServer(mainProject));
+			mainProject.dirty = false;
 		}
 		const comps = projects.filter(p => p.type === 'comp');
-		const savePromises = [];
 		for (const comp of comps) {
 			savePromises.push(this.saveComponent(comp));
+			comp.dirty = false;
 		}
 		Promise.all(savePromises).then(() => this.errorHandling.showInfo('Saved Project and all open Components'));
 	}
