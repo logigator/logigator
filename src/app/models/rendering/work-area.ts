@@ -6,6 +6,7 @@ import {ThemingService} from '../../services/theming/theming.service';
 import {RenderTicker} from './render-ticker';
 import {ZoomPanInputManager} from './zoom-pan-input-manager';
 import {View} from './view';
+import {EditorView} from './editor-view';
 
 export abstract class WorkArea {
 
@@ -85,17 +86,24 @@ export abstract class WorkArea {
 		if (this._zoomPanInputManager.isZoomIn &&
 			this._activeView.applyZoom('out', this._zoomPanInputManager.mouseX, this._zoomPanInputManager.mouseY)) {
 				needsChunkUpdate = true;
-				this._activeView.updateSelectedElementsScale();
-				this._activeView.updatePastingElementsScale();
+				this.updateSelectedZoomScale();
 		} else if (this._zoomPanInputManager.isZoomOut &&
 			this._activeView.applyZoom('in', this._zoomPanInputManager.mouseX, this._zoomPanInputManager.mouseY)) {
 				needsChunkUpdate = true;
-				this._activeView.updateSelectedElementsScale();
-				this._activeView.updatePastingElementsScale();
+				this.updateSelectedZoomScale();
 		}
 
 		if (needsChunkUpdate) {
 			this._activeView.updateChunks();
+		}
+	}
+
+	private updateSelectedZoomScale() {
+		if (this._activeView.constructor.name === 'EditorView') {
+			// @ts-ignore
+			this._activeView.updateSelectedElementsScale();
+			// @ts-ignore
+			this._activeView.updatePastingElementsScale();
 		}
 	}
 

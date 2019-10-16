@@ -16,7 +16,6 @@ import {ComponentLocalFile, ProjectLocalFile} from '../../models/project-local-f
 import {ModelDatabaseMap, ProjectModelResponse} from '../../models/http-responses/project-model-response';
 import {CreateProjectResponse} from '../../models/http-responses/create-project-response';
 import {SaveProjectRequest} from '../../models/http-requests/save-project-request';
-import * as FileSaver from 'file-saver';
 import {ElementType} from '../../models/element-types/element-type';
 import {Observable} from 'rxjs';
 import {ProjectInfoResponse} from '../../models/http-responses/project-info-response';
@@ -299,7 +298,7 @@ export class ProjectSaveManagementService {
 			isComponent: false
 		}).pipe(
 			map(r => Number(r.result.id)),
-			this.errorHandling.catchErrorOperator('Cannot create Projecct', undefined)
+			this.errorHandling.catchErrorOperator('Cannot create Project', undefined)
 		).toPromise();
 	}
 
@@ -408,7 +407,7 @@ export class ProjectSaveManagementService {
 			body.num_outputs = project.numOutputs;
 		}
 		const currentlyInCache = this._cloudProjectCache.get(project.id);
-		currentlyInCache.project.data = body.data;
+		if (currentlyInCache) currentlyInCache.project.data = body.data;
 		return this.http.post<HttpResponseData<{success: boolean}>>(`${environment.apiPrefix}/api/project/save/${project.id}`, body).pipe(
 			this.errorHandling.catchErrorOperator('Unable to save Component or Project on Server', undefined)
 		).toPromise();
