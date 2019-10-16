@@ -94,9 +94,10 @@ export class ProjectsService {
 	}
 
 	public async newProject() {
-		this.projectSaveManagementService.resetProjectSource();
+		this.elementProvider.clearElementsFromFile();
 		const project = Project.empty();
 		await this.closeAllProjects();
+		this.projectSaveManagementService.resetProjectSource();
 		this._projects.set(project.id, project);
 		this._currProject = project;
 		this._mainProject = project;
@@ -107,6 +108,7 @@ export class ProjectsService {
 		const project = this.projectSaveManagementService.openFromFile(content);
 		if (!project) return;
 		await this.closeAllProjects();
+		this.projectSaveManagementService.resetProjectSource();
 		this._projects.set(project.id, project);
 		this._currProject = project;
 		this._mainProject = project;
@@ -124,6 +126,8 @@ export class ProjectsService {
 	}
 
 	private async closeAllProjects() {
+		if (!this.projectSaveManagementService.isFirstSave)
+			this.projectSaveManagementService.saveProjects(Array.from(this.allProjects.values()));
 		for (const proj of this.allProjects.entries()) {
 			await this.closeProject(proj[0]);
 		}
@@ -166,14 +170,13 @@ export class ProjectsService {
 	}
 
 	public async closeProject(id: number) {
-		await this.projectSaveManagementService.saveComponent(this._projects.get(id));
 		this._projectClosedSubject.next(id);
 		this._projects.delete(id);
 	}
 
 	public async saveAll() {
 		if (this.projectSaveManagementService.isFirstSave) {
-			const newMainProject = await this.popup.showPopup(SaveAsComponent, 'POPUP.SAVE.TITLE', false, Array.from(this.allProjects.values()));
+			const newMainProject = await this.popup.showPopup(SaveAsComponent, 'POPUP.SAVE.TITLE', false, this.mainProject);
 			if (newMainProject) {
 				await this.closeAllProjects();
 				this._mainProject = newMainProject;

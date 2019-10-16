@@ -129,6 +129,7 @@ export class ProjectSaveManagementService {
 			this._componentsFromLocalFile.set(newIndex, newComp);
 			this.elemProvService.addUserDefinedElement(newComp.type, newIndex);
 		}
+		this.errorHandling.showInfo(`Created Component ${name}`);
 	}
 
 	public async saveComponent(project: Project) {
@@ -137,11 +138,11 @@ export class ProjectSaveManagementService {
 			const compLocalFile = this._componentsFromLocalFile.get(project.id);
 			compLocalFile.data = project.currState.model;
 		} else if (this.user.isLoggedIn && project.id >= 1000) {
-			if (await this.saveSingleProjectToServer(project)) {
-				this.errorHandling.showInfo(`Saved component ${project.name} on Server`);
-			} else {
-				throw Error();
-			}
+			await this.saveSingleProjectToServer(project);
+			this.errorHandling.showInfo(`Saved component ${project.name} on Server`);
+		} else {
+			this.errorHandling.showErrorMessage('Unable to save Component');
+			throw new Error();
 		}
 	}
 
@@ -154,7 +155,6 @@ export class ProjectSaveManagementService {
 		let parsedFile: ProjectLocalFile;
 		try {
 			parsedFile = JSON.parse(content);
-			delete this._projectSource;
 			this.elemProvService.clearElementsFromFile();
 			parsedFile.components.forEach(c => {
 				this._componentsFromLocalFile.set(c.typeId, c);
@@ -174,15 +174,10 @@ export class ProjectSaveManagementService {
 		}
 	}
 
-	public async exportToFile(allOpenProjects: Project[], name?: string) {
-		const cache = new Map<number, Project>();
-		for (const project of allOpenProjects) {
-			if (project.id >= 1000) cache.set(project.id, project);
-		}
-		const mainProject = allOpenProjects.find(p => p.type === 'project');
+	public async exportToFile(project: Project, name?: string) {
 		let deps;
 		try {
-			deps = Array.from((await this.buildDependencyTree(mainProject, new Map<number, Project>(), cache)).values());
+			deps = Array.from((await this.buildDependencyTree(project)).values());
 		} catch (e) {
 			this.errorHandling.showErrorMessage('Unable resolve dependencies of Project');
 			return;
@@ -197,8 +192,8 @@ export class ProjectSaveManagementService {
 		const modelToSave: ProjectLocalFile = {
 			mainProject: {
 				id: 500,
-				name: name || mainProject.name,
-				data: this.applyMappingsLoad(mainProject.currState.model, mapping)
+				name: name || project.name,
+				data: this.applyMappingsLoad(project.currState.model, mapping)
 			},
 			components: deps.map(c => {
 				const type = this.elemProvService.getElementById(c.id);
@@ -212,24 +207,17 @@ export class ProjectSaveManagementService {
 				} as ComponentLocalFile;
 			}) as ComponentLocalFile[]
 		};
-		if (await saveLocalFile(modelToSave, name || mainProject.name, this.electronService))
+		if (await saveLocalFile(modelToSave, name || project.name, this.electronService))
 			this.errorHandling.showInfo('Exported Project and all needed Components');
 	}
 
-	private async buildDependencyTree(
-		project: Project,
-		resolved: Map<number, Project>,
-		cachedProjects: Map<number, Project>): Promise<Map<number, Project>> {
-		for (const element of project.currState.model.board.elements) {
+	private async buildDependencyTree(project: Project, resolved?: Map<number, Project>): Promise<Map<number, Project>> {
+		if (!resolved) resolved = new Map<number, Project>();
+		for (const element of project.allElements) {
 			if (element.typeId >= 500 && !resolved.has(element.typeId)) {
-				let proj;
-				if (cachedProjects.has(element.typeId)) {
-					proj = cachedProjects.get(element.typeId);
-				} else {
-					proj = await this.openComponent(element.typeId);
-				}
+				const proj = await this.openComponent(element.typeId);
 				resolved.set(element.typeId, proj);
-				resolved = new Map([...resolved, ...(await this.buildDependencyTree(proj, resolved, cachedProjects))]);
+				resolved = new Map([...resolved, ...(await this.buildDependencyTree(proj, resolved))]);
 			}
 		}
 		return resolved;
@@ -239,15 +227,10 @@ export class ProjectSaveManagementService {
 		delete this._projectSource;
 	}
 
-	public async saveAsNewProjectServer(projects: Project[], name: string): Promise<Project> {
-		const mainProject = projects.find(p => p.type === 'project');
-		const cache = new Map<number, Project>();
-		for (const project of projects) {
-			if (project.id >= 1000) cache.set(project.id, project);
-		}
+	public async saveAsNewProjectServer(project: Project, name: string): Promise<Project> {
 		let deps;
 		try {
-			deps = Array.from((await this.buildDependencyTree(mainProject, new Map<number, Project>(), cache)).values());
+			deps = Array.from((await this.buildDependencyTree(project)).values());
 		} catch (e) {
 			this.errorHandling.showErrorMessage('Unable resolve dependencies of Project');
 			return;
@@ -259,9 +242,9 @@ export class ProjectSaveManagementService {
 				createdComps.push(this.newCustomComponentOnServer(dep.name, type.symbol, type.description));
 			}
 		}
-		let mainProjectId = mainProject.id;
-		if (mainProject.id < 1000) {
-			mainProjectId = await this.createProjectServer(name || mainProject.name);
+		let mainProjectId = project.id;
+		if (project.id < 1000) {
+			mainProjectId = await this.createProjectServer(name || project.name);
 			if (mainProjectId === undefined) return;
 		}
 		const ids = await Promise.all(createdComps);
@@ -278,9 +261,9 @@ export class ProjectSaveManagementService {
 			}
 		}
 		const projectsToSave: Project[] = [];
-		const mainProjToSave = new Project(new ProjectState(this.applyMappingsLoad(mainProject.currState.model, mappings)), {
+		const mainProjToSave = new Project(new ProjectState(this.applyMappingsLoad(project.currState.model, mappings)), {
 			type: 'project',
-			name: name || mainProject.name,
+			name: name || project.name,
 			id: mainProjectId
 		});
 		mainProjToSave.dirty = true;
@@ -432,7 +415,7 @@ export class ProjectSaveManagementService {
 		const currentlyInCache = this._cloudProjectCache.get(project.id);
 		if (currentlyInCache) currentlyInCache.project.data = body.data;
 		return this.http.post<HttpResponseData<{success: boolean}>>(`${environment.apiPrefix}/api/project/save/${project.id}`, body).pipe(
-			this.errorHandling.catchErrorOperator('Unable to save Component or Project on Server', undefined)
+			this.errorHandling.showErrorMessageOnErrorOperator('Unable to save Component or Project on Server')
 		).toPromise();
 	}
 

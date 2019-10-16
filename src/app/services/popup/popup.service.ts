@@ -7,6 +7,8 @@ import {PopupContentComp} from '../../components/popup/popup-contents/popup-cont
 })
 export class PopupService {
 
+	private _popupOpened = false;
+
 	constructor(
 		private componentFactoryResolver: ComponentFactoryResolver,
 		private appRef: ApplicationRef,
@@ -29,13 +31,19 @@ export class PopupService {
 			this.appRef.attachView(popupRef.hostView);
 			const domElem = (popupRef.hostView as EmbeddedViewRef<any>).rootNodes[0] as HTMLElement;
 			document.body.appendChild(domElem);
+			this._popupOpened = true;
 
 			const subscription = popupRef.instance.requestClose.subscribe(output => {
 				this.appRef.detachView(popupRef.hostView);
 				popupRef.destroy();
 				subscription.unsubscribe();
+				this._popupOpened = false;
 				resolve(output);
 			});
 		});
+	}
+
+	public get isPopupOpened(): boolean {
+		return this._popupOpened;
 	}
 }

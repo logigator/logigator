@@ -132,7 +132,7 @@ export class WindowWorkAreaComponent extends WorkArea implements OnInit, OnDestr
 	}
 
 	private openProject(projectId: number) {
-		this._activeView = new EditorView(projectId, this._pixiCanvasContainer.nativeElement, this._ticker, true);
+		// this._activeView = new EditorView(projectId, this._pixiCanvasContainer.nativeElement, this._ticker);
 		this.componentName = this.projects.allProjects.get(projectId).id.toString();
 	}
 
