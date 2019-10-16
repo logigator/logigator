@@ -43,16 +43,15 @@
 
 	.main-menu {
 		// #!web
-		height: 90%;
+		height: 75%;
 
 		// #!electron
 		height: 100%;
 
-		display: grid;
+		display: flex;
+		flex-direction: column;
+		justify-content: space-between;
 		align-self: center;
-
-		// #!web
-		grid-template-rows: auto #{$top-bar-height / 2.5};
 
 		.project-title {
 			font-size: 1.2rem;
