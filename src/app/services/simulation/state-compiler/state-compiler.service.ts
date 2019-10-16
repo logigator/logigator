@@ -413,7 +413,6 @@ export class StateCompilerService {
 		this._wiresOnLinks.set(this._currIdentifier, new Map<number, Element[]>());
 		this._wireEndsOnLinks.set(this._currIdentifier, new Map<number, WireEndOnComp[]>());
 		// }
-		debugger
 		const {units, replacements} = this.compileInner(unitsState, outerUnit);
 		// this._currId = typeId;
 		this._currIdentifier = this._outerIdentifier;
