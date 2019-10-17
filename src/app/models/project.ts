@@ -97,6 +97,18 @@ export class Project {
 				element
 			});
 		}
+		for (const chunks of this._currState.chunks) {
+			for (const chunk of chunks) {
+				if (!chunk || !chunk.connectionPoints)
+					continue;
+				for (const cp of chunk.connectionPoints) {
+					out.push({
+						name: 'conWire',
+						pos: cp.clone()
+					});
+				}
+			}
+		}
 		return out;
 	}
 
