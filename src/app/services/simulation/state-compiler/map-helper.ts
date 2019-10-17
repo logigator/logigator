@@ -3,6 +3,7 @@
 // import {LinksOnWireEnds, UnitToElement} from './compiler-types';
 //
 import {CompiledComp} from './compiled-comp';
+import {SimulationUnit, SimulationUnits} from '../../../models/simulation/SimulationUnit';
 
 export abstract class MapHelper {
 //
@@ -41,6 +42,14 @@ export abstract class MapHelper {
 // 		}
 // 		return out;
 // 	}
+
+	public static cloneUnits(units: SimulationUnit[]): SimulationUnit[] {
+		const out = Array<SimulationUnit>(units.length);
+		for (let i = 0; i < units.length; i++) {
+			out[i] = SimulationUnits.clone(units[i]);
+		}
+		return out;
+	}
 
 	public static pushInMapArray<K, V>(map: Map<K, Array<V>>, key: K, value: V): void {
 		if (map.has(key)) {
