@@ -206,14 +206,18 @@ export class StateCompilerService {
 		const compiledProject = this._udcCache.get(project.id);
 		const units = [...compiledProject.units];
 
-		// const idDif = this._
+		let highestInProj = this._highestLinkId;
 		for (const unit of units) {
 			[unit.inputs, unit.outputs].forEach(arr => {
 				for (let i = 0; i < arr.length; i++) {
-
+					arr[i] += this._highestLinkId;
+					if (arr[i] > highestInProj) {
+						highestInProj = arr[i];
+					}
 				}
 			});
 		}
+		this._highestLinkId = highestInProj;
 
 		return [];
 	}
