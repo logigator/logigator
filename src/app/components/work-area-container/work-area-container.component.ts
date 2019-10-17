@@ -11,7 +11,7 @@ import {WorkModeService} from '../../services/work-mode/work-mode.service';
 })
 export class WorkAreaContainerComponent implements OnInit {
 
-	public windowWorkAreas: WindowWorkAreaMeta[] = [];
+	public windowWorkAreas: WindowWorkAreaMeta[] = [{showing: false}, {showing: false}];
 
 	@ViewChild('windowDragBounding', {static: true})
 	workAreaContainer: ElementRef<HTMLElement>;
@@ -29,17 +29,56 @@ export class WorkAreaContainerComponent implements OnInit {
 				this.renderer2.setStyle(this.workAreaContainer.nativeElement, 'width', '100%');
 			} else {
 				this.renderer2.removeStyle(this.workAreaContainer.nativeElement, 'width');
+				this.windowWorkAreas.forEach(a => a.showing = false);
+				this.cdr.detectChanges();
 			}
 		});
 	}
 
-	async onRequestElementInspection(event: ReqInspectElementEvent) {
+	async onRequestElementInspection(event: ReqInspectElementEvent, fromWindow?: number) {
 		console.log(event);
-		if (this.windowWorkAreas.find(w => w.identifier === event.identifier)) return;
-		this.windowWorkAreas.push({
+		if (this.windowWorkAreas.find(a => a.identifier === event.identifier)) return;
+
+		const meta: WindowWorkAreaMeta = {
+			showing: true,
+			project: await this.projectSaveManagement.openComponent(event.typeId),
 			identifier: event.identifier,
-			project: await this.projectSaveManagement.openComponent(event.typeId)
-		});
+			zIndex: 1
+		};
+
+		this.moveAllBack();
+
+		if (fromWindow === undefined) {
+			let firstHidden = this.windowWorkAreas.find(a => !a.showing);
+			if (!firstHidden) firstHidden = this.windowWorkAreas[0];
+			firstHidden.showing = meta.showing;
+			firstHidden.identifier = meta.identifier;
+			firstHidden.project = meta.project;
+			firstHidden.zIndex = meta.zIndex;
+			this.cdr.detectChanges();
+			return;
+		}
+
+		this.windowWorkAreas[fromWindow].showing = meta.showing;
+		this.windowWorkAreas[fromWindow].identifier = meta.identifier;
+		this.windowWorkAreas[fromWindow].project = meta.project;
+		this.windowWorkAreas[fromWindow].zIndex = meta.zIndex;
+		this.cdr.detectChanges();
+	}
+
+	private moveAllBack() {
+		for (let i = 0; i < this.windowWorkAreas.length; i++) {
+			this.windowWorkAreas[i].zIndex = 0;
+		}
+	}
+
+	public setOnTop(window: number) {
+		this.moveAllBack();
+		this.windowWorkAreas[window].zIndex = 1;
+	}
+
+	requestHide(window: number) {
+		this.windowWorkAreas[window].showing = false;
 		this.cdr.detectChanges();
 	}
 

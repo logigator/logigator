@@ -1,8 +1,8 @@
-<div class="collision-box" #popup>
+<div class="collision-box" [style.z-index]="zIndex" #popup (mousedown)="doRequestOnTop()">
 	<div class="window-container">
 		<div class="header" #header>
-			<p>{{project.name}}</p>
-			<img src="/assets/icons/light/close.svg" (click)="hide()">
+			<p>{{project?.name}}</p>
+			<img src="/assets/icons/light/close.svg" (click)="requestHide()">
 		</div>
 		<div class="canvas-window-container" #canvasContainer></div>
 	</div>

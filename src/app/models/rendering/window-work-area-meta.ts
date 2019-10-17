@@ -1,6 +1,8 @@
 import {Project} from '../project';
 
 export interface WindowWorkAreaMeta {
-	project: Project;
-	identifier: string;
+	project?: Project;
+	identifier?: string;
+	showing?: boolean;
+	zIndex?: number;
 }

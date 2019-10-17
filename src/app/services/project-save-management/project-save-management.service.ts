@@ -132,7 +132,7 @@ export class ProjectSaveManagementService {
 		this.errorHandling.showInfo(`Created Component ${name}`);
 	}
 
-	public async saveComponent(project: Project) {
+	public async saveComponent(project: Project): Promise<void> {
 		if (!project.dirty) return;
 		if (project.id < 1000 && this._componentsFromLocalFile.has(project.id)) {
 			const compLocalFile = this._componentsFromLocalFile.get(project.id);

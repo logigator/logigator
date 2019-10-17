@@ -1,11 +1,11 @@
 import {
 	Component,
-	ElementRef,
+	ElementRef, EventEmitter,
 	Input,
-	NgZone,
+	NgZone, OnChanges,
 	OnDestroy,
-	OnInit,
-	Renderer2,
+	OnInit, Output,
+	Renderer2, SimpleChanges,
 	ViewChild
 } from '@angular/core';
 import {WorkArea} from '../../models/rendering/work-area';
@@ -18,7 +18,7 @@ import {WindowDragManager} from './window-drag-manager';
 	templateUrl: './window-work-area.component.html',
 	styleUrls: ['./window-work-area.component.scss']
 })
-export class WindowWorkAreaComponent extends WorkArea implements OnInit, OnDestroy {
+export class WindowWorkAreaComponent extends WorkArea implements OnInit, OnChanges, OnDestroy {
 
 	constructor(
 		private renderer2: Renderer2,
@@ -31,7 +31,22 @@ export class WindowWorkAreaComponent extends WorkArea implements OnInit, OnDestr
 	public project: Project;
 
 	@Input()
+	parent: string;
+
+	@Input()
 	dragBounding: HTMLElement;
+
+	@Input()
+	showing: boolean;
+
+	@Input()
+	zIndex: number;
+
+	@Output()
+	onRequestHide = new EventEmitter<void>();
+
+	@Output()
+	requestOnTop = new EventEmitter<void>();
 
 	@ViewChild('popup', {static: true})
 	private _popup: ElementRef<HTMLDivElement>;
@@ -45,32 +60,58 @@ export class WindowWorkAreaComponent extends WorkArea implements OnInit, OnDestr
 	private _dragManager: WindowDragManager;
 
 	ngOnInit() {
-		this._activeView = new SimulationView(
-			this.project,
-			this._pixiCanvasContainer.nativeElement,
-			this._ticker,
-			this.requestInspectElementInSim,
-			'');
-
 		this.ngZone.runOutsideAngular(async () => {
 			this.preventContextMenu(this._pixiCanvasContainer, this.renderer2);
 			this.initZoomPan(this._pixiCanvasContainer);
 			this.initPixi(this._pixiCanvasContainer, this.renderer2);
-
-			this._dragManager = new WindowDragManager(
-				this.dragBounding,
-				this._pixiCanvasContainer.nativeElement,
-				this._popup.nativeElement,
-				this._header.nativeElement,
-				this.renderer2,
-				this._activeView as SimulationView,
-				this._pixiRenderer
-			);
 		});
+	}
+
+	ngOnChanges(changes: SimpleChanges): void {
+		if (changes.showing) {
+			if (changes.showing.currentValue) {
+				this.show();
+			} else {
+				this.hide();
+			}
+		}
+		if (changes.project && this.showing) {
+			this.ngZone.run(() => {
+				this._activeView = new SimulationView(
+					this.project,
+					this._pixiCanvasContainer.nativeElement,
+					this._ticker,
+					this.requestInspectElementInSim,
+					this.parent);
+
+				if (this._dragManager) this._dragManager.destroy();
+
+				this._dragManager =  new WindowDragManager(
+					this.dragBounding,
+					this._pixiCanvasContainer.nativeElement,
+					this._popup.nativeElement,
+					this._header.nativeElement,
+					this.renderer2,
+					this._activeView as SimulationView,
+					this._pixiRenderer
+				);
+			});
+		}
+	}
+
+	public requestHide() {
+		this.onRequestHide.emit();
+	}
+
+	public doRequestOnTop() {
+		this.requestOnTop.next();
 	}
 
 	public hide() {
 		this.renderer2.setStyle(this._popup.nativeElement, 'display', 'none');
+		if (!this._dragManager) return;
+		this._dragManager.destroy();
+		delete this._dragManager;
 	}
 
 	public show() {

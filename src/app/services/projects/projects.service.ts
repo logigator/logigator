@@ -188,6 +188,13 @@ export class ProjectsService {
 		}
 	}
 
+	public async saveAllComponents() {
+		for (const p of this._projects.values()) {
+			if (p.type !== 'comp') continue;
+			await this.projectSaveManagementService.saveComponent(p);
+		}
+	}
+
 	public getProjectById(id: number): Project {
 		return this._projects.get(id);
 	}

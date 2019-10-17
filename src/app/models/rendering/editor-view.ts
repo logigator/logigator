@@ -66,13 +66,6 @@ export class EditorView extends View {
 		}
 	}
 
-	private onZoomClick(dir: 'in' | 'out' | '100') {
-		if (this.applyZoom(dir)) {
-			this.updateChunks();
-			this.ticker.singleFrame();
-		}
-	}
-
 	public placeWires(start: PIXI.Point, middle: PIXI.Point, end?: PIXI.Point) {
 		this._project.addWire(start, middle, end);
 	}

@@ -6,6 +6,9 @@ import {ElementSprite} from '../element-sprite';
 import {SimulationViewInteractionManager} from './simulation-view-interaction-manager';
 import {EventEmitter} from '@angular/core';
 import {ReqInspectElementEvent} from './req-inspect-element-event';
+import {ProjectInteractionService} from '../../services/project-interaction/project-interaction.service';
+import {filter, takeUntil} from 'rxjs/operators';
+import {ProjectsService} from '../../services/projects/projects.service';
 
 export class SimulationView extends View {
 
@@ -27,6 +30,11 @@ export class SimulationView extends View {
 		this.parentProjectIdentifier = parent;
 		this._simViewInteractionManager = new SimulationViewInteractionManager(this);
 		this.applyOpenActions();
+
+		ProjectInteractionService.staticInstance.onZoomChangeClick$.pipe(
+			filter(_ => this._project.type === 'project'),
+			takeUntil(this._destroySubject)
+		).subscribe((dir => this.onZoomClick(dir)));
 	}
 
 	public placeComponentOnView(element: Element): ElementSprite {

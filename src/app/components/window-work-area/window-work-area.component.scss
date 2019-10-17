@@ -4,7 +4,7 @@
 	@include themify() {
 		background-color: rgba(0, 0, 0, 0);
 	}
-	
+
 	user-select: none;
 	width: 500px;
 	height: 300px;
@@ -12,6 +12,7 @@
 	position: fixed;
 	bottom: 0;
 	right: 0;
+	display: none;
 
 	.window-container {
 		@include themify() {

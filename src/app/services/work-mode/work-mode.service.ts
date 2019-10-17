@@ -1,8 +1,9 @@
 import { Injectable } from '@angular/core';
 import {WorkMode} from '../../models/work-modes';
 import {BehaviorSubject, Observable, ReplaySubject} from 'rxjs';
-import {distinctUntilChanged, map, takeUntil} from 'rxjs/operators';
+import {distinctUntilChanged, map, switchMap, takeUntil} from 'rxjs/operators';
 import {ProjectSaveManagementService} from '../project-save-management/project-save-management.service';
+import {ProjectsService} from '../projects/projects.service';
 
 @Injectable({
 	providedIn: 'root'
@@ -16,7 +17,7 @@ export class WorkModeService {
 
 	private _workModeSubject = new ReplaySubject<WorkMode>(1);
 
-	constructor(private projectSaveManagement: ProjectSaveManagementService) {
+	constructor(private projectSaveManagement: ProjectSaveManagementService, private project: ProjectsService) {
 		WorkModeService.staticInstance = this;
 
 		if (projectSaveManagement.isShare) {
@@ -26,8 +27,12 @@ export class WorkModeService {
 		}
 	}
 
-	public setWorkMode(mode: WorkMode, componentTypeToBuild?: number) {
+	public async setWorkMode(mode: WorkMode, componentTypeToBuild?: number) {
 		if (this.projectSaveManagement.isShare) return;
+
+		if (mode === 'simulation') {
+			await this.project.saveAllComponents();
+		}
 		this._currentWorkMode = mode;
 		this._workModeSubject.next(mode);
 		if (componentTypeToBuild) {
@@ -50,7 +55,7 @@ export class WorkModeService {
 	public get onSimulationModeChange(): Observable<boolean> {
 		return this._workModeSubject.pipe(
 			map((mode) => mode === 'simulation'),
-			distinctUntilChanged()
+			distinctUntilChanged(),
 		);
 	}
 

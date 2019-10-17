@@ -356,6 +356,13 @@ export abstract class View extends PIXI.Container {
 		}
 	}
 
+	protected onZoomClick(dir: 'in' | 'out' | '100') {
+		if (this.applyZoom(dir)) {
+			this.updateChunks();
+			this.ticker.singleFrame();
+		}
+	}
+
 	public get projectId(): number {
 		return this._project.id;
 	}
