@@ -126,10 +126,9 @@ export class ProjectsService {
 	}
 
 	private async closeAllProjects() {
-		if (!this.projectSaveManagementService.isFirstSave)
-			this.projectSaveManagementService.saveProjects(Array.from(this.allProjects.values()));
-		for (const proj of this.allProjects.entries()) {
-			await this.closeProject(proj[0]);
+		for (const [key, proj] of this.allProjects.entries()) {
+			if (proj.type === 'project' && this.projectSaveManagementService.isFirstSave) continue;
+			await this.closeProject(key);
 		}
 	}
 
@@ -170,6 +169,7 @@ export class ProjectsService {
 	}
 
 	public async closeProject(id: number) {
+		await this.projectSaveManagementService.saveComponent(this.allProjects.get(id));
 		this._projectClosedSubject.next(id);
 		this._projects.delete(id);
 	}
