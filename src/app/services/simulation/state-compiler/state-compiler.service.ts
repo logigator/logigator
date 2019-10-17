@@ -2,7 +2,7 @@ import {Injectable} from '@angular/core';
 import {Project} from '../../../models/project';
 import {SimulationUnit, SimulationUnits} from '../../../models/simulation/SimulationUnit';
 import {
-	AbsPlugIdsOnLinks, ElementToUnit, LinkOnWireEnd,
+	ElementToUnit, LinkOnWireEnd,
 	PosOfElem, UnitElementBidir,
 	UnitToElement, WireEndLinksOnElem,
 	WireEndOnComp,
@@ -56,10 +56,11 @@ export class StateCompilerService {
 	}
 
 	public async compile(project: Project): Promise<SimulationUnit[]> {
+		const start = Date.now();
 		this.initElemsOnLinks('' + project.id);
-		const depTree = await this.projectSaveManagement.buildDependencyTree(project);
-		depTree.set(project.id, project);
+		const depTree = await this.projectsToCompile(project);
 		this.compileDependencies(depTree);
+		console.log(`Compilation took ${Date.now() - start}ms`);
 		return [];
 	}
 
@@ -68,6 +69,11 @@ export class StateCompilerService {
 		this._wireEndsOnLinks = new Map<string, WireEndsOnLinks>([[identifier, new Map<number, WireEndOnComp[]>()]]);
 	}
 
+	private async projectsToCompile(project: Project): Promise<Map<number, Project>> {
+		const out = await this.projectSaveManagement.buildDependencyTree(project);
+		out.set(project.id, project);
+		return out;
+	}
 
 	private compileDependencies(depTree: Map<number, Project>): void {
 		for (const [typeId, project] of depTree.entries()) {
@@ -85,12 +91,17 @@ export class StateCompilerService {
 			units: [],
 			wiresOnLinks: new Map<number, Element[]>(),
 			wireEndsOnLinks: new Map<number, WireEndOnComp[]>(),
-			connectedPlugs: []
+			connectedPlugs: [],
+			plugsByIndex: []
 		};
 		const linksOnWireEnds: WireEndLinksOnElem = new Map<Element, LinkOnWireEnd>();
+
 		this.setAllLinks(unitElems, linksOnWireEnds, state, compiledComp);
+
 		compiledComp.units = [...unitElems.unitToElement.keys()];
+		this.loadConnectedPlugs(compiledComp);
 		MapHelper.uniquify(compiledComp);
+
 		console.log(compiledComp);
 		return compiledComp;
 	}
@@ -160,6 +171,33 @@ export class StateCompilerService {
 		for (const simUnit of simUnits.keys()) {
 			if (this.elementProvider.isPlugElement(simUnit.typeId)) {
 				simUnits.delete(simUnit);
+			}
+		}
+	}
+
+	private loadConnectedPlugs(compiledComp: CompiledComp) {
+		for (let i = 0; i < compiledComp.plugsByIndex.length; i++) {
+			const plugIndex = compiledComp.plugsByIndex[i];
+			const value = SimulationUnits.concatIO(compiledComp.units[plugIndex])[0];
+			for (let j = i + 1; j < compiledComp.plugsByIndex.length; j++) {
+				const otherIndex = compiledComp.plugsByIndex[j];
+				const otherValue = SimulationUnits.concatIO(compiledComp.units[otherIndex])[0];
+				if (value === otherValue) {
+					let pushed = false;
+					for (const arr of compiledComp.connectedPlugs) {
+						if (arr.includes(plugIndex) && !arr.includes(otherIndex)) {
+							arr.push(otherIndex);
+							pushed = true;
+						} else if (arr.includes(otherIndex) && !arr.includes(plugIndex)) {
+							arr.push(plugIndex);
+							pushed = true;
+						} else if (arr.includes(otherIndex) && arr.includes(plugIndex)) {
+							pushed = true;
+						}
+					}
+					if (!pushed)
+						compiledComp.connectedPlugs.push([plugIndex, otherIndex]);
+				}
 			}
 		}
 	}
