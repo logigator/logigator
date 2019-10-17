@@ -66,6 +66,8 @@ export class ToolbarComponent {
 	}
 
 	public undo(): void {
+		this.stateCompiler.compile(this.projectService.currProject);
+		return;
 		this.projectInteraction.undoForCurrent();
 	}
 

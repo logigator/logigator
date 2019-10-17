@@ -1,8 +1,15 @@
-import {ConnectedToPlugByIndex, UnitToElement} from './compiler-types';
+import {WireEndsOnLinks, WiresOnLinks} from './compiler-types';
+import {SimulationUnit} from '../../../models/simulation/SimulationUnit';
 
 export interface CompiledComp {
-	startId: number;
-	units: UnitToElement;
-	connectedToPlug: ConnectedToPlugByIndex;
-	replacements: Map<number, number[]>;
+	units: SimulationUnit[];
+	wiresOnLinks: WiresOnLinks;
+	wireEndsOnLinks: WireEndsOnLinks;
+	connectedPlugs: number[][];
+	/*
+	* [
+	* 	[0, 1]
+	* 	[0, 3]
+	* ]
+	*/
 }

@@ -5,6 +5,7 @@ import * as PIXI from 'pixi.js';
 import {CollisionFunctions} from './collision-functions';
 import {Action, ChangeType} from './action';
 import {ElementProviderService} from '../services/element-provider/element-provider.service';
+import {WireEndOnElem} from '../services/simulation/state-compiler/compiler-types';
 
 export class ProjectState {
 
@@ -84,12 +85,12 @@ export class ProjectState {
 
 
 	private addConnectionPoint(pos: PIXI.Point): void {
-		if (this.wireEndsOnPoint(pos).length > 2)
+		if (this.elemsOnPoint(pos).length > 2)
 			this.loadConIntoChunks(pos);
 	}
 
 	private removeConnectionPoint(pos: PIXI.Point): void {
-		if (this.wireEndsOnPoint(pos).length < 3)
+		if (this.elemsOnPoint(pos).length < 3)
 			this.removeConFromChunks(pos);
 	}
 
@@ -323,8 +324,8 @@ export class ProjectState {
 		if (wire0.typeId !== 0 || wire1.typeId !== 0 || wire0.id === wire1.id || !CollisionFunctions.doWiresOverlap(wire0, wire1))
 			return null;
 		if (!doDisconnect) {
-			if (wire0.pos.equals(wire1.endPos) && this.wireEndsOnPoint(wire0.pos).length > 2 ||
-				wire1.pos.equals(wire0.endPos) && this.wireEndsOnPoint(wire1.pos).length > 2)
+			if (wire0.pos.equals(wire1.endPos) && this.elemsOnPoint(wire0.pos).length > 2 ||
+				wire1.pos.equals(wire0.endPos) && this.elemsOnPoint(wire1.pos).length > 2)
 				return null;
 		}
 		const newElem = Elements.genNewElement(0, undefined, undefined);
@@ -379,7 +380,7 @@ export class ProjectState {
 		return outWires;
 	}
 
-	public wireEndsOnPoint(pos: PIXI.Point): Element[] {
+	public elemsOnPoint(pos: PIXI.Point): Element[] {
 		const chunkX = CollisionFunctions.gridPosToChunk(pos.x);
 		const chunkY = CollisionFunctions.gridPosToChunk(pos.y);
 		const outWires: Element[] = [];
@@ -389,6 +390,19 @@ export class ProjectState {
 			}
 		}
 		return outWires;
+	}
+
+	public wireEndsOnPoint(pos: PIXI.Point): WireEndOnElem {
+		const chunkX = CollisionFunctions.gridPosToChunk(pos.x);
+		const chunkY = CollisionFunctions.gridPosToChunk(pos.y);
+		const out: WireEndOnElem = new Map<Element, number>();
+		for (const elem of this.elementsInChunk(chunkX, chunkY)) {
+			const index = CollisionFunctions.wirePointIndex(elem, pos);
+			if (index >= 0) {
+				out.set(elem, index);
+			}
+		}
+		return out;
 	}
 
 
