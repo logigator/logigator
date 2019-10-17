@@ -1,7 +1,7 @@
 import { Injectable } from '@angular/core';
 import {WorkMode} from '../../models/work-modes';
 import {BehaviorSubject, Observable, ReplaySubject} from 'rxjs';
-import {distinctUntilChanged} from 'rxjs/operators';
+import {distinctUntilChanged, map, takeUntil} from 'rxjs/operators';
 import {ProjectSaveManagementService} from '../project-save-management/project-save-management.service';
 
 @Injectable({
@@ -43,6 +43,13 @@ export class WorkModeService {
 
 	public get currentWorkMode$(): Observable<WorkMode> {
 		return this._workModeSubject.asObservable().pipe(
+			distinctUntilChanged()
+		);
+	}
+
+	public get onSimulationModeChange(): Observable<boolean> {
+		return this._workModeSubject.pipe(
+			map((mode) => mode === 'simulation'),
 			distinctUntilChanged()
 		);
 	}

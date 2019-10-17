@@ -1,5 +1,4 @@
 import {
-	ChangeDetectionStrategy,
 	Component,
 	ElementRef,
 	NgZone,
@@ -12,7 +11,6 @@ import {EditorView} from '../../models/rendering/editor-view';
 import {ProjectsService} from '../../services/projects/projects.service';
 import {Project} from '../../models/project';
 import {WorkArea} from '../../models/rendering/work-area';
-import {WindowWorkAreaComponent} from '../window-work-area/window-work-area.component';
 import {distinctUntilChanged, map, takeUntil} from 'rxjs/operators';
 import {WorkModeService} from '../../services/work-mode/work-mode.service';
 import {SimulationView} from '../../models/rendering/simulation-view';
@@ -29,9 +27,6 @@ export class WorkAreaComponent extends WorkArea implements OnInit, OnDestroy {
 
 	@ViewChild('pixiCanvasContainer', {static: true})
 	private _pixiCanvasContainer: ElementRef<HTMLDivElement>;
-
-	@ViewChild('pixiWindowContainer', {static: true})
-	private _pixiWindowContainer: WindowWorkAreaComponent;
 
 	constructor(
 		private renderer2: Renderer2,
@@ -66,11 +61,9 @@ export class WorkAreaComponent extends WorkArea implements OnInit, OnDestroy {
 				takeUntil(this._destroySubject)
 			).subscribe(id => this.onProjectSwitch(id));
 
-			this.workMode.currentWorkMode$.pipe(
+			this.workMode.onSimulationModeChange.pipe(
 				takeUntil(this._destroySubject),
-				map((mode) => mode === 'simulation'),
-				distinctUntilChanged()
-			).subscribe(isSim => this.isSimulationModeChanged(isSim));
+			).subscribe(isSim => this.onSimulationModeChanged(isSim));
 		});
 	}
 
@@ -86,12 +79,16 @@ export class WorkAreaComponent extends WorkArea implements OnInit, OnDestroy {
 		return this._activeView;
 	}
 
-	private isSimulationModeChanged(simulation: boolean) {
+	private onSimulationModeChanged(simulation: boolean) {
 		if (simulation) {
-			this.renderer2.setStyle(this._pixiCanvasContainer.nativeElement, 'width', '100%');
 			this.projectsService.allProjects.forEach(proj => {
 				if (proj.type === 'project') {
-					this._activeView = new SimulationView(proj, this._pixiCanvasContainer.nativeElement, this._ticker);
+					this._activeView = new SimulationView(
+						proj,
+						this._pixiCanvasContainer.nativeElement,
+						this._ticker,
+						this.requestInspectElementInSim,
+						this.projectsService.mainProject.id.toString());
 					this._ticker.singleFrame();
 				}
 			});
@@ -100,7 +97,6 @@ export class WorkAreaComponent extends WorkArea implements OnInit, OnDestroy {
 			this._activeView.destroy();
 			delete this._activeView;
 			this.switchToProject(this.projectsService.allProjects.values().next().value.id);
-			this.renderer2.removeStyle(this._pixiCanvasContainer.nativeElement, 'width');
 		}
 		if (this._pixiRenderer) {
 			this._pixiRenderer.resize(this._pixiCanvasContainer.nativeElement.offsetWidth, this._pixiCanvasContainer.nativeElement.offsetHeight);

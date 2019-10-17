@@ -1,12 +1,13 @@
 import * as PIXI from 'pixi.js';
 import {fromEvent, ReplaySubject, Subject} from 'rxjs';
 import {takeUntil} from 'rxjs/operators';
-import {ElementRef, Renderer2} from '@angular/core';
+import {ElementRef, EventEmitter, Output, Renderer2} from '@angular/core';
 import {ThemingService} from '../../services/theming/theming.service';
 import {RenderTicker} from './render-ticker';
 import {ZoomPanInputManager} from './zoom-pan-input-manager';
 import {View} from './view';
 import {EditorView} from './editor-view';
+import {ReqInspectElementEvent} from './req-inspect-element-event';
 
 export abstract class WorkArea {
 
@@ -23,6 +24,9 @@ export abstract class WorkArea {
 	protected _destroySubject = new Subject<any>();
 
 	protected _activeView: View;
+
+	@Output()
+	requestInspectElementInSim = new EventEmitter<ReqInspectElementEvent>();
 
 	protected constructor() {
 		this._ticker.setTickerFunction(() => {
@@ -111,5 +115,8 @@ export abstract class WorkArea {
 		this._zoomPanInputManager.destroy();
 		this._destroySubject.next();
 		this._destroySubject.unsubscribe();
+		if (this._activeView) {
+			this._activeView.destroy();
+		}
 	}
 }

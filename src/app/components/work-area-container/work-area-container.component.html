@@ -1,0 +1,8 @@
+<div class="work-area-container" #windowDragBounding>
+	<app-work-area (requestInspectElementInSim)="onRequestElementInspection($event)"></app-work-area>
+	<app-window-work-area
+		*ngFor="let win of windowWorkAreas"
+	    [dragBounding]="windowDragBounding"
+		[project]="win.project">
+	</app-window-work-area>
+</div>

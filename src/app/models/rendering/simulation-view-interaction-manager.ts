@@ -3,6 +3,7 @@ import * as PIXI from 'pixi.js';
 import InteractionEvent = PIXI.interaction.InteractionEvent;
 import {WorkModeService} from '../../services/work-mode/work-mode.service';
 import {SimulationView} from './simulation-view';
+import {ElementProviderService} from '../../services/element-provider/element-provider.service';
 
 export class SimulationViewInteractionManager {
 
@@ -21,7 +22,12 @@ export class SimulationViewInteractionManager {
 	}
 
 	private onCompClick(e: InteractionEvent, elemSprite: ElementSprite) {
-		console.log(elemSprite);
+		if (ElementProviderService.staticInstance.isUserElement(elemSprite.element.typeId)) {
+			this._view.requestInspectElemEventEmitter.emit({
+				identifier: `${this._view.parentProjectIdentifier}:${elemSprite.element.id}-${elemSprite.element.typeId}`,
+				typeId: elemSprite.element.typeId
+			});
+		}
 	}
 
 }

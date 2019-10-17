@@ -4,13 +4,27 @@ import {RenderTicker} from './render-ticker';
 import {Element} from '../element';
 import {ElementSprite} from '../element-sprite';
 import {SimulationViewInteractionManager} from './simulation-view-interaction-manager';
+import {EventEmitter} from '@angular/core';
+import {ReqInspectElementEvent} from './req-inspect-element-event';
 
 export class SimulationView extends View {
 
 	private _simViewInteractionManager: SimulationViewInteractionManager;
 
-	constructor(project: Project, htmlContainer: HTMLElement, ticker: RenderTicker) {
+	public requestInspectElemEventEmitter: EventEmitter<ReqInspectElementEvent>;
+
+	public parentProjectIdentifier: string;
+
+	constructor(
+		project: Project,
+		htmlContainer: HTMLElement,
+		ticker: RenderTicker,
+		requestInspectElemEventEmitter: EventEmitter<ReqInspectElementEvent>,
+		parent: string
+	) {
 		super(project, htmlContainer, ticker);
+		this.requestInspectElemEventEmitter = requestInspectElemEventEmitter;
+		this.parentProjectIdentifier = parent;
 		this._simViewInteractionManager = new SimulationViewInteractionManager(this);
 		this.applyOpenActions();
 	}

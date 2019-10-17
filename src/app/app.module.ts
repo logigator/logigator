@@ -39,6 +39,7 @@ import { NgxElectronModule } from 'ngx-electron';
 import { LoginComponent } from './components/popup/popup-contents/login/login.component';
 // #!electron
 import { RegisterComponent } from './components/popup/popup-contents/register/register.component';
+import { WorkAreaContainerComponent } from './components/work-area-container/work-area-container.component';
 
 @NgModule({
 	declarations: [
@@ -71,7 +72,8 @@ import { RegisterComponent } from './components/popup/popup-contents/register/re
 		// #!electron
 		LoginComponent,
 		// #!electron
-		RegisterComponent
+		RegisterComponent,
+		WorkAreaContainerComponent
 	],
 	entryComponents: [
 		PopupComponent,
