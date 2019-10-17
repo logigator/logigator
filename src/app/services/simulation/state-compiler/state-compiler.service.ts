@@ -106,6 +106,9 @@ export class StateCompilerService {
 					continue;
 				linkId = this.setLinks(state, wireEndPos, linksOnWireEnds, linkId, unitElems, compiledComp) + 1;
 			}
+			if (this.elementProvider.isPlugElement(element.typeId)) {
+				compiledComp.plugsByIndex.push(unitIndex);
+			}
 			unitIndex++;
 		}
 	}
@@ -123,6 +126,7 @@ export class StateCompilerService {
 		compiledComp: CompiledComp,
 		coveredPoints?: PosOfElem[]
 	): number {
+		// TODO coveredPoints as Map
 		coveredPoints = coveredPoints || [];
 		for (const [elem, index] of state.wireEndsOnPoint(pos)) {
 			if (coveredPoints.find(p => p.id === elem.id && p.pos.equals(pos)))
@@ -137,7 +141,7 @@ export class StateCompilerService {
 					if (!linksOnWireEnds.get(elem).has(index)) {
 						linksOnWireEnds.get(elem).set(index, linkId);
 					} else {
-						console.error('got here i guess');
+						console.error('you should not be here');
 					}
 				} else {
 					linksOnWireEnds.set(elem, new Map<number, number>([[index, linkId]]));

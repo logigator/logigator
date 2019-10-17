@@ -6,6 +6,7 @@ export interface CompiledComp {
 	wiresOnLinks: WiresOnLinks;
 	wireEndsOnLinks: WireEndsOnLinks;
 	connectedPlugs: number[][];
+	plugsByIndex: number[];
 	/*
 	* [
 	* 	[0, 1]
