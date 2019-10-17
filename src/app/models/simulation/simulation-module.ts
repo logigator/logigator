@@ -1,5 +1,6 @@
 import {Pointer} from './wasm-interface';
 import {BoardStatus} from './board';
+import {SimulationUnit} from './simulation-unit';
 
 export type TypedArray =
 	Int8Array |
@@ -29,26 +30,6 @@ export type WebAssemblyExports = Array<{
 
 export interface CCallOpts {
 	async?: boolean;
-}
-
-export interface SimulationModule extends EmscriptenModule {
-	lengthBytesUTF8(input: string): number;
-	stringToUTF8(str: string, outPtr: Pointer, maxBytesToWrite: number): number;
-
-	test(): number;
-	initBoard(): number;
-	initLinks(count: number): number;
-	initComponents(count: number): number;
-	initComponent(index: number, type: string, inputs: Pointer, outputs: Pointer, inputCount: number, outputCount: number): number;
-
-	start(): number;
-	startTimeout(ms: number): number;
-	startManual(ticks: number): number;
-	stop(): number;
-
-	getStatus(): BoardStatus;
-	getLinks(): Pointer;
-	getComponents(): Pointer;
 }
 
 interface EmscriptenModule {
@@ -133,4 +114,24 @@ interface EmscriptenModule {
 
 	_malloc(size: number): number;
 	_free(ptr: number): void;
+}
+
+export interface SimulationModule extends EmscriptenModule {
+	lengthBytesUTF8(input: string): number;
+	stringToUTF8(str: string, outPtr: Pointer, maxBytesToWrite: number): number;
+
+	test(): number;
+	initBoard(): number;
+	initLinks(count: number): number;
+	initComponents(count: number): number;
+	initComponent(index: number, typeId: number, inputs: Pointer, outputs: Pointer, inputCount: number, outputCount: number, op1: number, op2: number): number;
+
+	start(): number;
+	startTimeout(ms: number): number;
+	startManual(ticks: number): number;
+	stop(): number;
+
+	getStatus(): BoardStatus;
+	getLinks(): Pointer;
+	getComponents(): Pointer;
 }

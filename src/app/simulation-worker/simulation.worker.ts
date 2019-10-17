@@ -89,8 +89,7 @@ const test = () => {
 		links: 10,
 		components: [
 			{
-				// @ts-ignore
-				typeId: 'AND',
+				typeId: 2,
 				inputs: [
 					8, 9
 				],
@@ -99,8 +98,7 @@ const test = () => {
 				]
 			},
 			{
-				// @ts-ignore
-				typeId: 'NOT',
+				typeId: 1,
 				inputs: [
 					8
 				],
@@ -109,8 +107,7 @@ const test = () => {
 				]
 			},
 			{
-				// @ts-ignore
-				typeId: 'NOT',
+				typeId: 1,
 				inputs: [
 					8
 				],
@@ -119,8 +116,7 @@ const test = () => {
 				]
 			},
 			{
-				// @ts-ignore
-				typeId: 'XOR',
+				typeId: 4,
 				inputs: [
 					1, 2
 				],
@@ -129,8 +125,7 @@ const test = () => {
 				]
 			},
 			{
-				// @ts-ignore
-				typeId: 'AND',
+				typeId: 2,
 				inputs: [
 					1, 2
 				],
@@ -139,8 +134,7 @@ const test = () => {
 				]
 			},
 			{
-				// @ts-ignore
-				typeId: 'XOR',
+				typeId: 4,
 				inputs: [
 					0, 3
 				],
@@ -149,8 +143,7 @@ const test = () => {
 				]
 			},
 			{
-				// @ts-ignore
-				typeId: 'AND',
+				typeId: 2,
 				inputs: [
 					0, 3
 				],
@@ -159,8 +152,7 @@ const test = () => {
 				]
 			},
 			{
-				// @ts-ignore
-				typeId: 'OR',
+				typeId: 3,
 				inputs: [
 					4, 6
 				],

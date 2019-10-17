@@ -21,8 +21,7 @@ export class SimulationWorker {
 			const inputPtr = this._arrayToHeap(inputs);
 			const outputPtr = this._arrayToHeap(outputs);
 
-			// @ts-ignore
-			simulationModule.initComponent(i, x.typeId, inputPtr, outputPtr, x.inputs.length, x.outputs.length);
+			simulationModule.initComponent(i, x.typeId, inputPtr, outputPtr, x.inputs.length, x.outputs.length, x.op1 || 0, x.op2 || 0);
 		});
 		simulationModule.initBoard();
 	}
