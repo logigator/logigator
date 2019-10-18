@@ -160,7 +160,8 @@ export abstract class View extends PIXI.Container {
 			scaledFor: this.zoomPan.currentScale
 		};
 		this._chunks[x][y].container.sortableChildren = false;
-		this._chunks[x][y].container.hitArea = new PIXI.Rectangle(
+		this._chunks[x][y].container.interactive = false;
+		this._chunks[x][y].gridGraphics.hitArea = new PIXI.Rectangle(
 			0,
 			0,
 			environment.chunkSize * environment.gridPixelWidth,
@@ -181,10 +182,8 @@ export abstract class View extends PIXI.Container {
 			const chunkPos = this.getChunkPos(chunkX, chunkY);
 			chunk.container.position = chunkPos;
 			chunk.gridGraphics.position = chunkPos;
-			this.addChild(chunk.gridGraphics);
-			this.addChild(chunk.container);
-			chunk.container.zIndex = 1;
-			chunk.gridGraphics.zIndex = 0;
+			this.addChildAt(chunk.gridGraphics, 0);
+			this.addChildAt(chunk.container, 1);
 			return true;
 		}
 		return false;
