@@ -26,6 +26,14 @@ export abstract class SimulationUnits {
 		};
 	}
 
+	public static cloneMult(units: SimulationUnit[]): SimulationUnit[] {
+		const out = new Array(units.length);
+		for (let i = 0; i < units.length; i++) {
+			out[i] = SimulationUnits.clone(units[i]);
+		}
+		return out;
+	}
+
 	public static concatIO(unit: SimulationUnit): number[] {
 		return unit.inputs.concat(unit.outputs);
 	}

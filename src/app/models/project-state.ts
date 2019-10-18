@@ -204,6 +204,9 @@ export class ProjectState {
 	public addElement(elem: Element, id?: number): Element {
 		elem.id = id || this.getNextId();
 		this._model.board.elements.push(elem);
+		if (ElementProviderService.staticInstance.isPlugElement(elem.typeId)) {
+			elem.plugIndex = this.numInputs + this.numOutputs; // TODO make setting
+		}
 		if (ElementProviderService.staticInstance.isInputElement(elem.typeId)) {
 			this.numInputs++;
 		} else if (ElementProviderService.staticInstance.isOutputElement(elem.typeId)) {

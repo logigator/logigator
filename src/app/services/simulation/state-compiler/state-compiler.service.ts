@@ -57,13 +57,14 @@ export class StateCompilerService {
 
 	public async compile(project: Project): Promise<SimulationUnit[]> {
 		const start = Date.now();
+		this._highestLinkId = 0;
 		this.initElemsOnLinks('' + project.id);
 		const depTree = await this.projectsToCompile(project);
 		this.compileDependencies(depTree);
 
-		const units = this.projectUnits(project);
+		const units = this.projectUnits(this._udcCache.get(project.id));
 		console.log(`Compilation took ${Date.now() - start}ms`);
-		return [];
+		return units;
 	}
 
 	private initElemsOnLinks(identifier: string) {
@@ -94,7 +95,7 @@ export class StateCompilerService {
 			wiresOnLinks: new Map<number, Element[]>(),
 			wireEndsOnLinks: new Map<number, WireEndOnComp[]>(),
 			connectedPlugs: [],
-			plugsByIndex: []
+			plugsByIndex: new Map<number, number>()
 		};
 		const linksOnWireEnds: WireEndLinksOnElem = new Map<Element, LinkOnWireEnd>();
 
@@ -108,6 +109,7 @@ export class StateCompilerService {
 		return compiledComp;
 	}
 
+	private plugIndex = 0;
 	private setAllLinks(unitElems: UnitElementBidir, linksOnWireEnds: WireEndLinksOnElem, state: ProjectState, compiledComp: CompiledComp) {
 		let unitIndex = 0;
 		let linkId = 0;
@@ -120,7 +122,8 @@ export class StateCompilerService {
 				linkId = this.setLinks(state, wireEndPos, linksOnWireEnds, linkId, unitElems, compiledComp) + 1;
 			}
 			if (this.elementProvider.isPlugElement(element.typeId)) {
-				compiledComp.plugsByIndex.push(unitIndex);
+				// compiledComp.plugsByIndex.set(element.plugIndex, unitIndex);
+				compiledComp.plugsByIndex.set(this.plugIndex++, unitIndex);
 			}
 			unitIndex++;
 		}
@@ -190,6 +193,7 @@ export class StateCompilerService {
 		elem, index, state: ProjectState, linksOnWireEnds: WireEndLinksOnElem, linkId: number,
 		unitElems: UnitElementBidir, compiledComp: CompiledComp, coveredPoints: PosOfElem[]
 	) {
+		debugger
 		for (const conPlugs of this._udcCache.get(elem.typeId).connectedPlugs) {
 			if (conPlugs.includes(index)) {
 				for (const wireEndIndex of conPlugs) {
@@ -202,41 +206,60 @@ export class StateCompilerService {
 		}
 	}
 
-	private projectUnits(project: Project): SimulationUnit[] {
-		const compiledProject = this._udcCache.get(project.id);
-		const units = [...compiledProject.units];
+	private projectUnits(compiledComp: CompiledComp, outerUnit?: SimulationUnit): SimulationUnit[] {
+		const units = SimulationUnits.cloneMult(compiledComp.units);
+		const linkMap = new Map<number, number>();
+		if (outerUnit) {
+			for (const [outer, inner] of compiledComp.plugsByIndex) {
+				linkMap.set(SimulationUnits.concatIO(units[inner])[0], SimulationUnits.concatIO(outerUnit)[outer]);
+			}
+			this.removePlugs(compiledComp, units);
+		}
 
 		let highestInProj = this._highestLinkId;
+		const udcIndexes: number[] = [];
+		let unitIndex = 0;
 		for (const unit of units) {
 			[unit.inputs, unit.outputs].forEach(arr => {
 				for (let i = 0; i < arr.length; i++) {
-					arr[i] += this._highestLinkId;
+					arr[i] = linkMap.has(arr[i]) ? linkMap.get(arr[i]) : arr[i] + this._highestLinkId;
 					if (arr[i] > highestInProj) {
 						highestInProj = arr[i];
 					}
 				}
 			});
+			if (this.elementProvider.isUserElement(unit.typeId)) {
+				udcIndexes.push(unitIndex);
+			}
+			unitIndex++;
 		}
 		this._highestLinkId = highestInProj;
 
-		return [];
+		// udcIndexes is already sorted desc
+		for (let i = udcIndexes.length - 1; i >= 0; i--) {
+			const inner = this.projectUnits(this._udcCache.get(units[udcIndexes[i]].typeId), units[udcIndexes[i]]);
+			console.log(inner);
+			units.splice(udcIndexes[i], 1);
+			units.push(...inner);
+		}
+
+		return units;
 	}
 
-
-	private deletePlugElements(simUnits: UnitToElement) {
-		for (const simUnit of simUnits.keys()) {
-			if (this.elementProvider.isPlugElement(simUnit.typeId)) {
-				simUnits.delete(simUnit);
-			}
+	private removePlugs(compiledComp: CompiledComp, units: SimulationUnit[]) {
+		const plugsByIndexSorted = [...compiledComp.plugsByIndex.values()].sort((a, b) => a - b);
+		for (let i = plugsByIndexSorted.length - 1; i >= 0; i--) {
+			units.splice(plugsByIndexSorted[i], 1);
 		}
 	}
 
 	private loadConnectedPlugs(compiledComp: CompiledComp) {
-		for (let i = 0; i < compiledComp.plugsByIndex.length; i++) {
-			const plugIndex = compiledComp.plugsByIndex[i];
+		const plugsByIndex = [...compiledComp.plugsByIndex.values()];
+		for (let i = 0; i < plugsByIndex.length; i++) {
+			const plugIndex = plugsByIndex[i];
 			const value = SimulationUnits.concatIO(compiledComp.units[plugIndex])[0];
-			for (let j = i + 1; j < compiledComp.plugsByIndex.length; j++) {
-				const otherIndex = compiledComp.plugsByIndex[j];
+			for (let j = i + 1; j < plugsByIndex.length; j++) {
+				const otherIndex = plugsByIndex[j];
 				const otherValue = SimulationUnits.concatIO(compiledComp.units[otherIndex])[0];
 				if (value === otherValue) {
 					let pushed = false;

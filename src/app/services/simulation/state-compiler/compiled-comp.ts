@@ -6,7 +6,7 @@ export interface CompiledComp {
 	wiresOnLinks: WiresOnLinks;
 	wireEndsOnLinks: WireEndsOnLinks;
 	connectedPlugs: number[][];
-	plugsByIndex: number[];
+	plugsByIndex: Map<number, number>; // outerUnit -> inner
 	/*
 	* [
 	* 	[0, 1]
