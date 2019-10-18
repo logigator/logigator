@@ -5,7 +5,6 @@
 		background-color: rgba(0, 0, 0, 0);
 	}
 
-	display: none;
 	user-select: none;
 	width: 500px;
 	height: 300px;
@@ -13,6 +12,7 @@
 	position: fixed;
 	bottom: 0;
 	right: 0;
+	display: none;
 
 	.window-container {
 		@include themify() {
@@ -47,8 +47,27 @@
 			padding-bottom: 2px;
 			align-items: center;
 
-			p {
+			.identifier-string {
 				margin: 0 0 0 0.3rem;
+				display: flex;
+				flex-direction: row;
+				cursor: auto;
+
+				p {
+					margin: 0;
+					line-height: 2rem;
+					cursor: pointer;
+				}
+
+				span {
+					line-height: 2rem;
+					margin: 0 0.25rem;
+				}
+			}
+
+			.drag-header {
+				flex-grow: 1;
+				height: 2rem;
 			}
 
 			img {
