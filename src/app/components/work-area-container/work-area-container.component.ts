@@ -43,17 +43,20 @@ export class WorkAreaContainerComponent implements OnInit {
 			showing: true,
 			project: await this.projectSaveManagement.openComponent(event.typeId),
 			identifier: event.identifier,
+			parentNames: event.parentNames,
 			zIndex: 1
 		};
 
 		this.moveAllBack();
 
 		if (fromWindow === undefined) {
+			meta.parentNames.shift();
 			let firstHidden = this.windowWorkAreas.find(a => !a.showing);
 			if (!firstHidden) firstHidden = this.windowWorkAreas[0];
 			firstHidden.showing = meta.showing;
 			firstHidden.identifier = meta.identifier;
 			firstHidden.project = meta.project;
+			firstHidden.parentNames = meta.parentNames;
 			firstHidden.zIndex = meta.zIndex;
 			this.cdr.detectChanges();
 			return;
@@ -62,6 +65,7 @@ export class WorkAreaContainerComponent implements OnInit {
 		this.windowWorkAreas[fromWindow].showing = meta.showing;
 		this.windowWorkAreas[fromWindow].identifier = meta.identifier;
 		this.windowWorkAreas[fromWindow].project = meta.project;
+		this.windowWorkAreas[fromWindow].parentNames = meta.parentNames;
 		this.windowWorkAreas[fromWindow].zIndex = meta.zIndex;
 		this.cdr.detectChanges();
 	}

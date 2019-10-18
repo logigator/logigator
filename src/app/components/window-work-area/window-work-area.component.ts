@@ -31,7 +31,10 @@ export class WindowWorkAreaComponent extends WorkArea implements OnInit, OnChang
 	public project: Project;
 
 	@Input()
-	parent: string;
+	identifier: string;
+
+	@Input()
+	parentNames: string[];
 
 	@Input()
 	dragBounding: HTMLElement;
@@ -82,7 +85,9 @@ export class WindowWorkAreaComponent extends WorkArea implements OnInit, OnChang
 					this._pixiCanvasContainer.nativeElement,
 					this._ticker,
 					this.requestInspectElementInSim,
-					this.parent);
+					this.identifier,
+					this.parentNames
+				);
 
 				if (this._dragManager) this._dragManager.destroy();
 
@@ -117,6 +122,21 @@ export class WindowWorkAreaComponent extends WorkArea implements OnInit, OnChang
 	public show() {
 		this.renderer2.setStyle(this._popup.nativeElement, 'display', 'block');
 		this._pixiRenderer.resize(this._pixiCanvasContainer.nativeElement.offsetWidth, this._pixiCanvasContainer.nativeElement.offsetHeight);
+	}
+
+	public get headerNames(): string[] {
+		if (!this.parentNames || !this.project) return [];
+		return [...this.parentNames, this.project.name];
+	}
+
+	public inspectParentElement(index: number) {
+		if ((this.headerNames.length - 1) === index) return;
+		const identifiers = this.identifier.split(':').slice(0, 2 + index);
+		this.requestInspectElementInSim.emit({
+			identifier: identifiers.join(':'),
+			typeId: Number(identifiers[identifiers.length - 1].split('-')[1]),
+			parentNames: this.parentNames.splice(0, index)
+		});
 	}
 
 	ngOnDestroy(): void {

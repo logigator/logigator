@@ -4,7 +4,8 @@
 		<app-window-work-area
 			[dragBounding]="windowDragBounding"
 			[project]="area.project"
-			[parent]="area.identifier"
+			[identifier]="area.identifier"
+			[parentNames]="area.parentNames"
 			[showing]="area.showing"
 			[zIndex]="area.zIndex"
 			(onRequestHide)="requestHide(i)"

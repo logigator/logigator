@@ -17,17 +17,20 @@ export class SimulationView extends View {
 	public requestInspectElemEventEmitter: EventEmitter<ReqInspectElementEvent>;
 
 	public parentProjectIdentifier: string;
+	public parentProjectNames: string[];
 
 	constructor(
 		project: Project,
 		htmlContainer: HTMLElement,
 		ticker: RenderTicker,
 		requestInspectElemEventEmitter: EventEmitter<ReqInspectElementEvent>,
-		parent: string
+		parent: string,
+		parentNames: string[]
 	) {
 		super(project, htmlContainer, ticker);
 		this.requestInspectElemEventEmitter = requestInspectElemEventEmitter;
 		this.parentProjectIdentifier = parent;
+		this.parentProjectNames = parentNames;
 		this._simViewInteractionManager = new SimulationViewInteractionManager(this);
 		this.applyOpenActions();
 
@@ -41,5 +44,9 @@ export class SimulationView extends View {
 		const es = super.placeComponentOnView(element);
 		this._simViewInteractionManager.addEventListenersToNewElement(es);
 		return es;
+	}
+
+	public get projectName(): string {
+		return this._project.name;
 	}
 }

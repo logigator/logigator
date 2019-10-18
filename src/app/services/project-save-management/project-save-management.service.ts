@@ -546,7 +546,8 @@ export class ProjectSaveManagementService {
 				numInputs: e.numInputs,
 				pos: new PIXI.Point(e.pos.x, e.pos.y),
 				endPos: new PIXI.Point(e.endPos.x, e.endPos.y),
-				rotation: e.rotation
+				rotation: e.rotation,
+				plugIndex: e.plugIndex
 			};
 			return elem;
 		});

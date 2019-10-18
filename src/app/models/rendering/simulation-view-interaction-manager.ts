@@ -25,7 +25,8 @@ export class SimulationViewInteractionManager {
 		if (ElementProviderService.staticInstance.isUserElement(elemSprite.element.typeId)) {
 			this._view.requestInspectElemEventEmitter.emit({
 				identifier: `${this._view.parentProjectIdentifier}:${elemSprite.element.id}-${elemSprite.element.typeId}`,
-				typeId: elemSprite.element.typeId
+				typeId: elemSprite.element.typeId,
+				parentNames: [...this._view.parentProjectNames, this._view.projectName]
 			});
 		}
 	}
