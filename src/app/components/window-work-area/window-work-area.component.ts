@@ -46,7 +46,7 @@ export class WindowWorkAreaComponent extends WorkArea implements OnInit, OnChang
 	zIndex: number;
 
 	@Output()
-	onRequestHide = new EventEmitter<void>();
+	requestHide = new EventEmitter<void>();
 
 	@Output()
 	requestOnTop = new EventEmitter<void>();
@@ -104,8 +104,8 @@ export class WindowWorkAreaComponent extends WorkArea implements OnInit, OnChang
 		}
 	}
 
-	public requestHide() {
-		this.onRequestHide.emit();
+	public doRequestHide() {
+		this.requestHide.emit();
 	}
 
 	public doRequestOnTop() {

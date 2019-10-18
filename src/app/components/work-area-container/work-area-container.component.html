@@ -8,7 +8,7 @@
 			[parentNames]="area.parentNames"
 			[showing]="area.showing"
 			[zIndex]="area.zIndex"
-			(onRequestHide)="requestHide(i)"
+			(requestHide)="requestHide(i)"
 			(requestOnTop)="setOnTop(i)"
 			(requestInspectElementInSim)="onRequestElementInspection($event, i)">
 		</app-window-work-area>
