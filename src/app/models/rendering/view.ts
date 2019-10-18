@@ -35,7 +35,7 @@ export abstract class View extends PIXI.Container {
 
 	protected readonly _project: Project;
 
-	constructor(project: Project, htmlContainer: HTMLElement, ticker: RenderTicker) {
+	protected constructor(project: Project, htmlContainer: HTMLElement, ticker: RenderTicker) {
 		super();
 		this._project = project;
 		this.htmlContainer = htmlContainer;
@@ -181,8 +181,10 @@ export abstract class View extends PIXI.Container {
 			const chunkPos = this.getChunkPos(chunkX, chunkY);
 			chunk.container.position = chunkPos;
 			chunk.gridGraphics.position = chunkPos;
-			this.addChildAt(chunk.gridGraphics, 0);
-			this.addChildAt(chunk.container, 1);
+			this.addChild(chunk.gridGraphics);
+			this.addChild(chunk.container);
+			chunk.container.zIndex = 1;
+			chunk.gridGraphics.zIndex = 0;
 			return true;
 		}
 		return false;
