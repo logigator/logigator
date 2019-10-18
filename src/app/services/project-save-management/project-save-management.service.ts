@@ -391,6 +391,7 @@ export class ProjectSaveManagementService {
 	}
 
 	private saveSingleProjectToServer(project: Project): Promise<HttpResponseData<{success: boolean}>> {
+		if (project.id < 1000) return;
 		const mappings: ModelDatabaseMap[] = [];
 		project.currState.model.board.elements.forEach(el => {
 			if (el.typeId >= 500 && !mappings.find(m => m.model === el.typeId)) {
