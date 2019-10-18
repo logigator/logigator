@@ -78,6 +78,10 @@ export class StateCompilerService {
 		return out;
 	}
 
+	public clearCache(): void {
+		this._udcCache = new Map<number, CompiledComp>();
+	}
+
 	private compileDependencies(depTree: Map<number, Project>): void {
 		for (const [typeId, project] of depTree.entries()) {
 			this._udcCache.set(typeId, this.compileSingle(project));
@@ -153,7 +157,8 @@ export class StateCompilerService {
 			} else {
 				this.setCompLink(linksOnWireEnds, elem, index, linkId, unitElems, compiledComp);
 				if (this.elementProvider.isUserElement(elem.typeId)) {
-					this.includePlugLinks(elem, index, state, linksOnWireEnds, linkId, unitElems, compiledComp, coveredPoints);
+					this.includePlugLinks(elem, index, state, linksOnWireEnds,
+						linkId, unitElems, compiledComp, coveredPoints);
 				}
 			}
 		}
@@ -193,7 +198,6 @@ export class StateCompilerService {
 		elem, index, state: ProjectState, linksOnWireEnds: WireEndLinksOnElem, linkId: number,
 		unitElems: UnitElementBidir, compiledComp: CompiledComp, coveredPoints: PosOfElem[]
 	) {
-		debugger
 		for (const conPlugs of this._udcCache.get(elem.typeId).connectedPlugs) {
 			if (conPlugs.includes(index)) {
 				for (const wireEndIndex of conPlugs) {
@@ -254,7 +258,7 @@ export class StateCompilerService {
 	}
 
 	private loadConnectedPlugs(compiledComp: CompiledComp) {
-		const plugsByIndex = [...compiledComp.plugsByIndex.values()];
+		const plugsByIndex = [...compiledComp.plugsByIndex.keys()];
 		for (let i = 0; i < plugsByIndex.length; i++) {
 			const plugIndex = plugsByIndex[i];
 			const value = SimulationUnits.concatIO(compiledComp.units[plugIndex])[0];

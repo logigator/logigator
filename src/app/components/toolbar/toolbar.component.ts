@@ -72,6 +72,7 @@ export class ToolbarComponent {
 	}
 
 	public redo(): void {
+		this.stateCompiler.clearCache();
 		this.projectInteraction.redoForCurrent();
 	}
 
