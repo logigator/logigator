@@ -127,8 +127,8 @@ export class ProjectsService {
 		this._projectOpenedSubject.next(project.id);
 	}
 
-	private async closeAllProjects() {
-		await this.saveAllOrAllComps();
+	private async closeAllProjects(save = true) {
+		if (save) await this.saveAllOrAllComps();
 		for (const id of this.allProjects.keys()) {
 			await this.closeProject(id);
 		}
@@ -179,7 +179,7 @@ export class ProjectsService {
 		if (this.projectSaveManagementService.isFirstSave) {
 			const newMainProject = await this.popup.showPopup(SaveAsComponent, 'POPUP.SAVE.TITLE', false, this.mainProject);
 			if (newMainProject) {
-				await this.closeAllProjects();
+				await this.closeAllProjects(false);
 				this._mainProject = newMainProject;
 				this._projects.set(newMainProject.id, newMainProject);
 				this._projectOpenedSubject.next(newMainProject.id);

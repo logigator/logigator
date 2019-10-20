@@ -293,7 +293,6 @@ export class ProjectSaveManagementService {
 
 		// #!web
 		window.history.pushState(null, null, `/board/${mainProjectId}`);
-		this.errorHandling.showInfo(`Saved Project ${mainProjToSave.name}`);
 		this._projectSource = 'server';
 		return mainProjToSave;
 	}
@@ -311,7 +310,7 @@ export class ProjectSaveManagementService {
 	public async saveProjectsAndComponents(projects: Project[]) {
 		const mainProject = projects.find(p => p.type === 'project');
 		const savePromises = [];
-		if (mainProject && this._projectSource === 'server') {
+		if (mainProject) {
 			savePromises.push(this.saveProject(mainProject));
 			mainProject.dirty = false;
 		}
