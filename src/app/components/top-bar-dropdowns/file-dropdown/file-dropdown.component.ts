@@ -4,6 +4,7 @@ import {ProjectSaveManagementService} from '../../../services/project-save-manag
 import {OpenProjectComponent} from '../../popup/popup-contents/open/open-project.component';
 import {PopupService} from '../../../services/popup/popup.service';
 import {NewComponentComponent} from '../../popup/popup-contents/new-component/new-component.component';
+import {ShareProjectComponent} from '../../popup/popup-contents/share-project/share-project.component';
 
 @Component({
 	selector: 'app-file-dropdown',
@@ -19,7 +20,8 @@ export class FileDropdownComponent implements OnInit {
 	constructor(
 		private projectsService: ProjectsService,
 		private projectSave: ProjectSaveManagementService,
-		private popupService: PopupService
+		private popupService: PopupService,
+		private projectSaveService: ProjectSaveManagementService
 	) { }
 
 	ngOnInit() {
@@ -56,6 +58,15 @@ export class FileDropdownComponent implements OnInit {
 	public exportProject() {
 		this.projectSave.exportToFile(this.projectsService.mainProject);
 		this.close();
+	}
+
+	public shareProject() {
+		this.popupService.showPopup(ShareProjectComponent, 'POPUP.SHARE.TITLE', false, null, {project: this.projectsService.mainProject.name});
+		this.close();
+	}
+
+	public get canShare(): boolean {
+		return this.projectSaveService.isFromServer;
 	}
 
 	public screenshot() {

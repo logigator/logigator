@@ -40,6 +40,7 @@ import { LoginComponent } from './components/popup/popup-contents/login/login.co
 // #!electron
 import { RegisterComponent } from './components/popup/popup-contents/register/register.component';
 import { WorkAreaContainerComponent } from './components/work-area-container/work-area-container.component';
+import { ShareProjectComponent } from './components/popup/popup-contents/share-project/share-project.component';
 
 @NgModule({
 	declarations: [
@@ -73,7 +74,8 @@ import { WorkAreaContainerComponent } from './components/work-area-container/wor
 		LoginComponent,
 		// #!electron
 		RegisterComponent,
-		WorkAreaContainerComponent
+		WorkAreaContainerComponent,
+		ShareProjectComponent
 	],
 	entryComponents: [
 		PopupComponent,
@@ -83,6 +85,7 @@ import { WorkAreaContainerComponent } from './components/work-area-container/wor
 		OpenProjectComponent,
 		SaveAsComponent,
 		UnsavedChangesComponent,
+		ShareProjectComponent,
 		// #!electron
 		LoginComponent,
 		// #!electron

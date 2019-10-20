@@ -11,7 +11,8 @@
 			"OPEN": "Open",
 			"SAVE": "Save",
 			"EXPORT": "Export to file",
-			"SCREENSHOT": "Screenshot"
+			"SCREENSHOT": "Screenshot",
+			"SHARE": "Share"
 		},
 		"EDIT": {
 			"TITLE": "Edit",
@@ -115,6 +116,11 @@
 			"QUESTION": "The current project has unsaved changes, by opening another project, these changes may be lost!",
 			"OK": "CONTINUE ANYWAYS",
 			"CANCEL": "CANCEL"
+		},
+		"SHARE": {
+			"TITLE": "Share Project {{project}}",
+			"INFO_TEXT": "Please type in the email-addresses of the users, with whom you want to share this project.",
+			"EMAIL": "e-mail"
 		}
 	},
 	"SETTINGS_INFO": {

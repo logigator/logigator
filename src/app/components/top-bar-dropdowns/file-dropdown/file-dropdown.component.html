@@ -18,6 +18,12 @@
 		{{'DROPDOWN.FILE.EXPORT' | translate}}
 	</div>
 	<hr>
+	<ng-container *ngIf="canShare">
+		<div (click)="shareProject()">
+			{{'DROPDOWN.FILE.SHARE' | translate}}
+		</div>
+		<hr>
+	</ng-container>
 	<div (click)="screenshot()">
 		{{'DROPDOWN.FILE.SCREENSHOT' | translate}}
 	</div>

@@ -11,7 +11,8 @@
 			"OPEN": "Open",
 			"SAVE": "Save",
 			"EXPORT": "Export to file",
-			"SCREENSHOT": "Screenshot"
+			"SCREENSHOT": "Screenshot",
+			"SHARE": "Teilen"
 		},
 		"EDIT": {
 			"TITLE": "Edit",

@@ -55,6 +55,7 @@ export class ProjectSaveManagementService {
 			this.elemProvService.setUserDefinedTypes(await this.getCustomElementsFromServer());
 			project = this.openProjectFromServerOnLoad();
 		} else if (location.pathname.startsWith('/share')) {
+			this.elemProvService.setUserDefinedTypes(await this.getCustomElementsFromServer());
 			// open share
 		} else {
 			// #!web
@@ -373,7 +374,11 @@ export class ProjectSaveManagementService {
 	}
 
 	public get isShare(): boolean {
-		return location.pathname.startsWith('/share/');
+		return this._projectSource === 'share';
+	}
+
+	public get isFromServer(): boolean {
+		return this._projectSource === 'server';
 	}
 
 	private newCustomComponentOnServer(name: string, symbol: string, description: string = ''): Promise<number> {

@@ -1,0 +1,82 @@
+@import "themes";
+
+.share {
+	margin: 1rem;
+	width: 25rem;
+	display: flex;
+	flex-direction: column;
+
+	.switch-container {
+		display: flex;
+		flex-direction: row;
+		justify-content: space-between;
+		height: 3rem;
+		align-items: center;
+
+		p {
+			margin: 0;
+		}
+	}
+
+	.email-info {
+		margin: 1rem 0;
+	}
+
+	.add-email {
+		display: flex;
+		flex-direction: row;
+
+		app-input {
+			flex-grow: 1;
+			margin-right: 1rem;
+		}
+	}
+
+	.added-emails {
+		display: flex;
+		flex-direction: column;
+		margin-top: 0.5rem;
+
+		.added-mail-row {
+			display: flex;
+			flex-direction: row;
+			align-items: center;
+			justify-content: space-between;
+			height: 2.5rem;
+
+			p {
+				margin: 0;
+			}
+
+		}
+
+	}
+
+	.link-headline {
+		margin: 0.5rem 0;
+	}
+
+	.link {
+		display: flex;
+		flex-direction: row;
+		align-items: center;
+		height: 2.5rem;
+		justify-content: space-between;
+
+		p {
+			@include scrollbar(0, 3px);
+			overflow: scroll;
+			margin: 0 0.5rem 0 0;
+			height: 1.5rem;
+		}
+	}
+
+	.bottom-btns {
+		margin: 1rem 0 0;
+
+		button {
+			float: right;
+			margin-left: 0.5rem;
+		}
+	}
+}
