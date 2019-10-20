@@ -119,8 +119,17 @@
 		},
 		"SHARE": {
 			"TITLE": "Share Project {{project}}",
+			"SHARE_ENABLE": "Share this project with others",
+			"PUBLIC": "Public share",
 			"INFO_TEXT": "Please type in the email-addresses of the users, with whom you want to share this project.",
-			"EMAIL": "e-mail"
+			"EMAIL": "e-mail",
+			"ADD_EMAIL": "Add",
+			"REMOVE_EMAIL": "Remove",
+			"INVITATIONS": "Send email invitations to users",
+			"LINK": "Link to share",
+			"COPY": "Copy",
+			"SAVE": "SAVE SETTINGS",
+			"CANCEL": "CANCEL"
 		}
 	},
 	"SETTINGS_INFO": {

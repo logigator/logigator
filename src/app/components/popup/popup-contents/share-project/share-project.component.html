@@ -1,32 +1,41 @@
 <div class="share">
 	<div class="switch-container">
-		<h3>Share this project with others</h3>
+		<p>{{'POPUP.SHARE.SHARE_ENABLE' | translate}}</p>
 		<app-switch [(ngModel)]="sharing"></app-switch>
 	</div>
 	<div class="switch-container" *ngIf="sharing">
-		<h3>Public Share</h3>
+		<p>{{'POPUP.SHARE.PUBLIC' | translate}}</p>
 		<app-switch [(ngModel)]="public"></app-switch>
 	</div>
-	<div [hidden]="sharing && !public">
+	<div [hidden]="!sharing || public">
+		<div class="switch-container" *ngIf="sharing">
+			<p>{{'POPUP.SHARE.INVITATIONS' | translate}}</p>
+			<app-switch [(ngModel)]="sendInvitations"></app-switch>
+		</div>
 		<p class="email-info">{{'POPUP.SHARE.INFO_TEXT' | translate}}</p>
 		<form class="add-email" [formGroup]="addEmailFrom" (ngSubmit)="addEmail()">
 			<app-input [label]="'POPUP.SHARE.EMAIL' | translate" formControlName="email"></app-input>
-			<button class="btn-outline primary" type="submit" [disabled]="addEmailFrom.invalid">Add</button>
+			<button class="btn-outline primary" type="submit" [disabled]="addEmailFrom.invalid">{{'POPUP.SHARE.ADD_EMAIL' | translate}}</button>
 		</form>
 		<div class="added-emails">
 			<div class="added-mail-row" *ngFor="let mail of addedEmails; index as i;">
 				<p>{{mail}}</p>
-				<button class="btn-outline danger" (click)="removeMail(i)">Remove</button>
+				<button class="btn-outline danger" (click)="removeMail(i)">{{'POPUP.SHARE.REMOVE_EMAIL' | translate}}</button>
 			</div>
 		</div>
 	</div>
-	<h3 class="link-headline">Link to share:</h3>
-	<div class="link">
-		<p>{{link}}</p>
-		<button class="btn-outline primary">Copy</button>
-	</div>
+	<ng-container *ngIf="sharing && link">
+		<h3 class="link-headline">{{'POPUP.SHARE.LINK' | translate}}</h3>
+		<div class="link">
+			<p>{{link}}</p>
+			<button class="btn-outline primary" (click)="copyLink()">{{'POPUP.SHARE.COPY' | translate}}</button>
+		</div>
+	</ng-container>
+	<ng-container *ngIf="errors">
+		<p *ngFor="let e of errors" class="error">{{e}}</p>
+	</ng-container>
 	<div class="bottom-btns">
-		<button class="btn-raised primary">Save Settings</button>
-		<button class="btn-raised danger">Cancel</button>
+		<button class="btn-raised primary" (click)="save()" [disabled]="!canSave">{{'POPUP.SHARE.SAVE' | translate}}</button>
+		<button class="btn-raised danger" (click)="cancel()">{{'POPUP.SHARE.CANCEL' | translate}}</button>
 	</div>
 </div>

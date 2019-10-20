@@ -68,6 +68,15 @@
 			overflow: scroll;
 			margin: 0 0.5rem 0 0;
 			height: 1.5rem;
+			white-space: nowrap;
+		}
+	}
+
+	.error {
+		width: 100%;
+		margin: 0.5rem 0;
+		@include themify() {
+			color: themed('error');
 		}
 	}
 

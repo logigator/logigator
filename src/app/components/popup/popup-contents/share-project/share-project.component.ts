@@ -1,7 +1,8 @@
-import { Component, OnInit } from '@angular/core';
+import {ChangeDetectorRef, Component, OnInit} from '@angular/core';
 import {PopupContentComp} from '../popup-content-comp';
+import {AbstractControl, FormBuilder, FormGroup, Validators} from '@angular/forms';
+import {SharingService} from '../../../../services/sharing/sharing.service';
 import {ProjectsService} from '../../../../services/projects/projects.service';
-import {FormBuilder, FormGroup, Validators} from '@angular/forms';
 
 @Component({
 	selector: 'app-share-project',
@@ -13,19 +14,39 @@ export class ShareProjectComponent extends PopupContentComp implements OnInit {
 	public addedEmails: string[] = [];
 	public addEmailFrom: FormGroup;
 
-	public link: string = 'asdsaddsfsdajhfghsdlkghksdfjg,mjdhfsjghdkjsfhgkjdfhskjghdskjghkjasd';
+	public link: string;
 
 	public sharing = false;
-	public public = false;
+	public public = true;
+	public sendInvitations = false;
 
-	constructor(private projects: ProjectsService, private fromBuilder: FormBuilder) {
+	public errors: string[];
+
+	constructor(
+		private fromBuilder: FormBuilder,
+		private sharingSer: SharingService,
+		private projects: ProjectsService,
+		private cdr: ChangeDetectorRef
+	) {
 		super();
 	}
 
 	ngOnInit() {
 		this.addEmailFrom = this.fromBuilder.group({
-			email: ['', [Validators.email, Validators.required]]
+			email: ['', [Validators.email, Validators.required, this.uniqueEmailValidator.bind(this)]]
 		});
+	}
+
+	private uniqueEmailValidator(control: AbstractControl): {[key: string]: any} | null {
+		if (this.addedEmails.includes(control.value)) return {alreadySet: true};
+		return null;
+	}
+
+	public get canSave(): boolean {
+		if (!this.public) {
+			return this.addedEmails.length > 0;
+		}
+		return true;
 	}
 
 	addEmail() {
@@ -36,6 +57,38 @@ export class ShareProjectComponent extends PopupContentComp implements OnInit {
 
 	removeMail(index: number) {
 		this.addedEmails.splice(index, 1);
+	}
+
+	public copyLink() {
+		const textArea = document.createElement('textarea');
+		textArea.value = this.link;
+		document.body.appendChild(textArea);
+		textArea.select();
+		document.execCommand('copy');
+		textArea.remove();
+	}
+
+	public async save() {
+		if (!this.canSave) return;
+		try {
+			const link = await this.sharingSer.saveSettings(this.sharing, {
+				project: this.projects.mainProject.id,
+				invitations: this.sendInvitations,
+				users: this.public ? undefined : this.addedEmails
+			});
+			console.log(link);
+			if (link === undefined) this.requestClose.emit();
+			this.link = link;
+			delete this.errors;
+		} catch (e) {
+			this.errors = e;
+		} finally {
+			this.cdr.detectChanges();
+		}
+	}
+
+	public cancel() {
+		this.requestClose.emit();
 	}
 
 }

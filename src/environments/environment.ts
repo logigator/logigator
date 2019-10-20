@@ -7,7 +7,8 @@ export const environment = {
 	chunkSize: 16,
 	gridPixelWidth: 16,
 	componentWidth: 2,
-	apiPrefix: ''
+	apiPrefix: '',
+	domain: 'http://editor.logigator-local-dev.com'
 };
 
 /*

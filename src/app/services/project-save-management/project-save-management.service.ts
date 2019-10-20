@@ -22,6 +22,7 @@ import {ProjectInfoResponse} from '../../models/http-responses/project-info-resp
 import {environment} from '../../../environments/environment';
 import {ElectronService} from 'ngx-electron';
 import {saveLocalFile} from './save-local-file';
+import {SharingService} from '../sharing/sharing.service';
 
 @Injectable({
 	providedIn: 'root'
@@ -38,7 +39,8 @@ export class ProjectSaveManagementService {
 		private user: UserService,
 		private errorHandling: ErrorHandlingService,
 		private ngZone: NgZone,
-		private electronService: ElectronService
+		private electronService: ElectronService,
+		private sharing: SharingService
 	) {
 		this.ngZone.run(() => {
 			this.user.userLoginState$.pipe(
