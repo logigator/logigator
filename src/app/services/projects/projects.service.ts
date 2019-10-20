@@ -80,8 +80,7 @@ export class ProjectsService {
 	}
 
 	public get hasUnsavedProjects(): boolean {
-		const projects = Array.from(this._projects.values());
-		for (const project of projects) {
+		for (const project of this._projects.values()) {
 			if (project.dirty) return true;
 		}
 		return false;
@@ -102,6 +101,9 @@ export class ProjectsService {
 		this._currProject = project;
 		this._mainProject = project;
 		this._projectOpenedSubject.next(project.id);
+
+		// #!web
+		window.history.pushState(null, null, `/`);
 	}
 
 	public async openFile(content: string) {
@@ -126,9 +128,13 @@ export class ProjectsService {
 	}
 
 	private async closeAllProjects() {
-		for (const [key, proj] of this.allProjects.entries()) {
-			if (proj.type === 'project' && this.projectSaveManagementService.isFirstSave) continue;
-			await this.closeProject(key);
+		if (!this.projectSaveManagementService.isFirstSave) {
+			await this.saveAll();
+		} else {
+			await this.saveAllComponents();
+		}
+		for (const id of this.allProjects.keys()) {
+			await this.closeProject(id);
 		}
 	}
 
@@ -169,12 +175,11 @@ export class ProjectsService {
 	}
 
 	public async closeProject(id: number) {
-		await this.projectSaveManagementService.saveComponent(this.allProjects.get(id));
 		this._projectClosedSubject.next(id);
 		this._projects.delete(id);
 	}
 
-	public async saveAll() {
+	public async saveAll(): Promise<void> {
 		if (this.projectSaveManagementService.isFirstSave) {
 			const newMainProject = await this.popup.showPopup(SaveAsComponent, 'POPUP.SAVE.TITLE', false, this.mainProject);
 			if (newMainProject) {
@@ -184,15 +189,13 @@ export class ProjectsService {
 				this._projectOpenedSubject.next(newMainProject.id);
 			}
 		} else {
-			await this.projectSaveManagementService.saveProjects(Array.from(this.allProjects.values()));
+			await this.projectSaveManagementService.saveProjectsAndComponents(Array.from(this.allProjects.values()));
 		}
 	}
 
-	public async saveAllComponents() {
-		for (const p of this._projects.values()) {
-			if (p.type !== 'comp') continue;
-			await this.projectSaveManagementService.saveComponent(p);
-		}
+	public saveAllComponents(): Promise<void> {
+		const comps = Array.from(this._projects.values()).filter(c => c.type === 'comp');
+		return this.projectSaveManagementService.saveProjectsAndComponents(comps);
 	}
 
 	public getProjectById(id: number): Project {

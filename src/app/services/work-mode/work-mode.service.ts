@@ -4,6 +4,7 @@ import {BehaviorSubject, Observable, ReplaySubject} from 'rxjs';
 import {distinctUntilChanged, map, switchMap, takeUntil} from 'rxjs/operators';
 import {ProjectSaveManagementService} from '../project-save-management/project-save-management.service';
 import {ProjectsService} from '../projects/projects.service';
+import {ElementProviderService} from '../element-provider/element-provider.service';
 
 @Injectable({
 	providedIn: 'root'
@@ -17,7 +18,11 @@ export class WorkModeService {
 
 	private _workModeSubject = new ReplaySubject<WorkMode>(1);
 
-	constructor(private projectSaveManagement: ProjectSaveManagementService, private project: ProjectsService) {
+	constructor(
+		private projectSaveManagement: ProjectSaveManagementService,
+		private project: ProjectsService,
+		private elemProv: ElementProviderService
+	) {
 		WorkModeService.staticInstance = this;
 
 		if (projectSaveManagement.isShare) {
@@ -61,5 +66,9 @@ export class WorkModeService {
 
 	public get currentComponentToBuild(): number {
 		return this._currentComponentTypeToBuild;
+	}
+
+	public get isCompToBuildPlug(): boolean {
+		return this.elemProv.isPlugElement(this.currentComponentToBuild);
 	}
 }

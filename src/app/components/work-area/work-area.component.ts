@@ -121,6 +121,11 @@ export class WorkAreaComponent extends WorkArea implements OnInit, OnDestroy {
 
 	private onProjectSwitch(id: number) {
 		this._activeView = this._allViews.get(id);
+		if (((this.activeView as EditorView).projectType === 'project' && this.workMode.isCompToBuildPlug) ||
+			this.activeView.projectId === this.workMode.currentComponentToBuild
+		) {
+			this.workMode.setWorkMode('select');
+		}
 		this._ticker.singleFrame();
 	}
 

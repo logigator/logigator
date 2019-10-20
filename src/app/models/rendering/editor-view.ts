@@ -12,6 +12,7 @@ import {View} from './view';
 import {Project} from '../project';
 import {Element} from '../element';
 import {ElementSprite} from '../element-sprite';
+import {ProjectType} from '../project-type';
 
 export class EditorView extends View {
 
@@ -79,6 +80,10 @@ export class EditorView extends View {
 		const es = super.placeComponentOnView(element);
 		this._viewInteractionManager.addEventListenersToNewElement(es);
 		return es;
+	}
+
+	public get projectType(): ProjectType {
+		return this._project.type;
 	}
 
 	public destroy() {

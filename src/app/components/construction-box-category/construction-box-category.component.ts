@@ -5,6 +5,8 @@ import {WorkModeService} from '../../services/work-mode/work-mode.service';
 import {TranslateService} from '@ngx-translate/core';
 import {Observable} from 'rxjs';
 import {map} from 'rxjs/operators';
+import {ElementProviderService} from '../../services/element-provider/element-provider.service';
+import {ProjectsService} from '../../services/projects/projects.service';
 
 @Component({
 	selector: 'app-construction-box-category',
@@ -22,7 +24,12 @@ export class ConstructionBoxCategoryComponent {
 	@Input()
 	public searchText: string;
 
-	constructor(private workModeService: WorkModeService, private translate: TranslateService) { }
+	constructor(
+		private workModeService: WorkModeService,
+		private translate: TranslateService,
+		private elemProv: ElementProviderService,
+		private projects: ProjectsService
+	) { }
 
 	public componentsTrackBy(index, item) {
 		if (!item) return null;
@@ -33,6 +40,10 @@ export class ConstructionBoxCategoryComponent {
 		return this.translate.get(toSearch).pipe(
 			map(translated => translated.toLowerCase().includes(this.searchText.trim().toLowerCase()))
 		);
+	}
+
+	public isCurrentCustomElement(id: number): boolean {
+		return this.elemProv.isUserElement(id) && this.projects.currProject.id === id;
 	}
 
 	public selectComponent(id: number) {

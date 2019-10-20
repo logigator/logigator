@@ -132,16 +132,16 @@ export class ProjectSaveManagementService {
 		this.errorHandling.showInfo(`Created Component ${name}`);
 	}
 
-	public async saveComponent(project: Project): Promise<void> {
+	private async saveProject(project: Project): Promise<void> {
 		if (!project.dirty) return;
 		if (project.id < 1000 && this._componentsFromLocalFile.has(project.id)) {
 			const compLocalFile = this._componentsFromLocalFile.get(project.id);
 			compLocalFile.data = project.currState.model;
 		} else if (this.user.isLoggedIn && project.id >= 1000) {
 			await this.saveSingleProjectToServer(project);
-			this.errorHandling.showInfo(`Saved component ${project.name} on Server`);
+			this.errorHandling.showInfo(`Saved ${project.name} on Server`);
 		} else {
-			this.errorHandling.showErrorMessage('Unable to save Component');
+			this.errorHandling.showErrorMessage('Unable to save');
 			throw new Error();
 		}
 	}
@@ -151,6 +151,7 @@ export class ProjectSaveManagementService {
 		while (this._componentsFromLocalFile.has(id)) id++;
 		return id;
 	}
+
 	public openFromFile(content: string): Project {
 		let parsedFile: ProjectLocalFile;
 		try {
@@ -288,7 +289,7 @@ export class ProjectSaveManagementService {
 		}
 		this.elemProvService.clearElementsFromFile();
 		this._componentsFromLocalFile.clear();
-		await this.saveProjectsToServer(projectsToSave);
+		await this.saveProjectsAndComponents(projectsToSave);
 
 		// #!web
 		window.history.pushState(null, null, `/board/${mainProjectId}`);
@@ -307,19 +308,20 @@ export class ProjectSaveManagementService {
 		).toPromise();
 	}
 
-	public saveProjects(projects: Project[]) {
+	public async saveProjectsAndComponents(projects: Project[]) {
 		const mainProject = projects.find(p => p.type === 'project');
 		const savePromises = [];
-		if (this._projectSource === 'server' && mainProject.dirty) {
-			savePromises.push(this.saveSingleProjectToServer(mainProject));
+		if (mainProject && this._projectSource === 'server') {
+			savePromises.push(this.saveProject(mainProject));
 			mainProject.dirty = false;
 		}
 		const comps = projects.filter(p => p.type === 'comp');
 		for (const comp of comps) {
-			savePromises.push(this.saveComponent(comp));
+			savePromises.push(this.saveProject(comp));
 			comp.dirty = false;
 		}
-		Promise.all(savePromises).then(() => this.errorHandling.showInfo('Saved Project and all open Components'));
+		await Promise.all(savePromises);
+		if (savePromises.length > 0) this.errorHandling.showInfo('Saved Project and all open Components');
 	}
 
 	public async openComponent(id: number): Promise<Project> {
@@ -388,15 +390,6 @@ export class ProjectSaveManagementService {
 				undefined
 			)
 		).toPromise();
-	}
-
-	private saveProjectsToServer(projects: Project[]): Promise<any> {
-		const allPromises = [];
-		projects.forEach(proj => {
-			if (proj.dirty) allPromises.push(this.saveSingleProjectToServer(proj));
-			proj.dirty = false;
-		});
-		return Promise.all(allPromises);
 	}
 
 	private saveSingleProjectToServer(project: Project): Promise<HttpResponseData<{success: boolean}>> {

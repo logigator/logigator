@@ -6,7 +6,7 @@
 		<ng-container *ngIf="components.size > 0; else noComponents">
 			<ng-container *ngFor="let comp of components | keyvalue; trackBy: componentsTrackBy">
 				<div class="component-to-select"
-				     *ngIf="comp.key !== 0 && (searchText == '' || (isInSearchResult(comp.value.name) | async))"
+				     *ngIf="comp.key !== 0 && (searchText == '' || (isInSearchResult(comp.value.name) | async)) && !isCurrentCustomElement(comp.key)"
 				     (click)="selectComponent(comp.key)"
 				     [class.active-selected-component]="currentWorkMode === 'buildComponent' && currentSelectedComponent === comp.key">
 					<div>
