@@ -25,7 +25,7 @@ import { ReloadQuestionComponent } from './components/popup/popup-contents/relao
 import { NewComponentComponent } from './components/popup/popup-contents/new-component/new-component.component';
 import { OpenProjectComponent } from './components/popup/popup-contents/open/open-project.component';
 import { SaveAsComponent } from './components/popup/popup-contents/save-as/save-as.component';
-import {ToastrModule} from 'ngx-toastr';
+import {ToastContainerModule, ToastrModule} from 'ngx-toastr';
 import {BrowserAnimationsModule} from '@angular/platform-browser/animations';
 import {MissingTranslationHandler, TranslateLoader, TranslateModule} from '@ngx-translate/core';
 import {createTranslateLoader} from './models/translation/translation-loader-factory';
@@ -95,6 +95,7 @@ import { WorkAreaContainerComponent } from './components/work-area-container/wor
 		HttpClientModule,
 		ReactiveFormsModule,
 		BrowserAnimationsModule,
+		ToastContainerModule,
 		ToastrModule.forRoot({
 			positionClass: 'toastr-position',
 			easeTime: 100,

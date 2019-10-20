@@ -1,7 +1,7 @@
 import { Injectable } from '@angular/core';
 import {catchError} from 'rxjs/operators';
 import {Observable, of} from 'rxjs';
-import {ToastrService} from 'ngx-toastr';
+import {ToastContainerDirective, ToastrService} from 'ngx-toastr';
 
 @Injectable({
 	providedIn: 'root'
@@ -51,5 +51,9 @@ export class ErrorHandlingService {
 	public showInfo(message: string) {
 		this.toastr.info(message);
 		console.log(message);
+	}
+
+	public setToastrContainer(cont: ToastContainerDirective) {
+		this.toastr.overlayContainer = cont;
 	}
 }

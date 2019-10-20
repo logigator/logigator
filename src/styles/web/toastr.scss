@@ -6,8 +6,9 @@
 @import "themes";
 
 .toastr-position {
-	left: $construction-box-width + 0.5rem;
+	left: 0.5rem;
 	bottom: 0.5rem;
+	position: absolute !important;
 }
 
 .ngx-toastr {

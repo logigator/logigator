@@ -128,11 +128,7 @@ export class ProjectsService {
 	}
 
 	private async closeAllProjects() {
-		if (!this.projectSaveManagementService.isFirstSave) {
-			await this.saveAll();
-		} else {
-			await this.saveAllComponents();
-		}
+		await this.saveAllOrAllComps();
 		for (const id of this.allProjects.keys()) {
 			await this.closeProject(id);
 		}
@@ -190,6 +186,14 @@ export class ProjectsService {
 			}
 		} else {
 			await this.projectSaveManagementService.saveProjectsAndComponents(Array.from(this.allProjects.values()));
+		}
+	}
+
+	public async saveAllOrAllComps() {
+		if (!this.projectSaveManagementService.isFirstSave) {
+			await this.saveAll();
+		} else {
+			await this.saveAllComponents();
 		}
 	}
 

@@ -3,4 +3,5 @@
 .work-area-container {
 	width: calc(100vw - #{$construction-box-width});
 	height: calc(100vh - #{$page-header-height});
+	position: relative;
 }

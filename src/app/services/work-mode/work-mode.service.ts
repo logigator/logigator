@@ -36,7 +36,7 @@ export class WorkModeService {
 		if (this.projectSaveManagement.isShare) return;
 
 		if (mode === 'simulation') {
-			await this.project.saveAllComponents();
+			await this.project.saveAllOrAllComps();
 		}
 		this._currentWorkMode = mode;
 		this._workModeSubject.next(mode);

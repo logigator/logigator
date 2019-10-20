@@ -1,4 +1,4 @@
-<div class="work-area-container" #windowDragBounding>
+<div class="work-area-container" #windowDragBounding toastContainer>
 	<app-work-area (requestInspectElementInSim)="onRequestElementInspection($event)"></app-work-area>
 	<ng-container *ngFor="let area of windowWorkAreas; index as i;">
 		<app-window-work-area

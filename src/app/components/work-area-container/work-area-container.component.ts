@@ -3,6 +3,8 @@ import {ReqInspectElementEvent} from '../../models/rendering/req-inspect-element
 import {WindowWorkAreaMeta} from '../../models/rendering/window-work-area-meta';
 import {ProjectSaveManagementService} from '../../services/project-save-management/project-save-management.service';
 import {WorkModeService} from '../../services/work-mode/work-mode.service';
+import {ErrorHandlingService} from '../../services/error-handling/error-handling.service';
+import {ToastContainerDirective} from 'ngx-toastr';
 
 @Component({
 	selector: 'app-work-area-container',
@@ -16,11 +18,15 @@ export class WorkAreaContainerComponent implements OnInit {
 	@ViewChild('windowDragBounding', {static: true})
 	workAreaContainer: ElementRef<HTMLElement>;
 
+	@ViewChild(ToastContainerDirective, {static: true})
+	toastContainer: ToastContainerDirective;
+
 	constructor(
 		private projectSaveManagement: ProjectSaveManagementService,
 		private cdr: ChangeDetectorRef,
 		private workMode: WorkModeService,
-		private renderer2: Renderer2
+		private renderer2: Renderer2,
+		private errorHandling: ErrorHandlingService
 	) { }
 
 	ngOnInit() {
@@ -33,6 +39,8 @@ export class WorkAreaContainerComponent implements OnInit {
 				this.cdr.detectChanges();
 			}
 		});
+
+		this.errorHandling.setToastrContainer(this.toastContainer);
 	}
 
 	async onRequestElementInspection(event: ReqInspectElementEvent, fromWindow?: number) {

@@ -43,6 +43,7 @@ export class ConstructionBoxCategoryComponent {
 	}
 
 	public isCurrentCustomElement(id: number): boolean {
+		if (!this.projects.currProject) return false;
 		return this.elemProv.isUserElement(id) && this.projects.currProject.id === id;
 	}
 
