@@ -8,6 +8,7 @@
 				<div class="component-to-select"
 				     *ngIf="comp.key !== 0 && (searchText == '' || (isInSearchResult(comp.value.name) | async)) && !isCurrentCustomElement(comp.key)"
 				     (click)="selectComponent(comp.key)"
+				     (dblclick)="openComponent(comp.key)"
 				     [class.active-selected-component]="currentWorkMode === 'buildComponent' && currentSelectedComponent === comp.key">
 					<div>
 						<p>{{comp.value.symbol}}</p>

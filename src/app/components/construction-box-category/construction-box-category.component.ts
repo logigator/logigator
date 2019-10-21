@@ -51,6 +51,11 @@ export class ConstructionBoxCategoryComponent {
 		this.workModeService.setWorkMode('buildComponent', id);
 	}
 
+	public openComponent(id: number) {
+		if (!this.elemProv.isUserElement(id)) return;
+		this.projects.openComponent(id);
+	}
+
 	public get currentWorkMode(): WorkMode {
 		return this.workModeService.currentWorkMode;
 	}
