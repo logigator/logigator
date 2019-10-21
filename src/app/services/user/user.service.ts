@@ -1,4 +1,4 @@
-import {Inject, Injectable} from '@angular/core';
+import {Inject, Injectable, Optional} from '@angular/core';
 import {DOCUMENT} from '@angular/common';
 import {Observable, of, Subject} from 'rxjs';
 import {UserInfo} from '../../models/http-responses/user-info';
@@ -21,7 +21,7 @@ export class UserService {
 		@Inject(DOCUMENT) private document: Document,
 		private http: HttpClient,
 		private errorHandling: ErrorHandlingService,
-		private electronService: ElectronService
+		@Optional() private electronService: ElectronService
 	) {
 		this.getUserInfoFromServer();
 	}
@@ -76,9 +76,12 @@ export class UserService {
 	// #!endif
 
 	public get isLoggedIn(): boolean {
-		if (this.electronService.isElectronApp && this.electronService.remote.getGlobal('isLoggedIn')) {
+		// #!if ELECTRON === 'true'
+		if (this.electronService && this.electronService.remote.getGlobal('isLoggedIn')) {
 			return this.electronService.remote.getGlobal('isLoggedIn').data === 'true';
 		}
+		// #!endif
+
 		const isLoggedIn = this.document.cookie.match('(^|[^;]+)\\s*' + 'isLoggedIn' + '\\s*=\\s*([^;]+)');
 		if (!isLoggedIn) {
 			return false;

@@ -7,7 +7,7 @@ import * as fs from 'fs';
 import {SaveDialogReturnValue} from 'electron';
 
 export async function saveLocalFile(toSave: ProjectLocalFile, name: string, electronService: ElectronService): Promise<boolean> {
-	if (electronService.isElectronApp) {
+	if (electronService) {
 		return saveElectron(toSave, name, electronService);
 	}
 	const blob = new Blob([JSON.stringify(toSave, null, 2)], {type: 'application/json;charset=utf-8'});

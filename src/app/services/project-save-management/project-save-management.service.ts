@@ -1,4 +1,4 @@
-import {Injectable, NgZone} from '@angular/core';
+import {Injectable, NgZone, Optional} from '@angular/core';
 import {Project} from '../../models/project';
 import {HttpResponseData} from '../../models/http-responses/http-response-data';
 import {OpenProjectResponse} from '../../models/http-responses/open-project-response';
@@ -39,7 +39,7 @@ export class ProjectSaveManagementService {
 		private user: UserService,
 		private errorHandling: ErrorHandlingService,
 		private ngZone: NgZone,
-		private electronService: ElectronService,
+		@Optional() private electronService: ElectronService,
 		private sharing: SharingService
 	) {
 		this.ngZone.run(() => {

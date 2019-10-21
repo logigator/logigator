@@ -34,6 +34,7 @@ import { OutsideNgZoneEventDirective } from './directives/outside-ng-zone-event/
 import { SwitchComponent } from './components/switch/switch.component';
 import { UnsavedChangesComponent } from './components/popup/popup-contents/unsaved-changes/unsaved-changes.component';
 import { InputComponent } from './components/input/input.component';
+// #!electron
 import { NgxElectronModule } from 'ngx-electron';
 // #!electron
 import { LoginComponent } from './components/popup/popup-contents/login/login.component';
@@ -92,6 +93,7 @@ import { ShareProjectComponent } from './components/popup/popup-contents/share-p
 		RegisterComponent
 	],
 	imports: [
+		// #!electron
 		NgxElectronModule,
 		BrowserModule,
 		FormsModule,

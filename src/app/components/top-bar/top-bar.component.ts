@@ -1,4 +1,4 @@
-import {Component, OnInit} from '@angular/core';
+import {Component, OnInit, Optional} from '@angular/core';
 import {ProjectsService} from '../../services/projects/projects.service';
 import {UserService} from '../../services/user/user.service';
 import {Observable} from 'rxjs';
@@ -24,7 +24,7 @@ export class TopBarComponent implements OnInit {
 	public settingsDropdownOpen = false;
 
 	constructor(
-		private electronService: ElectronService,
+		@Optional() private electronService: ElectronService,
 		private projectService: ProjectsService,
 		private userService: UserService,
 		private popup: PopupService
