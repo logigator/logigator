@@ -18,11 +18,11 @@
 		}
 	}
 
-	.email-info {
+	.user-info {
 		margin: 1rem 0;
 	}
 
-	.add-email {
+	.add-user {
 		display: flex;
 		flex-direction: row;
 
@@ -77,6 +77,14 @@
 		margin: 0.5rem 0;
 		@include themify() {
 			color: themed('error');
+		}
+	}
+
+	.success {
+		width: 100%;
+		margin: 0.5rem 0;
+		@include themify() {
+			color: themed('primary');
 		}
 	}
 

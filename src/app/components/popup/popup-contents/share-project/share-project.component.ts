@@ -3,6 +3,7 @@ import {PopupContentComp} from '../popup-content-comp';
 import {AbstractControl, FormBuilder, FormGroup, Validators} from '@angular/forms';
 import {SharingService} from '../../../../services/sharing/sharing.service';
 import {ProjectsService} from '../../../../services/projects/projects.service';
+import {environment} from '../../../../../environments/environment';
 
 @Component({
 	selector: 'app-share-project',
@@ -11,16 +12,21 @@ import {ProjectsService} from '../../../../services/projects/projects.service';
 })
 export class ShareProjectComponent extends PopupContentComp implements OnInit {
 
-	public addedEmails: string[] = [];
-	public addEmailFrom: FormGroup;
+	private isNewShare;
 
-	public link: string;
+	public addedUsers: string[] = [];
+	public addUserFrom: FormGroup;
+
+	public address: string;
 
 	public sharing = false;
 	public public = true;
 	public sendInvitations = false;
 
-	public errors: string[];
+	public error = false;
+	public success = false;
+
+	private removeErrorSuccessTimeout: any;
 
 	constructor(
 		private fromBuilder: FormBuilder,
@@ -31,60 +37,117 @@ export class ShareProjectComponent extends PopupContentComp implements OnInit {
 		super();
 	}
 
-	ngOnInit() {
-		this.addEmailFrom = this.fromBuilder.group({
-			email: ['', [Validators.email, Validators.required, this.uniqueEmailValidator.bind(this)]]
+	async ngOnInit() {
+		this.addUserFrom = this.fromBuilder.group({
+			user: ['', [Validators.required, this.uniqueUserValidator.bind(this)]]
 		});
+		const shareSettings = await this.sharingSer.getShareSettings(this.projects.mainProject.id);
+		if (!shareSettings) {
+			this.isNewShare = true;
+			this.cdr.detectChanges();
+			return;
+		}
+		this.sharing = true;
+		this.isNewShare = false;
+		this.public = shareSettings.is_public as boolean;
+		this.address = shareSettings.address;
+		this.addedUsers = shareSettings.users.map(u => u.email);
+		this.cdr.detectChanges();
 	}
 
-	private uniqueEmailValidator(control: AbstractControl): {[key: string]: any} | null {
-		if (this.addedEmails.includes(control.value)) return {alreadySet: true};
+	private uniqueUserValidator(control: AbstractControl): {[key: string]: any} | null {
+		if (this.addedUsers.includes(control.value)) return {alreadySet: true};
 		return null;
 	}
 
-	public get canSave(): boolean {
-		if (!this.public) {
-			return this.addedEmails.length > 0;
-		}
-		return true;
+	addUser() {
+		if (this.addUserFrom.invalid) return;
+		this.addedUsers.push(this.addUserFrom.controls.user.value);
+		this.addUserFrom.reset();
 	}
 
-	addEmail() {
-		if (this.addEmailFrom.invalid) return;
-		this.addedEmails.push(this.addEmailFrom.controls.email.value);
-		this.addEmailFrom.reset();
-	}
-
-	removeMail(index: number) {
-		this.addedEmails.splice(index, 1);
+	removeUser(index: number) {
+		this.addedUsers.splice(index, 1);
 	}
 
 	public copyLink() {
 		const textArea = document.createElement('textarea');
-		textArea.value = this.link;
+		textArea.value = this.getLinkFromShareAddress(this.address);
 		document.body.appendChild(textArea);
 		textArea.select();
 		document.execCommand('copy');
 		textArea.remove();
 	}
 
+	public get canSave(): boolean {
+		if (this.sharing && !this.public) {
+			return this.addedUsers.length > 0;
+		}
+		return true;
+	}
+
 	public async save() {
 		if (!this.canSave) return;
-		try {
-			const link = await this.sharingSer.saveSettings(this.sharing, {
+		if (this.isNewShare) {
+			if (!this.sharing) {
+				this.requestClose.emit();
+				return;
+			}
+			const resp = await this.sharingSer.createShare({
 				project: this.projects.mainProject.id,
 				invitations: this.sendInvitations,
-				users: this.public ? undefined : this.addedEmails
+				users: this.public ? undefined : this.addedUsers
 			});
-			console.log(link);
-			if (link === undefined) this.requestClose.emit();
-			this.link = link;
-			delete this.errors;
-		} catch (e) {
-			this.errors = e;
-		} finally {
-			this.cdr.detectChanges();
+			if (!resp) return;
+			this.isNewShare = false;
+			this.address = resp.result.address;
+			this.processReceivedWarnings(resp.warnings);
+		} else {
+			if (this.sharing) {
+				const resp = await this.sharingSer.updateShare({
+					invitations: this.sendInvitations,
+					is_public: this.public,
+					users: this.addedUsers
+				}, this.address);
+				this.processReceivedWarnings(resp.warnings);
+			} else {
+				const resp = await this.sharingSer.deleteShare(this.address);
+				if (!resp) return;
+				this.isNewShare = true;
+				delete this.address;
+				this.addedUsers = [];
+				this.processReceivedWarnings(resp.warnings);
+			}
 		}
+		this.cdr.detectChanges();
+	}
+
+	private processReceivedWarnings(warnings: any) {
+		if (warnings && warnings.not_found && warnings.not_found.length > 0) {
+			warnings.not_found.forEach((nf: string) => {
+				this.addedUsers = this.addedUsers.filter(e => e !== nf);
+			});
+			this.error = true;
+			this.success = false;
+			this.removeErrorSuccessFromDomInFuture();
+		} else {
+			this.success = true;
+			this.error = false;
+			this.removeErrorSuccessFromDomInFuture();
+		}
+	}
+
+	private removeErrorSuccessFromDomInFuture() {
+		clearTimeout(this.removeErrorSuccessTimeout);
+		this.removeErrorSuccessTimeout = setTimeout(() => {
+			this.error = false;
+			this.success = false;
+			this.cdr.detectChanges();
+		}, 5000);
+	}
+
+	public getLinkFromShareAddress(shareId: string): string {
+		return environment.domain + '/share/' + shareId;
 	}
 
 	public cancel() {
