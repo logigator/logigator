@@ -93,9 +93,10 @@ export class ProjectsService {
 	}
 
 	public async newProject() {
+		await this.saveAllOrAllComps();
 		this.elementProvider.clearElementsFromFile();
 		const project = Project.empty();
-		await this.closeAllProjects();
+		this.closeAllProjects();
 		this.projectSaveManagementService.resetProjectSource();
 		this._projects.set(project.id, project);
 		this._currProject = project;
@@ -107,9 +108,10 @@ export class ProjectsService {
 	}
 
 	public async openFile(content: string) {
+		await this.saveAllOrAllComps();
 		const project = this.projectSaveManagementService.openFromFile(content);
 		if (!project) return;
-		await this.closeAllProjects();
+		this.closeAllProjects();
 		this.projectSaveManagementService.resetProjectSource();
 		this._projects.set(project.id, project);
 		this._currProject = project;
@@ -118,19 +120,19 @@ export class ProjectsService {
 	}
 
 	public async openProjectServer(id: number) {
+		await this.saveAllOrAllComps();
 		const project = await this.projectSaveManagementService.openProjectFromServer(id, false);
 		if (!project) return;
-		await this.closeAllProjects();
+		this.closeAllProjects();
 		this._projects.set(project.id, project);
 		this._currProject = project;
 		this._mainProject = project;
 		this._projectOpenedSubject.next(project.id);
 	}
 
-	private async closeAllProjects(save = true) {
-		if (save) await this.saveAllOrAllComps();
+	private closeAllProjects() {
 		for (const id of this.allProjects.keys()) {
-			await this.closeProject(id);
+			this.closeProject(id);
 		}
 	}
 
@@ -170,16 +172,17 @@ export class ProjectsService {
 		return this._projects;
 	}
 
-	public async closeProject(id: number) {
+	public closeProject(id: number) {
 		this._projectClosedSubject.next(id);
 		this._projects.delete(id);
 	}
 
 	public async saveAll(): Promise<void> {
 		if (this.projectSaveManagementService.isFirstSave) {
+			await this.saveAllOrAllComps();
 			const newMainProject = await this.popup.showPopup(SaveAsComponent, 'POPUP.SAVE.TITLE', false, this.mainProject);
 			if (newMainProject) {
-				await this.closeAllProjects(false);
+				this.closeAllProjects();
 				this._mainProject = newMainProject;
 				this._projects.set(newMainProject.id, newMainProject);
 				this._projectOpenedSubject.next(newMainProject.id);
