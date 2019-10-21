@@ -30,6 +30,9 @@ export class StateCompilerService {
 	private _wiresOnLinks: WiresOnLinksInProject;
 	private _wireEndsOnLinks: WireEndsOnLinksInProject;
 
+	private _wiresOnLinksCache: WiresOnLinksInProject;
+	private _wireEndsOnLinksCache: WireEndsOnLinksInProject;
+
 	private _udcCache: Map<number, CompiledComp>;
 
 	constructor(
@@ -80,6 +83,7 @@ export class StateCompilerService {
 
 	public clearCache(): void {
 		this._udcCache = new Map<number, CompiledComp>();
+		this._highestLinkId = 0;
 	}
 
 	private compileDependencies(depTree: Map<number, Project>): void {
@@ -226,7 +230,11 @@ export class StateCompilerService {
 		for (const unit of units) {
 			[unit.inputs, unit.outputs].forEach(arr => {
 				for (let i = 0; i < arr.length; i++) {
-					arr[i] = linkMap.has(arr[i]) ? linkMap.get(arr[i]) : arr[i] + this._highestLinkId;
+					const newVal = linkMap.has(arr[i]) ? linkMap.get(arr[i]) : arr[i] + this._highestLinkId;
+					// TODO right projectID
+					this._wiresOnLinks.get('').set(newVal, this._wiresOnLinksCache.get('').get(arr[i]));
+					this._wireEndsOnLinks.get('').set(newVal, this._wireEndsOnLinksCache.get('').get(arr[i]));
+					arr[i] = newVal;
 					if (arr[i] > highestInProj) {
 						highestInProj = arr[i];
 					}
@@ -258,21 +266,22 @@ export class StateCompilerService {
 	}
 
 	private loadConnectedPlugs(compiledComp: CompiledComp) {
-		const plugsByIndex = [...compiledComp.plugsByIndex.keys()];
-		for (let i = 0; i < plugsByIndex.length; i++) {
-			const plugIndex = plugsByIndex[i];
-			const value = SimulationUnits.concatIO(compiledComp.units[plugIndex])[0];
-			for (let j = i + 1; j < plugsByIndex.length; j++) {
-				const otherIndex = plugsByIndex[j];
-				const otherValue = SimulationUnits.concatIO(compiledComp.units[otherIndex])[0];
+		const plugsByIndex = compiledComp.plugsByIndex;
+		const plugsByIndexKeys = [...plugsByIndex.keys()];
+		for (let i = 0; i < plugsByIndexKeys.length; i++) {
+			const plugIndex = plugsByIndexKeys[i];
+			const value = SimulationUnits.concatIO(compiledComp.units[plugsByIndex.get(plugIndex)])[0];
+			for (let j = i + 1; j < plugsByIndexKeys.length; j++) {
+				const otherIndex = plugsByIndexKeys[j];
+				const otherValue = SimulationUnits.concatIO(compiledComp.units[plugsByIndex.get(otherIndex)])[0];
 				if (value === otherValue) {
 					let pushed = false;
 					for (const arr of compiledComp.connectedPlugs) {
 						if (arr.includes(plugIndex) && !arr.includes(otherIndex)) {
-							arr.push(otherIndex);
+							arr.push(plugsByIndex.get(otherIndex));
 							pushed = true;
 						} else if (arr.includes(otherIndex) && !arr.includes(plugIndex)) {
-							arr.push(plugIndex);
+							arr.push(plugsByIndex.get(plugIndex));
 							pushed = true;
 						} else if (arr.includes(otherIndex) && arr.includes(plugIndex)) {
 							pushed = true;
