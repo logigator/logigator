@@ -9,6 +9,7 @@ import {SaveAsComponent} from '../../components/popup/popup-contents/save-as/sav
 import {PopupService} from '../popup/popup.service';
 import {ElementProviderService} from '../element-provider/element-provider.service';
 import {ErrorHandlingService} from '../error-handling/error-handling.service';
+import {UnsavedChangesComponent} from '../../components/popup/popup-contents/unsaved-changes/unsaved-changes.component';
 
 @Injectable({
 	providedIn: 'root'
@@ -78,24 +79,59 @@ export class ProjectsService {
 		this._projects.forEach(p => p.updateInputsOutputs(projectId));
 	}
 
-	public newProject() {
-		this.projectSaveManagementService.resetProjectSource();
+	public get hasUnsavedProjects(): boolean {
+		for (const project of this._projects.values()) {
+			if (project.dirty) return true;
+		}
+		return false;
+	}
+
+	// returns if projects can be closed
+	public async askToSave(): Promise<boolean> {
+		if (!this.hasUnsavedProjects) return Promise.resolve(true);
+		return await this.popup.showPopup(UnsavedChangesComponent, 'POPUP.UNSAVED_CHANGES.TITLE', false);
+	}
+
+	public async newProject() {
+		this.elementProvider.clearElementsFromFile();
 		const project = Project.empty();
-		this.allProjects.forEach((value, key) => this.closeProject(key));
+		await this.closeAllProjects();
+		this.projectSaveManagementService.resetProjectSource();
+		this._projects.set(project.id, project);
+		this._currProject = project;
+		this._mainProject = project;
+		this._projectOpenedSubject.next(project.id);
+
+		// #!web
+		window.history.pushState(null, null, `/`);
+	}
+
+	public async openFile(content: string) {
+		const project = this.projectSaveManagementService.openFromFile(content);
+		if (!project) return;
+		await this.closeAllProjects();
+		this.projectSaveManagementService.resetProjectSource();
 		this._projects.set(project.id, project);
 		this._currProject = project;
 		this._mainProject = project;
 		this._projectOpenedSubject.next(project.id);
 	}
 
-	public openFile(content: string) {
-		const project = this.projectSaveManagementService.openFromFile(content);
+	public async openProjectServer(id: number) {
+		const project = await this.projectSaveManagementService.openProjectFromServer(id, false);
 		if (!project) return;
-		this.allProjects.forEach((value, key) => this.closeProject(key));
+		await this.closeAllProjects();
 		this._projects.set(project.id, project);
 		this._currProject = project;
 		this._mainProject = project;
 		this._projectOpenedSubject.next(project.id);
+	}
+
+	private async closeAllProjects(save = true) {
+		if (save) await this.saveAllOrAllComps();
+		for (const id of this.allProjects.keys()) {
+			await this.closeProject(id);
+		}
 	}
 
 	public onProjectChanges$(projectId: number): Observable<Action[]> {
@@ -134,25 +170,36 @@ export class ProjectsService {
 		return this._projects;
 	}
 
-	public closeProject(id: number) {
-		this.projectSaveManagementService.saveComponent(this._projects.get(id)).then(() => {
-			this._projectClosedSubject.next(id);
-			this._projects.delete(id);
-		}).catch();
+	public async closeProject(id: number) {
+		this._projectClosedSubject.next(id);
+		this._projects.delete(id);
 	}
 
-	public async saveAll() {
+	public async saveAll(): Promise<void> {
 		if (this.projectSaveManagementService.isFirstSave) {
-			const newMainProject = await this.popup.showPopup(SaveAsComponent, 'POPUP.NEW_COMP.SAVE', false, Array.from(this.allProjects.values()));
+			const newMainProject = await this.popup.showPopup(SaveAsComponent, 'POPUP.SAVE.TITLE', false, this.mainProject);
 			if (newMainProject) {
-				this.allProjects.forEach((value, key) => this.closeProject(key));
+				await this.closeAllProjects(false);
 				this._mainProject = newMainProject;
 				this._projects.set(newMainProject.id, newMainProject);
 				this._projectOpenedSubject.next(newMainProject.id);
 			}
 		} else {
-			await this.projectSaveManagementService.saveProjects(Array.from(this.allProjects.values()));
+			await this.projectSaveManagementService.saveProjectsAndComponents(Array.from(this.allProjects.values()));
 		}
+	}
+
+	public async saveAllOrAllComps() {
+		if (!this.projectSaveManagementService.isFirstSave) {
+			await this.saveAll();
+		} else {
+			await this.saveAllComponents();
+		}
+	}
+
+	public saveAllComponents(): Promise<void> {
+		const comps = Array.from(this._projects.values()).filter(c => c.type === 'comp');
+		return this.projectSaveManagementService.saveProjectsAndComponents(comps);
 	}
 
 	public getProjectById(id: number): Project {

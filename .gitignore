@@ -6,9 +6,12 @@
 /out-tsc
 # Only exists if Bazel was run
 /bazel-out
+/custom-build-scripts/dist
+/release
 
 # dependencies
 /node_modules
+package-lock.json
 /src/assets/wasm/*
 !/src/assets/wasm/.gitkeep
 

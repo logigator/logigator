@@ -41,7 +41,7 @@ export class CompSpriteGenerator {
 
 		const text = new PIXI.BitmapText(symbol, {
 			font: {
-				name: 'Louis George Café',
+				name: 'Nunito',
 				size: environment.gridPixelWidth + 4
 			},
 			tint: ThemingService.staticInstance.getEditorColor('fontTint')
@@ -65,6 +65,7 @@ export class CompSpriteGenerator {
 	public static getComponentSprite(symbol: string, inputs: number, outputs: number, rotation: number, scale: number): PIXI.Sprite | PIXI.Graphics {
 		const graphics = new PIXI.Graphics();
 		graphics.interactiveChildren = false;
+		graphics.sortableChildren = false;
 		return CompSpriteGenerator.updateGraphics(symbol, inputs, outputs, rotation, scale, graphics);
 	}
 

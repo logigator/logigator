@@ -1,0 +1,99 @@
+$themes: (
+	light: (
+		primary-text: black,
+		secondary-text: #F5F5F5,
+		button-text: #F5F5F5,
+		primary: #2ECC71,
+		secondary: #d1d1d1,
+		background: #F5F5F5,
+		inactive: #5D5D5D,
+		error: #DD3138
+	),
+	dark: (
+		primary-text: #cccccc,
+		secondary-text: black,
+		button-text: #cccccc,
+		primary: #27AE60,
+		secondary: #3a4042,
+		background: #262a2b,
+		inactive: #979797,
+		error: #DD3138
+	)
+);
+
+$border-styles: (
+	width: 1px,
+	radius: 0.1rem
+);
+
+@function border($key) {
+	@return map-get($border-styles, $key);
+}
+
+@mixin themify() {
+	@each $theme, $map in $themes {
+
+		$themeForTestFunction: $theme !global;
+
+		@if(&) {
+			:host-context(.theme-#{$theme}) & {
+				$theme-map: () !global;
+				@each $key, $submap in $map {
+					$theme-map: map-merge($theme-map, ($key: $submap)) !global;
+				}
+
+				@content;
+				$theme-map: null !global;
+				$themeForTestFunction: null !global;
+			}
+		} @else {
+			.theme-#{$theme} {
+				$theme-map: () !global;
+				@each $key, $submap in $map {
+					$theme-map: map-merge($theme-map, ($key: $submap)) !global;
+				}
+
+				@content;
+				$theme-map: null !global;
+				$themeForTestFunction: null !global;
+			}
+		}
+
+	}
+}
+
+@function themed($key) {
+	@return map-get($theme-map, $key);
+}
+
+@function isTheme($theme) {
+	@return $themeForTestFunction == $theme;
+}
+
+@mixin scrollbar($width) {
+	&::-webkit-scrollbar-track
+	{
+		@include themify() {
+			background-color: themed('background');
+		}
+	}
+
+	&::-webkit-scrollbar
+	{
+		width: $width;
+	}
+
+	&::-webkit-scrollbar-thumb
+	{
+		border-radius: 2px;
+		@include themify() {
+			background-color: themed('secondary');
+		}
+	}
+
+	scrollbar-width: thin;
+	@include themify() {
+		scrollbar-color: themed('secondary') themed('background');
+	}
+
+}

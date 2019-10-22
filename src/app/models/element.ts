@@ -38,6 +38,22 @@ export abstract class Elements {
 		return out;
 	}
 
+	public static equals(elem0: Element, elem1: Element): boolean {
+		for (const k in elem0) {
+			if (k === 'id' || k === 'plugIndex') continue;
+			if (elem0[k] && elem0[k].x !== undefined && elem0[k].y !== undefined) {
+				if (!(elem0[k].x === elem1[k].x && elem0[k].y === elem1[k].y))
+					return false;
+			} else {
+				const v0 = elem0[k] === undefined || elem0[k] === null ? undefined : elem0[k];
+				const v1 = elem1[k] === undefined || elem1[k] === null ? undefined : elem1[k];
+				if (v0 !== v1)
+					return false;
+			}
+		}
+		return true;
+	}
+
 	public static move(element: Element, dif: PIXI.Point): void {
 		element.pos.x += dif.x;
 		element.pos.y += dif.y;
@@ -72,7 +88,7 @@ export abstract class Elements {
 	}
 
 	public static calcEndPos(pos: PIXI.Point, numInputs: number, numOutputs: number, rotation?: number): PIXI.Point {
-		if (rotation === undefined) rotation = 0;
+		if (rotation === undefined || rotation === null) rotation = 0;
 		if (rotation % 2 === 0) {
 			return new PIXI.Point(pos.x + environment.componentWidth,
 				pos.y + Math.max(numInputs, numOutputs));
@@ -80,6 +96,10 @@ export abstract class Elements {
 			return new PIXI.Point(pos.x + Math.max(numInputs, numOutputs),
 				pos.y + environment.componentWidth);
 		}
+	}
+
+	public static otherWirePos(wire: Element, pos: PIXI.Point): PIXI.Point {
+		return wire.pos.equals(pos) ? wire.endPos : wire.pos;
 	}
 
 	public static addActionName(elem: Element): ActionType {
@@ -112,29 +132,31 @@ export abstract class Elements {
 		if (numInputs === undefined)
 			numInputs = element.numInputs;
 		const out: PIXI.Point[] = [];
-		if (rotation === 0) {
-			for (let i = 0; i < numInputs; i++)
-				out.push(new PIXI.Point(element.pos.x - 1, element.pos.y + i));
-			for (let i = 0; i < element.numOutputs; i++)
-				out.push(new PIXI.Point(element.endPos.x, element.pos.y + i));
-		}
-		if (rotation === 1) {
-			for (let i = 0; i < numInputs; i++)
-				out.push(new PIXI.Point(element.endPos.x - 1 - i, element.pos.y - 1));
-			for (let i = 0; i < element.numOutputs; i++)
-				out.push(new PIXI.Point(element.endPos.x - 1 - i, element.endPos.y));
-		}
-		if (rotation === 2) {
-			for (let i = 0; i < numInputs; i++)
-				out.push(new PIXI.Point(element.endPos.x, element.endPos.y - 1 - i));
-			for (let i = 0; i < element.numOutputs; i++)
-				out.push(new PIXI.Point(element.pos.x - 1, element.endPos.y - 1 - i));
-		}
-		if (rotation === 3) {
-			for (let i = 0; i < numInputs; i++)
-				out.push(new PIXI.Point(element.pos.x + i, element.endPos.y));
-			for (let i = 0; i < element.numOutputs; i++)
-				out.push(new PIXI.Point(element.pos.x + i, element.pos.y - 1));
+		switch (rotation) {
+			case 0:
+				for (let i = 0; i < numInputs; i++)
+					out.push(new PIXI.Point(element.pos.x - 1, element.pos.y + i));
+				for (let i = 0; i < element.numOutputs; i++)
+					out.push(new PIXI.Point(element.endPos.x, element.pos.y + i));
+				break;
+			case 1:
+				for (let i = 0; i < numInputs; i++)
+					out.push(new PIXI.Point(element.endPos.x - 1 - i, element.pos.y - 1));
+				for (let i = 0; i < element.numOutputs; i++)
+					out.push(new PIXI.Point(element.endPos.x - 1 - i, element.endPos.y));
+				break;
+			case 2:
+				for (let i = 0; i < numInputs; i++)
+					out.push(new PIXI.Point(element.endPos.x, element.endPos.y - 1 - i));
+				for (let i = 0; i < element.numOutputs; i++)
+					out.push(new PIXI.Point(element.pos.x - 1, element.endPos.y - 1 - i));
+				break;
+			case 3:
+				for (let i = 0; i < numInputs; i++)
+					out.push(new PIXI.Point(element.pos.x + i, element.endPos.y));
+				for (let i = 0; i < element.numOutputs; i++)
+					out.push(new PIXI.Point(element.pos.x + i, element.pos.y - 1));
+				break;
 		}
 		return out;
 	}
@@ -160,5 +182,15 @@ export abstract class Elements {
 				}
 			}
 		}
+	}
+
+	public static wireEndIndex(element: Element, pos: PIXI.Point): number {
+		const wireEnds = this.wireEnds(element);
+		for (let i = 0; i < wireEnds.length; i++) {
+			if (wireEnds[i].equals(pos)) {
+				return i;
+			}
+		}
+		return -1;
 	}
 }

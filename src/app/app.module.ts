@@ -25,12 +25,21 @@ import { ReloadQuestionComponent } from './components/popup/popup-contents/relao
 import { NewComponentComponent } from './components/popup/popup-contents/new-component/new-component.component';
 import { OpenProjectComponent } from './components/popup/popup-contents/open/open-project.component';
 import { SaveAsComponent } from './components/popup/popup-contents/save-as/save-as.component';
-import {ToastrModule} from 'ngx-toastr';
+import {ToastContainerModule, ToastrModule} from 'ngx-toastr';
 import {BrowserAnimationsModule} from '@angular/platform-browser/animations';
 import {MissingTranslationHandler, TranslateLoader, TranslateModule} from '@ngx-translate/core';
 import {createTranslateLoader} from './models/translation/translation-loader-factory';
 import {AppMissingTranslationHandler} from './models/translation/missing-translation-handler';
 import { OutsideNgZoneEventDirective } from './directives/outside-ng-zone-event/outside-ng-zone-event.directive';
+import { SwitchComponent } from './components/switch/switch.component';
+import { UnsavedChangesComponent } from './components/popup/popup-contents/unsaved-changes/unsaved-changes.component';
+import { InputComponent } from './components/input/input.component';
+import { NgxElectronModule } from 'ngx-electron';
+// #!electron
+import { LoginComponent } from './components/popup/popup-contents/login/login.component';
+// #!electron
+import { RegisterComponent } from './components/popup/popup-contents/register/register.component';
+import { WorkAreaContainerComponent } from './components/work-area-container/work-area-container.component';
 
 @NgModule({
 	declarations: [
@@ -56,7 +65,15 @@ import { OutsideNgZoneEventDirective } from './directives/outside-ng-zone-event/
 		NewComponentComponent,
 		OpenProjectComponent,
 		SaveAsComponent,
-		OutsideNgZoneEventDirective
+		OutsideNgZoneEventDirective,
+		SwitchComponent,
+		UnsavedChangesComponent,
+		InputComponent,
+		// #!electron
+		LoginComponent,
+		// #!electron
+		RegisterComponent,
+		WorkAreaContainerComponent
 	],
 	entryComponents: [
 		PopupComponent,
@@ -64,14 +81,21 @@ import { OutsideNgZoneEventDirective } from './directives/outside-ng-zone-event/
 		ReloadQuestionComponent,
 		NewComponentComponent,
 		OpenProjectComponent,
-		SaveAsComponent
+		SaveAsComponent,
+		UnsavedChangesComponent,
+		// #!electron
+		LoginComponent,
+		// #!electron
+		RegisterComponent
 	],
 	imports: [
+		NgxElectronModule,
 		BrowserModule,
 		FormsModule,
 		HttpClientModule,
 		ReactiveFormsModule,
 		BrowserAnimationsModule,
+		ToastContainerModule,
 		ToastrModule.forRoot({
 			positionClass: 'toastr-position',
 			easeTime: 100,

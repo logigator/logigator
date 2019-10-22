@@ -37,7 +37,8 @@
 			"SHOW_GRID": "Show Grid",
 			"LANGUAGE": "Language",
 			"SHORTCUTS": "Customize Shortcuts",
-			"ACCOUNT": "Account Settings"
+			"ACCOUNT": "Account Settings",
+			"LOGOUT": "Logout"
 		}
 	},
 	"TOOLBAR": {
@@ -48,31 +49,48 @@
 		"LOGIN": "Login",
 		"REGISTER": "Register"
 	},
-	"CONST_BOX_CATEGORIES": {
-		"BASIC": "Basic Components",
-		"IO": "IO Components",
-		"PLUG": "Plug Components",
-		"USER": "User Defined"
+	"CONST_BOX": {
+		"SEARCH": "Search",
+		"CATEGORIES": {
+			"BASIC": "Basic Components",
+			"IO": "IO Components",
+			"PLUG": "Plug Components",
+			"USER": "User Defined"
+		}
 	},
 	"POPUP": {
 		"NEW_COMP": {
 			"TITLE": "New Component",
 			"NAME": "Name",
-			"SYMBOL": "Symbol"
+			"SYMBOL": "Symbol",
+			"CREATE": "CREATE"
 		},
 		"SAVE": {
-			"TITLE": "Save Project"
+			"TITLE": "Save Project",
+			"NAME": "Name",
+			"DOWNLOAD": "DOWNLOAD FILE",
+			"CLOUD": "SAVE IN CLOUD"
+		},
+		"OPEN": {
+			"TITLE": "Open Project",
+			"OPEN": "OPEN",
+			"UPLOAD": "Upload File",
+			"TABLE_OPEN": "Open",
+			"TABLE_EDITED": "Last edited",
+			"TABLE_NAME": "Name",
+			"OPEN_FILE": "Open from File",
+			"OPEN_CLOUD": "Open from Cloud"
 		},
 		"RELOAD": {
 			"TITLE": "Reload Required",
 			"QUESTION": "For this change to take effect, the editor has to be reloaded.<br>Do you want to reload this page now?",
-			"YES": "Yes",
-			"POSTPONE": "No, I'll reload later",
-			"CANCEL": "Cancel"
+			"YES": "YES",
+			"POSTPONE": "RELOAD LATER",
+			"CANCEL": "CANCEL"
 		},
 		"SHORTCUTS": {
 			"TITLE": "Customize Shortcuts",
-			"SAVE": "Save",
+			"SAVE": "SAVE",
 			"DESCRIPTION": {
 				"copy": "Copy",
 				"paste": "Paste",
@@ -91,6 +109,12 @@
 				"textMode": "text mode",
 				"save": "Save"
 			}
+		},
+		"UNSAVED_CHANGES": {
+			"TITLE": "Unsaved Changes",
+			"QUESTION": "The current project has unsaved changes, by opening another project, these changes may be lost!",
+			"OK": "CONTINUE ANYWAYS",
+			"CANCEL": "CANCEL"
 		}
 	},
 	"SETTINGS_INFO": {

@@ -1,5 +1,6 @@
-<p>save-as works!</p>
+<div>
+	<app-input [label]="'POPUP.SAVE.NAME' | translate" [(ngModel)]="projectName"></app-input>
 
-<input type="text" [(ngModel)]="projectName">
-<button (click)="exportProject()">Download Project File</button>
-<button (click)="saveToServer()" *ngIf="isLoggedIn">save in cloud</button>
+	<button class="btn-raised primary" (click)="exportProject()">{{'POPUP.SAVE.DOWNLOAD' | translate}}</button>
+	<button class="btn-raised primary" (click)="saveToServer()" *ngIf="isLoggedIn">{{'POPUP.SAVE.CLOUD' | translate}}</button>
+</div>

@@ -4,14 +4,17 @@ import {Element, Elements} from './element';
 import {Observable, Subject} from 'rxjs';
 import * as PIXI from 'pixi.js';
 import {CollisionFunctions} from './collision-functions';
+// #!debug
+import {BoardRecorder} from '../../../tests/auto-tests/board-recorder';
 import {ElementProviderService} from '../services/element-provider/element-provider.service';
+import {ProjectType} from './project-type';
 
 export class Project {
 
 
 	private readonly _id: number;
 	private _name: string;
-	private _type: 'project' | 'comp';
+	private _type: ProjectType;
 
 	private _currState: ProjectState;
 
@@ -24,7 +27,10 @@ export class Project {
 
 	public dirty = false;
 
-	public constructor(projectState: ProjectState, config: {id?: number, name?: string, type?: 'project' | 'comp'}) {
+	// #!debug
+	public boardRecorder: BoardRecorder;
+
+	public constructor(projectState: ProjectState, config: {id?: number, name?: string, type?: ProjectType}) {
 		this._currState = projectState;
 		this._actions = new Array(this._maxActionCount);
 		this._id = config.id;
@@ -33,12 +39,15 @@ export class Project {
 		this._currActionPointer = -1;
 		this._currMaxActionPointer = -1;
 		this._changeSubject = new Subject<Action[]>();
+
+		// #!debug
+		this.boardRecorder = new BoardRecorder(this, true);
 	}
 
-	public static empty(): Project {
+	public static empty(name?: string): Project {
 		return new Project(new ProjectState(), {
 			type: 'project',
-			name: 'NewProject',
+			name: name || 'New Project',
 			id: 0
 		});
 	}
@@ -89,6 +98,18 @@ export class Project {
 				element
 			});
 		}
+		for (const chunks of this._currState.chunks) {
+			for (const chunk of chunks) {
+				if (!chunk || !chunk.connectionPoints)
+					continue;
+				for (const cp of chunk.connectionPoints) {
+					out.push({
+						name: 'conWire',
+						pos: cp.clone()
+					});
+				}
+			}
+		}
 		return out;
 	}
 
@@ -114,6 +135,9 @@ export class Project {
 			dif = new PIXI.Point(0, 0);
 		if (!this._currState.allSpacesFree(elements, dif))
 			return false;
+
+		// #!debug
+		this.boardRecorder.call('addElements', arguments, -1, -1, 0);
 		const actions: Action[] = new Array(elements.length);
 		let i = 0;
 		elements.forEach(elem => {
@@ -141,6 +165,9 @@ export class Project {
 			_endPos || Elements.calcEndPos(_pos, numInputs, numOutputs, rotation), rotation, numInputs);
 		if (!this._currState.isFreeSpace(elem.pos, elem.endPos, typeId === 0, Elements.wireEnds(elem)))
 			return null;
+
+		// #!debug
+		this.boardRecorder.call('addElement', arguments);
 		this._currState.addElement(elem);
 		const actions: Action[] = [{
 			name: Elements.addActionName(elem),
@@ -159,6 +186,9 @@ export class Project {
 		const {wire0, wire1} = Elements.gen2Wires(_pos, _cornerPos, _endPos);
 		if (!this._currState.allSpacesFree([wire0, wire1], new PIXI.Point(0, 0)))
 			return null;
+
+		// #!debug
+		this.boardRecorder.call('addWire', arguments);
 		this._currState.addElement(wire0);
 		this._currState.addElement(wire1);
 		const actions = this.actionsFromAddWires([wire0, wire1]);
@@ -175,6 +205,8 @@ export class Project {
 
 
 	public removeElementsById(ids: number[]): void {
+		// #!debug
+		this.boardRecorder.call('removeElementsById', arguments, -1, 0);
 		const actions: Action[] = [];
 		const onEdges: Element[] = [];
 		const elements: Element[] = new Array(ids.length);
@@ -206,6 +238,9 @@ export class Project {
 		const changed = this._currState.withWiresOnEdges(elements);
 		if (!this._currState.allSpacesFree(elements, dif, elements))
 			return false;
+
+		// #!debug
+		this.boardRecorder.call('moveElementsById', arguments, -1, 0);
 		this._currState.removeAllConnectionPoints(elements);
 		for (const elem of elements) {
 			this._currState.moveElement(elem, dif);
@@ -234,6 +269,9 @@ export class Project {
 		const newEndPos = Elements.calcEndPos(element.pos, element.numInputs, element.numOutputs, rotation);
 		if (!this._currState.isFreeSpace(element.pos, newEndPos, false, Elements.wireEnds(element, rotation), [element]))
 			return false;
+
+		// #!debug
+		this.boardRecorder.call('rotateComponent', arguments, 0);
 		this._currState.rotateComp(element, rotation, newEndPos);
 		actions.push(...this.autoAssemble(changed));
 		this.newState(actions);
@@ -254,6 +292,9 @@ export class Project {
 		const newEndPos = Elements.calcEndPos(element.pos, numInputs, element.numOutputs, element.rotation);
 		if (!this._currState.isFreeSpace(element.pos, newEndPos, false, Elements.wireEnds(element, undefined, numInputs), [element]))
 			return false;
+
+		// #!debug
+		this.boardRecorder.call('setNumInputs', arguments, 0);
 		this._currState.setNumInputs(element, numInputs, newEndPos);
 		actions.push(...this.autoAssemble(changed));
 		this.newState(actions);
@@ -282,6 +323,8 @@ export class Project {
 
 
 	public toggleWireConnection(pos: PIXI.Point): void {
+		// #!debug
+		this.boardRecorder.call('toggleWireConnection', arguments);
 		const wiresOnPoint = this._currState.wiresOnPoint(pos);
 		let actions: Action[];
 		if (wiresOnPoint.length === 2) {
@@ -356,6 +399,9 @@ export class Project {
 	public stepBack(): Action[] {
 		if (this._currActionPointer < 0)
 			return;
+
+		// #!debug
+		this.boardRecorder.call('stepBack', arguments);
 		const backActions = Actions.reverseActions(this._actions[this._currActionPointer]);
 		this._currActionPointer--;
 		this.applyActions(backActions);
@@ -367,6 +413,9 @@ export class Project {
 	public stepForward(): Action[] {
 		if (this._currActionPointer >= this._maxActionCount || this._currActionPointer === this._currMaxActionPointer)
 			return;
+
+		// #!debug
+		this.boardRecorder.call('stepForward', arguments);
 		const outActions = this._actions[++this._currActionPointer];
 		this.applyActions(outActions);
 		this._changeSubject.next(outActions);
@@ -400,7 +449,7 @@ export class Project {
 		this._name = value;
 	}
 
-	get type(): 'project' | 'comp' {
+	get type(): ProjectType {
 		return this._type;
 	}
 

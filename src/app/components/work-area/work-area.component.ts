@@ -1,5 +1,4 @@
 import {
-	ChangeDetectionStrategy,
 	Component,
 	ElementRef,
 	NgZone,
@@ -8,13 +7,14 @@ import {
 	Renderer2,
 	ViewChild
 } from '@angular/core';
-import {View} from '../../models/rendering/view';
+import {EditorView} from '../../models/rendering/editor-view';
 import {ProjectsService} from '../../services/projects/projects.service';
 import {Project} from '../../models/project';
 import {WorkArea} from '../../models/rendering/work-area';
-import {WindowWorkAreaComponent} from '../window-work-area/window-work-area.component';
 import {distinctUntilChanged, map, takeUntil} from 'rxjs/operators';
 import {WorkModeService} from '../../services/work-mode/work-mode.service';
+import {SimulationView} from '../../models/rendering/simulation-view';
+import {View} from '../../models/rendering/view';
 
 @Component({
 	selector: 'app-work-area',
@@ -23,15 +23,10 @@ import {WorkModeService} from '../../services/work-mode/work-mode.service';
 })
 export class WorkAreaComponent extends WorkArea implements OnInit, OnDestroy {
 
-	private _allViews: Map<number, View>;
-
-	public activeView: View;
+	private _allViews: Map<number, EditorView>;
 
 	@ViewChild('pixiCanvasContainer', {static: true})
 	private _pixiCanvasContainer: ElementRef<HTMLDivElement>;
-
-	@ViewChild('pixiWindowContainer', {static: true})
-	private _pixiWindowContainer: WindowWorkAreaComponent;
 
 	constructor(
 		private renderer2: Renderer2,
@@ -43,17 +38,12 @@ export class WorkAreaComponent extends WorkArea implements OnInit, OnDestroy {
 	}
 
 	ngOnInit() {
-		this._allViews = new Map<number, View>();
+		this._allViews = new Map<number, EditorView>();
 
 		this.ngZone.runOutsideAngular(async () => {
 			this.preventContextMenu(this._pixiCanvasContainer, this.renderer2);
 			this.initZoomPan(this._pixiCanvasContainer);
 			this.initPixi(this._pixiCanvasContainer, this.renderer2);
-			this._ticker.setTickerFunction(() => {
-				if (!this.activeView) return;
-				this.updateZoomPan(this.activeView);
-				this._pixiRenderer.render(this.activeView);
-			});
 
 			this.projectsService.onProjectOpened$.pipe(
 				takeUntil(this._destroySubject)
@@ -71,11 +61,9 @@ export class WorkAreaComponent extends WorkArea implements OnInit, OnDestroy {
 				takeUntil(this._destroySubject)
 			).subscribe(id => this.onProjectSwitch(id));
 
-			this.workMode.currentWorkMode$.pipe(
+			this.workMode.onSimulationModeChange.pipe(
 				takeUntil(this._destroySubject),
-				map((mode) => mode === 'simulation'),
-				distinctUntilChanged()
-			).subscribe(isSim => this.isSimulationModeChanged(isSim));
+			).subscribe(isSim => this.onSimulationModeChanged(isSim));
 		});
 	}
 
@@ -87,16 +75,30 @@ export class WorkAreaComponent extends WorkArea implements OnInit, OnDestroy {
 		return this.workMode.currentWorkMode === 'simulation';
 	}
 
-	private isSimulationModeChanged(simulation: boolean) {
+	public get activeView(): View {
+		return this._activeView;
+	}
+
+	private onSimulationModeChanged(simulation: boolean) {
 		if (simulation) {
-			this.renderer2.setStyle(this._pixiCanvasContainer.nativeElement, 'width', '100%');
 			this.projectsService.allProjects.forEach(proj => {
 				if (proj.type === 'project') {
-					this.switchToProject(proj.id);
+					this._activeView = new SimulationView(
+						proj,
+						this._pixiCanvasContainer.nativeElement,
+						this._ticker,
+						this.requestInspectElementInSim,
+						this.projectsService.mainProject.id.toString(),
+						[]
+					);
+					this._ticker.singleFrame();
 				}
 			});
 		} else {
-			this.renderer2.removeStyle(this._pixiCanvasContainer.nativeElement, 'width');
+			if (!this._activeView) return;
+			this._activeView.destroy();
+			delete this._activeView;
+			this.switchToProject(this.projectsService.allProjects.values().next().value.id);
 		}
 		if (this._pixiRenderer) {
 			this._pixiRenderer.resize(this._pixiCanvasContainer.nativeElement.offsetWidth, this._pixiCanvasContainer.nativeElement.offsetHeight);
@@ -104,20 +106,26 @@ export class WorkAreaComponent extends WorkArea implements OnInit, OnDestroy {
 	}
 
 	private openProject(projectId: number) {
-		const newView = new View(projectId, this._pixiCanvasContainer.nativeElement, this._ticker);
+		const newView = new EditorView(this.projectsService.getProjectById(projectId), this._pixiCanvasContainer.nativeElement, this._ticker);
 		this.ngZone.run(() => {
 			this._allViews.set(projectId, newView);
-			this.activeView = newView;
+			this._activeView = newView;
 			this.projectsService.switchToProject(projectId);
 		});
 	}
 
 	public switchToProject(toSwitchToId: number) {
+		if (this.workMode.currentWorkMode === 'simulation') return;
 		this.projectsService.switchToProject(toSwitchToId);
 	}
 
 	private onProjectSwitch(id: number) {
-		this.activeView = this._allViews.get(id);
+		this._activeView = this._allViews.get(id);
+		if (((this.activeView as EditorView).projectType === 'project' && this.workMode.isCompToBuildPlug) ||
+			this.activeView.projectId === this.workMode.currentComponentToBuild
+		) {
+			this.workMode.setWorkMode('select');
+		}
 		this._ticker.singleFrame();
 	}
 
@@ -130,12 +138,12 @@ export class WorkAreaComponent extends WorkArea implements OnInit, OnDestroy {
 	public closeView(id: number) {
 		const toClose = this._allViews.get(id);
 		this._allViews.delete(id);
-		if (toClose === this.activeView) {
+		if (toClose === this._activeView) {
 			const toSwitchTo = this._allViews.values().next().value;
 			if (toSwitchTo) {
 				this.switchToProject(toSwitchTo.projectId);
 			} else {
-				delete this.activeView;
+				delete this._activeView;
 			}
 		}
 		toClose.destroy();

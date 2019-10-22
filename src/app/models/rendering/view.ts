@@ -1,88 +1,67 @@
 import * as PIXI from 'pixi.js';
-import {ZoomPanInputManager} from './zoom-pan-input-manager';
 import {ZoomPan} from './zoom-pan';
-import {Grid} from './grid';
-import {ElementSprite} from '../element-sprite';
-import {ProjectsService} from '../../services/projects/projects.service';
-import {ElementProviderService} from '../../services/element-provider/element-provider.service';
-import {Element} from '../element';
-import {ViewInteractionManager} from './view-interaction-manager';
-import {environment} from '../../../environments/environment';
-import {Subject} from 'rxjs';
-import {Action, Actions} from '../action';
-import {CollisionFunctions} from '../collision-functions';
-import {ThemingService} from '../../services/theming/theming.service';
-import {CompSpriteGenerator} from './comp-sprite-generator';
-import {ProjectInteractionService} from '../../services/project-interaction/project-interaction.service';
-import {filter, takeUntil} from 'rxjs/operators';
-import {SelectionService} from '../../services/selection/selection.service';
-import {SimulationViewInteractionManager} from './simulation-view-interaction-manager';
-import {RendererChunkData} from './renderer-chunk-data';
 import {RenderTicker} from './render-ticker';
+import {RendererChunkData} from './renderer-chunk-data';
+import {ElementSprite} from '../element-sprite';
+import {Subject} from 'rxjs';
+import {ThemingService} from '../../services/theming/theming.service';
+import {takeUntil} from 'rxjs/operators';
+import {ProjectsService} from '../../services/projects/projects.service';
+import {Grid} from './grid';
+import {environment} from '../../../environments/environment';
+import {Element} from '../element';
+import {ElementProviderService} from '../../services/element-provider/element-provider.service';
+import {CompSpriteGenerator} from './comp-sprite-generator';
+import {CollisionFunctions} from '../collision-functions';
+import {Project} from '../project';
+import {Action} from '../action';
 
-export class View extends PIXI.Container {
-
-	private readonly _projectId: number;
+export abstract class View extends PIXI.Container {
 
 	public zoomPan: ZoomPan;
 
 	public ticker: RenderTicker;
 
-	private readonly _onlySimMode: boolean;
-
-	private _viewInteractionManager: ViewInteractionManager;
-	private _simViewInteractionManager: SimulationViewInteractionManager;
-
 	public readonly htmlContainer: HTMLElement;
 
-	private _chunks: RendererChunkData[][] = [];
+	protected _chunks: RendererChunkData[][] = [];
 
 	public connectionPoints: Map<string, PIXI.Graphics> = new Map();
 	public allElements: Map<number, ElementSprite> = new Map();
 
-	private _chunksToRender: {x: number, y: number}[] = [];
+	protected _chunksToRender: {x: number, y: number}[] = [];
 
-	private _destroySubject =  new Subject<void>();
+	protected _destroySubject =  new Subject<void>();
 
-	constructor(projectId: number, htmlContainer: HTMLElement, ticker: RenderTicker, onlySimMode = false) {
+	protected readonly _project: Project;
+
+	protected constructor(project: Project, htmlContainer: HTMLElement, ticker: RenderTicker) {
 		super();
-		this._projectId = projectId;
+		this._project = project;
 		this.htmlContainer = htmlContainer;
 		this.ticker = ticker;
+		this.zoomPan = new ZoomPan(this);
+
 		this.interactive = true;
 		this.sortableChildren = true;
-		this._onlySimMode = onlySimMode;
-
-		this.zoomPan = new ZoomPan(this);
-		if (!this._onlySimMode) {
-			this._viewInteractionManager = new ViewInteractionManager(this);
-		}
-		this._simViewInteractionManager = new SimulationViewInteractionManager(this);
-
-		ProjectsService.staticInstance.onProjectChanges$(this.projectId).pipe(
-			takeUntil(this._destroySubject)
-		).subscribe((actions: Action[]) => this.applyActionsToView(actions));
-
-		ProjectInteractionService.staticInstance.onZoomChangeClick$.pipe(
-			filter(_ => this.projectId === ProjectsService.staticInstance.currProject.id),
-			takeUntil(this._destroySubject)
-		).subscribe((dir => this.onZoomClick(dir)));
 
 		ThemingService.staticInstance.showGridChanges$.pipe(
 			takeUntil(this._destroySubject)
 		).subscribe(show => {
 			this.onGridShowChange(show);
 		});
+	}
 
+	protected applyOpenActions() {
 		this.applyActionsToView(
-			ProjectsService.staticInstance.allProjects.get(this.projectId).getOpenActions()
+			this._project.getOpenActions()
 		);
 		this.updateChunks();
 	}
 
 	public updateChunks() {
 		const currentlyOnScreen = this.zoomPan.isOnScreen(this.htmlContainer.offsetHeight, this.htmlContainer.offsetWidth);
-		const chunksToRender = ProjectsService.staticInstance.currProject.chunksToRender(
+		const chunksToRender = this._project.chunksToRender(
 			Grid.getGridPosForPixelPos(currentlyOnScreen.start),
 			Grid.getGridPosForPixelPos(currentlyOnScreen.end)
 		);
@@ -111,21 +90,6 @@ export class View extends PIXI.Container {
 					this.updateConnectionPoint(chunkElems[e] as PIXI.Graphics);
 				}
 			}
-		}
-		const selectedIds = SelectionService.staticInstance.selectedIds(this.projectId);
-		for (let i = 0; i < selectedIds.length; i++) {
-			const elemSprite = this.allElements.get(selectedIds[i]);
-			if (elemSprite.element.typeId === 0) {
-				this.updateWireSprite(elemSprite.element, elemSprite.sprite as PIXI.Graphics);
-			} else if (elemSprite) {
-				this.updateComponentSprite(elemSprite.element, elemSprite.sprite as PIXI.Graphics);
-			}
-		}
-		const selectedConnections = SelectionService.staticInstance.selectedConnections(this.projectId);
-		for (let i = 0; i < selectedConnections.length; i++) {
-			const graphics = this.connectionPoints.get(`${selectedConnections[i].x}:${selectedConnections[i].y}`);
-			const pos = Grid.getPixelPosForPixelPosOnGridWire(graphics.position);
-			this.drawConnectionPoint(graphics, pos);
 		}
 		for (const oldChunk of this._chunksToRender) {
 			if (!chunksToRender.find(toRender => toRender.x === oldChunk.x && toRender.y === oldChunk.y)) {
@@ -156,26 +120,13 @@ export class View extends PIXI.Container {
 		this.ticker.singleFrame();
 	}
 
-	public drawConnectionPoint(graphics, pos) {
-		const size = this.calcConnPointSize();
-		graphics.clear();
-		graphics.position = this.adjustConnPointPosToSize(pos, size);
-		graphics.beginFill(ThemingService.staticInstance.getEditorColor('wire'));
-		graphics.drawRect(0, 0, size / this.zoomPan.currentScale, size / this.zoomPan.currentScale);
-	}
-
-	public calcConnPointSize(): number {
-		return this.zoomPan.currentScale < 0.5 ? 3 : 5;
-	}
-
-	public adjustConnPointPosToSize(pos: PIXI.Point, size: number): PIXI.Point {
-		return new PIXI.Point(
-			pos.x - size / 2 / this.zoomPan.currentScale,
-			pos.y - size / 2 / this.zoomPan.currentScale
+	protected getChunkPos(chunkX: number, chunkY: number): PIXI.Point {
+		return Grid.getPixelPosForGridPos(
+			new PIXI.Point(chunkX * environment.chunkSize, chunkY * environment.chunkSize)
 		);
 	}
 
-	private updateWireSprite(element: Element, graphics: PIXI.Graphics) {
+	protected updateWireSprite(element: Element, graphics: PIXI.Graphics) {
 		graphics.clear();
 		this.addLineToWireGraphics(
 			graphics,
@@ -184,7 +135,7 @@ export class View extends PIXI.Container {
 		);
 	}
 
-	private updateComponentSprite(element: Element, graphics: PIXI.Graphics) {
+	protected updateComponentSprite(element: Element, graphics: PIXI.Graphics) {
 		graphics.clear();
 		const elemType = ElementProviderService.staticInstance.getElementById(element.typeId);
 		CompSpriteGenerator.updateGraphics(
@@ -192,7 +143,7 @@ export class View extends PIXI.Container {
 		);
 	}
 
-	private createChunk(x: number, y: number): boolean {
+	protected createChunk(x: number, y: number): boolean {
 		if (this._chunks[x] && this._chunks[x][y])
 			return false;
 		for (let i = 0; i <= x; i++)
@@ -209,7 +160,8 @@ export class View extends PIXI.Container {
 			scaledFor: this.zoomPan.currentScale
 		};
 		this._chunks[x][y].container.sortableChildren = false;
-		this._chunks[x][y].container.hitArea = new PIXI.Rectangle(
+		this._chunks[x][y].container.interactive = false;
+		this._chunks[x][y].gridGraphics.hitArea = new PIXI.Rectangle(
 			0,
 			0,
 			environment.chunkSize * environment.gridPixelWidth,
@@ -217,14 +169,14 @@ export class View extends PIXI.Container {
 		);
 		this._chunks[x][y].gridGraphics.sortableChildren = false;
 		this._chunks[x][y].gridGraphics.visible = ThemingService.staticInstance.showGrid;
-		const text = new PIXI.Text(x  + ' ' + y);
-		text.x = (environment.chunkSize * environment.gridPixelWidth) / 2;
-		text.y = (environment.chunkSize * environment.gridPixelWidth) / 2;
-		this._chunks[x][y].container.addChild(text);
+		// const text = new PIXI.Text(x  + ' ' + y);
+		// text.x = (environment.chunkSize * environment.gridPixelWidth) / 2;
+		// text.y = (environment.chunkSize * environment.gridPixelWidth) / 2;
+		// this._chunks[x][y].container.addChild(text);
 		return true;
 	}
 
-	private createChunkIfNeeded(chunkX, chunkY): boolean {
+	protected createChunkIfNeeded(chunkX, chunkY): boolean {
 		if (this.createChunk(chunkX, chunkY)) {
 			const chunk = this._chunks[chunkX][chunkY];
 			const chunkPos = this.getChunkPos(chunkX, chunkY);
@@ -237,9 +189,20 @@ export class View extends PIXI.Container {
 		return false;
 	}
 
-	private getChunkPos(chunkX: number, chunkY: number): PIXI.Point {
-		return Grid.getPixelPosForGridPos(
-			new PIXI.Point(chunkX * environment.chunkSize, chunkY * environment.chunkSize)
+	public addLineToWireGraphics(graphics: PIXI.Graphics, endPos: PIXI.Point, startPos: PIXI.Point) {
+		graphics.lineStyle(1 / this.zoomPan.currentScale, ThemingService.staticInstance.getEditorColor('wire'));
+		graphics.moveTo(0, 0);
+		graphics.lineTo(endPos.x - startPos.x, endPos.y - startPos.y);
+	}
+
+	public calcConnPointSize(): number {
+		return this.zoomPan.currentScale < 0.5 ? 3 : 5;
+	}
+
+	public adjustConnPointPosToSize(pos: PIXI.Point, size: number): PIXI.Point {
+		return new PIXI.Point(
+			pos.x - size / 2 / this.zoomPan.currentScale,
+			pos.y - size / 2 / this.zoomPan.currentScale
 		);
 	}
 
@@ -258,24 +221,7 @@ export class View extends PIXI.Container {
 
 	}
 
-	private onZoomClick(dir: 'in' | 'out' | '100') {
-		if (this.applyZoom(dir)) {
-			this.updateChunks();
-			this.ticker.singleFrame();
-		}
-	}
-
-	public placeWires(start: PIXI.Point, middle: PIXI.Point, end?: PIXI.Point) {
-		ProjectsService.staticInstance.allProjects.get(this.projectId).addWire(start, middle, end);
-	}
-
-	public placeComponent(position: PIXI.Point, typeId: number) {
-		const type = ElementProviderService.staticInstance.getElementById(typeId);
-		const project = ProjectsService.staticInstance.allProjects.get(this.projectId);
-		return project.addElement(typeId, type.rotation, type.numInputs, type.numOutputs, position);
-	}
-
-	private placeComponentOnView(element: Element) {
+	protected placeComponentOnView(element: Element): ElementSprite {
 		const elemType = ElementProviderService.staticInstance.getElementById(element.typeId);
 		const sprite = CompSpriteGenerator.getComponentSprite(
 			elemType.symbol, element.numInputs, element.numOutputs, element.rotation, this.zoomPan.currentScale
@@ -287,14 +233,10 @@ export class View extends PIXI.Container {
 
 		const elemSprite = {element, sprite};
 		this.allElements.set(element.id, elemSprite);
-
-		if (!this._onlySimMode) {
-			this._viewInteractionManager.addEventListenersToNewElement(elemSprite);
-		}
-		this._simViewInteractionManager.addEventListenersToNewElement(elemSprite);
+		return elemSprite;
 	}
 
-	private placeWireOnView(element: Element) {
+	protected placeWireOnView(element: Element) {
 
 		const endPos = Grid.getPixelPosForGridPosWire(element.endPos);
 		const startPos = Grid.getPixelPosForGridPosWire(element.pos);
@@ -310,13 +252,7 @@ export class View extends PIXI.Container {
 		this.allElements.set(element.id, elemSprite);
 	}
 
-	public addLineToWireGraphics(graphics: PIXI.Graphics, endPos: PIXI.Point, startPos: PIXI.Point) {
-		graphics.lineStyle(1 / this.zoomPan.currentScale, ThemingService.staticInstance.getEditorColor('wire'));
-		graphics.moveTo(0, 0);
-		graphics.lineTo(endPos.x - startPos.x, endPos.y - startPos.y);
-	}
-
-	private addConnectionPoint(pos: PIXI.Point) {
+	protected addConnectionPointToView(pos: PIXI.Point) {
 		const pixelPos = Grid.getLocalChunkPixelPosForGridPosWireStart(pos);
 		pixelPos.x -= 2.5 / this.zoomPan.currentScale;
 		pixelPos.y -= 2.5 / this.zoomPan.currentScale;
@@ -330,9 +266,25 @@ export class View extends PIXI.Container {
 		this.connectionPoints.set(`${pos.x}:${pos.y}`, graphics);
 	}
 
-	private updateConnectionPoint(graphics: PIXI.Graphics) {
+	public addToCorrectChunk(sprite: PIXI.DisplayObject, pos: PIXI.Point) {
+		const chunkX = CollisionFunctions.gridPosToChunk(pos.x);
+		const chunkY = CollisionFunctions.gridPosToChunk(pos.y);
+
+		this.createChunkIfNeeded(chunkX, chunkY);
+		this._chunks[chunkX][chunkY].container.addChild(sprite);
+	}
+
+	protected updateConnectionPoint(graphics: PIXI.Graphics) {
 		const pos = Grid.getLocalChunkPixelPosForGridPosWireStart(Grid.getGridPosForPixelPos(graphics.position));
 		this.drawConnectionPoint(graphics, pos);
+	}
+
+	public drawConnectionPoint(graphics, pos) {
+		const size = this.calcConnPointSize();
+		graphics.clear();
+		graphics.position = this.adjustConnPointPosToSize(pos, size);
+		graphics.beginFill(ThemingService.staticInstance.getEditorColor('wire'));
+		graphics.drawRect(0, 0, size / this.zoomPan.currentScale, size / this.zoomPan.currentScale);
 	}
 
 	private removeConnectionPoint(pos: PIXI.Point) {
@@ -343,7 +295,20 @@ export class View extends PIXI.Container {
 		this.connectionPoints.delete(key);
 	}
 
-	private applyActionsToView(actions: Action[]) {
+	private moveMultipleAction(action: Action) {
+		action.others.forEach(element => {
+			const elemSprite = this.allElements.get(element.id);
+			this.addToCorrectChunk(elemSprite.sprite, element.pos);
+			this.setLocalChunkPos(element, elemSprite.sprite);
+		});
+	}
+
+	private updateComponent(action: Action) {
+		const elemSprite = this.allElements.get(action.element.id);
+		this.updateComponentSprite(action.element, elemSprite.sprite as PIXI.Graphics);
+	}
+
+	protected applyActionsToView(actions: Action[]) {
 		// console.log('incoming actions');
 		// Actions.printActions(actions);
 		if (!actions)
@@ -368,7 +333,7 @@ export class View extends PIXI.Container {
 				this.allElements.delete(action.element.id);
 				break;
 			case 'conWire':
-				this.addConnectionPoint(action.pos);
+				this.addConnectionPointToView(action.pos);
 				break;
 			case 'dcoWire':
 				this.removeConnectionPoint(action.pos);
@@ -384,19 +349,6 @@ export class View extends PIXI.Container {
 		this.ticker.singleFrame();
 	}
 
-	private moveMultipleAction(action: Action) {
-		action.others.forEach(element => {
-			const elemSprite = this.allElements.get(element.id);
-			this.addToCorrectChunk(elemSprite.sprite, element.pos);
-			this.setLocalChunkPos(element, elemSprite.sprite);
-		});
-	}
-
-	private updateComponent(action: Action) {
-		const elemSprite = this.allElements.get(action.element.id);
-		this.updateComponentSprite(action.element, elemSprite.sprite as PIXI.Graphics);
-	}
-
 	public setLocalChunkPos(element: Element, sprite: PIXI.DisplayObject) {
 		if (element.typeId === 0) {
 			sprite.position = Grid.getLocalChunkPixelPosForGridPosWireStart(element.pos);
@@ -405,24 +357,20 @@ export class View extends PIXI.Container {
 		}
 	}
 
-	public addToCorrectChunk(sprite: PIXI.DisplayObject, pos: PIXI.Point) {
-		const chunkX = CollisionFunctions.gridPosToChunk(pos.x);
-		const chunkY = CollisionFunctions.gridPosToChunk(pos.y);
-
-		this.createChunkIfNeeded(chunkX, chunkY);
-		this._chunks[chunkX][chunkY].container.addChild(sprite);
+	protected onZoomClick(dir: 'in' | 'out' | '100') {
+		if (this.applyZoom(dir)) {
+			this.updateChunks();
+			this.ticker.singleFrame();
+		}
 	}
 
 	public get projectId(): number {
-		return this._projectId;
+		return this._project.id;
 	}
 
 	public destroy() {
 		this._destroySubject.next();
 		this._destroySubject.unsubscribe();
-		if (!this._onlySimMode) {
-			this._viewInteractionManager.destroy();
-		}
 		super.destroy({
 			children: true
 		});
