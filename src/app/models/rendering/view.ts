@@ -37,6 +37,7 @@ export abstract class View extends PIXI.Container {
 	protected readonly _project: Project;
 
 	private themingService = getStaticDI(ThemingService);
+	private elementProviderService = getStaticDI(ElementProviderService);
 
 	protected constructor(project: Project, htmlContainer: HTMLElement, ticker: RenderTicker) {
 		super();
@@ -141,7 +142,7 @@ export abstract class View extends PIXI.Container {
 
 	protected updateComponentSprite(element: Element, graphics: PIXI.Graphics) {
 		graphics.clear();
-		const elemType = getStaticDI(ElementProviderService).getElementById(element.typeId);
+		const elemType = this.elementProviderService.getElementById(element.typeId);
 		CompSpriteGenerator.updateGraphics(
 			elemType.symbol, element.numInputs, element.numOutputs, element.rotation, this.zoomPan.currentScale, graphics
 		);
@@ -221,7 +222,7 @@ export abstract class View extends PIXI.Container {
 	}
 
 	protected placeComponentOnView(element: Element): ElementSprite {
-		const elemType = getStaticDI(ElementProviderService).getElementById(element.typeId);
+		const elemType = this.elementProviderService.getElementById(element.typeId);
 		const sprite = CompSpriteGenerator.getComponentSprite(
 			elemType.symbol, element.numInputs, element.numOutputs, element.rotation, this.zoomPan.currentScale
 		);

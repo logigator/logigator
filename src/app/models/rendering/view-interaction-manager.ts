@@ -96,20 +96,25 @@ export class ViewInteractionManager {
 	}
 
 	private handlePointerDownOnView(e: InteractionEvent) {
+		let addPointerMoveEvent = false;
 		if (this.workModeService.currentWorkMode === 'select' && e.data.button === 0) {
 			this.addSelectRectOrResetSelection(e);
+			addPointerMoveEvent = true;
 		} else if (this.workModeService.currentWorkMode === 'buildWire' && e.data.button === 0) {
 			this.startDrawingNewWire(e);
+			addPointerMoveEvent = true;
 		} else if (this.workModeService.currentWorkMode === 'connectWire' && e.data.button === 0) {
 			this.connectOrDisconnectWires(e);
+			addPointerMoveEvent = true;
 		} else if (this.workModeService.currentWorkMode === 'buildComponent'
 			&& this.workModeService.currentComponentToBuild !== 0
 			&& e.data.button === 0
 		) {
 			this.startDraggingNewComponent(e);
+			addPointerMoveEvent = true;
 		}
 		this._view.ticker.singleFrame();
-		this._view.on('pointermove', (e1: InteractionEvent) => this.handlePointerMoveOnView(e1));
+		if (addPointerMoveEvent) this._view.on('pointermove', (e1: InteractionEvent) => this.handlePointerMoveOnView(e1));
 	}
 
 	private handlePointerUpOnView(e: InteractionEvent) {

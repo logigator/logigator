@@ -19,6 +19,8 @@ export class EditorView extends View {
 
 	private _viewInteractionManager: ViewInteractionManager;
 
+	private selectionService = getStaticDI(SelectionService);
+
 	constructor(project: Project, htmlContainer: HTMLElement, ticker: RenderTicker) {
 		super(project, htmlContainer, ticker);
 
@@ -37,7 +39,7 @@ export class EditorView extends View {
 	}
 
 	public updateSelectedElementsScale() {
-		const selectedIds = getStaticDI(SelectionService).selectedIds(this.projectId);
+		const selectedIds = this.selectionService.selectedIds(this.projectId);
 		for (let i = 0; i < selectedIds.length; i++) {
 			const elemSprite = this.allElements.get(selectedIds[i]);
 			if (elemSprite.element.typeId === 0) {
@@ -46,7 +48,7 @@ export class EditorView extends View {
 				this.updateComponentSprite(elemSprite.element, elemSprite.sprite as PIXI.Graphics);
 			}
 		}
-		const selectedConnections = getStaticDI(SelectionService).selectedConnections(this.projectId);
+		const selectedConnections = this.selectionService.selectedConnections(this.projectId);
 		for (let i = 0; i < selectedConnections.length; i++) {
 			const graphics = this.connectionPoints.get(`${selectedConnections[i].x}:${selectedConnections[i].y}`);
 			const pos = Grid.getPixelPosForPixelPosOnGridWire(graphics.position);
