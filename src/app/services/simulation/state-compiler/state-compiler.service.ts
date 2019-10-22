@@ -1,21 +1,23 @@
 import {Injectable} from '@angular/core';
-import {ProjectState} from '../../../models/project-state';
+import {Project} from '../../../models/project';
 import {SimulationUnit, SimulationUnits} from '../../../models/simulation/SimulationUnit';
+import {
+	ElementToUnit, LinkOnWireEnd,
+	PosOfElem, UnitElementBidir,
+	UnitToElement, WireEndLinksOnElem,
+	WireEndOnComp,
+	WireEndsOnLinks,
+	WireEndsOnLinksInProject,
+	WiresOnLinks,
+	WiresOnLinksInProject
+} from './compiler-types';
 import {Element, Elements} from '../../../models/element';
+import {ProjectState} from '../../../models/project-state';
+import {CompiledComp} from './compiled-comp';
+import {ProjectSaveManagementService} from '../../project-save-management/project-save-management.service';
 import {ElementProviderService} from '../../element-provider/element-provider.service';
 import {ProjectsService} from '../../projects/projects.service';
 import {MapHelper} from './map-helper';
-import {CompiledComp} from './compiled-comp';
-import {
-	AbsPlugIdsOnLinks,
-	CompPlugByIndex,
-	ConnectedToPlugByIndex,
-	LinksOnWireEnds, PosOfElem,
-	Replacement, ReplacementById,
-	UdcInnerData,
-	UnitToElement, WireEndOnComp, WireEndsOnLinks, WireEndsOnLinksInProject, WiresOnLinks, WiresOnLinksInProject
-} from './compiler-types';
-import {Project} from '../../../models/project';
 
 @Injectable({
 	providedIn: 'root'
@@ -27,433 +29,304 @@ export class StateCompilerService {
 	private _highestLinkId: number;
 	private _wiresOnLinks: WiresOnLinksInProject;
 	private _wireEndsOnLinks: WireEndsOnLinksInProject;
-	private _udcCache: Map<ProjectState, CompiledComp> = new Map<ProjectState, CompiledComp>();
 
-	// private _currId: number;
-	private _currIdentifier: string;
-	private _outerIdentifier: string;
-	private _elemsOnConCache: WireEndOnComp[] = [];
+	private _wiresOnLinksCache: WiresOnLinksInProject;
+	private _wireEndsOnLinksCache: WireEndsOnLinksInProject;
+
+	private _udcCache: Map<number, CompiledComp>;
+
+	private _currTypeId: number;
 
 	constructor(
+		private projectSaveManagement: ProjectSaveManagementService,
 		private elementProvider: ElementProviderService,
 		private projects: ProjectsService
 	) {
 		StateCompilerService.staticInstance = this;
+
+		this._udcCache = new Map<number, CompiledComp>();
 	}
 
-	private static generateUnits(state: ProjectState): UnitToElement {
-		const simUnits: UnitToElement = new Map<SimulationUnit, Element>();
+	private static generateUnits(state: ProjectState): UnitElementBidir {
+		const unitToElement: UnitToElement = new Map<SimulationUnit, Element>();
+		const elementToUnit: ElementToUnit = new Map<Element, SimulationUnit>();
 		for (const element of state.allElements) {
 			const unit = SimulationUnits.fromElement(element);
 			if (unit) {
-				simUnits.set(unit, element);
+				unitToElement.set(unit, element);
+				elementToUnit.set(element, unit);
 			}
 		}
-		return simUnits;
+		return {unitToElement, elementToUnit};
 	}
 
-	public compile(project: Project): SimulationUnit[] {
-		const state = project.currState;
+	public async compile(project: Project): Promise<SimulationUnit[]> {
+		const start = Date.now();
 		this._highestLinkId = 0;
-		// this._currId = project.id;
-		this._currIdentifier = '' + project.id;
-		this._outerIdentifier = '';
-		this.initElemsOnLinks(project.id.toString());
-		return [...this.compileInner(state).units.keys()];
+		this.initElemsOnLinks('0');
+		const depTree = await this.projectsToCompile(project);
+		this.compileDependencies(depTree);
+
+		const units = this.projectUnits(project.id, '0');
+		console.log(`Compilation took ${Date.now() - start}ms`);
+		return units;
 	}
 
-	public clearCache(): void {
-		this._udcCache = new Map<ProjectState, CompiledComp>();
+	private initElemsOnLinksCache(identifier: string): void {
+		if (!this._wiresOnLinksCache)
+			this._wiresOnLinksCache = new Map<string, WiresOnLinks>();
+		if (!this._wireEndsOnLinksCache)
+			this._wireEndsOnLinksCache = new Map<string, WireEndsOnLinks>();
+		this._wiresOnLinksCache.set(identifier, new Map<number, Element[]>());
+		this._wireEndsOnLinksCache.set(identifier, new Map<number, WireEndOnComp[]>());
 	}
 
 	private initElemsOnLinks(identifier: string) {
-		this._wiresOnLinks = new Map<string, WiresOnLinks>([[identifier, new Map<number, Element[]>()]]);
-		this._wireEndsOnLinks = new Map<string, WireEndsOnLinks>([[identifier, new Map<number, WireEndOnComp[]>()]]);
+		if (!this._wiresOnLinks)
+			this._wiresOnLinks = new Map<string, WiresOnLinks>();
+		if (!this._wireEndsOnLinks)
+			this._wireEndsOnLinks = new Map<string, WireEndsOnLinks>();
+		this._wiresOnLinks.set(identifier, new Map<number, Element[]>());
+		this._wireEndsOnLinks.set(identifier, new Map<number, WireEndOnComp[]>());
 	}
 
-	private compileInner(state: ProjectState, outerUnit?: SimulationUnit): UdcInnerData {
-		let units;
-		if (outerUnit && this._udcCache.has(state)) {
-			units = this._udcCache.get(state).units;
-		} else {
-			units = StateCompilerService.generateUnits(state);
+	private async projectsToCompile(project: Project): Promise<Map<number, Project>> {
+		const out = await this.projectSaveManagement.buildDependencyTree(project);
+		out.set(project.id, project);
+		return out;
+	}
+
+	public clearCache(): void {
+		this._udcCache = new Map<number, CompiledComp>();
+		this._highestLinkId = 0;
+	}
+
+	private compileDependencies(depTree: Map<number, Project>): void {
+		for (const [typeId, project] of depTree.entries()) {
+			this._currTypeId = typeId;
+			this._udcCache.set(typeId, this.compileSingle(project));
 		}
-		const replacements = this.setAllLinks(state, units, outerUnit);
-		this.copyCache(state);
-		this.deletePlugElements(units);
-		this.dissolveUdcs(units);
-		return {units, replacements};
 	}
 
-	private setUdcCache(state: ProjectState, compiledComp: CompiledComp): void {
-		this._udcCache.set(state, {
-			startId: compiledComp.startId,
-			units: MapHelper.cloneMapSimUnits(compiledComp.units),
-			connectedToPlug: compiledComp.connectedToPlug,
-			replacements: compiledComp.replacements
-		});
+	private compileSingle(project: Project): CompiledComp {
+		const unitElems = StateCompilerService.generateUnits(project.currState);
+		return this.calcCompiledComp(project.currState, unitElems);
 	}
 
-	private copyCache(state: ProjectState): void {
-		this.setUdcCache(state, this._udcCache.get(state));
-	}
+	private calcCompiledComp(state: ProjectState, unitElems: UnitElementBidir): CompiledComp {
+		const compiledComp: CompiledComp = {
+			units: [],
+			wiresOnLinks: new Map<number, Element[]>(),
+			wireEndsOnLinks: new Map<number, WireEndOnComp[]>(),
+			connectedPlugs: [],
+			plugsByIndex: new Map<number, number>()
+		};
+		const linksOnWireEnds: WireEndLinksOnElem = new Map<Element, LinkOnWireEnd>();
 
-	private deletePlugElements(simUnits: UnitToElement) {
-		for (const simUnit of simUnits.keys()) {
-			if (this.elementProvider.isPlugElement(simUnit.typeId)) {
-				simUnits.delete(simUnit);
-			}
-		}
+		this.setAllLinks(unitElems, linksOnWireEnds, state, compiledComp);
+
+		compiledComp.units = [...unitElems.unitToElement.keys()];
+		this.loadConnectedPlugs(compiledComp);
+		MapHelper.uniquify(compiledComp);
+
+		return compiledComp;
 	}
 
 	private setAllLinks(
-		state: ProjectState,
-		units: UnitToElement,
-		outerUnit?: SimulationUnit):
-		Replacement {
-
-		let compiledComp: CompiledComp;
-
-		if (outerUnit && this._udcCache.has(state)) {
-			return this.updateCachedIds(state, outerUnit);
-		} else {
-			compiledComp = {
-				startId: this._highestLinkId,
-				units,
-				connectedToPlug: new Map<number, CompPlugByIndex[]>(),
-				replacements: undefined
-			};
-			return this.setNoncachedLinks(outerUnit, state, compiledComp);
-		}
-	}
-
-	private setNoncachedLinks(
-		outerUnit: SimulationUnit, state: ProjectState, compiledComp: CompiledComp):
-		Replacement {
-		const linksOnWireEnds: LinksOnWireEnds = new Map<PIXI.Point[], number>();
-		const units = compiledComp.units;
-		let plugsOnLinks: AbsPlugIdsOnLinks = new Map<number, number[]>();
-		if (outerUnit)
-			plugsOnLinks = this.fillPlugsInLinksOnWireEnds(state, linksOnWireEnds, units, outerUnit);
-		const ret = this.calcAllLinks(state, units, linksOnWireEnds, compiledComp.connectedToPlug, plugsOnLinks);
-		compiledComp.connectedToPlug = this.calcPlugConsForCache(units);
-		compiledComp.replacements = ret.replacementPos;
-		this.setUdcCache(state, compiledComp);
-		return ret.replacements;
-	}
-
-	private fillPlugsInLinksOnWireEnds(
-		state: ProjectState,
-		linksOnWireEnds: LinksOnWireEnds,
-		units: UnitToElement,
-		outerUnit: SimulationUnit):
-		AbsPlugIdsOnLinks {
-
-		const out: AbsPlugIdsOnLinks = new Map<number, number[]>();
-		let absPlugIndex = 0;
-		let absUnitIndex = -1;
-		for (const [unit, element] of units.entries()) {
-			absUnitIndex++;
-			if (!this.elementProvider.isPlugElement(unit.typeId))
-				continue;
-			const wireEndPos = Elements.wireEnds(element)[0];
-			const connected = this.connectedToPos(state, wireEndPos);
-			const absIndex = absPlugIndex++;
-			const link = SimulationUnits.concatIO(outerUnit)[absIndex];
-			linksOnWireEnds.set(connected, link);
-			unit.inputs = [link];
-			unit.outputs = [link];
-			if (out.has(link)) {
-				out.get(link).push(absUnitIndex);
-			} else {
-				out.set(link, [absUnitIndex]);
-			}
-		}
-		return out;
-	}
-
-	private calcPlugConsForCache(units: UnitToElement):
-		ConnectedToPlugByIndex {
-
-		const connectedToPlug: ConnectedToPlugByIndex = new Map<number, CompPlugByIndex[]>();
-		let compIndex = 0;
-		for (const unit of units.keys()) {
-			if (this.elementProvider.isPlugElement(unit.typeId)) {
-				const linkId = SimulationUnits.concatIO(unit)[0];
-				connectedToPlug.set(compIndex, []);
-				let oppoCompIndex = -1;
-				for (const oppositeUnit of units.keys()) {
-					oppoCompIndex++;
-					if (this.elementProvider.isPlugElement(oppositeUnit.typeId) || oppositeUnit === unit)
-						continue;
-					const allCons = SimulationUnits.concatIO(oppositeUnit);
-					for (let i = 0; i < allCons.length; i++) {
-						if (allCons[i] === linkId) {
-							connectedToPlug.get(compIndex).push({compIndex: oppoCompIndex, wireIndex: i});
-						}
-					}
-				}
-			}
-			compIndex++;
-		}
-		return connectedToPlug;
-	}
-
-
-	private calcAllLinks(
-		state: ProjectState,
-		units: UnitToElement,
-		linksOnWireEnds: LinksOnWireEnds,
-		connectedToPlug: ConnectedToPlugByIndex,
-		plugsOnLink: AbsPlugIdsOnLinks):
-		{replacements: Replacement, replacementPos: ReplacementById} {
-
-		const replacements = new Map<number, number>();
-		const replacementPos = new Map<number, number[]>();
-
+		unitElems: UnitElementBidir, linksOnWireEnds: WireEndLinksOnElem,
+		state: ProjectState, compiledComp: CompiledComp
+	) {
 		let unitIndex = 0;
-		let plugIndex = 0;
-		for (const [unit, element] of units.entries()) {
-			let wireEndIndex = 0;
+		let linkId = 0;
+		const identifier = '' + this._currTypeId;
+		this.initElemsOnLinksCache(identifier);
+		for (const element of unitElems.unitToElement.values()) {
+			let wireEndIndex = -1;
 			for (const wireEndPos of Elements.wireEnds(element)) {
-				if (this.elementProvider.isPlugElement(unit.typeId)) {
-					const connected = this.connectedToPos(state, wireEndPos);
-					this.calcReplacements(unit, connected, state, units, replacements, replacementPos, plugIndex++);
-				} else {
-					const connected = this.connectedToPos(state, wireEndPos, true);
-					const {linkId, index} = this.setUnitLink(linksOnWireEnds, connected, element, unit, wireEndIndex, plugsOnLink);
-					this._elemsOnConCache = [];
-					if (index !== undefined) {
-						const con = {compIndex: unitIndex, wireIndex: index};
-						for (const plugId of plugsOnLink.get(linkId)) {
-							if (connectedToPlug.has(plugId)) {
-								connectedToPlug.get(plugId).push(con);
-							} else {
-								connectedToPlug.set(plugId, [con]);
-							}
-						}
-					}
-				}
-
 				wireEndIndex++;
+				if (this.wireIdHasLink(linksOnWireEnds, element, wireEndIndex))
+					continue;
+				linkId = this.setLinks(state, wireEndPos, linksOnWireEnds,
+					linkId, unitElems, compiledComp) + 1;
+			}
+			if (this.elementProvider.isPlugElement(element.typeId)) {
+				compiledComp.plugsByIndex.set(element.plugIndex, unitIndex);
 			}
 			unitIndex++;
 		}
-		return {replacements, replacementPos};
 	}
 
-	private updateCachedIds(state: ProjectState, outerUnit: SimulationUnit): Replacement {
-		const compiledComp = this._udcCache.get(state);
-		const idDif = this._highestLinkId - compiledComp.startId;
-
-		const plugIndexes: number[] = [];
-		let compIndex = 0;
-		for (const unit of compiledComp.units.keys()) {
-			if (this.elementProvider.isPlugElement(unit.typeId)) {
-				plugIndexes.push(compIndex);
-			}
-			[unit.inputs, unit.outputs].forEach(arr => {
-				for (let i = 0; i < arr.length; i++) {
-					this.addToWireOnLinkKeys(this._outerIdentifier, arr[i], arr[i] + idDif);
-					arr[i] += idDif;
-					this._highestLinkId = Math.max(this._highestLinkId, arr[i]);
-				}
-			});
-			compIndex++;
-		}
-
-		const replacements = new Map<number, number>();
-		let plugIndex = 0;
-		const allUnits = [...compiledComp.units.keys()];
-		for (const absPlugIndex of plugIndexes) {
-			const connected = compiledComp.connectedToPlug.get(absPlugIndex);
-			for (const con of connected) {
-				const u = allUnits[con.compIndex];
-				const arr = con.wireIndex < u.inputs.length ? u.inputs : u.outputs;
-				const index = con.wireIndex < u.inputs.length ? con.wireIndex : con.wireIndex - u.inputs.length;
-				this.addToWireOnLinkKeys(this._outerIdentifier, arr[index],
-					SimulationUnits.concatIO(outerUnit)[plugIndex]);
-				arr[index] = SimulationUnits.concatIO(outerUnit)[plugIndex];
-			}
-			plugIndex++;
-		}
-		const outerPugs = SimulationUnits.concatIO(outerUnit);
-		for (const [fromPlug, toPlugs] of compiledComp.replacements.entries()) {
-			replacements.set(outerPugs[fromPlug], outerPugs[toPlugs[toPlugs.length - 1]]);
-		}
-		return replacements;
+	private wireIdHasLink(wireEndLinksOnElem: WireEndLinksOnElem, element: Element, wireIndex: number): boolean {
+		return wireEndLinksOnElem.has(element) && wireEndLinksOnElem.get(element).has(wireIndex);
 	}
 
-	private addToWireOnLinkKeys(identifier: string, from: number, to: number) {
-		[this._wiresOnLinks.get(identifier),
-			this._wireEndsOnLinks.get(identifier)].forEach(map => {
-			if (map.has(from)) {
-				// @ts-ignore
-				map.set(to, map.get(from));
-			} else {
-				console.error('why does this not exist?', map, from);
-			}
-		});
-	}
-
-	private setUnitLink(
-		linksOnWireEnds: LinksOnWireEnds,
-		connected, element, unit,
-		wireEndIndex: number, plugsOnLink: AbsPlugIdsOnLinks):
-		{linkId: number, index: number} {
-
-		const out: {linkId: number, index: number} = {linkId: undefined, index: undefined};
-		let linkId;
-		if (MapHelper.mapHas(linksOnWireEnds, connected)) {
-			linkId = MapHelper.mapGet(linksOnWireEnds, connected);
-		} else {
-			linkId = ++this._highestLinkId;
-		}
-		if (!this._wiresOnLinks.get(this._currIdentifier).has(linkId)) {
-			this._wiresOnLinks.get(this._currIdentifier).set(linkId, []);
-			this._wireEndsOnLinks.get(this._currIdentifier).set(linkId, []);
-		}
-		this._elemsOnConCache.forEach(wireEndComp => {
-			if (wireEndComp.component.typeId === 0) {
-				if (!this._wiresOnLinks.get(this._currIdentifier).get(linkId).find(e => e.id === wireEndComp.component.id))
-					this._wiresOnLinks.get(this._currIdentifier).get(linkId).push(wireEndComp.component);
-			} else {
-				this._wireEndsOnLinks.get(this._currIdentifier).get(linkId).push(wireEndComp);
-			}
-		});
-		linksOnWireEnds.set(connected, linkId);
-		let index: number;
-		if (wireEndIndex < element.numInputs) {
-			index = wireEndIndex;
-			unit.inputs[index] = linkId;
-		} else {
-			index = wireEndIndex - element.numInputs;
-			unit.outputs[index] = linkId;
-		}
-		if (plugsOnLink.has(linkId)) {
-			out.index = index;
-		}
-		out.linkId = linkId;
-		return out;
-	}
-
-	private calcReplacements(
-		unit, connected, state: ProjectState,
-		units: UnitToElement,
-		replacements, replacementPos, unitIndex) {
-
-		const element = units.get(unit);
-		const otherPlugs: Element[] = [];
-		let plugIndex = 0;
-		for (const pos of connected) {
-			for (const elem of state.wireEndsOnPoint(pos)) {
-				if (this.elementProvider.isPlugElement(elem.typeId) && elem.id !== element.id) {
-					otherPlugs.push(elem);
-					if (!replacementPos.has(unitIndex)) {
-						replacementPos.set(unitIndex, [plugIndex]);
-					} else {
-						replacementPos.get(unitIndex).push(plugIndex);
-					}
-					plugIndex++;
-				}
-			}
-		}
-		for (const otherPlug of otherPlugs) {
-			const u = MapHelper.valueToKey(units, otherPlug);
-			replacements.set(SimulationUnits.concatIO(unit)[0], SimulationUnits.concatIO(u)[0]);
-		}
-	}
-
-	private connectedToPos(state: ProjectState, pos: PIXI.Point, setElems?: boolean, coveredPoints?: PosOfElem[]): PIXI.Point[] {
-		const connected: PIXI.Point[] = [];
+	private setLinks(
+		state: ProjectState,
+		pos: PIXI.Point,
+		linksOnWireEnds: WireEndLinksOnElem,
+		linkId: number,
+		unitElems: UnitElementBidir,
+		compiledComp: CompiledComp,
+		coveredPoints?: PosOfElem[]
+	): number {
+		// TODO coveredPoints as Map
 		coveredPoints = coveredPoints || [];
-		for (const elem of state.wireEndsOnPoint(pos)) {
+		for (const [elem, index] of state.wireEndsOnPoint(pos)) {
 			if (coveredPoints.find(p => p.id === elem.id && p.pos.equals(pos)))
 				continue;
 			coveredPoints.push({id: elem.id, pos});
-			if (setElems && !this._elemsOnConCache.find(e => e.component.id === elem.id))
-				this._elemsOnConCache.push({component: elem, wireIndex: Elements.wireEndIndex(elem, pos)});
 			if (elem.typeId === 0) {
-				const oppoPos = Elements.otherWirePos(elem, pos);
-				for (const otherPos of this.connectedToPos(state, oppoPos, false, coveredPoints)) {
-					this.pushIfNonExistent(connected, otherPos);
-				}
+				this.setWireLink(elem, pos, state, linksOnWireEnds, linkId, unitElems,
+					compiledComp, coveredPoints);
 			} else {
-				this.pushIfNonExistent(connected, pos);
+				this.setCompLink(linksOnWireEnds, elem, index, linkId, unitElems, compiledComp);
+				if (this.elementProvider.isUserElement(elem.typeId)) {
+					this.includePlugLinks(elem, index, state, linksOnWireEnds,
+						linkId, unitElems, compiledComp, coveredPoints);
+				}
 			}
 		}
-		return connected;
+		return linkId;
 	}
 
-	private pushIfNonExistent(numbers: any[], id: any) {
-		if (!numbers.find(i => i === id || i.equals && i.equals(id)))
-			numbers.push(id);
+	private setWireLink(
+		elem, pos: PIXI.Point, state: ProjectState, linksOnWireEnds: WireEndLinksOnElem, linkId: number,
+		unitElems: UnitElementBidir, compiledComp: CompiledComp, coveredPoints: PosOfElem[]
+	) {
+		const oppoPos = Elements.otherWirePos(elem, pos);
+		this.setLinks(state, oppoPos, linksOnWireEnds, linkId,
+			unitElems, compiledComp, coveredPoints);
+		MapHelper.pushInMapArray(compiledComp.wiresOnLinks, linkId, elem);
+		MapHelper.pushInMapArrayUnique(this._wiresOnLinksCache.get('' + this._currTypeId), linkId, elem);
 	}
 
-
-	private dissolveUdcs(units: UnitToElement): Map<number, number> {
-		const out = new Map<number, number>();
-		for (const unit of units.keys()) {
-			if (!this.elementProvider.isUserElement(unit.typeId))
-				continue;
-			this.dissolveSingle(units, unit);
-			units.delete(unit);
+	private setCompLink(
+		linksOnWireEnds: WireEndLinksOnElem, elem, index, linkId: number, unitElems: UnitElementBidir,
+		compiledComp: CompiledComp
+	) {
+		if (linksOnWireEnds.has(elem)) {
+			if (!linksOnWireEnds.get(elem).has(index)) {
+				linksOnWireEnds.get(elem).set(index, linkId);
+			} else {
+				console.error('you should not be here');
+			}
+		} else {
+			linksOnWireEnds.set(elem, new Map<number, number>([[index, linkId]]));
 		}
-		return out;
-	}
-
-	private dissolveSingle(otherUnits: UnitToElement, outerUnit: SimulationUnit) {
-		const unitsState = this.projects.getProjectById(outerUnit.typeId).currState;
-		// const typeId = this._currId;
-		const outerIdent = this._outerIdentifier;
-		this._outerIdentifier = this._currIdentifier;
-		this._currIdentifier = this._currIdentifier + `:${otherUnits.get(outerUnit).id}-${outerUnit.typeId}`;
-		// this._currId = outerUnit.typeId;
-		// if (!this._wiresOnLinks.has(outerUnit.typeId)) {
-		this._wiresOnLinks.set(this._currIdentifier, new Map<number, Element[]>());
-		this._wireEndsOnLinks.set(this._currIdentifier, new Map<number, WireEndOnComp[]>());
-		// }
-		const {units, replacements} = this.compileInner(unitsState, outerUnit);
-		// this._currId = typeId;
-		this._currIdentifier = this._outerIdentifier;
-		this._outerIdentifier = outerIdent;
-		units.forEach((v, k) => {
-			otherUnits.set(k, v);
+		SimulationUnits.setInputOutput(unitElems.elementToUnit.get(elem), index, linkId);
+		MapHelper.pushInMapArray(compiledComp.wireEndsOnLinks, linkId, {
+			component: elem,
+			wireIndex: index
 		});
-		this.doReplacements(otherUnits, replacements);
-		this.doElemOnLinksReplacements(this._currIdentifier, replacements);
+		const identifier = '' + this._currTypeId;
+		MapHelper.pushInMapArray(this._wireEndsOnLinksCache.get(identifier), linkId, elem);
 	}
 
-	private doReplacements(units: UnitToElement, replacements: Replacement) {
-		for (const u of units.keys()) {
-			for (const [from, to] of replacements.entries()) {
-				[u.inputs, u.outputs].forEach(arr => {
-					for (let i = 0; i < arr.length; i++)
-						if (arr[i] === from)
-							arr[i] = to;
-				});
+	private includePlugLinks(
+		elem, index, state: ProjectState, linksOnWireEnds: WireEndLinksOnElem, linkId: number,
+		unitElems: UnitElementBidir, compiledComp: CompiledComp, coveredPoints: PosOfElem[]
+	) {
+		for (const conPlugs of this._udcCache.get(elem.typeId).connectedPlugs) {
+			if (conPlugs.includes(index)) {
+				for (const wireEndIndex of conPlugs) {
+					if (wireEndIndex === index)
+						continue;
+					this.setLinks(state, Elements.wireEnds(elem)[wireEndIndex], linksOnWireEnds,
+						linkId, unitElems, compiledComp, coveredPoints);
+				}
 			}
 		}
 	}
 
-	private doElemOnLinksReplacements(identifier: string, replacements: Replacement) {
-		const wireOnLinks = this._wiresOnLinks.get(identifier);
-		const wireEndsOnLinks = this._wireEndsOnLinks.get(identifier);
-		for (const [from, to] of replacements.entries()) {
-			if (from === to)
-				continue;
-			[wireOnLinks, wireEndsOnLinks].forEach(map => {
-				if (map.has(from)) {
-					if (!map.has(to)) {
-						map.set(to, []);
+	private projectUnits(
+		projectId: number, idIdentifier: string,
+		outerUnit?: SimulationUnit
+	): SimulationUnit[] {
+		const compiledComp = this._udcCache.get(projectId);
+		const units = SimulationUnits.cloneMult(compiledComp.units);
+		const linkMap = new Map<number, number>();
+		const typeIdentifier = '' + projectId;
+		if (outerUnit) {
+			for (const [outer, inner] of compiledComp.plugsByIndex) {
+				linkMap.set(SimulationUnits.concatIO(units[inner])[0], SimulationUnits.concatIO(outerUnit)[outer]);
+			}
+			this.removePlugs(compiledComp, units);
+		}
+
+		let highestInProj = this._highestLinkId;
+		const udcIndexes: number[] = [];
+		let unitIndex = 0;
+		for (const unit of units) {
+			[unit.inputs, unit.outputs].forEach(arr => {
+				for (let i = 0; i < arr.length; i++) {
+					const newVal = linkMap.has(arr[i]) ? linkMap.get(arr[i]) : arr[i] + this._highestLinkId;
+					// TODO right projectID
+					if (!this._wiresOnLinks.get(idIdentifier)) {
+						this.initElemsOnLinks(idIdentifier);
 					}
-					// @ts-ignore
-					map.get(to).push(...map.get(from));
-					map.delete(from);
+					this._wiresOnLinks.get(idIdentifier).set(newVal, this._wiresOnLinksCache.get(typeIdentifier).get(arr[i]));
+					this._wireEndsOnLinks.get(idIdentifier).set(newVal, this._wireEndsOnLinksCache.get(typeIdentifier).get(arr[i]));
+					arr[i] = newVal;
+					if (arr[i] > highestInProj) {
+						highestInProj = arr[i];
+					}
 				}
 			});
+			if (this.elementProvider.isUserElement(unit.typeId)) {
+				udcIndexes.push(unitIndex);
+			}
+			unitIndex++;
+		}
+		this._highestLinkId = highestInProj;
+
+		// udcIndexes is already sorted desc
+		for (let i = udcIndexes.length - 1; i >= 0; i--) {
+			const index = udcIndexes[i];
+			const inner = this.projectUnits(units[index].typeId,
+				idIdentifier + `:${index}`, units[index]);
+			units.splice(index, 1);
+			units.push(...inner);
+		}
+
+		return units;
+	}
+
+	private removePlugs(compiledComp: CompiledComp, units: SimulationUnit[]) {
+		const plugsByIndexSorted = [...compiledComp.plugsByIndex.values()].sort((a, b) => a - b);
+		for (let i = plugsByIndexSorted.length - 1; i >= 0; i--) {
+			units.splice(plugsByIndexSorted[i], 1);
 		}
 	}
+
+	private loadConnectedPlugs(compiledComp: CompiledComp) {
+		const plugsByIndex = compiledComp.plugsByIndex;
+		const plugsByIndexKeys = [...plugsByIndex.keys()];
+		for (let i = 0; i < plugsByIndexKeys.length; i++) {
+			const plugIndex = plugsByIndexKeys[i];
+			const value = SimulationUnits.concatIO(compiledComp.units[plugsByIndex.get(plugIndex)])[0];
+			for (let j = i + 1; j < plugsByIndexKeys.length; j++) {
+				const otherIndex = plugsByIndexKeys[j];
+				const otherValue = SimulationUnits.concatIO(compiledComp.units[plugsByIndex.get(otherIndex)])[0];
+				if (value === otherValue) {
+					let pushed = false;
+					for (const arr of compiledComp.connectedPlugs) {
+						if (arr.includes(plugIndex) && !arr.includes(otherIndex)) {
+							arr.push(plugsByIndex.get(otherIndex));
+							pushed = true;
+						} else if (arr.includes(otherIndex) && !arr.includes(plugIndex)) {
+							arr.push(plugsByIndex.get(plugIndex));
+							pushed = true;
+						} else if (arr.includes(otherIndex) && arr.includes(plugIndex)) {
+							pushed = true;
+						}
+					}
+					if (!pushed)
+						compiledComp.connectedPlugs.push([plugIndex, otherIndex]);
+				}
+			}
+		}
+	}
+
 
 	get wiresOnLinks(): Map<string, WiresOnLinks> {
 		return this._wiresOnLinks;
@@ -461,5 +334,14 @@ export class StateCompilerService {
 
 	get wireEndsOnLinks(): Map<string, WireEndsOnLinks> {
 		return this._wireEndsOnLinks;
+	}
+
+
+	get wiresOnLinksCache(): Map<string, WiresOnLinks> {
+		return this._wiresOnLinksCache;
+	}
+
+	get wireEndsOnLinksCache(): Map<string, WireEndsOnLinks> {
+		return this._wireEndsOnLinksCache;
 	}
 }

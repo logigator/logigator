@@ -72,7 +72,7 @@ export class ToolbarComponent {
 		this.projectInteraction.newComponent();
 	}
 
-	public undo(): void {
+	public async undo() {
 		this.projectInteraction.undoForCurrent();
 	}
 

@@ -251,7 +251,7 @@ export class ProjectSaveManagementService {
 			this.errorHandling.showInfo('Exported Project and all needed Components');
 	}
 
-	private async buildDependencyTree(project: Project, resolved?: Map<number, Project>): Promise<Map<number, Project>> {
+	public async buildDependencyTree(project: Project, resolved?: Map<number, Project>): Promise<Map<number, Project>> {
 		if (!resolved) resolved = new Map<number, Project>();
 		for (const element of project.allElements) {
 			if (element.typeId >= 500 && !resolved.has(element.typeId)) {

@@ -36,6 +36,16 @@ export abstract class CollisionFunctions {
 		return false;
 	}
 
+	public static wirePointIndex(elem: Element, pos: PIXI.Point): number {
+		let index = 0;
+		for (const endPoint of Elements.wireEnds(elem)) {
+			if (pos.equals(endPoint))
+				return index;
+			index++;
+		}
+		return -1;
+	}
+
 	public static isHorizontal(wire: Element): boolean {
 		return wire.pos.y === wire.endPos.y;
 	}
