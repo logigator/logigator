@@ -129,11 +129,9 @@ export class StateCompilerService {
 		this.loadConnectedPlugs(compiledComp);
 		MapHelper.uniquify(compiledComp);
 
-		console.log(compiledComp);
 		return compiledComp;
 	}
 
-	private plugIndex = 0;
 	private setAllLinks(
 		unitElems: UnitElementBidir, linksOnWireEnds: WireEndLinksOnElem,
 		state: ProjectState, compiledComp: CompiledComp
@@ -152,8 +150,7 @@ export class StateCompilerService {
 					linkId, unitElems, compiledComp) + 1;
 			}
 			if (this.elementProvider.isPlugElement(element.typeId)) {
-				// compiledComp.plugsByIndex.set(element.plugIndex, unitIndex);
-				compiledComp.plugsByIndex.set(this.plugIndex++, unitIndex);
+				compiledComp.plugsByIndex.set(element.plugIndex, unitIndex);
 			}
 			unitIndex++;
 		}
@@ -287,7 +284,6 @@ export class StateCompilerService {
 			const index = udcIndexes[i];
 			const inner = this.projectUnits(units[index].typeId,
 				idIdentifier + `:${index}`, units[index]);
-			console.log(inner);
 			units.splice(index, 1);
 			units.push(...inner);
 		}
