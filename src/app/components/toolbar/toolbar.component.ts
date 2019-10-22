@@ -65,7 +65,7 @@ export class ToolbarComponent {
 		this.popupService.showPopup(NewComponentComponent, 'POPUP.NEW_COMP.TITLE', false);
 	}
 
-	public undo(): void {
+	public async undo() {
 		this.projectInteraction.undoForCurrent();
 	}
 
