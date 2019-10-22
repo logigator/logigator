@@ -35,7 +35,7 @@ export abstract class View extends PIXI.Container {
 
 	protected readonly _project: Project;
 
-	constructor(project: Project, htmlContainer: HTMLElement, ticker: RenderTicker) {
+	protected constructor(project: Project, htmlContainer: HTMLElement, ticker: RenderTicker) {
 		super();
 		this._project = project;
 		this.htmlContainer = htmlContainer;
@@ -160,7 +160,8 @@ export abstract class View extends PIXI.Container {
 			scaledFor: this.zoomPan.currentScale
 		};
 		this._chunks[x][y].container.sortableChildren = false;
-		this._chunks[x][y].container.hitArea = new PIXI.Rectangle(
+		this._chunks[x][y].container.interactive = false;
+		this._chunks[x][y].gridGraphics.hitArea = new PIXI.Rectangle(
 			0,
 			0,
 			environment.chunkSize * environment.gridPixelWidth,
@@ -353,6 +354,13 @@ export abstract class View extends PIXI.Container {
 			sprite.position = Grid.getLocalChunkPixelPosForGridPosWireStart(element.pos);
 		} else {
 			sprite.position = Grid.getLocalChunkPixelPosForGridPos(element.pos);
+		}
+	}
+
+	protected onZoomClick(dir: 'in' | 'out' | '100') {
+		if (this.applyZoom(dir)) {
+			this.updateChunks();
+			this.ticker.singleFrame();
 		}
 	}
 

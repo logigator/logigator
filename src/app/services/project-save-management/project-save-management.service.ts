@@ -52,8 +52,8 @@ export class ProjectSaveManagementService {
 	public async getProjectToOpenOnLoad(): Promise<Project> {
 		let project;
 		if (location.pathname.startsWith('/board')) {
-			project = this.openProjectFromServerOnLoad();
 			this.elemProvService.setUserDefinedTypes(await this.getCustomElementsFromServer());
+			project = this.openProjectFromServerOnLoad();
 		} else if (location.pathname.startsWith('/share')) {
 			// open share
 		} else {
@@ -132,16 +132,16 @@ export class ProjectSaveManagementService {
 		this.errorHandling.showInfo(`Created Component ${name}`);
 	}
 
-	public async saveComponent(project: Project) {
+	private async saveProject(project: Project): Promise<void> {
 		if (!project.dirty) return;
 		if (project.id < 1000 && this._componentsFromLocalFile.has(project.id)) {
 			const compLocalFile = this._componentsFromLocalFile.get(project.id);
 			compLocalFile.data = project.currState.model;
 		} else if (this.user.isLoggedIn && project.id >= 1000) {
 			await this.saveSingleProjectToServer(project);
-			this.errorHandling.showInfo(`Saved component ${project.name} on Server`);
+			this.errorHandling.showInfo(`Saved ${project.name} on Server`);
 		} else {
-			this.errorHandling.showErrorMessage('Unable to save Component');
+			this.errorHandling.showErrorMessage('Unable to save');
 			throw new Error();
 		}
 	}
@@ -151,6 +151,7 @@ export class ProjectSaveManagementService {
 		while (this._componentsFromLocalFile.has(id)) id++;
 		return id;
 	}
+
 	public openFromFile(content: string): Project {
 		let parsedFile: ProjectLocalFile;
 		try {
@@ -160,7 +161,8 @@ export class ProjectSaveManagementService {
 				this._componentsFromLocalFile.set(c.typeId, c);
 				this.elemProvService.addUserDefinedElement(c.type, c.typeId);
 			});
-			const mainModel = this.getProjectModelFromJson(parsedFile.mainProject.data as ProjectModelResponse);
+			let mainModel = this.getProjectModelFromJson(parsedFile.mainProject.data as ProjectModelResponse);
+			mainModel = this.adjustInputsAndOutputs(mainModel);
 
 			// #!web
 			window.history.pushState(null, null, `/local/${parsedFile.mainProject.name}`);
@@ -287,11 +289,10 @@ export class ProjectSaveManagementService {
 		}
 		this.elemProvService.clearElementsFromFile();
 		this._componentsFromLocalFile.clear();
-		await this.saveProjectsToServer(projectsToSave);
+		await this.saveProjectsAndComponents(projectsToSave);
 
 		// #!web
 		window.history.pushState(null, null, `/board/${mainProjectId}`);
-		this.errorHandling.showInfo(`Saved Project ${mainProjToSave.name}`);
 		this._projectSource = 'server';
 		return mainProjToSave;
 	}
@@ -306,19 +307,20 @@ export class ProjectSaveManagementService {
 		).toPromise();
 	}
 
-	public saveProjects(projects: Project[]) {
+	public async saveProjectsAndComponents(projects: Project[]) {
 		const mainProject = projects.find(p => p.type === 'project');
 		const savePromises = [];
-		if (this._projectSource === 'server' && mainProject.dirty) {
-			savePromises.push(this.saveSingleProjectToServer(mainProject));
+		if (mainProject) {
+			savePromises.push(this.saveProject(mainProject));
 			mainProject.dirty = false;
 		}
 		const comps = projects.filter(p => p.type === 'comp');
 		for (const comp of comps) {
-			savePromises.push(this.saveComponent(comp));
+			savePromises.push(this.saveProject(comp));
 			comp.dirty = false;
 		}
-		Promise.all(savePromises).then(() => this.errorHandling.showInfo('Saved Project and all open Components'));
+		await Promise.all(savePromises);
+		if (savePromises.length > 0) this.errorHandling.showInfo('Saved Project and all open Components');
 	}
 
 	public async openComponent(id: number): Promise<Project> {
@@ -328,7 +330,9 @@ export class ProjectSaveManagementService {
 				return Promise.resolve(undefined);
 			}
 			const data = this._componentsFromLocalFile.get(id);
-			const project = new Project(new ProjectState(this.getProjectModelFromJson(data.data as ProjectModelResponse)), {
+			let model = this.getProjectModelFromJson(data.data as ProjectModelResponse);
+			model = this.adjustInputsAndOutputs(model);
+			const project = new Project(new ProjectState(model), {
 				type: 'comp',
 				name: data.type.name,
 				id: data.typeId
@@ -351,15 +355,21 @@ export class ProjectSaveManagementService {
 			throw Error('isProj');
 		}
 		const id = Number(openProRes.project.pk_id);
-		let project = this.getProjectModelFromJson(openProRes.project.data);
-		project = this.applyMappingsLoad(project, openProRes.project.data.mappings);
-		project = this.removeMappingsFromModel(project as ProjectModelResponse);
+		const project = this.convertResponseDataToProjectModel(openProRes.project.data);
 		this._cloudProjectCache.set(id, openProRes);
 		return new Project(new ProjectState(project), {
 			id: Number(id),
 			name: openProRes.project.name,
 			type: 'comp'
 		});
+	}
+
+	private convertResponseDataToProjectModel(openProRes: ProjectModelResponse): ProjectModel {
+		let project = this.getProjectModelFromJson(openProRes);
+		project = this.applyMappingsLoad(project, openProRes.mappings);
+		project = this.adjustInputsAndOutputs(project);
+		project = this.removeMappingsFromModel(project as ProjectModelResponse);
+		return project;
 	}
 
 	public get isShare(): boolean {
@@ -381,16 +391,8 @@ export class ProjectSaveManagementService {
 		).toPromise();
 	}
 
-	private saveProjectsToServer(projects: Project[]): Promise<any> {
-		const allPromises = [];
-		projects.forEach(proj => {
-			if (proj.dirty) allPromises.push(this.saveSingleProjectToServer(proj));
-			proj.dirty = false;
-		});
-		return Promise.all(allPromises);
-	}
-
 	private saveSingleProjectToServer(project: Project): Promise<HttpResponseData<{success: boolean}>> {
+		if (project.id < 1000) return;
 		const mappings: ModelDatabaseMap[] = [];
 		project.currState.model.board.elements.forEach(el => {
 			if (el.typeId >= 500 && !mappings.find(m => m.model === el.typeId)) {
@@ -470,6 +472,8 @@ export class ProjectSaveManagementService {
 	}
 
 	public async openProjectFromServer(id: number, emptyProjectOnFailure: boolean): Promise<Project> {
+		// #!web
+		window.history.pushState(null, null, `/board/${id}`);
 		this._projectSource = 'server';
 		if (this._cloudProjectCache.has(id))
 			return Promise.resolve(this.projectFromServerResponse(this._cloudProjectCache.get(id)));
@@ -493,9 +497,7 @@ export class ProjectSaveManagementService {
 			throw Error('isComp');
 		}
 		const id = Number(openProResp.project.pk_id);
-		let project = this.getProjectModelFromJson(openProResp.project.data);
-		project = this.applyMappingsLoad(project, openProResp.project.data.mappings);
-		project = this.removeMappingsFromModel(project as ProjectModelResponse);
+		const project = this.convertResponseDataToProjectModel(openProResp.project.data);
 		this.errorHandling.showInfo(`Opened Project ${openProResp.project.name}`);
 		this._cloudProjectCache.set(id, openProResp);
 		return new Project(new ProjectState(project), {
@@ -545,10 +547,34 @@ export class ProjectSaveManagementService {
 				numInputs: e.numInputs,
 				pos: new PIXI.Point(e.pos.x, e.pos.y),
 				endPos: new PIXI.Point(e.endPos.x, e.endPos.y),
-				rotation: e.rotation
+				rotation: e.rotation,
+				plugIndex: e.plugIndex
 			};
 			return elem;
 		});
 		return data;
+	}
+
+	private adjustInputsAndOutputs(project: ProjectModel): ProjectModel {
+		project.board.elements = project.board.elements.map(el => {
+			if (!this.elemProvService.isUserElement(el.typeId)) return el;
+			const type = this.elemProvService.getElementById(el.typeId);
+			el.numInputs = type.numInputs;
+			el.numOutputs = type.numOutputs;
+
+			let width;
+			let height;
+			if (el.rotation === 0 || el.rotation === 2) {
+				width = 2;
+				height = el.numInputs >= el.numOutputs ? el.numInputs : el.numOutputs;
+			} else {
+				width = el.numInputs >= el.numOutputs ? el.numInputs : el.numOutputs;
+				height = 2;
+			}
+
+			el.endPos = new PIXI.Point(el.pos.x + width, el.pos.y + height);
+			return el;
+		});
+		return project;
 	}
 }

@@ -7,13 +7,14 @@ import {CollisionFunctions} from './collision-functions';
 // #!debug
 import {BoardRecorder} from '../../../tests/auto-tests/board-recorder';
 import {ElementProviderService} from '../services/element-provider/element-provider.service';
+import {ProjectType} from './project-type';
 
 export class Project {
 
 
 	private readonly _id: number;
 	private _name: string;
-	private _type: 'project' | 'comp';
+	private _type: ProjectType;
 
 	private _currState: ProjectState;
 
@@ -29,7 +30,7 @@ export class Project {
 	// #!debug
 	public boardRecorder: BoardRecorder;
 
-	public constructor(projectState: ProjectState, config: {id?: number, name?: string, type?: 'project' | 'comp'}) {
+	public constructor(projectState: ProjectState, config: {id?: number, name?: string, type?: ProjectType}) {
 		this._currState = projectState;
 		this._actions = new Array(this._maxActionCount);
 		this._id = config.id;
@@ -96,6 +97,18 @@ export class Project {
 				endPos: element.endPos,
 				element
 			});
+		}
+		for (const chunks of this._currState.chunks) {
+			for (const chunk of chunks) {
+				if (!chunk || !chunk.connectionPoints)
+					continue;
+				for (const cp of chunk.connectionPoints) {
+					out.push({
+						name: 'conWire',
+						pos: cp.clone()
+					});
+				}
+			}
 		}
 		return out;
 	}
@@ -436,12 +449,8 @@ export class Project {
 		this._name = value;
 	}
 
-	get type(): 'project' | 'comp' {
+	get type(): ProjectType {
 		return this._type;
-	}
-
-	set type(value: 'project' | 'comp') {
-		this._type = value;
 	}
 
 	get numInputs() {

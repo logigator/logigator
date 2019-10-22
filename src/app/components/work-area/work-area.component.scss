@@ -7,8 +7,8 @@
 	height: 100%;
 
 	#canvas-container {
-		width: calc(100% - #{$construction-box-width});
-		height: calc(100vh - #{$page-header-height});
+		width: 100%;
+		height: 100%;
 		position: fixed;
 		cursor: crosshair;
 	}
