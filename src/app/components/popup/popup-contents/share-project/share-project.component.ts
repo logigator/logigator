@@ -12,7 +12,7 @@ import {environment} from '../../../../../environments/environment';
 })
 export class ShareProjectComponent extends PopupContentComp implements OnInit {
 
-	private isNewShare;
+	public isNewShare;
 
 	public addedUsers: string[] = [];
 	public addUserFrom: FormGroup;
