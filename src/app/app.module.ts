@@ -1,5 +1,5 @@
 import { BrowserModule } from '@angular/platform-browser';
-import { NgModule } from '@angular/core';
+import {Injector, NgModule} from '@angular/core';
 
 import { AppComponent } from './app.component';
 import { ToolbarComponent } from './components/toolbar/toolbar.component';
@@ -34,12 +34,15 @@ import { OutsideNgZoneEventDirective } from './directives/outside-ng-zone-event/
 import { SwitchComponent } from './components/switch/switch.component';
 import { UnsavedChangesComponent } from './components/popup/popup-contents/unsaved-changes/unsaved-changes.component';
 import { InputComponent } from './components/input/input.component';
+// #!electron
 import { NgxElectronModule } from 'ngx-electron';
 // #!electron
 import { LoginComponent } from './components/popup/popup-contents/login/login.component';
 // #!electron
 import { RegisterComponent } from './components/popup/popup-contents/register/register.component';
 import { WorkAreaContainerComponent } from './components/work-area-container/work-area-container.component';
+import { ShareProjectComponent } from './components/popup/popup-contents/share-project/share-project.component';
+import {setStaticDIInjector} from './models/get-di';
 
 @NgModule({
 	declarations: [
@@ -73,7 +76,8 @@ import { WorkAreaContainerComponent } from './components/work-area-container/wor
 		LoginComponent,
 		// #!electron
 		RegisterComponent,
-		WorkAreaContainerComponent
+		WorkAreaContainerComponent,
+		ShareProjectComponent
 	],
 	entryComponents: [
 		PopupComponent,
@@ -83,12 +87,14 @@ import { WorkAreaContainerComponent } from './components/work-area-container/wor
 		OpenProjectComponent,
 		SaveAsComponent,
 		UnsavedChangesComponent,
+		ShareProjectComponent,
 		// #!electron
 		LoginComponent,
 		// #!electron
 		RegisterComponent
 	],
 	imports: [
+		// #!electron
 		NgxElectronModule,
 		BrowserModule,
 		FormsModule,
@@ -117,4 +123,8 @@ import { WorkAreaContainerComponent } from './components/work-area-container/wor
 	providers: [],
 	bootstrap: [AppComponent]
 })
-export class AppModule { }
+export class AppModule {
+	constructor(private injector: Injector) {
+		setStaticDIInjector(injector);
+	}
+}

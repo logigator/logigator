@@ -43,7 +43,8 @@ export abstract class View extends PIXI.Container {
 		this.zoomPan = new ZoomPan(this);
 
 		this.interactive = true;
-		this.sortableChildren = true;
+		this.sortableChildren = false;
+		this.hitArea = new PIXI.Rectangle(0, 0, Infinity, Infinity);
 
 		ThemingService.staticInstance.showGridChanges$.pipe(
 			takeUntil(this._destroySubject)
@@ -161,13 +162,8 @@ export abstract class View extends PIXI.Container {
 		};
 		this._chunks[x][y].container.sortableChildren = false;
 		this._chunks[x][y].container.interactive = false;
-		this._chunks[x][y].gridGraphics.hitArea = new PIXI.Rectangle(
-			0,
-			0,
-			environment.chunkSize * environment.gridPixelWidth,
-			environment.chunkSize * environment.gridPixelWidth
-		);
 		this._chunks[x][y].gridGraphics.sortableChildren = false;
+		this._chunks[x][y].gridGraphics.interactive = false;
 		this._chunks[x][y].gridGraphics.visible = ThemingService.staticInstance.showGrid;
 		// const text = new PIXI.Text(x  + ' ' + y);
 		// text.x = (environment.chunkSize * environment.gridPixelWidth) / 2;

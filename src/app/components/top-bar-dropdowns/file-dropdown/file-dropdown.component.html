@@ -1,23 +1,32 @@
 <div class="dropdown">
-	<div (click)="newProject()">
+	<div (click)="newProject()" *ngIf="checkActionUsable('newProj')">
 		{{'DROPDOWN.FILE.NEW_PROJECT' | translate}}
 	</div>
-	<div (click)="newComponent()">
+	<div (click)="newComponent()" *ngIf="checkActionUsable('newComp')">
 		{{'DROPDOWN.FILE.NEW_COMPONENT' | translate}}
 		<span>{{'newComp' | shortcutText}}</span>
 	</div>
 	<hr>
-	<div (click)="openProject()">
+	<div (click)="openProject()" *ngIf="checkActionUsable('openProj')">
 		{{'DROPDOWN.FILE.OPEN' | translate}}
 	</div>
-	<div (click)="saveProject()">
+	<div (click)="saveProject()" *ngIf="checkActionUsable('save') && !canClone">
 		{{'DROPDOWN.FILE.SAVE' | translate}}
 		<span>{{'save' | shortcutText}}</span>
 	</div>
-	<div (click)="exportProject()">
+	<div (click)="cloneProject()" *ngIf="canClone">
+		{{'DROPDOWN.FILE.CLONE' | translate}}
+	</div>
+	<div (click)="exportProject()" *ngIf="checkActionUsable('export')">
 		{{'DROPDOWN.FILE.EXPORT' | translate}}
 	</div>
 	<hr>
+	<ng-container *ngIf="canShare && checkActionUsable('share')">
+		<div (click)="shareProject()">
+			{{'DROPDOWN.FILE.SHARE' | translate}}
+		</div>
+		<hr>
+	</ng-container>
 	<div (click)="screenshot()">
 		{{'DROPDOWN.FILE.SCREENSHOT' | translate}}
 	</div>

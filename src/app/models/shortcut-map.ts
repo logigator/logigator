@@ -14,6 +14,8 @@ export type ShortcutAction =
 	'selectMode' |
 	'textMode' |
 	'newComp' |
+	'newProj' |
+	'openProj' |
 	'save';
 
 export type ShortcutMap =  {
@@ -26,7 +28,3 @@ export interface ShortcutConfig {
 	ctrl?: boolean;
 	shift?: boolean;
 }
-
-export type ShortcutUsableInSimulationMap = {
-	[A in ShortcutAction]: boolean;
-};

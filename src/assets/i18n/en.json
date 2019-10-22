@@ -11,7 +11,9 @@
 			"OPEN": "Open",
 			"SAVE": "Save",
 			"EXPORT": "Export to file",
-			"SCREENSHOT": "Screenshot"
+			"SCREENSHOT": "Screenshot",
+			"SHARE": "Share",
+			"CLONE": "Clone Project"
 		},
 		"EDIT": {
 			"TITLE": "Edit",
@@ -114,6 +116,22 @@
 			"TITLE": "Unsaved Changes",
 			"QUESTION": "The current project has unsaved changes, by opening another project, these changes may be lost!",
 			"OK": "CONTINUE ANYWAYS",
+			"CANCEL": "CANCEL"
+		},
+		"SHARE": {
+			"TITLE": "Share Project {{project}}",
+			"SHARE_ENABLE": "Share this project with others",
+			"PUBLIC": "Public share",
+			"INFO_TEXT": "Please type in the email-addresses or usernames of the users, with whom you want to share this project.",
+			"EMAIL_USER": "e-mail / username",
+			"ADD_EMAIL": "Add",
+			"REMOVE_EMAIL": "Remove",
+			"INVITATIONS": "Send email invitations to users",
+			"NOT_FOUND_ERROR": "Some email addresses or user names were not found, share was created or updated anyways.",
+			"SUCCESS": "Created or updated share successfully.",
+			"LINK": "Link to share",
+			"COPY": "Copy",
+			"SAVE": "SAVE SETTINGS",
 			"CANCEL": "CANCEL"
 		}
 	},

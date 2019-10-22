@@ -1,8 +1,9 @@
 import {fromEvent, Subject} from 'rxjs';
 import {takeUntil} from 'rxjs/operators';
-import {Renderer2} from '@angular/core';
+import {NgZone, Renderer2} from '@angular/core';
 import {SimulationView} from '../../models/rendering/simulation-view';
 import * as PIXI from 'pixi.js';
+import {getStaticDI} from '../../models/get-di';
 
 type Border = 'move' | 'top-left' | 'top-right' | 'bottom-left' | 'bottom-right' | 'right' | 'left' | 'top' | 'bottom';
 
@@ -39,37 +40,39 @@ export class WindowDragManager {
 		this._view = view;
 		this._pixiRenderer = pixiRenderer;
 
-		fromEvent(window, 'mousemove').pipe(
-			takeUntil(this._destroySubject)
-		).subscribe((e: MouseEvent) => this.mouseMove(e));
+		getStaticDI(NgZone).runOutsideAngular(() => {
+			fromEvent(window, 'mousemove').pipe(
+				takeUntil(this._destroySubject)
+			).subscribe((e: MouseEvent) => this.mouseMove(e));
 
-		fromEvent(window, 'mouseup').pipe(
-			takeUntil(this._destroySubject)
-		).subscribe(() => this.mouseUp());
+			fromEvent(window, 'mouseup').pipe(
+				takeUntil(this._destroySubject)
+			).subscribe(() => this.mouseUp());
 
-		fromEvent(this._popup, 'mousedown').pipe(
-			takeUntil(this._destroySubject)
-		).subscribe((e: MouseEvent) => this.mouseDown(e));
+			fromEvent(this._popup, 'mousedown').pipe(
+				takeUntil(this._destroySubject)
+			).subscribe((e: MouseEvent) => this.mouseDown(e));
 
-		fromEvent(this._popup, 'mousemove').pipe(
-			takeUntil(this._destroySubject)
-		).subscribe((e: MouseEvent) => this.pointerOver(e));
+			fromEvent(this._popup, 'mousemove').pipe(
+				takeUntil(this._destroySubject)
+			).subscribe((e: MouseEvent) => this.pointerOver(e));
 
-		fromEvent(window, 'resize').pipe(
-			takeUntil(this._destroySubject)
-		).subscribe((e: MouseEvent) => {
-			if (this.collision_right(this._popup.offsetLeft)) {
-				let newLoc = (this._dragBounding.offsetLeft + this._dragBounding.offsetWidth) - this._popup.offsetWidth;
-				if (this.collision_left(newLoc))
-					newLoc = this._dragBounding.offsetLeft;
-				this.renderer2.setStyle(this._popup, 'left', newLoc + 'px');
-			}
-			if (this.collision_bottom(this._popup.offsetTop)) {
-				let newLoc = (this._dragBounding.offsetTop + this._dragBounding.offsetHeight) - this._popup.offsetHeight;
-				if (this.collision_top(newLoc))
-					newLoc = this._dragBounding.offsetTop;
-				this.renderer2.setStyle(this._popup, 'top', newLoc + 'px');
-			}
+			fromEvent(window, 'resize').pipe(
+				takeUntil(this._destroySubject)
+			).subscribe((e: MouseEvent) => {
+				if (this.collision_right(this._popup.offsetLeft)) {
+					let newLoc = (this._dragBounding.offsetLeft + this._dragBounding.offsetWidth) - this._popup.offsetWidth;
+					if (this.collision_left(newLoc))
+						newLoc = this._dragBounding.offsetLeft;
+					this.renderer2.setStyle(this._popup, 'left', newLoc + 'px');
+				}
+				if (this.collision_bottom(this._popup.offsetTop)) {
+					let newLoc = (this._dragBounding.offsetTop + this._dragBounding.offsetHeight) - this._popup.offsetHeight;
+					if (this.collision_top(newLoc))
+						newLoc = this._dragBounding.offsetTop;
+					this.renderer2.setStyle(this._popup, 'top', newLoc + 'px');
+				}
+			});
 		});
 	}
 

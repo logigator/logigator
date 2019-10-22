@@ -9,6 +9,7 @@
 		border: none;
 		padding: 0.25rem;
 		font-size: 1rem;
+		width: 100%;
 		@include themify() {
 			border-bottom: 1px solid themed('primary-text');
 			color: themed('primary-text');

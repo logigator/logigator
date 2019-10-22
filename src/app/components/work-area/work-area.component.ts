@@ -132,7 +132,7 @@ export class WorkAreaComponent extends WorkArea implements OnInit, OnDestroy {
 	public tabCloseClicked(id: number, event: MouseEvent) {
 		event.stopPropagation();
 		if (this._allViews.size <= 1) return;
-		this.projectsService.closeProject(id);
+		this.projectsService.closeTab(id);
 	}
 
 	public closeView(id: number) {

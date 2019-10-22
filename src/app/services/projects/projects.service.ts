@@ -10,6 +10,7 @@ import {PopupService} from '../popup/popup.service';
 import {ElementProviderService} from '../element-provider/element-provider.service';
 import {ErrorHandlingService} from '../error-handling/error-handling.service';
 import {UnsavedChangesComponent} from '../../components/popup/popup-contents/unsaved-changes/unsaved-changes.component';
+import {checkActionUsable} from '../../models/action-usable-in-modes';
 
 @Injectable({
 	providedIn: 'root'
@@ -93,9 +94,10 @@ export class ProjectsService {
 	}
 
 	public async newProject() {
+		if (!this.projectSaveManagementService.isShare) await this.saveAllOrAllComps();
 		this.elementProvider.clearElementsFromFile();
 		const project = Project.empty();
-		await this.closeAllProjects();
+		this.closeAllProjects();
 		this.projectSaveManagementService.resetProjectSource();
 		this._projects.set(project.id, project);
 		this._currProject = project;
@@ -107,9 +109,10 @@ export class ProjectsService {
 	}
 
 	public async openFile(content: string) {
+		if (!this.projectSaveManagementService.isShare) await this.saveAllOrAllComps();
 		const project = this.projectSaveManagementService.openFromFile(content);
 		if (!project) return;
-		await this.closeAllProjects();
+		this.closeAllProjects();
 		this.projectSaveManagementService.resetProjectSource();
 		this._projects.set(project.id, project);
 		this._currProject = project;
@@ -118,19 +121,20 @@ export class ProjectsService {
 	}
 
 	public async openProjectServer(id: number) {
+		if (!this.projectSaveManagementService.isShare) await this.saveAllOrAllComps();
 		const project = await this.projectSaveManagementService.openProjectFromServer(id, false);
 		if (!project) return;
-		await this.closeAllProjects();
+		this.closeAllProjects();
 		this._projects.set(project.id, project);
 		this._currProject = project;
 		this._mainProject = project;
 		this._projectOpenedSubject.next(project.id);
 	}
 
-	private async closeAllProjects(save = true) {
-		if (save) await this.saveAllOrAllComps();
+	private closeAllProjects() {
 		for (const id of this.allProjects.keys()) {
-			await this.closeProject(id);
+			this._projectClosedSubject.next(id);
+			this._projects.delete(id);
 		}
 	}
 
@@ -170,16 +174,29 @@ export class ProjectsService {
 		return this._projects;
 	}
 
-	public async closeProject(id: number) {
+	public async closeTab(id: number) {
+		if (this.projectSaveManagementService.isShare) {
+			this.projectSaveManagementService.saveComponentShare(this._projects.get(id));
+		} else {
+			await this.projectSaveManagementService.saveProject(this._projects.get(id));
+		}
 		this._projectClosedSubject.next(id);
 		this._projects.delete(id);
 	}
 
+	public saveComponentsShare() {
+		const comps = Array.from(this._projects.values()).filter(c => c.type === 'comp');
+		for (const comp of comps) {
+			this.projectSaveManagementService.saveComponentShare(comp);
+		}
+	}
+
 	public async saveAll(): Promise<void> {
 		if (this.projectSaveManagementService.isFirstSave) {
+			await this.saveAllOrAllComps();
 			const newMainProject = await this.popup.showPopup(SaveAsComponent, 'POPUP.SAVE.TITLE', false, this.mainProject);
 			if (newMainProject) {
-				await this.closeAllProjects(false);
+				this.closeAllProjects();
 				this._mainProject = newMainProject;
 				this._projects.set(newMainProject.id, newMainProject);
 				this._projectOpenedSubject.next(newMainProject.id);
@@ -200,6 +217,16 @@ export class ProjectsService {
 	public saveAllComponents(): Promise<void> {
 		const comps = Array.from(this._projects.values()).filter(c => c.type === 'comp');
 		return this.projectSaveManagementService.saveProjectsAndComponents(comps);
+	}
+
+	public async cloneShare() {
+		const project = await this.projectSaveManagementService.cloneShare();
+		if (!project) return;
+		this.closeAllProjects();
+		this._projects.set(project.id, project);
+		this._currProject = project;
+		this._mainProject = project;
+		this._projectOpenedSubject.next(project.id);
 	}
 
 	public getProjectById(id: number): Project {

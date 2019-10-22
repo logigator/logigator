@@ -1,5 +1,7 @@
 import {fromEvent, Observable, Subject} from 'rxjs';
 import {filter, takeUntil} from 'rxjs/operators';
+import {getStaticDI} from '../get-di';
+import {NgZone} from '@angular/core';
 
 export class ZoomPanInputManager {
 
@@ -25,26 +27,28 @@ export class ZoomPanInputManager {
 	}
 
 	private addListeners() {
-		fromEvent(this._htmlContainer, 'mousemove').pipe(
-			takeUntil(this._destroySubject)
-		).subscribe((e: MouseEvent) => this.mouseMoveHandler(e));
+		getStaticDI(NgZone).runOutsideAngular(() => {
+			fromEvent(this._htmlContainer, 'mousemove').pipe(
+				takeUntil(this._destroySubject)
+			).subscribe((e: MouseEvent) => this.mouseMoveHandler(e));
 
-		fromEvent(window, 'mouseup').pipe(
-			takeUntil(this._destroySubject)
-		).subscribe((e: MouseEvent) => this.mouseUpHandler(e));
+			fromEvent(window, 'mouseup').pipe(
+				takeUntil(this._destroySubject)
+			).subscribe((e: MouseEvent) => this.mouseUpHandler(e));
 
-		fromEvent(window, 'contextmenu').pipe(
-			takeUntil(this._destroySubject),
-			filter(() => this._mouseMoved)
-		).subscribe((e: MouseEvent) => e.preventDefault());
+			fromEvent(window, 'contextmenu').pipe(
+				takeUntil(this._destroySubject),
+				filter(() => this._mouseMoved)
+			).subscribe((e: MouseEvent) => e.preventDefault());
 
-		fromEvent(this._htmlContainer, 'mousedown').pipe(
-			takeUntil(this._destroySubject)
-		).subscribe((e: MouseEvent) => this.mouseDownHandler(e));
+			fromEvent(this._htmlContainer, 'mousedown').pipe(
+				takeUntil(this._destroySubject)
+			).subscribe((e: MouseEvent) => this.mouseDownHandler(e));
 
-		fromEvent(this._htmlContainer, 'wheel', {passive: true}).pipe(
-			takeUntil(this._destroySubject)
-		).subscribe((e: WheelEvent) => this.mouseWheelHandler(e));
+			fromEvent(this._htmlContainer, 'wheel', {passive: true}).pipe(
+				takeUntil(this._destroySubject)
+			).subscribe((e: WheelEvent) => this.mouseWheelHandler(e));
+		});
 	}
 
 	private mouseDownHandler(event: MouseEvent) {

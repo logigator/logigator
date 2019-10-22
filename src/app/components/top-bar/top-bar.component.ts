@@ -1,4 +1,4 @@
-import {Component, OnInit} from '@angular/core';
+import {Component, OnInit, Optional} from '@angular/core';
 import {ProjectsService} from '../../services/projects/projects.service';
 import {UserService} from '../../services/user/user.service';
 import {Observable} from 'rxjs';
@@ -9,6 +9,9 @@ import {PopupService} from '../../services/popup/popup.service';
 import {LoginComponent} from '../popup/popup-contents/login/login.component';
 // #!electron
 import {RegisterComponent} from '../popup/popup-contents/register/register.component';
+import {InteractionAction} from '../../models/interaction-action';
+import {checkActionUsable} from '../../models/action-usable-in-modes';
+
 
 @Component({
 	selector: 'app-top-bar',
@@ -24,13 +27,17 @@ export class TopBarComponent implements OnInit {
 	public settingsDropdownOpen = false;
 
 	constructor(
-		private electronService: ElectronService,
+		@Optional() private electronService: ElectronService,
 		private projectService: ProjectsService,
 		private userService: UserService,
 		private popup: PopupService
 	) { }
 
 	ngOnInit() {}
+
+	public checkActionUsable(action: InteractionAction) {
+		return checkActionUsable(action);
+	}
 
 	public get userInfo$(): Observable<UserInfo> {
 		return this.userService.userInfo$;

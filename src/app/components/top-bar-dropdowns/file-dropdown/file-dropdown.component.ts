@@ -1,9 +1,10 @@
 import {ChangeDetectionStrategy, Component, EventEmitter, OnInit, Output} from '@angular/core';
-import {ProjectsService} from '../../../services/projects/projects.service';
 import {ProjectSaveManagementService} from '../../../services/project-save-management/project-save-management.service';
-import {OpenProjectComponent} from '../../popup/popup-contents/open/open-project.component';
-import {PopupService} from '../../../services/popup/popup.service';
-import {NewComponentComponent} from '../../popup/popup-contents/new-component/new-component.component';
+import {checkActionUsable} from '../../../models/action-usable-in-modes';
+import {ProjectInteractionService} from '../../../services/project-interaction/project-interaction.service';
+import {InteractionAction} from '../../../models/interaction-action';
+import {UserService} from '../../../services/user/user.service';
+import {ProjectsService} from '../../../services/projects/projects.service';
 
 @Component({
 	selector: 'app-file-dropdown',
@@ -17,9 +18,10 @@ export class FileDropdownComponent implements OnInit {
 	public requestClosed: EventEmitter<any> = new EventEmitter();
 
 	constructor(
-		private projectsService: ProjectsService,
-		private projectSave: ProjectSaveManagementService,
-		private popupService: PopupService
+		private projectSaveService: ProjectSaveManagementService,
+		private projectInteraction: ProjectInteractionService,
+		private user: UserService,
+		private projects: ProjectsService
 	) { }
 
 	ngOnInit() {
@@ -29,32 +31,50 @@ export class FileDropdownComponent implements OnInit {
 		this.requestClosed.emit();
 	}
 
-	public async newProject() {
-		this.close();
-		if (await this.projectsService.askToSave()) {
-			await this.projectsService.newProject();
-		}
+	public checkActionUsable(action: InteractionAction) {
+		return checkActionUsable(action);
 	}
 
-	public newComponent() {
-		this.popupService.showPopup(NewComponentComponent, 'POPUP.NEW_COMP.TITLE', false);
+	public get canClone(): boolean {
+		return this.projectSaveService.isShare && this.user.isLoggedIn;
+	}
+
+	public newProject() {
+		this.close();
+		this.projectInteraction.newProject();
+	}
+
+	public async newComponent() {
+		await this.projectInteraction.newComponent();
 		this.close();
 	}
 
 	public async openProject() {
 		this.close();
-		if (await this.projectsService.askToSave()) {
-			this.popupService.showPopup(OpenProjectComponent, 'POPUP.OPEN.TITLE', true);
-		}
+		this.projectInteraction.openProject();
 	}
 
 	public saveProject() {
-		this.projectsService.saveAll();
+		this.projectInteraction.saveAll();
 		this.close();
 	}
 
-	public exportProject() {
-		this.projectSave.exportToFile(this.projectsService.mainProject);
+	public async exportProject() {
+		await this.projectInteraction.exportToFile();
+		this.close();
+	}
+
+	public shareProject() {
+		this.projectInteraction.shareProject();
+		this.close();
+	}
+
+	public get canShare(): boolean {
+		return this.projectSaveService.isFromServer;
+	}
+
+	public cloneProject() {
+		this.projects.cloneShare();
 		this.close();
 	}
 

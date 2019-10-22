@@ -26,7 +26,6 @@ export class ToolbarComponent {
 		private workModeService: WorkModeService,
 		private projectService: ProjectsService,
 		private projectInteraction: ProjectInteractionService,
-		private popupService: PopupService,
 		private stateCompiler: StateCompilerService
 	) {}
 
@@ -57,12 +56,20 @@ export class ToolbarComponent {
 		this.workModeService.setWorkMode(mode);
 	}
 
+	public enterSim() {
+		this.workModeService.enterSimulation();
+	}
+
+	public leaveSim() {
+		this.workModeService.leaveSimulation();
+	}
+
 	public get currentWorkMode(): WorkMode {
 		return this.workModeService.currentWorkMode;
 	}
 
 	public async newComponent() {
-		this.popupService.showPopup(NewComponentComponent, 'POPUP.NEW_COMP.TITLE', false);
+		this.projectInteraction.newComponent();
 	}
 
 	public async undo() {
@@ -98,12 +105,10 @@ export class ToolbarComponent {
 	}
 
 	public save() {
-		this.projectService.saveAll();
+		this.projectInteraction.saveAll();
 	}
 
 	public async open() {
-		if (await this.projectService.askToSave()) {
-			this.popupService.showPopup(OpenProjectComponent, 'POPUP.OPEN.TITLE', true);
-		}
+		this.projectInteraction.openProject();
 	}
 }

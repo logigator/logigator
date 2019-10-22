@@ -19,12 +19,14 @@ export class PopupService {
 		popupContentComp: Type<PopupContentComp>,
 		title: string,
 		closeOnClickOutside: boolean,
-		contentComponentInput?: any
+		contentComponentInput?: any,
+		titleTranslationParams?: { [key: string]: string}
 	): Promise<any> {
 		return new Promise<void>(resolve => {
 			const popupFactory = this.componentFactoryResolver.resolveComponentFactory(PopupComponent);
 			const popupRef = popupFactory.create(this.injector);
 			popupRef.instance.title = title;
+			popupRef.instance.titleTranslationParams = titleTranslationParams;
 			popupRef.instance.closeOnClickOutside = closeOnClickOutside;
 			popupRef.instance.contentCompInput = contentComponentInput;
 			popupRef.instance.contentComp = this.componentFactoryResolver.resolveComponentFactory(popupContentComp);
