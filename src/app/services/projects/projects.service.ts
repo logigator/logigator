@@ -93,7 +93,7 @@ export class ProjectsService {
 	}
 
 	public async newProject() {
-		await this.saveAllOrAllComps();
+		if (!this.projectSaveManagementService.isShare) await this.saveAllOrAllComps();
 		this.elementProvider.clearElementsFromFile();
 		const project = Project.empty();
 		this.closeAllProjects();
@@ -108,7 +108,7 @@ export class ProjectsService {
 	}
 
 	public async openFile(content: string) {
-		await this.saveAllOrAllComps();
+		if (!this.projectSaveManagementService.isShare) await this.saveAllOrAllComps();
 		const project = this.projectSaveManagementService.openFromFile(content);
 		if (!project) return;
 		this.closeAllProjects();
@@ -120,7 +120,7 @@ export class ProjectsService {
 	}
 
 	public async openProjectServer(id: number) {
-		await this.saveAllOrAllComps();
+		if (!this.projectSaveManagementService.isShare) await this.saveAllOrAllComps();
 		const project = await this.projectSaveManagementService.openProjectFromServer(id, false);
 		if (!project) return;
 		this.closeAllProjects();
@@ -132,7 +132,8 @@ export class ProjectsService {
 
 	private closeAllProjects() {
 		for (const id of this.allProjects.keys()) {
-			this.closeProject(id);
+			this._projectClosedSubject.next(id);
+			this._projects.delete(id);
 		}
 	}
 
@@ -172,9 +173,21 @@ export class ProjectsService {
 		return this._projects;
 	}
 
-	public closeProject(id: number) {
+	public async closeTab(id: number) {
+		if (this.projectSaveManagementService.isShare) {
+			this.projectSaveManagementService.saveComponentShare(this._projects.get(id));
+		} else {
+			await this.projectSaveManagementService.saveProject(this._projects.get(id));
+		}
 		this._projectClosedSubject.next(id);
 		this._projects.delete(id);
+	}
+
+	public saveComponentsShare() {
+		const comps = Array.from(this._projects.values()).filter(c => c.type === 'comp');
+		for (const comp of comps) {
+			this.projectSaveManagementService.saveComponentShare(comp);
+		}
 	}
 
 	public async saveAll(): Promise<void> {

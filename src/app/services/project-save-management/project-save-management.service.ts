@@ -58,7 +58,7 @@ export class ProjectSaveManagementService {
 			project = this.openProjectFromServerOnLoad();
 		} else if (location.pathname.startsWith('/share')) {
 			this.elemProvService.setUserDefinedTypes(await this.getCustomElementsFromServer());
-			// open share
+			project = this.openProjectFromShare();
 		} else {
 			// #!web
 			window.history.pushState(null, null, '/');
@@ -135,7 +135,27 @@ export class ProjectSaveManagementService {
 		this.errorHandling.showInfo(`Created Component ${name}`);
 	}
 
-	private async saveProject(project: Project): Promise<void> {
+	private async openProjectFromShare(): Promise<Project> {
+		const address = location.pathname.substr(location.pathname.lastIndexOf('/') + 1);
+		this._projectSource = 'share';
+		const resp = await this.sharing.openShare(address).pipe(
+			this.errorHandling.catchErrorOperator('Unable to open shared project', undefined)
+		).toPromise();
+		if (!resp) {
+			delete this._projectSource;
+			return Project.empty();
+		}
+		const model = this.convertResponseDataToProjectModel(resp.data);
+		const project = new Project(new ProjectState(model), {
+			name: resp.project.name,
+			type: 'project',
+			id: resp.project.id
+		});
+		this.errorHandling.showInfo(`Opened shared Project ${resp.project.name} from ${resp.user.username}`);
+		return project;
+	}
+
+	public async saveProject(project: Project): Promise<void> {
 		if (!project.dirty) return;
 		if (project.id < 1000 && this._componentsFromLocalFile.has(project.id)) {
 			const compLocalFile = this._componentsFromLocalFile.get(project.id);
@@ -400,6 +420,15 @@ export class ProjectSaveManagementService {
 
 	private saveSingleProjectToServer(project: Project): Promise<HttpResponseData<{success: boolean}>> {
 		if (project.id < 1000) return;
+		const body = this.projectToSaveRequest(project);
+		const currentlyInCache = this._cloudProjectCache.get(project.id);
+		if (currentlyInCache) currentlyInCache.project.data = body.data;
+		return this.http.post<HttpResponseData<{success: boolean}>>(`${environment.apiPrefix}/api/project/save/${project.id}`, body).pipe(
+			this.errorHandling.showErrorMessageOnErrorOperator('Unable to save Component or Project on Server')
+		).toPromise();
+	}
+
+	private projectToSaveRequest(project: Project): SaveProjectRequest {
 		const mappings: ModelDatabaseMap[] = [];
 		project.currState.model.board.elements.forEach(el => {
 			if (el.typeId >= 500 && !mappings.find(m => m.model === el.typeId)) {
@@ -421,11 +450,13 @@ export class ProjectSaveManagementService {
 			body.num_inputs = project.numInputs;
 			body.num_outputs = project.numOutputs;
 		}
+		return body;
+	}
+
+	public saveComponentShare(project: Project) {
+		const body = this.projectToSaveRequest(project);
 		const currentlyInCache = this._cloudProjectCache.get(project.id);
 		if (currentlyInCache) currentlyInCache.project.data = body.data;
-		return this.http.post<HttpResponseData<{success: boolean}>>(`${environment.apiPrefix}/api/project/save/${project.id}`, body).pipe(
-			this.errorHandling.showErrorMessageOnErrorOperator('Unable to save Component or Project on Server')
-		).toPromise();
 	}
 
 	private getCustomElementsFromServer(): Promise<Map<number, ElementType>> {

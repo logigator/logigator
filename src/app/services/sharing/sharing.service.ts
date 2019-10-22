@@ -7,6 +7,8 @@ import {CreateShareResp} from '../../models/http-responses/create-share-resp';
 import {ShareInfo} from '../../models/http-responses/ShareInfo';
 import {map} from 'rxjs/operators';
 import {ErrorHandlingService} from '../error-handling/error-handling.service';
+import {Observable} from 'rxjs';
+import {OpenShareResp} from '../../models/http-responses/open-share-resp';
 
 @Injectable({
 	providedIn: 'root'
@@ -45,5 +47,11 @@ export class SharingService {
 			}),
 			this.errorHandler.catchErrorOperator('Unable to get share information.', undefined)
 		).toPromise();
+	}
+
+	public openShare(address: string): Observable<OpenShareResp> {
+		return this.http.get<HttpResponseData<OpenShareResp>>(environment.apiPrefix + '/api/share/get/' + address).pipe(
+			map(r => r.result)
+		);
 	}
 }

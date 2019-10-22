@@ -1,10 +1,10 @@
 import { Injectable } from '@angular/core';
 import {WorkMode} from '../../models/work-modes';
-import {BehaviorSubject, Observable, ReplaySubject} from 'rxjs';
-import {distinctUntilChanged, map, switchMap, takeUntil} from 'rxjs/operators';
-import {ProjectSaveManagementService} from '../project-save-management/project-save-management.service';
+import {Observable, ReplaySubject} from 'rxjs';
+import {distinctUntilChanged, map} from 'rxjs/operators';
 import {ProjectsService} from '../projects/projects.service';
 import {ElementProviderService} from '../element-provider/element-provider.service';
+import {ProjectSaveManagementService} from '../project-save-management/project-save-management.service';
 
 @Injectable({
 	providedIn: 'root'
@@ -19,24 +19,22 @@ export class WorkModeService {
 	private _workModeSubject = new ReplaySubject<WorkMode>(1);
 
 	constructor(
+		private projects: ProjectsService,
 		private projectSaveManagement: ProjectSaveManagementService,
-		private project: ProjectsService,
 		private elemProv: ElementProviderService
 	) {
 		WorkModeService.staticInstance = this;
 
-		if (projectSaveManagement.isShare) {
-			this.setWorkMode('simulation');
-		} else {
-			this.setWorkMode('select');
-		}
+		this.setWorkMode('select');
 	}
 
 	public async setWorkMode(mode: WorkMode, componentTypeToBuild?: number) {
-		if (this.projectSaveManagement.isShare) return;
-
 		if (mode === 'simulation') {
-			await this.project.saveAllOrAllComps();
+			if (!this.projectSaveManagement.isShare) {
+				await this.projects.saveAllOrAllComps();
+			} else {
+				this.projects.saveComponentsShare();
+			}
 		}
 		this._currentWorkMode = mode;
 		this._workModeSubject.next(mode);
