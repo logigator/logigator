@@ -1,5 +1,5 @@
 import { BrowserModule } from '@angular/platform-browser';
-import { NgModule } from '@angular/core';
+import {Injector, NgModule} from '@angular/core';
 
 import { AppComponent } from './app.component';
 import { ToolbarComponent } from './components/toolbar/toolbar.component';
@@ -42,6 +42,7 @@ import { LoginComponent } from './components/popup/popup-contents/login/login.co
 import { RegisterComponent } from './components/popup/popup-contents/register/register.component';
 import { WorkAreaContainerComponent } from './components/work-area-container/work-area-container.component';
 import { ShareProjectComponent } from './components/popup/popup-contents/share-project/share-project.component';
+import {setStaticDIInjector} from './models/get-di';
 
 @NgModule({
 	declarations: [
@@ -122,4 +123,8 @@ import { ShareProjectComponent } from './components/popup/popup-contents/share-p
 	providers: [],
 	bootstrap: [AppComponent]
 })
-export class AppModule { }
+export class AppModule {
+	constructor(private injector: Injector) {
+		setStaticDIInjector(injector);
+	}
+}

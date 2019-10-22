@@ -15,6 +15,8 @@ import {CompSpriteGenerator} from './comp-sprite-generator';
 import {ProjectInteractionService} from '../../services/project-interaction/project-interaction.service';
 import {filter} from 'rxjs/operators';
 import {CopyService} from '../../services/copy/copy.service';
+import {getStaticDI} from '../get-di';
+import {NgZone} from '@angular/core';
 
 export class ViewInteractionManager {
 
@@ -64,20 +66,26 @@ export class ViewInteractionManager {
 	}
 
 	private addEventListenersToView() {
-		this._view.on('pointerdown', (e: InteractionEvent) => this.handlePointerDownOnView(e));
-		this._view.on('pointerup', (e: InteractionEvent) => this.handlePointerUpOnView(e));
-		this._view.on('pointerupoutside', (e: InteractionEvent) => this.handlePointerUpOnView(e));
+		getStaticDI(NgZone).runOutsideAngular(() => {
+			this._view.on('pointerdown', (e: InteractionEvent) => this.handlePointerDownOnView(e));
+			this._view.on('pointerup', (e: InteractionEvent) => this.handlePointerUpOnView(e));
+			this._view.on('pointerupoutside', (e: InteractionEvent) => this.handlePointerUpOnView(e));
+		});
 	}
 
 	private addEventListenersToSelectRect() {
-		this._selectRect.interactive = true;
-		this._selectRect.zIndex = 10;
-		this._selectRect.on('pointerdown', (e: InteractionEvent) => this.handlePointerDownOnSelectRect(e));
+		getStaticDI(NgZone).runOutsideAngular(() => {
+			this._selectRect.interactive = true;
+			this._selectRect.zIndex = 10;
+			this._selectRect.on('pointerdown', (e: InteractionEvent) => this.handlePointerDownOnSelectRect(e));
+		});
 	}
 
 	public addEventListenersToNewElement(elemSprite: ElementSprite) {
-		elemSprite.sprite.interactive = true;
-		elemSprite.sprite.on('pointerdown', (e: InteractionEvent) => this.handlePointerDownOnElement(e, elemSprite));
+		getStaticDI(NgZone).runOutsideAngular(() => {
+			elemSprite.sprite.interactive = true;
+			elemSprite.sprite.on('pointerdown', (e: InteractionEvent) => this.handlePointerDownOnElement(e, elemSprite));
+		});
 	}
 
 	private handlePointerDownOnView(e: InteractionEvent) {

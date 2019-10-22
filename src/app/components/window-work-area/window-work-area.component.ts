@@ -75,32 +75,33 @@ export class WindowWorkAreaComponent extends WorkArea implements OnInit, OnChang
 			if (changes.showing.currentValue) {
 				this.show();
 			} else {
+				if (this._dragManager) {
+					this._dragManager.destroy();
+					delete this._dragManager;
+				}
 				this.hide();
 			}
 		}
 		if (changes.project && this.showing) {
-			this.ngZone.run(() => {
-				this._activeView = new SimulationView(
-					this.project,
-					this._pixiCanvasContainer.nativeElement,
-					this._ticker,
-					this.requestInspectElementInSim,
-					this.identifier,
-					this.parentNames
-				);
+			this._activeView = new SimulationView(
+				this.project,
+				this._pixiCanvasContainer.nativeElement,
+				this._ticker,
+				this.requestInspectElementInSim,
+				this.identifier,
+				this.parentNames
+			);
+			if (this._dragManager) this._dragManager.destroy();
 
-				if (this._dragManager) this._dragManager.destroy();
-
-				this._dragManager =  new WindowDragManager(
-					this.dragBounding,
-					this._pixiCanvasContainer.nativeElement,
-					this._popup.nativeElement,
-					this._header.nativeElement,
-					this.renderer2,
-					this._activeView as SimulationView,
-					this._pixiRenderer
-				);
-			});
+			this._dragManager =  new WindowDragManager(
+				this.dragBounding,
+				this._pixiCanvasContainer.nativeElement,
+				this._popup.nativeElement,
+				this._header.nativeElement,
+				this.renderer2,
+				this._activeView as SimulationView,
+				this._pixiRenderer
+			);
 		}
 	}
 

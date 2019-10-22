@@ -12,7 +12,8 @@
 			"SAVE": "Save",
 			"EXPORT": "Export to file",
 			"SCREENSHOT": "Screenshot",
-			"SHARE": "Share"
+			"SHARE": "Share",
+			"CLONE": "Clone Project"
 		},
 		"EDIT": {
 			"TITLE": "Edit",

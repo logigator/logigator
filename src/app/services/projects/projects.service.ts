@@ -219,6 +219,16 @@ export class ProjectsService {
 		return this.projectSaveManagementService.saveProjectsAndComponents(comps);
 	}
 
+	public async cloneShare() {
+		const project = await this.projectSaveManagementService.cloneShare();
+		if (!project) return;
+		this.closeAllProjects();
+		this._projects.set(project.id, project);
+		this._currProject = project;
+		this._mainProject = project;
+		this._projectOpenedSubject.next(project.id);
+	}
+
 	public getProjectById(id: number): Project {
 		return this._projects.get(id);
 	}

@@ -142,6 +142,8 @@ export class ProjectSaveManagementService {
 			this.errorHandling.catchErrorOperator('Unable to open shared project', undefined)
 		).toPromise();
 		if (!resp) {
+			// !#web
+			window.history.pushState(null, null, '/');
 			delete this._projectSource;
 			return Project.empty();
 		}
@@ -153,6 +155,19 @@ export class ProjectSaveManagementService {
 		});
 		this.errorHandling.showInfo(`Opened shared Project ${resp.project.name} from ${resp.user.username}`);
 		return project;
+	}
+
+	public async cloneShare(): Promise<Project> {
+		if (!this.isShare) return;
+		const address = location.pathname.substr(location.pathname.lastIndexOf('/') + 1);
+		const resp = await this.http.get<HttpResponseData<any>>(`${environment.apiPrefix}/api/project/clone/${address}`).pipe(
+			this.errorHandling.catchErrorOperator('Unable to clone project', undefined)
+		).toPromise();
+		if (resp) {
+			this.errorHandling.showInfo('Cloned Project');
+			this.elemProvService.setUserDefinedTypes(await this.getCustomElementsFromServer());
+			return this.openProjectFromServer(resp.result.id, true);
+		}
 	}
 
 	public async saveProject(project: Project): Promise<void> {
