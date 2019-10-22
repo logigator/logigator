@@ -67,6 +67,9 @@ export class ToolbarComponent {
 
 	public async undo() {
 		console.log(await this.stateCompiler.compile(this.projectService.currProject));
+
+		console.log(this.stateCompiler.wiresOnLinks);
+		console.log(this.stateCompiler.wireEndsOnLinks);
 		return;
 		this.projectInteraction.undoForCurrent();
 	}
