@@ -8,6 +8,7 @@ import {ZoomPanInputManager} from './zoom-pan-input-manager';
 import {View} from './view';
 import {EditorView} from './editor-view';
 import {ReqInspectElementEvent} from './req-inspect-element-event';
+import {getStaticDI} from '../get-di';
 
 export abstract class WorkArea {
 
@@ -43,7 +44,7 @@ export abstract class WorkArea {
 			width: canvasContainer.nativeElement.offsetWidth,
 			antialias: false,
 			powerPreference: 'high-performance',
-			backgroundColor: ThemingService.staticInstance.getEditorColor('background'),
+			backgroundColor: getStaticDI(ThemingService).getEditorColor('background'),
 			resolution: Math.ceil(window.devicePixelRatio || 1),
 			autoDensity: true
 		});

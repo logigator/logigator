@@ -15,6 +15,7 @@ import {CompSpriteGenerator} from './comp-sprite-generator';
 import {CollisionFunctions} from '../collision-functions';
 import {Project} from '../project';
 import {Action} from '../action';
+import {getStaticDI} from '../get-di';
 
 export abstract class View extends PIXI.Container {
 
@@ -35,6 +36,8 @@ export abstract class View extends PIXI.Container {
 
 	protected readonly _project: Project;
 
+	private themingService = getStaticDI(ThemingService);
+
 	protected constructor(project: Project, htmlContainer: HTMLElement, ticker: RenderTicker) {
 		super();
 		this._project = project;
@@ -46,7 +49,7 @@ export abstract class View extends PIXI.Container {
 		this.sortableChildren = false;
 		this.hitArea = new PIXI.Rectangle(0, 0, Infinity, Infinity);
 
-		ThemingService.staticInstance.showGridChanges$.pipe(
+		this.themingService.showGridChanges$.pipe(
 			takeUntil(this._destroySubject)
 		).subscribe(show => {
 			this.onGridShowChange(show);
@@ -70,10 +73,10 @@ export abstract class View extends PIXI.Container {
 			if (this.createChunkIfNeeded(chunksToRender[i].x, chunksToRender[i].y)) continue;
 			const chunk = this._chunks[chunksToRender[i].x][chunksToRender[i].y];
 			chunk.container.visible = true;
-			chunk.gridGraphics.visible = ThemingService.staticInstance.showGrid;
+			chunk.gridGraphics.visible = this.themingService.showGrid;
 			if (chunk.scaledFor === this.zoomPan.currentScale) continue;
 			chunk.scaledFor = this.zoomPan.currentScale;
-			if (ThemingService.staticInstance.showGrid) {
+			if (this.themingService.showGrid) {
 				chunk.gridGraphics.destroy();
 				chunk.gridGraphics = Grid.generateGridGraphics(this.zoomPan.currentScale);
 				chunk.gridGraphics.position = this.getChunkPos(chunksToRender[i].x, chunksToRender[i].y);
@@ -103,7 +106,7 @@ export abstract class View extends PIXI.Container {
 
 	private onGridShowChange(show: boolean) {
 		const currentlyOnScreen = this.zoomPan.isOnScreen(this.htmlContainer.offsetHeight, this.htmlContainer.offsetWidth);
-		const chunksToRender = ProjectsService.staticInstance.currProject.chunksToRender(
+		const chunksToRender = getStaticDI(ProjectsService).currProject.chunksToRender(
 			Grid.getGridPosForPixelPos(currentlyOnScreen.start),
 			Grid.getGridPosForPixelPos(currentlyOnScreen.end)
 		);
@@ -138,7 +141,7 @@ export abstract class View extends PIXI.Container {
 
 	protected updateComponentSprite(element: Element, graphics: PIXI.Graphics) {
 		graphics.clear();
-		const elemType = ElementProviderService.staticInstance.getElementById(element.typeId);
+		const elemType = getStaticDI(ElementProviderService).getElementById(element.typeId);
 		CompSpriteGenerator.updateGraphics(
 			elemType.symbol, element.numInputs, element.numOutputs, element.rotation, this.zoomPan.currentScale, graphics
 		);
@@ -164,7 +167,7 @@ export abstract class View extends PIXI.Container {
 		this._chunks[x][y].container.interactive = false;
 		this._chunks[x][y].gridGraphics.sortableChildren = false;
 		this._chunks[x][y].gridGraphics.interactive = false;
-		this._chunks[x][y].gridGraphics.visible = ThemingService.staticInstance.showGrid;
+		this._chunks[x][y].gridGraphics.visible = this.themingService.showGrid;
 		// const text = new PIXI.Text(x  + ' ' + y);
 		// text.x = (environment.chunkSize * environment.gridPixelWidth) / 2;
 		// text.y = (environment.chunkSize * environment.gridPixelWidth) / 2;
@@ -186,7 +189,7 @@ export abstract class View extends PIXI.Container {
 	}
 
 	public addLineToWireGraphics(graphics: PIXI.Graphics, endPos: PIXI.Point, startPos: PIXI.Point) {
-		graphics.lineStyle(1 / this.zoomPan.currentScale, ThemingService.staticInstance.getEditorColor('wire'));
+		graphics.lineStyle(1 / this.zoomPan.currentScale, this.themingService.getEditorColor('wire'));
 		graphics.moveTo(0, 0);
 		graphics.lineTo(endPos.x - startPos.x, endPos.y - startPos.y);
 	}
@@ -218,7 +221,7 @@ export abstract class View extends PIXI.Container {
 	}
 
 	protected placeComponentOnView(element: Element): ElementSprite {
-		const elemType = ElementProviderService.staticInstance.getElementById(element.typeId);
+		const elemType = getStaticDI(ElementProviderService).getElementById(element.typeId);
 		const sprite = CompSpriteGenerator.getComponentSprite(
 			elemType.symbol, element.numInputs, element.numOutputs, element.rotation, this.zoomPan.currentScale
 		);
@@ -279,7 +282,7 @@ export abstract class View extends PIXI.Container {
 		const size = this.calcConnPointSize();
 		graphics.clear();
 		graphics.position = this.adjustConnPointPosToSize(pos, size);
-		graphics.beginFill(ThemingService.staticInstance.getEditorColor('wire'));
+		graphics.beginFill(this.themingService.getEditorColor('wire'));
 		graphics.drawRect(0, 0, size / this.zoomPan.currentScale, size / this.zoomPan.currentScale);
 	}
 

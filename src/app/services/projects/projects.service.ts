@@ -17,8 +17,6 @@ import {checkActionUsable} from '../../models/action-usable-in-modes';
 })
 export class ProjectsService {
 
-	public static staticInstance: ProjectsService;
-
 	private _projects: Map<number, Project> = new Map<number, Project>();
 	private _currProject: Project;
 
@@ -36,8 +34,6 @@ export class ProjectsService {
 		private elementProvider: ElementProviderService,
 		private errorHandling: ErrorHandlingService
 	) {
-		ProjectsService.staticInstance = this;
-
 		this.projectSaveManagementService.getProjectToOpenOnLoad().then(project => {
 			this._projects.set(project.id, project);
 			this._currProject = project;

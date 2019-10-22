@@ -44,10 +44,17 @@ export class ViewInteractionManager {
 	public pastingElements: ElementSprite[] = [];
 	public pastingConnPoints: PIXI.Graphics[] = [];
 
+	private copyService = getStaticDI(CopyService);
+	private projectsService = getStaticDI(ProjectsService);
+	private workModeService = getStaticDI(WorkModeService);
+	private elemProvService = getStaticDI(ElementProviderService);
+	private themingService = getStaticDI(ThemingService);
+	private selectionService = getStaticDI(SelectionService);
+
 	constructor(view: EditorView) {
 		this._view = view;
 		this._selectRect = new PIXI.Graphics();
-		this._selectRect.beginFill(ThemingService.staticInstance.getEditorColor('selectRect'), 0.3);
+		this._selectRect.beginFill(this.themingService.getEditorColor('selectRect'), 0.3);
 		this._selectRect.drawRect(0, 0, 1, 1);
 
 		this._newWire = new PIXI.Graphics();
@@ -56,12 +63,12 @@ export class ViewInteractionManager {
 		this.addEventListenersToSelectRect();
 
 		this._workModeSubscription = merge(
-			WorkModeService.staticInstance.currentWorkMode$,
-			ProjectInteractionService.staticInstance.onElementsDelete$,
+			this.workModeService.currentWorkMode$,
+			getStaticDI(ProjectInteractionService).onElementsDelete$,
 		).subscribe(_ => this.cleanUp());
 
-		this._pasteSubscription = ProjectInteractionService.staticInstance.onPaste$.pipe(
-			filter(_ => this._view.projectId === ProjectsService.staticInstance.currProject.id)
+		this._pasteSubscription = getStaticDI(ProjectInteractionService).onPaste$.pipe(
+			filter(_ => this._view.projectId === this.projectsService.currProject.id)
 		).subscribe(_ => this.onPaste());
 	}
 
@@ -89,14 +96,14 @@ export class ViewInteractionManager {
 	}
 
 	private handlePointerDownOnView(e: InteractionEvent) {
-		if (WorkModeService.staticInstance.currentWorkMode === 'select' && e.data.button === 0) {
+		if (this.workModeService.currentWorkMode === 'select' && e.data.button === 0) {
 			this.addSelectRectOrResetSelection(e);
-		} else if (WorkModeService.staticInstance.currentWorkMode === 'buildWire' && e.data.button === 0) {
+		} else if (this.workModeService.currentWorkMode === 'buildWire' && e.data.button === 0) {
 			this.startDrawingNewWire(e);
-		} else if (WorkModeService.staticInstance.currentWorkMode === 'connectWire' && e.data.button === 0) {
+		} else if (this.workModeService.currentWorkMode === 'connectWire' && e.data.button === 0) {
 			this.connectOrDisconnectWires(e);
-		} else if (WorkModeService.staticInstance.currentWorkMode === 'buildComponent'
-			&& WorkModeService.staticInstance.currentComponentToBuild !== 0
+		} else if (this.workModeService.currentWorkMode === 'buildComponent'
+			&& this.workModeService.currentComponentToBuild !== 0
 			&& e.data.button === 0
 		) {
 			this.startDraggingNewComponent(e);
@@ -106,9 +113,9 @@ export class ViewInteractionManager {
 	}
 
 	private handlePointerUpOnView(e: InteractionEvent) {
-		if ((WorkModeService.staticInstance.currentWorkMode === 'select' || this._currentlyPasting) && e.data.button === 0) {
+		if ((this.workModeService.currentWorkMode === 'select' || this._currentlyPasting) && e.data.button === 0) {
 			this.selectOrApplyMove();
-		} else if (WorkModeService.staticInstance.currentWorkMode === 'buildWire' && e.data.button === 0) {
+		} else if (this.workModeService.currentWorkMode === 'buildWire' && e.data.button === 0) {
 			this.addWire(e);
 		} else if (this._draggingNewComp) {
 			this.placeNewComp();
@@ -118,9 +125,9 @@ export class ViewInteractionManager {
 	}
 
 	private handlePointerMoveOnView(e: InteractionEvent) {
-		if (WorkModeService.staticInstance.currentWorkMode === 'select' || this._currentlyPasting) {
+		if (this.workModeService.currentWorkMode === 'select' || this._currentlyPasting) {
 			this.drawSelectRectOrMove(e);
-		} else if (WorkModeService.staticInstance.currentWorkMode === 'buildWire') {
+		} else if (this.workModeService.currentWorkMode === 'buildWire') {
 			this.drawNewWire(e);
 		} else if (this._draggingNewComp) {
 			this.dragNewComp(e);
@@ -129,14 +136,14 @@ export class ViewInteractionManager {
 	}
 
 	private handlePointerDownOnSelectRect(e: InteractionEvent) {
-		if (WorkModeService.staticInstance.currentWorkMode === 'select' || this._currentlyPasting) {
+		if (this.workModeService.currentWorkMode === 'select' || this._currentlyPasting) {
 			this.startDragging(e);
 			this._view.ticker.singleFrame();
 		}
 	}
 
 	private handlePointerDownOnElement(e: InteractionEvent, elem: ElementSprite) {
-		if (WorkModeService.staticInstance.currentWorkMode === 'select' && e.data.button === 0) {
+		if (this.workModeService.currentWorkMode === 'select' && e.data.button === 0) {
 			if (this._singleSelectedElement === elem.element) {
 				this.startDragging(e);
 			} else {
@@ -176,7 +183,7 @@ export class ViewInteractionManager {
 				this._selectRect.position.y + this._selectRect.height)
 			);
 			this.selectInRect(selectStart, selectEnd);
-			if (SelectionService.staticInstance.selectedIds().length === 0) {
+			if (this.selectionService.selectedIds().length === 0) {
 				this._view.removeChild(this._selectRect);
 			}
 		} else if (this._currentlyDragging) {
@@ -184,10 +191,10 @@ export class ViewInteractionManager {
 			if (this._currentlyPasting) {
 				const elementsToPaste = this.pastingElements.map(es => es.element);
 				const endPos = Grid.getGridPosForPixelPos(this.pastingElements[0].sprite.position);
-				if (ProjectsService.staticInstance.currProject.addElements(
+				if (this.projectsService.currProject.addElements(
 					elementsToPaste, new PIXI.Point(endPos.x - elementsToPaste[0].pos.x, endPos.y - elementsToPaste[0].pos.y))
 				) {
-					ProjectsService.staticInstance.inputsOutputsCustomComponentChanged(this._view.projectId);
+					this.projectsService.inputsOutputsCustomComponentChanged(this._view.projectId);
 					this._view.removeChild(this._selectRect);
 					this.cancelPasting();
 					delete this._singleSelectedElement;
@@ -202,8 +209,8 @@ export class ViewInteractionManager {
 				}
 				const movedDif = new PIXI.Point(endPos.x - this._actionStartPos.x, endPos.y - this._actionStartPos.y);
 
-				if (ProjectsService.staticInstance.currProject.moveElementsById(
-					SelectionService.staticInstance.selectedIds(), movedDif)
+				if (this.projectsService.currProject.moveElementsById(
+					this.selectionService.selectedIds(), movedDif)
 				) {
 					this._view.removeChild(this._selectRect);
 					this.clearSelection();
@@ -216,7 +223,7 @@ export class ViewInteractionManager {
 
 	private connectOrDisconnectWires(e: InteractionEvent) {
 		const pos = Grid.getGridPosForPixelPos(e.data.getLocalPosition(this._view));
-		ProjectsService.staticInstance.currProject.toggleWireConnection(pos);
+		this.projectsService.currProject.toggleWireConnection(pos);
 	}
 
 	private addWire(e: InteractionEvent) {
@@ -251,7 +258,7 @@ export class ViewInteractionManager {
 			const endPos = new PIXI.Point(currentMousePos.x - this._actionStartPos.x, currentMousePos.y - this._actionStartPos.y);
 			this.setDirForNewWire(currentMousePos);
 			this._newWire.clear();
-			this._newWire.lineStyle(1 / this._view.zoomPan.currentScale, ThemingService.staticInstance.getEditorColor('wire'));
+			this._newWire.lineStyle(1 / this._view.zoomPan.currentScale, this.themingService.getEditorColor('wire'));
 			this._newWire.moveTo(0, 0);
 			switch (this._newWireDir) {
 				case 'hor':
@@ -303,8 +310,8 @@ export class ViewInteractionManager {
 	}
 
 	private startDraggingNewComponent(e: InteractionEvent) {
-		const typeId = WorkModeService.staticInstance.currentComponentToBuild;
-		const elemType = ElementProviderService.staticInstance.getElementById(typeId);
+		const typeId = this.workModeService.currentComponentToBuild;
+		const elemType = this.elemProvService.getElementById(typeId);
 		if (elemType.numInputs === 0 && elemType.numOutputs === 0) return;
 		this._draggingNewComp = true;
 		this._newCompSprite = CompSpriteGenerator.getComponentSprite(
@@ -324,13 +331,13 @@ export class ViewInteractionManager {
 
 	private placeNewComp() {
 		if (this._newCompSprite.position.x > 0 && this._newCompSprite.position.y > 0) {
-			const typeIdToBuild = WorkModeService.staticInstance.currentComponentToBuild;
+			const typeIdToBuild = this.workModeService.currentComponentToBuild;
 			this._view.placeComponent(
 				Grid.getGridPosForPixelPos(this._newCompSprite.position),
 				typeIdToBuild
 			);
-			if (ElementProviderService.staticInstance.isPlugElement(typeIdToBuild)) {
-				ProjectsService.staticInstance.inputsOutputsCustomComponentChanged(this._view.projectId);
+			if (this.elemProvService.isPlugElement(typeIdToBuild)) {
+				this.projectsService.inputsOutputsCustomComponentChanged(this._view.projectId);
 			}
 		}
 		this._view.removeChild(this._newCompSprite);
@@ -350,12 +357,12 @@ export class ViewInteractionManager {
 			}
 			return;
 		}
-		SelectionService.staticInstance.selectedIds().forEach(id => {
+		this.selectionService.selectedIds().forEach(id => {
 			const sprite = this._view.allElements.get(id).sprite;
 			sprite.position.x += dx;
 			sprite.position.y += dy;
 		});
-		SelectionService.staticInstance.selectedConnections().forEach(point => {
+		this.selectionService.selectedConnections().forEach(point => {
 			const sprite = this._view.connectionPoints.get(`${point.x}:${point.y}`);
 			sprite.position.x += dx;
 			sprite.position.y += dy;
@@ -363,7 +370,7 @@ export class ViewInteractionManager {
 	}
 
 	private resetSelectionToOldPosition() {
-		SelectionService.staticInstance.selectedIds(this._view.projectId).forEach(id => {
+		this.selectionService.selectedIds(this._view.projectId).forEach(id => {
 			if (!this._view.allElements.has(id)) return;
 			const elemSprite = this._view.allElements.get(id);
 			this._view.removeChild(elemSprite.sprite);
@@ -371,7 +378,7 @@ export class ViewInteractionManager {
 			this._view.addToCorrectChunk(elemSprite.sprite, elemSprite.element.pos);
 			this._view.setLocalChunkPos(elemSprite.element, elemSprite.sprite);
 		});
-		SelectionService.staticInstance.selectedConnections(this._view.projectId).forEach(point => {
+		this.selectionService.selectedConnections(this._view.projectId).forEach(point => {
 			const key = `${point.x}:${point.y}`;
 			if (!this._view.connectionPoints.has(key)) return;
 			const sprite = this._view.connectionPoints.get(key);
@@ -398,26 +405,26 @@ export class ViewInteractionManager {
 	}
 
 	private clearSelection() {
-		SelectionService.staticInstance.selectedIds(this._view.projectId).forEach(id => {
+		this.selectionService.selectedIds(this._view.projectId).forEach(id => {
 			if (this._view.allElements.has(id))
 				this._view.allElements.get(id).sprite.tint = 0xffffff;
 		});
-		SelectionService.staticInstance.selectedConnections(this._view.projectId).forEach(point => {
+		this.selectionService.selectedConnections(this._view.projectId).forEach(point => {
 			const key = `${point.x}:${point.y}`;
 			if (this._view.connectionPoints.has(key))
 				this._view.connectionPoints.get(key).tint = 0xffffff;
 		});
-		SelectionService.staticInstance.clearSelection(this._view.projectId);
+		this.selectionService.clearSelection(this._view.projectId);
 		delete this._singleSelectedElement;
 	}
 
 	private selectInRect(start: PIXI.Point, end: PIXI.Point) {
 		if (start.x === end.x && start.y === end.y) return;
 		this.clearSelection();
-		const selected = SelectionService.staticInstance.selectFromRect(ProjectsService.staticInstance.currProject, start, end);
+		const selected = this.selectionService.selectFromRect(this.projectsService.currProject, start, end);
 		selected.forEach(id => {
 			const element = this._view.allElements.get(id);
-			element.sprite.tint = ThemingService.staticInstance.getEditorColor('selectTint');
+			element.sprite.tint = this.themingService.getEditorColor('selectTint');
 
 			element.sprite.parent.removeChild(element.sprite);
 			this._view.addChild(element.sprite);
@@ -428,9 +435,9 @@ export class ViewInteractionManager {
 				element.sprite.position = Grid.getPixelPosForGridPos(element.element.pos);
 			}
 		});
-		SelectionService.staticInstance.selectedConnections().forEach(point => {
+		this.selectionService.selectedConnections().forEach(point => {
 			const element = this._view.connectionPoints.get(`${point.x}:${point.y}`);
-			element.tint = ThemingService.staticInstance.getEditorColor('selectTint');
+			element.tint = this.themingService.getEditorColor('selectTint');
 			element.parent.removeChild(element);
 			this._view.addChild(element);
 			const pos = Grid.getPixelPosForGridPosWire(point);
@@ -440,12 +447,12 @@ export class ViewInteractionManager {
 	}
 
 	private onPaste() {
-		if (this._currentlyPasting || CopyService.staticInstance.copiedElements.length === 0) return;
+		if (this._currentlyPasting || this.copyService.copiedElements.length === 0) return;
 		this.cleanUp();
 		this._currentlyPasting = true;
-		const copiedElements = CopyService.staticInstance.copiedElements;
-		const copiedConnPts = CopyService.staticInstance.copiedConPoints;
-		const bounding = CopyService.staticInstance.getCopiedElementsBoundingBox();
+		const copiedElements = this.copyService.copiedElements;
+		const copiedConnPts = this.copyService.copiedConPoints;
+		const bounding = this.copyService.getCopiedElementsBoundingBox();
 		const pasteRectPos = this.calcPasteRectPos();
 		const pasteRectSizePixel = Grid.getPixelPosForGridPos(new PIXI.Point(bounding.width + 2, bounding.height + 2));
 		this._selectRect.position = Grid.getPixelPosForGridPos(new PIXI.Point(pasteRectPos.x - 1, pasteRectPos.y - 1));
@@ -472,7 +479,7 @@ export class ViewInteractionManager {
 					sprite: graphics
 				});
 			} else {
-				const type = ElementProviderService.staticInstance.getElementById(copiedElems[i].typeId);
+				const type = this.elemProvService.getElementById(copiedElems[i].typeId);
 				const sprite = CompSpriteGenerator.getComponentSprite(
 					type.symbol,
 					copiedElems[i].numInputs, copiedElems[i].numOutputs, copiedElems[i].rotation, this._view.zoomPan.currentScale
@@ -530,11 +537,11 @@ export class ViewInteractionManager {
 		this._singleSelectedElement = elem.element;
 		delete this._actionStartPos;
 		this._view.removeChild(this._selectRect);
-		elem.sprite.tint = ThemingService.staticInstance.getEditorColor('selectTint');
+		elem.sprite.tint = this.themingService.getEditorColor('selectTint');
 		elem.sprite.parent.removeChild(elem.sprite);
 		elem.sprite.position = Grid.getPixelPosForGridPos(elem.element.pos);
 		this._view.addChild(elem.sprite);
-		SelectionService.staticInstance.selectComponent(elem.element.id);
+		this.selectionService.selectComponent(elem.element.id);
 	}
 
 	private cleanUp() {

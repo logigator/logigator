@@ -16,8 +16,6 @@ import {ShareProjectComponent} from '../../components/popup/popup-contents/share
 })
 export class ProjectInteractionService {
 
-	public static staticInstance: ProjectInteractionService;
-
 	private _zoomNotifierSubject = new Subject<'in' | 'out' | '100'>();
 	private _deleteNotifierSubject = new Subject<void>();
 	private _pasteNotifierSubject = new Subject<void>();
@@ -30,9 +28,7 @@ export class ProjectInteractionService {
 		private popupService: PopupService,
 		private projectSave: ProjectSaveManagementService,
 		private ngZone: NgZone
-	) {
-		ProjectInteractionService.staticInstance = this;
-	}
+	) {}
 
 	public zoomIn() {
 		if (!checkActionUsable('zoomIn')) return;

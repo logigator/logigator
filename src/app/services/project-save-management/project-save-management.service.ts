@@ -83,10 +83,9 @@ export class ProjectSaveManagementService {
 		if (!name)
 			name = 'New Component';
 
-		const elementProvider = ElementProviderService.staticInstance;
 		let duplicate = 0;
 
-		while (Array.from(elementProvider.userDefinedElements.values())
+		while (Array.from(this.elemProvService.userDefinedElements.values())
 			.map(x => x.name)
 			.includes((duplicate === 0) ? name : `${name}-${duplicate}`)) {
 			duplicate++;

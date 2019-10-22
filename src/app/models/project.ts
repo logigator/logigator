@@ -8,6 +8,7 @@ import {CollisionFunctions} from './collision-functions';
 import {BoardRecorder} from '../../../tests/auto-tests/board-recorder';
 import {ElementProviderService} from '../services/element-provider/element-provider.service';
 import {ProjectType} from './project-type';
+import {getStaticDI} from './get-di';
 
 export class Project {
 
@@ -305,7 +306,7 @@ export class Project {
 	public updateInputsOutputs(typeId?: number): void {
 		const actions: Action[] = [];
 		for (const elem of this.allElements) {
-			if (elem.typeId === typeId || !typeId && ElementProviderService.staticInstance.isUserElement(elem.typeId)) {
+			if (elem.typeId === typeId || !typeId && getStaticDI(ElementProviderService).isUserElement(elem.typeId)) {
 				this._currState.updateNumInputsOutputs(elem);
 				actions.push({
 					name: 'remComp',

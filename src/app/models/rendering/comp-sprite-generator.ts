@@ -1,12 +1,13 @@
 import * as PIXI from 'pixi.js';
 import {ThemingService} from '../../services/theming/theming.service';
 import {environment} from '../../../environments/environment';
+import {getStaticDI} from '../get-di';
 
 export class CompSpriteGenerator {
 
 	public static updateGraphics(symbol: string, inputs: number, outputs: number, rotation: number, scale: number, graphics: PIXI.Graphics) {
-		graphics.lineStyle(1 / scale, ThemingService.staticInstance.getEditorColor('wire'));
-		graphics.beginFill(ThemingService.staticInstance.getEditorColor('background'));
+		graphics.lineStyle(1 / scale, getStaticDI(ThemingService).getEditorColor('wire'));
+		graphics.beginFill(getStaticDI(ThemingService).getEditorColor('background'));
 		graphics.moveTo(0, 0);
 
 		let width;
@@ -20,7 +21,7 @@ export class CompSpriteGenerator {
 		}
 		graphics.drawRect(0, 0, width, height);
 
-		graphics.beginFill(ThemingService.staticInstance.getEditorColor('wire'));
+		graphics.beginFill(getStaticDI(ThemingService).getEditorColor('wire'));
 
 		switch (rotation) {
 			case 0:
@@ -44,7 +45,7 @@ export class CompSpriteGenerator {
 				name: 'Nunito',
 				size: environment.gridPixelWidth + 4
 			},
-			tint: ThemingService.staticInstance.getEditorColor('fontTint')
+			tint: getStaticDI(ThemingService).getEditorColor('fontTint')
 		});
 
 		text.anchor = 0.5;

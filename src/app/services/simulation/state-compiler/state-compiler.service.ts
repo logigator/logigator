@@ -16,15 +16,12 @@ import {ProjectState} from '../../../models/project-state';
 import {CompiledComp} from './compiled-comp';
 import {ProjectSaveManagementService} from '../../project-save-management/project-save-management.service';
 import {ElementProviderService} from '../../element-provider/element-provider.service';
-import {ProjectsService} from '../../projects/projects.service';
 import {MapHelper} from './map-helper';
 
 @Injectable({
 	providedIn: 'root'
 })
 export class StateCompilerService {
-
-	public static staticInstance: StateCompilerService;
 
 	private _highestLinkId: number;
 	private _wiresOnLinks: WiresOnLinksInProject;
@@ -39,11 +36,8 @@ export class StateCompilerService {
 
 	constructor(
 		private projectSaveManagement: ProjectSaveManagementService,
-		private elementProvider: ElementProviderService,
-		private projects: ProjectsService
+		private elementProvider: ElementProviderService
 	) {
-		StateCompilerService.staticInstance = this;
-
 		this._udcCache = new Map<number, CompiledComp>();
 	}
 

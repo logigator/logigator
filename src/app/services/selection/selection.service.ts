@@ -10,14 +10,10 @@ import {Elements} from '../../models/element';
 })
 export class SelectionService {
 
-	public static staticInstance: SelectionService;
-
 	private _selectedIds: Map<number, number[]> = new Map<number, number[]>();
 	private _selectedConnections: Map<number, PIXI.Point[]> = new Map<number, PIXI.Point[]>();
 
-	constructor(private projectsService: ProjectsService, private ngZone: NgZone) {
-		SelectionService.staticInstance = this;
-	}
+	constructor(private projectsService: ProjectsService, private ngZone: NgZone) {}
 
 	public selectFromRect(project: Project, start: PIXI.Point, end: PIXI.Point): number[] {
 		return this.ngZone.run(() => {

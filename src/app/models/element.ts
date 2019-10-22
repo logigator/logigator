@@ -2,6 +2,7 @@ import * as PIXI from 'pixi.js';
 import {environment} from '../../environments/environment';
 import {ElementProviderService} from '../services/element-provider/element-provider.service';
 import {ActionType} from './action';
+import {getStaticDI} from './get-di';
 
 export interface Element {
 	id: number;
@@ -62,7 +63,7 @@ export abstract class Elements {
 	}
 
 	public static genNewElement(typeId: number, _pos: PIXI.Point, _endPos: PIXI.Point, rotation?: number, numInputs?: number): Element {
-		const type = ElementProviderService.staticInstance.getElementById(typeId);
+		const type = getStaticDI(ElementProviderService).getElementById(typeId);
 		const pos = _pos ? _pos.clone() : undefined;
 		const endPos = _endPos ? _endPos.clone() : undefined;
 		if (pos && endPos)
@@ -75,7 +76,7 @@ export abstract class Elements {
 			pos,
 			endPos,
 			rotation: rotation || type.rotation,
-			plugIndex: ElementProviderService.staticInstance.isPlugElement(typeId) ? 0 : undefined
+			plugIndex: getStaticDI(ElementProviderService).isPlugElement(typeId) ? 0 : undefined
 		};
 	}
 

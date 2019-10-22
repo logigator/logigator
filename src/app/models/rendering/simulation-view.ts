@@ -9,6 +9,7 @@ import {ReqInspectElementEvent} from './req-inspect-element-event';
 import {ProjectInteractionService} from '../../services/project-interaction/project-interaction.service';
 import {filter, takeUntil} from 'rxjs/operators';
 import {ProjectsService} from '../../services/projects/projects.service';
+import {getStaticDI} from '../get-di';
 
 export class SimulationView extends View {
 
@@ -34,7 +35,7 @@ export class SimulationView extends View {
 		this._simViewInteractionManager = new SimulationViewInteractionManager(this);
 		this.applyOpenActions();
 
-		ProjectInteractionService.staticInstance.onZoomChangeClick$.pipe(
+		getStaticDI(ProjectInteractionService).onZoomChangeClick$.pipe(
 			filter(_ => this._project.type === 'project'),
 			takeUntil(this._destroySubject)
 		).subscribe((dir => this.onZoomClick(dir)));

@@ -17,8 +17,6 @@ import {ElementType} from '../../models/element-types/element-type';
 })
 export class ElementProviderService {
 
-	public static staticInstance: ElementProviderService;
-
 	private _basicElements: Map<number, ElementType> = new Map([
 		[0, wire],
 		[1, not],
@@ -40,9 +38,7 @@ export class ElementProviderService {
 
 	private _userDefinedElements: Map<number, ElementType> = new Map<number, ElementType>();
 
-	constructor(private errorHandler: ErrorHandlingService) {
-		ElementProviderService.staticInstance = this;
-	}
+	constructor(private errorHandler: ErrorHandlingService) {}
 
 	public setUserDefinedTypes(elements: Map<number, ElementType>) {
 		this._userDefinedElements = elements;

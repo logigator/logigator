@@ -1,5 +1,6 @@
 import {WorkModeService} from '../services/work-mode/work-mode.service';
 import {InteractionAction, InteractionActionUsableInSimulation} from './interaction-action';
+import {getStaticDI} from './get-di';
 
 const actionUsableInSimulation: InteractionActionUsableInSimulation = {
 	copy: false,
@@ -26,7 +27,7 @@ const actionUsableInSimulation: InteractionActionUsableInSimulation = {
 };
 
 export function checkActionUsable(action: InteractionAction): boolean {
-	if (WorkModeService.staticInstance.currentWorkMode === 'simulation') {
+	if (getStaticDI(WorkModeService).currentWorkMode === 'simulation') {
 		return actionUsableInSimulation[action];
 	}
 	return true;

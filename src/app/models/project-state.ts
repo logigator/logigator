@@ -6,6 +6,7 @@ import {CollisionFunctions} from './collision-functions';
 import {Action, ChangeType} from './action';
 import {ElementProviderService} from '../services/element-provider/element-provider.service';
 import {WireEndOnElem} from '../services/simulation/state-compiler/compiler-types';
+import {getStaticDI} from './get-di';
 
 export class ProjectState {
 
@@ -204,12 +205,12 @@ export class ProjectState {
 	public addElement(elem: Element, id?: number): Element {
 		elem.id = id || this.getNextId();
 		this._model.board.elements.push(elem);
-		if (ElementProviderService.staticInstance.isPlugElement(elem.typeId)) {
+		if (getStaticDI(ElementProviderService).isPlugElement(elem.typeId)) {
 			elem.plugIndex = this.numInputs + this.numOutputs; // TODO make setting
 		}
-		if (ElementProviderService.staticInstance.isInputElement(elem.typeId)) {
+		if (getStaticDI(ElementProviderService).isInputElement(elem.typeId)) {
 			this.numInputs++;
-		} else if (ElementProviderService.staticInstance.isOutputElement(elem.typeId)) {
+		} else if (getStaticDI(ElementProviderService).isOutputElement(elem.typeId)) {
 			this.numOutputs++;
 		}
 		this.loadIntoChunks(elem);
@@ -222,9 +223,9 @@ export class ProjectState {
 			return null;
 		const outElem = this._model.board.elements[outElemIndex];
 		this._model.board.elements.splice(outElemIndex, 1);
-		if (ElementProviderService.staticInstance.isInputElement(outElem.typeId)) {
+		if (getStaticDI(ElementProviderService).isInputElement(outElem.typeId)) {
 			this.numInputs--;
-		} else if (ElementProviderService.staticInstance.isOutputElement(outElem.typeId)) {
+		} else if (getStaticDI(ElementProviderService).isOutputElement(outElem.typeId)) {
 			this.numOutputs--;
 		}
 		this.removeFromChunks(outElem);
@@ -251,8 +252,8 @@ export class ProjectState {
 
 
 	public updateNumInputsOutputs(element: Element): void {
-		element.numInputs = ElementProviderService.staticInstance.getElementById(element.typeId).numInputs;
-		element.numOutputs = ElementProviderService.staticInstance.getElementById(element.typeId).numOutputs;
+		element.numInputs = getStaticDI(ElementProviderService).getElementById(element.typeId).numInputs;
+		element.numOutputs = getStaticDI(ElementProviderService).getElementById(element.typeId).numOutputs;
 		element.endPos = Elements.calcEndPos(element.pos, element.numInputs, element.numOutputs, element.rotation);
 	}
 
@@ -494,9 +495,9 @@ export class ProjectState {
 		let numInputs = 0;
 		let numOutputs = 0;
 		this.allElements.forEach(e => {
-			if (ElementProviderService.staticInstance.isInputElement(e.typeId)) {
+			if (getStaticDI(ElementProviderService).isInputElement(e.typeId)) {
 				numInputs++;
-			} else if (ElementProviderService.staticInstance.isOutputElement(e.typeId)) {
+			} else if (getStaticDI(ElementProviderService).isOutputElement(e.typeId)) {
 				numOutputs++;
 			}
 		});

@@ -13,6 +13,7 @@ import {Project} from '../project';
 import {Element} from '../element';
 import {ElementSprite} from '../element-sprite';
 import {ProjectType} from '../project-type';
+import {getStaticDI} from '../get-di';
 
 export class EditorView extends View {
 
@@ -25,18 +26,18 @@ export class EditorView extends View {
 
 		this.applyOpenActions();
 
-		ProjectsService.staticInstance.onProjectChanges$(this.projectId).pipe(
+		getStaticDI(ProjectsService).onProjectChanges$(this.projectId).pipe(
 			takeUntil(this._destroySubject)
 		).subscribe((actions: Action[]) => this.applyActionsToView(actions));
 
-		ProjectInteractionService.staticInstance.onZoomChangeClick$.pipe(
-			filter(_ => this.projectId === ProjectsService.staticInstance.currProject.id),
+		getStaticDI(ProjectInteractionService).onZoomChangeClick$.pipe(
+			filter(_ => this.projectId === getStaticDI(ProjectsService).currProject.id),
 			takeUntil(this._destroySubject)
 		).subscribe((dir => this.onZoomClick(dir)));
 	}
 
 	public updateSelectedElementsScale() {
-		const selectedIds = SelectionService.staticInstance.selectedIds(this.projectId);
+		const selectedIds = getStaticDI(SelectionService).selectedIds(this.projectId);
 		for (let i = 0; i < selectedIds.length; i++) {
 			const elemSprite = this.allElements.get(selectedIds[i]);
 			if (elemSprite.element.typeId === 0) {
@@ -45,7 +46,7 @@ export class EditorView extends View {
 				this.updateComponentSprite(elemSprite.element, elemSprite.sprite as PIXI.Graphics);
 			}
 		}
-		const selectedConnections = SelectionService.staticInstance.selectedConnections(this.projectId);
+		const selectedConnections = getStaticDI(SelectionService).selectedConnections(this.projectId);
 		for (let i = 0; i < selectedConnections.length; i++) {
 			const graphics = this.connectionPoints.get(`${selectedConnections[i].x}:${selectedConnections[i].y}`);
 			const pos = Grid.getPixelPosForPixelPosOnGridWire(graphics.position);
@@ -72,7 +73,7 @@ export class EditorView extends View {
 	}
 
 	public placeComponent(position: PIXI.Point, typeId: number) {
-		const type = ElementProviderService.staticInstance.getElementById(typeId);
+		const type = getStaticDI(ElementProviderService).getElementById(typeId);
 		return this._project.addElement(typeId, type.rotation, type.numInputs, type.numOutputs, position);
 	}
 

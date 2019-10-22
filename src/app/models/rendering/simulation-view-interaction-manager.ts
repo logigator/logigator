@@ -19,14 +19,14 @@ export class SimulationViewInteractionManager {
 		getStaticDI(NgZone).runOutsideAngular(() => {
 			elemSprite.sprite.interactive = true;
 			elemSprite.sprite.on('pointerdown', (e: InteractionEvent) => {
-				if (WorkModeService.staticInstance.currentWorkMode !== 'simulation') return;
+				if (getStaticDI(WorkModeService).currentWorkMode !== 'simulation') return;
 				this.onCompClick(e, elemSprite);
 			});
 		});
 	}
 
 	private onCompClick(e: InteractionEvent, elemSprite: ElementSprite) {
-		if (ElementProviderService.staticInstance.isUserElement(elemSprite.element.typeId)) {
+		if (getStaticDI(ElementProviderService).isUserElement(elemSprite.element.typeId)) {
 			getStaticDI(NgZone).run(() => {
 				this._view.requestInspectElemEventEmitter.emit({
 					identifier: `${this._view.parentProjectIdentifier}:${elemSprite.element.id}-${elemSprite.element.typeId}`,

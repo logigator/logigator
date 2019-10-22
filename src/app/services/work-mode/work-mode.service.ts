@@ -12,8 +12,6 @@ import {checkActionUsable} from '../../models/action-usable-in-modes';
 })
 export class WorkModeService {
 
-	public static staticInstance: WorkModeService;
-
 	private _currentWorkMode: WorkMode;
 	private _currentComponentTypeToBuild: number = undefined;
 
@@ -24,8 +22,6 @@ export class WorkModeService {
 		private projectSaveManagement: ProjectSaveManagementService,
 		private elemProv: ElementProviderService
 	) {
-		WorkModeService.staticInstance = this;
-
 		this.setWorkMode('select');
 	}
 

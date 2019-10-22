@@ -9,14 +9,10 @@ import * as PIXI from 'pixi.js';
 })
 export class CopyService {
 
-	public static staticInstance: CopyService;
-
 	private _copiedElements: Element[] = [];
 	private _copiedConPoints: PIXI.Point[] = [];
 
-	constructor(private selection: SelectionService) {
-		CopyService.staticInstance = this;
-	}
+	constructor(private selection: SelectionService, private projects: ProjectsService) {}
 
 	public copySelection() {
 		const elementIds = this.selection.selectedIds();
@@ -26,7 +22,7 @@ export class CopyService {
 	}
 
 	public copyIds(ids: number[]): Element[] {
-		return this.copyElements(ProjectsService.staticInstance.currProject.currState.getElementsById(ids));
+		return this.copyElements(this.projects.currProject.currState.getElementsById(ids));
 	}
 	public copyElements(elements: Element[]): Element[] {
 		this._copiedElements = new Array(elements.length);
