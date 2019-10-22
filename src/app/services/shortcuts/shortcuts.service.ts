@@ -1,13 +1,10 @@
-import {Injectable, NgZone} from '@angular/core';
+import {Injectable} from '@angular/core';
 import {defaultShortcuts} from './default-shortcuts';
 import {ShortcutAction, ShortcutConfig, ShortcutMap} from '../../models/shortcut-map';
 import {WorkModeService} from '../work-mode/work-mode.service';
 import {ProjectInteractionService} from '../project-interaction/project-interaction.service';
-import {ProjectsService} from '../projects/projects.service';
 import {ThemingService} from '../theming/theming.service';
-import {shortcutsUsableInSimulation} from './shortcut-usable-in-modes';
 import {PopupService} from '../popup/popup.service';
-import {NewComponentComponent} from '../../components/popup/popup-contents/new-component/new-component.component';
 import {HttpClient} from '@angular/common/http';
 import {ErrorHandlingService} from '../error-handling/error-handling.service';
 import {UserService} from '../user/user.service';
@@ -23,13 +20,11 @@ export class ShortcutsService {
 	constructor(
 		private workMode: WorkModeService,
 		private projectInteraction: ProjectInteractionService,
-		private projects: ProjectsService,
 		private theming: ThemingService,
 		private popup: PopupService,
 		private http: HttpClient,
 		private errorHandling: ErrorHandlingService,
-		private user: UserService,
-		private ngZone: NgZone
+		private user: UserService
 	) {
 		this.loadShortcutSettings();
 	}
@@ -66,9 +61,7 @@ export class ShortcutsService {
 
 	public keyDownListener(e: KeyboardEvent) {
 		const action = this.getShortcutActionFromEvent(e);
-		if (!action ||
-			this.popup.isPopupOpened ||
-			(this.workMode.currentWorkMode === 'simulation' && !shortcutsUsableInSimulation[action])) return;
+		if (!action || this.popup.isPopupOpened) return;
 		e.preventDefault();
 		e.stopPropagation();
 		this.applyAction(action);
@@ -171,10 +164,16 @@ export class ShortcutsService {
 				this.projectInteraction.redoForCurrent();
 				break;
 			case 'save':
-				this.ngZone.run(() => this.projects.saveAll());
+				this.projectInteraction.saveAll();
+				break;
+			case 'newProj':
+				this.projectInteraction.newProject();
+				break;
+			case 'openProj':
+				this.projectInteraction.openProject();
 				break;
 			case 'newComp':
-				this.ngZone.run(() => this.popup.showPopup(NewComponentComponent, 'POPUP.NEW_COMP.TITLE', false));
+				this.projectInteraction.newComponent();
 				break;
 		}
 	}

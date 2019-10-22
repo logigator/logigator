@@ -9,6 +9,9 @@ import {PopupService} from '../../services/popup/popup.service';
 import {LoginComponent} from '../popup/popup-contents/login/login.component';
 // #!electron
 import {RegisterComponent} from '../popup/popup-contents/register/register.component';
+import {InteractionAction} from '../../models/interaction-action';
+import {checkActionUsable} from '../../models/action-usable-in-modes';
+
 
 @Component({
 	selector: 'app-top-bar',
@@ -31,6 +34,10 @@ export class TopBarComponent implements OnInit {
 	) { }
 
 	ngOnInit() {}
+
+	public checkActionUsable(action: InteractionAction) {
+		return checkActionUsable(action);
+	}
 
 	public get userInfo$(): Observable<UserInfo> {
 		return this.userService.userInfo$;

@@ -1,5 +1,7 @@
 import {ChangeDetectionStrategy, Component, EventEmitter, OnInit, Output} from '@angular/core';
 import {ProjectInteractionService} from '../../../services/project-interaction/project-interaction.service';
+import {InteractionAction} from '../../../models/interaction-action';
+import {checkActionUsable} from '../../../models/action-usable-in-modes';
 
 @Component({
 	selector: 'app-edit-dropdown',
@@ -15,6 +17,10 @@ export class EditDropdownComponent implements OnInit {
 	constructor(private projectInteraction: ProjectInteractionService) { }
 
 	ngOnInit() {
+	}
+
+	public checkActionUsable(action: InteractionAction) {
+		return checkActionUsable(action);
 	}
 
 	public close() {

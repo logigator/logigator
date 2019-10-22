@@ -51,6 +51,15 @@ export const defaultShortcuts: ShortcutMap = {
 		key_code: 'N',
 		alt: true
 	},
+	newProj: {
+		key_code: 'N',
+		alt: true,
+		ctrl: true
+	},
+	openProj: {
+		key_code: 'O',
+		ctrl: true
+	},
 	textMode: {
 		key_code: 'T',
 		alt: true

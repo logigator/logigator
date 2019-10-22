@@ -54,7 +54,7 @@
 	</div>
 
 	<div class="toolbar-end">
-		<p (click)="setWorkMode('simulation')" *ngIf="currentWorkMode !== 'simulation'" class="start-sim">{{'TOOLBAR.START_SIM' | translate}}</p>
-		<p (click)="setWorkMode('select')" *ngIf="currentWorkMode === 'simulation'" class="start-sim">{{'TOOLBAR.EXIT_SIM' | translate}}</p>
+		<p (click)="enterSim()" *ngIf="currentWorkMode !== 'simulation'" class="start-sim">{{'TOOLBAR.START_SIM' | translate}}</p>
+		<p (click)="leaveSim()" *ngIf="currentWorkMode === 'simulation'" class="start-sim">{{'TOOLBAR.EXIT_SIM' | translate}}</p>
 	</div>
 </div>

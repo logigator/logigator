@@ -5,6 +5,7 @@ import {distinctUntilChanged, map} from 'rxjs/operators';
 import {ProjectsService} from '../projects/projects.service';
 import {ElementProviderService} from '../element-provider/element-provider.service';
 import {ProjectSaveManagementService} from '../project-save-management/project-save-management.service';
+import {checkActionUsable} from '../../models/action-usable-in-modes';
 
 @Injectable({
 	providedIn: 'root'
@@ -29,13 +30,7 @@ export class WorkModeService {
 	}
 
 	public async setWorkMode(mode: WorkMode, componentTypeToBuild?: number) {
-		if (mode === 'simulation') {
-			if (!this.projectSaveManagement.isShare) {
-				await this.projects.saveAllOrAllComps();
-			} else {
-				this.projects.saveComponentsShare();
-			}
-		}
+		if (this.currentWorkMode === 'simulation') return;
 		this._currentWorkMode = mode;
 		this._workModeSubject.next(mode);
 		if (componentTypeToBuild) {
@@ -43,6 +38,23 @@ export class WorkModeService {
 		} else {
 			delete this._currentComponentTypeToBuild;
 		}
+	}
+
+	public async enterSimulation() {
+		if (!this.projectSaveManagement.isShare) {
+			await this.projects.saveAllOrAllComps();
+		} else {
+			this.projects.saveComponentsShare();
+		}
+		this._currentWorkMode = 'simulation';
+		this._workModeSubject.next('simulation');
+		delete this._currentComponentTypeToBuild;
+	}
+
+	public leaveSimulation() {
+		this._currentWorkMode = 'select';
+		this._workModeSubject.next('select');
+		delete this._currentComponentTypeToBuild;
 	}
 
 	public get currentWorkMode(): WorkMode {

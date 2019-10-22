@@ -18,7 +18,7 @@
 				<p (mouseover)="dropdownHover('fileDropdownOpen')" (click)="closeDropdowns(); fileDropdownOpen = true;">{{'DROPDOWN.FILE.TITLE' | translate}}</p>
 				<app-file-dropdown (requestClosed)="closeDropdowns()" *ngIf="fileDropdownOpen"></app-file-dropdown>
 			</div>
-			<div>
+			<div *ngIf="checkActionUsable('editDropdown')">
 				<p (mouseover)="dropdownHover('editDropdownOpen')" (click)="closeDropdowns(); editDropdownOpen = true;">{{'DROPDOWN.EDIT.TITLE' | translate}}</p>
 				<app-edit-dropdown (requestClosed)="closeDropdowns()" *ngIf="editDropdownOpen"></app-edit-dropdown>
 			</div>
