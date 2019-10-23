@@ -58,9 +58,9 @@
 (window as any).__Zone_disable_requestAnimationFrame = true;
 import 'zone.js/dist/zone';  // Included with Angular CLI.
 
-import * as PIXI from 'pixi.js';
-PIXI.Ticker.shared.autoStart = false;
-PIXI.Ticker.shared.stop();
+// import * as PIXI from 'pixi.js';
+// PIXI.Ticker.shared.autoStart = false;
+// PIXI.Ticker.shared.destroy();
 
 /***************************************************************************************************
  * APPLICATION IMPORTS

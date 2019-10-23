@@ -47,7 +47,7 @@ export abstract class View extends PIXI.Container {
 		this.zoomPan = new ZoomPan(this);
 
 		this.interactive = true;
-		this.sortableChildren = false;
+		this.sortableChildren = true;
 		this.hitArea = new PIXI.Rectangle(0, 0, Infinity, Infinity);
 
 		this.themingService.showGridChanges$.pipe(

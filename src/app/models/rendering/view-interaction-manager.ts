@@ -125,8 +125,8 @@ export class ViewInteractionManager {
 		} else if (this._draggingNewComp) {
 			this.placeNewComp();
 		}
-		this._view.ticker.start();
-		this._view.removeListener('pointermove');
+		this._view.ticker.singleFrame();
+		this._view.removeAllListeners('pointermove');
 	}
 
 	private handlePointerMoveOnView(e: InteractionEvent) {
