@@ -89,6 +89,7 @@ export class WorkAreaComponent extends WorkArea implements OnInit, OnDestroy {
 						this._ticker,
 						this.requestInspectElementInSim,
 						this.projectsService.mainProject.id.toString(),
+						[],
 						[]
 					);
 					this._ticker.singleFrame();

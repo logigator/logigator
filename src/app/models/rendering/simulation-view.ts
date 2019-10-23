@@ -19,6 +19,7 @@ export class SimulationView extends View {
 
 	public parentProjectIdentifier: string;
 	public parentProjectNames: string[];
+	public parentTypeIds: number[];
 
 	constructor(
 		project: Project,
@@ -26,12 +27,14 @@ export class SimulationView extends View {
 		ticker: RenderTicker,
 		requestInspectElemEventEmitter: EventEmitter<ReqInspectElementEvent>,
 		parent: string,
-		parentNames: string[]
+		parentNames: string[],
+		parentTypeIds: number[]
 	) {
 		super(project, htmlContainer, ticker);
 		this.requestInspectElemEventEmitter = requestInspectElemEventEmitter;
 		this.parentProjectIdentifier = parent;
 		this.parentProjectNames = parentNames;
+		this.parentTypeIds = parentTypeIds;
 		this._simViewInteractionManager = new SimulationViewInteractionManager(this);
 		this.applyOpenActions();
 

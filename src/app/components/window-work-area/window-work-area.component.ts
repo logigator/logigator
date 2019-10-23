@@ -37,6 +37,9 @@ export class WindowWorkAreaComponent extends WorkArea implements OnInit, OnChang
 	parentNames: string[];
 
 	@Input()
+	parentTypeIds: number[];
+
+	@Input()
 	dragBounding: HTMLElement;
 
 	@Input()
@@ -89,7 +92,8 @@ export class WindowWorkAreaComponent extends WorkArea implements OnInit, OnChang
 				this._ticker,
 				this.requestInspectElementInSim,
 				this.identifier,
-				this.parentNames
+				this.parentNames,
+				this.parentTypeIds
 			);
 			if (this._dragManager) this._dragManager.destroy();
 
@@ -135,8 +139,9 @@ export class WindowWorkAreaComponent extends WorkArea implements OnInit, OnChang
 		const identifiers = this.identifier.split(':').slice(0, 2 + index);
 		this.requestInspectElementInSim.emit({
 			identifier: identifiers.join(':'),
-			typeId: Number(identifiers[identifiers.length - 1].split('-')[1]),
-			parentNames: this.parentNames.splice(0, index)
+			typeId: this.parentTypeIds[index + 1],
+			parentNames: this.parentNames.splice(0, index),
+			parentTypeIds: this.parentTypeIds.slice(0, index)
 		});
 	}
 

@@ -44,6 +44,7 @@ export class WorkAreaContainerComponent implements OnInit {
 	}
 
 	async onRequestElementInspection(event: ReqInspectElementEvent, fromWindow?: number) {
+		console.log(event)
 		if (this.windowWorkAreas.find(a => a.identifier === event.identifier)) return;
 
 		const meta: WindowWorkAreaMeta = {
@@ -51,6 +52,7 @@ export class WorkAreaContainerComponent implements OnInit {
 			project: await this.projectSaveManagement.openComponent(event.typeId),
 			identifier: event.identifier,
 			parentNames: event.parentNames,
+			parentTypesIds: event.parentTypeIds,
 			zIndex: 1
 		};
 
@@ -64,6 +66,7 @@ export class WorkAreaContainerComponent implements OnInit {
 			firstHidden.identifier = meta.identifier;
 			firstHidden.project = meta.project;
 			firstHidden.parentNames = meta.parentNames;
+			firstHidden.parentTypesIds = meta.parentTypesIds;
 			firstHidden.zIndex = meta.zIndex;
 			this.cdr.detectChanges();
 			return;
@@ -73,6 +76,7 @@ export class WorkAreaContainerComponent implements OnInit {
 		this.windowWorkAreas[fromWindow].identifier = meta.identifier;
 		this.windowWorkAreas[fromWindow].project = meta.project;
 		this.windowWorkAreas[fromWindow].parentNames = meta.parentNames;
+		this.windowWorkAreas[fromWindow].parentTypesIds = meta.parentTypesIds;
 		this.windowWorkAreas[fromWindow].zIndex = meta.zIndex;
 		this.cdr.detectChanges();
 	}
