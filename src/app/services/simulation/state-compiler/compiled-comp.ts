@@ -1,5 +1,5 @@
 import {WireEndsOnLinks, WiresOnLinks} from './compiler-types';
-import {SimulationUnit} from '../../../models/simulation/SimulationUnit';
+import {SimulationUnit} from '../../../models/simulation/simulation-unit';
 
 export interface CompiledComp {
 	units: SimulationUnit[];

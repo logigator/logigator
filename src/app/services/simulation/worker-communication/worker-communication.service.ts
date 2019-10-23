@@ -50,7 +50,7 @@ export class WorkerCommunicationService {
 	public init(): boolean {
 		const project = this.projectsService.mainProject;
 		// this changes in a future version of stateCompiler
-		this._compiledBoard = this.stateCompiler.compile(project.currState);
+		this._compiledBoard = this.stateCompiler.compile(project);
 		const components = [...this._compiledBoard.keys()];
 		if (!components)
 			return false;

@@ -1,4 +1,4 @@
-import {SimulationUnit} from '../../../models/simulation/SimulationUnit';
+import {SimulationUnit} from '../../../models/simulation/simulation-unit';
 import {Element} from '../../../models/element';
 
 type UnitToElement = Map<SimulationUnit, Element>;
