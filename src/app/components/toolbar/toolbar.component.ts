@@ -11,6 +11,7 @@ import {PopupService} from '../../services/popup/popup.service';
 import {NewComponentComponent} from '../popup/popup-contents/new-component/new-component.component';
 import {OpenProjectComponent} from '../popup/popup-contents/open/open-project.component';
 import {StateCompilerService} from '../../services/simulation/state-compiler/state-compiler.service';
+import {WorkerCommunicationService} from '../../services/simulation/worker-communication/worker-communication.service';
 
 @Component({
 	selector: 'app-toolbar',
@@ -27,6 +28,7 @@ export class ToolbarComponent {
 		private projectService: ProjectsService,
 		private projectInteraction: ProjectInteractionService,
 		private popupService: PopupService,
+		private workerCommunication: WorkerCommunicationService,
 		private stateCompiler: StateCompilerService
 	) {}
 
@@ -53,8 +55,10 @@ export class ToolbarComponent {
 	}
 	// #!endif
 
-	public setWorkMode(mode: WorkMode) {
-		this.workModeService.setWorkMode(mode);
+	public async setWorkMode(mode: WorkMode) {
+		await this.workModeService.setWorkMode(mode);
+		console.log(await this.workerCommunication.init());
+		this.workerCommunication.singleStep();
 	}
 
 	public get currentWorkMode(): WorkMode {
