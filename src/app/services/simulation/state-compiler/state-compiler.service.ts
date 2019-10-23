@@ -30,6 +30,8 @@ export class StateCompilerService {
 	private _wiresOnLinksCache: WiresOnLinksInProject;
 	private _wireEndsOnLinksCache: WireEndsOnLinksInProject;
 
+	private _depTree: Map<number, Project>;
+
 	private _udcCache: Map<number, CompiledComp>;
 
 	private _currTypeId: number;
@@ -59,6 +61,7 @@ export class StateCompilerService {
 		this._highestLinkId = 0;
 		this.initElemsOnLinks('0');
 		const depTree = await this.projectsToCompile(project);
+		this._depTree = depTree;
 		this.compileDependencies(depTree);
 
 		const units = this.projectUnits(project.id, '0');
@@ -220,6 +223,10 @@ export class StateCompilerService {
 		elem, index, state: ProjectState, linksOnWireEnds: WireEndLinksOnElem, linkId: number,
 		unitElems: UnitElementBidir, compiledComp: CompiledComp, coveredPoints: PosOfElem[]
 	) {
+		if (!this._udcCache.has(elem.typeId)) {
+			this._currTypeId = elem.typeId;
+			this._udcCache.set(elem.typeId, this.compileSingle(this._depTree.get(elem.typeId)));
+		}
 		for (const conPlugs of this._udcCache.get(elem.typeId).connectedPlugs) {
 			if (conPlugs.includes(index)) {
 				for (const wireEndIndex of conPlugs) {

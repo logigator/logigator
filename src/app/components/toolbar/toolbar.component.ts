@@ -7,10 +7,6 @@ import {ProjectInteractionService} from '../../services/project-interaction/proj
 import {Test} from '../../../../tests/auto-tests/tests';
 // #!debug
 import {ManuallyLogged} from '../../../../tests/auto-tests/board-recorder';
-import {PopupService} from '../../services/popup/popup.service';
-import {NewComponentComponent} from '../popup/popup-contents/new-component/new-component.component';
-import {OpenProjectComponent} from '../popup/popup-contents/open/open-project.component';
-import {StateCompilerService} from '../../services/simulation/state-compiler/state-compiler.service';
 
 @Component({
 	selector: 'app-toolbar',
@@ -25,8 +21,7 @@ export class ToolbarComponent {
 	constructor(
 		private workModeService: WorkModeService,
 		private projectService: ProjectsService,
-		private projectInteraction: ProjectInteractionService,
-		private stateCompiler: StateCompilerService
+		private projectInteraction: ProjectInteractionService
 	) {}
 
 	// #!if DEBUG === 'true'
