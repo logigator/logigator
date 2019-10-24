@@ -1,6 +1,6 @@
 import {Injectable} from '@angular/core';
 import {Observable, Subject} from 'rxjs';
-import {PowerChangesOut} from '../../../models/simulation/power-changes';
+import {PowerChangesOutWire, PowerChangesOutWireEnd} from '../../../models/simulation/power-changes';
 import {ProjectsService} from '../../projects/projects.service';
 import {StateCompilerService} from '../state-compiler/state-compiler.service';
 import {WasmMethod, WasmRequest, WasmResponse} from '../../../models/simulation/wasm-interface';
@@ -10,7 +10,8 @@ import {WasmMethod, WasmRequest, WasmResponse} from '../../../models/simulation/
 })
 export class WorkerCommunicationService {
 
-	private _powerSubjects: Map<number, Subject<PowerChangesOut>>;
+	private _powerSubjectsWires: Map<number, Subject<PowerChangesOutWire>>;
+	private _powerSubjectsWireEnds: Map<number, Subject<PowerChangesOutWireEnd>>;
 	private readonly _worker: Worker;
 
 	private _frameTime: number;
@@ -31,7 +32,8 @@ export class WorkerCommunicationService {
 	private handleResponse(event: any): void {
 		const data = event.data as WasmResponse;
 		if (data.success) {
-			const powerChangesOut = new Map<number, PowerChangesOut>();
+			const powerChangesOutWire = new Map<number, PowerChangesOutWire>();
+			const powerChangesOutWirEnd = new Map<number, PowerChangesOutWireEnd>();
 			for (const state of data.state) {
 				// for (const obj of this.stateCompiler.elementsOnLink.get(link)) {
 				// 	if (!powerChangesOut.has(obj.projectId))
@@ -39,8 +41,11 @@ export class WorkerCommunicationService {
 				// 	powerChangesOut.get(obj.projectId).set(obj.element, state);
 				// }
 			}
-			for (const [k, v] of powerChangesOut.entries()) {
-				this._powerSubjects.get(k).next(v);
+			for (const [k, v] of powerChangesOutWire.entries()) {
+				this._powerSubjectsWires.get(k).next(v);
+			}
+			for (const [k, v] of powerChangesOutWirEnd.entries()) {
+				this._powerSubjectsWireEnds.get(k).next(v);
 			}
 		} else {
 			console.error(data.error);
@@ -112,7 +117,11 @@ export class WorkerCommunicationService {
 		}
 	}
 
-	public boardState(projectId: number): Observable<PowerChangesOut> {
-		return this._powerSubjects.get(projectId).asObservable();
+	public boardStateWires(projectId: number): Observable<PowerChangesOutWire> {
+		return this._powerSubjectsWires.get(projectId).asObservable();
+	}
+
+	public boardStateWireEnds(projectId: number): Observable<PowerChangesOutWireEnd> {
+		return this._powerSubjectsWireEnds.get(projectId).asObservable();
 	}
 }
