@@ -29,17 +29,19 @@ export class WorkerCommunicationService {
 		this._worker = new Worker('../../../simulation-worker/simulation.worker', { type: 'module' });
 		// this._worker.postMessage({kek: '_worker'});
 		this._worker.addEventListener('message', (event) => this.handleResponse(event as any));
+
+		this._powerSubjectsWires = new Map<string, Subject<PowerChangesOutWire>>();
+		this._powerSubjectsWireEnds = new Map<string, Subject<PowerChangesOutWireEnd>>();
 	}
 
 	private handleResponse(event: any): void {
-		debugger
 		const data = event.data as WasmResponse;
 		if (data.success) {
 			// const powerChangesOutWire = new Map<string, PowerChangesOutWire>();
 			// const powerChangesOutWirEnd = new Map<string, PowerChangesOutWireEnd>();
-			if (data.state.length !== this.stateCompiler.highestLinkId) { // TODO +-1??
-				console.error(`Response data (${data}) length does not match component count (${this._compiledBoard})`);
-				return;
+			if (data.state.length !== this.stateCompiler.highestLinkId) {
+				console.error(`Response data length does not match component count`, data, this._compiledBoard);
+				// return;
 			}
 			// TODO save projects containing specific link
 			for (let link = 0; link < data.state.length; link++) {
@@ -72,7 +74,7 @@ export class WorkerCommunicationService {
 			// 	this._powerSubjectsWireEnds.get(k).next(v);
 			// }
 		} else {
-			console.error(data.error);
+			console.error('error', data);
 		}
 	}
 
@@ -81,12 +83,14 @@ export class WorkerCommunicationService {
 		const project = this.projectsService.mainProject;
 		// this changes in a future version of stateCompiler
 		this._compiledBoard = await this.stateCompiler.compile(project);
+		console.log(this._compiledBoard);
 		if (!this._compiledBoard)
 			return false;
 		const board = {
-			links: 0,
+			links: this.stateCompiler.highestLinkId + 1,
 			components: this._compiledBoard
 		};
+		console.log(JSON.stringify(board));
 		const request: WasmRequest = {
 			method: WasmMethod.init,
 			board
