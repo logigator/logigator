@@ -21,10 +21,15 @@ export class ProjectState {
 	public numInputs = 0;
 	public numOutputs = 0;
 
+	private _outputPlugs: Element[];
+	private _inputPlugs: Element[];
+
 	public constructor(model?: ProjectModel, highestId?: number) {
 		this._model = model || {board: {elements: []}};
 		this._highestTakenId = highestId || this.findHighestTakenId();
 		this._chunks = [];
+		this._outputPlugs = [];
+		this._inputPlugs = [];
 		this.loadAllIntoChunks();
 	}
 
@@ -210,8 +215,10 @@ export class ProjectState {
 		}
 		if (getStaticDI(ElementProviderService).isInputElement(elem.typeId)) {
 			this.numInputs++;
+			this._inputPlugs.push(elem);
 		} else if (getStaticDI(ElementProviderService).isOutputElement(elem.typeId)) {
 			this.numOutputs++;
+			this._outputPlugs.push(elem);
 		}
 		this.loadIntoChunks(elem);
 		return elem;
@@ -225,8 +232,10 @@ export class ProjectState {
 		this._model.board.elements.splice(outElemIndex, 1);
 		if (getStaticDI(ElementProviderService).isInputElement(outElem.typeId)) {
 			this.numInputs--;
+			this._inputPlugs = this._inputPlugs.filter(e => e.id !== elementId);
 		} else if (getStaticDI(ElementProviderService).isOutputElement(outElem.typeId)) {
 			this.numOutputs--;
+			this._outputPlugs = this._outputPlugs.filter(e => e.id !== elementId);
 		}
 		this.removeFromChunks(outElem);
 		return outElem;
@@ -494,16 +503,36 @@ export class ProjectState {
 	public inputOutputCount(): {numInputs: number, numOutputs: number} {
 		let numInputs = 0;
 		let numOutputs = 0;
+		this._outputPlugs = [];
+		this._inputPlugs = [];
 		this.allElements.forEach(e => {
 			if (getStaticDI(ElementProviderService).isInputElement(e.typeId)) {
 				numInputs++;
+				this._inputPlugs.push(e);
 			} else if (getStaticDI(ElementProviderService).isOutputElement(e.typeId)) {
 				numOutputs++;
+				this._outputPlugs.push(e);
 			}
 		});
 		this.numInputs = numInputs;
 		this.numOutputs = numOutputs;
 		return {numInputs, numOutputs};
+	}
+
+	public setPlugId(elem: Element, id?: number): void {
+		if (getStaticDI(ElementProviderService).isInputElement(elem.typeId)) {
+			const nextFree = 0;
+			if (id === undefined) {
+				this.setPlugId(elem, this.numInputs++);
+			} else {
+				elem.plugIndex = id;
+				for (const plug of this._inputPlugs) {
+					if (plug.plugIndex === id) {
+
+					}
+				}
+			}
+		}
 	}
 
 	public chunk(x: number, y: number): Chunk {
