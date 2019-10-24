@@ -18,7 +18,7 @@ export class WorkerCommunicationService {
 
 	private _frameTime: number;
 
-	private _compiledBoard: SimulationUnit[]; // TODO
+	private _compiledBoard: SimulationUnit[];
 
 	private _userInputChanges: Map<number, boolean>;
 
@@ -39,7 +39,7 @@ export class WorkerCommunicationService {
 		if (data.success) {
 			// const powerChangesOutWire = new Map<string, PowerChangesOutWire>();
 			// const powerChangesOutWirEnd = new Map<string, PowerChangesOutWireEnd>();
-			if (data.state.length !== this.stateCompiler.highestLinkId) {
+			if (data.state.length !== this.stateCompiler.highestLinkId + 1) {
 				console.error(`Response data length does not match component count`, data, this._compiledBoard);
 				// return;
 			}
@@ -57,7 +57,6 @@ export class WorkerCommunicationService {
 					}
 					this._powerSubjectsWires.get(projId).next(powerChangesWire);
 					this._powerSubjectsWireEnds.get(projId).next(powerChangesWireEnd);
-					console.log('next', projId, powerChangesWire, powerChangesWireEnd);
 				}
 			}
 			// for (const state of data.state) {
@@ -83,14 +82,12 @@ export class WorkerCommunicationService {
 		const project = this.projectsService.mainProject;
 		// this changes in a future version of stateCompiler
 		this._compiledBoard = await this.stateCompiler.compile(project);
-		console.log(this._compiledBoard);
 		if (!this._compiledBoard)
 			return false;
 		const board = {
 			links: this.stateCompiler.highestLinkId + 1,
 			components: this._compiledBoard
 		};
-		console.log(JSON.stringify(board));
 		const request: WasmRequest = {
 			method: WasmMethod.init,
 			board
