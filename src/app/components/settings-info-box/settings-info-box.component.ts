@@ -60,9 +60,9 @@ export class SettingsInfoBoxComponent implements OnChanges, OnDestroy {
 	}
 
 	public toUserPlugIndex(possibleIndex: number): number {
-		if (this.selectedCompTypeId === 10) { // input
+		if (this.elemProvider.isInputElement(this.selectedCompTypeId)) {
 			return possibleIndex + 1;
-		} else if (this.selectedCompTypeId === 11) { // output
+		} else if (this.elemProvider.isOutputElement(this.selectedCompTypeId)) {
 			return possibleIndex - this.projects.currProject.numInputs + 1;
 		}
 	}
