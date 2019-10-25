@@ -1,5 +1,5 @@
 import {CompiledComp} from './compiled-comp';
-import {SimulationUnit, SimulationUnits} from '../../../models/simulation/SimulationUnit';
+import {SimulationUnit, SimulationUnits} from '../../../models/simulation/simulation-unit';
 
 export abstract class MapHelper {
 

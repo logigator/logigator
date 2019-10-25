@@ -8,6 +8,7 @@ import {DOCUMENT} from '@angular/common';
 import {takeUntil} from 'rxjs/operators';
 import {ProjectsService} from './services/projects/projects.service';
 import {TranslateService} from '@ngx-translate/core';
+import {WorkerCommunicationService} from './services/simulation/worker-communication/worker-communication.service';
 
 @Component({
 	selector: 'app-root',
@@ -30,7 +31,8 @@ export class AppComponent implements OnInit, OnDestroy {
 		private shortcuts: ShortcutsService,
 		private projects: ProjectsService,
 		@Inject(DOCUMENT) private document: HTMLDocument,
-		private translate: TranslateService
+		private translate: TranslateService,
+		private workerCommunication: WorkerCommunicationService
 	) {
 		this.initTranslation();
 	}
