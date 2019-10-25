@@ -17,6 +17,7 @@ import {filter} from 'rxjs/operators';
 import {CopyService} from '../../services/copy/copy.service';
 import {getStaticDI} from '../get-di';
 import {NgZone} from '@angular/core';
+import {LGraphics} from './l-graphics';
 
 export class ViewInteractionManager {
 
@@ -472,7 +473,7 @@ export class ViewInteractionManager {
 	private addPastingElementsToView(copiedElems: Element[], copiedConnPts: PIXI.Point[], offset: PIXI.Point) {
 		for (let i = 0; i < copiedElems.length; i++) {
 			if (copiedElems[i].typeId === 0) {
-				const graphics = new PIXI.Graphics();
+				const graphics = new LGraphics();
 				graphics.position = Grid.getPixelPosForGridPosWire(new PIXI.Point(copiedElems[i].pos.x + offset.x, copiedElems[i].pos.y + offset.y));
 				this._view.addLineToWireGraphics(
 					graphics,

@@ -16,6 +16,7 @@ import {CollisionFunctions} from '../collision-functions';
 import {Project} from '../project';
 import {Action} from '../action';
 import {getStaticDI} from '../get-di';
+import {LGraphics} from './l-graphics';
 
 export abstract class View extends PIXI.Container {
 
@@ -27,7 +28,7 @@ export abstract class View extends PIXI.Container {
 
 	protected _chunks: RendererChunkData[][] = [];
 
-	public connectionPoints: Map<string, PIXI.Graphics> = new Map();
+	public connectionPoints: Map<string, LGraphics> = new Map();
 	public allElements: Map<number, ElementSprite> = new Map();
 
 	protected _chunksToRender: {x: number, y: number}[] = [];
@@ -86,10 +87,8 @@ export abstract class View extends PIXI.Container {
 			const chunkElems = chunk.container.children;
 			for (let e = 0; e < chunkElems.length; e++) {
 				const elemSprite = this.allElements.get(Number(chunkElems[e].name));
-				if (elemSprite && elemSprite.element.typeId === 0) {
-					this.updateWireSprite(elemSprite.element, elemSprite.sprite as PIXI.Graphics);
-				} else if (elemSprite) {
-					this.updateComponentSprite(elemSprite.element, elemSprite.sprite as PIXI.Graphics);
+				if (elemSprite) {
+					elemSprite.sprite.updateScale(this.zoomPan.currentScale);
 				}
 				if (chunkElems[e].name === 'wireConnPoint') {
 					this.updateConnectionPoint(chunkElems[e] as PIXI.Graphics);
@@ -131,19 +130,10 @@ export abstract class View extends PIXI.Container {
 		);
 	}
 
-	protected updateWireSprite(element: Element, graphics: PIXI.Graphics) {
-		graphics.clear();
-		this.addLineToWireGraphics(
-			graphics,
-			Grid.getPixelPosForGridPosWire(element.endPos),
-			Grid.getPixelPosForGridPosWire(element.pos)
-		);
-	}
-
-	protected updateComponentSprite(element: Element, graphics: PIXI.Graphics) {
+	protected updateComponentSprite(element: Element, graphics: LGraphics) {
 		graphics.clear();
 		const elemType = this.elementProviderService.getElementById(element.typeId);
-		CompSpriteGenerator.updateGraphics(
+		CompSpriteGenerator.drawComponent(
 			elemType.symbol, element.numInputs, element.numOutputs, element.rotation, this.zoomPan.currentScale, graphics
 		);
 	}
@@ -241,7 +231,7 @@ export abstract class View extends PIXI.Container {
 		const endPos = Grid.getPixelPosForGridPosWire(element.endPos);
 		const startPos = Grid.getPixelPosForGridPosWire(element.pos);
 
-		const graphics = new PIXI.Graphics();
+		const graphics = new LGraphics();
 		graphics.position = Grid.getLocalChunkPixelPosForGridPosWireStart(element.pos);
 		graphics.name = element.id.toString();
 		this.addLineToWireGraphics(graphics, endPos, startPos);
@@ -257,7 +247,7 @@ export abstract class View extends PIXI.Container {
 		pixelPos.x -= 2.5 / this.zoomPan.currentScale;
 		pixelPos.y -= 2.5 / this.zoomPan.currentScale;
 
-		const graphics = new PIXI.Graphics();
+		const graphics = new LGraphics();
 		graphics.position = pixelPos;
 		graphics.name = 'wireConnPoint';
 		this.updateConnectionPoint(graphics);
@@ -305,7 +295,7 @@ export abstract class View extends PIXI.Container {
 
 	private updateComponent(action: Action) {
 		const elemSprite = this.allElements.get(action.element.id);
-		this.updateComponentSprite(action.element, elemSprite.sprite as PIXI.Graphics);
+		this.updateComponentSprite(action.element, elemSprite.sprite);
 	}
 
 	protected applyActionsToView(actions: Action[]) {

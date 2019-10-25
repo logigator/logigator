@@ -41,12 +41,7 @@ export class EditorView extends View {
 	public updateSelectedElementsScale() {
 		const selectedIds = this.selectionService.selectedIds(this.projectId);
 		for (let i = 0; i < selectedIds.length; i++) {
-			const elemSprite = this.allElements.get(selectedIds[i]);
-			if (elemSprite.element.typeId === 0) {
-				this.updateWireSprite(elemSprite.element, elemSprite.sprite as PIXI.Graphics);
-			} else if (elemSprite) {
-				this.updateComponentSprite(elemSprite.element, elemSprite.sprite as PIXI.Graphics);
-			}
+			this.allElements.get(selectedIds[i]).sprite.updateScale(this.zoomPan.currentScale);
 		}
 		const selectedConnections = this.selectionService.selectedConnections(this.projectId);
 		for (let i = 0; i < selectedConnections.length; i++) {
@@ -58,11 +53,7 @@ export class EditorView extends View {
 
 	public updatePastingElementsScale() {
 		for (const elemSprite of this._viewInteractionManager.pastingElements) {
-			if (elemSprite.element.typeId === 0) {
-				this.updateWireSprite(elemSprite.element, elemSprite.sprite as PIXI.Graphics);
-			} else {
-				this.updateComponentSprite(elemSprite.element, elemSprite.sprite as PIXI.Graphics);
-			}
+			elemSprite.sprite.updateScale(this.zoomPan.currentScale);
 		}
 		for (const graphics of this._viewInteractionManager.pastingConnPoints) {
 			const pos = Grid.getPixelPosForPixelPosOnGridWire(graphics.position);
