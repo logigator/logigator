@@ -49,11 +49,15 @@ export class WorkerCommunicationService {
 				for (const projId of this._powerSubjectsWires.keys()) {
 					const powerChangesWire: PowerChangesOutWire = new Map<Element, boolean>();
 					const powerChangesWireEnd: PowerChangesOutWireEnd = new Map<{component: Element, wireIndex: number}, boolean>();
-					for (const wire of this.stateCompiler.wiresOnLinks.get(projId).get(link)) {
-						powerChangesWire.set(wire, singleState);
+					if (this.stateCompiler.wiresOnLinks.get(projId).get(link)) {
+						for (const wire of this.stateCompiler.wiresOnLinks.get(projId).get(link)) {
+							powerChangesWire.set(wire, singleState);
+						}
 					}
-					for (const wireEnd of this.stateCompiler.wireEndsOnLinks.get(projId).get(link)) {
-						powerChangesWireEnd.set(wireEnd, singleState);
+					if (this.stateCompiler.wireEndsOnLinks.get(projId).get(link)) {
+						for (const wireEnd of this.stateCompiler.wireEndsOnLinks.get(projId).get(link)) {
+							powerChangesWireEnd.set(wireEnd, singleState);
+						}
 					}
 					this._powerSubjectsWires.get(projId).next(powerChangesWire);
 					this._powerSubjectsWireEnds.get(projId).next(powerChangesWireEnd);
