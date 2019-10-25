@@ -345,4 +345,9 @@ export class StateCompilerService {
 	get wireEndsOnLinksCache(): Map<string, WireEndsOnLinks> {
 		return this._wireEndsOnLinksCache;
 	}
+
+
+	get highestLinkId(): number {
+		return this._highestLinkId;
+	}
 }
