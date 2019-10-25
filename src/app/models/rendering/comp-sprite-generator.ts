@@ -2,6 +2,7 @@ import * as PIXI from 'pixi.js';
 import {ThemingService} from '../../services/theming/theming.service';
 import {environment} from '../../../environments/environment';
 import {getStaticDI} from '../get-di';
+import {LGraphics} from './l-graphics';
 
 export class CompSpriteGenerator {
 
@@ -12,7 +13,7 @@ export class CompSpriteGenerator {
 		return CompSpriteGenerator._themingService;
 	}
 
-	public static updateGraphics(symbol: string, inputs: number, outputs: number, rotation: number, scale: number, graphics: PIXI.Graphics) {
+	public static drawComponent(symbol: string, inputs: number, outputs: number, rotation: number, scale: number, graphics: LGraphics) {
 		graphics.lineStyle(1 / scale, CompSpriteGenerator.themingService.getEditorColor('wire'));
 		graphics.beginFill(CompSpriteGenerator.themingService.getEditorColor('background'));
 		graphics.moveTo(0, 0);
@@ -64,17 +65,12 @@ export class CompSpriteGenerator {
 		return graphics;
 	}
 
-	private static calcFontSize(length: number): number {
-		if (length <= 2) return environment.gridPixelWidth + 3;
-		return environment.gridPixelWidth / 1.2;
-	}
-
 	// tslint:disable-next-line:max-line-length
-	public static getComponentSprite(symbol: string, inputs: number, outputs: number, rotation: number, scale: number): PIXI.Sprite | PIXI.Graphics {
-		const graphics = new PIXI.Graphics();
+	public static getComponentSprite(symbol: string, inputs: number, outputs: number, rotation: number, scale: number): LGraphics {
+		const graphics = new LGraphics();
 		graphics.interactiveChildren = false;
 		graphics.sortableChildren = false;
-		return CompSpriteGenerator.updateGraphics(symbol, inputs, outputs, rotation, scale, graphics);
+		return CompSpriteGenerator.drawComponent(symbol, inputs, outputs, rotation, scale, graphics);
 	}
 
 	private static rotation0(inputs: number, outputs: number, height: number, width: number, graphics: PIXI.Graphics) {

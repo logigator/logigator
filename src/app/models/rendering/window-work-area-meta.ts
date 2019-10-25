@@ -6,4 +6,5 @@ export interface WindowWorkAreaMeta {
 	showing?: boolean;
 	zIndex?: number;
 	parentNames?: string[];
+	parentTypesIds?: number[];
 }

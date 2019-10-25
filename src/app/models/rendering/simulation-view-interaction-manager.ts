@@ -29,9 +29,10 @@ export class SimulationViewInteractionManager {
 		if (getStaticDI(ElementProviderService).isUserElement(elemSprite.element.typeId)) {
 			getStaticDI(NgZone).run(() => {
 				this._view.requestInspectElemEventEmitter.emit({
-					identifier: `${this._view.parentProjectIdentifier}:${elemSprite.element.id}-${elemSprite.element.typeId}`,
+					identifier: `${this._view.parentProjectIdentifier}:${elemSprite.element.id}`,
 					typeId: elemSprite.element.typeId,
-					parentNames: [...this._view.parentProjectNames, this._view.projectName]
+					parentNames: [...this._view.parentProjectNames, this._view.projectName],
+					parentTypeIds: [...this._view.parentTypeIds, this._view.projectId]
 				});
 			});
 		}

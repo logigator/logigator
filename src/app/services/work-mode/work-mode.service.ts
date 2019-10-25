@@ -6,6 +6,7 @@ import {ProjectsService} from '../projects/projects.service';
 import {ElementProviderService} from '../element-provider/element-provider.service';
 import {ProjectSaveManagementService} from '../project-save-management/project-save-management.service';
 import {checkActionUsable} from '../../models/action-usable-in-modes';
+import {StateCompilerService} from '../simulation/state-compiler/state-compiler.service';
 
 @Injectable({
 	providedIn: 'root'
@@ -20,7 +21,8 @@ export class WorkModeService {
 	constructor(
 		private projects: ProjectsService,
 		private projectSaveManagement: ProjectSaveManagementService,
-		private elemProv: ElementProviderService
+		private elemProv: ElementProviderService,
+		private stateCompiler: StateCompilerService
 	) {
 		this.setWorkMode('select');
 	}
@@ -42,6 +44,7 @@ export class WorkModeService {
 		} else {
 			this.projects.saveComponentsShare();
 		}
+		console.log(await this.stateCompiler.compile(this.projects.mainProject));
 		this._currentWorkMode = 'simulation';
 		this._workModeSubject.next('simulation');
 		delete this._currentComponentTypeToBuild;

@@ -76,8 +76,14 @@ export abstract class WorkArea {
 
 	protected initZoomPan(canvasContainer: ElementRef<HTMLDivElement>) {
 		this._zoomPanInputManager = new ZoomPanInputManager(canvasContainer.nativeElement);
-		this._zoomPanInputManager.interactionStart$.pipe(takeUntil(this._destroySubject)).subscribe(() => this._ticker.start());
-		this._zoomPanInputManager.interactionEnd$.pipe(takeUntil(this._destroySubject)).subscribe(() => this._ticker.stop());
+		this._zoomPanInputManager.interactionStart$.pipe(takeUntil(this._destroySubject)).subscribe(() => {
+			this._ticker.start();
+			if (this._activeView) this._activeView.interactiveChildren = false;
+		});
+		this._zoomPanInputManager.interactionEnd$.pipe(takeUntil(this._destroySubject)).subscribe(() => {
+			this._ticker.stop();
+			if (this._activeView) this._activeView.interactiveChildren = true;
+		});
 	}
 
 	private updateZoomPan() {
@@ -105,10 +111,8 @@ export abstract class WorkArea {
 
 	private updateSelectedZoomScale() {
 		if (this._activeView.constructor.name === 'EditorView') {
-			// @ts-ignore
-			this._activeView.updateSelectedElementsScale();
-			// @ts-ignore
-			this._activeView.updatePastingElementsScale();
+			(this._activeView as EditorView).updateSelectedElementsScale();
+			(this._activeView as EditorView).updatePastingElementsScale();
 		}
 	}
 

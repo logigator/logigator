@@ -236,9 +236,15 @@ export class Project {
 
 
 	public moveElementsById(ids: number[], dif: PIXI.Point): boolean {
-		if (dif.x === 0 && dif.y === 0)
-			return true;
 		const elements = this._currState.getElementsById(ids);
+		if (dif.x === 0 && dif.y === 0) {
+			this._changeSubject.next([{
+				name: 'movMult',
+				others: elements,
+				pos: dif
+			}]);
+			return true;
+		}
 		const changed = this._currState.withWiresOnEdges(elements);
 		if (!this._currState.allSpacesFree(elements, dif, elements))
 			return false;
