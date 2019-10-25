@@ -10,6 +10,7 @@ import {ProjectInteractionService} from '../../services/project-interaction/proj
 import {filter, takeUntil} from 'rxjs/operators';
 import {ProjectsService} from '../../services/projects/projects.service';
 import {getStaticDI} from '../get-di';
+import {WorkerCommunicationService} from '../../services/simulation/worker-communication/worker-communication.service';
 
 export class SimulationView extends View {
 
@@ -42,12 +43,24 @@ export class SimulationView extends View {
 			filter(_ => this._project.type === 'project'),
 			takeUntil(this._destroySubject)
 		).subscribe((dir => this.onZoomClick(dir)));
+
+		getStaticDI(WorkerCommunicationService).subscribe(this.parentProjectIdentifier);
+		getStaticDI(WorkerCommunicationService).boardStateWires(this.parentProjectIdentifier).pipe(
+			takeUntil(this._destroySubject)
+		).subscribe(e => this.blinkWires(e));
 	}
 
 	public placeComponentOnView(element: Element): ElementSprite {
 		const es = super.placeComponentOnView(element);
 		this._simViewInteractionManager.addEventListenersToNewElement(es);
 		return es;
+	}
+
+	private blinkWires(e: Map<Element, boolean>) {
+		for (const [elem, state] of e) {
+			this.allElements.get(elem.id).sprite.setWireState(this.zoomPan.currentScale, state);
+		}
+		this.ticker.singleFrame();
 	}
 
 	public get projectName(): string {

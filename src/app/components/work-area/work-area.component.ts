@@ -88,7 +88,7 @@ export class WorkAreaComponent extends WorkArea implements OnInit, OnDestroy {
 						this._pixiCanvasContainer.nativeElement,
 						this._ticker,
 						this.requestInspectElementInSim,
-						this.projectsService.mainProject.id.toString(),
+						'0',
 						[],
 						[]
 					);
