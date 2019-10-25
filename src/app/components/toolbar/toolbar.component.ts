@@ -7,6 +7,7 @@ import {ProjectInteractionService} from '../../services/project-interaction/proj
 import {Test} from '../../../../tests/auto-tests/tests';
 // #!debug
 import {ManuallyLogged} from '../../../../tests/auto-tests/board-recorder';
+import {WorkerCommunicationService} from '../../services/simulation/worker-communication/worker-communication.service';
 
 @Component({
 	selector: 'app-toolbar',
@@ -21,7 +22,8 @@ export class ToolbarComponent {
 	constructor(
 		private workModeService: WorkModeService,
 		private projectService: ProjectsService,
-		private projectInteraction: ProjectInteractionService
+		private projectInteraction: ProjectInteractionService,
+		private workerCommunication: WorkerCommunicationService
 	) {}
 
 	// #!if DEBUG === 'true'
@@ -105,5 +107,21 @@ export class ToolbarComponent {
 
 	public async open() {
 		this.projectInteraction.openProject();
+	}
+
+	public continueSm() {
+		this.workerCommunication.continue();
+	}
+
+	public pauseSim() {
+		this.workerCommunication.pause();
+	}
+
+	public stopSim() {
+		this.workerCommunication.stop();
+	}
+
+	public singleStepSim() {
+		this.workerCommunication.singleStep();
 	}
 }

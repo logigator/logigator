@@ -5,8 +5,7 @@ import {distinctUntilChanged, map} from 'rxjs/operators';
 import {ProjectsService} from '../projects/projects.service';
 import {ElementProviderService} from '../element-provider/element-provider.service';
 import {ProjectSaveManagementService} from '../project-save-management/project-save-management.service';
-import {checkActionUsable} from '../../models/action-usable-in-modes';
-import {StateCompilerService} from '../simulation/state-compiler/state-compiler.service';
+import {WorkerCommunicationService} from '../simulation/worker-communication/worker-communication.service';
 
 @Injectable({
 	providedIn: 'root'
@@ -22,7 +21,7 @@ export class WorkModeService {
 		private projects: ProjectsService,
 		private projectSaveManagement: ProjectSaveManagementService,
 		private elemProv: ElementProviderService,
-		private stateCompiler: StateCompilerService
+		private workerCommunicationService: WorkerCommunicationService
 	) {
 		this.setWorkMode('select');
 	}
@@ -44,7 +43,7 @@ export class WorkModeService {
 		} else {
 			this.projects.saveComponentsShare();
 		}
-		console.log(await this.stateCompiler.compile(this.projects.mainProject));
+		await this.workerCommunicationService.init();
 		this._currentWorkMode = 'simulation';
 		this._workModeSubject.next('simulation');
 		delete this._currentComponentTypeToBuild;
@@ -53,6 +52,7 @@ export class WorkModeService {
 	public leaveSimulation() {
 		this._currentWorkMode = 'select';
 		this._workModeSubject.next('select');
+		this.workerCommunicationService.stop();
 		delete this._currentComponentTypeToBuild;
 	}
 
