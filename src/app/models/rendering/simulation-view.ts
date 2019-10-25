@@ -4,7 +4,7 @@ import {RenderTicker} from './render-ticker';
 import {Element} from '../element';
 import {ElementSprite} from '../element-sprite';
 import {SimulationViewInteractionManager} from './simulation-view-interaction-manager';
-import {EventEmitter} from '@angular/core';
+import {EventEmitter, NgZone} from '@angular/core';
 import {ReqInspectElementEvent} from './req-inspect-element-event';
 import {ProjectInteractionService} from '../../services/project-interaction/project-interaction.service';
 import {filter, takeUntil} from 'rxjs/operators';
@@ -39,15 +39,17 @@ export class SimulationView extends View {
 		this._simViewInteractionManager = new SimulationViewInteractionManager(this);
 		this.applyOpenActions();
 
-		getStaticDI(ProjectInteractionService).onZoomChangeClick$.pipe(
-			filter(_ => this._project.type === 'project'),
-			takeUntil(this._destroySubject)
-		).subscribe((dir => this.onZoomClick(dir)));
+		getStaticDI(NgZone).runOutsideAngular(() => {
+			getStaticDI(ProjectInteractionService).onZoomChangeClick$.pipe(
+				filter(_ => this._project.type === 'project'),
+				takeUntil(this._destroySubject)
+			).subscribe((dir => this.onZoomClick(dir)));
 
-		getStaticDI(WorkerCommunicationService).subscribe(this.parentProjectIdentifier);
-		getStaticDI(WorkerCommunicationService).boardStateWires(this.parentProjectIdentifier).pipe(
-			takeUntil(this._destroySubject)
-		).subscribe(e => this.blinkWires(e));
+			getStaticDI(WorkerCommunicationService).subscribe(this.parentProjectIdentifier);
+			getStaticDI(WorkerCommunicationService).boardStateWires(this.parentProjectIdentifier).pipe(
+				takeUntil(this._destroySubject)
+			).subscribe(e => this.blinkWires(e));
+		});
 	}
 
 	public placeComponentOnView(element: Element): ElementSprite {
@@ -65,5 +67,10 @@ export class SimulationView extends View {
 
 	public get projectName(): string {
 		return this._project.name;
+	}
+
+	public destroy() {
+		super.destroy();
+		getStaticDI(WorkerCommunicationService).unsubscribe(this.parentProjectIdentifier);
 	}
 }

@@ -1,4 +1,4 @@
-import {Injectable} from '@angular/core';
+import {Injectable, NgZone} from '@angular/core';
 import {Observable, Subject} from 'rxjs';
 import {PowerChangesOutWire, PowerChangesOutWireEnd} from '../../../models/simulation/power-changes';
 import {ProjectsService} from '../../projects/projects.service';
@@ -26,7 +26,8 @@ export class WorkerCommunicationService {
 
 	constructor(
 		private projectsService: ProjectsService,
-		private stateCompiler: StateCompilerService
+		private stateCompiler: StateCompilerService,
+		private ngZone: NgZone
 	) {
 		this._powerSubjectsWires = new Map<string, Subject<PowerChangesOutWire>>();
 		this._powerSubjectsWireEnds = new Map<string, Subject<PowerChangesOutWireEnd>>();
@@ -107,7 +108,9 @@ export class WorkerCommunicationService {
 			this._worker.terminate();
 		this._initialized = false;
 		this._worker = new Worker('../../../simulation-worker/simulation.worker', { type: 'module' });
-		this._worker.addEventListener('message', (event) => this.handleResponse(event as any));
+		this.ngZone.runOutsideAngular(() => {
+			this._worker.addEventListener('message', (event) => this.handleResponse(event as any));
+		});
 
 		this._userInputChanges = new Map<number, boolean>();
 		const project = this.projectsService.mainProject;
