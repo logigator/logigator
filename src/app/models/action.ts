@@ -12,7 +12,8 @@ export type ActionType =
 	'conWire' |
 	'dcoWire' |
 	'rotComp' |
-	'numInpt';
+	'numInpt' |
+	'plugInd';
 
 export interface ChangeType {
 	newElems: Element[];
@@ -25,7 +26,7 @@ export interface Action {
 	others?: Element[];
 	pos?: PIXI.Point;
 	endPos?: PIXI.Point;
-	numbers?: number[]; // for rotation 0: new, 1: old
+	numbers?: number[]; // for rotation/numInput/plugIndex 0: new, 1: old
 }
 
 export class Actions {
@@ -41,7 +42,8 @@ export class Actions {
 		['conWire', ['dcoWire']],
 		['dcoWire', ['conWire']],
 		['rotComp', ['rotComp']],
-		['numInpt', ['numInpt']]
+		['numInpt', ['numInpt']],
+		['plugInd', ['plugInd']]
 	]);
 
 	public static reverseActions(actions: Action[]): Action[] {
@@ -62,7 +64,7 @@ export class Actions {
 			if (revAction.name === 'movMult') {
 				revAction.pos.x *= -1;
 				revAction.pos.y *= -1;
-			} else if (revAction.name === 'rotComp' || revAction.name === 'numInpt') {
+			} else if (revAction.name === 'rotComp' || revAction.name === 'numInpt' || revAction.name === 'plugInd') {
 				revAction.numbers = [...action.numbers].reverse();
 			}
 		}

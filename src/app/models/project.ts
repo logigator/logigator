@@ -86,6 +86,9 @@ export class Project {
 			case 'numInpt':
 				this._currState.setNumInputs(action.element, action.numbers[0]);
 				break;
+			case 'plugInd':
+				this._currState.setPlugId(action.element, action.numbers[0]);
+				break;
 		}
 	}
 
@@ -286,7 +289,7 @@ export class Project {
 	}
 
 
-	public setNumInputs(id: number, numInputs: number): boolean  {
+	public setNumInputs(id: number, numInputs: number): boolean {
 		const element = this._currState.getElementById(id);
 		if (element.typeId === 0)
 			return;
@@ -306,6 +309,26 @@ export class Project {
 		actions.push(...this.autoAssemble(changed));
 		this.newState(actions);
 		return true;
+	}
+
+
+	public setPlugIndex(elemId: number, index: number): boolean {
+		const element = this._currState.getElementById(elemId);
+		if (!this._currState.possiblePlugIds(element).includes(index))
+			return false;
+		const oldIndex = element.plugIndex;
+		this._currState.setPlugId(element, index);
+		const action: Action = {
+				name: 'plugInd',
+				element,
+				numbers: [element.plugIndex, oldIndex]
+			};
+		this.newState([action]);
+		return true;
+	}
+
+	public possiblePlugIndexes(elemId: number): number[] {
+		return this._currState.possiblePlugIds(this._currState.getElementById(elemId));
 	}
 
 

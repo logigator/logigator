@@ -145,7 +145,8 @@
 			"RIGHT": "Right"
 		},
 		"DESCRIPTION": "Description",
-		"EDIT": "Edit"
+		"EDIT": "Edit",
+		"PLUG_INDEX": "Plug Index"
 	},
 	"ELEMENT_TYPE": {
 		"BASIC": {

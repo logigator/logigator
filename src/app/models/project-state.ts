@@ -10,6 +10,7 @@ import {getStaticDI} from './get-di';
 
 export class ProjectState {
 
+	// TODO make it a Map<id, Element>
 	private _model: ProjectModel;
 
 	private readonly _chunks: Chunk[][];
@@ -21,11 +22,17 @@ export class ProjectState {
 	public numInputs = 0;
 	public numOutputs = 0;
 
+	private _outputPlugs: Element[];
+	private _inputPlugs: Element[];
+
 	public constructor(model?: ProjectModel, highestId?: number) {
 		this._model = model || {board: {elements: []}};
 		this._highestTakenId = highestId || this.findHighestTakenId();
 		this._chunks = [];
+		this._outputPlugs = [];
+		this._inputPlugs = [];
 		this.loadAllIntoChunks();
+		this.inputOutputCount();
 	}
 
 
@@ -205,13 +212,15 @@ export class ProjectState {
 	public addElement(elem: Element, id?: number): Element {
 		elem.id = id || this.getNextId();
 		this._model.board.elements.push(elem);
-		if (getStaticDI(ElementProviderService).isPlugElement(elem.typeId)) {
-			elem.plugIndex = this.numInputs + this.numOutputs; // TODO make setting
-		}
 		if (getStaticDI(ElementProviderService).isInputElement(elem.typeId)) {
-			this.numInputs++;
+			elem.plugIndex = this.numInputs++;
+			this._inputPlugs.push(elem);
+			for (const plug of this._outputPlugs) {
+				plug.plugIndex++;
+			}
 		} else if (getStaticDI(ElementProviderService).isOutputElement(elem.typeId)) {
-			this.numOutputs++;
+			elem.plugIndex = this.numInputs + this.numOutputs++;
+			this._outputPlugs.push(elem);
 		}
 		this.loadIntoChunks(elem);
 		return elem;
@@ -225,8 +234,13 @@ export class ProjectState {
 		this._model.board.elements.splice(outElemIndex, 1);
 		if (getStaticDI(ElementProviderService).isInputElement(outElem.typeId)) {
 			this.numInputs--;
+			this._inputPlugs = this._inputPlugs.filter(e => e.id !== elementId);
+			for (const plug of this._outputPlugs) {
+				plug.plugIndex--;
+			}
 		} else if (getStaticDI(ElementProviderService).isOutputElement(outElem.typeId)) {
 			this.numOutputs--;
+			this._outputPlugs = this._outputPlugs.filter(e => e.id !== elementId);
 		}
 		this.removeFromChunks(outElem);
 		return outElem;
@@ -494,16 +508,52 @@ export class ProjectState {
 	public inputOutputCount(): {numInputs: number, numOutputs: number} {
 		let numInputs = 0;
 		let numOutputs = 0;
+		this._outputPlugs = [];
+		this._inputPlugs = [];
 		this.allElements.forEach(e => {
 			if (getStaticDI(ElementProviderService).isInputElement(e.typeId)) {
+				if (e.plugIndex === undefined)
+					e.plugIndex = numInputs;
 				numInputs++;
+				this._inputPlugs.push(e);
 			} else if (getStaticDI(ElementProviderService).isOutputElement(e.typeId)) {
+				if (e.plugIndex === undefined)
+					e.plugIndex = numInputs + numOutputs;
 				numOutputs++;
+				this._outputPlugs.push(e);
 			}
 		});
 		this.numInputs = numInputs;
 		this.numOutputs = numOutputs;
 		return {numInputs, numOutputs};
+	}
+
+	public setPlugId(elem: Element, id: number): void {
+		for (const plug of getStaticDI(ElementProviderService).isInputElement(elem.typeId) ? this._inputPlugs : this._outputPlugs) {
+			if (plug.plugIndex === id) {
+				this.specialActions.push({
+					name: 'plugInd',
+					element: plug,
+					numbers: [elem.plugIndex, plug.plugIndex]
+				});
+				plug.plugIndex = elem.plugIndex;
+			}
+		}
+		elem.plugIndex = id;
+	}
+
+	public possiblePlugIds(elem: Element): number[] {
+		const out: number[] = [];
+		if (getStaticDI(ElementProviderService).isInputElement(elem.typeId)) {
+			for (let i = 0; i < this.numInputs; i++) {
+				out.push(i);
+			}
+		} else if (getStaticDI(ElementProviderService).isOutputElement(elem.typeId)) {
+			for (let i = 0; i < this.numOutputs; i++) {
+				out.push(this.numInputs + i);
+			}
+		}
+		return out;
 	}
 
 	public chunk(x: number, y: number): Chunk {
