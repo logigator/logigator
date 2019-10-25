@@ -86,6 +86,9 @@ export class Project {
 			case 'numInpt':
 				this._currState.setNumInputs(action.element, action.numbers[0]);
 				break;
+			case 'plugInd':
+				this._currState.setPlugId(action.element, action.numbers[0]);
+				break;
 		}
 	}
 

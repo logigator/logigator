@@ -32,6 +32,7 @@ export class ProjectState {
 		this._outputPlugs = [];
 		this._inputPlugs = [];
 		this.loadAllIntoChunks();
+		this.inputOutputCount();
 	}
 
 
@@ -511,9 +512,13 @@ export class ProjectState {
 		this._inputPlugs = [];
 		this.allElements.forEach(e => {
 			if (getStaticDI(ElementProviderService).isInputElement(e.typeId)) {
+				if (e.plugIndex === undefined)
+					e.plugIndex = numInputs;
 				numInputs++;
 				this._inputPlugs.push(e);
 			} else if (getStaticDI(ElementProviderService).isOutputElement(e.typeId)) {
+				if (e.plugIndex === undefined)
+					e.plugIndex = numInputs + numOutputs;
 				numOutputs++;
 				this._outputPlugs.push(e);
 			}

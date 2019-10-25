@@ -24,7 +24,7 @@ export class SettingsInfoBoxComponent implements OnChanges, OnDestroy {
 
 	public elemType: ElementType;
 
-	public propertiesFrom: FormGroup;
+	public propertiesForm: FormGroup;
 
 	private formSubscription: Subscription;
 
@@ -51,13 +51,30 @@ export class SettingsInfoBoxComponent implements OnChanges, OnDestroy {
 		this.projects.openComponent(this.selectedCompTypeId);
 	}
 
+	public get isPlugElement(): boolean {
+		return this.elemProvider.isPlugElement(this.selectedCompTypeId);
+	}
+
+	public get possiblePlugIndexes(): number[] {
+		return this.projects.currProject.possiblePlugIndexes(this.selectedCompId);
+	}
+
+	public toUserPlugIndex(possibleIndex: number): number {
+		if (this.selectedCompTypeId === 10) { // input
+			return possibleIndex + 1;
+		} else if (this.selectedCompTypeId === 11) { // output
+			return possibleIndex - this.projects.currProject.numInputs + 1;
+		}
+	}
+
 	private initType() {
 		this.elemType = this.elemProvider.getElementById(this.selectedCompTypeId);
-		this.propertiesFrom = this.formBuilder.group({
+		this.propertiesForm = this.formBuilder.group({
 			numInputs: [this.elemType.numInputs],
-			rotation: [this.elemType.rotation]
+			rotation: [this.elemType.rotation],
+			plugIndex: []
 		});
-		this.formSubscription = this.propertiesFrom.valueChanges.subscribe((data: any) => {
+		this.formSubscription = this.propertiesForm.valueChanges.subscribe((data: any) => {
 			if (data.numInputs <= this.elemType.maxInputs && data.numInputs >= this.elemType.minInputs) {
 				this.elemType.rotation = Number(data.rotation);
 			}
@@ -69,20 +86,25 @@ export class SettingsInfoBoxComponent implements OnChanges, OnDestroy {
 		const element = this.projects.currProject.currState.getElementById(this.selectedCompId);
 		this.selectedCompTypeId = element.typeId;
 		this.elemType = this.elemProvider.getElementById(element.typeId);
-		this.propertiesFrom = this.formBuilder.group({
+		this.propertiesForm = this.formBuilder.group({
 			numInputs: [element.numInputs],
-			rotation: [element.rotation]
+			rotation: [element.rotation],
+			plugIndex: [element.plugIndex]
 		});
-		this.formSubscription = this.propertiesFrom.valueChanges.subscribe((data: any) => {
+		this.formSubscription = this.propertiesForm.valueChanges.subscribe((data: any) => {
 			if (data.rotation !== element.rotation) {
 				if (!this.projects.currProject.rotateComponent(this.selectedCompId, Number(data.rotation))) {
-					this.propertiesFrom.controls.rotation.setValue(element.rotation);
+					this.propertiesForm.controls.rotation.setValue(element.rotation);
 				}
 			}
 			if (data.numInputs !== element.numInputs && data.numInputs <= this.elemType.maxInputs && data.numInputs >= this.elemType.minInputs) {
 				if (!this.projects.currProject.setNumInputs(this.selectedCompId, data.numInputs)) {
-					this.propertiesFrom.controls.numInputs.setValue(element.numInputs);
+					this.propertiesForm.controls.numInputs.setValue(element.numInputs);
 				}
+			}
+			if (data.plugIndex !== element.plugIndex) {
+				this.projects.currProject.setPlugIndex(this.selectedCompId, Number(data.plugIndex));
+				this.propertiesForm.controls.plugIndex.setValue(element.plugIndex);
 			}
 		});
 	}
