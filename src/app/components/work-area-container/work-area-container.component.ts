@@ -44,7 +44,6 @@ export class WorkAreaContainerComponent implements OnInit {
 	}
 
 	async onRequestElementInspection(event: ReqInspectElementEvent, fromWindow?: number) {
-		console.log(event)
 		if (this.windowWorkAreas.find(a => a.identifier === event.identifier)) return;
 
 		const meta: WindowWorkAreaMeta = {
