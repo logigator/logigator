@@ -34,7 +34,10 @@ export class WorkerCommunicationService {
 
 	private handleResponse(event: any): void {
 		if (!this._initialized) {
-			if (event.data.initialized) {
+			if (event.data.initialized === undefined)
+				return;
+
+			if (event.data.initialized === true) {
 				this._initialized = true;
 				this.initBoard();
 			} else {
