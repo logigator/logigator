@@ -110,7 +110,7 @@ export class ToolbarComponent {
 	}
 
 	public continueSm() {
-		this.workerCommunication.continue();
+		this.workerCommunication.start();
 	}
 
 	public pauseSim() {
