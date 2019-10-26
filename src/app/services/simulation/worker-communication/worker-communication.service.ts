@@ -49,11 +49,8 @@ export class WorkerCommunicationService {
 
 		const data = event.data as WasmResponse;
 		if (data.success) {
-			// const powerChangesOutWire = new Map<string, PowerChangesOutWire>();
-			// const powerChangesOutWirEnd = new Map<string, PowerChangesOutWireEnd>();
 			if (data.state.length !== this.stateCompiler.highestLinkId + 1) {
 				console.error(`Response data length does not match component count`, data, this._compiledBoard);
-				// return;
 			}
 			// TODO save projects containing specific link
 			for (let link = 0; link < data.state.length; link++) {
@@ -75,19 +72,6 @@ export class WorkerCommunicationService {
 					this._powerSubjectsWireEnds.get(projId).next(powerChangesWireEnd);
 				}
 			}
-			// for (const state of data.state) {
-				// for (const obj of this.stateCompiler.elementsOnLink.get(link)) {
-				// 	if (!powerChangesOut.has(obj.projectId))
-				// 		powerChangesOut.set(obj.projectId, new Map<Element, boolean>());
-				// 	powerChangesOut.get(obj.projectId).set(obj.element, state);
-				// }
-			// }
-			// for (const [k, v] of powerChangesOutWire.entries()) {
-			// 	this._powerSubjectsWires.get(k).next(v);
-			// }
-			// for (const [k, v] of powerChangesOutWirEnd.entries()) {
-			// 	this._powerSubjectsWireEnds.get(k).next(v);
-			// }
 
 			if (this._isContinuous) {
 				const request: WasmRequest = {
@@ -103,7 +87,7 @@ export class WorkerCommunicationService {
 		}
 	}
 
-	public async init(): Promise<boolean> {
+	public async init(): Promise<void> {
 		if (this._worker)
 			this._worker.terminate();
 		this._initialized = false;
@@ -111,17 +95,14 @@ export class WorkerCommunicationService {
 		this.ngZone.runOutsideAngular(() => {
 			this._worker.addEventListener('message', (event) => this.handleResponse(event as any));
 		});
-
-		this._userInputChanges = new Map<number, boolean>();
-		const project = this.projectsService.mainProject;
-		// this changes in a future version of stateCompiler
-		this._compiledBoard = await this.stateCompiler.compile(project);
-		if (!this._compiledBoard)
-			return false;
-		return true;
 	}
 
-	private initBoard() {
+	private async initBoard() {
+		const project = this.projectsService.mainProject;
+		this._compiledBoard = await this.stateCompiler.compile(project);
+		this._userInputChanges = new Map<number, boolean>();
+		if (!this._compiledBoard)
+			return false;
 		const board = {
 			links: this.stateCompiler.highestLinkId + 1,
 			components: this._compiledBoard
@@ -135,7 +116,6 @@ export class WorkerCommunicationService {
 
 	public stop(): void {
 		this._isContinuous = false;
-		this.init();
 	}
 
 	public pause(): void {
