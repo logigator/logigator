@@ -57,11 +57,11 @@ export class StateCompilerService {
 	}
 
 	public async compile(project: Project): Promise<SimulationUnit[]> {
-		const start = Date.now();
 		this._highestLinkId = 0;
 		this.initElemsOnLinks('0');
 		const depTree = await this.projectsToCompile(project);
 		this._depTree = depTree;
+		const start = Date.now();
 		this.compileDependencies(depTree);
 
 		const units = this.projectUnits(project.id, '0');
@@ -112,7 +112,7 @@ export class StateCompilerService {
 
 	private calcCompiledComp(state: ProjectState, unitElems: UnitElementBidir): CompiledComp {
 		const compiledComp: CompiledComp = {
-			units: [],
+			units: new Map<SimulationUnit, Element>(),
 			wiresOnLinks: new Map<number, Element[]>(),
 			wireEndsOnLinks: new Map<number, WireEndOnComp[]>(),
 			connectedPlugs: [],
@@ -122,7 +122,7 @@ export class StateCompilerService {
 
 		this.setAllLinks(unitElems, linksOnWireEnds, state, compiledComp);
 
-		compiledComp.units = [...unitElems.unitToElement.keys()];
+		compiledComp.units = unitElems.unitToElement;
 		this.loadConnectedPlugs(compiledComp);
 		MapHelper.uniquify(compiledComp);
 
@@ -244,7 +244,7 @@ export class StateCompilerService {
 		outerUnit?: SimulationUnit
 	): SimulationUnit[] {
 		const compiledComp = this._udcCache.get(projectId);
-		const units = SimulationUnits.cloneMult(compiledComp.units);
+		const units = SimulationUnits.cloneMult([...compiledComp.units.keys()]);
 		const linkMap = new Map<number, number>();
 		const typeIdentifier = '' + projectId;
 		if (outerUnit) {
@@ -261,7 +261,6 @@ export class StateCompilerService {
 			[unit.inputs, unit.outputs].forEach(arr => {
 				for (let i = 0; i < arr.length; i++) {
 					const newVal = linkMap.has(arr[i]) ? linkMap.get(arr[i]) : arr[i] + this._highestLinkId;
-					// TODO right projectID
 					if (!this._wiresOnLinks.get(idIdentifier)) {
 						this.initElemsOnLinks(idIdentifier);
 					}
@@ -284,7 +283,7 @@ export class StateCompilerService {
 		for (let i = udcIndexes.length - 1; i >= 0; i--) {
 			const index = udcIndexes[i];
 			const inner = this.projectUnits(units[index].typeId,
-				idIdentifier + `:${index}`, units[index]);
+				idIdentifier + `:${compiledComp.units.get([...compiledComp.units.keys()][index]).id}`, units[index]);
 			units.splice(index, 1);
 			units.push(...inner);
 		}
@@ -304,10 +303,10 @@ export class StateCompilerService {
 		const plugsByIndexKeys = [...plugsByIndex.keys()];
 		for (let i = 0; i < plugsByIndexKeys.length; i++) {
 			const plugIndex = plugsByIndexKeys[i];
-			const value = SimulationUnits.concatIO(compiledComp.units[plugsByIndex.get(plugIndex)])[0];
+			const value = SimulationUnits.concatIO([...compiledComp.units.keys()][plugsByIndex.get(plugIndex)])[0];
 			for (let j = i + 1; j < plugsByIndexKeys.length; j++) {
 				const otherIndex = plugsByIndexKeys[j];
-				const otherValue = SimulationUnits.concatIO(compiledComp.units[plugsByIndex.get(otherIndex)])[0];
+				const otherValue = SimulationUnits.concatIO([...compiledComp.units.keys()][plugsByIndex.get(otherIndex)])[0];
 				if (value === otherValue) {
 					let pushed = false;
 					for (const arr of compiledComp.connectedPlugs) {
