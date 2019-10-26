@@ -134,4 +134,6 @@ export interface SimulationModule extends EmscriptenModule {
 	getStatus(): BoardStatus;
 	getLinks(): Pointer;
 	getComponents(): Pointer;
+
+	destroy(): number;
 }

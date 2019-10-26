@@ -60,7 +60,6 @@ export class RenderTicker {
 
 	private getTickerFunction(originalFn: () => void, identifier: string): () => void {
 		return () => {
-			console.log(this.frameTime);
 			this._tickerFunctions.get(identifier).requestedFrame = false;
 			originalFn();
 		};

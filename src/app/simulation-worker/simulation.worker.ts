@@ -26,12 +26,11 @@ addEventListener('message', ({ data }: {data: WasmRequest}) => {
 			method: data.method,
 			success: false,
 			state: new Int8Array(0),
-			error: 'WebAssembly not initialized yet.'
+			error: 'WebAssembly is not initialized yet.'
 		} as WasmResponse);
 		return;
 	}
 
-	console.log(data);
 	let error: string;
 
 	switch (data.method) {
@@ -48,13 +47,12 @@ addEventListener('message', ({ data }: {data: WasmRequest}) => {
 			worker.stop();
 			break;
 		case WasmMethod.init:
-			if (worker) {
-				error = 'Already initialized.';
-				break;
-			}
 			if (!data.board) {
 				error = 'No board specified.';
 				break;
+			}
+			if (worker) {
+				worker.destroy();
 			}
 			worker = new SimulationWorker(data.board, Module);
 			break;
@@ -75,14 +73,14 @@ addEventListener('message', ({ data }: {data: WasmRequest}) => {
 		postMessage({
 			method: data.method,
 			success: false,
-			state: worker.getLinks(),
+			state: worker.getLinks() || new Int8Array(0),
 			error
 		} as WasmResponse);
 	else
 		postMessage({
 			method: data.method,
 			success: true,
-			state: worker.getLinks()
+			state: worker.getLinks() || new Int8Array(0)
 		} as WasmResponse);
 });
 

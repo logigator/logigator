@@ -5,7 +5,7 @@ import {ProjectsService} from '../../projects/projects.service';
 import {StateCompilerService} from '../state-compiler/state-compiler.service';
 import {WasmMethod, WasmRequest, WasmResponse} from '../../../models/simulation/wasm-interface';
 import {SimulationUnit} from '../../../models/simulation/simulation-unit';
-import { Element } from '../../../models/element';
+import {Element} from '../../../models/element';
 
 @Injectable({
 	providedIn: 'root'
@@ -31,6 +31,7 @@ export class WorkerCommunicationService {
 	) {
 		this._powerSubjectsWires = new Map<string, Subject<PowerChangesOutWire>>();
 		this._powerSubjectsWireEnds = new Map<string, Subject<PowerChangesOutWireEnd>>();
+		this.initWorker();
 	}
 
 	private handleResponse(event: any): void {
@@ -38,12 +39,10 @@ export class WorkerCommunicationService {
 			if (event.data.initialized === undefined)
 				return;
 
-			if (event.data.initialized === true) {
+			if (event.data.initialized === true)
 				this._initialized = true;
-				this.finalizeInit();
-			} else {
+			else
 				console.error('WebWorker failed to initialize.', event.data);
-			}
 			return;
 		}
 
@@ -88,13 +87,17 @@ export class WorkerCommunicationService {
 	}
 
 	public async init(): Promise<void> {
+		if (!this._initialized)
+			return;
+
 		const project = this.projectsService.mainProject;
-		this.initWorker();
 
 		this._compiledBoard = await this.stateCompiler.compile(project);
 		this._userInputChanges = new Map<number, boolean>();
 		if (!this._compiledBoard)
 			console.error('Failed to compile board.');
+
+		this.finalizeInit();
 	}
 
 	private initWorker() {
@@ -122,7 +125,7 @@ export class WorkerCommunicationService {
 
 	public stop(): void {
 		this._isContinuous = false;
-		this.initWorker();
+		this.finalizeInit();
 	}
 
 	public pause(): void {
