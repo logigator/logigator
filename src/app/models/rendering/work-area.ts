@@ -9,6 +9,7 @@ import {EditorView} from './editor-view';
 import {ReqInspectElementEvent} from './req-inspect-element-event';
 import {getStaticDI} from '../get-di';
 import {RenderTicker} from '../../services/render-ticker/render-ticker.service';
+import {WorkAreaComponent} from '../../components/work-area/work-area.component';
 
 export abstract class WorkArea {
 
@@ -60,6 +61,10 @@ export abstract class WorkArea {
 			if (!this._activeView) return;
 			this.updateZoomPan();
 			this._pixiRenderer.render(this._activeView);
+			if (this.constructor.name === 'WorkAreaComponent') {
+				(this as unknown as WorkAreaComponent).setWorkerFrameTime();
+				console.log(this.ticker.frameTime);
+			}
 		});
 	}
 

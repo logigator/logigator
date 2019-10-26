@@ -15,6 +15,7 @@ import {takeUntil} from 'rxjs/operators';
 import {WorkModeService} from '../../services/work-mode/work-mode.service';
 import {SimulationView} from '../../models/rendering/simulation-view';
 import {View} from '../../models/rendering/view';
+import {WorkerCommunicationService} from '../../services/simulation/worker-communication/worker-communication.service';
 
 @Component({
 	selector: 'app-work-area',
@@ -32,7 +33,8 @@ export class WorkAreaComponent extends WorkArea implements OnInit, OnDestroy {
 		private renderer2: Renderer2,
 		private ngZone: NgZone,
 		private projectsService: ProjectsService,
-		private workMode: WorkModeService
+		private workMode: WorkModeService,
+		private workerCommunicationService: WorkerCommunicationService
 	) {
 		super();
 	}
@@ -70,6 +72,10 @@ export class WorkAreaComponent extends WorkArea implements OnInit, OnDestroy {
 
 	getIdentifier(): string {
 		return '0';
+	}
+
+	public setWorkerFrameTime() {
+		this.workerCommunicationService.setFrameTime(this.ticker.frameTime);
 	}
 
 	public get allProjects(): Map<number, Project> {

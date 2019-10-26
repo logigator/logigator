@@ -12,6 +12,8 @@ interface TickerFunction {
 })
 export class RenderTicker {
 
+	constructor() {}
+
 	private _tickerFunctions = new Map<string, TickerFunction>();
 
 	public addTickerFunction(identifier: string, fn: () => void) {
