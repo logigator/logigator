@@ -1,6 +1,5 @@
 import {View} from './view';
 import {Project} from '../project';
-import {RenderTicker} from './render-ticker';
 import {Element} from '../element';
 import {ElementSprite} from '../element-sprite';
 import {SimulationViewInteractionManager} from './simulation-view-interaction-manager';
@@ -8,7 +7,6 @@ import {EventEmitter, NgZone} from '@angular/core';
 import {ReqInspectElementEvent} from './req-inspect-element-event';
 import {ProjectInteractionService} from '../../services/project-interaction/project-interaction.service';
 import {filter, takeUntil} from 'rxjs/operators';
-import {ProjectsService} from '../../services/projects/projects.service';
 import {getStaticDI} from '../get-di';
 import {WorkerCommunicationService} from '../../services/simulation/worker-communication/worker-communication.service';
 
@@ -25,13 +23,13 @@ export class SimulationView extends View {
 	constructor(
 		project: Project,
 		htmlContainer: HTMLElement,
-		ticker: RenderTicker,
+		requestSingleFrameFn: () => void,
 		requestInspectElemEventEmitter: EventEmitter<ReqInspectElementEvent>,
 		parent: string,
 		parentNames: string[],
 		parentTypeIds: number[]
 	) {
-		super(project, htmlContainer, ticker);
+		super(project, htmlContainer, requestSingleFrameFn);
 		this.requestInspectElemEventEmitter = requestInspectElemEventEmitter;
 		this.parentProjectIdentifier = parent;
 		this.parentProjectNames = parentNames;
@@ -62,7 +60,7 @@ export class SimulationView extends View {
 		for (const [elem, state] of e) {
 			this.allElements.get(elem.id).sprite.setWireState(this.zoomPan.currentScale, state);
 		}
-		this.ticker.singleFrame();
+		this.requestSingleFrame();
 	}
 
 	public get projectName(): string {

@@ -67,6 +67,7 @@ export class WindowWorkAreaComponent extends WorkArea implements OnInit, OnChang
 
 	ngOnInit() {
 		this.ngZone.runOutsideAngular(async () => {
+			this.addTickerFunction();
 			this.preventContextMenu(this._pixiCanvasContainer, this.renderer2);
 			this.initZoomPan(this._pixiCanvasContainer);
 			this.initPixi(this._pixiCanvasContainer, this.renderer2);
@@ -89,7 +90,7 @@ export class WindowWorkAreaComponent extends WorkArea implements OnInit, OnChang
 			this._activeView = new SimulationView(
 				this.project,
 				this._pixiCanvasContainer.nativeElement,
-				this._ticker,
+				() => this.ticker.singleFrame(this.identifier),
 				this.requestInspectElementInSim,
 				this.identifier,
 				this.parentNames,
@@ -107,6 +108,10 @@ export class WindowWorkAreaComponent extends WorkArea implements OnInit, OnChang
 				this._pixiRenderer
 			);
 		}
+	}
+
+	getIdentifier(): string {
+		return this.identifier;
 	}
 
 	public doRequestHide() {

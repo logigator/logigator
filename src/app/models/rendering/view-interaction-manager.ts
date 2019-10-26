@@ -114,7 +114,7 @@ export class ViewInteractionManager {
 			this.startDraggingNewComponent(e);
 			addPointerMoveEvent = true;
 		}
-		this._view.ticker.singleFrame();
+		this._view.requestSingleFrame();
 		if (addPointerMoveEvent) this._view.on('pointermove', (e1: InteractionEvent) => this.handlePointerMoveOnView(e1));
 	}
 
@@ -126,7 +126,7 @@ export class ViewInteractionManager {
 		} else if (this._draggingNewComp) {
 			this.placeNewComp();
 		}
-		this._view.ticker.singleFrame();
+		this._view.requestSingleFrame();
 		this._view.removeAllListeners('pointermove');
 	}
 
@@ -138,13 +138,13 @@ export class ViewInteractionManager {
 		} else if (this._draggingNewComp) {
 			this.dragNewComp(e);
 		}
-		this._view.ticker.singleFrame();
+		this._view.requestSingleFrame();
 	}
 
 	private handlePointerDownOnSelectRect(e: InteractionEvent) {
 		if (this.workModeService.currentWorkMode === 'select' || this._currentlyPasting) {
 			this.startDragging(e);
-			this._view.ticker.singleFrame();
+			this._view.requestSingleFrame();
 		}
 	}
 
@@ -155,7 +155,7 @@ export class ViewInteractionManager {
 			} else {
 				this.selectSingleComp(elem);
 			}
-			this._view.ticker.singleFrame();
+			this._view.requestSingleFrame();
 		}
 	}
 
@@ -563,10 +563,15 @@ export class ViewInteractionManager {
 		this._currentlyPasting = false;
 		this._view.removeChild(this._selectRect);
 		this._view.removeChild(this._newWire);
-		this._view.ticker.singleFrame();
+		this._view.requestSingleFrame();
 	}
 
 	public destroy() {
+		this._view.removeAllListeners('pointermove');
+		this._view.removeAllListeners('pointerdown');
+		this._view.removeAllListeners('pointerup');
+		this._view.removeAllListeners('pointerupoutside');
+		this._selectRect.removeAllListeners('pointerdown');
 		this._workModeSubscription.unsubscribe();
 	}
 }

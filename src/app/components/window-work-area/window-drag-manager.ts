@@ -175,7 +175,7 @@ export class WindowDragManager {
 					}
 					this._pixiRenderer.resize(this._canvasContainer.offsetWidth, this._canvasContainer.offsetHeight);
 					this._view.updateChunks();
-					this._view.ticker.singleFrame();
+					this._view.requestSingleFrame();
 					break;
 				case 'top-right':
 					if (!this.collision_top(newY, changeY)) {
@@ -187,7 +187,7 @@ export class WindowDragManager {
 					}
 					this._pixiRenderer.resize(this._canvasContainer.offsetWidth, this._canvasContainer.offsetHeight);
 					this._view.updateChunks();
-					this._view.ticker.singleFrame();
+					this._view.requestSingleFrame();
 					break;
 				case 'bottom-left':
 					if (!this.collision_bottom(newY, changeY)) {
@@ -199,7 +199,7 @@ export class WindowDragManager {
 					}
 					this._pixiRenderer.resize(this._canvasContainer.offsetWidth, this._canvasContainer.offsetHeight);
 					this._view.updateChunks();
-					this._view.ticker.singleFrame();
+					this._view.requestSingleFrame();
 					break;
 				case 'bottom-right':
 					if (!this.collision_bottom(newY, changeY)) {
@@ -210,7 +210,7 @@ export class WindowDragManager {
 					}
 					this._pixiRenderer.resize(this._canvasContainer.offsetWidth, this._canvasContainer.offsetHeight);
 					this._view.updateChunks();
-					this._view.ticker.singleFrame();
+					this._view.requestSingleFrame();
 					break;
 				case 'top':
 					if (!this.collision_top(newY, changeY)) {
@@ -218,7 +218,7 @@ export class WindowDragManager {
 						this.renderer2.setStyle(this._popup, 'height', this._popup.offsetHeight - changeY + 'px');
 						this._pixiRenderer.resize(this._canvasContainer.offsetWidth, this._canvasContainer.offsetHeight);
 						this._view.updateChunks();
-						this._view.ticker.singleFrame();
+						this._view.requestSingleFrame();
 					}
 					break;
 				case 'right':
@@ -226,7 +226,7 @@ export class WindowDragManager {
 						this.renderer2.setStyle(this._popup, 'width', this._popup.offsetWidth + changeX + 'px');
 						this._pixiRenderer.resize(this._canvasContainer.offsetWidth, this._canvasContainer.offsetHeight);
 						this._view.updateChunks();
-						this._view.ticker.singleFrame();
+						this._view.requestSingleFrame();
 					}
 					break;
 				case 'bottom':
@@ -234,7 +234,7 @@ export class WindowDragManager {
 						this.renderer2.setStyle(this._popup, 'height', this._popup.offsetHeight + changeY + 'px');
 						this._pixiRenderer.resize(this._canvasContainer.offsetWidth, this._canvasContainer.offsetHeight);
 						this._view.updateChunks();
-						this._view.ticker.singleFrame();
+						this._view.requestSingleFrame();
 					}
 					break;
 				case 'left':
@@ -243,7 +243,7 @@ export class WindowDragManager {
 						this.renderer2.setStyle(this._popup, 'width', this._popup.offsetWidth - changeX + 'px');
 						this._pixiRenderer.resize(this._canvasContainer.offsetWidth, this._canvasContainer.offsetHeight);
 						this._view.updateChunks();
-						this._view.ticker.singleFrame();
+						this._view.requestSingleFrame();
 					}
 					break;
 			}

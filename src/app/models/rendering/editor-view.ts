@@ -7,7 +7,6 @@ import {Action} from '../action';
 import {ProjectInteractionService} from '../../services/project-interaction/project-interaction.service';
 import {filter, takeUntil} from 'rxjs/operators';
 import {SelectionService} from '../../services/selection/selection.service';
-import {RenderTicker} from './render-ticker';
 import {View} from './view';
 import {Project} from '../project';
 import {Element} from '../element';
@@ -21,8 +20,8 @@ export class EditorView extends View {
 
 	private selectionService = getStaticDI(SelectionService);
 
-	constructor(project: Project, htmlContainer: HTMLElement, ticker: RenderTicker) {
-		super(project, htmlContainer, ticker);
+	constructor(project: Project, htmlContainer: HTMLElement, requestSingleFrameFn: () => void) {
+		super(project, htmlContainer, requestSingleFrameFn);
 
 		this._viewInteractionManager = new ViewInteractionManager(this);
 
@@ -81,8 +80,8 @@ export class EditorView extends View {
 	}
 
 	public destroy() {
-		super.destroy();
 		this._viewInteractionManager.destroy();
+		super.destroy();
 	}
 
 }
