@@ -124,7 +124,16 @@ export interface SimulationModule extends EmscriptenModule {
 	initBoard(): number;
 	initLinks(count: number): number;
 	initComponents(count: number): number;
-	initComponent(index: number, typeId: number, inputs: Pointer, outputs: Pointer, inputCount: number, outputCount: number, op1: number, op2: number): number;
+	initComponent(
+		index: number,
+		typeId: number,
+		inputs: Pointer,
+		outputs: Pointer,
+		inputCount: number,
+		outputCount: number,
+		op1: number,
+		op2: number
+	): number;
 
 	start(): number;
 	startTimeout(ms: number): number;
