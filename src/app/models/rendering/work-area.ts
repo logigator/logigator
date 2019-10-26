@@ -3,12 +3,12 @@ import {fromEvent, ReplaySubject, Subject} from 'rxjs';
 import {takeUntil} from 'rxjs/operators';
 import {ElementRef, EventEmitter, Output, Renderer2} from '@angular/core';
 import {ThemingService} from '../../services/theming/theming.service';
-import {RenderTicker} from './render-ticker';
 import {ZoomPanInputManager} from './zoom-pan-input-manager';
 import {View} from './view';
 import {EditorView} from './editor-view';
 import {ReqInspectElementEvent} from './req-inspect-element-event';
 import {getStaticDI} from '../get-di';
+import {RenderTicker} from '../../services/render-ticker/render-ticker.service';
 
 export abstract class WorkArea {
 
@@ -18,24 +18,18 @@ export abstract class WorkArea {
 
 	protected _pixiRenderer: PIXI.Renderer;
 
-	protected _ticker = new RenderTicker();
-
 	protected _zoomPanInputManager: ZoomPanInputManager;
 
 	protected _destroySubject = new Subject<any>();
 
 	protected _activeView: View;
 
+	protected ticker: RenderTicker = getStaticDI(RenderTicker);
+
 	@Output()
 	requestInspectElementInSim = new EventEmitter<ReqInspectElementEvent>();
 
-	protected constructor() {
-		this._ticker.setTickerFunction(() => {
-			if (!this._activeView) return;
-			this.updateZoomPan();
-			this._pixiRenderer.render(this._activeView);
-		});
-	}
+	abstract getIdentifier(): string;
 
 	protected initPixi(canvasContainer: ElementRef<HTMLDivElement>, renderer2: Renderer2) {
 		this.loadPixiFont();
@@ -56,7 +50,15 @@ export abstract class WorkArea {
 		).subscribe(() => {
 			this._pixiRenderer.resize(canvasContainer.nativeElement.offsetWidth, canvasContainer.nativeElement.offsetHeight);
 			if (this._activeView) this._activeView.updateChunks();
-			this._ticker.singleFrame();
+			this.ticker.singleFrame(this.getIdentifier());
+		});
+	}
+
+	protected addTickerFunction() {
+		this.ticker.addTickerFunction(this.getIdentifier(), () => {
+			if (!this._activeView) return;
+			this.updateZoomPan();
+			this._pixiRenderer.render(this._activeView);
 		});
 	}
 
@@ -77,12 +79,15 @@ export abstract class WorkArea {
 	protected initZoomPan(canvasContainer: ElementRef<HTMLDivElement>) {
 		this._zoomPanInputManager = new ZoomPanInputManager(canvasContainer.nativeElement);
 		this._zoomPanInputManager.interactionStart$.pipe(takeUntil(this._destroySubject)).subscribe(() => {
-			this._ticker.start();
+			this.ticker.startTicker(this.getIdentifier());
 			if (this._activeView) this._activeView.interactiveChildren = false;
 		});
 		this._zoomPanInputManager.interactionEnd$.pipe(takeUntil(this._destroySubject)).subscribe(() => {
-			this._ticker.stop();
+			this.ticker.stopTicker(this.getIdentifier());
 			if (this._activeView) this._activeView.interactiveChildren = true;
+		});
+		this._zoomPanInputManager.zoom$.pipe(takeUntil(this._destroySubject)).subscribe(() => {
+			this.ticker.singleFrame(this.getIdentifier());
 		});
 	}
 
@@ -120,6 +125,7 @@ export abstract class WorkArea {
 		this._zoomPanInputManager.destroy();
 		this._destroySubject.next();
 		this._destroySubject.unsubscribe();
+		this.ticker.removeTickerFunction(this.getIdentifier());
 		if (this._activeView) {
 			this._activeView.destroy();
 		}
