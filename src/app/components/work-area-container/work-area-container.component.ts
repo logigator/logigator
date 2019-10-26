@@ -35,7 +35,10 @@ export class WorkAreaContainerComponent implements OnInit {
 				this.renderer2.setStyle(this.workAreaContainer.nativeElement, 'width', '100%');
 			} else {
 				this.renderer2.removeStyle(this.workAreaContainer.nativeElement, 'width');
-				this.windowWorkAreas.forEach(a => a.showing = false);
+				this.windowWorkAreas.forEach(a => {
+					a.identifier = null;
+					a.showing = false;
+				});
 				this.cdr.detectChanges();
 			}
 		});

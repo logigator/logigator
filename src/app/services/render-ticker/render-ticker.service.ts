@@ -32,7 +32,7 @@ export class RenderTicker {
 
 	public singleFrame(identifier: string) {
 		const tf = this._tickerFunctions.get(identifier);
-		if (!tf.started && !tf.requestedFrame) {
+		if (tf && !tf.started && !tf.requestedFrame) {
 			tf.requestedFrame = true;
 			PIXI.Ticker.shared.addOnce(tf.fn, this);
 		}

@@ -61,10 +61,7 @@ export abstract class WorkArea {
 			if (!this._activeView) return;
 			this.updateZoomPan();
 			this._pixiRenderer.render(this._activeView);
-			if (this.constructor.name === 'WorkAreaComponent') {
-				(this as unknown as WorkAreaComponent).setWorkerFrameTime();
-				console.log(this.ticker.frameTime);
-			}
+			if (this.constructor.name === 'WorkAreaComponent') (this as unknown as WorkAreaComponent).setWorkerFrameTime();
 		});
 	}
 
