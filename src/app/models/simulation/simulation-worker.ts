@@ -101,4 +101,9 @@ export class SimulationWorker {
 		heapBytes.set(new Uint8Array(typedArray.buffer));
 		return ptr;
 	}
+
+	public destroy() {
+		this._simulationModule.destroy();
+		delete this._board;
+	}
 }

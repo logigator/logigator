@@ -5,7 +5,7 @@ import {ProjectsService} from '../../projects/projects.service';
 import {StateCompilerService} from '../state-compiler/state-compiler.service';
 import {WasmMethod, WasmRequest, WasmResponse} from '../../../models/simulation/wasm-interface';
 import {SimulationUnit} from '../../../models/simulation/simulation-unit';
-import { Element } from '../../../models/element';
+import {Element} from '../../../models/element';
 
 @Injectable({
 	providedIn: 'root'
@@ -31,6 +31,7 @@ export class WorkerCommunicationService {
 	) {
 		this._powerSubjectsWires = new Map<string, Subject<PowerChangesOutWire>>();
 		this._powerSubjectsWireEnds = new Map<string, Subject<PowerChangesOutWireEnd>>();
+		this.initWorker();
 	}
 
 	private handleResponse(event: any): void {
@@ -38,12 +39,10 @@ export class WorkerCommunicationService {
 			if (event.data.initialized === undefined)
 				return;
 
-			if (event.data.initialized === true) {
+			if (event.data.initialized === true)
 				this._initialized = true;
-				this.initBoard();
-			} else {
+			else
 				console.error('WebWorker failed to initialize.', event.data);
-			}
 			return;
 		}
 
@@ -88,8 +87,23 @@ export class WorkerCommunicationService {
 	}
 
 	public async init(): Promise<void> {
+		if (!this._initialized)
+			return;
+
+		const project = this.projectsService.mainProject;
+
+		this._compiledBoard = await this.stateCompiler.compile(project);
+		this._userInputChanges = new Map<number, boolean>();
+		if (!this._compiledBoard)
+			console.error('Failed to compile board.');
+
+		this.finalizeInit();
+	}
+
+	private initWorker() {
 		if (this._worker)
 			this._worker.terminate();
+
 		this._initialized = false;
 		this._worker = new Worker('../../../simulation-worker/simulation.worker', { type: 'module' });
 		this.ngZone.runOutsideAngular(() => {
@@ -97,12 +111,7 @@ export class WorkerCommunicationService {
 		});
 	}
 
-	private async initBoard() {
-		const project = this.projectsService.mainProject;
-		this._compiledBoard = await this.stateCompiler.compile(project);
-		this._userInputChanges = new Map<number, boolean>();
-		if (!this._compiledBoard)
-			return false;
+	private finalizeInit() {
 		const board = {
 			links: this.stateCompiler.highestLinkId + 1,
 			components: this._compiledBoard
@@ -116,6 +125,7 @@ export class WorkerCommunicationService {
 
 	public stop(): void {
 		this._isContinuous = false;
+		this.finalizeInit();
 	}
 
 	public pause(): void {
