@@ -67,7 +67,6 @@ export class WindowWorkAreaComponent extends WorkArea implements OnInit, OnChang
 
 	ngOnInit() {
 		this.ngZone.runOutsideAngular(async () => {
-			this.addTickerFunction();
 			this.preventContextMenu(this._pixiCanvasContainer, this.renderer2);
 			this.initZoomPan(this._pixiCanvasContainer);
 			this.initPixi(this._pixiCanvasContainer, this.renderer2);
@@ -79,14 +78,22 @@ export class WindowWorkAreaComponent extends WorkArea implements OnInit, OnChang
 			if (changes.showing.currentValue) {
 				this.show();
 			} else {
-				if (this._dragManager) {
-					this._dragManager.destroy();
-					delete this._dragManager;
-				}
 				this.hide();
 			}
 		}
+		if (changes.identifier) {
+			this.ticker.removeTickerFunction(changes.identifier.previousValue);
+		}
+
 		if (changes.project && this.showing) {
+			this.addTickerFunction();
+
+			if (this._activeView) {
+				this._activeView.destroy();
+				// @ts-ignore
+				this._pixiRenderer._lastObjectRendered = null;
+			}
+
 			this._activeView = new SimulationView(
 				this.project,
 				this._pixiCanvasContainer.nativeElement,
@@ -123,10 +130,18 @@ export class WindowWorkAreaComponent extends WorkArea implements OnInit, OnChang
 	}
 
 	public hide() {
+		this.ticker.removeTickerFunction(this.identifier);
 		this.renderer2.setStyle(this._popup.nativeElement, 'display', 'none');
-		if (!this._dragManager) return;
-		this._dragManager.destroy();
-		delete this._dragManager;
+		if (this._dragManager) {
+			this._dragManager.destroy();
+			delete this._dragManager;
+		}
+		if (this._activeView) {
+			this._activeView.destroy();
+			delete this._activeView;
+			// @ts-ignore
+			this._pixiRenderer._lastObjectRendered = null;
+		}
 	}
 
 	public show() {
@@ -151,8 +166,8 @@ export class WindowWorkAreaComponent extends WorkArea implements OnInit, OnChang
 	}
 
 	ngOnDestroy(): void {
-		super.destroy();
 		this._dragManager.destroy();
+		super.destroy();
 	}
 
 }

@@ -93,6 +93,7 @@ export class WorkAreaContainerComponent implements OnInit {
 
 	requestHide(window: number) {
 		this.windowWorkAreas[window].showing = false;
+		this.windowWorkAreas[window].identifier = null;
 		this.cdr.detectChanges();
 	}
 

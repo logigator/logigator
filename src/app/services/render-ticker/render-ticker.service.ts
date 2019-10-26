@@ -23,7 +23,8 @@ export class RenderTicker {
 	}
 
 	public removeTickerFunction(identifier: string) {
-		this.stopTicker(identifier);
+		if (!this._tickerFunctions.has(identifier)) return;
+		this.stopTicker(identifier, false);
 		this._tickerFunctions.delete(identifier);
 	}
 
@@ -37,17 +38,18 @@ export class RenderTicker {
 
 	public startTicker(identifier: string) {
 		const tf = this._tickerFunctions.get(identifier);
-		if (!tf.started) {
+		if (tf && !tf.started) {
 			tf.started = true;
 			PIXI.Ticker.shared.add(tf.fn, this);
 		}
 	}
 
-	public stopTicker(identifier: string) {
+	public stopTicker(identifier: string, keepRequestFrame = true) {
+		if (!this._tickerFunctions.has(identifier)) return;
 		const tf = this._tickerFunctions.get(identifier);
 		tf.started = false;
 		PIXI.Ticker.shared.remove(tf.fn, this);
-		if (tf.requestedFrame) PIXI.Ticker.shared.addOnce(tf.fn, this);
+		if (tf.requestedFrame && keepRequestFrame) PIXI.Ticker.shared.addOnce(tf.fn, this);
 	}
 
 	public get FPS(): number {
