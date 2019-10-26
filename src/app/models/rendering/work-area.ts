@@ -42,6 +42,7 @@ export abstract class WorkArea {
 			resolution: Math.ceil(window.devicePixelRatio || 1),
 			autoDensity: true
 		});
+		this._pixiRenderer.plugins.interaction.moveWhenInside = true;
 
 		renderer2.appendChild(canvasContainer.nativeElement, this._pixiRenderer.view);
 

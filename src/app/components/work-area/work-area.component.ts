@@ -104,6 +104,8 @@ export class WorkAreaComponent extends WorkArea implements OnInit, OnDestroy {
 			if (!this._activeView) return;
 			this._activeView.destroy();
 			delete this._activeView;
+			// @ts-ignore
+			this._pixiRenderer._lastObjectRendered = null;
 			this.switchToProject(this.projectsService.allProjects.values().next().value.id);
 		}
 		if (this._pixiRenderer) {
@@ -156,6 +158,8 @@ export class WorkAreaComponent extends WorkArea implements OnInit, OnDestroy {
 			}
 		}
 		toClose.destroy();
+		// @ts-ignore
+		this._pixiRenderer._lastObjectRendered = null;
 	}
 
 	ngOnDestroy(): void {
