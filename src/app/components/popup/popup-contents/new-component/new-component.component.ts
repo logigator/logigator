@@ -19,8 +19,8 @@ export class NewComponentComponent extends PopupContentComp implements OnInit {
 
 	ngOnInit() {
 		this.newCompForm = this.formBuilder.group({
-			compName: ['', [Validators.required]],
-			compSymbol: ['', [Validators.required, Validators.maxLength(5)]]
+			compName: ['', [Validators.required, Validators.minLength(2), Validators.maxLength(20), Validators.pattern('^[a-zA-Z0-9_\\- ]+$')]],
+			compSymbol: ['', [Validators.required, Validators.maxLength(5), Validators.pattern('^[a-zA-Z0-9_\\-]+$')]]
 		});
 	}
 

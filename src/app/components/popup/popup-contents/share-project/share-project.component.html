@@ -14,7 +14,9 @@
 		</div>
 		<p class="user-info">{{'POPUP.SHARE.INFO_TEXT' | translate}}</p>
 		<form class="add-user" [formGroup]="addUserFrom" (ngSubmit)="addUser()">
-			<app-input [label]="'POPUP.SHARE.EMAIL_USER' | translate" formControlName="user"></app-input>
+			<app-input [label]="'POPUP.SHARE.EMAIL_USER' | translate" formControlName="user">
+				<app-input-error error="alreadySet">{{'POPUP.SHARE.EMAIL_USER_ALREADY_ADDED' | translate}}</app-input-error>
+			</app-input>
 			<button class="btn-outline primary" type="submit" [disabled]="addUserFrom.invalid">{{'POPUP.SHARE.ADD_EMAIL' | translate}}</button>
 		</form>
 		<div class="added-emails">
