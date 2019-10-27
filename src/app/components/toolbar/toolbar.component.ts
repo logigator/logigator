@@ -28,7 +28,7 @@ export class ToolbarComponent {
 
 	// #!if DEBUG === 'true'
 	public printElements(): void {
-		this.projectService.currProject.allElements.forEach(console.log);
+		console.log(this.projectService.currProject.allElements);
 	}
 
 	public printCalls(): void {

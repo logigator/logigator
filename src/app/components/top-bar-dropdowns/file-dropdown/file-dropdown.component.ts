@@ -44,12 +44,12 @@ export class FileDropdownComponent implements OnInit {
 		this.projectInteraction.newProject();
 	}
 
-	public async newComponent() {
-		await this.projectInteraction.newComponent();
+	public newComponent() {
+		this.projectInteraction.newComponent();
 		this.close();
 	}
 
-	public async openProject() {
+	public openProject() {
 		this.close();
 		this.projectInteraction.openProject();
 	}

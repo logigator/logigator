@@ -1,0 +1,8 @@
+@import "themes";
+@include themify() {
+	.single-error {
+		margin-top: 0.25rem;
+		font-size: 0.9rem;
+		color: themed('error');
+	}
+}
