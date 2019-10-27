@@ -26,7 +26,8 @@ export class Project {
 
 	private _changeSubject: Subject<Action[]>;
 
-	public dirty = false;
+	public saveDirty = false;
+	public compileDirty = false;
 
 	// #!debug
 	public boardRecorder: BoardRecorder;
@@ -422,7 +423,8 @@ export class Project {
 		actions.push(...this._currState.specialActions);
 		this._currState.specialActions = [];
 		this._actions[this._currActionPointer] = actions;
-		this.dirty = true;
+		this.saveDirty = true;
+		this.compileDirty = true;
 		this._changeSubject.next(actions);
 	}
 

@@ -61,12 +61,8 @@ export class StateCompilerService {
 		this.initElemsOnLinks('0');
 		const depTree = await this.projectsToCompile(project);
 		this._depTree = depTree;
-		const start = Date.now();
 		this.compileDependencies(depTree);
-
-		const units = this.projectUnits(project.id, '0');
-		console.log(`Compilation took ${Date.now() - start}ms`);
-		return units;
+		return this.projectUnits(project.id, '0');
 	}
 
 	private initElemsOnLinksCache(identifier: string): void {
@@ -94,14 +90,19 @@ export class StateCompilerService {
 	}
 
 	public clearCache(): void {
-		this._udcCache = new Map<number, CompiledComp>();
+		this._udcCache.clear();
 		this._highestLinkId = 0;
 	}
 
 	private compileDependencies(depTree: Map<number, Project>): void {
 		for (const [typeId, project] of depTree.entries()) {
 			this._currTypeId = typeId;
-			this._udcCache.set(typeId, this.compileSingle(project));
+			if (!this._udcCache.has(typeId) || project.compileDirty) {
+				this._udcCache.set(typeId, this.compileSingle(project));
+			} else {
+				console.log('load from cache', typeId);
+			}
+			project.compileDirty = false;
 		}
 	}
 

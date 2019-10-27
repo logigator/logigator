@@ -170,7 +170,7 @@ export class ProjectSaveManagementService {
 	}
 
 	public async saveProject(project: Project): Promise<void> {
-		if (!project.dirty) return;
+		if (!project.saveDirty) return;
 		if (project.id < 1000 && this._componentsFromLocalFile.has(project.id)) {
 			const compLocalFile = this._componentsFromLocalFile.get(project.id);
 			compLocalFile.data = project.currState.model;
@@ -305,7 +305,7 @@ export class ProjectSaveManagementService {
 			name: name || project.name,
 			id: mainProjectId
 		});
-		mainProjToSave.dirty = true;
+		mainProjToSave.saveDirty = true;
 		projectsToSave.push(mainProjToSave);
 		for (const dep of deps) {
 			const singleMapping = mappings.find(m => m.model === dep.id);
@@ -321,7 +321,7 @@ export class ProjectSaveManagementService {
 				type: 'comp'
 			});
 			if (id >= 1000) this.elemProvService.addUserDefinedElement(this.elemProvService.getElementById(dep.id), id);
-			proj.dirty = true;
+			proj.saveDirty = true;
 			projectsToSave.push(proj);
 		}
 		this.elemProvService.clearElementsFromFile();
@@ -349,12 +349,12 @@ export class ProjectSaveManagementService {
 		const savePromises = [];
 		if (mainProject) {
 			savePromises.push(this.saveProject(mainProject));
-			mainProject.dirty = false;
+			mainProject.saveDirty = false;
 		}
 		const comps = projects.filter(p => p.type === 'comp');
 		for (const comp of comps) {
 			savePromises.push(this.saveProject(comp));
-			comp.dirty = false;
+			comp.saveDirty = false;
 		}
 		await Promise.all(savePromises);
 		if (savePromises.length > 0) this.errorHandling.showInfo('Saved Project and all open Components');

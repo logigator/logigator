@@ -78,7 +78,7 @@ export class ProjectsService {
 
 	public get hasUnsavedProjects(): boolean {
 		for (const project of this._projects.values()) {
-			if (project.dirty) return true;
+			if (project.saveDirty) return true;
 		}
 		return false;
 	}
