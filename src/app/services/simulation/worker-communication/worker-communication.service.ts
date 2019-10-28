@@ -1,4 +1,4 @@
-import {Injectable, NgZone} from '@angular/core';
+import {Injectable, IterableDiffer, IterableDiffers, NgZone} from '@angular/core';
 import {Observable, Subject} from 'rxjs';
 import {PowerChangesOutWire, PowerChangesOutWireEnd} from '../../../models/simulation/power-changes';
 import {ProjectsService} from '../../projects/projects.service';
@@ -24,10 +24,13 @@ export class WorkerCommunicationService {
 
 	private _userInputChanges: Map<number, boolean>;
 
+	private _powerStatesDiffer: IterableDiffer<number>;
+
 	constructor(
 		private projectsService: ProjectsService,
 		private stateCompiler: StateCompilerService,
-		private ngZone: NgZone
+		private ngZone: NgZone,
+		private iterableDiffers: IterableDiffers
 	) {
 		this._powerSubjectsWires = new Map<string, Subject<PowerChangesOutWire>>();
 		this._powerSubjectsWireEnds = new Map<string, Subject<PowerChangesOutWireEnd>>();
@@ -51,24 +54,24 @@ export class WorkerCommunicationService {
 			if (data.state.length !== this.stateCompiler.highestLinkId + 1) {
 				console.error(`Response data length does not match component count`, data, this._compiledBoard);
 			}
-			// TODO save projects containing specific link
-			for (let link = 0; link < data.state.length; link++) {
-				const singleState: boolean = !!data.state[link];
+
+			const changes = this._powerStatesDiffer.diff(data.state);
+			if (changes !== null) {
+				const powerChanges: Map<string, PowerChangesOutWire> = new Map<string, PowerChangesOutWire>();
 				for (const projId of this._powerSubjectsWires.keys()) {
-					const powerChangesWire: PowerChangesOutWire = new Map<Element, boolean>();
-					const powerChangesWireEnd: PowerChangesOutWireEnd = new Map<{component: Element, wireIndex: number}, boolean>();
-					if (this.stateCompiler.wiresOnLinks.get(projId).get(link)) {
-						for (const wire of this.stateCompiler.wiresOnLinks.get(projId).get(link)) {
-							powerChangesWire.set(wire, singleState);
+					powerChanges.set(projId, new Map<Element, boolean>());
+				}
+				changes.forEachItem(r => {
+					for (const projId of this._powerSubjectsWires.keys()) {
+						if (this.stateCompiler.wiresOnLinks.get(projId).get(r.currentIndex)) {
+							for (const wire of this.stateCompiler.wiresOnLinks.get(projId).get(r.currentIndex)) {
+								powerChanges.get(projId).set(wire, r.item as unknown as boolean);
+							}
 						}
 					}
-					if (this.stateCompiler.wireEndsOnLinks.get(projId).get(link)) {
-						for (const wireEnd of this.stateCompiler.wireEndsOnLinks.get(projId).get(link)) {
-							powerChangesWireEnd.set(wireEnd, singleState);
-						}
-					}
-					this._powerSubjectsWires.get(projId).next(powerChangesWire);
-					this._powerSubjectsWireEnds.get(projId).next(powerChangesWireEnd);
+				});
+				for (const projId of this._powerSubjectsWires.keys()) {
+					this._powerSubjectsWires.get(projId).next(powerChanges.get(projId));
 				}
 			}
 
@@ -94,6 +97,7 @@ export class WorkerCommunicationService {
 
 		this._compiledBoard = await this.stateCompiler.compile(project);
 		this._userInputChanges = new Map<number, boolean>();
+		this._powerStatesDiffer = this.iterableDiffers.find(new Int8Array()).create();
 		if (!this._compiledBoard)
 			console.error('Failed to compile board.');
 
