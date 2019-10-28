@@ -61,8 +61,11 @@ export class StateCompilerService {
 		this.initElemsOnLinks('0');
 		const depTree = await this.projectsToCompile(project);
 		this._depTree = depTree;
+		const start = Date.now();
 		this.compileDependencies(depTree);
-		return this.projectUnits(project.id, '0');
+		const out =  this.projectUnits(project.id, '0');
+		console.log(`compilation took ${Date.now() - start}ms`);
+		return out;
 	}
 
 	private initElemsOnLinksCache(identifier: string): void {
@@ -142,8 +145,9 @@ export class StateCompilerService {
 			let wireEndIndex = -1;
 			for (const wireEndPos of Elements.wireEnds(element)) {
 				wireEndIndex++;
-				if (this.wireIdHasLink(linksOnWireEnds, element, wireEndIndex))
+				if (this.wireIdHasLink(linksOnWireEnds, element, wireEndIndex)) {
 					continue;
+				}
 				linkId = this.setLinks(state, wireEndPos, linksOnWireEnds,
 					linkId, unitElems, compiledComp) + 1;
 			}
@@ -167,7 +171,6 @@ export class StateCompilerService {
 		compiledComp: CompiledComp,
 		coveredPoints?: PosOfElem[]
 	): number {
-		// TODO coveredPoints as Map
 		coveredPoints = coveredPoints || [];
 		for (const [elem, index] of state.wireEndsOnPoint(pos)) {
 			if (coveredPoints.find(p => p.id === elem.id && p.pos.equals(pos)))
@@ -265,8 +268,7 @@ export class StateCompilerService {
 					if (!this._wiresOnLinks.get(idIdentifier)) {
 						this.initElemsOnLinks(idIdentifier);
 					}
-					this._wiresOnLinks.get(idIdentifier).set(newVal, this._wiresOnLinksCache.get(typeIdentifier).get(arr[i]));
-					this._wireEndsOnLinks.get(idIdentifier).set(newVal, this._wireEndsOnLinksCache.get(typeIdentifier).get(arr[i]));
+					this.pushWiresOnLink(idIdentifier, newVal, typeIdentifier, arr[i]);
 					arr[i] = newVal;
 					if (arr[i] > highestInProj) {
 						highestInProj = arr[i];
@@ -290,6 +292,19 @@ export class StateCompilerService {
 		}
 
 		return units;
+	}
+
+	private pushWiresOnLink(idIdentifier: string, newVal, typeIdentifier, val: number) {
+		if (this._wiresOnLinks.get(idIdentifier).has(newVal)) {
+			this._wiresOnLinks.get(idIdentifier).get(newVal).push(...this._wiresOnLinksCache.get(typeIdentifier).get(val));
+		} else {
+			this._wiresOnLinks.get(idIdentifier).set(newVal, this._wiresOnLinksCache.get(typeIdentifier).get(val));
+		}
+		if (this._wireEndsOnLinks.get(idIdentifier).has(newVal)) {
+			this._wireEndsOnLinks.get(idIdentifier).get(newVal).push(...this._wireEndsOnLinksCache.get(typeIdentifier).get(val));
+		} else {
+			this._wireEndsOnLinks.get(idIdentifier).set(newVal, this._wireEndsOnLinksCache.get(typeIdentifier).get(val));
+		}
 	}
 
 	private removePlugs(compiledComp: CompiledComp, units: SimulationUnit[]) {
