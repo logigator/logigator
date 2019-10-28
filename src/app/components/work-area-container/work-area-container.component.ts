@@ -55,7 +55,8 @@ export class WorkAreaContainerComponent implements OnInit {
 			identifier: event.identifier,
 			parentNames: event.parentNames,
 			parentTypesIds: event.parentTypeIds,
-			zIndex: 1
+			zIndex: 1,
+			projectChange: Math.random()
 		};
 
 		this.moveAllBack();
@@ -68,6 +69,7 @@ export class WorkAreaContainerComponent implements OnInit {
 			firstHidden.showing = meta.showing;
 			firstHidden.identifier = meta.identifier;
 			firstHidden.project = meta.project;
+			firstHidden.projectChange = meta.projectChange;
 			firstHidden.parentNames = meta.parentNames;
 			firstHidden.parentTypesIds = meta.parentTypesIds;
 			firstHidden.zIndex = meta.zIndex;
@@ -78,6 +80,7 @@ export class WorkAreaContainerComponent implements OnInit {
 		this.windowWorkAreas[fromWindow].showing = meta.showing;
 		this.windowWorkAreas[fromWindow].identifier = meta.identifier;
 		this.windowWorkAreas[fromWindow].project = meta.project;
+		this.windowWorkAreas[fromWindow].projectChange = meta.projectChange;
 		this.windowWorkAreas[fromWindow].parentNames = meta.parentNames;
 		this.windowWorkAreas[fromWindow].parentTypesIds = meta.parentTypesIds;
 		this.windowWorkAreas[fromWindow].zIndex = meta.zIndex;

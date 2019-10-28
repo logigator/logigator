@@ -31,6 +31,9 @@ export class WindowWorkAreaComponent extends WorkArea implements OnInit, OnChang
 	public project: Project;
 
 	@Input()
+	public projectChange: number;
+
+	@Input()
 	identifier: string;
 
 	@Input()
@@ -84,8 +87,7 @@ export class WindowWorkAreaComponent extends WorkArea implements OnInit, OnChang
 		if (changes.identifier) {
 			this.ticker.removeTickerFunction(changes.identifier.previousValue);
 		}
-
-		if (changes.project && this.showing) {
+		if (changes.projectChange && this.showing) {
 			this.addTickerFunction();
 
 			if (this._activeView) {
