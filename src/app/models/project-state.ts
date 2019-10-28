@@ -57,6 +57,7 @@ export class ProjectState {
 			this.loadIntoChunks(element);
 		}
 		this.loadConnectionPoints(this._model.board.elements);
+		this.specialActions = [];
 	}
 
 	private createChunk(x: number, y: number): void {

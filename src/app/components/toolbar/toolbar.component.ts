@@ -36,16 +36,14 @@ export class ToolbarComponent {
 	}
 
 	public runTests(): void {
-		// this.test = new Test('bugfix', this.projectService.currProject, ManuallyLogged.reducedCrash);
+		// this.test = new Test('bugfix', this.projectService.currProject, ManuallyLogged.bug);
 		for (const name in ManuallyLogged) {
 			Test.runAndCheck(name, false);
 		}
 	}
 
 	public runStep(): void {
-		for (let i = 0; i < 2000; i++) {
-			this.test.runStep(true);
-		}
+		this.test.runStep(true);
 	}
 	// #!endif
 
