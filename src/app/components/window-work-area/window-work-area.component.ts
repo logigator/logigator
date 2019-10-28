@@ -159,7 +159,7 @@ export class WindowWorkAreaComponent extends WorkArea implements OnInit, OnChang
 		const identifiers = this.identifier.split(':').slice(0, 2 + index);
 		this.requestInspectElementInSim.emit({
 			identifier: identifiers.join(':'),
-			typeId: this.parentTypeIds[index + 1],
+			typeId: this.parentTypeIds[index],
 			parentNames: this.parentNames.splice(0, index),
 			parentTypeIds: this.parentTypeIds.slice(0, index)
 		});
