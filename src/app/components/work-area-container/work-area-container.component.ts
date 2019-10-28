@@ -62,6 +62,7 @@ export class WorkAreaContainerComponent implements OnInit {
 
 		if (fromWindow === undefined) {
 			meta.parentNames.shift();
+			meta.parentTypesIds.shift();
 			let firstHidden = this.windowWorkAreas.find(a => !a.showing);
 			if (!firstHidden) firstHidden = this.windowWorkAreas[0];
 			firstHidden.showing = meta.showing;
