@@ -1,6 +1,7 @@
 import {Chunk} from './chunk';
 import {ProjectModel} from './project-model';
-import {Element, Elements} from './element';
+import {Element} from './element';
+import {Elements} from './elements';
 import * as PIXI from 'pixi.js';
 import {CollisionFunctions} from './collision-functions';
 import {Action, ChangeType} from './action';

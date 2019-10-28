@@ -1,5 +1,6 @@
 import { Injectable } from '@angular/core';
-import {Element, Elements} from '../../models/element';
+import {Element} from '../../models/element';
+import {Elements} from '../../models/elements';
 import {ProjectsService} from '../projects/projects.service';
 import {SelectionService} from '../selection/selection.service';
 import * as PIXI from 'pixi.js';

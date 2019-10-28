@@ -11,12 +11,13 @@ import {
 	WiresOnLinks,
 	WiresOnLinksInProject
 } from './compiler-types';
-import {Element, Elements} from '../../../models/element';
+import {Element} from '../../../models/element';
 import {ProjectState} from '../../../models/project-state';
 import {CompiledComp} from './compiled-comp';
 import {ProjectSaveManagementService} from '../../project-save-management/project-save-management.service';
 import {ElementProviderService} from '../../element-provider/element-provider.service';
 import {MapHelper} from './map-helper';
+import {Elements} from '../../../models/elements';
 
 @Injectable({
 	providedIn: 'root'

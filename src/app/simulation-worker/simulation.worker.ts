@@ -1,8 +1,7 @@
 /// <reference lib="webworker" />
 
-import {Board, BoardState} from '../models/simulation/board';
-import {SimulationModule, TypedArray} from '../models/simulation/simulation-module';
-import {Pointer, WasmMethod, WasmRequest, WasmResponse} from '../models/simulation/wasm-interface';
+import {SimulationModule} from '../models/simulation/simulation-module';
+import {WasmMethod, WasmRequest, WasmResponse} from '../models/simulation/wasm-interface';
 import {SimulationWorker} from '../models/simulation/simulation-worker';
 
 let initialized = false;
@@ -54,6 +53,7 @@ addEventListener('message', ({ data }: {data: WasmRequest}) => {
 			if (worker) {
 				worker.destroy();
 			}
+
 			worker = new SimulationWorker(data.board, Module);
 			break;
 		case WasmMethod.status:

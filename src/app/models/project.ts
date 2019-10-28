@@ -1,6 +1,7 @@
 import {ProjectState} from './project-state';
 import {Action, Actions} from './action';
-import {Element, Elements} from './element';
+import {Element} from './element';
+import {Elements} from './elements';
 import {Observable, Subject} from 'rxjs';
 import * as PIXI from 'pixi.js';
 import {CollisionFunctions} from './collision-functions';

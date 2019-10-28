@@ -6,7 +6,7 @@ import {catchError, filter, map} from 'rxjs/operators';
 import {ProjectModel} from '../../models/project-model';
 import * as PIXI from 'pixi.js';
 import {HttpClient} from '@angular/common/http';
-import {Element, Elements} from '../../models/element';
+import {Element} from '../../models/element';
 import {ComponentInfoResponse} from '../../models/http-responses/component-info-response';
 import {ProjectState} from '../../models/project-state';
 import {ElementProviderService} from '../element-provider/element-provider.service';
@@ -23,6 +23,7 @@ import {environment} from '../../../environments/environment';
 import {ElectronService} from 'ngx-electron';
 import {saveLocalFile} from './save-local-file';
 import {SharingService} from '../sharing/sharing.service';
+import {Elements} from '../../models/elements';
 
 @Injectable({
 	providedIn: 'root'

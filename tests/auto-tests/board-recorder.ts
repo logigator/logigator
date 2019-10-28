@@ -2,7 +2,7 @@ import {Project} from '../../src/app/models/project';
 import * as PIXI from 'pixi.js';
 import {ProjectState} from '../../src/app/models/project-state';
 import {CollisionFunctions} from '../../src/app/models/collision-functions';
-import {Elements} from '../../src/app/models/element';
+import {Elements} from '../../src/app/models/elements';
 
 export class BoardRecorder {
 

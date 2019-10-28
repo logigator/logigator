@@ -1,4 +1,5 @@
-import {Element, Elements} from './element';
+import {Element} from './element';
+import {Elements} from './elements';
 import * as PIXI from 'pixi.js';
 
 export type ActionType =
