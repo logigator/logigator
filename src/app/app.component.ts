@@ -32,6 +32,7 @@ export class AppComponent implements OnInit, OnDestroy {
 		@Inject(DOCUMENT) private document: HTMLDocument,
 		private translate: TranslateService
 	) {
+		this.setGoogleAnalytics();
 		this.initTranslation();
 	}
 
@@ -108,6 +109,14 @@ export class AppComponent implements OnInit, OnDestroy {
 		this.translate.addLangs(['en', 'de']);
 		this.translate.setDefaultLang('en');
 		this.translate.use('en');
+	}
+
+	private setGoogleAnalytics() {
+		// #!electron
+		gtag('config', 'UA-151071040-3', { page_path: 'electron' });
+
+		// #!web
+		gtag('config', 'UA-151071040-3', { page_path: 'web' });
 	}
 
 	ngOnDestroy(): void {
