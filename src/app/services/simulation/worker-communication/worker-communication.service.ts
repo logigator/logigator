@@ -55,24 +55,17 @@ export class WorkerCommunicationService {
 				console.error(`Response data length does not match component count`, data, this._compiledBoard);
 			}
 
-			const changes = this._powerStatesDiffer.diff(data.state);
-			if (changes !== null) {
-				const powerChanges: Map<string, PowerChangesOutWire> = new Map<string, PowerChangesOutWire>();
-				for (const projId of this._powerSubjectsWires.keys()) {
-					powerChanges.set(projId, new Map<Element, boolean>());
-				}
-				changes.forEachItem(r => {
-					for (const projId of this._powerSubjectsWires.keys()) {
-						if (this.stateCompiler.wiresOnLinks.get(projId).get(r.currentIndex)) {
-							for (const wire of this.stateCompiler.wiresOnLinks.get(projId).get(r.currentIndex)) {
-								powerChanges.get(projId).set(wire, r.item as unknown as boolean);
-							}
-						}
+			const powerChanges: Map<string, PowerChangesOutWire> = new Map<string, PowerChangesOutWire>();
+			for (const projId of this._powerSubjectsWires.keys()) {
+				powerChanges.set(projId, new Map<Element, boolean>());
+				for (const [link, wires] of this.stateCompiler.wiresOnLinks.get(projId).entries()) {
+					for (const wire of wires) {
+						powerChanges.get(projId).set(wire, data.state[link] as unknown as boolean);
 					}
-				});
-				for (const projId of this._powerSubjectsWires.keys()) {
-					this._powerSubjectsWires.get(projId).next(powerChanges.get(projId));
 				}
+			}
+			for (const projId of this._powerSubjectsWires.keys()) {
+				this._powerSubjectsWires.get(projId).next(powerChanges.get(projId));
 			}
 
 			if (this._isContinuous) {

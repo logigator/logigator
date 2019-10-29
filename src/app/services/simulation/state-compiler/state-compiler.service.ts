@@ -297,14 +297,11 @@ export class StateCompilerService {
 
 	private pushWiresOnLink(idIdentifier: string, newVal, typeIdentifier, val: number) {
 		if (this._wiresOnLinks.get(idIdentifier).has(newVal)) {
-			this._wiresOnLinks.get(idIdentifier).get(newVal).push(...(this._wiresOnLinksCache.get(typeIdentifier).get(val)) || []);
+			if (this._wiresOnLinks.get(idIdentifier).get(newVal)[0] !== this._wiresOnLinksCache.get(typeIdentifier).get(val)[0]) {
+				this._wiresOnLinks.get(idIdentifier).get(newVal).push(...(this._wiresOnLinksCache.get(typeIdentifier).get(val)) || []);
+			}
 		} else {
 			this._wiresOnLinks.get(idIdentifier).set(newVal, this._wiresOnLinksCache.get(typeIdentifier).get(val) || []);
-		}
-		if (this._wireEndsOnLinks.get(idIdentifier).has(newVal)) {
-			this._wireEndsOnLinks.get(idIdentifier).get(newVal).push(...(this._wireEndsOnLinksCache.get(typeIdentifier).get(val)) || []);
-		} else {
-			this._wireEndsOnLinks.get(idIdentifier).set(newVal, this._wireEndsOnLinksCache.get(typeIdentifier).get(val) || []);
 		}
 	}
 
