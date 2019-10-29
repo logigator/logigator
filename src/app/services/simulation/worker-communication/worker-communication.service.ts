@@ -22,7 +22,7 @@ export class WorkerCommunicationService {
 
 	private _compiledBoard: SimulationUnit[];
 
-	private _userInputChanges: Map<number, boolean>;
+	private _userInputChanges: Map<number, boolean> = new Map<number, boolean>();
 
 	private _powerStatesDiffer: IterableDiffer<number>;
 

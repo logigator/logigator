@@ -58,6 +58,8 @@ export class StateCompilerService {
 	}
 
 	public async compile(project: Project): Promise<SimulationUnit[]> {
+		this.clearCache(); // TODO fix cache
+
 		this._highestLinkId = 0;
 		this.initElemsOnLinks('0');
 		const depTree = await this.projectsToCompile(project);
@@ -66,6 +68,8 @@ export class StateCompilerService {
 		this.compileDependencies(depTree);
 		const out =  this.projectUnits(project.id, '0');
 		console.log(`compilation took ${Date.now() - start}ms`);
+		console.log(out);
+		console.log(this._wiresOnLinks);
 		return out;
 	}
 
@@ -95,16 +99,22 @@ export class StateCompilerService {
 
 	public clearCache(): void {
 		this._udcCache.clear();
+		if (this._wiresOnLinksCache) {
+			this._wiresOnLinksCache.clear();
+			this._wireEndsOnLinksCache.clear();
+			this._wiresOnLinks.clear();
+			this._wireEndsOnLinks.clear();
+		}
 		this._highestLinkId = 0;
 	}
 
 	private compileDependencies(depTree: Map<number, Project>): void {
 		for (const [typeId, project] of depTree.entries()) {
 			this._currTypeId = typeId;
-			if (!this._udcCache.has(typeId) || project.compileDirty) {
-				this._udcCache.set(typeId, this.compileSingle(project));
-			} else {
+			if (this._udcCache.has(typeId) && !project.compileDirty) {
 				console.log('load from cache', typeId);
+			} else {
+				this._udcCache.set(typeId, this.compileSingle(project));
 			}
 			project.compileDirty = false;
 		}
@@ -259,6 +269,8 @@ export class StateCompilerService {
 			this.removePlugs(compiledComp, units);
 		}
 
+		if (this._highestLinkId > 0)
+			this._highestLinkId++;
 		let highestInProj = this._highestLinkId;
 		const udcIndexes: number[] = [];
 		let unitIndex = 0;
@@ -296,7 +308,7 @@ export class StateCompilerService {
 	}
 
 	private pushWiresOnLink(idIdentifier: string, newVal, typeIdentifier, val: number) {
-		if (this._wiresOnLinks.get(idIdentifier).has(newVal)) {
+		if (this._wiresOnLinks.get(idIdentifier).has(newVal) && this._wiresOnLinks.get(idIdentifier).get(newVal).length > 0) {
 			if (this._wiresOnLinks.get(idIdentifier).get(newVal)[0] !== this._wiresOnLinksCache.get(typeIdentifier).get(val)[0]) {
 				this._wiresOnLinks.get(idIdentifier).get(newVal).push(...(this._wiresOnLinksCache.get(typeIdentifier).get(val)) || []);
 			}
