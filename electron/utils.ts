@@ -5,14 +5,9 @@ export function getApiUrl(): string {
 	return 'https://api.logigator.com';
 }
 
-export function getHttpFilterRewriteUrl(): OnBeforeSendHeadersFilter {
-	return {
-		urls: [
-			'https://localhost:8202/api/*',
-			'http://localhost:8202/api/*',
-			'http://logi/api/*'
-		]
-	};
+export function getDomain(): string {
+	if (process.env.LOCAL_DOMAIN) return process.env.LOCAL_DOMAIN;
+	return 'https://editor.logigator.com';
 }
 
 export function getHttpFilterSetCookie(): OnBeforeSendHeadersFilter {

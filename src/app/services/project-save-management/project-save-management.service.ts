@@ -73,7 +73,7 @@ export class ProjectSaveManagementService {
 	}
 
 	public getAllProjectsInfoFromServer(): Observable<ProjectInfoResponse[]> {
-		return this.http.get<HttpResponseData<ProjectInfoResponse[]>>(environment.apiPrefix + '/api/project/get-all-projects-info').pipe(
+		return this.http.get<HttpResponseData<ProjectInfoResponse[]>>(environment.apiPrefix + '/project/get-all-projects-info').pipe(
 			this.errorHandling.catchErrorOperator('Unable to get Projects from Server', undefined),
 			map(r => r.result)
 		);
@@ -158,7 +158,7 @@ export class ProjectSaveManagementService {
 	public async cloneShare(): Promise<Project> {
 		if (!this.isShare) return;
 		const address = location.pathname.substr(location.pathname.lastIndexOf('/') + 1);
-		const resp = await this.http.get<HttpResponseData<any>>(`${environment.apiPrefix}/api/project/clone/${address}`).pipe(
+		const resp = await this.http.get<HttpResponseData<any>>(`${environment.apiPrefix}/project/clone/${address}`).pipe(
 			this.errorHandling.catchErrorOperator('Unable to clone project', undefined)
 		).toPromise();
 		if (resp) {
@@ -337,7 +337,7 @@ export class ProjectSaveManagementService {
 	}
 
 	private async createProjectServer(name: string): Promise<number> {
-		return this.http.post<HttpResponseData<CreateProjectResponse>>(environment.apiPrefix + '/api/project/create', {
+		return this.http.post<HttpResponseData<CreateProjectResponse>>(environment.apiPrefix + '/project/create', {
 			name,
 			isComponent: false
 		}).pipe(
@@ -367,7 +367,7 @@ export class ProjectSaveManagementService {
 		}
 		if (this._projectCache.has(id))
 			return Promise.resolve(this._projectCache.get(id));
-		return this.http.get<HttpResponseData<OpenProjectResponse>>(`${environment.apiPrefix}/api/project/open/${id}`).pipe(
+		return this.http.get<HttpResponseData<OpenProjectResponse>>(`${environment.apiPrefix}/project/open/${id}`).pipe(
 			map(response => this.componentFromServerResponse(response.result)),
 			this.errorHandling.catchErrorOperatorDynamicMessage((err: any) => {
 				if (err.message === 'isProj') return 'Unable to open Project as Component';
@@ -408,7 +408,7 @@ export class ProjectSaveManagementService {
 	}
 
 	private newCustomComponentOnServer(name: string, symbol: string, description: string = ''): Promise<number> {
-		return this.http.post<HttpResponseData<{id: number}>>(environment.apiPrefix + '/api/project/create', {
+		return this.http.post<HttpResponseData<{id: number}>>(environment.apiPrefix + '/project/create', {
 			name,
 			isComponent: true,
 			symbol,
@@ -425,7 +425,7 @@ export class ProjectSaveManagementService {
 	private saveSingleProjectToServer(project: Project): Promise<HttpResponseData<{success: boolean}>> {
 		if (project.id < 1000) return;
 		const body = this.projectToSaveRequest(project);
-		return this.http.post<HttpResponseData<{success: boolean}>>(`${environment.apiPrefix}/api/project/save/${project.id}`, body).pipe(
+		return this.http.post<HttpResponseData<{success: boolean}>>(`${environment.apiPrefix}/project/save/${project.id}`, body).pipe(
 			this.errorHandling.showErrorMessageOnErrorOperator('Unable to save Component or Project on Server')
 		).toPromise();
 	}
@@ -464,7 +464,7 @@ export class ProjectSaveManagementService {
 		if (!this.user.isLoggedIn) {
 			return Promise.resolve(new Map());
 		}
-		return this.http.get<HttpResponseData<ComponentInfoResponse[]>>(environment.apiPrefix + '/api/project/get-all-components-info').pipe(
+		return this.http.get<HttpResponseData<ComponentInfoResponse[]>>(environment.apiPrefix + '/project/get-all-components-info').pipe(
 			map(data => {
 				const newElemTypes = new Map<number, ElementType>();
 				data.result.forEach(elem => {
@@ -515,7 +515,7 @@ export class ProjectSaveManagementService {
 		window.history.pushState(null, null, `/board/${id}`);
 		this._projectSource = 'server';
 		if (this._projectCache.has(id)) return this._projectCache.get(id);
-		return this.http.get<HttpResponseData<OpenProjectResponse>>(`${environment.apiPrefix}/api/project/open/${id}`).pipe(
+		return this.http.get<HttpResponseData<OpenProjectResponse>>(`${environment.apiPrefix}/project/open/${id}`).pipe(
 			map(response => this.projectFromServerResponse(response.result)),
 			catchError(err => {
 				// #!web

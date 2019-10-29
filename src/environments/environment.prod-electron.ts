@@ -3,6 +3,6 @@ export const environment = {
 	chunkSize: 16,
 	gridPixelWidth: 16,
 	componentWidth: 2,
-	apiPrefix: 'http://logi',
+	apiPrefix: 'https://api.logigator.com',
 	domain: 'https://editor.logigator.com'
 };

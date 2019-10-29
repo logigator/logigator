@@ -1,12 +1,3 @@
 {
-	"/api/*": {
-		"target": "http://api.logigator-local-dev.com/",
-		"secure": true,
-		"logLevel": "debug",
-		"changeOrigin": true,
-		"pathRewrite": {
-			"^/api": ""
-		}
-	},
 	"/logigator-simulation.wasm": "/assets/wasm"
 }

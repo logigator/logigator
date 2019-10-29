@@ -30,7 +30,7 @@ export class UserService {
 		this._userInfo$ = of(this.isLoggedIn).pipe(
 			switchMap(isLoggedIn => {
 				if (!isLoggedIn) return of(undefined);
-				return this.http.get<HttpResponseData<UserInfo>>(environment.apiPrefix + '/api/user/get').pipe(
+				return this.http.get<HttpResponseData<UserInfo>>(environment.apiPrefix + '/user/get').pipe(
 					map(response => response.result),
 					this.errorHandling.catchErrorOperator('Unable to get user info', undefined)
 				);

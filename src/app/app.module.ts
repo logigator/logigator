@@ -20,7 +20,7 @@ import { PopupComponent } from './components/popup/popup/popup.component';
 import { SingleShortcutConfigComponent } from './components/popup/popup-contents/shortcut-config/single-shortcut-config/single-shortcut-config.component';
 import { ShortcutConfigComponent } from './components/popup/popup-contents/shortcut-config/shortcut-config/shortcut-config.component';
 import { WindowWorkAreaComponent } from './components/window-work-area/window-work-area.component';
-import {HttpClient, HttpClientModule} from '@angular/common/http';
+import {HTTP_INTERCEPTORS, HttpClient, HttpClientModule} from '@angular/common/http';
 import { ReloadQuestionComponent } from './components/popup/popup-contents/relaod-question/reload-question.component';
 import { NewComponentComponent } from './components/popup/popup-contents/new-component/new-component.component';
 import { OpenProjectComponent } from './components/popup/popup-contents/open/open-project.component';
@@ -44,6 +44,7 @@ import { WorkAreaContainerComponent } from './components/work-area-container/wor
 import { ShareProjectComponent } from './components/popup/popup-contents/share-project/share-project.component';
 import {setStaticDIInjector} from './models/get-di';
 import {InputErrorComponent} from './components/input-error/input-error.component';
+import {CredentialsInterceptor} from './interceptors/credentials';
 
 @NgModule({
 	declarations: [
@@ -122,7 +123,13 @@ import {InputErrorComponent} from './components/input-error/input-error.componen
 			}
 		})
 	],
-	providers: [],
+	providers: [
+		{
+			provide: HTTP_INTERCEPTORS,
+			useClass: CredentialsInterceptor,
+			multi: true
+		}
+	],
 	bootstrap: [AppComponent]
 })
 export class AppModule {

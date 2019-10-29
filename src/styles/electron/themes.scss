@@ -70,7 +70,7 @@ $border-styles: (
 	@return $themeForTestFunction == $theme;
 }
 
-@mixin scrollbar($width) {
+@mixin scrollbar($width, $height: -1) {
 	&::-webkit-scrollbar-track
 	{
 		@include themify() {
@@ -81,6 +81,9 @@ $border-styles: (
 	&::-webkit-scrollbar
 	{
 		width: $width;
+		@if ($height != -1) {
+			height: $height;
+		}
 	}
 
 	&::-webkit-scrollbar-thumb

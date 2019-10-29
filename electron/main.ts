@@ -3,7 +3,7 @@ import * as path from 'path';
 import * as url from 'url';
 import * as fs from 'fs';
 import {AuthenticationHandler} from './authentication-handler';
-import {getApiUrl, getHttpFilterRewriteUrl, getHttpFilterSetCookie} from './utils';
+import {getDomain, getHttpFilterSetCookie} from './utils';
 
 const args = process.argv.slice(1);
 const serve = args.some(val => val === '--serve');
@@ -87,26 +87,16 @@ function registerFileProtocols() {
 }
 
 function registerHttpInterceptor() {
-	session.defaultSession.webRequest.onBeforeRequest(getHttpFilterRewriteUrl(), (details, callback) => {
-		const rewriteUrl = getApiUrl() + details.url.substring(details.url.indexOf('/api') + 4);
-		callback({
-			redirectURL: rewriteUrl
-		});
-	});
-
 	session.defaultSession.webRequest.onBeforeSendHeaders(getHttpFilterSetCookie(), (details, callback) => {
 		// tslint:disable-next-line:no-string-literal
 		details.requestHeaders['Cookie'] = authHandler.cookies;
+		// tslint:disable-next-line:no-string-literal
+		details.requestHeaders['Origin'] = getDomain();
+		// tslint:disable-next-line:no-string-literal
+		details.requestHeaders['Referer'] = getDomain() + '/';
 
 		callback({
 			requestHeaders: details.requestHeaders
-		});
-	});
-
-	session.defaultSession.webRequest.onHeadersReceived(getHttpFilterSetCookie(), (details, callback) => {
-		callback({
-			statusLine: details.statusLine,
-			responseHeaders: details.responseHeaders
 		});
 	});
 }
