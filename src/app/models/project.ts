@@ -185,7 +185,11 @@ export class Project {
 	}
 
 	public addWire(_pos: PIXI.Point, _cornerPos: PIXI.Point, _endPos?: PIXI.Point): Element[] {
-		if (!_endPos) {
+		if (_cornerPos.equals(_pos)) {
+			_cornerPos = _endPos;
+			_endPos = undefined;
+		}
+		if (!_endPos || _cornerPos.equals(_endPos)) {
 			const elem = this.addElement(0, undefined, 0, 0, _pos, _cornerPos);
 			return elem ? [elem] : null;
 		}
