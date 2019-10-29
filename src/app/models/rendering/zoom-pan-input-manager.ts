@@ -10,6 +10,7 @@ export class ZoomPanInputManager {
 	private _destroySubject = new Subject<any>();
 	private _interactionStart = new Subject<void>();
 	private _interactionEnd = new Subject<void>();
+	private _zoom = new Subject<void>();
 
 	private _mouseDown = false;
 	private _mouseMoved = false;
@@ -82,13 +83,12 @@ export class ZoomPanInputManager {
 	}
 
 	private mouseWheelHandler(event: WheelEvent) {
-		this._interactionStart.next();
 		if (event.deltaY < 0) {
 			this._wheelDown = true;
 		} else if (event.deltaY > 0) {
 			this._wheelUp = true;
 		}
-		this._interactionEnd.next();
+		this._zoom.next();
 	}
 
 	public clearMouseDelta() {
@@ -142,6 +142,10 @@ export class ZoomPanInputManager {
 
 	public get interactionEnd$(): Observable<void> {
 		return this._interactionEnd.asObservable();
+	}
+
+	public get zoom$(): Observable<void> {
+		return this._zoom.asObservable();
 	}
 
 	public destroy() {

@@ -7,5 +7,6 @@
 		"pathRewrite": {
 			"^/api": ""
 		}
-	}
+	},
+	"/logigator-simulation.wasm": "/assets/wasm"
 }

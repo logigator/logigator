@@ -31,6 +31,9 @@ export class WindowWorkAreaComponent extends WorkArea implements OnInit, OnChang
 	public project: Project;
 
 	@Input()
+	public projectChange: number;
+
+	@Input()
 	identifier: string;
 
 	@Input()
@@ -78,18 +81,25 @@ export class WindowWorkAreaComponent extends WorkArea implements OnInit, OnChang
 			if (changes.showing.currentValue) {
 				this.show();
 			} else {
-				if (this._dragManager) {
-					this._dragManager.destroy();
-					delete this._dragManager;
-				}
 				this.hide();
 			}
 		}
-		if (changes.project && this.showing) {
+		if (changes.identifier) {
+			this.ticker.removeTickerFunction(changes.identifier.previousValue);
+		}
+		if (changes.projectChange && this.showing) {
+			this.addTickerFunction();
+
+			if (this._activeView) {
+				this._activeView.destroy();
+				// @ts-ignore
+				this._pixiRenderer._lastObjectRendered = null;
+			}
+
 			this._activeView = new SimulationView(
 				this.project,
 				this._pixiCanvasContainer.nativeElement,
-				this._ticker,
+				() => this.ticker.singleFrame(this.identifier),
 				this.requestInspectElementInSim,
 				this.identifier,
 				this.parentNames,
@@ -109,6 +119,10 @@ export class WindowWorkAreaComponent extends WorkArea implements OnInit, OnChang
 		}
 	}
 
+	getIdentifier(): string {
+		return this.identifier;
+	}
+
 	public doRequestHide() {
 		this.requestHide.emit();
 	}
@@ -118,10 +132,18 @@ export class WindowWorkAreaComponent extends WorkArea implements OnInit, OnChang
 	}
 
 	public hide() {
+		this.ticker.removeTickerFunction(this.identifier);
 		this.renderer2.setStyle(this._popup.nativeElement, 'display', 'none');
-		if (!this._dragManager) return;
-		this._dragManager.destroy();
-		delete this._dragManager;
+		if (this._dragManager) {
+			this._dragManager.destroy();
+			delete this._dragManager;
+		}
+		if (this._activeView) {
+			this._activeView.destroy();
+			delete this._activeView;
+			// @ts-ignore
+			this._pixiRenderer._lastObjectRendered = null;
+		}
 	}
 
 	public show() {
@@ -139,15 +161,15 @@ export class WindowWorkAreaComponent extends WorkArea implements OnInit, OnChang
 		const identifiers = this.identifier.split(':').slice(0, 2 + index);
 		this.requestInspectElementInSim.emit({
 			identifier: identifiers.join(':'),
-			typeId: this.parentTypeIds[index + 1],
+			typeId: this.parentTypeIds[index],
 			parentNames: this.parentNames.splice(0, index),
 			parentTypeIds: this.parentTypeIds.slice(0, index)
 		});
 	}
 
 	ngOnDestroy(): void {
-		super.destroy();
 		this._dragManager.destroy();
+		super.destroy();
 	}
 
 }

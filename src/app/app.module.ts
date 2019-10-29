@@ -43,6 +43,7 @@ import { RegisterComponent } from './components/popup/popup-contents/register/re
 import { WorkAreaContainerComponent } from './components/work-area-container/work-area-container.component';
 import { ShareProjectComponent } from './components/popup/popup-contents/share-project/share-project.component';
 import {setStaticDIInjector} from './models/get-di';
+import {InputErrorComponent} from './components/input-error/input-error.component';
 
 @NgModule({
 	declarations: [
@@ -72,6 +73,7 @@ import {setStaticDIInjector} from './models/get-di';
 		SwitchComponent,
 		UnsavedChangesComponent,
 		InputComponent,
+		InputErrorComponent,
 		// #!electron
 		LoginComponent,
 		// #!electron

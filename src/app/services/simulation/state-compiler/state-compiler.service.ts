@@ -1,6 +1,6 @@
 import {Injectable} from '@angular/core';
 import {Project} from '../../../models/project';
-import {SimulationUnit, SimulationUnits} from '../../../models/simulation/SimulationUnit';
+import {SimulationUnit, SimulationUnits} from '../../../models/simulation/simulation-unit';
 import {
 	ElementToUnit, LinkOnWireEnd,
 	PosOfElem, UnitElementBidir,
@@ -11,12 +11,13 @@ import {
 	WiresOnLinks,
 	WiresOnLinksInProject
 } from './compiler-types';
-import {Element, Elements} from '../../../models/element';
+import {Element} from '../../../models/element';
 import {ProjectState} from '../../../models/project-state';
 import {CompiledComp} from './compiled-comp';
 import {ProjectSaveManagementService} from '../../project-save-management/project-save-management.service';
 import {ElementProviderService} from '../../element-provider/element-provider.service';
 import {MapHelper} from './map-helper';
+import {Elements} from '../../../models/elements';
 
 @Injectable({
 	providedIn: 'root'
@@ -57,16 +58,19 @@ export class StateCompilerService {
 	}
 
 	public async compile(project: Project): Promise<SimulationUnit[]> {
-		const start = Date.now();
+		this.clearCache(); // TODO fix cache
+
 		this._highestLinkId = 0;
 		this.initElemsOnLinks('0');
 		const depTree = await this.projectsToCompile(project);
 		this._depTree = depTree;
+		const start = Date.now();
 		this.compileDependencies(depTree);
-
-		const units = this.projectUnits(project.id, '0');
-		console.log(`Compilation took ${Date.now() - start}ms`);
-		return units;
+		const out =  this.projectUnits(project.id, '0');
+		console.log(`compilation took ${Date.now() - start}ms`);
+		console.log(out);
+		console.log(this._wiresOnLinks);
+		return out;
 	}
 
 	private initElemsOnLinksCache(identifier: string): void {
@@ -94,14 +98,25 @@ export class StateCompilerService {
 	}
 
 	public clearCache(): void {
-		this._udcCache = new Map<number, CompiledComp>();
+		this._udcCache.clear();
+		if (this._wiresOnLinksCache) {
+			this._wiresOnLinksCache.clear();
+			this._wireEndsOnLinksCache.clear();
+			this._wiresOnLinks.clear();
+			this._wireEndsOnLinks.clear();
+		}
 		this._highestLinkId = 0;
 	}
 
 	private compileDependencies(depTree: Map<number, Project>): void {
 		for (const [typeId, project] of depTree.entries()) {
 			this._currTypeId = typeId;
-			this._udcCache.set(typeId, this.compileSingle(project));
+			if (this._udcCache.has(typeId) && !project.compileDirty) {
+				console.log('load from cache', typeId);
+			} else {
+				this._udcCache.set(typeId, this.compileSingle(project));
+			}
+			project.compileDirty = false;
 		}
 	}
 
@@ -112,7 +127,7 @@ export class StateCompilerService {
 
 	private calcCompiledComp(state: ProjectState, unitElems: UnitElementBidir): CompiledComp {
 		const compiledComp: CompiledComp = {
-			units: [],
+			units: new Map<SimulationUnit, Element>(),
 			wiresOnLinks: new Map<number, Element[]>(),
 			wireEndsOnLinks: new Map<number, WireEndOnComp[]>(),
 			connectedPlugs: [],
@@ -122,7 +137,7 @@ export class StateCompilerService {
 
 		this.setAllLinks(unitElems, linksOnWireEnds, state, compiledComp);
 
-		compiledComp.units = [...unitElems.unitToElement.keys()];
+		compiledComp.units = unitElems.unitToElement;
 		this.loadConnectedPlugs(compiledComp);
 		MapHelper.uniquify(compiledComp);
 
@@ -141,8 +156,9 @@ export class StateCompilerService {
 			let wireEndIndex = -1;
 			for (const wireEndPos of Elements.wireEnds(element)) {
 				wireEndIndex++;
-				if (this.wireIdHasLink(linksOnWireEnds, element, wireEndIndex))
+				if (this.wireIdHasLink(linksOnWireEnds, element, wireEndIndex)) {
 					continue;
+				}
 				linkId = this.setLinks(state, wireEndPos, linksOnWireEnds,
 					linkId, unitElems, compiledComp) + 1;
 			}
@@ -166,7 +182,6 @@ export class StateCompilerService {
 		compiledComp: CompiledComp,
 		coveredPoints?: PosOfElem[]
 	): number {
-		// TODO coveredPoints as Map
 		coveredPoints = coveredPoints || [];
 		for (const [elem, index] of state.wireEndsOnPoint(pos)) {
 			if (coveredPoints.find(p => p.id === elem.id && p.pos.equals(pos)))
@@ -244,7 +259,7 @@ export class StateCompilerService {
 		outerUnit?: SimulationUnit
 	): SimulationUnit[] {
 		const compiledComp = this._udcCache.get(projectId);
-		const units = SimulationUnits.cloneMult(compiledComp.units);
+		const units = SimulationUnits.cloneMult([...compiledComp.units.keys()]);
 		const linkMap = new Map<number, number>();
 		const typeIdentifier = '' + projectId;
 		if (outerUnit) {
@@ -254,6 +269,8 @@ export class StateCompilerService {
 			this.removePlugs(compiledComp, units);
 		}
 
+		if (this._highestLinkId > 0)
+			this._highestLinkId++;
 		let highestInProj = this._highestLinkId;
 		const udcIndexes: number[] = [];
 		let unitIndex = 0;
@@ -261,12 +278,10 @@ export class StateCompilerService {
 			[unit.inputs, unit.outputs].forEach(arr => {
 				for (let i = 0; i < arr.length; i++) {
 					const newVal = linkMap.has(arr[i]) ? linkMap.get(arr[i]) : arr[i] + this._highestLinkId;
-					// TODO right projectID
 					if (!this._wiresOnLinks.get(idIdentifier)) {
 						this.initElemsOnLinks(idIdentifier);
 					}
-					this._wiresOnLinks.get(idIdentifier).set(newVal, this._wiresOnLinksCache.get(typeIdentifier).get(arr[i]));
-					this._wireEndsOnLinks.get(idIdentifier).set(newVal, this._wireEndsOnLinksCache.get(typeIdentifier).get(arr[i]));
+					this.pushWiresOnLink(idIdentifier, newVal, typeIdentifier, arr[i]);
 					arr[i] = newVal;
 					if (arr[i] > highestInProj) {
 						highestInProj = arr[i];
@@ -284,12 +299,22 @@ export class StateCompilerService {
 		for (let i = udcIndexes.length - 1; i >= 0; i--) {
 			const index = udcIndexes[i];
 			const inner = this.projectUnits(units[index].typeId,
-				idIdentifier + `:${index}`, units[index]);
+				idIdentifier + `:${compiledComp.units.get([...compiledComp.units.keys()][index]).id}`, units[index]);
 			units.splice(index, 1);
 			units.push(...inner);
 		}
 
 		return units;
+	}
+
+	private pushWiresOnLink(idIdentifier: string, newVal, typeIdentifier, val: number) {
+		if (this._wiresOnLinks.get(idIdentifier).has(newVal) && this._wiresOnLinks.get(idIdentifier).get(newVal).length > 0) {
+			if (this._wiresOnLinks.get(idIdentifier).get(newVal)[0] !== this._wiresOnLinksCache.get(typeIdentifier).get(val)[0]) {
+				this._wiresOnLinks.get(idIdentifier).get(newVal).push(...(this._wiresOnLinksCache.get(typeIdentifier).get(val)) || []);
+			}
+		} else {
+			this._wiresOnLinks.get(idIdentifier).set(newVal, this._wiresOnLinksCache.get(typeIdentifier).get(val) || []);
+		}
 	}
 
 	private removePlugs(compiledComp: CompiledComp, units: SimulationUnit[]) {
@@ -304,10 +329,10 @@ export class StateCompilerService {
 		const plugsByIndexKeys = [...plugsByIndex.keys()];
 		for (let i = 0; i < plugsByIndexKeys.length; i++) {
 			const plugIndex = plugsByIndexKeys[i];
-			const value = SimulationUnits.concatIO(compiledComp.units[plugsByIndex.get(plugIndex)])[0];
+			const value = SimulationUnits.concatIO([...compiledComp.units.keys()][plugsByIndex.get(plugIndex)])[0];
 			for (let j = i + 1; j < plugsByIndexKeys.length; j++) {
 				const otherIndex = plugsByIndexKeys[j];
-				const otherValue = SimulationUnits.concatIO(compiledComp.units[plugsByIndex.get(otherIndex)])[0];
+				const otherValue = SimulationUnits.concatIO([...compiledComp.units.keys()][plugsByIndex.get(otherIndex)])[0];
 				if (value === otherValue) {
 					let pushed = false;
 					for (const arr of compiledComp.connectedPlugs) {
@@ -344,5 +369,10 @@ export class StateCompilerService {
 
 	get wireEndsOnLinksCache(): Map<string, WireEndsOnLinks> {
 		return this._wireEndsOnLinksCache;
+	}
+
+
+	get highestLinkId(): number {
+		return this._highestLinkId;
 	}
 }

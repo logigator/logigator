@@ -35,7 +35,10 @@ export class WorkAreaContainerComponent implements OnInit {
 				this.renderer2.setStyle(this.workAreaContainer.nativeElement, 'width', '100%');
 			} else {
 				this.renderer2.removeStyle(this.workAreaContainer.nativeElement, 'width');
-				this.windowWorkAreas.forEach(a => a.showing = false);
+				this.windowWorkAreas.forEach(a => {
+					a.identifier = null;
+					a.showing = false;
+				});
 				this.cdr.detectChanges();
 			}
 		});
@@ -52,18 +55,21 @@ export class WorkAreaContainerComponent implements OnInit {
 			identifier: event.identifier,
 			parentNames: event.parentNames,
 			parentTypesIds: event.parentTypeIds,
-			zIndex: 1
+			zIndex: 1,
+			projectChange: Math.random()
 		};
 
 		this.moveAllBack();
 
 		if (fromWindow === undefined) {
 			meta.parentNames.shift();
+			meta.parentTypesIds.shift();
 			let firstHidden = this.windowWorkAreas.find(a => !a.showing);
 			if (!firstHidden) firstHidden = this.windowWorkAreas[0];
 			firstHidden.showing = meta.showing;
 			firstHidden.identifier = meta.identifier;
 			firstHidden.project = meta.project;
+			firstHidden.projectChange = meta.projectChange;
 			firstHidden.parentNames = meta.parentNames;
 			firstHidden.parentTypesIds = meta.parentTypesIds;
 			firstHidden.zIndex = meta.zIndex;
@@ -74,6 +80,7 @@ export class WorkAreaContainerComponent implements OnInit {
 		this.windowWorkAreas[fromWindow].showing = meta.showing;
 		this.windowWorkAreas[fromWindow].identifier = meta.identifier;
 		this.windowWorkAreas[fromWindow].project = meta.project;
+		this.windowWorkAreas[fromWindow].projectChange = meta.projectChange;
 		this.windowWorkAreas[fromWindow].parentNames = meta.parentNames;
 		this.windowWorkAreas[fromWindow].parentTypesIds = meta.parentTypesIds;
 		this.windowWorkAreas[fromWindow].zIndex = meta.zIndex;
@@ -93,6 +100,7 @@ export class WorkAreaContainerComponent implements OnInit {
 
 	requestHide(window: number) {
 		this.windowWorkAreas[window].showing = false;
+		this.windowWorkAreas[window].identifier = null;
 		this.cdr.detectChanges();
 	}
 

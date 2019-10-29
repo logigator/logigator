@@ -65,7 +65,14 @@
 			"TITLE": "New Component",
 			"NAME": "Name",
 			"SYMBOL": "Symbol",
-			"CREATE": "CREATE"
+			"CREATE": "CREATE",
+			"NAME_REQUIRED": "Name is required",
+			"NAME_MIN_LENGTH": "Name is to short",
+			"NAME_MAX_LENGTH": "Name is to long",
+			"NAME_PATTERN": "Name must consist of A-Z a-z 0-9 -_",
+			"SYMBOL_REQUIRED": "Symbol is required",
+			"SYMBOL_MAX_LENGTH": "Symbol is to long",
+			"SYMBOL_PATTERN": "Symbol must consist of A-Z a-z 0-9 -_"
 		},
 		"SAVE": {
 			"TITLE": "Save Project",
@@ -124,6 +131,7 @@
 			"PUBLIC": "Public share",
 			"INFO_TEXT": "Please type in the email-addresses or usernames of the users, with whom you want to share this project.",
 			"EMAIL_USER": "e-mail / username",
+			"EMAIL_USER_ALREADY_ADDED": "Email or username is already added",
 			"ADD_EMAIL": "Add",
 			"REMOVE_EMAIL": "Remove",
 			"INVITATIONS": "Send email invitations to users",

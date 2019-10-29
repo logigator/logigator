@@ -1,6 +1,7 @@
 import {Chunk} from './chunk';
 import {ProjectModel} from './project-model';
-import {Element, Elements} from './element';
+import {Element} from './element';
+import {Elements} from './elements';
 import * as PIXI from 'pixi.js';
 import {CollisionFunctions} from './collision-functions';
 import {Action, ChangeType} from './action';
@@ -57,6 +58,7 @@ export class ProjectState {
 			this.loadIntoChunks(element);
 		}
 		this.loadConnectionPoints(this._model.board.elements);
+		this.specialActions = [];
 	}
 
 	private createChunk(x: number, y: number): void {

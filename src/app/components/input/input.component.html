@@ -1,10 +1,16 @@
 <div class="input-group">
-	<input
-		[type]="type"
-		[name]="label"
-		[id]="label + 'id'"
-		[(ngModel)]="state"
-		(ngModelChange)="stateChange()"
-		[disabled]="disabled">
-	<label [for]="label + 'id'">{{label}}</label>
+	<div class="input-container">
+		<input
+			[type]="type"
+			[name]="label"
+			[id]="label + 'id'"
+			[(ngModel)]="state"
+			(ngModelChange)="stateChange()"
+			[disabled]="disabled"
+			[class.invalid]="invalid">
+		<label [for]="label + 'id'" [class.has-value]="state" [class.invalid]="invalid">{{label}}</label>
+	</div>
+	<div class="errors">
+		<ng-content></ng-content>
+	</div>
 </div>

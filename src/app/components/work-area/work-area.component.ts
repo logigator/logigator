@@ -11,10 +11,11 @@ import {EditorView} from '../../models/rendering/editor-view';
 import {ProjectsService} from '../../services/projects/projects.service';
 import {Project} from '../../models/project';
 import {WorkArea} from '../../models/rendering/work-area';
-import {distinctUntilChanged, map, takeUntil} from 'rxjs/operators';
+import {takeUntil} from 'rxjs/operators';
 import {WorkModeService} from '../../services/work-mode/work-mode.service';
 import {SimulationView} from '../../models/rendering/simulation-view';
 import {View} from '../../models/rendering/view';
+import {WorkerCommunicationService} from '../../services/simulation/worker-communication/worker-communication.service';
 
 @Component({
 	selector: 'app-work-area',
@@ -32,7 +33,8 @@ export class WorkAreaComponent extends WorkArea implements OnInit, OnDestroy {
 		private renderer2: Renderer2,
 		private ngZone: NgZone,
 		private projectsService: ProjectsService,
-		private workMode: WorkModeService
+		private workMode: WorkModeService,
+		private workerCommunicationService: WorkerCommunicationService
 	) {
 		super();
 	}
@@ -41,6 +43,7 @@ export class WorkAreaComponent extends WorkArea implements OnInit, OnDestroy {
 		this._allViews = new Map<number, EditorView>();
 
 		this.ngZone.runOutsideAngular(async () => {
+			this.addTickerFunction();
 			this.preventContextMenu(this._pixiCanvasContainer, this.renderer2);
 			this.initZoomPan(this._pixiCanvasContainer);
 			this.initPixi(this._pixiCanvasContainer, this.renderer2);
@@ -50,7 +53,7 @@ export class WorkAreaComponent extends WorkArea implements OnInit, OnDestroy {
 			).subscribe(projectId => {
 				this.ngZone.runOutsideAngular(() => {
 					this.openProject(projectId);
-					this._ticker.singleFrame();
+					this.ticker.singleFrame('0');
 				});
 			});
 			this.projectsService.onProjectClosed$.pipe(
@@ -65,6 +68,14 @@ export class WorkAreaComponent extends WorkArea implements OnInit, OnDestroy {
 				takeUntil(this._destroySubject),
 			).subscribe(isSim => this.onSimulationModeChanged(isSim));
 		});
+	}
+
+	getIdentifier(): string {
+		return '0';
+	}
+
+	public setWorkerFrameTime() {
+		this.workerCommunicationService.setFrameTime(this.ticker.frameTime);
 	}
 
 	public get allProjects(): Map<number, Project> {
@@ -86,19 +97,21 @@ export class WorkAreaComponent extends WorkArea implements OnInit, OnDestroy {
 					this._activeView = new SimulationView(
 						proj,
 						this._pixiCanvasContainer.nativeElement,
-						this._ticker,
+						() => this.ticker.singleFrame('0'),
 						this.requestInspectElementInSim,
-						this.projectsService.mainProject.id.toString(),
+						'0',
 						[],
 						[]
 					);
-					this._ticker.singleFrame();
+					this.ticker.singleFrame('0');
 				}
 			});
 		} else {
 			if (!this._activeView) return;
 			this._activeView.destroy();
 			delete this._activeView;
+			// @ts-ignore
+			this._pixiRenderer._lastObjectRendered = null;
 			this.switchToProject(this.projectsService.allProjects.values().next().value.id);
 		}
 		if (this._pixiRenderer) {
@@ -107,7 +120,10 @@ export class WorkAreaComponent extends WorkArea implements OnInit, OnDestroy {
 	}
 
 	private openProject(projectId: number) {
-		const newView = new EditorView(this.projectsService.getProjectById(projectId), this._pixiCanvasContainer.nativeElement, this._ticker);
+		const newView = new EditorView(
+			this.projectsService.getProjectById(projectId),
+			this._pixiCanvasContainer.nativeElement,
+			() => this.ticker.singleFrame('0'));
 		this.ngZone.run(() => {
 			this._allViews.set(projectId, newView);
 			this._activeView = newView;
@@ -127,7 +143,7 @@ export class WorkAreaComponent extends WorkArea implements OnInit, OnDestroy {
 		) {
 			this.workMode.setWorkMode('select');
 		}
-		this._ticker.singleFrame();
+		this.ticker.singleFrame('0');
 	}
 
 	public tabCloseClicked(id: number, event: MouseEvent) {
@@ -148,6 +164,8 @@ export class WorkAreaComponent extends WorkArea implements OnInit, OnDestroy {
 			}
 		}
 		toClose.destroy();
+		// @ts-ignore
+		this._pixiRenderer._lastObjectRendered = null;
 	}
 
 	ngOnDestroy(): void {

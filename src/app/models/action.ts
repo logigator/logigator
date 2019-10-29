@@ -1,4 +1,5 @@
-import {Element, Elements} from './element';
+import {Element} from './element';
+import {Elements} from './elements';
 import * as PIXI from 'pixi.js';
 
 export type ActionType =
@@ -21,7 +22,7 @@ export interface ChangeType {
 }
 
 export interface Action {
-	name: ActionType;	// TODO element settings
+	name: ActionType;
 	element?: Element;
 	others?: Element[];
 	pos?: PIXI.Point;
@@ -47,8 +48,9 @@ export class Actions {
 	]);
 
 	public static reverseActions(actions: Action[]): Action[] {
+		if (!actions)
+			return actions;
 		const out: Action[] = [];
-		// TODO crashes when actions is undefined
 		for (let i = actions.length - 1; i > -1; i--) {
 			out.push(...Actions.reverseAction(actions[i]));
 		}

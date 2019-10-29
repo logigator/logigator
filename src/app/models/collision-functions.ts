@@ -1,7 +1,8 @@
-import {Element, Elements} from './element';
+import {Element} from './element';
 import * as PIXI from 'pixi.js';
 import {Project} from './project';
 import {environment} from '../../environments/environment';
+import {Elements} from './elements';
 
 export abstract class CollisionFunctions {
 

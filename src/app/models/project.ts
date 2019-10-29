@@ -1,6 +1,7 @@
 import {ProjectState} from './project-state';
 import {Action, Actions} from './action';
-import {Element, Elements} from './element';
+import {Element} from './element';
+import {Elements} from './elements';
 import {Observable, Subject} from 'rxjs';
 import * as PIXI from 'pixi.js';
 import {CollisionFunctions} from './collision-functions';
@@ -26,7 +27,8 @@ export class Project {
 
 	private _changeSubject: Subject<Action[]>;
 
-	public dirty = false;
+	public saveDirty = false;
+	public compileDirty = false;
 
 	// #!debug
 	public boardRecorder: BoardRecorder;
@@ -426,7 +428,8 @@ export class Project {
 		actions.push(...this._currState.specialActions);
 		this._currState.specialActions = [];
 		this._actions[this._currActionPointer] = actions;
-		this.dirty = true;
+		this.saveDirty = true;
+		this.compileDirty = true;
 		this._changeSubject.next(actions);
 	}
 

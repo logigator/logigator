@@ -1,6 +1,5 @@
 import * as PIXI from 'pixi.js';
 import {ZoomPan} from './zoom-pan';
-import {RenderTicker} from './render-ticker';
 import {RendererChunkData} from './renderer-chunk-data';
 import {ElementSprite} from '../element-sprite';
 import {Subject} from 'rxjs';
@@ -22,7 +21,7 @@ export abstract class View extends PIXI.Container {
 
 	public zoomPan: ZoomPan;
 
-	public ticker: RenderTicker;
+	public requestSingleFrame: () => void;
 
 	public readonly htmlContainer: HTMLElement;
 
@@ -40,11 +39,11 @@ export abstract class View extends PIXI.Container {
 	private themingService = getStaticDI(ThemingService);
 	private elementProviderService = getStaticDI(ElementProviderService);
 
-	protected constructor(project: Project, htmlContainer: HTMLElement, ticker: RenderTicker) {
+	protected constructor(project: Project, htmlContainer: HTMLElement, requestSingleFrameFn: () => void) {
 		super();
 		this._project = project;
 		this.htmlContainer = htmlContainer;
-		this.ticker = ticker;
+		this.requestSingleFrame = requestSingleFrameFn;
 		this.zoomPan = new ZoomPan(this);
 
 		this.interactive = true;
@@ -75,7 +74,12 @@ export abstract class View extends PIXI.Container {
 			if (this.createChunkIfNeeded(chunksToRender[i].x, chunksToRender[i].y)) continue;
 			const chunk = this._chunks[chunksToRender[i].x][chunksToRender[i].y];
 			chunk.container.visible = true;
+			chunk.container.renderable = true;
 			chunk.gridGraphics.visible = this.themingService.showGrid;
+			chunk.gridGraphics.renderable = this.themingService.showGrid;
+			if (this.constructor.name === 'SimulationView') {
+				chunk.container.children.forEach((c: LGraphics) => c.applyWireState(this.zoomPan.currentScale));
+			}
 			if (chunk.scaledFor === this.zoomPan.currentScale) continue;
 			chunk.scaledFor = this.zoomPan.currentScale;
 			if (this.themingService.showGrid) {
@@ -98,7 +102,9 @@ export abstract class View extends PIXI.Container {
 		for (const oldChunk of this._chunksToRender) {
 			if (!chunksToRender.find(toRender => toRender.x === oldChunk.x && toRender.y === oldChunk.y)) {
 				this._chunks[oldChunk.x][oldChunk.y].container.visible = false;
+				this._chunks[oldChunk.x][oldChunk.y].container.renderable = false;
 				this._chunks[oldChunk.x][oldChunk.y].gridGraphics.visible = false;
+				this._chunks[oldChunk.x][oldChunk.y].gridGraphics.renderable = false;
 			}
 		}
 		this._chunksToRender = chunksToRender;
@@ -121,7 +127,7 @@ export abstract class View extends PIXI.Container {
 				chunk.gridGraphics.visible = false;
 			}
 		}
-		this.ticker.singleFrame();
+		this.requestSingleFrame();
 	}
 
 	protected getChunkPos(chunkX: number, chunkY: number): PIXI.Point {
@@ -336,7 +342,7 @@ export abstract class View extends PIXI.Container {
 				this.updateComponent(action);
 				break;
 		}
-		this.ticker.singleFrame();
+		this.requestSingleFrame();
 	}
 
 	public setLocalChunkPos(element: Element, sprite: PIXI.DisplayObject) {
@@ -350,7 +356,7 @@ export abstract class View extends PIXI.Container {
 	protected onZoomClick(dir: 'in' | 'out' | '100') {
 		if (this.applyZoom(dir)) {
 			this.updateChunks();
-			this.ticker.singleFrame();
+			this.requestSingleFrame();
 		}
 	}
 
@@ -362,7 +368,7 @@ export abstract class View extends PIXI.Container {
 		this._destroySubject.next();
 		this._destroySubject.unsubscribe();
 		super.destroy({
-			children: true
+			children: true,
 		});
 	}
 

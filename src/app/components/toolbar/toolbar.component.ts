@@ -7,6 +7,7 @@ import {ProjectInteractionService} from '../../services/project-interaction/proj
 import {Test} from '../../../../tests/auto-tests/tests';
 // #!debug
 import {ManuallyLogged} from '../../../../tests/auto-tests/board-recorder';
+import {WorkerCommunicationService} from '../../services/simulation/worker-communication/worker-communication.service';
 
 @Component({
 	selector: 'app-toolbar',
@@ -21,12 +22,13 @@ export class ToolbarComponent {
 	constructor(
 		private workModeService: WorkModeService,
 		private projectService: ProjectsService,
-		private projectInteraction: ProjectInteractionService
+		private projectInteraction: ProjectInteractionService,
+		private workerCommunication: WorkerCommunicationService
 	) {}
 
 	// #!if DEBUG === 'true'
 	public printElements(): void {
-		this.projectService.currProject.allElements.forEach(console.log);
+		console.log(this.projectService.currProject.allElements);
 	}
 
 	public printCalls(): void {
@@ -34,16 +36,14 @@ export class ToolbarComponent {
 	}
 
 	public runTests(): void {
-		// this.test = new Test('bugfix', this.projectService.currProject, ManuallyLogged.reducedCrash);
+		// this.test = new Test('bugfix', this.projectService.currProject, ManuallyLogged.bug);
 		for (const name in ManuallyLogged) {
 			Test.runAndCheck(name, false);
 		}
 	}
 
 	public runStep(): void {
-		for (let i = 0; i < 2000; i++) {
-			this.test.runStep(true);
-		}
+		this.test.runStep(true);
 	}
 	// #!endif
 
@@ -105,5 +105,21 @@ export class ToolbarComponent {
 
 	public async open() {
 		this.projectInteraction.openProject();
+	}
+
+	public continueSm() {
+		this.workerCommunication.start();
+	}
+
+	public pauseSim() {
+		this.workerCommunication.pause();
+	}
+
+	public stopSim() {
+		this.workerCommunication.stop();
+	}
+
+	public singleStepSim() {
+		this.workerCommunication.singleStep();
 	}
 }

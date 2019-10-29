@@ -3,6 +3,7 @@ import {PopupContentComp} from '../popup-content-comp';
 import {ProjectSaveManagementService} from '../../../../services/project-save-management/project-save-management.service';
 import {Project} from '../../../../models/project';
 import {UserService} from '../../../../services/user/user.service';
+import {FormControl, Validators} from '@angular/forms';
 
 @Component({
 	selector: 'app-save-as',
@@ -11,14 +12,16 @@ import {UserService} from '../../../../services/user/user.service';
 })
 export class SaveAsComponent extends PopupContentComp<Project> implements OnInit {
 
-	public projectName: string;
+	public projectName: FormControl;
 
 	constructor(private projectSaveManagement: ProjectSaveManagementService, private user: UserService) {
 		super();
 	}
 
 	ngOnInit() {
-		this.projectName = this.inputFromOpener.name;
+		this.projectName = new FormControl(this.inputFromOpener.name, [
+			Validators.required, Validators.minLength(2), Validators.maxLength(20), Validators.pattern('^[a-zA-Z0-9_\\- ]+$')
+		]);
 	}
 
 	public get isLoggedIn(): boolean {
@@ -26,12 +29,12 @@ export class SaveAsComponent extends PopupContentComp<Project> implements OnInit
 	}
 
 	public async saveToServer() {
-		const newProject = this.projectSaveManagement.saveAsNewProjectServer(this.inputFromOpener, this.projectName);
+		const newProject = this.projectSaveManagement.saveAsNewProjectServer(this.inputFromOpener, this.projectName.value);
 		this.requestClose.emit(newProject);
 	}
 
 	public exportProject() {
-		this.projectSaveManagement.exportToFile(this.inputFromOpener, this.projectName);
+		this.projectSaveManagement.exportToFile(this.inputFromOpener, this.projectName.value);
 	}
 
 }
