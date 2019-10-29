@@ -91,6 +91,14 @@ export class ElementProviderService {
 		return this._plugElements.has(id) && id === 11;
 	}
 
+	public isButtonElement(id: number): boolean {
+		return this._ioElements.has(id) && id === 20;
+	}
+
+	public isLeverElement(id: number): boolean {
+		return this._ioElements.has(id) && id === 21;
+	}
+
 	public isUserElement(id: number): boolean {
 		return this._userDefinedElements.has(id);
 	}

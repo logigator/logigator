@@ -26,7 +26,7 @@ export class SimulationViewInteractionManager {
 	}
 
 	private onCompClick(e: InteractionEvent, elemSprite: ElementSprite) {
-		if (getStaticDI(ElementProviderService).isUserElement(elemSprite.element.typeId)) {
+		if (getStaticDI(ElementProviderService).isUserElement(elemSprite.element.typeId) && e.data.button === 0) {
 			getStaticDI(NgZone).run(() => {
 				this._view.requestInspectElemEventEmitter.emit({
 					identifier: `${this._view.parentProjectIdentifier}:${elemSprite.element.id}`,
@@ -35,6 +35,10 @@ export class SimulationViewInteractionManager {
 					parentTypeIds: [...this._view.parentTypeIds, this._view.projectId]
 				});
 			});
+		} else if (getStaticDI(ElementProviderService).isButtonElement(elemSprite.element.typeId)) {
+
+		} else if (getStaticDI(ElementProviderService).isLeverElement(elemSprite.element.typeId)) {
+
 		}
 	}
 
