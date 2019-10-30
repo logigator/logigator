@@ -28,7 +28,7 @@ export class Project {
 	private _changeSubject: Subject<Action[]>;
 
 	public saveDirty = false;
-	public compileDirty = false;
+	public compileDirty = true;
 
 	// #!debug
 	public boardRecorder: BoardRecorder;
