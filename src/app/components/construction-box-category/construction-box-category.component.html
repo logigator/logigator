@@ -6,7 +6,9 @@
 		<ng-container *ngIf="components.size > 0; else noComponents">
 			<ng-container *ngFor="let comp of components | keyvalue; trackBy: componentsTrackBy">
 				<div class="component-to-select"
-				     *ngIf="comp.key !== 0 && (searchText == '' || (isInSearchResult(comp.value.name) | async)) && !isCurrentCustomElement(comp.key)"
+				     *ngIf="comp.key !== 0 && comp.key !== 12 &&
+				     (searchText == '' || (isInSearchResult(comp.value.name) | async)) && !isCurrentCustomElement(comp.key)
+				     || isHiddenPlug(searchText, comp.key)"
 				     (click)="selectComponent(comp.key)"
 				     (dblclick)="openComponent(comp.key)"
 				     [class.active-selected-component]="currentWorkMode === 'buildComponent' && currentSelectedComponent === comp.key">
