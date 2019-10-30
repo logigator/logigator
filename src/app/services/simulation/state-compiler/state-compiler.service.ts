@@ -13,11 +13,12 @@ import {
 } from './compiler-types';
 import {Element} from '../../../models/element';
 import {ProjectState} from '../../../models/project-state';
-import {CompiledComp} from './compiled-comp';
+import {CompiledComp, CompiledComps} from './compiled-comp';
 import {ProjectSaveManagementService} from '../../project-save-management/project-save-management.service';
 import {ElementProviderService} from '../../element-provider/element-provider.service';
 import {MapHelper} from './map-helper';
 import {Elements} from '../../../models/elements';
+import {getStaticDI} from '../../../models/get-di';
 
 @Injectable({
 	providedIn: 'root'
@@ -68,8 +69,6 @@ export class StateCompilerService {
 		this.compileDependencies(depTree);
 		const out =  this.projectUnits(project.id, '0');
 		console.log(`compilation took ${Date.now() - start}ms`);
-		console.log(out);
-		console.log(this._wiresOnLinks);
 		return out;
 	}
 
@@ -127,12 +126,18 @@ export class StateCompilerService {
 
 	private calcCompiledComp(state: ProjectState, unitElems: UnitElementBidir): CompiledComp {
 		const compiledComp: CompiledComp = {
-			unitElems,
+			unitElems: {
+				unitToElement: unitElems.unitToElement,
+				elementToUnit: unitElems.elementToUnit
+			},
 			wiresOnLinks: new Map<number, Element[]>(),
 			wireEndsOnLinks: new Map<number, WireEndOnComp[]>(),
 			connectedPlugs: [],
 			plugsByIndex: new Map<number, number>()
 		};
+		// if you want to a lot of space but bit just a little bit slower
+		CompiledComps.reduceToIO(unitElems, compiledComp);
+
 		const linksOnWireEnds: WireEndLinksOnElem = new Map<Element, LinkOnWireEnd>();
 
 		this.setAllLinks(unitElems, linksOnWireEnds, state, compiledComp);
