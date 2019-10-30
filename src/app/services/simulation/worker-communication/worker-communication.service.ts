@@ -4,7 +4,7 @@ import {PowerChangesOutWire, PowerChangesOutWireEnd} from '../../../models/simul
 import {ProjectsService} from '../../projects/projects.service';
 import {StateCompilerService} from '../state-compiler/state-compiler.service';
 import {WasmMethod, WasmRequest, WasmResponse} from '../../../models/simulation/wasm-interface';
-import {SimulationUnit} from '../../../models/simulation/simulation-unit';
+import {SimulationUnit, SimulationUnits} from '../../../models/simulation/simulation-unit';
 import {Element} from '../../../models/element';
 
 @Injectable({
@@ -146,6 +146,7 @@ export class WorkerCommunicationService {
 			method: WasmMethod.single,
 			userInputs: this._userInputChanges
 		};
+		console.log(this._userInputChanges);
 		this._worker.postMessage(request);
 		this._userInputChanges.clear();
 	}
@@ -154,10 +155,10 @@ export class WorkerCommunicationService {
 		this._frameTime = frameTime;
 	}
 
-	public setUserInput(element: Element, state: boolean): void {
-		// const unit = this._compiledBoard.get(element);
-		// for (const link of SimulationUnits.concat(unit)) {
-		for (const link of [0, 1, 2]) {
+	public setUserInput(projectId: number, element: Element, state: boolean): void {
+		const unit = this.stateCompiler.unitByElement(projectId, element);
+
+		for (const link of unit.outputs) {
 			this._userInputChanges.set(link, state);
 		}
 	}

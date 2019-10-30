@@ -1,9 +1,9 @@
-import {WireEndsOnLinks, WiresOnLinks} from './compiler-types';
+import {UnitElementBidir, WireEndsOnLinks, WiresOnLinks} from './compiler-types';
 import {SimulationUnit} from '../../../models/simulation/simulation-unit';
 import {Element} from '../../../models/element';
 
 export interface CompiledComp {
-	units: Map<SimulationUnit, Element>;
+	unitElems: UnitElementBidir;
 	wiresOnLinks: WiresOnLinks;
 	wireEndsOnLinks: WireEndsOnLinks;
 	connectedPlugs: number[][];
