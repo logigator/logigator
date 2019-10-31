@@ -91,7 +91,6 @@ export class StateCompilerService {
 			this._linksOnIOElems = new Map<string, Map<Element, number[]>>();
 		this._wiresOnLinks.set(identifier, new Map<number, Element[]>());
 		this._wireEndsOnLinks.set(identifier, new Map<number, WireEndOnComp[]>());
-		this._linksOnIOElems.set(identifier, new Map<Element, number[]>());
 	}
 
 	private async projectsToCompile(project: Project): Promise<Map<number, Project>> {
@@ -316,8 +315,8 @@ export class StateCompilerService {
 	}
 
 	private setIOLink(idIdentifier: string, compiledComp: CompiledComp, unitIndex: number, unit) {
-		if (!this._wiresOnLinks.has(idIdentifier)) {
-			this.initElemsOnLinks(idIdentifier);
+		if (!this._linksOnIOElems.has(idIdentifier)) {
+			this._linksOnIOElems.set(idIdentifier, new Map<Element, number[]>());
 		}
 		const elem = compiledComp.units.get([...compiledComp.units.keys()][unitIndex]);
 		this._linksOnIOElems.get(idIdentifier).set(elem, []);
