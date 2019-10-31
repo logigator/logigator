@@ -1,6 +1,7 @@
-import {ProjectModel} from '../project-model';
+import {Element} from '../element';
 
-export interface ProjectModelResponse extends ProjectModel {
+export interface ProjectModelResponse {
+	elements: Element[];
 	mappings: ModelDatabaseMap[];
 }
 

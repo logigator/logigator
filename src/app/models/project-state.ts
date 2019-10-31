@@ -26,8 +26,16 @@ export class ProjectState {
 	private _outputPlugs: Element[];
 	private _inputPlugs: Element[];
 
-	public constructor(model?: Map<number, Element>, highestId?: number) {
-		this._model = model || new Map<number, Element>();
+	public constructor(elements?: Element[], highestId?: number) {
+		if (elements) {
+			const model = new Map<number, Element>();
+			for (const el of elements) {
+				model.set(el.id, el);
+			}
+			this._model = model;
+		} else {
+			this._model = new Map<number, Element>();
+		}
 		this._highestTakenId = highestId || this.findHighestTakenId();
 		this._chunks = [];
 		this._outputPlugs = [];
