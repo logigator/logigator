@@ -47,7 +47,7 @@ export class StateCompilerService {
 	private static generateUnits(state: ProjectState): UnitElementBidir {
 		const unitToElement: UnitToElement = new Map<SimulationUnit, Element>();
 		const elementToUnit: ElementToUnit = new Map<Element, SimulationUnit>();
-		for (const element of state.allElements) {
+		for (const element of state.model.values()) {
 			const unit = SimulationUnits.fromElement(element);
 			if (unit) {
 				unitToElement.set(unit, element);

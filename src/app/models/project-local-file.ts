@@ -1,11 +1,11 @@
-import {ProjectModel} from './project-model';
 import {ElementType} from './element-types/element-type';
+import {Element} from './element';
 
 export interface ProjectLocalFile {
 	mainProject: {
 		name: string;
 		id: number,
-		data: ProjectModel;
+		data: Element[];
 	};
 	components: ComponentLocalFile[];
 }
@@ -13,5 +13,5 @@ export interface ProjectLocalFile {
 export interface ComponentLocalFile {
 	typeId: number;
 	type: ElementType;
-	data: ProjectModel;
+	data: Element[];
 }
