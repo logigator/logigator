@@ -3,15 +3,12 @@ import {ThemingService} from '../../services/theming/theming.service';
 import {getStaticDI} from '../get-di';
 import {environment} from '../../../environments/environment';
 import * as PIXI from 'pixi.js';
-import {WireGraphics} from './wire-graphics';
 
 export class ComponentGraphics extends LGraphics {
 
 	private themingService = getStaticDI(ThemingService);
 
 	private _userInputState = false;
-
-	private _miniWires: WireGraphics[] = [];
 
 	constructor(symbol: string, inputs: number, outputs: number, rotation: number, scale: number) {
 		super();
@@ -80,53 +77,29 @@ export class ComponentGraphics extends LGraphics {
 
 	private leftWires(amount: number, width: number, height: number, scale) {
 		for (let i = 0; i < amount; i++) {
-			const miniWire = new WireGraphics();
-			miniWire.lineStyle(1 / scale, this.themingService.getEditorColor('wire'));
-			miniWire.position.x = 0;
-			miniWire.position.y = (environment.gridPixelWidth / 2) + environment.gridPixelWidth * i;
-			miniWire.moveTo(0, 0);
-			miniWire.lineTo(-environment.gridPixelWidth / 2, 0);
-			this.addChild(miniWire);
-			this._miniWires.push(miniWire);
+			this.moveTo(width, (environment.gridPixelWidth / 2) + environment.gridPixelWidth * i);
+			this.lineTo(width + environment.gridPixelWidth / 2, (environment.gridPixelWidth / 2) + environment.gridPixelWidth * i);
 		}
 	}
 
 	private rightWires(amount: number, width: number, height: number, scale) {
 		for (let i = 0; i < amount; i++) {
-			const miniWire = new WireGraphics();
-			miniWire.lineStyle(1 / scale, this.themingService.getEditorColor('wire'));
-			miniWire.position.x = width;
-			miniWire.position.y = (environment.gridPixelWidth / 2) + environment.gridPixelWidth * i;
-			miniWire.moveTo(0, 0);
-			miniWire.lineTo(environment.gridPixelWidth / 2, 0);
-			this.addChild(miniWire);
-			this._miniWires.push(miniWire);
+			this.moveTo(-(environment.gridPixelWidth / 2), (environment.gridPixelWidth / 2) + environment.gridPixelWidth * i);
+			this.lineTo(0, (environment.gridPixelWidth / 2) + environment.gridPixelWidth * i);
 		}
 	}
 
 	topWires(amount: number, width: number, height: number, scale) {
 		for (let i = 0; i < amount; i++) {
-			const miniWire = new WireGraphics();
-			miniWire.lineStyle(1 / scale, this.themingService.getEditorColor('wire'));
-			miniWire.position.x = (environment.gridPixelWidth / 2) + environment.gridPixelWidth * i;
-			miniWire.position.y = 0;
-			miniWire.moveTo(0, 0);
-			miniWire.lineTo(0, -environment.gridPixelWidth / 2);
-			this.addChild(miniWire);
-			this._miniWires.push(miniWire);
+			this.moveTo(width - (environment.gridPixelWidth / 2) - environment.gridPixelWidth * i, height);
+			this.lineTo(width - (environment.gridPixelWidth / 2) - environment.gridPixelWidth * i, height + environment.gridPixelWidth / 2);
 		}
 	}
 
 	bottomWires(amount: number, width: number, height: number, scale) {
 		for (let i = 0; i < amount; i++) {
-			const miniWire = new WireGraphics();
-			miniWire.lineStyle(1 / scale, this.themingService.getEditorColor('wire'));
-			miniWire.position.x = (environment.gridPixelWidth / 2) + environment.gridPixelWidth * i;
-			miniWire.position.y = height;
-			miniWire.moveTo(0, 0);
-			miniWire.lineTo(0, environment.gridPixelWidth / 2);
-			this.addChild(miniWire);
-			this._miniWires.push(miniWire);
+			this.moveTo((environment.gridPixelWidth / 2) + environment.gridPixelWidth * i, 0);
+			this.lineTo((environment.gridPixelWidth / 2) + environment.gridPixelWidth * i, -(environment.gridPixelWidth / 2));
 		}
 	}
 
@@ -137,10 +110,6 @@ export class ComponentGraphics extends LGraphics {
 		rotation: number,
 		scale: number
 	) {
-		for (const w of this._miniWires) {
-			w.destroy();
-		}
-		this._miniWires = [];
 		this.removeChildren(0);
 		this.drawComponent(symbol, inputs, outputs, rotation, scale);
 	}
@@ -149,9 +118,6 @@ export class ComponentGraphics extends LGraphics {
 		// @ts-ignore
 		for (const data of this.geometry.graphicsData) {
 			data.lineStyle.width = 1 / scale;
-		}
-		for (const w of this._miniWires) {
-			w.updateScale(scale);
 		}
 		this.geometry.invalidate();
 	}
