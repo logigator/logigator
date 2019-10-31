@@ -108,23 +108,13 @@ export class ProjectsService {
 		if (!this.projectSaveManagementService.isShare) await this.saveAllOrAllComps();
 		const project = this.projectSaveManagementService.openFromFile(content);
 		if (!project) return;
-		this.closeAllProjects();
-		this.projectSaveManagementService.resetProjectSource();
-		this._projects.set(project.id, project);
-		this._currProject = project;
-		this._mainProject = project;
-		this._projectOpenedSubject.next(project.id);
+		this.switchProjectAfterOpen(project);
 	}
 
 	public async openProjectServer(id: number) {
 		if (!this.projectSaveManagementService.isShare) await this.saveAllOrAllComps();
 		const project = await this.projectSaveManagementService.openProjectFromServer(id, false);
-		if (!project) return;
-		this.closeAllProjects();
-		this._projects.set(project.id, project);
-		this._currProject = project;
-		this._mainProject = project;
-		this._projectOpenedSubject.next(project.id);
+		this.switchProjectAfterOpen(project);
 	}
 
 	private closeAllProjects() {
@@ -217,7 +207,12 @@ export class ProjectsService {
 
 	public async cloneShare() {
 		const project = await this.projectSaveManagementService.cloneShare();
+		this.switchProjectAfterOpen(project);
+	}
+
+	private switchProjectAfterOpen(project: Project) {
 		if (!project) return;
+		this.errorHandling.showInfo(`Opened Project ${project.name}`);
 		this.closeAllProjects();
 		this._projects.set(project.id, project);
 		this._currProject = project;
