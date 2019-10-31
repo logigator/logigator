@@ -58,18 +58,15 @@ export class StateCompilerService {
 	}
 
 	public async compile(project: Project): Promise<SimulationUnit[]> {
-		this.clearCache(); // TODO fix cache
-
 		this._highestLinkId = 0;
 		this.initElemsOnLinks('0');
 		const depTree = await this.projectsToCompile(project);
 		this._depTree = depTree;
+
 		const start = Date.now();
 		this.compileDependencies(depTree);
 		const out =  this.projectUnits(project.id, '0');
 		console.log(`compilation took ${Date.now() - start}ms`);
-		console.log(out);
-		console.log(this._wiresOnLinks);
 		return out;
 	}
 
@@ -114,15 +111,16 @@ export class StateCompilerService {
 			if (this._udcCache.has(typeId) && !project.compileDirty) {
 				console.log('load from cache', typeId);
 			} else {
-				this._udcCache.set(typeId, this.compileSingle(project));
+				this.compileSingle(project);
 			}
 			project.compileDirty = false;
 		}
 	}
 
-	private compileSingle(project: Project): CompiledComp {
+	private compileSingle(project: Project): void {
 		const unitElems = StateCompilerService.generateUnits(project.currState);
-		return this.calcCompiledComp(project.currState, unitElems);
+		this._udcCache.set(project.id, this.calcCompiledComp(project.currState, unitElems));
+		project.compileDirty = false;
 	}
 
 	private calcCompiledComp(state: ProjectState, unitElems: UnitElementBidir): CompiledComp {
@@ -240,7 +238,7 @@ export class StateCompilerService {
 	) {
 		if (!this._udcCache.has(elem.typeId)) {
 			this._currTypeId = elem.typeId;
-			this._udcCache.set(elem.typeId, this.compileSingle(this._depTree.get(elem.typeId)));
+			this.compileSingle(this._depTree.get(elem.typeId));
 		}
 		for (const conPlugs of this._udcCache.get(elem.typeId).connectedPlugs) {
 			if (conPlugs.includes(index)) {
