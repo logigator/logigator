@@ -154,15 +154,17 @@ export class ProjectState {
 	}
 
 	public elementsInChunks(startPos: PIXI.Point, endPos: PIXI.Point): Element[] {
-		const out: Element[] = [];
 		const chunks = this.chunksFromCoords(CollisionFunctions.inRectChunks(startPos, endPos));
+		if (chunks.length === 1) {
+			return chunks[0].elements;
+		}
+		const out = new Set<Element>();
 		for (const chunk of chunks) {
 			for (const elem of chunk.elements) {
-				if (!out.find(e => e.id === elem.id))
-					out.push(elem);
+				out.add(elem);
 			}
 		}
-		return out;
+		return [...out];
 	}
 
 	private chunkHasCon(chunk: Chunk, pos: PIXI.Point): boolean {
@@ -365,14 +367,18 @@ export class ProjectState {
 
 	private connectWithEdge(other: Element, elem: Element): ChangeType {
 		const oldElems = (elem.typeId === 0 ? [elem] : []).concat(other.typeId === 0 ? [other] : []);
-		for (const endPoint of Elements.wireEnds(elem)) {
-			if (other.typeId === 0 && CollisionFunctions.isPointOnWireNoEdge(other, endPoint)) {
-				return {newElems: this.connectWires(elem, other, endPoint), oldElems};
+		if (other.typeId === 0) {
+			for (const endPoint of Elements.wireEnds(elem)) {
+				if (CollisionFunctions.isPointOnWireNoEdge(other, endPoint)) {
+					return {newElems: this.connectWires(elem, other, endPoint), oldElems};
+				}
 			}
 		}
-		for (const endPoint of Elements.wireEnds(other)) {
-			if (elem.typeId === 0 && CollisionFunctions.isPointOnWireNoEdge(elem, endPoint)) {
-				return {newElems: this.connectWires(other, elem, endPoint), oldElems};
+		if (elem.typeId === 0) {
+			for (const endPoint of Elements.wireEnds(other)) {
+				if (CollisionFunctions.isPointOnWireNoEdge(elem, endPoint)) {
+					return {newElems: this.connectWires(other, elem, endPoint), oldElems};
+				}
 			}
 		}
 		return null;
