@@ -15,8 +15,6 @@ Module.onRuntimeInitialized = () => {
 	postMessage({
 		initialized: true
 	});
-
-	// test();
 };
 
 addEventListener('message', ({ data }: {data: WasmRequest}) => {
@@ -53,7 +51,6 @@ addEventListener('message', ({ data }: {data: WasmRequest}) => {
 			if (worker) {
 				worker.destroy();
 			}
-
 			worker = new SimulationWorker(data.board, Module);
 			break;
 		case WasmMethod.status:
@@ -83,88 +80,3 @@ addEventListener('message', ({ data }: {data: WasmRequest}) => {
 			state: worker.getLinks() || new Int8Array(0)
 		} as WasmResponse);
 });
-
-// const test = () => {
-// 	worker = new SimulationWorker({
-// 		links: 10,
-// 		components: [
-// 			{
-// 				typeId: 2,
-// 				inputs: [
-// 					8, 9
-// 				],
-// 				outputs: [
-// 					0
-// 				]
-// 			},
-// 			{
-// 				typeId: 1,
-// 				inputs: [
-// 					8
-// 				],
-// 				outputs: [
-// 					1
-// 				]
-// 			},
-// 			{
-// 				typeId: 1,
-// 				inputs: [
-// 					8
-// 				],
-// 				outputs: [
-// 					2
-// 				]
-// 			},
-// 			{
-// 				typeId: 4,
-// 				inputs: [
-// 					1, 2
-// 				],
-// 				outputs: [
-// 					3
-// 				]
-// 			},
-// 			{
-// 				typeId: 2,
-// 				inputs: [
-// 					1, 2
-// 				],
-// 				outputs: [
-// 					4
-// 				]
-// 			},
-// 			{
-// 				typeId: 4,
-// 				inputs: [
-// 					0, 3
-// 				],
-// 				outputs: [
-// 					5
-// 				]
-// 			},
-// 			{
-// 				typeId: 2,
-// 				inputs: [
-// 					0, 3
-// 				],
-// 				outputs: [
-// 					6
-// 				]
-// 			},
-// 			{
-// 				typeId: 3,
-// 				inputs: [
-// 					4, 6
-// 				],
-// 				outputs: [
-// 					7
-// 				]
-// 			}
-// 		]
-// 	}, Module);
-//
-// 	worker.startManual(100);
-// 	console.log(worker.getStatus());
-// 	console.log(worker.getLinks());
-// 	console.log(worker.getComponents());
-// };

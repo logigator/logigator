@@ -6,6 +6,7 @@ export class SimulationWorker {
 
 	private _board: Board;
 	private _simulationModule: SimulationModule;
+	private _linkPointer: number = undefined;
 
 	constructor(board: Board, simulationModule: SimulationModule) {
 		this._board = board;
@@ -22,6 +23,9 @@ export class SimulationWorker {
 			const outputPtr = this._arrayToHeap(outputs);
 
 			simulationModule.initComponent(i, x.typeId, inputPtr, outputPtr, x.inputs.length, x.outputs.length, x.op1 || 0, x.op2 || 0);
+
+			this._simulationModule._free(inputPtr);
+			this._simulationModule._free(outputPtr);
 		});
 		simulationModule.initBoard();
 	}
@@ -38,11 +42,9 @@ export class SimulationWorker {
 	}
 
 	public getLinks(): Int8Array {
-		const ptr = this._simulationModule.getLinks();
-
-		const data = this._simulationModule.HEAP8.slice(ptr, ptr + this._board.links);
-		this._simulationModule._free(ptr);
-		return data;
+		if (this._linkPointer === undefined)
+			this._linkPointer = this._simulationModule.getLinks();
+		return this._simulationModule.HEAP8.slice(this._linkPointer, this._linkPointer + this._board.links);
 	}
 
 	public getComponents(): Array<{ inputs: Int8Array, outputs: Int8Array }> {
@@ -105,5 +107,6 @@ export class SimulationWorker {
 	public destroy() {
 		this._simulationModule.destroy();
 		delete this._board;
+		delete this._linkPointer;
 	}
 }
