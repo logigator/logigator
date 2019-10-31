@@ -28,11 +28,7 @@ export class ProjectState {
 
 	public constructor(elements?: Element[], highestId?: number) {
 		if (elements) {
-			const model = new Map<number, Element>();
-			for (const el of elements) {
-				model.set(el.id, el);
-			}
-			this._model = model;
+			this._model = new Map<number, Element>(elements.map(e => [e.id, e]));
 		} else {
 			this._model = new Map<number, Element>();
 		}
