@@ -155,10 +155,9 @@ export class WorkerCommunicationService {
 		this._frameTime = frameTime;
 	}
 
-	public setUserInput(projectId: number, element: Element, state: boolean): void {
-		const unit = this.stateCompiler.unitByElement(projectId, element);
-
-		for (const link of unit.outputs) {
+	public setUserInput(identifier: string, element: Element, state: boolean): void {
+		const links = this.stateCompiler.linksOnIOElems.get(identifier).get(element);
+		for (const link of links) {
 			this._userInputChanges.set(link, state);
 		}
 	}

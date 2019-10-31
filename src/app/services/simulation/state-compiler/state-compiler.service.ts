@@ -13,7 +13,7 @@ import {
 } from './compiler-types';
 import {Element} from '../../../models/element';
 import {ProjectState} from '../../../models/project-state';
-import {CompiledComp, CompiledComps} from './compiled-comp';
+import {CompiledComp} from './compiled-comp';
 import {ProjectSaveManagementService} from '../../project-save-management/project-save-management.service';
 import {ElementProviderService} from '../../element-provider/element-provider.service';
 import {MapHelper} from './map-helper';
@@ -28,6 +28,7 @@ export class StateCompilerService {
 	private _highestLinkId: number;
 	private _wiresOnLinks: WiresOnLinksInProject;
 	private _wireEndsOnLinks: WireEndsOnLinksInProject;
+	private _linksOnIOElems: Map<string, Map<Element, number[]>>;
 
 	private _wiresOnLinksCache: WiresOnLinksInProject;
 	private _wireEndsOnLinksCache: WireEndsOnLinksInProject;
@@ -69,6 +70,7 @@ export class StateCompilerService {
 		this.compileDependencies(depTree);
 		const out =  this.projectUnits(project.id, '0');
 		console.log(`compilation took ${Date.now() - start}ms`);
+		console.log(this._linksOnIOElems);
 		return out;
 	}
 
@@ -86,8 +88,11 @@ export class StateCompilerService {
 			this._wiresOnLinks = new Map<string, WiresOnLinks>();
 		if (!this._wireEndsOnLinks)
 			this._wireEndsOnLinks = new Map<string, WireEndsOnLinks>();
+		if (!this._linksOnIOElems)
+			this._linksOnIOElems = new Map<string, Map<Element, number[]>>();
 		this._wiresOnLinks.set(identifier, new Map<number, Element[]>());
 		this._wireEndsOnLinks.set(identifier, new Map<number, WireEndOnComp[]>());
+		this._linksOnIOElems.set(identifier, new Map<Element, number[]>());
 	}
 
 	private async projectsToCompile(project: Project): Promise<Map<number, Project>> {
@@ -103,6 +108,7 @@ export class StateCompilerService {
 			this._wireEndsOnLinksCache.clear();
 			this._wiresOnLinks.clear();
 			this._wireEndsOnLinks.clear();
+			this._linksOnIOElems.clear();
 		}
 		this._highestLinkId = 0;
 	}
@@ -126,17 +132,12 @@ export class StateCompilerService {
 
 	private calcCompiledComp(state: ProjectState, unitElems: UnitElementBidir): CompiledComp {
 		const compiledComp: CompiledComp = {
-			unitElems: {
-				unitToElement: unitElems.unitToElement,
-				elementToUnit: unitElems.elementToUnit
-			},
+			units: new Map<SimulationUnit, Element>(),
 			wiresOnLinks: new Map<number, Element[]>(),
 			wireEndsOnLinks: new Map<number, WireEndOnComp[]>(),
 			connectedPlugs: [],
 			plugsByIndex: new Map<number, number>()
 		};
-		// if you want to a lot of space but bit just a little bit slower
-		CompiledComps.reduceToIO(unitElems, compiledComp);
 
 		const linksOnWireEnds: WireEndLinksOnElem = new Map<Element, LinkOnWireEnd>();
 
@@ -263,7 +264,7 @@ export class StateCompilerService {
 		outerUnit?: SimulationUnit
 	): SimulationUnit[] {
 		const compiledComp = this._udcCache.get(projectId);
-		const units = SimulationUnits.cloneMult([...compiledComp.unitElems.unitToElement.keys()]);
+		const units = SimulationUnits.cloneMult([...compiledComp.units.keys()]);
 		const linkMap = new Map<number, number>();
 		const typeIdentifier = '' + projectId;
 		if (outerUnit) {
@@ -282,7 +283,7 @@ export class StateCompilerService {
 			[unit.inputs, unit.outputs].forEach(arr => {
 				for (let i = 0; i < arr.length; i++) {
 					const newVal = linkMap.has(arr[i]) ? linkMap.get(arr[i]) : arr[i] + this._highestLinkId;
-					if (!this._wiresOnLinks.get(idIdentifier)) {
+					if (!this._wiresOnLinks.has(idIdentifier)) {
 						this.initElemsOnLinks(idIdentifier);
 					}
 					this.pushWiresOnLink(idIdentifier, newVal, typeIdentifier, arr[i]);
@@ -294,6 +295,8 @@ export class StateCompilerService {
 			});
 			if (this.elementProvider.isUserElement(unit.typeId)) {
 				udcIndexes.push(unitIndex);
+			} else if (this.elementProvider.isIoElement(unit.typeId)) {
+				this.setIOLink(idIdentifier, compiledComp, unitIndex, unit);
 			}
 			unitIndex++;
 		}
@@ -303,13 +306,24 @@ export class StateCompilerService {
 		for (let i = udcIndexes.length - 1; i >= 0; i--) {
 			const index = udcIndexes[i];
 			const inner = this.projectUnits(units[index].typeId,
-				idIdentifier + `:${compiledComp.unitElems.unitToElement.get(
-					[...compiledComp.unitElems.unitToElement.keys()][index]).id}`, units[index]);
+				idIdentifier + `:${compiledComp.units.get(
+					[...compiledComp.units.keys()][index]).id}`, units[index]);
 			units.splice(index, 1);
 			units.push(...inner);
 		}
 
 		return units;
+	}
+
+	private setIOLink(idIdentifier: string, compiledComp: CompiledComp, unitIndex: number, unit) {
+		if (!this._wiresOnLinks.has(idIdentifier)) {
+			this.initElemsOnLinks(idIdentifier);
+		}
+		const elem = compiledComp.units.get([...compiledComp.units.keys()][unitIndex]);
+		this._linksOnIOElems.get(idIdentifier).set(elem, []);
+		for (const val of SimulationUnits.concatIO(unit)) {
+			this._linksOnIOElems.get(idIdentifier).get(elem).push(val);
+		}
 	}
 
 	private pushWiresOnLink(idIdentifier: string, newVal, typeIdentifier, val: number) {
@@ -334,10 +348,10 @@ export class StateCompilerService {
 		const plugsByIndexKeys = [...plugsByIndex.keys()];
 		for (let i = 0; i < plugsByIndexKeys.length; i++) {
 			const plugIndex = plugsByIndexKeys[i];
-			const value = SimulationUnits.concatIO([...compiledComp.unitElems.unitToElement.keys()][plugsByIndex.get(plugIndex)])[0];
+			const value = SimulationUnits.concatIO([...compiledComp.units.keys()][plugsByIndex.get(plugIndex)])[0];
 			for (let j = i + 1; j < plugsByIndexKeys.length; j++) {
 				const otherIndex = plugsByIndexKeys[j];
-				const otherValue = SimulationUnits.concatIO([...compiledComp.unitElems.unitToElement.keys()]
+				const otherValue = SimulationUnits.concatIO([...compiledComp.units.keys()]
 					[plugsByIndex.get(otherIndex)])[0];
 				if (value === otherValue) {
 					let pushed = false;
@@ -360,9 +374,6 @@ export class StateCompilerService {
 	}
 
 
-	public unitByElement(projectId: number, element: Element): SimulationUnit {
-		return this._udcCache.get(projectId).unitElems.elementToUnit.get(element);
-	}
 
 	get wiresOnLinks(): Map<string, WiresOnLinks> {
 		return this._wiresOnLinks;
@@ -381,6 +392,9 @@ export class StateCompilerService {
 		return this._wireEndsOnLinksCache;
 	}
 
+	get linksOnIOElems(): Map<string, Map<Element, number[]>> {
+		return this._linksOnIOElems;
+	}
 
 	get highestLinkId(): number {
 		return this._highestLinkId;
