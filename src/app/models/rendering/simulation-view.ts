@@ -48,6 +48,9 @@ export class SimulationView extends View {
 			getStaticDI(WorkerCommunicationService).boardStateWires(this.parentProjectIdentifier).pipe(
 				takeUntil(this._destroySubject),
 			).subscribe(e => this.blinkWires(e));
+			getStaticDI(WorkerCommunicationService).boardStateWireEnds(this.parentProjectIdentifier).pipe(
+				takeUntil(this._destroySubject)
+			).subscribe(e => this.blinkComps(e));
 
 			if (project.type === 'comp') {
 				this.blinkWires(getStaticDI(WorkerCommunicationService).getState(this.parentProjectIdentifier));
@@ -62,11 +65,14 @@ export class SimulationView extends View {
 	}
 
 	private blinkWires(e: Map<Element, boolean>) {
-		console.log(e, this._project.type);
 		for (const [elem, state] of e) {
 			(this.allElements.get(elem.id).sprite as WireGraphics).setWireState(this.zoomPan.currentScale, state);
 		}
 		this.requestSingleFrame();
+	}
+
+	private blinkComps(e: Map<{component: Element, wireIndex: number}, boolean>) {
+		// todo
 	}
 
 	public get projectName(): string {
