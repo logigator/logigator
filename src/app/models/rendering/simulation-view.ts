@@ -47,8 +47,11 @@ export class SimulationView extends View {
 			getStaticDI(WorkerCommunicationService).boardStateWires(this.parentProjectIdentifier).pipe(
 				takeUntil(this._destroySubject)
 			).subscribe(e => this.blinkWires(e));
+			getStaticDI(WorkerCommunicationService).boardStateWireEnds(this.parentProjectIdentifier).pipe(
+				takeUntil(this._destroySubject)
+			).subscribe(console.log);
 			if (project.type === 'comp') {
-				this.blinkWires(getStaticDI(WorkerCommunicationService).getState(this.parentProjectIdentifier));
+				this.blinkWires(getStaticDI(WorkerCommunicationService).getWireState(this.parentProjectIdentifier));
 			}
 		});
 	}

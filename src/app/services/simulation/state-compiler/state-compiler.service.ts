@@ -313,6 +313,13 @@ export class StateCompilerService {
 		} else {
 			this._wiresOnLinks.get(idIdentifier).set(newVal, this._wiresOnLinksCache.get(typeIdentifier).get(val) || []);
 		}
+		if (this._wireEndsOnLinks.get(idIdentifier).has(newVal) && this._wireEndsOnLinks.get(idIdentifier).get(newVal).length > 0) {
+			if (this._wireEndsOnLinks.get(idIdentifier).get(newVal)[0] !== this._wireEndsOnLinksCache.get(typeIdentifier).get(val)[0]) {
+				this._wireEndsOnLinks.get(idIdentifier).get(newVal).push(...(this._wireEndsOnLinksCache.get(typeIdentifier).get(val)) || []);
+			}
+		} else {
+			this._wireEndsOnLinks.get(idIdentifier).set(newVal, this._wireEndsOnLinksCache.get(typeIdentifier).get(val) || []);
+		}
 	}
 
 	private removePlugs(compiledComp: CompiledComp, units: SimulationUnit[]) {

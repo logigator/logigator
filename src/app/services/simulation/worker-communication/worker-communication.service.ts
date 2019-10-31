@@ -58,12 +58,16 @@ export class WorkerCommunicationService {
 			}
 			this._dataCache = data.state;
 
-			const powerChanges: Map<string, PowerChangesOutWire> = new Map<string, PowerChangesOutWire>();
+			const powerChangesWire = new Map<string, PowerChangesOutWire>();
+			const powerChangesWireEnds = new Map<string, PowerChangesOutWireEnd>();
 			for (const identifier of this._powerSubjectsWires.keys()) {
-				powerChanges.set(identifier, this.getState(identifier, data.state));
+				powerChangesWire.set(identifier, this.getWireState(identifier, data.state));
+				powerChangesWireEnds.set(identifier, this.getWireEndState(identifier, data.state));
 			}
 			for (const projId of this._powerSubjectsWires.keys()) {
-				this._powerSubjectsWires.get(projId).next(powerChanges.get(projId));
+				this._powerSubjectsWires.get(projId).next(powerChangesWire.get(projId));
+				console.log(powerChangesWireEnds);
+				this._powerSubjectsWireEnds.get(projId).next(powerChangesWireEnds.get(projId));
 			}
 
 			if (this._isContinuous) {
@@ -80,11 +84,23 @@ export class WorkerCommunicationService {
 		}
 	}
 
-	public getState(identifier: string, data?: Int8Array): Map<Element, boolean> {
+	public getWireState(identifier: string, data?: Int8Array): Map<Element, boolean> {
 		if (!data)
 			data = this._dataCache;
 		const out = new Map<Element, boolean>();
 		for (const [link, wires] of this.stateCompiler.wiresOnLinks.get(identifier).entries()) {
+			for (const wire of wires) {
+				out.set(wire, data[link] as unknown as boolean);
+			}
+		}
+		return out;
+	}
+
+	public getWireEndState(identifier: string, data?: Int8Array): Map<{component: Element, wireIndex: number}, boolean> {
+		if (!data)
+			data = this._dataCache;
+		const out = new Map<{component: Element, wireIndex: number}, boolean>();
+		for (const [link, wires] of this.stateCompiler.wireEndsOnLinks.get(identifier).entries()) {
 			for (const wire of wires) {
 				out.set(wire, data[link] as unknown as boolean);
 			}
