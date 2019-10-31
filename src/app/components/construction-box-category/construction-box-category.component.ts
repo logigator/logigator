@@ -36,6 +36,12 @@ export class ConstructionBoxCategoryComponent {
 		return item.key;
 	}
 
+	public isHiddenPlug(toSearch: string, typeId: number): boolean {
+		if (toSearch === '' || typeId !== 12)
+			return false;
+		return toSearch.trim().toLowerCase().replace(' ', '') === 'buttplug';
+	}
+
 	public isInSearchResult(toSearch: string): Observable<boolean> {
 		return this.translate.get(toSearch).pipe(
 			map(translated => translated.toLowerCase().includes(this.searchText.trim().toLowerCase()))

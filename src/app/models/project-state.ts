@@ -1,5 +1,5 @@
 import {Chunk} from './chunk';
-import {ProjectModel} from './project-model';
+// import {ProjectModel} from './project-model';
 import {Element} from './element';
 import {Elements} from './elements';
 import * as PIXI from 'pixi.js';
@@ -12,7 +12,7 @@ import {getStaticDI} from './get-di';
 export class ProjectState {
 
 	// TODO make it a Map<id, Element>
-	private _model: ProjectModel;
+	private _model: Map<number, Element>;
 
 	private readonly _chunks: Chunk[][];
 
@@ -26,8 +26,12 @@ export class ProjectState {
 	private _outputPlugs: Element[];
 	private _inputPlugs: Element[];
 
-	public constructor(model?: ProjectModel, highestId?: number) {
-		this._model = model || {board: {elements: []}};
+	public constructor(elements?: Element[], highestId?: number) {
+		if (elements) {
+			this._model = new Map<number, Element>(elements.map(e => [e.id, e]));
+		} else {
+			this._model = new Map<number, Element>();
+		}
 		this._highestTakenId = highestId || this.findHighestTakenId();
 		this._chunks = [];
 		this._outputPlugs = [];
@@ -40,7 +44,7 @@ export class ProjectState {
 
 	private findHighestTakenId(): number {
 		let out = 0;
-		for (const elem of this.model.board.elements) {
+		for (const elem of this._model.values()) {
 			if (elem.id > out)
 				out = elem.id;
 		}
@@ -54,10 +58,10 @@ export class ProjectState {
 
 
 	private loadAllIntoChunks(): void {
-		for (const element of this._model.board.elements) {
+		for (const element of this._model.values()) {
 			this.loadIntoChunks(element);
 		}
-		this.loadConnectionPoints(this._model.board.elements);
+		this.loadConnectionPoints(this.allElements);
 		this.specialActions = [];
 	}
 
@@ -154,15 +158,17 @@ export class ProjectState {
 	}
 
 	public elementsInChunks(startPos: PIXI.Point, endPos: PIXI.Point): Element[] {
-		const out: Element[] = [];
 		const chunks = this.chunksFromCoords(CollisionFunctions.inRectChunks(startPos, endPos));
+		if (chunks.length === 1) {
+			return chunks[0].elements;
+		}
+		const out = new Set<Element>();
 		for (const chunk of chunks) {
 			for (const elem of chunk.elements) {
-				if (!out.find(e => e.id === elem.id))
-					out.push(elem);
+				out.add(elem);
 			}
 		}
-		return out;
+		return [...out];
 	}
 
 	private chunkHasCon(chunk: Chunk, pos: PIXI.Point): boolean {
@@ -213,7 +219,7 @@ export class ProjectState {
 
 	public addElement(elem: Element, id?: number): Element {
 		elem.id = id || this.getNextId();
-		this._model.board.elements.push(elem);
+		this._model.set(elem.id, elem);
 		if (getStaticDI(ElementProviderService).isInputElement(elem.typeId)) {
 			elem.plugIndex = this.numInputs++;
 			this._inputPlugs.push(elem);
@@ -229,11 +235,11 @@ export class ProjectState {
 	}
 
 	public removeElement(elementId: number): Element {
-		const outElemIndex = this._model.board.elements.findIndex(c => c.id === elementId);
-		if (outElemIndex < 0)
+		const outElem = this._model.get(elementId);
+		if (!outElem)
 			return null;
-		const outElem = this._model.board.elements[outElemIndex];
-		this._model.board.elements.splice(outElemIndex, 1);
+		this._model.delete(elementId);
+
 		if (getStaticDI(ElementProviderService).isInputElement(outElem.typeId)) {
 			this.numInputs--;
 			this._inputPlugs = this._inputPlugs.filter(e => e.id !== elementId);
@@ -365,14 +371,18 @@ export class ProjectState {
 
 	private connectWithEdge(other: Element, elem: Element): ChangeType {
 		const oldElems = (elem.typeId === 0 ? [elem] : []).concat(other.typeId === 0 ? [other] : []);
-		for (const endPoint of Elements.wireEnds(elem)) {
-			if (other.typeId === 0 && CollisionFunctions.isPointOnWireNoEdge(other, endPoint)) {
-				return {newElems: this.connectWires(elem, other, endPoint), oldElems};
+		if (other.typeId === 0) {
+			for (const endPoint of Elements.wireEnds(elem)) {
+				if (CollisionFunctions.isPointOnWireNoEdge(other, endPoint)) {
+					return {newElems: this.connectWires(elem, other, endPoint), oldElems};
+				}
 			}
 		}
-		for (const endPoint of Elements.wireEnds(other)) {
-			if (elem.typeId === 0 && CollisionFunctions.isPointOnWireNoEdge(elem, endPoint)) {
-				return {newElems: this.connectWires(other, elem, endPoint), oldElems};
+		if (elem.typeId === 0) {
+			for (const endPoint of Elements.wireEnds(other)) {
+				if (CollisionFunctions.isPointOnWireNoEdge(elem, endPoint)) {
+					return {newElems: this.connectWires(other, elem, endPoint), oldElems};
+				}
 			}
 		}
 		return null;
@@ -444,31 +454,23 @@ export class ProjectState {
 
 
 	public getElementById(elemId: number): Element {
-		return this._model.board.elements.find(c => c.id === elemId);
+		return this._model.get(elemId);
 	}
 
 	public getElementsById(ids: number[]): Element[] {
-		return this._model.board.elements.filter(e => ids.includes(e.id));
-	}
-
-	public copy(): ProjectState {
-		// TODO copy _chunks
-		// TODO make cleaner/faster
-		const outModel: ProjectModel = {
-			board: {
-				elements: []
-			}
-		};
-		for (const elem of this._model.board.elements)
-			outModel.board.elements.push(Object.assign({}, elem));
-		return new ProjectState(outModel, this._highestTakenId);
+		const out: Element[] = [];
+		for (const id of ids) {
+			if (this._model.has(id))
+				out.push(this._model.get(id));
+		}
+		return out;
 	}
 
 	public equals(other: ProjectState): boolean {
-		if (other._model.board.elements.length !== this._model.board.elements.length)
+		if (other._model.size !== this._model.size)
 			return false;
-		for (let i = 0; i < this._model.board.elements.length; i++) {
-			if (!other._model.board.elements.find(e => Elements.equals(e, this._model.board.elements[i])))
+		for (const elem of this._model.values()) {
+			if (!other._model.has(elem.id) || !Elements.equals(elem, other._model.get(elem.id)))
 				return false;
 		}
 		for (let i = 0; i < this._chunks.length; i++) {
@@ -512,19 +514,19 @@ export class ProjectState {
 		let numOutputs = 0;
 		this._outputPlugs = [];
 		this._inputPlugs = [];
-		this.allElements.forEach(e => {
-			if (getStaticDI(ElementProviderService).isInputElement(e.typeId)) {
-				if (e.plugIndex === undefined)
-					e.plugIndex = numInputs;
+		for (const elem of this._model.values()) {
+			if (getStaticDI(ElementProviderService).isInputElement(elem.typeId)) {
+				if (elem.plugIndex === undefined)
+					elem.plugIndex = numInputs;
 				numInputs++;
-				this._inputPlugs.push(e);
-			} else if (getStaticDI(ElementProviderService).isOutputElement(e.typeId)) {
-				if (e.plugIndex === undefined)
-					e.plugIndex = numInputs + numOutputs;
+				this._inputPlugs.push(elem);
+			} else if (getStaticDI(ElementProviderService).isOutputElement(elem.typeId)) {
+				if (elem.plugIndex === undefined)
+					elem.plugIndex = numInputs + numOutputs;
 				numOutputs++;
-				this._outputPlugs.push(e);
+				this._outputPlugs.push(elem);
 			}
-		});
+		}
 		this.numInputs = numInputs;
 		this.numOutputs = numOutputs;
 		return {numInputs, numOutputs};
@@ -563,14 +565,14 @@ export class ProjectState {
 	}
 
 	get allElements(): Element[] {
-		return this.model.board.elements;
+		return [...this._model.values()];
 	}
 
 	get chunks(): Chunk[][] {
 		return this._chunks;
 	}
 
-	get model(): ProjectModel {
+	get model(): Map<number, Element> {
 		return this._model;
 	}
 }

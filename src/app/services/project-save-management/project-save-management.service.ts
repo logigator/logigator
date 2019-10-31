@@ -2,8 +2,7 @@ import {Injectable, NgZone, Optional} from '@angular/core';
 import {Project} from '../../models/project';
 import {HttpResponseData} from '../../models/http-responses/http-response-data';
 import {OpenProjectResponse} from '../../models/http-responses/open-project-response';
-import {catchError, filter, map} from 'rxjs/operators';
-import {ProjectModel} from '../../models/project-model';
+import {catchError, filter, map, tap} from 'rxjs/operators';
 import * as PIXI from 'pixi.js';
 import {HttpClient} from '@angular/common/http';
 import {Element} from '../../models/element';
@@ -109,26 +108,17 @@ export class ProjectSaveManagementService {
 			}, id);
 		} else {
 			const newIndex = this.findNextLocalCompId();
-			const newComp: ComponentLocalFile = {
-				typeId: newIndex,
-				data: {
-					board: {
-						elements: []
-					}
-				},
-				type: {
-					numOutputs: 0,
-					maxInputs: 0,
-					name,
-					description,
-					symbol,
-					numInputs: 0,
-					minInputs: 0,
-					category: 'user',
-					rotation: 0
-				}
-			};
-			this.elemProvService.addUserDefinedElement(newComp.type, newIndex);
+			this.elemProvService.addUserDefinedElement({
+				numOutputs: 0,
+				maxInputs: 0,
+				name,
+				description,
+				symbol,
+				numInputs: 0,
+				minInputs: 0,
+				category: 'user',
+				rotation: 0
+			}, newIndex);
 		}
 		this.errorHandling.showInfo(`Created Component ${name}`);
 	}
@@ -190,7 +180,7 @@ export class ProjectSaveManagementService {
 			parsedFile = JSON.parse(content);
 			this.elemProvService.clearElementsFromFile();
 			parsedFile.components.forEach(c => {
-				let model = this.getProjectModelFromJson(c.data as ProjectModelResponse);
+				let model = this.getProjectModelFromJson(c.data);
 				model = this.adjustInputsAndOutputs(model);
 				const project = new Project(new ProjectState(model), {
 					type: 'comp',
@@ -200,7 +190,7 @@ export class ProjectSaveManagementService {
 				this._projectCache.set(c.typeId, project);
 				this.elemProvService.addUserDefinedElement(c.type, c.typeId);
 			});
-			let mainModel = this.getProjectModelFromJson(parsedFile.mainProject.data as ProjectModelResponse);
+			let mainModel = this.getProjectModelFromJson(parsedFile.mainProject.data);
 			mainModel = this.adjustInputsAndOutputs(mainModel);
 
 			// #!web
@@ -216,7 +206,7 @@ export class ProjectSaveManagementService {
 	}
 
 	public async exportToFile(project: Project, name?: string) {
-		let deps;
+		let deps: Project[];
 		try {
 			deps = Array.from((await this.buildDependencyTree(project)).values());
 		} catch (e) {
@@ -234,16 +224,16 @@ export class ProjectSaveManagementService {
 			mainProject: {
 				id: 500,
 				name: name || project.name,
-				data: this.applyMappingsLoad(project.currState.model, mapping)
+				data: this.applyMappingsLoad(project.allElements, mapping)
 			},
 			components: deps.map(c => {
-				const type = this.elemProvService.getElementById(c.id);
+				const type = {...this.elemProvService.getElementById(c.id)};
 				if (!type.name.endsWith('-local')) {
 					type.name = type.name + '-local';
 				}
 				return {
 					typeId: mapping.find(m => m.model === c.id).database,
-					data: this.applyMappingsLoad(c.currState.model, mapping),
+					data: this.applyMappingsLoad(c.allElements, mapping),
 					type
 				} as ComponentLocalFile;
 			}) as ComponentLocalFile[]
@@ -269,7 +259,7 @@ export class ProjectSaveManagementService {
 	}
 
 	public async saveAsNewProjectServer(project: Project, name: string): Promise<Project> {
-		let deps;
+		let deps: Project[];
 		try {
 			deps = Array.from((await this.buildDependencyTree(project)).values());
 		} catch (e) {
@@ -302,7 +292,7 @@ export class ProjectSaveManagementService {
 			}
 		}
 		const projectsToSave: Project[] = [];
-		const mainProjToSave = new Project(new ProjectState(this.applyMappingsLoad(project.currState.model, mappings)), {
+		const mainProjToSave = new Project(new ProjectState(this.applyMappingsLoad(project.allElements, mappings)), {
 			type: 'project',
 			name: name || project.name,
 			id: mainProjectId
@@ -317,7 +307,7 @@ export class ProjectSaveManagementService {
 			} else {
 				id = dep.id;
 			}
-			const proj = new Project(new ProjectState(this.applyMappingsLoad(dep.currState.model, mappings)), {
+			const proj = new Project(new ProjectState(this.applyMappingsLoad(dep.allElements, mappings)), {
 				id,
 				name: dep.name,
 				type: 'comp'
@@ -370,8 +360,7 @@ export class ProjectSaveManagementService {
 		return this.http.get<HttpResponseData<OpenProjectResponse>>(`${environment.apiPrefix}/project/open/${id}`).pipe(
 			map(response => this.componentFromServerResponse(response.result)),
 			this.errorHandling.catchErrorOperatorDynamicMessage((err: any) => {
-				if (err.message === 'isProj') return 'Unable to open Project as Component';
-				return err.error.error.description;
+				return 'Unable to open Project as Component';
 			}, undefined)
 		).toPromise();
 	}
@@ -391,11 +380,11 @@ export class ProjectSaveManagementService {
 		return project;
 	}
 
-	private convertResponseDataToProjectModel(openProRes: ProjectModelResponse): ProjectModel {
-		let project = this.getProjectModelFromJson(openProRes);
+	private convertResponseDataToProjectModel(openProRes: ProjectModelResponse): Element[] {
+		if (!('elements' in openProRes)) return [];
+		let project = this.getProjectModelFromJson(openProRes.elements);
 		project = this.applyMappingsLoad(project, openProRes.mappings);
 		project = this.adjustInputsAndOutputs(project);
-		project = this.removeMappingsFromModel(project as ProjectModelResponse);
 		return project;
 	}
 
@@ -432,7 +421,7 @@ export class ProjectSaveManagementService {
 
 	private projectToSaveRequest(project: Project): SaveProjectRequest {
 		const mappings: ModelDatabaseMap[] = [];
-		project.currState.model.board.elements.forEach(el => {
+		project.allElements.forEach(el => {
 			if (el.typeId >= 500 && !mappings.find(m => m.model === el.typeId)) {
 				mappings.push({
 					database: el.typeId,
@@ -443,8 +432,8 @@ export class ProjectSaveManagementService {
 
 		const body: SaveProjectRequest = {
 			data: {
-				...project.currState.model,
-				...{mappings}
+				elements: project.allElements,
+				mappings
 			}
 		};
 		if (project.type === 'comp') {
@@ -536,7 +525,6 @@ export class ProjectSaveManagementService {
 		}
 		const id = Number(openProResp.project.pk_id);
 		const projectModel = this.convertResponseDataToProjectModel(openProResp.project.data);
-		this.errorHandling.showInfo(`Opened Project ${openProResp.project.name}`);
 		const project = new Project(new ProjectState(projectModel), {
 			id: Number(id),
 			name: openProResp.project.name,
@@ -546,39 +534,19 @@ export class ProjectSaveManagementService {
 		return project;
 	}
 
-	private applyMappingsLoad(model: ProjectModel, mappings: ModelDatabaseMap[]): ProjectModel {
-		const clonedModel: ProjectModel = {
-			board: {
-				elements: []
-			}
-		};
-		model.board.elements.forEach(el => {
+	private applyMappingsLoad(model: Element[], mappings: ModelDatabaseMap[]): Element[] {
+		return model.map(el => {
 			const newEl = Elements.clone(el);
 			const toMapTo = mappings.find(mapping => mapping.model === el.typeId);
 			if (toMapTo) {
 				newEl.typeId = toMapTo.database;
 			}
-			clonedModel.board.elements.push(newEl);
+			return newEl;
 		});
-		return clonedModel;
 	}
 
-	private removeMappingsFromModel(model: ProjectModelResponse): ProjectModel {
-		if (model.mappings) {
-			delete model.mappings;
-		}
-		return model;
-	}
-
-	private getProjectModelFromJson(data: ProjectModelResponse): ProjectModel {
-		if (!data.hasOwnProperty('board')) {
-			return {
-				board: {
-					elements: []
-				}
-			};
-		}
-		data.board.elements = data.board.elements.map(e => {
+	private getProjectModelFromJson(data: Element[]): Element[] {
+		return data.map(e => {
 			const elem: Element = {
 				id: e.id,
 				typeId: e.typeId,
@@ -591,11 +559,10 @@ export class ProjectSaveManagementService {
 			};
 			return elem;
 		});
-		return data;
 	}
 
-	private adjustInputsAndOutputs(project: ProjectModel): ProjectModel {
-		project.board.elements = project.board.elements.map(el => {
+	private adjustInputsAndOutputs(elements: Element[]): Element[] {
+		return elements.map(el => {
 			if (!this.elemProvService.isUserElement(el.typeId)) return el;
 			const type = this.elemProvService.getElementById(el.typeId);
 			el.numInputs = type.numInputs;
@@ -614,6 +581,5 @@ export class ProjectSaveManagementService {
 			el.endPos = new PIXI.Point(el.pos.x + width, el.pos.y + height);
 			return el;
 		});
-		return project;
 	}
 }
