@@ -10,12 +10,13 @@ import {Grid} from './grid';
 import {environment} from '../../../environments/environment';
 import {Element} from '../element';
 import {ElementProviderService} from '../../services/element-provider/element-provider.service';
-import {CompSpriteGenerator} from './comp-sprite-generator';
 import {CollisionFunctions} from '../collision-functions';
 import {Project} from '../project';
 import {Action} from '../action';
 import {getStaticDI} from '../get-di';
 import {LGraphics} from './l-graphics';
+import {WireGraphics} from './wire-graphics';
+import {ComponentGraphics} from './component-graphics';
 
 export abstract class View extends PIXI.Container {
 
@@ -78,7 +79,7 @@ export abstract class View extends PIXI.Container {
 			chunk.gridGraphics.visible = this.themingService.showGrid;
 			chunk.gridGraphics.renderable = this.themingService.showGrid;
 			if (this.constructor.name === 'SimulationView') {
-				chunk.container.children.forEach((c: LGraphics) => c.applyWireState(this.zoomPan.currentScale));
+				chunk.container.children.forEach((c: LGraphics) => c.applySimState(this.zoomPan.currentScale));
 			}
 			if (chunk.scaledFor === this.zoomPan.currentScale) continue;
 			chunk.scaledFor = this.zoomPan.currentScale;
@@ -139,8 +140,8 @@ export abstract class View extends PIXI.Container {
 	protected updateComponentSprite(element: Element, graphics: LGraphics) {
 		graphics.clear();
 		const elemType = this.elementProviderService.getElementById(element.typeId);
-		CompSpriteGenerator.drawComponent(
-			elemType.symbol, element.numInputs, element.numOutputs, element.rotation, this.zoomPan.currentScale, graphics
+		(graphics as ComponentGraphics).updateComponent(
+			elemType.symbol, element.numInputs, element.numOutputs, element.rotation, this.zoomPan.currentScale
 		);
 	}
 
@@ -219,7 +220,7 @@ export abstract class View extends PIXI.Container {
 
 	protected placeComponentOnView(element: Element): ElementSprite {
 		const elemType = this.elementProviderService.getElementById(element.typeId);
-		const sprite = CompSpriteGenerator.getComponentSprite(
+		const sprite = new ComponentGraphics(
 			elemType.symbol, element.numInputs, element.numOutputs, element.rotation, this.zoomPan.currentScale
 		);
 		sprite.position = Grid.getLocalChunkPixelPosForGridPos(element.pos);
@@ -237,7 +238,7 @@ export abstract class View extends PIXI.Container {
 		const endPos = Grid.getPixelPosForGridPosWire(element.endPos);
 		const startPos = Grid.getPixelPosForGridPosWire(element.pos);
 
-		const graphics = new LGraphics();
+		const graphics = new WireGraphics();
 		graphics.position = Grid.getLocalChunkPixelPosForGridPosWireStart(element.pos);
 		graphics.name = element.id.toString();
 		this.addLineToWireGraphics(graphics, endPos, startPos);

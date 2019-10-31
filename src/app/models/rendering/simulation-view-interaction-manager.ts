@@ -6,10 +6,15 @@ import {SimulationView} from './simulation-view';
 import {ElementProviderService} from '../../services/element-provider/element-provider.service';
 import {getStaticDI} from '../get-di';
 import {NgZone} from '@angular/core';
+import {WorkerCommunicationService} from '../../services/simulation/worker-communication/worker-communication.service';
+import {ComponentGraphics} from './component-graphics';
 
 export class SimulationViewInteractionManager {
 
 	private _view: SimulationView;
+
+	private elementProviderService = getStaticDI(ElementProviderService);
+	private workerCommunicationService = getStaticDI(WorkerCommunicationService);
 
 	constructor(view: SimulationView) {
 		this._view = view;
@@ -26,7 +31,7 @@ export class SimulationViewInteractionManager {
 	}
 
 	private onCompClick(e: InteractionEvent, elemSprite: ElementSprite) {
-		if (getStaticDI(ElementProviderService).isUserElement(elemSprite.element.typeId) && e.data.button === 0) {
+		if (this.elementProviderService.isUserElement(elemSprite.element.typeId) && e.data.button === 0) {
 			getStaticDI(NgZone).run(() => {
 				this._view.requestInspectElemEventEmitter.emit({
 					identifier: `${this._view.parentProjectIdentifier}:${elemSprite.element.id}`,
@@ -35,10 +40,15 @@ export class SimulationViewInteractionManager {
 					parentTypeIds: [...this._view.parentTypeIds, this._view.projectId]
 				});
 			});
-		} else if (getStaticDI(ElementProviderService).isButtonElement(elemSprite.element.typeId)) {
-
-		} else if (getStaticDI(ElementProviderService).isLeverElement(elemSprite.element.typeId)) {
-
+		} else if (this.elementProviderService.isButtonElement(elemSprite.element.typeId)) {
+			this.workerCommunicationService.setUserInput(this._view.parentProjectIdentifier, elemSprite.element, true);
+		} else if (this.elementProviderService.isLeverElement(elemSprite.element.typeId)) {
+			(elemSprite.sprite as ComponentGraphics).toggleUserInputState();
+			this.workerCommunicationService.setUserInput(
+				this._view.parentProjectIdentifier,
+				elemSprite.element,
+				(elemSprite.sprite as ComponentGraphics).userInputState
+			);
 		}
 	}
 
