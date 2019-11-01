@@ -43,20 +43,20 @@ export class ComponentGraphics extends LGraphics {
 
 		switch (rotation) {
 			case 0:
-				this.leftWires(inputs, width, height, scale);
-				this.rightWires(outputs, width, height, scale);
+				this.leftWires(inputs, width, height);
+				this.rightWires(outputs, width, height);
 				break;
 			case 1:
-				this.topWires(inputs, width, height, scale);
-				this.bottomWires(outputs, width, height, scale);
+				this.topWires(inputs, width, height);
+				this.bottomWires(outputs, width, height);
 				break;
 			case 2:
-				this.rightWires(inputs, width, height, scale);
-				this.leftWires(outputs, width, height, scale);
+				this.rightWires(inputs, width, height);
+				this.leftWires(outputs, width, height);
 				break;
 			case 3:
-				this.bottomWires(inputs, width, height, scale);
-				this.topWires(outputs, width, height, scale);
+				this.bottomWires(inputs, width, height);
+				this.topWires(outputs, width, height);
 				break;
 		}
 
@@ -75,31 +75,31 @@ export class ComponentGraphics extends LGraphics {
 		this.addChild(text);
 	}
 
-	private leftWires(amount: number, width: number, height: number, scale) {
+	private leftWires(amount: number, width: number, height: number) {
+		for (let i = 0; i < amount; i++) {
+			this.moveTo(0, (environment.gridPixelWidth / 2) + environment.gridPixelWidth * i);
+			this.lineTo(-environment.gridPixelWidth / 2, (environment.gridPixelWidth / 2) + environment.gridPixelWidth * i);
+		}
+	}
+
+	private rightWires(amount: number, width: number, height: number) {
 		for (let i = 0; i < amount; i++) {
 			this.moveTo(width, (environment.gridPixelWidth / 2) + environment.gridPixelWidth * i);
-			this.lineTo(width + environment.gridPixelWidth / 2, (environment.gridPixelWidth / 2) + environment.gridPixelWidth * i);
+			this.lineTo(width + (environment.gridPixelWidth / 2), (environment.gridPixelWidth / 2) + environment.gridPixelWidth * i);
 		}
 	}
 
-	private rightWires(amount: number, width: number, height: number, scale) {
+	topWires(amount: number, width: number, height: number) {
 		for (let i = 0; i < amount; i++) {
-			this.moveTo(-(environment.gridPixelWidth / 2), (environment.gridPixelWidth / 2) + environment.gridPixelWidth * i);
-			this.lineTo(0, (environment.gridPixelWidth / 2) + environment.gridPixelWidth * i);
+			this.moveTo(width - (environment.gridPixelWidth / 2) - environment.gridPixelWidth * i, 0);
+			this.lineTo(width - (environment.gridPixelWidth / 2) - environment.gridPixelWidth * i, -environment.gridPixelWidth / 2);
 		}
 	}
 
-	topWires(amount: number, width: number, height: number, scale) {
+	bottomWires(amount: number, width: number, height: number) {
 		for (let i = 0; i < amount; i++) {
-			this.moveTo(width - (environment.gridPixelWidth / 2) - environment.gridPixelWidth * i, height);
-			this.lineTo(width - (environment.gridPixelWidth / 2) - environment.gridPixelWidth * i, height + environment.gridPixelWidth / 2);
-		}
-	}
-
-	bottomWires(amount: number, width: number, height: number, scale) {
-		for (let i = 0; i < amount; i++) {
-			this.moveTo((environment.gridPixelWidth / 2) + environment.gridPixelWidth * i, 0);
-			this.lineTo((environment.gridPixelWidth / 2) + environment.gridPixelWidth * i, -(environment.gridPixelWidth / 2));
+			this.moveTo((environment.gridPixelWidth / 2) + environment.gridPixelWidth * i, height);
+			this.lineTo((environment.gridPixelWidth / 2) + environment.gridPixelWidth * i, height + (environment.gridPixelWidth / 2));
 		}
 	}
 
@@ -114,7 +114,7 @@ export class ComponentGraphics extends LGraphics {
 		this.drawComponent(symbol, inputs, outputs, rotation, scale);
 	}
 
-	updateScale(scale: number) {
+	public updateScale(scale: number) {
 		// @ts-ignore
 		for (const data of this.geometry.graphicsData) {
 			data.lineStyle.width = 1 / scale;
@@ -122,6 +122,13 @@ export class ComponentGraphics extends LGraphics {
 		this.geometry.invalidate();
 	}
 
+	public applySimState(scale: number) {
+		// @ts-ignore
+		for (const data of this.geometry.graphicsData) {
+			data.lineStyle.width = 1 / scale;
+		}
+		this.geometry.invalidate();
+	}
 
 	public toggleUserInputState() {
 		this._userInputState = !this._userInputState;

@@ -8,7 +8,6 @@ export class WireGraphics extends LGraphics {
 	public updateScale(scale: number) {
 		// @ts-ignore
 		for (const data of this.geometry.graphicsData) {
-			console.log(data);
 			if (this.simActiveState) {
 				data.lineStyle.width = 3 / scale;
 			} else {
