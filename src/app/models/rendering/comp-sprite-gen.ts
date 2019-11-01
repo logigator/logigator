@@ -55,7 +55,7 @@ export abstract class CompSpriteGen {
 			const tex = this._renderers.get(rendererId).generateTexture(
 				graphics,
 				PIXI.SCALE_MODES.NEAREST,
-				window.devicePixelRatio || 1
+				Math.ceil(window.devicePixelRatio || 1)
 			);
 			if ((rotation === 0 && inputs > 0) || (rotation === 2 && outputs > 0)) {
 				tex.defaultAnchor.x = (environment.gridPixelWidth / 2 * scale) / tex.width;

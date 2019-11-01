@@ -59,6 +59,7 @@
 import 'zone.js/dist/zone';  // Included with Angular CLI.
 
 // import * as PIXI from 'pixi.js';
+// PIXI.settings.ROUND_PIXELS = true;
 // PIXI.Ticker.shared.autoStart = false;
 // PIXI.Ticker.shared.destroy();
 
