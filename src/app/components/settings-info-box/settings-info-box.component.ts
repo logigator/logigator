@@ -1,14 +1,15 @@
-import {Component, Input, OnChanges, OnDestroy, OnInit, SimpleChanges} from '@angular/core';
+import {ChangeDetectionStrategy, Component, Input, OnChanges, OnDestroy, SimpleChanges} from '@angular/core';
 import {ElementProviderService} from '../../services/element-provider/element-provider.service';
-import {ElementType} from '../../models/element-type';
+import {ElementType} from '../../models/element-types/element-type';
 import {ProjectsService} from '../../services/projects/projects.service';
-import {FormGroup, FormControl, FormBuilder} from '@angular/forms';
+import {FormBuilder, FormGroup} from '@angular/forms';
 import {Subscription} from 'rxjs';
 
 @Component({
 	selector: 'app-settings-info-box',
 	templateUrl: './settings-info-box.component.html',
-	styleUrls: ['./settings-info-box.component.scss']
+	styleUrls: ['./settings-info-box.component.scss'],
+	changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class SettingsInfoBoxComponent implements OnChanges, OnDestroy {
 
@@ -23,7 +24,7 @@ export class SettingsInfoBoxComponent implements OnChanges, OnDestroy {
 
 	public elemType: ElementType;
 
-	public propertiesFrom: FormGroup;
+	public propertiesForm: FormGroup;
 
 	private formSubscription: Subscription;
 
@@ -46,22 +47,66 @@ export class SettingsInfoBoxComponent implements OnChanges, OnDestroy {
 		}
 	}
 
+	editComponentClick() {
+		this.projects.openComponent(this.selectedCompTypeId);
+	}
+
+	public get isPlugElement(): boolean {
+		return this.elemProvider.isPlugElement(this.selectedCompTypeId);
+	}
+
+	public get possiblePlugIndexes(): number[] {
+		if (this.selectedCompId === undefined) return [];
+		return this.projects.currProject.possiblePlugIndexes(this.selectedCompId);
+	}
+
+	public toUserPlugIndex(possibleIndex: number): number {
+		if (this.elemProvider.isInputElement(this.selectedCompTypeId)) {
+			return possibleIndex + 1;
+		} else if (this.elemProvider.isOutputElement(this.selectedCompTypeId)) {
+			return possibleIndex - this.projects.currProject.numInputs + 1;
+		}
+	}
+
 	private initType() {
 		this.elemType = this.elemProvider.getElementById(this.selectedCompTypeId);
-		this.propertiesFrom = this.formBuilder.group({
+		this.propertiesForm = this.formBuilder.group({
 			numInputs: [this.elemType.numInputs],
-			rotation: [this.elemType.rotation]
+			rotation: [this.elemType.rotation],
+			plugIndex: []
 		});
-		this.formSubscription = this.propertiesFrom.valueChanges.subscribe((data: any) => {
-			this.elemType.rotation = Number(data.rotation);
+		this.formSubscription = this.propertiesForm.valueChanges.subscribe((data: any) => {
+			if (data.numInputs <= this.elemType.maxInputs && data.numInputs >= this.elemType.minInputs) {
+				this.elemType.rotation = Number(data.rotation);
+			}
 			this.elemType.numInputs = data.numInputs;
 		});
 	}
 
 	private initInstance() {
-		this.propertiesFrom = this.formBuilder.group({
-			numInputs: [],
-			rotation: []
+		const element = this.projects.currProject.currState.getElementById(this.selectedCompId);
+		this.selectedCompTypeId = element.typeId;
+		this.elemType = this.elemProvider.getElementById(element.typeId);
+		this.propertiesForm = this.formBuilder.group({
+			numInputs: [element.numInputs],
+			rotation: [element.rotation],
+			plugIndex: [element.plugIndex]
+		});
+		this.formSubscription = this.propertiesForm.valueChanges.subscribe((data: any) => {
+			if (data.rotation !== element.rotation) {
+				if (!this.projects.currProject.rotateComponent(this.selectedCompId, Number(data.rotation))) {
+					this.propertiesForm.controls.rotation.setValue(element.rotation);
+				}
+			}
+			if (data.numInputs !== element.numInputs && data.numInputs <= this.elemType.maxInputs && data.numInputs >= this.elemType.minInputs) {
+				if (!this.projects.currProject.setNumInputs(this.selectedCompId, data.numInputs)) {
+					this.propertiesForm.controls.numInputs.setValue(element.numInputs);
+				}
+			}
+			if (data.plugIndex !== element.plugIndex) {
+				this.projects.currProject.setPlugIndex(this.selectedCompId, Number(data.plugIndex));
+				this.propertiesForm.controls.plugIndex.setValue(element.plugIndex);
+			}
 		});
 	}
 

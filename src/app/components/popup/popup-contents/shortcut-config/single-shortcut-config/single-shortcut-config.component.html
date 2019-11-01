@@ -1,0 +1,7 @@
+<div>
+	<p>{{'POPUP.SHORTCUTS.DESCRIPTION.' + shortcut | translate}}</p>
+	<div class="shortcut-input-container" [class.recording]="isRecording" (click)="startRecording()">
+		<input class="shortcut-input" [(ngModel)]="shortcutText" readonly #inputContainer>
+		<span class="save" (click)="saveClick()"></span>
+	</div>
+</div>

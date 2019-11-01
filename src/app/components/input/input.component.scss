@@ -1,0 +1,56 @@
+@import "themes";
+
+.input-group {
+	margin-bottom: 0.75rem;
+
+	.input-container {
+		@include themify() {
+			position: relative ;
+			display: flex;
+			flex-direction: column;
+
+			label {
+				position: absolute;
+				font-size: 1rem;
+				pointer-events: none;
+				left: 0.25rem;
+				bottom: 0.25rem;
+				transition: 0.2s ease all;
+
+				&.invalid {
+					color: themed('error');
+				}
+			}
+
+			input {
+				outline: none;
+				border: none;
+				padding: 0.25rem;
+				font-size: 1rem;
+				border-bottom: 1px solid themed('primary-text');
+				color: themed('primary-text');
+				background-color: themed('background');
+
+				&:focus ~ label {
+					bottom: 1.6rem;
+					font-size: 0.7rem;
+				}
+
+				&.invalid {
+					border-bottom: 1px solid themed('error');
+					color: themed('error');
+				}
+			}
+
+			.has-value {
+				bottom: 1.6rem;
+				font-size: 0.7rem;
+			}
+		}
+	}
+
+	.errors {
+		display: flex;
+		flex-direction: column;
+	}
+}

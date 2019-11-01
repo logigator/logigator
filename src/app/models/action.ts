@@ -1,4 +1,5 @@
 import {Element} from './element';
+import {Elements} from './elements';
 import * as PIXI from 'pixi.js';
 
 export type ActionType =
@@ -11,8 +12,9 @@ export type ActionType =
 	'movMult' |
 	'conWire' |
 	'dcoWire' |
-	'movWire' |
-	'setComp';
+	'rotComp' |
+	'numInpt' |
+	'plugInd';
 
 export interface ChangeType {
 	newElems: Element[];
@@ -20,13 +22,12 @@ export interface ChangeType {
 }
 
 export interface Action {
-	name: ActionType;	// TODO element settings
+	name: ActionType;
 	element?: Element;
 	others?: Element[];
-	oldElements?: Element[];
-	id?: number;
 	pos?: PIXI.Point;
 	endPos?: PIXI.Point;
+	numbers?: number[]; // for rotation/numInput/plugIndex 0: new, 1: old
 }
 
 export class Actions {
@@ -41,13 +42,15 @@ export class Actions {
 		['movMult', ['movMult']],
 		['conWire', ['dcoWire']],
 		['dcoWire', ['conWire']],
-		['movWire', ['movWire']],
-		['setComp', ['setComp']]
+		['rotComp', ['rotComp']],
+		['numInpt', ['numInpt']],
+		['plugInd', ['plugInd']]
 	]);
 
 	public static reverseActions(actions: Action[]): Action[] {
+		if (!actions)
+			return actions;
 		const out: Action[] = [];
-		// TODO crashes when actions is undefined
 		for (let i = actions.length - 1; i > -1; i--) {
 			out.push(...Actions.reverseAction(actions[i]));
 		}
@@ -63,6 +66,8 @@ export class Actions {
 			if (revAction.name === 'movMult') {
 				revAction.pos.x *= -1;
 				revAction.pos.y *= -1;
+			} else if (revAction.name === 'rotComp' || revAction.name === 'numInpt' || revAction.name === 'plugInd') {
+				revAction.numbers = [...action.numbers].reverse();
 			}
 		}
 		return revActions;
@@ -111,11 +116,11 @@ export class Actions {
 	): Element[] {
 		changes.forEach(change => {
 			change.oldElems.forEach(e => {
-				out.push({name: 'remWire', element: e});
+				out.push({name: Elements.remActionName(e), element: e});
 				outElements = outElements.filter(o => o.id !== e.id);
 			});
 			change.newElems.forEach(e => {
-				out.push({name: 'addWire', element: e});
+				out.push({name: Elements.addActionName(e), element: e});
 				outElements.push(e);
 			});
 		});
@@ -127,7 +132,7 @@ export class Actions {
 			return;
 		actions.forEach(a => {
 			if (a.element)
-				console.log(a.name, a.element.id, a.element.pos, a.element.endPos);
+				console.log(a.name, a.element.id, a.element.pos, a.element.endPos, a.numbers);
 			else
 				console.log(a.name, a.pos, a.endPos);
 

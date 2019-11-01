@@ -1,0 +1,35 @@
+@import "themes";
+
+.switch {
+	width: 3rem;
+	height: 1.5rem;
+	border-radius: 0.75rem;
+	@include themify() {
+		border: 2px solid themed('secondary');
+	}
+
+	&:hover {
+		cursor: pointer;
+	}
+
+	.bubble {
+		width: calc(1.5rem - 4px);
+		height: calc(1.5rem - 4px);
+		border-radius: 50%;
+		position: relative;
+		left: 1.5rem;
+		transition: left 100ms;
+		@include themify() {
+			background-color: themed('primary');
+		}
+	}
+
+	&.off {
+		.bubble {
+			left: 0;
+			@include themify() {
+				background-color: themed('error');
+			}
+		}
+	}
+}

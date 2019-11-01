@@ -1,20 +1,26 @@
-import {Component, EventEmitter, OnInit, Output} from '@angular/core';
-import {ProjectsService} from '../../../services/projects/projects.service';
+import {ChangeDetectionStrategy, Component, EventEmitter, OnInit, Output} from '@angular/core';
 import {ProjectInteractionService} from '../../../services/project-interaction/project-interaction.service';
+import {InteractionAction} from '../../../models/interaction-action';
+import {checkActionUsable} from '../../../models/action-usable-in-modes';
 
 @Component({
 	selector: 'app-edit-dropdown',
 	templateUrl: './edit-dropdown.component.html',
-	styleUrls: ['../top-bar-dropdowns.scss', './edit-dropdown.component.scss']
+	styleUrls: ['../top-bar-dropdowns.scss', './edit-dropdown.component.scss'],
+	changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class EditDropdownComponent implements OnInit {
 
 	@Output()
 	public requestClosed: EventEmitter<any> = new EventEmitter();
 
-	constructor(private projectService: ProjectsService, private projectInteraction: ProjectInteractionService) { }
+	constructor(private projectInteraction: ProjectInteractionService) { }
 
 	ngOnInit() {
+	}
+
+	public checkActionUsable(action: InteractionAction) {
+		return checkActionUsable(action);
 	}
 
 	public close() {
@@ -22,20 +28,27 @@ export class EditDropdownComponent implements OnInit {
 	}
 
 	public undo() {
-		this.projectService.currProject.stepBack();
+		this.projectInteraction.undoForCurrent();
 		this.close();
 	}
 
 	public redo() {
-		this.projectService.currProject.stepForward();
+		this.projectInteraction.redoForCurrent();
 		this.close();
 	}
 
 	public copy() {
+		this.projectInteraction.copySelection();
 		this.close();
 	}
 
 	public paste() {
+		this.projectInteraction.paste();
+		this.close();
+	}
+
+	public cut() {
+		this.projectInteraction.cutSelection();
 		this.close();
 	}
 

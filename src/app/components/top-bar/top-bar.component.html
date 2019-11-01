@@ -1,35 +1,64 @@
 <div id="top-bar">
 	<div (click)="closeDropdowns()" *ngIf="dropdownOpen" class="background"></div>
 
+	<!-- #!web -->
 	<a href="https://logigator.com/" target="_blank" rel="noopener"><img alt="Logigator" src="/assets/logo.svg"></a>
+
+	<!-- #!electron -->
+	<img alt="Logigator" src="/assets/logo.svg">
+
+
 	<div class="main-menu">
-		<p class="project-title">Projekttitel</p>
+
+		<!-- #!web -->
+		<p class="project-title">{{mainProjectName}}</p>
+
 		<div class="menu-entries">
 			<div>
-				<p (mouseover)="dropdownHover('fileDropdownOpen')" (click)="closeDropdowns(); fileDropdownOpen = true;">File</p>
+				<p (mouseover)="dropdownHover('fileDropdownOpen')" (click)="closeDropdowns(); fileDropdownOpen = true;">{{'DROPDOWN.FILE.TITLE' | translate}}</p>
 				<app-file-dropdown (requestClosed)="closeDropdowns()" *ngIf="fileDropdownOpen"></app-file-dropdown>
 			</div>
-			<div>
-				<p (mouseover)="dropdownHover('editDropdownOpen')" (click)="closeDropdowns(); editDropdownOpen = true;">Edit</p>
+			<div *ngIf="checkActionUsable('editDropdown')">
+				<p (mouseover)="dropdownHover('editDropdownOpen')" (click)="closeDropdowns(); editDropdownOpen = true;">{{'DROPDOWN.EDIT.TITLE' | translate}}</p>
 				<app-edit-dropdown (requestClosed)="closeDropdowns()" *ngIf="editDropdownOpen"></app-edit-dropdown>
 			</div>
 			<div>
-				<p (mouseover)="dropdownHover('viewDropdownOpen')" (click)="closeDropdowns(); viewDropdownOpen = true;">View</p>
+				<p (mouseover)="dropdownHover('viewDropdownOpen')" (click)="closeDropdowns(); viewDropdownOpen = true;">{{'DROPDOWN.VIEW.TITLE' | translate}}</p>
 				<app-view-dropdown (requestClosed)="closeDropdowns()" *ngIf="viewDropdownOpen"></app-view-dropdown>
 			</div>
 			<div>
-				<p (mouseover)="dropdownHover('helpDropdownOpen')" (click)="closeDropdowns(); helpDropdownOpen = true;">Help</p>
+				<p (mouseover)="dropdownHover('helpDropdownOpen')" (click)="closeDropdowns(); helpDropdownOpen = true;">{{'DROPDOWN.HELP.TITLE' | translate}}</p>
 				<app-help-dropdown (requestClosed)="closeDropdowns()" *ngIf="helpDropdownOpen"></app-help-dropdown>
 			</div>
 		</div>
 	</div>
 
-	<div class="login-register">
-		<p class="login">Login</p>
-		<div class="divider"></div>
-		<p class="register">Register</p>
-		<div (click)="closeDropdowns(); settingsDropdownOpen = true;" class="settings"></div>
-		<app-settings-dropdown (requestClosed)="closeDropdowns()" *ngIf="settingsDropdownOpen"></app-settings-dropdown>
+	<div class="top-bar-end">
+
+		<!-- #!electron -->
+		<p class="electron-project-name">{{mainProjectName}}</p>
+
+		<div class="login-register">
+			<ng-container *ngIf="userInfo$ | async as userInfo; else loginRegister">
+				<p>{{userInfo.user.username}}</p>
+			</ng-container>
+			<div (click)="closeDropdowns(); settingsDropdownOpen = true;" class="settings"></div>
+			<app-settings-dropdown (requestClosed)="closeDropdowns()" *ngIf="settingsDropdownOpen"></app-settings-dropdown>
+		</div>
+
+		<!-- #!if ELECTRON === 'true' -->
+		<div class="window-buttons">
+			<div class="minimize" (click)="minimize()"></div>
+			<div class="maximize" (click)="maximizeWin()"></div>
+			<div class="close" (click)="close()"></div>
+		</div>
+		<!-- #!endif -->
 	</div>
 
 </div>
+
+<ng-template #loginRegister>
+	<p class="login" (click)="login()">{{'TOP_BAR.LOGIN' | translate}}</p>
+	<div class="divider"></div>
+	<p class="register" (click)="register()">{{'TOP_BAR.REGISTER' | translate}}</p>
+</ng-template>

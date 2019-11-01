@@ -1,0 +1,79 @@
+@import "variables";
+@import "themes";
+
+.popup {
+	position: fixed;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	top: 0;
+	left: 0;
+	width: 100%;
+	height: 100%;
+	z-index: 500;
+
+	.content {
+		@include themify() {
+			background-color: themed('background');
+			border: border('width') solid themed('secondary');
+			color: themed('primary-text');
+		}
+
+		border-radius: border('radius');
+		min-width: 10rem;
+		min-height: 5rem;
+		z-index: 600;
+
+		.header {
+			display: flex;
+
+			@include themify() {
+				background-color: themed('secondary');
+				border-bottom: border('width') solid themed('secondary');
+
+				@if (isTheme('dark')) {
+					.dark {
+						display: block;
+					}
+					.light {
+						display: none;
+					}
+				} @else {
+					.dark {
+						display: none;
+					}
+					.light {
+						display: block;
+					}
+				}
+
+			}
+
+			width: 100%;
+			text-align: center;
+			font-size: 1.2rem;
+			font-weight: normal;
+			justify-content: space-between;
+			align-items: center;
+			padding: 0.5rem;
+
+			img {
+				margin-right: 1px;
+				border-radius: 0.25rem;
+				//width: 1.3rem;
+				height: 27px;
+				padding: 0.3rem;
+
+				&:hover {
+					@include themify() {
+						background-color: lighten(themed('background'), 10);
+					}
+				}
+			}
+		}
+	}
+
+
+}
+
+

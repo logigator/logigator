@@ -1,24 +1,28 @@
 <div class="dropdown">
-	<div (click)="undo()">
-		Undo
+	<div (click)="undo()" *ngIf="checkActionUsable('undo')">
+		{{'DROPDOWN.EDIT.UNDO' | translate}}
 		<span>{{'undo' | shortcutText}}</span>
 	</div>
-	<div (click)="redo()">
-		Redo
+	<div (click)="redo()" *ngIf="checkActionUsable('redo')">
+		{{'DROPDOWN.EDIT.REDO' | translate}}
 		<span>{{'redo' | shortcutText}}</span>
 	</div>
 	<hr>
-	<div (click)="copy()">
-		Copy
+	<div (click)="copy()" *ngIf="checkActionUsable('copy')">
+		{{'DROPDOWN.EDIT.COPY' | translate}}
 		<span>{{'copy' | shortcutText}}</span>
 	</div>
-	<div (click)="paste()">
-		Paste
+	<div (click)="paste()" *ngIf="checkActionUsable('paste')">
+		{{'DROPDOWN.EDIT.PASTE' | translate}}
 		<span>{{'paste' | shortcutText}}</span>
 	</div>
+	<div (click)="cut()" *ngIf="checkActionUsable('cut')">
+		{{'DROPDOWN.EDIT.CUT' | translate}}
+		<span>{{'cut' | shortcutText}}</span>
+	</div>
 	<hr>
-	<div (click)="delete()">
-		Delete
+	<div (click)="delete()" *ngIf="checkActionUsable('delete')">
+		{{'DROPDOWN.EDIT.DELETE' | translate}}
 		<span>{{'delete' | shortcutText}}</span>
 	</div>
 </div>

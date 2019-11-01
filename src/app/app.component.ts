@@ -6,6 +6,8 @@ import {ShortcutsService} from './services/shortcuts/shortcuts.service';
 import {fromEvent, Subject} from 'rxjs';
 import {DOCUMENT} from '@angular/common';
 import {takeUntil} from 'rxjs/operators';
+import {ProjectsService} from './services/projects/projects.service';
+import {TranslateService} from '@ngx-translate/core';
 
 @Component({
 	selector: 'app-root',
@@ -26,16 +28,25 @@ export class AppComponent implements OnInit, OnDestroy {
 		private workMode: WorkModeService,
 		private selection: SelectionService,
 		private shortcuts: ShortcutsService,
-		@Inject(DOCUMENT) private document: HTMLDocument
-	) {}
+		private projects: ProjectsService,
+		@Inject(DOCUMENT) private document: HTMLDocument,
+		private translate: TranslateService
+	) {
+		this.setGoogleAnalytics();
+		this.initTranslation();
+	}
 
 	ngOnInit(): void {
-		this.renderer2.addClass(this.appRoot.nativeElement, this.theming.themeClass);
-		this.listenToShortcuts();
+		this.ngZone.runOutsideAngular(() => {
+			this.listenToShortcuts();
 
-		this.theming.onRequestFullscreen$.pipe(
+			this.theming.onRequestFullscreen$.pipe(
+				takeUntil(this._destroySubject)
+			).subscribe(_ => this.onRequestFullscreen());
+		});
+		fromEvent(window, 'beforeunload').pipe(
 			takeUntil(this._destroySubject)
-		).subscribe(_ => this.onRequestFullscreen());
+		).subscribe((e) => this.onTabClose(e as Event));
 	}
 
 	private listenToShortcuts() {
@@ -46,8 +57,12 @@ export class AppComponent implements OnInit, OnDestroy {
 		});
 	}
 
+	public get isSimulationMode(): boolean {
+		return this.workMode.currentWorkMode === 'simulation';
+	}
+
 	public get showSettingsInfoBox(): boolean {
-		return this.workMode.currentWorkMode === 'buildComponent' || this.selection.isSingleSelect();
+		return this.workMode.currentWorkMode === 'buildComponent' ||  (this.projects.currProject && this.selection.isSingleSelect());
 	}
 
 	public get selectionMode(): 'type' | 'placed' {
@@ -79,6 +94,29 @@ export class AppComponent implements OnInit, OnDestroy {
 		} else if (elem.msRequestFullscreen) { /* IE/Edge */
 			elem.msRequestFullscreen();
 		}
+	}
+
+	private onTabClose(e: Event) {
+		// #!if DEBUG === 'false' && ELECTRON === 'false'
+		if (this.projects.hasUnsavedProjects) {
+			e.preventDefault();
+			e.returnValue = true;
+		}
+		// #!endif
+	}
+
+	private initTranslation() {
+		this.translate.addLangs(['en', 'de']);
+		this.translate.setDefaultLang('en');
+		this.translate.use('en');
+	}
+
+	private setGoogleAnalytics() {
+		// #!electron
+		gtag('config', 'UA-151071040-3', { page_path: 'electron' });
+
+		// #!web
+		gtag('config', 'UA-151071040-3', { page_path: 'web' });
 	}
 
 	ngOnDestroy(): void {

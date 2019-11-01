@@ -1,10 +1,21 @@
-import {Component, ElementRef, NgZone, OnDestroy, OnInit, Renderer2, ViewChild} from '@angular/core';
-import * as PIXI from 'pixi.js';
-import {View} from '../../models/rendering/view';
+import {
+	Component,
+	ElementRef,
+	NgZone,
+	OnDestroy,
+	OnInit,
+	Renderer2,
+	ViewChild
+} from '@angular/core';
+import {EditorView} from '../../models/rendering/editor-view';
 import {ProjectsService} from '../../services/projects/projects.service';
 import {Project} from '../../models/project';
 import {WorkArea} from '../../models/rendering/work-area';
-import {WindowWorkAreaComponent} from "../window-work-area/window-work-area.component";
+import {takeUntil} from 'rxjs/operators';
+import {WorkModeService} from '../../services/work-mode/work-mode.service';
+import {SimulationView} from '../../models/rendering/simulation-view';
+import {View} from '../../models/rendering/view';
+import {WorkerCommunicationService} from '../../services/simulation/worker-communication/worker-communication.service';
 
 @Component({
 	selector: 'app-work-area',
@@ -13,88 +24,148 @@ import {WindowWorkAreaComponent} from "../window-work-area/window-work-area.comp
 })
 export class WorkAreaComponent extends WorkArea implements OnInit, OnDestroy {
 
-	private _allViews: Map<number, View>;
-
-	public activeView: View;
+	private _allViews: Map<number, EditorView>;
 
 	@ViewChild('pixiCanvasContainer', {static: true})
 	private _pixiCanvasContainer: ElementRef<HTMLDivElement>;
 
-	@ViewChild('pixiWindowContainer', {static: true})
-	private _pixiWindowContainer: WindowWorkAreaComponent;
-
 	constructor(
 		private renderer2: Renderer2,
 		private ngZone: NgZone,
-		private projectsService: ProjectsService
+		private projectsService: ProjectsService,
+		private workMode: WorkModeService,
+		private workerCommunicationService: WorkerCommunicationService
 	) {
 		super();
 	}
 
 	ngOnInit() {
-		this._allViews = new Map<number, View>();
+		this._allViews = new Map<number, EditorView>();
 
 		this.ngZone.runOutsideAngular(async () => {
-			await this.loadPixiFont();
+			this.addTickerFunction();
 			this.preventContextMenu(this._pixiCanvasContainer, this.renderer2);
+			this.initZoomPan(this._pixiCanvasContainer);
 			this.initPixi(this._pixiCanvasContainer, this.renderer2);
-			this.initPixiTicker(() => {
-				this.activeView.updateZoomPan();
-				this._pixiRenderer.render(this.activeView);
-			});
 
-			this.projectsService.onProjectOpened$.subscribe(projectId => {
+			this.projectsService.onProjectOpened$.pipe(
+				takeUntil(this._destroySubject)
+			).subscribe(projectId => {
 				this.ngZone.runOutsideAngular(() => {
 					this.openProject(projectId);
-					this._pixiTicker.start(); // start ticker after a project was opened
+					this.ticker.singleFrame('0');
 				});
 			});
+			this.projectsService.onProjectClosed$.pipe(
+				takeUntil(this._destroySubject)
+			).subscribe(id => this.closeView(id));
+
+			this.projectsService.onProjectSwitch$.pipe(
+				takeUntil(this._destroySubject)
+			).subscribe(id => this.onProjectSwitch(id));
+
+			this.workMode.onSimulationModeChange.pipe(
+				takeUntil(this._destroySubject),
+			).subscribe(isSim => this.onSimulationModeChanged(isSim));
 		});
 	}
 
-	private loadPixiFont(): Promise<void> {
-		return new Promise<void>(resolve => {
-			const loader = PIXI.Loader.shared;
-			loader.add('luis_george_cafe', '/assets/fonts/louis_george_cafe_bitmap/font.fnt')
-				.load(() => resolve());
-		});
+	getIdentifier(): string {
+		return '0';
+	}
+
+	public setWorkerFrameTime() {
+		this.workerCommunicationService.setFrameTime(this.ticker.frameTime);
 	}
 
 	public get allProjects(): Map<number, Project> {
 		return this.projectsService.allProjects;
 	}
 
+	public get isSimulationMode(): boolean {
+		return this.workMode.currentWorkMode === 'simulation';
+	}
+
+	public get activeView(): View {
+		return this._activeView;
+	}
+
+	private onSimulationModeChanged(simulation: boolean) {
+		if (simulation) {
+			this.projectsService.allProjects.forEach(proj => {
+				if (proj.type === 'project') {
+					this._activeView = new SimulationView(
+						proj,
+						this._pixiCanvasContainer.nativeElement,
+						() => this.ticker.singleFrame('0'),
+						this.requestInspectElementInSim,
+						'0',
+						[],
+						[]
+					);
+					this.ticker.singleFrame('0');
+				}
+			});
+		} else {
+			if (!this._activeView) return;
+			this._activeView.destroy();
+			delete this._activeView;
+			// @ts-ignore
+			this._pixiRenderer._lastObjectRendered = null;
+			this.switchToProject(this.projectsService.allProjects.values().next().value.id);
+		}
+		if (this._pixiRenderer) {
+			this._pixiRenderer.resize(this._pixiCanvasContainer.nativeElement.offsetWidth, this._pixiCanvasContainer.nativeElement.offsetHeight);
+		}
+	}
+
 	private openProject(projectId: number) {
-		const newView = new View(projectId, this._pixiCanvasContainer.nativeElement);
+		const newView = new EditorView(
+			this.projectsService.getProjectById(projectId),
+			this._pixiCanvasContainer.nativeElement,
+			() => this.ticker.singleFrame('0'));
 		this.ngZone.run(() => {
 			this._allViews.set(projectId, newView);
-			this.activeView = newView;
+			this._activeView = newView;
+			this.projectsService.switchToProject(projectId);
 		});
 	}
 
-	public switchActiveView(toSwitchToId: number) {
+	public switchToProject(toSwitchToId: number) {
+		if (this.workMode.currentWorkMode === 'simulation') return;
 		this.projectsService.switchToProject(toSwitchToId);
-		this.activeView = this._allViews.get(toSwitchToId);
-
-		this._pixiWindowContainer.show();
 	}
 
-	public closeView(id: number, event: MouseEvent) {
+	private onProjectSwitch(id: number) {
+		this._activeView = this._allViews.get(id);
+		if (((this.activeView as EditorView).projectType === 'project' && this.workMode.isCompToBuildPlug) ||
+			this.activeView.projectId === this.workMode.currentComponentToBuild
+		) {
+			this.workMode.setWorkMode('select');
+		}
+		this.ticker.singleFrame('0');
+	}
+
+	public tabCloseClicked(id: number, event: MouseEvent) {
 		event.stopPropagation();
-
-		// TODO: ask if the user wants to save
 		if (this._allViews.size <= 1) return;
+		this.projectsService.closeTab(id);
+	}
 
+	public closeView(id: number) {
 		const toClose = this._allViews.get(id);
 		this._allViews.delete(id);
-
-		if (toClose === this.activeView) {
-			this.switchActiveView(this._allViews.values().next().value.projectId);
+		if (toClose === this._activeView) {
+			const toSwitchTo = this._allViews.values().next().value;
+			if (toSwitchTo) {
+				this.switchToProject(toSwitchTo.projectId);
+			} else {
+				delete this._activeView;
+			}
 		}
-
-		this.projectsService.closeProject(id);
 		toClose.destroy();
-
+		// @ts-ignore
+		this._pixiRenderer._lastObjectRendered = null;
 	}
 
 	ngOnDestroy(): void {

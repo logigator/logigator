@@ -4,9 +4,11 @@
 
 export const environment = {
 	production: false,
-	chunkSize: 20,
-	gridPixelWidth: 20,
-	componentWidth: 2
+	chunkSize: 16,
+	gridPixelWidth: 16,
+	componentWidth: 2,
+	apiPrefix: 'http://api.logigator-local-dev.com',
+	domain: 'http://editor.logigator-local-dev.com'
 };
 
 /*

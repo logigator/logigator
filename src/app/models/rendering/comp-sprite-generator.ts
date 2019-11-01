@@ -1,39 +1,48 @@
 import * as PIXI from 'pixi.js';
 import {ThemingService} from '../../services/theming/theming.service';
 import {environment} from '../../../environments/environment';
+import {getStaticDI} from '../get-di';
+import {LGraphics} from './l-graphics';
 
 export class CompSpriteGenerator {
 
-	public static updateGraphics(symbol: string, inputs: number, rotation: number, scale: number, graphics: PIXI.Graphics) {
-		graphics.lineStyle(1 / scale, ThemingService.staticInstance.getEditorColor('wire'));
-		graphics.beginFill(ThemingService.staticInstance.getEditorColor('background'));
+	private static _themingService: ThemingService;
+
+	private static get themingService(): ThemingService {
+		if (!CompSpriteGenerator._themingService) CompSpriteGenerator._themingService = getStaticDI(ThemingService);
+		return CompSpriteGenerator._themingService;
+	}
+
+	public static drawComponent(symbol: string, inputs: number, outputs: number, rotation: number, scale: number, graphics: LGraphics) {
+		graphics.lineStyle(1 / scale, CompSpriteGenerator.themingService.getEditorColor('wire'));
+		graphics.beginFill(CompSpriteGenerator.themingService.getEditorColor('background'));
 		graphics.moveTo(0, 0);
 
 		let width;
 		let height;
 		if (rotation === 0 || rotation === 2) {
 			width = environment.gridPixelWidth * 2;
-			height = environment.gridPixelWidth * inputs;
+			height = inputs >= outputs ? environment.gridPixelWidth * inputs : environment.gridPixelWidth * outputs;
 		} else {
-			width = environment.gridPixelWidth * inputs;
+			width = inputs >= outputs ? environment.gridPixelWidth * inputs : environment.gridPixelWidth * outputs;
 			height = environment.gridPixelWidth * 2;
 		}
 		graphics.drawRect(0, 0, width, height);
 
-		graphics.beginFill(ThemingService.staticInstance.getEditorColor('wire'));
+		graphics.beginFill(CompSpriteGenerator.themingService.getEditorColor('wire'));
 
 		switch (rotation) {
 			case 0:
-				CompSpriteGenerator.rotation0(inputs, height, width, graphics);
+				CompSpriteGenerator.rotation0(inputs, outputs, height, width, graphics);
 				break;
 			case 1:
-				CompSpriteGenerator.rotation1(inputs, height, width, graphics);
+				CompSpriteGenerator.rotation1(inputs, outputs, height, width, graphics);
 				break;
 			case 2:
-				CompSpriteGenerator.rotation2(inputs, height, width, graphics);
+				CompSpriteGenerator.rotation2(inputs, outputs, height, width, graphics);
 				break;
 			case 3:
-				CompSpriteGenerator.rotation3(inputs, height, width, graphics);
+				CompSpriteGenerator.rotation3(inputs, outputs, height, width, graphics);
 				break;
 		}
 
@@ -41,58 +50,67 @@ export class CompSpriteGenerator {
 
 		const text = new PIXI.BitmapText(symbol, {
 			font: {
-				name: 'Louis George Café',
+				name: 'Nunito',
 				size: environment.gridPixelWidth + 4
-			}
+			},
+			tint: CompSpriteGenerator.themingService.getEditorColor('fontTint')
 		});
 
-		text.position.x = (width / 2) - 5;
-		text.position.y = (height / 2) - 13;
+		text.anchor = 0.5;
+		text.position.x = width / 2;
+		text.position.y = height / 2;
 
 		graphics.addChild(text);
 
 		return graphics;
 	}
 
-	public static getComponentSprite(symbol: string, inputs: number, rotation: number, scale: number): PIXI.Sprite | PIXI.Graphics {
-		const graphics = new PIXI.Graphics();
-		return CompSpriteGenerator.updateGraphics(symbol, inputs, rotation, scale, graphics);
+	// tslint:disable-next-line:max-line-length
+	public static getComponentSprite(symbol: string, inputs: number, outputs: number, rotation: number, scale: number): LGraphics {
+		const graphics = new LGraphics();
+		graphics.interactiveChildren = false;
+		graphics.sortableChildren = false;
+		return CompSpriteGenerator.drawComponent(symbol, inputs, outputs, rotation, scale, graphics);
 	}
 
-	private static rotation0(inputs: number, height: number, width: number, graphics: PIXI.Graphics) {
-		graphics.moveTo(width, environment.gridPixelWidth / 2);
-		graphics.lineTo(width + environment.gridPixelWidth / 2, environment.gridPixelWidth / 2);
-
+	private static rotation0(inputs: number, outputs: number, height: number, width: number, graphics: PIXI.Graphics) {
+		for (let i = 0; i < outputs; i++) {
+			graphics.moveTo(width, (environment.gridPixelWidth / 2) + environment.gridPixelWidth * i);
+			graphics.lineTo(width + environment.gridPixelWidth / 2, (environment.gridPixelWidth / 2) + environment.gridPixelWidth * i);
+		}
 		for (let i = 0; i < inputs; i++) {
 			graphics.moveTo(-(environment.gridPixelWidth / 2), (environment.gridPixelWidth / 2) + environment.gridPixelWidth * i);
 			graphics.lineTo(0, (environment.gridPixelWidth / 2) + environment.gridPixelWidth * i);
 		}
 	}
 
-	private static rotation1(inputs: number, height: number, width: number, graphics: PIXI.Graphics) {
-		graphics.moveTo((inputs - 1) * environment.gridPixelWidth + environment.gridPixelWidth / 2, height);
-		graphics.lineTo((inputs - 1) * environment.gridPixelWidth + environment.gridPixelWidth / 2, height + environment.gridPixelWidth / 2);
-
+	private static rotation1(inputs: number, outputs: number, height: number, width: number, graphics: PIXI.Graphics) {
+		for (let i = 0; i < outputs; i++) {
+			graphics.moveTo(width - (environment.gridPixelWidth / 2) - environment.gridPixelWidth * i, height);
+			graphics.lineTo(width - (environment.gridPixelWidth / 2) - environment.gridPixelWidth * i, height + environment.gridPixelWidth / 2);
+		}
 		for (let i = 0; i < inputs; i++) {
 			graphics.moveTo((environment.gridPixelWidth / 2) + environment.gridPixelWidth * i, 0);
 			graphics.lineTo((environment.gridPixelWidth / 2) + environment.gridPixelWidth * i, -(environment.gridPixelWidth / 2));
 		}
 	}
 
-	private static rotation2(inputs: number, height: number, width: number, graphics: PIXI.Graphics) {
-		graphics.moveTo(0, (environment.gridPixelWidth * (inputs - 1)) + (environment.gridPixelWidth / 2));
-		graphics.lineTo(-(environment.gridPixelWidth / 2), (environment.gridPixelWidth * (inputs - 1)) + (environment.gridPixelWidth / 2));
-
+	private static rotation2(inputs: number, outputs: number, height: number, width: number, graphics: PIXI.Graphics) {
+		for (let i = 0; i < outputs; i++) {
+			graphics.moveTo(0, height - (environment.gridPixelWidth / 2) - (environment.gridPixelWidth * i));
+			graphics.lineTo(-(environment.gridPixelWidth / 2), height - (environment.gridPixelWidth / 2) - environment.gridPixelWidth * i);
+		}
 		for (let i = 0; i < inputs; i++) {
 			graphics.moveTo(width, (environment.gridPixelWidth / 2) + environment.gridPixelWidth * i);
 			graphics.lineTo(width + (environment.gridPixelWidth / 2), (environment.gridPixelWidth / 2) + environment.gridPixelWidth * i);
 		}
 	}
 
-	private static rotation3(inputs: number, height: number, width: number, graphics: PIXI.Graphics) {
-		graphics.moveTo(environment.gridPixelWidth / 2, 0);
-		graphics.lineTo(environment.gridPixelWidth / 2, -(environment.gridPixelWidth / 2));
-
+	private static rotation3(inputs: number, outputs: number, height: number, width: number, graphics: PIXI.Graphics) {
+		for (let i = 0; i < outputs; i++) {
+			graphics.moveTo(environment.gridPixelWidth / 2 + environment.gridPixelWidth * i, 0);
+			graphics.lineTo(environment.gridPixelWidth / 2 + environment.gridPixelWidth * i, -(environment.gridPixelWidth / 2));
+		}
 		for (let i = 0; i < inputs; i++) {
 			graphics.moveTo((environment.gridPixelWidth / 2) + environment.gridPixelWidth * i, height);
 			graphics.lineTo((environment.gridPixelWidth / 2) + environment.gridPixelWidth * i, height + (environment.gridPixelWidth / 2));

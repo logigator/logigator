@@ -2,6 +2,7 @@ import * as PIXI from 'pixi.js';
 import {environment} from '../../../environments/environment';
 import Point = PIXI.Point;
 import {ThemingService} from '../../services/theming/theming.service';
+import {getStaticDI} from '../get-di';
 
 export class Grid {
 
@@ -12,7 +13,7 @@ export class Grid {
 			return this._gridGeometries.get(scale);
 		}
 		const graphics = new PIXI.Graphics();
-		graphics.beginFill(ThemingService.staticInstance.getEditorColor('grid'));
+		graphics.beginFill(getStaticDI(ThemingService).getEditorColor('grid'));
 		for (let i = 0; i < environment.chunkSize; i++) {
 			for (let j = 0; j < environment.chunkSize; j++) {
 				graphics.drawRect(i * environment.gridPixelWidth, j * environment.gridPixelWidth, 1 / scale, 1 / scale);
@@ -24,19 +25,16 @@ export class Grid {
 		return graphics.geometry;
 	}
 
-	public static generateGridGraphics(scale): PIXI.Graphics {
-		const graphics = new PIXI.Graphics(this.getGridGeometry(scale));
-		graphics.hitArea = new PIXI.Rectangle(
-			0,
-			0,
-			environment.chunkSize * environment.gridPixelWidth,
-			environment.chunkSize * environment.gridPixelWidth
-		);
-		return graphics;
+	public static generateGridGraphics(scale: number): PIXI.Graphics {
+		return new PIXI.Graphics(this.getGridGeometry(scale));
 	}
 
 	public static getGridPosForPixelPos(point: PIXI.Point): PIXI.Point {
 		return new PIXI.Point(Math.floor(point.x / environment.gridPixelWidth), Math.floor(point.y / environment.gridPixelWidth));
+	}
+
+	public static getFloatGridPosForPixelPos(point: PIXI.Point): PIXI.Point {
+		return new PIXI.Point(point.x / environment.gridPixelWidth, point.y / environment.gridPixelWidth);
 	}
 
 	public static getPixelPosForGridPos(point: PIXI.Point): PIXI.Point {

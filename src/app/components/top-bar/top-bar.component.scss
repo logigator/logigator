@@ -3,17 +3,15 @@
 
 #top-bar {
 	@include themify() {
-		background-color: themed('toolbar');
-		color: themed('primary-text');
-		border-bottom: 1px solid themed('top-bar-divider');
+		background-color: themed('primary');
+		color: black;
 	}
 
 	width: 100%;
 	height: $top-bar-height;
 	user-select: none;
 
-	display: grid;
-	grid-template-columns: #{$construction-box-width - 3rem} auto 350px;
+	display: flex;
 
 	.background {
 		position: fixed;
@@ -26,21 +24,39 @@
 	}
 
 	a {
-		width: 80%;
-		justify-self: center;
-		align-self: center;
+		img {
+			height: 100%;
+		}
+
+		padding: 0.7rem;
+		height: 100%;
 	}
 
+	// #!if ELECTRON === 'true'
+	img {
+		-webkit-app-region: drag;
+		height: 50%;
+		align-self: center;
+		margin: 0 0.5rem 0 0.5rem;
+	}
+	// #!endif
+
 	.main-menu {
-		height: 90%;
-		display: grid;
-		grid-template-rows: auto #{$top-bar-height / 2.5};
+		// #!web
+		height: 75%;
+
+		// #!electron
+		height: 100%;
+
+		display: flex;
+		flex-direction: column;
+		justify-content: space-between;
+		align-self: center;
 
 		.project-title {
-			font-size: 15pt;
+			font-size: 1.2rem;
             padding-left: 0.17rem;
 			margin: 0;
-			align-self: end;
 		}
 
 		.menu-entries {
@@ -51,15 +67,29 @@
 			position: relative;
 
 			div {
+				// #!electron
+				height: 100%;
+
 				p {
-					margin: 0 0.5rem 0 0;
+					height: 100%;
+
+					// #!electron
+					line-height: $top-bar-height;
+
+					// #!web
 					padding: 0.1rem 0.2rem 0.1rem 0.2rem;
-					border-radius: 0.2rem;
+					// #!electron
+					padding: 0rem 0.2rem 0rem 0.2rem;
+
+					margin: 0 0.5rem 0 0;
+					border-top-right-radius: border('radius');
+					border-top-left-radius: border('radius');
 
 					&:hover {
 						cursor: pointer;
 						@include themify() {
-							background-color: lighten(themed('toolbar'), 5%);
+							background-color: themed('secondary');
+							color: themed('primary-text');
 						}
 					}
 				}
@@ -69,40 +99,92 @@
 		}
 	}
 
-	.login-register {
+	.top-bar-end {
+		-webkit-app-region: drag;
+		width: 100%;
 		display: flex;
 		flex-direction: row;
-		align-items: center;
 		justify-content: flex-end;
 
-		p {
-			font-size: 15pt;
+		.electron-project-name {
+			height: 100%;
 			margin: 0;
+			text-align: center;
+			flex-grow: 1;
+			line-height: $top-bar-height;
 		}
 
-		.divider {
-			border-left: 1px solid black;
-			height:  $toolbar-height - 25px;
-			padding: 0;
-			margin-right: 1rem;
-			margin-left: 1rem;
+		.login-register {
+			display: flex;
+			flex-direction: row;
+			align-items: center;
+			justify-content: flex-end;
+			-webkit-app-region: no-drag;
+
+			p {
+				// #!web
+				font-size: 1.2rem;
+				margin: 0;
+			}
+
+			.login, .register {
+				&:hover {
+					cursor: pointer;
+				}
+			}
+
+			.divider {
+				border-left: 1px solid black;
+				height:  $toolbar-height - 25px;
+				padding: 0;
+				margin-right: 1rem;
+				margin-left: 1rem;
+			}
+
+			.settings {
+				// #!if ELECTRON === 'true'
+				height: $top-bar-height  / 1.5;
+				width: $top-bar-height / 1.5;
+				// #!else
+				height: $top-bar-height / 2;
+				width: $top-bar-height / 2;
+				// #!endif
+
+				border: none;
+				cursor: pointer;
+				padding: 0;
+				margin-right: 0.7rem;
+				margin-left: 0.7rem;
+				outline: none;
+				background-size: cover;
+
+				background-image: url('/assets/icons/light/settings.svg');
+
+				@include themify() {
+					background-color: themed('primary');
+				}
+			}
 		}
 
-		.settings {
-			background-image: url("/assets/icons/settings.svg");
+		.window-buttons {
+			display: flex;
+			flex-direction: row;
+			-webkit-app-region: no-drag;
 
-			height: $top-bar-height / 2;
-			width: $top-bar-height / 2;
-			border: none;
-			cursor: pointer;
-			padding: 0;
-			margin-right: 0.7rem;
-			margin-left: 0.7rem;
-			outline: none;
-			background-size: cover;
-
-			@include themify() {
-				background-color: themed('toolbar');
+			.minimize {
+				width: $top-bar-height;
+				height: $top-bar-height;
+				background-color: #efefef;
+			}
+			.maximize {
+				width: $top-bar-height;
+				height: $top-bar-height;
+				background-color: #5D5D5D;
+			}
+			.close {
+				width: $top-bar-height;
+				height: $top-bar-height;
+				background-color: red;
 			}
 		}
 	}

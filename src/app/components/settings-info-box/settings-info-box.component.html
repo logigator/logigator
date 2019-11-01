@@ -1,24 +1,31 @@
 <div class="box">
 	<div class="header">
-		<h2>{{elemType?.name}}</h2>
+		<h2>{{elemType?.name | translate}}</h2>
 	</div>
-	<div class="content" [formGroup]="propertiesFrom">
-		<div class="property">
-			<p>Inputs:</p>
-			<input type="number" formControlName="numInputs" min="1">
+	<div class="content" [formGroup]="propertiesForm">
+		<div class="property" *ngIf="elemType.minInputs !== elemType.maxInputs">
+			<p>{{'SETTINGS_INFO.INPUTS' | translate}}:</p>
+			<input type="number" formControlName="numInputs" [min]="elemType.minInputs" [max]="elemType.maxInputs">
 		</div>
 		<div class="property">
-			<p>Direction:</p>
+			<p>{{'SETTINGS_INFO.DIRECTION' | translate}}:</p>
 			<select formControlName="rotation">
-				<option value="0">Left &rarr;</option>
-				<option value="1">Down &darr;</option>
-				<option value="2">Right &larr;</option>
-				<option value="3">Up &uarr;</option>
+				<option value="0">{{'SETTINGS_INFO.DIRECTIONS.LEFT' | translate}} &rarr;</option>
+				<option value="1">{{'SETTINGS_INFO.DIRECTIONS.DOWN' | translate}} &darr;</option>
+				<option value="2">{{'SETTINGS_INFO.DIRECTIONS.RIGHT' | translate}} &larr;</option>
+				<option value="3">{{'SETTINGS_INFO.DIRECTIONS.UP' | translate}} &uarr;</option>
+			</select>
+		</div>
+		<div class="property" *ngIf="isPlugElement">
+			<p>{{'SETTINGS_INFO.PLUG_INDEX' | translate}}:</p>
+			<select formControlName="plugIndex">
+				<option *ngFor="let i of possiblePlugIndexes" [value]="i">{{toUserPlugIndex(i)}}</option>
 			</select>
 		</div>
 		<div class="description">
-			<h6>Description:</h6>
-			{{elemType?.description}}
+			<h6>{{'SETTINGS_INFO.DESCRIPTION' | translate}}:</h6>
+			{{elemType?.description | translate}}
 		</div>
+		<button class="btn-outline secondary small edit" *ngIf="elemType.category === 'user'" (click)="editComponentClick()">{{'SETTINGS_INFO.EDIT' | translate}}</button>
 	</div>
 </div>

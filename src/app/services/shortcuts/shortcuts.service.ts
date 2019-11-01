@@ -1,11 +1,14 @@
-import { Injectable } from '@angular/core';
+import {Injectable} from '@angular/core';
 import {defaultShortcuts} from './default-shortcuts';
 import {ShortcutAction, ShortcutConfig, ShortcutMap} from '../../models/shortcut-map';
 import {WorkModeService} from '../work-mode/work-mode.service';
 import {ProjectInteractionService} from '../project-interaction/project-interaction.service';
-import {ProjectsService} from '../projects/projects.service';
 import {ThemingService} from '../theming/theming.service';
-import {shortcutDescriptions} from './shortcut-descriptions';
+import {PopupService} from '../popup/popup.service';
+import {HttpClient} from '@angular/common/http';
+import {ErrorHandlingService} from '../error-handling/error-handling.service';
+import {UserService} from '../user/user.service';
+import {environment} from '../../../environments/environment';
 
 @Injectable({
 	providedIn: 'root'
@@ -17,14 +20,31 @@ export class ShortcutsService {
 	constructor(
 		private workMode: WorkModeService,
 		private projectInteraction: ProjectInteractionService,
-		private projects: ProjectsService,
-		private theming: ThemingService
+		private theming: ThemingService,
+		private popup: PopupService,
+		private http: HttpClient,
+		private errorHandling: ErrorHandlingService,
+		private user: UserService
 	) {
 		this.loadShortcutSettings();
 	}
 
-	private loadShortcutSettings() {
-		// TODO: load
+	private async loadShortcutSettings() {
+		const userInfo = await this.user.userInfo$.toPromise();
+		if (!userInfo) return;
+		const customConfig: {[key: string]: ShortcutConfig} = {};
+		userInfo.shortcuts.forEach(s => {
+			customConfig[s.name] = {
+				alt: s.alt,
+				ctrl: s.ctrl,
+				shift: s.shift,
+				key_code: s.key_code
+			};
+		});
+		this._shortcutMap = {
+			...this.shortcutMap,
+			...customConfig
+		};
 	}
 
 	public setShortcutConfig(newConfig: {[key: string]: ShortcutConfig}) {
@@ -32,12 +52,16 @@ export class ShortcutsService {
 			...this.shortcutMap,
 			...newConfig
 		};
-		// TODO: save new config to server
+		this.http.post(environment.apiPrefix + '/user/update', {
+			shortcuts: newConfig
+		}).pipe(
+			this.errorHandling.catchErrorOperator('Error while Saving Shortcuts', undefined)
+		).subscribe();
 	}
 
 	public keyDownListener(e: KeyboardEvent) {
 		const action = this.getShortcutActionFromEvent(e);
-		if (!action) return;
+		if (!action || this.popup.isPopupOpened) return;
 		e.preventDefault();
 		e.stopPropagation();
 		this.applyAction(action);
@@ -62,7 +86,7 @@ export class ShortcutsService {
 			result += 'Shift+';
 		}
 
-		let key = config.key.toUpperCase();
+		let key = config.key_code.toUpperCase();
 		if (key === ' ') key = 'SPACE';
 
 		return result + key;
@@ -72,13 +96,9 @@ export class ShortcutsService {
 		return this._shortcutMap;
 	}
 
-	public getShortcutDescription(action: ShortcutAction) {
-		return shortcutDescriptions[action];
-	}
-
 	public getShortcutConfigFromEvent(event: KeyboardEvent): ShortcutConfig {
 		return {
-			key: event.key.toUpperCase(),
+			key_code: event.key.toUpperCase(),
 			shift: event.shiftKey,
 			ctrl: event.ctrlKey,
 			alt: event.altKey
@@ -89,7 +109,7 @@ export class ShortcutsService {
 		for (const action in this._shortcutMap) {
 			const shortcutConfig = this._shortcutMap[action];
 			if (shortcutConfig &&
-				e.key.toUpperCase() === shortcutConfig.key.toUpperCase() &&
+				e.key.toUpperCase() === shortcutConfig.key_code.toUpperCase() &&
 				e.shiftKey === !!shortcutConfig.shift &&
 				e.ctrlKey === !!shortcutConfig.ctrl &&
 				e.altKey === !!shortcutConfig.alt
@@ -117,9 +137,14 @@ export class ShortcutsService {
 				this.projectInteraction.deleteSelection();
 				break;
 			case 'copy':
+				this.projectInteraction.copySelection();
+				break;
 			case 'cut':
+				this.projectInteraction.cutSelection();
+				break;
 			case 'paste':
-					break;
+				this.projectInteraction.paste();
+				break;
 			case 'zoomIn':
 				this.projectInteraction.zoomIn();
 				break;
@@ -133,10 +158,22 @@ export class ShortcutsService {
 				this.theming.requestFullscreen();
 				break;
 			case 'undo':
-				this.projects.currProject.stepBack();
+				this.projectInteraction.undoForCurrent();
 				break;
 			case 'redo':
-				this.projects.currProject.stepForward();
+				this.projectInteraction.redoForCurrent();
+				break;
+			case 'save':
+				this.projectInteraction.saveAll();
+				break;
+			case 'newProj':
+				this.projectInteraction.newProject();
+				break;
+			case 'openProj':
+				this.projectInteraction.openProject();
+				break;
+			case 'newComp':
+				this.projectInteraction.newComponent();
 				break;
 		}
 	}

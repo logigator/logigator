@@ -1,0 +1,15 @@
+@import "themes";
+
+.shortcut-config {
+	max-height: 70vh;
+	padding: 0.5rem 2rem 0.5rem 2rem;
+	overflow: auto;
+	@include scrollbar(4px);
+
+	button {
+		margin: 0.5rem 0;
+		float: right;
+		width: 20%;
+		min-width: 100px;
+	}
+}

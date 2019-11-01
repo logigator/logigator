@@ -1,27 +1,36 @@
 <div class="dropdown" [class.hidden]="!showDropDown">
-	<div class="theme">
-		<input type="checkbox" (click)="reloadPopupActive = true;" [checked]="this.theming.pendingTheme === 'dark'">
-		<label>Dark mode</label>
+	<div class="switch">
+		<label>{{'DROPDOWN.SETTINGS.DARK_MODE' | translate}}</label>
+		<app-switch (click)="showReloadPopup()" [checked]="this.theming.pendingTheme === 'dark'"></app-switch>
 	</div>
-	<div class="shortcuts">
-		<button (click)="changeShortcutPopupActive = true; showDropDown = false;">Customize Shortcuts</button>
+	<hr>
+	<div class="switch">
+		<label>{{'DROPDOWN.SETTINGS.SHOW_GRID' | translate}}</label>
+		<app-switch [(ngModel)]="this.theming.showGrid"></app-switch>
 	</div>
+	<hr>
+	<div class="select">
+		<label>{{'DROPDOWN.SETTINGS.LANGUAGE' | translate}}</label>
+		<select [(ngModel)]="currentLang" (ngModelChange)="languageChange()">
+			<option value="en">{{'LANGUAGE.EN' | translate}}</option>
+			<option value="de">{{'LANGUAGE.DE' | translate}}</option>
+		</select>
+	</div>
+	<hr>
+	<div class="link">
+		<button class="btn-outline secondary small" (click)="showCustomizeShortcuts()">{{'DROPDOWN.SETTINGS.SHORTCUTS' | translate}}</button>
+	</div>
+	<hr>
+	<div class="link">
+		<button class="btn-outline secondary small">{{'DROPDOWN.SETTINGS.ACCOUNT' | translate}}</button>
+	</div>
+
+	<!-- #!if ELECTRON === 'true' -->
+	<ng-container *ngIf="isLoggedIn">
+		<hr>
+		<div class="link">
+			<button class="btn-outline secondary small" (click)="logout()">{{'DROPDOWN.SETTINGS.LOGOUT' | translate}}</button>
+		</div>
+	</ng-container>
+	<!-- #!endif -->
 </div>
-<app-popup *ngIf="reloadPopupActive" (requestClose)="reloadClose()" title="Reload required" [closeOnClickOutside]="false">
-	<p>For this change to take effect, the editor has to be reloaded.</p>
-	<p>Do you want to reload this page now?</p>
-	<button (click)="reloadConfirm()">Yes</button>
-	<button (click)="reloadPostponed()">No, I'll reload later</button>
-	<button (click)="reloadClose()">Cancel</button>
-</app-popup>
-<app-popup *ngIf="changeShortcutPopupActive"
-           [closeOnClickOutside]="false"
-           (requestClose)="shortcutSettingsClose()"
-           title="Customize Shortcuts"
-           class="shortcut-settings-popup">
-	<div>
-		<app-shortcut-config (requestClose)="close()"></app-shortcut-config>
-	</div>
-</app-popup>
-
-
