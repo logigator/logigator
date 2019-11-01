@@ -40,72 +40,107 @@ export class ComponentGraphics extends PIXI.Graphics {
 
 		switch (rotation) {
 			case 0:
-				this.leftWires(inputs, this._width, this._height, scale);
-				this.rightWires(outputs, this._width, this._height, scale);
+				this.rotation0(inputs, outputs, scale);
 				break;
 			case 1:
-				this.topWires(inputs, this._width, this._height, scale);
-				this.bottomWires(outputs, this._width, this._height, scale);
+				this.rotation1(inputs, outputs, scale);
 				break;
 			case 2:
-				this.rightWires(inputs, this._width, this._height, scale);
-				this.leftWires(outputs, this._width, this._height, scale);
+				this.rotation2(inputs, outputs, scale);
 				break;
 			case 3:
-				this.bottomWires(inputs, this._width, this._height, scale);
-				this.topWires(outputs, this._width, this._height, scale);
+				this.rotation3(inputs, outputs, scale);
 				break;
 		}
 	}
 
-	private leftWires(amount: number, width: number, height: number, scale: number) {
-		for (let i = 0; i < amount; i++) {
+	private rotation0(inputs: number, outputs: number, scale: number) {
+		for (let i = 0; i < outputs; i++) {
 			this.moveTo(
-				0,
-				Math.floor(((environment.gridPixelWidth / 2) + environment.gridPixelWidth * i) * scale)
+				Math.floor(this._width * scale),
+				Math.floor((environment.gridPixelWidth / 2 + environment.gridPixelWidth * i) * scale)
 			);
 			this.lineTo(
+				Math.floor((this._width + environment.gridPixelWidth / 2) * scale),
+				Math.floor((environment.gridPixelWidth / 2 + environment.gridPixelWidth * i) * scale)
+			);
+		}
+		for (let i = 0; i < inputs; i++) {
+			this.moveTo(
 				Math.floor(-environment.gridPixelWidth / 2 * scale),
-				Math.floor(((environment.gridPixelWidth / 2) + environment.gridPixelWidth * i) * scale)
+				Math.floor((environment.gridPixelWidth / 2 + environment.gridPixelWidth * i) * scale)
+			);
+			this.lineTo(
+				0,
+				Math.floor((environment.gridPixelWidth / 2 + environment.gridPixelWidth * i) * scale)
 			);
 		}
 	}
 
-	private rightWires(amount: number, width: number, height: number, scale: number) {
-		for (let i = 0; i < amount; i++) {
+	private rotation1(inputs: number, outputs: number, scale: number) {
+		for (let i = 0; i < outputs; i++) {
 			this.moveTo(
-				Math.floor(width * scale),
-				Math.floor(((environment.gridPixelWidth / 2) + environment.gridPixelWidth * i) * scale)
+				Math.floor((this._width - environment.gridPixelWidth / 2 - environment.gridPixelWidth * i) * scale),
+				Math.floor(this._height * scale)
 			);
 			this.lineTo(
-				Math.floor((width + (environment.gridPixelWidth / 2)) * scale),
-				Math.floor(((environment.gridPixelWidth / 2) + environment.gridPixelWidth * i) * scale)
+				Math.floor((this._width - environment.gridPixelWidth / 2 - environment.gridPixelWidth * i) * scale),
+				Math.floor((this._height + environment.gridPixelWidth / 2) * scale)
 			);
 		}
-	}
-
-	private topWires(amount: number, width: number, height: number, scale: number) {
-		for (let i = 0; i < amount; i++) {
+		for (let i = 0; i < inputs; i++) {
 			this.moveTo(
-				Math.floor((width - (environment.gridPixelWidth / 2) - environment.gridPixelWidth * i) * scale),
-				0
-			);
+				Math.floor((environment.gridPixelWidth / 2 + environment.gridPixelWidth * i) * scale),
+			0);
 			this.lineTo(
-				Math.floor((width - (environment.gridPixelWidth / 2) - environment.gridPixelWidth * i) * scale),
+				Math.floor((environment.gridPixelWidth / 2 + environment.gridPixelWidth * i) * scale),
 				Math.floor(-environment.gridPixelWidth / 2 * scale)
 			);
 		}
 	}
 
-	private bottomWires(amount: number, width: number, height: number, scale: number) {
-		for (let i = 0; i < amount; i++) {
+	private rotation2(inputs: number, outputs: number, scale: number) {
+		for (let i = 0; i < outputs; i++) {
 			this.moveTo(
-				Math.floor(((environment.gridPixelWidth / 2) + environment.gridPixelWidth * i) * scale),
-				Math.floor(height * scale)
+				0,
+				Math.floor((this._height - environment.gridPixelWidth / 2 - environment.gridPixelWidth * i) * scale)
 			);
 			this.lineTo(
-				Math.floor(((environment.gridPixelWidth / 2) + environment.gridPixelWidth * i) * scale),
-				Math.floor( (height + (environment.gridPixelWidth / 2)) * scale)
+				Math.floor(-environment.gridPixelWidth / 2 * scale),
+				Math.floor((this._height - environment.gridPixelWidth / 2 - environment.gridPixelWidth * i) * scale)
+			);
+		}
+		for (let i = 0; i < inputs; i++) {
+			this.moveTo(
+				Math.floor(this._width * scale),
+				Math.floor((environment.gridPixelWidth / 2 + environment.gridPixelWidth * i) * scale)
+			);
+			this.lineTo(
+				Math.floor(((this._width + environment.gridPixelWidth / 2) * scale)),
+				Math.floor((environment.gridPixelWidth / 2 + environment.gridPixelWidth * i) * scale)
+			);
+		}
+	}
+
+	private rotation3(inputs: number, outputs: number, scale: number) {
+		for (let i = 0; i < outputs; i++) {
+			this.moveTo(
+				Math.floor((environment.gridPixelWidth / 2 + environment.gridPixelWidth * i) * scale),
+				0
+			);
+			this.lineTo(
+				Math.floor((environment.gridPixelWidth / 2 + environment.gridPixelWidth * i) * scale),
+				Math.floor(-environment.gridPixelWidth / 2 * scale)
+			);
+		}
+		for (let i = 0; i < inputs; i++) {
+			this.moveTo(
+				Math.floor((environment.gridPixelWidth / 2 + environment.gridPixelWidth * i) * scale),
+				Math.floor(this._height * scale)
+			);
+			this.lineTo(
+				Math.floor((environment.gridPixelWidth / 2 + environment.gridPixelWidth * i) * scale),
+				Math.floor((this._height + environment.gridPixelWidth / 2) * scale)
 			);
 		}
 	}
