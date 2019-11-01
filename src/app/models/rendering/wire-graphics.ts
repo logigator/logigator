@@ -1,6 +1,6 @@
-import {LGraphics} from './l-graphics';
+import * as PIXI from 'pixi.js';
 
-export class WireGraphics extends LGraphics {
+export class WireGraphics extends PIXI.Graphics {
 
 	private simActiveState = false;
 	private shouldHaveActiveState = false;

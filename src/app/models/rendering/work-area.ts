@@ -10,10 +10,12 @@ import {ReqInspectElementEvent} from './req-inspect-element-event';
 import {getStaticDI} from '../get-di';
 import {RenderTicker} from '../../services/render-ticker/render-ticker.service';
 import {WorkAreaComponent} from '../../components/work-area/work-area.component';
+import {CompSpriteGen} from './comp-sprite-gen';
 
 export abstract class WorkArea {
 
 	private static _loadedPixiFont = false;
+	protected static _rendererIdCounter = 0;
 
 	public static pixiFontLoaded$ = new ReplaySubject<void>(1);
 
@@ -26,6 +28,8 @@ export abstract class WorkArea {
 	protected _activeView: View;
 
 	protected ticker: RenderTicker = getStaticDI(RenderTicker);
+
+	protected _rendererId: number;
 
 	@Output()
 	requestInspectElementInSim = new EventEmitter<ReqInspectElementEvent>();
@@ -44,6 +48,9 @@ export abstract class WorkArea {
 			autoDensity: true
 		});
 		this._pixiRenderer.plugins.interaction.moveWhenInside = true;
+		this._rendererId = WorkArea._rendererIdCounter;
+		CompSpriteGen.injectRenderer(this._pixiRenderer, this._rendererId);
+		WorkArea._rendererIdCounter++;
 
 		renderer2.appendChild(canvasContainer.nativeElement, this._pixiRenderer.view);
 

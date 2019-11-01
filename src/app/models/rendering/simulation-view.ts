@@ -28,9 +28,10 @@ export class SimulationView extends View {
 		requestInspectElemEventEmitter: EventEmitter<ReqInspectElementEvent>,
 		parent: string,
 		parentNames: string[],
-		parentTypeIds: number[]
+		parentTypeIds: number[],
+		rendererId: number
 	) {
-		super(project, htmlContainer, requestSingleFrameFn);
+		super(project, htmlContainer, requestSingleFrameFn, rendererId);
 		this.requestInspectElemEventEmitter = requestInspectElemEventEmitter;
 		this.parentProjectIdentifier = parent;
 		this.parentProjectNames = parentNames;

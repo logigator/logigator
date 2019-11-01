@@ -16,8 +16,8 @@ import {filter} from 'rxjs/operators';
 import {CopyService} from '../../services/copy/copy.service';
 import {getStaticDI} from '../get-di';
 import {NgZone} from '@angular/core';
-import {LGraphics} from './l-graphics';
-import {ComponentGraphics} from './component-graphics';
+import {WireGraphics} from './wire-graphics';
+import {CompSpriteGen} from './comp-sprite-gen';
 
 export class ViewInteractionManager {
 
@@ -29,7 +29,7 @@ export class ViewInteractionManager {
 	private _actionStartPos: PIXI.Point;
 	private _lastMousePos: PIXI.Point;
 
-	private _newCompSprite: PIXI.DisplayObject;
+	private _newCompSprite: PIXI.Sprite;
 	private _draggingNewComp = false;
 
 	private _newWireDir: 'hor' | 'ver';
@@ -320,12 +320,13 @@ export class ViewInteractionManager {
 		const elemType = this.elemProvService.getElementById(typeId);
 		if (elemType.numInputs === 0 && elemType.numOutputs === 0) return;
 		this._draggingNewComp = true;
-		this._newCompSprite = new ComponentGraphics(
+		this._newCompSprite = CompSpriteGen.getComponentSprite(
+			this._view.rendererId,
+			this._view.zoomPan.currentScale,
 			elemType.symbol,
 			elemType.numInputs,
 			elemType.numOutputs,
-			elemType.rotation,
-			this._view.zoomPan.currentScale
+			elemType.rotation
 		);
 		this._newCompSprite.position = Grid.getPixelPosOnGridForPixelPos(e.data.getLocalPosition(this._view));
 		this._view.addChild(this._newCompSprite);
@@ -473,7 +474,7 @@ export class ViewInteractionManager {
 	private addPastingElementsToView(copiedElems: Element[], copiedConnPts: PIXI.Point[], offset: PIXI.Point) {
 		for (let i = 0; i < copiedElems.length; i++) {
 			if (copiedElems[i].typeId === 0) {
-				const graphics = new LGraphics();
+				const graphics = new WireGraphics();
 				graphics.position = Grid.getPixelPosForGridPosWire(new PIXI.Point(copiedElems[i].pos.x + offset.x, copiedElems[i].pos.y + offset.y));
 				this._view.addLineToWireGraphics(
 					graphics,
@@ -486,9 +487,11 @@ export class ViewInteractionManager {
 				});
 			} else {
 				const type = this.elemProvService.getElementById(copiedElems[i].typeId);
-				const sprite = new ComponentGraphics(
+				const sprite = CompSpriteGen.getComponentSprite(
+					this._view.rendererId,
+					this._view.zoomPan.currentScale,
 					type.symbol,
-					copiedElems[i].numInputs, copiedElems[i].numOutputs, copiedElems[i].rotation, this._view.zoomPan.currentScale
+					copiedElems[i].numInputs, copiedElems[i].numOutputs, copiedElems[i].rotation
 				);
 				sprite.position = Grid.getPixelPosForGridPos(new PIXI.Point(copiedElems[i].pos.x + offset.x, copiedElems[i].pos.y + offset.y));
 				this._view.addChild(sprite);

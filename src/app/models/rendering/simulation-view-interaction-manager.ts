@@ -43,12 +43,6 @@ export class SimulationViewInteractionManager {
 		} else if (this.elementProviderService.isButtonElement(elemSprite.element.typeId)) {
 			this.workerCommunicationService.setUserInput(this._view.parentProjectIdentifier, elemSprite.element, true);
 		} else if (this.elementProviderService.isLeverElement(elemSprite.element.typeId)) {
-			(elemSprite.sprite as ComponentGraphics).toggleUserInputState();
-			this.workerCommunicationService.setUserInput(
-				this._view.parentProjectIdentifier,
-				elemSprite.element,
-				(elemSprite.sprite as ComponentGraphics).userInputState
-			);
 		}
 	}
 
