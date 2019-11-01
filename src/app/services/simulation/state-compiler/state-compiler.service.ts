@@ -58,6 +58,8 @@ export class StateCompilerService {
 	}
 
 	public async compile(project: Project): Promise<SimulationUnit[]> {
+		// TODO: FIX cache
+		this.clearCache();
 		this._highestLinkId = 0;
 		this.initElemsOnLinks('0');
 		const depTree = await this.projectsToCompile(project);
