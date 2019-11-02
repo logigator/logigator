@@ -32,6 +32,7 @@ export class StateCompilerService {
 	private _wireEndsOnLinksCache: WireEndsOnLinksInProject;
 
 	private _depTree: Map<number, Project>;
+	private _compiledDeps: Set<number>;
 
 	private _udcCache: Map<number, CompiledComp>;
 
@@ -108,6 +109,7 @@ export class StateCompilerService {
 	}
 
 	private compileDependencies(depTree: Map<number, Project>): void {
+		this._compiledDeps = new Set<number>();
 		for (const [typeId, project] of depTree.entries()) {
 			this._currTypeId = typeId;
 			if (this._udcCache.has(typeId) && !project.compileDirty) {
@@ -120,6 +122,10 @@ export class StateCompilerService {
 	}
 
 	private compileSingle(project: Project): void {
+		if (this._compiledDeps.has(project.id)) {
+			throw new Error('ERROR.COMPILE.CIRCULAR_DEP');
+		}
+		this._compiledDeps.add(project.id);
 		const unitElems = StateCompilerService.generateUnits(project.currState);
 		this._udcCache.set(project.id, this.calcCompiledComp(project.currState, unitElems));
 		project.compileDirty = false;
