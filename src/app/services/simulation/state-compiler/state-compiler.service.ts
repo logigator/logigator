@@ -57,6 +57,16 @@ export class StateCompilerService {
 		return {unitToElement, elementToUnit};
 	}
 
+	public async compileAsInt8Array(project: Project): Promise<Int8Array> {
+		const out: number[] = [];
+		const units = await this.compile(project);
+		for (const unit of units) {
+			const io = SimulationUnits.concatIO(unit);
+			out.push(unit.typeId, io.length, ...io);
+		}
+		return new Int8Array(out);
+	}
+
 	public async compile(project: Project): Promise<SimulationUnit[]> {
 		// TODO: FIX cache
 		this.clearCache();
