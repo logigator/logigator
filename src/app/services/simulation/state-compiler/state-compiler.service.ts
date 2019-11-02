@@ -266,7 +266,6 @@ export class StateCompilerService {
 			for (const [outer, inner] of compiledComp.plugsByIndex) {
 				linkMap.set(SimulationUnits.concatIO(units[inner])[0], SimulationUnits.concatIO(outerUnit)[outer]);
 			}
-			this.removePlugs(compiledComp, units);
 		}
 
 		if (this._highestLinkId > 0)
@@ -294,6 +293,7 @@ export class StateCompilerService {
 			unitIndex++;
 		}
 		this._highestLinkId = highestInProj;
+		this.removePlugs(compiledComp, units);
 
 		// udcIndexes is already sorted desc
 		for (let i = udcIndexes.length - 1; i >= 0; i--) {
