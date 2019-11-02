@@ -30,6 +30,10 @@ export class SimulationWorker {
 		simulationModule.initBoard();
 	}
 
+	public get getBoard() {
+		return this._board;
+	}
+
 	public start(ms?: number) {
 		if (ms)
 			this._simulationModule.startTimeout(ms);
@@ -106,7 +110,5 @@ export class SimulationWorker {
 
 	public destroy() {
 		this._simulationModule.destroy();
-		delete this._board;
-		delete this._linkPointer;
 	}
 }

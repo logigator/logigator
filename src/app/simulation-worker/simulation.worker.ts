@@ -53,6 +53,14 @@ addEventListener('message', ({ data }: {data: WasmRequest}) => {
 			}
 			worker = new SimulationWorker(data.board, Module);
 			break;
+		case WasmMethod.reset:
+			if (!worker) {
+				error = 'Not yet initialized.';
+				break;
+			}
+			worker.destroy();
+			worker = new SimulationWorker(worker.getBoard, Module);
+			break;
 		case WasmMethod.status:
 			postMessage({
 				method: data.method,
