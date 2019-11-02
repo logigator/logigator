@@ -239,8 +239,10 @@ export class StateCompilerService {
 		unitElems: UnitElementBidir, compiledComp: CompiledComp, coveredPoints: PosOfElem[]
 	) {
 		if (!this._udcCache.has(elem.typeId)) {
+			const outer = this._currTypeId;
 			this._currTypeId = elem.typeId;
 			this.compileSingle(this._depTree.get(elem.typeId));
+			this._currTypeId = outer;
 		}
 		for (const conPlugs of this._udcCache.get(elem.typeId).connectedPlugs) {
 			if (conPlugs.includes(index)) {
@@ -363,15 +365,6 @@ export class StateCompilerService {
 
 	get wireEndsOnLinks(): Map<string, WireEndsOnLinks> {
 		return this._wireEndsOnLinks;
-	}
-
-
-	get wiresOnLinksCache(): Map<string, WiresOnLinks> {
-		return this._wiresOnLinksCache;
-	}
-
-	get wireEndsOnLinksCache(): Map<string, WireEndsOnLinks> {
-		return this._wireEndsOnLinksCache;
 	}
 
 
