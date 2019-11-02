@@ -289,11 +289,14 @@ export class StateCompilerService {
 			});
 			if (this.elementProvider.isUserElement(unit.typeId)) {
 				udcIndexes.push(unitIndex);
+			} else if (this.elementProvider.isPlugElement(unit.typeId)) {
+				continue;
 			}
 			unitIndex++;
 		}
 		this._highestLinkId = highestInProj;
-		this.removePlugs(compiledComp, units);
+		if (outerUnit)
+			this.removePlugs(compiledComp, units);
 
 		// udcIndexes is already sorted desc
 		for (let i = udcIndexes.length - 1; i >= 0; i--) {
