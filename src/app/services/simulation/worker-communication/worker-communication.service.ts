@@ -81,6 +81,9 @@ export class WorkerCommunicationService {
 	}
 
 	public getState(identifier: string, data?: Int8Array): Map<Element, boolean> {
+		if (this.stateCompiler.wiresOnLinks.has(identifier) || this.stateCompiler.wiresOnLinks.get(identifier) === undefined) {
+			return new Map<Element, boolean>();
+		}
 		if (!data)
 			data = this._dataCache;
 		const out = new Map<Element, boolean>();
