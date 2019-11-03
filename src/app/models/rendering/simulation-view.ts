@@ -6,9 +6,11 @@ import {SimulationViewInteractionManager} from './simulation-view-interaction-ma
 import {EventEmitter, NgZone} from '@angular/core';
 import {ReqInspectElementEvent} from './req-inspect-element-event';
 import {ProjectInteractionService} from '../../services/project-interaction/project-interaction.service';
-import {filter, takeUntil} from 'rxjs/operators';
+import {filter, takeUntil, tap} from 'rxjs/operators';
 import {getStaticDI} from '../get-di';
 import {WorkerCommunicationService} from '../../services/simulation/worker-communication/worker-communication.service';
+import {WireGraphics} from './wire-graphics';
+import {ComponentGraphics} from './component-graphics';
 
 export class SimulationView extends View {
 
@@ -45,8 +47,15 @@ export class SimulationView extends View {
 
 			getStaticDI(WorkerCommunicationService).subscribe(this.parentProjectIdentifier);
 			getStaticDI(WorkerCommunicationService).boardStateWires(this.parentProjectIdentifier).pipe(
-				takeUntil(this._destroySubject)
+				takeUntil(this._destroySubject),
 			).subscribe(e => this.blinkWires(e));
+			getStaticDI(WorkerCommunicationService).boardStateWireEnds(this.parentProjectIdentifier).pipe(
+				takeUntil(this._destroySubject)
+			).subscribe(e => this.blinkComps(e));
+
+			if (project.type === 'comp') {
+				this.blinkWires(getStaticDI(WorkerCommunicationService).getState(this.parentProjectIdentifier));
+			}
 		});
 	}
 
@@ -58,9 +67,20 @@ export class SimulationView extends View {
 
 	private blinkWires(e: Map<Element, boolean>) {
 		for (const [elem, state] of e) {
-			this.allElements.get(elem.id).sprite.setWireState(this.zoomPan.currentScale, state);
+			(this.allElements.get(elem.id).sprite as WireGraphics).setWireState(state);
+		}
+		for (const elem of this.allElements.values()) {
+			if (elem.sprite instanceof ComponentGraphics) {
+				elem.sprite.setSimulationSate([true, false, true]);
+			}
 		}
 		this.requestSingleFrame();
+	}
+
+	private blinkComps(e: Map<{component: Element, wireIndex: number}, boolean>) {
+		for (const [elem] of e) {
+			(this.allElements.get(elem.component.id).sprite as ComponentGraphics).setSimulationSate([true, false, true]);
+		}
 	}
 
 	public get projectName(): string {

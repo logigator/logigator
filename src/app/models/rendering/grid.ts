@@ -19,8 +19,6 @@ export class Grid {
 				graphics.drawRect(i * environment.gridPixelWidth, j * environment.gridPixelWidth, 1 / scale, 1 / scale);
 			}
 		}
-		// graphics.drawRect(0, 0, 1, 20 * 20)
-		// graphics.drawRect(0, 0, 20 * 20, 1)
 		this._gridGeometries.set(scale, graphics.geometry);
 		return graphics.geometry;
 	}

@@ -58,6 +58,8 @@ export class Project {
 
 
 	private applyActions(actions: Action[]): void {
+		this.saveDirty = true;
+		this.compileDirty = true;
 		actions.forEach(action => this.applyAction(action));
 	}
 

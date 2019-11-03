@@ -10,11 +10,12 @@ import {Grid} from './grid';
 import {environment} from '../../../environments/environment';
 import {Element} from '../element';
 import {ElementProviderService} from '../../services/element-provider/element-provider.service';
-import {CompSpriteGenerator} from './comp-sprite-generator';
 import {CollisionFunctions} from '../collision-functions';
 import {Project} from '../project';
 import {Action} from '../action';
 import {getStaticDI} from '../get-di';
+import {WireGraphics} from './wire-graphics';
+import {ComponentGraphics} from './component-graphics';
 import {LGraphics} from './l-graphics';
 
 export abstract class View extends PIXI.Container {
@@ -27,7 +28,7 @@ export abstract class View extends PIXI.Container {
 
 	protected _chunks: RendererChunkData[][] = [];
 
-	public connectionPoints: Map<string, LGraphics> = new Map();
+	public connectionPoints: Map<string, PIXI.Graphics> = new Map();
 	public allElements: Map<number, ElementSprite> = new Map();
 
 	protected _chunksToRender: {x: number, y: number}[] = [];
@@ -78,7 +79,9 @@ export abstract class View extends PIXI.Container {
 			chunk.gridGraphics.visible = this.themingService.showGrid;
 			chunk.gridGraphics.renderable = this.themingService.showGrid;
 			if (this.constructor.name === 'SimulationView') {
-				chunk.container.children.forEach((c: LGraphics) => c.applyWireState(this.zoomPan.currentScale));
+				chunk.container.children.forEach(g => {
+					if (g instanceof LGraphics) g.applySimState(this.zoomPan.currentScale);
+				});
 			}
 			if (chunk.scaledFor === this.zoomPan.currentScale) continue;
 			chunk.scaledFor = this.zoomPan.currentScale;
@@ -136,14 +139,6 @@ export abstract class View extends PIXI.Container {
 		);
 	}
 
-	protected updateComponentSprite(element: Element, graphics: LGraphics) {
-		graphics.clear();
-		const elemType = this.elementProviderService.getElementById(element.typeId);
-		CompSpriteGenerator.drawComponent(
-			elemType.symbol, element.numInputs, element.numOutputs, element.rotation, this.zoomPan.currentScale, graphics
-		);
-	}
-
 	protected createChunk(x: number, y: number): boolean {
 		if (this._chunks[x] && this._chunks[x][y])
 			return false;
@@ -165,10 +160,6 @@ export abstract class View extends PIXI.Container {
 		this._chunks[x][y].gridGraphics.sortableChildren = false;
 		this._chunks[x][y].gridGraphics.interactive = false;
 		this._chunks[x][y].gridGraphics.visible = this.themingService.showGrid;
-		// const text = new PIXI.Text(x  + ' ' + y);
-		// text.x = (environment.chunkSize * environment.gridPixelWidth) / 2;
-		// text.y = (environment.chunkSize * environment.gridPixelWidth) / 2;
-		// this._chunks[x][y].container.addChild(text);
 		return true;
 	}
 
@@ -183,12 +174,6 @@ export abstract class View extends PIXI.Container {
 			return true;
 		}
 		return false;
-	}
-
-	public addLineToWireGraphics(graphics: PIXI.Graphics, endPos: PIXI.Point, startPos: PIXI.Point) {
-		graphics.lineStyle(1 / this.zoomPan.currentScale, this.themingService.getEditorColor('wire'));
-		graphics.moveTo(0, 0);
-		graphics.lineTo(endPos.x - startPos.x, endPos.y - startPos.y);
 	}
 
 	public calcConnPointSize(): number {
@@ -219,8 +204,8 @@ export abstract class View extends PIXI.Container {
 
 	protected placeComponentOnView(element: Element): ElementSprite {
 		const elemType = this.elementProviderService.getElementById(element.typeId);
-		const sprite = CompSpriteGenerator.getComponentSprite(
-			elemType.symbol, element.numInputs, element.numOutputs, element.rotation, this.zoomPan.currentScale
+		const sprite = new ComponentGraphics(
+			this.zoomPan.currentScale, elemType.symbol, element.numInputs, element.numOutputs, element.rotation
 		);
 		sprite.position = Grid.getLocalChunkPixelPosForGridPos(element.pos);
 		sprite.name = element.id.toString();
@@ -237,10 +222,9 @@ export abstract class View extends PIXI.Container {
 		const endPos = Grid.getPixelPosForGridPosWire(element.endPos);
 		const startPos = Grid.getPixelPosForGridPosWire(element.pos);
 
-		const graphics = new LGraphics();
+		const graphics = new WireGraphics(this.zoomPan.currentScale, endPos, startPos);
 		graphics.position = Grid.getLocalChunkPixelPosForGridPosWireStart(element.pos);
 		graphics.name = element.id.toString();
-		this.addLineToWireGraphics(graphics, endPos, startPos);
 
 		this.addToCorrectChunk(graphics, element.pos);
 
@@ -253,7 +237,7 @@ export abstract class View extends PIXI.Container {
 		pixelPos.x -= 2.5 / this.zoomPan.currentScale;
 		pixelPos.y -= 2.5 / this.zoomPan.currentScale;
 
-		const graphics = new LGraphics();
+		const graphics = new PIXI.Graphics();
 		graphics.position = pixelPos;
 		graphics.name = 'wireConnPoint';
 		this.updateConnectionPoint(graphics);
@@ -301,7 +285,9 @@ export abstract class View extends PIXI.Container {
 
 	private updateComponent(action: Action) {
 		const elemSprite = this.allElements.get(action.element.id);
-		this.updateComponentSprite(action.element, elemSprite.sprite);
+		(elemSprite.sprite as ComponentGraphics).updateComponent(
+			this.zoomPan.currentScale, elemSprite.element.numInputs, elemSprite.element.numOutputs, elemSprite.element.rotation
+		);
 	}
 
 	protected applyActionsToView(actions: Action[]) {

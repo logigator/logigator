@@ -3,8 +3,8 @@ import {ProjectsService} from '../../services/projects/projects.service';
 import {UserService} from '../../services/user/user.service';
 import {Observable} from 'rxjs';
 import {UserInfo} from '../../models/http-responses/user-info';
-import { ElectronService } from 'ngx-electron';
 import {PopupService} from '../../services/popup/popup.service';
+import { ElectronService } from 'ngx-electron';
 // #!electron
 import {LoginComponent} from '../popup/popup-contents/login/login.component';
 // #!electron
