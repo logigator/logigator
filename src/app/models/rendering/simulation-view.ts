@@ -54,7 +54,8 @@ export class SimulationView extends View {
 			).subscribe(e => this.blinkComps(e));
 
 			if (project.type === 'comp') {
-				this.blinkWires(getStaticDI(WorkerCommunicationService).getState(this.parentProjectIdentifier));
+				this.blinkWires(getStaticDI(WorkerCommunicationService).getWireState(this.parentProjectIdentifier));
+				this.blinkComps(getStaticDI(WorkerCommunicationService).getWireEndState(this.parentProjectIdentifier));
 			}
 		});
 	}
@@ -77,9 +78,9 @@ export class SimulationView extends View {
 		this.requestSingleFrame();
 	}
 
-	private blinkComps(e: Map<{component: Element, wireIndex: number}, boolean>) {
-		for (const [elem] of e) {
-			(this.allElements.get(elem.component.id).sprite as ComponentGraphics).setSimulationSate([true, false, true]);
+	private blinkComps(e: Map<Element, boolean[]>) {
+		for (const [elem, value] of e.entries()) {
+			(this.allElements.get(elem.id).sprite as ComponentGraphics).setSimulationSate(value);
 		}
 	}
 
