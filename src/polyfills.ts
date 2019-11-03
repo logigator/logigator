@@ -58,7 +58,8 @@
 (window as any).__Zone_disable_requestAnimationFrame = true;
 import 'zone.js/dist/zone';  // Included with Angular CLI.
 
-// import * as PIXI from 'pixi.js';
+import * as PIXI from 'pixi.js';
+PIXI.settings.SCALE_MODE = PIXI.SCALE_MODES.NEAREST;
 // PIXI.settings.ROUND_PIXELS = true;
 // PIXI.Ticker.shared.autoStart = false;
 // PIXI.Ticker.shared.destroy();
