@@ -20,7 +20,7 @@ export class WorkerCommunicationService {
 	private _initialized = false;
 	private _isContinuous = false;
 
-	private _dataCache: Int8Array;
+	private _dataCache: Uint8Array;
 
 	private _userInputChanges: Map<number, boolean> = new Map<number, boolean>();
 
@@ -60,7 +60,7 @@ export class WorkerCommunicationService {
 
 			const powerChanges: Map<string, PowerChangesOutWire> = new Map<string, PowerChangesOutWire>();
 			for (const identifier of this._powerSubjectsWires.keys()) {
-				powerChanges.set(identifier, this.getState(identifier, data.state));
+				powerChanges.set(identifier, this.getState(identifier, state));
 			}
 			for (const identifier of this._powerSubjectsWires.keys()) {
 				this._powerSubjectsWires.get(identifier).next(powerChanges.get(identifier));
@@ -80,7 +80,7 @@ export class WorkerCommunicationService {
 		}
 	}
 
-	public getState(identifier: string, data?: Int8Array): Map<Element, boolean> {
+	public getState(identifier: string, data?: Uint8Array): Map<Element, boolean> {
 		if (!this.stateCompiler.wiresOnLinks.has(identifier) || this.stateCompiler.wiresOnLinks.get(identifier) === undefined) {
 			return new Map<Element, boolean>();
 		}
