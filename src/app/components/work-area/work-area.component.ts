@@ -163,7 +163,7 @@ export class WorkAreaComponent extends WorkArea implements OnInit, OnDestroy {
 				delete this._activeView;
 			}
 		}
-		toClose.destroy();
+		if (toClose) toClose.destroy();
 		// @ts-ignore
 		this._pixiRenderer._lastObjectRendered = null;
 	}

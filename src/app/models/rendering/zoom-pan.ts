@@ -1,15 +1,16 @@
 import * as PIXI from 'pixi.js';
+import {View} from './view';
 
 export class ZoomPan {
 
 	private static MAX_ZOOM_IN = 2.5;
 	private static MAX_ZOOM_OUT = 0.4;
 
-	private _view: PIXI.Container;
+	private _view: View;
 
 	private _scale = 1;
 
-	constructor(view: PIXI.Container) {
+	constructor(view: View) {
 		this._view = view;
 	}
 
@@ -75,11 +76,13 @@ export class ZoomPan {
 	}
 
 	public get positionX(): number {
-		return this._view.x;
+		if (!this._view.transform) return 0;
+		return this._view.position.x;
 	}
 
 	public get positionY(): number {
-		return this._view.y;
+		if (!this._view.transform) return 0;
+		return this._view.position.y;
 	}
 
 	public get currentScale(): number {
