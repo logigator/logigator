@@ -19,6 +19,7 @@ import {ElementType} from '../../models/element-types/element-type';
 import {Observable} from 'rxjs';
 import {ProjectInfoResponse} from '../../models/http-responses/project-info-response';
 import {environment} from '../../../environments/environment';
+// #!electron
 import {ElectronService} from 'ngx-electron';
 import {saveLocalFile} from './save-local-file';
 import {SharingService} from '../sharing/sharing.service';

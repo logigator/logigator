@@ -6,6 +6,7 @@ import {map, share, switchMap} from 'rxjs/operators';
 import {HttpClient} from '@angular/common/http';
 import {HttpResponseData} from '../../models/http-responses/http-response-data';
 import {ErrorHandlingService} from '../error-handling/error-handling.service';
+// #!electron
 import {ElectronService} from 'ngx-electron';
 import {environment} from '../../../environments/environment';
 
