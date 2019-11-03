@@ -20,8 +20,6 @@ export class WorkerCommunicationService {
 	private _initialized = false;
 	private _isContinuous = false;
 
-	private _compiledBoard: SimulationUnit[];
-
 	private _userInputChanges: Map<number, boolean> = new Map<number, boolean>();
 
 	private _powerStatesDiffer: IterableDiffer<number>;
@@ -51,8 +49,10 @@ export class WorkerCommunicationService {
 
 		const data = event.data as WasmResponse;
 		if (data.success) {
-			if (data.state.length !== this.stateCompiler.highestLinkId + 1) {
-				console.error(`Response data length does not match component count`, data, this._compiledBoard);
+			const state = new Uint8Array(data.state);
+
+			if (state.length !== this.stateCompiler.highestLinkId + 1) {
+				console.error(`Response data length does not match component count`, data);
 			}
 
 			const powerChanges: Map<string, PowerChangesOutWire> = new Map<string, PowerChangesOutWire>();
@@ -60,7 +60,7 @@ export class WorkerCommunicationService {
 				powerChanges.set(projId, new Map<Element, boolean>());
 				for (const [link, wires] of this.stateCompiler.wiresOnLinks.get(projId).entries()) {
 					for (const wire of wires) {
-						powerChanges.get(projId).set(wire, data.state[link] as unknown as boolean);
+						powerChanges.get(projId).set(wire, state[link] as unknown as boolean);
 					}
 				}
 			}
@@ -88,13 +88,15 @@ export class WorkerCommunicationService {
 
 		const project = this.projectsService.mainProject;
 
-		this._compiledBoard = await this.stateCompiler.compile(project);
+		const compiledBoard = await this.stateCompiler.compileAsInt32Array(project);
 		this._userInputChanges = new Map<number, boolean>();
 		this._powerStatesDiffer = this.iterableDiffers.find(new Int8Array()).create();
-		if (!this._compiledBoard)
+		if (!compiledBoard) {
 			console.error('Failed to compile board.');
+			return;
+		}
 
-		this.finalizeInit();
+		this.finalizeInit(compiledBoard.buffer);
 	}
 
 	private initWorker() {
@@ -108,16 +110,14 @@ export class WorkerCommunicationService {
 		});
 	}
 
-	private finalizeInit() {
-		const board = {
-			links: this.stateCompiler.highestLinkId + 1,
-			components: this._compiledBoard
-		};
-		const request: WasmRequest = {
+	private finalizeInit(compiledBoard: ArrayBuffer) {
+		this._worker.postMessage({
 			method: WasmMethod.init,
-			board
-		};
-		this._worker.postMessage(request);
+			board: {
+				links: this.stateCompiler.highestLinkId + 1,
+				components: compiledBoard
+			}
+		} as WasmRequest, [ compiledBoard ]);
 	}
 
 	public stop(): void {

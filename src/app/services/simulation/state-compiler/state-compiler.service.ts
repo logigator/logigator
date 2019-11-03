@@ -57,14 +57,14 @@ export class StateCompilerService {
 		return {unitToElement, elementToUnit};
 	}
 
-	public async compileAsInt8Array(project: Project): Promise<Int8Array> {
-		const out: number[] = [];
+	public async compileAsInt32Array(project: Project): Promise<Int32Array> {
 		const units = await this.compile(project);
+		const out: number[] = [ units.length ];
+
 		for (const unit of units) {
-			const io = SimulationUnits.concatIO(unit);
-			out.push(unit.typeId, io.length, ...io);
+			out.push(unit.typeId, 0 /*op1*/, 0 /*op2*/, unit.inputs.length, unit.outputs.length, ...unit.inputs, ...unit.outputs);
 		}
-		return new Int8Array(out);
+		return new Int32Array(out);
 	}
 
 	public async compile(project: Project): Promise<SimulationUnit[]> {
