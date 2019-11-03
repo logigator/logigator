@@ -6,6 +6,7 @@ import {SimulationView} from './simulation-view';
 import {ElementProviderService} from '../../services/element-provider/element-provider.service';
 import {getStaticDI} from '../get-di';
 import {NgZone} from '@angular/core';
+import {WorkerCommunicationService} from '../../services/simulation/worker-communication/worker-communication.service';
 
 export class SimulationViewInteractionManager {
 
@@ -36,9 +37,9 @@ export class SimulationViewInteractionManager {
 				});
 			});
 		} else if (getStaticDI(ElementProviderService).isButtonElement(elemSprite.element.typeId)) {
-
+			getStaticDI(WorkerCommunicationService).setUserInput(this._view.parentProjectIdentifier, elemSprite.element, true);
 		} else if (getStaticDI(ElementProviderService).isLeverElement(elemSprite.element.typeId)) {
-
+			getStaticDI(WorkerCommunicationService).setUserInput(this._view.parentProjectIdentifier, elemSprite.element, true);
 		}
 	}
 
