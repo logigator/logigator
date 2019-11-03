@@ -20,6 +20,8 @@ export class WorkerCommunicationService {
 	private _initialized = false;
 	private _isContinuous = false;
 
+	private _dataCache: Int8Array;
+
 	private _compiledBoard: SimulationUnit[];
 
 	private _userInputChanges: Map<number, boolean> = new Map<number, boolean>();
@@ -54,18 +56,14 @@ export class WorkerCommunicationService {
 			if (data.state.length !== this.stateCompiler.highestLinkId + 1) {
 				console.error(`Response data length does not match component count`, data, this._compiledBoard);
 			}
+			this._dataCache = data.state;
 
 			const powerChanges: Map<string, PowerChangesOutWire> = new Map<string, PowerChangesOutWire>();
-			for (const projId of this._powerSubjectsWires.keys()) {
-				powerChanges.set(projId, new Map<Element, boolean>());
-				for (const [link, wires] of this.stateCompiler.wiresOnLinks.get(projId).entries()) {
-					for (const wire of wires) {
-						powerChanges.get(projId).set(wire, data.state[link] as unknown as boolean);
-					}
-				}
+			for (const identifier of this._powerSubjectsWires.keys()) {
+				powerChanges.set(identifier, this.getState(identifier, data.state));
 			}
-			for (const projId of this._powerSubjectsWires.keys()) {
-				this._powerSubjectsWires.get(projId).next(powerChanges.get(projId));
+			for (const identifier of this._powerSubjectsWires.keys()) {
+				this._powerSubjectsWires.get(identifier).next(powerChanges.get(identifier));
 			}
 
 			if (this._isContinuous) {
@@ -80,6 +78,18 @@ export class WorkerCommunicationService {
 		} else {
 			console.error('error', data);
 		}
+	}
+
+	public getState(identifier: string, data?: Int8Array): Map<Element, boolean> {
+		if (!data)
+			data = this._dataCache;
+		const out = new Map<Element, boolean>();
+		for (const [link, wires] of this.stateCompiler.wiresOnLinks.get(identifier).entries()) {
+			for (const wire of wires) {
+				out.set(wire, data[link] as unknown as boolean);
+			}
+		}
+		return out;
 	}
 
 	public async init(): Promise<void> {
@@ -172,15 +182,15 @@ export class WorkerCommunicationService {
 		return this._powerSubjectsWireEnds.get(projectId).asObservable();
 	}
 
-	public subscribe(projectId: string): void {
-		if (!this._powerSubjectsWires.has(projectId)) {
-			this._powerSubjectsWires.set(projectId, new Subject<PowerChangesOutWire>());
-			this._powerSubjectsWireEnds.set(projectId, new Subject<PowerChangesOutWireEnd>());
+	public subscribe(identifier: string): void {
+		if (!this._powerSubjectsWires.has(identifier)) {
+			this._powerSubjectsWires.set(identifier, new Subject<PowerChangesOutWire>());
+			this._powerSubjectsWireEnds.set(identifier, new Subject<PowerChangesOutWireEnd>());
 		}
 	}
 
-	public unsubscribe(projectId: string): void {
-		this._powerSubjectsWires.delete(projectId);
-		this._powerSubjectsWireEnds.delete(projectId);
+	public unsubscribe(identifier: string): void {
+		this._powerSubjectsWires.delete(identifier);
+		this._powerSubjectsWireEnds.delete(identifier);
 	}
 }
