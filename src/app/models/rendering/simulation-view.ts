@@ -10,6 +10,7 @@ import {filter, takeUntil, tap} from 'rxjs/operators';
 import {getStaticDI} from '../get-di';
 import {WorkerCommunicationService} from '../../services/simulation/worker-communication/worker-communication.service';
 import {WireGraphics} from './wire-graphics';
+import {ComponentGraphics} from './component-graphics';
 
 export class SimulationView extends View {
 
@@ -28,10 +29,9 @@ export class SimulationView extends View {
 		requestInspectElemEventEmitter: EventEmitter<ReqInspectElementEvent>,
 		parent: string,
 		parentNames: string[],
-		parentTypeIds: number[],
-		rendererId: number
+		parentTypeIds: number[]
 	) {
-		super(project, htmlContainer, requestSingleFrameFn, rendererId);
+		super(project, htmlContainer, requestSingleFrameFn);
 		this.requestInspectElemEventEmitter = requestInspectElemEventEmitter;
 		this.parentProjectIdentifier = parent;
 		this.parentProjectNames = parentNames;
@@ -67,13 +67,20 @@ export class SimulationView extends View {
 
 	private blinkWires(e: Map<Element, boolean>) {
 		for (const [elem, state] of e) {
-			(this.allElements.get(elem.id).sprite as WireGraphics).setWireState(this.zoomPan.currentScale, state);
+			(this.allElements.get(elem.id).sprite as WireGraphics).setWireState(state);
+		}
+		for (const elem of this.allElements.values()) {
+			if (elem.sprite instanceof ComponentGraphics) {
+				elem.sprite.setSimulationSate([true, false, true]);
+			}
 		}
 		this.requestSingleFrame();
 	}
 
 	private blinkComps(e: Map<{component: Element, wireIndex: number}, boolean>) {
-		// todo
+		for (const [elem] of e) {
+			(this.allElements.get(elem.component.id).sprite as ComponentGraphics).setSimulationSate([true, false, true]);
+		}
 	}
 
 	public get projectName(): string {

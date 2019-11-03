@@ -13,7 +13,6 @@ import {Element} from '../element';
 import {ElementSprite} from '../element-sprite';
 import {ProjectType} from '../project-type';
 import {getStaticDI} from '../get-di';
-import {CompSpriteGen} from './comp-sprite-gen';
 
 export class EditorView extends View {
 
@@ -21,8 +20,8 @@ export class EditorView extends View {
 
 	private selectionService = getStaticDI(SelectionService);
 
-	constructor(project: Project, htmlContainer: HTMLElement, requestSingleFrameFn: () => void, rendererId: number) {
-		super(project, htmlContainer, requestSingleFrameFn, rendererId);
+	constructor(project: Project, htmlContainer: HTMLElement, requestSingleFrameFn: () => void) {
+		super(project, htmlContainer, requestSingleFrameFn);
 
 		this._viewInteractionManager = new ViewInteractionManager(this);
 
@@ -42,20 +41,7 @@ export class EditorView extends View {
 		const selectedIds = this.selectionService.selectedIds(this.projectId);
 		for (let i = 0; i < selectedIds.length; i++) {
 			const elemSprite = this.allElements.get(selectedIds[i]);
-			if (elemSprite.sprite instanceof PIXI.Sprite) {
-				const type = getStaticDI(ElementProviderService).getElementById(elemSprite.element.typeId);
-				CompSpriteGen.updateComponentSprite(
-					this.rendererId,
-					this.zoomPan.currentScale,
-					type.symbol,
-					elemSprite.element.numInputs,
-					elemSprite.element.numOutputs,
-					elemSprite.element.rotation,
-					elemSprite.sprite
-				);
-			} else {
-				elemSprite.sprite.updateScale(this.zoomPan.currentScale);
-			}
+			elemSprite.sprite.updateScale(this.zoomPan.currentScale);
 		}
 		const selectedConnections = this.selectionService.selectedConnections(this.projectId);
 		for (let i = 0; i < selectedConnections.length; i++) {
@@ -67,20 +53,7 @@ export class EditorView extends View {
 
 	public updatePastingElementsScale() {
 		for (const elemSprite of this._viewInteractionManager.pastingElements) {
-			if (elemSprite.sprite instanceof PIXI.Sprite) {
-				const type = getStaticDI(ElementProviderService).getElementById(elemSprite.element.typeId);
-				CompSpriteGen.updateComponentSprite(
-					this.rendererId,
-					this.zoomPan.currentScale,
-					type.symbol,
-					elemSprite.element.numInputs,
-					elemSprite.element.numOutputs,
-					elemSprite.element.rotation,
-					elemSprite.sprite
-				);
-			} else {
-				elemSprite.sprite.updateScale(this.zoomPan.currentScale);
-			}
+			elemSprite.sprite.updateScale(this.zoomPan.currentScale);
 		}
 		for (const graphics of this._viewInteractionManager.pastingConnPoints) {
 			const pos = Grid.getPixelPosForPixelPosOnGridWire(graphics.position);

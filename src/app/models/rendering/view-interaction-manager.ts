@@ -17,7 +17,7 @@ import {CopyService} from '../../services/copy/copy.service';
 import {getStaticDI} from '../get-di';
 import {NgZone} from '@angular/core';
 import {WireGraphics} from './wire-graphics';
-import {CompSpriteGen} from './comp-sprite-gen';
+import {ComponentGraphics} from './component-graphics';
 
 export class ViewInteractionManager {
 
@@ -29,7 +29,7 @@ export class ViewInteractionManager {
 	private _actionStartPos: PIXI.Point;
 	private _lastMousePos: PIXI.Point;
 
-	private _newCompSprite: PIXI.Sprite;
+	private _newCompSprite: ComponentGraphics;
 	private _draggingNewComp = false;
 
 	private _newWireDir: 'hor' | 'ver';
@@ -320,8 +320,7 @@ export class ViewInteractionManager {
 		const elemType = this.elemProvService.getElementById(typeId);
 		if (elemType.numInputs === 0 && elemType.numOutputs === 0) return;
 		this._draggingNewComp = true;
-		this._newCompSprite = CompSpriteGen.getComponentSprite(
-			this._view.rendererId,
+		this._newCompSprite = new ComponentGraphics(
 			this._view.zoomPan.currentScale,
 			elemType.symbol,
 			elemType.numInputs,
@@ -474,12 +473,12 @@ export class ViewInteractionManager {
 	private addPastingElementsToView(copiedElems: Element[], copiedConnPts: PIXI.Point[], offset: PIXI.Point) {
 		for (let i = 0; i < copiedElems.length; i++) {
 			if (copiedElems[i].typeId === 0) {
-				const graphics = new WireGraphics();
-				graphics.position = Grid.getPixelPosForGridPosWire(new PIXI.Point(copiedElems[i].pos.x + offset.x, copiedElems[i].pos.y + offset.y));
-				this._view.addLineToWireGraphics(
-					graphics,
-					Grid.getPixelPosForGridPosWire(copiedElems[i].endPos), Grid.getPixelPosForGridPosWire(copiedElems[i].pos)
+				const graphics = new WireGraphics(
+					this._view.zoomPan.currentScale,
+					Grid.getPixelPosForGridPosWire(copiedElems[i].endPos),
+					Grid.getPixelPosForGridPosWire(copiedElems[i].pos)
 				);
+				graphics.position = Grid.getPixelPosForGridPosWire(new PIXI.Point(copiedElems[i].pos.x + offset.x, copiedElems[i].pos.y + offset.y));
 				this._view.addChild(graphics);
 				this.pastingElements.push({
 					element: copiedElems[i],
@@ -487,8 +486,7 @@ export class ViewInteractionManager {
 				});
 			} else {
 				const type = this.elemProvService.getElementById(copiedElems[i].typeId);
-				const sprite = CompSpriteGen.getComponentSprite(
-					this._view.rendererId,
+				const sprite = new ComponentGraphics(
 					this._view.zoomPan.currentScale,
 					type.symbol,
 					copiedElems[i].numInputs, copiedElems[i].numOutputs, copiedElems[i].rotation

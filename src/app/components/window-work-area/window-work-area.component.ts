@@ -103,8 +103,7 @@ export class WindowWorkAreaComponent extends WorkArea implements OnInit, OnChang
 				this.requestInspectElementInSim,
 				this.identifier,
 				this.parentNames,
-				this.parentTypeIds,
-				this._rendererId
+				this.parentTypeIds
 			);
 			if (this._dragManager) this._dragManager.destroy();
 
