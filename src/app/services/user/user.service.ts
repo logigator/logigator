@@ -2,10 +2,11 @@ import {Inject, Injectable, Optional} from '@angular/core';
 import {DOCUMENT} from '@angular/common';
 import {Observable, of, Subject} from 'rxjs';
 import {UserInfo} from '../../models/http-responses/user-info';
-import {map, share, switchMap} from 'rxjs/operators';
+import {map, switchMap} from 'rxjs/operators';
 import {HttpClient} from '@angular/common/http';
 import {HttpResponseData} from '../../models/http-responses/http-response-data';
 import {ErrorHandlingService} from '../error-handling/error-handling.service';
+
 import {ElectronService} from 'ngx-electron';
 import {environment} from '../../../environments/environment';
 

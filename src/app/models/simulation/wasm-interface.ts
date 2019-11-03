@@ -9,7 +9,8 @@ export enum WasmMethod {
 	stop,
 	pause,
 	init,
-	status
+	status,
+	reset
 }
 
 export interface WasmRequest {

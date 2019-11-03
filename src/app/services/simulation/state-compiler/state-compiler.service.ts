@@ -69,7 +69,6 @@ export class StateCompilerService {
 		this.compileDependencies(depTree);
 		const out =  this.projectUnits(project.id, '0');
 		console.log(`compilation took ${Date.now() - start}ms`);
-		console.log(this._linksOnIOElems);
 		return out;
 	}
 
@@ -244,8 +243,10 @@ export class StateCompilerService {
 		unitElems: UnitElementBidir, compiledComp: CompiledComp, coveredPoints: PosOfElem[]
 	) {
 		if (!this._udcCache.has(elem.typeId)) {
+			const outer = this._currTypeId;
 			this._currTypeId = elem.typeId;
 			this.compileSingle(this._depTree.get(elem.typeId));
+			this._currTypeId = outer;
 		}
 		for (const conPlugs of this._udcCache.get(elem.typeId).connectedPlugs) {
 			if (conPlugs.includes(index)) {
@@ -271,7 +272,6 @@ export class StateCompilerService {
 			for (const [outer, inner] of compiledComp.plugsByIndex) {
 				linkMap.set(SimulationUnits.concatIO(units[inner])[0], SimulationUnits.concatIO(outerUnit)[outer]);
 			}
-			this.removePlugs(compiledComp, units);
 		}
 
 		if (this._highestLinkId > 0)
@@ -297,10 +297,14 @@ export class StateCompilerService {
 				udcIndexes.push(unitIndex);
 			} else if (this.elementProvider.isIoElement(unit.typeId)) {
 				this.setIOLink(idIdentifier, compiledComp, unitIndex, unit);
+			} else if (this.elementProvider.isPlugElement(unit.typeId)) {
+				continue;
 			}
 			unitIndex++;
 		}
 		this._highestLinkId = highestInProj;
+		if (outerUnit)
+			this.removePlugs(compiledComp, units);
 
 		// udcIndexes is already sorted desc
 		for (let i = udcIndexes.length - 1; i >= 0; i--) {

@@ -4,7 +4,7 @@ import {PowerChangesOutWire, PowerChangesOutWireEnd} from '../../../models/simul
 import {ProjectsService} from '../../projects/projects.service';
 import {StateCompilerService} from '../state-compiler/state-compiler.service';
 import {WasmMethod, WasmRequest, WasmResponse} from '../../../models/simulation/wasm-interface';
-import {SimulationUnit, SimulationUnits} from '../../../models/simulation/simulation-unit';
+import {SimulationUnit} from '../../../models/simulation/simulation-unit';
 import {Element} from '../../../models/element';
 
 @Injectable({
@@ -62,8 +62,8 @@ export class WorkerCommunicationService {
 			for (const identifier of this._powerSubjectsWires.keys()) {
 				powerChanges.set(identifier, this.getState(identifier, data.state));
 			}
-			for (const projId of this._powerSubjectsWires.keys()) {
-				this._powerSubjectsWires.get(projId).next(powerChanges.get(projId));
+			for (const identifier of this._powerSubjectsWires.keys()) {
+				this._powerSubjectsWires.get(identifier).next(powerChanges.get(identifier));
 			}
 
 			if (this._isContinuous) {
@@ -81,6 +81,9 @@ export class WorkerCommunicationService {
 	}
 
 	public getState(identifier: string, data?: Int8Array): Map<Element, boolean> {
+		if (!this.stateCompiler.wiresOnLinks.has(identifier) || this.stateCompiler.wiresOnLinks.get(identifier) === undefined) {
+			return new Map<Element, boolean>();
+		}
 		if (!data)
 			data = this._dataCache;
 		const out = new Map<Element, boolean>();
@@ -132,7 +135,9 @@ export class WorkerCommunicationService {
 
 	public stop(): void {
 		this._isContinuous = false;
-		this.finalizeInit();
+		this._worker.postMessage({
+			method: WasmMethod.reset
+		} as WasmRequest);
 	}
 
 	public pause(): void {
@@ -156,7 +161,6 @@ export class WorkerCommunicationService {
 			method: WasmMethod.single,
 			userInputs: this._userInputChanges
 		};
-		console.log(this._userInputChanges);
 		this._worker.postMessage(request);
 		this._userInputChanges.clear();
 	}
