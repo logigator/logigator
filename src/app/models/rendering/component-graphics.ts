@@ -86,8 +86,8 @@ export class ComponentGraphics extends LGraphics {
 
 	private rotation1(inputs: number, outputs: number, height: number, width: number) {
 		for (let i = 0; i < inputs; i++) {
-			this.moveTo((environment.gridPixelWidth / 2) + environment.gridPixelWidth * i, 0);
-			this.lineTo((environment.gridPixelWidth / 2) + environment.gridPixelWidth * i, -(environment.gridPixelWidth / 2));
+			this.moveTo(width - (environment.gridPixelWidth / 2) - environment.gridPixelWidth * i, 0);
+			this.lineTo(width - (environment.gridPixelWidth / 2) - environment.gridPixelWidth * i, -(environment.gridPixelWidth / 2));
 		}
 		for (let i = 0; i < outputs; i++) {
 			this.moveTo(width - (environment.gridPixelWidth / 2) - environment.gridPixelWidth * i, height);
@@ -97,8 +97,8 @@ export class ComponentGraphics extends LGraphics {
 
 	private rotation2(inputs: number, outputs: number, height: number, width: number) {
 		for (let i = 0; i < inputs; i++) {
-			this.moveTo(width, (environment.gridPixelWidth / 2) + environment.gridPixelWidth * i);
-			this.lineTo(width + (environment.gridPixelWidth / 2), (environment.gridPixelWidth / 2) + environment.gridPixelWidth * i);
+			this.moveTo(width, height - (environment.gridPixelWidth / 2) - environment.gridPixelWidth * i);
+			this.lineTo(width + (environment.gridPixelWidth / 2), height - (environment.gridPixelWidth / 2) - environment.gridPixelWidth * i);
 		}
 		for (let i = 0; i < outputs; i++) {
 			this.moveTo(0, height - (environment.gridPixelWidth / 2) - (environment.gridPixelWidth * i));
@@ -169,6 +169,7 @@ export class ComponentGraphics extends LGraphics {
 		this._inputs = inputs;
 		this._outputs = outputs;
 		this._rotation = rotation;
+		this.clear();
 		this.drawComponent(this._symbol, inputs, outputs, rotation, scale);
 	}
 

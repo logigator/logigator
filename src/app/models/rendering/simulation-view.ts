@@ -70,11 +70,6 @@ export class SimulationView extends View {
 		for (const [elem, state] of e) {
 			(this.allElements.get(elem.id).sprite as WireGraphics).setWireState(state);
 		}
-		for (const elem of this.allElements.values()) {
-			if (elem.sprite instanceof ComponentGraphics) {
-				elem.sprite.setSimulationSate([true, false, true]);
-			}
-		}
 		this.requestSingleFrame();
 	}
 
