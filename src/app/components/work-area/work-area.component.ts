@@ -123,7 +123,8 @@ export class WorkAreaComponent extends WorkArea implements OnInit, OnDestroy {
 		const newView = new EditorView(
 			this.projectsService.getProjectById(projectId),
 			this._pixiCanvasContainer.nativeElement,
-			() => this.ticker.singleFrame('0'));
+			() => this.ticker.singleFrame('0')
+		);
 		this.ngZone.run(() => {
 			this._allViews.set(projectId, newView);
 			this._activeView = newView;
@@ -163,7 +164,7 @@ export class WorkAreaComponent extends WorkArea implements OnInit, OnDestroy {
 				delete this._activeView;
 			}
 		}
-		toClose.destroy();
+		if (toClose) toClose.destroy();
 		// @ts-ignore
 		this._pixiRenderer._lastObjectRendered = null;
 	}

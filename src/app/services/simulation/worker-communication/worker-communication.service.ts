@@ -148,7 +148,9 @@ export class WorkerCommunicationService {
 
 	public stop(): void {
 		this._isContinuous = false;
-		this.finalizeInit();
+		this._worker.postMessage({
+			method: WasmMethod.reset
+		} as WasmRequest);
 	}
 
 	public pause(): void {

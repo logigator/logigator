@@ -243,6 +243,11 @@ export class ProjectState {
 		if (getStaticDI(ElementProviderService).isInputElement(outElem.typeId)) {
 			this.numInputs--;
 			this._inputPlugs = this._inputPlugs.filter(e => e.id !== elementId);
+			for (const plug of this._inputPlugs) {
+				if (plug.plugIndex > outElem.plugIndex) {
+					plug.plugIndex--;
+				}
+			}
 			for (const plug of this._outputPlugs) {
 				plug.plugIndex--;
 			}
