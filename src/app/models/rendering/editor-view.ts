@@ -40,7 +40,8 @@ export class EditorView extends View {
 	public updateSelectedElementsScale() {
 		const selectedIds = this.selectionService.selectedIds(this.projectId);
 		for (let i = 0; i < selectedIds.length; i++) {
-			this.allElements.get(selectedIds[i]).sprite.updateScale(this.zoomPan.currentScale);
+			const elemSprite = this.allElements.get(selectedIds[i]);
+			elemSprite.sprite.updateScale(this.zoomPan.currentScale);
 		}
 		const selectedConnections = this.selectionService.selectedConnections(this.projectId);
 		for (let i = 0; i < selectedConnections.length; i++) {
