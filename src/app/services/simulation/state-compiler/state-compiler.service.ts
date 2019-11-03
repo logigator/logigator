@@ -77,6 +77,8 @@ export class StateCompilerService {
 		this.compileDependencies(depTree);
 		const out =  this.projectUnits(project.id, '0');
 		console.log(`compilation took ${Date.now() - start}ms`);
+		console.log(out);
+		console.log(this._wiresOnLinks);
 		return out;
 	}
 
@@ -117,19 +119,33 @@ export class StateCompilerService {
 
 	private compileDependencies(depTree: Map<number, Project>): void {
 		for (const [typeId, project] of depTree.entries()) {
-			this._currTypeId = typeId;
 			if (this._udcCache.has(typeId) && !project.compileDirty) {
 				console.log('load from cache', typeId);
 			} else {
 				this.compileSingle(project);
 			}
-			project.compileDirty = false;
 		}
 	}
 
 	private compileSingle(project: Project): void {
+		const oldTypeId = this._currTypeId;
+		this._currTypeId = project.id;
 		const unitElems = StateCompilerService.generateUnits(project.currState);
+		let conPlugs: number[][];
+		if (this._udcCache.has(project.id)) {
+			conPlugs = this._udcCache.get(project.id).connectedPlugs;
+		}
+
 		this._udcCache.set(project.id, this.calcCompiledComp(project.currState, unitElems));
+		if (!MapHelper.array2dSame(conPlugs, this._udcCache.get(project.id).connectedPlugs)) {
+			for (const [typeId, compiledComp] of this._udcCache.entries()) {
+				if (compiledComp.includesUdcs.has(project.id)) {
+					console.log('special:', typeId);
+					this.compileSingle(this._depTree.get(typeId));
+				}
+			}
+		}
+		this._currTypeId = oldTypeId;
 		project.compileDirty = false;
 	}
 
@@ -139,7 +155,8 @@ export class StateCompilerService {
 			wiresOnLinks: new Map<number, Element[]>(),
 			wireEndsOnLinks: new Map<number, WireEndOnComp[]>(),
 			connectedPlugs: [],
-			plugsByIndex: new Map<number, number>()
+			plugsByIndex: new Map<number, number>(),
+			includesUdcs: new Set<number>()
 		};
 		const linksOnWireEnds: WireEndLinksOnElem = new Map<Element, LinkOnWireEnd>();
 
@@ -203,6 +220,7 @@ export class StateCompilerService {
 				if (this.elementProvider.isUserElement(elem.typeId)) {
 					this.includePlugLinks(elem, index, state, linksOnWireEnds,
 						linkId, unitElems, compiledComp, coveredPoints);
+					compiledComp.includesUdcs.add(elem.typeId);
 				}
 			}
 		}
@@ -248,9 +266,7 @@ export class StateCompilerService {
 	) {
 		if (!this._udcCache.has(elem.typeId)) {
 			const outer = this._currTypeId;
-			this._currTypeId = elem.typeId;
 			this.compileSingle(this._depTree.get(elem.typeId));
-			this._currTypeId = outer;
 		}
 		for (const conPlugs of this._udcCache.get(elem.typeId).connectedPlugs) {
 			if (conPlugs.includes(index)) {
@@ -269,6 +285,8 @@ export class StateCompilerService {
 		outerUnit?: SimulationUnit
 	): SimulationUnit[] {
 		const compiledComp = this._udcCache.get(projectId);
+		console.log('compiledComp', compiledComp);
+		console.log('cache', this._wiresOnLinksCache);
 		const units = SimulationUnits.cloneMult([...compiledComp.units.keys()]);
 		const linkMap = new Map<number, number>();
 		const typeIdentifier = '' + projectId;

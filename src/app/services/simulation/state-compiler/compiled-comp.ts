@@ -8,4 +8,5 @@ export interface CompiledComp {
 	wireEndsOnLinks: WireEndsOnLinks;
 	connectedPlugs: number[][];
 	plugsByIndex: Map<number, number>; // outerUnit -> inner
+	includesUdcs: Set<number>;
 }
