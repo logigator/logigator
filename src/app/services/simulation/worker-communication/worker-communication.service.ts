@@ -20,9 +20,7 @@ export class WorkerCommunicationService {
 	private _initialized = false;
 	private _isContinuous = false;
 
-	private _dataCache: Int8Array;
-
-	private _compiledBoard: SimulationUnit[];
+	private _dataCache: Uint8Array;
 
 	private _userInputChanges: Map<number, boolean> = new Map<number, boolean>();
 
@@ -53,14 +51,16 @@ export class WorkerCommunicationService {
 
 		const data = event.data as WasmResponse;
 		if (data.success) {
-			if (data.state.length !== this.stateCompiler.highestLinkId + 1) {
-				console.error(`Response data length does not match component count`, data, this._compiledBoard);
+			const state = new Uint8Array(data.state);
+
+			if (state.length !== this.stateCompiler.highestLinkId + 1) {
+				console.error(`Response data length does not match component count`, data);
 			}
-			this._dataCache = data.state;
+			this._dataCache = state;
 
 			const powerChanges: Map<string, PowerChangesOutWire> = new Map<string, PowerChangesOutWire>();
 			for (const identifier of this._powerSubjectsWires.keys()) {
-				powerChanges.set(identifier, this.getState(identifier, data.state));
+				powerChanges.set(identifier, this.getState(identifier, state));
 			}
 			for (const identifier of this._powerSubjectsWires.keys()) {
 				this._powerSubjectsWires.get(identifier).next(powerChanges.get(identifier));
@@ -80,7 +80,7 @@ export class WorkerCommunicationService {
 		}
 	}
 
-	public getState(identifier: string, data?: Int8Array): Map<Element, boolean> {
+	public getState(identifier: string, data?: Uint8Array): Map<Element, boolean> {
 		if (!this.stateCompiler.wiresOnLinks.has(identifier) || this.stateCompiler.wiresOnLinks.get(identifier) === undefined) {
 			return new Map<Element, boolean>();
 		}
@@ -101,13 +101,15 @@ export class WorkerCommunicationService {
 
 		const project = this.projectsService.mainProject;
 
-		this._compiledBoard = await this.stateCompiler.compile(project);
+		const compiledBoard = await this.stateCompiler.compileAsInt32Array(project);
 		this._userInputChanges = new Map<number, boolean>();
 		this._powerStatesDiffer = this.iterableDiffers.find(new Int8Array()).create();
-		if (!this._compiledBoard)
+		if (!compiledBoard) {
 			console.error('Failed to compile board.');
+			return;
+		}
 
-		this.finalizeInit();
+		this.finalizeInit(compiledBoard.buffer);
 	}
 
 	private initWorker() {
@@ -121,16 +123,14 @@ export class WorkerCommunicationService {
 		});
 	}
 
-	private finalizeInit() {
-		const board = {
-			links: this.stateCompiler.highestLinkId + 1,
-			components: this._compiledBoard
-		};
-		const request: WasmRequest = {
+	private finalizeInit(compiledBoard: ArrayBuffer) {
+		this._worker.postMessage({
 			method: WasmMethod.init,
-			board
-		};
-		this._worker.postMessage(request);
+			board: {
+				links: this.stateCompiler.highestLinkId + 1,
+				components: compiledBoard
+			}
+		} as WasmRequest, [ compiledBoard ]);
 	}
 
 	public stop(): void {

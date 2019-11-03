@@ -9,7 +9,7 @@ export enum BoardState {
 
 export interface Board {
 	links: number;
-	components: SimulationUnit[];
+	components: ArrayBuffer;
 }
 
 export interface BoardStatus {

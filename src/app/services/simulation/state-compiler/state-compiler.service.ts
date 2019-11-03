@@ -57,6 +57,16 @@ export class StateCompilerService {
 		return {unitToElement, elementToUnit};
 	}
 
+	public async compileAsInt32Array(project: Project): Promise<Int32Array> {
+		const units = await this.compile(project);
+		const out: number[] = [ units.length ];
+
+		for (const unit of units) {
+			out.push(unit.typeId, 0 /*op1*/, 0 /*op2*/, unit.inputs.length, unit.outputs.length, ...unit.inputs, ...unit.outputs);
+		}
+		return new Int32Array(out);
+	}
+
 	public async compile(project: Project): Promise<SimulationUnit[]> {
 		this._highestLinkId = 0;
 		this.initElemsOnLinks('0');
