@@ -1,6 +1,3 @@
-import {CompiledComp} from './compiled-comp';
-import {SimulationUnit, SimulationUnits} from '../../../models/simulation/simulation-unit';
-
 export abstract class MapHelper {
 
 	public static pushInMapArray<K, V>(map: Map<K, Array<V>>, key: K, value: V): void {
@@ -18,5 +15,21 @@ export abstract class MapHelper {
 		} else {
 			map.set(key, [value]);
 		}
+	}
+
+	public static array2dSame(a: number[][], b: number[][]): boolean {
+		if (!a || !b)
+			return false;
+		if (a.length !== b.length)
+			return false;
+		for (let i = 0; i < a.length; i++) {
+			if (a[i].length !== b[i].length)
+				return false;
+			for (let j = 0; j < a[i].length; j++) {
+				if (a[i][j] !== b[i][j])
+					return false;
+			}
+		}
+		return true;
 	}
 }
