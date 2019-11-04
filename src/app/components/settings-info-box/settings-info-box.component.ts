@@ -76,10 +76,14 @@ export class SettingsInfoBoxComponent implements OnChanges, OnDestroy {
 			plugIndex: []
 		});
 		this.formSubscription = this.propertiesForm.valueChanges.subscribe((data: any) => {
-			if (data.numInputs <= this.elemType.maxInputs && data.numInputs >= this.elemType.minInputs) {
+			if (data.rotation !== this.elemType.rotation) {
 				this.elemType.rotation = Number(data.rotation);
 			}
-			this.elemType.numInputs = data.numInputs;
+			if (data.numInputs <= this.elemType.maxInputs && data.numInputs >= this.elemType.minInputs) {
+				this.elemType.numInputs = data.numInputs;
+			} else if (data.numInputs) {
+				this.propertiesForm.controls.numInputs.setValue(this.elemType.numInputs);
+			}
 		});
 	}
 
@@ -98,10 +102,12 @@ export class SettingsInfoBoxComponent implements OnChanges, OnDestroy {
 					this.propertiesForm.controls.rotation.setValue(element.rotation);
 				}
 			}
-			if (data.numInputs !== element.numInputs && data.numInputs <= this.elemType.maxInputs && data.numInputs >= this.elemType.minInputs) {
-				if (!this.projects.currProject.setNumInputs(this.selectedCompId, data.numInputs)) {
+			if (data.numInputs <= this.elemType.maxInputs && data.numInputs >= this.elemType.minInputs) {
+				if (data.numInputs !== element.numInputs && !this.projects.currProject.setNumInputs(this.selectedCompId, data.numInputs)) {
 					this.propertiesForm.controls.numInputs.setValue(element.numInputs);
 				}
+			} else if (data.numInputs) {
+				this.propertiesForm.controls.numInputs.setValue(element.numInputs);
 			}
 			if (data.plugIndex !== element.plugIndex) {
 				this.projects.currProject.setPlugIndex(this.selectedCompId, Number(data.plugIndex));
