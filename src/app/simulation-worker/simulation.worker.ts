@@ -74,17 +74,19 @@ addEventListener('message', ({ data }: {data: WasmRequest}) => {
 			break;
 	}
 
-	if (error)
+	const buffer = worker.getLinks().buffer || new ArrayBuffer(0);
+	if (error) {
 		postMessage({
 			method: data.method,
 			success: false,
-			state: worker.getLinks() || new Int8Array(0),
+			state: buffer,
 			error
-		} as WasmResponse);
-	else
+		} as WasmResponse, [ buffer ]);
+	} else {
 		postMessage({
 			method: data.method,
 			success: true,
-			state: worker.getLinks() || new Int8Array(0)
-		} as WasmResponse);
+			state: buffer
+		} as WasmResponse, [ buffer ]);
+	}
 });

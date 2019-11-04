@@ -24,7 +24,7 @@ export interface WasmRequest {
 export interface WasmResponse {
 	method: WasmMethod;
 	success: boolean;
-	state: Int8Array;
+	state: ArrayBuffer;
 	status?: BoardStatus;
 	error?: string;
 }
