@@ -19,10 +19,4 @@ export abstract class MapHelper {
 			map.set(key, [value]);
 		}
 	}
-
-	public static uniquify(compiledComp: CompiledComp): void {
-		for (const key of compiledComp.wiresOnLinks.keys()) {
-			compiledComp.wiresOnLinks.set(key, [...new Set(compiledComp.wiresOnLinks.get(key)).values()]);
-		}
-	}
 }

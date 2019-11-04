@@ -10,7 +10,6 @@ import {SelectionService} from '../../services/selection/selection.service';
 import {View} from './view';
 import {Project} from '../project';
 import {Element} from '../element';
-import {ElementSprite} from '../element-sprite';
 import {ProjectType} from '../project-type';
 import {getStaticDI} from '../get-di';
 
@@ -40,8 +39,7 @@ export class EditorView extends View {
 	public updateSelectedElementsScale() {
 		const selectedIds = this.selectionService.selectedIds(this.projectId);
 		for (let i = 0; i < selectedIds.length; i++) {
-			const elemSprite = this.allElements.get(selectedIds[i]);
-			elemSprite.sprite.updateScale(this.zoomPan.currentScale);
+			this.allElements.get(selectedIds[i]).updateScale(this.zoomPan.currentScale);
 		}
 		const selectedConnections = this.selectionService.selectedConnections(this.projectId);
 		for (let i = 0; i < selectedConnections.length; i++) {
@@ -52,8 +50,8 @@ export class EditorView extends View {
 	}
 
 	public updatePastingElementsScale() {
-		for (const elemSprite of this._viewInteractionManager.pastingElements) {
-			elemSprite.sprite.updateScale(this.zoomPan.currentScale);
+		for (const lGraphics of this._viewInteractionManager.pastingElements) {
+			lGraphics.updateScale(this.zoomPan.currentScale);
 		}
 		for (const graphics of this._viewInteractionManager.pastingConnPoints) {
 			const pos = Grid.getPixelPosForPixelPosOnGridWire(graphics.position);
@@ -70,10 +68,10 @@ export class EditorView extends View {
 		return this._project.addElement(typeId, type.rotation, type.numInputs, type.numOutputs, position);
 	}
 
-	public placeComponentOnView(element: Element): ElementSprite {
-		const es = super.placeComponentOnView(element);
-		this._viewInteractionManager.addEventListenersToNewElement(es);
-		return es;
+	public placeComponentOnView(element: Element) {
+		const lGraphics = super.placeComponentOnView(element);
+		this._viewInteractionManager.addEventListenersToNewElement(lGraphics);
+		return lGraphics;
 	}
 
 	public get projectType(): ProjectType {
