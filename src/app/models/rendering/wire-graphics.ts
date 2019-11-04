@@ -27,6 +27,7 @@ export class WireGraphics extends PIXI.Graphics implements LGraphics {
 		} else {
 			this.element = elementOrEndPos;
 		}
+		this._scale = scale;
 		this.lineStyle(1 / scale, this.themingService.getEditorColor('wire'));
 		this.moveTo(0, 0);
 		const endPos = Grid.getPixelPosForGridPosWire(this.element.endPos);
@@ -67,6 +68,7 @@ export class WireGraphics extends PIXI.Graphics implements LGraphics {
 				data.lineStyle.width = 1 / scale;
 			}
 		}
+		this._scale = scale;
 		this.geometry.invalidate();
 	}
 

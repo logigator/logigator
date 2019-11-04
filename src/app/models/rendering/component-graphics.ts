@@ -32,6 +32,7 @@ export class ComponentGraphics extends PIXI.Graphics implements LGraphics {
 			} as any as Element;
 			this._symbol = elementOrSymbol;
 		} else {
+			this._scale = scale;
 			this.element = elementOrSymbol;
 			this._symbol = getStaticDI(ElementProviderService).getElementById(this.element.typeId).symbol;
 		}
@@ -148,6 +149,7 @@ export class ComponentGraphics extends PIXI.Graphics implements LGraphics {
 				wireIndex++;
 			}
 		}
+		this._scale = scale;
 		this.geometry.invalidate();
 	}
 
