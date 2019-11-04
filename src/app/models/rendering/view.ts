@@ -1,7 +1,6 @@
 import * as PIXI from 'pixi.js';
 import {ZoomPan} from './zoom-pan';
 import {RendererChunkData} from './renderer-chunk-data';
-import {ElementSprite} from '../element-sprite';
 import {Subject} from 'rxjs';
 import {ThemingService} from '../../services/theming/theming.service';
 import {takeUntil} from 'rxjs/operators';
@@ -16,7 +15,7 @@ import {Action} from '../action';
 import {getStaticDI} from '../get-di';
 import {WireGraphics} from './wire-graphics';
 import {ComponentGraphics} from './component-graphics';
-import {LGraphics} from './l-graphics';
+import {isLGraphics, LGraphics} from './l-graphics';
 
 export abstract class View extends PIXI.Container {
 
@@ -29,7 +28,7 @@ export abstract class View extends PIXI.Container {
 	protected _chunks: RendererChunkData[][] = [];
 
 	public connectionPoints: Map<string, PIXI.Graphics> = new Map();
-	public allElements: Map<number, ElementSprite> = new Map();
+	public allElements: Map<number, LGraphics> = new Map();
 
 	protected _chunksToRender: {x: number, y: number}[] = [];
 
@@ -80,7 +79,7 @@ export abstract class View extends PIXI.Container {
 			chunk.gridGraphics.renderable = this.themingService.showGrid;
 			if (this.constructor.name === 'SimulationView') {
 				chunk.container.children.forEach(g => {
-					if (g instanceof LGraphics) g.applySimState(this.zoomPan.currentScale);
+					if (isLGraphics(g)) g.applySimState(this.zoomPan.currentScale);
 				});
 			}
 			if (chunk.scaledFor === this.zoomPan.currentScale) continue;
@@ -95,7 +94,7 @@ export abstract class View extends PIXI.Container {
 			for (let e = 0; e < chunkElems.length; e++) {
 				const elemSprite = this.allElements.get(Number(chunkElems[e].name));
 				if (elemSprite) {
-					elemSprite.sprite.updateScale(this.zoomPan.currentScale);
+					elemSprite.updateScale(this.zoomPan.currentScale);
 				}
 				if (chunkElems[e].name === 'wireConnPoint') {
 					this.updateConnectionPoint(chunkElems[e] as PIXI.Graphics);
@@ -202,34 +201,24 @@ export abstract class View extends PIXI.Container {
 
 	}
 
-	protected placeComponentOnView(element: Element): ElementSprite {
-		const elemType = this.elementProviderService.getElementById(element.typeId);
-		const sprite = new ComponentGraphics(
-			this.zoomPan.currentScale, elemType.symbol, element.numInputs, element.numOutputs, element.rotation
-		);
+	protected placeComponentOnView(element: Element): LGraphics {
+		const sprite = new ComponentGraphics(this.zoomPan.currentScale, element);
 		sprite.position = Grid.getLocalChunkPixelPosForGridPos(element.pos);
 		sprite.name = element.id.toString();
 
 		this.addToCorrectChunk(sprite, element.pos);
 
-		const elemSprite = {element, sprite};
-		this.allElements.set(element.id, elemSprite);
-		return elemSprite;
+		this.allElements.set(element.id, sprite);
+		return sprite;
 	}
 
 	protected placeWireOnView(element: Element) {
-
-		const endPos = Grid.getPixelPosForGridPosWire(element.endPos);
-		const startPos = Grid.getPixelPosForGridPosWire(element.pos);
-
-		const graphics = new WireGraphics(this.zoomPan.currentScale, endPos, startPos);
+		const graphics = new WireGraphics(this.zoomPan.currentScale, element);
 		graphics.position = Grid.getLocalChunkPixelPosForGridPosWireStart(element.pos);
 		graphics.name = element.id.toString();
 
 		this.addToCorrectChunk(graphics, element.pos);
-
-		const elemSprite = {element, sprite: graphics};
-		this.allElements.set(element.id, elemSprite);
+		this.allElements.set(element.id, graphics);
 	}
 
 	protected addConnectionPointToView(pos: PIXI.Point) {
@@ -277,16 +266,16 @@ export abstract class View extends PIXI.Container {
 
 	private moveMultipleAction(action: Action) {
 		action.others.forEach(element => {
-			const elemSprite = this.allElements.get(element.id);
-			this.addToCorrectChunk(elemSprite.sprite, element.pos);
-			this.setLocalChunkPos(element, elemSprite.sprite);
+			const sprite = this.allElements.get(element.id);
+			this.addToCorrectChunk(sprite, element.pos);
+			this.setLocalChunkPos(element, sprite);
 		});
 	}
 
 	private updateComponent(action: Action) {
-		const elemSprite = this.allElements.get(action.element.id);
-		(elemSprite.sprite as ComponentGraphics).updateComponent(
-			this.zoomPan.currentScale, elemSprite.element.numInputs, elemSprite.element.numOutputs, elemSprite.element.rotation
+		const sprite = this.allElements.get(action.element.id);
+		(sprite as ComponentGraphics).updateComponent(
+			this.zoomPan.currentScale, sprite.element.numInputs, sprite.element.numOutputs, sprite.element.rotation
 		);
 	}
 
@@ -311,7 +300,7 @@ export abstract class View extends PIXI.Container {
 			case 'remComp':
 			case 'remWire':
 				if (!this.allElements.has(action.element.id)) break;
-				this.allElements.get(action.element.id).sprite.destroy();
+				this.allElements.get(action.element.id).destroy();
 				this.allElements.delete(action.element.id);
 				break;
 			case 'conWire':

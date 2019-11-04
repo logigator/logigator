@@ -1,26 +1,41 @@
 import {environment} from '../../../environments/environment';
 import * as PIXI from 'pixi.js';
 import {LGraphics} from './l-graphics';
+import {getStaticDI} from '../get-di';
+import {ThemingService} from '../../services/theming/theming.service';
+import {Element} from '../element';
+import {ElementProviderService} from '../../services/element-provider/element-provider.service';
 
-export class ComponentGraphics extends LGraphics {
+export class ComponentGraphics extends PIXI.Graphics implements LGraphics {
+
+	readonly element: Element;
+
+	private _scale: number;
+	private themingService = getStaticDI(ThemingService);
 
 	private readonly _symbol: string;
-	private _inputs: number;
-	private _outputs: number;
-	private _rotation: number;
 
 	private simActiveState = [];
 	private shouldHaveActiveState = [];
 
-	constructor(scale: number, symbol: string, inputs: number, outputs: number, rotation: number) {
-		super(scale);
+	constructor(scale: number, element?: Element);
+	constructor(scale: number, symbol: string, inputs: number, outputs: number, rotation: number);
+	constructor(scale: number, elementOrSymbol: Element | string, inputs?: number, outputs?: number, rotation?: number) {
+		super();
 		this.interactiveChildren = false;
 		this.sortableChildren = false;
-		this._symbol = symbol;
-		this._inputs = inputs;
-		this._outputs = outputs;
-		this._rotation = rotation;
-		this.drawComponent(symbol, inputs, outputs, rotation, scale);
+		if (typeof elementOrSymbol === 'string') {
+			this.element = {
+				rotation,
+				numInputs: inputs,
+				numOutputs: outputs,
+			} as any as Element;
+			this._symbol = elementOrSymbol;
+		} else {
+			this.element = elementOrSymbol;
+			this._symbol = getStaticDI(ElementProviderService).getElementById(this.element.typeId).symbol;
+		}
+		this.drawComponent(this._symbol, this.element.numInputs, this.element.numOutputs, this.element.rotation, scale);
 	}
 
 	private drawComponent(symbol: string, inputs: number, outputs: number, rotation: number, scale: number) {
@@ -86,8 +101,8 @@ export class ComponentGraphics extends LGraphics {
 
 	private rotation1(inputs: number, outputs: number, height: number, width: number) {
 		for (let i = 0; i < inputs; i++) {
-			this.moveTo((environment.gridPixelWidth / 2) + environment.gridPixelWidth * i, 0);
-			this.lineTo((environment.gridPixelWidth / 2) + environment.gridPixelWidth * i, -(environment.gridPixelWidth / 2));
+			this.moveTo(width - (environment.gridPixelWidth / 2) - environment.gridPixelWidth * i, 0);
+			this.lineTo(width - (environment.gridPixelWidth / 2) - environment.gridPixelWidth * i, -(environment.gridPixelWidth / 2));
 		}
 		for (let i = 0; i < outputs; i++) {
 			this.moveTo(width - (environment.gridPixelWidth / 2) - environment.gridPixelWidth * i, height);
@@ -97,8 +112,8 @@ export class ComponentGraphics extends LGraphics {
 
 	private rotation2(inputs: number, outputs: number, height: number, width: number) {
 		for (let i = 0; i < inputs; i++) {
-			this.moveTo(width, (environment.gridPixelWidth / 2) + environment.gridPixelWidth * i);
-			this.lineTo(width + (environment.gridPixelWidth / 2), (environment.gridPixelWidth / 2) + environment.gridPixelWidth * i);
+			this.moveTo(width, height - (environment.gridPixelWidth / 2) - environment.gridPixelWidth * i);
+			this.lineTo(width + (environment.gridPixelWidth / 2), height - (environment.gridPixelWidth / 2) - environment.gridPixelWidth * i);
 		}
 		for (let i = 0; i < outputs; i++) {
 			this.moveTo(0, height - (environment.gridPixelWidth / 2) - (environment.gridPixelWidth * i));
@@ -165,11 +180,23 @@ export class ComponentGraphics extends LGraphics {
 		this.geometry.invalidate();
 	}
 
+	setSelected(selected: boolean) {
+		if (selected) {
+			this.tint = this.themingService.getEditorColor('selectTint');
+		} else {
+			this.tint = 0xffffff;
+		}
+	}
+
 	public updateComponent(scale: number, inputs: number, outputs: number, rotation: number) {
-		this._inputs = inputs;
-		this._outputs = outputs;
-		this._rotation = rotation;
+		this.element.numInputs = inputs;
+		this.element.numOutputs = outputs;
+		this.element.rotation = rotation;
+		this._scale = scale;
+		this.clear();
 		this.drawComponent(this._symbol, inputs, outputs, rotation, scale);
 	}
+
+
 
 }

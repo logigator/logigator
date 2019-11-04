@@ -2,7 +2,6 @@ import {EditorView} from './editor-view';
 import {Grid} from './grid';
 import * as PIXI from 'pixi.js';
 import InteractionEvent = PIXI.interaction.InteractionEvent;
-import {ElementSprite} from '../element-sprite';
 import {Element} from '../element';
 import {WorkModeService} from '../../services/work-mode/work-mode.service';
 import {SelectionService} from '../../services/selection/selection.service';
@@ -18,6 +17,7 @@ import {getStaticDI} from '../get-di';
 import {NgZone} from '@angular/core';
 import {WireGraphics} from './wire-graphics';
 import {ComponentGraphics} from './component-graphics';
+import {LGraphics} from './l-graphics';
 
 export class ViewInteractionManager {
 
@@ -42,7 +42,7 @@ export class ViewInteractionManager {
 	private _currentlyPasting = false;
 	private readonly _selectRect: PIXI.Graphics;
 
-	public pastingElements: ElementSprite[] = [];
+	public pastingElements: LGraphics[] = [];
 	public pastingConnPoints: PIXI.Graphics[] = [];
 
 	private copyService = getStaticDI(CopyService);
@@ -89,10 +89,10 @@ export class ViewInteractionManager {
 		});
 	}
 
-	public addEventListenersToNewElement(elemSprite: ElementSprite) {
+	public addEventListenersToNewElement(sprite: LGraphics) {
 		getStaticDI(NgZone).runOutsideAngular(() => {
-			elemSprite.sprite.interactive = true;
-			elemSprite.sprite.on('pointerdown', (e: InteractionEvent) => this.handlePointerDownOnElement(e, elemSprite));
+			sprite.interactive = true;
+			sprite.on('pointerdown', (e: InteractionEvent) => this.handlePointerDownOnElement(e, sprite));
 		});
 	}
 
@@ -148,7 +148,7 @@ export class ViewInteractionManager {
 		}
 	}
 
-	private handlePointerDownOnElement(e: InteractionEvent, elem: ElementSprite) {
+	private handlePointerDownOnElement(e: InteractionEvent, elem: LGraphics) {
 		if (this.workModeService.currentWorkMode === 'select' && e.data.button === 0) {
 			if (this._singleSelectedElement === elem.element) {
 				this.startDragging(e);
@@ -196,7 +196,7 @@ export class ViewInteractionManager {
 			this._currentlyDragging = false;
 			if (this._currentlyPasting) {
 				const elementsToPaste = this.pastingElements.map(es => es.element);
-				const endPos = Grid.getGridPosForPixelPos(this.pastingElements[0].sprite.position);
+				const endPos = Grid.getGridPosForPixelPos(this.pastingElements[0].position);
 				if (this.projectsService.currProject.addElements(
 					elementsToPaste, new PIXI.Point(endPos.x - elementsToPaste[0].pos.x, endPos.y - elementsToPaste[0].pos.y))
 				) {
@@ -354,8 +354,8 @@ export class ViewInteractionManager {
 	private applyDraggingPositionChangeToSelection(dx: number, dy: number) {
 		if (this._currentlyPasting) {
 			for (let i = 0; i < this.pastingElements.length; i++) {
-				this.pastingElements[i].sprite.position.x += dx;
-				this.pastingElements[i].sprite.position.y += dy;
+				this.pastingElements[i].position.x += dx;
+				this.pastingElements[i].position.y += dy;
 			}
 			for (let i = 0; i < this.pastingConnPoints.length; i++) {
 				this.pastingConnPoints[i].position.x += dx;
@@ -364,7 +364,7 @@ export class ViewInteractionManager {
 			return;
 		}
 		this.selectionService.selectedIds().forEach(id => {
-			const sprite = this._view.allElements.get(id).sprite;
+			const sprite = this._view.allElements.get(id);
 			sprite.position.x += dx;
 			sprite.position.y += dy;
 		});
@@ -378,11 +378,11 @@ export class ViewInteractionManager {
 	private resetSelectionToOldPosition() {
 		this.selectionService.selectedIds(this._view.projectId).forEach(id => {
 			if (!this._view.allElements.has(id)) return;
-			const elemSprite = this._view.allElements.get(id);
-			this._view.removeChild(elemSprite.sprite);
+			const lGraphics = this._view.allElements.get(id);
+			this._view.removeChild(lGraphics);
 
-			this._view.addToCorrectChunk(elemSprite.sprite, elemSprite.element.pos);
-			this._view.setLocalChunkPos(elemSprite.element, elemSprite.sprite);
+			this._view.addToCorrectChunk(lGraphics, lGraphics.element.pos);
+			this._view.setLocalChunkPos(lGraphics.element, lGraphics);
 		});
 		this.selectionService.selectedConnections(this._view.projectId).forEach(point => {
 			const key = `${point.x}:${point.y}`;
@@ -413,7 +413,7 @@ export class ViewInteractionManager {
 	private clearSelection() {
 		this.selectionService.selectedIds(this._view.projectId).forEach(id => {
 			if (this._view.allElements.has(id))
-				this._view.allElements.get(id).sprite.tint = 0xffffff;
+				this._view.allElements.get(id).setSelected(false);
 		});
 		this.selectionService.selectedConnections(this._view.projectId).forEach(point => {
 			const key = `${point.x}:${point.y}`;
@@ -429,16 +429,16 @@ export class ViewInteractionManager {
 		this.clearSelection();
 		const selected = this.selectionService.selectFromRect(this.projectsService.currProject, start, end);
 		selected.forEach(id => {
-			const element = this._view.allElements.get(id);
-			element.sprite.tint = this.themingService.getEditorColor('selectTint');
+			const lGraphics = this._view.allElements.get(id);
+			lGraphics.setSelected(true);
 
-			element.sprite.parent.removeChild(element.sprite);
-			this._view.addChild(element.sprite);
+			lGraphics.parent.removeChild(lGraphics);
+			this._view.addChild(lGraphics);
 
-			if (element.element.typeId === 0) {
-				element.sprite.position = Grid.getPixelPosForGridPosWire(element.element.pos);
+			if (lGraphics.element.typeId === 0) {
+				lGraphics.position = Grid.getPixelPosForGridPosWire(lGraphics.element.pos);
 			} else {
-				element.sprite.position = Grid.getPixelPosForGridPos(element.element.pos);
+				lGraphics.position = Grid.getPixelPosForGridPos(lGraphics.element.pos);
 			}
 		});
 		this.selectionService.selectedConnections().forEach(point => {
@@ -475,28 +475,19 @@ export class ViewInteractionManager {
 			if (copiedElems[i].typeId === 0) {
 				const graphics = new WireGraphics(
 					this._view.zoomPan.currentScale,
-					Grid.getPixelPosForGridPosWire(copiedElems[i].endPos),
-					Grid.getPixelPosForGridPosWire(copiedElems[i].pos)
+					copiedElems[i]
 				);
 				graphics.position = Grid.getPixelPosForGridPosWire(new PIXI.Point(copiedElems[i].pos.x + offset.x, copiedElems[i].pos.y + offset.y));
 				this._view.addChild(graphics);
-				this.pastingElements.push({
-					element: copiedElems[i],
-					sprite: graphics
-				});
+				this.pastingElements.push(graphics);
 			} else {
-				const type = this.elemProvService.getElementById(copiedElems[i].typeId);
 				const sprite = new ComponentGraphics(
 					this._view.zoomPan.currentScale,
-					type.symbol,
-					copiedElems[i].numInputs, copiedElems[i].numOutputs, copiedElems[i].rotation
+					copiedElems[i]
 				);
 				sprite.position = Grid.getPixelPosForGridPos(new PIXI.Point(copiedElems[i].pos.x + offset.x, copiedElems[i].pos.y + offset.y));
 				this._view.addChild(sprite);
-				this.pastingElements.push({
-					element: copiedElems[i],
-					sprite
-				});
+				this.pastingElements.push(sprite);
 			}
 		}
 
@@ -513,7 +504,7 @@ export class ViewInteractionManager {
 	private cancelPasting() {
 		this._currentlyPasting = false;
 		for (let i = 0; i < this.pastingElements.length; i++) {
-			this.pastingElements[i].sprite.destroy();
+			this.pastingElements[i].destroy();
 		}
 		for (let i = 0; i < this.pastingConnPoints.length; i++) {
 			this.pastingConnPoints[i].destroy();
@@ -538,16 +529,16 @@ export class ViewInteractionManager {
 		);
 	}
 
-	private selectSingleComp(elem: ElementSprite) {
+	private selectSingleComp(elem: LGraphics) {
 		this.resetSelectionToOldPosition();
 		this.clearSelection();
 		this._singleSelectedElement = elem.element;
 		delete this._actionStartPos;
 		this._view.removeChild(this._selectRect);
-		elem.sprite.tint = this.themingService.getEditorColor('selectTint');
-		elem.sprite.parent.removeChild(elem.sprite);
-		elem.sprite.position = Grid.getPixelPosForGridPos(elem.element.pos);
-		this._view.addChild(elem.sprite);
+		elem.setSelected(true);
+		elem.parent.removeChild(elem);
+		elem.position = Grid.getPixelPosForGridPos(elem.element.pos);
+		this._view.addChild(elem);
 		this.selectionService.selectComponent(elem.element.id);
 	}
 

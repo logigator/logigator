@@ -150,8 +150,6 @@ export class StateCompilerService {
 	private calcCompiledComp(state: ProjectState, unitElems: UnitElementBidir): CompiledComp {
 		const compiledComp: CompiledComp = {
 			units: new Map<SimulationUnit, Element>(),
-			wiresOnLinks: new Map<number, Element[]>(),
-			wireEndsOnLinks: new Map<number, WireEndOnComp[]>(),
 			connectedPlugs: [],
 			plugsByIndex: new Map<number, number>(),
 			includesUdcs: new Set<number>()
@@ -162,7 +160,6 @@ export class StateCompilerService {
 
 		compiledComp.units = unitElems.unitToElement;
 		this.loadConnectedPlugs(compiledComp);
-		MapHelper.uniquify(compiledComp);
 
 		return compiledComp;
 	}
@@ -232,30 +229,25 @@ export class StateCompilerService {
 		const oppoPos = Elements.otherWirePos(elem, pos);
 		this.setLinks(state, oppoPos, linksOnWireEnds, linkId,
 			unitElems, compiledComp, coveredPoints);
-		MapHelper.pushInMapArray(compiledComp.wiresOnLinks, linkId, elem);
 		MapHelper.pushInMapArrayUnique(this._wiresOnLinksCache.get('' + this._currTypeId), linkId, elem);
 	}
 
 	private setCompLink(
-		linksOnWireEnds: WireEndLinksOnElem, elem, index, linkId: number, unitElems: UnitElementBidir,
+		linksOnWireEnds: WireEndLinksOnElem, elem, wireIndex, linkId: number, unitElems: UnitElementBidir,
 		compiledComp: CompiledComp
 	) {
 		if (linksOnWireEnds.has(elem)) {
-			if (!linksOnWireEnds.get(elem).has(index)) {
-				linksOnWireEnds.get(elem).set(index, linkId);
+			if (!linksOnWireEnds.get(elem).has(wireIndex)) {
+				linksOnWireEnds.get(elem).set(wireIndex, linkId);
 			} else {
 				console.error('you should not be here');
 			}
 		} else {
-			linksOnWireEnds.set(elem, new Map<number, number>([[index, linkId]]));
+			linksOnWireEnds.set(elem, new Map<number, number>([[wireIndex, linkId]]));
 		}
-		SimulationUnits.setInputOutput(unitElems.elementToUnit.get(elem), index, linkId);
-		MapHelper.pushInMapArray(compiledComp.wireEndsOnLinks, linkId, {
-			component: elem,
-			wireIndex: index
-		});
+		SimulationUnits.setInputOutput(unitElems.elementToUnit.get(elem), wireIndex, linkId);
 		const identifier = '' + this._currTypeId;
-		MapHelper.pushInMapArray(this._wireEndsOnLinksCache.get(identifier), linkId, elem);
+		MapHelper.pushInMapArray(this._wireEndsOnLinksCache.get(identifier), linkId, {component: elem, wireIndex});
 	}
 
 	private includePlugLinks(
@@ -341,6 +333,13 @@ export class StateCompilerService {
 			}
 		} else {
 			this._wiresOnLinks.get(idIdentifier).set(newVal, this._wiresOnLinksCache.get(typeIdentifier).get(val) || []);
+		}
+		if (this._wireEndsOnLinks.get(idIdentifier).has(newVal) && this._wireEndsOnLinks.get(idIdentifier).get(newVal).length > 0) {
+			if (this._wireEndsOnLinks.get(idIdentifier).get(newVal)[0] !== this._wireEndsOnLinksCache.get(typeIdentifier).get(val)[0]) {
+				this._wireEndsOnLinks.get(idIdentifier).get(newVal).push(...(this._wireEndsOnLinksCache.get(typeIdentifier).get(val)) || []);
+			}
+		} else {
+			this._wireEndsOnLinks.get(idIdentifier).set(newVal, this._wireEndsOnLinksCache.get(typeIdentifier).get(val) || []);
 		}
 	}
 

@@ -1,5 +1,3 @@
-import {CompiledComp} from './compiled-comp';
-
 export abstract class MapHelper {
 
 	public static pushInMapArray<K, V>(map: Map<K, Array<V>>, key: K, value: V): void {
@@ -16,12 +14,6 @@ export abstract class MapHelper {
 				map.get(key).push(value);
 		} else {
 			map.set(key, [value]);
-		}
-	}
-
-	public static uniquify(compiledComp: CompiledComp): void {
-		for (const key of compiledComp.wiresOnLinks.keys()) {
-			compiledComp.wiresOnLinks.set(key, [...new Set(compiledComp.wiresOnLinks.get(key)).values()]);
 		}
 	}
 

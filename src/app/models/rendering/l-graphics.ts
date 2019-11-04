@@ -1,17 +1,15 @@
 import * as PIXI from 'pixi.js';
-import {getStaticDI} from '../get-di';
-import {ThemingService} from '../../services/theming/theming.service';
+import {Element} from '../element';
 
-export abstract class LGraphics extends PIXI.Graphics {
+export interface LGraphics extends PIXI.DisplayObject {
 
-	protected _scale: number;
-	protected themingService = getStaticDI(ThemingService);
+	readonly element: Element;
 
-	protected constructor(scale: number) {
-		super();
-		this._scale = scale;
-	}
+	applySimState(scale: number);
+	updateScale(scale: number);
+	setSelected(selected: boolean);
+}
 
-	abstract applySimState(scale: number);
-	abstract updateScale(scale: number);
+export function isLGraphics(object: any): object is LGraphics {
+	return 'applySimState' in object && 'updateScale' in object && 'setSelected' in object && 'element' in object;
 }
