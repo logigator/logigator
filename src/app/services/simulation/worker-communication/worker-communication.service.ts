@@ -58,15 +58,17 @@ export class WorkerCommunicationService {
 			}
 			this._dataCache = state;
 
-			const powerChangesWire = new Map<string, PowerChangesOutWire>();
-			const powerChangesWireEnds = new Map<string, Map<Element, boolean[]>>();
-			for (const identifier of this._powerSubjectsWires.keys()) {
-				powerChangesWire.set(identifier, this.getWireState(identifier, state));
-				powerChangesWireEnds.set(identifier, this.getWireEndState(identifier, state));
-			}
-			for (const projId of this._powerSubjectsWires.keys()) {
-				this._powerSubjectsWires.get(projId).next(powerChangesWire.get(projId));
-				this._powerSubjectsWireEnds.get(projId).next(powerChangesWireEnds.get(projId));
+			if (data.method !== WasmMethod.init) {
+				const powerChangesWire = new Map<string, PowerChangesOutWire>();
+				const powerChangesWireEnds = new Map<string, Map<Element, boolean[]>>();
+				for (const identifier of this._powerSubjectsWires.keys()) {
+					powerChangesWire.set(identifier, this.getWireState(identifier, state));
+					powerChangesWireEnds.set(identifier, this.getWireEndState(identifier, state));
+				}
+				for (const projId of this._powerSubjectsWires.keys()) {
+					this._powerSubjectsWires.get(projId).next(powerChangesWire.get(projId));
+					this._powerSubjectsWireEnds.get(projId).next(powerChangesWireEnds.get(projId));
+				}
 			}
 
 			if (this._isContinuous) {

@@ -37,7 +37,6 @@ export abstract class View extends PIXI.Container {
 	protected readonly _project: Project;
 
 	private themingService = getStaticDI(ThemingService);
-	private elementProviderService = getStaticDI(ElementProviderService);
 
 	protected constructor(project: Project, htmlContainer: HTMLElement, requestSingleFrameFn: () => void) {
 		super();
