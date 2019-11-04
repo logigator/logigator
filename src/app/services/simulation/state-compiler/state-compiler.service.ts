@@ -69,7 +69,8 @@ export class StateCompilerService {
 
 	public async compile(project: Project): Promise<SimulationUnit[]> {
 		this._highestLinkId = 0;
-		this.initElemsOnLinks('0');
+		this._wiresOnLinks = new Map<string, WiresOnLinks>();
+		this._wireEndsOnLinks = new Map<string, WireEndsOnLinks>();
 		const depTree = await this.projectsToCompile(project);
 		this._depTree = depTree;
 
@@ -77,8 +78,6 @@ export class StateCompilerService {
 		this.compileDependencies(depTree);
 		const out =  this.projectUnits(project.id, '0');
 		console.log(`compilation took ${Date.now() - start}ms`);
-		console.log(out);
-		console.log(this._wiresOnLinks);
 		return out;
 	}
 
@@ -140,7 +139,6 @@ export class StateCompilerService {
 		if (!MapHelper.array2dSame(conPlugs, this._udcCache.get(project.id).connectedPlugs)) {
 			for (const [typeId, compiledComp] of this._udcCache.entries()) {
 				if (compiledComp.includesUdcs.has(project.id)) {
-					console.log('special:', typeId);
 					this.compileSingle(this._depTree.get(typeId));
 				}
 			}
@@ -285,8 +283,6 @@ export class StateCompilerService {
 		outerUnit?: SimulationUnit
 	): SimulationUnit[] {
 		const compiledComp = this._udcCache.get(projectId);
-		console.log('compiledComp', compiledComp);
-		console.log('cache', this._wiresOnLinksCache);
 		const units = SimulationUnits.cloneMult([...compiledComp.units.keys()]);
 		const linkMap = new Map<number, number>();
 		const typeIdentifier = '' + projectId;
