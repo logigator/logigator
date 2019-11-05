@@ -24,10 +24,12 @@ export class NewComponentComponent extends PopupContentComp implements OnInit {
 		});
 	}
 
-	public fromSubmitClick() {
+	public async fromSubmitClick() {
 		if (this.newCompForm.invalid) return;
-		this.saveManagement.addCustomComponent(this.newCompForm.controls.compName.value, this.newCompForm.controls.compSymbol.value);
+		const id = await this.saveManagement.addCustomComponent(this.newCompForm.controls.compName.value,
+			this.newCompForm.controls.compSymbol.value);
 		this.requestClose.emit();
+		this.projects.openComponent(id);
 	}
 
 }
