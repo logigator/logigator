@@ -1,11 +1,11 @@
 import {Injectable, IterableDiffer, IterableDiffers, NgZone} from '@angular/core';
 import {Observable, Subject} from 'rxjs';
-import {PowerChangesOutWire, PowerChangesOutWireEnd} from '../../../models/simulation/power-changes';
+import {PowerChangesOutWire} from '../../../models/simulation/power-changes';
 import {ProjectsService} from '../../projects/projects.service';
 import {StateCompilerService} from '../state-compiler/state-compiler.service';
 import {WasmMethod, WasmRequest, WasmResponse} from '../../../models/simulation/wasm-interface';
-import {SimulationUnit} from '../../../models/simulation/simulation-unit';
 import {Element} from '../../../models/element';
+import {InputEvent} from '../../../models/simulation/board';
 
 @Injectable({
 	providedIn: 'root'
@@ -21,9 +21,6 @@ export class WorkerCommunicationService {
 	private _isContinuous = false;
 
 	private _dataCache: Uint8Array;
-
-	private _userInputChanges: Map<number, boolean> = new Map<number, boolean>();
-
 	private _powerStatesDiffer: IterableDiffer<number>;
 
 	constructor(
@@ -74,11 +71,9 @@ export class WorkerCommunicationService {
 			if (this._isContinuous) {
 				const request: WasmRequest = {
 					method: WasmMethod.cont,
-					time: this._frameTime,
-					userInputs: this._userInputChanges
+					time: this._frameTime
 				};
 				this._worker.postMessage(request);
-				this._userInputChanges.clear();
 			}
 		} else {
 			console.error('error', data);
@@ -120,7 +115,6 @@ export class WorkerCommunicationService {
 		const project = this.projectsService.mainProject;
 
 		const compiledBoard = await this.stateCompiler.compileAsInt32Array(project);
-		this._userInputChanges = new Map<number, boolean>();
 		this._powerStatesDiffer = this.iterableDiffers.find(new Int8Array()).create();
 		if (!compiledBoard) {
 			console.error('Failed to compile board.');
@@ -165,22 +159,18 @@ export class WorkerCommunicationService {
 	public start(): void {
 		const request: WasmRequest = {
 			method: WasmMethod.cont,
-			time: this._frameTime,
-			userInputs: this._userInputChanges
+			time: this._frameTime
 		};
 		this._isContinuous = true;
 		this._worker.postMessage(request);
-		this._userInputChanges.clear();
 		this._worker.postMessage(request);
 	}
 
 	public singleStep(): void {
 		const request: WasmRequest = {
-			method: WasmMethod.single,
-			userInputs: this._userInputChanges
+			method: WasmMethod.single
 		};
 		this._worker.postMessage(request);
-		this._userInputChanges.clear();
 	}
 
 	public setFrameTime(frameTime: number): void {
@@ -189,9 +179,19 @@ export class WorkerCommunicationService {
 
 	public setUserInput(identifier: string, element: Element, state: boolean): void {
 		const links = this.stateCompiler.linksOnIOElems.get(identifier).get(element);
-		for (const link of links) {
-			this._userInputChanges.set(link, state);
-		}
+
+		const index = 0;
+		const inputEvent = InputEvent.Pulse;
+		const stateBuffer = new ArrayBuffer(0);
+
+		this._worker.postMessage({
+			method: WasmMethod.triggerInput,
+			userInput: {
+				index,
+				inputEvent,
+				state: stateBuffer
+			}
+		} as WasmRequest, [ stateBuffer ]);
 	}
 
 	public boardStateWires(projectId: string): Observable<PowerChangesOutWire> {
