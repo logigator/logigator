@@ -1,4 +1,5 @@
 import {ElementType} from '../element-type';
+import {environment} from '../../../../environments/environment';
 
 export const not: ElementType = {
 	name: 'ELEMENT_TYPE.BASIC.NOT.NAME',
@@ -6,6 +7,7 @@ export const not: ElementType = {
 	numOutputs: 1,
 	minInputs: 1,
 	maxInputs: 1,
+	width: environment.componentWidth,
 	symbol: '1',
 	description: 'ELEMENT_TYPE.BASIC.NOT.DESCRIPTION',
 	rotation: 0,

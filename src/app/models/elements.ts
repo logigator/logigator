@@ -4,6 +4,7 @@ import {ElementProviderService} from '../services/element-provider/element-provi
 import {environment} from '../../environments/environment';
 import {ActionType} from './action';
 import {Element} from './element';
+import {ElementType} from './element-types/element-type';
 
 export abstract class Elements {
 
@@ -76,14 +77,14 @@ export abstract class Elements {
 		return {wire0, wire1};
 	}
 
-	public static calcEndPos(pos: PIXI.Point, numInputs: number, numOutputs: number, rotation?: number): PIXI.Point {
+	public static calcEndPos(pos: PIXI.Point, width: number, numInputs: number, numOutputs: number, rotation: number): PIXI.Point {
 		if (rotation === undefined || rotation === null) rotation = 0;
 		if (rotation % 2 === 0) {
-			return new PIXI.Point(pos.x + environment.componentWidth,
+			return new PIXI.Point(pos.x + width,
 				pos.y + Math.max(numInputs, numOutputs));
 		} else {
 			return new PIXI.Point(pos.x + Math.max(numInputs, numOutputs),
-				pos.y + environment.componentWidth);
+				pos.y + width);
 		}
 	}
 
@@ -181,5 +182,9 @@ export abstract class Elements {
 			}
 		}
 		return -1;
+	}
+
+	public static elementType(typeId: number): ElementType {
+		return getStaticDI(ElementProviderService).getElementById(typeId);
 	}
 }

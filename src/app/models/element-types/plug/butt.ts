@@ -6,6 +6,7 @@ export const butt: ElementType = {
 	numOutputs: 1,
 	minInputs: 0,
 	maxInputs: 0,
+	width: 1,
 	symbol: '3 -',
 	description: 'Place this in your butt',
 	rotation: 0,

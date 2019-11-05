@@ -269,19 +269,22 @@ export class ProjectState {
 
 	public rotateComp(element: Element, rotation: number, endPos?: PIXI.Point): void {
 		element.rotation = rotation;
-		element.endPos = endPos || Elements.calcEndPos(element.pos, element.numInputs, element.numOutputs, rotation);
+		element.endPos = endPos || Elements.calcEndPos(element.pos, Elements.elementType(element.typeId).width,
+			element.numInputs, element.numOutputs, rotation);
 	}
 
 	public setNumInputs(element: Element, numInputs: number, endPos?: PIXI.Point): void {
 		element.numInputs = numInputs;
-		element.endPos = endPos || Elements.calcEndPos(element.pos, numInputs, element.numOutputs, element.rotation);
+		element.endPos = endPos || Elements.calcEndPos(element.pos, Elements.elementType(element.typeId).width,
+			numInputs, element.numOutputs, element.rotation);
 	}
 
 
 	public updateNumInputsOutputs(element: Element): void {
-		element.numInputs = getStaticDI(ElementProviderService).getElementById(element.typeId).numInputs;
-		element.numOutputs = getStaticDI(ElementProviderService).getElementById(element.typeId).numOutputs;
-		element.endPos = Elements.calcEndPos(element.pos, element.numInputs, element.numOutputs, element.rotation);
+		element.numInputs = Elements.elementType(element.typeId).numInputs;
+		element.numOutputs = Elements.elementType(element.typeId).numOutputs;
+		element.endPos = Elements.calcEndPos(element.pos, Elements.elementType(element.typeId).width,
+			element.numInputs, element.numOutputs, element.rotation);
 	}
 
 
@@ -564,6 +567,7 @@ export class ProjectState {
 		}
 		return out;
 	}
+
 
 	public chunk(x: number, y: number): Chunk {
 		return this._chunks[x] ? this._chunks[x][y] : null;
