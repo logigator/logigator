@@ -107,7 +107,7 @@ export class ProjectSaveManagementService {
 				rotation: 0
 			}, id);
 		} else {
-			const newIndex = this.findNextLocalCompId();
+			id = this.findNextLocalCompId();
 			this.elemProvService.addUserDefinedElement({
 				numOutputs: 0,
 				maxInputs: 0,
@@ -118,7 +118,7 @@ export class ProjectSaveManagementService {
 				minInputs: 0,
 				category: 'user',
 				rotation: 0
-			}, newIndex);
+			}, id);
 		}
 		this.errorHandling.showInfo(`Created Component ${name}`);
 		return id;
