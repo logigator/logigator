@@ -1,5 +1,5 @@
 import {Pointer} from './wasm-interface';
-import {BoardStatus} from './board';
+import {BoardStatus, InputEvent} from './board';
 import {SimulationUnit} from './simulation-unit';
 
 export type TypedArray =
@@ -134,6 +134,7 @@ export interface SimulationModule extends EmscriptenModule {
 		op1: number,
 		op2: number
 	): number;
+	triggerInput(index: number, event: InputEvent, state: Pointer);
 
 	start(): number;
 	startTimeout(ms: number): number;
