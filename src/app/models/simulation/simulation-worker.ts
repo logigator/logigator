@@ -1,4 +1,4 @@
-import {Board, BoardStatus} from './board';
+import {Board, BoardStatus, InputEvent} from './board';
 import {SimulationModule, TypedArray} from './simulation-module';
 import {Pointer} from './wasm-interface';
 
@@ -85,6 +85,12 @@ export class SimulationWorker {
 		}
 		this._simulationModule._free(ptr);
 		return components;
+	}
+
+	public triggerInput(index: number, inputEvent: InputEvent, state: Int8Array) {
+		const ptr = this._arrayToHeap(state);
+		this._simulationModule.triggerInput(index, inputEvent, ptr);
+		this._simulationModule._free(ptr);
 	}
 
 	public runTimeout(target: number) {

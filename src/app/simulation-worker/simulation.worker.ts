@@ -43,6 +43,13 @@ addEventListener('message', ({ data }: {data: WasmRequest}) => {
 		case WasmMethod.pause:
 			worker.stop();
 			break;
+		case WasmMethod.triggerInput:
+			if (!data.userInput) {
+				error = 'No user inputs received.';
+				break;
+			}
+			worker.triggerInput(data.userInput.index, data.userInput.inputEvent, new Int8Array(data.userInput.state));
+			break;
 		case WasmMethod.init:
 			if (!data.board) {
 				error = 'No board specified.';
