@@ -78,7 +78,7 @@ export class ProjectSaveManagementService {
 		);
 	}
 
-	public async addCustomComponent(name: string, symbol: string, description = '') {
+	public async addCustomComponent(name: string, symbol: string, description = ''): Promise<number> {
 		if (!name)
 			name = 'New Component';
 
@@ -121,6 +121,7 @@ export class ProjectSaveManagementService {
 			}, newIndex);
 		}
 		this.errorHandling.showInfo(`Created Component ${name}`);
+		return id;
 	}
 
 	private async openProjectFromShare(): Promise<Project> {
