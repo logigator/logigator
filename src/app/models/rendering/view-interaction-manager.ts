@@ -7,7 +7,7 @@ import {WorkModeService} from '../../services/work-mode/work-mode.service';
 import {SelectionService} from '../../services/selection/selection.service';
 import {ProjectsService} from '../../services/projects/projects.service';
 import {CollisionFunctions} from '../collision-functions';
-import {merge, of, Subscription} from 'rxjs';
+import {merge, Subscription} from 'rxjs';
 import {ThemingService} from '../../services/theming/theming.service';
 import {ElementProviderService} from '../../services/element-provider/element-provider.service';
 import {ProjectInteractionService} from '../../services/project-interaction/project-interaction.service';
@@ -15,9 +15,8 @@ import {filter} from 'rxjs/operators';
 import {CopyService} from '../../services/copy/copy.service';
 import {getStaticDI} from '../get-di';
 import {NgZone} from '@angular/core';
-import {WireGraphics} from './wire-graphics';
-import {ComponentGraphics} from './component-graphics';
-import {LGraphics} from './l-graphics';
+import {LGraphics} from './graphics/l-graphics';
+import {LGraphicsResolver} from './graphics/l-graphics-resolver';
 
 export class ViewInteractionManager {
 
@@ -29,7 +28,7 @@ export class ViewInteractionManager {
 	private _actionStartPos: PIXI.Point;
 	private _lastMousePos: PIXI.Point;
 
-	private _newCompSprite: ComponentGraphics;
+	private _newCompSprite: LGraphics;
 	private _draggingNewComp = false;
 
 	private _newWireDir: 'hor' | 'ver';
@@ -320,13 +319,7 @@ export class ViewInteractionManager {
 		const elemType = this.elemProvService.getElementById(typeId);
 		if (elemType.numInputs === 0 && elemType.numOutputs === 0) return;
 		this._draggingNewComp = true;
-		this._newCompSprite = new ComponentGraphics(
-			this._view.zoomPan.currentScale,
-			elemType.symbol,
-			elemType.numInputs,
-			elemType.numOutputs,
-			elemType.rotation
-		);
+		this._newCompSprite = LGraphicsResolver.getLGraphicsFromType(this._view.zoomPan.currentScale, typeId);
 		this._newCompSprite.position = Grid.getPixelPosOnGridForPixelPos(e.data.getLocalPosition(this._view));
 		this._view.addChild(this._newCompSprite);
 	}
@@ -473,7 +466,7 @@ export class ViewInteractionManager {
 	private addPastingElementsToView(copiedElems: Element[], copiedConnPts: PIXI.Point[], offset: PIXI.Point) {
 		for (let i = 0; i < copiedElems.length; i++) {
 			if (copiedElems[i].typeId === 0) {
-				const graphics = new WireGraphics(
+				const graphics = LGraphicsResolver.getLGraphicsFromElement(
 					this._view.zoomPan.currentScale,
 					copiedElems[i]
 				);
@@ -481,7 +474,7 @@ export class ViewInteractionManager {
 				this._view.addChild(graphics);
 				this.pastingElements.push(graphics);
 			} else {
-				const sprite = new ComponentGraphics(
+				const sprite = LGraphicsResolver.getLGraphicsFromElement(
 					this._view.zoomPan.currentScale,
 					copiedElems[i]
 				);

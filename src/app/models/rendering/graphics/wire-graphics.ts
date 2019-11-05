@@ -1,9 +1,9 @@
 import {LGraphics} from './l-graphics';
 import * as PIXI from 'pixi.js';
-import {getStaticDI} from '../get-di';
-import {ThemingService} from '../../services/theming/theming.service';
-import {Element} from '../element';
-import {Grid} from './grid';
+import {getStaticDI} from '../../get-di';
+import {ThemingService} from '../../../services/theming/theming.service';
+import {Element} from '../../element';
+import {Grid} from '../grid';
 
 export class WireGraphics extends PIXI.Graphics implements LGraphics {
 
@@ -15,18 +15,9 @@ export class WireGraphics extends PIXI.Graphics implements LGraphics {
 	private simActiveState = false;
 	private shouldHaveActiveState = false;
 
-	constructor(scale: number, element: Element);
-	constructor(scale: number, endPos: PIXI.Point, pos: PIXI.Point);
-	constructor(scale: number, elementOrEndPos: Element | PIXI.Point, pos?: PIXI.Point) {
+	constructor(scale: number, element: Element) {
 		super();
-		if (elementOrEndPos instanceof PIXI.Point) {
-			this.element = {
-				endPos: elementOrEndPos,
-				pos
-			} as any as Element;
-		} else {
-			this.element = elementOrEndPos;
-		}
+		this.element = element;
 		this._scale = scale;
 		this.lineStyle(1 / scale, this.themingService.getEditorColor('wire'));
 		this.moveTo(0, 0);
@@ -50,8 +41,8 @@ export class WireGraphics extends PIXI.Graphics implements LGraphics {
 		this.geometry.invalidate();
 	}
 
-	public setWireState(state: boolean) {
-		this.shouldHaveActiveState = state;
+	public setSimulationState(state: boolean[]) {
+		this.shouldHaveActiveState = state[0];
 		if (this.worldVisible) {
 			this.applySimState(this._scale);
 		}

@@ -8,9 +8,12 @@ import {ProjectInteractionService} from '../../services/project-interaction/proj
 import {filter, takeUntil} from 'rxjs/operators';
 import {getStaticDI} from '../get-di';
 import {WorkerCommunicationService} from '../../services/simulation/worker-communication/worker-communication.service';
-import {WireGraphics} from './wire-graphics';
-import {ComponentGraphics} from './component-graphics';
-import {LGraphics} from './l-graphics';
+import {WireGraphics} from './graphics/wire-graphics';
+import {ComponentGraphics} from './graphics/component-graphics';
+import {LGraphics} from './graphics/l-graphics';
+import {LGraphicsResolver} from './graphics/l-graphics-resolver';
+import {Grid} from './grid';
+import {ElementProviderService} from '../../services/element-provider/element-provider.service';
 
 export class SimulationView extends View {
 
@@ -60,22 +63,27 @@ export class SimulationView extends View {
 		});
 	}
 
-	public placeComponentOnView(element: Element): LGraphics {
-		const lGraphics = super.placeComponentOnView(element);
-		this._simViewInteractionManager.addEventListenersToNewElement(lGraphics);
-		return lGraphics;
+	public placeComponentOnView(element: Element) {
+		const sprite = LGraphicsResolver.getLGraphicsFromElement(this.zoomPan.currentScale, element, this.parentProjectIdentifier);
+		sprite.position = Grid.getLocalChunkPixelPosForGridPos(element.pos);
+		sprite.name = element.id.toString();
+		this.addToCorrectChunk(sprite, element.pos);
+		this.allElements.set(element.id, sprite);
+		if (getStaticDI(ElementProviderService).isUserElement(element.typeId)) {
+			this._simViewInteractionManager.addEventListenersToCustomElement(sprite);
+		}
 	}
 
 	private blinkWires(e: Map<Element, boolean>) {
 		for (const [elem, state] of e) {
-			(this.allElements.get(elem.id) as WireGraphics).setWireState(state);
+			this.allElements.get(elem.id).setSimulationState([state]);
 		}
 		this.requestSingleFrame();
 	}
 
 	private blinkComps(e: Map<Element, boolean[]>) {
 		for (const [elem, value] of e.entries()) {
-			(this.allElements.get(elem.id) as ComponentGraphics).setSimulationSate(value);
+			this.allElements.get(elem.id).setSimulationState(value);
 		}
 	}
 
