@@ -24,7 +24,8 @@ export abstract class Elements {
 	public static clone(element: Element): Element {
 		const out = {...element};
 		out.pos = element.pos.clone();
-		out.endPos = element.endPos.clone();
+		if (element.endPos)
+			out.endPos = element.endPos.clone();
 		return out;
 	}
 

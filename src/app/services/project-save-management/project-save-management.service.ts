@@ -227,7 +227,7 @@ export class ProjectSaveManagementService {
 			mainProject: {
 				id: 500,
 				name: name || project.name,
-				data: this.applyMappingsLoad(project.allElements, mapping)
+				data: this.removeEndPosFromElements(this.applyMappingsLoad(project.allElements, mapping))
 			},
 			components: deps.map(c => {
 				const type = {...this.elemProvService.getElementById(c.id)};
@@ -236,7 +236,7 @@ export class ProjectSaveManagementService {
 				}
 				return {
 					typeId: mapping.find(m => m.model === c.id).database,
-					data: this.applyMappingsLoad(c.allElements, mapping),
+					data: this.removeEndPosFromElements(this.applyMappingsLoad(c.allElements, mapping)),
 					type
 				} as ComponentLocalFile;
 			}) as ComponentLocalFile[]
@@ -435,7 +435,7 @@ export class ProjectSaveManagementService {
 
 		const body: SaveProjectRequest = {
 			data: {
-				elements: project.allElements,
+				elements: this.removeEndPosFromElements(project.allElements),
 				mappings
 			}
 		};
@@ -518,7 +518,7 @@ export class ProjectSaveManagementService {
 			}),
 			this.errorHandling.catchErrorOperatorDynamicMessage((err: any) => {
 				if (err.message === 'isComp') return 'Unable to open Component as Project';
-				return err.error.error.description;
+				return err;
 			}, emptyProjectOnFailure ? Project.empty() : undefined)
 		).toPromise();
 	}
@@ -557,10 +557,10 @@ export class ProjectSaveManagementService {
 				numOutputs: e.numOutputs,
 				numInputs: e.numInputs,
 				pos: new PIXI.Point(e.pos.x, e.pos.y),
-				endPos: new PIXI.Point(e.endPos.x, e.endPos.y),
 				rotation: e.rotation,
 				plugIndex: e.plugIndex
 			};
+			if (e.endPos) elem.endPos = new PIXI.Point(e.endPos.x, e.endPos.y);
 			return elem;
 		});
 	}
@@ -571,19 +571,14 @@ export class ProjectSaveManagementService {
 			const type = this.elemProvService.getElementById(el.typeId);
 			el.numInputs = type.numInputs;
 			el.numOutputs = type.numOutputs;
-
-			let width;
-			let height;
-			if (el.rotation === 0 || el.rotation === 2) {
-				width = 2;
-				height = el.numInputs >= el.numOutputs ? el.numInputs : el.numOutputs;
-			} else {
-				width = el.numInputs >= el.numOutputs ? el.numInputs : el.numOutputs;
-				height = 2;
-			}
-
-			el.endPos = new PIXI.Point(el.pos.x + width, el.pos.y + height);
 			return el;
+		});
+	}
+
+	private removeEndPosFromElements(elements: Element[]): Element[] {
+		return elements.map(e => {
+			if (e.typeId !== 0) delete e.endPos;
+			return e;
 		});
 	}
 }

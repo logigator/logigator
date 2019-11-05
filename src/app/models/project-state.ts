@@ -35,6 +35,7 @@ export class ProjectState {
 		this._chunks = [];
 		this._outputPlugs = [];
 		this._inputPlugs = [];
+		this.calcAllEndPos();
 		this.loadAllIntoChunks();
 		this.inputOutputCount();
 	}
@@ -54,6 +55,15 @@ export class ProjectState {
 		return ++this._highestTakenId;
 	}
 
+
+	private calcAllEndPos() {
+		for (const element of this.allElements) {
+			if (element.typeId === 0) continue;
+			element.endPos = Elements.calcEndPos(
+				element.pos, Elements.elementType(element.typeId).width, element.numInputs, element.numOutputs, element.rotation
+			);
+		}
+	}
 
 
 	private loadAllIntoChunks(): void {
