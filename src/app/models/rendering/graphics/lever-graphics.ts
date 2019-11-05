@@ -81,7 +81,8 @@ export class LeverGraphics extends PIXI.Graphics implements LGraphics, Component
 	}
 
 	applySimState(scale: number) {
-		if (this.simActiveState === this.shouldHaveActiveState) return;
+		// tslint:disable-next-line:triple-equals
+		if (this.simActiveState == this.shouldHaveActiveState) return;
 		this.simActiveState = this.shouldHaveActiveState;
 		// @ts-ignore
 		for (const data of this.geometry.graphicsData) {
