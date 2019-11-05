@@ -2,6 +2,7 @@ import { Element } from '../element';
 import {InputEvent} from './board';
 
 export interface PowerChangeIn {
+	index: number;
 	inputEvent: InputEvent;
 	state: ArrayBuffer;
 }
