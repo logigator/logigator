@@ -1,5 +1,3 @@
-import {ElementSprite} from '../element-sprite';
-import * as PIXI from 'pixi.js';
 import InteractionEvent = PIXI.interaction.InteractionEvent;
 import {WorkModeService} from '../../services/work-mode/work-mode.service';
 import {SimulationView} from './simulation-view';
