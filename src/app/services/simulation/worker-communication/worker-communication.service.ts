@@ -179,12 +179,10 @@ export class WorkerCommunicationService {
 		this._frameTime = frameTime;
 	}
 
-	public setUserInput(identifier: string, element: Element, state: boolean): void {
-		const links = this.stateCompiler.linksOnIOElems.get(identifier).get(element);
-
-		const index = 0;
+	public setUserInput(identifier: string, element: Element, state: boolean[]): void {
+		const index = this.stateCompiler.ioElemIndexes.get(identifier).get(element);
 		const inputEvent = InputEvent.Pulse;
-		const stateBuffer = new ArrayBuffer(0);
+		const stateBuffer = Int8Array.from(state as any);
 
 		this._worker.postMessage({
 			method: WasmMethod.triggerInput,

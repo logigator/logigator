@@ -28,7 +28,8 @@ export class StateCompilerService {
 	private _highestLinkId: number;
 	private _wiresOnLinks: WiresOnLinksInProject;
 	private _wireEndsOnLinks: WireEndsOnLinksInProject;
-	private _linksOnIOElems: Map<string, Map<Element, number[]>>;
+	private _ioElemUnits: Map<string, Map<Element, SimulationUnit>>;
+	private _ioElemIndexes: Map<string, Map<Element, number>>;
 
 	private _wiresOnLinksCache: WiresOnLinksInProject;
 	private _wireEndsOnLinksCache: WireEndsOnLinksInProject;
@@ -97,10 +98,14 @@ export class StateCompilerService {
 			this._wiresOnLinks = new Map<string, WiresOnLinks>();
 		if (!this._wireEndsOnLinks)
 			this._wireEndsOnLinks = new Map<string, WireEndsOnLinks>();
-		if (!this._linksOnIOElems)
-			this._linksOnIOElems = new Map<string, Map<Element, number[]>>();
+		if (!this._ioElemUnits)
+			this._ioElemUnits = new Map<string, Map<Element, SimulationUnit>>();
+		if (!this._ioElemIndexes)
+			this._ioElemIndexes = new Map<string, Map<Element, number>>();
 		this._wiresOnLinks.set(identifier, new Map<number, Element[]>());
 		this._wireEndsOnLinks.set(identifier, new Map<number, WireEndOnComp[]>());
+		this._ioElemUnits.set(identifier, new Map<Element, SimulationUnit>());
+		this._ioElemIndexes.set(identifier, new Map<Element, number>());
 	}
 
 	private async projectsToCompile(project: Project): Promise<Map<number, Project>> {
@@ -116,7 +121,8 @@ export class StateCompilerService {
 			this._wireEndsOnLinksCache.clear();
 			this._wiresOnLinks.clear();
 			this._wireEndsOnLinks.clear();
-			this._linksOnIOElems.clear();
+			this._ioElemUnits.clear();
+			this._ioElemIndexes.clear();
 		}
 		this._highestLinkId = 0;
 	}
@@ -331,18 +337,25 @@ export class StateCompilerService {
 			units.push(...inner);
 		}
 
+		if (!outerUnit) {
+			for (const [id, map] of this._ioElemUnits.entries()) {
+				this._ioElemIndexes.set(id, new Map<Element, number>());
+				for (const [key, val] of map.entries()) {
+					this._ioElemIndexes.get(id).set(key, units.indexOf(val));
+				}
+			}
+		}
+
 		return units;
 	}
 
-	private setIOLink(idIdentifier: string, compiledComp: CompiledComp, unitIndex: number, unit) {
-		if (!this._linksOnIOElems.has(idIdentifier)) {
-			this._linksOnIOElems.set(idIdentifier, new Map<Element, number[]>());
+	private setIOLink(idIdentifier: string, compiledComp: CompiledComp, unitIndex: number, realUnit: SimulationUnit) {
+		if (!this._ioElemUnits.has(idIdentifier)) {
+			this._ioElemUnits.set(idIdentifier, new Map<Element, SimulationUnit>());
 		}
-		const elem = compiledComp.units.get([...compiledComp.units.keys()][unitIndex]);
-		this._linksOnIOElems.get(idIdentifier).set(elem, []);
-		for (const val of SimulationUnits.concatIO(unit)) {
-			this._linksOnIOElems.get(idIdentifier).get(elem).push(val);
-		}
+		const unit = [...compiledComp.units.keys()][unitIndex];
+		const elem = compiledComp.units.get(unit);
+		this._ioElemUnits.get(idIdentifier).set(elem, realUnit);
 	}
 
 	private pushWiresOnLink(idIdentifier: string, newVal, typeIdentifier, val: number) {
@@ -416,8 +429,12 @@ export class StateCompilerService {
 		return this._wireEndsOnLinksCache;
 	}
 
-	get linksOnIOElems(): Map<string, Map<Element, number[]>> {
-		return this._linksOnIOElems;
+	get ioElemUnits(): Map<string, Map<Element, SimulationUnit>> {
+		return this._ioElemUnits;
+	}
+
+	get ioElemIndexes(): Map<string, Map<Element, number>> {
+		return this._ioElemIndexes;
 	}
 
 	get highestLinkId(): number {
