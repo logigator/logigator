@@ -1,7 +1,6 @@
 import {View} from './view';
 import {Project} from '../project';
 import {Element} from '../element';
-import {ElementSprite} from '../element-sprite';
 import {SimulationViewInteractionManager} from './simulation-view-interaction-manager';
 import {EventEmitter, NgZone} from '@angular/core';
 import {ReqInspectElementEvent} from './req-inspect-element-event';
@@ -9,6 +8,9 @@ import {ProjectInteractionService} from '../../services/project-interaction/proj
 import {filter, takeUntil} from 'rxjs/operators';
 import {getStaticDI} from '../get-di';
 import {WorkerCommunicationService} from '../../services/simulation/worker-communication/worker-communication.service';
+import {WireGraphics} from './wire-graphics';
+import {ComponentGraphics} from './component-graphics';
+import {LGraphics} from './l-graphics';
 
 export class SimulationView extends View {
 
@@ -47,24 +49,34 @@ export class SimulationView extends View {
 			getStaticDI(WorkerCommunicationService).boardStateWires(this.parentProjectIdentifier).pipe(
 				takeUntil(this._destroySubject)
 			).subscribe(e => this.blinkWires(e));
+			getStaticDI(WorkerCommunicationService).boardStateWireEnds(this.parentProjectIdentifier).pipe(
+				takeUntil(this._destroySubject)
+			).subscribe(e => this.blinkComps(e));
 
 			if (project.type === 'comp') {
-				this.blinkWires(getStaticDI(WorkerCommunicationService).getState(this.parentProjectIdentifier));
+				this.blinkWires(getStaticDI(WorkerCommunicationService).getWireState(this.parentProjectIdentifier));
+				this.blinkComps(getStaticDI(WorkerCommunicationService).getWireEndState(this.parentProjectIdentifier));
 			}
 		});
 	}
 
-	public placeComponentOnView(element: Element): ElementSprite {
-		const es = super.placeComponentOnView(element);
-		this._simViewInteractionManager.addEventListenersToNewElement(es);
-		return es;
+	public placeComponentOnView(element: Element): LGraphics {
+		const lGraphics = super.placeComponentOnView(element);
+		this._simViewInteractionManager.addEventListenersToNewElement(lGraphics);
+		return lGraphics;
 	}
 
 	private blinkWires(e: Map<Element, boolean>) {
 		for (const [elem, state] of e) {
-			this.allElements.get(elem.id).sprite.setWireState(this.zoomPan.currentScale, state);
+			(this.allElements.get(elem.id) as WireGraphics).setWireState(state);
 		}
 		this.requestSingleFrame();
+	}
+
+	private blinkComps(e: Map<Element, boolean[]>) {
+		for (const [elem, value] of e.entries()) {
+			(this.allElements.get(elem.id) as ComponentGraphics).setSimulationSate(value);
+		}
 	}
 
 	public get projectName(): string {

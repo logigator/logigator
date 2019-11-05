@@ -13,16 +13,14 @@ import {Element} from '../../../models/element';
 export class WorkerCommunicationService {
 
 	private _powerSubjectsWires: Map<string, Subject<PowerChangesOutWire>>;
-	private _powerSubjectsWireEnds: Map<string, Subject<PowerChangesOutWireEnd>>;
+	private _powerSubjectsWireEnds: Map<string, Subject<Map<Element, boolean[]>>>;
 	private _worker: Worker;
 
 	private _frameTime = 1;
 	private _initialized = false;
 	private _isContinuous = false;
 
-	private _dataCache: Int8Array;
-
-	private _compiledBoard: SimulationUnit[];
+	private _dataCache: Uint8Array;
 
 	private _userInputChanges: Map<number, boolean> = new Map<number, boolean>();
 
@@ -35,7 +33,7 @@ export class WorkerCommunicationService {
 		private iterableDiffers: IterableDiffers
 	) {
 		this._powerSubjectsWires = new Map<string, Subject<PowerChangesOutWire>>();
-		this._powerSubjectsWireEnds = new Map<string, Subject<PowerChangesOutWireEnd>>();
+		this._powerSubjectsWireEnds = new Map<string, Subject<Map<Element, boolean[]>>>();
 		this.initWorker();
 	}
 
@@ -53,17 +51,24 @@ export class WorkerCommunicationService {
 
 		const data = event.data as WasmResponse;
 		if (data.success) {
-			if (data.state.length !== this.stateCompiler.highestLinkId + 1) {
-				console.error(`Response data length does not match component count`, data, this._compiledBoard);
-			}
-			this._dataCache = data.state;
+			const state = new Uint8Array(data.state);
 
-			const powerChanges: Map<string, PowerChangesOutWire> = new Map<string, PowerChangesOutWire>();
-			for (const identifier of this._powerSubjectsWires.keys()) {
-				powerChanges.set(identifier, this.getState(identifier, data.state));
+			if (state.length !== this.stateCompiler.highestLinkId + 1) {
+				console.error(`Response data length does not match component count`, data);
 			}
-			for (const identifier of this._powerSubjectsWires.keys()) {
-				this._powerSubjectsWires.get(identifier).next(powerChanges.get(identifier));
+			this._dataCache = state;
+
+			if (data.method !== WasmMethod.init) {
+				const powerChangesWire = new Map<string, PowerChangesOutWire>();
+				const powerChangesWireEnds = new Map<string, Map<Element, boolean[]>>();
+				for (const identifier of this._powerSubjectsWires.keys()) {
+					powerChangesWire.set(identifier, this.getWireState(identifier, state));
+					powerChangesWireEnds.set(identifier, this.getWireEndState(identifier, state));
+				}
+				for (const projId of this._powerSubjectsWires.keys()) {
+					this._powerSubjectsWires.get(projId).next(powerChangesWire.get(projId));
+					this._powerSubjectsWireEnds.get(projId).next(powerChangesWireEnds.get(projId));
+				}
 			}
 
 			if (this._isContinuous) {
@@ -80,10 +85,7 @@ export class WorkerCommunicationService {
 		}
 	}
 
-	public getState(identifier: string, data?: Int8Array): Map<Element, boolean> {
-		if (!this.stateCompiler.wiresOnLinks.has(identifier) || this.stateCompiler.wiresOnLinks.get(identifier) === undefined) {
-			return new Map<Element, boolean>();
-		}
+	public getWireState(identifier: string, data?: Uint8Array): Map<Element, boolean> {
 		if (!data)
 			data = this._dataCache;
 		const out = new Map<Element, boolean>();
@@ -95,19 +97,37 @@ export class WorkerCommunicationService {
 		return out;
 	}
 
+	public getWireEndState(identifier: string, data?: Uint8Array): Map<Element, boolean[]> {
+		if (!data)
+			data = this._dataCache;
+		const out = new Map<Element, boolean[]>();
+		for (const [link, wireEndOnComps] of this.stateCompiler.wireEndsOnLinks.get(identifier).entries()) {
+			for (const wireEndOnComp of wireEndOnComps) {
+				const elem = wireEndOnComp.component;
+				if (!out.has(elem))
+					out.set(elem, new Array(elem.numInputs + elem.numOutputs));
+				out.get(elem)[wireEndOnComp.wireIndex] = data[link] as unknown as boolean;
+
+			}
+		}
+		return out;
+	}
+
 	public async init(): Promise<void> {
 		if (!this._initialized)
 			return;
 
 		const project = this.projectsService.mainProject;
 
-		this._compiledBoard = await this.stateCompiler.compile(project);
+		const compiledBoard = await this.stateCompiler.compileAsInt32Array(project);
 		this._userInputChanges = new Map<number, boolean>();
 		this._powerStatesDiffer = this.iterableDiffers.find(new Int8Array()).create();
-		if (!this._compiledBoard)
+		if (!compiledBoard) {
 			console.error('Failed to compile board.');
+			return;
+		}
 
-		this.finalizeInit();
+		this.finalizeInit(compiledBoard.buffer);
 	}
 
 	private initWorker() {
@@ -121,16 +141,14 @@ export class WorkerCommunicationService {
 		});
 	}
 
-	private finalizeInit() {
-		const board = {
-			links: this.stateCompiler.highestLinkId + 1,
-			components: this._compiledBoard
-		};
-		const request: WasmRequest = {
+	private finalizeInit(compiledBoard: ArrayBuffer) {
+		this._worker.postMessage({
 			method: WasmMethod.init,
-			board
-		};
-		this._worker.postMessage(request);
+			board: {
+				links: this.stateCompiler.highestLinkId + 1,
+				components: compiledBoard
+			}
+		} as WasmRequest, [ compiledBoard ]);
 	}
 
 	public stop(): void {
@@ -180,14 +198,14 @@ export class WorkerCommunicationService {
 		return this._powerSubjectsWires.get(projectId).asObservable();
 	}
 
-	public boardStateWireEnds(projectId: string): Observable<PowerChangesOutWireEnd> {
+	public boardStateWireEnds(projectId: string): Observable<Map<Element, boolean[]>> {
 		return this._powerSubjectsWireEnds.get(projectId).asObservable();
 	}
 
 	public subscribe(identifier: string): void {
 		if (!this._powerSubjectsWires.has(identifier)) {
 			this._powerSubjectsWires.set(identifier, new Subject<PowerChangesOutWire>());
-			this._powerSubjectsWireEnds.set(identifier, new Subject<PowerChangesOutWireEnd>());
+			this._powerSubjectsWireEnds.set(identifier, new Subject<Map<Element, boolean[]>>());
 		}
 	}
 

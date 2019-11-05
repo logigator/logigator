@@ -1,40 +1,15 @@
 import * as PIXI from 'pixi.js';
+import {Element} from '../element';
 
-export class LGraphics extends PIXI.Graphics {
+export interface LGraphics extends PIXI.DisplayObject {
 
-	private simActiveState = false;
-	private shouldHaveActiveState = false;
+	readonly element: Element;
 
-	public updateScale(scale: number) {
-		// @ts-ignore
-		for (const data of this.geometry.graphicsData) {
-			if (this.simActiveState) {
-				data.lineStyle.width = 3 / scale;
-			} else {
-				data.lineStyle.width = 1 / scale;
-			}
-		}
-		this.geometry.invalidate();
-	}
+	applySimState(scale: number);
+	updateScale(scale: number);
+	setSelected(selected: boolean);
+}
 
-	public setWireState(scale: number, state: boolean) {
-		this.shouldHaveActiveState = state;
-		if (this.worldVisible) {
-			this.applyWireState(scale);
-		}
-	}
-
-	public applyWireState(scale: number) {
-		if (this.simActiveState === this.shouldHaveActiveState) return;
-		this.simActiveState = this.shouldHaveActiveState;
-		// @ts-ignore
-		for (const data of this.geometry.graphicsData) {
-			if (this.simActiveState) {
-				data.lineStyle.width = 3 / scale;
-			} else {
-				data.lineStyle.width = 1 / scale;
-			}
-		}
-		this.geometry.invalidate();
-	}
+export function isLGraphics(object: any): object is LGraphics {
+	return 'applySimState' in object && 'updateScale' in object && 'setSelected' in object && 'element' in object;
 }

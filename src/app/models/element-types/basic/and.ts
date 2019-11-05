@@ -5,7 +5,7 @@ export const and: ElementType = {
 	numInputs: 2,
 	numOutputs: 1,
 	minInputs: 2,
-	maxInputs: 5,
+	maxInputs: 64,
 	symbol: '&',
 	description: 'ELEMENT_TYPE.BASIC.AND.DESCRIPTION',
 	rotation: 0,
