@@ -1,9 +1,10 @@
 import {Injectable, IterableDiffer, IterableDiffers, NgZone} from '@angular/core';
 import {Observable, Subject} from 'rxjs';
-import {PowerChangesOutWire} from '../../../models/simulation/power-changes';
+import {PowerChangesOutWire, PowerChangesOutWireEnd} from '../../../models/simulation/power-changes';
 import {ProjectsService} from '../../projects/projects.service';
 import {StateCompilerService} from '../state-compiler/state-compiler.service';
 import {WasmMethod, WasmRequest, WasmResponse} from '../../../models/simulation/wasm-interface';
+import {SimulationUnit} from '../../../models/simulation/simulation-unit';
 import {Element} from '../../../models/element';
 import {InputEvent} from '../../../models/simulation/board';
 
@@ -21,6 +22,7 @@ export class WorkerCommunicationService {
 	private _isContinuous = false;
 
 	private _dataCache: Uint8Array;
+
 	private _powerStatesDiffer: IterableDiffer<number>;
 
 	constructor(
