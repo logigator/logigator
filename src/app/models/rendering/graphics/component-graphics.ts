@@ -15,6 +15,7 @@ export class ComponentGraphics extends PIXI.Graphics implements LGraphics, Compo
 	private themingService = getStaticDI(ThemingService);
 
 	private readonly _symbol: string;
+	private readonly _width: number;
 
 	private simActiveState = [];
 	private shouldHaveActiveState = [];
@@ -33,9 +34,11 @@ export class ComponentGraphics extends PIXI.Graphics implements LGraphics, Compo
 				numOutputs: elementOrType.numOutputs,
 			} as any as Element;
 			this._symbol = elementOrType.symbol;
+			this._width = elementOrType.width;
 		} else {
 			this.element = elementOrType;
 			this._symbol = getStaticDI(ElementProviderService).getElementById(this.element.typeId).symbol;
+			this._width = getStaticDI(ElementProviderService).getElementById(this.element.typeId).width;
 		}
 		this.drawComponent();
 	}
@@ -48,7 +51,7 @@ export class ComponentGraphics extends PIXI.Graphics implements LGraphics, Compo
 		let width;
 		let height;
 		if (this.element.rotation === 0 || this.element.rotation === 2) {
-			width = environment.gridPixelWidth * 2;
+			width = environment.gridPixelWidth * this._width;
 			height = this.element.numInputs >= this.element.numOutputs ?
 				environment.gridPixelWidth * this.element.numInputs :
 				environment.gridPixelWidth * this.element.numOutputs;
@@ -56,7 +59,7 @@ export class ComponentGraphics extends PIXI.Graphics implements LGraphics, Compo
 			width = this.element.numInputs >= this.element.numOutputs ?
 				environment.gridPixelWidth * this.element.numInputs :
 				environment.gridPixelWidth * this.element.numOutputs;
-			height = environment.gridPixelWidth * 2;
+			height = environment.gridPixelWidth * this._width;
 		}
 		this.drawRect(0, 0, width, height);
 

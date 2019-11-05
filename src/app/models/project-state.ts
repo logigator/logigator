@@ -1,5 +1,4 @@
 import {Chunk} from './chunk';
-// import {ProjectModel} from './project-model';
 import {Element} from './element';
 import {Elements} from './elements';
 import * as PIXI from 'pixi.js';
