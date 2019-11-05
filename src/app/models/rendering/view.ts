@@ -8,14 +8,13 @@ import {ProjectsService} from '../../services/projects/projects.service';
 import {Grid} from './grid';
 import {environment} from '../../../environments/environment';
 import {Element} from '../element';
-import {ElementProviderService} from '../../services/element-provider/element-provider.service';
 import {CollisionFunctions} from '../collision-functions';
 import {Project} from '../project';
 import {Action} from '../action';
 import {getStaticDI} from '../get-di';
-import {WireGraphics} from './wire-graphics';
-import {ComponentGraphics} from './component-graphics';
-import {isLGraphics, LGraphics} from './l-graphics';
+import {ComponentGraphics} from './graphics/component-graphics';
+import {isLGraphics, isUpdatable, LGraphics} from './graphics/l-graphics';
+import {LGraphicsResolver} from './graphics/l-graphics-resolver';
 
 export abstract class View extends PIXI.Container {
 
@@ -55,6 +54,8 @@ export abstract class View extends PIXI.Container {
 			this.onGridShowChange(show);
 		});
 	}
+
+	abstract placeComponentOnView(element: Element);
 
 	protected applyOpenActions() {
 		this.applyActionsToView(
@@ -200,19 +201,8 @@ export abstract class View extends PIXI.Container {
 
 	}
 
-	protected placeComponentOnView(element: Element): LGraphics {
-		const sprite = new ComponentGraphics(this.zoomPan.currentScale, element);
-		sprite.position = Grid.getLocalChunkPixelPosForGridPos(element.pos);
-		sprite.name = element.id.toString();
-
-		this.addToCorrectChunk(sprite, element.pos);
-
-		this.allElements.set(element.id, sprite);
-		return sprite;
-	}
-
 	protected placeWireOnView(element: Element) {
-		const graphics = new WireGraphics(this.zoomPan.currentScale, element);
+		const graphics = LGraphicsResolver.getLGraphicsFromElement(this.zoomPan.currentScale, element);
 		graphics.position = Grid.getLocalChunkPixelPosForGridPosWireStart(element.pos);
 		graphics.name = element.id.toString();
 
@@ -273,9 +263,9 @@ export abstract class View extends PIXI.Container {
 
 	private updateComponent(action: Action) {
 		const sprite = this.allElements.get(action.element.id);
-		(sprite as ComponentGraphics).updateComponent(
-			this.zoomPan.currentScale, sprite.element.numInputs, sprite.element.numOutputs, sprite.element.rotation
-		);
+		if (isUpdatable(sprite)) {
+			sprite.updateComponent(this.zoomPan.currentScale, sprite.element.numInputs, sprite.element.numOutputs, sprite.element.rotation);
+		}
 	}
 
 	protected applyActionsToView(actions: Action[]) {

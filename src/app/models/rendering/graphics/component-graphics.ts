@@ -1,12 +1,13 @@
-import {environment} from '../../../environments/environment';
+import {environment} from '../../../../environments/environment';
 import * as PIXI from 'pixi.js';
-import {LGraphics} from './l-graphics';
-import {getStaticDI} from '../get-di';
-import {ThemingService} from '../../services/theming/theming.service';
-import {Element} from '../element';
-import {ElementProviderService} from '../../services/element-provider/element-provider.service';
+import {ComponentUpdatable, LGraphics} from './l-graphics';
+import {getStaticDI} from '../../get-di';
+import {ThemingService} from '../../../services/theming/theming.service';
+import {Element} from '../../element';
+import {ElementProviderService} from '../../../services/element-provider/element-provider.service';
+import {ElementType, isElementType} from '../../element-types/element-type';
 
-export class ComponentGraphics extends PIXI.Graphics implements LGraphics {
+export class ComponentGraphics extends PIXI.Graphics implements LGraphics, ComponentUpdatable {
 
 	readonly element: Element;
 
@@ -19,62 +20,66 @@ export class ComponentGraphics extends PIXI.Graphics implements LGraphics {
 	private shouldHaveActiveState = [];
 
 	constructor(scale: number, element?: Element);
-	constructor(scale: number, symbol: string, inputs: number, outputs: number, rotation: number);
-	constructor(scale: number, elementOrSymbol: Element | string, inputs?: number, outputs?: number, rotation?: number) {
+	constructor(scale: number, elementType: ElementType);
+	constructor(scale: number, elementOrType: Element | ElementType) {
 		super();
 		this.interactiveChildren = false;
 		this.sortableChildren = false;
-		if (typeof elementOrSymbol === 'string') {
+		this._scale = scale;
+		if (isElementType(elementOrType)) {
 			this.element = {
-				rotation,
-				numInputs: inputs,
-				numOutputs: outputs,
+				rotation: elementOrType.rotation,
+				numInputs: elementOrType.numInputs,
+				numOutputs: elementOrType.numOutputs,
 			} as any as Element;
-			this._symbol = elementOrSymbol;
+			this._symbol = elementOrType.symbol;
 		} else {
-			this._scale = scale;
-			this.element = elementOrSymbol;
+			this.element = elementOrType;
 			this._symbol = getStaticDI(ElementProviderService).getElementById(this.element.typeId).symbol;
 		}
-		this.drawComponent(this._symbol, this.element.numInputs, this.element.numOutputs, this.element.rotation, scale);
+		this.drawComponent();
 	}
 
-	private drawComponent(symbol: string, inputs: number, outputs: number, rotation: number, scale: number) {
-		this.lineStyle(1 / scale, this.themingService.getEditorColor('wire'));
+	private drawComponent() {
+		this.lineStyle(1 / this._scale, this.themingService.getEditorColor('wire'));
 		this.beginFill(this.themingService.getEditorColor('background'));
 		this.moveTo(0, 0);
 
 		let width;
 		let height;
-		if (rotation === 0 || rotation === 2) {
+		if (this.element.rotation === 0 || this.element.rotation === 2) {
 			width = environment.gridPixelWidth * 2;
-			height = inputs >= outputs ? environment.gridPixelWidth * inputs : environment.gridPixelWidth * outputs;
+			height = this.element.numInputs >= this.element.numOutputs ?
+				environment.gridPixelWidth * this.element.numInputs :
+				environment.gridPixelWidth * this.element.numOutputs;
 		} else {
-			width = inputs >= outputs ? environment.gridPixelWidth * inputs : environment.gridPixelWidth * outputs;
+			width = this.element.numInputs >= this.element.numOutputs ?
+				environment.gridPixelWidth * this.element.numInputs :
+				environment.gridPixelWidth * this.element.numOutputs;
 			height = environment.gridPixelWidth * 2;
 		}
 		this.drawRect(0, 0, width, height);
 
 		this.beginFill(this.themingService.getEditorColor('wire'));
 
-		switch (rotation) {
+		switch (this.element.rotation) {
 			case 0:
-				this.rotation0(inputs, outputs, height, width);
+				this.rotation0(this.element.numInputs, this.element.numOutputs, height, width);
 				break;
 			case 1:
-				this.rotation1(inputs, outputs, height, width);
+				this.rotation1(this.element.numInputs, this.element.numOutputs, height, width);
 				break;
 			case 2:
-				this.rotation2(inputs, outputs, height, width);
+				this.rotation2(this.element.numInputs, this.element.numOutputs, height, width);
 				break;
 			case 3:
-				this.rotation3(inputs, outputs, height, width);
+				this.rotation3(this.element.numInputs, this.element.numOutputs, height, width);
 				break;
 		}
 
 		this.removeChildren(0);
 
-		const text = new PIXI.BitmapText(symbol, {
+		const text = new PIXI.BitmapText(this._symbol, {
 			font: {
 				name: 'Nunito',
 				size: environment.gridPixelWidth + 4
@@ -153,7 +158,7 @@ export class ComponentGraphics extends PIXI.Graphics implements LGraphics {
 		this.geometry.invalidate();
 	}
 
-	public setSimulationSate(state: boolean[]) {
+	public setSimulationState(state: boolean[]) {
 		this.shouldHaveActiveState = state;
 		if (this.worldVisible) {
 			this.applySimState(this._scale);
@@ -196,9 +201,7 @@ export class ComponentGraphics extends PIXI.Graphics implements LGraphics {
 		this.element.rotation = rotation;
 		this._scale = scale;
 		this.clear();
-		this.drawComponent(this._symbol, inputs, outputs, rotation, scale);
+		this.drawComponent();
 	}
-
-
 
 }

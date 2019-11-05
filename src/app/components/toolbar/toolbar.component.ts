@@ -8,6 +8,9 @@ import {Test} from '../../../../tests/auto-tests/tests';
 // #!debug
 import {ManuallyLogged} from '../../../../tests/auto-tests/board-recorder';
 import {WorkerCommunicationService} from '../../services/simulation/worker-communication/worker-communication.service';
+import {getStaticDI} from '../../models/get-di';
+import {ElementProviderService} from '../../services/element-provider/element-provider.service';
+import {Element} from '../../models/element';
 
 @Component({
 	selector: 'app-toolbar',
