@@ -12,6 +12,8 @@ import {Project} from '../project';
 import {Element} from '../element';
 import {ProjectType} from '../project-type';
 import {getStaticDI} from '../get-di';
+import {LGraphics} from './graphics/l-graphics';
+import {LGraphicsResolver} from './graphics/l-graphics-resolver';
 
 export class EditorView extends View {
 
@@ -69,9 +71,12 @@ export class EditorView extends View {
 	}
 
 	public placeComponentOnView(element: Element) {
-		const lGraphics = super.placeComponentOnView(element);
-		this._viewInteractionManager.addEventListenersToNewElement(lGraphics);
-		return lGraphics;
+		const sprite = LGraphicsResolver.getLGraphicsFromElement(this.zoomPan.currentScale, element);
+		sprite.position = Grid.getLocalChunkPixelPosForGridPos(element.pos);
+		sprite.name = element.id.toString();
+		this.addToCorrectChunk(sprite, element.pos);
+		this.allElements.set(element.id, sprite);
+		this._viewInteractionManager.addEventListenersToNewElement(sprite);
 	}
 
 	public get projectType(): ProjectType {
