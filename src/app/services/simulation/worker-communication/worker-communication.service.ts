@@ -22,8 +22,6 @@ export class WorkerCommunicationService {
 
 	private _dataCache: Uint8Array;
 
-	private _userInputChanges: Map<number, boolean> = new Map<number, boolean>();
-
 	private _powerStatesDiffer: IterableDiffer<number>;
 
 	constructor(
@@ -74,11 +72,9 @@ export class WorkerCommunicationService {
 			if (this._isContinuous) {
 				const request: WasmRequest = {
 					method: WasmMethod.cont,
-					time: this._frameTime,
-					userInputs: this._userInputChanges
+					time: this._frameTime
 				};
 				this._worker.postMessage(request);
-				this._userInputChanges.clear();
 			}
 		} else {
 			console.error('error', data);
@@ -120,7 +116,6 @@ export class WorkerCommunicationService {
 		const project = this.projectsService.mainProject;
 
 		const compiledBoard = await this.stateCompiler.compileAsInt32Array(project);
-		this._userInputChanges = new Map<number, boolean>();
 		this._powerStatesDiffer = this.iterableDiffers.find(new Int8Array()).create();
 		if (!compiledBoard) {
 			console.error('Failed to compile board.');
@@ -165,22 +160,18 @@ export class WorkerCommunicationService {
 	public start(): void {
 		const request: WasmRequest = {
 			method: WasmMethod.cont,
-			time: this._frameTime,
-			userInputs: this._userInputChanges
+			time: this._frameTime
 		};
 		this._isContinuous = true;
 		this._worker.postMessage(request);
-		this._userInputChanges.clear();
 		this._worker.postMessage(request);
 	}
 
 	public singleStep(): void {
 		const request: WasmRequest = {
-			method: WasmMethod.single,
-			userInputs: this._userInputChanges
+			method: WasmMethod.single
 		};
 		this._worker.postMessage(request);
-		this._userInputChanges.clear();
 	}
 
 	public setFrameTime(frameTime: number): void {
@@ -190,7 +181,6 @@ export class WorkerCommunicationService {
 	public setUserInput(identifier: string, element: Element, state: boolean): void {
 		const links = this.stateCompiler.linksOnIOElems.get(identifier).get(element);
 		for (const link of links) {
-			this._userInputChanges.set(link, state);
 		}
 	}
 
