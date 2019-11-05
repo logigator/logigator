@@ -1,4 +1,4 @@
-import InteractionEvent = PIXI.interaction.InteractionEvent;
+import * as PIXI from 'pixi.js'
 import {WorkModeService} from '../../services/work-mode/work-mode.service';
 import {SimulationView} from './simulation-view';
 import {getStaticDI} from '../get-di';
@@ -16,14 +16,14 @@ export class SimulationViewInteractionManager {
 	public addEventListenersToCustomElement(sprite: LGraphics) {
 		getStaticDI(NgZone).runOutsideAngular(() => {
 			sprite.interactive = true;
-			sprite.on('pointerdown', (e: InteractionEvent) => {
+			sprite.on('pointerdown', (e: PIXI.interaction.InteractionEvent) => {
 				if (getStaticDI(WorkModeService).currentWorkMode !== 'simulation') return;
 				this.onCompClick(e, sprite);
 			});
 		});
 	}
 
-	private onCompClick(e: InteractionEvent, sprite: LGraphics) {
+	private onCompClick(e: PIXI.interaction.InteractionEvent, sprite: LGraphics) {
 		if (e.data.button === 0) {
 			getStaticDI(NgZone).run(() => {
 				this._view.requestInspectElemEventEmitter.emit({

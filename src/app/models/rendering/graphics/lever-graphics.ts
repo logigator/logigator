@@ -5,6 +5,7 @@ import {ElementType, isElementType} from '../../element-types/element-type';
 import {getStaticDI} from '../../get-di';
 import {ThemingService} from '../../../services/theming/theming.service';
 import {environment} from '../../../../environments/environment';
+import {WorkerCommunicationService} from '../../../services/simulation/worker-communication/worker-communication.service';
 
 export class LeverGraphics extends PIXI.Graphics implements LGraphics, ComponentUpdatable {
 
@@ -12,10 +13,13 @@ export class LeverGraphics extends PIXI.Graphics implements LGraphics, Component
 
 	private readonly _parentProjectIdentifier: string;
 
+	private readonly workerCommunicationService = getStaticDI(WorkerCommunicationService);
+
 	private _scale: number;
 	private themingService = getStaticDI(ThemingService);
 
 	private simActiveState = false;
+	private shouldHaveActiveState = false;
 
 	constructor(scale: number, element: Element, parentProjectIdentifier: string);
 	constructor(scale: number, elementType: ElementType);
@@ -66,10 +70,29 @@ export class LeverGraphics extends PIXI.Graphics implements LGraphics, Component
 	}
 
 	private addClickListener() {
-
+		this.interactive = true;
+		this.on('pointerdown', (e: PIXI.interaction.InteractionEvent) => {
+			this.simActiveState = !this.simActiveState;
+			this.workerCommunicationService.setUserInput(this._parentProjectIdentifier, this.element, [this.simActiveState]);
+			this.setSimulationState([this.simActiveState]);
+		});
 	}
 
 	applySimState(scale: number) {
+		if (this.simActiveState === this.shouldHaveActiveState) return;
+		this.simActiveState = this.shouldHaveActiveState;
+		// @ts-ignore
+		for (const data of this.geometry.graphicsData) {
+			if (data.shape instanceof PIXI.Polygon) {
+				if (this.simActiveState) {
+					data.lineStyle.width = 3 / scale;
+				} else {
+					data.lineStyle.width = 1 / scale;
+				}
+			}
+		}
+		this._scale = scale;
+		this.geometry.invalidate();
 	}
 
 	setSelected(selected: boolean) {
@@ -81,6 +104,10 @@ export class LeverGraphics extends PIXI.Graphics implements LGraphics, Component
 	}
 
 	setSimulationState(state: boolean[]) {
+		this.shouldHaveActiveState = state[0];
+		if (this.worldVisible) {
+			this.applySimState(this._scale);
+		}
 	}
 
 	updateComponent(scale: number, inputs: number, outputs: number, rotation: number) {

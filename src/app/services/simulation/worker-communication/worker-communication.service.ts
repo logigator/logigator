@@ -181,17 +181,18 @@ export class WorkerCommunicationService {
 
 	public setUserInput(identifier: string, element: Element, state: boolean[]): void {
 		const index = this.stateCompiler.ioElemIndexes.get(identifier).get(element);
-		const inputEvent = InputEvent.Pulse;
-		const stateBuffer = Int8Array.from(state as any);
+		const inputEvent = InputEvent.Cont;
+		const stateBuffer = Int8Array.from(state as any).buffer;
 
-		this._worker.postMessage({
+		const request = {
 			method: WasmMethod.triggerInput,
 			userInput: {
 				index,
 				inputEvent,
 				state: stateBuffer
 			}
-		} as WasmRequest, [ stateBuffer ]);
+		} as WasmRequest;
+		this._worker.postMessage(request, [ stateBuffer ]);
 	}
 
 	public boardStateWires(projectId: string): Observable<PowerChangesOutWire> {

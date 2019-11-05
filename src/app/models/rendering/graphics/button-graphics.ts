@@ -5,6 +5,7 @@ import {ElementType, isElementType} from '../../element-types/element-type';
 import {getStaticDI} from '../../get-di';
 import {ThemingService} from '../../../services/theming/theming.service';
 import {environment} from '../../../../environments/environment';
+import {WorkerCommunicationService} from '../../../services/simulation/worker-communication/worker-communication.service';
 
 export class ButtonGraphics extends PIXI.Graphics implements LGraphics, ComponentUpdatable {
 
@@ -12,10 +13,13 @@ export class ButtonGraphics extends PIXI.Graphics implements LGraphics, Componen
 
 	private readonly _parentProjectIdentifier: string;
 
+	private readonly workerCommunicationService = getStaticDI(WorkerCommunicationService);
+
 	private _scale: number;
 	private themingService = getStaticDI(ThemingService);
 
 	private simActiveState = false;
+	private shouldHaveActiveState = false;
 
 	constructor(scale: number, element: Element, parentProjectIdentifier: string);
 	constructor(scale: number, elementType: ElementType);
@@ -66,7 +70,11 @@ export class ButtonGraphics extends PIXI.Graphics implements LGraphics, Componen
 	}
 
 	private addClickListener() {
-
+		this.interactive = true;
+		this.on('pointerdown', (e: PIXI.interaction.InteractionEvent) => {
+			this.simActiveState = true;
+			this.workerCommunicationService.setUserInput(this._parentProjectIdentifier, this.element, [this.simActiveState]);
+		});
 	}
 
 	applySimState(scale: number) {
