@@ -26,14 +26,14 @@ export class ElementProviderService {
 	]);
 
 	private _plugElements: Map<number, ElementType> = new Map([
-		[10, input],
-		[11, output],
-		[12, butt]
+		[100, input],
+		[101, output],
+		[102, butt]
 	]);
 
 	private _ioElements: Map<number, ElementType> = new Map([
-		[20, button],
-		[21, lever]
+		[200, button],
+		[201, lever]
 	]);
 
 	private _userDefinedElements: Map<number, ElementType> = new Map<number, ElementType>();
@@ -84,19 +84,19 @@ export class ElementProviderService {
 	}
 
 	public isInputElement(id: number): boolean {
-		return this._plugElements.has(id) && id === 10;
+		return this._plugElements.has(id) && id === 100;
 	}
 
 	public isOutputElement(id: number): boolean {
-		return this._plugElements.has(id) && id === 11;
+		return this._plugElements.has(id) && id === 101;
 	}
 
 	public isButtonElement(id: number): boolean {
-		return this._ioElements.has(id) && id === 20;
+		return this._ioElements.has(id) && id === 200;
 	}
 
 	public isLeverElement(id: number): boolean {
-		return this._ioElements.has(id) && id === 21;
+		return this._ioElements.has(id) && id === 201;
 	}
 
 	public isUserElement(id: number): boolean {

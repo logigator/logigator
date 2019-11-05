@@ -3,8 +3,8 @@ import {ElementProviderService} from '../../services/element-provider/element-pr
 import {ElementType} from '../../models/element-types/element-type';
 import {ProjectsService} from '../../services/projects/projects.service';
 import {FormBuilder, FormGroup} from '@angular/forms';
-import {Subscription} from 'rxjs';
-import {debounceTime} from 'rxjs/operators';
+import {of, Subscription, timer} from 'rxjs';
+import {debounce} from 'rxjs/operators';
 
 @Component({
 	selector: 'app-settings-info-box',
@@ -77,7 +77,10 @@ export class SettingsInfoBoxComponent implements OnChanges, OnDestroy {
 			plugIndex: []
 		});
 		this.formSubscription = this.propertiesForm.valueChanges.pipe(
-			debounceTime(1000)
+			debounce(value => {
+				if (value.numInputs !== this.elemType.numInputs) return timer(1000);
+				return of(undefined);
+			})
 		).subscribe((data: any) => {
 			if (data.rotation !== this.elemType.rotation) {
 				this.elemType.rotation = Number(data.rotation);
@@ -100,7 +103,10 @@ export class SettingsInfoBoxComponent implements OnChanges, OnDestroy {
 			plugIndex: [element.plugIndex]
 		});
 		this.formSubscription = this.propertiesForm.valueChanges.pipe(
-			debounceTime(1000)
+			debounce(value => {
+				if (value.numInputs !== element.numInputs) return timer(1000);
+				return of(undefined);
+			})
 		).subscribe((data: any) => {
 			if (data.rotation !== element.rotation) {
 				if (!this.projects.currProject.rotateComponent(this.selectedCompId, Number(data.rotation))) {
