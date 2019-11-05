@@ -6,12 +6,13 @@ import {getStaticDI} from '../../get-di';
 import {ThemingService} from '../../../services/theming/theming.service';
 import {environment} from '../../../../environments/environment';
 import {WorkerCommunicationService} from '../../../services/simulation/worker-communication/worker-communication.service';
+import {RenderTicker} from '../../../services/render-ticker/render-ticker.service';
 
 export class LeverGraphics extends PIXI.Graphics implements LGraphics, ComponentUpdatable {
 
 	readonly element: Element;
 
-	private readonly _parentProjectIdentifier: string;
+	private readonly _projectIdentifier: string;
 
 	private readonly workerCommunicationService = getStaticDI(WorkerCommunicationService);
 
@@ -21,9 +22,9 @@ export class LeverGraphics extends PIXI.Graphics implements LGraphics, Component
 	private simActiveState = false;
 	private shouldHaveActiveState = false;
 
-	constructor(scale: number, element: Element, parentProjectIdentifier: string);
+	constructor(scale: number, element: Element, projectIdentifier: string);
 	constructor(scale: number, elementType: ElementType);
-	constructor(scale: number, elementOrType: Element | ElementType, parentProjectIdentifier?: string) {
+	constructor(scale: number, elementOrType: Element | ElementType, projectIdentifier?: string) {
 		super();
 		this.interactiveChildren = false;
 		this.sortableChildren = false;
@@ -36,10 +37,10 @@ export class LeverGraphics extends PIXI.Graphics implements LGraphics, Component
 			} as any as Element;
 		} else {
 			this.element = elementOrType;
-			this._parentProjectIdentifier = parentProjectIdentifier;
+			this._projectIdentifier = projectIdentifier;
 		}
 		this.drawComponent();
-		if (this._parentProjectIdentifier) this.addClickListener();
+		if (this._projectIdentifier) this.addClickListener();
 	}
 
 	private drawComponent() {
@@ -72,9 +73,10 @@ export class LeverGraphics extends PIXI.Graphics implements LGraphics, Component
 	private addClickListener() {
 		this.interactive = true;
 		this.on('pointerdown', (e: PIXI.interaction.InteractionEvent) => {
-			this.simActiveState = !this.simActiveState;
-			this.workerCommunicationService.setUserInput(this._parentProjectIdentifier, this.element, [this.simActiveState]);
-			this.setSimulationState([this.simActiveState]);
+			const newSate = !this.simActiveState;
+			this.workerCommunicationService.setUserInput(this._projectIdentifier, this.element, [newSate]);
+			this.setSimulationState([newSate]);
+			getStaticDI(RenderTicker).singleFrame(this._projectIdentifier);
 		});
 	}
 
