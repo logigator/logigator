@@ -62,6 +62,30 @@ $border-styles: (
 	}
 }
 
+@mixin themifyCompatibilityWarning() {
+	@each $theme, $map in $themes {
+
+		$themeForTestFunction: $theme !global;
+
+		.theme-#{$theme} {
+			$theme-map: () !global;
+			@each $key, $submap in $map {
+				$theme-map: map-merge($theme-map, ($key: $submap)) !global;
+			}
+
+			@content;
+			$theme-map: null !global;
+			$themeForTestFunction: null !global;
+		}
+	}
+
+	$themeForTestFunction: dark !global;
+	$theme-map: map_get($themes, dark) !global;
+	@content;
+	$theme-map: null !global;
+	$themeForTestFunction: null !global;
+}
+
 @function themed($key) {
 	@return map-get($theme-map, $key);
 }

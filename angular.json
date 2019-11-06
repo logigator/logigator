@@ -59,7 +59,15 @@
 								"includePaths": [
 									"src/styles/web"
 								]
-							}
+							},
+							"indexTransform": "./custom-build-scripts/dist/index-html-transform.js",
+							"assets": [
+								"src/favicon.ico",
+								"src/assets",
+								"src/site.webmanifest",
+								"src/browserconfig.xml",
+								"src/compatibility-check/warning-script.js"
+							]
 						},
 						"prod-electron": {
 							"styles": [
@@ -112,6 +120,14 @@
 									"replace": "src/environments/environment.ts",
 									"with": "src/environments/environment.prod-web.ts"
 								}
+							],
+							"indexTransform": "./custom-build-scripts/dist/index-html-transform.js",
+							"assets": [
+								"src/favicon.ico",
+								"src/assets",
+								"src/site.webmanifest",
+								"src/browserconfig.xml",
+								"src/compatibility-check/warning-script.js"
 							],
 							"optimization": true,
 							"outputHashing": "all",
