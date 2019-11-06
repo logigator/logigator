@@ -55,6 +55,7 @@
 		"SEARCH": "Search",
 		"CATEGORIES": {
 			"BASIC": "Basic Components",
+			"ADVANCED": "Advanced Components",
 			"IO": "IO Components",
 			"PLUG": "Plug Components",
 			"USER": "User Defined"
@@ -154,7 +155,8 @@
 		},
 		"DESCRIPTION": "Description",
 		"EDIT": "Edit",
-		"PLUG_INDEX": "Plug Index"
+		"PLUG_INDEX": "Plug Index",
+		"DELAY": "Delay (ticks)"
 	},
 	"ELEMENT_TYPE": {
 		"BASIC": {
@@ -172,6 +174,24 @@
 			},
 			"XOR": {
 				"NAME": "XOR Gate",
+				"DESCRIPTION": ""
+			},
+			"DELAY": {
+				"NAME": "Delay",
+				"DESCRIPTION": "Output = Input. Adds one tick delay to the signal."
+			},
+			"CLOCK": {
+				"NAME": "Clock",
+				"DESCRIPTION": ""
+			}
+		},
+		"ADVANCED": {
+			"HALF_ADDER": {
+				"NAME": "Half Adder",
+				"DESCRIPTION": ""
+			},
+			"FULL_ADDER": {
+				"NAME": "Full Adder",
 				"DESCRIPTION": ""
 			}
 		},

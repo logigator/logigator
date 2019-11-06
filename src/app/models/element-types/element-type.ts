@@ -10,7 +10,7 @@ export interface ElementType {
 	// translation id for predefined comps
 	description: string;
 	rotation: number;
-	category: 'basic' | 'plug' | 'io' | 'user';
+	category: 'basic' | 'advanced' | 'plug' | 'io' | 'user';
 }
 
 export function isElementType(object: any): object is ElementType {

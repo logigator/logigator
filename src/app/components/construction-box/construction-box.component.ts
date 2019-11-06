@@ -23,6 +23,10 @@ export class ConstructionBoxComponent {
 		return this.componentProviderService.basicElements;
 	}
 
+	public get advancedComponents(): Map<number, ElementType> {
+		return this.componentProviderService.advancedElements;
+	}
+
 	public get plugComponents(): Map<number, ElementType> {
 		return this.componentProviderService.plugElements;
 	}

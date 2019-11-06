@@ -56,6 +56,10 @@ export class SettingsInfoBoxComponent implements OnChanges, OnDestroy {
 		return this.elemProvider.isPlugElement(this.selectedCompTypeId);
 	}
 
+	public get isDelayElement(): boolean {
+		return this.elemProvider.isDelayElement(this.selectedCompTypeId);
+	}
+
 	public get possiblePlugIndexes(): number[] {
 		if (this.selectedCompId === undefined) return [];
 		return this.projects.currProject.possiblePlugIndexes(this.selectedCompId);
