@@ -1,37 +1,57 @@
-import {Board, BoardStatus} from './board';
+import {Board, BoardStatus, InputEvent} from './board';
 import {SimulationModule, TypedArray} from './simulation-module';
 import {Pointer} from './wasm-interface';
 
 export class SimulationWorker {
 
-	private _board: Board;
+	private _components: Int32Array;
+	private _links: number;
 	private _simulationModule: SimulationModule;
 	private _linkPointer: number = undefined;
 
 	constructor(board: Board, simulationModule: SimulationModule) {
-		this._board = board;
+		this._links = board.links;
+		this._components = new Int32Array(board.components);
 		this._simulationModule = simulationModule;
 
-		simulationModule.initLinks(board.links);
-		simulationModule.initComponents(board.components.length);
+		simulationModule.initLinks(this._links);
+		simulationModule.initComponents(this._components[0]);
 
-		board.components.forEach((x, i) => {
-			const inputs = new Int32Array(x.inputs);
-			const outputs = new Int32Array(x.outputs);
+		let counter = 0;
+		for (let i = 1; i < this._components.length; ) {
+			const typeId = this._components[i++];
+			const op1 = this._components[i++];
+			const op2 = this._components[i++];
+			const inputCount = this._components[i++];
+			const outputCount = this._components[i++];
+			const inputs = this._components.slice(i, i += inputCount);
+			const outputs = this._components.slice(i, i += outputCount);
 
 			const inputPtr = this._arrayToHeap(inputs);
 			const outputPtr = this._arrayToHeap(outputs);
 
-			simulationModule.initComponent(i, x.typeId, inputPtr, outputPtr, x.inputs.length, x.outputs.length, x.op1 || 0, x.op2 || 0);
+			simulationModule.initComponent
+			(
+				counter++,
+				typeId,
+				inputPtr,
+				outputPtr,
+				inputCount,
+				outputCount,
+				op1,
+				op2
+			);
 
 			this._simulationModule._free(inputPtr);
 			this._simulationModule._free(outputPtr);
-		});
+		}
 		simulationModule.initBoard();
 	}
 
 	public get getBoard() {
-		return this._board;
+		return {
+			links: this._links, components: this._components
+		} as Board;
 	}
 
 	public start(ms?: number) {
@@ -48,22 +68,29 @@ export class SimulationWorker {
 	public getLinks(): Int8Array {
 		if (this._linkPointer === undefined)
 			this._linkPointer = this._simulationModule.getLinks();
-		return this._simulationModule.HEAP8.slice(this._linkPointer, this._linkPointer + this._board.links);
+		return this._simulationModule.HEAP8.slice(this._linkPointer, this._linkPointer + this._links);
 	}
 
 	public getComponents(): Array<{ inputs: Int8Array, outputs: Int8Array }> {
 		const ptr = this._simulationModule.getComponents();
 
 		let ptrPosition = ptr;
-		const components = new Array(this._board.components.length);
-		for (let i = 0; i < this._board.components.length; i++) {
+		const components = new Array(this._components[0]);
+		for (let i = 0, j = 4; i < components.length; i++, j += 5) {
 			components[i] = {
-				inputs: this._simulationModule.HEAP8.slice(ptrPosition, ptrPosition += this._board.components[i].inputs.length),
-				outputs: this._simulationModule.HEAP8.slice(ptrPosition, ptrPosition += this._board.components[i].outputs.length)
+				inputs: this._simulationModule.HEAP8.slice(ptrPosition, ptrPosition += this._components[j]),
+				outputs: this._simulationModule.HEAP8.slice(ptrPosition, ptrPosition += this._components[j + 1])
 			};
+			j += this._components[j] + this._components[j + 1];
 		}
 		this._simulationModule._free(ptr);
 		return components;
+	}
+
+	public triggerInput(index: number, inputEvent: InputEvent, state: Int8Array) {
+		const ptr = this._arrayToHeap(state);
+		this._simulationModule.triggerInput(index, inputEvent, ptr);
+		this._simulationModule._free(ptr);
 	}
 
 	public runTimeout(target: number) {

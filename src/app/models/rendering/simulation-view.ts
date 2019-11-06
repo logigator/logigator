@@ -1,7 +1,6 @@
 import {View} from './view';
 import {Project} from '../project';
 import {Element} from '../element';
-import {ElementSprite} from '../element-sprite';
 import {SimulationViewInteractionManager} from './simulation-view-interaction-manager';
 import {EventEmitter, NgZone} from '@angular/core';
 import {ReqInspectElementEvent} from './req-inspect-element-event';
@@ -9,6 +8,12 @@ import {ProjectInteractionService} from '../../services/project-interaction/proj
 import {filter, takeUntil} from 'rxjs/operators';
 import {getStaticDI} from '../get-di';
 import {WorkerCommunicationService} from '../../services/simulation/worker-communication/worker-communication.service';
+import {WireGraphics} from './graphics/wire-graphics';
+import {ComponentGraphics} from './graphics/component-graphics';
+import {LGraphics} from './graphics/l-graphics';
+import {LGraphicsResolver} from './graphics/l-graphics-resolver';
+import {Grid} from './grid';
+import {ElementProviderService} from '../../services/element-provider/element-provider.service';
 
 export class SimulationView extends View {
 
@@ -47,20 +52,39 @@ export class SimulationView extends View {
 			getStaticDI(WorkerCommunicationService).boardStateWires(this.parentProjectIdentifier).pipe(
 				takeUntil(this._destroySubject)
 			).subscribe(e => this.blinkWires(e));
+			getStaticDI(WorkerCommunicationService).boardStateWireEnds(this.parentProjectIdentifier).pipe(
+				takeUntil(this._destroySubject)
+			).subscribe(e => this.blinkComps(e));
+
+			if (project.type === 'comp') {
+				this.blinkWires(getStaticDI(WorkerCommunicationService).getWireState(this.parentProjectIdentifier));
+				this.blinkComps(getStaticDI(WorkerCommunicationService).getWireEndState(this.parentProjectIdentifier));
+			}
 		});
 	}
 
-	public placeComponentOnView(element: Element): ElementSprite {
-		const es = super.placeComponentOnView(element);
-		this._simViewInteractionManager.addEventListenersToNewElement(es);
-		return es;
+	public placeComponentOnView(element: Element) {
+		const sprite = LGraphicsResolver.getLGraphicsFromElement(this.zoomPan.currentScale, element, this.parentProjectIdentifier);
+		sprite.position = Grid.getLocalChunkPixelPosForGridPos(element.pos);
+		sprite.name = element.id.toString();
+		this.addToCorrectChunk(sprite, element.pos);
+		this.allElements.set(element.id, sprite);
+		if (getStaticDI(ElementProviderService).isUserElement(element.typeId)) {
+			this._simViewInteractionManager.addEventListenersToCustomElement(sprite);
+		}
 	}
 
 	private blinkWires(e: Map<Element, boolean>) {
 		for (const [elem, state] of e) {
-			this.allElements.get(elem.id).sprite.setWireState(this.zoomPan.currentScale, state);
+			this.allElements.get(elem.id).setSimulationState([state]);
 		}
 		this.requestSingleFrame();
+	}
+
+	private blinkComps(e: Map<Element, boolean[]>) {
+		for (const [elem, value] of e.entries()) {
+			this.allElements.get(elem.id).setSimulationState(value);
+		}
 	}
 
 	public get projectName(): string {

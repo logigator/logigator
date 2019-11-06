@@ -18,6 +18,7 @@ import {ProjectSaveManagementService} from '../../project-save-management/projec
 import {ElementProviderService} from '../../element-provider/element-provider.service';
 import {MapHelper} from './map-helper';
 import {Elements} from '../../../models/elements';
+import {getStaticDI} from '../../../models/get-di';
 
 @Injectable({
 	providedIn: 'root'
@@ -27,6 +28,8 @@ export class StateCompilerService {
 	private _highestLinkId: number;
 	private _wiresOnLinks: WiresOnLinksInProject;
 	private _wireEndsOnLinks: WireEndsOnLinksInProject;
+	private _ioElemUnits: Map<string, Map<Element, SimulationUnit>>;
+	private _ioElemIndexes: Map<string, Map<Element, number>>;
 
 	private _wiresOnLinksCache: WiresOnLinksInProject;
 	private _wireEndsOnLinksCache: WireEndsOnLinksInProject;
@@ -58,11 +61,20 @@ export class StateCompilerService {
 		return {unitToElement, elementToUnit};
 	}
 
+	public async compileAsInt32Array(project: Project): Promise<Int32Array> {
+		const units = await this.compile(project);
+		const out: number[] = [ units.length ];
+
+		for (const unit of units) {
+			out.push(unit.typeId, 0 /*op1*/, 0 /*op2*/, unit.inputs.length, unit.outputs.length, ...unit.inputs, ...unit.outputs);
+		}
+		return new Int32Array(out);
+	}
+
 	public async compile(project: Project): Promise<SimulationUnit[]> {
-		// TODO: FIX cache
-		this.clearCache();
 		this._highestLinkId = 0;
-		this.initElemsOnLinks('0');
+		this._wiresOnLinks = new Map<string, WiresOnLinks>();
+		this._wireEndsOnLinks = new Map<string, WireEndsOnLinks>();
 		const depTree = await this.projectsToCompile(project);
 		this._depTree = depTree;
 
@@ -87,8 +99,14 @@ export class StateCompilerService {
 			this._wiresOnLinks = new Map<string, WiresOnLinks>();
 		if (!this._wireEndsOnLinks)
 			this._wireEndsOnLinks = new Map<string, WireEndsOnLinks>();
+		if (!this._ioElemUnits)
+			this._ioElemUnits = new Map<string, Map<Element, SimulationUnit>>();
+		if (!this._ioElemIndexes)
+			this._ioElemIndexes = new Map<string, Map<Element, number>>();
 		this._wiresOnLinks.set(identifier, new Map<number, Element[]>());
 		this._wireEndsOnLinks.set(identifier, new Map<number, WireEndOnComp[]>());
+		this._ioElemUnits.set(identifier, new Map<Element, SimulationUnit>());
+		this._ioElemIndexes.set(identifier, new Map<Element, number>());
 	}
 
 	private async projectsToCompile(project: Project): Promise<Map<number, Project>> {
@@ -104,6 +122,8 @@ export class StateCompilerService {
 			this._wireEndsOnLinksCache.clear();
 			this._wiresOnLinks.clear();
 			this._wireEndsOnLinks.clear();
+			this._ioElemUnits.clear();
+			this._ioElemIndexes.clear();
 		}
 		this._highestLinkId = 0;
 	}
@@ -111,13 +131,11 @@ export class StateCompilerService {
 	private compileDependencies(depTree: Map<number, Project>): void {
 		this._compiledDeps = new Set<number>();
 		for (const [typeId, project] of depTree.entries()) {
-			this._currTypeId = typeId;
 			if (this._udcCache.has(typeId) && !project.compileDirty) {
 				console.log('load from cache', typeId);
 			} else {
 				this.compileSingle(project);
 			}
-			project.compileDirty = false;
 		}
 	}
 
@@ -126,26 +144,40 @@ export class StateCompilerService {
 			throw new Error('ERROR.COMPILE.CIRCULAR_DEP');
 		}
 		this._compiledDeps.add(project.id);
+		const oldTypeId = this._currTypeId;
+		this._currTypeId = project.id;
 		const unitElems = StateCompilerService.generateUnits(project.currState);
+		let conPlugs: number[][];
+		if (this._udcCache.has(project.id)) {
+			conPlugs = this._udcCache.get(project.id).connectedPlugs;
+		}
+
 		this._udcCache.set(project.id, this.calcCompiledComp(project.currState, unitElems));
+		if (!MapHelper.array2dSame(conPlugs, this._udcCache.get(project.id).connectedPlugs)) {
+			for (const [typeId, compiledComp] of this._udcCache.entries()) {
+				if (compiledComp.includesUdcs.has(project.id)) {
+					this.compileSingle(this._depTree.get(typeId));
+				}
+			}
+		}
+		this._currTypeId = oldTypeId;
 		project.compileDirty = false;
 	}
 
 	private calcCompiledComp(state: ProjectState, unitElems: UnitElementBidir): CompiledComp {
 		const compiledComp: CompiledComp = {
 			units: new Map<SimulationUnit, Element>(),
-			wiresOnLinks: new Map<number, Element[]>(),
-			wireEndsOnLinks: new Map<number, WireEndOnComp[]>(),
 			connectedPlugs: [],
-			plugsByIndex: new Map<number, number>()
+			plugsByIndex: new Map<number, number>(),
+			includesUdcs: new Set<number>()
 		};
+
 		const linksOnWireEnds: WireEndLinksOnElem = new Map<Element, LinkOnWireEnd>();
 
 		this.setAllLinks(unitElems, linksOnWireEnds, state, compiledComp);
 
 		compiledComp.units = unitElems.unitToElement;
 		this.loadConnectedPlugs(compiledComp);
-		MapHelper.uniquify(compiledComp);
 
 		return compiledComp;
 	}
@@ -201,6 +233,7 @@ export class StateCompilerService {
 				if (this.elementProvider.isUserElement(elem.typeId)) {
 					this.includePlugLinks(elem, index, state, linksOnWireEnds,
 						linkId, unitElems, compiledComp, coveredPoints);
+					compiledComp.includesUdcs.add(elem.typeId);
 				}
 			}
 		}
@@ -214,30 +247,25 @@ export class StateCompilerService {
 		const oppoPos = Elements.otherWirePos(elem, pos);
 		this.setLinks(state, oppoPos, linksOnWireEnds, linkId,
 			unitElems, compiledComp, coveredPoints);
-		MapHelper.pushInMapArray(compiledComp.wiresOnLinks, linkId, elem);
 		MapHelper.pushInMapArrayUnique(this._wiresOnLinksCache.get('' + this._currTypeId), linkId, elem);
 	}
 
 	private setCompLink(
-		linksOnWireEnds: WireEndLinksOnElem, elem, index, linkId: number, unitElems: UnitElementBidir,
+		linksOnWireEnds: WireEndLinksOnElem, elem, wireIndex, linkId: number, unitElems: UnitElementBidir,
 		compiledComp: CompiledComp
 	) {
 		if (linksOnWireEnds.has(elem)) {
-			if (!linksOnWireEnds.get(elem).has(index)) {
-				linksOnWireEnds.get(elem).set(index, linkId);
+			if (!linksOnWireEnds.get(elem).has(wireIndex)) {
+				linksOnWireEnds.get(elem).set(wireIndex, linkId);
 			} else {
 				console.error('you should not be here');
 			}
 		} else {
-			linksOnWireEnds.set(elem, new Map<number, number>([[index, linkId]]));
+			linksOnWireEnds.set(elem, new Map<number, number>([[wireIndex, linkId]]));
 		}
-		SimulationUnits.setInputOutput(unitElems.elementToUnit.get(elem), index, linkId);
-		MapHelper.pushInMapArray(compiledComp.wireEndsOnLinks, linkId, {
-			component: elem,
-			wireIndex: index
-		});
+		SimulationUnits.setInputOutput(unitElems.elementToUnit.get(elem), wireIndex, linkId);
 		const identifier = '' + this._currTypeId;
-		MapHelper.pushInMapArray(this._wireEndsOnLinksCache.get(identifier), linkId, elem);
+		MapHelper.pushInMapArray(this._wireEndsOnLinksCache.get(identifier), linkId, {component: elem, wireIndex});
 	}
 
 	private includePlugLinks(
@@ -246,9 +274,7 @@ export class StateCompilerService {
 	) {
 		if (!this._udcCache.has(elem.typeId)) {
 			const outer = this._currTypeId;
-			this._currTypeId = elem.typeId;
 			this.compileSingle(this._depTree.get(elem.typeId));
-			this._currTypeId = outer;
 		}
 		for (const conPlugs of this._udcCache.get(elem.typeId).connectedPlugs) {
 			if (conPlugs.includes(index)) {
@@ -285,7 +311,7 @@ export class StateCompilerService {
 			[unit.inputs, unit.outputs].forEach(arr => {
 				for (let i = 0; i < arr.length; i++) {
 					const newVal = linkMap.has(arr[i]) ? linkMap.get(arr[i]) : arr[i] + this._highestLinkId;
-					if (!this._wiresOnLinks.get(idIdentifier)) {
+					if (!this._wiresOnLinks.has(idIdentifier)) {
 						this.initElemsOnLinks(idIdentifier);
 					}
 					this.pushWiresOnLink(idIdentifier, newVal, typeIdentifier, arr[i]);
@@ -297,6 +323,8 @@ export class StateCompilerService {
 			});
 			if (this.elementProvider.isUserElement(unit.typeId)) {
 				udcIndexes.push(unitIndex);
+			} else if (this.elementProvider.isIoElement(unit.typeId)) {
+				this.setIOLink(idIdentifier, compiledComp, unitIndex, unit);
 			} else if (this.elementProvider.isPlugElement(unit.typeId)) {
 				continue;
 			}
@@ -315,7 +343,25 @@ export class StateCompilerService {
 			units.push(...inner);
 		}
 
+		if (!outerUnit) {
+			for (const [id, map] of this._ioElemUnits.entries()) {
+				this._ioElemIndexes.set(id, new Map<Element, number>());
+				for (const [key, val] of map.entries()) {
+					this._ioElemIndexes.get(id).set(key, units.indexOf(val));
+				}
+			}
+		}
+
 		return units;
+	}
+
+	private setIOLink(idIdentifier: string, compiledComp: CompiledComp, unitIndex: number, realUnit: SimulationUnit) {
+		if (!this._ioElemUnits.has(idIdentifier)) {
+			this._ioElemUnits.set(idIdentifier, new Map<Element, SimulationUnit>());
+		}
+		const unit = [...compiledComp.units.keys()][unitIndex];
+		const elem = compiledComp.units.get(unit);
+		this._ioElemUnits.get(idIdentifier).set(elem, realUnit);
 	}
 
 	private pushWiresOnLink(idIdentifier: string, newVal, typeIdentifier, val: number) {
@@ -325,6 +371,13 @@ export class StateCompilerService {
 			}
 		} else {
 			this._wiresOnLinks.get(idIdentifier).set(newVal, this._wiresOnLinksCache.get(typeIdentifier).get(val) || []);
+		}
+		if (this._wireEndsOnLinks.get(idIdentifier).has(newVal) && this._wireEndsOnLinks.get(idIdentifier).get(newVal).length > 0) {
+			if (this._wireEndsOnLinks.get(idIdentifier).get(newVal)[0] !== this._wireEndsOnLinksCache.get(typeIdentifier).get(val)[0]) {
+				this._wireEndsOnLinks.get(idIdentifier).get(newVal).push(...(this._wireEndsOnLinksCache.get(typeIdentifier).get(val)) || []);
+			}
+		} else {
+			this._wireEndsOnLinks.get(idIdentifier).set(newVal, this._wireEndsOnLinksCache.get(typeIdentifier).get(val) || []);
 		}
 	}
 
@@ -373,6 +426,22 @@ export class StateCompilerService {
 		return this._wireEndsOnLinks;
 	}
 
+
+	get wiresOnLinksCache(): Map<string, WiresOnLinks> {
+		return this._wiresOnLinksCache;
+	}
+
+	get wireEndsOnLinksCache(): Map<string, WireEndsOnLinks> {
+		return this._wireEndsOnLinksCache;
+	}
+
+	get ioElemUnits(): Map<string, Map<Element, SimulationUnit>> {
+		return this._ioElemUnits;
+	}
+
+	get ioElemIndexes(): Map<string, Map<Element, number>> {
+		return this._ioElemIndexes;
+	}
 
 	get highestLinkId(): number {
 		return this._highestLinkId;

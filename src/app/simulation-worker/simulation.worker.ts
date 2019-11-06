@@ -43,6 +43,13 @@ addEventListener('message', ({ data }: {data: WasmRequest}) => {
 		case WasmMethod.pause:
 			worker.stop();
 			break;
+		case WasmMethod.triggerInput:
+			if (!data.userInput) {
+				error = 'No user inputs received.';
+				break;
+			}
+			worker.triggerInput(data.userInput.index, data.userInput.inputEvent, new Int8Array(data.userInput.state));
+			break;
 		case WasmMethod.init:
 			if (!data.board) {
 				error = 'No board specified.';
@@ -74,17 +81,19 @@ addEventListener('message', ({ data }: {data: WasmRequest}) => {
 			break;
 	}
 
-	if (error)
+	const buffer = worker.getLinks().buffer || new ArrayBuffer(0);
+	if (error) {
 		postMessage({
 			method: data.method,
 			success: false,
-			state: worker.getLinks() || new Int8Array(0),
+			state: buffer,
 			error
-		} as WasmResponse);
-	else
+		} as WasmResponse, [ buffer ]);
+	} else {
 		postMessage({
 			method: data.method,
 			success: true,
-			state: worker.getLinks() || new Int8Array(0)
-		} as WasmResponse);
+			state: buffer
+		} as WasmResponse, [ buffer ]);
+	}
 });

@@ -6,6 +6,7 @@ export const wire: ElementType = {
 	numOutputs: 0,
 	minInputs: 0,
 	maxInputs: 0,
+	width: 0,
 	symbol: '',
 	description: '',
 	rotation: 0,

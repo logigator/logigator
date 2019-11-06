@@ -3,7 +3,8 @@ import {ElementProviderService} from '../../services/element-provider/element-pr
 import {ElementType} from '../../models/element-types/element-type';
 import {ProjectsService} from '../../services/projects/projects.service';
 import {FormBuilder, FormGroup} from '@angular/forms';
-import {Subscription} from 'rxjs';
+import {of, Subscription, timer} from 'rxjs';
+import {debounce} from 'rxjs/operators';
 
 @Component({
 	selector: 'app-settings-info-box',
@@ -75,11 +76,20 @@ export class SettingsInfoBoxComponent implements OnChanges, OnDestroy {
 			rotation: [this.elemType.rotation],
 			plugIndex: []
 		});
-		this.formSubscription = this.propertiesForm.valueChanges.subscribe((data: any) => {
-			if (data.numInputs <= this.elemType.maxInputs && data.numInputs >= this.elemType.minInputs) {
+		this.formSubscription = this.propertiesForm.valueChanges.pipe(
+			debounce(value => {
+				if (value.numInputs !== this.elemType.numInputs) return timer(1000);
+				return of(undefined);
+			})
+		).subscribe((data: any) => {
+			if (data.rotation !== this.elemType.rotation) {
 				this.elemType.rotation = Number(data.rotation);
 			}
-			this.elemType.numInputs = data.numInputs;
+			if (data.numInputs <= this.elemType.maxInputs && data.numInputs >= this.elemType.minInputs) {
+				this.elemType.numInputs = data.numInputs;
+			} else if (data.numInputs) {
+				this.propertiesForm.controls.numInputs.setValue(this.elemType.numInputs);
+			}
 		});
 	}
 
@@ -92,16 +102,23 @@ export class SettingsInfoBoxComponent implements OnChanges, OnDestroy {
 			rotation: [element.rotation],
 			plugIndex: [element.plugIndex]
 		});
-		this.formSubscription = this.propertiesForm.valueChanges.subscribe((data: any) => {
+		this.formSubscription = this.propertiesForm.valueChanges.pipe(
+			debounce(value => {
+				if (value.numInputs !== element.numInputs) return timer(1000);
+				return of(undefined);
+			})
+		).subscribe((data: any) => {
 			if (data.rotation !== element.rotation) {
 				if (!this.projects.currProject.rotateComponent(this.selectedCompId, Number(data.rotation))) {
 					this.propertiesForm.controls.rotation.setValue(element.rotation);
 				}
 			}
-			if (data.numInputs !== element.numInputs && data.numInputs <= this.elemType.maxInputs && data.numInputs >= this.elemType.minInputs) {
-				if (!this.projects.currProject.setNumInputs(this.selectedCompId, data.numInputs)) {
+			if (data.numInputs <= this.elemType.maxInputs && data.numInputs >= this.elemType.minInputs) {
+				if (data.numInputs !== element.numInputs && !this.projects.currProject.setNumInputs(this.selectedCompId, data.numInputs)) {
 					this.propertiesForm.controls.numInputs.setValue(element.numInputs);
 				}
+			} else if (data.numInputs) {
+				this.propertiesForm.controls.numInputs.setValue(element.numInputs);
 			}
 			if (data.plugIndex !== element.plugIndex) {
 				this.projects.currProject.setPlugIndex(this.selectedCompId, Number(data.plugIndex));

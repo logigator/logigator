@@ -6,6 +6,7 @@ export const output: ElementType = {
 	numOutputs: 0,
 	minInputs: 1,
 	maxInputs: 1,
+	width: 1,
 	symbol: 'out',
 	description: 'ELEMENT_TYPE.PLUG.OUTPUT.DESCRIPTION',
 	rotation: 0,
