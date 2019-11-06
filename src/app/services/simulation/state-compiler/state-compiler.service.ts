@@ -143,7 +143,8 @@ export class StateCompilerService {
 		if (this._compiledDeps.has(project.id)) {
 			throw {
 				name: 'ERROR.COMPILE.CIRCULAR_DEP',
-				src: this._currTypeId
+				src: this._currTypeId,
+				comp: project.id
 			} as CompileError;
 		}
 		this._compiledDeps.add(project.id);
