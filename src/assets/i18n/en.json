@@ -198,7 +198,7 @@
 	},
 	"ERROR": {
 		"COMPILE": {
-			"CIRCULAR_DEP": "Circular dependency in components. Components must not include themselves or other components including it."
+			"CIRCULAR_DEP": "Circular dependency in components. Components must not include themselves or other components including it. At:"
 		}
 	}
 }
