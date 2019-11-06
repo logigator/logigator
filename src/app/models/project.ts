@@ -170,7 +170,8 @@ export class Project {
 		if (typeId === 0 && _pos.equals(_endPos))
 			return null;
 		const elem = Elements.genNewElement(typeId, _pos,
-			_endPos || Elements.calcEndPos(_pos, numInputs, numOutputs, rotation), rotation, numInputs);
+			_endPos || Elements.calcEndPos(_pos, Elements.elementType(typeId).width,
+			numInputs, numOutputs, rotation), rotation, numInputs);
 		if (!this._currState.isFreeSpace(elem.pos, elem.endPos, typeId === 0, Elements.wireEnds(elem)))
 			return null;
 
@@ -284,7 +285,8 @@ export class Project {
 			numbers: [rotation, element.rotation]
 		}];
 		const changed = this._currState.withWiresOnEdges([element]);
-		const newEndPos = Elements.calcEndPos(element.pos, element.numInputs, element.numOutputs, rotation);
+		const newEndPos = Elements.calcEndPos(element.pos, Elements.elementType(element.typeId).width,
+			element.numInputs, element.numOutputs, rotation);
 		if (!this._currState.isFreeSpace(element.pos, newEndPos, false, Elements.wireEnds(element, rotation), [element]))
 			return false;
 
@@ -307,7 +309,8 @@ export class Project {
 			numbers: [numInputs, element.numInputs]
 		}];
 		const changed = this._currState.withWiresOnEdges([element]);
-		const newEndPos = Elements.calcEndPos(element.pos, numInputs, element.numOutputs, element.rotation);
+		const newEndPos = Elements.calcEndPos(element.pos, Elements.elementType(element.typeId).width,
+			numInputs, element.numOutputs, element.rotation);
 		if (!this._currState.isFreeSpace(element.pos, newEndPos, false, Elements.wireEnds(element, undefined, numInputs), [element]))
 			return false;
 

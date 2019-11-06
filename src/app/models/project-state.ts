@@ -1,5 +1,4 @@
 import {Chunk} from './chunk';
-// import {ProjectModel} from './project-model';
 import {Element} from './element';
 import {Elements} from './elements';
 import * as PIXI from 'pixi.js';
@@ -36,6 +35,7 @@ export class ProjectState {
 		this._chunks = [];
 		this._outputPlugs = [];
 		this._inputPlugs = [];
+		this.calcAllEndPos();
 		this.loadAllIntoChunks();
 		this.inputOutputCount();
 	}
@@ -55,6 +55,15 @@ export class ProjectState {
 		return ++this._highestTakenId;
 	}
 
+
+	private calcAllEndPos() {
+		for (const element of this.allElements) {
+			if (element.typeId === 0) continue;
+			element.endPos = Elements.calcEndPos(
+				element.pos, Elements.elementType(element.typeId).width, element.numInputs, element.numOutputs, element.rotation
+			);
+		}
+	}
 
 
 	private loadAllIntoChunks(): void {
@@ -269,19 +278,22 @@ export class ProjectState {
 
 	public rotateComp(element: Element, rotation: number, endPos?: PIXI.Point): void {
 		element.rotation = rotation;
-		element.endPos = endPos || Elements.calcEndPos(element.pos, element.numInputs, element.numOutputs, rotation);
+		element.endPos = endPos || Elements.calcEndPos(element.pos, Elements.elementType(element.typeId).width,
+			element.numInputs, element.numOutputs, rotation);
 	}
 
 	public setNumInputs(element: Element, numInputs: number, endPos?: PIXI.Point): void {
 		element.numInputs = numInputs;
-		element.endPos = endPos || Elements.calcEndPos(element.pos, numInputs, element.numOutputs, element.rotation);
+		element.endPos = endPos || Elements.calcEndPos(element.pos, Elements.elementType(element.typeId).width,
+			numInputs, element.numOutputs, element.rotation);
 	}
 
 
 	public updateNumInputsOutputs(element: Element): void {
-		element.numInputs = getStaticDI(ElementProviderService).getElementById(element.typeId).numInputs;
-		element.numOutputs = getStaticDI(ElementProviderService).getElementById(element.typeId).numOutputs;
-		element.endPos = Elements.calcEndPos(element.pos, element.numInputs, element.numOutputs, element.rotation);
+		element.numInputs = Elements.elementType(element.typeId).numInputs;
+		element.numOutputs = Elements.elementType(element.typeId).numOutputs;
+		element.endPos = Elements.calcEndPos(element.pos, Elements.elementType(element.typeId).width,
+			element.numInputs, element.numOutputs, element.rotation);
 	}
 
 
@@ -564,6 +576,7 @@ export class ProjectState {
 		}
 		return out;
 	}
+
 
 	public chunk(x: number, y: number): Chunk {
 		return this._chunks[x] ? this._chunks[x][y] : null;

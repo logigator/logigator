@@ -6,6 +6,7 @@ export const input: ElementType = {
 	numOutputs: 1,
 	minInputs: 0,
 	maxInputs: 0,
+	width: 1,
 	symbol: 'in',
 	description: 'ELEMENT_TYPE.PLUG.INPUT.DESCRIPTION',
 	rotation: 0,

@@ -5,6 +5,7 @@ export interface ElementType {
 	numOutputs: number;
 	maxInputs: number;
 	minInputs: number;
+	width: number;
 	symbol: string;
 	// translation id for predefined comps
 	description: string;
