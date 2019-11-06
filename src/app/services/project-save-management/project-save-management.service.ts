@@ -577,8 +577,11 @@ export class ProjectSaveManagementService {
 
 	private removeEndPosFromElements(elements: Element[]): Element[] {
 		return elements.map(e => {
-			if (e.typeId !== 0) delete e.endPos;
-			return e;
+			if (e.typeId === 0)
+				return e;
+			const out = Elements.clone(e);
+			delete out.endPos;
+			return out;
 		});
 	}
 }

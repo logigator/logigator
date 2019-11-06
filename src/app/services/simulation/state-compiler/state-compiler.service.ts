@@ -18,7 +18,6 @@ import {ProjectSaveManagementService} from '../../project-save-management/projec
 import {ElementProviderService} from '../../element-provider/element-provider.service';
 import {MapHelper} from './map-helper';
 import {Elements} from '../../../models/elements';
-import {getStaticDI} from '../../../models/get-di';
 
 @Injectable({
 	providedIn: 'root'
