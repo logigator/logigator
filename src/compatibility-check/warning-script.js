@@ -8,7 +8,7 @@
 		typeof WebAssembly !== "object" ||
 		typeof WebAssembly.instantiate !== "function" ||
 		!supports_grid ||
-		!window.WebGL2RenderingContext ||
+		!(window.WebGLRenderingContext || window.WebGL2ContextEvent) ||
 		/Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent)
 	) {
 		document.getElementById('compatibility-warning').style.display = 'flex';
