@@ -122,6 +122,11 @@ export class ProjectSaveManagementService {
 				rotation: 0
 			}, id);
 		}
+		this._projectCache.set(id, new Project(new ProjectState(), {
+			name,
+			type: 'comp',
+			id
+		}));
 		this.errorHandling.showInfo(`Created Component ${name}`);
 		return id;
 	}

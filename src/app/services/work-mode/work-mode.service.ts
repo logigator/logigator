@@ -43,10 +43,12 @@ export class WorkModeService {
 		} else {
 			this.projects.saveComponentsShare();
 		}
-		await this.workerCommunicationService.init();
-		this._currentWorkMode = 'simulation';
-		this._workModeSubject.next('simulation');
-		delete this._currentComponentTypeToBuild;
+		try {
+			await this.workerCommunicationService.init();
+			this._currentWorkMode = 'simulation';
+			this._workModeSubject.next('simulation');
+			delete this._currentComponentTypeToBuild;
+		} catch (e) {}
 	}
 
 	public leaveSimulation() {
