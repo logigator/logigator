@@ -222,7 +222,7 @@ export class WorkerCommunicationService {
 	}
 
 	public setUserInput(identifier: string, element: Element, state: boolean[]): void {
-		const index = this.stateCompiler.ioElemIndexes.get(identifier).get(element);
+		const index = this.stateCompiler.ioElemIndexes.get(identifier).get(element.id);
 		const inputEvent = InputEvent.Cont;
 		const stateBuffer = Int8Array.from(state as any).buffer;
 

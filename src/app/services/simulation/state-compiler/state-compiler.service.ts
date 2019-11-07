@@ -2,6 +2,7 @@ import {Injectable} from '@angular/core';
 import {Project} from '../../../models/project';
 import {SimulationUnit, SimulationUnits} from '../../../models/simulation/simulation-unit';
 import {
+	ElementId,
 	ElementToUnit, LinkOnWireEnd,
 	PosOfElem, UnitElementBidir,
 	UnitToElement, WireEndLinksOnElem,
@@ -26,19 +27,47 @@ import {CompileError} from '../../../models/simulation/error';
 export class StateCompilerService {
 
 	private _highestLinkId: number;
-	private _wiresOnLinks: WiresOnLinksInProject;
-	private _wireEndsOnLinks: WireEndsOnLinksInProject;
-	private _ioElemUnits: Map<string, Map<Element, SimulationUnit>>;
-	private _ioElemIndexes: Map<string, Map<Element, number>>;
 
+	/**
+	 * Contains which wire are on which links for a given project
+	 */
+	private _wiresOnLinks: WiresOnLinksInProject;
+
+	/**
+	 * Contains which wireEnds are on which links for a given project
+	 */
+	private _wireEndsOnLinks: WireEndsOnLinksInProject;
+
+	/**
+	 * Contains on which index of the final output an ioElement is for a given project
+	 */
+	private _ioElemIndexes: Map<string, Map<ElementId, number>>;
+
+	private _ioElemUnitCache: Map<string, Map<ElementId, SimulationUnit>>;
+
+	/*
+	 * OnLink-Caches are used to store which wires/wireEnds are on which links, but per project
+	 * If you've got 1 Udc (User-defined-component) placed 2 times in one project
+	 *     the caches will contain every wire once, the final output twice
+	 */
 	private _wiresOnLinksCache: WiresOnLinksInProject;
 	private _wireEndsOnLinksCache: WireEndsOnLinksInProject;
 
 	private _depTree: Map<number, Project>;
+
+	/*
+	 * Only to store which projects already started compiling to detect circular dependencies
+	 */
 	private _compiledDeps: Set<number>;
 
+	/*
+	 * The main cache for compiledComps
+	 */
 	private _udcCache: Map<number, CompiledComp>;
 
+	/*
+	 * TypeId of the currently compiling project
+	 */
 	private _currTypeId: number;
 
 	constructor(
@@ -48,19 +77,12 @@ export class StateCompilerService {
 		this._udcCache = new Map<number, CompiledComp>();
 	}
 
-	private static generateUnits(state: ProjectState): UnitElementBidir {
-		const unitToElement: UnitToElement = new Map<SimulationUnit, Element>();
-		const elementToUnit: ElementToUnit = new Map<Element, SimulationUnit>();
-		for (const element of state.model.values()) {
-			const unit = SimulationUnits.fromElement(element);
-			if (unit) {
-				unitToElement.set(unit, element);
-				elementToUnit.set(element, unit);
-			}
-		}
-		return {unitToElement, elementToUnit};
-	}
-
+	/**
+	 * Returns the compiler output (SimulationUnit[]) as an Int32Array.
+	 * This is to save performance by not copying the output to the simulation-worker, but just share it.
+	 * For this you need a simple-typed array.
+	 * @param project The Project that need to be compiled.
+	 */
 	public async compileAsInt32Array(project: Project): Promise<Int32Array> {
 		const units = await this.compile(project);
 		const out: number[] = [ units.length ];
@@ -71,6 +93,10 @@ export class StateCompilerService {
 		return new Int32Array(out);
 	}
 
+	/**
+	 * Returns a SimulationUnit[], which is the format needed by the wasm-part to work.
+	 * @param project The Project that need to be compiled.
+	 */
 	public async compile(project: Project): Promise<SimulationUnit[]> {
 		this._highestLinkId = 0;
 		this._wiresOnLinks = new Map<string, WiresOnLinks>();
@@ -99,14 +125,14 @@ export class StateCompilerService {
 			this._wiresOnLinks = new Map<string, WiresOnLinks>();
 		if (!this._wireEndsOnLinks)
 			this._wireEndsOnLinks = new Map<string, WireEndsOnLinks>();
-		if (!this._ioElemUnits)
-			this._ioElemUnits = new Map<string, Map<Element, SimulationUnit>>();
+		if (!this._ioElemUnitCache)
+			this._ioElemUnitCache = new Map<string, Map<ElementId, SimulationUnit>>();
 		if (!this._ioElemIndexes)
-			this._ioElemIndexes = new Map<string, Map<Element, number>>();
+			this._ioElemIndexes = new Map<string, Map<ElementId, number>>();
 		this._wiresOnLinks.set(identifier, new Map<number, Element[]>());
 		this._wireEndsOnLinks.set(identifier, new Map<number, WireEndOnComp[]>());
-		this._ioElemUnits.set(identifier, new Map<Element, SimulationUnit>());
-		this._ioElemIndexes.set(identifier, new Map<Element, number>());
+		this._ioElemUnitCache.set(identifier, new Map<ElementId, SimulationUnit>());
+		this._ioElemIndexes.set(identifier, new Map<ElementId, number>());
 	}
 
 	private async projectsToCompile(project: Project): Promise<Map<number, Project>> {
@@ -115,6 +141,9 @@ export class StateCompilerService {
 		return out;
 	}
 
+	/**
+	 * Clears the cache so everything has to get recompiled.
+	 */
 	public clearCache(): void {
 		this._udcCache.clear();
 		if (this._wiresOnLinksCache) {
@@ -122,7 +151,7 @@ export class StateCompilerService {
 			this._wireEndsOnLinksCache.clear();
 			this._wiresOnLinks.clear();
 			this._wireEndsOnLinks.clear();
-			this._ioElemUnits.clear();
+			this._ioElemUnitCache.clear();
 			this._ioElemIndexes.clear();
 		}
 		this._highestLinkId = 0;
@@ -139,6 +168,12 @@ export class StateCompilerService {
 		}
 	}
 
+	/*
+	 * Compiles a single project
+	 * If this project already started to compile before it throws a circular dependency exception
+	 * If the argument project is a component and it detects, that plug-components aren't connected with each other as
+	 *     in the cached version (if existing) it also recompiles all projects containing this component
+	 */
 	private compileSingle(project: Project): void {
 		if (this._compiledDeps.has(project.id)) {
 			throw {
@@ -148,15 +183,24 @@ export class StateCompilerService {
 			} as CompileError;
 		}
 		this._compiledDeps.add(project.id);
+
 		const oldTypeId = this._currTypeId;
 		this._currTypeId = project.id;
-		const unitElems = StateCompilerService.generateUnits(project.currState);
+		const unitElems = SimulationUnits.generateUnits(project.currState);
 		let conPlugs: number[][];
+
 		if (this._udcCache.has(project.id)) {
 			conPlugs = this._udcCache.get(project.id).connectedPlugs;
 		}
-
 		this._udcCache.set(project.id, this.calcCompiledComp(project.currState, unitElems));
+
+		this.compilerOuterIfNeeded(conPlugs, project);
+
+		this._currTypeId = oldTypeId;
+		project.compileDirty = false;
+	}
+
+	private compilerOuterIfNeeded(conPlugs: number[][], project: Project) {
 		if (!MapHelper.array2dSame(conPlugs, this._udcCache.get(project.id).connectedPlugs)) {
 			for (const [typeId, compiledComp] of this._udcCache.entries()) {
 				if (compiledComp.includesUdcs.has(project.id)) {
@@ -164,10 +208,11 @@ export class StateCompilerService {
 				}
 			}
 		}
-		this._currTypeId = oldTypeId;
-		project.compileDirty = false;
 	}
 
+	/*
+	 * Simply compiles the state to a CompiledComp (used to generate the final output)
+	 */
 	private calcCompiledComp(state: ProjectState, unitElems: UnitElementBidir): CompiledComp {
 		const compiledComp: CompiledComp = {
 			units: new Map<SimulationUnit, Element>(),
@@ -181,15 +226,16 @@ export class StateCompilerService {
 		this.setAllLinks(unitElems, linksOnWireEnds, state, compiledComp);
 
 		compiledComp.units = unitElems.unitToElement;
-		this.loadConnectedPlugs(compiledComp);
+		SimulationUnits.loadConnectedPlugs(compiledComp);
 
 		return compiledComp;
 	}
 
+
 	private setAllLinks(
 		unitElems: UnitElementBidir, linksOnWireEnds: WireEndLinksOnElem,
 		state: ProjectState, compiledComp: CompiledComp
-	) {
+	): void {
 		let unitIndex = 0;
 		let linkId = 0;
 		const identifier = '' + this._currTypeId;
@@ -198,7 +244,7 @@ export class StateCompilerService {
 			let wireEndIndex = -1;
 			for (const wireEndPos of Elements.wireEnds(element)) {
 				wireEndIndex++;
-				if (this.wireIdHasLink(linksOnWireEnds, element, wireEndIndex)) {
+				if (SimulationUnits.wireIdHasLink(linksOnWireEnds, element, wireEndIndex)) {
 					continue;
 				}
 				linkId = this.setLinks(state, wireEndPos, linksOnWireEnds,
@@ -209,10 +255,6 @@ export class StateCompilerService {
 			}
 			unitIndex++;
 		}
-	}
-
-	private wireIdHasLink(wireEndLinksOnElem: WireEndLinksOnElem, element: Element, wireIndex: number): boolean {
-		return wireEndLinksOnElem.has(element) && wireEndLinksOnElem.get(element).has(wireIndex);
 	}
 
 	private setLinks(
@@ -233,7 +275,7 @@ export class StateCompilerService {
 				this.setWireLink(elem, pos, state, linksOnWireEnds, linkId, unitElems,
 					compiledComp, coveredPoints);
 			} else {
-				this.setCompLink(linksOnWireEnds, elem, index, linkId, unitElems, compiledComp);
+				this.setCompLink(linksOnWireEnds, elem, index, linkId, unitElems);
 				if (this.elementProvider.isUserElement(elem.typeId)) {
 					this.includePlugLinks(elem, index, state, linksOnWireEnds,
 						linkId, unitElems, compiledComp, coveredPoints);
@@ -244,6 +286,9 @@ export class StateCompilerService {
 		return linkId;
 	}
 
+	/*
+	 * When the element is a wire it has to include elements on the other end too (that's the use of a wire)
+	 */
 	private setWireLink(
 		elem, pos: PIXI.Point, state: ProjectState, linksOnWireEnds: WireEndLinksOnElem, linkId: number,
 		unitElems: UnitElementBidir, compiledComp: CompiledComp, coveredPoints: PosOfElem[]
@@ -254,16 +299,12 @@ export class StateCompilerService {
 		MapHelper.pushInMapArrayUnique(this._wiresOnLinksCache.get('' + this._currTypeId), linkId, elem);
 	}
 
-	private setCompLink(
-		linksOnWireEnds: WireEndLinksOnElem, elem, wireIndex, linkId: number, unitElems: UnitElementBidir,
-		compiledComp: CompiledComp
-	) {
+	/*
+	 * When the element is a component just set the input/output to be the wanted link
+	 */
+	private setCompLink(linksOnWireEnds: WireEndLinksOnElem, elem, wireIndex, linkId: number, unitElems: UnitElementBidir) {
 		if (linksOnWireEnds.has(elem)) {
-			if (!linksOnWireEnds.get(elem).has(wireIndex)) {
-				linksOnWireEnds.get(elem).set(wireIndex, linkId);
-			} else {
-				console.error('you should not be here');
-			}
+			linksOnWireEnds.get(elem).set(wireIndex, linkId);
 		} else {
 			linksOnWireEnds.set(elem, new Map<number, number>([[wireIndex, linkId]]));
 		}
@@ -272,12 +313,15 @@ export class StateCompilerService {
 		MapHelper.pushInMapArray(this._wireEndsOnLinksCache.get(identifier), linkId, {component: elem, wireIndex});
 	}
 
+	/*
+	 * When the element is a Udc (User-defined-component) and 2 plugs are directly connected the other side of that connection has to
+	 *     be included too
+	 */
 	private includePlugLinks(
 		elem, index, state: ProjectState, linksOnWireEnds: WireEndLinksOnElem, linkId: number,
 		unitElems: UnitElementBidir, compiledComp: CompiledComp, coveredPoints: PosOfElem[]
 	) {
 		if (!this._udcCache.has(elem.typeId)) {
-			const outer = this._currTypeId;
 			this.compileSingle(this._depTree.get(elem.typeId));
 		}
 		for (const conPlugs of this._udcCache.get(elem.typeId).connectedPlugs) {
@@ -292,6 +336,17 @@ export class StateCompilerService {
 		}
 	}
 
+
+
+
+
+
+
+
+	/*
+	 * After all compiledComps were calculated and store which component is part of which link (link always start at 0 in every compiledComp)
+	 * it is time to bring them all together
+	 */
 	private projectUnits(
 		projectId: number, idIdentifier: string,
 		outerUnit?: SimulationUnit
@@ -302,6 +357,7 @@ export class StateCompilerService {
 			return [];
 		const linkMap = new Map<number, number>();
 		const typeIdentifier = '' + projectId;
+
 		if (outerUnit) {
 			for (const [outer, inner] of compiledComp.plugsByIndex) {
 				linkMap.set(SimulationUnits.concatIO(units[inner])[0], SimulationUnits.concatIO(outerUnit)[outer]);
@@ -313,6 +369,8 @@ export class StateCompilerService {
 		let highestInProj = this._highestLinkId;
 		const udcIndexes: number[] = [];
 		let unitIndex = 0;
+		let donePlugCount = 0;
+
 		for (const unit of units) {
 			[unit.inputs, unit.outputs].forEach(arr => {
 				for (let i = 0; i < arr.length; i++) {
@@ -327,18 +385,22 @@ export class StateCompilerService {
 					}
 				}
 			});
+
 			if (this.elementProvider.isUserElement(unit.typeId)) {
 				udcIndexes.push(unitIndex);
 			} else if (this.elementProvider.isIoElement(unit.typeId)) {
-				this.setIOLink(idIdentifier, compiledComp, unitIndex, unit);
+				this.setIOLink(idIdentifier, compiledComp, unitIndex + donePlugCount, unit);
 			} else if (this.elementProvider.isPlugElement(unit.typeId)) {
+				donePlugCount++;
 				continue;
 			}
+
 			unitIndex++;
 		}
+
 		this._highestLinkId = highestInProj;
 		if (outerUnit)
-			this.removePlugs(compiledComp, units);
+			SimulationUnits.removePlugs(units, compiledComp);
 
 		// udcIndexes is already sorted desc
 		for (let i = udcIndexes.length - 1; i >= 0; i--) {
@@ -349,27 +411,19 @@ export class StateCompilerService {
 			units.push(...inner);
 		}
 
-		if (!outerUnit) {
-			for (const [id, map] of this._ioElemUnits.entries()) {
-				this._ioElemIndexes.set(id, new Map<Element, number>());
-				for (const [key, val] of map.entries()) {
-					this._ioElemIndexes.get(id).set(key, units.indexOf(val));
-				}
+		for (const [id, map] of this._ioElemUnitCache.entries()) {
+			this._ioElemIndexes.set(id, new Map<ElementId, number>());
+			for (const [key, val] of map.entries()) {
+				this._ioElemIndexes.get(id).set(key, units.indexOf(val));
 			}
 		}
 
 		return units;
 	}
 
-	private setIOLink(idIdentifier: string, compiledComp: CompiledComp, unitIndex: number, realUnit: SimulationUnit) {
-		if (!this._ioElemUnits.has(idIdentifier)) {
-			this._ioElemUnits.set(idIdentifier, new Map<Element, SimulationUnit>());
-		}
-		const unit = [...compiledComp.units.keys()][unitIndex];
-		const elem = compiledComp.units.get(unit);
-		this._ioElemUnits.get(idIdentifier).set(elem, realUnit);
-	}
-
+	/*
+	 * Push the wires and wireEnds of a specific link from cache to the final output
+	 */
 	private pushWiresOnLink(idIdentifier: string, newVal, typeIdentifier, val: number) {
 		if (this._wiresOnLinks.get(idIdentifier).has(newVal) && this._wiresOnLinks.get(idIdentifier).get(newVal).length > 0) {
 			if (this._wiresOnLinks.get(idIdentifier).get(newVal)[0] !== this._wiresOnLinksCache.get(typeIdentifier).get(val)[0]) {
@@ -387,40 +441,13 @@ export class StateCompilerService {
 		}
 	}
 
-	private removePlugs(compiledComp: CompiledComp, units: SimulationUnit[]) {
-		const plugsByIndexSorted = [...compiledComp.plugsByIndex.values()].sort((a, b) => a - b);
-		for (let i = plugsByIndexSorted.length - 1; i >= 0; i--) {
-			units.splice(plugsByIndexSorted[i], 1);
+	private setIOLink(idIdentifier: string, compiledComp: CompiledComp, unitIndex: number, realUnit: SimulationUnit) {
+		if (!this._ioElemUnitCache.has(idIdentifier)) {
+			this._ioElemUnitCache.set(idIdentifier, new Map<ElementId, SimulationUnit>());
 		}
-	}
-
-	private loadConnectedPlugs(compiledComp: CompiledComp) {
-		const plugsByIndex = compiledComp.plugsByIndex;
-		const plugsByIndexKeys = [...plugsByIndex.keys()];
-		for (let i = 0; i < plugsByIndexKeys.length; i++) {
-			const plugIndex = plugsByIndexKeys[i];
-			const value = SimulationUnits.concatIO([...compiledComp.units.keys()][plugsByIndex.get(plugIndex)])[0];
-			for (let j = i + 1; j < plugsByIndexKeys.length; j++) {
-				const otherIndex = plugsByIndexKeys[j];
-				const otherValue = SimulationUnits.concatIO([...compiledComp.units.keys()][plugsByIndex.get(otherIndex)])[0];
-				if (value === otherValue) {
-					let pushed = false;
-					for (const arr of compiledComp.connectedPlugs) {
-						if (arr.includes(plugIndex) && !arr.includes(otherIndex)) {
-							arr.push(plugsByIndex.get(otherIndex));
-							pushed = true;
-						} else if (arr.includes(otherIndex) && !arr.includes(plugIndex)) {
-							arr.push(plugsByIndex.get(plugIndex));
-							pushed = true;
-						} else if (arr.includes(otherIndex) && arr.includes(plugIndex)) {
-							pushed = true;
-						}
-					}
-					if (!pushed)
-						compiledComp.connectedPlugs.push([plugIndex, otherIndex]);
-				}
-			}
-		}
+		const unit = [...compiledComp.units.keys()][unitIndex];
+		const elem = compiledComp.units.get(unit);
+		this._ioElemUnitCache.get(idIdentifier).set(elem.id, realUnit);
 	}
 
 
@@ -432,20 +459,7 @@ export class StateCompilerService {
 		return this._wireEndsOnLinks;
 	}
 
-
-	get wiresOnLinksCache(): Map<string, WiresOnLinks> {
-		return this._wiresOnLinksCache;
-	}
-
-	get wireEndsOnLinksCache(): Map<string, WireEndsOnLinks> {
-		return this._wireEndsOnLinksCache;
-	}
-
-	get ioElemUnits(): Map<string, Map<Element, SimulationUnit>> {
-		return this._ioElemUnits;
-	}
-
-	get ioElemIndexes(): Map<string, Map<Element, number>> {
+	get ioElemIndexes(): Map<string, Map<number, number>> {
 		return this._ioElemIndexes;
 	}
 
