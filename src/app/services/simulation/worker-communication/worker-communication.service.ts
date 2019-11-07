@@ -84,16 +84,16 @@ export class WorkerCommunicationService {
 				}
 			}
 
-			if (data.method === WasmMethod.status) {
-				this.ngZone.run(() => this._status = data.status);
-			}
-
-			if (this._isContinuous) {
+			if (data.method === WasmMethod.cont && this._isContinuous) {
 				const request: WasmRequest = {
 					method: WasmMethod.cont,
 					time: this._frameAverage.average
 				};
 				this._worker.postMessage(request);
+			}
+
+			if (data.method === WasmMethod.status) {
+				this.ngZone.run(() => this._status = data.status);
 			}
 		} else {
 			console.error('error', data);
