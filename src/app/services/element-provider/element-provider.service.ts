@@ -84,6 +84,14 @@ export class ElementProviderService {
 		this.errorHandler.showErrorMessage('Component not found, project might be corrupted');
 	}
 
+	public hasElement(id: number) {
+		return this._basicElements.has(id) ||
+			this._advancedElements.has(id) ||
+			this._plugElements.has(id) ||
+			this._ioElements.has(id) ||
+			this._userDefinedElements.has(id);
+	}
+
 	public isBasicElement(id: number): boolean {
 		return this._basicElements.has(id);
 	}
