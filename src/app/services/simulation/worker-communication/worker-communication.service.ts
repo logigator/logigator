@@ -105,6 +105,8 @@ export class WorkerCommunicationService {
 		if (!data)
 			data = this._dataCache;
 		const out = new Map<Element, boolean>();
+		if (!this.stateCompiler.wiresOnLinks.has(identifier))
+			return out;
 		for (const [link, wires] of this.stateCompiler.wiresOnLinks.get(identifier).entries()) {
 			for (const wire of wires) {
 				out.set(wire, data[link] as unknown as boolean);
@@ -117,6 +119,8 @@ export class WorkerCommunicationService {
 		if (!data)
 			data = this._dataCache;
 		const out = new Map<Element, boolean[]>();
+		if (!this.stateCompiler.wireEndsOnLinks.has(identifier))
+			return out;
 		for (const [link, wireEndOnComps] of this.stateCompiler.wireEndsOnLinks.get(identifier).entries()) {
 			for (const wireEndOnComp of wireEndOnComps) {
 				const elem = wireEndOnComp.component;
