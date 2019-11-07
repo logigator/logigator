@@ -8,9 +8,6 @@ import {ProjectInteractionService} from '../../services/project-interaction/proj
 import {filter, takeUntil} from 'rxjs/operators';
 import {getStaticDI} from '../get-di';
 import {WorkerCommunicationService} from '../../services/simulation/worker-communication/worker-communication.service';
-import {WireGraphics} from './graphics/wire-graphics';
-import {ComponentGraphics} from './graphics/component-graphics';
-import {LGraphics} from './graphics/l-graphics';
 import {LGraphicsResolver} from './graphics/l-graphics-resolver';
 import {Grid} from './grid';
 import {ElementProviderService} from '../../services/element-provider/element-provider.service';
@@ -85,6 +82,7 @@ export class SimulationView extends View {
 		for (const [elem, value] of e.entries()) {
 			this.allElements.get(elem.id).setSimulationState(value);
 		}
+		this.requestSingleFrame();
 	}
 
 	public get projectName(): string {
