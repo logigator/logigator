@@ -54,7 +54,9 @@ export class LeverGraphics extends PIXI.Graphics implements LGraphics, Component
 		this.beginFill(this.themingService.getEditorColor('background'));
 		this.moveTo(0, 0);
 		this.drawRect(0, 0, environment.gridPixelWidth * this._width, environment.gridPixelWidth);
+		this.drawRect(3, 3, environment.gridPixelWidth - 6, environment.gridPixelWidth - 6);
 		this.beginFill(this.themingService.getEditorColor('wire'));
+
 
 		switch (this.element.rotation) {
 			case 0:
@@ -97,6 +99,12 @@ export class LeverGraphics extends PIXI.Graphics implements LGraphics, Component
 					data.lineStyle.width = 3 / scale;
 				} else {
 					data.lineStyle.width = 1 / scale;
+				}
+			} else if (data.shape instanceof PIXI.Rectangle && data.shape.width === 10 && data.shape.height === 10){
+				if (this.simActiveState) {
+					data.fillStyle.color = this.themingService.getEditorColor('wire');
+				} else {
+					data.fillStyle.color = this.themingService.getEditorColor('background');
 				}
 			}
 		}

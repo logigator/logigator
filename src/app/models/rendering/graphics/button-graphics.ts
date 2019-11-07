@@ -44,16 +44,24 @@ export class ButtonGraphics extends PIXI.Graphics implements LGraphics, Componen
 			this._projectIdentifier = projectIdentifier;
 			this._width = getStaticDI(ElementProviderService).getElementById(this.element.typeId).width;
 		}
-		this.drawComponent();
+		this.drawComponent(this.simActiveState);
 		if (this._projectIdentifier) this.addClickListener();
 	}
 
-	private drawComponent() {
+	private drawComponent(state: boolean) {
 		this.lineStyle(1 / this._scale, this.themingService.getEditorColor('wire'));
 		this.beginFill(this.themingService.getEditorColor('background'));
 		this.moveTo(0, 0);
 		this.drawRect(0, 0, environment.gridPixelWidth * this._width, environment.gridPixelWidth);
-		this.beginFill(this.themingService.getEditorColor('wire'));
+		if (state) {
+			this.beginFill(this.themingService.getEditorColor('wire'));
+			this.drawRect(0, 0, environment.gridPixelWidth * this._width, 4);
+			this.lineStyle(3 / this._scale, this.themingService.getEditorColor('wire'));
+		} else {
+			this.drawRect(0, environment.gridPixelWidth - 4, environment.gridPixelWidth * this._width, 4);
+			this.lineStyle(1 / this._scale, this.themingService.getEditorColor('wire'));
+			this.beginFill(this.themingService.getEditorColor('wire'));
+		}
 
 		switch (this.element.rotation) {
 			case 0:
@@ -89,18 +97,9 @@ export class ButtonGraphics extends PIXI.Graphics implements LGraphics, Componen
 		// tslint:disable-next-line:triple-equals
 		if (this.simActiveState == this.shouldHaveActiveState) return;
 		this.simActiveState = this.shouldHaveActiveState;
-		// @ts-ignore
-		for (const data of this.geometry.graphicsData) {
-			if (data.shape instanceof PIXI.Polygon) {
-				if (this.simActiveState) {
-					data.lineStyle.width = 3 / scale;
-				} else {
-					data.lineStyle.width = 1 / scale;
-				}
-			}
-		}
+		this.clear();
+		this.drawComponent(this.simActiveState);
 		this._scale = scale;
-		this.geometry.invalidate();
 	}
 
 	setSelected(selected: boolean) {
@@ -122,7 +121,7 @@ export class ButtonGraphics extends PIXI.Graphics implements LGraphics, Componen
 		this.element.rotation = rotation;
 		this._scale = scale;
 		this.clear();
-		this.drawComponent();
+		this.drawComponent(this.simActiveState);
 	}
 
 	updateScale(scale: number) {

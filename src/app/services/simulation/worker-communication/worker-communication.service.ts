@@ -226,7 +226,7 @@ export class WorkerCommunicationService {
 		const index = this.stateCompiler.ioElemIndexes.get(identifier).get(element);
 		let inputEvent: InputEvent;
 		if (this.elementProvider.isButtonElement(element.typeId)) {
-			inputEvent = InputEvent.Pulse
+			inputEvent = InputEvent.Pulse;
 		} else if (this.elementProvider.isLeverElement(element.typeId)) {
 			inputEvent = InputEvent.Cont;
 		}
