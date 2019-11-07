@@ -45,6 +45,7 @@ import { ShareProjectComponent } from './components/popup/popup-contents/share-p
 import {setStaticDIInjector} from './models/get-di';
 import {InputErrorComponent} from './components/input-error/input-error.component';
 import {CredentialsInterceptor} from './interceptors/credentials';
+import {SiPipe} from './pipes/si/si.pipe';
 
 @NgModule({
 	declarations: [
@@ -80,7 +81,8 @@ import {CredentialsInterceptor} from './interceptors/credentials';
 		// #!electron
 		RegisterComponent,
 		WorkAreaContainerComponent,
-		ShareProjectComponent
+		ShareProjectComponent,
+		SiPipe
 	],
 	entryComponents: [
 		PopupComponent,
