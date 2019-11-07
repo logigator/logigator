@@ -72,7 +72,7 @@ addEventListener('message', ({ data }: {data: WasmRequest}) => {
 			postMessage({
 				method: data.method,
 				success: true,
-				state: worker.getLinks(),
+				state: worker.getLinks().buffer,
 				status: worker.getStatus()
 			} as WasmResponse);
 			return;

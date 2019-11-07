@@ -1,14 +1,16 @@
-import {Injectable, IterableDiffer, IterableDiffers, NgZone} from '@angular/core';
-import {Observable, Subject} from 'rxjs';
-import {PowerChangesOutWire, PowerChangesOutWireEnd} from '../../../models/simulation/power-changes';
+import {Injectable, NgZone} from '@angular/core';
+import {Observable, Subject, timer} from 'rxjs';
+import {PowerChangesOutWire} from '../../../models/simulation/power-changes';
 import {ProjectsService} from '../../projects/projects.service';
 import {StateCompilerService} from '../state-compiler/state-compiler.service';
 import {WasmMethod, WasmRequest, WasmResponse} from '../../../models/simulation/wasm-interface';
 import {Element} from '../../../models/element';
-import {InputEvent} from '../../../models/simulation/board';
+import {BoardState, BoardStatus, InputEvent} from '../../../models/simulation/board';
+import {filter, takeWhile} from 'rxjs/operators';
 import {ErrorHandlingService} from '../../error-handling/error-handling.service';
 import {CompileError} from '../../../models/simulation/error';
 import {ElementProviderService} from '../../element-provider/element-provider.service';
+import {AverageBuffer} from '../../../models/average-buffer';
 
 @Injectable({
 	providedIn: 'root'
@@ -19,11 +21,19 @@ export class WorkerCommunicationService {
 	private _powerSubjectsWireEnds: Map<string, Subject<Map<Element, boolean[]>>>;
 	private _worker: Worker;
 
-	private _frameTime = 1;
 	private _initialized = false;
 	private _isContinuous = false;
+	private _frameAverage = new AverageBuffer(5);
 
 	private _dataCache: Uint8Array;
+
+	private _status: BoardStatus = {
+		tick: 0,
+		componentCount: 0,
+		linkCount: 0,
+		speed: 0,
+		state: BoardState.Uninitialized
+	};
 
 	constructor(
 		private projectsService: ProjectsService,
@@ -74,10 +84,15 @@ export class WorkerCommunicationService {
 				}
 			}
 
+			if (data.method === WasmMethod.status) {
+				console.log(this._frameAverage.average);
+				this.ngZone.run(() => this._status = data.status);
+			}
+
 			if (this._isContinuous) {
 				const request: WasmRequest = {
 					method: WasmMethod.cont,
-					time: this._frameTime
+					time: this._frameAverage.average
 				};
 				this._worker.postMessage(request);
 			}
@@ -156,6 +171,17 @@ export class WorkerCommunicationService {
 				components: compiledBoard
 			}
 		} as WasmRequest, [ compiledBoard ]);
+
+		this.ngZone.runOutsideAngular(() => {
+			timer(0, 1000).pipe(
+				filter(() => this._isContinuous),
+				takeWhile(() => this._initialized === true)
+			).subscribe(x => {
+				this._worker.postMessage({
+					method: WasmMethod.status
+				} as WasmRequest);
+			});
+		});
 	}
 
 	public stop(): void {
@@ -172,7 +198,7 @@ export class WorkerCommunicationService {
 	public start(): void {
 		const request: WasmRequest = {
 			method: WasmMethod.cont,
-			time: this._frameTime
+			time: this._frameAverage.average
 		};
 		this._isContinuous = true;
 		this._worker.postMessage(request);
@@ -184,10 +210,13 @@ export class WorkerCommunicationService {
 			method: WasmMethod.single
 		};
 		this._worker.postMessage(request);
+		this._worker.postMessage({
+			method: WasmMethod.status
+		} as WasmRequest);
 	}
 
 	public setFrameTime(frameTime: number): void {
-		this._frameTime = frameTime;
+		this._frameAverage.push(frameTime > this._frameAverage.average + 1000 ? this._frameAverage.average + 1000 : frameTime);
 	}
 
 	public setUserInput(identifier: string, element: Element, state: boolean[]): void {
@@ -212,6 +241,14 @@ export class WorkerCommunicationService {
 
 	public boardStateWireEnds(projectId: string): Observable<Map<Element, boolean[]>> {
 		return this._powerSubjectsWireEnds.get(projectId).asObservable();
+	}
+
+	public get status() {
+		return this._status;
+	}
+
+	public get isRunning() {
+		return this._isContinuous;
 	}
 
 	public subscribe(identifier: string): void {

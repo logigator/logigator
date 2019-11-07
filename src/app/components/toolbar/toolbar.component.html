@@ -40,6 +40,8 @@
 			<button class="toolbar-button step" (click)="singleStepSim()"></button>
 			<button class="toolbar-button pause" (click)="pauseSim()"></button>
 			<button class="toolbar-button stop" (click)="stopSim()"></button>
+
+			<p *ngIf="simulationRunning">Current Speed: {{simulationStatus.speed | number : '1.0-0'}}Hz</p>
 		</ng-container>
 
 		<!-- #!debug -->
