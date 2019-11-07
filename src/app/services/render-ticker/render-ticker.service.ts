@@ -31,7 +31,7 @@ export class RenderTicker {
 
 	public removeTickerFunction(identifier: string) {
 		if (!this._tickerFunctions.has(identifier)) return;
-		this.stopTicker(identifier, false);
+		this.stopTicker(identifier, false, true);
 		this._tickerFunctions.delete(identifier);
 	}
 

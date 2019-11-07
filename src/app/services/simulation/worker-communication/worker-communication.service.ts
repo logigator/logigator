@@ -6,7 +6,7 @@ import {StateCompilerService} from '../state-compiler/state-compiler.service';
 import {WasmMethod, WasmRequest, WasmResponse} from '../../../models/simulation/wasm-interface';
 import {Element} from '../../../models/element';
 import {BoardState, BoardStatus, InputEvent} from '../../../models/simulation/board';
-import {filter, takeWhile} from 'rxjs/operators';
+import {takeWhile} from 'rxjs/operators';
 import {ErrorHandlingService} from '../../error-handling/error-handling.service';
 import {CompileError} from '../../../models/simulation/error';
 import {ElementProviderService} from '../../element-provider/element-provider.service';
@@ -224,7 +224,12 @@ export class WorkerCommunicationService {
 
 	public setUserInput(identifier: string, element: Element, state: boolean[]): void {
 		const index = this.stateCompiler.ioElemIndexes.get(identifier).get(element);
-		const inputEvent = InputEvent.Cont;
+		let inputEvent: InputEvent;
+		if (this.elementProvider.isButtonElement(element.typeId)) {
+			inputEvent = InputEvent.Pulse
+		} else if (this.elementProvider.isLeverElement(element.typeId)) {
+			inputEvent = InputEvent.Cont;
+		}
 		const stateBuffer = Int8Array.from(state as any).buffer;
 
 		const request = {
