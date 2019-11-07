@@ -85,7 +85,6 @@ export class WorkerCommunicationService {
 			}
 
 			if (data.method === WasmMethod.status) {
-				console.log(this._frameAverage.average);
 				this.ngZone.run(() => this._status = data.status);
 			}
 
