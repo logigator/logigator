@@ -6,7 +6,7 @@ import {StateCompilerService} from '../state-compiler/state-compiler.service';
 import {WasmMethod, WasmRequest, WasmResponse} from '../../../models/simulation/wasm-interface';
 import {Element} from '../../../models/element';
 import {BoardState, BoardStatus, InputEvent} from '../../../models/simulation/board';
-import {filter, takeWhile} from 'rxjs/operators';
+import {takeWhile} from 'rxjs/operators';
 import {ErrorHandlingService} from '../../error-handling/error-handling.service';
 import {CompileError} from '../../../models/simulation/error';
 import {ElementProviderService} from '../../element-provider/element-provider.service';
@@ -71,7 +71,7 @@ export class WorkerCommunicationService {
 			}
 			this._dataCache = state;
 
-			if (data.method !== WasmMethod.init) {
+			if (data.method === WasmMethod.single || data.method === WasmMethod.cont || data.method === WasmMethod.reset) {
 				const powerChangesWire = new Map<string, PowerChangesOutWire>();
 				const powerChangesWireEnds = new Map<string, Map<Element, boolean[]>>();
 				for (const identifier of this._powerSubjectsWires.keys()) {
