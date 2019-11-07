@@ -298,6 +298,8 @@ export class StateCompilerService {
 	): SimulationUnit[] {
 		const compiledComp = this._udcCache.get(projectId);
 		const units = SimulationUnits.cloneMult([...compiledComp.units.keys()]);
+		if (units.length === 0)
+			return [];
 		const linkMap = new Map<number, number>();
 		const typeIdentifier = '' + projectId;
 		if (outerUnit) {
