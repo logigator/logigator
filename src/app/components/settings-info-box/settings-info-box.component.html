@@ -11,7 +11,7 @@
 
 		<div class="property" *ngIf="isDelayElement">
 			<p>{{'SETTINGS_INFO.DELAY' | translate}}:</p>
-			<input type="number" formControlName="delay" [min]="1">
+			<input type="number" formControlName="delay" [min]="1"> <!-- delay (one for every settings type) or options in general?? -->
 		</div>
 
 		<div class="property">

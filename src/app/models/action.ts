@@ -14,7 +14,8 @@ export type ActionType =
 	'dcoWire' |
 	'rotComp' |
 	'numInpt' |
-	'plugInd';
+	'plugInd' |
+	'compOpt';
 
 export interface ChangeType {
 	newElems: Element[];
@@ -27,6 +28,7 @@ export interface Action {
 	others?: Element[];
 	pos?: PIXI.Point;
 	endPos?: PIXI.Point;
+	options?: number[][];
 	numbers?: number[]; // for rotation/numInput/plugIndex 0: new, 1: old
 }
 
@@ -44,7 +46,8 @@ export class Actions {
 		['dcoWire', ['conWire']],
 		['rotComp', ['rotComp']],
 		['numInpt', ['numInpt']],
-		['plugInd', ['plugInd']]
+		['plugInd', ['plugInd']],
+		['compOpt', ['compOpt']]
 	]);
 
 	public static reverseActions(actions: Action[]): Action[] {
@@ -68,6 +71,8 @@ export class Actions {
 				revAction.pos.y *= -1;
 			} else if (revAction.name === 'rotComp' || revAction.name === 'numInpt' || revAction.name === 'plugInd') {
 				revAction.numbers = [...action.numbers].reverse();
+			} else if (revAction.name === 'compOpt') {
+				revAction.options = [...action.options].reverse();
 			}
 		}
 		return revActions;

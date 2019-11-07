@@ -93,6 +93,9 @@ export class Project {
 			case 'plugInd':
 				this._currState.setPlugId(action.element, action.numbers[0]);
 				break;
+			case 'compOpt':
+				this._currState.setOptions(action.element, action.options[0]);
+				break;
 		}
 	}
 
@@ -340,6 +343,17 @@ export class Project {
 
 	public possiblePlugIndexes(elemId: number): number[] {
 		return this._currState.possiblePlugIds(this._currState.getElementById(elemId));
+	}
+
+	public setOptions(elemId: number, options: number[]): void {
+		const elem = this._currState.getElementById(elemId);
+		const oldOptions = [...elem.options];
+		this._currState.setOptions(elem, options);
+		const action: Action = {
+			name: 'compOpt',
+			options: [options, oldOptions]
+		};
+		this.newState([action]);
 	}
 
 

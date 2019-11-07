@@ -577,6 +577,10 @@ export class ProjectState {
 		return out;
 	}
 
+	public setOptions(element: Element, options: number[]): void {
+		element.options = options;
+	}
+
 
 	public chunk(x: number, y: number): Chunk {
 		return this._chunks[x] ? this._chunks[x][y] : null;
