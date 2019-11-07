@@ -4,9 +4,11 @@ import {PowerChangesOutWire, PowerChangesOutWireEnd} from '../../../models/simul
 import {ProjectsService} from '../../projects/projects.service';
 import {StateCompilerService} from '../state-compiler/state-compiler.service';
 import {WasmMethod, WasmRequest, WasmResponse} from '../../../models/simulation/wasm-interface';
-import {SimulationUnit} from '../../../models/simulation/simulation-unit';
 import {Element} from '../../../models/element';
 import {InputEvent} from '../../../models/simulation/board';
+import {ErrorHandlingService} from '../../error-handling/error-handling.service';
+import {CompileError} from '../../../models/simulation/error';
+import {ElementProviderService} from '../../element-provider/element-provider.service';
 
 @Injectable({
 	providedIn: 'root'
@@ -23,13 +25,12 @@ export class WorkerCommunicationService {
 
 	private _dataCache: Uint8Array;
 
-	private _powerStatesDiffer: IterableDiffer<number>;
-
 	constructor(
 		private projectsService: ProjectsService,
 		private stateCompiler: StateCompilerService,
 		private ngZone: NgZone,
-		private iterableDiffers: IterableDiffers
+		private errorHandling: ErrorHandlingService,
+		private elementProvider: ElementProviderService
 	) {
 		this._powerSubjectsWires = new Map<string, Subject<PowerChangesOutWire>>();
 		this._powerSubjectsWireEnds = new Map<string, Subject<Map<Element, boolean[]>>>();
@@ -41,10 +42,12 @@ export class WorkerCommunicationService {
 			if (event.data.initialized === undefined)
 				return;
 
-			if (event.data.initialized === true)
+			if (event.data.initialized === true) {
 				this._initialized = true;
-			else
-				console.error('WebWorker failed to initialize.', event.data);
+			} else {
+				console.log(event.data);
+				this.errorHandling.showErrorMessage('WebWorker failed to initialize.');
+			}
 			return;
 		}
 
@@ -53,7 +56,8 @@ export class WorkerCommunicationService {
 			const state = new Uint8Array(data.state);
 
 			if (state.length !== this.stateCompiler.highestLinkId + 1) {
-				console.error(`Response data length does not match component count`, data);
+				console.error(data);
+				this.errorHandling.showErrorMessage(`Response data length does not match component count`);
 			}
 			this._dataCache = state;
 
@@ -116,14 +120,20 @@ export class WorkerCommunicationService {
 
 		const project = this.projectsService.mainProject;
 
-		const compiledBoard = await this.stateCompiler.compileAsInt32Array(project);
-		this._powerStatesDiffer = this.iterableDiffers.find(new Int8Array()).create();
-		if (!compiledBoard) {
-			console.error('Failed to compile board.');
-			return;
-		}
+		try {
+			const compiledBoard = await this.stateCompiler.compileAsInt32Array(project);
+			if (!compiledBoard) {
+				this.errorHandling.showErrorMessage('Failed to compile board.');
+				return;
+			}
 
-		this.finalizeInit(compiledBoard.buffer);
+			this.finalizeInit(compiledBoard.buffer);
+		} catch (e) {
+			e.comp = this.elementProvider.getElementById(e.comp).name;
+			e.src = this.elementProvider.getElementById(e.src).name;
+			this.errorHandling.showErrorMessage((e as CompileError).name, e);
+			throw e;
+		}
 	}
 
 	private initWorker() {

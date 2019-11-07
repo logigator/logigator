@@ -195,5 +195,10 @@
 				"DESCRIPTION": "Place this where the outputs of you self-defined components should be"
 			}
 		}
+	},
+	"ERROR": {
+		"COMPILE": {
+			"CIRCULAR_DEP": "Circular dependency in components. {{src}} must not include {{comp}}."
+		}
 	}
 }
