@@ -173,17 +173,6 @@ export class WorkerCommunicationService {
 				components: compiledBoard
 			}
 		} as WasmRequest, [ compiledBoard ]);
-
-		this.ngZone.runOutsideAngular(() => {
-			timer(0, 1000).pipe(
-				filter(() => this._isContinuous),
-				takeWhile(() => this._initialized === true)
-			).subscribe(x => {
-				this._worker.postMessage({
-					method: WasmMethod.status
-				} as WasmRequest);
-			});
-		});
 	}
 
 	public stop(): void {
@@ -198,6 +187,9 @@ export class WorkerCommunicationService {
 	}
 
 	public start(): void {
+		if (this._isContinuous)
+			return;
+
 		const request: WasmRequest = {
 			method: WasmMethod.cont,
 			time: this._frameAverage.average
@@ -205,6 +197,15 @@ export class WorkerCommunicationService {
 		this._isContinuous = true;
 		this._worker.postMessage(request);
 		this._worker.postMessage(request);
+		this.ngZone.runOutsideAngular(() => {
+			timer(0, 1000).pipe(
+				takeWhile(() => this._isContinuous)
+			).subscribe(x => {
+				this._worker.postMessage({
+					method: WasmMethod.status
+				} as WasmRequest);
+			});
+		});
 	}
 
 	public singleStep(): void {
@@ -218,7 +219,7 @@ export class WorkerCommunicationService {
 	}
 
 	public setFrameTime(frameTime: number): void {
-		this._frameAverage.push(frameTime > this._frameAverage.average + 1000 ? this._frameAverage.average + 1000 : frameTime);
+		this._frameAverage.push(frameTime > this._frameAverage.average + 100 ? this._frameAverage.average + 100 : frameTime);
 	}
 
 	public setUserInput(identifier: string, element: Element, state: boolean[]): void {
