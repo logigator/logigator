@@ -18,7 +18,7 @@ import {ProjectSaveManagementService} from '../../project-save-management/projec
 import {ElementProviderService} from '../../element-provider/element-provider.service';
 import {MapHelper} from './map-helper';
 import {Elements} from '../../../models/elements';
-import {getStaticDI} from '../../../models/get-di';
+import {CompileError} from '../../../models/simulation/error';
 
 @Injectable({
 	providedIn: 'root'
@@ -35,6 +35,7 @@ export class StateCompilerService {
 	private _wireEndsOnLinksCache: WireEndsOnLinksInProject;
 
 	private _depTree: Map<number, Project>;
+	private _compiledDeps: Set<number>;
 
 	private _udcCache: Map<number, CompiledComp>;
 
@@ -128,6 +129,7 @@ export class StateCompilerService {
 	}
 
 	private compileDependencies(depTree: Map<number, Project>): void {
+		this._compiledDeps = new Set<number>();
 		for (const [typeId, project] of depTree.entries()) {
 			if (this._udcCache.has(typeId) && !project.compileDirty) {
 				console.log('load from cache', typeId);
@@ -138,6 +140,14 @@ export class StateCompilerService {
 	}
 
 	private compileSingle(project: Project): void {
+		if (this._compiledDeps.has(project.id)) {
+			throw {
+				name: 'ERROR.COMPILE.CIRCULAR_DEP',
+				src: this._currTypeId,
+				comp: project.id
+			} as CompileError;
+		}
+		this._compiledDeps.add(project.id);
 		const oldTypeId = this._currTypeId;
 		this._currTypeId = project.id;
 		const unitElems = StateCompilerService.generateUnits(project.currState);

@@ -16,7 +16,8 @@
 		"custom-webpack.config.ts",
 		"create-dist-package.ts",
 		"package-app.ts",
-		"add-protocols-to-index.ts"
+		"add-protocols-to-index.ts",
+		"index-html-transform.ts"
 	],
 	"include": [
 		"./**/*.ts"
