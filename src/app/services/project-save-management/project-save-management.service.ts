@@ -203,11 +203,13 @@ export class ProjectSaveManagementService {
 
 			// #!web
 			window.history.pushState(null, null, `/local/${parsedFile.mainProject.name}`);
-			return new Project(new ProjectState(mainModel), {
+			const proj =  new Project(new ProjectState(mainModel), {
 				type: 'project',
 				name: parsedFile.mainProject.name,
 				id: parsedFile.mainProject.id
 			});
+			delete this._projectSource;
+			return proj;
 		} catch (e) {
 			this.errorHandling.showErrorMessage('Invalid File');
 		}
@@ -300,13 +302,12 @@ export class ProjectSaveManagementService {
 			}
 		}
 		const projectsToSave: Project[] = [];
-		const mainProjToSave = new Project(new ProjectState(this.applyMappingsLoad(project.allElements, mappings)), {
-			type: 'project',
-			name: name || project.name,
-			id: mainProjectId
-		});
-		mainProjToSave.saveDirty = true;
-		projectsToSave.push(mainProjToSave);
+		for (const dep of deps) {
+			if (dep.id < 1000) {
+				const id = mappings.find(m => m.model === dep.id).database;
+				if (id >= 1000) this.elemProvService.addUserDefinedElement(this.elemProvService.getElementById(dep.id), id);
+			}
+		}
 		for (const dep of deps) {
 			const singleMapping = mappings.find(m => m.model === dep.id);
 			let id;
@@ -320,10 +321,16 @@ export class ProjectSaveManagementService {
 				name: dep.name,
 				type: 'comp'
 			});
-			if (id >= 1000) this.elemProvService.addUserDefinedElement(this.elemProvService.getElementById(dep.id), id);
 			proj.saveDirty = true;
 			projectsToSave.push(proj);
 		}
+		const mainProjToSave = new Project(new ProjectState(this.applyMappingsLoad(project.allElements, mappings)), {
+			type: 'project',
+			name: name || project.name,
+			id: mainProjectId
+		});
+		mainProjToSave.saveDirty = true;
+		projectsToSave.push(mainProjToSave);
 		this.elemProvService.clearElementsFromFile();
 		this._projectCache.clear();
 		await this.saveProjectsAndComponents(projectsToSave);
@@ -523,7 +530,7 @@ export class ProjectSaveManagementService {
 			}),
 			this.errorHandling.catchErrorOperatorDynamicMessage((err: any) => {
 				if (err.message === 'isComp') return 'Unable to open Component as Project';
-				return err;
+				return 'Error opening Project';
 			}, emptyProjectOnFailure ? Project.empty() : undefined)
 		).toPromise();
 	}

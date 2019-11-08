@@ -56,12 +56,12 @@ export abstract class WorkArea {
 		});
 	}
 
-	protected addTickerFunction() {
+	protected addTickerFunction(setFrameTime = false) {
 		this.ticker.addTickerFunction(this.getIdentifier(), () => {
 			if (!this._activeView) return;
 			this.updateZoomPan();
 			this._pixiRenderer.render(this._activeView);
-			if (this.constructor.name === 'WorkAreaComponent') (this as unknown as WorkAreaComponent).setWorkerFrameTime();
+			if (setFrameTime) (this as unknown as WorkAreaComponent).setWorkerFrameTime();
 		});
 	}
 
