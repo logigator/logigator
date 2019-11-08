@@ -118,7 +118,7 @@ export abstract class WorkArea {
 	}
 
 	private updateSelectedZoomScale() {
-		if (this._activeView.constructor.name === 'EditorView') {
+		if ('updateSelectedElementsScale' in this._activeView && 'updatePastingElementsScale' in this._activeView) {
 			(this._activeView as EditorView).updateSelectedElementsScale();
 			(this._activeView as EditorView).updatePastingElementsScale();
 		}

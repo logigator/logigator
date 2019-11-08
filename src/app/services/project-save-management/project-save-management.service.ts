@@ -74,7 +74,10 @@ export class ProjectSaveManagementService {
 	public getAllProjectsInfoFromServer(): Observable<ProjectInfoResponse[]> {
 		return this.http.get<HttpResponseData<ProjectInfoResponse[]>>(environment.apiPrefix + '/project/get-all-projects-info').pipe(
 			this.errorHandling.catchErrorOperator('Unable to get Projects from Server', undefined),
-			map(r => r.result)
+			map(r => {
+				if (r) return r.result;
+				return [];
+			})
 		);
 	}
 
