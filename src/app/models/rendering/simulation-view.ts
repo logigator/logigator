@@ -60,6 +60,10 @@ export class SimulationView extends View {
 		});
 	}
 
+	isSimulationView(): boolean {
+		return true;
+	}
+
 	public placeComponentOnView(element: Element) {
 		const sprite = LGraphicsResolver.getLGraphicsFromElement(this.zoomPan.currentScale, element, this.parentProjectIdentifier);
 		sprite.position = Grid.getLocalChunkPixelPosForGridPos(element.pos);

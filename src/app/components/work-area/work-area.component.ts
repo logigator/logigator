@@ -43,7 +43,7 @@ export class WorkAreaComponent extends WorkArea implements OnInit, OnDestroy {
 		this._allViews = new Map<number, EditorView>();
 
 		this.ngZone.runOutsideAngular(async () => {
-			this.addTickerFunction();
+			this.addTickerFunction(true);
 			this.preventContextMenu(this._pixiCanvasContainer, this.renderer2);
 			this.initZoomPan(this._pixiCanvasContainer);
 			this.initPixi(this._pixiCanvasContainer, this.renderer2);

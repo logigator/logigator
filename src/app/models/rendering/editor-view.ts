@@ -38,6 +38,10 @@ export class EditorView extends View {
 		).subscribe((dir => this.onZoomClick(dir)));
 	}
 
+	isSimulationView(): boolean {
+		return false;
+	}
+
 	public updateSelectedElementsScale() {
 		const selectedIds = this.selectionService.selectedIds(this.projectId);
 		for (let i = 0; i < selectedIds.length; i++) {
