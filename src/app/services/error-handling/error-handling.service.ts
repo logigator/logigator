@@ -2,13 +2,17 @@ import { Injectable } from '@angular/core';
 import {catchError} from 'rxjs/operators';
 import {Observable, of} from 'rxjs';
 import {ToastContainerDirective, ToastrService} from 'ngx-toastr';
+import {TranslateService} from '@ngx-translate/core';
 
 @Injectable({
 	providedIn: 'root'
 })
 export class ErrorHandlingService {
 
-	constructor(private toastr: ToastrService) { }
+	constructor(
+		private toastr: ToastrService,
+		private translate: TranslateService
+	) { }
 
 	public catchErrorOperator<T>(errorMessage: string, toEmit: any) {
 		return (source: Observable<T>) => {
@@ -43,14 +47,19 @@ export class ErrorHandlingService {
 		};
 	}
 
-	public showErrorMessage(message: string) {
-		this.toastr.error(message);
-		console.error(message);
+	public showErrorMessage(message: string, translationParams?: any) {
+		this.translate.get(message, translationParams).subscribe((res: string) => {
+			this.toastr.error(res);
+			console.error(res);
+		});
 	}
 
-	public showInfo(message: string) {
-		this.toastr.info(message);
-		console.log(message);
+	public showInfo(message: string, translationParams?: any) {
+		this.translate.get(message, translationParams).subscribe((res: string) => {
+			this.toastr.info(res);
+			console.log(res);
+		});
+
 	}
 
 	public setToastrContainer(cont: ToastContainerDirective) {

@@ -7,9 +7,14 @@ export enum BoardState {
 	Stopping
 }
 
+export enum InputEvent {
+	Cont,
+	Pulse
+}
+
 export interface Board {
 	links: number;
-	components: SimulationUnit[];
+	components: ArrayBuffer;
 }
 
 export interface BoardStatus {

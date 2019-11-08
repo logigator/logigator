@@ -48,7 +48,7 @@ export class SelectionService {
 	}
 
 	public isSingleSelect(projectId?: number): boolean {
-		const id = projectId === undefined ? this.projectsService.currProject.id : projectId;
+		const id = projectId === undefined ? this.projectsService.currProject ? this.projectsService.currProject.id : projectId : projectId;
 		if (this._selectedIds.has(id)) {
 			return this._selectedIds.get(id).length === 1;
 		}
@@ -56,7 +56,7 @@ export class SelectionService {
 }
 
 	public selectedIds(projectId?: number): number[] {
-		const id = projectId === undefined ? this.projectsService.currProject.id : projectId;
+		const id = projectId === undefined ? this.projectsService.currProject ? this.projectsService.currProject.id : projectId : projectId;
 		if (this._selectedIds.has(id)) {
 			return this._selectedIds.get(id);
 		}
@@ -64,7 +64,7 @@ export class SelectionService {
 	}
 
 	public selectedConnections(projectId?: number): PIXI.Point[] {
-		const id = projectId === undefined ? this.projectsService.currProject.id : projectId;
+		const id = projectId === undefined ? this.projectsService.currProject ? this.projectsService.currProject.id : projectId : projectId;
 		if (this._selectedConnections.has(id)) {
 			return this._selectedConnections.get(id);
 		}

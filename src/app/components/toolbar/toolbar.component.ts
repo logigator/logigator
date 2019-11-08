@@ -8,6 +8,7 @@ import {Test} from '../../../../tests/auto-tests/tests';
 // #!debug
 import {ManuallyLogged} from '../../../../tests/auto-tests/board-recorder';
 import {WorkerCommunicationService} from '../../services/simulation/worker-communication/worker-communication.service';
+import {RenderTicker} from '../../services/render-ticker/render-ticker.service';
 
 @Component({
 	selector: 'app-toolbar',
@@ -23,7 +24,8 @@ export class ToolbarComponent {
 		private workModeService: WorkModeService,
 		private projectService: ProjectsService,
 		private projectInteraction: ProjectInteractionService,
-		private workerCommunication: WorkerCommunicationService
+		private workerCommunication: WorkerCommunicationService,
+		private renderTicker: RenderTicker
 	) {}
 
 	// #!if DEBUG === 'true'
@@ -56,6 +58,7 @@ export class ToolbarComponent {
 	}
 
 	public leaveSim() {
+		this.renderTicker.stopAllContSim();
 		this.workModeService.leaveSimulation();
 	}
 
@@ -109,17 +112,28 @@ export class ToolbarComponent {
 
 	public continueSm() {
 		this.workerCommunication.start();
+		this.renderTicker.startAllContSim();
 	}
 
 	public pauseSim() {
 		this.workerCommunication.pause();
+		this.renderTicker.stopAllContSim();
 	}
 
 	public stopSim() {
 		this.workerCommunication.stop();
+		this.renderTicker.stopAllContSim();
 	}
 
 	public singleStepSim() {
 		this.workerCommunication.singleStep();
+	}
+
+	public get simulationStatus() {
+		return this.workerCommunication.status;
+	}
+
+	public get simulationRunning() {
+		return this.workerCommunication.isRunning;
 	}
 }

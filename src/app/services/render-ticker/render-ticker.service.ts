@@ -16,17 +16,22 @@ export class RenderTicker {
 
 	private _tickerFunctions = new Map<string, TickerFunction>();
 
+	private _startedAllCont = false;
+
 	public addTickerFunction(identifier: string, fn: () => void) {
 		this._tickerFunctions.set(identifier, {
 			fn: this.getTickerFunction(fn, identifier),
 			requestedFrame: false,
 			started: false
 		});
+		if (this._startedAllCont) {
+			this.startTicker(identifier);
+		}
 	}
 
 	public removeTickerFunction(identifier: string) {
 		if (!this._tickerFunctions.has(identifier)) return;
-		this.stopTicker(identifier, false);
+		this.stopTicker(identifier, false, true);
 		this._tickerFunctions.delete(identifier);
 	}
 
@@ -46,8 +51,23 @@ export class RenderTicker {
 		}
 	}
 
-	public stopTicker(identifier: string, keepRequestFrame = true) {
+	public startAllContSim() {
+		this._startedAllCont = true;
+		for (const id of this._tickerFunctions.keys()) {
+			this.startTicker(id);
+		}
+	}
+
+	public stopAllContSim() {
+		this._startedAllCont = false;
+		for (const id of this._tickerFunctions.keys()) {
+			this.stopTicker(id, false, true);
+		}
+	}
+
+	public stopTicker(identifier: string, keepRequestFrame = true, force = false) {
 		if (!this._tickerFunctions.has(identifier)) return;
+		if (this._startedAllCont && !force) return;
 		const tf = this._tickerFunctions.get(identifier);
 		tf.started = false;
 		PIXI.Ticker.shared.remove(tf.fn, this);

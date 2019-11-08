@@ -6,6 +6,7 @@ export const button: ElementType = {
 	numOutputs: 1,
 	minInputs: 0,
 	maxInputs: 0,
+	width: 1,
 	symbol: 'but',
 	description: 'ELEMENT_TYPE.IO.BUTTON.DESCRIPTION',
 	rotation: 0,

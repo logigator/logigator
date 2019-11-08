@@ -7,7 +7,7 @@ export interface Element {
 	numOutputs: number;
 
 	pos: PIXI.Point;
-	endPos: PIXI.Point;
+	endPos?: PIXI.Point;
 	rotation?: number;
 
 	plugIndex?: number;
