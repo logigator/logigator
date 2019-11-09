@@ -18,8 +18,8 @@
 			color: themed('primary-text');
 			border-radius: border('radius');
 			z-index: 600;
-			width: 50%;
-			height: 30%;
+			width: 80vw;
+			height: 60vh;
 
 			@media (max-width: 768px) {
 				width: 90%;
