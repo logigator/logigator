@@ -23,6 +23,7 @@ import {ElectronService} from 'ngx-electron';
 import {saveLocalFile} from './save-local-file';
 import {SharingService} from '../sharing/sharing.service';
 import {Elements} from '../../models/elements';
+import {OpenShareResp} from '../../models/http-responses/open-share-resp';
 
 @Injectable({
 	providedIn: 'root'
@@ -139,12 +140,35 @@ export class ProjectSaveManagementService {
 		this._projectSource = 'share';
 		const resp = await this.sharing.openShare(address).pipe(
 			this.errorHandling.catchErrorOperator('Unable to open shared project', undefined)
-		).toPromise();
+		).toPromise<OpenShareResp>();
 		if (!resp) {
 			// !#web
 			window.history.pushState(null, null, '/');
 			delete this._projectSource;
 			return Project.empty();
+		}
+		for (const depId in resp.components) {
+			const depComp = resp.components[depId];
+			this.elemProvService.addUserDefinedElement({
+				description: depComp.description,
+				name: depComp.name,
+				rotation: 0,
+				width: environment.componentWidth,
+				minInputs: depComp.num_inputs,
+				maxInputs: depComp.num_inputs,
+				symbol: depComp.symbol,
+				numInputs: depComp.num_inputs,
+				numOutputs: depComp.num_outputs,
+				category: 'user'
+			}, Number(depId));
+		}
+		for (const depId in resp.components) {
+			const projectModel = this.convertResponseDataToProjectModel(resp.components[depId].data);
+			this._projectCache.set(Number(depId), new Project(new ProjectState(projectModel), {
+				type: 'comp',
+				name: resp.components[depId].name,
+				id: Number(depId)
+			}));
 		}
 		const model = this.convertResponseDataToProjectModel(resp.data);
 		const project = new Project(new ProjectState(model), {
