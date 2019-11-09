@@ -37,7 +37,7 @@ export class ConstructionBoxCategoryComponent {
 	}
 
 	public isHiddenPlug(toSearch: string, typeId: number): boolean {
-		if (toSearch === '' || typeId !== 12)
+		if (toSearch === '' || typeId !== 102)
 			return false;
 		return toSearch.trim().toLowerCase().replace(' ', '') === 'buttplug';
 	}
