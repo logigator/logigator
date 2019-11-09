@@ -6,7 +6,7 @@ function transform(targetOptions, indexHtml: string): string {
 	const toInject = `
 		${warningPopup}
 		<noscript>
-			${warningPopup.replace('id="compatibility-warning" style="display: none;"', 'id="compatibility-warning" style="display: flex;"')}
+			${warningPopup.replace('id="compatibility-warning" style="display: none"', 'id="compatibility-warning"')}
 		</noscript>`;
 
 	return indexHtml.replace('<template id="compatibility-warning"></template>', toInject);
