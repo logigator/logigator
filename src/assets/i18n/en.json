@@ -40,7 +40,8 @@
 			"LANGUAGE": "Language",
 			"SHORTCUTS": "Customize Shortcuts",
 			"ACCOUNT": "Account Settings",
-			"LOGOUT": "Logout"
+			"LOGOUT": "Logout",
+			"PRIVACY": "Privacy Policy"
 		}
 	},
 	"TOOLBAR": {
