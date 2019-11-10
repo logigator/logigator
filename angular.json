@@ -128,7 +128,8 @@
 								"src/assets",
 								"src/site.webmanifest",
 								"src/browserconfig.xml",
-								"src/compatibility-check/warning-script.js"
+								"src/compatibility-check/warning-script.js",
+								"src/compatibility-check/warning-styles.css"
 							],
 							"optimization": true,
 							"outputHashing": "all",
