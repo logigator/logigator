@@ -230,6 +230,10 @@
 					}
 				}
 			}
-		}},
-	"defaultProject": "logigator-editor"
+		}
+	},
+	"defaultProject": "logigator-editor",
+	"cli": {
+		"analytics": false
+	}
 }
