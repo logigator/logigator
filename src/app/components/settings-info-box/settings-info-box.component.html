@@ -5,7 +5,7 @@
 	<div class="content" [formGroup]="propertiesForm">
 		<div class="property" *ngIf="elemType.minInputs !== elemType.maxInputs">
 			<p>{{'SETTINGS_INFO.INPUTS' | translate}}:</p>
-			<input type="number" formControlName="numInputs" [min]="elemType.minInputs" [max]="elemType.maxInputs">
+			<input type="number" formControlName="numInputs" [min]="elemType.minInputs" [max]="elemType.maxInputs" (blur)="resetInputElementValue()">
 		</div>
 		<div class="property">
 			<p>{{'SETTINGS_INFO.DIRECTION' | translate}}:</p>
