@@ -1,6 +1,7 @@
 import {Injectable} from '@angular/core';
 import {Project} from '../../../models/project';
-import {SimulationUnit, SimulationUnits} from '../../../models/simulation/simulation-unit';
+import {SimulationUnit} from '../../../models/simulation/simulation-unit';
+import {SimulationUnits} from '../../../models/simulation/simulation-units';
 import {
 	ElementId,
 	ElementToUnit, LinkOnWireEnd,
