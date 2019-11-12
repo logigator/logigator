@@ -6,7 +6,7 @@ import {StateCompilerService} from '../state-compiler/state-compiler.service';
 import {WasmMethod, WasmRequest, WasmResponse} from '../../../models/simulation/wasm-interface';
 import {Element} from '../../../models/element';
 import {BoardState, BoardStatus, InputEvent} from '../../../models/simulation/board';
-import {filter, takeWhile} from 'rxjs/operators';
+import {takeWhile} from 'rxjs/operators';
 import {ErrorHandlingService} from '../../error-handling/error-handling.service';
 import {CompileError} from '../../../models/simulation/error';
 import {ElementProviderService} from '../../element-provider/element-provider.service';
@@ -71,7 +71,7 @@ export class WorkerCommunicationService {
 			}
 			this._dataCache = state;
 
-			if (data.method !== WasmMethod.init) {
+			if (data.method === WasmMethod.single || data.method === WasmMethod.cont || data.method === WasmMethod.reset) {
 				const powerChangesWire = new Map<string, PowerChangesOutWire>();
 				const powerChangesWireEnds = new Map<string, Map<Element, boolean[]>>();
 				for (const identifier of this._powerSubjectsWires.keys()) {
@@ -84,16 +84,16 @@ export class WorkerCommunicationService {
 				}
 			}
 
-			if (data.method === WasmMethod.status) {
-				this.ngZone.run(() => this._status = data.status);
-			}
-
-			if (this._isContinuous) {
+			if (data.method === WasmMethod.cont && this._isContinuous) {
 				const request: WasmRequest = {
 					method: WasmMethod.cont,
 					time: this._frameAverage.average
 				};
 				this._worker.postMessage(request);
+			}
+
+			if (data.method === WasmMethod.status) {
+				this.ngZone.run(() => this._status = data.status);
 			}
 		} else {
 			console.error('error', data);
@@ -173,17 +173,6 @@ export class WorkerCommunicationService {
 				components: compiledBoard
 			}
 		} as WasmRequest, [ compiledBoard ]);
-
-		this.ngZone.runOutsideAngular(() => {
-			timer(0, 1000).pipe(
-				filter(() => this._isContinuous),
-				takeWhile(() => this._initialized === true)
-			).subscribe(x => {
-				this._worker.postMessage({
-					method: WasmMethod.status
-				} as WasmRequest);
-			});
-		});
 	}
 
 	public stop(): void {
@@ -198,6 +187,9 @@ export class WorkerCommunicationService {
 	}
 
 	public start(): void {
+		if (this._isContinuous)
+			return;
+
 		const request: WasmRequest = {
 			method: WasmMethod.cont,
 			time: this._frameAverage.average
@@ -205,6 +197,15 @@ export class WorkerCommunicationService {
 		this._isContinuous = true;
 		this._worker.postMessage(request);
 		this._worker.postMessage(request);
+		this.ngZone.runOutsideAngular(() => {
+			timer(0, 1000).pipe(
+				takeWhile(() => this._isContinuous)
+			).subscribe(x => {
+				this._worker.postMessage({
+					method: WasmMethod.status
+				} as WasmRequest);
+			});
+		});
 	}
 
 	public singleStep(): void {
@@ -218,12 +219,17 @@ export class WorkerCommunicationService {
 	}
 
 	public setFrameTime(frameTime: number): void {
-		this._frameAverage.push(frameTime > this._frameAverage.average + 1000 ? this._frameAverage.average + 1000 : frameTime);
+		this._frameAverage.push(frameTime > this._frameAverage.average + 100 ? this._frameAverage.average + 100 : frameTime);
 	}
 
 	public setUserInput(identifier: string, element: Element, state: boolean[]): void {
-		const index = this.stateCompiler.ioElemIndexes.get(identifier).get(element.id);
-		const inputEvent = InputEvent.Cont;
+		const index = this.stateCompiler.ioElemIndexes.get(identifier).get(element);
+		let inputEvent: InputEvent;
+		if (this.elementProvider.isButtonElement(element.typeId)) {
+			inputEvent = InputEvent.Pulse;
+		} else if (this.elementProvider.isLeverElement(element.typeId)) {
+			inputEvent = InputEvent.Cont;
+		}
 		const stateBuffer = Int8Array.from(state as any).buffer;
 
 		const request = {

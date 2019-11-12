@@ -5,14 +5,14 @@
 	<div class="content" [formGroup]="propertiesForm">
 		<div class="property" *ngIf="elemType.minInputs !== elemType.maxInputs">
 			<p>{{'SETTINGS_INFO.INPUTS' | translate}}:</p>
-			<input type="number" formControlName="numInputs" [min]="elemType.minInputs" [max]="elemType.maxInputs">
+			<input type="number" formControlName="numInputs" [min]="elemType.minInputs" [max]="elemType.maxInputs" (blur)="resetInputElementValue()">
 		</div>
 		<div class="property">
 			<p>{{'SETTINGS_INFO.DIRECTION' | translate}}:</p>
 			<select formControlName="rotation">
-				<option value="0">{{'SETTINGS_INFO.DIRECTIONS.LEFT' | translate}} &rarr;</option>
+				<option value="0">{{'SETTINGS_INFO.DIRECTIONS.RIGHT' | translate}} &rarr;</option>
 				<option value="1">{{'SETTINGS_INFO.DIRECTIONS.DOWN' | translate}} &darr;</option>
-				<option value="2">{{'SETTINGS_INFO.DIRECTIONS.RIGHT' | translate}} &larr;</option>
+				<option value="2">{{'SETTINGS_INFO.DIRECTIONS.LEFT' | translate}} &larr;</option>
 				<option value="3">{{'SETTINGS_INFO.DIRECTIONS.UP' | translate}} &uarr;</option>
 			</select>
 		</div>

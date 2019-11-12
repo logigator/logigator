@@ -53,6 +53,7 @@ export class ButtonGraphics extends PIXI.Graphics implements LGraphics, Componen
 		this.beginFill(this.themingService.getEditorColor('background'));
 		this.moveTo(0, 0);
 		this.drawRect(0, 0, environment.gridPixelWidth * this._width, environment.gridPixelWidth);
+		this.drawRect(3, 3, environment.gridPixelWidth - 6, environment.gridPixelWidth - 6);
 		this.beginFill(this.themingService.getEditorColor('wire'));
 
 		switch (this.element.rotation) {
@@ -80,7 +81,7 @@ export class ButtonGraphics extends PIXI.Graphics implements LGraphics, Componen
 		this.on('pointerdown', (e: PIXI.interaction.InteractionEvent) => {
 			const newSate = !this.simActiveState;
 			this.workerCommunicationService.setUserInput(this._projectIdentifier, this.element, [newSate]);
-			this.setSimulationState([newSate]);
+			this.setSimulationState([newSate], true);
 			getStaticDI(RenderTicker).singleFrame(this._projectIdentifier);
 		});
 	}
@@ -97,6 +98,12 @@ export class ButtonGraphics extends PIXI.Graphics implements LGraphics, Componen
 				} else {
 					data.lineStyle.width = 1 / scale;
 				}
+			} else if (data.shape instanceof PIXI.Rectangle && data.shape.width === 10 && data.shape.height === 10) {
+				if (this.simActiveState) {
+					data.fillStyle.color = this.themingService.getEditorColor('wire');
+				} else {
+					data.fillStyle.color = this.themingService.getEditorColor('background');
+				}
 			}
 		}
 		this._scale = scale;
@@ -111,7 +118,8 @@ export class ButtonGraphics extends PIXI.Graphics implements LGraphics, Componen
 		}
 	}
 
-	setSimulationState(state: boolean[]) {
+	setSimulationState(state: boolean[], force = false) {
+		if (state[0] && !force) return;
 		this.shouldHaveActiveState = state[0];
 		if (this.worldVisible) {
 			this.applySimState(this._scale);

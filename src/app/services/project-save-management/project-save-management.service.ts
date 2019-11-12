@@ -23,6 +23,7 @@ import {ElectronService} from 'ngx-electron';
 import {saveLocalFile} from './save-local-file';
 import {SharingService} from '../sharing/sharing.service';
 import {Elements} from '../../models/elements';
+import {OpenShareResp} from '../../models/http-responses/open-share-resp';
 
 @Injectable({
 	providedIn: 'root'
@@ -74,7 +75,10 @@ export class ProjectSaveManagementService {
 	public getAllProjectsInfoFromServer(): Observable<ProjectInfoResponse[]> {
 		return this.http.get<HttpResponseData<ProjectInfoResponse[]>>(environment.apiPrefix + '/project/get-all-projects-info').pipe(
 			this.errorHandling.catchErrorOperator('Unable to get Projects from Server', undefined),
-			map(r => r.result)
+			map(r => {
+				if (r) return r.result;
+				return [];
+			})
 		);
 	}
 
@@ -136,12 +140,35 @@ export class ProjectSaveManagementService {
 		this._projectSource = 'share';
 		const resp = await this.sharing.openShare(address).pipe(
 			this.errorHandling.catchErrorOperator('Unable to open shared project', undefined)
-		).toPromise();
+		).toPromise<OpenShareResp>();
 		if (!resp) {
 			// !#web
 			window.history.pushState(null, null, '/');
 			delete this._projectSource;
 			return Project.empty();
+		}
+		for (const depId in resp.components) {
+			const depComp = resp.components[depId];
+			this.elemProvService.addUserDefinedElement({
+				description: depComp.description,
+				name: depComp.name,
+				rotation: 0,
+				width: environment.componentWidth,
+				minInputs: depComp.num_inputs,
+				maxInputs: depComp.num_inputs,
+				symbol: depComp.symbol,
+				numInputs: depComp.num_inputs,
+				numOutputs: depComp.num_outputs,
+				category: 'user'
+			}, Number(depId));
+		}
+		for (const depId in resp.components) {
+			const projectModel = this.convertResponseDataToProjectModel(resp.components[depId].data);
+			this._projectCache.set(Number(depId), new Project(new ProjectState(projectModel), {
+				type: 'comp',
+				name: resp.components[depId].name,
+				id: Number(depId)
+			}));
 		}
 		const model = this.convertResponseDataToProjectModel(resp.data);
 		const project = new Project(new ProjectState(model), {
@@ -203,11 +230,13 @@ export class ProjectSaveManagementService {
 
 			// #!web
 			window.history.pushState(null, null, `/local/${parsedFile.mainProject.name}`);
-			return new Project(new ProjectState(mainModel), {
+			const proj =  new Project(new ProjectState(mainModel), {
 				type: 'project',
 				name: parsedFile.mainProject.name,
 				id: parsedFile.mainProject.id
 			});
+			delete this._projectSource;
+			return proj;
 		} catch (e) {
 			this.errorHandling.showErrorMessage('Invalid File');
 		}
@@ -300,13 +329,12 @@ export class ProjectSaveManagementService {
 			}
 		}
 		const projectsToSave: Project[] = [];
-		const mainProjToSave = new Project(new ProjectState(this.applyMappingsLoad(project.allElements, mappings)), {
-			type: 'project',
-			name: name || project.name,
-			id: mainProjectId
-		});
-		mainProjToSave.saveDirty = true;
-		projectsToSave.push(mainProjToSave);
+		for (const dep of deps) {
+			if (dep.id < 1000) {
+				const id = mappings.find(m => m.model === dep.id).database;
+				if (id >= 1000) this.elemProvService.addUserDefinedElement(this.elemProvService.getElementById(dep.id), id);
+			}
+		}
 		for (const dep of deps) {
 			const singleMapping = mappings.find(m => m.model === dep.id);
 			let id;
@@ -320,10 +348,16 @@ export class ProjectSaveManagementService {
 				name: dep.name,
 				type: 'comp'
 			});
-			if (id >= 1000) this.elemProvService.addUserDefinedElement(this.elemProvService.getElementById(dep.id), id);
 			proj.saveDirty = true;
 			projectsToSave.push(proj);
 		}
+		const mainProjToSave = new Project(new ProjectState(this.applyMappingsLoad(project.allElements, mappings)), {
+			type: 'project',
+			name: name || project.name,
+			id: mainProjectId
+		});
+		mainProjToSave.saveDirty = true;
+		projectsToSave.push(mainProjToSave);
 		this.elemProvService.clearElementsFromFile();
 		this._projectCache.clear();
 		await this.saveProjectsAndComponents(projectsToSave);
@@ -523,7 +557,7 @@ export class ProjectSaveManagementService {
 			}),
 			this.errorHandling.catchErrorOperatorDynamicMessage((err: any) => {
 				if (err.message === 'isComp') return 'Unable to open Component as Project';
-				return err;
+				return 'Error opening Project';
 			}, emptyProjectOnFailure ? Project.empty() : undefined)
 		).toPromise();
 	}

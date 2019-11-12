@@ -39,6 +39,10 @@ export class FileDropdownComponent implements OnInit {
 		return this.projectSaveService.isShare && this.user.isLoggedIn;
 	}
 
+	public get canSave(): boolean {
+		return this.user.isLoggedIn && !this.projectSaveService.isShare;
+	}
+
 	public newProject() {
 		this.close();
 		this.projectInteraction.newProject();

@@ -20,9 +20,15 @@
 	<div class="link">
 		<button class="btn-outline secondary small" (click)="showCustomizeShortcuts()">{{'DROPDOWN.SETTINGS.SHORTCUTS' | translate}}</button>
 	</div>
+	<ng-container *ngIf="isLoggedIn">
+		<hr>
+		<div class="link">
+			<button class="btn-outline secondary small" (click)="accountSettings()">{{'DROPDOWN.SETTINGS.ACCOUNT' | translate}}</button>
+		</div>
+	</ng-container>
 	<hr>
 	<div class="link">
-		<button class="btn-outline secondary small">{{'DROPDOWN.SETTINGS.ACCOUNT' | translate}}</button>
+		<button class="btn-outline secondary small" (click)="privacyPolicy()">{{'DROPDOWN.SETTINGS.PRIVACY' | translate}}</button>
 	</div>
 
 	<!-- #!if ELECTRON === 'true' -->

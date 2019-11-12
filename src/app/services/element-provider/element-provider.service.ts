@@ -11,6 +11,7 @@ import {lever} from '../../models/element-types/io/lever';
 import {butt} from '../../models/element-types/plug/butt';
 import {ErrorHandlingService} from '../error-handling/error-handling.service';
 import {ElementType} from '../../models/element-types/element-type';
+import {environment} from '../../../environments/environment';
 
 @Injectable({
 	providedIn: 'root'
@@ -41,10 +42,14 @@ export class ElementProviderService {
 	constructor(private errorHandler: ErrorHandlingService) {}
 
 	public setUserDefinedTypes(elements: Map<number, ElementType>) {
+		for (const elem of elements.values()) {
+			elem.width = environment.componentWidth;
+		}
 		this._userDefinedElements = elements;
 	}
 
 	public addUserDefinedElement(element: ElementType, id: number) {
+		element.width = environment.componentWidth;
 		this._userDefinedElements.set(id, element);
 	}
 
