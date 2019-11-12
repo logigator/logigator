@@ -8,9 +8,9 @@ import {
 	PosOfElem, UnitElementBidir,
 	UnitToElement, WireEndLinksOnElem,
 	WireEndOnComp,
-	WireEndsOnLinks,
+	WireEndsOnLinks, WireEndsOnLinksCache,
 	WireEndsOnLinksInProject,
-	WiresOnLinks,
+	WiresOnLinks, WiresOnLinksCache,
 	WiresOnLinksInProject
 } from './compiler-types';
 import {Element} from '../../../models/element';
@@ -51,8 +51,8 @@ export class StateCompilerService {
 	 * If you've got 1 Udc (User-defined-component) placed 2 times in one project
 	 *     the caches will contain every wire once, the final output twice
 	 */
-	private _wiresOnLinksCache: WiresOnLinksInProject;
-	private _wireEndsOnLinksCache: WireEndsOnLinksInProject;
+	private _wiresOnLinksCache: WiresOnLinksCache;
+	private _wireEndsOnLinksCache: WireEndsOnLinksCache;
 
 	private _depTree: Map<number, Project>;
 
@@ -112,11 +112,11 @@ export class StateCompilerService {
 		return out;
 	}
 
-	private initElemsOnLinksCache(identifier: string): void {
+	private initElemsOnLinksCache(identifier: number): void {
 		if (!this._wiresOnLinksCache)
-			this._wiresOnLinksCache = new Map<string, WiresOnLinks>();
+			this._wiresOnLinksCache = new Map<number, WiresOnLinks>();
 		if (!this._wireEndsOnLinksCache)
-			this._wireEndsOnLinksCache = new Map<string, WireEndsOnLinks>();
+			this._wireEndsOnLinksCache = new Map<number, WireEndsOnLinks>();
 		this._wiresOnLinksCache.set(identifier, new Map<number, Element[]>());
 		this._wireEndsOnLinksCache.set(identifier, new Map<number, WireEndOnComp[]>());
 	}
@@ -162,7 +162,7 @@ export class StateCompilerService {
 		this._compiledDeps = new Set<number>();
 		for (const [typeId, project] of depTree.entries()) {
 			if (this._udcCache.has(typeId) && !project.compileDirty) {
-				console.log('load from cache', typeId);
+				console.log('load from cache', typeId, project.name);
 			} else {
 				this.compileSingle(project);
 			}
@@ -239,8 +239,7 @@ export class StateCompilerService {
 	): void {
 		let unitIndex = 0;
 		let linkId = 0;
-		const identifier = '' + this._currTypeId;
-		this.initElemsOnLinksCache(identifier);
+		this.initElemsOnLinksCache(this._currTypeId);
 		for (const element of unitElems.unitToElement.values()) {
 			let wireEndIndex = -1;
 			for (const wireEndPos of Elements.wireEnds(element)) {
@@ -297,7 +296,7 @@ export class StateCompilerService {
 		const oppoPos = Elements.otherWirePos(elem, pos);
 		this.setLinks(state, oppoPos, linksOnWireEnds, linkId,
 			unitElems, compiledComp, coveredPoints);
-		MapHelper.pushInMapArrayUnique(this._wiresOnLinksCache.get('' + this._currTypeId), linkId, elem);
+		MapHelper.pushInMapArrayUnique(this._wiresOnLinksCache.get(this._currTypeId), linkId, elem);
 	}
 
 	/*
@@ -310,8 +309,7 @@ export class StateCompilerService {
 			linksOnWireEnds.set(elem, new Map<number, number>([[wireIndex, linkId]]));
 		}
 		SimulationUnits.setInputOutput(unitElems.elementToUnit.get(elem), wireIndex, linkId);
-		const identifier = '' + this._currTypeId;
-		MapHelper.pushInMapArray(this._wireEndsOnLinksCache.get(identifier), linkId, {component: elem, wireIndex});
+		MapHelper.pushInMapArray(this._wireEndsOnLinksCache.get(this._currTypeId), linkId, {component: elem, wireIndex});
 	}
 
 	/*
@@ -357,7 +355,6 @@ export class StateCompilerService {
 		if (units.length === 0)
 			return [];
 		const linkMap = new Map<number, number>();
-		const typeIdentifier = '' + projectId;
 
 		if (outerUnit) {
 			for (const [outer, inner] of compiledComp.plugsByIndex) {
@@ -369,6 +366,7 @@ export class StateCompilerService {
 			this._highestLinkId++;
 		let highestInProj = this._highestLinkId;
 		const udcIndexes: number[] = [];
+		const udcIndexesInclPlug: number[] = [];
 		let unitIndex = 0;
 		let donePlugCount = 0;
 
@@ -379,7 +377,7 @@ export class StateCompilerService {
 					if (!this._wiresOnLinks.has(idIdentifier)) {
 						this.initElemsOnLinks(idIdentifier);
 					}
-					this.pushWiresOnLink(idIdentifier, newVal, typeIdentifier, arr[i]);
+					this.pushWiresOnLink(idIdentifier, newVal, projectId, arr[i]);
 					arr[i] = newVal;
 					if (arr[i] > highestInProj) {
 						highestInProj = arr[i];
@@ -389,6 +387,7 @@ export class StateCompilerService {
 
 			if (this.elementProvider.isUserElement(unit.typeId)) {
 				udcIndexes.push(unitIndex);
+				udcIndexesInclPlug.push(unitIndex + donePlugCount);
 			} else if (this.elementProvider.isIoElement(unit.typeId)) {
 				this.setIOLink(idIdentifier, compiledComp, unitIndex + donePlugCount, unit);
 			} else if (this.elementProvider.isPlugElement(unit.typeId)) {
@@ -406,8 +405,8 @@ export class StateCompilerService {
 		// udcIndexes is already sorted desc
 		for (let i = udcIndexes.length - 1; i >= 0; i--) {
 			const index = udcIndexes[i];
-			const inner = this.projectUnits(units[index].typeId,
-				idIdentifier + `:${compiledComp.units.get([...compiledComp.units.keys()][index]).id}`, units[index]);
+			const innerIdIdentifier = `${idIdentifier}:${[...compiledComp.units.values()][udcIndexesInclPlug[i]].id}`;
+			const inner = this.projectUnits(units[index].typeId, innerIdIdentifier, units[index]);
 			units.splice(index, 1);
 			units.push(...inner);
 		}
@@ -425,7 +424,7 @@ export class StateCompilerService {
 	/*
 	 * Push the wires and wireEnds of a specific link from cache to the final output
 	 */
-	private pushWiresOnLink(idIdentifier: string, newVal, typeIdentifier, val: number) {
+	private pushWiresOnLink(idIdentifier: string, newVal, typeIdentifier: number, val: number) {
 		if (this._wiresOnLinks.get(idIdentifier).has(newVal) && this._wiresOnLinks.get(idIdentifier).get(newVal).length > 0) {
 			if (this._wiresOnLinks.get(idIdentifier).get(newVal)[0] !== this._wiresOnLinksCache.get(typeIdentifier).get(val)[0]) {
 				this._wiresOnLinks.get(idIdentifier).get(newVal).push(...(this._wiresOnLinksCache.get(typeIdentifier).get(val)) || []);
