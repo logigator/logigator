@@ -359,6 +359,7 @@ export class StateCompilerService {
 		if (outerUnit) {
 			for (const [outer, inner] of compiledComp.plugsByIndex) {
 				linkMap.set(SimulationUnits.concatIO(units[inner])[0], SimulationUnits.concatIO(outerUnit)[outer]);
+				this._highestLinkId++;
 			}
 		}
 
