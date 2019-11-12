@@ -199,7 +199,45 @@
 	},
 	"ERROR": {
 		"COMPILE": {
-			"CIRCULAR_DEP": "Circular dependency in components. {{src}} must not include {{comp}}."
+			"CIRCULAR_DEP": "Circular dependency in components. {{src}} must not include {{comp}}.",
+			"FAILED": "Failed to compile board.",
+			"WORKER_INIT": "WebWorker failed to initialize."
+		},
+		"PROJECTS": {
+			"GET_PROJECTS": "Unable to get Projects from Server",
+			"GET_COMPS": "Unable to get Components from Server",
+			"OPEN_COMP": "Unable to open Component",
+			"CLONE": "Unable to clone project",
+			"CREATE": "Unable to create project",
+			"SAVE": "Unable to save Component or Project on Server",
+			"COMP_NOT_FOUND": "Component not found, project might be corrupted",
+			"INVALID_FILE": "Invalid File",
+			"RESOLVE_DEPS": "Unable resolve dependencies of Project",
+			"PROJECT_AS_COMP": "Unable to open Project as Component"
+		},
+		"SHARE": {
+			"CREATE": "Unable to create share.",
+			"OPEN": "Unable to open shared Project",
+			"UPDATE": "Unable to update Share",
+			"DELETE": "Unable to delete Share",
+			"GET_INFO": "Unable to get Share information"
+		},
+		"USER": {
+			"SAVE_SHORTCUTS": "Error while Saving Shortcuts",
+			"GET_INFO": "Unable to get User info",
+			"LOGIN": "Error while logging in"
+		},
+		"INVALID_URL": "Invalid Url"
+	},
+	"INFO": {
+		"PROJECTS": {
+			"CREATE_COMP": "Created Component {{name}}.",
+			"OPEN_COMP": "Opened Component {{name}}.",
+			"OPEN_PROJECT": "Opened Project {{name}}.",
+			"CLONED": "Cloned Project.",
+			"SAVE_SERVER": "Saved {{name}} on Server.",
+			"SAVE_ALL": "Saved Project and all open Components",
+			"EXPORT": "Exported Project and all needed Components"
 		}
 	}
 }

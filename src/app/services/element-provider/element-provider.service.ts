@@ -73,7 +73,7 @@ export class ElementProviderService {
 		} else if (this._userDefinedElements.has(id)) {
 			return this._userDefinedElements.get(id);
 		}
-		this.errorHandler.showErrorMessage('Component not found, project might be corrupted');
+		this.errorHandler.showErrorMessage('ERROR.PROJECTS.COMP_NOT_FOUND');
 	}
 
 	public isBasicElement(id: number): boolean {

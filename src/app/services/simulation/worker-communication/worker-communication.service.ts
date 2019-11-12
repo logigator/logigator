@@ -56,7 +56,7 @@ export class WorkerCommunicationService {
 				this._initialized = true;
 			} else {
 				console.log(event.data);
-				this.errorHandling.showErrorMessage('WebWorker failed to initialize.');
+				this.errorHandling.showErrorMessage('ERROR.COMPILE.WORKER_INIT');
 			}
 			return;
 		}
@@ -141,7 +141,7 @@ export class WorkerCommunicationService {
 		try {
 			const compiledBoard = await this.stateCompiler.compileAsInt32Array(project);
 			if (!compiledBoard) {
-				this.errorHandling.showErrorMessage('Failed to compile board.');
+				this.errorHandling.showErrorMessage('ERROR.COMPILE.FAILED');
 				return;
 			}
 
