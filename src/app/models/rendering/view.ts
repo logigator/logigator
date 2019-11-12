@@ -21,7 +21,7 @@ export abstract class View extends PIXI.Container {
 
 	public zoomPan: ZoomPan;
 
-	public requestSingleFrame: () => void;
+	public requestSingleFrame: () => Promise<void>;
 
 	public readonly htmlContainer: HTMLElement;
 
@@ -38,7 +38,7 @@ export abstract class View extends PIXI.Container {
 
 	private themingService = getStaticDI(ThemingService);
 
-	protected constructor(project: Project, htmlContainer: HTMLElement, requestSingleFrameFn: () => void) {
+	protected constructor(project: Project, htmlContainer: HTMLElement, requestSingleFrameFn: () => Promise<void>) {
 		super();
 		this._project = project;
 		this.htmlContainer = htmlContainer;
@@ -81,7 +81,7 @@ export abstract class View extends PIXI.Container {
 			chunk.gridGraphics.renderable = this.themingService.showGrid;
 			if (this.isSimulationView()) {
 				chunk.container.children.forEach(g => {
-					if (isLGraphics(g)) g.applySimState(this.zoomPan.currentScale);
+					//if (isLGraphics(g)) g.applySimState(this.zoomPan.currentScale);
 				});
 			}
 			if (chunk.scaledFor === this.zoomPan.currentScale) continue;

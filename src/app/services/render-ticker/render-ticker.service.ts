@@ -5,6 +5,7 @@ interface TickerFunction {
 	fn: () => void;
 	requestedFrame: boolean;
 	started: boolean;
+	singleFramePromiseResolveFns: (() => void)[];
 }
 
 @Injectable({
@@ -22,7 +23,8 @@ export class RenderTicker {
 		this._tickerFunctions.set(identifier, {
 			fn: this.getTickerFunction(fn, identifier),
 			requestedFrame: false,
-			started: false
+			started: false,
+			singleFramePromiseResolveFns: []
 		});
 		if (this._startedAllCont) {
 			this.startTicker(identifier);
@@ -35,12 +37,22 @@ export class RenderTicker {
 		this._tickerFunctions.delete(identifier);
 	}
 
-	public singleFrame(identifier: string) {
+	/**
+	 * @returns Promise resolved after the frame was rendered
+	 */
+	public singleFrame(identifier: string): Promise<void> {
 		const tf = this._tickerFunctions.get(identifier);
-		if (tf && !tf.started && !tf.requestedFrame) {
-			tf.requestedFrame = true;
-			PIXI.Ticker.shared.addOnce(tf.fn, this);
-		}
+		return new Promise<void>(resolve => {
+			if (!tf) {
+				resolve();
+				return;
+			}
+			if (!tf.started && !tf.requestedFrame) {
+				tf.requestedFrame = true;
+				PIXI.Ticker.shared.addOnce(tf.fn, this);
+			}
+			tf.singleFramePromiseResolveFns.push(resolve);
+		});
 	}
 
 	public startTicker(identifier: string) {
@@ -70,6 +82,7 @@ export class RenderTicker {
 		if (this._startedAllCont && !force) return;
 		const tf = this._tickerFunctions.get(identifier);
 		tf.started = false;
+		tf.singleFramePromiseResolveFns = [];
 		PIXI.Ticker.shared.remove(tf.fn, this);
 		if (tf.requestedFrame && keepRequestFrame) PIXI.Ticker.shared.addOnce(tf.fn, this);
 	}
@@ -84,7 +97,12 @@ export class RenderTicker {
 
 	private getTickerFunction(originalFn: () => void, identifier: string): () => void {
 		return () => {
-			this._tickerFunctions.get(identifier).requestedFrame = false;
+			const tf = this._tickerFunctions.get(identifier);
+			tf.requestedFrame = false;
+			for (const resolve of tf.singleFramePromiseResolveFns) {
+				resolve();
+			}
+			tf.singleFramePromiseResolveFns = [];
 			originalFn();
 		};
 	}
