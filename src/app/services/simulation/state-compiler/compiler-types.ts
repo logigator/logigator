@@ -24,7 +24,9 @@ interface WireEndOnComp {
 type WireEndsOnLinks = Map<number, WireEndOnComp[]>;
 type WireEndsOnLinksInProject = Map<string, WireEndsOnLinks>;
 
+type ElementId = number;
+
 export {UnitToElement, LinkOnWireEnd, PosOfElem, WireEndOnElem,
 	WiresOnLinks, WiresOnLinksInProject, WireEndLinksOnElem,
 	WireEndOnComp, WireEndsOnLinks, WireEndsOnLinksInProject,
-	ElementToUnit, UnitElementBidir};
+	ElementToUnit, UnitElementBidir, ElementId};

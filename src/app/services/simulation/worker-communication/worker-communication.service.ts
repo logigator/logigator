@@ -223,7 +223,7 @@ export class WorkerCommunicationService {
 	}
 
 	public setUserInput(identifier: string, element: Element, state: boolean[]): void {
-		const index = this.stateCompiler.ioElemIndexes.get(identifier).get(element);
+		const index = this.stateCompiler.ioElemIndexes.get(identifier).get(element.id);
 		let inputEvent: InputEvent;
 		if (this.elementProvider.isButtonElement(element.typeId)) {
 			inputEvent = InputEvent.Pulse;
