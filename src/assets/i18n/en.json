@@ -46,7 +46,28 @@
 	},
 	"TOOLBAR": {
 		"START_SIM": "Start Simulation",
-		"EXIT_SIM": "Exit Simulation"
+		"EXIT_SIM": "Exit Simulation",
+		"TOOLTIP": {
+			"SAVE": "Save",
+			"OPEN": "Open",
+			"NEW_COMP": "New Component",
+			"COPY": "Copy",
+			"PASTE": "Paste",
+			"CUT": "Cut",
+			"DELETE": "Delete",
+			"UNDO": "Undo",
+			"REDO": "Redo",
+			"ZOOM_IN": "Zoom In",
+			"ZOOM_OUT": "Zoom Out",
+			"WIRE": "Place Wires",
+			"CONN_WIRE": "Connect Wires",
+			"SELECT": "Select",
+			"TEXT": "Text",
+			"SIM_SINGLE": "Single Step",
+			"SIM_PAUSE": "Pause",
+			"SIM_STOP": "Stop",
+			"SIM_CONT": "Start"
+		}
 	},
 	"TOP_BAR": {
 		"LOGIN": "Login",
