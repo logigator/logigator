@@ -21,7 +21,7 @@ export class EditorView extends View {
 
 	private selectionService = getStaticDI(SelectionService);
 
-	constructor(project: Project, htmlContainer: HTMLElement, requestSingleFrameFn: () => void) {
+	constructor(project: Project, htmlContainer: HTMLElement, requestSingleFrameFn: () => Promise<void>) {
 		super(project, htmlContainer, requestSingleFrameFn);
 
 		this._viewInteractionManager = new ViewInteractionManager(this);

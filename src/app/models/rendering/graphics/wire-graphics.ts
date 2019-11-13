@@ -49,7 +49,8 @@ export class WireGraphics extends PIXI.Graphics implements LGraphics {
 	}
 
 	public applySimState(scale: number) {
-		if (this.simActiveState === this.shouldHaveActiveState) return;
+		// tslint:disable-next-line:triple-equals
+		if (this.simActiveState == this.shouldHaveActiveState) return;
 		this.simActiveState = this.shouldHaveActiveState;
 		// @ts-ignore
 		for (const data of this.geometry.graphicsData) {

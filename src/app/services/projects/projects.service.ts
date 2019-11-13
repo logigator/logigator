@@ -61,7 +61,7 @@ export class ProjectsService {
 		this._projects.set(id, proj);
 		this._projectOpenedSubject.next(id);
 		this._currentlyOpening = this._currentlyOpening.filter(o => id !== o);
-		this.errorHandling.showInfo(`Opened Component ${proj.name}`);
+		this.errorHandling.showInfo('INFO.PROJECTS.OPEN_COMP', {name: proj.name});
 	}
 
 	public inputsOutputsCustomComponentChanged(projectId: number) {
@@ -212,7 +212,7 @@ export class ProjectsService {
 
 	private switchProjectAfterOpen(project: Project) {
 		if (!project) return;
-		this.errorHandling.showInfo(`Opened Project ${project.name}`);
+		this.errorHandling.showInfo('INFO.PROJECTS.OPEN_PROJECT', {name: project.name});
 		this.closeAllProjects();
 		this._projects.set(project.id, project);
 		this._currProject = project;

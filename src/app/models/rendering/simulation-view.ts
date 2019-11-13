@@ -25,7 +25,7 @@ export class SimulationView extends View {
 	constructor(
 		project: Project,
 		htmlContainer: HTMLElement,
-		requestSingleFrameFn: () => void,
+		requestSingleFrameFn: () => Promise<void>,
 		requestInspectElemEventEmitter: EventEmitter<ReqInspectElementEvent>,
 		parent: string,
 		parentNames: string[],
@@ -39,7 +39,7 @@ export class SimulationView extends View {
 		this._simViewInteractionManager = new SimulationViewInteractionManager(this);
 		this.applyOpenActions();
 
-		getStaticDI(NgZone).runOutsideAngular(() => {
+		getStaticDI(NgZone).runOutsideAngular(async () => {
 			getStaticDI(ProjectInteractionService).onZoomChangeClick$.pipe(
 				filter(_ => this._project.type === 'project'),
 				takeUntil(this._destroySubject)
@@ -54,6 +54,7 @@ export class SimulationView extends View {
 			).subscribe(e => this.blinkComps(e));
 
 			if (project.type === 'comp') {
+				await this.requestSingleFrame();
 				this.blinkWires(getStaticDI(WorkerCommunicationService).getWireState(this.parentProjectIdentifier));
 				this.blinkComps(getStaticDI(WorkerCommunicationService).getWireEndState(this.parentProjectIdentifier));
 			}
