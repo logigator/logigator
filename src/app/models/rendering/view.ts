@@ -81,7 +81,7 @@ export abstract class View extends PIXI.Container {
 			chunk.gridGraphics.renderable = this.themingService.showGrid;
 			if (this.isSimulationView()) {
 				chunk.container.children.forEach(g => {
-					//if (isLGraphics(g)) g.applySimState(this.zoomPan.currentScale);
+					if (isLGraphics(g)) g.applySimState(this.zoomPan.currentScale);
 				});
 			}
 			if (chunk.scaledFor === this.zoomPan.currentScale) continue;
