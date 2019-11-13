@@ -147,6 +147,8 @@ export class WorkerCommunicationService {
 
 			this.finalizeInit(compiledBoard.buffer);
 		} catch (e) {
+			// #!debug
+			console.error(e);
 			e.comp = this.elementProvider.getElementById(e.comp).name;
 			e.src = this.elementProvider.getElementById(e.src).name;
 			this.errorHandling.showErrorMessage((e as CompileError).name, e);
