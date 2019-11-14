@@ -1,6 +1,5 @@
 import {Pointer} from './wasm-interface';
 import {BoardStatus, InputEvent} from './board';
-import {SimulationUnit} from './simulation-unit';
 
 export type TypedArray =
 	Int8Array |

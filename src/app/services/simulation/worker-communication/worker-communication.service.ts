@@ -56,7 +56,7 @@ export class WorkerCommunicationService {
 				this._initialized = true;
 			} else {
 				console.log(event.data);
-				this.errorHandling.showErrorMessage('WebWorker failed to initialize.');
+				this.errorHandling.showErrorMessage('ERROR.COMPILE.WORKER_INIT');
 			}
 			return;
 		}
@@ -141,12 +141,14 @@ export class WorkerCommunicationService {
 		try {
 			const compiledBoard = await this.stateCompiler.compileAsInt32Array(project);
 			if (!compiledBoard) {
-				this.errorHandling.showErrorMessage('Failed to compile board.');
+				this.errorHandling.showErrorMessage('ERROR.COMPILE.FAILED');
 				return;
 			}
 
 			this.finalizeInit(compiledBoard.buffer);
 		} catch (e) {
+			// #!debug
+			console.error(e);
 			e.comp = this.elementProvider.getElementById(e.comp).name;
 			e.src = this.elementProvider.getElementById(e.src).name;
 			this.errorHandling.showErrorMessage((e as CompileError).name, e);
@@ -223,7 +225,7 @@ export class WorkerCommunicationService {
 	}
 
 	public setUserInput(identifier: string, element: Element, state: boolean[]): void {
-		const index = this.stateCompiler.ioElemIndexes.get(identifier).get(element);
+		const index = this.stateCompiler.ioElemIndexes.get(identifier).get(element.id);
 		let inputEvent: InputEvent;
 		if (this.elementProvider.isButtonElement(element.typeId)) {
 			inputEvent = InputEvent.Pulse;

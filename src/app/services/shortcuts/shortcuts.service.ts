@@ -55,7 +55,7 @@ export class ShortcutsService {
 		this.http.post(environment.apiPrefix + '/user/update', {
 			shortcuts: newConfig
 		}).pipe(
-			this.errorHandling.catchErrorOperator('Error while Saving Shortcuts', undefined)
+			this.errorHandling.catchErrorOperator('ERROR.USER.SAVE_SHORTCUTS', undefined)
 		).subscribe();
 	}
 

@@ -33,7 +33,7 @@ export class UserService {
 				if (!isLoggedIn) return of(undefined);
 				return this.http.get<HttpResponseData<UserInfo>>(environment.apiPrefix + '/user/get').pipe(
 					map(response => response.result),
-					this.errorHandling.catchErrorOperator('Unable to get user info', undefined)
+					this.errorHandling.catchErrorOperator('ERROR.USER.GET_INFO', undefined)
 				);
 			})
 		);
@@ -41,11 +41,11 @@ export class UserService {
 
 	// #!if ELECTRON === 'true'
 	public loginTwitter() {
-		this.login('twitter').catch(() => this.errorHandling.showErrorMessage('Error while logging in'));
+		this.login('twitter').catch(() => this.errorHandling.showErrorMessage('ERROR.USER.LOGIN'));
 	}
 
 	public loginGoogle() {
-		this.login('google').catch(() => this.errorHandling.showErrorMessage('Error while logging in'));
+		this.login('google').catch(() => this.errorHandling.showErrorMessage('ERROR.USER.LOGIN'));
 	}
 
 	public loginEmail(email: string, password: string): Promise<string> {

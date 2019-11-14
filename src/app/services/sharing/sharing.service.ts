@@ -19,19 +19,19 @@ export class SharingService {
 
 	public async createShare(settings: CreateShare): Promise<HttpResponseData<CreateShareResp>> {
 		return this.http.post<HttpResponseData<CreateShareResp>>(environment.apiPrefix + '/share/create', settings).pipe(
-			this.errorHandler.catchErrorOperator('Unable to create share.', undefined)
+			this.errorHandler.catchErrorOperator('ERROR.SHARE.CREATE', undefined)
 		).toPromise();
 	}
 
 	public updateShare(settings: UpdateShare, address: string): Promise<HttpResponseData<any>> {
 		return this.http.post<HttpResponseData<any>>(`${environment.apiPrefix}/share/update/${address}`, settings).pipe(
-			this.errorHandler.catchErrorOperator('Unable to update share.', undefined)
+			this.errorHandler.catchErrorOperator('ERROR.SHARE.UPDATE', undefined)
 		).toPromise();
 	}
 
 	public deleteShare(address: string): Promise<HttpResponseData<any>> {
 		return this.http.get<HttpResponseData<any>>(`${environment.apiPrefix}/share/delete/${address}`).pipe(
-			this.errorHandler.catchErrorOperator('Unable to delete share.', undefined)
+			this.errorHandler.catchErrorOperator('ERROR.SHARE.DELETE', undefined)
 		).toPromise();
 	}
 
@@ -45,7 +45,7 @@ export class SharingService {
 				}
 				return share;
 			}),
-			this.errorHandler.catchErrorOperator('Unable to get share information.', undefined)
+			this.errorHandler.catchErrorOperator('ERROR.SHARE.GET_INFO', undefined)
 		).toPromise();
 	}
 

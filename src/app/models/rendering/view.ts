@@ -21,7 +21,7 @@ export abstract class View extends PIXI.Container {
 
 	public zoomPan: ZoomPan;
 
-	public requestSingleFrame: () => void;
+	public requestSingleFrame: () => Promise<void>;
 
 	public readonly htmlContainer: HTMLElement;
 
@@ -38,7 +38,7 @@ export abstract class View extends PIXI.Container {
 
 	private themingService = getStaticDI(ThemingService);
 
-	protected constructor(project: Project, htmlContainer: HTMLElement, requestSingleFrameFn: () => void) {
+	protected constructor(project: Project, htmlContainer: HTMLElement, requestSingleFrameFn: () => Promise<void>) {
 		super();
 		this._project = project;
 		this.htmlContainer = htmlContainer;

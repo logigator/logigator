@@ -1,0 +1,23 @@
+@import "themes";
+
+.tooltip {
+	position: absolute;
+	border-radius: 0.2rem;
+	animation-name: fadeIn;
+	animation-duration: 100ms;
+	animation-fill-mode: both;
+
+	@include themify() {
+		background-color: themed('secondary');
+
+		p {
+			color: themed('primary-text');
+			margin: 0.3rem;
+		}
+	}
+}
+
+@keyframes fadeIn {
+	0% {opacity: 0;}
+	100% {opacity: 1;}
+}

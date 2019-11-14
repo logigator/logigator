@@ -10,7 +10,7 @@
 	<div (click)="openProject()" *ngIf="checkActionUsable('openProj')">
 		{{'DROPDOWN.FILE.OPEN' | translate}}
 	</div>
-	<div (click)="saveProject()" *ngIf="checkActionUsable('save') && !canClone">
+	<div (click)="saveProject()" *ngIf="checkActionUsable('save') && canSave">
 		{{'DROPDOWN.FILE.SAVE' | translate}}
 		<span>{{'save' | shortcutText}}</span>
 	</div>
