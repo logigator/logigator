@@ -21,8 +21,8 @@
 			<div class="divider"></div>
 		</ng-container>
 
-		<button class="toolbar-button zoom-out" (appOutsideNgZoneEvent)="zoomOut()" appToolbarItemTooltip [tooltipText]="'TOOLBAR.TOOLTIP.ZOOM_IN' | translate" aria-label="Zoom Out"></button>
-		<button class="toolbar-button zoom-in" (appOutsideNgZoneEvent)="zoomIn()" appToolbarItemTooltip [tooltipText]="'TOOLBAR.TOOLTIP.ZOOM_OUT' | translate" aria-label="Zoom In"></button>
+		<button class="toolbar-button zoom-out" (appOutsideNgZoneEvent)="zoomOut()" appToolbarItemTooltip [tooltipText]="'TOOLBAR.TOOLTIP.ZOOM_OUT' | translate" aria-label="Zoom Out"></button>
+		<button class="toolbar-button zoom-in" (appOutsideNgZoneEvent)="zoomIn()" appToolbarItemTooltip [tooltipText]="'TOOLBAR.TOOLTIP.ZOOM_IN' | translate" aria-label="Zoom In"></button>
 
 		<ng-container *ngIf="currentWorkMode !== 'simulation'">
 			<div class="divider"></div>
