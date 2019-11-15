@@ -6,12 +6,7 @@
 
 		<div class="property" *ngIf="elemType.minInputs !== elemType.maxInputs">
 			<p>{{'SETTINGS_INFO.INPUTS' | translate}}:</p>
-			<input type="number" formControlName="numInputs" [min]="elemType.minInputs" [max]="elemType.maxInputs" (blur)="resetInputElementValue()">
-		</div>
-
-		<div class="property" *ngIf="isDelayElement">
-			<p>{{'SETTINGS_INFO.DELAY' | translate}}:</p>
-			<input type="number" formControlName="delay" [min]="1"> <!-- delay (one for every settings type) or options in general?? -->
+			<input type="number" formControlName="numInputs" [min]="elemType.minInputs" [max]="elemType.maxInputs" (blur)="resetNumInputsValue()">
 		</div>
 
 		<div class="property">
@@ -29,6 +24,15 @@
 			<select formControlName="plugIndex">
 				<option *ngFor="let i of possiblePlugIndexes" [value]="i">{{toUserPlugIndex(i)}}</option>
 			</select>
+		</div>
+
+		<div class="property" formArrayName="options" *ngFor="let item of propertiesForm.get('options').controls; let i = index">
+			<p>{{elemType.optionsConfig[i].name | translate}}:</p>
+			<input [type]="elemType.optionsConfig[i].type"
+			       [formControl]=" getOptionFromControl(i)"
+			       [min]="elemType.optionsConfig[i].min"
+			       [max]="elemType.optionsConfig[i].max"
+			       (blur)="resetOptionsValue(i)">
 		</div>
 
 		<div class="description">

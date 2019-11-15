@@ -11,6 +11,13 @@ export interface ElementType {
 	description: string;
 	rotation: number;
 	category: 'basic' | 'advanced' | 'plug' | 'io' | 'user';
+	options?: any[];
+	optionsConfig?: {
+		type: 'number' | 'text',
+		name: string,
+		min?: number,
+		max?: number
+	}[];
 }
 
 export function isElementType(object: any): object is ElementType {

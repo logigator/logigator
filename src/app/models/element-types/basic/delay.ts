@@ -11,5 +11,14 @@ export const delay: ElementType = {
 	symbol: '1',
 	description: 'ELEMENT_TYPE.BASIC.DELAY.DESCRIPTION',
 	rotation: 0,
-	category: 'basic'
+	category: 'basic',
+	options: [1],
+	optionsConfig: [
+		{
+			name: 'ELEMENT_TYPE.BASIC.DELAY.DELAY_OPT',
+			type: 'number',
+			min: 1,
+			max: Number.MAX_VALUE
+		}
+	]
 };

@@ -2,7 +2,7 @@ import {ChangeDetectionStrategy, Component, Input, OnChanges, OnDestroy, SimpleC
 import {ElementProviderService} from '../../services/element-provider/element-provider.service';
 import {ElementType} from '../../models/element-types/element-type';
 import {ProjectsService} from '../../services/projects/projects.service';
-import {FormBuilder, FormGroup} from '@angular/forms';
+import {FormArray, FormBuilder, FormControl, FormGroup} from '@angular/forms';
 import {of, Subscription, timer} from 'rxjs';
 import {debounce} from 'rxjs/operators';
 
@@ -55,10 +55,6 @@ export class SettingsInfoBoxComponent implements OnChanges, OnDestroy {
 		return this.elemProvider.isPlugElement(this.selectedCompTypeId);
 	}
 
-	public get isDelayElement(): boolean {
-		return this.elemProvider.isDelayElement(this.selectedCompTypeId);
-	}
-
 	public get possiblePlugIndexes(): number[] {
 		if (this.selectedCompId === undefined) return [];
 		return this.projects.currProject.possiblePlugIndexes(this.selectedCompId);
@@ -77,7 +73,8 @@ export class SettingsInfoBoxComponent implements OnChanges, OnDestroy {
 		this.propertiesForm = this.formBuilder.group({
 			numInputs: [this.elemType.numInputs],
 			rotation: [this.elemType.rotation],
-			plugIndex: []
+			plugIndex: [],
+			options: this.formBuilder.array(this.getOptionsArray(this.elemType, this.elemType.options))
 		});
 		this.formSubscription = this.propertiesForm.valueChanges.subscribe((data: any) => {
 			if (data.rotation !== this.elemType.rotation) {
@@ -87,6 +84,20 @@ export class SettingsInfoBoxComponent implements OnChanges, OnDestroy {
 				this.elemType.numInputs = data.numInputs;
 			} else if (data.numInputs * 10 >= this.elemType.maxInputs) {
 				this.propertiesForm.controls.numInputs.setValue(this.elemType.numInputs);
+			}
+
+			if (this.elemType.optionsConfig) {
+				for (let i = 0; i < data.options.length; i++) {
+					let optVal = data.options[i];
+					if (this.elemType.optionsConfig[i].type === 'number') {
+						optVal = Number(optVal);
+						if (optVal <= this.elemType.optionsConfig[i].max && optVal >= this.elemType.optionsConfig[i].min) {
+							this.elemType.options[i] = optVal;
+						} else if (optVal * 10 >= this.elemType.optionsConfig[i].max) {
+							(this.propertiesForm.get('options') as FormArray).controls[i].setValue(this.elemType.options[i]);
+						}
+					}
+				}
 			}
 		});
 	}
@@ -98,7 +109,8 @@ export class SettingsInfoBoxComponent implements OnChanges, OnDestroy {
 		this.propertiesForm = this.formBuilder.group({
 			numInputs: [element.numInputs],
 			rotation: [element.rotation],
-			plugIndex: [element.plugIndex]
+			plugIndex: [element.plugIndex],
+			options: this.formBuilder.array(this.getOptionsArray(this.elemType, element.options))
 		});
 		this.formSubscription = this.propertiesForm.valueChanges.subscribe((data: any) => {
 			if (data.rotation !== element.rotation) {
@@ -120,19 +132,45 @@ export class SettingsInfoBoxComponent implements OnChanges, OnDestroy {
 		});
 	}
 
-	resetInputElementValue() {
-		if (this.selectionMode === 'type') {
-			if (this.propertiesForm.controls.numInputs.value > this.elemType.maxInputs ||
-				this.propertiesForm.controls.numInputs.value < this.elemType.minInputs) {
-				this.propertiesForm.controls.numInputs.setValue(this.elemType.numInputs);
+	public resetNumInputsValue() {
+		const currVal = this.propertiesForm.controls.numInputs.value;
+		if (currVal > this.elemType.maxInputs || currVal < this.elemType.minInputs) {
+			let valToSet: number;
+			if (this.selectionMode === 'placed') {
+				valToSet = this.projects.currProject.currState.getElementById(this.selectedCompId).numInputs;
+			} else {
+				valToSet = this.elemType.numInputs;
 			}
-		} else {
-			const element = this.projects.currProject.currState.getElementById(this.selectedCompId);
-			if (this.propertiesForm.controls.numInputs.value > this.elemType.maxInputs ||
-				this.propertiesForm.controls.numInputs.value < this.elemType.minInputs) {
-				this.propertiesForm.controls.numInputs.setValue(element.numInputs);
+			this.propertiesForm.controls.numInputs.setValue(valToSet);
+		}
+	}
+
+	public resetOptionsValue(index: number) {
+		if (this.elemType.optionsConfig[index].type === 'number') {
+			const optVal = Number((this.propertiesForm.get('options') as FormArray).controls[index].value);
+			if (optVal > this.elemType.optionsConfig[index].max || optVal < this.elemType.optionsConfig[index].min) {
+				let valToSet: number;
+				if (this.selectionMode === 'placed') {
+					valToSet = this.projects.currProject.currState.getElementById(this.selectedCompId).options[index];
+				} else {
+					valToSet = this.elemType.options[index];
+				}
+				(this.propertiesForm.get('options') as FormArray).controls[index].setValue(valToSet);
 			}
 		}
+	}
+
+	private getOptionsArray(elemType: ElementType, opts: any[]): any[] {
+		const formArray = [];
+		if (!elemType.optionsConfig) return formArray;
+		elemType.optionsConfig.forEach((oc, index) => {
+			formArray.push(this.formBuilder.control(opts[index]));
+		});
+		return formArray;
+	}
+
+	public getOptionFromControl(index: number): FormControl {
+		return (this.propertiesForm.get('options') as FormArray).controls[index] as FormControl;
 	}
 
 	ngOnDestroy(): void {

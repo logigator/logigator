@@ -177,8 +177,7 @@
 		},
 		"DESCRIPTION": "Description",
 		"EDIT": "Edit",
-		"PLUG_INDEX": "Plug Index",
-		"DELAY": "Delay (ticks)"
+		"PLUG_INDEX": "Plug Index"
 	},
 	"ELEMENT_TYPE": {
 		"BASIC": {
@@ -200,7 +199,8 @@
 			},
 			"DELAY": {
 				"NAME": "Delay",
-				"DESCRIPTION": "Output = Input. Adds one tick delay to the signal."
+				"DESCRIPTION": "Output = Input. Adds one tick delay to the signal.",
+				"DELAY_OPT": "Delay (ticks)"
 			},
 			"CLOCK": {
 				"NAME": "Clock",
