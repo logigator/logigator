@@ -7,6 +7,7 @@ import {TranslateService} from '@ngx-translate/core';
 import {UserService} from '../../../services/user/user.service';
 import {ProjectsService} from '../../../services/projects/projects.service';
 import {ElementProviderService} from '../../../services/element-provider/element-provider.service';
+import {environment} from '../../../../environments/environment';
 
 @Component({
 	selector: 'app-settings-dropdown',
@@ -51,6 +52,14 @@ export class SettingsDropdownComponent implements OnInit {
 		this.showDropDown = false;
 		await this.popupService.showPopup(ShortcutConfigComponent, 'POPUP.SHORTCUTS.TITLE', false);
 		this.close();
+	}
+
+	public accountSettings() {
+		window.open('https://logigator.com/my/settings', '_blank');
+	}
+
+	public privacyPolicy() {
+		window.open('https://logigator.com/privacy-policy', '_blank');
 	}
 
 	// #! ELECTRON === 'true'

@@ -45,6 +45,9 @@ import { ShareProjectComponent } from './components/popup/popup-contents/share-p
 import {setStaticDIInjector} from './models/get-di';
 import {InputErrorComponent} from './components/input-error/input-error.component';
 import {CredentialsInterceptor} from './interceptors/credentials';
+import {SiPipe} from './pipes/si/si.pipe';
+import { ToolbarItemTooltipDirective } from './directives/toolbar-item-tooltip/toolbar-item-tooltip.directive';
+import { ToolbarItemTooltipComponent } from './components/toolbar-item-tooltip/toolbar-item-tooltip.component';
 
 @NgModule({
 	declarations: [
@@ -80,7 +83,10 @@ import {CredentialsInterceptor} from './interceptors/credentials';
 		// #!electron
 		RegisterComponent,
 		WorkAreaContainerComponent,
-		ShareProjectComponent
+		ShareProjectComponent,
+		SiPipe,
+		ToolbarItemTooltipDirective,
+		ToolbarItemTooltipComponent
 	],
 	entryComponents: [
 		PopupComponent,
@@ -91,6 +97,7 @@ import {CredentialsInterceptor} from './interceptors/credentials';
 		SaveAsComponent,
 		UnsavedChangesComponent,
 		ShareProjectComponent,
+		ToolbarItemTooltipComponent,
 		// #!electron
 		LoginComponent,
 		// #!electron

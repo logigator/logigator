@@ -8,9 +8,6 @@ import {ProjectInteractionService} from '../../services/project-interaction/proj
 import {filter, takeUntil} from 'rxjs/operators';
 import {getStaticDI} from '../get-di';
 import {WorkerCommunicationService} from '../../services/simulation/worker-communication/worker-communication.service';
-import {WireGraphics} from './graphics/wire-graphics';
-import {ComponentGraphics} from './graphics/component-graphics';
-import {LGraphics} from './graphics/l-graphics';
 import {LGraphicsResolver} from './graphics/l-graphics-resolver';
 import {Grid} from './grid';
 import {ElementProviderService} from '../../services/element-provider/element-provider.service';
@@ -28,7 +25,7 @@ export class SimulationView extends View {
 	constructor(
 		project: Project,
 		htmlContainer: HTMLElement,
-		requestSingleFrameFn: () => void,
+		requestSingleFrameFn: () => Promise<void>,
 		requestInspectElemEventEmitter: EventEmitter<ReqInspectElementEvent>,
 		parent: string,
 		parentNames: string[],
@@ -42,7 +39,7 @@ export class SimulationView extends View {
 		this._simViewInteractionManager = new SimulationViewInteractionManager(this);
 		this.applyOpenActions();
 
-		getStaticDI(NgZone).runOutsideAngular(() => {
+		getStaticDI(NgZone).runOutsideAngular(async () => {
 			getStaticDI(ProjectInteractionService).onZoomChangeClick$.pipe(
 				filter(_ => this._project.type === 'project'),
 				takeUntil(this._destroySubject)
@@ -57,10 +54,15 @@ export class SimulationView extends View {
 			).subscribe(e => this.blinkComps(e));
 
 			if (project.type === 'comp') {
+				await this.requestSingleFrame();
 				this.blinkWires(getStaticDI(WorkerCommunicationService).getWireState(this.parentProjectIdentifier));
 				this.blinkComps(getStaticDI(WorkerCommunicationService).getWireEndState(this.parentProjectIdentifier));
 			}
 		});
+	}
+
+	isSimulationView(): boolean {
+		return true;
 	}
 
 	public placeComponentOnView(element: Element) {
@@ -85,6 +87,7 @@ export class SimulationView extends View {
 		for (const [elem, value] of e.entries()) {
 			this.allElements.get(elem.id).setSimulationState(value);
 		}
+		this.requestSingleFrame();
 	}
 
 	public get projectName(): string {

@@ -15,12 +15,13 @@ import {getStaticDI} from '../get-di';
 import {ComponentGraphics} from './graphics/component-graphics';
 import {isLGraphics, isUpdatable, LGraphics} from './graphics/l-graphics';
 import {LGraphicsResolver} from './graphics/l-graphics-resolver';
+import {SimulationView} from './simulation-view';
 
 export abstract class View extends PIXI.Container {
 
 	public zoomPan: ZoomPan;
 
-	public requestSingleFrame: () => void;
+	public requestSingleFrame: () => Promise<void>;
 
 	public readonly htmlContainer: HTMLElement;
 
@@ -37,7 +38,7 @@ export abstract class View extends PIXI.Container {
 
 	private themingService = getStaticDI(ThemingService);
 
-	protected constructor(project: Project, htmlContainer: HTMLElement, requestSingleFrameFn: () => void) {
+	protected constructor(project: Project, htmlContainer: HTMLElement, requestSingleFrameFn: () => Promise<void>) {
 		super();
 		this._project = project;
 		this.htmlContainer = htmlContainer;
@@ -56,6 +57,7 @@ export abstract class View extends PIXI.Container {
 	}
 
 	abstract placeComponentOnView(element: Element);
+	abstract isSimulationView(): boolean;
 
 	protected applyOpenActions() {
 		this.applyActionsToView(
@@ -77,7 +79,7 @@ export abstract class View extends PIXI.Container {
 			chunk.container.renderable = true;
 			chunk.gridGraphics.visible = this.themingService.showGrid;
 			chunk.gridGraphics.renderable = this.themingService.showGrid;
-			if (this.constructor.name === 'SimulationView') {
+			if (this.isSimulationView()) {
 				chunk.container.children.forEach(g => {
 					if (isLGraphics(g)) g.applySimState(this.zoomPan.currentScale);
 				});

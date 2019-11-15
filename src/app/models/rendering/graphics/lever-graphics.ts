@@ -45,16 +45,24 @@ export class LeverGraphics extends PIXI.Graphics implements LGraphics, Component
 			this._width = getStaticDI(ElementProviderService).getElementById(this.element.typeId).width;
 
 		}
-		this.drawComponent();
+		this.drawComponent(this.simActiveState);
 		if (this._projectIdentifier) this.addClickListener();
 	}
 
-	private drawComponent() {
+	private drawComponent(state: boolean) {
 		this.lineStyle(1 / this._scale, this.themingService.getEditorColor('wire'));
 		this.beginFill(this.themingService.getEditorColor('background'));
 		this.moveTo(0, 0);
 		this.drawRect(0, 0, environment.gridPixelWidth * this._width, environment.gridPixelWidth);
-		this.beginFill(this.themingService.getEditorColor('wire'));
+		if (state) {
+			this.beginFill(this.themingService.getEditorColor('wire'));
+			this.drawRect(0, 0, environment.gridPixelWidth * this._width, 4);
+			this.lineStyle(3 / this._scale, this.themingService.getEditorColor('wire'));
+		} else {
+			this.drawRect(0, environment.gridPixelWidth - 4, environment.gridPixelWidth * this._width, 4);
+			this.lineStyle(1 / this._scale, this.themingService.getEditorColor('wire'));
+			this.beginFill(this.themingService.getEditorColor('wire'));
+		}
 
 		switch (this.element.rotation) {
 			case 0:
@@ -81,7 +89,7 @@ export class LeverGraphics extends PIXI.Graphics implements LGraphics, Component
 		this.on('pointerdown', (e: PIXI.interaction.InteractionEvent) => {
 			const newSate = !this.simActiveState;
 			this.workerCommunicationService.setUserInput(this._projectIdentifier, this.element, [newSate]);
-			this.setSimulationState([newSate]);
+			this.setSimulationState([newSate], true);
 			getStaticDI(RenderTicker).singleFrame(this._projectIdentifier);
 		});
 	}
@@ -90,18 +98,9 @@ export class LeverGraphics extends PIXI.Graphics implements LGraphics, Component
 		// tslint:disable-next-line:triple-equals
 		if (this.simActiveState == this.shouldHaveActiveState) return;
 		this.simActiveState = this.shouldHaveActiveState;
-		// @ts-ignore
-		for (const data of this.geometry.graphicsData) {
-			if (data.shape instanceof PIXI.Polygon) {
-				if (this.simActiveState) {
-					data.lineStyle.width = 3 / scale;
-				} else {
-					data.lineStyle.width = 1 / scale;
-				}
-			}
-		}
+		this.clear();
+		this.drawComponent(this.simActiveState);
 		this._scale = scale;
-		this.geometry.invalidate();
 	}
 
 	setSelected(selected: boolean) {
@@ -112,7 +111,8 @@ export class LeverGraphics extends PIXI.Graphics implements LGraphics, Component
 		}
 	}
 
-	setSimulationState(state: boolean[]) {
+	setSimulationState(state: boolean[], force = false) {
+		if (!force) return;
 		this.shouldHaveActiveState = state[0];
 		if (this.worldVisible) {
 			this.applySimState(this._scale);
@@ -123,7 +123,7 @@ export class LeverGraphics extends PIXI.Graphics implements LGraphics, Component
 		this.element.rotation = rotation;
 		this._scale = scale;
 		this.clear();
-		this.drawComponent();
+		this.drawComponent(this.simActiveState);
 	}
 
 	updateScale(scale: number) {

@@ -15,6 +15,7 @@ import {delay} from '../../models/element-types/basic/delay';
 import {clock} from '../../models/element-types/basic/clock';
 import {halfAdder} from '../../models/element-types/advanced/half-adder';
 import {fullAdder} from '../../models/element-types/advanced/full-adder';
+import {environment} from '../../../environments/environment';
 
 @Injectable({
 	providedIn: 'root'
@@ -52,10 +53,14 @@ export class ElementProviderService {
 	constructor(private errorHandler: ErrorHandlingService) {}
 
 	public setUserDefinedTypes(elements: Map<number, ElementType>) {
+		for (const elem of elements.values()) {
+			elem.width = environment.componentWidth;
+		}
 		this._userDefinedElements = elements;
 	}
 
 	public addUserDefinedElement(element: ElementType, id: number) {
+		element.width = environment.componentWidth;
 		this._userDefinedElements.set(id, element);
 	}
 
@@ -81,7 +86,7 @@ export class ElementProviderService {
 		} else if (this._userDefinedElements.has(id)) {
 			return this._userDefinedElements.get(id);
 		}
-		this.errorHandler.showErrorMessage('Component not found, project might be corrupted');
+		this.errorHandler.showErrorMessage('ERROR.PROJECTS.COMP_NOT_FOUND');
 	}
 
 	public hasElement(id: number) {

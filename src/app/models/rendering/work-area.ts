@@ -56,12 +56,12 @@ export abstract class WorkArea {
 		});
 	}
 
-	protected addTickerFunction() {
+	protected addTickerFunction(setFrameTime = false) {
 		this.ticker.addTickerFunction(this.getIdentifier(), () => {
 			if (!this._activeView) return;
 			this.updateZoomPan();
 			this._pixiRenderer.render(this._activeView);
-			if (this.constructor.name === 'WorkAreaComponent') (this as unknown as WorkAreaComponent).setWorkerFrameTime();
+			if (setFrameTime) (this as unknown as WorkAreaComponent).setWorkerFrameTime();
 		});
 	}
 
@@ -118,7 +118,7 @@ export abstract class WorkArea {
 	}
 
 	private updateSelectedZoomScale() {
-		if (this._activeView.constructor.name === 'EditorView') {
+		if ('updateSelectedElementsScale' in this._activeView && 'updatePastingElementsScale' in this._activeView) {
 			(this._activeView as EditorView).updateSelectedElementsScale();
 			(this._activeView as EditorView).updatePastingElementsScale();
 		}

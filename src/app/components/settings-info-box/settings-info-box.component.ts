@@ -44,7 +44,6 @@ export class SettingsInfoBoxComponent implements OnChanges, OnDestroy {
 			this.initType();
 		} else {
 			this.initInstance();
-
 		}
 	}
 
@@ -80,18 +79,13 @@ export class SettingsInfoBoxComponent implements OnChanges, OnDestroy {
 			rotation: [this.elemType.rotation],
 			plugIndex: []
 		});
-		this.formSubscription = this.propertiesForm.valueChanges.pipe(
-			debounce(value => {
-				if (value.numInputs !== this.elemType.numInputs) return timer(1000);
-				return of(undefined);
-			})
-		).subscribe((data: any) => {
+		this.formSubscription = this.propertiesForm.valueChanges.subscribe((data: any) => {
 			if (data.rotation !== this.elemType.rotation) {
 				this.elemType.rotation = Number(data.rotation);
 			}
 			if (data.numInputs <= this.elemType.maxInputs && data.numInputs >= this.elemType.minInputs) {
 				this.elemType.numInputs = data.numInputs;
-			} else if (data.numInputs) {
+			} else if (data.numInputs * 10 >= this.elemType.maxInputs) {
 				this.propertiesForm.controls.numInputs.setValue(this.elemType.numInputs);
 			}
 		});
@@ -106,12 +100,7 @@ export class SettingsInfoBoxComponent implements OnChanges, OnDestroy {
 			rotation: [element.rotation],
 			plugIndex: [element.plugIndex]
 		});
-		this.formSubscription = this.propertiesForm.valueChanges.pipe(
-			debounce(value => {
-				if (value.numInputs !== element.numInputs) return timer(1000);
-				return of(undefined);
-			})
-		).subscribe((data: any) => {
+		this.formSubscription = this.propertiesForm.valueChanges.subscribe((data: any) => {
 			if (data.rotation !== element.rotation) {
 				if (!this.projects.currProject.rotateComponent(this.selectedCompId, Number(data.rotation))) {
 					this.propertiesForm.controls.rotation.setValue(element.rotation);
@@ -121,7 +110,7 @@ export class SettingsInfoBoxComponent implements OnChanges, OnDestroy {
 				if (data.numInputs !== element.numInputs && !this.projects.currProject.setNumInputs(this.selectedCompId, data.numInputs)) {
 					this.propertiesForm.controls.numInputs.setValue(element.numInputs);
 				}
-			} else if (data.numInputs) {
+			} else if (data.numInputs * 10 >= this.elemType.maxInputs) {
 				this.propertiesForm.controls.numInputs.setValue(element.numInputs);
 			}
 			if (data.plugIndex !== element.plugIndex) {
@@ -129,6 +118,21 @@ export class SettingsInfoBoxComponent implements OnChanges, OnDestroy {
 				this.propertiesForm.controls.plugIndex.setValue(element.plugIndex);
 			}
 		});
+	}
+
+	resetInputElementValue() {
+		if (this.selectionMode === 'type') {
+			if (this.propertiesForm.controls.numInputs.value > this.elemType.maxInputs ||
+				this.propertiesForm.controls.numInputs.value < this.elemType.minInputs) {
+				this.propertiesForm.controls.numInputs.setValue(this.elemType.numInputs);
+			}
+		} else {
+			const element = this.projects.currProject.currState.getElementById(this.selectedCompId);
+			if (this.propertiesForm.controls.numInputs.value > this.elemType.maxInputs ||
+				this.propertiesForm.controls.numInputs.value < this.elemType.minInputs) {
+				this.propertiesForm.controls.numInputs.setValue(element.numInputs);
+			}
+		}
 	}
 
 	ngOnDestroy(): void {

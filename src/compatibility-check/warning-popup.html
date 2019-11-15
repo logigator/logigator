@@ -1,13 +1,10 @@
-<div id="compatibility-warning" style="display: none;">
-	<div class="content">
-		<div class="header">
-			<div>Compatibility Warning</div>
-			<img src="/assets/icons/dark/close.svg" class="dark comp-warning-close">
-			<img src="/assets/icons/light/close.svg" class="light comp-warning-close">
-		</div>
-		<div>
-			This may not work
-		</div>
-	</div>
+<script src="/compatibility-check/warning-script.js"></script>
+<link rel="stylesheet" type="text/css" href="/compatibility-check/warning-styles.css">
+
+<div id="compatibility-warning" style="display: none">
+	<a id="compatibility-warning-close" href="#" onclick="document.getElementById('compatibility-warning').style.display = 'none'">
+		<img id="compatibility-warning-img" alt="close" src="/assets/icons/dark/close.svg">
+	</a>
+	<h2 id="compatibility-warning-text1" class="compatibility-warning-text">Unfortunately, is seems like your browser doesn't fully support this site.</h2>
+	<h2 id="compatibility-warning-text2" class="compatibility-warning-text">If you experience any issues, please try using a different browser.</h2>
 </div>
-<script src="/compatibility-check/warning-script.js" defer></script>

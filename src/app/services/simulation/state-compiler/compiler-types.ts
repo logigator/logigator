@@ -17,14 +17,18 @@ interface PosOfElem {
 
 type WiresOnLinks = Map<number, Element[]>;
 type WiresOnLinksInProject = Map<string, WiresOnLinks>;
+type WiresOnLinksCache = Map<number, WiresOnLinks>;
 interface WireEndOnComp {
 	component: Element;
 	wireIndex: number;
 }
 type WireEndsOnLinks = Map<number, WireEndOnComp[]>;
 type WireEndsOnLinksInProject = Map<string, WireEndsOnLinks>;
+type WireEndsOnLinksCache = Map<number, WireEndsOnLinks>;
+
+type ElementId = number;
 
 export {UnitToElement, LinkOnWireEnd, PosOfElem, WireEndOnElem,
 	WiresOnLinks, WiresOnLinksInProject, WireEndLinksOnElem,
 	WireEndOnComp, WireEndsOnLinks, WireEndsOnLinksInProject,
-	ElementToUnit, UnitElementBidir};
+	ElementToUnit, UnitElementBidir, ElementId, WiresOnLinksCache, WireEndsOnLinksCache};
