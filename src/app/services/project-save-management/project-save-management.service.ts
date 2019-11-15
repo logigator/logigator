@@ -215,6 +215,9 @@ export class ProjectSaveManagementService {
 			parsedFile = JSON.parse(content);
 			this.elemProvService.clearElementsFromFile();
 			parsedFile.components.forEach(c => {
+				this.elemProvService.addUserDefinedElement(c.type, c.typeId);
+			});
+			parsedFile.components.forEach(c => {
 				let model = this.getProjectModelFromJson(c.data);
 				model = this.adjustInputsAndOutputs(model);
 				const project = new Project(new ProjectState(model), {
@@ -223,7 +226,6 @@ export class ProjectSaveManagementService {
 					id: c.typeId
 				});
 				this._projectCache.set(c.typeId, project);
-				this.elemProvService.addUserDefinedElement(c.type, c.typeId);
 			});
 			let mainModel = this.getProjectModelFromJson(parsedFile.mainProject.data);
 			mainModel = this.adjustInputsAndOutputs(mainModel);
