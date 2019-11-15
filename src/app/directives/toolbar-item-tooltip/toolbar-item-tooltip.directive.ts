@@ -42,11 +42,6 @@ export class ToolbarItemTooltipDirective {
 		this.hide();
 	}
 
-	@HostListener('click')
-	onClick() {
-		this.hide();
-	}
-
 	private show() {
 		this._showTimeout = setTimeout(() => {
 			if (this._componentRef) return;
