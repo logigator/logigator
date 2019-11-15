@@ -20,14 +20,19 @@
 	<div (click)="exportProject()" *ngIf="checkActionUsable('export')">
 		{{'DROPDOWN.FILE.EXPORT' | translate}}
 	</div>
-	<hr>
 	<ng-container *ngIf="canShare && checkActionUsable('share')">
+		<hr>
 		<div (click)="shareProject()">
 			{{'DROPDOWN.FILE.SHARE' | translate}}
 		</div>
-		<hr>
 	</ng-container>
-	<div (click)="screenshot()">
-		{{'DROPDOWN.FILE.SCREENSHOT' | translate}}
-	</div>
+	<ng-container *ngIf="checkActionUsable('exportImage')">
+		<hr>
+		<div (click)="screenshot('png')">
+			{{'DROPDOWN.FILE.IMAGE_PNG' | translate}}
+		</div>
+		<div (click)="screenshot('jpeg')">
+			{{'DROPDOWN.FILE.IMAGE_JPEG' | translate}}
+		</div>
+	</ng-container>
 </div>

@@ -11,7 +11,8 @@
 			"OPEN": "Open",
 			"SAVE": "Save",
 			"EXPORT": "Export to file",
-			"SCREENSHOT": "Screenshot",
+			"IMAGE_PNG": "Export as PNG Image",
+			"IMAGE_JPEG": "Export as JPEG Image",
 			"SHARE": "Share",
 			"CLONE": "Clone Project"
 		},
