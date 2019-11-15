@@ -28,7 +28,7 @@
 
 		<div class="property" formArrayName="options" *ngFor="let item of propertiesForm.get('options').controls; let i = index">
 			<p>{{elemType.optionsConfig[i].name | translate}}:</p>
-			<input [type]="elemType.optionsConfig[i].type"
+			<input type="number"
 			       [formControl]=" getOptionFromControl(i)"
 			       [min]="elemType.optionsConfig[i].min"
 			       [max]="elemType.optionsConfig[i].max"

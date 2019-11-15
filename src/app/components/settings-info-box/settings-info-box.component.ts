@@ -88,14 +88,11 @@ export class SettingsInfoBoxComponent implements OnChanges, OnDestroy {
 
 			if (this.elemType.optionsConfig) {
 				for (let i = 0; i < data.options.length; i++) {
-					let optVal = data.options[i];
-					if (this.elemType.optionsConfig[i].type === 'number') {
-						optVal = Number(optVal);
-						if (optVal <= this.elemType.optionsConfig[i].max && optVal >= this.elemType.optionsConfig[i].min) {
-							this.elemType.options[i] = optVal;
-						} else if (optVal * 10 >= this.elemType.optionsConfig[i].max) {
-							(this.propertiesForm.get('options') as FormArray).controls[i].setValue(this.elemType.options[i]);
-						}
+					const optVal = Number(data.options[i]);
+					if (optVal <= this.elemType.optionsConfig[i].max && optVal >= this.elemType.optionsConfig[i].min) {
+						this.elemType.options[i] = optVal;
+					} else if (optVal * 10 >= this.elemType.optionsConfig[i].max) {
+						(this.propertiesForm.get('options') as FormArray).controls[i].setValue(this.elemType.options[i]);
 					}
 				}
 			}
@@ -146,21 +143,19 @@ export class SettingsInfoBoxComponent implements OnChanges, OnDestroy {
 	}
 
 	public resetOptionsValue(index: number) {
-		if (this.elemType.optionsConfig[index].type === 'number') {
-			const optVal = Number((this.propertiesForm.get('options') as FormArray).controls[index].value);
-			if (optVal > this.elemType.optionsConfig[index].max || optVal < this.elemType.optionsConfig[index].min) {
-				let valToSet: number;
-				if (this.selectionMode === 'placed') {
-					valToSet = this.projects.currProject.currState.getElementById(this.selectedCompId).options[index];
-				} else {
-					valToSet = this.elemType.options[index];
-				}
-				(this.propertiesForm.get('options') as FormArray).controls[index].setValue(valToSet);
+		const optVal = Number((this.propertiesForm.get('options') as FormArray).controls[index].value);
+		if (optVal > this.elemType.optionsConfig[index].max || optVal < this.elemType.optionsConfig[index].min) {
+			let valToSet: number;
+			if (this.selectionMode === 'placed') {
+				valToSet = this.projects.currProject.currState.getElementById(this.selectedCompId).options[index];
+			} else {
+				valToSet = this.elemType.options[index];
 			}
+			(this.propertiesForm.get('options') as FormArray).controls[index].setValue(valToSet);
 		}
 	}
 
-	private getOptionsArray(elemType: ElementType, opts: any[]): any[] {
+	private getOptionsArray(elemType: ElementType, opts: number[]): FormControl[] {
 		const formArray = [];
 		if (!elemType.optionsConfig) return formArray;
 		elemType.optionsConfig.forEach((oc, index) => {

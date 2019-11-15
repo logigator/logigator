@@ -13,10 +13,9 @@ export interface ElementType {
 	category: 'basic' | 'advanced' | 'plug' | 'io' | 'user';
 	options?: any[];
 	optionsConfig?: {
-		type: 'number' | 'text',
 		name: string,
-		min?: number,
-		max?: number
+		min: number,
+		max: number
 	}[];
 }
 
