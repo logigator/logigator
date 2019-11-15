@@ -12,7 +12,6 @@ import {Project} from '../project';
 import {Element} from '../element';
 import {ProjectType} from '../project-type';
 import {getStaticDI} from '../get-di';
-import {LGraphics} from './graphics/l-graphics';
 import {LGraphicsResolver} from './graphics/l-graphics-resolver';
 
 export class EditorView extends View {
