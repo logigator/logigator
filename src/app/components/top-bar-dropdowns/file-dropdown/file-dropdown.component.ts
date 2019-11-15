@@ -84,7 +84,7 @@ export class FileDropdownComponent implements OnInit {
 		this.close();
 	}
 
-	public screenshot(type: 'jpeg' | 'png') {
+	public screenshot(type: 'jpeg' | 'png' | 'svg') {
 		this.imageExportService.exportImage(type);
 		this.close();
 	}
