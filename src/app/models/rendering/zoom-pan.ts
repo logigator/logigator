@@ -26,6 +26,11 @@ export class ZoomPan {
 		}
 	}
 
+	public translateTo(point: PIXI.Point) {
+		this._view.x = point.x;
+		this._view.y = point.y;
+	}
+
 	/**
 	 * zooms by a given factor to a given point
 	 * @return true if something was actually moved

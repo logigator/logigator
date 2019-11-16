@@ -23,7 +23,8 @@ const actionUsableInSimulation: InteractionActionUsableInSimulation = {
 	save: false,
 	share: true,
 	export: true,
-	editDropdown: false
+	editDropdown: false,
+	exportImage: false
 };
 
 export function checkActionUsable(action: InteractionAction): boolean {

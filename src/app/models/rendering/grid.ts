@@ -27,15 +27,15 @@ export class Grid {
 		return new PIXI.Graphics(this.getGridGeometry(scale));
 	}
 
-	public static getGridPosForPixelPos(point: PIXI.Point): PIXI.Point {
+	public static getGridPosForPixelPos(point: PIXI.IPoint): PIXI.Point {
 		return new PIXI.Point(Math.floor(point.x / environment.gridPixelWidth), Math.floor(point.y / environment.gridPixelWidth));
 	}
 
-	public static getFloatGridPosForPixelPos(point: PIXI.Point): PIXI.Point {
+	public static getFloatGridPosForPixelPos(point: PIXI.IPoint): PIXI.Point {
 		return new PIXI.Point(point.x / environment.gridPixelWidth, point.y / environment.gridPixelWidth);
 	}
 
-	public static getPixelPosForGridPos(point: PIXI.Point): PIXI.Point {
+	public static getPixelPosForGridPos(point: PIXI.IPoint): PIXI.Point {
 		return new PIXI.Point(point.x * environment.gridPixelWidth, point.y * environment.gridPixelWidth);
 	}
 
@@ -53,18 +53,18 @@ export class Grid {
 		return Grid.getLocalChunkPixelPosForGridPos(newPoint);
 	}
 
-	public static getPixelPosForGridPosWire(point: PIXI.Point): PIXI.Point {
+	public static getPixelPosForGridPosWire(point: PIXI.IPoint): PIXI.Point {
 		return Grid.getPixelPosForGridPos(new Point(point.x + 0.5, point.y + 0.5));
 	}
 
-	public static getPixelPosForPixelPosOnGridWire(point: PIXI.Point): PIXI.Point {
+	public static getPixelPosForPixelPosOnGridWire(point: PIXI.IPoint): PIXI.Point {
 		const gridPos = Grid.getGridPosForPixelPos(point);
 		gridPos.x += 0.5;
 		gridPos.y += 0.5;
 		return Grid.getPixelPosForGridPos(gridPos);
 	}
 
-	public static getPixelPosOnGridForPixelPos(point: PIXI.Point): PIXI.Point {
+	public static getPixelPosOnGridForPixelPos(point: PIXI.IPoint): PIXI.Point {
 		const gridPos = Grid.getGridPosForPixelPos(point);
 		return Grid.getPixelPosForGridPos(gridPos);
 	}

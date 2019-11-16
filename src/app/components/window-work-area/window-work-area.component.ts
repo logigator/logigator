@@ -105,6 +105,7 @@ export class WindowWorkAreaComponent extends WorkArea implements OnInit, OnChang
 				this.parentNames,
 				this.parentTypeIds
 			);
+			this._activeView.centerView();
 			if (this._dragManager) this._dragManager.destroy();
 
 			this._dragManager =  new WindowDragManager(

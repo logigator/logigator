@@ -16,6 +16,7 @@ import {WorkModeService} from '../../services/work-mode/work-mode.service';
 import {SimulationView} from '../../models/rendering/simulation-view';
 import {View} from '../../models/rendering/view';
 import {WorkerCommunicationService} from '../../services/simulation/worker-communication/worker-communication.service';
+import {ImageExportService} from '../../services/image-export/image-export.service';
 
 @Component({
 	selector: 'app-work-area',
@@ -34,7 +35,8 @@ export class WorkAreaComponent extends WorkArea implements OnInit, OnDestroy {
 		private ngZone: NgZone,
 		private projectsService: ProjectsService,
 		private workMode: WorkModeService,
-		private workerCommunicationService: WorkerCommunicationService
+		private workerCommunicationService: WorkerCommunicationService,
+		private imageExportService: ImageExportService
 	) {
 		super();
 	}
@@ -47,6 +49,7 @@ export class WorkAreaComponent extends WorkArea implements OnInit, OnDestroy {
 			this.preventContextMenu(this._pixiCanvasContainer, this.renderer2);
 			this.initZoomPan(this._pixiCanvasContainer);
 			this.initPixi(this._pixiCanvasContainer, this.renderer2);
+			this.imageExportService.injectRenderer(this._pixiRenderer);
 
 			this.projectsService.onProjectOpened$.pipe(
 				takeUntil(this._destroySubject)

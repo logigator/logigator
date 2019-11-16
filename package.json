@@ -8,7 +8,9 @@
 		"start:electron": "env-cmd -e dev-electron --use-shell \"npm run build-custom-build-scripts && npm-run-all -p ng:serve:electron electron:serve\"",
 		"build": "npm run build:web",
 		"build:web": "npm run wasm-build && env-cmd -e prod-web --use-shell \"npm run build-custom-build-scripts && ng build -c prod-web \"",
+		"build:web-with-stats": "npm run wasm-build && env-cmd -e prod-web --use-shell \"npm run build-custom-build-scripts && ng build -c prod-web --stats-json\"",
 		"build:electron:win64": "env-cmd -e prod-electron --use-shell \"npm run build-custom-build-scripts && npm run prepackage-electron && node custom-build-scripts/dist/package-app.js win32 x64\"",
+		"analyze-bundle": "webpack-bundle-analyzer dist/logigator-editor/stats-es2015.json",
 		"wasm-build": "node custom-build-scripts/build-wasm.js",
 		"ng:serve": "ng serve --port 8202 --disableHostCheck",
 		"prepackage-electron": "ng build -c prod-electron && npm run electron:tsc && node custom-build-scripts/dist/create-dist-package.js && node custom-build-scripts/dist/add-protocols-to-index.js",
@@ -39,7 +41,7 @@
 		"ngx-electron": "^2.1.1",
 		"ngx-toastr": "^11.1.0",
 		"node-fetch": "^2.6.0",
-		"pixi.js": "^5.1.5",
+		"pixi.js": "^5.2.0",
 		"run-script-os": "^1.0.7",
 		"rxjs": "~6.4.0",
 		"tslib": "^1.10.0",
@@ -77,6 +79,7 @@
 		"tslint": "~5.15.0",
 		"typescript": "~3.5.3",
 		"wait-on": "^3.3.0",
+		"webpack-bundle-analyzer": "^3.6.0",
 		"webpack-preprocessor-loader": "github:logigator/preprocessor-loader"
 	}
 }

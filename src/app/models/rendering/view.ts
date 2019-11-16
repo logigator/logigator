@@ -12,10 +12,8 @@ import {CollisionFunctions} from '../collision-functions';
 import {Project} from '../project';
 import {Action} from '../action';
 import {getStaticDI} from '../get-di';
-import {ComponentGraphics} from './graphics/component-graphics';
 import {isLGraphics, isUpdatable, LGraphics} from './graphics/l-graphics';
 import {LGraphicsResolver} from './graphics/l-graphics-resolver';
-import {SimulationView} from './simulation-view';
 
 export abstract class View extends PIXI.Container {
 
@@ -324,6 +322,22 @@ export abstract class View extends PIXI.Container {
 			this.updateChunks();
 			this.requestSingleFrame();
 		}
+	}
+
+	public centerView() {
+		for (let x = 0; x < this._project.currState.chunks.length; x++) {
+			for (let y = 0; y < this._project.currState.chunks[x].length; y++) {
+				if (this._project.currState.chunks[x][y] && this._project.currState.chunks[x][y].elements.length > 0) {
+					this.zoomPan.translateTo(this.getChunkPos(-x, -y));
+					this.updateChunks();
+					this.requestSingleFrame();
+					return;
+				}
+			}
+		}
+		this.zoomPan.translateTo(new PIXI.Point(0, 0));
+		this.updateChunks();
+		this.requestSingleFrame();
 	}
 
 	public get projectId(): number {

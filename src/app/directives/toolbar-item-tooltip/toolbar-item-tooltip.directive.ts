@@ -30,20 +30,13 @@ export class ToolbarItemTooltipDirective {
 		private injector: Injector
 	) { }
 
-	@HostListener('focusin')
 	@HostListener('mouseenter')
 	onMouseEnter() {
 		this.show();
 	}
 
-	@HostListener('focusout')
 	@HostListener('mouseleave')
 	onMouseLeave() {
-		this.hide();
-	}
-
-	@HostListener('click')
-	onClick() {
 		this.hide();
 	}
 
