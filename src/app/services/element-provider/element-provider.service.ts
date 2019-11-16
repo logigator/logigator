@@ -11,6 +11,10 @@ import {lever} from '../../models/element-types/io/lever';
 import {butt} from '../../models/element-types/plug/butt';
 import {ErrorHandlingService} from '../error-handling/error-handling.service';
 import {ElementType} from '../../models/element-types/element-type';
+import {delay} from '../../models/element-types/basic/delay';
+import {clock} from '../../models/element-types/basic/clock';
+import {halfAdder} from '../../models/element-types/advanced/half-adder';
+import {fullAdder} from '../../models/element-types/advanced/full-adder';
 import {environment} from '../../../environments/environment';
 
 @Injectable({
@@ -23,7 +27,14 @@ export class ElementProviderService {
 		[1, not],
 		[2, and],
 		[3, or],
-		[4, xor]
+		[4, xor],
+		[5, delay],
+		[6, clock],
+	]);
+
+	private _advancedElements: Map<number, ElementType> = new Map([
+		[10, halfAdder],
+		[11, fullAdder]
 	]);
 
 	private _plugElements: Map<number, ElementType> = new Map([
@@ -66,6 +77,8 @@ export class ElementProviderService {
 	public getElementById(id: number): ElementType {
 		if (this._basicElements.has(id)) {
 			return this._basicElements.get(id);
+		} else if (this._advancedElements.has(id)) {
+			return this._advancedElements.get(id);
 		} else if (this._plugElements.has(id)) {
 			return this._plugElements.get(id);
 		} else if (this._ioElements.has(id)) {
@@ -76,8 +89,28 @@ export class ElementProviderService {
 		this.errorHandler.showErrorMessage('ERROR.PROJECTS.COMP_NOT_FOUND');
 	}
 
+	public hasElement(id: number) {
+		return this._basicElements.has(id) ||
+			this._advancedElements.has(id) ||
+			this._plugElements.has(id) ||
+			this._ioElements.has(id) ||
+			this._userDefinedElements.has(id);
+	}
+
 	public isBasicElement(id: number): boolean {
 		return this._basicElements.has(id);
+	}
+
+	public isAdvancedElement(id: number): boolean {
+		return this._advancedElements.has(id);
+	}
+
+	public isSimpleElement(id: number): boolean {
+		return this.isBasicElement(id) || this.isAdvancedElement(id);
+	}
+
+	public isDelayElement(id: number): boolean {
+		return this._basicElements.has(id) && id === 5;
 	}
 
 	public isIoElement(id: number): boolean {
@@ -110,6 +143,10 @@ export class ElementProviderService {
 
 	public get basicElements(): Map<number, ElementType> {
 		return this._basicElements;
+	}
+
+	get advancedElements(): Map<number, ElementType> {
+		return this._advancedElements;
 	}
 
 	public get plugElements(): Map<number, ElementType> {

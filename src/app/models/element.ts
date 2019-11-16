@@ -11,4 +11,6 @@ export interface Element {
 	rotation?: number;
 
 	plugIndex?: number;
+
+	options?: number[];
 }
