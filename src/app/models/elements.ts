@@ -26,6 +26,7 @@ export abstract class Elements {
 		out.pos = element.pos.clone();
 		if (element.endPos)
 			out.endPos = element.endPos.clone();
+		out.options = out.options ? [...out.options] : undefined;
 		return out;
 	}
 
@@ -66,8 +67,8 @@ export abstract class Elements {
 			pos,
 			endPos,
 			rotation: type.rotation,
-			plugIndex: getStaticDI(ElementProviderService).isPlugElement(typeId) ? 0 : undefined,
-
+			options: type.options,
+			plugIndex: getStaticDI(ElementProviderService).isPlugElement(typeId) ? 0 : undefined
 		};
 	}
 

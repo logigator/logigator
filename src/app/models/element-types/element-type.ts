@@ -11,7 +11,7 @@ export interface ElementType {
 	description: string;
 	rotation: number;
 	category: 'basic' | 'advanced' | 'plug' | 'io' | 'user';
-	options?: any[];
+	options?: number[];
 	optionsConfig?: {
 		name: string,
 		min: number,
