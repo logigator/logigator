@@ -69,8 +69,7 @@ export class EditorView extends View {
 	}
 
 	public placeComponent(position: PIXI.Point, typeId: number) {
-		const type = getStaticDI(ElementProviderService).getElementById(typeId);
-		return this._project.addElement(typeId, type.rotation, type.numInputs, type.numOutputs, position);
+		return this._project.addElement(typeId, position);
 	}
 
 	public placeComponentOnView(element: Element) {

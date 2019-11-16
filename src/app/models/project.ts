@@ -163,15 +163,14 @@ export class Project {
 		return true;
 	}
 
-	public addElement(typeId: number, rotation: number, numInputs: number, numOutputs: number, _pos: PIXI.Point, _endPos?: PIXI.Point):
-		Element {
+	public addElement(typeId: number, _pos: PIXI.Point, _endPos?: PIXI.Point): Element {
 		if (typeId === 0 && !_endPos)
 			return null;
 		if (typeId === 0 && _pos.equals(_endPos))
 			return null;
-		const elem = Elements.genNewElement(typeId, _pos,
-			_endPos || Elements.calcEndPos(_pos, Elements.elementType(typeId).width,
-			numInputs, numOutputs, rotation), rotation, numInputs);
+		const elem = Elements.genNewElement(typeId, _pos, _endPos);
+		elem.endPos = elem.endPos || Elements.calcEndPos(_pos, Elements.elementType(typeId).width,
+			elem.numInputs, elem.numOutputs, elem.rotation);
 		if (!this._currState.isFreeSpace(elem.pos, elem.endPos, typeId === 0, Elements.wireEnds(elem)))
 			return null;
 
@@ -193,7 +192,7 @@ export class Project {
 			_endPos = undefined;
 		}
 		if (!_endPos || _cornerPos.equals(_endPos)) {
-			const elem = this.addElement(0, undefined, 0, 0, _pos, _cornerPos);
+			const elem = this.addElement(0, _pos, _cornerPos);
 			return elem ? [elem] : null;
 		}
 		const {wire0, wire1} = Elements.gen2Wires(_pos, _cornerPos, _endPos);

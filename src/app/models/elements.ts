@@ -52,7 +52,7 @@ export abstract class Elements {
 		element.endPos.y += dif.y;
 	}
 
-	public static genNewElement(typeId: number, _pos: PIXI.Point, _endPos: PIXI.Point, rotation?: number, numInputs?: number): Element {
+	public static genNewElement(typeId: number, _pos: PIXI.Point, _endPos?: PIXI.Point): Element {
 		const type = getStaticDI(ElementProviderService).getElementById(typeId);
 		const pos = _pos ? _pos.clone() : undefined;
 		const endPos = _endPos ? _endPos.clone() : undefined;
@@ -61,12 +61,13 @@ export abstract class Elements {
 		return {
 			id: -1,
 			typeId,
-			numInputs: numInputs || type.numInputs,
+			numInputs: type.numInputs,
 			numOutputs: type.numOutputs,
 			pos,
 			endPos,
-			rotation: rotation || type.rotation,
-			plugIndex: getStaticDI(ElementProviderService).isPlugElement(typeId) ? 0 : undefined
+			rotation: type.rotation,
+			plugIndex: getStaticDI(ElementProviderService).isPlugElement(typeId) ? 0 : undefined,
+
 		};
 	}
 
