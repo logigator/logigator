@@ -1,7 +1,13 @@
 @import "variables";
 
-.work-area-container {
-	width: calc(100vw - #{$construction-box-width});
+.work-area-status-bar-container {
 	height: calc(100vh - #{$page-header-height});
-	position: relative;
+	display: flex;
+	flex-direction: column;
+
+	.work-area-container {
+		width: calc(100vw - #{$construction-box-width});
+		height: calc(100vh - #{$page-header-height - $status-bar-height});
+		position: relative;
+	}
 }

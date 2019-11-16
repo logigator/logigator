@@ -1,0 +1,31 @@
+@import "variables";
+@import "themes";
+
+.status-bar {
+	height: $status-bar-height;
+	width: 100%;
+	display: flex;
+	justify-content: flex-end;
+	align-items: center;
+	font-size: 90%;
+
+	@include themify() {
+		background-color: themed('toolbar');
+		color: themed('primary-text');
+		border-top: border('width') solid themed('secondary');
+
+		.divider {
+			height: 100%;
+			border-left: border('width') solid themed('secondary');
+			margin: 0 0.5rem;
+		}
+	}
+
+	.no-margin {
+		margin: 0;
+	}
+
+	p {
+		margin: 0 0.5rem 0 0;
+	}
+}

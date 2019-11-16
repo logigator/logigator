@@ -32,7 +32,7 @@ export class WorkAreaContainerComponent implements OnInit {
 	ngOnInit() {
 		this.workMode.onSimulationModeChange.subscribe(isSim => {
 			if (isSim) {
-				this.renderer2.setStyle(this.workAreaContainer.nativeElement, 'width', '100%');
+				this.renderer2.setStyle(this.workAreaContainer.nativeElement, 'width', '100vw');
 			} else {
 				this.renderer2.removeStyle(this.workAreaContainer.nativeElement, 'width');
 				this.windowWorkAreas.forEach(a => {
