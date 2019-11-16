@@ -155,12 +155,12 @@ export class ProjectState {
 	public loadConnectionPoints(elements: Element[], allRemoved?: boolean): void {
 		if (!allRemoved) {
 			elements.forEach(elem => {
-				for (const pos of this.wireEnds(elem))
+				for (const pos of Elements.wireEnds(elem))
 					this.removeConnectionPoint(pos);
 			});
 		}
 		elements.forEach(elem => {
-			for (const pos of this.wireEnds(elem))
+			for (const pos of Elements.wireEnds(elem))
 				this.addConnectionPoint(pos);
 		});
 	}
@@ -314,8 +314,12 @@ export class ProjectState {
 					continue;
 				outWires.push(merged.newElems[0]);
 				doneWires.push(wire0, wire1);
-				if (wires.length === 3)
-					return outWires;
+			}
+		}
+		if (doneWires.length !== wires.length) {
+			for (const wire of wires) {
+				if (!doneWires.includes(wire))
+					outWires.push(wire);
 			}
 		}
 		return outWires;
@@ -391,7 +395,6 @@ export class ProjectState {
 		const oldElems = (elem.typeId === 0 ? [elem] : []).concat(other.typeId === 0 ? [other] : []);
 		if (other.typeId === 0) {
 			const wireEnds = this.wireEnds(elem);
-			console.log(wireEnds);
 			for (const endPoint of wireEnds) {
 				if (CollisionFunctions.isPointOnWireNoEdge(other, endPoint)) {
 					return {newElems: this.connectWires(elem, other, endPoint), oldElems};
@@ -400,7 +403,6 @@ export class ProjectState {
 		}
 		if (elem.typeId === 0) {
 			const wireEnds = this.wireEnds(other);
-			console.log(wireEnds);
 			for (const endPoint of wireEnds) {
 				if (CollisionFunctions.isPointOnWireNoEdge(elem, endPoint)) {
 					return {newElems: this.connectWires(other, elem, endPoint), oldElems};
@@ -476,7 +478,7 @@ export class ProjectState {
 	public withWiresOnEdges(elements: Element[]): Element[] {
 		const out = [...elements];
 		for (const element of elements) {
-			for (const pos of this.wireEnds(element)) {
+			for (const pos of Elements.wireEnds(element)) {
 				const elemsOnPos = this.wiresOnPoint(pos);
 				elemsOnPos.forEach(elem => {
 					if (!out.includes(elem))
