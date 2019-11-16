@@ -13,6 +13,7 @@
 			"EXPORT": "Export to file",
 			"IMAGE_PNG": "Export as PNG Image",
 			"IMAGE_JPEG": "Export as JPEG Image",
+			"IMAGE_SVG": "Export as SVG Image",
 			"SHARE": "Share",
 			"CLONE": "Clone Project"
 		},

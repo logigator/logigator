@@ -7,7 +7,7 @@ import {getStaticDI} from '../../models/get-di';
 import {ThemingService} from '../theming/theming.service';
 import {environment} from '../../../environments/environment';
 
-export class ImageExporter {
+export class PixelImageExporter {
 
 	private readonly _container: PIXI.Container;
 	private readonly themingService = getStaticDI(ThemingService);
