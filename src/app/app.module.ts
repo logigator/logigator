@@ -48,6 +48,7 @@ import {CredentialsInterceptor} from './interceptors/credentials';
 import {SiPipe} from './pipes/si/si.pipe';
 import { ToolbarItemTooltipDirective } from './directives/toolbar-item-tooltip/toolbar-item-tooltip.directive';
 import { ToolbarItemTooltipComponent } from './components/toolbar-item-tooltip/toolbar-item-tooltip.component';
+import { TextComponent } from './components/popup/popup-contents/text/text.component';
 
 @NgModule({
 	declarations: [
@@ -86,7 +87,8 @@ import { ToolbarItemTooltipComponent } from './components/toolbar-item-tooltip/t
 		ShareProjectComponent,
 		SiPipe,
 		ToolbarItemTooltipDirective,
-		ToolbarItemTooltipComponent
+		ToolbarItemTooltipComponent,
+		TextComponent
 	],
 	entryComponents: [
 		PopupComponent,
@@ -97,6 +99,7 @@ import { ToolbarItemTooltipComponent } from './components/toolbar-item-tooltip/t
 		SaveAsComponent,
 		UnsavedChangesComponent,
 		ShareProjectComponent,
+		TextComponent,
 		ToolbarItemTooltipComponent,
 		// #!electron
 		LoginComponent,

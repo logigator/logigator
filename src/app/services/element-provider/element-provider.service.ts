@@ -16,6 +16,7 @@ import {clock} from '../../models/element-types/basic/clock';
 import {halfAdder} from '../../models/element-types/advanced/half-adder';
 import {fullAdder} from '../../models/element-types/advanced/full-adder';
 import {environment} from '../../../environments/environment';
+import {text} from '../../models/element-types/basic/text';
 
 @Injectable({
 	providedIn: 'root'
@@ -30,6 +31,7 @@ export class ElementProviderService {
 		[4, xor],
 		[5, delay],
 		[6, clock],
+		[7, text]
 	]);
 
 	private _advancedElements: Map<number, ElementType> = new Map([
@@ -139,6 +141,14 @@ export class ElementProviderService {
 
 	public isUserElement(id: number): boolean {
 		return this._userDefinedElements.has(id);
+	}
+
+	public isHiddenElement(id: number): boolean {
+		return id === 0 || id === 102 || id === 7;
+	}
+
+	public shouldShowSettingsBox(id: number): boolean {
+		return id !== 0;
 	}
 
 	public get basicElements(): Map<number, ElementType> {

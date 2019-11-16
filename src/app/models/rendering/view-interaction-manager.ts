@@ -17,6 +17,8 @@ import {getStaticDI} from '../get-di';
 import {NgZone} from '@angular/core';
 import {LGraphics} from './graphics/l-graphics';
 import {LGraphicsResolver} from './graphics/l-graphics-resolver';
+import {PopupService} from '../../services/popup/popup.service';
+import {TextComponent} from '../../components/popup/popup-contents/text/text.component';
 
 export class ViewInteractionManager {
 
@@ -112,6 +114,8 @@ export class ViewInteractionManager {
 		) {
 			this.startDraggingNewComponent(e);
 			addPointerMoveEvent = true;
+		} else if (this.workModeService.currentWorkMode === 'text' && e.data.button === 0 && e.target === this._view) {
+			this.placeText(e);
 		}
 		this._view.requestSingleFrame();
 		if (addPointerMoveEvent) this._view.on('pointermove', (e1: InteractionEvent) => this.handlePointerMoveOnView(e1));
@@ -250,7 +254,7 @@ export class ViewInteractionManager {
 		if (!(wire1End2StartPos.x !== wire2EndPos.x || wire1End2StartPos.y !== wire2EndPos.y)) {
 			wire2EndPos = undefined;
 		}
-		this._view.placeWires(wire1StartPos, wire1End2StartPos, wire2EndPos);
+		this.projectsService.currProject.addWire(wire1StartPos, wire1End2StartPos, wire2EndPos);
 
 		this._newWire.clear();
 		this._view.removeChild(this._newWire);
@@ -331,9 +335,9 @@ export class ViewInteractionManager {
 	private placeNewComp() {
 		if (this._newCompSprite.position.x > 0 && this._newCompSprite.position.y > 0) {
 			const typeIdToBuild = this.workModeService.currentComponentToBuild;
-			this._view.placeComponent(
-				Grid.getGridPosForPixelPos(this._newCompSprite.position),
-				typeIdToBuild
+			this.projectsService.currProject.addElement(
+				typeIdToBuild,
+				Grid.getGridPosForPixelPos(this._newCompSprite.position)
 			);
 			if (this.elemProvService.isPlugElement(typeIdToBuild)) {
 				this.projectsService.inputsOutputsCustomComponentChanged(this._view.projectId);
@@ -520,6 +524,15 @@ export class ViewInteractionManager {
 			pasteRectPos.x - bounding.x,
 			pasteRectPos.y - bounding.y
 		);
+	}
+
+	private placeText(e: InteractionEvent) {
+		getStaticDI(NgZone).run(async () => {
+			const text = await getStaticDI(PopupService).showPopup(TextComponent, 'POPUP.TEXT.TITLE', false);
+			if (!text) return;
+			const pos = Grid.getGridPosForPixelPos((e.data.getLocalPosition(this._view)));
+			// TODO PLace
+		});
 	}
 
 	private selectSingleComp(elem: LGraphics) {

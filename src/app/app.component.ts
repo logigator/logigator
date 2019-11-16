@@ -8,6 +8,7 @@ import {DOCUMENT} from '@angular/common';
 import {takeUntil} from 'rxjs/operators';
 import {ProjectsService} from './services/projects/projects.service';
 import {TranslateService} from '@ngx-translate/core';
+import {ElementProviderService} from './services/element-provider/element-provider.service';
 
 @Component({
 	selector: 'app-root',
@@ -30,7 +31,8 @@ export class AppComponent implements OnInit, OnDestroy {
 		private shortcuts: ShortcutsService,
 		private projects: ProjectsService,
 		@Inject(DOCUMENT) private document: HTMLDocument,
-		private translate: TranslateService
+		private translate: TranslateService,
+		private elementProviderService: ElementProviderService
 	) {
 		this.setGoogleAnalytics();
 		this.initTranslation();
@@ -62,7 +64,9 @@ export class AppComponent implements OnInit, OnDestroy {
 	}
 
 	public get showSettingsInfoBox(): boolean {
-		return this.workMode.currentWorkMode === 'buildComponent' ||  (this.projects.currProject && this.selection.isSingleSelect());
+		return this.workMode.currentWorkMode === 'buildComponent' ||
+			(this.projects.currProject && this.selection.isSingleSelect() &&
+				this.elementProviderService.shouldShowSettingsBox(this.projects.currProject.currState.getElementById(this.selectedCompId).typeId));
 	}
 
 	public get selectionMode(): 'type' | 'placed' {

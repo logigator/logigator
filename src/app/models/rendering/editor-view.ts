@@ -64,14 +64,6 @@ export class EditorView extends View {
 		}
 	}
 
-	public placeWires(start: PIXI.Point, middle: PIXI.Point, end?: PIXI.Point) {
-		this._project.addWire(start, middle, end);
-	}
-
-	public placeComponent(position: PIXI.Point, typeId: number) {
-		return this._project.addElement(typeId, position);
-	}
-
 	public placeComponentOnView(element: Element) {
 		const sprite = LGraphicsResolver.getLGraphicsFromElement(this.zoomPan.currentScale, element);
 		sprite.position = Grid.getLocalChunkPixelPosForGridPos(element.pos);

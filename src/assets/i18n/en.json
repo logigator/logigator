@@ -166,6 +166,11 @@
 			"COPY": "Copy",
 			"SAVE": "SAVE SETTINGS",
 			"CANCEL": "CANCEL"
+		},
+		"TEXT": {
+			"TITLE": "Place Text",
+			"SET": "Save",
+			"LABEL": "Text"
 		}
 	},
 	"SETTINGS_INFO": {
