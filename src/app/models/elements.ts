@@ -67,7 +67,7 @@ export abstract class Elements {
 			pos,
 			endPos,
 			rotation: type.rotation,
-			options: type.options,
+			options: type.options ? [...type.options] : undefined,
 			plugIndex: getStaticDI(ElementProviderService).isPlugElement(typeId) ? 0 : undefined
 		};
 	}

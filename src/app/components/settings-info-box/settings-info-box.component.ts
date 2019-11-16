@@ -126,6 +126,18 @@ export class SettingsInfoBoxComponent implements OnChanges, OnDestroy {
 				this.projects.currProject.setPlugIndex(this.selectedCompId, Number(data.plugIndex));
 				this.propertiesForm.controls.plugIndex.setValue(element.plugIndex);
 			}
+
+			if (this.elemType.optionsConfig) {
+				for (let i = 0; i < data.options.length; i++) {
+					const optVal = Number(data.options[i]);
+					if (optVal <= this.elemType.optionsConfig[i].max && optVal >= this.elemType.optionsConfig[i].min) {
+						element.options[i] = optVal;
+						this.projects.currProject.setOptions(element.id, element.options);
+					} else if (optVal * 10 >= this.elemType.optionsConfig[i].max) {
+						(this.propertiesForm.get('options') as FormArray).controls[i].setValue(this.elemType.options[i]);
+					}
+				}
+			}
 		});
 	}
 
