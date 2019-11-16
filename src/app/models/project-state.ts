@@ -10,8 +10,7 @@ import {getStaticDI} from './get-di';
 
 export class ProjectState {
 
-	// TODO make it a Map<id, Element>
-	private _model: Map<number, Element>;
+	private readonly _model: Map<number, Element>;
 
 	private readonly _chunks: Chunk[][];
 
@@ -147,7 +146,7 @@ export class ProjectState {
 
 	public removeAllConnectionPoints(elements: Element[]): void {
 		elements.forEach(elem => {
-			for (const pos of Elements.wireEnds(elem)) {
+			for (const pos of this.wireEnds(elem)) {
 				this.removeConFromChunks(pos);
 			}
 		});
@@ -317,6 +316,12 @@ export class ProjectState {
 				doneWires.push(wire0, wire1);
 			}
 		}
+		if (doneWires.length !== wires.length) {
+			for (const wire of wires) {
+				if (!doneWires.includes(wire))
+					outWires.push(wire);
+			}
+		}
 		return outWires;
 	}
 
@@ -373,9 +378,9 @@ export class ProjectState {
 		}
 		const newElem = Elements.genNewElement(0, undefined, undefined);
 		newElem.id = wire0.id;
-		if (CollisionFunctions.isVertical(wire0) && CollisionFunctions.isVertical(wire1) && wire0.pos.x === wire1.pos.x) {
+		if (Elements.isVertical(wire0) && Elements.isVertical(wire1) && wire0.pos.x === wire1.pos.x) {
 			Elements.mergeCheckedWiresVertical(wire0, wire1, newElem);
-		} else if (CollisionFunctions.isHorizontal(wire0) && CollisionFunctions.isHorizontal(wire1) && wire0.pos.y === wire1.pos.y) {
+		} else if (Elements.isHorizontal(wire0) && Elements.isHorizontal(wire1) && wire0.pos.y === wire1.pos.y) {
 			Elements.mergeCheckedWiresHorizontal(wire0, wire1, newElem);
 		} else {
 			return null;
@@ -389,14 +394,16 @@ export class ProjectState {
 	private connectWithEdge(other: Element, elem: Element): ChangeType {
 		const oldElems = (elem.typeId === 0 ? [elem] : []).concat(other.typeId === 0 ? [other] : []);
 		if (other.typeId === 0) {
-			for (const endPoint of Elements.wireEnds(elem)) {
+			const wireEnds = this.wireEnds(elem);
+			for (const endPoint of wireEnds) {
 				if (CollisionFunctions.isPointOnWireNoEdge(other, endPoint)) {
 					return {newElems: this.connectWires(elem, other, endPoint), oldElems};
 				}
 			}
 		}
 		if (elem.typeId === 0) {
-			for (const endPoint of Elements.wireEnds(other)) {
+			const wireEnds = this.wireEnds(other);
+			for (const endPoint of wireEnds) {
 				if (CollisionFunctions.isPointOnWireNoEdge(elem, endPoint)) {
 					return {newElems: this.connectWires(other, elem, endPoint), oldElems};
 				}
@@ -425,6 +432,20 @@ export class ProjectState {
 				outWires.push(elem);
 		}
 		return outWires;
+	}
+
+	private wireEnds(element: Element): PIXI.Point[] {
+		const out = Elements.wireEnds(element);
+		return out.filter(point => {
+			for (const wire of this.elemsOnPoint(point)) {
+				if (wire === element)
+					continue;
+				if (Elements.isSameDirection(element, wire)) {
+					return false;
+				}
+			}
+			return true;
+		});
 	}
 
 	public elemsOnPoint(pos: PIXI.Point): Element[] {
