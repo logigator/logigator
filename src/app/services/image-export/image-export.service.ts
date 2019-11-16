@@ -38,7 +38,6 @@ export class ImageExportService {
 	private exportVectorImage() {
 		const project = this.projectsService.currProject;
 		const exporter = new SvgImageExporter(project);
-		console.log(exporter.getSVGDownloadString());
 		const a = document.createElement('a');
 		a.href = exporter.getSVGDownloadString();
 		a.download = `${project.name}.svg`;

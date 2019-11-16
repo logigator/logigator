@@ -1,18 +1,16 @@
 import {Project} from '../../models/project';
 import {Element} from '../../models/element';
 import * as PIXI from 'pixi.js';
-import {environment} from '../../../environments/environment';
 import {getStaticDI} from '../../models/get-di';
 import {ThemingService} from '../theming/theming.service';
-import {ElementProviderService} from '../element-provider/element-provider.service';
 import {Grid} from '../../models/rendering/grid';
+import {SvgCompRenderer} from './svg-comp-renderer';
 
 export class SvgImageExporter {
 
 	private readonly SVG_NS = 'http://www.w3.org/2000/svg';
 
 	private readonly themingService = getStaticDI(ThemingService);
-	private readonly elementProvider = getStaticDI(ElementProviderService);
 
 	private readonly _svg: SVGElement;
 
@@ -39,34 +37,9 @@ export class SvgImageExporter {
 	}
 
 	private placeComp(element: Element) {
-		const elemType = this.elementProvider.getElementById(element.typeId);
-
-		let width;
-		let height;
-		if (element.rotation === 0 || element.rotation === 2) {
-			width = environment.gridPixelWidth * elemType.width;
-			height = element.numInputs >= element.numOutputs ?
-				environment.gridPixelWidth * element.numInputs :
-				environment.gridPixelWidth * element.numOutputs;
-		} else {
-			width = element.numInputs >= element.numOutputs ?
-				environment.gridPixelWidth * element.numInputs :
-				environment.gridPixelWidth * element.numOutputs;
-			height = environment.gridPixelWidth * elemType.width;
-		}
-
-		const group = document.createElementNS(this.SVG_NS, 'g');
-		const rect = document.createElementNS(this.SVG_NS, 'rect');
-		rect.setAttribute('x', '0');
-		rect.setAttribute('y', '0');
-		rect.setAttribute('width', width + '');
-		rect.setAttribute('height', height + '');
-		rect.setAttribute('class', 'wire');
-		group.appendChild(rect);
-		const pos = Grid.getPixelPosForGridPos(element.pos);
-		group.setAttribute('transform', `translate(${pos.x}, ${pos.y})`);
+		const compRenderer = new SvgCompRenderer(element);
+		this._svg.appendChild(compRenderer.getSVGGroup());
 		this.updateSize(Grid.getPixelPosForGridPos(element.endPos));
-		this._svg.appendChild(group);
 	}
 
 	private placeWire(element: Element) {
@@ -84,7 +57,14 @@ export class SvgImageExporter {
 	}
 
 	private placeConnPoint(pos: PIXI.Point) {
-
+		const point = document.createElementNS(this.SVG_NS, 'rect');
+		const pixelPos = Grid.getPixelPosForGridPosWire(pos);
+		pixelPos.x -= 2.5;
+		pixelPos.y -= 2.5;
+		point.setAttribute('x', pixelPos.x + '');
+		point.setAttribute('y', pixelPos.y + '');
+		point.setAttribute('class', 'conn-point');
+		this._svg.appendChild(point);
 	}
 
 	private generateStyles() {
@@ -96,6 +76,17 @@ export class SvgImageExporter {
 				stroke: #${this.themingService.getEditorColor('wire').toString(16)};
 				stroke-width: 1px;
 				fill: none;
+			}
+			.conn-point {
+				fill: #${this.themingService.getEditorColor('wire').toString(16)};
+				height: 5px;
+				width: 5px;
+			}
+			.symbol {
+				fill: #${this.themingService.getEditorColor('fontTint').toString(16)};
+				text-anchor: middle;
+				font-family: Roboto, Arial, sans-serif;
+				dominant-baseline: central;
 			}
 		`;
 		defs.appendChild(styles);
