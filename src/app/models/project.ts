@@ -349,6 +349,7 @@ export class Project {
 		const oldOptions = [...elem.options];
 		this._currState.setOptions(elem, options);
 		const action: Action = {
+			element: elem,
 			name: 'compOpt',
 			options: [options, oldOptions]
 		};
