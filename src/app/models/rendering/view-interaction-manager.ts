@@ -528,11 +528,11 @@ export class ViewInteractionManager {
 	}
 
 	private placeText(e: InteractionEvent) {
+		const pos = Grid.getGridPosForPixelPos(e.data.getLocalPosition(this._view));
 		getStaticDI(NgZone).run(async () => {
 			const text = await getStaticDI(PopupService).showPopup(TextComponent, 'POPUP.TEXT.TITLE', false);
 			if (!text) return;
-			const pos = Grid.getGridPosForPixelPos((e.data.getLocalPosition(this._view)));
-			// TODO PLace
+			this.projectsService.currProject.addText(text, pos, new PIXI.Point(pos.x + 3, pos.y + text.split('\n').length));
 		});
 	}
 

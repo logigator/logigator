@@ -6,6 +6,8 @@ import {FormArray, FormBuilder, FormControl, FormGroup} from '@angular/forms';
 import {of, Subscription, timer} from 'rxjs';
 import {debounce} from 'rxjs/operators';
 import {ElementTypeId} from '../../models/element-types/element-type-ids';
+import {PopupService} from '../../services/popup/popup.service';
+import {TextComponent} from '../popup/popup-contents/text/text.component';
 
 @Component({
 	selector: 'app-settings-info-box',
@@ -33,7 +35,8 @@ export class SettingsInfoBoxComponent implements OnChanges, OnDestroy {
 	constructor(
 		private elemProvider: ElementProviderService,
 		private projects: ProjectsService,
-		private formBuilder: FormBuilder
+		private formBuilder: FormBuilder,
+		private popup: PopupService
 	) { }
 
 	ngOnChanges(changes: SimpleChanges): void {
@@ -54,6 +57,10 @@ export class SettingsInfoBoxComponent implements OnChanges, OnDestroy {
 
 	public get isPlugElement(): boolean {
 		return this.elemProvider.isPlugElement(this.selectedCompTypeId);
+	}
+
+	public get isTextElement(): boolean {
+		return this.selectedCompTypeId === ElementTypeId.TEXT;
 	}
 
 	public get possiblePlugIndexes(): number[] {
@@ -179,6 +186,13 @@ export class SettingsInfoBoxComponent implements OnChanges, OnDestroy {
 
 	public getOptionFromControl(index: number): FormControl {
 		return (this.propertiesForm.get('options') as FormArray).controls[index] as FormControl;
+	}
+
+	public async editTextClick() {
+		const oText = this.projects.currProject.currState.getElementById(this.selectedCompId).text;
+		const nText = await this.popup.showPopup(TextComponent, 'POPUP.TEXT.TITLE', false, oText);
+		if (nText === oText) return;
+		this.projects.currProject.setText(this.selectedCompId, nText);
 	}
 
 	ngOnDestroy(): void {

@@ -7,6 +7,7 @@ import {ComponentGraphics} from './component-graphics';
 import {ButtonGraphics} from './button-graphics';
 import {LeverGraphics} from './lever-graphics';
 import {ElementTypeId} from '../../element-types/element-type-ids';
+import {TextGraphics} from './text-graphics';
 
 export abstract class LGraphicsResolver {
 
@@ -21,12 +22,14 @@ export abstract class LGraphicsResolver {
 			return new ButtonGraphics(scale, element, parentProjectIdentifier);
 		} else if (element.typeId === ElementTypeId.LEVER) {
 			return new LeverGraphics(scale, element, parentProjectIdentifier);
+		} else if (element.typeId === ElementTypeId.TEXT) {
+			return new TextGraphics(scale, element);
 		} else {
 			return new ComponentGraphics(scale, element);
 		}
 	}
 
-	// wires are not supported !!
+	// wires and text are not supported !!
 	public static getLGraphicsFromType(scale: number, elemTypeId: number): LGraphics {
 		const elemType = this.elementProviderService.getElementById(elemTypeId);
 		if (elemTypeId === ElementTypeId.BUTTON) {

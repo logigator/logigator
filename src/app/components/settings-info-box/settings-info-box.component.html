@@ -9,7 +9,7 @@
 			<input type="number" formControlName="numInputs" [min]="elemType.minInputs" [max]="elemType.maxInputs" (blur)="resetNumInputsValue()">
 		</div>
 
-		<div class="property">
+		<div class="property" *ngIf="!isTextElement">
 			<p>{{'SETTINGS_INFO.DIRECTION' | translate}}:</p>
 			<select formControlName="rotation">
 				<option value="0">{{'SETTINGS_INFO.DIRECTIONS.RIGHT' | translate}} &rarr;</option>
@@ -35,11 +35,13 @@
 			       (blur)="resetOptionsValue(i)">
 		</div>
 
-		<div class="description">
+		<div class="description" *ngIf="elemType?.description">
 			<h6>{{'SETTINGS_INFO.DESCRIPTION' | translate}}:</h6>
 			{{elemType?.description | translate}}
 		</div>
 
 		<button class="btn-outline secondary small edit" *ngIf="elemType.category === 'user'" (click)="editComponentClick()">{{'SETTINGS_INFO.EDIT' | translate}}</button>
+
+		<button class="btn-outline secondary small edit" *ngIf="isTextElement" (click)="editTextClick()">{{'SETTINGS_INFO.EDIT' | translate}}</button>
 	</div>
 </div>

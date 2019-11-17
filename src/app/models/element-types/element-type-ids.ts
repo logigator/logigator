@@ -1,4 +1,4 @@
-export enum ElementTypeId {
+export const enum ElementTypeId {
 	WIRE = 0,
 	NOT = 1,
 	AND = 2,

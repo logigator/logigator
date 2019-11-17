@@ -283,7 +283,7 @@ export class Project {
 
 	public rotateComponent(id: number, rotation: number): boolean {
 		const element = this._currState.getElementById(id);
-		if (element.typeId === ElementTypeId.WIRE)
+		if (element.typeId === ElementTypeId.WIRE || element.typeId === ElementTypeId.TEXT)
 			return;
 		const actions: Action[] = [{
 			name: 'rotComp',
@@ -307,7 +307,7 @@ export class Project {
 
 	public setNumInputs(id: number, numInputs: number): boolean {
 		const element = this._currState.getElementById(id);
-		if (element.typeId === ElementTypeId.WIRE)
+		if (element.typeId === ElementTypeId.WIRE || element.typeId === ElementTypeId.TEXT)
 			return;
 		const actions: Action[] = [{
 			name: 'numInpt',
