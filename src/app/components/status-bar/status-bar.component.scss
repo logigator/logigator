@@ -5,7 +5,7 @@
 	height: $status-bar-height;
 	width: 100%;
 	display: flex;
-	justify-content: flex-end;
+	justify-content: space-between;
 	align-items: center;
 	font-size: 90%;
 
@@ -13,19 +13,36 @@
 		background-color: themed('toolbar');
 		color: themed('primary-text');
 		border-top: border('width') solid themed('secondary');
+	}
+
+	.division {
+		display: flex;
+		align-items: center;
+		height: 100%;
 
 		.divider {
 			height: 100%;
-			border-left: border('width') solid themed('secondary');
 			margin: 0 0.5rem;
+
+			@include themify() {
+				border-left: border('width') solid themed('secondary');
+			}
 		}
-	}
 
-	.no-margin {
-		margin: 0;
-	}
+		.no-margin {
+			margin: 0;
+		}
 
-	p {
-		margin: 0 0.5rem 0 0;
+		p {
+			margin: 0;
+		}
+
+		.m-right {
+			margin: 0 0.5rem 0 0;
+		}
+
+		.m-left {
+			margin: 0 0 0 0.5rem;
+		}
 	}
 }
