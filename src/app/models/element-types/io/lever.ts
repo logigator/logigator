@@ -7,7 +7,7 @@ export const lever: ElementType = {
 	minInputs: 0,
 	maxInputs: 0,
 	width: 1,
-	symbol: 'lev',
+	symbol: 'sw',
 	description: 'ELEMENT_TYPE.IO.LEVER.DESCRIPTION',
 	rotation: 0,
 	category: 'io'
