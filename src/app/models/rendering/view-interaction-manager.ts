@@ -532,7 +532,7 @@ export class ViewInteractionManager {
 		getStaticDI(NgZone).run(async () => {
 			const text = await getStaticDI(PopupService).showPopup(TextComponent, 'POPUP.TEXT.TITLE', false);
 			if (!text) return;
-			this.projectsService.currProject.addText(text, pos, new PIXI.Point(pos.x + 3, pos.y + text.split('\n').length));
+			this.projectsService.currProject.addText(text, pos);
 		});
 	}
 

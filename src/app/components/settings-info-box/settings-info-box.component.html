@@ -41,7 +41,6 @@
 		</div>
 
 		<button class="btn-outline secondary small edit" *ngIf="elemType.category === 'user'" (click)="editComponentClick()">{{'SETTINGS_INFO.EDIT' | translate}}</button>
-
-		<button class="btn-outline secondary small edit" *ngIf="isTextElement" (click)="editTextClick()">{{'SETTINGS_INFO.EDIT' | translate}}</button>
+		<button class="btn-outline secondary small text-edit" *ngIf="isTextElement" (click)="editTextClick()">{{'SETTINGS_INFO.EDIT' | translate}}</button>
 	</div>
 </div>

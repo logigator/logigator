@@ -12,69 +12,73 @@ export class TextGraphics extends PIXI.Container implements LGraphics, Component
 	private themingService = getStaticDI(ThemingService);
 
 	private _texts: PIXI.BitmapText[] = [];
-
-	private _selectionRect: PIXI.Graphics;
+	private _point: PIXI.Graphics;
 
 	constructor(scale: number, element: Element) {
 		super();
 		this.element = element;
-		this._selectionRect = new PIXI.Graphics();
-		this._selectionRect.beginFill(0, 0.3);
-		this._selectionRect.drawRect(0, 0,  1, 1);
-		this._selectionRect.visible = false;
-		this.renderTexts();
-		this.addChild(this._selectionRect);
+		this._point = new PIXI.Graphics();
+		this.drawPoint(scale);
+		this.addChild(this._point);
+		this.renderText(this.element.text);
 	}
 
-	private renderTexts() {
-		for (const text of this._texts) {
-			text.destroy();
+	private renderText(text: string) {
+		for (const t of this._texts) {
+			t.destroy();
 		}
 		this._texts = [];
-		const textParts = this.element.text.split('\n');
+		const textParts = text.split('\n');
 		for (let i = 0; i < textParts.length; i++) {
 			this._texts[i] = new PIXI.BitmapText(textParts[i], {
 				font: {
 					name: 'Nunito',
-					size: environment.gridPixelWidth + 4
+					size: environment.gridPixelWidth + 6
 				},
 				tint: this.themingService.getEditorColor('fontTint')
 			});
-			this._texts[i].x = 0;
-			this._texts[i].y = environment.gridPixelWidth * i;
+			this._texts[i].anchor = new PIXI.Point(0, 0.5);
+			this._texts[i].x = environment.gridPixelWidth;
+			this._texts[i].y = environment.gridPixelWidth / 2 + environment.gridPixelWidth * i;
 			this.addChild(this._texts[i]);
 		}
-
-		this._selectionRect.width = 0;
-		this._selectionRect.width = Math.ceil(this.width / environment.gridPixelWidth) * environment.gridPixelWidth;
-		this._selectionRect.height = this._texts.length * environment.gridPixelWidth;
-		this.hitArea = new PIXI.Rectangle(
-			0,
-			0,
-			this._selectionRect.width,
-			this._selectionRect.height
-		);
-		this.element.endPos = new PIXI.Point(
-			this.element.pos.x + Math.ceil(this.width / environment.gridPixelWidth),
-			this.element.pos.y + this._texts.length
-		);
 	}
 
 	updateComponent(scale: number, inputs: number, outputs: number, rotation: number) {
-		this.renderTexts();
+		this.renderText(this.element.text);
+	}
+
+	drawPoint(scale: number) {
+		this._point.clear();
+		this._point.beginFill(this.themingService.getEditorColor('wire'));
+		const size = scale < 0.5 ? 5 : 7;
+		this._point.position = new PIXI.Point(
+			environment.gridPixelWidth / 2 - size / 2 / scale,
+			environment.gridPixelWidth / 2 - size / 2 / scale
+		);
+		this._point.drawRect(0, 0, size / scale, size / scale);
 	}
 
 	applySimState(scale: number) {
 	}
 
 	setSelected(selected: boolean) {
-		this._selectionRect.visible = selected;
+		let tint;
+		if (selected) {
+			tint = this.themingService.getEditorColor('selectTint');
+		} else {
+			tint = this.themingService.getEditorColor('fontTint');
+		}
+		for (const t of this._texts) {
+			t.tint = tint;
+		}
 	}
 
 	setSimulationState(state: boolean[]) {
 	}
 
 	updateScale(scale: number) {
+		this.drawPoint(scale);
 	}
 
 	destroy() {

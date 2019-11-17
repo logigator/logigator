@@ -361,8 +361,8 @@ export class Project {
 	}
 
 
-	public addText(text: string, _pos: PIXI.Point, _endPos: PIXI.Point): Element {
-		const elem = Elements.genNewElement(ElementTypeId.TEXT, _pos, _endPos);
+	public addText(text: string, _pos: PIXI.Point): Element {
+		const elem = Elements.genNewElement(ElementTypeId.TEXT, _pos, _pos);
 		elem.text = text;
 
 		this._currState.addElement(elem);
