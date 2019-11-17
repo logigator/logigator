@@ -54,6 +54,10 @@ export class ElementProviderService {
 
 	constructor(private errorHandler: ErrorHandlingService) {}
 
+	public static idOfText(): number {
+		return 7;
+	}
+
 	public setUserDefinedTypes(elements: Map<number, ElementType>) {
 		for (const elem of elements.values()) {
 			elem.width = environment.componentWidth;
@@ -141,6 +145,10 @@ export class ElementProviderService {
 
 	public isUserElement(id: number): boolean {
 		return this._userDefinedElements.has(id);
+	}
+
+	public isTextElement(id: number): boolean {
+		return id === 7;
 	}
 
 	public isHiddenElement(id: number): boolean {

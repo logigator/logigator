@@ -96,6 +96,9 @@ export class Project {
 			case 'compOpt':
 				this._currState.setOptions(action.element, action.options[0]);
 				break;
+			case 'ediText':
+				this._currState.setText(action.element, action.texts[0]);
+				break;
 		}
 	}
 
@@ -352,6 +355,33 @@ export class Project {
 			element: elem,
 			name: 'compOpt',
 			options: [options, oldOptions]
+		};
+		this.newState([action]);
+	}
+
+
+	public addText(text: string, _pos: PIXI.Point, _endPos: PIXI.Point): Element {
+		const elem = Elements.genNewElement(ElementProviderService.idOfText(), _pos, _endPos);
+		elem.text = text;
+
+		this._currState.addElement(elem);
+		const actions: Action[] = [{
+			name: Elements.addActionName(elem),
+			element: elem
+		}];
+		this.newState(actions);
+		return elem;
+	}
+
+
+	public setText(elemId: number, text: string): void {
+		const element = this._currState.getElementById(elemId);
+		const oldText = element.text;
+		this._currState.setText(element, text);
+		const action: Action = {
+			name: 'ediText',
+			element,
+			texts: [element.text, oldText]
 		};
 		this.newState([action]);
 	}

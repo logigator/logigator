@@ -581,6 +581,10 @@ export class ProjectState {
 		element.options = options;
 	}
 
+	public setText(element: Element, text: string): void {
+		element.text = text;
+	}
+
 
 	public chunk(x: number, y: number): Chunk {
 		return this._chunks[x] ? this._chunks[x][y] : null;

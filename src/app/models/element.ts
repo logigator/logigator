@@ -13,4 +13,6 @@ export interface Element {
 	plugIndex?: number;
 
 	options?: number[];
+
+	text?: string;
 }
