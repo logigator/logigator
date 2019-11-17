@@ -49,6 +49,7 @@ import {SiPipe} from './pipes/si/si.pipe';
 import { ToolbarItemTooltipDirective } from './directives/toolbar-item-tooltip/toolbar-item-tooltip.directive';
 import { ToolbarItemTooltipComponent } from './components/toolbar-item-tooltip/toolbar-item-tooltip.component';
 import { StatusBarComponent } from './components/status-bar/status-bar.component';
+import {FileInputComponent} from './components/file-input/file-input.component';
 
 @NgModule({
 	declarations: [
@@ -88,7 +89,8 @@ import { StatusBarComponent } from './components/status-bar/status-bar.component
 		SiPipe,
 		ToolbarItemTooltipDirective,
 		ToolbarItemTooltipComponent,
-		StatusBarComponent
+		StatusBarComponent,
+		FileInputComponent
 	],
 	entryComponents: [
 		PopupComponent,

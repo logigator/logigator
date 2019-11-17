@@ -32,10 +32,6 @@ export class OpenProjectComponent extends PopupContentComp implements OnInit {
 		return this.user.isLoggedIn;
 	}
 
-	public inputFileChanged(event) {
-		this.fileToOpen = event.target.files[0];
-	}
-
 	public openServer(project: ProjectInfoResponse) {
 		this.projects.openProjectServer(Number(project.pk_id));
 		this.requestClose.emit();

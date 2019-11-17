@@ -20,15 +20,14 @@
 			</tbody>
 		</table>
 	</div>
-	<form (ngSubmit)="openFile()">
+	<div>
 		<h2>{{'POPUP.OPEN.OPEN_FILE' | translate}}</h2>
-		<div class="file-upload-row">
-			<div class="file-upload">
-				<label for="file-upload" class="file-upload-label btn-outline primary">{{'POPUP.OPEN.UPLOAD' | translate}}</label>
-				<input id="file-upload" type="file" accept="application/json" (change)="inputFileChanged($event)"/>
-				<p>{{fileToOpen?.name}}</p>
+		<div class="file-upload">
+			<app-file-input [(ngModel)]="fileToOpen"></app-file-input>
+			<div>
+				<p>{{fileToOpen ? fileToOpen.name : 'POPUP.OPEN.NO_FILE' | translate}}</p>
+				<button class="btn-outline primary" [disabled]="!fileToOpen || fileToOpen.type !== 'application/json'" (click)="openFile()">{{'POPUP.OPEN.OPEN' | translate}}</button>
 			</div>
-			<button type="submit" class="btn-outline primary" [disabled]="!fileToOpen || fileToOpen.type !== 'application/json'">{{'POPUP.OPEN.OPEN' | translate}}</button>
 		</div>
-	</form>
+	</div>
 </div>

@@ -107,12 +107,12 @@
 		"OPEN": {
 			"TITLE": "Open Project",
 			"OPEN": "OPEN",
-			"UPLOAD": "Upload File",
 			"TABLE_OPEN": "Open",
 			"TABLE_EDITED": "Last edited",
 			"TABLE_NAME": "Name",
 			"OPEN_FILE": "Open from File",
-			"OPEN_CLOUD": "Open from Cloud"
+			"OPEN_CLOUD": "Open from Cloud",
+			"NO_FILE": "No File Selected"
 		},
 		"RELOAD": {
 			"TITLE": "Reload Required",
