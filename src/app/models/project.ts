@@ -254,9 +254,9 @@ export class Project {
 			}]);
 			return true;
 		}
-		const changed = this._currState.withWiresOnEdges(elements);
 		if (!this._currState.allSpacesFree(elements, dif, elements))
 			return false;
+		const changed = this._currState.withWiresOnEdges(elements);
 
 		// #!debug
 		this.boardRecorder.call('moveElementsById', arguments, -1, 0);
@@ -372,6 +372,11 @@ export class Project {
 			actions = this.connectWires(pos, wiresOnPoint);
 		} else if (wiresOnPoint.length === 4) {
 			actions = this.disconnectWires(wiresOnPoint);
+		} else if (wiresOnPoint.length === 3) {
+			const elemsOnPoint = this._currState.elemsOnPoint(pos);
+			if (elemsOnPoint.length === 4) {
+				actions = this.disconnectWires(wiresOnPoint);
+			}
 		} else {
 			return;
 		}
@@ -379,7 +384,7 @@ export class Project {
 	}
 
 	private connectWires(pos: PIXI.Point, wiresToConnect: Element[]): Action[] {
-		const newWires = this.currState.connectWires(wiresToConnect[0], wiresToConnect[1], pos);
+		const newWires = this._currState.connectWires(wiresToConnect[0], wiresToConnect[1], pos);
 		this._currState.loadConnectionPoints(newWires);
 		return Actions.connectWiresToActions(wiresToConnect, newWires);
 	}
