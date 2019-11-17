@@ -220,6 +220,19 @@
 			}
 		}
 	},
+	"STATUS_BAR": {
+		"UNSAVED": "Unsaved Changes",
+		"SAVED": "Saved",
+		"SELECTED": "Sel"
+	},
+	"WORK_MODE_DES": {
+		"select": "Selecting Elements",
+		"buildComponent": "Placing Component: {{comp}}",
+		"buildWire": "Placing Wires",
+		"connectWire": "Connecting Wires",
+		"text": "Placing Text",
+		"simulation": "Simulating Circuit"
+	},
 	"ERROR": {
 		"COMPILE": {
 			"CIRCULAR_DEP": "Circular dependency in components. {{src}} must not include {{comp}}.",
