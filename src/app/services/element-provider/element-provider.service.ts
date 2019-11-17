@@ -125,7 +125,7 @@ export class ElementProviderService {
 	}
 
 	public isHiddenElement(id: number): boolean {
-		return id === ElementTypeId.WIRE || id === ElementTypeId.BUTTON || id === ElementTypeId.TEXT;
+		return id === ElementTypeId.WIRE || id === ElementTypeId.BUTT || id === ElementTypeId.TEXT;
 	}
 
 	public shouldShowSettingsBox(id: ElementTypeId): boolean {
