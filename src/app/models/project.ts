@@ -10,6 +10,7 @@ import {BoardRecorder} from '../../../tests/auto-tests/board-recorder';
 import {ElementProviderService} from '../services/element-provider/element-provider.service';
 import {ProjectType} from './project-type';
 import {getStaticDI} from './get-di';
+import {ElementTypeId} from './element-types/element-type-ids';
 
 export class Project {
 
@@ -170,14 +171,14 @@ export class Project {
 	}
 
 	public addElement(typeId: number, _pos: PIXI.Point, _endPos?: PIXI.Point): Element {
-		if (typeId === 0 && !_endPos)
+		if (typeId === ElementTypeId.WIRE && !_endPos)
 			return null;
-		if (typeId === 0 && _pos.equals(_endPos))
+		if (typeId === ElementTypeId.WIRE && _pos.equals(_endPos))
 			return null;
 		const elem = Elements.genNewElement(typeId, _pos, _endPos);
 		elem.endPos = elem.endPos || Elements.calcEndPos(_pos, Elements.elementType(typeId).width,
 			elem.numInputs, elem.numOutputs, elem.rotation);
-		if (!this._currState.isFreeSpace(elem.pos, elem.endPos, typeId === 0, Elements.wireEnds(elem)))
+		if (!this._currState.isFreeSpace(elem.pos, elem.endPos, typeId === ElementTypeId.WIRE, Elements.wireEnds(elem)))
 			return null;
 
 		// #!debug
@@ -282,7 +283,7 @@ export class Project {
 
 	public rotateComponent(id: number, rotation: number): boolean {
 		const element = this._currState.getElementById(id);
-		if (element.typeId === 0)
+		if (element.typeId === ElementTypeId.WIRE)
 			return;
 		const actions: Action[] = [{
 			name: 'rotComp',
@@ -306,7 +307,7 @@ export class Project {
 
 	public setNumInputs(id: number, numInputs: number): boolean {
 		const element = this._currState.getElementById(id);
-		if (element.typeId === 0)
+		if (element.typeId === ElementTypeId.WIRE)
 			return;
 		const actions: Action[] = [{
 			name: 'numInpt',
@@ -361,7 +362,7 @@ export class Project {
 
 
 	public addText(text: string, _pos: PIXI.Point, _endPos: PIXI.Point): Element {
-		const elem = Elements.genNewElement(ElementProviderService.idOfText(), _pos, _endPos);
+		const elem = Elements.genNewElement(ElementTypeId.TEXT, _pos, _endPos);
 		elem.text = text;
 
 		this._currState.addElement(elem);

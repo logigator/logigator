@@ -1,4 +1,4 @@
-import { Injectable } from '@angular/core';
+import {Injectable} from '@angular/core';
 import {wire} from '../../models/element-types/basic/wire';
 import {not} from '../../models/element-types/basic/not';
 import {and} from '../../models/element-types/basic/and';
@@ -17,6 +17,7 @@ import {halfAdder} from '../../models/element-types/advanced/half-adder';
 import {fullAdder} from '../../models/element-types/advanced/full-adder';
 import {environment} from '../../../environments/environment';
 import {text} from '../../models/element-types/basic/text';
+import {ElementTypeId} from '../../models/element-types/element-type-ids';
 
 @Injectable({
 	providedIn: 'root'
@@ -24,39 +25,35 @@ import {text} from '../../models/element-types/basic/text';
 export class ElementProviderService {
 
 	private _basicElements: Map<number, ElementType> = new Map([
-		[0, wire],
-		[1, not],
-		[2, and],
-		[3, or],
-		[4, xor],
-		[5, delay],
-		[6, clock],
-		[7, text]
+		[ElementTypeId.WIRE, wire],
+		[ElementTypeId.NOT, not],
+		[ElementTypeId.AND, and],
+		[ElementTypeId.OR, or],
+		[ElementTypeId.XOR, xor],
+		[ElementTypeId.DELAY, delay],
+		[ElementTypeId.CLOCK, clock],
+		[ElementTypeId.TEXT, text]
 	]);
 
 	private _advancedElements: Map<number, ElementType> = new Map([
-		[10, halfAdder],
-		[11, fullAdder]
+		[ElementTypeId.HALF_ADDER, halfAdder],
+		[ElementTypeId.FULL_ADDER, fullAdder]
 	]);
 
 	private _plugElements: Map<number, ElementType> = new Map([
-		[100, input],
-		[101, output],
-		[102, butt]
+		[ElementTypeId.INPUT, input],
+		[ElementTypeId.OUTPUT, output],
+		[ElementTypeId.BUTT, butt]
 	]);
 
 	private _ioElements: Map<number, ElementType> = new Map([
-		[200, button],
-		[201, lever]
+		[ElementTypeId.BUTTON, button],
+		[ElementTypeId.LEVER, lever]
 	]);
 
 	private _userDefinedElements: Map<number, ElementType> = new Map<number, ElementType>();
 
 	constructor(private errorHandler: ErrorHandlingService) {}
-
-	public static idOfText(): number {
-		return 7;
-	}
 
 	public setUserDefinedTypes(elements: Map<number, ElementType>) {
 		for (const elem of elements.values()) {
@@ -115,10 +112,6 @@ export class ElementProviderService {
 		return this.isBasicElement(id) || this.isAdvancedElement(id);
 	}
 
-	public isDelayElement(id: number): boolean {
-		return this._basicElements.has(id) && id === 5;
-	}
-
 	public isIoElement(id: number): boolean {
 		return this._ioElements.has(id);
 	}
@@ -127,36 +120,16 @@ export class ElementProviderService {
 		return this._plugElements.has(id);
 	}
 
-	public isInputElement(id: number): boolean {
-		return this._plugElements.has(id) && id === 100;
-	}
-
-	public isOutputElement(id: number): boolean {
-		return this._plugElements.has(id) && id === 101;
-	}
-
-	public isButtonElement(id: number): boolean {
-		return this._ioElements.has(id) && id === 200;
-	}
-
-	public isLeverElement(id: number): boolean {
-		return this._ioElements.has(id) && id === 201;
-	}
-
 	public isUserElement(id: number): boolean {
 		return this._userDefinedElements.has(id);
 	}
 
-	public isTextElement(id: number): boolean {
-		return id === 7;
-	}
-
 	public isHiddenElement(id: number): boolean {
-		return id === 0 || id === 102 || id === 7;
+		return id === ElementTypeId.WIRE || id === ElementTypeId.BUTTON || id === ElementTypeId.TEXT;
 	}
 
-	public shouldShowSettingsBox(id: number): boolean {
-		return id !== 0;
+	public shouldShowSettingsBox(id: ElementTypeId): boolean {
+		return id !== ElementTypeId.WIRE;
 	}
 
 	public get basicElements(): Map<number, ElementType> {

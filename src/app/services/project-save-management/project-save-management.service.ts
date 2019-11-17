@@ -24,6 +24,7 @@ import {saveLocalFile} from './save-local-file';
 import {SharingService} from '../sharing/sharing.service';
 import {Elements} from '../../models/elements';
 import {OpenShareResp} from '../../models/http-responses/open-share-resp';
+import {ElementTypeId} from '../../models/element-types/element-type-ids';
 
 @Injectable({
 	providedIn: 'root'
@@ -616,7 +617,7 @@ export class ProjectSaveManagementService {
 
 	private removeEndPosFromElements(elements: Element[]): Element[] {
 		return elements.map(e => {
-			if (e.typeId === 0)
+			if (e.typeId === ElementTypeId.WIRE)
 				return e;
 			const out = Elements.clone(e);
 			delete out.endPos;

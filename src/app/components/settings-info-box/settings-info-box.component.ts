@@ -5,6 +5,7 @@ import {ProjectsService} from '../../services/projects/projects.service';
 import {FormArray, FormBuilder, FormControl, FormGroup} from '@angular/forms';
 import {of, Subscription, timer} from 'rxjs';
 import {debounce} from 'rxjs/operators';
+import {ElementTypeId} from '../../models/element-types/element-type-ids';
 
 @Component({
 	selector: 'app-settings-info-box',
@@ -61,9 +62,9 @@ export class SettingsInfoBoxComponent implements OnChanges, OnDestroy {
 	}
 
 	public toUserPlugIndex(possibleIndex: number): number {
-		if (this.elemProvider.isInputElement(this.selectedCompTypeId)) {
+		if (this.selectedCompTypeId === ElementTypeId.INPUT) {
 			return possibleIndex + 1;
-		} else if (this.elemProvider.isOutputElement(this.selectedCompTypeId)) {
+		} else if (this.selectedCompTypeId === ElementTypeId.OUTPUT) {
 			return possibleIndex - this.projects.currProject.numInputs + 1;
 		}
 	}

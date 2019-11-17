@@ -3,6 +3,7 @@ import {ElementToUnit, UnitElementBidir, UnitToElement, WireEndLinksOnElem} from
 import {Element} from '../element';
 import {CompiledComp} from '../../services/simulation/state-compiler/compiled-comp';
 import {SimulationUnit} from './simulation-unit';
+import {ElementTypeId} from '../element-types/element-type-ids';
 
 export abstract class SimulationUnits {
 
@@ -20,7 +21,7 @@ export abstract class SimulationUnits {
 	}
 
 	public static fromElement(element: Element): SimulationUnit {
-		return element.typeId === 0
+		return element.typeId === ElementTypeId.WIRE
 			? undefined
 			: {
 				typeId: element.typeId,

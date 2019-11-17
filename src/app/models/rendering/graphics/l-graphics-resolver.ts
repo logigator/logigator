@@ -6,6 +6,7 @@ import {WireGraphics} from './wire-graphics';
 import {ComponentGraphics} from './component-graphics';
 import {ButtonGraphics} from './button-graphics';
 import {LeverGraphics} from './lever-graphics';
+import {ElementTypeId} from '../../element-types/element-type-ids';
 
 export abstract class LGraphicsResolver {
 
@@ -14,11 +15,11 @@ export abstract class LGraphicsResolver {
 	}
 
 	public static getLGraphicsFromElement(scale: number, element: Element, parentProjectIdentifier?: string): LGraphics {
-		if (element.typeId === 0) {
+		if (element.typeId === ElementTypeId.WIRE) {
 			return new WireGraphics(scale, element);
-		} else if (this.elementProviderService.isButtonElement(element.typeId)) {
+		} else if (element.typeId === ElementTypeId.BUTTON) {
 			return new ButtonGraphics(scale, element, parentProjectIdentifier);
-		} else if (this.elementProviderService.isLeverElement(element.typeId)) {
+		} else if (element.typeId === ElementTypeId.LEVER) {
 			return new LeverGraphics(scale, element, parentProjectIdentifier);
 		} else {
 			return new ComponentGraphics(scale, element);
@@ -28,9 +29,9 @@ export abstract class LGraphicsResolver {
 	// wires are not supported !!
 	public static getLGraphicsFromType(scale: number, elemTypeId: number): LGraphics {
 		const elemType = this.elementProviderService.getElementById(elemTypeId);
-		if (this.elementProviderService.isButtonElement(elemTypeId)) {
+		if (elemTypeId === ElementTypeId.BUTTON) {
 			return new ButtonGraphics(scale, elemType);
-		} else if (this.elementProviderService.isLeverElement(elemTypeId)) {
+		} else if (elemTypeId === ElementTypeId.LEVER) {
 			return new LeverGraphics(scale, elemType);
 		} else {
 			return new ComponentGraphics(scale, elemType);

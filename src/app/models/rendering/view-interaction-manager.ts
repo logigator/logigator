@@ -19,6 +19,7 @@ import {LGraphics} from './graphics/l-graphics';
 import {LGraphicsResolver} from './graphics/l-graphics-resolver';
 import {PopupService} from '../../services/popup/popup.service';
 import {TextComponent} from '../../components/popup/popup-contents/text/text.component';
+import {ElementTypeId} from '../element-types/element-type-ids';
 
 export class ViewInteractionManager {
 
@@ -432,7 +433,7 @@ export class ViewInteractionManager {
 			lGraphics.parent.removeChild(lGraphics);
 			this._view.addChild(lGraphics);
 
-			if (lGraphics.element.typeId === 0) {
+			if (lGraphics.element.typeId === ElementTypeId.WIRE) {
 				lGraphics.position = Grid.getPixelPosForGridPosWire(lGraphics.element.pos);
 			} else {
 				lGraphics.position = Grid.getPixelPosForGridPos(lGraphics.element.pos);
@@ -469,7 +470,7 @@ export class ViewInteractionManager {
 
 	private addPastingElementsToView(copiedElems: Element[], copiedConnPts: PIXI.Point[], offset: PIXI.Point) {
 		for (let i = 0; i < copiedElems.length; i++) {
-			if (copiedElems[i].typeId === 0) {
+			if (copiedElems[i].typeId === ElementTypeId.WIRE) {
 				const graphics = LGraphicsResolver.getLGraphicsFromElement(
 					this._view.zoomPan.currentScale,
 					copiedElems[i]

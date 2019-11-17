@@ -14,6 +14,7 @@ import {Action} from '../action';
 import {getStaticDI} from '../get-di';
 import {isLGraphics, isUpdatable, LGraphics} from './graphics/l-graphics';
 import {LGraphicsResolver} from './graphics/l-graphics-resolver';
+import {ElementTypeId} from '../element-types/element-type-ids';
 
 export abstract class View extends PIXI.Container {
 
@@ -310,7 +311,7 @@ export abstract class View extends PIXI.Container {
 	}
 
 	public setLocalChunkPos(element: Element, sprite: PIXI.DisplayObject) {
-		if (element.typeId === 0) {
+		if (element.typeId === ElementTypeId.WIRE) {
 			sprite.position = Grid.getLocalChunkPixelPosForGridPosWireStart(element.pos);
 		} else {
 			sprite.position = Grid.getLocalChunkPixelPosForGridPos(element.pos);

@@ -11,6 +11,7 @@ import {ErrorHandlingService} from '../../error-handling/error-handling.service'
 import {CompileError} from '../../../models/simulation/error';
 import {ElementProviderService} from '../../element-provider/element-provider.service';
 import {AverageBuffer} from '../../../models/average-buffer';
+import {ElementTypeId} from '../../../models/element-types/element-type-ids';
 
 @Injectable({
 	providedIn: 'root'
@@ -228,9 +229,9 @@ export class WorkerCommunicationService {
 	public setUserInput(identifier: string, element: Element, state: boolean[]): void {
 		const index = this.stateCompiler.ioElemIndexes.get(identifier).get(element.id);
 		let inputEvent: InputEvent;
-		if (this.elementProvider.isButtonElement(element.typeId)) {
+		if (element.typeId === ElementTypeId.BUTTON) {
 			inputEvent = InputEvent.Pulse;
-		} else if (this.elementProvider.isLeverElement(element.typeId)) {
+		} else if (element.typeId === ElementTypeId.LEVER) {
 			inputEvent = InputEvent.Cont;
 		}
 		const stateBuffer = Int8Array.from(state as any).buffer;

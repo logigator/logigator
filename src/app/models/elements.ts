@@ -5,6 +5,7 @@ import {environment} from '../../environments/environment';
 import {ActionType} from './action';
 import {Element} from './element';
 import {ElementType} from './element-types/element-type';
+import {ElementTypeId} from './element-types/element-type-ids';
 
 export abstract class Elements {
 
@@ -96,11 +97,11 @@ export abstract class Elements {
 	}
 
 	public static addActionName(elem: Element): ActionType {
-		return elem.typeId === 0 ? 'addWire' : 'addComp';
+		return elem.typeId === ElementTypeId.WIRE ? 'addWire' : 'addComp';
 	}
 
 	public static remActionName(elem: Element): ActionType {
-		return elem.typeId === 0 ? 'remWire' : 'remComp';
+		return elem.typeId === ElementTypeId.WIRE ? 'remWire' : 'remComp';
 	}
 
 	public static mergeCheckedWiresVertical(wire0: Element, wire1: Element, newElem) {
@@ -118,7 +119,7 @@ export abstract class Elements {
 	}
 
 	public static wireEnds(element: Element, rotation?: number, numInputs?: number): PIXI.Point[] {
-		if (element.typeId === 0)
+		if (element.typeId === ElementTypeId.WIRE)
 			return [element.pos, element.endPos];
 		if (rotation === undefined)
 			rotation = element.rotation;
