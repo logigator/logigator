@@ -35,10 +35,7 @@ export class ProjectsService {
 		private errorHandling: ErrorHandlingService
 	) {
 		this.projectSaveManagementService.getProjectToOpenOnLoad().then(project => {
-			this._projects.set(project.id, project);
-			this._currProject = project;
-			this._mainProject = project;
-			this._projectOpenedSubject.next(project.id);
+			this.switchProjectAfterOpen(project);
 		});
 	}
 

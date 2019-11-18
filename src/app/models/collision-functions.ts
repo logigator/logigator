@@ -47,14 +47,6 @@ export abstract class CollisionFunctions {
 		return -1;
 	}
 
-	public static isHorizontal(wire: Element): boolean {
-		return wire.pos.y === wire.endPos.y;
-	}
-
-	public static isVertical(wire: Element): boolean {
-		return wire.pos.x === wire.endPos.x;
-	}
-
 	public static inRectChunks(_startPos: PIXI.Point, _endPos: PIXI.Point, wireEnds?: PIXI.Point[]): {x: number, y: number}[] {
 		const startPos = _startPos.clone();
 		const endPos = _endPos.clone();

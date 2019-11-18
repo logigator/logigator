@@ -79,19 +79,20 @@ export class Actions {
 		return revActions;
 	}
 
-	public static connectWiresToActions(oldWires, newWires): Action[] {
-		const outActions: Action[] = [];
+	public static connectWiresToActions(oldWires: Element[], newWires: Element[]): Action[] {
+		const outActions: Action[] = new Array(oldWires.length + newWires.length);
+		let i = 0;
 		for (const oldWire of oldWires) {
-			outActions.push({
+			outActions[i++] = {
 				name: 'remWire',
 				element: oldWire
-			});
+			};
 		}
 		for (const newWire of newWires) {
-			outActions.push({
+			outActions[i++] = {
 				name: 'addWire',
 				element: newWire
-			});
+			};
 		}
 		return outActions;
 	}

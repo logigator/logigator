@@ -1,0 +1,11 @@
+<div class="status-bar">
+	<div class="division">
+		<p class="m-left">{{workModeDescription$ | async}}</p>
+	</div>
+	<div class="division">
+		<p *ngIf="!isSaved">{{'STATUS_BAR.UNSAVED' | translate}}</p>
+		<p *ngIf="isSaved">{{'STATUS_BAR.SAVED' | translate}}</p>
+		<div class="divider"></div>
+		<p class="m-right">{{'STATUS_BAR.SELECTED' | translate}}: {{selected}}</p>
+	</div>
+</div>

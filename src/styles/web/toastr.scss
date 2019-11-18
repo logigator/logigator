@@ -7,7 +7,7 @@
 
 .toastr-position {
 	left: 0.5rem;
-	bottom: 0.5rem;
+	bottom: 0;
 	position: absolute !important;
 }
 
@@ -17,6 +17,7 @@
 	border-radius: 0 !important;
 	background-position: 0.75rem center !important;
 	background-size: 1.75rem !important;
+	margin: 0 0 0.5rem !important;
 
 	.toast-message {
 		margin-left: 2.75rem;

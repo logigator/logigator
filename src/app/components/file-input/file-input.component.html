@@ -1,0 +1,16 @@
+<div (dragenter)="onDragStart($event)"
+     (dragstart)="onDragStart($event)"
+     (dragover)="onDragStart($event)"
+     (drag)="onDragStart($event)"
+     (dragend)="onDragStop($event)"
+     (dragexit)="onDragStop($event)"
+     (dragleave)="onDragStop($event)"
+     (drop)="onDrop($event)"
+     (click)="fileInput.click()"
+     [class.dragging]="isDragging"
+     class="upload-container">
+	<input type="file" #fileInput (change)="fileChange($event)">
+	<img *ngIf="currTheme === 'light'" src="/assets/icons/light/cloud_upload.svg">
+	<img *ngIf="currTheme === 'dark'" src="/assets/icons/dark/cloud_upload.svg">
+	<p>Drop your files here.</p>
+</div>

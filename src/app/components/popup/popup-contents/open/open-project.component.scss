@@ -41,28 +41,24 @@
 		}
 	}
 
-	.file-upload-row {
-		width: 100%;
+	.file-upload {
 		display: flex;
-		align-items: center;
-		flex-direction: row;
-		justify-content: space-between;
+		flex-direction: column;
+		width: 100%;
 
-		.file-upload {
+		app-file-input {
+			width: 100%;
+			height: 5rem;
+		}
+
+		div {
 			display: flex;
-			flex-direction: row;
+			justify-content: space-between;
+			margin-top: 0.83rem;
 			align-items: center;
 
-			input[type="file"] {
-				display: none;
-			}
-			.file-upload-label {
-				display: inline-block;
-			}
-
 			p {
-				margin: 0 0.5rem;
-				word-break: break-word;
+				margin: 0;
 			}
 		}
 	}

@@ -38,10 +38,12 @@ export class ViewInteractionManager {
 	private _drawingNewWire = false;
 	private readonly _newWire: PIXI.Graphics;
 
+	private _mouseDownPos: PIXI.Point;
 	private _singleSelectedElement: Element;
 	private _currentlyDragging = false;
 	private _drawingSelectRect = false;
 	private _currentlyPasting = false;
+	private _startedOnElement: LGraphics;
 	private readonly _selectRect: PIXI.Graphics;
 
 	public pastingElements: LGraphics[] = [];
@@ -100,7 +102,14 @@ export class ViewInteractionManager {
 
 	private handlePointerDownOnView(e: InteractionEvent) {
 		let addPointerMoveEvent = false;
-		if (this.workModeService.currentWorkMode === 'select' && e.data.button === 0) {
+		this._mouseDownPos = Grid.getPixelPosOnGridForPixelPos(e.data.getLocalPosition(this._view));
+		if (this.workModeService.currentWorkMode === 'buildComponent'
+			&& this.workModeService.currentComponentToBuild !== 0
+			&& e.data.button === 0
+		) {
+			this.startDraggingNewComponent(e);
+			addPointerMoveEvent = true;
+		} else if ((this.workModeService.currentWorkMode === 'select' || this._singleSelectedElement) && e.data.button === 0) {
 			this.addSelectRectOrResetSelection(e);
 			addPointerMoveEvent = true;
 		} else if (this.workModeService.currentWorkMode === 'buildWire' && e.data.button === 0) {
@@ -108,12 +117,6 @@ export class ViewInteractionManager {
 			addPointerMoveEvent = true;
 		} else if (this.workModeService.currentWorkMode === 'connectWire' && e.data.button === 0) {
 			this.connectOrDisconnectWires(e);
-			addPointerMoveEvent = true;
-		} else if (this.workModeService.currentWorkMode === 'buildComponent'
-			&& this.workModeService.currentComponentToBuild !== 0
-			&& e.data.button === 0
-		) {
-			this.startDraggingNewComponent(e);
 			addPointerMoveEvent = true;
 		} else if (this.workModeService.currentWorkMode === 'text' && e.data.button === 0 && e.target === this._view) {
 			this.placeText(e);
@@ -123,19 +126,25 @@ export class ViewInteractionManager {
 	}
 
 	private handlePointerUpOnView(e: InteractionEvent) {
-		if ((this.workModeService.currentWorkMode === 'select' || this._currentlyPasting) && e.data.button === 0) {
-			this.selectOrApplyMove();
-		} else if (this.workModeService.currentWorkMode === 'buildWire' && e.data.button === 0) {
-			this.addWire(e);
-		} else if (this._draggingNewComp) {
+		if (this._draggingNewComp)
 			this.placeNewComp();
-		}
+		else if (this._startedOnElement && this._mouseDownPos.equals(Grid.getPixelPosOnGridForPixelPos(e.data.getLocalPosition(this._view))))
+			this.selectSingleComp(this._startedOnElement);
+		else if (
+			(this._singleSelectedElement || this.workModeService.currentWorkMode === 'select' || this._currentlyPasting)
+			&& e.data.button === 0
+		)
+			this.selectOrApplyMove();
+		else if (this.workModeService.currentWorkMode === 'buildWire' && e.data.button === 0)
+			this.addWire(e);
+
+		delete this._startedOnElement;
 		this._view.requestSingleFrame();
 		this._view.removeAllListeners('pointermove');
 	}
 
 	private handlePointerMoveOnView(e: InteractionEvent) {
-		if (this.workModeService.currentWorkMode === 'select' || this._currentlyPasting) {
+		if (this.workModeService.currentWorkMode === 'select' || this._singleSelectedElement || this._currentlyPasting) {
 			this.drawSelectRectOrMove(e);
 		} else if (this.workModeService.currentWorkMode === 'buildWire') {
 			this.drawNewWire(e);
@@ -153,12 +162,11 @@ export class ViewInteractionManager {
 	}
 
 	private handlePointerDownOnElement(e: InteractionEvent, elem: LGraphics) {
-		if (this.workModeService.currentWorkMode === 'select' && e.data.button === 0) {
+		if (e.data.button === 0) {
 			if (this._singleSelectedElement === elem.element) {
 				this.startDragging(e);
-			} else {
-				this.selectSingleComp(elem);
 			}
+			this._startedOnElement = elem;
 			this._view.requestSingleFrame();
 		}
 	}
@@ -217,6 +225,8 @@ export class ViewInteractionManager {
 				} else {
 					endPos = Grid.getGridPosForPixelPos(this._selectRect.position);
 				}
+				if (!this._actionStartPos)
+					return;
 				const movedDif = new PIXI.Point(endPos.x - this._actionStartPos.x, endPos.y - this._actionStartPos.y);
 
 				if (this.projectsService.currProject.moveElementsById(
