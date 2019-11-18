@@ -20,7 +20,7 @@ export class TextGraphics extends PIXI.Container implements LGraphics, Component
 		this._point = new PIXI.Graphics();
 		this.drawPoint(scale);
 		this.addChild(this._point);
-		this.renderText(this.element.text);
+		this.renderText(this.element.data as string);
 	}
 
 	private renderText(text: string) {
@@ -45,7 +45,7 @@ export class TextGraphics extends PIXI.Container implements LGraphics, Component
 	}
 
 	updateComponent(scale: number, inputs: number, outputs: number, rotation: number) {
-		this.renderText(this.element.text);
+		this.renderText(this.element.data as string);
 	}
 
 	drawPoint(scale: number) {

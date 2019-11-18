@@ -192,7 +192,7 @@ export class SettingsInfoBoxComponent implements OnChanges, OnDestroy {
 		const oText = this.projects.currProject.currState.getElementById(this.selectedCompId).text;
 		const nText = await this.popup.showPopup(TextComponent, 'POPUP.TEXT.TITLE', false, oText);
 		if (nText === oText) return;
-		this.projects.currProject.setText(this.selectedCompId, nText);
+		this.projects.currProject.setData(this.selectedCompId, nText);
 	}
 
 	ngOnDestroy(): void {

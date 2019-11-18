@@ -9,7 +9,7 @@
 			<input type="number" formControlName="numInputs" [min]="elemType.minInputs" [max]="elemType.maxInputs" (blur)="resetNumInputsValue()">
 		</div>
 
-		<div class="property" *ngIf="!isTextElement">
+		<div class="property" *ngIf="">
 			<p>{{'SETTINGS_INFO.DIRECTION' | translate}}:</p>
 			<select formControlName="rotation">
 				<option value="0">{{'SETTINGS_INFO.DIRECTIONS.RIGHT' | translate}} &rarr;</option>

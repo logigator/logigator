@@ -106,11 +106,8 @@ export class ProjectSaveManagementService {
 				name,
 				description,
 				symbol,
-				width: environment.componentWidth,
 				numInputs: 0,
 				minInputs: 0,
-				category: 'user',
-				rotation: 0
 			}, id);
 		} else {
 			id = this.findNextLocalCompId();
@@ -120,11 +117,8 @@ export class ProjectSaveManagementService {
 				name,
 				description,
 				symbol,
-				width: environment.componentWidth,
 				numInputs: 0,
 				minInputs: 0,
-				category: 'user',
-				rotation: 0
 			}, id);
 		}
 		this._projectCache.set(id, new Project(new ProjectState(), {
@@ -498,21 +492,18 @@ export class ProjectSaveManagementService {
 		}
 		return this.http.get<HttpResponseData<ComponentInfoResponse[]>>(environment.apiPrefix + '/project/get-all-components-info').pipe(
 			map(data => {
-				const newElemTypes = new Map<number, ElementType>();
+				const newElemTypes = new Map<number, Partial<ElementType>>();
 				data.result.forEach(elem => {
 					elem.num_inputs = Number(elem.num_inputs);
 					elem.num_outputs = Number(elem.num_outputs);
-					const elemType: ElementType = {
+					const elemType: Partial<ElementType> = {
 						description: elem.description,
 						name: elem.name,
-						rotation: 0,
-						width: environment.componentWidth,
 						minInputs: elem.num_inputs,
 						maxInputs: elem.num_inputs,
 						symbol: elem.symbol,
 						numInputs: elem.num_inputs,
 						numOutputs: elem.num_outputs,
-						category: 'user'
 					};
 					newElemTypes.set(Number(elem.pk_id), elemType);
 				});
@@ -599,7 +590,7 @@ export class ProjectSaveManagementService {
 				pos: new PIXI.Point(e.pos.x, e.pos.y),
 				rotation: e.rotation,
 				plugIndex: e.plugIndex,
-				text: e.text,
+				data: e.data,
 				options: e.options
 			};
 			if (e.endPos) elem.endPos = new PIXI.Point(e.endPos.x, e.endPos.y);

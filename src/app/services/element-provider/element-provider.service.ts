@@ -18,6 +18,7 @@ import {fullAdder} from '../../models/element-types/advanced/full-adder';
 import {environment} from '../../../environments/environment';
 import {text} from '../../models/element-types/basic/text';
 import {ElementTypeId} from '../../models/element-types/element-type-ids';
+import {udcTemplate} from '../../models/element-types/udc-template';
 
 @Injectable({
 	providedIn: 'root'
@@ -55,16 +56,14 @@ export class ElementProviderService {
 
 	constructor(private errorHandler: ErrorHandlingService) {}
 
-	public setUserDefinedTypes(elements: Map<number, ElementType>) {
-		for (const elem of elements.values()) {
-			elem.width = environment.componentWidth;
+	public setUserDefinedTypes(elements: Map<number, Partial<ElementType>>) {
+		for (const [id, elem] of elements) {
+			this.addUserDefinedElement(elem, id);
 		}
-		this._userDefinedElements = elements;
 	}
 
-	public addUserDefinedElement(element: ElementType, id: number) {
-		element.width = environment.componentWidth;
-		this._userDefinedElements.set(id, element);
+	public addUserDefinedElement(element: Partial<ElementType>, id: number) {
+		this._userDefinedElements.set(id, {...udcTemplate, ...element} as ElementType);
 	}
 
 	public clearElementsFromFile() {
