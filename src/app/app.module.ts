@@ -90,7 +90,7 @@ import {FileInputComponent} from './components/file-input/file-input.component';
 		SiPipe,
 		ToolbarItemTooltipDirective,
 		ToolbarItemTooltipComponent,
-		TextComponent
+		TextComponent,
 		ToolbarItemTooltipComponent,
 		StatusBarComponent,
 		FileInputComponent
