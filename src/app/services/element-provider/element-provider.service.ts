@@ -55,6 +55,10 @@ export class ElementProviderService {
 
 	constructor(private errorHandler: ErrorHandlingService) {}
 
+	public static isCompileElement(id: number): boolean {
+		return !(id === ElementTypeId.WIRE || id === ElementTypeId.BUTT || id === ElementTypeId.TEXT);
+	}
+
 	public setUserDefinedTypes(elements: Map<number, ElementType>) {
 		for (const elem of elements.values()) {
 			elem.width = environment.componentWidth;
