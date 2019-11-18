@@ -204,7 +204,7 @@ export abstract class View extends PIXI.Container {
 
 	protected placeWireOnView(element: Element) {
 		const graphics = LGraphicsResolver.getLGraphicsFromElement(this.zoomPan.currentScale, element);
-		graphics.position = Grid.getLocalChunkPixelPosForGridPosWireStart(element.pos);
+		graphics.position = Grid.getLocalChunkPixelPosForGridPosWire(element.pos);
 		graphics.name = element.id.toString();
 
 		this.addToCorrectChunk(graphics, element.pos);
@@ -212,7 +212,7 @@ export abstract class View extends PIXI.Container {
 	}
 
 	protected addConnectionPointToView(pos: PIXI.Point) {
-		const pixelPos = Grid.getLocalChunkPixelPosForGridPosWireStart(pos);
+		const pixelPos = Grid.getLocalChunkPixelPosForGridPosWire(pos);
 		pixelPos.x -= 2.5 / this.zoomPan.currentScale;
 		pixelPos.y -= 2.5 / this.zoomPan.currentScale;
 
@@ -234,7 +234,7 @@ export abstract class View extends PIXI.Container {
 	}
 
 	protected updateConnectionPoint(graphics: PIXI.Graphics) {
-		const pos = Grid.getLocalChunkPixelPosForGridPosWireStart(Grid.getGridPosForPixelPos(graphics.position));
+		const pos = Grid.getLocalChunkPixelPosForGridPosWire(Grid.getGridPosForPixelPos(graphics.position));
 		this.drawConnectionPoint(graphics, pos);
 	}
 
@@ -313,7 +313,7 @@ export abstract class View extends PIXI.Container {
 
 	public setLocalChunkPos(element: Element, sprite: PIXI.DisplayObject) {
 		if (element.typeId === ElementTypeId.WIRE) {
-			sprite.position = Grid.getLocalChunkPixelPosForGridPosWireStart(element.pos);
+			sprite.position = Grid.getLocalChunkPixelPosForGridPosWire(element.pos);
 		} else {
 			sprite.position = Grid.getLocalChunkPixelPosForGridPos(element.pos);
 		}

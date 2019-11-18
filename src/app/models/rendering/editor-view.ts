@@ -1,7 +1,5 @@
-import * as PIXI from 'pixi.js';
 import {Grid} from './grid';
 import {ProjectsService} from '../../services/projects/projects.service';
-import {ElementProviderService} from '../../services/element-provider/element-provider.service';
 import {ViewInteractionManager} from './view-interaction-manager';
 import {Action} from '../action';
 import {ProjectInteractionService} from '../../services/project-interaction/project-interaction.service';
@@ -70,7 +68,7 @@ export class EditorView extends View {
 		sprite.name = element.id.toString();
 		this.addToCorrectChunk(sprite, element.pos);
 		this.allElements.set(element.id, sprite);
-		this._viewInteractionManager.addEventListenersToNewElement(sprite);
+		this._viewInteractionManager.addNewElement(sprite);
 	}
 
 	public get projectType(): ProjectType {

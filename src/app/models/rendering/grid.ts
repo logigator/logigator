@@ -49,7 +49,7 @@ export class Grid {
 		return Grid.getPixelPosForGridPos(newPoint);
 	}
 
-	public static getLocalChunkPixelPosForGridPosWireStart(point: PIXI.Point): PIXI.Point {
+	public static getLocalChunkPixelPosForGridPosWire(point: PIXI.Point): PIXI.Point {
 		const newPoint = point.clone();
 		newPoint.x += 0.5;
 		newPoint.y += 0.5;
