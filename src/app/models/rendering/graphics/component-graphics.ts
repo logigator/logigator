@@ -198,10 +198,10 @@ export class ComponentGraphics extends PIXI.Graphics implements LGraphics, Compo
 		}
 	}
 
-	public updateComponent(scale: number, inputs: number, outputs: number, rotation: number) {
-		this.element.numInputs = inputs;
-		this.element.numOutputs = outputs;
-		this.element.rotation = rotation;
+	public updateComponent(scale: number, element: Element) {
+		this.element.numInputs = element.numInputs;
+		this.element.numOutputs = element.numOutputs;
+		this.element.rotation = element.rotation;
 		this._scale = scale;
 		this.clear();
 		this.drawComponent();

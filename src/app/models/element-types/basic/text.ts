@@ -29,10 +29,12 @@ export const text: ElementType = {
 	width: 0,
 
 	edit: async (typeId: number, id: number, projectsSer: ProjectsService) => {
-		const oText = projectsSer.currProject.currState.getElementById(id).data;
+		const oText = projectsSer.currProject.currState.getElementById(id).data as TextData;
 		const nText = await getStaticDI(PopupService).showPopup(TextComponent, 'POPUP.TEXT.TITLE', false, oText);
 		if (nText === oText) return;
 		projectsSer.currProject.setData(id, nText);
 	},
 	canEditType: false
 };
+
+export type TextData = string;

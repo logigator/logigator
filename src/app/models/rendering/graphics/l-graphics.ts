@@ -12,7 +12,7 @@ export interface LGraphics extends PIXI.DisplayObject {
 }
 
 export interface ComponentUpdatable {
-	updateComponent(scale: number, inputs: number, outputs: number, rotation: number);
+	updateComponent(scale: number, newElement: Element);
 }
 
 export function isLGraphics(object: any): object is LGraphics {

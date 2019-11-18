@@ -119,8 +119,8 @@ export class LeverGraphics extends PIXI.Graphics implements LGraphics, Component
 		}
 	}
 
-	updateComponent(scale: number, inputs: number, outputs: number, rotation: number) {
-		this.element.rotation = rotation;
+	updateComponent(scale: number, element: Element) {
+		this.element.rotation = element.rotation;
 		this._scale = scale;
 		this.clear();
 		this.drawComponent(this.simActiveState);

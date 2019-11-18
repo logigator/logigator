@@ -4,6 +4,7 @@ import {Element} from '../../element';
 import {environment} from '../../../../environments/environment';
 import {getStaticDI} from '../../get-di';
 import {ThemingService} from '../../../services/theming/theming.service';
+import {TextData} from '../../element-types/basic/text';
 
 export class TextGraphics extends PIXI.Container implements LGraphics, ComponentUpdatable {
 
@@ -44,8 +45,9 @@ export class TextGraphics extends PIXI.Container implements LGraphics, Component
 		}
 	}
 
-	updateComponent(scale: number, inputs: number, outputs: number, rotation: number) {
-		this.renderText(this.element.data as string);
+	updateComponent(scale: number, element: Element) {
+		this.element.data = element.data;
+		this.renderText(this.element.data as TextData);
 	}
 
 	drawPoint(scale: number) {

@@ -265,7 +265,7 @@ export abstract class View extends PIXI.Container {
 	private updateComponent(action: Action) {
 		const sprite = this.allElements.get(action.element.id);
 		if (isUpdatable(sprite)) {
-			sprite.updateComponent(this.zoomPan.currentScale, sprite.element.numInputs, sprite.element.numOutputs, sprite.element.rotation);
+			sprite.updateComponent(this.zoomPan.currentScale, sprite.element);
 		}
 	}
 
