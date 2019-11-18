@@ -304,7 +304,7 @@ export abstract class View extends PIXI.Container {
 				break;
 			case 'rotComp':
 			case 'numInpt':
-			case 'ediText':
+			case 'ediData':
 				this.updateComponent(action);
 				break;
 		}

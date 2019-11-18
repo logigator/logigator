@@ -14,7 +14,7 @@ export type ActionType =
 	'numInpt' |
 	'plugInd' |
 	'compOpt' |
-	'ediText';
+	'ediData';
 
 export interface ChangeType {
 	newElems: Element[];
@@ -29,7 +29,7 @@ export interface Action {
 	endPos?: PIXI.Point;
 	options?: number[][];
 	numbers?: number[]; // for rotation/numInput/plugIndex 0: new, 1: old
-	texts?: unknown[];
+	data?: unknown[];
 }
 
 export class Actions {
@@ -46,7 +46,7 @@ export class Actions {
 		['numInpt', ['numInpt']],
 		['plugInd', ['plugInd']],
 		['compOpt', ['compOpt']],
-		['ediText', ['ediText']]
+		['ediData', ['ediData']]
 	]);
 
 	public static reverseActions(actions: Action[]): Action[] {
@@ -72,8 +72,8 @@ export class Actions {
 				revAction.numbers = [...action.numbers].reverse();
 			} else if (revAction.name === 'compOpt') {
 				revAction.options = [...action.options].reverse();
-			} else if (revAction.name === 'ediText') {
-				revAction.texts = [...action.texts].reverse();
+			} else if (revAction.name === 'ediData') {
+				revAction.data = [...action.data].reverse();
 			}
 		}
 		return revActions;

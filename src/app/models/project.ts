@@ -97,8 +97,8 @@ export class Project {
 			case 'compOpt':
 				this._currState.setOptions(action.element, action.options[0]);
 				break;
-			case 'ediText':
-				this._currState.setText(action.element, action.texts[0]);
+			case 'ediData':
+				this._currState.setText(action.element, action.data[0]);
 				break;
 		}
 	}
@@ -377,12 +377,12 @@ export class Project {
 
 	public setData(elemId: number, data: any): void {
 		const element = this._currState.getElementById(elemId);
-		const oldText = element.data;
+		const oldData = element.data;
 		this._currState.setText(element, data);
 		const action: Action = {
-			name: 'ediText',
+			name: 'ediData',
 			element,
-			texts: [element.data, oldText]
+			data: [element.data, oldData]
 		};
 		this.newState([action]);
 	}
