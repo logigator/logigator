@@ -18,6 +18,7 @@ import {fullAdder} from '../../models/element-types/advanced/full-adder';
 import {environment} from '../../../environments/environment';
 import {text} from '../../models/element-types/basic/text';
 import {ElementTypeId} from '../../models/element-types/element-type-ids';
+import {udcTemplate} from '../../models/element-types/udc-template';
 
 @Injectable({
 	providedIn: 'root'
@@ -59,16 +60,14 @@ export class ElementProviderService {
 		return !(id === ElementTypeId.WIRE || id === ElementTypeId.BUTT || id === ElementTypeId.TEXT);
 	}
 
-	public setUserDefinedTypes(elements: Map<number, ElementType>) {
-		for (const elem of elements.values()) {
-			elem.width = environment.componentWidth;
+	public setUserDefinedTypes(elements: Map<number, Partial<ElementType>>) {
+		for (const [id, elem] of elements) {
+			this.addUserDefinedElement(elem, id);
 		}
-		this._userDefinedElements = elements;
 	}
 
-	public addUserDefinedElement(element: ElementType, id: number) {
-		element.width = environment.componentWidth;
-		this._userDefinedElements.set(id, element);
+	public addUserDefinedElement(element: Partial<ElementType>, id: number) {
+		this._userDefinedElements.set(id, {...udcTemplate, ...element} as ElementType);
 	}
 
 	public clearElementsFromFile() {
@@ -104,18 +103,6 @@ export class ElementProviderService {
 			this._userDefinedElements.has(id);
 	}
 
-	public isBasicElement(id: number): boolean {
-		return this._basicElements.has(id);
-	}
-
-	public isAdvancedElement(id: number): boolean {
-		return this._advancedElements.has(id);
-	}
-
-	public isSimpleElement(id: number): boolean {
-		return this.isBasicElement(id) || this.isAdvancedElement(id);
-	}
-
 	public isIoElement(id: number): boolean {
 		return this._ioElements.has(id);
 	}
@@ -126,14 +113,6 @@ export class ElementProviderService {
 
 	public isUserElement(id: number): boolean {
 		return this._userDefinedElements.has(id);
-	}
-
-	public isHiddenElement(id: number): boolean {
-		return id === ElementTypeId.WIRE || id === ElementTypeId.BUTT || id === ElementTypeId.TEXT;
-	}
-
-	public shouldShowSettingsBox(id: ElementTypeId): boolean {
-		return id !== ElementTypeId.WIRE;
 	}
 
 	public get basicElements(): Map<number, ElementType> {

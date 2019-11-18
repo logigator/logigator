@@ -363,7 +363,7 @@ export class Project {
 
 	public addText(text: string, _pos: PIXI.Point): Element {
 		const elem = Elements.genNewElement(ElementTypeId.TEXT, _pos, _pos);
-		elem.text = text;
+		elem.data = text;
 
 		this._currState.addElement(elem);
 		const actions: Action[] = [{
@@ -375,14 +375,14 @@ export class Project {
 	}
 
 
-	public setText(elemId: number, text: string): void {
+	public setData(elemId: number, data: any): void {
 		const element = this._currState.getElementById(elemId);
-		const oldText = element.text;
-		this._currState.setText(element, text);
+		const oldText = element.data;
+		this._currState.setText(element, data);
 		const action: Action = {
 			name: 'ediText',
 			element,
-			texts: [element.text, oldText]
+			texts: [element.data, oldText]
 		};
 		this.newState([action]);
 	}

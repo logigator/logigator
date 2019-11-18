@@ -42,10 +42,6 @@ export class ConstructionBoxCategoryComponent {
 		return toSearch.trim().toLowerCase().replace(' ', '') === 'buttplug';
 	}
 
-	public isHiddenElement(id: number): boolean {
-		return this.elemProv.isHiddenElement(id);
-	}
-
 	public isInSearchResult(toSearch: string): Observable<boolean> {
 		return this.translate.get(toSearch).pipe(
 			map(translated => translated.toLowerCase().includes(this.searchText.trim().toLowerCase()))

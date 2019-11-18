@@ -3,13 +3,25 @@ import {environment} from '../../../../environments/environment';
 
 export const clock: ElementType = {
 	name: 'ELEMENT_TYPE.BASIC.CLOCK.NAME',
-	numInputs: 1,
+
+	category: 'basic',
+
+	symbol: 'clk',
+
+	showSettings: true,
+	showSettingsForType: true,
+	showInConstructionBox: true,
+
+	description: 'ELEMENT_TYPE.BASIC.CLOCK.DESCRIPTION',
+
+	isRotatable: true,
+	rotation: 0,
+
 	numOutputs: 1,
+
+	numInputs: 1,
 	minInputs: 1,
 	maxInputs: 1,
-	width: environment.componentWidth,
-	symbol: 'clk',
-	description: 'ELEMENT_TYPE.BASIC.CLOCK.DESCRIPTION',
-	rotation: 0,
-	category: 'basic'
+
+	width: environment.componentWidth
 };

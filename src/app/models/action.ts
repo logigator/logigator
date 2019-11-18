@@ -29,7 +29,7 @@ export interface Action {
 	endPos?: PIXI.Point;
 	options?: number[][];
 	numbers?: number[]; // for rotation/numInput/plugIndex 0: new, 1: old
-	texts?: string[];
+	texts?: unknown[];
 }
 
 export class Actions {

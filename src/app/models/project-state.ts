@@ -603,8 +603,8 @@ export class ProjectState {
 		element.options = options;
 	}
 
-	public setText(element: Element, text: string): void {
-		element.text = text;
+	public setText(element: Element, text: unknown): void {
+		element.data = text;
 	}
 
 
