@@ -1,15 +1,15 @@
 <div class="box">
 	<div class="header">
-		<h2>{{elemType?.name | translate}}</h2>
+		<h2>{{elementType?.name | translate}}</h2>
 	</div>
 	<div class="content" [formGroup]="propertiesForm">
 
-		<div class="property" *ngIf="elemType.minInputs !== elemType.maxInputs">
+		<div class="property" *ngIf="elementType.minInputs !== elementType.maxInputs">
 			<p>{{'SETTINGS_INFO.INPUTS' | translate}}:</p>
-			<input type="number" formControlName="numInputs" [min]="elemType.minInputs" [max]="elemType.maxInputs" (blur)="resetNumInputsValue()">
+			<input type="number" formControlName="numInputs" [min]="elementType.minInputs" [max]="elementType.maxInputs" (blur)="resetNumInputsValue()">
 		</div>
 
-		<div class="property" *ngIf="">
+		<div class="property" *ngIf="elementType.isRotatable">
 			<p>{{'SETTINGS_INFO.DIRECTION' | translate}}:</p>
 			<select formControlName="rotation">
 				<option value="0">{{'SETTINGS_INFO.DIRECTIONS.RIGHT' | translate}} &rarr;</option>
@@ -19,7 +19,7 @@
 			</select>
 		</div>
 
-		<div class="property" *ngIf="isPlugElement">
+		<div class="property" *ngIf="elementType.hasPlugIndex && selectedCompId">
 			<p>{{'SETTINGS_INFO.PLUG_INDEX' | translate}}:</p>
 			<select formControlName="plugIndex">
 				<option *ngFor="let i of possiblePlugIndexes" [value]="i">{{toUserPlugIndex(i)}}</option>
@@ -27,20 +27,19 @@
 		</div>
 
 		<div class="property" formArrayName="options" *ngFor="let item of propertiesForm.get('options').controls; let i = index">
-			<p>{{elemType.optionsConfig[i].name | translate}}:</p>
+			<p>{{elementType.optionsConfig[i].name | translate}}:</p>
 			<input type="number"
-			       [formControl]=" getOptionFromControl(i)"
-			       [min]="elemType.optionsConfig[i].min"
-			       [max]="elemType.optionsConfig[i].max"
+			       [formControl]="propertiesForm.get('options').controls[i]"
+			       [min]="elementType.optionsConfig[i].min"
+			       [max]="elementType.optionsConfig[i].max"
 			       (blur)="resetOptionsValue(i)">
 		</div>
 
-		<div class="description" *ngIf="elemType?.description">
+		<div class="description" *ngIf="elementType?.description">
 			<h6>{{'SETTINGS_INFO.DESCRIPTION' | translate}}:</h6>
-			{{elemType?.description | translate}}
+			{{elementType.description | translate}}
 		</div>
 
-		<button class="btn-outline secondary small edit" *ngIf="elemType.category === 'user'" (click)="editComponentClick()">{{'SETTINGS_INFO.EDIT' | translate}}</button>
-		<button class="btn-outline secondary small text-edit" *ngIf="isTextElement" (click)="editTextClick()">{{'SETTINGS_INFO.EDIT' | translate}}</button>
+		<button class="btn-outline secondary small edit" *ngIf="elementType.edit && (selectedCompId || elementType.canEditType)" (click)="editClick()">{{'SETTINGS_INFO.EDIT' | translate}}</button>
 	</div>
 </div>

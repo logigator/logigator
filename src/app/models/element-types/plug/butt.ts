@@ -7,6 +7,7 @@ export const butt: ElementType = {
 
 	symbol: '3 -',
 
+	showSettings: true,
 	showSettingsForType: false,
 	showInConstructionBox: false,
 

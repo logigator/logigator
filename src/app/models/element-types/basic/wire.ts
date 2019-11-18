@@ -7,6 +7,7 @@ export const wire: ElementType = {
 
 	symbol: '',
 
+	showSettings: false,
 	showSettingsForType: false,
 	showInConstructionBox: false,
 

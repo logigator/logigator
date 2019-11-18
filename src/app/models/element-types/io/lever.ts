@@ -7,6 +7,7 @@ export const lever: ElementType = {
 
 	symbol: 'sw',
 
+	showSettings: true,
 	showSettingsForType: true,
 	showInConstructionBox: true,
 

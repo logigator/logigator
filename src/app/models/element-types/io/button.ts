@@ -7,6 +7,7 @@ export const button: ElementType = {
 
 	symbol: 'but',
 
+	showSettings: true,
 	showSettingsForType: true,
 	showInConstructionBox: true,
 

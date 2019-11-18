@@ -8,6 +8,7 @@ export const xor: ElementType = {
 
 	symbol: '&',
 
+	showSettings: true,
 	showSettingsForType: true,
 	showInConstructionBox: true,
 

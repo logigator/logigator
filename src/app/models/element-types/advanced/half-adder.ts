@@ -8,6 +8,7 @@ export const halfAdder: ElementType = {
 
 	symbol: 'HA',
 
+	showSettings: true,
 	showSettingsForType: true,
 	showInConstructionBox: true,
 

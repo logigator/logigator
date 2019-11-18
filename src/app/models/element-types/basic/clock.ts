@@ -8,6 +8,7 @@ export const clock: ElementType = {
 
 	symbol: 'clk',
 
+	showSettings: true,
 	showSettingsForType: true,
 	showInConstructionBox: true,
 

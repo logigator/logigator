@@ -1,4 +1,5 @@
 import {Project} from '../project';
+import {ProjectsService} from '../../services/projects/projects.service';
 
 export interface ElementType {
 	// translation id for predefined comps
@@ -8,6 +9,7 @@ export interface ElementType {
 
 	symbol: string;
 
+	showSettings: boolean;
 	showSettingsForType: boolean;
 	showInConstructionBox: boolean;
 
@@ -34,8 +36,8 @@ export interface ElementType {
 		max: number
 	}[];
 
-	// if editing type project and id is not passed
-	edit?: (typeId: number, id: number, project?: Project) => void;
+	edit?: (typeId: number, id: number, projectsSer: ProjectsService) => void;
+	canEditType?: boolean;
 }
 
 export function isElementType(object: any): object is ElementType {

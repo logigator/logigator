@@ -9,6 +9,7 @@ import {takeUntil} from 'rxjs/operators';
 import {ProjectsService} from './services/projects/projects.service';
 import {TranslateService} from '@ngx-translate/core';
 import {ElementProviderService} from './services/element-provider/element-provider.service';
+import {ElementType} from './models/element-types/element-type';
 
 @Component({
 	selector: 'app-root',
@@ -64,25 +65,27 @@ export class AppComponent implements OnInit, OnDestroy {
 	}
 
 	public get showSettingsInfoBox(): boolean {
-		return this.workMode.currentWorkMode === 'buildComponent' ||
-			(this.projects.currProject && this.selection.isSingleSelect() &&
-				this.elementProviderService.shouldShowSettingsBox(this.projects.currProject.currState.getElementById(this.selectedCompId).typeId));
+		const seElTypeId = this.selectedElemTypeId;
+		return seElTypeId === undefined ? false : this.elementProviderService.getElementById(seElTypeId).showSettings;
 	}
 
-	public get selectionMode(): 'type' | 'placed' {
+	public get selectedElemTypeId(): number {
 		if (this.workMode.currentWorkMode === 'buildComponent') {
-			return 'type';
+			return this.workMode.currentComponentToBuild;
+		} else {
+			const selectedIds = this.selection.selectedIds();
+			if (!selectedIds || selectedIds.length === 0 || selectedIds.length > 1) {
+				return undefined;
+			}
+			const elemType = this.projects.currProject.currState.getElementById(this.selection.selectedIds()[0]);
+			if (!elemType) return undefined;
+			return elemType.typeId;
 		}
-		return 'placed';
-	}
-
-	public get selectedCompTypeId(): number {
-		return this.workMode.currentComponentToBuild;
 	}
 
 	public get selectedCompId(): number {
-		if (!this.selection.selectedIds()) {
-			return null;
+		if (!this.selection.selectedIds() || this.workMode.currentWorkMode === 'buildComponent') {
+			return undefined;
 		}
 		return this.selection.selectedIds()[0];
 	}

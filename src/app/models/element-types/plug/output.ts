@@ -5,8 +5,9 @@ export const output: ElementType = {
 
 	category: 'plug',
 
-	symbol: 'in',
+	symbol: 'out',
 
+	showSettings: true,
 	showSettingsForType: true,
 	showInConstructionBox: true,
 

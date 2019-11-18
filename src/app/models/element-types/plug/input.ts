@@ -7,6 +7,7 @@ export const input: ElementType = {
 
 	symbol: 'in',
 
+	showSettings: true,
 	showSettingsForType: true,
 	showInConstructionBox: true,
 

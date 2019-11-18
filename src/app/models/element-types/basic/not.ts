@@ -8,6 +8,7 @@ export const not: ElementType = {
 
 	symbol: '!',
 
+	showSettings: true,
 	showSettingsForType: true,
 	showInConstructionBox: true,
 

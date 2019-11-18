@@ -7,6 +7,7 @@ export const fullAdder: ElementType = {
 
 	symbol: 'FA',
 
+	showSettings: true,
 	showSettingsForType: true,
 	showInConstructionBox: true,
 

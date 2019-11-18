@@ -8,6 +8,7 @@ export const and: ElementType = {
 
 	symbol: '&',
 
+	showSettings: true,
 	showSettingsForType: true,
 	showInConstructionBox: true,
 

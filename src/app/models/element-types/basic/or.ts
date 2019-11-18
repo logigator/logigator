@@ -8,6 +8,7 @@ export const or: ElementType = {
 
 	symbol: '≥1',
 
+	showSettings: true,
 	showSettingsForType: true,
 	showInConstructionBox: true,
 

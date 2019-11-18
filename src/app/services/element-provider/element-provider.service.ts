@@ -99,18 +99,6 @@ export class ElementProviderService {
 			this._userDefinedElements.has(id);
 	}
 
-	public isBasicElement(id: number): boolean {
-		return this._basicElements.has(id);
-	}
-
-	public isAdvancedElement(id: number): boolean {
-		return this._advancedElements.has(id);
-	}
-
-	public isSimpleElement(id: number): boolean {
-		return this.isBasicElement(id) || this.isAdvancedElement(id);
-	}
-
 	public isIoElement(id: number): boolean {
 		return this._ioElements.has(id);
 	}
@@ -121,14 +109,6 @@ export class ElementProviderService {
 
 	public isUserElement(id: number): boolean {
 		return this._userDefinedElements.has(id);
-	}
-
-	public isHiddenElement(id: number): boolean {
-		return id === ElementTypeId.WIRE || id === ElementTypeId.BUTT || id === ElementTypeId.TEXT;
-	}
-
-	public shouldShowSettingsBox(id: ElementTypeId): boolean {
-		return id !== ElementTypeId.WIRE;
 	}
 
 	public get basicElements(): Map<number, ElementType> {
