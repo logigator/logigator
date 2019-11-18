@@ -1,6 +1,6 @@
 <div>
 	<label for="text-setting">{{'POPUP.TEXT.LABEL' | translate}}</label>
-	<textarea [formControl]="text" type="text" id="text-setting"></textarea>
+	<textarea rows="4" cols="50" [formControl]="text" type="text" id="text-setting"></textarea>
 
 	<button class="btn-raised primary" (click)="setText()" [disabled]="text.invalid">{{'POPUP.TEXT.SET' | translate}}</button>
 </div>
