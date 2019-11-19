@@ -43,6 +43,10 @@ export class PosHelper {
 		return Grid.getPixelPosOnGridForPixelPos(this._pixelPosStart);
 	}
 
+	public get pixelPosOnGridStartWire(): PIXI.Point {
+		return Grid.getPixelPosForGridPosWire(this.gridPosStart);
+	}
+
 	public get gridPosStartWire(): PIXI.Point {
 		return Grid.getPixelPosForGridPosWire(this._pixelPosStart);
 	}
@@ -53,6 +57,10 @@ export class PosHelper {
 
 	public get lastGridPos(): PIXI.Point {
 		return this._lastGridPos;
+	}
+
+	public get lastPixelPosOnGridWire(): PIXI.Point {
+		return Grid.getPixelPosForGridPosWire(this.lastGridPos);
 	}
 
 	public get lastGridPosFloat(): PIXI.Point {

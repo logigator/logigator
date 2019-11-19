@@ -7,9 +7,7 @@ export const enum ViewIntManState {
 	DRAGGING
 }
 
-export const enum CleanUpMethod {
-	RESET_SEL,
-	REMOVE,
-	DESELECT,
-	NONE
+export const enum WireDir {
+	HOR,
+	VER
 }
