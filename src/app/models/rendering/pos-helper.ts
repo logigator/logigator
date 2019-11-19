@@ -4,15 +4,18 @@ import {Grid} from './grid';
 
 export class PosHelper {
 
-	private readonly _pixelPosStart: PIXI.Point;
+	private readonly _startPosForDiff: PIXI.IPoint;
 
-	private _lastPixelPos: PIXI.Point;
-	private _lastGridPos: PIXI.Point;
+	private readonly _pixelPosStartDrag: PIXI.Point;
 
-	constructor(e: InteractionEvent, view: PIXI.DisplayObject) {
-		this._pixelPosStart = e.data.getLocalPosition(view);
-		this._lastPixelPos = this._pixelPosStart;
-		this._lastGridPos = Grid.getGridPosForPixelPos(this._pixelPosStart);
+	private _lastPixelPosDrag: PIXI.Point;
+	private _lastGridPosDrag: PIXI.Point;
+
+	constructor(e: InteractionEvent, view: PIXI.DisplayObject, startPosForDiff?: PIXI.IPoint) {
+		this._pixelPosStartDrag = e.data.getLocalPosition(view);
+		this._lastPixelPosDrag = this._pixelPosStartDrag;
+		this._lastGridPosDrag = Grid.getGridPosForPixelPos(this._pixelPosStartDrag);
+		this._startPosForDiff = startPosForDiff || this._pixelPosStartDrag;
 	}
 
 	/**
@@ -20,27 +23,27 @@ export class PosHelper {
 	 */
 	public addDragPos(e: InteractionEvent, view: PIXI.DisplayObject): PIXI.Point {
 		const currentPos = e.data.getLocalPosition(view);
-		this._lastPixelPos = currentPos;
+		this._lastPixelPosDrag = currentPos;
 		const currGridPos = Grid.getGridPosForPixelPos(currentPos);
-		const diff = new PIXI.Point(currGridPos.x - this._lastGridPos.x, currGridPos.y - this._lastGridPos.y);
-		if (diff.x !== 0 || diff.y !== 0) this._lastGridPos = currGridPos;
+		const diff = new PIXI.Point(currGridPos.x - this._lastGridPosDrag.x, currGridPos.y - this._lastGridPosDrag.y);
+		if (diff.x !== 0 || diff.y !== 0) this._lastGridPosDrag = currGridPos;
 		return Grid.getPixelPosForGridPos(diff);
 	}
 
-	public get pixelPosStart(): PIXI.Point {
-		return this._pixelPosStart;
+	public get pixelPosStartDrag(): PIXI.Point {
+		return this._pixelPosStartDrag;
 	}
 
 	public get gridPosStart(): PIXI.Point {
-		return Grid.getGridPosForPixelPos(this._pixelPosStart);
+		return Grid.getGridPosForPixelPos(this._pixelPosStartDrag);
 	}
 
 	public get gridPosFloatStart(): PIXI.Point {
-		return Grid.getFloatGridPosForPixelPos(this._pixelPosStart);
+		return Grid.getFloatGridPosForPixelPos(this._pixelPosStartDrag);
 	}
 
 	public get pixelPosOnGridStart(): PIXI.Point {
-		return Grid.getPixelPosOnGridForPixelPos(this._pixelPosStart);
+		return Grid.getPixelPosOnGridForPixelPos(this._pixelPosStartDrag);
 	}
 
 	public get pixelPosOnGridStartWire(): PIXI.Point {
@@ -48,31 +51,32 @@ export class PosHelper {
 	}
 
 	public get gridPosStartWire(): PIXI.Point {
-		return Grid.getPixelPosForGridPosWire(this._pixelPosStart);
+		return Grid.getPixelPosForGridPosWire(this._pixelPosStartDrag);
 	}
 
-	public get lastPixelPos(): PIXI.Point {
-		return this._lastPixelPos;
+	public get lastPixelPosDrag(): PIXI.Point {
+		return this._lastPixelPosDrag;
 	}
 
-	public get lastGridPos(): PIXI.Point {
-		return this._lastGridPos;
+	public get lastGridPosDrag(): PIXI.Point {
+		return this._lastGridPosDrag;
 	}
 
 	public get lastPixelPosOnGridWire(): PIXI.Point {
-		return Grid.getPixelPosForGridPosWire(this.lastGridPos);
+		return Grid.getPixelPosForGridPosWire(this.lastGridPosDrag);
 	}
 
 	public get lastGridPosFloat(): PIXI.Point {
-		return Grid.getFloatGridPosForPixelPos(this._lastPixelPos);
+		return Grid.getFloatGridPosForPixelPos(this._lastPixelPosDrag);
 	}
 
-	public get gridPosDifFFromStart(): PIXI.Point {
-		const startGridPos = this.gridPosStart;
-		return new PIXI.Point(this._lastGridPos.x - startGridPos.x, this.lastGridPos.y - startGridPos.y);
+	public getGridPosDiffFromStart(toCalcDifFrom: PIXI.IPoint): PIXI.Point {
+		toCalcDifFrom = toCalcDifFrom || this._lastPixelPosDrag;
+		return Grid.getGridPosForPixelPos( new PIXI.Point(toCalcDifFrom.x - this._startPosForDiff.x, toCalcDifFrom.y - this._startPosForDiff.y));
 	}
 
-	public get pixelPosDiffFromStart(): PIXI.Point {
-		return new PIXI.Point(this._lastPixelPos.x - this._pixelPosStart.x, this._lastPixelPos.y - this._pixelPosStart.y);
+	public getPixelPosDiffFromStart(toCalcDifFrom?: PIXI.IPoint): PIXI.Point {
+		toCalcDifFrom = toCalcDifFrom || this._lastPixelPosDrag;
+		return new PIXI.Point(toCalcDifFrom.x - this._startPosForDiff.x, toCalcDifFrom.y - this._startPosForDiff.y);
 	}
 }

@@ -238,7 +238,7 @@ export abstract class View extends PIXI.Container {
 		this.drawConnectionPoint(graphics, pos);
 	}
 
-	public drawConnectionPoint(graphics, pos) {
+	public drawConnectionPoint(graphics: PIXI.Graphics, pos: PIXI.Point) {
 		const size = this.calcConnPointSize();
 		graphics.clear();
 		graphics.position = this.adjustConnPointPosToSize(pos, size);

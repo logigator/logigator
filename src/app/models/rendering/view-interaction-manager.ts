@@ -87,6 +87,15 @@ export class ViewInteractionManager {
 		});
 	}
 
+	public updateSelectionScale() {
+		for (const lGraphics of this._selectedElements || []) {
+			lGraphics.updateScale(this.currScale);
+		}
+		for (const point of this._selectedConnPoints || []) {
+			this._view.drawConnectionPoint(point.graphics, point.pos);
+		}
+	}
+
 	private pDownView(e: InteractionEvent) {
 		if (e.target !== this._view || e.data.button !== 0) return;
 		this.cleanUp();
@@ -98,6 +107,7 @@ export class ViewInteractionManager {
 				this.startBuildWire(e);
 				break;
 			case 'connectWire':
+				this.toggleWireConn(e);
 				break;
 			case 'text':
 				this.placeText(e);
@@ -143,7 +153,11 @@ export class ViewInteractionManager {
 	private pDownSelectRect(e: InteractionEvent) {
 		if (this._state === ViewIntManState.WAIT_FOR_DRAG) {
 			this._state = ViewIntManState.DRAGGING;
-			if (!this._actionPos) this._actionPos = new PosHelper(e, this._view);
+			if (!this._actionPos) {
+				this._actionPos = new PosHelper(e, this._view, (this._selectedElements[0].position as PIXI.ObservablePoint).clone());
+			} else {
+				this._actionPos.addDragPos(e, this._view);
+			}
 		}
 	}
 
@@ -164,7 +178,7 @@ export class ViewInteractionManager {
 	private pDownElement(e: InteractionEvent, lGraphics: LGraphics) {
 		if (this._state === ViewIntManState.WAIT_FOR_DRAG && !this._selectRect.visible && this._selectedElements.includes(lGraphics)) {
 			this._state = ViewIntManState.DRAGGING;
-			if (!this._actionPos) this._actionPos = new PosHelper(e, this._view);
+			if (!this._actionPos) this._actionPos = new PosHelper(e, this._view, (lGraphics.position as PIXI.ObservablePoint).clone());
 		}
 	}
 
@@ -191,10 +205,12 @@ export class ViewInteractionManager {
 
 	private dragNewWire(e) {
 		this._actionPos.addDragPos(e, this._view);
-		if (this._wireDirection === undefined && CollisionFunctions.distance(this._actionPos.gridPosStart, this._actionPos.lastGridPos) >= 1) {
-			if (this._actionPos.gridPosStart.x === this._actionPos.lastGridPos.x) {
+		if (this._wireDirection === undefined
+			&& CollisionFunctions.distance(this._actionPos.gridPosStart, this._actionPos.lastGridPosDrag) >= 1
+		) {
+			if (this._actionPos.gridPosStart.x === this._actionPos.lastGridPosDrag.x) {
 				this._wireDirection = WireDir.VER;
-			} else if (this._actionPos.gridPosStart.y === this._actionPos.lastGridPos.y) {
+			} else if (this._actionPos.gridPosStart.y === this._actionPos.lastGridPosDrag.y) {
 				this._wireDirection = WireDir.HOR;
 			} else {
 				this._wireDirection = WireDir.VER;
@@ -222,7 +238,7 @@ export class ViewInteractionManager {
 
 	private buildNewWire(e: InteractionEvent) {
 		const startPos = this._actionPos.gridPosStart;
-		const endPos = this._actionPos.lastGridPos;
+		const endPos = this._actionPos.lastGridPosDrag;
 		this.projectsSer.currProject.addWire(
 			startPos,
 			this._wireDirection === WireDir.HOR ? new PIXI.Point(endPos.x, startPos.y) : new PIXI.Point(startPos.x, endPos.y),
@@ -236,13 +252,13 @@ export class ViewInteractionManager {
 		this._actionPos = new PosHelper(e, this._view);
 		this._selectRect.width = 0;
 		this._selectRect.height = 0;
-		this._selectRect.position = this._actionPos.pixelPosStart;
+		this._selectRect.position = this._actionPos.pixelPosStartDrag;
 		this._selectRect.visible = true;
 	}
 
 	private dragSelectRect(e: InteractionEvent) {
 		this._actionPos.addDragPos(e, this._view);
-		const selSize = this._actionPos.pixelPosDiffFromStart;
+		const selSize = this._actionPos.getPixelPosDiffFromStart();
 		this._selectRect.width = selSize.x;
 		this._selectRect.height = selSize.y;
 		this._view.requestSingleFrame();
@@ -286,7 +302,7 @@ export class ViewInteractionManager {
 
 	private buildNewComp(e: InteractionEvent) {
 		this._actionPos.addDragPos(e, this._view);
-		this.projectsSer.currProject.addElement(this.workModeSer.currentComponentToBuild, this._actionPos.lastGridPos);
+		this.projectsSer.currProject.addElement(this.workModeSer.currentComponentToBuild, this._actionPos.lastGridPosDrag);
 		this.cleanUp();
 	}
 
@@ -308,7 +324,9 @@ export class ViewInteractionManager {
 	}
 
 	private applyDrag(e: InteractionEvent) {
-		if (this.projectsSer.currProject.moveElementsById(this.selectionSer.selectedIds(), this._actionPos.gridPosDifFFromStart)) {
+		if (this.projectsSer.currProject.moveElementsById(
+			this.selectionSer.selectedIds(), this._actionPos.getGridPosDiffFromStart(this._selectedElements[0].position))
+		) {
 			this.cleanUp();
 		} else {
 			this._state = ViewIntManState.WAIT_FOR_DRAG;
@@ -322,6 +340,12 @@ export class ViewInteractionManager {
 			if (!text) return;
 			this.projectsSer.currProject.addText(text, pos);
 		});
+		this.cleanUp();
+	}
+
+	private toggleWireConn(e: InteractionEvent) {
+		this._actionPos = new PosHelper(e, this._view);
+		this.projectsSer.currProject.toggleWireConnection(this._actionPos.gridPosStart);
 		this.cleanUp();
 	}
 
