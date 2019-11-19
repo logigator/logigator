@@ -1,4 +1,3 @@
-import {Project} from '../project';
 import {ProjectsService} from '../../services/projects/projects.service';
 
 export interface ElementType {

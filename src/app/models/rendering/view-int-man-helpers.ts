@@ -35,6 +35,10 @@ export class PosHelper {
 		return Grid.getGridPosForPixelPos(this._pixelPosStart);
 	}
 
+	public get gridPosFloatStart(): PIXI.Point {
+		return Grid.getFloatGridPosForPixelPos(this._pixelPosStart);
+	}
+
 	public get pixelPosOnGridStart(): PIXI.Point {
 		return Grid.getPixelPosOnGridForPixelPos(this._pixelPosStart);
 	}
@@ -51,8 +55,16 @@ export class PosHelper {
 		return this._lastGridPos;
 	}
 
+	public get lastGridPosFloat(): PIXI.Point {
+		return Grid.getFloatGridPosForPixelPos(this._lastPixelPos);
+	}
+
 	public get gridPosDifFFromStart(): PIXI.Point {
 		const startGridPos = this.gridPosStart;
-		return new PIXI.Point(this._lastGridPos.x - startGridPos.x, this._lastPixelPos.y - startGridPos.y);
+		return new PIXI.Point(this._lastGridPos.x - startGridPos.x, this.lastGridPos.y - startGridPos.y);
+	}
+
+	public get pixelPosDiffFromStart(): PIXI.Point {
+		return new PIXI.Point(this._lastPixelPos.x - this._pixelPosStart.x, this._lastPixelPos.y - this._pixelPosStart.y);
 	}
 }
