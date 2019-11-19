@@ -92,7 +92,7 @@ export class ViewInteractionManager {
 			lGraphics.updateScale(this.currScale);
 		}
 		for (const point of this._selectedConnPoints || []) {
-			this._view.drawConnectionPoint(point.graphics, point.pos);
+			this._view.drawConnectionPoint(point.graphics, Grid.getPixelPosForGridPosWire(point.pos));
 		}
 	}
 
@@ -289,9 +289,7 @@ export class ViewInteractionManager {
 			graphics.tint = this.themingSer.getEditorColor('selectTint');
 			graphics.parent.removeChild(graphics);
 			this._view.addChild(graphics);
-			const pos = Grid.getPixelPosForGridPosWire(point);
-			const size = this._view.calcConnPointSize();
-			graphics.position = this._view.adjustConnPointPosToSize(pos, size);
+			this._view.drawConnectionPoint(graphics, Grid.getPixelPosForGridPosWire(point));
 			return {graphics, pos: point};
 		});
 		this._selectionNewElements = false;
@@ -374,9 +372,8 @@ export class ViewInteractionManager {
 				} else {
 					this._view.removeChild(point.graphics);
 					this._view.addToCorrectChunk(point.graphics, point.pos);
-					const pos = Grid.getLocalChunkPixelPosForGridPosWire(point.pos);
-					const size = this._view.calcConnPointSize();
-					point.graphics.position = this._view.adjustConnPointPosToSize(pos, size);
+					point.graphics.tint = 0xFFFFFF;
+					this._view.drawConnectionPoint(point.graphics, Grid.getLocalChunkPixelPosForGridPosWire(point.pos));
 				}
 			} catch {}
 
