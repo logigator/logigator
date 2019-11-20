@@ -62,7 +62,17 @@ export abstract class View extends PIXI.Container {
 		this.applyActionsToView(
 			this._project.getOpenActions()
 		);
-		this.updateChunks();
+		this.requestSingleFrame().then(() => {
+			for (const chunkRow of this._chunks) {
+				for (const chunk of chunkRow) {
+					if (!chunk) continue;
+					chunk.container.visible = false;
+					chunk.gridGraphics.visible = false;
+				}
+			}
+			this.updateChunks();
+			this.requestSingleFrame();
+		});
 	}
 
 	public updateChunks() {
@@ -157,6 +167,7 @@ export abstract class View extends PIXI.Container {
 		};
 		this._chunks[x][y].container.sortableChildren = false;
 		this._chunks[x][y].container.interactive = false;
+		this._chunks[x][y].container.visible = true;
 		this._chunks[x][y].gridGraphics.sortableChildren = false;
 		this._chunks[x][y].gridGraphics.interactive = false;
 		this._chunks[x][y].gridGraphics.visible = this.themingService.showGrid;
@@ -182,8 +193,8 @@ export abstract class View extends PIXI.Container {
 
 	public adjustConnPointPosToSize(pos: PIXI.Point, size: number): PIXI.Point {
 		return new PIXI.Point(
-			pos.x - size / 2 / this.zoomPan.currentScale,
-			pos.y - size / 2 / this.zoomPan.currentScale
+			pos.x - (size / 2) / this.zoomPan.currentScale,
+			pos.y - (size / 2) / this.zoomPan.currentScale
 		);
 	}
 
