@@ -83,8 +83,9 @@ export class SvgImageExporter {
 		styles.innerHTML = `
 			.wire {
 				stroke: #${this.themingService.getEditorColor('wire').toString(16)};
-				stroke-width: 1px;
+				stroke-width: 2px;
 				fill: none;
+				vector-effect: non-scaling-stroke;
 			}
 			.conn-point {
 				fill: #${this.themingService.getEditorColor('wire').toString(16)};

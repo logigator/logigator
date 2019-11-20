@@ -4,7 +4,7 @@ import {View} from './view';
 export class ZoomPan {
 
 	private static MAX_ZOOM_IN = 2.5;
-	private static MAX_ZOOM_OUT = 0.18;
+	private static MAX_ZOOM_OUT = 0.1;
 
 	private _view: View;
 

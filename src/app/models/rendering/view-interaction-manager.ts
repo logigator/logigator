@@ -1,6 +1,6 @@
 import * as PIXI from 'pixi.js';
 import {EditorView} from './editor-view';
-import {merge, Subject} from 'rxjs';
+import {merge, of, Subject} from 'rxjs';
 import {LGraphics} from './graphics/l-graphics';
 import {getStaticDI} from '../get-di';
 import {WorkModeService} from '../../services/work-mode/work-mode.service';
@@ -22,6 +22,7 @@ import {CollisionFunctions} from '../collision-functions';
 import {CopyService} from '../../services/copy/copy.service';
 import InteractionEvent = PIXI.interaction.InteractionEvent;
 import {Elements} from '../elements';
+import {ConnectionPoint} from './graphics/connection-point';
 
 export class ViewInteractionManager {
 
@@ -36,7 +37,7 @@ export class ViewInteractionManager {
 
 	private _selectedElements: LGraphics[];
 	private _selectedConnPoints: {
-		graphics: PIXI.Graphics,
+		graphics: ConnectionPoint,
 		pos: PIXI.Point
 	}[];
 	private _selectionNewElements: boolean;
@@ -100,7 +101,7 @@ export class ViewInteractionManager {
 			lGraphics.updateScale(this.currScale);
 		}
 		for (const point of this._selectedConnPoints || []) {
-			this._view.drawConnectionPoint(point.graphics, Grid.getPixelPosForGridPosWire(point.pos));
+			point.graphics.updateScale(this.currScale);
 		}
 	}
 
@@ -304,12 +305,12 @@ export class ViewInteractionManager {
 			return lGraphics;
 		});
 		this._selectedConnPoints = this.selectionSer.selectedConnections().map(point => {
-			const graphics = this._view.connectionPoints.get(`${point.x}:${point.y}`);
-			graphics.tint = this.themingSer.getEditorColor('selectTint');
-			graphics.parent.removeChild(graphics);
-			this._view.addChild(graphics);
-			this._view.drawConnectionPoint(graphics, Grid.getPixelPosForGridPosWire(point));
-			return {graphics, pos: point};
+			const connPoint = this._view.connectionPoints.get(`${point.x}:${point.y}`);
+			connPoint.setSelected(true);
+			connPoint.parent.removeChild(connPoint);
+			this._view.addChild(connPoint);
+			connPoint.setPosition(point, false, this.currScale);
+			return {graphics: connPoint, pos: point};
 		});
 		this._selectionNewElements = false;
 		delete this._actionPos;
@@ -330,8 +331,7 @@ export class ViewInteractionManager {
 			lGraphics.position.y += diff.y;
 		}
 		for (const connPoint of this._selectedConnPoints || []) {
-			connPoint.graphics.x += diff.x;
-			connPoint.graphics.y += diff.y;
+			connPoint.graphics.addOffsetToPos(Grid.getGridPosForPixelPos(diff), this.currScale);
 		}
 		if (this._selectRect.visible) {
 			this._selectRect.x += diff.x;
@@ -397,11 +397,9 @@ export class ViewInteractionManager {
 			return lGraphics;
 		});
 		this._selectedConnPoints = this.copySer.copiedConPoints.map(point => {
-			const pos = Grid.getPixelPosForGridPosWire(new PIXI.Point(point.x + elemPosOffset.x, point.y + elemPosOffset.y));
-			const graphics = new PIXI.Graphics();
-			graphics.position = pos;
-			graphics.tint = this.themingSer.getEditorColor('selectTint');
-			this._view.drawConnectionPoint(graphics, pos);
+			const pos = new PIXI.Point(point.x + elemPosOffset.x, point.y + elemPosOffset.y);
+			const graphics = new ConnectionPoint(pos, false, this.currScale);
+			graphics.setSelected(true);
 			this._view.addChild(graphics);
 			return {graphics, pos: point};
 		});
@@ -445,8 +443,8 @@ export class ViewInteractionManager {
 				} else {
 					this._view.removeChild(point.graphics);
 					this._view.addToCorrectChunk(point.graphics, point.pos);
-					point.graphics.tint = 0xFFFFFF;
-					this._view.drawConnectionPoint(point.graphics, Grid.getLocalChunkPixelPosForGridPosWire(point.pos));
+					point.graphics.setSelected(false);
+					point.graphics.setPosition(point.pos, true, this.currScale);
 				}
 			} catch {}
 
