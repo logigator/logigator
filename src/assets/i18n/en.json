@@ -211,7 +211,8 @@
 			},
 			"CLOCK": {
 				"NAME": "Clock",
-				"DESCRIPTION": ""
+				"DESCRIPTION": "",
+				"SPEED": "Pulse Duration"
 			},
 			"TEXT": {
 				"NAME": "Text",
