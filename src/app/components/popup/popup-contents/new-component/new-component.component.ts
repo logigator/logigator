@@ -3,6 +3,7 @@ import {PopupContentComp} from '../popup-content-comp';
 import {FormBuilder, FormGroup, Validators} from '@angular/forms';
 import {ProjectsService} from '../../../../services/projects/projects.service';
 import {ProjectSaveManagementService} from '../../../../services/project-save-management/project-save-management.service';
+import {EastereggService} from '../../../../services/easteregg/easteregg.service';
 
 @Component({
 	selector: 'app-new-component',
@@ -13,7 +14,11 @@ export class NewComponentComponent extends PopupContentComp implements OnInit {
 
 	public newCompForm: FormGroup;
 
-	constructor(private formBuilder: FormBuilder, private projects: ProjectsService, private saveManagement: ProjectSaveManagementService) {
+	constructor(
+		private formBuilder: FormBuilder,
+		private projects: ProjectsService,
+		private saveManagement: ProjectSaveManagementService,
+		private eastereggs: EastereggService) {
 		super();
 	}
 
@@ -30,6 +35,10 @@ export class NewComponentComponent extends PopupContentComp implements OnInit {
 			this.newCompForm.controls.compSymbol.value);
 		this.requestClose.emit();
 		this.projects.openComponent(id);
+		const name = this.newCompForm.controls.compName.value.toLowerCase().replace(' ', '');
+		if (name === 'asdf' || name === 'test') {
+			this.eastereggs.achieve('LAZ');
+		}
 	}
 
 }

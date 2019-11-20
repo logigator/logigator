@@ -11,6 +11,7 @@ import {ErrorHandlingService} from '../../error-handling/error-handling.service'
 import {CompileError} from '../../../models/simulation/error';
 import {ElementProviderService} from '../../element-provider/element-provider.service';
 import {AverageBuffer} from '../../../models/average-buffer';
+import {EastereggService} from '../../easteregg/easteregg.service';
 
 @Injectable({
 	providedIn: 'root'
@@ -40,7 +41,8 @@ export class WorkerCommunicationService {
 		private stateCompiler: StateCompilerService,
 		private ngZone: NgZone,
 		private errorHandling: ErrorHandlingService,
-		private elementProvider: ElementProviderService
+		private elementProvider: ElementProviderService,
+		private eastereggs: EastereggService
 	) {
 		this._powerSubjectsWires = new Map<string, Subject<PowerChangesOutWire>>();
 		this._powerSubjectsWireEnds = new Map<string, Subject<Map<Element, boolean[]>>>();
@@ -143,6 +145,9 @@ export class WorkerCommunicationService {
 			if (!compiledBoard) {
 				this.errorHandling.showErrorMessage('ERROR.COMPILE.FAILED');
 				return;
+			}
+			if (compiledBoard.length > 100_000) {
+				this.eastereggs.achieve('GBOGH');
 			}
 
 			this.finalizeInit(compiledBoard.buffer);

@@ -2,6 +2,7 @@ import {Inject, Injectable} from '@angular/core';
 import {DOCUMENT} from '@angular/common';
 import {EditorColorKey, EditorColors, Theme} from '../../models/theming';
 import {Observable, Subject} from 'rxjs';
+import {EastereggService} from '../easteregg/easteregg.service';
 
 @Injectable({
 	providedIn: 'root'
@@ -34,13 +35,16 @@ export class ThemingService {
 		}
 	};
 
-	constructor(@Inject(DOCUMENT) private document: HTMLDocument) {
+	constructor(@Inject(DOCUMENT) private document: HTMLDocument, private eastereggs: EastereggService) {
 		this.loadTheme();
 		this.document.body.classList.add(this.themeClass);
 	}
 
 	private loadTheme() {
 		this._currentTheme = (localStorage.getItem('theme') || 'dark') as Theme;
+		if (this._currentTheme === 'light') {
+			this.eastereggs.achieve('BLD');
+		}
 	}
 
 	public setTheme(theme: Theme) {
