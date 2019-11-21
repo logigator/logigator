@@ -26,10 +26,10 @@
 			</select>
 		</div>
 
-		<div class="property" formArrayName="options" *ngFor="let item of propertiesForm.get('options').controls; let i = index">
+		<div class="property" formArrayName="options" *ngFor="let item of optionsControls; let i = index">
 			<p>{{elementType.optionsConfig[i].name | translate}}:</p>
 			<input type="number"
-			       [formControl]="propertiesForm.get('options').controls[i]"
+			       [formControl]="optionsControls[i]"
 			       [min]="elementType.optionsConfig[i].min"
 			       [max]="elementType.optionsConfig[i].max"
 			       (blur)="resetOptionsValue(i)">

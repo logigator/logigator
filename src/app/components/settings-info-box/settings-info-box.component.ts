@@ -2,7 +2,7 @@ import {ChangeDetectionStrategy, Component, Input, OnChanges, OnDestroy, SimpleC
 import {ElementProviderService} from '../../services/element-provider/element-provider.service';
 import {ElementType} from '../../models/element-types/element-type';
 import {ProjectsService} from '../../services/projects/projects.service';
-import {FormArray, FormBuilder, FormControl, FormGroup} from '@angular/forms';
+import {AbstractControl, FormArray, FormBuilder, FormControl, FormGroup} from '@angular/forms';
 import {of, Subscription, timer} from 'rxjs';
 import {debounce} from 'rxjs/operators';
 import {ElementTypeId} from '../../models/element-types/element-type-ids';
@@ -156,9 +156,9 @@ export class SettingsInfoBoxComponent implements OnChanges, OnDestroy {
 		return formArray;
 	}
 
-	// public async editTextClick() {
-
-	// }
+	public get optionsControls(): AbstractControl[] {
+		return (this.propertiesForm.get('options') as FormArray).controls;
+	}
 
 	ngOnDestroy(): void {
 		if (this.formSubscription) {
