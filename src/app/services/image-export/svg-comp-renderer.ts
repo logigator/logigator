@@ -5,6 +5,7 @@ import {ElementProviderService} from '../element-provider/element-provider.servi
 import {environment} from '../../../environments/environment';
 import {Grid} from '../../models/rendering/grid';
 import {ElementTypeId} from '../../models/element-types/element-type-ids';
+import * as PIXI from 'pixi.js';
 
 export class SvgCompRenderer {
 
@@ -19,7 +20,7 @@ export class SvgCompRenderer {
 
 	private readonly elementProvider = getStaticDI(ElementProviderService);
 
-	constructor(private element: Element) {
+	constructor(private element: Element, private offset: PIXI.Point) {
 		this._elementType = this.elementProvider.getElementById(element.typeId);
 
 		this._group = document.createElementNS(this.SVG_NS, 'g');
@@ -60,7 +61,7 @@ export class SvgCompRenderer {
 				break;
 		}
 
-		const pos = Grid.getPixelPosForGridPos(element.pos);
+		const pos = Grid.getPixelPosForGridPos(new PIXI.Point(element.pos.x - this.offset.x, element.pos.y - this.offset.y));
 		this._group.setAttribute('transform', `translate(${pos.x}, ${pos.y})`);
 	}
 

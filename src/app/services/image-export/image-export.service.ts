@@ -1,22 +1,15 @@
 import { Injectable } from '@angular/core';
 import {ProjectsService} from '../projects/projects.service';
 import * as PIXI from 'pixi.js';
-import {PixelImageExporter} from './pixel-image-exporter';
 import {SvgImageExporter} from './svg-image-exporter';
+import * as FileSaver from 'file-saver';
 
 @Injectable({
 	providedIn: 'root'
 })
 export class ImageExportService {
 
-	private _renderer: PIXI.Renderer;
-
 	constructor(private projectsService: ProjectsService) { }
-
-	public injectRenderer(renderer: PIXI.Renderer) {
-		if (this._renderer) return;
-		this._renderer = renderer;
-	}
 
 	public exportImage(type: 'jpeg' | 'png' | 'svg') {
 		if (type === 'jpeg' || type === 'png') {
@@ -26,21 +19,30 @@ export class ImageExportService {
 		}
 	}
 
-	private exportPixelImage(type: 'jpeg' | 'png') {
+	private exportPixelImage(type: 'jpeg' | 'png', width = 512, height = 512) {
 		const project = this.projectsService.currProject;
-		const exporter = new PixelImageExporter(this._renderer, project);
-		const a = document.createElement('a');
-		a.href = exporter.getBase64String(type);
-		a.download = `${project.name}.${type}`;
-		a.click();
+
+		const img = new Image();
+		const canvas = document.createElement('canvas') as HTMLCanvasElement;
+		const exporter = new SvgImageExporter(project);
+
+		canvas.width = width || exporter.width + 1;
+		canvas.height = height || exporter.height + 1;
+
+		img.onload = () => {
+			canvas.getContext('2d')
+				.drawImage(img, 0, 0, exporter.width, exporter.height, 0, 0, width || exporter.width + 1, height || exporter.height + 1);
+
+			canvas.toBlob((x) => {
+				FileSaver.saveAs(x, `${project.name}.${type}`);
+			}, `image/${type}`);
+		};
+		img.src = exporter.getBase64String();
 	}
 
 	private exportVectorImage() {
 		const project = this.projectsService.currProject;
 		const exporter = new SvgImageExporter(project);
-		const a = document.createElement('a');
-		a.href = exporter.getSVGDownloadString();
-		a.download = `${project.name}.svg`;
-		a.click();
+		FileSaver.saveAs(exporter.getSVGDownloadString(), `${project.name}.svg`);
 	}
 }

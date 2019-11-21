@@ -7,6 +7,7 @@ import {Grid} from '../../models/rendering/grid';
 import {SvgCompRenderer} from './svg-comp-renderer';
 import {ElementTypeId} from '../../models/element-types/element-type-ids';
 import {SvgTextRenderer} from './svg-text-renderer';
+import {environment} from '../../../environments/environment';
 
 export class SvgImageExporter {
 
@@ -17,10 +18,29 @@ export class SvgImageExporter {
 	private readonly _svg: SVGElement;
 
 	private size = new PIXI.Point(0, 0);
+	private offset = new PIXI.Point(0, 0);
 
 	constructor(private project: Project) {
 		this._svg = document.createElementNS(this.SVG_NS, 'svg');
 		this.generateStyles();
+
+		this.offset.x = Number.MAX_SAFE_INTEGER;
+		this.offset.y = Number.MAX_SAFE_INTEGER;
+
+		for (let i = 0; i < this.project.currState.chunks.length; i++) {
+			for (let j = 0; j < this.project.currState.chunks[i].length; j++) {
+				if (this.project.currState.chunks[i][j] && this.project.currState.chunks[i][j].elements.length) {
+					if (i < this.offset.x)
+						this.offset.x = i;
+					if (j < this.offset.y)
+						this.offset.y = j;
+					break;
+				}
+			}
+		}
+		this.offset.x *= environment.chunkSize;
+		this.offset.y *= environment.chunkSize;
+
 		for (const action of this.project.getOpenActions()) {
 			switch (action.name) {
 				case 'addComp':
@@ -40,21 +60,21 @@ export class SvgImageExporter {
 
 	private placeComp(element: Element) {
 		if (element.typeId === ElementTypeId.TEXT) {
-			const textRender = new SvgTextRenderer(element);
+			const textRender = new SvgTextRenderer(element, this.offset);
 			this._svg.appendChild(textRender.getSVGGroup());
-			this.updateSize(Grid.getPixelPosForGridPos(element.pos));
+			this.updateSize(Grid.getPixelPosForGridPos(new PIXI.Point(element.pos.x - this.offset.x, element.pos.y - this.offset.y)));
 		} else {
-			const compRenderer = new SvgCompRenderer(element);
+			const compRenderer = new SvgCompRenderer(element, this.offset);
 			this._svg.appendChild(compRenderer.getSVGGroup());
-			this.updateSize(Grid.getPixelPosForGridPos(element.endPos));
+			this.updateSize(Grid.getPixelPosForGridPos(new PIXI.Point(element.endPos.x - this.offset.x, element.endPos.y - this.offset.y)));
 		}
 
 	}
 
 	private placeWire(element: Element) {
 		const wire = document.createElementNS(this.SVG_NS, 'line');
-		const startPos = Grid.getPixelPosForGridPosWire(element.pos);
-		const endPos = Grid.getPixelPosForGridPosWire(element.endPos);
+		const startPos = Grid.getPixelPosForGridPosWire(new PIXI.Point(element.pos.x - this.offset.x, element.pos.y - this.offset.y));
+		const endPos = Grid.getPixelPosForGridPosWire(new PIXI.Point(element.endPos.x - this.offset.x, element.endPos.y - this.offset.y));
 		wire.setAttribute('x1', startPos.x + '');
 		wire.setAttribute('y1', startPos.y + '');
 		wire.setAttribute('x2', endPos.x + '');
@@ -67,7 +87,7 @@ export class SvgImageExporter {
 
 	private placeConnPoint(pos: PIXI.Point) {
 		const point = document.createElementNS(this.SVG_NS, 'rect');
-		const pixelPos = Grid.getPixelPosForGridPosWire(pos);
+		const pixelPos = Grid.getPixelPosForGridPosWire(new PIXI.Point(pos.x - this.offset.x, pos.y - this.offset.y));
 		pixelPos.x -= 2.5;
 		pixelPos.y -= 2.5;
 		point.setAttribute('x', pixelPos.x + '');
@@ -83,7 +103,7 @@ export class SvgImageExporter {
 		styles.innerHTML = `
 			.wire {
 				stroke: #${this.themingService.getEditorColor('wire').toString(16)};
-				stroke-width: 2px;
+				stroke-width: 1px;
 				fill: none;
 				vector-effect: non-scaling-stroke;
 			}
@@ -115,7 +135,7 @@ export class SvgImageExporter {
 		if (pos.y > this.size.y) this.size.y = pos.y;
 	}
 
-	public getSVGDownloadString(): string {
+	private serializeSVG(): string {
 		const serializer = new XMLSerializer();
 		let source = serializer.serializeToString(this._svg);
 		if (!source.match(/^<svg[^>]+xmlns="http\:\/\/www\.w3\.org\/2000\/svg"/)) {
@@ -124,8 +144,22 @@ export class SvgImageExporter {
 		if (!source.match(/^<svg[^>]+"http\:\/\/www\.w3\.org\/1999\/xlink"/)) {
 			source = source.replace(/^<svg/, '<svg xmlns:xlink="http://www.w3.org/1999/xlink"');
 		}
-		source = '<?xml version="1.0" standalone="no"?>\r\n' + source;
-		return 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(source);
+		return '<?xml version="1.0" standalone="no"?>\r\n' + source;
 	}
 
+	public getSVGDownloadString(): string {
+		return 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(this.serializeSVG());
+	}
+
+	public getBase64String(): string {
+		return 'data:image/svg+xml;base64,' + btoa(unescape(encodeURIComponent(this.serializeSVG())));
+	}
+
+	public get width(): number {
+		return this.size.x;
+	}
+
+	public get height(): number {
+		return this.size.y;
+	}
 }

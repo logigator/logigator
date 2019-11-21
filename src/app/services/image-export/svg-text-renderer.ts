@@ -2,6 +2,7 @@ import {Element} from '../../models/element';
 import {Grid} from '../../models/rendering/grid';
 import {environment} from '../../../environments/environment';
 import {TextData} from '../../models/element-types/basic/text';
+import * as PIXI from 'pixi.js';
 
 export class SvgTextRenderer {
 
@@ -9,10 +10,10 @@ export class SvgTextRenderer {
 
 	private readonly _group: SVGGElement;
 
-	constructor(private element: Element) {
+	constructor(private element: Element, private offset: PIXI.Point) {
 		this._group = document.createElementNS(this.SVG_NS, 'g');
 		this.renderText();
-		const pos = Grid.getPixelPosForGridPos(element.pos);
+		const pos = Grid.getPixelPosForGridPos(new PIXI.Point(element.pos.x - this.offset.x, element.pos.y - this.offset.y));
 		this._group.setAttribute('transform', `translate(${pos.x}, ${pos.y})`);
 	}
 

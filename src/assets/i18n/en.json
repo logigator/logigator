@@ -212,7 +212,7 @@
 			"CLOCK": {
 				"NAME": "Clock",
 				"DESCRIPTION": "",
-				"SPEED": "Pulse Duration"
+				"SPEED": "Delay between pulses."
 			},
 			"TEXT": {
 				"NAME": "Text",

@@ -49,7 +49,6 @@ export class WorkAreaComponent extends WorkArea implements OnInit, OnDestroy {
 			this.preventContextMenu(this._pixiCanvasContainer, this.renderer2);
 			this.initZoomPan(this._pixiCanvasContainer);
 			this.initPixi(this._pixiCanvasContainer, this.renderer2);
-			this.imageExportService.injectRenderer(this._pixiRenderer);
 
 			this.projectsService.onProjectOpened$.pipe(
 				takeUntil(this._destroySubject)
