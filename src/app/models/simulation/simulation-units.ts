@@ -27,7 +27,8 @@ export abstract class SimulationUnits {
 			? {
 				typeId: element.typeId,
 				inputs: new Array(element.numInputs),
-				outputs: new Array(element.numOutputs)
+				outputs: new Array(element.numOutputs),
+				options: element.options || []
 			}
 			: undefined;
 	}
@@ -36,7 +37,8 @@ export abstract class SimulationUnits {
 		return {
 			typeId: unit.typeId,
 			inputs: [...unit.inputs],
-			outputs: [...unit.outputs]
+			outputs: [...unit.outputs],
+			options: [...unit.options]
 		};
 	}
 
