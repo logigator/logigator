@@ -304,6 +304,11 @@
 			"SAVE_SERVER": "Saved {{name}} on Server.",
 			"SAVE_ALL": "Saved Project and all open Components",
 			"EXPORT": "Exported Project and all needed Components"
+		},
+		"EASTEREGGS": {
+			"GBOGH": "Go big or go home",
+			"BLD": "AHHH MY EYES, SO MANY LUMENS",
+			"LAZ": "Too Lazy for a proper name..."
 		}
 	}
 }
