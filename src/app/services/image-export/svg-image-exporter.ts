@@ -5,6 +5,8 @@ import {getStaticDI} from '../../models/get-di';
 import {ThemingService} from '../theming/theming.service';
 import {Grid} from '../../models/rendering/grid';
 import {SvgCompRenderer} from './svg-comp-renderer';
+import {ElementTypeId} from '../../models/element-types/element-type-ids';
+import {SvgTextRenderer} from './svg-text-renderer';
 
 export class SvgImageExporter {
 
@@ -37,9 +39,16 @@ export class SvgImageExporter {
 	}
 
 	private placeComp(element: Element) {
-		const compRenderer = new SvgCompRenderer(element);
-		this._svg.appendChild(compRenderer.getSVGGroup());
-		this.updateSize(Grid.getPixelPosForGridPos(element.endPos));
+		if (element.typeId === ElementTypeId.TEXT) {
+			const textRender = new SvgTextRenderer(element);
+			this._svg.appendChild(textRender.getSVGGroup());
+			this.updateSize(Grid.getPixelPosForGridPos(element.pos));
+		} else {
+			const compRenderer = new SvgCompRenderer(element);
+			this._svg.appendChild(compRenderer.getSVGGroup());
+			this.updateSize(Grid.getPixelPosForGridPos(element.endPos));
+		}
+
 	}
 
 	private placeWire(element: Element) {
@@ -74,8 +83,9 @@ export class SvgImageExporter {
 		styles.innerHTML = `
 			.wire {
 				stroke: #${this.themingService.getEditorColor('wire').toString(16)};
-				stroke-width: 1px;
+				stroke-width: 2px;
 				fill: none;
+				vector-effect: non-scaling-stroke;
 			}
 			.conn-point {
 				fill: #${this.themingService.getEditorColor('wire').toString(16)};
@@ -85,6 +95,12 @@ export class SvgImageExporter {
 			.symbol {
 				fill: #${this.themingService.getEditorColor('fontTint').toString(16)};
 				text-anchor: middle;
+				font-family: Roboto, Arial, sans-serif;
+				dominant-baseline: central;
+			}
+			.text {
+				fill: #${this.themingService.getEditorColor('fontTint').toString(16)};
+				text-anchor: start;
 				font-family: Roboto, Arial, sans-serif;
 				dominant-baseline: central;
 			}

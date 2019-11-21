@@ -19,6 +19,9 @@ export class Grid {
 				graphics.drawRect(i * environment.gridPixelWidth, j * environment.gridPixelWidth, 1 / scale, 1 / scale);
 			}
 		}
+		// graphics.beginFill(0, 0);
+		// graphics.lineStyle(1 / scale, 0xffffff);
+		// graphics.drawRect(0, 0, environment.gridPixelWidth * environment.chunkSize, environment.gridPixelWidth * environment.chunkSize);
 		this._gridGeometries.set(scale, graphics.geometry);
 		return graphics.geometry;
 	}
@@ -46,7 +49,7 @@ export class Grid {
 		return Grid.getPixelPosForGridPos(newPoint);
 	}
 
-	public static getLocalChunkPixelPosForGridPosWireStart(point: PIXI.Point): PIXI.Point {
+	public static getLocalChunkPixelPosForGridPosWire(point: PIXI.Point): PIXI.Point {
 		const newPoint = point.clone();
 		newPoint.x += 0.5;
 		newPoint.y += 0.5;

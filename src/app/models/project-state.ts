@@ -7,6 +7,7 @@ import {Action, ChangeType} from './action';
 import {ElementProviderService} from '../services/element-provider/element-provider.service';
 import {WireEndOnElem} from '../services/simulation/state-compiler/compiler-types';
 import {getStaticDI} from './get-di';
+import {ElementTypeId} from './element-types/element-type-ids';
 
 export class ProjectState {
 
@@ -57,7 +58,7 @@ export class ProjectState {
 
 	private calcAllEndPos() {
 		for (const element of this.allElements) {
-			if (element.typeId === 0) continue;
+			if (element.typeId === ElementTypeId.WIRE) continue;
 			element.endPos = Elements.calcEndPos(
 				element.pos, Elements.elementType(element.typeId).width, element.numInputs, element.numOutputs, element.rotation
 			);
@@ -188,11 +189,12 @@ export class ProjectState {
 	public isFreeSpace(startPos: PIXI.Point, endPos: PIXI.Point, isWire?: boolean, wireEnds?: PIXI.Point[], except?: Element[]): boolean {
 		const others = this.elementsInChunks(startPos, endPos);
 		for (const elem of others) {
-			if (except && except.find(e => e.id === elem.id) || isWire && elem.typeId === 0)
+			if (except && except.find(e => e.id === elem.id) || isWire && elem.typeId === ElementTypeId.WIRE)
 				continue;
 			if (isWire && CollisionFunctions.isRectInRectLightBorder(elem.pos, elem.endPos, startPos, endPos))
 				return false;
-			if (!isWire && elem.typeId === 0 && CollisionFunctions.isRectInRectLightBorder(startPos, endPos, elem.pos, elem.endPos)) {
+			if (!isWire && elem.typeId === ElementTypeId.WIRE &&
+				CollisionFunctions.isRectInRectLightBorder(startPos, endPos, elem.pos, elem.endPos)) {
 				return false;
 			}
 			if (!isWire && CollisionFunctions.isRectInRectNoBorder(startPos, endPos, elem.pos, elem.endPos))
@@ -217,7 +219,7 @@ export class ProjectState {
 		for (const elem of elements) {
 			const newStartPos = new PIXI.Point(elem.pos.x + dif.x, elem.pos.y + dif.y);
 			const newEndPos = new PIXI.Point(elem.endPos.x + dif.x, elem.endPos.y + dif.y);
-			if (!this.isFreeSpace(newStartPos, newEndPos, elem.typeId === 0, Elements.wireEnds(elem), except))
+			if (!this.isFreeSpace(newStartPos, newEndPos, elem.typeId === ElementTypeId.WIRE, Elements.wireEnds(elem), except))
 				return false;
 		}
 		return true;
@@ -228,13 +230,13 @@ export class ProjectState {
 	public addElement(elem: Element, id?: number): Element {
 		elem.id = id || this.getNextId();
 		this._model.set(elem.id, elem);
-		if (getStaticDI(ElementProviderService).isInputElement(elem.typeId)) {
+		if (elem.typeId === ElementTypeId.INPUT) {
 			elem.plugIndex = this.numInputs++;
 			this._inputPlugs.push(elem);
 			for (const plug of this._outputPlugs) {
 				plug.plugIndex++;
 			}
-		} else if (getStaticDI(ElementProviderService).isOutputElement(elem.typeId)) {
+		} else if (elem.typeId === ElementTypeId.OUTPUT) {
 			elem.plugIndex = this.numInputs + this.numOutputs++;
 			this._outputPlugs.push(elem);
 		}
@@ -248,7 +250,7 @@ export class ProjectState {
 			return null;
 		this._model.delete(elementId);
 
-		if (getStaticDI(ElementProviderService).isInputElement(outElem.typeId)) {
+		if (outElem.typeId === ElementTypeId.INPUT) {
 			this.numInputs--;
 			this._inputPlugs = this._inputPlugs.filter(e => e.id !== elementId);
 			for (const plug of this._inputPlugs) {
@@ -259,7 +261,7 @@ export class ProjectState {
 			for (const plug of this._outputPlugs) {
 				plug.plugIndex--;
 			}
-		} else if (getStaticDI(ElementProviderService).isOutputElement(outElem.typeId)) {
+		} else if (outElem.typeId === ElementTypeId.OUTPUT) {
 			this.numOutputs--;
 			this._outputPlugs = this._outputPlugs.filter(e => e.id !== elementId);
 		}
@@ -298,8 +300,8 @@ export class ProjectState {
 
 
 	public connectWires(wire0: Element, wire1: Element, intersection: PIXI.Point): Element[] {
-		const out = wire0.typeId === 0 ? this.splitWire(wire0, intersection) : [];
-		return out.concat(wire1.typeId === 0 ? this.splitWire(wire1, intersection) : []);
+		const out = wire0.typeId === ElementTypeId.WIRE ? this.splitWire(wire0, intersection) : [];
+		return out.concat(wire1.typeId === ElementTypeId.WIRE ? this.splitWire(wire1, intersection) : []);
 	}
 
 	public disconnectWires(wires: Element[]): Element[] {
@@ -392,8 +394,8 @@ export class ProjectState {
 	}
 
 	private connectWithEdge(other: Element, elem: Element): ChangeType {
-		const oldElems = (elem.typeId === 0 ? [elem] : []).concat(other.typeId === 0 ? [other] : []);
-		if (other.typeId === 0) {
+		const oldElems = (elem.typeId === ElementTypeId.WIRE ? [elem] : []).concat(other.typeId === ElementTypeId.WIRE ? [other] : []);
+		if (other.typeId === ElementTypeId.WIRE) {
 			const wireEnds = this.wireEnds(elem);
 			for (const endPoint of wireEnds) {
 				if (CollisionFunctions.isPointOnWireNoEdge(other, endPoint)) {
@@ -401,7 +403,7 @@ export class ProjectState {
 				}
 			}
 		}
-		if (elem.typeId === 0) {
+		if (elem.typeId === ElementTypeId.WIRE) {
 			const wireEnds = this.wireEnds(other);
 			for (const endPoint of wireEnds) {
 				if (CollisionFunctions.isPointOnWireNoEdge(elem, endPoint)) {
@@ -417,7 +419,7 @@ export class ProjectState {
 		const chunkY = CollisionFunctions.gridPosToChunk(pos.y);
 		const outWires: Element[] = [];
 		for (const elem of this.elementsInChunk(chunkX, chunkY)) {
-			if (elem.typeId === 0 && CollisionFunctions.isPointOnWire(elem, pos))
+			if (elem.typeId === ElementTypeId.WIRE && CollisionFunctions.isPointOnWire(elem, pos))
 				outWires.push(elem);
 		}
 		return outWires;
@@ -553,12 +555,12 @@ export class ProjectState {
 		this._outputPlugs = [];
 		this._inputPlugs = [];
 		for (const elem of this._model.values()) {
-			if (getStaticDI(ElementProviderService).isInputElement(elem.typeId)) {
+			if (elem.typeId === ElementTypeId.INPUT) {
 				if (elem.plugIndex === undefined)
 					elem.plugIndex = numInputs;
 				numInputs++;
 				this._inputPlugs.push(elem);
-			} else if (getStaticDI(ElementProviderService).isOutputElement(elem.typeId)) {
+			} else if (elem.typeId === ElementTypeId.OUTPUT) {
 				if (elem.plugIndex === undefined)
 					elem.plugIndex = numInputs + numOutputs;
 				numOutputs++;
@@ -571,7 +573,7 @@ export class ProjectState {
 	}
 
 	public setPlugId(elem: Element, id: number): void {
-		for (const plug of getStaticDI(ElementProviderService).isInputElement(elem.typeId) ? this._inputPlugs : this._outputPlugs) {
+		for (const plug of elem.typeId === ElementTypeId.INPUT ? this._inputPlugs : this._outputPlugs) {
 			if (plug.plugIndex === id) {
 				this.specialActions.push({
 					name: 'plugInd',
@@ -586,16 +588,24 @@ export class ProjectState {
 
 	public possiblePlugIds(elem: Element): number[] {
 		const out: number[] = [];
-		if (getStaticDI(ElementProviderService).isInputElement(elem.typeId)) {
+		if (elem.typeId === ElementTypeId.INPUT) {
 			for (let i = 0; i < this.numInputs; i++) {
 				out.push(i);
 			}
-		} else if (getStaticDI(ElementProviderService).isOutputElement(elem.typeId)) {
+		} else if (elem.typeId === ElementTypeId.OUTPUT) {
 			for (let i = 0; i < this.numOutputs; i++) {
 				out.push(this.numInputs + i);
 			}
 		}
 		return out;
+	}
+
+	public setOptions(element: Element, options: number[]): void {
+		element.options = options;
+	}
+
+	public setText(element: Element, text: unknown): void {
+		element.data = text;
 	}
 
 

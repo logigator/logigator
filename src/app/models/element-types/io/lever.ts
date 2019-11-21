@@ -2,13 +2,25 @@ import {ElementType} from '../element-type';
 
 export const lever: ElementType = {
 	name: 'ELEMENT_TYPE.IO.LEVER.NAME',
-	numInputs: 0,
+
+	category: 'io',
+
+	symbol: 'sw',
+
+	showSettings: true,
+	showSettingsForType: true,
+	showInConstructionBox: true,
+
+	description: 'ELEMENT_TYPE.IO.LEVER.DESCRIPTION',
+
+	isRotatable: true,
+	rotation: 0,
+
 	numOutputs: 1,
+
+	numInputs: 0,
 	minInputs: 0,
 	maxInputs: 0,
+
 	width: 1,
-	symbol: 'lev',
-	description: 'ELEMENT_TYPE.IO.LEVER.DESCRIPTION',
-	rotation: 0,
-	category: 'io'
 };

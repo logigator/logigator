@@ -1,18 +1,18 @@
 import {ElementType} from '../element-type';
 import {environment} from '../../../../environments/environment';
 
-export const not: ElementType = {
-	name: 'ELEMENT_TYPE.BASIC.NOT.NAME',
+export const clock: ElementType = {
+	name: 'ELEMENT_TYPE.BASIC.CLOCK.NAME',
 
 	category: 'basic',
 
-	symbol: '!',
+	symbol: 'clk',
 
 	showSettings: true,
 	showSettingsForType: true,
 	showInConstructionBox: true,
 
-	description: 'ELEMENT_TYPE.BASIC.NOT.DESCRIPTION',
+	description: 'ELEMENT_TYPE.BASIC.CLOCK.DESCRIPTION',
 
 	isRotatable: true,
 	rotation: 0,
@@ -23,5 +23,14 @@ export const not: ElementType = {
 	minInputs: 1,
 	maxInputs: 1,
 
-	width: environment.componentWidth
+	width: environment.componentWidth,
+
+	options: [0],
+	optionsConfig: [
+		{
+			name: 'ELEMENT_TYPE.BASIC.CLOCK.SPEED',
+			min: 1,
+			max: Number.MAX_VALUE
+		}
+	]
 };

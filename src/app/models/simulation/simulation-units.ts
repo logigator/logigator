@@ -3,6 +3,9 @@ import {ElementToUnit, UnitElementBidir, UnitToElement, WireEndLinksOnElem} from
 import {Element} from '../element';
 import {CompiledComp} from '../../services/simulation/state-compiler/compiled-comp';
 import {SimulationUnit} from './simulation-unit';
+import {ElementTypeId} from '../element-types/element-type-ids';
+import {getStaticDI} from '../get-di';
+import {ElementProviderService} from '../../services/element-provider/element-provider.service';
 
 export abstract class SimulationUnits {
 
@@ -20,13 +23,13 @@ export abstract class SimulationUnits {
 	}
 
 	public static fromElement(element: Element): SimulationUnit {
-		return element.typeId === 0
-			? undefined
-			: {
+		return ElementProviderService.isCompileElement(element.typeId)
+			? {
 				typeId: element.typeId,
 				inputs: new Array(element.numInputs),
 				outputs: new Array(element.numOutputs)
-			};
+			}
+			: undefined;
 	}
 
 	public static clone(unit: SimulationUnit): SimulationUnit {

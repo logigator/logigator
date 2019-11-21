@@ -5,6 +5,7 @@ import {environment} from '../../environments/environment';
 import {ActionType} from './action';
 import {Element} from './element';
 import {ElementType} from './element-types/element-type';
+import {ElementTypeId} from './element-types/element-type-ids';
 
 export abstract class Elements {
 
@@ -26,6 +27,7 @@ export abstract class Elements {
 		out.pos = element.pos.clone();
 		if (element.endPos)
 			out.endPos = element.endPos.clone();
+		out.options = out.options ? [...out.options] : undefined;
 		return out;
 	}
 
@@ -52,7 +54,7 @@ export abstract class Elements {
 		element.endPos.y += dif.y;
 	}
 
-	public static genNewElement(typeId: number, _pos: PIXI.Point, _endPos: PIXI.Point, rotation?: number, numInputs?: number): Element {
+	public static genNewElement(typeId: number, _pos: PIXI.Point, _endPos?: PIXI.Point): Element {
 		const type = getStaticDI(ElementProviderService).getElementById(typeId);
 		const pos = _pos ? _pos.clone() : undefined;
 		const endPos = _endPos ? _endPos.clone() : undefined;
@@ -61,11 +63,12 @@ export abstract class Elements {
 		return {
 			id: -1,
 			typeId,
-			numInputs: numInputs || type.numInputs,
+			numInputs: type.numInputs,
 			numOutputs: type.numOutputs,
 			pos,
 			endPos,
-			rotation: rotation || type.rotation,
+			rotation: type.rotation,
+			options: type.options ? [...type.options] : undefined,
 			plugIndex: getStaticDI(ElementProviderService).isPlugElement(typeId) ? 0 : undefined
 		};
 	}
@@ -94,11 +97,11 @@ export abstract class Elements {
 	}
 
 	public static addActionName(elem: Element): ActionType {
-		return elem.typeId === 0 ? 'addWire' : 'addComp';
+		return elem.typeId === ElementTypeId.WIRE ? 'addWire' : 'addComp';
 	}
 
 	public static remActionName(elem: Element): ActionType {
-		return elem.typeId === 0 ? 'remWire' : 'remComp';
+		return elem.typeId === ElementTypeId.WIRE ? 'remWire' : 'remComp';
 	}
 
 	public static mergeCheckedWiresVertical(wire0: Element, wire1: Element, newElem) {
@@ -116,7 +119,7 @@ export abstract class Elements {
 	}
 
 	public static wireEnds(element: Element, rotation?: number, numInputs?: number): PIXI.Point[] {
-		if (element.typeId === 0)
+		if (element.typeId === ElementTypeId.WIRE)
 			return [element.pos, element.endPos];
 		if (rotation === undefined)
 			rotation = element.rotation;

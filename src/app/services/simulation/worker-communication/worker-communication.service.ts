@@ -11,6 +11,7 @@ import {ErrorHandlingService} from '../../error-handling/error-handling.service'
 import {CompileError} from '../../../models/simulation/error';
 import {ElementProviderService} from '../../element-provider/element-provider.service';
 import {AverageBuffer} from '../../../models/average-buffer';
+import {ElementTypeId} from '../../../models/element-types/element-type-ids';
 import {EastereggService} from '../../easteregg/easteregg.service';
 
 @Injectable({
@@ -154,6 +155,7 @@ export class WorkerCommunicationService {
 		} catch (e) {
 			// #!debug
 			console.error(e);
+			if (!this.elementProvider.hasElement(e.comp) || !this.elementProvider.hasElement(e.src)) return;
 			e.comp = this.elementProvider.getElementById(e.comp).name;
 			e.src = this.elementProvider.getElementById(e.src).name;
 			this.errorHandling.showErrorMessage((e as CompileError).name, e);
@@ -232,9 +234,9 @@ export class WorkerCommunicationService {
 	public setUserInput(identifier: string, element: Element, state: boolean[]): void {
 		const index = this.stateCompiler.ioElemIndexes.get(identifier).get(element.id);
 		let inputEvent: InputEvent;
-		if (this.elementProvider.isButtonElement(element.typeId)) {
+		if (element.typeId === ElementTypeId.BUTTON) {
 			inputEvent = InputEvent.Pulse;
-		} else if (this.elementProvider.isLeverElement(element.typeId)) {
+		} else if (element.typeId === ElementTypeId.LEVER) {
 			inputEvent = InputEvent.Cont;
 		}
 		const stateBuffer = Int8Array.from(state as any).buffer;

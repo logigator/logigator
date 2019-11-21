@@ -1,572 +1,468 @@
-import {EditorView} from './editor-view';
-import {Grid} from './grid';
 import * as PIXI from 'pixi.js';
-import InteractionEvent = PIXI.interaction.InteractionEvent;
-import {Element} from '../element';
-import {WorkModeService} from '../../services/work-mode/work-mode.service';
-import {SelectionService} from '../../services/selection/selection.service';
-import {ProjectsService} from '../../services/projects/projects.service';
-import {CollisionFunctions} from '../collision-functions';
-import {merge, Subscription} from 'rxjs';
-import {ThemingService} from '../../services/theming/theming.service';
-import {ElementProviderService} from '../../services/element-provider/element-provider.service';
-import {ProjectInteractionService} from '../../services/project-interaction/project-interaction.service';
-import {filter} from 'rxjs/operators';
-import {CopyService} from '../../services/copy/copy.service';
-import {getStaticDI} from '../get-di';
-import {NgZone} from '@angular/core';
+import {EditorView} from './editor-view';
+import {merge, of, Subject} from 'rxjs';
 import {LGraphics} from './graphics/l-graphics';
+import {getStaticDI} from '../get-di';
+import {WorkModeService} from '../../services/work-mode/work-mode.service';
+import {ProjectInteractionService} from '../../services/project-interaction/project-interaction.service';
+import {filter, takeUntil} from 'rxjs/operators';
+import {NgZone} from '@angular/core';
+import {ThemingService} from '../../services/theming/theming.service';
+import {ViewIntManState, WireDir} from './view-int-man-states';
+import {ElementProviderService} from '../../services/element-provider/element-provider.service';
 import {LGraphicsResolver} from './graphics/l-graphics-resolver';
+import {PosHelper} from './pos-helper';
+import {ProjectsService} from '../../services/projects/projects.service';
+import {SelectionService} from '../../services/selection/selection.service';
+import {ElementTypeId} from '../element-types/element-type-ids';
+import {Grid} from './grid';
+import {PopupService} from '../../services/popup/popup.service';
+import {TextComponent} from '../../components/popup/popup-contents/text/text.component';
+import {CollisionFunctions} from '../collision-functions';
+import {CopyService} from '../../services/copy/copy.service';
+import InteractionEvent = PIXI.interaction.InteractionEvent;
+import {Elements} from '../elements';
+import {ConnectionPoint} from './graphics/connection-point';
 
 export class ViewInteractionManager {
 
 	private readonly _view: EditorView;
 
-	private _workModeSubscription: Subscription;
-	private _pasteSubscription: Subscription;
+	private _destroySubject = new Subject<void>();
 
-	private _actionStartPos: PIXI.Point;
-	private _lastMousePos: PIXI.Point;
-
-	private _newCompSprite: LGraphics;
-	private _draggingNewComp = false;
-
-	private _newWireDir: 'hor' | 'ver';
-	private _drawingNewWire = false;
-	private readonly _newWire: PIXI.Graphics;
-
-	private _mouseDownPos: PIXI.Point;
-	private _singleSelectedElement: Element;
-	private _currentlyDragging = false;
-	private _drawingSelectRect = false;
-	private _currentlyPasting = false;
-	private _startedOnElement: LGraphics;
 	private readonly _selectRect: PIXI.Graphics;
 
-	public pastingElements: LGraphics[] = [];
-	public pastingConnPoints: PIXI.Graphics[] = [];
+	private readonly _wireGraphics: PIXI.Graphics;
+	private _wireDirection: WireDir;
 
-	private copyService = getStaticDI(CopyService);
-	private projectsService = getStaticDI(ProjectsService);
-	private workModeService = getStaticDI(WorkModeService);
-	private elemProvService = getStaticDI(ElementProviderService);
-	private themingService = getStaticDI(ThemingService);
-	private selectionService = getStaticDI(SelectionService);
+	private _selectedElements: LGraphics[];
+	private _selectedConnPoints: {
+		graphics: ConnectionPoint,
+		pos: PIXI.Point
+	}[];
+	private _selectionNewElements: boolean;
+
+	private _actionPos: PosHelper;
+
+	private _state: ViewIntManState = ViewIntManState.IDLE;
+
+	private workModeSer = getStaticDI(WorkModeService);
+	private themingSer = getStaticDI(ThemingService);
+	private elemProvSer = getStaticDI(ElementProviderService);
+	private projectsSer = getStaticDI(ProjectsService);
+	private selectionSer = getStaticDI(SelectionService);
+	private copySer = getStaticDI(CopyService);
 
 	constructor(view: EditorView) {
 		this._view = view;
+
 		this._selectRect = new PIXI.Graphics();
-		this._selectRect.beginFill(this.themingService.getEditorColor('selectRect'), 0.3);
+		this._selectRect.beginFill(this.themingSer.getEditorColor('selectRect'), 0.3);
 		this._selectRect.drawRect(0, 0, 1, 1);
+		this._selectRect.interactive = true;
+		this._selectRect.zIndex = 10;
+		this._selectRect.visible = false;
+		this._view.addChild(this._selectRect);
 
-		this._newWire = new PIXI.Graphics();
+		this._wireGraphics = new PIXI.Graphics();
+		this._view.addChild(this._wireGraphics);
 
-		this.addEventListenersToView();
-		this.addEventListenersToSelectRect();
+		this.initEventListeners();
 
-		this._workModeSubscription = merge(
-			this.workModeService.currentWorkMode$,
-			getStaticDI(ProjectInteractionService).onElementsDelete$,
-		).subscribe(_ => this.cleanUp());
+		merge(this.workModeSer.currentWorkMode$, getStaticDI(ProjectInteractionService).onElementsDelete$)
+			.pipe(takeUntil(this._destroySubject)).subscribe(() => this.cleanUp());
 
-		this._pasteSubscription = getStaticDI(ProjectInteractionService).onPaste$.pipe(
-			filter(_ => this._view.projectId === this.projectsService.currProject.id)
-		).subscribe(_ => this.onPaste());
+		getStaticDI(ProjectInteractionService).onPaste$.pipe(
+			takeUntil(this._destroySubject),
+			filter(_ => this._view.projectId === this.projectsSer.currProject.id)
+		).subscribe(() => this.startPaste());
 	}
 
-	private addEventListenersToView() {
+	public addNewElement(lGraphics: LGraphics) {
 		getStaticDI(NgZone).runOutsideAngular(() => {
-			this._view.on('pointerdown', (e: InteractionEvent) => this.handlePointerDownOnView(e));
-			this._view.on('pointerup', (e: InteractionEvent) => this.handlePointerUpOnView(e));
-			this._view.on('pointerupoutside', (e: InteractionEvent) => this.handlePointerUpOnView(e));
+			lGraphics.interactive = true;
+			lGraphics.on('pointerup', (e: InteractionEvent) => this.pUpElement(e, lGraphics));
+			lGraphics.on('pointerdown', (e: InteractionEvent) => this.pDownElement(e, lGraphics));
 		});
 	}
 
-	private addEventListenersToSelectRect() {
+	private initEventListeners() {
 		getStaticDI(NgZone).runOutsideAngular(() => {
-			this._selectRect.interactive = true;
-			this._selectRect.zIndex = 10;
-			this._selectRect.on('pointerdown', (e: InteractionEvent) => this.handlePointerDownOnSelectRect(e));
+			this._view.on('pointerdown', (e: InteractionEvent) => this.pDownView(e));
+			this._view.on('pointerup', (e: InteractionEvent) => this.pUpView(e));
+			this._view.on('pointerupoutside', (e: InteractionEvent) => this.pUpView(e));
+			this._view.on('pointermove', (e: InteractionEvent) => this.pMoveView(e));
+			this._selectRect.on('pointerdown', (e: InteractionEvent) => this.pDownSelectRect(e));
 		});
 	}
 
-	public addEventListenersToNewElement(sprite: LGraphics) {
-		getStaticDI(NgZone).runOutsideAngular(() => {
-			sprite.interactive = true;
-			sprite.on('pointerdown', (e: InteractionEvent) => this.handlePointerDownOnElement(e, sprite));
-		});
-	}
-
-	private handlePointerDownOnView(e: InteractionEvent) {
-		let addPointerMoveEvent = false;
-		this._mouseDownPos = Grid.getPixelPosOnGridForPixelPos(e.data.getLocalPosition(this._view));
-		if (this.workModeService.currentWorkMode === 'buildComponent'
-			&& this.workModeService.currentComponentToBuild !== 0
-			&& e.data.button === 0
-		) {
-			this.startDraggingNewComponent(e);
-			addPointerMoveEvent = true;
-		} else if ((this.workModeService.currentWorkMode === 'select' || this._singleSelectedElement) && e.data.button === 0) {
-			this.addSelectRectOrResetSelection(e);
-			addPointerMoveEvent = true;
-		} else if (this.workModeService.currentWorkMode === 'buildWire' && e.data.button === 0) {
-			this.startDrawingNewWire(e);
-			addPointerMoveEvent = true;
-		} else if (this.workModeService.currentWorkMode === 'connectWire' && e.data.button === 0) {
-			this.connectOrDisconnectWires(e);
-			addPointerMoveEvent = true;
+	public updateSelectionScale() {
+		for (const lGraphics of this._selectedElements || []) {
+			lGraphics.updateScale(this.currScale);
 		}
-		this._view.requestSingleFrame();
-		if (addPointerMoveEvent) this._view.on('pointermove', (e1: InteractionEvent) => this.handlePointerMoveOnView(e1));
-	}
-
-	private handlePointerUpOnView(e: InteractionEvent) {
-		if (this._draggingNewComp)
-			this.placeNewComp();
-		else if (this._startedOnElement && this._mouseDownPos.equals(Grid.getPixelPosOnGridForPixelPos(e.data.getLocalPosition(this._view))))
-			this.selectSingleComp(this._startedOnElement);
-		else if (
-			(this._singleSelectedElement || this.workModeService.currentWorkMode === 'select' || this._currentlyPasting)
-			&& e.data.button === 0
-		)
-			this.selectOrApplyMove();
-		else if (this.workModeService.currentWorkMode === 'buildWire' && e.data.button === 0)
-			this.addWire(e);
-
-		delete this._startedOnElement;
-		this._view.requestSingleFrame();
-		this._view.removeAllListeners('pointermove');
-	}
-
-	private handlePointerMoveOnView(e: InteractionEvent) {
-		if (this.workModeService.currentWorkMode === 'select' || this._singleSelectedElement || this._currentlyPasting) {
-			this.drawSelectRectOrMove(e);
-		} else if (this.workModeService.currentWorkMode === 'buildWire') {
-			this.drawNewWire(e);
-		} else if (this._draggingNewComp) {
-			this.dragNewComp(e);
-		}
-		this._view.requestSingleFrame();
-	}
-
-	private handlePointerDownOnSelectRect(e: InteractionEvent) {
-		if (this.workModeService.currentWorkMode === 'select' || this._currentlyPasting) {
-			this.startDragging(e);
-			this._view.requestSingleFrame();
+		for (const point of this._selectedConnPoints || []) {
+			point.graphics.updateScale(this.currScale);
 		}
 	}
 
-	private handlePointerDownOnElement(e: InteractionEvent, elem: LGraphics) {
-		if (e.data.button === 0) {
-			if (this._singleSelectedElement === elem.element) {
-				this.startDragging(e);
-			}
-			this._startedOnElement = elem;
-			this._view.requestSingleFrame();
-		}
-	}
-
-	private startDrawingNewWire(e: PIXI.interaction.InteractionEvent) {
-		this._drawingNewWire = true;
-		this._actionStartPos = Grid.getPixelPosForPixelPosOnGridWire(e.data.getLocalPosition(this._view));
-		this._newWire.position = this._actionStartPos;
-		this._view.addChild(this._newWire);
-	}
-
-	private addSelectRectOrResetSelection(e: PIXI.interaction.InteractionEvent) {
-		if (e.target === this._view) {
-			this.cancelPasting();
-			this.resetSelectionToOldPosition();
-			delete this._actionStartPos;
-			this.clearSelection();
-			this._drawingSelectRect = true;
-			this._view.removeChild(this._selectRect);
-			this._selectRect.position = e.data.getLocalPosition(this._view);
-			this._selectRect.width = 0;
-			this._selectRect.height = 0;
-		}
-	}
-
-	private selectOrApplyMove() {
-		if (this._drawingSelectRect) {
-			this._drawingSelectRect = false;
-			const selectStart = Grid.getFloatGridPosForPixelPos(this._selectRect.position);
-			const selectEnd = Grid.getFloatGridPosForPixelPos(new PIXI.Point(
-				this._selectRect.position.x + this._selectRect.width,
-				this._selectRect.position.y + this._selectRect.height)
-			);
-			this.selectInRect(selectStart, selectEnd);
-			if (this.selectionService.selectedIds().length === 0) {
-				this._view.removeChild(this._selectRect);
-			}
-		} else if (this._currentlyDragging) {
-			this._currentlyDragging = false;
-			if (this._currentlyPasting) {
-				const elementsToPaste = this.pastingElements.map(es => es.element);
-				const endPos = Grid.getGridPosForPixelPos(this.pastingElements[0].position);
-				if (this.projectsService.currProject.addElements(
-					elementsToPaste, new PIXI.Point(endPos.x - elementsToPaste[0].pos.x, endPos.y - elementsToPaste[0].pos.y))
-				) {
-					this.projectsService.inputsOutputsCustomComponentChanged(this._view.projectId);
-					this._view.removeChild(this._selectRect);
-					this.cancelPasting();
-					delete this._singleSelectedElement;
-					delete this._actionStartPos;
-				}
-			} else {
-				let endPos;
-				if (this._singleSelectedElement) {
-					endPos = Grid.getGridPosForPixelPos(this._lastMousePos);
-				} else {
-					endPos = Grid.getGridPosForPixelPos(this._selectRect.position);
-				}
-				if (!this._actionStartPos)
-					return;
-				const movedDif = new PIXI.Point(endPos.x - this._actionStartPos.x, endPos.y - this._actionStartPos.y);
-
-				if (this.projectsService.currProject.moveElementsById(
-					this.selectionService.selectedIds(), movedDif)
-				) {
-					this._view.removeChild(this._selectRect);
-					this.clearSelection();
-					delete this._singleSelectedElement;
-					delete this._actionStartPos;
-				}
-			}
-		}
-	}
-
-	private connectOrDisconnectWires(e: InteractionEvent) {
-		const pos = Grid.getGridPosForPixelPos(e.data.getLocalPosition(this._view));
-		this.projectsService.currProject.toggleWireConnection(pos);
-	}
-
-	private addWire(e: InteractionEvent) {
-		this._drawingNewWire = false;
-		if (!this._actionStartPos) return;
-		const wire1StartPos = Grid.getGridPosForPixelPos(this._actionStartPos);
-		let wire2EndPos = Grid.getGridPosForPixelPos(e.data.getLocalPosition(this._view));
-		let wire1End2StartPos;
-		switch (this._newWireDir) {
-			case 'hor':
-				wire1End2StartPos = new PIXI.Point(wire2EndPos.x, wire1StartPos.y);
+	private pDownView(e: InteractionEvent) {
+		if (e.target !== this._view || e.data.button !== 0) return;
+		this.cleanUp();
+		switch (this.workModeSer.currentWorkMode) {
+			case 'buildComponent':
+				this.startBuildComp(e);
 				break;
-			case 'ver':
-				wire1End2StartPos = new PIXI.Point(wire1StartPos.x, wire2EndPos.y);
+			case 'buildWire':
+				this.startBuildWire(e);
 				break;
-			default:
-				return;
+			case 'connectWire':
+				this.toggleWireConn(e);
+				break;
+			case 'text':
+				this.placeText(e);
+				break;
+			case 'select':
+				this.startSelection(e);
+				break;
 		}
-		if (!(wire1End2StartPos.x !== wire2EndPos.x || wire1End2StartPos.y !== wire2EndPos.y)) {
-			wire2EndPos = undefined;
-		}
-		this._view.placeWires(wire1StartPos, wire1End2StartPos, wire2EndPos);
-
-		this._newWire.clear();
-		this._view.removeChild(this._newWire);
-		delete this._newWireDir;
 	}
 
-	private drawNewWire(e: InteractionEvent) {
-		if (this._drawingNewWire) {
-			const currentMousePos = Grid.getPixelPosForPixelPosOnGridWire(e.data.getLocalPosition(this._view));
-			const endPos = new PIXI.Point(currentMousePos.x - this._actionStartPos.x, currentMousePos.y - this._actionStartPos.y);
-			this.setDirForNewWire(currentMousePos);
-			this._newWire.clear();
-			this._newWire.lineStyle(1 / this._view.zoomPan.currentScale, this.themingService.getEditorColor('wire'));
-			this._newWire.moveTo(0, 0);
-			switch (this._newWireDir) {
-				case 'hor':
-					this._newWire.lineTo(endPos.x, 0);
-					this._newWire.lineTo(endPos.x, endPos.y);
+	private pUpView(e: InteractionEvent) {
+		switch (this._state) {
+			case ViewIntManState.NEW_COMP:
+				this.buildNewComp(e);
+				break;
+			case ViewIntManState.SELECT:
+				this.selectFromRect(e);
+				break;
+			case ViewIntManState.DRAGGING:
+				this.applyDrag(e);
+				break;
+			case ViewIntManState.NEW_WIRE:
+				this.buildNewWire(e);
+				break;
+			case ViewIntManState.PASTE_DRAGGING:
+				this.applyPaste(e);
+				break;
+		}
+	}
+
+	private pMoveView(e: InteractionEvent) {
+		switch (this._state) {
+			case ViewIntManState.NEW_COMP:
+			case ViewIntManState.DRAGGING:
+			case ViewIntManState.PASTE_DRAGGING:
+				this.dragSelection(e);
+				break;
+			case ViewIntManState.SELECT:
+				this.dragSelectRect(e);
+				break;
+			case ViewIntManState.NEW_WIRE:
+				this.dragNewWire(e);
+				break;
+		}
+	}
+
+	private pDownSelectRect(e: InteractionEvent) {
+		if (this._state === ViewIntManState.WAIT_FOR_DRAG || this._state === ViewIntManState.WAIT_FOR_PASTE_DRAG) {
+			switch (this._state) {
+				case ViewIntManState.WAIT_FOR_DRAG:
+					this._state = ViewIntManState.DRAGGING;
 					break;
-				case 'ver':
-					this._newWire.lineTo(0, endPos.y);
-					this._newWire.lineTo(endPos.x, endPos.y);
+				case ViewIntManState.WAIT_FOR_PASTE_DRAG:
+					this._state = ViewIntManState.PASTE_DRAGGING;
 					break;
 			}
-		}
-	}
-
-	private drawSelectRectOrMove(e: InteractionEvent) {
-		if (this._drawingSelectRect) {
-			if (!this._selectRect.parent) {
-				this._view.addChild(this._selectRect);
-			}
-			const rectEndPos = e.data.getLocalPosition(this._view);
-			this._selectRect.width = rectEndPos.x - this._selectRect.x;
-			this._selectRect.height = rectEndPos.y -= this._selectRect.y;
-		} else if (this._currentlyDragging) {
-			const currentMousePos = Grid.getPixelPosOnGridForPixelPos(e.data.getLocalPosition(this._view));
-			const dx = currentMousePos.x - this._lastMousePos.x;
-			const dy = currentMousePos.y - this._lastMousePos.y;
-
-			if (dx !== 0 || dy !== 0) {
-				this._selectRect.position.x += dx;
-				this._selectRect.position.y += dy;
-				this.applyDraggingPositionChangeToSelection(dx, dy);
-
-				this._lastMousePos = currentMousePos;
-			}
-		}
-	}
-
-	private setDirForNewWire(currentMousePos) {
-		if (!this._newWireDir && CollisionFunctions.distance(this._actionStartPos, currentMousePos) >= 1) {
-			if (this._actionStartPos.x === currentMousePos.x) {
-				this._newWireDir = 'ver';
-			} else if (this._actionStartPos.y === currentMousePos.y) {
-				this._newWireDir = 'hor';
+			if (!this._actionPos) {
+				this._actionPos = new PosHelper(e, this._view, Grid.getPixelPosForGridPos(this._selectedElements[0].element.pos));
 			} else {
-
-				this._newWireDir = 'ver';
+				this._actionPos.addDragPos(e, this._view);
 			}
 		}
 	}
 
-	private startDraggingNewComponent(e: InteractionEvent) {
-		const typeId = this.workModeService.currentComponentToBuild;
-		const elemType = this.elemProvService.getElementById(typeId);
+	private pUpElement(e: InteractionEvent, lGraphics: LGraphics) {
+		if (this.workModeSer.currentWorkMode === 'buildComponent' || this._state === ViewIntManState.DRAGGING || this._selectRect.visible) return;
+		this.cleanUp();
+		this._state = ViewIntManState.WAIT_FOR_DRAG;
+		this.selectionSer.selectComponent(lGraphics.element.id);
+		lGraphics.setSelected(true);
+		lGraphics.parent.removeChild(lGraphics);
+		lGraphics.position = Grid.getPixelPosForGridPos(lGraphics.element.pos);
+		this._view.addChild(lGraphics);
+		this._selectedElements = [lGraphics];
+		this._selectionNewElements = false;
+		this._view.requestSingleFrame();
+	}
+
+	private pDownElement(e: InteractionEvent, lGraphics: LGraphics) {
+		if (this._state === ViewIntManState.WAIT_FOR_DRAG && !this._selectRect.visible && this._selectedElements.includes(lGraphics)) {
+			this._state = ViewIntManState.DRAGGING;
+			if (!this._actionPos) this._actionPos = new PosHelper(e, this._view, (lGraphics.position as PIXI.ObservablePoint).clone());
+		}
+	}
+
+	private startBuildComp(e: InteractionEvent) {
+		const typeId = this.workModeSer.currentComponentToBuild;
+		const elemType = this.elemProvSer.getElementById(typeId);
 		if (elemType.numInputs === 0 && elemType.numOutputs === 0) return;
-		this._draggingNewComp = true;
-		this._newCompSprite = LGraphicsResolver.getLGraphicsFromType(this._view.zoomPan.currentScale, typeId);
-		this._newCompSprite.position = Grid.getPixelPosOnGridForPixelPos(e.data.getLocalPosition(this._view));
-		this._view.addChild(this._newCompSprite);
+		this._state = ViewIntManState.NEW_COMP;
+		this._actionPos = new PosHelper(e, this._view);
+		const newElem = LGraphicsResolver.getLGraphicsFromType(this.currScale, typeId);
+		newElem.position = this._actionPos.pixelPosOnGridStart;
+		this._view.addChild(newElem);
+		this._selectedElements = [newElem];
+		this._selectionNewElements = true;
+		this._view.requestSingleFrame();
 	}
 
-	private dragNewComp(e: InteractionEvent) {
-		this._newCompSprite.position = Grid.getPixelPosOnGridForPixelPos(e.data.getLocalPosition(this._view));
+	private startBuildWire(e: InteractionEvent) {
+		this._state = ViewIntManState.NEW_WIRE;
+		this._actionPos = new PosHelper(e, this._view);
+		this._wireGraphics.position = this._actionPos.pixelPosOnGridStartWire;
+		this._wireGraphics.visible = true;
 	}
 
-	private placeNewComp() {
-		if (this._newCompSprite.position.x > 0 && this._newCompSprite.position.y > 0) {
-			const typeIdToBuild = this.workModeService.currentComponentToBuild;
-			this._view.placeComponent(
-				Grid.getGridPosForPixelPos(this._newCompSprite.position),
-				typeIdToBuild
-			);
-			if (this.elemProvService.isPlugElement(typeIdToBuild)) {
-				this.projectsService.inputsOutputsCustomComponentChanged(this._view.projectId);
+	private dragNewWire(e) {
+		this._actionPos.addDragPos(e, this._view);
+		if (this._wireDirection === undefined
+			&& CollisionFunctions.distance(this._actionPos.gridPosStart, this._actionPos.lastGridPosDrag) >= 1
+		) {
+			if (this._actionPos.gridPosStart.x === this._actionPos.lastGridPosDrag.x) {
+				this._wireDirection = WireDir.VER;
+			} else if (this._actionPos.gridPosStart.y === this._actionPos.lastGridPosDrag.y) {
+				this._wireDirection = WireDir.HOR;
+			} else {
+				this._wireDirection = WireDir.VER;
 			}
 		}
-		this._view.removeChild(this._newCompSprite);
-		this._newCompSprite.destroy();
-		this._draggingNewComp = false;
+		this._wireGraphics.clear();
+		this._wireGraphics.lineStyle(1 / this._view.zoomPan.currentScale, this.themingSer.getEditorColor('wire'));
+		this._wireGraphics.moveTo(0, 0);
+		const endPosAbsolute = this._actionPos.lastPixelPosOnGridWire;
+		const endPosRel = new PIXI.Point(
+			endPosAbsolute.x - this._actionPos.pixelPosOnGridStartWire.x, endPosAbsolute.y - this._actionPos.pixelPosOnGridStartWire.y
+		);
+		switch (this._wireDirection) {
+			case WireDir.HOR:
+				this._wireGraphics.lineTo(endPosRel.x, 0);
+				this._wireGraphics.lineTo(endPosRel.x, endPosRel.y);
+				break;
+			case WireDir.VER:
+				this._wireGraphics.lineTo(0, endPosRel.y);
+				this._wireGraphics.lineTo(endPosRel.x, endPosRel.y);
+				break;
+		}
+		this._view.requestSingleFrame();
 	}
 
-	private applyDraggingPositionChangeToSelection(dx: number, dy: number) {
-		if (this._currentlyPasting) {
-			for (let i = 0; i < this.pastingElements.length; i++) {
-				this.pastingElements[i].position.x += dx;
-				this.pastingElements[i].position.y += dy;
-			}
-			for (let i = 0; i < this.pastingConnPoints.length; i++) {
-				this.pastingConnPoints[i].position.x += dx;
-				this.pastingConnPoints[i].position.y += dy;
-			}
+	private buildNewWire(e: InteractionEvent) {
+		const startPos = this._actionPos.gridPosStart;
+		const endPos = this._actionPos.lastGridPosDrag;
+		this.projectsSer.currProject.addWire(
+			startPos,
+			this._wireDirection === WireDir.HOR ? new PIXI.Point(endPos.x, startPos.y) : new PIXI.Point(startPos.x, endPos.y),
+			endPos
+		);
+		this.cleanUp();
+	}
+
+	private startSelection(e: InteractionEvent) {
+		this._state = ViewIntManState.SELECT;
+		this._actionPos = new PosHelper(e, this._view);
+		this._selectRect.width = 0;
+		this._selectRect.height = 0;
+		this._selectRect.position = this._actionPos.pixelPosStartDrag;
+		this._selectRect.visible = true;
+	}
+
+	private dragSelectRect(e: InteractionEvent) {
+		this._actionPos.addDragPos(e, this._view);
+		const selSize = this._actionPos.getPixelPosDiffFromStart();
+		this._selectRect.width = selSize.x;
+		this._selectRect.height = selSize.y;
+		this._view.requestSingleFrame();
+	}
+
+	private selectFromRect(e: InteractionEvent) {
+		const selected = this.selectionSer.selectFromRect(
+			this.projectsSer.currProject, this._actionPos.gridPosFloatStart, this._actionPos.lastGridPosFloat
+		);
+		if (selected.length === 0) {
+			this.cleanUp();
 			return;
 		}
-		this.selectionService.selectedIds().forEach(id => {
-			const sprite = this._view.allElements.get(id);
-			sprite.position.x += dx;
-			sprite.position.y += dy;
-		});
-		this.selectionService.selectedConnections().forEach(point => {
-			const sprite = this._view.connectionPoints.get(`${point.x}:${point.y}`);
-			sprite.position.x += dx;
-			sprite.position.y += dy;
-		});
-	}
-
-	private resetSelectionToOldPosition() {
-		this.selectionService.selectedIds(this._view.projectId).forEach(id => {
-			if (!this._view.allElements.has(id)) return;
-			const lGraphics = this._view.allElements.get(id);
-			this._view.removeChild(lGraphics);
-
-			this._view.addToCorrectChunk(lGraphics, lGraphics.element.pos);
-			this._view.setLocalChunkPos(lGraphics.element, lGraphics);
-		});
-		this.selectionService.selectedConnections(this._view.projectId).forEach(point => {
-			const key = `${point.x}:${point.y}`;
-			if (!this._view.connectionPoints.has(key)) return;
-			const sprite = this._view.connectionPoints.get(key);
-			this._view.removeChild(sprite);
-
-			this._view.addToCorrectChunk(sprite, point);
-
-			const pos = Grid.getLocalChunkPixelPosForGridPosWireStart(point);
-			const size = this._view.calcConnPointSize();
-			sprite.position = this._view.adjustConnPointPosToSize(pos, size);
-		});
-	}
-
-	private startDragging(e: InteractionEvent) {
-		this._currentlyDragging = true;
-		this._lastMousePos = Grid.getPixelPosOnGridForPixelPos(e.data.getLocalPosition(this._view));
-		if (!this._actionStartPos) {
-			if (this._singleSelectedElement) {
-				this._actionStartPos = Grid.getGridPosForPixelPos(this._lastMousePos);
-			} else {
-				this._actionStartPos = Grid.getGridPosForPixelPos(this._selectRect.position);
-			}
-		}
-	}
-
-	private clearSelection() {
-		this.selectionService.selectedIds(this._view.projectId).forEach(id => {
-			if (this._view.allElements.has(id))
-				this._view.allElements.get(id).setSelected(false);
-		});
-		this.selectionService.selectedConnections(this._view.projectId).forEach(point => {
-			const key = `${point.x}:${point.y}`;
-			if (this._view.connectionPoints.has(key))
-				this._view.connectionPoints.get(key).tint = 0xffffff;
-		});
-		this.selectionService.clearSelection(this._view.projectId);
-		delete this._singleSelectedElement;
-	}
-
-	private selectInRect(start: PIXI.Point, end: PIXI.Point) {
-		if (start.x === end.x && start.y === end.y) return;
-		this.clearSelection();
-		const selected = this.selectionService.selectFromRect(this.projectsService.currProject, start, end);
-		selected.forEach(id => {
-			const lGraphics = this._view.allElements.get(id);
+		this._selectedElements = selected.map(selId => {
+			const lGraphics = this._view.allElements.get(selId);
 			lGraphics.setSelected(true);
-
 			lGraphics.parent.removeChild(lGraphics);
 			this._view.addChild(lGraphics);
-
-			if (lGraphics.element.typeId === 0) {
+			if (lGraphics.element.typeId === ElementTypeId.WIRE) {
 				lGraphics.position = Grid.getPixelPosForGridPosWire(lGraphics.element.pos);
 			} else {
 				lGraphics.position = Grid.getPixelPosForGridPos(lGraphics.element.pos);
 			}
+			return lGraphics;
 		});
-		this.selectionService.selectedConnections().forEach(point => {
-			const element = this._view.connectionPoints.get(`${point.x}:${point.y}`);
-			element.tint = this.themingService.getEditorColor('selectTint');
-			element.parent.removeChild(element);
-			this._view.addChild(element);
-			const pos = Grid.getPixelPosForGridPosWire(point);
-			const size = this._view.calcConnPointSize();
-			element.position = this._view.adjustConnPointPosToSize(pos, size);
+		this._selectedConnPoints = this.selectionSer.selectedConnections().map(point => {
+			const connPoint = this._view.connectionPoints.get(`${point.x}:${point.y}`);
+			connPoint.setSelected(true);
+			connPoint.parent.removeChild(connPoint);
+			this._view.addChild(connPoint);
+			connPoint.setPosition(point, false, this.currScale);
+			return {graphics: connPoint, pos: point};
 		});
+		this._selectionNewElements = false;
+		delete this._actionPos;
+		this._state = ViewIntManState.WAIT_FOR_DRAG;
+		this._view.requestSingleFrame();
 	}
 
-	private onPaste() {
-		if (this._currentlyPasting || this.copyService.copiedElements.length === 0) return;
+	private buildNewComp(e: InteractionEvent) {
+		this._actionPos.addDragPos(e, this._view);
+		this.projectsSer.currProject.addElement(this.workModeSer.currentComponentToBuild, this._actionPos.lastGridPosDrag);
 		this.cleanUp();
-		this._currentlyPasting = true;
-		const copiedElements = this.copyService.copiedElements;
-		const copiedConnPts = this.copyService.copiedConPoints;
-		const bounding = this.copyService.getCopiedElementsBoundingBox();
-		const pasteRectPos = this.calcPasteRectPos();
+	}
+
+	private dragSelection(e: InteractionEvent) {
+		const diff = this._actionPos.addDragPos(e, this._view);
+		for (const lGraphics of this._selectedElements) {
+			lGraphics.position.x += diff.x;
+			lGraphics.position.y += diff.y;
+		}
+		for (const connPoint of this._selectedConnPoints || []) {
+			connPoint.graphics.addOffsetToPos(Grid.getGridPosForPixelPos(diff), this.currScale);
+		}
+		if (this._selectRect.visible) {
+			this._selectRect.x += diff.x;
+			this._selectRect.y += diff.y;
+		}
+		this._view.requestSingleFrame();
+	}
+
+	private applyDrag(e: InteractionEvent) {
+		if (this.projectsSer.currProject.moveElementsById(
+			this.selectionSer.selectedIds(), this._actionPos.getGridPosDiffFromStart(this._selectedElements[0].position))
+		) {
+			this.cleanUp();
+		} else {
+			this._state = ViewIntManState.WAIT_FOR_DRAG;
+		}
+	}
+
+	private placeText(e: InteractionEvent) {
+		const pos = Grid.getGridPosForPixelPos(e.data.getLocalPosition(this._view));
+		getStaticDI(NgZone).run(async () => {
+			const text = await getStaticDI(PopupService).showPopup(TextComponent, 'POPUP.TEXT.TITLE', false);
+			if (!text) return;
+			this.projectsSer.currProject.addText(text, pos);
+		});
+		this.cleanUp();
+	}
+
+	private toggleWireConn(e: InteractionEvent) {
+		this._actionPos = new PosHelper(e, this._view);
+		this.projectsSer.currProject.toggleWireConnection(this._actionPos.gridPosStart);
+		this.cleanUp();
+	}
+
+	private startPaste() {
+		if (this.copySer.copiedElements.length === 0) return;
+		this.cleanUp();
+		this._state = ViewIntManState.WAIT_FOR_PASTE_DRAG;
+		const bounding = this.copySer.getCopiedElementsBoundingBox();
+		const pasteRectPos =  Grid.getGridPosForPixelPos(new PIXI.Point(
+				(this._view.htmlContainer.offsetWidth / 3 - this._view.zoomPan.positionX) / this.currScale,
+				(this._view.htmlContainer.offsetHeight / 3 - this._view.zoomPan.positionY) / this.currScale)
+		);
+		const elemPosOffset = new PIXI.Point(pasteRectPos.x - bounding.x, pasteRectPos.y - bounding.y);
 		const pasteRectSizePixel = Grid.getPixelPosForGridPos(new PIXI.Point(bounding.width + 2, bounding.height + 2));
 		this._selectRect.position = Grid.getPixelPosForGridPos(new PIXI.Point(pasteRectPos.x - 1, pasteRectPos.y - 1));
 		this._selectRect.width = pasteRectSizePixel.x;
 		this._selectRect.height = pasteRectSizePixel.y;
-		this._view.addChild(this._selectRect);
-
-		const elementPosOffset = this.calcPasteRectOffset(bounding, pasteRectPos);
-		this.addPastingElementsToView(copiedElements, copiedConnPts, elementPosOffset);
-	}
-
-	private addPastingElementsToView(copiedElems: Element[], copiedConnPts: PIXI.Point[], offset: PIXI.Point) {
-		for (let i = 0; i < copiedElems.length; i++) {
-			if (copiedElems[i].typeId === 0) {
-				const graphics = LGraphicsResolver.getLGraphicsFromElement(
-					this._view.zoomPan.currentScale,
-					copiedElems[i]
+		this._selectRect.visible = true;
+		this._selectedElements = this.copySer.copiedElements.map(el => {
+			const lGraphics = LGraphicsResolver.getLGraphicsFromElement(this.currScale, el);
+			lGraphics.setSelected(true);
+			this._view.addChild(lGraphics);
+			if (lGraphics.element.typeId === ElementTypeId.WIRE) {
+				lGraphics.position = Grid.getPixelPosForGridPosWire(
+					new PIXI.Point(lGraphics.element.pos.x + elemPosOffset.x, lGraphics.element.pos.y + elemPosOffset.y)
 				);
-				graphics.position = Grid.getPixelPosForGridPosWire(new PIXI.Point(copiedElems[i].pos.x + offset.x, copiedElems[i].pos.y + offset.y));
-				this._view.addChild(graphics);
-				this.pastingElements.push(graphics);
 			} else {
-				const sprite = LGraphicsResolver.getLGraphicsFromElement(
-					this._view.zoomPan.currentScale,
-					copiedElems[i]
+				lGraphics.position = Grid.getPixelPosForGridPos(
+					new PIXI.Point(lGraphics.element.pos.x + elemPosOffset.x, lGraphics.element.pos.y + elemPosOffset.y)
 				);
-				sprite.position = Grid.getPixelPosForGridPos(new PIXI.Point(copiedElems[i].pos.x + offset.x, copiedElems[i].pos.y + offset.y));
-				this._view.addChild(sprite);
-				this.pastingElements.push(sprite);
 			}
-		}
-
-		for (let i = 0; i < copiedConnPts.length; i++) {
-			const pos = Grid.getPixelPosForGridPosWire(new PIXI.Point(copiedConnPts[i].x + offset.x, copiedConnPts[i].y + offset.y));
-			const graphics = new PIXI.Graphics();
-			graphics.position = pos;
-			this._view.drawConnectionPoint(graphics, pos);
+			return lGraphics;
+		});
+		this._selectedConnPoints = this.copySer.copiedConPoints.map(point => {
+			const pos = new PIXI.Point(point.x + elemPosOffset.x, point.y + elemPosOffset.y);
+			const graphics = new ConnectionPoint(pos, false, this.currScale);
+			graphics.setSelected(true);
 			this._view.addChild(graphics);
-			this.pastingConnPoints.push(graphics);
+			return {graphics, pos: point};
+		});
+		this._selectionNewElements = true;
+		this._view.requestSingleFrame();
+	}
+
+	private applyPaste(e: InteractionEvent) {
+		if (this.projectsSer.currProject.addElements(
+			this._selectedElements.map(lg => Elements.clone(lg.element)),
+			this._actionPos.getGridPosDiffFromStart(this._selectedElements[0].position))
+		) {
+			this.cleanUp();
+		} else {
+			this._state = ViewIntManState.WAIT_FOR_PASTE_DRAG;
 		}
 	}
 
-	private cancelPasting() {
-		this._currentlyPasting = false;
-		for (let i = 0; i < this.pastingElements.length; i++) {
-			this.pastingElements[i].destroy();
-		}
-		for (let i = 0; i < this.pastingConnPoints.length; i++) {
-			this.pastingConnPoints[i].destroy();
-		}
-		this.pastingConnPoints = [];
-		this.pastingElements = [];
-	}
-
-	private calcPasteRectPos(): PIXI.Point {
-		return Grid.getGridPosForPixelPos(
-			new PIXI.Point(
-				(this._view.htmlContainer.offsetWidth / 3 - this._view.zoomPan.positionX) / this._view.zoomPan.currentScale,
-				(this._view.htmlContainer.offsetHeight / 3 - this._view.zoomPan.positionY) / this._view.zoomPan.currentScale
-			)
-		);
-	}
-
-	private calcPasteRectOffset(bounding: PIXI.Rectangle, pasteRectPos: PIXI.Point): PIXI.Point {
-		return new PIXI.Point(
-			pasteRectPos.x - bounding.x,
-			pasteRectPos.y - bounding.y
-		);
-	}
-
-	private selectSingleComp(elem: LGraphics) {
-		this.resetSelectionToOldPosition();
-		this.clearSelection();
-		this._singleSelectedElement = elem.element;
-		delete this._actionStartPos;
-		this._view.removeChild(this._selectRect);
-		elem.setSelected(true);
-		elem.parent.removeChild(elem);
-		elem.position = Grid.getPixelPosForGridPos(elem.element.pos);
-		this._view.addChild(elem);
-		this.selectionService.selectComponent(elem.element.id);
+	private get currScale() {
+		return this._view.zoomPan.currentScale;
 	}
 
 	private cleanUp() {
-		this.resetSelectionToOldPosition();
-		this.cancelPasting();
-		this.clearSelection();
-		delete this._actionStartPos;
-		delete this._newWireDir;
-		delete this._lastMousePos;
-		this._drawingSelectRect = false;
-		this._drawingSelectRect = false;
-		this._currentlyDragging = false;
-		this._currentlyPasting = false;
-		this._view.removeChild(this._selectRect);
-		this._view.removeChild(this._newWire);
+		this._state = ViewIntManState.IDLE;
+		this.selectionSer.clearSelection();
+		for (const lGraphics of this._selectedElements || []) {
+			try {
+				if (this._selectionNewElements) {
+					lGraphics.destroy();
+				} else {
+					this._view.addToCorrectChunk(lGraphics, lGraphics.element.pos);
+					this._view.setLocalChunkPos(lGraphics.element, lGraphics);
+					lGraphics.setSelected(false);
+				}
+			} catch {}
+		}
+		for (const point of this._selectedConnPoints || []) {
+			try {
+				if (this._selectionNewElements) {
+					point.graphics.destroy();
+				} else {
+					this._view.removeChild(point.graphics);
+					this._view.addToCorrectChunk(point.graphics, point.pos);
+					point.graphics.setSelected(false);
+					point.graphics.setPosition(point.pos, true, this.currScale);
+				}
+			} catch {}
+
+		}
+		this._selectRect.visible = false;
+		this._wireGraphics.visible = false;
+		this._wireGraphics.clear();
+		delete this._wireDirection;
+		this._selectedElements = [];
+		this._selectedConnPoints = [];
+		delete this._selectionNewElements;
+		delete this._actionPos;
 		this._view.requestSingleFrame();
 	}
 
 	public destroy() {
-		this._view.removeAllListeners('pointermove');
-		this._view.removeAllListeners('pointerdown');
-		this._view.removeAllListeners('pointerup');
-		this._view.removeAllListeners('pointerupoutside');
-		this._selectRect.removeAllListeners('pointerdown');
-		this._workModeSubscription.unsubscribe();
+		this._destroySubject.next();
+		this._destroySubject.complete();
 	}
+
 }

@@ -1,16 +1,42 @@
+import {ProjectsService} from '../../services/projects/projects.service';
+
 export interface ElementType {
 	// translation id for predefined comps
 	name: string;
-	numInputs: number;
-	numOutputs: number;
-	maxInputs: number;
-	minInputs: number;
-	width: number;
+
+	category: 'basic' | 'advanced' | 'plug' | 'io' | 'user';
+
 	symbol: string;
+
+	showSettings: boolean;
+	showSettingsForType: boolean;
+	showInConstructionBox: boolean;
+
 	// translation id for predefined comps
 	description: string;
+
+	isRotatable?: boolean;
 	rotation: number;
-	category: 'basic' | 'plug' | 'io' | 'user';
+
+	numOutputs: number;
+
+	numInputs: number;
+	minInputs: number;
+	maxInputs: number;
+
+	hasPlugIndex?: boolean;
+
+	width: number;
+
+	options?: number[];
+	optionsConfig?: {
+		name: string,
+		min: number,
+		max: number
+	}[];
+
+	edit?: (typeId: number, id: number, projectsSer: ProjectsService) => void;
+	canEditType?: boolean;
 }
 
 export function isElementType(object: any): object is ElementType {

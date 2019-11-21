@@ -79,6 +79,7 @@
 		"SEARCH": "Search",
 		"CATEGORIES": {
 			"BASIC": "Basic Components",
+			"ADVANCED": "Advanced Components",
 			"IO": "IO Components",
 			"PLUG": "Plug Components",
 			"USER": "User Defined"
@@ -165,6 +166,11 @@
 			"COPY": "Copy",
 			"SAVE": "SAVE SETTINGS",
 			"CANCEL": "CANCEL"
+		},
+		"TEXT": {
+			"TITLE": "Place Text",
+			"SET": "Save",
+			"LABEL": "Text"
 		}
 	},
 	"SETTINGS_INFO": {
@@ -197,6 +203,30 @@
 			"XOR": {
 				"NAME": "XOR Gate",
 				"DESCRIPTION": ""
+			},
+			"DELAY": {
+				"NAME": "Delay",
+				"DESCRIPTION": "Output = Input. Adds one tick delay to the signal.",
+				"DELAY_OPT": "Delay (ticks)"
+			},
+			"CLOCK": {
+				"NAME": "Clock",
+				"DESCRIPTION": "",
+				"SPEED": "Pulse Duration"
+			},
+			"TEXT": {
+				"NAME": "Text",
+				"DESCRIPTION": "Text which you can place anywhere."
+			}
+		},
+		"ADVANCED": {
+			"HALF_ADDER": {
+				"NAME": "Half Adder",
+				"DESCRIPTION": ""
+			},
+			"FULL_ADDER": {
+				"NAME": "Full Adder",
+				"DESCRIPTION": ""
 			}
 		},
 		"IO": {
@@ -205,7 +235,7 @@
 				"DESCRIPTION": ""
 			},
 			"LEVER": {
-				"NAME": "Lever",
+				"NAME": "Switch",
 				"DESCRIPTION": ""
 			}
 		},

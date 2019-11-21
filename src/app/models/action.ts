@@ -5,16 +5,16 @@ import * as PIXI from 'pixi.js';
 export type ActionType =
 	'addComp' |
 	'addWire' |
-	'addText' |
 	'remComp' |
 	'remWire' |
-	'remText' |
 	'movMult' |
 	'conWire' |
 	'dcoWire' |
 	'rotComp' |
 	'numInpt' |
-	'plugInd';
+	'plugInd' |
+	'compOpt' |
+	'ediData';
 
 export interface ChangeType {
 	newElems: Element[];
@@ -27,7 +27,9 @@ export interface Action {
 	others?: Element[];
 	pos?: PIXI.Point;
 	endPos?: PIXI.Point;
+	options?: number[][];
 	numbers?: number[]; // for rotation/numInput/plugIndex 0: new, 1: old
+	data?: unknown[];
 }
 
 export class Actions {
@@ -35,16 +37,16 @@ export class Actions {
 	private static readonly REVERSE_ACTION: Map<ActionType, ActionType[]> = new Map<ActionType, ActionType[]>([
 		['addComp', ['remComp']],
 		['addWire', ['remWire']],
-		['addText', ['remText']],
 		['remComp', ['addComp']],
 		['remWire', ['addWire']],
-		['remText', ['addText']],
 		['movMult', ['movMult']],
 		['conWire', ['dcoWire']],
 		['dcoWire', ['conWire']],
 		['rotComp', ['rotComp']],
 		['numInpt', ['numInpt']],
-		['plugInd', ['plugInd']]
+		['plugInd', ['plugInd']],
+		['compOpt', ['compOpt']],
+		['ediData', ['ediData']]
 	]);
 
 	public static reverseActions(actions: Action[]): Action[] {
@@ -68,6 +70,10 @@ export class Actions {
 				revAction.pos.y *= -1;
 			} else if (revAction.name === 'rotComp' || revAction.name === 'numInpt' || revAction.name === 'plugInd') {
 				revAction.numbers = [...action.numbers].reverse();
+			} else if (revAction.name === 'compOpt') {
+				revAction.options = [...action.options].reverse();
+			} else if (revAction.name === 'ediData') {
+				revAction.data = [...action.data].reverse();
 			}
 		}
 		return revActions;

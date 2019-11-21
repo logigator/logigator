@@ -126,8 +126,8 @@ export class ButtonGraphics extends PIXI.Graphics implements LGraphics, Componen
 		}
 	}
 
-	updateComponent(scale: number, inputs: number, outputs: number, rotation: number) {
-		this.element.rotation = rotation;
+	updateComponent(scale: number, element: Element) {
+		this.element.rotation = element.rotation;
 		this._scale = scale;
 		this.clear();
 		this.drawComponent();

@@ -1,8 +1,8 @@
 import {Element} from './element';
 import * as PIXI from 'pixi.js';
-import {Project} from './project';
 import {environment} from '../../environments/environment';
 import {Elements} from './elements';
+import {ElementTypeId} from './element-types/element-type-ids';
 
 export abstract class CollisionFunctions {
 
@@ -81,7 +81,7 @@ export abstract class CollisionFunctions {
 	}
 
 	public static isElementInFloatRect(element: Element, startPos: PIXI.Point, endPos: PIXI.Point): boolean {
-		if (element.typeId !== 0) {
+		if (element.typeId !== ElementTypeId.WIRE && element.typeId !== ElementTypeId.TEXT) {
 			return CollisionFunctions.isRectInRectLightBorder(element.pos, element.endPos, startPos, endPos);
 		} else {
 			return element.pos.x + 0.5 <= endPos.x && element.pos.y + 0.5 <= endPos.y &&

@@ -4,6 +4,7 @@ import {getStaticDI} from '../../models/get-di';
 import {ElementProviderService} from '../element-provider/element-provider.service';
 import {environment} from '../../../environments/environment';
 import {Grid} from '../../models/rendering/grid';
+import {ElementTypeId} from '../../models/element-types/element-type-ids';
 
 export class SvgCompRenderer {
 
@@ -129,14 +130,14 @@ export class SvgCompRenderer {
 
 	private symbol() {
 		let symbol: SVGElement;
-		if (this.elementProvider.isButtonElement(this.element.typeId)) {
+		if (this.element.typeId === ElementTypeId.BUTTON) {
 			symbol = document.createElementNS(this.SVG_NS, 'rect');
 			symbol.setAttribute('class', 'wire');
 			symbol.setAttribute('x', '3');
 			symbol.setAttribute('y', '3');
 			symbol.setAttribute('width', environment.gridPixelWidth - 6 + '');
 			symbol.setAttribute('height', environment.gridPixelWidth - 6 + '');
-		} else if (this.elementProvider.isLeverElement(this.element.typeId)) {
+		} else if (this.element.typeId === ElementTypeId.LEVER) {
 			symbol = document.createElementNS(this.SVG_NS, 'line');
 			symbol.setAttribute('class', 'wire');
 			symbol.setAttribute('x1', '0');

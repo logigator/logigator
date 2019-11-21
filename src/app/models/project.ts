@@ -10,6 +10,7 @@ import {BoardRecorder} from '../../../tests/auto-tests/board-recorder';
 import {ElementProviderService} from '../services/element-provider/element-provider.service';
 import {ProjectType} from './project-type';
 import {getStaticDI} from './get-di';
+import {ElementTypeId} from './element-types/element-type-ids';
 
 export class Project {
 
@@ -93,6 +94,12 @@ export class Project {
 			case 'plugInd':
 				this._currState.setPlugId(action.element, action.numbers[0]);
 				break;
+			case 'compOpt':
+				this._currState.setOptions(action.element, action.options[0]);
+				break;
+			case 'ediData':
+				this._currState.setText(action.element, action.data[0]);
+				break;
 		}
 	}
 
@@ -163,16 +170,15 @@ export class Project {
 		return true;
 	}
 
-	public addElement(typeId: number, rotation: number, numInputs: number, numOutputs: number, _pos: PIXI.Point, _endPos?: PIXI.Point):
-		Element {
-		if (typeId === 0 && !_endPos)
+	public addElement(typeId: number, _pos: PIXI.Point, _endPos?: PIXI.Point): Element {
+		if (typeId === ElementTypeId.WIRE && !_endPos)
 			return null;
-		if (typeId === 0 && _pos.equals(_endPos))
+		if (typeId === ElementTypeId.WIRE && _pos.equals(_endPos))
 			return null;
-		const elem = Elements.genNewElement(typeId, _pos,
-			_endPos || Elements.calcEndPos(_pos, Elements.elementType(typeId).width,
-			numInputs, numOutputs, rotation), rotation, numInputs);
-		if (!this._currState.isFreeSpace(elem.pos, elem.endPos, typeId === 0, Elements.wireEnds(elem)))
+		const elem = Elements.genNewElement(typeId, _pos, _endPos);
+		elem.endPos = elem.endPos || Elements.calcEndPos(_pos, Elements.elementType(typeId).width,
+			elem.numInputs, elem.numOutputs, elem.rotation);
+		if (!this._currState.isFreeSpace(elem.pos, elem.endPos, typeId === ElementTypeId.WIRE, Elements.wireEnds(elem)))
 			return null;
 
 		// #!debug
@@ -193,7 +199,7 @@ export class Project {
 			_endPos = undefined;
 		}
 		if (!_endPos || _cornerPos.equals(_endPos)) {
-			const elem = this.addElement(0, undefined, 0, 0, _pos, _cornerPos);
+			const elem = this.addElement(0, _pos, _cornerPos);
 			return elem ? [elem] : null;
 		}
 		const {wire0, wire1} = Elements.gen2Wires(_pos, _cornerPos, _endPos);
@@ -277,7 +283,7 @@ export class Project {
 
 	public rotateComponent(id: number, rotation: number): boolean {
 		const element = this._currState.getElementById(id);
-		if (element.typeId === 0)
+		if (element.typeId === ElementTypeId.WIRE || element.typeId === ElementTypeId.TEXT)
 			return;
 		const actions: Action[] = [{
 			name: 'rotComp',
@@ -301,7 +307,7 @@ export class Project {
 
 	public setNumInputs(id: number, numInputs: number): boolean {
 		const element = this._currState.getElementById(id);
-		if (element.typeId === 0)
+		if (element.typeId === ElementTypeId.WIRE || element.typeId === ElementTypeId.TEXT)
 			return;
 		const actions: Action[] = [{
 			name: 'numInpt',
@@ -340,6 +346,45 @@ export class Project {
 
 	public possiblePlugIndexes(elemId: number): number[] {
 		return this._currState.possiblePlugIds(this._currState.getElementById(elemId));
+	}
+
+	public setOptions(elemId: number, options: number[]): void {
+		const elem = this._currState.getElementById(elemId);
+		const oldOptions = [...elem.options];
+		this._currState.setOptions(elem, options);
+		const action: Action = {
+			element: elem,
+			name: 'compOpt',
+			options: [options, oldOptions]
+		};
+		this.newState([action]);
+	}
+
+
+	public addText(text: string, _pos: PIXI.Point): Element {
+		const elem = Elements.genNewElement(ElementTypeId.TEXT, _pos, _pos);
+		elem.data = text;
+
+		this._currState.addElement(elem);
+		const actions: Action[] = [{
+			name: Elements.addActionName(elem),
+			element: elem
+		}];
+		this.newState(actions);
+		return elem;
+	}
+
+
+	public setData(elemId: number, data: any): void {
+		const element = this._currState.getElementById(elemId);
+		const oldData = element.data;
+		this._currState.setText(element, data);
+		const action: Action = {
+			name: 'ediData',
+			element,
+			data: [element.data, oldData]
+		};
+		this.newState([action]);
 	}
 
 
