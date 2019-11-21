@@ -23,14 +23,5 @@ export const delay: ElementType = {
 	minInputs: 1,
 	maxInputs: 1,
 
-	width: environment.componentWidth,
-
-	options: [1],
-	optionsConfig: [
-		{
-			name: 'ELEMENT_TYPE.BASIC.DELAY.DELAY_OPT',
-			min: 1,
-			max: Number.MAX_VALUE
-		}
-	]
+	width: environment.componentWidth
 };
