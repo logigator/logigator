@@ -1,8 +1,8 @@
 /// <reference lib="webworker" />
 
-import {SimulationModule} from '../models/simulation/simulation-module';
-import {WasmMethod, WasmRequest, WasmResponse} from '../models/simulation/wasm-interface';
-import {SimulationWorker} from '../models/simulation/simulation-worker';
+import {SimulationModule} from '../../models/simulation/simulation-module';
+import {WasmMethod, WasmRequest, WasmResponse} from '../../models/simulation/wasm-interface';
+import {SimulationWorker} from '../../models/simulation/simulation-worker';
 
 let initialized = false;
 let worker: SimulationWorker;

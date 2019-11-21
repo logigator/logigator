@@ -20,7 +20,7 @@ export class SvgImageExporter {
 	private size = new PIXI.Point(0, 0);
 	private offset = new PIXI.Point(0, 0);
 
-	constructor(private project: Project) {
+	constructor(private project: Project, private isThumb: boolean) {
 		this._svg = document.createElementNS(this.SVG_NS, 'svg');
 		this.generateStyles();
 
@@ -54,8 +54,8 @@ export class SvgImageExporter {
 					break;
 			}
 		}
-		this._svg.setAttribute('height', this.size.y + '');
-		this._svg.setAttribute('width', this.size.x + '');
+		this._svg.setAttribute('height', this.height + '');
+		this._svg.setAttribute('width', this.width + '');
 	}
 
 	private placeComp(element: Element) {
@@ -103,7 +103,7 @@ export class SvgImageExporter {
 		styles.innerHTML = `
 			.wire {
 				stroke: #${this.themingService.getEditorColor('wire').toString(16)};
-				stroke-width: 1px;
+				stroke-width: ${this.isThumb ? '4px' : '1px'};
 				fill: none;
 				vector-effect: non-scaling-stroke;
 			}
@@ -156,10 +156,10 @@ export class SvgImageExporter {
 	}
 
 	public get width(): number {
-		return this.size.x;
+		return this.size.x + environment.gridPixelWidth;
 	}
 
 	public get height(): number {
-		return this.size.y;
+		return this.size.y + environment.gridPixelWidth;
 	}
 }

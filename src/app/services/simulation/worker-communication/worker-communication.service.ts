@@ -168,7 +168,7 @@ export class WorkerCommunicationService {
 			this._worker.terminate();
 
 		this._initialized = false;
-		this._worker = new Worker('../../../simulation-worker/simulation.worker', { type: 'module' });
+		this._worker = new Worker('../../../worker/simulation-worker/simulation.worker', { type: 'module' });
 		this.ngZone.runOutsideAngular(() => {
 			this._worker.addEventListener('message', (event) => this.handleResponse(event as any));
 		});
