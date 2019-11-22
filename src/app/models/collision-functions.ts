@@ -93,7 +93,7 @@ export abstract class CollisionFunctions {
 		if (!CollisionFunctions.isWirePartlyInRect(element, startPos, endPos))
 			return undefined;
 		const cuttingEdge = CollisionFunctions.isWireEndInRect(element.pos, startPos, endPos)
-			? new PIXI.Point(Math.floor(endPos.x) + 1, Math.floor(endPos.y) + 1)
+			? new PIXI.Point(Math.ceil(endPos.x), Math.ceil(endPos.y))
 			: new PIXI.Point(Math.floor(startPos.x), Math.floor(startPos.y));
 		if (Elements.isHorizontal(element)) {
 			return new PIXI.Point(cuttingEdge.x, element.pos.y);
