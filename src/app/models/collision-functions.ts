@@ -90,8 +90,11 @@ export abstract class CollisionFunctions {
 	}
 
 	public static rectCuttingPoint(element: Element, startPos: PIXI.Point, endPos: PIXI.Point): PIXI.Point {
-		if (!CollisionFunctions.isWirePartlyInRect(element, startPos, endPos))
+		const num = CollisionFunctions.numWireEndInRect(element, startPos, endPos);
+		if (num === 0)
 			return undefined;
+		else if (num === 2)
+			return null;
 		const cuttingEdge = CollisionFunctions.isWireEndInRect(element.pos, startPos, endPos)
 			? new PIXI.Point(Math.ceil(endPos.x), Math.ceil(endPos.y))
 			: new PIXI.Point(Math.floor(startPos.x), Math.floor(startPos.y));
@@ -102,11 +105,10 @@ export abstract class CollisionFunctions {
 		}
 	}
 
-	public static isWirePartlyInRect(element: Element, startPos: PIXI.Point, endPos: PIXI.Point): boolean {
-		return (
-			(CollisionFunctions.isWireEndInRect(element.pos, startPos, endPos) ? 0 : 1) +
-			(CollisionFunctions.isWireEndInRect(element.endPos, startPos, endPos) ? 0 : 1)
-		) === 1;
+	public static numWireEndInRect(element: Element, startPos: PIXI.Point, endPos: PIXI.Point): number {
+		return (CollisionFunctions.isWireEndInRect(element.pos, startPos, endPos) ? 0 : 1) +
+			(CollisionFunctions.isWireEndInRect(element.endPos, startPos, endPos) ? 0 : 1);
+
 	}
 
 	public static isRectInRectNoBorder(startPos0: PIXI.Point, endPos0: PIXI.Point, startPos1: PIXI.Point, endPos1: PIXI.Point): boolean {

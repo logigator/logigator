@@ -441,6 +441,24 @@ export class Project {
 	}
 
 
+	public splitWire(element: Element, pos: PIXI.Point): {
+		actions: Action[],
+		elements: Element[]
+	} {
+		const newWires = this._currState.splitWire(element, pos);
+		if (newWires.length === 1)
+			return {
+				actions: [],
+				elements: []
+			};
+		this._currState.loadConnectionPoints(newWires);
+		return {
+			actions: this.newState(Actions.connectWiresToActions([element], newWires), true),
+			elements: newWires
+		};
+	}
+
+
 
 	private autoAssemble(elements: Element[]): Action[] {
 		Elements.removeDuplicates(elements);
@@ -471,9 +489,9 @@ export class Project {
 
 
 
-	private newState(actions: Action[]): void {
+	public newState(actions: Action[], skipSubject?: boolean): Action[] {
 		if (!actions)
-			return;
+			return [];
 		if (this._currActionPointer >= this._maxActionCount) {
 			this._actions.shift();
 		} else {
@@ -485,7 +503,10 @@ export class Project {
 		this._actions[this._currActionPointer] = actions;
 		this.saveDirty = true;
 		this.compileDirty = true;
-		this._changeSubject.next(actions);
+		if (!skipSubject)
+			this._changeSubject.next(actions);
+		console.log('newS', actions);
+		return actions;
 	}
 
 	public stepBack(): Action[] {
@@ -513,6 +534,14 @@ export class Project {
 		this._changeSubject.next(outActions);
 		this._currState.specialActions = [];
 		return outActions;
+	}
+
+	public cancelLastStep(): void {
+		if (this._currActionPointer < 0)
+			return;
+
+		this.stepBack();
+		this._currMaxActionPointer--;
 	}
 
 

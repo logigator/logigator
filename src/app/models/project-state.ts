@@ -4,9 +4,7 @@ import {Elements} from './elements';
 import * as PIXI from 'pixi.js';
 import {CollisionFunctions} from './collision-functions';
 import {Action, ChangeType} from './action';
-import {ElementProviderService} from '../services/element-provider/element-provider.service';
 import {WireEndOnElem} from '../services/simulation/state-compiler/compiler-types';
-import {getStaticDI} from './get-di';
 import {ElementTypeId} from './element-types/element-type-ids';
 
 export class ProjectState {
@@ -327,7 +325,7 @@ export class ProjectState {
 		return outWires;
 	}
 
-	private splitWire(wire: Element, pos: PIXI.Point): Element[] {
+	public splitWire(wire: Element, pos: PIXI.Point): Element[] {
 		if (!CollisionFunctions.isPointOnWireNoEdge(wire, pos))
 			return [wire];
 		const newWire0 = Elements.genNewElement(0, wire.pos, pos);
