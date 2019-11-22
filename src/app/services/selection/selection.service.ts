@@ -4,6 +4,7 @@ import {ProjectsService} from '../projects/projects.service';
 import {CollisionFunctions} from '../../models/collision-functions';
 import * as PIXI from 'pixi.js';
 import {Elements} from '../../models/elements';
+import {Action} from '../../models/action';
 
 @Injectable({
 	providedIn: 'root'
@@ -38,6 +39,19 @@ export class SelectionService {
 				}
 			}
 			return ids;
+		});
+	}
+
+	public cutFromRect(project: Project, start: PIXI.Point, end: PIXI.Point): Action[] {
+		return this.ngZone.run(() => {
+			Elements.correctPosOrder(start, end);
+			this._selectedIds.set(project.id, []);
+			this._selectedConnections.set(project.id, []);
+			const ids = this._selectedIds.get(project.id);
+			const cons = this._selectedConnections.get(project.id);
+			const possibleChunkCoords = CollisionFunctions.inRectChunks(start, end);
+
+			return [];
 		});
 	}
 

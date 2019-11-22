@@ -89,6 +89,26 @@ export abstract class CollisionFunctions {
 		}
 	}
 
+	public static rectCuttingPoint(element: Element, startPos: PIXI.Point, endPos: PIXI.Point): PIXI.Point {
+		if (!CollisionFunctions.isWirePartlyInRect(element, startPos, endPos))
+			return undefined;
+		const cuttingEdge = CollisionFunctions.isWireEndInRect(element.pos, startPos, endPos)
+			? new PIXI.Point(Math.floor(endPos.x) + 1, Math.floor(endPos.y) + 1)
+			: new PIXI.Point(Math.floor(startPos.x), Math.floor(startPos.y));
+		if (Elements.isHorizontal(element)) {
+			return new PIXI.Point(cuttingEdge.x, element.pos.y);
+		} else {
+			return new PIXI.Point(element.pos.x, cuttingEdge.y);
+		}
+	}
+
+	public static isWirePartlyInRect(element: Element, startPos: PIXI.Point, endPos: PIXI.Point): boolean {
+		return (
+			(CollisionFunctions.isWireEndInRect(element.pos, startPos, endPos) ? 0 : 1) +
+			(CollisionFunctions.isWireEndInRect(element.endPos, startPos, endPos) ? 0 : 1)
+		) === 1;
+	}
+
 	public static isRectInRectNoBorder(startPos0: PIXI.Point, endPos0: PIXI.Point, startPos1: PIXI.Point, endPos1: PIXI.Point): boolean {
 		return startPos0.x < endPos1.x && startPos0.y < endPos1.y &&
 			endPos0.x > startPos1.x && endPos0.y > startPos1.y;
@@ -96,6 +116,10 @@ export abstract class CollisionFunctions {
 
 	public static isPointInRect(pos: PIXI.Point, startPos: PIXI.Point, endPos: PIXI.Point): boolean {
 		return pos.x >= startPos.x && pos.x < endPos.x && pos.y >= startPos.y && pos.y < endPos.y;
+	}
+
+	public static isWireEndInRect(pos: PIXI.Point, startPos: PIXI.Point, endPos: PIXI.Point): boolean {
+		return pos.x + 0.5 >= startPos.x && pos.x + 0.5 < endPos.x && pos.y + 0.5 >= startPos.y && pos.y + 0.5 < endPos.y;
 	}
 
 	public static gridPosToChunk(pos: number): number {
