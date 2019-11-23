@@ -1,6 +1,6 @@
 import * as PIXI from 'pixi.js';
 import {EditorView} from './editor-view';
-import {merge, of, Subject} from 'rxjs';
+import {merge, Subject} from 'rxjs';
 import {LGraphics} from './graphics/l-graphics';
 import {getStaticDI} from '../get-di';
 import {WorkModeService} from '../../services/work-mode/work-mode.service';
@@ -20,9 +20,9 @@ import {PopupService} from '../../services/popup/popup.service';
 import {TextComponent} from '../../components/popup/popup-contents/text/text.component';
 import {CollisionFunctions} from '../collision-functions';
 import {CopyService} from '../../services/copy/copy.service';
-import InteractionEvent = PIXI.interaction.InteractionEvent;
 import {Elements} from '../elements';
 import {ConnectionPoint} from './graphics/connection-point';
+import InteractionEvent = PIXI.interaction.InteractionEvent;
 
 export class ViewInteractionManager {
 
@@ -122,7 +122,10 @@ export class ViewInteractionManager {
 				this.placeText(e);
 				break;
 			case 'select':
-				this.startSelection(e);
+				this.startSelection(e, ViewIntManState.SELECT);
+				break;
+			case 'selectCut':
+				this.startSelection(e, ViewIntManState.SELECT_CUT);
 				break;
 		}
 	}
@@ -134,6 +137,9 @@ export class ViewInteractionManager {
 				break;
 			case ViewIntManState.SELECT:
 				this.selectFromRect(e);
+				break;
+			case ViewIntManState.SELECT_CUT:
+				this.selectCutFromRect(e);
 				break;
 			case ViewIntManState.DRAGGING:
 				this.applyDrag(e);
@@ -155,6 +161,7 @@ export class ViewInteractionManager {
 				this.dragSelection(e);
 				break;
 			case ViewIntManState.SELECT:
+			case ViewIntManState.SELECT_CUT:
 				this.dragSelectRect(e);
 				break;
 			case ViewIntManState.NEW_WIRE:
@@ -267,8 +274,8 @@ export class ViewInteractionManager {
 		this.cleanUp();
 	}
 
-	private startSelection(e: InteractionEvent) {
-		this._state = ViewIntManState.SELECT;
+	private startSelection(e: InteractionEvent, selMode: ViewIntManState) {
+		this._state = selMode;
 		this._actionPos = new PosHelper(e, this._view);
 		this._selectRect.width = 0;
 		this._selectRect.height = 0;
@@ -292,7 +299,34 @@ export class ViewInteractionManager {
 			this.cleanUp();
 			return;
 		}
-		this._selectedElements = selected.map(selId => {
+		this.setSelected(selected, this.selectionSer.selectedConnections());
+		this._selectionNewElements = false;
+		delete this._actionPos;
+		this._state = ViewIntManState.WAIT_FOR_DRAG;
+		this._view.requestSingleFrame();
+	}
+
+	private selectCutFromRect(e: InteractionEvent) {
+		const actions = this.selectionSer.cutFromRect(
+			this.projectsSer.currProject, this._actionPos.gridPosFloatStart, this._actionPos.lastGridPosFloat
+		);
+
+		this._view.applyActionsToView(actions);
+		this.setSelected(this.selectionSer.selectedIds(), this.selectionSer.selectedConnections());
+
+		if (this.selectionSer.selectedIds().length === 0) {
+			this.cleanUp();
+			return;
+		}
+
+		this._selectionNewElements = false;
+		delete this._actionPos;
+		this._state = ViewIntManState.WAIT_FOR_DRAG;
+		this._view.requestSingleFrame();
+	}
+
+	private setSelected(elemIds: number[], connPts: PIXI.Point[]) {
+		this._selectedElements = elemIds.map(selId => {
 			const lGraphics = this._view.allElements.get(selId);
 			lGraphics.setSelected(true);
 			lGraphics.parent.removeChild(lGraphics);
@@ -304,7 +338,7 @@ export class ViewInteractionManager {
 			}
 			return lGraphics;
 		});
-		this._selectedConnPoints = this.selectionSer.selectedConnections().map(point => {
+		this._selectedConnPoints = connPts.map(point => {
 			const connPoint = this._view.connectionPoints.get(`${point.x}:${point.y}`);
 			connPoint.setSelected(true);
 			connPoint.parent.removeChild(connPoint);
@@ -312,10 +346,6 @@ export class ViewInteractionManager {
 			connPoint.setPosition(point, false, this.currScale);
 			return {graphics: connPoint, pos: point};
 		});
-		this._selectionNewElements = false;
-		delete this._actionPos;
-		this._state = ViewIntManState.WAIT_FOR_DRAG;
-		this._view.requestSingleFrame();
 	}
 
 	private buildNewComp(e: InteractionEvent) {
@@ -424,6 +454,7 @@ export class ViewInteractionManager {
 
 	private cleanUp() {
 		this._state = ViewIntManState.IDLE;
+		// TODO: Cancel cut dragging > reverse Actions
 		this.selectionSer.clearSelection();
 		for (const lGraphics of this._selectedElements || []) {
 			try {

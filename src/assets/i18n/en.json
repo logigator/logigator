@@ -64,6 +64,7 @@
 			"WIRE": "Place Wires",
 			"CONN_WIRE": "Connect Wires",
 			"SELECT": "Select",
+			"SELECT_CUT": "Select Cut",
 			"TEXT": "Text",
 			"SIM_SINGLE": "Single Step",
 			"SIM_PAUSE": "Pause",
@@ -257,6 +258,7 @@
 	},
 	"WORK_MODE_DES": {
 		"select": "Selecting Elements",
+		"selectCut": "Selecting Elements, but cut wires of",
 		"buildComponent": "Placing Component: {{comp}}",
 		"buildWire": "Placing Wires",
 		"connectWire": "Connecting Wires",

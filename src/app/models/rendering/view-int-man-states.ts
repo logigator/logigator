@@ -3,6 +3,7 @@ export const enum ViewIntManState {
 	NEW_COMP,
 	NEW_WIRE,
 	SELECT,
+	SELECT_CUT,
 	WAIT_FOR_DRAG,
 	DRAGGING,
 	WAIT_FOR_PASTE_DRAG,
