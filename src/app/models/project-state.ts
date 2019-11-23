@@ -223,6 +223,18 @@ export class ProjectState {
 		return true;
 	}
 
+	public withoutToEmptyChunk(elements: Element[], dif: PIXI.Point): Element[] {
+		const out: Element[] = [];
+		for (const elem of elements) {
+			const newStartPos = new PIXI.Point(elem.pos.x + dif.x, elem.pos.y + dif.y);
+			const newEndPos = new PIXI.Point(elem.endPos.x + dif.x, elem.endPos.y + dif.y);
+			const others = this.elementsInChunks(newStartPos, newEndPos);
+			if (others.length > 0)
+				out.push(elem);
+		}
+		return out;
+	}
+
 
 
 	public addElement(elem: Element, id?: number): Element {

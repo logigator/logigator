@@ -89,19 +89,21 @@ export abstract class CollisionFunctions {
 		}
 	}
 
-	public static rectCuttingPoint(element: Element, startPos: PIXI.Point, endPos: PIXI.Point): PIXI.Point {
-		const num = CollisionFunctions.numWireEndInRect(element, startPos, endPos);
-		if (num === 0)
-			return undefined;
-		else if (num === 2)
-			return null;
-		const cuttingEdge = CollisionFunctions.isWireEndInRect(element.pos, startPos, endPos)
-			? new PIXI.Point(Math.ceil(endPos.x), Math.ceil(endPos.y))
-			: new PIXI.Point(Math.floor(startPos.x), Math.floor(startPos.y));
+	public static rectCuttingPoints(element: Element, startPos: PIXI.Point, endPos: PIXI.Point): PIXI.Point[] {
 		if (Elements.isHorizontal(element)) {
-			return new PIXI.Point(cuttingEdge.x, element.pos.y);
+			if (!(element.pos.y > startPos.y && element.pos.y < endPos.y))
+				return undefined;
+			return [
+				new PIXI.Point(startPos.x, element.pos.y),
+				new PIXI.Point(endPos.x, element.pos.y)
+			];
 		} else {
-			return new PIXI.Point(element.pos.x, cuttingEdge.y);
+			if (!(element.pos.x > startPos.x && element.pos.x < endPos.x))
+				return undefined;
+			return [
+				new PIXI.Point(element.pos.x, startPos.y),
+				new PIXI.Point(element.pos.x, endPos.y)
+			];
 		}
 	}
 

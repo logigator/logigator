@@ -262,7 +262,7 @@ export class Project {
 		}
 		if (!this._currState.allSpacesFree(elements, dif, elements))
 			return false;
-		const changed = this._currState.withWiresOnEdges(elements);
+		const changed = this._currState.withoutToEmptyChunk(this._currState.withWiresOnEdges(elements), dif);
 
 		// #!debug
 		this.boardRecorder.call('moveElementsById', arguments, -1, 0);

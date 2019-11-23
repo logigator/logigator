@@ -71,23 +71,20 @@ export class SelectionService {
 	}
 
 	private splitAndSelectWire(elem, start: PIXI.Point, end: PIXI.Point, ids, project: Project, out: Action[]) {
-		const cuttingPos = CollisionFunctions.rectCuttingPoint(elem, start, end);
-		console.log(cuttingPos);
-		if (cuttingPos === undefined)
+		const cuttingPoses = CollisionFunctions.rectCuttingPoints(elem, start, end);
+		console.log(cuttingPoses);
+		if (cuttingPoses === undefined)
 			return;
-		if (cuttingPos === null) {
-			if (!ids.find(id => id === elem.id))
-				ids.push(elem.id);
-			return;
-		}
-		const splitted = project.splitWire(elem, cuttingPos);
-		for (const e of splitted.elements) {
-			if (CollisionFunctions.isElementInFloatRect(elem, start, end)) {
-				if (!ids.find(id => id === elem.id))
-					ids.push(elem.id);
+		for (const cuttingPos of cuttingPoses) {
+			const splitted = project.splitWire(elem, cuttingPos);
+			for (const e of splitted.elements) {
+				if (CollisionFunctions.isElementInFloatRect(elem, start, end)) {
+					if (!ids.find(id => id === elem.id))
+						ids.push(elem.id);
+				}
 			}
+			out.push(...splitted.actions);
 		}
-		out.push(...splitted.actions);
 	}
 
 	private clearForSelect(project: Project, start: PIXI.Point, end: PIXI.Point) {
