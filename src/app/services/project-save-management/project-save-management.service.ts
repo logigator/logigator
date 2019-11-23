@@ -191,6 +191,7 @@ export class ProjectSaveManagementService {
 	public async saveProject(project: Project): Promise<void> {
 		if (!project.saveDirty) return;
 		this._projectCache.set(project.id, project);
+		if (this.isShare) return;
 		if (this.user.isLoggedIn && project.id >= 1000) {
 			await this.saveSingleProjectToServer(project);
 			this.errorHandling.showInfo('INFO.PROJECTS.SAVE_SERVER', {name: project.name});
@@ -386,7 +387,7 @@ export class ProjectSaveManagementService {
 			savePromises.push(this.saveProject(comp));
 		}
 		await Promise.all(savePromises);
-		if (savePromises.length > 0) this.errorHandling.showInfo('INFO.PROJECTS.SAVE_ALL');
+		if (savePromises.length > 0 && !this.isShare) this.errorHandling.showInfo('INFO.PROJECTS.SAVE_ALL');
 	}
 
 	public async openComponent(id: number): Promise<Project> {
