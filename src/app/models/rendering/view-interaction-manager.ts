@@ -142,6 +142,7 @@ export class ViewInteractionManager {
 				this.selectCutFromRect(e);
 				break;
 			case ViewIntManState.DRAGGING:
+			case ViewIntManState.CUT_DRAGGING:
 				this.applyDrag(e);
 				break;
 			case ViewIntManState.NEW_WIRE:
@@ -157,6 +158,7 @@ export class ViewInteractionManager {
 		switch (this._state) {
 			case ViewIntManState.NEW_COMP:
 			case ViewIntManState.DRAGGING:
+			case ViewIntManState.CUT_DRAGGING:
 			case ViewIntManState.PASTE_DRAGGING:
 				this.dragSelection(e);
 				break;
@@ -171,7 +173,9 @@ export class ViewInteractionManager {
 	}
 
 	private pDownSelectRect(e: InteractionEvent) {
-		if (this._state === ViewIntManState.WAIT_FOR_DRAG || this._state === ViewIntManState.WAIT_FOR_PASTE_DRAG) {
+		if (this._state === ViewIntManState.WAIT_FOR_DRAG ||
+			this._state === ViewIntManState.WAIT_FOR_PASTE_DRAG ||
+			this._state === ViewIntManState.WAIT_FOR_CUT_DRAG) {
 			switch (this._state) {
 				case ViewIntManState.WAIT_FOR_DRAG:
 					this._state = ViewIntManState.DRAGGING;
@@ -179,6 +183,9 @@ export class ViewInteractionManager {
 				case ViewIntManState.WAIT_FOR_PASTE_DRAG:
 					this._state = ViewIntManState.PASTE_DRAGGING;
 					break;
+				case ViewIntManState.WAIT_FOR_CUT_DRAG:
+					this._state = ViewIntManState.CUT_DRAGGING;
+					break
 			}
 			if (!this._actionPos) {
 				this._actionPos = new PosHelper(e, this._view, Grid.getPixelPosForGridPos(this._selectedElements[0].element.pos));
@@ -321,7 +328,7 @@ export class ViewInteractionManager {
 
 		this._selectionNewElements = false;
 		delete this._actionPos;
-		this._state = ViewIntManState.WAIT_FOR_DRAG;
+		this._state = ViewIntManState.WAIT_FOR_CUT_DRAG;
 		this._view.requestSingleFrame();
 	}
 
@@ -376,7 +383,17 @@ export class ViewInteractionManager {
 		) {
 			this.cleanUp();
 		} else {
-			this._state = ViewIntManState.WAIT_FOR_DRAG;
+			switch (this._state) {
+				case ViewIntManState.DRAGGING:
+					this._state = ViewIntManState.WAIT_FOR_DRAG;
+					break;
+				case ViewIntManState.PASTE_DRAGGING:
+					this._state = ViewIntManState.WAIT_FOR_PASTE_DRAG;
+					break;
+				case ViewIntManState.CUT_DRAGGING:
+					this._state = ViewIntManState.WAIT_FOR_CUT_DRAG;
+					break;
+			}
 		}
 	}
 
@@ -453,10 +470,9 @@ export class ViewInteractionManager {
 	}
 
 	private cleanUp() {
-		if (this._state === ViewIntManState.SELECT_CUT)
+		if (this._state === ViewIntManState.WAIT_FOR_CUT_DRAG)
 			this.selectionSer.cancelCut(this.projectsSer.currProject);
 		this._state = ViewIntManState.IDLE;
-		// TODO: Cancel cut dragging > reverse Actions
 		this.selectionSer.clearSelection();
 		for (const lGraphics of this._selectedElements || []) {
 			try {
