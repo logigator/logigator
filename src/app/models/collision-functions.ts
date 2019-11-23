@@ -75,6 +75,11 @@ export abstract class CollisionFunctions {
 			endPos0.x >= startPos1.x && endPos0.y >= startPos1.y;
 	}
 
+	public static isRectFullyInRect(startPos0: PIXI.Point, endPos0: PIXI.Point, startPos1: PIXI.Point, endPos1: PIXI.Point): boolean {
+		return startPos0.x >= startPos1.x && startPos0.y >= startPos1.y &&
+			endPos0.x <= endPos1.x && endPos0.y <= endPos1.y;
+	}
+
 	public static isRectInRectLightBorder(startPos0: PIXI.Point, endPos0: PIXI.Point, startPos1: PIXI.Point, endPos1: PIXI.Point): boolean {
 		return startPos0.x <= endPos1.x && startPos0.y <= endPos1.y &&
 			endPos0.x > startPos1.x && endPos0.y > startPos1.y;
@@ -94,15 +99,15 @@ export abstract class CollisionFunctions {
 			if (!(element.pos.y > startPos.y && element.pos.y < endPos.y))
 				return undefined;
 			return [
-				new PIXI.Point(startPos.x, element.pos.y),
-				new PIXI.Point(endPos.x, element.pos.y)
+				new PIXI.Point(Math.floor(startPos.x), element.pos.y),
+				new PIXI.Point(Math.ceil(endPos.x), element.pos.y)
 			];
 		} else {
 			if (!(element.pos.x > startPos.x && element.pos.x < endPos.x))
 				return undefined;
 			return [
-				new PIXI.Point(element.pos.x, startPos.y),
-				new PIXI.Point(element.pos.x, endPos.y)
+				new PIXI.Point(element.pos.x, Math.floor(startPos.y)),
+				new PIXI.Point(element.pos.x, Math.ceil(endPos.y))
 			];
 		}
 	}

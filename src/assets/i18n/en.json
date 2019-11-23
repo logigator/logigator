@@ -258,7 +258,7 @@
 	},
 	"WORK_MODE_DES": {
 		"select": "Selecting Elements",
-		"selectCut": "Selecting Elements, but cut wires of",
+		"selectCut": "Selecting Elements, but cut wires off",
 		"buildComponent": "Placing Component: {{comp}}",
 		"buildWire": "Placing Wires",
 		"connectWire": "Connecting Wires",

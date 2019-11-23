@@ -449,11 +449,11 @@ export class Project {
 		if (newWires.length === 1)
 			return {
 				actions: [],
-				elements: []
+				elements: newWires
 			};
 		this._currState.loadConnectionPoints(newWires);
 		return {
-			actions: this.newState(Actions.connectWiresToActions([element], newWires), true),
+			actions: Actions.connectWiresToActions([element], newWires),
 			elements: newWires
 		};
 	}
@@ -489,9 +489,9 @@ export class Project {
 
 
 
-	public newState(actions: Action[], skipSubject?: boolean): Action[] {
+	public newState(actions: Action[], skipSubject?: boolean): void {
 		if (!actions)
-			return [];
+			return;
 		if (this._currActionPointer >= this._maxActionCount) {
 			this._actions.shift();
 		} else {
@@ -505,8 +505,6 @@ export class Project {
 		this.compileDirty = true;
 		if (!skipSubject)
 			this._changeSubject.next(actions);
-		console.log('newS', actions);
-		return actions;
 	}
 
 	public stepBack(): Action[] {

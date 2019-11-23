@@ -453,6 +453,8 @@ export class ViewInteractionManager {
 	}
 
 	private cleanUp() {
+		if (this._state === ViewIntManState.SELECT_CUT)
+			this.selectionSer.cancelCut(this.projectsSer.currProject);
 		this._state = ViewIntManState.IDLE;
 		// TODO: Cancel cut dragging > reverse Actions
 		this.selectionSer.clearSelection();

@@ -5,6 +5,7 @@ import {CollisionFunctions} from '../../models/collision-functions';
 import * as PIXI from 'pixi.js';
 import {Elements} from '../../models/elements';
 import {Action} from '../../models/action';
+import {Element} from '../../models/element';
 
 @Injectable({
 	providedIn: 'root'
@@ -52,7 +53,7 @@ export class SelectionService {
 					if (elem.typeId === 0) {
 						this.splitAndSelectWire(elem, start, end, ids, project, out);
 					} else {
-						if (CollisionFunctions.isRectOnRect(elem.pos, elem.endPos, start, end)) {
+						if (CollisionFunctions.isRectFullyInRect(elem.pos, elem.endPos, start, end)) {
 							if (!ids.find(id => id === elem.id))
 								ids.push(elem.id);
 						}
@@ -65,25 +66,35 @@ export class SelectionService {
 					}
 				}
 			}
+			out.push(...project.currState.specialActions);
+			project.newState(out, true);
 
 			return out;
 		});
 	}
 
-	private splitAndSelectWire(elem, start: PIXI.Point, end: PIXI.Point, ids, project: Project, out: Action[]) {
-		const cuttingPoses = CollisionFunctions.rectCuttingPoints(elem, start, end);
-		console.log(cuttingPoses);
+	public cancelCut(project: Project): void {
+		console.log('cancel');
+		project.cancelLastStep();
+	}
+
+	private splitAndSelectWire(element: Element, start: PIXI.Point, end: PIXI.Point, ids, project: Project, out: Action[]) {
+		const cuttingPoses = CollisionFunctions.rectCuttingPoints(element, start, end);
 		if (cuttingPoses === undefined)
 			return;
+		let elems: Element[] = [element];
 		for (const cuttingPos of cuttingPoses) {
-			const splitted = project.splitWire(elem, cuttingPos);
-			for (const e of splitted.elements) {
-				if (CollisionFunctions.isElementInFloatRect(elem, start, end)) {
-					if (!ids.find(id => id === elem.id))
-						ids.push(elem.id);
-				}
+			for (const elem of elems) {
+				const splitted = project.splitWire(elem, cuttingPos);
+				elems = [...splitted.elements];
+				out.push(...splitted.actions);
 			}
-			out.push(...splitted.actions);
+		}
+		for (const e of elems) {
+			if (CollisionFunctions.isElementInFloatRect(e, start, end)) {
+				if (!ids.find(id => id === e.id))
+					ids.push(e.id);
+			}
 		}
 	}
 
