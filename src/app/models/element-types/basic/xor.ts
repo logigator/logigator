@@ -6,7 +6,7 @@ export const xor: ElementType = {
 
 	category: 'basic',
 
-	symbol: '&',
+	symbol: '=1',
 
 	showSettings: true,
 	showSettingsForType: true,
