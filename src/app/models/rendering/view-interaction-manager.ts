@@ -185,7 +185,7 @@ export class ViewInteractionManager {
 					break;
 				case ViewIntManState.WAIT_FOR_CUT_DRAG:
 					this._state = ViewIntManState.CUT_DRAGGING;
-					break
+					break;
 			}
 			if (!this._actionPos) {
 				this._actionPos = new PosHelper(e, this._view, Grid.getPixelPosForGridPos(this._selectedElements[0].element.pos));
