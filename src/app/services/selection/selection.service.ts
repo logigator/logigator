@@ -67,14 +67,14 @@ export class SelectionService {
 				}
 			}
 			out.push(...project.currState.specialActions);
-			project.newState(out, true);
+			if (out.length > 0)
+				project.newState(out, true);
 
 			return out;
 		});
 	}
 
 	public cancelCut(project: Project): void {
-		console.log('cancel');
 		project.cancelLastStep();
 	}
 
