@@ -4,9 +4,7 @@ import {Elements} from './elements';
 import * as PIXI from 'pixi.js';
 import {CollisionFunctions} from './collision-functions';
 import {Action, ChangeType} from './action';
-import {ElementProviderService} from '../services/element-provider/element-provider.service';
 import {WireEndOnElem} from '../services/simulation/state-compiler/compiler-types';
-import {getStaticDI} from './get-di';
 import {ElementTypeId} from './element-types/element-type-ids';
 
 export class ProjectState {
@@ -225,6 +223,18 @@ export class ProjectState {
 		return true;
 	}
 
+	public withoutToEmptyChunk(elements: Element[], dif: PIXI.Point): Element[] {
+		const out: Element[] = [];
+		for (const elem of elements) {
+			const newStartPos = new PIXI.Point(elem.pos.x + dif.x, elem.pos.y + dif.y);
+			const newEndPos = new PIXI.Point(elem.endPos.x + dif.x, elem.endPos.y + dif.y);
+			const others = this.elementsInChunks(newStartPos, newEndPos);
+			if (others.length > 0)
+				out.push(elem);
+		}
+		return out;
+	}
+
 
 
 	public addElement(elem: Element, id?: number): Element {
@@ -327,7 +337,7 @@ export class ProjectState {
 		return outWires;
 	}
 
-	private splitWire(wire: Element, pos: PIXI.Point): Element[] {
+	public splitWire(wire: Element, pos: PIXI.Point): Element[] {
 		if (!CollisionFunctions.isPointOnWireNoEdge(wire, pos))
 			return [wire];
 		const newWire0 = Elements.genNewElement(0, wire.pos, pos);

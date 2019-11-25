@@ -64,6 +64,7 @@
 			"WIRE": "Place Wires",
 			"CONN_WIRE": "Connect Wires",
 			"SELECT": "Select",
+			"SELECT_CUT": "Select Cut",
 			"TEXT": "Text",
 			"SIM_SINGLE": "Single Step",
 			"SIM_PAUSE": "Pause",
@@ -138,10 +139,13 @@
 				"fullscreen": "enter fullscreen mode",
 				"connWireMode": "Connect wires mode",
 				"wireMode": "Place wires mode",
-				"selectMode": "selection mode",
+				"selectMode": "Selection mode",
+				"cutSelectMode": "Cut Selection mode",
 				"newComp": "Create new custom component",
-				"textMode": "text mode",
-				"save": "Save"
+				"textMode": "Text mode",
+				"save": "Save",
+				"newProj": "New Project",
+				"openProj": "Open Project"
 			}
 		},
 		"UNSAVED_CHANGES": {
@@ -257,6 +261,7 @@
 	},
 	"WORK_MODE_DES": {
 		"select": "Selecting Elements",
+		"selectCut": "Selecting Elements, but cut wires off",
 		"buildComponent": "Placing Component: {{comp}}",
 		"buildWire": "Placing Wires",
 		"connectWire": "Connecting Wires",

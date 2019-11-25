@@ -131,7 +131,11 @@ export class ShortcutsService {
 			case 'selectMode':
 				this.workMode.setWorkMode('select');
 				break;
+			case 'cutSelectMode':
+				this.workMode.setWorkMode('selectCut');
+				break;
 			case 'textMode':
+				this.workMode.setWorkMode('text');
 				break;
 			case 'delete':
 				this.projectInteraction.deleteSelection();

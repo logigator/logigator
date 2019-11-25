@@ -47,6 +47,11 @@ export const defaultShortcuts: ShortcutMap = {
 		key_code: 'S',
 		alt: true
 	},
+	cutSelectMode: {
+		key_code: 'S',
+		alt: true,
+		shift: true
+	},
 	newComp: {
 		key_code: 'N',
 		alt: true

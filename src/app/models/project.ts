@@ -31,6 +31,8 @@ export class Project {
 	public saveDirty = false;
 	public compileDirty = true;
 
+	private _stateActionFlag = false;
+
 	// #!debug
 	public boardRecorder: BoardRecorder;
 
@@ -258,11 +260,12 @@ export class Project {
 				others: elements,
 				pos: dif
 			}]);
+			this.cancelLastStep();
 			return true;
 		}
 		if (!this._currState.allSpacesFree(elements, dif, elements))
 			return false;
-		const changed = this._currState.withWiresOnEdges(elements);
+		const changed = this._currState.withoutToEmptyChunk(this._currState.withWiresOnEdges(elements), dif);
 
 		// #!debug
 		this.boardRecorder.call('moveElementsById', arguments, -1, 0);
@@ -441,6 +444,24 @@ export class Project {
 	}
 
 
+	public splitWire(element: Element, pos: PIXI.Point): {
+		actions: Action[],
+		elements: Element[]
+	} {
+		const newWires = this._currState.splitWire(element, pos);
+		if (newWires.length === 1)
+			return {
+				actions: [],
+				elements: newWires
+			};
+		this._currState.loadConnectionPoints(newWires);
+		return {
+			actions: Actions.connectWiresToActions([element], newWires),
+			elements: newWires
+		};
+	}
+
+
 
 	private autoAssemble(elements: Element[]): Action[] {
 		Elements.removeDuplicates(elements);
@@ -471,21 +492,30 @@ export class Project {
 
 
 
-	private newState(actions: Action[]): void {
+	public newState(actions: Action[], skipSubject?: boolean): void {
 		if (!actions)
 			return;
-		if (this._currActionPointer >= this._maxActionCount) {
-			this._actions.shift();
-		} else {
-			this._currActionPointer++;
-		}
-		this._currMaxActionPointer = this._currActionPointer;
 		actions.push(...this._currState.specialActions);
 		this._currState.specialActions = [];
-		this._actions[this._currActionPointer] = actions;
+		if (this._stateActionFlag) {
+			this._actions[this._currActionPointer].push(...actions);
+			this._stateActionFlag = false;
+		} else {
+			if (this._currActionPointer >= this._maxActionCount) {
+				this._actions.shift();
+			} else {
+				this._currActionPointer++;
+			}
+			this._currMaxActionPointer = this._currActionPointer;
+			this._actions[this._currActionPointer] = actions;
+		}
 		this.saveDirty = true;
 		this.compileDirty = true;
-		this._changeSubject.next(actions);
+		if (!skipSubject) {
+			this._changeSubject.next(actions);
+		} else {
+			this._stateActionFlag = true;
+		}
 	}
 
 	public stepBack(): Action[] {
@@ -513,6 +543,15 @@ export class Project {
 		this._changeSubject.next(outActions);
 		this._currState.specialActions = [];
 		return outActions;
+	}
+
+	public cancelLastStep(): void {
+		if (this._currActionPointer < 0 || !this._stateActionFlag)
+			return;
+
+		this.stepBack();
+		this._currMaxActionPointer--;
+		this._stateActionFlag = false;
 	}
 
 

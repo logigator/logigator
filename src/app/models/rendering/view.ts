@@ -244,7 +244,7 @@ export abstract class View extends PIXI.Container {
 		}
 	}
 
-	protected applyActionsToView(actions: Action[]) {
+	public applyActionsToView(actions: Action[]) {
 		// console.log('incoming actions');
 		// Actions.printActions(actions);
 		if (!actions)
