@@ -260,8 +260,7 @@ export class Project {
 				others: elements,
 				pos: dif
 			}]);
-			if (this._stateActionFlag)
-				this.cancelLastStep();
+			this.cancelLastStep();
 			return true;
 		}
 		if (!this._currState.allSpacesFree(elements, dif, elements))
@@ -547,7 +546,7 @@ export class Project {
 	}
 
 	public cancelLastStep(): void {
-		if (this._currActionPointer < 0)
+		if (this._currActionPointer < 0 || !this._stateActionFlag)
 			return;
 
 		this.stepBack();
