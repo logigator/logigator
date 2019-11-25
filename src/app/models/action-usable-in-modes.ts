@@ -16,6 +16,7 @@ const actionUsableInSimulation: InteractionActionUsableInSimulation = {
 	connWireMode: false,
 	wireMode: false,
 	selectMode: false,
+	cutSelectMode: false,
 	newComp: false,
 	newProj: false,
 	openProj: false,
