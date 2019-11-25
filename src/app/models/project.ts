@@ -31,6 +31,8 @@ export class Project {
 	public saveDirty = false;
 	public compileDirty = true;
 
+	private _stateActionFlag = false;
+
 	// #!debug
 	public boardRecorder: BoardRecorder;
 
@@ -258,6 +260,8 @@ export class Project {
 				others: elements,
 				pos: dif
 			}]);
+			if (this._stateActionFlag)
+				this.cancelLastStep();
 			return true;
 		}
 		if (!this._currState.allSpacesFree(elements, dif, elements))
@@ -492,19 +496,27 @@ export class Project {
 	public newState(actions: Action[], skipSubject?: boolean): void {
 		if (!actions)
 			return;
-		if (this._currActionPointer >= this._maxActionCount) {
-			this._actions.shift();
-		} else {
-			this._currActionPointer++;
-		}
-		this._currMaxActionPointer = this._currActionPointer;
 		actions.push(...this._currState.specialActions);
 		this._currState.specialActions = [];
-		this._actions[this._currActionPointer] = actions;
+		if (this._stateActionFlag) {
+			this._actions[this._currActionPointer].push(...actions);
+			this._stateActionFlag = false;
+		} else {
+			if (this._currActionPointer >= this._maxActionCount) {
+				this._actions.shift();
+			} else {
+				this._currActionPointer++;
+			}
+			this._currMaxActionPointer = this._currActionPointer;
+			this._actions[this._currActionPointer] = actions;
+		}
 		this.saveDirty = true;
 		this.compileDirty = true;
-		if (!skipSubject)
+		if (!skipSubject) {
 			this._changeSubject.next(actions);
+		} else {
+			this._stateActionFlag = true;
+		}
 	}
 
 	public stepBack(): Action[] {
@@ -540,6 +552,7 @@ export class Project {
 
 		this.stepBack();
 		this._currMaxActionPointer--;
+		this._stateActionFlag = false;
 	}
 
 
