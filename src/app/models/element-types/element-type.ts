@@ -25,6 +25,7 @@ export interface ElementType {
 	maxInputs: number;
 
 	hasPlugIndex?: boolean;
+	hasLabel?: boolean;
 
 	width: number;
 

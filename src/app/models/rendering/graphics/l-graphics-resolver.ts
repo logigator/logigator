@@ -8,6 +8,7 @@ import {ButtonGraphics} from './button-graphics';
 import {LeverGraphics} from './lever-graphics';
 import {ElementTypeId} from '../../element-types/element-type-ids';
 import {TextGraphics} from './text-graphics';
+import {InputOutputGraphics} from './input-output-graphics';
 
 export abstract class LGraphicsResolver {
 
@@ -16,28 +17,34 @@ export abstract class LGraphicsResolver {
 	}
 
 	public static getLGraphicsFromElement(scale: number, element: Element, parentProjectIdentifier?: string): LGraphics {
-		if (element.typeId === ElementTypeId.WIRE) {
-			return new WireGraphics(scale, element);
-		} else if (element.typeId === ElementTypeId.BUTTON) {
-			return new ButtonGraphics(scale, element, parentProjectIdentifier);
-		} else if (element.typeId === ElementTypeId.LEVER) {
-			return new LeverGraphics(scale, element, parentProjectIdentifier);
-		} else if (element.typeId === ElementTypeId.TEXT) {
-			return new TextGraphics(scale, element);
-		} else {
-			return new ComponentGraphics(scale, element);
+		switch (element.typeId) {
+			case ElementTypeId.WIRE:
+				return new WireGraphics(scale, element);
+			case ElementTypeId.BUTTON:
+				return new ButtonGraphics(scale, element, parentProjectIdentifier);
+			case ElementTypeId.LEVER:
+				return new LeverGraphics(scale, element, parentProjectIdentifier);
+			case ElementTypeId.INPUT:
+			case ElementTypeId.OUTPUT:
+				return new InputOutputGraphics(scale, element);
+			default:
+				return new ComponentGraphics(scale, element);
 		}
 	}
 
 	// wires and text are not supported !!
 	public static getLGraphicsFromType(scale: number, elemTypeId: number): LGraphics {
 		const elemType = this.elementProviderService.getElementById(elemTypeId);
-		if (elemTypeId === ElementTypeId.BUTTON) {
-			return new ButtonGraphics(scale, elemType);
-		} else if (elemTypeId === ElementTypeId.LEVER) {
-			return new LeverGraphics(scale, elemType);
-		} else {
-			return new ComponentGraphics(scale, elemType);
+		switch (elemTypeId) {
+			case ElementTypeId.BUTTON:
+				return new ButtonGraphics(scale, elemType);
+			case ElementTypeId.LEVER:
+				return new LeverGraphics(scale, elemType);
+			case ElementTypeId.INPUT:
+			case ElementTypeId.OUTPUT:
+				return new InputOutputGraphics(scale, elemType);
+			default:
+				return new ComponentGraphics(scale, elemType);
 		}
 	}
 

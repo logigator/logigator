@@ -188,7 +188,8 @@
 		},
 		"DESCRIPTION": "Description",
 		"EDIT": "Edit",
-		"PLUG_INDEX": "Plug Index"
+		"PLUG_INDEX": "Plug Index",
+		"PLUG_LABEL": "Label"
 	},
 	"ELEMENT_TYPE": {
 		"BASIC": {

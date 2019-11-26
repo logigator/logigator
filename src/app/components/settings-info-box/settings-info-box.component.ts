@@ -46,6 +46,7 @@ export class SettingsInfoBoxComponent implements OnChanges, OnDestroy {
 			numInputs: [this.selectedCompId ? this._element.numInputs : this.elementType.numInputs],
 			rotation: [this.selectedCompId ? this._element.rotation : this.elementType.rotation],
 			plugIndex: [this.selectedCompId ? this._element.plugIndex : undefined],
+			label: [this._element && this._element.data ? this._element.data : this.elementType.symbol],
 			options: this.formBuilder.array(
 				this.getOptionsArray(this.elementType, this.selectedCompId ? this._element.options : this.elementType.options)
 			)
@@ -69,6 +70,9 @@ export class SettingsInfoBoxComponent implements OnChanges, OnDestroy {
 				if (this.elementType.hasPlugIndex && data.plugIndex !== this._element.plugIndex) {
 					this.projects.currProject.setPlugIndex(this.selectedCompId, Number(data.plugIndex));
 					this.propertiesForm.controls.plugIndex.setValue(this._element.plugIndex);
+				}
+				if (this.elementType.hasLabel && data.label !== this._element.data) {
+					this.projects.currProject.setData(this.selectedCompId, data.label);
 				}
 				if (this.elementType.optionsConfig) {
 					for (let i = 0; i < data.options.length; i++) {
