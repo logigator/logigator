@@ -2,7 +2,7 @@ import {Injectable, NgZone, Optional} from '@angular/core';
 import {Project} from '../../models/project';
 import {HttpResponseData} from '../../models/http-responses/http-response-data';
 import {OpenProjectResponse} from '../../models/http-responses/open-project-response';
-import {catchError, filter, map} from 'rxjs/operators';
+import {filter, map} from 'rxjs/operators';
 import * as PIXI from 'pixi.js';
 import {HttpClient} from '@angular/common/http';
 import {Element} from '../../models/element';
@@ -25,6 +25,7 @@ import {SharingService} from '../sharing/sharing.service';
 import {Elements} from '../../models/elements';
 import {OpenShareResp} from '../../models/http-responses/open-share-resp';
 import {ElementTypeId} from '../../models/element-types/element-type-ids';
+import {main} from '@angular/compiler-cli/src/main';
 
 @Injectable({
 	providedIn: 'root'
@@ -52,21 +53,21 @@ export class ProjectSaveManagementService {
 		});
 	}
 
-	public async getProjectToOpenOnLoad(): Promise<Project> {
-		let project;
+	public async getProjectsToOpenOnLoad(): Promise<Project[]> {
+		let projects;
 		if (location.pathname.startsWith('/board')) {
 			this.elemProvService.setUserDefinedTypes(await this.getCustomElementsFromServer());
-			project = this.openProjectFromServerOnLoad();
+			projects = this.openProjectFromServerOnLoad();
 		} else if (location.pathname.startsWith('/share')) {
 			this.elemProvService.setUserDefinedTypes(await this.getCustomElementsFromServer());
-			project = this.openProjectFromShare();
+			projects = this.openProjectFromShare();
 		} else {
 			// #!web
 			window.history.pushState(null, null, '/');
-			project = Promise.resolve(Project.empty());
+			projects = Promise.resolve([Project.empty()]);
 			this.elemProvService.setUserDefinedTypes(await this.getCustomElementsFromServer());
 		}
-		return project;
+		return projects;
 	}
 
 	public get isFirstSave(): boolean {
@@ -130,7 +131,7 @@ export class ProjectSaveManagementService {
 		return id;
 	}
 
-	private async openProjectFromShare(): Promise<Project> {
+	private async openProjectFromShare(): Promise<Project[]> {
 		const address = location.pathname.substr(location.pathname.lastIndexOf('/') + 1);
 		this._projectSource = 'share';
 		const resp = await this.sharing.openShare(address).pipe(
@@ -140,7 +141,7 @@ export class ProjectSaveManagementService {
 			// !#web
 			window.history.pushState(null, null, '/');
 			delete this._projectSource;
-			return Project.empty();
+			return [Project.empty()];
 		}
 		for (const depId in resp.components) {
 			const depComp = resp.components[depId];
@@ -168,14 +169,15 @@ export class ProjectSaveManagementService {
 		const model = this.convertResponseDataToProjectModel(resp.data);
 		const project = new Project(new ProjectState(model), {
 			name: resp.project.name,
-			type: 'project',
+			type: resp.project.is_component ? 'comp' : 'project',
 			id: resp.project.id
 		});
 		this.errorHandling.showInfo(`Opened shared Project ${resp.project.name} from ${resp.user.username}`);
-		return project;
+		if (resp.project.is_component) return [Project.empty(), project];
+		return [project];
 	}
 
-	public async cloneShare(): Promise<Project> {
+	public async cloneShare(): Promise<Project[]> {
 		if (!this.isShare) return;
 		const address = location.pathname.substr(location.pathname.lastIndexOf('/') + 1);
 		const resp = await this.http.get<HttpResponseData<any>>(`${environment.apiPrefix}/project/clone/${address}`).pipe(
@@ -184,7 +186,11 @@ export class ProjectSaveManagementService {
 		if (resp) {
 			this.errorHandling.showInfo('INFO.PROJECTS.CLONED');
 			this.elemProvService.setUserDefinedTypes(await this.getCustomElementsFromServer());
-			return this.openProjectFromServer(resp.result.id, true);
+			const mainProj = await this.getProjectOrCompFromServer(resp.result.id, true);
+			// #!web
+			window.history.pushState(null, null, `/board/${mainProj.id}`);
+			if (mainProj.type === 'comp') return [Project.empty(), mainProj];
+			return [mainProj];
 		}
 	}
 
@@ -289,8 +295,8 @@ export class ProjectSaveManagementService {
 		return resolved;
 	}
 
-	public resetProjectSource() {
-		delete this._projectSource;
+	public set projectSource(source: 'server' | 'share' | undefined) {
+		this._projectSource = source;
 	}
 
 	public async saveAsNewProjectServer(project: Project, name: string): Promise<Project> {
@@ -395,26 +401,11 @@ export class ProjectSaveManagementService {
 			this.errorHandling.showErrorMessage('ERROR.PROJECTS.OPEN_COMP');
 			return Promise.resolve(undefined);
 		}
-		if (this._projectCache.has(id))
-			return Promise.resolve(this._projectCache.get(id));
-		return this.http.get<HttpResponseData<OpenProjectResponse>>(`${environment.apiPrefix}/project/open/${id}`).pipe(
-			map(response => this.componentFromServerResponse(response.result)),
-			this.errorHandling.catchErrorOperator('ERROR.PROJECT_PROJECT_AS_COMP', undefined)
-		).toPromise();
-	}
-
-	private componentFromServerResponse(openProRes: OpenProjectResponse): Project {
-		if (Number(openProRes.project.is_component) === 0) {
-			throw Error('isProj');
+		const project = await this.getProjectOrCompFromServer(id, false);
+		if (project.type !== 'comp') {
+			this.errorHandling.showErrorMessage('Unable to open Component as Project');
+			return Project.empty();
 		}
-		const id = Number(openProRes.project.pk_id);
-		const projectModel = this.convertResponseDataToProjectModel(openProRes.project.data);
-		const project = new Project(new ProjectState(projectModel), {
-			id: Number(id),
-			name: openProRes.project.name,
-			type: 'comp'
-		});
-		this._projectCache.set(id, project);
 		return project;
 	}
 
@@ -523,48 +514,38 @@ export class ProjectSaveManagementService {
 		return id;
 	}
 
-	private openProjectFromServerOnLoad(): Promise<Project> {
+	private async openProjectFromServerOnLoad(): Promise<Project[]> {
 		const id = this.getProjectIdToLoadFromUrl();
 		if (!id) {
 			this.errorHandling.showErrorMessage('ERROR.INVALID_URL');
 
 			// #!web
 			window.history.pushState(null, null, '/');
-			return Promise.resolve(Project.empty());
+			return Promise.resolve([Project.empty()]);
 		}
-		return this.openProjectFromServer(id, true);
+		const mainProj = await this.getProjectOrCompFromServer(id, true);
+		if (mainProj.type === 'project') {
+			this._projectSource = 'server';
+			return [mainProj];
+		}
+		return [Project.empty(), mainProj];
 	}
 
-	public async openProjectFromServer(id: number, emptyProjectOnFailure: boolean): Promise<Project> {
-		// #!web
-		window.history.pushState(null, null, `/board/${id}`);
-		this._projectSource = 'server';
+	public async getProjectOrCompFromServer(id: number, emptyProjectOnFailure: boolean): Promise<Project> {
 		if (this._projectCache.has(id)) return this._projectCache.get(id);
 		return this.http.get<HttpResponseData<OpenProjectResponse>>(`${environment.apiPrefix}/project/open/${id}`).pipe(
 			map(response => this.projectFromServerResponse(response.result)),
-			catchError(err => {
-				// #!web
-				window.history.pushState(null, null, '/');
-				delete this._projectSource;
-				throw err;
-			}),
-			this.errorHandling.catchErrorOperatorDynamicMessage((err: any) => {
-				if (err.message === 'isComp') return 'Unable to open Component as Project';
-				return 'Error opening Project';
-			}, emptyProjectOnFailure ? Project.empty() : undefined)
+			this.errorHandling.catchErrorOperator('Unable to open Project or Component', emptyProjectOnFailure ? Project.empty() : undefined)
 		).toPromise();
 	}
 
 	private projectFromServerResponse(openProResp: OpenProjectResponse): Project {
-		if (Number(openProResp.project.is_component) === 1) {
-			throw Error('isComp');
-		}
 		const id = Number(openProResp.project.pk_id);
 		const projectModel = this.convertResponseDataToProjectModel(openProResp.project.data);
 		const project = new Project(new ProjectState(projectModel), {
 			id: Number(id),
 			name: openProResp.project.name,
-			type: 'project'
+			type: openProResp.project.is_component ? 'comp' : 'project'
 		});
 		this._projectCache.set(id, project);
 		return project;

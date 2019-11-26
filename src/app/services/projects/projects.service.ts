@@ -34,8 +34,15 @@ export class ProjectsService {
 		private elementProvider: ElementProviderService,
 		private errorHandling: ErrorHandlingService
 	) {
-		this.projectSaveManagementService.getProjectToOpenOnLoad().then(project => {
-			this.switchProjectAfterOpen(project);
+		this.projectSaveManagementService.getProjectsToOpenOnLoad().then(projects => {
+			for (const p of projects) {
+				if (this.projectSaveManagementService.projectSource === 'server')
+					this.errorHandling.showInfo('INFO.PROJECTS.OPEN_PROJECT', {name: p.name});
+				this._projects.set(p.id, p);
+				this._currProject = p;
+				if (p.type === 'project') this._mainProject = p;
+				this._projectOpenedSubject.next(p.id);
+			}
 		});
 	}
 
@@ -91,7 +98,7 @@ export class ProjectsService {
 		this.elementProvider.clearElementsFromFile();
 		const project = Project.empty();
 		this.closeAllProjects();
-		this.projectSaveManagementService.resetProjectSource();
+		this.projectSaveManagementService.projectSource = undefined;
 		this._projects.set(project.id, project);
 		this._currProject = project;
 		this._mainProject = project;
@@ -110,7 +117,10 @@ export class ProjectsService {
 
 	public async openProjectServer(id: number) {
 		if (!this.projectSaveManagementService.isShare) await this.saveAllOrAllComps();
-		const project = await this.projectSaveManagementService.openProjectFromServer(id, false);
+		const project = await this.projectSaveManagementService.getProjectOrCompFromServer(id, false);
+		this.projectSaveManagementService.projectSource = 'server';
+		// #!web
+		window.history.pushState(null, null, `/board/${project.id}`);
 		this.switchProjectAfterOpen(project);
 	}
 
@@ -128,10 +138,7 @@ export class ProjectsService {
 	public get onProjectOpened$(): Observable<number> {
 		return this._projectOpenedSubject.asObservable().pipe(
 			delayWhen((value, index) => {
-				if (index === 0) {
-					return WorkArea.pixiFontLoaded$;
-				}
-				return of(undefined);
+				return WorkArea.pixiFontLoaded$;
 			})
 		);
 	}
@@ -203,8 +210,16 @@ export class ProjectsService {
 	}
 
 	public async cloneShare() {
-		const project = await this.projectSaveManagementService.cloneShare();
-		this.switchProjectAfterOpen(project);
+		const projects = await this.projectSaveManagementService.cloneShare();
+		if (!projects) return;
+		this.closeAllProjects();
+		for (const p of projects) {
+			this.errorHandling.showInfo('INFO.PROJECTS.OPEN_PROJECT', {name: p.name});
+			this._projects.set(p.id, p);
+			this._currProject = p;
+			if (p.type === 'project') this._mainProject = p;
+			this._projectOpenedSubject.next(p.id);
+		}
 	}
 
 	private switchProjectAfterOpen(project: Project) {
