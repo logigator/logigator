@@ -358,6 +358,9 @@ export class ViewInteractionManager {
 	private buildNewComp(e: InteractionEvent) {
 		this._actionPos.addDragPos(e, this._view);
 		this.projectsSer.currProject.addElement(this.workModeSer.currentComponentToBuild, this._actionPos.lastGridPosDrag);
+		if (this.elemProvSer.isPlugElement(this.workModeSer.currentComponentToBuild)) {
+			this.projectsSer.inputsOutputsCustomComponentChanged(this.projectsSer.currProject.id);
+		}
 		this.cleanUp();
 	}
 
