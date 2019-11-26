@@ -1,4 +1,5 @@
 import {ProjectsService} from '../../services/projects/projects.service';
+import {Element} from '../element';
 
 export interface ElementType {
 	// translation id for predefined comps
@@ -38,6 +39,10 @@ export interface ElementType {
 
 	edit?: (typeId: number, id: number, projectsSer: ProjectsService) => void;
 	canEditType?: boolean;
+
+	// only used for udcs, order must be like plugIndices
+	udcLabels?: string[];
+	calcLabels?: (element?: Element) => string[];
 }
 
 export function isElementType(object: any): object is ElementType {

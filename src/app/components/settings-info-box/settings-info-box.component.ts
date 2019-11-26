@@ -46,7 +46,7 @@ export class SettingsInfoBoxComponent implements OnChanges, OnDestroy {
 			numInputs: [this.selectedCompId ? this._element.numInputs : this.elementType.numInputs],
 			rotation: [this.selectedCompId ? this._element.rotation : this.elementType.rotation],
 			plugIndex: [this.selectedCompId ? this._element.plugIndex : undefined],
-			label: [this._element && this._element.data ? this._element.data : this.elementType.symbol],
+			label: [this._element && this._element.data ? this._element.data : ''],
 			options: this.formBuilder.array(
 				this.getOptionsArray(this.elementType, this.selectedCompId ? this._element.options : this.elementType.options)
 			)
