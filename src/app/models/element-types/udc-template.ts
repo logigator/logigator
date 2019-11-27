@@ -1,7 +1,5 @@
 import {ElementType} from './element-type';
 import {environment} from '../../../environments/environment';
-import {Project} from '../project';
-import {getStaticDI} from '../get-di';
 import {ProjectsService} from '../../services/projects/projects.service';
 
 export const udcTemplate: Partial<ElementType> = {
@@ -19,5 +17,10 @@ export const udcTemplate: Partial<ElementType> = {
 	edit: (typeId: number, id: number, projectsSer: ProjectsService) => {
 		projectsSer.openComponent(typeId);
 	},
-	canEditType: true
+	canEditType: true,
+
+	udcLabels: [],
+	calcLabels() {
+		return this.udcLabels;
+	}
 };
