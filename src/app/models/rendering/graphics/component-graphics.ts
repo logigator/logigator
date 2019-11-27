@@ -51,7 +51,6 @@ export class ComponentGraphics extends PIXI.Graphics implements LGraphics, Compo
 
 	private drawComponent() {
 		this.lineStyle(1 / this._scale, this.themingService.getEditorColor('wire'));
-		this.beginFill(this.themingService.getEditorColor('background'));
 		this.moveTo(0, 0);
 
 		let width;
@@ -67,10 +66,8 @@ export class ComponentGraphics extends PIXI.Graphics implements LGraphics, Compo
 				environment.gridPixelWidth * this.element.numOutputs;
 			height = environment.gridPixelWidth * this._width;
 		}
-		this.drawRect(0, 0, width, height);
 
 		this.beginFill(this.themingService.getEditorColor('wire'));
-
 		this.removeChildren(0);
 
 		switch (this.element.rotation) {
@@ -90,8 +87,8 @@ export class ComponentGraphics extends PIXI.Graphics implements LGraphics, Compo
 
 		const text = new PIXI.BitmapText(this._symbol, {
 			font: {
-				name: 'Nunito',
-				size: environment.gridPixelWidth + 4
+				name: 'Roboto',
+				size: environment.gridPixelWidth * 0.9
 			},
 			tint: this.themingService.getEditorColor('fontTint')
 		});
@@ -124,6 +121,15 @@ export class ComponentGraphics extends PIXI.Graphics implements LGraphics, Compo
 			label.y = (environment.gridPixelWidth / 2) + environment.gridPixelWidth * i;
 			this.addChild(label);
 		}
+
+		this.beginFill(this.themingService.getEditorColor('background'));
+		this.moveTo(0, 0);
+		this.lineTo(width - 3, 0);
+		this.lineTo(width, 3);
+		this.lineTo(width, height - 3);
+		this.lineTo(width - 3, height);
+		this.lineTo(0, height);
+		this.lineTo(0, 0);
 	}
 
 	private rotation1(inputs: number, outputs: number, height: number, width: number) {
@@ -147,6 +153,15 @@ export class ComponentGraphics extends PIXI.Graphics implements LGraphics, Compo
 			label.y = height - 1;
 			this.addChild(label);
 		}
+
+		this.beginFill(this.themingService.getEditorColor('background'));
+		this.moveTo(0, 0);
+		this.lineTo(width, 0);
+		this.lineTo(width, height - 3);
+		this.lineTo(width - 3, height);
+		this.lineTo(3, height);
+		this.lineTo(0, height - 3);
+		this.lineTo(0, 0);
 	}
 
 	private rotation2(inputs: number, outputs: number, height: number, width: number) {
@@ -170,6 +185,15 @@ export class ComponentGraphics extends PIXI.Graphics implements LGraphics, Compo
 			label.y = height - (environment.gridPixelWidth / 2) - environment.gridPixelWidth * i;
 			this.addChild(label);
 		}
+
+		this.beginFill(this.themingService.getEditorColor('background'));
+		this.moveTo(3, 0);
+		this.lineTo(width, 0);
+		this.lineTo(width, height);
+		this.lineTo(3, height);
+		this.lineTo(0, height - 3);
+		this.lineTo(0, 3);
+		this.lineTo(3, 0);
 	}
 
 	private rotation3(inputs: number, outputs: number, height: number, width: number) {
@@ -193,13 +217,22 @@ export class ComponentGraphics extends PIXI.Graphics implements LGraphics, Compo
 			label.y = 1;
 			this.addChild(label);
 		}
+
+		this.beginFill(this.themingService.getEditorColor('background'));
+		this.moveTo(3, 0);
+		this.lineTo(width - 3, 0);
+		this.lineTo(width, 3);
+		this.lineTo(width, height);
+		this.lineTo(0, height);
+		this.lineTo(0, 3);
+		this.lineTo(3, 0);
 	}
 
 	private getLabelText(text: string): PIXI.BitmapText {
 		return new PIXI.BitmapText(text, {
 			font: {
-				name: 'Nunito',
-				size: environment.gridPixelWidth * 0.8
+				name: 'Roboto',
+				size: environment.gridPixelWidth * 0.5
 			},
 			tint: this.themingService.getEditorColor('fontTint')
 		});

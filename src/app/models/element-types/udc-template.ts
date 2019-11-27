@@ -14,7 +14,7 @@ export const udcTemplate: Partial<ElementType> = {
 	isRotatable: true,
 	rotation: 0,
 
-	width: environment.componentWidth,
+	width: 3,
 
 	edit: (typeId: number, id: number, projectsSer: ProjectsService) => {
 		projectsSer.openComponent(typeId);

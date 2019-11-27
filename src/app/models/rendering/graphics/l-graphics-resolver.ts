@@ -24,6 +24,8 @@ export abstract class LGraphicsResolver {
 				return new ButtonGraphics(scale, element, parentProjectIdentifier);
 			case ElementTypeId.LEVER:
 				return new LeverGraphics(scale, element, parentProjectIdentifier);
+			case ElementTypeId.TEXT:
+				return new TextGraphics(scale, element);
 			case ElementTypeId.INPUT:
 			case ElementTypeId.OUTPUT:
 				return new InputOutputGraphics(scale, element);

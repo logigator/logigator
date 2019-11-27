@@ -22,5 +22,9 @@ export const fullAdder: ElementType = {
 	minInputs: 3,
 	maxInputs: 3,
 
-	width: environment.componentWidth,
+	width: 3,
+
+	calcLabels: element => {
+		return ['A', 'B', 'Cin', 'S', 'C'];
+	}
 };
