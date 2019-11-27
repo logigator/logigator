@@ -300,6 +300,8 @@ export class ComponentGraphics extends PIXI.Graphics implements LGraphics, Compo
 		this.element.numOutputs = element.numOutputs;
 		this.element.rotation = element.rotation;
 		this._scale = scale;
+		const elemType = this.elemProvService.getElementById(this.element.typeId);
+		if (elemType.calcLabels) this._labels = elemType.calcLabels(this.element);
 		this.clear();
 		this.drawComponent();
 	}
