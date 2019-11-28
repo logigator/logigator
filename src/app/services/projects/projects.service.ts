@@ -1,9 +1,9 @@
 import { Injectable } from '@angular/core';
 import {Project} from '../../models/project';
-import {Observable, of, ReplaySubject, Subject} from 'rxjs';
+import {Observable, ReplaySubject, Subject} from 'rxjs';
 import {Action} from '../../models/action';
 import {ProjectSaveManagementService} from '../project-save-management/project-save-management.service';
-import {delayWhen, tap} from 'rxjs/operators';
+import {delayWhen} from 'rxjs/operators';
 import {WorkArea} from '../../models/rendering/work-area';
 import {SaveAsComponent} from '../../components/popup/popup-contents/save-as/save-as.component';
 import {PopupService} from '../popup/popup.service';
@@ -85,7 +85,7 @@ export class ProjectsService {
 		if (!compProject || compProject.type !== 'comp') return;
 		const elemType = this.elementProvider.getElementById(projectId);
 		const compLabels = []; // = compProject.calcLabels();
-		elemType.udcLabels = compLabels;
+		elemType.labels = compLabels;
 		// this._projects.forEach(p => p.updateLabels(projectId));
 	}
 

@@ -41,7 +41,7 @@ export interface ElementType {
 	canEditType?: boolean;
 
 	// only used for udcs, order must be like plugIndices
-	udcLabels?: string[];
+	labels?: string[];
 	calcLabels?: (element?: Element) => string[];
 }
 

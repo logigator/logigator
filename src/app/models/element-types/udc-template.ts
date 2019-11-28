@@ -18,8 +18,9 @@ export const udcTemplate: Partial<ElementType> = {
 	},
 	canEditType: true,
 
-	udcLabels: [],
+	labels: ['ds'],
 	calcLabels() {
-		return this.udcLabels;
+		console.log(this)
+		return this.labels;
 	}
 };
