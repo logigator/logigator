@@ -12,6 +12,7 @@ import {
 	ViewContainerRef
 } from '@angular/core';
 import {PopupContentComp} from '../popup-contents/popup-content-comp';
+import {ThemingService} from '../../../services/theming/theming.service';
 
 @Component({
 	selector: 'app-popup',
@@ -50,7 +51,7 @@ export class PopupComponent implements OnInit {
 		this.closeClick();
 	}
 
-	constructor() { }
+	constructor(private theming: ThemingService) { }
 
 	ngOnInit() {
 		const contentComp = this._viewContRef.createComponent(this.contentComp);
@@ -68,5 +69,9 @@ export class PopupComponent implements OnInit {
 
 	public closeClick() {
 		this.requestClose.emit();
+	}
+
+	public get currentTheme() {
+		return this.theming.currentTheme;
 	}
 }

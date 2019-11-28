@@ -2,8 +2,8 @@
 	<div class="content">
 		<div class="header">
 			<div>{{title | translate:titleTranslationParams}}</div>
-			<img src="/assets/icons/dark/close.svg" (click)="closeClick()" class="dark">
-			<img src="/assets/icons/light/close.svg" (click)="closeClick()" class="light">
+			<img *ngIf="currentTheme === 'dark'" src="/assets/icons/dark/close.svg" (click)="closeClick()" class="dark">
+			<img *ngIf="currentTheme === 'light'" src="/assets/icons/light/close.svg" (click)="closeClick()" class="light">
 		</div>
 		<ng-container #contentComponentInsert></ng-container>
 	</div>
