@@ -1,5 +1,4 @@
 import {ElementType} from './element-type';
-import {environment} from '../../../environments/environment';
 import {ProjectsService} from '../../services/projects/projects.service';
 
 export const udcTemplate: Partial<ElementType> = {

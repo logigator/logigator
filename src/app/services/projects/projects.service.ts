@@ -10,7 +10,6 @@ import {PopupService} from '../popup/popup.service';
 import {ElementProviderService} from '../element-provider/element-provider.service';
 import {ErrorHandlingService} from '../error-handling/error-handling.service';
 import {UnsavedChangesComponent} from '../../components/popup/popup-contents/unsaved-changes/unsaved-changes.component';
-import {checkActionUsable} from '../../models/action-usable-in-modes';
 
 @Injectable({
 	providedIn: 'root'
@@ -78,6 +77,16 @@ export class ProjectsService {
 		elemType.numInputs = compProject.numInputs;
 		elemType.numOutputs = compProject.numOutputs;
 		this._projects.forEach(p => p.updateInputsOutputs(projectId));
+		this.labelsCustomComponentChanged(projectId);
+	}
+
+	labelsCustomComponentChanged(projectId: number) {
+		const compProject = this.allProjects.get(projectId);
+		if (!compProject || compProject.type !== 'comp') return;
+		const elemType = this.elementProvider.getElementById(projectId);
+		const compLabels = []; // = compProject.calcLabels();
+		elemType.udcLabels = compLabels;
+		// this._projects.forEach(p => p.updateLabels(projectId));
 	}
 
 	public get hasUnsavedProjects(): boolean {
