@@ -396,11 +396,7 @@ export class Project {
 			if (elem.typeId === typeId || !typeId && getStaticDI(ElementProviderService).isUserElement(elem.typeId)) {
 				this._currState.updateNumInputsOutputs(elem);
 				actions.push({
-					name: 'remComp',
-					element: elem
-				});
-				actions.push({
-					name: 'addComp',
+					name: 'rotComp',
 					element: elem
 				});
 			}
@@ -414,11 +410,7 @@ export class Project {
 		for (const elem of this.allElements) {
 			if (elem.typeId === typeId || !typeId && getStaticDI(ElementProviderService).isUserElement(elem.typeId)) {
 				actions.push({
-					name: 'remComp',
-					element: elem
-				});
-				actions.push({
-					name: 'addComp',
+					name: 'rotComp',
 					element: elem
 				});
 			}
