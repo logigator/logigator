@@ -1,16 +1,15 @@
 import { Injectable } from '@angular/core';
 import {Project} from '../../models/project';
-import {Observable, of, ReplaySubject, Subject} from 'rxjs';
+import {Observable, ReplaySubject, Subject} from 'rxjs';
 import {Action} from '../../models/action';
 import {ProjectSaveManagementService} from '../project-save-management/project-save-management.service';
-import {delayWhen, tap} from 'rxjs/operators';
+import {delayWhen} from 'rxjs/operators';
 import {WorkArea} from '../../models/rendering/work-area';
 import {SaveAsComponent} from '../../components/popup/popup-contents/save-as/save-as.component';
 import {PopupService} from '../popup/popup.service';
 import {ElementProviderService} from '../element-provider/element-provider.service';
 import {ErrorHandlingService} from '../error-handling/error-handling.service';
 import {UnsavedChangesComponent} from '../../components/popup/popup-contents/unsaved-changes/unsaved-changes.component';
-import {checkActionUsable} from '../../models/action-usable-in-modes';
 
 @Injectable({
 	providedIn: 'root'
@@ -51,7 +50,7 @@ export class ProjectsService {
 	}
 
 	public async openComponent(id: number) {
-		if (this.allProjects.has(id)) {
+		if (this._projects.has(id)) {
 			this.switchToProject(id);
 			return;
 		}
@@ -69,7 +68,7 @@ export class ProjectsService {
 	}
 
 	public inputsOutputsCustomComponentChanged(projectId: number) {
-		const compProject = this.allProjects.get(projectId);
+		const compProject = this._projects.get(projectId);
 		if (!compProject || compProject.type !== 'comp') return;
 		const elemType = this.elementProvider.getElementById(projectId);
 		compProject.currState.inputOutputCount();
@@ -78,6 +77,15 @@ export class ProjectsService {
 		elemType.numInputs = compProject.numInputs;
 		elemType.numOutputs = compProject.numOutputs;
 		this._projects.forEach(p => p.updateInputsOutputs(projectId));
+		this.labelsCustomComponentChanged(projectId);
+	}
+
+	public labelsCustomComponentChanged(projectId: number) {
+		const compProject = this._projects.get(projectId);
+		if (!compProject || compProject.type !== 'comp') return;
+		const elemType = this.elementProvider.getElementById(projectId);
+		elemType.labels = compProject.calcLabels();
+		this._projects.forEach(p => p.updateLabels(projectId));
 	}
 
 	public get hasUnsavedProjects(): boolean {
@@ -125,7 +133,7 @@ export class ProjectsService {
 	}
 
 	private closeAllProjects() {
-		for (const id of this.allProjects.keys()) {
+		for (const id of this._projects.keys()) {
 			this._projectClosedSubject.next(id);
 			this._projects.delete(id);
 		}
@@ -192,7 +200,7 @@ export class ProjectsService {
 				this._projectOpenedSubject.next(newMainProject.id);
 			}
 		} else {
-			await this.projectSaveManagementService.saveProjectsAndComponents(Array.from(this.allProjects.values()));
+			await this.projectSaveManagementService.saveProjectsAndComponents(Array.from(this._projects.values()));
 		}
 	}
 

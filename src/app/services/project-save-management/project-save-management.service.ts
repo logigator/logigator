@@ -25,7 +25,6 @@ import {SharingService} from '../sharing/sharing.service';
 import {Elements} from '../../models/elements';
 import {OpenShareResp} from '../../models/http-responses/open-share-resp';
 import {ElementTypeId} from '../../models/element-types/element-type-ids';
-import {main} from '@angular/compiler-cli/src/main';
 
 @Injectable({
 	providedIn: 'root'
@@ -469,6 +468,7 @@ export class ProjectSaveManagementService {
 			project.currState.inputOutputCount();
 			body.num_inputs = project.numInputs;
 			body.num_outputs = project.numOutputs;
+			body.labels = this.elemProvService.getElementById(project.id).labels;
 		}
 		return body;
 	}
@@ -496,6 +496,7 @@ export class ProjectSaveManagementService {
 						symbol: elem.symbol,
 						numInputs: elem.num_inputs,
 						numOutputs: elem.num_outputs,
+						labels: elem.labels
 					};
 					newElemTypes.set(Number(elem.pk_id), elemType);
 				});

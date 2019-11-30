@@ -33,7 +33,7 @@ export class TextGraphics extends PIXI.Container implements LGraphics, Component
 		for (let i = 0; i < textParts.length; i++) {
 			this._texts[i] = new PIXI.BitmapText(textParts[i], {
 				font: {
-					name: 'Nunito',
+					name: 'Roboto',
 					size: environment.gridPixelWidth + 6
 				},
 				tint: this.themingService.getEditorColor('fontTint')

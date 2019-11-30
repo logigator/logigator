@@ -57,9 +57,7 @@ export class ProjectState {
 	private calcAllEndPos() {
 		for (const element of this.allElements) {
 			if (element.typeId === ElementTypeId.WIRE) continue;
-			element.endPos = Elements.calcEndPos(
-				element.pos, Elements.elementType(element.typeId).width, element.numInputs, element.numOutputs, element.rotation
-			);
+			element.endPos = Elements.calcElemEndPos(element);
 		}
 	}
 
@@ -303,8 +301,7 @@ export class ProjectState {
 	public updateNumInputsOutputs(element: Element): void {
 		element.numInputs = Elements.elementType(element.typeId).numInputs;
 		element.numOutputs = Elements.elementType(element.typeId).numOutputs;
-		element.endPos = Elements.calcEndPos(element.pos, Elements.elementType(element.typeId).width,
-			element.numInputs, element.numOutputs, element.rotation);
+		element.endPos = Elements.calcElemEndPos(element);
 	}
 
 
@@ -618,9 +615,19 @@ export class ProjectState {
 		element.data = text;
 	}
 
-
 	public chunk(x: number, y: number): Chunk {
 		return this._chunks[x] ? this._chunks[x][y] : null;
+	}
+
+	public allPlugs(): Element[] {
+		return [
+			...this._inputPlugs.sort((a, b) => {
+				return a.plugIndex - b.plugIndex;
+			}),
+			...this._outputPlugs.sort((a, b) => {
+				return a.plugIndex - b.plugIndex;
+			})
+		];
 	}
 
 	get allElements(): Element[] {

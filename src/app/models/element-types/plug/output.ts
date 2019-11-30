@@ -23,6 +23,7 @@ export const output: ElementType = {
 	maxInputs: 1,
 
 	hasPlugIndex: true,
+	hasLabel: true,
 
 	width: 1,
 };
