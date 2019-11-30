@@ -50,7 +50,7 @@ export class ProjectsService {
 	}
 
 	public async openComponent(id: number) {
-		if (this.allProjects.has(id)) {
+		if (this._projects.has(id)) {
 			this.switchToProject(id);
 			return;
 		}
@@ -68,7 +68,7 @@ export class ProjectsService {
 	}
 
 	public inputsOutputsCustomComponentChanged(projectId: number) {
-		const compProject = this.allProjects.get(projectId);
+		const compProject = this._projects.get(projectId);
 		if (!compProject || compProject.type !== 'comp') return;
 		const elemType = this.elementProvider.getElementById(projectId);
 		compProject.currState.inputOutputCount();
@@ -80,13 +80,12 @@ export class ProjectsService {
 		this.labelsCustomComponentChanged(projectId);
 	}
 
-	labelsCustomComponentChanged(projectId: number) {
-		const compProject = this.allProjects.get(projectId);
+	public labelsCustomComponentChanged(projectId: number) {
+		const compProject = this._projects.get(projectId);
 		if (!compProject || compProject.type !== 'comp') return;
 		const elemType = this.elementProvider.getElementById(projectId);
-		const compLabels = []; // = compProject.calcLabels();
-		elemType.labels = compLabels;
-		// this._projects.forEach(p => p.updateLabels(projectId));
+		elemType.labels = compProject.calcLabels();
+		this._projects.forEach(p => p.updateLabels(projectId));
 	}
 
 	public get hasUnsavedProjects(): boolean {
@@ -134,7 +133,7 @@ export class ProjectsService {
 	}
 
 	private closeAllProjects() {
-		for (const id of this.allProjects.keys()) {
+		for (const id of this._projects.keys()) {
 			this._projectClosedSubject.next(id);
 			this._projects.delete(id);
 		}
@@ -201,7 +200,7 @@ export class ProjectsService {
 				this._projectOpenedSubject.next(newMainProject.id);
 			}
 		} else {
-			await this.projectSaveManagementService.saveProjectsAndComponents(Array.from(this.allProjects.values()));
+			await this.projectSaveManagementService.saveProjectsAndComponents(Array.from(this._projects.values()));
 		}
 	}
 
