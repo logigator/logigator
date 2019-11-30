@@ -20,7 +20,6 @@ export const udcTemplate: Partial<ElementType> = {
 
 	labels: ['ds'],
 	calcLabels() {
-		console.log(this)
 		return this.labels;
 	}
 };
