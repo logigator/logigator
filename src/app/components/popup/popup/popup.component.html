@@ -5,6 +5,8 @@
 			<img *ngIf="currentTheme === 'dark'" src="/assets/icons/dark/close.svg" (click)="closeClick()" class="dark">
 			<img *ngIf="currentTheme === 'light'" src="/assets/icons/light/close.svg" (click)="closeClick()" class="light">
 		</div>
-		<ng-container #contentComponentInsert></ng-container>
+		<div class="body">
+			<ng-container #contentComponentInsert></ng-container>
+		</div>
 	</div>
 </div>
