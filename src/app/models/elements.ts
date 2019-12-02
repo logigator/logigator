@@ -81,7 +81,12 @@ export abstract class Elements {
 		return {wire0, wire1};
 	}
 
-	public static calcEndPos(pos: PIXI.Point, width: number, numInputs: number, numOutputs: number, rotation: number): PIXI.Point {
+	public static calcElemEndPos(element: Element): PIXI.Point {
+		return Elements.calcEndPos(element.pos, Elements.elementType(element.typeId).width,
+			element.numInputs, element.numOutputs, element.rotation);
+	}
+
+	public static calcEndPos(pos: PIXI.Point, width?: number, numInputs?: number, numOutputs?: number, rotation?: number): PIXI.Point {
 		if (rotation === undefined || rotation === null) rotation = 0;
 		if (rotation % 2 === 0) {
 			return new PIXI.Point(pos.x + width,

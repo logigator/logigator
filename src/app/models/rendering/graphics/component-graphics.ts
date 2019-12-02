@@ -13,9 +13,12 @@ export class ComponentGraphics extends PIXI.Graphics implements LGraphics, Compo
 
 	private _scale: number;
 	private themingService = getStaticDI(ThemingService);
+	private elemProvService = getStaticDI(ElementProviderService);
 
 	private readonly _symbol: string;
 	private readonly _width: number;
+
+	private _labels: string[];
 
 	private simActiveState = [];
 	private shouldHaveActiveState = [];
@@ -35,17 +38,19 @@ export class ComponentGraphics extends PIXI.Graphics implements LGraphics, Compo
 			} as any as Element;
 			this._symbol = elementOrType.symbol;
 			this._width = elementOrType.width;
+			if (elementOrType.calcLabels) this._labels = elementOrType.calcLabels();
 		} else {
 			this.element = elementOrType;
-			this._symbol = getStaticDI(ElementProviderService).getElementById(this.element.typeId).symbol;
-			this._width = getStaticDI(ElementProviderService).getElementById(this.element.typeId).width;
+			const elemType = this.elemProvService.getElementById(this.element.typeId);
+			this._symbol = elemType.symbol;
+			this._width = elemType.width;
+			if (elemType.calcLabels) this._labels = elemType.calcLabels(this.element);
 		}
 		this.drawComponent();
 	}
 
 	private drawComponent() {
 		this.lineStyle(1 / this._scale, this.themingService.getEditorColor('wire'));
-		this.beginFill(this.themingService.getEditorColor('background'));
 		this.moveTo(0, 0);
 
 		let width;
@@ -61,9 +66,9 @@ export class ComponentGraphics extends PIXI.Graphics implements LGraphics, Compo
 				environment.gridPixelWidth * this.element.numOutputs;
 			height = environment.gridPixelWidth * this._width;
 		}
-		this.drawRect(0, 0, width, height);
 
 		this.beginFill(this.themingService.getEditorColor('wire'));
+		this.removeChildren(0);
 
 		switch (this.element.rotation) {
 			case 0:
@@ -80,12 +85,10 @@ export class ComponentGraphics extends PIXI.Graphics implements LGraphics, Compo
 				break;
 		}
 
-		this.removeChildren(0);
-
 		const text = new PIXI.BitmapText(this._symbol, {
 			font: {
-				name: 'Nunito',
-				size: environment.gridPixelWidth + 4
+				name: 'Roboto',
+				size: environment.gridPixelWidth * 0.9
 			},
 			tint: this.themingService.getEditorColor('fontTint')
 		});
@@ -101,44 +104,138 @@ export class ComponentGraphics extends PIXI.Graphics implements LGraphics, Compo
 		for (let i = 0; i < inputs; i++) {
 			this.moveTo(-(environment.gridPixelWidth / 2), (environment.gridPixelWidth / 2) + environment.gridPixelWidth * i);
 			this.lineTo(0, (environment.gridPixelWidth / 2) + environment.gridPixelWidth * i);
+			if (!this._labels || !this._labels[i]) continue;
+			const label = this.getLabelText(this._labels[i]);
+			label.anchor = new PIXI.Point(0, 0.5);
+			label.x = 1;
+			label.y = (environment.gridPixelWidth / 2) + environment.gridPixelWidth * i;
+			this.addChild(label);
 		}
 		for (let i = 0; i < outputs; i++) {
 			this.moveTo(width, (environment.gridPixelWidth / 2) + environment.gridPixelWidth * i);
 			this.lineTo(width + environment.gridPixelWidth / 2, (environment.gridPixelWidth / 2) + environment.gridPixelWidth * i);
+			if (!this._labels || !this._labels[inputs + i]) continue;
+			const label = this.getLabelText(this._labels[inputs + i]);
+			label.anchor = new PIXI.Point(1, 0.5);
+			label.x = width - 1;
+			label.y = (environment.gridPixelWidth / 2) + environment.gridPixelWidth * i;
+			this.addChild(label);
 		}
+
+		this.beginFill(this.themingService.getEditorColor('background'));
+		this.moveTo(0, 0);
+		this.lineTo(width - 3, 0);
+		this.lineTo(width, 3);
+		this.lineTo(width, height - 3);
+		this.lineTo(width - 3, height);
+		this.lineTo(0, height);
+		this.lineTo(0, 0);
 	}
 
 	private rotation1(inputs: number, outputs: number, height: number, width: number) {
 		for (let i = 0; i < inputs; i++) {
-			this.moveTo(width - (environment.gridPixelWidth / 2) - environment.gridPixelWidth * i, 0);
-			this.lineTo(width - (environment.gridPixelWidth / 2) - environment.gridPixelWidth * i, -(environment.gridPixelWidth / 2));
+			this.moveTo(width - environment.gridPixelWidth / 2 - environment.gridPixelWidth * i, 0);
+			this.lineTo(width - environment.gridPixelWidth / 2 - environment.gridPixelWidth * i, -(environment.gridPixelWidth / 2));
+			if (!this._labels || !this._labels[i]) continue;
+			const label = this.getLabelText(this._labels[i]);
+			label.anchor = new PIXI.Point(0.5, 0);
+			label.x = width - environment.gridPixelWidth / 2 - environment.gridPixelWidth * i;
+			label.y = 1;
+			this.addChild(label);
 		}
 		for (let i = 0; i < outputs; i++) {
-			this.moveTo(width - (environment.gridPixelWidth / 2) - environment.gridPixelWidth * i, height);
-			this.lineTo(width - (environment.gridPixelWidth / 2) - environment.gridPixelWidth * i, height + environment.gridPixelWidth / 2);
+			this.moveTo(width - environment.gridPixelWidth / 2 - environment.gridPixelWidth * i, height);
+			this.lineTo(width - environment.gridPixelWidth / 2 - environment.gridPixelWidth * i, height + environment.gridPixelWidth / 2);
+			if (!this._labels || !this._labels[inputs + i]) continue;
+			const label = this.getLabelText(this._labels[inputs + i]);
+			label.anchor = new PIXI.Point(0.5, 1);
+			label.x = width - environment.gridPixelWidth / 2 - environment.gridPixelWidth * i;
+			label.y = height - 1;
+			this.addChild(label);
 		}
+
+		this.beginFill(this.themingService.getEditorColor('background'));
+		this.moveTo(0, 0);
+		this.lineTo(width, 0);
+		this.lineTo(width, height - 3);
+		this.lineTo(width - 3, height);
+		this.lineTo(3, height);
+		this.lineTo(0, height - 3);
+		this.lineTo(0, 0);
 	}
 
 	private rotation2(inputs: number, outputs: number, height: number, width: number) {
 		for (let i = 0; i < inputs; i++) {
 			this.moveTo(width, height - (environment.gridPixelWidth / 2) - environment.gridPixelWidth * i);
 			this.lineTo(width + (environment.gridPixelWidth / 2), height - (environment.gridPixelWidth / 2) - environment.gridPixelWidth * i);
+			if (!this._labels || !this._labels[i]) continue;
+			const label = this.getLabelText(this._labels[i]);
+			label.anchor = new PIXI.Point(1, 0.5);
+			label.x = width - 1;
+			label.y = height - (environment.gridPixelWidth / 2) - environment.gridPixelWidth * i;
+			this.addChild(label);
 		}
 		for (let i = 0; i < outputs; i++) {
-			this.moveTo(0, height - (environment.gridPixelWidth / 2) - (environment.gridPixelWidth * i));
-			this.lineTo(-(environment.gridPixelWidth / 2), height - (environment.gridPixelWidth / 2) - environment.gridPixelWidth * i);
+			this.moveTo(0, height - environment.gridPixelWidth / 2 - environment.gridPixelWidth * i);
+			this.lineTo(-environment.gridPixelWidth / 2, height - environment.gridPixelWidth / 2 - environment.gridPixelWidth * i);
+			if (!this._labels || !this._labels[inputs + i]) continue;
+			const label = this.getLabelText(this._labels[inputs + i]);
+			label.anchor = new PIXI.Point(0, 0.5);
+			label.x = 1;
+			label.y = height - (environment.gridPixelWidth / 2) - environment.gridPixelWidth * i;
+			this.addChild(label);
 		}
+
+		this.beginFill(this.themingService.getEditorColor('background'));
+		this.moveTo(3, 0);
+		this.lineTo(width, 0);
+		this.lineTo(width, height);
+		this.lineTo(3, height);
+		this.lineTo(0, height - 3);
+		this.lineTo(0, 3);
+		this.lineTo(3, 0);
 	}
 
 	private rotation3(inputs: number, outputs: number, height: number, width: number) {
 		for (let i = 0; i < inputs; i++) {
 			this.moveTo((environment.gridPixelWidth / 2) + environment.gridPixelWidth * i, height);
 			this.lineTo((environment.gridPixelWidth / 2) + environment.gridPixelWidth * i, height + (environment.gridPixelWidth / 2));
+			if (!this._labels || !this._labels[i]) continue;
+			const label = this.getLabelText(this._labels[i]);
+			label.anchor = new PIXI.Point(0.5, 1);
+			label.x = width - environment.gridPixelWidth / 2 - environment.gridPixelWidth * i;
+			label.y = height - 1;
+			this.addChild(label);
 		}
 		for (let i = 0; i < outputs; i++) {
 			this.moveTo(environment.gridPixelWidth / 2 + environment.gridPixelWidth * i, 0);
 			this.lineTo(environment.gridPixelWidth / 2 + environment.gridPixelWidth * i, -(environment.gridPixelWidth / 2));
+			if (!this._labels || !this._labels[inputs + i]) continue;
+			const label = this.getLabelText(this._labels[inputs + i]);
+			label.anchor = new PIXI.Point(0.5, 0);
+			label.x = width - environment.gridPixelWidth / 2 - environment.gridPixelWidth * i;
+			label.y = 1;
+			this.addChild(label);
 		}
+
+		this.beginFill(this.themingService.getEditorColor('background'));
+		this.moveTo(3, 0);
+		this.lineTo(width - 3, 0);
+		this.lineTo(width, 3);
+		this.lineTo(width, height);
+		this.lineTo(0, height);
+		this.lineTo(0, 3);
+		this.lineTo(3, 0);
+	}
+
+	private getLabelText(text: string): PIXI.BitmapText {
+		return new PIXI.BitmapText(text, {
+			font: {
+				name: 'Roboto',
+				size: environment.gridPixelWidth * 0.5
+			},
+			tint: this.themingService.getEditorColor('fontTint')
+		});
 	}
 
 	public applySimState(scale: number) {
@@ -203,6 +300,8 @@ export class ComponentGraphics extends PIXI.Graphics implements LGraphics, Compo
 		this.element.numOutputs = element.numOutputs;
 		this.element.rotation = element.rotation;
 		this._scale = scale;
+		const elemType = this.elemProvService.getElementById(this.element.typeId);
+		if (elemType.calcLabels) this._labels = elemType.calcLabels(this.element);
 		this.clear();
 		this.drawComponent();
 	}

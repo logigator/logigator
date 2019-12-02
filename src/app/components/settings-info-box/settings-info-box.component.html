@@ -26,6 +26,11 @@
 			</select>
 		</div>
 
+		<div class="property" *ngIf="elementType.hasLabel && selectedCompId">
+			<p>{{'SETTINGS_INFO.PLUG_LABEL' | translate}}:</p>
+			<input formControlName="label" type="text" maxlength="3">
+		</div>
+
 		<div class="property" formArrayName="options" *ngFor="let item of optionsControls; let i = index">
 			<p>{{elementType.optionsConfig[i].name | translate}}:</p>
 			<input type="number"

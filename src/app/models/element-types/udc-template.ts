@@ -1,7 +1,4 @@
 import {ElementType} from './element-type';
-import {environment} from '../../../environments/environment';
-import {Project} from '../project';
-import {getStaticDI} from '../get-di';
 import {ProjectsService} from '../../services/projects/projects.service';
 
 export const udcTemplate: Partial<ElementType> = {
@@ -14,10 +11,15 @@ export const udcTemplate: Partial<ElementType> = {
 	isRotatable: true,
 	rotation: 0,
 
-	width: environment.componentWidth,
+	width: 3,
 
 	edit: (typeId: number, id: number, projectsSer: ProjectsService) => {
 		projectsSer.openComponent(typeId);
 	},
-	canEditType: true
+	canEditType: true,
+
+	labels: ['ds'],
+	calcLabels() {
+		return this.labels;
+	}
 };

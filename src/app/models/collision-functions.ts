@@ -96,18 +96,18 @@ export abstract class CollisionFunctions {
 
 	public static rectCuttingPoints(element: Element, startPos: PIXI.Point, endPos: PIXI.Point): PIXI.Point[] {
 		if (Elements.isHorizontal(element)) {
-			if (!(element.pos.y > startPos.y && element.pos.y < endPos.y))
+			if (!(element.pos.y > startPos.y - 0.5 && element.pos.y < endPos.y - 0.5))
 				return undefined;
 			return [
-				new PIXI.Point(Math.floor(startPos.x), element.pos.y),
-				new PIXI.Point(Math.ceil(endPos.x), element.pos.y)
+				new PIXI.Point(Math.floor(startPos.x - 0.5), element.pos.y),
+				new PIXI.Point(Math.ceil(endPos.x - 0.5), element.pos.y)
 			];
 		} else {
-			if (!(element.pos.x > startPos.x && element.pos.x < endPos.x))
+			if (!(element.pos.x > startPos.x - 0.5 && element.pos.x < endPos.x - 0.5))
 				return undefined;
 			return [
-				new PIXI.Point(element.pos.x, Math.floor(startPos.y)),
-				new PIXI.Point(element.pos.x, Math.ceil(endPos.y))
+				new PIXI.Point(element.pos.x, Math.floor(startPos.y - 0.5)),
+				new PIXI.Point(element.pos.x, Math.ceil(endPos.y - 0.5))
 			];
 		}
 	}
