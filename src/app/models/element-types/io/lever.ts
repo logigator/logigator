@@ -1,6 +1,9 @@
 import {ElementType} from '../element-type';
+import {ElementTypeId} from '../element-type-ids';
 
 export const lever: ElementType = {
+	id: ElementTypeId.LEVER,
+
 	name: 'ELEMENT_TYPE.IO.LEVER.NAME',
 
 	category: 'io',

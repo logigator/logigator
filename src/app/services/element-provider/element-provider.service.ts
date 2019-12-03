@@ -15,7 +15,6 @@ import {delay} from '../../models/element-types/basic/delay';
 import {clock} from '../../models/element-types/basic/clock';
 import {halfAdder} from '../../models/element-types/advanced/half-adder';
 import {fullAdder} from '../../models/element-types/advanced/full-adder';
-import {environment} from '../../../environments/environment';
 import {text} from '../../models/element-types/basic/text';
 import {ElementTypeId} from '../../models/element-types/element-type-ids';
 import {udcTemplate} from '../../models/element-types/udc-template';
@@ -26,30 +25,30 @@ import {udcTemplate} from '../../models/element-types/udc-template';
 export class ElementProviderService {
 
 	private _basicElements: Map<number, ElementType> = new Map([
-		[ElementTypeId.WIRE, wire],
-		[ElementTypeId.NOT, not],
-		[ElementTypeId.AND, and],
-		[ElementTypeId.OR, or],
-		[ElementTypeId.XOR, xor],
-		[ElementTypeId.DELAY, delay],
-		[ElementTypeId.CLOCK, clock],
-		[ElementTypeId.TEXT, text]
+		[wire.id, wire],
+		[not.id, not],
+		[and.id, and],
+		[or.id, or],
+		[xor.id, xor],
+		[delay.id, delay],
+		[clock.id, clock],
+		[text.id, text]
 	]);
 
 	private _advancedElements: Map<number, ElementType> = new Map([
-		[ElementTypeId.HALF_ADDER, halfAdder],
-		[ElementTypeId.FULL_ADDER, fullAdder]
+		[halfAdder.id, halfAdder],
+		[fullAdder.id, fullAdder]
 	]);
 
 	private _plugElements: Map<number, ElementType> = new Map([
-		[ElementTypeId.INPUT, input],
-		[ElementTypeId.OUTPUT, output],
-		[ElementTypeId.BUTT, butt]
+		[input.id, input],
+		[output.id, output],
+		[butt.id, butt]
 	]);
 
 	private _ioElements: Map<number, ElementType> = new Map([
-		[ElementTypeId.BUTTON, button],
-		[ElementTypeId.LEVER, lever]
+		[button.id, button],
+		[lever.id, lever]
 	]);
 
 	private _userDefinedElements: Map<number, ElementType> = new Map<number, ElementType>();

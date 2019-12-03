@@ -1,6 +1,9 @@
 import {ElementType} from '../element-type';
+import {ElementTypeId} from '../element-type-ids';
 
 export const button: ElementType = {
+	id: ElementTypeId.BUTTON,
+
 	name: 'ELEMENT_TYPE.IO.BUTTON.NAME',
 
 	category: 'io',

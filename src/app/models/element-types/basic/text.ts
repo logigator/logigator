@@ -3,8 +3,11 @@ import {ProjectsService} from '../../../services/projects/projects.service';
 import {TextComponent} from '../../../components/popup/popup-contents/text/text.component';
 import {getStaticDI} from '../../get-di';
 import {PopupService} from '../../../services/popup/popup.service';
+import {ElementTypeId} from '../element-type-ids';
 
 export const text: ElementType = {
+	id: ElementTypeId.TEXT,
+
 	name: 'ELEMENT_TYPE.BASIC.TEXT.NAME',
 
 	category: 'basic',

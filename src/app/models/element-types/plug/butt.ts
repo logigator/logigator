@@ -1,6 +1,9 @@
 import {ElementType} from '../element-type';
+import {ElementTypeId} from '../element-type-ids';
 
 export const butt: ElementType = {
+	id: ElementTypeId.BUTT,
+
 	name: 'Butt PLug',
 
 	category: 'plug',

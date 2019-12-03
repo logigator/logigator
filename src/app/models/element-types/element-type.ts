@@ -2,6 +2,8 @@ import {ProjectsService} from '../../services/projects/projects.service';
 import {Element} from '../element';
 
 export interface ElementType {
+	id: number;
+
 	// translation id for predefined comps
 	name: string;
 

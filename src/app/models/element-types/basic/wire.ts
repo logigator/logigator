@@ -1,6 +1,9 @@
 import {ElementType} from '../element-type';
+import {ElementTypeId} from '../element-type-ids';
 
 export const wire: ElementType = {
+	id: ElementTypeId.WIRE,
+
 	name: 'wire',
 
 	category: 'basic',

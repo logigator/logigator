@@ -1,7 +1,9 @@
 import {ElementType} from '../element-type';
-import {environment} from '../../../../environments/environment';
+import {ElementTypeId} from '../element-type-ids';
 
 export const fullAdder: ElementType = {
+	id: ElementTypeId.FULL_ADDER,
+
 	name: 'ELEMENT_TYPE.ADVANCED.FULL_ADDER.NAME',
 	category: 'advanced',
 

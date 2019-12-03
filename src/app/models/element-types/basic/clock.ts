@@ -1,7 +1,10 @@
 import {ElementType} from '../element-type';
 import {environment} from '../../../../environments/environment';
+import {ElementTypeId} from '../element-type-ids';
 
 export const clock: ElementType = {
+	id: ElementTypeId.CLOCK,
+
 	name: 'ELEMENT_TYPE.BASIC.CLOCK.NAME',
 
 	category: 'basic',

@@ -1,7 +1,10 @@
 import {ElementType} from '../element-type';
 import {environment} from '../../../../environments/environment';
+import {ElementTypeId} from '../element-type-ids';
 
 export const xor: ElementType = {
+	id: ElementTypeId.XOR,
+
 	name: 'ELEMENT_TYPE.BASIC.XOR.NAME',
 
 	category: 'basic',

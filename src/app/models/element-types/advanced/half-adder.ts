@@ -1,7 +1,9 @@
 import {ElementType} from '../element-type';
-import {environment} from '../../../../environments/environment';
+import {ElementTypeId} from '../element-type-ids';
 
 export const halfAdder: ElementType = {
+	id: ElementTypeId.HALF_ADDER,
+
 	name: 'ELEMENT_TYPE.ADVANCED.HALF_ADDER.NAME',
 
 	category: 'advanced',

@@ -1,7 +1,10 @@
 import {ElementType} from '../element-type';
 import {environment} from '../../../../environments/environment';
+import {ElementTypeId} from '../element-type-ids';
 
 export const delay: ElementType = {
+	id: ElementTypeId.DELAY,
+
 	name: 'ELEMENT_TYPE.BASIC.DELAY.NAME',
 
 	category: 'basic',

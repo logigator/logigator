@@ -1,6 +1,9 @@
 import {ElementType} from '../element-type';
+import {ElementTypeId} from '../element-type-ids';
 
 export const input: ElementType = {
+	id: ElementTypeId.INPUT,
+
 	name: 'ELEMENT_TYPE.PLUG.INPUT.NAME',
 
 	category: 'plug',

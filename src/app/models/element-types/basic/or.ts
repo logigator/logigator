@@ -1,7 +1,10 @@
 import {ElementType} from '../element-type';
 import {environment} from '../../../../environments/environment';
+import {ElementTypeId} from '../element-type-ids';
 
 export const or: ElementType = {
+	id: ElementTypeId.OR,
+
 	name: 'ELEMENT_TYPE.BASIC.OR.NAME',
 
 	category: 'basic',

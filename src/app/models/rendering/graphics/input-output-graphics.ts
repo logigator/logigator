@@ -34,6 +34,7 @@ export class InputOutputGraphics extends PIXI.Graphics implements LGraphics, Com
 				rotation: elementOrType.rotation,
 				numInputs: elementOrType.numInputs,
 				numOutputs: elementOrType.numOutputs,
+				typeId: elementOrType.id
 			} as any as Element;
 			this._symbol = elementOrType.symbol;
 			this._width = elementOrType.width;

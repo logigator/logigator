@@ -101,6 +101,7 @@ export class ProjectSaveManagementService {
 			id = await this.newCustomComponentOnServer(name, symbol, description);
 			if (!id) return;
 			this.elemProvService.addUserDefinedElement({
+				id,
 				numOutputs: 0,
 				maxInputs: 0,
 				name,
@@ -112,6 +113,7 @@ export class ProjectSaveManagementService {
 		} else {
 			id = this.findNextLocalCompId();
 			this.elemProvService.addUserDefinedElement({
+				id,
 				numOutputs: 0,
 				maxInputs: 0,
 				name,
@@ -145,6 +147,7 @@ export class ProjectSaveManagementService {
 		for (const depId in resp.components) {
 			const depComp = resp.components[depId];
 			this.elemProvService.addUserDefinedElement({
+				id: Number(depId),
 				description: depComp.description,
 				name: depComp.name,
 				rotation: 0,
@@ -489,6 +492,7 @@ export class ProjectSaveManagementService {
 					elem.num_inputs = Number(elem.num_inputs);
 					elem.num_outputs = Number(elem.num_outputs);
 					const elemType: Partial<ElementType> = {
+						id: Number(elem.pk_id),
 						description: elem.description,
 						name: elem.name,
 						minInputs: elem.num_inputs,
