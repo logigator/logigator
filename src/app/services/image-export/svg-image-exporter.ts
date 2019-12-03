@@ -20,7 +20,7 @@ export class SvgImageExporter {
 	private size = new PIXI.Point(0, 0);
 	private offset = new PIXI.Point(0, 0);
 
-	constructor(private project: Project, private isThumb: boolean) {
+	constructor(private project: Project) {
 		this._svg = document.createElementNS(this.SVG_NS, 'svg');
 		this.generateStyles();
 
@@ -101,9 +101,13 @@ export class SvgImageExporter {
 		const styles = document.createElement('style');
 		styles.setAttribute('type', 'text/css');
 		styles.innerHTML = `
+			text {
+				fill: #${this.themingService.getEditorColor('fontTint').toString(16)};
+				font-family: Roboto, Arial, sans-serif;
+			}
 			.wire {
 				stroke: #${this.themingService.getEditorColor('wire').toString(16)};
-				stroke-width: ${this.isThumb ? '4px' : '1px'};
+				stroke-width: 1px;
 				fill: none;
 				vector-effect: non-scaling-stroke;
 			}
@@ -113,16 +117,33 @@ export class SvgImageExporter {
 				width: 5px;
 			}
 			.symbol {
-				fill: #${this.themingService.getEditorColor('fontTint').toString(16)};
 				text-anchor: middle;
-				font-family: Roboto, Arial, sans-serif;
+				font-size: 15px;
 				dominant-baseline: central;
 			}
 			.text {
-				fill: #${this.themingService.getEditorColor('fontTint').toString(16)};
 				text-anchor: start;
-				font-family: Roboto, Arial, sans-serif;
 				dominant-baseline: central;
+			}
+			.l-l {
+				text-anchor: start;
+				font-size: ${environment.gridPixelWidth * 0.5}px;
+				dominant-baseline: central;
+			}
+			.l-r {
+				text-anchor: end;
+				font-size: ${environment.gridPixelWidth * 0.5}px;
+				dominant-baseline: central;
+			}
+			.l-t {
+				text-anchor: middle;
+				font-size: ${environment.gridPixelWidth * 0.5}px;
+				dominant-baseline: text-before-edge;
+			}
+			.l-b {
+				text-anchor: middle;
+				font-size: ${environment.gridPixelWidth * 0.5}px;
+				dominant-baseline: text-after-edge;
 			}
 		`;
 		defs.appendChild(styles);
