@@ -4,6 +4,7 @@
 @import "buttons";
 
 @import url('https://fonts.googleapis.com/css?family=Nunito&display=swap');
+@import url('https://fonts.googleapis.com/css?family=Roboto&display=swap');
 
 html, body {
 	margin: 0;
@@ -15,6 +16,6 @@ html, body {
 
 * {
 	box-sizing: border-box;
-	font-family: Nunito, Arial, sans-serif;
+	font-family: Roboto, Nunito, Arial, sans-serif;
 	font-size: 100%;
 }

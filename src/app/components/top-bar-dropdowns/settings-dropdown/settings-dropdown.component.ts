@@ -1,4 +1,4 @@
-import {ChangeDetectionStrategy, Component, EventEmitter, OnInit, Output} from '@angular/core';
+import {ChangeDetectionStrategy, Component, EventEmitter, OnInit, Optional, Output} from '@angular/core';
 import {ThemingService} from '../../../services/theming/theming.service';
 import {PopupService} from '../../../services/popup/popup.service';
 import {ShortcutConfigComponent} from '../../popup/popup-contents/shortcut-config/shortcut-config/shortcut-config.component';
@@ -8,6 +8,7 @@ import {UserService} from '../../../services/user/user.service';
 import {ProjectsService} from '../../../services/projects/projects.service';
 import {ElementProviderService} from '../../../services/element-provider/element-provider.service';
 import {environment} from '../../../../environments/environment';
+import {ElectronService} from 'ngx-electron';
 
 @Component({
 	selector: 'app-settings-dropdown',
@@ -29,7 +30,8 @@ export class SettingsDropdownComponent implements OnInit {
 		private translation: TranslateService,
 		private user: UserService,
 		private projects: ProjectsService,
-		private elementProvServ: ElementProviderService
+		private elementProvServ: ElementProviderService,
+		@Optional() private electronService: ElectronService,
 	) {}
 
 	ngOnInit(): void {
@@ -55,11 +57,17 @@ export class SettingsDropdownComponent implements OnInit {
 	}
 
 	public accountSettings() {
+		// #!web
 		window.open('https://logigator.com/my/settings', '_blank');
+		// #!electron
+		this.electronService.shell.openExternal('https://logigator.com/my/settings');
 	}
 
 	public privacyPolicy() {
+		// #!web
 		window.open('https://logigator.com/privacy-policy', '_blank');
+		// #!electron
+		this.electronService.shell.openExternal('https://logigator.com/privacy-policy');
 	}
 
 	// #! ELECTRON === 'true'

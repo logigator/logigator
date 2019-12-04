@@ -72,7 +72,7 @@ export class UserService {
 		this.electronService.remote.getGlobal('isLoggedIn').data = 'false';
 
 		this.electronService.ipcRenderer.send('logout');
-		this.getUserInfoFromServer();
+		this._userInfo$ = of(undefined);
 	}
 	// #!endif
 
