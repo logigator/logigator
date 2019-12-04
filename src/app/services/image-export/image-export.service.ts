@@ -1,15 +1,19 @@
-import { Injectable } from '@angular/core';
+import {Injectable, Optional} from '@angular/core';
 import {ProjectsService} from '../projects/projects.service';
 import {SvgImageExporter} from './svg-image-exporter';
-import * as FileSaver from 'file-saver';
 import {Project} from '../../models/project';
+import {saveLocalFileBlob, saveLocalFile} from '../../models/save-local-file';
+import {ElectronService} from 'ngx-electron';
 
 @Injectable({
 	providedIn: 'root'
 })
 export class ImageExportService {
 
-	constructor(private projectsService: ProjectsService) { }
+	constructor(
+		private projectsService: ProjectsService,
+		@Optional() private electronService: ElectronService
+	) { }
 
 	public exportImage(type: 'jpeg' | 'png' | 'svg') {
 		if (type === 'jpeg' || type === 'png') {
@@ -22,7 +26,7 @@ export class ImageExportService {
 	private async exportPixelImage(type: 'jpeg' | 'png') {
 		const project = this.projectsService.currProject;
 		const blob = await this.getBlobImage(project, type);
-		FileSaver.saveAs(blob, `${project.name}.${type}`);
+		saveLocalFileBlob(blob, type, project.name, 'Save Image As', this.electronService);
 	}
 
 	private getBlobImage(project: Project, type: 'jpeg' | 'png'): Promise<Blob> {
@@ -47,6 +51,6 @@ export class ImageExportService {
 	private exportVectorImage() {
 		const project = this.projectsService.currProject;
 		const exporter = new SvgImageExporter(project);
-		FileSaver.saveAs(exporter.getSVGDownloadString(), `${project.name}.svg`);
+		saveLocalFile(exporter.serializeSVG(), 'svg', project.name, 'Save Image As', this.electronService);
 	}
 }

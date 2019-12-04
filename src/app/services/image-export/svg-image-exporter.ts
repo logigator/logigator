@@ -156,7 +156,7 @@ export class SvgImageExporter {
 		if (pos.y > this.size.y) this.size.y = pos.y;
 	}
 
-	private serializeSVG(): string {
+	public serializeSVG(): string {
 		const serializer = new XMLSerializer();
 		let source = serializer.serializeToString(this._svg);
 		if (!source.match(/^<svg[^>]+xmlns="http\:\/\/www\.w3\.org\/2000\/svg"/)) {
@@ -166,10 +166,6 @@ export class SvgImageExporter {
 			source = source.replace(/^<svg/, '<svg xmlns:xlink="http://www.w3.org/1999/xlink"');
 		}
 		return '<?xml version="1.0" standalone="no"?>\r\n' + source;
-	}
-
-	public getSVGDownloadString(): string {
-		return 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(this.serializeSVG());
 	}
 
 	public getBase64String(): string {

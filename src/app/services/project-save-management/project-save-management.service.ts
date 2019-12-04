@@ -20,7 +20,7 @@ import {Observable} from 'rxjs';
 import {ProjectInfoResponse} from '../../models/http-responses/project-info-response';
 import {environment} from '../../../environments/environment';
 import {ElectronService} from 'ngx-electron';
-import {saveLocalFile} from './save-local-file';
+import {saveLocalFile} from '../../models/save-local-file';
 import {SharingService} from '../sharing/sharing.service';
 import {Elements} from '../../models/elements';
 import {OpenShareResp} from '../../models/http-responses/open-share-resp';
@@ -281,7 +281,9 @@ export class ProjectSaveManagementService {
 				} as ComponentLocalFile;
 			}) as ComponentLocalFile[]
 		};
-		if (await saveLocalFile(modelToSave, name || project.name, this.electronService))
+		if (await saveLocalFile(
+			JSON.stringify(modelToSave), 'json', name || project.name, 'Save Project', this.electronService)
+		)
 			this.errorHandling.showInfo('INFO.PROJECTS.EXPORT');
 	}
 
