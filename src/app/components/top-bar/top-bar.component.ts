@@ -45,7 +45,7 @@ export class TopBarComponent implements OnInit {
 
 	public login() {
 		// #!electron
-		this.popup.showPopup(LoginPopupComponent, null, 'Login', true);
+		this.popup.showPopup(LoginPopupComponent, 'Login', true);
 
 		// #!web
 		window.open('https://logigator.com/login', '_blank');
@@ -53,7 +53,7 @@ export class TopBarComponent implements OnInit {
 
 	public register() {
 		// #!electron
-		this.popup.showPopup(RegisterPopupComponent, null, 'Register', true);
+		this.popup.showPopup(RegisterPopupComponent, 'Register', false);
 
 		// #!web
 		window.open('https://logigator.com/register', '_blank');

@@ -96,7 +96,7 @@ export class ProjectInteractionService {
 		if (!checkActionUsable('openProj')) return;
 		await this.ngZone.run(async () => {
 			if (await this.projectsService.askToSave()) {
-				await this.popupService.showPopup(OpenProjectComponent, null, 'POPUP.OPEN.TITLE', true);
+				await this.popupService.showPopup(OpenProjectComponent, 'POPUP.OPEN.TITLE', true);
 			}
 		});
 	}
@@ -104,7 +104,7 @@ export class ProjectInteractionService {
 	public newComponent(): Promise<any> {
 		if (!checkActionUsable('newComp')) return;
 		return this.ngZone.run(() => {
-			return this.popupService.showPopup(NewComponentComponent, null, 'POPUP.NEW_COMP.TITLE', false);
+			return this.popupService.showPopup(NewComponentComponent, 'POPUP.NEW_COMP.TITLE', false);
 		});
 	}
 
@@ -112,9 +112,9 @@ export class ProjectInteractionService {
 		return this.ngZone.run(() => {
 			return this.popupService.showPopup(
 				ShareProjectComponent,
-				null,
 				'POPUP.SHARE.TITLE',
 				false,
+				null,
 				null,
 				{project: this.projectsService.mainProject.name}
 			);

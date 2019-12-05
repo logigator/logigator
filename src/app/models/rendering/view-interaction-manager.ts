@@ -403,7 +403,7 @@ export class ViewInteractionManager {
 	private placeText(e: InteractionEvent) {
 		const pos = Grid.getGridPosForPixelPos(e.data.getLocalPosition(this._view));
 		getStaticDI(NgZone).run(async () => {
-			const text = await getStaticDI(PopupService).showPopup(TextComponent, null, 'POPUP.TEXT.TITLE', false);
+			const text = await getStaticDI(PopupService).showPopup(TextComponent, 'POPUP.TEXT.TITLE', false);
 			if (!text) return;
 			this.projectsSer.currProject.addText(text, pos);
 		});

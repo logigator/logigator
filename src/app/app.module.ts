@@ -46,7 +46,11 @@ import { ToolbarItemTooltipComponent } from './components/toolbar-item-tooltip/t
 import { TextComponent } from './components/popup-contents/text/text.component';
 import { StatusBarComponent } from './components/status-bar/status-bar.component';
 import {FileInputComponent} from './components/file-input/file-input.component';
-import {LogigatorSharedCompsModule} from '@logigator/logigator-shared-comps';
+import {
+	LogigatorSharedCompsModule,
+	SharedCompsAuthService,
+	SharedCompsThemingService
+} from '@logigator/logigator-shared-comps';
 import {ThemingService} from './services/theming/theming.service';
 import {UserService} from './services/user/user.service';
 
@@ -125,8 +129,14 @@ import {UserService} from './services/user/user.service';
 			}
 		}),
 		LogigatorSharedCompsModule.forRoot({
-			authService: UserService,
-			themingService: ThemingService
+			themingService: {
+				provide: SharedCompsThemingService,
+				useExisting: ThemingService
+			},
+			authService: {
+				provide: SharedCompsAuthService,
+				useExisting: UserService
+			}
 		})
 	],
 	providers: [

@@ -27,8 +27,8 @@
 				border: none;
 				padding: 0.25rem;
 				font-size: 1rem;
-				border-bottom: 1px solid themed('primary-text');
-				color: themed('primary-text');
+				border-bottom: 1px solid themed('text-primary');
+				color: themed('text-primary');
 				background-color: themed('background');
 
 				&:focus ~ label {

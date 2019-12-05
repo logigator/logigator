@@ -5,6 +5,10 @@
 	@include themify() {
 		background-color: themed('primary');
 		color: black;
+
+		p {
+			color: themed('text-secondary');
+		}
 	}
 
 	width: 100%;
@@ -88,8 +92,8 @@
 					&:hover {
 						cursor: pointer;
 						@include themify() {
-							background-color: themed('secondary');
-							color: themed('primary-text');
+							background-color: themed('accent2');
+							color: themed('text-primary');
 						}
 					}
 				}

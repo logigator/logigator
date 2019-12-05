@@ -13,8 +13,8 @@
 
 	@include themify() {
 		background-color: themed('background');
-		color: themed('primary-text');
-		border: solid themed('secondary') border('width');
+		color: themed('text-primary');
+		border: solid themed('accent2') border('width');
 		border-top-right-radius: border('radius');
 		border-bottom-left-radius: border('radius');
 		border-bottom-right-radius: border('radius');
@@ -23,7 +23,7 @@
 			padding: 0.5rem;
 
 			&:hover {
-				background-color: themed('secondary');
+				background-color: themed('accent2');
 			}
 
 			span {
@@ -39,7 +39,7 @@
 			border-bottom-width: 1px;
 			border-style: solid;
 
-			border-color: themed('secondary');
+			border-color: themed('accent2');
 		}
 	}
 }

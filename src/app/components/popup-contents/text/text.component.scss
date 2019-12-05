@@ -12,8 +12,8 @@ div {
 
 		@include themify(){
 			background-color: themed('background');
-			border: 1px solid themed('primary-text');
-			color: themed('primary-text');
+			border: 1px solid themed('text-primary');
+			color: themed('text-primary');
 		}
 	}
 }

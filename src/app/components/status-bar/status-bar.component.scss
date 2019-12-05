@@ -11,8 +11,8 @@
 
 	@include themify() {
 		background-color: themed('toolbar');
-		color: themed('primary-text');
-		border-top: border('width') solid themed('secondary');
+		color: themed('text-primary');
+		border-top: border('width') solid themed('accent2');
 	}
 
 	.division {
@@ -25,7 +25,7 @@
 			margin: 0 0.5rem;
 
 			@include themify() {
-				border-left: border('width') solid themed('secondary');
+				border-left: border('width') solid themed('accent2');
 			}
 		}
 

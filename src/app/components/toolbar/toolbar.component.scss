@@ -4,8 +4,8 @@
 .toolbar {
 	@include themify() {
 		background-color: themed('background');
-		color: themed('primary-text');
-		border-bottom: border('width') solid themed('secondary');
+		color: themed('text-primary');
+		border-bottom: border('width') solid themed('accent2');
 	}
 
 	position: static;
@@ -36,7 +36,7 @@
 		&:hover {
 			cursor: default;
 			@include themify() {
-				background-color: themed('secondary');
+				background-color: themed('accent2');
 			}
 		}
 	}
@@ -53,7 +53,7 @@
 
 	.divider {
 		@include themify() {
-			border-left: 1px solid themed('primary-text');
+			border-left: 1px solid themed('text-primary');
 		}
 		height: $toolbar-height - 20px;
 		padding: 0;

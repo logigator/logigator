@@ -18,7 +18,7 @@
 
 	@include themify() {
 		background-color: themed('background');
-		color: themed('primary-text');
+		color: themed('text-primary');
 		border: border('width') solid themed(secondary);
 		border-radius: border('radius');
 
@@ -42,8 +42,8 @@
 				font-size: 0.9rem;
 				outline: none;
 				border: none;
-				border-bottom: 1px solid themed('primary-text');
-				color: themed('primary-text');
+				border-bottom: 1px solid themed('text-primary');
+				color: themed('text-primary');
 				background-color: themed('background');
 			}
 		}
@@ -59,7 +59,7 @@
 			border-bottom-width: 1px;
 			border-style: solid;
 
-			border-color: themed('secondary');
+			border-color: themed('accent2');
 		}
 	}
 }
