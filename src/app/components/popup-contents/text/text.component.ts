@@ -1,6 +1,6 @@
 import { Component, OnInit } from '@angular/core';
-import {PopupContentComp} from '../popup-content-comp';
 import {FormControl, Validators} from '@angular/forms';
+import {PopupContentComp} from '@logigator/logigator-shared-comps';
 
 @Component({
 	selector: 'app-text',

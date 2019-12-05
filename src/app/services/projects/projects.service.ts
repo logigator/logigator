@@ -5,11 +5,11 @@ import {Action} from '../../models/action';
 import {ProjectSaveManagementService} from '../project-save-management/project-save-management.service';
 import {delayWhen} from 'rxjs/operators';
 import {WorkArea} from '../../models/rendering/work-area';
-import {SaveAsComponent} from '../../components/popup/popup-contents/save-as/save-as.component';
-import {PopupService} from '../popup/popup.service';
+import {SaveAsComponent} from '../../components/popup-contents/save-as/save-as.component';
 import {ElementProviderService} from '../element-provider/element-provider.service';
 import {ErrorHandlingService} from '../error-handling/error-handling.service';
-import {UnsavedChangesComponent} from '../../components/popup/popup-contents/unsaved-changes/unsaved-changes.component';
+import {UnsavedChangesComponent} from '../../components/popup-contents/unsaved-changes/unsaved-changes.component';
+import {PopupService} from '@logigator/logigator-shared-comps';
 
 @Injectable({
 	providedIn: 'root'
@@ -98,7 +98,7 @@ export class ProjectsService {
 	// returns if projects can be closed
 	public async askToSave(): Promise<boolean> {
 		if (!this.hasUnsavedProjects) return Promise.resolve(true);
-		return await this.popup.showPopup(UnsavedChangesComponent, 'POPUP.UNSAVED_CHANGES.TITLE', false);
+		return await this.popup.showPopup(UnsavedChangesComponent, null, 'POPUP.UNSAVED_CHANGES.TITLE', false);
 	}
 
 	public async newProject() {
@@ -192,7 +192,7 @@ export class ProjectsService {
 	public async saveAll(): Promise<void> {
 		if (this.projectSaveManagementService.isFirstSave) {
 			await this.saveAllOrAllComps();
-			const newMainProject = await this.popup.showPopup(SaveAsComponent, 'POPUP.SAVE.TITLE', false, this.mainProject);
+			const newMainProject = await this.popup.showPopup(SaveAsComponent, null, 'POPUP.SAVE.TITLE', false, this.mainProject);
 			if (newMainProject) {
 				this.closeAllProjects();
 				this._mainProject = newMainProject;

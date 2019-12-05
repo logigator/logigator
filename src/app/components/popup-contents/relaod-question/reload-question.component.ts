@@ -1,6 +1,6 @@
 import { Component, OnInit } from '@angular/core';
-import {ThemingService} from '../../../../services/theming/theming.service';
-import {PopupContentComp} from '../popup-content-comp';
+import {ThemingService} from '../../../services/theming/theming.service';
+import {PopupContentComp} from '@logigator/logigator-shared-comps';
 
 @Component({
 	selector: 'app-reload-question',

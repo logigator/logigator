@@ -1,9 +1,9 @@
 import { Component, OnInit } from '@angular/core';
-import {PopupContentComp} from '../popup-content-comp';
-import {ProjectSaveManagementService} from '../../../../services/project-save-management/project-save-management.service';
-import {Project} from '../../../../models/project';
-import {UserService} from '../../../../services/user/user.service';
+import {ProjectSaveManagementService} from '../../../services/project-save-management/project-save-management.service';
+import {Project} from '../../../models/project';
+import {UserService} from '../../../services/user/user.service';
 import {FormControl, Validators} from '@angular/forms';
+import {PopupContentComp} from '@logigator/logigator-shared-comps';
 
 @Component({
 	selector: 'app-save-as',

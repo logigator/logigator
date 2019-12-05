@@ -40,11 +40,11 @@ export class UserService {
 	}
 
 	// #!if ELECTRON === 'true'
-	public loginTwitter() {
+	public authenticateTwitter() {
 		this.login('twitter').catch(() => this.errorHandling.showErrorMessage('ERROR.USER.LOGIN'));
 	}
 
-	public loginGoogle() {
+	public authenticateGoogle() {
 		this.login('google').catch(() => this.errorHandling.showErrorMessage('ERROR.USER.LOGIN'));
 	}
 

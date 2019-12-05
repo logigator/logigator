@@ -1,9 +1,9 @@
 import { Component, OnInit } from '@angular/core';
-import {PopupContentComp} from '../popup-content-comp';
 import {FormBuilder, FormGroup, Validators} from '@angular/forms';
-import {ProjectsService} from '../../../../services/projects/projects.service';
-import {ProjectSaveManagementService} from '../../../../services/project-save-management/project-save-management.service';
-import {EastereggService} from '../../../../services/easteregg/easteregg.service';
+import {ProjectsService} from '../../../services/projects/projects.service';
+import {ProjectSaveManagementService} from '../../../services/project-save-management/project-save-management.service';
+import {EastereggService} from '../../../services/easteregg/easteregg.service';
+import {PopupContentComp} from '@logigator/logigator-shared-comps';
 
 @Component({
 	selector: 'app-new-component',

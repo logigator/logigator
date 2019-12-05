@@ -1,5 +1,5 @@
-import { Component, OnInit } from '@angular/core';
-import {PopupContentComp} from '../popup-content-comp';
+import { Component } from '@angular/core';
+import {PopupContentComp} from '@logigator/logigator-shared-comps';
 
 @Component({
 	selector: 'app-unsaved-changes',

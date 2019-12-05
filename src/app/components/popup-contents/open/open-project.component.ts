@@ -1,10 +1,10 @@
 import { Component, OnInit } from '@angular/core';
-import {PopupContentComp} from '../popup-content-comp';
-import {ProjectsService} from '../../../../services/projects/projects.service';
-import {UserService} from '../../../../services/user/user.service';
-import {ProjectSaveManagementService} from '../../../../services/project-save-management/project-save-management.service';
+import {ProjectsService} from '../../../services/projects/projects.service';
+import {UserService} from '../../../services/user/user.service';
+import {ProjectSaveManagementService} from '../../../services/project-save-management/project-save-management.service';
 import {Observable} from 'rxjs';
-import {ProjectInfoResponse} from '../../../../models/http-responses/project-info-response';
+import {ProjectInfoResponse} from '../../../models/http-responses/project-info-response';
+import {PopupContentComp} from '@logigator/logigator-shared-comps';
 
 @Component({
 	selector: 'app-open-project',

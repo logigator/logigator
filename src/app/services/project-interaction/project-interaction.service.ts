@@ -5,11 +5,11 @@ import {SelectionService} from '../selection/selection.service';
 import {CopyService} from '../copy/copy.service';
 import {WorkModeService} from '../work-mode/work-mode.service';
 import {checkActionUsable} from '../../models/action-usable-in-modes';
-import {OpenProjectComponent} from '../../components/popup/popup-contents/open/open-project.component';
-import {PopupService} from '../popup/popup.service';
-import {NewComponentComponent} from '../../components/popup/popup-contents/new-component/new-component.component';
+import {OpenProjectComponent} from '../../components/popup-contents/open/open-project.component';
+import {NewComponentComponent} from '../../components/popup-contents/new-component/new-component.component';
 import {ProjectSaveManagementService} from '../project-save-management/project-save-management.service';
-import {ShareProjectComponent} from '../../components/popup/popup-contents/share-project/share-project.component';
+import {ShareProjectComponent} from '../../components/popup-contents/share-project/share-project.component';
+import {PopupService} from '@logigator/logigator-shared-comps';
 
 @Injectable({
 	providedIn: 'root'
@@ -96,7 +96,7 @@ export class ProjectInteractionService {
 		if (!checkActionUsable('openProj')) return;
 		await this.ngZone.run(async () => {
 			if (await this.projectsService.askToSave()) {
-				await this.popupService.showPopup(OpenProjectComponent, 'POPUP.OPEN.TITLE', true);
+				await this.popupService.showPopup(OpenProjectComponent, null, 'POPUP.OPEN.TITLE', true);
 			}
 		});
 	}
@@ -104,7 +104,7 @@ export class ProjectInteractionService {
 	public newComponent(): Promise<any> {
 		if (!checkActionUsable('newComp')) return;
 		return this.ngZone.run(() => {
-			return this.popupService.showPopup(NewComponentComponent, 'POPUP.NEW_COMP.TITLE', false);
+			return this.popupService.showPopup(NewComponentComponent, null, 'POPUP.NEW_COMP.TITLE', false);
 		});
 	}
 
@@ -112,6 +112,7 @@ export class ProjectInteractionService {
 		return this.ngZone.run(() => {
 			return this.popupService.showPopup(
 				ShareProjectComponent,
+				null,
 				'POPUP.SHARE.TITLE',
 				false,
 				null,

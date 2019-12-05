@@ -9,8 +9,8 @@ import {
 	OnInit,
 	ViewChild
 } from '@angular/core';
-import {ShortcutsService} from '../../../../../services/shortcuts/shortcuts.service';
-import {ShortcutAction, ShortcutConfig} from '../../../../../models/shortcut-map';
+import {ShortcutsService} from '../../../../services/shortcuts/shortcuts.service';
+import {ShortcutAction, ShortcutConfig} from '../../../../models/shortcut-map';
 import {fromEvent, Subject, Subscription} from 'rxjs';
 import {takeUntil} from 'rxjs/operators';
 
