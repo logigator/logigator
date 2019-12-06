@@ -52,10 +52,26 @@ export class UserService {
 		return this.login('email', {email, password});
 	}
 
+	public async registerEmail(username: string, email: string, password: string, recaptcha: string) {
+		this.electronService.ipcRenderer.send('registeremail', {username, email, password, recaptcha});
+		return new Promise<string>((resolve, reject) => {
+			this.electronService.ipcRenderer.once('loginemailResponse', ((event, args) => {
+				if (args === 'success') {
+					this._userLoginStateInSubject.next(true);
+					this.getUserInfoFromServer();
+					resolve();
+					return;
+				}
+				reject(args);
+			}));
+		});
+	}
+
 	private login(type: 'google' | 'twitter' | 'email', credentials?: {email: string, password: string}): Promise<string> {
 		this.electronService.ipcRenderer.send('login' + type, credentials);
 		return new Promise<string>((resolve, reject) => {
 			this.electronService.ipcRenderer.once('login' + type + 'Response', ((event, args) => {
+				console.log(args);
 				if (args === 'success') {
 					this._userLoginStateInSubject.next(true);
 					this.getUserInfoFromServer();

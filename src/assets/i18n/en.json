@@ -87,6 +87,36 @@
 		}
 	},
 	"POPUP": {
+		"LOGIN": {
+			"TITLE": "Login",
+			"HEADLINE": "Login here",
+			"USERNAME": "Username / email",
+			"USERNAME_ERR_REQUIRED": "Username / email is required.",
+			"PASSWORD": "Password",
+			"PASSWORD_ERR_REQUIRED": "Password is required.",
+			"LOGIN_BUTTON": "LOGIN",
+			"OR": "or"
+		},
+		"REGISTER": {
+			"TITLE": "Sign up",
+			"HEADLINE": "Sign up here",
+			"EMAIL": "Email",
+			"EMAIL_ERR_REQUIRED": "Email is required.",
+			"EMAIL_ERR_INVALID": "Please enter a valid email address.",
+			"USERNAME": "Username",
+			"USERNAME_ERR_REQUIRED": "Username is required.",
+			"USERNAME_ERR_MIN": "Username has to have at least two characters.",
+			"USERNAME_ERR_MAX": "Username may contain a maximum of 20 characters.",
+			"PASSWORD": "Password",
+			"PASSWORD_ERR_REQUIRED": "Password is required.",
+			"PASSWORD_ERR_MIN": "Password must contain at least eight characters.",
+			"PASSWORD_ERR_COMPLEXITY": "Password must contain letters and digits.",
+			"PASSWORD_REPEAT": "Repeat password",
+			"PASSWORD_REPEAT_ERR": "Passwords do not match",
+			"PRIVACY_POLICY": "By clicking on \"SIGN UP\" you agree that you have read and accepted our data policy.",
+			"REGISTER_BUTTON": "SIGN UP",
+			"OR": "or"
+		},
 		"NEW_COMP": {
 			"TITLE": "New Component",
 			"NAME": "Name",

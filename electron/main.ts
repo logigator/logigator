@@ -3,7 +3,7 @@ import * as path from 'path';
 import * as url from 'url';
 import * as fs from 'fs';
 import {AuthenticationHandler} from './authentication-handler';
-import {getDomain, getHttpFilterSetCookie} from './utils';
+import {getDomain, getHttpFilterSetCookie, getRecaptchaFilter} from './utils';
 
 const args = process.argv.slice(1);
 const serve = args.some(val => val === '--serve');
@@ -94,6 +94,16 @@ function registerHttpInterceptor() {
 		details.requestHeaders['Origin'] = getDomain();
 		// tslint:disable-next-line:no-string-literal
 		details.requestHeaders['Referer'] = getDomain() + '/';
+
+		callback({
+			requestHeaders: details.requestHeaders
+		});
+	});
+
+	session.defaultSession.webRequest.onBeforeSendHeaders(getRecaptchaFilter(), (details, callback) => {
+		// tslint:disable-next-line:no-string-literal
+		details.referrer = 'https://logigator.com';
+		console.log(details);
 
 		callback({
 			requestHeaders: details.requestHeaders

@@ -19,3 +19,12 @@ export function getHttpFilterSetCookie(): OnBeforeSendHeadersFilter {
 		]
 	};
 }
+
+export function getRecaptchaFilter(): OnBeforeSendHeadersFilter {
+	return {
+		urls: [
+			'https://www.gstatic.com/recaptcha/releases/*',
+			'https://www.google.com/recaptcha/*'
+		]
+	};
+}
