@@ -48,8 +48,8 @@ export class UserService {
 		this.login('google').catch(() => this.errorHandling.showErrorMessage('ERROR.USER.LOGIN'));
 	}
 
-	public loginEmail(email: string, password: string): Promise<string> {
-		return this.login('email', {email, password});
+	public loginEmail(user: string, password: string): Promise<string> {
+		return this.login('email', {user, password});
 	}
 
 	public async registerEmail(username: string, email: string, password: string, recaptcha: string) {
@@ -67,11 +67,10 @@ export class UserService {
 		});
 	}
 
-	private login(type: 'google' | 'twitter' | 'email', credentials?: {email: string, password: string}): Promise<string> {
+	private login(type: 'google' | 'twitter' | 'email', credentials?: {user: string, password: string}): Promise<string> {
 		this.electronService.ipcRenderer.send('login' + type, credentials);
 		return new Promise<string>((resolve, reject) => {
 			this.electronService.ipcRenderer.once('login' + type + 'Response', ((event, args) => {
-				console.log(args);
 				if (args === 'success') {
 					this._userLoginStateInSubject.next(true);
 					this.getUserInfoFromServer();

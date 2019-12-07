@@ -94,14 +94,14 @@ export class AuthenticationHandler {
 		}
 	}
 
-	private async onEmailLogin(args: {email: string, password: string}) {
+	private async onEmailLogin(args: {user: string, password: string}) {
 		const resp = await fetch(getApiUrl() + '/auth/login-email', {
 			method: 'post',
 			body: JSON.stringify(args),
 			headers: { 'Content-Type': 'application/json' }
 		});
 		if (!resp.ok) {
-			this.sendLoginResponse(false, 'email', resp);
+			this.sendLoginResponse(false, 'email', await resp.json());
 			return;
 		}
 		await this.setLoggedIn(resp.headers.raw()['set-cookie'].find(c => c.includes('auth-token')));
@@ -115,7 +115,7 @@ export class AuthenticationHandler {
 			headers: { 'Content-Type': 'application/json' }
 		});
 		if (!resp.ok) {
-			this.sendLoginResponse(false, 'email', resp);
+			this.sendLoginResponse(false, 'email', await resp.json());
 			return;
 		}
 		await this.setLoggedIn(resp.headers.raw()['set-cookie'].find(c => c.includes('auth-token')));
@@ -173,7 +173,7 @@ export class AuthenticationHandler {
 			headers: { 'Content-Type': 'application/json' }
 		});
 		if (!resp.ok) {
-			this.sendLoginResponse(false, 'google');
+			this.sendLoginResponse(false, 'google', await resp.json());
 			return;
 		}
 		await this.setLoggedIn(resp.headers.raw()['set-cookie'].find(c => c.includes('auth-token')));
@@ -187,7 +187,7 @@ export class AuthenticationHandler {
 			headers: { 'Content-Type': 'application/json' }
 		});
 		if (!resp.ok) {
-			this.sendLoginResponse(false, 'twitter');
+			this.sendLoginResponse(false, 'twitter', await resp.json());
 			return;
 		}
 		await this.setLoggedIn(resp.headers.raw()['set-cookie'].find(c => c.includes('auth-token')));

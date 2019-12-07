@@ -1,9 +1,8 @@
-import {BrowserWindow, app, protocol, session} from 'electron';
+import {BrowserWindow, app, session} from 'electron';
+import * as express from 'express';
 import * as path from 'path';
-import * as url from 'url';
-import * as fs from 'fs';
 import {AuthenticationHandler} from './authentication-handler';
-import {getDomain, getHttpFilterSetCookie, getRecaptchaFilter} from './utils';
+import {getDomain, getHttpFilterUrls} from './utils';
 
 const args = process.argv.slice(1);
 const serve = args.some(val => val === '--serve');
@@ -14,12 +13,13 @@ let authHandler: AuthenticationHandler;
 try {
 	authHandler = new AuthenticationHandler();
 
-	app.on('ready', () => {
-		if (!serve) registerFileProtocols();
+	app.on('ready', async () => {
+		let port = 8202;
+		if (!serve) port = await startLocalWebServer();
 
 		registerHttpInterceptor();
 		authHandler.readSavedLoginState();
-		createWindow();
+		createWindow(port);
 		authHandler.initLoginListeners(win);
 	});
 
@@ -34,7 +34,7 @@ try {
 	process.exit(1);
 }
 
-function createWindow() {
+function createWindow(port: number) {
 	win = new BrowserWindow({
 		width: 1400,
 		height: 725,
@@ -51,15 +51,9 @@ function createWindow() {
 		require('electron-reload')(__dirname, {
 			electron: require(path.join(__dirname, `../../node_modules/electron`))
 		});
-		win.webContents.openDevTools();
-		win.loadURL('http://localhost:8202');
-	} else {
-		win.loadURL(url.format({
-			pathname: path.join(__dirname, '../logigator-editor/index.html'),
-			protocol: 'file:',
-			slashes: true
-		}));
 	}
+	win.webContents.openDevTools();
+	win.loadURL('http://localhost:' + port);
 
 	win.on('closed', () => {
 		win = null;
@@ -67,43 +61,28 @@ function createWindow() {
 
 }
 
-function registerFileProtocols() {
-	protocol.registerBufferProtocol('jsmod', (request, callback) => {
-		fs.readFile(path.join(__dirname, '..', 'logigator-editor', request.url.replace('jsmod://', '').replace(/\/$/, '')), (err, data) => {
-			callback({
-				mimeType: 'text/javascript',
-				data
-			});
-		});
-	});
-	protocol.interceptFileProtocol('file', (request, callback) => {
-		if (!request.url.includes('assets')) {
-			callback(request.url.replace('file:///', ''));
-			return;
-		}
-		const requestedFile = request.url.substr(request.url.indexOf('/assets'));
-		callback(path.join(__dirname, '..', 'logigator-editor', requestedFile));
+function startLocalWebServer(): Promise<number> {
+	const server = express();
+	server.use('/', express.static(path.join(__dirname, '..', 'logigator-editor')));
+	return new Promise<number>(resolve => {
+		const infos = server.listen(0, 'localhost', () => resolve(infos.address().port));
 	});
 }
 
 function registerHttpInterceptor() {
-	session.defaultSession.webRequest.onBeforeSendHeaders(getHttpFilterSetCookie(), (details, callback) => {
-		// tslint:disable-next-line:no-string-literal
-		details.requestHeaders['Cookie'] = authHandler.cookies;
-		// tslint:disable-next-line:no-string-literal
-		details.requestHeaders['Origin'] = getDomain();
-		// tslint:disable-next-line:no-string-literal
-		details.requestHeaders['Referer'] = getDomain() + '/';
-
-		callback({
-			requestHeaders: details.requestHeaders
-		});
-	});
-
-	session.defaultSession.webRequest.onBeforeSendHeaders(getRecaptchaFilter(), (details, callback) => {
-		// tslint:disable-next-line:no-string-literal
-		details.referrer = 'https://logigator.com';
-		console.log(details);
+	session.defaultSession.webRequest.onBeforeSendHeaders(getHttpFilterUrls(), (details, callback) => {
+		if (details.url.includes('api.logigator')) {
+			// tslint:disable-next-line:no-string-literal
+			details.requestHeaders['Cookie'] = authHandler.cookies;
+			// tslint:disable-next-line:no-string-literal
+			details.requestHeaders['Origin'] = getDomain();
+			// tslint:disable-next-line:no-string-literal
+			details.requestHeaders['Referer'] = getDomain() + '/';
+		} else {
+			details.referrer = 'https://logigator.com';
+			// tslint:disable-next-line:no-string-literal
+			details.requestHeaders['Referer'] = 'https://logigator.com';
+		}
 
 		callback({
 			requestHeaders: details.requestHeaders
