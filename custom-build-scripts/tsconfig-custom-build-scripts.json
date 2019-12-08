@@ -16,7 +16,7 @@
 		"custom-webpack.config.ts",
 		"create-dist-package.ts",
 		"package-app.ts",
-		"add-protocols-to-index.ts",
+		"remove-comp-warning-template.ts",
 		"index-html-transform.ts"
 	],
 	"include": [

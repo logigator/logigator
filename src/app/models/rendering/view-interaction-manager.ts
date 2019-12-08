@@ -16,13 +16,13 @@ import {ProjectsService} from '../../services/projects/projects.service';
 import {SelectionService} from '../../services/selection/selection.service';
 import {ElementTypeId} from '../element-types/element-type-ids';
 import {Grid} from './grid';
-import {PopupService} from '../../services/popup/popup.service';
-import {TextComponent} from '../../components/popup/popup-contents/text/text.component';
+import {TextComponent} from '../../components/popup-contents/text/text.component';
 import {CollisionFunctions} from '../collision-functions';
 import {CopyService} from '../../services/copy/copy.service';
 import {Elements} from '../elements';
 import {ConnectionPoint} from './graphics/connection-point';
 import InteractionEvent = PIXI.interaction.InteractionEvent;
+import {PopupService} from '@logigator/logigator-shared-comps';
 
 export class ViewInteractionManager {
 

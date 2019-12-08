@@ -16,11 +16,11 @@
 		padding: 0.5rem;
 
 		@include themify() {
-			background-color: themed('secondary');
-			color: themed('primary-text');
-			border-top: border('width') solid themed('secondary');
-			border-left: border('width') solid themed('secondary');
-			border-right: border('width') solid themed('secondary');
+			background-color: themed('accent2');
+			color: themed('text-primary');
+			border-top: border('width') solid themed('accent2');
+			border-left: border('width') solid themed('accent2');
+			border-right: border('width') solid themed('accent2');
 		}
 
 		h2 {
@@ -41,8 +41,8 @@
 
 		@include themify() {
 			background-color: themed('background');
-			color: themed('primary-text');
-			border: border('width') solid themed('secondary');
+			color: themed('text-primary');
+			border: border('width') solid themed('accent2');
 		}
 
 		.no-components {
@@ -80,12 +80,12 @@
 			}
 
 			@include themify() {
-				border-color: themed('secondary');
-				color: themed('primary-text');
+				border-color: themed('accent2');
+				color: themed('text-primary');
 
 				&:hover {
-					border-color: themed('secondary');
-					color: themed('secondary');
+					border-color: themed('accent2');
+					color: themed('accent2');
 				}
 			}
 		}

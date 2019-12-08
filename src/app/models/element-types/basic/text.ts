@@ -1,9 +1,9 @@
 import {ElementType} from '../element-type';
 import {ProjectsService} from '../../../services/projects/projects.service';
-import {TextComponent} from '../../../components/popup/popup-contents/text/text.component';
+import {TextComponent} from '../../../components/popup-contents/text/text.component';
 import {getStaticDI} from '../../get-di';
-import {PopupService} from '../../../services/popup/popup.service';
 import {ElementTypeId} from '../element-type-ids';
+import {PopupService} from '@logigator/logigator-shared-comps';
 
 export const text: ElementType = {
 	id: ElementTypeId.TEXT,

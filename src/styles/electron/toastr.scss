@@ -30,7 +30,7 @@
 		} @else {
 			background-image: url("/assets/icons/dark/alert.svg");
 		}
-		color: themed('primary-text');
+		color: themed('text-primary');
 		background-color: themed('error');
 	}
 
@@ -40,7 +40,7 @@
 		} @else {
 			background-image: url("/assets/icons/dark/check.svg");
 		}
-		color: themed('primary-text');
-		background-color: themed('secondary');
+		color: themed('text-primary');
+		background-color: themed('accent2');
 	}
 }

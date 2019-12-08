@@ -26,10 +26,10 @@
 		.tab {
 			@include themify() {
 				background-color: themed('background');
-				color: themed('primary-text');
-				border-left: themed('border-width') solid themed('secondary');
-				border-right: themed('border-width') solid themed('secondary');
-				border-bottom: themed('border-width') solid themed('secondary');
+				color: themed('text-primary');
+				border-left: themed('border-width') solid themed('accent2');
+				border-right: themed('border-width') solid themed('accent2');
+				border-bottom: themed('border-width') solid themed('accent2');
 			}
 
 			height: $tab-height;
@@ -69,12 +69,12 @@
 
 		.tab-active {
 			@include themify() {
-				background-color: themed('secondary');
-				color: themed('primary-text');
+				background-color: themed('accent2');
+				color: themed('text-primary');
 
 				.tab-close {
 					&:hover {
-						background-color: lighten(themed('secondary'), 5%);
+						background-color: lighten(themed('accent2'), 5%);
 					}
 				}
 			}

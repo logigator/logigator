@@ -13,8 +13,8 @@
 
 	@include themify() {
 		background-color: themed('background');
-		color: themed('primary-text');
-		border: border('width') solid themed('secondary');
+		color: themed('text-primary');
+		border: border('width') solid themed('accent2');
 		border-radius: border('radius');
 	}
 
@@ -26,7 +26,7 @@
 		justify-content: center;
 
 		@include themify() {
-			background-color: themed('secondary');
+			background-color: themed('accent2');
 		}
 
 		h2 {
@@ -59,8 +59,8 @@
 				 font-size: 0.9rem;
 				 width: 40%;
 				 @include themify() {
-					 border-bottom: 1px solid themed('primary-text');
-					 color: themed('primary-text');
+					 border-bottom: 1px solid themed('text-primary');
+					 color: themed('text-primary');
 					 background-color: themed('background');
 				 }
 			 }
@@ -72,8 +72,8 @@
 				border: none;
 
 				@include themify() {
-					border-bottom: 1px solid themed('primary-text');
-					color: themed('primary-text');
+					border-bottom: 1px solid themed('text-primary');
+					color: themed('text-primary');
 					background-color: themed('background');
 				}
 			}

@@ -5,7 +5,7 @@
 	height: 1.5rem;
 	border-radius: 0.75rem;
 	@include themify() {
-		border: 2px solid themed('secondary');
+		border: 2px solid themed('accent2');
 	}
 
 	&:hover {

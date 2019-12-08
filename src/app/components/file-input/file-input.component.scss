@@ -16,8 +16,8 @@
 
 	@include themify() {
 		border: 2px dashed themed('primary');
-		background-color: themed('secondary');
-		color: themed('primary-text');
+		background-color: themed('accent2');
+		color: themed('text-primary');
 	}
 
 	input {

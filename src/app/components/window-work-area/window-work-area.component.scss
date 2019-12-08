@@ -17,7 +17,7 @@
 	.window-container {
 		@include themify() {
 			background-color: themed('background');
-			border: border('width') solid themed('secondary');
+			border: border('width') solid themed('accent2');
 		}
 
 		width: 100%;
@@ -34,8 +34,8 @@
 			display: flex;
 
 			@include themify() {
-				background-color: themed('secondary');
-				color: themed('primary-text');
+				background-color: themed('accent2');
+				color: themed('text-primary');
 			}
 
 			width: 100%;

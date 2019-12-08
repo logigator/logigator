@@ -5,11 +5,11 @@ import {SelectionService} from '../selection/selection.service';
 import {CopyService} from '../copy/copy.service';
 import {WorkModeService} from '../work-mode/work-mode.service';
 import {checkActionUsable} from '../../models/action-usable-in-modes';
-import {OpenProjectComponent} from '../../components/popup/popup-contents/open/open-project.component';
-import {PopupService} from '../popup/popup.service';
-import {NewComponentComponent} from '../../components/popup/popup-contents/new-component/new-component.component';
+import {OpenProjectComponent} from '../../components/popup-contents/open/open-project.component';
+import {NewComponentComponent} from '../../components/popup-contents/new-component/new-component.component';
 import {ProjectSaveManagementService} from '../project-save-management/project-save-management.service';
-import {ShareProjectComponent} from '../../components/popup/popup-contents/share-project/share-project.component';
+import {ShareProjectComponent} from '../../components/popup-contents/share-project/share-project.component';
+import {PopupService} from '@logigator/logigator-shared-comps';
 
 @Injectable({
 	providedIn: 'root'
@@ -114,6 +114,7 @@ export class ProjectInteractionService {
 				ShareProjectComponent,
 				'POPUP.SHARE.TITLE',
 				false,
+				null,
 				null,
 				{project: this.projectsService.mainProject.name}
 			);
