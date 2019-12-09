@@ -121,6 +121,7 @@
 			"TITLE": "New Component",
 			"NAME": "Name",
 			"SYMBOL": "Symbol",
+			"DESCRIPTION": "Description",
 			"CREATE": "CREATE",
 			"NAME_REQUIRED": "Name is required",
 			"NAME_MIN_LENGTH": "Name is to short",

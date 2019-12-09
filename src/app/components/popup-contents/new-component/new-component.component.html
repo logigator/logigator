@@ -10,5 +10,7 @@
 		<logi-input-error error="maxlength">{{'POPUP.NEW_COMP.SYMBOL_MAX_LENGTH' | translate}}</logi-input-error>
 		<logi-input-error error="pattern">{{'POPUP.NEW_COMP.SYMBOL_PATTERN' | translate}}</logi-input-error>
 	</logi-input>
+	<logi-input [label]="'POPUP.NEW_COMP.DESCRIPTION' | translate" formControlName="compDescription" type="text"></logi-input>
+
 	<button type="submit" class="btn-raised primary" [disabled]="newCompForm.invalid">{{'POPUP.NEW_COMP.CREATE' | translate}}</button>
 </form>

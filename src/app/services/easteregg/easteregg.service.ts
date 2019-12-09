@@ -17,7 +17,7 @@ export class EastereggService {
 		if (this.done.has(name))
 			return;
 		this.done.add(name);
-		this.errorHandling.showInfo(name);
+		this.errorHandling.showInfo('INFO.EASTEREGGS.' + name);
 		localStorage.setItem('sneaks', JSON.stringify([...this.done]));
 	}
 }

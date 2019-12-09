@@ -25,14 +25,18 @@ export class NewComponentComponent extends PopupContentComp implements OnInit {
 	ngOnInit() {
 		this.newCompForm = this.formBuilder.group({
 			compName: ['', [Validators.required, Validators.minLength(2), Validators.maxLength(20), Validators.pattern('^[a-zA-Z0-9_\\- ]+$')]],
-			compSymbol: ['', [Validators.required, Validators.maxLength(5), Validators.pattern('^[a-zA-Z0-9_\\-]+$')]]
+			compSymbol: ['', [Validators.required, Validators.maxLength(5), Validators.pattern('^[a-zA-Z0-9_\\-]+$')]],
+			compDescription: ['']
 		});
 	}
 
 	public async fromSubmitClick() {
 		if (this.newCompForm.invalid) return;
-		const id = await this.saveManagement.addCustomComponent(this.newCompForm.controls.compName.value,
-			this.newCompForm.controls.compSymbol.value);
+		const id = await this.saveManagement.addCustomComponent(
+			this.newCompForm.controls.compName.value,
+			this.newCompForm.controls.compSymbol.value,
+			this.newCompForm.controls.compDescription.value
+		);
 		this.requestClose.emit();
 		this.projects.openComponent(id);
 		const name = this.newCompForm.controls.compName.value.toLowerCase().replace(' ', '');
