@@ -303,7 +303,7 @@ export class ProjectSaveManagementService {
 		this._projectSource = source;
 	}
 
-	public async saveAsNewProjectServer(project: Project, name: string): Promise<Project> {
+	public async saveAsNewProjectServer(project: Project, name: string, description?: string): Promise<Project> {
 		let deps: Project[];
 		try {
 			deps = Array.from((await this.buildDependencyTree(project)).values());
@@ -320,7 +320,7 @@ export class ProjectSaveManagementService {
 		}
 		let mainProjectId = project.id;
 		if (project.id < 1000) {
-			mainProjectId = await this.createProjectServer(name || project.name);
+			mainProjectId = await this.createProjectServer(name || project.name, description);
 			if (mainProjectId === undefined) return;
 		}
 		const ids = await Promise.all(createdComps);
@@ -376,10 +376,11 @@ export class ProjectSaveManagementService {
 		return mainProjToSave;
 	}
 
-	private async createProjectServer(name: string): Promise<number> {
+	private async createProjectServer(name: string, description?: string): Promise<number> {
 		return this.http.post<HttpResponseData<CreateProjectResponse>>(environment.apiPrefix + '/project/create', {
 			name,
-			isComponent: false
+			isComponent: false,
+			description
 		}).pipe(
 			map(r => Number(r.result.id)),
 			this.errorHandling.catchErrorOperator('ERROR.PROJECTS.CREATE', undefined)

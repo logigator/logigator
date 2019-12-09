@@ -133,6 +133,7 @@
 		"SAVE": {
 			"TITLE": "Save Project",
 			"NAME": "Name",
+			"DESCRIPTION": "Description",
 			"DOWNLOAD": "DOWNLOAD FILE",
 			"CLOUD": "SAVE IN CLOUD"
 		},

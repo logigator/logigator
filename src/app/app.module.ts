@@ -1,6 +1,5 @@
 import { BrowserModule } from '@angular/platform-browser';
 import {Injector, NgModule} from '@angular/core';
-
 import { AppComponent } from './app.component';
 import { ToolbarComponent } from './components/toolbar/toolbar.component';
 import { SettingsInfoBoxComponent } from './components/settings-info-box/settings-info-box.component';
@@ -30,22 +29,18 @@ import {MissingTranslationHandler, TranslateLoader, TranslateModule} from '@ngx-
 import {createTranslateLoader} from './models/translation/translation-loader-factory';
 import {AppMissingTranslationHandler} from './models/translation/missing-translation-handler';
 import { OutsideNgZoneEventDirective } from './directives/outside-ng-zone-event/outside-ng-zone-event.directive';
-import { SwitchComponent } from './components/switch/switch.component';
 import { UnsavedChangesComponent } from './components/popup-contents/unsaved-changes/unsaved-changes.component';
-import { InputComponent } from './components/input/input.component';
 // #!electron
 import { NgxElectronModule } from 'ngx-electron';
 import { WorkAreaContainerComponent } from './components/work-area-container/work-area-container.component';
 import { ShareProjectComponent } from './components/popup-contents/share-project/share-project.component';
 import {setStaticDIInjector} from './models/get-di';
-import {InputErrorComponent} from './components/input-error/input-error.component';
 import {CredentialsInterceptor} from './interceptors/credentials';
 import {SiPipe} from './pipes/si/si.pipe';
 import { ToolbarItemTooltipDirective } from './directives/toolbar-item-tooltip/toolbar-item-tooltip.directive';
 import { ToolbarItemTooltipComponent } from './components/toolbar-item-tooltip/toolbar-item-tooltip.component';
 import { TextComponent } from './components/popup-contents/text/text.component';
 import { StatusBarComponent } from './components/status-bar/status-bar.component';
-import {FileInputComponent} from './components/file-input/file-input.component';
 import {
 	LogigatorSharedCompsModule,
 	SharedCompsAuthService,
@@ -77,10 +72,7 @@ import {UserService} from './services/user/user.service';
 		OpenProjectComponent,
 		SaveAsComponent,
 		OutsideNgZoneEventDirective,
-		SwitchComponent,
 		UnsavedChangesComponent,
-		InputComponent,
-		InputErrorComponent,
 		WorkAreaContainerComponent,
 		ShareProjectComponent,
 		SiPipe,
@@ -88,8 +80,7 @@ import {UserService} from './services/user/user.service';
 		ToolbarItemTooltipComponent,
 		TextComponent,
 		ToolbarItemTooltipComponent,
-		StatusBarComponent,
-		FileInputComponent
+		StatusBarComponent
 	],
 	entryComponents: [
 		ShortcutConfigComponent,
