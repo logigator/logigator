@@ -12,7 +12,7 @@
 			<tbody>
 				<tr *ngFor="let p of allProjects" class="single-project-server">
 					<td class="name">{{p.name}}</td>
-					<td class="last-edit">{{p.last_edited}}</td>
+					<td class="last-edit">{{p.last_edited | date:'medium'}}</td>
 					<td class="open">
 						<button class="btn-outline primary small" (click)="openServer(p)">{{'POPUP.OPEN.OPEN' | translate}}</button>
 					</td>

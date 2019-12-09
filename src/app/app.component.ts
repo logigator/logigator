@@ -7,9 +7,8 @@ import {fromEvent, Subject} from 'rxjs';
 import {DOCUMENT} from '@angular/common';
 import {takeUntil} from 'rxjs/operators';
 import {ProjectsService} from './services/projects/projects.service';
-import {TranslateService} from '@ngx-translate/core';
+import {LangChangeEvent, TranslateService} from '@ngx-translate/core';
 import {ElementProviderService} from './services/element-provider/element-provider.service';
-import {ElementType} from './models/element-types/element-type';
 
 @Component({
 	selector: 'app-root',
@@ -114,8 +113,17 @@ export class AppComponent implements OnInit, OnDestroy {
 
 	private initTranslation() {
 		this.translate.addLangs(['en', 'de']);
-		this.translate.setDefaultLang('en');
-		this.translate.use('en');
+		const lang = window.localStorage.getItem('lang');
+		if (lang) {
+			this.translate.setDefaultLang(lang);
+			this.translate.use(lang);
+		} else {
+			this.translate.setDefaultLang('en');
+			this.translate.use('en');
+		}
+		this.translate.onLangChange.subscribe((e: LangChangeEvent) => {
+			window.localStorage.setItem('lang', e.lang);
+		});
 	}
 
 	private setGoogleAnalytics() {
