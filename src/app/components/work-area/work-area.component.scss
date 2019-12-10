@@ -57,7 +57,10 @@
 				border-radius: 50%;
 				width: 1rem;
 				height: 1rem;
-				background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 8 8'><path stroke='rgba(0, 0, 0)' stroke-linecap='square' stroke-width='1' d='M2 2 L6 6 M6 2 L2 6'></path></svg>");
+				@include themify() {
+					$tab-close-color: themed('text-primary');
+					background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 8 8'><path stroke='rgba(#{red($tab-close-color)}, #{green($tab-close-color)}, #{blue($tab-close-color)})' stroke-linecap='square' stroke-width='1' d='M2 2 L6 6 M6 2 L2 6'></path></svg>");
+				}
 
 				&:hover {
 					@include themify() {

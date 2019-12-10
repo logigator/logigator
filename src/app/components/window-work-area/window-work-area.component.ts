@@ -12,6 +12,8 @@ import {WorkArea} from '../../models/rendering/work-area';
 import {Project} from '../../models/project';
 import {SimulationView} from '../../models/rendering/simulation-view';
 import {WindowDragManager} from './window-drag-manager';
+import {ThemingService} from '../../services/theming/theming.service';
+import {Theme} from '../../models/theming';
 
 @Component({
 	selector: 'app-window-work-area',
@@ -22,7 +24,8 @@ export class WindowWorkAreaComponent extends WorkArea implements OnInit, OnChang
 
 	constructor(
 		private renderer2: Renderer2,
-		private ngZone: NgZone
+		private ngZone: NgZone,
+		private themingService: ThemingService
 	) {
 		super();
 	}
@@ -122,6 +125,10 @@ export class WindowWorkAreaComponent extends WorkArea implements OnInit, OnChang
 
 	getIdentifier(): string {
 		return this.identifier;
+	}
+
+	public get theme(): Theme {
+		return this.themingService.currentTheme;
 	}
 
 	public doRequestHide() {
