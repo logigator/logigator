@@ -79,10 +79,10 @@
 	"CONST_BOX": {
 		"SEARCH": "Search",
 		"CATEGORIES": {
-			"BASIC": "Basic Components",
-			"ADVANCED": "Advanced Components",
-			"IO": "IO Components",
-			"PLUG": "Plug Components",
+			"BASIC": "Basic",
+			"ADVANCED": "Advanced",
+			"IO": "IO",
+			"PLUG": "Plug",
 			"USER": "User Defined"
 		}
 	},
@@ -168,13 +168,13 @@
 				"zoom100": "Zoom to 100%",
 				"zoomIn": "Zoom in",
 				"zoomOut": "Zoom out",
-				"fullscreen": "enter fullscreen mode",
+				"fullscreen": "Enter fullscreen mode",
 				"connWireMode": "Connect wires mode",
 				"wireMode": "Place wires mode",
 				"selectMode": "Selection mode",
 				"cutSelectMode": "Cut Selection mode",
 				"newComp": "Create new custom component",
-				"textMode": "Text mode",
+				"textMode": "Place text",
 				"save": "Save",
 				"newProj": "New Project",
 				"openProj": "Open Project"
@@ -191,8 +191,8 @@
 			"SHARE_ENABLE": "Share this project with others",
 			"PUBLIC": "Public share",
 			"INFO_TEXT": "Please type in the email-addresses or usernames of the users, with whom you want to share this project.",
-			"EMAIL_USER": "e-mail / username",
-			"EMAIL_USER_ALREADY_ADDED": "Email or username is already added",
+			"EMAIL_USER": "Email / username",
+			"EMAIL_USER_ALREADY_ADDED": "Email or username has already been added",
 			"ADD_EMAIL": "Add",
 			"REMOVE_EMAIL": "Remove",
 			"INVITATIONS": "Send email invitations to users",
@@ -243,8 +243,7 @@
 			},
 			"DELAY": {
 				"NAME": "Delay",
-				"DESCRIPTION": "Output = Input. Adds one tick delay to the signal.",
-				"DELAY_OPT": "Delay (ticks)"
+				"DESCRIPTION": "Output = Input. Adds one tick delay to the signal."
 			},
 			"CLOCK": {
 				"NAME": "Clock",
@@ -316,7 +315,7 @@
 			"SAVE": "Unable to save Component or Project on Server",
 			"COMP_NOT_FOUND": "Component not found, project might be corrupted",
 			"INVALID_FILE": "Invalid File",
-			"RESOLVE_DEPS": "Unable resolve dependencies of Project",
+			"RESOLVE_DEPS": "Unable to resolve dependencies of Project",
 			"PROJECT_AS_COMP": "Unable to open Project as Component"
 		},
 		"SHARE": {
@@ -341,7 +340,7 @@
 			"CLONED": "Cloned Project.",
 			"SAVE_SERVER": "Saved {{name}} on Server.",
 			"SAVE_ALL": "Saved Project and all open Components",
-			"EXPORT": "Exported Project and all needed Components",
+			"EXPORT": "Exported Project and all included Components",
 			"OPEN_SHARE": "Opened shared project {{name}} from {{user}}"
 		},
 		"EASTEREGGS": {
