@@ -312,7 +312,7 @@
 			"GET_COMPS": "Unable to get Components from Server",
 			"OPEN_COMP": "Unable to open Component",
 			"CLONE": "Unable to clone project",
-			"CREATE": "Unable to create project",
+			"CREATE": "Unable to create project or component",
 			"SAVE": "Unable to save Component or Project on Server",
 			"COMP_NOT_FOUND": "Component not found, project might be corrupted",
 			"INVALID_FILE": "Invalid File",
@@ -341,7 +341,8 @@
 			"CLONED": "Cloned Project.",
 			"SAVE_SERVER": "Saved {{name}} on Server.",
 			"SAVE_ALL": "Saved Project and all open Components",
-			"EXPORT": "Exported Project and all needed Components"
+			"EXPORT": "Exported Project and all needed Components",
+			"OPEN_SHARE": "Opened shared project {{name}} from {{user}}"
 		},
 		"EASTEREGGS": {
 			"GBOGH": "Go big or go home",

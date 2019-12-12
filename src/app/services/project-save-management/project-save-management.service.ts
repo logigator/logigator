@@ -174,7 +174,7 @@ export class ProjectSaveManagementService {
 			type: resp.project.is_component ? 'comp' : 'project',
 			id: resp.project.id
 		});
-		this.errorHandling.showInfo(`Opened shared Project ${resp.project.name} from ${resp.user.username}`);
+		this.errorHandling.showInfo('INFO.PROJECTS.OPEN_SHARE', {name: resp.project.name, user: resp.user.username});
 		if (resp.project.is_component) return [Project.empty(), project];
 		return [project];
 	}
@@ -543,7 +543,7 @@ export class ProjectSaveManagementService {
 		if (this._projectCache.has(id)) return this._projectCache.get(id);
 		return this.http.get<HttpResponseData<OpenProjectResponse>>(`${environment.apiPrefix}/project/open/${id}`).pipe(
 			map(response => this.projectFromServerResponse(response.result)),
-			this.errorHandling.catchErrorOperator('Unable to open Project or Component', emptyProjectOnFailure ? Project.empty() : undefined)
+			this.errorHandling.catchErrorOperator('ERROR.PROJECTS.CREATE', emptyProjectOnFailure ? Project.empty() : undefined)
 		).toPromise();
 	}
 
