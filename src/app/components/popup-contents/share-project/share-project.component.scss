@@ -64,7 +64,7 @@
 		justify-content: space-between;
 
 		p {
-			@include scrollbar(0, 3px);
+			@include scrollbar(0, 5px);
 			overflow: scroll;
 			margin: 0 0.5rem 0 0;
 			height: 1.5rem;

@@ -10,7 +10,7 @@
 			table-layout: fixed;
 
 			tbody {
-				@include scrollbar(4px);
+				@include scrollbar(5px);
 				display: block;
 				width: 30rem;
 				overflow: auto;
