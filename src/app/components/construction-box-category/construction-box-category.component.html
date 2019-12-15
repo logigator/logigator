@@ -13,7 +13,8 @@
 				     (dblclick)="openComponent(comp.key)"
 				     [class.active-selected-component]="currentWorkMode === 'buildComponent' && currentSelectedComponent === comp.key">
 					<div>
-						<p>{{comp.value.symbol}}</p>
+						<img *ngIf="comp.value.symbolImage" [src]="comp.value.symbolImage">
+						<p *ngIf="!comp.value.symbolImage">{{comp.value.symbol}}</p>
 					</div>
 					<p>{{comp.value.name | translate}}</p>
 				</div>

@@ -10,6 +10,7 @@ export interface ElementType {
 	category: 'basic' | 'advanced' | 'plug' | 'io' | 'user';
 
 	symbol: string;
+	symbolImage?: string;
 
 	showSettings: boolean;
 	showSettingsForType: boolean;
