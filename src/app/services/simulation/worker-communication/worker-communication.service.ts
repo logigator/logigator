@@ -26,9 +26,11 @@ export class WorkerCommunicationService {
 
 	private _initialized = false;
 	private _mode: 'continuous' | 'target';
-	private _targetSpeed = 0;
 	private _frameAverage = new AverageBuffer(5);
+
+	private _targetSpeed = 0;
 	private _targetLastRun = Date.now();
+	private _targetUnprocessedFraction = 0;
 
 	private _dataCache: Uint8Array;
 
@@ -98,14 +100,16 @@ export class WorkerCommunicationService {
 				this._worker.postMessage(request);
 			} else if (data.method === WasmMethod.run && this._mode === 'target') {
 				const timestamp = Date.now();
-				const ticks = Math.trunc((timestamp - this._targetLastRun) * this._targetSpeed / 1000);
+				const ticks = ((timestamp - this._targetLastRun) * this._targetSpeed / 1000) + this._targetUnprocessedFraction;
+				const ticksToCompute = Math.trunc(ticks);
 				const request: WasmRequest = {
 					method: WasmMethod.run,
 					time: this._frameAverage.average,
-					ticks
+					ticks: ticksToCompute
 				};
 
-				if (ticks) {
+				if (ticksToCompute) {
+					this._targetUnprocessedFraction = ticks % 1;
 					this._worker.postMessage(request);
 					this._targetLastRun = timestamp;
 				} else {
