@@ -54,15 +54,8 @@ export class SimulationWorker {
 		} as Board;
 	}
 
-	public start(ms?: number) {
-		if (ms)
-			this._simulationModule.startTimeout(ms);
-		else
-			this._simulationModule.start();
-	}
-
-	public startManual(ticks: number) {
-		this._simulationModule.startManual(ticks);
+	public start(ticks?: number, ms?: number) {
+		this._simulationModule.start(ticks !== undefined ? ticks : Number.MAX_SAFE_INTEGER, ms !== undefined ? ms : 4294967295);
 	}
 
 	public getLinks(): Int8Array {
@@ -93,18 +86,11 @@ export class SimulationWorker {
 		this._simulationModule._free(ptr);
 	}
 
-	public runTimeout(target: number) {
-		while (true) {
-			this._simulationModule.startTimeout(target);
-			console.log(this._simulationModule.getStatus());
-		}
-	}
-
 	public runForTarget(target: number) {
 		let ticks = 1;
 		while (true) {
 			const prev = performance.now();
-			this._simulationModule.startManual(ticks);
+			this._simulationModule.start(ticks, Number.MAX_SAFE_INTEGER);
 
 			ticks *= target / (performance.now() - prev);
 			console.log(this._simulationModule.getStatus());

@@ -42,6 +42,12 @@
 			<button class="toolbar-button pause" (click)="pauseSim()" appToolbarItemTooltip [tooltipText]="'TOOLBAR.TOOLTIP.SIM_PAUSE' | translate"></button>
 			<button class="toolbar-button stop" (click)="stopSim()" appToolbarItemTooltip [tooltipText]="'TOOLBAR.TOOLTIP.SIM_STOP' | translate"></button>
 
+			<div class="divider"></div>
+
+			<label for="target-tick-rate">Target Tick Rate:</label>
+			<input id="target-tick-rate" type="number" (keyup)="setTarget($event)" (change)="setTarget($event)">
+			<button class="toolbar-button play" (click)="continueSmTarget()" appToolbarItemTooltip [tooltipText]="'TOOLBAR.TOOLTIP.SIM_CONT' | translate"></button>
+
 			<ng-container *ngIf="simulationRunning">
 				<div class="divider"></div>
 				<p>Current Speed: {{simulationStatus.speed | si : 2}}Hz</p>

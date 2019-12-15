@@ -17,6 +17,7 @@ import {EastereggService} from '../../easteregg/easteregg.service';
 @Injectable({
 	providedIn: 'root'
 })
+
 export class WorkerCommunicationService {
 
 	private _powerSubjectsWires: Map<string, Subject<PowerChangesOutWire>>;
@@ -24,8 +25,10 @@ export class WorkerCommunicationService {
 	private _worker: Worker;
 
 	private _initialized = false;
-	private _isContinuous = false;
+	private _mode: 'continuous' | 'target';
+	private _targetSpeed = 0;
 	private _frameAverage = new AverageBuffer(5);
+	private _targetLastRun = Date.now();
 
 	private _dataCache: Uint8Array;
 
@@ -74,7 +77,7 @@ export class WorkerCommunicationService {
 			}
 			this._dataCache = state;
 
-			if (data.method === WasmMethod.single || data.method === WasmMethod.cont || data.method === WasmMethod.reset) {
+			if (data.method === WasmMethod.run || data.method === WasmMethod.reset) {
 				const powerChangesWire = new Map<string, PowerChangesOutWire>();
 				const powerChangesWireEnds = new Map<string, Map<Element, boolean[]>>();
 				for (const identifier of this._powerSubjectsWires.keys()) {
@@ -87,12 +90,29 @@ export class WorkerCommunicationService {
 				}
 			}
 
-			if (data.method === WasmMethod.cont && this._isContinuous) {
+			if (data.method === WasmMethod.run && this._mode === 'continuous') {
 				const request: WasmRequest = {
-					method: WasmMethod.cont,
+					method: WasmMethod.run,
 					time: this._frameAverage.average
 				};
 				this._worker.postMessage(request);
+			} else if (data.method === WasmMethod.run && this._mode === 'target') {
+				const timestamp = Date.now();
+				const ticks = Math.trunc((timestamp - this._targetLastRun) * this._targetSpeed / 1000);
+				const request: WasmRequest = {
+					method: WasmMethod.run,
+					time: this._frameAverage.average,
+					ticks
+				};
+
+				if (ticks) {
+					this._worker.postMessage(request);
+					this._targetLastRun = timestamp;
+				} else {
+					setTimeout(() => {
+						this._worker.postMessage(request);
+					}, this._frameAverage.average / 2);
+				}
 			}
 
 			if (data.method === WasmMethod.status) {
@@ -185,30 +205,56 @@ export class WorkerCommunicationService {
 	}
 
 	public stop(): void {
-		this._isContinuous = false;
+		this._mode = undefined;
 		this._worker.postMessage({
 			method: WasmMethod.reset
 		} as WasmRequest);
 	}
 
 	public pause(): void {
-		this._isContinuous = false;
+		this._mode = undefined;
 	}
 
 	public start(): void {
-		if (this._isContinuous)
+		if (this._mode === 'continuous')
 			return;
 
 		const request: WasmRequest = {
-			method: WasmMethod.cont,
+			method: WasmMethod.run,
 			time: this._frameAverage.average
 		};
-		this._isContinuous = true;
+		this._mode = 'continuous';
 		this._worker.postMessage(request);
 		this._worker.postMessage(request);
+		this.registerStatusWatch();
+	}
+
+	public startTarget(target?: number): void {
+		if (this._mode === 'target')
+			return;
+
+		if (target && target >= 0)
+			this._targetSpeed = target;
+
+		const request: WasmRequest = {
+			method: WasmMethod.run,
+			time: this._frameAverage.average,
+			ticks: 1
+		};
+		this._mode = 'target';
+		this._worker.postMessage(request);
+		this.registerStatusWatch();
+	}
+
+	public setTarget(target: number) {
+		if (target > 0)
+			this._targetSpeed = target;
+	}
+
+	private registerStatusWatch() {
 		this.ngZone.runOutsideAngular(() => {
 			timer(0, 1000).pipe(
-				takeWhile(() => this._isContinuous)
+				takeWhile(() => !!this._mode)
 			).subscribe(x => {
 				this._worker.postMessage({
 					method: WasmMethod.status
@@ -219,7 +265,8 @@ export class WorkerCommunicationService {
 
 	public singleStep(): void {
 		const request: WasmRequest = {
-			method: WasmMethod.single
+			method: WasmMethod.run,
+			ticks: 1
 		};
 		this._worker.postMessage(request);
 		this._worker.postMessage({
@@ -265,7 +312,7 @@ export class WorkerCommunicationService {
 	}
 
 	public get isRunning() {
-		return this._isContinuous;
+		return !!this._mode;
 	}
 
 	public subscribe(identifier: string): void {

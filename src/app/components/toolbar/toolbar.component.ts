@@ -129,6 +129,15 @@ export class ToolbarComponent {
 		this.workerCommunication.singleStep();
 	}
 
+	public continueSmTarget() {
+		this.workerCommunication.startTarget();
+		this.renderTicker.startAllContSim();
+	}
+
+	public setTarget(event) {
+		this.workerCommunication.setTarget(event.target.valueAsNumber);
+	}
+
 	public get simulationStatus() {
 		return this.workerCommunication.status;
 	}
