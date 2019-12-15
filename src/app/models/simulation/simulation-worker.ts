@@ -86,17 +86,6 @@ export class SimulationWorker {
 		this._simulationModule._free(ptr);
 	}
 
-	public runForTarget(target: number) {
-		let ticks = 1;
-		while (true) {
-			const prev = performance.now();
-			this._simulationModule.start(ticks, Number.MAX_SAFE_INTEGER);
-
-			ticks *= target / (performance.now() - prev);
-			console.log(this._simulationModule.getStatus());
-		}
-	}
-
 	public stop() {
 		this._simulationModule.stop();
 	}
