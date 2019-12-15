@@ -1,159 +1,352 @@
 {
 	"LANGUAGE": {
-		"DE": "German",
-		"EN": "English"
+		"DE": "Deutsch",
+		"EN": "Englisch"
 	},
 	"DROPDOWN": {
 		"FILE": {
-			"TITLE": "File",
-			"NEW_PROJECT": "New Project",
-			"NEW_COMPONENT": "New Component",
-			"OPEN": "Open",
-			"SAVE": "Save",
-			"EXPORT": "Export to file",
-			"SCREENSHOT": "Screenshot",
-			"SHARE": "Teilen"
+			"TITLE": "Datei",
+			"NEW_PROJECT": "Neues Projekt",
+			"NEW_COMPONENT": "Neue Komponente",
+			"OPEN": "Öffnen",
+			"SAVE": "Speichern",
+			"EXPORT": "Als Datei exportieren",
+			"IMAGE_PNG": "Als PNG exportieren",
+			"IMAGE_JPEG": "Als JPG exportieren",
+			"IMAGE_SVG": "Als SVG exportieren",
+			"SHARE": "Teilen",
+			"CLONE": "Projekt klonen"
 		},
 		"EDIT": {
-			"TITLE": "Edit",
-			"UNDO": "Undo",
-			"REDO": "Redo",
-			"COPY": "Copy",
-			"PASTE": "Paste",
-			"CUT": "Cut",
-			"DELETE": "Delete"
+			"TITLE": "Bearbeiten",
+			"UNDO": "Rückgängig",
+			"REDO": "Wiederholen",
+			"COPY": "Kopieren",
+			"PASTE": "Einfügen",
+			"CUT": "Ausschneiden",
+			"DELETE": "Löschen"
 		},
 		"VIEW": {
-			"TITLE": "View",
-			"ZOOM_IN": "Zoom in",
-			"ZOOM_OUT": "Zoom out",
+			"TITLE": "Ansicht",
+			"ZOOM_IN": "Einzoomen",
+			"ZOOM_OUT": "Auszoomen",
 			"100": "100%",
-			"FULLSCREEN": "Fullscreen"
+			"FULLSCREEN": "Vollbild"
 		},
 		"HELP": {
-			"TITLE": "Help"
+			"TITLE": "Hilfe"
 		},
 		"SETTINGS": {
-			"DARK_MODE": "Dark Mode",
-			"SHOW_GRID": "Show Grid",
-			"LANGUAGE": "Language",
-			"SHORTCUTS": "Customize Shortcuts",
-			"ACCOUNT": "Account Settings"
+			"DARK_MODE": "Dunkles Design",
+			"SHOW_GRID": "Raster anzeigen",
+			"LANGUAGE": "Sprache",
+			"SHORTCUTS": "Tastaturbefehle bearbeiten",
+			"ACCOUNT": "Account",
+			"LOGOUT": "Abmelden",
+			"PRIVACY": "Datenschutz"
 		}
 	},
 	"TOOLBAR": {
-		"START_SIM": "Start Simulation",
-		"EXIT_SIM": "Exit Simulation"
+		"START_SIM": "Simulation starten",
+		"EXIT_SIM": "Simulation verlassen",
+		"TOOLTIP": {
+			"SAVE": "Speichern",
+			"OPEN": "Öffnen",
+			"NEW_COMP": "Neue Komponente",
+			"COPY": "Kopieren",
+			"PASTE": "Einfügen",
+			"CUT": "Ausschneiden",
+			"DELETE": "Löschen",
+			"UNDO": "Rückgängig",
+			"REDO": "Wiederholen",
+			"ZOOM_IN": "Einzoomen",
+			"ZOOM_OUT": "Auszoomen",
+			"WIRE": "Leitungen platzieren",
+			"CONN_WIRE": "Leitungen verbinden",
+			"SELECT": "Auswählen",
+			"SELECT_CUT": "Auswählen und Schneiden",
+			"TEXT": "Text",
+			"SIM_SINGLE": "Einzelschritt",
+			"SIM_PAUSE": "Pause",
+			"SIM_STOP": "Stopp",
+			"SIM_CONT": "Start"
+		}
 	},
 	"TOP_BAR": {
-		"LOGIN": "Login",
-		"REGISTER": "Register"
+		"LOGIN": "Anmelden",
+		"REGISTER": "Registrieren"
 	},
 	"CONST_BOX": {
-		"SEARCH": "Search",
+		"SEARCH": "Suchen",
 		"CATEGORIES": {
-			"BASIC": "Basic Components",
-			"IO": "IO Components",
-			"PLUG": "Plug Components",
-			"USER": "User Defined"
+			"BASIC": "Grundlegend",
+			"ADVANCED": "Fortgeschritten",
+			"IO": "IO",
+			"PLUG": "Stecker",
+			"USER": "Benutzerdefiniert"
 		}
 	},
 	"POPUP": {
+		"LOGIN": {
+			"TITLE": "Anmelden",
+			"HEADLINE": "Melde dich hier an",
+			"USERNAME": "Benutzername / E-Mail",
+			"USERNAME_ERR_REQUIRED": "Benutzername / E-Mail muss angegeben werden",
+			"PASSWORD": "Passwort",
+			"PASSWORD_ERR_REQUIRED": "Passwort muss angegeben werden",
+			"LOGIN_BUTTON": "ANMELDEN",
+			"OR": "oder"
+		},
+		"REGISTER": {
+			"TITLE": "Registrieren",
+			"HEADLINE": "Registriere dich hier",
+			"EMAIL": "E-Mail",
+			"EMAIL_ERR_REQUIRED": "E-Mail muss angegeben werden",
+			"EMAIL_ERR_INVALID": "Bitte geben Sie eine valide E-Mail an",
+			"USERNAME": "Benutzername",
+			"USERNAME_ERR_REQUIRED": "Benutzername muss angegeben werden",
+			"USERNAME_ERR_MIN": "Benutzername muss mindestens zwei Zeichen enthalten",
+			"USERNAME_ERR_MAX": "Benutzername darf maximal 20 Zeichen enthalten",
+			"PASSWORD": "Passwort",
+			"PASSWORD_ERR_REQUIRED": "Passwort muss angegeben werden",
+			"PASSWORD_ERR_MIN": "Passwort muss mindestens acht Zeichen enthalten",
+			"PASSWORD_ERR_COMPLEXITY": "Passwort muss Ziffern und Buchstaben enthalten",
+			"PASSWORD_REPEAT": "Repeat password",
+			"PASSWORD_REPEAT_ERR": "Passwörter stimmen nicht überein",
+			"PRIVACY_POLICY": "Durch klicken auf \"Registrieren\" stimmen Sie zu, dass Sie die Datenschutzerklärung gelesen haben akzeptieren.",
+			"REGISTER_BUTTON": "REGISTRIEREN",
+			"OR": "oder"
+		},
 		"NEW_COMP": {
-			"TITLE": "New Component",
+			"TITLE": "Neue Komponente",
 			"NAME": "Name",
 			"SYMBOL": "Symbol",
-			"CREATE": "Create"
+			"DESCRIPTION": "Beschreibung",
+			"CREATE": "ERSTELLEN",
+			"NAME_REQUIRED": "Name muss angegeben werden",
+			"NAME_MIN_LENGTH": "Name ist zu kurz",
+			"NAME_MAX_LENGTH": "Name ist zu lang",
+			"NAME_PATTERN": "Name muss bestehen aus A-Z a-z 0-9 -_",
+			"SYMBOL_REQUIRED": "Symbol muss angegeben werden",
+			"SYMBOL_MAX_LENGTH": "Symbol ist zu lang",
+			"SYMBOL_PATTERN": "Symbol muss bestehen aus A-Z a-z 0-9 -_"
 		},
 		"SAVE": {
-			"TITLE": "Save Project",
+			"TITLE": "Projekt speichern",
 			"NAME": "Name",
-			"DOWNLOAD": "Download Project File",
-			"CLOUD": "Save in Cloud"
+			"DESCRIPTION": "Beschreibung",
+			"DOWNLOAD": "DATEI HERUNTERLADEN",
+			"CLOUD": "IN DER CLOUD SPEICHERN"
 		},
 		"OPEN": {
-			"TITLE": "Open Project"
+			"TITLE": "Projekt öffnen",
+			"OPEN": "ÖFFNEN",
+			"TABLE_OPEN": "Öffnen",
+			"TABLE_EDITED": "Zuletzt bearbeitet",
+			"TABLE_NAME": "Name",
+			"OPEN_FILE": "Aus Datei öffnen",
+			"OPEN_CLOUD": "Aus Cloud öffnen",
+			"NO_FILE": "Keine Datei ausgewählt"
 		},
 		"RELOAD": {
-			"TITLE": "Reload Required",
-			"QUESTION": "For this change to take effect, the editor has to be reloaded.<br>Do you want to reload this page now?",
-			"YES": "Yes",
-			"POSTPONE": "No, I'll reload later",
-			"CANCEL": "Cancel"
+			"TITLE": "Neuladen benötigt",
+			"QUESTION": "Um diese Änderungen zu übernehmen, muss der Editor neu geladen werden.<br>Wollen Sie diese Seite jetzt neuladen?",
+			"YES": "JA",
+			"POSTPONE": "SPÄTER NEULADEN",
+			"CANCEL": "ABBRECHEN"
 		},
 		"SHORTCUTS": {
-			"TITLE": "Customize Shortcuts",
-			"SAVE": "Save",
+			"TITLE": "Tastaturbefehle bearbeiten",
+			"SAVE": "SPEICHERN",
 			"DESCRIPTION": {
-				"copy": "Copy",
-				"paste": "Paste",
-				"cut": "Cut",
-				"delete": "Delete selected items",
-				"undo": "Undo",
-				"redo": "Redo",
-				"zoom100": "Zoom to 100%",
-				"zoomIn": "Zoom in",
-				"zoomOut": "Zoom out",
-				"fullscreen": "enter fullscreen mode",
-				"connWireMode": "Connect wires mode",
-				"wireMode": "Place wires mode",
-				"selectMode": "selection mode",
-				"newComp": "Create new custom component",
-				"textMode": "text mode",
-				"save": "Save"
+				"copy": "Kopieren",
+				"paste": "Einfügen",
+				"cut": "Ausschneiden",
+				"delete": "Auswahl löschen",
+				"undo": "Rückgängig",
+				"redo": "Wiederholen",
+				"zoom100": "Auf 100% zoomen",
+				"zoomIn": "Einzoomen",
+				"zoomOut": "Auszoomen",
+				"fullscreen": "Vollbildmodus",
+				"connWireMode": "Leitungen verbinden",
+				"wireMode": "Leitungen platzieren",
+				"selectMode": "Auswählen",
+				"cutSelectMode": "Auswählen und Schneiden",
+				"newComp": "Neue benutzerdefinierte Komponente",
+				"textMode": "Text platzieren",
+				"save": "Speichern",
+				"newProj": "Neues Projekt",
+				"openProj": "Projekt öffnen"
 			}
+		},
+		"UNSAVED_CHANGES": {
+			"TITLE": "Ungespeicherte Änderungen",
+			"QUESTION": "Dieses Projekt hat ungespeicherte Änderungen, diese gehen verloren, wenn ein anderes Projekt geöffnet wird!",
+			"OK": "TROTZDEM FORTFAHREN",
+			"CANCEL": "ABBRECHEN"
+		},
+		"SHARE": {
+			"TITLE": "Projekt teilen {{project}}",
+			"SHARE_ENABLE": "Teile dieses Projekt mit anderen",
+			"PUBLIC": "Öffenttlich teilen",
+			"INFO_TEXT": "Bitte geben Sie die E-Mail-Adressen und Benutzernamen der Nutzer an, mit denen Sie das Projekt teilen wollen.",
+			"EMAIL_USER": "E-Mail / Benutzername",
+			"EMAIL_USER_ALREADY_ADDED": "E-Mail oder Benutzername wurden bereits hinzugefügt",
+			"ADD_EMAIL": "Hinzufügen",
+			"REMOVE_EMAIL": "Entfernen",
+			"INVITATIONS": "E-Mail Einladungen an Benutzer senden",
+			"NOT_FOUND_ERROR": "Manche E-Mail-Adressen konnten nicht gefunden werden, Projekt wurde trotzdem geteilt.",
+			"SUCCESS": "Projekt wurde erfolgreich geteilt.",
+			"LINK": "Link zum Teilen",
+			"COPY": "Kopieren",
+			"SAVE": "EINSTELLUNGEN SPEICHERN",
+			"CANCEL": "ABBRECHEN"
+		},
+		"TEXT": {
+			"TITLE": "Text platzieren",
+			"SET": "Speichern",
+			"LABEL": "Text"
 		}
 	},
 	"SETTINGS_INFO": {
-		"INPUTS": "Inputs",
-		"DIRECTION": "Direction",
+		"INPUTS": "Eingänge",
+		"DIRECTION": "Richtung",
 		"DIRECTIONS": {
-			"LEFT": "Left",
-			"DOWN": "Down",
-			"UP": "Up",
-			"RIGHT": "Right"
+			"LEFT": "Nach links",
+			"DOWN": "Nach unten",
+			"UP": "Nach oben",
+			"RIGHT": "Nach rechts"
 		},
-		"DESCRIPTION": "Description",
-		"EDIT": "Edit"
+		"DESCRIPTION": "Beschreibung",
+		"EDIT": "Bearbeiten",
+		"PLUG_INDEX": "Stecker Index",
+		"PLUG_LABEL": "Beschriftung"
 	},
 	"ELEMENT_TYPE": {
 		"BASIC": {
 			"AND": {
-				"NAME": "AND Gate",
+				"NAME": "UND Gatter",
 				"DESCRIPTION": ""
 			},
 			"NOT": {
-				"NAME": "NOT Gate",
-				"DESCRIPTION": "I am a not"
+				"NAME": "NICHT Gatter",
+				"DESCRIPTION": "Ich bin ein Nicht"
 			},
 			"OR": {
-				"NAME": "OR Gate",
+				"NAME": "ODER Gatter",
 				"DESCRIPTION": ""
 			},
 			"XOR": {
-				"NAME": "XOR Gate",
+				"NAME": "XOR Gatter",
+				"DESCRIPTION": ""
+			},
+			"DELAY": {
+				"NAME": "Verzögerung",
+				"DESCRIPTION": "Ausgang = Eingang. Fügt einen Tick Verzögerung zum Signal hinzu."
+			},
+			"CLOCK": {
+				"NAME": "Taktgeber",
+				"DESCRIPTION": "",
+				"SPEED": "Verzögerung zwischen Pulsen."
+			},
+			"TEXT": {
+				"NAME": "Text",
+				"DESCRIPTION": "Text, der überall platziert werden kann."
+			}
+		},
+		"ADVANCED": {
+			"HALF_ADDER": {
+				"NAME": "Halbaddierer",
+				"DESCRIPTION": ""
+			},
+			"FULL_ADDER": {
+				"NAME": "Volladdierer",
 				"DESCRIPTION": ""
 			}
 		},
 		"IO": {
 			"BUTTON": {
-				"NAME": "Button",
+				"NAME": "Knopf",
 				"DESCRIPTION": ""
 			},
 			"LEVER": {
-				"NAME": "Lever",
+				"NAME": "Schalter",
 				"DESCRIPTION": ""
 			}
 		},
 		"PLUG": {
 			"INPUT": {
-				"NAME": "Input Plug",
-				"DESCRIPTION": "Place this where the inputs of you self-defined components should be"
+				"NAME": "Eingangsstecker",
+				"DESCRIPTION": "Platzieren das, wo die Eingänge deiner selbstdefinierten Komponenten sein sollen"
 			},
 			"OUTPUT": {
-				"NAME": "Output Plug",
-				"DESCRIPTION": "Place this where the outputs of you self-defined components should be"
+				"NAME": "Ausgangsstecker",
+				"DESCRIPTION": "Platzieren das, wo die Ausgänge deiner selbstdefinierten Komponenten sein sollen"
 			}
+		}
+	},
+	"STATUS_BAR": {
+		"UNSAVED": "Ungespeicherte Änderungen",
+		"SAVED": "Gespeichert",
+		"SELECTED": "Sel"
+	},
+	"WORK_MODE_DES": {
+		"select": "Elemente selektieren",
+		"selectCut": "Elemente selektieren, aber Leitungen werden abgeschnitten",
+		"buildComponent": "Komponente platzieren: {{comp}}",
+		"buildWire": "Leitungen platzieren",
+		"connectWire": "Leitungen verbinden",
+		"text": "Text platzieren",
+		"simulation": "Schaltung simulieren"
+	},
+	"ERROR": {
+		"COMPILE": {
+			"CIRCULAR_DEP": "Zirkuläre Abhängigkeit in Komponenten. {{src}} darf nicht {{comp}} beinhalten.",
+			"FAILED": "Board konnte nicht zusammengestellt werden.",
+			"WORKER_INIT": "WebWorker konnte nicht initialisiert werden."
+		},
+		"PROJECTS": {
+			"GET_PROJECTS": "Konnte Projekte nicht vom Server laden",
+			"GET_COMPS": "Konnte Komponenten nicht vom Server laden",
+			"OPEN_COMP": "Konnte Komponente nicht öffnen",
+			"CLONE": "Konnte Projekt nicht klonen",
+			"CREATE": "Konnte Projekt oder Komponente nicht erstellen",
+			"SAVE": "Konnte Projekt oder Komponente nicht auf dem Server speichern",
+			"COMP_NOT_FOUND": "Komponente konnte nicht gefunden werden, Projekt könnte beschädigt sein",
+			"INVALID_FILE": "Fehlerhafte Datei",
+			"RESOLVE_DEPS": "Konnte Abhängigkeiten des Projekts nicht auflösen",
+			"PROJECT_AS_COMP": "Konnte Projekt nicht als Komponente öffnen"
+		},
+		"SHARE": {
+			"CREATE": "Konnte Projekt nicht teilen.",
+			"OPEN": "Konnte geteiltes Projekt nicht öffnen",
+			"UPDATE": "Share konnte nicht aktualisiert werden",
+			"DELETE": "Share konnte nicht gelöscht werden",
+			"GET_INFO": "Konnte Share Informationen nicht bekommen"
+		},
+		"USER": {
+			"SAVE_SHORTCUTS": "Fehler beim speichern der Tastaturbefehle",
+			"GET_INFO": "Konnte Benutzerinformationen nicht bekommen",
+			"LOGIN": "Fehler beim Anmelden"
+		},
+		"INVALID_URL": "Ungülitge Url"
+	},
+	"INFO": {
+		"PROJECTS": {
+			"CREATE_COMP": "Komponente erstellt {{name}}.",
+			"OPEN_COMP": "Komponente geöffnet {{name}}.",
+			"OPEN_PROJECT": "Projekt geöffnet {{name}}.",
+			"CLONED": "Projekt geklont.",
+			"SAVE_SERVER": "{{name}} auf dem Server gespeichert.",
+			"SAVE_ALL": "Projekt und alle geöffneten Komponenten gespeichert",
+			"EXPORT": "Projekt und alle beinhalteten Komponenten wurden gespeichert",
+			"OPEN_SHARE": "Geteiltes Projekt {{name}} von {{user}} geöffnet"
+		},
+		"EASTEREGGS": {
+			"GBOGH": "Gehe groß oder gehe nach Hause",
+			"BLD": "AHHH MEINE AUGEN, SO VIELE LUMEN",
+			"LAZ": "Zu faul für einen gescheiten Namen..."
 		}
 	}
 }
