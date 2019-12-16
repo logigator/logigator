@@ -25,7 +25,7 @@ export class WorkerCommunicationService {
 	private _worker: Worker;
 
 	private _initialized = false;
-	private _mode: 'continuous' | 'target';
+	private _mode: 'continuous' | 'target' | 'sync';
 	private _frameAverage = new AverageBuffer(5);
 
 	private _targetSpeed = 0;
@@ -250,15 +250,26 @@ export class WorkerCommunicationService {
 		this.registerStatusWatch();
 	}
 
+	public startSync(): void {
+		if (this._mode === 'sync')
+			return;
+
+		this._mode = 'sync';
+		this.registerStatusWatch();
+		this.singleStep();
+	}
+
 	public setTarget(target: number) {
 		if (target > 0)
 			this._targetSpeed = target;
 	}
 
 	private registerStatusWatch() {
+		const mode = this._mode;
+
 		this.ngZone.runOutsideAngular(() => {
 			timer(0, 1000).pipe(
-				takeWhile(() => !!this._mode)
+				takeWhile(() => mode === this._mode),
 			).subscribe(x => {
 				this._worker.postMessage({
 					method: WasmMethod.status
@@ -280,6 +291,14 @@ export class WorkerCommunicationService {
 
 	public setFrameTime(frameTime: number): void {
 		this._frameAverage.push(frameTime > this._frameAverage.average + 100 ? this._frameAverage.average + 100 : frameTime);
+
+		if (this._mode === 'sync') {
+			const request: WasmRequest = {
+				method: WasmMethod.run,
+				ticks: 1
+			};
+			this._worker.postMessage(request);
+		}
 	}
 
 	public setUserInput(identifier: string, element: Element, state: boolean[]): void {

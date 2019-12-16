@@ -44,9 +44,14 @@
 
 			<div class="divider"></div>
 
-			<label for="target-tick-rate">Target Tick Rate:</label>
+			<label for="target-tick-rate">Limit Tick Rate to:</label>
 			<input id="target-tick-rate" type="number" (keyup)="setTarget($event)" (change)="setTarget($event)">
-			<button class="toolbar-button play" (click)="continueSmTarget()" appToolbarItemTooltip [tooltipText]="'TOOLBAR.TOOLTIP.SIM_CONT' | translate"></button>
+			<logi-switch [(ngModel)]="targetMode" (ngModelChange)="setTargetMode()"></logi-switch>
+
+			<div class="divider"></div>
+
+			<p>Sync Tick Rate to Frame Rate</p>
+			<logi-switch [(ngModel)]="syncMode" (ngModelChange)="setSyncMode()"></logi-switch>
 
 			<ng-container *ngIf="simulationRunning">
 				<div class="divider"></div>

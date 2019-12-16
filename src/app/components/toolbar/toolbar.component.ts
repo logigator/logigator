@@ -20,6 +20,9 @@ export class ToolbarComponent {
 	// #!debug
 	private test: Test;
 
+	public targetMode = false;
+	public syncMode = false;
+
 	constructor(
 		private workModeService: WorkModeService,
 		private projectService: ProjectsService,
@@ -110,8 +113,18 @@ export class ToolbarComponent {
 		this.projectInteraction.openProject();
 	}
 
-	public continueSm() {
-		this.workerCommunication.start();
+	public continueSm(override = false) {
+		if (!override && this.simulationRunning)
+			return;
+
+		if (this.targetMode) {
+			this.workerCommunication.startTarget();
+		} else if (this.syncMode) {
+			this.workerCommunication.startSync();
+		} else {
+			this.workerCommunication.start();
+		}
+
 		this.renderTicker.startAllContSim();
 	}
 
@@ -129,9 +142,20 @@ export class ToolbarComponent {
 		this.workerCommunication.singleStep();
 	}
 
-	public continueSmTarget() {
-		this.workerCommunication.startTarget();
-		this.renderTicker.startAllContSim();
+	public setTargetMode() {
+		if (this.targetMode)
+			this.syncMode = false;
+
+		if (this.simulationRunning)
+			this.continueSm(true);
+	}
+
+	public setSyncMode() {
+		if (this.syncMode)
+			this.targetMode = false;
+
+		if (this.simulationRunning)
+			this.continueSm(true);
 	}
 
 	public setTarget(event) {
