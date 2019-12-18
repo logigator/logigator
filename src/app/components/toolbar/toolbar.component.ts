@@ -23,6 +23,9 @@ export class ToolbarComponent {
 	public targetMode = false;
 	public syncMode = false;
 
+	public targetMultiplier = '1';
+	public targetTickRate = 1;
+
 	constructor(
 		private workModeService: WorkModeService,
 		private projectService: ProjectsService,
@@ -142,15 +145,19 @@ export class ToolbarComponent {
 		this.workerCommunication.singleStep();
 	}
 
-	public setTargetMode() {
-		if (this.targetMode)
+	public toggleTargetMode() {
+		this.targetMode = !this.targetMode;
+		if (this.targetMode) {
+			this.setTarget();
 			this.syncMode = false;
+		}
 
 		if (this.simulationRunning)
 			this.continueSm(true);
 	}
 
-	public setSyncMode() {
+	public toggleSyncMode() {
+		this.syncMode = !this.syncMode;
 		if (this.syncMode)
 			this.targetMode = false;
 
@@ -158,8 +165,10 @@ export class ToolbarComponent {
 			this.continueSm(true);
 	}
 
-	public setTarget(event) {
-		this.workerCommunication.setTarget(event.target.valueAsNumber);
+	public setTarget() {
+		const target = this.targetTickRate * Number(this.targetMultiplier);
+		if (target < 0) this.targetTickRate = 0;
+		this.workerCommunication.setTarget(target);
 	}
 
 	public get simulationStatus() {

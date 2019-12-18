@@ -69,7 +69,9 @@
 			"SIM_SINGLE": "Einzelschritt",
 			"SIM_PAUSE": "Pause",
 			"SIM_STOP": "Stopp",
-			"SIM_CONT": "Start"
+			"SIM_CONT": "Start",
+			"SIM_TARGET_MODE": "Tickrate limitieren",
+			"SIM_SYNC_MODE": "Tickrate mit Bildschirm synchronisieren"
 		}
 	},
 	"TOP_BAR": {

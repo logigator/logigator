@@ -260,7 +260,7 @@ export class WorkerCommunicationService {
 	}
 
 	public setTarget(target: number) {
-		if (target > 0)
+		if (target >= 0)
 			this._targetSpeed = target;
 	}
 
