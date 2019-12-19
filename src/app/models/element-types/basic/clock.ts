@@ -28,7 +28,7 @@ export const clock: ElementType = {
 
 	width: environment.componentWidth,
 
-	options: [0],
+	options: [1],
 	optionsConfig: [
 		{
 			name: 'ELEMENT_TYPE.BASIC.CLOCK.SPEED',

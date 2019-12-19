@@ -20,15 +20,16 @@ export class SimulationWorker {
 		let counter = 0;
 		for (let i = 1; i < this._components.length; ) {
 			const typeId = this._components[i++];
-			const op1 = this._components[i++];
-			const op2 = this._components[i++];
+			const opCount = this._components[i++];
 			const inputCount = this._components[i++];
 			const outputCount = this._components[i++];
+			const ops = this._components.slice(i, i += opCount);
 			const inputs = this._components.slice(i, i += inputCount);
 			const outputs = this._components.slice(i, i += outputCount);
 
 			const inputPtr = this._arrayToHeap(inputs);
 			const outputPtr = this._arrayToHeap(outputs);
+			const opsPtr = opCount > 0 ? this._arrayToHeap(ops) : 0;
 
 			simulationModule.initComponent
 			(
@@ -38,12 +39,13 @@ export class SimulationWorker {
 				outputPtr,
 				inputCount,
 				outputCount,
-				op1,
-				op2
+				opCount,
+				opsPtr
 			);
 
 			this._simulationModule._free(inputPtr);
 			this._simulationModule._free(outputPtr);
+			if (opCount > 0) this._simulationModule._free(opsPtr);
 		}
 		simulationModule.initBoard();
 	}
