@@ -265,6 +265,12 @@
 			"FULL_ADDER": {
 				"NAME": "Volladdierer",
 				"DESCRIPTION": ""
+			},
+			"ROM": {
+				"NAME": "ROM",
+				"DESCRIPTION": "",
+				"WORD_SIZE": "Wortbreite",
+				"ADDRESS_SIZE": "Adressgröße"
 			}
 		},
 		"IO": {

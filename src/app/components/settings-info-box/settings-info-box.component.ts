@@ -61,7 +61,7 @@ export class SettingsInfoBoxComponent implements OnChanges, OnDestroy {
 					if (data.numInputs !== this._element.numInputs && !this.projects.currProject.setNumInputs(this.selectedCompId, data.numInputs)) {
 						this.propertiesForm.controls.numInputs.setValue(this._element.numInputs);
 					}
-				} else if (data.numInputs * 10 >= this.elementType.maxInputs) {
+				} else if (data.numInputs * 10 >= this.elementType.maxInputs && this.elementType.maxInputs !== this.elementType.minInputs) {
 					this.propertiesForm.controls.numInputs.setValue(this._element.numInputs);
 				}
 				if (this.elementType.hasPlugIndex && data.plugIndex !== this._element.plugIndex) {
@@ -77,8 +77,11 @@ export class SettingsInfoBoxComponent implements OnChanges, OnDestroy {
 					for (let i = 0; i < data.options.length; i++) {
 						const optVal = Number(data.options[i]);
 						if (optVal <= this.elementType.optionsConfig[i].max && optVal >= this.elementType.optionsConfig[i].min) {
-							this._element.options[i] = optVal;
-							this.projects.currProject.setOptions(this.selectedCompId, this._element.options);
+							if (this._element.options[i] !== optVal) {
+								const newOptions = [...this._element.options];
+								newOptions[i] = optVal;
+								this.projects.currProject.setOptions(this.selectedCompId, newOptions);
+							}
 						} else if (optVal * 10 >= this.elementType.optionsConfig[i].max) {
 							(this.propertiesForm.get('options') as FormArray).controls[i].setValue(this._element.options[i]);
 						}
@@ -90,7 +93,7 @@ export class SettingsInfoBoxComponent implements OnChanges, OnDestroy {
 				}
 				if (data.numInputs <= this.elementType.maxInputs && data.numInputs >= this.elementType.minInputs) {
 					this.elementType.numInputs = data.numInputs;
-				} else if (data.numInputs * 10 >= this.elementType.maxInputs) {
+				} else if (data.numInputs * 10 >= this.elementType.maxInputs && this.elementType.maxInputs !== this.elementType.minInputs) {
 					this.propertiesForm.controls.numInputs.setValue(this.elementType.numInputs);
 				}
 				if (this.elementType.optionsConfig) {
@@ -98,6 +101,7 @@ export class SettingsInfoBoxComponent implements OnChanges, OnDestroy {
 						const optVal = Number(data.options[i]);
 						if (optVal <= this.elementType.optionsConfig[i].max && optVal >= this.elementType.optionsConfig[i].min) {
 							this.elementType.options[i] = optVal;
+							if (this.elementType.onOptionsChanged) this.elementType.onOptionsChanged();
 						} else if (optVal * 10 >= this.elementType.optionsConfig[i].max) {
 							(this.propertiesForm.get('options') as FormArray).controls[i].setValue(this.elementType.options[i]);
 						}

@@ -265,6 +265,12 @@
 			"FULL_ADDER": {
 				"NAME": "Full Adder",
 				"DESCRIPTION": ""
+			},
+			"ROM": {
+				"NAME": "ROM",
+				"DESCRIPTION": "",
+				"WORD_SIZE": "Word Size",
+				"ADDRESS_SIZE": "Address Size"
 			}
 		},
 		"IO": {
