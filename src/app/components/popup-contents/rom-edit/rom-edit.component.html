@@ -10,7 +10,14 @@
 			<tr>
 				<td valign="top" class="left-address">{{leftAddress}}</td>
 				<td class="text-area-td">
-					<textarea spellcheck="false" cols="45" (input)="onInput($event)" #hexInput></textarea>
+					<textarea spellcheck="false"
+					          cols="45"
+					          (input)="onInput($event)"
+					          (keydown)="selectionChange"
+					          (click)="selectionChange()"
+					          (focus)="selectionChange()"
+					          #hexInput>
+					</textarea>
 				</td>
 			</tr>
 		</tbody>

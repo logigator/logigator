@@ -13,6 +13,9 @@ export class RomEditComponent extends PopupContentComp<string> implements OnInit
 
 	leftAddress = '00000000';
 
+	selectionStart: number;
+	selectionEnd: number;
+
 	constructor() {
 		super();
 	}
@@ -21,7 +24,8 @@ export class RomEditComponent extends PopupContentComp<string> implements OnInit
 		console.log(this.inputFromOpener);
 	}
 
-	onInput(event: Event) {
+	onInput(event: any) {
+		this.selectionChange();
 		this.hexInput.nativeElement.value = this.hexInput.nativeElement.value
 			.split('')
 			.map(c => c.toUpperCase())
@@ -38,8 +42,17 @@ export class RomEditComponent extends PopupContentComp<string> implements OnInit
 			while (hex.length < 8) hex = '0' + hex;
 			newLeftAddress += hex + '\n';
 		}
+		if (event.inputType.startsWith('delete')) {
+			this.hexInput.nativeElement.selectionStart = this.selectionStart;
+			this.hexInput.nativeElement.selectionEnd = this.selectionEnd;
+		}
 		this.leftAddress = newLeftAddress;
 		this.hexInput.nativeElement.style.height = 26 + Math.ceil(this.hexInput.nativeElement.value.length / 48) * 26 + 'px';
+	}
+
+	selectionChange() {
+		this.selectionStart = this.hexInput.nativeElement.selectionStart;
+		this.selectionEnd = this.hexInput.nativeElement.selectionEnd;
 	}
 
 }
