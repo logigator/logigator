@@ -23,7 +23,7 @@
 	<div>
 		<h2>{{'POPUP.OPEN.OPEN_FILE' | translate}}</h2>
 		<div class="file-upload">
-			<logi-file-input [(ngModel)]="fileToOpen"></logi-file-input>
+			<logi-file-input [(ngModel)]="fileToOpen" accept=".json"></logi-file-input>
 			<div>
 				<p>{{fileToOpen ? fileToOpen.name : 'POPUP.OPEN.NO_FILE' | translate}}</p>
 				<button class="btn-outline primary" [disabled]="!fileToOpen || fileToOpen.type !== 'application/json'" (click)="openFile()">{{'POPUP.OPEN.OPEN' | translate}}</button>
