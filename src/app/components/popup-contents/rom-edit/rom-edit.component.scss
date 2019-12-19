@@ -1,0 +1,80 @@
+@import "themes";
+
+div {
+	.hex-editor {
+		border-collapse: collapse;
+		table-layout: fixed;
+
+		* {
+			padding: 0.2rem;
+			margin: 0;
+			font-family: 'Roboto Mono', monospace;
+			font-size: 18px;
+			border-collapse: collapse;
+			@include themify() {
+				color: themed('text-primary');
+			}
+		}
+
+		thead {
+			display: block;
+			padding: 0;
+
+			.top-right {
+				width: 95px;
+				@include themify() {
+					border-bottom: border('width') solid themed('accent2');
+					border-right: border('width') solid themed('accent2');
+				}
+			}
+
+			.top-address {
+				@include themify() {
+					border-bottom: border('width') solid themed('accent2');
+					border-left: border('width') solid themed('accent2');
+				}
+			}
+		}
+
+		tbody {
+			max-height: 500px;
+			padding: 0;
+			display: block;
+			overflow-y: scroll;
+			overflow-x: hidden;
+			@include scrollbar(4px);
+
+			.left-address {
+				width: 95px;
+
+				@include themify() {
+					border-right: border('width') solid themed('accent2');
+				}
+			}
+
+			.text-area-td {
+				@include themify() {
+					border-left: border('width') solid themed('accent2');
+				}
+
+				textarea {
+					padding: 0;
+					resize: none;
+					outline: none;
+					border: none;
+					background-color: transparent;
+				}
+			}
+		}
+	}
+
+	.buttons {
+		display: flex;
+		flex-direction: row;
+		justify-content: flex-end;
+
+		button {
+			margin-left: 1rem;
+		}
+	}
+}

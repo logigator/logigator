@@ -1,5 +1,11 @@
 import {ElementType} from '../element-type';
 import {ElementTypeId} from '../element-type-ids';
+import {ProjectsService} from '../../../services/projects/projects.service';
+import {getStaticDI} from '../../get-di';
+import {PopupService} from '@logigator/logigator-shared-comps';
+import {TextComponent} from '../../../components/popup-contents/text/text.component';
+import {TextData} from '../basic/text';
+import {RomEditComponent} from '../../../components/popup-contents/rom-edit/rom-edit.component';
 
 export const rom: ElementType = {
 	id: ElementTypeId.ROM,
@@ -52,6 +58,14 @@ export const rom: ElementType = {
 		this.numOutputs = this.options[0];
 	},
 
+	edit: async (typeId: number, id: number, projectsSer: ProjectsService) => {
+		const oData = projectsSer.currProject.currState.getElementById(id).data as RomData;
+		const nData = await getStaticDI(PopupService).showPopup(RomEditComponent, 'POPUP.ROM_EDIT.TITLE', false, oData);
+		if (nData === oData) return;
+		projectsSer.currProject.setData(id, nData);
+	},
+	canEditType: false,
+
 	calcLabels(element?)  {
 		const labels = [];
 		if (element) {
@@ -72,3 +86,5 @@ export const rom: ElementType = {
 		return labels;
 	}
 };
+
+export type RomData = string;

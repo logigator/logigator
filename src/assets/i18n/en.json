@@ -209,6 +209,11 @@
 			"TITLE": "Place Text",
 			"SET": "Save",
 			"LABEL": "Text"
+		},
+		"ROM_EDIT": {
+			"TITLE": "Edit Rom Data",
+			"SAVE": "SAVE",
+			"CANCEL": "CANCEL"
 		}
 	},
 	"SETTINGS_INFO": {
