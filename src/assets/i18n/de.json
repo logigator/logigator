@@ -209,6 +209,11 @@
 			"TITLE": "Text platzieren",
 			"SET": "Speichern",
 			"LABEL": "Text"
+		},
+		"ROM_EDIT": {
+			"TITLE": "Rom Daten editieren",
+			"SAVE": "SPEICHERN",
+			"CANCEL": "ABBRECHEN"
 		}
 	},
 	"SETTINGS_INFO": {
