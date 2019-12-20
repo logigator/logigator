@@ -4,6 +4,7 @@ div {
 	.hex-editor {
 		border-collapse: collapse;
 		table-layout: fixed;
+		margin-bottom: 1rem;
 
 		* {
 			padding: 0.2rem;
@@ -62,6 +63,7 @@ div {
 					resize: none;
 					outline: none;
 					border: none;
+					overflow: hidden;
 					background-color: transparent;
 				}
 			}

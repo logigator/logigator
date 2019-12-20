@@ -15,13 +15,24 @@ export class RomEditComponent extends PopupContentComp<string> implements OnInit
 
 	selectionStart: number;
 	selectionEnd: number;
+	rows = 1;
 
 	constructor() {
 		super();
 	}
 
 	ngOnInit() {
-		console.log(this.inputFromOpener);
+		if (!this.inputFromOpener) return;
+		const raw = atob(this.inputFromOpener);
+		let hex = '';
+		for (let i = 0; i < raw.length; i++ ) {
+			const _hex = raw.charCodeAt(i).toString(16).toUpperCase();
+			hex += (_hex.length === 2 ? _hex : '0' + _hex) + ' ';
+
+		}
+		this.rows = Math.ceil(hex.length / 48) || 1;
+		this.calcLeftAddresses(this.rows);
+		this.hexInput.nativeElement.value = hex;
 	}
 
 	onInput(event: any) {
@@ -29,30 +40,46 @@ export class RomEditComponent extends PopupContentComp<string> implements OnInit
 		this.hexInput.nativeElement.value = this.hexInput.nativeElement.value
 			.split('')
 			.map(c => c.toUpperCase())
-			.filter(c => c.match(/[0-9A-F]/i))
+			.filter(c => c.match(/[0-9A-F]/im))
 			.reduce((previousValue, currentValue, currentIndex) => {
 				return previousValue + currentValue + (currentIndex !== 0 && (currentIndex + 1) % 2 === 0 ? ' ' : '');
 			}, '')
 			.trimRight();
 
-		let newLeftAddress = '';
-		const lineCount = Math.ceil(this.hexInput.nativeElement.value.length / 48) || 1;
-		for (let i = 0; i < lineCount; i++) {
-			let hex = (i * 16).toString(16);
-			while (hex.length < 8) hex = '0' + hex;
-			newLeftAddress += hex + '\n';
-		}
+		this.rows = Math.ceil(this.hexInput.nativeElement.value.length / 48) || 1;
+		this.calcLeftAddresses(this.rows);
 		if (event.inputType.startsWith('delete')) {
 			this.hexInput.nativeElement.selectionStart = this.selectionStart;
 			this.hexInput.nativeElement.selectionEnd = this.selectionEnd;
 		}
+	}
+
+	private calcLeftAddresses(lineCount: number) {
+		let newLeftAddress = '';
+		for (let i = 0; i < lineCount; i++) {
+			let hexAddr = (i * 16).toString(16).toUpperCase();
+			while (hexAddr.length < 8) hexAddr = '0' + hexAddr;
+			newLeftAddress += hexAddr + '\n';
+		}
 		this.leftAddress = newLeftAddress;
-		this.hexInput.nativeElement.style.height = 26 + Math.ceil(this.hexInput.nativeElement.value.length / 48) * 26 + 'px';
 	}
 
 	selectionChange() {
 		this.selectionStart = this.hexInput.nativeElement.selectionStart;
 		this.selectionEnd = this.hexInput.nativeElement.selectionEnd;
+	}
+
+	public cancel() {
+		this.requestClose.emit(false);
+	}
+
+	public save() {
+		const hex = this.hexInput.nativeElement.value.replace(/ /g, '');
+		let base64 = '';
+		for (let i = 0; i < hex.length; i++) {
+			base64 += !(i - 1 & 1) ? String.fromCharCode(parseInt(hex.substring(i - 1, i + 1), 16)) : '';
+		}
+		this.requestClose.emit(btoa(base64));
 	}
 
 }

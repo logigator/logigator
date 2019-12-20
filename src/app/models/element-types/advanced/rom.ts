@@ -45,7 +45,7 @@ export const rom: ElementType = {
 		{
 			name: 'ELEMENT_TYPE.ADVANCED.ROM.ADDRESS_SIZE',
 			min: 1,
-			max: 24
+			max: 16
 		}
 	],
 	onOptionsChanged(element?) {
@@ -61,7 +61,7 @@ export const rom: ElementType = {
 	edit: async (typeId: number, id: number, projectsSer: ProjectsService) => {
 		const oData = projectsSer.currProject.currState.getElementById(id).data as RomData;
 		const nData = await getStaticDI(PopupService).showPopup(RomEditComponent, 'POPUP.ROM_EDIT.TITLE', false, oData);
-		if (nData === oData) return;
+		if (nData === oData || nData === false) return;
 		projectsSer.currProject.setData(id, nData);
 	},
 	canEditType: false,

@@ -12,8 +12,9 @@
 				<td class="text-area-td">
 					<textarea spellcheck="false"
 					          cols="45"
+					          [rows]="rows"
 					          (input)="onInput($event)"
-					          (keydown)="selectionChange"
+					          (keydown)="selectionChange()"
 					          (click)="selectionChange()"
 					          (focus)="selectionChange()"
 					          #hexInput>
