@@ -43,7 +43,8 @@ div {
 			display: block;
 			overflow-y: scroll;
 			overflow-x: hidden;
-			@include scrollbar(4px);
+			@include scrollbar(5px);
+			width: 100%;
 
 			.left-address {
 				width: 95px;
@@ -54,11 +55,15 @@ div {
 			}
 
 			.text-area-td {
+				width: 100%;
+				padding-right: 0;
 				@include themify() {
 					border-left: border('width') solid themed('accent2');
 				}
 
 				textarea {
+					width: 100%;
+					margin-right: 0.5rem;
 					padding: 0;
 					resize: none;
 					outline: none;
