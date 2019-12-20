@@ -22,6 +22,8 @@ export class RomEditComponent extends PopupContentComp<string> implements OnInit
 	}
 
 	ngOnInit() {
+		this.hexInput.nativeElement.value = '';
+
 		if (!this.inputFromOpener) return;
 		const raw = atob(this.inputFromOpener);
 		let hex = '';
