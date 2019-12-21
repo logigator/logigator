@@ -6,7 +6,7 @@
 			     *ngIf="!isSimulationMode || project.value.type === 'project'"
 			     (click)="switchToProject(project.key)"
 			     [class.tab-active]="project.key === activeView?.projectId">
-				<p>{{project.value.name}}</p>
+				<p logiAutoFontSize desiredFontWidth="170">{{project.value.name}}</p>
 				<span *ngIf="project.value.type !== 'project'" class="tab-close" (click)="tabCloseClicked(project.key, $event)"></span>
 			</div>
 		</ng-container>
