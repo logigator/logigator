@@ -616,8 +616,8 @@ export class ProjectState {
 		element.endPos = Elements.calcElemEndPos(element);
 	}
 
-	public setText(element: Element, text: unknown): void {
-		element.data = text;
+	public setData(element: Element, data: unknown): void {
+		element.data = data;
 	}
 
 	public chunk(x: number, y: number): Chunk {

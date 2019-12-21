@@ -1,12 +1,14 @@
 import {Component, ElementRef, OnInit, ViewChild} from '@angular/core';
 import {PopupContentComp} from '@logigator/logigator-shared-comps';
+import {Element} from '../../../models/element';
+import {RomData} from '../../../models/element-types/advanced/rom';
 
 @Component({
 	selector: 'app-rom-edit',
 	templateUrl: './rom-edit.component.html',
 	styleUrls: ['./rom-edit.component.scss']
 })
-export class RomEditComponent extends PopupContentComp<string> implements OnInit {
+export class RomEditComponent extends PopupContentComp<Element> implements OnInit {
 
 	@ViewChild('hexInput', {static: true})
 	hexInput: ElementRef<HTMLTextAreaElement>;
@@ -24,8 +26,8 @@ export class RomEditComponent extends PopupContentComp<string> implements OnInit
 	ngOnInit() {
 		this.hexInput.nativeElement.value = '';
 
-		if (!this.inputFromOpener) return;
-		const raw = atob(this.inputFromOpener);
+		if (!this.inputFromOpener.data) return;
+		const raw = atob(this.inputFromOpener.data as RomData);
 		let hex = '';
 		for (let i = 0; i < raw.length; i++ ) {
 			const _hex = raw.charCodeAt(i).toString(16).toUpperCase();

@@ -59,9 +59,9 @@ export const rom: ElementType = {
 	},
 
 	edit: async (typeId: number, id: number, projectsSer: ProjectsService) => {
-		const oData = projectsSer.currProject.currState.getElementById(id).data as RomData;
-		const nData = await getStaticDI(PopupService).showPopup(RomEditComponent, 'POPUP.ROM_EDIT.TITLE', false, oData);
-		if (nData === oData || nData === false) return;
+		const romElem = projectsSer.currProject.currState.getElementById(id);
+		const nData = await getStaticDI(PopupService).showPopup(RomEditComponent, 'POPUP.ROM_EDIT.TITLE', false, romElem);
+		if (nData === undefined || nData === false || nData === romElem.data) return;
 		projectsSer.currProject.setData(id, nData);
 	},
 	canEditType: false,
