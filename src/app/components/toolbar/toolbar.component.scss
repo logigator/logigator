@@ -176,9 +176,9 @@
 
 			.select-cut {
 				@if (isTheme('dark')) {
-					background-image: url("/assets/icons/dark/selection1.svg");
+					background-image: url("/assets/icons/dark/selection_cut.svg");
 				} @else {
-					background-image: url("/assets/icons/light/selection1.svg");
+					background-image: url("/assets/icons/light/selection_cut.svg");
 				}
 			}
 
@@ -264,17 +264,17 @@
 
 			.target-clock-speed {
 				@if (isTheme('dark')) {
-					background-image: url("/assets/icons/dark/control-stop.svg");
+					background-image: url("/assets/icons/dark/speed_limit.svg");
 				} @else {
-					background-image: url("/assets/icons/light/control-stop.svg");
+					background-image: url("/assets/icons/light/speed_limit.svg");
 				}
 			}
 
 			.sync-to-frame-rate {
 				@if (isTheme('dark')) {
-					background-image: url("/assets/icons/dark/control-stop.svg");
+					background-image: url("/assets/icons/dark/speed_sync.svg");
 				} @else {
-					background-image: url("/assets/icons/light/control-stop.svg");
+					background-image: url("/assets/icons/light/speed_sync.svg");
 				}
 			}
 
