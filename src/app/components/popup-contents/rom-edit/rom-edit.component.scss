@@ -49,6 +49,7 @@ div {
 			.left-address {
 				width: 95px;
 				padding: 0.25rem;
+				padding-top: 0.2rem;
 
 				@include themify() {
 					border-right: border('width') solid themed('accent2');

@@ -15,6 +15,8 @@ export class RomEditComponent extends PopupContentComp<Element> implements OnIni
 
 	leftAddress = '00000000';
 
+	private oldValue = '';
+
 	selectionStart: number;
 	selectionEnd: number;
 	rows = 1;
@@ -41,14 +43,24 @@ export class RomEditComponent extends PopupContentComp<Element> implements OnIni
 
 	onInput(event: any) {
 		this.selectionChange();
-		this.hexInput.nativeElement.value = this.hexInput.nativeElement.value
+		let newValue: string | string[] = this.hexInput.nativeElement.value
 			.split('')
 			.map(c => c.toUpperCase())
-			.filter(c => c.match(/[0-9A-F]/im))
-			.reduce((previousValue, currentValue, currentIndex) => {
-				return previousValue + currentValue + (currentIndex !== 0 && (currentIndex + 1) % 2 === 0 ? ' ' : '');
-			}, '')
-			.trimRight();
+			.filter(c => c.match(/[0-9A-F]/im));
+
+		const newLength = newValue.length;
+
+		newValue = newValue.reduce((previousValue, currentValue, currentIndex) => {
+			return previousValue + currentValue + (currentIndex !== 0 && (currentIndex + 1) % 2 === 0 ? ' ' : '');
+		}, '')
+		.trimRight();
+
+		if (newLength * 4 <= this.inputFromOpener.options[0] * (2 ** this.inputFromOpener.options[1])) {
+			this.hexInput.nativeElement.value = newValue;
+			this.oldValue = newValue;
+		} else {
+			this.hexInput.nativeElement.value = this.oldValue;
+		}
 
 		this.rows = Math.ceil(this.hexInput.nativeElement.value.length / 48) || 1;
 		this.calcLeftAddresses(this.rows);
