@@ -7,6 +7,7 @@ import {ThemingService} from '../../../services/theming/theming.service';
 import {ElementProviderService} from '../../../services/element-provider/element-provider.service';
 import {environment} from '../../../../environments/environment';
 import {ElementTypeId} from '../../element-types/element-type-ids';
+import {FontWidthService} from '@logigator/logigator-shared-comps';
 
 export class InputOutputGraphics extends PIXI.Graphics implements LGraphics, ComponentUpdatable, ComponentSelectable, ComponentScalable {
 
@@ -99,8 +100,9 @@ export class InputOutputGraphics extends PIXI.Graphics implements LGraphics, Com
 	}
 
 	private calcFontSize(): number {
-		if (this._symbol.length <= 2) return environment.gridPixelWidth;
-		return environment.gridPixelWidth * 0.7;
+		const textWidth = getStaticDI(FontWidthService).getTextWidth(this._symbol, '10px Roboto');
+		const adjustedSize = 10 * (environment.gridPixelWidth * 0.9 / textWidth);
+		return adjustedSize < environment.gridPixelWidth * 0.8 ? adjustedSize : environment.gridPixelWidth * 0.8;
 	}
 
 	applySimState(scale: number) {

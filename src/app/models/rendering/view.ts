@@ -240,7 +240,7 @@ export abstract class View extends PIXI.Container {
 	private updateComponent(action: Action) {
 		const sprite = this.allElements.get(action.element.id);
 		if (isUpdatable(sprite)) {
-			sprite.updateComponent(this.zoomPan.currentScale, sprite.element);
+			sprite.updateComponent(this.zoomPan.currentScale, action.element);
 		}
 	}
 
@@ -280,6 +280,7 @@ export abstract class View extends PIXI.Container {
 			case 'rotComp':
 			case 'numInpt':
 			case 'ediData':
+			case 'compOpt':
 				this.updateComponent(action);
 				break;
 		}

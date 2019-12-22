@@ -100,7 +100,7 @@ export class Project {
 				this._currState.setOptions(action.element, action.options[0]);
 				break;
 			case 'ediData':
-				this._currState.setText(action.element, action.data[0]);
+				this._currState.setData(action.element, action.data[0]);
 				break;
 		}
 	}
@@ -380,7 +380,7 @@ export class Project {
 	public setData(elemId: number, data: any): void {
 		const element = this._currState.getElementById(elemId);
 		const oldData = element.data;
-		this._currState.setText(element, data);
+		this._currState.setData(element, data);
 		const action: Action = {
 			name: 'ediData',
 			element,

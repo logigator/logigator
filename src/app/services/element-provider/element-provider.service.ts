@@ -18,6 +18,7 @@ import {fullAdder} from '../../models/element-types/advanced/full-adder';
 import {text} from '../../models/element-types/basic/text';
 import {ElementTypeId} from '../../models/element-types/element-type-ids';
 import {udcTemplate} from '../../models/element-types/udc-template';
+import {rom} from '../../models/element-types/advanced/rom';
 
 @Injectable({
 	providedIn: 'root'
@@ -37,7 +38,8 @@ export class ElementProviderService {
 
 	private _advancedElements: Map<number, ElementType> = new Map([
 		[halfAdder.id, halfAdder],
-		[fullAdder.id, fullAdder]
+		[fullAdder.id, fullAdder],
+		[rom.id, rom]
 	]);
 
 	private _plugElements: Map<number, ElementType> = new Map([

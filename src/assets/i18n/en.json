@@ -69,7 +69,9 @@
 			"SIM_SINGLE": "Single Step",
 			"SIM_PAUSE": "Pause",
 			"SIM_STOP": "Stop",
-			"SIM_CONT": "Start"
+			"SIM_CONT": "Start",
+			"SIM_TARGET_MODE": "Limit Tick Rate",
+			"SIM_SYNC_MODE": "Sync Tick Rate to Frame Rate"
 		}
 	},
 	"TOP_BAR": {
@@ -207,6 +209,11 @@
 			"TITLE": "Place Text",
 			"SET": "Save",
 			"LABEL": "Text"
+		},
+		"ROM_EDIT": {
+			"TITLE": "Edit Rom Data",
+			"SAVE": "SAVE",
+			"CANCEL": "CANCEL"
 		}
 	},
 	"SETTINGS_INFO": {
@@ -263,6 +270,12 @@
 			"FULL_ADDER": {
 				"NAME": "Full Adder",
 				"DESCRIPTION": ""
+			},
+			"ROM": {
+				"NAME": "ROM",
+				"DESCRIPTION": "",
+				"WORD_SIZE": "Word Size",
+				"ADDRESS_SIZE": "Address Size"
 			}
 		},
 		"IO": {

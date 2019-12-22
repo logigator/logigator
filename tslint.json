@@ -12,6 +12,7 @@
 				"allow-pascal-case"
 			]
 		},
+		"no-bitwise": false,
 		"indent": [ true, "tabs", 1 ],
 		"array-type": false,
 		"arrow-parens": false,

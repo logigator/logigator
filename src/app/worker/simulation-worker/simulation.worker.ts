@@ -31,17 +31,8 @@ addEventListener('message', ({ data }: {data: WasmRequest}) => {
 	let error: string;
 
 	switch (data.method) {
-		case WasmMethod.single:
-			worker.startManual(data.ticks ? data.ticks : 1);
-			break;
-		case WasmMethod.cont:
-			data.time ? worker.start(data.time) : worker.start();
-			break;
-		case WasmMethod.stop:
-			worker.stop();
-			break;
-		case WasmMethod.pause:
-			worker.stop();
+		case WasmMethod.run:
+			worker.start(data.ticks, data.time);
 			break;
 		case WasmMethod.triggerInput:
 			if (!data.userInput) {

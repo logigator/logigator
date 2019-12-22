@@ -69,7 +69,9 @@
 			"SIM_SINGLE": "Einzelschritt",
 			"SIM_PAUSE": "Pause",
 			"SIM_STOP": "Stopp",
-			"SIM_CONT": "Start"
+			"SIM_CONT": "Start",
+			"SIM_TARGET_MODE": "Tickrate limitieren",
+			"SIM_SYNC_MODE": "Tickrate mit Bildschirm synchronisieren"
 		}
 	},
 	"TOP_BAR": {
@@ -207,6 +209,11 @@
 			"TITLE": "Text platzieren",
 			"SET": "Speichern",
 			"LABEL": "Text"
+		},
+		"ROM_EDIT": {
+			"TITLE": "Rom Daten editieren",
+			"SAVE": "SPEICHERN",
+			"CANCEL": "ABBRECHEN"
 		}
 	},
 	"SETTINGS_INFO": {
@@ -263,6 +270,12 @@
 			"FULL_ADDER": {
 				"NAME": "Volladdierer",
 				"DESCRIPTION": ""
+			},
+			"ROM": {
+				"NAME": "ROM",
+				"DESCRIPTION": "",
+				"WORD_SIZE": "Wortbreite",
+				"ADDRESS_SIZE": "Adressgröße"
 			}
 		},
 		"IO": {

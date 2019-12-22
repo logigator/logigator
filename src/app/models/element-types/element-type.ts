@@ -39,6 +39,7 @@ export interface ElementType {
 		min: number,
 		max: number
 	}[];
+	onOptionsChanged?: (element?: Element) => void;
 
 	edit?: (typeId: number, id: number, projectsSer: ProjectsService) => void;
 	canEditType?: boolean;
