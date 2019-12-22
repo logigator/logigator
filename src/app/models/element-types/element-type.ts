@@ -10,6 +10,7 @@ export interface ElementType {
 	category: 'basic' | 'advanced' | 'plug' | 'io' | 'user';
 
 	symbol: string;
+	symbolImage?: string;
 
 	showSettings: boolean;
 	showSettingsForType: boolean;
@@ -38,6 +39,7 @@ export interface ElementType {
 		min: number,
 		max: number
 	}[];
+	onOptionsChanged?: (element?: Element) => void;
 
 	edit?: (typeId: number, id: number, projectsSer: ProjectsService) => void;
 	canEditType?: boolean;

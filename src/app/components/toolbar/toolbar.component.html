@@ -37,10 +37,24 @@
 		<ng-container *ngIf="currentWorkMode === 'simulation'">
 			<div class="divider"></div>
 
-			<button class="toolbar-button play" (click)="continueSm()" appToolbarItemTooltip [tooltipText]="'TOOLBAR.TOOLTIP.SIM_CONT' | translate"></button>
+			<button class="toolbar-button play" [class.active-button]="simulationRunning" (click)="continueSm()" appToolbarItemTooltip [tooltipText]="'TOOLBAR.TOOLTIP.SIM_CONT' | translate"></button>
 			<button class="toolbar-button step" (click)="singleStepSim()" appToolbarItemTooltip [tooltipText]="'TOOLBAR.TOOLTIP.SIM_SINGLE' | translate"></button>
 			<button class="toolbar-button pause" (click)="pauseSim()" appToolbarItemTooltip [tooltipText]="'TOOLBAR.TOOLTIP.SIM_PAUSE' | translate"></button>
 			<button class="toolbar-button stop" (click)="stopSim()" appToolbarItemTooltip [tooltipText]="'TOOLBAR.TOOLTIP.SIM_STOP' | translate"></button>
+
+			<div class="divider"></div>
+
+			<button class="toolbar-button target-clock-speed" [class.active-button]="targetMode" (click)="toggleTargetMode()" appToolbarItemTooltip [tooltipText]="'TOOLBAR.TOOLTIP.SIM_TARGET_MODE' | translate"></button>
+			<button class="toolbar-button sync-to-frame-rate" [class.active-button]="syncMode" (click)="toggleSyncMode()" appToolbarItemTooltip [tooltipText]="'TOOLBAR.TOOLTIP.SIM_SYNC_MODE' | translate"></button>
+
+			<ng-container *ngIf="targetMode">
+				<input class="target-tick-rate" type="number" [(ngModel)]="targetTickRate" (ngModelChange)="setTarget()" min="0">
+				<select class="target-tick-rate" [(ngModel)]="targetMultiplier" (ngModelChange)="setTarget()">
+					<option value="1">Hz</option>
+					<option value="1000">kHz</option>
+					<option value="1000000">MHz</option>
+				</select>
+			</ng-container>
 
 			<ng-container *ngIf="simulationRunning">
 				<div class="divider"></div>

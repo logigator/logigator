@@ -48,6 +48,7 @@ import {
 } from '@logigator/logigator-shared-comps';
 import {ThemingService} from './services/theming/theming.service';
 import {UserService} from './services/user/user.service';
+import { RomEditComponent } from './components/popup-contents/rom-edit/rom-edit.component';
 
 @NgModule({
 	declarations: [
@@ -80,7 +81,8 @@ import {UserService} from './services/user/user.service';
 		ToolbarItemTooltipComponent,
 		TextComponent,
 		ToolbarItemTooltipComponent,
-		StatusBarComponent
+		StatusBarComponent,
+		RomEditComponent
 	],
 	entryComponents: [
 		ShortcutConfigComponent,
@@ -92,6 +94,7 @@ import {UserService} from './services/user/user.service';
 		ShareProjectComponent,
 		TextComponent,
 		ToolbarItemTooltipComponent,
+		RomEditComponent
 	],
 	imports: [
 		// #!electron

@@ -90,8 +90,8 @@ export class StateCompilerService {
 		const out: number[] = [ units.length ];
 
 		for (const unit of units) {
-			out.push(unit.typeId, unit.options[0] || 0, unit.options[1] || 0,
-				unit.inputs.length, unit.outputs.length, ...unit.inputs, ...unit.outputs);
+			out.push(unit.typeId, unit.options.length || 0,
+				unit.inputs.length, unit.outputs.length, ...unit.options || [], ...unit.inputs, ...unit.outputs);
 		}
 		return new Int32Array(out);
 	}

@@ -19,7 +19,7 @@
 	@include themify() {
 		background-color: themed('background');
 		color: themed('text-primary');
-		border: border('width') solid themed(secondary);
+		border: border('width') solid themed('accent2');
 		border-radius: border('radius');
 
 		.switch {

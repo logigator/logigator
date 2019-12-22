@@ -26,14 +26,18 @@ export const clock: ElementType = {
 	minInputs: 1,
 	maxInputs: 1,
 
-	width: environment.componentWidth,
+	width: 3,
 
-	options: [0],
+	options: [1],
 	optionsConfig: [
 		{
 			name: 'ELEMENT_TYPE.BASIC.CLOCK.SPEED',
 			min: 1,
 			max: Number.MAX_VALUE
 		}
-	]
+	],
+
+	calcLabels: element => {
+		return ['STP', 'CLK'];
+	}
 };

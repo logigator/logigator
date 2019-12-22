@@ -20,15 +20,16 @@ export class SimulationWorker {
 		let counter = 0;
 		for (let i = 1; i < this._components.length; ) {
 			const typeId = this._components[i++];
-			const op1 = this._components[i++];
-			const op2 = this._components[i++];
+			const opCount = this._components[i++];
 			const inputCount = this._components[i++];
 			const outputCount = this._components[i++];
+			const ops = this._components.slice(i, i += opCount);
 			const inputs = this._components.slice(i, i += inputCount);
 			const outputs = this._components.slice(i, i += outputCount);
 
 			const inputPtr = this._arrayToHeap(inputs);
 			const outputPtr = this._arrayToHeap(outputs);
+			const opsPtr = opCount > 0 ? this._arrayToHeap(ops) : 0;
 
 			simulationModule.initComponent
 			(
@@ -38,12 +39,13 @@ export class SimulationWorker {
 				outputPtr,
 				inputCount,
 				outputCount,
-				op1,
-				op2
+				opCount,
+				opsPtr
 			);
 
 			this._simulationModule._free(inputPtr);
 			this._simulationModule._free(outputPtr);
+			if (opCount > 0) this._simulationModule._free(opsPtr);
 		}
 		simulationModule.initBoard();
 	}
@@ -54,15 +56,8 @@ export class SimulationWorker {
 		} as Board;
 	}
 
-	public start(ms?: number) {
-		if (ms)
-			this._simulationModule.startTimeout(ms);
-		else
-			this._simulationModule.start();
-	}
-
-	public startManual(ticks: number) {
-		this._simulationModule.startManual(ticks);
+	public start(ticks?: number, ms?: number) {
+		this._simulationModule.start(ticks !== undefined ? ticks : Number.MAX_SAFE_INTEGER, ms !== undefined ? ms : 4294967295);
 	}
 
 	public getLinks(): Int8Array {
@@ -91,24 +86,6 @@ export class SimulationWorker {
 		const ptr = this._arrayToHeap(state);
 		this._simulationModule.triggerInput(index, inputEvent, ptr);
 		this._simulationModule._free(ptr);
-	}
-
-	public runTimeout(target: number) {
-		while (true) {
-			this._simulationModule.startTimeout(target);
-			console.log(this._simulationModule.getStatus());
-		}
-	}
-
-	public runForTarget(target: number) {
-		let ticks = 1;
-		while (true) {
-			const prev = performance.now();
-			this._simulationModule.startManual(ticks);
-
-			ticks *= target / (performance.now() - prev);
-			console.log(this._simulationModule.getStatus());
-		}
 	}
 
 	public stop() {

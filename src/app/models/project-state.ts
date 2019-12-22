@@ -6,6 +6,8 @@ import {CollisionFunctions} from './collision-functions';
 import {Action, ChangeType} from './action';
 import {WireEndOnElem} from '../services/simulation/state-compiler/compiler-types';
 import {ElementTypeId} from './element-types/element-type-ids';
+import {getStaticDI} from './get-di';
+import {ElementProviderService} from '../services/element-provider/element-provider.service';
 
 export class ProjectState {
 
@@ -609,10 +611,13 @@ export class ProjectState {
 
 	public setOptions(element: Element, options: number[]): void {
 		element.options = options;
+		const elemType = getStaticDI(ElementProviderService).getElementById(element.typeId);
+		if (elemType.onOptionsChanged) elemType.onOptionsChanged(element);
+		element.endPos = Elements.calcElemEndPos(element);
 	}
 
-	public setText(element: Element, text: unknown): void {
-		element.data = text;
+	public setData(element: Element, data: unknown): void {
+		element.data = data;
 	}
 
 	public chunk(x: number, y: number): Chunk {
