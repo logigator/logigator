@@ -6,6 +6,7 @@ import {ThemingService} from '../../../services/theming/theming.service';
 import {Element} from '../../element';
 import {ElementProviderService} from '../../../services/element-provider/element-provider.service';
 import {ElementType, isElementType} from '../../element-types/element-type';
+import {FontWidthService} from '@logigator/logigator-shared-comps';
 
 export class ComponentGraphics extends PIXI.Graphics implements LGraphics, ComponentUpdatable {
 
@@ -88,7 +89,7 @@ export class ComponentGraphics extends PIXI.Graphics implements LGraphics, Compo
 		const text = new PIXI.BitmapText(this._symbol, {
 			font: {
 				name: 'Roboto',
-				size: environment.gridPixelWidth * 0.9
+				size: this.calcFontSize()
 			},
 			tint: this.themingService.getEditorColor('fontTint')
 		});
@@ -98,6 +99,12 @@ export class ComponentGraphics extends PIXI.Graphics implements LGraphics, Compo
 		text.position.y = height / 2;
 
 		this.addChild(text);
+	}
+
+	private calcFontSize(): number {
+		const textWidth = getStaticDI(FontWidthService).getTextWidth(this._symbol, '10px Roboto');
+		const adjustedSize = 10 * (environment.gridPixelWidth * 1.4 / textWidth);
+		return adjustedSize < environment.gridPixelWidth * 0.9 ? adjustedSize : environment.gridPixelWidth * 0.9;
 	}
 
 	private rotation0(inputs: number, outputs: number, height: number, width: number) {
