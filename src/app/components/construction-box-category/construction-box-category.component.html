@@ -6,14 +6,15 @@
 		<ng-container *ngIf="components.size > 0; else noComponents">
 			<ng-container *ngFor="let comp of components | keyvalue; trackBy: componentsTrackBy">
 				<div class="component-to-select"
-				     *ngIf="comp.key !== 0 && comp.key !== 102 &&
+				     *ngIf="comp.value.showInConstructionBox &&
 				     (searchText == '' || (isInSearchResult(comp.value.name) | async)) && !isCurrentCustomElement(comp.key)
 				     || isHiddenPlug(searchText, comp.key)"
 				     (click)="selectComponent(comp.key)"
 				     (dblclick)="openComponent(comp.key)"
 				     [class.active-selected-component]="currentWorkMode === 'buildComponent' && currentSelectedComponent === comp.key">
 					<div>
-						<p>{{comp.value.symbol}}</p>
+						<img *ngIf="comp.value.symbolImage" [src]="comp.value.symbolImage">
+						<p *ngIf="!comp.value.symbolImage">{{comp.value.symbol}}</p>
 					</div>
 					<p>{{comp.value.name | translate}}</p>
 				</div>

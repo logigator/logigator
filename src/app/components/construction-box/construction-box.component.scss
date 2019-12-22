@@ -6,7 +6,7 @@ $search-height: 3.5rem;
 #construction-box {
 	@include themify() {
 		background-color: themed('background');
-		border-right: border('width') solid themed('secondary');
+		border-right: border('width') solid themed('accent2');
 	}
 
 	height: calc(100vh - #{$page-header-height});
@@ -30,9 +30,9 @@ $search-height: 3.5rem;
 		background-origin: content-box;
 
 		@include themify() {
-			border: border(width) solid themed(secondary);
+			border: border('width') solid themed('accent2');
 			background-color: themed('background');
-			color: themed('primary-text');
+			color: themed('text-primary');
 
 			@if (isTheme('dark')) {
 				background-image: url("/assets/icons/dark/search.svg");
@@ -54,6 +54,11 @@ $search-height: 3.5rem;
 		overflow: auto;
 		margin: auto;
 		overflow-x: hidden;
+
+		@include themify() {
+			background-color: themed('background');
+			border-right: border('width') solid themed('accent2');
+		}
 
 		@include scrollbar(5px)
 	}

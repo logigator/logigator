@@ -10,14 +10,14 @@
 	height: 300px;
 	padding: 5px;
 	position: fixed;
-	bottom: 0;
-	right: 0;
+	bottom: 100px;
+	right: 10px;
 	display: none;
 
 	.window-container {
 		@include themify() {
 			background-color: themed('background');
-			border: border('width') solid themed('secondary');
+			border: border('width') solid themed('accent2');
 		}
 
 		width: 100%;
@@ -34,8 +34,8 @@
 			display: flex;
 
 			@include themify() {
-				background-color: themed('secondary');
-				color: themed('primary-text');
+				background-color: themed('accent2');
+				color: themed('text-primary');
 			}
 
 			width: 100%;

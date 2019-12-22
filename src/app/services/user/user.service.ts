@@ -40,19 +40,34 @@ export class UserService {
 	}
 
 	// #!if ELECTRON === 'true'
-	public loginTwitter() {
+	public authenticateTwitter() {
 		this.login('twitter').catch(() => this.errorHandling.showErrorMessage('ERROR.USER.LOGIN'));
 	}
 
-	public loginGoogle() {
+	public authenticateGoogle() {
 		this.login('google').catch(() => this.errorHandling.showErrorMessage('ERROR.USER.LOGIN'));
 	}
 
-	public loginEmail(email: string, password: string): Promise<string> {
-		return this.login('email', {email, password});
+	public loginEmail(user: string, password: string): Promise<string> {
+		return this.login('email', {user, password});
 	}
 
-	private login(type: 'google' | 'twitter' | 'email', credentials?: {email: string, password: string}): Promise<string> {
+	public async registerEmail(username: string, email: string, password: string, recaptcha: string) {
+		this.electronService.ipcRenderer.send('registeremail', {username, email, password, recaptcha});
+		return new Promise<string>((resolve, reject) => {
+			this.electronService.ipcRenderer.once('loginemailResponse', ((event, args) => {
+				if (args === 'success') {
+					this._userLoginStateInSubject.next(true);
+					this.getUserInfoFromServer();
+					resolve();
+					return;
+				}
+				reject(args);
+			}));
+		});
+	}
+
+	private login(type: 'google' | 'twitter' | 'email', credentials?: {user: string, password: string}): Promise<string> {
 		this.electronService.ipcRenderer.send('login' + type, credentials);
 		return new Promise<string>((resolve, reject) => {
 			this.electronService.ipcRenderer.once('login' + type + 'Response', ((event, args) => {
@@ -72,7 +87,7 @@ export class UserService {
 		this.electronService.remote.getGlobal('isLoggedIn').data = 'false';
 
 		this.electronService.ipcRenderer.send('logout');
-		this.getUserInfoFromServer();
+		this._userInfo$ = of(undefined);
 	}
 	// #!endif
 

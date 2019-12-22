@@ -11,7 +11,9 @@
 			"OPEN": "Open",
 			"SAVE": "Save",
 			"EXPORT": "Export to file",
-			"SCREENSHOT": "Screenshot",
+			"IMAGE_PNG": "Export as PNG Image",
+			"IMAGE_JPEG": "Export as JPEG Image",
+			"IMAGE_SVG": "Export as SVG Image",
 			"SHARE": "Share",
 			"CLONE": "Clone Project"
 		},
@@ -62,11 +64,14 @@
 			"WIRE": "Place Wires",
 			"CONN_WIRE": "Connect Wires",
 			"SELECT": "Select",
+			"SELECT_CUT": "Select Cut",
 			"TEXT": "Text",
 			"SIM_SINGLE": "Single Step",
 			"SIM_PAUSE": "Pause",
 			"SIM_STOP": "Stop",
-			"SIM_CONT": "Start"
+			"SIM_CONT": "Start",
+			"SIM_TARGET_MODE": "Limit Tick Rate",
+			"SIM_SYNC_MODE": "Sync Tick Rate to Frame Rate"
 		}
 	},
 	"TOP_BAR": {
@@ -76,17 +81,49 @@
 	"CONST_BOX": {
 		"SEARCH": "Search",
 		"CATEGORIES": {
-			"BASIC": "Basic Components",
-			"IO": "IO Components",
-			"PLUG": "Plug Components",
+			"BASIC": "Basic",
+			"ADVANCED": "Advanced",
+			"IO": "IO",
+			"PLUG": "Plug",
 			"USER": "User Defined"
 		}
 	},
 	"POPUP": {
+		"LOGIN": {
+			"TITLE": "Login",
+			"HEADLINE": "Login here",
+			"USERNAME": "Username / email",
+			"USERNAME_ERR_REQUIRED": "Username / email is required.",
+			"PASSWORD": "Password",
+			"PASSWORD_ERR_REQUIRED": "Password is required.",
+			"LOGIN_BUTTON": "LOGIN",
+			"OR": "or"
+		},
+		"REGISTER": {
+			"TITLE": "Sign up",
+			"HEADLINE": "Sign up here",
+			"EMAIL": "Email",
+			"EMAIL_ERR_REQUIRED": "Email is required.",
+			"EMAIL_ERR_INVALID": "Please enter a valid email address.",
+			"USERNAME": "Username",
+			"USERNAME_ERR_REQUIRED": "Username is required.",
+			"USERNAME_ERR_MIN": "Username has to have at least two characters.",
+			"USERNAME_ERR_MAX": "Username may contain a maximum of 20 characters.",
+			"PASSWORD": "Password",
+			"PASSWORD_ERR_REQUIRED": "Password is required.",
+			"PASSWORD_ERR_MIN": "Password must contain at least eight characters.",
+			"PASSWORD_ERR_COMPLEXITY": "Password must contain letters and digits.",
+			"PASSWORD_REPEAT": "Repeat password",
+			"PASSWORD_REPEAT_ERR": "Passwords do not match",
+			"PRIVACY_POLICY": "By clicking on \"SIGN UP\" you agree that you have read and accepted our data policy.",
+			"REGISTER_BUTTON": "SIGN UP",
+			"OR": "or"
+		},
 		"NEW_COMP": {
 			"TITLE": "New Component",
 			"NAME": "Name",
 			"SYMBOL": "Symbol",
+			"DESCRIPTION": "Description",
 			"CREATE": "CREATE",
 			"NAME_REQUIRED": "Name is required",
 			"NAME_MIN_LENGTH": "Name is to short",
@@ -99,18 +136,19 @@
 		"SAVE": {
 			"TITLE": "Save Project",
 			"NAME": "Name",
+			"DESCRIPTION": "Description",
 			"DOWNLOAD": "DOWNLOAD FILE",
 			"CLOUD": "SAVE IN CLOUD"
 		},
 		"OPEN": {
 			"TITLE": "Open Project",
 			"OPEN": "OPEN",
-			"UPLOAD": "Upload File",
 			"TABLE_OPEN": "Open",
 			"TABLE_EDITED": "Last edited",
 			"TABLE_NAME": "Name",
 			"OPEN_FILE": "Open from File",
-			"OPEN_CLOUD": "Open from Cloud"
+			"OPEN_CLOUD": "Open from Cloud",
+			"NO_FILE": "No File Selected"
 		},
 		"RELOAD": {
 			"TITLE": "Reload Required",
@@ -132,13 +170,16 @@
 				"zoom100": "Zoom to 100%",
 				"zoomIn": "Zoom in",
 				"zoomOut": "Zoom out",
-				"fullscreen": "enter fullscreen mode",
+				"fullscreen": "Enter fullscreen mode",
 				"connWireMode": "Connect wires mode",
 				"wireMode": "Place wires mode",
-				"selectMode": "selection mode",
+				"selectMode": "Selection mode",
+				"cutSelectMode": "Cut Selection mode",
 				"newComp": "Create new custom component",
-				"textMode": "text mode",
-				"save": "Save"
+				"textMode": "Place text",
+				"save": "Save",
+				"newProj": "New Project",
+				"openProj": "Open Project"
 			}
 		},
 		"UNSAVED_CHANGES": {
@@ -152,8 +193,8 @@
 			"SHARE_ENABLE": "Share this project with others",
 			"PUBLIC": "Public share",
 			"INFO_TEXT": "Please type in the email-addresses or usernames of the users, with whom you want to share this project.",
-			"EMAIL_USER": "e-mail / username",
-			"EMAIL_USER_ALREADY_ADDED": "Email or username is already added",
+			"EMAIL_USER": "Email / username",
+			"EMAIL_USER_ALREADY_ADDED": "Email or username has already been added",
 			"ADD_EMAIL": "Add",
 			"REMOVE_EMAIL": "Remove",
 			"INVITATIONS": "Send email invitations to users",
@@ -162,6 +203,16 @@
 			"LINK": "Link to share",
 			"COPY": "Copy",
 			"SAVE": "SAVE SETTINGS",
+			"CANCEL": "CANCEL"
+		},
+		"TEXT": {
+			"TITLE": "Place Text",
+			"SET": "Save",
+			"LABEL": "Text"
+		},
+		"ROM_EDIT": {
+			"TITLE": "Edit Rom Data",
+			"SAVE": "SAVE",
 			"CANCEL": "CANCEL"
 		}
 	},
@@ -176,35 +227,65 @@
 		},
 		"DESCRIPTION": "Description",
 		"EDIT": "Edit",
-		"PLUG_INDEX": "Plug Index"
+		"PLUG_INDEX": "Plug Index",
+		"PLUG_LABEL": "Label"
 	},
 	"ELEMENT_TYPE": {
 		"BASIC": {
 			"AND": {
 				"NAME": "AND Gate",
-				"DESCRIPTION": ""
+				"DESCRIPTION": "Output is high if all inputs are high."
 			},
 			"NOT": {
 				"NAME": "NOT Gate",
-				"DESCRIPTION": "I am a not"
+				"DESCRIPTION": "Output is high if input is low."
 			},
 			"OR": {
 				"NAME": "OR Gate",
-				"DESCRIPTION": ""
+				"DESCRIPTION": "Output is high if at least one input is high."
 			},
 			"XOR": {
 				"NAME": "XOR Gate",
-				"DESCRIPTION": ""
+				"DESCRIPTION": "Output is high if an odd number of inputs are high."
+			},
+			"DELAY": {
+				"NAME": "Delay",
+				"DESCRIPTION": "Output equals Input. Adds one tick delay to the signal."
+			},
+			"CLOCK": {
+				"NAME": "Clock",
+				"DESCRIPTION": "Periodically sends a one tick long pulse.<br>Delay between pulses can be configured.",
+				"SPEED": "Delay"
+			},
+			"TEXT": {
+				"NAME": "Text",
+				"DESCRIPTION": "Text which you can place on the canvas."
+			}
+		},
+		"ADVANCED": {
+			"HALF_ADDER": {
+				"NAME": "Half Adder",
+				"DESCRIPTION": "Adds two 1-bit numbers together."
+			},
+			"FULL_ADDER": {
+				"NAME": "Full Adder",
+				"DESCRIPTION": "Adds three 1-bit numbers together."
+			},
+			"ROM": {
+				"NAME": "ROM",
+				"DESCRIPTION": "Read only Memory.<br>Can be used for program code, for example.",
+				"WORD_SIZE": "Word Size",
+				"ADDRESS_SIZE": "Address Size"
 			}
 		},
 		"IO": {
 			"BUTTON": {
 				"NAME": "Button",
-				"DESCRIPTION": ""
+				"DESCRIPTION": "Can be clicked to emit a pulse signal."
 			},
 			"LEVER": {
-				"NAME": "Lever",
-				"DESCRIPTION": ""
+				"NAME": "Switch",
+				"DESCRIPTION": "Can be switched on and off during simulation."
 			}
 		},
 		"PLUG": {
@@ -218,6 +299,20 @@
 			}
 		}
 	},
+	"STATUS_BAR": {
+		"UNSAVED": "Unsaved Changes",
+		"SAVED": "Saved",
+		"SELECTED": "Sel"
+	},
+	"WORK_MODE_DES": {
+		"select": "Selecting Elements",
+		"selectCut": "Selecting Elements, but cut wires off",
+		"buildComponent": "Placing Component: {{comp}}",
+		"buildWire": "Placing Wires",
+		"connectWire": "Connecting Wires",
+		"text": "Placing Text",
+		"simulation": "Simulating Circuit"
+	},
 	"ERROR": {
 		"COMPILE": {
 			"CIRCULAR_DEP": "Circular dependency in components. {{src}} must not include {{comp}}.",
@@ -229,11 +324,11 @@
 			"GET_COMPS": "Unable to get Components from Server",
 			"OPEN_COMP": "Unable to open Component",
 			"CLONE": "Unable to clone project",
-			"CREATE": "Unable to create project",
+			"CREATE": "Unable to create project or component",
 			"SAVE": "Unable to save Component or Project on Server",
 			"COMP_NOT_FOUND": "Component not found, project might be corrupted",
 			"INVALID_FILE": "Invalid File",
-			"RESOLVE_DEPS": "Unable resolve dependencies of Project",
+			"RESOLVE_DEPS": "Unable to resolve dependencies of Project",
 			"PROJECT_AS_COMP": "Unable to open Project as Component"
 		},
 		"SHARE": {
@@ -258,7 +353,13 @@
 			"CLONED": "Cloned Project.",
 			"SAVE_SERVER": "Saved {{name}} on Server.",
 			"SAVE_ALL": "Saved Project and all open Components",
-			"EXPORT": "Exported Project and all needed Components"
+			"EXPORT": "Exported Project and all included Components",
+			"OPEN_SHARE": "Opened shared project {{name}} from {{user}}"
+		},
+		"EASTEREGGS": {
+			"GBOGH": "Go big or go home",
+			"BLD": "AHHH MY EYES, SO MANY LUMENS",
+			"LAZ": "Too Lazy for a proper name..."
 		}
 	}
 }

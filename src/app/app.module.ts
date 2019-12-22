@@ -1,6 +1,5 @@
 import { BrowserModule } from '@angular/platform-browser';
 import {Injector, NgModule} from '@angular/core';
-
 import { AppComponent } from './app.component';
 import { ToolbarComponent } from './components/toolbar/toolbar.component';
 import { SettingsInfoBoxComponent } from './components/settings-info-box/settings-info-box.component';
@@ -15,39 +14,41 @@ import { ViewDropdownComponent } from './components/top-bar-dropdowns/view-dropd
 import { HelpDropdownComponent } from './components/top-bar-dropdowns/help-dropdown/help-dropdown.component';
 import { SettingsDropdownComponent } from './components/top-bar-dropdowns/settings-dropdown/settings-dropdown.component';
 import { ShortcutTextPipe } from './pipes/shortcut-text/shortcut-text.pipe';
-import { PopupComponent } from './components/popup/popup/popup.component';
 // tslint:disable-next-line:max-line-length
-import { SingleShortcutConfigComponent } from './components/popup/popup-contents/shortcut-config/single-shortcut-config/single-shortcut-config.component';
-import { ShortcutConfigComponent } from './components/popup/popup-contents/shortcut-config/shortcut-config/shortcut-config.component';
+import { SingleShortcutConfigComponent } from './components/popup-contents/shortcut-config/single-shortcut-config/single-shortcut-config.component';
+import { ShortcutConfigComponent } from './components/popup-contents/shortcut-config/shortcut-config/shortcut-config.component';
 import { WindowWorkAreaComponent } from './components/window-work-area/window-work-area.component';
 import {HTTP_INTERCEPTORS, HttpClient, HttpClientModule} from '@angular/common/http';
-import { ReloadQuestionComponent } from './components/popup/popup-contents/relaod-question/reload-question.component';
-import { NewComponentComponent } from './components/popup/popup-contents/new-component/new-component.component';
-import { OpenProjectComponent } from './components/popup/popup-contents/open/open-project.component';
-import { SaveAsComponent } from './components/popup/popup-contents/save-as/save-as.component';
+import { ReloadQuestionComponent } from './components/popup-contents/relaod-question/reload-question.component';
+import { NewComponentComponent } from './components/popup-contents/new-component/new-component.component';
+import { OpenProjectComponent } from './components/popup-contents/open/open-project.component';
+import { SaveAsComponent } from './components/popup-contents/save-as/save-as.component';
 import {ToastContainerModule, ToastrModule} from 'ngx-toastr';
 import {BrowserAnimationsModule} from '@angular/platform-browser/animations';
 import {MissingTranslationHandler, TranslateLoader, TranslateModule} from '@ngx-translate/core';
 import {createTranslateLoader} from './models/translation/translation-loader-factory';
 import {AppMissingTranslationHandler} from './models/translation/missing-translation-handler';
 import { OutsideNgZoneEventDirective } from './directives/outside-ng-zone-event/outside-ng-zone-event.directive';
-import { SwitchComponent } from './components/switch/switch.component';
-import { UnsavedChangesComponent } from './components/popup/popup-contents/unsaved-changes/unsaved-changes.component';
-import { InputComponent } from './components/input/input.component';
+import { UnsavedChangesComponent } from './components/popup-contents/unsaved-changes/unsaved-changes.component';
 // #!electron
 import { NgxElectronModule } from 'ngx-electron';
-// #!electron
-import { LoginComponent } from './components/popup/popup-contents/login/login.component';
-// #!electron
-import { RegisterComponent } from './components/popup/popup-contents/register/register.component';
 import { WorkAreaContainerComponent } from './components/work-area-container/work-area-container.component';
-import { ShareProjectComponent } from './components/popup/popup-contents/share-project/share-project.component';
+import { ShareProjectComponent } from './components/popup-contents/share-project/share-project.component';
 import {setStaticDIInjector} from './models/get-di';
-import {InputErrorComponent} from './components/input-error/input-error.component';
 import {CredentialsInterceptor} from './interceptors/credentials';
 import {SiPipe} from './pipes/si/si.pipe';
 import { ToolbarItemTooltipDirective } from './directives/toolbar-item-tooltip/toolbar-item-tooltip.directive';
 import { ToolbarItemTooltipComponent } from './components/toolbar-item-tooltip/toolbar-item-tooltip.component';
+import { TextComponent } from './components/popup-contents/text/text.component';
+import { StatusBarComponent } from './components/status-bar/status-bar.component';
+import {
+	LogigatorSharedCompsModule,
+	SharedCompsAuthService,
+	SharedCompsThemingService
+} from '@logigator/logigator-shared-comps';
+import {ThemingService} from './services/theming/theming.service';
+import {UserService} from './services/user/user.service';
+import { RomEditComponent } from './components/popup-contents/rom-edit/rom-edit.component';
 
 @NgModule({
 	declarations: [
@@ -64,32 +65,26 @@ import { ToolbarItemTooltipComponent } from './components/toolbar-item-tooltip/t
 		HelpDropdownComponent,
 		SettingsDropdownComponent,
 		ShortcutTextPipe,
-		PopupComponent,
 		SingleShortcutConfigComponent,
 		ShortcutConfigComponent,
-		PopupComponent,
 		WindowWorkAreaComponent,
 		ReloadQuestionComponent,
 		NewComponentComponent,
 		OpenProjectComponent,
 		SaveAsComponent,
 		OutsideNgZoneEventDirective,
-		SwitchComponent,
 		UnsavedChangesComponent,
-		InputComponent,
-		InputErrorComponent,
-		// #!electron
-		LoginComponent,
-		// #!electron
-		RegisterComponent,
 		WorkAreaContainerComponent,
 		ShareProjectComponent,
 		SiPipe,
 		ToolbarItemTooltipDirective,
-		ToolbarItemTooltipComponent
+		ToolbarItemTooltipComponent,
+		TextComponent,
+		ToolbarItemTooltipComponent,
+		StatusBarComponent,
+		RomEditComponent
 	],
 	entryComponents: [
-		PopupComponent,
 		ShortcutConfigComponent,
 		ReloadQuestionComponent,
 		NewComponentComponent,
@@ -97,11 +92,9 @@ import { ToolbarItemTooltipComponent } from './components/toolbar-item-tooltip/t
 		SaveAsComponent,
 		UnsavedChangesComponent,
 		ShareProjectComponent,
+		TextComponent,
 		ToolbarItemTooltipComponent,
-		// #!electron
-		LoginComponent,
-		// #!electron
-		RegisterComponent
+		RomEditComponent
 	],
 	imports: [
 		// #!electron
@@ -127,6 +120,16 @@ import { ToolbarItemTooltipComponent } from './components/toolbar-item-tooltip/t
 			missingTranslationHandler: {
 				provide: MissingTranslationHandler,
 				useClass: AppMissingTranslationHandler
+			}
+		}),
+		LogigatorSharedCompsModule.forRoot({
+			themingService: {
+				provide: SharedCompsThemingService,
+				useExisting: ThemingService
+			},
+			authService: {
+				provide: SharedCompsAuthService,
+				useExisting: UserService
 			}
 		})
 	],

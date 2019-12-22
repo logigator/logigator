@@ -12,10 +12,10 @@ import {CollisionFunctions} from '../collision-functions';
 import {Project} from '../project';
 import {Action} from '../action';
 import {getStaticDI} from '../get-di';
-import {ComponentGraphics} from './graphics/component-graphics';
-import {isLGraphics, isUpdatable, LGraphics} from './graphics/l-graphics';
+import {ComponentScalable, isLGraphics, isScalable, isUpdatable, LGraphics} from './graphics/l-graphics';
 import {LGraphicsResolver} from './graphics/l-graphics-resolver';
-import {SimulationView} from './simulation-view';
+import {ElementTypeId} from '../element-types/element-type-ids';
+import {ConnectionPoint} from './graphics/connection-point';
 
 export abstract class View extends PIXI.Container {
 
@@ -27,7 +27,7 @@ export abstract class View extends PIXI.Container {
 
 	protected _chunks: RendererChunkData[][] = [];
 
-	public connectionPoints: Map<string, PIXI.Graphics> = new Map();
+	public connectionPoints: Map<string, ConnectionPoint> = new Map();
 	public allElements: Map<number, LGraphics> = new Map();
 
 	protected _chunksToRender: {x: number, y: number}[] = [];
@@ -63,7 +63,17 @@ export abstract class View extends PIXI.Container {
 		this.applyActionsToView(
 			this._project.getOpenActions()
 		);
-		this.updateChunks();
+		this.requestSingleFrame().then(() => {
+			for (const chunkRow of this._chunks) {
+				for (const chunk of chunkRow) {
+					if (!chunk) continue;
+					chunk.container.visible = false;
+					chunk.gridGraphics.visible = false;
+				}
+			}
+			this.updateChunks();
+			this.requestSingleFrame();
+		});
 	}
 
 	public updateChunks() {
@@ -94,12 +104,8 @@ export abstract class View extends PIXI.Container {
 			}
 			const chunkElems = chunk.container.children;
 			for (let e = 0; e < chunkElems.length; e++) {
-				const elemSprite = this.allElements.get(Number(chunkElems[e].name));
-				if (elemSprite) {
-					elemSprite.updateScale(this.zoomPan.currentScale);
-				}
-				if (chunkElems[e].name === 'wireConnPoint') {
-					this.updateConnectionPoint(chunkElems[e] as PIXI.Graphics);
+				if (isScalable(chunkElems[e])) {
+					(chunkElems[e] as unknown as ComponentScalable).updateScale(this.zoomPan.currentScale);
 				}
 			}
 		}
@@ -158,6 +164,7 @@ export abstract class View extends PIXI.Container {
 		};
 		this._chunks[x][y].container.sortableChildren = false;
 		this._chunks[x][y].container.interactive = false;
+		this._chunks[x][y].container.visible = true;
 		this._chunks[x][y].gridGraphics.sortableChildren = false;
 		this._chunks[x][y].gridGraphics.interactive = false;
 		this._chunks[x][y].gridGraphics.visible = this.themingService.showGrid;
@@ -177,17 +184,6 @@ export abstract class View extends PIXI.Container {
 		return false;
 	}
 
-	public calcConnPointSize(): number {
-		return this.zoomPan.currentScale < 0.5 ? 3 : 5;
-	}
-
-	public adjustConnPointPosToSize(pos: PIXI.Point, size: number): PIXI.Point {
-		return new PIXI.Point(
-			pos.x - size / 2 / this.zoomPan.currentScale,
-			pos.y - size / 2 / this.zoomPan.currentScale
-		);
-	}
-
 	public applyZoom(dir: 'in' | 'out' | '100', centerX?: number, centerY?: number): boolean {
 		if (!centerX || !centerY) {
 			centerX = this.htmlContainer.offsetWidth / 2;
@@ -205,7 +201,7 @@ export abstract class View extends PIXI.Container {
 
 	protected placeWireOnView(element: Element) {
 		const graphics = LGraphicsResolver.getLGraphicsFromElement(this.zoomPan.currentScale, element);
-		graphics.position = Grid.getLocalChunkPixelPosForGridPosWireStart(element.pos);
+		graphics.position = Grid.getLocalChunkPixelPosForGridPosWire(element.pos);
 		graphics.name = element.id.toString();
 
 		this.addToCorrectChunk(graphics, element.pos);
@@ -213,17 +209,9 @@ export abstract class View extends PIXI.Container {
 	}
 
 	protected addConnectionPointToView(pos: PIXI.Point) {
-		const pixelPos = Grid.getLocalChunkPixelPosForGridPosWireStart(pos);
-		pixelPos.x -= 2.5 / this.zoomPan.currentScale;
-		pixelPos.y -= 2.5 / this.zoomPan.currentScale;
-
-		const graphics = new PIXI.Graphics();
-		graphics.position = pixelPos;
-		graphics.name = 'wireConnPoint';
-		this.updateConnectionPoint(graphics);
-		this.addToCorrectChunk(graphics, pos);
-
-		this.connectionPoints.set(`${pos.x}:${pos.y}`, graphics);
+		const connPoint = new ConnectionPoint(pos, true, this.zoomPan.currentScale);
+		this.addToCorrectChunk(connPoint, pos);
+		this.connectionPoints.set(`${pos.x}:${pos.y}`, connPoint);
 	}
 
 	public addToCorrectChunk(sprite: PIXI.DisplayObject, pos: PIXI.Point) {
@@ -234,23 +222,9 @@ export abstract class View extends PIXI.Container {
 		this._chunks[chunkX][chunkY].container.addChild(sprite);
 	}
 
-	protected updateConnectionPoint(graphics: PIXI.Graphics) {
-		const pos = Grid.getLocalChunkPixelPosForGridPosWireStart(Grid.getGridPosForPixelPos(graphics.position));
-		this.drawConnectionPoint(graphics, pos);
-	}
-
-	public drawConnectionPoint(graphics, pos) {
-		const size = this.calcConnPointSize();
-		graphics.clear();
-		graphics.position = this.adjustConnPointPosToSize(pos, size);
-		graphics.beginFill(this.themingService.getEditorColor('wire'));
-		graphics.drawRect(0, 0, size / this.zoomPan.currentScale, size / this.zoomPan.currentScale);
-	}
-
 	private removeConnectionPoint(pos: PIXI.Point) {
 		const key = `${pos.x}:${pos.y}`;
-		if (!this.connectionPoints.has(key))
-			return;
+		if (!this.connectionPoints.has(key)) return;
 		this.connectionPoints.get(key).destroy();
 		this.connectionPoints.delete(key);
 	}
@@ -266,11 +240,11 @@ export abstract class View extends PIXI.Container {
 	private updateComponent(action: Action) {
 		const sprite = this.allElements.get(action.element.id);
 		if (isUpdatable(sprite)) {
-			sprite.updateComponent(this.zoomPan.currentScale, sprite.element.numInputs, sprite.element.numOutputs, sprite.element.rotation);
+			sprite.updateComponent(this.zoomPan.currentScale, action.element);
 		}
 	}
 
-	protected applyActionsToView(actions: Action[]) {
+	public applyActionsToView(actions: Action[]) {
 		// console.log('incoming actions');
 		// Actions.printActions(actions);
 		if (!actions)
@@ -305,6 +279,8 @@ export abstract class View extends PIXI.Container {
 				break;
 			case 'rotComp':
 			case 'numInpt':
+			case 'ediData':
+			case 'compOpt':
 				this.updateComponent(action);
 				break;
 		}
@@ -312,8 +288,8 @@ export abstract class View extends PIXI.Container {
 	}
 
 	public setLocalChunkPos(element: Element, sprite: PIXI.DisplayObject) {
-		if (element.typeId === 0) {
-			sprite.position = Grid.getLocalChunkPixelPosForGridPosWireStart(element.pos);
+		if (element.typeId === ElementTypeId.WIRE) {
+			sprite.position = Grid.getLocalChunkPixelPosForGridPosWire(element.pos);
 		} else {
 			sprite.position = Grid.getLocalChunkPixelPosForGridPos(element.pos);
 		}
@@ -324,6 +300,22 @@ export abstract class View extends PIXI.Container {
 			this.updateChunks();
 			this.requestSingleFrame();
 		}
+	}
+
+	public centerView() {
+		for (let x = 0; x < this._project.currState.chunks.length; x++) {
+			for (let y = 0; y < this._project.currState.chunks[x].length; y++) {
+				if (this._project.currState.chunks[x][y] && this._project.currState.chunks[x][y].elements.length > 0) {
+					this.zoomPan.translateTo(this.getChunkPos(-x, -y));
+					this.updateChunks();
+					this.requestSingleFrame();
+					return;
+				}
+			}
+		}
+		this.zoomPan.translateTo(new PIXI.Point(0, 0));
+		this.updateChunks();
+		this.requestSingleFrame();
 	}
 
 	public get projectId(): number {

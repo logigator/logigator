@@ -8,10 +8,10 @@
 	animation-fill-mode: both;
 
 	@include themify() {
-		background-color: themed('secondary');
+		background-color: themed('accent2');
 
 		p {
-			color: themed('primary-text');
+			color: themed('text-primary');
 			margin: 0.3rem;
 		}
 	}

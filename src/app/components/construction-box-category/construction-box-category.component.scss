@@ -16,11 +16,11 @@
 		padding: 0.5rem;
 
 		@include themify() {
-			background-color: themed('secondary');
-			color: themed('primary-text');
-			border-top: border('width') solid themed('secondary');
-			border-left: border('width') solid themed('secondary');
-			border-right: border('width') solid themed('secondary');
+			background-color: themed('accent2');
+			color: themed('text-primary');
+			border-top: border('width') solid themed('accent2');
+			border-left: border('width') solid themed('accent2');
+			border-right: border('width') solid themed('accent2');
 		}
 
 		h2 {
@@ -41,8 +41,8 @@
 
 		@include themify() {
 			background-color: themed('background');
-			color: themed('primary-text');
-			border: border('width') solid themed('secondary');
+			color: themed('text-primary');
+			border: border('width') solid themed('accent2');
 		}
 
 		.no-components {
@@ -55,7 +55,6 @@
 			div {
 				text-align: center;
 				position: relative;
-				//outline: 1px solid;
 				border: 1px solid;
 				border-radius: border('radius');
 				width: 100%;
@@ -70,6 +69,17 @@
 					font-size: 1.2rem;
 					line-height: 0;
 				}
+
+				img {
+					position: absolute;
+					left: 50%;
+					bottom: 0;
+					right: 0;
+					top: 50%;
+					transform: translateY(-50%) translateX(-50%);
+					height: 60%;
+					width: 60%;
+				}
 			}
 
 			p {
@@ -80,24 +90,49 @@
 			}
 
 			@include themify() {
-				border-color: themed('secondary');
-				color: themed('primary-text');
+				color: themed('text-primary');
+
+				img {
+					@if isTheme(dark) {
+						filter: invert(99%) sepia(0%) saturate(540%) hue-rotate(169deg) brightness(81%) contrast(100%);
+					} @else {
+						// is black
+					}
+				}
 
 				&:hover {
-					border-color: themed('secondary');
-					color: themed('secondary');
+					color: themed('accent2');
+					img {
+						@if isTheme(dark) {
+							filter: invert(22%) sepia(14%) saturate(285%) hue-rotate(149deg) brightness(94%) contrast(88%);
+						} @else {
+							filter: invert(91%) sepia(0%) saturate(96%) hue-rotate(178deg) brightness(92%) contrast(95%);
+						}
+					}
 				}
 			}
 		}
 
 		.active-selected-component {
 			@include themify() {
-				border-color: themed('primary');
 				color: themed('primary');
+				img {
+					@if isTheme(dark) {
+						filter: invert(50%) sepia(76%) saturate(435%) hue-rotate(93deg) brightness(95%) contrast(88%);
+					} @else {
+						filter: invert(63%) sepia(63%) saturate(498%) hue-rotate(93deg) brightness(93%) contrast(89%);
+					}
+				}
 
 				&:hover {
-					border-color: themed('primary');
 					color: themed('primary');
+					img {
+						@if isTheme(dark) {
+							filter: invert(50%) sepia(76%) saturate(435%) hue-rotate(93deg) brightness(95%) contrast(88%);
+						} @else {
+							filter: invert(63%) sepia(63%) saturate(498%) hue-rotate(93deg) brightness(93%) contrast(89%);
+						}
+					}
 				}
 			}
 		}

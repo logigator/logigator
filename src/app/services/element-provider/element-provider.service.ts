@@ -1,4 +1,4 @@
-import { Injectable } from '@angular/core';
+import {Injectable} from '@angular/core';
 import {wire} from '../../models/element-types/basic/wire';
 import {not} from '../../models/element-types/basic/not';
 import {and} from '../../models/element-types/basic/and';
@@ -11,7 +11,14 @@ import {lever} from '../../models/element-types/io/lever';
 import {butt} from '../../models/element-types/plug/butt';
 import {ErrorHandlingService} from '../error-handling/error-handling.service';
 import {ElementType} from '../../models/element-types/element-type';
-import {environment} from '../../../environments/environment';
+import {delay} from '../../models/element-types/basic/delay';
+import {clock} from '../../models/element-types/basic/clock';
+import {halfAdder} from '../../models/element-types/advanced/half-adder';
+import {fullAdder} from '../../models/element-types/advanced/full-adder';
+import {text} from '../../models/element-types/basic/text';
+import {ElementTypeId} from '../../models/element-types/element-type-ids';
+import {udcTemplate} from '../../models/element-types/udc-template';
+import {rom} from '../../models/element-types/advanced/rom';
 
 @Injectable({
 	providedIn: 'root'
@@ -19,38 +26,49 @@ import {environment} from '../../../environments/environment';
 export class ElementProviderService {
 
 	private _basicElements: Map<number, ElementType> = new Map([
-		[0, wire],
-		[1, not],
-		[2, and],
-		[3, or],
-		[4, xor]
+		[wire.id, wire],
+		[not.id, not],
+		[and.id, and],
+		[or.id, or],
+		[xor.id, xor],
+		[delay.id, delay],
+		[clock.id, clock],
+		[text.id, text]
+	]);
+
+	private _advancedElements: Map<number, ElementType> = new Map([
+		[halfAdder.id, halfAdder],
+		[fullAdder.id, fullAdder],
+		// [rom.id, rom]
 	]);
 
 	private _plugElements: Map<number, ElementType> = new Map([
-		[100, input],
-		[101, output],
-		[102, butt]
+		[input.id, input],
+		[output.id, output],
+		[butt.id, butt]
 	]);
 
 	private _ioElements: Map<number, ElementType> = new Map([
-		[200, button],
-		[201, lever]
+		[button.id, button],
+		[lever.id, lever]
 	]);
 
 	private _userDefinedElements: Map<number, ElementType> = new Map<number, ElementType>();
 
 	constructor(private errorHandler: ErrorHandlingService) {}
 
-	public setUserDefinedTypes(elements: Map<number, ElementType>) {
-		for (const elem of elements.values()) {
-			elem.width = environment.componentWidth;
-		}
-		this._userDefinedElements = elements;
+	public static isCompileElement(id: number): boolean {
+		return !(id === ElementTypeId.WIRE || id === ElementTypeId.BUTT || id === ElementTypeId.TEXT);
 	}
 
-	public addUserDefinedElement(element: ElementType, id: number) {
-		element.width = environment.componentWidth;
-		this._userDefinedElements.set(id, element);
+	public setUserDefinedTypes(elements: Map<number, Partial<ElementType>>) {
+		for (const [id, elem] of elements) {
+			this.addUserDefinedElement(elem, id);
+		}
+	}
+
+	public addUserDefinedElement(element: Partial<ElementType>, id: number) {
+		this._userDefinedElements.set(id, {...udcTemplate, ...element} as ElementType);
 	}
 
 	public clearElementsFromFile() {
@@ -66,6 +84,8 @@ export class ElementProviderService {
 	public getElementById(id: number): ElementType {
 		if (this._basicElements.has(id)) {
 			return this._basicElements.get(id);
+		} else if (this._advancedElements.has(id)) {
+			return this._advancedElements.get(id);
 		} else if (this._plugElements.has(id)) {
 			return this._plugElements.get(id);
 		} else if (this._ioElements.has(id)) {
@@ -76,8 +96,12 @@ export class ElementProviderService {
 		this.errorHandler.showErrorMessage('ERROR.PROJECTS.COMP_NOT_FOUND');
 	}
 
-	public isBasicElement(id: number): boolean {
-		return this._basicElements.has(id);
+	public hasElement(id: number) {
+		return this._basicElements.has(id) ||
+			this._advancedElements.has(id) ||
+			this._plugElements.has(id) ||
+			this._ioElements.has(id) ||
+			this._userDefinedElements.has(id);
 	}
 
 	public isIoElement(id: number): boolean {
@@ -88,28 +112,16 @@ export class ElementProviderService {
 		return this._plugElements.has(id);
 	}
 
-	public isInputElement(id: number): boolean {
-		return this._plugElements.has(id) && id === 100;
-	}
-
-	public isOutputElement(id: number): boolean {
-		return this._plugElements.has(id) && id === 101;
-	}
-
-	public isButtonElement(id: number): boolean {
-		return this._ioElements.has(id) && id === 200;
-	}
-
-	public isLeverElement(id: number): boolean {
-		return this._ioElements.has(id) && id === 201;
-	}
-
 	public isUserElement(id: number): boolean {
 		return this._userDefinedElements.has(id);
 	}
 
 	public get basicElements(): Map<number, ElementType> {
 		return this._basicElements;
+	}
+
+	get advancedElements(): Map<number, ElementType> {
+		return this._advancedElements;
 	}
 
 	public get plugElements(): Map<number, ElementType> {

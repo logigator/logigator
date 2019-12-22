@@ -17,7 +17,7 @@ export class SiPipe implements PipeTransform {
 		let gr = 0;
 		let lw = 0;
 
-		for (; value > 1000 && gr < SiPipe.siSymbols_gr.length; gr++) {
+		for (; value >= 1000 && gr < SiPipe.siSymbols_gr.length; gr++) {
 			value /= 1000;
 		}
 

@@ -7,6 +7,11 @@
 			[searchText]="searchText"
 		></app-construction-box-category>
 		<app-construction-box-category
+			categoryName="CONST_BOX.CATEGORIES.ADVANCED"
+			[components]="advancedComponents"
+			[searchText]="searchText"
+		></app-construction-box-category>
+		<app-construction-box-category
 			*ngIf="showPlugComponents"
 			categoryName="CONST_BOX.CATEGORIES.PLUG"
 			[components]="plugComponents"

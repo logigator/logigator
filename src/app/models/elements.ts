@@ -5,6 +5,7 @@ import {environment} from '../../environments/environment';
 import {ActionType} from './action';
 import {Element} from './element';
 import {ElementType} from './element-types/element-type';
+import {ElementTypeId} from './element-types/element-type-ids';
 
 export abstract class Elements {
 
@@ -26,6 +27,7 @@ export abstract class Elements {
 		out.pos = element.pos.clone();
 		if (element.endPos)
 			out.endPos = element.endPos.clone();
+		out.options = out.options ? [...out.options] : undefined;
 		return out;
 	}
 
@@ -52,7 +54,7 @@ export abstract class Elements {
 		element.endPos.y += dif.y;
 	}
 
-	public static genNewElement(typeId: number, _pos: PIXI.Point, _endPos: PIXI.Point, rotation?: number, numInputs?: number): Element {
+	public static genNewElement(typeId: number, _pos: PIXI.Point, _endPos?: PIXI.Point): Element {
 		const type = getStaticDI(ElementProviderService).getElementById(typeId);
 		const pos = _pos ? _pos.clone() : undefined;
 		const endPos = _endPos ? _endPos.clone() : undefined;
@@ -61,11 +63,12 @@ export abstract class Elements {
 		return {
 			id: -1,
 			typeId,
-			numInputs: numInputs || type.numInputs,
+			numInputs: type.numInputs,
 			numOutputs: type.numOutputs,
 			pos,
 			endPos,
-			rotation: rotation || type.rotation,
+			rotation: type.rotation,
+			options: type.options ? [...type.options] : undefined,
 			plugIndex: getStaticDI(ElementProviderService).isPlugElement(typeId) ? 0 : undefined
 		};
 	}
@@ -78,7 +81,12 @@ export abstract class Elements {
 		return {wire0, wire1};
 	}
 
-	public static calcEndPos(pos: PIXI.Point, width: number, numInputs: number, numOutputs: number, rotation: number): PIXI.Point {
+	public static calcElemEndPos(element: Element): PIXI.Point {
+		return Elements.calcEndPos(element.pos, Elements.elementType(element.typeId).width,
+			element.numInputs, element.numOutputs, element.rotation);
+	}
+
+	public static calcEndPos(pos: PIXI.Point, width?: number, numInputs?: number, numOutputs?: number, rotation?: number): PIXI.Point {
 		if (rotation === undefined || rotation === null) rotation = 0;
 		if (rotation % 2 === 0) {
 			return new PIXI.Point(pos.x + width,
@@ -94,11 +102,11 @@ export abstract class Elements {
 	}
 
 	public static addActionName(elem: Element): ActionType {
-		return elem.typeId === 0 ? 'addWire' : 'addComp';
+		return elem.typeId === ElementTypeId.WIRE ? 'addWire' : 'addComp';
 	}
 
 	public static remActionName(elem: Element): ActionType {
-		return elem.typeId === 0 ? 'remWire' : 'remComp';
+		return elem.typeId === ElementTypeId.WIRE ? 'remWire' : 'remComp';
 	}
 
 	public static mergeCheckedWiresVertical(wire0: Element, wire1: Element, newElem) {
@@ -116,7 +124,7 @@ export abstract class Elements {
 	}
 
 	public static wireEnds(element: Element, rotation?: number, numInputs?: number): PIXI.Point[] {
-		if (element.typeId === 0)
+		if (element.typeId === ElementTypeId.WIRE)
 			return [element.pos, element.endPos];
 		if (rotation === undefined)
 			rotation = element.rotation;
@@ -183,6 +191,26 @@ export abstract class Elements {
 			}
 		}
 		return -1;
+	}
+
+	public static isHorizontal(wire: Element): boolean {
+		return wire.pos.y === wire.endPos.y;
+	}
+
+	public static isVertical(wire: Element): boolean {
+		return wire.pos.x === wire.endPos.x;
+	}
+
+	public static isSameDirection(elem0: Element, elem1: Element): boolean {
+		const comp = elem0.typeId === 0 ? elem1 : elem0;
+		const wire = elem0.typeId === 0 ? elem0 : elem1;
+		// comp still might be a wire, because it is not tested that well
+		if (comp.typeId === 0)
+			return false;
+		if (comp.rotation % 2 === 0)
+			return Elements.isHorizontal(wire);
+		else
+			return Elements.isVertical(wire);
 	}
 
 	public static elementType(typeId: number): ElementType {

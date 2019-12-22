@@ -1,16 +1,15 @@
 import { Injectable } from '@angular/core';
 import {Project} from '../../models/project';
-import {Observable, of, ReplaySubject, Subject} from 'rxjs';
+import {Observable, ReplaySubject, Subject} from 'rxjs';
 import {Action} from '../../models/action';
 import {ProjectSaveManagementService} from '../project-save-management/project-save-management.service';
-import {delayWhen, tap} from 'rxjs/operators';
+import {delayWhen} from 'rxjs/operators';
 import {WorkArea} from '../../models/rendering/work-area';
-import {SaveAsComponent} from '../../components/popup/popup-contents/save-as/save-as.component';
-import {PopupService} from '../popup/popup.service';
+import {SaveAsComponent} from '../../components/popup-contents/save-as/save-as.component';
 import {ElementProviderService} from '../element-provider/element-provider.service';
 import {ErrorHandlingService} from '../error-handling/error-handling.service';
-import {UnsavedChangesComponent} from '../../components/popup/popup-contents/unsaved-changes/unsaved-changes.component';
-import {checkActionUsable} from '../../models/action-usable-in-modes';
+import {UnsavedChangesComponent} from '../../components/popup-contents/unsaved-changes/unsaved-changes.component';
+import {PopupService} from '@logigator/logigator-shared-comps';
 
 @Injectable({
 	providedIn: 'root'
@@ -34,11 +33,15 @@ export class ProjectsService {
 		private elementProvider: ElementProviderService,
 		private errorHandling: ErrorHandlingService
 	) {
-		this.projectSaveManagementService.getProjectToOpenOnLoad().then(project => {
-			this._projects.set(project.id, project);
-			this._currProject = project;
-			this._mainProject = project;
-			this._projectOpenedSubject.next(project.id);
+		this.projectSaveManagementService.getProjectsToOpenOnLoad().then(projects => {
+			for (const p of projects) {
+				if (this.projectSaveManagementService.projectSource === 'server')
+					this.errorHandling.showInfo('INFO.PROJECTS.OPEN_PROJECT', {name: p.name});
+				this._projects.set(p.id, p);
+				this._currProject = p;
+				if (p.type === 'project') this._mainProject = p;
+				this._projectOpenedSubject.next(p.id);
+			}
 		});
 	}
 
@@ -47,7 +50,7 @@ export class ProjectsService {
 	}
 
 	public async openComponent(id: number) {
-		if (this.allProjects.has(id)) {
+		if (this._projects.has(id)) {
 			this.switchToProject(id);
 			return;
 		}
@@ -65,7 +68,7 @@ export class ProjectsService {
 	}
 
 	public inputsOutputsCustomComponentChanged(projectId: number) {
-		const compProject = this.allProjects.get(projectId);
+		const compProject = this._projects.get(projectId);
 		if (!compProject || compProject.type !== 'comp') return;
 		const elemType = this.elementProvider.getElementById(projectId);
 		compProject.currState.inputOutputCount();
@@ -74,6 +77,15 @@ export class ProjectsService {
 		elemType.numInputs = compProject.numInputs;
 		elemType.numOutputs = compProject.numOutputs;
 		this._projects.forEach(p => p.updateInputsOutputs(projectId));
+		this.labelsCustomComponentChanged(projectId);
+	}
+
+	public labelsCustomComponentChanged(projectId: number) {
+		const compProject = this._projects.get(projectId);
+		if (!compProject || compProject.type !== 'comp') return;
+		const elemType = this.elementProvider.getElementById(projectId);
+		elemType.labels = compProject.calcLabels();
+		this._projects.forEach(p => p.updateLabels(projectId));
 	}
 
 	public get hasUnsavedProjects(): boolean {
@@ -94,7 +106,7 @@ export class ProjectsService {
 		this.elementProvider.clearElementsFromFile();
 		const project = Project.empty();
 		this.closeAllProjects();
-		this.projectSaveManagementService.resetProjectSource();
+		this.projectSaveManagementService.projectSource = undefined;
 		this._projects.set(project.id, project);
 		this._currProject = project;
 		this._mainProject = project;
@@ -113,12 +125,15 @@ export class ProjectsService {
 
 	public async openProjectServer(id: number) {
 		if (!this.projectSaveManagementService.isShare) await this.saveAllOrAllComps();
-		const project = await this.projectSaveManagementService.openProjectFromServer(id, false);
+		const project = await this.projectSaveManagementService.getProjectOrCompFromServer(id, false);
+		this.projectSaveManagementService.projectSource = 'server';
+		// #!web
+		window.history.pushState(null, null, `/board/${project.id}`);
 		this.switchProjectAfterOpen(project);
 	}
 
 	private closeAllProjects() {
-		for (const id of this.allProjects.keys()) {
+		for (const id of this._projects.keys()) {
 			this._projectClosedSubject.next(id);
 			this._projects.delete(id);
 		}
@@ -131,10 +146,7 @@ export class ProjectsService {
 	public get onProjectOpened$(): Observable<number> {
 		return this._projectOpenedSubject.asObservable().pipe(
 			delayWhen((value, index) => {
-				if (index === 0) {
-					return WorkArea.pixiFontLoaded$;
-				}
-				return of(undefined);
+				return WorkArea.pixiFontLoaded$;
 			})
 		);
 	}
@@ -188,7 +200,7 @@ export class ProjectsService {
 				this._projectOpenedSubject.next(newMainProject.id);
 			}
 		} else {
-			await this.projectSaveManagementService.saveProjectsAndComponents(Array.from(this.allProjects.values()));
+			await this.projectSaveManagementService.saveProjectsAndComponents(Array.from(this._projects.values()));
 		}
 	}
 
@@ -206,8 +218,16 @@ export class ProjectsService {
 	}
 
 	public async cloneShare() {
-		const project = await this.projectSaveManagementService.cloneShare();
-		this.switchProjectAfterOpen(project);
+		const projects = await this.projectSaveManagementService.cloneShare();
+		if (!projects) return;
+		this.closeAllProjects();
+		for (const p of projects) {
+			this.errorHandling.showInfo('INFO.PROJECTS.OPEN_PROJECT', {name: p.name});
+			this._projects.set(p.id, p);
+			this._currProject = p;
+			if (p.type === 'project') this._mainProject = p;
+			this._projectOpenedSubject.next(p.id);
+		}
 	}
 
 	private switchProjectAfterOpen(project: Project) {

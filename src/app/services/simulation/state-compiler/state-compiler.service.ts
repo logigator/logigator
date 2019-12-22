@@ -21,6 +21,7 @@ import {ElementProviderService} from '../../element-provider/element-provider.se
 import {MapHelper} from './map-helper';
 import {Elements} from '../../../models/elements';
 import {CompileError} from '../../../models/simulation/error';
+import {ElementTypeId} from '../../../models/element-types/element-type-ids';
 
 @Injectable({
 	providedIn: 'root'
@@ -89,7 +90,8 @@ export class StateCompilerService {
 		const out: number[] = [ units.length ];
 
 		for (const unit of units) {
-			out.push(unit.typeId, 0 /*op1*/, 0 /*op2*/, unit.inputs.length, unit.outputs.length, ...unit.inputs, ...unit.outputs);
+			out.push(unit.typeId, unit.options.length || 0,
+				unit.inputs.length, unit.outputs.length, ...unit.options || [], ...unit.inputs, ...unit.outputs);
 		}
 		return new Int32Array(out);
 	}
@@ -271,7 +273,7 @@ export class StateCompilerService {
 			if (coveredPoints.find(p => p.id === elem.id && p.pos.equals(pos)))
 				continue;
 			coveredPoints.push({id: elem.id, pos});
-			if (elem.typeId === 0) {
+			if (elem.typeId === ElementTypeId.WIRE) {
 				this.setWireLink(elem, pos, state, linksOnWireEnds, linkId, unitElems,
 					compiledComp, coveredPoints);
 			} else {
@@ -352,7 +354,7 @@ export class StateCompilerService {
 	): SimulationUnit[] {
 		const compiledComp = this._udcCache.get(projectId);
 		const units = SimulationUnits.cloneMult([...compiledComp.units.keys()]);
-		if (units.length === 0)
+		if (units.length === ElementTypeId.WIRE)
 			return [];
 		const linkMap = new Map<number, number>();
 

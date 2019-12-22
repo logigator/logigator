@@ -130,14 +130,12 @@ export interface SimulationModule extends EmscriptenModule {
 		outputs: Pointer,
 		inputCount: number,
 		outputCount: number,
-		op1: number,
-		op2: number
+		opCount: number,
+		ops: Pointer
 	): number;
 	triggerInput(index: number, event: InputEvent, state: Pointer);
 
-	start(): number;
-	startTimeout(ms: number): number;
-	startManual(ticks: number): number;
+	start(ticks: number, ms: number): number;
 	stop(): number;
 
 	getStatus(): BoardStatus;

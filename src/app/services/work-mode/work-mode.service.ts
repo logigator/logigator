@@ -1,11 +1,12 @@
 import { Injectable } from '@angular/core';
 import {WorkMode} from '../../models/work-modes';
 import {Observable, ReplaySubject} from 'rxjs';
-import {distinctUntilChanged, map} from 'rxjs/operators';
+import {distinctUntilChanged, map, switchMap} from 'rxjs/operators';
 import {ProjectsService} from '../projects/projects.service';
 import {ElementProviderService} from '../element-provider/element-provider.service';
 import {ProjectSaveManagementService} from '../project-save-management/project-save-management.service';
 import {WorkerCommunicationService} from '../simulation/worker-communication/worker-communication.service';
+import {TranslateService} from '@ngx-translate/core';
 
 @Injectable({
 	providedIn: 'root'
@@ -21,7 +22,8 @@ export class WorkModeService {
 		private projects: ProjectsService,
 		private projectSaveManagement: ProjectSaveManagementService,
 		private elemProv: ElementProviderService,
-		private workerCommunicationService: WorkerCommunicationService
+		private workerCommunicationService: WorkerCommunicationService,
+		private translate: TranslateService
 	) {
 		this.setWorkMode('select');
 	}
@@ -29,12 +31,12 @@ export class WorkModeService {
 	public async setWorkMode(mode: WorkMode, componentTypeToBuild?: number) {
 		if (this.currentWorkMode === 'simulation') return;
 		this._currentWorkMode = mode;
-		this._workModeSubject.next(mode);
 		if (componentTypeToBuild) {
 			this._currentComponentTypeToBuild = componentTypeToBuild;
 		} else {
 			delete this._currentComponentTypeToBuild;
 		}
+		this._workModeSubject.next(mode);
 	}
 
 	public async enterSimulation() {
@@ -60,6 +62,21 @@ export class WorkModeService {
 
 	public get currentWorkMode(): WorkMode {
 		return this._currentWorkMode;
+	}
+
+	public get workModeDescription$(): Observable<string> {
+		return this.currentWorkMode$.pipe(
+			switchMap(workMode => {
+				if (workMode === 'buildComponent') {
+					return this.translate.get(this.elemProv.getElementById(this._currentComponentTypeToBuild).name).pipe(
+						switchMap(comp => {
+							return this.translate.get('WORK_MODE_DES.' + workMode, {comp});
+						})
+					);
+				}
+				return this.translate.get('WORK_MODE_DES.' + workMode);
+			})
+		);
 	}
 
 	public get currentWorkMode$(): Observable<WorkMode> {

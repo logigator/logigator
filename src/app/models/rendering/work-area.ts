@@ -75,8 +75,10 @@ export abstract class WorkArea {
 		if (WorkArea._loadedPixiFont === true) return;
 		WorkArea._loadedPixiFont = true;
 		const loader = PIXI.Loader.shared;
-		loader.add('Nunito', '/assets/Nunito_Bitmap/font.fnt')
-			.load(() => WorkArea.pixiFontLoaded$.next());
+		loader.add('Roboto', '/assets/bitmap-fonts/roboto.fnt')
+			.load(() => {
+				WorkArea.pixiFontLoaded$.next();
+			});
 	}
 
 	protected initZoomPan(canvasContainer: ElementRef<HTMLDivElement>) {
@@ -118,10 +120,8 @@ export abstract class WorkArea {
 	}
 
 	private updateSelectedZoomScale() {
-		if ('updateSelectedElementsScale' in this._activeView && 'updatePastingElementsScale' in this._activeView) {
+		if ('updateSelectedElementsScale' in this._activeView)
 			(this._activeView as EditorView).updateSelectedElementsScale();
-			(this._activeView as EditorView).updatePastingElementsScale();
-		}
 	}
 
 	protected destroy() {

@@ -1,10 +1,10 @@
-@import "variables";
 @import "themes";
-@import "toastr";
-@import "buttons";
+@import "variables";
 
-@import url('https://fonts.googleapis.com/css?family=Nunito&display=swap');
-@import url('https://fonts.googleapis.com/css?family=Roboto&display=swap');
+@import url('https://fonts.googleapis.com/css?family=Roboto+Mono:300&display=swap');
+@import "~@logigator/logigator-shared-comps/styles/main";
+@import "~@logigator/logigator-shared-comps/styles/buttons";
+@import "toastr";
 
 html, body {
 	margin: 0;
@@ -12,10 +12,14 @@ html, body {
 
 	height: 100%;
 	width: 100%;
+
+	overflow: hidden;
 }
 
 * {
-	box-sizing: border-box;
-	font-family: Roboto, Nunito, Arial, sans-serif;
 	font-size: 100%;
+}
+
+.grecaptcha-badge {
+	display: none !important;
 }

@@ -1,0 +1,16 @@
+<form [formGroup]="newCompForm" (ngSubmit)="fromSubmitClick()" class="new-component-form" autocomplete="off">
+	<logi-input [label]="'POPUP.NEW_COMP.NAME' | translate" formControlName="compName" type="text">
+		<logi-input-error error="required">{{'POPUP.NEW_COMP.NAME_REQUIRED' | translate}}</logi-input-error>
+		<logi-input-error error="minlength">{{'POPUP.NEW_COMP.NAME_MIN_LENGTH' | translate}}</logi-input-error>
+		<logi-input-error error="maxlength">{{'POPUP.NEW_COMP.NAME_MAX_LENGTH' | translate}}</logi-input-error>
+		<logi-input-error error="pattern">{{'POPUP.NEW_COMP.NAME_PATTERN' | translate}}</logi-input-error>
+	</logi-input>
+	<logi-input [label]="'POPUP.NEW_COMP.SYMBOL' | translate" formControlName="compSymbol" type="text">
+		<logi-input-error error="required">{{'POPUP.NEW_COMP.SYMBOL_REQUIRED' | translate}}</logi-input-error>
+		<logi-input-error error="maxlength">{{'POPUP.NEW_COMP.SYMBOL_MAX_LENGTH' | translate}}</logi-input-error>
+		<logi-input-error error="pattern">{{'POPUP.NEW_COMP.SYMBOL_PATTERN' | translate}}</logi-input-error>
+	</logi-input>
+	<logi-input [label]="'POPUP.NEW_COMP.DESCRIPTION' | translate" formControlName="compDescription" type="text"></logi-input>
+
+	<button type="submit" class="btn-raised primary" [disabled]="newCompForm.invalid">{{'POPUP.NEW_COMP.CREATE' | translate}}</button>
+</form>

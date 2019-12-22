@@ -1,8 +1,8 @@
 import {Element} from './element';
 import * as PIXI from 'pixi.js';
-import {Project} from './project';
 import {environment} from '../../environments/environment';
 import {Elements} from './elements';
+import {ElementTypeId} from './element-types/element-type-ids';
 
 export abstract class CollisionFunctions {
 
@@ -47,14 +47,6 @@ export abstract class CollisionFunctions {
 		return -1;
 	}
 
-	public static isHorizontal(wire: Element): boolean {
-		return wire.pos.y === wire.endPos.y;
-	}
-
-	public static isVertical(wire: Element): boolean {
-		return wire.pos.x === wire.endPos.x;
-	}
-
 	public static inRectChunks(_startPos: PIXI.Point, _endPos: PIXI.Point, wireEnds?: PIXI.Point[]): {x: number, y: number}[] {
 		const startPos = _startPos.clone();
 		const endPos = _endPos.clone();
@@ -83,18 +75,47 @@ export abstract class CollisionFunctions {
 			endPos0.x >= startPos1.x && endPos0.y >= startPos1.y;
 	}
 
+	public static isRectFullyInRect(startPos0: PIXI.Point, endPos0: PIXI.Point, startPos1: PIXI.Point, endPos1: PIXI.Point): boolean {
+		return startPos0.x >= startPos1.x && startPos0.y >= startPos1.y &&
+			endPos0.x <= endPos1.x && endPos0.y <= endPos1.y;
+	}
+
 	public static isRectInRectLightBorder(startPos0: PIXI.Point, endPos0: PIXI.Point, startPos1: PIXI.Point, endPos1: PIXI.Point): boolean {
 		return startPos0.x <= endPos1.x && startPos0.y <= endPos1.y &&
 			endPos0.x > startPos1.x && endPos0.y > startPos1.y;
 	}
 
 	public static isElementInFloatRect(element: Element, startPos: PIXI.Point, endPos: PIXI.Point): boolean {
-		if (element.typeId !== 0) {
+		if (element.typeId !== ElementTypeId.WIRE && element.typeId !== ElementTypeId.TEXT) {
 			return CollisionFunctions.isRectInRectLightBorder(element.pos, element.endPos, startPos, endPos);
 		} else {
 			return element.pos.x + 0.5 <= endPos.x && element.pos.y + 0.5 <= endPos.y &&
 				element.endPos.x + 0.5 > startPos.x && element.endPos.y + 0.5 > startPos.y;
 		}
+	}
+
+	public static rectCuttingPoints(element: Element, startPos: PIXI.Point, endPos: PIXI.Point): PIXI.Point[] {
+		if (Elements.isHorizontal(element)) {
+			if (!(element.pos.y > startPos.y - 0.5 && element.pos.y < endPos.y - 0.5))
+				return undefined;
+			return [
+				new PIXI.Point(Math.floor(startPos.x - 0.5), element.pos.y),
+				new PIXI.Point(Math.ceil(endPos.x - 0.5), element.pos.y)
+			];
+		} else {
+			if (!(element.pos.x > startPos.x - 0.5 && element.pos.x < endPos.x - 0.5))
+				return undefined;
+			return [
+				new PIXI.Point(element.pos.x, Math.floor(startPos.y - 0.5)),
+				new PIXI.Point(element.pos.x, Math.ceil(endPos.y - 0.5))
+			];
+		}
+	}
+
+	public static numWireEndInRect(element: Element, startPos: PIXI.Point, endPos: PIXI.Point): number {
+		return (CollisionFunctions.isWireEndInRect(element.pos, startPos, endPos) ? 0 : 1) +
+			(CollisionFunctions.isWireEndInRect(element.endPos, startPos, endPos) ? 0 : 1);
+
 	}
 
 	public static isRectInRectNoBorder(startPos0: PIXI.Point, endPos0: PIXI.Point, startPos1: PIXI.Point, endPos1: PIXI.Point): boolean {
@@ -104,6 +125,10 @@ export abstract class CollisionFunctions {
 
 	public static isPointInRect(pos: PIXI.Point, startPos: PIXI.Point, endPos: PIXI.Point): boolean {
 		return pos.x >= startPos.x && pos.x < endPos.x && pos.y >= startPos.y && pos.y < endPos.y;
+	}
+
+	public static isWireEndInRect(pos: PIXI.Point, startPos: PIXI.Point, endPos: PIXI.Point): boolean {
+		return pos.x + 0.5 >= startPos.x && pos.x + 0.5 < endPos.x && pos.y + 0.5 >= startPos.y && pos.y + 0.5 < endPos.y;
 	}
 
 	public static gridPosToChunk(pos: number): number {

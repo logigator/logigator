@@ -1,18 +1,24 @@
 import * as PIXI from 'pixi.js';
 import {Element} from '../../element';
 
-export interface LGraphics extends PIXI.DisplayObject {
+export interface ComponentUpdatable {
+	updateComponent(scale: number, newElement: Element);
+}
+
+export interface ComponentScalable {
+	updateScale(scale: number);
+}
+
+export interface ComponentSelectable {
+	setSelected(selected: boolean);
+}
+
+export interface LGraphics extends PIXI.DisplayObject, ComponentScalable, ComponentSelectable {
 
 	readonly element: Element;
 
 	applySimState(scale: number);
-	updateScale(scale: number);
-	setSelected(selected: boolean);
 	setSimulationState(state: boolean[]);
-}
-
-export interface ComponentUpdatable {
-	updateComponent(scale: number, inputs: number, outputs: number, rotation: number);
 }
 
 export function isLGraphics(object: any): object is LGraphics {
@@ -25,4 +31,8 @@ export function isLGraphics(object: any): object is LGraphics {
 
 export function isUpdatable(object: any): object is ComponentUpdatable {
 	return 'updateComponent' in object;
+}
+
+export function isScalable(object: any): object is ComponentSelectable {
+	return 'updateScale' in object;
 }

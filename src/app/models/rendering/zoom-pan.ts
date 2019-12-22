@@ -4,7 +4,7 @@ import {View} from './view';
 export class ZoomPan {
 
 	private static MAX_ZOOM_IN = 2.5;
-	private static MAX_ZOOM_OUT = 0.4;
+	private static MAX_ZOOM_OUT = 0.2;
 
 	private _view: View;
 
@@ -24,6 +24,11 @@ export class ZoomPan {
 		if (this._view.y > 0) {
 			this._view.y = 0;
 		}
+	}
+
+	public translateTo(point: PIXI.Point) {
+		this._view.x = point.x;
+		this._view.y = point.y;
 	}
 
 	/**

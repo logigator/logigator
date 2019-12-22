@@ -10,6 +10,7 @@ import {BoardRecorder} from '../../../tests/auto-tests/board-recorder';
 import {ElementProviderService} from '../services/element-provider/element-provider.service';
 import {ProjectType} from './project-type';
 import {getStaticDI} from './get-di';
+import {ElementTypeId} from './element-types/element-type-ids';
 
 export class Project {
 
@@ -29,6 +30,8 @@ export class Project {
 
 	public saveDirty = false;
 	public compileDirty = true;
+
+	private _stateActionFlag = false;
 
 	// #!debug
 	public boardRecorder: BoardRecorder;
@@ -92,6 +95,12 @@ export class Project {
 				break;
 			case 'plugInd':
 				this._currState.setPlugId(action.element, action.numbers[0]);
+				break;
+			case 'compOpt':
+				this._currState.setOptions(action.element, action.options[0]);
+				break;
+			case 'ediData':
+				this._currState.setData(action.element, action.data[0]);
 				break;
 		}
 	}
@@ -163,16 +172,14 @@ export class Project {
 		return true;
 	}
 
-	public addElement(typeId: number, rotation: number, numInputs: number, numOutputs: number, _pos: PIXI.Point, _endPos?: PIXI.Point):
-		Element {
-		if (typeId === 0 && !_endPos)
+	public addElement(typeId: number, _pos: PIXI.Point, _endPos?: PIXI.Point): Element {
+		if (typeId === ElementTypeId.WIRE && !_endPos)
 			return null;
-		if (typeId === 0 && _pos.equals(_endPos))
+		if (typeId === ElementTypeId.WIRE && _pos.equals(_endPos))
 			return null;
-		const elem = Elements.genNewElement(typeId, _pos,
-			_endPos || Elements.calcEndPos(_pos, Elements.elementType(typeId).width,
-			numInputs, numOutputs, rotation), rotation, numInputs);
-		if (!this._currState.isFreeSpace(elem.pos, elem.endPos, typeId === 0, Elements.wireEnds(elem)))
+		const elem = Elements.genNewElement(typeId, _pos, _endPos);
+		elem.endPos = elem.endPos || Elements.calcElemEndPos(elem);
+		if (!this._currState.isFreeSpace(elem.pos, elem.endPos, typeId === ElementTypeId.WIRE, Elements.wireEnds(elem)))
 			return null;
 
 		// #!debug
@@ -193,7 +200,7 @@ export class Project {
 			_endPos = undefined;
 		}
 		if (!_endPos || _cornerPos.equals(_endPos)) {
-			const elem = this.addElement(0, undefined, 0, 0, _pos, _cornerPos);
+			const elem = this.addElement(0, _pos, _cornerPos);
 			return elem ? [elem] : null;
 		}
 		const {wire0, wire1} = Elements.gen2Wires(_pos, _cornerPos, _endPos);
@@ -252,11 +259,12 @@ export class Project {
 				others: elements,
 				pos: dif
 			}]);
+			this.cancelLastStep();
 			return true;
 		}
-		const changed = this._currState.withWiresOnEdges(elements);
 		if (!this._currState.allSpacesFree(elements, dif, elements))
 			return false;
+		const changed = this._currState.withoutToEmptyChunk(this._currState.withWiresOnEdges(elements), dif);
 
 		// #!debug
 		this.boardRecorder.call('moveElementsById', arguments, -1, 0);
@@ -277,7 +285,7 @@ export class Project {
 
 	public rotateComponent(id: number, rotation: number): boolean {
 		const element = this._currState.getElementById(id);
-		if (element.typeId === 0)
+		if (element.typeId === ElementTypeId.WIRE || element.typeId === ElementTypeId.TEXT)
 			return;
 		const actions: Action[] = [{
 			name: 'rotComp',
@@ -301,7 +309,7 @@ export class Project {
 
 	public setNumInputs(id: number, numInputs: number): boolean {
 		const element = this._currState.getElementById(id);
-		if (element.typeId === 0)
+		if (element.typeId === ElementTypeId.WIRE || element.typeId === ElementTypeId.TEXT)
 			return;
 		const actions: Action[] = [{
 			name: 'numInpt',
@@ -342,6 +350,45 @@ export class Project {
 		return this._currState.possiblePlugIds(this._currState.getElementById(elemId));
 	}
 
+	public setOptions(elemId: number, options: number[]): void {
+		const elem = this._currState.getElementById(elemId);
+		const oldOptions = [...elem.options];
+		this._currState.setOptions(elem, options);
+		const action: Action = {
+			element: elem,
+			name: 'compOpt',
+			options: [options, oldOptions]
+		};
+		this.newState([action]);
+	}
+
+
+	public addText(text: string, _pos: PIXI.Point): Element {
+		const elem = Elements.genNewElement(ElementTypeId.TEXT, _pos, _pos);
+		elem.data = text;
+
+		this._currState.addElement(elem);
+		const actions: Action[] = [{
+			name: Elements.addActionName(elem),
+			element: elem
+		}];
+		this.newState(actions);
+		return elem;
+	}
+
+
+	public setData(elemId: number, data: any): void {
+		const element = this._currState.getElementById(elemId);
+		const oldData = element.data;
+		this._currState.setData(element, data);
+		const action: Action = {
+			name: 'ediData',
+			element,
+			data: [element.data, oldData]
+		};
+		this.newState([action]);
+	}
+
 
 	public updateInputsOutputs(typeId?: number): void {
 		const actions: Action[] = [];
@@ -349,16 +396,36 @@ export class Project {
 			if (elem.typeId === typeId || !typeId && getStaticDI(ElementProviderService).isUserElement(elem.typeId)) {
 				this._currState.updateNumInputsOutputs(elem);
 				actions.push({
-					name: 'remComp',
-					element: elem
-				});
-				actions.push({
-					name: 'addComp',
+					name: 'rotComp',
 					element: elem
 				});
 			}
 		}
 		this._changeSubject.next(actions);
+	}
+
+
+	public updateLabels(typeId?: number): void {
+		const actions: Action[] = [];
+		for (const elem of this.allElements) {
+			if (elem.typeId === typeId || !typeId && getStaticDI(ElementProviderService).isUserElement(elem.typeId)) {
+				actions.push({
+					name: 'rotComp',
+					element: elem
+				});
+			}
+		}
+		this._changeSubject.next(actions);
+	}
+
+
+	public calcLabels(): string[] {
+		const plugs = this._currState.allPlugs();
+		const out: string[] = [];
+		for (const plug of plugs) {
+			out.push(plug.data as string || '');
+		}
+		return out;
 	}
 
 
@@ -372,6 +439,11 @@ export class Project {
 			actions = this.connectWires(pos, wiresOnPoint);
 		} else if (wiresOnPoint.length === 4) {
 			actions = this.disconnectWires(wiresOnPoint);
+		} else if (wiresOnPoint.length === 3) {
+			const elemsOnPoint = this._currState.elemsOnPoint(pos);
+			if (elemsOnPoint.length === 4) {
+				actions = this.disconnectWires(wiresOnPoint);
+			}
 		} else {
 			return;
 		}
@@ -379,7 +451,7 @@ export class Project {
 	}
 
 	private connectWires(pos: PIXI.Point, wiresToConnect: Element[]): Action[] {
-		const newWires = this.currState.connectWires(wiresToConnect[0], wiresToConnect[1], pos);
+		const newWires = this._currState.connectWires(wiresToConnect[0], wiresToConnect[1], pos);
 		this._currState.loadConnectionPoints(newWires);
 		return Actions.connectWiresToActions(wiresToConnect, newWires);
 	}
@@ -388,6 +460,24 @@ export class Project {
 		const newWires = this._currState.disconnectWires(wiresOnPoint);
 		this._currState.loadConnectionPoints(newWires.concat(wiresOnPoint));
 		return Actions.connectWiresToActions(wiresOnPoint, newWires);
+	}
+
+
+	public splitWire(element: Element, pos: PIXI.Point): {
+		actions: Action[],
+		elements: Element[]
+	} {
+		const newWires = this._currState.splitWire(element, pos);
+		if (newWires.length === 1)
+			return {
+				actions: [],
+				elements: newWires
+			};
+		this._currState.loadConnectionPoints(newWires);
+		return {
+			actions: Actions.connectWiresToActions([element], newWires),
+			elements: newWires
+		};
 	}
 
 
@@ -421,21 +511,30 @@ export class Project {
 
 
 
-	private newState(actions: Action[]): void {
+	public newState(actions: Action[], skipSubject?: boolean): void {
 		if (!actions)
 			return;
-		if (this._currActionPointer >= this._maxActionCount) {
-			this._actions.shift();
-		} else {
-			this._currActionPointer++;
-		}
-		this._currMaxActionPointer = this._currActionPointer;
 		actions.push(...this._currState.specialActions);
 		this._currState.specialActions = [];
-		this._actions[this._currActionPointer] = actions;
+		if (this._stateActionFlag) {
+			this._actions[this._currActionPointer].push(...actions);
+			this._stateActionFlag = false;
+		} else {
+			if (this._currActionPointer >= this._maxActionCount) {
+				this._actions.shift();
+			} else {
+				this._currActionPointer++;
+			}
+			this._currMaxActionPointer = this._currActionPointer;
+			this._actions[this._currActionPointer] = actions;
+		}
 		this.saveDirty = true;
 		this.compileDirty = true;
-		this._changeSubject.next(actions);
+		if (!skipSubject) {
+			this._changeSubject.next(actions);
+		} else {
+			this._stateActionFlag = true;
+		}
 	}
 
 	public stepBack(): Action[] {
@@ -463,6 +562,15 @@ export class Project {
 		this._changeSubject.next(outActions);
 		this._currState.specialActions = [];
 		return outActions;
+	}
+
+	public cancelLastStep(): void {
+		if (this._currActionPointer < 0 || !this._stateActionFlag)
+			return;
+
+		this.stepBack();
+		this._currMaxActionPointer--;
+		this._stateActionFlag = false;
 	}
 
 

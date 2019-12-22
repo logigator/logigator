@@ -16,6 +16,7 @@ const actionUsableInSimulation: InteractionActionUsableInSimulation = {
 	connWireMode: false,
 	wireMode: false,
 	selectMode: false,
+	cutSelectMode: false,
 	newComp: false,
 	newProj: false,
 	openProj: false,
@@ -23,7 +24,8 @@ const actionUsableInSimulation: InteractionActionUsableInSimulation = {
 	save: false,
 	share: true,
 	export: true,
-	editDropdown: false
+	editDropdown: false,
+	exportImage: false
 };
 
 export function checkActionUsable(action: InteractionAction): boolean {

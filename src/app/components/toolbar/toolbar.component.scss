@@ -4,8 +4,8 @@
 .toolbar {
 	@include themify() {
 		background-color: themed('background');
-		color: themed('primary-text');
-		border-bottom: border('width') solid themed('secondary');
+		color: themed('text-primary');
+		border-bottom: border('width') solid themed('accent2');
 	}
 
 	position: static;
@@ -36,7 +36,7 @@
 		&:hover {
 			cursor: default;
 			@include themify() {
-				background-color: themed('secondary');
+				background-color: themed('accent2');
 			}
 		}
 	}
@@ -53,7 +53,7 @@
 
 	.divider {
 		@include themify() {
-			border-left: 1px solid themed('primary-text');
+			border-left: 1px solid themed('text-primary');
 		}
 		height: $toolbar-height - 20px;
 		padding: 0;
@@ -174,6 +174,14 @@
 				}
 			}
 
+			.select-cut {
+				@if (isTheme('dark')) {
+					background-image: url("/assets/icons/dark/selection_cut.svg");
+				} @else {
+					background-image: url("/assets/icons/light/selection_cut.svg");
+				}
+			}
+
 			.sim-start {
 				@if (isTheme('dark')) {
 					background-image: url("/assets/icons/dark/control-play.svg");
@@ -252,6 +260,35 @@
 				} @else {
 					background-image: url("/assets/icons/light/control-stop.svg");
 				}
+			}
+
+			.target-clock-speed {
+				@if (isTheme('dark')) {
+					background-image: url("/assets/icons/dark/speed_limit.svg");
+				} @else {
+					background-image: url("/assets/icons/light/speed_limit.svg");
+				}
+			}
+
+			.sync-to-frame-rate {
+				@if (isTheme('dark')) {
+					background-image: url("/assets/icons/dark/speed_sync.svg");
+				} @else {
+					background-image: url("/assets/icons/light/speed_sync.svg");
+				}
+			}
+
+			.target-tick-rate {
+				outline: none;
+				border: none;
+				margin-left: 0.2rem;
+				padding: 0.25rem;
+				font-size: 0.9rem;
+				width: 5rem;
+				height: 70%;
+				border-bottom: 1px solid themed('text-primary');
+				color: themed('text-primary');
+				background-color: themed('background');
 			}
 		}
 	}

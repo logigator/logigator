@@ -10,12 +10,15 @@ export function getDomain(): string {
 	return 'https://editor.logigator.com';
 }
 
-export function getHttpFilterSetCookie(): OnBeforeSendHeadersFilter {
+export function getHttpFilterUrls(): OnBeforeSendHeadersFilter {
 	return {
 		urls: [
 			'https://api.logigator.com/*',
 			'http://api.logigator-local-dev.com/*',
-			'https://api.logigator-local-dev.com/*'
+			'https://api.logigator-local-dev.com/*',
+
+			'https://www.gstatic.com/recaptcha/releases/*',
+			'https://www.google.com/recaptcha/*'
 		]
 	};
 }

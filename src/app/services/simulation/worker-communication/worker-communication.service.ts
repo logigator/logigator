@@ -11,10 +11,13 @@ import {ErrorHandlingService} from '../../error-handling/error-handling.service'
 import {CompileError} from '../../../models/simulation/error';
 import {ElementProviderService} from '../../element-provider/element-provider.service';
 import {AverageBuffer} from '../../../models/average-buffer';
+import {ElementTypeId} from '../../../models/element-types/element-type-ids';
+import {EastereggService} from '../../easteregg/easteregg.service';
 
 @Injectable({
 	providedIn: 'root'
 })
+
 export class WorkerCommunicationService {
 
 	private _powerSubjectsWires: Map<string, Subject<PowerChangesOutWire>>;
@@ -22,8 +25,12 @@ export class WorkerCommunicationService {
 	private _worker: Worker;
 
 	private _initialized = false;
-	private _isContinuous = false;
+	private _mode: 'continuous' | 'target' | 'sync';
 	private _frameAverage = new AverageBuffer(5);
+
+	private _targetSpeed = 0;
+	private _targetLastRun = Date.now();
+	private _targetUnprocessedFraction = 0;
 
 	private _dataCache: Uint8Array;
 
@@ -40,7 +47,8 @@ export class WorkerCommunicationService {
 		private stateCompiler: StateCompilerService,
 		private ngZone: NgZone,
 		private errorHandling: ErrorHandlingService,
-		private elementProvider: ElementProviderService
+		private elementProvider: ElementProviderService,
+		private eastereggs: EastereggService
 	) {
 		this._powerSubjectsWires = new Map<string, Subject<PowerChangesOutWire>>();
 		this._powerSubjectsWireEnds = new Map<string, Subject<Map<Element, boolean[]>>>();
@@ -71,7 +79,7 @@ export class WorkerCommunicationService {
 			}
 			this._dataCache = state;
 
-			if (data.method === WasmMethod.single || data.method === WasmMethod.cont || data.method === WasmMethod.reset) {
+			if (data.method === WasmMethod.run || data.method === WasmMethod.reset) {
 				const powerChangesWire = new Map<string, PowerChangesOutWire>();
 				const powerChangesWireEnds = new Map<string, Map<Element, boolean[]>>();
 				for (const identifier of this._powerSubjectsWires.keys()) {
@@ -84,12 +92,31 @@ export class WorkerCommunicationService {
 				}
 			}
 
-			if (data.method === WasmMethod.cont && this._isContinuous) {
+			if (data.method === WasmMethod.run && this._mode === 'continuous') {
 				const request: WasmRequest = {
-					method: WasmMethod.cont,
+					method: WasmMethod.run,
 					time: this._frameAverage.average
 				};
 				this._worker.postMessage(request);
+			} else if (data.method === WasmMethod.run && this._mode === 'target') {
+				const timestamp = Date.now();
+				const ticks = ((timestamp - this._targetLastRun) * this._targetSpeed / 1000) + this._targetUnprocessedFraction;
+				const ticksToCompute = Math.trunc(ticks);
+				const request: WasmRequest = {
+					method: WasmMethod.run,
+					time: this._frameAverage.average,
+					ticks: ticksToCompute
+				};
+
+				if (ticksToCompute) {
+					this._targetUnprocessedFraction = ticks % 1;
+					this._worker.postMessage(request);
+					this._targetLastRun = timestamp;
+				} else {
+					setTimeout(() => {
+						this._worker.postMessage(request);
+					}, this._frameAverage.average / 2);
+				}
 			}
 
 			if (data.method === WasmMethod.status) {
@@ -144,11 +171,15 @@ export class WorkerCommunicationService {
 				this.errorHandling.showErrorMessage('ERROR.COMPILE.FAILED');
 				return;
 			}
+			if (compiledBoard.length > 100_000) {
+				this.eastereggs.achieve('GBOGH');
+			}
 
 			this.finalizeInit(compiledBoard.buffer);
 		} catch (e) {
 			// #!debug
 			console.error(e);
+			if (!this.elementProvider.hasElement(e.comp) || !this.elementProvider.hasElement(e.src)) return;
 			e.comp = this.elementProvider.getElementById(e.comp).name;
 			e.src = this.elementProvider.getElementById(e.src).name;
 			this.errorHandling.showErrorMessage((e as CompileError).name, e);
@@ -161,7 +192,7 @@ export class WorkerCommunicationService {
 			this._worker.terminate();
 
 		this._initialized = false;
-		this._worker = new Worker('../../../simulation-worker/simulation.worker', { type: 'module' });
+		this._worker = new Worker('../../../worker/simulation-worker/simulation.worker', { type: 'module' });
 		this.ngZone.runOutsideAngular(() => {
 			this._worker.addEventListener('message', (event) => this.handleResponse(event as any));
 		});
@@ -178,30 +209,67 @@ export class WorkerCommunicationService {
 	}
 
 	public stop(): void {
-		this._isContinuous = false;
+		this._mode = undefined;
 		this._worker.postMessage({
 			method: WasmMethod.reset
 		} as WasmRequest);
 	}
 
 	public pause(): void {
-		this._isContinuous = false;
+		this._mode = undefined;
 	}
 
 	public start(): void {
-		if (this._isContinuous)
+		if (this._mode === 'continuous')
 			return;
 
 		const request: WasmRequest = {
-			method: WasmMethod.cont,
+			method: WasmMethod.run,
 			time: this._frameAverage.average
 		};
-		this._isContinuous = true;
+		this._mode = 'continuous';
 		this._worker.postMessage(request);
 		this._worker.postMessage(request);
+		this.registerStatusWatch();
+	}
+
+	public startTarget(target?: number): void {
+		if (this._mode === 'target')
+			return;
+
+		if (target && target >= 0)
+			this._targetSpeed = target;
+
+		const request: WasmRequest = {
+			method: WasmMethod.run,
+			time: this._frameAverage.average,
+			ticks: 1
+		};
+		this._mode = 'target';
+		this._worker.postMessage(request);
+		this.registerStatusWatch();
+	}
+
+	public startSync(): void {
+		if (this._mode === 'sync')
+			return;
+
+		this._mode = 'sync';
+		this.registerStatusWatch();
+		this.singleStep();
+	}
+
+	public setTarget(target: number) {
+		if (target >= 0)
+			this._targetSpeed = target;
+	}
+
+	private registerStatusWatch() {
+		const mode = this._mode;
+
 		this.ngZone.runOutsideAngular(() => {
 			timer(0, 1000).pipe(
-				takeWhile(() => this._isContinuous)
+				takeWhile(() => mode === this._mode),
 			).subscribe(x => {
 				this._worker.postMessage({
 					method: WasmMethod.status
@@ -212,7 +280,8 @@ export class WorkerCommunicationService {
 
 	public singleStep(): void {
 		const request: WasmRequest = {
-			method: WasmMethod.single
+			method: WasmMethod.run,
+			ticks: 1
 		};
 		this._worker.postMessage(request);
 		this._worker.postMessage({
@@ -222,14 +291,22 @@ export class WorkerCommunicationService {
 
 	public setFrameTime(frameTime: number): void {
 		this._frameAverage.push(frameTime > this._frameAverage.average + 100 ? this._frameAverage.average + 100 : frameTime);
+
+		if (this._mode === 'sync') {
+			const request: WasmRequest = {
+				method: WasmMethod.run,
+				ticks: 1
+			};
+			this._worker.postMessage(request);
+		}
 	}
 
 	public setUserInput(identifier: string, element: Element, state: boolean[]): void {
 		const index = this.stateCompiler.ioElemIndexes.get(identifier).get(element.id);
 		let inputEvent: InputEvent;
-		if (this.elementProvider.isButtonElement(element.typeId)) {
+		if (element.typeId === ElementTypeId.BUTTON) {
 			inputEvent = InputEvent.Pulse;
-		} else if (this.elementProvider.isLeverElement(element.typeId)) {
+		} else if (element.typeId === ElementTypeId.LEVER) {
 			inputEvent = InputEvent.Cont;
 		}
 		const stateBuffer = Int8Array.from(state as any).buffer;
@@ -258,7 +335,7 @@ export class WorkerCommunicationService {
 	}
 
 	public get isRunning() {
-		return this._isContinuous;
+		return !!this._mode;
 	}
 
 	public subscribe(identifier: string): void {

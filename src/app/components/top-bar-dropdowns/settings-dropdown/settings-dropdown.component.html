@@ -1,12 +1,12 @@
 <div class="dropdown" [class.hidden]="!showDropDown">
 	<div class="switch">
 		<label>{{'DROPDOWN.SETTINGS.DARK_MODE' | translate}}</label>
-		<app-switch (click)="showReloadPopup()" [checked]="this.theming.pendingTheme === 'dark'"></app-switch>
+		<logi-switch (click)="showReloadPopup()" [checked]="this.theming.pendingTheme === 'dark'"></logi-switch>
 	</div>
 	<hr>
 	<div class="switch">
 		<label>{{'DROPDOWN.SETTINGS.SHOW_GRID' | translate}}</label>
-		<app-switch [(ngModel)]="this.theming.showGrid"></app-switch>
+		<logi-switch [(ngModel)]="this.theming.showGrid"></logi-switch>
 	</div>
 	<hr>
 	<div class="select">
@@ -39,4 +39,5 @@
 		</div>
 	</ng-container>
 	<!-- #!endif -->
+
 </div>

@@ -26,11 +26,13 @@
 						"polyfills": "src/polyfills.ts",
 						"tsConfig": "tsconfig.app.json",
 						"aot": false,
+						"preserveSymlinks": true,
 						"assets": [
 							"src/favicon.ico",
 							"src/assets",
 							"src/site.webmanifest",
-							"src/browserconfig.xml"
+							"src/browserconfig.xml",
+							"src/robots.txt"
 						],
 						"stylePreprocessorOptions": {
 							"includePaths": [
@@ -65,6 +67,7 @@
 								"src/favicon.ico",
 								"src/assets",
 								"src/site.webmanifest",
+								"src/robots.txt",
 								"src/browserconfig.xml",
 								"src/compatibility-check/warning-script.js",
 								"src/compatibility-check/warning-styles.css"
@@ -127,6 +130,7 @@
 								"src/favicon.ico",
 								"src/assets",
 								"src/site.webmanifest",
+								"src/robots.txt",
 								"src/browserconfig.xml",
 								"src/compatibility-check/warning-script.js",
 								"src/compatibility-check/warning-styles.css"

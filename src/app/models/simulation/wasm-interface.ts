@@ -4,10 +4,7 @@ import {PowerChangeIn} from './power-changes';
 export type Pointer = number;
 
 export enum WasmMethod {
-	single,
-	cont,
-	stop,
-	pause,
+	run,
 	triggerInput,
 	init,
 	status,

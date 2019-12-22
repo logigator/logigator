@@ -7,4 +7,5 @@ export interface ComponentInfoResponse {
 	created_on: string;
 	num_inputs: number;
 	num_outputs: number;
+	labels: string[];
 }

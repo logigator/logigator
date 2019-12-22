@@ -7,7 +7,7 @@
 
 .toastr-position {
 	left: 0.5rem;
-	bottom: 0.5rem;
+	bottom: 0;
 	position: absolute !important;
 }
 
@@ -17,6 +17,7 @@
 	border-radius: 0 !important;
 	background-position: 0.75rem center !important;
 	background-size: 1.75rem !important;
+	margin: 0 0 0.5rem !important;
 
 	.toast-message {
 		margin-left: 2.75rem;
@@ -30,7 +31,7 @@
 		} @else {
 			background-image: url("/assets/icons/dark/alert.svg");
 		}
-		color: themed('primary-text');
+		color: themed('text-primary');
 		background-color: themed('error');
 	}
 
@@ -40,7 +41,7 @@
 		} @else {
 			background-image: url("/assets/icons/dark/check.svg");
 		}
-		color: themed('primary-text');
-		background-color: themed('secondary');
+		color: themed('text-primary');
+		background-color: themed('accent2');
 	}
 }

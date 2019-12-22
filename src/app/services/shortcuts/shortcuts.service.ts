@@ -4,11 +4,11 @@ import {ShortcutAction, ShortcutConfig, ShortcutMap} from '../../models/shortcut
 import {WorkModeService} from '../work-mode/work-mode.service';
 import {ProjectInteractionService} from '../project-interaction/project-interaction.service';
 import {ThemingService} from '../theming/theming.service';
-import {PopupService} from '../popup/popup.service';
 import {HttpClient} from '@angular/common/http';
 import {ErrorHandlingService} from '../error-handling/error-handling.service';
 import {UserService} from '../user/user.service';
 import {environment} from '../../../environments/environment';
+import {PopupService} from '@logigator/logigator-shared-comps';
 
 @Injectable({
 	providedIn: 'root'
@@ -131,7 +131,11 @@ export class ShortcutsService {
 			case 'selectMode':
 				this.workMode.setWorkMode('select');
 				break;
+			case 'cutSelectMode':
+				this.workMode.setWorkMode('selectCut');
+				break;
 			case 'textMode':
+				this.workMode.setWorkMode('text');
 				break;
 			case 'delete':
 				this.projectInteraction.deleteSelection();

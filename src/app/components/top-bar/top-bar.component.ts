@@ -3,14 +3,14 @@ import {ProjectsService} from '../../services/projects/projects.service';
 import {UserService} from '../../services/user/user.service';
 import {Observable} from 'rxjs';
 import {UserInfo} from '../../models/http-responses/user-info';
-import {PopupService} from '../../services/popup/popup.service';
 import { ElectronService } from 'ngx-electron';
 // #!electron
-import {LoginComponent} from '../popup/popup-contents/login/login.component';
+import {LoginPopupComponent} from '@logigator/logigator-shared-comps';
 // #!electron
-import {RegisterComponent} from '../popup/popup-contents/register/register.component';
+import {RegisterPopupComponent} from '@logigator/logigator-shared-comps';
 import {InteractionAction} from '../../models/interaction-action';
 import {checkActionUsable} from '../../models/action-usable-in-modes';
+import {PopupService} from '@logigator/logigator-shared-comps';
 
 
 @Component({
@@ -45,7 +45,7 @@ export class TopBarComponent implements OnInit {
 
 	public login() {
 		// #!electron
-		this.popup.showPopup(LoginComponent, 'Login', true);
+		this.popup.showPopup(LoginPopupComponent, 'POPUP.LOGIN.TITLE', true);
 
 		// #!web
 		window.open('https://logigator.com/login', '_blank');
@@ -53,7 +53,7 @@ export class TopBarComponent implements OnInit {
 
 	public register() {
 		// #!electron
-		this.popup.showPopup(RegisterComponent, 'Register', true);
+		this.popup.showPopup(RegisterPopupComponent, 'POPUP.REGISTER.TITLE', false);
 
 		// #!web
 		window.open('https://logigator.com/register', '_blank');
