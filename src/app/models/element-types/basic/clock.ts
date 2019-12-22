@@ -26,7 +26,7 @@ export const clock: ElementType = {
 	minInputs: 1,
 	maxInputs: 1,
 
-	width: environment.componentWidth,
+	width: 3,
 
 	options: [1],
 	optionsConfig: [
@@ -35,5 +35,9 @@ export const clock: ElementType = {
 			min: 1,
 			max: Number.MAX_VALUE
 		}
-	]
+	],
+
+	calcLabels: element => {
+		return ['STP', 'CLK'];
+	}
 };
