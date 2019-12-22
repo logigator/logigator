@@ -69,7 +69,9 @@
 			"SIM_SINGLE": "Einzelschritt",
 			"SIM_PAUSE": "Pause",
 			"SIM_STOP": "Stopp",
-			"SIM_CONT": "Start"
+			"SIM_CONT": "Start",
+			"SIM_TARGET_MODE": "Tickrate limitieren",
+			"SIM_SYNC_MODE": "Tickrate mit Bildschirm synchronisieren"
 		}
 	},
 	"TOP_BAR": {
@@ -207,6 +209,11 @@
 			"TITLE": "Text platzieren",
 			"SET": "Speichern",
 			"LABEL": "Text"
+		},
+		"ROM_EDIT": {
+			"TITLE": "Rom Daten editieren",
+			"SAVE": "SPEICHERN",
+			"CANCEL": "ABBRECHEN"
 		}
 	},
 	"SETTINGS_INFO": {
@@ -227,42 +234,48 @@
 		"BASIC": {
 			"AND": {
 				"NAME": "UND Gatter",
-				"DESCRIPTION": ""
+				"DESCRIPTION": "Ausgang ist aktiv wenn alle Eingänge aktiv sind."
 			},
 			"NOT": {
 				"NAME": "NICHT Gatter",
-				"DESCRIPTION": "Ich bin ein Nicht"
+				"DESCRIPTION": "Ausgang ist aktiv wenn der Eingang inaktiv ist."
 			},
 			"OR": {
 				"NAME": "ODER Gatter",
-				"DESCRIPTION": ""
+				"DESCRIPTION": "Ausgang ist aktiv wenn mindestens ein Eingang aktiv ist."
 			},
 			"XOR": {
 				"NAME": "XOR Gatter",
-				"DESCRIPTION": ""
+				"DESCRIPTION": "Augang ist aktiv wenn eine ungerade Zahl an Eingängen aktiv sind."
 			},
 			"DELAY": {
-				"NAME": "Verzögerung",
+				"NAME": "Durchpass",
 				"DESCRIPTION": "Ausgang = Eingang. Fügt einen Tick Verzögerung zum Signal hinzu."
 			},
 			"CLOCK": {
 				"NAME": "Taktgeber",
-				"DESCRIPTION": "",
-				"SPEED": "Verzögerung zwischen Pulsen."
+				"DESCRIPTION": "Sendet periodisch ein Taktsignal.<br>Die Verzögerung zwischen den Signalen kann angepasst werden.",
+				"SPEED": "Verzögerung"
 			},
 			"TEXT": {
 				"NAME": "Text",
-				"DESCRIPTION": "Text, der überall platziert werden kann."
+				"DESCRIPTION": "Text, der auf der Arbeitsfläche platziert werden kann."
 			}
 		},
 		"ADVANCED": {
 			"HALF_ADDER": {
 				"NAME": "Halbaddierer",
-				"DESCRIPTION": ""
+				"DESCRIPTION": "Addiert zwei 1-Bit Zahlen zusammen."
 			},
 			"FULL_ADDER": {
 				"NAME": "Volladdierer",
-				"DESCRIPTION": ""
+				"DESCRIPTION": "Addiert drei 1-Bit Zahlen zusammen."
+			},
+			"ROM": {
+				"NAME": "ROM",
+				"DESCRIPTION": "Speichern, aus dem nur gelesen werden kann.<br>Kann beispielsweise für Programmcode genutzt werden.",
+				"WORD_SIZE": "Wortbreite",
+				"ADDRESS_SIZE": "Adressgröße"
 			}
 		},
 		"IO": {

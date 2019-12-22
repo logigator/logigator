@@ -69,7 +69,9 @@
 			"SIM_SINGLE": "Single Step",
 			"SIM_PAUSE": "Pause",
 			"SIM_STOP": "Stop",
-			"SIM_CONT": "Start"
+			"SIM_CONT": "Start",
+			"SIM_TARGET_MODE": "Limit Tick Rate",
+			"SIM_SYNC_MODE": "Sync Tick Rate to Frame Rate"
 		}
 	},
 	"TOP_BAR": {
@@ -207,6 +209,11 @@
 			"TITLE": "Place Text",
 			"SET": "Save",
 			"LABEL": "Text"
+		},
+		"ROM_EDIT": {
+			"TITLE": "Edit Rom Data",
+			"SAVE": "SAVE",
+			"CANCEL": "CANCEL"
 		}
 	},
 	"SETTINGS_INFO": {
@@ -227,52 +234,58 @@
 		"BASIC": {
 			"AND": {
 				"NAME": "AND Gate",
-				"DESCRIPTION": ""
+				"DESCRIPTION": "Output is high if all inputs are high."
 			},
 			"NOT": {
 				"NAME": "NOT Gate",
-				"DESCRIPTION": "I am a not"
+				"DESCRIPTION": "Output is high if input is low."
 			},
 			"OR": {
 				"NAME": "OR Gate",
-				"DESCRIPTION": ""
+				"DESCRIPTION": "Output is high if at least one input is high."
 			},
 			"XOR": {
 				"NAME": "XOR Gate",
-				"DESCRIPTION": ""
+				"DESCRIPTION": "Output is high if an odd number of inputs are high."
 			},
 			"DELAY": {
 				"NAME": "Delay",
-				"DESCRIPTION": "Output = Input. Adds one tick delay to the signal."
+				"DESCRIPTION": "Output equals Input. Adds one tick delay to the signal."
 			},
 			"CLOCK": {
 				"NAME": "Clock",
-				"DESCRIPTION": "",
-				"SPEED": "Delay between pulses."
+				"DESCRIPTION": "Periodically sends a one tick long pulse.<br>Delay between pulses can be configured.",
+				"SPEED": "Delay"
 			},
 			"TEXT": {
 				"NAME": "Text",
-				"DESCRIPTION": "Text which you can place anywhere."
+				"DESCRIPTION": "Text which you can place on the canvas."
 			}
 		},
 		"ADVANCED": {
 			"HALF_ADDER": {
 				"NAME": "Half Adder",
-				"DESCRIPTION": ""
+				"DESCRIPTION": "Adds two 1-bit numbers together."
 			},
 			"FULL_ADDER": {
 				"NAME": "Full Adder",
-				"DESCRIPTION": ""
+				"DESCRIPTION": "Adds three 1-bit numbers together."
+			},
+			"ROM": {
+				"NAME": "ROM",
+				"DESCRIPTION": "Read only Memory.<br>Can be used for program code, for example.",
+				"WORD_SIZE": "Word Size",
+				"ADDRESS_SIZE": "Address Size"
 			}
 		},
 		"IO": {
 			"BUTTON": {
 				"NAME": "Button",
-				"DESCRIPTION": ""
+				"DESCRIPTION": "Can be clicked to emit a pulse signal."
 			},
 			"LEVER": {
 				"NAME": "Switch",
-				"DESCRIPTION": ""
+				"DESCRIPTION": "Can be switched on and off during simulation."
 			}
 		},
 		"PLUG": {

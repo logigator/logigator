@@ -42,7 +42,7 @@
 
 		<div class="description" *ngIf="elementType?.description">
 			<h6>{{'SETTINGS_INFO.DESCRIPTION' | translate}}:</h6>
-			{{elementType.description | translate}}
+			<span [innerHTML]="elementType.description | translate"></span>
 		</div>
 
 		<button class="btn-outline secondary small edit" *ngIf="elementType.edit && (selectedCompId || elementType.canEditType)" (click)="editClick()">{{'SETTINGS_INFO.EDIT' | translate}}</button>
