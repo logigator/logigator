@@ -1,15 +1,13 @@
 <div class="dropdown" [class.hidden]="!showDropDown">
-	<div class="switch">
+	<div class="switch item">
 		<label>{{'DROPDOWN.SETTINGS.DARK_MODE' | translate}}</label>
 		<logi-switch (click)="showReloadPopup()" [checked]="this.theming.pendingTheme === 'dark'"></logi-switch>
 	</div>
-	<hr>
-	<div class="switch">
+	<div class="switch item">
 		<label>{{'DROPDOWN.SETTINGS.SHOW_GRID' | translate}}</label>
 		<logi-switch [(ngModel)]="this.theming.showGrid"></logi-switch>
 	</div>
-	<hr>
-	<div class="select">
+	<div class="select item">
 		<label>{{'DROPDOWN.SETTINGS.LANGUAGE' | translate}}</label>
 		<select [(ngModel)]="currentLang" (ngModelChange)="languageChange()">
 			<option value="en">{{'LANGUAGE.EN' | translate}}</option>
@@ -17,24 +15,24 @@
 		</select>
 	</div>
 	<hr>
-	<div class="link">
+
+	<div class="link item">
+		<button class="btn-outline secondary small" (click)="privacyPolicy()">{{'DROPDOWN.SETTINGS.PRIVACY' | translate}}</button>
+	</div>
+	<hr>
+
+	<div class="link item">
 		<button class="btn-outline secondary small" (click)="showCustomizeShortcuts()">{{'DROPDOWN.SETTINGS.SHORTCUTS' | translate}}</button>
 	</div>
 	<ng-container *ngIf="isLoggedIn">
-		<hr>
-		<div class="link">
+		<div class="link item">
 			<button class="btn-outline secondary small" (click)="accountSettings()">{{'DROPDOWN.SETTINGS.ACCOUNT' | translate}}</button>
 		</div>
 	</ng-container>
-	<hr>
-	<div class="link">
-		<button class="btn-outline secondary small" (click)="privacyPolicy()">{{'DROPDOWN.SETTINGS.PRIVACY' | translate}}</button>
-	</div>
 
 	<!-- #!if ELECTRON === 'true' -->
 	<ng-container *ngIf="isLoggedIn">
-		<hr>
-		<div class="link">
+		<div class="link item">
 			<button class="btn-outline secondary small" (click)="logout()">{{'DROPDOWN.SETTINGS.LOGOUT' | translate}}</button>
 		</div>
 	</ng-container>

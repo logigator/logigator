@@ -6,7 +6,6 @@
 	z-index: 200;
 	width: max-content;
 	min-width: 20rem;
-	min-height: 10rem;
 	display: flex;
 	flex-direction: column;
 	right: 0;
@@ -19,23 +18,15 @@
 	@include themify() {
 		background-color: themed('background');
 		color: themed('text-primary');
-		border: border('width') solid themed('accent2');
+		border: border('width') solid themed('accent2');;
 		border-radius: border('radius');
 
 		.switch {
-			display: flex;
-			flex-direction: row;
-			align-items: center;
 			justify-content: space-between;
-			padding: 0.5rem;
 		}
 
 		.select {
-			display: flex;
-			flex-direction: row;
-			align-items: center;
 			justify-content: space-between;
-			padding: 0.5rem;
 
 			select {
 				width: 40%;
@@ -48,8 +39,24 @@
 			}
 		}
 
+		.item {
+			display: flex;
+			flex-direction: row;
+			align-items: center;
+			height: 3rem;
+			padding: 0.5rem 1rem;
+			text-decoration: none;
+
+			img {
+				height: 100%;
+				margin-right: 1rem;
+			}
+		}
+
 		.link {
-			padding: 0.5rem;
+			&:hover {
+				background-color: themed('accent2');
+			}
 		}
 
 		hr {
