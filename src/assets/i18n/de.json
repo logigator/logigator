@@ -341,7 +341,14 @@
 		"USER": {
 			"SAVE_SHORTCUTS": "Fehler beim speichern der Tastaturbefehle",
 			"GET_INFO": "Konnte Benutzerinformationen nicht bekommen",
-			"LOGIN": "Fehler beim Anmelden"
+		},
+		"LOGIN": {
+			"NO_USER": "Benutzername exsistiert nicht",
+			"INVALID_PW": "Password ist falsch",
+			"EMAIL_NOT_VERIFIED": "Email Adresse nicht verifiziert",
+			"EMAIL_TAKEN": "Email Adresse wird bereits verwendet",
+			"USERNAME_TAKEN": "Benutzername wird bereits verwedet",
+			"OTHER": "Ein unbekannter Fehler ist aufgetreten"
 		},
 		"INVALID_URL": "Ungülitge Url"
 	},

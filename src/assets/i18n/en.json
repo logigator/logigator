@@ -340,8 +340,15 @@
 		},
 		"USER": {
 			"SAVE_SHORTCUTS": "Error while Saving Shortcuts",
-			"GET_INFO": "Unable to get User info",
-			"LOGIN": "Error while logging in"
+			"GET_INFO": "Unable to get User info"
+		},
+		"LOGIN": {
+			"NO_USER": "Username does not exist",
+			"INVALID_PW": "Password is incorrect",
+			"EMAIL_NOT_VERIFIED": "Email address is not verified",
+			"EMAIL_TAKEN": "Email has already been taken",
+			"USERNAME_TAKEN": "Username has already been taken",
+			"OTHER": "An unknown error occurred while trying to log you in"
 		},
 		"INVALID_URL": "Invalid Url"
 	},
