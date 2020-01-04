@@ -117,7 +117,9 @@
 			"PASSWORD_REPEAT_ERR": "Passwörter stimmen nicht überein",
 			"PRIVACY_POLICY": "Durch klicken auf \"Registrieren\" stimmen Sie zu, dass Sie die Datenschutzerklärung gelesen haben akzeptieren.",
 			"REGISTER_BUTTON": "REGISTRIEREN",
-			"OR": "oder"
+			"OR": "oder",
+			"SUCCESS_1": "Account erfolgreich erstellt.",
+			"SUCCESS_2": "Bitte überprüfe deinen Posteingang und verifiziere deine Email Adresse."
 		},
 		"NEW_COMP": {
 			"TITLE": "Neue Komponente",

@@ -3,7 +3,7 @@ import {DOCUMENT} from '@angular/common';
 import {Observable, of, Subject} from 'rxjs';
 import {UserInfo} from '../../models/http-responses/user-info';
 import {map, switchMap} from 'rxjs/operators';
-import {HttpClient} from '@angular/common/http';
+import {HttpClient, HttpErrorResponse} from '@angular/common/http';
 import {HttpResponseData} from '../../models/http-responses/http-response-data';
 import {ErrorHandlingService} from '../error-handling/error-handling.service';
 
@@ -40,15 +40,15 @@ export class UserService {
 	}
 
 	// #!if ELECTRON === 'true'
-	public authenticateTwitter() {
-		this.login('twitter').catch(() => this.errorHandling.showErrorMessage('ERROR.USER.LOGIN'));
+	public authenticateTwitter(): Promise<void> {
+		return this.login('twitter');
 	}
 
-	public authenticateGoogle() {
-		this.login('google').catch(() => this.errorHandling.showErrorMessage('ERROR.USER.LOGIN'));
+	public authenticateGoogle(): Promise<void> {
+		return this.login('google');
 	}
 
-	public loginEmail(user: string, password: string): Promise<string> {
+	public loginEmail(user: string, password: string): Promise<void> {
 		return this.login('email', {user, password});
 	}
 
@@ -57,19 +57,17 @@ export class UserService {
 		return new Promise<string>((resolve, reject) => {
 			this.electronService.ipcRenderer.once('loginemailResponse', ((event, args) => {
 				if (args === 'success') {
-					this._userLoginStateInSubject.next(true);
-					this.getUserInfoFromServer();
 					resolve();
 					return;
 				}
-				reject(args);
+				reject(new HttpErrorResponse({error: args}));
 			}));
 		});
 	}
 
-	private login(type: 'google' | 'twitter' | 'email', credentials?: {user: string, password: string}): Promise<string> {
+	private login(type: 'google' | 'twitter' | 'email', credentials?: {user: string, password: string}): Promise<void> {
 		this.electronService.ipcRenderer.send('login' + type, credentials);
-		return new Promise<string>((resolve, reject) => {
+		return new Promise<void>((resolve, reject) => {
 			this.electronService.ipcRenderer.once('login' + type + 'Response', ((event, args) => {
 				if (args === 'success') {
 					this._userLoginStateInSubject.next(true);
@@ -77,7 +75,7 @@ export class UserService {
 					resolve();
 					return;
 				}
-				reject(args);
+				reject(reject(new HttpErrorResponse({error: args})));
 			}));
 		});
 

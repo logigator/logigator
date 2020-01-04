@@ -118,7 +118,6 @@ export class AuthenticationHandler {
 			this.sendLoginResponse(false, 'email', await resp.json());
 			return;
 		}
-		await this.setLoggedIn(resp.headers.raw()['set-cookie'].find(c => c.includes('auth-token')));
 		this.sendLoginResponse(true, 'email');
 	}
 
