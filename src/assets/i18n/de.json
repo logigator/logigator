@@ -342,7 +342,7 @@
 		},
 		"USER": {
 			"SAVE_SHORTCUTS": "Fehler beim speichern der Tastaturbefehle",
-			"GET_INFO": "Konnte Benutzerinformationen nicht bekommen",
+			"GET_INFO": "Konnte Benutzerinformationen nicht bekommen"
 		},
 		"LOGIN": {
 			"NO_USER": "Benutzername exsistiert nicht",
