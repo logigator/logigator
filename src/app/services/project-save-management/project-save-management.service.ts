@@ -44,10 +44,12 @@ export class ProjectSaveManagementService {
 		private sharing: SharingService
 	) {
 		this.ngZone.run(() => {
-			this.user.userLoginState$.pipe(
-				filter(state => state)
-			).subscribe(async () => {
-				this.elemProvService.setUserDefinedTypes(await this.getCustomElementsFromServer());
+			this.user.userLoginState$.subscribe(async (isLoggedIn) => {
+				if (isLoggedIn) {
+					this.elemProvService.setUserDefinedTypes(await this.getCustomElementsFromServer());
+				} else {
+					this.elemProvService.clearUserDefinedElements();
+				}
 			});
 		});
 	}

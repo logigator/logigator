@@ -1,6 +1,6 @@
 import {Inject, Injectable, Optional} from '@angular/core';
 import {DOCUMENT} from '@angular/common';
-import {Observable, of, Subject} from 'rxjs';
+import {interval, Observable, of, Subject} from 'rxjs';
 import {UserInfo} from '../../models/http-responses/user-info';
 import {map, switchMap} from 'rxjs/operators';
 import {HttpClient, HttpErrorResponse} from '@angular/common/http';
@@ -18,6 +18,8 @@ export class UserService {
 	private _userInfo$: Observable<UserInfo>;
 	private _userLoginStateInSubject = new Subject<boolean>();
 
+	private lastCheckedLoginState: boolean;
+
 	constructor(
 		@Inject(DOCUMENT) private document: Document,
 		private http: HttpClient,
@@ -25,6 +27,7 @@ export class UserService {
 		@Optional() private electronService: ElectronService
 	) {
 		this.getUserInfoFromServer();
+		interval(2000).subscribe(() => this.loginStateCheck());
 	}
 
 	private getUserInfoFromServer() {
@@ -109,5 +112,18 @@ export class UserService {
 
 	public get userLoginState$(): Observable<boolean> {
 		return this._userLoginStateInSubject.asObservable();
+	}
+
+	private loginStateCheck() {
+		const isLoggedIn = this.isLoggedIn;
+		if (isLoggedIn === this.lastCheckedLoginState) return;
+		this.lastCheckedLoginState = isLoggedIn;
+		if (isLoggedIn) {
+			this._userLoginStateInSubject.next(true);
+			this.getUserInfoFromServer();
+		} else {
+			this._userInfo$ = of(undefined);
+			this._userLoginStateInSubject.next(false);
+		}
 	}
 }
