@@ -119,7 +119,8 @@
 			"REGISTER_BUTTON": "REGISTRIEREN",
 			"OR": "oder",
 			"SUCCESS_1": "Account erfolgreich erstellt.",
-			"SUCCESS_2": "Bitte überprüfe deinen Posteingang und verifiziere deine Email Adresse."
+			"SUCCESS_2": "Bitte überprüfe deinen Posteingang und verifiziere deine Email Adresse.",
+			"SUCCESS_OK_BUTTON": "OK"
 		},
 		"NEW_COMP": {
 			"TITLE": "Neue Komponente",
@@ -344,7 +345,7 @@
 			"SAVE_SHORTCUTS": "Fehler beim speichern der Tastaturbefehle",
 			"GET_INFO": "Konnte Benutzerinformationen nicht bekommen"
 		},
-		"LOGIN": {
+		"ACCOUNT": {
 			"NO_USER": "Benutzername exsistiert nicht",
 			"INVALID_PW": "Password ist falsch",
 			"EMAIL_NOT_VERIFIED": "Email Adresse nicht verifiziert",
