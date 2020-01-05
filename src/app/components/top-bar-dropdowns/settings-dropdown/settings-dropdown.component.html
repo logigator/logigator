@@ -16,26 +16,29 @@
 	</div>
 	<hr>
 
+	<a class="link item" (click)="showCustomizeShortcuts()">
+		<img *ngIf="this.theming.currentTheme === 'dark'" src="/assets/icons/dark/settings.svg">
+		<img *ngIf="this.theming.currentTheme === 'light'" src="/assets/icons/light/settings.svg">
+		{{'DROPDOWN.SETTINGS.SHORTCUTS' | translate}}
+	</a>
+
+	<a class="link item" *ngIf="isLoggedIn" (click)="accountSettings()">
+		<img *ngIf="this.theming.currentTheme === 'dark'" src="/assets/icons/dark/user.svg">
+		<img *ngIf="this.theming.currentTheme === 'light'" src="/assets/icons/light/user.svg">
+		{{'DROPDOWN.SETTINGS.ACCOUNT' | translate}}
+	</a>
+
+	<!-- #!if ELECTRON === 'true' -->
+	<a class="link item" *ngIf="isLoggedIn" (click)="logout()">
+		<img *ngIf="this.theming.currentTheme === 'dark'" src="/assets/icons/dark/logout.svg">
+		<img *ngIf="this.theming.currentTheme === 'light'" src="/assets/icons/light/logout.svg">
+		{{'DROPDOWN.SETTINGS.LOGOUT' | translate}}
+	</a>
+	<!-- #!endif -->
+
+	<hr>
 	<div class="link item">
 		<button class="btn-outline secondary small" (click)="privacyPolicy()">{{'DROPDOWN.SETTINGS.PRIVACY' | translate}}</button>
 	</div>
-	<hr>
-
-	<div class="link item">
-		<button class="btn-outline secondary small" (click)="showCustomizeShortcuts()">{{'DROPDOWN.SETTINGS.SHORTCUTS' | translate}}</button>
-	</div>
-	<ng-container *ngIf="isLoggedIn">
-		<div class="link item">
-			<button class="btn-outline secondary small" (click)="accountSettings()">{{'DROPDOWN.SETTINGS.ACCOUNT' | translate}}</button>
-		</div>
-	</ng-container>
-
-	<!-- #!if ELECTRON === 'true' -->
-	<ng-container *ngIf="isLoggedIn">
-		<div class="link item">
-			<button class="btn-outline secondary small" (click)="logout()">{{'DROPDOWN.SETTINGS.LOGOUT' | translate}}</button>
-		</div>
-	</ng-container>
-	<!-- #!endif -->
 
 </div>
