@@ -97,6 +97,10 @@
 			"PASSWORD": "Passwort",
 			"PASSWORD_ERR_REQUIRED": "Passwort muss angegeben werden",
 			"LOGIN_BUTTON": "ANMELDEN",
+			"RESEND_BUTTON": "Email erneut senden",
+			"RESEND_SUCCESS_1": "Email erfolgreich gesendet",
+			"RESEND_SUCCESS_2": "Bitte überprüfe deinen Posteingang und verifiziere deine Email Adresse",
+			"RESEND_SUCCESS_OK_BUTTON": "OK",
 			"OR": "oder"
 		},
 		"REGISTER": {

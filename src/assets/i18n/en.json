@@ -97,6 +97,10 @@
 			"PASSWORD": "Password",
 			"PASSWORD_ERR_REQUIRED": "Password is required.",
 			"LOGIN_BUTTON": "LOGIN",
+			"RESEND_BUTTON": "Resend Mail",
+			"RESEND_SUCCESS_1": "Email resent successfully",
+			"RESEND_SUCCESS_2": "Please check your mailbox and verify your email.",
+			"RESEND_SUCCESS_OK_BUTTON": "OK",
 			"OR": "or"
 		},
 		"REGISTER": {

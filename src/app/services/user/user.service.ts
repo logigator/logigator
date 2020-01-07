@@ -9,11 +9,12 @@ import {ErrorHandlingService} from '../error-handling/error-handling.service';
 
 import {ElectronService} from 'ngx-electron';
 import {environment} from '../../../environments/environment';
+import {SharedCompsAuthService} from '@logigator/logigator-shared-comps';
 
 @Injectable({
 	providedIn: 'root'
 })
-export class UserService {
+export class UserService implements SharedCompsAuthService {
 
 	private _userInfo$: Observable<UserInfo>;
 	private _userLoginStateInSubject = new Subject<boolean>();
@@ -55,6 +56,10 @@ export class UserService {
 		return this.login('email', {user, password});
 	}
 
+	public async resendVerificationMail(user: string, password: string): Promise<any> {
+		return this.http.post(environment.apiPrefix + '/auth/resend-verification-mail', {user, password}).toPromise();
+	}
+
 	public async registerEmail(username: string, email: string, password: string, recaptcha: string) {
 		this.electronService.ipcRenderer.send('registeremail', {username, email, password, recaptcha});
 		return new Promise<string>((resolve, reject) => {
@@ -84,11 +89,12 @@ export class UserService {
 
 	}
 
-	public logout() {
+	public logout(): Promise<any> {
 		this.electronService.remote.getGlobal('isLoggedIn').data = 'false';
 
 		this.electronService.ipcRenderer.send('logout');
 		this._userInfo$ = of(undefined);
+		return Promise.resolve();
 	}
 	// #!endif
 
