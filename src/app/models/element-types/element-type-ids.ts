@@ -11,6 +11,7 @@ export const enum ElementTypeId {
 	HALF_ADDER = 10,
 	FULL_ADDER = 11,
 	ROM = 12,
+	JK_FF = 13,
 
 	INPUT = 100,
 	OUTPUT = 101,

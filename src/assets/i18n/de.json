@@ -283,6 +283,10 @@
 				"DESCRIPTION": "Speichern, aus dem nur gelesen werden kann.<br>Kann beispielsweise für Programmcode genutzt werden.",
 				"WORD_SIZE": "Wortbreite",
 				"ADDRESS_SIZE": "Adressgröße"
+			},
+			"JK_FF": {
+				"NAME": "JK Flip Flop",
+				"DESCRIPTION": ""
 			}
 		},
 		"IO": {

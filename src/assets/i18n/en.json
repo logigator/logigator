@@ -283,6 +283,10 @@
 				"DESCRIPTION": "Read only Memory.<br>Can be used for program code, for example.",
 				"WORD_SIZE": "Word Size",
 				"ADDRESS_SIZE": "Address Size"
+			},
+			"JK_FF": {
+				"NAME": "JK Flip Flop",
+				"DESCRIPTION": ""
 			}
 		},
 		"IO": {
