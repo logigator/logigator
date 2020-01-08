@@ -10,8 +10,8 @@ export const jkFF: ElementType = {
 
 	symbol: 'JK',
 
-	showSettings: false,
-	showSettingsForType: false,
+	showSettings: true,
+	showSettingsForType: true,
 	showInConstructionBox: true,
 
 	description: 'ELEMENT_TYPE.ADVANCED.JK_FF.DESCRIPTION',

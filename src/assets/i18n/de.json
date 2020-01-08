@@ -284,6 +284,10 @@
 				"WORD_SIZE": "Wortbreite",
 				"ADDRESS_SIZE": "Adressgröße"
 			},
+			"D_FF": {
+				"NAME": "D Flip-Flop",
+				"DESCRIPTION": ""
+			},
 			"JK_FF": {
 				"NAME": "JK Flip Flop",
 				"DESCRIPTION": ""
