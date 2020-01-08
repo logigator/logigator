@@ -21,6 +21,7 @@ import {udcTemplate} from '../../models/element-types/udc-template';
 import {rom} from '../../models/element-types/advanced/rom';
 import {dFF} from '../../models/element-types/advanced/d-ff';
 import {jkFF} from '../../models/element-types/advanced/jk-ff';
+import {srFF} from '../../models/element-types/advanced/sr-ff';
 
 @Injectable({
 	providedIn: 'root'
@@ -43,7 +44,8 @@ export class ElementProviderService {
 		[fullAdder.id, fullAdder],
 		// [rom.id, rom],
 		[dFF.id, dFF],
-		[jkFF.id, jkFF]
+		[jkFF.id, jkFF],
+		[srFF.id, srFF]
 	]);
 
 	private _plugElements: Map<number, ElementType> = new Map([
