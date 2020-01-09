@@ -131,6 +131,7 @@
 			"NAME": "Name",
 			"SYMBOL": "Symbol",
 			"DESCRIPTION": "Beschreibung",
+			"DESCRIPTION_MAX_LENGTH": "Beschreibung ist zu lang",
 			"CREATE": "ERSTELLEN",
 			"NAME_REQUIRED": "Name muss angegeben werden",
 			"NAME_MIN_LENGTH": "Name ist zu kurz",
