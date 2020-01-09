@@ -22,6 +22,7 @@ import {rom} from '../../models/element-types/advanced/rom';
 import {dFF} from '../../models/element-types/advanced/d-ff';
 import {jkFF} from '../../models/element-types/advanced/jk-ff';
 import {srFF} from '../../models/element-types/advanced/sr-ff';
+import {led} from '../../models/element-types/io/led';
 
 @Injectable({
 	providedIn: 'root'
@@ -56,7 +57,8 @@ export class ElementProviderService {
 
 	private _ioElements: Map<number, ElementType> = new Map([
 		[button.id, button],
-		[lever.id, lever]
+		[lever.id, lever],
+		[led.id, led]
 	]);
 
 	private _userDefinedElements: Map<number, ElementType> = new Map<number, ElementType>();

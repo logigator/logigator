@@ -9,6 +9,7 @@ import {LeverGraphics} from './lever-graphics';
 import {ElementTypeId} from '../../element-types/element-type-ids';
 import {TextGraphics} from './text-graphics';
 import {InputOutputGraphics} from './input-output-graphics';
+import {LedGraphics} from './led-graphics';
 
 export abstract class LGraphicsResolver {
 
@@ -29,6 +30,8 @@ export abstract class LGraphicsResolver {
 			case ElementTypeId.INPUT:
 			case ElementTypeId.OUTPUT:
 				return new InputOutputGraphics(scale, element);
+			case ElementTypeId.LED:
+				return new LedGraphics(scale, element);
 			default:
 				return new ComponentGraphics(scale, element);
 		}
@@ -45,6 +48,8 @@ export abstract class LGraphicsResolver {
 			case ElementTypeId.INPUT:
 			case ElementTypeId.OUTPUT:
 				return new InputOutputGraphics(scale, elemType);
+			case ElementTypeId.LED:
+				return new LedGraphics(scale, elemType);
 			default:
 				return new ComponentGraphics(scale, elemType);
 		}

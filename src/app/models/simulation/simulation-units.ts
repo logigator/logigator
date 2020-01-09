@@ -26,7 +26,7 @@ export abstract class SimulationUnits {
 		if (ElementProviderService.isCompileElement(element.typeId)) {
 			const out: SimulationUnit = {
 				typeId: element.typeId,
-					inputs: new Array(element.numInputs),
+				inputs: new Array(element.numInputs),
 				outputs: new Array(element.numOutputs),
 				options: element.options || []
 			};

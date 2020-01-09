@@ -306,6 +306,10 @@
 			"LEVER": {
 				"NAME": "Switch",
 				"DESCRIPTION": "Can be switched on and off during simulation."
+			},
+			"LED": {
+				"NAME": "LED",
+				"DESCRIPTION": ""
 			}
 		},
 		"PLUG": {

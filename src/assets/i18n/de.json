@@ -306,6 +306,10 @@
 			"LEVER": {
 				"NAME": "Schalter",
 				"DESCRIPTION": "Kann an- und ausgeschalten werden."
+			},
+			"LED": {
+				"NAME": "LED",
+				"DESCRIPTION": ""
 			}
 		},
 		"PLUG": {

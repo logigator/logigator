@@ -20,5 +20,6 @@ export const enum ElementTypeId {
 	BUTT = 102,
 
 	BUTTON = 200,
-	LEVER = 201
+	LEVER = 201,
+	LED = 202
 }
