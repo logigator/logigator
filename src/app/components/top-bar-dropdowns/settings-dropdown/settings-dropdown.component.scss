@@ -54,6 +54,8 @@
 		}
 
 		.link {
+			cursor: pointer;
+
 			&:hover {
 				background-color: themed('accent2');
 			}
