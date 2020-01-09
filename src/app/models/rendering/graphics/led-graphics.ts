@@ -14,8 +14,6 @@ export class LedGraphics extends PIXI.Graphics implements LGraphics, ComponentUp
 	private _scale: number;
 	private themingService = getStaticDI(ThemingService);
 
-	private readonly _width: number;
-
 	private simActiveState = false;
 	private shouldHaveActiveState = false;
 
@@ -32,10 +30,8 @@ export class LedGraphics extends PIXI.Graphics implements LGraphics, ComponentUp
 				numInputs: elementOrType.numInputs,
 				numOutputs: elementOrType.numOutputs,
 			} as any as Element;
-			this._width = elementOrType.width;
 		} else {
 			this.element = elementOrType;
-			this._width = getStaticDI(ElementProviderService).getElementById(this.element.typeId).width;
 		}
 		this.drawComponent(this.simActiveState);
 	}
@@ -66,12 +62,12 @@ export class LedGraphics extends PIXI.Graphics implements LGraphics, ComponentUp
 				this.lineTo(environment.gridPixelWidth / 2, -environment.gridPixelWidth / 2);
 				break;
 			case 2:
-				this.moveTo(environment.gridPixelWidth * this._width, environment.gridPixelWidth / 2);
-				this.lineTo(environment.gridPixelWidth * this._width + environment.gridPixelWidth / 2, environment.gridPixelWidth / 2);
+				this.moveTo(environment.gridPixelWidth, environment.gridPixelWidth / 2);
+				this.lineTo(environment.gridPixelWidth + environment.gridPixelWidth / 2, environment.gridPixelWidth / 2);
 				break;
 			case 3:
-				this.moveTo(environment.gridPixelWidth / 2, environment.gridPixelWidth * this._width);
-				this.lineTo(environment.gridPixelWidth / 2, environment.gridPixelWidth * this._width + environment.gridPixelWidth / 2);
+				this.moveTo(environment.gridPixelWidth / 2, environment.gridPixelWidth);
+				this.lineTo(environment.gridPixelWidth / 2, environment.gridPixelWidth + environment.gridPixelWidth / 2);
 				break;
 		}
 	}
