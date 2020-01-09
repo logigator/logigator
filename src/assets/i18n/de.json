@@ -281,31 +281,31 @@
 			},
 			"ROM": {
 				"NAME": "ROM",
-				"DESCRIPTION": "Speichern, aus dem nur gelesen werden kann.<br>Kann beispielsweise für Programmcode genutzt werden.",
+				"DESCRIPTION": "Speicher, aus dem nur gelesen werden kann.<br>Kann beispielsweise für Programmcode genutzt werden.",
 				"WORD_SIZE": "Wortbreite",
 				"ADDRESS_SIZE": "Adressgröße"
 			},
 			"D_FF": {
 				"NAME": "D Flip Flop",
-				"DESCRIPTION": ""
+				"DESCRIPTION": "Speichert einen Wert. Wert auf (D) wird bei Anlegen von (CLK) gespeichert."
 			},
 			"JK_FF": {
 				"NAME": "JK Flip Flop",
-				"DESCRIPTION": ""
+				"DESCRIPTION": "Speichert einen Wert. Setzt auf HIGH, wenn (J) auf HIGH und setzt auf LOW, wenn (K) auf HIGH. Schaltet um, wenn beide Eingänge auf HIGH sind.<br>Speichert bei Anlegen von (CLK)."
 			},
 			"SR_FF": {
 				"NAME": "SR Flip Flop",
-				"DESCRIPTION": ""
+				"DESCRIPTION": "Speichert einen Wert. Setzt auf HIGH, wenn (S) auf HIGH und setzt auf LOW, wenn (R) auf HIGH.<br>Speichert bei Anlegen von (CLK)."
 			}
 		},
 		"IO": {
 			"BUTTON": {
 				"NAME": "Knopf",
-				"DESCRIPTION": ""
+				"DESCRIPTION": "Kann gedrückt werden, um einen Puls zu senden."
 			},
 			"LEVER": {
 				"NAME": "Schalter",
-				"DESCRIPTION": ""
+				"DESCRIPTION": "Kann an- und ausgeschalten werden."
 			}
 		},
 		"PLUG": {

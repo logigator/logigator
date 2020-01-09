@@ -23,14 +23,24 @@ export abstract class SimulationUnits {
 	}
 
 	public static fromElement(element: Element): SimulationUnit {
-		return ElementProviderService.isCompileElement(element.typeId)
-			? {
+		if (ElementProviderService.isCompileElement(element.typeId)) {
+			const out: SimulationUnit = {
 				typeId: element.typeId,
-				inputs: new Array(element.numInputs),
+					inputs: new Array(element.numInputs),
 				outputs: new Array(element.numOutputs),
 				options: element.options || []
+			};
+
+			if (out.typeId === ElementTypeId.ROM) {
+				out.options = [...element.options];
+				const byteChars = atob(element.data as string || '');
+				for (let i = 0; i < byteChars.length; i++) {
+					out.options.push(byteChars.charCodeAt(i));
+				}
 			}
-			: undefined;
+			return out;
+		}
+		return undefined;
 	}
 
 	public static clone(unit: SimulationUnit): SimulationUnit {

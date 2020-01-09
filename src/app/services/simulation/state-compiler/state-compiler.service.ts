@@ -109,7 +109,7 @@ export class StateCompilerService {
 
 		const start = Date.now();
 		this.compileDependencies(depTree);
-		const out =  this.projectUnits(project.id, '0');
+		const out = this.projectUnits(project.id, '0');
 		console.log(`compilation took ${Date.now() - start}ms`);
 		return out;
 	}

@@ -287,15 +287,15 @@
 			},
 			"D_FF": {
 				"NAME": "D Flip Flop",
-				"DESCRIPTION": ""
+				"DESCRIPTION": "Holds a state. State on (D) gets saved on rising edge."
 			},
 			"JK_FF": {
 				"NAME": "JK Flip Flop",
-				"DESCRIPTION": ""
+				"DESCRIPTION": "Holds a state. Set (J) to high to set and (K) to high to reset. Toggles output if both are high.<br>Triggers on rising edge."
 			},
 			"SR_FF": {
 				"NAME": "SR Flip Flop",
-				"DESCRIPTION": ""
+				"DESCRIPTION": "Holds a state. Set (S) to high to set and (R) to high to reset.<br>Triggers on rising edge."
 			}
 		},
 		"IO": {

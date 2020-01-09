@@ -42,7 +42,7 @@ export class ElementProviderService {
 	private _advancedElements: Map<number, ElementType> = new Map([
 		[halfAdder.id, halfAdder],
 		[fullAdder.id, fullAdder],
-		// [rom.id, rom],
+		[rom.id, rom],
 		[dFF.id, dFF],
 		[jkFF.id, jkFF],
 		[srFF.id, srFF]
