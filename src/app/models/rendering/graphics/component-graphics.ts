@@ -19,7 +19,7 @@ export class ComponentGraphics extends PIXI.Graphics implements LGraphics, Compo
 
 	private readonly _symbol: string;
 
-	private size: PIXI.Point;
+	private _size: PIXI.Point;
 
 	private _labels: string[];
 
@@ -48,7 +48,7 @@ export class ComponentGraphics extends PIXI.Graphics implements LGraphics, Compo
 			this._symbol = elemType.symbol;
 			if (elemType.calcLabels) this._labels = elemType.calcLabels(this.element);
 		}
-		this.size = Elements.calcPixelElementSize(this.element);
+		this._size = Elements.calcPixelElementSize(this.element);
 		this.drawComponent();
 	}
 
@@ -61,16 +61,16 @@ export class ComponentGraphics extends PIXI.Graphics implements LGraphics, Compo
 
 		switch (this.element.rotation) {
 			case 0:
-				this.rotation0(this.element.numInputs, this.element.numOutputs, this.size.y, this.size.x);
+				this.rotation0(this.element.numInputs, this.element.numOutputs, this._size.y, this._size.x);
 				break;
 			case 1:
-				this.rotation1(this.element.numInputs, this.element.numOutputs, this.size.y, this.size.x);
+				this.rotation1(this.element.numInputs, this.element.numOutputs, this._size.y, this._size.x);
 				break;
 			case 2:
-				this.rotation2(this.element.numInputs, this.element.numOutputs, this.size.y, this.size.x);
+				this.rotation2(this.element.numInputs, this.element.numOutputs, this._size.y, this._size.x);
 				break;
 			case 3:
-				this.rotation3(this.element.numInputs, this.element.numOutputs, this.size.y, this.size.x);
+				this.rotation3(this.element.numInputs, this.element.numOutputs, this._size.y, this._size.x);
 				break;
 		}
 
@@ -83,8 +83,8 @@ export class ComponentGraphics extends PIXI.Graphics implements LGraphics, Compo
 		});
 
 		text.anchor = 0.5;
-		text.position.x = this.size.x / 2;
-		text.position.y = this.size.y / 2;
+		text.position.x = this._size.x / 2;
+		text.position.y = this._size.y / 2;
 
 		this.addChild(text);
 	}
@@ -298,7 +298,7 @@ export class ComponentGraphics extends PIXI.Graphics implements LGraphics, Compo
 		const elemType = this.elemProvService.getElementById(this.element.typeId);
 		if (elemType.calcLabels) this._labels = elemType.calcLabels(this.element);
 		this.clear();
-		this.size = Elements.calcPixelElementSize(this.element);
+		this._size = Elements.calcPixelElementSize(this.element);
 		this.drawComponent();
 	}
 
