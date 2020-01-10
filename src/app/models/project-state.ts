@@ -59,7 +59,7 @@ export class ProjectState {
 	private calcAllEndPos() {
 		for (const element of this.allElements) {
 			if (element.typeId === ElementTypeId.WIRE) continue;
-			element.endPos = Elements.calcElemEndPos(element);
+			element.endPos = Elements.calcEndPos(element);
 		}
 	}
 
@@ -289,21 +289,19 @@ export class ProjectState {
 
 	public rotateComp(element: Element, rotation: number, endPos?: PIXI.Point): void {
 		element.rotation = rotation;
-		element.endPos = endPos || Elements.calcEndPos(element.pos, Elements.elementType(element.typeId).width,
-			element.numInputs, element.numOutputs, rotation);
+		element.endPos = endPos || Elements.calcEndPos(element, undefined, undefined, rotation);
 	}
 
 	public setNumInputs(element: Element, numInputs: number, endPos?: PIXI.Point): void {
 		element.numInputs = numInputs;
-		element.endPos = endPos || Elements.calcEndPos(element.pos, Elements.elementType(element.typeId).width,
-			numInputs, element.numOutputs, element.rotation);
+		element.endPos = endPos || Elements.calcEndPos(element, numInputs);
 	}
 
 
 	public updateNumInputsOutputs(element: Element): void {
 		element.numInputs = Elements.elementType(element.typeId).numInputs;
 		element.numOutputs = Elements.elementType(element.typeId).numOutputs;
-		element.endPos = Elements.calcElemEndPos(element);
+		element.endPos = Elements.calcEndPos(element);
 	}
 
 
@@ -613,7 +611,7 @@ export class ProjectState {
 		element.options = options;
 		const elemType = getStaticDI(ElementProviderService).getElementById(element.typeId);
 		if (elemType.onOptionsChanged) elemType.onOptionsChanged(element);
-		element.endPos = Elements.calcElemEndPos(element);
+		element.endPos = Elements.calcEndPos(element);
 	}
 
 	public setData(element: Element, data: unknown): void {

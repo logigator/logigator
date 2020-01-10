@@ -27,7 +27,8 @@ export const srFF: ElementType = {
 	minInputs: 3,
 	maxInputs: 3,
 
-	width: 3,
+	width: () => 3,
+	height: () => 3,
 
 	calcLabels(element?)  {
 		return ['S', 'CLK', 'R', 'Q', '!Q'];

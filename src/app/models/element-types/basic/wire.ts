@@ -24,5 +24,6 @@ export const wire: ElementType = {
 	minInputs: 0,
 	maxInputs: 0,
 
-	width: 0,
+	width: () => undefined,
+	height: () => undefined,
 };
