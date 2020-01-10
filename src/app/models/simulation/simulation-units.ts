@@ -32,7 +32,7 @@ export abstract class SimulationUnits {
 			};
 
 			if (out.typeId === ElementTypeId.ROM) {
-				out.options = [...element.options];
+				out.options = [];
 				const byteChars = atob(element.data as string || '');
 				for (let i = 0; i < byteChars.length; i++) {
 					out.options.push(byteChars.charCodeAt(i));
