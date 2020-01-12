@@ -23,7 +23,8 @@ export class SegmentDisplayGraphics extends PIXI.Graphics implements LGraphics, 
 	private simActiveState = [];
 	private shouldHaveActiveState = [];
 
-	private segments: Segment[];
+	private segmentText: PIXI.BitmapText;
+	private segmentTextLength: number;
 
 	constructor(scale: number, element?: Element);
 	constructor(scale: number, elementType: ElementType);
@@ -45,9 +46,7 @@ export class SegmentDisplayGraphics extends PIXI.Graphics implements LGraphics, 
 			this._labels = elemType.calcLabels(this.element);
 		}
 		this._size = Elements.calcPixelElementSize(this.element);
-		this.segments = new Array(Math.ceil(Math.log10((2 ** this.element.numInputs) + 1)))
-			.fill(undefined)
-			.map(() => new Segment(scale, this.themingService));
+		this.segmentText = this.getSegments();
 		this.drawComponent();
 	}
 
@@ -63,7 +62,7 @@ export class SegmentDisplayGraphics extends PIXI.Graphics implements LGraphics, 
 				this.rotation0(this.element.numInputs);
 				break;
 			case 1:
-				this.rotation1(this.element.numInputs, this._size.y, this._size.x);
+				this.rotation1(this.element.numInputs, this._size.x);
 				break;
 			case 2:
 				this.rotation2(this.element.numInputs, this._size.y, this._size.x);
@@ -76,6 +75,8 @@ export class SegmentDisplayGraphics extends PIXI.Graphics implements LGraphics, 
 		this.beginFill(this.themingService.getEditorColor('background'));
 		this.moveTo(0, 0);
 		this.drawRect(0, 0, this._size.x, this._size.y);
+
+		this.addChild(this.segmentText);
 	}
 
 	private rotation0(inputs: number) {
@@ -88,18 +89,9 @@ export class SegmentDisplayGraphics extends PIXI.Graphics implements LGraphics, 
 			label.y = (environment.gridPixelWidth / 2) + environment.gridPixelWidth * i;
 			this.addChild(label);
 		}
-
-		// tslint:disable-next-line:max-line-length
-		const posXOffset = environment.gridPixelWidth / 1.2 + (this._size.x - environment.gridPixelWidth - this.segments.length * environment.gridPixelWidth * 1.4) / 2;
-		const posY = this._size.y / 2 - environment.gridPixelWidth * 1.2;
-		for (let i = 0; i < this.segments.length; i++) {
-			this.segments[i].position.x = posXOffset + environment.gridPixelWidth * i * 1.4;
-			this.segments[i].position.y = posY;
-			this.addChild(this.segments[i]);
-		}
 	}
 
-	private rotation1(inputs: number, height: number, width: number) {
+	private rotation1(inputs: number, width: number) {
 		for (let i = 0; i < inputs; i++) {
 			this.moveTo(width - environment.gridPixelWidth / 2 - environment.gridPixelWidth * i, 0);
 			this.lineTo(width - environment.gridPixelWidth / 2 - environment.gridPixelWidth * i, -(environment.gridPixelWidth / 2));
@@ -108,14 +100,6 @@ export class SegmentDisplayGraphics extends PIXI.Graphics implements LGraphics, 
 			label.x = width - environment.gridPixelWidth / 2 - environment.gridPixelWidth * i;
 			label.y = 1;
 			this.addChild(label);
-		}
-
-		const posXOffset = (this._size.x - this.segments.length * environment.gridPixelWidth * 1.2) / 2;
-		const posY = this._size.y / 2 - environment.gridPixelWidth * 1.2;
-		for (let i = 0; i < this.segments.length; i++) {
-			this.segments[i].position.x = posXOffset + environment.gridPixelWidth * i * 1.4;
-			this.segments[i].position.y = posY;
-			this.addChild(this.segments[i]);
 		}
 	}
 
@@ -129,15 +113,6 @@ export class SegmentDisplayGraphics extends PIXI.Graphics implements LGraphics, 
 			label.y = height - (environment.gridPixelWidth / 2) - environment.gridPixelWidth * i;
 			this.addChild(label);
 		}
-
-		// tslint:disable-next-line:max-line-length
-		const posXOffset = (this._size.x - this.segments.length * environment.gridPixelWidth * 1.4) / 2;
-		const posY = this._size.y / 2 - environment.gridPixelWidth * 1.2;
-		for (let i = 0; i < this.segments.length; i++) {
-			this.segments[i].position.x = posXOffset + environment.gridPixelWidth * i * 1.4;
-			this.segments[i].position.y = posY;
-			this.addChild(this.segments[i]);
-		}
 	}
 
 	private rotation3(inputs: number, height: number, width: number) {
@@ -150,14 +125,6 @@ export class SegmentDisplayGraphics extends PIXI.Graphics implements LGraphics, 
 			label.y = height - 1;
 			this.addChild(label);
 		}
-
-		const posXOffset = (this._size.x - this.segments.length * environment.gridPixelWidth * 1.2) / 2;
-		const posY = this._size.y / 2 - environment.gridPixelWidth * 1.2;
-		for (let i = 0; i < this.segments.length; i++) {
-			this.segments[i].position.x = posXOffset + environment.gridPixelWidth * i * 1.4;
-			this.segments[i].position.y = posY;
-			this.addChild(this.segments[i]);
-		}
 	}
 
 	private getLabelText(text: string): PIXI.BitmapText {
@@ -168,6 +135,26 @@ export class SegmentDisplayGraphics extends PIXI.Graphics implements LGraphics, 
 			},
 			tint: this.themingService.getEditorColor('fontTint')
 		});
+	}
+
+	private getSegments(): PIXI.BitmapText {
+		this.segmentTextLength = Math.ceil(Math.log10((2 ** this.element.numInputs) + 1));
+		const seg = new PIXI.BitmapText(this.getSegmentString(0, this.segmentTextLength), {
+			font: {
+				name: 'Segment7',
+				size: environment.gridPixelWidth * 2
+			},
+			align: 'center'
+		});
+		seg.anchor = new PIXI.Point(0.5, 0.5);
+		seg.position = new PIXI.Point(this._size.x / 2, this._size.y / 2);
+		return seg;
+	}
+
+	private getSegmentString(num: number, length: number): string {
+		let str = num.toString();
+		while (str.length < length) str = '0' + str;
+		return str;
 	}
 
 	public applySimState(scale: number) {
@@ -188,6 +175,16 @@ export class SegmentDisplayGraphics extends PIXI.Graphics implements LGraphics, 
 		}
 		this._scale = scale;
 		this.geometry.invalidate();
+
+		let numberToDisplay = 0;
+		for (let i = this.simActiveState.length - 1; i >= 0; i--) {
+			if (this.simActiveState[i]) {
+				numberToDisplay = (numberToDisplay << 1) | 1;
+			} else {
+				numberToDisplay = numberToDisplay << 1;
+			}
+		}
+		this.segmentText.text = this.getSegmentString(numberToDisplay, this.segmentTextLength);
 	}
 
 	public setSimulationState(state: boolean[]) {
@@ -229,43 +226,15 @@ export class SegmentDisplayGraphics extends PIXI.Graphics implements LGraphics, 
 
 	public updateComponent(scale: number, element: Element) {
 		this.element.numInputs = element.numInputs;
-		this.element.numOutputs = element.numOutputs;
 		this.element.rotation = element.rotation;
 		this._scale = scale;
 		const elemType = this.elemProvService.getElementById(this.element.typeId);
 		this._labels = elemType.calcLabels(this.element);
 		this.clear();
 		this._size = Elements.calcPixelElementSize(this.element);
+		this.segmentText.destroy();
+		this.segmentText = this.getSegments();
 		this.drawComponent();
 	}
 
-}
-
-
-class Segment extends PIXI.Graphics {
-
-	private _themingService: ThemingService;
-
-	constructor(scale: number, themingService: ThemingService) {
-		super();
-		this._themingService = themingService;
-		this.interactiveChildren = false;
-		this.sortableChildren = false;
-		this.setNumber(undefined, scale);
-	}
-
-	public setScale(scale: number) {
-
-	}
-
-	public setNumber(num: number, scale: number) {
-		this.moveTo(0, 0);
-		this.lineStyle(1 / scale, this._themingService.getEditorColor('wire'));
-		this.drawRect(0, 0, environment.gridPixelWidth * 1.2, environment.gridPixelWidth * 2.4);
-
-		// switch (num) {
-		// 	default:
-		// 		break;
-		// }
-	}
 }
