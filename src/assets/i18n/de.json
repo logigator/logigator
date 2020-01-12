@@ -310,6 +310,10 @@
 			"LED": {
 				"NAME": "LED",
 				"DESCRIPTION": ""
+			},
+			"SEGMENT_DISPLAY": {
+				"NAME": "Segment Display",
+				"DESCRIPTION": ""
 			}
 		},
 		"PLUG": {
