@@ -27,7 +27,7 @@ export const clock: ElementType = {
 	maxInputs: 1,
 
 	width: () => 3,
-	height: () => 1,
+	height: () => 2,
 
 	options: [1],
 	optionsConfig: [
