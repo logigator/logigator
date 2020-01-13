@@ -23,11 +23,16 @@ export const segmentDisplay: ElementType = {
 
 	numInputs: 2,
 	minInputs: 1,
-	maxInputs: 8,
+	maxInputs: 16,
 
 	width(element?) {
 		const inputs = element ? element.numInputs : this.numInputs;
-		return inputs < 7 ? 4 : 5;
+		const rotation = element ? element.rotation : this.rotation;
+		if (rotation % 2 === 0) {
+			return 2 + Math.ceil(Math.log10((2 ** inputs) + 1));
+		} else {
+			return 4;
+		}
 	},
 	height(element?) {
 		const inputs = element ? element.numInputs : this.numInputs;
