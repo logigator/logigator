@@ -7,10 +7,10 @@ import {ReqInspectElementEvent} from './req-inspect-element-event';
 import {ProjectInteractionService} from '../../services/project-interaction/project-interaction.service';
 import {filter, takeUntil} from 'rxjs/operators';
 import {getStaticDI} from '../get-di';
-import {WorkerCommunicationService} from '../../services/simulation/worker-communication/worker-communication.service';
 import {LGraphicsResolver} from './graphics/l-graphics-resolver';
 import {Grid} from './grid';
 import {ElementProviderService} from '../../services/element-provider/element-provider.service';
+import {WorkerCommunicationService} from '../../services/simulation/worker-communication/worker-communication-service';
 
 export class SimulationView extends View {
 
@@ -96,6 +96,6 @@ export class SimulationView extends View {
 
 	public destroy() {
 		super.destroy();
-		getStaticDI(WorkerCommunicationService).unsubscribe(this.parentProjectIdentifier);
+		getStaticDI(WorkerCommunicationWasmService).unsubscribe(this.parentProjectIdentifier);
 	}
 }

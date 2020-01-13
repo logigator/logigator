@@ -1,12 +1,12 @@
 import { TestBed } from '@angular/core/testing';
 
-import { WorkerCommunicationService } from './worker-communication.service';
+import { WorkerCommunicationWasmService } from './worker-communication-wasm.service';
 
 describe('WorkerCommunicationService', () => {
 	beforeEach(() => TestBed.configureTestingModule({}));
 
 	it('should be created', () => {
-		const service: WorkerCommunicationService = TestBed.get(WorkerCommunicationService);
+		const service: WorkerCommunicationWasmService = TestBed.get(WorkerCommunicationWasmService);
 		expect(service).toBeTruthy();
 	});
 });

@@ -5,7 +5,7 @@ import {distinctUntilChanged, map, switchMap} from 'rxjs/operators';
 import {ProjectsService} from '../projects/projects.service';
 import {ElementProviderService} from '../element-provider/element-provider.service';
 import {ProjectSaveManagementService} from '../project-save-management/project-save-management.service';
-import {WorkerCommunicationService} from '../simulation/worker-communication/worker-communication.service';
+import {WorkerCommunicationService} from '../simulation/worker-communication/worker-communication-service';
 import {TranslateService} from '@ngx-translate/core';
 
 @Injectable({

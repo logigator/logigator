@@ -15,8 +15,8 @@ import {takeUntil} from 'rxjs/operators';
 import {WorkModeService} from '../../services/work-mode/work-mode.service';
 import {SimulationView} from '../../models/rendering/simulation-view';
 import {View} from '../../models/rendering/view';
-import {WorkerCommunicationService} from '../../services/simulation/worker-communication/worker-communication.service';
 import {ImageExportService} from '../../services/image-export/image-export.service';
+import {WorkerCommunicationService} from '../../services/simulation/worker-communication/worker-communication-service';
 
 @Component({
 	selector: 'app-work-area',

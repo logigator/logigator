@@ -7,8 +7,8 @@ import {ProjectInteractionService} from '../../services/project-interaction/proj
 import {Test} from '../../../../tests/auto-tests/tests';
 // #!debug
 import {ManuallyLogged} from '../../../../tests/auto-tests/board-recorder';
-import {WorkerCommunicationService} from '../../services/simulation/worker-communication/worker-communication.service';
 import {RenderTicker} from '../../services/render-ticker/render-ticker.service';
+import {WorkerCommunicationService} from '../../services/simulation/worker-communication/worker-communication-service';
 
 @Component({
 	selector: 'app-toolbar',

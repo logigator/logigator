@@ -13,12 +13,9 @@ import {ElementProviderService} from '../../element-provider/element-provider.se
 import {AverageBuffer} from '../../../models/average-buffer';
 import {ElementTypeId} from '../../../models/element-types/element-type-ids';
 import {EastereggService} from '../../easteregg/easteregg.service';
+import {WorkerCommunicationService} from './worker-communication-service';
 
-@Injectable({
-	providedIn: 'root'
-})
-
-export class WorkerCommunicationService {
+export class WorkerCommunicationWasmService implements WorkerCommunicationService {
 
 	private _powerSubjectsWires: Map<string, Subject<PowerChangesOutWire>>;
 	private _powerSubjectsWireEnds: Map<string, Subject<Map<Element, boolean[]>>>;
