@@ -31,7 +31,8 @@ export interface ElementType {
 	hasPlugIndex?: boolean;
 	hasLabel?: boolean;
 
-	width: number;
+	width: (element?: Element) => number;
+	height: (element?: Element) => number;
 
 	options?: number[];
 	optionsConfig?: {

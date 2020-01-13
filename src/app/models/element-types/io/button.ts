@@ -26,5 +26,6 @@ export const button: ElementType = {
 	minInputs: 0,
 	maxInputs: 0,
 
-	width: 1,
+	width: () => 1,
+	height: () => 1
 };

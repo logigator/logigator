@@ -4,7 +4,6 @@ import {Element} from '../../element';
 import {ElementType, isElementType} from '../../element-types/element-type';
 import {getStaticDI} from '../../get-di';
 import {ThemingService} from '../../../services/theming/theming.service';
-import {ElementProviderService} from '../../../services/element-provider/element-provider.service';
 import {environment} from '../../../../environments/environment';
 
 export class LedGraphics extends PIXI.Graphics implements LGraphics, ComponentUpdatable {
