@@ -1,11 +1,14 @@
-import { Injectable } from '@angular/core';
+import {Inject, Injectable} from '@angular/core';
 import {WorkMode} from '../../models/work-modes';
 import {Observable, ReplaySubject} from 'rxjs';
 import {distinctUntilChanged, map, switchMap} from 'rxjs/operators';
 import {ProjectsService} from '../projects/projects.service';
 import {ElementProviderService} from '../element-provider/element-provider.service';
 import {ProjectSaveManagementService} from '../project-save-management/project-save-management.service';
-import {WorkerCommunicationService} from '../simulation/worker-communication/worker-communication-service';
+import {
+	WorkerCommunicationService,
+	WorkerCommunicationServiceModel
+} from '../simulation/worker-communication/worker-communication-service';
 import {TranslateService} from '@ngx-translate/core';
 
 @Injectable({
@@ -22,7 +25,7 @@ export class WorkModeService {
 		private projects: ProjectsService,
 		private projectSaveManagement: ProjectSaveManagementService,
 		private elemProv: ElementProviderService,
-		private workerCommunicationService: WorkerCommunicationService,
+		@Inject(WorkerCommunicationService) private workerCommunicationService: WorkerCommunicationServiceModel,
 		private translate: TranslateService
 	) {
 		this.setWorkMode('select');

@@ -13,9 +13,10 @@ import {ElementProviderService} from '../../element-provider/element-provider.se
 import {AverageBuffer} from '../../../models/average-buffer';
 import {ElementTypeId} from '../../../models/element-types/element-type-ids';
 import {EastereggService} from '../../easteregg/easteregg.service';
-import {WorkerCommunicationService} from './worker-communication-service';
+import {WorkerCommunicationServiceModel} from './worker-communication-service';
 
-export class WorkerCommunicationWasmService implements WorkerCommunicationService {
+@Injectable()
+export class WorkerCommunicationWasmService implements WorkerCommunicationServiceModel {
 
 	private _powerSubjectsWires: Map<string, Subject<PowerChangesOutWire>>;
 	private _powerSubjectsWireEnds: Map<string, Subject<Map<Element, boolean[]>>>;
@@ -327,7 +328,7 @@ export class WorkerCommunicationWasmService implements WorkerCommunicationServic
 		return this._powerSubjectsWireEnds.get(projectId).asObservable();
 	}
 
-	public get status() {
+	public get status(): BoardStatus {
 		return this._status;
 	}
 

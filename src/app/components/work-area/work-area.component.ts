@@ -1,6 +1,6 @@
 import {
 	Component,
-	ElementRef,
+	ElementRef, Inject,
 	NgZone,
 	OnDestroy,
 	OnInit,
@@ -15,8 +15,10 @@ import {takeUntil} from 'rxjs/operators';
 import {WorkModeService} from '../../services/work-mode/work-mode.service';
 import {SimulationView} from '../../models/rendering/simulation-view';
 import {View} from '../../models/rendering/view';
-import {ImageExportService} from '../../services/image-export/image-export.service';
-import {WorkerCommunicationService} from '../../services/simulation/worker-communication/worker-communication-service';
+import {
+	WorkerCommunicationService,
+	WorkerCommunicationServiceModel
+} from '../../services/simulation/worker-communication/worker-communication-service';
 
 @Component({
 	selector: 'app-work-area',
@@ -35,8 +37,7 @@ export class WorkAreaComponent extends WorkArea implements OnInit, OnDestroy {
 		private ngZone: NgZone,
 		private projectsService: ProjectsService,
 		private workMode: WorkModeService,
-		private workerCommunicationService: WorkerCommunicationService,
-		private imageExportService: ImageExportService
+		@Inject(WorkerCommunicationService) private workerCommunicationService: WorkerCommunicationServiceModel
 	) {
 		super();
 	}

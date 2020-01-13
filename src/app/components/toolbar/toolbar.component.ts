@@ -1,4 +1,4 @@
-import {Component} from '@angular/core';
+import {Component, Inject} from '@angular/core';
 import {WorkMode} from '../../models/work-modes';
 import {WorkModeService} from '../../services/work-mode/work-mode.service';
 import {ProjectsService} from '../../services/projects/projects.service';
@@ -8,7 +8,10 @@ import {Test} from '../../../../tests/auto-tests/tests';
 // #!debug
 import {ManuallyLogged} from '../../../../tests/auto-tests/board-recorder';
 import {RenderTicker} from '../../services/render-ticker/render-ticker.service';
-import {WorkerCommunicationService} from '../../services/simulation/worker-communication/worker-communication-service';
+import {
+	WorkerCommunicationService,
+	WorkerCommunicationServiceModel
+} from '../../services/simulation/worker-communication/worker-communication-service';
 
 @Component({
 	selector: 'app-toolbar',
@@ -30,7 +33,7 @@ export class ToolbarComponent {
 		private workModeService: WorkModeService,
 		private projectService: ProjectsService,
 		private projectInteraction: ProjectInteractionService,
-		private workerCommunication: WorkerCommunicationService,
+		@Inject(WorkerCommunicationService) private workerCommunication: WorkerCommunicationServiceModel,
 		private renderTicker: RenderTicker
 	) {}
 

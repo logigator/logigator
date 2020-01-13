@@ -1,9 +1,12 @@
 import {Element} from '../../../models/element';
 import {Observable} from 'rxjs';
 import {PowerChangesOutWire} from '../../../models/simulation/power-changes';
-import {Type} from '@angular/core';
+import {InjectionToken} from '@angular/core';
+import {BoardStatus} from '../../../models/simulation/board';
 
-export abstract class WorkerCommunicationService {
+export const WorkerCommunicationService = new InjectionToken<WorkerCommunicationServiceModel>('WorkerCommunication Injection Token');
+
+export abstract class WorkerCommunicationServiceModel {
 	public abstract getWireState(identifier: string, data?: Uint8Array): Map<Element, boolean>;
 
 	public abstract getWireEndState(identifier: string, data?: Uint8Array): Map<Element, boolean[]>;
@@ -32,9 +35,9 @@ export abstract class WorkerCommunicationService {
 
 	public abstract boardStateWireEnds(projectId: string): Observable<Map<Element, boolean[]>>;
 
-	public abstract get status();
+	public abstract get status(): BoardStatus;
 
-	public abstract get isRunning();
+	public abstract get isRunning(): boolean;
 
 	public abstract subscribe(identifier: string): void;
 

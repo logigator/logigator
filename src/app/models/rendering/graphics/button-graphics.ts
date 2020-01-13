@@ -5,9 +5,9 @@ import {ElementType, isElementType} from '../../element-types/element-type';
 import {getStaticDI} from '../../get-di';
 import {ThemingService} from '../../../services/theming/theming.service';
 import {environment} from '../../../../environments/environment';
-import {WorkerCommunicationWasmService} from '../../../services/simulation/worker-communication/worker_communication_service__wasm';
 import {RenderTicker} from '../../../services/render-ticker/render-ticker.service';
 import {ElementProviderService} from '../../../services/element-provider/element-provider.service';
+import {WorkerCommunicationService} from '../../../services/simulation/worker-communication/worker-communication-service';
 
 export class ButtonGraphics extends PIXI.Graphics implements LGraphics, ComponentUpdatable {
 
@@ -15,7 +15,7 @@ export class ButtonGraphics extends PIXI.Graphics implements LGraphics, Componen
 
 	private readonly _projectIdentifier: string;
 
-	private readonly workerCommunicationService = getStaticDI(WorkerCommunicationWasmService);
+	private readonly workerCommunicationService = getStaticDI(WorkerCommunicationService);
 
 	private _scale: number;
 	private themingService = getStaticDI(ThemingService);

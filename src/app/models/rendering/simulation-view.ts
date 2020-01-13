@@ -96,6 +96,6 @@ export class SimulationView extends View {
 
 	public destroy() {
 		super.destroy();
-		getStaticDI(WorkerCommunicationWasmService).unsubscribe(this.parentProjectIdentifier);
+		getStaticDI(WorkerCommunicationService).unsubscribe(this.parentProjectIdentifier);
 	}
 }
