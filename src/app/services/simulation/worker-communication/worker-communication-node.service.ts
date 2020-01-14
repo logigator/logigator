@@ -190,7 +190,6 @@ export class WorkerCommunicationNodeService implements WorkerCommunicationServic
 	private updateSubjects() {
 		const state = logicsim.getLinks();
 		this._dataCache = state;
-		console.log(state);
 		const powerChangesWire = new Map<string, PowerChangesOutWire>();
 		const powerChangesWireEnds = new Map<string, Map<Element, boolean[]>>();
 		for (const identifier of this._powerSubjectsWires.keys()) {
@@ -211,7 +210,7 @@ export class WorkerCommunicationNodeService implements WorkerCommunicationServic
 		if (this._mode === 'sync') {
 			logicsim.start(1, 1);
 		}
-		this.updateSubjects();
+		if (this._mode === 'continuous' || this._mode === 'sync') this.updateSubjects();
 	}
 
 	public setUserInput(identifier: string, element: Element, state: boolean[]): void {

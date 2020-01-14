@@ -42,7 +42,6 @@ export class RenderTicker {
 	 */
 	public singleFrame(identifier: string): Promise<void> {
 		const tf = this._tickerFunctions.get(identifier);
-		console.log(tf)
 		return new Promise<void>(resolve => {
 			if (!tf) {
 				resolve();
@@ -50,7 +49,6 @@ export class RenderTicker {
 			}
 			if (!tf.started && !tf.requestedFrame) {
 				tf.requestedFrame = true;
-				console.log('sdasdadsad');
 				PIXI.Ticker.shared.addOnce(tf.fn, this);
 			}
 			tf.singleFramePromiseResolveFns.push(resolve);
