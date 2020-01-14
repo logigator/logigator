@@ -7,9 +7,9 @@ import {BoardStatus} from '../../../models/simulation/board';
 export const WorkerCommunicationService = new InjectionToken<WorkerCommunicationServiceModel>('WorkerCommunication Injection Token');
 
 export abstract class WorkerCommunicationServiceModel {
-	public abstract getWireState(identifier: string, data?: Uint8Array): Map<Element, boolean>;
+	public abstract getWireState(identifier: string, data?: Uint8Array | boolean[]): Map<Element, boolean>;
 
-	public abstract getWireEndState(identifier: string, data?: Uint8Array): Map<Element, boolean[]>;
+	public abstract getWireEndState(identifier: string, data?: Uint8Array | boolean[]): Map<Element, boolean[]>;
 
 	public abstract async init(): Promise<void>;
 

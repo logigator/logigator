@@ -21,6 +21,12 @@ module.exports = (config, options) => {
 			preprocessorConfig
 		]
 	});
+	config.module.rules.push({
+		test: /\.node?$/,
+		use: [
+			'node-loader'
+		]
+	});
 
 	if (process.env.ELECTRON === 'true') {
 		config.target = 'electron-renderer';
