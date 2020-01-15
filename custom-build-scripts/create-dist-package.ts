@@ -1,12 +1,12 @@
 import * as fs from 'fs';
 import * as path from 'path';
-import * as child_process from 'child_process';
 const packageFile = require('../../package.json');
 
 const electronDependencies = {
 	'node-fetch': '^2.6.0',
 	tslib: '^1.10.0',
-	express: '^4.17.1'
+	express: '^4.17.1',
+	'@logigator/logigator-simulation': '1.0.0'
 };
 
 const toWrite = `
@@ -19,10 +19,3 @@ const toWrite = `
 `;
 
 fs.writeFileSync(path.join(__dirname, '..', '..', 'dist', 'package.json'), toWrite);
-
-child_process.exec('npm install', {
-	cwd: path.join(__dirname, '..', '..', 'dist')
-}, (error, stdout) => {
-	console.log(stdout);
-	console.error(error);
-});

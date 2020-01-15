@@ -49,6 +49,11 @@ import {
 import {ThemingService} from './services/theming/theming.service';
 import {UserService} from './services/user/user.service';
 import { RomEditComponent } from './components/popup-contents/rom-edit/rom-edit.component';
+import {WorkerCommunicationService} from './services/simulation/worker-communication/worker-communication-service';
+// #!web
+import {WorkerCommunicationWasmService} from './services/simulation/worker-communication/worker-communication-wasm.service';
+// #!electron
+import {WorkerCommunicationNodeService} from './services/simulation/worker-communication/worker-communication-node.service';
 
 @NgModule({
 	declarations: [
@@ -138,7 +143,19 @@ import { RomEditComponent } from './components/popup-contents/rom-edit/rom-edit.
 			provide: HTTP_INTERCEPTORS,
 			useClass: CredentialsInterceptor,
 			multi: true
+		},
+		// #!if ELECTRON === 'false'
+		{
+			provide: WorkerCommunicationService,
+			useClass: WorkerCommunicationWasmService
+		},
+		// #!endif
+		// #!if ELECTRON === 'true'
+		{
+			provide: WorkerCommunicationService,
+			useClass: WorkerCommunicationNodeService
 		}
+		// #!endif
 	],
 	bootstrap: [AppComponent]
 })

@@ -25,17 +25,17 @@ export abstract class SimulationUnits {
 	public static fromElement(element: Element): SimulationUnit {
 		if (ElementProviderService.isCompileElement(element.typeId)) {
 			const out: SimulationUnit = {
-				typeId: element.typeId,
+				type: element.typeId,
 				inputs: new Array(element.numInputs),
 				outputs: new Array(element.numOutputs),
-				options: element.options || []
+				ops: element.options || []
 			};
 
-			if (out.typeId === ElementTypeId.ROM) {
-				out.options = [];
+			if (out.type === ElementTypeId.ROM) {
+				out.ops = [];
 				const byteChars = atob(element.data as string || '');
 				for (let i = 0; i < byteChars.length; i++) {
-					out.options.push(byteChars.charCodeAt(i));
+					out.ops.push(byteChars.charCodeAt(i));
 				}
 			}
 			return out;
@@ -45,10 +45,10 @@ export abstract class SimulationUnits {
 
 	public static clone(unit: SimulationUnit): SimulationUnit {
 		return {
-			typeId: unit.typeId,
+			type: unit.type,
 			inputs: [...unit.inputs],
 			outputs: [...unit.outputs],
-			options: [...unit.options]
+			ops: [...unit.ops]
 		};
 	}
 

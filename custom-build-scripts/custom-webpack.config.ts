@@ -2,6 +2,7 @@ import {AngularCompilerPlugin} from '@ngtools/webpack';
 import {templateLoaderTransformer} from './template-loader-transformer';
 
 module.exports = (config, options) => {
+
 	config.module.rules.unshift({
 		test: /\.tsx?$/,
 		use: [
@@ -24,6 +25,9 @@ module.exports = (config, options) => {
 
 	if (process.env.ELECTRON === 'true') {
 		config.target = 'electron-renderer';
+		config.externals = {
+			'@logigator/logigator-simulation': 'require(\'@logigator/logigator-simulation\')'
+		};
 	} else {
 		config.target = 'web';
 	}

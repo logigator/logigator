@@ -5,8 +5,9 @@ import {ElementType, isElementType} from '../../element-types/element-type';
 import {getStaticDI} from '../../get-di';
 import {ThemingService} from '../../../services/theming/theming.service';
 import {environment} from '../../../../environments/environment';
-import {WorkerCommunicationService} from '../../../services/simulation/worker-communication/worker-communication.service';
 import {RenderTicker} from '../../../services/render-ticker/render-ticker.service';
+import {ElementProviderService} from '../../../services/element-provider/element-provider.service';
+import {WorkerCommunicationService} from '../../../services/simulation/worker-communication/worker-communication-service';
 
 export class ButtonGraphics extends PIXI.Graphics implements LGraphics, ComponentUpdatable {
 

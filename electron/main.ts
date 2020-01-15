@@ -51,8 +51,8 @@ function createWindow(port: number) {
 		require('electron-reload')(__dirname, {
 			electron: require(path.join(__dirname, `../../node_modules/electron`))
 		});
+		win.webContents.openDevTools();
 	}
-	win.webContents.openDevTools();
 	win.loadURL('http://localhost:' + port);
 
 	win.on('closed', () => {
