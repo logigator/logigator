@@ -3,7 +3,6 @@ import {Observable, Subject, timer} from 'rxjs';
 import {PowerChangesOutWire} from '../../../models/simulation/power-changes';
 import {ProjectsService} from '../../projects/projects.service';
 import {StateCompilerService} from '../state-compiler/state-compiler.service';
-import {WasmMethod, WasmRequest, WasmResponse} from '../../../models/simulation/wasm-interface';
 import {Element} from '../../../models/element';
 import {BoardState, BoardStatus, InputEvent} from '../../../models/simulation/board';
 import {takeWhile} from 'rxjs/operators';
@@ -14,7 +13,7 @@ import {AverageBuffer} from '../../../models/average-buffer';
 import {ElementTypeId} from '../../../models/element-types/element-type-ids';
 import {EastereggService} from '../../easteregg/easteregg.service';
 import {WorkerCommunicationServiceModel} from './worker-communication-service';
-import {Board, logicsim} from 'logigator-simulation';
+import {Board, logicsim, InputEvent as SimInputEvent} from 'logigator-simulation';
 
 @Injectable()
 export class WorkerCommunicationNodeService implements WorkerCommunicationServiceModel {
@@ -31,6 +30,7 @@ export class WorkerCommunicationNodeService implements WorkerCommunicationServic
 	private _targetUnprocessedFraction = 0;
 
 	private _dataCache: boolean[];
+	private _compiledBoard: Board;
 
 	private _status: BoardStatus = {
 		tick: 0,
@@ -96,12 +96,12 @@ export class WorkerCommunicationNodeService implements WorkerCommunicationServic
 			if (compiledBoard.length > 100_000) {
 				this.eastereggs.achieve('GBOGH');
 			}
-			logicsim.destroy();
-			logicsim.init({
+			this._compiledBoard = {
 				components: compiledBoard,
 				links: this.stateCompiler.highestLinkId + 1
-			} as Board);
-			console.log(logicsim.getBoard());
+			} as Board;
+			logicsim.destroy();
+			logicsim.init(this._compiledBoard);
 			this._initialized = true;
 		} catch (e) {
 			// #!debug
@@ -115,40 +115,50 @@ export class WorkerCommunicationNodeService implements WorkerCommunicationServic
 	}
 
 	public stop(): void {
+		if (!this._initialized)
+			return;
+
 		this._mode = undefined;
 		logicsim.destroy();
+		logicsim.init(this._compiledBoard);
+		this.updateSubjects();
 	}
 
 	public pause(): void {
-		this._mode = undefined;
+		if (!this._initialized)
+			return;
+
 		logicsim.stop();
+		this._mode = undefined;
 	}
 
-	public start(): void {
-		if (this._mode === 'continuous')
+	public start(threads = 1): void {
+		if (!this._initialized || this._mode === 'continuous')
 			return;
 
 		this._mode = 'continuous';
 		this.registerStatusWatch();
 
-		logicsim.start(1);
+		logicsim.start(threads);
 	}
 
 	public startTarget(target?: number): void {
-		if (this._mode === 'target')
+		if (!this._initialized || this._mode === 'target')
 			return;
 
 		if (target && target >= 0)
 			this._targetSpeed = target;
 
+		this.pause();
+		this._mode = 'target';
 		this.registerStatusWatch();
-		this.singleStep();
 	}
 
 	public startSync(): void {
-		if (this._mode === 'sync')
+		if (!this._initialized || this._mode === 'sync')
 			return;
 
+		this.pause();
 		this._mode = 'sync';
 		this.registerStatusWatch();
 		this.singleStep();
@@ -204,13 +214,25 @@ export class WorkerCommunicationNodeService implements WorkerCommunicationServic
 
 	public setFrameTime(frameTime: number): void {
 		this._frameAverage.push(frameTime > this._frameAverage.average + 100 ? this._frameAverage.average + 100 : frameTime);
-
 		if (!this._initialized)
 			return;
+
 		if (this._mode === 'sync') {
-			logicsim.start(1, 1);
+			logicsim.start(1, 1, Number.MAX_SAFE_INTEGER, true);
+		} else if (this._mode === 'target') {
+			const timestamp = Date.now();
+			const ticks = ((timestamp - this._targetLastRun) * this._targetSpeed / 1000) + this._targetUnprocessedFraction;
+			const ticksToCompute = Math.trunc(ticks);
+
+			if (ticksToCompute) {
+				this._targetUnprocessedFraction = ticks % 1;
+				logicsim.start(1, ticksToCompute, this._frameAverage.average);
+				this._targetLastRun = timestamp;
+			}
 		}
-		if (this._mode === 'continuous' || this._mode === 'sync') this.updateSubjects();
+
+		if (this._mode)
+			this.updateSubjects();
 	}
 
 	public setUserInput(identifier: string, element: Element, state: boolean[]): void {
@@ -221,16 +243,7 @@ export class WorkerCommunicationNodeService implements WorkerCommunicationServic
 		} else if (element.typeId === ElementTypeId.LEVER) {
 			inputEvent = InputEvent.Cont;
 		}
-		const stateBuffer = Int8Array.from(state as any).buffer;
-
-		const request = {
-			method: WasmMethod.triggerInput,
-			userInput: {
-				index,
-				inputEvent,
-				state: stateBuffer
-			}
-		} as WasmRequest;
+		logicsim.triggerInput(index, inputEvent as unknown as SimInputEvent, state);
 	}
 
 	public boardStateWires(projectId: string): Observable<PowerChangesOutWire> {

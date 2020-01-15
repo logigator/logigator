@@ -29,6 +29,8 @@ export class ToolbarComponent {
 	public targetMultiplier = '1';
 	public targetTickRate = 1;
 
+	public threadCount = 1;
+
 	constructor(
 		private workModeService: WorkModeService,
 		private projectService: ProjectsService,
@@ -128,7 +130,7 @@ export class ToolbarComponent {
 		} else if (this.syncMode) {
 			this.workerCommunication.startSync();
 		} else {
-			this.workerCommunication.start();
+			this.workerCommunication.start(this.threadCount);
 		}
 
 		this.renderTicker.startAllContSim();
@@ -180,5 +182,20 @@ export class ToolbarComponent {
 
 	public get simulationRunning() {
 		return this.workerCommunication.isRunning;
+	}
+
+	public setThreadCount() {
+		if (!this.threadCount)
+			return;
+
+		if (this.threadCount < 1)
+			this.threadCount = 1;
+		if (this.threadCount > 512)
+			this.threadCount = 512;
+
+		if (this.simulationRunning) {
+			this.workerCommunication.pause();
+			this.continueSm();
+		}
 	}
 }

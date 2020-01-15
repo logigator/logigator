@@ -17,7 +17,7 @@ export abstract class WorkerCommunicationServiceModel {
 
 	public abstract pause(): void;
 
-	public abstract start(): void;
+	public abstract start(threads?: number): void;
 
 	public abstract startTarget(target?: number): void;
 

@@ -1,13 +1,13 @@
 import {SimulationUnit} from './simulation-unit';
 
-export enum BoardState {
+export const enum BoardState {
 	Uninitialized,
 	Stopped,
 	Running,
 	Stopping
 }
 
-export enum InputEvent {
+export const enum InputEvent {
 	Cont,
 	Pulse
 }
