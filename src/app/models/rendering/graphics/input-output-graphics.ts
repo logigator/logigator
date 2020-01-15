@@ -18,7 +18,6 @@ export class InputOutputGraphics extends PIXI.Graphics implements LGraphics, Com
 	private elemProvService = getStaticDI(ElementProviderService);
 
 	private _symbol: string;
-	private readonly _width: number;
 
 	private simActiveState: boolean;
 	private shouldHaveActiveState: boolean;
@@ -38,11 +37,9 @@ export class InputOutputGraphics extends PIXI.Graphics implements LGraphics, Com
 				typeId: elementOrType.id
 			} as any as Element;
 			this._symbol = elementOrType.symbol;
-			this._width = elementOrType.width;
 		} else {
 			this.element = elementOrType;
 			this._symbol = this.element.data as string || this.elemProvService.getElementById(this.element.typeId).symbol;
-			this._width = this.elemProvService.getElementById(this.element.typeId).width;
 		}
 		this.drawComponent();
 	}

@@ -26,5 +26,6 @@ export const led: ElementType = {
 	minInputs: 1,
 	maxInputs: 1,
 
-	width: 1,
+	width: () => 1,
+	height: () => 1
 };

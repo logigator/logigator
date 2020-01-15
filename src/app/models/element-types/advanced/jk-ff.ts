@@ -25,7 +25,8 @@ export const jkFF: ElementType = {
 	minInputs: 3,
 	maxInputs: 3,
 
-	width: 3,
+	width: () => 3,
+	height: () => 3,
 
 	calcLabels: element => {
 		return ['J', 'CLK', 'K', 'Q', '!Q'];

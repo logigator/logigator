@@ -23,6 +23,7 @@ import {dFF} from '../../models/element-types/advanced/d-ff';
 import {jkFF} from '../../models/element-types/advanced/jk-ff';
 import {srFF} from '../../models/element-types/advanced/sr-ff';
 import {led} from '../../models/element-types/io/led';
+import {segmentDisplay} from '../../models/element-types/io/segment-display';
 
 @Injectable({
 	providedIn: 'root'
@@ -58,7 +59,8 @@ export class ElementProviderService {
 	private _ioElements: Map<number, ElementType> = new Map([
 		[button.id, button],
 		[lever.id, lever],
-		[led.id, led]
+		[led.id, led],
+		[segmentDisplay.id, segmentDisplay]
 	]);
 
 	private _userDefinedElements: Map<number, ElementType> = new Map<number, ElementType>();

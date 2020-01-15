@@ -25,7 +25,8 @@ export const halfAdder: ElementType = {
 	minInputs: 2,
 	maxInputs: 2,
 
-	width: 3,
+	width: () => 3,
+	height: () => 2,
 
 	calcLabels: element => {
 		return ['A', 'B', 'S', 'C'];

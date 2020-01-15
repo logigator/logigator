@@ -153,7 +153,6 @@ export class ProjectSaveManagementService {
 				description: depComp.description,
 				name: depComp.name,
 				rotation: 0,
-				width: environment.componentWidth,
 				minInputs: depComp.num_inputs,
 				maxInputs: depComp.num_inputs,
 				symbol: depComp.symbol,
