@@ -1,7 +1,9 @@
 import {AngularCompilerPlugin} from '@ngtools/webpack';
 import {templateLoaderTransformer} from './template-loader-transformer';
+import * as path from 'path';
 
 module.exports = (config, options) => {
+
 	config.module.rules.unshift({
 		test: /\.tsx?$/,
 		use: [
@@ -23,9 +25,8 @@ module.exports = (config, options) => {
 	});
 	config.module.rules.push({
 		test: /\.node?$/,
-		use: [
-			'node-loader'
-		]
+		loader: 'native-ext-loader',
+		options: {}
 	});
 
 	if (process.env.ELECTRON === 'true') {

@@ -144,14 +144,18 @@ import {WorkerCommunicationNodeService} from './services/simulation/worker-commu
 			useClass: CredentialsInterceptor,
 			multi: true
 		},
+		// #!if WEB === 'true'
 		{
 			provide: WorkerCommunicationService,
-			// #!electron
-			useClass: WorkerCommunicationNodeService,
-			// @ts-ignore
-			// #!web
 			useClass: WorkerCommunicationWasmService
+		},
+		// #!endif
+		// #!if ELECTRON === 'true'
+		{
+			provide: WorkerCommunicationService,
+			useClass: WorkerCommunicationNodeService
 		}
+		// #!endif
 	],
 	bootstrap: [AppComponent]
 })
