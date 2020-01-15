@@ -33,7 +33,10 @@ export const rom: ElementType = {
 	minInputs: 0,
 	maxInputs: 0,
 
-	width: 3,
+	width: () => 3,
+	height(element?) {
+		return element ? Math.max(element.numInputs, element.numOutputs) : Math.max(this.numInputs, this.numOutputs);
+	},
 
 	options: [4, 4],
 	optionsConfig: [

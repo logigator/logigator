@@ -26,5 +26,6 @@ export const not: ElementType = {
 	minInputs: 1,
 	maxInputs: 1,
 
-	width: environment.componentWidth
+	width: () => 2,
+	height: () => 1,
 };

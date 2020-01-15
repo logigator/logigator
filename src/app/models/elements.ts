@@ -81,20 +81,27 @@ export abstract class Elements {
 		return {wire0, wire1};
 	}
 
-	public static calcElemEndPos(element: Element): PIXI.Point {
-		return Elements.calcEndPos(element.pos, Elements.elementType(element.typeId).width,
-			element.numInputs, element.numOutputs, element.rotation);
+	public static calcEndPos(element: Element, numInputs?: number, numOutputs?: number, rotation?: number): PIXI.Point {
+		const elemSize = this.calcElemSize(element, numInputs, numOutputs, rotation);
+		return new PIXI.Point(element.pos.x + elemSize.x, element.pos.y + elemSize.y);
 	}
 
-	public static calcEndPos(pos: PIXI.Point, width?: number, numInputs?: number, numOutputs?: number, rotation?: number): PIXI.Point {
-		if (rotation === undefined || rotation === null) rotation = 0;
+	public static calcElemSize(element: Element, numInputs?: number, numOutputs?: number, rotation?: number): PIXI.Point {
+		const elemType = Elements.elementType(element.typeId);
+		rotation = rotation === undefined || rotation == null ? element.rotation : rotation;
+		const elemToCalc = {...element};
+		if (numInputs !== undefined && numInputs !== null) elemToCalc.numInputs = numInputs;
+		if (numOutputs !== undefined && numOutputs !== null) elemToCalc.numOutputs = numOutputs;
 		if (rotation % 2 === 0) {
-			return new PIXI.Point(pos.x + width,
-				pos.y + Math.max(numInputs, numOutputs));
+			return new PIXI.Point(elemType.width(elemToCalc), elemType.height(elemToCalc));
 		} else {
-			return new PIXI.Point(pos.x + Math.max(numInputs, numOutputs),
-				pos.y + width);
+			return new PIXI.Point(elemType.height(elemToCalc), elemType.width(elemToCalc));
 		}
+	}
+
+	public static calcPixelElementSize(element: Element): PIXI.Point {
+		const gridSize = Elements.calcElemSize(element);
+		return new PIXI.Point(gridSize.x * environment.gridPixelWidth, gridSize.y * environment.gridPixelWidth);
 	}
 
 	public static otherWirePos(wire: Element, pos: PIXI.Point): PIXI.Point {

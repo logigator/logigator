@@ -26,5 +26,8 @@ export const or: ElementType = {
 	minInputs: 2,
 	maxInputs: 64,
 
-	width: environment.componentWidth
+	width: () => 2,
+	height(element?) {
+		return element.numInputs || this.numInputs;
+	}
 };

@@ -29,7 +29,8 @@ export const text: ElementType = {
 	minInputs: 0,
 	maxInputs: 0,
 
-	width: 0,
+	width: () => undefined,
+	height: () => undefined,
 
 	edit: async (typeId: number, id: number, projectsSer: ProjectsService) => {
 		const oText = projectsSer.currProject.currState.getElementById(id).data as TextData;
