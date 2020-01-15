@@ -13,6 +13,7 @@ import {AverageBuffer} from '../../../models/average-buffer';
 import {ElementTypeId} from '../../../models/element-types/element-type-ids';
 import {EastereggService} from '../../easteregg/easteregg.service';
 import {WorkerCommunicationServiceModel} from './worker-communication-service';
+// #!electron
 import {Board, logicsim, InputEvent as SimInputEvent} from '@logigator/logigator-simulation';
 
 @Injectable()
