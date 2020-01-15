@@ -1,6 +1,5 @@
 import {AngularCompilerPlugin} from '@ngtools/webpack';
 import {templateLoaderTransformer} from './template-loader-transformer';
-import * as path from 'path';
 
 module.exports = (config, options) => {
 
@@ -23,14 +22,12 @@ module.exports = (config, options) => {
 			preprocessorConfig
 		]
 	});
-	config.module.rules.push({
-		test: /\.node?$/,
-		loader: 'native-ext-loader',
-		options: {}
-	});
 
 	if (process.env.ELECTRON === 'true') {
 		config.target = 'electron-renderer';
+		config.externals = {
+			'@logigator/logigator-simulation': 'require(\'@logigator/logigator-simulation\')'
+		};
 	} else {
 		config.target = 'web';
 	}

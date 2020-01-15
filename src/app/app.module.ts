@@ -144,7 +144,7 @@ import {WorkerCommunicationNodeService} from './services/simulation/worker-commu
 			useClass: CredentialsInterceptor,
 			multi: true
 		},
-		// #!if WEB === 'true'
+		// #!if ELECTRON === 'false'
 		{
 			provide: WorkerCommunicationService,
 			useClass: WorkerCommunicationWasmService
