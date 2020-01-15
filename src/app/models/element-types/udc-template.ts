@@ -13,7 +13,7 @@ export const udcTemplate: Partial<ElementType> = {
 
 	width: () => 3,
 	height(element? ) {
-		return element.numInputs || this.numInputs;
+		return element ? Math.max(element.numInputs, element.numOutputs) : Math.max(this.numInputs, this.numOutputs);
 	},
 
 	edit: (typeId: number, id: number, projectsSer: ProjectsService) => {
