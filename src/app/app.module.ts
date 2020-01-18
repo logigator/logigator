@@ -18,7 +18,7 @@ import { ShortcutTextPipe } from './pipes/shortcut-text/shortcut-text.pipe';
 import { SingleShortcutConfigComponent } from './components/popup-contents/shortcut-config/single-shortcut-config/single-shortcut-config.component';
 import { ShortcutConfigComponent } from './components/popup-contents/shortcut-config/shortcut-config/shortcut-config.component';
 import { WindowWorkAreaComponent } from './components/window-work-area/window-work-area.component';
-import {HTTP_INTERCEPTORS, HttpClient, HttpClientModule} from '@angular/common/http';
+import {HTTP_INTERCEPTORS, HttpClientModule} from '@angular/common/http';
 import { ReloadQuestionComponent } from './components/popup-contents/relaod-question/reload-question.component';
 import { NewComponentComponent } from './components/popup-contents/new-component/new-component.component';
 import { OpenProjectComponent } from './components/popup-contents/open/open-project.component';
@@ -26,7 +26,7 @@ import { SaveAsComponent } from './components/popup-contents/save-as/save-as.com
 import {ToastContainerModule, ToastrModule} from 'ngx-toastr';
 import {BrowserAnimationsModule} from '@angular/platform-browser/animations';
 import {MissingTranslationHandler, TranslateLoader, TranslateModule} from '@ngx-translate/core';
-import {createTranslateLoader} from './models/translation/translation-loader-factory';
+import {CacheBustingTranslationLoader} from './models/translation/cache-busting-translate-loader';
 import {AppMissingTranslationHandler} from './models/translation/missing-translation-handler';
 import { OutsideNgZoneEventDirective } from './directives/outside-ng-zone-event/outside-ng-zone-event.directive';
 import { UnsavedChangesComponent } from './components/popup-contents/unsaved-changes/unsaved-changes.component';
@@ -119,8 +119,7 @@ import {WorkerCommunicationNodeService} from './services/simulation/worker-commu
 		TranslateModule.forRoot({
 			loader: {
 				provide: TranslateLoader,
-				useFactory: createTranslateLoader,
-				deps: [HttpClient]
+				useClass: CacheBustingTranslationLoader,
 			},
 			missingTranslationHandler: {
 				provide: MissingTranslationHandler,

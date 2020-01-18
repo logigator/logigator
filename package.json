@@ -37,7 +37,6 @@
 		"@angular/router": "^8.2.14",
 		"@logigator/logigator-shared-comps": "latest",
 		"@ngx-translate/core": "^11.0.1",
-		"@ngx-translate/http-loader": "^4.0.0",
 		"bootstrap": "^4.4.1",
 		"express": "^4.17.1",
 		"file-saver": "^2.0.2",
