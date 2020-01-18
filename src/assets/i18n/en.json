@@ -222,6 +222,9 @@
 			"TITLE": "Edit Rom Data",
 			"SAVE": "SAVE",
 			"CANCEL": "CANCEL"
+		},
+		"HELP": {
+			"TITLE": "Help"
 		}
 	},
 	"SETTINGS_INFO": {

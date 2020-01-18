@@ -222,6 +222,9 @@
 			"TITLE": "Rom Daten editieren",
 			"SAVE": "SPEICHERN",
 			"CANCEL": "ABBRECHEN"
+		},
+		"HELP": {
+			"TITLE": "Hilfe"
 		}
 	},
 	"SETTINGS_INFO": {

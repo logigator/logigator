@@ -54,6 +54,8 @@ import {WorkerCommunicationService} from './services/simulation/worker-communica
 import {WorkerCommunicationWasmService} from './services/simulation/worker-communication/worker-communication-wasm.service';
 // #!electron
 import {WorkerCommunicationNodeService} from './services/simulation/worker-communication/worker-communication-node.service';
+import { HelpComponent } from './components/popup-contents/help/help.component';
+import { HelpRendererComponent } from './components/popup-contents/help-renderer/help-renderer.component';
 
 @NgModule({
 	declarations: [
@@ -87,7 +89,9 @@ import {WorkerCommunicationNodeService} from './services/simulation/worker-commu
 		TextComponent,
 		ToolbarItemTooltipComponent,
 		StatusBarComponent,
-		RomEditComponent
+		RomEditComponent,
+		HelpComponent,
+		HelpRendererComponent
 	],
 	entryComponents: [
 		ShortcutConfigComponent,
@@ -99,7 +103,8 @@ import {WorkerCommunicationNodeService} from './services/simulation/worker-commu
 		ShareProjectComponent,
 		TextComponent,
 		ToolbarItemTooltipComponent,
-		RomEditComponent
+		RomEditComponent,
+		HelpComponent
 	],
 	imports: [
 		// #!electron

@@ -1,0 +1,55 @@
+@import "themes";
+
+.help-container {
+	display: flex;
+	flex-direction: row;
+	width: 80vw;
+
+	.sidebar {
+		width: 200px;
+		padding: 1rem;
+		@include themify() {
+			border-right: border('width') solid themed('accent2');
+		}
+
+		ul {
+			margin: 0;
+			padding: 0;
+			text-align: left;
+			list-style: none;
+
+			li {
+				margin-bottom: 1.5rem;
+
+				p {
+					margin: 0;
+
+					&:hover {
+						cursor: pointer;
+						text-decoration: underline;
+					}
+
+					&.active {
+						@include themify() {
+							color: themed('primary');
+						}
+
+						&:hover {
+							cursor: default;
+							text-decoration: none;
+						}
+					}
+				}
+
+				&:last-of-type {
+					margin-bottom: 0;
+				}
+			}
+		}
+	}
+
+	.content {
+		flex-grow: 1;
+		margin: 1rem;
+	}
+}

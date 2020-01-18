@@ -18,8 +18,20 @@ module.exports = (config, options) => {
 	config.module.rules.push({
 		test: /\.html?$/,
 		use: [
-			'html-loader',
+			{
+				loader: 'html-loader',
+				options: {
+					interpolate: true
+				}
+			},
 			preprocessorConfig
+		]
+	});
+	config.module.rules.push({
+		test: /\.md?$/,
+		use: [
+			'html-loader',
+			'markdown-loader'
 		]
 	});
 
