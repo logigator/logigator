@@ -1,1 +1,28 @@
+@import "themes";
 @import "~github-markdown-css/github-markdown.css";
+
+@include themifyForNoEncapsulation() {
+	.markdown-body {
+		color: themed('text-primary') !important;
+		max-height: 80vh;
+		height: 80vh;
+		padding: 0 1rem;
+		font-family: inherit;
+
+		h1, h2 {
+			border-bottom-color: themed('text-primary');
+		}
+
+		table tr {
+			background-color: inherit !important;
+		}
+
+		pre {
+			background-color: themed('accent2');
+		}
+
+		a {
+			color: themed('primary') !important;
+		}
+	}
+}
