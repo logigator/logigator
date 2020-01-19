@@ -17,7 +17,8 @@
 		"create-dist-package.ts",
 		"package-app.ts",
 		"remove-comp-warning-template.ts",
-		"index-html-transform.ts"
+		"index-html-transform.ts",
+		"markdown-postprocess-loader.ts"
 	],
 	"include": [
 		"./**/*.ts"

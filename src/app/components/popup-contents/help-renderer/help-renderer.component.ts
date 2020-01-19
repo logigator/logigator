@@ -30,7 +30,7 @@ export class HelpRendererComponent implements OnChanges {
 
 	ngOnChanges(changes: SimpleChanges): void {
 		const fileToLoad = this.currentLang + '/' + this.helpToRender;
-		this.renderer2.setProperty(this.insertionPoint.nativeElement, 'innerHTML', require(`help/${fileToLoad}.md`))
+		this.renderer2.setProperty(this.insertionPoint.nativeElement, 'innerHTML', require(`../../../../help/${fileToLoad}.md`))
 	}
 
 }

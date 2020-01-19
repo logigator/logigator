@@ -224,7 +224,8 @@
 			"CANCEL": "ABBRECHEN"
 		},
 		"HELP": {
-			"TITLE": "Hilfe"
+			"TITLE": "Hilfe",
+			"EDIT": "Auf Github bearbeiten"
 		}
 	},
 	"SETTINGS_INFO": {

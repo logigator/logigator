@@ -1,5 +1,6 @@
 import {AngularCompilerPlugin} from '@ngtools/webpack';
 import {templateLoaderTransformer} from './template-loader-transformer';
+import * as path from 'path';
 
 module.exports = (config, options) => {
 
@@ -30,7 +31,9 @@ module.exports = (config, options) => {
 	config.module.rules.push({
 		test: /\.md?$/,
 		use: [
-			'html-loader',
+			{
+				loader: path.resolve('custom-build-scripts/dist/markdown-postprocess-loader.js'),
+			},
 			'markdown-loader'
 		]
 	});

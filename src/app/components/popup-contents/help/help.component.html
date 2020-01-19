@@ -1,11 +1,12 @@
 <div class="help-container">
 	<div class="sidebar" [ngSwitch]="currentLang" #sidebar>
 		<ng-container *ngSwitchCase="'en'">
-			${require('help/en/sidebar.md')}
+			${require('../../../../help/en/sidebar.md')}
 		</ng-container>
 		<ng-container *ngSwitchCase="'de'">
-			${require('help/de/sidebar.md')}
+			${require('../../../../help/de/sidebar.md')}
 		</ng-container>
+		<a [href]="githubEditUrl" target="_blank" rel="noopener">{{'POPUP.HELP.EDIT' | translate}}</a>
 	</div>
 	<div class="content">
 		<app-help-renderer [currentLang]="currentLang" [helpToRender]="helpToRender"></app-help-renderer>

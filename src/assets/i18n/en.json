@@ -224,7 +224,8 @@
 			"CANCEL": "CANCEL"
 		},
 		"HELP": {
-			"TITLE": "Help"
+			"TITLE": "Help",
+			"EDIT": "Edit on Github"
 		}
 	},
 	"SETTINGS_INFO": {

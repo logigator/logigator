@@ -9,6 +9,16 @@
 		width: 200px;
 		min-width: 200px;
 		padding: 1rem;
+		display: flex;
+		flex-direction: column;
+		justify-content: space-between;
+
+		> a {
+			@include themify() {
+				color: themed('primary');
+			}
+		}
+
 		@include themify() {
 			border-right: border('width') solid themed('accent2');
 		}

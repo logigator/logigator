@@ -48,6 +48,11 @@ export class HelpComponent extends PopupContentComp implements AfterViewInit, On
 		this._sidebar.nativeElement.querySelectorAll('p').forEach(p => p.classList.remove('active'));
 		link.classList.add('active');
 	}
+
+	public get githubEditUrl(): string {
+		return `https://github.com/logigator/logigator-editor/tree/development/src/help/${this.currentLang}/${this.helpToRender}.md`;
+	}
+
 	ngOnDestroy(): void {
 		this._destroySubject.next();
 		this._destroySubject.complete();
