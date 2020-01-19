@@ -24,5 +24,39 @@
 		a {
 			color: themed('primary') !important;
 		}
+
+		img {
+			background-color: transparent;
+		}
+
+		.rows {
+			display: flex;
+			flex-direction: row;
+
+			&.align-center {
+				align-items: center;
+
+				p {
+					margin-bottom: 0;
+				}
+			}
+
+			img {
+				max-width: initial;
+			}
+		}
+
+		.margin-left {
+			margin-left: 1rem;
+		}
+
+		.margin-bottom {
+			margin-bottom: 1rem;
+		}
+
+		img[title="icon-img"] {
+			width: 40px;
+			height: 40px;
+		}
 	}
 }
