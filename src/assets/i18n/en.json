@@ -313,11 +313,11 @@
 			},
 			"LED": {
 				"NAME": "LED",
-				"DESCRIPTION": ""
+				"DESCRIPTION": "Switches on or off depending on the applied input."
 			},
 			"SEGMENT_DISPLAY": {
 				"NAME": "Segment Display",
-				"DESCRIPTION": ""
+				"DESCRIPTION": "Displays a binary input as decimal number"
 			}
 		},
 		"PLUG": {

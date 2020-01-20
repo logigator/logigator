@@ -18,7 +18,6 @@ After you selected an Element you can place it by clicking anywhere on the worka
 
 It's also possible to drag the Element before placing it. To do so hold down your mouse button and move your mouse, the Element will be placed when you release the mouse button.
 </div>
-
 </div>
 
 ## Editing Circuit Elements
@@ -33,7 +32,6 @@ Placed Elements can be edit in the Settings box located in the bottom-right corn
 There you can configure settings like the direction, amount of inputs, amount of outputs of components.
 
 </div>
-
 </div>
 
 ## Zooming and Panning the View

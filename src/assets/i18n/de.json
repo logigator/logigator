@@ -313,11 +313,11 @@
 			},
 			"LED": {
 				"NAME": "LED",
-				"DESCRIPTION": ""
+				"DESCRIPTION": "Schaltet sich Abhängig vom Eingang aus oder ein."
 			},
 			"SEGMENT_DISPLAY": {
 				"NAME": "Segment Display",
-				"DESCRIPTION": ""
+				"DESCRIPTION": "Stellt die binären Eingänge als Dezimalzahlen dar."
 			}
 		},
 		"PLUG": {

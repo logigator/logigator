@@ -38,7 +38,14 @@ Adds three 1-bit numbers together.
 
 ## ROM
 
+<div class="rows">
+
+![Rom Data Edit](../../assets/help/rom-edit.jpg)
+
+<div class="margin-left">
 Read only Memory. Can be used for program code, for example.
+</div>
+</div>
 
 ## D Flip-Flop
 
