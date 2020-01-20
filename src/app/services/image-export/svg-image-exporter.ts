@@ -8,6 +8,7 @@ import {SvgCompRenderer} from './svg-comp-renderer';
 import {ElementTypeId} from '../../models/element-types/element-type-ids';
 import {SvgTextRenderer} from './svg-text-renderer';
 import {environment} from '../../../environments/environment';
+import {SvgLedRenderer} from './svg-led-renderer';
 
 export class SvgImageExporter {
 
@@ -61,6 +62,10 @@ export class SvgImageExporter {
 	private placeComp(element: Element) {
 		if (element.typeId === ElementTypeId.TEXT) {
 			const textRender = new SvgTextRenderer(element, this.offset);
+			this._svg.appendChild(textRender.getSVGGroup());
+			this.updateSize(Grid.getPixelPosForGridPos(new PIXI.Point(element.pos.x - this.offset.x, element.pos.y - this.offset.y)));
+		} else if (element.typeId === ElementTypeId.LED) {
+			const textRender = new SvgLedRenderer(element, this.offset);
 			this._svg.appendChild(textRender.getSVGGroup());
 			this.updateSize(Grid.getPixelPosForGridPos(new PIXI.Point(element.pos.x - this.offset.x, element.pos.y - this.offset.y)));
 		} else {
@@ -118,31 +123,34 @@ export class SvgImageExporter {
 			}
 			.symbol {
 				text-anchor: middle;
-				font-size: 15px;
+				font-size: 8px;
 				dominant-baseline: central;
 			}
 			.text {
 				text-anchor: start;
 				dominant-baseline: central;
 			}
+			.led {
+				fill: #${this.themingService.getEditorColor('wire').toString(16)};
+			}
 			.l-l {
 				text-anchor: start;
-				font-size: ${environment.gridPixelWidth * 0.5}px;
+				font-size: ${environment.gridPixelWidth * 0.3}px;
 				dominant-baseline: central;
 			}
 			.l-r {
 				text-anchor: end;
-				font-size: ${environment.gridPixelWidth * 0.5}px;
+				font-size: ${environment.gridPixelWidth * 0.3}px;
 				dominant-baseline: central;
 			}
 			.l-t {
 				text-anchor: middle;
-				font-size: ${environment.gridPixelWidth * 0.5}px;
+				font-size: ${environment.gridPixelWidth * 0.3}px;
 				dominant-baseline: text-before-edge;
 			}
 			.l-b {
 				text-anchor: middle;
-				font-size: ${environment.gridPixelWidth * 0.5}px;
+				font-size: ${environment.gridPixelWidth * 0.3}px;
 				dominant-baseline: text-after-edge;
 			}
 		`;

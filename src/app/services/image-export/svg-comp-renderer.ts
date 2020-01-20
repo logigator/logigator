@@ -208,7 +208,14 @@ export class SvgCompRenderer {
 
 	private symbol() {
 		let symbol: SVGElement;
-		if (this.element.typeId === ElementTypeId.BUTTON) {
+		if (this.element.typeId === ElementTypeId.SEGMENT_DISPLAY) {
+		} else if (this.elementProvider.isPlugElement(this.element.typeId)) {
+			symbol = document.createElementNS(this.SVG_NS, 'text');
+			symbol.textContent = this.element.data as string || this.elementProvider.getElementById(this.element.typeId).symbol;
+			symbol.setAttribute('class', 'symbol');
+			symbol.setAttribute('x', this._size.x / 2 + '');
+			symbol.setAttribute('y', this._size.y / 2 + '');
+		} else if (this.element.typeId === ElementTypeId.BUTTON) {
 			symbol = document.createElementNS(this.SVG_NS, 'rect');
 			symbol.setAttribute('class', 'wire');
 			symbol.setAttribute('x', '3');
@@ -229,7 +236,7 @@ export class SvgCompRenderer {
 			symbol.setAttribute('x', this._size.x / 2 + '');
 			symbol.setAttribute('y', this._size.y / 2 + '');
 		}
-		this._group.appendChild(symbol);
+		if (symbol) this._group.appendChild(symbol);
 	}
 
 	private getLabelText(text: string, x: number, y: number): SVGTextElement {
