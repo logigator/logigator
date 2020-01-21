@@ -22,7 +22,7 @@ export class HelpComponent extends PopupContentComp implements AfterViewInit, On
 
 	private _destroySubject = new Subject();
 
-	public helpToRender: string = 'get-started';
+	public helpToRender = 'get-started';
 
 	constructor(private translate: TranslateService) {
 		super();
@@ -39,7 +39,7 @@ export class HelpComponent extends PopupContentComp implements AfterViewInit, On
 			).subscribe(() => {
 				this.helpToRender = link.id;
 				this.setActiveClass(link);
-			})
+			});
 		});
 		this.setActiveClass(this._sidebar.nativeElement.querySelectorAll('p').item(0));
 	}
