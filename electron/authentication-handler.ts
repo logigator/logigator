@@ -95,30 +95,38 @@ export class AuthenticationHandler {
 	}
 
 	private async onEmailLogin(args: {user: string, password: string}) {
-		const resp = await fetch(getApiUrl() + '/auth/login-email', {
-			method: 'post',
-			body: JSON.stringify(args),
-			headers: { 'Content-Type': 'application/json' }
-		});
-		if (!resp.ok) {
-			this.sendLoginResponse(false, 'email', await resp.json());
-			return;
+		try {
+			const resp = await fetch(getApiUrl() + '/auth/login-email', {
+				method: 'post',
+				body: JSON.stringify(args),
+				headers: { 'Content-Type': 'application/json' }
+			});
+			if (!resp.ok) {
+				this.sendLoginResponse(false, 'email', await resp.json());
+				return;
+			}
+			await this.setLoggedIn(resp.headers.raw()['set-cookie'].find(c => c.includes('auth-token')));
+			this.sendLoginResponse(true, 'email');
+		} catch (e) {
+			this.sendLoginResponse(false, 'email', {});
 		}
-		await this.setLoggedIn(resp.headers.raw()['set-cookie'].find(c => c.includes('auth-token')));
-		this.sendLoginResponse(true, 'email');
 	}
 
 	private async onEmailRegister(args: {username: string, email: string, password: string, recaptcha: string}) {
-		const resp = await fetch(getApiUrl() + '/auth/register-email', {
-			method: 'post',
-			body: JSON.stringify(args),
-			headers: { 'Content-Type': 'application/json' }
-		});
-		if (!resp.ok) {
-			this.sendLoginResponse(false, 'email', await resp.json());
-			return;
+		try {
+			const resp = await fetch(getApiUrl() + '/auth/register-email', {
+				method: 'post',
+				body: JSON.stringify(args),
+				headers: { 'Content-Type': 'application/json' }
+			});
+			if (!resp.ok) {
+				this.sendLoginResponse(false, 'email', await resp.json());
+				return;
+			}
+			this.sendLoginResponse(true, 'email');
+		} catch (e) {
+			this.sendLoginResponse(false, 'email', {});
 		}
-		this.sendLoginResponse(true, 'email');
 	}
 
 	private onLogout() {
@@ -166,31 +174,40 @@ export class AuthenticationHandler {
 	}
 
 	private async verifyGoogleCredentials(code: string) {
-		const resp = await fetch(getApiUrl() + '/auth/verify-google-credentials', {
-			method: 'post',
-			body: JSON.stringify({ code }),
-			headers: { 'Content-Type': 'application/json' }
-		});
-		if (!resp.ok) {
-			this.sendLoginResponse(false, 'google', await resp.json());
-			return;
+		try {
+			const resp = await fetch(getApiUrl() + '/auth/verify-google-credentials', {
+				method: 'post',
+				body: JSON.stringify({code}),
+				headers: {'Content-Type': 'application/json'}
+			});
+			if (!resp.ok) {
+				this.sendLoginResponse(false, 'google', await resp.json());
+				return;
+			}
+			await this.setLoggedIn(resp.headers.raw()['set-cookie'].find(c => c.includes('auth-token')));
+			this.sendLoginResponse(true, 'google');
+		} catch (e) {
+			this.sendLoginResponse(false, 'google', {});
 		}
-		await this.setLoggedIn(resp.headers.raw()['set-cookie'].find(c => c.includes('auth-token')));
-		this.sendLoginResponse(true, 'google');
 	}
 
 	private async verifyTwitterCredentials(oauth_token: string, oauth_verifier: string) {
-		const resp = await fetch(getApiUrl() + '/auth/verify-twitter-credentials', {
-			method: 'post',
-			body: JSON.stringify({ oauth_token, oauth_verifier }),
-			headers: { 'Content-Type': 'application/json' }
-		});
-		if (!resp.ok) {
-			this.sendLoginResponse(false, 'twitter', await resp.json());
-			return;
+		try {
+			const resp = await fetch(getApiUrl() + '/auth/verify-twitter-credentials', {
+				method: 'post',
+				body: JSON.stringify({ oauth_token, oauth_verifier }),
+				headers: { 'Content-Type': 'application/json' }
+			});
+			if (!resp.ok) {
+				this.sendLoginResponse(false, 'twitter', await resp.json());
+				return;
+			}
+			await this.setLoggedIn(resp.headers.raw()['set-cookie'].find(c => c.includes('auth-token')));
+			this.sendLoginResponse(true, 'twitter');
+		} catch (e) {
+			this.sendLoginResponse(false, 'twitter', {});
 		}
-		await this.setLoggedIn(resp.headers.raw()['set-cookie'].find(c => c.includes('auth-token')));
-		this.sendLoginResponse(true, 'twitter');
+
 	}
 
 	public get isLoggedIn(): boolean {
