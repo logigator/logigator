@@ -1,7 +1,7 @@
 {
 	"LANGUAGE": {
 		"DE": "Deutsch",
-		"EN": "Englisch"
+		"EN": "English"
 	},
 	"DROPDOWN": {
 		"FILE": {
@@ -34,7 +34,8 @@
 			"FULLSCREEN": "Vollbild"
 		},
 		"HELP": {
-			"TITLE": "Hilfe"
+			"TITLE": "Hilfe",
+			"HELP": "Hilfe"
 		},
 		"SETTINGS": {
 			"DARK_MODE": "Dunkles Design",
@@ -222,6 +223,10 @@
 			"TITLE": "Rom Daten editieren",
 			"SAVE": "SPEICHERN",
 			"CANCEL": "ABBRECHEN"
+		},
+		"HELP": {
+			"TITLE": "Hilfe",
+			"EDIT": "Auf Github bearbeiten"
 		}
 	},
 	"SETTINGS_INFO": {
@@ -309,11 +314,11 @@
 			},
 			"LED": {
 				"NAME": "LED",
-				"DESCRIPTION": ""
+				"DESCRIPTION": "Schaltet sich Abhängig vom Eingang aus oder ein."
 			},
 			"SEGMENT_DISPLAY": {
 				"NAME": "Segment Display",
-				"DESCRIPTION": ""
+				"DESCRIPTION": "Stellt die binären Eingänge als Dezimalzahlen dar."
 			}
 		},
 		"PLUG": {

@@ -1,0 +1,6 @@
+- <p id="get-started">Getting Started</p>
+- <p id="basic">Basic Gates</p>
+- <p id="advanced">Advanced Gates</p>
+- <p id="io">IO Gates</p>
+- <p id="user-defined">User Defined Components</p>
+- <p id="saving">Saving Projects</p>

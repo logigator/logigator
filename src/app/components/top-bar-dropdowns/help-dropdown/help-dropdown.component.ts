@@ -1,4 +1,6 @@
 import {ChangeDetectionStrategy, Component, EventEmitter, OnInit, Output} from '@angular/core';
+import {PopupService} from '@logigator/logigator-shared-comps';
+import {HelpComponent} from '../../popup-contents/help/help.component';
 
 @Component({
 	selector: 'app-help-dropdown',
@@ -11,7 +13,7 @@ export class HelpDropdownComponent implements OnInit {
 	@Output()
 	public requestClosed: EventEmitter<any> = new EventEmitter();
 
-	constructor() { }
+	constructor(private popupService: PopupService) { }
 
 	ngOnInit() {
 	}
@@ -21,7 +23,7 @@ export class HelpDropdownComponent implements OnInit {
 	}
 
 	public help() {
-		window.alert('UwU');
+		this.popupService.showPopup(HelpComponent, 'POPUP.HELP.TITLE', true);
 		this.close();
 	}
 }
