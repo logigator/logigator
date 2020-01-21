@@ -1,6 +1,6 @@
 # User Defined Components - Subcircuits
 
-You can create subcircuits/components and use it in larger circuits. You can also modify the amount of the inputs and outputs of the subcircuit.
+You can create subcircuits/components and use it in larger circuits. You can also modify the amount of inputs and outputs of the subcircuit.
 
 <div class="rows">
 

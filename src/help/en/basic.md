@@ -26,7 +26,7 @@ Output is high if input is low.
 | 1   | 1   | 1      |
 
 <div class="margin-left">
-Output is high if input is low.
+Output is high if all inputs are low.
 </div>
 </div>
 
@@ -42,7 +42,7 @@ Output is high if input is low.
 | 1   | 1   | 1      |
 
 <div class="margin-left">
-Output is high if input is low.
+Output is high if at least one input is high.
 </div>
 </div>
 
@@ -64,7 +64,7 @@ Output is high if an odd number of inputs are high.
 
 ## Delay
 
-Output is high if an odd number of inputs are high.
+Output equals Input, but delayed for one simulation tick.
 
 ## Clock
 

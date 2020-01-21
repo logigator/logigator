@@ -2,7 +2,7 @@
 
 Logigator is a tool to create logic circuits and simulate them directly in the browser or in a native desktop application.
 
-No matter if you are a bloody beginner, Logigator will help you achieve learning success very quickly, or an absolute professional who needs top performance for his simulations - Logigator is the answer!
+No matter if you are a bloody beginner or an absolute professional who needs top performance for his simulations, Logigator will help you achieve learning success very quickly - Logigator is the answer!
 
 ## Creating a Circuit Element
 
@@ -29,7 +29,7 @@ It's also possible to drag the Element before placing it. To do so hold down you
 <div class="margin-left">
 Placed Elements can be edit in the Settings box located in the bottom-right corner of the screen.
 
-There you can configure settings like the direction, amount of inputs, amount of outputs of components.
+There you can configure settings like the direction, amount of inputs or amount of outputs of components.
 
 </div>
 </div>
@@ -53,7 +53,7 @@ To select Elements click on the desired Element or drag a select-rect with your 
 	<p class="margin-left">Select Cut</p>
 </div>
 
-In Select Mode wires will be select to the next corner or the end of the wire.<br>
+In Select Mode wires will be selected to the next corner or the end of the wire.<br>
 In contrast, in Cut Select Mode wires will only be selected to the end of the Select-rect. There wires will be cut of. 
 
 ## Placing Wires
