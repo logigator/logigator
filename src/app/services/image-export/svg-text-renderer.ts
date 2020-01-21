@@ -19,9 +19,6 @@ export class SvgTextRenderer {
 
 	private renderText() {
 		const point = document.createElementNS(this.SVG_NS, 'rect');
-		const pixelPos = Grid.getPixelPosForGridPosWire(this.element.pos);
-		pixelPos.x -= 2.5;
-		pixelPos.y -= 2.5;
 		point.setAttribute('x', environment.gridPixelWidth / 2 + '');
 		point.setAttribute('y', environment.gridPixelWidth / 2 + '');
 		point.setAttribute('class', 'conn-point');

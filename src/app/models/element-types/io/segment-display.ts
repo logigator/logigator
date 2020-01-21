@@ -41,7 +41,7 @@ export const segmentDisplay: ElementType = {
 	calcLabels(element?) {
 		return new Array(element ? element.numInputs : this.numInputs)
 			.fill(undefined)
-			.map((value, index) => 'I' + index);
+			.map((value, index) => index.toString());
 	}
 
 };

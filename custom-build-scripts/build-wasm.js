@@ -1,7 +1,7 @@
 const fs = require('fs');
 const path = require('path');
 
-const source = path.join(__dirname, '..', 'node_modules', 'logigator-simulation', 'webAssembly', 'dist');
+const source = path.join(__dirname, '..', 'node_modules', '@logigator', 'logigator-simulation', 'webAssembly', 'dist');
 const dest = path.join(__dirname, '..', 'src', 'assets', 'wasm');
 
 if (fs.existsSync(path.join(source, 'logigator-simulation.js')) && fs.existsSync(path.join(source, 'logigator-simulation.wasm'))) {
