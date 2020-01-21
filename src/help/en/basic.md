@@ -26,7 +26,7 @@ Output is high if input is low.
 | 1   | 1   | 1      |
 
 <div class="margin-left">
-Output is high if all inputs are low.
+Output is high if all inputs are high.
 </div>
 </div>
 

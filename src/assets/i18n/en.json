@@ -34,7 +34,8 @@
 			"FULLSCREEN": "Fullscreen"
 		},
 		"HELP": {
-			"TITLE": "Help"
+			"TITLE": "Help",
+			"HELP": "Help"
 		},
 		"SETTINGS": {
 			"DARK_MODE": "Dark Mode",

@@ -34,7 +34,8 @@
 			"FULLSCREEN": "Vollbild"
 		},
 		"HELP": {
-			"TITLE": "Hilfe"
+			"TITLE": "Hilfe",
+			"HELP": "Hilfe"
 		},
 		"SETTINGS": {
 			"DARK_MODE": "Dunkles Design",

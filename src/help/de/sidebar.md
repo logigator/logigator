@@ -2,5 +2,5 @@
 - <p id="basic">Grundlegende Gatter</p>
 - <p id="advanced">Fortgeschritene Gatter</p>
 - <p id="io">IO Gatter</p>
-- <p id="user-defined">Benutzerdefinierte Gatter</p>
+- <p id="user-defined">Benutzerdefinierte Komponenten</p>
 - <p id="saving">Projekte speichern</p>
