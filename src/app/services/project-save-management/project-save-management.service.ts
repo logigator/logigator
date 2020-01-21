@@ -47,7 +47,7 @@ export class ProjectSaveManagementService {
 			this.user.userLoginState$.subscribe(async (isLoggedIn) => {
 				if (isLoggedIn) {
 					this.elemProvService.setUserDefinedTypes(await this.getCustomElementsFromServer());
-				} else {
+				} else if (this._projectSource !== 'share') {
 					this.elemProvService.clearUserDefinedElements();
 				}
 			});
@@ -188,6 +188,8 @@ export class ProjectSaveManagementService {
 		).toPromise();
 		if (resp) {
 			this.errorHandling.showInfo('INFO.PROJECTS.CLONED');
+			this._projectSource = 'server';
+			this.elemProvService.clearUserDefinedElements();
 			this.elemProvService.setUserDefinedTypes(await this.getCustomElementsFromServer());
 			const mainProj = await this.getProjectOrCompFromServer(resp.result.id, true);
 			// #!web
