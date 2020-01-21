@@ -37,6 +37,10 @@ export class UserService implements SharedCompsAuthService {
 				if (!isLoggedIn) return of(undefined);
 				return this.http.get<HttpResponseData<UserInfo>>(environment.apiPrefix + '/user/get').pipe(
 					map(response => response.result),
+					map(data => {
+						data.user.profile_image = environment.apiPrefix + '/images/profile/' + data.user.profile_image;
+						return data;
+					}),
 					this.errorHandling.catchErrorOperator('ERROR.USER.GET_INFO', undefined)
 				);
 			})

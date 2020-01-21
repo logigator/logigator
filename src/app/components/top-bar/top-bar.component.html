@@ -5,7 +5,7 @@
 	<a href="https://logigator.com/" target="_blank" rel="noopener"><img alt="Logigator" src="/assets/logo.svg"></a>
 
 	<!-- #!electron -->
-	<img alt="Logigator" src="/assets/logo.svg">
+	<img class="logo-img"  alt="Logigator" src="/assets/logo.svg">
 
 
 	<div class="main-menu">
@@ -40,9 +40,11 @@
 
 		<div class="login-register">
 			<ng-container *ngIf="userInfo$ | async as userInfo; else loginRegister">
-				<p>{{userInfo.user.username}}</p>
+				<div class="logged-in-settings" (click)="closeDropdowns(); settingsDropdownOpen = true;">
+					<p>{{userInfo.user.username}}</p>
+					<img class="user-img" alt="User image" [src]="userInfo.user.profile_image">
+				</div>
 			</ng-container>
-			<div (click)="closeDropdowns(); settingsDropdownOpen = true;" class="settings"></div>
 			<app-settings-dropdown (requestClosed)="closeDropdowns()" *ngIf="settingsDropdownOpen"></app-settings-dropdown>
 		</div>
 
@@ -61,4 +63,5 @@
 	<p class="login" (click)="login()">{{'TOP_BAR.LOGIN' | translate}}</p>
 	<div class="divider"></div>
 	<p class="register" (click)="register()">{{'TOP_BAR.REGISTER' | translate}}</p>
+	<div (click)="closeDropdowns(); settingsDropdownOpen = true;" class="settings"></div>
 </ng-template>
