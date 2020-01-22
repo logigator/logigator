@@ -51,16 +51,21 @@ export class SvgCompRenderer {
 	}
 
 	private rotation0(inputs: number, outputs: number) {
-		const rect = document.createElementNS(this.SVG_NS, 'path');
-		rect.setAttribute('d',
-			`M 0,0
+		let rect: SVGElement;
+		if (this.shouldRenderAsRect()) {
+			rect = this.renderRect();
+		} else {
+			rect = document.createElementNS(this.SVG_NS, 'path');
+			rect.setAttribute('d',
+				`M 0,0
 			h ${this._size.x - 3}
 			L ${this._size.x},3
 			v ${this._size.y - 6}
 			L ${this._size.x - 3},${this._size.y},
 			h -${this._size.x - 3},
 			v -${this._size.y}`
-		);
+			);
+		}
 		rect.setAttribute('class', 'wire');
 		this._group.appendChild(rect);
 		const path = document.createElementNS(this.SVG_NS, 'path');
@@ -89,16 +94,21 @@ export class SvgCompRenderer {
 	}
 
 	private rotation1(inputs: number, outputs: number) {
-		const rect = document.createElementNS(this.SVG_NS, 'path');
-		rect.setAttribute('d',
-			`M 0,0
+		let rect: SVGElement;
+		if (this.shouldRenderAsRect()) {
+			rect = this.renderRect();
+		} else {
+			rect = document.createElementNS(this.SVG_NS, 'path');
+			rect.setAttribute('d',
+				`M 0,0
 			h ${this._size.x}
 			v ${this._size.y - 3},
 			L ${this._size.x - 3},${this._size.y}
 			h -${this._size.x - 6},
 			L 0,${this._size.y - 3},
 			v -${this._size.y - 3}`
-		);
+			);
+		}
 		rect.setAttribute('class', 'wire');
 		this._group.appendChild(rect);
 		const path = document.createElementNS(this.SVG_NS, 'path');
@@ -127,16 +137,21 @@ export class SvgCompRenderer {
 	}
 
 	private rotation2(inputs: number, outputs: number) {
-		const rect = document.createElementNS(this.SVG_NS, 'path');
-		rect.setAttribute('d',
-			`M 3,0
+		let rect: SVGElement;
+		if (this.shouldRenderAsRect()) {
+			rect = this.renderRect();
+		} else {
+			rect = document.createElementNS(this.SVG_NS, 'path');
+			rect.setAttribute('d',
+				`M 3,0
 			h ${this._size.x - 3}
 			v ${this._size.y},
 			h -${this._size.x - 3}
 			L 0,${this._size.y - 3},
 			v -${this._size.y - 6}
 			L 3,0`
-		);
+			);
+		}
 		rect.setAttribute('class', 'wire');
 		this._group.appendChild(rect);
 		const path = document.createElementNS(this.SVG_NS, 'path');
@@ -167,16 +182,21 @@ export class SvgCompRenderer {
 	}
 
 	private rotation3(inputs: number, outputs: number) {
-		const rect = document.createElementNS(this.SVG_NS, 'path');
-		rect.setAttribute('d',
-			`M 3,0
+		let rect: SVGElement;
+		if (this.shouldRenderAsRect()) {
+			rect = this.renderRect();
+		} else {
+			rect = document.createElementNS(this.SVG_NS, 'path');
+			rect.setAttribute('d',
+				`M 3,0
 			h ${this._size.x - 6}
 			L ${this._size.x},3
 			v ${this._size.y - 3}
 			h -${this._size.x},
 			v -${this._size.y - 3},
 			L 3,0`
-		);
+			);
+		}
 		rect.setAttribute('class', 'wire');
 		this._group.appendChild(rect);
 		const path = document.createElementNS(this.SVG_NS, 'path');
@@ -245,6 +265,23 @@ export class SvgCompRenderer {
 		label.setAttribute('x', x + '');
 		label.setAttribute('y', y + '');
 		return label;
+	}
+
+	private renderRect() {
+		const rect = document.createElementNS(this.SVG_NS, 'rect');
+		rect.setAttribute('x', '0');
+		rect.setAttribute('y', '0');
+		rect.setAttribute('width', this._size.x + '');
+		rect.setAttribute('height', this._size.y + '');
+		return rect;
+	}
+
+	private shouldRenderAsRect(): boolean {
+		return this.element.typeId === ElementTypeId.INPUT ||
+			this.element.typeId === ElementTypeId.OUTPUT ||
+			this.element.typeId === ElementTypeId.BUTTON ||
+			this.element.typeId === ElementTypeId.LEVER ||
+			this.element.typeId === ElementTypeId.SEGMENT_DISPLAY;
 	}
 
 	public getSVGGroup(): SVGGElement {

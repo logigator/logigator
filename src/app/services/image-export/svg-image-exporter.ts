@@ -124,7 +124,7 @@ export class SvgImageExporter {
 			.symbol {
 				text-anchor: middle;
 				font-size: 8px;
-				dominant-baseline: central;
+				transform: translateY(2px);
 			}
 			.text {
 				text-anchor: start;
@@ -136,22 +136,22 @@ export class SvgImageExporter {
 			.l-l {
 				text-anchor: start;
 				font-size: ${environment.gridPixelWidth * 0.3}px;
-				dominant-baseline: central;
+				transform: translateY(2px);
 			}
 			.l-r {
 				text-anchor: end;
 				font-size: ${environment.gridPixelWidth * 0.3}px;
-				dominant-baseline: central;
+				transform: translateY(2px);
 			}
 			.l-t {
 				text-anchor: middle;
 				font-size: ${environment.gridPixelWidth * 0.3}px;
-				dominant-baseline: text-before-edge;
+                transform: translateY(4px);
 			}
 			.l-b {
 				text-anchor: middle;
 				font-size: ${environment.gridPixelWidth * 0.3}px;
-				dominant-baseline: text-after-edge;
+                transform: translateY(-1px);
 			}
 		`;
 		defs.appendChild(styles);
