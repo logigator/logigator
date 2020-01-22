@@ -1,5 +1,6 @@
 import * as path from 'path';
 import * as fs from 'fs';
+import {app, remote} from 'electron';
 
 export class Storage {
 
@@ -8,14 +9,8 @@ export class Storage {
 	private static _storageData;
 
 	private static getStoragePath(): string {
-		if (process.platform === 'win32') {
-			if (!fs.existsSync(path.join(process.env.APPDATA, 'Logigator'))) {
-				fs.mkdirSync(path.join(process.env.APPDATA, 'Logigator'));
-			}
-			return path.join(process.env.APPDATA, 'Logigator', 'savings.json');
-		} else if (process.platform === 'linux') {
-			throw Error('Not implemented');
-		}
+		const userDataPath = (app || remote.app).getPath('userData');
+		return path.join(userDataPath, 'electron-savings.json');
 	}
 
 	static set(key: string, data: any) {
