@@ -10,6 +10,7 @@
 | 1     | 0      |
 
 <div class="margin-left">
+
 Der Ausgang ist HIGH, wenn der Eingang LOW ist.
 </div>
 </div>
@@ -26,6 +27,7 @@ Der Ausgang ist HIGH, wenn der Eingang LOW ist.
 | 1   | 1   | 1      |
 
 <div class="margin-left">
+
 Der Ausgang ist HIGH, wenn alle Eingänge HIGH sind.
 </div>
 </div>
@@ -42,6 +44,7 @@ Der Ausgang ist HIGH, wenn alle Eingänge HIGH sind.
 | 1   | 1   | 1      |
 
 <div class="margin-left">
+
 Der Ausgang ist HIGH, wenn mindestens ein Eingang HIGH ist.
 </div>
 </div>
@@ -58,6 +61,7 @@ Der Ausgang ist HIGH, wenn mindestens ein Eingang HIGH ist.
 | 1   | 1   | 0      |
 
 <div class="margin-left">
+
 Der Ausgang ist HIGH, wenn eine ungerade Anzahl an Eingängen HIGH sind.
 </div>
 </div>

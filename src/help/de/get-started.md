@@ -11,8 +11,9 @@ Egal ob du ein blutiger Anfänger bist der hier erste Lernerfolge erzielt oder e
 ![Construction Box](../../assets/help/construction-box.jpg)
 
 <div class="margin-left">
+
 Um ein Schaltungselement zu erstellen, selektieren Sie das gewollte Element aus dem Baukasten, der sich auf der linken Seite des Bildschirms befindet.
-<br><br>
+<br>
 
 Nachdem Sie ein Element ausgewählt haben, können Sie es mit einem Klick auf der Arbeitsfläche platzieren.
 </div>
@@ -25,6 +26,7 @@ Nachdem Sie ein Element ausgewählt haben, können Sie es mit einem Klick auf de
 ![Settings Info Box](../../assets/help/settings-info-box.jpg)
 
 <div class="margin-left">
+
 Platzierte Elemente können in der Einstellungsbox am rechten unteren Rand des Editors bearbeitet werden.
 
 Dort kann man Einstellungen wie die Richtung, Anzahl der Eingänge oder Anzahl der Ausgänge konfigurieren.

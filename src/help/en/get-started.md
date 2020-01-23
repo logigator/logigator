@@ -11,6 +11,7 @@ No matter if you are a bloody beginner or an absolute professional who needs top
 ![Construction Box](../../assets/help/construction-box.jpg)
 
 <div class="margin-left">
+
 In order to create a circuit element select the desired element from the construction box, which is located on the left-hand side of the screen.
 <br><br>
 
@@ -25,6 +26,7 @@ After selecting an element you can place it by clicking anywhere on the workarea
 ![Settings Info Box](../../assets/help/settings-info-box.jpg)
 
 <div class="margin-left">
+
 Placed elements can be edited in the Settings box, which is located in the bottom-right corner of the screen.
 
 There you can configure settings like the direction, amount of inputs, or amount of outputs of components.

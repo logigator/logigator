@@ -6,6 +6,7 @@
 ![Button](../../assets/help/button.jpg)
 
 <div class="margin-left">
+
 Kann gedrückt werden, um einen Puls zu senden. Dieser dauert einen Simulationstick.
 </div>
 </div>
@@ -16,6 +17,7 @@ Kann gedrückt werden, um einen Puls zu senden. Dieser dauert einen Simulationst
 ![Switch](../../assets/help/switch.jpg)
 
 <div class="margin-left">
+
 Kann an- und ausgeschalten werden.
 </div>
 </div>
@@ -27,6 +29,7 @@ Kann an- und ausgeschalten werden.
 ![LED](../../assets/help/led.jpg)
 
 <div class="margin-left">
+
 Schaltet sich abhängig vom Eingang aus oder ein.
 </div>
 </div>
@@ -38,6 +41,7 @@ Schaltet sich abhängig vom Eingang aus oder ein.
 ![Segment Display](../../assets/help/segment-display.jpg)
 
 <div class="margin-left">
+
 Stellt die binären Eingänge als Dezimalzahlen dar.
 </div>
 </div>
