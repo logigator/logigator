@@ -6,7 +6,7 @@
 ![Button](../../assets/help/button.jpg)
 
 <div class="margin-left">
-Can be clicked to emit a pulse signal.
+Can be clicked to emit a pulse signal. Lasts one simulation tick.
 </div>
 </div>
 

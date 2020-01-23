@@ -10,7 +10,7 @@
 | 1     | 0      |
 
 <div class="margin-left">
-Ausgang ist HIGH wenn Eingang LOW ist.
+Der Ausgang ist HIGH, wenn der Eingang LOW ist.
 </div>
 </div>
 
@@ -26,7 +26,7 @@ Ausgang ist HIGH wenn Eingang LOW ist.
 | 1   | 1   | 1      |
 
 <div class="margin-left">
-Ausgang ist HIGH wenn alle Eingänge HIGH sind.
+Der Ausgang ist HIGH, wenn alle Eingänge HIGH sind.
 </div>
 </div>
 
@@ -42,7 +42,7 @@ Ausgang ist HIGH wenn alle Eingänge HIGH sind.
 | 1   | 1   | 1      |
 
 <div class="margin-left">
-Ausgang ist HIGH wenn mindestens ein Eingang HIGH ist.
+Der Ausgang ist HIGH, wenn mindestens ein Eingang HIGH ist.
 </div>
 </div>
 
@@ -58,15 +58,15 @@ Ausgang ist HIGH wenn mindestens ein Eingang HIGH ist.
 | 1   | 1   | 0      |
 
 <div class="margin-left">
-Ausgang ist HIGH wenn eine ungerade Anzahl an Eingängen HIGH sind.
+Der Ausgang ist HIGH, wenn eine ungerade Anzahl an Eingängen HIGH sind.
 </div>
 </div>
 
 ## Durchpass
 
-Ausgangssignal ist gleich wie Eingangssignal, jedoch um einen Simalationstick verzögert.
+Das Ausgangssignal ist gleich dem Eingangssignal, jedoch um einen Simulationstick verzögert.
 
 ## Taktgeber
 
-Gibt regelmäßige ein Tick lange Signale aus. Abstand zwischen den Signal kann konfiguriert werden.<br>
-wenn der STP Eingang HIGH ist, werden keine Ausgangssignale generiert. 
+Dieser gibt regelmäßige, ein Tick lange, Signale aus. Der Abstand zwischen den Signalen kann konfiguriert werden.<br>
+Wenn der STP Eingang HIGH ist, werden keine Ausgangssignale generiert. 

@@ -278,11 +278,11 @@
 		"ADVANCED": {
 			"HALF_ADDER": {
 				"NAME": "Halbaddierer",
-				"DESCRIPTION": "Addiert zwei 1-Bit Zahlen zusammen."
+				"DESCRIPTION": "Addiert zwei 1-Bit Zahlen."
 			},
 			"FULL_ADDER": {
 				"NAME": "Volladdierer",
-				"DESCRIPTION": "Addiert drei 1-Bit Zahlen zusammen."
+				"DESCRIPTION": "Addiert drei 1-Bit Zahlen."
 			},
 			"ROM": {
 				"NAME": "ROM",
@@ -314,7 +314,7 @@
 			},
 			"LED": {
 				"NAME": "LED",
-				"DESCRIPTION": "Schaltet sich Abhängig vom Eingang aus oder ein."
+				"DESCRIPTION": "Schaltet sich abhängig vom Eingang aus oder ein."
 			},
 			"SEGMENT_DISPLAY": {
 				"NAME": "Segment Display",
@@ -324,11 +324,11 @@
 		"PLUG": {
 			"INPUT": {
 				"NAME": "Eingangsstecker",
-				"DESCRIPTION": "Platzieren das, wo die Eingänge deiner selbstdefinierten Komponenten sein sollen"
+				"DESCRIPTION": "Platziere das, wo die Eingänge deiner selbstdefinierten Komponente sein sollen"
 			},
 			"OUTPUT": {
 				"NAME": "Ausgangsstecker",
-				"DESCRIPTION": "Platzieren das, wo die Ausgänge deiner selbstdefinierten Komponenten sein sollen"
+				"DESCRIPTION": "Platziere das, wo die Ausgänge deiner selbstdefinierten Komponente sein sollen"
 			}
 		}
 	},
