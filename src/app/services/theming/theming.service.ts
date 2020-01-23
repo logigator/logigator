@@ -23,7 +23,9 @@ export class ThemingService {
 			wire: 0x2ED573,
 			selectRect: 0,
 			selectTint: 0xd1d1d1,
-			fontTint: 0
+			fontTint: 0,
+			ledOn: 0x2ED573,
+			ledOff: 0x2A7A37
 		},
 		dark: {
 			background: 0x222526,
@@ -31,7 +33,9 @@ export class ThemingService {
 			wire: 0x27AE60,
 			selectRect: 0,
 			selectTint: 0x8a8a8a,
-			fontTint: 0xFFFFFF
+			fontTint: 0xFFFFFF,
+			ledOn: 0x27AE60,
+			ledOff: 0x1C6834
 		}
 	};
 

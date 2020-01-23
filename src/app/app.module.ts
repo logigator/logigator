@@ -18,7 +18,7 @@ import { ShortcutTextPipe } from './pipes/shortcut-text/shortcut-text.pipe';
 import { SingleShortcutConfigComponent } from './components/popup-contents/shortcut-config/single-shortcut-config/single-shortcut-config.component';
 import { ShortcutConfigComponent } from './components/popup-contents/shortcut-config/shortcut-config/shortcut-config.component';
 import { WindowWorkAreaComponent } from './components/window-work-area/window-work-area.component';
-import {HTTP_INTERCEPTORS, HttpClient, HttpClientModule} from '@angular/common/http';
+import {HTTP_INTERCEPTORS, HttpClientModule} from '@angular/common/http';
 import { ReloadQuestionComponent } from './components/popup-contents/relaod-question/reload-question.component';
 import { NewComponentComponent } from './components/popup-contents/new-component/new-component.component';
 import { OpenProjectComponent } from './components/popup-contents/open/open-project.component';
@@ -26,7 +26,7 @@ import { SaveAsComponent } from './components/popup-contents/save-as/save-as.com
 import {ToastContainerModule, ToastrModule} from 'ngx-toastr';
 import {BrowserAnimationsModule} from '@angular/platform-browser/animations';
 import {MissingTranslationHandler, TranslateLoader, TranslateModule} from '@ngx-translate/core';
-import {createTranslateLoader} from './models/translation/translation-loader-factory';
+import {CacheBustingTranslationLoader} from './models/translation/cache-busting-translate-loader';
 import {AppMissingTranslationHandler} from './models/translation/missing-translation-handler';
 import { OutsideNgZoneEventDirective } from './directives/outside-ng-zone-event/outside-ng-zone-event.directive';
 import { UnsavedChangesComponent } from './components/popup-contents/unsaved-changes/unsaved-changes.component';
@@ -49,6 +49,13 @@ import {
 import {ThemingService} from './services/theming/theming.service';
 import {UserService} from './services/user/user.service';
 import { RomEditComponent } from './components/popup-contents/rom-edit/rom-edit.component';
+import {WorkerCommunicationService} from './services/simulation/worker-communication/worker-communication-service';
+// #!web
+import {WorkerCommunicationWasmService} from './services/simulation/worker-communication/worker-communication-wasm.service';
+// #!electron
+import {WorkerCommunicationNodeService} from './services/simulation/worker-communication/worker-communication-node.service';
+import { HelpComponent } from './components/popup-contents/help/help.component';
+import { HelpRendererComponent } from './components/popup-contents/help-renderer/help-renderer.component';
 
 @NgModule({
 	declarations: [
@@ -82,7 +89,9 @@ import { RomEditComponent } from './components/popup-contents/rom-edit/rom-edit.
 		TextComponent,
 		ToolbarItemTooltipComponent,
 		StatusBarComponent,
-		RomEditComponent
+		RomEditComponent,
+		HelpComponent,
+		HelpRendererComponent
 	],
 	entryComponents: [
 		ShortcutConfigComponent,
@@ -94,7 +103,8 @@ import { RomEditComponent } from './components/popup-contents/rom-edit/rom-edit.
 		ShareProjectComponent,
 		TextComponent,
 		ToolbarItemTooltipComponent,
-		RomEditComponent
+		RomEditComponent,
+		HelpComponent
 	],
 	imports: [
 		// #!electron
@@ -114,8 +124,7 @@ import { RomEditComponent } from './components/popup-contents/rom-edit/rom-edit.
 		TranslateModule.forRoot({
 			loader: {
 				provide: TranslateLoader,
-				useFactory: createTranslateLoader,
-				deps: [HttpClient]
+				useClass: CacheBustingTranslationLoader,
 			},
 			missingTranslationHandler: {
 				provide: MissingTranslationHandler,
@@ -138,7 +147,19 @@ import { RomEditComponent } from './components/popup-contents/rom-edit/rom-edit.
 			provide: HTTP_INTERCEPTORS,
 			useClass: CredentialsInterceptor,
 			multi: true
+		},
+		// #!if ELECTRON === 'false'
+		{
+			provide: WorkerCommunicationService,
+			useClass: WorkerCommunicationWasmService
+		},
+		// #!endif
+		// #!if ELECTRON === 'true'
+		{
+			provide: WorkerCommunicationService,
+			useClass: WorkerCommunicationNodeService
 		}
+		// #!endif
 	],
 	bootstrap: [AppComponent]
 })

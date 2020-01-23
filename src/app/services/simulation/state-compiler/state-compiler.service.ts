@@ -90,8 +90,8 @@ export class StateCompilerService {
 		const out: number[] = [ units.length ];
 
 		for (const unit of units) {
-			out.push(unit.typeId, unit.options.length || 0,
-				unit.inputs.length, unit.outputs.length, ...unit.options || [], ...unit.inputs, ...unit.outputs);
+			out.push(unit.type, unit.ops.length || 0,
+				unit.inputs.length, unit.outputs.length, ...unit.ops || [], ...unit.inputs, ...unit.outputs);
 		}
 		return new Int32Array(out);
 	}
@@ -109,7 +109,7 @@ export class StateCompilerService {
 
 		const start = Date.now();
 		this.compileDependencies(depTree);
-		const out =  this.projectUnits(project.id, '0');
+		const out = this.projectUnits(project.id, '0');
 		console.log(`compilation took ${Date.now() - start}ms`);
 		return out;
 	}
@@ -388,12 +388,12 @@ export class StateCompilerService {
 				}
 			});
 
-			if (this.elementProvider.isUserElement(unit.typeId)) {
+			if (this.elementProvider.isUserElement(unit.type)) {
 				udcIndexes.push(unitIndex);
 				udcIndexesInclPlug.push(unitIndex + donePlugCount);
-			} else if (this.elementProvider.isIoElement(unit.typeId)) {
+			} else if (this.elementProvider.isIoElement(unit.type)) {
 				this.setIOLink(idIdentifier, compiledComp, unitIndex + donePlugCount, unit);
-			} else if (this.elementProvider.isPlugElement(unit.typeId)) {
+			} else if (this.elementProvider.isPlugElement(unit.type)) {
 				donePlugCount++;
 				continue;
 			}
@@ -409,7 +409,7 @@ export class StateCompilerService {
 		for (let i = udcIndexes.length - 1; i >= 0; i--) {
 			const index = udcIndexes[i];
 			const innerIdIdentifier = `${idIdentifier}:${[...compiledComp.units.values()][udcIndexesInclPlug[i]].id}`;
-			const inner = this.projectUnits(units[index].typeId, innerIdIdentifier, units[index]);
+			const inner = this.projectUnits(units[index].type, innerIdIdentifier, units[index]);
 			units.splice(index, 1);
 			units.push(...inner);
 		}

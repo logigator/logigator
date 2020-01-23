@@ -1,22 +1,25 @@
 import {Inject, Injectable, Optional} from '@angular/core';
 import {DOCUMENT} from '@angular/common';
-import {Observable, of, Subject} from 'rxjs';
+import {interval, Observable, of, Subject} from 'rxjs';
 import {UserInfo} from '../../models/http-responses/user-info';
 import {map, switchMap} from 'rxjs/operators';
-import {HttpClient} from '@angular/common/http';
+import {HttpClient, HttpErrorResponse} from '@angular/common/http';
 import {HttpResponseData} from '../../models/http-responses/http-response-data';
 import {ErrorHandlingService} from '../error-handling/error-handling.service';
 
 import {ElectronService} from 'ngx-electron';
 import {environment} from '../../../environments/environment';
+import {SharedCompsAuthService} from '@logigator/logigator-shared-comps';
 
 @Injectable({
 	providedIn: 'root'
 })
-export class UserService {
+export class UserService implements SharedCompsAuthService {
 
 	private _userInfo$: Observable<UserInfo>;
 	private _userLoginStateInSubject = new Subject<boolean>();
+
+	private lastCheckedLoginState: boolean;
 
 	constructor(
 		@Inject(DOCUMENT) private document: Document,
@@ -25,6 +28,7 @@ export class UserService {
 		@Optional() private electronService: ElectronService
 	) {
 		this.getUserInfoFromServer();
+		interval(2000).subscribe(() => this.loginStateCheck());
 	}
 
 	private getUserInfoFromServer() {
@@ -33,6 +37,10 @@ export class UserService {
 				if (!isLoggedIn) return of(undefined);
 				return this.http.get<HttpResponseData<UserInfo>>(environment.apiPrefix + '/user/get').pipe(
 					map(response => response.result),
+					map(data => {
+						data.user.profile_image = environment.apiPrefix + '/images/profile/' + data.user.profile_image;
+						return data;
+					}),
 					this.errorHandling.catchErrorOperator('ERROR.USER.GET_INFO', undefined)
 				);
 			})
@@ -40,16 +48,20 @@ export class UserService {
 	}
 
 	// #!if ELECTRON === 'true'
-	public authenticateTwitter() {
-		this.login('twitter').catch(() => this.errorHandling.showErrorMessage('ERROR.USER.LOGIN'));
+	public authenticateTwitter(): Promise<void> {
+		return this.login('twitter');
 	}
 
-	public authenticateGoogle() {
-		this.login('google').catch(() => this.errorHandling.showErrorMessage('ERROR.USER.LOGIN'));
+	public authenticateGoogle(): Promise<void> {
+		return this.login('google');
 	}
 
-	public loginEmail(user: string, password: string): Promise<string> {
+	public loginEmail(user: string, password: string): Promise<void> {
 		return this.login('email', {user, password});
+	}
+
+	public async resendVerificationMail(user: string, password: string): Promise<any> {
+		return this.http.post(environment.apiPrefix + '/auth/resend-verification-mail', {user, password}).toPromise();
 	}
 
 	public async registerEmail(username: string, email: string, password: string, recaptcha: string) {
@@ -57,19 +69,17 @@ export class UserService {
 		return new Promise<string>((resolve, reject) => {
 			this.electronService.ipcRenderer.once('loginemailResponse', ((event, args) => {
 				if (args === 'success') {
-					this._userLoginStateInSubject.next(true);
-					this.getUserInfoFromServer();
 					resolve();
 					return;
 				}
-				reject(args);
+				reject(new HttpErrorResponse({error: args}));
 			}));
 		});
 	}
 
-	private login(type: 'google' | 'twitter' | 'email', credentials?: {user: string, password: string}): Promise<string> {
+	private login(type: 'google' | 'twitter' | 'email', credentials?: {user: string, password: string}): Promise<void> {
 		this.electronService.ipcRenderer.send('login' + type, credentials);
-		return new Promise<string>((resolve, reject) => {
+		return new Promise<void>((resolve, reject) => {
 			this.electronService.ipcRenderer.once('login' + type + 'Response', ((event, args) => {
 				if (args === 'success') {
 					this._userLoginStateInSubject.next(true);
@@ -77,17 +87,18 @@ export class UserService {
 					resolve();
 					return;
 				}
-				reject(args);
+				reject(reject(new HttpErrorResponse({error: args})));
 			}));
 		});
 
 	}
 
-	public logout() {
+	public logout(): Promise<any> {
 		this.electronService.remote.getGlobal('isLoggedIn').data = 'false';
 
 		this.electronService.ipcRenderer.send('logout');
 		this._userInfo$ = of(undefined);
+		return Promise.resolve();
 	}
 	// #!endif
 
@@ -111,5 +122,18 @@ export class UserService {
 
 	public get userLoginState$(): Observable<boolean> {
 		return this._userLoginStateInSubject.asObservable();
+	}
+
+	private loginStateCheck() {
+		const isLoggedIn = this.isLoggedIn;
+		if (isLoggedIn === this.lastCheckedLoginState) return;
+		this.lastCheckedLoginState = isLoggedIn;
+		if (isLoggedIn) {
+			this._userLoginStateInSubject.next(true);
+			this.getUserInfoFromServer();
+		} else {
+			this._userInfo$ = of(undefined);
+			this._userLoginStateInSubject.next(false);
+		}
 	}
 }

@@ -11,7 +11,10 @@ export const udcTemplate: Partial<ElementType> = {
 	isRotatable: true,
 	rotation: 0,
 
-	width: 3,
+	width: () => 3,
+	height(element? ) {
+		return element ? Math.max(element.numInputs, element.numOutputs) : Math.max(this.numInputs, this.numOutputs);
+	},
 
 	edit: (typeId: number, id: number, projectsSer: ProjectsService) => {
 		projectsSer.openComponent(typeId);

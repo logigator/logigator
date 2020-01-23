@@ -1,4 +1,4 @@
-import {Component} from '@angular/core';
+import {Component, Inject} from '@angular/core';
 import {WorkMode} from '../../models/work-modes';
 import {WorkModeService} from '../../services/work-mode/work-mode.service';
 import {ProjectsService} from '../../services/projects/projects.service';
@@ -7,8 +7,11 @@ import {ProjectInteractionService} from '../../services/project-interaction/proj
 import {Test} from '../../../../tests/auto-tests/tests';
 // #!debug
 import {ManuallyLogged} from '../../../../tests/auto-tests/board-recorder';
-import {WorkerCommunicationService} from '../../services/simulation/worker-communication/worker-communication.service';
 import {RenderTicker} from '../../services/render-ticker/render-ticker.service';
+import {
+	WorkerCommunicationService,
+	WorkerCommunicationServiceModel
+} from '../../services/simulation/worker-communication/worker-communication-service';
 
 @Component({
 	selector: 'app-toolbar',
@@ -26,11 +29,13 @@ export class ToolbarComponent {
 	public targetMultiplier = '1';
 	public targetTickRate = 1;
 
+	public threadCount = 1;
+
 	constructor(
 		private workModeService: WorkModeService,
 		private projectService: ProjectsService,
 		private projectInteraction: ProjectInteractionService,
-		private workerCommunication: WorkerCommunicationService,
+		@Inject(WorkerCommunicationService) private workerCommunication: WorkerCommunicationServiceModel,
 		private renderTicker: RenderTicker
 	) {}
 
@@ -125,7 +130,7 @@ export class ToolbarComponent {
 		} else if (this.syncMode) {
 			this.workerCommunication.startSync();
 		} else {
-			this.workerCommunication.start();
+			this.workerCommunication.start(this.threadCount);
 		}
 
 		this.renderTicker.startAllContSim();
@@ -177,5 +182,20 @@ export class ToolbarComponent {
 
 	public get simulationRunning() {
 		return this.workerCommunication.isRunning;
+	}
+
+	public setThreadCount() {
+		if (!this.threadCount)
+			return;
+
+		if (this.threadCount < 1)
+			this.threadCount = 1;
+		if (this.threadCount > 512)
+			this.threadCount = 512;
+
+		if (this.simulationRunning) {
+			this.workerCommunication.pause();
+			this.continueSm();
+		}
 	}
 }

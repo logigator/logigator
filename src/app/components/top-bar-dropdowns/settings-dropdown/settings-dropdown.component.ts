@@ -5,7 +5,6 @@ import {ReloadQuestionComponent} from '../../popup-contents/relaod-question/relo
 import {TranslateService} from '@ngx-translate/core';
 import {UserService} from '../../../services/user/user.service';
 import {ProjectsService} from '../../../services/projects/projects.service';
-import {ElementProviderService} from '../../../services/element-provider/element-provider.service';
 import {ElectronService} from 'ngx-electron';
 import {PopupService} from '@logigator/logigator-shared-comps';
 
@@ -29,7 +28,6 @@ export class SettingsDropdownComponent implements OnInit {
 		private translation: TranslateService,
 		private user: UserService,
 		private projects: ProjectsService,
-		private elementProvServ: ElementProviderService,
 		@Optional() private electronService: ElectronService,
 	) {}
 
@@ -74,7 +72,6 @@ export class SettingsDropdownComponent implements OnInit {
 		if (await this.projects.askToSave()) {
 			this.user.logout();
 			this.projects.newProject();
-			this.elementProvServ.clearUserDefinedElements();
 		}
 		this.close();
 	}

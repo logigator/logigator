@@ -7,6 +7,7 @@ import {Element} from '../../element';
 import {ElementProviderService} from '../../../services/element-provider/element-provider.service';
 import {ElementType, isElementType} from '../../element-types/element-type';
 import {FontWidthService} from '@logigator/logigator-shared-comps';
+import {Elements} from '../../elements';
 
 export class ComponentGraphics extends PIXI.Graphics implements LGraphics, ComponentUpdatable {
 
@@ -17,7 +18,8 @@ export class ComponentGraphics extends PIXI.Graphics implements LGraphics, Compo
 	private elemProvService = getStaticDI(ElementProviderService);
 
 	private readonly _symbol: string;
-	private readonly _width: number;
+
+	private _size: PIXI.Point;
 
 	private _labels: string[];
 
@@ -36,17 +38,17 @@ export class ComponentGraphics extends PIXI.Graphics implements LGraphics, Compo
 				rotation: elementOrType.rotation,
 				numInputs: elementOrType.numInputs,
 				numOutputs: elementOrType.numOutputs,
+				typeId: elementOrType.id
 			} as any as Element;
 			this._symbol = elementOrType.symbol;
-			this._width = elementOrType.width;
 			if (elementOrType.calcLabels) this._labels = elementOrType.calcLabels();
 		} else {
 			this.element = elementOrType;
 			const elemType = this.elemProvService.getElementById(this.element.typeId);
 			this._symbol = elemType.symbol;
-			this._width = elemType.width;
 			if (elemType.calcLabels) this._labels = elemType.calcLabels(this.element);
 		}
+		this._size = Elements.calcPixelElementSize(this.element);
 		this.drawComponent();
 	}
 
@@ -54,35 +56,21 @@ export class ComponentGraphics extends PIXI.Graphics implements LGraphics, Compo
 		this.lineStyle(1 / this._scale, this.themingService.getEditorColor('wire'));
 		this.moveTo(0, 0);
 
-		let width;
-		let height;
-		if (this.element.rotation === 0 || this.element.rotation === 2) {
-			width = environment.gridPixelWidth * this._width;
-			height = this.element.numInputs >= this.element.numOutputs ?
-				environment.gridPixelWidth * this.element.numInputs :
-				environment.gridPixelWidth * this.element.numOutputs;
-		} else {
-			width = this.element.numInputs >= this.element.numOutputs ?
-				environment.gridPixelWidth * this.element.numInputs :
-				environment.gridPixelWidth * this.element.numOutputs;
-			height = environment.gridPixelWidth * this._width;
-		}
-
 		this.beginFill(this.themingService.getEditorColor('wire'));
 		this.removeChildren(0);
 
 		switch (this.element.rotation) {
 			case 0:
-				this.rotation0(this.element.numInputs, this.element.numOutputs, height, width);
+				this.rotation0(this.element.numInputs, this.element.numOutputs, this._size.y, this._size.x);
 				break;
 			case 1:
-				this.rotation1(this.element.numInputs, this.element.numOutputs, height, width);
+				this.rotation1(this.element.numInputs, this.element.numOutputs, this._size.y, this._size.x);
 				break;
 			case 2:
-				this.rotation2(this.element.numInputs, this.element.numOutputs, height, width);
+				this.rotation2(this.element.numInputs, this.element.numOutputs, this._size.y, this._size.x);
 				break;
 			case 3:
-				this.rotation3(this.element.numInputs, this.element.numOutputs, height, width);
+				this.rotation3(this.element.numInputs, this.element.numOutputs, this._size.y, this._size.x);
 				break;
 		}
 
@@ -95,8 +83,8 @@ export class ComponentGraphics extends PIXI.Graphics implements LGraphics, Compo
 		});
 
 		text.anchor = 0.5;
-		text.position.x = width / 2;
-		text.position.y = height / 2;
+		text.position.x = this._size.x / 2;
+		text.position.y = this._size.y / 2;
 
 		this.addChild(text);
 	}
@@ -210,7 +198,7 @@ export class ComponentGraphics extends PIXI.Graphics implements LGraphics, Compo
 			if (!this._labels || !this._labels[i]) continue;
 			const label = this.getLabelText(this._labels[i]);
 			label.anchor = new PIXI.Point(0.5, 1);
-			label.x = width - environment.gridPixelWidth / 2 - environment.gridPixelWidth * i;
+			label.x = environment.gridPixelWidth / 2 + environment.gridPixelWidth * i;
 			label.y = height - 1;
 			this.addChild(label);
 		}
@@ -220,7 +208,7 @@ export class ComponentGraphics extends PIXI.Graphics implements LGraphics, Compo
 			if (!this._labels || !this._labels[inputs + i]) continue;
 			const label = this.getLabelText(this._labels[inputs + i]);
 			label.anchor = new PIXI.Point(0.5, 0);
-			label.x = width - environment.gridPixelWidth / 2 - environment.gridPixelWidth * i;
+			label.x = environment.gridPixelWidth / 2 + environment.gridPixelWidth * i;
 			label.y = 1;
 			this.addChild(label);
 		}
@@ -310,6 +298,7 @@ export class ComponentGraphics extends PIXI.Graphics implements LGraphics, Compo
 		const elemType = this.elemProvService.getElementById(this.element.typeId);
 		if (elemType.calcLabels) this._labels = elemType.calcLabels(this.element);
 		this.clear();
+		this._size = Elements.calcPixelElementSize(this.element);
 		this.drawComponent();
 	}
 

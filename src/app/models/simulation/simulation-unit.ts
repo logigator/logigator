@@ -1,6 +1,6 @@
 export interface SimulationUnit {
-	typeId: number;
+	type: number;
 	inputs: number[];
 	outputs: number[];
-	options: number[];
+	ops: number[];
 }

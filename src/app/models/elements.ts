@@ -81,20 +81,27 @@ export abstract class Elements {
 		return {wire0, wire1};
 	}
 
-	public static calcElemEndPos(element: Element): PIXI.Point {
-		return Elements.calcEndPos(element.pos, Elements.elementType(element.typeId).width,
-			element.numInputs, element.numOutputs, element.rotation);
+	public static calcEndPos(element: Element, numInputs?: number, numOutputs?: number, rotation?: number): PIXI.Point {
+		const elemSize = this.calcElemSize(element, numInputs, numOutputs, rotation);
+		return new PIXI.Point(element.pos.x + elemSize.x, element.pos.y + elemSize.y);
 	}
 
-	public static calcEndPos(pos: PIXI.Point, width?: number, numInputs?: number, numOutputs?: number, rotation?: number): PIXI.Point {
-		if (rotation === undefined || rotation === null) rotation = 0;
+	public static calcElemSize(element: Element, numInputs?: number, numOutputs?: number, rotation?: number): PIXI.Point {
+		const elemType = Elements.elementType(element.typeId);
+		rotation = rotation === undefined || rotation == null ? element.rotation : rotation;
+		const elemToCalc = {...element};
+		if (numInputs !== undefined && numInputs !== null) elemToCalc.numInputs = numInputs;
+		if (numOutputs !== undefined && numOutputs !== null) elemToCalc.numOutputs = numOutputs;
 		if (rotation % 2 === 0) {
-			return new PIXI.Point(pos.x + width,
-				pos.y + Math.max(numInputs, numOutputs));
+			return new PIXI.Point(elemType.width(elemToCalc), elemType.height(elemToCalc));
 		} else {
-			return new PIXI.Point(pos.x + Math.max(numInputs, numOutputs),
-				pos.y + width);
+			return new PIXI.Point(elemType.height(elemToCalc), elemType.width(elemToCalc));
 		}
+	}
+
+	public static calcPixelElementSize(element: Element): PIXI.Point {
+		const gridSize = Elements.calcElemSize(element);
+		return new PIXI.Point(gridSize.x * environment.gridPixelWidth, gridSize.y * environment.gridPixelWidth);
 	}
 
 	public static otherWirePos(wire: Element, pos: PIXI.Point): PIXI.Point {
@@ -123,9 +130,11 @@ export abstract class Elements {
 		newElem.endPos = new PIXI.Point(end, wire0.pos.y);
 	}
 
-	public static wireEnds(element: Element, rotation?: number, numInputs?: number): PIXI.Point[] {
+	public static wireEnds(element: Element, rotation?: number, numInputs?: number, dif?: PIXI.Point): PIXI.Point[] {
+		const pos = dif ? new PIXI.Point(element.pos.x + dif.x, element.pos.y + dif.y) : element.pos;
+		const endPos = dif ? new PIXI.Point(element.endPos.x + dif.x, element.endPos.y + dif.y) : element.endPos;
 		if (element.typeId === ElementTypeId.WIRE)
-			return [element.pos, element.endPos];
+			return [pos, endPos];
 		if (rotation === undefined)
 			rotation = element.rotation;
 		if (numInputs === undefined)
@@ -134,27 +143,27 @@ export abstract class Elements {
 		switch (rotation) {
 			case 0:
 				for (let i = 0; i < numInputs; i++)
-					out[i] = new PIXI.Point(element.pos.x - 1, element.pos.y + i);
+					out[i] = new PIXI.Point(pos.x - 1, pos.y + i);
 				for (let i = 0; i < element.numOutputs; i++)
-					out[numInputs + i] = new PIXI.Point(element.endPos.x, element.pos.y + i);
+					out[numInputs + i] = new PIXI.Point(endPos.x, pos.y + i);
 				break;
 			case 1:
 				for (let i = 0; i < numInputs; i++)
-					out[i] = new PIXI.Point(element.endPos.x - 1 - i, element.pos.y - 1);
+					out[i] = new PIXI.Point(endPos.x - 1 - i, pos.y - 1);
 				for (let i = 0; i < element.numOutputs; i++)
-					out[numInputs + i] = new PIXI.Point(element.endPos.x - 1 - i, element.endPos.y);
+					out[numInputs + i] = new PIXI.Point(endPos.x - 1 - i, endPos.y);
 				break;
 			case 2:
 				for (let i = 0; i < numInputs; i++)
-					out[i] = new PIXI.Point(element.endPos.x, element.endPos.y - 1 - i);
+					out[i] = new PIXI.Point(endPos.x, endPos.y - 1 - i);
 				for (let i = 0; i < element.numOutputs; i++)
-					out[numInputs + i] = new PIXI.Point(element.pos.x - 1, element.endPos.y - 1 - i);
+					out[numInputs + i] = new PIXI.Point(pos.x - 1, endPos.y - 1 - i);
 				break;
 			case 3:
 				for (let i = 0; i < numInputs; i++)
-					out[i] = new PIXI.Point(element.pos.x + i, element.endPos.y);
+					out[i] = new PIXI.Point(pos.x + i, endPos.y);
 				for (let i = 0; i < element.numOutputs; i++)
-					out[numInputs + i] = new PIXI.Point(element.pos.x + i, element.pos.y - 1);
+					out[numInputs + i] = new PIXI.Point(pos.x + i, pos.y - 1);
 				break;
 		}
 		return out;

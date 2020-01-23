@@ -37,7 +37,7 @@
 	}
 
 	// #!if ELECTRON === 'true'
-	img {
+	.logo-img {
 		-webkit-app-region: drag;
 		height: 50%;
 		align-self: center;
@@ -137,6 +137,26 @@
 				}
 			}
 
+			.logged-in-settings {
+				display: flex;
+				flex-direction: row;
+				align-items: center;
+				justify-content: flex-end;
+				cursor: pointer;
+				padding-right: 0.7rem;
+				height: 100%;
+
+				&:hover {
+					@include themify() {
+						background-color: lighten(themed('primary'), 10%);
+					}
+				}
+
+				p {
+					margin: 0 0.5rem;
+				}
+			}
+
 			.divider {
 				border-left: 1px solid black;
 				height:  $toolbar-height - 25px;
@@ -167,6 +187,13 @@
 				@include themify() {
 					background-color: themed('primary');
 				}
+			}
+
+			.user-img {
+				height: $top-bar-height  / 1.5;
+				width: $top-bar-height / 1.5;
+				outline: none;
+				padding: 0;
 			}
 		}
 

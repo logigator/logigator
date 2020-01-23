@@ -14,11 +14,6 @@ export NVM_DIR="$([ -z "${XDG_CONFIG_HOME-}" ] && printf %s "${HOME}/.nvm" || pr
 nvm install lts/*
 ```
 
-Furthermore, python2 is required for compiling the [Simulation Code](https://github.com/logigator/logigator-simulation):
-```shell
-apt install python2
-```
-
 ### Installation
 Download the contents of the repository, open the command line in that directory and install all required dependencies using ```npm install```.
 #### Linux / Unix
@@ -34,7 +29,9 @@ You can also run the app on your local PC using Electron
 ```
 npm run start:electron
 ```
-If you want to use the Backend, which is required for login and saving projects, you must also setup [Logigator-Backend](https://github.com/logigator/logigator-backend). Instructions for doing so can be found in the backend repo. 
+If you want to use the Backend, which is required for login and saving projects, 
+you must also setup [Logigator-Backend](https://github.com/logigator/logigator-backend). 
+Instructions for doing so can be found in the [logigator-development-distribution](https://github.com/logigator/logigator-development-distribution).
 
 ##### Using the Simulation-Code
 If the simulation-mode is not working, is this most likely due to a missing Webassembly module. 

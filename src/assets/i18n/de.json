@@ -1,7 +1,7 @@
 {
 	"LANGUAGE": {
 		"DE": "Deutsch",
-		"EN": "Englisch"
+		"EN": "English"
 	},
 	"DROPDOWN": {
 		"FILE": {
@@ -34,7 +34,8 @@
 			"FULLSCREEN": "Vollbild"
 		},
 		"HELP": {
-			"TITLE": "Hilfe"
+			"TITLE": "Hilfe",
+			"HELP": "Hilfe"
 		},
 		"SETTINGS": {
 			"DARK_MODE": "Dunkles Design",
@@ -97,6 +98,10 @@
 			"PASSWORD": "Passwort",
 			"PASSWORD_ERR_REQUIRED": "Passwort muss angegeben werden",
 			"LOGIN_BUTTON": "ANMELDEN",
+			"RESEND_BUTTON": "Email erneut senden",
+			"RESEND_SUCCESS_1": "Email erfolgreich gesendet",
+			"RESEND_SUCCESS_2": "Bitte überprüfe deinen Posteingang und verifiziere deine Email Adresse",
+			"RESEND_SUCCESS_OK_BUTTON": "OK",
 			"OR": "oder"
 		},
 		"REGISTER": {
@@ -117,13 +122,17 @@
 			"PASSWORD_REPEAT_ERR": "Passwörter stimmen nicht überein",
 			"PRIVACY_POLICY": "Durch klicken auf \"Registrieren\" stimmen Sie zu, dass Sie die Datenschutzerklärung gelesen haben akzeptieren.",
 			"REGISTER_BUTTON": "REGISTRIEREN",
-			"OR": "oder"
+			"OR": "oder",
+			"SUCCESS_1": "Account erfolgreich erstellt.",
+			"SUCCESS_2": "Bitte überprüfe deinen Posteingang und verifiziere deine Email Adresse.",
+			"SUCCESS_OK_BUTTON": "OK"
 		},
 		"NEW_COMP": {
 			"TITLE": "Neue Komponente",
 			"NAME": "Name",
 			"SYMBOL": "Symbol",
 			"DESCRIPTION": "Beschreibung",
+			"DESCRIPTION_MAX_LENGTH": "Beschreibung ist zu lang",
 			"CREATE": "ERSTELLEN",
 			"NAME_REQUIRED": "Name muss angegeben werden",
 			"NAME_MIN_LENGTH": "Name ist zu kurz",
@@ -214,6 +223,10 @@
 			"TITLE": "Rom Daten editieren",
 			"SAVE": "SPEICHERN",
 			"CANCEL": "ABBRECHEN"
+		},
+		"HELP": {
+			"TITLE": "Hilfe",
+			"EDIT": "Auf Github bearbeiten"
 		}
 	},
 	"SETTINGS_INFO": {
@@ -265,37 +278,57 @@
 		"ADVANCED": {
 			"HALF_ADDER": {
 				"NAME": "Halbaddierer",
-				"DESCRIPTION": "Addiert zwei 1-Bit Zahlen zusammen."
+				"DESCRIPTION": "Addiert zwei 1-Bit Zahlen."
 			},
 			"FULL_ADDER": {
 				"NAME": "Volladdierer",
-				"DESCRIPTION": "Addiert drei 1-Bit Zahlen zusammen."
+				"DESCRIPTION": "Addiert drei 1-Bit Zahlen."
 			},
 			"ROM": {
 				"NAME": "ROM",
-				"DESCRIPTION": "Speichern, aus dem nur gelesen werden kann.<br>Kann beispielsweise für Programmcode genutzt werden.",
+				"DESCRIPTION": "Speicher, aus dem nur gelesen werden kann.<br>Kann beispielsweise für Programmcode genutzt werden.",
 				"WORD_SIZE": "Wortbreite",
 				"ADDRESS_SIZE": "Adressgröße"
+			},
+			"D_FF": {
+				"NAME": "D Flip Flop",
+				"DESCRIPTION": "Speichert einen Wert. Wert auf (D) wird bei Anlegen von (CLK) gespeichert."
+			},
+			"JK_FF": {
+				"NAME": "JK Flip Flop",
+				"DESCRIPTION": "Speichert einen Wert. Setzt auf HIGH, wenn (J) auf HIGH und setzt auf LOW, wenn (K) auf HIGH. Schaltet um, wenn beide Eingänge auf HIGH sind.<br>Speichert bei Anlegen von (CLK)."
+			},
+			"SR_FF": {
+				"NAME": "SR Flip Flop",
+				"DESCRIPTION": "Speichert einen Wert. Setzt auf HIGH, wenn (S) auf HIGH und setzt auf LOW, wenn (R) auf HIGH.<br>Speichert bei Anlegen von (CLK)."
 			}
 		},
 		"IO": {
 			"BUTTON": {
 				"NAME": "Knopf",
-				"DESCRIPTION": ""
+				"DESCRIPTION": "Kann gedrückt werden, um einen Puls zu senden."
 			},
 			"LEVER": {
 				"NAME": "Schalter",
-				"DESCRIPTION": ""
+				"DESCRIPTION": "Kann an- und ausgeschalten werden."
+			},
+			"LED": {
+				"NAME": "LED",
+				"DESCRIPTION": "Schaltet sich abhängig vom Eingang aus oder ein."
+			},
+			"SEGMENT_DISPLAY": {
+				"NAME": "Segment Display",
+				"DESCRIPTION": "Stellt die binären Eingänge als Dezimalzahlen dar."
 			}
 		},
 		"PLUG": {
 			"INPUT": {
 				"NAME": "Eingangsstecker",
-				"DESCRIPTION": "Platzieren das, wo die Eingänge deiner selbstdefinierten Komponenten sein sollen"
+				"DESCRIPTION": "Platziere das, wo die Eingänge deiner selbstdefinierten Komponente sein sollen"
 			},
 			"OUTPUT": {
 				"NAME": "Ausgangsstecker",
-				"DESCRIPTION": "Platzieren das, wo die Ausgänge deiner selbstdefinierten Komponenten sein sollen"
+				"DESCRIPTION": "Platziere das, wo die Ausgänge deiner selbstdefinierten Komponente sein sollen"
 			}
 		}
 	},
@@ -329,7 +362,8 @@
 			"COMP_NOT_FOUND": "Komponente konnte nicht gefunden werden, Projekt könnte beschädigt sein",
 			"INVALID_FILE": "Fehlerhafte Datei",
 			"RESOLVE_DEPS": "Konnte Abhängigkeiten des Projekts nicht auflösen",
-			"PROJECT_AS_COMP": "Konnte Projekt nicht als Komponente öffnen"
+			"PROJECT_AS_COMP": "Konnte Projekt nicht als Komponente öffnen",
+			"INVALID_FILE_TYPE": "Flascher Filetyp. Bitte Json verwenden."
 		},
 		"SHARE": {
 			"CREATE": "Konnte Projekt nicht teilen.",
@@ -340,8 +374,15 @@
 		},
 		"USER": {
 			"SAVE_SHORTCUTS": "Fehler beim speichern der Tastaturbefehle",
-			"GET_INFO": "Konnte Benutzerinformationen nicht bekommen",
-			"LOGIN": "Fehler beim Anmelden"
+			"GET_INFO": "Konnte Benutzerinformationen nicht bekommen"
+		},
+		"ACCOUNT": {
+			"NO_USER": "Benutzername exsistiert nicht",
+			"INVALID_PW": "Password ist falsch",
+			"EMAIL_NOT_VERIFIED": "Email Adresse nicht verifiziert",
+			"EMAIL_TAKEN": "Email Adresse wird bereits verwendet",
+			"USERNAME_TAKEN": "Benutzername wird bereits verwedet",
+			"OTHER": "Ein unbekannter Fehler ist aufgetreten"
 		},
 		"INVALID_URL": "Ungülitge Url"
 	},

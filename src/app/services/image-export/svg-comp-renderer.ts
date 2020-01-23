@@ -6,6 +6,7 @@ import {environment} from '../../../environments/environment';
 import {Grid} from '../../models/rendering/grid';
 import {ElementTypeId} from '../../models/element-types/element-type-ids';
 import * as PIXI from 'pixi.js';
+import {Elements} from '../../models/elements';
 
 export class SvgCompRenderer {
 
@@ -13,8 +14,7 @@ export class SvgCompRenderer {
 
 	private readonly _elementType: ElementType;
 
-	private readonly _width: number;
-	private readonly _height: number;
+	private readonly _size: PIXI.Point;
 
 	private readonly _labels: string[];
 
@@ -28,17 +28,7 @@ export class SvgCompRenderer {
 
 		this._group = document.createElementNS(this.SVG_NS, 'g');
 
-		if (element.rotation === 0 || element.rotation === 2) {
-			this._width = environment.gridPixelWidth * this._elementType.width;
-			this._height = element.numInputs >= element.numOutputs ?
-				environment.gridPixelWidth * element.numInputs :
-				environment.gridPixelWidth * element.numOutputs;
-		} else {
-			this._width = element.numInputs >= element.numOutputs ?
-				environment.gridPixelWidth * element.numInputs :
-				environment.gridPixelWidth * element.numOutputs;
-			this._height = environment.gridPixelWidth * this._elementType.width;
-		}
+		this._size = Elements.calcPixelElementSize(this.element);
 
 		switch (this.element.rotation) {
 			case 0:
@@ -61,16 +51,21 @@ export class SvgCompRenderer {
 	}
 
 	private rotation0(inputs: number, outputs: number) {
-		const rect = document.createElementNS(this.SVG_NS, 'path');
-		rect.setAttribute('d',
-			`M 0,0
-			h ${this._width - 3}
-			L ${this._width},3
-			v ${this._height - 6}
-			L ${this._width - 3},${this._height},
-			h -${this._width - 3},
-			v -${this._height}`
-		);
+		let rect: SVGElement;
+		if (this.shouldRenderAsRect()) {
+			rect = this.renderRect();
+		} else {
+			rect = document.createElementNS(this.SVG_NS, 'path');
+			rect.setAttribute('d',
+				`M 0,0
+			h ${this._size.x - 3}
+			L ${this._size.x},3
+			v ${this._size.y - 6}
+			L ${this._size.x - 3},${this._size.y},
+			h -${this._size.x - 3},
+			v -${this._size.y}`
+			);
+		}
 		rect.setAttribute('class', 'wire');
 		this._group.appendChild(rect);
 		const path = document.createElementNS(this.SVG_NS, 'path');
@@ -79,16 +74,16 @@ export class SvgCompRenderer {
 			d += `M ${-(environment.gridPixelWidth / 2)},${(environment.gridPixelWidth / 2) + environment.gridPixelWidth * i} `;
 			d += `h ${environment.gridPixelWidth / 2} `;
 			if (!this._labels || !this._labels[i]) continue;
-			const label = this.getLabelText(this._labels[i], 2, (environment.gridPixelWidth / 2) + environment.gridPixelWidth * i);
+			const label = this.getLabelText(this._labels[i], 2, (environment.gridPixelWidth / 2) + environment.gridPixelWidth * i + 2);
 			label.setAttribute('class', 'l-l');
 			this._group.appendChild(label);
 		}
 		for (let i = 0; i < outputs; i++) {
-			d += `M ${this._width},${(environment.gridPixelWidth / 2) + environment.gridPixelWidth * i} `;
+			d += `M ${this._size.x},${(environment.gridPixelWidth / 2) + environment.gridPixelWidth * i} `;
 			d += `h ${environment.gridPixelWidth / 2} `;
 			if (!this._labels || !this._labels[inputs + i]) continue;
 			const label = this.getLabelText(
-				this._labels[inputs + i], this._width - 2, (environment.gridPixelWidth / 2) + environment.gridPixelWidth * i
+				this._labels[inputs + i], this._size.x - 2, (environment.gridPixelWidth / 2) + environment.gridPixelWidth * i + 2
 			);
 			label.setAttribute('class', 'l-r');
 			this._group.appendChild(label);
@@ -99,34 +94,39 @@ export class SvgCompRenderer {
 	}
 
 	private rotation1(inputs: number, outputs: number) {
-		const rect = document.createElementNS(this.SVG_NS, 'path');
-		rect.setAttribute('d',
-			`M 0,0
-			h ${this._width}
-			v ${this._height - 3},
-			L ${this._width - 3},${this._height}
-			h -${this._width - 6},
-			L 0,${this._height - 3},
-			v -${this._height - 3}`
-		);
+		let rect: SVGElement;
+		if (this.shouldRenderAsRect()) {
+			rect = this.renderRect();
+		} else {
+			rect = document.createElementNS(this.SVG_NS, 'path');
+			rect.setAttribute('d',
+				`M 0,0
+			h ${this._size.x}
+			v ${this._size.y - 3},
+			L ${this._size.x - 3},${this._size.y}
+			h -${this._size.x - 6},
+			L 0,${this._size.y - 3},
+			v -${this._size.y - 3}`
+			);
+		}
 		rect.setAttribute('class', 'wire');
 		this._group.appendChild(rect);
 		const path = document.createElementNS(this.SVG_NS, 'path');
 		let d = '';
 		for (let i = 0; i < inputs; i++) {
-			d += `M ${this._width - environment.gridPixelWidth / 2 - environment.gridPixelWidth * i},0 `;
+			d += `M ${this._size.x - environment.gridPixelWidth / 2 - environment.gridPixelWidth * i},0 `;
 			d += `v ${-environment.gridPixelWidth / 2} `;
 			if (!this._labels || !this._labels[i]) continue;
-			const label = this.getLabelText(this._labels[i], this._width - environment.gridPixelWidth / 2 - environment.gridPixelWidth * i, 2);
+			const label = this.getLabelText(this._labels[i], this._size.x - environment.gridPixelWidth / 2 - environment.gridPixelWidth * i, 6);
 			label.setAttribute('class', 'l-t');
 			this._group.appendChild(label);
 		}
 		for (let i = 0; i < outputs; i++) {
-			d += `M ${this._width - environment.gridPixelWidth / 2 - environment.gridPixelWidth * i},${this._height} `;
+			d += `M ${this._size.x - environment.gridPixelWidth / 2 - environment.gridPixelWidth * i},${this._size.y} `;
 			d += `v ${environment.gridPixelWidth / 2} `;
 			if (!this._labels || !this._labels[inputs + i]) continue;
 			const label = this.getLabelText(
-				this._labels[inputs + i], this._width - environment.gridPixelWidth / 2 - environment.gridPixelWidth * i, this._height - 2
+				this._labels[inputs + i], this._size.x - environment.gridPixelWidth / 2 - environment.gridPixelWidth * i, this._size.y - 3
 			);
 			label.setAttribute('class', 'l-b');
 			this._group.appendChild(label);
@@ -137,36 +137,41 @@ export class SvgCompRenderer {
 	}
 
 	private rotation2(inputs: number, outputs: number) {
-		const rect = document.createElementNS(this.SVG_NS, 'path');
-		rect.setAttribute('d',
-			`M 3,0
-			h ${this._width - 3}
-			v ${this._height},
-			h -${this._width - 3}
-			L 0,${this._height - 3},
-			v -${this._height - 6}
+		let rect: SVGElement;
+		if (this.shouldRenderAsRect()) {
+			rect = this.renderRect();
+		} else {
+			rect = document.createElementNS(this.SVG_NS, 'path');
+			rect.setAttribute('d',
+				`M 3,0
+			h ${this._size.x - 3}
+			v ${this._size.y},
+			h -${this._size.x - 3}
+			L 0,${this._size.y - 3},
+			v -${this._size.y - 6}
 			L 3,0`
-		);
+			);
+		}
 		rect.setAttribute('class', 'wire');
 		this._group.appendChild(rect);
 		const path = document.createElementNS(this.SVG_NS, 'path');
 		let d = '';
 		for (let i = 0; i < inputs; i++) {
-			d += `M ${this._width},${this._height - (environment.gridPixelWidth / 2) - environment.gridPixelWidth * i} `;
+			d += `M ${this._size.x},${this._size.y - (environment.gridPixelWidth / 2) - environment.gridPixelWidth * i} `;
 			d += `h ${environment.gridPixelWidth / 2} `;
 			if (!this._labels || !this._labels[i]) continue;
 			const label = this.getLabelText(
-				this._labels[i], this._width - 2, this._height - (environment.gridPixelWidth / 2) - environment.gridPixelWidth * i
+				this._labels[i], this._size.x, this._size.y - (environment.gridPixelWidth / 2) - environment.gridPixelWidth * i + 2
 			);
 			label.setAttribute('class', 'l-r');
 			this._group.appendChild(label);
 		}
 		for (let i = 0; i < outputs; i++) {
-			d += `M 0,${this._height - (environment.gridPixelWidth / 2) - (environment.gridPixelWidth * i)} `;
+			d += `M 0,${this._size.y - (environment.gridPixelWidth / 2) - (environment.gridPixelWidth * i)} `;
 			d += `h ${-environment.gridPixelWidth / 2} `;
 			if (!this._labels || !this._labels[inputs + i]) continue;
 			const label = this.getLabelText(
-				this._labels[inputs + i], 2, this._height - (environment.gridPixelWidth / 2) - environment.gridPixelWidth * i
+				this._labels[inputs + i], 2, this._size.y - (environment.gridPixelWidth / 2) - environment.gridPixelWidth * i + 2
 			);
 			label.setAttribute('class', 'l-l');
 			this._group.appendChild(label);
@@ -177,26 +182,31 @@ export class SvgCompRenderer {
 	}
 
 	private rotation3(inputs: number, outputs: number) {
-		const rect = document.createElementNS(this.SVG_NS, 'path');
-		rect.setAttribute('d',
-			`M 3,0
-			h ${this._width - 6}
-			L ${this._width},3
-			v ${this._height - 3}
-			h -${this._width},
-			v -${this._height - 3},
+		let rect: SVGElement;
+		if (this.shouldRenderAsRect()) {
+			rect = this.renderRect();
+		} else {
+			rect = document.createElementNS(this.SVG_NS, 'path');
+			rect.setAttribute('d',
+				`M 3,0
+			h ${this._size.x - 6}
+			L ${this._size.x},3
+			v ${this._size.y - 3}
+			h -${this._size.x},
+			v -${this._size.y - 3},
 			L 3,0`
-		);
+			);
+		}
 		rect.setAttribute('class', 'wire');
 		this._group.appendChild(rect);
 		const path = document.createElementNS(this.SVG_NS, 'path');
 		let d = '';
 		for (let i = 0; i < inputs; i++) {
-			d += `M ${(environment.gridPixelWidth / 2) + environment.gridPixelWidth * i},${this._height} `;
+			d += `M ${environment.gridPixelWidth / 2 + environment.gridPixelWidth * i},${this._size.y} `;
 			d += `v ${environment.gridPixelWidth / 2} `;
 			if (!this._labels || !this._labels[i]) continue;
 			const label = this.getLabelText(
-				this._labels[i], this._width - environment.gridPixelWidth / 2 - environment.gridPixelWidth * i, this._height - 2
+				this._labels[i], environment.gridPixelWidth / 2 + environment.gridPixelWidth * i, this._size.y - 3
 			);
 			label.setAttribute('class', 'l-b');
 			this._group.appendChild(label);
@@ -206,7 +216,7 @@ export class SvgCompRenderer {
 			d += `v ${-environment.gridPixelWidth / 2} `;
 			if (!this._labels || !this._labels[inputs + i]) continue;
 			const label = this.getLabelText(
-				this._labels[inputs + i], this._width - environment.gridPixelWidth / 2 - environment.gridPixelWidth * i, 2
+				this._labels[inputs + i], environment.gridPixelWidth / 2 + environment.gridPixelWidth * i, 6
 			);
 			label.setAttribute('class', 'l-t');
 			this._group.appendChild(label);
@@ -218,7 +228,14 @@ export class SvgCompRenderer {
 
 	private symbol() {
 		let symbol: SVGElement;
-		if (this.element.typeId === ElementTypeId.BUTTON) {
+		if (this.element.typeId === ElementTypeId.SEGMENT_DISPLAY) {
+		} else if (this.elementProvider.isPlugElement(this.element.typeId)) {
+			symbol = document.createElementNS(this.SVG_NS, 'text');
+			symbol.textContent = this.element.data as string || this.elementProvider.getElementById(this.element.typeId).symbol;
+			symbol.setAttribute('class', 'symbol');
+			symbol.setAttribute('x', this._size.x / 2 + '');
+			symbol.setAttribute('y', this._size.y / 2 + 3 + '');
+		} else if (this.element.typeId === ElementTypeId.BUTTON) {
 			symbol = document.createElementNS(this.SVG_NS, 'rect');
 			symbol.setAttribute('class', 'wire');
 			symbol.setAttribute('x', '3');
@@ -230,16 +247,16 @@ export class SvgCompRenderer {
 			symbol.setAttribute('class', 'wire');
 			symbol.setAttribute('x1', '0');
 			symbol.setAttribute('y1', environment.gridPixelWidth - 4 + '');
-			symbol.setAttribute('x1', this._width + '');
+			symbol.setAttribute('x1', this._size.x + '');
 			symbol.setAttribute('y2', environment.gridPixelWidth - 4 + '');
 		} else {
 			symbol = document.createElementNS(this.SVG_NS, 'text');
 			symbol.textContent = this._elementType.symbol;
 			symbol.setAttribute('class', 'symbol');
-			symbol.setAttribute('x', this._width / 2 + '');
-			symbol.setAttribute('y', this._height / 2 + '');
+			symbol.setAttribute('x', this._size.x / 2 + '');
+			symbol.setAttribute('y', this._size.y / 2 + 3 + '');
 		}
-		this._group.appendChild(symbol);
+		if (symbol) this._group.appendChild(symbol);
 	}
 
 	private getLabelText(text: string, x: number, y: number): SVGTextElement {
@@ -248,6 +265,23 @@ export class SvgCompRenderer {
 		label.setAttribute('x', x + '');
 		label.setAttribute('y', y + '');
 		return label;
+	}
+
+	private renderRect() {
+		const rect = document.createElementNS(this.SVG_NS, 'rect');
+		rect.setAttribute('x', '0');
+		rect.setAttribute('y', '0');
+		rect.setAttribute('width', this._size.x + '');
+		rect.setAttribute('height', this._size.y + '');
+		return rect;
+	}
+
+	private shouldRenderAsRect(): boolean {
+		return this.element.typeId === ElementTypeId.INPUT ||
+			this.element.typeId === ElementTypeId.OUTPUT ||
+			this.element.typeId === ElementTypeId.BUTTON ||
+			this.element.typeId === ElementTypeId.LEVER ||
+			this.element.typeId === ElementTypeId.SEGMENT_DISPLAY;
 	}
 
 	public getSVGGroup(): SVGGElement {

@@ -1,6 +1,6 @@
 {
 	"LANGUAGE": {
-		"DE": "German",
+		"DE": "Deutsch",
 		"EN": "English"
 	},
 	"DROPDOWN": {
@@ -34,7 +34,8 @@
 			"FULLSCREEN": "Fullscreen"
 		},
 		"HELP": {
-			"TITLE": "Help"
+			"TITLE": "Help",
+			"HELP": "Help"
 		},
 		"SETTINGS": {
 			"DARK_MODE": "Dark Mode",
@@ -97,6 +98,10 @@
 			"PASSWORD": "Password",
 			"PASSWORD_ERR_REQUIRED": "Password is required.",
 			"LOGIN_BUTTON": "LOGIN",
+			"RESEND_BUTTON": "Resend Mail",
+			"RESEND_SUCCESS_1": "Email resent successfully",
+			"RESEND_SUCCESS_2": "Please check your mailbox and verify your email.",
+			"RESEND_SUCCESS_OK_BUTTON": "OK",
 			"OR": "or"
 		},
 		"REGISTER": {
@@ -117,13 +122,17 @@
 			"PASSWORD_REPEAT_ERR": "Passwords do not match",
 			"PRIVACY_POLICY": "By clicking on \"SIGN UP\" you agree that you have read and accepted our data policy.",
 			"REGISTER_BUTTON": "SIGN UP",
-			"OR": "or"
+			"OR": "or",
+			"SUCCESS_1": "Account created successfully.",
+			"SUCCESS_2": "Please check your mailbox and verify your email.",
+			"SUCCESS_OK_BUTTON": "OK"
 		},
 		"NEW_COMP": {
 			"TITLE": "New Component",
 			"NAME": "Name",
 			"SYMBOL": "Symbol",
 			"DESCRIPTION": "Description",
+			"DESCRIPTION_MAX_LENGTH": "Description is to long",
 			"CREATE": "CREATE",
 			"NAME_REQUIRED": "Name is required",
 			"NAME_MIN_LENGTH": "Name is to short",
@@ -214,6 +223,10 @@
 			"TITLE": "Edit Rom Data",
 			"SAVE": "SAVE",
 			"CANCEL": "CANCEL"
+		},
+		"HELP": {
+			"TITLE": "Help",
+			"EDIT": "Edit on Github"
 		}
 	},
 	"SETTINGS_INFO": {
@@ -276,6 +289,18 @@
 				"DESCRIPTION": "Read only Memory.<br>Can be used for program code, for example.",
 				"WORD_SIZE": "Word Size",
 				"ADDRESS_SIZE": "Address Size"
+			},
+			"D_FF": {
+				"NAME": "D Flip Flop",
+				"DESCRIPTION": "Holds a state. State on (D) gets saved on rising edge."
+			},
+			"JK_FF": {
+				"NAME": "JK Flip Flop",
+				"DESCRIPTION": "Holds a state. Set (J) to high to set and (K) to high to reset. Toggles output if both are high.<br>Triggers on rising edge."
+			},
+			"SR_FF": {
+				"NAME": "SR Flip Flop",
+				"DESCRIPTION": "Holds a state. Set (S) to high to set and (R) to high to reset.<br>Triggers on rising edge."
 			}
 		},
 		"IO": {
@@ -286,6 +311,14 @@
 			"LEVER": {
 				"NAME": "Switch",
 				"DESCRIPTION": "Can be switched on and off during simulation."
+			},
+			"LED": {
+				"NAME": "LED",
+				"DESCRIPTION": "Switches on or off depending on the applied input."
+			},
+			"SEGMENT_DISPLAY": {
+				"NAME": "Segment Display",
+				"DESCRIPTION": "Displays a binary input as decimal number"
 			}
 		},
 		"PLUG": {
@@ -329,7 +362,8 @@
 			"COMP_NOT_FOUND": "Component not found, project might be corrupted",
 			"INVALID_FILE": "Invalid File",
 			"RESOLVE_DEPS": "Unable to resolve dependencies of Project",
-			"PROJECT_AS_COMP": "Unable to open Project as Component"
+			"PROJECT_AS_COMP": "Unable to open Project as Component",
+			"INVALID_FILE_TYPE": "Invalid File Type. Use a Json File."
 		},
 		"SHARE": {
 			"CREATE": "Unable to create share.",
@@ -340,8 +374,15 @@
 		},
 		"USER": {
 			"SAVE_SHORTCUTS": "Error while Saving Shortcuts",
-			"GET_INFO": "Unable to get User info",
-			"LOGIN": "Error while logging in"
+			"GET_INFO": "Unable to get User info"
+		},
+		"ACCOUNT": {
+			"NO_USER": "Username does not exist",
+			"INVALID_PW": "Password is incorrect",
+			"EMAIL_NOT_VERIFIED": "Email address is not verified",
+			"EMAIL_TAKEN": "Email has already been taken",
+			"USERNAME_TAKEN": "Username has already been taken",
+			"OTHER": "An unknown error occurred."
 		},
 		"INVALID_URL": "Invalid Url"
 	},

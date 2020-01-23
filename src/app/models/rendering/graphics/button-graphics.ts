@@ -5,9 +5,9 @@ import {ElementType, isElementType} from '../../element-types/element-type';
 import {getStaticDI} from '../../get-di';
 import {ThemingService} from '../../../services/theming/theming.service';
 import {environment} from '../../../../environments/environment';
-import {WorkerCommunicationService} from '../../../services/simulation/worker-communication/worker-communication.service';
 import {RenderTicker} from '../../../services/render-ticker/render-ticker.service';
 import {ElementProviderService} from '../../../services/element-provider/element-provider.service';
+import {WorkerCommunicationService} from '../../../services/simulation/worker-communication/worker-communication-service';
 
 export class ButtonGraphics extends PIXI.Graphics implements LGraphics, ComponentUpdatable {
 
@@ -19,8 +19,6 @@ export class ButtonGraphics extends PIXI.Graphics implements LGraphics, Componen
 
 	private _scale: number;
 	private themingService = getStaticDI(ThemingService);
-
-	private readonly _width: number;
 
 	private simActiveState = false;
 	private shouldHaveActiveState = false;
@@ -37,12 +35,11 @@ export class ButtonGraphics extends PIXI.Graphics implements LGraphics, Componen
 				rotation: elementOrType.rotation,
 				numInputs: elementOrType.numInputs,
 				numOutputs: elementOrType.numOutputs,
+				typeId: elementOrType.id
 			} as any as Element;
-			this._width = elementOrType.width;
 		} else {
 			this.element = elementOrType;
 			this._projectIdentifier = projectIdentifier;
-			this._width = getStaticDI(ElementProviderService).getElementById(this.element.typeId).width;
 		}
 		this.drawComponent();
 		if (this._projectIdentifier) this.addClickListener();
@@ -52,18 +49,18 @@ export class ButtonGraphics extends PIXI.Graphics implements LGraphics, Componen
 		this.lineStyle(1 / this._scale, this.themingService.getEditorColor('wire'));
 		this.beginFill(this.themingService.getEditorColor('background'));
 		this.moveTo(0, 0);
-		this.drawRect(0, 0, environment.gridPixelWidth * this._width, environment.gridPixelWidth);
+		this.drawRect(0, 0, environment.gridPixelWidth, environment.gridPixelWidth);
 		this.drawRect(3, 3, environment.gridPixelWidth - 6, environment.gridPixelWidth - 6);
 		this.beginFill(this.themingService.getEditorColor('wire'));
 
 		switch (this.element.rotation) {
 			case 0:
-				this.moveTo(environment.gridPixelWidth * this._width, environment.gridPixelWidth / 2);
-				this.lineTo(environment.gridPixelWidth * this._width + environment.gridPixelWidth / 2, environment.gridPixelWidth / 2);
+				this.moveTo(environment.gridPixelWidth, environment.gridPixelWidth / 2);
+				this.lineTo(environment.gridPixelWidth + environment.gridPixelWidth / 2, environment.gridPixelWidth / 2);
 				break;
 			case 1:
-				this.moveTo(environment.gridPixelWidth / 2, environment.gridPixelWidth * this._width);
-				this.lineTo(environment.gridPixelWidth / 2, environment.gridPixelWidth * this._width + environment.gridPixelWidth / 2);
+				this.moveTo(environment.gridPixelWidth / 2, environment.gridPixelWidth);
+				this.lineTo(environment.gridPixelWidth / 2, environment.gridPixelWidth + environment.gridPixelWidth / 2);
 				break;
 			case 2:
 				this.moveTo(0, environment.gridPixelWidth / 2);

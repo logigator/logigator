@@ -28,5 +28,6 @@ export const input: ElementType = {
 	hasPlugIndex: true,
 	hasLabel: true,
 
-	width: 1,
+	width: () => 1,
+	height: () => 1
 };

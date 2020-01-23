@@ -29,7 +29,7 @@ export class TextGraphics extends PIXI.Container implements LGraphics, Component
 			t.destroy();
 		}
 		this._texts = [];
-		const textParts = text.split('\n');
+		const textParts = text ? text.split('\n') : [];
 		for (let i = 0; i < textParts.length; i++) {
 			this._texts[i] = new PIXI.BitmapText(textParts[i], {
 				font: {

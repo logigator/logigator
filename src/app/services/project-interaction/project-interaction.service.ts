@@ -10,6 +10,7 @@ import {NewComponentComponent} from '../../components/popup-contents/new-compone
 import {ProjectSaveManagementService} from '../project-save-management/project-save-management.service';
 import {ShareProjectComponent} from '../../components/popup-contents/share-project/share-project.component';
 import {PopupService} from '@logigator/logigator-shared-comps';
+import {ErrorHandlingService} from '../error-handling/error-handling.service';
 
 @Injectable({
 	providedIn: 'root'
@@ -27,6 +28,7 @@ export class ProjectInteractionService {
 		private workMode: WorkModeService,
 		private popupService: PopupService,
 		private projectSave: ProjectSaveManagementService,
+		private errorHandling: ErrorHandlingService,
 		private ngZone: NgZone
 	) {}
 
@@ -99,6 +101,22 @@ export class ProjectInteractionService {
 				await this.popupService.showPopup(OpenProjectComponent, 'POPUP.OPEN.TITLE', true);
 			}
 		});
+	}
+
+	public async openProjectDrop(files: FileList) {
+		if (!checkActionUsable('openProj')) return;
+		if (files.length !== 1) return ;
+		if (files[0].type !== 'application/json') {
+			this.errorHandling.showErrorMessage('ERROR.PROJECTS.INVALID_FILE_TYPE');
+			return;
+		}
+		if (await this.projectsService.askToSave()) {
+			const reader = new FileReader();
+			reader.readAsText(files[0], 'UTF-8');
+			reader.onload = (event: any) => {
+				this.projectsService.openFile(event.target.result);
+			};
+		}
 	}
 
 	public newComponent(): Promise<any> {

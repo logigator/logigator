@@ -8,6 +8,7 @@ import {SvgCompRenderer} from './svg-comp-renderer';
 import {ElementTypeId} from '../../models/element-types/element-type-ids';
 import {SvgTextRenderer} from './svg-text-renderer';
 import {environment} from '../../../environments/environment';
+import {SvgLedRenderer} from './svg-led-renderer';
 
 export class SvgImageExporter {
 
@@ -63,6 +64,10 @@ export class SvgImageExporter {
 			const textRender = new SvgTextRenderer(element, this.offset);
 			this._svg.appendChild(textRender.getSVGGroup());
 			this.updateSize(Grid.getPixelPosForGridPos(new PIXI.Point(element.pos.x - this.offset.x, element.pos.y - this.offset.y)));
+		} else if (element.typeId === ElementTypeId.LED) {
+			const textRender = new SvgLedRenderer(element, this.offset);
+			this._svg.appendChild(textRender.getSVGGroup());
+			this.updateSize(Grid.getPixelPosForGridPos(new PIXI.Point(element.pos.x - this.offset.x, element.pos.y - this.offset.y)));
 		} else {
 			const compRenderer = new SvgCompRenderer(element, this.offset);
 			this._svg.appendChild(compRenderer.getSVGGroup());
@@ -88,11 +93,13 @@ export class SvgImageExporter {
 	private placeConnPoint(pos: PIXI.Point) {
 		const point = document.createElementNS(this.SVG_NS, 'rect');
 		const pixelPos = Grid.getPixelPosForGridPosWire(new PIXI.Point(pos.x - this.offset.x, pos.y - this.offset.y));
-		pixelPos.x -= 2.5;
-		pixelPos.y -= 2.5;
+		pixelPos.x -= 2;
+		pixelPos.y -= 2;
 		point.setAttribute('x', pixelPos.x + '');
 		point.setAttribute('y', pixelPos.y + '');
-		point.setAttribute('class', 'conn-point');
+		point.setAttribute('width', '4');
+		point.setAttribute('height', '4');
+		point.setAttribute('fill', '#' + this.themingService.getEditorColor('wire').toString(16));
 		this._svg.appendChild(point);
 	}
 
@@ -111,39 +118,31 @@ export class SvgImageExporter {
 				fill: none;
 				vector-effect: non-scaling-stroke;
 			}
-			.conn-point {
-				fill: #${this.themingService.getEditorColor('wire').toString(16)};
-				height: 5px;
-				width: 5px;
-			}
 			.symbol {
 				text-anchor: middle;
-				font-size: 15px;
-				dominant-baseline: central;
+				font-size: 8px;
 			}
 			.text {
 				text-anchor: start;
-				dominant-baseline: central;
+			}
+			.led {
+				fill: #${this.themingService.getEditorColor('wire').toString(16)};
 			}
 			.l-l {
 				text-anchor: start;
-				font-size: ${environment.gridPixelWidth * 0.5}px;
-				dominant-baseline: central;
+				font-size: ${environment.gridPixelWidth * 0.3}px;
 			}
 			.l-r {
 				text-anchor: end;
-				font-size: ${environment.gridPixelWidth * 0.5}px;
-				dominant-baseline: central;
+				font-size: ${environment.gridPixelWidth * 0.3}px;
 			}
 			.l-t {
 				text-anchor: middle;
-				font-size: ${environment.gridPixelWidth * 0.5}px;
-				dominant-baseline: text-before-edge;
+				font-size: ${environment.gridPixelWidth * 0.3}px;
 			}
 			.l-b {
 				text-anchor: middle;
-				font-size: ${environment.gridPixelWidth * 0.5}px;
-				dominant-baseline: text-after-edge;
+				font-size: ${environment.gridPixelWidth * 0.3}px;
 			}
 		`;
 		defs.appendChild(styles);
