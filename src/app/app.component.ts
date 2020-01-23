@@ -123,10 +123,10 @@ export class AppComponent implements OnInit, OnDestroy {
 		event.stopPropagation();
 	}
 
-	private onFileDrop(event: DragEvent) {
+	public onFileDrop(event: DragEvent) {
 		event.preventDefault();
 		event.stopPropagation();
-		this.projectInteractionService.openProjectDrop(event.dataTransfer.files)
+		this.projectInteractionService.openProjectDrop(event.dataTransfer.files);
 	}
 
 	private initTranslation() {
