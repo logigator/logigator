@@ -198,7 +198,7 @@ export class ComponentGraphics extends PIXI.Graphics implements LGraphics, Compo
 			if (!this._labels || !this._labels[i]) continue;
 			const label = this.getLabelText(this._labels[i]);
 			label.anchor = new PIXI.Point(0.5, 1);
-			label.x = width - environment.gridPixelWidth / 2 - environment.gridPixelWidth * i;
+			label.x = environment.gridPixelWidth / 2 + environment.gridPixelWidth * i;
 			label.y = height - 1;
 			this.addChild(label);
 		}
@@ -208,7 +208,7 @@ export class ComponentGraphics extends PIXI.Graphics implements LGraphics, Compo
 			if (!this._labels || !this._labels[inputs + i]) continue;
 			const label = this.getLabelText(this._labels[inputs + i]);
 			label.anchor = new PIXI.Point(0.5, 0);
-			label.x = width - environment.gridPixelWidth / 2 - environment.gridPixelWidth * i;
+			label.x = environment.gridPixelWidth / 2 + environment.gridPixelWidth * i;
 			label.y = 1;
 			this.addChild(label);
 		}

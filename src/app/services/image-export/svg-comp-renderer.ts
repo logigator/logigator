@@ -74,7 +74,7 @@ export class SvgCompRenderer {
 			d += `M ${-(environment.gridPixelWidth / 2)},${(environment.gridPixelWidth / 2) + environment.gridPixelWidth * i} `;
 			d += `h ${environment.gridPixelWidth / 2} `;
 			if (!this._labels || !this._labels[i]) continue;
-			const label = this.getLabelText(this._labels[i], 2, (environment.gridPixelWidth / 2) + environment.gridPixelWidth * i);
+			const label = this.getLabelText(this._labels[i], 2, (environment.gridPixelWidth / 2) + environment.gridPixelWidth * i + 2);
 			label.setAttribute('class', 'l-l');
 			this._group.appendChild(label);
 		}
@@ -83,7 +83,7 @@ export class SvgCompRenderer {
 			d += `h ${environment.gridPixelWidth / 2} `;
 			if (!this._labels || !this._labels[inputs + i]) continue;
 			const label = this.getLabelText(
-				this._labels[inputs + i], this._size.x - 2, (environment.gridPixelWidth / 2) + environment.gridPixelWidth * i
+				this._labels[inputs + i], this._size.x - 2, (environment.gridPixelWidth / 2) + environment.gridPixelWidth * i + 2
 			);
 			label.setAttribute('class', 'l-r');
 			this._group.appendChild(label);
@@ -117,7 +117,7 @@ export class SvgCompRenderer {
 			d += `M ${this._size.x - environment.gridPixelWidth / 2 - environment.gridPixelWidth * i},0 `;
 			d += `v ${-environment.gridPixelWidth / 2} `;
 			if (!this._labels || !this._labels[i]) continue;
-			const label = this.getLabelText(this._labels[i], this._size.x - environment.gridPixelWidth / 2 - environment.gridPixelWidth * i, 2);
+			const label = this.getLabelText(this._labels[i], this._size.x - environment.gridPixelWidth / 2 - environment.gridPixelWidth * i, 6);
 			label.setAttribute('class', 'l-t');
 			this._group.appendChild(label);
 		}
@@ -126,7 +126,7 @@ export class SvgCompRenderer {
 			d += `v ${environment.gridPixelWidth / 2} `;
 			if (!this._labels || !this._labels[inputs + i]) continue;
 			const label = this.getLabelText(
-				this._labels[inputs + i], this._size.x - environment.gridPixelWidth / 2 - environment.gridPixelWidth * i, this._size.y - 2
+				this._labels[inputs + i], this._size.x - environment.gridPixelWidth / 2 - environment.gridPixelWidth * i, this._size.y - 3
 			);
 			label.setAttribute('class', 'l-b');
 			this._group.appendChild(label);
@@ -161,7 +161,7 @@ export class SvgCompRenderer {
 			d += `h ${environment.gridPixelWidth / 2} `;
 			if (!this._labels || !this._labels[i]) continue;
 			const label = this.getLabelText(
-				this._labels[i], this._size.x - 2, this._size.y - (environment.gridPixelWidth / 2) - environment.gridPixelWidth * i
+				this._labels[i], this._size.x, this._size.y - (environment.gridPixelWidth / 2) - environment.gridPixelWidth * i + 2
 			);
 			label.setAttribute('class', 'l-r');
 			this._group.appendChild(label);
@@ -171,7 +171,7 @@ export class SvgCompRenderer {
 			d += `h ${-environment.gridPixelWidth / 2} `;
 			if (!this._labels || !this._labels[inputs + i]) continue;
 			const label = this.getLabelText(
-				this._labels[inputs + i], 2, this._size.y - (environment.gridPixelWidth / 2) - environment.gridPixelWidth * i
+				this._labels[inputs + i], 2, this._size.y - (environment.gridPixelWidth / 2) - environment.gridPixelWidth * i + 2
 			);
 			label.setAttribute('class', 'l-l');
 			this._group.appendChild(label);
@@ -202,11 +202,11 @@ export class SvgCompRenderer {
 		const path = document.createElementNS(this.SVG_NS, 'path');
 		let d = '';
 		for (let i = 0; i < inputs; i++) {
-			d += `M ${(environment.gridPixelWidth / 2) + environment.gridPixelWidth * i},${this._size.y} `;
+			d += `M ${environment.gridPixelWidth / 2 + environment.gridPixelWidth * i},${this._size.y} `;
 			d += `v ${environment.gridPixelWidth / 2} `;
 			if (!this._labels || !this._labels[i]) continue;
 			const label = this.getLabelText(
-				this._labels[i], this._size.x - environment.gridPixelWidth / 2 - environment.gridPixelWidth * i, this._size.y - 2
+				this._labels[i], environment.gridPixelWidth / 2 + environment.gridPixelWidth * i, this._size.y - 3
 			);
 			label.setAttribute('class', 'l-b');
 			this._group.appendChild(label);
@@ -216,7 +216,7 @@ export class SvgCompRenderer {
 			d += `v ${-environment.gridPixelWidth / 2} `;
 			if (!this._labels || !this._labels[inputs + i]) continue;
 			const label = this.getLabelText(
-				this._labels[inputs + i], this._size.x - environment.gridPixelWidth / 2 - environment.gridPixelWidth * i, 2
+				this._labels[inputs + i], environment.gridPixelWidth / 2 + environment.gridPixelWidth * i, 6
 			);
 			label.setAttribute('class', 'l-t');
 			this._group.appendChild(label);
@@ -234,7 +234,7 @@ export class SvgCompRenderer {
 			symbol.textContent = this.element.data as string || this.elementProvider.getElementById(this.element.typeId).symbol;
 			symbol.setAttribute('class', 'symbol');
 			symbol.setAttribute('x', this._size.x / 2 + '');
-			symbol.setAttribute('y', this._size.y / 2 + '');
+			symbol.setAttribute('y', this._size.y / 2 + 3 + '');
 		} else if (this.element.typeId === ElementTypeId.BUTTON) {
 			symbol = document.createElementNS(this.SVG_NS, 'rect');
 			symbol.setAttribute('class', 'wire');
@@ -254,7 +254,7 @@ export class SvgCompRenderer {
 			symbol.textContent = this._elementType.symbol;
 			symbol.setAttribute('class', 'symbol');
 			symbol.setAttribute('x', this._size.x / 2 + '');
-			symbol.setAttribute('y', this._size.y / 2 + '');
+			symbol.setAttribute('y', this._size.y / 2 + 3 + '');
 		}
 		if (symbol) this._group.appendChild(symbol);
 	}
