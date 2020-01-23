@@ -5,3 +5,4 @@ export const environment = {
 	apiPrefix: 'https://api.logigator.com',
 	domain: 'https://editor.logigator.com'
 };
+export const ELECTRON = true;

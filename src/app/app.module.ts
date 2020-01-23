@@ -56,6 +56,7 @@ import {WorkerCommunicationWasmService} from './services/simulation/worker-commu
 import {WorkerCommunicationNodeService} from './services/simulation/worker-communication/worker-communication-node.service';
 import { HelpComponent } from './components/popup-contents/help/help.component';
 import { HelpRendererComponent } from './components/popup-contents/help-renderer/help-renderer.component';
+import {ELECTRON} from '../environments/environment';
 
 @NgModule({
 	declarations: [
@@ -148,18 +149,10 @@ import { HelpRendererComponent } from './components/popup-contents/help-renderer
 			useClass: CredentialsInterceptor,
 			multi: true
 		},
-		// #!if ELECTRON === 'false'
 		{
 			provide: WorkerCommunicationService,
-			useClass: WorkerCommunicationWasmService
-		},
-		// #!endif
-		// #!if ELECTRON === 'true'
-		{
-			provide: WorkerCommunicationService,
-			useClass: WorkerCommunicationNodeService
+			useClass: ELECTRON ? WorkerCommunicationNodeService : WorkerCommunicationWasmService
 		}
-		// #!endif
 	],
 	bootstrap: [AppComponent]
 })
