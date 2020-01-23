@@ -9,6 +9,7 @@ import {takeUntil} from 'rxjs/operators';
 import {ProjectsService} from './services/projects/projects.service';
 import {LangChangeEvent, TranslateService} from '@ngx-translate/core';
 import {ElementProviderService} from './services/element-provider/element-provider.service';
+import {ProjectInteractionService} from './services/project-interaction/project-interaction.service';
 
 @Component({
 	selector: 'app-root',
@@ -30,6 +31,7 @@ export class AppComponent implements OnInit, OnDestroy {
 		private selection: SelectionService,
 		private shortcuts: ShortcutsService,
 		private projects: ProjectsService,
+		private projectInteractionService: ProjectInteractionService,
 		@Inject(DOCUMENT) private document: HTMLDocument,
 		private translate: TranslateService,
 		private elementProviderService: ElementProviderService
@@ -109,6 +111,22 @@ export class AppComponent implements OnInit, OnDestroy {
 			e.returnValue = true;
 		}
 		// #!endif
+	}
+
+	public onDragStart(event: Event) {
+		event.preventDefault();
+		event.stopPropagation();
+	}
+
+	public onDragStop(event: Event) {
+		event.preventDefault();
+		event.stopPropagation();
+	}
+
+	public onFileDrop(event: DragEvent) {
+		event.preventDefault();
+		event.stopPropagation();
+		this.projectInteractionService.openProjectDrop(event.dataTransfer.files);
 	}
 
 	private initTranslation() {

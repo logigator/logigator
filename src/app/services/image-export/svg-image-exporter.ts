@@ -93,11 +93,13 @@ export class SvgImageExporter {
 	private placeConnPoint(pos: PIXI.Point) {
 		const point = document.createElementNS(this.SVG_NS, 'rect');
 		const pixelPos = Grid.getPixelPosForGridPosWire(new PIXI.Point(pos.x - this.offset.x, pos.y - this.offset.y));
-		pixelPos.x -= 2.5;
-		pixelPos.y -= 2.5;
+		pixelPos.x -= 2;
+		pixelPos.y -= 2;
 		point.setAttribute('x', pixelPos.x + '');
 		point.setAttribute('y', pixelPos.y + '');
-		point.setAttribute('class', 'conn-point');
+		point.setAttribute('width', '4');
+		point.setAttribute('height', '4');
+		point.setAttribute('fill', '#' + this.themingService.getEditorColor('wire').toString(16));
 		this._svg.appendChild(point);
 	}
 
@@ -116,19 +118,12 @@ export class SvgImageExporter {
 				fill: none;
 				vector-effect: non-scaling-stroke;
 			}
-			.conn-point {
-				fill: #${this.themingService.getEditorColor('wire').toString(16)};
-				height: 5px;
-				width: 5px;
-			}
 			.symbol {
 				text-anchor: middle;
 				font-size: 8px;
-				transform: translateY(2px);
 			}
 			.text {
 				text-anchor: start;
-				dominant-baseline: central;
 			}
 			.led {
 				fill: #${this.themingService.getEditorColor('wire').toString(16)};
@@ -136,22 +131,18 @@ export class SvgImageExporter {
 			.l-l {
 				text-anchor: start;
 				font-size: ${environment.gridPixelWidth * 0.3}px;
-				transform: translateY(2px);
 			}
 			.l-r {
 				text-anchor: end;
 				font-size: ${environment.gridPixelWidth * 0.3}px;
-				transform: translateY(2px);
 			}
 			.l-t {
 				text-anchor: middle;
 				font-size: ${environment.gridPixelWidth * 0.3}px;
-                transform: translateY(4px);
 			}
 			.l-b {
 				text-anchor: middle;
 				font-size: ${environment.gridPixelWidth * 0.3}px;
-                transform: translateY(-1px);
 			}
 		`;
 		defs.appendChild(styles);

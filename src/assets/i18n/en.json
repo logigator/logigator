@@ -362,7 +362,8 @@
 			"COMP_NOT_FOUND": "Component not found, project might be corrupted",
 			"INVALID_FILE": "Invalid File",
 			"RESOLVE_DEPS": "Unable to resolve dependencies of Project",
-			"PROJECT_AS_COMP": "Unable to open Project as Component"
+			"PROJECT_AS_COMP": "Unable to open Project as Component",
+			"INVALID_FILE_TYPE": "Invalid File Type. Use a Json File."
 		},
 		"SHARE": {
 			"CREATE": "Unable to create share.",

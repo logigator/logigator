@@ -362,7 +362,8 @@
 			"COMP_NOT_FOUND": "Komponente konnte nicht gefunden werden, Projekt könnte beschädigt sein",
 			"INVALID_FILE": "Fehlerhafte Datei",
 			"RESOLVE_DEPS": "Konnte Abhängigkeiten des Projekts nicht auflösen",
-			"PROJECT_AS_COMP": "Konnte Projekt nicht als Komponente öffnen"
+			"PROJECT_AS_COMP": "Konnte Projekt nicht als Komponente öffnen",
+			"INVALID_FILE_TYPE": "Flascher Filetyp. Bitte Json verwenden."
 		},
 		"SHARE": {
 			"CREATE": "Konnte Projekt nicht teilen.",
