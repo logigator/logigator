@@ -68,5 +68,5 @@ Output equals Input, but delayed for one simulation tick.
 
 ## Clock
 
-Periodically sends a one tick long pulse. Delay between pulses can be configured.<br>
+Periodically sends a one tick long pulse. The delay between pulses can be configured.<br>
 If the STP input is high, no clock pulses are produced.

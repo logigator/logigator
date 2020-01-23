@@ -11,12 +11,11 @@ No matter if you are a bloody beginner or an absolute professional who needs top
 ![Construction Box](../../assets/help/construction-box.jpg)
 
 <div class="margin-left">
-In order to create a Circuit Element select the desired Element from to construction box, located on the left-hand side of the editor.
+
+In order to create a circuit element select the desired element from the construction box, which is located on the left-hand side of the screen.
 <br><br>
 
-After you selected an Element you can place it by clicking anywhere on the workarea. 
-
-It's also possible to drag the Element before placing it. To do so hold down your mouse button and move your mouse, the Element will be placed when you release the mouse button.
+After selecting an element you can place it by clicking anywhere on the workarea.
 </div>
 </div>
 
@@ -27,20 +26,21 @@ It's also possible to drag the Element before placing it. To do so hold down you
 ![Settings Info Box](../../assets/help/settings-info-box.jpg)
 
 <div class="margin-left">
-Placed Elements can be edit in the Settings box located in the bottom-right corner of the screen.
 
-There you can configure settings like the direction, amount of inputs or amount of outputs of components.
+Placed elements can be edited in the Settings box, which is located in the bottom-right corner of the screen.
+
+There you can configure settings like the direction, amount of inputs, or amount of outputs of components.
 
 </div>
 </div>
 
 ## Zooming and Panning the View
-You can zoom the view by scrolling your mouse wheel or by pressing the `+` or `-` button in the toolbar.
+You can zoom in and out by scrolling your mouse wheel or by pressing the `+` or `-` button in the toolbar.
 
 To pan the view just hold down your right mouse-button and move your mouse.
 
 ## Selecting Elements
-To select Elements click on the desired Element or drag a select-rect with your left mouse-button.
+To select elements click on the desired element or drag a select-rect with your left mouse-button.
 
 #### Select vs. Select Cut
 
@@ -53,8 +53,8 @@ To select Elements click on the desired Element or drag a select-rect with your 
 	<p class="margin-left">Select Cut</p>
 </div>
 
-In Select Mode wires will be selected to the next corner or the end of the wire.<br>
-In contrast, in Cut Select Mode wires will only be selected to the end of the Select-rect. There wires will be cut of. 
+In `Select` mode wires will be selected to the next corner or the end of the wire.<br>
+In contrast, in `Cut Select` Mode wires will only be selected to the edge of the selection-rectangle. Wires will be cut at this edge.
 
 ## Placing Wires
 
@@ -66,7 +66,7 @@ In contrast, in Cut Select Mode wires will only be selected to the end of the Se
 To place wires select this icon in the toolbar.
 </div>
 </div>
-Then you can drag a new wire with you left mouse-button.
+Then you can drag a new wire with your left mouse-button.
 
 ## Connecting Wires
 
@@ -78,7 +78,7 @@ Then you can drag a new wire with you left mouse-button.
 To connect wires select this icon in the toolbar.
 </div>
 </div>
-Then you can click on intersection of wires, to connect them. If you click again, the wires will be disconnected.
+Click on the intersection of the wire you want to connect to to this. When you click again, the wires will be disconnected.
 
 ## Placing Text
 
@@ -87,15 +87,16 @@ Then you can click on intersection of wires, to connect them. If you click again
 ![Connect Wires Icon](../../assets/icons/dark/text.svg "icon-img")
 
 <div class="margin-left">
-To place text select this icon in the toolbar.
+To place text, select this icon in the toolbar.
 </div>
 </div>
-Then you can click anywhere on the view to place text.
+Place the text-field on the workarea, just like a gate.
 
 ## Exporting Images
-Images can be exported by clicking: File > Export Image, in the correct file format.
-
-Images can be exported in the following Formats: SVG, PNG, JPEG.
+Images of the current circuit can be exported via `File > Export Image`.
 
 ## Shortcuts 
-Most of the described actions can also be performed with shortcuts. You can see and edit shortcuts by clicking the Edit Shortcuts Button in the Settings Menu on the top-right corner of the editor.
+Most of the described actions can also be performed with shortcuts. You see and edit shortcuts via `Edit Shortcuts` in the settings menu in the top-right corner of the screen.
+
+## Simulation Ticks
+The output of every gate and element gets updated once every simulation tick.

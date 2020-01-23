@@ -12,7 +12,8 @@
 | 1   | 1   | 0   | 1     |
 
 <div class="margin-left">
-Adds two 1-bit numbers together.
+
+Adds two single binary digits. `Sum` is the single digit sum of the addition. `Carry` represents the overflow.
 </div>
 </div>
 
@@ -32,7 +33,8 @@ Adds two 1-bit numbers together.
 | 1   | 1   | 1   | 1   | 1     |
 
 <div class="margin-left">
-Adds three 1-bit numbers together.
+
+Adds three single binary digits.
 </div>
 </div>
 
@@ -43,7 +45,9 @@ Adds three 1-bit numbers together.
 ![Rom Data Edit](../../assets/help/rom-edit.jpg)
 
 <div class="margin-left">
-Read only Memory. Can be used for program code, for example.
+
+`Read only Memory` - Data can be written in hexadecimal.
+Can be used for program code, for example.
 </div>
 </div>
 
@@ -57,7 +61,9 @@ Read only Memory. Can be used for program code, for example.
 | 0   | 0   | 1         |
 
 <div class="margin-left">
-Holds a state. State on (D) gets saved on rising edge of the CLK input.
+
+`Data` or `Delay` Flip-Flop - Holds a state. When (CLK) is set high, (Q) gets set to (D). (Q Inverse) always is the inverse of (Q).
+
 </div>
 </div>
 
@@ -73,7 +79,8 @@ Holds a state. State on (D) gets saved on rising edge of the CLK input.
 | 0    | 0    | No change | No change |
 
 <div class="margin-left">
-Holds a state. Set (J) to high to set and (K) to high to reset. Toggles output if both are high. Triggers on rising edge of the CLK input.
+
+Holds a state. (J) represents `set`, (K) represents `reset`. As soon as (CLK) is set high, (Q) sets high if (J) is set high and sets low if (K) is set high. (Q) does not change when both (J) and (K) are low, toggles when both are set high.
 </div>
 </div>
 
@@ -89,6 +96,7 @@ Holds a state. Set (J) to high to set and (K) to high to reset. Toggles output i
 | 1    | 1    | Invalid   | Invalid   |
 
 <div class="margin-left">
-Holds a state. Set (S) to high to set and (R) to high to reset. Triggers on rising edge of the CLK input.
+
+Holds a state. (S) represents `set`, (R) represents `reset`. As soon as (CLK) is set high, (Q) sets high if (S) is set high and sets low if (R) is set high. (Q) does not change when (J) and (K) are the same.
 </div>
 </div>

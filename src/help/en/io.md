@@ -6,7 +6,8 @@
 ![Button](../../assets/help/button.jpg)
 
 <div class="margin-left">
-Can be clicked to emit a pulse signal.
+
+Can be clicked to emit a pulse signal. Lasts one simulation tick.
 </div>
 </div>
 
@@ -16,6 +17,7 @@ Can be clicked to emit a pulse signal.
 ![Switch](../../assets/help/switch.jpg)
 
 <div class="margin-left">
+
 Can be switched on and off during simulation.
 </div>
 </div>
@@ -27,6 +29,7 @@ Can be switched on and off during simulation.
 ![LED](../../assets/help/led.jpg)
 
 <div class="margin-left">
+
 Switches on or off depending on the applied input.
 </div>
 </div>
@@ -38,6 +41,7 @@ Switches on or off depending on the applied input.
 ![Segment Display](../../assets/help/segment-display.jpg)
 
 <div class="margin-left">
+
 Seven segment display with a binary input, that displays the input as decimal number. 
 </div>
 </div>
