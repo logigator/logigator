@@ -49,7 +49,7 @@ export class ToolbarComponent {
 	}
 
 	public runTests(): void {
-		// this.test = new Test('bugfix', this.projectService.currProject, ManuallyLogged.bug);
+		// this.test = new Test('bugfix', this.projectService.currProject, ManuallyLogged.testTest);
 		for (const name in ManuallyLogged) {
 			Test.runAndCheck(name, false);
 		}

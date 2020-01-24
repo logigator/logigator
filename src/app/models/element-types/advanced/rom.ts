@@ -3,8 +3,6 @@ import {ElementTypeId} from '../element-type-ids';
 import {ProjectsService} from '../../../services/projects/projects.service';
 import {getStaticDI} from '../../get-di';
 import {PopupService} from '@logigator/logigator-shared-comps';
-import {TextComponent} from '../../../components/popup-contents/text/text.component';
-import {TextData} from '../basic/text';
 import {RomEditComponent} from '../../../components/popup-contents/rom-edit/rom-edit.component';
 
 export const rom: ElementType = {
