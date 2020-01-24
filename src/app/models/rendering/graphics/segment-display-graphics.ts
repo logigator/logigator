@@ -68,7 +68,7 @@ export class SegmentDisplayGraphics extends PIXI.Graphics implements LGraphics, 
 				this.rotation2(this.element.numInputs, this._size.y, this._size.x);
 				break;
 			case 3:
-				this.rotation3(this.element.numInputs, this._size.y, this._size.x);
+				this.rotation3(this.element.numInputs, this._size.y);
 				break;
 		}
 
@@ -115,13 +115,13 @@ export class SegmentDisplayGraphics extends PIXI.Graphics implements LGraphics, 
 		}
 	}
 
-	private rotation3(inputs: number, height: number, width: number) {
+	private rotation3(inputs: number, height: number) {
 		for (let i = 0; i < inputs; i++) {
 			this.moveTo((environment.gridPixelWidth / 2) + environment.gridPixelWidth * i, height);
 			this.lineTo((environment.gridPixelWidth / 2) + environment.gridPixelWidth * i, height + (environment.gridPixelWidth / 2));
 			const label = this.getLabelText(this._labels[i]);
 			label.anchor = new PIXI.Point(0.5, 1);
-			label.x = width - environment.gridPixelWidth / 2 - environment.gridPixelWidth * i;
+			label.x = environment.gridPixelWidth / 2 + environment.gridPixelWidth * i;
 			label.y = height - 1;
 			this.addChild(label);
 		}
