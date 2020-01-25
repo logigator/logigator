@@ -6,7 +6,7 @@ describe('CopyService', () => {
 	beforeEach(() => TestBed.configureTestingModule({}));
 
 	it('should be created', () => {
-		const service: CopyService = TestBed.get(CopyService);
+		const service: CopyService = TestBed.inject(CopyService);
 		expect(service).toBeTruthy();
 	});
 });

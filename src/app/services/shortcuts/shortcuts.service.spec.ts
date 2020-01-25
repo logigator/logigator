@@ -6,7 +6,7 @@ describe('ShortcutsService', () => {
 	beforeEach(() => TestBed.configureTestingModule({}));
 
 	it('should be created', () => {
-		const service: ShortcutsService = TestBed.get(ShortcutsService);
+		const service: ShortcutsService = TestBed.inject(ShortcutsService);
 		expect(service).toBeTruthy();
 	});
 });

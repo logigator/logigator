@@ -39,7 +39,7 @@ async function saveElectron(
 		const fileReader = new FileReader();
 		return new Promise(resolve => {
 			fileReader.onload = (event: any) => {
-				fs.writeFileSync(savePath.filePath, new Buffer(event.target.result));
+				fs.writeFileSync(savePath.filePath, Buffer.from(event.target.result));
 				resolve();
 			};
 			fileReader.readAsArrayBuffer(toSave);
