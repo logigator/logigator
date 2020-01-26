@@ -1,4 +1,4 @@
-import {ChangeDetectorRef, Component, OnInit} from '@angular/core';
+import {ChangeDetectionStrategy, ChangeDetectorRef, Component, OnInit} from '@angular/core';
 import {AbstractControl, FormBuilder, FormGroup, Validators} from '@angular/forms';
 import {SharingService} from '../../../services/sharing/sharing.service';
 import {ProjectsService} from '../../../services/projects/projects.service';
@@ -8,7 +8,8 @@ import {PopupContentComp} from '@logigator/logigator-shared-comps';
 @Component({
 	selector: 'app-share-project',
 	templateUrl: './share-project.component.html',
-	styleUrls: ['./share-project.component.scss']
+	styleUrls: ['./share-project.component.scss'],
+	changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class ShareProjectComponent extends PopupContentComp implements OnInit {
 
