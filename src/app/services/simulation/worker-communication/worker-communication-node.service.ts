@@ -255,6 +255,10 @@ export class WorkerCommunicationNodeService implements WorkerCommunicationServic
 		return this._powerSubjectsWireEnds.get(projectId).asObservable();
 	}
 
+	onIoCompReset(projectId: string): Observable<void> {
+		return undefined;
+	}
+
 	public get status(): BoardStatus {
 		return this._status;
 	}

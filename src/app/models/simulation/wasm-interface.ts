@@ -3,7 +3,7 @@ import {PowerChangeIn} from './power-changes';
 
 export type Pointer = number;
 
-export enum WasmMethod {
+export const enum WasmMethod {
 	run,
 	triggerInput,
 	init,
