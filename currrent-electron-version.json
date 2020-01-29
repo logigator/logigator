@@ -3,6 +3,7 @@
 	"versions": [
 		{
 			"version": "1.0.0",
+			"date": "2020-01-29",
 			"platforms": {
 				"windows": {
 					"x32": {
@@ -37,6 +38,7 @@
 		},
 		{
 			"version": "0.0.0",
+			"date": "2020-01-01",
 			"platforms": {
 				"windows": {
 					"x32": {
