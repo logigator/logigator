@@ -1,15 +1,14 @@
 import * as PIXI from 'pixi.js';
-import {ComponentUpdatable, LGraphics} from './l-graphics';
+import {ComponentResetable, ComponentUpdatable, LGraphics} from './l-graphics';
 import {Element} from '../../element';
 import {ElementType, isElementType} from '../../element-types/element-type';
 import {getStaticDI} from '../../get-di';
 import {ThemingService} from '../../../services/theming/theming.service';
 import {environment} from '../../../../environments/environment';
 import {RenderTicker} from '../../../services/render-ticker/render-ticker.service';
-import {ElementProviderService} from '../../../services/element-provider/element-provider.service';
 import {WorkerCommunicationService} from '../../../services/simulation/worker-communication/worker-communication-service';
 
-export class ButtonGraphics extends PIXI.Graphics implements LGraphics, ComponentUpdatable {
+export class ButtonGraphics extends PIXI.Graphics implements LGraphics, ComponentUpdatable, ComponentResetable {
 
 	readonly element: Element;
 
@@ -121,6 +120,10 @@ export class ButtonGraphics extends PIXI.Graphics implements LGraphics, Componen
 		if (this.worldVisible) {
 			this.applySimState(this._scale);
 		}
+	}
+
+	resetSimState() {
+		this.setSimulationState([false], true);
 	}
 
 	updateComponent(scale: number, element: Element) {
