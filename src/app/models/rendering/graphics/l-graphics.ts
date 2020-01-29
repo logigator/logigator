@@ -5,8 +5,8 @@ export interface ComponentUpdatable {
 
 	/**
 	 * updates the {Element} LGraphics uses for rendering
-	 * @param scale
-	 * @param newElement
+	 * @param scale scale Scale to use for rendering
+	 * @param newElement new {Element} used for rendering
 	 */
 	updateComponent(scale: number, newElement: Element);
 }
@@ -19,7 +19,7 @@ export interface ComponentSelectable {
 
 	/**
 	 * sets the selection state of the component
-	 * @param selected
+	 * @param selected is the element selected
 	 */
 	setSelected(selected: boolean);
 }
@@ -41,7 +41,7 @@ export interface LGraphics extends PIXI.DisplayObject, ComponentScalable, Compon
 
 	/**
 	 * Applies the current simulation state, means the new state is rendered no matter if the component is visible on screen
-	 * @param scale
+	 * @param scale Scale to use for rendering
 	 */
 	applySimState(scale: number);
 

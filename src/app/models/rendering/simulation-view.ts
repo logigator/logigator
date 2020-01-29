@@ -57,7 +57,7 @@ export class SimulationView extends View {
 			).subscribe(e => this.blinkComps(e));
 			workerCommunicationService.onIoCompReset(this.parentProjectIdentifier).pipe(
 				takeUntil(this._destroySubject)
-			).subscribe(() => this.resetIoComps())
+			).subscribe(() => this.resetIoComps());
 
 			if (project.type === 'comp') {
 				await this.requestSingleFrame();
