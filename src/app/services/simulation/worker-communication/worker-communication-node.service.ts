@@ -21,6 +21,7 @@ export class WorkerCommunicationNodeService implements WorkerCommunicationServic
 
 	private _powerSubjectsWires: Map<string, Subject<PowerChangesOutWire>>;
 	private _powerSubjectsWireEnds: Map<string, Subject<Map<Element, boolean[]>>>;
+	private _ioComponentsResetSubject: Map<string, Subject<void>>;
 
 	private _initialized = false;
 	private _mode: 'continuous' | 'target' | 'sync';
@@ -123,6 +124,9 @@ export class WorkerCommunicationNodeService implements WorkerCommunicationServic
 		logicsim.destroy();
 		logicsim.init(this._compiledBoard);
 		this.updateSubjects();
+		for (const resetSubject of this._ioComponentsResetSubject.values()) {
+			resetSubject.next();
+		}
 	}
 
 	public pause(): void {
@@ -256,7 +260,7 @@ export class WorkerCommunicationNodeService implements WorkerCommunicationServic
 	}
 
 	onIoCompReset(projectId: string): Observable<void> {
-		return undefined;
+		return this._ioComponentsResetSubject.get(projectId).asObservable();
 	}
 
 	public get status(): BoardStatus {
@@ -271,11 +275,13 @@ export class WorkerCommunicationNodeService implements WorkerCommunicationServic
 		if (!this._powerSubjectsWires.has(identifier)) {
 			this._powerSubjectsWires.set(identifier, new Subject<PowerChangesOutWire>());
 			this._powerSubjectsWireEnds.set(identifier, new Subject<Map<Element, boolean[]>>());
+			this._ioComponentsResetSubject.set(identifier, new Subject<void>());
 		}
 	}
 
 	public unsubscribe(identifier: string): void {
 		this._powerSubjectsWires.delete(identifier);
 		this._powerSubjectsWireEnds.delete(identifier);
+		this._ioComponentsResetSubject.delete(identifier);
 	}
 }

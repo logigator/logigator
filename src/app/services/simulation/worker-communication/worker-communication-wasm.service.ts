@@ -93,8 +93,8 @@ export class WorkerCommunicationWasmService implements WorkerCommunicationServic
 			}
 
 			if (data.method === WasmMethod.reset) {
-				for (const identifier of this._ioComponentsResetSubject.keys()) {
-					this._ioComponentsResetSubject.get(identifier).next();
+				for (const resetSubject of this._ioComponentsResetSubject.values()) {
+					resetSubject.next();
 				}
 			}
 

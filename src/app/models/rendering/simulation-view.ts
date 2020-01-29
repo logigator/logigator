@@ -11,6 +11,7 @@ import {LGraphicsResolver} from './graphics/l-graphics-resolver';
 import {Grid} from './grid';
 import {ElementProviderService} from '../../services/element-provider/element-provider.service';
 import {WorkerCommunicationService} from '../../services/simulation/worker-communication/worker-communication-service';
+import {isResetable} from './graphics/l-graphics';
 
 export class SimulationView extends View {
 
@@ -96,7 +97,11 @@ export class SimulationView extends View {
 	}
 
 	private resetIoComps() {
-		console.log('asdsad');
+		for (const element of this.allElements.values()) {
+			if (isResetable(element)) {
+				element.resetSimState();
+			}
+		}
 		this.requestSingleFrame();
 	}
 
