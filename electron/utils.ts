@@ -1,4 +1,4 @@
-import { OnBeforeSendHeadersFilter } from 'electron';
+import { Filter } from 'electron';
 
 export function getApiUrl(): string {
 	if (process.env.LOCAL_API) return process.env.LOCAL_API;
@@ -10,7 +10,7 @@ export function getDomain(): string {
 	return 'https://editor.logigator.com';
 }
 
-export function getHttpFilterUrls(): OnBeforeSendHeadersFilter {
+export function getHttpFilterUrls(): Filter {
 	return {
 		urls: [
 			'https://api.logigator.com/*',
