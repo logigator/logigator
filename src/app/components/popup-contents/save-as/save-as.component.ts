@@ -1,4 +1,4 @@
-import { Component, OnInit } from '@angular/core';
+import {ChangeDetectionStrategy, Component, OnInit} from '@angular/core';
 import {ProjectSaveManagementService} from '../../../services/project-save-management/project-save-management.service';
 import {Project} from '../../../models/project';
 import {UserService} from '../../../services/user/user.service';
@@ -8,7 +8,8 @@ import {PopupContentComp} from '@logigator/logigator-shared-comps';
 @Component({
 	selector: 'app-save-as',
 	templateUrl: './save-as.component.html',
-	styleUrls: ['./save-as.component.scss']
+	styleUrls: ['./save-as.component.scss'],
+	changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class SaveAsComponent extends PopupContentComp<Project> implements OnInit {
 

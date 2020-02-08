@@ -1,4 +1,4 @@
-import {Component, ElementRef, OnInit, ViewChild} from '@angular/core';
+import {ChangeDetectionStrategy, Component, ElementRef, OnInit, ViewChild} from '@angular/core';
 import {PopupContentComp} from '@logigator/logigator-shared-comps';
 import {Element} from '../../../models/element';
 import {RomData} from '../../../models/element-types/advanced/rom';
@@ -6,7 +6,8 @@ import {RomData} from '../../../models/element-types/advanced/rom';
 @Component({
 	selector: 'app-rom-edit',
 	templateUrl: './rom-edit.component.html',
-	styleUrls: ['./rom-edit.component.scss']
+	styleUrls: ['./rom-edit.component.scss'],
+	changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class RomEditComponent extends PopupContentComp<Element> implements OnInit {
 

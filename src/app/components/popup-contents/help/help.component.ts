@@ -1,5 +1,7 @@
 import {
 	AfterViewInit,
+	ChangeDetectionStrategy,
+	ChangeDetectorRef,
 	Component,
 	ElementRef,
 	OnDestroy,
@@ -13,7 +15,8 @@ import {takeUntil} from 'rxjs/operators';
 @Component({
 	selector: 'app-help',
 	templateUrl: './help.component.html',
-	styleUrls: ['./help.component.scss']
+	styleUrls: ['./help.component.scss'],
+	changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class HelpComponent extends PopupContentComp implements AfterViewInit, OnDestroy {
 
@@ -24,7 +27,7 @@ export class HelpComponent extends PopupContentComp implements AfterViewInit, On
 
 	public helpToRender = 'get-started';
 
-	constructor(private translate: TranslateService) {
+	constructor(private translate: TranslateService, private cdr: ChangeDetectorRef) {
 		super();
 	}
 
@@ -39,6 +42,7 @@ export class HelpComponent extends PopupContentComp implements AfterViewInit, On
 			).subscribe(() => {
 				this.helpToRender = link.id;
 				this.setActiveClass(link);
+				this.cdr.detectChanges();
 			});
 		});
 		this.setActiveClass(this._sidebar.nativeElement.querySelectorAll('p').item(0));
