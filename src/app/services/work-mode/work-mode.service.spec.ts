@@ -6,7 +6,7 @@ describe('WorkModeService', () => {
 	beforeEach(() => TestBed.configureTestingModule({}));
 
 	it('should be created', () => {
-		const service: WorkModeService = TestBed.get(WorkModeService);
+		const service: WorkModeService = TestBed.inject(WorkModeService);
 		expect(service).toBeTruthy();
 	});
 });

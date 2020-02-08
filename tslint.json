@@ -21,7 +21,7 @@
 		},
 		"component-class-suffix": true,
 		"contextual-lifecycle": true,
-		"directive-class-suffix": true,
+		"directive-class-suffix": false,
 		"directive-selector": [
 			true,
 			"attribute",

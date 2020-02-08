@@ -14,6 +14,8 @@ let authHandler: AuthenticationHandler;
 try {
 	authHandler = new AuthenticationHandler();
 
+	//app.allowRendererProcessReuse = true;
+	// TODO: Fix https://github.com/electron/electron/issues/18397
 	app.on('ready', async () => {
 		let port = 8202;
 		if (!serve) port = await startLocalWebServer();

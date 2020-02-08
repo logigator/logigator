@@ -52,6 +52,7 @@ export class WorkerCommunicationNodeService implements WorkerCommunicationServic
 	) {
 		this._powerSubjectsWires = new Map<string, Subject<PowerChangesOutWire>>();
 		this._powerSubjectsWireEnds = new Map<string, Subject<Map<Element, boolean[]>>>();
+		this._ioComponentsResetSubject = new Map<string, Subject<void>>();
 	}
 
 	public getWireState(identifier: string, data?: boolean[]): Map<Element, boolean> {

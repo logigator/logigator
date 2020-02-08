@@ -119,7 +119,7 @@ export class WindowDragManager {
 			return;
 		}
 
-		switch (WindowDragManager.getBoarderCollision(event.layerX, event.layerY, this._popup)) {
+		switch (WindowDragManager.getBoarderCollision(event.offsetX, event.offsetY, this._popup)) {
 			case 'top':
 				this.renderer2.setStyle(this._popup, 'cursor', 'n-resize');
 				break;
@@ -272,7 +272,7 @@ export class WindowDragManager {
 		if (event.button !== 0)
 			return;
 
-		const b = WindowDragManager.getBoarderCollision(event.layerX, event.layerY, this._popup);
+		const b = WindowDragManager.getBoarderCollision(event.offsetX, event.offsetY, this._popup);
 		if (b) {
 			this._currentlyDragging = b;
 			this._draggingPos = [ event.screenX, event.screenY ];
