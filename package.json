@@ -23,6 +23,7 @@
 		"ng:serve:electron": "npm run ng:serve -- -c dev-electron --proxy-config proxyconfig.json",
 		"ng:serve:electron-prod": "npm run ng:serve -- -c prod-electron --proxy-config proxyconfig.json",
 		"electron:serve": "wait-on http-get://localhost:8202/ && npm run electron:tsc && electron . --serve --inspect=5858",
+		"electron:debug": "env-cmd -e dev-electron --use-shell \"electron-rebuild --debug --force && npm run build-custom-build-scripts && npm-run-all -p ng:serve:electron\"",
 		"test": "ng test",
 		"lint": "ng lint",
 		"e2e": "ng e2e",
@@ -95,6 +96,7 @@
 	},
 	"developmentInfo": {
 		"": "For Development you should use the local version of shared-cops to use live reload from the libary",
-		"@logigator/logigator-shared-comps": "file:../logigator-shared-comps/dist/logigator-shared-comps"
+		"@logigator/logigator-shared-comps": "file:../logigator-shared-comps/dist/logigator-shared-comps",
+		"@logigator/logigator-simulation": "file:../logigator-simulation"
 	}
 }

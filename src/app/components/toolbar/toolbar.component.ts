@@ -12,6 +12,7 @@ import {
 	WorkerCommunicationService,
 	WorkerCommunicationServiceModel
 } from '../../services/simulation/worker-communication/worker-communication-service';
+import {StateCompilerService} from '../../services/simulation/state-compiler/state-compiler.service';
 
 @Component({
 	selector: 'app-toolbar',
@@ -36,7 +37,8 @@ export class ToolbarComponent {
 		private projectService: ProjectsService,
 		private projectInteraction: ProjectInteractionService,
 		@Inject(WorkerCommunicationService) private workerCommunication: WorkerCommunicationServiceModel,
-		private renderTicker: RenderTicker
+		private renderTicker: RenderTicker,
+		private stateCompiler: StateCompilerService
 	) {}
 
 	// #!if DEBUG === 'true'
@@ -57,6 +59,13 @@ export class ToolbarComponent {
 
 	public runStep(): void {
 		this.test.runStep(true);
+	}
+
+	public async printBoard() {
+		console.log(JSON.stringify({
+			components: await this.stateCompiler.compile(this.projectService.currProject),
+			links: this.stateCompiler.highestLinkId + 1
+		}));
 	}
 	// #!endif
 
