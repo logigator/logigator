@@ -151,8 +151,8 @@ export class ToolbarComponent {
 	}
 
 	public stopSim() {
-		this.workerCommunication.stop();
 		this.renderTicker.stopAllContSim();
+		this.workerCommunication.stop();
 	}
 
 	public singleStepSim() {
