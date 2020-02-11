@@ -11,8 +11,7 @@ export class AuthenticationHandler {
 	private _authCookie: string;
 	private _cookieValidUntilUntil: Date;
 
-	constructor() {
-	}
+	constructor() {}
 
 	public initLoginListeners(mainWindow: BrowserWindow) {
 		this._mainWindow = mainWindow;
@@ -135,7 +134,7 @@ export class AuthenticationHandler {
 
 		// tslint:disable-next-line:no-string-literal
 		global['isLoggedIn'] = {
-			data: 'true'
+			data: 'false'
 		};
 
 		if (!Storage.has('authCookie') || !Storage.has('cookieValidUntilUntil')) return;
