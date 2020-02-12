@@ -1,4 +1,4 @@
-import { Component, OnInit } from '@angular/core';
+import {ChangeDetectionStrategy, Component, OnInit} from '@angular/core';
 import {ProjectsService} from '../../../services/projects/projects.service';
 import {UserService} from '../../../services/user/user.service';
 import {ProjectSaveManagementService} from '../../../services/project-save-management/project-save-management.service';
@@ -9,7 +9,8 @@ import {PopupContentComp} from '@logigator/logigator-shared-comps';
 @Component({
 	selector: 'app-open-project',
 	templateUrl: './open-project.component.html',
-	styleUrls: ['./open-project.component.scss']
+	styleUrls: ['./open-project.component.scss'],
+	changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class OpenProjectComponent extends PopupContentComp implements OnInit {
 

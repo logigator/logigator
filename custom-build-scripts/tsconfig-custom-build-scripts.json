@@ -18,7 +18,8 @@
 		"package-app.ts",
 		"remove-comp-warning-template.ts",
 		"index-html-transform.ts",
-		"markdown-postprocess-loader.ts"
+		"markdown-postprocess-loader.ts",
+		"wasm-js-cache-bust.ts"
 	],
 	"include": [
 		"./**/*.ts"

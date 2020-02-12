@@ -1,7 +1,7 @@
 import * as PIXI from 'pixi.js';
 import {fromEvent, ReplaySubject, Subject} from 'rxjs';
 import {takeUntil} from 'rxjs/operators';
-import {ElementRef, EventEmitter, Output, Renderer2} from '@angular/core';
+import { ElementRef, EventEmitter, Output, Renderer2, Directive } from '@angular/core';
 import {ThemingService} from '../../services/theming/theming.service';
 import {ZoomPanInputManager} from './zoom-pan-input-manager';
 import {View} from './view';
@@ -11,6 +11,7 @@ import {getStaticDI} from '../get-di';
 import {RenderTicker} from '../../services/render-ticker/render-ticker.service';
 import {WorkAreaComponent} from '../../components/work-area/work-area.component';
 
+@Directive()
 export abstract class WorkArea {
 
 	private static _loadedPixiFont = false;

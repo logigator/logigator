@@ -6,7 +6,7 @@ describe('ImageExportService', () => {
 	beforeEach(() => TestBed.configureTestingModule({}));
 
 	it('should be created', () => {
-		const service: ImageExportService = TestBed.get(ImageExportService);
+		const service: ImageExportService = TestBed.inject(ImageExportService);
 		expect(service).toBeTruthy();
 	});
 });

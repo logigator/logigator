@@ -1,4 +1,4 @@
-import { Component, OnInit } from '@angular/core';
+import {ChangeDetectionStrategy, Component, OnInit} from '@angular/core';
 import {FormBuilder, FormGroup, Validators} from '@angular/forms';
 import {ProjectsService} from '../../../services/projects/projects.service';
 import {ProjectSaveManagementService} from '../../../services/project-save-management/project-save-management.service';
@@ -8,7 +8,8 @@ import {PopupContentComp} from '@logigator/logigator-shared-comps';
 @Component({
 	selector: 'app-new-component',
 	templateUrl: './new-component.component.html',
-	styleUrls: ['./new-component.component.scss']
+	styleUrls: ['./new-component.component.scss'],
+	changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class NewComponentComponent extends PopupContentComp implements OnInit {
 

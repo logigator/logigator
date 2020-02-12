@@ -20,6 +20,7 @@ export class WorkerCommunicationWasmService implements WorkerCommunicationServic
 
 	private _powerSubjectsWires: Map<string, Subject<PowerChangesOutWire>>;
 	private _powerSubjectsWireEnds: Map<string, Subject<Map<Element, boolean[]>>>;
+	private _ioComponentsResetSubject: Map<string, Subject<void>>;
 	private _worker: Worker;
 
 	private _initialized = false;
@@ -50,6 +51,7 @@ export class WorkerCommunicationWasmService implements WorkerCommunicationServic
 	) {
 		this._powerSubjectsWires = new Map<string, Subject<PowerChangesOutWire>>();
 		this._powerSubjectsWireEnds = new Map<string, Subject<Map<Element, boolean[]>>>();
+		this._ioComponentsResetSubject = new Map<string, Subject<void>>();
 		this.initWorker();
 	}
 
@@ -87,6 +89,12 @@ export class WorkerCommunicationWasmService implements WorkerCommunicationServic
 				for (const projId of this._powerSubjectsWires.keys()) {
 					this._powerSubjectsWires.get(projId).next(powerChangesWire.get(projId));
 					this._powerSubjectsWireEnds.get(projId).next(powerChangesWireEnds.get(projId));
+				}
+			}
+
+			if (data.method === WasmMethod.reset) {
+				for (const resetSubject of this._ioComponentsResetSubject.values()) {
+					resetSubject.next();
 				}
 			}
 
@@ -328,6 +336,10 @@ export class WorkerCommunicationWasmService implements WorkerCommunicationServic
 		return this._powerSubjectsWireEnds.get(projectId).asObservable();
 	}
 
+	public onIoCompReset(projectId: string): Observable<void> {
+		return this._ioComponentsResetSubject.get(projectId).asObservable();
+	}
+
 	public get status(): BoardStatus {
 		return this._status;
 	}
@@ -340,11 +352,13 @@ export class WorkerCommunicationWasmService implements WorkerCommunicationServic
 		if (!this._powerSubjectsWires.has(identifier)) {
 			this._powerSubjectsWires.set(identifier, new Subject<PowerChangesOutWire>());
 			this._powerSubjectsWireEnds.set(identifier, new Subject<Map<Element, boolean[]>>());
+			this._ioComponentsResetSubject.set(identifier, new Subject<void>());
 		}
 	}
 
 	public unsubscribe(identifier: string): void {
 		this._powerSubjectsWires.delete(identifier);
 		this._powerSubjectsWireEnds.delete(identifier);
+		this._ioComponentsResetSubject.delete(identifier);
 	}
 }

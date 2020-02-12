@@ -35,6 +35,8 @@ export abstract class WorkerCommunicationServiceModel {
 
 	public abstract boardStateWireEnds(projectId: string): Observable<Map<Element, boolean[]>>;
 
+	public abstract onIoCompReset(projectId: string): Observable<void>;
+
 	public abstract get status(): BoardStatus;
 
 	public abstract get isRunning(): boolean;

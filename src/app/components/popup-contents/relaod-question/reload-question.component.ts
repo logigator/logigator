@@ -1,11 +1,12 @@
-import { Component, OnInit } from '@angular/core';
+import {ChangeDetectionStrategy, Component, OnInit} from '@angular/core';
 import {ThemingService} from '../../../services/theming/theming.service';
 import {PopupContentComp} from '@logigator/logigator-shared-comps';
 
 @Component({
 	selector: 'app-reload-question',
 	templateUrl: './reload-question.component.html',
-	styleUrls: ['./reload-question.component.scss']
+	styleUrls: ['./reload-question.component.scss'],
+	changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class ReloadQuestionComponent extends PopupContentComp implements OnInit {
 

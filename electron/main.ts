@@ -1,6 +1,7 @@
 import {BrowserWindow, app, session} from 'electron';
 import * as express from 'express';
 import * as path from 'path';
+import {AddressInfo} from 'net';
 import {AuthenticationHandler} from './authentication-handler';
 import {getDomain, getHttpFilterUrls} from './utils';
 
@@ -13,6 +14,7 @@ let authHandler: AuthenticationHandler;
 try {
 	authHandler = new AuthenticationHandler();
 
+	app.allowRendererProcessReuse = true;
 	app.on('ready', async () => {
 		let port = 8202;
 		if (!serve) port = await startLocalWebServer();
@@ -65,7 +67,7 @@ function startLocalWebServer(): Promise<number> {
 	const server = express();
 	server.use('/', express.static(path.join(__dirname, '..', 'logigator-editor')));
 	return new Promise<number>(resolve => {
-		const infos = server.listen(0, 'localhost', () => resolve(infos.address().port));
+		const infos = server.listen(0, 'localhost', () => resolve((infos.address() as AddressInfo).port));
 	});
 }
 
