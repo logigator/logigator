@@ -14,4 +14,6 @@ if (fs.existsSync(path.join(source, 'logigator-simulation.js')) && fs.existsSync
 		});
 	fs.copyFileSync(path.join(source, 'logigator-simulation.wasm'), path.join(dest, `logigator-simulation.${timestamp}.wasm`));
 	fs.writeFileSync(path.join(dest, 'logigator-simulation.js'), fs.readFileSync(path.join(source, 'logigator-simulation.js')).toString().replace(/var wasmBinaryFile ?= ?["'](.*?)["'];/, `var wasmBinaryFile = \'assets/wasm/logigator-simulation.${timestamp}.wasm\';`));
+} else {
+	process.exit(1);
 }
