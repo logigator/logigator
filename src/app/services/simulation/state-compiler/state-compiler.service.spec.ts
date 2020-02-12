@@ -6,7 +6,7 @@ describe('StateCompilerService', () => {
 	beforeEach(() => TestBed.configureTestingModule({}));
 
 	it('should be created', () => {
-		const service: StateCompilerService = TestBed.get(StateCompilerService);
+		const service: StateCompilerService = TestBed.inject(StateCompilerService);
 		expect(service).toBeTruthy();
 	});
 });

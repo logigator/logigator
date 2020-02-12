@@ -289,13 +289,17 @@ export class ProjectState {
 	}
 
 	public rotateComp(element: Element, rotation: number, endPos?: PIXI.Point): void {
+		this.removeFromChunks(element);
 		element.rotation = rotation;
 		element.endPos = endPos || Elements.calcEndPos(element, undefined, undefined, rotation);
+		this.loadIntoChunks(element);
 	}
 
 	public setNumInputs(element: Element, numInputs: number, endPos?: PIXI.Point): void {
+		this.removeFromChunks(element);
 		element.numInputs = numInputs;
 		element.endPos = endPos || Elements.calcEndPos(element, numInputs);
+		this.loadIntoChunks(element);
 	}
 
 

@@ -11,6 +11,7 @@ import {LGraphicsResolver} from './graphics/l-graphics-resolver';
 import {Grid} from './grid';
 import {ElementProviderService} from '../../services/element-provider/element-provider.service';
 import {WorkerCommunicationService} from '../../services/simulation/worker-communication/worker-communication-service';
+import {isResetable} from './graphics/l-graphics';
 
 export class SimulationView extends View {
 
@@ -45,18 +46,23 @@ export class SimulationView extends View {
 				takeUntil(this._destroySubject)
 			).subscribe((dir => this.onZoomClick(dir)));
 
-			getStaticDI(WorkerCommunicationService).subscribe(this.parentProjectIdentifier);
-			getStaticDI(WorkerCommunicationService).boardStateWires(this.parentProjectIdentifier).pipe(
+			const workerCommunicationService = getStaticDI(WorkerCommunicationService);
+
+			workerCommunicationService.subscribe(this.parentProjectIdentifier);
+			workerCommunicationService.boardStateWires(this.parentProjectIdentifier).pipe(
 				takeUntil(this._destroySubject)
 			).subscribe(e => this.blinkWires(e));
-			getStaticDI(WorkerCommunicationService).boardStateWireEnds(this.parentProjectIdentifier).pipe(
+			workerCommunicationService.boardStateWireEnds(this.parentProjectIdentifier).pipe(
 				takeUntil(this._destroySubject)
 			).subscribe(e => this.blinkComps(e));
+			workerCommunicationService.onIoCompReset(this.parentProjectIdentifier).pipe(
+				takeUntil(this._destroySubject)
+			).subscribe(() => this.resetIoComps());
 
 			if (project.type === 'comp') {
 				await this.requestSingleFrame();
-				this.blinkWires(getStaticDI(WorkerCommunicationService).getWireState(this.parentProjectIdentifier));
-				this.blinkComps(getStaticDI(WorkerCommunicationService).getWireEndState(this.parentProjectIdentifier));
+				this.blinkWires(workerCommunicationService.getWireState(this.parentProjectIdentifier));
+				this.blinkComps(workerCommunicationService.getWireEndState(this.parentProjectIdentifier));
 			}
 		});
 	}
@@ -86,6 +92,15 @@ export class SimulationView extends View {
 	private blinkComps(e: Map<Element, boolean[]>) {
 		for (const [elem, value] of e.entries()) {
 			this.allElements.get(elem.id).setSimulationState(value);
+		}
+		this.requestSingleFrame();
+	}
+
+	private resetIoComps() {
+		for (const element of this.allElements.values()) {
+			if (isResetable(element)) {
+				element.resetSimState();
+			}
 		}
 		this.requestSingleFrame();
 	}

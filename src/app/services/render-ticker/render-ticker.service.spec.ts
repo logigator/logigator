@@ -6,7 +6,7 @@ describe('RenderTickerService', () => {
 	beforeEach(() => TestBed.configureTestingModule({}));
 
 	it('should be created', () => {
-		const service: RenderTicker = TestBed.get(RenderTicker);
+		const service: RenderTicker = TestBed.inject(RenderTicker);
 		expect(service).toBeTruthy();
 	});
 });

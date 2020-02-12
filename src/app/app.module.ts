@@ -36,7 +36,6 @@ import { WorkAreaContainerComponent } from './components/work-area-container/wor
 import { ShareProjectComponent } from './components/popup-contents/share-project/share-project.component';
 import {setStaticDIInjector} from './models/get-di';
 import {CredentialsInterceptor} from './interceptors/credentials';
-import {SiPipe} from './pipes/si/si.pipe';
 import { ToolbarItemTooltipDirective } from './directives/toolbar-item-tooltip/toolbar-item-tooltip.directive';
 import { ToolbarItemTooltipComponent } from './components/toolbar-item-tooltip/toolbar-item-tooltip.component';
 import { TextComponent } from './components/popup-contents/text/text.component';
@@ -84,7 +83,6 @@ import {ELECTRON} from '../environments/environment';
 		UnsavedChangesComponent,
 		WorkAreaContainerComponent,
 		ShareProjectComponent,
-		SiPipe,
 		ToolbarItemTooltipDirective,
 		ToolbarItemTooltipComponent,
 		TextComponent,

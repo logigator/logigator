@@ -104,9 +104,7 @@ export class UserService implements SharedCompsAuthService {
 
 	public get isLoggedIn(): boolean {
 		// #!if ELECTRON === 'true'
-		if (this.electronService && this.electronService.remote.getGlobal('isLoggedIn')) {
-			return this.electronService.remote.getGlobal('isLoggedIn').data === 'true';
-		}
+		return this.electronService && this.electronService.remote.getGlobal('isLoggedIn')?.data === 'true';
 		// #!endif
 
 		const isLoggedIn = this.document.cookie.match('(^|[^;]+)\\s*' + 'isLoggedIn' + '\\s*=\\s*([^;]+)');

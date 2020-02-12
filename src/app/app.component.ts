@@ -1,4 +1,13 @@
-import {Component, DoCheck, ElementRef, Inject, NgZone, OnDestroy, OnInit, Renderer2, ViewChild} from '@angular/core';
+import {
+	Component,
+	ElementRef,
+	Inject,
+	NgZone,
+	OnDestroy,
+	OnInit,
+	Renderer2,
+	ViewChild
+} from '@angular/core';
 import {ThemingService} from './services/theming/theming.service';
 import {SelectionService} from './services/selection/selection.service';
 import {WorkModeService} from './services/work-mode/work-mode.service';
@@ -36,7 +45,9 @@ export class AppComponent implements OnInit, OnDestroy {
 		private translate: TranslateService,
 		private elementProviderService: ElementProviderService
 	) {
-		this.setGoogleAnalytics();
+		if ((!!window.navigator.userAgent.match(/Electron/) && !window.location.host.endsWith('8202')) || window.location.host === 'editor.logigator.com') {
+			this.setGoogleAnalytics();
+		}
 		this.initTranslation();
 	}
 

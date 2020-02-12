@@ -1,0 +1,36 @@
+{
+	"currentVersion": "1.0.0",
+	"version": "1.0.0",
+	"date": "2020-01-29",
+	"platforms": {
+		"windows": {
+			"x32": {
+				"fileSize": 5465456,
+				"fileName": "LogigatorEditor_win_32.zip",
+				"downloadLink": "https://github.com/logigator/logigator-editor/releases/download/0.2.0/logigator-editor.zip"
+			},
+			"x64": {
+				"fileSize": 445,
+				"fileName": "LogigatorEditor_win_64.zip",
+				"downloadLink": "https://github.com/logigator/logigator-editor/releases/download/0.2.0/logigator-editor.zip"
+			},
+			"arm64": {
+				"fileSize": 5465,
+				"fileName": "LogigatorEditor_win_arm64.zip",
+				"downloadLink": "https://github.com/logigator/logigator-editor/releases/download/0.2.0/logigator-editor.zip"
+			}
+		},
+		"linux": {
+			"x32": {
+				"fileSize": 5465456,
+				"fileName": "LogigatorEditor_linux_32.zip",
+				"downloadLink": "https://github.com/logigator/logigator-editor/releases/download/0.2.0/logigator-editor.zip"
+			},
+			"x64": {
+				"fileSize": 44578,
+				"fileName": "LogigatorEditor_linux_64.zip",
+				"downloadLink": "https://github.com/logigator/logigator-editor/releases/download/0.2.0/logigator-editor.zip"
+			}
+		}
+	}
+}

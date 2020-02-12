@@ -1,10 +1,11 @@
-import { Component } from '@angular/core';
+import {ChangeDetectionStrategy, Component} from '@angular/core';
 import {PopupContentComp} from '@logigator/logigator-shared-comps';
 
 @Component({
 	selector: 'app-unsaved-changes',
 	templateUrl: './unsaved-changes.component.html',
-	styleUrls: ['./unsaved-changes.component.scss']
+	styleUrls: ['./unsaved-changes.component.scss'],
+	changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class UnsavedChangesComponent extends PopupContentComp {
 

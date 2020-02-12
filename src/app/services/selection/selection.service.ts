@@ -106,12 +106,12 @@ export class SelectionService {
 
 	public selectComponent(id: number, projectId?: number): void {
 		this.ngZone.run(() => {
-			this._selectedIds.set(projectId === undefined ? this.projectsService.currProject.id : projectId, [id]);
+			this._selectedIds.set(projectId ?? this.projectsService.currProject.id, [id]);
 		});
 	}
 
 	public isSingleSelect(projectId?: number): boolean {
-		const id = projectId === undefined ? this.projectsService.currProject ? this.projectsService.currProject.id : projectId : projectId;
+		const id = projectId ?? this.projectsService.currProject?.id;
 		if (this._selectedIds.has(id)) {
 			return this._selectedIds.get(id).length === 1;
 		}
@@ -119,7 +119,7 @@ export class SelectionService {
 }
 
 	public selectedIds(projectId?: number): number[] {
-		const id = projectId === undefined ? this.projectsService.currProject ? this.projectsService.currProject.id : projectId : projectId;
+		const id = projectId ?? this.projectsService.currProject?.id;
 		if (this._selectedIds.has(id)) {
 			return this._selectedIds.get(id);
 		}
@@ -127,7 +127,7 @@ export class SelectionService {
 	}
 
 	public selectedConnections(projectId?: number): PIXI.Point[] {
-		const id = projectId === undefined ? this.projectsService.currProject ? this.projectsService.currProject.id : projectId : projectId;
+		const id = projectId ?? this.projectsService.currProject?.id;
 		if (this._selectedConnections.has(id)) {
 			return this._selectedConnections.get(id);
 		}
@@ -136,8 +136,8 @@ export class SelectionService {
 
 	public clearSelection(projectId?: number) {
 		this.ngZone.run(() => {
-			this._selectedIds.delete(projectId === undefined ? this.projectsService.currProject.id : projectId);
-			this._selectedConnections.delete(projectId === undefined ? this.projectsService.currProject.id : projectId);
+			this._selectedIds.delete(projectId ?? this.projectsService.currProject.id);
+			this._selectedConnections.delete(projectId ?? this.projectsService.currProject.id);
 		});
 
 	}
