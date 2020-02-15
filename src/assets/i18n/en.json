@@ -133,19 +133,24 @@
 			"SYMBOL": "Symbol",
 			"DESCRIPTION": "Description",
 			"DESCRIPTION_MAX_LENGTH": "Description is to long",
+			"DESCRIPTION_INFO": "Description of the new component",
 			"CREATE": "CREATE",
 			"NAME_REQUIRED": "Name is required",
 			"NAME_MIN_LENGTH": "Name is to short",
 			"NAME_MAX_LENGTH": "Name is to long",
 			"NAME_PATTERN": "Name must consist of A-Z a-z 0-9 -_",
+			"NAME_INFO": "Name of the new component",
 			"SYMBOL_REQUIRED": "Symbol is required",
 			"SYMBOL_MAX_LENGTH": "Symbol is to long",
-			"SYMBOL_PATTERN": "Symbol must consist of A-Z a-z 0-9 -_"
+			"SYMBOL_PATTERN": "Symbol must consist of A-Z a-z 0-9 -_",
+			"SYMBOL_INFO": "Will be shown when placing component."
 		},
 		"SAVE": {
 			"TITLE": "Save Project",
 			"NAME": "Name",
+			"NAME_INFO": "Name of the new project",
 			"DESCRIPTION": "Description",
+			"DESCRIPTION_INFO": "Description of the new project",
 			"DOWNLOAD": "DOWNLOAD FILE",
 			"CLOUD": "SAVE IN CLOUD"
 		},
