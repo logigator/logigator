@@ -1,21 +1,23 @@
 <div class="work-area-status-bar-container">
 	<div class="work-area-container" #windowDragBounding toastContainer>
 		<app-work-area (requestInspectElementInSim)="onRequestElementInspection($event)"></app-work-area>
-		<ng-container *ngFor="let area of windowWorkAreas; index as i;">
-			<app-window-work-area
-				[dragBounding]="windowDragBounding"
-				[project]="area.project"
-				[projectChange]="area.projectChange"
-				[identifier]="area.identifier"
-				[parentNames]="area.parentNames"
-				[parentTypeIds]="area.parentTypesIds"
-				[showing]="area.showing"
-				[zIndex]="area.zIndex"
-				(requestHide)="requestHide(i)"
-				(requestOnTop)="setOnTop(i)"
-				(requestInspectElementInSim)="onRequestElementInspection($event, i)">
-			</app-window-work-area>
-		</ng-container>
+		<app-window-work-area
+			*ngFor="let area of windowWorkAreas; index as i;"
+			[dragBounding]="windowDragBounding"
+			[project]="area.project"
+			[projectChange]="area.projectChange"
+			[identifier]="area.identifier"
+			[parentNames]="area.parentNames"
+			[parentTypeIds]="area.parentTypesIds"
+			[showing]="area.showing"
+			[zIndex]="area.zIndex"
+			(requestHide)="requestHide(i)"
+			(requestOnTop)="setOnTop(i)"
+			(requestInspectElementInSim)="onRequestElementInspection($event, i)">
+		</app-window-work-area>
+		<div class="help-window-container">
+			<ng-container #helpWindowInsertionPoint></ng-container>
+		</div>
 	</div>
 	<app-status-bar></app-status-bar>
 </div>

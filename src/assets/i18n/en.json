@@ -249,6 +249,14 @@
 		"PLUG_INDEX": "Plug Index",
 		"PLUG_LABEL": "Label"
 	},
+	"HELP_WINDOW": {
+		"TIPP": "Hint",
+		"DONT_AGAIN": "Don't show again",
+		"OK": "OK",
+		"HELP_TEXTS": {
+			"ENTER_SIM": "Simulation mode yay"
+		}
+	},
 	"ELEMENT_TYPE": {
 		"BASIC": {
 			"AND": {

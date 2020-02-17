@@ -56,6 +56,7 @@ import {WorkerCommunicationNodeService} from './services/simulation/worker-commu
 import { HelpComponent } from './components/popup-contents/help/help.component';
 import { HelpRendererComponent } from './components/popup-contents/help-renderer/help-renderer.component';
 import {ELECTRON} from '../environments/environment';
+import { HelpWindowComponent } from './components/help-window/help-window.component';
 
 @NgModule({
 	declarations: [
@@ -90,7 +91,8 @@ import {ELECTRON} from '../environments/environment';
 		StatusBarComponent,
 		RomEditComponent,
 		HelpComponent,
-		HelpRendererComponent
+		HelpRendererComponent,
+		HelpWindowComponent
 	],
 	entryComponents: [
 		ShortcutConfigComponent,
