@@ -254,7 +254,7 @@
 		"DONT_AGAIN": "Nicht mehr anzeigen",
 		"OK": "OK",
 		"HELP_TEXTS": {
-			"ENTER_SIM": "Simulation mode yay"
+			"ENTER_SIM": "Um die Simulation zu starten, drücke den Play Button in der Toolbar."
 		}
 	},
 	"ELEMENT_TYPE": {
