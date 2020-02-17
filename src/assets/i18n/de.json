@@ -114,6 +114,7 @@
 			"USERNAME_ERR_REQUIRED": "Benutzername muss angegeben werden",
 			"USERNAME_ERR_MIN": "Benutzername muss mindestens zwei Zeichen enthalten",
 			"USERNAME_ERR_MAX": "Benutzername darf maximal 20 Zeichen enthalten",
+			"USERNAME_ERR_PATTERN": "Benutzername darf nur a-z, A-Z, 0-9, _ oder - enthalten",
 			"PASSWORD": "Passwort",
 			"PASSWORD_ERR_REQUIRED": "Passwort muss angegeben werden",
 			"PASSWORD_ERR_MIN": "Passwort muss mindestens acht Zeichen enthalten",
