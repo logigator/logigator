@@ -249,6 +249,14 @@
 		"PLUG_INDEX": "Stecker Index",
 		"PLUG_LABEL": "Beschriftung"
 	},
+	"HELP_WINDOW": {
+		"TIPP": "Tipp",
+		"DONT_AGAIN": "Nicht mehr anzeigen",
+		"OK": "OK",
+		"HELP_TEXTS": {
+			"ENTER_SIM": "Um die Simulation zu starten, drücke den Play Button in der Toolbar."
+		}
+	},
 	"ELEMENT_TYPE": {
 		"BASIC": {
 			"AND": {
