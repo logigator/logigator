@@ -1,5 +1,5 @@
 import * as PIXI from 'pixi.js';
-import {ComponentResetable, ComponentUpdatable, LGraphics} from './l-graphics';
+import {LGraphics} from './l-graphics';
 import {Element} from '../../element';
 import {ElementType, isElementType} from '../../element-types/element-type';
 import {getStaticDI} from '../../get-di';
@@ -8,7 +8,7 @@ import {environment} from '../../../../environments/environment';
 import {RenderTicker} from '../../../services/render-ticker/render-ticker.service';
 import {WorkerCommunicationService} from '../../../services/simulation/worker-communication/worker-communication-service';
 
-export class LeverGraphics extends PIXI.Graphics implements LGraphics, ComponentUpdatable, ComponentResetable {
+export class LeverGraphics extends PIXI.Graphics implements LGraphics {
 
 	readonly element: Element;
 
