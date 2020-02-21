@@ -205,17 +205,41 @@
 			.minimize {
 				width: $top-bar-height;
 				height: $top-bar-height;
-				background-color: #efefef;
+				background-image: url("/assets/icons/light/minimize.svg");
+				background-repeat: no-repeat;
+				background-position: bottom;
+
+				&:hover {
+					@include themify() {
+						background-color: lighten(themed('primary'), 10%);
+					}
+				}
 			}
 			.maximize {
 				width: $top-bar-height;
 				height: $top-bar-height;
-				background-color: #5D5D5D;
+				background-image: url("/assets/icons/light/fullscreen.svg");
+				background-repeat: no-repeat;
+				background-position: center;
+				&:hover {
+					@include themify() {
+						background-color: lighten(themed('primary'), 10%);
+					}
+				}
 			}
 			.close {
 				width: $top-bar-height;
 				height: $top-bar-height;
-				background-color: red;
+				background-image: url("/assets/icons/light/close.svg");
+				background-repeat: no-repeat;
+				background-position: center;
+				@include themify() {
+					background-color: themed('error');
+
+					&:hover {
+						background-color: lighten(themed('error'), 10%);
+					}
+				}
 			}
 		}
 	}
