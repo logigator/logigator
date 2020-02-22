@@ -235,6 +235,12 @@ export abstract class View extends PIXI.Container {
 		});
 	}
 
+	private removeComponentOrWire(element: Element) {
+		if (!this.allElements.has(element.id)) return;
+		this.allElements.get(element.id).destroy();
+		this.allElements.delete(element.id);
+	}
+
 	private updateComponent(action: Action) {
 		const sprite = this.allElements.get(action.element.id);
 		if (isUpdatable(sprite)) {
@@ -262,9 +268,7 @@ export abstract class View extends PIXI.Container {
 				break;
 			case 'remComp':
 			case 'remWire':
-				if (!this.allElements.has(action.element.id)) break;
-				this.allElements.get(action.element.id).destroy();
-				this.allElements.delete(action.element.id);
+				this.removeComponentOrWire(action.element);
 				break;
 			case 'conWire':
 				this.addConnectionPointToView(action.pos);
