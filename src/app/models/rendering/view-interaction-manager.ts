@@ -107,14 +107,16 @@ export class ViewInteractionManager {
 
 	private pDownView(e: InteractionEvent) {
 		if (e.data.button !== 0) return;
-		this.cleanUp();
 
 		if (this.workModeSer.currentWorkMode === 'eraser') {
+			this.cleanUp();
 			this.startEraser(e);
 			return;
 		}
 
 		if (e.target !== this._view) return;
+		this.cleanUp();
+
 		switch (this.workModeSer.currentWorkMode) {
 			case 'buildComponent':
 				this.startBuildComp(e);
@@ -483,16 +485,20 @@ export class ViewInteractionManager {
 
 	private startEraser(e: InteractionEvent) {
 		this._state = ViewIntManState.USING_ERASER;
-		console.log(e)
+		this._actionPos = new PosHelper(e, this._view);
 	}
 
 	private eraseComponents(e: InteractionEvent) {
-		console.log(e);
+		this._actionPos.addDragPos(e, this._view);
+		console.log(this._actionPos.previousGridPosFloat);
+		console.log(this._actionPos.lastGridPosFloat);
+		console.log(this._actionPos.floatGridDiffFromPreviousDrag);
+
+		// console.log(this._actionPos.lastGridPosDrag);
 	}
 
 	private stopEraser(e: InteractionEvent) {
-		this._state = ViewIntManState.IDLE;
-		console.log('stop')
+		this.cleanUp();
 	}
 
 	private get currScale() {
