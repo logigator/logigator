@@ -9,7 +9,8 @@ export const enum ViewIntManState {
 	WAIT_FOR_CUT_DRAG,
 	CUT_DRAGGING,
 	WAIT_FOR_PASTE_DRAG,
-	PASTE_DRAGGING
+	PASTE_DRAGGING,
+	USING_ERASER
 }
 
 export const enum WireDir {

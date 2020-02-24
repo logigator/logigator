@@ -150,6 +150,14 @@
 				}
 			}
 
+			.robber {
+				@if (isTheme('dark')) {
+					background-image: url("/assets/icons/dark/close.svg");
+				} @else {
+					background-image: url("/assets/icons/light/close.svg");
+				}
+			}
+
 			.wire {
 				@if (isTheme('dark')) {
 					background-image: url("/assets/icons/dark/connection.svg");

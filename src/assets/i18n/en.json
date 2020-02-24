@@ -66,6 +66,7 @@
 			"CONN_WIRE": "Connect Wires",
 			"SELECT": "Select",
 			"SELECT_CUT": "Select Cut",
+			"ROBBER": "Eraser",
 			"TEXT": "Text",
 			"SIM_SINGLE": "Single Step",
 			"SIM_PAUSE": "Pause",
@@ -358,6 +359,7 @@
 		"buildWire": "Placing Wires",
 		"connectWire": "Connecting Wires",
 		"text": "Placing Text",
+		"eraser": "Erase Components",
 		"simulation": "Simulating Circuit"
 	},
 	"ERROR": {

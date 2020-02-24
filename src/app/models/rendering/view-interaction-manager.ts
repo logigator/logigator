@@ -21,8 +21,8 @@ import {CollisionFunctions} from '../collision-functions';
 import {CopyService} from '../../services/copy/copy.service';
 import {Elements} from '../elements';
 import {ConnectionPoint} from './graphics/connection-point';
-import InteractionEvent = PIXI.interaction.InteractionEvent;
 import {PopupService} from '@logigator/logigator-shared-comps';
+import InteractionEvent = PIXI.interaction.InteractionEvent;
 
 export class ViewInteractionManager {
 
@@ -106,8 +106,15 @@ export class ViewInteractionManager {
 	}
 
 	private pDownView(e: InteractionEvent) {
-		if (e.target !== this._view || e.data.button !== 0) return;
+		if (e.data.button !== 0) return;
 		this.cleanUp();
+
+		if (this.workModeSer.currentWorkMode === 'eraser') {
+			this.startEraser(e);
+			return;
+		}
+
+		if (e.target !== this._view) return;
 		switch (this.workModeSer.currentWorkMode) {
 			case 'buildComponent':
 				this.startBuildComp(e);
@@ -151,6 +158,9 @@ export class ViewInteractionManager {
 			case ViewIntManState.PASTE_DRAGGING:
 				this.applyPaste(e);
 				break;
+			case ViewIntManState.USING_ERASER:
+				this.stopEraser(e);
+				break;
 		}
 	}
 
@@ -168,6 +178,9 @@ export class ViewInteractionManager {
 				break;
 			case ViewIntManState.NEW_WIRE:
 				this.dragNewWire(e);
+				break;
+			case ViewIntManState.USING_ERASER:
+				this.eraseComponents(e);
 				break;
 		}
 	}
@@ -196,7 +209,7 @@ export class ViewInteractionManager {
 	}
 
 	private pUpElement(e: InteractionEvent, lGraphics: LGraphics) {
-		if (this.workModeSer.currentWorkMode === 'buildComponent' || this._state === ViewIntManState.DRAGGING || this._selectRect.visible) return;
+		if (this.workModeSer.currentWorkMode === 'buildComponent' || this.workModeSer.currentWorkMode === 'eraser' || this._state === ViewIntManState.DRAGGING || this._selectRect.visible) return;
 		this.cleanUp();
 		this._state = ViewIntManState.WAIT_FOR_DRAG;
 		this.selectionSer.selectComponent(lGraphics.element.id);
@@ -466,6 +479,20 @@ export class ViewInteractionManager {
 		} else {
 			this._state = ViewIntManState.WAIT_FOR_PASTE_DRAG;
 		}
+	}
+
+	private startEraser(e: InteractionEvent) {
+		this._state = ViewIntManState.USING_ERASER;
+		console.log(e)
+	}
+
+	private eraseComponents(e: InteractionEvent) {
+		console.log(e);
+	}
+
+	private stopEraser(e: InteractionEvent) {
+		this._state = ViewIntManState.IDLE;
+		console.log('stop')
 	}
 
 	private get currScale() {
