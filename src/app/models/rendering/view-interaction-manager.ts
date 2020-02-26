@@ -486,18 +486,16 @@ export class ViewInteractionManager {
 	private startEraser(e: InteractionEvent) {
 		this._state = ViewIntManState.USING_ERASER;
 		this._actionPos = new PosHelper(e, this._view);
+		this.projectsSer.currProject.eraseElements(this._actionPos.previousGridPosFloat, this._actionPos.lastGridPosFloat);
 	}
 
 	private eraseComponents(e: InteractionEvent) {
 		this._actionPos.addDragPos(e, this._view);
-		console.log(this._actionPos.previousGridPosFloat);
-		console.log(this._actionPos.lastGridPosFloat);
-		console.log(this._actionPos.floatGridDiffFromPreviousDrag);
-
-		// console.log(this._actionPos.lastGridPosDrag);
+		this.projectsSer.currProject.eraseElements(this._actionPos.previousGridPosFloat, this._actionPos.lastGridPosFloat);
 	}
 
 	private stopEraser(e: InteractionEvent) {
+		this.projectsSer.currProject.stopErase();
 		this.cleanUp();
 	}
 
