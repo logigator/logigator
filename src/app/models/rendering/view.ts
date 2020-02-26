@@ -213,11 +213,10 @@ export abstract class View extends PIXI.Container {
 	}
 
 	public addToCorrectChunk(sprite: PIXI.DisplayObject, pos: PIXI.Point) {
-		const chunkX = CollisionFunctions.gridPosToChunk(pos.x);
-		const chunkY = CollisionFunctions.gridPosToChunk(pos.y);
+		const chunk = CollisionFunctions.gridPosToChunk(pos);
 
-		this.createChunkIfNeeded(chunkX, chunkY);
-		this._chunks[chunkX][chunkY].container.addChild(sprite);
+		this.createChunkIfNeeded(chunk.x, chunk.y);
+		this._chunks[chunk.x][chunk.y].container.addChild(sprite);
 	}
 
 	private removeConnectionPoint(pos: PIXI.Point) {

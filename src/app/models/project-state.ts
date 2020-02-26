@@ -127,9 +127,7 @@ export class ProjectState {
 	}
 
 	public removeConFromChunks(con: PIXI.Point): void {
-		const chunkX = CollisionFunctions.gridPosToChunk(con.x);
-		const chunkY = CollisionFunctions.gridPosToChunk(con.y);
-		const chunk = this.chunk(chunkX, chunkY);
+		const chunk = this.chunk(CollisionFunctions.gridPosToChunk(con));
 		if (!chunk)
 			return;
 		let conIndex = -1;
@@ -427,10 +425,9 @@ export class ProjectState {
 	}
 
 	public wiresOnPoint(pos: PIXI.Point): Element[] {
-		const chunkX = CollisionFunctions.gridPosToChunk(pos.x);
-		const chunkY = CollisionFunctions.gridPosToChunk(pos.y);
+		const chunk = CollisionFunctions.gridPosToChunk(pos);
 		const outWires: Element[] = [];
-		for (const elem of this.elementsInChunk(chunkX, chunkY)) {
+		for (const elem of this.elementsInChunk(chunk)) {
 			if (elem.typeId === ElementTypeId.WIRE && CollisionFunctions.isPointOnWire(elem, pos))
 				outWires.push(elem);
 		}
@@ -438,10 +435,9 @@ export class ProjectState {
 	}
 
 	public componentsOnPoint(pos: PIXI.Point): Element[] {
-		const chunkX = CollisionFunctions.gridPosToChunk(pos.x);
-		const chunkY = CollisionFunctions.gridPosToChunk(pos.y);
+		const chunk = CollisionFunctions.gridPosToChunk(pos);
 		const outWires: Element[] = [];
-		for (const elem of this.elementsInChunk(chunkX, chunkY)) {
+		for (const elem of this.elementsInChunk(chunk)) {
 			if (elem.typeId !== 0 && CollisionFunctions.isPointOnWire(elem, pos))
 				outWires.push(elem);
 		}
@@ -463,10 +459,9 @@ export class ProjectState {
 	}
 
 	public elemsOnPoint(pos: PIXI.Point): Element[] {
-		const chunkX = CollisionFunctions.gridPosToChunk(pos.x);
-		const chunkY = CollisionFunctions.gridPosToChunk(pos.y);
+		const chunk = CollisionFunctions.gridPosToChunk(pos);
 		const outWires: Element[] = [];
-		for (const elem of this.elementsInChunk(chunkX, chunkY)) {
+		for (const elem of this.elementsInChunk(chunk)) {
 			if (CollisionFunctions.elemHasWirePoint(elem, pos)) {
 				outWires.push(elem);
 			}
@@ -475,10 +470,9 @@ export class ProjectState {
 	}
 
 	public wireEndsOnPoint(pos: PIXI.Point): WireEndOnElem {
-		const chunkX = CollisionFunctions.gridPosToChunk(pos.x);
-		const chunkY = CollisionFunctions.gridPosToChunk(pos.y);
+		const chunk = CollisionFunctions.gridPosToChunk(pos);
 		const out: WireEndOnElem = new Map<Element, number>();
-		for (const elem of this.elementsInChunk(chunkX, chunkY)) {
+		for (const elem of this.elementsInChunk(chunk)) {
 			const index = CollisionFunctions.wirePointIndex(elem, pos);
 			if (index >= 0) {
 				out.set(elem, index);
@@ -546,8 +540,8 @@ export class ProjectState {
 		return true;
 	}
 
-	public elementsInChunk(x: number, y: number): Element[] {
-		return this._chunks[x] && this._chunks[x][y] ? this._chunks[x][y].elements : [];
+	public elementsInChunk(c: PIXI.Point): Element[] {
+		return this._chunks[c.x] && this._chunks[c.x][c.y] ? this._chunks[c.x][c.y].elements : [];
 	}
 
 	public chunksFromCoords(chunkCoords: {x: number, y: number}[]): Chunk[] {
@@ -558,6 +552,29 @@ export class ProjectState {
 			out.push(this._chunks[coords.x][coords.y]);
 		}
 		return out;
+	}
+
+
+	public chunksOverLine(from: PIXI.Point, to: PIXI.Point): Chunk[] {
+		const chunk1 = CollisionFunctions.gridPosToChunk(from);
+		const chunk2 = CollisionFunctions.gridPosToChunk(to);
+		let chunks: Chunk[];
+		if (chunk1.equals(chunk2)) {
+			chunks = [this.chunk(chunk1)];
+		} else {
+			if (Math.abs(chunk1.x - chunk2.x) > 1 || Math.abs(chunk1.y - chunk2.y) > 1)
+				return;
+
+			chunks = [this.chunk(chunk1), this.chunk(chunk2)];
+			const otherChunks = [new PIXI.Point(chunk1.x, chunk2.y), new PIXI.Point(chunk1.y, chunk2.x)];
+			for (const c of otherChunks) {
+				const {start, end} = CollisionFunctions.chunkToPoints(new PIXI.Point(chunk1.x, chunk2.y));
+				if (CollisionFunctions.lineOverRect(start, end, from, to)) {
+					chunks.push(this.chunk(c));
+				}
+			}
+		}
+		return chunks;
 	}
 
 
@@ -623,8 +640,8 @@ export class ProjectState {
 		element.data = data;
 	}
 
-	public chunk(x: number, y: number): Chunk {
-		return this._chunks[x] ? this._chunks[x][y] : null;
+	public chunk(c: PIXI.Point): Chunk {
+		return this._chunks[c.x] ? this._chunks[c.x][c.y] : null;
 	}
 
 	public allPlugs(): Element[] {
