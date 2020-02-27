@@ -555,7 +555,22 @@ export class ProjectState {
 	}
 
 
-	public chunksOverLine(from: PIXI.Point, to: PIXI.Point): Chunk[] {
+	public elementsOverLine(from: PIXI.Point, to: PIXI.Point): Element[] {
+		const out: Element[] = [];
+		const chunks = this.chunksOverLine(from, to);
+		for (const chunk of chunks) {
+			if (!chunk) continue;
+			for (const element of chunk.elements) {
+				if (out.find(e => e.id === element.id))
+					continue;
+				if (CollisionFunctions.lineOverElem(element, from, to))
+					out.push(element);
+			}
+		}
+		return out;
+	}
+
+	private chunksOverLine(from: PIXI.Point, to: PIXI.Point): Chunk[] {
 		const chunk1 = CollisionFunctions.gridPosToChunk(from);
 		const chunk2 = CollisionFunctions.gridPosToChunk(to);
 		let chunks: Chunk[];
@@ -563,7 +578,7 @@ export class ProjectState {
 			chunks = [this.chunk(chunk1)];
 		} else {
 			if (Math.abs(chunk1.x - chunk2.x) > 1 || Math.abs(chunk1.y - chunk2.y) > 1)
-				return;
+				return [];
 
 			chunks = [this.chunk(chunk1), this.chunk(chunk2)];
 			const otherChunks = [new PIXI.Point(chunk1.x, chunk2.y), new PIXI.Point(chunk1.y, chunk2.x)];

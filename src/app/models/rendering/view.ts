@@ -10,7 +10,7 @@ import {environment} from '../../../environments/environment';
 import {Element} from '../element';
 import {CollisionFunctions} from '../collision-functions';
 import {Project} from '../project';
-import {Action} from '../action';
+import {Action, Actions} from '../action';
 import {getStaticDI} from '../get-di';
 import {ComponentScalable, isUpdatable, LGraphics} from './graphics/l-graphics';
 import {LGraphicsResolver} from './graphics/l-graphics-resolver';
