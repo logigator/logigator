@@ -31,7 +31,7 @@
 			<button class="toolbar-button conn-wire" (click)="setWorkMode('connectWire')" [class.active-button]="currentWorkMode === 'connectWire'" aria-label="Connect Wire" appToolbarItemTooltip [tooltipText]="'TOOLBAR.TOOLTIP.CONN_WIRE' | translate"></button>
 			<button class="toolbar-button select" (click)="setWorkMode('select')" [class.active-button]="currentWorkMode === 'select'" aria-label="Select" appToolbarItemTooltip [tooltipText]="'TOOLBAR.TOOLTIP.SELECT' | translate"></button>
 			<button class="toolbar-button select-cut" (click)="setWorkMode('selectCut')" [class.active-button]="currentWorkMode === 'selectCut'" aria-label="Select Cut" appToolbarItemTooltip [tooltipText]="'TOOLBAR.TOOLTIP.SELECT_CUT' | translate"></button>
-			<button class="toolbar-button robber" (click)="setWorkMode('eraser')" [class.active-button]="currentWorkMode === 'eraser'" aria-label="Robber" appToolbarItemTooltip [tooltipText]="'TOOLBAR.TOOLTIP.ROBBER' | translate"></button>
+			<button class="toolbar-button eraser" (click)="setWorkMode('eraser')" [class.active-button]="currentWorkMode === 'eraser'" aria-label="Robber" appToolbarItemTooltip [tooltipText]="'TOOLBAR.TOOLTIP.ROBBER' | translate"></button>
 			<button class="toolbar-button text" (click)="setWorkMode('text')" [class.active-button]="currentWorkMode === 'text'" aria-label="Place Text" appToolbarItemTooltip [tooltipText]="'TOOLBAR.TOOLTIP.TEXT' | translate"></button>
 		</ng-container>
 
