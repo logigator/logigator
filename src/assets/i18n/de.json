@@ -190,6 +190,7 @@
 				"connWireMode": "Leitungen verbinden",
 				"wireMode": "Leitungen platzieren",
 				"selectMode": "Auswählen",
+				"eraserMode": "Radiergummi",
 				"cutSelectMode": "Auswählen und Schneiden",
 				"newComp": "Neue benutzerdefinierte Komponente",
 				"textMode": "Text platzieren",

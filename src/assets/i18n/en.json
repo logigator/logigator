@@ -190,6 +190,7 @@
 				"connWireMode": "Connect wires mode",
 				"wireMode": "Place wires mode",
 				"selectMode": "Selection mode",
+				"eraserMode": "Eraser",
 				"cutSelectMode": "Cut Selection mode",
 				"newComp": "Create new custom component",
 				"textMode": "Place text",

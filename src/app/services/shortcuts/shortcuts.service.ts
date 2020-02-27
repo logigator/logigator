@@ -52,6 +52,7 @@ export class ShortcutsService {
 			...this.shortcutMap,
 			...newConfig
 		};
+		if (!this.user.isLoggedIn) return;
 		this.http.post(environment.apiPrefix + '/user/update', {
 			shortcuts: newConfig
 		}).pipe(
@@ -133,6 +134,9 @@ export class ShortcutsService {
 				break;
 			case 'cutSelectMode':
 				this.workMode.setWorkMode('selectCut');
+				break;
+			case 'eraserMode':
+				this.workMode.setWorkMode('eraser');
 				break;
 			case 'textMode':
 				this.workMode.setWorkMode('text');
