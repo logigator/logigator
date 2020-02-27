@@ -143,6 +143,13 @@ export abstract class CollisionFunctions {
 		return Math.sqrt((p1.x - p2.x) ** 2 + (p1.y - p2.y) ** 2);
 	}
 
+	public static lineOverElem(element: Element, from: PIXI.Point, to: PIXI.Point): boolean {
+		return element.typeId === ElementTypeId.WIRE
+			? CollisionFunctions.lineCollide(element.pos.x + 0.5, element.pos.y + 0.5,
+				element.endPos.x + 0.5, element.endPos.y + 0.5, from.x, from.y, to.x, to.y)
+			: CollisionFunctions.lineOverRect(element.pos, element.endPos, from, to);
+	}
+
 	// don't blame me
 	public static lineOverRect(r1: PIXI.Point, r2: PIXI.Point, l1: PIXI.Point, l2: PIXI.Point): boolean {
 		return CollisionFunctions.lineCollide(r1.x, r1.y, r2.x, r1.y, l1.x, l1.y, l2.x, l2.y) ||

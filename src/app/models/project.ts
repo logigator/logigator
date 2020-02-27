@@ -252,14 +252,38 @@ export class Project {
 	public eraseElements(from: PIXI.Point, to: PIXI.Point): void {
 		// #!debug
 		this.boardRecorder.call('eraseElements', arguments);
-		const chunks = this._currState.chunksOverLine(from, to);
-		for (const chunk of chunks) {
-
+		const elements = this._currState.elementsOverLine(from, to);
+		if (elements.length === 0)
+			return;
+		const actions: Action[] = new Array(elements.length);
+		const onEdges: Element[] = [];
+		let i = 0;
+		for (const element of elements) {
+			actions[i++] = {
+				name: Elements.remActionName(element),
+				element
+			};
+			this._currState.removeElement(element.id);
 		}
+		elements.forEach(elem => {
+			for (const pos of Elements.wireEnds(elem)) {
+				onEdges.push(...this._currState.wiresOnPoint(pos));
+			}
+		});
+		this._currState.loadConnectionPoints(elements);
+		actions.push(...this.autoAssemble(onEdges), ...this._currState.specialActions);
+		this._currState.specialActions = [];
+		this._actionToApply.push(...actions);
+		this._changeSubject.next(actions);
 	}
 
 	public stopErase(): void {
-
+		// #!debug
+		this.boardRecorder.call('stopErase', arguments);
+		if (this._actionToApply.length === 0)
+			return;
+		this.newState(this._actionToApply, false, true);
+		this._actionToApply = [];
 	}
 
 
@@ -518,7 +542,7 @@ export class Project {
 	}
 
 
-	public newState(actions: Action[], skipSubject?: boolean): void {
+	public newState(actions: Action[], setStateActionFlag?: boolean, skipSubject?: boolean): void {
 		if (!actions)
 			return;
 		actions.push(...this._currState.specialActions);
@@ -537,9 +561,9 @@ export class Project {
 		}
 		this.saveDirty = true;
 		this.compileDirty = true;
-		if (!skipSubject) {
+		if (!setStateActionFlag && !skipSubject) {
 			this._changeSubject.next(actions);
-		} else {
+		} else if (setStateActionFlag) {
 			this._stateActionFlag = true;
 		}
 	}
