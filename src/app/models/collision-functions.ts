@@ -167,20 +167,11 @@ export abstract class CollisionFunctions {
 		return uA >= 0 && uA <= 1 && uB >= 0 && uB <= 1;
 	}
 
-	public static lineCollide(x1, y1, x2, y2, x3, y3, x4, y4): boolean {
+	public static lineCollide(x1: number, y1: number, x2: number, y2: number, x3: number, y3: number, x4: number, y4: number): boolean {
 		// calculate the direction of the lines
 		const uA = ((x4-x3)*(y1-y3) - (y4-y3)*(x1-x3)) / ((y4-y3)*(x2-x1) - (x4-x3)*(y2-y1));
 		const uB = ((x2-x1)*(y1-y3) - (y2-y1)*(x1-x3)) / ((y4-y3)*(x2-x1) - (x4-x3)*(y2-y1));
 
 		return uA >= 0 && uA <= 1 && uB >= 0 && uB <= 1;
-		// if uA and uB are between 0-1, lines are colliding
-		// if (uA >= 0 && uA <= 1 && uB >= 0 && uB <= 1) {
-		// optionally, draw a circle where the lines meet
-		// const intersectionX = p1.x + (uA * (p2.x-p1.x));
-		// const intersectionY = p1.y + (uA * (p2.y-p1.y));
-
-		// return true;
-		// }
-		// return false;
 	}
 }
