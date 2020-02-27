@@ -69,7 +69,7 @@ export class ViewInteractionManager {
 
 		this.initEventListeners();
 
-		merge(this.workModeSer.currentWorkMode$, getStaticDI(ProjectInteractionService).onElementsDelete$)
+		merge(this.workModeSer.currentWorkMode$, getStaticDI(ProjectInteractionService).onElementsDelete$, getStaticDI(ProjectInteractionService).onUndoOrRedo$)
 			.pipe(takeUntil(this._destroySubject)).subscribe(() => this.cleanUp());
 
 		getStaticDI(ProjectInteractionService).onPaste$.pipe(
