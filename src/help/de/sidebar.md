@@ -4,3 +4,4 @@
 - <p id="io">IO Gatter</p>
 - <p id="user-defined">Benutzerdefinierte Komponenten</p>
 - <p id="saving">Projekte speichern</p>
+- <p id="tutorial-vids">Video Toturials</p>

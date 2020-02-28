@@ -4,3 +4,4 @@
 - <p id="io">IO Gates</p>
 - <p id="user-defined">User Defined Components</p>
 - <p id="saving">Saving Projects</p>
+- <p id="tutorial-vids">Video tutorials</p>
