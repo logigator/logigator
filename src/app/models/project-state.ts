@@ -565,6 +565,8 @@ export class ProjectState {
 					continue;
 				if (CollisionFunctions.lineOverElem(element, from, to))
 					out.push(element);
+				else if (CollisionFunctions.isPointInRect(from, element.pos, element.endPos))
+					out.push(element);
 			}
 		}
 		return out;
