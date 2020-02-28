@@ -377,6 +377,7 @@
 			"CREATE": "Unable to create project or component",
 			"SAVE": "Unable to save Component or Project on Server",
 			"COMP_NOT_FOUND": "Component not found, project might be corrupted",
+			"REMOVED_COMP": "A component was not found and was removed from the Project",
 			"INVALID_FILE": "Invalid File",
 			"RESOLVE_DEPS": "Unable to resolve dependencies of Project",
 			"PROJECT_AS_COMP": "Unable to open Project as Component",

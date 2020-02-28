@@ -421,6 +421,7 @@ export class ProjectSaveManagementService {
 		if (!('elements' in openProRes)) return [];
 		let project = this.getProjectModelFromJson(openProRes.elements);
 		project = this.applyMappingsLoad(project, openProRes.mappings);
+		project = this.ensureComponentsExists(project);
 		project = this.adjustInputsAndOutputs(project);
 		return project;
 	}
@@ -588,6 +589,16 @@ export class ProjectSaveManagementService {
 			};
 			if (e.endPos) elem.endPos = new PIXI.Point(e.endPos.x, e.endPos.y);
 			return elem;
+		});
+	}
+
+	private ensureComponentsExists(elements: Element[]): Element[] {
+		return elements.filter(el => {
+			if (el.typeId < 500) return true;
+			if(!this.elemProvService.getElementById(el.typeId)) {
+				this.errorHandling.showErrorMessage('ERROR.PROJECTS.REMOVED_COMP');
+				return false;
+			}
 		});
 	}
 
