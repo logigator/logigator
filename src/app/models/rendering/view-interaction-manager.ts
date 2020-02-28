@@ -69,8 +69,11 @@ export class ViewInteractionManager {
 
 		this.initEventListeners();
 
-		merge(this.workModeSer.currentWorkMode$, getStaticDI(ProjectInteractionService).onElementsDelete$, getStaticDI(ProjectInteractionService).onUndoOrRedo$)
-			.pipe(takeUntil(this._destroySubject)).subscribe(() => this.cleanUp());
+		merge(
+			this.workModeSer.currentWorkMode$,
+			getStaticDI(ProjectInteractionService).onElementsDelete$,
+			getStaticDI(ProjectInteractionService).onUndoOrRedo$
+		).pipe(takeUntil(this._destroySubject)).subscribe(() => this.cleanUp());
 
 		getStaticDI(ProjectInteractionService).onPaste$.pipe(
 			takeUntil(this._destroySubject),
@@ -211,7 +214,14 @@ export class ViewInteractionManager {
 	}
 
 	private pUpElement(e: InteractionEvent, lGraphics: LGraphics) {
-		if (this.workModeSer.currentWorkMode === 'buildComponent' || this.workModeSer.currentWorkMode === 'eraser' || this._state === ViewIntManState.DRAGGING || this._selectRect.visible) return;
+		if (this.workModeSer.currentWorkMode === 'buildComponent' ||
+			this.workModeSer.currentWorkMode === 'eraser' ||
+			this._state === ViewIntManState.DRAGGING ||
+			this._selectRect.visible
+		) {
+			return;
+		}
+
 		this.cleanUp();
 		this._state = ViewIntManState.WAIT_FOR_DRAG;
 		this.selectionSer.selectComponent(lGraphics.element.id);
