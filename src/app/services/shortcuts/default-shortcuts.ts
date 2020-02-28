@@ -36,20 +36,19 @@ export const defaultShortcuts: ShortcutMap = {
 		shift: true
 	},
 	connWireMode: {
-		key_code: 'C',
-		alt: true
+		key_code: 'C'
 	},
 	wireMode: {
-		key_code: 'W',
-		alt: true
+		key_code: 'W'
 	},
 	selectMode: {
-		key_code: 'S',
-		alt: true
+		key_code: 'S'
+	},
+	eraserMode: {
+		key_code: 'E'
 	},
 	cutSelectMode: {
 		key_code: 'S',
-		alt: true,
 		shift: true
 	},
 	newComp: {
@@ -66,8 +65,7 @@ export const defaultShortcuts: ShortcutMap = {
 		ctrl: true
 	},
 	textMode: {
-		key_code: 'T',
-		alt: true
+		key_code: 'T'
 	},
 	save: {
 		key_code: 'S',

@@ -20,6 +20,7 @@ const actionUsableInSimulation: InteractionActionUsableInSimulation = {
 	newComp: false,
 	newProj: false,
 	openProj: false,
+	eraserMode: false,
 	textMode: false,
 	save: false,
 	share: true,

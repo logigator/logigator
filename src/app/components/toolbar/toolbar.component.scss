@@ -36,17 +36,29 @@
 		&:hover {
 			cursor: default;
 			@include themify() {
-				background-color: themed('accent2');
+				@if isTheme('dark') {
+					background-color: themed('accent2');
+				} @else {
+					background-color: lighten(themed('accent2'), 10%);
+				}
 			}
 		}
 	}
 
 	.active-button {
 		@include themify() {
-			background-color: lighten(themed('background'), 15%);
+			@if isTheme('dark') {
+				background-color: lighten(themed('background'), 15%);
+			} @else {
+				background-color: darken(themed('background'), 15%);
+			}
 
 			&:hover {
-				background-color: lighten(themed('background'), 15%);
+				@if isTheme('dark') {
+					background-color: lighten(themed('background'), 15%);
+				} @else {
+					background-color: darken(themed('background'), 15%);
+				}
 			}
 		}
 	}
@@ -147,6 +159,14 @@
 					background-image: url("/assets/icons/dark/text.svg");
 				} @else {
 					background-image: url("/assets/icons/light/text.svg");
+				}
+			}
+
+			.eraser {
+				@if (isTheme('dark')) {
+					background-image: url("/assets/icons/dark/eraser.svg");
+				} @else {
+					background-image: url("/assets/icons/light/eraser.svg");
 				}
 			}
 

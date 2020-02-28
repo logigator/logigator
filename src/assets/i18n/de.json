@@ -66,6 +66,7 @@
 			"CONN_WIRE": "Leitungen verbinden",
 			"SELECT": "Auswählen",
 			"SELECT_CUT": "Auswählen und Schneiden",
+			"ROBBER": "Radiergummi",
 			"TEXT": "Text",
 			"SIM_SINGLE": "Einzelschritt",
 			"SIM_PAUSE": "Pause",
@@ -189,6 +190,7 @@
 				"connWireMode": "Leitungen verbinden",
 				"wireMode": "Leitungen platzieren",
 				"selectMode": "Auswählen",
+				"eraserMode": "Radiergummi",
 				"cutSelectMode": "Auswählen und Schneiden",
 				"newComp": "Neue benutzerdefinierte Komponente",
 				"textMode": "Text platzieren",
@@ -358,6 +360,7 @@
 		"buildWire": "Leitungen platzieren",
 		"connectWire": "Leitungen verbinden",
 		"text": "Text platzieren",
+		"eraser": "Komponenten radieren",
 		"simulation": "Schaltung simulieren"
 	},
 	"ERROR": {

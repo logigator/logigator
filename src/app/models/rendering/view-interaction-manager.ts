@@ -21,8 +21,8 @@ import {CollisionFunctions} from '../collision-functions';
 import {CopyService} from '../../services/copy/copy.service';
 import {Elements} from '../elements';
 import {ConnectionPoint} from './graphics/connection-point';
-import InteractionEvent = PIXI.interaction.InteractionEvent;
 import {PopupService} from '@logigator/logigator-shared-comps';
+import InteractionEvent = PIXI.interaction.InteractionEvent;
 
 export class ViewInteractionManager {
 
@@ -69,8 +69,11 @@ export class ViewInteractionManager {
 
 		this.initEventListeners();
 
-		merge(this.workModeSer.currentWorkMode$, getStaticDI(ProjectInteractionService).onElementsDelete$)
-			.pipe(takeUntil(this._destroySubject)).subscribe(() => this.cleanUp());
+		merge(
+			this.workModeSer.currentWorkMode$,
+			getStaticDI(ProjectInteractionService).onElementsDelete$,
+			getStaticDI(ProjectInteractionService).onUndoOrRedo$
+		).pipe(takeUntil(this._destroySubject)).subscribe(() => this.cleanUp());
 
 		getStaticDI(ProjectInteractionService).onPaste$.pipe(
 			takeUntil(this._destroySubject),
@@ -106,8 +109,17 @@ export class ViewInteractionManager {
 	}
 
 	private pDownView(e: InteractionEvent) {
-		if (e.target !== this._view || e.data.button !== 0) return;
+		if (e.data.button !== 0) return;
+
+		if (this.workModeSer.currentWorkMode === 'eraser') {
+			this.cleanUp();
+			this.startEraser(e);
+			return;
+		}
+
+		if (e.target !== this._view) return;
 		this.cleanUp();
+
 		switch (this.workModeSer.currentWorkMode) {
 			case 'buildComponent':
 				this.startBuildComp(e);
@@ -151,6 +163,9 @@ export class ViewInteractionManager {
 			case ViewIntManState.PASTE_DRAGGING:
 				this.applyPaste(e);
 				break;
+			case ViewIntManState.USING_ERASER:
+				this.stopEraser(e);
+				break;
 		}
 	}
 
@@ -168,6 +183,9 @@ export class ViewInteractionManager {
 				break;
 			case ViewIntManState.NEW_WIRE:
 				this.dragNewWire(e);
+				break;
+			case ViewIntManState.USING_ERASER:
+				this.eraseComponents(e);
 				break;
 		}
 	}
@@ -196,7 +214,14 @@ export class ViewInteractionManager {
 	}
 
 	private pUpElement(e: InteractionEvent, lGraphics: LGraphics) {
-		if (this.workModeSer.currentWorkMode === 'buildComponent' || this._state === ViewIntManState.DRAGGING || this._selectRect.visible) return;
+		if (this.workModeSer.currentWorkMode === 'buildComponent' ||
+			this.workModeSer.currentWorkMode === 'eraser' ||
+			this._state === ViewIntManState.DRAGGING ||
+			this._selectRect.visible
+		) {
+			return;
+		}
+
 		this.cleanUp();
 		this._state = ViewIntManState.WAIT_FOR_DRAG;
 		this.selectionSer.selectComponent(lGraphics.element.id);
@@ -466,6 +491,22 @@ export class ViewInteractionManager {
 		} else {
 			this._state = ViewIntManState.WAIT_FOR_PASTE_DRAG;
 		}
+	}
+
+	private startEraser(e: InteractionEvent) {
+		this._state = ViewIntManState.USING_ERASER;
+		this._actionPos = new PosHelper(e, this._view);
+		this.projectsSer.currProject.eraseElements(this._actionPos.previousGridPosFloat, this._actionPos.lastGridPosFloat);
+	}
+
+	private eraseComponents(e: InteractionEvent) {
+		this._actionPos.addDragPos(e, this._view);
+		this.projectsSer.currProject.eraseElements(this._actionPos.previousGridPosFloat, this._actionPos.lastGridPosFloat);
+	}
+
+	private stopEraser(e: InteractionEvent) {
+		this.projectsSer.currProject.stopErase();
+		this.cleanUp();
 	}
 
 	private get currScale() {

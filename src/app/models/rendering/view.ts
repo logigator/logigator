@@ -10,7 +10,7 @@ import {environment} from '../../../environments/environment';
 import {Element} from '../element';
 import {CollisionFunctions} from '../collision-functions';
 import {Project} from '../project';
-import {Action} from '../action';
+import {Action, Actions} from '../action';
 import {getStaticDI} from '../get-di';
 import {ComponentScalable, isUpdatable, LGraphics} from './graphics/l-graphics';
 import {LGraphicsResolver} from './graphics/l-graphics-resolver';
@@ -213,11 +213,10 @@ export abstract class View extends PIXI.Container {
 	}
 
 	public addToCorrectChunk(sprite: PIXI.DisplayObject, pos: PIXI.Point) {
-		const chunkX = CollisionFunctions.gridPosToChunk(pos.x);
-		const chunkY = CollisionFunctions.gridPosToChunk(pos.y);
+		const chunk = CollisionFunctions.gridPosToChunk(pos);
 
-		this.createChunkIfNeeded(chunkX, chunkY);
-		this._chunks[chunkX][chunkY].container.addChild(sprite);
+		this.createChunkIfNeeded(chunk.x, chunk.y);
+		this._chunks[chunk.x][chunk.y].container.addChild(sprite);
 	}
 
 	private removeConnectionPoint(pos: PIXI.Point) {

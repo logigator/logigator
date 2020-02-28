@@ -20,6 +20,7 @@ export class ProjectInteractionService {
 	private _zoomNotifierSubject = new Subject<'in' | 'out' | '100'>();
 	private _deleteNotifierSubject = new Subject<void>();
 	private _pasteNotifierSubject = new Subject<void>();
+	private _undoOrRedoNotifierSubject = new Subject<void>();
 
 	constructor(
 		private projectsService: ProjectsService,
@@ -77,12 +78,14 @@ export class ProjectInteractionService {
 		if (!checkActionUsable('undo')) return;
 		this.projectsService.currProject.stepBack();
 		this.projectsService.inputsOutputsCustomComponentChanged(this.projectsService.currProject.id);
+		this._undoOrRedoNotifierSubject.next();
 	}
 
 	public redoForCurrent() {
 		if (!checkActionUsable('redo')) return;
 		this.projectsService.currProject.stepForward();
 		this.projectsService.inputsOutputsCustomComponentChanged(this.projectsService.currProject.id);
+		this._undoOrRedoNotifierSubject.next();
 	}
 
 	public newProject() {
@@ -157,5 +160,9 @@ export class ProjectInteractionService {
 
 	public get onPaste$(): Observable<void> {
 		return this._pasteNotifierSubject.asObservable();
+	}
+
+	public get onUndoOrRedo$(): Observable<void> {
+		return this._undoOrRedoNotifierSubject.asObservable();
 	}
 }

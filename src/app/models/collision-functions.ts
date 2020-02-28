@@ -52,19 +52,16 @@ export abstract class CollisionFunctions {
 		const endPos = _endPos.clone();
 		Elements.correctPosOrder(startPos, endPos);
 		const out: {x: number, y: number}[] = [];
-		const startChunkX = CollisionFunctions.gridPosToChunk(startPos.x);
-		const startChunkY = CollisionFunctions.gridPosToChunk(startPos.y);
-		const endChunkX = CollisionFunctions.gridPosToChunk(endPos.x);
-		const endChunkY = CollisionFunctions.gridPosToChunk(endPos.y);
-		for (let x = startChunkX; x <= endChunkX; x++)
-			for (let y = startChunkY; y <= endChunkY; y++)
+		const startChunk = CollisionFunctions.gridPosToChunk(startPos);
+		const endChunk = CollisionFunctions.gridPosToChunk(endPos);
+		for (let x = startChunk.x; x <= endChunk.x; x++)
+			for (let y = startChunk.y; y <= endChunk.y; y++)
 				out.push({x, y});
 		if (wireEnds) {
 			wireEnds.forEach(wireEnd => {
-				const chunkX = CollisionFunctions.gridPosToChunk(wireEnd.x);
-				const chunkY = CollisionFunctions.gridPosToChunk(wireEnd.y);
-				if (!out.find(c => c.x === chunkX && c.y === chunkY))
-					out.push({x: chunkX, y: chunkY});
+				const chunk = CollisionFunctions.gridPosToChunk(wireEnd);
+				if (!out.find(c => c.x === chunk.x && c.y === chunk.y))
+					out.push({x: chunk.x, y: chunk.y});
 			});
 		}
 		return out;
@@ -83,6 +80,11 @@ export abstract class CollisionFunctions {
 	public static isRectInRectLightBorder(startPos0: PIXI.Point, endPos0: PIXI.Point, startPos1: PIXI.Point, endPos1: PIXI.Point): boolean {
 		return startPos0.x <= endPos1.x && startPos0.y <= endPos1.y &&
 			endPos0.x > startPos1.x && endPos0.y > startPos1.y;
+	}
+
+	public static isConPointInRect(pos: PIXI.Point, startPos: PIXI.Point, endPos: PIXI.Point): boolean {
+		return pos.x + 0.5 < endPos.x && pos.y + 0.5 < endPos.y &&
+			pos.x + 0.5 > startPos.x && pos.y + 0.5 > startPos.y;
 	}
 
 	public static isElementInFloatRect(element: Element, startPos: PIXI.Point, endPos: PIXI.Point): boolean {
@@ -131,11 +133,50 @@ export abstract class CollisionFunctions {
 		return pos.x + 0.5 >= startPos.x && pos.x + 0.5 < endPos.x && pos.y + 0.5 >= startPos.y && pos.y + 0.5 < endPos.y;
 	}
 
-	public static gridPosToChunk(pos: number): number {
-		return Math.floor(pos / environment.chunkSize);
+	public static gridPosToChunk(pos: PIXI.Point): PIXI.Point {
+		return new PIXI.Point(Math.floor(pos.x / environment.chunkSize), Math.floor(pos.y / environment.chunkSize));
+	}
+
+	public static chunkToPoints(c: PIXI.Point): {start: PIXI.Point, end: PIXI.Point} {
+		return {
+			start: new PIXI.Point(c.x * environment.chunkSize, c.y * environment.chunkSize),
+			end: new PIXI.Point((c.x + 1) * environment.chunkSize, (c.y + 1) * environment.chunkSize)
+		};
 	}
 
 	public static distance(p1: PIXI.Point, p2: PIXI.Point): number {
 		return Math.sqrt((p1.x - p2.x) ** 2 + (p1.y - p2.y) ** 2);
+	}
+
+	public static lineOverElem(element: Element, from: PIXI.Point, to: PIXI.Point): boolean {
+		return element.typeId === ElementTypeId.WIRE
+			? CollisionFunctions.lineCollide(element.pos.x + 0.5, element.pos.y + 0.5,
+				element.endPos.x + 0.5, element.endPos.y + 0.5, from.x, from.y, to.x, to.y)
+			: CollisionFunctions.lineOverRect(element.pos, element.endPos, from, to);
+	}
+
+	// don't blame me
+	public static lineOverRect(r1: PIXI.Point, r2: PIXI.Point, l1: PIXI.Point, l2: PIXI.Point): boolean {
+		return CollisionFunctions.lineCollide(r1.x, r1.y, r2.x, r1.y, l1.x, l1.y, l2.x, l2.y) ||
+		CollisionFunctions.lineCollide(r2.x, r1.y, r2.x, r2.y, l1.x, l1.y, l2.x, l2.y) ||
+		CollisionFunctions.lineCollide(r2.x, r2.y, r1.x, r2.y, l1.x, l1.y, l2.x, l2.y) ||
+		CollisionFunctions.lineCollide(r1.x, r2.y, r1.x, r1.y, l1.x, l1.y, l2.x, l2.y);
+	}
+
+	public static lineCollidePoint(p1: PIXI.Point, p2: PIXI.Point, p3: PIXI.Point, p4: PIXI.Point): boolean {
+		const uA = ((p4.x-p3.x)*(p1.y-p3.y) - (p4.y-p3.y)*(p1.x-p3.x)) /
+			((p4.y-p3.y)*(p2.x-p1.x) - (p4.x-p3.x)*(p2.y-p1.y));
+		const uB = ((p2.x-p1.x)*(p1.y-p3.y) - (p2.y-p1.y)*(p1.x-p3.x)) /
+			((p4.y-p3.y)*(p2.x-p1.x) - (p4.x-p3.x)*(p2.y-p1.y));
+
+		return uA >= 0 && uA <= 1 && uB >= 0 && uB <= 1;
+	}
+
+	public static lineCollide(x1: number, y1: number, x2: number, y2: number, x3: number, y3: number, x4: number, y4: number): boolean {
+		// calculate the direction of the lines
+		const uA = ((x4-x3)*(y1-y3) - (y4-y3)*(x1-x3)) / ((y4-y3)*(x2-x1) - (x4-x3)*(y2-y1));
+		const uB = ((x2-x1)*(y1-y3) - (y2-y1)*(x1-x3)) / ((y4-y3)*(x2-x1) - (x4-x3)*(y2-y1));
+
+		return uA >= 0 && uA <= 1 && uB >= 0 && uB <= 1;
 	}
 }

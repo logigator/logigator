@@ -1,1 +1,1 @@
-export type WorkMode = 'select' | 'selectCut' | 'buildComponent' | 'buildWire' | 'connectWire' | 'text' | 'simulation';
+export type WorkMode = 'select' | 'selectCut' | 'eraser' | 'buildComponent' | 'buildWire' | 'connectWire' | 'text' | 'simulation';
