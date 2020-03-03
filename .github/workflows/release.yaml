@@ -7,7 +7,7 @@ on:
 jobs:
   relase:
     name: Create Release
-    runs-on: ubuntu-latest
+    runs-on: windows-latest
     steps:
       - name: Checkout
         uses: actions/checkout@v2
@@ -24,9 +24,10 @@ jobs:
           npm i
           npm run build:electron:win64
 
-      - name: Zip
-        run: |
-          zip -r release/Logigator-win32-x64.zip release/Logigator-win32-x64
+      - name: Zip Win64
+        uses: montudor/action-zip@v0.1.0
+        with:
+          args: zip -qq -r release/Logigator-win32-x64.zip ./release/Logigator-win32-x64
 
       - name: Release
         uses: softprops/action-gh-release@v0.1.5
