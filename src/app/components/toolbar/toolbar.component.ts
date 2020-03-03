@@ -146,8 +146,8 @@ export class ToolbarComponent {
 	}
 
 	public pauseSim() {
-		this.workerCommunication.pause();
 		this.renderTicker.stopAllContSim();
+		this.workerCommunication.pause();
 	}
 
 	public stopSim() {
