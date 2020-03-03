@@ -29,12 +29,12 @@ jobs:
           zip -r release/Logigator-win32-x64.zip release/Logigator-win32-x64
 
       - name: Release
-          uses: softprops/action-gh-release@v1
+          uses: softprops/action-gh-release@v0.1.5
           with:
             tag_name: ${{ github.ref }}
             draft: false
             prereleas: false
             files: |
-              release/
+              release/Logigator-win32-x64.zip
           env:
             GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
