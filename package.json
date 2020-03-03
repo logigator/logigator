@@ -13,7 +13,7 @@
 		"build:electron:win32": "env-cmd -e prod-electron --use-shell \"npm run build-custom-build-scripts && npm run prepackage-electron && node custom-build-scripts/dist/package-app.js win32 ia32\"",
 		"build:electron:win-arm64": "env-cmd -e prod-electron --use-shell \"npm run build-custom-build-scripts && npm run prepackage-electron && node custom-build-scripts/dist/package-app.js win32 arm64\"",
 		"build:electron:linux64": "env-cmd -e prod-electron --use-shell \"npm run build-custom-build-scripts && npm run prepackage-electron && node custom-build-scripts/dist/package-app.js linux x64\"",
-		"build:electron:linux32": "env-cmd -e prod-electron --use-shell \"npm run build-custom-build-scripts && npm run prepackage-electron && node custom-build-scripts/dist/package-app.js win32 ia32\"",
+		"build:electron:linux32": "env-cmd -e prod-electron --use-shell \"npm run build-custom-build-scripts && npm run prepackage-electron && node custom-build-scripts/dist/package-app.js linux ia32\"",
 		"analyze-bundle": "webpack-bundle-analyzer dist/logigator-editor/stats-es2015.json",
 		"wasm-build": "node custom-build-scripts/build-wasm.js",
 		"wasm-js-cache-bust": "node custom-build-scripts/dist/wasm-js-cache-bust.js",
