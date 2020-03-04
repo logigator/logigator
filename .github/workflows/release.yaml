@@ -30,10 +30,10 @@ jobs:
         shell: powershell
         run: |
           compress-archive -path ".\release\Logigator-win32-x64\" -destinationpath ".\release\Logigator-win32-x64.zip" -compressionlevel optimal
-          compress-archive -path ".\release\Logigator-win32-x32\" -destinationpath ".\release\Logigator-win32-x32.zip" -compressionlevel optimal
+          compress-archive -path ".\release\Logigator-win32-ia32\" -destinationpath ".\release\Logigator-win32-x32.zip" -compressionlevel optimal
           compress-archive -path ".\release\Logigator-win32-arm64\" -destinationpath ".\release\Logigator-win32-arm64.zip" -compressionlevel optimal
           compress-archive -path ".\release\Logigator-linux-x64\" -destinationpath ".\release\Logigator-linux-x64.zip" -compressionlevel optimal
-          compress-archive -path ".\release\Logigator-linux-x32\" -destinationpath ".\release\Logigator-linux-x32.zip" -compressionlevel optimal
+          compress-archive -path ".\release\Logigator-linux-ia32\" -destinationpath ".\release\Logigator-linux-x32.zip" -compressionlevel optimal
 
       - name: Release
         uses: softprops/action-gh-release@v0.1.5
