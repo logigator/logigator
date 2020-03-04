@@ -44,7 +44,8 @@
 			"SHORTCUTS": "Customize Shortcuts",
 			"ACCOUNT": "Account",
 			"LOGOUT": "Logout",
-			"PRIVACY": "Privacy Policy"
+			"PRIVACY": "Privacy Policy",
+			"NEW_VERSION": "New version available"
 		}
 	},
 	"TOOLBAR": {

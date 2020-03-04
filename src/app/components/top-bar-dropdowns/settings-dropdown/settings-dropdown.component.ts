@@ -7,6 +7,8 @@ import {UserService} from '../../../services/user/user.service';
 import {ProjectsService} from '../../../services/projects/projects.service';
 import {ElectronService} from 'ngx-electron';
 import {PopupService} from '@logigator/logigator-shared-comps';
+import {Observable} from 'rxjs';
+import {ElectronUpdateService} from '../../../services/electron-update/electron-update.service';
 
 @Component({
 	selector: 'app-settings-dropdown',
@@ -22,17 +24,23 @@ export class SettingsDropdownComponent implements OnInit {
 	public showDropDown = true;
 	public currentLang: string;
 
+	public isNewVersionAvailable$: Observable<boolean>;
+
 	constructor(
 		public theming: ThemingService,
 		private popupService: PopupService,
 		private translation: TranslateService,
 		private user: UserService,
 		private projects: ProjectsService,
-		@Optional() private electronService: ElectronService,
+		@Optional() private electronUpdateService: ElectronUpdateService,
+		@Optional() private electronService: ElectronService
 	) {}
 
 	ngOnInit(): void {
 		this.currentLang = this.translation.currentLang;
+
+		// #!electron
+		this.isNewVersionAvailable$ = this.electronUpdateService.isNewVersionAvailable$;
 	}
 
 	public get isLoggedIn(): boolean {
@@ -74,6 +82,10 @@ export class SettingsDropdownComponent implements OnInit {
 			this.projects.newProject();
 		}
 		this.close();
+	}
+
+	updateClick() {
+		this.electronService.shell.openExternal('https://logigator.com/download');
 	}
 	// #!endif
 

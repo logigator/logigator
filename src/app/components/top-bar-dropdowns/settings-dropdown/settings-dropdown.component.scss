@@ -61,6 +61,16 @@
 			}
 		}
 
+		.new-version {
+			color: themed('text-primary');
+			background-color: themed('primary');
+
+			&:hover {
+				background-color: darken(themed('primary'), 5%);
+				color: themed('text-primary');
+			}
+		}
+
 		hr {
 			width: 100%;
 			margin: auto;

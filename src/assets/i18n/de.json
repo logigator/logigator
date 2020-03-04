@@ -44,7 +44,8 @@
 			"SHORTCUTS": "Tastaturbefehle bearbeiten",
 			"ACCOUNT": "Account",
 			"LOGOUT": "Abmelden",
-			"PRIVACY": "Datenschutz"
+			"PRIVACY": "Datenschutz",
+			"NEW_VERSION": "Neue Version verfügbar"
 		}
 	},
 	"TOOLBAR": {
