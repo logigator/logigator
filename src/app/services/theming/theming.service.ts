@@ -3,6 +3,7 @@ import {DOCUMENT} from '@angular/common';
 import {EditorColorKey, EditorColors, Theme} from '../../models/theming';
 import {Observable, Subject} from 'rxjs';
 import {EastereggService} from '../easteregg/easteregg.service';
+import {StorageService} from '../storage/storage.service';
 
 @Injectable({
 	providedIn: 'root'
@@ -39,20 +40,20 @@ export class ThemingService {
 		}
 	};
 
-	constructor(@Inject(DOCUMENT) private document: HTMLDocument, private eastereggs: EastereggService) {
+	constructor(@Inject(DOCUMENT) private document: HTMLDocument, private eastereggs: EastereggService, private storage: StorageService) {
 		this.loadTheme();
 		this.document.body.classList.add(this.themeClass);
 	}
 
 	private loadTheme() {
-		this._currentTheme = (localStorage.getItem('theme') || 'dark') as Theme;
+		this._currentTheme = (this.storage.get('theme') || 'dark') as Theme;
 		if (this._currentTheme === 'light') {
-			this.eastereggs.achieve('BLD');
+			setTimeout(() => this.eastereggs.achieve('BLD'), 1000);
 		}
 	}
 
 	public setTheme(theme: Theme) {
-		localStorage.setItem('theme', theme);
+		this.storage.set('theme', theme);
 	}
 
 	public get themeClass(): string {
@@ -68,7 +69,7 @@ export class ThemingService {
 	}
 
 	public get pendingTheme(): Theme {
-		return (localStorage.getItem('theme') || 'dark') as Theme;
+		return (this.storage.get('theme') || 'dark') as Theme;
 	}
 
 	public get showGrid(): boolean {

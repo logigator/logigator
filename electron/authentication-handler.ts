@@ -8,6 +8,9 @@ import {URL, URLSearchParams} from 'url';
 export class AuthenticationHandler {
 
 	private _mainWindow: BrowserWindow;
+
+	private _storage = Storage.getInstance();
+
 	private _authCookie: string;
 	private _cookieValidUntilUntil: Date;
 
@@ -23,14 +26,14 @@ export class AuthenticationHandler {
 	}
 
 	public readSavedLoginState() {
-		if (!Storage.has('authCookie') || !Storage.has('cookieValidUntilUntil')) return;
+		if (!this._storage.has('authCookie') || !this._storage.has('cookieValidUntilUntil')) return;
 
-		this._authCookie = Storage.get('authCookie');
-		this._cookieValidUntilUntil = new Date(Storage.get('cookieValidUntilUntil'));
+		this._authCookie = this._storage.get('authCookie');
+		this._cookieValidUntilUntil = new Date(this._storage.get('cookieValidUntilUntil'));
 
 		if (this._cookieValidUntilUntil.getTime() <= Date.now()) {
-			Storage.remove('authCookie');
-			Storage.remove('cookieValidUntilUntil');
+			this._storage.remove('authCookie');
+			this._storage.remove('cookieValidUntilUntil');
 			delete this._cookieValidUntilUntil;
 			delete this._authCookie;
 		} else {
@@ -49,8 +52,8 @@ export class AuthenticationHandler {
 		this._authCookie = cookie;
 		const expires = cookie.substring(cookie.indexOf('expires=') + 8);
 		this._cookieValidUntilUntil = new Date(expires.substring(0, expires.indexOf('; ')));
-		Storage.set('authCookie', this._authCookie);
-		Storage.set('cookieValidUntilUntil', this._cookieValidUntilUntil.toISOString());
+		this._storage.set('authCookie', this._authCookie);
+		this._storage.set('cookieValidUntilUntil', this._cookieValidUntilUntil.toISOString());
 	}
 
 	public get cookies(): string {
@@ -132,14 +135,13 @@ export class AuthenticationHandler {
 		delete this._authCookie;
 		delete this._cookieValidUntilUntil;
 
-		// tslint:disable-next-line:no-string-literal
 		global['isLoggedIn'] = {
 			data: 'false'
 		};
 
-		if (!Storage.has('authCookie') || !Storage.has('cookieValidUntilUntil')) return;
-		Storage.remove('authCookie');
-		Storage.remove('cookieValidUntilUntil');
+		if (!this._storage.has('authCookie') || !this._storage.has('cookieValidUntilUntil')) return;
+		this._storage.remove('authCookie');
+		this._storage.remove('cookieValidUntilUntil');
 	}
 
 	private async getSocialLoginUrl(type: 'google' | 'twitter'): Promise<string> {

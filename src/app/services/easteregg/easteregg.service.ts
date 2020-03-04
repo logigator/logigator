@@ -1,5 +1,6 @@
 import { Injectable } from '@angular/core';
 import {ErrorHandlingService} from '../error-handling/error-handling.service';
+import {StorageService} from '../storage/storage.service';
 
 @Injectable({
 	providedIn: 'root'
@@ -8,16 +9,16 @@ export class EastereggService {
 
 	private readonly done: Set<string>;
 
-	constructor(private errorHandling: ErrorHandlingService) {
-		const item = localStorage.getItem('sneaks');
-		this.done = item && item.length > 0 ? new Set(JSON.parse(item)) : new Set<string>();
+	constructor(private errorHandling: ErrorHandlingService, private storage: StorageService) {
+		const item = this.storage.get('sneaks');
+		this.done = item ? new Set(item) : new Set<string>();
 	}
 
 	public achieve(name: string) {
-		if (this.done.has(name))
+		if (!this.done || this.done.has(name))
 			return;
 		this.done.add(name);
 		this.errorHandling.showInfo('INFO.EASTEREGGS.' + name);
-		localStorage.setItem('sneaks', JSON.stringify([...this.done]));
+		this.storage.set('sneaks', [...this.done]);
 	}
 }
