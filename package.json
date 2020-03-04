@@ -1,6 +1,12 @@
 {
 	"name": "logigator-editor",
 	"version": "0.3.0",
+	"description": "Logigator Editor",
+	"license": "MIT",
+	"repository": {
+		"type": "git",
+		"url": "git+https://github.com/logigator/logigator-editor.git"
+	},
 	"scripts": {
 		"start": "npm run start:web",
 		"start:web": "env-cmd -e dev-web --use-shell \"npm run build-custom-build-scripts && npm run ng:serve -- -c dev-web --proxy-config proxyconfig.json --host 0.0.0.0\"",
