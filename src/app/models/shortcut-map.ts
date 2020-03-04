@@ -13,6 +13,7 @@ export type ShortcutAction =
 	'connWireMode' |
 	'selectMode' |
 	'cutSelectMode' |
+	'eraserMode' |
 	'textMode' |
 	'newComp' |
 	'newProj' |

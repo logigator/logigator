@@ -42,7 +42,7 @@
 			"SHOW_GRID": "Show Grid",
 			"LANGUAGE": "Language",
 			"SHORTCUTS": "Customize Shortcuts",
-			"ACCOUNT": "Account Settings",
+			"ACCOUNT": "Account",
 			"LOGOUT": "Logout",
 			"PRIVACY": "Privacy Policy"
 		}
@@ -66,6 +66,7 @@
 			"CONN_WIRE": "Connect Wires",
 			"SELECT": "Select",
 			"SELECT_CUT": "Select Cut",
+			"ROBBER": "Eraser",
 			"TEXT": "Text",
 			"SIM_SINGLE": "Single Step",
 			"SIM_PAUSE": "Pause",
@@ -114,6 +115,7 @@
 			"USERNAME_ERR_REQUIRED": "Username is required.",
 			"USERNAME_ERR_MIN": "Username has to have at least two characters.",
 			"USERNAME_ERR_MAX": "Username may contain a maximum of 20 characters.",
+			"USERNAME_ERR_PATTERN": "Username may only contain a-z, A-Z, 0-9, _ or -",
 			"PASSWORD": "Password",
 			"PASSWORD_ERR_REQUIRED": "Password is required.",
 			"PASSWORD_ERR_MIN": "Password must contain at least eight characters.",
@@ -133,19 +135,24 @@
 			"SYMBOL": "Symbol",
 			"DESCRIPTION": "Description",
 			"DESCRIPTION_MAX_LENGTH": "Description is to long",
+			"DESCRIPTION_INFO": "Description of the new component",
 			"CREATE": "CREATE",
 			"NAME_REQUIRED": "Name is required",
 			"NAME_MIN_LENGTH": "Name is to short",
 			"NAME_MAX_LENGTH": "Name is to long",
 			"NAME_PATTERN": "Name must consist of A-Z a-z 0-9 -_",
+			"NAME_INFO": "Name of the new component",
 			"SYMBOL_REQUIRED": "Symbol is required",
 			"SYMBOL_MAX_LENGTH": "Symbol is to long",
-			"SYMBOL_PATTERN": "Symbol must consist of A-Z a-z 0-9 -_"
+			"SYMBOL_PATTERN": "Symbol must consist of A-Z a-z 0-9 -_",
+			"SYMBOL_INFO": "Will be shown when placing component."
 		},
 		"SAVE": {
 			"TITLE": "Save Project",
 			"NAME": "Name",
+			"NAME_INFO": "Name of the new project",
 			"DESCRIPTION": "Description",
+			"DESCRIPTION_INFO": "Description of the new project",
 			"DOWNLOAD": "DOWNLOAD FILE",
 			"CLOUD": "SAVE IN CLOUD"
 		},
@@ -183,6 +190,7 @@
 				"connWireMode": "Connect wires mode",
 				"wireMode": "Place wires mode",
 				"selectMode": "Selection mode",
+				"eraserMode": "Eraser",
 				"cutSelectMode": "Cut Selection mode",
 				"newComp": "Create new custom component",
 				"textMode": "Place text",
@@ -242,6 +250,14 @@
 		"EDIT": "Edit",
 		"PLUG_INDEX": "Plug Index",
 		"PLUG_LABEL": "Label"
+	},
+	"HELP_WINDOW": {
+		"TIPP": "Hint",
+		"DONT_AGAIN": "Don't show again",
+		"OK": "OK",
+		"HELP_TEXTS": {
+			"ENTER_SIM": "To start the simulation press the play button in the toolbar."
+		}
 	},
 	"ELEMENT_TYPE": {
 		"BASIC": {
@@ -344,6 +360,7 @@
 		"buildWire": "Placing Wires",
 		"connectWire": "Connecting Wires",
 		"text": "Placing Text",
+		"eraser": "Erase Components",
 		"simulation": "Simulating Circuit"
 	},
 	"ERROR": {
@@ -360,6 +377,7 @@
 			"CREATE": "Unable to create project or component",
 			"SAVE": "Unable to save Component or Project on Server",
 			"COMP_NOT_FOUND": "Component not found, project might be corrupted",
+			"REMOVED_COMP": "A component was not found and was removed from the Project",
 			"INVALID_FILE": "Invalid File",
 			"RESOLVE_DEPS": "Unable to resolve dependencies of Project",
 			"PROJECT_AS_COMP": "Unable to open Project as Component",

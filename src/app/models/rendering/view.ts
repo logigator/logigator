@@ -10,9 +10,9 @@ import {environment} from '../../../environments/environment';
 import {Element} from '../element';
 import {CollisionFunctions} from '../collision-functions';
 import {Project} from '../project';
-import {Action} from '../action';
+import {Action, Actions} from '../action';
 import {getStaticDI} from '../get-di';
-import {ComponentScalable, isLGraphics, isScalable, isUpdatable, LGraphics} from './graphics/l-graphics';
+import {ComponentScalable, isUpdatable, LGraphics} from './graphics/l-graphics';
 import {LGraphicsResolver} from './graphics/l-graphics-resolver';
 import {ElementTypeId} from '../element-types/element-type-ids';
 import {ConnectionPoint} from './graphics/connection-point';
@@ -82,31 +82,29 @@ export abstract class View extends PIXI.Container {
 			Grid.getGridPosForPixelPos(currentlyOnScreen.start),
 			Grid.getGridPosForPixelPos(currentlyOnScreen.end)
 		);
-		for (let i = 0; i < chunksToRender.length; i++) {
-			if (this.createChunkIfNeeded(chunksToRender[i].x, chunksToRender[i].y)) continue;
-			const chunk = this._chunks[chunksToRender[i].x][chunksToRender[i].y];
+		for (const chunkToRender of chunksToRender) {
+			if (this.createChunkIfNeeded(chunkToRender.x, chunkToRender.y)) continue;
+			const chunk = this._chunks[chunkToRender.x][chunkToRender.y];
 			chunk.container.visible = true;
 			chunk.container.renderable = true;
 			chunk.gridGraphics.visible = this.themingService.showGrid;
 			chunk.gridGraphics.renderable = this.themingService.showGrid;
 			if (this.isSimulationView()) {
-				chunk.container.children.forEach(g => {
-					if (isLGraphics(g)) g.applySimState(this.zoomPan.currentScale);
-				});
+				for (const g of chunk.container.children) {
+					(g as LGraphics).applySimState(this.zoomPan.currentScale);
+				}
 			}
 			if (chunk.scaledFor === this.zoomPan.currentScale) continue;
 			chunk.scaledFor = this.zoomPan.currentScale;
 			if (this.themingService.showGrid) {
 				chunk.gridGraphics.destroy();
 				chunk.gridGraphics = Grid.generateGridGraphics(this.zoomPan.currentScale);
-				chunk.gridGraphics.position = this.getChunkPos(chunksToRender[i].x, chunksToRender[i].y);
+				chunk.gridGraphics.position = this.getChunkPos(chunkToRender.x, chunkToRender.y);
 				this.addChildAt(chunk.gridGraphics, 0);
 			}
 			const chunkElems = chunk.container.children;
-			for (let e = 0; e < chunkElems.length; e++) {
-				if (isScalable(chunkElems[e])) {
-					(chunkElems[e] as unknown as ComponentScalable).updateScale(this.zoomPan.currentScale);
-				}
+			for (const chunkElem of chunkElems) {
+				(chunkElem as unknown as ComponentScalable).updateScale(this.zoomPan.currentScale);
 			}
 		}
 		for (const oldChunk of this._chunksToRender) {
@@ -215,11 +213,10 @@ export abstract class View extends PIXI.Container {
 	}
 
 	public addToCorrectChunk(sprite: PIXI.DisplayObject, pos: PIXI.Point) {
-		const chunkX = CollisionFunctions.gridPosToChunk(pos.x);
-		const chunkY = CollisionFunctions.gridPosToChunk(pos.y);
+		const chunk = CollisionFunctions.gridPosToChunk(pos);
 
-		this.createChunkIfNeeded(chunkX, chunkY);
-		this._chunks[chunkX][chunkY].container.addChild(sprite);
+		this.createChunkIfNeeded(chunk.x, chunk.y);
+		this._chunks[chunk.x][chunk.y].container.addChild(sprite);
 	}
 
 	private removeConnectionPoint(pos: PIXI.Point) {
@@ -235,6 +232,12 @@ export abstract class View extends PIXI.Container {
 			this.addToCorrectChunk(sprite, element.pos);
 			this.setLocalChunkPos(element, sprite);
 		});
+	}
+
+	private removeComponentOrWire(element: Element) {
+		if (!this.allElements.has(element.id)) return;
+		this.allElements.get(element.id).destroy();
+		this.allElements.delete(element.id);
 	}
 
 	private updateComponent(action: Action) {
@@ -264,9 +267,7 @@ export abstract class View extends PIXI.Container {
 				break;
 			case 'remComp':
 			case 'remWire':
-				if (!this.allElements.has(action.element.id)) break;
-				this.allElements.get(action.element.id).destroy();
-				this.allElements.delete(action.element.id);
+				this.removeComponentOrWire(action.element);
 				break;
 			case 'conWire':
 				this.addConnectionPointToView(action.pos);

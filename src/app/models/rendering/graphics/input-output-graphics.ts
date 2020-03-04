@@ -1,5 +1,5 @@
 import * as PIXI from 'pixi.js';
-import {ComponentScalable, ComponentSelectable, ComponentUpdatable, LGraphics} from './l-graphics';
+import {ComponentUpdatable, LGraphics} from './l-graphics';
 import {Element} from '../../element';
 import {ElementType, isElementType} from '../../element-types/element-type';
 import {getStaticDI} from '../../get-di';
@@ -9,7 +9,7 @@ import {environment} from '../../../../environments/environment';
 import {ElementTypeId} from '../../element-types/element-type-ids';
 import {FontWidthService} from '@logigator/logigator-shared-comps';
 
-export class InputOutputGraphics extends PIXI.Graphics implements LGraphics, ComponentUpdatable, ComponentSelectable, ComponentScalable {
+export class InputOutputGraphics extends PIXI.Graphics implements LGraphics, ComponentUpdatable {
 
 	readonly element: Element;
 

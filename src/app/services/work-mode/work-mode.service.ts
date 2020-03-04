@@ -10,6 +10,7 @@ import {
 	WorkerCommunicationServiceModel
 } from '../simulation/worker-communication/worker-communication-service';
 import {TranslateService} from '@ngx-translate/core';
+import {HelpWindowService} from '../help-window/help-window.service';
 
 @Injectable({
 	providedIn: 'root'
@@ -26,7 +27,8 @@ export class WorkModeService {
 		private projectSaveManagement: ProjectSaveManagementService,
 		private elemProv: ElementProviderService,
 		@Inject(WorkerCommunicationService) private workerCommunicationService: WorkerCommunicationServiceModel,
-		private translate: TranslateService
+		private translate: TranslateService,
+		private helpWindowService: HelpWindowService
 	) {
 		this.setWorkMode('select');
 	}
@@ -53,6 +55,7 @@ export class WorkModeService {
 			this._currentWorkMode = 'simulation';
 			this._workModeSubject.next('simulation');
 			delete this._currentComponentTypeToBuild;
+			this.helpWindowService.showHelpWindow('ENTER_SIM');
 		} catch (e) {}
 	}
 

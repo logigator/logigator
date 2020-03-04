@@ -45,9 +45,7 @@ export class AppComponent implements OnInit, OnDestroy {
 		private translate: TranslateService,
 		private elementProviderService: ElementProviderService
 	) {
-		if ((!!window.navigator.userAgent.match(/Electron/) && !window.location.host.endsWith('8202')) || window.location.host === 'editor.logigator.com') {
-			this.setGoogleAnalytics();
-		}
+		this.setupScripts();
 		this.initTranslation();
 	}
 
@@ -153,6 +151,37 @@ export class AppComponent implements OnInit, OnDestroy {
 		this.translate.onLangChange.subscribe((e: LangChangeEvent) => {
 			window.localStorage.setItem('lang', e.lang);
 		});
+	}
+
+	private setupScripts() {
+		// To defer the loading of scripts a little bit
+		setTimeout(() => {
+			this.loadScripts().then(() => {
+				if ((!!window.navigator.userAgent.match(/Electron/) && !window.location.host.endsWith('8202')) || window.location.host === 'editor.logigator.com') {
+					this.setGoogleAnalytics();
+				}
+			});
+		}, 1000);
+	}
+
+	private loadScripts(): Promise<any> {
+		const scripts = [
+			'https://www.googletagmanager.com/gtag/js?id=UA-151071040-3',
+			'https://www.google.com/recaptcha/api.js?render=6Le9BbgUAAAAAHJupU1XiAa8n1Z0M2YFHL89OMMp'
+		];
+		const promises: Promise<void>[] = [];
+		scripts.forEach(scriptUrl => {
+			promises.push(new Promise<void>(resolve => {
+				const script = document.createElement('script');
+				script.type = 'text/javascript';
+				script.src = scriptUrl;
+				script.onload = () => {
+					resolve();
+				};
+				document.getElementsByTagName('head')[0].appendChild(script);
+			}));
+		});
+		return Promise.all(promises);
 	}
 
 	private setGoogleAnalytics() {

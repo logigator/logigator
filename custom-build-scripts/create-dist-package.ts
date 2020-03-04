@@ -6,7 +6,7 @@ const electronDependencies = {
 	'node-fetch': '^2.6.0',
 	tslib: '^1.10.0',
 	express: '^4.17.1',
-	'@logigator/logigator-simulation': '1.0.0'
+	'@logigator/logigator-simulation': 'latest'
 };
 
 const toWrite = `

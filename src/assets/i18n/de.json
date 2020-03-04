@@ -66,6 +66,7 @@
 			"CONN_WIRE": "Leitungen verbinden",
 			"SELECT": "Auswählen",
 			"SELECT_CUT": "Auswählen und Schneiden",
+			"ROBBER": "Radiergummi",
 			"TEXT": "Text",
 			"SIM_SINGLE": "Einzelschritt",
 			"SIM_PAUSE": "Pause",
@@ -114,6 +115,7 @@
 			"USERNAME_ERR_REQUIRED": "Benutzername muss angegeben werden",
 			"USERNAME_ERR_MIN": "Benutzername muss mindestens zwei Zeichen enthalten",
 			"USERNAME_ERR_MAX": "Benutzername darf maximal 20 Zeichen enthalten",
+			"USERNAME_ERR_PATTERN": "Benutzername darf nur a-z, A-Z, 0-9, _ oder - enthalten",
 			"PASSWORD": "Passwort",
 			"PASSWORD_ERR_REQUIRED": "Passwort muss angegeben werden",
 			"PASSWORD_ERR_MIN": "Passwort muss mindestens acht Zeichen enthalten",
@@ -133,19 +135,24 @@
 			"SYMBOL": "Symbol",
 			"DESCRIPTION": "Beschreibung",
 			"DESCRIPTION_MAX_LENGTH": "Beschreibung ist zu lang",
+			"DESCRIPTION_INFO": "Beschreibung der neuen Komponente",
 			"CREATE": "ERSTELLEN",
 			"NAME_REQUIRED": "Name muss angegeben werden",
 			"NAME_MIN_LENGTH": "Name ist zu kurz",
 			"NAME_MAX_LENGTH": "Name ist zu lang",
 			"NAME_PATTERN": "Name muss bestehen aus A-Z a-z 0-9 -_",
+			"NAME_INFO": "Name der neuen Komponente",
 			"SYMBOL_REQUIRED": "Symbol muss angegeben werden",
 			"SYMBOL_MAX_LENGTH": "Symbol ist zu lang",
-			"SYMBOL_PATTERN": "Symbol muss bestehen aus A-Z a-z 0-9 -_"
+			"SYMBOL_PATTERN": "Symbol muss bestehen aus A-Z a-z 0-9 -_",
+			"SYMBOL_INFO": "Wird auf platzierter Komponente angezeigt."
 		},
 		"SAVE": {
 			"TITLE": "Projekt speichern",
 			"NAME": "Name",
+			"NAME_INFO": "Name des neuen Projektes",
 			"DESCRIPTION": "Beschreibung",
+			"DESCRIPTION_INFO": "Beschreibung des neuen Projektes",
 			"DOWNLOAD": "DATEI HERUNTERLADEN",
 			"CLOUD": "IN DER CLOUD SPEICHERN"
 		},
@@ -183,6 +190,7 @@
 				"connWireMode": "Leitungen verbinden",
 				"wireMode": "Leitungen platzieren",
 				"selectMode": "Auswählen",
+				"eraserMode": "Radiergummi",
 				"cutSelectMode": "Auswählen und Schneiden",
 				"newComp": "Neue benutzerdefinierte Komponente",
 				"textMode": "Text platzieren",
@@ -242,6 +250,14 @@
 		"EDIT": "Bearbeiten",
 		"PLUG_INDEX": "Stecker Index",
 		"PLUG_LABEL": "Beschriftung"
+	},
+	"HELP_WINDOW": {
+		"TIPP": "Tipp",
+		"DONT_AGAIN": "Nicht mehr anzeigen",
+		"OK": "OK",
+		"HELP_TEXTS": {
+			"ENTER_SIM": "Um die Simulation zu starten, drücke den Play Button in der Toolbar."
+		}
 	},
 	"ELEMENT_TYPE": {
 		"BASIC": {
@@ -344,6 +360,7 @@
 		"buildWire": "Leitungen platzieren",
 		"connectWire": "Leitungen verbinden",
 		"text": "Text platzieren",
+		"eraser": "Komponenten radieren",
 		"simulation": "Schaltung simulieren"
 	},
 	"ERROR": {
@@ -360,6 +377,7 @@
 			"CREATE": "Konnte Projekt oder Komponente nicht erstellen",
 			"SAVE": "Konnte Projekt oder Komponente nicht auf dem Server speichern",
 			"COMP_NOT_FOUND": "Komponente konnte nicht gefunden werden, Projekt könnte beschädigt sein",
+			"REMOVED_COMP": "Eine Komponente konnte nicht gefunden werden und wurde aus dem Projekt entfernt",
 			"INVALID_FILE": "Fehlerhafte Datei",
 			"RESOLVE_DEPS": "Konnte Abhängigkeiten des Projekts nicht auflösen",
 			"PROJECT_AS_COMP": "Konnte Projekt nicht als Komponente öffnen",

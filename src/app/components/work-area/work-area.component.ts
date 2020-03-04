@@ -45,7 +45,7 @@ export class WorkAreaComponent extends WorkArea implements OnInit, OnDestroy {
 	ngOnInit() {
 		this._allViews = new Map<number, EditorView>();
 
-		this.ngZone.runOutsideAngular(async () => {
+		this.ngZone.runOutsideAngular(() => {
 			this.addTickerFunction(true);
 			this.preventContextMenu(this._pixiCanvasContainer, this.renderer2);
 			this.initZoomPan(this._pixiCanvasContainer);
@@ -54,10 +54,8 @@ export class WorkAreaComponent extends WorkArea implements OnInit, OnDestroy {
 			this.projectsService.onProjectOpened$.pipe(
 				takeUntil(this._destroySubject)
 			).subscribe(projectId => {
-				this.ngZone.runOutsideAngular(() => {
-					this.openProject(projectId);
-					this.ticker.singleFrame('0');
-				});
+				this.openProject(projectId);
+				this.ticker.singleFrame('0');
 			});
 			this.projectsService.onProjectClosed$.pipe(
 				takeUntil(this._destroySubject)

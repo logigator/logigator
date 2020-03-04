@@ -73,7 +73,7 @@ export class RenderTicker {
 	public stopAllContSim() {
 		this._startedAllCont = false;
 		for (const id of this._tickerFunctions.keys()) {
-			this.stopTicker(id, false, true);
+			this.stopTicker(id, true, true);
 		}
 	}
 

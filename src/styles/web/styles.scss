@@ -1,10 +1,16 @@
 @import "themes";
 @import "variables";
 
-@import url('https://fonts.googleapis.com/css?family=Roboto+Mono:300&display=swap');
 @import "~@logigator/logigator-shared-comps/styles/main";
 @import "~@logigator/logigator-shared-comps/styles/buttons";
 @import "toastr";
+
+@font-face {
+	font-family: 'Roboto Mono';
+	src: local('Roboto Mono Light'), local('RobotoMono-Light'), url('/assets/fonts/robotomono-light-webfont.woff2') format('woff2');
+	font-weight: normal;
+	font-style: normal;
+}
 
 html, body {
 	margin: 0;

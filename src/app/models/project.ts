@@ -33,10 +33,12 @@ export class Project {
 
 	private _stateActionFlag = false;
 
+	private _actionToApply: Action[] = [];
+
 	// #!debug
 	public boardRecorder: BoardRecorder;
 
-	public constructor(projectState: ProjectState, config: {id?: number, name?: string, type?: ProjectType}) {
+	public constructor(projectState: ProjectState, config: { id?: number, name?: string, type?: ProjectType }) {
 		this._currState = projectState;
 		this._actions = new Array(this._maxActionCount);
 		this._id = config.id;
@@ -57,7 +59,6 @@ export class Project {
 			id: 0
 		});
 	}
-
 
 
 	private applyActions(actions: Action[]): void {
@@ -131,20 +132,17 @@ export class Project {
 	}
 
 
-
-	public chunksToRender(start: PIXI.Point, end: PIXI.Point): {x: number, y: number}[] {
+	public chunksToRender(start: PIXI.Point, end: PIXI.Point): { x: number, y: number }[] {
 		const out = CollisionFunctions.inRectChunks(start, end);
-		for (const chunk of this._currState.chunksFromCoords(out)) {
-			for (const elem of chunk.elements) {
-				const chunkX = CollisionFunctions.gridPosToChunk(elem.pos.x);
-				const chunkY = CollisionFunctions.gridPosToChunk(elem.pos.y);
-				if (!out.find(c => c.x === chunkX && c.y === chunkY))
-					out.push({x: chunkX, y: chunkY});
+		for (const outerChunk of this._currState.chunksFromCoords(out)) {
+			for (const elem of outerChunk.elements) {
+				const chunk = CollisionFunctions.gridPosToChunk(elem.pos);
+				if (!out.find(c => c.x === chunk.x && c.y === chunk.y))
+					out.push({x: chunk.x, y: chunk.y});
 			}
 		}
 		return out;
 	}
-
 
 
 	public addElements(elements: Element[], dif?: PIXI.Point): boolean {
@@ -251,6 +249,44 @@ export class Project {
 	}
 
 
+	public eraseElements(from: PIXI.Point, to: PIXI.Point): void {
+		// #!debug
+		this.boardRecorder.call('eraseElements', arguments);
+		const elements = this._currState.elementsOverLine(from, to);
+		if (elements.length === 0)
+			return;
+		const actions: Action[] = new Array(elements.length);
+		const onEdges: Element[] = [];
+		let i = 0;
+		for (const element of elements) {
+			actions[i++] = {
+				name: Elements.remActionName(element),
+				element
+			};
+			this._currState.removeElement(element.id);
+		}
+		elements.forEach(elem => {
+			for (const pos of Elements.wireEnds(elem)) {
+				onEdges.push(...this._currState.wiresOnPoint(pos));
+			}
+		});
+		this._currState.loadConnectionPoints(elements);
+		actions.push(...this.autoAssemble(onEdges), ...this._currState.specialActions);
+		this._currState.specialActions = [];
+		this._actionToApply.push(...actions);
+		this._changeSubject.next(actions);
+	}
+
+	public stopErase(): void {
+		// #!debug
+		this.boardRecorder.call('stopErase', arguments);
+		if (this._actionToApply.length === 0)
+			return;
+		this.newState(this._actionToApply, false, true);
+		this._actionToApply = [];
+	}
+
+
 	public moveElementsById(ids: number[], dif: PIXI.Point): boolean {
 		const elements = this._currState.getElementsById(ids);
 		if (dif.x === 0 && dif.y === 0) {
@@ -336,10 +372,10 @@ export class Project {
 		const oldIndex = element.plugIndex;
 		this._currState.setPlugId(element, index);
 		const action: Action = {
-				name: 'plugInd',
-				element,
-				numbers: [element.plugIndex, oldIndex]
-			};
+			name: 'plugInd',
+			element,
+			numbers: [element.plugIndex, oldIndex]
+		};
 		this.newState([action]);
 		return true;
 	}
@@ -427,7 +463,6 @@ export class Project {
 	}
 
 
-
 	public toggleWireConnection(pos: PIXI.Point): void {
 		// #!debug
 		this.boardRecorder.call('toggleWireConnection', arguments);
@@ -479,7 +514,6 @@ export class Project {
 	}
 
 
-
 	private autoAssemble(elements: Element[]): Action[] {
 		Elements.removeDuplicates(elements);
 		const out: Action[] = [];
@@ -491,7 +525,7 @@ export class Project {
 		return out;
 	}
 
-	private autoConnect(elements: Element[]): {actions: Action[], elements: Element[]} {
+	private autoConnect(elements: Element[]): { actions: Action[], elements: Element[] } {
 		const out: Action[] = [];
 		let outElements = [...elements];
 		const elemChanges = this._currState.connectToBoard([...elements]);
@@ -499,7 +533,7 @@ export class Project {
 		return {actions: out, elements: outElements};
 	}
 
-	private autoMerge(elements: Element[]): {actions: Action[], elements: Element[]} {
+	private autoMerge(elements: Element[]): { actions: Action[], elements: Element[] } {
 		const out: Action[] = [];
 		let outElements = [...elements];
 		const elemChanges = this._currState.mergeToBoard([...elements]);
@@ -508,8 +542,7 @@ export class Project {
 	}
 
 
-
-	public newState(actions: Action[], skipSubject?: boolean): void {
+	public newState(actions: Action[], setStateActionFlag?: boolean, skipSubject?: boolean): void {
 		if (!actions)
 			return;
 		actions.push(...this._currState.specialActions);
@@ -528,9 +561,9 @@ export class Project {
 		}
 		this.saveDirty = true;
 		this.compileDirty = true;
-		if (!skipSubject) {
+		if (!setStateActionFlag && !skipSubject) {
 			this._changeSubject.next(actions);
-		} else {
+		} else if (setStateActionFlag) {
 			this._stateActionFlag = true;
 		}
 	}
@@ -570,7 +603,6 @@ export class Project {
 		this._currMaxActionPointer--;
 		this._stateActionFlag = false;
 	}
-
 
 
 	get allElements(): Element[] {

@@ -1,6 +1,7 @@
 import {BrowserWindow, app, session} from 'electron';
 import * as express from 'express';
 import * as path from 'path';
+import * as url from 'url';
 import {AddressInfo} from 'net';
 import {AuthenticationHandler} from './authentication-handler';
 import {getDomain, getHttpFilterUrls} from './utils';
@@ -8,6 +9,7 @@ import {getDomain, getHttpFilterUrls} from './utils';
 const args = process.argv.slice(1);
 const serve = args.some(val => val === '--serve');
 
+let loadingWin: BrowserWindow;
 let win: BrowserWindow;
 let authHandler: AuthenticationHandler;
 
@@ -17,7 +19,10 @@ try {
 	app.allowRendererProcessReuse = true;
 	app.on('ready', async () => {
 		let port = 8202;
-		if (!serve) port = await startLocalWebServer();
+		if (!serve) {
+			createLoadingWindow();
+			port = await startLocalWebServer();
+		}
 
 		registerHttpInterceptor();
 		authHandler.readSavedLoginState();
@@ -54,13 +59,39 @@ function createWindow(port: number) {
 			electron: require(path.join(__dirname, `../../node_modules/electron`))
 		});
 		win.webContents.openDevTools();
+	} else {
+		win.hide();
 	}
-	win.loadURL('http://localhost:' + port);
+
+	win.loadURL('http://localhost:' + port).then(() => {
+		if (!serve) {
+			win.show();
+			loadingWin.destroy();
+		}
+	});
 
 	win.on('closed', () => {
 		win = null;
 	});
 
+}
+
+function createLoadingWindow() {
+	loadingWin = new BrowserWindow({
+		width: 500,
+		height: 180,
+		resizable: false,
+		webPreferences: {
+			webSecurity: true,
+			nodeIntegration: false
+		},
+		frame: false
+	});
+	loadingWin.loadURL(url.format({
+		pathname: path.join(__dirname, '..', 'logigator-editor', 'assets', 'electron-loading-window.html'),
+		protocol: 'file:',
+		slashes: true
+	}));
 }
 
 function startLocalWebServer(): Promise<number> {

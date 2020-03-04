@@ -1,0 +1,51 @@
+name: Release
+on:
+  create:
+    branches:
+      - master
+    tags:
+      - '*'
+
+jobs:
+  relase:
+    name: Create Release
+    runs-on: windows-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2
+        with:
+          ref: master
+
+      - name: Setup Node
+        uses: actions/setup-node@v1.1.0
+        with:
+          node-version: '12.x'
+
+      - name: Build
+        run: |
+          npm i
+          npm run build:electron:win64
+          npm run build:electron:win32
+          npm run build:electron:win-arm64
+          npm run build:electron:linux64
+          npm run build:electron:linux32
+
+      - name: Zip
+        shell: powershell
+        run: |
+          compress-archive -path ".\release\Logigator-win32-x64\" -destinationpath ".\release\Logigator-win32-x64.zip" -compressionlevel optimal
+          compress-archive -path ".\release\Logigator-win32-x32\" -destinationpath ".\release\Logigator-win32-x32.zip" -compressionlevel optimal
+          compress-archive -path ".\release\Logigator-win32-arm64\" -destinationpath ".\release\Logigator-win32-arm64.zip" -compressionlevel optimal
+          compress-archive -path ".\release\Logigator-linux-x64\" -destinationpath ".\release\Logigator-linux-x64.zip" -compressionlevel optimal
+          compress-archive -path ".\release\Logigator-linux-x32\" -destinationpath ".\release\Logigator-linux-x32.zip" -compressionlevel optimal
+
+      - name: Release
+        uses: softprops/action-gh-release@v0.1.5
+        with:
+          tag_name: ${{ github.ref }}
+          draft: false
+          prereleas: false
+          files: |
+            release/Logigator-win32-x64.zip
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

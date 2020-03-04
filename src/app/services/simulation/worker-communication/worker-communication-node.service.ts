@@ -136,6 +136,7 @@ export class WorkerCommunicationNodeService implements WorkerCommunicationServic
 
 		logicsim.stop();
 		this._mode = undefined;
+		this.updateSubjects();
 	}
 
 	public start(threads = 1): void {

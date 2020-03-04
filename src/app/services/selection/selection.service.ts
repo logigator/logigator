@@ -31,7 +31,7 @@ export class SelectionService {
 					}
 				}
 				for (const con of chunk.connectionPoints) {
-					if (CollisionFunctions.isRectInRectLightBorder(con, con, start, end)) {
+					if (CollisionFunctions.isConPointInRect(con, start, end)) {
 						if (!cons.find(c => c.equals(con)))
 							cons.push(con);
 					}
@@ -60,7 +60,7 @@ export class SelectionService {
 					}
 				}
 				for (const con of chunk.connectionPoints) {
-					if (CollisionFunctions.isRectInRectLightBorder(con, con, start, end)) {
+					if (CollisionFunctions.isConPointInRect(con, start, end)) {
 						if (!cons.find(c => c.equals(con)))
 							cons.push(con);
 					}

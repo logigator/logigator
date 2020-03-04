@@ -1,11 +1,15 @@
 import * as PIXi from 'pixi.js';
-import {ComponentScalable, ComponentSelectable} from './l-graphics';
+import {LGraphics} from './l-graphics';
 import {getStaticDI} from '../../get-di';
 import {ThemingService} from '../../../services/theming/theming.service';
 import * as PIXI from 'pixi.js';
 import {Grid} from '../grid';
+import {Element} from '../../element';
 
-export class ConnectionPoint extends PIXI.Graphics implements ComponentScalable, ComponentSelectable {
+export class ConnectionPoint extends PIXI.Graphics implements LGraphics {
+
+	// to make compiler happy
+	readonly element: Element;
 
 	private _gridPos: PIXi.Point;
 	private _isInChunk: boolean;
@@ -63,5 +67,8 @@ export class ConnectionPoint extends PIXI.Graphics implements ComponentScalable,
 			this.tint = 0xFFFFFF;
 		}
 	}
+
+	applySimState(scale: number) {}
+	setSimulationState(state: boolean[]) {}
 
 }

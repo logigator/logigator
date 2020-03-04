@@ -52,20 +52,8 @@ export interface LGraphics extends PIXI.DisplayObject, ComponentScalable, Compon
 	setSimulationState(state: boolean[]);
 }
 
-export function isLGraphics(object: any): object is LGraphics {
-	return 'applySimState' in object &&
-		'updateScale' in object &&
-		'setSelected' in object &&
-		'setSimulationState' in object &&
-		'element' in object;
-}
-
 export function isUpdatable(object: any): object is ComponentUpdatable {
 	return 'updateComponent' in object;
-}
-
-export function isScalable(object: any): object is ComponentSelectable {
-	return 'updateScale' in object;
 }
 
 export function isResetable(object: any): object is ComponentResetable {
