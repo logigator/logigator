@@ -25,7 +25,7 @@
 		"wasm-js-cache-bust": "node custom-build-scripts/dist/wasm-js-cache-bust.js",
 		"ng:serve": "ng serve --port 8202 --disableHostCheck",
 		"prepackage-electron": "ng build -c prod-electron && npm run electron:tsc && node custom-build-scripts/dist/create-dist-package.js && npm run electron-npm-i && node custom-build-scripts/dist/remove-comp-warning-template.js",
-		"electron-npm-i": "cd dist && npm i && electron-rebuild",
+		"electron-npm-i": "cd dist && npm i --silent && electron-rebuild",
 		"ng:serve:electron": "npm run ng:serve -- -c dev-electron --proxy-config proxyconfig.json",
 		"ng:serve:electron-prod": "npm run ng:serve -- -c prod-electron --proxy-config proxyconfig.json",
 		"electron:serve": "wait-on http-get://localhost:8202/ && npm run electron:tsc && electron . --serve --inspect=5858",
