@@ -13,6 +13,12 @@ const toWrite = `
 {
   "name": "${packageFile.name}",
   "version": "${packageFile.version}",
+  "description": "Logigator Editor",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/logigator/logigator-editor.git"
+  },
   "main": "electron/main.js",
   "dependencies": ${JSON.stringify(electronDependencies, null, 2)}
 }
