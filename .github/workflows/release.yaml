@@ -24,11 +24,7 @@ jobs:
       - name: Build
         run: |
           npm i
-          npm run build:electron:win64
-          npm run build:electron:win32
-          npm run build:electron:win-arm64
-          npm run build:electron:linux64
-          npm run build:electron:linux32
+          npm run build:electron-all-platforms
 
       - name: Zip
         shell: powershell
