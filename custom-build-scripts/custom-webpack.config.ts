@@ -42,7 +42,7 @@ module.exports = (config, options) => {
 		config.target = 'electron-renderer';
 		config.externals = {
 			'@logigator/logigator-simulation': 'require(\'@logigator/logigator-simulation\')',
-			'package.json': 'require(\'./package.json\')'
+
 		};
 	} else {
 		config.target = 'web';

@@ -2,7 +2,7 @@ import {Injectable, NgZone, Optional} from '@angular/core';
 import {Project} from '../../models/project';
 import {HttpResponseData} from '../../models/http-responses/http-response-data';
 import {OpenProjectResponse} from '../../models/http-responses/open-project-response';
-import {filter, map} from 'rxjs/operators';
+import {map} from 'rxjs/operators';
 import * as PIXI from 'pixi.js';
 import {HttpClient} from '@angular/common/http';
 import {Element} from '../../models/element';
