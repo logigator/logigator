@@ -273,6 +273,11 @@ export class ProjectState {
 		} else if (outElem.typeId === ElementTypeId.OUTPUT) {
 			this.numOutputs--;
 			this._outputPlugs = this._outputPlugs.filter(e => e.id !== elementId);
+			for (const plug of this._outputPlugs) {
+				if (plug.plugIndex > outElem.plugIndex) {
+					plug.plugIndex--;
+				}
+			}
 		}
 		this.removeFromChunks(outElem);
 		return outElem;
