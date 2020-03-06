@@ -257,7 +257,9 @@
 		"DONT_AGAIN": "Don't show again",
 		"OK": "OK",
 		"HELP_TEXTS": {
-			"ENTER_SIM": "To start the simulation press the play button in the toolbar."
+			"ENTER_SIM": "To start the simulation press the play button in the toolbar.",
+			"DRAG": "Use right click, to drag the view.",
+			"NEEDS_PLUGS": "To be able to place the component, it needs inputs or outputs."
 		}
 	},
 	"ELEMENT_TYPE": {

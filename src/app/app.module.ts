@@ -105,7 +105,8 @@ import { HelpWindowComponent } from './components/help-window/help-window.compon
 		TextComponent,
 		ToolbarItemTooltipComponent,
 		RomEditComponent,
-		HelpComponent
+		HelpComponent,
+		HelpWindowComponent
 	],
 	imports: [
 		// #!electron

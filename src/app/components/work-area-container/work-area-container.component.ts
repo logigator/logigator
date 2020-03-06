@@ -50,6 +50,7 @@ export class WorkAreaContainerComponent implements OnInit {
 
 		this.errorHandling.setToastrContainer(this.toastContainer);
 		this.helpWindowService.setHelpWindowInsertionPoint(this.helpWindowInsertionPoint);
+		this.helpWindowService.showHelpWindow('DRAG');
 	}
 
 	async onRequestElementInspection(event: ReqInspectElementEvent, fromWindow?: number) {
