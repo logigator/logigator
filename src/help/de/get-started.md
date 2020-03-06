@@ -80,6 +80,18 @@ Um Leitungen zu verbinden, wählen Sie dieses Icon in der Symbolleiste.
 </div>
 Klicken Sie auf die Kreuzung der Leitungen, die Sie verbinden möchten, um dies zu tun. Wenn Sie ein weiteres Mal klicken werden die Leitungen wieder getrennt.
 
+## Radiergummi
+
+<div class="rows align-center">
+
+![Connect Wires Icon](../../assets/icons/dark/eraser.svg "icon-img")
+
+<div class="margin-left">
+Um Elemente oder Leitunngen zu radieren, wählen Sie dieses Icon in der Symbolleiste.
+</div>
+</div>
+Bewegen Sie Ihre Maus, während Sie die linke Maustaste drücken, um Elemente und Leitungen zu radieren.
+
 ## Text platzieren
 
 <div class="rows align-center">

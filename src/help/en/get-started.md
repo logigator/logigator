@@ -80,6 +80,18 @@ To connect wires select this icon in the toolbar.
 </div>
 Click on the intersection of the wire you want to connect to to this. When you click again, the wires will be disconnected.
 
+## Eraser
+
+<div class="rows align-center">
+
+![Connect Wires Icon](../../assets/icons/dark/eraser.svg "icon-img")
+
+<div class="margin-left">
+To erase elements and wires select this icon in the toolbar.
+</div>
+</div>
+Drag your mouse while holding down your left-mouse button, to erase components and wires.
+
 ## Placing Text
 
 <div class="rows align-center">
