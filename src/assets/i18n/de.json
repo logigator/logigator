@@ -258,7 +258,7 @@
 		"OK": "OK",
 		"HELP_TEXTS": {
 			"ENTER_SIM": "Um die Simulation zu starten, drücke den Play Button in der Toolbar.",
-			"DRAG": "Verwende Rechtsklick, um die Ansicht zu verschieben.",
+			"DRAG": "Verwende die rechte Maustaste, um die Ansicht zu verschieben.",
 			"NEEDS_PLUGS": "Um die Komponente platzieren zu können, braucht sie Eingänge oder Ausgänge."
 		}
 	},
