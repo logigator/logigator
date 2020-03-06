@@ -599,6 +599,7 @@ export class ProjectSaveManagementService {
 				this.errorHandling.showErrorMessage('ERROR.PROJECTS.REMOVED_COMP');
 				return false;
 			}
+			return true;
 		});
 	}
 
