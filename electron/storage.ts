@@ -1,54 +1,68 @@
 import * as path from 'path';
 import * as fs from 'fs';
-import {app, remote} from 'electron';
+import {app, remote, ipcMain} from 'electron';
 
 export class Storage {
 
+	private static _instance: Storage;
+
 	private static readonly STORAGE_PATH = Storage.getStoragePath();
 
-	private static _storageData;
+	constructor() {
+		this.readStorage();
+	}
+
+	public static getInstance(): Storage {
+		if (Storage._instance)
+			return Storage._instance;
+
+		Storage._instance = new Storage();
+		return Storage._instance;
+	}
+
+	public setupCommunicationWithRenderer() {
+		ipcMain.on('storageKeyChanged', ( (event, args: {key: string, data: any}) => {
+			this.set(args.key, args.data);
+		}));
+		ipcMain.on('storageKeyRemoved', ( (event, args: {key: string}) => {
+			this.remove(args.key);
+		}));
+	}
 
 	private static getStoragePath(): string {
 		const userDataPath = (app || remote.app).getPath('userData');
 		return path.join(userDataPath, 'electron-savings.json');
 	}
 
-	static set(key: string, data: any) {
-		if (!Storage._storageData) Storage._storageData = {};
-		Storage._storageData[key] = data;
-		Storage.saveStorage();
+	public set(key: string, data: any) {
+		global['storageData'][key] = data;
+		this.saveStorage();
 	}
 
-	static get(key: string) {
-		if (!Storage._storageData) {
-			Storage.readStorage();
-		}
-		return Storage._storageData[key];
+	public get(key: string): any {
+		return global['storageData'][key];
 	}
 
-	static remove(key: string) {
-		if (Storage.has(key)) {
-			delete Storage._storageData[key];
-			Storage.saveStorage();
+	public remove(key: string) {
+		if (this.has(key)) {
+			delete global['storageData'][key];
+			this.saveStorage();
 		}
 	}
 
-	static has(key: string) {
-		if (!Storage._storageData) {
-			Storage.readStorage();
-		}
-		return Storage._storageData.hasOwnProperty(key);
+	public has(key: string): boolean {
+		return global['storageData'].hasOwnProperty(key);
 	}
 
-	private static readStorage() {
+	private readStorage() {
 		try {
-			Storage._storageData = JSON.parse(fs.readFileSync(Storage.STORAGE_PATH).toString());
+			global['storageData'] = JSON.parse(fs.readFileSync(Storage.STORAGE_PATH).toString());
 		} catch (e) {
-			Storage._storageData = {};
+			global['storageData'] = {};
 		}
 	}
 
-	private static saveStorage() {
-		fs.writeFileSync(Storage.STORAGE_PATH, JSON.stringify(Storage._storageData));
+	private saveStorage() {
+		fs.writeFileSync(Storage.STORAGE_PATH, JSON.stringify(global['storageData']));
 	}
 }

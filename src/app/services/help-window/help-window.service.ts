@@ -1,5 +1,6 @@
 import {ComponentFactoryResolver, Injectable, ViewContainerRef} from '@angular/core';
 import {HelpWindowComponent} from '../../components/help-window/help-window.component';
+import {StorageService} from '../storage/storage.service';
 
 @Injectable({
 	providedIn: 'root'
@@ -9,10 +10,11 @@ export class HelpWindowService {
 	private _helpWindowInsertionPoint: ViewContainerRef;
 
 	private readonly _dontShowAgain: Set<string>;
+	private readonly _currentlyShowing = new Set<string>();
 
-	constructor(private componentFactoryResolver: ComponentFactoryResolver) {
-		const item = localStorage.getItem('helpWindows');
-		this._dontShowAgain = item && item.length > 0 ? new Set(JSON.parse(item)) : new Set<string>();
+	constructor(private componentFactoryResolver: ComponentFactoryResolver, private storage: StorageService) {
+		const item = this.storage.get('helpWindows');
+		this._dontShowAgain = item ? new Set(item) : new Set<string>();
 	}
 
 
@@ -21,16 +23,18 @@ export class HelpWindowService {
 	}
 
 	public showHelpWindow(helpKey: string) {
-		if (this._dontShowAgain.has(helpKey))
+		if (this._currentlyShowing.has(helpKey) || !this._dontShowAgain || this._dontShowAgain.has(helpKey))
 			return;
 
+		this._currentlyShowing.add(helpKey);
 		const compFactory = this.componentFactoryResolver.resolveComponentFactory(HelpWindowComponent);
 		const componentInstance = this._helpWindowInsertionPoint.createComponent(compFactory);
 		componentInstance.instance.helpToDisplay = helpKey;
 		const closeSubscription = componentInstance.instance.requestClose.subscribe(dontShowAgain => {
+			this._currentlyShowing.delete(helpKey);
 			if (dontShowAgain) {
 				this._dontShowAgain.add(helpKey);
-				localStorage.setItem('helpWindows', JSON.stringify([...this._dontShowAgain]));
+				this.storage.set('helpWindows', [...this._dontShowAgain]);
 			}
 			componentInstance.destroy();
 			closeSubscription.unsubscribe();

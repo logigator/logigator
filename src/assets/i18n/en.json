@@ -44,7 +44,8 @@
 			"SHORTCUTS": "Customize Shortcuts",
 			"ACCOUNT": "Account",
 			"LOGOUT": "Logout",
-			"PRIVACY": "Privacy Policy"
+			"PRIVACY": "Privacy Policy",
+			"NEW_VERSION": "New version available"
 		}
 	},
 	"TOOLBAR": {
@@ -256,7 +257,9 @@
 		"DONT_AGAIN": "Don't show again",
 		"OK": "OK",
 		"HELP_TEXTS": {
-			"ENTER_SIM": "To start the simulation press the play button in the toolbar."
+			"ENTER_SIM": "To start the simulation press the play button in the toolbar.",
+			"DRAG": "Use your right mouse button, to drag the view.",
+			"NEEDS_PLUGS": "To be able to place the component, it needs inputs or outputs."
 		}
 	},
 	"ELEMENT_TYPE": {

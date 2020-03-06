@@ -5,6 +5,7 @@ import * as url from 'url';
 import {AddressInfo} from 'net';
 import {AuthenticationHandler} from './authentication-handler';
 import {getDomain, getHttpFilterUrls} from './utils';
+import {Storage} from './storage';
 
 const args = process.argv.slice(1);
 const serve = args.some(val => val === '--serve');
@@ -26,6 +27,7 @@ try {
 
 		registerHttpInterceptor();
 		authHandler.readSavedLoginState();
+		Storage.getInstance().setupCommunicationWithRenderer();
 		createWindow(port);
 		authHandler.initLoginListeners(win);
 	});
