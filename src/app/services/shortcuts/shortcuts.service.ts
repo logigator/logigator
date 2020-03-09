@@ -17,6 +17,8 @@ export class ShortcutsService {
 
 	private _shortcutMap: ShortcutMap = defaultShortcuts;
 
+	private _shortcutListenerEnabled = true;
+
 	constructor(
 		private workMode: WorkModeService,
 		private projectInteraction: ProjectInteractionService,
@@ -61,8 +63,9 @@ export class ShortcutsService {
 	}
 
 	public keyDownListener(e: KeyboardEvent) {
+		if (this.popup.isPopupOpened || !this._shortcutListenerEnabled) return;
 		const action = this.getShortcutActionFromEvent(e);
-		if (!action || this.popup.isPopupOpened) return;
+		if (!action) return;
 		e.preventDefault();
 		e.stopPropagation();
 		this.applyAction(action);
@@ -104,6 +107,10 @@ export class ShortcutsService {
 			ctrl: event.ctrlKey,
 			alt: event.altKey
 		};
+	}
+
+	set shortcutListenerEnabled(value: boolean) {
+		this._shortcutListenerEnabled = value;
 	}
 
 	private getShortcutActionFromEvent(e: KeyboardEvent): ShortcutAction | null {

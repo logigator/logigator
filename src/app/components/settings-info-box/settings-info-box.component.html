@@ -6,7 +6,7 @@
 
 		<div class="property" *ngIf="elementType.minInputs !== elementType.maxInputs">
 			<p>{{'SETTINGS_INFO.INPUTS' | translate}}:</p>
-			<input type="number" formControlName="numInputs" [min]="elementType.minInputs" [max]="elementType.maxInputs" (blur)="resetNumInputsValue()">
+			<input type="number" formControlName="numInputs" [min]="elementType.minInputs" [max]="elementType.maxInputs" (focus)="focusInput()" (blur)="resetNumInputsValue(); blurInput()">
 		</div>
 
 		<div class="property" *ngIf="elementType.isRotatable">
@@ -28,7 +28,7 @@
 
 		<div class="property" *ngIf="elementType.hasLabel && selectedCompId">
 			<p>{{'SETTINGS_INFO.PLUG_LABEL' | translate}}:</p>
-			<input formControlName="label" type="text" maxlength="3">
+			<input formControlName="label" type="text" maxlength="3" (focus)="focusInput()" (blur)="blurInput()">
 		</div>
 
 		<div class="property" formArrayName="options" *ngFor="let item of optionsControls; let i = index">
