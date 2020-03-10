@@ -411,7 +411,7 @@ export class ProjectSaveManagementService {
 		}
 		const project = await this.getProjectOrCompFromServer(id, false);
 		if (project.type !== 'comp') {
-			this.errorHandling.showErrorMessage('Unable to open Component as Project');
+			this.errorHandling.showErrorMessage('ERROR.PROJECTS.COMP_AS_PROJECT');
 			return Project.empty();
 		}
 		return project;
@@ -547,7 +547,7 @@ export class ProjectSaveManagementService {
 		if (this._projectCache.has(id)) return this._projectCache.get(id);
 		return this.http.get<HttpResponseData<OpenProjectResponse>>(`${environment.apiPrefix}/project/open/${id}`).pipe(
 			map(response => this.projectFromServerResponse(response.result)),
-			this.errorHandling.catchErrorOperator('ERROR.PROJECTS.CREATE', emptyProjectOnFailure ? Project.empty() : undefined)
+			this.errorHandling.catchErrorOperator('ERROR.PROJECTS.OPEN', emptyProjectOnFailure ? Project.empty() : undefined)
 		).toPromise();
 	}
 
