@@ -535,7 +535,12 @@ export class ProjectSaveManagementService {
 			window.history.pushState(null, null, '/');
 			return Promise.resolve([Project.empty()]);
 		}
-		const mainProj = await this.getProjectOrCompFromServer(id, true);
+		let mainProj = await this.getProjectOrCompFromServer(id, false);
+		if (!mainProj) {
+			// #!web
+			window.history.pushState(null, null, '/');
+			mainProj = Project.empty();
+		}
 		if (mainProj.type === 'project') {
 			this._projectSource = 'server';
 			return [mainProj];
