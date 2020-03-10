@@ -13,7 +13,11 @@ export class ConstructionBoxComponent {
 
 	public searchText = '';
 
-	constructor(private componentProviderService: ElementProviderService, private projects: ProjectsService, private shortcuts: ShortcutsService) { }
+	constructor(
+		private componentProviderService: ElementProviderService,
+		private projects: ProjectsService,
+		private shortcuts: ShortcutsService
+	) { }
 
 	public get showPlugComponents(): boolean {
 		if (!this.projects.currProject) return false;
