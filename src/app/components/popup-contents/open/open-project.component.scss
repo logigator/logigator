@@ -40,6 +40,21 @@
 		}
 	}
 
+	.open-share {
+		display: flex;
+		flex-direction: row;
+		padding-top: 0.2rem;
+
+		logi-input {
+			flex-grow: 1;
+			margin-right: 1rem;
+		}
+
+		button {
+			height: fit-content;
+		}
+	}
+
 	.file-upload {
 		display: flex;
 		flex-direction: column;

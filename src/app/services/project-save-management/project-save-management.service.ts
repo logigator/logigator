@@ -61,7 +61,7 @@ export class ProjectSaveManagementService {
 			projects = this.openProjectFromServerOnLoad();
 		} else if (location.pathname.startsWith('/share')) {
 			this.elemProvService.setUserDefinedTypes(await this.getCustomElementsFromServer());
-			projects = this.openProjectFromShare();
+			projects = this.openProjectFromShareOnLoad();
 		} else {
 			// #!web
 			window.history.pushState(null, null, '/');
@@ -134,18 +134,28 @@ export class ProjectSaveManagementService {
 		return id;
 	}
 
-	private async openProjectFromShare(): Promise<Project[]> {
+	private async openProjectFromShareOnLoad(): Promise<Project[]> {
 		const address = location.pathname.substr(location.pathname.lastIndexOf('/') + 1);
-		this._projectSource = 'share';
+		const project = await this.openProjectFromShare(address);
+		if (!project)
+			return [Project.empty()];
+
+		if (project.type === 'comp')
+			return [Project.empty(), project];
+
+		return [project];
+	}
+
+	public async openProjectFromShare(address: string): Promise<Project> {
 		const resp = await this.sharing.openShare(address).pipe(
 			this.errorHandling.catchErrorOperator('ERROR.SHARE.OPEN', undefined)
 		).toPromise<OpenShareResp>();
 		if (!resp) {
 			// !#web
 			window.history.pushState(null, null, '/');
-			delete this._projectSource;
-			return [Project.empty()];
+			return null;
 		}
+		this._projectSource = 'share';
 		for (const depId in resp.components) {
 			const depComp = resp.components[depId];
 			this.elemProvService.addUserDefinedElement({
@@ -176,8 +186,7 @@ export class ProjectSaveManagementService {
 			id: resp.project.id
 		});
 		this.errorHandling.showInfo('INFO.PROJECTS.OPEN_SHARE', {name: resp.project.name, user: resp.user.username});
-		if (resp.project.is_component) return [Project.empty(), project];
-		return [project];
+		return project;
 	}
 
 	public async cloneShare(): Promise<Project[]> {

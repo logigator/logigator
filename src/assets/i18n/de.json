@@ -165,6 +165,8 @@
 			"TABLE_NAME": "Name",
 			"OPEN_FILE": "Aus Datei öffnen",
 			"OPEN_CLOUD": "Aus Cloud öffnen",
+			"OPEN_SHARE": "Geteiltes Projekt öffnen",
+			"SHARE_LABEL": "Id / Link",
 			"NO_FILE": "Keine Datei ausgewählt"
 		},
 		"RELOAD": {

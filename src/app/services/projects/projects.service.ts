@@ -132,6 +132,16 @@ export class ProjectsService {
 		this.switchProjectAfterOpen(project);
 	}
 
+	public async openProjectShare(address: string) {
+		if (!this.projectSaveManagementService.isShare) await this.saveAllOrAllComps();
+		const project = await this.projectSaveManagementService.openProjectFromShare(address);
+		if (!project) return;
+
+		// #!web
+		window.history.pushState(null, null, `/share/${address}`);
+		this.switchProjectAfterOpen(project);
+	}
+
 	private closeAllProjects() {
 		for (const id of this._projects.keys()) {
 			this._projectClosedSubject.next(id);
