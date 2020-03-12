@@ -9,6 +9,8 @@ import {ErrorHandlingService} from '../error-handling/error-handling.service';
 import {UserService} from '../user/user.service';
 import {environment} from '../../../environments/environment';
 import {PopupService} from '@logigator/logigator-shared-comps';
+import {RenderTicker} from '../render-ticker/render-ticker.service';
+import {checkActionUsable} from '../../models/action-usable-in-modes';
 
 @Injectable({
 	providedIn: 'root'
@@ -26,7 +28,8 @@ export class ShortcutsService {
 		private popup: PopupService,
 		private http: HttpClient,
 		private errorHandling: ErrorHandlingService,
-		private user: UserService
+		private user: UserService,
+		private renderTicker: RenderTicker
 	) {
 		this.loadShortcutSettings();
 	}
@@ -189,6 +192,16 @@ export class ShortcutsService {
 				break;
 			case 'newComp':
 				this.projectInteraction.newComponent();
+				break;
+			case 'enterSim':
+				if (checkActionUsable('enterSim'))
+					this.workMode.enterSimulation();
+				break;
+			case 'leaveSim':
+				if (checkActionUsable('leaveSim')) {
+					this.renderTicker.stopAllContSim();
+					this.workMode.leaveSimulation();
+				}
 				break;
 		}
 	}

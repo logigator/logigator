@@ -199,7 +199,9 @@
 				"textMode": "Text platzieren",
 				"save": "Speichern",
 				"newProj": "Neues Projekt",
-				"openProj": "Projekt öffnen"
+				"openProj": "Projekt öffnen",
+				"enterSim": "Simulation starten",
+				"leaveSim": "Simulation verlassen"
 			}
 		},
 		"UNSAVED_CHANGES": {

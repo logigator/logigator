@@ -199,7 +199,9 @@
 				"textMode": "Place text",
 				"save": "Save",
 				"newProj": "New Project",
-				"openProj": "Open Project"
+				"openProj": "Open Project",
+				"enterSim": "Enter Simulation",
+				"leaveSim": "Leave Simulation"
 			}
 		},
 		"UNSAVED_CHANGES": {

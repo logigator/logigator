@@ -71,4 +71,10 @@ export const defaultShortcuts: ShortcutMap = {
 		key_code: 'S',
 		ctrl: true
 	},
+	enterSim: {
+		key_code: 'ENTER'
+	},
+	leaveSim: {
+		key_code: 'ESCAPE'
+	}
 };
