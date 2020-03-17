@@ -42,3 +42,11 @@ After you built the simulation-code, just copy the contents of `logigator-simula
 ### Building the App
 Browser: `npm run build`<br>
 Electron: `npm run build:electron:*platform*`
+
+## Publishing
+The App is automatically published to the web when code is pushed to the master branch.<br>
+To release a new version of electron create a tag the version number in the master branch. The tag must match the version found in `package.json`.<br>
+Before merging to master please update the version in `package.json`.
+
+## License
+This Project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details
