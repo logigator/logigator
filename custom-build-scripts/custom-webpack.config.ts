@@ -19,7 +19,7 @@ module.exports = (config, options) => {
 	config.module.rules.push({
 		test: /\.html?$/,
 		use: [
-			'html-loader',
+			'raw-loader',
 			preprocessorConfig
 		]
 	});
