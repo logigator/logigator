@@ -1,11 +1,13 @@
 import {
-	AfterViewInit,
 	ChangeDetectionStrategy,
 	ChangeDetectorRef,
 	Component,
 	ElementRef,
 	OnDestroy,
-	ViewChild
+	OnInit,
+	Renderer2,
+	ViewChild,
+	ViewEncapsulation
 } from '@angular/core';
 import {PopupContentComp} from '@logigator/logigator-shared-comps';
 import {TranslateService} from '@ngx-translate/core';
@@ -16,9 +18,10 @@ import {takeUntil} from 'rxjs/operators';
 	selector: 'app-help',
 	templateUrl: './help.component.html',
 	styleUrls: ['./help.component.scss'],
+	encapsulation: ViewEncapsulation.None,
 	changeDetection: ChangeDetectionStrategy.OnPush
 })
-export class HelpComponent extends PopupContentComp implements AfterViewInit, OnDestroy {
+export class HelpComponent extends PopupContentComp implements OnInit, OnDestroy {
 
 	@ViewChild('sidebar', {static: true})
 	private _sidebar: ElementRef<HTMLDivElement>;
@@ -27,7 +30,7 @@ export class HelpComponent extends PopupContentComp implements AfterViewInit, On
 
 	public helpToRender = 'get-started';
 
-	constructor(private translate: TranslateService, private cdr: ChangeDetectorRef) {
+	constructor(private translate: TranslateService, private cdr: ChangeDetectorRef, private renderer2: Renderer2) {
 		super();
 	}
 
@@ -35,7 +38,8 @@ export class HelpComponent extends PopupContentComp implements AfterViewInit, On
 		return this.translate.currentLang;
 	}
 
-	ngAfterViewInit() {
+	ngOnInit() {
+		this.insertSideBar();
 		this._sidebar.nativeElement.querySelectorAll('p').forEach(link => {
 			fromEvent(link, 'click').pipe(
 				takeUntil(this._destroySubject)
@@ -46,6 +50,10 @@ export class HelpComponent extends PopupContentComp implements AfterViewInit, On
 			});
 		});
 		this.setActiveClass(this._sidebar.nativeElement.querySelectorAll('p').item(0));
+	}
+
+	private insertSideBar() {
+		this.renderer2.setProperty(this._sidebar.nativeElement, 'innerHTML', require(`../../../../help/${this.currentLang}/sidebar.md`))
 	}
 
 	private setActiveClass(link: HTMLElement) {
