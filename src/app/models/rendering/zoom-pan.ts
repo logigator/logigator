@@ -1,6 +1,12 @@
 import * as PIXI from 'pixi.js';
 import {View} from './view';
 
+export interface ZoomPanData {
+	posX: number;
+	posY: number;
+	scale: number;
+}
+
 export class ZoomPan {
 
 	private static MAX_ZOOM_IN = 2.5;
@@ -92,6 +98,19 @@ export class ZoomPan {
 
 	public get currentScale(): number {
 		return this._scale;
+	}
+
+	public setZoomPanData({scale, posX, posY}: ZoomPanData) {
+		this.zoomTo(scale, posX, posY)
+		this.translateTo(new PIXI.Point(posX, posY));
+	}
+
+	public get zoomPanData(): ZoomPanData {
+		return {
+			posX: this.positionX,
+			posY: this.positionY,
+			scale: this.currentScale
+		}
 	}
 
 }
