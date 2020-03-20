@@ -19,12 +19,7 @@ module.exports = (config, options) => {
 	config.module.rules.push({
 		test: /\.html?$/,
 		use: [
-			{
-				loader: 'html-loader',
-				options: {
-					interpolate: true
-				}
-			},
+			'raw-loader',
 			preprocessorConfig
 		]
 	});

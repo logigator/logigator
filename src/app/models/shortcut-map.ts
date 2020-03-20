@@ -18,7 +18,9 @@ export type ShortcutAction =
 	'newComp' |
 	'newProj' |
 	'openProj' |
-	'save';
+	'save' |
+	'enterSim' |
+	'leaveSim';
 
 export type ShortcutMap =  {
 	[A in ShortcutAction]: ShortcutConfig | null

@@ -165,6 +165,8 @@
 			"TABLE_NAME": "Name",
 			"OPEN_FILE": "Aus Datei öffnen",
 			"OPEN_CLOUD": "Aus Cloud öffnen",
+			"OPEN_SHARE": "Geteiltes Projekt öffnen",
+			"SHARE_LABEL": "Id / Link",
 			"NO_FILE": "Keine Datei ausgewählt"
 		},
 		"RELOAD": {
@@ -197,7 +199,9 @@
 				"textMode": "Text platzieren",
 				"save": "Speichern",
 				"newProj": "Neues Projekt",
-				"openProj": "Projekt öffnen"
+				"openProj": "Projekt öffnen",
+				"enterSim": "Simulation starten",
+				"leaveSim": "Simulation verlassen"
 			}
 		},
 		"UNSAVED_CHANGES": {
@@ -376,11 +380,13 @@
 			"GET_PROJECTS": "Konnte Projekte nicht vom Server laden",
 			"GET_COMPS": "Konnte Komponenten nicht vom Server laden",
 			"OPEN_COMP": "Konnte Komponente nicht öffnen",
+			"OPEN": "Konnte Projekt oder Komponente nicht öffnen",
 			"CLONE": "Konnte Projekt nicht klonen",
 			"CREATE": "Konnte Projekt oder Komponente nicht erstellen",
 			"SAVE": "Konnte Projekt oder Komponente nicht auf dem Server speichern",
 			"COMP_NOT_FOUND": "Komponente konnte nicht gefunden werden, Projekt könnte beschädigt sein",
 			"REMOVED_COMP": "Eine Komponente konnte nicht gefunden werden und wurde aus dem Projekt entfernt",
+			"COMP_AS_PROJECT": "komponente kann nicht als Projekt geöffnet werden",
 			"INVALID_FILE": "Fehlerhafte Datei",
 			"RESOLVE_DEPS": "Konnte Abhängigkeiten des Projekts nicht auflösen",
 			"PROJECT_AS_COMP": "Konnte Projekt nicht als Komponente öffnen",

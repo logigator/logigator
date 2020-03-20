@@ -165,6 +165,8 @@
 			"TABLE_NAME": "Name",
 			"OPEN_FILE": "Open from File",
 			"OPEN_CLOUD": "Open from Cloud",
+			"OPEN_SHARE": "Open Share",
+			"SHARE_LABEL": "Id / Link",
 			"NO_FILE": "No File Selected"
 		},
 		"RELOAD": {
@@ -197,7 +199,9 @@
 				"textMode": "Place text",
 				"save": "Save",
 				"newProj": "New Project",
-				"openProj": "Open Project"
+				"openProj": "Open Project",
+				"enterSim": "Enter Simulation",
+				"leaveSim": "Leave Simulation"
 			}
 		},
 		"UNSAVED_CHANGES": {
@@ -376,11 +380,13 @@
 			"GET_PROJECTS": "Unable to get Projects from Server",
 			"GET_COMPS": "Unable to get Components from Server",
 			"OPEN_COMP": "Unable to open Component",
+			"OPEN": "Unable to open Project or Component",
 			"CLONE": "Unable to clone project",
 			"CREATE": "Unable to create project or component",
 			"SAVE": "Unable to save Component or Project on Server",
 			"COMP_NOT_FOUND": "Component not found, project might be corrupted",
 			"REMOVED_COMP": "A component was not found and was removed from the Project",
+			"COMP_AS_PROJECT": "Unable to open Component as Project",
 			"INVALID_FILE": "Invalid File",
 			"RESOLVE_DEPS": "Unable to resolve dependencies of Project",
 			"PROJECT_AS_COMP": "Unable to open Project as Component",

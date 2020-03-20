@@ -12,6 +12,7 @@ import {Grid} from './grid';
 import {ElementProviderService} from '../../services/element-provider/element-provider.service';
 import {WorkerCommunicationService} from '../../services/simulation/worker-communication/worker-communication-service';
 import {isResetable} from './graphics/l-graphics';
+import {ZoomPanData} from './zoom-pan';
 
 export class SimulationView extends View {
 
@@ -30,7 +31,8 @@ export class SimulationView extends View {
 		requestInspectElemEventEmitter: EventEmitter<ReqInspectElementEvent>,
 		parent: string,
 		parentNames: string[],
-		parentTypeIds: number[]
+		parentTypeIds: number[],
+		startZoomPanPos?: ZoomPanData
 	) {
 		super(project, htmlContainer, requestSingleFrameFn);
 		this.requestInspectElemEventEmitter = requestInspectElemEventEmitter;
@@ -38,6 +40,7 @@ export class SimulationView extends View {
 		this.parentProjectNames = parentNames;
 		this.parentTypeIds = parentTypeIds;
 		this._simViewInteractionManager = new SimulationViewInteractionManager(this);
+		if (startZoomPanPos) this.zoomPan.setZoomPanData(startZoomPanPos);
 		this.applyOpenActions();
 
 		getStaticDI(NgZone).runOutsideAngular(async () => {

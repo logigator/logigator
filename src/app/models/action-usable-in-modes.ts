@@ -1,8 +1,37 @@
 import {WorkModeService} from '../services/work-mode/work-mode.service';
-import {InteractionAction, InteractionActionUsableInSimulation} from './interaction-action';
+import {InteractionAction, InteractionActionUsable} from './interaction-action';
 import {getStaticDI} from './get-di';
 
-const actionUsableInSimulation: InteractionActionUsableInSimulation = {
+const actionUsableInEditor: InteractionActionUsable = {
+	copy: true,
+	paste: true,
+	cut: true,
+	delete: true,
+	undo: true,
+	redo: true,
+	zoom100: true,
+	zoomIn: true,
+	zoomOut: true,
+	fullscreen: true,
+	connWireMode: true,
+	wireMode: true,
+	selectMode: true,
+	cutSelectMode: true,
+	newComp: true,
+	newProj: true,
+	openProj: true,
+	eraserMode: true,
+	textMode: true,
+	save: true,
+	share: true,
+	export: true,
+	editDropdown: true,
+	exportImage: true,
+	enterSim: true,
+	leaveSim: false
+};
+
+const actionUsableInSimulation: InteractionActionUsable = {
 	copy: false,
 	paste: false,
 	cut: false,
@@ -26,12 +55,16 @@ const actionUsableInSimulation: InteractionActionUsableInSimulation = {
 	share: true,
 	export: true,
 	editDropdown: false,
-	exportImage: false
+	exportImage: false,
+	enterSim: false,
+	leaveSim: true
 };
 
 export function checkActionUsable(action: InteractionAction): boolean {
-	if (getStaticDI(WorkModeService).currentWorkMode === 'simulation') {
+	const currentWorkMode = getStaticDI(WorkModeService).currentWorkMode;
+	if (currentWorkMode === 'simulation') {
 		return actionUsableInSimulation[action];
+	} else {
+		return actionUsableInEditor[action]
 	}
-	return true;
 }

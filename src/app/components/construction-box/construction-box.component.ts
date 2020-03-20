@@ -2,6 +2,7 @@ import {Component} from '@angular/core';
 import {ElementProviderService} from '../../services/element-provider/element-provider.service';
 import {ElementType} from '../../models/element-types/element-type';
 import {ProjectsService} from '../../services/projects/projects.service';
+import {ShortcutsService} from '../../services/shortcuts/shortcuts.service';
 
 @Component({
 	selector: 'app-construction-box',
@@ -12,7 +13,11 @@ export class ConstructionBoxComponent {
 
 	public searchText = '';
 
-	constructor(private componentProviderService: ElementProviderService, private projects: ProjectsService) { }
+	constructor(
+		private componentProviderService: ElementProviderService,
+		private projects: ProjectsService,
+		private shortcuts: ShortcutsService
+	) { }
 
 	public get showPlugComponents(): boolean {
 		if (!this.projects.currProject) return false;
@@ -37,5 +42,13 @@ export class ConstructionBoxComponent {
 
 	public get userDefinedComponents(): Map<number, ElementType> {
 		return this.componentProviderService.userDefinedElements;
+	}
+
+	public focusSearch() {
+		this.shortcuts.shortcutListenerEnabled = false;
+	}
+
+	public blurSearch() {
+		this.shortcuts.shortcutListenerEnabled = true;
 	}
 }

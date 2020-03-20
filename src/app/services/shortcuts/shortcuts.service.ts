@@ -9,6 +9,8 @@ import {ErrorHandlingService} from '../error-handling/error-handling.service';
 import {UserService} from '../user/user.service';
 import {environment} from '../../../environments/environment';
 import {PopupService} from '@logigator/logigator-shared-comps';
+import {RenderTicker} from '../render-ticker/render-ticker.service';
+import {checkActionUsable} from '../../models/action-usable-in-modes';
 
 @Injectable({
 	providedIn: 'root'
@@ -17,6 +19,8 @@ export class ShortcutsService {
 
 	private _shortcutMap: ShortcutMap = defaultShortcuts;
 
+	private _shortcutListenerEnabled = true;
+
 	constructor(
 		private workMode: WorkModeService,
 		private projectInteraction: ProjectInteractionService,
@@ -24,7 +28,8 @@ export class ShortcutsService {
 		private popup: PopupService,
 		private http: HttpClient,
 		private errorHandling: ErrorHandlingService,
-		private user: UserService
+		private user: UserService,
+		private renderTicker: RenderTicker
 	) {
 		this.loadShortcutSettings();
 	}
@@ -61,8 +66,9 @@ export class ShortcutsService {
 	}
 
 	public keyDownListener(e: KeyboardEvent) {
+		if (this.popup.isPopupOpened || !this._shortcutListenerEnabled) return;
 		const action = this.getShortcutActionFromEvent(e);
-		if (!action || this.popup.isPopupOpened) return;
+		if (!action) return;
 		e.preventDefault();
 		e.stopPropagation();
 		this.applyAction(action);
@@ -104,6 +110,10 @@ export class ShortcutsService {
 			ctrl: event.ctrlKey,
 			alt: event.altKey
 		};
+	}
+
+	set shortcutListenerEnabled(value: boolean) {
+		this._shortcutListenerEnabled = value;
 	}
 
 	private getShortcutActionFromEvent(e: KeyboardEvent): ShortcutAction | null {
@@ -182,6 +192,16 @@ export class ShortcutsService {
 				break;
 			case 'newComp':
 				this.projectInteraction.newComponent();
+				break;
+			case 'enterSim':
+				if (checkActionUsable('enterSim'))
+					this.workMode.enterSimulation();
+				break;
+			case 'leaveSim':
+				if (checkActionUsable('leaveSim')) {
+					this.renderTicker.stopAllContSim();
+					this.workMode.leaveSimulation();
+				}
 				break;
 		}
 	}

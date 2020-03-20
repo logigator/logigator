@@ -15,6 +15,7 @@ import {PopupContentComp} from '@logigator/logigator-shared-comps';
 export class OpenProjectComponent extends PopupContentComp implements OnInit {
 
 	public fileToOpen: File;
+	public shareLinkId: string;
 	public allProjectsInfo: Observable<ProjectInfoResponse[]>;
 
 	constructor(
@@ -46,6 +47,17 @@ export class OpenProjectComponent extends PopupContentComp implements OnInit {
 			this.projects.openFile(event.target.result);
 			this.requestClose.emit();
 		};
+	}
+
+	public openShare() {
+		let address: string;
+		if (this.shareLinkId.includes('/')) {
+			address = this.shareLinkId.substring(this.shareLinkId.lastIndexOf('/') + 1);
+		} else {
+			address = this.shareLinkId;
+		}
+		this.projects.openProjectShare(address);
+		this.requestClose.emit();
 	}
 
 }

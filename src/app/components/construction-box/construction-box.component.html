@@ -1,5 +1,5 @@
 <div id="construction-box">
-	<input id="component-search" [placeholder]="'CONST_BOX.SEARCH' | translate" type="text" [(ngModel)]="searchText" aria-label="Search">
+	<input id="component-search" [placeholder]="'CONST_BOX.SEARCH' | translate" type="text" [(ngModel)]="searchText" (focus)="focusSearch()" (blur)="blurSearch()" aria-label="Search">
 	<div class="scroll-container">
 		<app-construction-box-category
 			categoryName="CONST_BOX.CATEGORIES.BASIC"

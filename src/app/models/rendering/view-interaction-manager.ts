@@ -84,7 +84,7 @@ export class ViewInteractionManager {
 	public addNewElement(lGraphics: LGraphics) {
 		getStaticDI(NgZone).runOutsideAngular(() => {
 			lGraphics.interactive = true;
-			lGraphics.on('pointerup', (e: InteractionEvent) => this.pUpElement(e, lGraphics));
+			lGraphics.on('pointerup', (e: InteractionEvent) => this.pUpElement(lGraphics));
 			lGraphics.on('pointerdown', (e: InteractionEvent) => this.pDownElement(e, lGraphics));
 		});
 	}
@@ -148,23 +148,23 @@ export class ViewInteractionManager {
 				this.buildNewComp(e);
 				break;
 			case ViewIntManState.SELECT:
-				this.selectFromRect(e);
+				this.selectFromRect();
 				break;
 			case ViewIntManState.SELECT_CUT:
-				this.selectCutFromRect(e);
+				this.selectCutFromRect();
 				break;
 			case ViewIntManState.DRAGGING:
 			case ViewIntManState.CUT_DRAGGING:
-				this.applyDrag(e);
+				this.applyDrag();
 				break;
 			case ViewIntManState.NEW_WIRE:
-				this.buildNewWire(e);
+				this.buildNewWire();
 				break;
 			case ViewIntManState.PASTE_DRAGGING:
-				this.applyPaste(e);
+				this.applyPaste();
 				break;
 			case ViewIntManState.USING_ERASER:
-				this.stopEraser(e);
+				this.stopEraser();
 				break;
 		}
 	}
@@ -213,7 +213,7 @@ export class ViewInteractionManager {
 		}
 	}
 
-	private pUpElement(e: InteractionEvent, lGraphics: LGraphics) {
+	private pUpElement(lGraphics: LGraphics) {
 		if (this.workModeSer.currentWorkMode === 'buildComponent' ||
 			this.workModeSer.currentWorkMode === 'eraser' ||
 			this._state === ViewIntManState.DRAGGING ||
@@ -262,7 +262,7 @@ export class ViewInteractionManager {
 		this._wireGraphics.visible = true;
 	}
 
-	private dragNewWire(e) {
+	private dragNewWire(e: InteractionEvent) {
 		this._actionPos.addDragPos(e, this._view);
 		if (this._wireDirection === undefined
 			&& CollisionFunctions.distance(this._actionPos.gridPosStart, this._actionPos.lastGridPosDrag) >= 1
@@ -295,7 +295,7 @@ export class ViewInteractionManager {
 		this._view.requestSingleFrame();
 	}
 
-	private buildNewWire(e: InteractionEvent) {
+	private buildNewWire() {
 		const startPos = this._actionPos.gridPosStart;
 		const endPos = this._actionPos.lastGridPosDrag;
 		this.projectsSer.currProject.addWire(
@@ -323,7 +323,7 @@ export class ViewInteractionManager {
 		this._view.requestSingleFrame();
 	}
 
-	private selectFromRect(e: InteractionEvent) {
+	private selectFromRect() {
 		const selected = this.selectionSer.selectFromRect(
 			this.projectsSer.currProject, this._actionPos.gridPosFloatStart, this._actionPos.lastGridPosFloat
 		);
@@ -338,7 +338,7 @@ export class ViewInteractionManager {
 		this._view.requestSingleFrame();
 	}
 
-	private selectCutFromRect(e: InteractionEvent) {
+	private selectCutFromRect() {
 		const actions = this.selectionSer.cutFromRect(
 			this.projectsSer.currProject, this._actionPos.gridPosFloatStart, this._actionPos.lastGridPosFloat
 		);
@@ -405,7 +405,7 @@ export class ViewInteractionManager {
 		this._view.requestSingleFrame();
 	}
 
-	private applyDrag(e: InteractionEvent) {
+	private applyDrag() {
 		if (this.projectsSer.currProject.moveElementsById(
 			this.selectionSer.selectedIds(), this._actionPos.getGridPosDiffFromStart(this._selectedElements[0].position))
 		) {
@@ -456,7 +456,12 @@ export class ViewInteractionManager {
 		this._selectRect.width = pasteRectSizePixel.x;
 		this._selectRect.height = pasteRectSizePixel.y;
 		this._selectRect.visible = true;
-		this._selectedElements = this.copySer.copiedElements.map(el => {
+		this._selectedElements = this.copySer.copiedElements.filter(el => {
+			if (this.projectsSer.currProject.type === 'project') {
+				return !this.elemProvSer.isPlugElement(el.typeId)
+			}
+			return true;
+		}).map(el => {
 			const lGraphics = LGraphicsResolver.getLGraphicsFromElement(this.currScale, el);
 			lGraphics.setSelected(true);
 			this._view.addChild(lGraphics);
@@ -482,9 +487,16 @@ export class ViewInteractionManager {
 		this._view.requestSingleFrame();
 	}
 
-	private applyPaste(e: InteractionEvent) {
+	private applyPaste() {
+		const elementsToAdd = this._selectedElements.filter(lg => {
+				if (this.projectsSer.currProject.type === 'project') {
+					return !this.elemProvSer.isPlugElement(lg.element.typeId)
+				}
+				return true;
+			}).map(lg => Elements.clone(lg.element));
+
 		if (this.projectsSer.currProject.addElements(
-			this._selectedElements.map(lg => Elements.clone(lg.element)),
+			elementsToAdd,
 			this._actionPos.getGridPosDiffFromStart(this._selectedElements[0].position))
 		) {
 			this.cleanUp();
@@ -504,7 +516,7 @@ export class ViewInteractionManager {
 		this.projectsSer.currProject.eraseElements(this._actionPos.previousGridPosFloat, this._actionPos.lastGridPosFloat);
 	}
 
-	private stopEraser(e: InteractionEvent) {
+	private stopEraser() {
 		this.projectsSer.currProject.stopErase();
 		this.cleanUp();
 	}
