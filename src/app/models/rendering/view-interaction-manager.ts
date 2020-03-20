@@ -456,7 +456,12 @@ export class ViewInteractionManager {
 		this._selectRect.width = pasteRectSizePixel.x;
 		this._selectRect.height = pasteRectSizePixel.y;
 		this._selectRect.visible = true;
-		this._selectedElements = this.copySer.copiedElements.map(el => {
+		this._selectedElements = this.copySer.copiedElements.filter(el => {
+			if (this.projectsSer.currProject.type === 'project') {
+				return !this.elemProvSer.isPlugElement(el.typeId)
+			}
+			return true;
+		}).map(el => {
 			const lGraphics = LGraphicsResolver.getLGraphicsFromElement(this.currScale, el);
 			lGraphics.setSelected(true);
 			this._view.addChild(lGraphics);
@@ -483,8 +488,15 @@ export class ViewInteractionManager {
 	}
 
 	private applyPaste(e: InteractionEvent) {
+		const elementsToAdd = this._selectedElements.filter(lg => {
+				if (this.projectsSer.currProject.type === 'project') {
+					return !this.elemProvSer.isPlugElement(lg.element.typeId)
+				}
+				return true;
+			}).map(lg => Elements.clone(lg.element));
+
 		if (this.projectsSer.currProject.addElements(
-			this._selectedElements.map(lg => Elements.clone(lg.element)),
+			elementsToAdd,
 			this._actionPos.getGridPosDiffFromStart(this._selectedElements[0].position))
 		) {
 			this.cleanUp();
