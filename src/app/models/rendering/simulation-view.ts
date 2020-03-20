@@ -12,7 +12,7 @@ import {Grid} from './grid';
 import {ElementProviderService} from '../../services/element-provider/element-provider.service';
 import {WorkerCommunicationService} from '../../services/simulation/worker-communication/worker-communication-service';
 import {isResetable} from './graphics/l-graphics';
-import {ZoomPanData} from "./zoom-pan";
+import {ZoomPanData} from './zoom-pan';
 
 export class SimulationView extends View {
 
