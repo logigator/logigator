@@ -342,6 +342,12 @@
 			"SEGMENT_DISPLAY": {
 				"NAME": "Segment Display",
 				"DESCRIPTION": "Displays a binary input as decimal number"
+			},
+			"LED_MATRIX": {
+				"NAME": "LED Matrix",
+				"DESCRIPTION": "Display an image",
+				"WIDTH": "Width",
+				"HEIGHT": "Height"
 			}
 		},
 		"PLUG": {
