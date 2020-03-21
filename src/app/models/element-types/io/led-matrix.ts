@@ -30,20 +30,14 @@ export const ledMatrix: ElementType = {
 
 	},
 	height(element?) {
-		return element?.options ? element.options[1] : this.options[1];
+		return element?.options ? element.options[0] : this.options[0];
 	},
 
-	options: [4, 4],
+	options: [4],
 	optionsConfig: [
 		{
-			name: 'ELEMENT_TYPE.IO.LED_MATRIX.WIDTH',
-			min: 2,
-			max: 24
-		},
-		{
-			name: 'ELEMENT_TYPE.IO.LED_MATRIX.HEIGHT',
-			min: 2,
-			max: 24
+			name: 'ELEMENT_TYPE.IO.LED_MATRIX.SIZE',
+			allowedValues: [4, 8, 16]
 		}
 	],
 

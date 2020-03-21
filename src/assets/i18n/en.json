@@ -346,8 +346,7 @@
 			"LED_MATRIX": {
 				"NAME": "LED Matrix",
 				"DESCRIPTION": "Display an image",
-				"WIDTH": "Width",
-				"HEIGHT": "Height"
+				"SIZE": "Width/Height"
 			}
 		},
 		"PLUG": {

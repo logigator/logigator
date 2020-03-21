@@ -78,7 +78,7 @@ export class SettingsInfoBoxComponent implements OnChanges, OnDestroy {
 				if (this.elementType.optionsConfig) {
 					for (let i = 0; i < data.options.length; i++) {
 						const optVal = Number(data.options[i]);
-						if (optVal <= this.elementType.optionsConfig[i].max && optVal >= this.elementType.optionsConfig[i].min) {
+						if (this.elementType.optionsConfig[i].allowedValues || (optVal <= this.elementType.optionsConfig[i].max && optVal >= this.elementType.optionsConfig[i].min)) {
 							if (this._element.options[i] !== optVal) {
 								const newOptions = [...this._element.options];
 								newOptions[i] = optVal;
@@ -101,7 +101,7 @@ export class SettingsInfoBoxComponent implements OnChanges, OnDestroy {
 				if (this.elementType.optionsConfig) {
 					for (let i = 0; i < data.options.length; i++) {
 						const optVal = Number(data.options[i]);
-						if (optVal <= this.elementType.optionsConfig[i].max && optVal >= this.elementType.optionsConfig[i].min) {
+						if (this.elementType.optionsConfig[i].allowedValues || (optVal <= this.elementType.optionsConfig[i].max && optVal >= this.elementType.optionsConfig[i].min)) {
 							this.elementType.options[i] = optVal;
 							if (this.elementType.onOptionsChanged) this.elementType.onOptionsChanged();
 						} else if (optVal * 10 >= this.elementType.optionsConfig[i].max) {
