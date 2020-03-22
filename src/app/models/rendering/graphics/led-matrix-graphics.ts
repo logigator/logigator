@@ -6,6 +6,7 @@ import {ThemingService} from '../../../services/theming/theming.service';
 import {ElementType, isElementType} from '../../element-types/element-type';
 import {Elements} from '../../elements';
 import {environment} from '../../../../environments/environment';
+import {ElementProviderService} from '../../../services/element-provider/element-provider.service';
 
 export class LedMatrixGraphics extends PIXI.Graphics implements LGraphics, ComponentUpdatable {
 
@@ -13,11 +14,16 @@ export class LedMatrixGraphics extends PIXI.Graphics implements LGraphics, Compo
 
 	private _scale: number;
 	private themingService = getStaticDI(ThemingService);
+	private elemProvService = getStaticDI(ElementProviderService);
 
 	private _size: PIXI.Point;
 
+	private _labels: string[];
+
 	private simActiveState = [];
 	private shouldHaveActiveState = [];
+
+	private _leds: PIXI.Container;
 
 	constructor(scale: number, element?: Element);
 	constructor(scale: number, elementType: ElementType);
@@ -28,15 +34,20 @@ export class LedMatrixGraphics extends PIXI.Graphics implements LGraphics, Compo
 		this._scale = scale;
 		if (isElementType(elementOrType)) {
 			this.element = {
+				options: elementOrType.options,
 				typeId: elementOrType.id,
 				rotation: elementOrType.rotation,
 				numInputs: elementOrType.numInputs,
 				numOutputs: elementOrType.numOutputs,
 			} as any as Element;
+			this._labels = elementOrType.calcLabels();
 		} else {
 			this.element = elementOrType;
+			const elemType = this.elemProvService.getElementById(this.element.typeId);
+			this._labels = elemType.calcLabels(this.element);
 		}
 		this._size = Elements.calcPixelElementSize(this.element);
+		this._leds = this.getLeds()
 		this.drawComponent();
 	}
 
@@ -45,6 +56,7 @@ export class LedMatrixGraphics extends PIXI.Graphics implements LGraphics, Compo
 		this.moveTo(0, 0);
 
 		this.beginFill(this.themingService.getEditorColor('wire'));
+		this.removeChildren(0);
 
 		switch (this.element.rotation) {
 			case 0:
@@ -64,12 +76,19 @@ export class LedMatrixGraphics extends PIXI.Graphics implements LGraphics, Compo
 		this.beginFill(this.themingService.getEditorColor('background'));
 		this.moveTo(0, 0);
 		this.drawRect(0, 0, this._size.x, this._size.y);
+
+		this.addChild(this._leds);
 	}
 
 	private rotation0(inputs: number) {
 		for (let i = 0; i < inputs; i++) {
 			this.moveTo(-(environment.gridPixelWidth / 2), (environment.gridPixelWidth / 2) + environment.gridPixelWidth * i);
 			this.lineTo(0, (environment.gridPixelWidth / 2) + environment.gridPixelWidth * i);
+			const label = this.getLabelText(this._labels[i]);
+			label.anchor = new PIXI.Point(0, 0.5);
+			label.x = 1;
+			label.y = (environment.gridPixelWidth / 2) + environment.gridPixelWidth * i;
+			this.addChild(label);
 		}
 	}
 
@@ -77,6 +96,11 @@ export class LedMatrixGraphics extends PIXI.Graphics implements LGraphics, Compo
 		for (let i = 0; i < inputs; i++) {
 			this.moveTo(width - environment.gridPixelWidth / 2 - environment.gridPixelWidth * i, 0);
 			this.lineTo(width - environment.gridPixelWidth / 2 - environment.gridPixelWidth * i, -(environment.gridPixelWidth / 2));
+			const label = this.getLabelText(this._labels[i]);
+			label.anchor = new PIXI.Point(0.5, 0);
+			label.x = width - environment.gridPixelWidth / 2 - environment.gridPixelWidth * i;
+			label.y = 1;
+			this.addChild(label);
 		}
 	}
 
@@ -84,6 +108,11 @@ export class LedMatrixGraphics extends PIXI.Graphics implements LGraphics, Compo
 		for (let i = 0; i < inputs; i++) {
 			this.moveTo(width, height - (environment.gridPixelWidth / 2) - environment.gridPixelWidth * i);
 			this.lineTo(width + (environment.gridPixelWidth / 2), height - (environment.gridPixelWidth / 2) - environment.gridPixelWidth * i);
+			const label = this.getLabelText(this._labels[i]);
+			label.anchor = new PIXI.Point(1, 0.5);
+			label.x = width - 1;
+			label.y = height - (environment.gridPixelWidth / 2) - environment.gridPixelWidth * i;
+			this.addChild(label);
 		}
 	}
 
@@ -91,6 +120,11 @@ export class LedMatrixGraphics extends PIXI.Graphics implements LGraphics, Compo
 		for (let i = 0; i < inputs; i++) {
 			this.moveTo((environment.gridPixelWidth / 2) + environment.gridPixelWidth * i, height);
 			this.lineTo((environment.gridPixelWidth / 2) + environment.gridPixelWidth * i, height + (environment.gridPixelWidth / 2));
+			const label = this.getLabelText(this._labels[i]);
+			label.anchor = new PIXI.Point(0.5, 1);
+			label.x = environment.gridPixelWidth / 2 + environment.gridPixelWidth * i;
+			label.y = height - 1;
+			this.addChild(label);
 		}
 	}
 
@@ -133,8 +167,12 @@ export class LedMatrixGraphics extends PIXI.Graphics implements LGraphics, Compo
 		this.element.numInputs = element.numInputs;
 		this.element.rotation = element.rotation;
 		this._scale = scale;
+		const elemType = this.elemProvService.getElementById(this.element.typeId);
+		this._labels = elemType.calcLabels(this.element);
 		this.clear();
 		this._size = Elements.calcPixelElementSize(this.element);
+		this._leds.destroy({children: true});
+		this._leds = this.getLeds();
 		this.drawComponent();
 	}
 
@@ -158,6 +196,53 @@ export class LedMatrixGraphics extends PIXI.Graphics implements LGraphics, Compo
 			}
 		}
 		this.geometry.invalidate();
+	}
+
+	private getLabelText(text: string): PIXI.BitmapText {
+		return new PIXI.BitmapText(text, {
+			font: {
+				name: 'Roboto',
+				size: environment.gridPixelWidth * 0.5
+			},
+			tint: this.themingService.getEditorColor('fontTint')
+		});
+	}
+
+	private getLeds(): PIXI.Container {
+		const matrixSize = this._size.x - environment.gridPixelWidth * 2;
+		let pos: PIXI.Point;
+		switch (this.element.rotation) {
+			case 0:
+				pos = new PIXI.Point(1.5 * environment.gridPixelWidth, environment.gridPixelWidth);
+				break;
+			case 1:
+				pos = new PIXI.Point(environment.gridPixelWidth, 1.5 * environment.gridPixelWidth);
+				break;
+			case 2:
+				pos = new PIXI.Point(0.5 * environment.gridPixelWidth, environment.gridPixelWidth);
+				break;
+			case 3:
+				pos = new PIXI.Point(environment.gridPixelWidth, 0.5 * environment.gridPixelWidth);
+				break;
+		}
+		const container = new PIXI.Container();
+		container.position = pos;
+
+		const ledAmount = this.element.options[0];
+		const ledSize = matrixSize / ledAmount;
+
+		for (let x = 0; x < ledAmount; x++) {
+			for (let y = 0; y < ledAmount; y++) {
+				const led = new PIXI.Graphics();
+				led.beginFill(0xFFFFFF);
+				led.tint = Math.random() < 0.5 ? this.themingService.getEditorColor('ledOff') : this.themingService.getEditorColor('ledOn');
+				led.drawRect(0, 0, ledSize, ledSize);
+				led.position.x = x * ledSize;
+				led.position.y = y * ledSize;
+				container.addChild(led);
+			}
+		}
+		return container;
 	}
 
 }
