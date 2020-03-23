@@ -20,12 +20,12 @@ export class ThemingService {
 	private _editorColor: EditorColors = {
 		light: {
 			background: 0xF5F5F5,
-			grid: 0x248945,
-			wire: 0x2ED573,
+			grid: 0x0,
+			wire: 0x27AE60,
 			selectRect: 0,
 			selectTint: 0xd1d1d1,
 			fontTint: 0,
-			ledOn: 0x2ED573,
+			ledOn: 0x27AE60,
 			ledOff: 0xC8F5C8
 		},
 		dark: {
