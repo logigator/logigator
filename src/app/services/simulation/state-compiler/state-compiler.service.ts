@@ -264,8 +264,8 @@ export class StateCompilerService {
 
 	private setIgnoreOutputsLinks(unitElems: UnitElementBidir, element: Element, linkId: number): number {
 		for (let i = 0; i < element.numOutputs; i++) {
-			const wireIndex = element.numInputs + i + 1;
-			unitElems.elementToUnit.get(element).outputs[i] = linkId++;
+			const wireIndex = element.numInputs + i;
+			unitElems.elementToUnit.get(element).outputs[i] = ++linkId;
 			MapHelper.pushInMapArray(
 				this._wireEndsOnLinksCache.get(this._currTypeId),
 				linkId,
