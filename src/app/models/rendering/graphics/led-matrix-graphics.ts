@@ -147,7 +147,8 @@ export class LedMatrixGraphics extends PIXI.Graphics implements LGraphics, Compo
 		this.geometry.invalidate();
 
 		for (const led of this._leds.children) {
-			(led as PIXI.Graphics).tint = this.simActiveState[wireIndex] ? this.themingService.getEditorColor('ledOn') : this.themingService.getEditorColor('ledOff');
+			(led as PIXI.Graphics).tint =
+				this.simActiveState[wireIndex] ? this.themingService.getEditorColor('ledOn') : this.themingService.getEditorColor('ledOff');
 			wireIndex++;
 		}
 	}

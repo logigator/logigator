@@ -46,7 +46,8 @@ export const ledMatrix: ElementType = {
 	onOptionsChanged(element?) {
 		const size = element ? element.options[0] : this.options[0];
 
-		let inputs, outputs: number;
+		let inputs: number;
+		let outputs: number;
 		switch (size) {
 			case 4:
 				inputs = 7;
