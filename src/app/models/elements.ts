@@ -9,6 +9,8 @@ import {ElementTypeId} from './element-types/element-type-ids';
 
 export abstract class Elements {
 
+	private static _elementProviderService: ElementProviderService;
+
 	public static correctPosOrder(startPos: PIXI.Point, endPos: PIXI.Point): void {
 		if (startPos.x > endPos.x) {
 			const startX = startPos.x;
@@ -234,6 +236,11 @@ export abstract class Elements {
 	}
 
 	public static elementType(typeId: number): ElementType {
-		return getStaticDI(ElementProviderService).getElementById(typeId);
+		if (this._elementProviderService) {
+			return this._elementProviderService.getElementById(typeId);
+		} else {
+			this._elementProviderService = getStaticDI(ElementProviderService);
+			return this._elementProviderService.getElementById(typeId);
+		}
 	}
 }
