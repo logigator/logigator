@@ -129,6 +129,7 @@ export class LedMatrixGraphics extends PIXI.Graphics implements LGraphics, Compo
 	}
 
 	applySimState(scale: number) {
+		if (this.shouldHaveActiveState.every((v, i) => v === this.simActiveState[i])) return;
 		this.simActiveState = this.shouldHaveActiveState;
 
 		let wireIndex = 0;
