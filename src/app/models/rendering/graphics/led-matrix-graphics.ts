@@ -141,6 +141,8 @@ export class LedMatrixGraphics extends PIXI.Graphics implements LGraphics, Compo
 					data.lineStyle.width = 1 / scale;
 				}
 				wireIndex++;
+			} else {
+				data.lineStyle.width = 1 / scale;
 			}
 		}
 		this._scale = scale;
