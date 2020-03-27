@@ -131,7 +131,6 @@ export class LedMatrixGraphics extends PIXI.Graphics implements LGraphics, Compo
 	applySimState(scale: number) {
 		if (this.shouldHaveActiveState.every((v, i) => v === this.simActiveState[i])) return;
 		this.simActiveState = this.shouldHaveActiveState;
-
 		let wireIndex = 0;
 		// @ts-ignore
 		for (const data of this.geometry.graphicsData) {
@@ -146,7 +145,6 @@ export class LedMatrixGraphics extends PIXI.Graphics implements LGraphics, Compo
 				data.lineStyle.width = 1 / scale;
 			}
 		}
-		this._scale = scale;
 		this.geometry.invalidate();
 
 		for (const led of this._leds.children) {
@@ -185,8 +183,20 @@ export class LedMatrixGraphics extends PIXI.Graphics implements LGraphics, Compo
 	}
 
 	updateScale(scale: number) {
-		if (this._scale === scale) return;
+		// if (this._scale === scale) return;
 		this._scale = scale;
+
+		const ledAmount = this.element.options[0];
+		const ledSize = (this._size.x - environment.gridPixelWidth * 2) / ledAmount;
+
+		for (let y = 0; y < ledAmount; y++) {
+			for (let x = 0; x < ledAmount; x++) {
+				const led = this._leds.children[ledAmount * x + y];
+				led.scale = new PIXI.Point(1 + 1 / ledSize * this._scale, 1 + 1 / ledSize * this._scale);
+				led.position.x = x * ledSize * (1 + 1 / ledSize * this._scale) + x / this._scale;
+				led.position.y = y * ledSize * (1 + 1 / ledSize * this._scale) + y / this._scale;
+			}
+		}
 
 		let wireIndex = 0;
 
@@ -239,14 +249,14 @@ export class LedMatrixGraphics extends PIXI.Graphics implements LGraphics, Compo
 		const ledAmount = this.element.options[0];
 		const ledSize = matrixSize / ledAmount;
 
-		for (let x = 0; x < ledAmount; x++) {
-			for (let y = 0; y < ledAmount; y++) {
+		for (let y = 0; y < ledAmount; y++) {
+			for (let x = 0; x < ledAmount; x++) {
 				const led = new PIXI.Graphics();
 				led.beginFill(0xFFFFFF);
 				led.tint = this.themingService.getEditorColor('ledOff');
 				led.drawRect(0, 0, ledSize, ledSize);
-				led.position.x = x * ledSize;
-				led.position.y = y * ledSize;
+				led.position.x = x * ledSize + x / this._scale;
+				led.position.y = y * ledSize + y / this._scale;
 				container.addChild(led);
 			}
 		}
