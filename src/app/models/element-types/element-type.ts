@@ -22,6 +22,7 @@ export interface ElementType {
 	isRotatable?: boolean;
 	rotation: number;
 
+	ignoreOutputs?: boolean;
 	numOutputs: number;
 
 	numInputs: number;

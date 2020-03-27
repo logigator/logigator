@@ -19,6 +19,7 @@ export const ledMatrix: ElementType = {
 	isRotatable: true,
 	rotation: 0,
 
+	ignoreOutputs: true,
 	numOutputs: 16,
 
 	numInputs: 7,
