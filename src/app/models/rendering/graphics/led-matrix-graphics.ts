@@ -129,7 +129,6 @@ export class LedMatrixGraphics extends PIXI.Graphics implements LGraphics, Compo
 	}
 
 	applySimState(scale: number) {
-		if (this.shouldHaveActiveState.every((v, i) => v === this.simActiveState[i])) return;
 		this.simActiveState = this.shouldHaveActiveState;
 
 		let wireIndex = 0;
@@ -146,6 +145,11 @@ export class LedMatrixGraphics extends PIXI.Graphics implements LGraphics, Compo
 		}
 		this._scale = scale;
 		this.geometry.invalidate();
+
+		for (const led of this._leds.children) {
+			(led as PIXI.Graphics).tint = this.simActiveState[wireIndex] ? this.themingService.getEditorColor('ledOn') : this.themingService.getEditorColor('ledOff');
+			wireIndex++;
+		}
 	}
 
 	setSimulationState(state: boolean[]) {
@@ -235,7 +239,7 @@ export class LedMatrixGraphics extends PIXI.Graphics implements LGraphics, Compo
 			for (let y = 0; y < ledAmount; y++) {
 				const led = new PIXI.Graphics();
 				led.beginFill(0xFFFFFF);
-				led.tint = Math.random() < 0.5 ? this.themingService.getEditorColor('ledOff') : this.themingService.getEditorColor('ledOn');
+				led.tint = this.themingService.getEditorColor('ledOff');
 				led.drawRect(0, 0, ledSize, ledSize);
 				led.position.x = x * ledSize;
 				led.position.y = y * ledSize;
