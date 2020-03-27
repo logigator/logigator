@@ -252,6 +252,11 @@ export class StateCompilerService {
 				linkId = this.setLinks(state, wireEndPos, linksOnWireEnds,
 					linkId, unitElems, compiledComp) + 1;
 			}
+			if (this.elementProvider.getElementById(element.typeId).ignoreOutputs) {
+				for (let i = 0; i < element.numOutputs; i++) {
+					unitElems.elementToUnit.get(element).outputs[i] = linkId++;
+				}
+			}
 			if (this.elementProvider.isPlugElement(element.typeId)) {
 				compiledComp.plugsByIndex.set(element.plugIndex, unitIndex);
 			}
