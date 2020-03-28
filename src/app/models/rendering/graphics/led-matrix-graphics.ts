@@ -183,20 +183,10 @@ export class LedMatrixGraphics extends PIXI.Graphics implements LGraphics, Compo
 	}
 
 	updateScale(scale: number) {
-		// if (this._scale === scale) return;
+		if (this._scale === scale) return;
 		this._scale = scale;
 
-		const ledAmount = this.element.options[0];
-		const ledSize = (this._size.x - environment.gridPixelWidth * 2) / ledAmount;
-
-		for (let y = 0; y < ledAmount; y++) {
-			for (let x = 0; x < ledAmount; x++) {
-				const led = this._leds.children[ledAmount * x + y];
-				led.scale = new PIXI.Point(1 + 1 / ledSize * this._scale, 1 + 1 / ledSize * this._scale);
-				led.position.x = x * ledSize * (1 + 1 / ledSize * this._scale) + x / this._scale;
-				led.position.y = y * ledSize * (1 + 1 / ledSize * this._scale) + y / this._scale;
-			}
-		}
+		this.positionLeds(this._leds);
 
 		let wireIndex = 0;
 
@@ -227,7 +217,6 @@ export class LedMatrixGraphics extends PIXI.Graphics implements LGraphics, Compo
 	}
 
 	private getLeds(): PIXI.Container {
-		const matrixSize = this._size.x - environment.gridPixelWidth * 2;
 		let pos: PIXI.Point;
 		switch (this.element.rotation) {
 			case 0:
@@ -247,20 +236,32 @@ export class LedMatrixGraphics extends PIXI.Graphics implements LGraphics, Compo
 		container.position = pos;
 
 		const ledAmount = this.element.options[0];
-		const ledSize = matrixSize / ledAmount;
 
 		for (let y = 0; y < ledAmount; y++) {
 			for (let x = 0; x < ledAmount; x++) {
 				const led = new PIXI.Graphics();
 				led.beginFill(0xFFFFFF);
+				led.drawRect(0, 0, 1, 1);
 				led.tint = this.themingService.getEditorColor('ledOff');
-				led.drawRect(0, 0, ledSize, ledSize);
-				led.position.x = x * ledSize + x / this._scale;
-				led.position.y = y * ledSize + y / this._scale;
 				container.addChild(led);
 			}
 		}
+		this.positionLeds(container);
 		return container;
+	}
+
+	private positionLeds(ledsContainer: PIXI.Container) {
+		const ledAmount = this.element.options[0];
+		const ledSize = (this._size.x - environment.gridPixelWidth * 2) / ledAmount - 1 / this._scale;
+
+		for (let y = 0; y < ledAmount; y++) {
+			for (let x = 0; x < ledAmount; x++) {
+				const led = ledsContainer.children[ledAmount * x + y];
+				led.scale = new PIXI.Point(ledSize, ledSize);
+				led.position.x = x * ledSize + x / this._scale;
+				led.position.y = y * ledSize + y / this._scale;
+			}
+		}
 	}
 
 }
