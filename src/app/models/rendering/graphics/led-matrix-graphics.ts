@@ -237,8 +237,8 @@ export class LedMatrixGraphics extends PIXI.Graphics implements LGraphics, Compo
 
 		const ledAmount = this.element.options[0];
 
-		for (let y = 0; y < ledAmount; y++) {
-			for (let x = 0; x < ledAmount; x++) {
+		for (let x = 0; x < ledAmount; x++) {
+			for (let y = 0; y < ledAmount; y++) {
 				const led = new PIXI.Graphics();
 				led.beginFill(0xFFFFFF);
 				led.drawRect(0, 0, 1, 1);
@@ -254,9 +254,9 @@ export class LedMatrixGraphics extends PIXI.Graphics implements LGraphics, Compo
 		const ledAmount = this.element.options[0];
 		const ledSize = (this._size.x - environment.gridPixelWidth * 2) / ledAmount - 1 / this._scale;
 
-		for (let y = 0; y < ledAmount; y++) {
-			for (let x = 0; x < ledAmount; x++) {
-				const led = ledsContainer.children[ledAmount * x + y];
+		for (let x = 0; x < ledAmount; x++) {
+			for (let y = 0; y < ledAmount; y++) {
+				const led = ledsContainer.children[ledAmount * y + x];
 				led.scale = new PIXI.Point(ledSize, ledSize);
 				led.position.x = x * ledSize + x / this._scale;
 				led.position.y = y * ledSize + y / this._scale;
