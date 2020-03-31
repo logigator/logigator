@@ -296,6 +296,11 @@
 			"TEXT": {
 				"NAME": "Text",
 				"DESCRIPTION": "Text which you can place on the canvas."
+			},
+			"TUNNEL": {
+				"NAME": "Tunnel",
+				"DESCRIPTION": "Works like a wire, but wireless. Every tunnel is connected to all others with the same id",
+				"ID": "Tunnel-Id"
 			}
 		},
 		"ADVANCED": {

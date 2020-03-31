@@ -296,6 +296,11 @@
 			"TEXT": {
 				"NAME": "Text",
 				"DESCRIPTION": "Text, der auf der Arbeitsfläche platziert werden kann."
+			},
+			"TUNNEL": {
+				"NAME": "Tunnel",
+				"DESCRIPTION": "Funktioniert wie eine Leitung, aber ohne Leitung. Jeder tunnel ist mit allen anderen Tunneln verbunden, die die selbe Id haben",
+				"ID": "Tunnel-Id"
 			}
 		},
 		"ADVANCED": {
