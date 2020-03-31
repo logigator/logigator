@@ -1,5 +1,4 @@
 import {ElementType} from '../element-type';
-import {environment} from '../../../../environments/environment';
 import {ElementTypeId} from '../element-type-ids';
 
 export const tunnel: ElementType = {
@@ -26,7 +25,7 @@ export const tunnel: ElementType = {
 	minInputs: 1,
 	maxInputs: 1,
 
-	width: () => 1,
+	width: () => 2,
 	height: () => 1,
 
 	options: [0],
@@ -38,7 +37,8 @@ export const tunnel: ElementType = {
 		}
 	],
 
-	calcLabels: element => {
-		return ['' + element.options[0]];
+	calcLabels(element?) {
+		const label = element ? element.options[0] : this.options[0];
+		return [label + ''];
 	}
 };
