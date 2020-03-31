@@ -62,7 +62,7 @@ Die Ansteuerung funktioniert folgendermaßen:
  - **Dateneingänge**<br>
    Die Matrix hat zwischen 4 und 8 Dateneingänge(D0-D7). D0 ist dabei immer die erste LED von links und und D7 die achte LED. Sind bei einer 16x16 Matrix, die linken LEDs addresiert, setzt man mit D0 die neunte LED und mit D7 die letzte LED der Reihe.
 
- - **Takteingang**
+ - **Takteingang**<br>
    Wenn dieser Eingang HIGH ist werden die Daten auf die Matrix geschrieben.
 
 </div>
