@@ -299,7 +299,7 @@
 			},
 			"TUNNEL": {
 				"NAME": "Tunnel",
-				"DESCRIPTION": "Funktioniert wie eine Leitung, aber ohne Leitung. Jeder tunnel ist mit allen anderen Tunneln verbunden, die die selbe Id haben",
+				"DESCRIPTION": "Funktioniert wie eine Leitung, aber ohne Leitung. Jeder Tunnel ist mit allen anderen Tunneln verbunden, die die selbe Id haben",
 				"ID": "Tunnel-Id"
 			}
 		},

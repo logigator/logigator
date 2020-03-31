@@ -70,3 +70,6 @@ Output equals Input, but delayed for one simulation tick.
 
 Periodically sends a one tick long pulse. The delay between pulses can be configured.<br>
 If the STP input is high, no clock pulses are produced.
+
+## Tunnel
+Works like a wire, but wireless. Every tunnel is connected to all others with the same id.

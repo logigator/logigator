@@ -74,3 +74,6 @@ Das Ausgangssignal ist gleich dem Eingangssignal, jedoch um einen Simulationstic
 
 Dieser gibt regelmäßige, ein Tick lange, Signale aus. Der Abstand zwischen den Signalen kann konfiguriert werden.<br>
 Wenn der STP Eingang HIGH ist, werden keine Ausgangssignale generiert. 
+
+## Tunnel
+Funktioniert wie eine Leitung, aber ohne Leitung. Jeder Tunnel ist mit allen anderen Tunneln verbunden, die die selbe Id haben.
