@@ -253,7 +253,7 @@ export class StateCompilerService {
 					linkId, unitElems, compiledComp) + 1;
 			}
 			if (this.elementProvider.getElementById(element.typeId).ignoreOutputs) {
-				linkId = this.setIgnoreOutputsLinks(unitElems, element, linkId);
+				linkId = this.setIgnoreOutputsLinks(unitElems, element, linkId) + 1;
 			}
 			if (this.elementProvider.isPlugElement(element.typeId)) {
 				compiledComp.plugsByIndex.set(element.plugIndex, unitIndex);

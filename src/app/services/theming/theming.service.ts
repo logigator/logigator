@@ -21,12 +21,12 @@ export class ThemingService {
 		light: {
 			background: 0xF5F5F5,
 			grid: 0x0,
-			wire: 0x27AE60,
+			wire: 0x0,
 			selectRect: 0,
 			selectTint: 0xd1d1d1,
 			fontTint: 0,
 			ledOn: 0x27AE60,
-			ledOff: 0xC8F5C8
+			ledOff: 0x0
 		},
 		dark: {
 			background: 0x222526,
@@ -36,7 +36,7 @@ export class ThemingService {
 			selectTint: 0x8a8a8a,
 			fontTint: 0xFFFFFF,
 			ledOn: 0x27AE60,
-			ledOff: 0x222C26
+			ledOff: 0x18592d
 		}
 	};
 
