@@ -6,4 +6,5 @@ export interface CompiledComp {
 	connectedPlugs: number[][];
 	plugsByIndex: Map<number, number>; // outerUnit -> inner
 	includesUdcs: Set<number>;
+	tunnels: Map<number, Element[]>;
 }

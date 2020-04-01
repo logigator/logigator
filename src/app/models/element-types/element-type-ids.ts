@@ -7,6 +7,7 @@ export const enum ElementTypeId {
 	DELAY = 5,
 	CLOCK = 6,
 	TEXT = 7,
+	TUNNEL = 8,
 
 	HALF_ADDER = 10,
 	FULL_ADDER = 11,

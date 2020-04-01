@@ -144,6 +144,7 @@ export class SegmentDisplayGraphics extends PIXI.Graphics implements LGraphics, 
 				name: 'Segment7',
 				size: environment.gridPixelWidth * 2
 			},
+			tint: this.themingService.getEditorColor('fontTint'),
 			align: 'center'
 		});
 		seg.anchor = new PIXI.Point(0.5, 0.5);
