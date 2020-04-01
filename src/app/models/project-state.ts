@@ -165,8 +165,8 @@ export class ProjectState {
 		});
 	}
 
-	public elementsInChunks(startPos: PIXI.Point, endPos: PIXI.Point): Element[] {
-		const chunks = this.chunksFromCoords(CollisionFunctions.inRectChunks(startPos, endPos));
+	public elementsInChunks(startPos: PIXI.Point, endPos: PIXI.Point, wireEnds?: PIXI.Point[]): Element[] {
+		const chunks = this.chunksFromCoords(CollisionFunctions.inRectChunks(startPos, endPos, wireEnds));
 		if (chunks.length === 1) {
 			return chunks[0].elements;
 		}
@@ -185,10 +185,10 @@ export class ProjectState {
 
 
 
-	public isFreeSpace(startPos: PIXI.Point, endPos: PIXI.Point, isWire?: boolean, wireEnds?: PIXI.Point[], except?: Element[]): boolean {
+	public isFreeSpace(startPos: PIXI.Point, endPos: PIXI.Point, isWire?: boolean, wireEnds?: PIXI.Point[], except?: Set<Element>): boolean {
 		const others = this.elementsInChunks(startPos, endPos);
 		for (const elem of others) {
-			if (except && except.find(e => e.id === elem.id) || isWire && elem.typeId === ElementTypeId.WIRE)
+			if (except && except.has(elem) || isWire && elem.typeId === ElementTypeId.WIRE)
 				continue;
 			if (isWire && CollisionFunctions.isRectInRectLightBorder(elem.pos, elem.endPos, startPos, endPos))
 				return false;
@@ -214,7 +214,7 @@ export class ProjectState {
 		return !(startPos.x < 0 || startPos.y < 0);
 	}
 
-	public allSpacesFree(elements: Element[], dif: PIXI.Point, except?: Element[]): boolean {
+	public allSpacesFree(elements: Element[], dif: PIXI.Point, except?: Set<Element>): boolean {
 		for (const elem of elements) {
 			const newStartPos = new PIXI.Point(elem.pos.x + dif.x, elem.pos.y + dif.y);
 			const newEndPos = new PIXI.Point(elem.endPos.x + dif.x, elem.endPos.y + dif.y);
@@ -230,7 +230,7 @@ export class ProjectState {
 		for (const elem of elements) {
 			const newStartPos = new PIXI.Point(elem.pos.x + dif.x, elem.pos.y + dif.y);
 			const newEndPos = new PIXI.Point(elem.endPos.x + dif.x, elem.endPos.y + dif.y);
-			const others = this.elementsInChunks(newStartPos, newEndPos);
+			const others = this.elementsInChunks(newStartPos, newEndPos, Elements.wireEnds(elem, undefined, undefined, dif));
 			if (others.length > 0)
 				out.push(elem);
 		}
@@ -365,7 +365,7 @@ export class ProjectState {
 		const out: ChangeType[] = [];
 		while (elements.length > 0) {
 			const elem = elements.shift();
-			const others = this.elementsInChunks(elem.pos, elem.endPos);
+			const others = this.elementsInChunks(elem.pos, elem.endPos, Elements.wireEnds(elem));
 			for (const other of others) {
 				if (elem.id === other.id)
 					continue;
