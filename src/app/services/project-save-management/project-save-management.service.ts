@@ -279,7 +279,7 @@ export class ProjectSaveManagementService {
 			mainProject: {
 				id: 500,
 				name: name || project.name,
-				data: this.removeEndPosFromElements(this.applyMappingsLoad(project.allElements, mapping))
+				data: this.removeVolatilePropsFromElements(this.applyMappingsLoad(project.allElements, mapping))
 			},
 			components: deps.map(c => {
 				const type = {...this.elemProvService.getElementById(c.id)};
@@ -288,7 +288,7 @@ export class ProjectSaveManagementService {
 				}
 				return {
 					typeId: mapping.find(m => m.model === c.id).database,
-					data: this.removeEndPosFromElements(this.applyMappingsLoad(c.allElements, mapping)),
+					data: this.removeVolatilePropsFromElements(this.applyMappingsLoad(c.allElements, mapping)),
 					type
 				} as ComponentLocalFile;
 			}) as ComponentLocalFile[]
@@ -479,7 +479,7 @@ export class ProjectSaveManagementService {
 
 		const body: SaveProjectRequest = {
 			data: {
-				elements: this.removeEndPosFromElements(project.allElements),
+				elements: this.removeVolatilePropsFromElements(project.allElements),
 				mappings
 			}
 		};
@@ -627,12 +627,13 @@ export class ProjectSaveManagementService {
 		});
 	}
 
-	private removeEndPosFromElements(elements: Element[]): Element[] {
+	private removeVolatilePropsFromElements(elements: Element[]): Element[] {
 		return elements.map(e => {
 			if (e.typeId === ElementTypeId.WIRE)
 				return e;
 			const out = Elements.clone(e);
 			delete out.endPos;
+			delete out.wireEnds;
 			return out;
 		});
 	}
