@@ -290,7 +290,6 @@ export class ProjectState {
 		return outElem;
 	}
 
-	// when except param is undefined it will not check for collision
 	public moveElement(element: Element, dif: PIXI.Point): boolean {
 		this.removeFromChunks(element);
 		Elements.move(element, dif);

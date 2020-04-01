@@ -27,6 +27,7 @@ export abstract class Elements {
 		out.pos = element.pos.clone();
 		if (element.endPos)
 			out.endPos = element.endPos.clone();
+		delete out.wireEnds;
 		out.options = out.options ? [...out.options] : undefined;
 		return out;
 	}
@@ -52,6 +53,7 @@ export abstract class Elements {
 		element.pos.y += dif.y;
 		element.endPos.x += dif.x;
 		element.endPos.y += dif.y;
+		delete element.wireEnds;
 	}
 
 	public static genNewElement(typeId: number, _pos: PIXI.Point, _endPos?: PIXI.Point): Element {
@@ -83,6 +85,7 @@ export abstract class Elements {
 
 	public static calcEndPos(element: Element, numInputs?: number, numOutputs?: number, rotation?: number): PIXI.Point {
 		const elemSize = this.calcElemSize(element, numInputs, numOutputs, rotation);
+		delete element.wireEnds;
 		return new PIXI.Point(element.pos.x + elemSize.x, element.pos.y + elemSize.y);
 	}
 
@@ -133,6 +136,8 @@ export abstract class Elements {
 	}
 
 	public static wireEnds(element: Element, rotation?: number, numInputs?: number, dif?: PIXI.Point): PIXI.Point[] {
+		if (element.wireEnds)
+			return element.wireEnds.map(p => p.clone());
 		const pos = dif ? new PIXI.Point(element.pos.x + dif.x, element.pos.y + dif.y) : element.pos;
 		const endPos = dif ? new PIXI.Point(element.endPos.x + dif.x, element.endPos.y + dif.y) : element.endPos;
 		if (element.typeId === ElementTypeId.WIRE)
@@ -168,6 +173,7 @@ export abstract class Elements {
 					out[numInputs + i] = new PIXI.Point(pos.x + i, pos.y - 1);
 				break;
 		}
+		element.wireEnds = out.map(p => p.clone());
 		return out;
 	}
 
