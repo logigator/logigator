@@ -6,6 +6,7 @@ import {SimulationUnit} from './simulation-unit';
 import {ElementTypeId} from '../element-types/element-type-ids';
 import {getStaticDI} from '../get-di';
 import {ElementProviderService} from '../../services/element-provider/element-provider.service';
+import {MapHelper} from '../../services/simulation/state-compiler/map-helper';
 
 export abstract class SimulationUnits {
 
@@ -110,5 +111,13 @@ export abstract class SimulationUnits {
 				}
 			}
 		}
+	}
+
+	public static mapTunnels(tunnels: Element[]): Map<number, Element[]> {
+		const out = new Map<number, Element[]>();
+		for (const tunnel of tunnels) {
+			MapHelper.pushInMapArray(out, tunnel.options[0], tunnel);
+		}
+		return out;
 	}
 }

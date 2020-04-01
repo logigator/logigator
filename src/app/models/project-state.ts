@@ -25,6 +25,8 @@ export class ProjectState {
 	private _outputPlugs: Element[];
 	private _inputPlugs: Element[];
 
+	private _tunnels: Element[];
+
 	public constructor(elements?: Element[], highestId?: number) {
 		if (elements) {
 			this._model = new Map<number, Element>(elements.map(e => [e.id, e]));
@@ -35,6 +37,7 @@ export class ProjectState {
 		this._chunks = [];
 		this._outputPlugs = [];
 		this._inputPlugs = [];
+		this._tunnels = [];
 		this.calcAllEndPos();
 		this.loadAllIntoChunks();
 		this.inputOutputCount();
@@ -248,6 +251,8 @@ export class ProjectState {
 		} else if (elem.typeId === ElementTypeId.OUTPUT) {
 			elem.plugIndex = this.numInputs + this.numOutputs++;
 			this._outputPlugs.push(elem);
+		} else if (elem.typeId === ElementTypeId.TUNNEL) {
+			this._tunnels.push(elem);
 		}
 		this.loadIntoChunks(elem);
 		return elem;
@@ -278,6 +283,8 @@ export class ProjectState {
 					plug.plugIndex--;
 				}
 			}
+		} else if (outElem.typeId === ElementTypeId.TUNNEL) {
+			this._tunnels = this._tunnels.filter(e => e.id !== elementId);
 		}
 		this.removeFromChunks(outElem);
 		return outElem;
@@ -687,5 +694,9 @@ export class ProjectState {
 
 	get model(): Map<number, Element> {
 		return this._model;
+	}
+
+	get tunnels(): Element[] {
+		return this._tunnels;
 	}
 }
