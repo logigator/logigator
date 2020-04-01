@@ -24,6 +24,7 @@ import {jkFF} from '../../models/element-types/advanced/jk-ff';
 import {srFF} from '../../models/element-types/advanced/sr-ff';
 import {led} from '../../models/element-types/io/led';
 import {segmentDisplay} from '../../models/element-types/io/segment-display';
+import {ledMatrix} from '../../models/element-types/io/led-matrix';
 import {tunnel} from '../../models/element-types/basic/tunnel';
 
 @Injectable({
@@ -62,7 +63,8 @@ export class ElementProviderService {
 		[button.id, button],
 		[lever.id, lever],
 		[led.id, led],
-		[segmentDisplay.id, segmentDisplay]
+		[segmentDisplay.id, segmentDisplay],
+		[ledMatrix.id, ledMatrix]
 	]);
 
 	private _userDefinedElements: Map<number, ElementType> = new Map<number, ElementType>();

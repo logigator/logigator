@@ -253,11 +253,27 @@ export class StateCompilerService {
 				linkId = this.setLinks(state, wireEndPos, linksOnWireEnds,
 					linkId, unitElems, compiledComp) + 1;
 			}
+			if (this.elementProvider.getElementById(element.typeId).ignoreOutputs) {
+				linkId = this.setIgnoreOutputsLinks(unitElems, element, linkId) + 1;
+			}
 			if (this.elementProvider.isPlugElement(element.typeId)) {
 				compiledComp.plugsByIndex.set(element.plugIndex, unitIndex);
 			}
 			unitIndex++;
 		}
+	}
+
+	private setIgnoreOutputsLinks(unitElems: UnitElementBidir, element: Element, linkId: number): number {
+		for (let i = 0; i < element.numOutputs; i++) {
+			const wireIndex = element.numInputs + i;
+			unitElems.elementToUnit.get(element).outputs[i] = ++linkId;
+			MapHelper.pushInMapArray(
+				this._wireEndsOnLinksCache.get(this._currTypeId),
+				linkId,
+				{component: element, wireIndex }
+				);
+		}
+		return linkId;
 	}
 
 	private setLinks(
