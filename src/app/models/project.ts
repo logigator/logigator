@@ -298,7 +298,7 @@ export class Project {
 			this.cancelLastStep();
 			return true;
 		}
-		if (!this._currState.allSpacesFree(elements, dif, elements))
+		if (!this._currState.allSpacesFree(elements, dif, new Set<Element>(elements)))
 			return false;
 		const changed = this._currState.withoutToEmptyChunk(this._currState.withWiresOnEdges(elements), dif);
 
@@ -330,7 +330,8 @@ export class Project {
 		}];
 		const changed = this._currState.withWiresOnEdges([element]);
 		const newEndPos = Elements.calcEndPos(element, undefined, undefined, rotation);
-		if (!this._currState.isFreeSpace(element.pos, newEndPos, false, Elements.wireEnds(element, rotation), [element]))
+		if (!this._currState.isFreeSpace(element.pos, newEndPos, false,
+			Elements.wireEnds(element, rotation), new Set<Element>([element])))
 			return false;
 
 		// #!debug
@@ -353,7 +354,8 @@ export class Project {
 		}];
 		const changed = this._currState.withWiresOnEdges([element]);
 		const newEndPos = Elements.calcEndPos(element, numInputs);
-		if (!this._currState.isFreeSpace(element.pos, newEndPos, false, Elements.wireEnds(element, undefined, numInputs), [element]))
+		if (!this._currState.isFreeSpace(element.pos, newEndPos, false,
+			Elements.wireEnds(element, undefined, numInputs), new Set<Element>([element])))
 			return false;
 
 		// #!debug
