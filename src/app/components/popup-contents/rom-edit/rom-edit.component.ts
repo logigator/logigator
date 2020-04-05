@@ -56,7 +56,7 @@ export class RomEditComponent extends PopupContentComp<Element> implements OnIni
 		}, '')
 		.trimRight();
 
-		if (newLength * 4 <= this.inputFromOpener.options[0] * (2 ** this.inputFromOpener.options[1])) {
+		if (newLength <= Math.ceil((this.inputFromOpener.options[0] * (2 ** this.inputFromOpener.options[1])) / 4)) {
 			this.hexInput.nativeElement.value = newValue;
 			this.oldValue = newValue;
 		} else {
@@ -92,10 +92,10 @@ export class RomEditComponent extends PopupContentComp<Element> implements OnIni
 
 	public save() {
 		const hex = this.hexInput.nativeElement.value.replace(/ /g, '');
-		let base64 = '';
-		for (let i = 0; i < hex.length; i++) {
-			base64 += !(i - 1 & 1) ? String.fromCharCode(parseInt(hex.substring(i - 1, i + 1), 16)) : '';
-		}
+		console.log(hex);
+		const base64 = hex.match(/\w{2}/g).map((a) =>  {
+			return String.fromCharCode(parseInt(a, 16));
+		}).join('')
 		this.requestClose.emit(btoa(base64));
 	}
 
