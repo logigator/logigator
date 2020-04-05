@@ -92,7 +92,6 @@ export class RomEditComponent extends PopupContentComp<Element> implements OnIni
 
 	public save() {
 		const hex = this.hexInput.nativeElement.value.replace(/ /g, '');
-		console.log(hex);
 		const base64 = hex.match(/\w{2}/g).map((a) =>  {
 			return String.fromCharCode(parseInt(a, 16));
 		}).join('')
