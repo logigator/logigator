@@ -296,6 +296,11 @@
 			"TEXT": {
 				"NAME": "Text",
 				"DESCRIPTION": "Text which you can place on the canvas."
+			},
+			"TUNNEL": {
+				"NAME": "Tunnel",
+				"DESCRIPTION": "Works like a wire, but wireless. Every tunnel is connected to all others with the same id",
+				"ID": "Tunnel-Id"
 			}
 		},
 		"ADVANCED": {
@@ -342,6 +347,11 @@
 			"SEGMENT_DISPLAY": {
 				"NAME": "Segment Display",
 				"DESCRIPTION": "Displays a binary input as decimal number"
+			},
+			"LED_MATRIX": {
+				"NAME": "LED Matrix",
+				"DESCRIPTION": "Display an image",
+				"SIZE": "Width/Height"
 			}
 		},
 		"PLUG": {

@@ -22,6 +22,7 @@ export interface ElementType {
 	isRotatable?: boolean;
 	rotation: number;
 
+	ignoreOutputs?: boolean;
 	numOutputs: number;
 
 	numInputs: number;
@@ -37,8 +38,9 @@ export interface ElementType {
 	options?: number[];
 	optionsConfig?: {
 		name: string,
-		min: number,
-		max: number
+		min?: number,
+		max?: number,
+		allowedValues?: number[]
 	}[];
 	onOptionsChanged?: (element?: Element) => void;
 

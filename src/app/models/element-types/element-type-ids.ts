@@ -7,6 +7,7 @@ export const enum ElementTypeId {
 	DELAY = 5,
 	CLOCK = 6,
 	TEXT = 7,
+	TUNNEL = 8,
 
 	HALF_ADDER = 10,
 	FULL_ADDER = 11,
@@ -22,5 +23,6 @@ export const enum ElementTypeId {
 	BUTTON = 200,
 	LEVER = 201,
 	LED = 202,
-	SEGMENT_DISPLAY = 203
+	SEGMENT_DISPLAY = 203,
+	LED_MATRIX = 204
 }

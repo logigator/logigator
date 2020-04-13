@@ -16,6 +16,7 @@ import {ComponentScalable, isUpdatable, LGraphics} from './graphics/l-graphics';
 import {LGraphicsResolver} from './graphics/l-graphics-resolver';
 import {ElementTypeId} from '../element-types/element-type-ids';
 import {ConnectionPoint} from './graphics/connection-point';
+import {IterableDiffers} from '@angular/core';
 
 export abstract class View extends PIXI.Container {
 
@@ -30,7 +31,7 @@ export abstract class View extends PIXI.Container {
 	public connectionPoints: Map<string, ConnectionPoint> = new Map();
 	public allElements: Map<number, LGraphics> = new Map();
 
-	protected _chunksToRender: {x: number, y: number}[] = [];
+	private chunksToRenderDiffer = getStaticDI(IterableDiffers).find([]).create<{ x: number, y: number }>(this.chunksToRenderTrackBy);
 
 	protected _destroySubject =  new Subject<void>();
 
@@ -82,19 +83,16 @@ export abstract class View extends PIXI.Container {
 			Grid.getGridPosForPixelPos(currentlyOnScreen.start),
 			Grid.getGridPosForPixelPos(currentlyOnScreen.end)
 		);
-		for (const chunkToRender of chunksToRender) {
-			if (this.createChunkIfNeeded(chunkToRender.x, chunkToRender.y)) continue;
+		const chunksToRenderChanges = this.chunksToRenderDiffer.diff(chunksToRender);
+		chunksToRenderChanges.forEachItem(record => {
+			const chunkToRender = record.item;
+			if (this.createChunkIfNeeded(chunkToRender.x, chunkToRender.y)) return;
 			const chunk = this._chunks[chunkToRender.x][chunkToRender.y];
 			chunk.container.visible = true;
 			chunk.container.renderable = true;
 			chunk.gridGraphics.visible = this.themingService.showGrid;
 			chunk.gridGraphics.renderable = this.themingService.showGrid;
-			if (this.isSimulationView()) {
-				for (const g of chunk.container.children) {
-					(g as LGraphics).applySimState(this.zoomPan.currentScale);
-				}
-			}
-			if (chunk.scaledFor === this.zoomPan.currentScale) continue;
+			if (chunk.scaledFor === this.zoomPan.currentScale) return;
 			chunk.scaledFor = this.zoomPan.currentScale;
 			if (this.themingService.showGrid) {
 				chunk.gridGraphics.destroy();
@@ -106,16 +104,25 @@ export abstract class View extends PIXI.Container {
 			for (const chunkElem of chunkElems) {
 				(chunkElem as unknown as ComponentScalable).updateScale(this.zoomPan.currentScale);
 			}
+		});
+		if (this.isSimulationView()) {
+			chunksToRenderChanges.forEachAddedItem(record => {
+				for (const g of this._chunks[record.item.x][record.item.y].container.children) {
+					(g as LGraphics).applySimState(this.zoomPan.currentScale);
+				}
+			});
 		}
-		for (const oldChunk of this._chunksToRender) {
-			if (!chunksToRender.find(toRender => toRender.x === oldChunk.x && toRender.y === oldChunk.y)) {
-				this._chunks[oldChunk.x][oldChunk.y].container.visible = false;
-				this._chunks[oldChunk.x][oldChunk.y].container.renderable = false;
-				this._chunks[oldChunk.x][oldChunk.y].gridGraphics.visible = false;
-				this._chunks[oldChunk.x][oldChunk.y].gridGraphics.renderable = false;
-			}
-		}
-		this._chunksToRender = chunksToRender;
+		chunksToRenderChanges.forEachRemovedItem(record => {
+			const removedChunk = record.item;
+			this._chunks[removedChunk.x][removedChunk.y].container.visible = false;
+			this._chunks[removedChunk.x][removedChunk.y].container.renderable = false;
+			this._chunks[removedChunk.x][removedChunk.y].gridGraphics.visible = false;
+			this._chunks[removedChunk.x][removedChunk.y].gridGraphics.renderable = false;
+		})
+	}
+
+	private chunksToRenderTrackBy(index: number, item: { x: number, y: number }) {
+		return `${item.x}:${item.y}`
 	}
 
 	private onGridShowChange(show: boolean) {

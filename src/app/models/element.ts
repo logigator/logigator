@@ -10,6 +10,8 @@ export interface Element {
 	pos: PIXI.Point;
 	endPos?: PIXI.Point;
 
+	wireEnds?: PIXI.Point[];
+
 	rotation?: number;
 
 	plugIndex?: number;

@@ -34,10 +34,15 @@
 		<div class="property" formArrayName="options" *ngFor="let item of optionsControls; let i = index">
 			<p>{{elementType.optionsConfig[i].name | translate}}:</p>
 			<input type="number"
+			       *ngIf="!elementType.optionsConfig[i].allowedValues"
 			       [formControl]="optionsControls[i]"
 			       [min]="elementType.optionsConfig[i].min"
 			       [max]="elementType.optionsConfig[i].max"
-			       (blur)="resetOptionsValue(i)">
+			       (blur)="resetOptionsValue(i)"
+			>
+			<select *ngIf="elementType.optionsConfig[i].allowedValues" [formControl]="optionsControls[i]">
+				<option *ngFor="let value of elementType.optionsConfig[i].allowedValues" [value]="value">{{value}}</option>
+			</select>
 		</div>
 
 		<div class="description" *ngIf="elementType?.description">

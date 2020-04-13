@@ -296,6 +296,11 @@
 			"TEXT": {
 				"NAME": "Text",
 				"DESCRIPTION": "Text, der auf der Arbeitsfläche platziert werden kann."
+			},
+			"TUNNEL": {
+				"NAME": "Tunnel",
+				"DESCRIPTION": "Funktioniert wie eine Leitung, aber ohne Leitung. Jeder Tunnel ist mit allen anderen Tunneln verbunden, die die selbe Id haben",
+				"ID": "Tunnel-Id"
 			}
 		},
 		"ADVANCED": {
@@ -342,6 +347,11 @@
 			"SEGMENT_DISPLAY": {
 				"NAME": "Segment Display",
 				"DESCRIPTION": "Stellt die binären Eingänge als Dezimalzahlen dar."
+			},
+			"LED_MATRIX": {
+				"NAME": "LED Matrix",
+				"DESCRIPTION": "Zeige ein Bild an",
+				"SIZE": "Höhe/Breite"
 			}
 		},
 		"PLUG": {

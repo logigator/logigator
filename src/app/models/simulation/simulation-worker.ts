@@ -63,6 +63,7 @@ export class SimulationWorker {
 	public getLinks(): Int8Array {
 		if (this._linkPointer === undefined)
 			this._linkPointer = this._simulationModule.getLinks();
+
 		return this._simulationModule.HEAP8.slice(this._linkPointer, this._linkPointer + this._links);
 	}
 
