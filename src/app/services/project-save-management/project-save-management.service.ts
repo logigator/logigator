@@ -400,14 +400,10 @@ export class ProjectSaveManagementService {
 	}
 
 	public async saveProjectsAndComponents(projects: Project[]) {
-		const mainProject = projects.find(p => p.type === 'project');
 		const savePromises = [];
-		if (mainProject) {
-			savePromises.push(this.saveProject(mainProject));
-		}
-		const comps = projects.filter(p => p.type === 'comp');
-		for (const comp of comps) {
-			savePromises.push(this.saveProject(comp));
+		for (const project of projects) {
+			if (!project.saveDirty) continue;
+			savePromises.push(this.saveProject(project));
 		}
 		await Promise.all(savePromises);
 		if (savePromises.length > 0 && !this.isShare) this.errorHandling.showInfo('INFO.PROJECTS.SAVE_ALL');
