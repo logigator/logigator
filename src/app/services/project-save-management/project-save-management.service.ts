@@ -2,7 +2,7 @@ import {Injectable, NgZone, Optional} from '@angular/core';
 import {Project} from '../../models/project';
 import {HttpResponseData} from '../../models/http-responses/http-response-data';
 import {OpenProjectResponse} from '../../models/http-responses/open-project-response';
-import {map} from 'rxjs/operators';
+import {map, tap} from 'rxjs/operators';
 import * as PIXI from 'pixi.js';
 import {HttpClient} from '@angular/common/http';
 import {Element} from '../../models/element';
@@ -457,8 +457,15 @@ export class ProjectSaveManagementService {
 	private saveSingleProjectToServer(project: Project): Promise<HttpResponseData<{success: boolean}>> {
 		if (project.id < 1000) return;
 		const body = this.projectToSaveRequest(project);
-		return this.http.post<HttpResponseData<{success: boolean}>>(`${environment.apiPrefix}/project/save/${project.id}`, body).pipe(
-			this.errorHandling.showErrorMessageOnErrorOperator('ERROR.PROJECTS.SAVE')
+		return this.http.post<HttpResponseData<{success: boolean, version: number}>>(`${environment.apiPrefix}/project/save/${project.id}`, body)
+			.pipe(
+				this.errorHandling.showErrorMessageOnErrorDynamicMessage(err => {
+					if (err?.error?.error?.description?.startsWith('[VERSION_ERROR]')) {
+						return 'ERROR.PROJECTS.SAVE_VERSION';
+					}
+					return 'ERROR.PROJECTS.SAVE';
+				}),
+				tap(response => project.version = response.result.version)
 		).toPromise();
 	}
 
@@ -474,6 +481,7 @@ export class ProjectSaveManagementService {
 		});
 
 		const body: SaveProjectRequest = {
+			version: project.version,
 			data: {
 				elements: this.removeVolatilePropsFromElements(project.allElements),
 				mappings
@@ -567,7 +575,8 @@ export class ProjectSaveManagementService {
 		const project = new Project(new ProjectState(projectModel), {
 			id: Number(id),
 			name: openProResp.project.name,
-			type: openProResp.project.is_component ? 'comp' : 'project'
+			type: openProResp.project.is_component ? 'comp' : 'project',
+			version: openProResp.project.version
 		});
 		this._projectCache.set(id, project);
 		return project;

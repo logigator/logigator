@@ -394,6 +394,7 @@
 			"CLONE": "Unable to clone project",
 			"CREATE": "Unable to create project or component",
 			"SAVE": "Unable to save Component or Project on Server",
+			"SAVE_VERSION": "Version Error: Unable to save Component or Project on Server, because someone else updated the project while it was changed.",
 			"COMP_NOT_FOUND": "Component not found, project might be corrupted",
 			"REMOVED_COMP": "A component was not found and was removed from the Project",
 			"COMP_AS_PROJECT": "Unable to open Component as Project",

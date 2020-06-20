@@ -47,6 +47,17 @@ export class ErrorHandlingService {
 		};
 	}
 
+	public showErrorMessageOnErrorDynamicMessage<T>(msgFn: (err: any) => string) {
+		return (source: Observable<T>) => {
+			return source.pipe(
+				catchError(err => {
+					this.showErrorMessage(msgFn(err));
+					throw err;
+				})
+			);
+		};
+	}
+
 	public showErrorMessage(message: string, translationParams?: any) {
 		this.translate.get(message, translationParams).subscribe((res: string) => {
 			this.toastr.error(res);
