@@ -18,6 +18,7 @@ export class Project {
 	private readonly _id: number;
 	private _name: string;
 	private _type: ProjectType;
+	private _version: number;
 
 	private _currState: ProjectState;
 
@@ -38,12 +39,13 @@ export class Project {
 	// #!debug
 	public boardRecorder: BoardRecorder;
 
-	public constructor(projectState: ProjectState, config: { id?: number, name?: string, type?: ProjectType }) {
+	public constructor(projectState: ProjectState, config: { id?: number, name?: string, type?: ProjectType, version?: number }) {
 		this._currState = projectState;
 		this._actions = new Array(this._maxActionCount);
 		this._id = config.id;
 		this._name = config.name;
 		this._type = config.type || 'comp';
+		this._version = config.version ?? 0;
 		this._currActionPointer = -1;
 		this._currMaxActionPointer = -1;
 		this._changeSubject = new Subject<Action[]>();
@@ -641,5 +643,13 @@ export class Project {
 
 	get numOutputs() {
 		return this._currState.numOutputs;
+	}
+
+	get version(): number {
+		return this._version;
+	}
+
+	set version(value: number) {
+		this._version = value;
 	}
 }

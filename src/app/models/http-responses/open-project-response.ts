@@ -2,6 +2,7 @@ import {ProjectModelResponse} from './project-model-response';
 
 export interface OpenProjectResponse {
 	project: {
+		version: number;
 		created_on: string;
 		name: string;
 		data: ProjectModelResponse;

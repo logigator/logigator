@@ -16,6 +16,8 @@ export class RomEditComponent extends PopupContentComp<Element> implements OnIni
 
 	leftAddress = '00000000';
 
+	private leftAddressCache = new Map<number, string>();
+
 	private oldValue = '';
 
 	selectionStart: number;
@@ -40,44 +42,63 @@ export class RomEditComponent extends PopupContentComp<Element> implements OnIni
 		this.rows = Math.ceil(hex.length / 48) || 1;
 		this.calcLeftAddresses(this.rows);
 		this.hexInput.nativeElement.value = hex;
+		this.oldValue = hex;
 	}
 
-	onInput(event: any) {
+	onInput(event: InputEvent) {
 		this.selectionChange();
-		let newValue: string | string[] = this.hexInput.nativeElement.value
-			.split('')
-			.map(c => c.toUpperCase())
-			.filter(c => c.match(/[0-9A-F]/im));
+
+		let newValue = this.hexInput.nativeElement.value.toUpperCase();
+		if (event.inputType.includes('insert') && !(/^[0-9A-F ]+$/.test(newValue))) {
+			this.hexInput.nativeElement.value = this.oldValue;
+			return;
+		}
+
+		newValue = newValue.replace(/ /g, '');
 
 		const newLength = newValue.length;
 
-		newValue = newValue.reduce((previousValue, currentValue, currentIndex) => {
-			return previousValue + currentValue + (currentIndex !== 0 && (currentIndex + 1) % 2 === 0 ? ' ' : '');
-		}, '')
-		.trimRight();
+		let newValueWithSpaces = '';
+		for (let i = 0; i < newValue.length; i++) {
+			newValueWithSpaces += newValue.charAt(i) + (i !== 0 && (i + 1) % 2 === 0 ? ' ' : '');
+		}
+		newValueWithSpaces = newValueWithSpaces.trimRight();
+
+		let oldValueWithSpaces: string;
 
 		if (newLength <= Math.ceil((this.inputFromOpener.options[0] * (2 ** this.inputFromOpener.options[1])) / 4)) {
-			this.hexInput.nativeElement.value = newValue;
-			this.oldValue = newValue;
+			oldValueWithSpaces = this.hexInput.nativeElement.value;
+			this.hexInput.nativeElement.value = newValueWithSpaces;
+			this.oldValue = newValueWithSpaces;
 		} else {
 			this.hexInput.nativeElement.value = this.oldValue;
+			return;
 		}
 
 		this.rows = Math.ceil(this.hexInput.nativeElement.value.length / 48) || 1;
 		this.calcLeftAddresses(this.rows);
-		if (event.inputType.startsWith('delete')) {
+
+		if (newValueWithSpaces.length !== oldValueWithSpaces.length && !event.inputType.includes('delete')) {
+			this.hexInput.nativeElement.selectionStart = this.selectionStart + 1;
+			this.hexInput.nativeElement.selectionEnd = this.selectionEnd + 1;
+		} else {
 			this.hexInput.nativeElement.selectionStart = this.selectionStart;
 			this.hexInput.nativeElement.selectionEnd = this.selectionEnd;
 		}
 	}
 
 	private calcLeftAddresses(lineCount: number) {
+		if (this.leftAddressCache.has(lineCount)) {
+			this.leftAddress = this.leftAddressCache.get(lineCount);
+		}
+
 		let newLeftAddress = '';
 		for (let i = 0; i < lineCount; i++) {
 			let hexAddr = (i * 16).toString(16).toUpperCase();
 			while (hexAddr.length < 8) hexAddr = '0' + hexAddr;
 			newLeftAddress += hexAddr + '\n';
 		}
+		this.leftAddressCache.set(lineCount, newLeftAddress);
 		this.leftAddress = newLeftAddress;
 	}
 
@@ -92,6 +113,11 @@ export class RomEditComponent extends PopupContentComp<Element> implements OnIni
 
 	public save() {
 		const hex = this.hexInput.nativeElement.value.replace(/ /g, '');
+		if (hex.length === 0) {
+			this.requestClose.emit('');
+			return;
+		}
+
 		const base64 = hex.match(/\w{2}/g).map((a) =>  {
 			return String.fromCharCode(parseInt(a, 16));
 		}).join('')
