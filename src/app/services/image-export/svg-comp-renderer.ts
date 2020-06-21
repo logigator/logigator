@@ -228,8 +228,7 @@ export class SvgCompRenderer {
 
 	private symbol() {
 		let symbol: SVGElement;
-		if (this.element.typeId === ElementTypeId.SEGMENT_DISPLAY) {
-		} else if (this.elementProvider.isPlugElement(this.element.typeId)) {
+		if (this.elementProvider.isPlugElement(this.element.typeId)) {
 			symbol = document.createElementNS(this.SVG_NS, 'text');
 			symbol.textContent = this.element.data as string || this.elementProvider.getElementById(this.element.typeId).symbol;
 			symbol.setAttribute('class', 'symbol');
@@ -249,6 +248,37 @@ export class SvgCompRenderer {
 			symbol.setAttribute('y1', environment.gridPixelWidth - 4 + '');
 			symbol.setAttribute('x1', this._size.x + '');
 			symbol.setAttribute('y2', environment.gridPixelWidth - 4 + '');
+		} else if (this.element.typeId === ElementTypeId.LED_MATRIX) {
+			symbol = document.createElementNS(this.SVG_NS, 'g');
+			const ledAmount = this.element.options[0];
+			const ledSize = (this._size.x - environment.gridPixelWidth * 2) / ledAmount - 1;
+			let offsetX = environment.gridPixelWidth;
+			let offsetY = environment.gridPixelWidth;
+			switch (this.element.rotation) {
+				case 0:
+					offsetX = 1.5 * environment.gridPixelWidth;
+					break;
+				case 1:
+					offsetY = 1.5 * environment.gridPixelWidth;
+					break;
+				case 2:
+					offsetX = 0.5 * environment.gridPixelWidth
+					break;
+				case 3:
+					offsetY = 0.5 * environment.gridPixelWidth
+					break;
+			}
+			for (let x = 0; x < ledAmount; x++) {
+				for (let y = 0; y < ledAmount; y++) {
+					const led = document.createElementNS(this.SVG_NS, 'rect');
+					led.setAttribute('class', 'led');
+					led.setAttribute('x', (offsetX + x * ledSize + x) + '');
+					led.setAttribute('y', (offsetY + y * ledSize + y) + '');
+					led.setAttribute('width', ledSize + '');
+					led.setAttribute('height', ledSize + '');
+					symbol.appendChild(led);
+				}
+			}
 		} else {
 			symbol = document.createElementNS(this.SVG_NS, 'text');
 			symbol.textContent = this._elementType.symbol;
@@ -281,7 +311,8 @@ export class SvgCompRenderer {
 			this.element.typeId === ElementTypeId.OUTPUT ||
 			this.element.typeId === ElementTypeId.BUTTON ||
 			this.element.typeId === ElementTypeId.LEVER ||
-			this.element.typeId === ElementTypeId.SEGMENT_DISPLAY;
+			this.element.typeId === ElementTypeId.SEGMENT_DISPLAY ||
+			this.element.typeId === ElementTypeId.LED_MATRIX;
 	}
 
 	public getSVGGroup(): SVGGElement {

@@ -9,6 +9,7 @@ import {ElementTypeId} from '../../models/element-types/element-type-ids';
 import {SvgTextRenderer} from './svg-text-renderer';
 import {environment} from '../../../environments/environment';
 import {SvgLedRenderer} from './svg-led-renderer';
+import {Elements} from '../../models/elements';
 
 export class SvgImageExporter {
 
@@ -65,9 +66,15 @@ export class SvgImageExporter {
 			this._svg.appendChild(textRender.getSVGGroup());
 			this.updateSize(Grid.getPixelPosForGridPos(new PIXI.Point(element.pos.x - this.offset.x, element.pos.y - this.offset.y)));
 		} else if (element.typeId === ElementTypeId.LED) {
-			const textRender = new SvgLedRenderer(element, this.offset);
-			this._svg.appendChild(textRender.getSVGGroup());
+			const ledRenderer = new SvgLedRenderer(element, this.offset);
+			this._svg.appendChild(ledRenderer.getSVGGroup());
 			this.updateSize(Grid.getPixelPosForGridPos(new PIXI.Point(element.pos.x - this.offset.x, element.pos.y - this.offset.y)));
+		} else if (element.typeId === ElementTypeId.LED_MATRIX) {
+			const ledMElement = Elements.clone(element);
+			ledMElement.numOutputs = 0;
+			const compRenderer = new SvgCompRenderer(ledMElement, this.offset);
+			this._svg.appendChild(compRenderer.getSVGGroup());
+			this.updateSize(Grid.getPixelPosForGridPos(new PIXI.Point(element.endPos.x - this.offset.x, element.endPos.y - this.offset.y)));
 		} else {
 			const compRenderer = new SvgCompRenderer(element, this.offset);
 			this._svg.appendChild(compRenderer.getSVGGroup());
