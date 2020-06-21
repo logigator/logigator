@@ -112,8 +112,7 @@ export class ProjectsService {
 		this._mainProject = project;
 		this._projectOpenedSubject.next(project.id);
 
-		// #!web
-		window.history.pushState(null, null, `/`);
+		this.projectSaveManagementService.setAddress();
 	}
 
 	public async openFile(content: string) {
@@ -127,8 +126,7 @@ export class ProjectsService {
 		if (!this.projectSaveManagementService.isShare) await this.saveAllOrAllComps();
 		const project = await this.projectSaveManagementService.getProjectOrCompFromServer(id, false);
 		this.projectSaveManagementService.projectSource = 'server';
-		// #!web
-		window.history.pushState(null, null, `/board/${project.id}`);
+		this.projectSaveManagementService.setAddress('board', project.id);
 		this.switchProjectAfterOpen(project);
 	}
 
@@ -137,8 +135,7 @@ export class ProjectsService {
 		const project = await this.projectSaveManagementService.openProjectFromShare(address);
 		if (!project) return;
 
-		// #!web
-		window.history.pushState(null, null, `/share/${address}`);
+		this.projectSaveManagementService.setAddress('share', address)
 		this.switchProjectAfterOpen(project);
 	}
 

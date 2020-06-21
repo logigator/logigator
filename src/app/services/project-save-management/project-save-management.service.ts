@@ -63,8 +63,7 @@ export class ProjectSaveManagementService {
 			this.elemProvService.setUserDefinedTypes(await this.getCustomElementsFromServer());
 			projects = this.openProjectFromShareOnLoad();
 		} else {
-			// #!web
-			window.history.pushState(null, null, '/');
+			this.setAddress();
 			projects = Promise.resolve([Project.empty()]);
 			this.elemProvService.setUserDefinedTypes(await this.getCustomElementsFromServer());
 		}
@@ -151,8 +150,7 @@ export class ProjectSaveManagementService {
 			this.errorHandling.catchErrorOperator('ERROR.SHARE.OPEN', undefined)
 		).toPromise<OpenShareResp>();
 		if (!resp) {
-			// !#web
-			window.history.pushState(null, null, '/');
+			this.setAddress();
 			return null;
 		}
 		this._projectSource = 'share';
@@ -201,8 +199,7 @@ export class ProjectSaveManagementService {
 			this.elemProvService.clearUserDefinedElements();
 			this.elemProvService.setUserDefinedTypes(await this.getCustomElementsFromServer());
 			const mainProj = await this.getProjectOrCompFromServer(resp.result.id, true);
-			// #!web
-			window.history.pushState(null, null, `/board/${mainProj.id}`);
+			this.setAddress('board', mainProj.id)
 			if (mainProj.type === 'comp') return [Project.empty(), mainProj];
 			return [mainProj];
 		}
@@ -246,8 +243,7 @@ export class ProjectSaveManagementService {
 			let mainModel = this.getProjectModelFromJson(parsedFile.mainProject.data);
 			mainModel = this.adjustInputsAndOutputs(mainModel);
 
-			// #!web
-			window.history.pushState(null, null, `/local/${parsedFile.mainProject.name}`);
+			this.setAddress('local', parsedFile.mainProject.name);
 			const proj =  new Project(new ProjectState(mainModel), {
 				type: 'project',
 				name: parsedFile.mainProject.name,
@@ -382,8 +378,7 @@ export class ProjectSaveManagementService {
 		this._projectCache.clear();
 		await this.saveProjectsAndComponents(projectsToSave);
 
-		// #!web
-		window.history.pushState(null, null, `/board/${mainProjectId}`);
+		this.setAddress('board', mainProjectId)
 		this._projectSource = 'server';
 		return mainProjToSave;
 	}
@@ -544,14 +539,12 @@ export class ProjectSaveManagementService {
 		if (!id) {
 			this.errorHandling.showErrorMessage('ERROR.INVALID_URL');
 
-			// #!web
-			window.history.pushState(null, null, '/');
+			this.setAddress();
 			return Promise.resolve([Project.empty()]);
 		}
 		let mainProj = await this.getProjectOrCompFromServer(id, false);
 		if (!mainProj) {
-			// #!web
-			window.history.pushState(null, null, '/');
+			this.setAddress();
 			mainProj = Project.empty();
 		}
 		if (mainProj.type === 'project') {
@@ -641,5 +634,16 @@ export class ProjectSaveManagementService {
 			delete out.wireEnds;
 			return out;
 		});
+	}
+
+	public setAddress(type: string = null, path: string | number = null) {
+		let url = '/'
+		if (type)
+			url += `${type}`;
+		if (path)
+			url += `/${path}`;
+
+		// #!web
+		window.history.pushState(null, null, url);
 	}
 }
