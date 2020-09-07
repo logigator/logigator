@@ -32,10 +32,8 @@ export class TextGraphics extends PIXI.Container implements LGraphics, Component
 		const textParts = text ? text.split('\n') : [];
 		for (let i = 0; i < textParts.length; i++) {
 			this._texts[i] = new PIXI.BitmapText(textParts[i], {
-				font: {
-					name: 'Roboto',
-					size: environment.gridPixelWidth + 6
-				},
+				fontName: 'Roboto',
+				fontSize: environment.gridPixelWidth + 6,
 				tint: this.themingService.getEditorColor('fontTint')
 			});
 			this._texts[i].anchor = new PIXI.Point(0, 0.5);

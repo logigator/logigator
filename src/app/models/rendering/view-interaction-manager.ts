@@ -22,7 +22,6 @@ import {CopyService} from '../../services/copy/copy.service';
 import {Elements} from '../elements';
 import {ConnectionPoint} from './graphics/connection-point';
 import {PopupService} from '@logigator/logigator-shared-comps';
-import InteractionEvent = PIXI.interaction.InteractionEvent;
 
 export class ViewInteractionManager {
 
@@ -84,18 +83,18 @@ export class ViewInteractionManager {
 	public addNewElement(lGraphics: LGraphics) {
 		getStaticDI(NgZone).runOutsideAngular(() => {
 			lGraphics.interactive = true;
-			lGraphics.on('pointerup', (e: InteractionEvent) => this.pUpElement(lGraphics));
-			lGraphics.on('pointerdown', (e: InteractionEvent) => this.pDownElement(e, lGraphics));
+			lGraphics.on('pointerup', (e: PIXI.InteractionEvent) => this.pUpElement(lGraphics));
+			lGraphics.on('pointerdown', (e: PIXI.InteractionEvent) => this.pDownElement(e, lGraphics));
 		});
 	}
 
 	private initEventListeners() {
 		getStaticDI(NgZone).runOutsideAngular(() => {
-			this._view.on('pointerdown', (e: InteractionEvent) => this.pDownView(e));
-			this._view.on('pointerup', (e: InteractionEvent) => this.pUpView(e));
-			this._view.on('pointerupoutside', (e: InteractionEvent) => this.pUpView(e));
-			this._view.on('pointermove', (e: InteractionEvent) => this.pMoveView(e));
-			this._selectRect.on('pointerdown', (e: InteractionEvent) => this.pDownSelectRect(e));
+			this._view.on('pointerdown', (e: PIXI.InteractionEvent) => this.pDownView(e));
+			this._view.on('pointerup', (e: PIXI.InteractionEvent) => this.pUpView(e));
+			this._view.on('pointerupoutside', (e: PIXI.InteractionEvent) => this.pUpView(e));
+			this._view.on('pointermove', (e: PIXI.InteractionEvent) => this.pMoveView(e));
+			this._selectRect.on('pointerdown', (e: PIXI.InteractionEvent) => this.pDownSelectRect(e));
 		});
 	}
 
@@ -108,7 +107,7 @@ export class ViewInteractionManager {
 		}
 	}
 
-	private pDownView(e: InteractionEvent) {
+	private pDownView(e: PIXI.InteractionEvent) {
 		if (e.data.button !== 0) return;
 
 		if (this.workModeSer.currentWorkMode === 'eraser') {
@@ -142,7 +141,7 @@ export class ViewInteractionManager {
 		}
 	}
 
-	private pUpView(e: InteractionEvent) {
+	private pUpView(e: PIXI.InteractionEvent) {
 		switch (this._state) {
 			case ViewIntManState.NEW_COMP:
 				this.buildNewComp(e);
@@ -169,7 +168,7 @@ export class ViewInteractionManager {
 		}
 	}
 
-	private pMoveView(e: InteractionEvent) {
+	private pMoveView(e: PIXI.InteractionEvent) {
 		switch (this._state) {
 			case ViewIntManState.NEW_COMP:
 			case ViewIntManState.DRAGGING:
@@ -190,7 +189,7 @@ export class ViewInteractionManager {
 		}
 	}
 
-	private pDownSelectRect(e: InteractionEvent) {
+	private pDownSelectRect(e: PIXI.InteractionEvent) {
 		if (this._state === ViewIntManState.WAIT_FOR_DRAG ||
 			this._state === ViewIntManState.WAIT_FOR_PASTE_DRAG ||
 			this._state === ViewIntManState.WAIT_FOR_CUT_DRAG) {
@@ -234,14 +233,14 @@ export class ViewInteractionManager {
 		this._view.requestSingleFrame();
 	}
 
-	private pDownElement(e: InteractionEvent, lGraphics: LGraphics) {
+	private pDownElement(e: PIXI.InteractionEvent, lGraphics: LGraphics) {
 		if (this._state === ViewIntManState.WAIT_FOR_DRAG && !this._selectRect.visible && this._selectedElements.includes(lGraphics)) {
 			this._state = ViewIntManState.DRAGGING;
 			if (!this._actionPos) this._actionPos = new PosHelper(e, this._view, (lGraphics.position as PIXI.ObservablePoint).clone());
 		}
 	}
 
-	private startBuildComp(e: InteractionEvent) {
+	private startBuildComp(e: PIXI.InteractionEvent) {
 		const typeId = this.workModeSer.currentComponentToBuild;
 		const elemType = this.elemProvSer.getElementById(typeId);
 		if (elemType.numInputs === 0 && elemType.numOutputs === 0) return;
@@ -255,14 +254,14 @@ export class ViewInteractionManager {
 		this._view.requestSingleFrame();
 	}
 
-	private startBuildWire(e: InteractionEvent) {
+	private startBuildWire(e: PIXI.InteractionEvent) {
 		this._state = ViewIntManState.NEW_WIRE;
 		this._actionPos = new PosHelper(e, this._view);
 		this._wireGraphics.position = this._actionPos.pixelPosOnGridStartWire;
 		this._wireGraphics.visible = true;
 	}
 
-	private dragNewWire(e: InteractionEvent) {
+	private dragNewWire(e: PIXI.InteractionEvent) {
 		this._actionPos.addDragPos(e, this._view);
 		if (this._wireDirection === undefined
 			&& CollisionFunctions.distance(this._actionPos.gridPosStart, this._actionPos.lastGridPosDrag) >= 1
@@ -306,7 +305,7 @@ export class ViewInteractionManager {
 		this.cleanUp();
 	}
 
-	private startSelection(e: InteractionEvent, selMode: ViewIntManState) {
+	private startSelection(e: PIXI.InteractionEvent, selMode: ViewIntManState) {
 		this._state = selMode;
 		this._actionPos = new PosHelper(e, this._view);
 		this._selectRect.width = 0;
@@ -315,7 +314,7 @@ export class ViewInteractionManager {
 		this._selectRect.visible = true;
 	}
 
-	private dragSelectRect(e: InteractionEvent) {
+	private dragSelectRect(e: PIXI.InteractionEvent) {
 		this._actionPos.addDragPos(e, this._view);
 		const selSize = this._actionPos.getPixelPosDiffFromStart();
 		this._selectRect.width = selSize.x;
@@ -380,7 +379,7 @@ export class ViewInteractionManager {
 		});
 	}
 
-	private buildNewComp(e: InteractionEvent) {
+	private buildNewComp(e: PIXI.InteractionEvent) {
 		this._actionPos.addDragPos(e, this._view);
 		this.projectsSer.currProject.addElement(this.workModeSer.currentComponentToBuild, this._actionPos.lastGridPosDrag);
 		if (this.elemProvSer.isPlugElement(this.workModeSer.currentComponentToBuild)) {
@@ -389,7 +388,7 @@ export class ViewInteractionManager {
 		this.cleanUp();
 	}
 
-	private dragSelection(e: InteractionEvent) {
+	private dragSelection(e: PIXI.InteractionEvent) {
 		const diff = this._actionPos.addDragPos(e, this._view);
 		for (const lGraphics of this._selectedElements) {
 			lGraphics.position.x += diff.x;
@@ -425,7 +424,7 @@ export class ViewInteractionManager {
 		}
 	}
 
-	private placeText(e: InteractionEvent) {
+	private placeText(e: PIXI.InteractionEvent) {
 		const pos = Grid.getGridPosForPixelPos(e.data.getLocalPosition(this._view));
 		getStaticDI(NgZone).run(async () => {
 			const text = await getStaticDI(PopupService).showPopup(TextComponent, 'POPUP.TEXT.TITLE', false);
@@ -435,7 +434,7 @@ export class ViewInteractionManager {
 		this.cleanUp();
 	}
 
-	private toggleWireConn(e: InteractionEvent) {
+	private toggleWireConn(e: PIXI.InteractionEvent) {
 		this._actionPos = new PosHelper(e, this._view);
 		this.projectsSer.currProject.toggleWireConnection(this._actionPos.gridPosStart);
 		this.cleanUp();
@@ -505,13 +504,13 @@ export class ViewInteractionManager {
 		}
 	}
 
-	private startEraser(e: InteractionEvent) {
+	private startEraser(e: PIXI.InteractionEvent) {
 		this._state = ViewIntManState.USING_ERASER;
 		this._actionPos = new PosHelper(e, this._view);
 		this.projectsSer.currProject.eraseElements(this._actionPos.previousGridPosFloat, this._actionPos.lastGridPosFloat);
 	}
 
-	private eraseComponents(e: InteractionEvent) {
+	private eraseComponents(e: PIXI.InteractionEvent) {
 		this._actionPos.addDragPos(e, this._view);
 		this.projectsSer.currProject.eraseElements(this._actionPos.previousGridPosFloat, this._actionPos.lastGridPosFloat);
 	}

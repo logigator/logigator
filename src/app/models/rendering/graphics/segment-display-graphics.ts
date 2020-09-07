@@ -129,10 +129,8 @@ export class SegmentDisplayGraphics extends PIXI.Graphics implements LGraphics, 
 
 	private getLabelText(text: string): PIXI.BitmapText {
 		return new PIXI.BitmapText(text, {
-			font: {
-				name: 'Roboto',
-				size: environment.gridPixelWidth * 0.5
-			},
+			fontName: 'Roboto',
+			fontSize: environment.gridPixelWidth * 0.5,
 			tint: this.themingService.getEditorColor('fontTint')
 		});
 	}
@@ -140,10 +138,8 @@ export class SegmentDisplayGraphics extends PIXI.Graphics implements LGraphics, 
 	private getSegments(): PIXI.BitmapText {
 		this.segmentTextLength = Math.ceil(Math.log10((2 ** this.element.numInputs) + 1));
 		const seg = new PIXI.BitmapText(this.getSegmentString(0, this.segmentTextLength), {
-			font: {
-				name: 'Segment7',
-				size: environment.gridPixelWidth * 2
-			},
+			fontName: 'Segment7',
+			fontSize: environment.gridPixelWidth * 2,
 			tint: this.themingService.getEditorColor('fontTint'),
 			align: 'center'
 		});

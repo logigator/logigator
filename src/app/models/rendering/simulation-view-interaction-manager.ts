@@ -16,14 +16,14 @@ export class SimulationViewInteractionManager {
 	public addEventListenersToCustomElement(sprite: LGraphics) {
 		getStaticDI(NgZone).runOutsideAngular(() => {
 			sprite.interactive = true;
-			sprite.on('pointerdown', (e: PIXI.interaction.InteractionEvent) => {
+			sprite.on('pointerdown', (e: PIXI.InteractionEvent) => {
 				if (getStaticDI(WorkModeService).currentWorkMode !== 'simulation') return;
 				this.onCompClick(e, sprite);
 			});
 		});
 	}
 
-	private onCompClick(e: PIXI.interaction.InteractionEvent, sprite: LGraphics) {
+	private onCompClick(e: PIXI.InteractionEvent, sprite: LGraphics) {
 		if (e.data.button === 0) {
 			getStaticDI(NgZone).run(() => {
 				this._view.requestInspectElemEventEmitter.emit({

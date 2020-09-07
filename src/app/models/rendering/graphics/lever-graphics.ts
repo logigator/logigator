@@ -81,7 +81,7 @@ export class LeverGraphics extends PIXI.Graphics implements LGraphics, Component
 
 	private addClickListener() {
 		this.interactive = true;
-		this.on('pointerdown', (e: PIXI.interaction.InteractionEvent) => {
+		this.on('pointerdown', (e: PIXI.InteractionEvent) => {
 			const newSate = !this.simActiveState;
 			this.workerCommunicationService.setUserInput(this._projectIdentifier, this.element, [newSate]);
 			this.setSimulationState([newSate], true);

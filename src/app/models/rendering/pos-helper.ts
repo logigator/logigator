@@ -1,5 +1,4 @@
 import * as PIXI from 'pixi.js';
-import InteractionEvent = PIXI.interaction.InteractionEvent;
 import {Grid} from './grid';
 
 export class PosHelper {
@@ -13,7 +12,7 @@ export class PosHelper {
 
 	private _previousPixelPosDrag: PIXI.Point;
 
-	constructor(e: InteractionEvent, view: PIXI.DisplayObject, startPosForDiff?: PIXI.IPoint) {
+	constructor(e: PIXI.InteractionEvent, view: PIXI.DisplayObject, startPosForDiff?: PIXI.IPoint) {
 		this._pixelPosStartDrag = e.data.getLocalPosition(view);
 		this._lastPixelPosDrag = this._pixelPosStartDrag;
 		this._previousPixelPosDrag = this._pixelPosStartDrag;
@@ -24,7 +23,7 @@ export class PosHelper {
 	/**
 	 * @return diff in pixelPos rounded to grid from last addDragPos() call, (0,0) if gridPos did not change
 	 */
-	public addDragPos(e: InteractionEvent, view: PIXI.DisplayObject): PIXI.Point {
+	public addDragPos(e: PIXI.InteractionEvent, view: PIXI.DisplayObject): PIXI.Point {
 		const currentPos = e.data.getLocalPosition(view);
 		this._previousPixelPosDrag = this._lastPixelPosDrag;
 		this._lastPixelPosDrag = currentPos;

@@ -74,7 +74,7 @@ export class ButtonGraphics extends PIXI.Graphics implements LGraphics, Componen
 
 	private addClickListener() {
 		this.interactive = true;
-		this.on('pointerdown', (e: PIXI.interaction.InteractionEvent) => {
+		this.on('pointerdown', (e: PIXI.InteractionEvent) => {
 			const newSate = !this.simActiveState;
 			this.workerCommunicationService.setUserInput(this._projectIdentifier, this.element, [newSate]);
 			this.setSimulationState([newSate], true);

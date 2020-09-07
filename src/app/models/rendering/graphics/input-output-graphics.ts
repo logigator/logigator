@@ -82,10 +82,8 @@ export class InputOutputGraphics extends PIXI.Graphics implements LGraphics, Com
 		this.removeChildren(0);
 
 		const text = new PIXI.BitmapText(this._symbol, {
-			font: {
-				name: 'Roboto',
-				size: this.calcFontSize()
-			},
+			fontName: 'Roboto',
+			fontSize: this.calcFontSize(),
 			tint: this.themingService.getEditorColor('fontTint')
 		});
 

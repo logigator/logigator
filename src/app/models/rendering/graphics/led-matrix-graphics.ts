@@ -208,10 +208,8 @@ export class LedMatrixGraphics extends PIXI.Graphics implements LGraphics, Compo
 
 	private getLabelText(text: string): PIXI.BitmapText {
 		return new PIXI.BitmapText(text, {
-			font: {
-				name: 'Roboto',
-				size: environment.gridPixelWidth * 0.5
-			},
+			fontName: 'Roboto',
+			fontSize: environment.gridPixelWidth * 0.5,
 			tint: this.themingService.getEditorColor('fontTint')
 		});
 	}
