@@ -3,7 +3,7 @@ import * as path from 'path';
 const packageFile = require('../../package.json');
 
 const electronDependencies = {
-	'node-fetch': '^2.6.0',
+	'node-fetch': '^2.6.1',
 	tslib: '^1.10.0',
 	express: '^4.17.1',
 	'@logigator/logigator-simulation': 'latest'

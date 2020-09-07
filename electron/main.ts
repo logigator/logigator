@@ -51,7 +51,8 @@ function createWindow(port: number) {
 		minHeight: 725,
 		webPreferences: {
 			webSecurity: false,
-			nodeIntegration: true
+			nodeIntegration: true,
+			enableRemoteModule: true
 		},
 		frame: false
 	});
