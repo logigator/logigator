@@ -10,6 +10,7 @@ import {ErrorHandlingService} from '../error-handling/error-handling.service';
 import {ElectronService} from 'ngx-electron';
 import {environment} from '../../../environments/environment';
 import {SharedCompsAuthService} from '@logigator/logigator-shared-comps';
+import {InitService} from '../init/init.service';
 
 @Injectable({
 	providedIn: 'root'
@@ -19,16 +20,19 @@ export class UserService implements SharedCompsAuthService {
 	private _userInfo$: Observable<UserInfo>;
 	private _userLoginStateInSubject = new Subject<boolean>();
 
-	private lastCheckedLoginState: boolean;
+	private _isLoggedIn: boolean;
 
 	constructor(
 		@Inject(DOCUMENT) private document: Document,
 		private http: HttpClient,
 		private errorHandling: ErrorHandlingService,
-		@Optional() private electronService: ElectronService
+		@Optional() private electronService: ElectronService,
+		private init: InitService
 	) {
+		this._isLoggedIn = this.init.electronIsLoggedIn;
+		this.checkLoginState(false);
 		this.getUserInfoFromServer();
-		interval(2000).subscribe(() => this.loginStateCheck());
+		interval(2000).subscribe(() => this.updateLoginState());
 	}
 
 	private getUserInfoFromServer() {
@@ -94,24 +98,15 @@ export class UserService implements SharedCompsAuthService {
 	}
 
 	public logout(): Promise<any> {
-		this.electronService.remote.getGlobal('isLoggedIn').data = 'false';
-
 		this.electronService.ipcRenderer.send('logout');
 		this._userInfo$ = of(undefined);
+		this._isLoggedIn = false;
 		return Promise.resolve();
 	}
 	// #!endif
 
 	public get isLoggedIn(): boolean {
-		// #!if ELECTRON === 'true'
-		return this.electronService && this.electronService.remote.getGlobal('isLoggedIn')?.data === 'true';
-		// #!endif
-
-		const isLoggedIn = this.document.cookie.match('(^|[^;]+)\\s*' + 'isLoggedIn' + '\\s*=\\s*([^;]+)');
-		if (!isLoggedIn) {
-			return false;
-		}
-		return isLoggedIn[0] !== '' && isLoggedIn[0].endsWith('true');
+		return this._isLoggedIn;
 	}
 
 	public get userInfo$(): Observable<UserInfo> {
@@ -122,11 +117,30 @@ export class UserService implements SharedCompsAuthService {
 		return this._userLoginStateInSubject.asObservable();
 	}
 
-	private loginStateCheck() {
-		const isLoggedIn = this.isLoggedIn;
-		if (isLoggedIn === this.lastCheckedLoginState) return;
-		this.lastCheckedLoginState = isLoggedIn;
-		if (isLoggedIn) {
+	private async checkLoginState(checkElectron = true) {
+		// #!if ELECTRON === 'true'
+		if (checkElectron) {
+			this._isLoggedIn = await this.electronService.ipcRenderer.invoke('isLoggedIn');
+		}
+		// #!else
+		const isLoggedIn = this.document.cookie.match('(^|[^;]+)\\s*' + 'isLoggedIn' + '\\s*=\\s*([^;]+)');
+		if (!isLoggedIn) {
+			this._isLoggedIn = false
+		} else {
+			this._isLoggedIn = isLoggedIn[0] !== '' && isLoggedIn[0].endsWith('true');
+		}
+		// #!endif
+	}
+
+	private async updateLoginState() {
+		const lastLoginState = this.isLoggedIn;
+
+		await this.checkLoginState();
+
+		if (lastLoginState === this.isLoggedIn)
+			return;
+
+		if (this._isLoggedIn) {
 			this._userLoginStateInSubject.next(true);
 			this.getUserInfoFromServer();
 		} else {

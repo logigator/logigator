@@ -14,6 +14,8 @@ export class AuthenticationHandler {
 	private _authCookie: string;
 	private _cookieValidUntilUntil: Date;
 
+	private _isLoggedIn: boolean;
+
 	constructor() {}
 
 	public initLoginListeners(mainWindow: BrowserWindow) {
@@ -23,6 +25,7 @@ export class AuthenticationHandler {
 		ipcMain.on('loginemail', (event, args) => this.onEmailLogin(args));
 		ipcMain.on('registeremail', (event, args) => this.onEmailRegister(args));
 		ipcMain.on('logout', () => this.onLogout());
+		ipcMain.handle('isLoggedIn', () => this.isLoggedIn);
 	}
 
 	public readSavedLoginState() {
@@ -36,19 +39,14 @@ export class AuthenticationHandler {
 			this._storage.remove('cookieValidUntilUntil');
 			delete this._cookieValidUntilUntil;
 			delete this._authCookie;
+			this._isLoggedIn = false;
 		} else {
-			// tslint:disable-next-line:no-string-literal
-			global['isLoggedIn'] = {
-				data: 'true'
-			};
+			this._isLoggedIn = true
 		}
 	}
 
 	public setLoggedIn(cookie: string) {
-		// tslint:disable-next-line:no-string-literal
-		global['isLoggedIn'] = {
-			data: 'true'
-		};
+		this._isLoggedIn = true;
 		this._authCookie = cookie;
 		const expires = cookie.substring(cookie.indexOf('expires=') + 8);
 		this._cookieValidUntilUntil = new Date(expires.substring(0, expires.indexOf('; ')));
@@ -134,10 +132,7 @@ export class AuthenticationHandler {
 	private onLogout() {
 		delete this._authCookie;
 		delete this._cookieValidUntilUntil;
-
-		global['isLoggedIn'] = {
-			data: 'false'
-		};
+		this._isLoggedIn = false;
 
 		if (!this._storage.has('authCookie') || !this._storage.has('cookieValidUntilUntil')) return;
 		this._storage.remove('authCookie');
@@ -212,6 +207,6 @@ export class AuthenticationHandler {
 	}
 
 	public get isLoggedIn(): boolean {
-		return true;
+		return this._isLoggedIn;
 	}
 }

@@ -25,7 +25,7 @@ try {
 			port = await startLocalWebServer();
 		}
 
-		registerHttpInterceptor();
+		registerHttpInterceptor(port);
 		authHandler.readSavedLoginState();
 		Storage.getInstance().setupCommunicationWithRenderer();
 		createWindow(port);
@@ -51,8 +51,7 @@ function createWindow(port: number) {
 		minHeight: 725,
 		webPreferences: {
 			webSecurity: false,
-			nodeIntegration: true,
-			enableRemoteModule: true
+			nodeIntegration: true
 		},
 		frame: false
 	});
@@ -85,7 +84,6 @@ function createLoadingWindow() {
 		height: 180,
 		resizable: false,
 		webPreferences: {
-			webSecurity: true,
 			nodeIntegration: false
 		},
 		frame: false
@@ -105,7 +103,7 @@ function startLocalWebServer(): Promise<number> {
 	});
 }
 
-function registerHttpInterceptor() {
+function registerHttpInterceptor(port: number) {
 	session.defaultSession.webRequest.onBeforeSendHeaders(getHttpFilterUrls(), (details, callback) => {
 		if (details.url.includes('api.logigator')) {
 			// tslint:disable-next-line:no-string-literal
@@ -122,6 +120,16 @@ function registerHttpInterceptor() {
 
 		callback({
 			requestHeaders: details.requestHeaders
+		});
+	});
+	session.defaultSession.webRequest.onHeadersReceived(getHttpFilterUrls(), (details, callback) => {
+		if (details.url.includes('api.logigator')) {
+			// tslint:disable-next-line:no-string-literal
+			details.responseHeaders['Access-Control-Allow-Origin'] = ['http://localhost:' + port];
+		}
+
+		callback({
+			responseHeaders: details.responseHeaders
 		});
 	});
 }
