@@ -61,21 +61,17 @@ export class TopBarComponent implements OnInit {
 
 	// #!if ELECTRON === 'true'
 	public minimize() {
-		this.electronService.remote.getCurrentWindow().minimize();
+		this.electronService.ipcRenderer.invoke('windowMinimize');
 	}
 
-	maximizeWin() {
-		if (this.electronService.remote.getCurrentWindow().isMaximized()) {
-			this.electronService.remote.getCurrentWindow().unmaximize();
-		} else {
-			this.electronService.remote.getCurrentWindow().maximize();
-		}
+	public maximizeWin() {
+		this.electronService.ipcRenderer.invoke('windowMaximize');
 	}
 
-	async close() {
+	public async close() {
 		const canClose = await this.projectService.askToSave();
 		if (canClose) {
-			this.electronService.remote.getCurrentWindow().close();
+			this.electronService.ipcRenderer.invoke('windowClose');
 		}
 	}
 	// #!endif

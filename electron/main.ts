@@ -6,6 +6,7 @@ import {AddressInfo} from 'net';
 import {AuthenticationHandler} from './authentication-handler';
 import {getDomain, getHttpFilterUrls} from './utils';
 import {Storage} from './storage';
+import {WindowResizeHandler} from './window-resize-handler';
 
 const args = process.argv.slice(1);
 const serve = args.some(val => val === '--serve');
@@ -50,11 +51,12 @@ function createWindow(port: number) {
 		minWidth: 1000,
 		minHeight: 725,
 		webPreferences: {
-			webSecurity: false,
 			nodeIntegration: true
 		},
 		frame: false
 	});
+	const windowResizeHandler = new WindowResizeHandler(win);
+	windowResizeHandler.initResizeListeners();
 
 	if (serve) {
 		require('electron-reload')(__dirname, {
