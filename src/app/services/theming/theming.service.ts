@@ -4,6 +4,7 @@ import {EditorColorKey, EditorColors, Theme} from '../../models/theming';
 import {Observable, Subject} from 'rxjs';
 import {EastereggService} from '../easteregg/easteregg.service';
 import {StorageService} from '../storage/storage.service';
+import {InitService} from '../init/init.service';
 
 @Injectable({
 	providedIn: 'root'
@@ -11,6 +12,7 @@ import {StorageService} from '../storage/storage.service';
 export class ThemingService {
 
 	private _currentTheme: Theme;
+	private _pendingTheme: Theme;
 
 	private _showGrid = true;
 	private _showGridChangeSubject = new Subject<boolean>();
@@ -40,19 +42,26 @@ export class ThemingService {
 		}
 	};
 
-	constructor(@Inject(DOCUMENT) private document: HTMLDocument, private eastereggs: EastereggService, private storage: StorageService) {
+	constructor(
+		@Inject(DOCUMENT) private document: HTMLDocument,
+		private eastereggs: EastereggService,
+		private storage: StorageService,
+		private init: InitService
+	) {
 		this.loadTheme();
-		this.document.body.classList.add(this.themeClass);
 	}
 
-	private loadTheme() {
-		this._currentTheme = (this.storage.get('theme') || 'dark') as Theme;
+	public loadTheme() {
+		this._currentTheme = this.init.themingServiceData;
+		this._pendingTheme = this.currentTheme;
 		if (this._currentTheme === 'light') {
 			setTimeout(() => this.eastereggs.achieve('BLD'), 1000);
 		}
+		this.document.body.classList.add(this.themeClass);
 	}
 
 	public setTheme(theme: Theme) {
+		this._pendingTheme = theme;
 		this.storage.set('theme', theme);
 	}
 
@@ -69,7 +78,7 @@ export class ThemingService {
 	}
 
 	public get pendingTheme(): Theme {
-		return (this.storage.get('theme') || 'dark') as Theme;
+		return this._pendingTheme
 	}
 
 	public get showGrid(): boolean {

@@ -1,5 +1,5 @@
 import { BrowserModule } from '@angular/platform-browser';
-import {Injector, NgModule} from '@angular/core';
+import {APP_INITIALIZER, Injector, NgModule} from '@angular/core';
 import { AppComponent } from './app.component';
 import { ToolbarComponent } from './components/toolbar/toolbar.component';
 import { SettingsInfoBoxComponent } from './components/settings-info-box/settings-info-box.component';
@@ -57,6 +57,8 @@ import { HelpComponent } from './components/popup-contents/help/help.component';
 import { HelpRendererComponent } from './components/popup-contents/help-renderer/help-renderer.component';
 import {ELECTRON} from '../environments/environment';
 import { HelpWindowComponent } from './components/help-window/help-window.component';
+import {initServices} from './providerFactories/initServices';
+import {InitService} from './services/init/init.service';
 
 @NgModule({
 	declarations: [
@@ -153,6 +155,12 @@ import { HelpWindowComponent } from './components/help-window/help-window.compon
 		{
 			provide: WorkerCommunicationService,
 			useClass: ELECTRON ? WorkerCommunicationNodeService : WorkerCommunicationWasmService
+		},
+		{
+			provide: APP_INITIALIZER,
+			useFactory: initServices,
+			deps: [InitService],
+			multi: true,
 		}
 	],
 	bootstrap: [AppComponent]

@@ -20,6 +20,7 @@ import {LangChangeEvent, TranslateService} from '@ngx-translate/core';
 import {ElementProviderService} from './services/element-provider/element-provider.service';
 import {ProjectInteractionService} from './services/project-interaction/project-interaction.service';
 import {StorageService} from './services/storage/storage.service';
+import {InitService} from './services/init/init.service';
 
 @Component({
 	selector: 'app-root',
@@ -45,7 +46,8 @@ export class AppComponent implements OnInit, OnDestroy {
 		@Inject(DOCUMENT) private document: HTMLDocument,
 		private translate: TranslateService,
 		private elementProviderService: ElementProviderService,
-		private storage: StorageService
+		private storage: StorageService,
+		private init: InitService
 	) {
 		this.setupScripts();
 		this.initTranslation();
@@ -142,7 +144,7 @@ export class AppComponent implements OnInit, OnDestroy {
 
 	private initTranslation() {
 		this.translate.addLangs(['en', 'de']);
-		const lang = this.storage.get('lang');
+		const lang = this.init.currentSelectedLanguage;
 		if (lang) {
 			this.translate.setDefaultLang(lang);
 			this.translate.use(lang);

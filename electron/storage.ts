@@ -8,6 +8,8 @@ export class Storage {
 
 	private static readonly STORAGE_PATH = Storage.getStoragePath();
 
+	private storageData: object;
+
 	constructor() {
 		this.readStorage();
 	}
@@ -21,11 +23,17 @@ export class Storage {
 	}
 
 	public setupCommunicationWithRenderer() {
-		ipcMain.on('storageKeyChanged', ( (event, args: {key: string, data: any}) => {
+		ipcMain.handle('storageKeyChanged', ((event, args: {key: string, data: any}) => {
 			this.set(args.key, args.data);
 		}));
-		ipcMain.on('storageKeyRemoved', ( (event, args: {key: string}) => {
+		ipcMain.handle('storageKeyRemoved', ((event, args: {key: string}) => {
 			this.remove(args.key);
+		}));
+		ipcMain.handle('storageKeyRead', ((event, args: {key: string}) => {
+			return this.get(args.key);
+		}));
+		ipcMain.handle('storageKeyHas', ((event, args: {key: string}) => {
+			return this.has(args.key);
 		}));
 	}
 
@@ -35,34 +43,34 @@ export class Storage {
 	}
 
 	public set(key: string, data: any) {
-		global['storageData'][key] = data;
+		this.storageData[key] = data;
 		this.saveStorage();
 	}
 
 	public get(key: string): any {
-		return global['storageData'][key];
+		return this.storageData[key];
 	}
 
 	public remove(key: string) {
 		if (this.has(key)) {
-			delete global['storageData'][key];
+			delete this.storageData[key];
 			this.saveStorage();
 		}
 	}
 
 	public has(key: string): boolean {
-		return global['storageData'].hasOwnProperty(key);
+		return this.storageData.hasOwnProperty(key);
 	}
 
 	private readStorage() {
 		try {
-			global['storageData'] = JSON.parse(fs.readFileSync(Storage.STORAGE_PATH).toString());
+			this.storageData = JSON.parse(fs.readFileSync(Storage.STORAGE_PATH).toString());
 		} catch (e) {
-			global['storageData'] = {};
+			this.storageData = {};
 		}
 	}
 
 	private saveStorage() {
-		fs.writeFileSync(Storage.STORAGE_PATH, JSON.stringify(global['storageData']));
+		fs.writeFileSync(Storage.STORAGE_PATH, JSON.stringify(this.storageData));
 	}
 }

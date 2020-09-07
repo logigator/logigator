@@ -8,22 +8,22 @@ export class StorageService {
 
 	constructor(@Optional() private electronService: ElectronService) {}
 
-	public get(key: string): any {
+	public get(key: string): Promise<any> {
 		// #!if ELECTRON === 'true'
-		return this.electronService.remote.getGlobal('storageData')[key];
+		return this.electronService.ipcRenderer.invoke('storageKeyRead', {key});
 		// #!else
 		const data = localStorage.getItem(key);
 		try {
-			return JSON.parse(data);
+			return Promise.resolve(JSON.parse(data));
 		} catch (e) {
-			return data;
+			return Promise.resolve(data);
 		}
 		// #!endif
 	}
 
 	public set(key: string, data: any) {
 		// #!if ELECTRON === 'true'
-		this.electronService.ipcRenderer.send('storageKeyChanged', {key, data});
+		this.electronService.ipcRenderer.invoke('storageKeyChanged', {key, data});
 		// #!else
 		localStorage.setItem(key, typeof data === 'string' ? data : JSON.stringify(data));
 		// #!endif
@@ -31,17 +31,17 @@ export class StorageService {
 
 	public remove(key: string) {
 		// #!if ELECTRON === 'true'
-		this.electronService.ipcRenderer.send('storageKeyRemoved', {key});
+		this.electronService.ipcRenderer.invoke('storageKeyRemoved', {key});
 		// #!else
 		localStorage.removeItem(key);
 		// #!endif
 	}
 
-	public has(key: string): boolean {
+	public has(key: string): Promise<boolean> {
 		// #!if ELECTRON === 'true'
-		return !!this.electronService.remote.getGlobal('storageData')[key];
+		return this.electronService.ipcRenderer.invoke('storageKeyHas', {key});
 		// #!else
-		return !!localStorage.getItem(key);
+		return Promise.resolve(!!localStorage.getItem(key));
 		// #!endif
 	}
 }

@@ -1,6 +1,7 @@
 import {ComponentFactoryResolver, Injectable, ViewContainerRef} from '@angular/core';
 import {HelpWindowComponent} from '../../components/help-window/help-window.component';
 import {StorageService} from '../storage/storage.service';
+import {InitService} from '../init/init.service';
 
 @Injectable({
 	providedIn: 'root'
@@ -9,12 +10,15 @@ export class HelpWindowService {
 
 	private _helpWindowInsertionPoint: ViewContainerRef;
 
-	private readonly _dontShowAgain: Set<string>;
+	private _dontShowAgain: Set<string>;
 	private readonly _currentlyShowing = new Set<string>();
 
-	constructor(private componentFactoryResolver: ComponentFactoryResolver, private storage: StorageService) {
-		const item = this.storage.get('helpWindows');
-		this._dontShowAgain = item ? new Set(item) : new Set<string>();
+	constructor(
+		private componentFactoryResolver: ComponentFactoryResolver,
+		private storage: StorageService,
+		private init: InitService
+	) {
+		this._dontShowAgain = this.init.helpWindowServiceData;
 	}
 
 

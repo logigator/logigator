@@ -7,11 +7,12 @@ import {StorageService} from '../storage/storage.service';
 })
 export class EastereggService {
 
-	private readonly done: Set<string>;
+	private done: Set<string>;
 
 	constructor(private errorHandling: ErrorHandlingService, private storage: StorageService) {
-		const item = this.storage.get('sneaks');
-		this.done = item ? new Set(item) : new Set<string>();
+		this.storage.get('sneaks').then(item => {
+			this.done = item ? new Set(item) : new Set<string>();
+		});
 	}
 
 	public achieve(name: string) {
