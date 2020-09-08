@@ -13,6 +13,7 @@
 		]
 	},
 	"files": [
+		"build-wasm.ts",
 		"create-dist-package.ts",
 		"custom-webpack.config.ts",
 		"index-html-transform.ts",
