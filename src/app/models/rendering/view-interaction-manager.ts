@@ -190,6 +190,8 @@ export class ViewInteractionManager {
 	}
 
 	private pDownSelectRect(e: PIXI.InteractionEvent) {
+		if (e.data.button !== 0) return;
+
 		if (this._state === ViewIntManState.WAIT_FOR_DRAG ||
 			this._state === ViewIntManState.WAIT_FOR_PASTE_DRAG ||
 			this._state === ViewIntManState.WAIT_FOR_CUT_DRAG) {
@@ -234,6 +236,7 @@ export class ViewInteractionManager {
 	}
 
 	private pDownElement(e: PIXI.InteractionEvent, lGraphics: LGraphics) {
+		if (e.data.button !== 0) return;
 		if (this._state === ViewIntManState.WAIT_FOR_DRAG && !this._selectRect.visible && this._selectedElements.includes(lGraphics)) {
 			this._state = ViewIntManState.DRAGGING;
 			if (!this._actionPos) this._actionPos = new PosHelper(e, this._view, (lGraphics.position as PIXI.ObservablePoint).clone());
