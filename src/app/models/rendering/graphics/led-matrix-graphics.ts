@@ -47,7 +47,7 @@ export class LedMatrixGraphics extends PIXI.Graphics implements LGraphics, Compo
 			this._labels = elemType.calcLabels(this.element);
 		}
 		this._size = Elements.calcPixelElementSize(this.element);
-		this._leds = this.getLeds()
+		this._leds = this.getLeds();
 		this.drawComponent();
 	}
 

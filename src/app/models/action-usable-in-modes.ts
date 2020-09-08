@@ -65,6 +65,6 @@ export function checkActionUsable(action: InteractionAction): boolean {
 	if (currentWorkMode === 'simulation') {
 		return actionUsableInSimulation[action];
 	} else {
-		return actionUsableInEditor[action]
+		return actionUsableInEditor[action];
 	}
 }

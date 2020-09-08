@@ -13,12 +13,12 @@
 		]
 	},
 	"files": [
-		"custom-webpack.config.ts",
 		"create-dist-package.ts",
-		"package-app.ts",
-		"remove-comp-warning-template.ts",
+		"custom-webpack.config.ts",
 		"index-html-transform.ts",
 		"markdown-postprocess-loader.ts",
+		"package-app.ts",
+		"remove-comp-warning-template.ts",
 		"wasm-js-cache-bust.ts"
 	],
 	"include": [

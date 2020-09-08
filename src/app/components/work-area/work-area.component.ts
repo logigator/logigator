@@ -111,7 +111,7 @@ export class WorkAreaComponent extends WorkArea implements OnInit, OnDestroy {
 		} else {
 			if (!this._activeView) return;
 			const editorView = this._allViews.get(this._activeView.projectId);
-			editorView.zoomPan.setZoomPanData(this._activeView.zoomPan.zoomPanData)
+			editorView.zoomPan.setZoomPanData(this._activeView.zoomPan.zoomPanData);
 			editorView.updateChunks();
 			this._activeView.destroy();
 			delete this._activeView;

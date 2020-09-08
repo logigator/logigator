@@ -1,4 +1,4 @@
-import { async, ComponentFixture, TestBed } from '@angular/core/testing';
+import {ComponentFixture, TestBed, waitForAsync} from '@angular/core/testing';
 
 import { ShortcutConfigComponent } from './shortcut-config.component';
 
@@ -6,7 +6,7 @@ describe('ShortcutConfigComponent', () => {
 	let component: ShortcutConfigComponent;
 	let fixture: ComponentFixture<ShortcutConfigComponent>;
 
-	beforeEach(async(() => {
+	beforeEach(waitForAsync(() => {
 		TestBed.configureTestingModule({
 			declarations: [ ShortcutConfigComponent ]
 		})

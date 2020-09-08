@@ -78,7 +78,7 @@ export class ThemingService {
 	}
 
 	public get pendingTheme(): Theme {
-		return this._pendingTheme
+		return this._pendingTheme;
 	}
 
 	public get showGrid(): boolean {

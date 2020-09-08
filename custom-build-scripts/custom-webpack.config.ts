@@ -1,5 +1,4 @@
 import {AngularCompilerPlugin} from '@ngtools/webpack';
-import {templateLoaderTransformer} from './template-loader-transformer';
 import * as path from 'path';
 
 module.exports = (config, options) => {
@@ -51,8 +50,6 @@ module.exports = (config, options) => {
 
 	angularCompilerPlugin.options.directTemplateLoading = false;
 
-	addTransformerToAngularCompilerPlugin(angularCompilerPlugin, templateLoaderTransformer);
-
 	return config;
 };
 
@@ -79,8 +76,4 @@ function findAngularCompilerPlugin(webpackCfg): AngularCompilerPlugin | null {
 			return plugin;
 		}
 	}
-}
-
-function addTransformerToAngularCompilerPlugin(acp, transformer): void {
-	acp._transformers = [transformer, ...acp._transformers];
 }

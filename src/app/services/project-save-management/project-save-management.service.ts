@@ -199,7 +199,7 @@ export class ProjectSaveManagementService {
 			this.elemProvService.clearUserDefinedElements();
 			this.elemProvService.setUserDefinedTypes(await this.getCustomElementsFromServer());
 			const mainProj = await this.getProjectOrCompFromServer(resp.result.id, true);
-			this.setAddress('board', mainProj.id)
+			this.setAddress('board', mainProj.id);
 			if (mainProj.type === 'comp') return [Project.empty(), mainProj];
 			return [mainProj];
 		}
@@ -378,7 +378,7 @@ export class ProjectSaveManagementService {
 		this._projectCache.clear();
 		await this.saveProjectsAndComponents(projectsToSave);
 
-		this.setAddress('board', mainProjectId)
+		this.setAddress('board', mainProjectId);
 		this._projectSource = 'server';
 		return mainProjToSave;
 	}
@@ -607,7 +607,7 @@ export class ProjectSaveManagementService {
 	private ensureComponentsExists(elements: Element[]): Element[] {
 		return elements.filter(el => {
 			if (el.typeId < 500) return true;
-			if(!this.elemProvService.getElementById(el.typeId)) {
+			if (!this.elemProvService.getElementById(el.typeId)) {
 				this.errorHandling.showErrorMessage('ERROR.PROJECTS.REMOVED_COMP');
 				return false;
 			}
@@ -637,7 +637,7 @@ export class ProjectSaveManagementService {
 	}
 
 	public setAddress(type: string = null, path: string | number = null) {
-		let url = '/'
+		let url = '/';
 		if (type)
 			url += `${type}`;
 		if (path)

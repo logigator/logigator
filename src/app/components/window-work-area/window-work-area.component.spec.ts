@@ -1,4 +1,4 @@
-import { async, ComponentFixture, TestBed } from '@angular/core/testing';
+import {ComponentFixture, TestBed, waitForAsync} from '@angular/core/testing';
 
 import { WindowWorkAreaComponent } from './window-work-area.component';
 
@@ -6,7 +6,7 @@ describe('WindowWorkAreaComponent', () => {
 	let component: WindowWorkAreaComponent;
 	let fixture: ComponentFixture<WindowWorkAreaComponent>;
 
-	beforeEach(async(() => {
+	beforeEach(waitForAsync(() => {
 		TestBed.configureTestingModule({
 			declarations: [ WindowWorkAreaComponent ]
 		})

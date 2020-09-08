@@ -262,10 +262,10 @@ export class SvgCompRenderer {
 					offsetY = 1.5 * environment.gridPixelWidth;
 					break;
 				case 2:
-					offsetX = 0.5 * environment.gridPixelWidth
+					offsetX = 0.5 * environment.gridPixelWidth;
 					break;
 				case 3:
-					offsetY = 0.5 * environment.gridPixelWidth
+					offsetY = 0.5 * environment.gridPixelWidth;
 					break;
 			}
 			for (let x = 0; x < ledAmount; x++) {

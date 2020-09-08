@@ -40,7 +40,7 @@ export class WorkModeService {
 			this._currentComponentTypeToBuild = componentTypeToBuild;
 			const elementType = this.elemProv.getElementById(componentTypeToBuild);
 			if (this.elemProv.isUserElement(componentTypeToBuild) && elementType.numInputs === 0 && elementType.numOutputs === 0) {
-				this.helpWindowService.showHelpWindow('NEEDS_PLUGS')
+				this.helpWindowService.showHelpWindow('NEEDS_PLUGS');
 			}
 		} else {
 			delete this._currentComponentTypeToBuild;

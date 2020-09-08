@@ -53,7 +53,7 @@ export class HelpComponent extends PopupContentComp implements OnInit, OnDestroy
 	}
 
 	private insertSideBar() {
-		this.renderer2.setProperty(this._sidebar.nativeElement, 'innerHTML', require(`../../../../help/${this.currentLang}/sidebar.md`))
+		this.renderer2.setProperty(this._sidebar.nativeElement, 'innerHTML', require(`../../../../help/${this.currentLang}/sidebar.md`));
 	}
 
 	private setActiveClass(link: HTMLElement) {

@@ -120,7 +120,7 @@ export class RomEditComponent extends PopupContentComp<Element> implements OnIni
 
 		const base64 = hex.match(/\w{2}/g).map((a) =>  {
 			return String.fromCharCode(parseInt(a, 16));
-		}).join('')
+		}).join('');
 		this.requestClose.emit(btoa(base64));
 	}
 

@@ -135,7 +135,7 @@ export class ProjectsService {
 		const project = await this.projectSaveManagementService.openProjectFromShare(address);
 		if (!project) return;
 
-		this.projectSaveManagementService.setAddress('share', address)
+		this.projectSaveManagementService.setAddress('share', address);
 		this.switchProjectAfterOpen(project);
 	}
 

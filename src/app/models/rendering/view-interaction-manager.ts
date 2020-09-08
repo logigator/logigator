@@ -457,7 +457,7 @@ export class ViewInteractionManager {
 		this._selectRect.visible = true;
 		this._selectedElements = this.copySer.copiedElements.filter(el => {
 			if (this.projectsSer.currProject.type === 'project') {
-				return !this.elemProvSer.isPlugElement(el.typeId)
+				return !this.elemProvSer.isPlugElement(el.typeId);
 			}
 			return true;
 		}).map(el => {
@@ -489,7 +489,7 @@ export class ViewInteractionManager {
 	private applyPaste() {
 		const elementsToAdd = this._selectedElements.filter(lg => {
 				if (this.projectsSer.currProject.type === 'project') {
-					return !this.elemProvSer.isPlugElement(lg.element.typeId)
+					return !this.elemProvSer.isPlugElement(lg.element.typeId);
 				}
 				return true;
 			}).map(lg => Elements.clone(lg.element));

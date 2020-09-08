@@ -118,11 +118,11 @@ export abstract class View extends PIXI.Container {
 			this._chunks[removedChunk.x][removedChunk.y].container.renderable = false;
 			this._chunks[removedChunk.x][removedChunk.y].gridGraphics.visible = false;
 			this._chunks[removedChunk.x][removedChunk.y].gridGraphics.renderable = false;
-		})
+		});
 	}
 
 	private chunksToRenderTrackBy(index: number, item: { x: number, y: number }) {
-		return `${item.x}:${item.y}`
+		return `${item.x}:${item.y}`;
 	}
 
 	private onGridShowChange(show: boolean) {

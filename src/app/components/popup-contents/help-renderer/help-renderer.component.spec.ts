@@ -1,4 +1,4 @@
-import { async, ComponentFixture, TestBed } from '@angular/core/testing';
+import {ComponentFixture, TestBed, waitForAsync} from '@angular/core/testing';
 
 import { HelpRendererComponent } from './help-renderer.component';
 
@@ -6,7 +6,7 @@ describe('HelpRendererComponent', () => {
 	let component: HelpRendererComponent;
 	let fixture: ComponentFixture<HelpRendererComponent>;
 
-	beforeEach(async(() => {
+	beforeEach(waitForAsync(() => {
 		TestBed.configureTestingModule({
 			declarations: [ HelpRendererComponent ]
 		})

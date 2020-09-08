@@ -101,7 +101,7 @@ export class ZoomPan {
 	}
 
 	public setZoomPanData({scale, posX, posY}: ZoomPanData) {
-		this.zoomTo(scale, posX, posY)
+		this.zoomTo(scale, posX, posY);
 		this.translateTo(new PIXI.Point(posX, posY));
 	}
 
@@ -110,7 +110,7 @@ export class ZoomPan {
 			posX: this.positionX,
 			posY: this.positionY,
 			scale: this.currentScale
-		}
+		};
 	}
 
 }

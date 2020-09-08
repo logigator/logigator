@@ -1,4 +1,4 @@
-import { async, ComponentFixture, TestBed } from '@angular/core/testing';
+import {ComponentFixture, TestBed, waitForAsync} from '@angular/core/testing';
 
 import { SettingsInfoBoxComponent } from './settings-info-box.component';
 
@@ -6,7 +6,7 @@ describe('SettingsInfoBoxComponent', () => {
 	let component: SettingsInfoBoxComponent;
 	let fixture: ComponentFixture<SettingsInfoBoxComponent>;
 
-	beforeEach(async(() => {
+	beforeEach(waitForAsync(() => {
 		TestBed.configureTestingModule({
 			declarations: [ SettingsInfoBoxComponent ]
 		})

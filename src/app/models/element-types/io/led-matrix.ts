@@ -85,7 +85,7 @@ export const ledMatrix: ElementType = {
 				addressAmount = 2;
 				break;
 			case 8:
-				addressAmount = 3
+				addressAmount = 3;
 				break;
 			case 16:
 				addressAmount = 5;

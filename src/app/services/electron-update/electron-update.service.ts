@@ -26,7 +26,7 @@ export class ElectronUpdateService {
 		// #!if DEBUG === 'true'
 		this.packageJson = JSON.parse(fs.readFileSync(path.join(process.cwd(), 'package.json')).toString());
 		// #!else
-		this.packageJson = JSON.parse(fs.readFileSync(path.join(process.cwd(), 'resources', 'app.asar', 'package.json')).toString())
+		this.packageJson = JSON.parse(fs.readFileSync(path.join(process.cwd(), 'resources', 'app.asar', 'package.json')).toString());
 		// #!endif
 	}
 

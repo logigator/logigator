@@ -125,7 +125,7 @@ export class UserService implements SharedCompsAuthService {
 		// #!else
 		const isLoggedIn = this.document.cookie.match('(^|[^;]+)\\s*' + 'isLoggedIn' + '\\s*=\\s*([^;]+)');
 		if (!isLoggedIn) {
-			this._isLoggedIn = false
+			this._isLoggedIn = false;
 		} else {
 			this._isLoggedIn = isLoggedIn[0] !== '' && isLoggedIn[0].endsWith('true');
 		}
