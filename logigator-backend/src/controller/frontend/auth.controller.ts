@@ -1,6 +1,8 @@
 import {Controller, Get, Post, UseBefore} from "routing-controllers";
 import {GoogleLoginMiddleware} from "../../middleware/auth/google-login.middleware";
 import {GoogleAuthenticationMiddleware} from "../../middleware/auth/google-authentication.middleware";
+import {TwitterLoginMiddleware} from "../../middleware/auth/twitter-login.middleware";
+import {TwitterAuthenticationMiddleware} from "../../middleware/auth/twitter-authentication.middleware";
 
 @Controller('/auth')
 export class AuthController {
@@ -24,7 +26,13 @@ export class AuthController {
 	}
 
 	@Get('/twitter-login')
+	@UseBefore(TwitterLoginMiddleware)
 	public twitterLogin() {
+	}
+
+	@Get('/twitter-authenticate')
+	@UseBefore(TwitterAuthenticationMiddleware)
+	public twitterAuthenticate() {
 	}
 
 }

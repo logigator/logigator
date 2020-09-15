@@ -3,7 +3,6 @@ import {Shortcut} from "./shortcut.entity";
 import {Project} from "./project.entity";
 import {Component} from "./component.entity";
 import {Link} from "./link.entity";
-import {IsBoolean, IsEmail} from "class-validator";
 
 @Entity()
 @Check(`(login_type = 'local' and password is not null) or (login_type != 'local')`)

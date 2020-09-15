@@ -1,0 +1,12 @@
+{
+	"google": {
+		"clientID": "--",
+		"clientSecret": "--",
+		"callbackURL": "http://example.com"
+	},
+	"twitter": {
+		"consumerKey": "--",
+		"consumerSecret": "--",
+		"callbackURL": "http://example.com"
+	}
+}

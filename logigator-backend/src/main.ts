@@ -1,8 +1,8 @@
 import "reflect-metadata";
-import {createExpressServer, useContainer as useContainerRC, useExpressServer} from "routing-controllers";
+import {useContainer as useContainerRC, useExpressServer} from "routing-controllers";
 import {createConnection, useContainer as typeOrmUseContainer, ConnectionOptions} from 'typeorm';
 import {useContainer as classValidatorUseContainer} from "class-validator";
-import express, {Application, urlencoded} from 'express'
+import express, {urlencoded} from 'express'
 import {Container} from "typedi";
 import * as exphbs from "express-handlebars";
 import {HomeController} from "./controller/frontend/home.controller";
@@ -43,8 +43,8 @@ async function bootstrap() {
 	app.set('views', path.join(__dirname, '..', 'resources', 'private', 'templates', 'views'));
 	app.set('view engine', 'hbs');
 
-	app.use(urlencoded({ extended: false }))
-	app.use(flash())
+	app.use(urlencoded({ extended: false }));
+	app.use(flash());
 	app.use(cookieParser());
 	app.use(session({
 		secret: 'test',

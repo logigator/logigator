@@ -4,6 +4,7 @@ import {OAuth2Strategy} from 'passport-google-oauth'
 import {ConfigService} from "./config.service";
 import {User} from "../database/entities/user.entity";
 import {UserService} from "./user.service";
+import {Strategy as TwitterStrategy} from 'passport-twitter'
 
 @Service()
 export class PassportConfigService {
@@ -12,6 +13,7 @@ export class PassportConfigService {
 
 	public setupPassport() {
 		this.setupGoogle();
+		this.setupTwitter();
 		this.setupSessions();
 	}
 
@@ -31,6 +33,22 @@ export class PassportConfigService {
 			async (accessToken, refreshToken, profile, done) => {
 				const user = await this.userService.findOrCreateGoogleUser(profile);
 				done(null, user, null);
+			}
+		));
+	}
+
+	private setupTwitter() {
+		passport.use(new TwitterStrategy(
+			{
+				...this.configService.getConfig('passport').twitter,
+				includeEmail: true,
+				includeEntities: false,
+				includeStatus: false,
+				forceLogin: true
+			},
+			async (accessToken, refreshToken, profile, done) => {
+				const user = await this.userService.findOrCreateTwitterUser(profile);
+				done(null, user);
 			}
 		));
 	}
