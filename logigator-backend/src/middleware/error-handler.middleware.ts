@@ -1,4 +1,4 @@
-import {ExpressErrorMiddlewareInterface, HttpError, Middleware} from "routing-controllers";
+import {BadRequestError, ExpressErrorMiddlewareInterface, HttpError, Middleware} from "routing-controllers";
 import {Request, Response} from 'express';
 import {ConfigService} from "../services/config.service";
 
@@ -23,6 +23,9 @@ export class ErrorHandlerMiddleware implements ExpressErrorMiddlewareInterface {
 		if (this._appContext !== 'production') {
 			errorResponse.error.description = error.message;
 			errorResponse.error.stack = error.stack;
+			if (error instanceof BadRequestError && 'errors' in error) {
+				errorResponse.error.errors = (error as any).errors;
+			}
 			console.log(error);
 		}
 
