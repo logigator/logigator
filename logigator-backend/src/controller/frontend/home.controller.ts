@@ -1,5 +1,6 @@
-import {Authorized, Controller, CurrentUser, Get, Render} from "routing-controllers";
+import {Controller, CurrentUser, Get, Render, UseBefore} from "routing-controllers";
 import {User} from "../../database/entities/user.entity";
+import {CheckAuthenticatedFrontMiddleware} from "../../middleware/auth/frontend-guards/check-authenticated-front.middleware";
 
 @Controller()
 export class HomeController {
@@ -13,7 +14,7 @@ export class HomeController {
 	}
 
 	@Get('/test')
-	@Authorized()
+	@UseBefore(CheckAuthenticatedFrontMiddleware)
 	public test(@CurrentUser() user: User) {
 		return JSON.stringify(user);
 	}

@@ -14,6 +14,9 @@ import passport from "passport";
 import session from "express-session";
 import {PassportConfigService} from "./services/passport-config.service";
 import cookieParser from "cookie-parser";
+import {ErrorHandlerMiddleware} from "./middleware/error-handler.middleware";
+import {ProjectController} from "./controller/api/project.controller";
+import {NotFoundController} from "./controller/not-found.controller";
 
 useContainerRC(Container)
 typeOrmUseContainer(Container);
@@ -58,10 +61,13 @@ async function bootstrap() {
 	useExpressServer(app, {
 		controllers: [
 			HomeController,
-			AuthController
+			AuthController,
+			ProjectController,
+			NotFoundController
 		],
+		middlewares: [ErrorHandlerMiddleware],
 		development: appContext === 'development',
-		authorizationChecker: action => !!action.request.user,
+		defaultErrorHandler: false,
 		currentUserChecker: action => action.request.user
 	});
 
