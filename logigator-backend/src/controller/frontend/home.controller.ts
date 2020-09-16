@@ -16,7 +16,7 @@ export class HomeController {
 
 	@Get('/delete')
 	public del(@CurrentUser() user: User) {
-		this.userRepo.delete(user);
+		this.userRepo.remove(user);
 		return '';
 	}
 
