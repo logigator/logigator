@@ -1,8 +1,18 @@
-import {Check, Column, Entity, ManyToMany, OneToMany, PrimaryGeneratedColumn} from 'typeorm';
+import {
+	Check,
+	Column,
+	Entity,
+	JoinColumn,
+	ManyToMany,
+	OneToMany,
+	OneToOne,
+	PrimaryGeneratedColumn
+} from 'typeorm';
 import {Shortcut} from "./shortcut.entity";
 import {Project} from "./project.entity";
 import {Component} from "./component.entity";
 import {Link} from "./link.entity";
+import {ProfilePicture} from "./profile-picture.entity";
 
 @Entity()
 @Check(`(login_type = 'local' and password is not null) or (login_type != 'local')`)
@@ -26,6 +36,9 @@ export class User {
 	})
 	loginType: 'local'|'google'|'twitter';
 
+	@OneToOne(type => ProfilePicture, image => image.user, {eager: true, cascade: true})
+	image: ProfilePicture;
+
 	@Column({default: false})
 	localEmailVerified: boolean;
 
@@ -40,4 +53,5 @@ export class User {
 
 	@ManyToMany(type => Link, object => object.permits)
 	permittedLinks: Link[];
+
 }

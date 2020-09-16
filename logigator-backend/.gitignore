@@ -36,3 +36,7 @@ lerna-debug.log*
 # configs
 /config/*.json
 !/config/*.json.example
+
+# persited resources
+/resources/public/persisted/*
+!/resources/public/persisted/.gitkeep

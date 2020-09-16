@@ -1,22 +1,23 @@
-import {Controller, CurrentUser, Get, Render, UseBefore} from "routing-controllers";
+import {Controller, CurrentUser, Get, Render} from "routing-controllers";
 import {User} from "../../database/entities/user.entity";
-import {CheckAuthenticatedFrontMiddleware} from "../../middleware/auth/frontend-guards/check-authenticated-front.middleware";
+import {InjectRepository} from "typeorm-typedi-extensions";
+import {UserRepository} from "../../database/repositories/user.repository";
 
 @Controller()
 export class HomeController {
 
-	constructor() {}
+	constructor(@InjectRepository() private userRepo: UserRepository,) {}
 
 	@Get('/',)
-	@Render('home')
-	public async index() {
-		return {};
+	//@Render('home')
+	public async index(@CurrentUser() user: User) {
+		return user;
 	}
 
-	@Get('/test')
-	@UseBefore(CheckAuthenticatedFrontMiddleware)
-	public test(@CurrentUser() user: User) {
-		return JSON.stringify(user);
+	@Get('/delete')
+	public del(@CurrentUser() user: User) {
+		this.userRepo.delete(user);
+		return '';
 	}
 
 }

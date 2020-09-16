@@ -2,7 +2,7 @@ import "reflect-metadata";
 import {useContainer as useContainerRC, useExpressServer} from "routing-controllers";
 import {createConnection, useContainer as typeOrmUseContainer, ConnectionOptions} from 'typeorm';
 import {useContainer as classValidatorUseContainer} from "class-validator";
-import express, {urlencoded} from 'express'
+import express, {urlencoded, static as expressStatic} from 'express'
 import {Container} from "typedi";
 import * as exphbs from "express-handlebars";
 import {HomeController} from "./controller/frontend/home.controller";
@@ -58,6 +58,7 @@ async function bootstrap() {
 	app.use(passport.initialize());
 	app.use(passport.session());
 
+	app.use(expressStatic(path.join(__dirname, '..', 'resources', 'public')));
 	useExpressServer(app, {
 		controllers: [
 			HomeController,

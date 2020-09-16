@@ -1,7 +1,7 @@
 import {
 	Column,
 	CreateDateColumn,
-	Entity,
+	Entity, JoinColumn,
 	ManyToOne,
 	OneToMany, OneToOne,
 	PrimaryGeneratedColumn,
@@ -9,6 +9,7 @@ import {
 } from 'typeorm';
 import {User} from "./user.entity";
 import {Link} from "./link.entity";
+import {ProjectFile} from "./project-file.entity";
 
 @Entity()
 export class Project {
@@ -27,6 +28,10 @@ export class Project {
 
 	@UpdateDateColumn()
 	lastEdited: Date;
+
+	@OneToOne(type => ProjectFile, projectFile => projectFile.project)
+	@JoinColumn()
+	projectFile: ProjectFile
 
 	@ManyToOne(type => User, object => object.projects)
 	user: User;
