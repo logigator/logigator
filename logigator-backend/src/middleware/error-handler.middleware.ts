@@ -13,12 +13,12 @@ export class ErrorHandlerMiddleware implements ExpressErrorMiddlewareInterface {
 
 	error(error: Error, request: Request, response: Response, next: (err?: any) => any): void {
 
-		let errorResponse: any = {
+		const errorResponse: any = {
 			status: (error as HttpError).httpCode || 500,
 			error: {
 				name: error.name || 'InternalServerError',
 			}
-		}
+		};
 
 		if (this._appContext !== 'production') {
 			errorResponse.error.description = error.message;

@@ -5,7 +5,7 @@ import {User} from "./user.entity";
 @Entity()
 export class ProfilePicture extends PersistedResource {
 
-	@OneToOne(type => User, user => user.image, {onDelete: "CASCADE"})
+	@OneToOne(type => User, user => user.image)
 	@JoinColumn()
 	user: User;
 

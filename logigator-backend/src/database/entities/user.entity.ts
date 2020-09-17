@@ -1,8 +1,8 @@
 import {
+	BeforeRemove,
 	Check,
 	Column,
-	Entity,
-	JoinColumn,
+	Entity, getCustomRepository,
 	ManyToMany,
 	OneToMany,
 	OneToOne,
@@ -13,6 +13,7 @@ import {Project} from "./project.entity";
 import {Component} from "./component.entity";
 import {Link} from "./link.entity";
 import {ProfilePicture} from "./profile-picture.entity";
+import {ProfilePictureRepository} from '../repositories/profile-picture.repository';
 
 @Entity()
 @Check(`(login_type = 'local' and password is not null) or (login_type != 'local')`)
@@ -53,5 +54,10 @@ export class User {
 
 	@ManyToMany(type => Link, object => object.permits)
 	permittedLinks: Link[];
+
+	@BeforeRemove()
+	private async removeImage() {
+		await getCustomRepository(ProfilePictureRepository).remove(this.image);
+	}
 
 }

@@ -1,30 +1,81 @@
-import {AfterInsert, AfterUpdate, BeforeRemove, Column, PrimaryGeneratedColumn} from 'typeorm';
+import {AfterInsert, BeforeRemove, BeforeUpdate, Column, Generated, PrimaryGeneratedColumn} from 'typeorm';
 import * as fs from 'fs';
 import * as path from 'path';
 import mime from 'mime';
 import md5 from 'md5';
+import { v4 as uuid } from 'uuid';
 
 export abstract class PersistedResource {
 
 	@PrimaryGeneratedColumn('uuid')
-	id: string;
+	readonly id: string;
+
+	@Column({unique: true, name: 'filename'})
+	@Generated('uuid')
+	private _filename: string;
 
 	@Column()
 	mimeType: string;
 
-	@Column({type: 'char', length: 32})
-	md5: string
+	@Column({type: 'char', length: 32, name: 'md5'})
+	private _md5: string;
 
 	private _fileContent: Buffer;
+	private _dirty = false;
+	protected _cacheable = false;
+	protected _path = 'persisted';
+
+	public get filename() {
+		return this._filename;
+	}
+
+	public get md5() {
+		return this._md5;
+	}
+
+	public get cacheable() {
+		return this._cacheable;
+	}
 
 	@AfterInsert()
 	private createFile() {
 		fs.writeFileSync(this.filePath, this._fileContent);
 	}
 
-	@AfterUpdate()
-	private updateFile() {
-		fs.writeFileSync(this.filePath, this._fileContent);
+	@BeforeUpdate()
+	private async updateFile() {
+		if (this._dirty) {
+			if (this._cacheable) {
+				return new Promise<void>((resolve, reject) => {
+					fs.unlink(this.filePath, err => {
+						if (err) {
+							reject(err);
+							return;
+						}
+						this._filename = uuid();
+						fs.writeFile(this.filePath, this._fileContent, err => {
+							if (err) {
+								reject(err);
+								return;
+							}
+							this._dirty = false;
+							resolve();
+						});
+					});
+				});
+			} else {
+				return new Promise<void>((resolve, reject) => {
+					fs.writeFile(this.filePath, this._fileContent, err => {
+						if (err) {
+							reject(err);
+							return;
+						}
+						this._dirty = false;
+						resolve();
+					});
+				});
+			}
+		}
 	}
 
 	@BeforeRemove()
@@ -51,18 +102,19 @@ export abstract class PersistedResource {
 	public setFileContent(content: Buffer | string) {
 		if (content instanceof Buffer) {
 			this._fileContent = content;
-			this.md5 = md5(this._fileContent);
-			return;
+		} else {
+			this._fileContent = Buffer.from(content);
 		}
-		this._fileContent = Buffer.from(content);
-		this.md5 = md5(this._fileContent);
+		const hash = md5(this._fileContent);
+		this._dirty = this._md5 !== hash;
+		this._md5 = hash;
 	}
 
 	public get filePath(): string {
-		return path.join(__dirname, '..', '..', '..', 'resources', 'public', 'persisted', this.id + '.' + mime.getExtension(this.mimeType));
+		return path.join(__dirname, '..', '..', '..', 'resources', 'public', this._path, this._filename + '.' + mime.getExtension(this.mimeType));
 	}
 
 	public get publicUrl(): string {
-		return `/persisted/${this.id}.${mime.getExtension(this.mimeType)}`;
+		return `/${this._path}/${this._filename}.${mime.getExtension(this.mimeType)}`;
 	}
 }

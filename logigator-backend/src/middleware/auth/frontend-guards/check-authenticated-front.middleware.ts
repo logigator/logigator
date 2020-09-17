@@ -4,7 +4,7 @@ import {Request, Response} from "express";
 export class CheckAuthenticatedFrontMiddleware implements ExpressMiddlewareInterface {
 
 	use(request: Request, response: Response, next: (err?: any) => any): any {
-		if (!!request.user) {
+		if (request.user) {
 			next();
 			return;
 		}

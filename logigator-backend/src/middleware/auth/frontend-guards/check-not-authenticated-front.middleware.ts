@@ -4,7 +4,7 @@ import {Request, Response} from "express";
 export class CheckNotAuthenticatedFrontMiddleware implements ExpressMiddlewareInterface {
 
 	use(request: Request, response: Response, next: (err?: any) => any): any {
-		if (!!request.user) {
+		if (request.user) {
 			response.redirect('/');
 			return;
 		}

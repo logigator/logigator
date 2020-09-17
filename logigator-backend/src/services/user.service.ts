@@ -17,7 +17,7 @@ export class UserService {
 
 	public async findOrCreateGoogleUser(profile: GoogleProfile): Promise<User> {
 		let user = await this.userRepo.findOne({
-			email: profile.emails[0].value,
+			email: profile.emails[0].value
 		});
 
 		if (user) {
