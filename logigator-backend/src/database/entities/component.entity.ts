@@ -7,8 +7,8 @@ import {
 	PrimaryGeneratedColumn,
 	UpdateDateColumn, VersionColumn
 } from 'typeorm';
-import {User} from "./user.entity";
-import {Link} from "./link.entity";
+import {User} from './user.entity';
+import {Link} from './link.entity';
 
 
 @Entity()

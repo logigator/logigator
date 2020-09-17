@@ -1,5 +1,5 @@
-import {ExpressMiddlewareInterface} from "routing-controllers";
-import {Request, Response} from "express";
+import {ExpressMiddlewareInterface} from 'routing-controllers';
+import {Request, Response} from 'express';
 
 export class FlashMessagesMiddleware implements ExpressMiddlewareInterface {
 

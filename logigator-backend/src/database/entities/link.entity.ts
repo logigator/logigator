@@ -8,9 +8,9 @@ import {
 	OneToOne,
 	PrimaryGeneratedColumn
 } from 'typeorm';
-import {Project} from "./project.entity";
-import {Component} from "./component.entity";
-import {User} from "./user.entity";
+import {Project} from './project.entity';
+import {Component} from './component.entity';
+import {User} from './user.entity';
 
 @Entity()
 @Check(`(project is not null and component is null) or (project is null and component is not null)`)

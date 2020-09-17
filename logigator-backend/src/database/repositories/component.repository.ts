@@ -1,6 +1,6 @@
-import {EntityRepository, Repository} from "typeorm";
-import {Service} from "typedi";
-import {Component} from "../entities/component.entity";
+import {EntityRepository, Repository} from 'typeorm';
+import {Service} from 'typedi';
+import {Component} from '../entities/component.entity';
 
 @Service()
 @EntityRepository(Component)

@@ -1,6 +1,6 @@
-import {ExpressMiddlewareInterface} from "routing-controllers";
-import {Request, Response} from "express";
-import passport from "passport";
+import {ExpressMiddlewareInterface} from 'routing-controllers';
+import {Request, Response} from 'express';
+import passport from 'passport';
 
 export class TwitterAuthenticationMiddleware implements ExpressMiddlewareInterface {
 

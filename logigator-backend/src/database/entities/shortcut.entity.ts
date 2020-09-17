@@ -1,6 +1,5 @@
 import {Column, Entity, ManyToOne, PrimaryGeneratedColumn} from 'typeorm';
-import {User} from "./user.entity";
-import {IsBoolean} from "class-validator";
+import {User} from './user.entity';
 
 @Entity()
 export class Shortcut {

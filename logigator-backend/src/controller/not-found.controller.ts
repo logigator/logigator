@@ -1,4 +1,4 @@
-import {Controller, Delete, Get, HttpCode, NotFoundError, Post, Put, Render, Req} from "routing-controllers";
+import {Controller, Delete, Get, HttpCode, NotFoundError, Post, Put, Render, Req} from 'routing-controllers';
 import {Request} from 'express';
 
 @Controller()

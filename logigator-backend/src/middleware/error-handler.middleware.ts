@@ -1,8 +1,8 @@
-import {BadRequestError, ExpressErrorMiddlewareInterface, HttpError, Middleware} from "routing-controllers";
+import {BadRequestError, ExpressErrorMiddlewareInterface, HttpError, Middleware} from 'routing-controllers';
 import {Request, Response} from 'express';
-import {ConfigService} from "../services/config.service";
+import {ConfigService} from '../services/config.service';
 
-@Middleware({type: "after"})
+@Middleware({type: 'after'})
 export class ErrorHandlerMiddleware implements ExpressErrorMiddlewareInterface {
 
 	private readonly _appContext: string;
@@ -16,7 +16,7 @@ export class ErrorHandlerMiddleware implements ExpressErrorMiddlewareInterface {
 		const errorResponse: any = {
 			status: (error as HttpError).httpCode || 500,
 			error: {
-				name: error.name || 'InternalServerError',
+				name: error.name || 'InternalServerError'
 			}
 		};
 
@@ -55,7 +55,7 @@ export class ErrorHandlerMiddleware implements ExpressErrorMiddlewareInterface {
 				return `${line}<br>`;
 			});
 
-			body += `<p>${formattedStack}</p>`
+			body += `<p>${formattedStack}</p>`;
 		}
 		response.send(body);
 	}

@@ -8,11 +8,11 @@ import {
 	OneToOne,
 	PrimaryGeneratedColumn
 } from 'typeorm';
-import {Shortcut} from "./shortcut.entity";
-import {Project} from "./project.entity";
-import {Component} from "./component.entity";
-import {Link} from "./link.entity";
-import {ProfilePicture} from "./profile-picture.entity";
+import {Shortcut} from './shortcut.entity';
+import {Project} from './project.entity';
+import {Component} from './component.entity';
+import {Link} from './link.entity';
+import {ProfilePicture} from './profile-picture.entity';
 import {ProfilePictureRepository} from '../repositories/profile-picture.repository';
 
 @Entity()

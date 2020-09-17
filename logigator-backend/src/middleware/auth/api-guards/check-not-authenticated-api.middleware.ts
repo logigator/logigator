@@ -1,5 +1,5 @@
-import {BadRequestError, ExpressMiddlewareInterface} from "routing-controllers";
-import {Request, Response} from "express";
+import {BadRequestError, ExpressMiddlewareInterface} from 'routing-controllers';
+import {Request, Response} from 'express';
 
 export class CheckNotAuthenticatedApiMiddleware implements ExpressMiddlewareInterface {
 

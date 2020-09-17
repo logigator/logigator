@@ -1,10 +1,10 @@
-import {Service} from "typedi";
-import passport from "passport";
-import {OAuth2Strategy} from 'passport-google-oauth'
-import {ConfigService} from "./config.service";
-import {User} from "../database/entities/user.entity";
-import {UserService} from "./user.service";
-import {Strategy as TwitterStrategy} from 'passport-twitter'
+import {Service} from 'typedi';
+import passport from 'passport';
+import {OAuth2Strategy} from 'passport-google-oauth';
+import {ConfigService} from './config.service';
+import {User} from '../database/entities/user.entity';
+import {UserService} from './user.service';
+import {Strategy as TwitterStrategy} from 'passport-twitter';
 
 @Service()
 export class PassportConfigService {

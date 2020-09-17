@@ -7,9 +7,9 @@ import {
 	PrimaryGeneratedColumn,
 	UpdateDateColumn, VersionColumn
 } from 'typeorm';
-import {User} from "./user.entity";
-import {Link} from "./link.entity";
-import {ProjectFile} from "./project-file.entity";
+import {User} from './user.entity';
+import {Link} from './link.entity';
+import {ProjectFile} from './project-file.entity';
 
 @Entity()
 export class Project {

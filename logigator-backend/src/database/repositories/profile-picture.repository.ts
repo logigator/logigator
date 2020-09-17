@@ -1,7 +1,7 @@
 import {EntityRepository, Repository} from 'typeorm';
 import {Service} from 'typedi';
 import {ProfilePicture} from '../entities/profile-picture.entity';
-import fetch from 'node-fetch'
+import fetch from 'node-fetch';
 
 @Service()
 @EntityRepository(ProfilePicture)

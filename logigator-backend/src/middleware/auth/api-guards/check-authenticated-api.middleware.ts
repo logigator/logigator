@@ -1,5 +1,5 @@
-import {ExpressMiddlewareInterface, UnauthorizedError} from "routing-controllers";
-import {Request, Response} from "express";
+import {ExpressMiddlewareInterface, UnauthorizedError} from 'routing-controllers';
+import {Request, Response} from 'express';
 
 export class CheckAuthenticatedApiMiddleware implements ExpressMiddlewareInterface {
 

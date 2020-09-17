@@ -25,15 +25,15 @@ export abstract class PersistedResource {
 	protected _cacheable = false;
 	protected _path = 'persisted';
 
-	public get filename() {
+	public get filename(): string {
 		return this._filename;
 	}
 
-	public get md5() {
+	public get md5(): string {
 		return this._md5;
 	}
 
-	public get cacheable() {
+	public get cacheable(): boolean {
 		return this._cacheable;
 	}
 
@@ -47,15 +47,15 @@ export abstract class PersistedResource {
 		if (this._dirty) {
 			if (this._cacheable) {
 				return new Promise<void>((resolve, reject) => {
-					fs.unlink(this.filePath, err => {
-						if (err) {
-							reject(err);
+					fs.unlink(this.filePath, delErr => {
+						if (delErr) {
+							reject(delErr);
 							return;
 						}
 						this._filename = uuid();
-						fs.writeFile(this.filePath, this._fileContent, err => {
-							if (err) {
-								reject(err);
+						fs.writeFile(this.filePath, this._fileContent, readErr => {
+							if (readErr) {
+								reject(readErr);
 								return;
 							}
 							this._dirty = false;

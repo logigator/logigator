@@ -1,4 +1,4 @@
-import {Service} from "typedi";
+import {Service} from 'typedi';
 import * as fs from 'fs';
 import * as path from 'path';
 
