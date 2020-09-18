@@ -22,8 +22,6 @@ services:
     user: "node"
     working_dir: /home/node/app
     command: "npm start"
-    expose:
-      - "80"
   development_mysql:
     image: mysql:latest
     networks:
