@@ -50,7 +50,7 @@ async function bootstrap() {
 	app.use(flash());
 	app.use(cookieParser());
 	app.use(session({
-		secret: 'test',
+		secret: configService.getConfig('session').secret,
 		resave: false,
 		saveUninitialized: false
 	}));

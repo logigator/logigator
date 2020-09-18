@@ -1,4 +1,4 @@
-import {Controller, CurrentUser, Get, Render} from 'routing-controllers';
+import {Controller, CookieParams, CurrentUser, Get, Render} from 'routing-controllers';
 import {User} from '../../database/entities/user.entity';
 import {InjectRepository} from 'typeorm-typedi-extensions';
 import {UserRepository} from '../../database/repositories/user.repository';
