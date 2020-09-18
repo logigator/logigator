@@ -1,8 +1,0 @@
-version: '3'
-services:
-  dev_http_proxy:
-    image: httpd:latest
-    network_mode: host
-    volumes:
-      - ./dev-proxy.httpd.conf:/usr/local/apache2/conf/httpd.conf
-

@@ -72,7 +72,7 @@ async function bootstrap() {
 		currentUserChecker: action => action.request.user
 	});
 
-	app.listen(80, () => {
+	app.listen(3000, () => {
 		console.log('App started successfully');
 	});
 }
