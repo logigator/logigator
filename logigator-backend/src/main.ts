@@ -21,6 +21,9 @@ import {RedisService} from './services/redis.service';
 import {PreferencesController} from './controller/frontend/preferences.controller';
 import {NotFoundMiddleware} from './middleware/not-found.middleware';
 import {DefaultSessionMiddleware} from './middleware/default-session.middleware';
+import {TranslationMiddleware} from './middleware/translation.middleware';
+import {UserDataMiddleware} from './middleware/user-data.middleware';
+import {handlebarsHelpers} from './handlebars-helper/helpers';
 
 useContainerRC(Container);
 typeOrmUseContainer(Container);
@@ -45,7 +48,8 @@ async function bootstrap() {
 		extname: '.hbs',
 		layoutsDir: path.join(__dirname, '..', 'resources', 'private', 'templates', 'layouts'),
 		partialsDir: path.join(__dirname, '..', 'resources', 'private', 'templates', 'partials'),
-		defaultLayout: 'default'
+		defaultLayout: 'default',
+		helpers: handlebarsHelpers
 	}).engine);
 	app.set('views', path.join(__dirname, '..', 'resources', 'private', 'templates', 'views'));
 	app.set('view engine', 'hbs');
@@ -77,6 +81,8 @@ async function bootstrap() {
 		],
 		middlewares: [
 			DefaultSessionMiddleware,
+			TranslationMiddleware,
+			UserDataMiddleware,
 			NotFoundMiddleware,
 			ErrorHandlerMiddleware
 		],

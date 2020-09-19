@@ -1,0 +1,287 @@
+{
+	"LANGUAGE": {
+		"DE": "Deutsch",
+		"EN": "English"
+	},
+	"OPTIONS": {
+		"DARK_MODE": "Dunkles Design",
+		"LANGUAGE": "Sprache",
+		"USERSPACE": "Benutzerraum",
+		"LOGIN": "Anmelden",
+		"LOGIN_GOOGLE": "Mit Google anmelden",
+		"LOGIN_TWITTER": "Mit Twitter anmelden",
+		"REGISTER": "Registrieren",
+		"LOGOUT": "Abmelden",
+		"PROJECTS": "Projekte",
+		"COMPONENTS": "Komponenten",
+		"ACCOUNT": "Account",
+		"DOWNLOAD": "Download",
+		"FEATURES": "Features"
+	},
+	"FOOTER": {
+		"DATA_POLICY": "Datenschutzerklärung",
+		"IMPRINT": "Impressum",
+		"PROJECT_SITE": "Projektwebseite",
+		"CONTRIBUTING": "Contributing"
+	},
+	"HOME": {
+		"INTRO": {
+			"TITLE": "Was ist Logigator",
+			"DESCRIPTION": "Der Editor für Logikschaltungen...",
+			"BUTTON": "ZUM EDITOR"
+		},
+		"EXPLANATION": {
+			"TITLE": "Eine kurze Erklärung",
+			"DESCRIPTION": "Wenn Sie sich jetzt Fragen, was logische Gatter überhaupt sind, dann ist das ganz normal. Kurzgesagt sind logische Gatter jene Bausteine, aus denen die Recheneinheiten eines Computers aufgebaut sind. Aber weil das als Erklärung nicht reicht, haben wir ein Video animiert in dem die Grundprinzipien unserer Diplomarbeit verständlich erklärt werden.",
+			"VIDEO": "https://www.youtube.com/embed/114EOH-fdLE"
+		},
+		"EXAMPLES": {
+			"TITLE": "Ein paar Beispielschaltungen zum ausprobieren...",
+			"TRY_NOW": "JETZT AUSPROBIEREN"
+		}
+	},
+	"FEATURES": {
+		"WHAT_IS": {
+			"TITLE": "Was ist Logigator",
+			"VIDEO": "https://www.youtube.com/embed/114EOH-fdLE",
+			"TEXT": "Logigator ist ein Online Logikgatter-Simulator, welcher es einem ermöglicht im Browser Schaltungen aus logischen Gattern aufzubauen und diese dann zu simulieren. Es lassen sich zum Beispiel Halbaddierer und Volladdierer bauen, was gut zu Lernzwecken genutzt werden kann. Ob es nur ums Ausprobieren und Erforschen von boolschen Operationen geht, oder um das Entwerfen von neuen, komplexen Schaltungen - Logigator ist das geeignete Tool dafür. <br> Logigator bietet auch hohe Performanz bei umfangreichen Schaltungen, wie zum Beispiel auch ganzen CPUs (Computer). Mit Hilfe der Technologie “WebAssembly” (https://webassembly.org/) lassen sich Geschwindigkeiten erzielen, welche sonst im Browser nicht möglich wären."
+		},
+		"GENERAL": {
+			"TITLE": "Allgemein",
+			"VIDEO": "https://www.youtube.com/embed/aLcu7rsbDHA",
+			"TEXT": "Unter editor.logigator.com erreicht man den Editor, wo man Schaltungen entwerfen und simulieren kann. <br> Um ein Schaltungselement zu platzieren, selektiert man das gewollte Element aus dem Baukasten, der sich auf der linken Seite des Bildschirms befindet. Es gibt folgende grundlegende Gatter: UND, ODER, XODER, NICHT, sowie einen Durchpass, welcher das Eingangssignal nicht verändert und einen Taktgeber, welcher in regelmäßigen Abständen ein Signal ausgibt. Natürlich gibt es aber auch komplexere Elemente, die hier nicht erwähnt wurden. Nachdem man ein Element ausgewählt hat, kann man es mit einem Klick auf der Arbeitsfläche platzieren. Mit dem Selektierwerkzeug kann man ein Element auswählen und mithilfe der Einstellungsbox in der rechten unteren Ecke bearbeiten. Die Möglichkeiten dieser Einstellungen variieren von Komponente zu Komponente. Mit Hilfe des Leitungswerkzeugs lassen sich die einzelnen Elemente verbinden."
+		},
+		"CUSTOM_COMPS": {
+			"TITLE": "Benutzererstellte Komponenten",
+			"VIDEO": "https://www.youtube.com/embed/1m9IrqVxTKA",
+			"TEXT": "Oft ist es so, dass man einen Teil einer gebauten Schaltung, öfters verwenden will. Dazu kann man eigene Komponenten definieren, die danach leicht wiederzuverwenden sind, auch in mehreren Projekten. <br> Es gibt 2 Arten von Stecker-Elementen: Eingänge und Ausgänge. Platziert man diese in eigenen Komponenten, lassen sich mit deren Hilfe die Ein- und Ausgänge dieser Komponenten kennzeichnen. Man kann sie außerdem beschriften, um den Überblick zu behalten."
+		},
+		"SIMULATION": {
+			"TITLE": "Simulation",
+			"VIDEO": "https://www.youtube.com/embed/P8fuF-AHbb0",
+			"TEXT": "Im Simulationsmodus lassen sich aufgebaute Schaltungen testen und simulieren. Um in den Simulationsmodus zu wechseln, drückt man auf den “Simulation Starten” Button. Zu Beginn ist die Simulation pausiert. Um diese zu starten, drückt man den Play Button. Nun kann man mit der Schaltung interagieren. Will man die Schaltung debuggen, kann man diese mit Hilfe des Pause Buttons pausieren und Schritt für Schritt überprüfen. Mit dem Stopp Button kommen wir wieder zum Ausgangszustand zurück. Grundsätzlich läuft die Simulation so schnell wie möglich. Möchte man die Frequenz limitieren, kann man die Zielfrequenz entweder händisch angeben, oder mit der Frequenz des Bildschirms synchronisieren. Will man sich den Inhalt einer eigenen Komponente genauer ansehen, muss man einfach auf diese klicken."
+		},
+		"SAVING": {
+			"TITLE": "Projekte speichern",
+			"VIDEO": "https://www.youtube.com/embed/peOkC2Agkoo",
+			"TEXT": "Projekte und eigene Komponenten können sowohl lokal, als Datei gespeichert werden, als auch in der Cloud, um sie auf mehreren Geräten bearbeiten zu können, wobei man hierfür angemeldet sein muss. Sie können ebenfalls mit anderen Nutzern geteilt werden."
+		}
+	},
+	"USERSPACE": {
+		"HEADER": {
+			"PROJECTS": "Projekte",
+			"COMPONENTS": "Komponenten",
+			"ACCOUNT_SETTINGS": "Account-Einstellungen"
+		},
+		"PROJECTS": {
+			"TITLE": "Meine Projekte",
+			"LAST_EDITED": "Zuletzt bearbeitet: ",
+			"ERROR": "Du hast noch keine Projekte definiert."
+		},
+		"COMPONENTS": {
+			"TITLE": "Meine Komponenten",
+			"LAST_EDITED": "Zuletzt bearbeitet: ",
+			"ERROR": "Du hast noch keine Komponenten definiert."
+		},
+		"ACCOUNT_SETTINGS": {
+			"USERNAME": "Benutzername",
+			"EMAIL": "E-Mail",
+			"PASSWORD": "Password",
+			"AVATAR": "Profilbild",
+			"CHANGE": "ÄNDERN"
+		}
+	},
+	"POPUP": {
+		"LOGIN": {
+			"TITLE": "Anmelden",
+			"HEADLINE": "Melde dich hier an",
+			"USERNAME": "Benutzername / E-Mail",
+			"USERNAME_ERR_REQUIRED": "Benutzername / E-Mail muss angegeben werden",
+			"PASSWORD": "Passwort",
+			"PASSWORD_ERR_REQUIRED": "Passwort muss angegeben werden",
+			"LOGIN_BUTTON": "ANMELDEN",
+			"RESEND_BUTTON": "Email erneut senden",
+			"RESEND_SUCCESS_1": "Email erfolgreich gesendet",
+			"RESEND_SUCCESS_2": "Bitte überprüfe deinen Posteingang und verifiziere deine Email Adresse",
+			"RESEND_SUCCESS_OK_BUTTON": "OK",
+			"OR": "oder"
+		},
+		"REGISTER": {
+			"TITLE": "Registrieren",
+			"HEADLINE": "Registriere dich hier",
+			"EMAIL": "E-Mail",
+			"EMAIL_ERR_REQUIRED": "E-Mail muss angegeben werden",
+			"EMAIL_ERR_INVALID": "Bitte geben Sie eine valide E-Mail an",
+			"USERNAME": "Benutzername",
+			"USERNAME_ERR_REQUIRED": "Benutzername muss angegeben werden",
+			"USERNAME_ERR_MIN": "Benutzername muss mindestens zwei Zeichen enthalten",
+			"USERNAME_ERR_MAX": "Benutzername darf maximal 20 Zeichen enthalten",
+			"USERNAME_ERR_PATTERN": "Benutzername darf nur a-z, A-Z, 0-9, _ oder - enthalten",
+			"PASSWORD": "Passwort",
+			"PASSWORD_ERR_REQUIRED": "Passwort muss angegeben werden",
+			"PASSWORD_ERR_MIN": "Passwort muss mindestens acht Zeichen enthalten",
+			"PASSWORD_ERR_COMPLEXITY": "Passwort muss Ziffern und Buchstaben enthalten",
+			"PASSWORD_REPEAT": "Passwort wiederholen",
+			"PASSWORD_REPEAT_ERR": "Passwörter stimmen nicht überein",
+			"PRIVACY_POLICY": "Durch klicken auf \"Registrieren\" stimmen Sie zu, dass Sie die Datenschutzerklärung gelesen haben akzeptieren.",
+			"REGISTER_BUTTON": "REGISTRIEREN",
+			"OR": "oder",
+			"SUCCESS_1": "Account erfolgreich erstellt.",
+			"SUCCESS_2": "Bitte überprüfe deinen Posteingang und verifiziere deine Email Adresse.",
+			"SUCCESS_OK_BUTTON": "OK"
+		},
+		"SHARE": {
+			"TITLE": "Teilen",
+			"SHARE_ENABLE": "Teile dieses Projekt mit anderen",
+			"PUBLIC": "Öffentlich teilen",
+			"INFO_TEXT": "Bitte geben Sie die E-Mail-Adressen und Benutzernamen der Nutzer an, mit denen Sie das Projekt teilen möchten.",
+			"EMAIL_USER": "E-Mail / Benutzername",
+			"EMAIL_USER_ALREADY_ADDED": "E-Mail oder Benutzername wurde bereits hinzugefügt",
+			"ADD_EMAIL": "HINZUFÜGEN",
+			"REMOVE_EMAIL": "ENTFERNEN",
+			"INVITATIONS": "E-Mail Einladungen an Benutzer senden",
+			"NOT_FOUND_ERROR": "Manche E-Mail-Adressen konnten nicht gefunden werden, Projekt wurde trotzdem geteilt.",
+			"SUCCESS": "Projekt wurde erfolgreich geteilt.",
+			"LINK": "Link zum Teilen",
+			"COPY": "KOPIEREN",
+			"SAVE": "EINSTELLUNGEN SPEICHERN",
+			"CANCEL": "ABBRECHEN"
+		},
+		"CHANGE_EMAIL": {
+			"TITLE": "E-Mail ändern",
+			"EMAIL": "E-Mail",
+			"EMAIL_ERR_REQUIRED": "E-Mail muss angegeben werden",
+			"EMAIL_ERR_INVALID": "Bitte geben Sie eine valide E-Mail an",
+			"SAVE_BUTTON": "SPEICHERN",
+			"SUCCESS_1": "Email erfolgreich geändert.",
+			"SUCCESS_2": "Bitte überprüfe deinen Posteingang und verifiziere deine neue Email Adresse.",
+			"SUCCESS_OK_BUTTON": "OK"
+		},
+		"CHANGE_PASSWORD": {
+			"TITLE": "Passwort ändern",
+			"PASSWORD": "Passwort",
+			"PASSWORD_ERR_REQUIRED": "Passwort muss angegeben werden",
+			"PASSWORD_ERR_MIN": "Passwort muss mindestens acht Zeichen enthalten",
+			"PASSWORD_ERR_COMPLEXITY": "Passwort muss Ziffern und Buchstaben enthalten",
+			"PASSWORD_REPEAT": "Repeat password",
+			"PASSWORD_REPEAT_ERR": "Passwörter stimmen nicht überein",
+			"SAVE_BUTTON": "SPEICHERN",
+			"SUCCESS": "Passwort erfolgreich geändert.",
+			"SUCCESS_OK_BUTTON": "OK"
+		},
+		"CHANGE_USERNAME": {
+			"TITLE": "Benutzernamen ändern",
+			"USERNAME": "Benutzername",
+			"USERNAME_ERR_REQUIRED": "Benutzername muss angegeben werden",
+			"USERNAME_ERR_MIN": "Benutzername muss mindestens zwei Zeichen enthalten",
+			"USERNAME_ERR_MAX": "Benutzername darf maximal 20 Zeichen enthalten",
+			"SAVE_BUTTON": "SPEICHERN",
+			"SUCCESS": "Benutzername erfolgreich geändert.",
+			"SUCCESS_OK_BUTTON": "OK"
+		},
+		"CHANGE_PICTURE": {
+			"TITLE": "Profilbild ändern",
+			"IMAGE_CROP": "Bild zuschneiden",
+			"IMAGE_UPLOAD": "Bild hochladen",
+			"SAVE_BUTTON": "SPEICHERN",
+			"SUCCESS": "Profilbild erfolgreich geändert.",
+			"SUCCESS_OK_BUTTON": "OK"
+		},
+		"NEW_PROJECT": {
+			"TITLE": "Neues Projekt"
+		},
+		"NEW_COMP": {
+			"TITLE": "Neue Komponente",
+			"SYMBOL": "Symbol",
+			"NAME": "Name",
+			"NAME_REQUIRED": "Name muss angegeben werden",
+			"NAME_MIN_LENGTH": "Name muss mindestens zwei Zeichen enthalten",
+			"NAME_MAX_LENGTH": "Name darf maximal 20 Zeichen enthalten",
+			"NAME_PATTERN": "Name ist ungültig",
+			"SYMBOL_REQUIRED": "Symbol muss angegeben werden",
+			"SYMBOL_MAX_LENGTH": "Symbol darf maximal fünf Zeichen enthalten",
+			"SYMBOL_PATTERN": "Symbol ist ungültig",
+			"CREATE": "ERSTELLEN"
+		},
+		"COMP_EDIT": {
+			"TITLE": "Komponente bearbeiten"
+		},
+		"PROJECT_EDIT": {
+			"TITLE": "Projekt bearbeiten",
+			"NAME": "Name",
+			"NAME_ERR_REQUIRED": "Name muss angegeben werden",
+			"NAME_ERR_MIN": "Name ist zu kurz",
+			"NAME_ERR_MAX": "Name ist zu lang",
+			"NAME_ERR_PATTERN": "Darf nur Buchstaben, Zahlen, Untersctriche und Bindestriche enthalten",
+			"DESCRIPTION": "Bschreibung",
+			"DESCRIPTION_ERR_MAX": "Bschreibung ist zu lang",
+			"SAVE": "SPEICHERN"
+		},
+		"COMP_INFO": {
+			"TITLE": "Informationen",
+			"NAME": "Name",
+			"CREATED": "Erstellt",
+			"MODIFIED": "Zuletzt bearbeitet",
+			"INPUTS": "Eingänge",
+			"OUTPUTS": "Ausgänge",
+			"DESCRIPTION": "Beschreibung"
+		},
+		"PROJECT_DELETE": {
+			"TITLE": "Löschen bestätigen",
+			"DELETE": "Löschen bestätigen"
+		},
+		"COMP_DELETE": {
+			"TITLE": "Löschen bestätigen",
+			"WARNING": "Bitte verischere dich, dass die Komponente in keinen Projekten verwendet wird.",
+			"DELETE": "Löschen bestätigen"
+		},
+		"COOKIE_CONSENT": {
+			"MESSAGE": "Wir verwenden Cookies. Wenn Sie auf unserer Seite weitersurfen, stimmen Sie der Cookie-Nutzung zu.",
+			"DISMISS": "Akzeptieren",
+			"LINK": "Mehr erfahren"
+		}
+	},
+	"IMPRINT": {
+		"HEAD": "Impressum",
+		"INFORMATION_OBLIGATION": "Informationspflicht laut §5 E-Commerce Gesetz, §14 Unternehmensgesetzbuch, §63 Gewerbeordnung und Offenlegungspflicht laut §25 Mediengesetz.",
+		"COLLEGE": "Höhere technische Bundeslehranstalt Wien 3",
+		"VIENNA": "Wien",
+		"AUSTRIA": "Österreich",
+		"SOURCE_1": "Quelle: Erstellt mit dem Impressum Generator von",
+		"SOURCE_2": "in Kooperation mit",
+		"CONTENTS_HEAD": "Haftung für Inhalte dieser Webseitee",
+		"CONTENTS_1": "Wir entwickeln die Inhalte dieser Webseite ständig weiter und bemühen uns korrekte und aktuelle Informationen bereitzustellen. Leider können wir keine Haftung für die Korrektheit aller Inhalte auf dieser Webseite übernehmen, speziell für jene die seitens Dritter bereitgestellt wurden.",
+		"CONTENTS_2": "Sollten Ihnen problematische oder rechtswidrige Inhalte auffallen, bitten wir Sie uns umgehend zu kontaktieren, Sie finden die Kontaktdaten im Impressum.",
+		"LINKS_HEAD": "Haftung für Links auf dieser Webseite",
+		"LINKS_1": "Unsere Webseite enthält Links zu anderen Webseiten für deren Inhalt wir nicht verantwortlich sind. Haftung für verlinkte Websites besteht laut",
+		"LINKS_1_1": "für uns nicht, da wir keine Kenntnis rechtswidriger Tätigkeiten hatten und haben, uns solche Rechtswidrigkeiten auch bisher nicht aufgefallen sind und wir Links sofort entfernen würden, wenn uns Rechtswidrigkeiten bekannt werden.",
+		"LINKS_2": "Wenn Ihnen rechtswidrige Links auf unserer Website auffallen, bitten wir Sie uns zu kontaktieren, Sie finden die Kontaktdaten im Impressum.",
+		"COPYRIGHT_HEAD": "Urheberrechtshinweis",
+		"COPYRIGHT_1": "Icons erstellt von",
+		"COPYRIGHT_1_1": "von",
+		"COPYRIGHT_2": "Alle Inhalte dieser Webseite (Bilder, Fotos, Texte, Videos) unterliegen dem Urheberrecht. Falls notwendig, werden wir die unerlaubte Nutzung von Teilen der Inhalte unserer Seite rechtlich verfolgen."
+	},
+	"VERIFY_MAIL": {
+		"VERIFYING": "Email wird verifiezirt",
+		"SUCCESS": "Email erfolgreich verifiziert.",
+		"ERROR": "Fehler beim verifizieren der Email"
+	},
+	"DOWNLOAD": {
+		"HEADLINE": "Editor herunterladen",
+		"DESCRIPTION": "Der Editor ist auch als Desktopanwendung verfügbar. Das hat den Vorteil, dass die Simulation um einiges schneller ist, als in der Webversion. Die App kann hier heruntergeladen werden.",
+		"DOWNLOAD": "Herunterladen",
+		"DATE": "Datum",
+		"FILE_SIZE": "Dateigröße"
+	},
+	"ERROR": {
+		"ACCOUNT": {
+			"NO_USER": "Benutzername exsistiert nicht",
+			"INVALID_PW": "Password ist falsch",
+			"EMAIL_NOT_VERIFIED": "Email Adresse nicht verifiziert",
+			"EMAIL_TAKEN": "Email Adresse wird bereits verwendet",
+			"USERNAME_TAKEN": "Benutzername wird bereits verwedet",
+			"MAX_FILE_SIZE": "Maximale Dateigröße überschritten",
+			"OTHER": "Ein unbekannter Fehler ist aufgetreten"
+		}
+	}
+}

@@ -5,16 +5,23 @@
 		</a>
 
 		<div class="partial-site-header__links">
-			<a href="/features">Features</a>
-			<a href="/download">Download</a>
-			<a href="/my/projects">Projects</a>
-			<a href="/my/components">Components</a>
+			<a href="/features">{{i18n.OPTIONS.FEATURES}}</a>
+			<a href="/download">{{i18n.OPTIONS.DOWNLOAD}}</a>
+			{{#if isAuthenticated }}
+				<a href="/my/projects">{{i18n.OPTIONS.PROJECTS}}</a>
+				<a href="/my/components">{{i18n.OPTIONS.COMPONENTS}}</a>
+			{{/if}}
 		</div>
 	</div>
 
-	<div class="partial-site-header__right">
-		<button class="btn-outline secondary partial-site-header__btn-login">Login</button>
-		<button class="btn-outline secondary partial-site-header__btn-login">Register</button>
-		<div class="partial-site-header__more"></div>
+	<div class="partial-site-header__right {{printIf isAuthenticated 'partial-site-header__right--logged-in'}}">
+		{{#if isAuthenticated }}
+			<p class="partial-site-header__username">{{user.username}}</p>
+			<img class="partial-site-header__user-img" alt="User Image" src="{{user.image}}">
+		{{else}}
+			<button class="btn-outline secondary partial-site-header__btn-login">{{i18n.OPTIONS.LOGIN}}</button>
+			<button class="btn-outline secondary partial-site-header__btn-login">{{i18n.OPTIONS.REGISTER}}</button>
+			<div class="partial-site-header__more"></div>
+		{{/if}}
 	</div>
 </div>

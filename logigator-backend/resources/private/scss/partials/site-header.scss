@@ -64,6 +64,17 @@
 		@media (max-width: 767px) {
 			display: none;
 		}
+
+		@include modifier('logged-in') {
+			padding: 0.5rem;
+			cursor: pointer;
+
+			&:hover {
+				@include themify() {
+					background-color: lighten(themed('primary'), 10);
+				}
+			}
+		}
 	}
 
 	@include element('btn-login') {
@@ -84,5 +95,16 @@
 		&:hover {
 			cursor: pointer;
 		}
+	}
+
+	@include element('username') {
+		margin: 0 0.5rem;
+		color: black;
+	}
+
+	@include element('user-img') {
+		height: $header-height - 1rem;
+		width: $header-height - 1rem;
+		outline: none;
 	}
 }

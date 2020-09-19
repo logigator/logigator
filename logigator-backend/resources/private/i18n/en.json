@@ -1,0 +1,287 @@
+{
+	"LANGUAGE": {
+		"DE": "Deutsch",
+		"EN": "English"
+	},
+	"OPTIONS": {
+		"DARK_MODE": "Dark Mode",
+		"LANGUAGE": "Language",
+		"USERSPACE": "Userspace",
+		"LOGIN": "Login",
+		"LOGIN_GOOGLE": "Login with Google",
+		"LOGIN_TWITTER": "Login with Twitter",
+		"REGISTER": "Sign up",
+		"LOGOUT": "Logout",
+		"PROJECTS": "Projects",
+		"COMPONENTS": "Components",
+		"ACCOUNT": "Account",
+		"DOWNLOAD": "Download",
+		"FEATURES": "Features"
+	},
+	"FOOTER": {
+		"DATA_POLICY": "Data Policy",
+		"IMPRINT": "Imprint",
+		"PROJECT_SITE": "Project-site",
+		"CONTRIBUTING": "Contributing"
+	},
+	"HOME": {
+		"INTRO": {
+			"TITLE": "What is Logigator",
+			"DESCRIPTION": "The editor for logical circuits...",
+			"BUTTON": "TRY NOW"
+		},
+		"EXPLANATION": {
+			"TITLE": "A short Explanation",
+			"DESCRIPTION": "You probably ask yourself - what are logical gates? In a nutshell logical gates are the components that make up the processing unit of a computer. However, this explanation is a bit short, which is why we animated this short video to explain the basics needed to use our website.",
+			"VIDEO": "https://www.youtube.com/embed/weTeJLMGq_Q"
+		},
+		"EXAMPLES": {
+			"TITLE": "A few example circuits for you...",
+			"TRY_NOW": "TRY NOW"
+		}
+	},
+	"FEATURES": {
+		"WHAT_IS": {
+			"TITLE": "What is Logigator",
+			"VIDEO": "https://www.youtube.com/embed/weTeJLMGq_Q",
+			"TEXT": "Logigator is an online simulator for logic gates, which enables the user to build and simulate circuits with logic gates. For example one can build half-adders and full-adders, which can be used for learning. Whether one wants to experiment and explore boolean functions or design new and complex circuits - Logigator is the right tool. <br> In addition, Logigator offers high performance even with large-scale projects. By using “WebAssembly” (https://webassembly.org/) the website can reach simulation speeds that else would not be possible in a browser. "
+		},
+		"GENERAL": {
+			"TITLE": "General",
+			"VIDEO": "https://www.youtube.com/embed/tX7HT_0MZRo",
+			"TEXT": "The editor can be reached under editor.logigator.com and can be used to design and simulate circuits. <br> To place an element, simply select the wanted element from the construction-kit on the left side of the window. The basic gates consist of: AND, OR, XOR, NOT as well as a delay which doesn’t change the input signal and a clock, which outputs a signal in periodical intervals. Naturally, there are also more complex elements, which are not mentioned here. After one selects an element it can be placed by clicking anywhere in the workspace. Using the selection-tool one can select an element and change settings in the box in bottom right corner. These settings vary from from component to component. The wire-tool can then be used to connect the elements."
+		},
+		"CUSTOM_COMPS": {
+			"TITLE": "Custom components",
+			"VIDEO": "https://www.youtube.com/embed/fSErH93I-Wg",
+			"TEXT": "One might want to use a part of a circuit multiple times. To simplify this process it is possible to define custom components, which can easily be placed again and can even be used in other projects. <br> There are two types of plug-components: inputs and outputs. By placing these components one can mark the the inputs and outputs of a custom components. Additionally parts of circuits can be labeled for better overview."
+		},
+		"SIMULATION": {
+			"TITLE": "Simulation-mode",
+			"VIDEO": "https://www.youtube.com/embed/WjpChcxn18k",
+			"TEXT": "The simulation-mode can be used to test and simulate circuits. To switch to simulation-mode, simply press the “start simulation” button. After switching mode, the Simulation is paused. To start the simulation simply press the play button. Now you can interact with the circuit. In case you want to debug the circuit you can pause the simulation and test it step by step. To return to the original state simply press the stop button. By default the simulation will run as fast as possible. However, the clockspeed can be changed by simply entering the wanted speed or locking it to the displays frequency. The composition of custom components can be observed by simply clicking on them."
+		},
+		"SAVING": {
+			"TITLE": "Saving projects",
+			"VIDEO": "https://www.youtube.com/embed/VtS4E0L2MyU",
+			"TEXT": "Projects and Components can either be saved locally as a file or in the cloud, which enables editing on multiple devices. To save projects online the user has to be logged in, which also enables projects to be shared with other users."
+		}
+	},
+	"USERSPACE": {
+		"HEADER": {
+			"PROJECTS": "Projects",
+			"COMPONENTS": "Components",
+			"ACCOUNT_SETTINGS": "Account Settings"
+		},
+		"PROJECTS": {
+			"TITLE": "My projects",
+			"LAST_EDITED": "Last edited: ",
+			"ERROR": "You haven't defined any projects yet."
+		},
+		"COMPONENTS": {
+			"TITLE": "My components",
+			"LAST_EDITED": "Last edited: ",
+			"ERROR": "You haven't defined any components yet."
+		},
+		"ACCOUNT_SETTINGS": {
+			"USERNAME": "Username",
+			"EMAIL": "Email",
+			"PASSWORD": "Password",
+			"AVATAR": "Avatar",
+			"CHANGE": "CHANGE"
+		}
+	},
+	"POPUP": {
+		"LOGIN": {
+			"TITLE": "Login",
+			"HEADLINE": "Login here",
+			"USERNAME": "Username / email",
+			"USERNAME_ERR_REQUIRED": "Username / email is required.",
+			"PASSWORD": "Password",
+			"PASSWORD_ERR_REQUIRED": "Password is required.",
+			"LOGIN_BUTTON": "LOGIN",
+			"RESEND_BUTTON": "Resend Mail",
+			"RESEND_SUCCESS_1": "Email resent successfully",
+			"RESEND_SUCCESS_2": "Please check your mailbox and verify your email.",
+			"RESEND_SUCCESS_OK_BUTTON": "OK",
+			"OR": "or"
+		},
+		"REGISTER": {
+			"TITLE": "Sign up",
+			"HEADLINE": "Sign up here",
+			"EMAIL": "Email",
+			"EMAIL_ERR_REQUIRED": "Email is required.",
+			"EMAIL_ERR_INVALID": "Please enter a valid email address.",
+			"USERNAME": "Username",
+			"USERNAME_ERR_REQUIRED": "Username is required.",
+			"USERNAME_ERR_MIN": "Username has to have at least two characters.",
+			"USERNAME_ERR_MAX": "Username may contain a maximum of 20 characters.",
+			"USERNAME_ERR_PATTERN": "Username may only contain a-z, A-Z, 0-9, _ or -",
+			"PASSWORD": "Password",
+			"PASSWORD_ERR_REQUIRED": "Password is required.",
+			"PASSWORD_ERR_MIN": "Password must contain at least eight characters.",
+			"PASSWORD_ERR_COMPLEXITY": "Password must contain letters and digits.",
+			"PASSWORD_REPEAT": "Repeat password",
+			"PASSWORD_REPEAT_ERR": "Passwords do not match",
+			"PRIVACY_POLICY": "By clicking on \"SIGN UP\" you agree that you have read and accepted our data policy.",
+			"REGISTER_BUTTON": "SIGN UP",
+			"OR": "or",
+			"SUCCESS_1": "Account created successfully.",
+			"SUCCESS_2": "Please check your mailbox and verify your email.",
+			"SUCCESS_OK_BUTTON": "OK"
+		},
+		"SHARE": {
+			"TITLE": "Share",
+			"SHARE_ENABLE": "Share this project with others",
+			"PUBLIC": "Public share",
+			"INFO_TEXT": "Please type in the email-addresses or usernames of the users, with whom you want to share this project.",
+			"EMAIL_USER": "Email / username",
+			"EMAIL_USER_ALREADY_ADDED": "Email or username has already been added",
+			"ADD_EMAIL": "Add",
+			"REMOVE_EMAIL": "Remove",
+			"INVITATIONS": "Send email invitations to users",
+			"NOT_FOUND_ERROR": "Some email addresses or user names were not found, share was created or updated anyways.",
+			"SUCCESS": "Created or updated share successfully.",
+			"LINK": "Link to share",
+			"COPY": "Copy",
+			"SAVE": "SAVE SETTINGS",
+			"CANCEL": "CANCEL"
+		},
+		"CHANGE_EMAIL": {
+			"TITLE": "Change email",
+			"EMAIL": "Email",
+			"EMAIL_ERR_REQUIRED": "Email is required.",
+			"EMAIL_ERR_INVALID": "Please enter a valid email address.",
+			"SAVE_BUTTON": "SAVE",
+			"SUCCESS_1": "Email changed successfully.",
+			"SUCCESS_2": "Please check your mailbox and verify your new email.",
+			"SUCCESS_OK_BUTTON": "OK"
+		},
+		"CHANGE_PASSWORD": {
+			"TITLE": "Change password",
+			"PASSWORD": "Password",
+			"PASSWORD_ERR_REQUIRED": "Password is required.",
+			"PASSWORD_ERR_MIN": "Password must contain at least eight characters.",
+			"PASSWORD_ERR_COMPLEXITY": "Password must contain letters and digits.",
+			"PASSWORD_REPEAT": "Repeat password",
+			"PASSWORD_REPEAT_ERR": "Passwords do not match",
+			"SAVE_BUTTON": "SAVE",
+			"SUCCESS": "Password changed successfully.",
+			"SUCCESS_OK_BUTTON": "OK"
+		},
+		"CHANGE_USERNAME": {
+			"TITLE": "Change username",
+			"USERNAME": "Username",
+			"USERNAME_ERR_REQUIRED": "Username is required.",
+			"USERNAME_ERR_MIN": "Username has to have at least two characters.",
+			"USERNAME_ERR_MAX": "Username may contain a maximum of 20 characters.",
+			"SAVE_BUTTON": "SAVE",
+			"SUCCESS": "Username changed successfully.",
+			"SUCCESS_OK_BUTTON": "OK"
+		},
+		"CHANGE_PICTURE": {
+			"TITLE": "Change picture",
+			"IMAGE_CROP": "Crop image",
+			"IMAGE_UPLOAD": "Upload image",
+			"SAVE_BUTTON": "SAVE",
+			"SUCCESS": "Avatar changed successfully.",
+			"SUCCESS_OK_BUTTON": "OK"
+		},
+		"NEW_PROJECT": {
+			"TITLE": "New Project"
+		},
+		"NEW_COMP": {
+			"TITLE": "New Component",
+			"SYMBOL": "Symbol",
+			"NAME": "Name",
+			"NAME_REQUIRED": "Name is required.",
+			"NAME_MIN_LENGTH": "Name has to have at least two characters.",
+			"NAME_MAX_LENGTH": "Name may contain a maximum of 20 characters.",
+			"NAME_PATTERN": "Name is invalid.",
+			"SYMBOL_REQUIRED": "Symbol is required.",
+			"SYMBOL_MAX_LENGTH": "Symbol may contain a maximum of 5 characters.",
+			"SYMBOL_PATTERN": "Symbol is invalid.",
+			"CREATE": "SAVE"
+		},
+		"COMP_EDIT": {
+			"TITLE": "Edit Component"
+		},
+		"PROJECT_EDIT": {
+			"TITLE": "Edit Project",
+			"NAME": "Name",
+			"NAME_ERR_REQUIRED": "Name is required",
+			"NAME_ERR_MIN": "Name is to short",
+			"NAME_ERR_MAX": "Name is to long",
+			"NAME_ERR_PATTERN": "May only contain letters, digits, underscores and dashes",
+			"DESCRIPTION": "Description",
+			"DESCRIPTION_ERR_MAX": "Description is too long",
+			"SAVE": "SAVE"
+		},
+		"COMP_INFO": {
+			"TITLE": "Information",
+			"NAME": "Name",
+			"CREATED": "Created",
+			"MODIFIED": "last modified",
+			"INPUTS": "Inputs",
+			"OUTPUTS": "Outputs",
+			"DESCRIPTION": "Description"
+		},
+		"PROJECT_DELETE": {
+			"TITLE": "Confirm Delete",
+			"DELETE": "Confirm Delete"
+		},
+		"COMP_DELETE": {
+			"TITLE": "Confirm Delete",
+			"WARNING": "Please ensure that the component is not used in any of your projects.",
+			"DELETE": "Confirm Delete"
+		},
+		"COOKIE_CONSENT": {
+			"MESSAGE": "This website uses cookies to ensure you get the best experience on our website.",
+			"DISMISS": "Got it!",
+			"LINK": "Learn more"
+		}
+	},
+	"IMPRINT" : {
+		"HEAD": "Imprint",
+		"INFORMATION_OBLIGATION": "Information obligation according to §5 E-Commerce Law, §14 Corporate Code, §63 Trade Regulations and Disclosure Obligation according to §25 Media Act.",
+		"COLLEGE": "Higher Technical College Vienna 3",
+		"VIENNA": "Vienna",
+		"AUSTRIA": "Austria",
+		"SOURCE_1": "Source: Created with the imprint generator of",
+		"SOURCE_2": "in cooperation with",
+		"CONTENTS_HEAD": "Liability for contents of this website",
+		"CONTENTS_1": "We are constantly developing the contents of this website and strive to provide correct and up-to-date information. Unfortunately, we can not assume any liability for the correctness of all content on this website, especially for those provided by third parties.",
+		"CONTENTS_2": "If you notice any problematic or unlawful content, please contact us immediately, you will find the contact details in the imprint.",
+		"LINKS_HEAD": "Liability for links on this website",
+		"LINKS_1": "Our website contains links to other websites whose content we are not responsible for. Liability for linked websites does not exist for us according to",
+		"LINKS_1_1": ", because we did not have knowledge of illegal activities and have not noticed such illegality and we would remove links immediately if we become aware of any illegalities.",
+		"LINKS_2": "If you notice unlawful links on our website, we ask you to contact us, you will find the contact details in the imprint.",
+		"COPYRIGHT_HEAD": "Copyright Notice",
+		"COPYRIGHT_1": "Icons made by",
+		"COPYRIGHT_1_1": "from",
+		"COPYRIGHT_2": "All contents of this website (pictures, photos, texts, videos) are subject to copyright. If necessary, we will legally pursue the unauthorized use of parts of the contents of our site."
+	},
+	"VERIFY_MAIL": {
+		"VERIFYING": "Verifying email. Please wait.",
+		"SUCCESS": "Email verified successfully.",
+		"ERROR": "Error verifying email."
+	},
+	"DOWNLOAD": {
+		"HEADLINE": "Download Editor",
+		"DESCRIPTION": "The editor is also available as a Desktop app. This has the advantage, that the simulation is way faster than in the web version. The app can be downloaded below.",
+		"DOWNLOAD": "Download",
+		"DATE": "Date",
+		"FILE_SIZE": "File Size"
+	},
+	"ERROR": {
+		"ACCOUNT": {
+			"NO_USER": "Username does not exist",
+			"INVALID_PW": "Password is incorrect",
+			"EMAIL_NOT_VERIFIED": "Email address is not verified",
+			"EMAIL_TAKEN": "Email has already been taken",
+			"USERNAME_TAKEN": "Username has already been taken",
+			"MAX_FILE_SIZE": "Max file size exceeded.",
+			"OTHER": "An unknown error occurred."
+		}
+	}
+}
