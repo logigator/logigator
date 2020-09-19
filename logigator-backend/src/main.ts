@@ -17,6 +17,8 @@ import cookieParser from 'cookie-parser';
 import {ErrorHandlerMiddleware} from './middleware/error-handler.middleware';
 import {ProjectController} from './controller/api/project.controller';
 import {NotFoundController} from './controller/not-found.controller';
+import connectRedis from 'connect-redis';
+import {RedisService} from './services/redis.service';
 
 useContainerRC(Container);
 typeOrmUseContainer(Container);
@@ -52,7 +54,12 @@ async function bootstrap() {
 	app.use(session({
 		secret: configService.getConfig('session').secret,
 		resave: false,
-		saveUninitialized: false
+		saveUninitialized: false,
+		unset: 'destroy',
+		store: new (connectRedis(session))({ client: Container.get(RedisService).redisClient }),
+		cookie: {
+			maxAge: 1000 * 60 * 60 * 24 * 7 // one week
+		}
 	}));
 	Container.get(PassportConfigService).setupPassport();
 	app.use(passport.initialize());

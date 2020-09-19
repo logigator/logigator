@@ -1,5 +1,6 @@
 version: '3.5'
 services:
+  #### HTTP_PROXY ####
   development_http_proxy:
     image: httpd:latest
     networks:
@@ -9,6 +10,7 @@ services:
     ports:
       - "80:80"
       - "443:443"
+  #### NODE_JS_BACKEND_HOME ####
   development_backend:
     image: node:12
     networks:
@@ -22,6 +24,7 @@ services:
     user: "node"
     working_dir: /home/node/app
     command: "npm start"
+  #### MYSQL ####
   development_mysql:
     image: mysql:latest
     networks:
@@ -38,6 +41,20 @@ services:
       - MYSQL_DATABASE=logigator
       - MYSQL_USER=logigator
       - MYSQL_PASSWORD=logigator
+  #### REDIS ####
+  development_redis:
+    image: redis:latest
+    networks:
+      logigator_intern:
+        aliases:
+          - redis
+  #### REDIS_UI ####
+  development_redis_ui:
+    image: marian/rebrow:latest
+    networks:
+      - logigator_intern
+    ports:
+      - 5001:5001
 
 networks:
   logigator_intern:

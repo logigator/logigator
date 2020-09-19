@@ -43,8 +43,13 @@ export class AuthController {
 	@Get('/logout')
 	@UseBefore(CheckAuthenticatedFrontMiddleware)
 	public logout(@Req() request: Request, @Res() response: Response) {
-		request.logOut();
-		response.redirect('/');
+		request.logout();
+		return new Promise(resolve => {
+			request.session.destroy(err => {
+				response.redirect('/');
+				resolve(response);
+			});
+		});
 	}
 
 }
