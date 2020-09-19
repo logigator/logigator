@@ -1,0 +1,62 @@
+$themes: (
+	light: (
+		background: #F5F5F5,
+		primary: #27AE60,
+		accent1: #FFFFFF,
+		accent2: #d1d1d1,
+		text-primary: #000000,
+		text-secondary: #F5F5F5,
+		error: #AD2F26,
+		button-text: #F5F5F5
+	),
+	dark: (
+		background: #262a2b,
+		primary: #27AE60,
+		accent1: #1A1A1A,
+		accent2: #3a4042,
+		text-primary: #cccccc,
+		text-secondary: #000000,
+		error: #CC392F,
+		button-text: #000000
+	)
+);
+
+@mixin themify() {
+	@each $theme, $map in $themes {
+
+		$themeForTestFunction: $theme !global;
+
+		@if(&) {
+			.theme-#{$theme} & {
+				$theme-map: () !global;
+				@each $key, $submap in $map {
+					$theme-map: map-merge($theme-map, ($key: $submap)) !global;
+				}
+				@content;
+				$theme-map: null !global;
+			}
+
+			$themeForTestFunction: null !global;
+		} @else {
+			.theme-#{$theme} {
+				$theme-map: () !global;
+				@each $key, $submap in $map {
+					$theme-map: map-merge($theme-map, ($key: $submap)) !global;
+				}
+				@content;
+				$theme-map: null !global;
+			}
+
+			$themeForTestFunction: null !global;
+		}
+
+	}
+}
+
+@function themed($key) {
+	@return map-get($theme-map, $key);
+}
+
+@function isTheme($theme) {
+	@return $themeForTestFunction == $theme;
+}

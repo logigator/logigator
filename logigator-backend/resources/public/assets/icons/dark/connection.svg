@@ -1,0 +1,86 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<svg
+   xmlns:dc="http://purl.org/dc/elements/1.1/"
+   xmlns:cc="http://creativecommons.org/ns#"
+   xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
+   xmlns:svg="http://www.w3.org/2000/svg"
+   xmlns="http://www.w3.org/2000/svg"
+   xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd"
+   xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"
+   id="Layer_1"
+   data-name="Layer 1"
+   viewBox="0 0 17 17"
+   version="1.1"
+   sodipodi:docname="connection.svg"
+   inkscape:version="0.92.2 (5c3e80d, 2017-08-06)">
+  <metadata
+     id="metadata21">
+    <rdf:RDF>
+      <cc:Work
+         rdf:about="">
+        <dc:format>image/svg+xml</dc:format>
+        <dc:type
+           rdf:resource="http://purl.org/dc/dcmitype/StillImage" />
+      </cc:Work>
+    </rdf:RDF>
+  </metadata>
+  <defs
+     id="defs19" />
+  <sodipodi:namedview
+     pagecolor="#ffffff"
+     bordercolor="#666666"
+     borderopacity="1"
+     objecttolerance="10"
+     gridtolerance="10"
+     guidetolerance="10"
+     inkscape:pageopacity="0"
+     inkscape:pageshadow="2"
+     inkscape:window-width="1810"
+     inkscape:window-height="1057"
+     id="namedview17"
+     showgrid="false"
+     inkscape:zoom="13.882353"
+     inkscape:cx="-2.6292373"
+     inkscape:cy="8.5"
+     inkscape:window-x="-8"
+     inkscape:window-y="-8"
+     inkscape:window-maximized="1"
+     inkscape:current-layer="Layer_1" />
+  <title
+     id="title2">scaling sollte worken</title>
+  <path
+     d="M9,9v8h8V9Zm7,7H10V10h6Z"
+     fill="ffffff"
+     id="path4"
+     style="fill:#ffffff;fill-opacity:1" />
+  <path
+     d="M0,0V8H8V0ZM7,7H1V1H7Z"
+     fill="#cccccc"
+     id="path6"
+     style="fill:#ffffff;fill-opacity:1" />
+  <path
+     d="M4,9.06v1H3v-1Zm0,2v1H3V11Zm0,2v1H3V13Z"
+     fill="#cccccc"
+     id="path8"
+     style="fill:#ffffff;fill-opacity:1" />
+  <rect
+     x="3.02"
+     y="7.57"
+     width="1"
+     height="0.5"
+     fill="#cccccc"
+     id="rect10"
+     style="fill:#ffffff;fill-opacity:1" />
+  <path
+     d="M8,14H7V13H8ZM6,14H5V13H6Z"
+     fill="#cccccc"
+     id="path12"
+     style="fill:#ffffff;fill-opacity:1" />
+  <rect
+     x="8.93"
+     y="12.98"
+     width="0.5"
+     height="1"
+     id="rect14"
+     style="fill:#ffffff;fill-opacity:1" />
+</svg>

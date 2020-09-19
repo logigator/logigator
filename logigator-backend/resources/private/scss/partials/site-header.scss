@@ -1,0 +1,88 @@
+@include partial('site-header') {
+	height: $header-height;
+	position: fixed;
+	width: 100%;
+	top: 0;
+	display: flex;
+
+	@include themify() {
+		background-color: themed('primary');
+	}
+
+	@include element('left') {
+		display: flex;
+		flex: 1;
+		flex-direction: row;
+		height: 100%;
+
+		@media (max-width: 767px) {
+			justify-content: center;
+		}
+	}
+
+	@include element('logo') {
+		img {
+			height: $header-height/1.5;
+		}
+		padding: 0.5rem;
+	}
+
+	@include element('links') {
+		height: 100%;
+		display: flex;
+		flex-direction: row;
+
+		@media (max-width: 767px) {
+			display: none;
+		}
+
+		a {
+			display: flex;
+			flex-direction: row;
+			align-items: center;
+			padding: 0 1rem;
+			height: 100%;
+			color: black;
+			text-decoration: none;
+			cursor: pointer;
+
+			&:hover {
+				@include themify() {
+					background-color: lighten(themed('primary'), 10);
+				}
+			}
+		}
+	}
+
+	@include element('right') {
+		display: flex;
+		flex-direction: row;
+		height: 100%;
+		align-items: center;
+		padding: 0;
+
+		@media (max-width: 767px) {
+			display: none;
+		}
+	}
+
+	@include element('btn-login') {
+		color: black !important;
+		border-color: black !important;
+		margin-left: 0.5rem;
+	}
+
+	@include element('more') {
+		height: $header-height - 1.5rem;
+		width: $header-height - 1.5rem;
+		outline: none;
+		background-size: cover;
+		background-image: url('/assets/icons/light/more.svg');
+		transform: rotate(90deg);
+		margin: 0 0.25rem 0 0.5rem;
+
+		&:hover {
+			cursor: pointer;
+		}
+	}
+}

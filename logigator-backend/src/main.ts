@@ -2,7 +2,7 @@ import 'reflect-metadata';
 import {useContainer as useContainerRC, useExpressServer} from 'routing-controllers';
 import {createConnection, useContainer as typeOrmUseContainer, ConnectionOptions} from 'typeorm';
 import {useContainer as classValidatorUseContainer} from 'class-validator';
-import express, {urlencoded, static as expressStatic} from 'express';
+import express, {urlencoded, static as expressStatic,} from 'express';
 import {Container} from 'typedi';
 import * as exphbs from 'express-handlebars';
 import {HomeController} from './controller/frontend/home.controller';
@@ -16,9 +16,11 @@ import {PassportConfigService} from './services/passport-config.service';
 import cookieParser from 'cookie-parser';
 import {ErrorHandlerMiddleware} from './middleware/error-handler.middleware';
 import {ProjectController} from './controller/api/project.controller';
-import {NotFoundController} from './controller/not-found.controller';
 import connectRedis from 'connect-redis';
 import {RedisService} from './services/redis.service';
+import {PreferencesController} from './controller/frontend/preferences.controller';
+import {NotFoundMiddleware} from './middleware/not-found.middleware';
+import {DefaultSessionMiddleware} from './middleware/default-session.middleware';
 
 useContainerRC(Container);
 typeOrmUseContainer(Container);
@@ -70,15 +72,18 @@ async function bootstrap() {
 		controllers: [
 			HomeController,
 			AuthController,
-			ProjectController,
-			NotFoundController
+			PreferencesController,
+			ProjectController
 		],
-		middlewares: [ErrorHandlerMiddleware],
+		middlewares: [
+			DefaultSessionMiddleware,
+			NotFoundMiddleware,
+			ErrorHandlerMiddleware
+		],
 		development: appContext === 'development',
 		defaultErrorHandler: false,
 		currentUserChecker: action => action.request.user
 	});
-
 	app.listen(3000, () => {
 		console.log('App started successfully');
 	});

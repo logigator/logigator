@@ -2,9 +2,41 @@
 <html>
 	<head>
 		<meta charset="utf-8" />
-		<title>Example App</title>
+		<title>Logigator</title>
+		<base href="/">
+		<meta name="viewport" content="width=device-width, initial-scale=1">
+		<link rel="apple-touch-icon" sizes="180x180" href="assets/icons/apple-touch-icon.png">
+		<link rel="icon" type="image/png" sizes="32x32" href="assets/icons/favicon-32x32.png">
+		<link rel="icon" type="image/png" sizes="16x16" href="assets/icons/favicon-16x16.png">
+		<link rel="manifest" href="site.webmanifest">
+		<link rel="mask-icon" href="assets/icons/safari-pinned-tab.svg" color="#27ae60">
+		<meta name="apple-mobile-web-app-title" content="Logigator">
+		<meta name="application-name" content="Logigator">
+		<meta name="msapplication-TileColor" content="#2b5797">
+		<meta name="theme-color" content="#27ae60">
+		<meta name="Description"
+			  content="Build and simulate your own logic circuits with Logigator, a simple yet powerful web-based online tool.">
+		<meta name="keywords"
+			  content="logic circuit, simulator, logic, cad, computer aided design, digital, designer, build, simulate, logic circuit simulator, digital circuit simulator, online">
+		<meta property="og:title" content="Logigator"/>
+		<meta property="og:url" content="https://logigator.com"/>
+		<meta property="og:image" content="https://logigator.com/assets/icons/android-chrome-512x512.png"/>
+		<meta property="twitter:card" content="summary"/>
+		<meta property="twitter:image" content="https://logigator.com/assets/icons/android-chrome-512x512.png"/>
+		<meta property="twitter:title" content="Logigator"/>
+		<meta property="twitter:description"
+			  content="Build and simulate your own logic circuits with Logigator, a simple yet powerful web-based online tool."/>
+		<meta property="og:description"
+			  content="Build and simulate your own logic circuits with Logigator, a simple yet powerful web-based online tool."/>
+
+		<link rel="stylesheet" type="text/css" href="/css/layouts/default.css">
+		<link rel="stylesheet" type="text/css" href="/css/views/{{@exphbs.view}}.css">
 	</head>
-	<body>
-		{{{body}}}
+	<body class="theme-dark">
+		{{> site-header }}
+		<div class="main-content">
+			{{{body}}}
+		</div>
+		{{> footer }}
 	</body>
 </html>

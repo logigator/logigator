@@ -1,0 +1,90 @@
+// CONFIG
+// ======
+
+// You can change the configuration here. To use your own config/variables file, just import your variables before using one of the mixins.
+
+// .block[separator]element:
+$element-separator:        '__' !default;
+
+// .block[separator]modifier:
+$modifier-separator:       '--' !default;
+
+// The default prefix for state modifier selectors, will be combined with $modifier-separator:
+$state-prefix:             'is' !default;
+
+// The default prefix for section selectors, will be combined with the given $name
+$partial-prefix:           'partial' !default;
+
+
+
+// MIXINS
+// ======
+
+@mixin block($name) {
+	$block-name: $name !global;
+
+	.#{$name} {
+		@content;
+	}
+
+	$block-name: null !global;
+}
+
+
+@mixin element($name) {
+	@at-root {
+		@if ((variable_exists(current-modifier) and $current-modifier != null) or (variable_exists(current-pseudo) and $current-pseudo != null)) {
+			& .#{$block-name}#{$element-separator}#{$name} {
+				@content;
+			}
+		} @else {
+			.#{$block-name}#{$element-separator}#{$name} {
+				@content;
+			}
+		}
+	}
+}
+
+
+@mixin modifier($name) {
+	$current-modifier: $name !global;
+
+	$self: &;
+
+	@at-root {
+		#{$self}#{$self}#{$modifier-separator}#{$name} {
+			@content;
+		}
+	}
+
+
+	$current-modifier: null !global;
+}
+
+
+@mixin state($state, $prefix: $state-prefix) {
+	@at-root {
+		&.#{$prefix}-#{$state} {
+			@content;
+		}
+	}
+}
+
+
+@mixin partial($name) {
+	@include block(#{$partial-prefix}-#{$name}) {
+		@content;
+	}
+}
+
+@mixin pseudo($name) {
+	$current-pseudo: $name !global;
+
+	@at-root {
+		&:#{$name} {
+			@content;
+		}
+	}
+
+	$current-pseudo: null !global;
+}
