@@ -1,0 +1,113 @@
+@include partial('form-input') {
+	margin-top: 1rem;
+	margin-bottom: 2rem;
+
+	@include state('invalid') {
+
+		input {
+			@include themify() {
+				border-bottom: 1px solid themed('error');
+				color: themed('error');
+			}
+		}
+
+		label {
+			@include themify() {
+				color: themed('error');
+			}
+		}
+
+		.partial-form-input__tooltip-button {
+			@include themify() {
+				border-bottom: 1px solid themed('error');
+			}
+		}
+
+	}
+
+	@include element('input-container') {
+		display: flex;
+		flex-direction: row;
+		position: relative;
+	}
+
+	label {
+		position: absolute;
+		font-size: 1rem;
+		pointer-events: none;
+		left: 0.25rem;
+		bottom: 0.25rem;
+		transition: 0.2s ease all;
+	}
+
+	input {
+		outline: none;
+		border: none;
+		padding: 0.25rem;
+		font-size: 0.9rem;
+		flex-grow: 1;
+
+		@include themify() {
+			border-bottom: 1px solid themed('text-primary');
+			color: themed('text-primary');
+			background-color: themed('background');
+		}
+
+		::placeholder {
+			display: none;
+		}
+
+		&:focus ~ label {
+			bottom: 1.6rem;
+			font-size: 0.7rem;
+		}
+
+		&:not(:placeholder-shown) ~ label {
+			bottom: 1.6rem;
+			font-size: 0.7rem;
+		}
+	}
+
+	@include element('tooltip-button') {
+		font-size: 1rem;
+		width: 1.5rem;
+		height: 1.7rem;
+		background-size: 1.3rem;
+		background-repeat: no-repeat;
+		background-position: center;
+		cursor: pointer;
+
+		&:hover ~ .partial-form-input__tooltip {
+			display: block;
+		}
+
+		@include themify() {
+			border-bottom: 1px solid themed('text-primary');
+
+			@if (isTheme('dark')) {
+				background-image: url("/assets/icons/dark/info.svg");
+			} @else {
+				background-image: url("/assets/icons/light/info.svg");
+			}
+		}
+	}
+
+	@include element('tooltip') {
+		position: absolute;
+		right: 0;
+		bottom: -2.4rem;
+		padding: 0.5rem;
+		border-radius: 0.3rem;
+		z-index: 10;
+		display: none;
+
+		@include themify() {
+			background-color: themed('accent1');
+		}
+	}
+
+	@include element('errors') {
+		display: flex;
+		flex-direction: column;
+	}
+}

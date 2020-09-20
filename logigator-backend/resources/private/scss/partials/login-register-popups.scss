@@ -1,0 +1,81 @@
+@include partial('login-register-popup') {
+	display: flex;
+	flex-direction: column;
+	justify-content: space-between;
+	max-width: 50rem;
+
+	@media (max-width: 767px) {
+		width: 100%;
+		padding: 1rem;
+	}
+
+	padding: 2rem;
+	margin: auto;
+
+	@include element('headline') {
+		font-weight: normal;
+		font-size: 2rem;
+		text-align: center;
+		margin-top: 0;
+	}
+
+	@include element('submit') {
+		padding: 0.7rem !important;
+		width: 100%;
+	}
+
+	@include element('divider') {
+		display: flex;
+		flex-direction: row;
+		justify-content: space-around;
+		align-items: center;
+		margin-top: 1.5rem;
+		margin-bottom: 1.5rem;
+
+		> .divider {
+			width: 42%;
+			@include themify {
+				border-bottom: 1px solid themed('secondary-text');
+			}
+		}
+	}
+
+	@include element('social-media') {
+		display: flex;
+		flex-direction: row;
+		justify-content: space-between;
+	}
+
+	@include element('google', 'twitter') {
+		display: flex;
+		flex-direction: row;
+		justify-content: center;
+		align-items: center;
+		width: 45%;
+		padding: 0.7rem !important;
+		color: white !important;
+		text-decoration: none;
+		font-size: 14px;
+
+		img {
+			padding: 0 0 0 1rem !important;
+			box-shadow: none !important;
+		}
+	}
+
+	@include element('google') {
+		background-color: #ea4335 !important;
+
+		img {
+			background-color: #ea4335 !important;
+		}
+	}
+
+	@include element('twitter') {
+		background-color: #1da1f2 !important;
+
+		img {
+			background-color: #1da1f2 !important;
+		}
+	}
+}

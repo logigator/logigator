@@ -32,6 +32,8 @@
 	<div class="partial-site-header__dropdown-background"></div>
 </div>
 
-{{#> popup title=i18n.POPUP.LOGIN.TITLE  defaultOpen=false triggers='.partial-site-header__btn-login'}}
-	<div>asdsadasd</div>
-{{/popup}}
+{{#unless isAuthenticated }}
+	{{> login-popup }}
+	{{> register-popup }}
+{{/unless}}
+

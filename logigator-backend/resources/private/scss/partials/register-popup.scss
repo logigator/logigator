@@ -1,0 +1,9 @@
+@import "login-register-popups";
+
+@include partial('login-register-popup') {
+
+	@include element('agreement') {
+		font-size: 1rem;
+		margin-top: 0;
+	}
+}

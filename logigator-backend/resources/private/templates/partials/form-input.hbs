@@ -1,0 +1,17 @@
+<!-- parameters: name: string, type: string, label: string, tooltip: string -->
+
+<div class="partial-form-input">
+	<div class="partial-form-input__input-container">
+		<input type="{{type}}" name="{{name}}" id="{{concat formData.formName '_' name}}" placeholder=" " value="">
+		<label for="{{concat formData.formName '_' name}}">{{label}}</label>
+		{{#if tooltip}}
+			<span class="partial-form-input__tooltip-button"></span>
+			<div class="partial-form-input__tooltip">{{tooltip}}</div>
+		{{/if}}
+	</div>
+	<div class="partial-form-input__errors">
+		{{#if @partial-block}}
+			{{> @partial-block }}
+		{{/if}}
+	</div>
+</div>

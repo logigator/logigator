@@ -1,0 +1,33 @@
+{{#> popup title=i18n.POPUP.REGISTER.TITLE  defaultOpen=true triggers='.partial-site-header__btn-register'}}
+	<div class="partial-login-register-popup">
+		<h3 class="partial-login-register-popup__headline">{{i18n.POPUP.REGISTER.HEADLINE}}</h3>
+
+		{{#> form action='/auth/local-register'}}
+			{{> form-input name='email' type='email' label=i18n.POPUP.REGISTER.EMAIL}}
+			{{> form-input name='password' type='passsword' label=i18n.POPUP.REGISTER.PASSWORD}}
+			{{> form-input name='password_repeat' type='passsword' label=i18n.POPUP.REGISTER.PASSWORD_REPEAT}}
+			{{> form-input name='username' type='text' label=i18n.POPUP.REGISTER.USERNAME}}
+
+			<p class="partial-login-register-popup__agreement"> {{i18n.POPUP.REGISTER.PRIVACY_POLICY}} </p>
+
+			<button type="submit" class="btn-raised primary partial-login-register-popup__submit">{{i18n.POPUP.REGISTER.REGISTER_BUTTON}}</button>
+		{{/form}}
+
+		<div class="partial-login-register-popup__divider">
+			<div class="divider"></div>
+			<div>{{i18n.POPUP.LOGIN.OR}}</div>
+			<div class="divider"></div>
+		</div>
+
+		<div class="partial-login-register-popup__social-media">
+			<a class="btn-raised primary partial-login-register-popup__google" href="/auth/google-login">
+				GOOGLE
+				<img class="btn-raised secondary" src="assets/icons/dark/google.svg" alt="google login icon">
+			</a>
+			<a class="btn-raised primary partial-login-register-popup__twitter" href="/auth/twitter-login">
+				TWITTER
+				<img class="btn-raised secondary"src="assets/icons/dark/twitter.svg" alt="twitter login icon">
+			</a>
+		</div>
+	</div>
+{{/popup}}
