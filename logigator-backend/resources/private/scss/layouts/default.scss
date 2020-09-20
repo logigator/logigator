@@ -2,6 +2,7 @@
 @import "../partials/site-header";
 @import "../partials/settings-dropdown";
 @import "../partials/footer";
+@import "../partials/popup";
 
 .main-content {
 	min-height: calc(100vh - #{$footer-height + $header-height});

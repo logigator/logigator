@@ -23,7 +23,7 @@
 		{{else}}
 			<div class="partial-site-header__right-hover">
 				<button class="btn-outline secondary partial-site-header__btn-login">{{i18n.OPTIONS.LOGIN}}</button>
-				<button class="btn-outline secondary partial-site-header__btn-login">{{i18n.OPTIONS.REGISTER}}</button>
+				<button class="btn-outline secondary partial-site-header__btn-register">{{i18n.OPTIONS.REGISTER}}</button>
 				<div class="partial-site-header__more partial-site-header__dropdown-trigger"></div>
 			</div>
 		{{/if}}
@@ -31,3 +31,7 @@
 	</div>
 	<div class="partial-site-header__dropdown-background"></div>
 </div>
+
+{{#> popup title=i18n.POPUP.LOGIN.TITLE  defaultOpen=false triggers='.partial-site-header__btn-login'}}
+	<div>asdsadasd</div>
+{{/popup}}

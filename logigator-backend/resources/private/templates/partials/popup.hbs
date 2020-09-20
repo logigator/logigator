@@ -1,0 +1,14 @@
+<!-- parameters: title: string, defaultOpen: boolean, triggers: selectors separated with :: ex. .class1::.class2 -->
+
+<div class="partial-popup {{printIf defaultOpen 'is-open'}}" data-triggers="{{triggers}}">
+	<div class="partial-popup__popup">
+		<div class="partial-popup__header">
+			<div class="partial-popup__title">{{title}}</div>
+			<img class="show-dark-theme partial-popup__close" src="/assets/icons/dark/close.svg">
+			<img class="show-light-theme partial-popup__close" src="/assets/icons/light/close.svg">
+		</div>
+		<div class="partial-popup__body">
+			{{> @partial-block }}
+		</div>
+	</div>
+</div>

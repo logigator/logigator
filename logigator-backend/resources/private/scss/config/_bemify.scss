@@ -34,15 +34,19 @@ $view-prefix:           'view' !default;
 }
 
 
-@mixin element($name) {
+@mixin element($names...) {
 	@at-root {
 		@if ((variable_exists(current-modifier) and $current-modifier != null) or (variable_exists(current-pseudo) and $current-pseudo != null)) {
-			& .#{$block-name}#{$element-separator}#{$name} {
-				@content;
+			@for $i from 0 to length($names) {
+				& .#{$block-name}#{$element-separator}#{nth($names, $i + 1)} {
+					@content;
+				}
 			}
 		} @else {
-			.#{$block-name}#{$element-separator}#{$name} {
-				@content;
+			@for $i from 0 to length($names) {
+				.#{$block-name}#{$element-separator}#{nth($names, $i + 1)} {
+					@content;
+				}
 			}
 		}
 	}

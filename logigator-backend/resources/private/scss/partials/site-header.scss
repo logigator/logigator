@@ -94,7 +94,7 @@
 		}
 	}
 
-	@include element('btn-login') {
+	@include element('btn-login', 'btn-register') {
 		color: black !important;
 		border-color: black !important;
 		margin-left: 0.5rem;
