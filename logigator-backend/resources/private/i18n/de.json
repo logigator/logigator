@@ -273,6 +273,10 @@
 		"DATE": "Datum",
 		"FILE_SIZE": "Dateigröße"
 	},
+	"NOT_FOUND": {
+		"TEXT": "Die angegebene Seite konnte nicht gefunden werden.",
+		"BACK": "Zur Startseite"
+	},
 	"ERROR": {
 		"ACCOUNT": {
 			"NO_USER": "Benutzername exsistiert nicht",

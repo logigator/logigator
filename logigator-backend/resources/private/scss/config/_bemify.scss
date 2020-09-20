@@ -12,8 +12,11 @@ $modifier-separator:       '--' !default;
 // The default prefix for state modifier selectors, will be combined with $modifier-separator:
 $state-prefix:             'is' !default;
 
-// The default prefix for section selectors, will be combined with the given $name
+// The default prefix for partial selectors, will be combined with the given $name
 $partial-prefix:           'partial' !default;
+
+// The default prefix for view selectors, will be combined with the given $name
+$view-prefix:           'view' !default;
 
 
 
@@ -73,6 +76,12 @@ $partial-prefix:           'partial' !default;
 
 @mixin partial($name) {
 	@include block(#{$partial-prefix}-#{$name}) {
+		@content;
+	}
+}
+
+@mixin view($name) {
+	@include block(#{$view-prefix}-#{$name}) {
 		@content;
 	}
 }

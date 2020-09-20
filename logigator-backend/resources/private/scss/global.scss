@@ -18,3 +18,9 @@ html, body {
 	box-sizing: border-box;
 	font-family: Roboto, Arial, sans-serif;
 }
+
+@include themify() {
+	* {
+		color: themed('text-primary');
+	}
+}

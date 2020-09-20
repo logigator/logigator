@@ -1,10 +1,10 @@
 import {Controller, Get, Render} from 'routing-controllers';
 
-@Controller('/')
-export class HomeController {
+@Controller('/imprint')
+export class ImprintController {
 
 	@Get('/')
-	@Render('home')
+	@Render('imprint')
 	public async index() {
 		return '';
 	}

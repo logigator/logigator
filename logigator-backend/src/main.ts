@@ -24,6 +24,8 @@ import {DefaultSessionMiddleware} from './middleware/default-session.middleware'
 import {TranslationMiddleware} from './middleware/translation.middleware';
 import {UserDataMiddleware} from './middleware/user-data.middleware';
 import {handlebarsHelpers} from './handlebars-helper/helpers';
+import {ImprintController} from './controller/frontend/imprint.controller';
+import {PrivacyPolicyController} from './controller/frontend/privacy-policy.controller';
 
 useContainerRC(Container);
 typeOrmUseContainer(Container);
@@ -75,6 +77,8 @@ async function bootstrap() {
 	useExpressServer(app, {
 		controllers: [
 			HomeController,
+			ImprintController,
+			PrivacyPolicyController,
 			AuthController,
 			PreferencesController,
 			ProjectController

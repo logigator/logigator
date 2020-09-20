@@ -273,6 +273,10 @@
 		"DATE": "Date",
 		"FILE_SIZE": "File Size"
 	},
+	"NOT_FOUND": {
+		"TEXT": "The requested page could not be found.",
+		"BACK": "Back to home"
+	},
 	"ERROR": {
 		"ACCOUNT": {
 			"NO_USER": "Username does not exist",

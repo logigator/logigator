@@ -1,0 +1,15 @@
+@import "../config/config";
+
+@include view('not-found') {
+	width: 100%;
+	display: flex;
+	justify-content: center;
+	align-items: center;
+	padding-top: 5rem;
+
+	h1 {
+		font-size: 5rem;
+		margin: 0.5rem 0;
+		font-weight: 100;
+	}
+}

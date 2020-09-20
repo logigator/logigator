@@ -1,10 +1,10 @@
 import {Controller, Get, Render} from 'routing-controllers';
 
-@Controller('/')
-export class HomeController {
+@Controller('/privacy-policy')
+export class PrivacyPolicyController {
 
 	@Get('/')
-	@Render('home')
+	@Render('privacy-policy')
 	public async index() {
 		return '';
 	}
