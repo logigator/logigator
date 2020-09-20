@@ -26,6 +26,7 @@ import {UserDataMiddleware} from './middleware/user-data.middleware';
 import {handlebarsHelpers} from './handlebars-helper/helpers';
 import {ImprintController} from './controller/frontend/imprint.controller';
 import {PrivacyPolicyController} from './controller/frontend/privacy-policy.controller';
+import compression from 'compression';
 
 useContainerRC(Container);
 typeOrmUseContainer(Container);
@@ -56,6 +57,7 @@ async function bootstrap() {
 	app.set('views', path.join(__dirname, '..', 'resources', 'private', 'templates', 'views'));
 	app.set('view engine', 'hbs');
 
+	app.use(compression());
 	app.use(urlencoded({ extended: false }));
 	app.use(flash());
 	app.use(cookieParser());
