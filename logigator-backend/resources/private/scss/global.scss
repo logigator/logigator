@@ -24,3 +24,18 @@ html, body {
 		color: themed('text-primary');
 	}
 }
+
+@include themify() {
+	.show-dark-theme {
+		@if (isTheme('light')) {
+			display: none;
+		}
+	}
+
+	.show-light-theme {
+		@if (isTheme('dark')) {
+			display: none;
+		}
+	}
+}
+

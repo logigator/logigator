@@ -1,0 +1,26 @@
+<div class="partial-settings-dropdown">
+	{{#if isAuthenticated }}
+		<hr>
+		<a class="partial-settings-dropdown__link partial-settings-dropdown__item" href="/my/projects">
+			<img class="show-dark-theme" src="/assets/icons/dark/archive.svg">
+			<img class="show-light-theme" src="/assets/icons/light/archive.svg">
+			{{i18n.OPTIONS.PROJECTS}}
+		</a>
+		<a class="partial-settings-dropdown__link partial-settings-dropdown__item" href="/my/components">
+			<img class="show-dark-theme" src="/assets/icons/dark/archive.svg">
+			<img class="show-light-theme" src="/assets/icons/light/archive.svg">
+			{{i18n.OPTIONS.COMPONENTS}}
+		</a>
+		<hr>
+		<a class="partial-settings-dropdown__link partial-settings-dropdown__item" href="/my/settings">
+			<img class="show-dark-theme" src="/assets/icons/dark/user.svg">
+			<img class="show-light-theme" src="/assets/icons/light/user.svg">
+			{{i18n.OPTIONS.ACCOUNT}}
+		</a>
+		<a class="partial-settings-dropdown__link partial-settings-dropdown__item" href="/auth/logout">
+			<img class="show-dark-theme" src="/assets/icons/dark/logout.svg">
+			<img class="show-light-theme" src="/assets/icons/light/logout.svg">
+			{{i18n.OPTIONS.LOGOUT}}
+		</a>
+	{{/if}}
+</div>

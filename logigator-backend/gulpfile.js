@@ -1,6 +1,10 @@
 const gulp = require('gulp');
 const sass = require('gulp-sass');
 const path = require('path');
+const babel = require('gulp-babel');
+const terser = require('gulp-terser');
+const concat = require('gulp-concat');
+const sourceMaps = require('gulp-sourcemaps');
 
 
 gulp.task('scss:layouts', function() {
@@ -24,3 +28,28 @@ gulp.task('scss:watch', function () {
 	});
 });
 
+gulp.task('js:global', function() {
+	return gulp.src([path.join(__dirname, 'resources/private/js/bem.js'), path.join(__dirname, 'resources/private/js/global.js')])
+		.pipe(sourceMaps.init())
+		.pipe(concat('global.js'))
+		.pipe(babel({
+			presets: ['@babel/env']
+		}))
+		.on('error', function(err) {
+			console.error(err.message);
+			this.emit('end');
+		})
+		.pipe(terser())
+		.pipe(sourceMaps.write('./'))
+		.pipe(gulp.dest(path.join(__dirname, 'resources/public/js')));
+});
+
+gulp.task('js', gulp.parallel(['js:global']));
+
+gulp.task('js:watch', function () {
+	gulp.watch(path.join(__dirname, 'resources/private/js/**/*.js'), (done) => {
+		gulp.series(['js'])(done);
+	});
+});
+
+gulp.task('watch', gulp.parallel(['scss:watch', 'js:watch']));

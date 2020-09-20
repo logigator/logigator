@@ -14,14 +14,20 @@
 		</div>
 	</div>
 
-	<div class="partial-site-header__right {{printIf isAuthenticated 'partial-site-header__right--logged-in'}}">
+	<div class="partial-site-header__right">
 		{{#if isAuthenticated }}
-			<p class="partial-site-header__username">{{user.username}}</p>
-			<img class="partial-site-header__user-img" alt="User Image" src="{{user.image}}">
+			<div class="partial-site-header__right-hover partial-site-header__dropdown-trigger partial-site-header__right-hover--logged-in">
+				<p class="partial-site-header__username">{{user.username}}</p>
+				<img class="partial-site-header__user-img" alt="User Image" src="{{user.image}}">
+			</div>
 		{{else}}
-			<button class="btn-outline secondary partial-site-header__btn-login">{{i18n.OPTIONS.LOGIN}}</button>
-			<button class="btn-outline secondary partial-site-header__btn-login">{{i18n.OPTIONS.REGISTER}}</button>
-			<div class="partial-site-header__more"></div>
+			<div class="partial-site-header__right-hover">
+				<button class="btn-outline secondary partial-site-header__btn-login">{{i18n.OPTIONS.LOGIN}}</button>
+				<button class="btn-outline secondary partial-site-header__btn-login">{{i18n.OPTIONS.REGISTER}}</button>
+				<div class="partial-site-header__more partial-site-header__dropdown-trigger"></div>
+			</div>
 		{{/if}}
+		{{> settings-dropdown }}
 	</div>
+	<div class="partial-site-header__dropdown-background"></div>
 </div>

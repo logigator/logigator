@@ -55,15 +55,32 @@
 	}
 
 	@include element('right') {
+		@media (max-width: 767px) {
+			display: none;
+		}
+	}
+
+	@include element('dropdown-background') {
+		position: fixed;
+		top: $header-height;
+		left: 0;
+		width: 100%;
+		height: calc(100% - #{$header-height});
+		background-color: rgba(0, 0, 0, 0);
+		z-index: 100;
+		display: none;
+
+		@include state('shown') {
+			display: block;
+		}
+	}
+
+	@include element('right-hover') {
 		display: flex;
 		flex-direction: row;
 		height: 100%;
 		align-items: center;
 		padding: 0;
-
-		@media (max-width: 767px) {
-			display: none;
-		}
 
 		@include modifier('logged-in') {
 			padding: 0.5rem;

@@ -1,0 +1,57 @@
+@include partial('settings-dropdown') {
+	position: absolute;
+	z-index: 200;
+	width: max-content;
+	min-width: 20rem;
+	display: none;
+	flex-direction: column;
+	right: 0;
+	top: $header-height;
+
+	@include state('open') {
+		display: flex;
+	}
+
+	@include themify() {
+		background-color: themed('background');
+		color: themed('text-primary');
+		border: 1px solid themed('accent2');;
+		border-radius: 0.1rem;
+	}
+
+	@include element('item') {
+		display: flex;
+		flex-direction: row;
+		align-items: center;
+		height: 3rem;
+		padding: 0.5rem 1rem;
+		text-decoration: none;
+
+		img {
+			height: 100%;
+			margin-right: 1rem;
+		}
+	}
+
+	@include element('link') {
+		cursor: pointer;
+
+		&:hover {
+			@include themify() {
+				background-color: themed('accent2');
+			}
+		}
+	}
+
+	hr {
+		width: 100%;
+		margin: auto;
+		border-width: 0;
+		border-bottom-width: 1px;
+		border-style: solid;
+
+		@include themify() {
+			border-color: themed('accent2');
+		}
+	}
+}

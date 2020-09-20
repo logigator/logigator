@@ -38,7 +38,8 @@
 		"prebuild": "rimraf dist",
 		"build": "tsc -p tsconfig.json",
 		"start:prod": "node dist/main.js",
-		"lint": "eslint \"{src,test}/**/*.ts\""
+		"lint:backend": "cd src && eslint -c .eslintrc.json \"./**/*.ts\"",
+		"lint:frontend": "eslint -c ./resources/private/js/.eslintrc.json \"resources/private/js/**/*.js\""
 	},
 	"main": "./dist/main.js",
 	"dependencies": {
@@ -71,6 +72,8 @@
 		"uuid": "^8.3.0"
 	},
 	"devDependencies": {
+		"@babel/core": "^7.11.6",
+		"@babel/preset-env": "^7.11.5",
 		"@types/body-parser": "^1.19.0",
 		"@types/connect-redis": "0.0.14",
 		"@types/cookie-parser": "^1.4.2",
@@ -93,7 +96,11 @@
 		"concurrently": "^5.3.0",
 		"eslint": "^7.9.0",
 		"gulp": "^4.0.2",
+		"gulp-babel": "^8.0.0",
+		"gulp-concat": "^2.6.1",
 		"gulp-sass": "^4.1.0",
+		"gulp-sourcemaps": "^2.6.5",
+		"gulp-terser": "^1.4.0",
 		"nodemon": "^2.0.4",
 		"rimraf": "^3.0.2",
 		"typescript": "^4.0.2"
