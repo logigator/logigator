@@ -19,6 +19,23 @@
 		border-radius: 0.1rem;
 	}
 
+	@include element('lang') {
+		justify-content: space-between;
+	}
+
+	@include element('lang-select') {
+		width: 100px;
+		font-size: 0.9rem;
+		outline: none;
+		border: none;
+
+		@include themify() {
+			border-bottom: 1px solid themed('text-primary');
+			color: themed('text-primary');
+			background-color: themed('background');
+		}
+	}
+
 	@include element('item') {
 		display: flex;
 		flex-direction: row;

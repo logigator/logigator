@@ -3,6 +3,13 @@
 		"DE": "Deutsch",
 		"EN": "English"
 	},
+	"TITLE": {
+		"HOME": "Logigator",
+		"PRIVACY_POLICY": "Logigator - Privacy Policy",
+		"IMPRINT": "Logigator - Imprint",
+		"FEATURES": "Logigator - Features",
+		"DOWNLOAD": "Logigator - Download"
+	},
 	"OPTIONS": {
 		"DARK_MODE": "Dark Mode",
 		"LANGUAGE": "Language",

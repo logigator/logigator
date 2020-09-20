@@ -14,6 +14,7 @@ export class UserDataMiddleware implements ExpressMiddlewareInterface {
 				image: (request.user as User).image?.publicUrl
 			};
 		}
+		response.locals.preferences = request.session.preferences;
 		next();
 	}
 

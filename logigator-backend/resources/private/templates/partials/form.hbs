@@ -2,7 +2,7 @@
 
 <form class="partial-form" action="{{action}}" method="{{ternary method method 'POST'}}" name="{{formName action}}">
 
-	<input type="hidden" name="submittedFrom" value="/">
+	<input type="hidden" name="submittedFrom" value="{{currentPagePath}}">
 
 	{{> @partial-block }}
 </form>

@@ -21,7 +21,7 @@ import {RedisService} from './services/redis.service';
 import {PreferencesController} from './controller/frontend/preferences.controller';
 import {NotFoundMiddleware} from './middleware/not-found.middleware';
 import {DefaultSessionMiddleware} from './middleware/default-session.middleware';
-import {TranslationMiddleware} from './middleware/translation.middleware';
+import {GlobalViewDataMiddleware} from './middleware/global-view-data.middleware';
 import {UserDataMiddleware} from './middleware/user-data.middleware';
 import {handlebarsHelpers} from './handlebars-helper/helpers';
 import {ImprintController} from './controller/frontend/imprint.controller';
@@ -85,7 +85,7 @@ async function bootstrap() {
 		],
 		middlewares: [
 			DefaultSessionMiddleware,
-			TranslationMiddleware,
+			GlobalViewDataMiddleware,
 			UserDataMiddleware,
 			NotFoundMiddleware,
 			ErrorHandlerMiddleware
