@@ -29,8 +29,8 @@
 		<meta property="og:description"
 			  content="Build and simulate your own logic circuits with Logigator, a simple yet powerful web-based online tool."/>
 
-		<link rel="stylesheet" type="text/css" href="/css/layouts/default.css">
-		<link rel="stylesheet" type="text/css" href="/css/views/{{@exphbs.view}}.css">
+		{{styleTag url='/css/layouts/default.css' }}
+		{{styleTag url=(concat '/css/views/' @exphbs.view '.css') }}
 	</head>
 	<body class="{{#ifEqual preferences.theme 'dark'}}theme-dark{{else}}theme-light{{/ifEqual}}">
 		{{> site-header }}
@@ -38,7 +38,7 @@
 			{{{body}}}
 		</div>
 		{{> footer }}
-		<script type="module" src="/js/global-es2015.js"></script>
-		<script nomodule src="/js/global-es5.js"></script>
+		{{scriptTag url='/js/global-es2015.js' type='module' }}
+		{{scriptTag url='/js/global-es5.js' type='nomodule' }}
 	</body>
 </html>
