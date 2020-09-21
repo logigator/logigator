@@ -19,7 +19,7 @@
 		border-radius: 0.1rem;
 	}
 
-	@include element('lang') {
+	@include element('lang', 'theme') {
 		justify-content: space-between;
 	}
 

@@ -1,6 +1,6 @@
-<!-- parameters: action: string, method: string -->
+<!-- parameters: action: string, method: string, class: string -->
 
-<form class="partial-form" action="{{action}}" method="{{ternary method method 'POST'}}" name="{{formName action}}">
+<form class="partial-form {{class}}" action="{{action}}" method="{{ternary method method 'POST'}}" name="{{formName action}}">
 
 	<input type="hidden" name="submittedFrom" value="{{currentPagePath}}">
 

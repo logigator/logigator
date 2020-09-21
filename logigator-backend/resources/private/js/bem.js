@@ -27,6 +27,16 @@ const Bem = {
         return node.querySelector(`.${bemClass}__${element}`);
     },
 
+	/**
+	 * @param {Element} node
+	 * @param {string} element
+	 * @returns {NodeList<HTMLElement>}
+	 */
+	elements(node, element) {
+		const bemClass = Bem.bemClass(node);
+		return node.querySelectorAll(`.${bemClass}__${element}`);
+	},
+
     /**
      * @param {Element} node
      * @param {string} state

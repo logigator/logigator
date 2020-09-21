@@ -1,7 +1,13 @@
 <div class="partial-settings-dropdown">
+	<div class="partial-settings-dropdown__item partial-settings-dropdown__theme">
+		<label>{{i18n.OPTIONS.DARK_MODE}}</label>
+		{{#> form action='/prefernces/dark-mode' class='partial-settings-dropdown__theme-select'}}
+			{{> form-switch name='dark_mode' checked=(expr preferences.theme '===' 'dark') }}
+		{{/form}}
+	</div>
 	<div class="partial-settings-dropdown__item partial-settings-dropdown__lang">
 		<label>{{i18n.OPTIONS.LANGUAGE}}</label>
-		{{#> form action='/preferences/set-lang'}}
+		{{#> form action='/preferences/set-lang' }}
 			<select name="lang" class="partial-settings-dropdown__lang-select" onchange="this.form.submit()">
 				<option value="en" {{#ifEqual preferences.lang 'en' }}selected="selected"{{/ifEqual}}>{{i18n.LANGUAGE.EN}}</option>
 				<option value="de" {{#ifEqual preferences.lang 'de' }}selected="selected"{{/ifEqual}}>{{i18n.LANGUAGE.DE}}</option>

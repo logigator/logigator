@@ -1,0 +1,11 @@
+<!-- parameters: name: string, label: string, checked: boolean -->
+
+<div class="partial-form-switch">
+	<label class="partial-form-switch__switch-container" for="{{concat formData.formName '_' name}}">
+		<input class="partial-form-switch__input" type="checkbox" {{#if checked}}checked{{/if}} name="{{name}}" id="{{concat formData.formName '_' name}}" >
+		<span class="partial-form-switch__slider"></span>
+	</label>
+	{{#if label}}
+		<span class="partial-form-switch__label">{{label}}</span>
+	{{/if}}
+</div>
