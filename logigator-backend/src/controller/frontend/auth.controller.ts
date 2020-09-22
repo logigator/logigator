@@ -18,7 +18,7 @@ export class AuthController {
 	@UseBefore(CheckNotAuthenticatedFrontMiddleware)
 	@UseAfter(FormErrorMiddleware)
 	public localRegister(@Body() body: LocalRegister, @RedirectToRef() redirect) {
-		// throw new FormDataError('email', 'email_taken');
+		throw new FormDataError('email', 'email_taken');
 		return redirect();
 	}
 

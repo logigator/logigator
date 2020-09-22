@@ -1,5 +1,7 @@
 import {BadRequestError, ExpressErrorMiddlewareInterface} from 'routing-controllers';
 import {Request, Response} from 'express';
+import {ValidationError} from 'class-validator';
+import {FormDataError} from '../../errors/form-data.error';
 
 export class FormErrorMiddleware implements ExpressErrorMiddlewareInterface {
 
@@ -8,11 +10,41 @@ export class FormErrorMiddleware implements ExpressErrorMiddlewareInterface {
 			throw error;
 		}
 
-		console.log(error);
+		const formName = request.path.replace(/\//g, '_').substr(1);
 
-		const formErrors = {
-			test: 'kek'
-		};
+		const formErrors = {};
+		formErrors[formName] = {};
+
+		// Validation with class-validator failed
+		if ('errors' in error) {
+			(error as any).errors.forEach((valErr: ValidationError) => {
+				formErrors[formName][valErr.property] = Object.keys(valErr.constraints);
+			});
+		}
+
+		// FormDataError was thrown somewhere
+		if (error.name === 'FormDataError') {
+			const formDataError = error as FormDataError;
+
+			if (formDataError.property !== undefined) {
+				formErrors[formName][formDataError.property] = [formDataError.errorName];
+			} else {
+				formErrors[formName].__general__ = [formDataError.errorName];
+			}
+		}
+
+		/*
+			formErrors Format:
+				{
+					'formName': {
+						'formProperty': ['error0', 'error1'],
+						'formProperty2': ['error0', 'error1'],
+						'formProperty3': ['error1'],
+						'formProperty3': ['error1'],
+						'__general__': ['error0']
+					}
+				}
+		 */
 
 		request.session.formErrors = formErrors;
 
