@@ -9,8 +9,8 @@
 		<label>{{i18n.OPTIONS.LANGUAGE}}</label>
 		{{#> form action='/preferences/set-lang' }}
 			<select name="lang" class="partial-settings-dropdown__lang-select" onchange="this.form.submit()">
-				<option value="en" {{#ifEqual preferences.lang 'en' }}selected="selected"{{/ifEqual}}>{{i18n.LANGUAGE.EN}}</option>
-				<option value="de" {{#ifEqual preferences.lang 'de' }}selected="selected"{{/ifEqual}}>{{i18n.LANGUAGE.DE}}</option>
+				<option value="en" {{#if (expr preferences.lang '===' 'en') }}selected="selected"{{/if}}>{{i18n.LANGUAGE.EN}}</option>
+				<option value="de" {{#if (expr preferences.lang '===' 'de') }}selected="selected"{{/if}}>{{i18n.LANGUAGE.DE}}</option>
 			</select>
 		{{/form}}
 	</div>

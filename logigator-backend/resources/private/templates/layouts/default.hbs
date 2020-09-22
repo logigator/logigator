@@ -32,7 +32,7 @@
 		{{styleTag url='/css/layouts/default.css' }}
 		{{styleTag url=(concat '/css/views/' @exphbs.view '.css') }}
 	</head>
-	<body class="{{#ifEqual preferences.theme 'dark'}}theme-dark{{else}}theme-light{{/ifEqual}}">
+	<body class="{{#if (expr preferences.theme '===' 'dark') }}theme-dark{{else}}theme-light{{/if}}">
 		{{> site-header }}
 		<div class="main-content">
 			{{{body}}}

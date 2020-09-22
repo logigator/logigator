@@ -2,7 +2,6 @@ import {ternaryHelper} from './ternary.helper';
 import {printIfHelper} from './printif.helper';
 import {formNameScopeHelper} from './form-name-scope.helper';
 import {concatHelper} from './concat.helper';
-import {ifEqualHelper} from './ifEqual.helper';
 import {exprHelper} from './expr.helper';
 import {scriptTagHelper} from './scriptTag.helper';
 import {styleTagHelper} from './styleTag.helper';
@@ -22,7 +21,6 @@ export const handlebarsHelpers = {
 	formFieldHasErrors: formFieldHasErrorsHelper(),
 	formFieldError: formFieldErrorHelper(),
 	formFieldValue: formFieldValueHelper(),
-	ifEqual: ifEqualHelper(),
 	expr: exprHelper(),
 	scriptTag: scriptTagHelper(),
 	styleTag: styleTagHelper()

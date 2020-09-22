@@ -11,7 +11,7 @@ export function propertyExistsHelper(): HelperDelegate {
 
 		const propParts = prop.split('.');
 		for (let i = 0; i < propParts.length; i++) {
-			if (contextToCheck !== undefined && contextToCheck !== null &&propParts[i] in contextToCheck) {
+			if (contextToCheck !== undefined && contextToCheck !== null && propParts[i] in contextToCheck) {
 				contextToCheck = contextToCheck[propParts[i]];
 			} else {
 				return false;
