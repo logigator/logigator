@@ -1,6 +1,6 @@
 import {Request, Response} from 'express';
 import {Container} from 'typedi';
-import {TranslationService} from '../services/translation.service';
+import {TranslationService} from '../../services/translation.service';
 
 export function setTitleMiddleware(title: string) {
 

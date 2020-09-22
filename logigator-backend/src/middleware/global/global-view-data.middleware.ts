@@ -1,6 +1,6 @@
 import {ExpressMiddlewareInterface, Middleware} from 'routing-controllers';
 import {Request, Response} from 'express';
-import {TranslationService} from '../services/translation.service';
+import {TranslationService} from '../../services/translation.service';
 
 @Middleware({type: 'before'})
 export class GlobalViewDataMiddleware implements ExpressMiddlewareInterface {
@@ -9,7 +9,8 @@ export class GlobalViewDataMiddleware implements ExpressMiddlewareInterface {
 
 	use(request: Request, response: Response, next: (err?: any) => any): any {
 		response.locals.i18n = this.translationService.getTranslations(request.session.preferences.lang);
-		response.locals.currentPagePath = request.path;
+		response.locals.formErrors = request.session.formErrors;
+		request.session.formErrors = undefined;
 		next();
 	}
 

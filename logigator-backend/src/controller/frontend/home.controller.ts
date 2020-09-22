@@ -1,5 +1,5 @@
 import {Controller, Get, Render, UseBefore} from 'routing-controllers';
-import {setTitleMiddleware} from '../../middleware/set-title-middleware';
+import {setTitleMiddleware} from '../../middleware/action/set-title-middleware';
 
 @Controller('/')
 export class HomeController {

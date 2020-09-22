@@ -9,20 +9,19 @@ import {HomeController} from './controller/frontend/home.controller';
 import {ConfigService} from './services/config.service';
 import * as path from 'path';
 import {AuthController} from './controller/frontend/auth.controller';
-import flash from 'express-flash';
 import passport from 'passport';
 import session from 'express-session';
 import {PassportConfigService} from './services/passport-config.service';
 import cookieParser from 'cookie-parser';
-import {ErrorHandlerMiddleware} from './middleware/error-handler.middleware';
+import {ErrorHandlerMiddleware} from './middleware/global/error-handler.middleware';
 import {ProjectController} from './controller/api/project.controller';
 import connectRedis from 'connect-redis';
 import {RedisService} from './services/redis.service';
 import {PreferencesController} from './controller/frontend/preferences.controller';
-import {NotFoundMiddleware} from './middleware/not-found.middleware';
-import {DefaultSessionMiddleware} from './middleware/default-session.middleware';
-import {GlobalViewDataMiddleware} from './middleware/global-view-data.middleware';
-import {UserDataMiddleware} from './middleware/user-data.middleware';
+import {NotFoundMiddleware} from './middleware/global/not-found.middleware';
+import {DefaultSessionMiddleware} from './middleware/global/default-session.middleware';
+import {GlobalViewDataMiddleware} from './middleware/global/global-view-data.middleware';
+import {UserDataMiddleware} from './middleware/global/user-data.middleware';
 import {handlebarsHelpers} from './handlebars-helper/helpers';
 import {ImprintController} from './controller/frontend/imprint.controller';
 import {PrivacyPolicyController} from './controller/frontend/privacy-policy.controller';
@@ -59,7 +58,6 @@ async function bootstrap() {
 
 	app.use(compression());
 	app.use(urlencoded({ extended: false }));
-	app.use(flash());
 	app.use(cookieParser());
 	app.use(session({
 		secret: configService.getConfig('session').secret,
@@ -92,6 +90,10 @@ async function bootstrap() {
 			NotFoundMiddleware,
 			ErrorHandlerMiddleware
 		],
+		validation: {
+			whitelist: true,
+			forbidNonWhitelisted: true
+		},
 		development: appContext === 'development',
 		defaultErrorHandler: false,
 		currentUserChecker: action => action.request.user

@@ -1,6 +1,6 @@
 import {ExpressMiddlewareInterface, Middleware} from 'routing-controllers';
 import {Request, Response} from 'express';
-import {User} from '../database/entities/user.entity';
+import {User} from '../../database/entities/user.entity';
 
 @Middleware({type: 'before'})
 export class UserDataMiddleware implements ExpressMiddlewareInterface {

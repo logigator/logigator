@@ -1,6 +1,6 @@
 import {BadRequestError, ExpressErrorMiddlewareInterface, HttpError, Middleware} from 'routing-controllers';
 import {Request, Response} from 'express';
-import {ConfigService} from '../services/config.service';
+import {ConfigService} from '../../services/config.service';
 
 @Middleware({type: 'after'})
 export class ErrorHandlerMiddleware implements ExpressErrorMiddlewareInterface {
@@ -47,15 +47,11 @@ export class ErrorHandlerMiddleware implements ExpressErrorMiddlewareInterface {
 
 		let body = `<h1>${errorResponse.status} ${errorResponse.error.name}</h1><hr>`;
 		if (this._appContext !== 'production') {
-			console.log(errorResponse.error.stack.split('\n'));
+			body += `<pre>${errorResponse.error.stack}</pre>`;
 
-			body += `<h4>${errorResponse.error.description}</h4>`;
-
-			const formattedStack = errorResponse.error.stack.split('\n').map(line => {
-				return `${line}<br>`;
-			});
-
-			body += `<p>${formattedStack}</p>`;
+			if (errorResponse.error.errors) {
+				body += `<pre>${JSON.stringify(errorResponse.error.errors, null, 2)}</pre>`;
+			}
 		}
 		response.send(body);
 	}
