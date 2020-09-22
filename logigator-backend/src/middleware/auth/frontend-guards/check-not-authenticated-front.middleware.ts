@@ -4,8 +4,8 @@ import {Request, Response} from 'express';
 export class CheckNotAuthenticatedFrontMiddleware implements ExpressMiddlewareInterface {
 
 	use(request: Request, response: Response, next: (err?: any) => any): any {
-		if (request.user) {
-			response.redirect('/');
+		if (request.isAuthenticated()) {
+			response.redirect(`/${request.session.preferences.lang}`);
 			return;
 		}
 		next();

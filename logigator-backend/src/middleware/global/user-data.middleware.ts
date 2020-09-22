@@ -6,8 +6,8 @@ import {User} from '../../database/entities/user.entity';
 export class UserDataMiddleware implements ExpressMiddlewareInterface {
 
 	use(request: Request, response: Response, next: (err?: any) => any): any {
-		response.locals.isAuthenticated = !!request.user;
-		if (request.user) {
+		response.locals.isAuthenticated = request.isAuthenticated();
+		if (request.isAuthenticated()) {
 			response.locals.user = {
 				username: (request.user as User).username,
 				email: (request.user as User).email,

@@ -2,7 +2,7 @@ import 'reflect-metadata';
 import {useContainer as useContainerRC, useExpressServer} from 'routing-controllers';
 import {createConnection, useContainer as typeOrmUseContainer, ConnectionOptions} from 'typeorm';
 import {useContainer as classValidatorUseContainer} from 'class-validator';
-import express, {urlencoded, static as expressStatic} from 'express';
+import express, {urlencoded, static as expressStatic, Request} from 'express';
 import {Container} from 'typedi';
 import * as exphbs from 'express-handlebars';
 import {HomeController} from './controller/frontend/home.controller';
@@ -26,6 +26,7 @@ import {handlebarsHelpers} from './handlebars-helper/helpers';
 import {ImprintController} from './controller/frontend/imprint.controller';
 import {PrivacyPolicyController} from './controller/frontend/privacy-policy.controller';
 import compression from 'compression';
+import {TranslationMiddleware} from './middleware/global/translation.middleware';
 
 useContainerRC(Container);
 typeOrmUseContainer(Container);
@@ -85,6 +86,7 @@ async function bootstrap() {
 		],
 		middlewares: [
 			DefaultSessionMiddleware,
+			TranslationMiddleware,
 			GlobalViewDataMiddleware,
 			UserDataMiddleware,
 			NotFoundMiddleware,
@@ -96,7 +98,7 @@ async function bootstrap() {
 		},
 		development: appContext === 'development',
 		defaultErrorHandler: false,
-		currentUserChecker: action => action.request.user
+		currentUserChecker: action => (action.request as Request).isAuthenticated()
 	});
 	app.listen(3000, () => {
 		console.log('App started successfully');

@@ -46,4 +46,8 @@ export class TranslationService {
 		return this._translations.get(lang);
 	}
 
+	public get availableLanguages(): string[] {
+		return [...this._translations.keys()];
+	}
+
 }

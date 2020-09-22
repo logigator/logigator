@@ -1,15 +1,15 @@
 <div class="partial-site-header">
 	<div class="partial-site-header__left">
-		<a href="/" class="partial-site-header__logo">
+		<a href="{{linkHref '/'}}" class="partial-site-header__logo">
 			<img alt="Logigator" src="/assets/logo.svg">
 		</a>
 
 		<div class="partial-site-header__links">
-			<a href="/features">{{i18n.OPTIONS.FEATURES}}</a>
-			<a href="/download">{{i18n.OPTIONS.DOWNLOAD}}</a>
+			<a href="{{linkHref '/features'}}">{{i18n.OPTIONS.FEATURES}}</a>
+			<a href="{{linkHref '/download'}}">{{i18n.OPTIONS.DOWNLOAD}}</a>
 			{{#if isAuthenticated }}
-				<a href="/my/projects">{{i18n.OPTIONS.PROJECTS}}</a>
-				<a href="/my/components">{{i18n.OPTIONS.COMPONENTS}}</a>
+				<a href="{{linkHref '/my/projects'}}">{{i18n.OPTIONS.PROJECTS}}</a>
+				<a href="{{linkHref '/my/components'}}">{{i18n.OPTIONS.COMPONENTS}}</a>
 			{{/if}}
 		</div>
 	</div>

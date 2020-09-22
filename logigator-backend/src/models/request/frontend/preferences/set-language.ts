@@ -1,9 +1,10 @@
-import {IsIn, IsString} from 'class-validator';
+import {IsString} from 'class-validator';
+import {Required} from '../../../../validators/required.validator';
 
 export class SetLanguage {
 
 	@IsString()
-	@IsIn(['de', 'en'])
+	@Required()
 	lang: string;
 
 }

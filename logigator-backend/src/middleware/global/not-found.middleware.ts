@@ -10,7 +10,7 @@ export class NotFoundMiddleware implements ExpressMiddlewareInterface {
 			return;
 		}
 
-		if (request.path.startsWith('/api')) {
+		if (request.originalUrl.startsWith('/api')) {
 			throw new NotFoundError(request.path + ' cannot be found on this server');
 		}
 

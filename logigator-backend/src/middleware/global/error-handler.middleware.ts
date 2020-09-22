@@ -31,7 +31,7 @@ export class ErrorHandlerMiddleware implements ExpressErrorMiddlewareInterface {
 
 		response.status(errorResponse.status);
 
-		if (request.path.startsWith('/api')) {
+		if (request.originalUrl.startsWith('/api')) {
 			response.setHeader('Content-Type', 'application/json');
 
 			let body: string;

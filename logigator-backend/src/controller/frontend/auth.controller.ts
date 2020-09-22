@@ -1,4 +1,4 @@
-import {Body, Controller, Get, Post, Req, Res, UseAfter, UseBefore} from 'routing-controllers';
+import {Body, Controller, Get, Post, Req, Res, Session, UseAfter, UseBefore} from 'routing-controllers';
 import {GoogleLoginMiddleware} from '../../middleware/auth/google-login.middleware';
 import {GoogleAuthenticationMiddleware} from '../../middleware/auth/google-authentication.middleware';
 import {TwitterLoginMiddleware} from '../../middleware/auth/twitter-login.middleware';
@@ -49,9 +49,9 @@ export class AuthController {
 
 	@Get('/logout')
 	@UseBefore(CheckAuthenticatedFrontMiddleware)
-	public logout(@Req() request: Request, @Res() response: Response) {
+	public logout(@Session() sess: any, @Req() request: Request, @Res() response: Response) {
 		request.logout();
-		response.redirect('/');
+		response.redirect(`/${sess.preferences.lang}`);
 		return response;
 	}
 

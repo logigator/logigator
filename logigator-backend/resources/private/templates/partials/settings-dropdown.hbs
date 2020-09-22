@@ -16,18 +16,18 @@
 	</div>
 	{{#if isAuthenticated }}
 		<hr>
-		<a class="partial-settings-dropdown__link partial-settings-dropdown__item" href="/my/projects">
+		<a class="partial-settings-dropdown__link partial-settings-dropdown__item" href="{{linkHref '/my/projects'}}">
 			<img alt="projects" class="show-dark-theme" src="/assets/icons/dark/archive.svg">
 			<img alt="projects" class="show-light-theme" src="/assets/icons/light/archive.svg">
 			{{i18n.OPTIONS.PROJECTS}}
 		</a>
-		<a class="partial-settings-dropdown__link partial-settings-dropdown__item" href="/my/components">
+		<a class="partial-settings-dropdown__link partial-settings-dropdown__item" href="{{linkHref '/my/components'}}">
 			<img alt="components" class="show-dark-theme" src="/assets/icons/dark/archive.svg">
 			<img alt="components" class="show-light-theme" src="/assets/icons/light/archive.svg">
 			{{i18n.OPTIONS.COMPONENTS}}
 		</a>
 		<hr>
-		<a class="partial-settings-dropdown__link partial-settings-dropdown__item" href="/my/settings">
+		<a class="partial-settings-dropdown__link partial-settings-dropdown__item" href="{{linkHref '/my/settings'}}">
 			<img alt="account" class="show-dark-theme" src="/assets/icons/dark/user.svg">
 			<img alt="account" class="show-light-theme" src="/assets/icons/light/user.svg">
 			{{i18n.OPTIONS.ACCOUNT}}

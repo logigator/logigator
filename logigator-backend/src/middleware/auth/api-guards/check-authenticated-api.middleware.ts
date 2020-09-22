@@ -4,11 +4,11 @@ import {Request, Response} from 'express';
 export class CheckAuthenticatedApiMiddleware implements ExpressMiddlewareInterface {
 
 	use(request: Request, response: Response, next: (err?: any) => any): any {
-		if (request.user) {
+		if (request.isAuthenticated()) {
 			next();
 			return;
 		}
-		throw new UnauthorizedError(request.path + ' requires authentication');
+		throw new UnauthorizedError(request.originalUrl + ' requires authentication');
 	}
 
 }

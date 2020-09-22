@@ -9,6 +9,7 @@ import {formFieldHasErrorsHelper} from './form-field-has-errors.helper';
 import {formFieldValueHelper} from './form-field-value.helper';
 import {formFieldNameScopeHelper} from './form-field-name-scope.helper';
 import {formFieldErrorHelper} from './form-field-error.helper';
+import {linkHrefHelper} from './linkHref.helper';
 
 export const handlebarsHelpers = {
 	ternary: ternaryHelper(),
@@ -21,5 +22,6 @@ export const handlebarsHelpers = {
 	formFieldValue: formFieldValueHelper(),
 	expr: exprHelper(),
 	scriptTag: scriptTagHelper(),
-	styleTag: styleTagHelper()
+	styleTag: styleTagHelper(),
+	linkHref: linkHrefHelper()
 };
