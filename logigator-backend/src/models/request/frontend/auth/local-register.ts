@@ -11,7 +11,7 @@ export class LocalRegister {
 
 	@IsString()
 	@Required()
-	@MinLength(2)
+	@MinLength(8)
 	@Matches(/^(?=.*[A-Za-z])(?=.*[0-9]).*$/)
 	password: string;
 

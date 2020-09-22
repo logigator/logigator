@@ -1,7 +1,13 @@
 @include partial('form-error') {
 	margin-top: 0.25rem;
 	font-size: 0.9rem;
+	display: none;
+
 	@include themify() {
 		color: themed('error');
+	}
+
+	@include state('shown') {
+		display: block;
 	}
 }

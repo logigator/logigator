@@ -17,8 +17,15 @@ export class FormErrorMiddleware implements ExpressErrorMiddlewareInterface {
 
 		// Validation with class-validator failed
 		if ('errors' in error) {
+			const currentValues = (error as any).errors[0].target;
+			Object.keys(currentValues).forEach(key => {
+				formErrors[formName][key] = {
+					value: currentValues[key]
+				};
+			});
+
 			(error as any).errors.forEach((valErr: ValidationError) => {
-				formErrors[formName][valErr.property] = Object.keys(valErr.constraints);
+				formErrors[formName][valErr.property].errors = Object.keys(valErr.constraints);
 			});
 		}
 
@@ -26,10 +33,19 @@ export class FormErrorMiddleware implements ExpressErrorMiddlewareInterface {
 		if (error.name === 'FormDataError') {
 			const formDataError = error as FormDataError;
 
+			const currentValues = formDataError.currentValues;
+			Object.keys(currentValues).forEach(key => {
+				formErrors[formName][key] = {
+					value: currentValues[key]
+				};
+			});
+
 			if (formDataError.property !== undefined) {
-				formErrors[formName][formDataError.property] = [formDataError.errorName];
+				formErrors[formName][formDataError.property].errors = [formDataError.errorName];
 			} else {
-				formErrors[formName].__general__ = [formDataError.errorName];
+				formErrors[formName].__general__ = {
+					errors: [formDataError.errorName]
+				};
 			}
 		}
 
@@ -37,10 +53,14 @@ export class FormErrorMiddleware implements ExpressErrorMiddlewareInterface {
 			formErrors Format:
 				{
 					'formName': {
-						'formProperty': ['error0', 'error1'],
-						'formProperty2': ['error0', 'error1'],
-						'formProperty3': ['error1'],
-						'formProperty3': ['error1'],
+						'formProperty': {
+							'value': 'val1',
+							'errors': ['error0', 'error1']
+						},
+						'formProperty1': {
+							'value': 'val2',
+							'errors': ['error0', 'error1']
+						},
 						'__general__': ['error0']
 					}
 				}

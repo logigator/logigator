@@ -1,12 +1,31 @@
-{{#> popup title=i18n.POPUP.REGISTER.TITLE  defaultOpen=false triggers='.partial-site-header__btn-register'}}
+{{#> popup title=i18n.POPUP.REGISTER.TITLE  defaultOpen=(propertyExists 'formErrors.auth_local-register') triggers='.partial-site-header__btn-register'}}
 	<div class="partial-login-register-popup">
 		<h3 class="partial-login-register-popup__headline">{{i18n.POPUP.REGISTER.HEADLINE}}</h3>
 
 		{{#> form action='/auth/local-register'}}
-			{{> form-input name='email' type='email' label=i18n.POPUP.REGISTER.EMAIL}}
-			{{> form-input name='password' type='passsword' label=i18n.POPUP.REGISTER.PASSWORD}}
-			{{> form-input name='password_repeat' type='passsword' label=i18n.POPUP.REGISTER.PASSWORD_REPEAT}}
-			{{> form-input name='username' type='text' label=i18n.POPUP.REGISTER.USERNAME}}
+
+			{{#> form-input name='email' type='email' label=i18n.POPUP.REGISTER.EMAIL}}
+				{{> form-error error='required' message=i18n.POPUP.REGISTER.EMAIL_ERR_REQUIRED }}
+				{{> form-error error='isEmail' message=i18n.POPUP.REGISTER.EMAIL_ERR_INVALID }}
+			{{/form-input}}
+
+			{{#> form-input name='password' type='password' label=i18n.POPUP.REGISTER.PASSWORD}}
+				{{> form-error error='required' message=i18n.POPUP.REGISTER.PASSWORD_ERR_REQUIRED }}
+				{{> form-error error='minLength' message=i18n.POPUP.REGISTER.PASSWORD_ERR_MIN }}
+				{{> form-error error='matches' message=i18n.POPUP.REGISTER.PASSWORD_ERR_COMPLEXITY }}
+			{{/form-input}}
+
+			{{#> form-input name='password_repeat' type='password' label=i18n.POPUP.REGISTER.PASSWORD_REPEAT}}
+				{{> form-error error='required' message=i18n.POPUP.REGISTER.PASSWORD_REPEAT_ERR_REQUIRED }}
+				{{> form-error error='matchesProperty' message=i18n.POPUP.REGISTER.PASSWORD_REPEAT_ERR }}
+			{{/form-input}}
+
+			{{#> form-input name='username' type='text' label=i18n.POPUP.REGISTER.USERNAME}}
+				{{> form-error error='required' message=i18n.POPUP.REGISTER.USERNAME_ERR_REQUIRED }}
+				{{> form-error error='minLength' message=i18n.POPUP.REGISTER.USERNAME_ERR_MIN }}
+				{{> form-error error='maxLength' message=i18n.POPUP.REGISTER.USERNAME_ERR_MAX }}
+				{{> form-error error='matches' message=i18n.POPUP.REGISTER.USERNAME_ERR_PATTERN }}
+			{{/form-input}}
 
 			<p class="partial-login-register-popup__agreement"> {{i18n.POPUP.REGISTER.PRIVACY_POLICY}} </p>
 

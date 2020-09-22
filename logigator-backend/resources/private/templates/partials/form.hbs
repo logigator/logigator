@@ -1,6 +1,9 @@
 <!-- parameters: action: string, method: string, class: string -->
 
-<form class="partial-form {{class}}" action="{{action}}" method="{{ternary method method 'POST'}}" name="{{formName action}}">
+{{#formNameScope action }}
+	<form class="partial-form {{class}}" action="{{action}}" method="{{ternary method method 'POST'}}" name="{{@formName}}">
 
-	{{> @partial-block }}
-</form>
+		{{> @partial-block }}
+	</form>
+{{/formNameScope}}
+
