@@ -9,12 +9,10 @@ import {formFieldHasErrorsHelper} from './form-field-has-errors.helper';
 import {formFieldValueHelper} from './form-field-value.helper';
 import {formFieldNameScopeHelper} from './form-field-name-scope.helper';
 import {formFieldErrorHelper} from './form-field-error.helper';
-import {propertyExistsHelper} from './property-exists.helper';
 
 export const handlebarsHelpers = {
 	ternary: ternaryHelper(),
 	printIf: printIfHelper(),
-	propertyExists: propertyExistsHelper(),
 	concat: concatHelper(),
 	formNameScope: formNameScopeHelper(),
 	formFieldNameScope: formFieldNameScopeHelper(),
