@@ -17,14 +17,20 @@ export class FormDataError extends BadRequestError {
 	 */
 	errorName: string;
 
+	/**
+	 * set form name if it cant be resolved automatically
+	 */
+	formName: string;
+
 	name = 'FormDataError';
 
-	constructor(currentValues: any, property: string | undefined, errorName: string, message?: string) {
-		super(message);
+	constructor(currentValues: any, property: string | undefined, errorName: string, formName?: string) {
+		super();
 
 		this.currentValues = currentValues;
 		this.property = property;
 		this.errorName = errorName;
+		this.formName = formName;
 	}
 
 }

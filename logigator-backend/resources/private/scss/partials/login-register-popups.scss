@@ -20,6 +20,7 @@
 	}
 
 	@include element('submit') {
+		margin-top: 1rem;
 		padding: 0.7rem !important;
 		width: 100%;
 	}

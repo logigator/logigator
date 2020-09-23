@@ -5,10 +5,17 @@
 		{{#> form action='/auth/local-login'}}
 			{{#> form-input name='email' type='email' label=i18n.POPUP.LOGIN.EMAIL}}
 				{{> form-error error='required' message=i18n.POPUP.LOGIN.EMAIL_ERR_REQUIRED }}
+				{{> form-error error='noUser' message=i18n.POPUP.LOGIN.EMAIL_ERR_NO_USER }}
+				{{> form-error error='notVerified' message=i18n.POPUP.LOGIN.EMAIL_ERR_NOT_VERIFIED }}
 			{{/form-input}}
-			{{#> form-input name='password' type='passsword' label=i18n.POPUP.LOGIN.PASSWORD}}
+			{{#> form-input name='password' type='password' label=i18n.POPUP.LOGIN.PASSWORD}}
 				{{> form-error error='required' message=i18n.POPUP.LOGIN.PASSWORD_ERR_REQUIRED }}
+				{{> form-error error='invalid' message=i18n.POPUP.LOGIN.PASSWORD_ERR_INVALID }}
 			{{/form-input}}
+
+			{{#> form-general-errors}}
+				{{> form-error error='emailTaken' message=i18n.POPUP.LOGIN.ERR_EMAIL_TAKEN }}
+			{{/form-general-errors}}
 
 			<button type="submit" class="btn-raised primary partial-login-register-popup__submit">{{i18n.POPUP.LOGIN.LOGIN_BUTTON}}</button>
 		{{/form}}

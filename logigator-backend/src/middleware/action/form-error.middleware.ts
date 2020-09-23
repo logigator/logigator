@@ -11,7 +11,13 @@ export class FormErrorMiddleware implements ExpressErrorMiddlewareInterface {
 			throw error;
 		}
 
-		const formName = request.path.replace(/\//g, '_').substr(1);
+		let formName: string;
+
+		if (error.name === 'FormDataError' && (error as FormDataError).formName) {
+			formName = (error as FormDataError).formName;
+		} else {
+			formName = request.path.replace(/\//g, '_').substr(1);
+		}
 
 		const formErrors = {};
 		formErrors[formName] = {};

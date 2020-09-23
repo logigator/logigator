@@ -5,7 +5,7 @@ import {Profile as TwitterProfile} from 'passport-twitter';
 import {InjectRepository} from 'typeorm-typedi-extensions';
 import {UserRepository} from '../database/repositories/user.repository';
 import {ProfilePictureRepository} from '../database/repositories/profile-picture.repository';
-import {hash, compare} from 'bcrypt'
+import {hash, compare} from 'bcrypt';
 import {FormDataError} from '../errors/form-data.error';
 
 @Service()
@@ -28,6 +28,13 @@ export class UserService {
 			user.image = await this.profilePictureRepo.importFromUrlIfChanged(profile.photos[0].value, user.image);
 			return this.userRepo.save(user);
 		}
+		const existingUser = await this.userRepo.findOne({
+			email: profile.emails[0].value
+		});
+		if (existingUser) {
+			throw new FormDataError({}, undefined, 'emailTaken', 'auth_local-login');
+		}
+
 		user = this.userRepo.create();
 		user.email = profile.emails[0].value;
 		user.localEmailVerified = true;
@@ -47,6 +54,13 @@ export class UserService {
 			user.image = await this.profilePictureRepo.importFromUrlIfChanged(profile.photos[0].value, user.image);
 			return this.userRepo.save(user);
 		}
+		const existingUser = await this.userRepo.findOne({
+			email: profile.emails[0].value
+		});
+		if (existingUser) {
+			throw new FormDataError({}, undefined, 'emailTaken', 'auth_local-login');
+		}
+
 		user = this.userRepo.create();
 		user.email = profile.emails[0].value;
 		user.localEmailVerified = true;

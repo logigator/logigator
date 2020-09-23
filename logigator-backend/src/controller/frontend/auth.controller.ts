@@ -1,4 +1,4 @@
-import {Body, Controller, Get, Post, Req, Res, Session, UseAfter, UseBefore} from 'routing-controllers';
+import {Body, Controller, Get, Post, Req, Session, UseAfter, UseBefore} from 'routing-controllers';
 import {GoogleLoginMiddleware} from '../../middleware/auth/google-login.middleware';
 import {GoogleAuthenticationMiddleware} from '../../middleware/auth/google-authentication.middleware';
 import {TwitterLoginMiddleware} from '../../middleware/auth/twitter-login.middleware';
@@ -48,6 +48,7 @@ export class AuthController {
 
 	@Get('/google-authenticate')
 	@UseBefore(CheckNotAuthenticatedFrontMiddleware, GoogleAuthenticationMiddleware)
+	@UseAfter(FormErrorMiddleware)
 	public googleAuthenticate() {
 	}
 
@@ -58,6 +59,7 @@ export class AuthController {
 
 	@Get('/twitter-authenticate')
 	@UseBefore(CheckNotAuthenticatedFrontMiddleware, TwitterAuthenticationMiddleware)
+	@UseAfter(FormErrorMiddleware)
 	public twitterAuthenticate() {
 	}
 

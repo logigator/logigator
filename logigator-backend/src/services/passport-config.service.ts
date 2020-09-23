@@ -33,8 +33,12 @@ export class PassportConfigService {
 		passport.use(new OAuth2Strategy(
 			this.configService.getConfig('passport').google,
 			async (accessToken, refreshToken, profile, done) => {
-				const user = await this.userService.findOrCreateGoogleUser(profile);
-				done(null, user, null);
+				try {
+					const user = await this.userService.findOrCreateGoogleUser(profile);
+					done(null, user);
+				} catch (error) {
+					done(error);
+				}
 			}
 		));
 	}
@@ -49,8 +53,12 @@ export class PassportConfigService {
 				forceLogin: true
 			},
 			async (accessToken, refreshToken, profile, done) => {
-				const user = await this.userService.findOrCreateTwitterUser(profile);
-				done(null, user);
+				try {
+					const user = await this.userService.findOrCreateTwitterUser(profile);
+					done(null, user);
+				} catch (error) {
+					done(error);
+				}
 			}
 		));
 	}
