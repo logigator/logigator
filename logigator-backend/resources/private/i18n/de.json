@@ -3,6 +3,11 @@
 		"DE": "Deutsch",
 		"EN": "English"
 	},
+	"COOKIE_CONSENT": {
+		"MESSAGE": "Wir verwenden Cookies. Wenn Sie auf unserer Seite weitersurfen, stimmen Sie der Cookie-Nutzung zu.",
+		"DISMISS": "Akzeptieren",
+		"LINK": "Mehr erfahren"
+	},
 	"TITLE": {
 		"HOME": "Logigator",
 		"PRIVACY_POLICY": "Logigator - Datenschutzerklärung",
@@ -10,25 +15,25 @@
 		"FEATURES": "Logigator - Features",
 		"DOWNLOAD": "Logigator - Download"
 	},
-	"OPTIONS": {
+	"SITE_HEADER": {
+		"DOWNLOAD": "Download",
+		"FEATURES": "Features",
+		"PROJECTS": "Projekte",
+		"COMPONENTS": "Komponenten",
+		"LOGIN": "Anmelden",
+		"REGISTER": "Registrieren"
+	},
+	"SETTINGS_DROPDOWN": {
 		"DARK_MODE": "Dunkles Design",
 		"LANGUAGE": "Sprache",
-		"USERSPACE": "Benutzerraum",
-		"LOGIN": "Anmelden",
-		"LOGIN_GOOGLE": "Mit Google anmelden",
-		"LOGIN_TWITTER": "Mit Twitter anmelden",
-		"REGISTER": "Registrieren",
-		"LOGOUT": "Abmelden",
 		"PROJECTS": "Projekte",
 		"COMPONENTS": "Komponenten",
 		"ACCOUNT": "Account",
-		"DOWNLOAD": "Download",
-		"FEATURES": "Features"
+		"LOGOUT": "Abmelden"
 	},
 	"FOOTER": {
 		"DATA_POLICY": "Datenschutzerklärung",
 		"IMPRINT": "Impressum",
-		"PROJECT_SITE": "Projektwebseite",
 		"CONTRIBUTING": "Contributing"
 	},
 	"HOME": {
@@ -133,10 +138,7 @@
 			"PASSWORD_REPEAT_ERR": "Passwörter stimmen nicht überein.",
 			"PRIVACY_POLICY": "Durch klicken auf \"Registrieren\" stimmen Sie zu, dass Sie die Datenschutzerklärung gelesen haben akzeptieren.",
 			"REGISTER_BUTTON": "REGISTRIEREN",
-			"OR": "oder",
-			"SUCCESS_1": "Account erfolgreich erstellt.",
-			"SUCCESS_2": "Bitte überprüfe deinen Posteingang und verifiziere deine Email Adresse.",
-			"SUCCESS_OK_BUTTON": "OK"
+			"OR": "oder"
 		},
 		"SHARE": {
 			"TITLE": "Teilen",
@@ -242,11 +244,6 @@
 			"TITLE": "Löschen bestätigen",
 			"WARNING": "Bitte verischere dich, dass die Komponente in keinen Projekten verwendet wird.",
 			"DELETE": "Löschen bestätigen"
-		},
-		"COOKIE_CONSENT": {
-			"MESSAGE": "Wir verwenden Cookies. Wenn Sie auf unserer Seite weitersurfen, stimmen Sie der Cookie-Nutzung zu.",
-			"DISMISS": "Akzeptieren",
-			"LINK": "Mehr erfahren"
 		}
 	},
 	"IMPRINT": {
@@ -284,16 +281,5 @@
 	"NOT_FOUND": {
 		"TEXT": "Die angegebene Seite konnte nicht gefunden werden.",
 		"BACK": "Zur Startseite"
-	},
-	"ERROR": {
-		"ACCOUNT": {
-			"NO_USER": "Benutzername exsistiert nicht",
-			"INVALID_PW": "Password ist falsch",
-			"EMAIL_NOT_VERIFIED": "Email Adresse nicht verifiziert",
-			"EMAIL_TAKEN": "Email Adresse wird bereits verwendet",
-			"USERNAME_TAKEN": "Benutzername wird bereits verwedet",
-			"MAX_FILE_SIZE": "Maximale Dateigröße überschritten",
-			"OTHER": "Ein unbekannter Fehler ist aufgetreten"
-		}
 	}
 }

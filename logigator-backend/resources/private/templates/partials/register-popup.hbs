@@ -27,6 +27,11 @@
 				{{> form-error error='matches' message=i18n.POPUP.REGISTER.USERNAME_ERR_PATTERN }}
 			{{/form-input}}
 
+			{{#> form-general-errors}}
+				{{> form-error error='email_taken' message='eamil takemn' }}
+				{{> form-error error='email_taken' message='asdasdsadsad' }}
+			{{/form-general-errors}}
+
 			<p class="partial-login-register-popup__agreement"> {{i18n.POPUP.REGISTER.PRIVACY_POLICY}} </p>
 
 			<button type="submit" class="btn-raised primary partial-login-register-popup__submit">{{i18n.POPUP.REGISTER.REGISTER_BUTTON}}</button>

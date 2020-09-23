@@ -5,11 +5,11 @@
 		</a>
 
 		<div class="partial-site-header__links">
-			<a href="{{linkHref '/features'}}">{{i18n.OPTIONS.FEATURES}}</a>
-			<a href="{{linkHref '/download'}}">{{i18n.OPTIONS.DOWNLOAD}}</a>
+			<a href="{{linkHref '/features'}}">{{i18n.SITE_HEADER.FEATURES}}</a>
+			<a href="{{linkHref '/download'}}">{{i18n.SITE_HEADER.DOWNLOAD}}</a>
 			{{#if isAuthenticated }}
-				<a href="{{linkHref '/my/projects'}}">{{i18n.OPTIONS.PROJECTS}}</a>
-				<a href="{{linkHref '/my/components'}}">{{i18n.OPTIONS.COMPONENTS}}</a>
+				<a href="{{linkHref '/my/projects'}}">{{i18n.SITE_HEADER.PROJECTS}}</a>
+				<a href="{{linkHref '/my/components'}}">{{i18n.SITE_HEADER.COMPONENTS}}</a>
 			{{/if}}
 		</div>
 	</div>
@@ -22,8 +22,8 @@
 			</div>
 		{{else}}
 			<div class="partial-site-header__right-hover">
-				<button class="btn-outline secondary partial-site-header__btn-login">{{i18n.OPTIONS.LOGIN}}</button>
-				<button class="btn-outline secondary partial-site-header__btn-register">{{i18n.OPTIONS.REGISTER}}</button>
+				<button class="btn-outline secondary partial-site-header__btn-login">{{i18n.SITE_HEADER.LOGIN}}</button>
+				<button class="btn-outline secondary partial-site-header__btn-register">{{i18n.SITE_HEADER.REGISTER}}</button>
 				<div class="partial-site-header__more partial-site-header__dropdown-trigger"></div>
 			</div>
 		{{/if}}

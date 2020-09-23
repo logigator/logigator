@@ -10,6 +10,7 @@ import {LocalRegister} from '../../models/request/frontend/auth/local-register';
 import {FormErrorMiddleware} from '../../middleware/action/form-error.middleware';
 import {FormDataError} from '../../errors/form-data.error';
 import {RedirectToRef} from '../../decorator/redirect-to-ref.decorator';
+import {LocalLogin} from '../../models/request/frontend/auth/local-login';
 
 @Controller('/auth')
 export class AuthController {
@@ -18,19 +19,21 @@ export class AuthController {
 	@UseBefore(CheckNotAuthenticatedFrontMiddleware)
 	@UseAfter(FormErrorMiddleware)
 	public localRegister(@Body() body: LocalRegister, @RedirectToRef() redirect) {
-		throw new FormDataError(body, 'email', 'email_taken');
+		throw new FormDataError(body, undefined, 'email_taken');
 		return redirect();
 	}
 
 	@Post('/local-login')
 	@UseBefore(CheckNotAuthenticatedFrontMiddleware)
-	public localLogin() {
+	public localLogin(@Body() body: LocalLogin, @RedirectToRef() redirect) {
+		return redirect();
 	}
 
 	@Get('/google-login')
 	@UseBefore(CheckNotAuthenticatedFrontMiddleware, GoogleLoginMiddleware)
 	public googleLogin() {
 	}
+
 
 	@Get('/google-authenticate')
 	@UseBefore(CheckNotAuthenticatedFrontMiddleware, GoogleAuthenticationMiddleware)

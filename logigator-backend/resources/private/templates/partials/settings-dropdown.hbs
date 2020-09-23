@@ -1,12 +1,12 @@
 <div class="partial-settings-dropdown">
 	<div class="partial-settings-dropdown__item partial-settings-dropdown__theme">
-		<label>{{i18n.OPTIONS.DARK_MODE}}</label>
+		<label>{{i18n.SETTINGS_DROPDOWN.DARK_MODE}}</label>
 		{{#> form action='/prefernces/dark-mode' class='partial-settings-dropdown__theme-select'}}
 			{{> form-switch name='dark_mode' checked=(expr preferences.theme '===' 'dark') }}
 		{{/form}}
 	</div>
 	<div class="partial-settings-dropdown__item partial-settings-dropdown__lang">
-		<label>{{i18n.OPTIONS.LANGUAGE}}</label>
+		<label>{{i18n.SETTINGS_DROPDOWN.LANGUAGE}}</label>
 		{{#> form action='/preferences/set-lang' }}
 			<select name="lang" class="partial-settings-dropdown__lang-select" onchange="this.form.submit()">
 				<option value="en" {{#if (expr preferences.lang '===' 'en') }}selected="selected"{{/if}}>{{i18n.LANGUAGE.EN}}</option>
@@ -19,23 +19,23 @@
 		<a class="partial-settings-dropdown__link partial-settings-dropdown__item" href="{{linkHref '/my/projects'}}">
 			<img alt="projects" class="show-dark-theme" src="/assets/icons/dark/archive.svg">
 			<img alt="projects" class="show-light-theme" src="/assets/icons/light/archive.svg">
-			{{i18n.OPTIONS.PROJECTS}}
+			{{i18n.SETTINGS_DROPDOWN.PROJECTS}}
 		</a>
 		<a class="partial-settings-dropdown__link partial-settings-dropdown__item" href="{{linkHref '/my/components'}}">
 			<img alt="components" class="show-dark-theme" src="/assets/icons/dark/archive.svg">
 			<img alt="components" class="show-light-theme" src="/assets/icons/light/archive.svg">
-			{{i18n.OPTIONS.COMPONENTS}}
+			{{i18n.SETTINGS_DROPDOWN.COMPONENTS}}
 		</a>
 		<hr>
 		<a class="partial-settings-dropdown__link partial-settings-dropdown__item" href="{{linkHref '/my/settings'}}">
 			<img alt="account" class="show-dark-theme" src="/assets/icons/dark/user.svg">
 			<img alt="account" class="show-light-theme" src="/assets/icons/light/user.svg">
-			{{i18n.OPTIONS.ACCOUNT}}
+			{{i18n.SETTINGS_DROPDOWN.ACCOUNT}}
 		</a>
 		<a class="partial-settings-dropdown__link partial-settings-dropdown__item" href="/auth/logout">
 			<img alt="logout" class="show-dark-theme" src="/assets/icons/dark/logout.svg">
 			<img alt="logout" class="show-light-theme" src="/assets/icons/light/logout.svg">
-			{{i18n.OPTIONS.LOGOUT}}
+			{{i18n.SETTINGS_DROPDOWN.LOGOUT}}
 		</a>
 	{{/if}}
 </div>

@@ -3,6 +3,11 @@
 		"DE": "Deutsch",
 		"EN": "English"
 	},
+	"COOKIE_CONSENT": {
+		"MESSAGE": "This website uses cookies to ensure you get the best experience on our website.",
+		"DISMISS": "Got it!",
+		"LINK": "Learn more"
+	},
 	"TITLE": {
 		"HOME": "Logigator",
 		"PRIVACY_POLICY": "Logigator - Privacy Policy",
@@ -10,25 +15,25 @@
 		"FEATURES": "Logigator - Features",
 		"DOWNLOAD": "Logigator - Download"
 	},
-	"OPTIONS": {
+	"SITE_HEADER": {
+		"DOWNLOAD": "Download",
+		"FEATURES": "Features",
+		"PROJECTS": "Projects",
+		"COMPONENTS": "Components",
+		"LOGIN": "Login",
+		"REGISTER": "Sign up"
+	},
+	"SETTINGS_DROPDOWN": {
 		"DARK_MODE": "Dark Mode",
 		"LANGUAGE": "Language",
-		"USERSPACE": "Userspace",
-		"LOGIN": "Login",
-		"LOGIN_GOOGLE": "Login with Google",
-		"LOGIN_TWITTER": "Login with Twitter",
-		"REGISTER": "Sign up",
-		"LOGOUT": "Logout",
 		"PROJECTS": "Projects",
 		"COMPONENTS": "Components",
 		"ACCOUNT": "Account",
-		"DOWNLOAD": "Download",
-		"FEATURES": "Features"
+		"LOGOUT": "Logout"
 	},
 	"FOOTER": {
 		"DATA_POLICY": "Data Policy",
 		"IMPRINT": "Imprint",
-		"PROJECT_SITE": "Project-site",
 		"CONTRIBUTING": "Contributing"
 	},
 	"HOME": {
@@ -133,10 +138,7 @@
 			"PASSWORD_REPEAT_ERR": "Passwords do not match.",
 			"PRIVACY_POLICY": "By clicking on \"SIGN UP\" you agree that you have read and accepted our data policy.",
 			"REGISTER_BUTTON": "SIGN UP",
-			"OR": "or",
-			"SUCCESS_1": "Account created successfully.",
-			"SUCCESS_2": "Please check your mailbox and verify your email.",
-			"SUCCESS_OK_BUTTON": "OK"
+			"OR": "or"
 		},
 		"SHARE": {
 			"TITLE": "Share",
@@ -242,11 +244,6 @@
 			"TITLE": "Confirm Delete",
 			"WARNING": "Please ensure that the component is not used in any of your projects.",
 			"DELETE": "Confirm Delete"
-		},
-		"COOKIE_CONSENT": {
-			"MESSAGE": "This website uses cookies to ensure you get the best experience on our website.",
-			"DISMISS": "Got it!",
-			"LINK": "Learn more"
 		}
 	},
 	"IMPRINT" : {
@@ -284,16 +281,5 @@
 	"NOT_FOUND": {
 		"TEXT": "The requested page could not be found.",
 		"BACK": "Back to home"
-	},
-	"ERROR": {
-		"ACCOUNT": {
-			"NO_USER": "Username does not exist",
-			"INVALID_PW": "Password is incorrect",
-			"EMAIL_NOT_VERIFIED": "Email address is not verified",
-			"EMAIL_TAKEN": "Email has already been taken",
-			"USERNAME_TAKEN": "Username has already been taken",
-			"MAX_FILE_SIZE": "Max file size exceeded.",
-			"OTHER": "An unknown error occurred."
-		}
 	}
 }
