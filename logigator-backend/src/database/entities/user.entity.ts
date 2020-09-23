@@ -31,17 +31,17 @@ export class User {
 	@Column({nullable: true})
 	password: string;
 
-	@Column({
-		type: 'enum',
-		enum: ['local', 'google', 'twitter']
-	})
-	loginType: 'local'|'google'|'twitter';
+	@Column({nullable: true, unique: true})
+	googleUserId: string;
 
-	@OneToOne(type => ProfilePicture, image => image.user, {eager: true, cascade: true})
-	image: ProfilePicture;
+	@Column({nullable: true, unique: true})
+	twitterUserId: string
 
 	@Column({default: false})
 	localEmailVerified: boolean;
+
+	@OneToOne(type => ProfilePicture, image => image.user, {eager: true, cascade: true})
+	image: ProfilePicture;
 
 	@OneToMany(type => Shortcut, object => object.user, {cascade: true})
 	shortcuts: Shortcut[];

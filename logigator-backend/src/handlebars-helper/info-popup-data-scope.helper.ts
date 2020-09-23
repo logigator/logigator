@@ -1,9 +1,9 @@
 import {HelperDelegate, createFrame, HelperOptions} from 'handlebars';
 
-export function successPopupDataScopeHelper(): HelperDelegate {
+export function infoPopupDataScopeHelper(): HelperDelegate {
 	return function(options: HelperOptions) {
 		const data = createFrame(options.data);
-		data.successPopupData = this.successPopup.data;
+		data.infoPopupData = this.infoPopup.data;
 		return options.fn(this, {data: data});
 	};
 }

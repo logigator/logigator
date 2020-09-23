@@ -107,8 +107,8 @@
 		"LOGIN": {
 			"TITLE": "Anmelden",
 			"HEADLINE": "Melde dich hier an",
-			"USERNAME": "Benutzername / E-Mail",
-			"USERNAME_ERR_REQUIRED": "Benutzername / E-Mail muss angegeben werden",
+			"EMAIL": "E-Mail",
+			"EMAIL_ERR_REQUIRED": "E-Mail muss angegeben werden",
 			"PASSWORD": "Passwort",
 			"PASSWORD_ERR_REQUIRED": "Passwort muss angegeben werden",
 			"LOGIN_BUTTON": "ANMELDEN",
@@ -124,6 +124,7 @@
 			"EMAIL": "E-Mail",
 			"EMAIL_ERR_REQUIRED": "E-Mail muss angegeben werden.",
 			"EMAIL_ERR_INVALID": "Bitte geben Sie eine valide E-Mail an.",
+			"EMAIL_ERR_TAKEN": "Email Adresse wird bereits verwendet",
 			"USERNAME": "Benutzername",
 			"USERNAME_ERR_REQUIRED": "Benutzername muss angegeben werden.",
 			"USERNAME_ERR_MIN": "Benutzername muss mindestens zwei Zeichen enthalten.",
@@ -138,7 +139,8 @@
 			"PASSWORD_REPEAT_ERR": "Passwörter stimmen nicht überein.",
 			"PRIVACY_POLICY": "Durch klicken auf \"Registrieren\" stimmen Sie zu, dass Sie die Datenschutzerklärung gelesen haben akzeptieren.",
 			"REGISTER_BUTTON": "REGISTRIEREN",
-			"OR": "oder"
+			"OR": "oder",
+			"ERR_UNKNOWN": "Ein unbekannter Fehler ist aufgetreten."
 		},
 		"SHARE": {
 			"TITLE": "Teilen",
@@ -244,6 +246,14 @@
 			"TITLE": "Löschen bestätigen",
 			"WARNING": "Bitte verischere dich, dass die Komponente in keinen Projekten verwendet wird.",
 			"DELETE": "Löschen bestätigen"
+		}
+	},
+	"INFO_POPUP": {
+		"LOCAL_REGISTER": {
+			"TITLE": "Account erstellt",
+			"LINE_1": "Account erfolgreich erstellt.",
+			"LINE_2": "Bitte überprüfe deinen Posteingang und verifiziere deine Email Adresse.",
+			"OK_BUTTON": "OK"
 		}
 	},
 	"IMPRINT": {

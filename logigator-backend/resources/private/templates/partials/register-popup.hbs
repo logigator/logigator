@@ -7,6 +7,7 @@
 			{{#> form-input name='email' type='email' label=i18n.POPUP.REGISTER.EMAIL}}
 				{{> form-error error='required' message=i18n.POPUP.REGISTER.EMAIL_ERR_REQUIRED }}
 				{{> form-error error='isEmail' message=i18n.POPUP.REGISTER.EMAIL_ERR_INVALID }}
+				{{> form-error error='emailTaken' message=i18n.POPUP.REGISTER.EMAIL_ERR_TAKEN }}
 			{{/form-input}}
 
 			{{#> form-input name='password' type='password' label=i18n.POPUP.REGISTER.PASSWORD}}
@@ -28,8 +29,7 @@
 			{{/form-input}}
 
 			{{#> form-general-errors}}
-				{{> form-error error='email_taken' message='eamil takemn' }}
-				{{> form-error error='email_taken' message='asdasdsadsad' }}
+				{{> form-error error='unknown' message=i18n.POPUP.REGISTER.ERR_UNKNOWN }}
 			{{/form-general-errors}}
 
 			<p class="partial-login-register-popup__agreement"> {{i18n.POPUP.REGISTER.PRIVACY_POLICY}} </p>

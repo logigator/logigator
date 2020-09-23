@@ -1,5 +1,6 @@
 import {ExpressMiddlewareInterface} from 'routing-controllers';
 import {Request, Response} from 'express';
+import {redirect} from '../../../functions/redirect';
 
 export class CheckAuthenticatedFrontMiddleware implements ExpressMiddlewareInterface {
 
@@ -10,7 +11,7 @@ export class CheckAuthenticatedFrontMiddleware implements ExpressMiddlewareInter
 			next();
 			return;
 		}
-		response.redirect(`/${request.session.preferences.lang}`);
+		redirect(request, response, {target: '/'});
 	}
 
 }

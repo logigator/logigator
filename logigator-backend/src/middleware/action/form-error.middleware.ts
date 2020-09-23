@@ -2,6 +2,7 @@ import {BadRequestError, ExpressErrorMiddlewareInterface} from 'routing-controll
 import {Request, Response} from 'express';
 import {ValidationError} from 'class-validator';
 import {FormDataError} from '../../errors/form-data.error';
+import {redirect} from '../../functions/redirect';
 
 export class FormErrorMiddleware implements ExpressErrorMiddlewareInterface {
 
@@ -68,7 +69,7 @@ export class FormErrorMiddleware implements ExpressErrorMiddlewareInterface {
 
 		request.session.formErrors = formErrors;
 
-		response.redirect(request.get('Referer'));
+		redirect(request, response);
 	}
 
 }

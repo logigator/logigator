@@ -1,9 +1,9 @@
 <!-- parameters: name: string, title: string -->
 
-{{#if (expr successPopup.show '===' name) }}
-	{{#successPopupDataScope }}
+{{#if (expr infoPopup.show '===' name) }}
+	{{#infoPopupDataScope }}
 		{{#> popup title=title defaultOpen=true }}
 			{{> @partial-block }}
 		{{/popup}}
-	{{/successPopupDataScope}}
+	{{/infoPopupDataScope}}
 {{/if}}

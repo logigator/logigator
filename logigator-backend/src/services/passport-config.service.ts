@@ -5,6 +5,7 @@ import {ConfigService} from './config.service';
 import {User} from '../database/entities/user.entity';
 import {UserService} from './user.service';
 import {Strategy as TwitterStrategy} from 'passport-twitter';
+import {Strategy as LocalStrategy} from 'passport-local';
 
 @Service()
 export class PassportConfigService {
@@ -14,6 +15,7 @@ export class PassportConfigService {
 	public setupPassport() {
 		this.setupGoogle();
 		this.setupTwitter();
+		this.setupLocal();
 		this.setupSessions();
 	}
 
@@ -49,6 +51,23 @@ export class PassportConfigService {
 			async (accessToken, refreshToken, profile, done) => {
 				const user = await this.userService.findOrCreateTwitterUser(profile);
 				done(null, user);
+			}
+		));
+	}
+
+	private setupLocal() {
+		passport.use(new LocalStrategy(
+			{
+				passwordField: 'password',
+				usernameField: 'email'
+			},
+			async (email, password, done) => {
+				try {
+					const user = await this.userService.validateLocalUser(email, password);
+					done(null, user);
+				} catch (error) {
+					done(error);
+				}
 			}
 		));
 	}

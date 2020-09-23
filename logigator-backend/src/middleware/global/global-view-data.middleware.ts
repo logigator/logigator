@@ -13,8 +13,8 @@ export class GlobalViewDataMiddleware implements ExpressMiddlewareInterface {
 		response.locals.formErrors = request.session.formErrors;
 		request.session.formErrors = undefined;
 
-		response.locals.successPopup = request.session.successPopup;
-		request.session.successPopup = undefined;
+		response.locals.infoPopup = request.session.infoPopup;
+		request.session.infoPopup = undefined;
 
 		next();
 	}

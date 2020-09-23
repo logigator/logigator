@@ -10,7 +10,7 @@ import {formFieldValueHelper} from './form-field-value.helper';
 import {formFieldNameScopeHelper} from './form-field-name-scope.helper';
 import {formFieldErrorHelper} from './form-field-error.helper';
 import {linkHrefHelper} from './linkHref.helper';
-import {successPopupDataScopeHelper} from './success-popup-data-scope.helper';
+import {infoPopupDataScopeHelper} from './info-popup-data-scope.helper';
 
 export const handlebarsHelpers = {
 	ternary: ternaryHelper(),
@@ -21,7 +21,7 @@ export const handlebarsHelpers = {
 	formFieldHasErrors: formFieldHasErrorsHelper(),
 	formFieldError: formFieldErrorHelper(),
 	formFieldValue: formFieldValueHelper(),
-	successPopupDataScope: successPopupDataScopeHelper(),
+	infoPopupDataScope: infoPopupDataScopeHelper(),
 	expr: exprHelper(),
 	scriptTag: scriptTagHelper(),
 	styleTag: styleTagHelper(),

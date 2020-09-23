@@ -107,8 +107,8 @@
 		"LOGIN": {
 			"TITLE": "Login",
 			"HEADLINE": "Login here",
-			"USERNAME": "Username / email",
-			"USERNAME_ERR_REQUIRED": "Username / email is required.",
+			"EMAIL": "email",
+			"EMAIL_ERR_REQUIRED": "email is required.",
 			"PASSWORD": "Password",
 			"PASSWORD_ERR_REQUIRED": "Password is required.",
 			"LOGIN_BUTTON": "LOGIN",
@@ -124,6 +124,7 @@
 			"EMAIL": "Email",
 			"EMAIL_ERR_REQUIRED": "Email is required.",
 			"EMAIL_ERR_INVALID": "Please enter a valid email address.",
+			"EMAIL_ERR_TAKEN": "Email has already been taken",
 			"USERNAME": "Username",
 			"USERNAME_ERR_REQUIRED": "Username is required.",
 			"USERNAME_ERR_MIN": "Username has to have at least two characters.",
@@ -138,7 +139,8 @@
 			"PASSWORD_REPEAT_ERR": "Passwords do not match.",
 			"PRIVACY_POLICY": "By clicking on \"SIGN UP\" you agree that you have read and accepted our data policy.",
 			"REGISTER_BUTTON": "SIGN UP",
-			"OR": "or"
+			"OR": "or",
+			"ERR_UNKNOWN": "An unknown error occurred."
 		},
 		"SHARE": {
 			"TITLE": "Share",
@@ -244,6 +246,14 @@
 			"TITLE": "Confirm Delete",
 			"WARNING": "Please ensure that the component is not used in any of your projects.",
 			"DELETE": "Confirm Delete"
+		}
+	},
+	"INFO_POPUP": {
+		"LOCAL_REGISTER": {
+			"TITLE": "Account created",
+			"LINE_1": "Account created successfully.",
+			"LINE_2": "Please check your mailbox and verify your email.",
+			"OK_BUTTON": "OK"
 		}
 	},
 	"IMPRINT" : {

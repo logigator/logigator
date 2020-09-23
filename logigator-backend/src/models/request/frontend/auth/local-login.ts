@@ -6,7 +6,7 @@ export class LocalLogin{
 
 	@IsString()
 	@Required()
-	username: string;
+	email: string;
 
 	@IsString()
 	@Required()

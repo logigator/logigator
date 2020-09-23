@@ -3,8 +3,8 @@
 		<h3 class="partial-login-register-popup__headline">{{i18n.POPUP.LOGIN.HEADLINE}}</h3>
 
 		{{#> form action='/auth/local-login'}}
-			{{#> form-input name='username' type='text' label=i18n.POPUP.LOGIN.USERNAME}}
-				{{> form-error error='required' message=i18n.POPUP.LOGIN.USERNAME_ERR_REQUIRED }}
+			{{#> form-input name='email' type='email' label=i18n.POPUP.LOGIN.EMAIL}}
+				{{> form-error error='required' message=i18n.POPUP.LOGIN.EMAIL_ERR_REQUIRED }}
 			{{/form-input}}
 			{{#> form-input name='password' type='passsword' label=i18n.POPUP.LOGIN.PASSWORD}}
 				{{> form-error error='required' message=i18n.POPUP.LOGIN.PASSWORD_ERR_REQUIRED }}
