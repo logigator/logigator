@@ -1,5 +1,6 @@
 @include partial('form-input') {
 	margin-top: 2rem;
+	margin-bottom: 2rem;
 
 	@include state('invalid') {
 

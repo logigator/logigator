@@ -74,15 +74,19 @@ settingsDropdownPartial(document.querySelector('.partial-settings-dropdown'));
 function popupPartial(node) {
 	let opened = Bem.hasState(node, 'open');
 
-	const triggers = Bem.data(node, 'triggers').split('::');
-	triggers.forEach(trigger => {
-		document.querySelector(trigger).addEventListener('click', () => {
-			if (!opened) {
-				Bem.setState(node, 'open', true);
-				opened = true;
-			}
+	const dataTriggers = Bem.data(node, 'triggers');
+
+	if (dataTriggers) {
+		const triggers = dataTriggers.split('::');
+		triggers.forEach(trigger => {
+			document.querySelector(trigger).addEventListener('click', () => {
+				if (!opened) {
+					Bem.setState(node, 'open', true);
+					opened = true;
+				}
+			});
 		});
-	});
+	}
 
 	Bem.elements(node, 'close').forEach(elem => {
 		elem.addEventListener('click', () => {

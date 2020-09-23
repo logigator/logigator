@@ -9,7 +9,7 @@ import {CheckAuthenticatedFrontMiddleware} from '../../middleware/auth/frontend-
 import {LocalRegister} from '../../models/request/frontend/auth/local-register';
 import {FormErrorMiddleware} from '../../middleware/action/form-error.middleware';
 import {FormDataError} from '../../errors/form-data.error';
-import {RedirectToRef} from '../../decorator/redirect-to-ref.decorator';
+import {RedirectFunc, RedirectToRef} from '../../decorator/redirect-to-ref.decorator';
 import {LocalLogin} from '../../models/request/frontend/auth/local-login';
 
 @Controller('/auth')
@@ -18,15 +18,16 @@ export class AuthController {
 	@Post('/local-register')
 	@UseBefore(CheckNotAuthenticatedFrontMiddleware)
 	@UseAfter(FormErrorMiddleware)
-	public localRegister(@Body() body: LocalRegister, @RedirectToRef() redirect) {
-		throw new FormDataError(body, undefined, 'email_taken');
-		return redirect();
+	public localRegister(@Body() body: LocalRegister, @RedirectToRef() redirect: RedirectFunc) {
+		// throw new FormDataError(body, undefined, 'email_taken');
+		return redirect({ showSuccessPopup: 'local-register'});
 	}
 
 	@Post('/local-login')
 	@UseBefore(CheckNotAuthenticatedFrontMiddleware)
-	public localLogin(@Body() body: LocalLogin, @RedirectToRef() redirect) {
-		return redirect();
+	@UseAfter(FormErrorMiddleware)
+	public localLogin(@Body() body: LocalLogin, @RedirectToRef() redirect: RedirectFunc) {
+		return redirect({ showSuccessPopup: 'local-register', successPopupData: 'kekeko ja'});
 	}
 
 	@Get('/google-login')

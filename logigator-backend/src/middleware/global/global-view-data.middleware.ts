@@ -9,8 +9,13 @@ export class GlobalViewDataMiddleware implements ExpressMiddlewareInterface {
 
 	use(request: Request, response: Response, next: (err?: any) => any): any {
 		response.locals.i18n = this.translationService.getTranslations(request.session.preferences.lang);
+
 		response.locals.formErrors = request.session.formErrors;
 		request.session.formErrors = undefined;
+
+		response.locals.successPopup = request.session.successPopup;
+		request.session.successPopup = undefined;
+
 		next();
 	}
 
