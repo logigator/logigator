@@ -1,27 +1,26 @@
-import {IsEmail, IsString, Matches, MaxLength, MinLength} from 'class-validator';
-import {Required} from '../../../../validators/required.validator';
+import {IsEmail, IsNotEmpty, IsString, Matches, MaxLength, MinLength} from 'class-validator';
 import {MatchesProperty} from '../../../../validators/matches-property.validator';
 
 export class LocalRegister {
 
 	@IsString()
-	@Required()
+	@IsNotEmpty()
 	@IsEmail()
 	email: string;
 
 	@IsString()
-	@Required()
+	@IsNotEmpty()
 	@MinLength(8)
 	@Matches(/^(?=.*[A-Za-z])(?=.*[0-9]).*$/)
 	password: string;
 
 	@IsString()
-	@Required()
+	@IsNotEmpty()
 	@MatchesProperty('password')
 	password_repeat: string;
 
 	@IsString()
-	@Required()
+	@IsNotEmpty()
 	@MinLength(2)
 	@MaxLength(20)
 	@Matches(/^[a-zA-Z0-9_-]+$/)

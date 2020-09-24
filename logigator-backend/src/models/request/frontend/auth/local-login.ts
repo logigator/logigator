@@ -1,15 +1,13 @@
-import {IsString} from 'class-validator';
-import {Required} from '../../../../validators/required.validator';
-
+import {IsNotEmpty, IsString} from 'class-validator';
 
 export class LocalLogin{
 
 	@IsString()
-	@Required()
+	@IsNotEmpty()
 	email: string;
 
 	@IsString()
-	@Required()
+	@IsNotEmpty()
 	password: string;
 
 }
