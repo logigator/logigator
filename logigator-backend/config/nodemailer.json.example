@@ -1,0 +1,26 @@
+{
+	"noreply": {
+		"from": "from@email.com",
+		"transport": {
+			"host": "example.com",
+			"port": 465,
+			"secure": true,
+			"auth": {
+				"user": "--",
+				"pass": "--"
+			}
+		}
+	},
+	"--": {
+    	"from": "from@email.com",
+    	"transport": {
+    		"host": "example.com",
+    		"port": 465,
+    		"secure": true,
+    		"auth": {
+    			"user": "--",
+    			"pass": "--"
+    		}
+    	}
+    }
+}

@@ -1,6 +1,6 @@
 import {Service} from 'typedi';
 import * as path from 'path';
-import * as fs from 'fs/promises';
+import {promises as fs} from 'fs';
 import {ConfigService} from './config.service';
 import {compile} from 'handlebars';
 import {TranslationService} from './translation.service';

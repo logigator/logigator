@@ -296,5 +296,10 @@
 	"NOT_FOUND": {
 		"TEXT": "The requested page could not be found.",
 		"BACK": "Back to home"
+	},
+	"MAILS": {
+		"VERIFY_EMAIL": {
+			"SUBJECT": "Verify Email"
+		}
 	}
 }

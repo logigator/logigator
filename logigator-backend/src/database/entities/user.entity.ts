@@ -37,8 +37,8 @@ export class User {
 	@Column({nullable: true, unique: true})
 	twitterUserId: string
 
-	@Column({default: false})
-	localEmailVerified: boolean;
+	@Column({nullable: true})
+	localEmailVerificationCode: string;
 
 	@OneToOne(type => ProfilePicture, image => image.user, {eager: true, cascade: true})
 	image: ProfilePicture;

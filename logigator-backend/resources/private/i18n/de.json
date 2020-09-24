@@ -296,5 +296,10 @@
 	"NOT_FOUND": {
 		"TEXT": "Die angegebene Seite konnte nicht gefunden werden.",
 		"BACK": "Zur Startseite"
+	},
+	"MAILS": {
+		"VERIFY_EMAIL": {
+			"SUBJECT": "Email Verifizieren"
+		}
 	}
 }

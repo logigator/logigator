@@ -9,7 +9,6 @@ import {CheckAuthenticatedFrontMiddleware} from '../../middleware/auth/frontend-
 import {LocalRegister} from '../../models/request/frontend/auth/local-register';
 import {FormErrorMiddleware} from '../../middleware/action/form-error.middleware';
 import {FormDataError} from '../../errors/form-data.error';
-import {LocalLogin} from '../../models/request/frontend/auth/local-login';
 import {UserService} from '../../services/user.service';
 import {Redirect, RedirectFunction} from '../../decorator/redirect.decorator';
 import {LocalAuthenticationMiddleware} from '../../middleware/auth/local-authentication.middleware';

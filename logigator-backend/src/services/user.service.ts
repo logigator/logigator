@@ -8,6 +8,10 @@ import {ProfilePictureRepository} from '../database/repositories/profile-picture
 import {hash, compare} from 'bcrypt';
 import {FormDataError} from '../errors/form-data.error';
 import {EmailService} from './email.service';
+import {v4 as uuid} from 'uuid';
+import {StandaloneViewService} from './standalone-view.service';
+import {ConfigService} from './config.service';
+import {TranslationService} from './translation.service';
 
 @Service()
 export class UserService {
@@ -17,7 +21,10 @@ export class UserService {
 	constructor(
 		@InjectRepository() private userRepo: UserRepository,
 		@InjectRepository() private profilePictureRepo: ProfilePictureRepository,
-		private emailService: EmailService
+		private emailService: EmailService,
+		private standaloneViewService: StandaloneViewService,
+		private configService: ConfigService,
+		private translationService: TranslationService
 	) {}
 
 	public async findOrCreateGoogleUser(profile: GoogleProfile): Promise<User> {
@@ -39,7 +46,6 @@ export class UserService {
 
 		user = this.userRepo.create();
 		user.email = profile.emails[0].value;
-		user.localEmailVerified = true;
 		user.username = profile.displayName;
 		user.googleUserId = profile.id;
 		user.image = await this.profilePictureRepo.importFromUrl(profile.photos[0].value);
@@ -65,7 +71,6 @@ export class UserService {
 
 		user = this.userRepo.create();
 		user.email = profile.emails[0].value;
-		user.localEmailVerified = true;
 		user.username = profile.displayName;
 		user.twitterUserId = profile.id;
 		user.image = await this.profilePictureRepo.importFromUrl(profile.photos[0].value);
@@ -87,7 +92,7 @@ export class UserService {
 		newUser.email = email;
 		newUser.username = username;
 		newUser.password = await hash(password, this.PASSWORD_SALT_ROUNDS);
-		// TODO: gen verification token
+		newUser.localEmailVerificationCode = uuid();
 		await this.userRepo.save(newUser);
 		try {
 			await this.sendVerificationMail(newUser, currentLang);
@@ -107,14 +112,18 @@ export class UserService {
 		if (!(await compare(password, user.password))) {
 			throw new FormDataError({email, password}, 'password', 'invalid');
 		}
-		if (!user.localEmailVerified) {
+		if (user.localEmailVerificationCode) {
 			throw new FormDataError({email, password}, 'email', 'notVerified');
 		}
 		return user;
 	}
 
 	private async sendVerificationMail(user: User, lang: string) {
-		await this.emailService.sendMail('noreply', user.email, 'Test mail', '<p>Test 123</p>');
+		const mail = await this.standaloneViewService.renderView('verification-mail', {
+			username: user.username,
+			verifyLink: `${this.configService.getConfig('domains').rootUrl}/verify-email/${user.localEmailVerificationCode}`
+		}, lang);
+		await this.emailService.sendMail('noreply', user.email, this.translationService.getTranslation('MAIL.VERIFY_MAIL.SUBJECT', lang), mail);
 	}
 
 	public async getUserById(id: string): Promise<User> {
