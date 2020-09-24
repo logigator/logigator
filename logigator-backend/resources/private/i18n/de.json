@@ -144,6 +144,7 @@
 			"PRIVACY_POLICY": "Durch klicken auf \"Registrieren\" stimmen Sie zu, dass Sie die Datenschutzerklärung gelesen haben akzeptieren.",
 			"REGISTER_BUTTON": "REGISTRIEREN",
 			"OR": "oder",
+			"ERR_VERIFICATION_MAIL": "Verfizierungs-Email konnte nicht gesendet werden, versuchen Sie es beim anmelden erneut.",
 			"ERR_UNKNOWN": "Ein unbekannter Fehler ist aufgetreten."
 		},
 		"SHARE": {

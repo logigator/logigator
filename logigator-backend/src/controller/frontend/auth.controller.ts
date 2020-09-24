@@ -28,6 +28,9 @@ export class AuthController {
 				return redirect({ showInfoPopup: 'local-register'});
 			}
 		} catch (err) {
+			if (err.message === 'verification_mail') {
+				throw new FormDataError(body, undefined, 'verificationMail');
+			}
 			throw new FormDataError(body, undefined, 'unknown');
 		}
 		throw new FormDataError(body, 'email', 'emailTaken');

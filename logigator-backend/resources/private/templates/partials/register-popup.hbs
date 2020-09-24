@@ -29,6 +29,7 @@
 			{{/form-input}}
 
 			{{#> form-general-errors}}
+				{{> form-error error='verificationMail' message=i18n.POPUP.REGISTER.ERR_VERIFICATION_MAIL }}
 				{{> form-error error='unknown' message=i18n.POPUP.REGISTER.ERR_UNKNOWN }}
 			{{/form-general-errors}}
 

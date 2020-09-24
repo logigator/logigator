@@ -7,6 +7,7 @@ import {UserRepository} from '../database/repositories/user.repository';
 import {ProfilePictureRepository} from '../database/repositories/profile-picture.repository';
 import {hash, compare} from 'bcrypt';
 import {FormDataError} from '../errors/form-data.error';
+import {EmailService} from './email.service';
 
 @Service()
 export class UserService {
@@ -15,7 +16,8 @@ export class UserService {
 
 	constructor(
 		@InjectRepository() private userRepo: UserRepository,
-		@InjectRepository() private profilePictureRepo: ProfilePictureRepository
+		@InjectRepository() private profilePictureRepo: ProfilePictureRepository,
+		private emailService: EmailService
 	) {}
 
 	public async findOrCreateGoogleUser(profile: GoogleProfile): Promise<User> {
@@ -85,7 +87,13 @@ export class UserService {
 		newUser.email = email;
 		newUser.username = username;
 		newUser.password = await hash(password, this.PASSWORD_SALT_ROUNDS);
+		// TODO: gen verification token
 		await this.userRepo.save(newUser);
+		try {
+			await this.sendVerificationMail(newUser);
+		} catch (error) {
+			throw new Error('verification_mail');
+		}
 		return true;
 	}
 
@@ -103,6 +111,10 @@ export class UserService {
 			throw new FormDataError({email, password}, 'email', 'notVerified');
 		}
 		return user;
+	}
+
+	private async sendVerificationMail(user: User) {
+		await this.emailService.sendMail('noreply', user.email, 'Test mail', '<p>Test 123</p>');
 	}
 
 	public async getUserById(id: string): Promise<User> {

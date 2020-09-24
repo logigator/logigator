@@ -144,6 +144,7 @@
 			"PRIVACY_POLICY": "By clicking on \"SIGN UP\" you agree that you have read and accepted our data policy.",
 			"REGISTER_BUTTON": "SIGN UP",
 			"OR": "or",
+			"ERR_VERIFICATION_MAIL": "Verification-mail could not be sent, try again when signing in.",
 			"ERR_UNKNOWN": "An unknown error occurred."
 		},
 		"SHARE": {
