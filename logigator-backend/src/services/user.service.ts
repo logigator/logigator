@@ -101,7 +101,7 @@ export class UserService {
 		const user = await this.userRepo.findOne({
 			email: email
 		});
-		if (!user) {
+		if (!user?.password) {
 			throw new FormDataError({email, password}, 'email', 'noUser');
 		}
 		if (!(await compare(password, user.password))) {

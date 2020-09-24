@@ -5,20 +5,21 @@ import * as path from 'path';
 @Service()
 export class ConfigService {
 
-	private readonly CONFIG_PATH = path.join(__dirname, '..', '..', 'config');
-
 	private _config = new Map<string, any>();
 
 	constructor() {
-		this.readConfigs();
+		this.initialize(path.join(__dirname, '..', '..'));
 	}
 
-	private readConfigs() {
-		fs.readdirSync(this.CONFIG_PATH).forEach(configFile => {
+	public initialize(projectRootPath: string) {
+		this._config.set('projectRootPath', projectRootPath);
+
+		const configPath = path.join(this.projectRootPath, 'config');
+		fs.readdirSync(configPath).forEach(configFile => {
 			if (configFile.endsWith('.json.example') || !configFile.endsWith('.json')) {
 				return;
 			}
-			const config = fs.readFileSync(path.join(this.CONFIG_PATH, configFile)).toString();
+			const config = fs.readFileSync(path.join(configPath, configFile)).toString();
 			this._config.set(path.parse(configFile).name, JSON.parse(config));
 		});
 	}
@@ -28,6 +29,10 @@ export class ConfigService {
 			return undefined;
 		}
 		return this._config.get(key) as T;
+	}
+
+	public get projectRootPath(): string {
+		return this._config.get('projectRootPath');
 	}
 
 }

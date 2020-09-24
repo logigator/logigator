@@ -49,12 +49,12 @@ async function bootstrap() {
 
 	app.engine('hbs', exphbs.create({
 		extname: '.hbs',
-		layoutsDir: path.join(__dirname, '..', 'resources', 'private', 'templates', 'layouts'),
-		partialsDir: path.join(__dirname, '..', 'resources', 'private', 'templates', 'partials'),
+		layoutsDir: path.join(configService.projectRootPath, 'resources', 'private', 'templates', 'layouts'),
+		partialsDir: path.join(configService.projectRootPath, 'resources', 'private', 'templates', 'partials'),
 		defaultLayout: 'default',
 		helpers: handlebarsHelpers
 	}).engine);
-	app.set('views', path.join(__dirname, '..', 'resources', 'private', 'templates', 'views'));
+	app.set('views', path.join(configService.projectRootPath, 'resources', 'private', 'templates', 'views'));
 	app.set('view engine', 'hbs');
 
 	app.use(compression());
@@ -74,7 +74,7 @@ async function bootstrap() {
 	app.use(passport.initialize());
 	app.use(passport.session());
 
-	app.use(expressStatic(path.join(__dirname, '..', 'resources', 'public')));
+	app.use(expressStatic(path.join(configService.projectRootPath, 'resources', 'public')));
 	useExpressServer(app, {
 		controllers: [
 			HomeController,

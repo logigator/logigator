@@ -41,7 +41,7 @@ export function scriptTagHelper(): HelperDelegate {
 	};
 
 	function generateSrcAttr(url: string): string {
-		const filePath = path.join(__dirname, '..', '..', 'resources', 'public', url);
+		const filePath = path.join(Container.get(ConfigService).projectRootPath, 'resources', 'public', url);
 		const fileMd5 = md5(fs.readFileSync(filePath));
 		return `src="${url}?${fileMd5}"`;
 	}

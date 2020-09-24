@@ -39,7 +39,7 @@ export class AuthController {
 	@Post('/local-login')
 	@UseBefore(CheckNotAuthenticatedFrontMiddleware, LocalAuthenticationMiddleware)
 	@UseAfter(FormErrorMiddleware)
-	public localLogin(@Body() body: LocalLogin, @Redirect() redirect: RedirectFunction) {
+	public localLogin(@Redirect() redirect: RedirectFunction) {
 		return redirect({ showInfoPopup: 'local-register'});
 	}
 

@@ -35,7 +35,7 @@ export function styleTagHelper(): HelperDelegate {
 	};
 
 	function generateHrefAttr(url: string): string {
-		const filePath = path.join(__dirname, '..', '..', 'resources', 'public', url);
+		const filePath = path.join(Container.get(ConfigService).projectRootPath, 'resources', 'public', url);
 		const fileMd5 = md5(fs.readFileSync(filePath));
 		return `href="${url}?${fileMd5}"`;
 	}

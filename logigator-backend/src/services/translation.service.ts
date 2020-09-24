@@ -1,24 +1,25 @@
 import {Service} from 'typedi';
 import * as fs from 'fs';
 import path from 'path';
+import {ConfigService} from './config.service';
 
 @Service()
 export class TranslationService {
 
-	private readonly I18N_PATH = path.join(__dirname, '..', '..', 'resources', 'private', 'i18n');
-
 	private _translations = new Map<string, any>();
 
-	constructor() {
+	constructor(private configService: ConfigService) {
 		this.readTranslations();
 	}
 
 	private readTranslations() {
-		fs.readdirSync(this.I18N_PATH).forEach(translation => {
+		const i18nPath = path.join(this.configService.projectRootPath, 'resources', 'private', 'i18n');
+
+		fs.readdirSync(i18nPath).forEach(translation => {
 			if (!translation.endsWith('.json')) {
 				return;
 			}
-			const config = fs.readFileSync(path.join(this.I18N_PATH, translation)).toString();
+			const config = fs.readFileSync(path.join(i18nPath, translation)).toString();
 			this._translations.set(path.parse(translation).name, JSON.parse(config));
 		});
 	}
