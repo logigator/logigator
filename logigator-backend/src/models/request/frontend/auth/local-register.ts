@@ -7,7 +7,7 @@ export class LocalRegister {
 	@IsString()
 	@Required()
 	@IsEmail()
-	email: string
+	email: string;
 
 	@IsString()
 	@Required()

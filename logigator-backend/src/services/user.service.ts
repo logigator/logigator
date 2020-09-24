@@ -76,7 +76,7 @@ export class UserService {
 	/**
 	 * @return true on success, false on error (email already in use)
 	 */
-	public async createLocalUser(username: string, email: string, password: string): Promise<boolean> {
+	public async createLocalUser(username: string, email: string, password: string, currentLang: string): Promise<boolean> {
 		const user = await this.userRepo.findOne({
 			email: email
 		});
@@ -90,7 +90,7 @@ export class UserService {
 		// TODO: gen verification token
 		await this.userRepo.save(newUser);
 		try {
-			await this.sendVerificationMail(newUser);
+			await this.sendVerificationMail(newUser, currentLang);
 		} catch (error) {
 			throw new Error('verification_mail');
 		}
@@ -113,7 +113,7 @@ export class UserService {
 		return user;
 	}
 
-	private async sendVerificationMail(user: User) {
+	private async sendVerificationMail(user: User, lang: string) {
 		await this.emailService.sendMail('noreply', user.email, 'Test mail', '<p>Test 123</p>');
 	}
 
