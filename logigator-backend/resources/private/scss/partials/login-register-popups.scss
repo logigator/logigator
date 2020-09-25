@@ -19,6 +19,15 @@
 		margin-top: 0;
 	}
 
+	@include element('resend-container') {
+		display: flex;
+		justify-content: center;
+
+		a {
+			text-decoration: inherit;
+		}
+	}
+
 	@include element('submit') {
 		margin-top: 1rem;
 		padding: 0.7rem !important;

@@ -42,6 +42,12 @@ export class AuthController {
 		return redirect({ showInfoPopup: 'local-register'});
 	}
 
+	@Get('/resend-verification-mail')
+	@UseAfter(FormErrorMiddleware)
+	public resendVerificationMail() {
+		throw new FormDataError({}, undefined, 'verificationMail', 'auth_local-login');
+	}
+
 	@Get('/google-login')
 	@UseBefore(CheckNotAuthenticatedFrontMiddleware, GoogleLoginMiddleware)
 	public googleLogin() {

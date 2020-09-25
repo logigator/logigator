@@ -15,7 +15,16 @@
 
 			{{#> form-general-errors}}
 				{{> form-error error='emailTaken' message=i18n.POPUP.LOGIN.ERR_EMAIL_TAKEN }}
+				{{> form-error error='verificationMail' message=i18n.POPUP.LOGIN.ERR_VERIFICATION_MAIL }}
 			{{/form-general-errors}}
+
+			{{#formFieldNameScope 'email' }}
+				{{#formFieldError 'notVerified'}}
+					<div class="partial-login-register-popup__resend-container">
+						<buttton class="btn-outline secondary"><a href="/auth/resend-verification-mail">{{i18n.POPUP.LOGIN.RESEND_BUTTON}}</a></buttton>
+					</div>
+				{{/formFieldError}}
+			{{/formFieldNameScope}}
 
 			<button type="submit" class="btn-raised primary partial-login-register-popup__submit">{{i18n.POPUP.LOGIN.LOGIN_BUTTON}}</button>
 		{{/form}}

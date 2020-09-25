@@ -107,7 +107,7 @@
 		"LOGIN": {
 			"TITLE": "Login",
 			"HEADLINE": "Login here",
-			"EMAIL": "email",
+			"EMAIL": "Email",
 			"EMAIL_ERR_REQUIRED": "email is required.",
 			"EMAIL_ERR_NO_USER": "email does not exist.",
 			"EMAIL_ERR_NOT_VERIFIED": "email address is not verified.",
@@ -115,11 +115,9 @@
 			"PASSWORD_ERR_REQUIRED": "Password is required.",
 			"PASSWORD_ERR_INVALID": "Password is invalid.",
 			"ERR_EMAIL_TAKEN": "Email has already been taken",
+			"ERR_VERIFICATION_MAIL": "Verification-mail could not be sent.",
 			"LOGIN_BUTTON": "LOGIN",
-			"RESEND_BUTTON": "Resend Mail",
-			"RESEND_SUCCESS_1": "Email resent successfully",
-			"RESEND_SUCCESS_2": "Please check your mailbox and verify your email.",
-			"RESEND_SUCCESS_OK_BUTTON": "OK",
+			"RESEND_BUTTON": "Resend verification mail",
 			"OR": "or"
 		},
 		"REGISTER": {
