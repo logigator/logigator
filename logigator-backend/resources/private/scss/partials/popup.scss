@@ -78,7 +78,7 @@
 
 	@include element('body') {
 		margin: auto;
-		padding: 0.5rem;
+		padding: 1.5rem;
 		overflow: auto;
 		width: 100%;
 		@include scrollbar(5px)

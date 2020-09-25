@@ -3,14 +3,13 @@
 	flex-direction: column;
 	justify-content: space-between;
 	max-width: 50rem;
+	margin: auto;
 
 	@media (max-width: 767px) {
 		width: 100%;
 		padding: 1rem;
 	}
 
-	padding: 2rem;
-	margin: auto;
 
 	@include element('headline') {
 		font-weight: normal;

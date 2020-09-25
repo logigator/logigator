@@ -1,5 +1,3 @@
-@import "login-register-popups";
-
 @include partial('login-register-popup') {
 
 	@include element('agreement') {

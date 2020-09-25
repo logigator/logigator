@@ -253,9 +253,9 @@
 	},
 	"INFO_POPUP": {
 		"LOCAL_REGISTER": {
-			"TITLE": "Account created",
-			"LINE_1": "Account created successfully.",
-			"LINE_2": "Please check your mailbox and verify your email.",
+			"TITLE": "Email verification",
+			"LINE_1": "Welcome to Logigator.",
+			"LINE_2": "Please check your mailbox and verify your email, before you can start to use Logigator.",
 			"OK_BUTTON": "OK"
 		}
 	},
