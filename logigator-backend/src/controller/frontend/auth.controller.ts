@@ -12,6 +12,7 @@ import {FormDataError} from '../../errors/form-data.error';
 import {UserService} from '../../services/user.service';
 import {Redirect, RedirectFunction} from '../../decorator/redirect.decorator';
 import {LocalAuthenticationMiddleware} from '../../middleware/auth/local-authentication.middleware';
+import {ResendVerificationMail} from '../../models/request/frontend/auth/resend-verification-mail';
 
 @Controller('/auth')
 export class AuthController {
@@ -21,7 +22,7 @@ export class AuthController {
 	@Post('/local-register')
 	@UseBefore(CheckNotAuthenticatedFrontMiddleware)
 	@UseAfter(FormErrorMiddleware)
-	public async localRegister(@Body() body: LocalRegister, @Session() sess, @Redirect() redirect: RedirectFunction) {
+	public async localRegister(@Body() body: LocalRegister, @Session() sess: any, @Redirect() redirect: RedirectFunction) {
 		try {
 			if (await this.userService.createLocalUser(body.username, body.email, body.password, sess.preferences.lang)) {
 				return redirect({ showInfoPopup: 'local-register'});
@@ -40,6 +41,20 @@ export class AuthController {
 	@UseAfter(FormErrorMiddleware)
 	public localLogin(@Redirect() redirect: RedirectFunction) {
 		return redirect({ showInfoPopup: 'local-register'});
+	}
+
+	@Post('/resend-verification-mail')
+	@UseAfter(FormErrorMiddleware)
+	public async resendVerificationMail(@Body() body: ResendVerificationMail, @Session() sess: any, @Redirect() redirect: RedirectFunction) {
+		try {
+			await this.userService.resendVerificationMail(body.email, body.password, sess.preferences.lang);
+		} catch (err) {
+			if (err.message === 'verification_mail') {
+				throw new FormDataError(body, undefined, 'verificationMail');
+			}
+			throw err;
+		}
+		return redirect({ showInfoPopup: 'local-register'}); // must be changed
 	}
 
 	@Get('/google-login')

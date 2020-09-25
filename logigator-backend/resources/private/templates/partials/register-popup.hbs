@@ -5,24 +5,24 @@
 		{{#> form action='/auth/local-register'}}
 
 			{{#> form-input name='email' type='email' label=i18n.POPUP.REGISTER.EMAIL}}
-				{{> form-error error='required' message=i18n.POPUP.REGISTER.EMAIL_ERR_REQUIRED }}
+				{{> form-error error='isNotEmpty' message=i18n.POPUP.REGISTER.EMAIL_ERR_REQUIRED }}
 				{{> form-error error='isEmail' message=i18n.POPUP.REGISTER.EMAIL_ERR_INVALID }}
 				{{> form-error error='emailTaken' message=i18n.POPUP.REGISTER.EMAIL_ERR_TAKEN }}
 			{{/form-input}}
 
 			{{#> form-input name='password' type='password' label=i18n.POPUP.REGISTER.PASSWORD}}
-				{{> form-error error='required' message=i18n.POPUP.REGISTER.PASSWORD_ERR_REQUIRED }}
+				{{> form-error error='isNotEmpty' message=i18n.POPUP.REGISTER.PASSWORD_ERR_REQUIRED }}
 				{{> form-error error='minLength' message=i18n.POPUP.REGISTER.PASSWORD_ERR_MIN }}
 				{{> form-error error='matches' message=i18n.POPUP.REGISTER.PASSWORD_ERR_COMPLEXITY }}
 			{{/form-input}}
 
 			{{#> form-input name='password_repeat' type='password' label=i18n.POPUP.REGISTER.PASSWORD_REPEAT}}
-				{{> form-error error='required' message=i18n.POPUP.REGISTER.PASSWORD_REPEAT_ERR_REQUIRED }}
+				{{> form-error error='isNotEmpty' message=i18n.POPUP.REGISTER.PASSWORD_REPEAT_ERR_REQUIRED }}
 				{{> form-error error='matchesProperty' message=i18n.POPUP.REGISTER.PASSWORD_REPEAT_ERR }}
 			{{/form-input}}
 
 			{{#> form-input name='username' type='text' label=i18n.POPUP.REGISTER.USERNAME}}
-				{{> form-error error='required' message=i18n.POPUP.REGISTER.USERNAME_ERR_REQUIRED }}
+				{{> form-error error='isNotEmpty' message=i18n.POPUP.REGISTER.USERNAME_ERR_REQUIRED }}
 				{{> form-error error='minLength' message=i18n.POPUP.REGISTER.USERNAME_ERR_MIN }}
 				{{> form-error error='maxLength' message=i18n.POPUP.REGISTER.USERNAME_ERR_MAX }}
 				{{> form-error error='matches' message=i18n.POPUP.REGISTER.USERNAME_ERR_PATTERN }}

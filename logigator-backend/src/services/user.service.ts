@@ -95,7 +95,7 @@ export class UserService {
 		newUser.localEmailVerificationCode = uuid();
 		await this.userRepo.save(newUser);
 		try {
-			await this.sendVerificationMail(newUser, currentLang);
+			await this.sendRegisterVerificationMail(newUser, currentLang);
 		} catch (error) {
 			throw new Error('verification_mail');
 		}
@@ -118,12 +118,33 @@ export class UserService {
 		return user;
 	}
 
-	private async sendVerificationMail(user: User, lang: string) {
-		const mail = await this.standaloneViewService.renderView('verification-mail', {
+	public async resendVerificationMail(email: string, password: string, lang: string) {
+		const user = await this.userRepo.findOne({
+			email: email
+		});
+		if (!user?.password) {
+			throw new FormDataError({email, password}, 'email', 'noUser', 'auth_local-login');
+		}
+		if (!(await compare(password, user.password))) {
+			throw new FormDataError({email, password}, 'password', 'invalid', 'auth_local-login');
+		}
+		user.localEmailVerificationCode = uuid();
+		await this.userRepo.save(user);
+
+		try {
+			await this.sendRegisterVerificationMail(user, lang);
+		} catch (error) {
+			throw new Error('verification_mail');
+		}
+
+	}
+
+	private async sendRegisterVerificationMail(user: User, lang: string) {
+		const mail = await this.standaloneViewService.renderView('verification-mail-register', {
 			username: user.username,
 			verifyLink: `${this.configService.getConfig('domains').rootUrl}/verify-email/${user.localEmailVerificationCode}`
 		}, lang);
-		await this.emailService.sendMail('noreply', user.email, this.translationService.getTranslation('MAIL.VERIFY_MAIL.SUBJECT', lang), mail);
+		await this.emailService.sendMail('noreply', user.email, this.translationService.getTranslation('MAILS.VERIFY_MAIL_REGISTER.SUBJECT', lang), mail);
 	}
 
 	public async getUserById(id: string): Promise<User> {
