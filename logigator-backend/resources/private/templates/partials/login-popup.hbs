@@ -21,7 +21,7 @@
 			{{#formFieldNameScope 'email' }}
 				{{#formFieldError 'notVerified'}}
 					<div class="partial-login-register-popup__resend-container">
-						<buttton class="btn-outline secondary"><a href="/auth/resend-verification-mail">{{i18n.POPUP.LOGIN.RESEND_BUTTON}}</a></buttton>
+						<button class="btn-outline secondary" type="submit" formaction="/auth/resend-verification-mail">{{i18n.POPUP.LOGIN.RESEND_BUTTON}}</button>
 					</div>
 				{{/formFieldError}}
 			{{/formFieldNameScope}}

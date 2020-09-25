@@ -118,6 +118,27 @@ export class UserService {
 		return user;
 	}
 
+	public async resendVerificationMail(email: string, password: string, lang: string) {
+		const user = await this.userRepo.findOne({
+			email: email
+		});
+		if (!user?.password) {
+			throw new FormDataError({email, password}, 'email', 'noUser', 'auth_local-login');
+		}
+		if (!(await compare(password, user.password))) {
+			throw new FormDataError({email, password}, 'password', 'invalid', 'auth_local-login');
+		}
+		user.localEmailVerificationCode = uuid();
+		await this.userRepo.save(user);
+
+		try {
+			await this.sendRegisterVerificationMail(user, lang);
+		} catch (error) {
+			throw new Error('verification_mail');
+		}
+
+	}
+
 	private async sendRegisterVerificationMail(user: User, lang: string) {
 		const mail = await this.standaloneViewService.renderView('verification-mail-register', {
 			username: user.username,

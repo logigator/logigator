@@ -22,10 +22,6 @@
 	@include element('resend-container') {
 		display: flex;
 		justify-content: center;
-
-		a {
-			text-decoration: inherit;
-		}
 	}
 
 	@include element('submit') {

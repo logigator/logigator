@@ -12,6 +12,7 @@ import {FormDataError} from '../../errors/form-data.error';
 import {UserService} from '../../services/user.service';
 import {Redirect, RedirectFunction} from '../../decorator/redirect.decorator';
 import {LocalAuthenticationMiddleware} from '../../middleware/auth/local-authentication.middleware';
+import {ResendVerificationMail} from '../../models/request/frontend/auth/resend-verification-mail';
 
 @Controller('/auth')
 export class AuthController {
@@ -42,10 +43,18 @@ export class AuthController {
 		return redirect({ showInfoPopup: 'local-register'});
 	}
 
-	@Get('/resend-verification-mail')
+	@Post('/resend-verification-mail')
 	@UseAfter(FormErrorMiddleware)
-	public resendVerificationMail() {
-		throw new FormDataError({}, undefined, 'verificationMail', 'auth_local-login');
+	public async resendVerificationMail(@Body() body: ResendVerificationMail, @Session() sess: any, @Redirect() redirect: RedirectFunction) {
+		try {
+			await this.userService.resendVerificationMail(body.email, body.password, sess.preferences.lang);
+		} catch (err) {
+			if (err.message === 'verification_mail') {
+				throw new FormDataError(body, undefined, 'verificationMail');
+			}
+			throw err;
+		}
+		return redirect({ showInfoPopup: 'local-register'}); // must be changed
 	}
 
 	@Get('/google-login')

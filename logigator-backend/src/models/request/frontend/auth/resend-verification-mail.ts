@@ -1,6 +1,6 @@
 import {IsNotEmpty, IsString} from 'class-validator';
 
-export class LocalLogin {
+export class ResendVerificationMail {
 
 	@IsString()
 	@IsNotEmpty()
