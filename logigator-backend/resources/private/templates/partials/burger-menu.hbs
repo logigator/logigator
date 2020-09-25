@@ -1,0 +1,25 @@
+<div class="partial-burger-menu is-open">
+	<div class="partial-burger-menu__top">
+		<a href="{{linkHref '/features'}}" class="partial-burger-menu__entry">
+			{{> icon icon='features' alt='Features Link' class='partial-burger-menu__entry-icon' }}
+			<p>{{i18n.SITE_HEADER.FEATURES}}</p>
+		</a>
+		<a href="{{linkHref '/download'}}" class="partial-burger-menu__entry">
+			{{> icon icon='download' alt='Downlaod Page Link' class='partial-burger-menu__entry-icon' }}
+			<p>{{i18n.SITE_HEADER.DOWNLOAD}}</p>
+		</a>
+		{{#if isAuthenticated }}
+			<a href="{{linkHref '/my/projects'}}" class="partial-burger-menu__entry">
+				{{> icon icon='archive' alt='my Projects Link' class='partial-burger-menu__entry-icon' }}
+				<p>{{i18n.SITE_HEADER.PROJECTS}}</p>
+			</a>
+			<a href="{{linkHref '/my/components'}}" class="partial-burger-menu__entry">
+				{{> icon icon='archive' alt='my Components Link' class='partial-burger-menu__entry-icon' }}
+				<p>{{i18n.SITE_HEADER.COMPONENTS}}</p>
+			</a>
+		{{/if}}
+	</div>
+	<div class="partial-burger-menu__bottom">
+
+	</div>
+</div>

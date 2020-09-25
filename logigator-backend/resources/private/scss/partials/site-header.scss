@@ -20,6 +20,20 @@
 		}
 	}
 
+	@include element('burger-menu') {
+		display: none;
+		position: absolute;
+		left: 0;
+		top: 0;
+		padding: 0.5rem;
+		height: 100%;
+		cursor: pointer;
+
+		@media (max-width: 767px) {
+			display: block;
+		}
+	}
+
 	@include element('logo') {
 		img {
 			height: $header-height/1.5;
