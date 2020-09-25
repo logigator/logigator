@@ -44,8 +44,8 @@ export class Component {
 	@Column()
 	numOutputs: number;
 
-	@Column({length: 3072})
-	labels: string;
+	@Column('simple-array')
+	labels: string[];
 
 	@ManyToOne(type => User, object => object.components)
 	user: Promise<User>;

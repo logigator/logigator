@@ -1,10 +1,11 @@
-import {EntityRepository, Repository} from 'typeorm';
+import {EntityRepository} from 'typeorm';
 import {Service} from 'typedi';
 import {Component} from '../entities/component.entity';
+import {PageableRepository} from './pageable.repository';
 
 @Service()
 @EntityRepository(Component)
-export class ComponentRepository extends Repository<Component> {
+export class ComponentRepository extends PageableRepository<Component> {
 
 
 }
