@@ -15,7 +15,7 @@
 		flex-direction: row;
 		height: 100%;
 
-		@media (max-width: 767px) {
+		@include media-breakpoint-down('md') {
 			justify-content: center;
 		}
 	}
@@ -29,7 +29,7 @@
 		height: 100%;
 		cursor: pointer;
 
-		@media (max-width: 767px) {
+		@include media-breakpoint-down('md') {
 			display: block;
 		}
 	}
@@ -46,7 +46,7 @@
 		display: flex;
 		flex-direction: row;
 
-		@media (max-width: 767px) {
+		@include media-breakpoint-down('md') {
 			display: none;
 		}
 
@@ -69,7 +69,7 @@
 	}
 
 	@include element('right') {
-		@media (max-width: 767px) {
+		@include media-breakpoint-down('md') {
 			display: none;
 		}
 	}
