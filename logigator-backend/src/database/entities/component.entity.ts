@@ -1,14 +1,16 @@
 import {
+	BeforeRemove,
 	Column,
 	CreateDateColumn,
-	Entity,
+	Entity, Generated, getCustomRepository, JoinColumn,
 	ManyToOne,
 	OneToMany, OneToOne,
 	PrimaryGeneratedColumn,
 	UpdateDateColumn, VersionColumn
 } from 'typeorm';
 import {User} from './user.entity';
-import {Link} from './link.entity';
+import {ComponentFile} from './component-file.entity';
+import {ComponentFileRepository} from '../repositories/component-file.repository';
 
 
 @Entity()
@@ -29,6 +31,10 @@ export class Component {
 	@UpdateDateColumn()
 	lastEdited: Date;
 
+	@OneToOne(type => ComponentFile, componentFile => componentFile.component, {cascade: true, eager: true})
+	@JoinColumn()
+	componentFile: ComponentFile;
+
 	@Column()
 	symbol: string;
 
@@ -42,17 +48,27 @@ export class Component {
 	labels: string;
 
 	@ManyToOne(type => User, object => object.components)
-	user: User;
+	user: Promise<User>;
 
-	@OneToOne(type => Link, object => object.component, {nullable: true})
-	link: Link;
+	@Column({nullable: false})
+	@Generated('uuid')
+	link: string;
+
+	@Column({default: false, nullable: false})
+	public: boolean;
 
 	@ManyToOne(type => Component, object => object.forks, {nullable: true})
-	forkedFrom: Component;
+	forkedFrom: Promise<Component>;
 
 	@OneToMany(type => Component, object => object.forkedFrom)
-	forks: Component[];
+	forks: Promise<Component[]>;
 
 	@VersionColumn()
 	version: number;
+
+	@BeforeRemove()
+	private async removeFile() {
+		if (this.componentFile)
+			await getCustomRepository(ComponentFileRepository).remove(this.componentFile);
+	}
 }

@@ -24,5 +24,5 @@ export class Shortcut {
 	alt: boolean;
 
 	@ManyToOne(type => User, object => object.shortcuts)
-	user: User;
+	user: Promise<User>;
 }

@@ -7,6 +7,6 @@ export class ProfilePicture extends PersistedResource {
 
 	@OneToOne(type => User, user => user.image)
 	@JoinColumn()
-	user: User;
+	user: Promise<User>;
 
 }

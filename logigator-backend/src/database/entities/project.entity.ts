@@ -1,15 +1,16 @@
 import {
+	BeforeRemove,
 	Column,
 	CreateDateColumn,
-	Entity, JoinColumn,
+	Entity, Generated, getCustomRepository, JoinColumn,
 	ManyToOne,
 	OneToMany, OneToOne,
 	PrimaryGeneratedColumn,
 	UpdateDateColumn, VersionColumn
 } from 'typeorm';
 import {User} from './user.entity';
-import {Link} from './link.entity';
 import {ProjectFile} from './project-file.entity';
+import {ProjectFileRepository} from '../repositories/project-file.repository';
 
 @Entity()
 export class Project {
@@ -20,7 +21,7 @@ export class Project {
 	@Column({nullable: false})
 	name: string;
 
-	@Column({length: 2048, default: ''})
+	@Column({length: 2048, default: '', nullable: false})
 	description: string;
 
 	@CreateDateColumn()
@@ -29,22 +30,32 @@ export class Project {
 	@UpdateDateColumn()
 	lastEdited: Date;
 
-	@OneToOne(type => ProjectFile, projectFile => projectFile.project)
+	@OneToOne(type => ProjectFile, projectFile => projectFile.project, {cascade: true, eager: true})
 	@JoinColumn()
-	projectFile: ProjectFile
+	projectFile: ProjectFile;
 
-	@ManyToOne(type => User, object => object.projects)
-	user: User;
+	@ManyToOne(type => User, object => object.projects, {nullable: false})
+	user: Promise<User>;
 
-	@OneToOne(type => Link, object => object.project, {nullable: true})
-	link: Link;
+	@Column()
+	@Generated('uuid')
+	link: string;
+
+	@Column({default: false, nullable: false})
+	public: boolean;
 
 	@ManyToOne(type => Project, object => object.forks, {nullable: true})
-	forkedFrom: Project;
+	forkedFrom: Promise<Project>;
 
 	@OneToMany(type => Project, object => object.forkedFrom)
-	forks: Project[];
+	forks: Promise<Project[]>;
 
 	@VersionColumn()
 	version: number;
+
+	@BeforeRemove()
+	private async removeFile() {
+		if (this.projectFile)
+			await getCustomRepository(ProjectFileRepository).remove(this.projectFile);
+	}
 }

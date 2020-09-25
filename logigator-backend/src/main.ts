@@ -98,7 +98,7 @@ async function bootstrap() {
 		},
 		development: appContext === 'development',
 		defaultErrorHandler: false,
-		currentUserChecker: action => (action.request as Request).isAuthenticated()
+		currentUserChecker: action => (action.request as Request).user
 	});
 	app.listen(3000, () => {
 		console.log('App started successfully');

@@ -11,9 +11,10 @@ import {
 import {Shortcut} from './shortcut.entity';
 import {Project} from './project.entity';
 import {Component} from './component.entity';
-import {Link} from './link.entity';
 import {ProfilePicture} from './profile-picture.entity';
 import {ProfilePictureRepository} from '../repositories/profile-picture.repository';
+import {ProjectRepository} from '../repositories/project.repository';
+import {ComponentRepository} from '../repositories/component.repository';
 
 @Entity()
 @Check(`(login_type = 'local' and password is not null) or (login_type != 'local')`)
@@ -35,29 +36,34 @@ export class User {
 	googleUserId: string;
 
 	@Column({nullable: true, unique: true})
-	twitterUserId: string
+	twitterUserId: string;
 
 	@Column({nullable: true})
 	localEmailVerificationCode: string;
 
-	@OneToOne(type => ProfilePicture, image => image.user, {eager: true, cascade: true})
+	@OneToOne(type => ProfilePicture, image => image.user, {cascade: true, eager: true})
 	image: ProfilePicture;
 
 	@OneToMany(type => Shortcut, object => object.user, {cascade: true})
-	shortcuts: Shortcut[];
+	shortcuts: Promise<Shortcut[]>;
 
 	@OneToMany(type => Project, object => object.user, {cascade: true})
-	projects: Project[];
+	projects: Promise<Project[]>;
 
 	@OneToMany(type => Component, object => object.user, {cascade: true})
-	components: Component[];
-
-	@ManyToMany(type => Link, object => object.permits)
-	permittedLinks: Link[];
+	components: Promise<Component[]>;
 
 	@BeforeRemove()
-	private async removeImage() {
-		await getCustomRepository(ProfilePictureRepository).remove(this.image);
+	private async removeFile() {
+		return Promise.all([
+			getCustomRepository(ProjectRepository).remove(await this.projects),
+			getCustomRepository(ComponentRepository).remove(await this.components),
+			() => {
+				if (this.image)
+					return getCustomRepository(ProfilePictureRepository).remove(this.image);
+				return Promise.resolve();
+			}
+		]);
 	}
 
 }

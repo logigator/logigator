@@ -6,6 +6,6 @@ import {Project} from './project.entity';
 export class ProjectFile extends PersistedResource {
 
 	@OneToOne(type => Project, project => project.projectFile)
-	project: Project
+	project: Promise<Project>
 
 }

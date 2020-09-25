@@ -1,5 +1,5 @@
 import {AfterInsert, BeforeRemove, BeforeUpdate, Column, Generated, PrimaryGeneratedColumn} from 'typeorm';
-import * as fs from 'fs';
+import {promises as fs} from 'fs';
 import * as path from 'path';
 import mime from 'mime';
 import md5 from 'md5';
@@ -17,7 +17,7 @@ export abstract class PersistedResource {
 	@Column()
 	mimeType: string;
 
-	@Column({type: 'char', length: 32, name: 'md5'})
+	@Column({type: 'char', length: 32, name: 'md5', default: '00000000000000000000000000000000'})
 	private _md5: string;
 
 	private _fileContent: Buffer;
@@ -39,64 +39,30 @@ export abstract class PersistedResource {
 
 	@AfterInsert()
 	private createFile() {
-		fs.writeFileSync(this.filePath, this._fileContent);
+		return fs.writeFile(this.filePath, this._fileContent);
 	}
 
 	@BeforeUpdate()
-	private async updateFile() {
+	private async updateFile(): Promise<void> {
 		if (this._dirty) {
 			if (this._cacheable) {
-				return new Promise<void>((resolve, reject) => {
-					fs.unlink(this.filePath, delErr => {
-						if (delErr) {
-							reject(delErr);
-							return;
-						}
-						this._filename = uuid();
-						fs.writeFile(this.filePath, this._fileContent, readErr => {
-							if (readErr) {
-								reject(readErr);
-								return;
-							}
-							this._dirty = false;
-							resolve();
-						});
-					});
-				});
-			} else {
-				return new Promise<void>((resolve, reject) => {
-					fs.writeFile(this.filePath, this._fileContent, err => {
-						if (err) {
-							reject(err);
-							return;
-						}
-						this._dirty = false;
-						resolve();
-					});
-				});
+				await fs.unlink(this.filePath);
+				this._filename = uuid();
 			}
+			await fs.writeFile(this.filePath, this._fileContent);
+			this._dirty = false;
 		}
 	}
 
 	@BeforeRemove()
 	private deleteFile() {
-		fs.unlinkSync(this.filePath);
+		return fs.unlink(this.filePath);
 	}
 
-	public getFileContent(): Promise<Buffer> {
-		if (this._fileContent) {
-			return Promise.resolve(this._fileContent);
-		}
-		return new Promise<Buffer>((resolve, reject) => {
-			fs.readFile(this.filePath, (err, data) => {
-				if (err) {
-					reject(err);
-					return;
-				}
-				this._fileContent = data;
-				resolve(data);
-			});
-		});
+	public async getFileContent(): Promise<Buffer> {
+		if (!this._fileContent)
+			this._fileContent = await fs.readFile(this.filePath);
+		return this._fileContent;
 	}
 
 	public setFileContent(content: Buffer | string) {
