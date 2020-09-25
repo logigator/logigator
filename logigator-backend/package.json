@@ -38,8 +38,8 @@
 		"prebuild": "rimraf dist",
 		"build": "tsc -p tsconfig.json",
 		"start:prod": "node dist/main.js",
-		"lint:backend": "cd src && eslint -c .eslintrc.json \"./**/*.ts\"",
-		"lint:frontend": "eslint -c ./resources/private/js/.eslintrc.json \"resources/private/js/**/*.js\""
+		"lint:backend": "eslint -c ./src/.eslintrc.js \"src/**/*.ts\"",
+		"lint:frontend": "eslint -c ./resources/private/js/.eslintrc.js \"resources/private/js/**/*.js\""
 	},
 	"main": "./dist/main.js",
 	"dependencies": {
