@@ -1,9 +1,10 @@
-import {Body, ContentType, Controller, Post, Req, Res, Session} from 'routing-controllers';
+import {Body, Controller, Post, Req, Res, Session} from 'routing-controllers';
 import {SetLanguage} from '../../models/request/frontend/preferences/set-language';
 import {SetTheme} from '../../models/request/frontend/preferences/set-theme';
 import {TranslationService} from '../../services/translation.service';
 import {Referer} from '../../decorator/referer.decorator';
 import {Request, Response} from 'express';
+import {Redirect, RedirectFunction} from '../../decorator/redirect.decorator';
 
 @Controller('/preferences')
 export class PreferencesController {
@@ -25,10 +26,9 @@ export class PreferencesController {
 	}
 
 	@Post('/set-theme')
-	@ContentType('application/json')
-	public setTheme(@Body() body: SetTheme, @Session() session: any) {
-		session.preferences.theme = body.theme;
-		return {success: true};
+	public setTheme(@Body() body: SetTheme, @Session() session: any, @Redirect() redirect: RedirectFunction) {
+		session.preferences.theme = body.dark_mode === 'on' ? 'dark' : 'light';
+		return redirect();
 	}
 
 }

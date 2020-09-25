@@ -6,7 +6,7 @@
 	left: 0;
 	width: 100%;
 	height: 100%;
-	z-index: 500;
+	z-index: 1000;
 	background-color: rgba(0,0,0,.25);
 	display: none;
 
@@ -35,7 +35,7 @@
 		z-index: 600;
 		box-shadow: 10px 10px 10px -5px rgba(0,0,0,0.5);
 
-		@media (max-width: 767px){
+	@include media-breakpoint-down('md') {
 			min-width: 100%;
 			min-height: 100%;
 			width: 100%;
@@ -46,10 +46,6 @@
 	@include element('header') {
 		display: flex;
 		width: 100%;
-
-		@media (max-width: 350px) {
-			padding-top: 1rem;
-		}
 
 		@include themify() {
 			background-color: themed('accent2');
@@ -78,7 +74,7 @@
 
 	@include element('body') {
 		margin: auto;
-		padding: 0.5rem;
+		padding: 1.5rem;
 		overflow: auto;
 		width: 100%;
 		@include scrollbar(5px)

@@ -1,9 +1,9 @@
-import {IsIn, IsString} from 'class-validator';
+import {IsOptional, IsString} from 'class-validator';
 
 export class SetTheme {
 
+	@IsOptional()
 	@IsString()
-	@IsIn(['dark', 'light'])
-	theme: string;
+	dark_mode: string;
 
 }

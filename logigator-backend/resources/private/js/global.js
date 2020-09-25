@@ -1,19 +1,19 @@
-// GLOBAL FUNCTIONS ------------------------------------------------------------------------------
+// GLOBAL_FUNCTIONS ---------------------------------------------------------------------------------------
 
 /**
- * @param {string} path
- * @param {object} body
- * @return {Promise<object>}
+ * @param {boolean?} open toggle if undefined
  */
-async function jsonRequest(path, body) {
-	const resp = await fetch(path, {
-		method: 'POST',
-		headers: {
-			'Content-Type': 'application/json'
-		},
-		body: JSON.stringify(body)
-	});
-	return resp.json();
+function setBurgerMenuState(open) {
+	const burgerMenu = document.querySelector('.partial-burger-menu');
+	const burgerMenuBackground = document.querySelector('.partial-burger-menu__background');
+	if (open !== undefined) {
+		Bem.setState(burgerMenu, 'open', open);
+		Bem.setState(burgerMenuBackground, 'open', open);
+	} else {
+		open = !Bem.hasState(burgerMenu, 'open');
+		Bem.setState(burgerMenu, 'open', open);
+		Bem.setState(burgerMenuBackground, 'open', open);
+	}
 }
 
 // PARTIALS ---------------------------------------------------------------------------------------
@@ -23,48 +23,24 @@ async function jsonRequest(path, body) {
  */
 function siteHeaderPartial(node) {
 	const settingsDropdown = node.querySelector('.partial-settings-dropdown');
-	const background = Bem.element(node, 'dropdown-background');
+	const dropdownBackground = Bem.element(node, 'dropdown-background');
 
 	let dropdownOpen = false;
 	Bem.element(node, 'dropdown-trigger').addEventListener('click', () => {
 		dropdownOpen = !dropdownOpen;
 		Bem.setState(settingsDropdown, 'open', dropdownOpen);
-		Bem.setState(background, 'shown', dropdownOpen);
+		Bem.setState(dropdownBackground, 'shown', dropdownOpen);
 	});
 
-	background.addEventListener('click', () => {
+	dropdownBackground.addEventListener('click', () => {
 		dropdownOpen = false;
 		Bem.setState(settingsDropdown, 'open', dropdownOpen);
-		Bem.setState(background, 'shown', dropdownOpen);
+		Bem.setState(dropdownBackground, 'shown', dropdownOpen);
 	});
+
+	Bem.element(node, 'burger-menu').addEventListener('click', () => setBurgerMenuState());
 }
 siteHeaderPartial(document.querySelector('.partial-site-header'));
-
-// ------------------------------------------------------------------------------------------------
-
-/**
- * @param {HTMLElement} node
- */
-function settingsDropdownPartial(node) {
-	const darkModeSwitch = Bem.element(node, 'theme-select').elements['dark_mode'];
-	darkModeSwitch.addEventListener('change', () => {
-		document.body.classList.remove('theme-dark', 'theme-light');
-		if (darkModeSwitch.checked) {
-			document.body.classList.add('theme-dark');
-			saveOnServer('dark');
-		} else {
-			document.body.classList.add('theme-light');
-			saveOnServer('light');
-		}
-	});
-
-	function saveOnServer(theme) {
-		jsonRequest('/preferences/set-theme', {
-			theme
-		});
-	}
-}
-settingsDropdownPartial(document.querySelector('.partial-settings-dropdown'));
 
 // ------------------------------------------------------------------------------------------------
 
@@ -88,13 +64,21 @@ function popupPartial(node) {
 		});
 	}
 
-	Bem.elements(node, 'close').forEach(elem => {
-		elem.addEventListener('click', () => {
-			Bem.setState(node, 'open', false);
-			opened = false;
-		});
+	Bem.element(node, 'close').addEventListener('click', () => {
+		Bem.setState(node, 'open', false);
+		opened = false;
 	});
 }
 document.querySelectorAll('.partial-popup').forEach(popup => popupPartial(popup));
+
+// ------------------------------------------------------------------------------------------------
+
+/**
+ * @param {HTMLElement} node
+ */
+function burgerMenuBackgroundElement(node) {
+	node.addEventListener('click', () => setBurgerMenuState(false));
+}
+burgerMenuBackgroundElement(document.querySelector('.partial-burger-menu__background'));
 
 // ------------------------------------------------------------------------------------------------

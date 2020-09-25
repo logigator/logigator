@@ -1,8 +1,8 @@
-<!-- parameters: name: string, label: string, checked: boolean -->
+<!-- parameters: name: string, label: string, checked: boolean, onchange: jsCode -->
 
 <div class="partial-form-switch">
-	<label class="partial-form-switch__switch-container" for="{{concat formData.formName '_' name}}">
-		<input class="partial-form-switch__input" type="checkbox" {{#if checked}}checked{{/if}} name="{{name}}" id="{{concat formData.formName '_' name}}" >
+	<label class="partial-form-switch__switch-container" for="{{concat @formName '_' name}}">
+		<input class="partial-form-switch__input" type="checkbox" {{#if checked}}checked{{/if}} name="{{name}}" id="{{concat @formName '_' name}}" {{#if onchange}}onchange="{{onchange}}"{{/if}}>
 		<span class="partial-form-switch__slider"></span>
 	</label>
 	{{#if label}}
