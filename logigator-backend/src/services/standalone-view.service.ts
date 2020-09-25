@@ -14,7 +14,7 @@ export class StandaloneViewService {
 	private _viewCache = new Map<string, HandlebarsTemplateDelegate>();
 
 	constructor(private configService: ConfigService, private translationService: TranslationService) {
-		this.VIEW_DIR = path.join(path.join(configService.projectRootPath, 'resources', 'templates', 'standalone'));
+		this.VIEW_DIR = path.join(path.join(configService.projectRootPath, 'resources', 'private', 'templates', 'standalone'));
 	}
 
 	public async renderView(view: string, data: any, lang = 'en'): Promise<string> {

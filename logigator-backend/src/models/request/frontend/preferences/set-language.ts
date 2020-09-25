@@ -1,10 +1,9 @@
-import {IsString} from 'class-validator';
-import {Required} from '../../../../validators/required.validator';
+import {IsNotEmpty, IsString} from 'class-validator';
 
 export class SetLanguage {
 
 	@IsString()
-	@Required()
+	@IsNotEmpty()
 	lang: string;
 
 }

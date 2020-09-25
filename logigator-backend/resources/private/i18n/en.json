@@ -298,8 +298,13 @@
 		"BACK": "Back to home"
 	},
 	"MAILS": {
-		"VERIFY_EMAIL": {
-			"SUBJECT": "Verify Email"
+		"VERIFY_MAIL_REGISTER": {
+			"SUBJECT": "Welcome to Logigator",
+			"WELCOME": "Welcome to Logigator:",
+			"PLEASE_VERIFY": "Please verify your e-mail address.",
+			"TO_DO_SO": "In order to do so",
+			"CLICK_HERE": "click here",
+			"HAVE_FUN": "Have fun building!"
 		}
 	}
 }

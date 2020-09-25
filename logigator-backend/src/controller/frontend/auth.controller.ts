@@ -21,7 +21,7 @@ export class AuthController {
 	@Post('/local-register')
 	@UseBefore(CheckNotAuthenticatedFrontMiddleware)
 	@UseAfter(FormErrorMiddleware)
-	public async localRegister(@Body() body: LocalRegister, @Session() sess, @Redirect() redirect: RedirectFunction) {
+	public async localRegister(@Body() body: LocalRegister, @Session() sess: any, @Redirect() redirect: RedirectFunction) {
 		try {
 			if (await this.userService.createLocalUser(body.username, body.email, body.password, sess.preferences.lang)) {
 				return redirect({ showInfoPopup: 'local-register'});
