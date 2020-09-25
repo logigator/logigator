@@ -6,7 +6,7 @@
 	width: 20rem;
 	height: calc(100% - #{$header-height});
 	position: fixed;
-	z-index: 1000;
+	z-index: 500;
 	left: -20rem;
 	transition: left 0.5s ease, visibility 0.5s;
 	padding: 0.5rem 0;
@@ -18,6 +18,23 @@
 	@include state('open') {
 		visibility: visible;
 		left: 0;
+	}
+
+	@include element('background') {
+		visibility: hidden;
+		position: fixed;
+		top: $header-height;
+		left: 0;
+		width: 100%;
+		height: 100%;
+		background-color: rgba(0,0,0,0);
+		z-index: 400;
+		transition: .5s ease;
+
+		@include state('open') {
+			visibility: visible;
+			background-color: rgba(0,0,0,.5);
+		}
 	}
 
 	@include element('entry') {
@@ -32,6 +49,10 @@
 		&:hover {
 			@include themify() {
 				background-color: darken(themed('accent2'), 10);
+
+				.partial-burger-menu__lang-select {
+					background-color: darken(themed('accent2'), 10);
+				}
 			}
 		}
 	}
@@ -42,5 +63,17 @@
 		max-height: 100%;
 		object-fit: contain;
 		margin-right: 0.5rem;
+	}
+
+	@include element('lang-select') {
+		font-size: 1rem;
+		outline: none;
+		border: none;
+		margin-right: 10px;
+
+		@include themify() {
+			color: themed('primary-text');
+			background-color: themed('accent2');
+		}
 	}
 }

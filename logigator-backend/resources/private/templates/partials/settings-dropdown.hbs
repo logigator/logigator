@@ -2,7 +2,7 @@
 	<div class="partial-settings-dropdown__item partial-settings-dropdown__theme">
 		<label>{{i18n.SETTINGS_DROPDOWN.DARK_MODE}}</label>
 		{{#> form action='/preferences/set-theme' class='partial-settings-dropdown__theme-select'}}
-			{{> form-switch name='dark_mode' checked=(expr preferences.theme '===' 'dark') }}
+			{{> form-switch name='dark_mode' checked=(expr preferences.theme '===' 'dark') onchange='this.form.submit()' }}
 		{{/form}}
 	</div>
 	<div class="partial-settings-dropdown__item partial-settings-dropdown__lang">
