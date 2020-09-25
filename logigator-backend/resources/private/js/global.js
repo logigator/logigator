@@ -64,9 +64,11 @@ function popupPartial(node) {
 		});
 	}
 
-	Bem.element(node, 'close').addEventListener('click', () => {
-		Bem.setState(node, 'open', false);
-		opened = false;
+	Bem.elements(node, 'close').forEach(elem => {
+		elem.addEventListener('click', () => {
+			Bem.setState(node, 'open', false);
+			opened = false;
+		});
 	});
 }
 document.querySelectorAll('.partial-popup').forEach(popup => popupPartial(popup));

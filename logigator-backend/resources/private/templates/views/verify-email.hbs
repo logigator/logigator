@@ -1,0 +1,11 @@
+<div class="view-verify-email">
+	<div>
+		{{#if success}}
+			<h1>{{i18n.VERIFY_MAIL.SUCCESS}}</h1>
+		{{else}}
+			<h1>{{i18n.VERIFY_MAIL.ERROR}}</h1>
+			<p>{{i18n.VERIFY_MAIL.ERROR_HELP}}</p>
+		{{/if}}
+		<a href="{{linkHref '/'}}">{{i18n.VERIFY_MAIL.BACK_HOME}}</a>
+	</div>
+</div>

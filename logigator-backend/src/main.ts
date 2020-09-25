@@ -27,6 +27,7 @@ import {ImprintController} from './controller/frontend/imprint.controller';
 import {PrivacyPolicyController} from './controller/frontend/privacy-policy.controller';
 import compression from 'compression';
 import {TranslationMiddleware} from './middleware/global/translation.middleware';
+import {VerifyEmailController} from './controller/frontend/verify-email.controller';
 
 useContainerRC(Container);
 typeOrmUseContainer(Container);
@@ -81,6 +82,7 @@ async function bootstrap() {
 			ImprintController,
 			PrivacyPolicyController,
 			AuthController,
+			VerifyEmailController,
 			PreferencesController,
 			ProjectController
 		],

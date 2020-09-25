@@ -13,7 +13,8 @@
 		"PRIVACY_POLICY": "Logigator - Privacy Policy",
 		"IMPRINT": "Logigator - Imprint",
 		"FEATURES": "Logigator - Features",
-		"DOWNLOAD": "Logigator - Download"
+		"DOWNLOAD": "Logigator - Download",
+		"VERIFY_EMAIL": "Logigator - Verify email"
 	},
 	"SITE_HEADER": {
 		"DOWNLOAD": "Download",
@@ -280,9 +281,10 @@
 		"COPYRIGHT_2": "All contents of this website (pictures, photos, texts, videos) are subject to copyright. If necessary, we will legally pursue the unauthorized use of parts of the contents of our site."
 	},
 	"VERIFY_MAIL": {
-		"VERIFYING": "Verifying email. Please wait.",
 		"SUCCESS": "Email verified successfully.",
-		"ERROR": "Error verifying email."
+		"ERROR": "Error verifying email",
+		"ERROR_HELP": "The mail can be resent from the login screen.",
+		"BACK_HOME": "Go back to home"
 	},
 	"DOWNLOAD": {
 		"HEADLINE": "Download Editor",

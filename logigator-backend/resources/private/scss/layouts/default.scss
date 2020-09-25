@@ -13,7 +13,6 @@
 
 .main-content {
 	min-height: calc(100vh - #{$footer-height + $header-height});
-	padding-bottom: 5rem;
 	margin-top: $header-height;
 	@include themify(){
 		background: themed('background');

@@ -1,0 +1,15 @@
+@import "../config/config";
+
+@include view('verify-email') {
+	width: 100%;
+	padding-top: 15vh;
+	display: flex;
+	justify-content: center;
+	align-items: center;
+
+	@include element('headline') {
+		font-size: 3rem;
+		margin: 0.5rem 0;
+		font-weight: 100;
+	}
+}

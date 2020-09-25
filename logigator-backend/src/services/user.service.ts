@@ -147,6 +147,19 @@ export class UserService {
 		await this.emailService.sendMail('noreply', user.email, this.translationService.getTranslation('MAILS.VERIFY_MAIL_REGISTER.SUBJECT', lang), mail);
 	}
 
+	public async verifyEmail(code: string):Promise<boolean> {
+		const user = await this.userRepo.findOne({
+			localEmailVerificationCode: code
+		});
+		if (!user)
+			return false;
+
+		console.log(user);
+		user.localEmailVerificationCode = null;
+		await this.userRepo.save(user);
+		return true;
+	}
+
 	public async getUserById(id: string): Promise<User> {
 		return this.userRepo.findOne(id);
 	}
