@@ -1,7 +1,7 @@
 <div class="partial-settings-dropdown">
 	<div class="partial-settings-dropdown__item partial-settings-dropdown__theme">
 		<label>{{i18n.SETTINGS_DROPDOWN.DARK_MODE}}</label>
-		{{#> form action='/prefernces/dark-mode' class='partial-settings-dropdown__theme-select'}}
+		{{#> form action='/preferences/set-theme' class='partial-settings-dropdown__theme-select'}}
 			{{> form-switch name='dark_mode' checked=(expr preferences.theme '===' 'dark') }}
 		{{/form}}
 	</div>
@@ -17,24 +17,20 @@
 	{{#if isAuthenticated }}
 		<hr>
 		<a class="partial-settings-dropdown__link partial-settings-dropdown__item" href="{{linkHref '/my/projects'}}">
-			<img alt="projects" class="show-dark-theme" src="/assets/icons/dark/archive.svg">
-			<img alt="projects" class="show-light-theme" src="/assets/icons/light/archive.svg">
+			{{> icon icon='archive' alt='projects' }}
 			{{i18n.SETTINGS_DROPDOWN.PROJECTS}}
 		</a>
 		<a class="partial-settings-dropdown__link partial-settings-dropdown__item" href="{{linkHref '/my/components'}}">
-			<img alt="components" class="show-dark-theme" src="/assets/icons/dark/archive.svg">
-			<img alt="components" class="show-light-theme" src="/assets/icons/light/archive.svg">
+			{{> icon icon='archive' alt='components' }}
 			{{i18n.SETTINGS_DROPDOWN.COMPONENTS}}
 		</a>
 		<hr>
 		<a class="partial-settings-dropdown__link partial-settings-dropdown__item" href="{{linkHref '/my/settings'}}">
-			<img alt="account" class="show-dark-theme" src="/assets/icons/dark/user.svg">
-			<img alt="account" class="show-light-theme" src="/assets/icons/light/user.svg">
+			{{> icon icon='user' alt='account' }}
 			{{i18n.SETTINGS_DROPDOWN.ACCOUNT}}
 		</a>
 		<a class="partial-settings-dropdown__link partial-settings-dropdown__item" href="/auth/logout">
-			<img alt="logout" class="show-dark-theme" src="/assets/icons/dark/logout.svg">
-			<img alt="logout" class="show-light-theme" src="/assets/icons/light/logout.svg">
+			{{> icon icon='logout' alt='logout' }}
 			{{i18n.SETTINGS_DROPDOWN.LOGOUT}}
 		</a>
 	{{/if}}
