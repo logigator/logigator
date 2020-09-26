@@ -1,0 +1,66 @@
+@import "../config/config";
+
+@include view('features') {
+	max-width: 1500px;
+	margin: auto;
+	padding-top: 1rem;
+
+	@include element('feature') {
+		margin: {
+			left: 1rem;
+			right: 1rem;
+			bottom: 1rem;
+		};
+		padding: 1rem;
+		display: flex;
+		flex-direction: row;
+
+		@include media-breakpoint-down('lg') {
+			align-items: center;
+			flex-direction: column-reverse;
+		}
+
+		@include themify() {
+			background-color: themed('accent2');
+		}
+	}
+
+	@include element('feature-description') {
+		@include media-breakpoint-up('lg') {
+			margin-left: 1rem;
+		}
+		@include media-breakpoint-down('lg') {
+			margin-bottom: 1rem;
+		}
+	}
+
+	@include element('feature-title') {
+		margin-top: 0;
+		margin-bottom: 0.2rem;
+		font-size: 30px;
+		font-weight: 500;
+	}
+
+	@include element('feature-divider') {
+		@include themify() {
+			border-width: 0;
+			border-top: 1px solid themed('text-primary');
+
+		}
+	}
+
+	@include element('feature-video') {
+		width: 600px;
+		height: 340px;
+		min-width: 600px;
+		object-fit: contain;
+
+		@include media-breakpoint-down('lg') {
+			max-width: 100%;
+			min-width: 0;
+		}
+		@include media-breakpoint-down('sm') {
+			height: 250px;
+		}
+	}
+}

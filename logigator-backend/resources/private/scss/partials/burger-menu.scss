@@ -3,11 +3,13 @@
 	justify-content: space-between;
 	flex-direction: column;
 	visibility: hidden;
-	width: 20rem;
+	width: 60vw;
+	min-width: 230px;
+	max-width: 400px;
 	height: calc(100% - #{$header-height});
 	position: fixed;
 	z-index: 500;
-	left: -20rem;
+	left: -60vw;
 	transition: left 0.5s ease, visibility 0.5s;
 	padding: 0.5rem 0;
 

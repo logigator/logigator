@@ -11,6 +11,7 @@ import {formFieldNameScopeHelper} from './form-field-name-scope.helper';
 import {formFieldErrorHelper} from './form-field-error.helper';
 import {linkHrefHelper} from './linkHref.helper';
 import {infoPopupDataScopeHelper} from './info-popup-data-scope.helper';
+import {safeStringHelper} from './safeString.helper';
 
 export const handlebarsHelpers = {
 	ternary: ternaryHelper(),
@@ -25,5 +26,6 @@ export const handlebarsHelpers = {
 	expr: exprHelper(),
 	scriptTag: scriptTagHelper(),
 	styleTag: styleTagHelper(),
-	linkHref: linkHrefHelper()
+	linkHref: linkHrefHelper(),
+	safeString: safeStringHelper()
 };
