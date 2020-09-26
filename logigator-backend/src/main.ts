@@ -29,6 +29,7 @@ import compression from 'compression';
 import {TranslationMiddleware} from './middleware/global/translation.middleware';
 import {VerifyEmailController} from './controller/frontend/verify-email.controller';
 import {FeaturesController} from './controller/frontend/features.controller';
+import bodyParser from 'body-parser';
 
 useContainerRC(Container);
 typeOrmUseContainer(Container);
@@ -77,6 +78,7 @@ async function bootstrap() {
 	app.use(passport.session());
 
 	app.use(expressStatic(path.join(configService.projectRootPath, 'resources', 'public')));
+	app.use(bodyParser.json({limit: '10mb'}));
 	useExpressServer(app, {
 		controllers: [
 			HomeController,
@@ -97,6 +99,10 @@ async function bootstrap() {
 			ErrorHandlerMiddleware
 		],
 		validation: {
+			validationError: {
+				target: false,
+				value: false
+			},
 			whitelist: true,
 			forbidNonWhitelisted: true
 		},

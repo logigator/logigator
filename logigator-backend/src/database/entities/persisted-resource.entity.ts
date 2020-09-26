@@ -38,8 +38,9 @@ export abstract class PersistedResource {
 	}
 
 	@AfterInsert()
-	private createFile() {
-		return fs.writeFile(this.filePath, this._fileContent);
+	private async createFile() {
+		await fs.writeFile(this.filePath, this._fileContent);
+		this._dirty = false;
 	}
 
 	@BeforeUpdate()

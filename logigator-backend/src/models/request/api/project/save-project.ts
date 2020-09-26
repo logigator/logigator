@@ -1,11 +1,14 @@
-import {IsArray, IsDefined, IsInt, ValidateNested} from 'class-validator';
+import {IsArray, IsDefined, IsInt, IsNotEmpty, IsString, ValidateNested} from 'class-validator';
 import {ProjectFile} from './project-file';
+import {Type} from 'class-transformer';
 
 export class SaveProject {
 	@IsDefined()
 	@ValidateNested()
+	@Type(() => ProjectFile)
 	project: ProjectFile;
 
-	@IsInt()
-	version: number;
+	@IsString()
+	@IsNotEmpty()
+	hash: string;
 }

@@ -1,50 +1,74 @@
-import {ProjectElementPos} from './project-element-pos';
 import {
-	IsArray,
+	ArrayMaxSize,
 	IsDefined,
 	IsInt,
 	IsNumber,
 	IsOptional,
-	IsString,
-	ValidateNested
+	MaxLength
 } from 'class-validator';
 
 export class ProjectElement {
+	/**
+	 * id
+	 */
 	@IsInt()
-	id: number;
+	c: number;
 
+	/**
+	 * typeId
+	 */
 	@IsInt()
-	typeId: number;
+	t: number;
 
+	/**
+	 * number of outputs
+	 */
 	@IsOptional()
 	@IsInt()
-	numOutputs: number;
+	o: number;
 
+	/**
+	 * number of inputs
+	 */
 	@IsOptional()
 	@IsInt()
-	numInputs: number;
+	i: number;
 
+	/**
+	 * Position
+	 */
 	@IsDefined()
-	@ValidateNested()
-	pos: ProjectElementPos;
+	@ArrayMaxSize(2)
+	@IsInt({each: true})
+	p: number[];
 
+	/**
+	 * end-position
+	 */
 	@IsOptional()
-	@ValidateNested()
-	endPos: ProjectElementPos;
+	@ArrayMaxSize(2)
+	@IsInt({each: true})
+	q: number[];
 
+	/**
+	 * rotation
+	 */
 	@IsInt()
-	rotation: number;
+	r: number;
 
 	@IsOptional()
 	@IsInt()
 	plugIndex: number;
 
 	@IsOptional()
-	@IsArray()
+	@ArrayMaxSize(64)
 	@IsNumber({}, {each: true})
 	options: number[];
 
+	/**
+	 * optional data
+	 */
 	@IsOptional()
-	@IsString()
-	data: string;
+	@MaxLength(32768)
+	d: string;
 }

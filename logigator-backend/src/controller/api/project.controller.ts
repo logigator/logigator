@@ -21,6 +21,7 @@ import {ProjectFile} from '../../database/entities/project-file.entity';
 import {SaveProject} from '../../models/request/api/project/save-project';
 import {Project} from '../../database/entities/project.entity';
 import {UpdateProject} from '../../models/request/api/project/update-project';
+import {Like} from 'typeorm';
 
 @JsonController('/api/project')
 @UseInterceptor(ApiInterceptor)
@@ -33,10 +34,11 @@ export class ProjectController {
 
 	@Get('/')
 	@UseBefore(CheckAuthenticatedApiMiddleware)
-	public async list(@CurrentUser() user: User, @QueryParam('page') pageNr: number, @QueryParam('size') pageSize: number) {
+	public async list(@CurrentUser() user: User, @QueryParam('page') pageNr: number, @QueryParam('size') pageSize: number, @QueryParam('search') search: string) {
 		const page = await this.projectRepo.getPage(pageNr, pageSize, {
 			where: {
-				user: user
+				user: user,
+				...(search && {name: Like('%' + search + '%')})
 			}
 		});
 		return page.entries.map(entry => {
@@ -72,19 +74,20 @@ export class ProjectController {
 	@Put('/:projectId')
 	@UseBefore(CheckAuthenticatedApiMiddleware)
 	public async save(@Param('projectId') projectId: string, @CurrentUser() user: User, @Body() body: SaveProject) {
-		const project = await this.getOwnedProjectOrThrow(projectId, user);
+		let project = await this.getOwnedProjectOrThrow(projectId, user);
 
-		if (project.version !== body.version)
+		if (project.projectFile && project.projectFile.md5 !== body.hash)
 			throw new BadRequestError('VersionMismatch');
 
 		if (!project.projectFile)
 			project.projectFile = new ProjectFile();
 
 		project.projectFile.mimeType = 'application/json';
-		project.projectFile.setFileContent(JSON.stringify(body));
-		await this.projectRepo.save(project);
+		project.projectFile.setFileContent(JSON.stringify(body.project));
+		project = await this.projectRepo.save(project);
 		return {
-			id: project.id
+			id: project.id,
+			hash: project.projectFile.md5
 		};
 	}
 

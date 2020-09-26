@@ -1,15 +1,10 @@
 import {ProjectElement} from './project-element';
-import {IsArray, IsDefined, ValidateNested} from 'class-validator';
-import {ProjectMapping} from './project-mapping';
+import {IsArray, ValidateNested} from 'class-validator';
+import {Type} from 'class-transformer';
 
 export class ProjectFile {
 	@IsArray()
-	@IsDefined({each: true})
 	@ValidateNested({each: true})
+	@Type(() => ProjectElement)
 	elements: ProjectElement[];
-
-	@IsArray()
-	@IsDefined({each: true})
-	@ValidateNested({each: true})
-	mappings: ProjectMapping[];
 }
