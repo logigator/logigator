@@ -1,1 +1,17 @@
-keko
+<div class="view-home">
+	<section class="view-home__section view-home__section-intro">
+		<div class="view-home__section-content">
+			{{#if (expr preferences.theme '===' 'dark')}}
+				<img src="/assets/logo_light.svg" alt="large Logo">
+			{{else}}
+				<img src="/assets/logo.svg" alt="large Logo">
+			{{/if}}
+			<div class="view-home__section-intro-content">
+				<h3 class="view-home__section-intro-headline">{{i18n.HOME.INTRO.DESCRIPTION}}</h3>
+				<a href="{{editorUrl}}" target="_blank" rel="noopener" class="view-home__section-intro-button-link">
+					<button class="btn-raised primary view-home__section-intro-button">{{i18n.HOME.INTRO.BUTTON}}</button>
+				</a>
+			</div>
+		</div>
+	</section>
+</div>

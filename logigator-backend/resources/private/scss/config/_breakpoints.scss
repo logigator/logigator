@@ -19,7 +19,7 @@ $grid-breakpoints: (
 }
 
 @mixin media-breakpoint-between($lower, $upper) {
-	@media (min-width: $lower) and (max-width: $upper) {
+	@media (min-width: map-get($grid-breakpoints, $lower)) and (max-width: map-get($grid-breakpoints, $upper)) {
 		@content;
 	}
 }

@@ -39,7 +39,6 @@
 	},
 	"HOME": {
 		"INTRO": {
-			"TITLE": "What is Logigator",
 			"DESCRIPTION": "The editor for logical circuits...",
 			"BUTTON": "TRY NOW"
 		},

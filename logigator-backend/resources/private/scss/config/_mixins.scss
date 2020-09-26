@@ -28,3 +28,28 @@
 	}
 
 }
+
+@mixin section($content-element-name: 'section-content') {
+	padding-top: 4rem;
+	padding-bottom: 4rem;
+
+	@include media-breakpoint-down('lg') {
+		padding-top: 2rem;
+		padding-bottom: 2rem;
+	}
+
+	@media (max-width: $container-max-width + 50px) {
+		padding-left: 2rem;
+		padding-right: 2rem;
+	}
+
+	@include media-breakpoint-down('sm') {
+		padding-left: 1rem;
+		padding-right: 1rem;
+	}
+
+	@include element($content-element-name) {
+		max-width: $container-max-width;
+		margin: auto;
+	}
+}
