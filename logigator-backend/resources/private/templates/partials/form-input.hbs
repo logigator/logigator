@@ -1,8 +1,8 @@
-<!-- parameters: name: string, type: string, label: string, tooltip: string -->
+<!-- parameters: name: string, type: string, label: string, tooltip: string, autocomplete: string -->
 
 <div class="partial-form-input {{#formFieldHasErrors name}}is-invalid{{/formFieldHasErrors}}">
 	<div class="partial-form-input__input-container">
-		<input type="{{type}}" name="{{name}}" id="{{concat @formName '_' name}}" placeholder=" " value="{{formFieldValue name}}">
+		<input type="{{type}}" name="{{name}}" id="{{concat @formName '_' name}}" placeholder=" " value="{{formFieldValue name}}" {{#if autocomplete}}autocomplete="{{autocomplete}}" {{/if}}>
 		<label for="{{concat @formName '_' name}}">{{label}}</label>
 		{{#if tooltip}}
 			<span class="partial-form-input__tooltip-button"></span>
