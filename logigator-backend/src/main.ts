@@ -30,6 +30,7 @@ import {TranslationMiddleware} from './middleware/global/translation.middleware'
 import {VerifyEmailController} from './controller/frontend/verify-email.controller';
 import {FeaturesController} from './controller/frontend/features.controller';
 import bodyParser from 'body-parser';
+import {MyProjectsController} from './controller/frontend/my/my-projects.controller';
 
 useContainerRC(Container);
 typeOrmUseContainer(Container);
@@ -85,6 +86,7 @@ async function bootstrap() {
 			ImprintController,
 			PrivacyPolicyController,
 			FeaturesController,
+			MyProjectsController,
 			AuthController,
 			VerifyEmailController,
 			PreferencesController,

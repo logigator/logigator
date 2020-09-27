@@ -1,0 +1,41 @@
+@include view('my-projects-comps') {
+	@include section('container', 950px);
+
+	@include element('header') {
+		display: flex;
+		align-items: center;
+		justify-content: space-between;
+		margin-bottom: 0.5rem;
+
+		@include media-breakpoint-down('sm') {
+			flex-direction: column;
+		}
+	}
+
+	@include element('header-headline') {
+		margin: 0.5rem 2rem 0.5rem 0;
+		font-size: 2rem;
+		font-weight: 400;
+
+		@include media-breakpoint-down('sm') {
+			margin-right: 0;
+			margin-bottom: 1rem;
+		}
+	}
+
+	@include element('search') {
+		margin: 0.5rem 0;
+		flex-grow: 1;
+		max-width: 300px;
+
+		@include media-breakpoint-down('sm') {
+			max-width: 100%;
+			width: 100%;
+		}
+	}
+
+	@include element('list') {
+		width: 100%;
+	}
+
+}

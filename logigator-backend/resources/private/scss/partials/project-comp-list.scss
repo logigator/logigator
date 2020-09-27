@@ -1,0 +1,256 @@
+@include partial('project-comp-list') {
+
+	@include element('tiles') {
+		display: flex;
+		flex-wrap: wrap;
+		align-items: center;
+		justify-content: center;
+		width: 100%;
+
+		@include media-breakpoint-down('md') {
+			flex-direction: column;
+		}
+	}
+
+	@include element('tile-wrapper') {
+		display: flex;
+		align-items: center;
+	}
+
+	@include element('tile') {
+		width: 176px;
+		height: 176px;
+		margin: 7px;
+		display: flex;
+		position: relative;
+		flex-direction: column;
+		align-items: center;
+		justify-content: space-between;
+
+		@include themify() {
+			background-color: themed('background');
+			box-shadow: inset 0 0 0 1px themed('text-primary');
+		}
+
+		@include media-breakpoint-down('sm') {
+			width: 160px;
+			height: 160px;
+			margin-left: 0;
+		}
+
+		@include media-breakpoint-up('md') {
+			&:hover {
+				.partial-project-comp-list__tile-hover {
+					display: block;
+				}
+			}
+		}
+	}
+
+	@include element('tile-name') {
+		font-size: 1.2rem;
+		font-weight: 500;
+		margin: 1rem 0 0.4rem 0;
+
+		@include media-breakpoint-down('md') {
+			display: none;
+		}
+	}
+
+	@include element('tile-image') {
+		width: 100%;
+		max-width: 100%;
+		object-fit: contain;
+		max-height: calc(100% - 3rem);
+		padding: 0.2rem;
+
+		@include media-breakpoint-down('md') {
+			max-height: 100%;
+			padding: 0.4rem;
+		}
+	}
+
+	@include element('tile-hover') {
+		display: none;
+		position: absolute;
+		top: 0;
+		left: 0;
+		width: 100%;
+		height: 100%;
+
+		@include themify() {
+			background-color: themed('accent2');
+			border: 1px solid themed('text-primary');
+		}
+	}
+
+	@include element('tile-open') {
+		position: absolute;
+		top: calc(50% - 1rem);
+		left: calc(50% - 1rem);
+		width: 2rem;
+		height: 2rem;
+
+		@include themify {
+			@if (isTheme('dark')) {
+				background-image: url("/assets/icons/dark/control-play.svg");
+			} @else {
+				background-image: url("/assets/icons/light/control-play.svg");
+			}
+		}
+	}
+
+	@include element('tile-actions') {
+		position: absolute;
+		width: 100%;
+		height: 2rem;
+		left: 0;
+		bottom: 0;
+		display: flex;
+		align-items: center;
+		justify-content: center;
+
+		> span {
+			width: 1rem;
+			height: 1rem;
+			margin: 0 0.3rem;
+		}
+	}
+
+	@include element('tile-detail') {
+		display: none;
+		width: 180px;
+		margin-left: 0.2rem;
+
+		@include media-breakpoint-down('md') {
+			display: block;
+		}
+	}
+
+	@include element('tile-detail-title') {
+		margin-bottom: 0.2rem;
+		font-weight: 600;
+	}
+
+	@include element('tile-detail-edited') {
+		margin: 0.5rem 0 1rem;
+	}
+
+	@include element('tile-detail-actions') {
+		width: 100%;
+		display: flex;
+		height: 2rem;
+
+		> span {
+			height: 1.5rem;
+			width: 1.5rem;
+			margin-right: 0.4rem;
+		}
+	}
+
+	@include element('tile-empty') {
+		justify-content: center;
+
+		> span {
+			z-index: 500;
+			width: 2rem;
+			height: 2rem;
+		}
+	}
+
+	@include element('list-item') {
+		display: flex;
+		align-items: center;
+		margin: 0 7px;
+
+		@include themify() {
+			border-bottom: 1px solid themed('text-primary');
+
+			&:hover {
+				background-color: themed('accent2');
+			}
+		}
+
+		> span {
+			height: 1rem;
+			width: 1rem;
+			margin: 0 0.25rem;
+		}
+	}
+
+	@include element('list-item-name') {
+		flex-grow: 1;
+		padding: 1rem 0;
+		text-decoration: none;
+	}
+
+	@include element('list-item-edited') {
+		margin: 0 1rem;
+
+		@include media-breakpoint-down('sm') {
+			display: none;
+		}
+	}
+
+	@include element('icon-share') {
+		@include themify {
+			@if (isTheme('dark')) {
+				background-image: url("/assets/icons/dark/share.svg");
+			} @else {
+				background-image: url("/assets/icons/light/share.svg");
+			}
+		}
+	}
+
+	@include element('icon-edit') {
+		@include themify {
+			@if (isTheme('dark')) {
+				background-image: url("/assets/icons/dark/pencil-alt.svg");
+			} @else {
+				background-image: url("/assets/icons/light/pencil-alt.svg");
+			}
+		}
+	}
+
+	@include element('icon-delete') {
+		@include themify {
+			@if (isTheme('dark')) {
+				background-image: url("/assets/icons/dark/trash.svg");
+			} @else {
+				background-image: url("/assets/icons/light/trash.svg");
+			}
+		}
+	}
+
+	@include element('icon-info') {
+		@include themify {
+			@if (isTheme('dark')) {
+				background-image: url("/assets/icons/dark/info.svg");
+			} @else {
+				background-image: url("/assets/icons/light/info.svg");
+			}
+		}
+	}
+
+	@include element('icon-new') {
+		@include themify {
+			@if (isTheme('dark')) {
+				background-image: url("/assets/icons/dark/plus.svg");
+			} @else {
+				background-image: url("/assets/icons/light/plus.svg");
+			}
+		}
+	}
+
+	@include element('icon') {
+		background-repeat: no-repeat;
+		background-position: center;
+		background-size: contain;
+		cursor: pointer;
+
+		&:hover {
+			filter: invert(0.25);
+		}
+	}
+
+}

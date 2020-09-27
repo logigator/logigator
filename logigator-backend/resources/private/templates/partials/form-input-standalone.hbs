@@ -1,0 +1,12 @@
+<!-- parameters: name: string, type: string, label: string, tooltip: string, autocomplete: string, id: string -->
+
+<div class="partial-form-input {{class}}">
+	<div class="partial-form-input__input-container">
+		<input type="{{type}}" name="{{name}}" id="{{id}}" placeholder=" " {{#if autocomplete}}autocomplete="{{autocomplete}}"{{/if}}>
+		<label for="{{id}}">{{label}}</label>
+		{{#if tooltip}}
+			<span class="partial-form-input__tooltip-button"></span>
+			<div class="partial-form-input__tooltip">{{tooltip}}</div>
+		{{/if}}
+	</div>
+</div>

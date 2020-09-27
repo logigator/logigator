@@ -29,7 +29,7 @@
 
 }
 
-@mixin section($content-element-name: 'section-content') {
+@mixin section($content-element-name: 'section-content', $section-max-width: $container-max-width) {
 	padding-top: 4rem;
 	padding-bottom: 4rem;
 
@@ -38,7 +38,7 @@
 		padding-bottom: 2rem;
 	}
 
-	@media (max-width: $container-max-width + 50px) {
+	@media (max-width: $section-max-width + 50px) {
 		padding-left: 2rem;
 		padding-right: 2rem;
 	}
@@ -49,7 +49,7 @@
 	}
 
 	@include element($content-element-name) {
-		max-width: $container-max-width;
+		max-width: $section-max-width;
 		margin: auto;
 	}
 }
