@@ -47,7 +47,9 @@ export class TranslationService {
 		return this._translations.get(lang);
 	}
 
-	public dateFormatTime(date: Date, lang: string) {
+	public dateFormatTime(date: Date | string, lang: string) {
+		if (!(date instanceof Date))
+			date = new Date(date);
 		switch (lang) {
 			case 'en':
 				return date.toLocaleTimeString('en', {
@@ -63,7 +65,9 @@ export class TranslationService {
 		}
 	}
 
-	public dateFormatDate(date: Date, lang: string) {
+	public dateFormatDate(date: Date | string, lang: string) {
+		if (!(date instanceof Date))
+			date = new Date(date);
 		switch (lang) {
 			case 'en':
 				return date.toLocaleDateString('en');
@@ -76,7 +80,9 @@ export class TranslationService {
 		}
 	}
 
-	public dateFormatDateTime(date: Date, lang: string) {
+	public dateFormatDateTime(date: Date | string, lang: string) {
+		if (!(date instanceof Date))
+			date = new Date(date);
 		switch (lang) {
 			case 'en':
 				return date.toLocaleString('en', {

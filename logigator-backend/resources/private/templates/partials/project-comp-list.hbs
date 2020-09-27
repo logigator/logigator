@@ -1,6 +1,6 @@
-<div class="partial-project-comp-list">
+<div class="partial-project-comp-list" data-current-page="{{currentPage}}" data-tatal-pages="{{totalPages}}">
 	<div class="partial-project-comp-list__tiles">
-		{{#each items}}
+		{{#each entries}}
 			{{#if (expr @index '<' 4)}}
 				<div class="partial-project-comp-list__tile-wrapper" data-id="{{this.id}}">
 					<div class="partial-project-comp-list__tile">
@@ -34,7 +34,7 @@
 			<span class="partial-project-comp-list__icon-new partial-project-comp-list__icon"></span>
 		</div>
 	</div>
-	{{#each items}}
+	{{#each entries}}
 		<div class="partial-project-comp-list__list-item"
 			 data-id="{{this.id}}"
 			 data-description="{{this.description}}"
