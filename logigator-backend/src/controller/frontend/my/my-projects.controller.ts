@@ -1,6 +1,7 @@
-import {Controller, Get, Render, UseBefore} from 'routing-controllers';
+import {Controller, Get, QueryParam, Render, UseBefore} from 'routing-controllers';
 import {setTitleMiddleware} from '../../../middleware/action/set-title-middleware';
 import {TranslationService} from '../../../services/translation.service';
+import {CheckAuthenticatedFrontMiddleware} from '../../../middleware/auth/frontend-guards/check-authenticated-front.middleware';
 
 @Controller('/my/projects')
 export class MyProjectsController {
@@ -11,7 +12,8 @@ export class MyProjectsController {
 	@Get('/')
 	@Render('my-projects')
 	@UseBefore(setTitleMiddleware('TITLE.PROJECTS'))
-	public myProjects() {
+	@UseBefore(CheckAuthenticatedFrontMiddleware)
+	public myProjects(@QueryParam('page') page: number) {
 		return {
 			items: [
 				{

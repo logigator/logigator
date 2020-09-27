@@ -42,8 +42,7 @@
 			 data-created="{{this.createdOn}}"
 			 data-last-edited="{{this.lastEdited}}"
 			 {{#if this.numInputs}}data-inputs="{{this.numInputs}}" {{/if}}
-			 {{#if this.numOutputs}}data-outputs="{{this.numOutputs}}"{{/if}}
-		>
+			 {{#if this.numOutputs}}data-outputs="{{this.numOutputs}}"{{/if}}>
 			<a href="#" target="_blank" rel="noopener" class="partial-project-comp-list__list-item-name">{{this.name}}</a>
 			<p href="#" target="_blank" rel="noopener" class="partial-project-comp-list__list-item-edited">{{@root.i18n.USERSPACE.PROJECTS.LAST_EDITED}} {{this.lastEditedShort}}</p>
 			<span class="partial-project-comp-list__icon-share partial-project-comp-list__icon"></span>
