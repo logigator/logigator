@@ -24,7 +24,7 @@ export class FormErrorMiddleware implements ExpressErrorMiddlewareInterface {
 
 		// Validation with class-validator failed
 		if ('errors' in error) {
-			const currentValues = (error as any).errors[0].target;
+			const currentValues = request.body;
 			Object.keys(currentValues).forEach(key => {
 				formErrors[formName][key] = {
 					value: currentValues[key]
