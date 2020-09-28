@@ -47,6 +47,63 @@ export class TranslationService {
 		return this._translations.get(lang);
 	}
 
+	public dateFormatTime(date: Date | string, lang: string) {
+		if (!(date instanceof Date))
+			date = new Date(date);
+		switch (lang) {
+			case 'en':
+				return date.toLocaleTimeString('en', {
+					hour: '2-digit',
+					minute:'2-digit'
+				});
+			case 'de':
+				return date.toLocaleTimeString('de', {
+					hour12: false,
+					hour: '2-digit',
+					minute:'2-digit'
+				});
+		}
+	}
+
+	public dateFormatDate(date: Date | string, lang: string) {
+		if (!(date instanceof Date))
+			date = new Date(date);
+		switch (lang) {
+			case 'en':
+				return date.toLocaleDateString('en');
+			case 'de':
+				return date.toLocaleDateString('de', {
+					year: 'numeric',
+					month: 'short',
+					day: 'numeric'
+				});
+		}
+	}
+
+	public dateFormatDateTime(date: Date | string, lang: string) {
+		if (!(date instanceof Date))
+			date = new Date(date);
+		switch (lang) {
+			case 'en':
+				return date.toLocaleString('en', {
+					hour: '2-digit',
+					minute:'2-digit',
+					year: 'numeric',
+					month: 'numeric',
+					day: 'numeric'
+				});
+			case 'de':
+				return date.toLocaleString('de', {
+					hour12: false,
+					hour: '2-digit',
+					minute:'2-digit',
+					year: 'numeric',
+					month: 'short',
+					day: 'numeric'
+				});
+		}
+	}
+
 	public get availableLanguages(): string[] {
 		return [...this._translations.keys()];
 	}

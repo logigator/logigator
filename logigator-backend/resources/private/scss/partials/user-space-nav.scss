@@ -1,0 +1,33 @@
+@include partial('user-space-nav') {
+
+	@include themify() {
+		background-color: themed('accent2');
+	}
+
+	@include media-breakpoint-down('md') {
+		display: none;
+	}
+
+	@include element('links') {
+		margin: auto;
+		display: flex;
+		justify-content: space-around;
+		flex-direction: row;
+
+		width: 100%;
+		max-width: 70rem;
+	}
+
+	@include element('link') {
+		line-height: 3rem;
+		text-decoration: none;
+		font-size: 1.2rem;
+		margin-left: 1rem;
+
+		&:hover {
+			@include themify() {
+				color: themed('primary');
+			}
+		}
+	}
+}

@@ -1,0 +1,54 @@
+<div class="partial-project-comp-list" data-current-page="{{currentPage}}" data-tatal-pages="{{totalPages}}">
+	<div class="partial-project-comp-list__tiles">
+		{{#each entries}}
+			{{#if (expr @index '<' 4)}}
+				<div class="partial-project-comp-list__tile-wrapper" data-id="{{this.id}}">
+					<div class="partial-project-comp-list__tile">
+						<h3 class="partial-project-comp-list__tile-name">{{this.name}}</h3>
+						<img class="partial-project-comp-list__tile-image" alt="Preview" src="{{this.previewImage}}">
+						<div class="partial-project-comp-list__tile-hover">
+							<a href="#" class="partial-project-comp-list__tile-open partial-project-comp-list__icon" target="_blank" rel="noopener"></a>
+							<div class="partial-project-comp-list__tile-actions">
+								<span class="partial-project-comp-list__icon-share partial-project-comp-list__icon"></span>
+								<span class="partial-project-comp-list__icon-edit partial-project-comp-list__icon"></span>
+								<span class="partial-project-comp-list__icon-delete partial-project-comp-list__icon"></span>
+								<span class="partial-project-comp-list__icon-info partial-project-comp-list__icon"></span>
+							</div>
+						</div>
+					</div>
+					<div class="partial-project-comp-list__tile-detail">
+						<h3 class="partial-project-comp-list__tile-detail-title">{{this.name}}</h3>
+						<p class="partial-project-comp-list__tile-detail-edited">{{@root.i18n.USERSPACE.PROJECTS.LAST_EDITED}} {{this.lastEditedShort}}</p>
+						<div class="partial-project-comp-list__tile-detail-actions">
+							<span class="partial-project-comp-list__icon-share partial-project-comp-list__icon"></span>
+							<span class="partial-project-comp-list__icon-edit partial-project-comp-list__icon"></span>
+							<span class="partial-project-comp-list__icon-delete partial-project-comp-list__icon"></span>
+							<span class="partial-project-comp-list__icon-info partial-project-comp-list__icon"></span>
+						</div>
+					</div>
+				</div>
+			{{/if}}
+		{{/each}}
+		<div class="partial-project-comp-list__tile partial-project-comp-list__tile-empty">
+			<div class="partial-project-comp-list__tile-hover"></div>
+			<span class="partial-project-comp-list__icon-new partial-project-comp-list__icon"></span>
+		</div>
+	</div>
+	{{#each entries}}
+		<div class="partial-project-comp-list__list-item"
+			 data-id="{{this.id}}"
+			 data-description="{{this.description}}"
+			 data-name="{{this.name}}"
+			 data-created="{{this.createdOn}}"
+			 data-last-edited="{{this.lastEdited}}"
+			 {{#if this.numInputs}}data-inputs="{{this.numInputs}}" {{/if}}
+			 {{#if this.numOutputs}}data-outputs="{{this.numOutputs}}"{{/if}}>
+			<a href="#" target="_blank" rel="noopener" class="partial-project-comp-list__list-item-name">{{this.name}}</a>
+			<p href="#" target="_blank" rel="noopener" class="partial-project-comp-list__list-item-edited">{{@root.i18n.USERSPACE.PROJECTS.LAST_EDITED}} {{this.lastEditedShort}}</p>
+			<span class="partial-project-comp-list__icon-share partial-project-comp-list__icon"></span>
+			<span class="partial-project-comp-list__icon-edit partial-project-comp-list__icon"></span>
+			<span class="partial-project-comp-list__icon-delete partial-project-comp-list__icon"></span>
+			<span class="partial-project-comp-list__icon-info partial-project-comp-list__icon"></span>
+		</div>
+	{{/each}}
+</div>

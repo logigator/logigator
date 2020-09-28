@@ -14,7 +14,8 @@
 		"IMPRINT": "Logigator - Impressum",
 		"FEATURES": "Logigator - Features",
 		"DOWNLOAD": "Logigator - Download",
-		"VERIFY_EMAIL": "Logigator - Emailverifizierung"
+		"VERIFY_EMAIL": "Logigator - Emailverifizierung",
+		"PROJECTS": "Logigator - Projekte"
 	},
 	"SITE_HEADER": {
 		"DOWNLOAD": "Download",
@@ -80,10 +81,13 @@
 		}
 	},
 	"USERSPACE": {
-		"HEADER": {
+		"NAV": {
 			"PROJECTS": "Projekte",
 			"COMPONENTS": "Komponenten",
 			"ACCOUNT_SETTINGS": "Account-Einstellungen"
+		},
+		"LIST": {
+			"SEARCH": "Suchen"
 		},
 		"PROJECTS": {
 			"TITLE": "Meine Projekte",
