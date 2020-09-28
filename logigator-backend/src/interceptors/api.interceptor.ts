@@ -9,4 +9,16 @@ export class ApiInterceptor implements InterceptorInterface {
 			data: result || {}
 		};
 	}
+
+	private static applyORMCache(data: any): any {
+		Object.keys(data)
+			.filter(x => x.startsWith('__') && x.endsWith('__'))
+			.forEach(x => {
+				if (!x.startsWith('__has_'))
+					data[x.replace(/_/g, '') + ''] = data[x];
+				// delete data[x];
+			});
+		console.log(data);
+		return data;
+	}
 }
