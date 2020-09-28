@@ -1,12 +1,12 @@
-import {BadRequestError, ExpressErrorMiddlewareInterface} from 'routing-controllers';
+import {BadRequestError} from 'routing-controllers';
 import {Request, Response} from 'express';
 import {ValidationError} from 'class-validator';
 import {FormDataError} from '../../errors/form-data.error';
 import {redirect} from '../../functions/redirect';
 
-export class FormErrorMiddleware implements ExpressErrorMiddlewareInterface {
+export function formErrorMiddleware(redirectTargetFunc?: (request: Request, response: Response) => string) {
 
-	error(error: any, request: Request, response: Response, next: (err?: any) => any): void {
+	return function (error: any, request: Request, response: Response, next: (err?: any) => any) {
 		if (!(error instanceof BadRequestError && (('errors' in error && 'paramName' in error) || error.name === 'FormDataError'))) {
 			throw error;
 		}
@@ -75,7 +75,13 @@ export class FormErrorMiddleware implements ExpressErrorMiddlewareInterface {
 
 		request.session.formErrors = formErrors;
 
-		redirect(request, response);
-	}
+		let redirectTarget;
+
+		if (redirectTargetFunc) {
+			redirectTarget = redirectTargetFunc(request, response);
+		}
+
+		redirect(request, response, {target: redirectTarget});
+	};
 
 }

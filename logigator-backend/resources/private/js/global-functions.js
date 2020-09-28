@@ -15,7 +15,6 @@ window.setBurgerMenuState = function (open) {
 };
 
 /**
- *
  * @param {Function} func
  * @param {number} debounce
  * @return {Function}
@@ -35,4 +34,22 @@ window.debounceFunction = function (func, debounce) {
 		clearTimeout(timeout);
 		timeout = setTimeout(later, debounce);
 	};
+};
+
+/**
+ * @param {string} popupUrl
+ * @param {Element} insertionPoint
+ * @param {string} [formDataPostUrl]
+ */
+window.openDynamicPopup = async function (popupUrl, insertionPoint, formDataPostUrl) {
+	const resp = await fetch(popupUrl);
+	insertionPoint.innerHTML = await resp.text();
+	const popupElem = insertionPoint.querySelector('.partial-popup');
+	Bem.elements(popupElem, 'close').forEach(elem => {
+		elem.addEventListener('click', () => {
+			while (insertionPoint.firstChild) {
+				insertionPoint.removeChild(insertionPoint.lastChild);
+			}
+		});
+	});
 };

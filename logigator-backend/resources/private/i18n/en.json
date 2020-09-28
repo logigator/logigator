@@ -236,13 +236,15 @@
 			"DESCRIPTION_ERR_MAX": "Description is too long",
 			"SAVE": "SAVE"
 		},
-		"COMP_INFO": {
+		"PROJECT_COMP_INFO": {
 			"TITLE": "Information",
 			"NAME": "Name",
 			"CREATED": "Created",
-			"MODIFIED": "last modified",
+			"MODIFIED": "Last modified",
 			"INPUTS": "Inputs",
 			"OUTPUTS": "Outputs",
+			"DEPENDENCIES": "Dependencies",
+			"NO_DEPENDENCIES": "N/A",
 			"DESCRIPTION": "Description"
 		},
 		"PROJECT_DELETE": {

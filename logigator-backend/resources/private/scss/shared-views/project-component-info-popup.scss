@@ -1,0 +1,46 @@
+@include view('project-component-info-popup') {
+	max-width: 40rem;
+
+	@include element('image') {
+		width: 100%;
+		max-height: 256px;
+		object-fit: contain;
+		margin-bottom: 1rem;
+
+		@include themify() {
+			filter: drop-shadow(0px 0px 2px darken(themed('background'), 30));
+		}
+	}
+
+	@include element('item') {
+		display: flex;
+		justify-content: space-between;
+		flex-direction: row;
+		align-items: center;
+
+		> p {
+			margin-top: 0.5rem;
+			margin-bottom: 0.5rem;
+		}
+	}
+
+	@include element('streched') {
+		flex-direction: column;
+		align-items: start;
+
+		> p {
+			word-break: break-word;
+		}
+	}
+
+	@include element('hr') {
+		border-width: 1px;
+		border-style: none;
+		border-top-style: solid;
+
+		@include themify() {
+			border-color: themed('text-primary');
+		}
+	}
+
+}

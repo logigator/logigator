@@ -1,4 +1,5 @@
-function paginationAndSearch() {
+function projectComponentList() {
+	const popupContainer = document.querySelector('.view-my-projects-comps__popup-container');
 	const pageContainer = document.querySelector('.view-my-projects-comps__list');
 	const pageButtons = document.querySelectorAll('.view-my-projects-comps__page-button');
 	const pageButtonTargets = [0, 0, 0, 0, 0, 0, 0];
@@ -84,15 +85,21 @@ function paginationAndSearch() {
 		const baseUrl = [location.protocol, '//', location.host, location.pathname].join('');
 		window.history.pushState({}, '', baseUrl + '?' + searchParams);
 		updatePagination();
+		addInteractionButtonListeners(pageContainer);
+	}
+
+	function addInteractionButtonListeners() {
+		pageContainer.querySelectorAll('.partial-project-comp-list__icon-info').forEach(button => {
+			button.addEventListener('click', () => {
+				const id = button.parentElement.getAttribute('data-id');
+				openDynamicPopup(`/my/projects/info/${id}`, popupContainer);
+			});
+		});
 	}
 
 	updatePagination();
 	addPageButtonListeners();
 	addSearchListener();
+	addInteractionButtonListeners();
 }
-paginationAndSearch();
-
-
-
-
-
+projectComponentList();

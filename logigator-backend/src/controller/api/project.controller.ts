@@ -64,7 +64,7 @@ export class ProjectController {
 	@Get('/:projectId')
 	@UseBefore(CheckAuthenticatedApiMiddleware)
 	public async open(@Param('projectId') projectId: string, @CurrentUser() user: User) {
-		const project = await this.getOwnedProjectOrThrow(projectId, user);
+		const project = await this.projectRepo.getOwnedProjectOrThrow(projectId, user);
 		const dependencies = await this.projectDepRepo.find({
 			where: {
 				dependent: project
@@ -83,7 +83,7 @@ export class ProjectController {
 	@Put('/:projectId')
 	@UseBefore(CheckAuthenticatedApiMiddleware)
 	public async save(@Param('projectId') projectId: string, @CurrentUser() user: User, @Body() body: SaveProject) {
-		let project = await this.getOwnedProjectOrThrow(projectId, user);
+		let project = await this.projectRepo.getOwnedProjectOrThrow(projectId, user);
 
 		if (project.projectFile && project.projectFile.md5 !== body.oldHash)
 			throw new BadRequestError('VersionMismatch');
@@ -103,7 +103,7 @@ export class ProjectController {
 	@Delete('/:projectId')
 	@UseBefore(CheckAuthenticatedApiMiddleware)
 	public async delete(@Param('projectId') projectId: string, @CurrentUser() user: User) {
-		const project = await this.getOwnedProjectOrThrow(projectId, user);
+		const project = await this.projectRepo.getOwnedProjectOrThrow(projectId, user);
 
 		await this.projectRepo.remove(project);
 		return {
@@ -114,7 +114,7 @@ export class ProjectController {
 	@Patch('/:projectId')
 	@UseBefore(CheckAuthenticatedApiMiddleware)
 	public async update(@Param('projectId') projectId: string, @CurrentUser() user: User, @Body() body: UpdateProject) {
-		const project = await this.getOwnedProjectOrThrow(projectId, user);
+		const project = await this.projectRepo.getOwnedProjectOrThrow(projectId, user);
 
 		if (body.name)
 			project.name = body.name;
@@ -131,18 +131,6 @@ export class ProjectController {
 	@UseBefore(CheckAuthenticatedApiMiddleware)
 	public async clone(@Param('link') link: string, @CurrentUser() user: User) {
 		// TODO
-	}
-
-	private async getOwnedProjectOrThrow(projectId: string, user: User): Promise<Project> {
-		const project = await this.projectRepo.findOne({
-			where: {
-				id: projectId,
-				user: user
-			}
-		});
-		if (!project)
-			throw new NotFoundError('ResourceNotFound');
-		return project;
 	}
 
 	private async getProjectDependencies(

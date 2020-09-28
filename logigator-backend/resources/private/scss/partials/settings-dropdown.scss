@@ -1,6 +1,6 @@
 @include partial('settings-dropdown') {
 	position: absolute;
-	z-index: 200;
+	z-index: 1000;
 	width: max-content;
 	min-width: 20rem;
 	display: none;

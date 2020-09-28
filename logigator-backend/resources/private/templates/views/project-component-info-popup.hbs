@@ -1,0 +1,47 @@
+{{#> popup title=i18n.POPUP.PROJECT_COMP_INFO.TITLE  defaultOpen=true }}
+	<div class="view-project-component-info-popup">
+		<img src="https://api.logigator.com/images/thumbnails/d884a93d-9256-458b-b6cc-3fffd8fc4bdf" alt="Preview Image" class="view-project-component-info-popup__image">
+		<div class="view-project-component-info-popup__item">
+			<p>{{i18n.POPUP.PROJECT_COMP_INFO.NAME}}:</p>
+			<p>{{name}}</p>
+		</div>
+		<hr class="view-project-component-info-popup__hr">
+		<div class="view-project-component-info-popup__item">
+			<p>{{i18n.POPUP.PROJECT_COMP_INFO.CREATED}}:</p>
+			<p>{{createdOn}}</p>
+		</div>
+		<div class="view-project-component-info-popup__item">
+			<p>{{i18n.POPUP.PROJECT_COMP_INFO.MODIFIED}}:</p>
+			<p>{{lastEdited}}</p>
+		</div>
+		<hr class="view-project-component-info-popup__hr">
+		{{#if numInputs}}
+			<div class="view-project-component-info-popup__item">
+				<p>{{i18n.POPUP.PROJECT_COMP_INFO.INPUTS}}:</p>
+				<p>{{numInputs}}</p>
+			</div>
+		{{/if}}
+		{{#if numOutputs}}
+			<div class="view-project-component-info-popup__item">
+				<p>{{i18n.POPUP.PROJECT_COMP_INFO.OUTPUTS}}:</p>
+				<p>{{numOutputs}}</p>
+			</div>
+			<hr class="view-project-component-info-popup__hr">
+		{{/if}}
+		<div class="view-project-component-info-popup__item view-project-component-info-popup__streched">
+			<p>{{i18n.POPUP.PROJECT_COMP_INFO.DEPENDENCIES}}:</p>
+			<p>
+				{{#if (expr dependencies '!==' '')}}
+					{{dependencies}}
+				{{else}}
+					{{i18n.POPUP.PROJECT_COMP_INFO.NO_DEPENDENCIES}}
+				{{/if}}
+			</p>
+		</div>
+		<hr class="view-project-component-info-popup__hr">
+		<div class="view-project-component-info-popup__item view-project-component-info-popup__streched">
+			<p>{{i18n.POPUP.PROJECT_COMP_INFO.DESCRIPTION}}:</p>
+			<p>{{description}}</p>
+		</div>
+	</div>
+{{/popup}}

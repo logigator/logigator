@@ -236,13 +236,15 @@
 			"DESCRIPTION_ERR_MAX": "Bschreibung ist zu lang",
 			"SAVE": "SPEICHERN"
 		},
-		"COMP_INFO": {
+		"PROJECT_COMP_INFO": {
 			"TITLE": "Informationen",
 			"NAME": "Name",
 			"CREATED": "Erstellt",
 			"MODIFIED": "Zuletzt bearbeitet",
 			"INPUTS": "Eingänge",
 			"OUTPUTS": "Ausgänge",
+			"DEPENDENCIES": "Abhängigkeiten",
+			"NO_DEPENDENCIES": "keine",
 			"DESCRIPTION": "Beschreibung"
 		},
 		"PROJECT_DELETE": {

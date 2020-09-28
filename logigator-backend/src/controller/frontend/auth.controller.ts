@@ -7,7 +7,7 @@ import {Request} from 'express';
 import {CheckNotAuthenticatedFrontMiddleware} from '../../middleware/auth/frontend-guards/check-not-authenticated-front.middleware';
 import {CheckAuthenticatedFrontMiddleware} from '../../middleware/auth/frontend-guards/check-authenticated-front.middleware';
 import {LocalRegister} from '../../models/request/frontend/auth/local-register';
-import {FormErrorMiddleware} from '../../middleware/action/form-error.middleware';
+import {formErrorMiddleware} from '../../middleware/action/form-error.middleware';
 import {FormDataError} from '../../errors/form-data.error';
 import {UserService} from '../../services/user.service';
 import {Redirect, RedirectFunction} from '../../decorator/redirect.decorator';
@@ -21,7 +21,7 @@ export class AuthController {
 
 	@Post('/local-register')
 	@UseBefore(CheckNotAuthenticatedFrontMiddleware)
-	@UseAfter(FormErrorMiddleware)
+	@UseAfter(formErrorMiddleware())
 	public async localRegister(@Body() body: LocalRegister, @Session() sess: any, @Redirect() redirect: RedirectFunction) {
 		try {
 			if (await this.userService.createLocalUser(body.username, body.email, body.password, sess.preferences.lang)) {
@@ -38,13 +38,13 @@ export class AuthController {
 
 	@Post('/local-login')
 	@UseBefore(CheckNotAuthenticatedFrontMiddleware, LocalAuthenticationMiddleware)
-	@UseAfter(FormErrorMiddleware)
+	@UseAfter(formErrorMiddleware())
 	public localLogin(@Redirect() redirect: RedirectFunction) {
 		return redirect({ showInfoPopup: 'local-register'});
 	}
 
 	@Post('/resend-verification-mail')
-	@UseAfter(FormErrorMiddleware)
+	@UseAfter(formErrorMiddleware())
 	public async resendVerificationMail(@Body() body: ResendVerificationMail, @Session() sess: any, @Redirect() redirect: RedirectFunction) {
 		try {
 			await this.userService.resendVerificationMail(body.email, body.password, sess.preferences.lang);
@@ -65,7 +65,7 @@ export class AuthController {
 
 	@Get('/google-authenticate')
 	@UseBefore(CheckNotAuthenticatedFrontMiddleware, GoogleAuthenticationMiddleware)
-	@UseAfter(FormErrorMiddleware)
+	@UseAfter(formErrorMiddleware())
 	public googleAuthenticate() {
 	}
 
@@ -76,7 +76,7 @@ export class AuthController {
 
 	@Get('/twitter-authenticate')
 	@UseBefore(CheckNotAuthenticatedFrontMiddleware, TwitterAuthenticationMiddleware)
-	@UseAfter(FormErrorMiddleware)
+	@UseAfter(formErrorMiddleware())
 	public twitterAuthenticate() {
 	}
 
