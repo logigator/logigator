@@ -1,4 +1,9 @@
 @include partial('user-space-nav') {
+	position: fixed;
+	top: $header-height;
+	left: 0;
+	width: 100%;
+	height: $user-space-nav-height;
 
 	@include themify() {
 		background-color: themed('accent2');
@@ -12,17 +17,17 @@
 		margin: auto;
 		display: flex;
 		justify-content: space-around;
+		align-items: center;
 		flex-direction: row;
 
 		width: 100%;
+		height: 100%;
 		max-width: 70rem;
 	}
 
 	@include element('link') {
-		line-height: 3rem;
 		text-decoration: none;
 		font-size: 1.2rem;
-		margin-left: 1rem;
 
 		&:hover {
 			@include themify() {
