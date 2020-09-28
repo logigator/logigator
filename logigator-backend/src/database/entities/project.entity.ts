@@ -6,11 +6,13 @@ import {
 	ManyToOne,
 	OneToMany, OneToOne,
 	PrimaryGeneratedColumn,
-	UpdateDateColumn, VersionColumn
+	UpdateDateColumn
 } from 'typeorm';
 import {User} from './user.entity';
 import {ProjectFile} from './project-file.entity';
 import {ProjectFileRepository} from '../repositories/project-file.repository';
+import {ProjectDependency} from './project-dependency.entity';
+import {Expose} from 'class-transformer';
 
 @Entity()
 export class Project {
@@ -37,6 +39,7 @@ export class Project {
 	@ManyToOne(type => User, object => object.projects, {nullable: false})
 	user: Promise<User>;
 
+	@Expose({groups: ['showShareLinks']})
 	@Column()
 	@Generated('uuid')
 	link: string;
@@ -50,8 +53,8 @@ export class Project {
 	@OneToMany(type => Project, object => object.forkedFrom)
 	forks: Promise<Project[]>;
 
-	@VersionColumn()
-	version: number;
+	@OneToMany(type => ProjectDependency, object => object.dependent, {cascade: true})
+	dependencies: Promise<ProjectDependency[]>;
 
 	@BeforeRemove()
 	private async removeFile() {

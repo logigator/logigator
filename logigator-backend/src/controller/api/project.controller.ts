@@ -6,7 +6,7 @@ import {
 	HttpCode,
 	JsonController, NotFoundError,
 	Param, Patch,
-	Post, Put, QueryParam,
+	Post, Put, QueryParam, ResponseClassTransformOptions,
 	UseBefore,
 	UseInterceptor
 } from 'routing-controllers';
@@ -22,6 +22,10 @@ import {SaveProject} from '../../models/request/api/project/save-project';
 import {Project} from '../../database/entities/project.entity';
 import {UpdateProject} from '../../models/request/api/project/update-project';
 import {Like} from 'typeorm';
+import {Component} from '../../database/entities/component.entity';
+import {ComponentDependency} from '../../database/entities/component-dependency.entity';
+import {ProjectDependencyRepository} from '../../database/repositories/project-dependency.repository';
+import {classToPlain} from 'class-transformer';
 
 @JsonController('/api/project')
 @UseInterceptor(ApiInterceptor)
@@ -29,11 +33,13 @@ export class ProjectController {
 
 	constructor (
 		@InjectRepository() private projectRepo: ProjectRepository,
-		@InjectRepository() private userRepo: UserRepository
+		@InjectRepository() private userRepo: UserRepository,
+		@InjectRepository() private projectDepRepo: ProjectDependencyRepository
 	) {}
 
 	@Get('/')
 	@UseBefore(CheckAuthenticatedApiMiddleware)
+	@ResponseClassTransformOptions({groups: ['showShareLinks']})
 	public async list(@CurrentUser() user: User, @QueryParam('page') pageNr: number, @QueryParam('size') pageSize: number, @QueryParam('search') search: string) {
 		const page = await this.projectRepo.getPage(pageNr, pageSize, {
 			where: {
@@ -41,34 +47,37 @@ export class ProjectController {
 				...(search && {name: Like('%' + search + '%')})
 			}
 		});
-		return page.entries.map(entry => {
-			(entry.projectFile as any) = entry.projectFile?.publicUrl;
-			return entry;
-		});
+		return page;
 	}
 
 	@Post('/')
 	@HttpCode(201)
 	@UseBefore(CheckAuthenticatedApiMiddleware)
-	public async create(@Body() body: CreateProject, @CurrentUser() user: User) {
+	public create(@Body() body: CreateProject, @CurrentUser() user: User) {
 		const project = this.projectRepo.create();
 		project.name = body.name;
 		project.description = body.description;
 		project.user = Promise.resolve(user);
-		return {
-			id: (await this.projectRepo.save(project)).id
-		};
+		return this.projectRepo.save(project);
 	}
 
 	@Get('/:projectId')
 	@UseBefore(CheckAuthenticatedApiMiddleware)
 	public async open(@Param('projectId') projectId: string, @CurrentUser() user: User) {
 		const project = await this.getOwnedProjectOrThrow(projectId, user);
+		const dependencies = await this.projectDepRepo.find({
+			where: {
+				dependent: project
+			}
+		});
 
-		const content = await project.projectFile?.getFileContent();
-		if (!content)
-			return {};
-		return JSON.parse(content.toString());
+		const content = JSON.parse((await project.projectFile?.getFileContent()).toString()) || {elements: []};
+
+		return {
+			...classToPlain(project),
+			mappings: dependencies,
+			...content
+		};
 	}
 
 	@Put('/:projectId')
@@ -76,7 +85,7 @@ export class ProjectController {
 	public async save(@Param('projectId') projectId: string, @CurrentUser() user: User, @Body() body: SaveProject) {
 		let project = await this.getOwnedProjectOrThrow(projectId, user);
 
-		if (project.projectFile && project.projectFile.md5 !== body.hash)
+		if (project.projectFile && project.projectFile.md5 !== body.oldHash)
 			throw new BadRequestError('VersionMismatch');
 
 		if (!project.projectFile)
@@ -134,5 +143,20 @@ export class ProjectController {
 		if (!project)
 			throw new NotFoundError('ResourceNotFound');
 		return project;
+	}
+
+	private async getProjectDependencies(
+		project: Project | Component,
+		deps = new Map<string, ComponentDependency>()
+	): Promise<Map<string, ComponentDependency>> {
+		const dependencies = (await project.dependencies as ComponentDependency[]);
+		for (const dependency of dependencies) {
+			if (deps.has(dependency.dependency.id)) {
+				continue;
+			}
+			deps.set(dependency.dependency.id, dependency);
+			deps = await this.getProjectDependencies(dependency.dependency, deps);
+		}
+		return deps;
 	}
 }

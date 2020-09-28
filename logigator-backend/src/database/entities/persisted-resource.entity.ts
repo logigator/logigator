@@ -4,12 +4,15 @@ import * as path from 'path';
 import mime from 'mime';
 import md5 from 'md5';
 import { v4 as uuid } from 'uuid';
+import {Exclude, Expose} from 'class-transformer';
 
 export abstract class PersistedResource {
 
+	@Exclude({toPlainOnly: true})
 	@PrimaryGeneratedColumn('uuid')
 	readonly id: string;
 
+	@Exclude()
 	@Column({unique: true, name: 'filename'})
 	@Generated('uuid')
 	private _filename: string;
@@ -17,18 +20,27 @@ export abstract class PersistedResource {
 	@Column()
 	mimeType: string;
 
+	@Exclude()
 	@Column({type: 'char', length: 32, name: 'md5', default: '00000000000000000000000000000000'})
 	private _md5: string;
 
+	@Exclude()
 	private _fileContent: Buffer;
+
+	@Exclude()
 	private _dirty = false;
+
+	@Exclude()
 	protected _cacheable = false;
+
+	@Exclude()
 	protected _path = 'persisted';
 
 	public get filename(): string {
 		return this._filename;
 	}
 
+	@Expose()
 	public get md5(): string {
 		return this._md5;
 	}
@@ -81,6 +93,7 @@ export abstract class PersistedResource {
 		return path.join(__dirname, '..', '..', '..', 'resources', 'public', this._path, this._filename + '.' + mime.getExtension(this.mimeType));
 	}
 
+	@Expose()
 	public get publicUrl(): string {
 		return `/${this._path}/${this._filename}.${mime.getExtension(this.mimeType)}`;
 	}

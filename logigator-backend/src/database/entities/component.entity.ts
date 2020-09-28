@@ -11,6 +11,9 @@ import {
 import {User} from './user.entity';
 import {ComponentFile} from './component-file.entity';
 import {ComponentFileRepository} from '../repositories/component-file.repository';
+import {ComponentDependency} from './component-dependency.entity';
+import {ProjectDependency} from './project-dependency.entity';
+import {Exclude, Expose} from 'class-transformer';
 
 
 @Entity()
@@ -35,7 +38,7 @@ export class Component {
 	@JoinColumn()
 	componentFile: ComponentFile;
 
-	@Column()
+	@Column({length: 10})
 	symbol: string;
 
 	@Column()
@@ -47,9 +50,19 @@ export class Component {
 	@Column('simple-array')
 	labels: string[];
 
+	@OneToMany(type => ComponentDependency, object => object.dependent)
+	dependencies: Promise<ComponentDependency[]>;
+
+	@OneToMany(type => ComponentDependency, object => object.dependency)
+	dependencyForComponents: Promise<ComponentDependency[]>;
+
+	@OneToMany(type => ProjectDependency, object => object.dependency)
+	dependencyForProjects: Promise<ProjectDependency[]>;
+
 	@ManyToOne(type => User, object => object.components)
 	user: Promise<User>;
 
+	@Expose({groups: ['showShareLinks']})
 	@Column({nullable: false})
 	@Generated('uuid')
 	link: string;
@@ -62,9 +75,6 @@ export class Component {
 
 	@OneToMany(type => Component, object => object.forkedFrom)
 	forks: Promise<Component[]>;
-
-	@VersionColumn()
-	version: number;
 
 	@BeforeRemove()
 	private async removeFile() {

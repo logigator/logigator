@@ -10,5 +10,5 @@ export class SaveProject {
 
 	@IsString()
 	@IsNotEmpty()
-	hash: string;
+	oldHash: string;
 }

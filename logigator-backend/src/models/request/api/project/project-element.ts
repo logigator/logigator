@@ -1,6 +1,5 @@
 import {
-	ArrayMaxSize,
-	IsDefined,
+	ArrayMaxSize, ArrayMinSize,
 	IsInt,
 	IsNumber,
 	IsOptional,
@@ -38,7 +37,7 @@ export class ProjectElement {
 	/**
 	 * Position
 	 */
-	@IsDefined()
+	@ArrayMinSize(2)
 	@ArrayMaxSize(2)
 	@IsInt({each: true})
 	p: number[];
@@ -47,6 +46,7 @@ export class ProjectElement {
 	 * end-position
 	 */
 	@IsOptional()
+	@ArrayMinSize(2)
 	@ArrayMaxSize(2)
 	@IsInt({each: true})
 	q: number[];
@@ -54,22 +54,22 @@ export class ProjectElement {
 	/**
 	 * rotation
 	 */
+	@IsOptional()
 	@IsInt()
 	r: number;
 
-	@IsOptional()
-	@IsInt()
-	plugIndex: number;
-
+	/**
+	 * numerical data
+	 */
 	@IsOptional()
 	@ArrayMaxSize(64)
 	@IsNumber({}, {each: true})
-	options: number[];
+	n: number[];
 
 	/**
-	 * optional data
+	 * string data
 	 */
 	@IsOptional()
 	@MaxLength(32768)
-	d: string;
+	s: string;
 }
