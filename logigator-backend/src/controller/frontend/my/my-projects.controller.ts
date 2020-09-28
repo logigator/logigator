@@ -22,14 +22,16 @@ export class MyProjectsController {
 	@Render('my-projects')
 	@UseBefore(setTitleMiddleware('TITLE.PROJECTS'))
 	@UseBefore(CheckAuthenticatedFrontMiddleware)
-	public async myProjects(@QueryParam('page') pageNumber: number, @CurrentUser() user: User, @Session() session) {
+	public async myProjects(@QueryParam('page') pageNumber: number, @QueryParam('search') search: string, @CurrentUser() user: User, @Session() session) {
 		const page = await this.projectRepo.getPage(pageNumber ?? 0, 12, {
 			where: {
-				user: user
+				user: user,
+				...(search && {name: Like('%' + search + '%')})
 			}
 		});
 		return {
 			...this.pageToResponse(page, session.preferences.lang),
+			searchTerm: search,
 			viewScript: 'my-projects-comps'
 		};
 	}

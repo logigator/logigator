@@ -1,14 +1,15 @@
-function pagination() {
+function paginationAndSearch() {
 	const pageContainer = document.querySelector('.view-my-projects-comps__list');
 	const pageButtons = document.querySelectorAll('.view-my-projects-comps__page-button');
 	const pageButtonTargets = [0, 0, 0, 0, 0, 0, 0];
 
 	let searchTerm;
+	let currentPage;
 
 	function updatePagination() {
 		const projectCompList = document.querySelector('.partial-project-comp-list');
-		const currentPage = Number(Bem.data(projectCompList, 'current-page'));
 		const totalPages = Number(Bem.data(projectCompList, 'total-pages'));
+		currentPage = Number(Bem.data(projectCompList, 'current-page'));
 
 		pageButtonTargets[0] = currentPage > 0 ? 0 : undefined;
 		pageButtonTargets[1] = currentPage > 0 ? currentPage - 1 : undefined;
@@ -49,7 +50,7 @@ function pagination() {
 
 	}
 
-	function addButtonListeners() {
+	function addPageButtonListeners() {
 		pageButtons.forEach((button, index) => {
 			button.addEventListener('click', () => {
 				if (pageButtonTargets[index] !== undefined && !Bem.hasState(button, 'active')) {
@@ -59,11 +60,20 @@ function pagination() {
 		});
 	}
 
+	function addSearchListener() {
+		const searchInput = document.getElementById('view-my-projects-comps__search');
+		const debouncedListener = debounceFunction(() => {
+			searchTerm = searchInput.value;
+			navigate(0, searchTerm);
+		}, 400);
+		searchInput.addEventListener('input', debouncedListener);
+	}
+
 	async function navigate(page, search) {
 		const params = {
 			page
 		};
-		if (search !== undefined) {
+		if (search !== undefined && search !== '') {
 			params.search = search;
 		}
 
@@ -77,9 +87,10 @@ function pagination() {
 	}
 
 	updatePagination();
-	addButtonListeners();
+	addPageButtonListeners();
+	addSearchListener();
 }
-pagination();
+paginationAndSearch();
 
 
 

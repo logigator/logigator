@@ -37,6 +37,7 @@ gulp.task('scss:watch', function () {
 gulp.task('js:global-modern', function() {
 	return gulp.src([
 		path.join(__dirname, 'resources/private/js/bem.js'),
+		path.join(__dirname, 'resources/private/js/global-functions.js'),
 		path.join(__dirname, 'resources/private/js/global.js')
 	]).pipe(sourceMaps.init())
 		.pipe(concat('global-es2015.js'))
@@ -103,6 +104,7 @@ gulp.task('js:global-legacy', function() {
 		path.join(__dirname, 'node_modules', 'core-js-bundle', 'minified.js'),
 		path.join(__dirname, 'node_modules', 'regenerator-runtime', 'runtime.js'),
 		path.join(__dirname, 'resources/private/js/bem.js'),
+		path.join(__dirname, 'resources/private/js/global-functions.js'),
 		path.join(__dirname, 'resources/private/js/global.js')
 	]).pipe(sourceMaps.init())
 		.pipe(concat('global-es5.js'))

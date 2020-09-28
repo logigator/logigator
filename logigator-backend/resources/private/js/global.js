@@ -1,21 +1,3 @@
-// GLOBAL_FUNCTIONS ---------------------------------------------------------------------------------------
-
-/**
- * @param {boolean?} open toggle if undefined
- */
-function setBurgerMenuState(open) {
-	const burgerMenu = document.querySelector('.partial-burger-menu');
-	const burgerMenuBackground = document.querySelector('.partial-burger-menu__background');
-	if (open !== undefined) {
-		Bem.setState(burgerMenu, 'open', open);
-		Bem.setState(burgerMenuBackground, 'open', open);
-	} else {
-		open = !Bem.hasState(burgerMenu, 'open');
-		Bem.setState(burgerMenu, 'open', open);
-		Bem.setState(burgerMenuBackground, 'open', open);
-	}
-}
-
 // PARTIALS ---------------------------------------------------------------------------------------
 
 /**

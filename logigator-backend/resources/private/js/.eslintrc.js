@@ -11,7 +11,9 @@ module.exports = {
 		es6: true
 	},
 	globals: {
-		Bem: 'readonly'
+		Bem: 'readonly',
+		setBurgerMenuState: 'readonly',
+		debounceFunction: "readonly",
 	},
 	rules: {
 		'semi': [ 'error', 'always' ],
