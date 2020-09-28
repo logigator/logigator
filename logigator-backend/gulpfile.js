@@ -8,6 +8,7 @@ const terser = require('gulp-terser');
 const concat = require('gulp-concat');
 const cleanCSS = require('gulp-clean-css');
 const sourceMaps = require('gulp-sourcemaps');
+const rename = require("gulp-rename");
 
 
 gulp.task('scss:layouts', function() {
@@ -65,7 +66,37 @@ gulp.task('js:global-modern', function() {
 		.pipe(gulp.dest(path.join(__dirname, 'resources/public/js')));
 });
 
-gulp.task('js-modern', gulp.parallel(['js:global-modern']));
+gulp.task('js:views-modern', function() {
+	return gulp.src(path.join(__dirname, 'resources/private/js/views/**/*.js'))
+		.pipe(sourceMaps.init())
+		.pipe(rename({suffix: '-es2015'}))
+		.pipe(babel({
+			presets: [
+				['@babel/env', {
+					targets: {
+						browsers: [
+							'Edge >= 16',
+							'Firefox >= 60',
+							'Chrome >= 61',
+							'Safari >= 11',
+							'Opera >= 48'
+						]
+					}
+				}]
+			],
+		}))
+		.on('error', function(err) {
+			console.error(err.message);
+			this.emit('end');
+		})
+		.pipe(terser({
+			ecma: 2015
+		}))
+		.pipe(sourceMaps.write('./'))
+		.pipe(gulp.dest(path.join(__dirname, 'resources/public/js/views')));
+});
+
+gulp.task('js-modern', gulp.parallel(['js:global-modern', 'js:views-modern']));
 
 gulp.task('js:global-legacy', function() {
 	return gulp.src([
@@ -98,7 +129,34 @@ gulp.task('js:global-legacy', function() {
 		.pipe(gulp.dest(path.join(__dirname, 'resources/public/js')));
 });
 
-gulp.task('js-legacy', gulp.parallel(['js:global-legacy']));
+gulp.task('js:views-legacy', function() {
+	return gulp.src(path.join(__dirname, 'resources/private/js/views/**/*.js'))
+		.pipe(sourceMaps.init())
+		.pipe(rename({suffix: '-es5'}))
+		.pipe(babel({
+			presets: [
+				['@babel/env', {
+					targets: {
+						browsers: [
+							'> 0.5%',
+						]
+					}
+				}]
+			],
+		}))
+		.on('error', function(err) {
+			console.error(err.message);
+			this.emit('end');
+		})
+		.pipe(terser({
+			ecma: 5,
+			safari10: true
+		}))
+		.pipe(sourceMaps.write('./'))
+		.pipe(gulp.dest(path.join(__dirname, 'resources/public/js/views')));
+});
+
+gulp.task('js-legacy', gulp.parallel(['js:global-legacy', 'js:views-legacy']));
 
 gulp.task('js:watch', function () {
 	gulp.watch(path.join(__dirname, 'resources/private/js/**/*.js'), (done) => {

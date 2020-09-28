@@ -42,5 +42,9 @@
 		{{> info-popups }}
 		{{scriptTag url='/js/global-es2015.js' type='module' }}
 		{{scriptTag url='/js/global-es5.js' type='nomodule' }}
+		{{#if viewScript}}
+			{{scriptTag url=(concat '/js/views/' viewScript '-es2015.js') type='module' }}
+			{{scriptTag url=(concat '/js/views/' viewScript '-es5.js') type='nomodule' }}
+		{{/if}}
 	</body>
 </html>

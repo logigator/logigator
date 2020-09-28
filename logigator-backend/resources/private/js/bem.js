@@ -1,4 +1,4 @@
-const Bem = {
+window.Bem = {
 
     /**
      * @param {Element} node
