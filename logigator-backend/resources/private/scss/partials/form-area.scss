@@ -1,0 +1,25 @@
+@include partial('form-area') {
+	display: flex;
+	flex-direction: column;
+	margin-top: 2rem;
+	margin-bottom: 1.5rem;
+
+	@include element('label') {
+		margin-bottom: 0.2rem;
+		font-size: 1rem;
+	}
+
+	@include element('area') {
+		min-width: 100%;
+		max-width: 100%;
+		min-height: 150px;
+		padding: 0.25rem;
+		font-size: 0.9rem;
+
+		@include themify(){
+			background-color: themed('background');
+			border: 1px solid themed('text-primary');
+			color: themed('text-primary');
+		}
+	}
+}
