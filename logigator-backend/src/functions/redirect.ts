@@ -3,13 +3,13 @@ import {Request, Response} from 'express';
 export function redirect(req: Request, res: Response, options?: RedirectFuncOptions): Response {
 	if (!options) {
 		options = {
-			target: req.get('Referer') ?? `/${req.session.preferences.lang}`
+			target: req.get('Referer') ?? `/${req.cookies.preferences.lang}`
 		};
 	} else {
 		if (options.target) {
-			options.target = `/${req.session.preferences.lang}${options.target}`;
+			options.target = `/${req.cookies.preferences.lang}${options.target}`;
 		} else {
-			options.target = req.get('Referer') ?? `/${req.session.preferences.lang}`;
+			options.target = req.get('Referer') ?? `/${req.cookies.preferences.lang}`;
 		}
 		if (options.showInfoPopup) {
 			req.session.infoPopup = {

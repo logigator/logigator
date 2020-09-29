@@ -55,11 +55,25 @@ export class MyProjectsController {
 
 		(project.lastEdited as any) = this.translationService.dateFormatDateTime(project.lastEdited, preferences.lang);
 		(project.createdOn as any) = this.translationService.dateFormatDateTime(project.lastEdited, preferences.lang);
+
+		// to be used only for components
 		(project as any).numInputs = '0';
 		(project as any).numOutputs = '1'; // cast to string because of 0 problem
+		(project as any).symbol = '145ke';
 		return {
 			...project,
 			dependencies,
+			layout: false
+		};
+	}
+
+	@Get('/edit-popup/:id')
+	@Render('project-component-edit-popup')
+	@UseBefore(CheckAuthenticatedFrontMiddleware)
+	public async editPopup(@Param('id') id: string, @CurrentUser() user: User) {
+		return {
+			...(await this.projectRepo.getOwnedProjectOrThrow(id, user)),
+			type: 'project',
 			layout: false
 		};
 	}

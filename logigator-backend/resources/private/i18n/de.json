@@ -222,18 +222,17 @@
 			"SYMBOL_PATTERN": "Symbol ist ungültig",
 			"CREATE": "ERSTELLEN"
 		},
-		"COMP_EDIT": {
-			"TITLE": "Komponente bearbeiten"
-		},
-		"PROJECT_EDIT": {
-			"TITLE": "Projekt bearbeiten",
+		"PROJECT_COMP_EDIT": {
+			"PROJECT_TITLE": "Projekt bearbeiten",
+			"COMP_TITLE": "Komponente bearbeiten",
 			"NAME": "Name",
-			"NAME_ERR_REQUIRED": "Name muss angegeben werden",
-			"NAME_ERR_MIN": "Name ist zu kurz",
-			"NAME_ERR_MAX": "Name ist zu lang",
-			"NAME_ERR_PATTERN": "Darf nur Buchstaben, Zahlen, Untersctriche und Bindestriche enthalten",
+			"NAME_ERR_REQUIRED": "Name muss angegeben werden.",
+			"NAME_ERR_MAX": "Name ist zu lang.",
 			"DESCRIPTION": "Bschreibung",
-			"DESCRIPTION_ERR_MAX": "Bschreibung ist zu lang",
+			"DESCRIPTION_ERR_MAX": "Bschreibung ist zu lang.",
+			"SYMBOL": "Symbol",
+			"SYMBOL_ERR_REQUIRED": "Symbol muss angegeben werden.",
+			"SYMBOL_ERR_MAX": "Symbol ist zu lang.",
 			"SAVE": "SPEICHERN"
 		},
 		"PROJECT_COMP_INFO": {
@@ -243,6 +242,7 @@
 			"MODIFIED": "Zuletzt bearbeitet",
 			"INPUTS": "Eingänge",
 			"OUTPUTS": "Ausgänge",
+			"SYMBOL": "Symbol",
 			"DEPENDENCIES": "Abhängigkeiten",
 			"NO_DEPENDENCIES": "keine",
 			"DESCRIPTION": "Beschreibung"

@@ -3,7 +3,7 @@ import {HelperDelegate, createFrame, HelperOptions} from 'handlebars';
 export function formNameScopeHelper(): HelperDelegate {
 	return function(action: string, namePrefix: string, options: HelperOptions) {
 		if (arguments.length < 2) {
-			throw new Error('handlebars Helper {{formNameScope}} expects 1 or 2 argument string (action)');
+			throw new Error('handlebars Helper {{formNameScope}} expects 1 or 2 arguments string (action)');
 		}
 		if (arguments.length === 2) {
 			options = namePrefix as any as HelperOptions;

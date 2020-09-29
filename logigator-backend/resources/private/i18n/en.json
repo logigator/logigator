@@ -222,18 +222,17 @@
 			"SYMBOL_PATTERN": "Symbol is invalid.",
 			"CREATE": "SAVE"
 		},
-		"COMP_EDIT": {
-			"TITLE": "Edit Component"
-		},
-		"PROJECT_EDIT": {
-			"TITLE": "Edit Project",
+		"PROJECT_COMP_EDIT": {
+			"PROJECT_TITLE": "Edit Project",
+			"COMP_TITLE": "Edit Component",
 			"NAME": "Name",
 			"NAME_ERR_REQUIRED": "Name is required",
-			"NAME_ERR_MIN": "Name is to short",
 			"NAME_ERR_MAX": "Name is to long",
-			"NAME_ERR_PATTERN": "May only contain letters, digits, underscores and dashes",
 			"DESCRIPTION": "Description",
 			"DESCRIPTION_ERR_MAX": "Description is too long",
+			"SYMBOL": "Symbol",
+			"SYMBOL_ERR_REQUIRED": "Symbol is required",
+			"SYMBOL_ERR_MAX": "Symbol is to long",
 			"SAVE": "SAVE"
 		},
 		"PROJECT_COMP_INFO": {
@@ -243,6 +242,7 @@
 			"MODIFIED": "Last modified",
 			"INPUTS": "Inputs",
 			"OUTPUTS": "Outputs",
+			"SYMBOL": "Symbol",
 			"DEPENDENCIES": "Dependencies",
 			"NO_DEPENDENCIES": "N/A",
 			"DESCRIPTION": "Description"
