@@ -3,6 +3,7 @@ import {PersistedResource} from './persisted-resource.entity';
 import {Component} from './component.entity';
 import {Exclude} from 'class-transformer';
 
+@Exclude({toPlainOnly: true})
 @Entity()
 export class ComponentFile extends PersistedResource {
 

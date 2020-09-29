@@ -6,34 +6,29 @@ import md5 from 'md5';
 import { v4 as uuid } from 'uuid';
 import {Exclude, Expose} from 'class-transformer';
 
+@Exclude({toPlainOnly: true})
 export abstract class PersistedResource {
 
-	@Exclude({toPlainOnly: true})
 	@PrimaryGeneratedColumn('uuid')
 	readonly id: string;
 
-	@Exclude()
 	@Column({unique: true, name: 'filename'})
 	@Generated('uuid')
 	private _filename: string;
 
+	@Expose()
 	@Column()
 	mimeType: string;
 
-	@Exclude()
 	@Column({type: 'char', length: 32, name: 'md5', default: '00000000000000000000000000000000'})
 	private _md5: string;
 
-	@Exclude()
 	private _fileContent: Buffer;
 
-	@Exclude()
 	private _dirty = false;
 
-	@Exclude()
 	protected _cacheable = false;
 
-	@Exclude()
 	protected _path = 'persisted';
 
 	public get filename(): string {

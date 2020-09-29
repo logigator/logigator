@@ -71,7 +71,8 @@ export class ProjectController {
 			}
 		});
 
-		const content = JSON.parse((await project.projectFile?.getFileContent()).toString()) || {elements: []};
+		const rawContent = await project.projectFile?.getFileContent();
+		const content: ProjectFile = rawContent ? JSON.parse(rawContent.toString()) : {elements: []};
 
 		return {
 			...classToPlain(project),

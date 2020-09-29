@@ -3,9 +3,9 @@ import {Component} from './component.entity';
 import {Project} from './project.entity';
 import {Exclude, Expose, Transform} from 'class-transformer';
 
+@Exclude({toPlainOnly: true})
 @Entity()
 export class ProjectDependency {
-	@Exclude({toPlainOnly: true})
 	@ManyToOne(type => Project, object => object.dependencies, {
 		primary: true,
 		eager: true,
@@ -14,8 +14,8 @@ export class ProjectDependency {
 	})
 	dependent: Project;
 
-	@Transform((x: Component) => x.id, {toPlainOnly: true})
-	@Expose({name: 'uuid', toPlainOnly: true})
+	@Expose({name: 'uuid'})
+	@Transform((x: Component) => x.id)
 	@ManyToOne(type => Component, object => object.dependencyForProjects, {
 		primary: true,
 		eager: true,
@@ -24,7 +24,7 @@ export class ProjectDependency {
 	})
 	dependency: Component;
 
-	@Expose({name: 'model', toPlainOnly: true})
-	@Column()
+	@Expose({name: 'model'})
+	@Column({nullable: false})
 	model_id: number;
 }

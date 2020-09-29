@@ -2,9 +2,9 @@ import {Column, Entity, ManyToMany, ManyToOne, PrimaryColumn} from 'typeorm';
 import {Component} from './component.entity';
 import {Exclude, Expose, Transform} from 'class-transformer';
 
+@Exclude({toPlainOnly: true})
 @Entity()
 export class ComponentDependency {
-	@Exclude({toPlainOnly: true})
 	@ManyToOne(type => Component, object => object.dependencies, {
 		primary: true,
 		eager: true,
@@ -13,8 +13,8 @@ export class ComponentDependency {
 	})
 	dependent: Component;
 
-	@Transform((x: Component) => x.id, {toPlainOnly: true})
-	@Expose({name: 'uuid', toPlainOnly: true})
+	@Expose({name: 'uuid'})
+	@Transform((x: Component) => x.id)
 	@ManyToOne(type => Component, object => object.dependencyForComponents, {
 		primary: true,
 		eager: true,
@@ -23,7 +23,7 @@ export class ComponentDependency {
 	})
 	dependency: Component;
 
-	@Expose({name: 'model', toPlainOnly: true})
+	@Expose({name: 'model'})
 	@Column({nullable: false})
 	model_id: number;
 }

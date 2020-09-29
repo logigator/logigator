@@ -14,11 +14,15 @@ export class ApiInterceptor implements InterceptorInterface {
 		Object.keys(data)
 			.filter(x => x.startsWith('__') && x.endsWith('__'))
 			.forEach(x => {
-				if (!x.startsWith('__has_'))
-					data[x.replace(/_/g, '') + ''] = data[x];
-				// delete data[x];
+				if (!x.startsWith('__has_')) {
+					const key = x.replace(/_/g, '');
+					Object.defineProperty(data, key, {
+						value: data[x],
+						enumerable: true
+					});
+				}
+				delete data[x];
 			});
-		console.log(data);
 		return data;
 	}
 }
