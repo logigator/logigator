@@ -1,6 +1,7 @@
 import {ExpressMiddlewareInterface, Middleware} from 'routing-controllers';
 import {Request, Response} from 'express';
 import {TranslationService} from '../../services/translation.service';
+import {updatePreferences} from '../../functions/update-preferences';
 
 @Middleware({type: 'before'})
 export class TranslationMiddleware implements ExpressMiddlewareInterface {
@@ -20,7 +21,10 @@ export class TranslationMiddleware implements ExpressMiddlewareInterface {
 				rewrittenUrl = '/' + rewrittenUrl;
 			}
 			request.url = rewrittenUrl;
-			request.session.preferences.lang = langMatches[1];
+
+			updatePreferences(request, response, {
+				lang: langMatches[1]
+			});
 		}
 		next();
 	}

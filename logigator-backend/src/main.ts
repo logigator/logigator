@@ -19,7 +19,7 @@ import connectRedis from 'connect-redis';
 import {RedisService} from './services/redis.service';
 import {PreferencesController} from './controller/frontend/preferences.controller';
 import {NotFoundMiddleware} from './middleware/global/not-found.middleware';
-import {DefaultSessionMiddleware} from './middleware/global/default-session.middleware';
+import {DefaultPreferencesMiddleware} from './middleware/global/default-preferences.middleware';
 import {GlobalViewDataMiddleware} from './middleware/global/global-view-data.middleware';
 import {UserDataMiddleware} from './middleware/global/user-data.middleware';
 import {handlebarsHelpers} from './handlebars-helper/helpers';
@@ -63,7 +63,7 @@ async function bootstrap() {
 
 	app.use(compression());
 	app.use(urlencoded({ extended: false }));
-	app.use(cookieParser());
+	app.use(cookieParser(configService.getConfig('session').secret));
 	app.use(session({
 		secret: configService.getConfig('session').secret,
 		resave: false,
@@ -93,7 +93,7 @@ async function bootstrap() {
 			ProjectController
 		],
 		middlewares: [
-			DefaultSessionMiddleware,
+			DefaultPreferencesMiddleware,
 			TranslationMiddleware,
 			GlobalViewDataMiddleware,
 			UserDataMiddleware,

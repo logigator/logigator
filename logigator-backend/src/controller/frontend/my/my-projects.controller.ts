@@ -1,23 +1,13 @@
-import {
-	Controller,
-	CurrentUser,
-	Get,
-	Param,
-	QueryParam,
-	Render,
-	Session,
-	UseBefore
-} from 'routing-controllers';
+import {Controller, CurrentUser, Get, Param, QueryParam, Render, UseBefore} from 'routing-controllers';
 import {setTitleMiddleware} from '../../../middleware/action/set-title-middleware';
 import {TranslationService} from '../../../services/translation.service';
 import {CheckAuthenticatedFrontMiddleware} from '../../../middleware/auth/frontend-guards/check-authenticated-front.middleware';
 import {InjectRepository} from 'typeorm-typedi-extensions';
 import {ProjectRepository} from '../../../database/repositories/project.repository';
 import {User} from '../../../database/entities/user.entity';
-import {Like} from 'typeorm';
-import {Page} from '../../../database/repositories/pageable.repository';
-import {Project} from '../../../database/entities/project.entity';
 import {ProjectDependencyRepository} from '../../../database/repositories/project-dependency.repository';
+import {Preferences} from '../../../decorator/preferences.decorator';
+import {UserPreferences} from '../../../models/user-preferences';
 
 @Controller('/my/projects')
 export class MyProjectsController {
@@ -32,9 +22,9 @@ export class MyProjectsController {
 	@Render('my-projects')
 	@UseBefore(setTitleMiddleware('TITLE.PROJECTS'))
 	@UseBefore(CheckAuthenticatedFrontMiddleware)
-	public async myProjects(@QueryParam('page') pageNumber: number, @QueryParam('search') search: string, @CurrentUser() user: User, @Session() session) {
+	public async myProjects(@QueryParam('page') pageNumber: number, @QueryParam('search') search: string, @CurrentUser() user: User, @Preferences() preferences: UserPreferences) {
 		return {
-			...(await this.getProjectsPage(pageNumber, search, user, session.preferences.lang)),
+			...(await this.getProjectsPage(pageNumber, search, user, preferences.lang)),
 			searchTerm: search,
 			viewScript: 'my-projects-comps'
 		};
@@ -43,9 +33,9 @@ export class MyProjectsController {
 	@Get('/page')
 	@Render('my-projects-page')
 	@UseBefore(CheckAuthenticatedFrontMiddleware)
-	public async myProjectsPage(@QueryParam('page') pageNumber = 0, @QueryParam('search') search: string, @CurrentUser() user: User, @Session() session) {
+	public async myProjectsPage(@QueryParam('page') pageNumber = 0, @QueryParam('search') search: string, @CurrentUser() user: User, @Preferences() preferences: UserPreferences) {
 		return {
-			...(await this.getProjectsPage(pageNumber, search, user, session.preferences.lang)),
+			...(await this.getProjectsPage(pageNumber, search, user, preferences.lang)),
 			layout: false
 		};
 	}
@@ -53,7 +43,7 @@ export class MyProjectsController {
 	@Get('/info/:id')
 	@Render('project-component-info-popup')
 	@UseBefore(CheckAuthenticatedFrontMiddleware)
-	public async infoPopup(@Param('id') id: string, @CurrentUser() user: User, @Session() session) {
+	public async infoPopup(@Param('id') id: string, @CurrentUser() user: User, @Preferences() preferences: UserPreferences) {
 		const project = await this.projectRepo.getOwnedProjectOrThrow(id, user);
 		const dependencies = (await this.projectDepRepo.find({
 			where: {
@@ -63,8 +53,8 @@ export class MyProjectsController {
 			return prev + ', ' + cur.dependency.name;
 		}, '');
 
-		(project.lastEdited as any) = this.translationService.dateFormatDateTime(project.lastEdited, session.preferences.lang);
-		(project.createdOn as any) = this.translationService.dateFormatDateTime(project.lastEdited, session.preferences.lang);
+		(project.lastEdited as any) = this.translationService.dateFormatDateTime(project.lastEdited, preferences.lang);
+		(project.createdOn as any) = this.translationService.dateFormatDateTime(project.lastEdited, preferences.lang);
 		(project as any).numInputs = '0';
 		(project as any).numOutputs = '1'; // cast to string because of 0 problem
 		return {

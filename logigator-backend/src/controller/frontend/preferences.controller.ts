@@ -1,10 +1,11 @@
-import {Body, Controller, Post, Req, Res, Session} from 'routing-controllers';
+import {Body, Controller, Post, Req, Res} from 'routing-controllers';
 import {SetLanguage} from '../../models/request/frontend/preferences/set-language';
 import {SetTheme} from '../../models/request/frontend/preferences/set-theme';
 import {TranslationService} from '../../services/translation.service';
 import {Referer} from '../../decorator/referer.decorator';
 import {Request, Response} from 'express';
 import {Redirect, RedirectFunction} from '../../decorator/redirect.decorator';
+import {updatePreferences} from '../../functions/update-preferences';
 
 @Controller('/preferences')
 export class PreferencesController {
@@ -12,8 +13,10 @@ export class PreferencesController {
 	constructor(private translationService: TranslationService) {}
 
 	@Post('/set-lang')
-	public setLanguage(@Body() body: SetLanguage, @Session() sess: any, @Req() req: Request, @Res() res: Response, @Referer() ref: string) {
-		sess.preferences.lang = body.lang;
+	public setLanguage(@Body() body: SetLanguage, @Req() req: Request, @Res() res: Response, @Referer() ref: string) {
+		updatePreferences(req, res, {
+			lang: body.lang
+		});
 
 		let redirectTarget = ref.replace(`${req.protocol}://${req.hostname}`, '');
 		if (redirectTarget === '/') {
@@ -26,8 +29,10 @@ export class PreferencesController {
 	}
 
 	@Post('/set-theme')
-	public setTheme(@Body() body: SetTheme, @Session() session: any, @Redirect() redirect: RedirectFunction) {
-		session.preferences.theme = body.dark_mode === 'on' ? 'dark' : 'light';
+	public setTheme(@Body() body: SetTheme, @Req() req: Request, @Res() res: Response, @Redirect() redirect: RedirectFunction) {
+		updatePreferences(req, res, {
+			theme: body.dark_mode === 'on' ? 'dark' : 'light'
+		});
 		return redirect();
 	}
 

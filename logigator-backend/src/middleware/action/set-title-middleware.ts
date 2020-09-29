@@ -7,7 +7,7 @@ export function setTitleMiddleware(title: string) {
 	const translationService = Container.get(TranslationService);
 
 	return function (request: Request, response: Response, next: (err?: any) => any): any {
-		response.locals.pageTitle = translationService.getTranslation(title, request.session.preferences.lang);
+		response.locals.pageTitle = translationService.getTranslation(title, request.cookies.preferences.lang);
 		next();
 	};
 

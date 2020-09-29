@@ -1,4 +1,4 @@
-import {Body, Controller, Get, Post, Req, Session, UseAfter, UseBefore} from 'routing-controllers';
+import {Body, Controller, Get, Post, Req, UseAfter, UseBefore} from 'routing-controllers';
 import {GoogleLoginMiddleware} from '../../middleware/auth/google-login.middleware';
 import {GoogleAuthenticationMiddleware} from '../../middleware/auth/google-authentication.middleware';
 import {TwitterLoginMiddleware} from '../../middleware/auth/twitter-login.middleware';
@@ -13,6 +13,8 @@ import {UserService} from '../../services/user.service';
 import {Redirect, RedirectFunction} from '../../decorator/redirect.decorator';
 import {LocalAuthenticationMiddleware} from '../../middleware/auth/local-authentication.middleware';
 import {ResendVerificationMail} from '../../models/request/frontend/auth/resend-verification-mail';
+import {Preferences} from '../../decorator/preferences.decorator';
+import {UserPreferences} from '../../models/user-preferences';
 
 @Controller('/auth')
 export class AuthController {
@@ -22,9 +24,9 @@ export class AuthController {
 	@Post('/local-register')
 	@UseBefore(CheckNotAuthenticatedFrontMiddleware)
 	@UseAfter(formErrorMiddleware())
-	public async localRegister(@Body() body: LocalRegister, @Session() sess: any, @Redirect() redirect: RedirectFunction) {
+	public async localRegister(@Body() body: LocalRegister, @Preferences() preferences: UserPreferences, @Redirect() redirect: RedirectFunction) {
 		try {
-			if (await this.userService.createLocalUser(body.username, body.email, body.password, sess.preferences.lang)) {
+			if (await this.userService.createLocalUser(body.username, body.email, body.password, preferences.lang)) {
 				return redirect({ showInfoPopup: 'local-register'});
 			}
 		} catch (err) {
@@ -45,9 +47,9 @@ export class AuthController {
 
 	@Post('/resend-verification-mail')
 	@UseAfter(formErrorMiddleware())
-	public async resendVerificationMail(@Body() body: ResendVerificationMail, @Session() sess: any, @Redirect() redirect: RedirectFunction) {
+	public async resendVerificationMail(@Body() body: ResendVerificationMail, @Preferences() preferences: UserPreferences, @Redirect() redirect: RedirectFunction) {
 		try {
-			await this.userService.resendVerificationMail(body.email, body.password, sess.preferences.lang);
+			await this.userService.resendVerificationMail(body.email, body.password, preferences.lang);
 		} catch (err) {
 			if (err.message === 'verification_mail') {
 				throw new FormDataError(body, undefined, 'verificationMail');
@@ -82,7 +84,7 @@ export class AuthController {
 
 	@Get('/logout')
 	@UseBefore(CheckAuthenticatedFrontMiddleware)
-	public logout(@Session() sess: any, @Req() request: Request, @Redirect() redirect: RedirectFunction) {
+	public logout(@Req() request: Request, @Redirect() redirect: RedirectFunction) {
 		request.logout();
 		return redirect({target: '/'});
 	}
