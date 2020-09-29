@@ -12,16 +12,16 @@ export class ApiInterceptor implements InterceptorInterface {
 
 	private static applyORMCache(data: any): any {
 		Object.keys(data)
-			.filter(x => x.startsWith('__') && x.endsWith('__'))
-			.forEach(x => {
-				if (!x.startsWith('__has_')) {
-					const key = x.replace(/_/g, '');
-					Object.defineProperty(data, key, {
-						value: data[x],
+			.filter(key => key.startsWith('__') && key.endsWith('__'))
+			.forEach(key => {
+				if (!key.startsWith('__has_')) {
+					const keyToDefine = key.replace(/_/g, '');
+					Object.defineProperty(data, keyToDefine, {
+						value: data[keyToDefine],
 						enumerable: true
 					});
 				}
-				delete data[x];
+				delete data[key];
 			});
 		return data;
 	}

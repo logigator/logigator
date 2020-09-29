@@ -1,7 +1,7 @@
-import {EntityRepository} from 'typeorm';
+import {EntityRepository, Like} from 'typeorm';
 import {Service} from 'typedi';
 import {Project} from '../entities/project.entity';
-import {PageableRepository} from './pageable.repository';
+import {Page, PageableRepository} from './pageable.repository';
 import {User} from '../entities/user.entity';
 import {NotFoundError} from 'routing-controllers';
 
@@ -20,5 +20,15 @@ export class ProjectRepository extends PageableRepository<Project> {
 			throw new NotFoundError('ResourceNotFound');
 		return project;
 	}
+
+	public async getProjectPageForUser(pageNr: number, pageSize: number, user: User, search?: string): Promise<Page<Project>> {
+		return this.getPage(pageNr, pageSize, {
+			where: {
+				user: user,
+				...(search && {name: Like('%' + search + '%')})
+			}
+		});
+	}
+
 
 }

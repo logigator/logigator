@@ -75,12 +75,7 @@ export class MyProjectsController {
 	}
 
 	private async getProjectsPage(pageNumber: number, search: string, user: User, language: string): Promise<any> {
-		const page = await this.projectRepo.getPage(pageNumber ?? 0, 12, {
-			where: {
-				user: user,
-				...(search && {name: Like('%' + search + '%')})
-			}
-		});
+		const page = await this.projectRepo.getProjectPageForUser(pageNumber ?? 0, 12, user, search);
 
 		const entries = page.entries.map(entry => {
 			(entry.lastEdited as any) = this.translationService.dateFormatDate(entry.lastEdited, language);

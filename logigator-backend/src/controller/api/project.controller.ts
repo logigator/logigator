@@ -41,13 +41,7 @@ export class ProjectController {
 	@UseBefore(CheckAuthenticatedApiMiddleware)
 	@ResponseClassTransformOptions({groups: ['showShareLinks']})
 	public async list(@CurrentUser() user: User, @QueryParam('page') pageNr: number, @QueryParam('size') pageSize: number, @QueryParam('search') search: string) {
-		const page = await this.projectRepo.getPage(pageNr, pageSize, {
-			where: {
-				user: user,
-				...(search && {name: Like('%' + search + '%')})
-			}
-		});
-		return page;
+		return this.projectRepo.getProjectPageForUser(pageNr, pageSize, user, search);
 	}
 
 	@Post('/')

@@ -154,14 +154,9 @@ export class UserService {
 		if (!user)
 			return false;
 
-		console.log(user);
 		user.localEmailVerificationCode = null;
 		await this.userRepo.save(user);
 		return true;
-	}
-
-	public async getUserById(id: string): Promise<User> {
-		return this.userRepo.findOne(id);
 	}
 
 }

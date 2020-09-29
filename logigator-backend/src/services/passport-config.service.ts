@@ -6,11 +6,17 @@ import {User} from '../database/entities/user.entity';
 import {UserService} from './user.service';
 import {Strategy as TwitterStrategy} from 'passport-twitter';
 import {Strategy as LocalStrategy} from 'passport-local';
+import {InjectRepository} from 'typeorm-typedi-extensions';
+import {UserRepository} from '../database/repositories/user.repository';
 
 @Service()
 export class PassportConfigService {
 
-	constructor(private configService: ConfigService, private userService: UserService) {}
+	constructor(
+		private configService: ConfigService,
+		private userService: UserService,
+		@InjectRepository() private userRepo: UserRepository
+	) {}
 
 	public setupPassport() {
 		this.setupGoogle();
@@ -24,7 +30,7 @@ export class PassportConfigService {
 			done(null, user.id);
 		});
 		passport.deserializeUser(async (id: string, done) => {
-			const user = await this.userService.getUserById(id);
+			const user = await this.userRepo.findOne(id);
 			done(null, user);
 		});
 	}
