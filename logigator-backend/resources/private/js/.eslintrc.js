@@ -14,6 +14,7 @@ module.exports = {
 		Bem: 'readonly',
 		setBurgerMenuState: 'readonly',
 		debounceFunction: "readonly",
+		startFormValidation: 'readonly',
 		openDynamicPopup: 'readonly'
 	},
 	rules: {

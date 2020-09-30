@@ -180,7 +180,7 @@
 
 	@include element('list-item-name') {
 		flex-grow: 1;
-		padding: 1rem 0;
+		padding: 1rem 0 1rem 0.25rem;
 		text-decoration: none;
 	}
 
