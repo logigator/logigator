@@ -4,6 +4,10 @@ import {ValidationError} from 'class-validator';
 import {FormDataError} from '../../errors/form-data.error';
 import {redirect} from '../../functions/redirect';
 
+/**
+ *
+ * @param redirectTargetFunc should return redirect target on error
+ */
 export function formErrorMiddleware(redirectTargetFunc?: (request: Request, response: Response) => string) {
 
 	return function (error: any, request: Request, response: Response, next: (err?: any) => any) {

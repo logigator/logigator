@@ -15,19 +15,15 @@
 			<p>{{lastEdited}}</p>
 		</div>
 		<hr class="view-project-component-info-popup__hr">
-		{{#if numInputs}}
+		{{#if (expr type '===' 'component')}}
 			<div class="view-project-component-info-popup__item">
 				<p>{{i18n.POPUP.PROJECT_COMP_INFO.INPUTS}}:</p>
 				<p>{{numInputs}}</p>
 			</div>
-		{{/if}}
-		{{#if numOutputs}}
 			<div class="view-project-component-info-popup__item">
 				<p>{{i18n.POPUP.PROJECT_COMP_INFO.OUTPUTS}}:</p>
 				<p>{{numOutputs}}</p>
 			</div>
-		{{/if}}
-		{{#if symbol}}
 			<div class="view-project-component-info-popup__item">
 				<p>{{i18n.POPUP.PROJECT_COMP_INFO.SYMBOL}}:</p>
 				<p>{{symbol}}</p>
