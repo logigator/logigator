@@ -40,7 +40,6 @@ export class Project {
 
 	@Expose()
 	@OneToOne(type => ProjectFile, projectFile => projectFile.project, {cascade: true, eager: true})
-	@JoinColumn()
 	projectFile: ProjectFile;
 
 	@ManyToOne(type => User, object => object.projects, {nullable: false})
