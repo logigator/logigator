@@ -39,17 +39,43 @@ window.debounceFunction = function (func, debounce) {
 /**
  * @param {string} popupUrl
  * @param {Element} insertionPoint
- * @param {string} [formDataPostUrl]
  */
-window.openDynamicPopup = async function (popupUrl, insertionPoint, formDataPostUrl) {
+window.openDynamicPopup = async function (popupUrl, insertionPoint) {
 	const resp = await fetch(popupUrl);
 	insertionPoint.innerHTML = await resp.text();
-	const popupElem = insertionPoint.querySelector('.partial-popup');
-	Bem.elements(popupElem, 'close').forEach(elem => {
-		elem.addEventListener('click', () => {
-			while (insertionPoint.firstChild) {
-				insertionPoint.removeChild(insertionPoint.lastChild);
+	setupPopupHandling();
+
+	function setupPopupHandling() {
+		const popupElem = insertionPoint.querySelector('.partial-popup');
+		Bem.elements(popupElem, 'close').forEach(elem => {
+			elem.addEventListener('click', () => {
+				while (insertionPoint.firstChild) {
+					insertionPoint.removeChild(insertionPoint.lastChild);
+				}
+			});
+		});
+		const formElement = popupElem.querySelector('form');
+		if (!formElement) return;
+
+		formElement.addEventListener('submit', async event => {
+			if(event.submitter.hasAttribute('formaction')) return;
+
+			event.preventDefault();
+			const submitResp = await fetch(formElement.action, {
+				method: formElement.method,
+				headers: {
+					'Content-Type': 'application/x-www-form-urlencoded'
+				},
+				redirect: 'follow',
+				body: new URLSearchParams(new FormData(formElement))
+			});
+			if (submitResp.redirected) {
+				insertionPoint.innerHTML = await submitResp.text();
+				setupPopupHandling();
+			} else {
+				location.reload();
 			}
 		});
-	});
+	}
+
 };

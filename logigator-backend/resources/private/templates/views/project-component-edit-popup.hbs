@@ -1,21 +1,25 @@
 {{#> popup title=(ternary (expr type '===' 'project') i18n.POPUP.PROJECT_COMP_EDIT.PROJECT_TITLE i18n.POPUP.PROJECT_COMP_EDIT.COMP_TITLE)  defaultOpen=true }}
 	<div class="view-project-component-edit-popup">
-		{{#> form action='/auth/local-login'}}
-			{{#> form-input name='name' type='text' label=i18n.POPUP.PROJECT_COMP_EDIT.NAME }}
+		{{#> form action=(concat '/my/projects/edit/' id)}}
+
+			{{#> form-input name='name' type='text' label=i18n.POPUP.PROJECT_COMP_EDIT.NAME value=name}}
 				{{> form-error error='isNotEmpty' message=i18n.POPUP.PROJECT_COMP_EDIT.NAME_ERR_REQUIRED }}
 				{{> form-error error='maxLength' message=i18n.POPUP.PROJECT_COMP_EDIT.NAME_ERR_MAX }}
 			{{/form-input}}
 
-			{{#> form-input name='symbol' type='text' label=i18n.POPUP.PROJECT_COMP_EDIT.SYMBOL }}
-				{{> form-error error='isNotEmpty' message=i18n.POPUP.PROJECT_COMP_EDIT.SYMBOL_ERR_REQUIRED }}
-				{{> form-error error='maxLength' message=i18n.POPUP.PROJECT_COMP_EDIT.SYMBOL_ERR_MAX }}
-			{{/form-input}}
+			{{#if (expr type '===' 'component')}}
+				{{#> form-input name='symbol' type='text' label=i18n.POPUP.PROJECT_COMP_EDIT.SYMBOL value=symbol }}
+					{{> form-error error='isNotEmpty' message=i18n.POPUP.PROJECT_COMP_EDIT.SYMBOL_ERR_REQUIRED }}
+					{{> form-error error='maxLength' message=i18n.POPUP.PROJECT_COMP_EDIT.SYMBOL_ERR_MAX }}
+				{{/form-input}}
+			{{/if}}
 
-			{{#> form-area name='description' label=i18n.POPUP.PROJECT_COMP_EDIT.DESCRIPTION }}
+			{{#> form-area name='description' label=i18n.POPUP.PROJECT_COMP_EDIT.DESCRIPTION value=description }}
 				{{> form-error error='isNotEmpty' message=i18n.POPUP.PROJECT_COMP_EDIT.DESCRIPTION_ERR_MAX }}
 			{{/form-area}}
 
-			<button type="submit" class="btn-raised primary">{{i18n.POPUP.PROJECT_COMP_EDIT.SAVE}}</button>
+			<button type="submit" class="btn-raised primary view-project-component-edit-popup__submit">{{i18n.POPUP.PROJECT_COMP_EDIT.SAVE}}</button>
+
 		{{/form}}
 	</div>
 {{/popup}}

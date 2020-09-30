@@ -1,4 +1,15 @@
-import {Controller, CurrentUser, Get, Param, QueryParam, Render, UseBefore} from 'routing-controllers';
+import {
+	Body,
+	ContentType,
+	Controller,
+	CurrentUser,
+	Get,
+	Param,
+	Post,
+	QueryParam,
+	Render, UseAfter,
+	UseBefore
+} from 'routing-controllers';
 import {setTitleMiddleware} from '../../../middleware/action/set-title-middleware';
 import {TranslationService} from '../../../services/translation.service';
 import {CheckAuthenticatedFrontMiddleware} from '../../../middleware/auth/frontend-guards/check-authenticated-front.middleware';
@@ -8,6 +19,8 @@ import {User} from '../../../database/entities/user.entity';
 import {ProjectDependencyRepository} from '../../../database/repositories/project-dependency.repository';
 import {Preferences} from '../../../decorator/preferences.decorator';
 import {UserPreferences} from '../../../models/user-preferences';
+import {EditProject} from '../../../models/request/frontend/my-projects/edit-project';
+import {formErrorMiddleware} from '../../../middleware/action/form-error.middleware';
 
 @Controller('/my/projects')
 export class MyProjectsController {
@@ -57,13 +70,14 @@ export class MyProjectsController {
 		(project.createdOn as any) = this.translationService.dateFormatDateTime(project.lastEdited, preferences.lang);
 
 		// to be used only for components
-		(project as any).numInputs = '0';
-		(project as any).numOutputs = '1'; // cast to string because of 0 problem
+		(project as any).numInputs = 0;
+		(project as any).numOutputs = 1;
 		(project as any).symbol = '145ke';
 		return {
 			...project,
 			dependencies,
-			layout: false
+			layout: false,
+			type: 'project'
 		};
 	}
 
@@ -75,6 +89,20 @@ export class MyProjectsController {
 			...(await this.projectRepo.getOwnedProjectOrThrow(id, user)),
 			type: 'project',
 			layout: false
+		};
+	}
+
+	@Post('/edit/:id')
+	@ContentType('application/json')
+	@UseBefore(CheckAuthenticatedFrontMiddleware)
+	@UseAfter(formErrorMiddleware(request => `/my/projects/edit-popup/${request.params.id}`))
+	public async editProject(@Param('id') id: string, @CurrentUser() user: User, @Body() body: EditProject) {
+		const project = await this.projectRepo.getOwnedProjectOrThrow(id, user);
+		project.name = body.name;
+		project.description = body.description;
+		await this.projectRepo.save(project);
+		return {
+			id: project.id
 		};
 	}
 
