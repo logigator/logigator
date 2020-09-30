@@ -46,7 +46,7 @@ export abstract class PersistedResource {
 
 	@AfterInsert()
 	private async createFile() {
-		await fs.writeFile(this.filePath, this._fileContent);
+		await fs.writeFile(this.filePath, this._fileContent ?? new Buffer(0));
 		this._dirty = false;
 	}
 
@@ -54,7 +54,7 @@ export abstract class PersistedResource {
 	private async updateFile(): Promise<void> {
 		if (this._dirty) {
 			if (this._cacheable) {
-				await fs.unlink(this.filePath);
+				await this.deleteFile();
 				this._filename = uuid();
 			}
 			await fs.writeFile(this.filePath, this._fileContent);
@@ -63,8 +63,13 @@ export abstract class PersistedResource {
 	}
 
 	@BeforeRemove()
-	private deleteFile() {
-		return fs.unlink(this.filePath);
+	private async deleteFile() {
+		try {
+			await fs.unlink(this.filePath);
+		} catch (e) {
+			if (e.code !== 'ENOENT')
+				throw e;
+		}
 	}
 
 	public async getFileContent(): Promise<Buffer> {

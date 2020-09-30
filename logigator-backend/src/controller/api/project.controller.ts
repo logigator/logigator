@@ -18,10 +18,10 @@ import {ApiInterceptor} from '../../interceptors/api.interceptor';
 import {User} from '../../database/entities/user.entity';
 import {UserRepository} from '../../database/repositories/user.repository';
 import {ProjectFile} from '../../database/entities/project-file.entity';
+import {ProjectFile as ProjectFileModel} from '../../models/request/api/project/project-file';
 import {SaveProject} from '../../models/request/api/project/save-project';
 import {Project} from '../../database/entities/project.entity';
 import {UpdateProject} from '../../models/request/api/project/update-project';
-import {Like} from 'typeorm';
 import {Component} from '../../database/entities/component.entity';
 import {ComponentDependency} from '../../database/entities/component-dependency.entity';
 import {ProjectDependencyRepository} from '../../database/repositories/project-dependency.repository';
@@ -47,11 +47,13 @@ export class ProjectController {
 	@Post('/')
 	@HttpCode(201)
 	@UseBefore(CheckAuthenticatedApiMiddleware)
+	@ResponseClassTransformOptions({groups: ['showShareLinks']})
 	public create(@Body() body: CreateProject, @CurrentUser() user: User) {
 		const project = this.projectRepo.create();
 		project.name = body.name;
 		project.description = body.description;
 		project.user = Promise.resolve(user);
+		project.projectFile = new ProjectFile();
 		return this.projectRepo.save(project);
 	}
 
@@ -65,13 +67,13 @@ export class ProjectController {
 			}
 		});
 
-		const rawContent = await project.projectFile?.getFileContent();
-		const content: ProjectFile = rawContent ? JSON.parse(rawContent.toString()) : {elements: []};
+		const contentBuffer = await project.projectFile?.getFileContent();
+		const content: ProjectFileModel = contentBuffer?.length ? JSON.parse(contentBuffer.toString()) : {};
 
 		return {
 			...classToPlain(project),
 			mappings: dependencies,
-			...content
+			elements: content.elements ?? []
 		};
 	}
 

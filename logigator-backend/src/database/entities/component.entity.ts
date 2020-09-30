@@ -41,7 +41,6 @@ export class Component {
 
 	@Expose()
 	@OneToOne(type => ComponentFile, componentFile => componentFile.component, {cascade: true, eager: true})
-	@JoinColumn()
 	componentFile: ComponentFile;
 
 	@Expose()
