@@ -18,14 +18,12 @@ import {ApiInterceptor} from '../../interceptors/api.interceptor';
 import {User} from '../../database/entities/user.entity';
 import {UserRepository} from '../../database/repositories/user.repository';
 import {ProjectFile} from '../../database/entities/project-file.entity';
-import {ProjectFile as ProjectFileModel} from '../../models/request/api/project/project-file';
 import {SaveProject} from '../../models/request/api/project/save-project';
-import {Project} from '../../database/entities/project.entity';
 import {UpdateProject} from '../../models/request/api/project/update-project';
-import {Component} from '../../database/entities/component.entity';
-import {ComponentDependency} from '../../database/entities/component-dependency.entity';
 import {ProjectDependencyRepository} from '../../database/repositories/project-dependency.repository';
 import {classToPlain} from 'class-transformer';
+import {ComponentRepository} from '../../database/repositories/component.repository';
+import {ProjectElement} from '../../models/request/api/project/project-element';
 
 @JsonController('/api/project')
 @UseInterceptor(ApiInterceptor)
@@ -33,6 +31,7 @@ export class ProjectController {
 
 	constructor (
 		@InjectRepository() private projectRepo: ProjectRepository,
+		@InjectRepository() private componentRepo: ComponentRepository,
 		@InjectRepository() private userRepo: UserRepository,
 		@InjectRepository() private projectDepRepo: ProjectDependencyRepository
 	) {}
@@ -68,12 +67,12 @@ export class ProjectController {
 		});
 
 		const contentBuffer = await project.projectFile?.getFileContent();
-		const content: ProjectFileModel = contentBuffer?.length ? JSON.parse(contentBuffer.toString()) : {};
+		const content: ProjectElement[] = contentBuffer?.length ? JSON.parse(contentBuffer.toString()) : [];
 
 		return {
 			...classToPlain(project),
 			mappings: dependencies,
-			elements: content.elements ?? []
+			elements: content ?? []
 		};
 	}
 
@@ -82,19 +81,35 @@ export class ProjectController {
 	public async save(@Param('projectId') projectId: string, @CurrentUser() user: User, @Body() body: SaveProject) {
 		let project = await this.projectRepo.getOwnedProjectOrThrow(projectId, user);
 
-		if (project.projectFile && project.projectFile.md5 !== body.oldHash)
+		if (project.projectFile && project.projectFile.hash !== body.oldHash)
 			throw new BadRequestError('VersionMismatch');
 
 		if (!project.projectFile)
 			project.projectFile = new ProjectFile();
 
-		project.projectFile.mimeType = 'application/json';
-		project.projectFile.setFileContent(JSON.stringify(body.project));
+		project.projectFile.setFileContent(JSON.stringify(body.elements));
+
+		const deps = [];
+		const depSet = new Set<string>();
+		for (const mapping of body.mappings) {
+			const depComp = await this.componentRepo.getOwnedComponentOrThrow(mapping.id, user, `Component for mapping '${mapping.id}' not found.`);
+			const dep = this.projectDepRepo.create();
+			dep.dependency = depComp;
+			dep.dependent = project;
+			dep.model_id = mapping.model;
+			depSet.add(dep.dependency.id);
+			deps.push(dep);
+		}
+
+		await this.projectDepRepo.remove(
+			(await this.projectDepRepo.find({dependent: project}))
+				.filter(x => !depSet.has(x.dependency.id))
+		);
+
+		project.dependencies = Promise.resolve(deps);
 		project = await this.projectRepo.save(project);
-		return {
-			id: project.id,
-			hash: project.projectFile.md5
-		};
+
+		return project;
 	}
 
 	@Delete('/:projectId')
@@ -127,21 +142,25 @@ export class ProjectController {
 	@Get('/clone/:link')
 	@UseBefore(CheckAuthenticatedApiMiddleware)
 	public async clone(@Param('link') link: string, @CurrentUser() user: User) {
-		// TODO
-	}
-
-	private async getProjectDependencies(
-		project: Project | Component,
-		deps = new Map<string, ComponentDependency>()
-	): Promise<Map<string, ComponentDependency>> {
-		const dependencies = (await project.dependencies as ComponentDependency[]);
-		for (const dependency of dependencies) {
-			if (deps.has(dependency.dependency.id)) {
-				continue;
+		const project = await this.projectRepo.findOne({
+			where: {
+				link
 			}
-			deps.set(dependency.dependency.id, dependency);
-			deps = await this.getProjectDependencies(dependency.dependency, deps);
-		}
-		return deps;
+		});
+		if (!project)
+			throw new NotFoundError('ResourceNotFound');
+
+		const dependencies = await this.projectDepRepo.getDependencies(project, true);
+
+		const cloned = this.projectRepo.create();
+		cloned.name = project.name;
+		cloned.description = project.description;
+		cloned.user = Promise.resolve(user);
+		cloned.projectFile = new ProjectFile();
+		cloned.projectFile.setFileContent(await project.projectFile.getFileContent());
+		// return this.projectRepo.save(cloned);
+
+
+		// TODO
 	}
 }

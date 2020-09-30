@@ -9,7 +9,7 @@ import {NotFoundError} from 'routing-controllers';
 @EntityRepository(Project)
 export class ProjectRepository extends PageableRepository<Project> {
 
-	public async getOwnedProjectOrThrow(projectId: string, user: User): Promise<Project> {
+	public async getOwnedProjectOrThrow(projectId: string, user: User, message = 'ResourceNotFound'): Promise<Project> {
 		const project = await this.findOne({
 			where: {
 				id: projectId,
@@ -17,7 +17,7 @@ export class ProjectRepository extends PageableRepository<Project> {
 			}
 		});
 		if (!project)
-			throw new NotFoundError('ResourceNotFound');
+			throw new NotFoundError(message);
 		return project;
 	}
 

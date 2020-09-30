@@ -20,8 +20,8 @@ export abstract class PersistedResource {
 	@Column()
 	mimeType: string;
 
-	@Column({type: 'char', length: 32, name: 'md5', default: '00000000000000000000000000000000'})
-	private _md5: string;
+	@Column({type: 'char', length: 32, name: 'hash', default: '00000000000000000000000000000000'})
+	private _hash: string;
 
 	private _fileContent: Buffer;
 
@@ -36,8 +36,8 @@ export abstract class PersistedResource {
 	}
 
 	@Expose()
-	public get md5(): string {
-		return this._md5;
+	public get hash(): string {
+		return this._hash;
 	}
 
 	public get cacheable(): boolean {
@@ -85,8 +85,8 @@ export abstract class PersistedResource {
 			this._fileContent = Buffer.from(content);
 		}
 		const hash = md5(this._fileContent);
-		this._dirty = this._md5 !== hash;
-		this._md5 = hash;
+		this._dirty = this._hash !== hash;
+		this._hash = hash;
 	}
 
 	public get filePath(): string {
