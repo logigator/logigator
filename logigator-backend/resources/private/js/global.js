@@ -66,3 +66,15 @@ function burgerMenuBackgroundElement(node) {
 burgerMenuBackgroundElement(document.querySelector('.partial-burger-menu__background'));
 
 // ------------------------------------------------------------------------------------------------
+
+/**
+ * @param {HTMLFormElement} form
+ */
+function formValidationForGlobalForms(form) {
+	if (form.querySelector('button[type="submit"]')) {
+		startFormValidation(form);
+	}
+}
+document.querySelectorAll('form').forEach(form => formValidationForGlobalForms(form));
+
+// ------------------------------------------------------------------------------------------------

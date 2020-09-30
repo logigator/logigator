@@ -12,20 +12,20 @@
 
 			{{#> form-input name='password' type='password' label=i18n.POPUP.REGISTER.PASSWORD autocomplete='new-password'}}
 				{{> form-error error='isNotEmpty' message=i18n.POPUP.REGISTER.PASSWORD_ERR_REQUIRED }}
-				{{> form-error error='minLength' message=i18n.POPUP.REGISTER.PASSWORD_ERR_MIN }}
-				{{> form-error error='matches' message=i18n.POPUP.REGISTER.PASSWORD_ERR_COMPLEXITY }}
+				{{> form-error error='minLength' message=i18n.POPUP.REGISTER.PASSWORD_ERR_MIN clientValData='8' }}
+				{{> form-error error='matches' message=i18n.POPUP.REGISTER.PASSWORD_ERR_COMPLEXITY clientValData='^(?=.*[A-Za-z])(?=.*[0-9]).*$' }}
 			{{/form-input}}
 
 			{{#> form-input name='password_repeat' type='password' label=i18n.POPUP.REGISTER.PASSWORD_REPEAT autocomplete='new-password'}}
 				{{> form-error error='isNotEmpty' message=i18n.POPUP.REGISTER.PASSWORD_REPEAT_ERR_REQUIRED }}
-				{{> form-error error='matchesProperty' message=i18n.POPUP.REGISTER.PASSWORD_REPEAT_ERR }}
+				{{> form-error error='matchesProperty' message=i18n.POPUP.REGISTER.PASSWORD_REPEAT_ERR clientValData='password' }}
 			{{/form-input}}
 
 			{{#> form-input name='username' type='text' label=i18n.POPUP.REGISTER.USERNAME autocomplete='username'}}
 				{{> form-error error='isNotEmpty' message=i18n.POPUP.REGISTER.USERNAME_ERR_REQUIRED }}
-				{{> form-error error='minLength' message=i18n.POPUP.REGISTER.USERNAME_ERR_MIN }}
-				{{> form-error error='maxLength' message=i18n.POPUP.REGISTER.USERNAME_ERR_MAX }}
-				{{> form-error error='matches' message=i18n.POPUP.REGISTER.USERNAME_ERR_PATTERN }}
+				{{> form-error error='minLength' message=i18n.POPUP.REGISTER.USERNAME_ERR_MIN clientValData='2'}}
+				{{> form-error error='maxLength' message=i18n.POPUP.REGISTER.USERNAME_ERR_MAX clientValData='20' }}
+				{{> form-error error='matches' message=i18n.POPUP.REGISTER.USERNAME_ERR_PATTERN clientValData='^[a-zA-Z0-9_-]+$' }}
 			{{/form-input}}
 
 			{{#> form-general-errors}}
