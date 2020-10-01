@@ -42,18 +42,21 @@ window.debounceFunction = function (func, debounce) {
  */
 window.startFormValidation = function (formElement) {
 	const validationFunctions = {
-		isNotEmpty: (value) => value !== undefined && value !== null && value !== '',
-		minLength: (value, valData) => value && value.length >= Number(valData),
-		maxLength: (value, valData) => value && value.length <= Number(valData),
+		isNotEmpty: value => value !== undefined && value !== null && value !== '',
+		minLength: (value, valData) => value.length >= Number(valData),
+		maxLength: (value, valData) => value.length <= Number(valData),
+		isEmail: value => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value),
+		matches: (value, valData) => new RegExp(valData).test(value),
+		matchesProperty: (value, valData, elements) => elements.namedItem(valData).value === value
 	};
 
 	const submitButton = formElement.querySelector('button[type="submit"]');
 	const formElements = formElement.elements;
 
-	const formErrorConfig = findErrorConfig(formElements);
+	const formErrorConfig = generateFormErrorConfig(formElements);
 
 	for (const elementErrorConfig of formErrorConfig) {
-		updateElementState(elementErrorConfig);
+		updateElementState(elementErrorConfig, Bem.hasState(elementErrorConfig.formContainer, 'invalid'));
 
 		elementErrorConfig.element.addEventListener('input', () => {
 			elementErrorConfig.touched = true;
@@ -61,14 +64,14 @@ window.startFormValidation = function (formElement) {
 		});
 	}
 
-	function updateElementState(elementErrorConfig) {
+	function updateElementState(elementErrorConfig, defaultInvalid) {
 		elementErrorConfig.valid = true;
 		elementErrorConfig.errors.forEach(error => {
-			const isValid = validationFunctions[error.errorName] ? validationFunctions[error.errorName](elementErrorConfig.element.value, error.valData, formElements) : true;
+			const isValid = validationFunctions[error.errorName](elementErrorConfig.element.value, error.valData, formElements);
 			if (!isValid) elementErrorConfig.valid = false;
 			Bem.setState(error.errorMessage, 'shown', !isValid && elementErrorConfig.touched);
 		});
-		Bem.setState(elementErrorConfig.formContainer, 'invalid', !elementErrorConfig.valid && elementErrorConfig.touched);
+		Bem.setState(elementErrorConfig.formContainer, 'invalid', defaultInvalid || !elementErrorConfig.valid && elementErrorConfig.touched);
 		submitButton.disabled = !formErrorConfig.every(elemErrConf => elemErrConf.valid);
 	}
 
@@ -76,7 +79,7 @@ window.startFormValidation = function (formElement) {
 	 *
 	 * @param {HTMLFormControlsCollection} elements
 	 */
-	function findErrorConfig(elements) {
+	function generateFormErrorConfig(elements) {
 		const config = [];
 
 		for (const element of elements) {
@@ -91,8 +94,12 @@ window.startFormValidation = function (formElement) {
 			};
 			const errorMessages = elementConfig.formContainer.querySelector('div[form-errors]').children;
 			for (const errorMessage of errorMessages) {
+				const errorName = errorMessage.getAttribute('data-error');
+
+				if (!(errorName in validationFunctions)) continue;
+
 				elementConfig.errors.push({
-					errorName: errorMessage.getAttribute('data-error'),
+					errorName: errorName,
 					valData: errorMessage.getAttribute('data-val-data'),
 					errorMessage: errorMessage
 				});
@@ -121,17 +128,15 @@ window.openDynamicPopup = async function (popupUrl, insertionPoint) {
 				}
 			});
 		});
+
 		const formElement = popupElem.querySelector('form');
 		if (!formElement) return;
 
+		startFormValidation(formElement);
 		formElement.addEventListener('submit', async event => {
 			event.preventDefault();
 
-			let action = formElement.action;
-			if(event.submitter.hasAttribute('formaction')) {
-				action = event.submitter.getAttribute('formaction');
-			}
-			const submitResp = await fetch(action, {
+			const submitResp = await fetch(event.submitter.getAttribute('formaction') ?? formElement.action, {
 				method: formElement.method,
 				headers: {
 					'Content-Type': 'application/x-www-form-urlencoded'

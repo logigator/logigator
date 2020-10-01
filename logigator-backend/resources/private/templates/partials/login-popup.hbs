@@ -5,6 +5,7 @@
 		{{#> form action='/auth/local-login'}}
 			{{#> form-input name='email' type='email' label=i18n.POPUP.LOGIN.EMAIL autocomplete='email'}}
 				{{> form-error error='isNotEmpty' message=i18n.POPUP.LOGIN.EMAIL_ERR_REQUIRED }}
+				{{> form-error error='isEmail' message=i18n.POPUP.LOGIN.EMAIL_ERR_INVALID }}
 				{{> form-error error='noUser' message=i18n.POPUP.LOGIN.EMAIL_ERR_NO_USER }}
 				{{> form-error error='notVerified' message=i18n.POPUP.LOGIN.EMAIL_ERR_NOT_VERIFIED }}
 			{{/form-input}}

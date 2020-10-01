@@ -113,6 +113,7 @@
 			"HEADLINE": "Login here",
 			"EMAIL": "Email",
 			"EMAIL_ERR_REQUIRED": "email is required.",
+			"EMAIL_ERR_INVALID": "Please enter a valid email address.",
 			"EMAIL_ERR_NO_USER": "email does not exist.",
 			"EMAIL_ERR_NOT_VERIFIED": "email address is not verified.",
 			"PASSWORD": "Password",

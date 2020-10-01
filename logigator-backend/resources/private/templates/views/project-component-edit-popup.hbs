@@ -4,18 +4,18 @@
 
 			{{#> form-input name='name' type='text' label=i18n.POPUP.PROJECT_COMP_EDIT.NAME value=name}}
 				{{> form-error error='isNotEmpty' message=i18n.POPUP.PROJECT_COMP_EDIT.NAME_ERR_REQUIRED }}
-				{{> form-error error='maxLength' message=i18n.POPUP.PROJECT_COMP_EDIT.NAME_ERR_MAX }}
+				{{> form-error error='maxLength' message=i18n.POPUP.PROJECT_COMP_EDIT.NAME_ERR_MAX clientValData='20' }}
 			{{/form-input}}
 
 			{{#if (expr type '===' 'component')}}
 				{{#> form-input name='symbol' type='text' label=i18n.POPUP.PROJECT_COMP_EDIT.SYMBOL value=symbol }}
 					{{> form-error error='isNotEmpty' message=i18n.POPUP.PROJECT_COMP_EDIT.SYMBOL_ERR_REQUIRED }}
-					{{> form-error error='maxLength' message=i18n.POPUP.PROJECT_COMP_EDIT.SYMBOL_ERR_MAX }}
+					{{> form-error error='maxLength' message=i18n.POPUP.PROJECT_COMP_EDIT.SYMBOL_ERR_MAX clientValData='10' }}
 				{{/form-input}}
 			{{/if}}
 
 			{{#> form-area name='description' label=i18n.POPUP.PROJECT_COMP_EDIT.DESCRIPTION value=description }}
-				{{> form-error error='isNotEmpty' message=i18n.POPUP.PROJECT_COMP_EDIT.DESCRIPTION_ERR_MAX }}
+				{{> form-error error='maxLength' message=i18n.POPUP.PROJECT_COMP_EDIT.DESCRIPTION_ERR_MAX clientValData='2048' }}
 			{{/form-area}}
 
 			<button type="submit" class="btn-raised primary view-project-component-edit-popup__submit">{{i18n.POPUP.PROJECT_COMP_EDIT.SAVE}}</button>
