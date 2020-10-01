@@ -150,23 +150,6 @@
 			"ERR_VERIFICATION_MAIL": "Verfizierungs-Email konnte nicht gesendet werden, versuchen Sie es beim anmelden erneut.",
 			"ERR_UNKNOWN": "Ein unbekannter Fehler ist aufgetreten."
 		},
-		"SHARE": {
-			"TITLE": "Teilen",
-			"SHARE_ENABLE": "Teile dieses Projekt mit anderen",
-			"PUBLIC": "Öffentlich teilen",
-			"INFO_TEXT": "Bitte geben Sie die E-Mail-Adressen und Benutzernamen der Nutzer an, mit denen Sie das Projekt teilen möchten.",
-			"EMAIL_USER": "E-Mail / Benutzername",
-			"EMAIL_USER_ALREADY_ADDED": "E-Mail oder Benutzername wurde bereits hinzugefügt",
-			"ADD_EMAIL": "HINZUFÜGEN",
-			"REMOVE_EMAIL": "ENTFERNEN",
-			"INVITATIONS": "E-Mail Einladungen an Benutzer senden",
-			"NOT_FOUND_ERROR": "Manche E-Mail-Adressen konnten nicht gefunden werden, Projekt wurde trotzdem geteilt.",
-			"SUCCESS": "Projekt wurde erfolgreich geteilt.",
-			"LINK": "Link zum Teilen",
-			"COPY": "KOPIEREN",
-			"SAVE": "EINSTELLUNGEN SPEICHERN",
-			"CANCEL": "ABBRECHEN"
-		},
 		"CHANGE_EMAIL": {
 			"TITLE": "E-Mail ändern",
 			"EMAIL": "E-Mail",
@@ -207,20 +190,17 @@
 			"SUCCESS": "Profilbild erfolgreich geändert.",
 			"SUCCESS_OK_BUTTON": "OK"
 		},
-		"NEW_PROJECT": {
-			"TITLE": "Neues Projekt"
-		},
-		"NEW_COMP": {
-			"TITLE": "Neue Komponente",
-			"SYMBOL": "Symbol",
+		"PROJECT_COMP_CREATE": {
+			"COMP_TITLE": "Neue Komponente",
+			"PROJECT_TITLE": "Neues Projekt",
 			"NAME": "Name",
-			"NAME_REQUIRED": "Name muss angegeben werden",
-			"NAME_MIN_LENGTH": "Name muss mindestens zwei Zeichen enthalten",
-			"NAME_MAX_LENGTH": "Name darf maximal 20 Zeichen enthalten",
-			"NAME_PATTERN": "Name ist ungültig",
-			"SYMBOL_REQUIRED": "Symbol muss angegeben werden",
-			"SYMBOL_MAX_LENGTH": "Symbol darf maximal fünf Zeichen enthalten",
-			"SYMBOL_PATTERN": "Symbol ist ungültig",
+			"NAME_ERR_REQUIRED": "Name muss angegeben werden.",
+			"NAME_ERR_MAX": "Name darf maximal 20 Zeichen enthalten.",
+			"DESCRIPTION": "Bschreibung",
+			"DESCRIPTION_ERR_MAX": "Bschreibung ist zu lang.",
+			"SYMBOL": "Symbol",
+			"SYMBOL_ERR_REQUIRED": "Symbol muss angegeben werden.",
+			"SYMBOL_ERR_MAX": "Symbol darf maximal fünf Zeichen enthalten",
 			"CREATE": "ERSTELLEN"
 		},
 		"PROJECT_COMP_EDIT": {
@@ -248,14 +228,14 @@
 			"NO_DEPENDENCIES": "keine",
 			"DESCRIPTION": "Beschreibung"
 		},
-		"PROJECT_DELETE": {
+		"PROJECT_COMP_DELETE": {
 			"TITLE": "Löschen bestätigen",
-			"DELETE": "Löschen bestätigen"
-		},
-		"COMP_DELETE": {
-			"TITLE": "Löschen bestätigen",
-			"WARNING": "Bitte verischere dich, dass die Komponente in keinen Projekten verwendet wird.",
-			"DELETE": "Löschen bestätigen"
+			"DELETE": "Löschen bestätigen",
+			"WARNING": "Diese Komponente wird in den folgenden Projekten oder Komponenten verwendet:",
+			"CANNOT_DELETE": "Sie kann nicht gelöscht werden so lange sie verwendet wird.",
+			"PROJECTS": "Projekte",
+			"COMPONENTS": "Komponenten",
+			"OK": "OK"
 		}
 	},
 	"INFO_POPUP": {

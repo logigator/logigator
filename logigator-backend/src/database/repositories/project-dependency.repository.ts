@@ -8,6 +8,7 @@ import {ComponentDependencyRepository} from './component-dependency.repository';
 @Service()
 @EntityRepository(ProjectDependency)
 export class ProjectDependencyRepository extends Repository<ProjectDependency> {
+
 	public async getDependencies(project: Project, recursive = false): Promise<Component[]> {
 		const dependencies = await this.find({
 			where: {

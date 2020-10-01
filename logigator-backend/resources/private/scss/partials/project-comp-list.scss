@@ -51,6 +51,8 @@
 		font-size: 1.2rem;
 		font-weight: 500;
 		margin: 1rem 0 0.4rem 0;
+		word-break: break-word;
+		text-align: center;
 
 		@include media-breakpoint-down('md') {
 			display: none;
@@ -63,6 +65,9 @@
 		object-fit: contain;
 		max-height: calc(100% - 3rem);
 		padding: 0.2rem;
+		position: absolute;
+		bottom: 0;
+		left: 0;
 
 		@include media-breakpoint-down('md') {
 			max-height: 100%;

@@ -1,0 +1,9 @@
+@include view('project-component-create-popup') {
+	max-width: 40rem;
+
+	@include element('submit') {
+		padding: 0.7rem !important;
+		width: 100%;
+	}
+
+}

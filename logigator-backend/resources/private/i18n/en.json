@@ -150,23 +150,6 @@
 			"ERR_VERIFICATION_MAIL": "Verification-mail could not be sent, try again when signing in.",
 			"ERR_UNKNOWN": "An unknown error occurred."
 		},
-		"SHARE": {
-			"TITLE": "Share",
-			"SHARE_ENABLE": "Share this project with others",
-			"PUBLIC": "Public share",
-			"INFO_TEXT": "Please type in the email-addresses or usernames of the users, with whom you want to share this project.",
-			"EMAIL_USER": "Email / username",
-			"EMAIL_USER_ALREADY_ADDED": "Email or username has already been added",
-			"ADD_EMAIL": "Add",
-			"REMOVE_EMAIL": "Remove",
-			"INVITATIONS": "Send email invitations to users",
-			"NOT_FOUND_ERROR": "Some email addresses or user names were not found, share was created or updated anyways.",
-			"SUCCESS": "Created or updated share successfully.",
-			"LINK": "Link to share",
-			"COPY": "Copy",
-			"SAVE": "SAVE SETTINGS",
-			"CANCEL": "CANCEL"
-		},
 		"CHANGE_EMAIL": {
 			"TITLE": "Change email",
 			"EMAIL": "Email",
@@ -207,20 +190,17 @@
 			"SUCCESS": "Avatar changed successfully.",
 			"SUCCESS_OK_BUTTON": "OK"
 		},
-		"NEW_PROJECT": {
-			"TITLE": "New Project"
-		},
-		"NEW_COMP": {
-			"TITLE": "New Component",
-			"SYMBOL": "Symbol",
+		"PROJECT_COMP_CREATE": {
+			"COMP_TITLE": "New Component",
+			"PROJECT_TITLE": "New Project",
 			"NAME": "Name",
-			"NAME_REQUIRED": "Name is required.",
-			"NAME_MIN_LENGTH": "Name has to have at least two characters.",
-			"NAME_MAX_LENGTH": "Name may contain a maximum of 20 characters.",
-			"NAME_PATTERN": "Name is invalid.",
-			"SYMBOL_REQUIRED": "Symbol is required.",
-			"SYMBOL_MAX_LENGTH": "Symbol may contain a maximum of 5 characters.",
-			"SYMBOL_PATTERN": "Symbol is invalid.",
+			"NAME_ERR_REQUIRED": "Name is required.",
+			"NAME_ERR_MAX": "Name may contain a maximum of 20 characters.",
+			"DESCRIPTION": "Description",
+			"DESCRIPTION_ERR_MAX": "Description is too long.",
+			"SYMBOL": "Symbol",
+			"SYMBOL_ERR_REQUIRED": "Symbol is required.",
+			"SYMBOL_ERR_MAX": "Symbol may contain a maximum of 5 characters.",
 			"CREATE": "SAVE"
 		},
 		"PROJECT_COMP_EDIT": {
@@ -248,14 +228,14 @@
 			"NO_DEPENDENCIES": "N/A",
 			"DESCRIPTION": "Description"
 		},
-		"PROJECT_DELETE": {
+		"PROJECT_COMP_DELETE": {
 			"TITLE": "Confirm Delete",
-			"DELETE": "Confirm Delete"
-		},
-		"COMP_DELETE": {
-			"TITLE": "Confirm Delete",
-			"WARNING": "Please ensure that the component is not used in any of your projects.",
-			"DELETE": "Confirm Delete"
+			"DELETE": "Confirm Delete",
+			"WARNING": "This Component is used in the following Projects or Components:",
+			"CANNOT_DELETE": "It can not be deleted as long as it used.",
+			"PROJECTS": "Projects",
+			"COMPONENTS": "Components",
+			"OK": "OK"
 		}
 	},
 	"INFO_POPUP": {

@@ -21,6 +21,8 @@ import {Preferences} from '../../../decorator/preferences.decorator';
 import {UserPreferences} from '../../../models/user-preferences';
 import {EditProject} from '../../../models/request/frontend/my-projects/edit-project';
 import {formErrorMiddleware} from '../../../middleware/action/form-error.middleware';
+import {CreateProject} from '../../../models/request/frontend/my-projects/create-project';
+import {ProjectFile} from '../../../database/entities/project-file.entity';
 
 @Controller('/my/projects')
 export class MyProjectsController {
@@ -100,6 +102,32 @@ export class MyProjectsController {
 		const project = await this.projectRepo.getOwnedProjectOrThrow(id, user);
 		project.name = body.name;
 		project.description = body.description;
+		await this.projectRepo.save(project);
+		return {
+			id: project.id
+		};
+	}
+
+	@Get('/create-popup')
+	@Render('project-component-create-popup')
+	@UseBefore(CheckAuthenticatedFrontMiddleware)
+	public async createPopup() {
+		return {
+			type: 'project',
+			layout: false
+		};
+	}
+
+	@Post('/create')
+	@ContentType('application/json')
+	@UseBefore(CheckAuthenticatedFrontMiddleware)
+	@UseAfter(formErrorMiddleware(() => '/my/projects/create-popup'))
+	public async createProject(@CurrentUser() user: User, @Body() body: CreateProject) {
+		const project = this.projectRepo.create();
+		project.name = body.name;
+		project.description = body.description;
+		project.user = Promise.resolve(user);
+		project.projectFile = new ProjectFile();
 		await this.projectRepo.save(project);
 		return {
 			id: project.id

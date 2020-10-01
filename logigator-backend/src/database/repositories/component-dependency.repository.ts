@@ -6,6 +6,7 @@ import {Component} from '../entities/component.entity';
 @Service()
 @EntityRepository(ComponentDependency)
 export class ComponentDependencyRepository extends Repository<ComponentDependency> {
+
 	public async getDependencies(component: Component, recursive = false): Promise<Component[]> {
 		if (recursive)
 			return Array.from((await this.getRecursiveDependencies(component)).values());

@@ -101,6 +101,11 @@ function projectComponentList() {
 				openDynamicPopup(`/my/projects/edit-popup/${id}`, popupContainer);
 			});
 		});
+		pageContainer.querySelectorAll('.partial-project-comp-list__icon-new').forEach(button => {
+			button.addEventListener('click', () => {
+				openDynamicPopup('/my/projects/create-popup', popupContainer);
+			});
+		});
 	}
 
 	updatePagination();

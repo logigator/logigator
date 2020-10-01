@@ -26,6 +26,9 @@ export class ProjectRepository extends PageableRepository<Project> {
 			where: {
 				user: user,
 				...(search && {name: Like('%' + search + '%')})
+			},
+			order: {
+				lastEdited: 'DESC'
 			}
 		});
 	}
