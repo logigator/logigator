@@ -46,7 +46,7 @@ export abstract class PersistedResource {
 
 	@AfterInsert()
 	private async createFile() {
-		await fs.writeFile(this.filePath, this._fileContent ?? new Buffer(0));
+		await fs.writeFile(this.filePath, this._fileContent ?? Buffer.alloc(0));
 		this._dirty = false;
 	}
 

@@ -24,6 +24,12 @@ import {ProjectDependencyRepository} from '../../database/repositories/project-d
 import {classToPlain} from 'class-transformer';
 import {ComponentRepository} from '../../database/repositories/component.repository';
 import {ProjectElement} from '../../models/request/api/project/project-element';
+import {Transaction, TransactionRepository} from 'typeorm';
+import {Component} from '../../database/entities/component.entity';
+import {ComponentDependencyRepository} from '../../database/repositories/component-dependency.repository';
+import {ComponentFile} from '../../database/entities/component-file.entity';
+import {v4 as uuid} from 'uuid';
+import {Project} from '../../database/entities/project.entity';
 
 @JsonController('/api/project')
 @UseInterceptor(ApiInterceptor)
@@ -151,16 +157,72 @@ export class ProjectController {
 			throw new NotFoundError('ResourceNotFound');
 
 		const dependencies = await this.projectDepRepo.getDependencies(project, true);
+		// @ts-ignore
+		return this.cloneTransaction(project, dependencies, user);
+	}
 
-		const cloned = this.projectRepo.create();
+	@Transaction()
+	private async cloneTransaction(
+		project: Project,
+		dependencies: Component[],
+		user: User,
+		@TransactionRepository(ComponentRepository) compRepo: ComponentRepository,
+		@TransactionRepository(ProjectRepository) projRepo: ProjectRepository,
+		@TransactionRepository(ComponentDependencyRepository) compDepRepo: ComponentDependencyRepository,
+		@TransactionRepository(ProjectDependencyRepository) projDepRepo: ProjectDependencyRepository
+	) {
+		const map = new Map<string, Component>();
+		for (const dep of dependencies) {
+			const cloned = compRepo.create();
+			cloned.name = dep.name;
+			cloned.description = dep.description;
+			cloned.user = Promise.resolve(user);
+			cloned.forkedFrom = Promise.resolve(dep);
+			cloned.createdOn = dep.createdOn;
+			cloned.labels = dep.labels;
+			cloned.numInputs = dep.numInputs;
+			cloned.numOutputs = dep.numOutputs;
+			cloned.symbol = dep.symbol;
+			cloned.componentFile = new ComponentFile();
+			if (dep.componentFile) cloned.componentFile.setFileContent(await dep.componentFile.getFileContent());
+			map.set(dep.id, await compRepo.save(cloned));
+		}
+
+		for (const comp of map) {
+			const deps = (await compDepRepo.find({
+				where: {
+					dependent: comp[0]
+				}
+			})).map(x => {
+				const dep = compDepRepo.create();
+				dep.dependency = map.get(x.dependency.id);
+				return dep;
+			});
+			comp[1].dependencies = Promise.resolve(deps);
+			await compRepo.save(comp[1]);
+		}
+
+		const cloned = projRepo.create();
 		cloned.name = project.name;
 		cloned.description = project.description;
 		cloned.user = Promise.resolve(user);
+		cloned.forkedFrom = Promise.resolve(project);
+		cloned.createdOn = project.createdOn;
 		cloned.projectFile = new ProjectFile();
-		cloned.projectFile.setFileContent(await project.projectFile.getFileContent());
-		// return this.projectRepo.save(cloned);
+		if (project.projectFile) cloned.projectFile.setFileContent(await project.projectFile.getFileContent());
+		cloned.dependencies = projDepRepo.find({
+			where: {
+				dependent: project
+			}
+		}).then(x => {
+			return x.map(y => {
+				const dep = projDepRepo.create();
+				dep.dependency = map.get(y.dependency.id);
+				return dep;
+			});
+		});
+		await projRepo.save(cloned);
 
-
-		// TODO
+		return map;
 	}
 }
