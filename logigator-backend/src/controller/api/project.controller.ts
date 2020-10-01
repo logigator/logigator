@@ -196,6 +196,7 @@ export class ProjectController {
 			})).map(x => {
 				const dep = compDepRepo.create();
 				dep.dependency = map.get(x.dependency.id);
+				dep.model_id = x.model_id;
 				return dep;
 			});
 			comp[1].dependencies = Promise.resolve(deps);
@@ -210,17 +211,17 @@ export class ProjectController {
 		cloned.createdOn = project.createdOn;
 		cloned.projectFile = new ProjectFile();
 		if (project.projectFile) cloned.projectFile.setFileContent(await project.projectFile.getFileContent());
-		cloned.dependencies = projDepRepo.find({
+		const deps = (await projDepRepo.find({
 			where: {
 				dependent: project
 			}
-		}).then(x => {
-			return x.map(y => {
-				const dep = projDepRepo.create();
-				dep.dependency = map.get(y.dependency.id);
-				return dep;
-			});
+		})).map(x => {
+			const dep = projDepRepo.create();
+			dep.dependency = map.get(x.dependency.id);
+			dep.model_id = x.model_id;
+			return dep;
 		});
+		cloned.dependencies = Promise.resolve(deps);
 		await projRepo.save(cloned);
 
 		return map;
