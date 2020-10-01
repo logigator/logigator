@@ -111,7 +111,7 @@ export class MyProjectsController {
 	@Get('/create-popup')
 	@Render('project-component-create-popup')
 	@UseBefore(CheckAuthenticatedFrontMiddleware)
-	public async createPopup() {
+	public createPopup() {
 		return {
 			type: 'project',
 			layout: false

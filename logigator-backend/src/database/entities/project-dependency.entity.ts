@@ -1,4 +1,4 @@
-import {Column, Entity, ManyToOne, PrimaryColumn} from 'typeorm';
+import {Column, Entity, ManyToOne} from 'typeorm';
 import {Component} from './component.entity';
 import {Project} from './project.entity';
 import {Exclude, Expose, Transform} from 'class-transformer';

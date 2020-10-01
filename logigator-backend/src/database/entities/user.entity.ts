@@ -2,8 +2,8 @@ import {
 	BeforeRemove,
 	Check,
 	Column,
-	Entity, getCustomRepository,
-	ManyToMany,
+	Entity,
+	getCustomRepository,
 	OneToMany,
 	OneToOne,
 	PrimaryGeneratedColumn

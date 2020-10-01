@@ -2,11 +2,14 @@ import {
 	BeforeRemove,
 	Column,
 	CreateDateColumn,
-	Entity, Generated, getCustomRepository, JoinColumn,
+	Entity,
+	Generated,
+	getCustomRepository,
 	ManyToOne,
-	OneToMany, OneToOne,
+	OneToMany,
+	OneToOne,
 	PrimaryGeneratedColumn,
-	UpdateDateColumn, VersionColumn
+	UpdateDateColumn
 } from 'typeorm';
 import {User} from './user.entity';
 import {ComponentFile} from './component-file.entity';
