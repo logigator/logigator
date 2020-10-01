@@ -1,16 +1,16 @@
 {{> user-space-nav }}
 
-<div class="view-my-projects-comps" data-type="projects">
+<div class="view-my-projects-comps" data-type="components">
 	<section class="view-my-projects-comps__container">
 		<div class="view-my-projects-comps__header">
-			<h1 class="view-my-projects-comps__header-headline">{{i18n.USERSPACE.PROJECTS.TITLE}}</h1>
+			<h1 class="view-my-projects-comps__header-headline">{{i18n.USERSPACE.COMPONENTS.TITLE}}</h1>
 			{{> form-input-standalone name='search' type='text' label=i18n.USERSPACE.LIST.SEARCH id='view-my-projects-comps__search' class='view-my-projects-comps__search' value=searchTerm }}
 		</div>
 		<div class="view-my-projects-comps__list">
 			{{> project-comp-list }}
 		</div>
 		{{#unless entries}}
-			<p class="view-my-projects-comps__error">{{i18n.USERSPACE.PROJECTS.ERROR}}</p>
+			<p class="view-my-projects-comps__error">{{i18n.USERSPACE.COMPONENTS.ERROR}}</p>
 		{{/unless}}
 		<div class="view-my-projects-comps__pages">
 			<button class="btn-outline secondary view-my-projects-comps__page-button"><<</button>

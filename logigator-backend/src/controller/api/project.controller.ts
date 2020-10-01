@@ -11,7 +11,7 @@ import {
 	UseInterceptor
 } from 'routing-controllers';
 import {CheckAuthenticatedApiMiddleware} from '../../middleware/auth/api-guards/check-authenticated-api.middleware';
-import {CreateProject} from '../../models/request/api/project/create-project';
+import {CreateProject} from '../../models/request/shared/create-project';
 import {InjectRepository} from 'typeorm-typedi-extensions';
 import {ProjectRepository} from '../../database/repositories/project.repository';
 import {ApiInterceptor} from '../../interceptors/api.interceptor';
@@ -28,7 +28,6 @@ import {Transaction, TransactionRepository} from 'typeorm';
 import {Component} from '../../database/entities/component.entity';
 import {ComponentDependencyRepository} from '../../database/repositories/component-dependency.repository';
 import {ComponentFile} from '../../database/entities/component-file.entity';
-import {v4 as uuid} from 'uuid';
 import {Project} from '../../database/entities/project.entity';
 
 @JsonController('/api/project')
@@ -54,12 +53,7 @@ export class ProjectController {
 	@UseBefore(CheckAuthenticatedApiMiddleware)
 	@ResponseClassTransformOptions({groups: ['showShareLinks']})
 	public create(@Body() body: CreateProject, @CurrentUser() user: User) {
-		const project = this.projectRepo.create();
-		project.name = body.name;
-		project.description = body.description;
-		project.user = Promise.resolve(user);
-		project.projectFile = new ProjectFile();
-		return this.projectRepo.save(project);
+		return this.projectRepo.createProjectForUser(body.name, body.description, user);
 	}
 
 	@Get('/:projectId')

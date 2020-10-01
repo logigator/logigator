@@ -26,7 +26,7 @@ export class Project {
 	id: string;
 
 	@Expose()
-	@Column({nullable: false})
+	@Column({length: 20, nullable: false})
 	name: string;
 
 	@Expose()
@@ -52,7 +52,7 @@ export class Project {
 	private __user__: User;
 
 	@Expose({groups: ['showShareLinks']})
-	@Column()
+	@Column({nullable: false})
 	@Generated('uuid')
 	link: string;
 

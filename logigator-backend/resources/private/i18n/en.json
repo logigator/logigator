@@ -15,7 +15,8 @@
 		"FEATURES": "Logigator - Features",
 		"DOWNLOAD": "Logigator - Download",
 		"VERIFY_EMAIL": "Logigator - Verify email",
-		"PROJECTS": "Logigator - Projects"
+		"PROJECTS": "Logigator - Projects",
+		"COMPONENTS": "Logigator - Components"
 	},
 	"SITE_HEADER": {
 		"DOWNLOAD": "Download",
@@ -87,16 +88,16 @@
 			"ACCOUNT_SETTINGS": "Account Settings"
 		},
 		"LIST": {
-			"SEARCH": "Search"
+			"SEARCH": "Search",
+			"LAST_EDITED": "Last edited: "
 		},
 		"PROJECTS": {
 			"TITLE": "My projects",
-			"LAST_EDITED": "Last edited: ",
+
 			"ERROR": "You haven't defined any projects yet."
 		},
 		"COMPONENTS": {
 			"TITLE": "My components",
-			"LAST_EDITED": "Last edited: ",
 			"ERROR": "You haven't defined any components yet."
 		},
 		"ACCOUNT_SETTINGS": {

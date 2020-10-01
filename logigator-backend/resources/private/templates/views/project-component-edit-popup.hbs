@@ -1,6 +1,6 @@
 {{#> popup title=(ternary (expr type '===' 'project') i18n.POPUP.PROJECT_COMP_EDIT.PROJECT_TITLE i18n.POPUP.PROJECT_COMP_EDIT.COMP_TITLE)  defaultOpen=true }}
 	<div class="view-project-component-edit-popup">
-		{{#> form action=(concat '/my/projects/edit/' id)}}
+		{{#> form action=(concat action id)}}
 
 			{{#> form-input name='name' type='text' label=i18n.POPUP.PROJECT_COMP_EDIT.NAME value=name}}
 				{{> form-error error='isNotEmpty' message=i18n.POPUP.PROJECT_COMP_EDIT.NAME_ERR_REQUIRED }}
@@ -10,7 +10,7 @@
 			{{#if (expr type '===' 'component')}}
 				{{#> form-input name='symbol' type='text' label=i18n.POPUP.PROJECT_COMP_EDIT.SYMBOL value=symbol }}
 					{{> form-error error='isNotEmpty' message=i18n.POPUP.PROJECT_COMP_EDIT.SYMBOL_ERR_REQUIRED }}
-					{{> form-error error='maxLength' message=i18n.POPUP.PROJECT_COMP_EDIT.SYMBOL_ERR_MAX clientValData='10' }}
+					{{> form-error error='maxLength' message=i18n.POPUP.PROJECT_COMP_EDIT.SYMBOL_ERR_MAX clientValData='5' }}
 				{{/form-input}}
 			{{/if}}
 

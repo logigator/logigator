@@ -27,11 +27,11 @@ export class Component {
 	id: string;
 
 	@Expose()
-	@Column()
+	@Column({length: 20, nullable: false})
 	name: string;
 
 	@Expose()
-	@Column({length: 2048, default: ''})
+	@Column({length: 2048, default: '', nullable: false})
 	description: string;
 
 	@Expose()
@@ -47,19 +47,19 @@ export class Component {
 	componentFile: ComponentFile;
 
 	@Expose()
-	@Column({length: 10})
+	@Column({length: 5, nullable: false})
 	symbol: string;
 
 	@Expose()
-	@Column()
+	@Column({nullable: false})
 	numInputs: number;
 
 	@Expose()
-	@Column()
+	@Column({nullable: false})
 	numOutputs: number;
 
 	@Expose()
-	@Column('simple-array')
+	@Column('simple-array', {nullable: false})
 	labels: string[];
 
 	@OneToMany(type => ComponentDependency, object => object.dependent)
@@ -80,7 +80,7 @@ export class Component {
 	@Expose({name: 'dependencyForProjects', groups: ['detailed']})
 	private __dependencyForProjects__: ProjectDependency[];
 
-	@ManyToOne(type => User, object => object.components)
+	@ManyToOne(type => User, object => object.components, {nullable: false})
 	user: Promise<User>;
 
 	@Expose({groups: ['showShareLinks']})

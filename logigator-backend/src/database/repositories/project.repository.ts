@@ -4,6 +4,7 @@ import {Project} from '../entities/project.entity';
 import {Page, PageableRepository} from './pageable.repository';
 import {User} from '../entities/user.entity';
 import {NotFoundError} from 'routing-controllers';
+import {ProjectFile} from '../entities/project-file.entity';
 
 @Service()
 @EntityRepository(Project)
@@ -33,5 +34,13 @@ export class ProjectRepository extends PageableRepository<Project> {
 		});
 	}
 
+	public async createProjectForUser(name: string, description: string, user: User) {
+		const project = this.create();
+		project.name = name;
+		project.description =description;
+		project.user = Promise.resolve(user);
+		project.projectFile = new ProjectFile();
+		return this.save(project);
+	}
 
 }

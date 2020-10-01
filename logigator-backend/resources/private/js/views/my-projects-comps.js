@@ -1,4 +1,5 @@
 function projectComponentList() {
+	const pageType = document.querySelector('.view-my-projects-comps').getAttribute('data-type');
 	const popupContainer = document.querySelector('.view-my-projects-comps__popup-container');
 	const pageContainer = document.querySelector('.view-my-projects-comps__list');
 	const pageButtons = document.querySelectorAll('.view-my-projects-comps__page-button');
@@ -79,7 +80,7 @@ function projectComponentList() {
 		}
 
 		const searchParams = new URLSearchParams(params).toString();
-		const resp = await fetch('/my/projects/page?' + searchParams);
+		const resp = await fetch(`/my/${pageType}/page?${searchParams}`);
 		pageContainer.innerHTML = await resp.text();
 
 		const baseUrl = [location.protocol, '//', location.host, location.pathname].join('');
@@ -92,18 +93,18 @@ function projectComponentList() {
 		pageContainer.querySelectorAll('.partial-project-comp-list__icon-info').forEach(button => {
 			button.addEventListener('click', () => {
 				const id = button.parentElement.getAttribute('data-id');
-				openDynamicPopup(`/my/projects/info/${id}`, popupContainer);
+				openDynamicPopup(`/my/${pageType}/info/${id}`, popupContainer);
 			});
 		});
 		pageContainer.querySelectorAll('.partial-project-comp-list__icon-edit').forEach(button => {
 			button.addEventListener('click', () => {
 				const id = button.parentElement.getAttribute('data-id');
-				openDynamicPopup(`/my/projects/edit-popup/${id}`, popupContainer);
+				openDynamicPopup(`/my/${pageType}/edit-popup/${id}`, popupContainer);
 			});
 		});
 		pageContainer.querySelectorAll('.partial-project-comp-list__icon-new').forEach(button => {
 			button.addEventListener('click', () => {
-				openDynamicPopup('/my/projects/create-popup', popupContainer);
+				openDynamicPopup(`/my/${pageType}/create-popup`, popupContainer);
 			});
 		});
 	}

@@ -1,4 +1,4 @@
-import {IsNotEmpty, IsString, MaxLength} from 'class-validator';
+import {IsNotEmpty, IsOptional, IsString, MaxLength} from 'class-validator';
 
 export class CreateProject {
 
@@ -8,6 +8,7 @@ export class CreateProject {
 	name: string;
 
 	@IsString()
+	@IsOptional()
 	@MaxLength(2048)
 	description: string
 

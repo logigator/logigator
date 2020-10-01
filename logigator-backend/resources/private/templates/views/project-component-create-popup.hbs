@@ -1,6 +1,6 @@
 {{#> popup title=(ternary (expr type '===' 'project') i18n.POPUP.PROJECT_COMP_CREATE.PROJECT_TITLE i18n.POPUP.PROJECT_COMP_CREATE.COMP_TITLE)  defaultOpen=true }}
 	<div class="view-project-component-create-popup">
-		{{#> form action='/my/projects/create' }}
+		{{#> form action=action }}
 
 			{{#> form-input name='name' type='text' label=i18n.POPUP.PROJECT_COMP_CREATE.NAME }}
 				{{> form-error error='isNotEmpty' message=i18n.POPUP.PROJECT_COMP_CREATE.NAME_ERR_REQUIRED }}
@@ -10,7 +10,7 @@
 			{{#if (expr type '===' 'component')}}
 				{{#> form-input name='symbol' type='text' label=i18n.POPUP.PROJECT_COMP_CREATE.SYMBOL value=symbol }}
 					{{> form-error error='isNotEmpty' message=i18n.POPUP.PROJECT_COMP_CREATE.SYMBOL_ERR_REQUIRED }}
-					{{> form-error error='maxLength' message=i18n.POPUP.PROJECT_COMP_CREATE.SYMBOL_ERR_MAX clientValData='10' }}
+					{{> form-error error='maxLength' message=i18n.POPUP.PROJECT_COMP_CREATE.SYMBOL_ERR_MAX clientValData='5' }}
 				{{/form-input}}
 			{{/if}}
 

@@ -21,8 +21,7 @@ import {Preferences} from '../../../decorator/preferences.decorator';
 import {UserPreferences} from '../../../models/user-preferences';
 import {EditProject} from '../../../models/request/frontend/my-projects/edit-project';
 import {formErrorMiddleware} from '../../../middleware/action/form-error.middleware';
-import {CreateProject} from '../../../models/request/frontend/my-projects/create-project';
-import {ProjectFile} from '../../../database/entities/project-file.entity';
+import {CreateProject} from '../../../models/request/shared/create-project';
 
 @Controller('/my/projects')
 export class MyProjectsController {
@@ -46,9 +45,9 @@ export class MyProjectsController {
 	}
 
 	@Get('/page')
-	@Render('my-projects-page')
+	@Render('project-component-page')
 	@UseBefore(CheckAuthenticatedFrontMiddleware)
-	public async myProjectsPage(@QueryParam('page') pageNumber = 0, @QueryParam('search') search: string, @CurrentUser() user: User, @Preferences() preferences: UserPreferences) {
+	public async page(@QueryParam('page') pageNumber = 0, @QueryParam('search') search: string, @CurrentUser() user: User, @Preferences() preferences: UserPreferences) {
 		return {
 			...(await this.getProjectsPage(pageNumber, search, user, preferences.lang)),
 			layout: false
@@ -60,21 +59,13 @@ export class MyProjectsController {
 	@UseBefore(CheckAuthenticatedFrontMiddleware)
 	public async infoPopup(@Param('id') id: string, @CurrentUser() user: User, @Preferences() preferences: UserPreferences) {
 		const project = await this.projectRepo.getOwnedProjectOrThrow(id, user);
-		const dependencies = (await this.projectDepRepo.find({
-			where: {
-				dependent: project
-			}
-		})).reduce((prev, cur) => {
-			return prev + ', ' + cur.dependency.name;
+		const dependencies = (await this.projectDepRepo.getDependencies(project)).reduce((prev, cur) => {
+			return prev + ', ' + cur.name;
 		}, '');
 
 		(project.lastEdited as any) = this.translationService.dateFormatDateTime(project.lastEdited, preferences.lang);
 		(project.createdOn as any) = this.translationService.dateFormatDateTime(project.lastEdited, preferences.lang);
 
-		// to be used only for components
-		(project as any).numInputs = 0;
-		(project as any).numOutputs = 1;
-		(project as any).symbol = '145ke';
 		return {
 			...project,
 			dependencies,
@@ -89,6 +80,7 @@ export class MyProjectsController {
 	public async editPopup(@Param('id') id: string, @CurrentUser() user: User) {
 		return {
 			...(await this.projectRepo.getOwnedProjectOrThrow(id, user)),
+			action: '/my/projects/edit/',
 			type: 'project',
 			layout: false
 		};
@@ -98,7 +90,7 @@ export class MyProjectsController {
 	@ContentType('application/json')
 	@UseBefore(CheckAuthenticatedFrontMiddleware)
 	@UseAfter(formErrorMiddleware(request => `/my/projects/edit-popup/${request.params.id}`))
-	public async editProject(@Param('id') id: string, @CurrentUser() user: User, @Body() body: EditProject) {
+	public async edit(@Param('id') id: string, @CurrentUser() user: User, @Body() body: EditProject) {
 		const project = await this.projectRepo.getOwnedProjectOrThrow(id, user);
 		project.name = body.name;
 		project.description = body.description;
@@ -113,6 +105,7 @@ export class MyProjectsController {
 	@UseBefore(CheckAuthenticatedFrontMiddleware)
 	public createPopup() {
 		return {
+			action: '/my/projects/create',
 			type: 'project',
 			layout: false
 		};
@@ -122,13 +115,8 @@ export class MyProjectsController {
 	@ContentType('application/json')
 	@UseBefore(CheckAuthenticatedFrontMiddleware)
 	@UseAfter(formErrorMiddleware(() => '/my/projects/create-popup'))
-	public async createProject(@CurrentUser() user: User, @Body() body: CreateProject) {
-		const project = this.projectRepo.create();
-		project.name = body.name;
-		project.description = body.description;
-		project.user = Promise.resolve(user);
-		project.projectFile = new ProjectFile();
-		await this.projectRepo.save(project);
+	public async create(@CurrentUser() user: User, @Body() body: CreateProject) {
+		const project = await this.projectRepo.createProjectForUser(body.name, body.description, user);
 		return {
 			id: project.id
 		};

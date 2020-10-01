@@ -31,6 +31,7 @@ import {VerifyEmailController} from './controller/frontend/verify-email.controll
 import {FeaturesController} from './controller/frontend/features.controller';
 import bodyParser from 'body-parser';
 import {MyProjectsController} from './controller/frontend/my/my-projects.controller';
+import {MyComponentsController} from './controller/frontend/my/my-components.controller';
 
 useContainerRC(Container);
 typeOrmUseContainer(Container);
@@ -87,6 +88,7 @@ async function bootstrap() {
 			PrivacyPolicyController,
 			FeaturesController,
 			MyProjectsController,
+			MyComponentsController,
 			AuthController,
 			VerifyEmailController,
 			PreferencesController,

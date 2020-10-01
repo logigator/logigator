@@ -44,6 +44,11 @@
 		width: 100%;
 	}
 
+	@include element('error') {
+		text-align: center;
+		margin: 1rem 0;
+	}
+
 	@include element('pages') {
 		width: 100%;
 		display: flex;

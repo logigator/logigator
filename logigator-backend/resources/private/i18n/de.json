@@ -15,7 +15,8 @@
 		"FEATURES": "Logigator - Features",
 		"DOWNLOAD": "Logigator - Download",
 		"VERIFY_EMAIL": "Logigator - Emailverifizierung",
-		"PROJECTS": "Logigator - Projekte"
+		"PROJECTS": "Logigator - Projekte",
+		"COMPONENTS": "Logigator - Komponenten"
 	},
 	"SITE_HEADER": {
 		"DOWNLOAD": "Download",

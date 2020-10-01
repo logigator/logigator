@@ -1,0 +1,9 @@
+@import "../config/config";
+@import "../partials/user-space-nav";
+@import "../partials/project-comp-list";
+@import "../shared/my-projects-comps";
+
+// Popups used in Component List
+@import "../shared-views/project-component-info-popup";
+@import "../shared-views/project-component-edit-popup";
+@import "../shared-views/project-component-create-popup";
