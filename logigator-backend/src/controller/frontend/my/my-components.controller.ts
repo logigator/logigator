@@ -22,6 +22,7 @@ import {ComponentRepository} from '../../../database/repositories/component.repo
 import {ComponentDependencyRepository} from '../../../database/repositories/component-dependency.repository';
 import {CreateComponent} from '../../../models/request/shared/create-component';
 import {EditComponent} from '../../../models/request/frontend/my-components/edit-component';
+import {ProjectDependencyRepository} from '../../../database/repositories/project-dependency.repository';
 
 @Controller('/my/components')
 export class MyComponentsController {
@@ -29,7 +30,8 @@ export class MyComponentsController {
 	constructor(
 		private translationService: TranslationService,
 		@InjectRepository() private componentRepo: ComponentRepository,
-		@InjectRepository() private componentDepRepo: ComponentDependencyRepository
+		@InjectRepository() private componentDepRepo: ComponentDependencyRepository,
+		@InjectRepository() private projectDepRepo: ProjectDependencyRepository
 	) {}
 
 	@Get('/')
@@ -59,9 +61,10 @@ export class MyComponentsController {
 	@UseBefore(CheckAuthenticatedFrontMiddleware)
 	public async infoPopup(@Param('id') id: string, @CurrentUser() user: User, @Preferences() preferences: UserPreferences) {
 		const component = await this.componentRepo.getOwnedComponentOrThrow(id, user);
-		const dependencies = (await this.componentDepRepo.getDependencies(component)).reduce((prev, cur) => {
-			return prev + ', ' + cur.name;
-		}, '');
+		const dependencies = (await this.componentDepRepo.getDependencies(component)).map(dep => dep.name).join(', ');
+		const componentDependents = (await this.componentDepRepo.getDependents(component)).map(dep => dep.name).join(', ');
+		const projectDependents = (await this.projectDepRepo.getDependents(component)).map(dep => dep.name).join(', ');
+
 
 		(component.lastEdited as any) = this.translationService.dateFormatDateTime(component.lastEdited, preferences.lang);
 		(component.createdOn as any) = this.translationService.dateFormatDateTime(component.lastEdited, preferences.lang);
@@ -69,6 +72,8 @@ export class MyComponentsController {
 		return {
 			...component,
 			dependencies,
+			componentDependents,
+			projectDependents,
 			layout: false,
 			type: 'component'
 		};

@@ -40,6 +40,28 @@
 				{{/if}}
 			</p>
 		</div>
+		{{#if (expr type '===' 'component') }}
+			<div class="view-project-component-info-popup__item view-project-component-info-popup__streched">
+				<p>{{i18n.POPUP.PROJECT_COMP_INFO.DEPENDENT_PROJECTS}}:</p>
+				<p>
+					{{#if (expr projectDependents '!==' '')}}
+						{{projectDependents}}
+					{{else}}
+						{{i18n.POPUP.PROJECT_COMP_INFO.NO_DEPENDENCIES}}
+					{{/if}}
+				</p>
+			</div>
+			<div class="view-project-component-info-popup__item view-project-component-info-popup__streched">
+				<p>{{i18n.POPUP.PROJECT_COMP_INFO.DEPENDENT_COMPONENTS}}:</p>
+				<p>
+					{{#if (expr componentDependents '!==' '')}}
+						{{componentDependents}}
+					{{else}}
+						{{i18n.POPUP.PROJECT_COMP_INFO.NO_DEPENDENCIES}}
+					{{/if}}
+				</p>
+			</div>
+		{{/if}}
 		<hr class="view-project-component-info-popup__hr">
 		<div class="view-project-component-info-popup__item view-project-component-info-popup__streched">
 			<p>{{i18n.POPUP.PROJECT_COMP_INFO.DESCRIPTION}}:</p>

@@ -226,6 +226,8 @@
 			"OUTPUTS": "Ausgänge",
 			"SYMBOL": "Symbol",
 			"DEPENDENCIES": "Abhängigkeiten",
+			"DEPENDENT_PROJECTS": "Abhängige Projekte",
+			"DEPENDENT_COMPONENTS": "Abhängige Komponenten",
 			"NO_DEPENDENCIES": "keine",
 			"DESCRIPTION": "Beschreibung"
 		},

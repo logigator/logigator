@@ -35,4 +35,13 @@ export class ComponentDependencyRepository extends Repository<ComponentDependenc
 
 		return deps;
 	}
+
+	public async getDependents(component: Component): Promise<Component[]> {
+		const dependents = await this.find({
+			where: {
+				dependency: component
+			}
+		});
+		return dependents.map(x => x.dependent);
+	}
 }

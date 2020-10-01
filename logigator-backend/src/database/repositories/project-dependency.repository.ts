@@ -28,4 +28,13 @@ export class ProjectDependencyRepository extends Repository<ProjectDependency> {
 		}
 		return Array.from(deps.values());
 	}
+
+	public async getDependents(component: Component): Promise<Project[]> {
+		const dependents = await this.find({
+			where: {
+				dependency: component
+			}
+		});
+		return dependents.map(x => x.dependent);
+	}
 }
