@@ -234,11 +234,12 @@
 		"PROJECT_COMP_DELETE": {
 			"TITLE": "Confirm Delete",
 			"DELETE": "Confirm Delete",
+			"CANCEL": "Cancel",
+			"CONFIRM_PROJECT": "Do you really want to delete this Project?",
 			"WARNING": "This Component is used in the following Projects or Components:",
 			"CANNOT_DELETE": "It can not be deleted as long as it used.",
 			"PROJECTS": "Projects",
-			"COMPONENTS": "Components",
-			"OK": "OK"
+			"COMPONENTS": "Components"
 		}
 	},
 	"INFO_POPUP": {

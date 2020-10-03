@@ -59,7 +59,7 @@
 		padding: 0.5rem;
 	}
 
-	@include element('close') {
+	@include element('close-style') {
 		margin-right: 1px;
 		border-radius: 0.25rem;
 		height: 27px;

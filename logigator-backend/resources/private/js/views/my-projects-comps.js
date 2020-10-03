@@ -107,6 +107,12 @@ function projectComponentList() {
 				openDynamicPopup(`/my/${pageType}/create-popup`, popupContainer);
 			});
 		});
+		pageContainer.querySelectorAll('.partial-project-comp-list__icon-delete').forEach(button => {
+			button.addEventListener('click', () => {
+				const id = button.parentElement.getAttribute('data-id');
+				openDynamicPopup(`/my/${pageType}/delete-popup/${id}`, popupContainer);
+			});
+		});
 	}
 
 	updatePagination();

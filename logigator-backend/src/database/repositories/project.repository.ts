@@ -43,4 +43,10 @@ export class ProjectRepository extends PageableRepository<Project> {
 		return this.save(project);
 	}
 
+	public async deleteProjectForUser(projectId: string, user: User): Promise<Project> {
+		const project = await this.getOwnedProjectOrThrow(projectId, user);
+		await this.remove(project);
+		return project;
+	}
+
 }

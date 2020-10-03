@@ -115,9 +115,7 @@ export class ProjectController {
 	@Delete('/:projectId')
 	@UseBefore(CheckAuthenticatedApiMiddleware)
 	public async delete(@Param('projectId') projectId: string, @CurrentUser() user: User) {
-		const project = await this.projectRepo.getOwnedProjectOrThrow(projectId, user);
-
-		await this.projectRepo.remove(project);
+		const project = await this.projectRepo.deleteProjectForUser(projectId, user);
 		return {
 			id: project.id
 		};

@@ -1,0 +1,16 @@
+{{#> popup title=(ternary (expr type '===' 'project') i18n.POPUP.PROJECT_COMP_DELETE.TITLE i18n.POPUP.PROJECT_COMP_DELETE.TITLE)  defaultOpen=true }}
+	<div class="view-project-component-delete-popup">
+		{{#> form action=(concat action id)}}
+
+			{{#if (expr type '===' 'project')}}
+				<p class="view-project-component-delete-popup__confirm-text">{{i18n.POPUP.PROJECT_COMP_DELETE.CONFIRM_PROJECT}}</p>
+			{{/if}}
+
+			<div class="view-project-component-delete-popup__buttons">
+				<button type="button" class="btn-raised secondary view-project-component-delete-popup__cancel partial-popup__close">{{i18n.POPUP.PROJECT_COMP_DELETE.CANCEL}}</button>
+				<button type="submit" class="btn-raised danger view-project-component-delete-popup__submit">{{i18n.POPUP.PROJECT_COMP_DELETE.DELETE}}</button>
+			</div>
+
+		{{/form}}
+	</div>
+{{/popup}}

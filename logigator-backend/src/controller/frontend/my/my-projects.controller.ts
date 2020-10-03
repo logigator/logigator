@@ -120,6 +120,28 @@ export class MyProjectsController {
 		};
 	}
 
+	@Get('/delete-popup/:id')
+	@Render('project-component-delete-popup')
+	@UseBefore(CheckAuthenticatedFrontMiddleware)
+	public async deletePopup(@Param('id') id: string, @CurrentUser() user: User) {
+		return {
+			...(await this.projectRepo.getOwnedProjectOrThrow(id, user)),
+			action: '/my/projects/delete/',
+			type: 'project',
+			layout: false
+		};
+	}
+
+	@Post('/delete/:id')
+	@ContentType('application/json')
+	@UseBefore(CheckAuthenticatedFrontMiddleware)
+	public async delete(@Param('id') id: string, @CurrentUser() user: User) {
+		const project = await this.projectRepo.deleteProjectForUser(id, user);
+		return {
+			id: project.id
+		};
+	}
+
 	private async getProjectsPage(pageNumber: number, search: string, user: User, language: string): Promise<any> {
 		const page = await this.projectRepo.getProjectPageForUser(pageNumber ?? 0, 12, user, search);
 
