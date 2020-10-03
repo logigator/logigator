@@ -77,4 +77,8 @@ function formValidationForGlobalForms(form) {
 }
 document.querySelectorAll('form').forEach(form => formValidationForGlobalForms(form));
 
+// GLOBAL_CALLS -----------------------------------------------------------------------------------
+
+autoAdjustFontSize(document.body);
+
 // ------------------------------------------------------------------------------------------------

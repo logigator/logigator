@@ -15,7 +15,8 @@ module.exports = {
 		setBurgerMenuState: 'readonly',
 		debounceFunction: "readonly",
 		startFormValidation: 'readonly',
-		openDynamicPopup: 'readonly'
+		openDynamicPopup: 'readonly',
+		autoAdjustFontSize: 'readonly'
 	},
 	rules: {
 		'semi': [ 'error', 'always' ],

@@ -154,3 +154,30 @@ window.openDynamicPopup = async function (popupUrl, insertionPoint) {
 	}
 
 };
+
+/**
+ * @param {HTMLElement} context
+ */
+window.autoAdjustFontSize = function (context) {
+	context.querySelectorAll('[auto-font-size]').forEach(node => {
+		const desiredFontWidth = Number(node.getAttribute('auto-font-size'));
+		const style = window.getComputedStyle(node);
+		const originalWidth = Number(style.fontSize.replace('px', ''));
+		const textWidth = getTextWidth(node.innerText, style.font);
+		const adjustedWidth = originalWidth * (desiredFontWidth / textWidth);
+
+		if (adjustedWidth < originalWidth) {
+			node.style.fontSize = adjustedWidth + 'px';
+		}
+
+	});
+
+	function getTextWidth(text, font) {
+		if (!window.__autoFontSizeCanvas__) {
+			window.__autoFontSizeCanvas__ = document.createElement('canvas');
+		}
+		const context2D = window.__autoFontSizeCanvas__.getContext('2d');
+		context2D.font = font ?? window.getComputedStyle(this.document.body).font;
+		return context2D.measureText(text).width;
+	}
+};
