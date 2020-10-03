@@ -4,6 +4,25 @@
 
 			{{#if (expr type '===' 'project')}}
 				<p class="view-project-component-delete-popup__confirm-text">{{i18n.POPUP.PROJECT_COMP_DELETE.CONFIRM_PROJECT}}</p>
+			{{else}}
+				{{#if hasDependents}}
+					{{#if projectDependents}}
+						<p class="view-project-component-delete-popup__confirm-text">{{i18n.POPUP.PROJECT_COMP_DELETE.WARNING_COMP}}</p>
+						<div class="view-project-component-delete-popup__confirm-text view-project-component-delete-popup__streched">
+							<p>{{i18n.POPUP.PROJECT_COMP_DELETE.PROJECTS}}:</p>
+							<p>{{projectDependents}}</p>
+						</div>
+					{{/if}}
+					{{#if componentDependents}}
+						<div class="view-project-component-delete-popup__confirm-text view-project-component-delete-popup__streched">
+							<p>{{i18n.POPUP.PROJECT_COMP_DELETE.COMPONENTS}}:</p>
+							<p>{{componentDependents}}</p>
+						</div>
+					{{/if}}
+					<p class="view-project-component-delete-popup__confirm-text">{{i18n.POPUP.PROJECT_COMP_DELETE.WARNING_COMP_DELETE}}</p>
+				{{else}}
+					<p class="view-project-component-delete-popup__confirm-text">{{i18n.POPUP.PROJECT_COMP_DELETE.CONFIRM_COMP}}</p>
+				{{/if}}
 			{{/if}}
 
 			<div class="view-project-component-delete-popup__buttons">

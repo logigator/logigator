@@ -236,8 +236,9 @@
 			"DELETE": "Löschen bestätigen",
 			"CANCEL": "Abbrechen",
 			"CONFIRM_PROJECT": "Sind sie sicher, dass sie dieses Projekt löschen wollen?",
-			"WARNING": "Diese Komponente wird in den folgenden Projekten oder Komponenten verwendet:",
-			"CANNOT_DELETE": "Sie kann nicht gelöscht werden so lange sie verwendet wird.",
+			"CONFIRM_COMP": "Sind sie sicher, dass sie diese Komponente löschen wollen?",
+			"WARNING_COMP": "Diese Komponente wird in den folgenden Projekten oder Komponenten verwendet:",
+			"WARNING_COMP_DELETE": "Wenn die Komponente gelöscht wird, wird sie aus diesen Projekten und Komponenten entfernt.",
 			"PROJECTS": "Projekte",
 			"COMPONENTS": "Komponenten"
 		}

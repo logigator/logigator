@@ -128,6 +128,35 @@ export class MyComponentsController {
 		};
 	}
 
+	@Get('/delete-popup/:id')
+	@Render('project-component-delete-popup')
+	@UseBefore(CheckAuthenticatedFrontMiddleware)
+	public async deletePopup(@Param('id') id: string, @CurrentUser() user: User) {
+		const component = await this.componentRepo.getOwnedComponentOrThrow(id, user);
+		const componentDependents = (await this.componentDepRepo.getDependents(component)).map(dep => dep.name).join(', ');
+		const projectDependents = (await this.projectDepRepo.getDependents(component)).map(dep => dep.name).join(', ');
+
+		return {
+			...component,
+			componentDependents,
+			projectDependents,
+			hasDependents: projectDependents || componentDependents,
+			action: '/my/components/delete/',
+			type: 'component',
+			layout: false
+		};
+	}
+
+	@Post('/delete/:id')
+	@ContentType('application/json')
+	@UseBefore(CheckAuthenticatedFrontMiddleware)
+	public async delete(@Param('id') id: string, @CurrentUser() user: User) {
+		const component = await this.componentRepo.deleteComponentForUser(id, user);
+		return {
+			id: component.id
+		};
+	}
+
 	private async getComponentsPage(pageNumber: number, search: string, user: User, language: string): Promise<any> {
 		const page = await this.componentRepo.getComponentPageForUser(pageNumber ?? 0, 12, user, search);
 

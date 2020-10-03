@@ -46,4 +46,10 @@ export class ComponentRepository extends PageableRepository<Component> {
 		component.labels = [];
 		return this.save(component);
 	}
+
+	public async deleteComponentForUser(projectId: string, user: User): Promise<Component> {
+		const component = await this.getOwnedComponentOrThrow(projectId, user);
+		await this.remove(component);
+		return component;
+	}
 }

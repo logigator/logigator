@@ -236,8 +236,9 @@
 			"DELETE": "Confirm Delete",
 			"CANCEL": "Cancel",
 			"CONFIRM_PROJECT": "Do you really want to delete this Project?",
-			"WARNING": "This Component is used in the following Projects or Components:",
-			"CANNOT_DELETE": "It can not be deleted as long as it used.",
+			"CONFIRM_COMP": "Do you really want to delete this Component?",
+			"WARNING_COMP": "This Component is used in the following Projects or Components:",
+			"WARNING_COMP_DELETE": "If the Component is deleted, it will be removed from that Projects and Components.",
 			"PROJECTS": "Projects",
 			"COMPONENTS": "Components"
 		}
