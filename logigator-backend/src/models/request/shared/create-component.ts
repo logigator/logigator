@@ -10,10 +10,10 @@ export class CreateComponent {
 	@IsString()
 	@IsNotEmpty()
 	@MaxLength(5)
-	symbol: string
+	symbol: string;
 
 	@IsString()
 	@MaxLength(2048)
-	description: string
+	description: string;
 
 }

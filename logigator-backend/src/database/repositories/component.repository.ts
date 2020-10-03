@@ -10,16 +10,32 @@ import {ComponentFile} from '../entities/component-file.entity';
 @EntityRepository(Component)
 export class ComponentRepository extends PageableRepository<Component> {
 
-	public async getOwnedComponentOrThrow(projectId: string, user: User, message = 'ResourceNotFound'): Promise<Component> {
+	public async getOwnedComponentOrThrow(componentId: string, user: User, message = 'ResourceNotFound'): Promise<Component> {
 		const component = await this.findOne({
 			where: {
-				id: projectId,
+				id: componentId,
 				user: user
 			}
 		});
 		if (!component)
 			throw new NotFoundError(message);
 		return component;
+	}
+
+	public async clone(component: Component, user: User) {
+		const cloned = this.create();
+		cloned.name = component.name;
+		cloned.description = component.description;
+		cloned.user = Promise.resolve(user);
+		cloned.forkedFrom = Promise.resolve(component);
+		cloned.createdOn = component.createdOn;
+		cloned.labels = component.labels;
+		cloned.numInputs = component.numInputs;
+		cloned.numOutputs = component.numOutputs;
+		cloned.symbol = component.symbol;
+		cloned.componentFile = new ComponentFile();
+		if (component.componentFile) cloned.componentFile.setFileContent(await component.componentFile.getFileContent());
+		return this.save(cloned);
 	}
 
 	public async getComponentPageForUser(pageNr: number, pageSize: number, user: User, search?: string): Promise<Page<Component>> {
@@ -41,8 +57,6 @@ export class ComponentRepository extends PageableRepository<Component> {
 		component.description = description;
 		component.user = Promise.resolve(user);
 		component.componentFile = new ComponentFile();
-		component.numInputs = 0;
-		component.numOutputs = 0;
 		component.labels = [];
 		return this.save(component);
 	}

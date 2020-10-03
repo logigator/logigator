@@ -51,11 +51,11 @@ export class Component {
 	symbol: string;
 
 	@Expose()
-	@Column({nullable: false})
+	@Column({nullable: false, default: 0})
 	numInputs: number;
 
 	@Expose()
-	@Column({nullable: false})
+	@Column({nullable: false, default: 0})
 	numOutputs: number;
 
 	@Expose()

@@ -1,9 +1,9 @@
-import {IsArray, IsNotEmpty, IsString, ValidateNested} from 'class-validator';
+import {IsArray, IsInt, IsNotEmpty, IsPositive, IsString, Length, MaxLength, ValidateNested} from 'class-validator';
 import {Type} from 'class-transformer';
 import {ProjectElement} from '../project-element';
 import {ProjectMapping} from '../project-mapping';
 
-export class SaveProject {
+export class SaveComponent {
 	@IsString()
 	@IsNotEmpty()
 	oldHash: string;
@@ -17,4 +17,17 @@ export class SaveProject {
 	@ValidateNested({each: true})
 	@Type(() => ProjectElement)
 	elements: ProjectElement[];
+
+	@IsInt()
+	@IsPositive()
+	numInputs: number;
+
+	@IsInt()
+	@IsPositive()
+	numOutputs: number;
+
+	@IsArray()
+	@IsString({each: true})
+	@Length(0, 4, {each: true})
+	labels: string[]
 }

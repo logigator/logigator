@@ -23,11 +23,10 @@ import {UpdateProject} from '../../models/request/api/project/update-project';
 import {ProjectDependencyRepository} from '../../database/repositories/project-dependency.repository';
 import {classToPlain} from 'class-transformer';
 import {ComponentRepository} from '../../database/repositories/component.repository';
-import {ProjectElement} from '../../models/request/api/project/project-element';
+import {ProjectElement} from '../../models/request/api/project-element';
 import {Transaction, TransactionRepository} from 'typeorm';
 import {Component} from '../../database/entities/component.entity';
 import {ComponentDependencyRepository} from '../../database/repositories/component-dependency.repository';
-import {ComponentFile} from '../../database/entities/component-file.entity';
 import {Project} from '../../database/entities/project.entity';
 
 @JsonController('/api/project')
@@ -71,7 +70,7 @@ export class ProjectController {
 
 		return {
 			...classToPlain(project),
-			mappings: dependencies,
+			dependencies,
 			elements: content ?? []
 		};
 	}
@@ -79,7 +78,7 @@ export class ProjectController {
 	@Put('/:projectId')
 	@UseBefore(CheckAuthenticatedApiMiddleware)
 	public async save(@Param('projectId') projectId: string, @CurrentUser() user: User, @Body() body: SaveProject) {
-		let project = await this.projectRepo.getOwnedProjectOrThrow(projectId, user);
+		const project = await this.projectRepo.getOwnedProjectOrThrow(projectId, user);
 
 		if (project.projectFile && project.projectFile.hash !== body.oldHash)
 			throw new BadRequestError('VersionMismatch');
@@ -91,7 +90,7 @@ export class ProjectController {
 
 		const deps = [];
 		const depSet = new Set<string>();
-		for (const mapping of body.mappings) {
+		for (const mapping of body.dependencies) {
 			const depComp = await this.componentRepo.getOwnedComponentOrThrow(mapping.id, user, `Component for mapping '${mapping.id}' not found.`);
 			const dep = this.projectDepRepo.create();
 			dep.dependency = depComp;
@@ -107,18 +106,13 @@ export class ProjectController {
 		);
 
 		project.dependencies = Promise.resolve(deps);
-		project = await this.projectRepo.save(project);
-
-		return project;
+		return this.projectRepo.save(project);
 	}
 
 	@Delete('/:projectId')
 	@UseBefore(CheckAuthenticatedApiMiddleware)
 	public async delete(@Param('projectId') projectId: string, @CurrentUser() user: User) {
-		const project = await this.projectRepo.deleteProjectForUser(projectId, user);
-		return {
-			id: project.id
-		};
+		return this.projectRepo.deleteProjectForUser(projectId, user);
 	}
 
 	@Patch('/:projectId')
@@ -131,10 +125,7 @@ export class ProjectController {
 		if (body.description)
 			project.description = body.description;
 
-		await this.projectRepo.save(project);
-		return {
-			id: project.id
-		};
+		return this.projectRepo.save(project);
 	}
 
 	@Get('/clone/:link')
@@ -149,8 +140,8 @@ export class ProjectController {
 			throw new NotFoundError('ResourceNotFound');
 
 		const dependencies = await this.projectDepRepo.getDependencies(project, true);
-		// @ts-ignore
-		return this.cloneTransaction(project, dependencies, user);
+		const clonedProjects = await this.cloneTransaction(project, dependencies, user);
+		return Array.from(clonedProjects.values());
 	}
 
 	@Transaction()
@@ -158,26 +149,14 @@ export class ProjectController {
 		project: Project,
 		dependencies: Component[],
 		user: User,
-		@TransactionRepository(ComponentRepository) compRepo: ComponentRepository,
-		@TransactionRepository(ProjectRepository) projRepo: ProjectRepository,
-		@TransactionRepository(ComponentDependencyRepository) compDepRepo: ComponentDependencyRepository,
-		@TransactionRepository(ProjectDependencyRepository) projDepRepo: ProjectDependencyRepository
+		@TransactionRepository(ComponentRepository) compRepo?: ComponentRepository,
+		@TransactionRepository(ProjectRepository) projRepo?: ProjectRepository,
+		@TransactionRepository(ComponentDependencyRepository) compDepRepo?: ComponentDependencyRepository,
+		@TransactionRepository(ProjectDependencyRepository) projDepRepo?: ProjectDependencyRepository
 	) {
 		const map = new Map<string, Component>();
 		for (const dep of dependencies) {
-			const cloned = compRepo.create();
-			cloned.name = dep.name;
-			cloned.description = dep.description;
-			cloned.user = Promise.resolve(user);
-			cloned.forkedFrom = Promise.resolve(dep);
-			cloned.createdOn = dep.createdOn;
-			cloned.labels = dep.labels;
-			cloned.numInputs = dep.numInputs;
-			cloned.numOutputs = dep.numOutputs;
-			cloned.symbol = dep.symbol;
-			cloned.componentFile = new ComponentFile();
-			if (dep.componentFile) cloned.componentFile.setFileContent(await dep.componentFile.getFileContent());
-			map.set(dep.id, await compRepo.save(cloned));
+			map.set(dep.id, await compRepo.clone(dep, user));
 		}
 
 		for (const comp of map) {
