@@ -73,7 +73,7 @@ async function bootstrap() {
 		unset: 'destroy',
 		store: new (connectRedis(session))({ client: Container.get(RedisService).redisClient }),
 		cookie: {
-			maxAge: 1000 * 60 * 60 * 24 * 7 // one week
+			maxAge: configService.getConfig('session').maxAge
 		}
 	}));
 	Container.get(PassportConfigService).setupPassport();

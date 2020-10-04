@@ -4,6 +4,9 @@ import passport from 'passport';
 import {validateOrReject} from 'class-validator';
 import {plainToClass} from 'class-transformer';
 import {LocalLogin} from '../../models/request/frontend/auth/local-login';
+import {User} from '../../database/entities/user.entity';
+import {redirect} from '../../functions/redirect';
+import {updateAuthenticatedCookie} from '../../functions/update-authenticated-cookie';
 
 export class LocalAuthenticationMiddleware implements ExpressMiddlewareInterface {
 
@@ -16,9 +19,17 @@ export class LocalAuthenticationMiddleware implements ExpressMiddlewareInterface
 			error.paramName = 'body';
 			throw error;
 		}
-		return passport.authenticate('local', {
-			failureRedirect: '/',
-			successRedirect: '/'
+		return passport.authenticate('local', (err, user: User) => {
+			if (err) {
+				return next(err);
+			}
+			request.login(user, loginErr => {
+				if (loginErr) {
+					return next(loginErr);
+				}
+				updateAuthenticatedCookie(request, response, true);
+				return redirect(request, response, { target: '/'});
+			});
 		})(request, response, next);
 	}
 

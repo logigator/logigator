@@ -1,5 +1,6 @@
 import {ExpressMiddlewareInterface, UnauthorizedError} from 'routing-controllers';
 import {Request, Response} from 'express';
+import {updateAuthenticatedCookie} from '../../../functions/update-authenticated-cookie';
 
 export class CheckAuthenticatedApiMiddleware implements ExpressMiddlewareInterface {
 
@@ -8,6 +9,7 @@ export class CheckAuthenticatedApiMiddleware implements ExpressMiddlewareInterfa
 			next();
 			return;
 		}
+		updateAuthenticatedCookie(request, response, false);
 		throw new UnauthorizedError(request.originalUrl + ' requires authentication');
 	}
 

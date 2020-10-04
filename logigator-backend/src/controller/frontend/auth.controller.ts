@@ -1,9 +1,9 @@
-import {Body, Controller, Get, Post, Req, UseAfter, UseBefore} from 'routing-controllers';
+import {Body, Controller, Get, Post, Req, Res, UseAfter, UseBefore} from 'routing-controllers';
 import {GoogleLoginMiddleware} from '../../middleware/auth/google-login.middleware';
 import {GoogleAuthenticationMiddleware} from '../../middleware/auth/google-authentication.middleware';
 import {TwitterLoginMiddleware} from '../../middleware/auth/twitter-login.middleware';
 import {TwitterAuthenticationMiddleware} from '../../middleware/auth/twitter-authentication.middleware';
-import {Request} from 'express';
+import {Request, Response} from 'express';
 import {CheckNotAuthenticatedFrontMiddleware} from '../../middleware/auth/frontend-guards/check-not-authenticated-front.middleware';
 import {CheckAuthenticatedFrontMiddleware} from '../../middleware/auth/frontend-guards/check-authenticated-front.middleware';
 import {LocalRegister} from '../../models/request/frontend/auth/local-register';
@@ -15,6 +15,7 @@ import {LocalAuthenticationMiddleware} from '../../middleware/auth/local-authent
 import {ResendVerificationMail} from '../../models/request/frontend/auth/resend-verification-mail';
 import {Preferences} from '../../decorator/preferences.decorator';
 import {UserPreferences} from '../../models/user-preferences';
+import {updateAuthenticatedCookie} from '../../functions/update-authenticated-cookie';
 
 @Controller('/auth')
 export class AuthController {
@@ -41,8 +42,7 @@ export class AuthController {
 	@Post('/local-login')
 	@UseBefore(CheckNotAuthenticatedFrontMiddleware, LocalAuthenticationMiddleware)
 	@UseAfter(formErrorMiddleware())
-	public localLogin(@Redirect() redirect: RedirectFunction) {
-		return redirect({ showInfoPopup: 'local-register'});
+	public localLogin() {
 	}
 
 	@Post('/resend-verification-mail')
@@ -84,8 +84,9 @@ export class AuthController {
 
 	@Get('/logout')
 	@UseBefore(CheckAuthenticatedFrontMiddleware)
-	public logout(@Req() request: Request, @Redirect() redirect: RedirectFunction) {
+	public logout(@Req() request: Request, @Res() response: Response, @Redirect() redirect: RedirectFunction) {
 		request.logout();
+		updateAuthenticatedCookie(request, response, false);
 		return redirect({target: '/'});
 	}
 
