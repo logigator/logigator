@@ -85,8 +85,12 @@ window.startFormValidation = function (formElement) {
 		for (const element of elements) {
 			if (element instanceof HTMLButtonElement) continue;
 
+			const formContainer = element.closest('div[form-container]');
+
+			if (!formContainer) continue;
+
 			const elementConfig = {
-				formContainer: element.closest('div[form-container]'),
+				formContainer: formContainer,
 				element: element,
 				touched: false,
 				valid: false,
@@ -121,6 +125,11 @@ window.openDynamicPopup = async function (popupUrl, insertionPoint) {
 
 	function setupPopupHandling() {
 		const popupElem = insertionPoint.querySelector('.partial-popup');
+
+		if (popupElem.hasAttribute('data-js')) {
+			window[popupElem.getAttribute('data-js')](popupElem);
+		}
+
 		Bem.elements(popupElem, 'close').forEach(elem => {
 			elem.addEventListener('click', () => {
 				while (insertionPoint.firstChild) {
@@ -135,6 +144,9 @@ window.openDynamicPopup = async function (popupUrl, insertionPoint) {
 		startFormValidation(formElement);
 		formElement.addEventListener('submit', async event => {
 			event.preventDefault();
+			if (event.submitter instanceof HTMLButtonElement) {
+				event.submitter.disabled = true;
+			}
 
 			const submitResp = await fetch(event.submitter.getAttribute('formaction') ?? formElement.action, {
 				method: formElement.method,

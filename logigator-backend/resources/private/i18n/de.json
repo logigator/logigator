@@ -88,16 +88,15 @@
 			"ACCOUNT_SETTINGS": "Account-Einstellungen"
 		},
 		"LIST": {
-			"SEARCH": "Suchen"
+			"SEARCH": "Suchen",
+			"LAST_EDITED": "Zuletzt bearbeitet: "
 		},
 		"PROJECTS": {
 			"TITLE": "Meine Projekte",
-			"LAST_EDITED": "Zuletzt bearbeitet: ",
 			"ERROR": "Du hast noch keine Projekte definiert."
 		},
 		"COMPONENTS": {
 			"TITLE": "Meine Komponenten",
-			"LAST_EDITED": "Zuletzt bearbeitet: ",
 			"ERROR": "Du hast noch keine Komponenten definiert."
 		},
 		"ACCOUNT_SETTINGS": {
@@ -202,7 +201,7 @@
 			"SYMBOL": "Symbol",
 			"SYMBOL_ERR_REQUIRED": "Symbol muss angegeben werden.",
 			"SYMBOL_ERR_MAX": "Symbol darf maximal fünf Zeichen enthalten",
-			"CREATE": "ERSTELLEN"
+			"CREATE": "Erstellen"
 		},
 		"PROJECT_COMP_EDIT": {
 			"PROJECT_TITLE": "Projekt bearbeiten",
@@ -215,7 +214,7 @@
 			"SYMBOL": "Symbol",
 			"SYMBOL_ERR_REQUIRED": "Symbol muss angegeben werden.",
 			"SYMBOL_ERR_MAX": "Symbol ist zu lang.",
-			"SAVE": "SPEICHERN"
+			"SAVE": "Speichern"
 		},
 		"PROJECT_COMP_INFO": {
 			"TITLE": "Informationen",
@@ -241,6 +240,17 @@
 			"WARNING_COMP_DELETE": "Wenn die Komponente gelöscht wird, wird sie aus diesen Projekten und Komponenten entfernt.",
 			"PROJECTS": "Projekte",
 			"COMPONENTS": "Komponenten"
+		},
+		"PROJECT_COMP_SHARE": {
+			"TITLE": "Teilen",
+			"EXPLANATION": "Jeder der den Link besitzt kann das Projekt ansehen, klonen, aber nicht bearbeiten. Ist 'Öffentlich teilen' aktiviert, wird das Projekt, in allen öffentlichen Listen angezeigt.",
+			"LINK": "Link zum teilen",
+			"PUBLIC": "Öffentlich teilen",
+			"REGENERATE": "Neu generieren",
+			"REGENERATE_WARN": "Durch das neu Generieren des Links, wird der alte Link ungültig.",
+			"COPY": "Kopieren",
+			"SAVE": "Speichern",
+			"CANCEL": "Abbrechen"
 		}
 	},
 	"INFO_POPUP": {

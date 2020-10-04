@@ -114,6 +114,12 @@ function projectComponentList() {
 				openDynamicPopup(`/my/${pageType}/delete-popup/${id}`, popupContainer);
 			});
 		});
+		pageContainer.querySelectorAll('.partial-project-comp-list__icon-share').forEach(button => {
+			button.addEventListener('click', () => {
+				const id = button.parentElement.getAttribute('data-id');
+				openDynamicPopup(`/my/${pageType}/share-popup/${id}`, popupContainer);
+			});
+		});
 	}
 
 	updatePagination();
@@ -122,3 +128,19 @@ function projectComponentList() {
 	addInteractionButtonListeners();
 }
 projectComponentList();
+
+/**
+ *
+ * @param {Element} node
+ */
+window.viewProjectComponentSharePopup = function (node) {
+	const linkCopyBtn = node.querySelector('.view-project-component-share-popup__link-copy');
+	linkCopyBtn.addEventListener('click', () => {
+		const textArea = this.document.createElement('textarea');
+		textArea.value = Bem.data(linkCopyBtn, 'link');
+		this.document.body.appendChild(textArea);
+		textArea.select();
+		this.document.execCommand('copy');
+		textArea.remove();
+	});
+};

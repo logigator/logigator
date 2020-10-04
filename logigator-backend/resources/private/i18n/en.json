@@ -93,7 +93,6 @@
 		},
 		"PROJECTS": {
 			"TITLE": "My projects",
-
 			"ERROR": "You haven't defined any projects yet."
 		},
 		"COMPONENTS": {
@@ -202,7 +201,7 @@
 			"SYMBOL": "Symbol",
 			"SYMBOL_ERR_REQUIRED": "Symbol is required.",
 			"SYMBOL_ERR_MAX": "Symbol may contain a maximum of 5 characters.",
-			"CREATE": "SAVE"
+			"CREATE": "Create"
 		},
 		"PROJECT_COMP_EDIT": {
 			"PROJECT_TITLE": "Edit Project",
@@ -215,7 +214,7 @@
 			"SYMBOL": "Symbol",
 			"SYMBOL_ERR_REQUIRED": "Symbol is required",
 			"SYMBOL_ERR_MAX": "Symbol is to long",
-			"SAVE": "SAVE"
+			"SAVE": "Save"
 		},
 		"PROJECT_COMP_INFO": {
 			"TITLE": "Information",
@@ -241,6 +240,17 @@
 			"WARNING_COMP_DELETE": "If the Component is deleted, it will be removed from that Projects and Components.",
 			"PROJECTS": "Projects",
 			"COMPONENTS": "Components"
+		},
+		"PROJECT_COMP_SHARE": {
+			"TITLE": "Share",
+			"EXPLANATION": "Anyone who owns the link can view, clone, but not edit the project. If 'Share publicly' is activated, the project will be displayed in all public lists.",
+			"LINK": "Link to share",
+			"PUBLIC": "Share publicly",
+			"REGENERATE": "Regenerate",
+			"REGENERATE_WARN": "Regenerating the link makes to old link invalid.",
+			"COPY": "Copy",
+			"SAVE": "Save",
+			"CANCEL": "Cancel"
 		}
 	},
 	"INFO_POPUP": {

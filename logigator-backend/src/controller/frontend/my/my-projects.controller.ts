@@ -22,12 +22,17 @@ import {UserPreferences} from '../../../models/user-preferences';
 import {EditProject} from '../../../models/request/frontend/my-projects/edit-project';
 import {formErrorMiddleware} from '../../../middleware/action/form-error.middleware';
 import {CreateProject} from '../../../models/request/shared/create-project';
+import {ConfigService} from '../../../services/config.service';
+import {ShareProject} from '../../../models/request/frontend/my-projects/share-project';
+import { v4 as uuid } from 'uuid';
+import {Redirect, RedirectFunction} from '../../../decorator/redirect.decorator';
 
 @Controller('/my/projects')
 export class MyProjectsController {
 
 	constructor(
 		private translationService: TranslationService,
+		private configService: ConfigService,
 		@InjectRepository() private projectRepo: ProjectRepository,
 		@InjectRepository() private projectDepRepo: ProjectDependencyRepository
 	) {}
@@ -140,6 +145,49 @@ export class MyProjectsController {
 		return {
 			id: project.id
 		};
+	}
+
+	@Get('/share-popup/:id')
+	@Render('project-component-share-popup')
+	@UseBefore(CheckAuthenticatedFrontMiddleware)
+	public async sharePopup(@Param('id') id: string, @CurrentUser() user: User) {
+		const project = await this.projectRepo.getOwnedProjectOrThrow(id, user);
+
+		return {
+			public: project.public,
+			id: project.id,
+			shareLink: `${this.configService.getConfig('domains').editor}/share/${project.link}`,
+			action: '/my/projects/share/',
+			regenerateAction: '/my/projects/regenerate-link/',
+			type: 'project',
+			layout: false
+		};
+	}
+
+	@Post('/share/:id')
+	@ContentType('application/json')
+	@UseBefore(CheckAuthenticatedFrontMiddleware)
+	public async share(@Param('id') id: string, @CurrentUser() user: User, @Body() body: ShareProject) {
+		const project = await this.projectRepo.getOwnedProjectOrThrow(id, user);
+		project.public = body.public === 'on';
+		await this.projectRepo.save(project);
+
+		return {
+			id: project.id
+		};
+	}
+
+	@Post('/regenerate-link/:id')
+	@ContentType('application/json')
+	@UseBefore(CheckAuthenticatedFrontMiddleware)
+	public async regenerateLink(@Param('id') id: string, @CurrentUser() user: User, @Redirect() redirect: RedirectFunction) {
+		const project = await this.projectRepo.getOwnedProjectOrThrow(id, user);
+		project.link = uuid();
+		await this.projectRepo.save(project);
+
+		return redirect({
+			target: `/my/projects/share-popup/${id}`
+		});
 	}
 
 	private async getProjectsPage(pageNumber: number, search: string, user: User, language: string): Promise<any> {

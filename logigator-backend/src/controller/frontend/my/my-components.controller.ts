@@ -23,12 +23,17 @@ import {ComponentDependencyRepository} from '../../../database/repositories/comp
 import {CreateComponent} from '../../../models/request/shared/create-component';
 import {EditComponent} from '../../../models/request/frontend/my-components/edit-component';
 import {ProjectDependencyRepository} from '../../../database/repositories/project-dependency.repository';
+import {ShareProject} from '../../../models/request/frontend/my-projects/share-project';
+import {Redirect, RedirectFunction} from '../../../decorator/redirect.decorator';
+import {v4 as uuid} from 'uuid';
+import {ConfigService} from '../../../services/config.service';
 
 @Controller('/my/components')
 export class MyComponentsController {
 
 	constructor(
 		private translationService: TranslationService,
+		private configService: ConfigService,
 		@InjectRepository() private componentRepo: ComponentRepository,
 		@InjectRepository() private componentDepRepo: ComponentDependencyRepository,
 		@InjectRepository() private projectDepRepo: ProjectDependencyRepository
@@ -155,6 +160,49 @@ export class MyComponentsController {
 		return {
 			id: component.id
 		};
+	}
+
+	@Get('/share-popup/:id')
+	@Render('project-component-share-popup')
+	@UseBefore(CheckAuthenticatedFrontMiddleware)
+	public async sharePopup(@Param('id') id: string, @CurrentUser() user: User) {
+		const component = await this.componentRepo.getOwnedComponentOrThrow(id, user);
+
+		return {
+			public: component.public,
+			id: component.id,
+			shareLink: `${this.configService.getConfig('domains').editor}/share/${component.link}`,
+			action: '/my/components/share/',
+			regenerateAction: '/my/components/regenerate-link/',
+			type: 'component',
+			layout: false
+		};
+	}
+
+	@Post('/share/:id')
+	@ContentType('application/json')
+	@UseBefore(CheckAuthenticatedFrontMiddleware)
+	public async share(@Param('id') id: string, @CurrentUser() user: User, @Body() body: ShareProject) {
+		const component = await this.componentRepo.getOwnedComponentOrThrow(id, user);
+		component.public = body.public === 'on';
+		await this.componentRepo.save(component);
+
+		return {
+			id: component.id
+		};
+	}
+
+	@Post('/regenerate-link/:id')
+	@ContentType('application/json')
+	@UseBefore(CheckAuthenticatedFrontMiddleware)
+	public async regenerateLink(@Param('id') id: string, @CurrentUser() user: User, @Redirect() redirect: RedirectFunction) {
+		const component = await this.componentRepo.getOwnedComponentOrThrow(id, user);
+		component.link = uuid();
+		await this.componentRepo.save(component);
+
+		return redirect({
+			target: `/my/components/share-popup/${id}`
+		});
 	}
 
 	private async getComponentsPage(pageNumber: number, search: string, user: User, language: string): Promise<any> {
