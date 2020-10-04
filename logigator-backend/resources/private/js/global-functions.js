@@ -156,10 +156,10 @@ window.openDynamicPopup = async function (popupUrl, insertionPoint) {
 };
 
 /**
- * @param {HTMLElement} context
+ * @param {Element} contextToCheck
  */
-window.autoAdjustFontSize = function (context) {
-	context.querySelectorAll('[auto-font-size]').forEach(node => {
+window.autoAdjustFontSize = function (contextToCheck) {
+	contextToCheck.querySelectorAll('[auto-font-size]').forEach(node => {
 		const desiredFontWidth = Number(node.getAttribute('auto-font-size'));
 		const style = window.getComputedStyle(node);
 		const originalWidth = Number(style.fontSize.replace('px', ''));

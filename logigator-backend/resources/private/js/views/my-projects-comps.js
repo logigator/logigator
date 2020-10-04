@@ -85,6 +85,7 @@ function projectComponentList() {
 
 		const baseUrl = [location.protocol, '//', location.host, location.pathname].join('');
 		window.history.pushState({}, '', baseUrl + '?' + searchParams);
+		autoAdjustFontSize(pageContainer);
 		updatePagination();
 		addInteractionButtonListeners(pageContainer);
 	}
