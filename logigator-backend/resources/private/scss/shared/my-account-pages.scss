@@ -1,0 +1,51 @@
+@mixin accountPagesShared() {
+	@include section('container', 950px);
+
+	// to push content down because of user-space-nav
+	padding-top: 6rem;
+	@include media-breakpoint-between('md', 'lg') {
+		padding-top: 5rem;
+	}
+
+	padding-bottom: 0;
+
+	@include element('container') {
+		display: flex;
+		flex-direction: row;
+	}
+
+	@include element('account-nav') {
+		width: 14rem;
+
+		@include media-breakpoint-down('md') {
+			display: none;
+		}
+	}
+
+	@include element('main') {
+		flex-grow: 1;
+		padding-left: 1rem;
+
+		@include media-breakpoint-up('md') {
+			height: calc(100vh - #{$header-height + $user-space-nav-height + $footer-height + 5rem});
+		}
+
+		@include media-breakpoint-down('md') {
+			padding-left: 0;
+		}
+	}
+
+	@include element('headline') {
+		height: 3rem;
+		display: flex;
+		align-items: center;
+		margin-bottom: 1rem;
+
+		> h1 {
+			margin: 0;
+			font-size: 2rem;
+			font-weight: 400;
+		}
+	}
+
+}

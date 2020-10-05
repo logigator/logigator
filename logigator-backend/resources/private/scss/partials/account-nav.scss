@@ -1,0 +1,41 @@
+@include partial('account-nav') {
+	height: 100%;
+
+	@include themify() {
+		border-right: 1px solid themed('text-primary');
+	}
+
+	@include element('link') {
+		width: 100%;
+		height: 3rem;
+		text-align: right;
+
+		@include themify() {
+			border-bottom: 1px solid themed('text-primary');
+
+			&:hover {
+				background-color: themed('accent2');
+			}
+		}
+
+		@include state('active') {
+			@include themify() {
+				background-color: themed('accent2');
+			}
+		}
+
+		&:last-of-type {
+			border-bottom: none;
+		}
+
+		> a {
+			text-decoration: none;
+
+			> p {
+				height: 100%;
+				padding: 0.8rem 0.5rem 0.8rem 0;
+				margin: 0;
+			}
+		}
+	}
+}
