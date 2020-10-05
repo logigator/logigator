@@ -16,7 +16,9 @@
 		"DOWNLOAD": "Logigator - Download",
 		"VERIFY_EMAIL": "Logigator - Emailverifizierung",
 		"PROJECTS": "Logigator - Projekte",
-		"COMPONENTS": "Logigator - Komponenten"
+		"COMPONENTS": "Logigator - Komponenten",
+		"ACCOUNT": "Logigator - Account",
+		"ACCOUNT_PROFILE": "Logigator - Profil"
 	},
 	"SITE_HEADER": {
 		"DOWNLOAD": "Download",
@@ -85,7 +87,7 @@
 		"NAV": {
 			"PROJECTS": "Projekte",
 			"COMPONENTS": "Komponenten",
-			"ACCOUNT_SETTINGS": "Account-Einstellungen"
+			"ACCOUNT": "Account"
 		},
 		"LIST": {
 			"SEARCH": "Suchen",
@@ -98,13 +100,6 @@
 		"COMPONENTS": {
 			"TITLE": "Meine Komponenten",
 			"ERROR": "Du hast noch keine Komponenten definiert."
-		},
-		"ACCOUNT_SETTINGS": {
-			"USERNAME": "Benutzername",
-			"EMAIL": "E-Mail",
-			"PASSWORD": "Password",
-			"AVATAR": "Profilbild",
-			"CHANGE": "ÄNDERN"
 		}
 	},
 	"POPUP": {

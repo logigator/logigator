@@ -39,8 +39,7 @@ export class MyProjectsController {
 
 	@Get('/')
 	@Render('my-projects')
-	@UseBefore(setTitleMiddleware('TITLE.PROJECTS'))
-	@UseBefore(CheckAuthenticatedFrontMiddleware)
+	@UseBefore(CheckAuthenticatedFrontMiddleware, setTitleMiddleware('TITLE.PROJECTS'))
 	public async myProjects(@QueryParam('page') pageNumber: number, @QueryParam('search') search: string, @CurrentUser() user: User, @Preferences() preferences: UserPreferences) {
 		return {
 			...(await this.getProjectsPage(pageNumber, search, user, preferences.lang)),

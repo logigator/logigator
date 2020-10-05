@@ -33,6 +33,7 @@ import bodyParser from 'body-parser';
 import {MyProjectsController} from './controller/frontend/my/my-projects.controller';
 import {MyComponentsController} from './controller/frontend/my/my-components.controller';
 import {ComponentController} from './controller/api/component.controller';
+import {MyAccountController} from './controller/frontend/my/my-account.controller';
 
 useContainerRC(Container);
 typeOrmUseContainer(Container);
@@ -90,6 +91,7 @@ async function bootstrap() {
 			FeaturesController,
 			MyProjectsController,
 			MyComponentsController,
+			MyAccountController,
 			AuthController,
 			VerifyEmailController,
 			PreferencesController,

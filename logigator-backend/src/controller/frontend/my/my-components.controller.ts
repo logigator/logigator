@@ -41,8 +41,7 @@ export class MyComponentsController {
 
 	@Get('/')
 	@Render('my-components')
-	@UseBefore(setTitleMiddleware('TITLE.COMPONENTS'))
-	@UseBefore(CheckAuthenticatedFrontMiddleware)
+	@UseBefore(CheckAuthenticatedFrontMiddleware, setTitleMiddleware('TITLE.COMPONENTS'))
 	public async myComponents(@QueryParam('page') pageNumber: number, @QueryParam('search') search: string, @CurrentUser() user: User, @Preferences() preferences: UserPreferences) {
 		return {
 			...(await this.getComponentsPage(pageNumber, search, user, preferences.lang)),

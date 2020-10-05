@@ -1,0 +1,12 @@
+@import "../config/config";
+@import "../partials/user-space-nav";
+
+@include view('my-account-profile') {
+	@include section('container', 950px);
+
+	// to push content down because of user-space-nav
+	padding-top: 6rem;
+	@include media-breakpoint-between('md', 'lg') {
+		padding-top: 5rem;
+	}
+}
