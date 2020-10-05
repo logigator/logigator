@@ -29,6 +29,18 @@ export class RedisService {
 		});
 	}
 
+	public delete(key: string): Promise<void> {
+		return new Promise<void>((resolve, reject) => {
+			this.redisClient.del(key, (err) => {
+				if (err) {
+					reject(err);
+					return;
+				}
+				resolve();
+			});
+		});
+	}
+
 	public ttl(key: string): Promise<number> {
 		return new Promise<number>((resolve, reject) => {
 			this.redisClient.ttl(key, (err, reply) => {

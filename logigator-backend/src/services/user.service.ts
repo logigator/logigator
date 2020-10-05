@@ -12,6 +12,7 @@ import {v4 as uuid} from 'uuid';
 import {StandaloneViewService} from './standalone-view.service';
 import {ConfigService} from './config.service';
 import {TranslationService} from './translation.service';
+import {RedisService} from './redis.service';
 
 @Service()
 export class UserService {
@@ -24,7 +25,8 @@ export class UserService {
 		private emailService: EmailService,
 		private standaloneViewService: StandaloneViewService,
 		private configService: ConfigService,
-		private translationService: TranslationService
+		private translationService: TranslationService,
+		private redisService: RedisService
 	) {}
 
 	public async findOrCreateGoogleUser(profile: GoogleProfile): Promise<User> {
@@ -88,14 +90,15 @@ export class UserService {
 		if (user)
 			return false;
 
-		const newUser = this.userRepo.create();
+		let newUser = this.userRepo.create();
 		newUser.email = email;
 		newUser.username = username;
 		newUser.password = await hash(password, this.PASSWORD_SALT_ROUNDS);
-		newUser.localEmailVerificationCode = uuid();
-		await this.userRepo.save(newUser);
+		newUser.localEmailVerified = false;
+		newUser = await this.userRepo.save(newUser);
 		try {
-			await this.sendRegisterVerificationMail(newUser, currentLang);
+			const code = await this.generateEmailVerificationCode(newUser.id, newUser.email);
+			await this.sendRegisterVerificationMail(newUser, code, currentLang);
 		} catch (error) {
 			throw new Error('verification_mail');
 		}
@@ -112,7 +115,7 @@ export class UserService {
 		if (!(await compare(password, user.password))) {
 			throw new FormDataError({email, password}, 'password', 'invalid');
 		}
-		if (user.localEmailVerificationCode) {
+		if (!user.localEmailVerified) {
 			throw new FormDataError({email, password}, 'email', 'notVerified');
 		}
 		return user;
@@ -128,34 +131,49 @@ export class UserService {
 		if (!(await compare(password, user.password))) {
 			throw new FormDataError({email, password}, 'password', 'invalid', 'auth_local-login');
 		}
-		user.localEmailVerificationCode = uuid();
-		await this.userRepo.save(user);
 
 		try {
-			await this.sendRegisterVerificationMail(user, lang);
+			const code = await this.generateEmailVerificationCode(user.id, user.email);
+			await this.sendRegisterVerificationMail(user, code, lang);
 		} catch (error) {
 			throw new Error('verification_mail');
 		}
 
 	}
 
-	private async sendRegisterVerificationMail(user: User, lang: string) {
+	private async sendRegisterVerificationMail(user: User, code: string, lang: string) {
 		const mail = await this.standaloneViewService.renderView('verification-mail-register', {
 			username: user.username,
-			verifyLink: `${this.configService.getConfig('domains').rootUrl}/verify-email/${user.localEmailVerificationCode}`
+			verifyLink: `${this.configService.getConfig('domains').rootUrl}/verify-email/${code}`
 		}, lang);
 		await this.emailService.sendMail('noreply', user.email, this.translationService.getTranslation('MAILS.VERIFY_MAIL_REGISTER.SUBJECT', lang), mail);
 	}
 
+	private async generateEmailVerificationCode(userId: string, emailToVerify: string): Promise<string> {
+		const code = uuid();
+		await this.redisService.setObject(`verify-mail:${code}`, {
+			userId: userId,
+			email: emailToVerify
+		}, 60 * 60);
+		return code;
+	}
+
 	public async verifyEmail(code: string):Promise<boolean> {
+		const verificationData = await  this.redisService.getObject(`verify-mail:${code}`);
+		if (!(verificationData?.userId && verificationData?.email))
+			return false;
+
 		const user = await this.userRepo.findOne({
-			localEmailVerificationCode: code
+			id: verificationData.userId
 		});
+
 		if (!user)
 			return false;
 
-		user.localEmailVerificationCode = null;
+		user.email = verificationData.email;
+		user.localEmailVerified = true;
 		await this.userRepo.save(user);
+		await this.redisService.delete(`verify-mail:${code}`);
 		return true;
 	}
 
