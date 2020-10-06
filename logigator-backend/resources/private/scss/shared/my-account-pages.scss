@@ -9,6 +9,45 @@
 
 	padding-bottom: 0;
 
+	@include element('mobile-back') {
+		height: $user-space-nav-height;
+		position: relative;
+		display: flex;
+		align-items: center;
+		justify-content: flex-start;
+
+		@include themify() {
+			background-color: themed('accent2');
+		}
+
+		@include media-breakpoint-up('md') {
+			display: none;
+		}
+	}
+
+	@include element('mobile-back-btn') {
+		transform: rotate(180deg);
+		height: 100%;
+		padding: 0.3rem;
+		cursor: pointer;
+		z-index: 100;
+	}
+
+	@include element('mobile-back-title') {
+		position: absolute;
+		top: 0;
+		width: 100%;
+		height: 100%;
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		pointer-events: none;
+
+		> p {
+			font-size: 1.2rem;
+		}
+	}
+
 	@include element('container') {
 		display: flex;
 		flex-direction: row;

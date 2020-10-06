@@ -6,4 +6,86 @@
 @include view('my-account-profile') {
 	@include accountPagesShared();
 
+	@include element('picture') {
+		display: flex;
+		justify-content: space-between;
+		align-items: flex-end;
+
+		@include media-breakpoint-down('md') {
+			flex-direction: column;
+			align-items: center;
+		}
+	}
+
+	@include element('picture-image') {
+		width: 9rem;
+		height: 9rem;
+
+		@include media-breakpoint-down('md') {
+			width: 11rem;
+			height: 11rem;
+		}
+
+		@include media-breakpoint-down('sm') {
+			width: 16rem;
+			height: 16rem;
+		}
+	}
+
+	@include element('picture-btns') {
+		margin-top: 1rem;
+
+		> button {
+			margin-left: 0.25rem;
+
+			@include media-breakpoint-down('md') {
+				padding: 0.6rem !important;
+			}
+		}
+	}
+
+	@include element('picture-change') {
+		min-width: 8rem;
+	}
+
+	@include element('category') {
+		padding-top: 2rem;
+	}
+
+	@include element('category-name') {
+		margin: 0;
+	}
+
+	@include element('category-form') {
+		display: flex;
+		align-items: flex-start;
+
+		.partial-form-input {
+			margin-top: 1rem;
+			margin-bottom: 1rem;
+			flex-grow: 1;
+		}
+
+		@include media-breakpoint-down('md') {
+			flex-direction: column;
+			align-items: unset;
+		}
+	}
+
+	@include element('category-save') {
+		margin-left: 1rem;
+		margin-top: 1rem;
+		min-width: 8rem;
+
+		@include media-breakpoint-down('md') {
+			margin-top: 0;
+			margin-left: 0;
+			padding: 0.6rem !important;
+		}
+	}
+
+	@include element('username') {
+		padding-top: 1rem;
+	}
+
 }

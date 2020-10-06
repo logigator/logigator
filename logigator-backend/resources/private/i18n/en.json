@@ -100,6 +100,16 @@
 		"COMPONENTS": {
 			"TITLE": "My components",
 			"ERROR": "You haven't defined any components yet."
+		},
+		"ACCOUNT": {
+			"NAV": {
+				"PROFILE": "Profile",
+				"SECURITY": "Security",
+				"DELETE": "Delete Account"
+			},
+			"PROFILE": {
+				"HEADLINE": "Profile Settings"
+			}
 		}
 	},
 	"POPUP": {
