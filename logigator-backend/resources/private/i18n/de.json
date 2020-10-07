@@ -170,46 +170,6 @@
 			"ERR_VERIFICATION_MAIL": "Verfizierungs-Email konnte nicht gesendet werden, versuchen Sie es beim anmelden erneut.",
 			"ERR_UNKNOWN": "Ein unbekannter Fehler ist aufgetreten."
 		},
-		"CHANGE_EMAIL": {
-			"TITLE": "E-Mail ändern",
-			"EMAIL": "E-Mail",
-			"EMAIL_ERR_REQUIRED": "E-Mail muss angegeben werden",
-			"EMAIL_ERR_INVALID": "Bitte geben Sie eine valide E-Mail an",
-			"SAVE_BUTTON": "SPEICHERN",
-			"SUCCESS_1": "Email erfolgreich geändert.",
-			"SUCCESS_2": "Bitte überprüfe deinen Posteingang und verifiziere deine neue Email Adresse.",
-			"SUCCESS_OK_BUTTON": "OK"
-		},
-		"CHANGE_PASSWORD": {
-			"TITLE": "Passwort ändern",
-			"PASSWORD": "Passwort",
-			"PASSWORD_ERR_REQUIRED": "Passwort muss angegeben werden",
-			"PASSWORD_ERR_MIN": "Passwort muss mindestens acht Zeichen enthalten",
-			"PASSWORD_ERR_COMPLEXITY": "Passwort muss Ziffern und Buchstaben enthalten",
-			"PASSWORD_REPEAT": "Repeat password",
-			"PASSWORD_REPEAT_ERR": "Passwörter stimmen nicht überein",
-			"SAVE_BUTTON": "SPEICHERN",
-			"SUCCESS": "Passwort erfolgreich geändert.",
-			"SUCCESS_OK_BUTTON": "OK"
-		},
-		"CHANGE_USERNAME": {
-			"TITLE": "Benutzernamen ändern",
-			"USERNAME": "Benutzername",
-			"USERNAME_ERR_REQUIRED": "Benutzername muss angegeben werden",
-			"USERNAME_ERR_MIN": "Benutzername muss mindestens zwei Zeichen enthalten",
-			"USERNAME_ERR_MAX": "Benutzername darf maximal 20 Zeichen enthalten",
-			"SAVE_BUTTON": "SPEICHERN",
-			"SUCCESS": "Benutzername erfolgreich geändert.",
-			"SUCCESS_OK_BUTTON": "OK"
-		},
-		"CHANGE_PICTURE": {
-			"TITLE": "Profilbild ändern",
-			"IMAGE_CROP": "Bild zuschneiden",
-			"IMAGE_UPLOAD": "Bild hochladen",
-			"SAVE_BUTTON": "SPEICHERN",
-			"SUCCESS": "Profilbild erfolgreich geändert.",
-			"SUCCESS_OK_BUTTON": "OK"
-		},
 		"PROJECT_COMP_CREATE": {
 			"COMP_TITLE": "Neue Komponente",
 			"PROJECT_TITLE": "Neues Projekt",
@@ -271,6 +231,12 @@
 			"COPY": "Kopieren",
 			"SAVE": "Speichern",
 			"CANCEL": "Abbrechen"
+		},
+		"DELETE_IMAGE": {
+			"TITLE": "Bild löschen",
+			"DELETE": "Löschen bestätigen",
+			"CANCEL": "Abbrechen",
+			"CONFIRM": "Willst du dein Proilbild wirklich löschen?"
 		}
 	},
 	"INFO_POPUP": {

@@ -1,4 +1,4 @@
-import {Body, Controller, CurrentUser, Get, Post, Render, UseAfter, UseBefore} from 'routing-controllers';
+import {Body, Controller, CurrentUser, Delete, Get, Post, Render, UseAfter, UseBefore} from 'routing-controllers';
 import {CheckAuthenticatedFrontMiddleware} from '../../../middleware/auth/frontend-guards/check-authenticated-front.middleware';
 import {setTitleMiddleware} from '../../../middleware/action/set-title-middleware';
 import {User} from '../../../database/entities/user.entity';
@@ -10,11 +10,16 @@ import {ProfileUpdateEmail} from '../../../models/request/frontend/my-account/pr
 import {FormDataError} from '../../../errors/form-data.error';
 import {Preferences} from '../../../decorator/preferences.decorator';
 import {UserPreferences} from '../../../models/user-preferences';
+import {InjectRepository} from 'typeorm-typedi-extensions';
+import {ProfilePictureRepository} from '../../../database/repositories/profile-picture.repository';
 
 @Controller('/my/account')
 export class MyAccountController {
 
-	constructor(private userService: UserService) {}
+	constructor(
+		private userService: UserService,
+		@InjectRepository() private profilePictureRepo: ProfilePictureRepository
+	) {}
 
 	@Get('/')
 	@Render('my-account')
@@ -60,6 +65,16 @@ export class MyAccountController {
 			throw new FormDataError(body, undefined, 'unknown');
 		}
 		throw new FormDataError(body, 'email', 'emailTaken');
+	}
+
+	@Post('/profile/delete-image')
+	@UseBefore(CheckAuthenticatedFrontMiddleware)
+	public async accountProfileDeleteImage(@CurrentUser() user: User, @Redirect() redirect: RedirectFunction) {
+		if (!user.image) {
+			return redirect();
+		}
+		await this.profilePictureRepo.remove(user.image);
+		return redirect();
 	}
 
 	@Get('/security')

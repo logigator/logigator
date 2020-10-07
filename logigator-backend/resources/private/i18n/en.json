@@ -170,46 +170,6 @@
 			"ERR_VERIFICATION_MAIL": "Verification-mail could not be sent, try again when signing in.",
 			"ERR_UNKNOWN": "An unknown error occurred."
 		},
-		"CHANGE_EMAIL": {
-			"TITLE": "Change email",
-			"EMAIL": "Email",
-			"EMAIL_ERR_REQUIRED": "Email is required.",
-			"EMAIL_ERR_INVALID": "Please enter a valid email address.",
-			"SAVE_BUTTON": "SAVE",
-			"SUCCESS_1": "Email changed successfully.",
-			"SUCCESS_2": "Please check your mailbox and verify your new email.",
-			"SUCCESS_OK_BUTTON": "OK"
-		},
-		"CHANGE_PASSWORD": {
-			"TITLE": "Change password",
-			"PASSWORD": "Password",
-			"PASSWORD_ERR_REQUIRED": "Password is required.",
-			"PASSWORD_ERR_MIN": "Password must contain at least eight characters.",
-			"PASSWORD_ERR_COMPLEXITY": "Password must contain letters and digits.",
-			"PASSWORD_REPEAT": "Repeat password",
-			"PASSWORD_REPEAT_ERR": "Passwords do not match",
-			"SAVE_BUTTON": "SAVE",
-			"SUCCESS": "Password changed successfully.",
-			"SUCCESS_OK_BUTTON": "OK"
-		},
-		"CHANGE_USERNAME": {
-			"TITLE": "Change username",
-			"USERNAME": "Username",
-			"USERNAME_ERR_REQUIRED": "Username is required.",
-			"USERNAME_ERR_MIN": "Username has to have at least two characters.",
-			"USERNAME_ERR_MAX": "Username may contain a maximum of 20 characters.",
-			"SAVE_BUTTON": "SAVE",
-			"SUCCESS": "Username changed successfully.",
-			"SUCCESS_OK_BUTTON": "OK"
-		},
-		"CHANGE_PICTURE": {
-			"TITLE": "Change picture",
-			"IMAGE_CROP": "Crop image",
-			"IMAGE_UPLOAD": "Upload image",
-			"SAVE_BUTTON": "SAVE",
-			"SUCCESS": "Avatar changed successfully.",
-			"SUCCESS_OK_BUTTON": "OK"
-		},
 		"PROJECT_COMP_CREATE": {
 			"COMP_TITLE": "New Component",
 			"PROJECT_TITLE": "New Project",
@@ -271,6 +231,12 @@
 			"COPY": "Copy",
 			"SAVE": "Save",
 			"CANCEL": "Cancel"
+		},
+		"DELETE_IMAGE": {
+			"TITLE": "Delete Image",
+			"DELETE": "Confirm Delete",
+			"CANCEL": "Cancel",
+			"CONFIRM": "Do you really want to delete your Profile Image?"
 		}
 	},
 	"INFO_POPUP": {

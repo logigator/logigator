@@ -1,0 +1,14 @@
+{{#> popup title=i18n.POPUP.DELETE_IMAGE.TITLE  defaultOpen=false triggers='.view-my-account-profile__picture-delete'}}
+	<div class="partial-delete-image-popup">
+		{{#> form action='/my/account/profile/delete-image' }}
+
+			<p class="partial-delete-image-popup__confirm-text">{{i18n.POPUP.DELETE_IMAGE.CONFIRM}}</p>
+
+			<div class="view-project-component-delete-popup__buttons">
+				<button type="button" class="btn-raised secondary partial-delete-image-popup__cancel partial-popup__close">{{i18n.POPUP.DELETE_IMAGE.CANCEL}}</button>
+				<button type="submit" class="btn-raised danger partial-delete-image-popup__submit">{{i18n.POPUP.DELETE_IMAGE.DELETE}}</button>
+			</div>
+
+		{{/form}}
+	</div>
+{{/popup}}

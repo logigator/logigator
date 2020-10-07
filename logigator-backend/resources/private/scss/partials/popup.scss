@@ -35,7 +35,7 @@
 		z-index: 600;
 		box-shadow: 10px 10px 10px -5px rgba(0,0,0,0.5);
 
-	@include media-breakpoint-down('md') {
+	@include media-breakpoint-down('sm') {
 			min-width: 100%;
 			min-height: 100%;
 			width: 100%;
