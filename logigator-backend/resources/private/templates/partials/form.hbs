@@ -1,4 +1,4 @@
-<!-- parameters: action: string, namePrefix?: string method: string, class: string -->
+{{! parameters: action: string, namePrefix?: string method: string, class: string }}
 
 {{#formNameScope action namePrefix }}
 	<form class="partial-form {{class}}" action="{{action}}" method="{{ternary method method 'POST'}}" name="{{@formName}}">

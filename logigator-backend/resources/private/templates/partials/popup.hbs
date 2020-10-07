@@ -1,4 +1,4 @@
-<!-- parameters: title: string, defaultOpen: boolean, triggers: selectors separated with :: ex. .class1::.class2, jsFunction: string - for dynamic popups -->
+{{! parameters: title: string, defaultOpen: boolean, triggers: selectors separated with :: ex. .class1::.class2, jsFunction: string - for dynamic popups }}
 
 <div class="partial-popup {{printIf defaultOpen 'is-open'}}" data-triggers="{{triggers}}" {{#if jsFunction}}data-js="{{jsFunction}}"{{/if}}>
 	<div class="partial-popup__popup">
