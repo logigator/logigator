@@ -1,4 +1,40 @@
 @import "../config/config";
+@import "../partials/account-mobile-nav";
+
 
 @include view('my-account') {
+	padding-top: $user-space-nav-height;
+
+
+	@include element('link') {
+		height: $user-space-nav-height;
+		display: flex;
+		align-items: center;
+		text-decoration: none;
+
+		@include themify() {
+			border-bottom: 1px solid themed('text-primary');
+
+			&:hover {
+				background-color: darken(themed('accent2'), 3%);
+			}
+		}
+
+		&:last-child {
+			border-bottom: none;
+		}
+
+		> p {
+			flex-grow: 1;
+			margin: 0;
+			padding-left: 1rem;
+		}
+	}
+
+	@include element('arrow') {
+		height: 100%;
+		padding: 0.3rem;
+		z-index: 100;
+	}
+
 }

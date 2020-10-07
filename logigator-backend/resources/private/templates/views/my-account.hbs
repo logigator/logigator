@@ -1,3 +1,20 @@
+{{> account-mobile-nav title=i18n.USERSPACE.NAV.ACCOUNT showBack=false }}
+
 <div class="view-my-account">
+
+	<a class="view-my-account__link" href="{{linkHref 'my/account/profile'}}">
+		<p>{{i18n.USERSPACE.ACCOUNT.NAV.PROFILE}}</p>
+		{{> icon icon='angle-right' alt='Arrow Rigth' class='view-my-account__arrow' }}
+	</a>
+
+	<a class="view-my-account__link" href="{{linkHref 'my/account/security'}}">
+		<p>{{i18n.USERSPACE.ACCOUNT.NAV.SECURITY}}</p>
+		{{> icon icon='angle-right' alt='Arrow Rigth' class='view-my-account__arrow' }}
+	</a>
+
+	<a class="view-my-account__link" href="{{linkHref 'my/account/delete'}}">
+		<p>{{i18n.USERSPACE.ACCOUNT.NAV.DELETE}}</p>
+		{{> icon icon='angle-right' alt='Arrow Rigth' class='view-my-account__arrow' }}
+	</a>
 
 </div>

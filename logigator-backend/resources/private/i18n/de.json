@@ -108,7 +108,18 @@
 				"DELETE": "Account löschen"
 			},
 			"PROFILE": {
-				"HEADLINE": "Profileinstetellungen"
+				"DELETE_IMAGE": "Bild löschen",
+				"CHANGE_IMAGE": "Bild ändern",
+				"EMAIL": "Email",
+				"EMAIL_ERR_REQUIRED": "E-Mail muss angegeben werden.",
+				"EMAIL_ERR_INVALID": "Bitte geben Sie eine valide E-Mail an.",
+				"EMAIL_ERR_TAKEN": "Email Adresse wird bereits verwendet",
+				"USERNAME": "Benutzername",
+				"USERNAME_ERR_REQUIRED": "Benutzername muss angegeben werden.",
+				"USERNAME_ERR_MIN": "Benutzername muss mindestens zwei Zeichen enthalten.",
+				"USERNAME_ERR_MAX": "Benutzername darf maximal 20 Zeichen enthalten.",
+				"USERNAME_ERR_PATTERN": "Benutzername darf nur a-z, A-Z, 0-9, _ oder - enthalten.",
+				"SAVE": "Speichern"
 			}
 		}
 	},

@@ -2,6 +2,7 @@
 @import "../shared/my-account-pages";
 @import "../partials/user-space-nav";
 @import "../partials/account-nav";
+@import "../partials/account-mobile-nav";
 
 @include view('my-account-profile') {
 	@include accountPagesShared();

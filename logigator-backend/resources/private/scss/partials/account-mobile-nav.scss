@@ -1,0 +1,44 @@
+@include partial('account-mobile-nav') {
+	height: $user-space-nav-height;
+	width: 100%;
+	top: $header-height;
+	position: fixed;
+	display: flex;
+	align-items: center;
+	justify-content: flex-start;
+
+	@include themify() {
+		background-color: themed('accent2');
+	}
+
+	@include media-breakpoint-up('md') {
+		display: none;
+	}
+
+	@include element('back-link') {
+		height: 100%;
+		cursor: pointer;
+	}
+
+	@include element('back') {
+		transform: rotate(180deg);
+		height: 100%;
+		padding: 0.3rem;
+		z-index: 100;
+	}
+
+	@include element('title') {
+		position: absolute;
+		top: 0;
+		width: 100%;
+		height: 100%;
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		pointer-events: none;
+
+		> p {
+			font-size: 1.2rem;
+		}
+	}
+}

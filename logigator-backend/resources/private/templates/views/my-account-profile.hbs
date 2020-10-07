@@ -1,11 +1,6 @@
 {{> user-space-nav }}
+{{> account-mobile-nav title=i18n.USERSPACE.ACCOUNT.NAV.PROFILE showBack=true }}
 
-<div class="view-my-account-profile__mobile-back">
-	{{> icon icon='angle-right' alt='Back' class='view-my-account-profile__mobile-back-btn' }}
-	<div class="view-my-account-profile__mobile-back-title">
-		<p>Profile</p>
-	</div>
-</div>
 
 <div class="view-my-account-profile">
 
@@ -19,22 +14,22 @@
 				<img src="{{user.image}}" alt="Profile Image" class="view-my-account-profile__picture-image">
 				<div class="view-my-account-profile__picture-btns">
 					{{#if userData.hasImage }}
-						<button class="btn-raised danger">Delete Image</button>
+						<button class="btn-raised danger">{{i18n.USERSPACE.ACCOUNT.PROFILE.DELETE_IMAGE}}</button>
 					{{/if}}
-					<button class="btn-raised primary view-my-account-profile__picture-change">Change Image</button>
+					<button class="btn-raised primary view-my-account-profile__picture-change">{{i18n.USERSPACE.ACCOUNT.PROFILE.CHANGE_IMAGE}}</button>
 				</div>
 			</div>
 
 			<div class="view-my-account-profile__category view-my-account-profile__email">
 				{{#> form action='/my/account/profile/update-email' class='view-my-account-profile__category-form' }}
 
-					{{#> form-input name='email' type='email' label='Email' autocomplete='email' value=userData.email }}
-						{{> form-error error='isNotEmpty' message='i18n.POPUP.LOGIN.EMAIL_ERR_REQUIRED' }}
-						{{> form-error error='isEmail' message='i18n.POPUP.LOGIN.EMAIL_ERR_INVALID' }}
-						{{> form-error error='emailTaken' message='i18n.POPUP.REGISTER.EMAIL_ERR_TAKEN' }}
+					{{#> form-input name='email' type='email' label=i18n.USERSPACE.ACCOUNT.PROFILE.EMAIL autocomplete='email' value=userData.email }}
+						{{> form-error error='isNotEmpty' message=i18n.USERSPACE.ACCOUNT.PROFILE.EMAIL_ERR_REQUIRED }}
+						{{> form-error error='isEmail' message=i18n.USERSPACE.ACCOUNT.PROFILE.EMAIL_ERR_INVALID }}
+						{{> form-error error='emailTaken' message=i18n.USERSPACE.ACCOUNT.PROFILE.EMAIL_ERR_TAKEN }}
 					{{/form-input}}
 
-					<button type="submit" class="btn-raised primary view-my-account-profile__category-save">Save</button>
+					<button type="submit" class="btn-raised primary view-my-account-profile__category-save">{{i18n.USERSPACE.ACCOUNT.PROFILE.SAVE}}</button>
 
 				{{/form}}
 			</div>
@@ -42,14 +37,14 @@
 			<div class="view-my-account-profile__category view-my-account-profile__username">
 				{{#> form action='/my/account/profile/update-username' class='view-my-account-profile__category-form' }}
 
-					{{#> form-input name='username' type='text' label='Username' autocomplete='email' value=userData.username }}
-						{{> form-error error='isNotEmpty' message=i18n.POPUP.REGISTER.USERNAME_ERR_REQUIRED }}
-						{{> form-error error='minLength' message=i18n.POPUP.REGISTER.USERNAME_ERR_MIN clientValData='2'}}
-						{{> form-error error='maxLength' message=i18n.POPUP.REGISTER.USERNAME_ERR_MAX clientValData='20' }}
-						{{> form-error error='matches' message=i18n.POPUP.REGISTER.USERNAME_ERR_PATTERN clientValData='^[a-zA-Z0-9_-]+$' }}
+					{{#> form-input name='username' type='text' label=i18n.USERSPACE.ACCOUNT.PROFILE.USERNAME autocomplete='username' value=userData.username }}
+						{{> form-error error='isNotEmpty' message=i18n.USERSPACE.ACCOUNT.PROFILE.USERNAME_ERR_REQUIRED }}
+						{{> form-error error='minLength' message=i18n.USERSPACE.ACCOUNT.PROFILE.USERNAME_ERR_MIN clientValData='2'}}
+						{{> form-error error='maxLength' message=i18n.USERSPACE.ACCOUNT.PROFILE.USERNAME_ERR_MAX clientValData='20' }}
+						{{> form-error error='matches' message=i18n.USERSPACE.ACCOUNT.PROFILE.USERNAME_ERR_PATTERN clientValData='^[a-zA-Z0-9_-]+$' }}
 					{{/form-input}}
 
-					<button type="submit" class="btn-raised primary view-my-account-profile__category-save">Save</button>
+					<button type="submit" class="btn-raised primary view-my-account-profile__category-save">{{i18n.USERSPACE.ACCOUNT.PROFILE.SAVE}}</button>
 
 				{{/form}}
 			</div>
