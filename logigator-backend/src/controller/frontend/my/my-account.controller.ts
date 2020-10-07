@@ -8,7 +8,7 @@ export class MyAccountController {
 
 	@Get('/')
 	@Render('my-account')
-	@UseBefore(CheckAuthenticatedFrontMiddleware, setTitleMiddleware('ACCOUNT.SETTINGS'))
+	@UseBefore(CheckAuthenticatedFrontMiddleware, setTitleMiddleware('TITLE.ACCOUNT'))
 	public account() {
 		return '';
 	}
@@ -19,11 +19,30 @@ export class MyAccountController {
 	public accountProfile(@CurrentUser() user: User) {
 
 		return {
+			active: 'account-profile',
 			userData: {
 				email: user.email,
 				username: user.username,
 				hasImage: !!user.image
 			}
+		};
+	}
+
+	@Get('/security')
+	@Render('my-account-security')
+	@UseBefore(CheckAuthenticatedFrontMiddleware, setTitleMiddleware('TITLE.ACCOUNT_SECURITY'))
+	public accountSecurity() {
+		return {
+			active: 'account-security'
+		};
+	}
+
+	@Get('/delete')
+	@Render('my-account-delete')
+	@UseBefore(CheckAuthenticatedFrontMiddleware, setTitleMiddleware('TITLE.ACCOUNT_DELETE'))
+	public accountDelete() {
+		return {
+			active: 'account-delete'
 		};
 	}
 

@@ -20,7 +20,9 @@
 
 		@include state('active') {
 			@include themify() {
-				background-color: themed('accent2');
+				p {
+					color: themed('primary');
+				}
 			}
 		}
 

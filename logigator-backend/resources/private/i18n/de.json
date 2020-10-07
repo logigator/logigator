@@ -18,7 +18,9 @@
 		"PROJECTS": "Logigator - Projekte",
 		"COMPONENTS": "Logigator - Komponenten",
 		"ACCOUNT": "Logigator - Account",
-		"ACCOUNT_PROFILE": "Logigator - Profil"
+		"ACCOUNT_PROFILE": "Logigator - Profil",
+		"ACCOUNT_SECURITY": "Logigator - Sicherheit",
+		"ACCOUNT_DELETE": "Logigator - Account löschen"
 	},
 	"SITE_HEADER": {
 		"DOWNLOAD": "Download",

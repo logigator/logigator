@@ -1,15 +1,15 @@
 <div class="partial-account-nav">
-	<div class="partial-account-nav__link">
+	<div class="partial-account-nav__link {{printIf (expr active '===' 'account-profile') 'is-active'}}">
 		<a href="{{linkHref 'my/account/profile'}}">
 			<p>{{i18n.USERSPACE.ACCOUNT.NAV.PROFILE}}</p>
 		</a>
 	</div>
-	<div class="partial-account-nav__link">
+	<div class="partial-account-nav__link {{printIf (expr active '===' 'account-security') 'is-active'}}">
 		<a href="{{linkHref 'my/account/security'}}">
 			<p>{{i18n.USERSPACE.ACCOUNT.NAV.SECURITY}}</p>
 		</a>
 	</div>
-	<div class="partial-account-nav__link">
+	<div class="partial-account-nav__link {{printIf (expr active '===' 'account-delete') 'is-active'}}">
 		<a href="{{linkHref 'my/account/delete'}}">
 			<p>{{i18n.USERSPACE.ACCOUNT.NAV.DELETE}}</p>
 		</a>

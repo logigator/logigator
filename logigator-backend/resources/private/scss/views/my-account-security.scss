@@ -1,0 +1,10 @@
+@import "../config/config";
+@import "../shared/my-account-pages";
+@import "../partials/user-space-nav";
+@import "../partials/account-nav";
+@import "../partials/account-mobile-nav";
+
+@include view('my-account-security') {
+	@include accountPagesShared();
+
+}
