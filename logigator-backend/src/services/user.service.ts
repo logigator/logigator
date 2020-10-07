@@ -205,4 +205,20 @@ export class UserService {
 		return true;
 	}
 
+	public connectTwitter(user: User, profile: TwitterProfile): Promise<User> {
+		if (user.twitterUserId) {
+			throw new Error('Already Connected');
+		}
+		user.twitterUserId = profile.id;
+		return this.userRepo.save(user);
+	}
+
+	public connectGoogle(user: User, profile: GoogleProfile): Promise<User> {
+		if (user.googleUserId) {
+			throw new Error('Already Connected');
+		}
+		user.googleUserId = profile.id;
+		return this.userRepo.save(user);
+	}
+
 }

@@ -129,6 +129,7 @@
 				"CONNECTED_ACCOUNTS": "Connected Accounts",
 				"CONNECT_NOW": "Connect now",
 				"CONNECTED": "Connected",
+				"CONNECT_ERR_UNKNOWN": "An unknown Error occurred",
 				"PASSWORD_EXPLANATION": "You can add a Password to your Account to be able to login with it, your Account will stay connected to all other Social Media Accounts.",
 				"CURRENT_PASSWORD": "Current Password",
 				"CURRENT_PASSWORD_ERR_REQUIRED": "Current Password is required.",

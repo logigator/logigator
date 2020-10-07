@@ -60,25 +60,25 @@ export class AuthController {
 	}
 
 	@Get('/google-login')
-	@UseBefore(CheckNotAuthenticatedFrontMiddleware, GoogleLoginMiddleware)
+	@UseBefore(GoogleLoginMiddleware)
 	public googleLogin() {
 	}
 
 
 	@Get('/google-authenticate')
-	@UseBefore(CheckNotAuthenticatedFrontMiddleware, GoogleAuthenticationMiddleware)
-	@UseAfter(formErrorMiddleware())
+	@UseBefore(GoogleAuthenticationMiddleware)
+	@UseAfter(formErrorMiddleware((request, response) => response.locals.connectedAccounts ? '/my/account/security' : '/'))
 	public googleAuthenticate() {
 	}
 
 	@Get('/twitter-login')
-	@UseBefore(CheckNotAuthenticatedFrontMiddleware, TwitterLoginMiddleware)
+	@UseBefore(TwitterLoginMiddleware)
 	public twitterLogin() {
 	}
 
 	@Get('/twitter-authenticate')
-	@UseBefore(CheckNotAuthenticatedFrontMiddleware, TwitterAuthenticationMiddleware)
-	@UseAfter(formErrorMiddleware())
+	@UseBefore(TwitterAuthenticationMiddleware)
+	@UseAfter(formErrorMiddleware((request, response) => response.locals.connectedAccounts ? '/my/account/security' : '/'))
 	public twitterAuthenticate() {
 	}
 

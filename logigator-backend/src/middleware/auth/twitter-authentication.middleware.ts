@@ -8,10 +8,14 @@ import {updateAuthenticatedCookie} from '../../functions/update-authenticated-co
 export class TwitterAuthenticationMiddleware implements ExpressMiddlewareInterface {
 
 	use(request: Request, response: Response, next?: (err?: any) => any): any {
-		return passport.authenticate('twitter', (err, user: User) => {
+		return passport.authenticate('twitter', (err, user: User, args) => {
 			if (err) {
 				return next(err);
 			}
+			if (args?.connectedAccounts) {
+				return redirect(request, response, { target: '/my/account/security'});
+			}
+
 			request.login(user, loginErr => {
 				if (loginErr) {
 					return next(loginErr);

@@ -18,6 +18,11 @@
 		@include themify() {
 			border-bottom: 1px solid themed('accenet2');
 		}
+
+		.partial-form-error {
+			text-align: left;
+			margin-bottom: 1rem;
+		}
 	}
 
 	@include element('linking-account') {

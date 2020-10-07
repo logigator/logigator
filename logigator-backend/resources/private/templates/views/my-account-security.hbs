@@ -9,7 +9,7 @@
 		</div>
 		<div class="view-my-account-security__main">
 
-			<div class="view-my-account-security__linking">
+			{{#> form action='/my/account/security/connect-account' method='GET' class='view-my-account-security__linking' }}
 
 				<h2 class="view-my-account-security__headline">{{i18n.USERSPACE.ACCOUNT.SECURITY.CONNECTED_ACCOUNTS}}</h2>
 
@@ -21,7 +21,7 @@
 					{{#if connectedGoogle}}
 						<p>{{i18n.USERSPACE.ACCOUNT.SECURITY.CONNECTED}}</p>
 					{{else}}
-						<button class="btn-outline primary">{{i18n.USERSPACE.ACCOUNT.SECURITY.CONNECT_NOW}}</button>
+						<button type="submit" formaction="/auth/google-login" class="btn-outline primary">{{i18n.USERSPACE.ACCOUNT.SECURITY.CONNECT_NOW}}</button>
 					{{/if}}
 				</div>
 				<div class="view-my-account-security__linking-account">
@@ -32,10 +32,15 @@
 					{{#if connectedTwitter}}
 						<p>{{i18n.USERSPACE.ACCOUNT.SECURITY.CONNECTED}}</p>
 					{{else}}
-						<button class="btn-outline primary">{{i18n.USERSPACE.ACCOUNT.SECURITY.CONNECT_NOW}}</button>
+						<button type="submit" formaction="/auth/twitter-login" class="btn-outline primary">{{i18n.USERSPACE.ACCOUNT.SECURITY.CONNECT_NOW}}</button>
 					{{/if}}
 				</div>
-			</div>
+
+				{{#> form-general-errors}}
+					{{> form-error error='unknown' message=i18n.USERSPACE.ACCOUNT.SECURITY.CONNECT_ERR_UNKNOWN }}
+				{{/form-general-errors}}
+
+			{{/form}}
 
 			<div class="view-my-account-security__password">
 
@@ -45,7 +50,7 @@
 					<p class="view-my-account-security__password-explanation">{{i18n.USERSPACE.ACCOUNT.SECURITY.PASSWORD_EXPLANATION}}</p>
 				{{/unless}}
 
-				{{#> form action='/my/account/profile/update-password' class='view-my-account-security__password-form' }}
+				{{#> form action='/my/account/security/update-password' class='view-my-account-security__password-form' }}
 
 					{{#unless localLoginPassword}}
 						{{#> form-input name='current_password' type='password' label=i18n.USERSPACE.ACCOUNT.SECURITY.CURRENT_PASSWORD autocomplete='password' }}

@@ -8,6 +8,7 @@ import {Strategy as TwitterStrategy} from 'passport-twitter';
 import {Strategy as LocalStrategy} from 'passport-local';
 import {InjectRepository} from 'typeorm-typedi-extensions';
 import {UserRepository} from '../database/repositories/user.repository';
+import {FormDataError} from '../errors/form-data.error';
 
 @Service()
 export class PassportConfigService {
@@ -36,16 +37,30 @@ export class PassportConfigService {
 	}
 
 	private setupGoogle() {
-		passport.use(new OAuth2Strategy(
-			this.configService.getConfig('passport').google,
-			async (accessToken, refreshToken, profile, done) => {
+		passport.use(new OAuth2Strategy({
+			...this.configService.getConfig('passport').google,
+			passReqToCallback: true
+		},
+		async (request, accessToken, refreshToken, profile, done) => {
+			if (request.isAuthenticated()) {
 				try {
-					const user = await this.userService.findOrCreateGoogleUser(profile);
-					done(null, user);
-				} catch (error) {
-					done(error);
+					request.res.locals.connectedAccounts = true;
+					const user = await this.userService.connectGoogle(request.user, profile);
+					done(null, user, {connectedAccounts: true});
+					return;
+				} catch (e) {
+					done(new FormDataError({}, undefined, 'unknown', 'my_account_security_connect-account'));
+					return;
 				}
 			}
+
+			try {
+				const user = await this.userService.findOrCreateGoogleUser(profile);
+				done(null, user);
+			} catch (error) {
+				done(error);
+			}
+		}
 		));
 	}
 
@@ -56,9 +71,22 @@ export class PassportConfigService {
 				includeEmail: true,
 				includeEntities: false,
 				includeStatus: false,
-				forceLogin: true
+				forceLogin: true,
+				passReqToCallback: true
 			},
-			async (accessToken, refreshToken, profile, done) => {
+			async (request, accessToken, refreshToken, profile, done) => {
+				if (request.isAuthenticated()) {
+					try {
+						request.res.locals.connectedAccounts = true;
+						const user = await this.userService.connectTwitter(request.user, profile);
+						done(null, user, {connectedAccounts: true});
+						return;
+					} catch (e) {
+						done(new FormDataError({}, undefined, 'unknown', 'my_account_security_connect-account'));
+						return;
+					}
+				}
+
 				try {
 					const user = await this.userService.findOrCreateTwitterUser(profile);
 					done(null, user);
