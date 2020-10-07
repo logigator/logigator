@@ -7,4 +7,65 @@
 @include view('my-account-security') {
 	@include accountPagesShared();
 
+	@include element('headline') {
+		margin: 0;
+		font-weight: 400;
+	}
+
+	@include element('linking') {
+		margin-bottom: 1rem;
+
+		@include themify() {
+			border-bottom: 1px solid themed('accenet2');
+		}
+	}
+
+	@include element('linking-account') {
+		display: flex;
+		align-items: center;
+		justify-content: space-between;
+		margin-bottom: 1rem;
+		margin-top: 0.25rem;
+
+		> p {
+			margin: 0;
+		}
+	}
+
+	@include element('linking-account-type') {
+		display: flex;
+		align-items: center;
+
+		> p {
+			margin: 0;
+			font-size: 1.4rem;
+		}
+
+		> img {
+			margin-right: 1rem;
+			width: 2rem;
+			height: 2rem;
+		}
+	}
+
+	@include element('password-explanation') {
+		margin-top: 0;
+		margin-bottom: 1.5rem;
+	}
+
+	@include element('password-form') {
+
+		.partial-form-input {
+			margin-top: 1rem;
+
+			&:last-of-type {
+				margin-bottom: 1rem;
+			}
+		}
+	}
+
+	@include element('password-save') {
+		min-width: 8rem;
+	}
+
 }

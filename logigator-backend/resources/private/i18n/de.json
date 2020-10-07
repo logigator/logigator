@@ -124,6 +124,22 @@
 				"USERNAME_ERR_PATTERN": "Benutzername darf nur a-z, A-Z, 0-9, _ oder - enthalten.",
 				"USERNAME_ERR_CHANGE": "Diesr Benutzername ist dein aktueller Benutzername.",
 				"SAVE": "Speichern"
+			},
+			"SECURITY": {
+				"CONNECTED_ACCOUNTS": "Verbundene Accounts",
+				"CONNECT_NOW": "Jetzt verbinden",
+				"CONNECTED": "Verbunden",
+				"PASSWORD_EXPLANATION": "Du kannst ein Passwort zu deinem Account hinzufügen, um dich damit anmelden zu können. Alle Social Media Accounts bleiben mit deinem Account verbunden",
+				"CURRENT_PASSWORD": "Aktuelles Passwort",
+				"CURRENT_PASSWORD_ERR_REQUIRED": "Aktuelles Passwort muss eingegeben werden.",
+				"PASSWORD": "Passwort",
+				"PASSWORD_ERR_REQUIRED": "Passwort muss angegeben werden.",
+				"PASSWORD_ERR_MIN": "Passwort muss mindestens acht Zeichen enthalten.",
+				"PASSWORD_ERR_COMPLEXITY": "Passwort muss Ziffern und Buchstaben enthalten.",
+				"PASSWORD_REPEAT": "Passwort wiederholen",
+				"PASSWORD_REPEAT_ERR_REQUIRED": "Passwort muss wiederholt werden.",
+				"PASSWORD_REPEAT_ERR": "Passwörter stimmen nicht überein.",
+				"SAVE": "Speichern"
 			}
 		}
 	},

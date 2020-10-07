@@ -8,7 +8,67 @@
 			{{> account-nav }}
 		</div>
 		<div class="view-my-account-security__main">
-			test
+
+			<div class="view-my-account-security__linking">
+
+				<h2 class="view-my-account-security__headline">{{i18n.USERSPACE.ACCOUNT.SECURITY.CONNECTED_ACCOUNTS}}</h2>
+
+				<div class="view-my-account-security__linking-account">
+					<div class="view-my-account-security__linking-account-type">
+						<img src="assets/icons/dark/google.svg" alt="google login icon">
+						<p>Google</p>
+					</div>
+					{{#if connectedGoogle}}
+						<p>{{i18n.USERSPACE.ACCOUNT.SECURITY.CONNECTED}}</p>
+					{{else}}
+						<button class="btn-outline primary">{{i18n.USERSPACE.ACCOUNT.SECURITY.CONNECT_NOW}}</button>
+					{{/if}}
+				</div>
+				<div class="view-my-account-security__linking-account">
+					<div class="view-my-account-security__linking-account-type">
+						<img src="assets/icons/dark/twitter.svg" alt="google login icon">
+						<p>Twitter</p>
+					</div>
+					{{#if connectedTwitter}}
+						<p>{{i18n.USERSPACE.ACCOUNT.SECURITY.CONNECTED}}</p>
+					{{else}}
+						<button class="btn-outline primary">{{i18n.USERSPACE.ACCOUNT.SECURITY.CONNECT_NOW}}</button>
+					{{/if}}
+				</div>
+			</div>
+
+			<div class="view-my-account-security__password">
+
+				<h2 class="view-my-account-security__headline">{{i18n.USERSPACE.ACCOUNT.SECURITY.PASSWORD}}</h2>
+
+				{{#unless localLoginPassword}}
+					<p class="view-my-account-security__password-explanation">{{i18n.USERSPACE.ACCOUNT.SECURITY.PASSWORD_EXPLANATION}}</p>
+				{{/unless}}
+
+				{{#> form action='/my/account/profile/update-password' class='view-my-account-security__password-form' }}
+
+					{{#unless localLoginPassword}}
+						{{#> form-input name='current_password' type='password' label=i18n.USERSPACE.ACCOUNT.SECURITY.CURRENT_PASSWORD autocomplete='password' }}
+							{{> form-error error='isNotEmpty' message=i18n.USERSPACE.ACCOUNT.SECURITY.CURRENT_PASSWORD_ERR_REQUIRED }}
+						{{/form-input}}
+					{{/unless}}
+
+					{{#> form-input name='password' type='password' label=i18n.USERSPACE.ACCOUNT.SECURITY.PASSWORD autocomplete='new-password'}}
+						{{> form-error error='isNotEmpty' message=i18n.USERSPACE.ACCOUNT.SECURITY.PASSWORD_ERR_REQUIRED }}
+						{{> form-error error='minLength' message=i18n.USERSPACE.ACCOUNT.SECURITY.PASSWORD_ERR_MIN clientValData='8' }}
+						{{> form-error error='matches' message=i18n.USERSPACE.ACCOUNT.SECURITY.PASSWORD_ERR_COMPLEXITY clientValData='^(?=.*[A-Za-z])(?=.*[0-9]).*$' }}
+					{{/form-input}}
+
+					{{#> form-input name='password_repeat' type='password' label=i18n.USERSPACE.ACCOUNT.SECURITY.PASSWORD_REPEAT autocomplete='new-password'}}
+						{{> form-error error='isNotEmpty' message=i18n.USERSPACE.ACCOUNT.SECURITY.PASSWORD_REPEAT_ERR_REQUIRED }}
+						{{> form-error error='matchesProperty' message=i18n.USERSPACE.ACCOUNT.SECURITY.PASSWORD_REPEAT_ERR clientValData='password' }}
+					{{/form-input}}
+
+					<button type="submit" class="btn-raised primary view-my-account-security__password-save">{{i18n.USERSPACE.ACCOUNT.SECURITY.SAVE}}</button>
+
+				{{/form}}
+			</div>
+
 		</div>
 	</section>
 

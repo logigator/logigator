@@ -16,6 +16,7 @@
 
 	@include element('account-nav') {
 		width: 14rem;
+		min-width: 12rem;
 
 		@include media-breakpoint-down('md') {
 			display: none;

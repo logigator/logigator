@@ -124,6 +124,22 @@
 				"USERNAME_ERR_PATTERN": "Username may only contain a-z, A-Z, 0-9, _ or -",
 				"USERNAME_ERR_CHANGE": "This is your current Username.",
 				"SAVE": "Save"
+			},
+			"SECURITY": {
+				"CONNECTED_ACCOUNTS": "Connected Accounts",
+				"CONNECT_NOW": "Connect now",
+				"CONNECTED": "Connected",
+				"PASSWORD_EXPLANATION": "You can add a Password to your Account to be able to login with it, your Account will stay connected to all other Social Media Accounts.",
+				"CURRENT_PASSWORD": "Current Password",
+				"CURRENT_PASSWORD_ERR_REQUIRED": "Current Password is required.",
+				"PASSWORD": "Password",
+				"PASSWORD_ERR_REQUIRED": "Password is required.",
+				"PASSWORD_ERR_MIN": "Password must contain at least eight characters.",
+				"PASSWORD_ERR_COMPLEXITY": "Password must contain letters and digits.",
+				"PASSWORD_REPEAT": "Repeat password",
+				"PASSWORD_REPEAT_ERR_REQUIRED": "Password must be repeated.",
+				"PASSWORD_REPEAT_ERR": "Passwords do not match.",
+				"SAVE": "Save"
 			}
 		}
 	},

@@ -80,9 +80,12 @@ export class MyAccountController {
 	@Get('/security')
 	@Render('my-account-security')
 	@UseBefore(CheckAuthenticatedFrontMiddleware, setTitleMiddleware('TITLE.ACCOUNT_SECURITY'))
-	public accountSecurity() {
+	public accountSecurity(@CurrentUser() user: User) {
 		return {
-			active: 'account-security'
+			active: 'account-security',
+			connectedGoogle: !!user.googleUserId,
+			connectedTwitter: !!user.twitterUserId,
+			localLoginPassword: !!user.password
 		};
 	}
 
