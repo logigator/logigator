@@ -2,15 +2,18 @@
  * @param {boolean?} open toggle if undefined
  */
 window.setBurgerMenuState = function (open) {
+	const burgerMenuButton = document.querySelector('.partial-site-header__burger-menu');
 	const burgerMenu = document.querySelector('.partial-burger-menu');
 	const burgerMenuBackground = document.querySelector('.partial-burger-menu__background');
 	if (open !== undefined) {
 		Bem.setState(burgerMenu, 'open', open);
 		Bem.setState(burgerMenuBackground, 'open', open);
+		Bem.setState(burgerMenuButton, 'open', open);
 	} else {
 		open = !Bem.hasState(burgerMenu, 'open');
 		Bem.setState(burgerMenu, 'open', open);
 		Bem.setState(burgerMenuBackground, 'open', open);
+		Bem.setState(burgerMenuButton, 'open', open);
 	}
 };
 

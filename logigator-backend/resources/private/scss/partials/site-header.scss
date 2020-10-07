@@ -26,12 +26,53 @@
 		position: absolute;
 		left: 0;
 		top: 0;
-		padding: 0.5rem;
+		width: $header-height;
 		height: 100%;
 		cursor: pointer;
 
 		@include media-breakpoint-down('md') {
 			display: block;
+		}
+
+		@include state('open') {
+
+			.partial-site-header__burger-menu-line {
+
+				&:nth-child(1) {
+					transform: translateY(12px) rotate(45deg);
+				}
+
+				&:nth-child(2) {
+					opacity: 0;
+				}
+
+				&:nth-child(3) {
+					transform: translateY(-12px) rotate(-45deg);
+				}
+			}
+		}
+	}
+
+	@include element('burger-menu-line') {
+		background-color: #000000;
+		display: block;
+		height: 0.25rem;
+		left: 0.5rem;
+		position: absolute;
+		transform-origin: center;
+		transition: .5s;
+		width: $header-height - 1rem;
+
+		&:nth-child(1) {
+			top: ($header-height / 2) - 0.75rem - 0.125rem;
+		}
+
+		&:nth-child(2) {
+			top: ($header-height / 2) - 0.125rem;
+		}
+
+		&:nth-child(3) {
+			top: ($header-height / 2) + 0.75rem - 0.125rem;
 		}
 	}
 
