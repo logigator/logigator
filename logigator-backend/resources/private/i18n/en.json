@@ -115,12 +115,14 @@
 				"EMAIL": "Email",
 				"EMAIL_ERR_REQUIRED": "Email is required.",
 				"EMAIL_ERR_INVALID": "Please enter a valid email address.",
-				"EMAIL_ERR_TAKEN": "Email has already been taken",
+				"EMAIL_ERR_TAKEN": "Email has already been taken.",
+				"EMAIL_ERR_CHANGE": "This is your current Email.",
 				"USERNAME": "Username",
 				"USERNAME_ERR_REQUIRED": "Username is required.",
 				"USERNAME_ERR_MIN": "Username has to have at least two characters.",
 				"USERNAME_ERR_MAX": "Username may contain a maximum of 20 characters.",
 				"USERNAME_ERR_PATTERN": "Username may only contain a-z, A-Z, 0-9, _ or -",
+				"USERNAME_ERR_CHANGE": "This is your current Username.",
 				"SAVE": "Save"
 			}
 		}
@@ -277,6 +279,12 @@
 			"LINE_1": "Welcome to Logigator.",
 			"LINE_2": "Please check your mailbox and verify your email, before you can start to use Logigator.",
 			"OK_BUTTON": "OK"
+		},
+		"EMAIL_UPDATED": {
+			"TITLE": "Email verification",
+			"LINE_1": "Your email was changed.",
+			"LINE_2": "Please check your mailbox and verify your new email.",
+			"OK_BUTTON": "OK"
 		}
 	},
 	"IMPRINT" : {
@@ -320,6 +328,14 @@
 		"VERIFY_MAIL_REGISTER": {
 			"SUBJECT": "Welcome to Logigator",
 			"WELCOME": "Welcome to Logigator:",
+			"PLEASE_VERIFY": "Please verify your e-mail address.",
+			"TO_DO_SO": "In order to do so",
+			"CLICK_HERE": "click here",
+			"HAVE_FUN": "Have fun building!"
+		},
+		"VERIFY_MAIL_EMAIL_UPDATE": {
+			"SUBJECT": "Verify your new Email",
+			"CHANGED": "Your e-mail address was changed recently.",
 			"PLEASE_VERIFY": "Please verify your e-mail address.",
 			"TO_DO_SO": "In order to do so",
 			"CLICK_HERE": "click here",

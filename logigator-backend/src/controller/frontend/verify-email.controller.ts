@@ -11,10 +11,12 @@ export class VerifyEmailController {
 	@Render('verify-email')
 	@UseBefore(setTitleMiddleware('TITLE.VERIFY_EMAIL'))
 	public async verifyEmail(@Param('authCode') authCode: string) {
-		if (await this.userService.verifyEmail(authCode)) {
+		try {
+			await this.userService.verifyEmail(authCode);
 			return {success: true};
+		} catch (e) {
+			return {success: false};
 		}
-		return {success: false};
 	}
 
 }

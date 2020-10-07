@@ -56,7 +56,7 @@ export class AuthController {
 			}
 			throw err;
 		}
-		return redirect({ showInfoPopup: 'local-register'}); // must be changed
+		return redirect({ showInfoPopup: 'local-register'});
 	}
 
 	@Get('/google-login')

@@ -50,7 +50,8 @@ window.startFormValidation = function (formElement) {
 		maxLength: (value, valData) => value.length <= Number(valData),
 		isEmail: value => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value),
 		matches: (value, valData) => new RegExp(valData).test(value),
-		matchesProperty: (value, valData, elements) => elements.namedItem(valData).value === value
+		matchesProperty: (value, valData, elements) => elements.namedItem(valData).value === value,
+		mustChange: (value, valData) => value !== valData
 	};
 
 	const submitButton = formElement.querySelector('button[type="submit"]');

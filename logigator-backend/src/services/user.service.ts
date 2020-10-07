@@ -149,6 +149,14 @@ export class UserService {
 		await this.emailService.sendMail('noreply', user.email, this.translationService.getTranslation('MAILS.VERIFY_MAIL_REGISTER.SUBJECT', lang), mail);
 	}
 
+	private async sendEmailUpdateVerificationMail(username: string, newEmail: string, code: string, lang: string) {
+		const mail = await this.standaloneViewService.renderView('verification-mail-email-update', {
+			username: username,
+			verifyLink: `${this.configService.getConfig('domains').rootUrl}/verify-email/${code}`
+		}, lang);
+		await this.emailService.sendMail('noreply', newEmail, this.translationService.getTranslation('MAILS.VERIFY_MAIL_EMAIL_UPDATE.SUBJECT', lang), mail);
+	}
+
 	private async generateEmailVerificationCode(userId: string, emailToVerify: string): Promise<string> {
 		const code = uuid();
 		await this.redisService.setObject(`verify-mail:${code}`, {
@@ -157,23 +165,43 @@ export class UserService {
 		}, 60 * 60);
 		return code;
 	}
+	public async verifyEmail(code: string): Promise<void> {
 
-	public async verifyEmail(code: string):Promise<boolean> {
 		const verificationData = await  this.redisService.getObject(`verify-mail:${code}`);
 		if (!(verificationData?.userId && verificationData?.email))
-			return false;
+			throw new Error('verification_timeout');
 
 		const user = await this.userRepo.findOne({
 			id: verificationData.userId
 		});
 
 		if (!user)
-			return false;
+			throw new Error('no_user');
 
 		user.email = verificationData.email;
 		user.localEmailVerified = true;
-		await this.userRepo.save(user);
 		await this.redisService.delete(`verify-mail:${code}`);
+		await this.userRepo.save(user);
+	}
+
+	public updateUsername(user: User, newUsername: string): Promise<User> {
+		user.username = newUsername;
+		return this.userRepo.save(user);
+	}
+
+	public async updateEmail(user: User, email: string, lang: string): Promise<boolean> {
+		const existingUser = await this.userRepo.findOne({
+			email: email
+		});
+		if (existingUser)
+			return false;
+
+		try {
+			const code = await this.generateEmailVerificationCode(user.id, email);
+			await this.sendEmailUpdateVerificationMail(user.username, email, code, lang);
+		} catch (error) {
+			throw new Error('verification_mail');
+		}
 		return true;
 	}
 
