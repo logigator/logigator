@@ -44,7 +44,7 @@ export class Component {
 
 	@Expose()
 	@OneToOne(type => ComponentFile, componentFile => componentFile.component, {cascade: true, eager: true})
-	componentFile: ComponentFile;
+	elementsFile: ComponentFile;
 
 	@Expose()
 	@Column({length: 5, nullable: false})
@@ -106,7 +106,7 @@ export class Component {
 
 	@BeforeRemove()
 	private async removeFile() {
-		if (this.componentFile)
-			await getCustomRepository(ComponentFileRepository).remove(this.componentFile);
+		if (this.elementsFile)
+			await getCustomRepository(ComponentFileRepository).remove(this.elementsFile);
 	}
 }

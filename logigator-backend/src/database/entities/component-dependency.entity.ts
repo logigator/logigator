@@ -13,8 +13,8 @@ export class ComponentDependency {
 	})
 	dependent: Component;
 
-	@Expose({name: 'uuid'})
-	@Transform((x: Component) => x.id)
+	@Expose()
+	@Transform((x: Component) => x.id, {groups: ['compactDependencies']})
 	@ManyToOne(type => Component, object => object.dependencyForComponents, {
 		primary: true,
 		eager: true,

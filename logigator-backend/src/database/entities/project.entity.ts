@@ -43,7 +43,7 @@ export class Project {
 
 	@Expose()
 	@OneToOne(type => ProjectFile, projectFile => projectFile.project, {cascade: true, eager: true})
-	projectFile: ProjectFile;
+	elementsFile: ProjectFile;
 
 	@ManyToOne(type => User, object => object.projects, {nullable: false})
 	user: Promise<User>;
@@ -80,7 +80,7 @@ export class Project {
 
 	@BeforeRemove()
 	private async removeFile() {
-		if (this.projectFile)
-			await getCustomRepository(ProjectFileRepository).remove(this.projectFile);
+		if (this.elementsFile)
+			await getCustomRepository(ProjectFileRepository).remove(this.elementsFile);
 	}
 }

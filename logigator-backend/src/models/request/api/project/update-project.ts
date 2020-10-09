@@ -1,4 +1,4 @@
-import {IsNotEmpty, IsOptional, IsString, MaxLength} from 'class-validator';
+import {IsBoolean, IsNotEmpty, IsOptional, IsString, MaxLength} from 'class-validator';
 
 export class UpdateProject {
 
@@ -12,4 +12,12 @@ export class UpdateProject {
 	@IsString()
 	@MaxLength(2048)
 	description: string;
+
+	@IsOptional()
+	@IsBoolean()
+	public: boolean;
+
+	@IsOptional()
+	@IsBoolean()
+	updateLink: boolean;
 }

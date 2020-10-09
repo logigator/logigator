@@ -1,4 +1,4 @@
-import {IsNotEmpty, IsOptional, IsString, MaxLength} from 'class-validator';
+import {IsBoolean, IsNotEmpty, IsOptional, IsString, MaxLength} from 'class-validator';
 
 export class UpdateComponent {
 
@@ -18,4 +18,12 @@ export class UpdateComponent {
 	@IsNotEmpty()
 	@MaxLength(5)
 	symbol: string;
+
+	@IsOptional()
+	@IsBoolean()
+	public: boolean;
+
+	@IsOptional()
+	@IsBoolean()
+	updateLink: boolean;
 }

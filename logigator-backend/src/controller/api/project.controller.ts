@@ -28,6 +28,7 @@ import {Transaction, TransactionRepository} from 'typeorm';
 import {Component} from '../../database/entities/component.entity';
 import {ComponentDependencyRepository} from '../../database/repositories/component-dependency.repository';
 import {Project} from '../../database/entities/project.entity';
+import {v4 as uuid} from 'uuid';
 
 @JsonController('/api/project')
 @UseInterceptor(ApiInterceptor)
@@ -65,7 +66,7 @@ export class ProjectController {
 			}
 		});
 
-		const contentBuffer = await project.projectFile?.getFileContent();
+		const contentBuffer = await project.elementsFile?.getFileContent();
 		const content: ProjectElement[] = contentBuffer?.length ? JSON.parse(contentBuffer.toString()) : [];
 
 		return {
@@ -80,13 +81,13 @@ export class ProjectController {
 	public async save(@Param('projectId') projectId: string, @CurrentUser() user: User, @Body() body: SaveProject) {
 		const project = await this.projectRepo.getOwnedProjectOrThrow(projectId, user);
 
-		if (project.projectFile && project.projectFile.hash !== body.oldHash)
+		if (project.elementsFile && project.elementsFile.hash !== body.oldHash)
 			throw new BadRequestError('VersionMismatch');
 
-		if (!project.projectFile)
-			project.projectFile = new ProjectFile();
+		if (!project.elementsFile)
+			project.elementsFile = new ProjectFile();
 
-		project.projectFile.setFileContent(JSON.stringify(body.elements));
+		project.elementsFile.setFileContent(JSON.stringify(body.elements));
 
 		const deps = [];
 		const depSet = new Set<string>();
@@ -124,6 +125,10 @@ export class ProjectController {
 			project.name = body.name;
 		if (body.description)
 			project.description = body.description;
+		if (body.public)
+			project.public = body.public;
+		if (body.updateLink)
+			project.link = uuid();
 
 		return this.projectRepo.save(project);
 	}
@@ -180,8 +185,8 @@ export class ProjectController {
 		cloned.user = Promise.resolve(user);
 		cloned.forkedFrom = Promise.resolve(project);
 		cloned.createdOn = project.createdOn;
-		cloned.projectFile = new ProjectFile();
-		if (project.projectFile) cloned.projectFile.setFileContent(await project.projectFile.getFileContent());
+		cloned.elementsFile = new ProjectFile();
+		if (project.elementsFile) cloned.elementsFile.setFileContent(await project.elementsFile.getFileContent());
 		const deps = (await projDepRepo.find({
 			where: {
 				dependent: project

@@ -39,7 +39,7 @@ export class ProjectRepository extends PageableRepository<Project> {
 		project.name = name;
 		project.description = description;
 		project.user = Promise.resolve(user);
-		project.projectFile = new ProjectFile();
+		project.elementsFile = new ProjectFile();
 		return this.save(project);
 	}
 

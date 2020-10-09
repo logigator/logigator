@@ -33,8 +33,8 @@ export class ComponentRepository extends PageableRepository<Component> {
 		cloned.numInputs = component.numInputs;
 		cloned.numOutputs = component.numOutputs;
 		cloned.symbol = component.symbol;
-		cloned.componentFile = new ComponentFile();
-		if (component.componentFile) cloned.componentFile.setFileContent(await component.componentFile.getFileContent());
+		cloned.elementsFile = new ComponentFile();
+		if (component.elementsFile) cloned.elementsFile.setFileContent(await component.elementsFile.getFileContent());
 		return this.save(cloned);
 	}
 
@@ -56,7 +56,7 @@ export class ComponentRepository extends PageableRepository<Component> {
 		component.symbol = symbol;
 		component.description = description;
 		component.user = Promise.resolve(user);
-		component.componentFile = new ComponentFile();
+		component.elementsFile = new ComponentFile();
 		component.labels = [];
 		return this.save(component);
 	}

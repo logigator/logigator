@@ -14,7 +14,7 @@ export class ProjectFile extends PersistedResource {
 		return super.publicUrl;
 	}
 
-	@OneToOne(type => Project, project => project.projectFile)
+	@OneToOne(type => Project, project => project.elementsFile)
 	@JoinColumn()
 	project: Promise<Project>
 

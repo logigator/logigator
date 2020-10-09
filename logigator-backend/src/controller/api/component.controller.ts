@@ -23,6 +23,7 @@ import {UpdateComponent} from '../../models/request/api/component/update-compone
 import {Transaction, TransactionRepository} from 'typeorm';
 import {Component} from '../../database/entities/component.entity';
 import {ProjectRepository} from '../../database/repositories/project.repository';
+import {v4 as uuid} from 'uuid';
 
 @JsonController('/api/component')
 @UseInterceptor(ApiInterceptor)
@@ -64,7 +65,7 @@ export class ComponentController {
 			}
 		});
 
-		const contentBuffer = await component.componentFile?.getFileContent();
+		const contentBuffer = await component.elementsFile?.getFileContent();
 		const content: ProjectElement[] = contentBuffer?.length ? JSON.parse(contentBuffer.toString()) : [];
 
 		return {
@@ -79,13 +80,13 @@ export class ComponentController {
 	public async save(@Param('componentId') componentId: string, @CurrentUser() user: User, @Body() body: SaveComponent) {
 		const component = await this.componentRepo.getOwnedComponentOrThrow(componentId, user);
 
-		if (component.componentFile && component.componentFile.hash !== body.oldHash)
+		if (component.elementsFile && component.elementsFile.hash !== body.oldHash)
 			throw new BadRequestError('VersionMismatch');
 
-		if (!component.componentFile)
-			component.componentFile = new ComponentFile();
+		if (!component.elementsFile)
+			component.elementsFile = new ComponentFile();
 
-		component.componentFile.setFileContent(JSON.stringify(body.elements));
+		component.elementsFile.setFileContent(JSON.stringify(body.elements));
 		component.numInputs = body.numInputs;
 		component.numOutputs = body.numOutputs;
 		component.labels = body.labels;
@@ -130,6 +131,10 @@ export class ComponentController {
 			component.description = body.description;
 		if (body.symbol)
 			component.symbol = body.symbol;
+		if (body.public)
+			component.public = body.public;
+		if (body.updateLink)
+			component.link = uuid();
 
 		return this.componentRepo.save(component);
 	}

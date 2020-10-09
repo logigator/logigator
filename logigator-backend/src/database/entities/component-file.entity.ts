@@ -14,7 +14,7 @@ export class ComponentFile extends PersistedResource {
 		return super.publicUrl;
 	}
 
-	@OneToOne(type => Component, component => component.componentFile)
+	@OneToOne(type => Component, component => component.elementsFile)
 	@JoinColumn()
 	component: Promise<Component>
 

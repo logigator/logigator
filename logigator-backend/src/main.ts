@@ -34,6 +34,7 @@ import {MyProjectsController} from './controller/frontend/my/my-projects.control
 import {MyComponentsController} from './controller/frontend/my/my-components.controller';
 import {ComponentController} from './controller/api/component.controller';
 import {MyAccountController} from './controller/frontend/my/my-account.controller';
+import {ShareController} from './controller/api/share.controller';
 
 useContainerRC(Container);
 typeOrmUseContainer(Container);
@@ -96,7 +97,8 @@ async function bootstrap() {
 			VerifyEmailController,
 			PreferencesController,
 			ProjectController,
-			ComponentController
+			ComponentController,
+			ShareController
 		],
 		middlewares: [
 			DefaultPreferencesMiddleware,
