@@ -15,6 +15,7 @@ export class UserDataMiddleware implements ExpressMiddlewareInterface {
 			};
 		}
 		response.locals.preferences = request.cookies.preferences;
+		response.locals.acceptedCookies = request.cookies.acceptedCookies;
 		next();
 	}
 

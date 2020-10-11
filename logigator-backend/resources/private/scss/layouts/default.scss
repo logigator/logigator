@@ -11,6 +11,7 @@
 @import "../partials/form-area";
 @import "../partials/login-register-popups";
 @import "../partials/register-popup";
+@import "../partials/cookie-consent";
 
 .main-content {
 	min-height: calc(100vh - #{$footer-height + $header-height});

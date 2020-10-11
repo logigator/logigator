@@ -77,6 +77,21 @@ function formValidationForGlobalForms(form) {
 }
 document.querySelectorAll('form').forEach(form => formValidationForGlobalForms(form));
 
+// ------------------------------------------------------------------------------------------------
+
+/**
+ * @param {HTMLElement} node
+ */
+function cookieConsent(node) {
+	if(!node) return;
+
+	Bem.element(node, 'btn').addEventListener('click', () => {
+		document.cookie = 'acceptedCookies=true';
+		node.style.display = 'none';
+	});
+}
+cookieConsent(document.querySelector('.partial-cookie-consent'));
+
 // GLOBAL_CALLS -----------------------------------------------------------------------------------
 
 autoAdjustFontSize(document.body);
