@@ -20,21 +20,6 @@
 				</div>
 			</div>
 
-			<div class="view-my-account-profile__category view-my-account-profile__email">
-				{{#> form action='/my/account/profile/update-email' class='view-my-account-profile__category-form' }}
-
-					{{#> form-input name='email' type='email' label=i18n.USERSPACE.ACCOUNT.PROFILE.EMAIL autocomplete='email' value=userData.email }}
-						{{> form-error error='isNotEmpty' message=i18n.USERSPACE.ACCOUNT.PROFILE.EMAIL_ERR_REQUIRED }}
-						{{> form-error error='isEmail' message=i18n.USERSPACE.ACCOUNT.PROFILE.EMAIL_ERR_INVALID }}
-						{{> form-error error='emailTaken' message=i18n.USERSPACE.ACCOUNT.PROFILE.EMAIL_ERR_TAKEN }}
-						{{> form-error error='mustChange' message=i18n.USERSPACE.ACCOUNT.PROFILE.EMAIL_ERR_CHANGE clientValData=userData.email }}
-					{{/form-input}}
-
-					<button type="submit" class="btn-raised primary view-my-account-profile__category-save">{{i18n.USERSPACE.ACCOUNT.PROFILE.SAVE}}</button>
-
-				{{/form}}
-			</div>
-
 			<div class="view-my-account-profile__category view-my-account-profile__username">
 				{{#> form action='/my/account/profile/update-username' class='view-my-account-profile__category-form' }}
 
@@ -44,6 +29,21 @@
 						{{> form-error error='maxLength' message=i18n.USERSPACE.ACCOUNT.PROFILE.USERNAME_ERR_MAX clientValData='20' }}
 						{{> form-error error='matches' message=i18n.USERSPACE.ACCOUNT.PROFILE.USERNAME_ERR_PATTERN clientValData='^[a-zA-Z0-9_-]+$' }}
 						{{> form-error error='mustChange' message=i18n.USERSPACE.ACCOUNT.PROFILE.USERNAME_ERR_CHANGE clientValData=userData.username }}
+					{{/form-input}}
+
+					<button type="submit" class="btn-raised primary view-my-account-profile__category-save">{{i18n.USERSPACE.ACCOUNT.PROFILE.SAVE}}</button>
+
+				{{/form}}
+			</div>
+
+			<div class="view-my-account-profile__category view-my-account-profile__email">
+				{{#> form action='/my/account/profile/update-email' class='view-my-account-profile__category-form' }}
+
+					{{#> form-input name='email' type='email' label=i18n.USERSPACE.ACCOUNT.PROFILE.EMAIL autocomplete='email' value=userData.email }}
+						{{> form-error error='isNotEmpty' message=i18n.USERSPACE.ACCOUNT.PROFILE.EMAIL_ERR_REQUIRED }}
+						{{> form-error error='isEmail' message=i18n.USERSPACE.ACCOUNT.PROFILE.EMAIL_ERR_INVALID }}
+						{{> form-error error='emailTaken' message=i18n.USERSPACE.ACCOUNT.PROFILE.EMAIL_ERR_TAKEN }}
+						{{> form-error error='mustChange' message=i18n.USERSPACE.ACCOUNT.PROFILE.EMAIL_ERR_CHANGE clientValData=userData.email }}
 					{{/form-input}}
 
 					<button type="submit" class="btn-raised primary view-my-account-profile__category-save">{{i18n.USERSPACE.ACCOUNT.PROFILE.SAVE}}</button>

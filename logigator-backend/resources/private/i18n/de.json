@@ -129,10 +129,10 @@
 				"CONNECTED_ACCOUNTS": "Verbundene Accounts",
 				"CONNECT_NOW": "Jetzt verbinden",
 				"CONNECTED": "Verbunden",
-				"CONNECT_ERR_UNKNOWN": "Ein unbekannter Fehler ist aufgetreten",
 				"PASSWORD_EXPLANATION": "Du kannst ein Passwort zu deinem Account hinzufügen, um dich damit anmelden zu können. Alle Social Media Accounts bleiben mit deinem Account verbunden",
 				"CURRENT_PASSWORD": "Aktuelles Passwort",
 				"CURRENT_PASSWORD_ERR_REQUIRED": "Aktuelles Passwort muss eingegeben werden.",
+				"CURRENT_PASSWORD_ERR_INVALID": "Password ist falsch.",
 				"PASSWORD": "Passwort",
 				"PASSWORD_ERR_REQUIRED": "Passwort muss angegeben werden.",
 				"PASSWORD_ERR_MIN": "Passwort muss mindestens acht Zeichen enthalten.",
@@ -140,6 +140,7 @@
 				"PASSWORD_REPEAT": "Passwort wiederholen",
 				"PASSWORD_REPEAT_ERR_REQUIRED": "Passwort muss wiederholt werden.",
 				"PASSWORD_REPEAT_ERR": "Passwörter stimmen nicht überein.",
+				"ERR_UNKNOWN": "Ein unbekannter Fehler ist aufgetreten",
 				"SAVE": "Speichern"
 			}
 		}
@@ -267,6 +268,11 @@
 			"TITLE": "Email verifizieren",
 			"LINE_1": "Deine Email wurde geändert..",
 			"LINE_2": "Bitte überprüfe deinen Posteingang und verifiziere deine neue Email Adresse",
+			"OK_BUTTON": "OK"
+		},
+		"PASSWORD_CHANGED": {
+			"TITLE": "Passwort geändert",
+			"LINE_1": "Passwort wurde erfolgreich gesetzt oder geändert.",
 			"OK_BUTTON": "OK"
 		}
 	},

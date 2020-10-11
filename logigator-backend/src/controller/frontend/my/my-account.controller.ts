@@ -12,6 +12,7 @@ import {Preferences} from '../../../decorator/preferences.decorator';
 import {UserPreferences} from '../../../models/user-preferences';
 import {InjectRepository} from 'typeorm-typedi-extensions';
 import {ProfilePictureRepository} from '../../../database/repositories/profile-picture.repository';
+import {SecurityUpdatePassword} from '../../../models/request/frontend/my-account/security-update-password';
 
 @Controller('/my/account')
 export class MyAccountController {
@@ -87,6 +88,22 @@ export class MyAccountController {
 			connectedTwitter: !!user.twitterUserId,
 			localLoginPassword: !!user.password
 		};
+	}
+
+	@Post('/security/update-password')
+	@UseBefore(CheckAuthenticatedFrontMiddleware)
+	@UseAfter(formErrorMiddleware())
+	public async accountSecurityUpdatePassword(@CurrentUser() user: User, @Body() body: SecurityUpdatePassword, @Redirect() redirect: RedirectFunction) {
+		try {
+			await this.userService.updatePassword(user, body.password, body.current_password);
+			return redirect({showInfoPopup: 'password-changed'});
+		} catch (err) {
+			if (err.message === 'invalid_password') {
+				throw new FormDataError(body, 'current_password', 'invalid');
+			} else {
+				throw new FormDataError(body, undefined, 'unknown');
+			}
+		}
 	}
 
 	@Get('/delete')

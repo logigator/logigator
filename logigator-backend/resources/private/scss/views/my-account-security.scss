@@ -67,6 +67,14 @@
 				margin-bottom: 1rem;
 			}
 		}
+		.partial-form-general-errors {
+			margin-top: -1rem;
+
+			.partial-form-error {
+				text-align: left;
+				margin-bottom: 1rem;
+			}
+		}
 	}
 
 	@include element('password-save') {

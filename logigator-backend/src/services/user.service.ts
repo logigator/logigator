@@ -205,6 +205,21 @@ export class UserService {
 		return true;
 	}
 
+	public async updatePassword(user: User, newPassword: string, currentPassword?: string): Promise<void> {
+		if (user.password) {
+			if (!(await compare(currentPassword, user.password))) {
+				throw new Error('invalid_password');
+			}
+			user.password = await hash(newPassword, this.PASSWORD_SALT_ROUNDS);
+			await this.userRepo.save(user);
+			return;
+		} else {
+			user.password = await hash(newPassword, this.PASSWORD_SALT_ROUNDS);
+			await this.userRepo.save(user);
+			return;
+		}
+	}
+
 	public connectTwitter(user: User, profile: TwitterProfile): Promise<User> {
 		if (user.twitterUserId) {
 			throw new Error('Already Connected');

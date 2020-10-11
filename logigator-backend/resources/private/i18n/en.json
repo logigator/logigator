@@ -129,10 +129,10 @@
 				"CONNECTED_ACCOUNTS": "Connected Accounts",
 				"CONNECT_NOW": "Connect now",
 				"CONNECTED": "Connected",
-				"CONNECT_ERR_UNKNOWN": "An unknown Error occurred",
 				"PASSWORD_EXPLANATION": "You can add a Password to your Account to be able to login with it, your Account will stay connected to all other Social Media Accounts.",
 				"CURRENT_PASSWORD": "Current Password",
 				"CURRENT_PASSWORD_ERR_REQUIRED": "Current Password is required.",
+				"CURRENT_PASSWORD_ERR_INVALID": "Password is invalid.",
 				"PASSWORD": "Password",
 				"PASSWORD_ERR_REQUIRED": "Password is required.",
 				"PASSWORD_ERR_MIN": "Password must contain at least eight characters.",
@@ -140,6 +140,7 @@
 				"PASSWORD_REPEAT": "Repeat password",
 				"PASSWORD_REPEAT_ERR_REQUIRED": "Password must be repeated.",
 				"PASSWORD_REPEAT_ERR": "Passwords do not match.",
+				"ERR_UNKNOWN": "An unknown Error occurred",
 				"SAVE": "Save"
 			}
 		}
@@ -267,6 +268,11 @@
 			"TITLE": "Email verification",
 			"LINE_1": "Your email was changed.",
 			"LINE_2": "Please check your mailbox and verify your new email.",
+			"OK_BUTTON": "OK"
+		},
+		"PASSWORD_CHANGED": {
+			"TITLE": "Password was set",
+			"LINE_1": "Password was successfully changed or set.",
 			"OK_BUTTON": "OK"
 		}
 	},

@@ -37,7 +37,7 @@
 				</div>
 
 				{{#> form-general-errors}}
-					{{> form-error error='unknown' message=i18n.USERSPACE.ACCOUNT.SECURITY.CONNECT_ERR_UNKNOWN }}
+					{{> form-error error='unknown' message=i18n.USERSPACE.ACCOUNT.SECURITY.ERR_UNKNOWN }}
 				{{/form-general-errors}}
 
 			{{/form}}
@@ -52,11 +52,12 @@
 
 				{{#> form action='/my/account/security/update-password' class='view-my-account-security__password-form' }}
 
-					{{#unless localLoginPassword}}
+					{{#if localLoginPassword}}
 						{{#> form-input name='current_password' type='password' label=i18n.USERSPACE.ACCOUNT.SECURITY.CURRENT_PASSWORD autocomplete='password' }}
 							{{> form-error error='isNotEmpty' message=i18n.USERSPACE.ACCOUNT.SECURITY.CURRENT_PASSWORD_ERR_REQUIRED }}
+							{{> form-error error='invalid' message=i18n.USERSPACE.ACCOUNT.SECURITY.CURRENT_PASSWORD_ERR_INVALID }}
 						{{/form-input}}
-					{{/unless}}
+					{{/if}}
 
 					{{#> form-input name='password' type='password' label=i18n.USERSPACE.ACCOUNT.SECURITY.PASSWORD autocomplete='new-password'}}
 						{{> form-error error='isNotEmpty' message=i18n.USERSPACE.ACCOUNT.SECURITY.PASSWORD_ERR_REQUIRED }}
@@ -68,6 +69,10 @@
 						{{> form-error error='isNotEmpty' message=i18n.USERSPACE.ACCOUNT.SECURITY.PASSWORD_REPEAT_ERR_REQUIRED }}
 						{{> form-error error='matchesProperty' message=i18n.USERSPACE.ACCOUNT.SECURITY.PASSWORD_REPEAT_ERR clientValData='password' }}
 					{{/form-input}}
+
+					{{#> form-general-errors}}
+						{{> form-error error='unknown' message=i18n.USERSPACE.ACCOUNT.SECURITY.ERR_UNKNOWN }}
+					{{/form-general-errors}}
 
 					<button type="submit" class="btn-raised primary view-my-account-security__password-save">{{i18n.USERSPACE.ACCOUNT.SECURITY.SAVE}}</button>
 
