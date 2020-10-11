@@ -86,7 +86,9 @@ function cookieConsent(node) {
 	if(!node) return;
 
 	Bem.element(node, 'btn').addEventListener('click', () => {
-		document.cookie = 'acceptedCookies=true';
+		const date = new Date();
+		date.setTime(date.getTime() + (30 * 24 * 60 * 60 * 1000));
+		document.cookie = `acceptedCookies=true; expires=${date.toUTCString()}; path=/`;
 		node.style.display = 'none';
 	});
 }
