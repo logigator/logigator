@@ -13,13 +13,13 @@
 		]
 	},
 	"files": [
-		"build-wasm.ts",
+		"copy-simulation-wasm-assets.ts",
 		"create-dist-package.ts",
 		"custom-webpack.config.ts",
-		"index-html-transform.ts",
+		"index-html-transform-electron.ts",
+		"index-html-transform-web.ts",
 		"markdown-postprocess-loader.ts",
 		"package-app.ts",
-		"remove-comp-warning-template.ts",
 		"wasm-js-cache-bust.ts"
 	],
 	"include": [

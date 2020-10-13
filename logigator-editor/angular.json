@@ -27,19 +27,6 @@
 						"tsConfig": "tsconfig.app.json",
 						"aot": true,
 						"preserveSymlinks": true,
-						"assets": [
-							"src/favicon.ico",
-							"src/assets",
-							"src/site.webmanifest",
-							"src/browserconfig.xml",
-							"src/robots.txt"
-						],
-						"stylePreprocessorOptions": {
-							"includePaths": [
-								"src/styles/web"
-							]
-						},
-						"scripts": [],
 						"webWorkerTsConfig": "tsconfig.worker.json"
 					},
 					"configurations": {
@@ -57,9 +44,19 @@
 									"replace": "src/environments/environment.ts",
 									"with": "src/environments/environment.dev-electron.ts"
 								}
+							],
+							"indexTransform": "./custom-build-scripts/dist/index-html-transform-electron.js",
+							"assets": [
+								"src/favicon.ico",
+								"src/assets",
+								"src/site.webmanifest",
+								"src/browserconfig.xml",
+								"src/robots.txt"
 							]
 						},
 						"dev-web": {
+							"baseHref": "/editor/",
+							"deployUrl": "/editor/",
 							"styles": [
 								"src/styles/web/styles.scss"
 							],
@@ -74,7 +71,7 @@
 									"with": "src/environments/environment.dev-web.ts"
 								}
 							],
-							"indexTransform": "./custom-build-scripts/dist/index-html-transform.js",
+							"indexTransform": "./custom-build-scripts/dist/index-html-transform-web.js",
 							"assets": [
 								"src/favicon.ico",
 								"src/assets",
@@ -100,6 +97,14 @@
 									"with": "src/environments/environment.prod-electron.ts"
 								}
 							],
+							"indexTransform": "./custom-build-scripts/dist/index-html-transform-electron.js",
+							"assets": [
+								"src/favicon.ico",
+								"src/assets",
+								"src/site.webmanifest",
+								"src/browserconfig.xml",
+								"src/robots.txt"
+							],
 							"optimization": true,
 							"outputHashing": "all",
 							"sourceMap": false,
@@ -123,6 +128,8 @@
 							]
 						},
 						"prod-web": {
+							"baseHref": "/editor/",
+							"deployUrl": "/editor/",
 							"styles": [
 								"src/styles/web/styles.scss"
 							],
@@ -137,7 +144,7 @@
 									"with": "src/environments/environment.prod-web.ts"
 								}
 							],
-							"indexTransform": "./custom-build-scripts/dist/index-html-transform.js",
+							"indexTransform": "./custom-build-scripts/dist/index-html-transform-web.js",
 							"assets": [
 								"src/favicon.ico",
 								"src/assets",
@@ -174,6 +181,10 @@
 				"serve": {
 					"builder": "@angular-builders/custom-webpack:dev-server",
 					"options": {
+						"host": "0.0.0.0",
+						"port": 8202,
+						"disableHostCheck": true,
+						"proxyConfig": "./proxyconfig.json",
 						"customWebpackConfig": {
 							"path": "./custom-build-scripts/dist/custom-webpack.config.js"
 						},
@@ -192,12 +203,6 @@
 						"dev-electron": {
 							"browserTarget": "logigator-editor:build:dev-electron"
 						}
-					}
-				},
-				"extract-i18n": {
-					"builder": "@angular-devkit/build-angular:extract-i18n",
-					"options": {
-						"browserTarget": "logigator-editor:build"
 					}
 				},
 				"test": {
