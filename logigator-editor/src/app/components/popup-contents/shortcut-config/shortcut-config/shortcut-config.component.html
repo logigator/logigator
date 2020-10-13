@@ -1,0 +1,4 @@
+<div class="shortcut-config">
+	<app-single-shortcut-config *ngFor="let shortcut of shortcutMap | keyvalue" [shortcut]="shortcut.key"></app-single-shortcut-config>
+	<button class="btn-raised primary" (click)="save()">{{'POPUP.SHORTCUTS.SAVE' | translate}}</button>
+</div>

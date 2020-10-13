@@ -1,0 +1,88 @@
+<div class="toolbar">
+
+	<div class="toolbar-buttons">
+		<ng-container *ngIf="currentWorkMode !== 'simulation'">
+			<button class="toolbar-button save" aria-label="Save" appToolbarItemTooltip [tooltipText]="'TOOLBAR.TOOLTIP.SAVE' | translate" (click)="save()"></button>
+			<button class="toolbar-button open" aria-label="Open" appToolbarItemTooltip [tooltipText]="'TOOLBAR.TOOLTIP.OPEN' | translate" (click)="open()"></button>
+			<button class="toolbar-button new-comp" aria-label="New Component" appToolbarItemTooltip [tooltipText]="'TOOLBAR.TOOLTIP.NEW_COMP' | translate" (click)="newComponent()"></button>
+
+			<div class="divider"></div>
+
+			<button class="toolbar-button copy" aria-label="Copy" appToolbarItemTooltip [tooltipText]="'TOOLBAR.TOOLTIP.COPY' | translate" (appOutsideNgZoneEvent)="copy()"></button>
+			<button class="toolbar-button cut" aria-label="Cut"  appToolbarItemTooltip [tooltipText]="'TOOLBAR.TOOLTIP.CUT' | translate" (appOutsideNgZoneEvent)="cut()"></button>
+			<button class="toolbar-button paste" aria-label="Paste" appToolbarItemTooltip [tooltipText]="'TOOLBAR.TOOLTIP.PASTE' | translate" (appOutsideNgZoneEvent)="paste()"></button>
+			<button class="toolbar-button delete" aria-label="Delete" appToolbarItemTooltip [tooltipText]="'TOOLBAR.TOOLTIP.DELETE' | translate" (appOutsideNgZoneEvent)="delete()"></button>
+
+			<div class="divider"></div>
+
+			<button class="toolbar-button undo" (appOutsideNgZoneEvent)="undo()" appToolbarItemTooltip [tooltipText]="'TOOLBAR.TOOLTIP.UNDO' | translate" aria-label="Undo"></button>
+			<button class="toolbar-button redo" (appOutsideNgZoneEvent)="redo()" appToolbarItemTooltip [tooltipText]="'TOOLBAR.TOOLTIP.REDO' | translate" aria-label="Redo"></button>
+
+			<div class="divider"></div>
+		</ng-container>
+
+		<button class="toolbar-button zoom-out" (appOutsideNgZoneEvent)="zoomOut()" appToolbarItemTooltip [tooltipText]="'TOOLBAR.TOOLTIP.ZOOM_OUT' | translate" aria-label="Zoom Out"></button>
+		<button class="toolbar-button zoom-in" (appOutsideNgZoneEvent)="zoomIn()" appToolbarItemTooltip [tooltipText]="'TOOLBAR.TOOLTIP.ZOOM_IN' | translate" aria-label="Zoom In"></button>
+
+		<ng-container *ngIf="currentWorkMode !== 'simulation'">
+			<div class="divider"></div>
+
+			<button class="toolbar-button wire" (click)="setWorkMode('buildWire')" [class.active-button]="currentWorkMode === 'buildWire'" aria-label="Place Wire" appToolbarItemTooltip [tooltipText]="'TOOLBAR.TOOLTIP.WIRE' | translate"></button>
+			<button class="toolbar-button conn-wire" (click)="setWorkMode('connectWire')" [class.active-button]="currentWorkMode === 'connectWire'" aria-label="Connect Wire" appToolbarItemTooltip [tooltipText]="'TOOLBAR.TOOLTIP.CONN_WIRE' | translate"></button>
+			<button class="toolbar-button select" (click)="setWorkMode('select')" [class.active-button]="currentWorkMode === 'select'" aria-label="Select" appToolbarItemTooltip [tooltipText]="'TOOLBAR.TOOLTIP.SELECT' | translate"></button>
+			<button class="toolbar-button select-cut" (click)="setWorkMode('selectCut')" [class.active-button]="currentWorkMode === 'selectCut'" aria-label="Select Cut" appToolbarItemTooltip [tooltipText]="'TOOLBAR.TOOLTIP.SELECT_CUT' | translate"></button>
+			<button class="toolbar-button eraser" (click)="setWorkMode('eraser')" [class.active-button]="currentWorkMode === 'eraser'" aria-label="Robber" appToolbarItemTooltip [tooltipText]="'TOOLBAR.TOOLTIP.ROBBER' | translate"></button>
+			<button class="toolbar-button text" (click)="setWorkMode('text')" [class.active-button]="currentWorkMode === 'text'" aria-label="Place Text" appToolbarItemTooltip [tooltipText]="'TOOLBAR.TOOLTIP.TEXT' | translate"></button>
+		</ng-container>
+
+		<ng-container *ngIf="currentWorkMode === 'simulation'">
+			<div class="divider"></div>
+
+			<button class="toolbar-button play" [class.active-button]="simulationRunning" (click)="continueSm()" appToolbarItemTooltip [tooltipText]="'TOOLBAR.TOOLTIP.SIM_CONT' | translate"></button>
+			<button class="toolbar-button step" (click)="singleStepSim()" appToolbarItemTooltip [tooltipText]="'TOOLBAR.TOOLTIP.SIM_SINGLE' | translate"></button>
+			<button class="toolbar-button pause" (click)="pauseSim()" appToolbarItemTooltip [tooltipText]="'TOOLBAR.TOOLTIP.SIM_PAUSE' | translate"></button>
+			<button class="toolbar-button stop" (click)="stopSim()" appToolbarItemTooltip [tooltipText]="'TOOLBAR.TOOLTIP.SIM_STOP' | translate"></button>
+
+			<div class="divider"></div>
+
+			<button class="toolbar-button target-clock-speed" [class.active-button]="targetMode" (click)="toggleTargetMode()" appToolbarItemTooltip [tooltipText]="'TOOLBAR.TOOLTIP.SIM_TARGET_MODE' | translate"></button>
+			<button class="toolbar-button sync-to-frame-rate" [class.active-button]="syncMode" (click)="toggleSyncMode()" appToolbarItemTooltip [tooltipText]="'TOOLBAR.TOOLTIP.SIM_SYNC_MODE' | translate"></button>
+
+			<ng-container *ngIf="targetMode">
+				<input class="target-tick-rate" type="number" [(ngModel)]="targetTickRate" (ngModelChange)="setTarget()" min="0">
+				<select class="target-tick-rate" [(ngModel)]="targetMultiplier" (ngModelChange)="setTarget()">
+					<option value="1">Hz</option>
+					<option value="1000">kHz</option>
+					<option value="1000000">MHz</option>
+				</select>
+			</ng-container>
+
+			<!-- #!if ELECTRON === 'true' -->
+			<ng-container>
+				<div class="divider"></div>
+				<p>Threads:</p>
+				<input class="thread-count" type="number" [(ngModel)]="threadCount" (ngModelChange)="setThreadCount()" min="1" max="512">
+			</ng-container>
+			<!-- #!endif -->
+
+			<ng-container *ngIf="simulationRunning">
+				<div class="divider"></div>
+				<p>Current Speed: {{simulationStatus.speed | si : 2}}Hz</p>
+			</ng-container>
+		</ng-container>
+
+		<!-- #!if DEBUG === 'true' -->
+		<button (click)="printBoard()">print board</button>
+		<button (click)="printElements()">print elements</button>
+		<button (click)="printCalls()">print calls</button>
+		<button (click)="runTests()">run tests</button>
+		<button (click)="runStep()">run step</button>
+		<!-- #!endif -->
+
+	</div>
+
+	<div class="toolbar-end">
+		<p (click)="enterSim()" *ngIf="currentWorkMode !== 'simulation'" class="start-sim">{{'TOOLBAR.START_SIM' | translate}}</p>
+		<p (click)="leaveSim()" *ngIf="currentWorkMode === 'simulation'" class="start-sim">{{'TOOLBAR.EXIT_SIM' | translate}}</p>
+	</div>
+</div>

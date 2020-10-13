@@ -1,0 +1,79 @@
+@import "themes";
+
+.open {
+	margin: 1rem 1.5rem;
+
+	.open-server {
+		table {
+			width: 30rem;
+			text-align: left;
+			table-layout: fixed;
+
+			tbody {
+				@include scrollbar(5px);
+				display: block;
+				width: 30rem;
+				overflow: auto;
+				max-height: 50vh;
+			}
+
+			tr {
+				height: 2.5rem;
+			}
+
+			.name {
+				width: 40%;
+			}
+
+			.last-edit {
+				width: 40%;
+			}
+
+			.open {
+				width: 12%;
+				text-align: center;
+
+				button {
+					height: 2rem;
+				}
+			}
+		}
+	}
+
+	.open-share {
+		display: flex;
+		flex-direction: row;
+		padding-top: 0.2rem;
+
+		logi-input {
+			flex-grow: 1;
+			margin-right: 1rem;
+		}
+
+		button {
+			height: fit-content;
+		}
+	}
+
+	.file-upload {
+		display: flex;
+		flex-direction: column;
+		width: 100%;
+
+		logi-file-input {
+			width: 100%;
+			height: 5rem;
+		}
+
+		div {
+			display: flex;
+			justify-content: space-between;
+			margin-top: 0.83rem;
+			align-items: center;
+
+			p {
+				margin: 0;
+			}
+		}
+	}
+}

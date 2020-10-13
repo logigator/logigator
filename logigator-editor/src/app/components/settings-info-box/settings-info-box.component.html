@@ -1,0 +1,55 @@
+<div class="box">
+	<div class="header">
+		<h2>{{elementType?.name | translate}}</h2>
+	</div>
+	<div class="content" [formGroup]="propertiesForm">
+
+		<div class="property" *ngIf="elementType.minInputs !== elementType.maxInputs">
+			<p>{{'SETTINGS_INFO.INPUTS' | translate}}:</p>
+			<input type="number" formControlName="numInputs" [min]="elementType.minInputs" [max]="elementType.maxInputs" (focus)="focusInput()" (blur)="resetNumInputsValue(); blurInput()">
+		</div>
+
+		<div class="property" *ngIf="elementType.isRotatable">
+			<p>{{'SETTINGS_INFO.DIRECTION' | translate}}:</p>
+			<select formControlName="rotation">
+				<option value="0">{{'SETTINGS_INFO.DIRECTIONS.RIGHT' | translate}} &rarr;</option>
+				<option value="1">{{'SETTINGS_INFO.DIRECTIONS.DOWN' | translate}} &darr;</option>
+				<option value="2">{{'SETTINGS_INFO.DIRECTIONS.LEFT' | translate}} &larr;</option>
+				<option value="3">{{'SETTINGS_INFO.DIRECTIONS.UP' | translate}} &uarr;</option>
+			</select>
+		</div>
+
+		<div class="property" *ngIf="elementType.hasPlugIndex && selectedCompId">
+			<p>{{'SETTINGS_INFO.PLUG_INDEX' | translate}}:</p>
+			<select formControlName="plugIndex">
+				<option *ngFor="let i of possiblePlugIndexes" [value]="i">{{toUserPlugIndex(i)}}</option>
+			</select>
+		</div>
+
+		<div class="property" *ngIf="elementType.hasLabel && selectedCompId">
+			<p>{{'SETTINGS_INFO.PLUG_LABEL' | translate}}:</p>
+			<input formControlName="label" type="text" maxlength="3" (focus)="focusInput()" (blur)="blurInput()">
+		</div>
+
+		<div class="property" formArrayName="options" *ngFor="let item of optionsControls; let i = index">
+			<p>{{elementType.optionsConfig[i].name | translate}}:</p>
+			<input type="number"
+			       *ngIf="!elementType.optionsConfig[i].allowedValues"
+			       [formControl]="optionsControls[i]"
+			       [min]="elementType.optionsConfig[i].min"
+			       [max]="elementType.optionsConfig[i].max"
+			       (blur)="resetOptionsValue(i)"
+			>
+			<select *ngIf="elementType.optionsConfig[i].allowedValues" [formControl]="optionsControls[i]">
+				<option *ngFor="let value of elementType.optionsConfig[i].allowedValues" [value]="value">{{value}}</option>
+			</select>
+		</div>
+
+		<div class="description" *ngIf="elementType?.description">
+			<h6>{{'SETTINGS_INFO.DESCRIPTION' | translate}}:</h6>
+			<span [innerHTML]="elementType.description | translate"></span>
+		</div>
+
+		<button class="btn-outline secondary small edit" *ngIf="elementType.edit && (selectedCompId || elementType.canEditType)" (click)="editClick()">{{'SETTINGS_INFO.EDIT' | translate}}</button>
+	</div>
+</div>

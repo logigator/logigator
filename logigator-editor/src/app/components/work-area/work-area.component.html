@@ -1,0 +1,14 @@
+<div class="main-area">
+	<div id="canvas-container" #pixiCanvasContainer></div>
+	<div id="tabs">
+		<ng-container *ngFor="let project of allProjects | keyvalue">
+			<div class="tab"
+			     *ngIf="!isSimulationMode || project.value.type === 'project'"
+			     (click)="switchToProject(project.key)"
+			     [class.tab-active]="project.key === activeView?.projectId">
+				<p logiAutoFontSize desiredFontWidth="170">{{project.value.name}}</p>
+				<span *ngIf="project.value.type !== 'project'" class="tab-close" (click)="tabCloseClicked(project.key, $event)"></span>
+			</div>
+		</ng-container>
+	</div>
+</div>

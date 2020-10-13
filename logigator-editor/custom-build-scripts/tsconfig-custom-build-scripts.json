@@ -1,0 +1,31 @@
+{
+	"compilerOptions": {
+		"module": "commonjs",
+		"target": "es5",
+		"sourceMap": false,
+		"skipLibCheck": true,
+		"outDir": "./dist",
+		"rootDir": ".",
+		"moduleResolution": "node",
+		"lib": ["es2018"],
+		"types": [
+			"node"
+		]
+	},
+	"files": [
+		"build-wasm.ts",
+		"create-dist-package.ts",
+		"custom-webpack.config.ts",
+		"index-html-transform.ts",
+		"markdown-postprocess-loader.ts",
+		"package-app.ts",
+		"remove-comp-warning-template.ts",
+		"wasm-js-cache-bust.ts"
+	],
+	"include": [
+		"./**/*.ts"
+	],
+	"exclude": [
+		"node_modules"
+	]
+}

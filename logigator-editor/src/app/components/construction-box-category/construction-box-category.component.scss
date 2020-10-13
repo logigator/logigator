@@ -1,0 +1,140 @@
+@import "variables";
+@import "themes";
+
+.box {
+	width: $construction-box-width - 0.75rem;
+	margin-left: 0.25rem;
+	margin-bottom: 0.8rem;
+
+	.header {
+		height: 2.3rem;
+		display: flex;
+		flex-direction: row;
+		align-items: center;
+		border-top-left-radius: border('radius');
+		border-top-right-radius: border('radius');
+		padding: 0.5rem;
+
+		@include themify() {
+			background-color: themed('accent2');
+			color: themed('text-primary');
+			border-top: border('width') solid themed('accent2');
+			border-left: border('width') solid themed('accent2');
+			border-right: border('width') solid themed('accent2');
+		}
+
+		h2 {
+			margin: 0;
+			font-weight: normal;
+			font-size: 1.2rem;
+		}
+	}
+
+	.content {
+		display: grid;
+		grid-gap: 0.7rem;
+		grid-template-columns: 1fr 1fr 1fr;
+		padding: 0.7rem;
+		user-select: none;
+		border-bottom-left-radius: border('radius');
+		border-bottom-right-radius: border('radius');
+
+		@include themify() {
+			background-color: themed('background');
+			color: themed('text-primary');
+			border: border('width') solid themed('accent2');
+		}
+
+		.no-components {
+			grid-column: 1 / -1;
+		}
+
+		.component-to-select {
+			height: fit-content;
+
+			div {
+				text-align: center;
+				position: relative;
+				border: 1px solid;
+				border-radius: border('radius');
+				width: 100%;
+				padding-top: 100%;
+
+				p {
+					top: calc(50% - 0.2rem);
+					left: 0;
+					bottom: 0;
+					right: 0;
+					position: absolute;
+					font-size: 1.2rem;
+					line-height: 0;
+				}
+
+				img {
+					position: absolute;
+					left: 50%;
+					bottom: 0;
+					right: 0;
+					top: 50%;
+					transform: translateY(-50%) translateX(-50%);
+					height: 60%;
+					width: 60%;
+				}
+			}
+
+			p {
+				text-align: center;
+				font-size: 0.9rem;
+				margin: 0.25rem 0 0 0;
+				word-break: break-word;
+			}
+
+			@include themify() {
+				color: themed('text-primary');
+
+				img {
+					@if isTheme(dark) {
+						filter: invert(99%) sepia(0%) saturate(540%) hue-rotate(169deg) brightness(81%) contrast(100%);
+					} @else {
+						// is black
+					}
+				}
+
+				&:hover {
+					color: themed('accent2');
+					img {
+						@if isTheme(dark) {
+							filter: invert(22%) sepia(14%) saturate(285%) hue-rotate(149deg) brightness(94%) contrast(88%);
+						} @else {
+							filter: invert(91%) sepia(0%) saturate(96%) hue-rotate(178deg) brightness(92%) contrast(95%);
+						}
+					}
+				}
+			}
+		}
+
+		.active-selected-component {
+			@include themify() {
+				color: themed('primary');
+				img {
+					@if isTheme(dark) {
+						filter: invert(50%) sepia(76%) saturate(435%) hue-rotate(93deg) brightness(95%) contrast(88%);
+					} @else {
+						filter: invert(63%) sepia(63%) saturate(498%) hue-rotate(93deg) brightness(93%) contrast(89%);
+					}
+				}
+
+				&:hover {
+					color: themed('primary');
+					img {
+						@if isTheme(dark) {
+							filter: invert(50%) sepia(76%) saturate(435%) hue-rotate(93deg) brightness(95%) contrast(88%);
+						} @else {
+							filter: invert(63%) sepia(63%) saturate(498%) hue-rotate(93deg) brightness(93%) contrast(89%);
+						}
+					}
+				}
+			}
+		}
+	}
+}

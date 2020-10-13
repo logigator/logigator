@@ -1,0 +1,9 @@
+<div class="help-popup-container">
+	<div class="sidebar">
+		<div #sidebar></div>
+		<a [href]="githubEditUrl" target="_blank" rel="noopener">{{'POPUP.HELP.EDIT' | translate}}</a>
+	</div>
+	<div class="content">
+		<app-help-renderer [currentLang]="currentLang" [helpToRender]="helpToRender"></app-help-renderer>
+	</div>
+</div>

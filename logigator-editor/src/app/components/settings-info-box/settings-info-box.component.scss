@@ -1,0 +1,96 @@
+@import "themes";
+@import "variables";
+
+.box {
+	position: absolute;
+	right: 0.5rem;
+	bottom: calc(0.5rem + #{$status-bar-height});
+
+	width: $settings-info-box-width;
+
+	display: grid;
+	grid-template-rows: 3rem auto;
+
+	@include themify() {
+		background-color: themed('background');
+		color: themed('text-primary');
+		border: border('width') solid themed('accent2');
+		border-radius: border('radius');
+	}
+
+	.header {
+		height: 100%;
+		display: flex;
+		flex-direction: row;
+		align-items: center;
+		justify-content: center;
+
+		@include themify() {
+			background-color: themed('accent2');
+		}
+
+		h2 {
+			margin: 0;
+			font-size: 1.2rem;
+			font-weight: normal;
+		}
+	}
+
+	.content {
+		padding: 0.5rem;
+
+		.property {
+			height: 2.5rem;
+			display: flex;
+			flex-direction: row;
+			justify-content: space-between;
+			align-items: center;
+			padding-bottom: 0.75rem;
+
+			p {
+				margin: 0;
+				align-self: flex-end;
+			}
+
+			input {
+				 outline: none;
+				 border: none;
+				 padding: 0.25rem;
+				 font-size: 0.9rem;
+				 width: 40%;
+				 @include themify() {
+					 border-bottom: 1px solid themed('text-primary');
+					 color: themed('text-primary');
+					 background-color: themed('background');
+				 }
+			 }
+
+			select {
+				width: 40%;
+				font-size: 0.9rem;
+				outline: none;
+				border: none;
+
+				@include themify() {
+					border-bottom: 1px solid themed('text-primary');
+					color: themed('text-primary');
+					background-color: themed('background');
+				}
+			}
+		}
+
+		.description {
+			h6 {
+				font-size: 0.9rem;
+				margin: 0;
+				margin-bottom: 0.2rem;
+			}
+		}
+
+		.edit {
+			float: right;
+			width: 40%;
+		}
+
+	}
+}

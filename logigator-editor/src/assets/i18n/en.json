@@ -1,0 +1,444 @@
+{
+	"LANGUAGE": {
+		"DE": "Deutsch",
+		"EN": "English"
+	},
+	"DROPDOWN": {
+		"FILE": {
+			"TITLE": "File",
+			"NEW_PROJECT": "New Project",
+			"NEW_COMPONENT": "New Component",
+			"OPEN": "Open",
+			"SAVE": "Save",
+			"EXPORT": "Export to file",
+			"IMAGE_PNG": "Export as PNG Image",
+			"IMAGE_JPEG": "Export as JPEG Image",
+			"IMAGE_SVG": "Export as SVG Image",
+			"SHARE": "Share",
+			"CLONE": "Clone Project"
+		},
+		"EDIT": {
+			"TITLE": "Edit",
+			"UNDO": "Undo",
+			"REDO": "Redo",
+			"COPY": "Copy",
+			"PASTE": "Paste",
+			"CUT": "Cut",
+			"DELETE": "Delete"
+		},
+		"VIEW": {
+			"TITLE": "View",
+			"ZOOM_IN": "Zoom in",
+			"ZOOM_OUT": "Zoom out",
+			"100": "100%",
+			"FULLSCREEN": "Fullscreen"
+		},
+		"HELP": {
+			"TITLE": "Help",
+			"HELP": "Help"
+		},
+		"SETTINGS": {
+			"DARK_MODE": "Dark Mode",
+			"SHOW_GRID": "Show Grid",
+			"LANGUAGE": "Language",
+			"SHORTCUTS": "Customize Shortcuts",
+			"ACCOUNT": "Account",
+			"LOGOUT": "Logout",
+			"PRIVACY": "Privacy Policy",
+			"NEW_VERSION": "New version available"
+		}
+	},
+	"TOOLBAR": {
+		"START_SIM": "Start Simulation",
+		"EXIT_SIM": "Exit Simulation",
+		"TOOLTIP": {
+			"SAVE": "Save",
+			"OPEN": "Open",
+			"NEW_COMP": "New Component",
+			"COPY": "Copy",
+			"PASTE": "Paste",
+			"CUT": "Cut",
+			"DELETE": "Delete",
+			"UNDO": "Undo",
+			"REDO": "Redo",
+			"ZOOM_IN": "Zoom In",
+			"ZOOM_OUT": "Zoom Out",
+			"WIRE": "Place Wires",
+			"CONN_WIRE": "Connect Wires",
+			"SELECT": "Select",
+			"SELECT_CUT": "Select Cut",
+			"ROBBER": "Eraser",
+			"TEXT": "Text",
+			"SIM_SINGLE": "Single Step",
+			"SIM_PAUSE": "Pause",
+			"SIM_STOP": "Stop",
+			"SIM_CONT": "Start",
+			"SIM_TARGET_MODE": "Limit Tick Rate",
+			"SIM_SYNC_MODE": "Sync Tick Rate to Frame Rate"
+		}
+	},
+	"TOP_BAR": {
+		"LOGIN": "Login",
+		"REGISTER": "Register"
+	},
+	"CONST_BOX": {
+		"SEARCH": "Search",
+		"CATEGORIES": {
+			"BASIC": "Basic",
+			"ADVANCED": "Advanced",
+			"IO": "IO",
+			"PLUG": "Plug",
+			"USER": "User Defined"
+		}
+	},
+	"POPUP": {
+		"LOGIN": {
+			"TITLE": "Login",
+			"HEADLINE": "Login here",
+			"USERNAME": "Username / email",
+			"USERNAME_ERR_REQUIRED": "Username / email is required.",
+			"PASSWORD": "Password",
+			"PASSWORD_ERR_REQUIRED": "Password is required.",
+			"LOGIN_BUTTON": "LOGIN",
+			"RESEND_BUTTON": "Resend Mail",
+			"RESEND_SUCCESS_1": "Email resent successfully",
+			"RESEND_SUCCESS_2": "Please check your mailbox and verify your email.",
+			"RESEND_SUCCESS_OK_BUTTON": "OK",
+			"OR": "or"
+		},
+		"REGISTER": {
+			"TITLE": "Sign up",
+			"HEADLINE": "Sign up here",
+			"EMAIL": "Email",
+			"EMAIL_ERR_REQUIRED": "Email is required.",
+			"EMAIL_ERR_INVALID": "Please enter a valid email address.",
+			"USERNAME": "Username",
+			"USERNAME_ERR_REQUIRED": "Username is required.",
+			"USERNAME_ERR_MIN": "Username has to have at least two characters.",
+			"USERNAME_ERR_MAX": "Username may contain a maximum of 20 characters.",
+			"USERNAME_ERR_PATTERN": "Username may only contain a-z, A-Z, 0-9, _ or -",
+			"PASSWORD": "Password",
+			"PASSWORD_ERR_REQUIRED": "Password is required.",
+			"PASSWORD_ERR_MIN": "Password must contain at least eight characters.",
+			"PASSWORD_ERR_COMPLEXITY": "Password must contain letters and digits.",
+			"PASSWORD_REPEAT": "Repeat password",
+			"PASSWORD_REPEAT_ERR": "Passwords do not match",
+			"PRIVACY_POLICY": "By clicking on \"SIGN UP\" you agree that you have read and accepted our data policy.",
+			"REGISTER_BUTTON": "SIGN UP",
+			"OR": "or",
+			"SUCCESS_1": "Account created successfully.",
+			"SUCCESS_2": "Please check your mailbox and verify your email.",
+			"SUCCESS_OK_BUTTON": "OK"
+		},
+		"NEW_COMP": {
+			"TITLE": "New Component",
+			"NAME": "Name",
+			"SYMBOL": "Symbol",
+			"DESCRIPTION": "Description",
+			"DESCRIPTION_MAX_LENGTH": "Description is to long",
+			"DESCRIPTION_INFO": "Description of the new component",
+			"CREATE": "CREATE",
+			"NAME_REQUIRED": "Name is required",
+			"NAME_MIN_LENGTH": "Name is to short",
+			"NAME_MAX_LENGTH": "Name is to long",
+			"NAME_PATTERN": "Name must consist of A-Z a-z 0-9 -_",
+			"NAME_INFO": "Name of the new component",
+			"SYMBOL_REQUIRED": "Symbol is required",
+			"SYMBOL_MAX_LENGTH": "Symbol is to long",
+			"SYMBOL_PATTERN": "Symbol must consist of A-Z a-z 0-9 -_",
+			"SYMBOL_INFO": "Will be shown when placing component."
+		},
+		"SAVE": {
+			"TITLE": "Save Project",
+			"NAME": "Name",
+			"NAME_INFO": "Name of the new project",
+			"DESCRIPTION": "Description",
+			"DESCRIPTION_INFO": "Description of the new project",
+			"DOWNLOAD": "DOWNLOAD FILE",
+			"CLOUD": "SAVE IN CLOUD"
+		},
+		"OPEN": {
+			"TITLE": "Open Project",
+			"OPEN": "OPEN",
+			"TABLE_OPEN": "Open",
+			"TABLE_EDITED": "Last edited",
+			"TABLE_NAME": "Name",
+			"OPEN_FILE": "Open from File",
+			"OPEN_CLOUD": "Open from Cloud",
+			"OPEN_SHARE": "Open Share",
+			"SHARE_LABEL": "Id / Link",
+			"NO_FILE": "No File Selected"
+		},
+		"RELOAD": {
+			"TITLE": "Reload Required",
+			"QUESTION": "For this change to take effect, the editor has to be reloaded.<br>Do you want to reload this page now?",
+			"YES": "YES",
+			"POSTPONE": "RELOAD LATER",
+			"CANCEL": "CANCEL"
+		},
+		"SHORTCUTS": {
+			"TITLE": "Customize Shortcuts",
+			"SAVE": "SAVE",
+			"DESCRIPTION": {
+				"copy": "Copy",
+				"paste": "Paste",
+				"cut": "Cut",
+				"delete": "Delete selected items",
+				"undo": "Undo",
+				"redo": "Redo",
+				"zoom100": "Zoom to 100%",
+				"zoomIn": "Zoom in",
+				"zoomOut": "Zoom out",
+				"fullscreen": "Enter fullscreen mode",
+				"connWireMode": "Connect wires mode",
+				"wireMode": "Place wires mode",
+				"selectMode": "Selection mode",
+				"eraserMode": "Eraser",
+				"cutSelectMode": "Cut Selection mode",
+				"newComp": "Create new custom component",
+				"textMode": "Place text",
+				"save": "Save",
+				"newProj": "New Project",
+				"openProj": "Open Project",
+				"enterSim": "Enter Simulation",
+				"leaveSim": "Leave Simulation"
+			}
+		},
+		"UNSAVED_CHANGES": {
+			"TITLE": "Unsaved Changes",
+			"QUESTION": "The current project has unsaved changes, by opening another project, these changes may be lost!",
+			"OK": "CONTINUE ANYWAYS",
+			"CANCEL": "CANCEL"
+		},
+		"SHARE": {
+			"TITLE": "Share Project {{project}}",
+			"SHARE_ENABLE": "Share this project with others",
+			"PUBLIC": "Public share",
+			"INFO_TEXT": "Please type in the email-addresses or usernames of the users, with whom you want to share this project.",
+			"EMAIL_USER": "Email / username",
+			"EMAIL_USER_ALREADY_ADDED": "Email or username has already been added",
+			"ADD_EMAIL": "Add",
+			"REMOVE_EMAIL": "Remove",
+			"INVITATIONS": "Send email invitations to users",
+			"NOT_FOUND_ERROR": "Some email addresses or user names were not found, share was created or updated anyways.",
+			"SUCCESS": "Created or updated share successfully.",
+			"LINK": "Link to share",
+			"COPY": "Copy",
+			"SAVE": "SAVE SETTINGS",
+			"CANCEL": "CANCEL"
+		},
+		"TEXT": {
+			"TITLE": "Place Text",
+			"SET": "Save",
+			"LABEL": "Text"
+		},
+		"ROM_EDIT": {
+			"TITLE": "Edit Rom Data",
+			"SAVE": "SAVE",
+			"CANCEL": "CANCEL"
+		},
+		"HELP": {
+			"TITLE": "Help",
+			"EDIT": "Edit on Github"
+		}
+	},
+	"SETTINGS_INFO": {
+		"INPUTS": "Inputs",
+		"DIRECTION": "Direction",
+		"DIRECTIONS": {
+			"LEFT": "Left",
+			"DOWN": "Down",
+			"UP": "Up",
+			"RIGHT": "Right"
+		},
+		"DESCRIPTION": "Description",
+		"EDIT": "Edit",
+		"PLUG_INDEX": "Plug Index",
+		"PLUG_LABEL": "Label"
+	},
+	"HELP_WINDOW": {
+		"TIPP": "Hint",
+		"DONT_AGAIN": "Don't show again",
+		"OK": "OK",
+		"HELP_TEXTS": {
+			"ENTER_SIM": "To start the simulation press the play button in the toolbar.",
+			"DRAG": "Use your right mouse button, to drag the view.",
+			"NEEDS_PLUGS": "To be able to place the component, it needs inputs or outputs."
+		}
+	},
+	"ELEMENT_TYPE": {
+		"BASIC": {
+			"AND": {
+				"NAME": "AND Gate",
+				"DESCRIPTION": "Output is high if all inputs are high."
+			},
+			"NOT": {
+				"NAME": "NOT Gate",
+				"DESCRIPTION": "Output is high if input is low."
+			},
+			"OR": {
+				"NAME": "OR Gate",
+				"DESCRIPTION": "Output is high if at least one input is high."
+			},
+			"XOR": {
+				"NAME": "XOR Gate",
+				"DESCRIPTION": "Output is high if an odd number of inputs are high."
+			},
+			"DELAY": {
+				"NAME": "Delay",
+				"DESCRIPTION": "Output equals Input. Adds one tick delay to the signal."
+			},
+			"CLOCK": {
+				"NAME": "Clock",
+				"DESCRIPTION": "Periodically sends a one tick long pulse.<br>Delay between pulses can be configured.",
+				"SPEED": "Delay"
+			},
+			"TEXT": {
+				"NAME": "Text",
+				"DESCRIPTION": "Text which you can place on the canvas."
+			},
+			"TUNNEL": {
+				"NAME": "Tunnel",
+				"DESCRIPTION": "Works like a wire, but wireless. Every tunnel is connected to all others with the same id",
+				"ID": "Tunnel-Id"
+			}
+		},
+		"ADVANCED": {
+			"HALF_ADDER": {
+				"NAME": "Half Adder",
+				"DESCRIPTION": "Adds two 1-bit numbers together."
+			},
+			"FULL_ADDER": {
+				"NAME": "Full Adder",
+				"DESCRIPTION": "Adds three 1-bit numbers together."
+			},
+			"ROM": {
+				"NAME": "ROM",
+				"DESCRIPTION": "Read only Memory.<br>Can be used for program code, for example.",
+				"WORD_SIZE": "Word Size",
+				"ADDRESS_SIZE": "Address Size"
+			},
+			"D_FF": {
+				"NAME": "D Flip Flop",
+				"DESCRIPTION": "Holds a state. State on (D) gets saved on rising edge."
+			},
+			"JK_FF": {
+				"NAME": "JK Flip Flop",
+				"DESCRIPTION": "Holds a state. Set (J) to high to set and (K) to high to reset. Toggles output if both are high.<br>Triggers on rising edge."
+			},
+			"SR_FF": {
+				"NAME": "SR Flip Flop",
+				"DESCRIPTION": "Holds a state. Set (S) to high to set and (R) to high to reset.<br>Triggers on rising edge."
+			}
+		},
+		"IO": {
+			"BUTTON": {
+				"NAME": "Button",
+				"DESCRIPTION": "Can be clicked to emit a pulse signal."
+			},
+			"LEVER": {
+				"NAME": "Switch",
+				"DESCRIPTION": "Can be switched on and off during simulation."
+			},
+			"LED": {
+				"NAME": "LED",
+				"DESCRIPTION": "Switches on or off depending on the applied input."
+			},
+			"SEGMENT_DISPLAY": {
+				"NAME": "Segment Display",
+				"DESCRIPTION": "Displays a binary input as decimal number"
+			},
+			"LED_MATRIX": {
+				"NAME": "LED Matrix",
+				"DESCRIPTION": "Display an image",
+				"SIZE": "Width/Height"
+			}
+		},
+		"PLUG": {
+			"INPUT": {
+				"NAME": "Input Plug",
+				"DESCRIPTION": "Place this where the inputs of you self-defined components should be"
+			},
+			"OUTPUT": {
+				"NAME": "Output Plug",
+				"DESCRIPTION": "Place this where the outputs of you self-defined components should be"
+			}
+		}
+	},
+	"STATUS_BAR": {
+		"UNSAVED": "Unsaved Changes",
+		"SAVED": "Saved",
+		"SELECTED": "Sel"
+	},
+	"WORK_MODE_DES": {
+		"select": "Selecting Elements",
+		"selectCut": "Selecting Elements, but cut wires off",
+		"buildComponent": "Placing Component: {{comp}}",
+		"buildWire": "Placing Wires",
+		"connectWire": "Connecting Wires",
+		"text": "Placing Text",
+		"eraser": "Erase Components",
+		"simulation": "Simulating Circuit"
+	},
+	"ERROR": {
+		"COMPILE": {
+			"CIRCULAR_DEP": "Circular dependency in components. {{src}} must not include {{comp}}.",
+			"FAILED": "Failed to compile board.",
+			"WORKER_INIT": "WebWorker failed to initialize."
+		},
+		"PROJECTS": {
+			"GET_PROJECTS": "Unable to get Projects from Server",
+			"GET_COMPS": "Unable to get Components from Server",
+			"OPEN_COMP": "Unable to open Component",
+			"OPEN": "Unable to open Project or Component",
+			"CLONE": "Unable to clone project",
+			"CREATE": "Unable to create project or component",
+			"SAVE": "Unable to save Component or Project on Server",
+			"SAVE_VERSION": "Version Error: Unable to save Component or Project on Server, because someone else updated the project while it was changed.",
+			"COMP_NOT_FOUND": "Component not found, project might be corrupted",
+			"REMOVED_COMP": "A component was not found and was removed from the Project",
+			"COMP_AS_PROJECT": "Unable to open Component as Project",
+			"INVALID_FILE": "Invalid File",
+			"RESOLVE_DEPS": "Unable to resolve dependencies of Project",
+			"PROJECT_AS_COMP": "Unable to open Project as Component",
+			"INVALID_FILE_TYPE": "Invalid File Type. Use a Json File."
+		},
+		"SHARE": {
+			"CREATE": "Unable to create share.",
+			"OPEN": "Unable to open shared Project",
+			"UPDATE": "Unable to update Share",
+			"DELETE": "Unable to delete Share",
+			"GET_INFO": "Unable to get Share information"
+		},
+		"USER": {
+			"SAVE_SHORTCUTS": "Error while Saving Shortcuts",
+			"GET_INFO": "Unable to get User info"
+		},
+		"ACCOUNT": {
+			"NO_USER": "Username does not exist",
+			"INVALID_PW": "Password is incorrect",
+			"EMAIL_NOT_VERIFIED": "Email address is not verified",
+			"EMAIL_TAKEN": "Email has already been taken",
+			"USERNAME_TAKEN": "Username has already been taken",
+			"OTHER": "An unknown error occurred."
+		},
+		"INVALID_URL": "Invalid Url"
+	},
+	"INFO": {
+		"PROJECTS": {
+			"CREATE_COMP": "Created Component {{name}}.",
+			"OPEN_COMP": "Opened Component {{name}}.",
+			"OPEN_PROJECT": "Opened Project {{name}}.",
+			"CLONED": "Cloned Project.",
+			"SAVE_SERVER": "Saved {{name}} on Server.",
+			"SAVE_ALL": "Saved Project and all open Components",
+			"EXPORT": "Exported Project and all included Components",
+			"OPEN_SHARE": "Opened shared project {{name}} from {{user}}"
+		},
+		"EASTEREGGS": {
+			"GBOGH": "Go big or go home",
+			"BLD": "AHHH MY EYES, SO MANY LUMENS",
+			"LAZ": "Too Lazy for a proper name..."
+		}
+	}
+}

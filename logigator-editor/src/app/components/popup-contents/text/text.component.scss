@@ -1,0 +1,19 @@
+@import "themes";
+
+div {
+	display: flex;
+	flex-direction: column;
+	margin: 2rem 1.5rem;
+
+	textarea {
+		min-width: 400px;
+		margin-bottom: 2rem;
+		outline: none;
+
+		@include themify(){
+			background-color: themed('background');
+			border: 1px solid themed('text-primary');
+			color: themed('text-primary');
+		}
+	}
+}

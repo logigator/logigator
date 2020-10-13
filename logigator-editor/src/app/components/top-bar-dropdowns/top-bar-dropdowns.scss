@@ -1,0 +1,45 @@
+@import "themes";
+
+.dropdown {
+	position: absolute;
+	z-index: 200;
+	width: max-content;
+	min-width: 10rem;
+	min-height: 1rem;
+	display: flex;
+	flex-direction: column;
+	user-select: none;
+	font-size: 0.9rem;
+
+	@include themify() {
+		background-color: themed('background');
+		color: themed('text-primary');
+		border: solid themed('accent2') border('width');
+		border-top-right-radius: border('radius');
+		border-bottom-left-radius: border('radius');
+		border-bottom-right-radius: border('radius');
+
+		div {
+			padding: 0.5rem;
+
+			&:hover {
+				background-color: themed('accent2');
+			}
+
+			span {
+				float: right;
+				margin-left: 3rem;
+			}
+		}
+
+		hr {
+			width: 100%;
+			margin: auto;
+			border-width: 0;
+			border-bottom-width: 1px;
+			border-style: solid;
+
+			border-color: themed('accent2');
+		}
+	}
+}

@@ -1,0 +1,444 @@
+{
+	"LANGUAGE": {
+		"DE": "Deutsch",
+		"EN": "English"
+	},
+	"DROPDOWN": {
+		"FILE": {
+			"TITLE": "Datei",
+			"NEW_PROJECT": "Neues Projekt",
+			"NEW_COMPONENT": "Neue Komponente",
+			"OPEN": "Öffnen",
+			"SAVE": "Speichern",
+			"EXPORT": "Als Datei exportieren",
+			"IMAGE_PNG": "Als PNG exportieren",
+			"IMAGE_JPEG": "Als JPG exportieren",
+			"IMAGE_SVG": "Als SVG exportieren",
+			"SHARE": "Teilen",
+			"CLONE": "Projekt klonen"
+		},
+		"EDIT": {
+			"TITLE": "Bearbeiten",
+			"UNDO": "Rückgängig",
+			"REDO": "Wiederholen",
+			"COPY": "Kopieren",
+			"PASTE": "Einfügen",
+			"CUT": "Ausschneiden",
+			"DELETE": "Löschen"
+		},
+		"VIEW": {
+			"TITLE": "Ansicht",
+			"ZOOM_IN": "Einzoomen",
+			"ZOOM_OUT": "Auszoomen",
+			"100": "100%",
+			"FULLSCREEN": "Vollbild"
+		},
+		"HELP": {
+			"TITLE": "Hilfe",
+			"HELP": "Hilfe"
+		},
+		"SETTINGS": {
+			"DARK_MODE": "Dunkles Design",
+			"SHOW_GRID": "Raster anzeigen",
+			"LANGUAGE": "Sprache",
+			"SHORTCUTS": "Tastaturbefehle bearbeiten",
+			"ACCOUNT": "Account",
+			"LOGOUT": "Abmelden",
+			"PRIVACY": "Datenschutz",
+			"NEW_VERSION": "Neue Version verfügbar"
+		}
+	},
+	"TOOLBAR": {
+		"START_SIM": "Simulation starten",
+		"EXIT_SIM": "Simulation verlassen",
+		"TOOLTIP": {
+			"SAVE": "Speichern",
+			"OPEN": "Öffnen",
+			"NEW_COMP": "Neue Komponente",
+			"COPY": "Kopieren",
+			"PASTE": "Einfügen",
+			"CUT": "Ausschneiden",
+			"DELETE": "Löschen",
+			"UNDO": "Rückgängig",
+			"REDO": "Wiederholen",
+			"ZOOM_IN": "Einzoomen",
+			"ZOOM_OUT": "Auszoomen",
+			"WIRE": "Leitungen platzieren",
+			"CONN_WIRE": "Leitungen verbinden",
+			"SELECT": "Auswählen",
+			"SELECT_CUT": "Auswählen und Schneiden",
+			"ROBBER": "Radiergummi",
+			"TEXT": "Text",
+			"SIM_SINGLE": "Einzelschritt",
+			"SIM_PAUSE": "Pause",
+			"SIM_STOP": "Stopp",
+			"SIM_CONT": "Start",
+			"SIM_TARGET_MODE": "Tickrate limitieren",
+			"SIM_SYNC_MODE": "Tickrate mit Bildschirm synchronisieren"
+		}
+	},
+	"TOP_BAR": {
+		"LOGIN": "Anmelden",
+		"REGISTER": "Registrieren"
+	},
+	"CONST_BOX": {
+		"SEARCH": "Suchen",
+		"CATEGORIES": {
+			"BASIC": "Grundlegend",
+			"ADVANCED": "Fortgeschritten",
+			"IO": "IO",
+			"PLUG": "Stecker",
+			"USER": "Benutzerdefiniert"
+		}
+	},
+	"POPUP": {
+		"LOGIN": {
+			"TITLE": "Anmelden",
+			"HEADLINE": "Melde dich hier an",
+			"USERNAME": "Benutzername / E-Mail",
+			"USERNAME_ERR_REQUIRED": "Benutzername / E-Mail muss angegeben werden",
+			"PASSWORD": "Passwort",
+			"PASSWORD_ERR_REQUIRED": "Passwort muss angegeben werden",
+			"LOGIN_BUTTON": "ANMELDEN",
+			"RESEND_BUTTON": "Email erneut senden",
+			"RESEND_SUCCESS_1": "Email erfolgreich gesendet",
+			"RESEND_SUCCESS_2": "Bitte überprüfe deinen Posteingang und verifiziere deine Email Adresse",
+			"RESEND_SUCCESS_OK_BUTTON": "OK",
+			"OR": "oder"
+		},
+		"REGISTER": {
+			"TITLE": "Registrieren",
+			"HEADLINE": "Registriere dich hier",
+			"EMAIL": "E-Mail",
+			"EMAIL_ERR_REQUIRED": "E-Mail muss angegeben werden",
+			"EMAIL_ERR_INVALID": "Bitte geben Sie eine valide E-Mail an",
+			"USERNAME": "Benutzername",
+			"USERNAME_ERR_REQUIRED": "Benutzername muss angegeben werden",
+			"USERNAME_ERR_MIN": "Benutzername muss mindestens zwei Zeichen enthalten",
+			"USERNAME_ERR_MAX": "Benutzername darf maximal 20 Zeichen enthalten",
+			"USERNAME_ERR_PATTERN": "Benutzername darf nur a-z, A-Z, 0-9, _ oder - enthalten",
+			"PASSWORD": "Passwort",
+			"PASSWORD_ERR_REQUIRED": "Passwort muss angegeben werden",
+			"PASSWORD_ERR_MIN": "Passwort muss mindestens acht Zeichen enthalten",
+			"PASSWORD_ERR_COMPLEXITY": "Passwort muss Ziffern und Buchstaben enthalten",
+			"PASSWORD_REPEAT": "Repeat password",
+			"PASSWORD_REPEAT_ERR": "Passwörter stimmen nicht überein",
+			"PRIVACY_POLICY": "Durch klicken auf \"Registrieren\" stimmen Sie zu, dass Sie die Datenschutzerklärung gelesen haben akzeptieren.",
+			"REGISTER_BUTTON": "REGISTRIEREN",
+			"OR": "oder",
+			"SUCCESS_1": "Account erfolgreich erstellt.",
+			"SUCCESS_2": "Bitte überprüfe deinen Posteingang und verifiziere deine Email Adresse.",
+			"SUCCESS_OK_BUTTON": "OK"
+		},
+		"NEW_COMP": {
+			"TITLE": "Neue Komponente",
+			"NAME": "Name",
+			"SYMBOL": "Symbol",
+			"DESCRIPTION": "Beschreibung",
+			"DESCRIPTION_MAX_LENGTH": "Beschreibung ist zu lang",
+			"DESCRIPTION_INFO": "Beschreibung der neuen Komponente",
+			"CREATE": "ERSTELLEN",
+			"NAME_REQUIRED": "Name muss angegeben werden",
+			"NAME_MIN_LENGTH": "Name ist zu kurz",
+			"NAME_MAX_LENGTH": "Name ist zu lang",
+			"NAME_PATTERN": "Name muss bestehen aus A-Z a-z 0-9 -_",
+			"NAME_INFO": "Name der neuen Komponente",
+			"SYMBOL_REQUIRED": "Symbol muss angegeben werden",
+			"SYMBOL_MAX_LENGTH": "Symbol ist zu lang",
+			"SYMBOL_PATTERN": "Symbol muss bestehen aus A-Z a-z 0-9 -_",
+			"SYMBOL_INFO": "Wird auf platzierter Komponente angezeigt."
+		},
+		"SAVE": {
+			"TITLE": "Projekt speichern",
+			"NAME": "Name",
+			"NAME_INFO": "Name des neuen Projektes",
+			"DESCRIPTION": "Beschreibung",
+			"DESCRIPTION_INFO": "Beschreibung des neuen Projektes",
+			"DOWNLOAD": "DATEI HERUNTERLADEN",
+			"CLOUD": "IN DER CLOUD SPEICHERN"
+		},
+		"OPEN": {
+			"TITLE": "Projekt öffnen",
+			"OPEN": "ÖFFNEN",
+			"TABLE_OPEN": "Öffnen",
+			"TABLE_EDITED": "Zuletzt bearbeitet",
+			"TABLE_NAME": "Name",
+			"OPEN_FILE": "Aus Datei öffnen",
+			"OPEN_CLOUD": "Aus Cloud öffnen",
+			"OPEN_SHARE": "Geteiltes Projekt öffnen",
+			"SHARE_LABEL": "Id / Link",
+			"NO_FILE": "Keine Datei ausgewählt"
+		},
+		"RELOAD": {
+			"TITLE": "Neuladen benötigt",
+			"QUESTION": "Um diese Änderungen zu übernehmen, muss der Editor neu geladen werden.<br>Wollen Sie diese Seite jetzt neuladen?",
+			"YES": "JA",
+			"POSTPONE": "SPÄTER NEULADEN",
+			"CANCEL": "ABBRECHEN"
+		},
+		"SHORTCUTS": {
+			"TITLE": "Tastaturbefehle bearbeiten",
+			"SAVE": "SPEICHERN",
+			"DESCRIPTION": {
+				"copy": "Kopieren",
+				"paste": "Einfügen",
+				"cut": "Ausschneiden",
+				"delete": "Auswahl löschen",
+				"undo": "Rückgängig",
+				"redo": "Wiederholen",
+				"zoom100": "Auf 100% zoomen",
+				"zoomIn": "Einzoomen",
+				"zoomOut": "Auszoomen",
+				"fullscreen": "Vollbildmodus",
+				"connWireMode": "Leitungen verbinden",
+				"wireMode": "Leitungen platzieren",
+				"selectMode": "Auswählen",
+				"eraserMode": "Radiergummi",
+				"cutSelectMode": "Auswählen und Schneiden",
+				"newComp": "Neue benutzerdefinierte Komponente",
+				"textMode": "Text platzieren",
+				"save": "Speichern",
+				"newProj": "Neues Projekt",
+				"openProj": "Projekt öffnen",
+				"enterSim": "Simulation starten",
+				"leaveSim": "Simulation verlassen"
+			}
+		},
+		"UNSAVED_CHANGES": {
+			"TITLE": "Ungespeicherte Änderungen",
+			"QUESTION": "Dieses Projekt hat ungespeicherte Änderungen, diese gehen verloren, wenn ein anderes Projekt geöffnet wird!",
+			"OK": "TROTZDEM FORTFAHREN",
+			"CANCEL": "ABBRECHEN"
+		},
+		"SHARE": {
+			"TITLE": "Projekt teilen {{project}}",
+			"SHARE_ENABLE": "Teile dieses Projekt mit anderen",
+			"PUBLIC": "Öffenttlich teilen",
+			"INFO_TEXT": "Bitte geben Sie die E-Mail-Adressen und Benutzernamen der Nutzer an, mit denen Sie das Projekt teilen wollen.",
+			"EMAIL_USER": "E-Mail / Benutzername",
+			"EMAIL_USER_ALREADY_ADDED": "E-Mail oder Benutzername wurden bereits hinzugefügt",
+			"ADD_EMAIL": "Hinzufügen",
+			"REMOVE_EMAIL": "Entfernen",
+			"INVITATIONS": "E-Mail Einladungen an Benutzer senden",
+			"NOT_FOUND_ERROR": "Manche E-Mail-Adressen konnten nicht gefunden werden, Projekt wurde trotzdem geteilt.",
+			"SUCCESS": "Projekt wurde erfolgreich geteilt.",
+			"LINK": "Link zum Teilen",
+			"COPY": "Kopieren",
+			"SAVE": "EINSTELLUNGEN SPEICHERN",
+			"CANCEL": "ABBRECHEN"
+		},
+		"TEXT": {
+			"TITLE": "Text platzieren",
+			"SET": "Speichern",
+			"LABEL": "Text"
+		},
+		"ROM_EDIT": {
+			"TITLE": "Rom Daten editieren",
+			"SAVE": "SPEICHERN",
+			"CANCEL": "ABBRECHEN"
+		},
+		"HELP": {
+			"TITLE": "Hilfe",
+			"EDIT": "Auf Github bearbeiten"
+		}
+	},
+	"SETTINGS_INFO": {
+		"INPUTS": "Eingänge",
+		"DIRECTION": "Richtung",
+		"DIRECTIONS": {
+			"LEFT": "Nach links",
+			"DOWN": "Nach unten",
+			"UP": "Nach oben",
+			"RIGHT": "Nach rechts"
+		},
+		"DESCRIPTION": "Beschreibung",
+		"EDIT": "Bearbeiten",
+		"PLUG_INDEX": "Stecker Index",
+		"PLUG_LABEL": "Beschriftung"
+	},
+	"HELP_WINDOW": {
+		"TIPP": "Tipp",
+		"DONT_AGAIN": "Nicht mehr anzeigen",
+		"OK": "OK",
+		"HELP_TEXTS": {
+			"ENTER_SIM": "Um die Simulation zu starten, drücke den Play Button in der Toolbar.",
+			"DRAG": "Verwende die rechte Maustaste, um die Ansicht zu verschieben.",
+			"NEEDS_PLUGS": "Um die Komponente platzieren zu können, braucht sie Eingänge oder Ausgänge."
+		}
+	},
+	"ELEMENT_TYPE": {
+		"BASIC": {
+			"AND": {
+				"NAME": "UND Gatter",
+				"DESCRIPTION": "Ausgang ist aktiv wenn alle Eingänge aktiv sind."
+			},
+			"NOT": {
+				"NAME": "NICHT Gatter",
+				"DESCRIPTION": "Ausgang ist aktiv wenn der Eingang inaktiv ist."
+			},
+			"OR": {
+				"NAME": "ODER Gatter",
+				"DESCRIPTION": "Ausgang ist aktiv wenn mindestens ein Eingang aktiv ist."
+			},
+			"XOR": {
+				"NAME": "XOR Gatter",
+				"DESCRIPTION": "Augang ist aktiv wenn eine ungerade Zahl an Eingängen aktiv sind."
+			},
+			"DELAY": {
+				"NAME": "Durchpass",
+				"DESCRIPTION": "Ausgang = Eingang. Fügt einen Tick Verzögerung zum Signal hinzu."
+			},
+			"CLOCK": {
+				"NAME": "Taktgeber",
+				"DESCRIPTION": "Sendet periodisch ein Taktsignal.<br>Die Verzögerung zwischen den Signalen kann angepasst werden.",
+				"SPEED": "Verzögerung"
+			},
+			"TEXT": {
+				"NAME": "Text",
+				"DESCRIPTION": "Text, der auf der Arbeitsfläche platziert werden kann."
+			},
+			"TUNNEL": {
+				"NAME": "Tunnel",
+				"DESCRIPTION": "Funktioniert wie eine Leitung, aber ohne Leitung. Jeder Tunnel ist mit allen anderen Tunneln verbunden, die die selbe Id haben",
+				"ID": "Tunnel-Id"
+			}
+		},
+		"ADVANCED": {
+			"HALF_ADDER": {
+				"NAME": "Halbaddierer",
+				"DESCRIPTION": "Addiert zwei 1-Bit Zahlen."
+			},
+			"FULL_ADDER": {
+				"NAME": "Volladdierer",
+				"DESCRIPTION": "Addiert drei 1-Bit Zahlen."
+			},
+			"ROM": {
+				"NAME": "ROM",
+				"DESCRIPTION": "Speicher, aus dem nur gelesen werden kann.<br>Kann beispielsweise für Programmcode genutzt werden.",
+				"WORD_SIZE": "Wortbreite",
+				"ADDRESS_SIZE": "Adressgröße"
+			},
+			"D_FF": {
+				"NAME": "D Flip Flop",
+				"DESCRIPTION": "Speichert einen Wert. Wert auf (D) wird bei Anlegen von (CLK) gespeichert."
+			},
+			"JK_FF": {
+				"NAME": "JK Flip Flop",
+				"DESCRIPTION": "Speichert einen Wert. Setzt auf HIGH, wenn (J) auf HIGH und setzt auf LOW, wenn (K) auf HIGH. Schaltet um, wenn beide Eingänge auf HIGH sind.<br>Speichert bei Anlegen von (CLK)."
+			},
+			"SR_FF": {
+				"NAME": "SR Flip Flop",
+				"DESCRIPTION": "Speichert einen Wert. Setzt auf HIGH, wenn (S) auf HIGH und setzt auf LOW, wenn (R) auf HIGH.<br>Speichert bei Anlegen von (CLK)."
+			}
+		},
+		"IO": {
+			"BUTTON": {
+				"NAME": "Knopf",
+				"DESCRIPTION": "Kann gedrückt werden, um einen Puls zu senden."
+			},
+			"LEVER": {
+				"NAME": "Schalter",
+				"DESCRIPTION": "Kann an- und ausgeschalten werden."
+			},
+			"LED": {
+				"NAME": "LED",
+				"DESCRIPTION": "Schaltet sich abhängig vom Eingang aus oder ein."
+			},
+			"SEGMENT_DISPLAY": {
+				"NAME": "Segment Display",
+				"DESCRIPTION": "Stellt die binären Eingänge als Dezimalzahlen dar."
+			},
+			"LED_MATRIX": {
+				"NAME": "LED Matrix",
+				"DESCRIPTION": "Zeige ein Bild an",
+				"SIZE": "Höhe/Breite"
+			}
+		},
+		"PLUG": {
+			"INPUT": {
+				"NAME": "Eingangsstecker",
+				"DESCRIPTION": "Platziere das, wo die Eingänge deiner selbstdefinierten Komponente sein sollen"
+			},
+			"OUTPUT": {
+				"NAME": "Ausgangsstecker",
+				"DESCRIPTION": "Platziere das, wo die Ausgänge deiner selbstdefinierten Komponente sein sollen"
+			}
+		}
+	},
+	"STATUS_BAR": {
+		"UNSAVED": "Ungespeicherte Änderungen",
+		"SAVED": "Gespeichert",
+		"SELECTED": "Sel"
+	},
+	"WORK_MODE_DES": {
+		"select": "Elemente selektieren",
+		"selectCut": "Elemente selektieren, aber Leitungen werden abgeschnitten",
+		"buildComponent": "Komponente platzieren: {{comp}}",
+		"buildWire": "Leitungen platzieren",
+		"connectWire": "Leitungen verbinden",
+		"text": "Text platzieren",
+		"eraser": "Komponenten radieren",
+		"simulation": "Schaltung simulieren"
+	},
+	"ERROR": {
+		"COMPILE": {
+			"CIRCULAR_DEP": "Zirkuläre Abhängigkeit in Komponenten. {{src}} darf nicht {{comp}} beinhalten.",
+			"FAILED": "Board konnte nicht zusammengestellt werden.",
+			"WORKER_INIT": "WebWorker konnte nicht initialisiert werden."
+		},
+		"PROJECTS": {
+			"GET_PROJECTS": "Konnte Projekte nicht vom Server laden",
+			"GET_COMPS": "Konnte Komponenten nicht vom Server laden",
+			"OPEN_COMP": "Konnte Komponente nicht öffnen",
+			"OPEN": "Konnte Projekt oder Komponente nicht öffnen",
+			"CLONE": "Konnte Projekt nicht klonen",
+			"CREATE": "Konnte Projekt oder Komponente nicht erstellen",
+			"SAVE": "Konnte Projekt oder Komponente nicht auf dem Server speichern",
+			"SAVE_VERSION": "Versionsfehler: Konnte Projekt oder Komponente nicht auf dem Server speichern, weil es wo anders bearbeitet wurde während es hier geöffnet war.",
+			"COMP_NOT_FOUND": "Komponente konnte nicht gefunden werden, Projekt könnte beschädigt sein",
+			"REMOVED_COMP": "Eine Komponente konnte nicht gefunden werden und wurde aus dem Projekt entfernt",
+			"COMP_AS_PROJECT": "komponente kann nicht als Projekt geöffnet werden",
+			"INVALID_FILE": "Fehlerhafte Datei",
+			"RESOLVE_DEPS": "Konnte Abhängigkeiten des Projekts nicht auflösen",
+			"PROJECT_AS_COMP": "Konnte Projekt nicht als Komponente öffnen",
+			"INVALID_FILE_TYPE": "Flascher Filetyp. Bitte Json verwenden."
+		},
+		"SHARE": {
+			"CREATE": "Konnte Projekt nicht teilen.",
+			"OPEN": "Konnte geteiltes Projekt nicht öffnen",
+			"UPDATE": "Share konnte nicht aktualisiert werden",
+			"DELETE": "Share konnte nicht gelöscht werden",
+			"GET_INFO": "Konnte Share Informationen nicht bekommen"
+		},
+		"USER": {
+			"SAVE_SHORTCUTS": "Fehler beim speichern der Tastaturbefehle",
+			"GET_INFO": "Konnte Benutzerinformationen nicht bekommen"
+		},
+		"ACCOUNT": {
+			"NO_USER": "Benutzername exsistiert nicht",
+			"INVALID_PW": "Password ist falsch",
+			"EMAIL_NOT_VERIFIED": "Email Adresse nicht verifiziert",
+			"EMAIL_TAKEN": "Email Adresse wird bereits verwendet",
+			"USERNAME_TAKEN": "Benutzername wird bereits verwedet",
+			"OTHER": "Ein unbekannter Fehler ist aufgetreten"
+		},
+		"INVALID_URL": "Ungülitge Url"
+	},
+	"INFO": {
+		"PROJECTS": {
+			"CREATE_COMP": "Komponente erstellt {{name}}.",
+			"OPEN_COMP": "Komponente geöffnet {{name}}.",
+			"OPEN_PROJECT": "Projekt geöffnet {{name}}.",
+			"CLONED": "Projekt geklont.",
+			"SAVE_SERVER": "{{name}} auf dem Server gespeichert.",
+			"SAVE_ALL": "Projekt und alle geöffneten Komponenten gespeichert",
+			"EXPORT": "Projekt und alle beinhalteten Komponenten wurden gespeichert",
+			"OPEN_SHARE": "Geteiltes Projekt {{name}} von {{user}} geöffnet"
+		},
+		"EASTEREGGS": {
+			"GBOGH": "Gehe groß oder gehe nach Hause",
+			"BLD": "AHHH MEINE AUGEN, SO VIELE LUMEN",
+			"LAZ": "Zu faul für einen gescheiten Namen..."
+		}
+	}
+}

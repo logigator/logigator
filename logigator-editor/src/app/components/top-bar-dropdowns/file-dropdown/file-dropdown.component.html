@@ -1,0 +1,41 @@
+<div class="dropdown">
+	<div (click)="newProject()" *ngIf="checkActionUsable('newProj')">
+		{{'DROPDOWN.FILE.NEW_PROJECT' | translate}}
+	</div>
+	<div (click)="newComponent()" *ngIf="checkActionUsable('newComp')">
+		{{'DROPDOWN.FILE.NEW_COMPONENT' | translate}}
+		<span>{{'newComp' | shortcutText}}</span>
+	</div>
+	<hr>
+	<div (click)="openProject()" *ngIf="checkActionUsable('openProj')">
+		{{'DROPDOWN.FILE.OPEN' | translate}}
+	</div>
+	<div (click)="saveProject()" *ngIf="checkActionUsable('save') && canSave">
+		{{'DROPDOWN.FILE.SAVE' | translate}}
+		<span>{{'save' | shortcutText}}</span>
+	</div>
+	<div (click)="cloneProject()" *ngIf="canClone">
+		{{'DROPDOWN.FILE.CLONE' | translate}}
+	</div>
+	<div (click)="exportProject()" *ngIf="checkActionUsable('export')">
+		{{'DROPDOWN.FILE.EXPORT' | translate}}
+	</div>
+	<ng-container *ngIf="canShare && checkActionUsable('share')">
+		<hr>
+		<div (click)="shareProject()">
+			{{'DROPDOWN.FILE.SHARE' | translate}}
+		</div>
+	</ng-container>
+	<ng-container *ngIf="checkActionUsable('exportImage')">
+		<hr>
+		<div (click)="screenshot('png')">
+			{{'DROPDOWN.FILE.IMAGE_PNG' | translate}}
+		</div>
+		<div (click)="screenshot('jpeg')">
+			{{'DROPDOWN.FILE.IMAGE_JPEG' | translate}}
+		</div>
+		<div (click)="screenshot('svg')">
+			{{'DROPDOWN.FILE.IMAGE_SVG' | translate}}
+		</div>
+	</ng-container>
+</div>

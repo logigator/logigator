@@ -1,0 +1,72 @@
+@import "themes";
+@import "~github-markdown-css/github-markdown.css";
+
+@include themifyForNoEncapsulation() {
+	.markdown-body {
+		color: themed('text-primary') !important;
+		max-height: 80vh;
+		height: 80vh;
+		padding: 0 1rem;
+		font-family: inherit;
+
+		h1, h2 {
+			border-bottom-color: themed('text-primary');
+		}
+
+		table tr {
+			background-color: inherit !important;
+		}
+
+		pre, code {
+			background-color: themed('accent2');
+		}
+
+		a {
+			color: themed('primary') !important;
+		}
+
+		img {
+			background-color: transparent;
+		}
+
+		.rows {
+			display: flex;
+			flex-direction: row;
+
+			&.align-center {
+				align-items: center;
+
+				p {
+					margin-bottom: 0;
+				}
+			}
+
+			.margin-left {
+				width: fit-content;
+			}
+
+			table {
+				width: auto;
+				overflow: initial;
+			}
+		}
+
+		.margin-left {
+			margin-left: 1rem;
+		}
+
+		.margin-bottom {
+			margin-bottom: 1rem;
+		}
+
+		img[title="icon-img"] {
+			width: 40px;
+			height: 40px;
+		}
+
+		.video {
+			width: 100%;
+			max-width: 800px;
+		}
+	}
+}

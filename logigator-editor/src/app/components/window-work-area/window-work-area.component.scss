@@ -1,0 +1,88 @@
+@import "themes";
+
+.collision-box {
+	@include themify() {
+		background-color: rgba(0, 0, 0, 0);
+	}
+
+	user-select: none;
+	width: 500px;
+	height: 300px;
+	padding: 5px;
+	position: fixed;
+	bottom: 100px;
+	right: 10px;
+	display: none;
+
+	.window-container {
+		@include themify() {
+			background-color: themed('background');
+			border: border('width') solid themed('accent2');
+		}
+
+		width: 100%;
+		height: 100%;
+		border-radius: border('radius');
+
+		.canvas-window-container {
+			width: 100%;
+			height: calc(100% - 2rem);
+			cursor: crosshair;
+		}
+
+		.header {
+			display: flex;
+
+			@include themify() {
+				background-color: themed('accent2');
+				color: themed('text-primary');
+			}
+
+			width: 100%;
+			height: 2rem;
+			text-align: center;
+			font-size: 1.2rem;
+			font-weight: 700;
+			justify-content: space-between;
+			padding-bottom: 2px;
+			align-items: center;
+
+			.identifier-string {
+				margin: 0 0 0 0.3rem;
+				display: flex;
+				flex-direction: row;
+				cursor: auto;
+
+				p {
+					margin: 0;
+					line-height: 2rem;
+					cursor: pointer;
+				}
+
+				span {
+					line-height: 2rem;
+					margin: 0 0.25rem;
+				}
+			}
+
+			.drag-header {
+				flex-grow: 1;
+				height: 2rem;
+			}
+
+			img {
+				margin-right: 0.11rem;
+				border-radius: 0.25rem;
+				width: 1.3rem;
+				height: 1.3rem;
+				cursor: auto;
+
+				&:hover {
+					@include themify() {
+						background-color: lighten(themed('background'), 10);
+					}
+				}
+			}
+		}
+	}
+}

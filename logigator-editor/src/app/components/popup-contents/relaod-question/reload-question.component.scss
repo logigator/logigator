@@ -1,0 +1,13 @@
+.reload {
+	margin: 1rem;
+
+	.buttons {
+		display: flex;
+		flex-direction: row;
+		justify-content: flex-end;
+
+		button {
+			margin-right: 0.5rem;
+		}
+	}
+}
