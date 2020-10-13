@@ -5,7 +5,7 @@
 	"license": "MIT",
 	"repository": {
 		"type": "git",
-		"url": "git+https://github.com/logigator/logigator-editor.git"
+		"url": "git+https://github.com/logigator/logigator.git"
 	},
 	"scripts": {
 		"start": "npm run start:web",

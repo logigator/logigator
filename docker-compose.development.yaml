@@ -55,6 +55,18 @@ services:
       - logigator_intern
     ports:
       - 5001:5001
+  #### NODE_JS_EDITOR ####
+  development_editor:
+    image: node:12
+    networks:
+      logigator_intern:
+        aliases:
+          - editor
+    volumes:
+      - ./logigator-editor/:/home/node/app
+    user: "node"
+    working_dir: /home/node/app
+    command: "npm start"
 
 networks:
   logigator_intern:
