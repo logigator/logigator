@@ -12,6 +12,6 @@ fs.renameSync(jsWasmFile, jsWasmFileTimestamp);
 for (let workerFile of workerJsFiles) {
 	workerFile = path.join(editorDist, workerFile);
 	if(fs.existsSync(workerFile)) {
-		fs.writeFileSync(workerFile, fs.readFileSync(workerFile).toString().replace('importScripts(\"/assets/wasm/logigator-simulation.js\")', `importScripts(\"/assets/wasm/logigator-simulation.${timestamp}.js\")`));
+		fs.writeFileSync(workerFile, fs.readFileSync(workerFile).toString().replace('importScripts(\"assets/wasm/logigator-simulation.js\")', `importScripts(\"/assets/wasm/logigator-simulation.${timestamp}.js\")`));
 	}
 }

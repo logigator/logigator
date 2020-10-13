@@ -9,7 +9,7 @@
 	},
 	"scripts": {
 		"start": "npm run start:web",
-		"start:web": "env-cmd -e dev-web --use-shell \"npm run build-custom-build-scripts && npm run ng:serve -- -c dev-web --proxy-config proxyconfig.json --host 0.0.0.0\"",
+		"start:web": "env-cmd -e dev-web --use-shell \"npm run build-custom-build-scripts && npm run ng:serve -- -c dev-web --proxy-config proxyconfig.json --host 0.0.0.0 --base-href /editor/ --deploy-url /editor/\"",
 		"start:web-prod": "env-cmd -e prod-web --use-shell \"npm run build-custom-build-scripts && npm run ng:serve -- -c prod-web --proxy-config proxyconfig.json\"",
 		"start:electron": "env-cmd -e dev-electron --use-shell \"electron-rebuild && npm run build-custom-build-scripts && npm-run-all -p ng:serve:electron electron:serve\"",
 		"build": "npm run build:web",

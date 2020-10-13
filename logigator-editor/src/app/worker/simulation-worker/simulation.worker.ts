@@ -7,7 +7,7 @@ import {SimulationWorker} from '../../models/simulation/simulation-worker';
 let initialized = false;
 let worker: SimulationWorker;
 
-importScripts('/assets/wasm/logigator-simulation.js');
+importScripts('assets/wasm/logigator-simulation.js');
 declare var Module: SimulationModule;
 
 Module.onRuntimeInitialized = () => {

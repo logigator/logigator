@@ -73,9 +73,9 @@ div {
 			.save {
 				@include themify() {
 					@if (isTheme('dark')) {
-						background-image: url("/assets/icons/dark/check.svg");
+						background-image: url("^assets/icons/dark/check.svg");
 					} @else {
-						background-image: url("/assets/icons/light/check.svg");
+						background-image: url("^assets/icons/light/check.svg");
 					}
 					background-repeat: no-repeat;
 					background-size: 60%;

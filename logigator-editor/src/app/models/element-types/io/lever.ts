@@ -9,7 +9,7 @@ export const lever: ElementType = {
 	category: 'io',
 
 	symbol: 'sw',
-	symbolImage: '/assets/elements/switch.svg',
+	symbolImage: 'assets/elements/switch.svg',
 
 	showSettings: true,
 	showSettingsForType: true,

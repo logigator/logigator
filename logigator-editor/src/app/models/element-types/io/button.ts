@@ -9,7 +9,7 @@ export const button: ElementType = {
 	category: 'io',
 
 	symbol: 'but',
-	symbolImage: '/assets/elements/button.svg',
+	symbolImage: 'assets/elements/button.svg',
 
 	showSettings: true,
 	showSettingsForType: true,

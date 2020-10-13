@@ -637,7 +637,7 @@ export class ProjectSaveManagementService {
 	}
 
 	public setAddress(type: string = null, path: string | number = null) {
-		let url = '/';
+		let url = '/editor/';
 		if (type)
 			url += `${type}`;
 		if (path)

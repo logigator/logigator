@@ -9,7 +9,7 @@ export const led: ElementType = {
 	category: 'io',
 
 	symbol: 'LED',
-	symbolImage: '/assets/elements/led.svg',
+	symbolImage: 'assets/elements/led.svg',
 
 	showSettings: true,
 	showSettingsForType: true,

@@ -76,8 +76,8 @@ export abstract class WorkArea {
 		if (WorkArea._loadedPixiFont === true) return;
 		WorkArea._loadedPixiFont = true;
 		const loader = PIXI.Loader.shared;
-		loader.add('Roboto', '/assets/bitmap-fonts/roboto.fnt')
-			.add('Segment7', '/assets/bitmap-fonts/segment7.fnt')
+		loader.add('Roboto', 'assets/bitmap-fonts/roboto.fnt')
+			.add('Segment7', 'assets/bitmap-fonts/segment7.fnt')
 			.load(() => {
 				WorkArea.pixiFontLoaded$.next();
 			});

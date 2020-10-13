@@ -9,7 +9,7 @@ export const ledMatrix: ElementType = {
 	category: 'io',
 
 	symbol: 'LED_M',
-	symbolImage: '/assets/elements/led-matrix.svg',
+	symbolImage: 'assets/elements/led-matrix.svg',
 
 	showSettings: true,
 	showSettingsForType: true,
