@@ -10,7 +10,6 @@ import {ErrorHandlingService} from '../error-handling/error-handling.service';
 import {ElectronService} from 'ngx-electron';
 import {environment} from '../../../environments/environment';
 import {SharedCompsAuthService} from '@logigator/logigator-shared-comps';
-import {InitService} from '../init/init.service';
 
 @Injectable({
 	providedIn: 'root'
@@ -27,9 +26,8 @@ export class UserService implements SharedCompsAuthService {
 		private http: HttpClient,
 		private errorHandling: ErrorHandlingService,
 		@Optional() private electronService: ElectronService,
-		private init: InitService
 	) {
-		this._isLoggedIn = this.init.electronIsLoggedIn;
+		this._isLoggedIn = false;
 		this.checkLoginState(false);
 		this.getUserInfoFromServer();
 		interval(2000).subscribe(() => this.updateLoginState());

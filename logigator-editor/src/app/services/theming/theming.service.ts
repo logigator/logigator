@@ -4,7 +4,6 @@ import {EditorColorKey, EditorColors, Theme} from '../../models/theming';
 import {Observable, Subject} from 'rxjs';
 import {EastereggService} from '../easteregg/easteregg.service';
 import {StorageService} from '../storage/storage.service';
-import {InitService} from '../init/init.service';
 
 @Injectable({
 	providedIn: 'root'
@@ -45,14 +44,13 @@ export class ThemingService {
 	constructor(
 		@Inject(DOCUMENT) private document: HTMLDocument,
 		private eastereggs: EastereggService,
-		private storage: StorageService,
-		private init: InitService
+		private storage: StorageService
 	) {
 		this.loadTheme();
 	}
 
 	public loadTheme() {
-		this._currentTheme = this.init.themingServiceData;
+		this._currentTheme = this.storage.get('theme') as Theme ?? 'dark';
 		this._pendingTheme = this.currentTheme;
 		if (this._currentTheme === 'light') {
 			setTimeout(() => this.eastereggs.achieve('BLD'), 1000);

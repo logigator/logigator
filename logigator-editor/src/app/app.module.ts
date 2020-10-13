@@ -57,8 +57,6 @@ import { HelpComponent } from './components/popup-contents/help/help.component';
 import { HelpRendererComponent } from './components/popup-contents/help-renderer/help-renderer.component';
 import {ELECTRON} from '../environments/environment';
 import { HelpWindowComponent } from './components/help-window/help-window.component';
-import {initServices} from './providerFactories/initServices';
-import {InitService} from './services/init/init.service';
 
 @NgModule({
 	declarations: [
@@ -155,12 +153,6 @@ import {InitService} from './services/init/init.service';
 		{
 			provide: WorkerCommunicationService,
 			useClass: ELECTRON ? WorkerCommunicationNodeService : WorkerCommunicationWasmService
-		},
-		{
-			provide: APP_INITIALIZER,
-			useFactory: initServices,
-			deps: [InitService],
-			multi: true,
 		}
 	],
 	bootstrap: [AppComponent]
