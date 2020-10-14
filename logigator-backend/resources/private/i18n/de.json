@@ -20,7 +20,9 @@
 		"ACCOUNT": "Logigator - Account",
 		"ACCOUNT_PROFILE": "Logigator - Profil",
 		"ACCOUNT_SECURITY": "Logigator - Sicherheit",
-		"ACCOUNT_DELETE": "Logigator - Account löschen"
+		"ACCOUNT_DELETE": "Logigator - Account löschen",
+		"LOGIN": "Logigator - Login",
+		"REGISTER": "Logigator - Registrieren"
 	},
 	"SITE_HEADER": {
 		"DOWNLOAD": "Download",
@@ -85,6 +87,48 @@
 			"TEXT": "Projekte und eigene Komponenten können sowohl lokal, als Datei gespeichert werden, als auch in der Cloud, um sie auf mehreren Geräten bearbeiten zu können, wobei man hierfür angemeldet sein muss. Sie können ebenfalls mit anderen Nutzern geteilt werden."
 		}
 	},
+	"LOGIN_FORM": {
+		"HEADLINE": "Melde dich hier an",
+		"EMAIL": "E-Mail",
+		"EMAIL_ERR_REQUIRED": "E-Mail muss angegeben werden",
+		"EMAIL_ERR_INVALID": "Bitte geben Sie eine valide E-Mail an.",
+		"EMAIL_ERR_NO_USER": "Email exsistiert nicht.",
+		"EMAIL_ERR_NOT_VERIFIED": "Email Adresse nicht verifiziert.",
+		"PASSWORD": "Passwort",
+		"PASSWORD_ERR_REQUIRED": "Passwort muss angegeben werden",
+		"PASSWORD_ERR_INVALID": "Password ist falsch.",
+		"ERR_EMAIL_TAKEN": "Email Adresse wird bereits verwendet",
+		"ERR_VERIFICATION_MAIL": "Verfizierungs-Email konnte nicht gesendet werden.",
+		"ERR_UNKNOWN": "Ein unbekannter Fehler ist aufgetreten.",
+		"LOGIN_BUTTON": "ANMELDEN",
+		"RESEND_BUTTON": "Verifizierungs Email erneut senden",
+		"OR": "oder"
+	},
+	"REGISTER_FORM": {
+		"HEADLINE": "Registriere dich hier",
+		"EMAIL": "E-Mail",
+		"EMAIL_ERR_REQUIRED": "E-Mail muss angegeben werden.",
+		"EMAIL_ERR_INVALID": "Bitte geben Sie eine valide E-Mail an.",
+		"EMAIL_ERR_TAKEN": "Email Adresse wird bereits verwendet",
+		"USERNAME": "Benutzername",
+		"USERNAME_ERR_REQUIRED": "Benutzername muss angegeben werden.",
+		"USERNAME_ERR_MIN": "Benutzername muss mindestens zwei Zeichen enthalten.",
+		"USERNAME_ERR_MAX": "Benutzername darf maximal 20 Zeichen enthalten.",
+		"USERNAME_ERR_PATTERN": "Benutzername darf nur a-z, A-Z, 0-9, _ oder - enthalten.",
+		"PASSWORD": "Passwort",
+		"PASSWORD_ERR_REQUIRED": "Passwort muss angegeben werden.",
+		"PASSWORD_ERR_MIN": "Passwort muss mindestens acht Zeichen enthalten.",
+		"PASSWORD_ERR_COMPLEXITY": "Passwort muss Ziffern und Buchstaben enthalten.",
+		"PASSWORD_REPEAT": "Passwort wiederholen",
+		"PASSWORD_REPEAT_ERR_REQUIRED": "Passwort muss wiederholt werden.",
+		"PASSWORD_REPEAT_ERR": "Passwörter stimmen nicht überein.",
+		"PRIVACY_POLICY": "Durch klicken auf \"Registrieren\" stimmen Sie zu, dass Sie die Datenschutzerklärung gelesen haben akzeptieren.",
+		"REGISTER_BUTTON": "REGISTRIEREN",
+		"OR": "oder",
+		"ERR_EMAIL_TAKEN": "Email Adresse wird bereits verwendet",
+		"ERR_VERIFICATION_MAIL": "Verfizierungs-Email konnte nicht gesendet werden, versuchen Sie es beim anmelden erneut.",
+		"ERR_UNKNOWN": "Ein unbekannter Fehler ist aufgetreten."
+	},
 	"USERSPACE": {
 		"NAV": {
 			"PROJECTS": "Projekte",
@@ -147,46 +191,10 @@
 	},
 	"POPUP": {
 		"LOGIN": {
-			"TITLE": "Anmelden",
-			"HEADLINE": "Melde dich hier an",
-			"EMAIL": "E-Mail",
-			"EMAIL_ERR_REQUIRED": "E-Mail muss angegeben werden",
-			"EMAIL_ERR_INVALID": "Bitte geben Sie eine valide E-Mail an.",
-			"EMAIL_ERR_NO_USER": "Email exsistiert nicht.",
-			"EMAIL_ERR_NOT_VERIFIED": "Email Adresse nicht verifiziert.",
-			"PASSWORD": "Passwort",
-			"PASSWORD_ERR_REQUIRED": "Passwort muss angegeben werden",
-			"PASSWORD_ERR_INVALID": "Password ist falsch.",
-			"ERR_EMAIL_TAKEN": "Email Adresse wird bereits verwendet",
-			"ERR_VERIFICATION_MAIL": "Verfizierungs-Email konnte nicht gesendet werden.",
-			"LOGIN_BUTTON": "ANMELDEN",
-			"RESEND_BUTTON": "Verifizierungs Email erneut senden",
-			"OR": "oder"
+			"TITLE": "Anmelden"
 		},
 		"REGISTER": {
-			"TITLE": "Registrieren",
-			"HEADLINE": "Registriere dich hier",
-			"EMAIL": "E-Mail",
-			"EMAIL_ERR_REQUIRED": "E-Mail muss angegeben werden.",
-			"EMAIL_ERR_INVALID": "Bitte geben Sie eine valide E-Mail an.",
-			"EMAIL_ERR_TAKEN": "Email Adresse wird bereits verwendet",
-			"USERNAME": "Benutzername",
-			"USERNAME_ERR_REQUIRED": "Benutzername muss angegeben werden.",
-			"USERNAME_ERR_MIN": "Benutzername muss mindestens zwei Zeichen enthalten.",
-			"USERNAME_ERR_MAX": "Benutzername darf maximal 20 Zeichen enthalten.",
-			"USERNAME_ERR_PATTERN": "Benutzername darf nur a-z, A-Z, 0-9, _ oder - enthalten.",
-			"PASSWORD": "Passwort",
-			"PASSWORD_ERR_REQUIRED": "Passwort muss angegeben werden.",
-			"PASSWORD_ERR_MIN": "Passwort muss mindestens acht Zeichen enthalten.",
-			"PASSWORD_ERR_COMPLEXITY": "Passwort muss Ziffern und Buchstaben enthalten.",
-			"PASSWORD_REPEAT": "Passwort wiederholen",
-			"PASSWORD_REPEAT_ERR_REQUIRED": "Passwort muss wiederholt werden.",
-			"PASSWORD_REPEAT_ERR": "Passwörter stimmen nicht überein.",
-			"PRIVACY_POLICY": "Durch klicken auf \"Registrieren\" stimmen Sie zu, dass Sie die Datenschutzerklärung gelesen haben akzeptieren.",
-			"REGISTER_BUTTON": "REGISTRIEREN",
-			"OR": "oder",
-			"ERR_VERIFICATION_MAIL": "Verfizierungs-Email konnte nicht gesendet werden, versuchen Sie es beim anmelden erneut.",
-			"ERR_UNKNOWN": "Ein unbekannter Fehler ist aufgetreten."
+			"TITLE": "Registrieren"
 		},
 		"PROJECT_COMP_CREATE": {
 			"COMP_TITLE": "Neue Komponente",

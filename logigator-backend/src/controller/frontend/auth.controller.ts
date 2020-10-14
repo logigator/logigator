@@ -25,7 +25,18 @@ export class AuthController {
 	@Post('/local-register')
 	@UseBefore(CheckNotAuthenticatedFrontMiddleware)
 	@UseAfter(formErrorMiddleware())
-	public async localRegister(@Body() body: LocalRegister, @Preferences() preferences: UserPreferences, @Redirect() redirect: RedirectFunction) {
+	public localRegister(@Body() body: LocalRegister, @Preferences() preferences: UserPreferences, @Redirect() redirect: RedirectFunction) {
+		return this.localRegisterShared(body, preferences, redirect);
+	}
+
+	@Post('/local-register-page')
+	@UseBefore(CheckNotAuthenticatedFrontMiddleware)
+	@UseAfter(formErrorMiddleware())
+	public localRegisterPage(@Body() body: LocalRegister, @Preferences() preferences: UserPreferences, @Redirect() redirect: RedirectFunction) {
+		return this.localRegisterShared(body, preferences, redirect);
+	}
+
+	private async localRegisterShared(body: LocalRegister, preferences: UserPreferences, redirect: RedirectFunction): Promise<Response> {
 		try {
 			if (await this.userService.createLocalUser(body.username, body.email, body.password, preferences.lang)) {
 				return redirect({ showInfoPopup: 'local-register'});
@@ -43,6 +54,12 @@ export class AuthController {
 	@UseBefore(CheckNotAuthenticatedFrontMiddleware, LocalAuthenticationMiddleware)
 	@UseAfter(formErrorMiddleware())
 	public localLogin() {
+	}
+
+	@Post('/local-login-page')
+	@UseBefore(CheckNotAuthenticatedFrontMiddleware, LocalAuthenticationMiddleware)
+	@UseAfter(formErrorMiddleware())
+	public localLoginPage() {
 	}
 
 	@Post('/resend-verification-mail')
@@ -67,7 +84,15 @@ export class AuthController {
 
 	@Get('/google-authenticate')
 	@UseBefore(GoogleAuthenticationMiddleware)
-	@UseAfter(formErrorMiddleware((request, response) => response.locals.connectedAccounts ? '/my/account/security' : '/'))
+	@UseAfter(formErrorMiddleware((request, response) => {
+		if (response.locals.connectedAccounts)
+			return '/my/account/security';
+		else if (request.query.state === 'login-page')
+			return '/login';
+		else if (request.query.state === 'register-page')
+			return '/register';
+		return '/';
+	}))
 	public googleAuthenticate() {
 	}
 
@@ -78,7 +103,15 @@ export class AuthController {
 
 	@Get('/twitter-authenticate')
 	@UseBefore(TwitterAuthenticationMiddleware)
-	@UseAfter(formErrorMiddleware((request, response) => response.locals.connectedAccounts ? '/my/account/security' : '/'))
+	@UseAfter(formErrorMiddleware((request, response) => {
+		if (response.locals.connectedAccounts)
+			return '/my/account/security';
+		else if (request.query.state === 'login-page')
+			return '/login';
+		else if (request.query.state === 'register-page')
+			return '/register';
+		return '/';
+	}))
 	public twitterAuthenticate() {
 	}
 

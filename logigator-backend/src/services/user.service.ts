@@ -43,7 +43,7 @@ export class UserService {
 			email: profile.emails[0].value
 		});
 		if (existingUser) {
-			throw new FormDataError({}, undefined, 'emailTaken', 'auth_local-login');
+			throw new Error('emailTaken');
 		}
 
 		user = this.userRepo.create();
@@ -68,7 +68,7 @@ export class UserService {
 			email: profile.emails[0].value
 		});
 		if (existingUser) {
-			throw new FormDataError({}, undefined, 'emailTaken', 'auth_local-login');
+			throw new Error('emailTaken');
 		}
 
 		user = this.userRepo.create();

@@ -21,7 +21,7 @@
 					{{#if connectedGoogle}}
 						<p>{{i18n.USERSPACE.ACCOUNT.SECURITY.CONNECTED}}</p>
 					{{else}}
-						<button type="submit" formaction="/auth/google-login" class="btn-outline primary">{{i18n.USERSPACE.ACCOUNT.SECURITY.CONNECT_NOW}}</button>
+						<button type="submit" formaction="/auth/google-login?form=connect" class="btn-outline primary">{{i18n.USERSPACE.ACCOUNT.SECURITY.CONNECT_NOW}}</button>
 					{{/if}}
 				</div>
 				<div class="view-my-account-security__linking-account">
@@ -32,7 +32,7 @@
 					{{#if connectedTwitter}}
 						<p>{{i18n.USERSPACE.ACCOUNT.SECURITY.CONNECTED}}</p>
 					{{else}}
-						<button type="submit" formaction="/auth/twitter-login" class="btn-outline primary">{{i18n.USERSPACE.ACCOUNT.SECURITY.CONNECT_NOW}}</button>
+						<button type="submit" formaction="/auth/twitter-login?form=connect" class="btn-outline primary">{{i18n.USERSPACE.ACCOUNT.SECURITY.CONNECT_NOW}}</button>
 					{{/if}}
 				</div>
 

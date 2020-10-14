@@ -1,4 +1,4 @@
-@include partial('login-register-popup') {
+@include partial('login-register-form') {
 	display: flex;
 	flex-direction: column;
 	justify-content: space-between;

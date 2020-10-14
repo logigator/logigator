@@ -1,0 +1,59 @@
+{{! parameters: action: string, oauthForm: string }}
+
+<div class="partial-login-register-form">
+	<h3 class="partial-login-register-form__headline">{{i18n.REGISTER_FORM.HEADLINE}}</h3>
+
+	{{#> form action=action}}
+
+		{{#> form-input name='email' type='email' label=i18n.REGISTER_FORM.EMAIL autocomplete='email'}}
+			{{> form-error error='isNotEmpty' message=i18n.REGISTER_FORM.EMAIL_ERR_REQUIRED }}
+			{{> form-error error='isEmail' message=i18n.REGISTER_FORM.EMAIL_ERR_INVALID }}
+			{{> form-error error='emailTaken' message=i18n.REGISTER_FORM.EMAIL_ERR_TAKEN }}
+		{{/form-input}}
+
+		{{#> form-input name='password' type='password' label=i18n.REGISTER_FORM.PASSWORD autocomplete='new-password'}}
+			{{> form-error error='isNotEmpty' message=i18n.REGISTER_FORM.PASSWORD_ERR_REQUIRED }}
+			{{> form-error error='minLength' message=i18n.REGISTER_FORM.PASSWORD_ERR_MIN clientValData='8' }}
+			{{> form-error error='matches' message=i18n.REGISTER_FORM.PASSWORD_ERR_COMPLEXITY clientValData='^(?=.*[A-Za-z])(?=.*[0-9]).*$' }}
+		{{/form-input}}
+
+		{{#> form-input name='password_repeat' type='password' label=i18n.REGISTER_FORM.PASSWORD_REPEAT autocomplete='new-password'}}
+			{{> form-error error='isNotEmpty' message=i18n.REGISTER_FORM.PASSWORD_REPEAT_ERR_REQUIRED }}
+			{{> form-error error='matchesProperty' message=i18n.REGISTER_FORM.PASSWORD_REPEAT_ERR clientValData='password' }}
+		{{/form-input}}
+
+		{{#> form-input name='username' type='text' label=i18n.REGISTER_FORM.USERNAME autocomplete='username'}}
+			{{> form-error error='isNotEmpty' message=i18n.REGISTER_FORM.USERNAME_ERR_REQUIRED }}
+			{{> form-error error='minLength' message=i18n.REGISTER_FORM.USERNAME_ERR_MIN clientValData='2'}}
+			{{> form-error error='maxLength' message=i18n.REGISTER_FORM.USERNAME_ERR_MAX clientValData='20' }}
+			{{> form-error error='matches' message=i18n.REGISTER_FORM.USERNAME_ERR_PATTERN clientValData='^[a-zA-Z0-9_-]+$' }}
+		{{/form-input}}
+
+		{{#> form-general-errors}}
+			{{> form-error error='emailTaken' message=i18n.REGISTER_FORM.ERR_EMAIL_TAKEN }}
+			{{> form-error error='verificationMail' message=i18n.REGISTER_FORM.ERR_VERIFICATION_MAIL }}
+			{{> form-error error='unknown' message=i18n.REGISTER_FORM.ERR_UNKNOWN }}
+		{{/form-general-errors}}
+
+		<p class="partial-login-register-form__agreement"> {{i18n.REGISTER_FORM.PRIVACY_POLICY}} </p>
+
+		<button type="submit" class="btn-raised primary partial-login-register-form__submit">{{i18n.REGISTER_FORM.REGISTER_BUTTON}}</button>
+	{{/form}}
+
+	<div class="partial-login-register-form__divider">
+		<div class="divider"></div>
+		<div>{{i18n.POPUP.LOGIN.OR}}</div>
+		<div class="divider"></div>
+	</div>
+
+	<div class="partial-login-register-form__social-media">
+		<a class="btn-raised primary partial-login-register-form__google" href="/auth/google-login?form={{oauthForm}}">
+			GOOGLE
+			<img class="btn-raised secondary" src="assets/icons/dark/google.svg" alt="google login icon">
+		</a>
+		<a class="btn-raised primary partial-login-register-form__twitter" href="/auth/twitter-login?form={{oauthForm}}">
+			TWITTER
+			<img class="btn-raised secondary"src="assets/icons/dark/twitter.svg" alt="twitter login icon">
+		</a>
+	</div>
+</div>

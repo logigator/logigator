@@ -20,7 +20,9 @@
 		"ACCOUNT": "Logigator - Account",
 		"ACCOUNT_PROFILE": "Logigator - Profile",
 		"ACCOUNT_SECURITY": "Logigator - Security",
-		"ACCOUNT_DELETE": "Logigator - Delete Account"
+		"ACCOUNT_DELETE": "Logigator - Delete Account",
+		"LOGIN": "Logigator - Login",
+		"REGISTER": "Logigator - Register"
 	},
 	"SITE_HEADER": {
 		"DOWNLOAD": "Download",
@@ -85,6 +87,48 @@
 			"TEXT": "Projects and Components can either be saved locally as a file or in the cloud, which enables editing on multiple devices. To save projects online the user has to be logged in, which also enables projects to be shared with other users."
 		}
 	},
+	"LOGIN_FORM": {
+		"HEADLINE": "Login here",
+		"EMAIL": "Email",
+		"EMAIL_ERR_REQUIRED": "email is required.",
+		"EMAIL_ERR_INVALID": "Please enter a valid email address.",
+		"EMAIL_ERR_NO_USER": "email does not exist.",
+		"EMAIL_ERR_NOT_VERIFIED": "email address is not verified.",
+		"PASSWORD": "Password",
+		"PASSWORD_ERR_REQUIRED": "Password is required.",
+		"PASSWORD_ERR_INVALID": "Password is invalid.",
+		"ERR_EMAIL_TAKEN": "Email has already been taken",
+		"ERR_VERIFICATION_MAIL": "Verification-mail could not be sent.",
+		"ERR_UNKNOWN": "An unknown error occurred.",
+		"LOGIN_BUTTON": "LOGIN",
+		"RESEND_BUTTON": "Resend verification mail",
+		"OR": "or"
+	},
+	"REGISTER_FORM": {
+		"HEADLINE": "Sign up here",
+		"EMAIL": "Email",
+		"EMAIL_ERR_REQUIRED": "Email is required.",
+		"EMAIL_ERR_INVALID": "Please enter a valid email address.",
+		"EMAIL_ERR_TAKEN": "Email has already been taken",
+		"USERNAME": "Username",
+		"USERNAME_ERR_REQUIRED": "Username is required.",
+		"USERNAME_ERR_MIN": "Username has to have at least two characters.",
+		"USERNAME_ERR_MAX": "Username may contain a maximum of 20 characters.",
+		"USERNAME_ERR_PATTERN": "Username may only contain a-z, A-Z, 0-9, _ or -",
+		"PASSWORD": "Password",
+		"PASSWORD_ERR_REQUIRED": "Password is required.",
+		"PASSWORD_ERR_MIN": "Password must contain at least eight characters.",
+		"PASSWORD_ERR_COMPLEXITY": "Password must contain letters and digits.",
+		"PASSWORD_REPEAT": "Repeat password",
+		"PASSWORD_REPEAT_ERR_REQUIRED": "Password must be repeated.",
+		"PASSWORD_REPEAT_ERR": "Passwords do not match.",
+		"PRIVACY_POLICY": "By clicking on \"SIGN UP\" you agree that you have read and accepted our data policy.",
+		"REGISTER_BUTTON": "SIGN UP",
+		"OR": "or",
+		"ERR_EMAIL_TAKEN": "Email has already been taken",
+		"ERR_VERIFICATION_MAIL": "Verification-mail could not be sent, try again when signing in.",
+		"ERR_UNKNOWN": "An unknown error occurred."
+	},
 	"USERSPACE": {
 		"NAV": {
 			"PROJECTS": "Projects",
@@ -147,46 +191,10 @@
 	},
 	"POPUP": {
 		"LOGIN": {
-			"TITLE": "Login",
-			"HEADLINE": "Login here",
-			"EMAIL": "Email",
-			"EMAIL_ERR_REQUIRED": "email is required.",
-			"EMAIL_ERR_INVALID": "Please enter a valid email address.",
-			"EMAIL_ERR_NO_USER": "email does not exist.",
-			"EMAIL_ERR_NOT_VERIFIED": "email address is not verified.",
-			"PASSWORD": "Password",
-			"PASSWORD_ERR_REQUIRED": "Password is required.",
-			"PASSWORD_ERR_INVALID": "Password is invalid.",
-			"ERR_EMAIL_TAKEN": "Email has already been taken",
-			"ERR_VERIFICATION_MAIL": "Verification-mail could not be sent.",
-			"LOGIN_BUTTON": "LOGIN",
-			"RESEND_BUTTON": "Resend verification mail",
-			"OR": "or"
+			"TITLE": "Login"
 		},
 		"REGISTER": {
-			"TITLE": "Sign up",
-			"HEADLINE": "Sign up here",
-			"EMAIL": "Email",
-			"EMAIL_ERR_REQUIRED": "Email is required.",
-			"EMAIL_ERR_INVALID": "Please enter a valid email address.",
-			"EMAIL_ERR_TAKEN": "Email has already been taken",
-			"USERNAME": "Username",
-			"USERNAME_ERR_REQUIRED": "Username is required.",
-			"USERNAME_ERR_MIN": "Username has to have at least two characters.",
-			"USERNAME_ERR_MAX": "Username may contain a maximum of 20 characters.",
-			"USERNAME_ERR_PATTERN": "Username may only contain a-z, A-Z, 0-9, _ or -",
-			"PASSWORD": "Password",
-			"PASSWORD_ERR_REQUIRED": "Password is required.",
-			"PASSWORD_ERR_MIN": "Password must contain at least eight characters.",
-			"PASSWORD_ERR_COMPLEXITY": "Password must contain letters and digits.",
-			"PASSWORD_REPEAT": "Repeat password",
-			"PASSWORD_REPEAT_ERR_REQUIRED": "Password must be repeated.",
-			"PASSWORD_REPEAT_ERR": "Passwords do not match.",
-			"PRIVACY_POLICY": "By clicking on \"SIGN UP\" you agree that you have read and accepted our data policy.",
-			"REGISTER_BUTTON": "SIGN UP",
-			"OR": "or",
-			"ERR_VERIFICATION_MAIL": "Verification-mail could not be sent, try again when signing in.",
-			"ERR_UNKNOWN": "An unknown error occurred."
+			"TITLE": "Sign up"
 		},
 		"PROJECT_COMP_CREATE": {
 			"COMP_TITLE": "New Component",

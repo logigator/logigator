@@ -9,6 +9,7 @@ import {Strategy as LocalStrategy} from 'passport-local';
 import {InjectRepository} from 'typeorm-typedi-extensions';
 import {UserRepository} from '../database/repositories/user.repository';
 import {FormDataError} from '../errors/form-data.error';
+import {Request} from 'express';
 
 @Service()
 export class PassportConfigService {
@@ -58,7 +59,12 @@ export class PassportConfigService {
 				const user = await this.userService.findOrCreateGoogleUser(profile);
 				done(null, user);
 			} catch (error) {
-				done(error);
+				const formName = this.getOauthErrorFormName(request);
+				if (error.message === 'emailTaken') {
+					done(new FormDataError({}, undefined, 'emailTaken', formName));
+				} else {
+					done(new FormDataError({}, undefined, 'unknown', formName));
+				}
 			}
 		}
 		));
@@ -91,7 +97,12 @@ export class PassportConfigService {
 					const user = await this.userService.findOrCreateTwitterUser(profile);
 					done(null, user);
 				} catch (error) {
-					done(error);
+					const formName = this.getOauthErrorFormName(request);
+					if (error.message === 'emailTaken') {
+						done(new FormDataError({}, undefined, 'emailTaken', formName));
+					} else {
+						done(new FormDataError({}, undefined, 'unknown', formName));
+					}
 				}
 			}
 		));
@@ -112,5 +123,18 @@ export class PassportConfigService {
 				}
 			}
 		));
+	}
+
+	private getOauthErrorFormName(request: Request): string {
+		switch (request.query.state) {
+			case 'login-page':
+				return 'auth_local-login-page';
+			case 'register-page':
+				return 'auth_local-register-page';
+			case 'register':
+				return 'auth_local-register';
+			default:
+				return 'auth_local-login';
+		}
 	}
 }
