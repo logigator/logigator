@@ -1,0 +1,16 @@
+@import "../global";
+@import "../partials/form-input";
+@import "../partials/form-error";
+@import "../partials/form-general-errors";
+@import "../partials/login-register-form";
+
+@include view('login-electron') {
+	height: 100vh;
+	width: 100vw;
+	padding: 2rem 1rem;
+
+	@include themify(){
+		background: themed('background');
+		color: themed('text-primary');
+	}
+}

@@ -9,14 +9,21 @@ export class AuthPagesController {
 	@Render('login-page')
 	@UseBefore(CheckNotAuthenticatedFrontMiddleware, setTitleMiddleware('TITLE.LOGIN'))
 	public login() {
-
 	}
 
 	@Get('/register')
 	@Render('register-page')
 	@UseBefore(CheckNotAuthenticatedFrontMiddleware, setTitleMiddleware('TITLE.REGISTER'))
 	public register() {
+	}
 
+	@Get('/login-electron')
+	@Render('login-electron')
+	@UseBefore(CheckNotAuthenticatedFrontMiddleware)
+	public loginElectron() {
+		return {
+			layout: false
+		};
 	}
 
 }

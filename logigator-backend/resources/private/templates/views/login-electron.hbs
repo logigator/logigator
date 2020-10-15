@@ -1,0 +1,17 @@
+<!doctype html>
+<html>
+	<head>
+		<base href="/">
+		<meta charset="UTF-8">
+		<meta name="viewport" content="width=device-width, user-scalable=no, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0">
+		<title>Login</title>
+		{{styleTag url='/css/views/login-electron.css' }}
+	</head>
+	<body class="theme-dark">
+		<div class="view-login-electron">
+			{{> login-form action='/auth/local-login-electron' oauthForm='login-electron'}}
+		</div>
+		{{scriptTag url='/js/global-es2015.js' type='module' }}
+		{{scriptTag url='/js/global-es5.js' type='nomodule' }}
+	</body>
+</html>

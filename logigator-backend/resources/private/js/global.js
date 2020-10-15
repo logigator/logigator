@@ -4,6 +4,8 @@
  * @param {HTMLElement} node
  */
 function siteHeaderPartial(node) {
+	if(!node) return;
+
 	const settingsDropdown = node.querySelector('.partial-settings-dropdown');
 	const dropdownBackground = Bem.element(node, 'dropdown-background');
 
@@ -30,6 +32,8 @@ siteHeaderPartial(document.querySelector('.partial-site-header'));
  * @param {HTMLElement} node
  */
 function popupPartial(node) {
+	if(!node) return;
+
 	let opened = Bem.hasState(node, 'open');
 
 	const dataTriggers = Bem.data(node, 'triggers');
@@ -61,6 +65,8 @@ document.querySelectorAll('.partial-popup').forEach(popup => popupPartial(popup)
  * @param {HTMLElement} node
  */
 function burgerMenuBackgroundElement(node) {
+	if(!node) return;
+
 	node.addEventListener('click', () => setBurgerMenuState(false));
 }
 burgerMenuBackgroundElement(document.querySelector('.partial-burger-menu__background'));
