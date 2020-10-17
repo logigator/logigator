@@ -62,6 +62,12 @@ export class AuthController {
 	public localLoginPage() {
 	}
 
+	@Post('/local-login-electron')
+	@UseBefore(CheckNotAuthenticatedFrontMiddleware, LocalAuthenticationMiddleware)
+	@UseAfter(formErrorMiddleware())
+	public localLoginElectron() {
+	}
+
 	@Post('/resend-verification-mail')
 	@UseAfter(formErrorMiddleware())
 	public async resendVerificationMail(@Body() body: ResendVerificationMail, @Preferences() preferences: UserPreferences, @Redirect() redirect: RedirectFunction) {
@@ -91,6 +97,8 @@ export class AuthController {
 			return '/login';
 		else if (request.query.state === 'register-page')
 			return '/register';
+		else if (request.query.state === 'login-electron')
+			return '/login-electron';
 		return '/';
 	}))
 	public googleAuthenticate() {
@@ -110,6 +118,8 @@ export class AuthController {
 			return '/login';
 		else if (request.query.state === 'register-page')
 			return '/register';
+		else if (request.query.state === 'login-electron')
+			return '/login-electron';
 		return '/';
 	}))
 	public twitterAuthenticate() {

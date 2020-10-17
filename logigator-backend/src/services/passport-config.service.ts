@@ -129,6 +129,8 @@ export class PassportConfigService {
 		switch (request.query.state) {
 			case 'login-page':
 				return 'auth_local-login-page';
+			case 'login-electron':
+				return 'auth_local-login-electron';
 			case 'register-page':
 				return 'auth_local-register-page';
 			case 'register':
