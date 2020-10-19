@@ -1,6 +1,6 @@
 import { Injectable } from '@angular/core';
 import {ErrorHandlingService} from '../error-handling/error-handling.service';
-import {StorageService} from '../storage/storage.service';
+import {LocalStorageService} from '../local-storage/local-storage.service';
 
 @Injectable({
 	providedIn: 'root'
@@ -9,7 +9,7 @@ export class EastereggService {
 
 	private _done: Set<string>;
 
-	constructor(private errorHandling: ErrorHandlingService, private storage: StorageService) {
+	constructor(private errorHandling: ErrorHandlingService, private storage: LocalStorageService) {
 		const data = this.storage.get('sneaks');
 		this._done = data ? new Set(data) : new Set<string>();
 	}

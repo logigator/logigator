@@ -8,13 +8,10 @@ import {PopupContentComp} from '@logigator/logigator-shared-comps';
 	styleUrls: ['./reload-question.component.scss'],
 	changeDetection: ChangeDetectionStrategy.OnPush
 })
-export class ReloadQuestionComponent extends PopupContentComp implements OnInit {
+export class ReloadQuestionComponent extends PopupContentComp {
 
 	constructor(private theming: ThemingService) {
 		super();
-	}
-
-	ngOnInit() {
 	}
 
 	public reloadPostponed() {

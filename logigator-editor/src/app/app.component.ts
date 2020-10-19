@@ -19,7 +19,7 @@ import {ProjectsService} from './services/projects/projects.service';
 import {LangChangeEvent, TranslateService} from '@ngx-translate/core';
 import {ElementProviderService} from './services/element-provider/element-provider.service';
 import {ProjectInteractionService} from './services/project-interaction/project-interaction.service';
-import {StorageService} from './services/storage/storage.service';
+import {CookieStorageService} from './services/cookie-storage/cookie-storage.service';
 
 @Component({
 	selector: 'app-root',
@@ -45,7 +45,7 @@ export class AppComponent implements OnInit, OnDestroy {
 		@Inject(DOCUMENT) private document: HTMLDocument,
 		private translate: TranslateService,
 		private elementProviderService: ElementProviderService,
-		private storage: StorageService
+		private storage: CookieStorageService
 	) {
 		this.setupScripts();
 		this.initTranslation();
@@ -151,7 +151,10 @@ export class AppComponent implements OnInit, OnDestroy {
 			this.translate.use('en');
 		}
 		this.translate.onLangChange.subscribe((e: LangChangeEvent) => {
-			this.storage.set('lang', e.lang);
+			this.storage.set('preferences', {
+				...this.storage.get('preferences'),
+				lang: e.lang
+			});
 		});
 	}
 

@@ -3,7 +3,7 @@ import {DOCUMENT} from '@angular/common';
 import {EditorColorKey, EditorColors, Theme} from '../../models/theming';
 import {Observable, Subject} from 'rxjs';
 import {EastereggService} from '../easteregg/easteregg.service';
-import {StorageService} from '../storage/storage.service';
+import {CookieStorageService} from '../cookie-storage/cookie-storage.service';
 
 @Injectable({
 	providedIn: 'root'
@@ -44,13 +44,13 @@ export class ThemingService {
 	constructor(
 		@Inject(DOCUMENT) private document: HTMLDocument,
 		private eastereggs: EastereggService,
-		private storage: StorageService
+		private storage: CookieStorageService
 	) {
 		this.loadTheme();
 	}
 
 	public loadTheme() {
-		this._currentTheme = this.storage.get('theme') as Theme ?? 'dark';
+		this._currentTheme = this.storage.get('preferences')?.theme as Theme ?? 'dark';
 		this._pendingTheme = this.currentTheme;
 		if (this._currentTheme === 'light') {
 			setTimeout(() => this.eastereggs.achieve('BLD'), 1000);
@@ -60,7 +60,10 @@ export class ThemingService {
 
 	public setTheme(theme: Theme) {
 		this._pendingTheme = theme;
-		this.storage.set('theme', theme);
+		this.storage.set('preferences', {
+			...this.storage.get('preferences'),
+			theme
+		});
 	}
 
 	public get themeClass(): string {
