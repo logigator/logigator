@@ -21,7 +21,7 @@ import {CollisionFunctions} from '../collision-functions';
 import {CopyService} from '../../services/copy/copy.service';
 import {Elements} from '../elements';
 import {ConnectionPoint} from './graphics/connection-point';
-import {PopupService} from '@logigator/logigator-shared-comps';
+import {PopupService} from '../../services/popup/popup.service';
 
 export class ViewInteractionManager {
 

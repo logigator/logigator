@@ -23,14 +23,14 @@
 	<div>
 		<h2>{{'POPUP.OPEN.OPEN_SHARE' | translate}}</h2>
 		<div class="open-share">
-			<logi-input [label]="'POPUP.OPEN.SHARE_LABEL' | translate" [(ngModel)]="shareLinkId"></logi-input>
+			<app-input [label]="'POPUP.OPEN.SHARE_LABEL' | translate" [(ngModel)]="shareLinkId"></app-input>
 			<button class="btn-outline primary" (click)="openShare()" [disabled]="!shareLinkId">{{'POPUP.OPEN.OPEN' | translate}}</button>
 		</div>
 	</div>
 	<div>
 		<h2>{{'POPUP.OPEN.OPEN_FILE' | translate}}</h2>
 		<div class="file-upload">
-			<logi-file-input [(ngModel)]="fileToOpen" accept=".json"></logi-file-input>
+			<app-file-input [(ngModel)]="fileToOpen" accept=".json"></app-file-input>
 			<div>
 				<p>{{fileToOpen ? fileToOpen.name : 'POPUP.OPEN.NO_FILE' | translate}}</p>
 				<button class="btn-outline primary" [disabled]="!fileToOpen || fileToOpen.type !== 'application/json'" (click)="openFile()">{{'POPUP.OPEN.OPEN' | translate}}</button>

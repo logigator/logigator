@@ -36,6 +36,7 @@
 							],
 							"stylePreprocessorOptions": {
 								"includePaths": [
+									"src/styles",
 									"src/styles/electron"
 								]
 							},
@@ -62,6 +63,7 @@
 							],
 							"stylePreprocessorOptions": {
 								"includePaths": [
+									"src/styles",
 									"src/styles/web"
 								]
 							},
@@ -88,6 +90,7 @@
 							],
 							"stylePreprocessorOptions": {
 								"includePaths": [
+									"src/styles",
 									"src/styles/electron"
 								]
 							},
@@ -135,6 +138,7 @@
 							],
 							"stylePreprocessorOptions": {
 								"includePaths": [
+									"src/styles",
 									"src/styles/web"
 								]
 							},

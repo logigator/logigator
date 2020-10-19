@@ -7,7 +7,7 @@ import {ThemingService} from '../../../services/theming/theming.service';
 import {ElementProviderService} from '../../../services/element-provider/element-provider.service';
 import {environment} from '../../../../environments/environment';
 import {ElementTypeId} from '../../element-types/element-type-ids';
-import {FontWidthService} from '@logigator/logigator-shared-comps';
+import {FontWidthService} from '../../../services/font-width/font-width.service';
 
 export class InputOutputGraphics extends PIXI.Graphics implements LGraphics, ComponentUpdatable {
 

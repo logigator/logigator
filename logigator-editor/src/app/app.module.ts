@@ -1,5 +1,5 @@
 import { BrowserModule } from '@angular/platform-browser';
-import {APP_INITIALIZER, Injector, NgModule} from '@angular/core';
+import {Injector, NgModule} from '@angular/core';
 import { AppComponent } from './app.component';
 import { ToolbarComponent } from './components/toolbar/toolbar.component';
 import { SettingsInfoBoxComponent } from './components/settings-info-box/settings-info-box.component';
@@ -40,13 +40,6 @@ import { ToolbarItemTooltipDirective } from './directives/toolbar-item-tooltip/t
 import { ToolbarItemTooltipComponent } from './components/toolbar-item-tooltip/toolbar-item-tooltip.component';
 import { TextComponent } from './components/popup-contents/text/text.component';
 import { StatusBarComponent } from './components/status-bar/status-bar.component';
-import {
-	LogigatorSharedCompsModule,
-	SharedCompsAuthService,
-	SharedCompsThemingService
-} from '@logigator/logigator-shared-comps';
-import {ThemingService} from './services/theming/theming.service';
-import {UserService} from './services/user/user.service';
 import { RomEditComponent } from './components/popup-contents/rom-edit/rom-edit.component';
 import {WorkerCommunicationService} from './services/simulation/worker-communication/worker-communication-service';
 // #!web
@@ -57,6 +50,12 @@ import { HelpComponent } from './components/popup-contents/help/help.component';
 import { HelpRendererComponent } from './components/popup-contents/help-renderer/help-renderer.component';
 import {ELECTRON} from '../environments/environment';
 import { HelpWindowComponent } from './components/help-window/help-window.component';
+import {SwitchComponent} from './components/switch/switch.component';
+import {PopupComponent} from './components/popup/popup.component';
+import {InputComponent} from './components/input/input.component';
+import {InputErrorComponent} from './components/input-error/input-error.component';
+import {FileInputComponent} from './components/file-input/file-input.component';
+import {SiPipe} from './pipes/si/si.pipe';
 
 @NgModule({
 	declarations: [
@@ -92,21 +91,13 @@ import { HelpWindowComponent } from './components/help-window/help-window.compon
 		RomEditComponent,
 		HelpComponent,
 		HelpRendererComponent,
-		HelpWindowComponent
-	],
-	entryComponents: [
-		ShortcutConfigComponent,
-		ReloadQuestionComponent,
-		NewComponentComponent,
-		OpenProjectComponent,
-		SaveAsComponent,
-		UnsavedChangesComponent,
-		ShareProjectComponent,
-		TextComponent,
-		ToolbarItemTooltipComponent,
-		RomEditComponent,
-		HelpComponent,
-		HelpWindowComponent
+		HelpWindowComponent,
+		SwitchComponent,
+		PopupComponent,
+		InputComponent,
+		InputErrorComponent,
+		FileInputComponent,
+		SiPipe
 	],
 	imports: [
 		// #!electron
@@ -131,16 +122,6 @@ import { HelpWindowComponent } from './components/help-window/help-window.compon
 			missingTranslationHandler: {
 				provide: MissingTranslationHandler,
 				useClass: AppMissingTranslationHandler
-			}
-		}),
-		LogigatorSharedCompsModule.forRoot({
-			themingService: {
-				provide: SharedCompsThemingService,
-				useExisting: ThemingService
-			},
-			authService: {
-				provide: SharedCompsAuthService,
-				useExisting: UserService
 			}
 		})
 	],

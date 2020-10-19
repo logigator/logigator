@@ -6,9 +6,9 @@ import {TranslateService} from '@ngx-translate/core';
 import {UserService} from '../../../services/user/user.service';
 import {ProjectsService} from '../../../services/projects/projects.service';
 import {ElectronService} from 'ngx-electron';
-import {PopupService} from '@logigator/logigator-shared-comps';
 import {Observable} from 'rxjs';
 import {ElectronUpdateService} from '../../../services/electron-update/electron-update.service';
+import {PopupService} from '../../../services/popup/popup.service';
 
 @Component({
 	selector: 'app-settings-dropdown',

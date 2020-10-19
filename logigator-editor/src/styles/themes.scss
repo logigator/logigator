@@ -1,0 +1,124 @@
+$themes: (
+	light: (
+		background: #F5F5F5,
+		primary: #27AE60,
+		accent1: #FFFFFF,
+		accent2: #d1d1d1,
+		text-primary: #000000,
+		text-secondary: #F5F5F5,
+		error: #AD2F26,
+		button-text: #F5F5F5,
+		inactive: #5D5D5D,
+		toolbar: #F5F5F5
+	),
+	dark: (
+		background: #262a2b,
+		primary: #27AE60,
+		accent1: #1A1A1A,
+		accent2: #3a4042,
+		text-primary: #cccccc,
+		text-secondary: #000000,
+		error: #CC392F,
+		button-text: #000000,
+		inactive: #979797,
+		toolbar: #262a2b
+	)
+);
+
+$border-styles: (
+	width: 1px,
+	radius: 0.1rem
+);
+
+@function border($key) {
+	@return map-get($border-styles, $key);
+}
+
+@mixin themify() {
+	@each $theme, $map in $themes {
+
+		$themeForTestFunction: $theme !global;
+
+		@if(&) {
+			:host-context(.theme-#{$theme}) & {
+				$theme-map: () !global;
+				@each $key, $submap in $map {
+					$theme-map: map-merge($theme-map, ($key: $submap)) !global;
+				}
+
+				@content;
+				$theme-map: null !global;
+				$themeForTestFunction: null !global;
+			}
+		} @else {
+			.theme-#{$theme} {
+				$theme-map: () !global;
+				@each $key, $submap in $map {
+					$theme-map: map-merge($theme-map, ($key: $submap)) !global;
+				}
+
+				@content;
+				$theme-map: null !global;
+				$themeForTestFunction: null !global;
+			}
+		}
+
+	}
+}
+
+@mixin themifyForNoEncapsulation() {
+	@each $theme, $map in $themes {
+
+		$themeForTestFunction: $theme !global;
+
+		.theme-#{$theme} {
+			$theme-map: () !global;
+			@each $key, $submap in $map {
+				$theme-map: map-merge($theme-map, ($key: $submap)) !global;
+			}
+
+			@content;
+			$theme-map: null !global;
+			$themeForTestFunction: null !global;
+		}
+	}
+}
+
+@function themed($key) {
+	@return map-get($theme-map, $key);
+}
+
+@function isTheme($theme) {
+	@return $themeForTestFunction == $theme;
+}
+
+@mixin scrollbar($width, $height: -1) {
+	&::-webkit-scrollbar-track
+	{
+		@include themify() {
+			background-color: themed('background');
+		}
+	}
+
+	&::-webkit-scrollbar
+	{
+		width: $width;
+		@if ($height != -1) {
+			height: $height;
+		}
+	}
+
+	&::-webkit-scrollbar-thumb
+	{
+		border-radius: $width / 2;
+		@include themify() {
+			background-color: themed('accent2');
+		}
+	}
+
+	scrollbar-width: thin;
+	@include themify() {
+		scrollbar-color: themed('accent2') themed('background');
+	}
+
+}

@@ -1,14 +1,14 @@
 <form [formGroup]="saveForm">
-	<logi-input [label]="'POPUP.SAVE.NAME' | translate" formControlName="name" [helpTooltip]="'POPUP.SAVE.NAME_INFO' | translate">
-		<logi-input-error error="required">{{'POPUP.NEW_COMP.NAME_REQUIRED' | translate}}</logi-input-error>
-		<logi-input-error error="minlength">{{'POPUP.NEW_COMP.NAME_MIN_LENGTH' | translate}}</logi-input-error>
-		<logi-input-error error="maxlength">{{'POPUP.NEW_COMP.NAME_MAX_LENGTH' | translate}}</logi-input-error>
-		<logi-input-error error="pattern">{{'POPUP.NEW_COMP.NAME_PATTERN' | translate}}</logi-input-error>
-	</logi-input>
+	<app-input [label]="'POPUP.SAVE.NAME' | translate" formControlName="name" [helpTooltip]="'POPUP.SAVE.NAME_INFO' | translate">
+		<app-input-error error="required">{{'POPUP.NEW_COMP.NAME_REQUIRED' | translate}}</app-input-error>
+		<app-input-error error="minlength">{{'POPUP.NEW_COMP.NAME_MIN_LENGTH' | translate}}</app-input-error>
+		<app-input-error error="maxlength">{{'POPUP.NEW_COMP.NAME_MAX_LENGTH' | translate}}</app-input-error>
+		<app-input-error error="pattern">{{'POPUP.NEW_COMP.NAME_PATTERN' | translate}}</app-input-error>
+	</app-input>
 
-	<logi-input [label]="'POPUP.SAVE.DESCRIPTION' | translate" formControlName="description" [helpTooltip]="'POPUP.SAVE.DESCRIPTION_INFO' | translate">
-		<logi-input-error error="maxlength">{{'POPUP.NEW_COMP.DESCRIPTION_MAX_LENGTH' | translate}}</logi-input-error>
-	</logi-input>
+	<app-input [label]="'POPUP.SAVE.DESCRIPTION' | translate" formControlName="description" [helpTooltip]="'POPUP.SAVE.DESCRIPTION_INFO' | translate">
+		<app-input-error error="maxlength">{{'POPUP.NEW_COMP.DESCRIPTION_MAX_LENGTH' | translate}}</app-input-error>
+	</app-input>
 
 	<button class="btn-raised primary" (click)="exportProject()" [disabled]="saveForm.invalid">{{'POPUP.SAVE.DOWNLOAD' | translate}}</button>
 	<button class="btn-raised primary" (click)="saveToServer()" *ngIf="isLoggedIn" [disabled]="saveForm.invalid">{{'POPUP.SAVE.CLOUD' | translate}}</button>

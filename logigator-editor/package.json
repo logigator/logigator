@@ -42,7 +42,6 @@
 		"@angular/platform-browser": "^10.1.0",
 		"@angular/platform-browser-dynamic": "^10.1.0",
 		"@angular/router": "^10.1.0",
-		"@logigator/logigator-shared-comps": "latest",
 		"@ngx-translate/core": "^12.1.2",
 		"bootstrap": "^4.5.2",
 		"express": "^4.17.1",
@@ -97,7 +96,6 @@
 	},
 	"developmentInfo": {
 		"": "For Development you should use the local version of shared-cops to use live reload from the libary",
-		"@logigator/logigator-shared-comps": "file:../logigator-shared-comps/dist/logigator-shared-comps",
 		"@logigator/logigator-simulation": "file:../logigator-simulation"
 	}
 }

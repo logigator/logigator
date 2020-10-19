@@ -9,7 +9,7 @@ import {SaveAsComponent} from '../../components/popup-contents/save-as/save-as.c
 import {ElementProviderService} from '../element-provider/element-provider.service';
 import {ErrorHandlingService} from '../error-handling/error-handling.service';
 import {UnsavedChangesComponent} from '../../components/popup-contents/unsaved-changes/unsaved-changes.component';
-import {PopupService} from '@logigator/logigator-shared-comps';
+import {PopupService} from '../popup/popup.service';
 
 @Injectable({
 	providedIn: 'root'

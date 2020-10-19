@@ -1,6 +1,6 @@
-import {ChangeDetectionStrategy, Component, OnInit} from '@angular/core';
+import {ChangeDetectionStrategy, Component} from '@angular/core';
 import {ThemingService} from '../../../services/theming/theming.service';
-import {PopupContentComp} from '@logigator/logigator-shared-comps';
+import {PopupContentComp} from '../../popup/popup-content-comp';
 
 @Component({
 	selector: 'app-reload-question',

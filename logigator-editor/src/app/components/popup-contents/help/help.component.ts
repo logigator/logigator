@@ -9,10 +9,10 @@ import {
 	ViewChild,
 	ViewEncapsulation
 } from '@angular/core';
-import {PopupContentComp} from '@logigator/logigator-shared-comps';
 import {TranslateService} from '@ngx-translate/core';
 import {fromEvent, Subject} from 'rxjs';
 import {takeUntil} from 'rxjs/operators';
+import {PopupContentComp} from '../../popup/popup-content-comp';
 
 @Component({
 	selector: 'app-help',

@@ -1,32 +1,5 @@
-@import "themes";
+@import "../themes";
 @import "variables";
-
-@import "~@logigator/logigator-shared-comps/styles/main";
-@import "~@logigator/logigator-shared-comps/styles/buttons";
-@import "toastr";
-
-@font-face {
-	font-family: 'Roboto Mono';
-	src: local('Roboto Mono Light'), local('RobotoMono-Light'), url('^assets/fonts/robotomono-light-webfont.woff2') format('woff2');
-	font-weight: normal;
-	font-style: normal;
-	font-display: swap;
-}
-
-html, body {
-	margin: 0;
-	padding: 0;
-
-	height: 100%;
-	width: 100%;
-
-	overflow: hidden;
-}
-
-* {
-	font-size: 100%;
-}
-
-.grecaptcha-badge {
-	display: none !important;
-}
+@import "../global";
+@import "../buttons";
+@import "../toastr";

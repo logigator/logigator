@@ -2,7 +2,7 @@
 	<h3 class="tipp">{{'HELP_WINDOW.TIPP' | translate}}</h3>
 	<p class="help-text">{{'HELP_WINDOW.HELP_TEXTS.' + helpToDisplay | translate}}</p>
 	<div class="dont-again">
-		<logi-switch [(ngModel)]="dontShowAgain"></logi-switch>
+		<app-switch [(ngModel)]="dontShowAgain"></app-switch>
 		<span>{{'HELP_WINDOW.DONT_AGAIN' | translate}}</span>
 	</div>
 	<button class="btn-raised primary ok-button" (click)="okClick()">{{'HELP_WINDOW.OK' | translate}}</button>

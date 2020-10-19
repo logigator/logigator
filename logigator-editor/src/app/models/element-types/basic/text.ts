@@ -3,7 +3,7 @@ import {ProjectsService} from '../../../services/projects/projects.service';
 import {TextComponent} from '../../../components/popup-contents/text/text.component';
 import {getStaticDI} from '../../get-di';
 import {ElementTypeId} from '../element-type-ids';
-import {PopupService} from '@logigator/logigator-shared-comps';
+import {PopupService} from '../../../services/popup/popup.service';
 
 export const text: ElementType = {
 	id: ElementTypeId.TEXT,

@@ -9,8 +9,8 @@ import {OpenProjectComponent} from '../../components/popup-contents/open/open-pr
 import {NewComponentComponent} from '../../components/popup-contents/new-component/new-component.component';
 import {ProjectSaveManagementService} from '../project-save-management/project-save-management.service';
 import {ShareProjectComponent} from '../../components/popup-contents/share-project/share-project.component';
-import {PopupService} from '@logigator/logigator-shared-comps';
 import {ErrorHandlingService} from '../error-handling/error-handling.service';
+import {PopupService} from '../popup/popup.service';
 
 @Injectable({
 	providedIn: 'root'

@@ -5,12 +5,9 @@ import {Observable} from 'rxjs';
 import {UserInfo} from '../../models/http-responses/user-info';
 import { ElectronService } from 'ngx-electron';
 // #!electron
-import {LoginPopupComponent} from '@logigator/logigator-shared-comps';
 // #!electron
-import {RegisterPopupComponent} from '@logigator/logigator-shared-comps';
 import {InteractionAction} from '../../models/interaction-action';
 import {checkActionUsable} from '../../models/action-usable-in-modes';
-import {PopupService} from '@logigator/logigator-shared-comps';
 
 
 @Component({
@@ -29,8 +26,7 @@ export class TopBarComponent implements OnInit {
 	constructor(
 		@Optional() private electronService: ElectronService,
 		private projectService: ProjectsService,
-		private userService: UserService,
-		private popup: PopupService
+		private userService: UserService
 	) { }
 
 	ngOnInit() {}
@@ -44,19 +40,11 @@ export class TopBarComponent implements OnInit {
 	}
 
 	public login() {
-		// #!electron
-		this.popup.showPopup(LoginPopupComponent, 'POPUP.LOGIN.TITLE', true);
-
-		// #!web
-		window.open('https://logigator.com/login', '_blank');
+		// TODO: Login
 	}
 
 	public register() {
-		// #!electron
-		this.popup.showPopup(RegisterPopupComponent, 'POPUP.REGISTER.TITLE', false);
-
-		// #!web
-		window.open('https://logigator.com/register', '_blank');
+		// TODO: Register
 	}
 
 	// #!if ELECTRON === 'true'

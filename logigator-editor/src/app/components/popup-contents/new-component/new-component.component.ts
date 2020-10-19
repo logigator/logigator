@@ -3,7 +3,7 @@ import {FormBuilder, FormGroup, Validators} from '@angular/forms';
 import {ProjectsService} from '../../../services/projects/projects.service';
 import {ProjectSaveManagementService} from '../../../services/project-save-management/project-save-management.service';
 import {EastereggService} from '../../../services/easteregg/easteregg.service';
-import {PopupContentComp} from '@logigator/logigator-shared-comps';
+import {PopupContentComp} from '../../popup/popup-content-comp';
 
 @Component({
 	selector: 'app-new-component',

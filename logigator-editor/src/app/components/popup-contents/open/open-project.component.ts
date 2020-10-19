@@ -4,7 +4,7 @@ import {UserService} from '../../../services/user/user.service';
 import {ProjectSaveManagementService} from '../../../services/project-save-management/project-save-management.service';
 import {Observable} from 'rxjs';
 import {ProjectInfoResponse} from '../../../models/http-responses/project-info-response';
-import {PopupContentComp} from '@logigator/logigator-shared-comps';
+import {PopupContentComp} from '../../popup/popup-content-comp';
 
 @Component({
 	selector: 'app-open-project',

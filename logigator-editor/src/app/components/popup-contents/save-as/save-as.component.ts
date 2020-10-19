@@ -3,7 +3,7 @@ import {ProjectSaveManagementService} from '../../../services/project-save-manag
 import {Project} from '../../../models/project';
 import {UserService} from '../../../services/user/user.service';
 import {FormBuilder, FormGroup, Validators} from '@angular/forms';
-import {PopupContentComp} from '@logigator/logigator-shared-comps';
+import {PopupContentComp} from '../../popup/popup-content-comp';
 
 @Component({
 	selector: 'app-save-as',

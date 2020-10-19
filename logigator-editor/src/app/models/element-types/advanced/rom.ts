@@ -2,8 +2,8 @@ import {ElementType} from '../element-type';
 import {ElementTypeId} from '../element-type-ids';
 import {ProjectsService} from '../../../services/projects/projects.service';
 import {getStaticDI} from '../../get-di';
-import {PopupService} from '@logigator/logigator-shared-comps';
 import {RomEditComponent} from '../../../components/popup-contents/rom-edit/rom-edit.component';
+import {PopupService} from '../../../services/popup/popup.service';
 
 export const rom: ElementType = {
 	id: ElementTypeId.ROM,

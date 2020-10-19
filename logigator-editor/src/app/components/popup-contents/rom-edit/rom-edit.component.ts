@@ -1,7 +1,7 @@
 import {ChangeDetectionStrategy, Component, ElementRef, OnInit, ViewChild} from '@angular/core';
-import {PopupContentComp} from '@logigator/logigator-shared-comps';
 import {Element} from '../../../models/element';
 import {RomData} from '../../../models/element-types/advanced/rom';
+import {PopupContentComp} from '../../popup/popup-content-comp';
 
 @Component({
 	selector: 'app-rom-edit',

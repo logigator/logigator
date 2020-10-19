@@ -8,9 +8,9 @@ import {HttpClient} from '@angular/common/http';
 import {ErrorHandlingService} from '../error-handling/error-handling.service';
 import {UserService} from '../user/user.service';
 import {environment} from '../../../environments/environment';
-import {PopupService} from '@logigator/logigator-shared-comps';
 import {RenderTicker} from '../render-ticker/render-ticker.service';
 import {checkActionUsable} from '../../models/action-usable-in-modes';
+import {PopupService} from '../popup/popup.service';
 
 @Injectable({
 	providedIn: 'root'

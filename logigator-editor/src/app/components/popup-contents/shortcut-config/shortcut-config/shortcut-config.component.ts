@@ -2,7 +2,7 @@ import {ChangeDetectionStrategy, Component, OnInit, QueryList, ViewChildren} fro
 import {ShortcutMap} from '../../../../models/shortcut-map';
 import {ShortcutsService} from '../../../../services/shortcuts/shortcuts.service';
 import {SingleShortcutConfigComponent} from '../single-shortcut-config/single-shortcut-config.component';
-import {PopupContentComp} from '@logigator/logigator-shared-comps';
+import {PopupContentComp} from '../../../popup/popup-content-comp';
 
 @Component({
 	selector: 'app-shortcut-config',

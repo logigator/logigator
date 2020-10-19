@@ -3,7 +3,7 @@ import {AbstractControl, FormBuilder, FormGroup, Validators} from '@angular/form
 import {SharingService} from '../../../services/sharing/sharing.service';
 import {ProjectsService} from '../../../services/projects/projects.service';
 import {environment} from '../../../../environments/environment';
-import {PopupContentComp} from '@logigator/logigator-shared-comps';
+import {PopupContentComp} from '../../popup/popup-content-comp';
 
 @Component({
 	selector: 'app-share-project',

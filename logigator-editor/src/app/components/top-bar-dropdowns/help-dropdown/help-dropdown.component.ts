@@ -1,6 +1,6 @@
 import {ChangeDetectionStrategy, Component, EventEmitter, OnInit, Output} from '@angular/core';
-import {PopupService} from '@logigator/logigator-shared-comps';
 import {HelpComponent} from '../../popup-contents/help/help.component';
+import {PopupService} from '../../../services/popup/popup.service';
 
 @Component({
 	selector: 'app-help-dropdown',

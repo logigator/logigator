@@ -1,11 +1,11 @@
 <div class="dropdown" [class.hidden]="!showDropDown">
 	<div class="switch item">
 		<label>{{'DROPDOWN.SETTINGS.DARK_MODE' | translate}}</label>
-		<logi-switch (click)="showReloadPopup()" [checked]="this.theming.pendingTheme === 'dark'"></logi-switch>
+		<app-switch (click)="showReloadPopup()" [checked]="this.theming.pendingTheme === 'dark'"></app-switch>
 	</div>
 	<div class="switch item">
 		<label>{{'DROPDOWN.SETTINGS.SHOW_GRID' | translate}}</label>
-		<logi-switch [(ngModel)]="this.theming.showGrid"></logi-switch>
+		<app-switch [(ngModel)]="this.theming.showGrid"></app-switch>
 	</div>
 	<div class="select item">
 		<label>{{'DROPDOWN.SETTINGS.LANGUAGE' | translate}}</label>

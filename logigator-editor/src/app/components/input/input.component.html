@@ -1,0 +1,19 @@
+<div class="input-group">
+	<div class="input-container">
+		<input
+			[type]="type"
+			[name]="label"
+			[id]="label + 'id'"
+			[(ngModel)]="state"
+			(ngModelChange)="stateChange()"
+			[disabled]="disabled"
+			[class.invalid]="invalid"
+			autocomplete="false">
+		<label [for]="label + 'id'" [class.has-value]="state" [class.invalid]="invalid">{{label}}</label>
+		<span class="tooltip-button" [class.invalid]="invalid" *ngIf="helpTooltip" (mouseenter)="showTooltip = true" (mouseleave)="showTooltip = false"></span>
+		<div class="tooltip" *ngIf="helpTooltip && showTooltip">{{helpTooltip}}</div>
+	</div>
+	<div class="errors">
+		<ng-content></ng-content>
+	</div>
+</div>

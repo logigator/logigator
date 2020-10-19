@@ -9,12 +9,11 @@ import {ErrorHandlingService} from '../error-handling/error-handling.service';
 
 import {ElectronService} from 'ngx-electron';
 import {environment} from '../../../environments/environment';
-import {SharedCompsAuthService} from '@logigator/logigator-shared-comps';
 
 @Injectable({
 	providedIn: 'root'
 })
-export class UserService implements SharedCompsAuthService {
+export class UserService {
 
 	private _userInfo$: Observable<UserInfo>;
 	private _userLoginStateInSubject = new Subject<boolean>();
