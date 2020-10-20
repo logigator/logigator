@@ -58,7 +58,7 @@ export class ShortcutsService {
 			...newConfig
 		};
 		if (!this.user.isLoggedIn) return;
-		this.http.post(environment.apiPrefix + '/user/update', {
+		this.http.post(environment.api + '/user/update', {
 			shortcuts: newConfig
 		}).pipe(
 			this.errorHandling.catchErrorOperator('ERROR.USER.SAVE_SHORTCUTS', undefined)

@@ -14,6 +14,9 @@ export class ErrorHandlingService {
 		private translate: TranslateService
 	) { }
 
+	/**
+	 * @deprecated
+	 */
 	public catchErrorOperator<T>(errorMessage: string, toEmit: any) {
 		return (source: Observable<T>) => {
 			return source.pipe(
@@ -25,6 +28,9 @@ export class ErrorHandlingService {
 		};
 	}
 
+	/**
+	 * @deprecated
+	 */
 	public catchErrorOperatorDynamicMessage<T>(msgFn: (err: any) => string, toEmit: any) {
 		return (source: Observable<T>) => {
 			return source.pipe(
@@ -36,17 +42,9 @@ export class ErrorHandlingService {
 		};
 	}
 
-	public showErrorMessageOnErrorOperator<T>(errorMessage: string) {
-		return (source: Observable<T>) => {
-			return source.pipe(
-				catchError(err => {
-					this.showErrorMessage(errorMessage);
-					throw err;
-				})
-			);
-		};
-	}
-
+	/**
+	 * @deprecated
+	 */
 	public showErrorMessageOnErrorDynamicMessage<T>(msgFn: (err: any) => string) {
 		return (source: Observable<T>) => {
 			return source.pipe(

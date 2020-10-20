@@ -18,25 +18,25 @@ export class SharingService {
 	constructor(private http: HttpClient, private errorHandler: ErrorHandlingService) { }
 
 	public async createShare(settings: CreateShare): Promise<HttpResponseData<CreateShareResp>> {
-		return this.http.post<HttpResponseData<CreateShareResp>>(environment.apiPrefix + '/share/create', settings).pipe(
+		return this.http.post<HttpResponseData<CreateShareResp>>(environment.api + '/share/create', settings).pipe(
 			this.errorHandler.catchErrorOperator('ERROR.SHARE.CREATE', undefined)
 		).toPromise();
 	}
 
 	public updateShare(settings: UpdateShare, address: string): Promise<HttpResponseData<any>> {
-		return this.http.post<HttpResponseData<any>>(`${environment.apiPrefix}/share/update/${address}`, settings).pipe(
+		return this.http.post<HttpResponseData<any>>(`${environment.api}/share/update/${address}`, settings).pipe(
 			this.errorHandler.catchErrorOperator('ERROR.SHARE.UPDATE', undefined)
 		).toPromise();
 	}
 
 	public deleteShare(address: string): Promise<HttpResponseData<any>> {
-		return this.http.get<HttpResponseData<any>>(`${environment.apiPrefix}/share/delete/${address}`).pipe(
+		return this.http.get<HttpResponseData<any>>(`${environment.api}/share/delete/${address}`).pipe(
 			this.errorHandler.catchErrorOperator('ERROR.SHARE.DELETE', undefined)
 		).toPromise();
 	}
 
 	public getShareSettings(projectId: number): Promise<ShareInfo> {
-		return this.http.get<HttpResponseData<ShareInfo[]>>(environment.apiPrefix + '/share/get').pipe(
+		return this.http.get<HttpResponseData<ShareInfo[]>>(environment.api + '/share/get').pipe(
 			map(resp => {
 				const share =  resp.result.find(s => s.project_id === projectId);
 				if (share) {
@@ -50,7 +50,7 @@ export class SharingService {
 	}
 
 	public openShare(address: string): Observable<OpenShareResp> {
-		return this.http.get<HttpResponseData<OpenShareResp>>(environment.apiPrefix + '/share/get/' + address).pipe(
+		return this.http.get<HttpResponseData<OpenShareResp>>(environment.api + '/share/get/' + address).pipe(
 			map(r => r.result)
 		);
 	}

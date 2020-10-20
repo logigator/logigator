@@ -10,7 +10,7 @@ export class CredentialsInterceptor implements HttpInterceptor {
 
 	intercept(request: HttpRequest<any>, next: HttpHandler): Observable<HttpEvent<any>> {
 
-		if (request.url.startsWith(environment.apiPrefix)) {
+		if (request.url.startsWith(environment.api)) {
 			request = request.clone({
 				withCredentials: true
 			});

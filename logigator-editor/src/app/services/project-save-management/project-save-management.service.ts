@@ -44,13 +44,13 @@ export class ProjectSaveManagementService {
 		private sharing: SharingService
 	) {
 		this.ngZone.run(() => {
-			this.user.userLoginState$.subscribe(async (isLoggedIn) => {
-				if (isLoggedIn) {
-					this.elemProvService.setUserDefinedTypes(await this.getCustomElementsFromServer());
-				} else if (this._projectSource !== 'share') {
-					this.elemProvService.clearUserDefinedElements();
-				}
-			});
+			// this.user.userLoginState$.subscribe(async (isLoggedIn) => {
+			// 	if (isLoggedIn) {
+			// 		this.elemProvService.setUserDefinedTypes(await this.getCustomElementsFromServer());
+			// 	} else if (this._projectSource !== 'share') {
+			// 		this.elemProvService.clearUserDefinedElements();
+			// 	}
+			// });
 		});
 	}
 
@@ -75,7 +75,7 @@ export class ProjectSaveManagementService {
 	}
 
 	public getAllProjectsInfoFromServer(): Observable<ProjectInfoResponse[]> {
-		return this.http.get<HttpResponseData<ProjectInfoResponse[]>>(environment.apiPrefix + '/project/get-all-projects-info').pipe(
+		return this.http.get<HttpResponseData<ProjectInfoResponse[]>>(environment.api + '/project/get-all-projects-info').pipe(
 			this.errorHandling.catchErrorOperator('ERROR.PROJECTS.GET_PROJECTS', undefined),
 			map(r => {
 				if (r) return r.result;
@@ -190,7 +190,7 @@ export class ProjectSaveManagementService {
 	public async cloneShare(): Promise<Project[]> {
 		if (!this.isShare) return;
 		const address = location.pathname.substr(location.pathname.lastIndexOf('/') + 1);
-		const resp = await this.http.get<HttpResponseData<any>>(`${environment.apiPrefix}/project/clone/${address}`).pipe(
+		const resp = await this.http.get<HttpResponseData<any>>(`${environment.api}/project/clone/${address}`).pipe(
 			this.errorHandling.catchErrorOperator('ERROR.PROJECTS.CLONE', undefined)
 		).toPromise();
 		if (resp) {
@@ -384,7 +384,7 @@ export class ProjectSaveManagementService {
 	}
 
 	private async createProjectServer(name: string, description?: string): Promise<number> {
-		return this.http.post<HttpResponseData<CreateProjectResponse>>(environment.apiPrefix + '/project/create', {
+		return this.http.post<HttpResponseData<CreateProjectResponse>>(environment.api + '/project/create', {
 			name,
 			isComponent: false,
 			description
@@ -435,7 +435,7 @@ export class ProjectSaveManagementService {
 	}
 
 	private newCustomComponentOnServer(name: string, symbol: string, description: string = ''): Promise<number> {
-		return this.http.post<HttpResponseData<{id: number}>>(environment.apiPrefix + '/project/create', {
+		return this.http.post<HttpResponseData<{id: number}>>(environment.api + '/project/create', {
 			name,
 			isComponent: true,
 			symbol,
@@ -452,7 +452,7 @@ export class ProjectSaveManagementService {
 	private saveSingleProjectToServer(project: Project): Promise<HttpResponseData<{success: boolean}>> {
 		if (project.id < 1000) return;
 		const body = this.projectToSaveRequest(project);
-		return this.http.post<HttpResponseData<{success: boolean, version: number}>>(`${environment.apiPrefix}/project/save/${project.id}`, body)
+		return this.http.post<HttpResponseData<{success: boolean, version: number}>>(`${environment.api}/project/save/${project.id}`, body)
 			.pipe(
 				this.errorHandling.showErrorMessageOnErrorDynamicMessage(err => {
 					if (err?.error?.error?.description?.startsWith('[VERSION_ERROR]')) {
@@ -500,7 +500,7 @@ export class ProjectSaveManagementService {
 		if (!this.user.isLoggedIn) {
 			return Promise.resolve(new Map());
 		}
-		return this.http.get<HttpResponseData<ComponentInfoResponse[]>>(environment.apiPrefix + '/project/get-all-components-info').pipe(
+		return this.http.get<HttpResponseData<ComponentInfoResponse[]>>(environment.api + '/project/get-all-components-info').pipe(
 			map(data => {
 				const newElemTypes = new Map<number, Partial<ElementType>>();
 				data.result.forEach(elem => {
@@ -556,7 +556,7 @@ export class ProjectSaveManagementService {
 
 	public async getProjectOrCompFromServer(id: number, emptyProjectOnFailure: boolean): Promise<Project> {
 		if (this._projectCache.has(id)) return this._projectCache.get(id);
-		return this.http.get<HttpResponseData<OpenProjectResponse>>(`${environment.apiPrefix}/project/open/${id}`).pipe(
+		return this.http.get<HttpResponseData<OpenProjectResponse>>(`${environment.api}/project/open/${id}`).pipe(
 			map(response => this.projectFromServerResponse(response.result)),
 			this.errorHandling.catchErrorOperator('ERROR.PROJECTS.OPEN', emptyProjectOnFailure ? Project.empty() : undefined)
 		).toPromise();

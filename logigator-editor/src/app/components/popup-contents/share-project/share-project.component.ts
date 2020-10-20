@@ -148,7 +148,7 @@ export class ShareProjectComponent extends PopupContentComp implements OnInit {
 	}
 
 	public getLinkFromShareAddress(shareId: string): string {
-		return environment.domain + '/share/' + shareId;
+		return environment.url + '/share/' + shareId;
 	}
 
 	public cancel() {
