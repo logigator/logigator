@@ -36,6 +36,7 @@ import {ComponentController} from './controller/api/component.controller';
 import {MyAccountController} from './controller/frontend/my/my-account.controller';
 import {ShareController} from './controller/api/share.controller';
 import {AuthPagesController} from './controller/frontend/auth-pages.controller';
+import {UserController} from './controller/api/user.controller';
 
 useContainerRC(Container);
 typeOrmUseContainer(Container);
@@ -100,7 +101,8 @@ async function bootstrap() {
 			PreferencesController,
 			ProjectController,
 			ComponentController,
-			ShareController
+			ShareController,
+			UserController
 		],
 		middlewares: [
 			DefaultPreferencesMiddleware,
