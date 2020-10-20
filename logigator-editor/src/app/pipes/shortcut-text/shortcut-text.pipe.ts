@@ -1,16 +1,15 @@
 import { Pipe, PipeTransform } from '@angular/core';
-import {ShortcutsService} from '../../services/shortcuts/shortcuts.service';
-import {ShortcutAction} from '../../models/shortcut-map';
+import {EditorActionsService} from '../../services/editor-actions/editor-actions.service';
 
 @Pipe({
 	name: 'shortcutText'
 })
 export class ShortcutTextPipe implements PipeTransform {
 
-	constructor(private shortcuts: ShortcutsService) {}
+	constructor(private actionsService: EditorActionsService) {}
 
-	transform(value: ShortcutAction): string {
-		return this.shortcuts.getShortcutTextForAction(value);
+	transform(value: string): string {
+		return this.actionsService.getShortcutTextForActionByStringName(value);
 	}
 
 }

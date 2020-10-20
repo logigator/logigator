@@ -3,10 +3,9 @@ import {ElementProviderService} from '../../services/element-provider/element-pr
 import {ElementType} from '../../models/element-types/element-type';
 import {ProjectsService} from '../../services/projects/projects.service';
 import {AbstractControl, FormArray, FormBuilder, FormControl, FormGroup} from '@angular/forms';
-import {Subscription, timer} from 'rxjs';
+import {Subscription} from 'rxjs';
 import {ElementTypeId} from '../../models/element-types/element-type-ids';
 import {Element} from '../../models/element';
-import {ShortcutsService} from '../../services/shortcuts/shortcuts.service';
 
 @Component({
 	selector: 'app-settings-info-box',
@@ -31,8 +30,7 @@ export class SettingsInfoBoxComponent implements OnChanges, OnDestroy {
 	constructor(
 		private elemProvider: ElementProviderService,
 		private projects: ProjectsService,
-		private formBuilder: FormBuilder,
-		private shortcuts: ShortcutsService
+		private formBuilder: FormBuilder
 	) { }
 
 	ngOnChanges(changes: SimpleChanges): void {
@@ -174,15 +172,15 @@ export class SettingsInfoBoxComponent implements OnChanges, OnDestroy {
 	}
 
 	public focusInput() {
-		this.shortcuts.shortcutListenerEnabled = false;
+		// this.shortcuts.shortcutListenerEnabled = false;
 	}
 
 	public blurInput() {
-		this.shortcuts.shortcutListenerEnabled = true;
+		// this.shortcuts.shortcutListenerEnabled = true;
 	}
 
 	ngOnDestroy(): void {
-		this.shortcuts.shortcutListenerEnabled = true;
+		// this.shortcuts.shortcutListenerEnabled = true;
 		if (this.formSubscription) {
 			this.formSubscription.unsubscribe();
 		}

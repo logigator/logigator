@@ -1,4 +1,4 @@
-import {ShortcutAction} from '../shortcut-map';
+import {EditorAction} from '../editor-action';
 
 export interface UserInfo {
 	user: {
@@ -8,7 +8,7 @@ export interface UserInfo {
 		profile_image: string;
 	};
 	shortcuts: {
-		name: ShortcutAction
+		action: EditorAction;
 		alt: boolean;
 		ctrl: boolean;
 		shift: boolean;

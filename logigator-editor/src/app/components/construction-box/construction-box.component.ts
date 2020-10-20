@@ -2,7 +2,6 @@ import {Component} from '@angular/core';
 import {ElementProviderService} from '../../services/element-provider/element-provider.service';
 import {ElementType} from '../../models/element-types/element-type';
 import {ProjectsService} from '../../services/projects/projects.service';
-import {ShortcutsService} from '../../services/shortcuts/shortcuts.service';
 
 @Component({
 	selector: 'app-construction-box',
@@ -15,8 +14,7 @@ export class ConstructionBoxComponent {
 
 	constructor(
 		private componentProviderService: ElementProviderService,
-		private projects: ProjectsService,
-		private shortcuts: ShortcutsService
+		private projects: ProjectsService
 	) { }
 
 	public get showPlugComponents(): boolean {
@@ -45,10 +43,10 @@ export class ConstructionBoxComponent {
 	}
 
 	public focusSearch() {
-		this.shortcuts.shortcutListenerEnabled = false;
+		// this.shortcuts.shortcutListenerEnabled = false;
 	}
 
 	public blurSearch() {
-		this.shortcuts.shortcutListenerEnabled = true;
+		// this.shortcuts.shortcutListenerEnabled = true;
 	}
 }

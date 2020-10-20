@@ -1,8 +1,6 @@
 import {ChangeDetectionStrategy, Component, EventEmitter, OnInit, Output} from '@angular/core';
 import {ProjectSaveManagementService} from '../../../services/project-save-management/project-save-management.service';
-import {checkActionUsable} from '../../../models/action-usable-in-modes';
 import {ProjectInteractionService} from '../../../services/project-interaction/project-interaction.service';
-import {InteractionAction} from '../../../models/interaction-action';
 import {UserService} from '../../../services/user/user.service';
 import {ProjectsService} from '../../../services/projects/projects.service';
 import {ImageExportService} from '../../../services/image-export/image-export.service';
@@ -33,8 +31,9 @@ export class FileDropdownComponent implements OnInit {
 		this.requestClosed.emit();
 	}
 
-	public checkActionUsable(action: InteractionAction) {
-		return checkActionUsable(action);
+	public checkActionUsable(action: string) {
+		// return checkActionUsable(action);
+		// TODO: fix
 	}
 
 	public get canClone(): boolean {

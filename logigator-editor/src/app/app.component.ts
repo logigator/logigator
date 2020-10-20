@@ -11,7 +11,6 @@ import {
 import {ThemingService} from './services/theming/theming.service';
 import {SelectionService} from './services/selection/selection.service';
 import {WorkModeService} from './services/work-mode/work-mode.service';
-import {ShortcutsService} from './services/shortcuts/shortcuts.service';
 import {fromEvent, Subject} from 'rxjs';
 import {DOCUMENT} from '@angular/common';
 import {takeUntil} from 'rxjs/operators';
@@ -20,6 +19,7 @@ import {LangChangeEvent, TranslateService} from '@ngx-translate/core';
 import {ElementProviderService} from './services/element-provider/element-provider.service';
 import {ProjectInteractionService} from './services/project-interaction/project-interaction.service';
 import {CookieStorageService} from './services/cookie-storage/cookie-storage.service';
+import {EditorActionsService} from './services/editor-actions/editor-actions.service';
 
 @Component({
 	selector: 'app-root',
@@ -39,7 +39,7 @@ export class AppComponent implements OnInit, OnDestroy {
 		private theming: ThemingService,
 		private workMode: WorkModeService,
 		private selection: SelectionService,
-		private shortcuts: ShortcutsService,
+		private actionsService: EditorActionsService,
 		private projects: ProjectsService,
 		private projectInteractionService: ProjectInteractionService,
 		@Inject(DOCUMENT) private document: HTMLDocument,
@@ -68,7 +68,7 @@ export class AppComponent implements OnInit, OnDestroy {
 		fromEvent(this.document, 'keydown').pipe(
 			takeUntil(this._destroySubject)
 		).subscribe((e: KeyboardEvent) => {
-			this.shortcuts.keyDownListener(e);
+			this.actionsService.keyDownListener(e);
 		});
 	}
 
