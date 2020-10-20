@@ -4,11 +4,6 @@ import {UserService} from '../../services/user/user.service';
 import {Observable} from 'rxjs';
 import {UserInfo} from '../../models/http-responses/user-info';
 import { ElectronService } from 'ngx-electron';
-// #!electron
-// #!electron
-import {InteractionAction} from '../../models/interaction-action';
-import {checkActionUsable} from '../../models/action-usable-in-modes';
-
 
 @Component({
 	selector: 'app-top-bar',
@@ -31,8 +26,9 @@ export class TopBarComponent implements OnInit {
 
 	ngOnInit() {}
 
-	public checkActionUsable(action: InteractionAction) {
-		return checkActionUsable(action);
+	public checkActionUsable(action) {
+		return true;
+		// TODO: fix
 	}
 
 	public get userInfo$(): Observable<UserInfo> {

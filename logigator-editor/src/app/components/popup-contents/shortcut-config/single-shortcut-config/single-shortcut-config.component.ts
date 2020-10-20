@@ -9,10 +9,11 @@ import {
 	OnInit,
 	ViewChild
 } from '@angular/core';
-import {ShortcutsService} from '../../../../services/shortcuts/shortcuts.service';
-import {ShortcutAction, ShortcutConfig} from '../../../../models/shortcut-map';
-import {fromEvent, Subject, Subscription} from 'rxjs';
+import {fromEvent, Subject} from 'rxjs';
 import {takeUntil} from 'rxjs/operators';
+import {EditorAction} from '../../../../models/editor-action';
+import {ShortcutConfig} from '../../../../models/shortcut-config';
+import {EditorActionsService} from '../../../../services/editor-actions/editor-actions.service';
 
 @Component({
 	selector: 'app-single-shortcut-config',
@@ -23,7 +24,7 @@ import {takeUntil} from 'rxjs/operators';
 export class SingleShortcutConfigComponent implements OnInit, OnDestroy {
 
 	@Input()
-	public shortcut: ShortcutAction;
+	public shortcut: EditorAction;
 
 	@ViewChild('inputContainer', {static: true})
 	private inputContainer: ElementRef<HTMLElement>;
@@ -34,10 +35,10 @@ export class SingleShortcutConfigComponent implements OnInit, OnDestroy {
 
 	private _destroySubject = new Subject();
 
-	constructor(private shortcuts: ShortcutsService, private ngZone: NgZone, private cdr: ChangeDetectorRef) { }
+	constructor(private actions: EditorActionsService, private ngZone: NgZone, private cdr: ChangeDetectorRef) { }
 
 	ngOnInit() {
-		this.shortcutText = this.shortcuts.getShortcutTextForAction(this.shortcut);
+		this.shortcutText = this.actions.getShortcutTextForAction(this.shortcut);
 		this.ngZone.runOutsideAngular(() => {
 			fromEvent(window, 'click').pipe(
 				takeUntil(this._destroySubject)
@@ -63,8 +64,8 @@ export class SingleShortcutConfigComponent implements OnInit, OnDestroy {
 		if (!this.isRecording) return;
 		e.preventDefault();
 		e.stopPropagation();
-		this._newShortcutConfig = this.shortcuts.getShortcutConfigFromEvent(e);
-		this.shortcutText = this.shortcuts.getShortcutText(this._newShortcutConfig);
+		this._newShortcutConfig = this.actions.getShortcutConfigFromKeyEvent(e);
+		this.shortcutText = this.actions.getShortcutText(this._newShortcutConfig);
 		this.cdr.detectChanges();
 	}
 
