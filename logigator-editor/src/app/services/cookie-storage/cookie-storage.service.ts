@@ -8,6 +8,9 @@ export class CookieStorageService {
 	constructor() {}
 
 	public get(key: string): any {
+		if (!this.has(key))
+			return undefined;
+
 		const cookieValue = document.cookie
 			.split('; ')
 			.find(row => row.startsWith(key))

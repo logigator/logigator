@@ -92,44 +92,6 @@
 		}
 	},
 	"POPUP": {
-		"LOGIN": {
-			"TITLE": "Login",
-			"HEADLINE": "Login here",
-			"USERNAME": "Username / email",
-			"USERNAME_ERR_REQUIRED": "Username / email is required.",
-			"PASSWORD": "Password",
-			"PASSWORD_ERR_REQUIRED": "Password is required.",
-			"LOGIN_BUTTON": "LOGIN",
-			"RESEND_BUTTON": "Resend Mail",
-			"RESEND_SUCCESS_1": "Email resent successfully",
-			"RESEND_SUCCESS_2": "Please check your mailbox and verify your email.",
-			"RESEND_SUCCESS_OK_BUTTON": "OK",
-			"OR": "or"
-		},
-		"REGISTER": {
-			"TITLE": "Sign up",
-			"HEADLINE": "Sign up here",
-			"EMAIL": "Email",
-			"EMAIL_ERR_REQUIRED": "Email is required.",
-			"EMAIL_ERR_INVALID": "Please enter a valid email address.",
-			"USERNAME": "Username",
-			"USERNAME_ERR_REQUIRED": "Username is required.",
-			"USERNAME_ERR_MIN": "Username has to have at least two characters.",
-			"USERNAME_ERR_MAX": "Username may contain a maximum of 20 characters.",
-			"USERNAME_ERR_PATTERN": "Username may only contain a-z, A-Z, 0-9, _ or -",
-			"PASSWORD": "Password",
-			"PASSWORD_ERR_REQUIRED": "Password is required.",
-			"PASSWORD_ERR_MIN": "Password must contain at least eight characters.",
-			"PASSWORD_ERR_COMPLEXITY": "Password must contain letters and digits.",
-			"PASSWORD_REPEAT": "Repeat password",
-			"PASSWORD_REPEAT_ERR": "Passwords do not match",
-			"PRIVACY_POLICY": "By clicking on \"SIGN UP\" you agree that you have read and accepted our data policy.",
-			"REGISTER_BUTTON": "SIGN UP",
-			"OR": "or",
-			"SUCCESS_1": "Account created successfully.",
-			"SUCCESS_2": "Please check your mailbox and verify your email.",
-			"SUCCESS_OK_BUTTON": "OK"
-		},
 		"NEW_COMP": {
 			"TITLE": "New Component",
 			"NAME": "Name",
@@ -413,14 +375,6 @@
 		"USER": {
 			"SAVE_SHORTCUTS": "Error while Saving Shortcuts",
 			"GET_INFO": "Unable to get User info"
-		},
-		"ACCOUNT": {
-			"NO_USER": "Username does not exist",
-			"INVALID_PW": "Password is incorrect",
-			"EMAIL_NOT_VERIFIED": "Email address is not verified",
-			"EMAIL_TAKEN": "Email has already been taken",
-			"USERNAME_TAKEN": "Username has already been taken",
-			"OTHER": "An unknown error occurred."
 		},
 		"INVALID_URL": "Invalid Url"
 	},

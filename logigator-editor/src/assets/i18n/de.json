@@ -92,44 +92,6 @@
 		}
 	},
 	"POPUP": {
-		"LOGIN": {
-			"TITLE": "Anmelden",
-			"HEADLINE": "Melde dich hier an",
-			"USERNAME": "Benutzername / E-Mail",
-			"USERNAME_ERR_REQUIRED": "Benutzername / E-Mail muss angegeben werden",
-			"PASSWORD": "Passwort",
-			"PASSWORD_ERR_REQUIRED": "Passwort muss angegeben werden",
-			"LOGIN_BUTTON": "ANMELDEN",
-			"RESEND_BUTTON": "Email erneut senden",
-			"RESEND_SUCCESS_1": "Email erfolgreich gesendet",
-			"RESEND_SUCCESS_2": "Bitte überprüfe deinen Posteingang und verifiziere deine Email Adresse",
-			"RESEND_SUCCESS_OK_BUTTON": "OK",
-			"OR": "oder"
-		},
-		"REGISTER": {
-			"TITLE": "Registrieren",
-			"HEADLINE": "Registriere dich hier",
-			"EMAIL": "E-Mail",
-			"EMAIL_ERR_REQUIRED": "E-Mail muss angegeben werden",
-			"EMAIL_ERR_INVALID": "Bitte geben Sie eine valide E-Mail an",
-			"USERNAME": "Benutzername",
-			"USERNAME_ERR_REQUIRED": "Benutzername muss angegeben werden",
-			"USERNAME_ERR_MIN": "Benutzername muss mindestens zwei Zeichen enthalten",
-			"USERNAME_ERR_MAX": "Benutzername darf maximal 20 Zeichen enthalten",
-			"USERNAME_ERR_PATTERN": "Benutzername darf nur a-z, A-Z, 0-9, _ oder - enthalten",
-			"PASSWORD": "Passwort",
-			"PASSWORD_ERR_REQUIRED": "Passwort muss angegeben werden",
-			"PASSWORD_ERR_MIN": "Passwort muss mindestens acht Zeichen enthalten",
-			"PASSWORD_ERR_COMPLEXITY": "Passwort muss Ziffern und Buchstaben enthalten",
-			"PASSWORD_REPEAT": "Repeat password",
-			"PASSWORD_REPEAT_ERR": "Passwörter stimmen nicht überein",
-			"PRIVACY_POLICY": "Durch klicken auf \"Registrieren\" stimmen Sie zu, dass Sie die Datenschutzerklärung gelesen haben akzeptieren.",
-			"REGISTER_BUTTON": "REGISTRIEREN",
-			"OR": "oder",
-			"SUCCESS_1": "Account erfolgreich erstellt.",
-			"SUCCESS_2": "Bitte überprüfe deinen Posteingang und verifiziere deine Email Adresse.",
-			"SUCCESS_OK_BUTTON": "OK"
-		},
 		"NEW_COMP": {
 			"TITLE": "Neue Komponente",
 			"NAME": "Name",
@@ -413,14 +375,6 @@
 		"USER": {
 			"SAVE_SHORTCUTS": "Fehler beim speichern der Tastaturbefehle",
 			"GET_INFO": "Konnte Benutzerinformationen nicht bekommen"
-		},
-		"ACCOUNT": {
-			"NO_USER": "Benutzername exsistiert nicht",
-			"INVALID_PW": "Password ist falsch",
-			"EMAIL_NOT_VERIFIED": "Email Adresse nicht verifiziert",
-			"EMAIL_TAKEN": "Email Adresse wird bereits verwendet",
-			"USERNAME_TAKEN": "Benutzername wird bereits verwedet",
-			"OTHER": "Ein unbekannter Fehler ist aufgetreten"
 		},
 		"INVALID_URL": "Ungülitge Url"
 	},

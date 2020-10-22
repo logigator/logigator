@@ -32,6 +32,7 @@ export class FileDropdownComponent implements OnInit {
 	}
 
 	public checkActionUsable(action: string) {
+		return true;
 		// return checkActionUsable(action);
 		// TODO: fix
 	}

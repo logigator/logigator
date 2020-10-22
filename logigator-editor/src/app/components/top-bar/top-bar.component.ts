@@ -2,8 +2,8 @@ import {Component, OnInit, Optional} from '@angular/core';
 import {ProjectsService} from '../../services/projects/projects.service';
 import {UserService} from '../../services/user/user.service';
 import {Observable} from 'rxjs';
-import {UserInfo} from '../../models/http-responses/user-info';
-import { ElectronService } from 'ngx-electron';
+import {ElectronService} from 'ngx-electron';
+import {User} from '../../models/http/response/user';
 
 @Component({
 	selector: 'app-top-bar',
@@ -31,16 +31,24 @@ export class TopBarComponent implements OnInit {
 		// TODO: fix
 	}
 
-	public get userInfo$(): Observable<UserInfo> {
+	public get userInfo$(): Observable<User> {
 		return this.userService.userInfo$;
 	}
 
 	public login() {
-		// TODO: Login
+		// #!electron
+		// TODO
+
+		// #!web
+		window.open('/login', '_blank');
 	}
 
 	public register() {
-		// TODO: Register
+		// #!electron
+		// TODO
+
+		// #!web
+		window.open('/register', '_blank');
 	}
 
 	// #!if ELECTRON === 'true'
