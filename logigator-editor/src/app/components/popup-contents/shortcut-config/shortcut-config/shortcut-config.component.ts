@@ -1,8 +1,8 @@
 import {ChangeDetectionStrategy, Component, OnInit, QueryList, ViewChildren} from '@angular/core';
 import {SingleShortcutConfigComponent} from '../single-shortcut-config/single-shortcut-config.component';
 import {PopupContentComp} from '../../../popup/popup-content-comp';
-import {EditorActionsService} from '../../../../services/editor-actions/editor-actions.service';
-import {EditorActionConfig} from '../../../../models/editor-action-config';
+import {ShortcutsService} from '../../../../services/shortcuts/shortcuts.service';
+import {Shortcut} from '../../../../models/shortcut';
 
 @Component({
 	selector: 'app-shortcut-config',
@@ -15,14 +15,14 @@ export class ShortcutConfigComponent extends PopupContentComp implements OnInit 
 	@ViewChildren(SingleShortcutConfigComponent)
 	singleConfigs: QueryList<SingleShortcutConfigComponent>;
 
-	constructor(private actionsService: EditorActionsService) {
+	constructor(private actionsService: ShortcutsService) {
 		super();
 	}
 
 	ngOnInit() {
 	}
 
-	public get actions(): EditorActionConfig[] {
+	public get shortcuts(): Shortcut[] {
 		return this.actionsService.shortcutActionConfig;
 	}
 

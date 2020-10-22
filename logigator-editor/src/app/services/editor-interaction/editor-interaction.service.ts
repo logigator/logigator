@@ -10,11 +10,15 @@ import {ProjectSaveManagementService} from '../project-save-management/project-s
 import {ShareProjectComponent} from '../../components/popup-contents/share-project/share-project.component';
 import {ErrorHandlingService} from '../error-handling/error-handling.service';
 import {PopupService} from '../popup/popup.service';
+import {EditorAction} from '../../models/editor-action';
+import {filter} from 'rxjs/operators';
 
 @Injectable({
 	providedIn: 'root'
 })
-export class ProjectInteractionService {
+export class EditorInteractionService {
+
+	private _editorActionsSubject = new Subject<EditorAction>();
 
 	private _zoomNotifierSubject = new Subject<'in' | 'out' | '100'>();
 	private _deleteNotifierSubject = new Subject<void>();
@@ -32,35 +36,42 @@ export class ProjectInteractionService {
 		private ngZone: NgZone
 	) {}
 
+	public triggerEditorAction(action: EditorAction) {
+		this._editorActionsSubject.next(action);
+	}
+
+	public subscribeEditorAction(action?: EditorAction): Observable<EditorAction> {
+		if (!action) {
+			return this._editorActionsSubject.asObservable();
+		}
+		return this._editorActionsSubject.pipe(
+			filter(a => a === action)
+		);
+	}
+
 	public zoomIn() {
-		// if (!checkActionUsable('zoomIn')) return;
 		this._zoomNotifierSubject.next('in');
 	}
 
 	public zoomOut() {
-		// if (!checkActionUsable('zoomOut')) return;
 		this._zoomNotifierSubject.next('out');
 	}
 
 	public zoom100() {
-		// if (!checkActionUsable('zoom100')) return;
 		this._zoomNotifierSubject.next('100');
 	}
 
 	public deleteSelection() {
-		// if (!checkActionUsable('delete')) return;
 		this.projectsService.currProject.removeElementsById(this.selection.selectedIds());
 		this.projectsService.inputsOutputsCustomComponentChanged(this.projectsService.currProject.id);
 		this._deleteNotifierSubject.next();
 	}
 
 	public copySelection() {
-		// if (!checkActionUsable('copy')) return;
 		this.copy.copySelection();
 	}
 
 	public cutSelection() {
-		// if (!checkActionUsable('cut')) return;
 		this.copy.copySelection();
 		this.projectsService.currProject.removeElementsById(this.selection.selectedIds());
 		this.projectsService.inputsOutputsCustomComponentChanged(this.projectsService.currProject.id);
@@ -68,27 +79,22 @@ export class ProjectInteractionService {
 	}
 
 	public paste() {
-		// if (!checkActionUsable('paste')) return;
-		// this.workMode.setWorkMode('select');
 		this._pasteNotifierSubject.next();
 	}
 
 	public undoForCurrent() {
-		// if (!checkActionUsable('undo')) return;
 		this.projectsService.currProject.stepBack();
 		this.projectsService.inputsOutputsCustomComponentChanged(this.projectsService.currProject.id);
 		this._undoOrRedoNotifierSubject.next();
 	}
 
 	public redoForCurrent() {
-		// if (!checkActionUsable('redo')) return;
 		this.projectsService.currProject.stepForward();
 		this.projectsService.inputsOutputsCustomComponentChanged(this.projectsService.currProject.id);
 		this._undoOrRedoNotifierSubject.next();
 	}
 
 	public newProject() {
-		// if (!checkActionUsable('newProj')) return;
 		this.ngZone.run(async () => {
 			if (await this.projectsService.askToSave()) {
 				await this.projectsService.newProject();
@@ -97,7 +103,6 @@ export class ProjectInteractionService {
 	}
 
 	public async openProject() {
-		// if (!checkActionUsable('openProj')) return;
 		await this.ngZone.run(async () => {
 			if (await this.projectsService.askToSave()) {
 				await this.popupService.showPopup(OpenProjectComponent, 'POPUP.OPEN.TITLE', true);
@@ -106,7 +111,6 @@ export class ProjectInteractionService {
 	}
 
 	public async openProjectDrop(files: FileList) {
-		// if (!checkActionUsable('openProj')) return;
 		if (files.length !== 1) return ;
 		if (files[0].type !== 'application/json') {
 			this.errorHandling.showErrorMessage('ERROR.PROJECTS.INVALID_FILE_TYPE');
@@ -122,7 +126,6 @@ export class ProjectInteractionService {
 	}
 
 	public newComponent(): Promise<any> {
-		// if (!checkActionUsable('newComp')) return;
 		return this.ngZone.run(() => {
 			return this.popupService.showPopup(NewComponentComponent, 'POPUP.NEW_COMP.TITLE', false);
 		});

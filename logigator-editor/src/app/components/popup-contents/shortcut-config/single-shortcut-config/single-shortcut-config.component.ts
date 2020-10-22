@@ -13,7 +13,8 @@ import {fromEvent, Subject} from 'rxjs';
 import {takeUntil} from 'rxjs/operators';
 import {EditorAction} from '../../../../models/editor-action';
 import {ShortcutConfig} from '../../../../models/shortcut-config';
-import {EditorActionsService} from '../../../../services/editor-actions/editor-actions.service';
+import {ShortcutsService} from '../../../../services/shortcuts/shortcuts.service';
+import {Shortcut} from '../../../../models/shortcut';
 
 @Component({
 	selector: 'app-single-shortcut-config',
@@ -24,7 +25,7 @@ import {EditorActionsService} from '../../../../services/editor-actions/editor-a
 export class SingleShortcutConfigComponent implements OnInit, OnDestroy {
 
 	@Input()
-	public shortcut: EditorAction;
+	public shortcut: Shortcut;
 
 	@ViewChild('inputContainer', {static: true})
 	private inputContainer: ElementRef<HTMLElement>;
@@ -35,10 +36,10 @@ export class SingleShortcutConfigComponent implements OnInit, OnDestroy {
 
 	private _destroySubject = new Subject();
 
-	constructor(private actions: EditorActionsService, private ngZone: NgZone, private cdr: ChangeDetectorRef) { }
+	constructor(private actions: ShortcutsService, private ngZone: NgZone, private cdr: ChangeDetectorRef) { }
 
 	ngOnInit() {
-		this.shortcutText = this.actions.getShortcutTextForAction(this.shortcut);
+		this.shortcutText = this.actions.getShortcutTextForAction(this.shortcut.action);
 		this.ngZone.runOutsideAngular(() => {
 			fromEvent(window, 'click').pipe(
 				takeUntil(this._destroySubject)
@@ -76,7 +77,7 @@ export class SingleShortcutConfigComponent implements OnInit, OnDestroy {
 	public get changedShortcutSettings(): { [key: string]: ShortcutConfig } {
 		if (!this._newShortcutConfig) return {};
 		const toReturn = {};
-		toReturn[this.shortcut] = this._newShortcutConfig;
+		toReturn[this.shortcut.action] = this._newShortcutConfig;
 		return toReturn;
 	}
 

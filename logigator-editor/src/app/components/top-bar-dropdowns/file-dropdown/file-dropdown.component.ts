@@ -1,9 +1,9 @@
 import {ChangeDetectionStrategy, Component, EventEmitter, OnInit, Output} from '@angular/core';
 import {ProjectSaveManagementService} from '../../../services/project-save-management/project-save-management.service';
-import {ProjectInteractionService} from '../../../services/project-interaction/project-interaction.service';
 import {UserService} from '../../../services/user/user.service';
 import {ProjectsService} from '../../../services/projects/projects.service';
 import {ImageExportService} from '../../../services/image-export/image-export.service';
+import {EditorInteractionService} from '../../../services/editor-interaction/editor-interaction.service';
 
 @Component({
 	selector: 'app-file-dropdown',
@@ -18,7 +18,7 @@ export class FileDropdownComponent implements OnInit {
 
 	constructor(
 		private projectSaveService: ProjectSaveManagementService,
-		private projectInteraction: ProjectInteractionService,
+		private editorInteractionService: EditorInteractionService,
 		private user: UserService,
 		private projects: ProjectsService,
 		private imageExportService: ImageExportService
@@ -47,31 +47,31 @@ export class FileDropdownComponent implements OnInit {
 
 	public newProject() {
 		this.close();
-		this.projectInteraction.newProject();
+		this.editorInteractionService.newProject();
 	}
 
 	public newComponent() {
-		this.projectInteraction.newComponent();
+		this.editorInteractionService.newComponent();
 		this.close();
 	}
 
 	public openProject() {
 		this.close();
-		this.projectInteraction.openProject();
+		this.editorInteractionService.openProject();
 	}
 
 	public saveProject() {
-		this.projectInteraction.saveAll();
+		this.editorInteractionService.saveAll();
 		this.close();
 	}
 
 	public async exportProject() {
-		await this.projectInteraction.exportToFile();
+		await this.editorInteractionService.exportToFile();
 		this.close();
 	}
 
 	public shareProject() {
-		this.projectInteraction.shareProject();
+		this.editorInteractionService.shareProject();
 		this.close();
 	}
 

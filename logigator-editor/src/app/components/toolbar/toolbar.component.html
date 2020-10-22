@@ -27,12 +27,12 @@
 		<ng-container *ngIf="!isSimulationMode">
 			<div class="divider"></div>
 
-			<button class="toolbar-button wire" (click)="triggerEditorAction('SWITCH_MODE_WIRE')" [class.active-button]="isWireMode" aria-label="Place Wire" appToolbarItemTooltip [tooltipText]="'TOOLBAR.TOOLTIP.WIRE' | translate"></button>
-			<button class="toolbar-button conn-wire" (click)="triggerEditorAction('SWITCH_MODE_CONN_WIRE')" [class.active-button]="isConnWireMode" aria-label="Connect Wire" appToolbarItemTooltip [tooltipText]="'TOOLBAR.TOOLTIP.CONN_WIRE' | translate"></button>
-			<button class="toolbar-button select" (click)="triggerEditorAction('SWITCH_MODE_SELECT')" [class.active-button]="iSelectMode" aria-label="Select" appToolbarItemTooltip [tooltipText]="'TOOLBAR.TOOLTIP.SELECT' | translate"></button>
-			<button class="toolbar-button select-cut" (click)="triggerEditorAction('SWITCH_MODE_CUT_SELECT')" [class.active-button]="isCutSelectMode" aria-label="Select Cut" appToolbarItemTooltip [tooltipText]="'TOOLBAR.TOOLTIP.SELECT_CUT' | translate"></button>
-			<button class="toolbar-button eraser" (click)="triggerEditorAction('SWITCH_MODE_ERASER')" [class.active-button]="isEraserMode" aria-label="Robber" appToolbarItemTooltip [tooltipText]="'TOOLBAR.TOOLTIP.ROBBER' | translate"></button>
-			<button class="toolbar-button text" (click)="triggerEditorAction('SWITCH_MODE_TEXT')" [class.active-button]="isTextMode" aria-label="Place Text" appToolbarItemTooltip [tooltipText]="'TOOLBAR.TOOLTIP.TEXT' | translate"></button>
+			<button class="toolbar-button wire" (click)="setWorkMode('WIRE')" [class.active-button]="isWireMode" aria-label="Place Wire" appToolbarItemTooltip [tooltipText]="'TOOLBAR.TOOLTIP.WIRE' | translate"></button>
+			<button class="toolbar-button conn-wire" (click)="setWorkMode('CONN_WIRE')" [class.active-button]="isConnWireMode" aria-label="Connect Wire" appToolbarItemTooltip [tooltipText]="'TOOLBAR.TOOLTIP.CONN_WIRE' | translate"></button>
+			<button class="toolbar-button select" (click)="setWorkMode('SELECT')" [class.active-button]="isSelectMode" aria-label="Select" appToolbarItemTooltip [tooltipText]="'TOOLBAR.TOOLTIP.SELECT' | translate"></button>
+			<button class="toolbar-button select-cut" (click)="setWorkMode('CUT_SELECT')" [class.active-button]="isCutSelectMode" aria-label="Select Cut" appToolbarItemTooltip [tooltipText]="'TOOLBAR.TOOLTIP.SELECT_CUT' | translate"></button>
+			<button class="toolbar-button eraser" (click)="setWorkMode('ERASER')" [class.active-button]="isEraserMode" aria-label="Robber" appToolbarItemTooltip [tooltipText]="'TOOLBAR.TOOLTIP.ROBBER' | translate"></button>
+			<button class="toolbar-button text" (click)="setWorkMode('TEXT')" [class.active-button]="isTextMode" aria-label="Place Text" appToolbarItemTooltip [tooltipText]="'TOOLBAR.TOOLTIP.TEXT' | translate"></button>
 		</ng-container>
 
 		<ng-container *ngIf="isSimulationMode">
@@ -82,7 +82,7 @@
 	</div>
 
 	<div class="toolbar-end">
-		<p (click)="triggerEditorAction('ENTER_SIM')" *ngIf="isActionUsable('ENTER_SIM')" class="start-sim">{{'TOOLBAR.START_SIM' | translate}}</p>
-		<p (click)="triggerEditorAction('LEAVE_SIM')" *ngIf="isActionUsable('LEAVE_SIM')" class="start-sim">{{'TOOLBAR.EXIT_SIM' | translate}}</p>
+		<p (click)="triggerEditorAction('ENTER_SIM')" *ngIf="!isSimulationMode" class="start-sim">{{'TOOLBAR.START_SIM' | translate}}</p>
+		<p (click)="triggerEditorAction('LEAVE_SIM')" *ngIf="isSimulationMode" class="start-sim">{{'TOOLBAR.EXIT_SIM' | translate}}</p>
 	</div>
 </div>

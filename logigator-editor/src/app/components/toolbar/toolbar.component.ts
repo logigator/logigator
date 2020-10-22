@@ -1,6 +1,5 @@
 import {Component, Inject} from '@angular/core';
 import {ProjectsService} from '../../services/projects/projects.service';
-import {ProjectInteractionService} from '../../services/project-interaction/project-interaction.service';
 // #!debug
 import {Test} from '../../../../tests/auto-tests/tests';
 // #!debug
@@ -11,9 +10,11 @@ import {
 	WorkerCommunicationServiceModel
 } from '../../services/simulation/worker-communication/worker-communication-service';
 import {StateCompilerService} from '../../services/simulation/state-compiler/state-compiler.service';
-import {EditorActionsService} from '../../services/editor-actions/editor-actions.service';
+import {ShortcutsService} from '../../services/shortcuts/shortcuts.service';
 import {WorkModeService} from '../../services/work-mode/work-mode.service';
 import {WorkMode} from '../../models/work-modes';
+import {EditorInteractionService} from '../../services/editor-interaction/editor-interaction.service';
+import {EditorAction} from '../../models/editor-action';
 
 @Component({
 	selector: 'app-toolbar',
@@ -36,11 +37,10 @@ export class ToolbarComponent {
 	constructor(
 		private workModeService: WorkModeService,
 		private projectService: ProjectsService,
-		private projectInteraction: ProjectInteractionService,
+		private editorInteractionService: EditorInteractionService,
 		@Inject(WorkerCommunicationService) private workerCommunication: WorkerCommunicationServiceModel,
 		private renderTicker: RenderTicker,
-		private stateCompiler: StateCompilerService,
-		private editorActions: EditorActionsService
+		private stateCompiler: StateCompilerService
 	) {}
 
 	// #!if DEBUG === 'true'
@@ -72,18 +72,62 @@ export class ToolbarComponent {
 	// #!endif
 
 	public triggerEditorAction(action: string) {
-		this.editorActions.triggerAction(action);
+		switch (action) {
+			case 'COPY':
+				this.editorInteractionService.triggerEditorAction(EditorAction.COPY);
+				break;
+			case 'PASTE':
+				this.editorInteractionService.triggerEditorAction(EditorAction.PASTE);
+				break;
+			case 'CUT':
+				this.editorInteractionService.triggerEditorAction(EditorAction.CUT);
+				break;
+			case 'DELETE':
+				this.editorInteractionService.triggerEditorAction(EditorAction.DELETE);
+				break;
+			case 'UNDO':
+				this.editorInteractionService.triggerEditorAction(EditorAction.UNDO);
+				break;
+			case 'REDO':
+				this.editorInteractionService.triggerEditorAction(EditorAction.REDO);
+				break;
+			case 'ZOOM_IN':
+				this.editorInteractionService.triggerEditorAction(EditorAction.ZOOM_IN);
+				break;
+			case 'ZOOM_OUT':
+				this.editorInteractionService.triggerEditorAction(EditorAction.ZOOM_OUT);
+				break;
+		}
 	}
 
-	public isActionUsable(action: string): boolean {
-		return this.editorActions.isActionUsable(action);
+	public setWorkMode(mode: string) {
+		switch (mode) {
+			case 'SELECT':
+				this.workModeService.setWorkMode(WorkMode.SELECT);
+				break;
+			case 'CUT_SELECT':
+				this.workModeService.setWorkMode(WorkMode.CUT_SELECT);
+				break;
+			case 'ERASER':
+				this.workModeService.setWorkMode(WorkMode.ERASER);
+				break;
+			case 'TEXT':
+				this.workModeService.setWorkMode(WorkMode.TEXT);
+				break;
+			case 'WIRE':
+				this.workModeService.setWorkMode(WorkMode.WIRE);
+				break;
+			case 'CONN_WIRE':
+				this.workModeService.setWorkMode(WorkMode.CONN_WIRE);
+				break;
+		}
 	}
 
 	public get isSimulationMode(): boolean {
 		return this.workModeService.currentWorkMode === WorkMode.SIMULATION;
 	}
 
-	public get iSelectMode(): boolean {
+	public get isSelectMode(): boolean {
 		return this.workModeService.currentWorkMode === WorkMode.SELECT;
 	}
 

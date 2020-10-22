@@ -1,5 +1,5 @@
 import {ChangeDetectionStrategy, Component, EventEmitter, OnInit, Output} from '@angular/core';
-import {ProjectInteractionService} from '../../../services/project-interaction/project-interaction.service';
+import {EditorInteractionService} from '../../../services/editor-interaction/editor-interaction.service';
 
 @Component({
 	selector: 'app-edit-dropdown',
@@ -12,7 +12,7 @@ export class EditDropdownComponent implements OnInit {
 	@Output()
 	public requestClosed: EventEmitter<any> = new EventEmitter();
 
-	constructor(private projectInteraction: ProjectInteractionService) { }
+	constructor(private editorInteractionService: EditorInteractionService) { }
 
 	ngOnInit() {
 	}
@@ -27,32 +27,32 @@ export class EditDropdownComponent implements OnInit {
 	}
 
 	public undo() {
-		this.projectInteraction.undoForCurrent();
+		this.editorInteractionService.undoForCurrent();
 		this.close();
 	}
 
 	public redo() {
-		this.projectInteraction.redoForCurrent();
+		this.editorInteractionService.redoForCurrent();
 		this.close();
 	}
 
 	public copy() {
-		this.projectInteraction.copySelection();
+		this.editorInteractionService.copySelection();
 		this.close();
 	}
 
 	public paste() {
-		this.projectInteraction.paste();
+		this.editorInteractionService.paste();
 		this.close();
 	}
 
 	public cut() {
-		this.projectInteraction.cutSelection();
+		this.editorInteractionService.cutSelection();
 		this.close();
 	}
 
 	public delete() {
-		this.projectInteraction.deleteSelection();
+		this.editorInteractionService.deleteSelection();
 		this.close();
 	}
 }

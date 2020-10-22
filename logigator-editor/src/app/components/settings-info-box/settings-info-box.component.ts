@@ -6,6 +6,7 @@ import {AbstractControl, FormArray, FormBuilder, FormControl, FormGroup} from '@
 import {Subscription} from 'rxjs';
 import {ElementTypeId} from '../../models/element-types/element-type-ids';
 import {Element} from '../../models/element';
+import {ShortcutsService} from '../../services/shortcuts/shortcuts.service';
 
 @Component({
 	selector: 'app-settings-info-box',
@@ -30,7 +31,8 @@ export class SettingsInfoBoxComponent implements OnChanges, OnDestroy {
 	constructor(
 		private elemProvider: ElementProviderService,
 		private projects: ProjectsService,
-		private formBuilder: FormBuilder
+		private formBuilder: FormBuilder,
+		private editorActions: ShortcutsService
 	) { }
 
 	ngOnChanges(changes: SimpleChanges): void {
@@ -172,15 +174,15 @@ export class SettingsInfoBoxComponent implements OnChanges, OnDestroy {
 	}
 
 	public focusInput() {
-		// this.shortcuts.shortcutListenerEnabled = false;
+		this.editorActions.disableShortcutListener();
 	}
 
 	public blurInput() {
-		// this.shortcuts.shortcutListenerEnabled = true;
+		this.editorActions.enableShortcutListener();
 	}
 
 	ngOnDestroy(): void {
-		// this.shortcuts.shortcutListenerEnabled = true;
+		this.editorActions.enableShortcutListener();
 		if (this.formSubscription) {
 			this.formSubscription.unsubscribe();
 		}

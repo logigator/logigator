@@ -7,8 +7,6 @@ import {Observable} from 'rxjs';
 import {map} from 'rxjs/operators';
 import {ElementProviderService} from '../../services/element-provider/element-provider.service';
 import {ProjectsService} from '../../services/projects/projects.service';
-import {EditorActionsService} from '../../services/editor-actions/editor-actions.service';
-import {EditorAction} from '../../models/editor-action';
 
 @Component({
 	selector: 'app-construction-box-category',
@@ -27,7 +25,6 @@ export class ConstructionBoxCategoryComponent {
 	public searchText: string;
 
 	constructor(
-		private editorActions: EditorActionsService,
 		private workModeService: WorkModeService,
 		private translate: TranslateService,
 		private elemProv: ElementProviderService,
@@ -57,7 +54,7 @@ export class ConstructionBoxCategoryComponent {
 	}
 
 	public selectComponent(id: number) {
-		this.editorActions.triggerAction(EditorAction.SWITCH_MODE_COMPONENT, id);
+		this.workModeService.setWorkMode(WorkMode.COMPONENT, id);
 	}
 
 	public openComponent(id: number) {

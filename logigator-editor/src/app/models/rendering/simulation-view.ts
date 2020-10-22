@@ -4,7 +4,6 @@ import {Element} from '../element';
 import {SimulationViewInteractionManager} from './simulation-view-interaction-manager';
 import {EventEmitter, NgZone} from '@angular/core';
 import {ReqInspectElementEvent} from './req-inspect-element-event';
-import {ProjectInteractionService} from '../../services/project-interaction/project-interaction.service';
 import {filter, takeUntil} from 'rxjs/operators';
 import {getStaticDI} from '../get-di';
 import {LGraphicsResolver} from './graphics/l-graphics-resolver';
@@ -13,6 +12,7 @@ import {ElementProviderService} from '../../services/element-provider/element-pr
 import {WorkerCommunicationService} from '../../services/simulation/worker-communication/worker-communication-service';
 import {isResetable} from './graphics/l-graphics';
 import {ZoomPanData} from './zoom-pan';
+import {EditorInteractionService} from '../../services/editor-interaction/editor-interaction.service';
 
 export class SimulationView extends View {
 
@@ -44,7 +44,7 @@ export class SimulationView extends View {
 		this.applyOpenActions();
 
 		getStaticDI(NgZone).runOutsideAngular(async () => {
-			getStaticDI(ProjectInteractionService).onZoomChangeClick$.pipe(
+			getStaticDI(EditorInteractionService).onZoomChangeClick$.pipe(
 				filter(_ => this._project.type === 'project'),
 				takeUntil(this._destroySubject)
 			).subscribe((dir => this.onZoomClick(dir)));

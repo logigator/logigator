@@ -1,6 +1,6 @@
 import {ChangeDetectionStrategy, Component, EventEmitter, OnInit, Output} from '@angular/core';
-import {ProjectInteractionService} from '../../../services/project-interaction/project-interaction.service';
 import {ThemingService} from '../../../services/theming/theming.service';
+import {EditorInteractionService} from '../../../services/editor-interaction/editor-interaction.service';
 
 @Component({
 	selector: 'app-view-dropdown',
@@ -13,7 +13,7 @@ export class ViewDropdownComponent implements OnInit {
 	@Output()
 	public requestClosed: EventEmitter<any> = new EventEmitter();
 
-	constructor(private projectInteractions: ProjectInteractionService, private theming: ThemingService) { }
+	constructor(private editorInteractionService: EditorInteractionService, private theming: ThemingService) { }
 
 	ngOnInit() {
 	}
@@ -23,17 +23,17 @@ export class ViewDropdownComponent implements OnInit {
 	}
 
 	public zoomIn() {
-		this.projectInteractions.zoomIn();
+		this.editorInteractionService.zoomIn();
 		this.close();
 	}
 
 	public zoomOut() {
-		this.projectInteractions.zoomOut();
+		this.editorInteractionService.zoomOut();
 		this.close();
 	}
 
 	public zoom100() {
-		this.projectInteractions.zoom100();
+		this.editorInteractionService.zoom100();
 		this.close();
 	}
 

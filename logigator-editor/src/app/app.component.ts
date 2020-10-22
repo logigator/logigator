@@ -8,10 +8,10 @@ import {takeUntil} from 'rxjs/operators';
 import {ProjectsService} from './services/projects/projects.service';
 import {LangChangeEvent, TranslateService} from '@ngx-translate/core';
 import {ElementProviderService} from './services/element-provider/element-provider.service';
-import {ProjectInteractionService} from './services/project-interaction/project-interaction.service';
 import {CookieStorageService} from './services/cookie-storage/cookie-storage.service';
-import {EditorActionsService} from './services/editor-actions/editor-actions.service';
+import {ShortcutsService} from './services/shortcuts/shortcuts.service';
 import {WorkMode} from './models/work-modes';
+import {EditorInteractionService} from './services/editor-interaction/editor-interaction.service';
 
 @Component({
 	selector: 'app-root',
@@ -31,9 +31,9 @@ export class AppComponent implements OnInit, OnDestroy {
 		private theming: ThemingService,
 		private workMode: WorkModeService,
 		private selection: SelectionService,
-		private actionsService: EditorActionsService,
+		private actionsService: ShortcutsService,
 		private projects: ProjectsService,
-		private projectInteractionService: ProjectInteractionService,
+		private editorInteractionService: EditorInteractionService,
 		@Inject(DOCUMENT) private document: HTMLDocument,
 		private translate: TranslateService,
 		private elementProviderService: ElementProviderService,
@@ -81,7 +81,7 @@ export class AppComponent implements OnInit, OnDestroy {
 			if (!selectedIds || selectedIds.length === 0 || selectedIds.length > 1) {
 				return undefined;
 			}
-			const elemType = this.projects.currProject.currState.getElementById(this.selection.selectedIds()[0]);
+			const elemType = this.projects.currProject.currState.getElementById(selectedIds[0]);
 			if (!elemType) return undefined;
 			return elemType.typeId;
 		}
@@ -129,7 +129,7 @@ export class AppComponent implements OnInit, OnDestroy {
 	public onFileDrop(event: DragEvent) {
 		event.preventDefault();
 		event.stopPropagation();
-		this.projectInteractionService.openProjectDrop(event.dataTransfer.files);
+		this.editorInteractionService.openProjectDrop(event.dataTransfer.files);
 	}
 
 	private initTranslation() {
@@ -164,7 +164,6 @@ export class AppComponent implements OnInit, OnDestroy {
 	private loadScripts(): Promise<any> {
 		const scripts = [
 			'https://www.googletagmanager.com/gtag/js?id=UA-151071040-3',
-			'https://www.google.com/recaptcha/api.js?render=6Le9BbgUAAAAAHJupU1XiAa8n1Z0M2YFHL89OMMp'
 		];
 		const promises: Promise<void>[] = [];
 		scripts.forEach(scriptUrl => {

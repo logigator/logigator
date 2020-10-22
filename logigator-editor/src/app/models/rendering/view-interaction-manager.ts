@@ -4,7 +4,6 @@ import {merge, Subject} from 'rxjs';
 import {LGraphics} from './graphics/l-graphics';
 import {getStaticDI} from '../get-di';
 import {WorkModeService} from '../../services/work-mode/work-mode.service';
-import {ProjectInteractionService} from '../../services/project-interaction/project-interaction.service';
 import {filter, takeUntil} from 'rxjs/operators';
 import {NgZone} from '@angular/core';
 import {ThemingService} from '../../services/theming/theming.service';
@@ -22,9 +21,9 @@ import {CopyService} from '../../services/copy/copy.service';
 import {Elements} from '../elements';
 import {ConnectionPoint} from './graphics/connection-point';
 import {PopupService} from '../../services/popup/popup.service';
-import {EditorActionsService} from '../../services/editor-actions/editor-actions.service';
 import {EditorAction} from '../editor-action';
 import {WorkMode} from '../work-modes';
+import {EditorInteractionService} from '../../services/editor-interaction/editor-interaction.service';
 
 export class ViewInteractionManager {
 
@@ -71,21 +70,13 @@ export class ViewInteractionManager {
 
 		this.initEventListeners();
 
-		getStaticDI(EditorActionsService).subscribe(
-			EditorAction.SWITCH_MODE_WIRE,
-			EditorAction.SWITCH_MODE_CONN_WIRE,
-			EditorAction.SWITCH_MODE_SELECT,
-			EditorAction.SWITCH_MODE_CUT_SELECT,
-			EditorAction.SWITCH_MODE_ERASER,
-			EditorAction.SWITCH_MODE_TEXT,
-		).subscribe(() => this.cleanUp());
-
 		merge(
-			getStaticDI(ProjectInteractionService).onElementsDelete$,
-			getStaticDI(ProjectInteractionService).onUndoOrRedo$
+			this.workModeSer.currentWorkMode$,
+			getStaticDI(EditorInteractionService).onElementsDelete$,
+			getStaticDI(EditorInteractionService).onUndoOrRedo$
 		).pipe(takeUntil(this._destroySubject)).subscribe(() => this.cleanUp());
 
-		getStaticDI(ProjectInteractionService).onPaste$.pipe(
+		getStaticDI(EditorInteractionService).onPaste$.pipe(
 			takeUntil(this._destroySubject),
 			filter(_ => this._view.projectId === this.projectsSer.currProject.id)
 		).subscribe(() => this.startPaste());

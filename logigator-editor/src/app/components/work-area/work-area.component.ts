@@ -12,7 +12,7 @@ import {
 	WorkerCommunicationServiceModel
 } from '../../services/simulation/worker-communication/worker-communication-service';
 import {WorkMode} from '../../models/work-modes';
-import {EditorActionsService} from '../../services/editor-actions/editor-actions.service';
+import {ShortcutsService} from '../../services/shortcuts/shortcuts.service';
 import {EditorAction} from '../../models/editor-action';
 
 @Component({
@@ -32,7 +32,7 @@ export class WorkAreaComponent extends WorkArea implements OnInit, OnDestroy {
 		private ngZone: NgZone,
 		private projectsService: ProjectsService,
 		private workMode: WorkModeService,
-		private editorActions: EditorActionsService,
+		private editorActions: ShortcutsService,
 		@Inject(WorkerCommunicationService) private workerCommunicationService: WorkerCommunicationServiceModel
 	) {
 		super();
@@ -61,8 +61,8 @@ export class WorkAreaComponent extends WorkArea implements OnInit, OnDestroy {
 				takeUntil(this._destroySubject)
 			).subscribe(id => this.onProjectSwitch(id));
 
-			this.editorActions.subscribe(EditorAction.ENTER_SIM).subscribe(() => this.onSimulationModeChanged(true));
-			this.editorActions.subscribe(EditorAction.LEAVE_SIM).subscribe(() => this.onSimulationModeChanged(false));
+			// this.editorActions.subscribe(EditorAction.ENTER_SIM).subscribe(() => this.onSimulationModeChanged(true));
+			// this.editorActions.subscribe(EditorAction.LEAVE_SIM).subscribe(() => this.onSimulationModeChanged(false));
 		});
 	}
 
@@ -142,7 +142,7 @@ export class WorkAreaComponent extends WorkArea implements OnInit, OnDestroy {
 		if (((this.activeView as EditorView).projectType === 'project' && this.workMode.isCompToBuildPlug) ||
 			this.activeView.projectId === this.workMode.currentComponentToBuild
 		) {
-			this.editorActions.triggerAction(EditorAction.SWITCH_MODE_SELECT);
+			this.workMode.setWorkMode(WorkMode.SELECT);
 		}
 		this.ticker.singleFrame('0');
 	}

@@ -1,6 +1,6 @@
 import {Inject, Injectable} from '@angular/core';
 import {WorkMode} from '../../models/work-modes';
-import {Observable, ReplaySubject} from 'rxjs';
+import {BehaviorSubject, Observable} from 'rxjs';
 import {switchMap} from 'rxjs/operators';
 import {ProjectsService} from '../projects/projects.service';
 import {ElementProviderService} from '../element-provider/element-provider.service';
@@ -10,9 +10,6 @@ import {
 	WorkerCommunicationServiceModel
 } from '../simulation/worker-communication/worker-communication-service';
 import {TranslateService} from '@ngx-translate/core';
-import {HelpWindowService} from '../help-window/help-window.service';
-import {EditorActionsService} from '../editor-actions/editor-actions.service';
-import {EditorAction} from '../../models/editor-action';
 
 @Injectable({
 	providedIn: 'root'
@@ -21,10 +18,9 @@ export class WorkModeService {
 
 	private _currentWorkMode: WorkMode = WorkMode.SELECT;
 
-	private _workModeSubject = new ReplaySubject<WorkMode>(1);
+	private _currentWorkModeSubject = new BehaviorSubject<WorkMode>(WorkMode.SELECT);
 
 	private _currentComponentTypeToBuild: number = undefined;
-
 
 	constructor(
 		private projects: ProjectsService,
@@ -32,52 +28,15 @@ export class WorkModeService {
 		private elemProv: ElementProviderService,
 		@Inject(WorkerCommunicationService) private workerCommunicationService: WorkerCommunicationServiceModel,
 		private translate: TranslateService,
-		private helpWindowService: HelpWindowService,
-		private editorActions: EditorActionsService
-	) {
-		this.editorActions.subscribe().subscribe(event => this.onEditorAction(event.action, event.data));
-	}
+	) {}
 
-	private onEditorAction(action: EditorAction, data?: any) {
-		switch (action) {
-			case EditorAction.SWITCH_MODE_SELECT:
-				this.switchWorkMode(WorkMode.SELECT);
-				break;
-			case EditorAction.SWITCH_MODE_CUT_SELECT:
-				this.switchWorkMode(WorkMode.CUT_SELECT);
-				break;
-			case EditorAction.SWITCH_MODE_ERASER:
-				this.switchWorkMode(WorkMode.ERASER);
-				break;
-			case EditorAction.SWITCH_MODE_TEXT:
-				this.switchWorkMode(WorkMode.TEXT);
-				break;
-			case EditorAction.SWITCH_MODE_WIRE:
-				this.switchWorkMode(WorkMode.WIRE);
-				break;
-			case EditorAction.SWITCH_MODE_CONN_WIRE:
-				this.switchWorkMode(WorkMode.CONN_WIRE);
-				break;
-			case EditorAction.SWITCH_MODE_COMPONENT:
-				this.switchWorkMode(WorkMode.COMPONENT);
-				this._currentComponentTypeToBuild = data;
-				break;
-			case EditorAction.ENTER_SIM:
-				this.enterSimulation();
-				break;
-			case EditorAction.LEAVE_SIM:
-				this.leaveSimulation();
-				break;
-		}
-	}
-
-	private switchWorkMode(workMode: WorkMode) {
+	public setWorkMode(workMode: WorkMode, compToBuild?: number) {
+		this._currentComponentTypeToBuild = compToBuild;
 		this._currentWorkMode = workMode;
-		this._workModeSubject.next(workMode);
+		this._currentWorkModeSubject.next(workMode);
 	}
 
-	private async enterSimulation() {
-		this.switchWorkMode(WorkMode.SIMULATION);
+	public enterSimulation() {
 			// if (!this.projectSaveManagement.isShare) {
 		// 	await this.projects.saveAllOrAllComps();
 		// } else {
@@ -92,8 +51,7 @@ export class WorkModeService {
 		// } catch (e) {}
 	}
 
-	private leaveSimulation() {
-		this.editorActions.triggerAction(EditorAction.SWITCH_MODE_SELECT);
+	public leaveSimulation() {
 		// this.renderTicker.stopAllContSim();
 		// this._currentWorkMode = 'select';
 		// this._workModeSubject.next('select');
@@ -105,8 +63,12 @@ export class WorkModeService {
 		return this._currentWorkMode;
 	}
 
+	public get currentWorkMode$(): Observable<WorkMode> {
+		return this._currentWorkModeSubject.asObservable();
+	}
+
 	public get workModeDescription$(): Observable<string> {
-		return this._workModeSubject.pipe(
+		return this._currentWorkModeSubject.pipe(
 			switchMap(workMode => {
 				if (workMode === WorkMode.COMPONENT) {
 					return this.translate.get(this.elemProv.getElementById(this._currentComponentTypeToBuild).name).pipe(
