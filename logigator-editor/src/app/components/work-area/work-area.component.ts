@@ -1,12 +1,4 @@
-import {
-	Component,
-	ElementRef, Inject,
-	NgZone,
-	OnDestroy,
-	OnInit,
-	Renderer2,
-	ViewChild
-} from '@angular/core';
+import {Component, ElementRef, Inject, NgZone, OnDestroy, OnInit, Renderer2, ViewChild} from '@angular/core';
 import {EditorView} from '../../models/rendering/editor-view';
 import {ProjectsService} from '../../services/projects/projects.service';
 import {Project} from '../../models/project';
@@ -19,6 +11,9 @@ import {
 	WorkerCommunicationService,
 	WorkerCommunicationServiceModel
 } from '../../services/simulation/worker-communication/worker-communication-service';
+import {WorkMode} from '../../models/work-modes';
+import {EditorActionsService} from '../../services/editor-actions/editor-actions.service';
+import {EditorAction} from '../../models/editor-action';
 
 @Component({
 	selector: 'app-work-area',
@@ -37,6 +32,7 @@ export class WorkAreaComponent extends WorkArea implements OnInit, OnDestroy {
 		private ngZone: NgZone,
 		private projectsService: ProjectsService,
 		private workMode: WorkModeService,
+		private editorActions: EditorActionsService,
 		@Inject(WorkerCommunicationService) private workerCommunicationService: WorkerCommunicationServiceModel
 	) {
 		super();
@@ -65,9 +61,8 @@ export class WorkAreaComponent extends WorkArea implements OnInit, OnDestroy {
 				takeUntil(this._destroySubject)
 			).subscribe(id => this.onProjectSwitch(id));
 
-			this.workMode.onSimulationModeChange.pipe(
-				takeUntil(this._destroySubject),
-			).subscribe(isSim => this.onSimulationModeChanged(isSim));
+			this.editorActions.subscribe(EditorAction.ENTER_SIM).subscribe(() => this.onSimulationModeChanged(true));
+			this.editorActions.subscribe(EditorAction.LEAVE_SIM).subscribe(() => this.onSimulationModeChanged(false));
 		});
 	}
 
@@ -84,7 +79,7 @@ export class WorkAreaComponent extends WorkArea implements OnInit, OnDestroy {
 	}
 
 	public get isSimulationMode(): boolean {
-		return this.workMode.currentWorkMode === 'simulation';
+		return this.workMode.currentWorkMode === WorkMode.SIMULATION;
 	}
 
 	public get activeView(): View {
@@ -138,7 +133,7 @@ export class WorkAreaComponent extends WorkArea implements OnInit, OnDestroy {
 	}
 
 	public switchToProject(toSwitchToId: number) {
-		if (this.workMode.currentWorkMode === 'simulation') return;
+		if (this.workMode.currentWorkMode === WorkMode.SIMULATION) return;
 		this.projectsService.switchToProject(toSwitchToId);
 	}
 
@@ -147,7 +142,7 @@ export class WorkAreaComponent extends WorkArea implements OnInit, OnDestroy {
 		if (((this.activeView as EditorView).projectType === 'project' && this.workMode.isCompToBuildPlug) ||
 			this.activeView.projectId === this.workMode.currentComponentToBuild
 		) {
-			this.workMode.setWorkMode('select');
+			this.editorActions.triggerAction(EditorAction.SWITCH_MODE_SELECT);
 		}
 		this.ticker.singleFrame('0');
 	}

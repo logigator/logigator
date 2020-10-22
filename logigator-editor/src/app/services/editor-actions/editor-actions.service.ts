@@ -20,20 +20,28 @@ export class EditorActionsService {
 
 	constructor() {}
 
-	public triggerAction(action: EditorAction, data?: any) {
+	public triggerAction(action: EditorAction | string, data?: any) {
+		if (typeof action === 'string') {
+			action = this._actionConfig.find(a => a.stringName === action).action;
+		}
+
 		this._editorActionsSubject.next({
 			action,
 			data
 		});
 	}
 
-	public subscribe(action?: EditorAction): Observable<EditorActionEvent> {
-		if (!action) {
+	public subscribe(...actions: EditorAction[]): Observable<EditorActionEvent> {
+		if (!actions || actions.length === 0) {
 			return this._editorActionsSubject.asObservable();
 		}
 		return this._editorActionsSubject.pipe(
-			filter(event => event.action === action)
+			filter(event => actions.includes(event.action))
 		);
+	}
+
+	public isActionUsable(action: EditorAction | string): boolean {
+		return true;
 	}
 
 	public keyDownListener(event: KeyboardEvent) {
@@ -75,14 +83,14 @@ export class EditorActionsService {
 	public getShortcutTextForAction(action: EditorAction) {
 		const config = this._actionConfig.find(a => a.action === action);
 
-		if (!config) return '';
+		if (!config?.shortcut) return '';
 		return this.getShortcutText(config.shortcut);
 	}
 
 	public getShortcutTextForActionByStringName(name: string) {
 		const config = this._actionConfig.find(a => a.stringName === name);
 
-		if (!config) return '';
+		if (!config?.shortcut) return '';
 		return this.getShortcutText(config.shortcut);
 	}
 
@@ -102,8 +110,8 @@ export class EditorActionsService {
 	public setShortcutConfig(config: any) {
 	}
 
-	public get actionConfig(): EditorActionConfig[] {
-		return this._actionConfig;
+	public get shortcutActionConfig(): EditorActionConfig[] {
+		return this._actionConfig.filter(a => !a.internal);
 	}
 
 }

@@ -4,6 +4,7 @@ import {SimulationView} from './simulation-view';
 import {getStaticDI} from '../get-di';
 import {NgZone} from '@angular/core';
 import {LGraphics} from './graphics/l-graphics';
+import {WorkMode} from '../work-modes';
 
 export class SimulationViewInteractionManager {
 
@@ -17,7 +18,7 @@ export class SimulationViewInteractionManager {
 		getStaticDI(NgZone).runOutsideAngular(() => {
 			sprite.interactive = true;
 			sprite.on('pointerdown', (e: PIXI.InteractionEvent) => {
-				if (getStaticDI(WorkModeService).currentWorkMode !== 'simulation') return;
+				if (getStaticDI(WorkModeService).currentWorkMode !== WorkMode.SIMULATION) return;
 				this.onCompClick(e, sprite);
 			});
 		});

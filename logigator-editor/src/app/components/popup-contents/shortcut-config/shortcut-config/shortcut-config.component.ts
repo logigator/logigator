@@ -23,7 +23,7 @@ export class ShortcutConfigComponent extends PopupContentComp implements OnInit 
 	}
 
 	public get actions(): EditorActionConfig[] {
-		return this.actionsService.actionConfig;
+		return this.actionsService.shortcutActionConfig;
 	}
 
 	public save() {

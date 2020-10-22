@@ -1,1 +1,10 @@
-export type WorkMode = 'select' | 'selectCut' | 'eraser' | 'buildComponent' | 'buildWire' | 'connectWire' | 'text' | 'simulation';
+export const enum WorkMode {
+	SELECT,
+	CUT_SELECT,
+	ERASER,
+	COMPONENT,
+	WIRE,
+	CONN_WIRE,
+	TEXT,
+	SIMULATION
+}

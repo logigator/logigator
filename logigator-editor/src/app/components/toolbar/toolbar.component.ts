@@ -1,6 +1,4 @@
 import {Component, Inject} from '@angular/core';
-import {WorkMode} from '../../models/work-modes';
-import {WorkModeService} from '../../services/work-mode/work-mode.service';
 import {ProjectsService} from '../../services/projects/projects.service';
 import {ProjectInteractionService} from '../../services/project-interaction/project-interaction.service';
 // #!debug
@@ -13,6 +11,9 @@ import {
 	WorkerCommunicationServiceModel
 } from '../../services/simulation/worker-communication/worker-communication-service';
 import {StateCompilerService} from '../../services/simulation/state-compiler/state-compiler.service';
+import {EditorActionsService} from '../../services/editor-actions/editor-actions.service';
+import {WorkModeService} from '../../services/work-mode/work-mode.service';
+import {WorkMode} from '../../models/work-modes';
 
 @Component({
 	selector: 'app-toolbar',
@@ -38,7 +39,8 @@ export class ToolbarComponent {
 		private projectInteraction: ProjectInteractionService,
 		@Inject(WorkerCommunicationService) private workerCommunication: WorkerCommunicationServiceModel,
 		private renderTicker: RenderTicker,
-		private stateCompiler: StateCompilerService
+		private stateCompiler: StateCompilerService,
+		private editorActions: EditorActionsService
 	) {}
 
 	// #!if DEBUG === 'true'
@@ -69,65 +71,40 @@ export class ToolbarComponent {
 	}
 	// #!endif
 
-	public setWorkMode(mode: WorkMode) {
-		this.workModeService.setWorkMode(mode);
+	public triggerEditorAction(action: string) {
+		this.editorActions.triggerAction(action);
 	}
 
-	public enterSim() {
-		this.workModeService.enterSimulation();
+	public isActionUsable(action: string): boolean {
+		return this.editorActions.isActionUsable(action);
 	}
 
-	public leaveSim() {
-		this.renderTicker.stopAllContSim();
-		this.workModeService.leaveSimulation();
+	public get isSimulationMode(): boolean {
+		return this.workModeService.currentWorkMode === WorkMode.SIMULATION;
 	}
 
-	public get currentWorkMode(): WorkMode {
-		return this.workModeService.currentWorkMode;
+	public get iSelectMode(): boolean {
+		return this.workModeService.currentWorkMode === WorkMode.SELECT;
 	}
 
-	public async newComponent() {
-		this.projectInteraction.newComponent();
+	public get isCutSelectMode(): boolean {
+		return this.workModeService.currentWorkMode === WorkMode.CUT_SELECT;
 	}
 
-	public async undo() {
-		this.projectInteraction.undoForCurrent();
+	public get isEraserMode(): boolean {
+		return this.workModeService.currentWorkMode === WorkMode.ERASER;
 	}
 
-	public redo(): void {
-		this.projectInteraction.redoForCurrent();
+	public get isTextMode(): boolean {
+		return this.workModeService.currentWorkMode === WorkMode.TEXT;
 	}
 
-	public zoomIn() {
-		this.projectInteraction.zoomIn();
+	public get isWireMode(): boolean {
+		return this.workModeService.currentWorkMode === WorkMode.WIRE;
 	}
 
-	public zoomOut() {
-		this.projectInteraction.zoomOut();
-	}
-
-	public delete() {
-		this.projectInteraction.deleteSelection();
-	}
-
-	public copy() {
-		this.projectInteraction.copySelection();
-	}
-
-	public cut() {
-		this.projectInteraction.cutSelection();
-	}
-
-	public paste() {
-		this.projectInteraction.paste();
-	}
-
-	public save() {
-		this.projectInteraction.saveAll();
-	}
-
-	public async open() {
-		this.projectInteraction.openProject();
+	public get isConnWireMode(): boolean {
+		return this.workModeService.currentWorkMode === WorkMode.CONN_WIRE;
 	}
 
 	public continueSm(override = false) {

@@ -5,6 +5,8 @@ export interface EditorActionConfig {
 	action: EditorAction;
 	shortcut?: ShortcutConfig;
 
+	internal: boolean;
+
 	usableIn: 'editor' | 'simulation' | 'both';
 
 	/**

@@ -5,6 +5,7 @@ export const editorActionDefaultConfig: EditorActionConfig[] = [
 	{
 		action: EditorAction.COPY,
 		usableIn: 'editor',
+		internal: false,
 		shortcut: {
 			key_code: 'C',
 			ctrl: true
@@ -15,6 +16,7 @@ export const editorActionDefaultConfig: EditorActionConfig[] = [
 	{
 		action: EditorAction.PASTE,
 		usableIn: 'editor',
+		internal: false,
 		shortcut: {
 			key_code: 'P',
 			ctrl: true
@@ -25,6 +27,7 @@ export const editorActionDefaultConfig: EditorActionConfig[] = [
 	{
 		action: EditorAction.CUT,
 		usableIn: 'editor',
+		internal: false,
 		shortcut: {
 			key_code: 'X',
 			ctrl: true
@@ -35,6 +38,7 @@ export const editorActionDefaultConfig: EditorActionConfig[] = [
 	{
 		action: EditorAction.DELETE,
 		usableIn: 'editor',
+		internal: false,
 		shortcut: {
 			key_code: 'Delete'
 		},
@@ -44,6 +48,7 @@ export const editorActionDefaultConfig: EditorActionConfig[] = [
 	{
 		action: EditorAction.UNDO,
 		usableIn: 'editor',
+		internal: false,
 		shortcut: {
 			key_code: 'Z',
 			ctrl: true
@@ -54,6 +59,7 @@ export const editorActionDefaultConfig: EditorActionConfig[] = [
 	{
 		action: EditorAction.REDO,
 		usableIn: 'editor',
+		internal: false,
 		shortcut: {
 			key_code: 'Y',
 			ctrl: true,
@@ -64,6 +70,7 @@ export const editorActionDefaultConfig: EditorActionConfig[] = [
 	{
 		action: EditorAction.ZOOM_100,
 		usableIn: 'both',
+		internal: false,
 		shortcut: {
 			key_code: '0',
 			ctrl: true,
@@ -74,18 +81,21 @@ export const editorActionDefaultConfig: EditorActionConfig[] = [
 	{
 		action: EditorAction.ZOOM_IN,
 		usableIn: 'both',
+		internal: false,
 		name: 'EDITOR_ACTIONS.ZOOM_IN',
 		stringName: 'ZOOM_IN'
 	},
 	{
 		action: EditorAction.ZOOM_OUT,
 		usableIn: 'both',
+		internal: false,
 		name: 'EDITOR_ACTIONS.ZOOM_OUT',
 		stringName: 'ZOOM_OUT'
 	},
 	{
 		action: EditorAction.FULLSCREEN,
 		usableIn: 'both',
+		internal: false,
 		shortcut: {
 			key_code: 'F',
 			ctrl: true,
@@ -97,6 +107,7 @@ export const editorActionDefaultConfig: EditorActionConfig[] = [
 	{
 		action: EditorAction.SWITCH_MODE_CONN_WIRE,
 		usableIn: 'editor',
+		internal: false,
 		shortcut: {
 			key_code: 'C'
 		},
@@ -106,6 +117,7 @@ export const editorActionDefaultConfig: EditorActionConfig[] = [
 	{
 		action: EditorAction.SWITCH_MODE_WIRE,
 		usableIn: 'editor',
+		internal: false,
 		shortcut: {
 			key_code: 'W'
 		},
@@ -115,6 +127,7 @@ export const editorActionDefaultConfig: EditorActionConfig[] = [
 	{
 		action: EditorAction.SWITCH_MODE_SELECT,
 		usableIn: 'editor',
+		internal: false,
 		shortcut: {
 			key_code: 'S'
 		},
@@ -124,6 +137,7 @@ export const editorActionDefaultConfig: EditorActionConfig[] = [
 	{
 		action: EditorAction.SWITCH_MODE_ERASER,
 		usableIn: 'editor',
+		internal: false,
 		shortcut: {
 			key_code: 'E'
 		},
@@ -133,6 +147,7 @@ export const editorActionDefaultConfig: EditorActionConfig[] = [
 	{
 		action: EditorAction.SWITCH_MODE_CUT_SELECT,
 		usableIn: 'editor',
+		internal: false,
 		shortcut: {
 			key_code: 'S',
 			shift: true
@@ -143,6 +158,7 @@ export const editorActionDefaultConfig: EditorActionConfig[] = [
 	{
 		action: EditorAction.SWITCH_MODE_TEXT,
 		usableIn: 'editor',
+		internal: false,
 		shortcut: {
 			key_code: 'T'
 		},
@@ -152,6 +168,7 @@ export const editorActionDefaultConfig: EditorActionConfig[] = [
 	{
 		action: EditorAction.NEW_COMP,
 		usableIn: 'editor',
+		internal: false,
 		shortcut: {
 			key_code: 'N',
 			alt: true
@@ -162,6 +179,7 @@ export const editorActionDefaultConfig: EditorActionConfig[] = [
 	{
 		action: EditorAction.NEW_PROJ,
 		usableIn: 'editor',
+		internal: false,
 		shortcut: {
 			key_code: 'N',
 			alt: true,
@@ -173,6 +191,7 @@ export const editorActionDefaultConfig: EditorActionConfig[] = [
 	{
 		action: EditorAction.OPEN_PROJ,
 		usableIn: 'editor',
+		internal: false,
 		shortcut: {
 			key_code: 'O',
 			ctrl: true
@@ -183,6 +202,7 @@ export const editorActionDefaultConfig: EditorActionConfig[] = [
 	{
 		action: EditorAction.SAVE,
 		usableIn: 'editor',
+		internal: false,
 		shortcut: {
 			key_code: 'S',
 			ctrl: true
@@ -193,6 +213,7 @@ export const editorActionDefaultConfig: EditorActionConfig[] = [
 	{
 		action: EditorAction.ENTER_SIM,
 		usableIn: 'editor',
+		internal: false,
 		shortcut: {
 			key_code: 'ENTER'
 		},
@@ -202,10 +223,17 @@ export const editorActionDefaultConfig: EditorActionConfig[] = [
 	{
 		action: EditorAction.LEAVE_SIM,
 		usableIn: 'simulation',
+		internal: false,
 		shortcut: {
 			key_code: 'ESCAPE'
 		},
 		name: 'EDITOR_ACTIONS.LEAVE_SIM',
+		stringName: 'LEAVE_SIM'
+	},
+	{
+		action: EditorAction.SWITCH_MODE_COMPONENT,
+		usableIn: 'editor',
+		internal: true,
 		stringName: 'LEAVE_SIM'
 	},
 ];

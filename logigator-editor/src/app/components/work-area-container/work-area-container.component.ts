@@ -6,6 +6,8 @@ import {WorkModeService} from '../../services/work-mode/work-mode.service';
 import {ErrorHandlingService} from '../../services/error-handling/error-handling.service';
 import {ToastContainerDirective} from 'ngx-toastr';
 import {HelpWindowService} from '../../services/help-window/help-window.service';
+import {EditorActionsService} from '../../services/editor-actions/editor-actions.service';
+import {EditorAction} from '../../models/editor-action';
 
 @Component({
 	selector: 'app-work-area-container',
@@ -31,12 +33,13 @@ export class WorkAreaContainerComponent implements OnInit {
 		private workMode: WorkModeService,
 		private renderer2: Renderer2,
 		private errorHandling: ErrorHandlingService,
-		private helpWindowService: HelpWindowService
+		private helpWindowService: HelpWindowService,
+		private editorActions: EditorActionsService
 	) { }
 
 	ngOnInit() {
-		this.workMode.onSimulationModeChange.subscribe(isSim => {
-			if (isSim) {
+		this.editorActions.subscribe(EditorAction.ENTER_SIM, EditorAction.ENTER_SIM).subscribe(event => {
+			if (event.action === EditorAction.ENTER_SIM) {
 				this.renderer2.setStyle(this.workAreaContainer.nativeElement, 'width', '100vw');
 			} else {
 				this.renderer2.removeStyle(this.workAreaContainer.nativeElement, 'width');

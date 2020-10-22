@@ -1,13 +1,4 @@
-import {
-	Component,
-	ElementRef,
-	Inject,
-	NgZone,
-	OnDestroy,
-	OnInit,
-	Renderer2,
-	ViewChild
-} from '@angular/core';
+import {Component, ElementRef, Inject, NgZone, OnDestroy, OnInit, Renderer2, ViewChild} from '@angular/core';
 import {ThemingService} from './services/theming/theming.service';
 import {SelectionService} from './services/selection/selection.service';
 import {WorkModeService} from './services/work-mode/work-mode.service';
@@ -20,6 +11,7 @@ import {ElementProviderService} from './services/element-provider/element-provid
 import {ProjectInteractionService} from './services/project-interaction/project-interaction.service';
 import {CookieStorageService} from './services/cookie-storage/cookie-storage.service';
 import {EditorActionsService} from './services/editor-actions/editor-actions.service';
+import {WorkMode} from './models/work-modes';
 
 @Component({
 	selector: 'app-root',
@@ -73,7 +65,7 @@ export class AppComponent implements OnInit, OnDestroy {
 	}
 
 	public get isSimulationMode(): boolean {
-		return this.workMode.currentWorkMode === 'simulation';
+		return this.workMode.currentWorkMode ===  WorkMode.SIMULATION;
 	}
 
 	public get showSettingsInfoBox(): boolean {
@@ -82,7 +74,7 @@ export class AppComponent implements OnInit, OnDestroy {
 	}
 
 	public get selectedElemTypeId(): number {
-		if (this.workMode.currentWorkMode === 'buildComponent') {
+		if (this.workMode.currentWorkMode ===  WorkMode.COMPONENT) {
 			return this.workMode.currentComponentToBuild;
 		} else {
 			const selectedIds = this.selection.selectedIds();
@@ -96,7 +88,7 @@ export class AppComponent implements OnInit, OnDestroy {
 	}
 
 	public get selectedCompId(): number {
-		if (!this.selection.selectedIds() || this.workMode.currentWorkMode === 'buildComponent') {
+		if (!this.selection.selectedIds() || this.workMode.currentWorkMode === WorkMode.COMPONENT) {
 			return undefined;
 		}
 		return this.selection.selectedIds()[0];

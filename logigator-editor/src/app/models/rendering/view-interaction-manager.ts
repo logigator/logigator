@@ -22,6 +22,9 @@ import {CopyService} from '../../services/copy/copy.service';
 import {Elements} from '../elements';
 import {ConnectionPoint} from './graphics/connection-point';
 import {PopupService} from '../../services/popup/popup.service';
+import {EditorActionsService} from '../../services/editor-actions/editor-actions.service';
+import {EditorAction} from '../editor-action';
+import {WorkMode} from '../work-modes';
 
 export class ViewInteractionManager {
 
@@ -68,8 +71,16 @@ export class ViewInteractionManager {
 
 		this.initEventListeners();
 
+		getStaticDI(EditorActionsService).subscribe(
+			EditorAction.SWITCH_MODE_WIRE,
+			EditorAction.SWITCH_MODE_CONN_WIRE,
+			EditorAction.SWITCH_MODE_SELECT,
+			EditorAction.SWITCH_MODE_CUT_SELECT,
+			EditorAction.SWITCH_MODE_ERASER,
+			EditorAction.SWITCH_MODE_TEXT,
+		).subscribe(() => this.cleanUp());
+
 		merge(
-			this.workModeSer.currentWorkMode$,
 			getStaticDI(ProjectInteractionService).onElementsDelete$,
 			getStaticDI(ProjectInteractionService).onUndoOrRedo$
 		).pipe(takeUntil(this._destroySubject)).subscribe(() => this.cleanUp());
@@ -110,7 +121,7 @@ export class ViewInteractionManager {
 	private pDownView(e: PIXI.InteractionEvent) {
 		if (e.data.button !== 0) return;
 
-		if (this.workModeSer.currentWorkMode === 'eraser') {
+		if (this.workModeSer.currentWorkMode === WorkMode.ERASER) {
 			this.cleanUp();
 			this.startEraser(e);
 			return;
@@ -120,22 +131,22 @@ export class ViewInteractionManager {
 		this.cleanUp();
 
 		switch (this.workModeSer.currentWorkMode) {
-			case 'buildComponent':
+			case WorkMode.COMPONENT:
 				this.startBuildComp(e);
 				break;
-			case 'buildWire':
+			case WorkMode.WIRE:
 				this.startBuildWire(e);
 				break;
-			case 'connectWire':
+			case WorkMode.CONN_WIRE:
 				this.toggleWireConn(e);
 				break;
-			case 'text':
+			case WorkMode.TEXT:
 				this.placeText(e);
 				break;
-			case 'select':
+			case WorkMode.SELECT:
 				this.startSelection(e, ViewIntManState.SELECT);
 				break;
-			case 'selectCut':
+			case WorkMode.CUT_SELECT:
 				this.startSelection(e, ViewIntManState.SELECT_CUT);
 				break;
 		}
@@ -215,8 +226,8 @@ export class ViewInteractionManager {
 	}
 
 	private pUpElement(lGraphics: LGraphics) {
-		if (this.workModeSer.currentWorkMode === 'buildComponent' ||
-			this.workModeSer.currentWorkMode === 'eraser' ||
+		if (this.workModeSer.currentWorkMode === WorkMode.COMPONENT ||
+			this.workModeSer.currentWorkMode === WorkMode.ERASER ||
 			this._state === ViewIntManState.DRAGGING ||
 			this._selectRect.visible
 		) {

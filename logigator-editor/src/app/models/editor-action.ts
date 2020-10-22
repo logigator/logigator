@@ -21,4 +21,6 @@ export const enum EditorAction {
 	SAVE = 19,
 	ENTER_SIM = 20,
 	LEAVE_SIM = 21,
+
+	SWITCH_MODE_COMPONENT = 100,
 }

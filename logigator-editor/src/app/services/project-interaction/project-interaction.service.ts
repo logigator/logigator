@@ -69,7 +69,7 @@ export class ProjectInteractionService {
 
 	public paste() {
 		// if (!checkActionUsable('paste')) return;
-		this.workMode.setWorkMode('select');
+		// this.workMode.setWorkMode('select');
 		this._pasteNotifierSubject.next();
 	}
 

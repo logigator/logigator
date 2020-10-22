@@ -11,7 +11,7 @@
 				     || isHiddenPlug(searchText, comp.key)"
 				     (click)="selectComponent(comp.key)"
 				     (dblclick)="openComponent(comp.key)"
-				     [class.active-selected-component]="currentWorkMode === 'buildComponent' && currentSelectedComponent === comp.key">
+				     [class.active-selected-component]="isComponentMode && currentSelectedComponent === comp.key">
 					<div>
 						<img *ngIf="comp.value.symbolImage" [src]="comp.value.symbolImage" [alt]="comp.value.symbol">
 						<p *ngIf="!comp.value.symbolImage" appAutoFontSize desiredFontWidth="53">{{comp.value.symbol}}</p>
