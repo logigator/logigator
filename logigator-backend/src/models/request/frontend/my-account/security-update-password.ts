@@ -7,7 +7,7 @@ export class SecurityUpdatePassword {
 	@IsOptional()
 	@IsString()
 	@IsNotEmpty()
-	current_password: string
+	current_password: string;
 
 	@IsString()
 	@IsNotEmpty()
