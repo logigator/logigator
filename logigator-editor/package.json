@@ -46,7 +46,7 @@
 		"bootstrap": "^4.5.2",
 		"express": "^4.17.1",
 		"file-saver": "^2.0.2",
-		"@logigator/logigator-simulation": "github:logigator/logigator-simulation",
+		"@logigator/logigator-simulation": "latest",
 		"github-markdown-css": "^4.0.0",
 		"ngx-electron": "^2.2.0",
 		"ngx-toastr": "^12.1.0",

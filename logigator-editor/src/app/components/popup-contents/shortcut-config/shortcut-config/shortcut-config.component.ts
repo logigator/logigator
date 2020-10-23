@@ -3,6 +3,8 @@ import {SingleShortcutConfigComponent} from '../single-shortcut-config/single-sh
 import {PopupContentComp} from '../../../popup/popup-content-comp';
 import {ShortcutsService} from '../../../../services/shortcuts/shortcuts.service';
 import {Shortcut} from '../../../../models/shortcut';
+import {ShortcutAction} from '../../../../models/shortcut-action';
+import {ShortcutConfig} from '../../../../models/shortcut-config';
 
 @Component({
 	selector: 'app-shortcut-config',
@@ -27,14 +29,11 @@ export class ShortcutConfigComponent extends PopupContentComp implements OnInit 
 	}
 
 	public save() {
-		let changedConfig = {};
+		let changedConfig = new Map<ShortcutAction, ShortcutConfig>();
 		this.singleConfigs.forEach(conf => {
 			const singleConf = conf.changedShortcutSettings;
 			if (singleConf) {
-				changedConfig = {
-					...changedConfig,
-					...singleConf
-				};
+				changedConfig.set(singleConf.key, singleConf.config);
 			}
 		});
 		this.actionsService.setShortcutConfig(changedConfig);

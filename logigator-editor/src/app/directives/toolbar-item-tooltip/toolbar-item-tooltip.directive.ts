@@ -49,7 +49,7 @@ export class ToolbarItemTooltipDirective {
 			this.appRef.attachView(this._componentRef.hostView);
 			const domElem = (this._componentRef.hostView as EmbeddedViewRef<any>).rootNodes[0] as HTMLElement;
 			document.body.appendChild(domElem);
-		}, 1000);
+		}, 500);
 	}
 
 	private hide() {

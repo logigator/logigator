@@ -11,10 +11,10 @@ import {
 } from '@angular/core';
 import {fromEvent, Subject} from 'rxjs';
 import {takeUntil} from 'rxjs/operators';
-import {EditorAction} from '../../../../models/editor-action';
 import {ShortcutConfig} from '../../../../models/shortcut-config';
 import {ShortcutsService} from '../../../../services/shortcuts/shortcuts.service';
 import {Shortcut} from '../../../../models/shortcut';
+import {ShortcutAction} from '../../../../models/shortcut-action';
 
 @Component({
 	selector: 'app-single-shortcut-config',
@@ -74,11 +74,12 @@ export class SingleShortcutConfigComponent implements OnInit, OnDestroy {
 		this.isRecording = true;
 	}
 
-	public get changedShortcutSettings(): { [key: string]: ShortcutConfig } {
-		if (!this._newShortcutConfig) return {};
-		const toReturn = {};
-		toReturn[this.shortcut.action] = this._newShortcutConfig;
-		return toReturn;
+	public get changedShortcutSettings(): { key: ShortcutAction; config: ShortcutConfig } | null {
+		if (!this._newShortcutConfig) return null;
+		return {
+			key: this.shortcut.action,
+			config: this._newShortcutConfig
+		}
 	}
 
 	ngOnDestroy(): void {

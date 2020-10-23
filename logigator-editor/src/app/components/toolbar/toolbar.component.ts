@@ -13,6 +13,8 @@ import {StateCompilerService} from '../../services/simulation/state-compiler/sta
 import {WorkModeService} from '../../services/work-mode/work-mode.service';
 import {WorkMode} from '../../models/work-modes';
 import {EditorInteractionService} from '../../services/editor-interaction/editor-interaction.service';
+import {ShortcutAction} from '../../models/shortcut-action';
+import {ShortcutsService} from '../../services/shortcuts/shortcuts.service';
 
 @Component({
 	selector: 'app-toolbar',
@@ -38,7 +40,8 @@ export class ToolbarComponent {
 		private editorInteractionService: EditorInteractionService,
 		@Inject(WorkerCommunicationService) private workerCommunication: WorkerCommunicationServiceModel,
 		private renderTicker: RenderTicker,
-		private stateCompiler: StateCompilerService
+		private stateCompiler: StateCompilerService,
+		private shortcutService: ShortcutsService
 	) {}
 
 	// #!if DEBUG === 'true'
@@ -90,6 +93,11 @@ export class ToolbarComponent {
 				this.workModeService.setWorkMode(WorkMode.CONN_WIRE);
 				break;
 		}
+	}
+
+	public getShortcut(action: ShortcutAction): string {
+		const text = this.shortcutService.getShortcutTextForAction(action);
+		return text ? ` (${text})`: '';
 	}
 
 	public enterSimulation() {

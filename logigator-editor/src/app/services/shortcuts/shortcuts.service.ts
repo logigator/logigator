@@ -5,6 +5,9 @@ import {ShortcutAction} from '../../models/shortcut-action';
 import {Shortcut} from '../../models/shortcut';
 import {WorkMode} from '../../models/work-modes';
 import {WorkModeService} from '../work-mode/work-mode.service';
+import {UserService} from '../user/user.service';
+import {ApiService} from '../api/api.service';
+import {UserShortcut} from '../../models/http/response/user';
 
 @Injectable({
 	providedIn: 'root'
@@ -12,10 +15,30 @@ import {WorkModeService} from '../work-mode/work-mode.service';
 export class ShortcutsService {
 
 	private _shortcutConfig = defaultShortcuts;
+	private _customShortcuts = new Map<ShortcutAction, ShortcutConfig>();
 
 	private _shortcutListenerEnabled = true;
 
-	constructor(private workMode: WorkModeService) {}
+	constructor(
+		private workMode: WorkModeService,
+		private userService: UserService,
+		private apiService: ApiService
+	) {
+		this.userService.userInfo$.subscribe(data => {
+			if (!data)
+				return;
+			for (const shortcut of data.shortcuts) {
+				const index = this._shortcutConfig.findIndex(x => x.action === shortcut.name);
+				if (index >= 0) {
+					this._shortcutConfig[index].shortcutConfig.key_code = shortcut.keyCode;
+					this._shortcutConfig[index].shortcutConfig.shift = shortcut.shift;
+					this._shortcutConfig[index].shortcutConfig.ctrl = shortcut.ctrl;
+					this._shortcutConfig[index].shortcutConfig.alt = shortcut.alt;
+					this._customShortcuts.set(shortcut.name as ShortcutAction, this._shortcutConfig[index].shortcutConfig);
+				}
+			}
+		});
+	}
 
 	public keyDownListener(event: KeyboardEvent) {
 		if (!this._shortcutListenerEnabled) return;
@@ -81,7 +104,28 @@ export class ShortcutsService {
 		return true;
 	}
 
-	public setShortcutConfig(config: any) {
+	public async setShortcutConfig(config: Map<ShortcutAction, ShortcutConfig>) {
+		for (const [key, val] of config) {
+			const index = this._shortcutConfig.findIndex(x => x.action === key);
+			if (index >= 0) {
+				this._shortcutConfig[index].shortcutConfig = val;
+				this._customShortcuts.set(key, val);
+			}
+		}
+
+		const patchData = [];
+		for (const [key, val] of this._customShortcuts) {
+			patchData.push({
+				name: key,
+				keyCode: val.key_code,
+				shift: val.shift,
+				ctrl: val.ctrl,
+				alt: val.alt
+			} as UserShortcut)
+		}
+		await this.apiService.patch<any>('/user', {
+			shortcuts: patchData
+		}).toPromise();
 	}
 
 	public get shortcutActionConfig(): Shortcut[] {
