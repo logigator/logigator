@@ -20,15 +20,10 @@ export class EditorInteractionService {
 
 	private _editorActionsSubject = new Subject<EditorAction>();
 
-	private _zoomNotifierSubject = new Subject<'in' | 'out' | '100'>();
-	private _deleteNotifierSubject = new Subject<void>();
-	private _pasteNotifierSubject = new Subject<void>();
-	private _undoOrRedoNotifierSubject = new Subject<void>();
-
 	constructor(
 		private projectsService: ProjectsService,
 		private selection: SelectionService,
-		private copy: CopyService,
+		private copyService: CopyService,
 		private workMode: WorkModeService,
 		private popupService: PopupService,
 		private projectSave: ProjectSaveManagementService,
@@ -36,62 +31,63 @@ export class EditorInteractionService {
 		private ngZone: NgZone
 	) {}
 
-	public triggerEditorAction(action: EditorAction) {
-		this._editorActionsSubject.next(action);
-	}
-
-	public subscribeEditorAction(action?: EditorAction): Observable<EditorAction> {
-		if (!action) {
+	public subscribeEditorAction(...actions: EditorAction[]): Observable<EditorAction> {
+		if (!actions || actions.length === 0) {
 			return this._editorActionsSubject.asObservable();
 		}
 		return this._editorActionsSubject.pipe(
-			filter(a => a === action)
+			filter(a => actions.includes(a))
 		);
 	}
 
 	public zoomIn() {
-		this._zoomNotifierSubject.next('in');
+		this._editorActionsSubject.next(EditorAction.ZOOM_IN);
 	}
 
 	public zoomOut() {
-		this._zoomNotifierSubject.next('out');
+		this._editorActionsSubject.next(EditorAction.ZOOM_OUT);
 	}
 
 	public zoom100() {
-		this._zoomNotifierSubject.next('100');
+		this._editorActionsSubject.next(EditorAction.ZOOM_100);
 	}
 
-	public deleteSelection() {
+	public delete() {
 		this.projectsService.currProject.removeElementsById(this.selection.selectedIds());
 		this.projectsService.inputsOutputsCustomComponentChanged(this.projectsService.currProject.id);
-		this._deleteNotifierSubject.next();
+		this._editorActionsSubject.next(EditorAction.DELETE);
 	}
 
-	public copySelection() {
-		this.copy.copySelection();
+	public copy() {
+		this.copyService.copySelection();
+		this._editorActionsSubject.next(EditorAction.COPY);
 	}
 
-	public cutSelection() {
-		this.copy.copySelection();
+	public cut() {
+		this.copyService.copySelection();
 		this.projectsService.currProject.removeElementsById(this.selection.selectedIds());
 		this.projectsService.inputsOutputsCustomComponentChanged(this.projectsService.currProject.id);
-		this._deleteNotifierSubject.next();
+		this._editorActionsSubject.next(EditorAction.CUT);
 	}
 
 	public paste() {
-		this._pasteNotifierSubject.next();
+		this._editorActionsSubject.next(EditorAction.PASTE);
 	}
 
-	public undoForCurrent() {
+	public undo() {
 		this.projectsService.currProject.stepBack();
 		this.projectsService.inputsOutputsCustomComponentChanged(this.projectsService.currProject.id);
-		this._undoOrRedoNotifierSubject.next();
+		this._editorActionsSubject.next(EditorAction.UNDO);
 	}
 
-	public redoForCurrent() {
+	public redo() {
 		this.projectsService.currProject.stepForward();
 		this.projectsService.inputsOutputsCustomComponentChanged(this.projectsService.currProject.id);
-		this._undoOrRedoNotifierSubject.next();
+		this._editorActionsSubject.next(EditorAction.REDO);
+	}
+
+	public fullscreen() {
+		this._editorActionsSubject.next(EditorAction.FULLSCREEN);
 	}
 
 	public newProject() {
@@ -150,21 +146,5 @@ export class EditorInteractionService {
 
 	public saveAll() {
 		this.ngZone.run(() => this.projectsService.saveAll());
-	}
-
-	public get onZoomChangeClick$(): Observable<'in' | 'out' | '100'> {
-		return this._zoomNotifierSubject.asObservable();
-	}
-
-	public get onElementsDelete$(): Observable<void> {
-		return this._deleteNotifierSubject.asObservable();
-	}
-
-	public get onPaste$(): Observable<void> {
-		return this._pasteNotifierSubject.asObservable();
-	}
-
-	public get onUndoOrRedo$(): Observable<void> {
-		return this._undoOrRedoNotifierSubject.asObservable();
 	}
 }

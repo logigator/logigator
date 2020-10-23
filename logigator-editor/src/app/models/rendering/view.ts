@@ -10,13 +10,14 @@ import {environment} from '../../../environments/environment';
 import {Element} from '../element';
 import {CollisionFunctions} from '../collision-functions';
 import {Project} from '../project';
-import {Action, Actions} from '../action';
+import {Action} from '../action';
 import {getStaticDI} from '../get-di';
 import {ComponentScalable, isUpdatable, LGraphics} from './graphics/l-graphics';
 import {LGraphicsResolver} from './graphics/l-graphics-resolver';
 import {ElementTypeId} from '../element-types/element-type-ids';
 import {ConnectionPoint} from './graphics/connection-point';
 import {IterableDiffers} from '@angular/core';
+import {EditorAction} from '../editor-action';
 
 export abstract class View extends PIXI.Container {
 
@@ -189,16 +190,16 @@ export abstract class View extends PIXI.Container {
 		return false;
 	}
 
-	public applyZoom(dir: 'in' | 'out' | '100', centerX?: number, centerY?: number): boolean {
+	public applyZoom(action: EditorAction, centerX?: number, centerY?: number): boolean {
 		if (!centerX || !centerY) {
 			centerX = this.htmlContainer.offsetWidth / 2;
 			centerY = this.htmlContainer.offsetHeight / 2;
 		}
-		if (dir === 'in') {
+		if (action === EditorAction.ZOOM_IN) {
 			return this.zoomPan.zoomBy(1.25, centerX, centerY);
-		} else if (dir === 'out') {
+		} else if (action === EditorAction.ZOOM_OUT) {
 			return this.zoomPan.zoomBy(0.8, centerX, centerY);
-		} else {
+		} else if (action === EditorAction.ZOOM_100) {
 			return this.zoomPan.zoomTo100(centerX, centerY);
 		}
 
@@ -303,8 +304,8 @@ export abstract class View extends PIXI.Container {
 		}
 	}
 
-	protected onZoomClick(dir: 'in' | 'out' | '100') {
-		if (this.applyZoom(dir)) {
+	public onZoom(action: EditorAction) {
+		if (this.applyZoom(action)) {
 			this.updateChunks();
 			this.requestSingleFrame();
 		}

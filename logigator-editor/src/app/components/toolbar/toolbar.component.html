@@ -2,27 +2,27 @@
 
 	<div class="toolbar-buttons">
 		<ng-container *ngIf="!isSimulationMode">
-			<button class="toolbar-button save" aria-label="Save" appToolbarItemTooltip [tooltipText]="'TOOLBAR.TOOLTIP.SAVE' | translate" (click)="triggerEditorAction('SAVE')"></button>
-			<button class="toolbar-button open" aria-label="Open" appToolbarItemTooltip [tooltipText]="'TOOLBAR.TOOLTIP.OPEN' | translate" (click)="triggerEditorAction('OPEN_PROJ')"></button>
-			<button class="toolbar-button new-comp" aria-label="New Component" appToolbarItemTooltip [tooltipText]="'TOOLBAR.TOOLTIP.NEW_COMP' | translate" (click)="triggerEditorAction('NEW_COMP')"></button>
+			<button class="toolbar-button save" aria-label="Save" appToolbarItemTooltip [tooltipText]="'TOOLBAR.TOOLTIP.SAVE' | translate" (click)="save()"></button>
+			<button class="toolbar-button open" aria-label="Open" appToolbarItemTooltip [tooltipText]="'TOOLBAR.TOOLTIP.OPEN' | translate" (click)="openProject()"></button>
+			<button class="toolbar-button new-comp" aria-label="New Component" appToolbarItemTooltip [tooltipText]="'TOOLBAR.TOOLTIP.NEW_COMP' | translate" (click)="newComponent()"></button>
 
 			<div class="divider"></div>
 
-			<button class="toolbar-button copy" aria-label="Copy" appToolbarItemTooltip [tooltipText]="'TOOLBAR.TOOLTIP.COPY' | translate" (appOutsideNgZoneEvent)="triggerEditorAction('COPY')"></button>
-			<button class="toolbar-button cut" aria-label="Cut"  appToolbarItemTooltip [tooltipText]="'TOOLBAR.TOOLTIP.CUT' | translate" (appOutsideNgZoneEvent)="triggerEditorAction('CUT')"></button>
-			<button class="toolbar-button paste" aria-label="Paste" appToolbarItemTooltip [tooltipText]="'TOOLBAR.TOOLTIP.PASTE' | translate" (appOutsideNgZoneEvent)="triggerEditorAction('PASTE')"></button>
-			<button class="toolbar-button delete" aria-label="Delete" appToolbarItemTooltip [tooltipText]="'TOOLBAR.TOOLTIP.DELETE' | translate" (appOutsideNgZoneEvent)="triggerEditorAction('DELETE')"></button>
+			<button class="toolbar-button copy" aria-label="Copy" appToolbarItemTooltip [tooltipText]="'TOOLBAR.TOOLTIP.COPY' | translate" (appOutsideNgZoneEvent)="copy()"></button>
+			<button class="toolbar-button cut" aria-label="Cut"  appToolbarItemTooltip [tooltipText]="'TOOLBAR.TOOLTIP.CUT' | translate" (appOutsideNgZoneEvent)="cut()"></button>
+			<button class="toolbar-button paste" aria-label="Paste" appToolbarItemTooltip [tooltipText]="'TOOLBAR.TOOLTIP.PASTE' | translate" (appOutsideNgZoneEvent)="paste()"></button>
+			<button class="toolbar-button delete" aria-label="Delete" appToolbarItemTooltip [tooltipText]="'TOOLBAR.TOOLTIP.DELETE' | translate" (appOutsideNgZoneEvent)="delete()"></button>
 
 			<div class="divider"></div>
 
-			<button class="toolbar-button undo" (appOutsideNgZoneEvent)="triggerEditorAction('UNDO')" appToolbarItemTooltip [tooltipText]="'TOOLBAR.TOOLTIP.UNDO' | translate" aria-label="Undo"></button>
-			<button class="toolbar-button redo" (appOutsideNgZoneEvent)="triggerEditorAction('REDO')" appToolbarItemTooltip [tooltipText]="'TOOLBAR.TOOLTIP.REDO' | translate" aria-label="Redo"></button>
+			<button class="toolbar-button undo" (appOutsideNgZoneEvent)="undo()" appToolbarItemTooltip [tooltipText]="'TOOLBAR.TOOLTIP.UNDO' | translate" aria-label="Undo"></button>
+			<button class="toolbar-button redo" (appOutsideNgZoneEvent)="redo()" appToolbarItemTooltip [tooltipText]="'TOOLBAR.TOOLTIP.REDO' | translate" aria-label="Redo"></button>
 
 			<div class="divider"></div>
 		</ng-container>
 
-		<button class="toolbar-button zoom-out" (appOutsideNgZoneEvent)="triggerEditorAction('ZOOM_IN')" appToolbarItemTooltip [tooltipText]="'TOOLBAR.TOOLTIP.ZOOM_OUT' | translate" aria-label="Zoom Out"></button>
-		<button class="toolbar-button zoom-in" (appOutsideNgZoneEvent)="triggerEditorAction('ZOOM_OUT')" appToolbarItemTooltip [tooltipText]="'TOOLBAR.TOOLTIP.ZOOM_IN' | translate" aria-label="Zoom In"></button>
+		<button class="toolbar-button zoom-out" (appOutsideNgZoneEvent)="zoomOut()" appToolbarItemTooltip [tooltipText]="'TOOLBAR.TOOLTIP.ZOOM_OUT' | translate" aria-label="Zoom Out"></button>
+		<button class="toolbar-button zoom-in" (appOutsideNgZoneEvent)="zoomIn()" appToolbarItemTooltip [tooltipText]="'TOOLBAR.TOOLTIP.ZOOM_IN' | translate" aria-label="Zoom In"></button>
 
 		<ng-container *ngIf="!isSimulationMode">
 			<div class="divider"></div>
@@ -82,7 +82,7 @@
 	</div>
 
 	<div class="toolbar-end">
-		<p (click)="triggerEditorAction('ENTER_SIM')" *ngIf="!isSimulationMode" class="start-sim">{{'TOOLBAR.START_SIM' | translate}}</p>
-		<p (click)="triggerEditorAction('LEAVE_SIM')" *ngIf="isSimulationMode" class="start-sim">{{'TOOLBAR.EXIT_SIM' | translate}}</p>
+		<p (click)="enterSimulation()" *ngIf="!isSimulationMode" class="start-sim">{{'TOOLBAR.START_SIM' | translate}}</p>
+		<p (click)="leaveSimulation()" *ngIf="isSimulationMode" class="start-sim">{{'TOOLBAR.EXIT_SIM' | translate}}</p>
 	</div>
 </div>

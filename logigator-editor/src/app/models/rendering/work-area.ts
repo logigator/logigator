@@ -1,7 +1,7 @@
 import * as PIXI from 'pixi.js';
 import {fromEvent, ReplaySubject, Subject} from 'rxjs';
 import {takeUntil} from 'rxjs/operators';
-import { ElementRef, EventEmitter, Output, Renderer2, Directive } from '@angular/core';
+import {Directive, ElementRef, EventEmitter, Output, Renderer2} from '@angular/core';
 import {ThemingService} from '../../services/theming/theming.service';
 import {ZoomPanInputManager} from './zoom-pan-input-manager';
 import {View} from './view';
@@ -10,6 +10,7 @@ import {ReqInspectElementEvent} from './req-inspect-element-event';
 import {getStaticDI} from '../get-di';
 import {RenderTicker} from '../../services/render-ticker/render-ticker.service';
 import {WorkAreaComponent} from '../../components/work-area/work-area.component';
+import {EditorAction} from '../editor-action';
 
 @Directive()
 export abstract class WorkArea {
@@ -107,11 +108,11 @@ export abstract class WorkArea {
 		}
 
 		if (this._zoomPanInputManager.isZoomIn &&
-			this._activeView.applyZoom('out', this._zoomPanInputManager.mouseX, this._zoomPanInputManager.mouseY)) {
+			this._activeView.applyZoom(EditorAction.ZOOM_IN, this._zoomPanInputManager.mouseX, this._zoomPanInputManager.mouseY)) {
 				needsChunkUpdate = true;
 				this.updateSelectedZoomScale();
 		} else if (this._zoomPanInputManager.isZoomOut &&
-			this._activeView.applyZoom('in', this._zoomPanInputManager.mouseX, this._zoomPanInputManager.mouseY)) {
+			this._activeView.applyZoom(EditorAction.ZOOM_OUT, this._zoomPanInputManager.mouseX, this._zoomPanInputManager.mouseY)) {
 				needsChunkUpdate = true;
 				this.updateSelectedZoomScale();
 		}

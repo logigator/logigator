@@ -124,13 +124,13 @@ export class ZoomPanInputManager {
 		return this._mouseY;
 	}
 
-	public get isZoomIn(): boolean {
+	public get isZoomOut(): boolean {
 		const toReturn = this._wheelUp;
 		this._wheelUp = false;
 		return toReturn;
 	}
 
-	public get isZoomOut(): boolean {
+	public get isZoomIn(): boolean {
 		const toReturn = this._wheelDown;
 		this._wheelDown = false;
 		return toReturn;

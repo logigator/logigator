@@ -12,7 +12,7 @@ import {
 	WorkerCommunicationServiceModel
 } from '../../services/simulation/worker-communication/worker-communication-service';
 import {WorkMode} from '../../models/work-modes';
-import {ShortcutsService} from '../../services/shortcuts/shortcuts.service';
+import {EditorInteractionService} from '../../services/editor-interaction/editor-interaction.service';
 import {EditorAction} from '../../models/editor-action';
 
 @Component({
@@ -32,7 +32,7 @@ export class WorkAreaComponent extends WorkArea implements OnInit, OnDestroy {
 		private ngZone: NgZone,
 		private projectsService: ProjectsService,
 		private workMode: WorkModeService,
-		private editorActions: ShortcutsService,
+		private editorInteraction: EditorInteractionService,
 		@Inject(WorkerCommunicationService) private workerCommunicationService: WorkerCommunicationServiceModel
 	) {
 		super();
@@ -60,6 +60,10 @@ export class WorkAreaComponent extends WorkArea implements OnInit, OnDestroy {
 			this.projectsService.onProjectSwitch$.pipe(
 				takeUntil(this._destroySubject)
 			).subscribe(id => this.onProjectSwitch(id));
+
+			this.editorInteraction.subscribeEditorAction(EditorAction.ZOOM_IN, EditorAction.ZOOM_OUT, EditorAction.ZOOM_100).pipe(
+				takeUntil(this._destroySubject)
+			).subscribe(action => this.activeView.onZoom(action));
 
 			// this.editorActions.subscribe(EditorAction.ENTER_SIM).subscribe(() => this.onSimulationModeChanged(true));
 			// this.editorActions.subscribe(EditorAction.LEAVE_SIM).subscribe(() => this.onSimulationModeChanged(false));

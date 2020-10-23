@@ -1,15 +1,12 @@
 import {Grid} from './grid';
-import {ProjectsService} from '../../services/projects/projects.service';
 import {ViewInteractionManager} from './view-interaction-manager';
 import {Action} from '../action';
-import {filter, takeUntil} from 'rxjs/operators';
+import {takeUntil} from 'rxjs/operators';
 import {View} from './view';
 import {Project} from '../project';
 import {Element} from '../element';
 import {ProjectType} from '../project-type';
-import {getStaticDI} from '../get-di';
 import {LGraphicsResolver} from './graphics/l-graphics-resolver';
-import {EditorInteractionService} from '../../services/editor-interaction/editor-interaction.service';
 
 export class EditorView extends View {
 
@@ -18,18 +15,13 @@ export class EditorView extends View {
 	constructor(project: Project, htmlContainer: HTMLElement, requestSingleFrameFn: () => Promise<void>) {
 		super(project, htmlContainer, requestSingleFrameFn);
 
-		this._viewInteractionManager = new ViewInteractionManager(this);
+		this._viewInteractionManager = new ViewInteractionManager(this, project);
 
 		this.applyOpenActions();
 
-		getStaticDI(ProjectsService).onProjectChanges$(this.projectId).pipe(
+		this._project.changes.pipe(
 			takeUntil(this._destroySubject)
 		).subscribe((actions: Action[]) => this.applyActionsToView(actions));
-
-		getStaticDI(EditorInteractionService).onZoomChangeClick$.pipe(
-			filter(_ => this.projectId === getStaticDI(ProjectsService).currProject.id),
-			takeUntil(this._destroySubject)
-		).subscribe((dir => this.onZoomClick(dir)));
 	}
 
 	isSimulationView(): boolean {

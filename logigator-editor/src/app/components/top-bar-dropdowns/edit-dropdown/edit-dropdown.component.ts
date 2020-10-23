@@ -1,4 +1,4 @@
-import {ChangeDetectionStrategy, Component, EventEmitter, OnInit, Output} from '@angular/core';
+import {ChangeDetectionStrategy, Component, EventEmitter, Output} from '@angular/core';
 import {EditorInteractionService} from '../../../services/editor-interaction/editor-interaction.service';
 
 @Component({
@@ -7,37 +7,29 @@ import {EditorInteractionService} from '../../../services/editor-interaction/edi
 	styleUrls: ['../top-bar-dropdowns.scss', './edit-dropdown.component.scss'],
 	changeDetection: ChangeDetectionStrategy.OnPush
 })
-export class EditDropdownComponent implements OnInit {
+export class EditDropdownComponent {
 
 	@Output()
 	public requestClosed: EventEmitter<any> = new EventEmitter();
 
 	constructor(private editorInteractionService: EditorInteractionService) { }
 
-	ngOnInit() {
-	}
-
-	public checkActionUsable(action: string) {
-		// return checkActionUsable(action);
-		// TODO: fix
-	}
-
 	public close() {
 		this.requestClosed.emit();
 	}
 
 	public undo() {
-		this.editorInteractionService.undoForCurrent();
+		this.editorInteractionService.undo();
 		this.close();
 	}
 
 	public redo() {
-		this.editorInteractionService.redoForCurrent();
+		this.editorInteractionService.redo();
 		this.close();
 	}
 
 	public copy() {
-		this.editorInteractionService.copySelection();
+		this.editorInteractionService.copy();
 		this.close();
 	}
 
@@ -47,12 +39,12 @@ export class EditDropdownComponent implements OnInit {
 	}
 
 	public cut() {
-		this.editorInteractionService.cutSelection();
+		this.editorInteractionService.cut();
 		this.close();
 	}
 
 	public delete() {
-		this.editorInteractionService.deleteSelection();
+		this.editorInteractionService.delete();
 		this.close();
 	}
 }

@@ -10,11 +10,9 @@ import {
 	WorkerCommunicationServiceModel
 } from '../../services/simulation/worker-communication/worker-communication-service';
 import {StateCompilerService} from '../../services/simulation/state-compiler/state-compiler.service';
-import {ShortcutsService} from '../../services/shortcuts/shortcuts.service';
 import {WorkModeService} from '../../services/work-mode/work-mode.service';
 import {WorkMode} from '../../models/work-modes';
 import {EditorInteractionService} from '../../services/editor-interaction/editor-interaction.service';
-import {EditorAction} from '../../models/editor-action';
 
 @Component({
 	selector: 'app-toolbar',
@@ -71,35 +69,6 @@ export class ToolbarComponent {
 	}
 	// #!endif
 
-	public triggerEditorAction(action: string) {
-		switch (action) {
-			case 'COPY':
-				this.editorInteractionService.triggerEditorAction(EditorAction.COPY);
-				break;
-			case 'PASTE':
-				this.editorInteractionService.triggerEditorAction(EditorAction.PASTE);
-				break;
-			case 'CUT':
-				this.editorInteractionService.triggerEditorAction(EditorAction.CUT);
-				break;
-			case 'DELETE':
-				this.editorInteractionService.triggerEditorAction(EditorAction.DELETE);
-				break;
-			case 'UNDO':
-				this.editorInteractionService.triggerEditorAction(EditorAction.UNDO);
-				break;
-			case 'REDO':
-				this.editorInteractionService.triggerEditorAction(EditorAction.REDO);
-				break;
-			case 'ZOOM_IN':
-				this.editorInteractionService.triggerEditorAction(EditorAction.ZOOM_IN);
-				break;
-			case 'ZOOM_OUT':
-				this.editorInteractionService.triggerEditorAction(EditorAction.ZOOM_OUT);
-				break;
-		}
-	}
-
 	public setWorkMode(mode: string) {
 		switch (mode) {
 			case 'SELECT':
@@ -121,6 +90,14 @@ export class ToolbarComponent {
 				this.workModeService.setWorkMode(WorkMode.CONN_WIRE);
 				break;
 		}
+	}
+
+	public enterSimulation() {
+		this.workModeService.enterSimulation();
+	}
+
+	public leaveSimulation() {
+		this.workModeService.leaveSimulation();
 	}
 
 	public get isSimulationMode(): boolean {
@@ -149,6 +126,47 @@ export class ToolbarComponent {
 
 	public get isConnWireMode(): boolean {
 		return this.workModeService.currentWorkMode === WorkMode.CONN_WIRE;
+	}
+
+	public zoomIn() {
+		this.editorInteractionService.zoomIn();
+	}
+
+	public zoomOut() {
+		this.editorInteractionService.zoomOut();
+	}
+
+	public undo() {
+		this.editorInteractionService.undo();
+	}
+
+	public redo() {
+		this.editorInteractionService.redo();
+	}
+
+	public copy() {
+		this.editorInteractionService.copy();
+	}
+
+	public cut() {
+		this.editorInteractionService.cut();
+	}
+
+	public paste() {
+		this.editorInteractionService.paste();
+	}
+
+	public delete() {
+		this.editorInteractionService.delete();
+	}
+
+	public save() {
+	}
+
+	public newComponent() {
+	}
+
+	public openProject() {
 	}
 
 	public continueSm(override = false) {

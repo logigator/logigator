@@ -146,10 +146,6 @@ export class ProjectsService {
 		}
 	}
 
-	public onProjectChanges$(projectId: number): Observable<Action[]> {
-		return this._projects.get(projectId).changes;
-	}
-
 	public get onProjectOpened$(): Observable<number> {
 		return this._projectOpenedSubject.asObservable().pipe(
 			delayWhen((value, index) => {

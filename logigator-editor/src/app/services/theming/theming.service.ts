@@ -16,8 +16,6 @@ export class ThemingService {
 	private _showGrid = true;
 	private _showGridChangeSubject = new Subject<boolean>();
 
-	private _requestFullscreenSubject = new Subject<void>();
-
 	private _editorColor: EditorColors = {
 		light: {
 			background: 0xF5F5F5,
@@ -93,13 +91,5 @@ export class ThemingService {
 
 	public get showGridChanges$(): Observable<boolean> {
 		return this._showGridChangeSubject.asObservable();
-	}
-
-	public requestFullscreen() {
-		this._requestFullscreenSubject.next();
-	}
-
-	public get onRequestFullscreen$(): Observable<void> {
-		return this._requestFullscreenSubject.asObservable();
 	}
 }

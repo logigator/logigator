@@ -1,5 +1,4 @@
 import {Component, ElementRef, Inject, NgZone, OnDestroy, OnInit, Renderer2, ViewChild} from '@angular/core';
-import {ThemingService} from './services/theming/theming.service';
 import {SelectionService} from './services/selection/selection.service';
 import {WorkModeService} from './services/work-mode/work-mode.service';
 import {fromEvent, Subject} from 'rxjs';
@@ -12,6 +11,7 @@ import {CookieStorageService} from './services/cookie-storage/cookie-storage.ser
 import {ShortcutsService} from './services/shortcuts/shortcuts.service';
 import {WorkMode} from './models/work-modes';
 import {EditorInteractionService} from './services/editor-interaction/editor-interaction.service';
+import {EditorAction} from './models/editor-action';
 
 @Component({
 	selector: 'app-root',
@@ -28,10 +28,9 @@ export class AppComponent implements OnInit, OnDestroy {
 	constructor(
 		private renderer2: Renderer2,
 		private ngZone: NgZone,
-		private theming: ThemingService,
 		private workMode: WorkModeService,
 		private selection: SelectionService,
-		private actionsService: ShortcutsService,
+		private shortcutsService: ShortcutsService,
 		private projects: ProjectsService,
 		private editorInteractionService: EditorInteractionService,
 		@Inject(DOCUMENT) private document: HTMLDocument,
@@ -47,7 +46,7 @@ export class AppComponent implements OnInit, OnDestroy {
 		this.ngZone.runOutsideAngular(() => {
 			this.listenToShortcuts();
 
-			this.theming.onRequestFullscreen$.pipe(
+			this.editorInteractionService.subscribeEditorAction(EditorAction.FULLSCREEN).pipe(
 				takeUntil(this._destroySubject)
 			).subscribe(_ => this.onRequestFullscreen());
 		});
@@ -60,7 +59,7 @@ export class AppComponent implements OnInit, OnDestroy {
 		fromEvent(this.document, 'keydown').pipe(
 			takeUntil(this._destroySubject)
 		).subscribe((e: KeyboardEvent) => {
-			this.actionsService.keyDownListener(e);
+			this.shortcutsService.keyDownListener(e);
 		});
 	}
 

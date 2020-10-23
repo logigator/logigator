@@ -21,13 +21,16 @@ import {CopyService} from '../../services/copy/copy.service';
 import {Elements} from '../elements';
 import {ConnectionPoint} from './graphics/connection-point';
 import {PopupService} from '../../services/popup/popup.service';
-import {EditorAction} from '../editor-action';
 import {WorkMode} from '../work-modes';
 import {EditorInteractionService} from '../../services/editor-interaction/editor-interaction.service';
+import {EditorAction} from '../editor-action';
+import {Project} from '../project';
 
 export class ViewInteractionManager {
 
 	private readonly _view: EditorView;
+
+	private readonly _project: Project;
 
 	private _destroySubject = new Subject<void>();
 
@@ -48,14 +51,16 @@ export class ViewInteractionManager {
 	private _state: ViewIntManState = ViewIntManState.IDLE;
 
 	private workModeSer = getStaticDI(WorkModeService);
+	private editorInteractionSer = getStaticDI(EditorInteractionService);
 	private themingSer = getStaticDI(ThemingService);
 	private elemProvSer = getStaticDI(ElementProviderService);
 	private projectsSer = getStaticDI(ProjectsService);
 	private selectionSer = getStaticDI(SelectionService);
 	private copySer = getStaticDI(CopyService);
 
-	constructor(view: EditorView) {
+	constructor(view: EditorView, project: Project) {
 		this._view = view;
+		this._project = project;
 
 		this._selectRect = new PIXI.Graphics();
 		this._selectRect.beginFill(this.themingSer.getEditorColor('selectRect'), 0.3);
@@ -72,11 +77,10 @@ export class ViewInteractionManager {
 
 		merge(
 			this.workModeSer.currentWorkMode$,
-			getStaticDI(EditorInteractionService).onElementsDelete$,
-			getStaticDI(EditorInteractionService).onUndoOrRedo$
+			this.editorInteractionSer.subscribeEditorAction(EditorAction.DELETE, EditorAction.UNDO, EditorAction.REDO)
 		).pipe(takeUntil(this._destroySubject)).subscribe(() => this.cleanUp());
 
-		getStaticDI(EditorInteractionService).onPaste$.pipe(
+		this.editorInteractionSer.subscribeEditorAction(EditorAction.PASTE).pipe(
 			takeUntil(this._destroySubject),
 			filter(_ => this._view.projectId === this.projectsSer.currProject.id)
 		).subscribe(() => this.startPaste());
@@ -302,7 +306,7 @@ export class ViewInteractionManager {
 	private buildNewWire() {
 		const startPos = this._actionPos.gridPosStart;
 		const endPos = this._actionPos.lastGridPosDrag;
-		this.projectsSer.currProject.addWire(
+		this._project.addWire(
 			startPos,
 			this._wireDirection === WireDir.HOR ? new PIXI.Point(endPos.x, startPos.y) : new PIXI.Point(startPos.x, endPos.y),
 			endPos
@@ -329,7 +333,7 @@ export class ViewInteractionManager {
 
 	private selectFromRect() {
 		const selected = this.selectionSer.selectFromRect(
-			this.projectsSer.currProject, this._actionPos.gridPosFloatStart, this._actionPos.lastGridPosFloat
+			this._project, this._actionPos.gridPosFloatStart, this._actionPos.lastGridPosFloat
 		);
 		if (selected.length === 0) {
 			this.cleanUp();
@@ -344,7 +348,7 @@ export class ViewInteractionManager {
 
 	private selectCutFromRect() {
 		const actions = this.selectionSer.cutFromRect(
-			this.projectsSer.currProject, this._actionPos.gridPosFloatStart, this._actionPos.lastGridPosFloat
+			this._project, this._actionPos.gridPosFloatStart, this._actionPos.lastGridPosFloat
 		);
 
 		this._view.applyActionsToView(actions);
@@ -386,9 +390,9 @@ export class ViewInteractionManager {
 
 	private buildNewComp(e: PIXI.InteractionEvent) {
 		this._actionPos.addDragPos(e, this._view);
-		this.projectsSer.currProject.addElement(this.workModeSer.currentComponentToBuild, this._actionPos.lastGridPosDrag);
+		this._project.addElement(this.workModeSer.currentComponentToBuild, this._actionPos.lastGridPosDrag);
 		if (this.elemProvSer.isPlugElement(this.workModeSer.currentComponentToBuild)) {
-			this.projectsSer.inputsOutputsCustomComponentChanged(this.projectsSer.currProject.id);
+			this.projectsSer.inputsOutputsCustomComponentChanged(this._project.id);
 		}
 		this.cleanUp();
 	}
@@ -410,7 +414,7 @@ export class ViewInteractionManager {
 	}
 
 	private applyDrag() {
-		if (this.projectsSer.currProject.moveElementsById(
+		if (this._project.moveElementsById(
 			this.selectionSer.selectedIds(), this._actionPos.getGridPosDiffFromStart(this._selectedElements[0].position))
 		) {
 			this.cleanUp();
@@ -434,14 +438,14 @@ export class ViewInteractionManager {
 		getStaticDI(NgZone).run(async () => {
 			const text = await getStaticDI(PopupService).showPopup(TextComponent, 'POPUP.TEXT.TITLE', false);
 			if (!text) return;
-			this.projectsSer.currProject.addText(text, pos);
+			this._project.addText(text, pos);
 		});
 		this.cleanUp();
 	}
 
 	private toggleWireConn(e: PIXI.InteractionEvent) {
 		this._actionPos = new PosHelper(e, this._view);
-		this.projectsSer.currProject.toggleWireConnection(this._actionPos.gridPosStart);
+		this._project.toggleWireConnection(this._actionPos.gridPosStart);
 		this.cleanUp();
 	}
 
@@ -461,7 +465,7 @@ export class ViewInteractionManager {
 		this._selectRect.height = pasteRectSizePixel.y;
 		this._selectRect.visible = true;
 		this._selectedElements = this.copySer.copiedElements.filter(el => {
-			if (this.projectsSer.currProject.type === 'project') {
+			if (this._project.type === 'project') {
 				return !this.elemProvSer.isPlugElement(el.typeId);
 			}
 			return true;
@@ -493,13 +497,13 @@ export class ViewInteractionManager {
 
 	private applyPaste() {
 		const elementsToAdd = this._selectedElements.filter(lg => {
-				if (this.projectsSer.currProject.type === 'project') {
+				if (this._project.type === 'project') {
 					return !this.elemProvSer.isPlugElement(lg.element.typeId);
 				}
 				return true;
 			}).map(lg => Elements.clone(lg.element));
 
-		if (this.projectsSer.currProject.addElements(
+		if (this._project.addElements(
 			elementsToAdd,
 			this._actionPos.getGridPosDiffFromStart(this._selectedElements[0].position))
 		) {
@@ -512,16 +516,16 @@ export class ViewInteractionManager {
 	private startEraser(e: PIXI.InteractionEvent) {
 		this._state = ViewIntManState.USING_ERASER;
 		this._actionPos = new PosHelper(e, this._view);
-		this.projectsSer.currProject.eraseElements(this._actionPos.previousGridPosFloat, this._actionPos.lastGridPosFloat);
+		this._project.eraseElements(this._actionPos.previousGridPosFloat, this._actionPos.lastGridPosFloat);
 	}
 
 	private eraseComponents(e: PIXI.InteractionEvent) {
 		this._actionPos.addDragPos(e, this._view);
-		this.projectsSer.currProject.eraseElements(this._actionPos.previousGridPosFloat, this._actionPos.lastGridPosFloat);
+		this._project.eraseElements(this._actionPos.previousGridPosFloat, this._actionPos.lastGridPosFloat);
 	}
 
 	private stopEraser() {
-		this.projectsSer.currProject.stopErase();
+		this._project.stopErase();
 		this.cleanUp();
 	}
 
@@ -531,7 +535,7 @@ export class ViewInteractionManager {
 
 	private cleanUp() {
 		if (this._state === ViewIntManState.WAIT_FOR_CUT_DRAG)
-			this.selectionSer.cancelCut(this.projectsSer.currProject);
+			this.selectionSer.cancelCut(this._project);
 		this._state = ViewIntManState.IDLE;
 		this.selectionSer.clearSelection();
 		for (const lGraphics of this._selectedElements || []) {

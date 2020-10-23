@@ -1,5 +1,4 @@
 import {ChangeDetectionStrategy, Component, EventEmitter, OnInit, Output} from '@angular/core';
-import {ThemingService} from '../../../services/theming/theming.service';
 import {EditorInteractionService} from '../../../services/editor-interaction/editor-interaction.service';
 
 @Component({
@@ -8,15 +7,12 @@ import {EditorInteractionService} from '../../../services/editor-interaction/edi
 	styleUrls: ['../top-bar-dropdowns.scss', './view-dropdown.component.scss'],
 	changeDetection: ChangeDetectionStrategy.OnPush
 })
-export class ViewDropdownComponent implements OnInit {
+export class ViewDropdownComponent {
 
 	@Output()
 	public requestClosed: EventEmitter<any> = new EventEmitter();
 
-	constructor(private editorInteractionService: EditorInteractionService, private theming: ThemingService) { }
-
-	ngOnInit() {
-	}
+	constructor(private editorInteractionService: EditorInteractionService) { }
 
 	public close() {
 		this.requestClosed.emit();
@@ -38,7 +34,7 @@ export class ViewDropdownComponent implements OnInit {
 	}
 
 	public fullscreen() {
-		this.theming.requestFullscreen();
+		this.editorInteractionService.fullscreen();
 		this.close();
 	}
 }

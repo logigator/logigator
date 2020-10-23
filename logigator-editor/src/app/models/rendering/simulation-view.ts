@@ -44,11 +44,6 @@ export class SimulationView extends View {
 		this.applyOpenActions();
 
 		getStaticDI(NgZone).runOutsideAngular(async () => {
-			getStaticDI(EditorInteractionService).onZoomChangeClick$.pipe(
-				filter(_ => this._project.type === 'project'),
-				takeUntil(this._destroySubject)
-			).subscribe((dir => this.onZoomClick(dir)));
-
 			const workerCommunicationService = getStaticDI(WorkerCommunicationService);
 
 			workerCommunicationService.subscribe(this.parentProjectIdentifier);
