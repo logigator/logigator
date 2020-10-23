@@ -7,11 +7,11 @@ import {
 	Matches,
 	MaxLength,
 	MinLength,
-	ValidateBy,
-	ValidateIf, ValidateNested
+	ValidateNested
 } from 'class-validator';
 import {Type} from 'class-transformer';
 import {Shortcut} from './shortcut';
+import {UniqueProperty} from '../../../../validators/unique-property.validator';
 
 export class UpdateUser {
 	@IsOptional()
@@ -42,5 +42,6 @@ export class UpdateUser {
 	@IsArray()
 	@ValidateNested({each: true})
 	@Type(() => Shortcut)
+	@UniqueProperty('name')
 	shortcuts: Shortcut[];
 }
