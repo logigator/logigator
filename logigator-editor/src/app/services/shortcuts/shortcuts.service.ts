@@ -121,7 +121,7 @@ export class ShortcutsService {
 				shift: val.shift,
 				ctrl: val.ctrl,
 				alt: val.alt
-			} as UserShortcut)
+			} as UserShortcut);
 		}
 		await this.apiService.patch<any>('/user', {
 			shortcuts: patchData

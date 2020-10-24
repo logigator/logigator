@@ -1,15 +1,12 @@
-import {Inject, Injectable} from '@angular/core';
+import {Injectable} from '@angular/core';
 import {WorkMode} from '../../models/work-modes';
-import {BehaviorSubject, Observable} from 'rxjs';
+import {BehaviorSubject, Observable, Subject} from 'rxjs';
 import {switchMap} from 'rxjs/operators';
 import {ProjectsService} from '../projects/projects.service';
 import {ElementProviderService} from '../element-provider/element-provider.service';
 import {ProjectSaveManagementService} from '../project-save-management/project-save-management.service';
-import {
-	WorkerCommunicationService,
-	WorkerCommunicationServiceModel
-} from '../simulation/worker-communication/worker-communication-service';
 import {TranslateService} from '@ngx-translate/core';
+import {SimulationManagementService} from '../simulation/simulation-management/simulation-management.service';
 
 @Injectable({
 	providedIn: 'root'
@@ -20,13 +17,15 @@ export class WorkModeService {
 
 	private _currentWorkModeSubject = new BehaviorSubject<WorkMode>(WorkMode.SELECT);
 
+	private _simulationModeSubject = new Subject<boolean>();
+
 	private _currentComponentTypeToBuild: number = undefined;
 
 	constructor(
 		private projects: ProjectsService,
 		private projectSaveManagement: ProjectSaveManagementService,
 		private elemProv: ElementProviderService,
-		@Inject(WorkerCommunicationService) private workerCommunicationService: WorkerCommunicationServiceModel,
+		private simulationManagement: SimulationManagementService,
 		private translate: TranslateService,
 	) {}
 
@@ -36,7 +35,12 @@ export class WorkModeService {
 		this._currentWorkModeSubject.next(workMode);
 	}
 
-	public enterSimulation() {
+	public async enterSimulation() {
+		await this.simulationManagement.enterSimulation();
+		delete this._currentComponentTypeToBuild;
+		this._currentWorkMode = WorkMode.SIMULATION;
+		this._currentWorkModeSubject.next(WorkMode.SIMULATION);
+		this._simulationModeSubject.next(true);
 			// if (!this.projectSaveManagement.isShare) {
 		// 	await this.projects.saveAllOrAllComps();
 		// } else {
@@ -51,7 +55,12 @@ export class WorkModeService {
 		// } catch (e) {}
 	}
 
-	public leaveSimulation() {
+	public async leaveSimulation() {
+		await this.simulationManagement.leaveSimulation();
+		delete this._currentComponentTypeToBuild;
+		this._currentWorkMode = WorkMode.SELECT;
+		this._currentWorkModeSubject.next(WorkMode.SELECT);
+		this._simulationModeSubject.next(false);
 		// this.renderTicker.stopAllContSim();
 		// this._currentWorkMode = 'select';
 		// this._workModeSubject.next('select');
@@ -65,6 +74,10 @@ export class WorkModeService {
 
 	public get currentWorkMode$(): Observable<WorkMode> {
 		return this._currentWorkModeSubject.asObservable();
+	}
+
+	public get isSimulationMode$(): Observable<boolean> {
+		return this._simulationModeSubject.asObservable();
 	}
 
 	public get workModeDescription$(): Observable<string> {

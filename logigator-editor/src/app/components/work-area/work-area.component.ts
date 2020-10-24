@@ -7,10 +7,6 @@ import {takeUntil} from 'rxjs/operators';
 import {WorkModeService} from '../../services/work-mode/work-mode.service';
 import {SimulationView} from '../../models/rendering/simulation-view';
 import {View} from '../../models/rendering/view';
-import {
-	WorkerCommunicationService,
-	WorkerCommunicationServiceModel
-} from '../../services/simulation/worker-communication/worker-communication-service';
 import {WorkMode} from '../../models/work-modes';
 import {EditorInteractionService} from '../../services/editor-interaction/editor-interaction.service';
 import {EditorAction} from '../../models/editor-action';
@@ -32,8 +28,7 @@ export class WorkAreaComponent extends WorkArea implements OnInit, OnDestroy {
 		private ngZone: NgZone,
 		private projectsService: ProjectsService,
 		private workMode: WorkModeService,
-		private editorInteraction: EditorInteractionService,
-		@Inject(WorkerCommunicationService) private workerCommunicationService: WorkerCommunicationServiceModel
+		private editorInteraction: EditorInteractionService
 	) {
 		super();
 	}
@@ -42,7 +37,7 @@ export class WorkAreaComponent extends WorkArea implements OnInit, OnDestroy {
 		this._allViews = new Map<number, EditorView>();
 
 		this.ngZone.runOutsideAngular(() => {
-			this.addTickerFunction(true);
+			this.addTickerFunction();
 			this.preventContextMenu(this._pixiCanvasContainer, this.renderer2);
 			this.initZoomPan(this._pixiCanvasContainer);
 			this.initPixi(this._pixiCanvasContainer, this.renderer2);
@@ -65,17 +60,12 @@ export class WorkAreaComponent extends WorkArea implements OnInit, OnDestroy {
 				takeUntil(this._destroySubject)
 			).subscribe(action => this.activeView.onZoom(action));
 
-			// this.editorActions.subscribe(EditorAction.ENTER_SIM).subscribe(() => this.onSimulationModeChanged(true));
-			// this.editorActions.subscribe(EditorAction.LEAVE_SIM).subscribe(() => this.onSimulationModeChanged(false));
+			this.workMode.isSimulationMode$.subscribe(isSim => this.onSimulationModeChanged(isSim));
 		});
 	}
 
 	getIdentifier(): string {
 		return '0';
-	}
-
-	public setWorkerFrameTime() {
-		this.workerCommunicationService.setFrameTime(this.ticker.frameTime);
 	}
 
 	public get allProjects(): Map<number, Project> {

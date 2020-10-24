@@ -38,7 +38,7 @@
 		<ng-container *ngIf="isSimulationMode">
 			<div class="divider"></div>
 
-			<button class="toolbar-button play" [class.active-button]="simulationRunning" (click)="continueSm()" appToolbarItemTooltip [tooltipText]="'TOOLBAR.TOOLTIP.SIM_CONT' | translate"></button>
+			<button class="toolbar-button play" [class.active-button]="simulationRunning" (click)="continueSim()" appToolbarItemTooltip [tooltipText]="'TOOLBAR.TOOLTIP.SIM_CONT' | translate"></button>
 			<button class="toolbar-button step" (click)="singleStepSim()" appToolbarItemTooltip [tooltipText]="'TOOLBAR.TOOLTIP.SIM_SINGLE' | translate"></button>
 			<button class="toolbar-button pause" (click)="pauseSim()" appToolbarItemTooltip [tooltipText]="'TOOLBAR.TOOLTIP.SIM_PAUSE' | translate"></button>
 			<button class="toolbar-button stop" (click)="stopSim()" appToolbarItemTooltip [tooltipText]="'TOOLBAR.TOOLTIP.SIM_STOP' | translate"></button>

@@ -9,7 +9,7 @@ import {getStaticDI} from '../get-di';
 import {LGraphicsResolver} from './graphics/l-graphics-resolver';
 import {Grid} from './grid';
 import {ElementProviderService} from '../../services/element-provider/element-provider.service';
-import {WorkerCommunicationService} from '../../services/simulation/worker-communication/worker-communication-service';
+import {WorkerCommunicationService} from '../../services/simulation/worker-communication/worker-communication-service-model';
 import {isResetable} from './graphics/l-graphics';
 import {ZoomPanData} from './zoom-pan';
 import {EditorInteractionService} from '../../services/editor-interaction/editor-interaction.service';

@@ -34,22 +34,21 @@ export class WorkAreaContainerComponent implements OnInit {
 		private renderer2: Renderer2,
 		private errorHandling: ErrorHandlingService,
 		private helpWindowService: HelpWindowService,
-		private editorActions: ShortcutsService
 	) { }
 
 	ngOnInit() {
-		// this.editorActions.subscribe(EditorAction.ENTER_SIM, EditorAction.ENTER_SIM).subscribe(event => {
-		// 	if (event.action === EditorAction.ENTER_SIM) {
-		// 		this.renderer2.setStyle(this.workAreaContainer.nativeElement, 'width', '100vw');
-		// 	} else {
-		// 		this.renderer2.removeStyle(this.workAreaContainer.nativeElement, 'width');
-		// 		this.windowWorkAreas.forEach(a => {
-		// 			a.identifier = null;
-		// 			a.showing = false;
-		// 		});
-		// 		this.cdr.detectChanges();
-		// 	}
-		// });
+		this.workMode.isSimulationMode$.subscribe(isSim => {
+			if (isSim) {
+				this.renderer2.setStyle(this.workAreaContainer.nativeElement, 'width', '100vw');
+			} else {
+				this.renderer2.removeStyle(this.workAreaContainer.nativeElement, 'width');
+				this.windowWorkAreas.forEach(a => {
+					a.identifier = null;
+					a.showing = false;
+				});
+				this.cdr.detectChanges();
+			}
+		});
 
 		this.errorHandling.setToastrContainer(this.toastContainer);
 		this.helpWindowService.setHelpWindowInsertionPoint(this.helpWindowInsertionPoint);

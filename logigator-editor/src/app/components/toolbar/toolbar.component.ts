@@ -4,17 +4,13 @@ import {ProjectsService} from '../../services/projects/projects.service';
 import {Test} from '../../../../tests/auto-tests/tests';
 // #!debug
 import {ManuallyLogged} from '../../../../tests/auto-tests/board-recorder';
-import {RenderTicker} from '../../services/render-ticker/render-ticker.service';
-import {
-	WorkerCommunicationService,
-	WorkerCommunicationServiceModel
-} from '../../services/simulation/worker-communication/worker-communication-service';
 import {StateCompilerService} from '../../services/simulation/state-compiler/state-compiler.service';
 import {WorkModeService} from '../../services/work-mode/work-mode.service';
 import {WorkMode} from '../../models/work-modes';
 import {EditorInteractionService} from '../../services/editor-interaction/editor-interaction.service';
 import {ShortcutAction} from '../../models/shortcut-action';
 import {ShortcutsService} from '../../services/shortcuts/shortcuts.service';
+import {SimulationManagementService} from '../../services/simulation/simulation-management/simulation-management.service';
 
 @Component({
 	selector: 'app-toolbar',
@@ -26,9 +22,6 @@ export class ToolbarComponent {
 	// #!debug
 	private test: Test;
 
-	public targetMode = false;
-	public syncMode = false;
-
 	public targetMultiplier = '1';
 	public targetTickRate = 1;
 
@@ -38,10 +31,9 @@ export class ToolbarComponent {
 		private workModeService: WorkModeService,
 		private projectService: ProjectsService,
 		private editorInteractionService: EditorInteractionService,
-		@Inject(WorkerCommunicationService) private workerCommunication: WorkerCommunicationServiceModel,
-		private renderTicker: RenderTicker,
 		private stateCompiler: StateCompilerService,
-		private shortcutService: ShortcutsService
+		private shortcutService: ShortcutsService,
+		private simulationManagement: SimulationManagementService
 	) {}
 
 	// #!if DEBUG === 'true'
@@ -97,7 +89,7 @@ export class ToolbarComponent {
 
 	public getShortcut(action: ShortcutAction): string {
 		const text = this.shortcutService.getShortcutTextForAction(action);
-		return text ? ` (${text})`: '';
+		return text ? ` (${text})` : '';
 	}
 
 	public enterSimulation() {
@@ -177,81 +169,54 @@ export class ToolbarComponent {
 	public openProject() {
 	}
 
-	public continueSm(override = false) {
-		if (!override && this.simulationRunning)
-			return;
-
-		if (this.targetMode) {
-			this.workerCommunication.startTarget();
-		} else if (this.syncMode) {
-			this.workerCommunication.startSync();
-		} else {
-			this.workerCommunication.start(this.threadCount);
-		}
-
-		this.renderTicker.startAllContSim();
+	public continueSim() {
+		this.simulationManagement.continueSim();
 	}
 
 	public pauseSim() {
-		this.renderTicker.stopAllContSim();
-		this.workerCommunication.pause();
+		this.simulationManagement.pauseSim();
 	}
 
 	public stopSim() {
-		this.renderTicker.stopAllContSim();
-		this.workerCommunication.stop();
+		this.simulationManagement.stopSim();
 	}
 
 	public singleStepSim() {
-		this.workerCommunication.singleStep();
+		this.simulationManagement.singleStepSim();
 	}
 
 	public toggleTargetMode() {
-		this.targetMode = !this.targetMode;
-		if (this.targetMode) {
-			this.setTarget();
-			this.syncMode = false;
-		}
-
-		if (this.simulationRunning)
-			this.continueSm(true);
+		this.simulationManagement.toggleTargetMode();
 	}
 
 	public toggleSyncMode() {
-		this.syncMode = !this.syncMode;
-		if (this.syncMode)
-			this.targetMode = false;
-
-		if (this.simulationRunning)
-			this.continueSm(true);
+		this.simulationManagement.toggleSyncMode();
 	}
 
 	public setTarget() {
 		const target = this.targetTickRate * Number(this.targetMultiplier);
 		if (target < 0) this.targetTickRate = 0;
-		this.workerCommunication.setTarget(target);
-	}
-
-	public get simulationStatus() {
-		return this.workerCommunication.status;
-	}
-
-	public get simulationRunning() {
-		return this.workerCommunication.isRunning;
+		this.simulationManagement.setTarget(target);
 	}
 
 	public setThreadCount() {
-		if (!this.threadCount)
-			return;
-
-		if (this.threadCount < 1)
-			this.threadCount = 1;
-		if (this.threadCount > 512)
-			this.threadCount = 512;
-
-		if (this.simulationRunning) {
-			this.workerCommunication.pause();
-			this.continueSm();
-		}
+		this.simulationManagement.setThreadCount(this.threadCount);
 	}
+
+	public get simulationStatus() {
+		return this.simulationManagement.simulationStatus;
+	}
+
+	public get simulationRunning() {
+		return this.simulationManagement.simulationRunning;
+	}
+
+	get targetMode(): boolean {
+		return this.simulationManagement.targetMode;
+	}
+
+	get syncMode(): boolean {
+		return this.simulationManagement.syncMode;
+	}
+
 }

@@ -41,7 +41,7 @@ import { ToolbarItemTooltipComponent } from './components/toolbar-item-tooltip/t
 import { TextComponent } from './components/popup-contents/text/text.component';
 import { StatusBarComponent } from './components/status-bar/status-bar.component';
 import { RomEditComponent } from './components/popup-contents/rom-edit/rom-edit.component';
-import {WorkerCommunicationService} from './services/simulation/worker-communication/worker-communication-service';
+import {WorkerCommunicationService} from './services/simulation/worker-communication/worker-communication-service-model';
 // #!web
 import {WorkerCommunicationWasmService} from './services/simulation/worker-communication/worker-communication-wasm.service';
 // #!electron

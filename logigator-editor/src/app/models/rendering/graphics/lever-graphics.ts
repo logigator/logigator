@@ -6,7 +6,7 @@ import {getStaticDI} from '../../get-di';
 import {ThemingService} from '../../../services/theming/theming.service';
 import {environment} from '../../../../environments/environment';
 import {RenderTicker} from '../../../services/render-ticker/render-ticker.service';
-import {WorkerCommunicationService} from '../../../services/simulation/worker-communication/worker-communication-service';
+import {WorkerCommunicationService} from '../../../services/simulation/worker-communication/worker-communication-service-model';
 
 export class LeverGraphics extends PIXI.Graphics implements LGraphics, ComponentResetable {
 

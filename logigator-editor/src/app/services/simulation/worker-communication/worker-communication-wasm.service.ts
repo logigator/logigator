@@ -13,7 +13,7 @@ import {ElementProviderService} from '../../element-provider/element-provider.se
 import {AverageBuffer} from '../../../models/average-buffer';
 import {ElementTypeId} from '../../../models/element-types/element-type-ids';
 import {EastereggService} from '../../easteregg/easteregg.service';
-import {WorkerCommunicationServiceModel} from './worker-communication-service';
+import {WorkerCommunicationServiceModel} from './worker-communication-service-model';
 
 @Injectable()
 export class WorkerCommunicationWasmService implements WorkerCommunicationServiceModel {

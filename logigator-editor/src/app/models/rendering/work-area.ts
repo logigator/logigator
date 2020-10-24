@@ -9,7 +9,6 @@ import {EditorView} from './editor-view';
 import {ReqInspectElementEvent} from './req-inspect-element-event';
 import {getStaticDI} from '../get-di';
 import {RenderTicker} from '../../services/render-ticker/render-ticker.service';
-import {WorkAreaComponent} from '../../components/work-area/work-area.component';
 import {EditorAction} from '../editor-action';
 
 @Directive()
@@ -58,12 +57,11 @@ export abstract class WorkArea {
 		});
 	}
 
-	protected addTickerFunction(setFrameTime = false) {
+	protected addTickerFunction() {
 		this.ticker.addTickerFunction(this.getIdentifier(), () => {
 			if (!this._activeView) return;
 			this.updateZoomPan();
 			this._pixiRenderer.render(this._activeView);
-			if (setFrameTime) (this as unknown as WorkAreaComponent).setWorkerFrameTime();
 		});
 	}
 
