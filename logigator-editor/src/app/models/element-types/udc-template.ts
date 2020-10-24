@@ -17,7 +17,7 @@ export const udcTemplate: Partial<ElementType> = {
 	},
 
 	edit: (typeId: number, id: number, projectsSer: ProjectsService) => {
-		projectsSer.openComponent(typeId);
+		// projectsSer.openComponent(typeId);
 	},
 	canEditType: true,
 

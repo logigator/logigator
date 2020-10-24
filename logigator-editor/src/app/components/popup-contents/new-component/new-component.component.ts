@@ -17,7 +17,7 @@ export class NewComponentComponent extends PopupContentComp implements OnInit {
 
 	constructor(
 		private formBuilder: FormBuilder,
-		private projects: ProjectsService,
+		// private projects: ProjectsService,
 		private saveManagement: ProjectSaveManagementService,
 		private eastereggs: EastereggService) {
 		super();
@@ -32,18 +32,18 @@ export class NewComponentComponent extends PopupContentComp implements OnInit {
 	}
 
 	public async fromSubmitClick() {
-		if (this.newCompForm.invalid) return;
-		const id = await this.saveManagement.addCustomComponent(
-			this.newCompForm.controls.compName.value,
-			this.newCompForm.controls.compSymbol.value,
-			this.newCompForm.controls.compDescription.value
-		);
-		this.requestClose.emit();
-		this.projects.openComponent(id);
-		const name = this.newCompForm.controls.compName.value.toLowerCase().replace(' ', '');
-		if (name === 'asdf' || name === 'test') {
-			this.eastereggs.achieve('LAZ');
-		}
+		// if (this.newCompForm.invalid) return;
+		// const id = await this.saveManagement.addCustomComponent(
+		// 	this.newCompForm.controls.compName.value,
+		// 	this.newCompForm.controls.compSymbol.value,
+		// 	this.newCompForm.controls.compDescription.value
+		// );
+		// this.requestClose.emit();
+		// // this.projects.openComponent(id);
+		// const name = this.newCompForm.controls.compName.value.toLowerCase().replace(' ', '');
+		// if (name === 'asdf' || name === 'test') {
+		// 	this.eastereggs.achieve('LAZ');
+		// }
 	}
 
 }

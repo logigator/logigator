@@ -19,15 +19,15 @@ export class OpenProjectComponent extends PopupContentComp implements OnInit {
 	public allProjectsInfo: Observable<ProjectInfoResponse[]>;
 
 	constructor(
-		private projects: ProjectsService,
+		// private projects: ProjectsService,
 		private user: UserService,
-		private projectSave: ProjectSaveManagementService
+		// private projectSave: ProjectSaveManagementService
 	) {
 		super();
 	}
 
 	ngOnInit() {
-		this.allProjectsInfo = this.projectSave.getAllProjectsInfoFromServer();
+		// this.allProjectsInfo = this.projectSave.getAllProjectsInfoFromServer();
 	}
 
 	public get isLoggedIn(): boolean {
@@ -35,7 +35,7 @@ export class OpenProjectComponent extends PopupContentComp implements OnInit {
 	}
 
 	public openServer(project: ProjectInfoResponse) {
-		this.projects.openProjectServer(Number(project.pk_id));
+		// this.projects.openProjectServer(Number(project.pk_id));
 		this.requestClose.emit();
 	}
 
@@ -44,7 +44,7 @@ export class OpenProjectComponent extends PopupContentComp implements OnInit {
 		const reader = new FileReader();
 		reader.readAsText(this.fileToOpen, 'UTF-8');
 		reader.onload = (event: any) => {
-			this.projects.openFile(event.target.result);
+			// this.projects.openFile(event.target.result);
 			this.requestClose.emit();
 		};
 	}
@@ -56,7 +56,7 @@ export class OpenProjectComponent extends PopupContentComp implements OnInit {
 		} else {
 			address = this.shareLinkId;
 		}
-		this.projects.openProjectShare(address);
+		// this.projects.openProjectShare(address);
 		this.requestClose.emit();
 	}
 

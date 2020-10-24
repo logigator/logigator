@@ -38,11 +38,13 @@ export class FileDropdownComponent implements OnInit {
 	}
 
 	public get canClone(): boolean {
-		return this.projectSaveService.isShare && this.user.isLoggedIn;
+		return true;
+		// return this.projectSaveService.isShare && this.user.isLoggedIn;
 	}
 
 	public get canSave(): boolean {
-		return this.user.isLoggedIn && !this.projectSaveService.isShare;
+		return;
+		// return this.user.isLoggedIn && !this.projectSaveService.isShare;
 	}
 
 	public newProject() {
@@ -76,11 +78,12 @@ export class FileDropdownComponent implements OnInit {
 	}
 
 	public get canShare(): boolean {
-		return this.projectSaveService.isFromServer;
+		return true;
+		// return this.projectSaveService.isFromServer;
 	}
 
 	public cloneProject() {
-		this.projects.cloneShare();
+		// this.projects.cloneShare();
 		this.close();
 	}
 

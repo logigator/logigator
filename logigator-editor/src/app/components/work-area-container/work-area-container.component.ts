@@ -60,7 +60,8 @@ export class WorkAreaContainerComponent implements OnInit {
 
 		const meta: WindowWorkAreaMeta = {
 			showing: true,
-			project: await this.projectSaveManagement.openComponent(event.typeId),
+			// project: await this.projectSaveManagement.openComponent(event.typeId),
+			project: null,
 			identifier: event.identifier,
 			parentNames: event.parentNames,
 			parentTypesIds: event.parentTypeIds,

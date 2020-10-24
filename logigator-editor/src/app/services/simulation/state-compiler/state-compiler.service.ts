@@ -139,9 +139,9 @@ export class StateCompilerService {
 	}
 
 	private async projectsToCompile(project: Project): Promise<Map<number, Project>> {
-		const out = await this.projectSaveManagement.buildDependencyTree(project);
-		out.set(project.id, project);
-		return out;
+		// const out = await this.projectSaveManagement.buildDependencyTree(project);
+		// out.set(project.id, project);
+		return Promise.resolve(new Map<number, Project>());
 	}
 
 	/**

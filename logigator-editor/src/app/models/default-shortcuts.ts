@@ -13,7 +13,7 @@ export const defaultShortcuts: Shortcut[] = [
 		action: 'paste',
 		usableIn: 'editor',
 		shortcutConfig: {
-			key_code: 'P',
+			key_code: 'V',
 			ctrl: true
 		}
 	},

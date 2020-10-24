@@ -61,10 +61,10 @@ export class TopBarComponent implements OnInit {
 	}
 
 	public async close() {
-		const canClose = await this.projectService.askToSave();
-		if (canClose) {
-			this.electronService.ipcRenderer.invoke('windowClose');
-		}
+		// const canClose = await this.projectService.askToSave();
+		// if (canClose) {
+		// 	this.electronService.ipcRenderer.invoke('windowClose');
+		// }
 	}
 	// #!endif
 

@@ -1,4 +1,4 @@
-import {Component, ElementRef, Inject, NgZone, OnDestroy, OnInit, Renderer2, ViewChild} from '@angular/core';
+import {Component, ElementRef, NgZone, OnDestroy, OnInit, Renderer2, ViewChild} from '@angular/core';
 import {EditorView} from '../../models/rendering/editor-view';
 import {ProjectsService} from '../../services/projects/projects.service';
 import {Project} from '../../models/project';
@@ -10,6 +10,7 @@ import {View} from '../../models/rendering/view';
 import {WorkMode} from '../../models/work-modes';
 import {EditorInteractionService} from '../../services/editor-interaction/editor-interaction.service';
 import {EditorAction} from '../../models/editor-action';
+import {ElementProviderService} from '../../services/element-provider/element-provider.service';
 
 @Component({
 	selector: 'app-work-area',
@@ -28,7 +29,8 @@ export class WorkAreaComponent extends WorkArea implements OnInit, OnDestroy {
 		private ngZone: NgZone,
 		private projectsService: ProjectsService,
 		private workMode: WorkModeService,
-		private editorInteraction: EditorInteractionService
+		private editorInteraction: EditorInteractionService,
+		private elementProvider: ElementProviderService
 	) {
 		super();
 	}
@@ -44,13 +46,10 @@ export class WorkAreaComponent extends WorkArea implements OnInit, OnDestroy {
 
 			this.projectsService.onProjectOpened$.pipe(
 				takeUntil(this._destroySubject)
-			).subscribe(projectId => {
-				this.openProject(projectId);
-				this.ticker.singleFrame('0');
-			});
+			).subscribe(projectId => this.onProjectOpen(projectId));
 			this.projectsService.onProjectClosed$.pipe(
 				takeUntil(this._destroySubject)
-			).subscribe(id => this.closeView(id));
+			).subscribe(id => this.onProjectClose(id));
 
 			this.projectsService.onProjectSwitch$.pipe(
 				takeUntil(this._destroySubject)
@@ -68,7 +67,7 @@ export class WorkAreaComponent extends WorkArea implements OnInit, OnDestroy {
 		return '0';
 	}
 
-	public get allProjects(): Map<number, Project> {
+	public get allProjects(): Project[] {
 		return this.projectsService.allProjects;
 	}
 
@@ -99,21 +98,21 @@ export class WorkAreaComponent extends WorkArea implements OnInit, OnDestroy {
 			});
 		} else {
 			if (!this._activeView) return;
-			const editorView = this._allViews.get(this._activeView.projectId);
+			const editorView = this._allViews.get(this._activeView.project.id);
 			editorView.zoomPan.setZoomPanData(this._activeView.zoomPan.zoomPanData);
 			editorView.updateChunks();
 			this._activeView.destroy();
 			delete this._activeView;
 			// @ts-ignore
 			this._pixiRenderer._lastObjectRendered = null;
-			this.switchToProject(this.projectsService.allProjects.values().next().value.id);
+			this.switchToProject(this.allProjects[0].id);
 		}
 		if (this._pixiRenderer) {
 			this._pixiRenderer.resize(this._pixiCanvasContainer.nativeElement.offsetWidth, this._pixiCanvasContainer.nativeElement.offsetHeight);
 		}
 	}
 
-	private openProject(projectId: number) {
+	private onProjectOpen(projectId: number) {
 		const newView = new EditorView(
 			this.projectsService.getProjectById(projectId),
 			this._pixiCanvasContainer.nativeElement,
@@ -124,6 +123,7 @@ export class WorkAreaComponent extends WorkArea implements OnInit, OnDestroy {
 			this._activeView = newView;
 			this.projectsService.switchToProject(projectId);
 		});
+		this.ticker.singleFrame('0');
 	}
 
 	public switchToProject(toSwitchToId: number) {
@@ -133,8 +133,8 @@ export class WorkAreaComponent extends WorkArea implements OnInit, OnDestroy {
 
 	private onProjectSwitch(id: number) {
 		this._activeView = this._allViews.get(id);
-		if (((this.activeView as EditorView).projectType === 'project' && this.workMode.isCompToBuildPlug) ||
-			this.activeView.projectId === this.workMode.currentComponentToBuild
+		if ((this.activeView.project.type === 'project' && this.elementProvider.isPlugElement(this.workMode.currentComponentToBuild)) ||
+			this.activeView.project.id === this.workMode.currentComponentToBuild
 		) {
 			this.workMode.setWorkMode(WorkMode.SELECT);
 		}
@@ -144,21 +144,16 @@ export class WorkAreaComponent extends WorkArea implements OnInit, OnDestroy {
 	public tabCloseClicked(id: number, event: MouseEvent) {
 		event.stopPropagation();
 		if (this._allViews.size <= 1) return;
-		this.projectsService.closeTab(id);
+		this.projectsService.closeProject(id);
 	}
 
-	public closeView(id: number) {
+	public onProjectClose(id: number) {
 		const toClose = this._allViews.get(id);
 		this._allViews.delete(id);
 		if (toClose === this._activeView) {
-			const toSwitchTo = this._allViews.values().next().value;
-			if (toSwitchTo) {
-				this.switchToProject(toSwitchTo.projectId);
-			} else {
-				delete this._activeView;
-			}
+			this.switchToProject(this.allProjects[0].id);
 		}
-		if (toClose) toClose.destroy();
+		toClose.destroy();
 		// @ts-ignore
 		this._pixiRenderer._lastObjectRendered = null;
 	}

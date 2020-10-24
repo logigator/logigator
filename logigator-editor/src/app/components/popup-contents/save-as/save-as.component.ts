@@ -35,14 +35,14 @@ export class SaveAsComponent extends PopupContentComp<Project> implements OnInit
 	}
 
 	public async saveToServer() {
-		const newProject = this.projectSaveManagement.saveAsNewProjectServer(
-			this.inputFromOpener, this.saveForm.controls.name.value, this.saveForm.controls.description.value
-		);
-		this.requestClose.emit(newProject);
+		// const newProject = this.projectSaveManagement.saveAsNewProjectServer(
+		// 	this.inputFromOpener, this.saveForm.controls.name.value, this.saveForm.controls.description.value
+		// );
+		// this.requestClose.emit(newProject);
 	}
 
 	public exportProject() {
-		this.projectSaveManagement.exportToFile(this.inputFromOpener, this.saveForm.controls.name.value);
+		// this.projectSaveManagement.exportToFile(this.inputFromOpener, this.saveForm.controls.name.value);
 	}
 
 }

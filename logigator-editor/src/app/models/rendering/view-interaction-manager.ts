@@ -82,7 +82,7 @@ export class ViewInteractionManager {
 
 		this.editorInteractionSer.subscribeEditorAction(EditorAction.PASTE).pipe(
 			takeUntil(this._destroySubject),
-			filter(_ => this._view.projectId === this.projectsSer.currProject.id)
+			filter(_ => this._view.project.id === this.projectsSer.currProject.id)
 		).subscribe(() => this.startPaste());
 	}
 
@@ -392,7 +392,7 @@ export class ViewInteractionManager {
 		this._actionPos.addDragPos(e, this._view);
 		this._project.addElement(this.workModeSer.currentComponentToBuild, this._actionPos.lastGridPosDrag);
 		if (this.elemProvSer.isPlugElement(this.workModeSer.currentComponentToBuild)) {
-			this.projectsSer.inputsOutputsCustomComponentChanged(this._project.id);
+			this.projectsSer.inputsOutputsCustomComponentChanged(this._project);
 		}
 		this.cleanUp();
 	}

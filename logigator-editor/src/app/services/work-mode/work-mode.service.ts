@@ -98,8 +98,4 @@ export class WorkModeService {
 	public get currentComponentToBuild(): number {
 		return this._currentComponentTypeToBuild;
 	}
-
-	public get isCompToBuildPlug(): boolean {
-		return this.elemProv.isPlugElement(this.currentComponentToBuild);
-	}
 }
