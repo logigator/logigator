@@ -162,5 +162,21 @@ export const defaultShortcuts: Shortcut[] = [
 		shortcutConfig: {
 			key_code: 'ESCAPE'
 		}
+	},
+	{
+		action: 'startSim',
+		usableIn: 'simulation',
+	},
+	{
+		action: 'pauseSim',
+		usableIn: 'simulation'
+	},
+	{
+		action: 'stopSim',
+		usableIn: 'simulation'
+	},
+	{
+		action: 'singleStepSim',
+		usableIn: 'simulation'
 	}
 ];

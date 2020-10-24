@@ -8,6 +8,8 @@ import {WorkModeService} from '../work-mode/work-mode.service';
 import {UserService} from '../user/user.service';
 import {ApiService} from '../api/api.service';
 import {UserShortcut} from '../../models/http/response/user';
+import {EditorInteractionService} from '../editor-interaction/editor-interaction.service';
+import {SimulationManagementService} from '../simulation/simulation-management/simulation-management.service';
 
 @Injectable({
 	providedIn: 'root'
@@ -21,6 +23,8 @@ export class ShortcutsService {
 
 	constructor(
 		private workMode: WorkModeService,
+		private editorInteraction: EditorInteractionService,
+		private simulationManagement: SimulationManagementService,
 		private userService: UserService,
 		private apiService: ApiService
 	) {
@@ -141,6 +145,82 @@ export class ShortcutsService {
 	}
 
 	private applyShortcutAction(action: ShortcutAction) {
+		switch (action) {
+			case 'copy':
+				this.editorInteraction.copy();
+				break;
+			case 'paste':
+				this.editorInteraction.paste();
+				break;
+			case 'cut':
+				this.editorInteraction.cut();
+				break;
+			case 'delete':
+				this.editorInteraction.delete();
+				break;
+			case 'undo':
+				this.editorInteraction.undo();
+				break;
+			case 'redo':
+				this.editorInteraction.redo();
+				break;
+			case 'zoomIn':
+				this.editorInteraction.zoomIn();
+				break;
+			case 'zoomOut':
+				this.editorInteraction.zoomOut();
+				break;
+			case 'zoom100':
+				this.editorInteraction.zoom100();
+				break;
+			case 'fullscreen':
+				this.editorInteraction.fullscreen();
+				break;
+			case 'wireMode':
+				this.workMode.setWorkMode(WorkMode.WIRE);
+				break;
+			case 'connWireMode':
+				this.workMode.setWorkMode(WorkMode.CONN_WIRE);
+				break;
+			case 'selectMode':
+				this.workMode.setWorkMode(WorkMode.SELECT);
+				break;
+			case 'cutSelectMode':
+				this.workMode.setWorkMode(WorkMode.CUT_SELECT);
+				break;
+			case 'eraserMode':
+				this.workMode.setWorkMode(WorkMode.ERASER);
+				break;
+			case 'textMode':
+				this.workMode.setWorkMode(WorkMode.TEXT);
+				break;
+			case 'newComp':
+				break;
+			case 'newProj':
+				break;
+			case 'openProj':
+				break;
+			case 'save':
+				break;
+			case 'enterSim':
+				this.workMode.enterSimulation();
+				break;
+			case 'leaveSim':
+				this.workMode.leaveSimulation();
+				break;
+			case 'startSim':
+				this.simulationManagement.continueSim();
+				break;
+			case 'pauseSim':
+				this.simulationManagement.pauseSim();
+				break;
+			case 'stopSim':
+				this.simulationManagement.stopSim();
+				break;
+			case 'singleStepSim':
+				this.simulationManagement.singleStepSim();
+				break;
+		}
 	}
 
 }

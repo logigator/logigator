@@ -20,4 +20,8 @@ export type ShortcutAction =
 	'openProj' |
 	'save' |
 	'enterSim' |
-	'leaveSim';
+	'leaveSim' |
+	'startSim' |
+	'pauseSim' |
+	'stopSim' |
+	'singleStepSim';
