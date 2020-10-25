@@ -16,7 +16,7 @@ import {ProjectsService} from '../../services/projects/projects.service';
 export class ConstructionBoxCategoryComponent {
 
 	@Input()
-	public components: Map<number, ElementType>;
+	public components: ElementType[];
 
 	@Input()
 	public categoryName: string;
@@ -58,7 +58,7 @@ export class ConstructionBoxCategoryComponent {
 	}
 
 	public openComponent(id: number) {
-		if (!this.elemProv.isUserElement(id)) return;
+		if (!(this.elemProv.isUserElement(id) || this.elemProv.isShareElement(id) || this.elemProv.isLocalElement(id))) return;
 		// this.projects.openComponent(id);
 	}
 

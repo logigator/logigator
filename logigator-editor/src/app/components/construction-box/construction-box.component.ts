@@ -24,23 +24,23 @@ export class ConstructionBoxComponent {
 		return this.projects.currProject.type === 'comp';
 	}
 
-	public get basicComponents(): Map<number, ElementType> {
+	public get basicComponents(): ElementType[] {
 		return this.componentProviderService.basicElements;
 	}
 
-	public get advancedComponents(): Map<number, ElementType> {
+	public get advancedComponents(): ElementType[] {
 		return this.componentProviderService.advancedElements;
 	}
 
-	public get plugComponents(): Map<number, ElementType> {
+	public get plugComponents(): ElementType[] {
 		return this.componentProviderService.plugElements;
 	}
 
-	public get ioComponents(): Map<number, ElementType> {
+	public get ioComponents(): ElementType[] {
 		return this.componentProviderService.ioElements;
 	}
 
-	public get userDefinedComponents(): Map<number, ElementType> {
+	public get userDefinedComponents(): ElementType[] {
 		return this.componentProviderService.userDefinedElements;
 	}
 

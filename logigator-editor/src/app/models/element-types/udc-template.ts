@@ -2,8 +2,6 @@ import {ElementType} from './element-type';
 import {ProjectsService} from '../../services/projects/projects.service';
 
 export const udcTemplate: Partial<ElementType> = {
-	category: 'user',
-
 	showSettings: true,
 	showSettingsForType: true,
 	showInConstructionBox: true,

@@ -1,15 +1,8 @@
-import {Injectable, NgZone} from '@angular/core';
+import {Injectable} from '@angular/core';
 import {Observable, Subject} from 'rxjs';
 import {ProjectsService} from '../projects/projects.service';
 import {SelectionService} from '../selection/selection.service';
 import {CopyService} from '../copy/copy.service';
-import {WorkModeService} from '../work-mode/work-mode.service';
-import {OpenProjectComponent} from '../../components/popup-contents/open/open-project.component';
-import {NewComponentComponent} from '../../components/popup-contents/new-component/new-component.component';
-import {ProjectSaveManagementService} from '../project-save-management/project-save-management.service';
-import {ShareProjectComponent} from '../../components/popup-contents/share-project/share-project.component';
-import {ErrorHandlingService} from '../error-handling/error-handling.service';
-import {PopupService} from '../popup/popup.service';
 import {EditorAction} from '../../models/editor-action';
 import {filter} from 'rxjs/operators';
 

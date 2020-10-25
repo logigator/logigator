@@ -7,7 +7,7 @@ export interface ElementType {
 	// translation id for predefined comps
 	name: string;
 
-	category: 'basic' | 'advanced' | 'plug' | 'io' | 'user';
+	category: 'basic' | 'advanced' | 'plug' | 'io' | 'user' | 'local' | 'share';
 
 	symbol: string;
 	symbolImage?: string;

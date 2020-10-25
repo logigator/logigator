@@ -25,13 +25,14 @@ import {SharingService} from '../sharing/sharing.service';
 import {Elements} from '../../models/elements';
 import {OpenShareResp} from '../../models/http-responses/open-share-resp';
 import {ElementTypeId} from '../../models/element-types/element-type-ids';
+import {ApiService} from '../api/api.service';
 
 @Injectable({
 	providedIn: 'root'
 })
 export class ProjectSaveManagementService {
 
-	constructor() {}
+	constructor(private api: ApiService, private elementProvider: ElementProviderService) {}
 
 	public getProjectUuid(uuid: string): Promise<Project> {
 		return Promise.resolve(Project.empty('Test'));
