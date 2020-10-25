@@ -302,7 +302,7 @@ export class Project {
 		}
 		if (!this._currState.allSpacesFree(elements, dif, new Set<Element>(elements)))
 			return false;
-		const changed = this._currState.withoutToEmptyChunk(this._currState.withWiresOnEdges(elements), dif);
+		const changed = this._currState.withWiresOnEdges(elements);
 
 		// #!debug
 		this.boardRecorder.call('moveElementsById', arguments, -1, 0);

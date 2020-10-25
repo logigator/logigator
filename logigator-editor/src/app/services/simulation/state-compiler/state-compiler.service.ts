@@ -245,7 +245,7 @@ export class StateCompilerService {
 		this.initElemsOnLinksCache(this._currTypeId);
 		for (const element of unitElems.unitToElement.values()) {
 			let wireEndIndex = -1;
-			for (const wireEndPos of Elements.wireEnds(element)) {
+			for (const wireEndPos of Elements.wireEnds(element, undefined, undefined, undefined, true)) {
 				wireEndIndex++;
 				if (SimulationUnits.wireIdHasLink(linksOnWireEnds, element, wireEndIndex)) {
 					continue;
@@ -313,7 +313,7 @@ export class StateCompilerService {
 	) {
 		const oppoComps = compiledComp.tunnels.get(elem.options[0]);
 		for (const oppoComp of oppoComps) {
-			this.setLinks(state, Elements.wireEnds(oppoComp)[0], linksOnWireEnds, linkId,
+			this.setLinks(state, Elements.wireEnds(oppoComp, undefined, undefined, undefined, true)[0], linksOnWireEnds, linkId,
 				unitElems, compiledComp, coveredPoints);
 		}
 		MapHelper.pushInMapArray(this._wireEndsOnLinksCache.get(this._currTypeId), linkId, {component: elem, wireIndex: 0});
@@ -361,7 +361,7 @@ export class StateCompilerService {
 				for (const wireEndIndex of conPlugs) {
 					if (wireEndIndex === index)
 						continue;
-					this.setLinks(state, Elements.wireEnds(elem)[wireEndIndex], linksOnWireEnds,
+					this.setLinks(state, Elements.wireEnds(elem, undefined, undefined, undefined, true)[wireEndIndex], linksOnWireEnds,
 						linkId, unitElems, compiledComp, coveredPoints);
 				}
 			}
