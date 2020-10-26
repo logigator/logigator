@@ -27,5 +27,17 @@
 			[components]="userDefinedComponents"
 			[searchText]="searchText"
 		></app-construction-box-category>
+		<app-construction-box-category
+			categoryName="CONST_BOX.CATEGORIES.LOCAL"
+			[components]="localComponents"
+			[searchText]="searchText"
+			*ngIf="localComponents.length > 0"
+		></app-construction-box-category>
+		<app-construction-box-category
+			categoryName="CONST_BOX.CATEGORIES.SHARE"
+			[components]="sharedComponents"
+			[searchText]="searchText"
+			*ngIf="sharedComponents.length > 0"
+		></app-construction-box-category>
 	</div>
 </div>

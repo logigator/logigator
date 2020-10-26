@@ -1,8 +1,8 @@
 import {Component} from '@angular/core';
 import {ElementProviderService} from '../../services/element-provider/element-provider.service';
 import {ElementType} from '../../models/element-types/element-type';
-import {ProjectsService} from '../../services/projects/projects.service';
 import {ShortcutsService} from '../../services/shortcuts/shortcuts.service';
+import {ProjectsService} from '../../services/projects/projects.service';
 
 @Component({
 	selector: 'app-construction-box',
@@ -42,6 +42,14 @@ export class ConstructionBoxComponent {
 
 	public get userDefinedComponents(): ElementType[] {
 		return this.componentProviderService.userDefinedElements;
+	}
+
+	public get localComponents(): ElementType[] {
+		return this.componentProviderService.localElements;
+	}
+
+	public get sharedComponents(): ElementType[] {
+		return this.componentProviderService.shareElements;
 	}
 
 	public focusSearch() {
