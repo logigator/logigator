@@ -1,9 +1,11 @@
-import {ChangeDetectionStrategy, Component, EventEmitter, OnInit, Output} from '@angular/core';
+import {ChangeDetectionStrategy, Component, EventEmitter, OnInit, Optional, Output} from '@angular/core';
 import {ProjectSaveManagementService} from '../../../services/project-save-management/project-save-management.service';
 import {UserService} from '../../../services/user/user.service';
 import {ProjectsService} from '../../../services/projects/projects.service';
 import {ImageExportService} from '../../../services/image-export/image-export.service';
 import {EditorInteractionService} from '../../../services/editor-interaction/editor-interaction.service';
+import {saveLocalFile, saveLocalFileBlob} from '../../../models/save-local-file';
+import {ElectronService} from 'ngx-electron';
 
 @Component({
 	selector: 'app-file-dropdown',
@@ -21,7 +23,8 @@ export class FileDropdownComponent implements OnInit {
 		private editorInteractionService: EditorInteractionService,
 		private user: UserService,
 		private projects: ProjectsService,
-		private imageExportService: ImageExportService
+		private imageExportService: ImageExportService,
+		@Optional() private electronService: ElectronService
 	) { }
 
 	ngOnInit() {
@@ -84,8 +87,12 @@ export class FileDropdownComponent implements OnInit {
 		this.close();
 	}
 
-	public screenshot(type: 'jpeg' | 'png' | 'svg') {
-		this.imageExportService.exportImage(type);
-		this.close();
+	public async screenshot(type: 'jpeg' | 'png' | 'svg') {
+		if (type === 'svg') {
+			saveLocalFile(this.imageExportService.generateSVG(), 'svg', this.projects.currProject.name, 'Save Image As', this.electronService);
+		} else {
+			saveLocalFileBlob(await this.imageExportService.generateImage(type), type, this.projects.currProject.name, 'Save Image As', this.electronService);
+			this.close();
+		}
 	}
 }

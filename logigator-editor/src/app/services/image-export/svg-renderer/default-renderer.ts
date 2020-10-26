@@ -1,34 +1,36 @@
-import {Element} from '../../models/element';
-import {ElementType} from '../../models/element-types/element-type';
-import {getStaticDI} from '../../models/get-di';
-import {ElementProviderService} from '../element-provider/element-provider.service';
-import {environment} from '../../../environments/environment';
-import {Grid} from '../../models/rendering/grid';
-import {ElementTypeId} from '../../models/element-types/element-type-ids';
-import * as PIXI from 'pixi.js';
-import {Elements} from '../../models/elements';
+import * as PIXI from "pixi.js";
+import {getStaticDI} from '../../../models/get-di';
+import {ElementProviderService} from '../../element-provider/element-provider.service';
+import {Element} from '../../../models/element';
+import {Elements} from '../../../models/elements';
+import {ElementTypeId} from '../../../models/element-types/element-type-ids';
+import {RenderQuality} from '../svg-image-exporter';
+import {ElementType} from '../../../models/element-types/element-type';
 
-export class SvgCompRenderer {
-
-	private readonly SVG_NS = 'http://www.w3.org/2000/svg';
-
-	private readonly _elementType: ElementType;
-
-	private readonly _size: PIXI.Point;
-
-	private readonly _labels: string[];
-
-	private readonly _group: SVGGElement;
+export class DefaultRenderer {
 
 	private readonly elementProvider = getStaticDI(ElementProviderService);
+	protected readonly SVG_NS = 'http://www.w3.org/2000/svg';
 
-	constructor(private element: Element, private offset: PIXI.Point) {
+	private _elementType: ElementType;
+	private _size: PIXI.Point;
+	private _labels: string[];
+	private _group: SVGGElement;
+	private element: Element;
+	private _gridSize: number;
+
+	render(element: Element, gridSize: number, quality: RenderQuality): SVGGElement {
+		this.element = element;
+		this._gridSize = gridSize;
+
 		this._elementType = this.elementProvider.getElementById(element.typeId);
 		if (this._elementType.calcLabels) this._labels = this._elementType.calcLabels(this.element);
 
 		this._group = document.createElementNS(this.SVG_NS, 'g');
 
-		this._size = Elements.calcPixelElementSize(this.element);
+		this._size = Elements.calcElemSize(this.element);
+		this._size.x *= gridSize;
+		this._size.y *= gridSize;
 
 		switch (this.element.rotation) {
 			case 0:
@@ -45,9 +47,7 @@ export class SvgCompRenderer {
 				break;
 		}
 		this.symbol();
-
-		const pos = Grid.getPixelPosForGridPos(new PIXI.Point(element.pos.x - this.offset.x, element.pos.y - this.offset.y));
-		this._group.setAttribute('transform', `translate(${pos.x}, ${pos.y})`);
+		return this._group;
 	}
 
 	private rotation0(inputs: number, outputs: number) {
@@ -56,40 +56,32 @@ export class SvgCompRenderer {
 			rect = this.renderRect();
 		} else {
 			rect = document.createElementNS(this.SVG_NS, 'path');
-			rect.setAttribute('d',
-				`M 0,0
-			h ${this._size.x - 3}
-			L ${this._size.x},3
-			v ${this._size.y - 6}
-			L ${this._size.x - 3},${this._size.y},
-			h -${this._size.x - 3},
-			v -${this._size.y}`
-			);
+			rect.setAttribute('d', `M 0,0 h ${this._size.x - this._gridSize * 0.1875} L ${this._size.x},${this._gridSize * 0.1875} v ${this._size.y - this._gridSize * 0.375} L ${this._size.x - this._gridSize * 0.1875},${this._size.y}, h -${this._size.x - this._gridSize * 0.1875}, v -${this._size.y}`);
 		}
-		rect.setAttribute('class', 'wire');
+		rect.setAttribute('class', 'w');
 		this._group.appendChild(rect);
 		const path = document.createElementNS(this.SVG_NS, 'path');
 		let d = '';
 		for (let i = 0; i < inputs; i++) {
-			d += `M ${-(environment.gridPixelWidth / 2)},${(environment.gridPixelWidth / 2) + environment.gridPixelWidth * i} `;
-			d += `h ${environment.gridPixelWidth / 2} `;
+			d += `M ${-(this._gridSize / 2)},${(this._gridSize / 2) + this._gridSize * i} `;
+			d += `h ${this._gridSize / 2} `;
 			if (!this._labels || !this._labels[i]) continue;
-			const label = this.getLabelText(this._labels[i], 2, (environment.gridPixelWidth / 2) + environment.gridPixelWidth * i + 2);
+			const label = this.getLabelText(this._labels[i], 2, (this._gridSize / 2) + this._gridSize * i + 2);
 			label.setAttribute('class', 'l-l');
 			this._group.appendChild(label);
 		}
 		for (let i = 0; i < outputs; i++) {
-			d += `M ${this._size.x},${(environment.gridPixelWidth / 2) + environment.gridPixelWidth * i} `;
-			d += `h ${environment.gridPixelWidth / 2} `;
+			d += `M ${this._size.x},${(this._gridSize / 2) + this._gridSize * i} `;
+			d += `h ${this._gridSize / 2} `;
 			if (!this._labels || !this._labels[inputs + i]) continue;
 			const label = this.getLabelText(
-				this._labels[inputs + i], this._size.x - 2, (environment.gridPixelWidth / 2) + environment.gridPixelWidth * i + 2
+				this._labels[inputs + i], this._size.x - 2, (this._gridSize / 2) + this._gridSize * i + 2
 			);
 			label.setAttribute('class', 'l-r');
 			this._group.appendChild(label);
 		}
 		path.setAttribute('d', d);
-		path.setAttribute('class', 'wire');
+		path.setAttribute('class', 'w');
 		this._group.appendChild(path);
 	}
 
@@ -109,30 +101,30 @@ export class SvgCompRenderer {
 			v -${this._size.y - 3}`
 			);
 		}
-		rect.setAttribute('class', 'wire');
+		rect.setAttribute('class', 'w');
 		this._group.appendChild(rect);
 		const path = document.createElementNS(this.SVG_NS, 'path');
 		let d = '';
 		for (let i = 0; i < inputs; i++) {
-			d += `M ${this._size.x - environment.gridPixelWidth / 2 - environment.gridPixelWidth * i},0 `;
-			d += `v ${-environment.gridPixelWidth / 2} `;
+			d += `M ${this._size.x - this._gridSize / 2 - this._gridSize * i},0 `;
+			d += `v ${-this._gridSize / 2} `;
 			if (!this._labels || !this._labels[i]) continue;
-			const label = this.getLabelText(this._labels[i], this._size.x - environment.gridPixelWidth / 2 - environment.gridPixelWidth * i, 6);
+			const label = this.getLabelText(this._labels[i], this._size.x - this._gridSize / 2 - this._gridSize * i, 6);
 			label.setAttribute('class', 'l-t');
 			this._group.appendChild(label);
 		}
 		for (let i = 0; i < outputs; i++) {
-			d += `M ${this._size.x - environment.gridPixelWidth / 2 - environment.gridPixelWidth * i},${this._size.y} `;
-			d += `v ${environment.gridPixelWidth / 2} `;
+			d += `M ${this._size.x - this._gridSize / 2 - this._gridSize * i},${this._size.y} `;
+			d += `v ${this._gridSize / 2} `;
 			if (!this._labels || !this._labels[inputs + i]) continue;
 			const label = this.getLabelText(
-				this._labels[inputs + i], this._size.x - environment.gridPixelWidth / 2 - environment.gridPixelWidth * i, this._size.y - 3
+				this._labels[inputs + i], this._size.x - this._gridSize / 2 - this._gridSize * i, this._size.y - 3
 			);
 			label.setAttribute('class', 'l-b');
 			this._group.appendChild(label);
 		}
 		path.setAttribute('d', d);
-		path.setAttribute('class', 'wire');
+		path.setAttribute('class', 'w');
 		this._group.appendChild(path);
 	}
 
@@ -152,32 +144,32 @@ export class SvgCompRenderer {
 			L 3,0`
 			);
 		}
-		rect.setAttribute('class', 'wire');
+		rect.setAttribute('class', 'w');
 		this._group.appendChild(rect);
 		const path = document.createElementNS(this.SVG_NS, 'path');
 		let d = '';
 		for (let i = 0; i < inputs; i++) {
-			d += `M ${this._size.x},${this._size.y - (environment.gridPixelWidth / 2) - environment.gridPixelWidth * i} `;
-			d += `h ${environment.gridPixelWidth / 2} `;
+			d += `M ${this._size.x},${this._size.y - (this._gridSize / 2) - this._gridSize * i} `;
+			d += `h ${this._gridSize / 2} `;
 			if (!this._labels || !this._labels[i]) continue;
 			const label = this.getLabelText(
-				this._labels[i], this._size.x, this._size.y - (environment.gridPixelWidth / 2) - environment.gridPixelWidth * i + 2
+				this._labels[i], this._size.x, this._size.y - (this._gridSize / 2) - this._gridSize * i + 2
 			);
 			label.setAttribute('class', 'l-r');
 			this._group.appendChild(label);
 		}
 		for (let i = 0; i < outputs; i++) {
-			d += `M 0,${this._size.y - (environment.gridPixelWidth / 2) - (environment.gridPixelWidth * i)} `;
-			d += `h ${-environment.gridPixelWidth / 2} `;
+			d += `M 0,${this._size.y - (this._gridSize / 2) - (this._gridSize * i)} `;
+			d += `h ${-this._gridSize / 2} `;
 			if (!this._labels || !this._labels[inputs + i]) continue;
 			const label = this.getLabelText(
-				this._labels[inputs + i], 2, this._size.y - (environment.gridPixelWidth / 2) - environment.gridPixelWidth * i + 2
+				this._labels[inputs + i], 2, this._size.y - (this._gridSize / 2) - this._gridSize * i + 2
 			);
 			label.setAttribute('class', 'l-l');
 			this._group.appendChild(label);
 		}
 		path.setAttribute('d', d);
-		path.setAttribute('class', 'wire');
+		path.setAttribute('class', 'w');
 		this._group.appendChild(path);
 	}
 
@@ -197,32 +189,32 @@ export class SvgCompRenderer {
 			L 3,0`
 			);
 		}
-		rect.setAttribute('class', 'wire');
+		rect.setAttribute('class', 'w');
 		this._group.appendChild(rect);
 		const path = document.createElementNS(this.SVG_NS, 'path');
 		let d = '';
 		for (let i = 0; i < inputs; i++) {
-			d += `M ${environment.gridPixelWidth / 2 + environment.gridPixelWidth * i},${this._size.y} `;
-			d += `v ${environment.gridPixelWidth / 2} `;
+			d += `M ${this._gridSize / 2 + this._gridSize * i},${this._size.y} `;
+			d += `v ${this._gridSize / 2} `;
 			if (!this._labels || !this._labels[i]) continue;
 			const label = this.getLabelText(
-				this._labels[i], environment.gridPixelWidth / 2 + environment.gridPixelWidth * i, this._size.y - 3
+				this._labels[i], this._gridSize / 2 + this._gridSize * i, this._size.y - 3
 			);
 			label.setAttribute('class', 'l-b');
 			this._group.appendChild(label);
 		}
 		for (let i = 0; i < outputs; i++) {
-			d += `M ${environment.gridPixelWidth / 2 + environment.gridPixelWidth * i},0 `;
-			d += `v ${-environment.gridPixelWidth / 2} `;
+			d += `M ${this._gridSize / 2 + this._gridSize * i},0 `;
+			d += `v ${-this._gridSize / 2} `;
 			if (!this._labels || !this._labels[inputs + i]) continue;
 			const label = this.getLabelText(
-				this._labels[inputs + i], environment.gridPixelWidth / 2 + environment.gridPixelWidth * i, 6
+				this._labels[inputs + i], this._gridSize / 2 + this._gridSize * i, 6
 			);
 			label.setAttribute('class', 'l-t');
 			this._group.appendChild(label);
 		}
 		path.setAttribute('d', d);
-		path.setAttribute('class', 'wire');
+		path.setAttribute('class', 'w');
 		this._group.appendChild(path);
 	}
 
@@ -236,36 +228,36 @@ export class SvgCompRenderer {
 			symbol.setAttribute('y', this._size.y / 2 + 3 + '');
 		} else if (this.element.typeId === ElementTypeId.BUTTON) {
 			symbol = document.createElementNS(this.SVG_NS, 'rect');
-			symbol.setAttribute('class', 'wire');
+			symbol.setAttribute('class', 'w');
 			symbol.setAttribute('x', '3');
 			symbol.setAttribute('y', '3');
-			symbol.setAttribute('width', environment.gridPixelWidth - 6 + '');
-			symbol.setAttribute('height', environment.gridPixelWidth - 6 + '');
+			symbol.setAttribute('width', this._gridSize - 6 + '');
+			symbol.setAttribute('height', this._gridSize - 6 + '');
 		} else if (this.element.typeId === ElementTypeId.LEVER) {
 			symbol = document.createElementNS(this.SVG_NS, 'line');
-			symbol.setAttribute('class', 'wire');
+			symbol.setAttribute('class', 'w');
 			symbol.setAttribute('x1', '0');
-			symbol.setAttribute('y1', environment.gridPixelWidth - 4 + '');
+			symbol.setAttribute('y1', this._gridSize - 4 + '');
 			symbol.setAttribute('x1', this._size.x + '');
-			symbol.setAttribute('y2', environment.gridPixelWidth - 4 + '');
+			symbol.setAttribute('y2', this._gridSize - 4 + '');
 		} else if (this.element.typeId === ElementTypeId.LED_MATRIX) {
 			symbol = document.createElementNS(this.SVG_NS, 'g');
 			const ledAmount = this.element.options[0];
-			const ledSize = (this._size.x - environment.gridPixelWidth * 2) / ledAmount - 1;
-			let offsetX = environment.gridPixelWidth;
-			let offsetY = environment.gridPixelWidth;
+			const ledSize = (this._size.x - this._gridSize * 2) / ledAmount - 1;
+			let offsetX = this._gridSize;
+			let offsetY = this._gridSize;
 			switch (this.element.rotation) {
 				case 0:
-					offsetX = 1.5 * environment.gridPixelWidth;
+					offsetX = 1.5 * this._gridSize;
 					break;
 				case 1:
-					offsetY = 1.5 * environment.gridPixelWidth;
+					offsetY = 1.5 * this._gridSize;
 					break;
 				case 2:
-					offsetX = 0.5 * environment.gridPixelWidth;
+					offsetX = 0.5 * this._gridSize;
 					break;
 				case 3:
-					offsetY = 0.5 * environment.gridPixelWidth;
+					offsetY = 0.5 * this._gridSize;
 					break;
 			}
 			for (let x = 0; x < ledAmount; x++) {
@@ -313,9 +305,5 @@ export class SvgCompRenderer {
 			this.element.typeId === ElementTypeId.LEVER ||
 			this.element.typeId === ElementTypeId.SEGMENT_DISPLAY ||
 			this.element.typeId === ElementTypeId.LED_MATRIX;
-	}
-
-	public getSVGGroup(): SVGGElement {
-		return this._group;
 	}
 }

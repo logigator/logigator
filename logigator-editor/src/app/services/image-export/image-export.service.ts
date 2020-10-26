@@ -1,9 +1,7 @@
 import {Injectable, Optional} from '@angular/core';
 import {ProjectsService} from '../projects/projects.service';
 import {SvgImageExporter} from './svg-image-exporter';
-import {Project} from '../../models/project';
-import {saveLocalFileBlob, saveLocalFile} from '../../models/save-local-file';
-import {ElectronService} from 'ngx-electron';
+import * as PIXI from 'pixi.js';
 
 @Injectable({
 	providedIn: 'root'
@@ -11,46 +9,39 @@ import {ElectronService} from 'ngx-electron';
 export class ImageExportService {
 
 	constructor(
-		private projectsService: ProjectsService,
-		@Optional() private electronService: ElectronService
+		private projectsService: ProjectsService
 	) { }
 
-	public exportImage(type: 'jpeg' | 'png' | 'svg') {
-		if (type === 'jpeg' || type === 'png') {
-			this.exportPixelImage(type);
-		} else {
-			this.exportVectorImage();
-		}
+	public generateImage(type: 'jpeg' | 'png', options?: {size?: PIXI.Point; theme?: 'dark' | 'light'}): Promise<Blob> {
+		return this.getBlobImage(new SvgImageExporter(this.projectsService.currProject, new PIXI.Point(1024, 1024), options?.theme), type);
 	}
 
-	private async exportPixelImage(type: 'jpeg' | 'png') {
-		const project = this.projectsService.currProject;
-		const blob = await this.getBlobImage(project, type);
-		saveLocalFileBlob(blob, type, project.name, 'Save Image As', this.electronService);
+	public generateSVG(options?: {size?: PIXI.Point; theme?: 'dark' | 'light'}): string {
+		console.time('SVG Generate');
+		const exporter = new SvgImageExporter(this.projectsService.currProject, new PIXI.Point(1024, 1024), options?.theme);
+		console.timeEnd('SVG Generate');
+		return exporter.serializeSVG();
 	}
 
-	private getBlobImage(project: Project, type: 'jpeg' | 'png'): Promise<Blob> {
+	private getBlobImage(exporter: SvgImageExporter, type: 'jpeg' | 'png'): Promise<Blob> {
 		const img = new Image();
 		const canvas = document.createElement('canvas') as HTMLCanvasElement;
-		const exporter = new SvgImageExporter(project);
 
-		canvas.width = exporter.width;
-		canvas.height = exporter.height;
+		canvas.width = Math.round(exporter.size.x * exporter.scaleFactor);
+		canvas.height = Math.round(exporter.size.y * exporter.scaleFactor);
 
 		return new Promise<Blob>(resolve => {
 			img.onload = () => {
+				console.time('canvasDraw');
 				canvas.getContext('2d')
-					.drawImage(img, 0, 0, exporter.width, exporter.height, 0, 0, exporter.width, exporter.height);
+					.drawImage(img, 0, 0, exporter.size.x, exporter.size.y, 0, 0, canvas.width, canvas.height);
 
 				canvas.toBlob(blob => resolve(blob), `image/${type}`);
+				console.timeEnd('canvasDraw');
 			};
+			console.time('base64');
 			img.src = exporter.getBase64String();
+			console.timeEnd('base64');
 		});
-	}
-
-	private exportVectorImage() {
-		const project = this.projectsService.currProject;
-		const exporter = new SvgImageExporter(project);
-		saveLocalFile(exporter.serializeSVG(), 'svg', project.name, 'Save Image As', this.electronService);
 	}
 }

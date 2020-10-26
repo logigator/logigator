@@ -29,8 +29,11 @@ export class ShortcutsService {
 		private apiService: ApiService
 	) {
 		this.userService.userInfo$.subscribe(data => {
-			if (!data)
+			if (!data) {
+				this._shortcutConfig = defaultShortcuts;
+				this._customShortcuts.clear();
 				return;
+			}
 			for (const shortcut of data.shortcuts) {
 				const index = this._shortcutConfig.findIndex(x => x.action === shortcut.name);
 				if (index >= 0) {
