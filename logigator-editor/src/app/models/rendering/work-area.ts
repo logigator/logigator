@@ -1,5 +1,5 @@
 import * as PIXI from 'pixi.js';
-import {fromEvent, ReplaySubject, Subject} from 'rxjs';
+import {fromEvent, Subject} from 'rxjs';
 import {takeUntil} from 'rxjs/operators';
 import {Directive, ElementRef, EventEmitter, Output, Renderer2} from '@angular/core';
 import {ThemingService} from '../../services/theming/theming.service';
@@ -10,13 +10,10 @@ import {ReqInspectElementEvent} from './req-inspect-element-event';
 import {getStaticDI} from '../get-di';
 import {RenderTicker} from '../../services/render-ticker/render-ticker.service';
 import {EditorAction} from '../editor-action';
+import {PixiLoaderService} from '../../services/pixi-loader/pixi-loader.service';
 
 @Directive()
 export abstract class WorkArea {
-
-	private static _loadedPixiFont = false;
-
-	public static pixiFontLoaded$ = new ReplaySubject<void>(1);
 
 	protected _pixiRenderer: PIXI.Renderer;
 
@@ -34,7 +31,7 @@ export abstract class WorkArea {
 	abstract getIdentifier(): string;
 
 	protected initPixi(canvasContainer: ElementRef<HTMLDivElement>, renderer2: Renderer2) {
-		this.loadPixiFont();
+		getStaticDI(PixiLoaderService).loadPixiFont();
 		this._pixiRenderer = new PIXI.Renderer({
 			height: canvasContainer.nativeElement.offsetHeight,
 			width: canvasContainer.nativeElement.offsetWidth,
@@ -69,17 +66,6 @@ export abstract class WorkArea {
 		renderer2.listen(canvasContainer.nativeElement, 'contextmenu', (e: MouseEvent) => {
 			e.preventDefault();
 		});
-	}
-
-	private loadPixiFont() {
-		if (WorkArea._loadedPixiFont === true) return;
-		WorkArea._loadedPixiFont = true;
-		const loader = PIXI.Loader.shared;
-		loader.add('Roboto', 'assets/bitmap-fonts/roboto.fnt')
-			.add('Segment7', 'assets/bitmap-fonts/segment7.fnt')
-			.load(() => {
-				WorkArea.pixiFontLoaded$.next();
-			});
 	}
 
 	protected initZoomPan(canvasContainer: ElementRef<HTMLDivElement>) {

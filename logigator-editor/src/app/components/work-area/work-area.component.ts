@@ -47,6 +47,7 @@ export class WorkAreaComponent extends WorkArea implements OnInit, OnDestroy {
 			this.projectsService.onProjectOpened$.pipe(
 				takeUntil(this._destroySubject)
 			).subscribe(projectId => this.onProjectOpen(projectId));
+
 			this.projectsService.onProjectClosed$.pipe(
 				takeUntil(this._destroySubject)
 			).subscribe(id => this.onProjectClose(id));

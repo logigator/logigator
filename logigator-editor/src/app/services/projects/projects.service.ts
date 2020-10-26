@@ -13,6 +13,7 @@ import {PopupService} from '../popup/popup.service';
 import {LocationService} from '../location/location.service';
 import {SelectionService} from '../selection/selection.service';
 import {CopyService} from '../copy/copy.service';
+import {PixiLoaderService} from '../pixi-loader/pixi-loader.service';
 
 @Injectable({
 	providedIn: 'root'
@@ -34,9 +35,12 @@ export class ProjectsService {
 		private popup: PopupService,
 		private elementProvider: ElementProviderService,
 		private errorHandling: ErrorHandlingService,
-		private location: LocationService
+		private pixiLoader: PixiLoaderService
 	) {
-		this.getInitialProjects().then(() => {
+		this.projectSaveManagementService.getInitialProjects().then(projects => {
+			this._projects = projects;
+			this._mainProject = projects[0];
+			this._currProject = projects[0];
 			for (const p of this.allProjects) {
 				this._projectOpenedSubject.next(p.id);
 			}
@@ -60,7 +64,9 @@ export class ProjectsService {
 	}
 
 	public get onProjectOpened$(): Observable<number> {
-		return this._projectOpenedSubject.asObservable();
+		return this._projectOpenedSubject.asObservable().pipe(
+			delayWhen((value, index) => this.pixiLoader.loaded$)
+		);
 	}
 
 	public get onProjectClosed$(): Observable<number> {
@@ -99,27 +105,5 @@ export class ProjectsService {
 		const elemType = this.elementProvider.getElementById(project.id);
 		elemType.labels = project.calcLabels();
 		this._projects.forEach(p => p.updateLabels(project.id));
-	}
-
-	// TODO: Error handling
-	private async getInitialProjects() {
-		let projects: Project[];
-		let mainProject: Project;
-		if (this.location.isProject) {
-			mainProject = await this.projectSaveManagementService.getProjectUuid(this.location.projectUuid);
-			projects = [mainProject];
-		} else if (this.location.isComponent) {
-			const comp = await this.projectSaveManagementService.getComponentUuid(this.location.componentUuid);
-			mainProject = Project.empty();
-			projects = [mainProject, comp];
-		} else if (this.location.isShare) {
-			projects = [];
-		} else {
-			mainProject = Project.empty();
-			projects = [mainProject];
-		}
-		this._projects = projects;
-		this._mainProject = mainProject;
-		this._currProject = mainProject;
 	}
 }

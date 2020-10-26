@@ -1,7 +1,7 @@
 import {ProjectInfo} from './project-info';
 import {ComponentInfo} from './component-info';
 
-export interface Project extends ProjectInfo {
+export interface ProjectData extends ProjectInfo {
 	dependencies: ProjectDependency[];
 	elements: ProjectElement[];
 }

@@ -71,45 +71,15 @@ export class ElementProviderService {
 		return !(id === ElementTypeId.WIRE || id === ElementTypeId.BUTT || id === ElementTypeId.TEXT || id === ElementTypeId.TUNNEL);
 	}
 
-	public addUserDefinedElements(elements: Partial<ElementType>[]) {
+	public addElements(elements: Partial<ElementType>[], category: 'user' | 'local' | 'share') {
 		for (const elem of elements) {
-			this.addElement(elem, 'user');
+			this._elements.set(elem.id, {...udcTemplate, ...elem, category} as ElementType);
 		}
 	}
 
-	public addShareElements(elements: Partial<ElementType>[]) {
-		for (const elem of elements) {
-			this.addElement(elem, 'share');
-		}
-	}
-
-	public addLocalElements(elements: Partial<ElementType>[]) {
-		for (const elem of elements) {
-			this.addElement(elem, 'local');
-		}
-	}
-
-	private addElement(element: Partial<ElementType>, category: 'user' | 'local' | 'share') {
-		this._elements.set(element.id, {...udcTemplate, ...element, category} as ElementType);
-	}
-
-	public clearUserDefinedElements() {
+	public clearElements(category: 'user' | 'local' | 'share') {
 		for (const [id, elem] of this._elements) {
-			if (elem.category === 'user')
-				this._elements.delete(id);
-		}
-	}
-
-	public clearShareElements() {
-		for (const [id, elem] of this._elements) {
-			if (elem.category === 'share')
-				this._elements.delete(id);
-		}
-	}
-
-	public clearLocalElements() {
-		for (const [id, elem] of this._elements) {
-			if (elem.category === 'local')
+			if (elem.category === category)
 				this._elements.delete(id);
 		}
 	}
@@ -143,6 +113,14 @@ export class ElementProviderService {
 
 	public isLocalElement(id: number): boolean {
 		return this._elements.has(id) && this._elements.get(id).category === 'local';
+	}
+
+	public isCustomElement(id: number): boolean {
+		if (!this._elements.has(id))
+			return false;
+
+		const category = this._elements.get(id).category;
+		return category === 'user' || category === 'share' || category === 'local';
 	}
 
 	public get basicElements(): ElementType[] {

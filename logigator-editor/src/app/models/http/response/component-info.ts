@@ -9,8 +9,8 @@ export interface ComponentInfo {
 		hash: string;
 	};
 	symbol: string;
-	numInputs: string;
-	numOutputs: string;
+	numInputs: number;
+	numOutputs: number;
 	labels: string[];
 	link: string;
 	public: boolean;
