@@ -88,6 +88,19 @@ export class ProjectsService {
 		this._projectClosedSubject.next(id);
 	}
 
+	public saveAllProjects() {
+		for (const p of this.allProjects) {
+			switch (p.type) {
+				case 'comp':
+					this.projectSaveManagementService.saveComponent(p);
+					break;
+				case 'project':
+					this.projectSaveManagementService.saveProject(p);
+					break;
+			}
+		}
+	}
+
 	public inputsOutputsCustomComponentChanged(project: Project) {
 		if (project.type !== 'comp') return;
 		const elemType = this.elementProvider.getElementById(project.id);

@@ -1,37 +1,17 @@
-import {Injectable, NgZone, Optional} from '@angular/core';
+import {Injectable} from '@angular/core';
 import {Project} from '../../models/project';
-import {HttpResponseData} from '../../models/http-responses/http-response-data';
-import {OpenProjectResponse} from '../../models/http-responses/open-project-response';
-import {map, tap} from 'rxjs/operators';
 import * as PIXI from 'pixi.js';
-import {HttpClient} from '@angular/common/http';
 import {Element} from '../../models/element';
-import {ComponentInfoResponse} from '../../models/http-responses/component-info-response';
 import {ProjectState} from '../../models/project-state';
 import {ElementProviderService} from '../element-provider/element-provider.service';
-import {UserService} from '../user/user.service';
-import {ErrorHandlingService} from '../error-handling/error-handling.service';
-import {ComponentLocalFile, ProjectLocalFile} from '../../models/project-local-file';
-import {ModelDatabaseMap, ProjectModelResponse} from '../../models/http-responses/project-model-response';
-import {CreateProjectResponse} from '../../models/http-responses/create-project-response';
-import {SaveProjectRequest} from '../../models/http-requests/save-project-request';
 import {ElementType} from '../../models/element-types/element-type';
-import {Observable} from 'rxjs';
-import {ProjectInfoResponse} from '../../models/http-responses/project-info-response';
-import {environment} from '../../../environments/environment';
-import {ElectronService} from 'ngx-electron';
-import {saveLocalFile} from '../../models/save-local-file';
-import {SharingService} from '../sharing/sharing.service';
-import {Elements} from '../../models/elements';
-import {OpenShareResp} from '../../models/http-responses/open-share-resp';
-import {ElementTypeId} from '../../models/element-types/element-type-ids';
 import {ApiService} from '../api/api.service';
 import {LocationService} from '../location/location.service';
 import {ProjectData, ProjectDependency, ProjectElement} from '../../models/http/response/project-data';
 import {BiDirectionalMap} from '../../models/bi-directional-map';
 import {ComponentInfo} from '../../models/http/response/component-info';
-import {emit} from 'cluster';
-import has = Reflect.has;
+import {v4 as genUuid} from 'uuid';
+import {ProjectInfo} from '../../models/http/response/project-info';
 
 @Injectable({
 	providedIn: 'root'
@@ -73,14 +53,22 @@ export class ProjectSaveManagementService {
 		const mappingsToApply = this.saveMappings(projectData.data.dependencies);
 		this.setCustomElements(projectData.data.dependencies.map(dep => dep.dependency), 'user');
 		const elements = this.convertSavedElementsToElements(projectData.data.elements, mappingsToApply);
-		return Promise.resolve(Project.empty('Test'));
+		const project = new Project(new ProjectState(elements), {
+			id: this.generateNextId(projectData.data.id),
+			source: 'server',
+			type: 'project',
+			name: projectData.data.name,
+			hash: projectData.data.elementsFile.hash,
+		});
+		return project;
 	}
 
 	public getComponentUuid(uuid: string): Promise<Project> {
 		const p = new Project(new ProjectState(), {
 			type: 'comp',
 			name: 'comp',
-			id: 0
+			id: 0,
+			source: 'local'
 		});
 		return Promise.resolve(p);
 	}
@@ -89,6 +77,7 @@ export class ProjectSaveManagementService {
 		const p = new Project(new ProjectState(), {
 			type: 'comp',
 			name: 'comp',
+			source: 'local',
 			id
 		});
 		return Promise.resolve(p);
@@ -102,6 +91,7 @@ export class ProjectSaveManagementService {
 	public createComponent(name: string, symbol: string, description: string = ''): Promise<Project> {
 		const p = new Project(new ProjectState(), {
 			type: 'comp',
+			source: 'local',
 			name,
 			id: 0
 		});
@@ -112,8 +102,25 @@ export class ProjectSaveManagementService {
 		return Promise.resolve();
 	}
 
-	public saveProject(project: Project): Promise<void> {
-		return Promise.resolve();
+	public async saveProject(project: Project): Promise<void> {
+		if (project.source === 'server') {
+			const convertedElements = this.convertElementsToSaveElements(project.allElements);
+			const body = {
+				oldHash: project.hash,
+				dependencies: convertedElements.usedCustomElements.map(cu => {
+					return {
+						id: this._mappings.getKey(cu),
+						model: cu,
+					};
+				}),
+				elements: convertedElements.elements,
+			};
+			const resp = await this.api.put<ProjectInfo>(`/project/${this._mappings.getKey(project.id)}`, body).toPromise();
+			project.saveDirty = false;
+			project.hash = resp.data.elementsFile.hash;
+		} else {
+			return Promise.resolve();
+		}
 	}
 
 	/**
@@ -163,9 +170,9 @@ export class ProjectSaveManagementService {
 			const element: Element = {
 				id: elem.c,
 				typeId,
-				numInputs: isCustomElement ? elementType.numInputs : elem.i,
-				numOutputs: isCustomElement ? elementType.numOutputs : elem.o,
-				rotation: elem.r,
+				numInputs: isCustomElement ? elementType.numInputs : (elem.i ?? 0),
+				numOutputs: isCustomElement ? elementType.numOutputs : (elem.o ?? 0),
+				rotation: elem.r ?? 0,
 				data: elem.s,
 				pos: new PIXI.Point(elem.p[0], elem.p[1])
 			};
@@ -180,6 +187,62 @@ export class ProjectSaveManagementService {
 		}
 
 		return mapped;
+	}
+
+	private convertElementsToSaveElements(elements: Element[]): {elements: ProjectElement[], usedCustomElements: number[]} {
+		const usedCustomElements: number[] = [];
+
+		const saveElements = elements.map(elem => {
+			if (this.elementProvider.isCustomElement(elem.typeId) && !usedCustomElements.includes(elem.typeId))
+				usedCustomElements.push(elem.typeId);
+
+			const elementType = this.elementProvider.getElementById(elem.typeId);
+
+			const element: ProjectElement = {
+				c: elem.id,
+				t: elem.typeId,
+				p: [elem.pos.x, elem.pos.y],
+			};
+
+			if (elem.rotation && elem.rotation !== 0)
+				element.r = elem.rotation;
+			if (elem.numInputs && elem.numInputs !== 0)
+				element.i = elem.numInputs;
+			if (elem.numOutputs && elem.numOutputs !== 0)
+				element.o = elem.numOutputs;
+			if (elementType.hasPlugIndex && elem.plugIndex)
+				element.n = [elem.plugIndex];
+			if (!elementType.hasPlugIndex && elem.options)
+				element.n = elem.options;
+			if (elem.data)
+				element.s = elem.data as string;
+			if (elem.endPos)
+				element.q = [elem.endPos.x, elem.endPos.y];
+
+			return element;
+		});
+
+		return {
+			elements: saveElements,
+			usedCustomElements
+		};
+	}
+
+	private generateNextId(uuid?: string): number {
+		if (this._mappings.hasKey(uuid))
+			return this._mappings.getValue(uuid);
+
+		uuid = uuid ?? genUuid();
+
+		let nextId = 0;
+		for (const id of this._mappings.values()) {
+			if (id > nextId)
+				nextId = id;
+		}
+		nextId += 1;
+
+		this._mappings.set(uuid, nextId);
+		return nextId;
 	}
 
 }

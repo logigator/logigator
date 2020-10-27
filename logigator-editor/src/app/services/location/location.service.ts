@@ -38,6 +38,6 @@ export class LocationService {
 	}
 
 	private get pathname(): string {
-		return location.pathname.substring(8);
+		return location.pathname.substring(7);
 	}
 }

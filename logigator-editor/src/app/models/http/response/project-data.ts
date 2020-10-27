@@ -21,12 +21,12 @@ export interface ProjectElement {
 	/**
 	 * number of outputs
 	 */
-	o: number;
+	o?: number;
 
 	/**
 	 * number of inputs
 	 */
-	i: number;
+	i?: number;
 
 	/**
 	 * Position
@@ -36,22 +36,22 @@ export interface ProjectElement {
 	/**
 	 * end-position
 	 */
-	q: number[];
+	q?: number[];
 
 	/**
 	 * rotation
 	 */
-	r: number;
+	r?: number;
 
 	/**
 	 * numerical data
 	 */
-	n: number[];
+	n?: number[];
 
 	/**
 	 * string data
 	 */
-	s: string;
+	s?: string;
 
 }
 

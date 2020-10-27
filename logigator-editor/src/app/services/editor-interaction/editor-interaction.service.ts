@@ -131,8 +131,4 @@ export class EditorInteractionService {
 	public exportToFile() {
 		// return this.projectSave.exportToFile(this.projectsService.mainProject);
 	}
-
-	public saveAll() {
-		// this.ngZone.run(() => this.projectsService.saveAll());
-	}
 }

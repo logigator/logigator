@@ -18,7 +18,8 @@ export class Project {
 	private readonly _id: number;
 	private _name: string;
 	private _type: ProjectType;
-	private _version: number;
+	private _hash: string;
+	private _source: 'server' | 'local' | 'share';
 
 	private _currState: ProjectState;
 
@@ -39,13 +40,14 @@ export class Project {
 	// #!debug
 	public boardRecorder: BoardRecorder;
 
-	public constructor(projectState: ProjectState, config: { id?: number, name?: string, type?: ProjectType, version?: number }) {
+	public constructor(projectState: ProjectState, config: { id?: number, name?: string, type?: ProjectType, hash?: string, source: 'server' | 'local' | 'share'}) {
 		this._currState = projectState;
 		this._actions = new Array(this._maxActionCount);
 		this._id = config.id;
 		this._name = config.name;
-		this._type = config.type || 'comp';
-		this._version = config.version ?? 0;
+		this._type = config.type ?? 'comp';
+		this._hash = config.hash;
+		this._source = config.source;
 		this._currActionPointer = -1;
 		this._currMaxActionPointer = -1;
 		this._changeSubject = new Subject<Action[]>();
@@ -57,6 +59,7 @@ export class Project {
 	public static empty(name?: string): Project {
 		return new Project(new ProjectState(), {
 			type: 'project',
+			source: 'local',
 			name: name || 'New Project',
 			id: 0
 		});
@@ -645,11 +648,15 @@ export class Project {
 		return this._currState.numOutputs;
 	}
 
-	get version(): number {
-		return this._version;
+	get hash(): string {
+		return this._hash;
 	}
 
-	set version(value: number) {
-		this._version = value;
+	set hash(value: string) {
+		this._hash = value;
+	}
+
+	get source(): 'server' | 'local' | 'share' {
+		return this._source;
 	}
 }

@@ -43,7 +43,7 @@ export class FileDropdownComponent implements OnInit {
 	}
 
 	public get canSave(): boolean {
-		return;
+		return true;
 		// return this.user.isLoggedIn && !this.projectSaveService.isShare;
 	}
 
@@ -63,7 +63,7 @@ export class FileDropdownComponent implements OnInit {
 	}
 
 	public saveProject() {
-		this.editorInteractionService.saveAll();
+		this.projects.saveAllProjects();
 		this.close();
 	}
 
