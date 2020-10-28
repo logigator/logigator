@@ -12,6 +12,8 @@ import {BiDirectionalMap} from '../../models/bi-directional-map';
 import {ComponentInfo} from '../../models/http/response/component-info';
 import {v4 as genUuid} from 'uuid';
 import {ProjectInfo} from '../../models/http/response/project-info';
+import {UserService} from '../user/user.service';
+import {filter} from 'rxjs/operators';
 
 @Injectable({
 	providedIn: 'root'
@@ -24,11 +26,18 @@ export class ProjectSaveManagementService {
 	 */
 	private _mappings = new BiDirectionalMap<string, number>();
 
+	private _loadedInitialProjects = false;
+
 	constructor(
 		private api: ApiService,
 		private elementProvider: ElementProviderService,
-		private location: LocationService
-	) {}
+		private location: LocationService,
+		private userService: UserService
+	) {
+		this.userService.userInfo$.pipe(
+			filter(() => this._loadedInitialProjects)
+		).subscribe(() => this.getAllComponentsInfo());
+	}
 
 	public async getInitialProjects(): Promise<Project[]> {
 		let projects: Project[];
@@ -45,6 +54,8 @@ export class ProjectSaveManagementService {
 			const mainProject = Project.empty();
 			projects = [mainProject];
 		}
+		await this.getAllComponentsInfo();
+		this._loadedInitialProjects = true;
 		return projects;
 	}
 
@@ -88,14 +99,21 @@ export class ProjectSaveManagementService {
 		return Promise.resolve(p);
 	}
 
-	public createComponent(name: string, symbol: string, description: string = ''): Promise<Project> {
-		const p = new Project(new ProjectState(), {
+	public async createComponent(name: string, symbol: string, description: string = ''): Promise<Project> {
+		const body = {
+			name, symbol, description
+		};
+
+		const resp = await this.api.post<ComponentInfo>('/component', body).toPromise();
+		const id = this.generateNextId(resp.data.id);
+		this.setCustomElements([resp.data], 'user');
+
+		return new Project(new ProjectState(), {
 			type: 'comp',
-			source: 'local',
-			name,
-			id: 0
+			source: 'server',
+			name: resp.data.name,
+			id
 		});
-		return Promise.resolve(p);
 	}
 
 	public saveComponent(project: Project): Promise<void> {
@@ -226,6 +244,16 @@ export class ProjectSaveManagementService {
 			elements: saveElements,
 			usedCustomElements
 		};
+	}
+
+	private async getAllComponentsInfo() {
+		if (this.userService.isLoggedIn) {
+			const componentData = await this.api.get<ComponentInfo[]>(`/component`).toPromise();
+			componentData.data.forEach(comp => this.generateNextId(comp.id));
+			this.setCustomElements(componentData.data, 'user');
+		} else {
+			this.elementProvider.clearElements('user');
+		}
 	}
 
 	private generateNextId(uuid?: string): number {

@@ -59,7 +59,7 @@ export class ConstructionBoxCategoryComponent {
 
 	public openComponent(id: number) {
 		if (!(this.elemProv.isUserElement(id) || this.elemProv.isShareElement(id) || this.elemProv.isLocalElement(id))) return;
-		// this.projects.openComponent(id);
+		this.projects.openComponent(id);
 	}
 
 	public get isComponentMode(): boolean {

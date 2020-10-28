@@ -101,6 +101,16 @@ export class ProjectsService {
 		}
 	}
 
+	public async createComponent(name: string, symbol: string, description: string = '') {
+		const component = await this.projectSaveManagementService.createComponent(name, symbol, description);
+		this._projects.push(component);
+		this._projectOpenedSubject.next(component.id);
+	}
+
+	public async openComponent(id: number) {
+
+	}
+
 	public inputsOutputsCustomComponentChanged(project: Project) {
 		if (project.type !== 'comp') return;
 		const elemType = this.elementProvider.getElementById(project.id);

@@ -114,8 +114,9 @@ export class EditorInteractionService {
 	}
 
 	public newComponent() {
-		return this.ngZone.run(() => {
-			return this.popupService.showPopup(NewComponentComponent, 'POPUP.NEW_COMP.TITLE', false);
+		return this.ngZone.run(async () => {
+			const compConfig = await this.popupService.showPopup(NewComponentComponent, 'POPUP.NEW_COMP.TITLE', false);
+			this.projectsService.createComponent(compConfig.name, compConfig.symbol, compConfig.description);
 		});
 	}
 
