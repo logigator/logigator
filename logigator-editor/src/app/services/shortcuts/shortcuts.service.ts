@@ -10,6 +10,7 @@ import {ApiService} from '../api/api.service';
 import {UserShortcut} from '../../models/http/response/user';
 import {EditorInteractionService} from '../editor-interaction/editor-interaction.service';
 import {SimulationManagementService} from '../simulation/simulation-management/simulation-management.service';
+import {PopupService} from '../popup/popup.service';
 
 @Injectable({
 	providedIn: 'root'
@@ -26,7 +27,8 @@ export class ShortcutsService {
 		private editorInteraction: EditorInteractionService,
 		private simulationManagement: SimulationManagementService,
 		private userService: UserService,
-		private apiService: ApiService
+		private apiService: ApiService,
+		private popupService: PopupService
 	) {
 		this.userService.userInfo$.subscribe(data => {
 			if (!data)
@@ -45,7 +47,7 @@ export class ShortcutsService {
 	}
 
 	public keyDownListener(event: KeyboardEvent) {
-		if (!this._shortcutListenerEnabled) return;
+		if (!this.shortcutListenerEnabled) return;
 		const shortcut = this.getShortcutFromKeyEvent(event);
 		if (!shortcut || !this.isShortcutUsable(shortcut)) return;
 		event.preventDefault();
@@ -142,6 +144,10 @@ export class ShortcutsService {
 
 	public disableShortcutListener() {
 		this._shortcutListenerEnabled = false;
+	}
+
+	private get shortcutListenerEnabled(): boolean {
+		return this._shortcutListenerEnabled && !this.popupService.isPopupOpened;
 	}
 
 	private applyShortcutAction(action: ShortcutAction) {

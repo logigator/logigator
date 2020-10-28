@@ -29,7 +29,7 @@ export class ShortcutConfigComponent extends PopupContentComp implements OnInit 
 	}
 
 	public save() {
-		let changedConfig = new Map<ShortcutAction, ShortcutConfig>();
+		const changedConfig = new Map<ShortcutAction, ShortcutConfig>();
 		this.singleConfigs.forEach(conf => {
 			const singleConf = conf.changedShortcutSettings;
 			if (singleConf) {

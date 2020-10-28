@@ -1,10 +1,12 @@
-import {Injectable} from '@angular/core';
+import {Injectable, NgZone} from '@angular/core';
 import {Observable, Subject} from 'rxjs';
 import {ProjectsService} from '../projects/projects.service';
 import {SelectionService} from '../selection/selection.service';
 import {CopyService} from '../copy/copy.service';
 import {EditorAction} from '../../models/editor-action';
 import {filter} from 'rxjs/operators';
+import {PopupService} from '../popup/popup.service';
+import {NewComponentComponent} from '../../components/popup-contents/new-component/new-component.component';
 
 @Injectable({
 	providedIn: 'root'
@@ -16,7 +18,9 @@ export class EditorInteractionService {
 	constructor(
 		private projectsService: ProjectsService,
 		private selection: SelectionService,
-		private copyService: CopyService
+		private copyService: CopyService,
+		private ngZone: NgZone,
+		private popupService: PopupService
 	) {}
 
 	public subscribeEditorAction(...actions: EditorAction[]): Observable<EditorAction> {
@@ -110,9 +114,9 @@ export class EditorInteractionService {
 	}
 
 	public newComponent() {
-		// return this.ngZone.run(() => {
-		// 	return this.popupService.showPopup(NewComponentComponent, 'POPUP.NEW_COMP.TITLE', false);
-		// });
+		return this.ngZone.run(() => {
+			return this.popupService.showPopup(NewComponentComponent, 'POPUP.NEW_COMP.TITLE', false);
+		});
 	}
 
 	public shareProject() {

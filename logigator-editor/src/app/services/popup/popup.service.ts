@@ -24,23 +24,21 @@ export class PopupService {
 		@Inject(DOCUMENT) private document: Document
 	) { }
 
-	public showPopup(
-		popupContentComp: Type<PopupContentComp>,
+	public showPopup<In, Out>(
+		popupContentComp: Type<PopupContentComp<In, Out>>,
 		title: string,
 		closeOnClickOutside: boolean,
-		contentComponentInput?: any,
-		componentFactoryResolver?: ComponentFactoryResolver,
+		contentComponentInput?: In,
 		titleTranslationParams?: { [key: string]: string}
-	): Promise<any> {
-		return new Promise<void>(resolve => {
-			componentFactoryResolver = componentFactoryResolver ? componentFactoryResolver : this.componentFactoryResolver;
-			const popupFactory = componentFactoryResolver.resolveComponentFactory(PopupComponent);
+	): Promise<Out> {
+		return new Promise<Out>(resolve => {
+			const popupFactory = this.componentFactoryResolver.resolveComponentFactory(PopupComponent);
 			const popupRef = popupFactory.create(this.injector);
 			popupRef.instance.title = title;
 			popupRef.instance.titleTranslationParams = titleTranslationParams;
 			popupRef.instance.closeOnClickOutside = closeOnClickOutside;
 			popupRef.instance.contentCompInput = contentComponentInput;
-			popupRef.instance.contentComp = componentFactoryResolver.resolveComponentFactory(popupContentComp);
+			popupRef.instance.contentComp = this.componentFactoryResolver.resolveComponentFactory(popupContentComp);
 			this.appRef.attachView(popupRef.hostView);
 			const domElem = (popupRef.hostView as EmbeddedViewRef<any>).rootNodes[0] as HTMLElement;
 			this.document.body.appendChild(domElem);
