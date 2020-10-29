@@ -83,19 +83,19 @@ export class EditorInteractionService {
 	}
 
 	public newProject() {
-		// this.ngZone.run(async () => {
-		// 	if (await this.projectsService.askToSave()) {
-		// 		await this.projectsService.newProject();
-		// 	}
-		// });
+		this.ngZone.run(async () => {
+			if (await this.projectsService.askToSave()) {
+				// await this.projectsService.newProject();
+			}
+		});
 	}
 
 	public async openProject() {
-		// await this.ngZone.run(async () => {
-		// 	if (await this.projectsService.askToSave()) {
-		// 		await this.popupService.showPopup(OpenProjectComponent, 'POPUP.OPEN.TITLE', true);
-		// 	}
-		// });
+		await this.ngZone.run(async () => {
+			if (await this.projectsService.askToSave()) {
+				// await this.popupService.showPopup(OpenProjectComponent, 'POPUP.OPEN.TITLE', true);
+			}
+		});
 	}
 
 	public async openProjectDrop(files: FileList) {

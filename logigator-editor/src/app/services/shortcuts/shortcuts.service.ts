@@ -206,8 +206,10 @@ export class ShortcutsService {
 				this.editorInteraction.newComponent();
 				break;
 			case 'newProj':
+				this.editorInteraction.newProject();
 				break;
 			case 'openProj':
+				this.editorInteraction.openProject();
 				break;
 			case 'save':
 				this.projects.saveAllProjects();

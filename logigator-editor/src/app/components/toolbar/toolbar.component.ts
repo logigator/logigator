@@ -169,6 +169,7 @@ export class ToolbarComponent {
 	}
 
 	public openProject() {
+		this.editorInteractionService.openProject();
 	}
 
 	public continueSim() {

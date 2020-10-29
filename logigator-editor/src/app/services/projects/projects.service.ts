@@ -141,4 +141,17 @@ export class ProjectsService {
 		elemType.labels = project.calcLabels();
 		this._projects.forEach(p => p.updateLabels(project.id));
 	}
+
+	public async askToSave(): Promise<boolean> {
+		if (!this.hasUnsavedProjects)
+			return true;
+		return await this.popup.showPopup(UnsavedChangesComponent, 'POPUP.UNSAVED_CHANGES.TITLE', false);
+	}
+
+	public get hasUnsavedProjects(): boolean {
+		for (const project of this._projects) {
+			if (project.saveDirty) return true;
+		}
+		return false;
+	}
 }
