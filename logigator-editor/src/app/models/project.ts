@@ -56,12 +56,12 @@ export class Project {
 		this.boardRecorder = new BoardRecorder(this, true);
 	}
 
-	public static empty(name?: string): Project {
+	public static empty(name?: string, id?: number): Project {
 		return new Project(new ProjectState(), {
 			type: 'project',
 			source: 'local',
-			name: name || 'New Project',
-			id: 0
+			name: name ?? 'New Project',
+			id: id ?? 0
 		});
 	}
 

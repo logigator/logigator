@@ -11,6 +11,7 @@ import {UserShortcut} from '../../models/http/response/user';
 import {EditorInteractionService} from '../editor-interaction/editor-interaction.service';
 import {SimulationManagementService} from '../simulation/simulation-management/simulation-management.service';
 import {PopupService} from '../popup/popup.service';
+import {ProjectsService} from '../projects/projects.service';
 
 @Injectable({
 	providedIn: 'root'
@@ -25,6 +26,7 @@ export class ShortcutsService {
 	constructor(
 		private workMode: WorkModeService,
 		private editorInteraction: EditorInteractionService,
+		private projects: ProjectsService,
 		private simulationManagement: SimulationManagementService,
 		private userService: UserService,
 		private apiService: ApiService,
@@ -201,12 +203,14 @@ export class ShortcutsService {
 				this.workMode.setWorkMode(WorkMode.TEXT);
 				break;
 			case 'newComp':
+				this.editorInteraction.newComponent();
 				break;
 			case 'newProj':
 				break;
 			case 'openProj':
 				break;
 			case 'save':
+				this.projects.saveAllProjects();
 				break;
 			case 'enterSim':
 				this.workMode.enterSimulation();

@@ -1,7 +1,5 @@
 import {ChangeDetectionStrategy, Component, OnInit} from '@angular/core';
-import {ProjectsService} from '../../../services/projects/projects.service';
 import {UserService} from '../../../services/user/user.service';
-import {ProjectSaveManagementService} from '../../../services/project-save-management/project-save-management.service';
 import {Observable} from 'rxjs';
 import {ProjectInfoResponse} from '../../../models/http-responses/project-info-response';
 import {PopupContentComp} from '../../popup/popup-content-comp';

@@ -139,9 +139,9 @@ export class StateCompilerService {
 	}
 
 	private async projectsToCompile(project: Project): Promise<Map<number, Project>> {
-		// const out = await this.projectSaveManagement.buildDependencyTree(project);
-		// out.set(project.id, project);
-		return Promise.resolve(new Map<number, Project>());
+		const out = await this.projectSaveManagement.buildDependencyTree(project);
+		out.set(project.id, project);
+		return out;
 	}
 
 	/**
@@ -367,13 +367,6 @@ export class StateCompilerService {
 			}
 		}
 	}
-
-
-
-
-
-
-
 
 	/*
 	 * After all compiledComps were calculated and store which component is part of which link (link always start at 0 in every compiledComp)

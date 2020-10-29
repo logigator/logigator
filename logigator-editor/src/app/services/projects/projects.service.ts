@@ -82,22 +82,27 @@ export class ProjectsService {
 		this._projectSwitchSubject.next(id);
 	}
 
-	public closeProject(id: number) {
-		// const project = this.getProjectById(id);
+	public async closeProject(id: number) {
+		await this.saveProject(id);
 		this._projects = this._projects.filter(p => p.id !== id);
 		this._projectClosedSubject.next(id);
 	}
 
-	public saveAllProjects() {
+	private async saveProject(id: number) {
+		const project = this.getProjectById(id);
+		switch (project.type) {
+			case 'comp':
+				await this.projectSaveManagementService.saveComponent(project);
+				break;
+			case 'project':
+				await this.projectSaveManagementService.saveProject(project);
+				break;
+		}
+	}
+
+	public async saveAllProjects() {
 		for (const p of this.allProjects) {
-			switch (p.type) {
-				case 'comp':
-					this.projectSaveManagementService.saveComponent(p);
-					break;
-				case 'project':
-					this.projectSaveManagementService.saveProject(p);
-					break;
-			}
+			await this.saveProject(p.id);
 		}
 	}
 
@@ -108,7 +113,14 @@ export class ProjectsService {
 	}
 
 	public async openComponent(id: number) {
+		if (this.getProjectById(id)) {
+			this.switchToProject(id);
+			return;
+		}
 
+		const component = await this.projectSaveManagementService.getComponent(id);
+		this._projects.push(component);
+		this._projectOpenedSubject.next(component.id);
 	}
 
 	public inputsOutputsCustomComponentChanged(project: Project) {

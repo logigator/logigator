@@ -1,5 +1,4 @@
 import {ChangeDetectionStrategy, Component, EventEmitter, OnInit, Output} from '@angular/core';
-import {ProjectSaveManagementService} from '../../../services/project-save-management/project-save-management.service';
 import {UserService} from '../../../services/user/user.service';
 import {ProjectsService} from '../../../services/projects/projects.service';
 import {ImageExportService} from '../../../services/image-export/image-export.service';
@@ -17,7 +16,6 @@ export class FileDropdownComponent implements OnInit {
 	public requestClosed: EventEmitter<any> = new EventEmitter();
 
 	constructor(
-		private projectSaveService: ProjectSaveManagementService,
 		private editorInteractionService: EditorInteractionService,
 		private user: UserService,
 		private projects: ProjectsService,

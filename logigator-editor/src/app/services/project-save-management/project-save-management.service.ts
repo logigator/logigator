@@ -14,6 +14,7 @@ import {v4 as genUuid} from 'uuid';
 import {ProjectInfo} from '../../models/http/response/project-info';
 import {UserService} from '../user/user.service';
 import {filter} from 'rxjs/operators';
+import {ComponentData} from '../../models/http/response/component-data';
 
 @Injectable({
 	providedIn: 'root'
@@ -25,6 +26,8 @@ export class ProjectSaveManagementService {
 	 * value: editor number id
 	 */
 	private _mappings = new BiDirectionalMap<string, number>();
+
+	private _projectsCache = new Map<number, Project>();
 
 	private _loadedInitialProjects = false;
 
@@ -42,10 +45,10 @@ export class ProjectSaveManagementService {
 	public async getInitialProjects(): Promise<Project[]> {
 		let projects: Project[];
 		if (this.location.isProject) {
-			const mainProject = await this.getProjectUuid(this.location.projectUuid);
+			const mainProject = await this.getProjectOrComponentUuid(this.location.projectUuid, 'project');
 			projects = [mainProject];
 		} else if (this.location.isComponent) {
-			const comp = await this.getComponentUuid(this.location.componentUuid);
+			const comp = await this.getProjectOrComponentUuid(this.location.componentUuid, 'comp');
 			const mainProject = Project.empty();
 			projects = [mainProject, comp];
 		} else if (this.location.isShare) {
@@ -59,18 +62,23 @@ export class ProjectSaveManagementService {
 		return projects;
 	}
 
-	public async getProjectUuid(uuid: string): Promise<Project> {
-		const projectData = await this.api.get<ProjectData>(`/project/${uuid}`).toPromise();
+	public async getProjectOrComponentUuid(uuid: string, type: 'project' | 'comp'): Promise<Project> {
+		if (this._projectsCache.has(this._mappings.getValue(uuid)))
+			return this._projectsCache.get(this._mappings.getValue(uuid));
+
+		const apiPath = type === 'project' ? 'project' : 'component';
+		const projectData = await this.api.get<ProjectData & ComponentData>(`/${apiPath}/${uuid}`).toPromise();
 		const mappingsToApply = this.saveMappings(projectData.data.dependencies);
 		this.setCustomElements(projectData.data.dependencies.map(dep => dep.dependency), 'user');
 		const elements = this.convertSavedElementsToElements(projectData.data.elements, mappingsToApply);
 		const project = new Project(new ProjectState(elements), {
 			id: this.generateNextId(projectData.data.id),
 			source: 'server',
-			type: 'project',
 			name: projectData.data.name,
 			hash: projectData.data.elementsFile.hash,
+			type,
 		});
+		this._projectsCache.set(project.id, project);
 		return project;
 	}
 
@@ -84,14 +92,24 @@ export class ProjectSaveManagementService {
 		return Promise.resolve(p);
 	}
 
-	public getComponent(id: number): Promise<Project> {
-		const p = new Project(new ProjectState(), {
+	public async getComponent(id: number): Promise<Project> {
+		if (this._projectsCache.has(id))
+			return this._projectsCache.get(id);
+
+		const uuid = this._mappings.getKey(id);
+		const componentData = await this.api.get<ComponentData>(`/component/${uuid}`).toPromise();
+		const mappingsToApply = this.saveMappings(componentData.data.dependencies);
+		const elements = this.convertSavedElementsToElements(componentData.data.elements, mappingsToApply);
+
+		const project = new Project(new ProjectState(elements), {
 			type: 'comp',
-			name: 'comp',
-			source: 'local',
+			name: componentData.data.name,
+			source: 'server',
+			hash: componentData.data.elementsFile.hash,
 			id
 		});
-		return Promise.resolve(p);
+		this._projectsCache.set(project.id, project);
+		return project;
 	}
 
 	public createProject(name: string, description = ''): Promise<Project> {
@@ -108,37 +126,68 @@ export class ProjectSaveManagementService {
 		const id = this.generateNextId(resp.data.id);
 		this.setCustomElements([resp.data], 'user');
 
-		return new Project(new ProjectState(), {
+		const project = new Project(new ProjectState(), {
 			type: 'comp',
 			source: 'server',
 			name: resp.data.name,
 			id
 		});
+		this._projectsCache.set(project.id, project);
+		return project;
 	}
 
-	public saveComponent(project: Project): Promise<void> {
-		return Promise.resolve();
+	public async saveComponent(project: Project): Promise<void> {
+		const elementType = this.elementProvider.getElementById(project.id);
+		const convertedElements = this.convertElementsToSaveElements(project.allElements);
+		const body = {
+			oldHash: project.hash,
+			dependencies: convertedElements.usedCustomElements.map(cu => {
+				return {
+					id: this._mappings.getKey(cu),
+					model: cu,
+				};
+			}),
+			elements: convertedElements.elements,
+			numInputs: elementType.numInputs,
+			numOutputs: elementType.numOutputs,
+			labels: elementType.labels
+		};
+		const resp = await this.api.put<ProjectInfo>(`/component/${this._mappings.getKey(project.id)}`, body).toPromise();
+		project.saveDirty = false;
+		project.hash = resp.data.elementsFile.hash;
+		this._projectsCache.set(project.id, project);
 	}
 
 	public async saveProject(project: Project): Promise<void> {
-		if (project.source === 'server') {
-			const convertedElements = this.convertElementsToSaveElements(project.allElements);
-			const body = {
-				oldHash: project.hash,
-				dependencies: convertedElements.usedCustomElements.map(cu => {
-					return {
-						id: this._mappings.getKey(cu),
-						model: cu,
-					};
-				}),
-				elements: convertedElements.elements,
-			};
-			const resp = await this.api.put<ProjectInfo>(`/project/${this._mappings.getKey(project.id)}`, body).toPromise();
-			project.saveDirty = false;
-			project.hash = resp.data.elementsFile.hash;
-		} else {
-			return Promise.resolve();
+		const convertedElements = this.convertElementsToSaveElements(project.allElements);
+		const body = {
+			oldHash: project.hash,
+			dependencies: convertedElements.usedCustomElements.map(cu => {
+				return {
+					id: this._mappings.getKey(cu),
+					model: cu,
+				};
+			}),
+			elements: convertedElements.elements,
+		};
+		const resp = await this.api.put<ProjectInfo>(`/project/${this._mappings.getKey(project.id)}`, body).toPromise();
+		project.saveDirty = false;
+		project.hash = resp.data.elementsFile.hash;
+		this._projectsCache.set(project.id, project);
+	}
+
+	public async buildDependencyTree(project: Project, resolved?: Map<number, Project>): Promise<Map<number, Project>> {
+		if (!resolved)
+			resolved = new Map<number, Project>();
+
+		for (const element of project.allElements) {
+			if (this.elementProvider.isCustomElement(element.typeId) && !resolved.has(element.typeId)) {
+				const proj = await this.getComponent(element.typeId);
+				resolved.set(element.typeId, proj);
+				resolved = new Map([...resolved, ...(await this.buildDependencyTree(proj, resolved))]);
+			}
 		}
+		return resolved;
 	}
 
 	/**
@@ -262,7 +311,7 @@ export class ProjectSaveManagementService {
 
 		uuid = uuid ?? genUuid();
 
-		let nextId = 0;
+		let nextId = 1000;
 		for (const id of this._mappings.values()) {
 			if (id > nextId)
 				nextId = id;
