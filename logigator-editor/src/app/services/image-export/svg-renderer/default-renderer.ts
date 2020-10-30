@@ -68,7 +68,7 @@ export class DefaultRenderer extends BaseRenderer {
 
 		// Labels
 		if (this._quality >= RenderQuality.full && this._labels) {
-			switch (this.element.rotation) {
+			switch (this._element.rotation) {
 				case ElementRotation.right:
 					for (let i = 0; i < this._element.numInputs; i++) {
 						if (!this._labels[i]) continue;

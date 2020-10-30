@@ -6,6 +6,8 @@ import {ThemingService} from '../theming/theming.service';
 import {environment} from '../../../environments/environment';
 import {DefaultRenderer} from './svg-renderer/default-renderer';
 import {ElementTypeId} from '../../models/element-types/element-type-ids';
+import {LedRenderer} from './svg-renderer/led-renderer';
+import {TextRenderer} from './svg-renderer/text-renderer';
 
 export class SvgImageExporter {
 
@@ -76,10 +78,10 @@ export class SvgImageExporter {
 		// console.log(maxX);
 		// console.log(maxY);
 		// console.log(this.offset);
-		console.log('GridSize: ' + this.gridSize);
-		console.log('Size: ' + this.size);
-		console.log('ScaleFactor: ' + this.scaleFactor);
-		console.log('Quality: ' + this.quality);
+		console.log('GridSize', this.gridSize);
+		console.log('Size', this.size);
+		console.log('ScaleFactor', this.scaleFactor);
+		console.log('Quality', this.quality);
 
 		this.generateDefinitions();
 		/*
@@ -122,7 +124,11 @@ export class SvgImageExporter {
 		let group: SVGGElement;
 		switch (element.typeId) {
 			case ElementTypeId.TEXT:
+				group = new TextRenderer(element, this.gridSize, this.quality).render();
+				break;
 			case ElementTypeId.LED:
+				group = new LedRenderer(element, this.gridSize, this.quality).render();
+				break;
 			case ElementTypeId.LED_MATRIX:
 			case ElementTypeId.BUTTON:
 			case ElementTypeId.INPUT:
@@ -188,6 +194,7 @@ export class SvgImageExporter {
 			}
 			.text {
 				text-anchor: start;
+				font-size: ${this.gridSize}px
 			}
 			.led {
 				fill: #${this.themingService.getEditorColor('wire').toString(16)};
