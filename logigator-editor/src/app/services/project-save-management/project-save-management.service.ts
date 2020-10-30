@@ -15,6 +15,9 @@ import {ProjectInfo} from '../../models/http/response/project-info';
 import {UserService} from '../user/user.service';
 import {filter} from 'rxjs/operators';
 import {ComponentData} from '../../models/http/response/component-data';
+import {ProjectList} from '../../models/http/response/project-list';
+import {Response} from '../../models/http/response/response';
+import {Observable} from 'rxjs';
 
 @Injectable({
 	providedIn: 'root'
@@ -188,6 +191,19 @@ export class ProjectSaveManagementService {
 			}
 		}
 		return resolved;
+	}
+
+	public getProjectsInfo(page?: number, search?: string): Observable<Response<ProjectList>> {
+		const params: any = {
+			size: 5
+		};
+
+		if (page)
+			params.page = page;
+		if (search)
+			params.search = search;
+
+		return this.api.get<ProjectList>('/project', undefined, params);
 	}
 
 	/**

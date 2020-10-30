@@ -7,6 +7,7 @@ import {EditorAction} from '../../models/editor-action';
 import {filter} from 'rxjs/operators';
 import {PopupService} from '../popup/popup.service';
 import {NewComponentComponent} from '../../components/popup-contents/new-component/new-component.component';
+import {OpenProjectComponent} from '../../components/popup-contents/open/open-project.component';
 
 @Injectable({
 	providedIn: 'root'
@@ -93,7 +94,7 @@ export class EditorInteractionService {
 	public async openProject() {
 		await this.ngZone.run(async () => {
 			if (await this.projectsService.askToSave()) {
-				// await this.popupService.showPopup(OpenProjectComponent, 'POPUP.OPEN.TITLE', true);
+				await this.popupService.showPopup(OpenProjectComponent, 'POPUP.OPEN.TITLE', true);
 			}
 		});
 	}

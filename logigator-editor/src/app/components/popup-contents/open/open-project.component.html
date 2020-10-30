@@ -1,39 +1,44 @@
-<div class="open">
-	<div class="open-server" *ngIf="isLoggedIn && allProjectsInfo | async as allProjects">
-		<h2>{{'POPUP.OPEN.OPEN_CLOUD' | translate}}</h2>
-		<table>
-			<thead>
-				<tr>
-					<th class="name">{{'POPUP.OPEN.TABLE_NAME' | translate}}</th>
-					<th class="last-edit">{{'POPUP.OPEN.TABLE_EDITED' | translate}}</th>
-					<th class="open">{{'POPUP.OPEN.TABLE_OPEN' | translate}}</th>
-				</tr>
-			</thead>
-			<tbody>
-				<tr *ngFor="let p of allProjects" class="single-project-server">
-					<td class="name">{{p.name}}</td>
-					<td class="last-edit">{{p.last_edited | date:'medium'}}</td>
-					<td class="open">
-						<button class="btn-outline primary small" (click)="openServer(p)">{{'POPUP.OPEN.OPEN' | translate}}</button>
-					</td>
-				</tr>
-			</tbody>
-		</table>
+<div class="open-project">
+	<div class="open-server" *ngIf="isLoggedIn">
+		<app-input [label]="'Search' | translate" [(ngModel)]="searchText" (ngModelChange)="searchTextChanged()"></app-input>
+
+		<ng-container *ngIf="projectsList as projects">
+			<div class="single-project-server table-header" *ngIf="projects.count > 0">
+				<p class="name">{{'POPUP.OPEN.TABLE_NAME' | translate}}</p>
+				<p class="last-edit">{{'POPUP.OPEN.TABLE_EDITED' | translate}}</p>
+			</div>
+
+			<div *ngIf="projects.count === 0">
+				<p class="not-found">{{'No projects found' | translate}}</p>
+			</div>
+
+			<div *ngFor="let p of projects.entries" class="single-project-server">
+				<p class="name">{{p.name}}</p>
+				<p class="last-edit">{{p.lastEdited | date:'medium'}}</p>
+				<button class="btn-outline primary small open-button" (click)="openServer(p.id)">{{'POPUP.OPEN.OPEN' | translate}}</button>
+			</div>
+		</ng-container>
+
+		<div class="pagination-buttons">
+			<ng-container *ngFor="let b of paginationButtons">
+				<button class="btn-outline secondary small" *ngIf="!b.hidden" [disabled]="b.disabled" [class.is-active]="b.active" (click)="pageButtonClick(b.target)">{{b.value}}</button>
+			</ng-container>
+		</div>
 	</div>
 	<div>
 		<h2>{{'POPUP.OPEN.OPEN_SHARE' | translate}}</h2>
 		<div class="open-share">
 			<app-input [label]="'POPUP.OPEN.SHARE_LABEL' | translate" [(ngModel)]="shareLinkId"></app-input>
-			<button class="btn-outline primary" (click)="openShare()" [disabled]="!shareLinkId">{{'POPUP.OPEN.OPEN' | translate}}</button>
+			<button class="btn-outline primary open-button" (click)="openShare()" [disabled]="!shareLinkId">{{'POPUP.OPEN.OPEN' | translate}}</button>
 		</div>
 	</div>
 	<div>
-		<h2>{{'POPUP.OPEN.OPEN_FILE' | translate}}</h2>
+		<h2 class="open-file-headline">{{'POPUP.OPEN.OPEN_FILE' | translate}}</h2>
 		<div class="file-upload">
 			<app-file-input [(ngModel)]="fileToOpen" accept=".json"></app-file-input>
 			<div>
 				<p>{{fileToOpen ? fileToOpen.name : 'POPUP.OPEN.NO_FILE' | translate}}</p>
-				<button class="btn-outline primary" [disabled]="!fileToOpen || fileToOpen.type !== 'application/json'" (click)="openFile()">{{'POPUP.OPEN.OPEN' | translate}}</button>
+				<button class="btn-outline primary open-button" [disabled]="!fileToOpen || fileToOpen.type !== 'application/json'" (click)="openFile()">{{'POPUP.OPEN.OPEN' | translate}}</button>
 			</div>
 		</div>
 	</div>

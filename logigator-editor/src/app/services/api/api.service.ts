@@ -14,32 +14,32 @@ export class ApiService {
 
 	constructor(private http: HttpClient, private errorHandling: ErrorHandlingService) {}
 
-	public get<T>(url: string, errorConfig?: ApiErrorConfig): Observable<Response<T>> {
-		return this.http.get<T>(environment.api + url).pipe(
+	public get<T>(url: string, errorConfig?: ApiErrorConfig, params?: { [param: string]: string; }): Observable<Response<T>> {
+		return this.http.get<T>(environment.api + url, {params}).pipe(
 			catchError(err => this.handleError(err, errorConfig))
 		);
 	}
 
-	public post<T>(url: string, body: any, errorConfig?: ApiErrorConfig): Observable<Response<T>> {
-		return this.http.post<T>(environment.api + url, body).pipe(
+	public post<T>(url: string, body: any, errorConfig?: ApiErrorConfig, params?: { [param: string]: string; }): Observable<Response<T>> {
+		return this.http.post<T>(environment.api + url, body, {params}).pipe(
 			catchError(err => this.handleError(err, errorConfig))
 		);
 	}
 
-	public put<T>(url: string, body: any, errorConfig?: ApiErrorConfig): Observable<Response<T>> {
-		return this.http.put<T>(environment.api + url, body).pipe(
+	public put<T>(url: string, body: any, errorConfig?: ApiErrorConfig, params?: { [param: string]: string; }): Observable<Response<T>> {
+		return this.http.put<T>(environment.api + url, body, {params}).pipe(
 			catchError(err => this.handleError(err, errorConfig))
 		);
 	}
 
-	public patch<T>(url: string, body: any, errorConfig?: ApiErrorConfig): Observable<Response<T>> {
-		return this.http.patch<T>(environment.api + url, body).pipe(
+	public patch<T>(url: string, body: any, errorConfig?: ApiErrorConfig, params?: { [param: string]: string; }): Observable<Response<T>> {
+		return this.http.patch<T>(environment.api + url, body, {params}).pipe(
 			catchError(err => this.handleError(err, errorConfig))
 		);
 	}
 
-	public delete<T>(url: string, errorConfig?: ApiErrorConfig): Observable<Response<T>> {
-		return this.http.delete<T>(environment.api + url).pipe(
+	public delete<T>(url: string, errorConfig?: ApiErrorConfig, params?: { [param: string]: string; }): Observable<Response<T>> {
+		return this.http.delete<T>(environment.api + url, {params}).pipe(
 			catchError(err => this.handleError(err, errorConfig))
 		);
 	}
