@@ -13,11 +13,18 @@ export interface Element {
 
 	wireEnds?: PIXI.Point[];
 
-	rotation?: number;
+	rotation?: ElementRotation;
 
 	plugIndex?: number;
 
 	options?: number[];
 
 	data?: unknown;
+}
+
+export const enum ElementRotation {
+	right,
+	down,
+	left,
+	up
 }
