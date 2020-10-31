@@ -35,7 +35,8 @@ export class ProjectsService {
 		private popup: PopupService,
 		private elementProvider: ElementProviderService,
 		private errorHandling: ErrorHandlingService,
-		private pixiLoader: PixiLoaderService
+		private pixiLoader: PixiLoaderService,
+		private location: LocationService
 	) {
 		this.projectSaveManagementService.getInitialProjects().then(projects => {
 			this._projects = projects;
@@ -100,6 +101,14 @@ export class ProjectsService {
 		}
 	}
 
+	private async openNewProject(project: Project) {
+		this._projects.unshift(project);
+		this._projectOpenedSubject.next(project.id);
+		for (let i = 1; i < this._projects.length; i++) {
+			this.closeProject(this._projects[i].id);
+		}
+	}
+
 	public async saveAllProjects() {
 		for (const p of this.allProjects) {
 			await this.saveProject(p.id);
@@ -110,6 +119,12 @@ export class ProjectsService {
 		const component = await this.projectSaveManagementService.createComponent(name, symbol, description);
 		this._projects.push(component);
 		this._projectOpenedSubject.next(component.id);
+	}
+
+	public async openProjectUuid(id: string) {
+		const project = await this.projectSaveManagementService.getProjectOrComponentUuid(id, 'project');
+		await this.openNewProject(project);
+		this.location.set('project', id);
 	}
 
 	public async openComponent(id: number) {

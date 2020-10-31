@@ -140,6 +140,14 @@ export class ProjectSaveManagementService {
 	}
 
 	public async saveComponent(project: Project): Promise<void> {
+		if (!project.saveDirty)
+			return;
+
+		if (project.source !== 'server') {
+			this._projectsCache.set(project.id, project);
+			return;
+		}
+
 		const elementType = this.elementProvider.getElementById(project.id);
 		const convertedElements = this.convertElementsToSaveElements(project.allElements);
 		const body = {
@@ -162,6 +170,14 @@ export class ProjectSaveManagementService {
 	}
 
 	public async saveProject(project: Project): Promise<void> {
+		if (!project.saveDirty)
+			return;
+
+		if (project.source !== 'server') {
+			this._projectsCache.set(project.id, project);
+			return;
+		}
+
 		const convertedElements = this.convertElementsToSaveElements(project.allElements);
 		const body = {
 			oldHash: project.hash,

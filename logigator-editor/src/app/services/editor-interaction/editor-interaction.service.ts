@@ -94,7 +94,15 @@ export class EditorInteractionService {
 	public async openProject() {
 		await this.ngZone.run(async () => {
 			if (await this.projectsService.askToSave()) {
-				await this.popupService.showPopup(OpenProjectComponent, 'POPUP.OPEN.TITLE', true);
+				const openResp = await this.popupService.showPopup(OpenProjectComponent, 'POPUP.OPEN.TITLE', true);
+				if (!openResp)
+					return;
+
+				switch (openResp.type) {
+					case 'server':
+						this.projectsService.openProjectUuid(openResp.data);
+						break;
+				}
 			}
 		});
 	}
