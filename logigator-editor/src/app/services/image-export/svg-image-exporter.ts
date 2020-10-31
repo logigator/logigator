@@ -8,6 +8,10 @@ import {DefaultRenderer} from './svg-renderer/default-renderer';
 import {ElementTypeId} from '../../models/element-types/element-type-ids';
 import {LedRenderer} from './svg-renderer/led-renderer';
 import {TextRenderer} from './svg-renderer/text-renderer';
+import {ButtonRenderer} from './svg-renderer/button-renderer';
+import {LeverRenderer} from './svg-renderer/lever-renderer';
+import {InputOutputRenderer} from './svg-renderer/input-output-renderer';
+import {LedMatrixRenderer} from './svg-renderer/led-matrix-renderer';
 
 export class SvgImageExporter {
 
@@ -97,6 +101,10 @@ export class SvgImageExporter {
 		*/
 
 		let wirePath = '';
+		const wires = document.createElementNS(this.SVG_NS, 'path');
+		wires.setAttribute('class', 'w');
+		this._svg.appendChild(wires);
+
 		for (const action of this.project.getOpenActions()) {
 			switch (action.name) {
 				case 'addComp':
@@ -114,10 +122,7 @@ export class SvgImageExporter {
 					break;
 			}
 		}
-		const wires = document.createElementNS(this.SVG_NS, 'path');
-		wires.setAttribute('class', 'w');
 		wires.setAttribute('d', wirePath);
-		this._svg.appendChild(wires);
 	}
 
 	private placeComp(element: Element) {
@@ -130,10 +135,18 @@ export class SvgImageExporter {
 				group = new LedRenderer(element, this.gridSize, this.quality).render();
 				break;
 			case ElementTypeId.LED_MATRIX:
+				group = new LedMatrixRenderer(element, this.gridSize, this.quality).render();
+				break;
 			case ElementTypeId.BUTTON:
+				group = new ButtonRenderer(element, this.gridSize, this.quality).render();
+				break;
 			case ElementTypeId.INPUT:
 			case ElementTypeId.OUTPUT:
+				group = new InputOutputRenderer(element, this.gridSize, this.quality).render();
+				break;
 			case ElementTypeId.LEVER:
+				group = new LeverRenderer(element, this.gridSize, this.quality).render();
+				break;
 			case ElementTypeId.SEGMENT_DISPLAY:
 				break;
 			default:
@@ -190,14 +203,14 @@ export class SvgImageExporter {
 			}
 			.s {
 				text-anchor: middle;
-				font-size: ${this.gridSize * 0.7}px;
+				font-size: ${this.gridSize * 0.6}px;
 			}
 			.text {
 				text-anchor: start;
-				font-size: ${this.gridSize}px
+				font-size: ${this.gridSize}px;
 			}
 			.led {
-				fill: #${this.themingService.getEditorColor('wire').toString(16)};
+				fill: #${this.themingService.getEditorColor('ledOff').toString(16)};
 			}
 			.l-l {
 				text-anchor: start;

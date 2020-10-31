@@ -53,9 +53,8 @@ export class InputOutputGraphics extends PIXI.Graphics implements LGraphics, Com
 		this.beginFill(this.themingService.getEditorColor('wire'));
 
 		let rotForRender = this.element.rotation;
-		if (this.element.typeId === ElementTypeId.OUTPUT) {
-			rotForRender = this.element.rotation - 2;
-		}
+		if (this.element.typeId === ElementTypeId.OUTPUT)
+			rotForRender = (this.element.rotation + 2) % 4;
 
 		// rotation for input
 		switch (rotForRender) {
@@ -68,12 +67,10 @@ export class InputOutputGraphics extends PIXI.Graphics implements LGraphics, Com
 				this.lineTo(environment.gridPixelWidth / 2, environment.gridPixelWidth + environment.gridPixelWidth / 2);
 				break;
 			case 2:
-			case -2:
 				this.moveTo(0, environment.gridPixelWidth / 2);
 				this.lineTo(-environment.gridPixelWidth / 2, environment.gridPixelWidth / 2);
 				break;
 			case 3:
-			case -1:
 				this.moveTo(environment.gridPixelWidth / 2, 0);
 				this.lineTo(environment.gridPixelWidth / 2, -environment.gridPixelWidth / 2);
 				break;

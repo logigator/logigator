@@ -40,6 +40,14 @@ export abstract class BaseRenderer {
 		return size * this._gridSize / environment.gridPixelWidth;
 	}
 
+	protected getLabelText(text: string, x: number, y: number): SVGTextElement {
+		const label = document.createElementNS(this.SVG_NS, 'text');
+		label.textContent = text;
+		label.setAttribute('x', x + '');
+		label.setAttribute('y', y + '');
+		return label;
+	}
+
 	get elementType(): ElementType {
 		return this._elementType;
 	}

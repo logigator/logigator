@@ -10,16 +10,16 @@ export class DefaultRenderer extends BaseRenderer {
 		// Outline, corners could be removed for lower quality presets
 		switch (this.element.rotation) {
 			case ElementRotation.right:
-				path = `M 0,0 h ${this._size.x - this.scaled(3)} L ${this._size.x},${this.scaled(3)} v ${this._size.y - this.scaled(6)} L ${this._size.x - this.scaled(3)},${this._size.y}, h -${this._size.x - this.scaled(3)}, v -${this._size.y}`;
+				path = `M 0,0 h ${this._size.x - this.scaled(3)} L ${this._size.x},${this.scaled(3)} V ${this._size.y - this.scaled(3)} l ${-this.scaled(3)},${this.scaled(3)}, H 0 V 0`;
 				break;
 			case ElementRotation.down:
-				path = `M 0,0 h ${this._size.x} v ${this._size.y - this.scaled(3)} L ${this._size.x - this.scaled(3)},${this._size.y} h -${this._size.x - this.scaled(6)} L 0,${this._size.y - this.scaled(3)} v -${this._size.y - this.scaled(3)}`;
+				path = `M 0,0 h ${this._size.x} v ${this._size.y - this.scaled(3)} l ${-this.scaled(3)},${this.scaled(3)} H ${this.scaled(3)} L 0,${this._size.y - this.scaled(3)} V 0`;
 				break;
 			case ElementRotation.left:
-				path = `M ${this.scaled(3)},0 h ${this._size.x - this.scaled(3)} v ${this._size.y} h -${this._size.x - this.scaled(3)} L 0,${this._size.y - this.scaled(3)} v -${this._size.y - this.scaled(6)} L ${this.scaled(3)},0`;
+				path = `M ${this.scaled(3)},0 H ${this._size.x} v ${this._size.y} H ${this.scaled(3)} L 0,${this._size.y - this.scaled(3)} V ${this.scaled(3)} L ${this.scaled(3)},0`;
 				break;
 			case ElementRotation.up:
-				path = `M ${this.scaled(3)},0 h ${this._size.x - this.scaled(6)} L ${this._size.x},${this.scaled(3)} v ${this._size.y - this.scaled(3)} h -${this._size.x} v -${this._size.y - this.scaled(3)} L ${this.scaled(3)},0`;
+				path = `M ${this.scaled(3)},0 H ${this._size.x - this.scaled(3)} L ${this._size.x},${this.scaled(3)} V ${this._size.y} H 0 V ${this.scaled(3)} L ${this.scaled(3)},0`;
 				break;
 		}
 
@@ -86,13 +86,13 @@ export class DefaultRenderer extends BaseRenderer {
 				case ElementRotation.down:
 					for (let i = 0; i < this._element.numInputs; i++) {
 						if (!this._labels[i]) continue;
-						const label = this.getLabelText(this._labels[i], this._size.x - this._gridSize / 2 - this._gridSize * i, 6);
+						const label = this.getLabelText(this._labels[i], this._size.x - this._gridSize / 2 - this._gridSize * i, this.scaled(6));
 						label.setAttribute('class', 'l-t');
 						this._group.appendChild(label);
 					}
 					for (let i = 0; i < this._element.numOutputs; i++) {
 						if (!this._labels[this._element.numOutputs + i]) continue;
-						const label = this.getLabelText(this._labels[this._element.numOutputs + i], this._size.x - this._gridSize / 2 - this._gridSize * i, this._size.y - 3);
+						const label = this.getLabelText(this._labels[this._element.numOutputs + i], this._size.x - this._gridSize / 2 - this._gridSize * i, this._size.y - this.scaled(3));
 						label.setAttribute('class', 'l-b');
 						this._group.appendChild(label);
 					}
@@ -114,13 +114,13 @@ export class DefaultRenderer extends BaseRenderer {
 				case ElementRotation.up:
 					for (let i = 0; i < this._element.numInputs; i++) {
 						if (!this._labels[i]) continue;
-						const label = this.getLabelText(this._labels[i], this._gridSize / 2 + this._gridSize * i, this._size.y - 3);
+						const label = this.getLabelText(this._labels[i], this._gridSize / 2 + this._gridSize * i, this._size.y - this.scaled(3));
 						label.setAttribute('class', 'l-b');
 						this._group.appendChild(label);
 					}
 					for (let i = 0; i < this._element.numOutputs; i++) {
 						if (!this._labels[this._element.numOutputs + i]) continue;
-						const label = this.getLabelText(this._labels[this._element.numOutputs + i], this._gridSize / 2 + this._gridSize * i, 6);
+						const label = this.getLabelText(this._labels[this._element.numOutputs + i], this._gridSize / 2 + this._gridSize * i, this.scaled(6));
 						label.setAttribute('class', 'l-t');
 						this._group.appendChild(label);
 					}
@@ -139,13 +139,5 @@ export class DefaultRenderer extends BaseRenderer {
 		}
 
 		return this._group;
-	}
-
-	private getLabelText(text: string, x: number, y: number): SVGTextElement {
-		const label = document.createElementNS(this.SVG_NS, 'text');
-		label.textContent = text;
-		label.setAttribute('x', x + '');
-		label.setAttribute('y', y + '');
-		return label;
 	}
 }
