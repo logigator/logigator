@@ -2,7 +2,7 @@ import {BaseRenderer} from './base-renderer';
 import {RenderQuality} from '../svg-image-exporter';
 import {ElementRotation} from '../../../models/element';
 
-export class LedMatrixRenderer extends BaseRenderer {
+export class SegmentDisplayRenderer extends BaseRenderer {
 	render(): SVGGElement {
 		let path = `M 0,0 h ${this.size.x} v ${this.size.y} H 0 V 0`;
 
@@ -31,6 +31,7 @@ export class LedMatrixRenderer extends BaseRenderer {
 					break;
 			}
 		}
+
 		const element = document.createElementNS(this.SVG_NS, 'path');
 		element.setAttribute('class', 'c');
 		element.setAttribute('d', path);
@@ -70,34 +71,12 @@ export class LedMatrixRenderer extends BaseRenderer {
 			}
 		}
 
-		const ledSize = (this._size.x - this.gridSize * 2) / this.element.options[0] - 1;
-		let ledPath = '';
-		for (let y = 0; y < this.element.options[0]; y++) {
-			for (let x = 0; x < this.element.options[0]; x++) {
-				ledPath += `M ${ledSize * x + x},${ledSize * y + y} h ${ledSize} v ${ledSize} h ${-ledSize} v ${-ledSize}`;
-			}
-		}
-
-		const leds = document.createElementNS(this.SVG_NS, 'path');
-		leds.setAttribute('class', 'led');
-		leds.setAttribute('d', ledPath);
-		switch (this.element.rotation) {
-			case ElementRotation.right:
-				leds.setAttribute('transform', `translate(${1.5 * this.gridSize}, ${this.gridSize})`);
-				break;
-			case ElementRotation.down:
-				leds.setAttribute('transform', `translate(${this.gridSize}, ${1.5 * this.gridSize})`);
-				break;
-			case ElementRotation.left:
-				leds.setAttribute('transform', `translate(${0.5 * this.gridSize}, ${this.gridSize})`);
-				break;
-			case ElementRotation.up:
-				leds.setAttribute('transform', `translate(${this.gridSize}, ${0.5 * this.gridSize})`);
-				break;
-		}
-		this._group.appendChild(leds);
-
+		let str = '0';
+		const strLength = Math.ceil(Math.log10((2 ** this.element.numInputs) + 1));
+		while (str.length < strLength) str = '0' + str;
+		const segments = this.getLabelText(str, this.size.x / 2, this.size.y / 2 + this.gridSize / 2);
+		segments.setAttribute('class', 'seg');
+		this._group.appendChild(segments);
 		return this._group;
 	}
-
 }
