@@ -27,6 +27,7 @@ import {ShareProject} from '../../../models/request/frontend/my-projects/share-p
 import {Redirect, RedirectFunction} from '../../../decorator/redirect.decorator';
 import {v4 as uuid} from 'uuid';
 import {ConfigService} from '../../../services/config.service';
+import {classToPlain} from 'class-transformer';
 
 @Controller('/my/components')
 export class MyComponentsController {
@@ -208,8 +209,10 @@ export class MyComponentsController {
 		const page = await this.componentRepo.getComponentPageForUser(pageNumber ?? 0, 12, user, search);
 
 		const entries = page.entries.map(entry => {
-			(entry.lastEdited as any) = this.translationService.dateFormatDate(entry.lastEdited, language);
-			return entry;
+			const transformed = classToPlain(entry);
+			transformed.lastEdited= this.translationService.dateFormatDate(entry.lastEdited, language);
+			transformed.editorUrl = this.configService.getConfig('domains').editor + '/component/' + entry.id;
+			return transformed;
 		});
 		return {
 			entries,

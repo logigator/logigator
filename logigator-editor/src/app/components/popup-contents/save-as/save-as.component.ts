@@ -11,12 +11,12 @@ import {PopupContentComp} from '../../popup/popup-content-comp';
 	styleUrls: ['./save-as.component.scss'],
 	changeDetection: ChangeDetectionStrategy.OnPush
 })
-export class SaveAsComponent extends PopupContentComp<Project> implements OnInit {
+export class SaveAsComponent extends
+	PopupContentComp<never, {name: string, description: string, target: 'local' | 'server'}> implements OnInit {
 
 	public saveForm: FormGroup;
 
 	constructor(
-		private projectSaveManagement: ProjectSaveManagementService,
 		private user: UserService,
 		private formBuilder: FormBuilder
 	) {
@@ -35,14 +35,17 @@ export class SaveAsComponent extends PopupContentComp<Project> implements OnInit
 	}
 
 	public async saveToServer() {
-		const newProject = this.projectSaveManagement.saveAsNewProjectServer(
-			this.inputFromOpener, this.saveForm.controls.name.value, this.saveForm.controls.description.value
-		);
-		this.requestClose.emit(newProject);
+		this.requestClose.emit({
+			target: 'server',
+			...this.saveForm.value
+		});
 	}
 
 	public exportProject() {
-		this.projectSaveManagement.exportToFile(this.inputFromOpener, this.saveForm.controls.name.value);
+		this.requestClose.emit({
+			target: 'local',
+			...this.saveForm.value
+		});
 	}
 
 }

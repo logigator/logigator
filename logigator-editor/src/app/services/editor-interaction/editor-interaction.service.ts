@@ -3,15 +3,12 @@ import {Observable, Subject} from 'rxjs';
 import {ProjectsService} from '../projects/projects.service';
 import {SelectionService} from '../selection/selection.service';
 import {CopyService} from '../copy/copy.service';
-import {WorkModeService} from '../work-mode/work-mode.service';
-import {OpenProjectComponent} from '../../components/popup-contents/open/open-project.component';
-import {NewComponentComponent} from '../../components/popup-contents/new-component/new-component.component';
-import {ProjectSaveManagementService} from '../project-save-management/project-save-management.service';
-import {ShareProjectComponent} from '../../components/popup-contents/share-project/share-project.component';
-import {ErrorHandlingService} from '../error-handling/error-handling.service';
-import {PopupService} from '../popup/popup.service';
 import {EditorAction} from '../../models/editor-action';
 import {filter} from 'rxjs/operators';
+import {PopupService} from '../popup/popup.service';
+import {NewComponentComponent} from '../../components/popup-contents/new-component/new-component.component';
+import {OpenProjectComponent} from '../../components/popup-contents/open/open-project.component';
+import {SaveAsComponent} from '../../components/popup-contents/save-as/save-as.component';
 
 @Injectable({
 	providedIn: 'root'
@@ -24,11 +21,8 @@ export class EditorInteractionService {
 		private projectsService: ProjectsService,
 		private selection: SelectionService,
 		private copyService: CopyService,
-		private workMode: WorkModeService,
-		private popupService: PopupService,
-		private projectSave: ProjectSaveManagementService,
-		private errorHandling: ErrorHandlingService,
-		private ngZone: NgZone
+		private ngZone: NgZone,
+		private popupService: PopupService
 	) {}
 
 	public subscribeEditorAction(...actions: EditorAction[]): Observable<EditorAction> {
@@ -54,7 +48,7 @@ export class EditorInteractionService {
 
 	public delete() {
 		this.projectsService.currProject.removeElementsById(this.selection.selectedIds());
-		this.projectsService.inputsOutputsCustomComponentChanged(this.projectsService.currProject.id);
+		this.projectsService.inputsOutputsCustomComponentChanged(this.projectsService.currProject);
 		this._editorActionsSubject.next(EditorAction.DELETE);
 	}
 
@@ -66,7 +60,7 @@ export class EditorInteractionService {
 	public cut() {
 		this.copyService.copySelection();
 		this.projectsService.currProject.removeElementsById(this.selection.selectedIds());
-		this.projectsService.inputsOutputsCustomComponentChanged(this.projectsService.currProject.id);
+		this.projectsService.inputsOutputsCustomComponentChanged(this.projectsService.currProject);
 		this._editorActionsSubject.next(EditorAction.CUT);
 	}
 
@@ -76,13 +70,13 @@ export class EditorInteractionService {
 
 	public undo() {
 		this.projectsService.currProject.stepBack();
-		this.projectsService.inputsOutputsCustomComponentChanged(this.projectsService.currProject.id);
+		this.projectsService.inputsOutputsCustomComponentChanged(this.projectsService.currProject);
 		this._editorActionsSubject.next(EditorAction.UNDO);
 	}
 
 	public redo() {
 		this.projectsService.currProject.stepForward();
-		this.projectsService.inputsOutputsCustomComponentChanged(this.projectsService.currProject.id);
+		this.projectsService.inputsOutputsCustomComponentChanged(this.projectsService.currProject);
 		this._editorActionsSubject.next(EditorAction.REDO);
 	}
 
@@ -101,50 +95,76 @@ export class EditorInteractionService {
 	public async openProject() {
 		await this.ngZone.run(async () => {
 			if (await this.projectsService.askToSave()) {
-				await this.popupService.showPopup(OpenProjectComponent, 'POPUP.OPEN.TITLE', true);
+				const openResp = await this.popupService.showPopup(OpenProjectComponent, 'POPUP.OPEN.TITLE', true);
+				if (!openResp)
+					return;
+
+				switch (openResp.type) {
+					case 'server':
+						this.projectsService.openProjectUuid(openResp.data);
+						break;
+					case 'local':
+						this.openProjectFile(openResp.data);
+						break;
+				}
 			}
 		});
 	}
 
-	public async openProjectDrop(files: FileList) {
-		if (files.length !== 1) return ;
-		if (files[0].type !== 'application/json') {
-			this.errorHandling.showErrorMessage('ERROR.PROJECTS.INVALID_FILE_TYPE');
+	public async saveProject() {
+		if (this.projectsService.mainProject.source !== 'local') {
+			this.projectsService.saveAllProjects();
+		} else {
+			const saveResp = await this.popupService.showPopup(SaveAsComponent, 'POPUP.SAVE.TITLE', true);
+			if (!saveResp)
+				return;
+
+			switch (saveResp.target) {
+				case 'server':
+					this.projectsService.saveProjectServer(saveResp.name, saveResp.description);
+					break;
+				case 'local':
+					this.exportToFile(saveResp.name);
+			}
+		}
+	}
+
+	public async openProjectFile(file: File) {
+		if (file.type !== 'application/json') {
+			// this.errorHandling.showErrorMessage('ERROR.PROJECTS.INVALID_FILE_TYPE');
 			return;
 		}
 		if (await this.projectsService.askToSave()) {
 			const reader = new FileReader();
-			reader.readAsText(files[0], 'UTF-8');
+			reader.readAsText(file, 'UTF-8');
 			reader.onload = (event: any) => {
 				this.projectsService.openFile(event.target.result);
 			};
 		}
 	}
 
-	public newComponent(): Promise<any> {
-		return this.ngZone.run(() => {
-			return this.popupService.showPopup(NewComponentComponent, 'POPUP.NEW_COMP.TITLE', false);
+	public newComponent() {
+		return this.ngZone.run(async () => {
+			const compConfig = await this.popupService.showPopup(NewComponentComponent, 'POPUP.NEW_COMP.TITLE', false);
+			if (compConfig)
+				this.projectsService.createComponent(compConfig.name, compConfig.symbol, compConfig.description);
 		});
 	}
 
-	public shareProject(): Promise<any> {
-		return this.ngZone.run(() => {
-			return this.popupService.showPopup(
-				ShareProjectComponent,
-				'POPUP.SHARE.TITLE',
-				false,
-				null,
-				null,
-				{project: this.projectsService.mainProject.name}
-			);
-		});
+	public shareProject() {
+		// return this.ngZone.run(() => {
+		// 	return this.popupService.showPopup(
+		// 		ShareProjectComponent,
+		// 		'POPUP.SHARE.TITLE',
+		// 		false,
+		// 		null,
+		// 		null,
+		// 		{project: this.projectsService.mainProject.name}
+		// 	);
+		// });
 	}
 
-	public exportToFile(): Promise<void> {
-		return this.projectSave.exportToFile(this.projectsService.mainProject);
-	}
-
-	public saveAll() {
-		this.ngZone.run(() => this.projectsService.saveAll());
+	public exportToFile(name?: string) {
+		return this.projectsService.exportToFile(name);
 	}
 }

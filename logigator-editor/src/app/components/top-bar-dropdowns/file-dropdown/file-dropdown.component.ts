@@ -1,5 +1,6 @@
 import {ChangeDetectionStrategy, Component, EventEmitter, OnInit, Optional, Output} from '@angular/core';
 import {ProjectSaveManagementService} from '../../../services/project-save-management/project-save-management.service';
+import {ChangeDetectionStrategy, Component, EventEmitter, Output} from '@angular/core';
 import {UserService} from '../../../services/user/user.service';
 import {ProjectsService} from '../../../services/projects/projects.service';
 import {ImageExportService} from '../../../services/image-export/image-export.service';
@@ -13,13 +14,12 @@ import {ElectronService} from 'ngx-electron';
 	styleUrls: ['../top-bar-dropdowns.scss', './file-dropdown.component.scss'],
 	changeDetection: ChangeDetectionStrategy.OnPush
 })
-export class FileDropdownComponent implements OnInit {
+export class FileDropdownComponent {
 
 	@Output()
 	public requestClosed: EventEmitter<any> = new EventEmitter();
 
 	constructor(
-		private projectSaveService: ProjectSaveManagementService,
 		private editorInteractionService: EditorInteractionService,
 		private user: UserService,
 		private projects: ProjectsService,
@@ -27,25 +27,24 @@ export class FileDropdownComponent implements OnInit {
 		@Optional() private electronService: ElectronService
 	) { }
 
-	ngOnInit() {
-	}
-
 	public close() {
 		this.requestClosed.emit();
 	}
 
-	public checkActionUsable(action: string) {
-		return true;
-		// return checkActionUsable(action);
-		// TODO: fix
-	}
-
 	public get canClone(): boolean {
-		return this.projectSaveService.isShare && this.user.isLoggedIn;
+		return this.projects.mainProject.source === 'share' && this.user.isLoggedIn;
 	}
 
 	public get canSave(): boolean {
-		return this.user.isLoggedIn && !this.projectSaveService.isShare;
+		return this.projects.mainProject.source !== 'share';
+	}
+
+	public get canExportProject() {
+		return this.projects.mainProject.source !== 'share';
+	}
+
+	public get canShare(): boolean {
+		return this.projects.mainProject.source === 'server' && this.user.isLoggedIn;
 	}
 
 	public newProject() {
@@ -64,7 +63,7 @@ export class FileDropdownComponent implements OnInit {
 	}
 
 	public saveProject() {
-		this.editorInteractionService.saveAll();
+		this.editorInteractionService.saveProject();
 		this.close();
 	}
 
@@ -78,12 +77,8 @@ export class FileDropdownComponent implements OnInit {
 		this.close();
 	}
 
-	public get canShare(): boolean {
-		return this.projectSaveService.isFromServer;
-	}
-
 	public cloneProject() {
-		this.projects.cloneShare();
+		// this.projects.cloneShare();
 		this.close();
 	}
 

@@ -6,8 +6,6 @@ import {WorkModeService} from '../../services/work-mode/work-mode.service';
 import {ErrorHandlingService} from '../../services/error-handling/error-handling.service';
 import {ToastContainerDirective} from 'ngx-toastr';
 import {HelpWindowService} from '../../services/help-window/help-window.service';
-import {ShortcutsService} from '../../services/shortcuts/shortcuts.service';
-import {EditorAction} from '../../models/editor-action';
 
 @Component({
 	selector: 'app-work-area-container',
@@ -60,7 +58,7 @@ export class WorkAreaContainerComponent implements OnInit {
 
 		const meta: WindowWorkAreaMeta = {
 			showing: true,
-			project: await this.projectSaveManagement.openComponent(event.typeId),
+			project: await this.projectSaveManagement.getComponent(event.typeId),
 			identifier: event.identifier,
 			parentNames: event.parentNames,
 			parentTypesIds: event.parentTypeIds,

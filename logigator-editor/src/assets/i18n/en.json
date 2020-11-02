@@ -121,7 +121,7 @@
 		},
 		"OPEN": {
 			"TITLE": "Open Project",
-			"OPEN": "OPEN",
+			"OPEN": "Open",
 			"TABLE_OPEN": "Open",
 			"TABLE_EDITED": "Last edited",
 			"TABLE_NAME": "Name",

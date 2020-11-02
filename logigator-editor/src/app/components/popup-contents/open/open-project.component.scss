@@ -1,40 +1,68 @@
 @import "themes";
 
-.open {
+.open-project {
 	margin: 1rem 1.5rem;
 
+	.open-button {
+		height: 2rem;
+	}
+
 	.open-server {
-		table {
-			width: 30rem;
-			text-align: left;
-			table-layout: fixed;
+		margin-top: 1rem;
 
-			tbody {
-				@include scrollbar(5px);
-				display: block;
-				width: 30rem;
-				overflow: auto;
-				max-height: 50vh;
+		.table-header {
+			margin-top: -1rem;
+
+			p {
+				font-weight: 600;
 			}
+		}
 
-			tr {
-				height: 2.5rem;
+		.not-found {
+			margin-top: -1.5rem;
+			text-align: center;
+		}
+
+		.single-project-server {
+			display: flex;
+			flex-direction: row;
+			align-items: center;
+			margin-bottom: 0.25rem;
+
+			p {
+				margin-top: 0.25rem;
+				margin-bottom: 0.25rem;
 			}
+		}
 
-			.name {
-				width: 40%;
+		.name {
+			min-width: 7rem;
+		}
+
+		.last-edit {
+			flex: 1;
+		}
+
+		.pagination-buttons {
+			display: flex;
+			justify-content: center;
+
+			button {
+
 			}
+			.is-active {
+				@include themify() {
+					background-color: themed('primary');
+					border-color: themed('primary');
+					color: #000000;
 
-			.last-edit {
-				width: 40%;
-			}
+					&:hover {
+						background-color: rgba(themed('primary'), 0.7);
+					}
 
-			.open {
-				width: 12%;
-				text-align: center;
-
-				button {
-					height: 2rem;
+					&:active {
+						background-color: themed('primary');
+					}
 				}
 			}
 		}
@@ -45,14 +73,14 @@
 		flex-direction: row;
 		padding-top: 0.2rem;
 
-		logi-input {
+		app-input {
 			flex-grow: 1;
 			margin-right: 1rem;
 		}
+	}
 
-		button {
-			height: fit-content;
-		}
+	.open-file-headline {
+		margin-top: 0;
 	}
 
 	.file-upload {
@@ -60,7 +88,7 @@
 		flex-direction: column;
 		width: 100%;
 
-		logi-file-input {
+		app-file-input {
 			width: 100%;
 			height: 5rem;
 		}

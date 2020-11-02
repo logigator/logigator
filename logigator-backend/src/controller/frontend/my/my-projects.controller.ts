@@ -26,6 +26,7 @@ import {ConfigService} from '../../../services/config.service';
 import {ShareProject} from '../../../models/request/frontend/my-projects/share-project';
 import { v4 as uuid } from 'uuid';
 import {Redirect, RedirectFunction} from '../../../decorator/redirect.decorator';
+import {classToPlain} from 'class-transformer';
 
 @Controller('/my/projects')
 export class MyProjectsController {
@@ -193,8 +194,10 @@ export class MyProjectsController {
 		const page = await this.projectRepo.getProjectPageForUser(pageNumber ?? 0, 12, user, search);
 
 		const entries = page.entries.map(entry => {
-			(entry.lastEdited as any) = this.translationService.dateFormatDate(entry.lastEdited, language);
-			return entry;
+			const transformed = classToPlain(entry);
+			transformed.lastEdited = this.translationService.dateFormatDate(entry.lastEdited, language);
+			transformed.editorUrl = this.configService.getConfig('domains').editor + '/project/' + entry.id;
+			return transformed;
 		});
 		return {
 			entries,

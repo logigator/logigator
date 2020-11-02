@@ -1,7 +1,5 @@
 import {ChangeDetectionStrategy, Component, OnInit} from '@angular/core';
 import {FormBuilder, FormGroup, Validators} from '@angular/forms';
-import {ProjectsService} from '../../../services/projects/projects.service';
-import {ProjectSaveManagementService} from '../../../services/project-save-management/project-save-management.service';
 import {EastereggService} from '../../../services/easteregg/easteregg.service';
 import {PopupContentComp} from '../../popup/popup-content-comp';
 
@@ -11,39 +9,32 @@ import {PopupContentComp} from '../../popup/popup-content-comp';
 	styleUrls: ['./new-component.component.scss'],
 	changeDetection: ChangeDetectionStrategy.OnPush
 })
-export class NewComponentComponent extends PopupContentComp implements OnInit {
+export class NewComponentComponent extends PopupContentComp<any, {name: string, symbol: string, description: string}> implements OnInit {
 
 	public newCompForm: FormGroup;
 
-	constructor(
-		private formBuilder: FormBuilder,
-		private projects: ProjectsService,
-		private saveManagement: ProjectSaveManagementService,
-		private eastereggs: EastereggService) {
+	constructor(private formBuilder: FormBuilder, private eastereggs: EastereggService) {
 		super();
 	}
 
 	ngOnInit() {
 		this.newCompForm = this.formBuilder.group({
-			compName: ['', [Validators.required, Validators.minLength(2), Validators.maxLength(20), Validators.pattern('^.+$')]],
-			compSymbol: ['', [Validators.required, Validators.maxLength(5), Validators.pattern('^.+$')]],
-			compDescription: ['', [Validators.maxLength(1000)]]
+			name: ['', [Validators.required, Validators.maxLength(20)]],
+			symbol: ['', [Validators.required, Validators.maxLength(5)]],
+			description: ['', [Validators.maxLength(2048)]]
 		});
 	}
 
 	public async fromSubmitClick() {
-		if (this.newCompForm.invalid) return;
-		const id = await this.saveManagement.addCustomComponent(
-			this.newCompForm.controls.compName.value,
-			this.newCompForm.controls.compSymbol.value,
-			this.newCompForm.controls.compDescription.value
-		);
-		this.requestClose.emit();
-		this.projects.openComponent(id);
-		const name = this.newCompForm.controls.compName.value.toLowerCase().replace(' ', '');
+		if (this.newCompForm.invalid)
+			return;
+
+		const name = this.newCompForm.controls.name.value.toLowerCase().replace(' ', '');
 		if (name === 'asdf' || name === 'test') {
 			this.eastereggs.achieve('LAZ');
 		}
+
+		this.requestClose.emit(this.newCompForm.value);
 	}
 
 }

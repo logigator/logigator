@@ -32,7 +32,8 @@ import {tunnel} from '../../models/element-types/basic/tunnel';
 })
 export class ElementProviderService {
 
-	private _basicElements: Map<number, ElementType> = new Map([
+	private _elements: Map<number, ElementType> = new Map([
+		// basic
 		[wire.id, wire],
 		[not.id, not],
 		[and.id, and],
@@ -41,25 +42,22 @@ export class ElementProviderService {
 		[delay.id, delay],
 		[clock.id, clock],
 		[text.id, text],
-		[tunnel.id, tunnel]
-	]);
+		[tunnel.id, tunnel],
 
-	private _advancedElements: Map<number, ElementType> = new Map([
+		// advanced
 		[halfAdder.id, halfAdder],
 		[fullAdder.id, fullAdder],
 		[rom.id, rom],
 		[dFF.id, dFF],
 		[jkFF.id, jkFF],
-		[srFF.id, srFF]
-	]);
+		[srFF.id, srFF],
 
-	private _plugElements: Map<number, ElementType> = new Map([
+		// plug
 		[input.id, input],
 		[output.id, output],
-		[butt.id, butt]
-	]);
+		[butt.id, butt],
 
-	private _ioElements: Map<number, ElementType> = new Map([
+		// io
 		[button.id, button],
 		[lever.id, lever],
 		[led.id, led],
@@ -67,88 +65,93 @@ export class ElementProviderService {
 		[ledMatrix.id, ledMatrix]
 	]);
 
-	private _userDefinedElements: Map<number, ElementType> = new Map<number, ElementType>();
-
 	constructor(private errorHandler: ErrorHandlingService) {}
 
 	public static isCompileElement(id: number): boolean {
 		return !(id === ElementTypeId.WIRE || id === ElementTypeId.BUTT || id === ElementTypeId.TEXT || id === ElementTypeId.TUNNEL);
 	}
 
-	public setUserDefinedTypes(elements: Map<number, Partial<ElementType>>) {
-		for (const [id, elem] of elements) {
-			this.addUserDefinedElement(elem, id);
+	public addElements(elements: Partial<ElementType>[], category: 'user' | 'local' | 'share') {
+		for (const elem of elements) {
+			this._elements.set(elem.id, {...udcTemplate, ...elem, category} as ElementType);
 		}
 	}
 
-	public addUserDefinedElement(element: Partial<ElementType>, id: number) {
-		this._userDefinedElements.set(id, {...udcTemplate, ...element} as ElementType);
-	}
-
-	public clearElementsFromFile() {
-		for (const key of this.userDefinedElements.keys()) {
-			if (key < 1000 && key >= 500) this.userDefinedElements.delete(key);
+	public clearElements(category: 'user' | 'local' | 'share') {
+		for (const [id, elem] of this._elements) {
+			if (elem.category === category)
+				this._elements.delete(id);
 		}
 	}
 
-	public clearUserDefinedElements() {
-		for (const key of this.userDefinedElements.keys()) {
-			if (key >= 1000) this.userDefinedElements.delete(key);
-		}
+	public removeElement(id: number) {
+		this._elements.delete(id);
 	}
 
 	public getElementById(id: number): ElementType {
-		if (this._basicElements.has(id)) {
-			return this._basicElements.get(id);
-		} else if (this._advancedElements.has(id)) {
-			return this._advancedElements.get(id);
-		} else if (this._plugElements.has(id)) {
-			return this._plugElements.get(id);
-		} else if (this._ioElements.has(id)) {
-			return this._ioElements.get(id);
-		} else if (this._userDefinedElements.has(id)) {
-			return this._userDefinedElements.get(id);
+		if (this._elements.has(id)) {
+			return this._elements.get(id);
 		}
 		this.errorHandler.showErrorMessage('ERROR.PROJECTS.COMP_NOT_FOUND');
 	}
 
 	public hasElement(id: number) {
-		return this._basicElements.has(id) ||
-			this._advancedElements.has(id) ||
-			this._plugElements.has(id) ||
-			this._ioElements.has(id) ||
-			this._userDefinedElements.has(id);
+		return this._elements.has(id);
 	}
 
 	public isIoElement(id: number): boolean {
-		return this._ioElements.has(id);
+		return this._elements.has(id) && this._elements.get(id).category === 'io';
 	}
 
 	public isPlugElement(id: number): boolean {
-		return this._plugElements.has(id);
+		return this._elements.has(id) && this._elements.get(id).category === 'plug';
 	}
 
 	public isUserElement(id: number): boolean {
-		return this._userDefinedElements.has(id);
+		return this._elements.has(id) && this._elements.get(id).category === 'user';
 	}
 
-	public get basicElements(): Map<number, ElementType> {
-		return this._basicElements;
+	public isShareElement(id: number): boolean {
+		return this._elements.has(id) && this._elements.get(id).category === 'share';
 	}
 
-	get advancedElements(): Map<number, ElementType> {
-		return this._advancedElements;
+	public isLocalElement(id: number): boolean {
+		return this._elements.has(id) && this._elements.get(id).category === 'local';
 	}
 
-	public get plugElements(): Map<number, ElementType> {
-		return this._plugElements;
+	public isCustomElement(id: number): boolean {
+		if (!this._elements.has(id))
+			return false;
+
+		const category = this._elements.get(id).category;
+		return category === 'user' || category === 'share' || category === 'local';
 	}
 
-	public get ioElements(): Map<number, ElementType> {
-		return this._ioElements;
+	public get basicElements(): ElementType[] {
+		return [...this._elements.values()].filter(e => e.category === 'basic');
 	}
 
-	public get userDefinedElements(): Map<number, ElementType> {
-		return this._userDefinedElements;
+	public get advancedElements(): ElementType[] {
+		return [...this._elements.values()].filter(e => e.category === 'advanced');
+	}
+
+	public get plugElements(): ElementType[] {
+		return [...this._elements.values()].filter(e => e.category === 'plug');
+	}
+
+	public get ioElements(): ElementType[] {
+		return [...this._elements.values()].filter(e => e.category === 'io');
+	}
+
+	public get userDefinedElements(): ElementType[] {
+		return [...this._elements.values()].filter(e => e.category === 'user');
+	}
+
+	public get shareElements(): ElementType[] {
+		return [...this._elements.values()].filter(e => e.category === 'share');
+	}
+
+	public get localElements(): ElementType[] {
+		return [...this._elements.values()].filter(e => e.category === 'local');
 	}
 }

@@ -8,7 +8,7 @@ import {PopupContentComp} from '../../popup/popup-content-comp';
 	styleUrls: ['./text.component.scss'],
 	changeDetection: ChangeDetectionStrategy.OnPush
 })
-export class TextComponent extends PopupContentComp implements OnInit {
+export class TextComponent extends PopupContentComp<string, string> implements OnInit {
 
 	public text: FormControl;
 

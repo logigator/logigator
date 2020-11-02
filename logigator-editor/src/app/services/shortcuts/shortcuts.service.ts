@@ -10,6 +10,8 @@ import {ApiService} from '../api/api.service';
 import {UserShortcut} from '../../models/http/response/user';
 import {EditorInteractionService} from '../editor-interaction/editor-interaction.service';
 import {SimulationManagementService} from '../simulation/simulation-management/simulation-management.service';
+import {PopupService} from '../popup/popup.service';
+import {ProjectsService} from '../projects/projects.service';
 
 @Injectable({
 	providedIn: 'root'
@@ -24,9 +26,11 @@ export class ShortcutsService {
 	constructor(
 		private workMode: WorkModeService,
 		private editorInteraction: EditorInteractionService,
+		private projects: ProjectsService,
 		private simulationManagement: SimulationManagementService,
 		private userService: UserService,
-		private apiService: ApiService
+		private apiService: ApiService,
+		private popupService: PopupService
 	) {
 		this.userService.userInfo$.subscribe(data => {
 			if (!data) {
@@ -48,7 +52,7 @@ export class ShortcutsService {
 	}
 
 	public keyDownListener(event: KeyboardEvent) {
-		if (!this._shortcutListenerEnabled) return;
+		if (!this.shortcutListenerEnabled) return;
 		const shortcut = this.getShortcutFromKeyEvent(event);
 		if (!shortcut || !this.isShortcutUsable(shortcut)) return;
 		event.preventDefault();
@@ -147,6 +151,10 @@ export class ShortcutsService {
 		this._shortcutListenerEnabled = false;
 	}
 
+	private get shortcutListenerEnabled(): boolean {
+		return this._shortcutListenerEnabled && !this.popupService.isPopupOpened;
+	}
+
 	private applyShortcutAction(action: ShortcutAction) {
 		switch (action) {
 			case 'copy':
@@ -198,12 +206,16 @@ export class ShortcutsService {
 				this.workMode.setWorkMode(WorkMode.TEXT);
 				break;
 			case 'newComp':
+				this.editorInteraction.newComponent();
 				break;
 			case 'newProj':
+				this.editorInteraction.newProject();
 				break;
 			case 'openProj':
+				this.editorInteraction.openProject();
 				break;
 			case 'save':
+				this.editorInteraction.saveProject();
 				break;
 			case 'enterSim':
 				this.workMode.enterSimulation();

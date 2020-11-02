@@ -9,7 +9,7 @@ import {PopupContentComp} from '../../popup/popup-content-comp';
 	styleUrls: ['./rom-edit.component.scss'],
 	changeDetection: ChangeDetectionStrategy.OnPush
 })
-export class RomEditComponent extends PopupContentComp<Element> implements OnInit {
+export class RomEditComponent extends PopupContentComp<Element, string | false> implements OnInit {
 
 	@ViewChild('hexInput', {static: true})
 	hexInput: ElementRef<HTMLTextAreaElement>;

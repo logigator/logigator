@@ -1,8 +1,8 @@
 import {Component} from '@angular/core';
 import {ElementProviderService} from '../../services/element-provider/element-provider.service';
 import {ElementType} from '../../models/element-types/element-type';
-import {ProjectsService} from '../../services/projects/projects.service';
 import {ShortcutsService} from '../../services/shortcuts/shortcuts.service';
+import {ProjectsService} from '../../services/projects/projects.service';
 
 @Component({
 	selector: 'app-construction-box',
@@ -24,24 +24,32 @@ export class ConstructionBoxComponent {
 		return this.projects.currProject.type === 'comp';
 	}
 
-	public get basicComponents(): Map<number, ElementType> {
+	public get basicComponents(): ElementType[] {
 		return this.componentProviderService.basicElements;
 	}
 
-	public get advancedComponents(): Map<number, ElementType> {
+	public get advancedComponents(): ElementType[] {
 		return this.componentProviderService.advancedElements;
 	}
 
-	public get plugComponents(): Map<number, ElementType> {
+	public get plugComponents(): ElementType[] {
 		return this.componentProviderService.plugElements;
 	}
 
-	public get ioComponents(): Map<number, ElementType> {
+	public get ioComponents(): ElementType[] {
 		return this.componentProviderService.ioElements;
 	}
 
-	public get userDefinedComponents(): Map<number, ElementType> {
+	public get userDefinedComponents(): ElementType[] {
 		return this.componentProviderService.userDefinedElements;
+	}
+
+	public get localComponents(): ElementType[] {
+		return this.componentProviderService.localElements;
+	}
+
+	public get sharedComponents(): ElementType[] {
+		return this.componentProviderService.shareElements;
 	}
 
 	public focusSearch() {

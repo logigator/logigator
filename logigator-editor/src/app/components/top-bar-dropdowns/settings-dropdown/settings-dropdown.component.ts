@@ -77,10 +77,10 @@ export class SettingsDropdownComponent implements OnInit {
 
 	// #! ELECTRON === 'true'
 	public async logout() {
-		if (await this.projects.askToSave()) {
-			this.projects.newProject();
-		}
-		this.close();
+		// if (await this.projects.askToSave()) {
+		// 	this.projects.newProject();
+		// }
+		// this.close();
 	}
 
 	updateClick() {

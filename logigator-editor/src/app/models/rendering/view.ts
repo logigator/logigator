@@ -327,8 +327,8 @@ export abstract class View extends PIXI.Container {
 		this.requestSingleFrame();
 	}
 
-	public get projectId(): number {
-		return this._project.id;
+	public get project(): Project {
+		return this._project;
 	}
 
 	public destroy() {

@@ -3,20 +3,20 @@
 		<h2>{{categoryName | translate}}</h2>
 	</div>
 	<div class="content">
-		<ng-container *ngIf="components.size > 0; else noComponents">
-			<ng-container *ngFor="let comp of components | keyvalue; trackBy: componentsTrackBy">
+		<ng-container *ngIf="components.length > 0; else noComponents">
+			<ng-container *ngFor="let comp of components; trackBy: componentsTrackBy">
 				<div class="component-to-select"
-				     *ngIf="comp.value.showInConstructionBox &&
-				     (searchText == '' || (isInSearchResult(comp.value.name) | async)) && !isCurrentCustomElement(comp.key)
-				     || isHiddenPlug(searchText, comp.key)"
-				     (click)="selectComponent(comp.key)"
-				     (dblclick)="openComponent(comp.key)"
-				     [class.active-selected-component]="isComponentMode && currentSelectedComponent === comp.key">
+				     *ngIf="comp.showInConstructionBox &&
+				     (searchText == '' || (isInSearchResult(comp.name) | async)) && !isCurrentCustomElement(comp.id)
+				     || isHiddenPlug(searchText, comp.id)"
+				     (click)="selectComponent(comp.id)"
+				     (dblclick)="openComponent(comp.id)"
+				     [class.active-selected-component]="isComponentMode && currentSelectedComponent === comp.id">
 					<div>
-						<img *ngIf="comp.value.symbolImage" [src]="comp.value.symbolImage" [alt]="comp.value.symbol">
-						<p *ngIf="!comp.value.symbolImage" appAutoFontSize desiredFontWidth="53">{{comp.value.symbol}}</p>
+						<img *ngIf="comp.symbolImage" [src]="comp.symbolImage" [alt]="comp.symbol">
+						<p *ngIf="!comp.symbolImage" appAutoFontSize desiredFontWidth="53">{{comp.symbol}}</p>
 					</div>
-					<p>{{comp.value.name | translate}}</p>
+					<p>{{comp.name | translate}}</p>
 				</div>
 			</ng-container>
 		</ng-container>

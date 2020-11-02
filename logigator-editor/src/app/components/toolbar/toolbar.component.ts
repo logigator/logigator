@@ -161,12 +161,15 @@ export class ToolbarComponent {
 	}
 
 	public save() {
+		this.editorInteractionService.saveProject();
 	}
 
 	public newComponent() {
+		this.editorInteractionService.newComponent();
 	}
 
 	public openProject() {
+		this.editorInteractionService.openProject();
 	}
 
 	public continueSim() {

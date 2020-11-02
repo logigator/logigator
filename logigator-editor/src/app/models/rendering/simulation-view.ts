@@ -75,7 +75,7 @@ export class SimulationView extends View {
 		sprite.name = element.id.toString();
 		this.addToCorrectChunk(sprite, element.pos);
 		this.allElements.set(element.id, sprite);
-		if (getStaticDI(ElementProviderService).isUserElement(element.typeId)) {
+		if (getStaticDI(ElementProviderService).isCustomElement(element.typeId)) {
 			this._simViewInteractionManager.addEventListenersToCustomElement(sprite);
 		}
 	}
@@ -101,10 +101,6 @@ export class SimulationView extends View {
 			}
 		}
 		this.requestSingleFrame();
-	}
-
-	public get projectName(): string {
-		return this._project.name;
 	}
 
 	public destroy() {

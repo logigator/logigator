@@ -1,16 +1,18 @@
-import {Component, OnInit, Optional} from '@angular/core';
+import {Component, Optional} from '@angular/core';
 import {ProjectsService} from '../../services/projects/projects.service';
 import {UserService} from '../../services/user/user.service';
 import {Observable} from 'rxjs';
 import {ElectronService} from 'ngx-electron';
 import {User} from '../../models/http/response/user';
+import {WorkMode} from '../../models/work-modes';
+import {WorkModeService} from '../../services/work-mode/work-mode.service';
 
 @Component({
 	selector: 'app-top-bar',
 	templateUrl: './top-bar.component.html',
 	styleUrls: ['./top-bar.component.scss']
 })
-export class TopBarComponent implements OnInit {
+export class TopBarComponent {
 
 	public editDropdownOpen = false;
 	public fileDropdownOpen = false;
@@ -21,14 +23,12 @@ export class TopBarComponent implements OnInit {
 	constructor(
 		@Optional() private electronService: ElectronService,
 		private projectService: ProjectsService,
-		private userService: UserService
+		private userService: UserService,
+		private workMode: WorkModeService
 	) { }
 
-	ngOnInit() {}
-
-	public checkActionUsable(action) {
-		return true;
-		// TODO: fix
+	public get isSimulationMode(): boolean {
+		return this.workMode.currentWorkMode === WorkMode.SIMULATION;
 	}
 
 	public get userInfo$(): Observable<User> {
@@ -61,10 +61,10 @@ export class TopBarComponent implements OnInit {
 	}
 
 	public async close() {
-		const canClose = await this.projectService.askToSave();
-		if (canClose) {
-			this.electronService.ipcRenderer.invoke('windowClose');
-		}
+		// const canClose = await this.projectService.askToSave();
+		// if (canClose) {
+		// 	this.electronService.ipcRenderer.invoke('windowClose');
+		// }
 	}
 	// #!endif
 
