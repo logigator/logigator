@@ -84,6 +84,10 @@ export class ElementProviderService {
 		}
 	}
 
+	public removeElement(id: number) {
+		this._elements.delete(id);
+	}
+
 	public getElementById(id: number): ElementType {
 		if (this._elements.has(id)) {
 			return this._elements.get(id);

@@ -161,7 +161,7 @@ export class ToolbarComponent {
 	}
 
 	public save() {
-		this.projectService.saveAllProjects();
+		this.editorInteractionService.saveProject();
 	}
 
 	public newComponent() {

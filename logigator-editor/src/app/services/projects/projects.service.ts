@@ -14,6 +14,7 @@ import {LocationService} from '../location/location.service';
 import {SelectionService} from '../selection/selection.service';
 import {CopyService} from '../copy/copy.service';
 import {PixiLoaderService} from '../pixi-loader/pixi-loader.service';
+import {addWarning} from '@angular-devkit/build-angular/src/utils/webpack-diagnostics';
 
 @Injectable({
 	providedIn: 'root'
@@ -104,9 +105,11 @@ export class ProjectsService {
 	private async openNewProject(project: Project) {
 		this._projects.unshift(project);
 		this._projectOpenedSubject.next(project.id);
+		this._mainProject = project;
 		for (let i = 1; i < this._projects.length; i++) {
 			this.closeProject(this._projects[i].id);
 		}
+		this.elementProvider.clearElements('local');
 	}
 
 	public async saveAllProjects() {
@@ -136,6 +139,25 @@ export class ProjectsService {
 		const component = await this.projectSaveManagementService.getComponent(id);
 		this._projects.push(component);
 		this._projectOpenedSubject.next(component.id);
+	}
+
+	public async saveProjectServer(name: string, description = '') {
+		const newId = await this.projectSaveManagementService.createProjectServer(name, description, this._mainProject);
+		const project = await this.projectSaveManagementService.getProjectOrComponentUuid(newId, 'project');
+		this._projects.unshift(project);
+		this._projectOpenedSubject.next(project.id);
+		this._mainProject = project;
+		for (let i = 1; i < this._projects.length; i++) {
+			this._projectClosedSubject.next(this._projects[i].id);
+		}
+		this._projects = [this._projects[0]];
+		this.location.set('project', newId);
+	}
+
+	public async newProject() {
+		const project = this.projectSaveManagementService.getEmptyProject();
+		await this.openNewProject(project);
+		this.location.reset();
 	}
 
 	public inputsOutputsCustomComponentChanged(project: Project) {

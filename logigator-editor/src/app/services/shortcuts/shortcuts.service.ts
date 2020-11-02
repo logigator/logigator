@@ -212,7 +212,7 @@ export class ShortcutsService {
 				this.editorInteraction.openProject();
 				break;
 			case 'save':
-				this.projects.saveAllProjects();
+				this.editorInteraction.saveProject();
 				break;
 			case 'enterSim':
 				this.workMode.enterSimulation();

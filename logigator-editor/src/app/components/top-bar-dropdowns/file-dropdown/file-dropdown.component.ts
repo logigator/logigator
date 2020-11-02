@@ -61,7 +61,7 @@ export class FileDropdownComponent implements OnInit {
 	}
 
 	public saveProject() {
-		this.projects.saveAllProjects();
+		this.editorInteractionService.saveProject();
 		this.close();
 	}
 

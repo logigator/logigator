@@ -8,6 +8,8 @@ import {filter} from 'rxjs/operators';
 import {PopupService} from '../popup/popup.service';
 import {NewComponentComponent} from '../../components/popup-contents/new-component/new-component.component';
 import {OpenProjectComponent} from '../../components/popup-contents/open/open-project.component';
+import {SaveAsComponent} from '../../components/popup-contents/save-as/save-as.component';
+import {ProjectSaveManagementService} from '../project-save-management/project-save-management.service';
 
 @Injectable({
 	providedIn: 'root'
@@ -86,7 +88,7 @@ export class EditorInteractionService {
 	public newProject() {
 		this.ngZone.run(async () => {
 			if (await this.projectsService.askToSave()) {
-				// await this.projectsService.newProject();
+				await this.projectsService.newProject();
 			}
 		});
 	}
@@ -105,6 +107,22 @@ export class EditorInteractionService {
 				}
 			}
 		});
+	}
+
+	public async saveProject() {
+		if (this.projectsService.mainProject.source !== 'local') {
+			this.projectsService.saveAllProjects();
+		} else {
+			const saveResp = await this.popupService.showPopup(SaveAsComponent, 'POPUP.SAVE.TITLE', true);
+			if (!saveResp)
+				return;
+
+			switch (saveResp.target) {
+				case 'server':
+					this.projectsService.saveProjectServer(saveResp.name, saveResp.description);
+					break;
+			}
+		}
 	}
 
 	public async openProjectDrop(files: FileList) {

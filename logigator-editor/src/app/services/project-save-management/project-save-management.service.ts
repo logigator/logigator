@@ -13,11 +13,12 @@ import {ComponentInfo} from '../../models/http/response/component-info';
 import {v4 as genUuid} from 'uuid';
 import {ProjectInfo} from '../../models/http/response/project-info';
 import {UserService} from '../user/user.service';
-import {filter} from 'rxjs/operators';
+import {delayWhen, filter} from 'rxjs/operators';
 import {ComponentData} from '../../models/http/response/component-data';
 import {ProjectList} from '../../models/http/response/project-list';
 import {Response} from '../../models/http/response/response';
-import {Observable} from 'rxjs';
+import {Observable, ReplaySubject} from 'rxjs';
+import {Share} from '../../models/http/response/share';
 
 @Injectable({
 	providedIn: 'root'
@@ -32,7 +33,7 @@ export class ProjectSaveManagementService {
 
 	private _projectsCache = new Map<number, Project>();
 
-	private _loadedInitialProjects = false;
+	private _loadedInitialProjects$ = new ReplaySubject<void>(1);
 
 	constructor(
 		private api: ApiService,
@@ -41,7 +42,7 @@ export class ProjectSaveManagementService {
 		private userService: UserService
 	) {
 		this.userService.userInfo$.pipe(
-			filter(() => this._loadedInitialProjects)
+			delayWhen((value, index) => this._loadedInitialProjects$)
 		).subscribe(() => this.getAllComponentsInfo());
 	}
 
@@ -52,16 +53,16 @@ export class ProjectSaveManagementService {
 			projects = [mainProject];
 		} else if (this.location.isComponent) {
 			const comp = await this.getProjectOrComponentUuid(this.location.componentUuid, 'comp');
-			const mainProject = Project.empty();
+			const mainProject = this.getEmptyProject();
 			projects = [mainProject, comp];
 		} else if (this.location.isShare) {
-			projects = [];
+			projects = [await this.getProjectsShare(this.location.shareUuid)];
 		} else {
-			const mainProject = Project.empty();
+			const mainProject = this.getEmptyProject();
 			projects = [mainProject];
 		}
 		await this.getAllComponentsInfo();
-		this._loadedInitialProjects = true;
+		this._loadedInitialProjects$.next();
 		return projects;
 	}
 
@@ -85,16 +86,6 @@ export class ProjectSaveManagementService {
 		return project;
 	}
 
-	public getComponentUuid(uuid: string): Promise<Project> {
-		const p = new Project(new ProjectState(), {
-			type: 'comp',
-			name: 'comp',
-			id: 0,
-			source: 'local'
-		});
-		return Promise.resolve(p);
-	}
-
 	public async getComponent(id: number): Promise<Project> {
 		if (this._projectsCache.has(id))
 			return this._projectsCache.get(id);
@@ -115,28 +106,96 @@ export class ProjectSaveManagementService {
 		return project;
 	}
 
-	public createProject(name: string, description = ''): Promise<Project> {
-		const p = Project.empty(name);
-		return Promise.resolve(p);
+	public async createProjectServer(name: string, description = '', project: Project): Promise<string> {
+		const projectResp = await this.api.post<ProjectInfo>('/project', {name, description}).toPromise();
+		const components = await this.buildDependencyTree(project);
+		const createdComps: ComponentInfo[] = [];
+		const tempMappings = new BiDirectionalMap<string, number>();
+		for (const [id, comp] of components) {
+			if (comp.source === 'local') {
+				const elemType = this.elementProvider.getElementById(id);
+				const createdComp = await this.api.post<ComponentInfo>('/component', {
+					name: elemType.name, symbol: elemType.symbol, description: elemType.description
+				}).toPromise();
+				tempMappings.set(createdComp.data.id, id);
+				createdComps.push(createdComp.data);
+			}
+		}
+		for (const createdComp of createdComps) {
+			const elementType = this.elementProvider.getElementById(tempMappings.getValue(createdComp.id));
+			const convertedElements = this.convertElementsToSaveElements(components.get(tempMappings.getValue(createdComp.id)).allElements);
+			const body = {
+				oldHash: createdComp.elementsFile.hash,
+				dependencies: convertedElements.usedCustomElements.map(cu => {
+					return {
+						id: tempMappings.getKey(cu) ?? this._mappings.getKey(cu),
+						model: cu,
+					};
+				}),
+				elements: convertedElements.elements,
+				numInputs: elementType.numInputs,
+				numOutputs: elementType.numOutputs,
+				labels: elementType.labels
+			};
+			await this.api.put<ProjectInfo>(`/component/${createdComp.id}`, body).toPromise();
+		}
+		const projectElements = this.convertElementsToSaveElements(project.allElements);
+		const projectBody = {
+			oldHash: projectResp.data.elementsFile.hash,
+			dependencies: projectElements.usedCustomElements.map(cu => {
+				return {
+					id: tempMappings.getKey(cu) ?? this._mappings.getKey(cu),
+					model: cu,
+				};
+			}),
+			elements: projectElements.elements,
+		};
+		await this.api.put<ProjectInfo>(`/project/${projectResp.data.id}`, projectBody).toPromise();
+		for (const toRemove of tempMappings.values()) {
+			this.elementProvider.removeElement(toRemove);
+		}
+		await this.getAllComponentsInfo();
+		return projectResp.data.id;
 	}
 
 	public async createComponent(name: string, symbol: string, description: string = ''): Promise<Project> {
-		const body = {
-			name, symbol, description
-		};
+		if (this.userService.isLoggedIn) {
+			const body = {
+				name, symbol, description
+			};
 
-		const resp = await this.api.post<ComponentInfo>('/component', body).toPromise();
-		const id = this.generateNextId(resp.data.id);
-		this.setCustomElements([resp.data], 'user');
+			const resp = await this.api.post<ComponentInfo>('/component', body).toPromise();
+			const id = this.generateNextId(resp.data.id);
+			this.setCustomElements([resp.data], 'user');
 
-		const project = new Project(new ProjectState(), {
-			type: 'comp',
-			source: 'server',
-			name: resp.data.name,
-			id
-		});
-		this._projectsCache.set(project.id, project);
-		return project;
+			const project = new Project(new ProjectState(), {
+				type: 'comp',
+				source: 'server',
+				name,
+				id
+			});
+			this._projectsCache.set(project.id, project);
+			return project;
+		} else {
+			const id = this.generateNextId();
+			this.setCustomElements([{
+				id: this._mappings.getKey(id),
+				symbol,
+				name,
+				description,
+				numInputs: 0,
+				numOutputs: 0,
+				labels: []
+			}], 'local');
+			const project = new Project(new ProjectState(), {
+				type: 'comp',
+				source: 'local',
+				name,
+				id
+			});
+			this._projectsCache.set(project.id, project);
+			return project;
+		}
 	}
 
 	public async saveComponent(project: Project): Promise<void> {
@@ -222,6 +281,11 @@ export class ProjectSaveManagementService {
 		return this.api.get<ProjectList>('/project', undefined, params);
 	}
 
+	public async getProjectsShare(linkId: string): Promise<Project> {
+		const resp = await this.api.get<Share>(`/share/${linkId}`, undefined).toPromise();
+		console.log(resp);
+	}
+
 	/**
 	 * returns mappings to apply to loaded elements
 	 */
@@ -237,7 +301,7 @@ export class ProjectSaveManagementService {
 		return mappingsToApply;
 	}
 
-	private setCustomElements(components: ComponentInfo[], category: 'user' | 'local' | 'share') {
+	private setCustomElements(components: Partial<ComponentInfo>[], category: 'user' | 'local' | 'share') {
 		const elements: Partial<ElementType>[] = components.map(comp => {
 			return {
 				id: this._mappings.getValue(comp.id),
@@ -352,6 +416,10 @@ export class ProjectSaveManagementService {
 
 		this._mappings.set(uuid, nextId);
 		return nextId;
+	}
+
+	public getEmptyProject(): Project {
+		return Project.empty(undefined, this.generateNextId());
 	}
 
 }

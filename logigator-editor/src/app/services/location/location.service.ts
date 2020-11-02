@@ -37,6 +37,10 @@ export class LocationService {
 		window.history.pushState(null, null, `/editor/${type}/${uuid}`);
 	}
 
+	public reset() {
+		window.history.pushState(null, null, `/editor/`);
+	}
+
 	private get pathname(): string {
 		return location.pathname.substring(7);
 	}
