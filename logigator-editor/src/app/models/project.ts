@@ -434,7 +434,7 @@ export class Project {
 	public updateInputsOutputs(typeId?: number): void {
 		const actions: Action[] = [];
 		for (const elem of this.allElements) {
-			if (elem.typeId === typeId || !typeId && getStaticDI(ElementProviderService).isUserElement(elem.typeId)) {
+			if (elem.typeId === typeId || !typeId && getStaticDI(ElementProviderService).isCustomElement(elem.typeId)) {
 				this._currState.updateNumInputsOutputs(elem);
 				actions.push({
 					name: 'rotComp',
@@ -449,7 +449,7 @@ export class Project {
 	public updateLabels(typeId?: number): void {
 		const actions: Action[] = [];
 		for (const elem of this.allElements) {
-			if (elem.typeId === typeId || !typeId && getStaticDI(ElementProviderService).isUserElement(elem.typeId)) {
+			if (elem.typeId === typeId || !typeId && getStaticDI(ElementProviderService).isCustomElement(elem.typeId)) {
 				actions.push({
 					name: 'rotComp',
 					element: elem

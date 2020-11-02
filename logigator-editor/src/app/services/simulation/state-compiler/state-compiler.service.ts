@@ -297,7 +297,7 @@ export class StateCompilerService {
 				this.setTunnelLink(compiledComp, elem, state, linksOnWireEnds, linkId, unitElems, coveredPoints);
 			} else {
 				this.setCompLink(linksOnWireEnds, elem, index, linkId, unitElems);
-				if (this.elementProvider.isUserElement(elem.typeId)) {
+				if (this.elementProvider.isCustomElement(elem.typeId)) {
 					this.includePlugLinks(elem, index, state, linksOnWireEnds,
 						linkId, unitElems, compiledComp, coveredPoints);
 					compiledComp.includesUdcs.add(elem.typeId);
@@ -412,7 +412,7 @@ export class StateCompilerService {
 				}
 			});
 
-			if (this.elementProvider.isUserElement(unit.type)) {
+			if (this.elementProvider.isCustomElement(unit.type)) {
 				udcIndexes.push(unitIndex);
 				udcIndexesInclPlug.push(unitIndex + donePlugCount);
 			} else if (this.elementProvider.isIoElement(unit.type)) {
