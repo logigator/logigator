@@ -1,4 +1,4 @@
-import {ChangeDetectionStrategy, Component, EventEmitter, OnInit, Output} from '@angular/core';
+import {ChangeDetectionStrategy, Component, EventEmitter, Output} from '@angular/core';
 import {UserService} from '../../../services/user/user.service';
 import {ProjectsService} from '../../../services/projects/projects.service';
 import {ImageExportService} from '../../../services/image-export/image-export.service';
@@ -10,7 +10,7 @@ import {EditorInteractionService} from '../../../services/editor-interaction/edi
 	styleUrls: ['../top-bar-dropdowns.scss', './file-dropdown.component.scss'],
 	changeDetection: ChangeDetectionStrategy.OnPush
 })
-export class FileDropdownComponent implements OnInit {
+export class FileDropdownComponent {
 
 	@Output()
 	public requestClosed: EventEmitter<any> = new EventEmitter();
@@ -22,27 +22,24 @@ export class FileDropdownComponent implements OnInit {
 		private imageExportService: ImageExportService
 	) { }
 
-	ngOnInit() {
-	}
-
 	public close() {
 		this.requestClosed.emit();
 	}
 
-	public checkActionUsable(action: string) {
-		return true;
-		// return checkActionUsable(action);
-		// TODO: fix
-	}
-
 	public get canClone(): boolean {
-		return true;
-		// return this.projectSaveService.isShare && this.user.isLoggedIn;
+		return this.projects.mainProject.source === 'share' && this.user.isLoggedIn;
 	}
 
 	public get canSave(): boolean {
-		return true;
-		// return this.user.isLoggedIn && !this.projectSaveService.isShare;
+		return this.projects.mainProject.source !== 'share';
+	}
+
+	public get canExportProject() {
+		return this.projects.mainProject.source !== 'share';
+	}
+
+	public get canShare(): boolean {
+		return this.projects.mainProject.source === 'server' && this.user.isLoggedIn;
 	}
 
 	public newProject() {
@@ -73,11 +70,6 @@ export class FileDropdownComponent implements OnInit {
 	public shareProject() {
 		this.editorInteractionService.shareProject();
 		this.close();
-	}
-
-	public get canShare(): boolean {
-		return true;
-		// return this.projectSaveService.isFromServer;
 	}
 
 	public cloneProject() {

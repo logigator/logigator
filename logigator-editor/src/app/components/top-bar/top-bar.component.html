@@ -14,11 +14,11 @@
 		<p class="project-title">{{mainProjectName}}</p>
 
 		<div class="menu-entries">
-			<div>
+			<div *ngIf="!isSimulationMode">
 				<p (mouseover)="dropdownHover('fileDropdownOpen')" (click)="closeDropdowns(); fileDropdownOpen = true;">{{'DROPDOWN.FILE.TITLE' | translate}}</p>
 				<app-file-dropdown (requestClosed)="closeDropdowns()" *ngIf="fileDropdownOpen"></app-file-dropdown>
 			</div>
-			<div *ngIf="checkActionUsable('editDropdown')">
+			<div *ngIf="!isSimulationMode">
 				<p (mouseover)="dropdownHover('editDropdownOpen')" (click)="closeDropdowns(); editDropdownOpen = true;">{{'DROPDOWN.EDIT.TITLE' | translate}}</p>
 				<app-edit-dropdown (requestClosed)="closeDropdowns()" *ngIf="editDropdownOpen"></app-edit-dropdown>
 			</div>
