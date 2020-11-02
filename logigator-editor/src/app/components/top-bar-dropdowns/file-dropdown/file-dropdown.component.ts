@@ -3,8 +3,7 @@ import {UserService} from '../../../services/user/user.service';
 import {ProjectsService} from '../../../services/projects/projects.service';
 import {ImageExportService} from '../../../services/image-export/image-export.service';
 import {EditorInteractionService} from '../../../services/editor-interaction/editor-interaction.service';
-import {saveLocalFile, saveLocalFileBlob} from '../../../models/save-local-file';
-import {ElectronService} from 'ngx-electron';
+import {FileSaverService} from '../../../services/file-saver/file-saver.service';
 
 @Component({
 	selector: 'app-file-dropdown',
@@ -22,7 +21,7 @@ export class FileDropdownComponent {
 		private user: UserService,
 		private projects: ProjectsService,
 		private imageExportService: ImageExportService,
-		@Optional() private electronService: ElectronService
+		private fileSaverService: FileSaverService
 	) { }
 
 	public close() {
@@ -82,9 +81,10 @@ export class FileDropdownComponent {
 
 	public async screenshot(type: 'jpeg' | 'png' | 'svg') {
 		if (type === 'svg') {
-			saveLocalFile(this.imageExportService.generateSVG(), 'svg', this.projects.currProject.name, 'Save Image As', this.electronService);
+			this.fileSaverService.saveLocalFile(this.imageExportService.generateSVG(), 'svg', this.projects.currProject.name, 'Save Image As');
 		} else {
-			saveLocalFileBlob(await this.imageExportService.generateImage(type), type, this.projects.currProject.name, 'Save Image As', this.electronService);
+			console.log('!');
+			this.fileSaverService.saveLocalFileBlob(await this.imageExportService.generateImage(type), type, this.projects.currProject.name, 'Save Image As');
 			this.close();
 		}
 	}

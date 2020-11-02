@@ -20,8 +20,7 @@ import {Response} from '../../models/http/response/response';
 import {Observable, ReplaySubject} from 'rxjs';
 import {Share} from '../../models/http/response/share';
 import {ComponentLocalFile, ProjectLocalFile} from '../../models/project-local-file';
-import {saveLocalFile} from '../../models/save-local-file';
-import * as assert from 'assert';
+import {FileSaverService} from '../file-saver/file-saver.service';
 
 @Injectable({
 	providedIn: 'root'
@@ -42,7 +41,8 @@ export class ProjectSaveManagementService {
 		private api: ApiService,
 		private elementProvider: ElementProviderService,
 		private location: LocationService,
-		private userService: UserService
+		private userService: UserService,
+		private fileSaverService: FileSaverService
 	) {
 		this.userService.userInfo$.pipe(
 			delayWhen((value, index) => this._loadedInitialProjects$)
@@ -292,7 +292,7 @@ export class ProjectSaveManagementService {
 			},
 			components
 		};
-		saveLocalFile(JSON.stringify(toSave), 'json', name ?? project.name, undefined, undefined);
+		await this.fileSaverService.saveLocalFile(JSON.stringify(toSave), 'json', name ?? project.name, undefined);
 	}
 
 	public openFile(content: string): Project {
