@@ -41,10 +41,12 @@ export class ShortcutsService {
 			for (const shortcut of data.shortcuts) {
 				const index = this._shortcutConfig.findIndex(x => x.action === shortcut.name);
 				if (index >= 0) {
-					this._shortcutConfig[index].shortcutConfig.key_code = shortcut.keyCode;
-					this._shortcutConfig[index].shortcutConfig.shift = shortcut.shift;
-					this._shortcutConfig[index].shortcutConfig.ctrl = shortcut.ctrl;
-					this._shortcutConfig[index].shortcutConfig.alt = shortcut.alt;
+					this._shortcutConfig[index].shortcutConfig = {
+						key_code: shortcut.keyCode,
+						shift: shortcut.shift,
+						ctrl: shortcut.ctrl,
+						alt: shortcut.alt
+					};
 					this._customShortcuts.set(shortcut.name as ShortcutAction, this._shortcutConfig[index].shortcutConfig);
 				}
 			}
