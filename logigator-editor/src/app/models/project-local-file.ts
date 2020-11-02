@@ -1,17 +1,19 @@
-import {ElementType} from './element-types/element-type';
-import {Element} from './element';
+import {ProjectElement} from './http/response/project-data';
+import {ComponentInfo} from './http/response/component-info';
 
 export interface ProjectLocalFile {
-	mainProject: {
+	project: {
 		name: string;
-		id: number,
-		data: Element[];
+		elements: ProjectElement[];
 	};
 	components: ComponentLocalFile[];
 }
 
 export interface ComponentLocalFile {
-	typeId: number;
-	type: ElementType;
-	data: Element[];
+	info: Partial<LocalComponentInfo>;
+	elements: ProjectElement[];
+}
+
+export interface LocalComponentInfo extends Omit<ComponentInfo, 'id'> {
+	id: number;
 }

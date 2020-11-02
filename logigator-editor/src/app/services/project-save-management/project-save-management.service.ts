@@ -19,6 +19,9 @@ import {ProjectList} from '../../models/http/response/project-list';
 import {Response} from '../../models/http/response/response';
 import {Observable, ReplaySubject} from 'rxjs';
 import {Share} from '../../models/http/response/share';
+import {ComponentLocalFile, ProjectLocalFile} from '../../models/project-local-file';
+import {saveLocalFile} from '../../models/save-local-file';
+import * as assert from 'assert';
 
 @Injectable({
 	providedIn: 'root'
@@ -263,6 +266,75 @@ export class ProjectSaveManagementService {
 		this._projectsCache.set(project.id, project);
 	}
 
+	public async exportToFile(project: Project, name?: string) {
+		const dependencies = await this.buildDependencyTree(project);
+		const components: ComponentLocalFile[] = [];
+		for (const [id, dep] of dependencies) {
+			const elementType = this.elementProvider.getElementById(id);
+			components.push({
+				info: {
+					id,
+					numInputs: elementType.numInputs,
+					numOutputs: elementType.numOutputs,
+					labels: elementType.labels,
+					description: elementType.description,
+					name: elementType.name,
+					symbol: elementType.symbol
+				},
+				elements: this.convertElementsToSaveElements(dep.allElements).elements
+			});
+		}
+
+		const toSave: ProjectLocalFile = {
+			project: {
+				name: name ?? project.name,
+				elements: this.convertElementsToSaveElements(project.allElements).elements
+			},
+			components
+		};
+		saveLocalFile(JSON.stringify(toSave), 'json', name ?? project.name, undefined, undefined);
+	}
+
+	public openFile(content: string): Project {
+		const parsedFile: ProjectLocalFile = JSON.parse(content);
+
+		const mappingsToApply = new Map<number, number>();
+		for (const component of parsedFile.components) {
+			if (this._mappings.hasValue(component.info.id)) {
+				const newId = this.generateNextId();
+				mappingsToApply.set(component.info.id, newId);
+				component.info.id = newId;
+			} else {
+				this._mappings.set(genUuid(), component.info.id);
+			}
+		}
+		this.setCustomElements(parsedFile.components.map(c => {
+			return {
+				...c.info,
+				id: this._mappings.getKey(c.info.id)
+			};
+		}), 'local');
+		for (const component of parsedFile.components) {
+			const elements = this.convertSavedElementsToElements(component.elements, mappingsToApply);
+			const compProject = new Project(new ProjectState(elements), {
+				type: 'comp',
+				name: component.info.name,
+				source: 'local',
+				id: component.info.id
+			});
+			this._projectsCache.set(compProject.id, compProject);
+		}
+		const projectElements = this.convertSavedElementsToElements(parsedFile.project.elements, mappingsToApply);
+		const project = new Project(new ProjectState(projectElements), {
+			type: 'project',
+			name: parsedFile.project.name,
+			source: 'local',
+			id: this.generateNextId()
+		});
+		this._projectsCache.set(project.id, project);
+		return project;
+	}
+
 	public async buildDependencyTree(project: Project, resolved?: Map<number, Project>): Promise<Map<number, Project>> {
 		if (!resolved)
 			resolved = new Map<number, Project>();
@@ -293,6 +365,7 @@ export class ProjectSaveManagementService {
 	public async getProjectsShare(linkId: string): Promise<Project> {
 		const resp = await this.api.get<Share>(`/share/${linkId}`, undefined).toPromise();
 		console.log(resp);
+		return this.getEmptyProject();
 	}
 
 	/**

@@ -9,7 +9,6 @@ import {PopupService} from '../popup/popup.service';
 import {NewComponentComponent} from '../../components/popup-contents/new-component/new-component.component';
 import {OpenProjectComponent} from '../../components/popup-contents/open/open-project.component';
 import {SaveAsComponent} from '../../components/popup-contents/save-as/save-as.component';
-import {ProjectSaveManagementService} from '../project-save-management/project-save-management.service';
 
 @Injectable({
 	providedIn: 'root'
@@ -104,6 +103,9 @@ export class EditorInteractionService {
 					case 'server':
 						this.projectsService.openProjectUuid(openResp.data);
 						break;
+					case 'local':
+						this.openProjectFile(openResp.data);
+						break;
 				}
 			}
 		});
@@ -121,23 +123,24 @@ export class EditorInteractionService {
 				case 'server':
 					this.projectsService.saveProjectServer(saveResp.name, saveResp.description);
 					break;
+				case 'local':
+					this.exportToFile(saveResp.name);
 			}
 		}
 	}
 
-	public async openProjectDrop(files: FileList) {
-		// if (files.length !== 1) return ;
-		// if (files[0].type !== 'application/json') {
-		// 	this.errorHandling.showErrorMessage('ERROR.PROJECTS.INVALID_FILE_TYPE');
-		// 	return;
-		// }
-		// if (await this.projectsService.askToSave()) {
-		// 	const reader = new FileReader();
-		// 	reader.readAsText(files[0], 'UTF-8');
-		// 	reader.onload = (event: any) => {
-		// 		this.projectsService.openFile(event.target.result);
-		// 	};
-		// }
+	public async openProjectFile(file: File) {
+		if (file.type !== 'application/json') {
+			// this.errorHandling.showErrorMessage('ERROR.PROJECTS.INVALID_FILE_TYPE');
+			return;
+		}
+		if (await this.projectsService.askToSave()) {
+			const reader = new FileReader();
+			reader.readAsText(file, 'UTF-8');
+			reader.onload = (event: any) => {
+				this.projectsService.openFile(event.target.result);
+			};
+		}
 	}
 
 	public newComponent() {
@@ -161,7 +164,7 @@ export class EditorInteractionService {
 		// });
 	}
 
-	public exportToFile() {
-		// return this.projectSave.exportToFile(this.projectsService.mainProject);
+	public exportToFile(name?: string) {
+		return this.projectsService.exportToFile(name);
 	}
 }
