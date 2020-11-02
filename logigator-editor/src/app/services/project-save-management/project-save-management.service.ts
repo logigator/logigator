@@ -49,17 +49,26 @@ export class ProjectSaveManagementService {
 	public async getInitialProjects(): Promise<Project[]> {
 		let projects: Project[];
 		if (this.location.isProject) {
-			const mainProject = await this.getProjectOrComponentUuid(this.location.projectUuid, 'project');
-			projects = [mainProject];
+			try {
+				const mainProject = await this.getProjectOrComponentUuid(this.location.projectUuid, 'project');
+				projects = [mainProject];
+			} catch (e) {
+				projects = [this.getEmptyProject()];
+				this.location.reset();
+			}
 		} else if (this.location.isComponent) {
-			const comp = await this.getProjectOrComponentUuid(this.location.componentUuid, 'comp');
-			const mainProject = this.getEmptyProject();
-			projects = [mainProject, comp];
+			try {
+				const comp = await this.getProjectOrComponentUuid(this.location.componentUuid, 'comp');
+				const mainProject = this.getEmptyProject();
+				projects = [mainProject, comp];
+			} catch (e) {
+				projects = [this.getEmptyProject()];
+				this.location.reset();
+			}
 		} else if (this.location.isShare) {
 			projects = [await this.getProjectsShare(this.location.shareUuid)];
 		} else {
-			const mainProject = this.getEmptyProject();
-			projects = [mainProject];
+			projects = [this.getEmptyProject()];
 		}
 		await this.getAllComponentsInfo();
 		this._loadedInitialProjects$.next();

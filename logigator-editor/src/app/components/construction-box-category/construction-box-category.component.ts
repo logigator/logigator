@@ -58,7 +58,7 @@ export class ConstructionBoxCategoryComponent {
 	}
 
 	public openComponent(id: number) {
-		if (!(this.elemProv.isUserElement(id) || this.elemProv.isShareElement(id) || this.elemProv.isLocalElement(id))) return;
+		if (!this.elemProv.isCustomElement(id)) return;
 		this.projects.openComponent(id);
 	}
 
