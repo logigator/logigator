@@ -23,8 +23,8 @@ export interface Element {
 }
 
 export const enum ElementRotation {
-	right,
-	down,
-	left,
-	up
+	Right = 0,
+	Down = 1,
+	Left = 2,
+	Up = 3
 }

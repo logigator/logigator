@@ -1,6 +1,6 @@
 import {ElementType} from '../element-type';
-import {environment} from '../../../../environments/environment';
 import {ElementTypeId} from '../element-type-ids';
+import {ElementRotation} from '../../element';
 
 export const delay: ElementType = {
 	id: ElementTypeId.DELAY,
@@ -18,7 +18,7 @@ export const delay: ElementType = {
 	description: 'ELEMENT_TYPE.BASIC.DELAY.DESCRIPTION',
 
 	isRotatable: true,
-	rotation: 0,
+	rotation: ElementRotation.Right,
 
 	numOutputs: 1,
 

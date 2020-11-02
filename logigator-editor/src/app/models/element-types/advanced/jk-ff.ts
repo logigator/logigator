@@ -1,5 +1,6 @@
 import {ElementType} from '../element-type';
 import {ElementTypeId} from '../element-type-ids';
+import {ElementRotation} from '../../element';
 
 export const jkFF: ElementType = {
 	id: ElementTypeId.JK_FF,
@@ -17,7 +18,7 @@ export const jkFF: ElementType = {
 	description: 'ELEMENT_TYPE.ADVANCED.JK_FF.DESCRIPTION',
 
 	isRotatable: true,
-	rotation: 0,
+	rotation: ElementRotation.Right,
 
 	numOutputs: 2,
 

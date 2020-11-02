@@ -1,6 +1,6 @@
 import {ElementType} from '../element-type';
-import {environment} from '../../../../environments/environment';
 import {ElementTypeId} from '../element-type-ids';
+import {ElementRotation} from '../../element';
 
 export const clock: ElementType = {
 	id: ElementTypeId.CLOCK,
@@ -18,7 +18,7 @@ export const clock: ElementType = {
 	description: 'ELEMENT_TYPE.BASIC.CLOCK.DESCRIPTION',
 
 	isRotatable: true,
-	rotation: 0,
+	rotation: ElementRotation.Right,
 
 	numOutputs: 1,
 

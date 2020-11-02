@@ -7,16 +7,16 @@ export class ButtonRenderer extends BaseRenderer {
 		let path = `M 0,0 h ${this.gridSize} v ${this.gridSize} H 0 V 0 M ${this.scaled(3)},${this.scaled(3)} H ${this.gridSize - this.scaled(3)} V ${this.gridSize - this.scaled(3)} H ${this.scaled(3)} V ${this.scaled(3)}`;
 		if (this.quality >= RenderQuality.high) {
 			switch (this.element.rotation) {
-				case ElementRotation.right:
+				case ElementRotation.Right:
 					path += ` M ${this.gridSize},${this.gridSize / 2} h ${this.gridSize / 2}`;
 					break;
-				case ElementRotation.down:
+				case ElementRotation.Down:
 					path += ` M ${this.gridSize / 2},${this.gridSize} v ${this.gridSize / 2}`;
 					break;
-				case ElementRotation.left:
+				case ElementRotation.Left:
 					path += ` M 0,${this.gridSize / 2} h ${-this.gridSize / 2}`;
 					break;
-				case ElementRotation.up:
+				case ElementRotation.Up:
 					path += ` M ${this.gridSize / 2},0 v ${-this.gridSize / 2}`;
 					break;
 			}

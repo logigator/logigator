@@ -1,5 +1,6 @@
 import {ElementType} from '../element-type';
 import {ElementTypeId} from '../element-type-ids';
+import {ElementRotation} from '../../element';
 
 export const led: ElementType = {
 	id: ElementTypeId.LED,
@@ -18,7 +19,7 @@ export const led: ElementType = {
 	description: 'ELEMENT_TYPE.IO.LED.DESCRIPTION',
 
 	isRotatable: true,
-	rotation: 0,
+	rotation: ElementRotation.Right,
 
 	numOutputs: 0,
 

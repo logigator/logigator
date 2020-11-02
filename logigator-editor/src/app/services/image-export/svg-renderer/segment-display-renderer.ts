@@ -9,22 +9,22 @@ export class SegmentDisplayRenderer extends BaseRenderer {
 		// wire ends
 		if (this._quality >= RenderQuality.high) {
 			switch (this.element.rotation) {
-				case ElementRotation.right:
+				case ElementRotation.Right:
 					for (let i = 0; i < this._element.numInputs; i++) {
 						path += ` M ${-(this._gridSize / 2)},${(this._gridSize / 2) + this._gridSize * i} h ${this._gridSize / 2}`;
 					}
 					break;
-				case ElementRotation.down:
+				case ElementRotation.Down:
 					for (let i = 0; i < this._element.numInputs; i++) {
 						path += ` M ${this._size.x - this._gridSize / 2 - this._gridSize * i},0 v ${-this._gridSize / 2}`;
 					}
 					break;
-				case ElementRotation.left:
+				case ElementRotation.Left:
 					for (let i = 0; i < this._element.numInputs; i++) {
 						path += ` M ${this._size.x},${this._size.y - (this._gridSize / 2) - this._gridSize * i} h ${this._gridSize / 2}`;
 					}
 					break;
-				case ElementRotation.up:
+				case ElementRotation.Up:
 					for (let i = 0; i < this._element.numInputs; i++) {
 						path += ` M ${this._gridSize / 2 + this._gridSize * i},${this._size.y} v ${this._gridSize / 2}`;
 					}
@@ -40,28 +40,28 @@ export class SegmentDisplayRenderer extends BaseRenderer {
 		// Labels
 		if (this._quality >= RenderQuality.full) {
 			switch (this._element.rotation) {
-				case ElementRotation.right:
+				case ElementRotation.Right:
 					for (let i = 0; i < this._element.numInputs; i++) {
 						const label = this.getLabelText(this._labels[i], 2, (this._gridSize / 2) + this._gridSize * i + this.scaled(2));
 						label.setAttribute('class', 'l-l');
 						this._group.appendChild(label);
 					}
 					break;
-				case ElementRotation.down:
+				case ElementRotation.Down:
 					for (let i = 0; i < this._element.numInputs; i++) {
 						const label = this.getLabelText(this._labels[i], this._size.x - this._gridSize / 2 - this._gridSize * i, this.scaled(6));
 						label.setAttribute('class', 'l-t');
 						this._group.appendChild(label);
 					}
 					break;
-				case ElementRotation.left:
+				case ElementRotation.Left:
 					for (let i = 0; i < this._element.numInputs; i++) {
 						const label = this.getLabelText(this._labels[i], this._size.x, this._size.y - (this._gridSize / 2) - this._gridSize * i + this.scaled(2));
 						label.setAttribute('class', 'l-r');
 						this._group.appendChild(label);
 					}
 					break;
-				case ElementRotation.up:
+				case ElementRotation.Up:
 					for (let i = 0; i < this._element.numInputs; i++) {
 						const label = this.getLabelText(this._labels[i], this._gridSize / 2 + this._gridSize * i, this._size.y - this.scaled(3));
 						label.setAttribute('class', 'l-b');

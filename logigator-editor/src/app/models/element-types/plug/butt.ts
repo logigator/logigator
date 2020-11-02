@@ -1,5 +1,6 @@
 import {ElementType} from '../element-type';
 import {ElementTypeId} from '../element-type-ids';
+import {ElementRotation} from '../../element';
 
 export const butt: ElementType = {
 	id: ElementTypeId.BUTT,
@@ -17,7 +18,7 @@ export const butt: ElementType = {
 	description: 'Place this in your butt',
 
 	isRotatable: true,
-	rotation: 0,
+	rotation: ElementRotation.Right,
 
 	numOutputs: 1,
 

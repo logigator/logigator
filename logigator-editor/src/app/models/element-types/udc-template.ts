@@ -1,5 +1,6 @@
 import {ElementType} from './element-type';
 import {ProjectsService} from '../../services/projects/projects.service';
+import {ElementRotation} from '../element';
 
 export const udcTemplate: Partial<ElementType> = {
 	showSettings: true,
@@ -7,7 +8,7 @@ export const udcTemplate: Partial<ElementType> = {
 	showInConstructionBox: true,
 
 	isRotatable: true,
-	rotation: 0,
+	rotation: ElementRotation.Right,
 
 	width: () => 3,
 	height(element? ) {

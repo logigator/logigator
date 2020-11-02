@@ -1,7 +1,7 @@
 import {Injectable} from '@angular/core';
 import {Project} from '../../models/project';
 import * as PIXI from 'pixi.js';
-import {Element} from '../../models/element';
+import {Element, ElementRotation} from '../../models/element';
 import {ProjectState} from '../../models/project-state';
 import {ElementProviderService} from '../element-provider/element-provider.service';
 import {ElementType} from '../../models/element-types/element-type';
@@ -417,7 +417,7 @@ export class ProjectSaveManagementService {
 				typeId,
 				numInputs: isCustomElement ? elementType.numInputs : (elem.i ?? 0),
 				numOutputs: isCustomElement ? elementType.numOutputs : (elem.o ?? 0),
-				rotation: elem.r ?? 0,
+				rotation: elem.r ?? ElementRotation.Right,
 				data: elem.s,
 				pos: new PIXI.Point(elem.p[0], elem.p[1])
 			};

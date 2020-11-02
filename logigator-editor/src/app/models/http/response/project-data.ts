@@ -1,5 +1,6 @@
 import {ProjectInfo} from './project-info';
 import {ComponentInfo} from './component-info';
+import {ElementRotation} from '../../element';
 
 export interface ProjectData extends ProjectInfo {
 	dependencies: ProjectDependency[];
@@ -41,7 +42,7 @@ export interface ProjectElement {
 	/**
 	 * rotation
 	 */
-	r?: number;
+	r?: ElementRotation;
 
 	/**
 	 * numerical data

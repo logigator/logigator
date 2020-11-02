@@ -1,5 +1,6 @@
 import {ElementType} from '../element-type';
 import {ElementTypeId} from '../element-type-ids';
+import {ElementRotation} from '../../element';
 
 export const segmentDisplay: ElementType = {
 	id: ElementTypeId.SEGMENT_DISPLAY,
@@ -17,7 +18,7 @@ export const segmentDisplay: ElementType = {
 	description: 'ELEMENT_TYPE.IO.SEGMENT_DISPLAY.DESCRIPTION',
 
 	isRotatable: true,
-	rotation: 0,
+	rotation: ElementRotation.Right,
 
 	numOutputs: 0,
 

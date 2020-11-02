@@ -1,5 +1,6 @@
 import {ElementType} from '../element-type';
 import {ElementTypeId} from '../element-type-ids';
+import {ElementRotation} from '../../element';
 
 export const wire: ElementType = {
 	id: ElementTypeId.WIRE,
@@ -16,7 +17,7 @@ export const wire: ElementType = {
 
 	description: '',
 
-	rotation: 0,
+	rotation: ElementRotation.Right,
 
 	numOutputs: 0,
 

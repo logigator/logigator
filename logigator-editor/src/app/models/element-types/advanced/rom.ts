@@ -4,6 +4,7 @@ import {ProjectsService} from '../../../services/projects/projects.service';
 import {getStaticDI} from '../../get-di';
 import {RomEditComponent} from '../../../components/popup-contents/rom-edit/rom-edit.component';
 import {PopupService} from '../../../services/popup/popup.service';
+import {ElementRotation} from '../../element';
 
 export const rom: ElementType = {
 	id: ElementTypeId.ROM,
@@ -21,7 +22,7 @@ export const rom: ElementType = {
 	description: 'ELEMENT_TYPE.ADVANCED.ROM.DESCRIPTION',
 
 	isRotatable: true,
-	rotation: 0,
+	rotation: ElementRotation.Right,
 
 	numOutputs: 4,
 

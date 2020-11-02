@@ -4,6 +4,7 @@ import {TextComponent} from '../../../components/popup-contents/text/text.compon
 import {getStaticDI} from '../../get-di';
 import {ElementTypeId} from '../element-type-ids';
 import {PopupService} from '../../../services/popup/popup.service';
+import {ElementRotation} from '../../element';
 
 export const text: ElementType = {
 	id: ElementTypeId.TEXT,
@@ -21,7 +22,7 @@ export const text: ElementType = {
 	description: 'ELEMENT_TYPE.BASIC.TEXT.DESCRIPTION',
 
 	isRotatable: false,
-	rotation: 0,
+	rotation: ElementRotation.Right,
 
 	numOutputs: 0,
 

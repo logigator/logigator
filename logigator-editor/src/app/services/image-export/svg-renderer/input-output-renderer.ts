@@ -11,16 +11,16 @@ export class InputOutputRenderer extends BaseRenderer {
 			if (this.element.typeId === ElementTypeId.OUTPUT)
 				rotation = (rotation + 2) % 4;
 			switch (rotation) {
-				case ElementRotation.right:
+				case ElementRotation.Right:
 					path += ` M ${this.gridSize},${this.gridSize / 2} h ${this.gridSize / 2}`;
 					break;
-				case ElementRotation.down:
+				case ElementRotation.Down:
 					path += ` M ${this.gridSize / 2},${this.gridSize} v ${this.gridSize / 2}`;
 					break;
-				case ElementRotation.left:
+				case ElementRotation.Left:
 					path += ` M 0,${this.gridSize / 2} h ${-this.gridSize / 2}`;
 					break;
-				case ElementRotation.up:
+				case ElementRotation.Up:
 					path += ` M ${this.gridSize / 2},0 v ${-this.gridSize / 2}`;
 					break;
 			}

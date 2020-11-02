@@ -1,5 +1,5 @@
 import {ProjectsService} from '../../services/projects/projects.service';
-import {Element} from '../element';
+import {Element, ElementRotation} from '../element';
 
 export interface ElementType {
 	id: number;
@@ -20,7 +20,7 @@ export interface ElementType {
 	description: string;
 
 	isRotatable?: boolean;
-	rotation: number;
+	rotation: ElementRotation;
 
 	ignoreOutputs?: boolean;
 	numOutputs: number;

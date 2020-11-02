@@ -1,5 +1,6 @@
 import {ElementType} from '../element-type';
 import {ElementTypeId} from '../element-type-ids';
+import {ElementRotation} from '../../element';
 
 export const lever: ElementType = {
 	id: ElementTypeId.LEVER,
@@ -18,7 +19,7 @@ export const lever: ElementType = {
 	description: 'ELEMENT_TYPE.IO.LEVER.DESCRIPTION',
 
 	isRotatable: true,
-	rotation: 0,
+	rotation: ElementRotation.Right,
 
 	numOutputs: 1,
 

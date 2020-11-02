@@ -1,5 +1,6 @@
 import {ElementType} from '../element-type';
 import {ElementTypeId} from '../element-type-ids';
+import {ElementRotation} from '../../element';
 
 export const dFF: ElementType = {
 	id: ElementTypeId.D_FF,
@@ -17,7 +18,7 @@ export const dFF: ElementType = {
 	description: 'ELEMENT_TYPE.ADVANCED.D_FF.DESCRIPTION',
 
 	isRotatable: true,
-	rotation: 0,
+	rotation: ElementRotation.Right,
 
 	numOutputs: 2,
 

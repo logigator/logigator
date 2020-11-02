@@ -1,5 +1,6 @@
 import {ElementType} from '../element-type';
 import {ElementTypeId} from '../element-type-ids';
+import {ElementRotation} from '../../element';
 
 export const ledMatrix: ElementType = {
 	id: ElementTypeId.LED_MATRIX,
@@ -18,7 +19,7 @@ export const ledMatrix: ElementType = {
 	description: 'ELEMENT_TYPE.IO.LED_MATRIX.DESCRIPTION',
 
 	isRotatable: true,
-	rotation: 0,
+	rotation: ElementRotation.Right,
 
 	ignoreOutputs: true,
 	numOutputs: 16,

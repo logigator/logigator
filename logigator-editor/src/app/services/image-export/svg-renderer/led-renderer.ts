@@ -8,16 +8,16 @@ export class LedRenderer extends BaseRenderer {
 			const input = document.createElementNS(this.SVG_NS, 'path');
 			input.setAttribute('class', 'w');
 			switch (this._element.rotation) {
-				case ElementRotation.right:
+				case ElementRotation.Right:
 					input.setAttribute('d', `M 0,${this.gridSize / 2} h ${-this.gridSize / 2}`);
 					break;
-				case ElementRotation.down:
+				case ElementRotation.Down:
 					input.setAttribute('d', `M ${this.gridSize / 2},0 v ${-this.gridSize / 2}`);
 					break;
-				case ElementRotation.left:
+				case ElementRotation.Left:
 					input.setAttribute('d', `M ${this.gridSize},${this.gridSize / 2} h ${this.gridSize / 2}`);
 					break;
-				case ElementRotation.up:
+				case ElementRotation.Up:
 					input.setAttribute('d', `M ${this.gridSize / 2},${this.gridSize} v ${this.gridSize / 2}`);
 					break;
 			}

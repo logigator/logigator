@@ -1,5 +1,6 @@
 import {ElementType} from '../element-type';
 import {ElementTypeId} from '../element-type-ids';
+import {ElementRotation} from '../../element';
 
 export const output: ElementType = {
 	id: ElementTypeId.OUTPUT,
@@ -17,7 +18,7 @@ export const output: ElementType = {
 	description: 'ELEMENT_TYPE.PLUG.OUTPUT.DESCRIPTION',
 
 	isRotatable: true,
-	rotation: 0,
+	rotation: ElementRotation.Right,
 
 	numOutputs: 0,
 
