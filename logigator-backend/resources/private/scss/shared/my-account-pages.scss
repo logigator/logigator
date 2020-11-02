@@ -16,7 +16,7 @@
 
 	@include element('account-nav') {
 		width: 14rem;
-		min-width: 12rem;
+		min-width: 14rem;
 
 		@include media-breakpoint-down('md') {
 			display: none;
@@ -28,7 +28,7 @@
 		padding-left: 1rem;
 
 		@include media-breakpoint-up('md') {
-			height: calc(100vh - #{$header-height + $user-space-nav-height + $footer-height + 5rem});
+			min-height: calc(100vh - #{$header-height + $user-space-nav-height + $footer-height + 5rem});
 		}
 
 		@include media-breakpoint-down('md') {
