@@ -17,9 +17,7 @@ export class ImageExportService {
 	}
 
 	public generateSVG(options?: {size?: PIXI.Point; theme?: 'dark' | 'light'}): string {
-		console.time('SVG Generate');
 		const exporter = new SvgImageExporter(this.projectsService.currProject, new PIXI.Point(1024, 1024), options?.theme);
-		console.timeEnd('SVG Generate');
 		return exporter.serializeSVG();
 	}
 
@@ -32,16 +30,12 @@ export class ImageExportService {
 
 		return new Promise<Blob>(resolve => {
 			img.onload = () => {
-				console.time('canvasDraw');
 				canvas.getContext('2d')
 					.drawImage(img, 0, 0, exporter.size.x, exporter.size.y, 0, 0, canvas.width, canvas.height);
 
 				canvas.toBlob(blob => resolve(blob), `image/${type}`);
-				console.timeEnd('canvasDraw');
 			};
-			console.time('base64');
 			img.src = exporter.getBase64String();
-			console.timeEnd('base64');
 		});
 	}
 }

@@ -83,10 +83,10 @@ export class SvgImageExporter {
 		// console.log(maxX);
 		// console.log(maxY);
 		// console.log(this.offset);
-		console.log('GridSize', this.gridSize);
-		console.log('Size', this.size);
-		console.log('ScaleFactor', this.scaleFactor);
-		console.log('Quality', this.quality);
+		// console.log('GridSize', this.gridSize);
+		// console.log('Size', this.size);
+		// console.log('ScaleFactor', this.scaleFactor);
+		// console.log('Quality', this.quality);
 
 		this.generateDefinitions();
 		/*
@@ -267,17 +267,13 @@ export class SvgImageExporter {
 
 	public serializeSVG(): string {
 		const serializer = new XMLSerializer();
-		console.time('serialize');
 		let source = serializer.serializeToString(this._svg);
-		console.timeEnd('serialize');
-		console.time('regex');
 		if (!source.match(/^<svg[^>]+xmlns="http\:\/\/www\.w3\.org\/2000\/svg"/)) {
 			source = source.replace(/^<svg/, '<svg xmlns="http://www.w3.org/2000/svg"');
 		}
 		if (!source.match(/^<svg[^>]+"http\:\/\/www\.w3\.org\/1999\/xlink"/)) {
 			source = source.replace(/^<svg/, '<svg xmlns:xlink="http://www.w3.org/1999/xlink"');
 		}
-		console.timeEnd('regex');
 		return '<?xml version="1.0" standalone="no"?>\r\n' + source;
 	}
 
