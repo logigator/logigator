@@ -13,6 +13,7 @@ import {classToPlain} from 'class-transformer';
 import {ProjectElement} from '../../models/request/api/project-element';
 import {Project} from '../../database/entities/project.entity';
 import {ComponentDependencyRepository} from '../../database/repositories/component-dependency.repository';
+import {Component} from '../../database/entities/component.entity';
 
 @JsonController('/api/share')
 @UseInterceptor(ApiInterceptor)
@@ -49,10 +50,32 @@ export class ShareController {
 		const content: ProjectElement[] = contentBuffer?.length ? JSON.parse(contentBuffer.toString()) : [];
 
 		return {
-			type: project instanceof Project ? 'project' : 'component',
+			type: project instanceof Project ? 'project' : 'comp',
 			...classToPlain(project),
 			dependencies,
 			elements: content ?? []
+		};
+	}
+
+	@Get('/dependencies/:link')
+	@ResponseClassTransformOptions({groups: ['showShareLinks']})
+	public async getDependencies(@Param('link') link: string) {
+		const project = (await this.projectRepo.findOne({
+			where: {
+				link
+			}
+		})) || (await this.componentRepo.findOne({
+			where: {
+				link
+			}
+		}));
+		if (!project)
+			throw new NotFoundError('ResourceNotFound');
+
+		return {
+			dependencies: project instanceof Project ?
+				await this.projectDepRepo.getDependencies(project as Project, true) :
+				await this.componentDepRepo.getDependencies(project as Component, true)
 		};
 	}
 }
