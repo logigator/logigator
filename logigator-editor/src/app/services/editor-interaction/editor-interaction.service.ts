@@ -9,6 +9,7 @@ import {PopupService} from '../popup/popup.service';
 import {NewComponentComponent} from '../../components/popup-contents/new-component/new-component.component';
 import {OpenProjectComponent} from '../../components/popup-contents/open/open-project.component';
 import {SaveAsComponent} from '../../components/popup-contents/save-as/save-as.component';
+import {ShareProjectComponent} from '../../components/popup-contents/share-project/share-project.component';
 
 @Injectable({
 	providedIn: 'root'
@@ -155,16 +156,15 @@ export class EditorInteractionService {
 	}
 
 	public shareProject() {
-		// return this.ngZone.run(() => {
-		// 	return this.popupService.showPopup(
-		// 		ShareProjectComponent,
-		// 		'POPUP.SHARE.TITLE',
-		// 		false,
-		// 		null,
-		// 		null,
-		// 		{project: this.projectsService.mainProject.name}
-		// 	);
-		// });
+		this.ngZone.run(() => {
+			this.popupService.showPopup(
+				ShareProjectComponent,
+				'POPUP.SHARE.TITLE',
+				false,
+				this.projectsService.mainProject,
+				{project: this.projectsService.mainProject.name}
+			);
+		});
 	}
 
 	public exportToFile(name?: string) {

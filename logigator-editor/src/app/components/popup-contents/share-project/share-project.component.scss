@@ -1,74 +1,37 @@
 @import "themes";
 
 .share {
-	margin: 1rem;
-	width: 28rem;
-	display: flex;
-	flex-direction: column;
+	max-width: 30rem;
+	padding: 1rem;
 
-	.switch-container {
+	.explanation {
+		margin: 0 0 1rem;
+	}
+
+	.public-switch {
 		display: flex;
-		flex-direction: row;
-		justify-content: space-between;
-		height: 3rem;
 		align-items: center;
+		justify-content: space-between;
+		padding: 0.5rem 0 1rem;
 
-		p {
+		> p {
 			margin: 0;
 		}
 	}
 
-	.user-info {
-		margin: 1rem 0;
-	}
-
-	.add-user {
-		display: flex;
-		flex-direction: row;
-
-		logi-input {
-			flex-grow: 1;
-			margin-right: 1rem;
-		}
-
-		button {
-			height: fit-content;
-		}
-	}
-
-	.added-emails {
-		display: flex;
-		flex-direction: column;
-		margin-top: 0.5rem;
-
-		.added-mail-row {
-			display: flex;
-			flex-direction: row;
-			align-items: center;
-			justify-content: space-between;
-			height: 2.5rem;
-
-			p {
-				margin: 0;
-			}
-
-		}
-
-	}
-
-	.link-headline {
-		margin: 0.5rem 0;
+	.link-head {
+		margin: 1rem 0 0.5rem;
 	}
 
 	.link {
 		display: flex;
-		flex-direction: row;
 		align-items: center;
-		height: 2.5rem;
 		justify-content: space-between;
+		margin: 0.5rem 0;
 
-		p {
-			@include scrollbar(0, 5px);
+		> p {
+			@include scrollbar(0, 3px);
+
 			overflow: scroll;
 			margin: 0 0.5rem 0 0;
 			height: 1.5rem;
@@ -76,28 +39,30 @@
 		}
 	}
 
-	.error {
-		width: 100%;
-		margin: 0.5rem 0;
-		@include themify() {
-			color: themed('error');
-		}
+	.link-regenerate {
+		white-space: nowrap;
+		margin-left: 0.5rem;
 	}
 
-	.success {
-		width: 100%;
-		margin: 0.5rem 0;
-		@include themify() {
-			color: themed('primary');
-		}
+	.regenerate-warn {
+		margin-top: 0.5rem;
+		margin-bottom: 1rem;
 	}
 
-	.bottom-btns {
-		margin: 1rem 0 0;
+	.buttons {
+		display: flex;
+		flex-direction: row;
+		justify-content: flex-start;
+	}
 
-		button {
-			float: right;
-			margin-left: 0.5rem;
-		}
+	.cancel {
+		padding: 0.7rem !important;
+		margin-right: 0.5rem;
+	}
+
+	.submit {
+		padding: 0.7rem !important;
+		margin-left: 0.5rem;
+		min-width: 4rem;
 	}
 }
