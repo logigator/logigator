@@ -106,6 +106,9 @@ export class EditorInteractionService {
 					case 'local':
 						this.openProjectFile(openResp.data);
 						break;
+					case 'share':
+						this.projectsService.openShare(openResp.data);
+						break;
 				}
 			}
 		});

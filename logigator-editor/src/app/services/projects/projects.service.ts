@@ -109,7 +109,6 @@ export class ProjectsService {
 		for (let i = 1; i < this._projects.length; i++) {
 			this.closeProject(this._projects[i].id);
 		}
-		this.elementProvider.clearElements('share');
 	}
 
 	public async saveAllProjects() {
@@ -125,6 +124,7 @@ export class ProjectsService {
 	}
 
 	public async openProjectUuid(id: string) {
+		this.elementProvider.clearElements('share');
 		const project = await this.projectSaveManagementService.getProjectOrComponentUuid(id, 'project');
 		await this.openNewProject(project);
 		this.location.set('project', id);
@@ -160,12 +160,21 @@ export class ProjectsService {
 
 	public async openFile(content: string) {
 		this.elementProvider.clearElements('local');
+		this.elementProvider.clearElements('share');
 		const project = this.projectSaveManagementService.openFile(content);
 		await this.openNewProject(project);
 		this.location.reset();
 	}
 
+	public async openShare(linkId: string) {
+		this.elementProvider.clearElements('share');
+		const project = await this.projectSaveManagementService.getProjectShare(linkId);
+		await this.openNewProject(project);
+		this.location.set('share', linkId);
+	}
+
 	public async newProject() {
+		this.elementProvider.clearElements('share');
 		const project = this.projectSaveManagementService.getEmptyProject();
 		await this.openNewProject(project);
 		this.location.reset();
