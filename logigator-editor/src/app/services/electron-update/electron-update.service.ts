@@ -1,12 +1,12 @@
 import {Injectable} from '@angular/core';
 import {HttpClient} from '@angular/common/http';
 import {Observable} from 'rxjs';
-import {EditorReleaseData} from '../../models/http-responses/editor-release-data';
 import {map, shareReplay} from 'rxjs/operators';
 // #!electron
 import * as fs from 'fs';
 // #!electron
 import * as path from 'path';
+import {EditorReleaseData} from '../../models/http/response/editor-release-data';
 
 @Injectable({
 	providedIn: 'root'

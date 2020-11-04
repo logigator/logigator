@@ -18,7 +18,7 @@ import { ShortcutTextPipe } from './pipes/shortcut-text/shortcut-text.pipe';
 import { SingleShortcutConfigComponent } from './components/popup-contents/shortcut-config/single-shortcut-config/single-shortcut-config.component';
 import { ShortcutConfigComponent } from './components/popup-contents/shortcut-config/shortcut-config/shortcut-config.component';
 import { WindowWorkAreaComponent } from './components/window-work-area/window-work-area.component';
-import {HTTP_INTERCEPTORS, HttpClientModule} from '@angular/common/http';
+import {HttpClientModule} from '@angular/common/http';
 import { ReloadQuestionComponent } from './components/popup-contents/relaod-question/reload-question.component';
 import { NewComponentComponent } from './components/popup-contents/new-component/new-component.component';
 import { OpenProjectComponent } from './components/popup-contents/open/open-project.component';
@@ -35,7 +35,6 @@ import { NgxElectronModule } from 'ngx-electron';
 import { WorkAreaContainerComponent } from './components/work-area-container/work-area-container.component';
 import { ShareProjectComponent } from './components/popup-contents/share-project/share-project.component';
 import {setStaticDIInjector} from './models/get-di';
-import {CredentialsInterceptor} from './interceptors/credentials';
 import { ToolbarItemTooltipDirective } from './directives/toolbar-item-tooltip/toolbar-item-tooltip.directive';
 import { ToolbarItemTooltipComponent } from './components/toolbar-item-tooltip/toolbar-item-tooltip.component';
 import { TextComponent } from './components/popup-contents/text/text.component';
@@ -126,11 +125,6 @@ import {SiPipe} from './pipes/si/si.pipe';
 		})
 	],
 	providers: [
-		{
-			provide: HTTP_INTERCEPTORS,
-			useClass: CredentialsInterceptor,
-			multi: true
-		},
 		{
 			provide: WorkerCommunicationService,
 			useClass: ELECTRON ? WorkerCommunicationNodeService : WorkerCommunicationWasmService
