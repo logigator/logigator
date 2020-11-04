@@ -1,6 +1,5 @@
 import {ChangeDetectionStrategy, ChangeDetectorRef, Component, OnInit} from '@angular/core';
 import {AbstractControl, FormBuilder, FormGroup, Validators} from '@angular/forms';
-import {SharingService} from '../../../services/sharing/sharing.service';
 import {ProjectsService} from '../../../services/projects/projects.service';
 import {environment} from '../../../../environments/environment';
 import {PopupContentComp} from '../../popup/popup-content-comp';
@@ -31,7 +30,6 @@ export class ShareProjectComponent extends PopupContentComp implements OnInit {
 
 	constructor(
 		private fromBuilder: FormBuilder,
-		private sharingSer: SharingService,
 		private projects: ProjectsService,
 		private cdr: ChangeDetectorRef
 	) {
@@ -39,21 +37,21 @@ export class ShareProjectComponent extends PopupContentComp implements OnInit {
 	}
 
 	async ngOnInit() {
-		this.addUserFrom = this.fromBuilder.group({
-			user: ['', [Validators.required, this.uniqueUserValidator.bind(this)]]
-		});
-		const shareSettings = await this.sharingSer.getShareSettings(this.projects.mainProject.id);
-		if (!shareSettings) {
-			this.isNewShare = true;
-			this.cdr.detectChanges();
-			return;
-		}
-		this.sharing = true;
-		this.isNewShare = false;
-		this.public = shareSettings.is_public as boolean;
-		this.address = shareSettings.address;
-		this.addedUsers = shareSettings.users.map(u => u.email);
-		this.cdr.detectChanges();
+		// this.addUserFrom = this.fromBuilder.group({
+		// 	user: ['', [Validators.required, this.uniqueUserValidator.bind(this)]]
+		// });
+		// const shareSettings = await this.sharingSer.getShareSettings(this.projects.mainProject.id);
+		// if (!shareSettings) {
+		// 	this.isNewShare = true;
+		// 	this.cdr.detectChanges();
+		// 	return;
+		// }
+		// this.sharing = true;
+		// this.isNewShare = false;
+		// this.public = shareSettings.is_public as boolean;
+		// this.address = shareSettings.address;
+		// this.addedUsers = shareSettings.users.map(u => u.email);
+		// this.cdr.detectChanges();
 	}
 
 	private uniqueUserValidator(control: AbstractControl): {[key: string]: any} | null {
@@ -88,39 +86,39 @@ export class ShareProjectComponent extends PopupContentComp implements OnInit {
 	}
 
 	public async save() {
-		if (!this.canSave) return;
-		if (this.isNewShare) {
-			if (!this.sharing) {
-				this.requestClose.emit();
-				return;
-			}
-			const resp = await this.sharingSer.createShare({
-				project: this.projects.mainProject.id,
-				invitations: this.sendInvitations,
-				users: this.public ? undefined : this.addedUsers
-			});
-			if (!resp) return;
-			this.isNewShare = false;
-			this.address = resp.result.address;
-			this.processReceivedWarnings(resp.warnings);
-		} else {
-			if (this.sharing) {
-				const resp = await this.sharingSer.updateShare({
-					invitations: this.sendInvitations,
-					is_public: this.public,
-					users: this.addedUsers
-				}, this.address);
-				this.processReceivedWarnings(resp.warnings);
-			} else {
-				const resp = await this.sharingSer.deleteShare(this.address);
-				if (!resp) return;
-				this.isNewShare = true;
-				delete this.address;
-				this.addedUsers = [];
-				this.processReceivedWarnings(resp.warnings);
-			}
-		}
-		this.cdr.detectChanges();
+		// if (!this.canSave) return;
+		// if (this.isNewShare) {
+		// 	if (!this.sharing) {
+		// 		this.requestClose.emit();
+		// 		return;
+		// 	}
+		// 	const resp = await this.sharingSer.createShare({
+		// 		project: this.projects.mainProject.id,
+		// 		invitations: this.sendInvitations,
+		// 		users: this.public ? undefined : this.addedUsers
+		// 	});
+		// 	if (!resp) return;
+		// 	this.isNewShare = false;
+		// 	this.address = resp.result.address;
+		// 	this.processReceivedWarnings(resp.warnings);
+		// } else {
+		// 	if (this.sharing) {
+		// 		const resp = await this.sharingSer.updateShare({
+		// 			invitations: this.sendInvitations,
+		// 			is_public: this.public,
+		// 			users: this.addedUsers
+		// 		}, this.address);
+		// 		this.processReceivedWarnings(resp.warnings);
+		// 	} else {
+		// 		const resp = await this.sharingSer.deleteShare(this.address);
+		// 		if (!resp) return;
+		// 		this.isNewShare = true;
+		// 		delete this.address;
+		// 		this.addedUsers = [];
+		// 		this.processReceivedWarnings(resp.warnings);
+		// 	}
+		// }
+		// this.cdr.detectChanges();
 	}
 
 	private processReceivedWarnings(warnings: any) {
