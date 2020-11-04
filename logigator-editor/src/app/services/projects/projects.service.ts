@@ -124,7 +124,7 @@ export class ProjectsService {
 	}
 
 	public async openProjectUuid(id: string) {
-		this.elementProvider.clearElements('share');
+		this.projectSaveManagementService.clearElements('share');
 		const project = await this.projectSaveManagementService.getProjectOrComponentUuid(id, 'project');
 		await this.openNewProject(project);
 		this.location.set('project', id);
@@ -159,22 +159,22 @@ export class ProjectsService {
 	}
 
 	public async openFile(content: string) {
-		this.elementProvider.clearElements('local');
-		this.elementProvider.clearElements('share');
+		this.projectSaveManagementService.clearElements('local');
+		this.projectSaveManagementService.clearElements('share');
 		const project = this.projectSaveManagementService.openFile(content);
 		await this.openNewProject(project);
 		this.location.reset();
 	}
 
 	public async openShare(linkId: string) {
-		this.elementProvider.clearElements('share');
+		this.projectSaveManagementService.clearElements('share');
 		const project = await this.projectSaveManagementService.getProjectShare(linkId);
 		await this.openNewProject(project);
 		this.location.set('share', linkId);
 	}
 
 	public async newProject() {
-		this.elementProvider.clearElements('share');
+		this.projectSaveManagementService.clearElements('share');
 		const project = this.projectSaveManagementService.getEmptyProject();
 		await this.openNewProject(project);
 		this.location.reset();

@@ -1,5 +1,5 @@
 import {Injectable} from '@angular/core';
-import {BehaviorSubject, Observable, timer} from 'rxjs';
+import {Observable, ReplaySubject, timer} from 'rxjs';
 import {User} from '../../models/http/response/user';
 import {ApiService} from '../api/api.service';
 import {CookieStorageService} from '../cookie-storage/cookie-storage.service';
@@ -10,11 +10,13 @@ import {distinctUntilChanged, map} from 'rxjs/operators';
 })
 export class UserService {
 
-	private readonly _userInfo$ = new BehaviorSubject<User>(undefined);
+	private readonly _userInfo$ = new ReplaySubject<User>(1);
 
-	private _isLoggedIn = false;
+	private _isLoggedIn: boolean;
 
 	constructor(private api: ApiService, private cookie: CookieStorageService) {
+		this._isLoggedIn = this.checkLoginState();
+
 		timer(0, 1500).pipe(
 			map(() => this.checkLoginState()),
 			distinctUntilChanged(),

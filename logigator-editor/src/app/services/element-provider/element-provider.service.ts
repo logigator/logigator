@@ -77,13 +77,6 @@ export class ElementProviderService {
 		}
 	}
 
-	public clearElements(category: 'user' | 'local' | 'share') {
-		for (const [id, elem] of this._elements) {
-			if (elem.category === category)
-				this._elements.delete(id);
-		}
-	}
-
 	public removeElement(id: number) {
 		this._elements.delete(id);
 	}
@@ -127,31 +120,35 @@ export class ElementProviderService {
 		return category === 'user' || category === 'share' || category === 'local';
 	}
 
+	public getElements(category: 'basic' | 'advanced' | 'plug' | 'io' | 'user' | 'local' | 'share'): ElementType[] {
+		return [...this._elements.values()].filter(e => e.category === category);
+	}
+
 	public get basicElements(): ElementType[] {
-		return [...this._elements.values()].filter(e => e.category === 'basic');
+		return this.getElements('basic');
 	}
 
 	public get advancedElements(): ElementType[] {
-		return [...this._elements.values()].filter(e => e.category === 'advanced');
+		return this.getElements('advanced');
 	}
 
 	public get plugElements(): ElementType[] {
-		return [...this._elements.values()].filter(e => e.category === 'plug');
+		return this.getElements('plug');
 	}
 
 	public get ioElements(): ElementType[] {
-		return [...this._elements.values()].filter(e => e.category === 'io');
+		return this.getElements('io');
 	}
 
 	public get userDefinedElements(): ElementType[] {
-		return [...this._elements.values()].filter(e => e.category === 'user');
+		return this.getElements('user');
 	}
 
 	public get shareElements(): ElementType[] {
-		return [...this._elements.values()].filter(e => e.category === 'share');
+		return this.getElements('share');
 	}
 
 	public get localElements(): ElementType[] {
-		return [...this._elements.values()].filter(e => e.category === 'local');
+		return this.getElements('local');
 	}
 }

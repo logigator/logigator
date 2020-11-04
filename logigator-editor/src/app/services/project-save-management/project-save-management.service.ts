@@ -13,7 +13,7 @@ import {ComponentInfo} from '../../models/http/response/component-info';
 import {v4 as genUuid} from 'uuid';
 import {ProjectInfo} from '../../models/http/response/project-info';
 import {UserService} from '../user/user.service';
-import {delayWhen, filter} from 'rxjs/operators';
+import {skipUntil} from 'rxjs/operators';
 import {ComponentData} from '../../models/http/response/component-data';
 import {ProjectList} from '../../models/http/response/project-list';
 import {Response} from '../../models/http/response/response';
@@ -46,7 +46,7 @@ export class ProjectSaveManagementService {
 		private fileSaverService: FileSaverService
 	) {
 		this.userService.userInfo$.pipe(
-			delayWhen((value, index) => this._loadedInitialProjects$)
+			skipUntil(this._loadedInitialProjects$)
 		).subscribe(() => this.getAllComponentsInfo());
 	}
 
@@ -183,7 +183,7 @@ export class ProjectSaveManagementService {
 		};
 		await this.api.put<ProjectInfo>(`/project/${projectResp.data.id}`, projectBody).toPromise();
 		for (const toRemove of tempMappings.values()) {
-			this.elementProvider.removeElement(toRemove);
+			this.removeElement(toRemove);
 		}
 		await this.getAllComponentsInfo();
 		return projectResp.data.id;
@@ -513,7 +513,7 @@ export class ProjectSaveManagementService {
 			componentData.data.forEach(comp => this.generateNextId(comp.id));
 			this.setCustomElements(componentData.data, 'user');
 		} else {
-			this.elementProvider.clearElements('user');
+			this.clearElements('user');
 		}
 	}
 
@@ -536,6 +536,19 @@ export class ProjectSaveManagementService {
 
 	public getEmptyProject(): Project {
 		return Project.empty(undefined, this.generateNextId());
+	}
+
+	public clearElements(category: 'user' | 'local' | 'share') {
+		const elements = this.elementProvider.getElements(category);
+		for (const element of elements) {
+			this.removeElement(element.id);
+		}
+	}
+
+	public removeElement(typeId: number) {
+		this._mappings.deleteValue(typeId);
+		this._projectsCache.delete(typeId);
+		this.elementProvider.removeElement(typeId);
 	}
 
 }
