@@ -21,6 +21,7 @@ import {Observable, ReplaySubject} from 'rxjs';
 import {Share} from '../../models/http/response/share';
 import {ComponentLocalFile, ProjectLocalFile} from '../../models/project-local-file';
 import {FileSaverService} from '../file-saver/file-saver.service';
+import {ShareDependencies} from '../../models/http/response/share-dependencies';
 
 @Injectable({
 	providedIn: 'root'
@@ -53,8 +54,7 @@ export class ProjectSaveManagementService {
 		let projects: Project[];
 		if (this.location.isProject) {
 			try {
-				const mainProject = await this.getProjectOrComponentUuid(this.location.projectUuid, 'project');
-				projects = [mainProject];
+				projects = [await this.getProjectOrComponentUuid(this.location.projectUuid, 'project')];
 			} catch (e) {
 				projects = [this.getEmptyProject()];
 				this.location.reset();
@@ -62,14 +62,18 @@ export class ProjectSaveManagementService {
 		} else if (this.location.isComponent) {
 			try {
 				const comp = await this.getProjectOrComponentUuid(this.location.componentUuid, 'comp');
-				const mainProject = this.getEmptyProject();
-				projects = [mainProject, comp];
+				projects = [this.getEmptyProject(), comp];
 			} catch (e) {
 				projects = [this.getEmptyProject()];
 				this.location.reset();
 			}
 		} else if (this.location.isShare) {
-			projects = [await this.getProjectsShare(this.location.shareUuid)];
+			const shared = await this.getProjectShare(this.location.shareUuid);
+			if (shared.type === 'comp') {
+				projects = [this.getEmptyProject(), shared];
+			} else {
+				projects = [shared];
+			}
 		} else {
 			projects = [this.getEmptyProject()];
 		}
@@ -101,6 +105,21 @@ export class ProjectSaveManagementService {
 	public async getComponent(id: number): Promise<Project> {
 		if (this._projectsCache.has(id))
 			return this._projectsCache.get(id);
+
+		if (this.elementProvider.getElementById(id).category === 'share') {
+			const link = this._mappings.getKey(id);
+			const sharedComp = await this.api.get<Share>(`/share/${link}`).toPromise();
+			const mappings = this.saveMappings(sharedComp.data.dependencies);
+			const compElements = this.convertSavedElementsToElements(sharedComp.data.elements, mappings);
+			const sharedProject = new Project(new ProjectState(compElements), {
+				type: 'comp',
+				name: sharedComp.data.name,
+				source: 'server',
+				id
+			});
+			this._projectsCache.set(sharedProject.id, sharedProject);
+			return sharedProject;
+		}
 
 		const uuid = this._mappings.getKey(id);
 		const componentData = await this.api.get<ComponentData>(`/component/${uuid}`).toPromise();
@@ -362,31 +381,46 @@ export class ProjectSaveManagementService {
 		return this.api.get<ProjectList>('/project', undefined, params);
 	}
 
-	public async getProjectsShare(linkId: string): Promise<Project> {
+	public async getProjectShare(linkId: string): Promise<Project> {
 		const resp = await this.api.get<Share>(`/share/${linkId}`, undefined).toPromise();
-		console.log(resp);
-		return this.getEmptyProject();
+		const mappingsToApply = this.saveMappings(resp.data.dependencies, true);
+		this.setCustomElements(resp.data.dependencies.map(dep => dep.dependency), 'share', true);
+		const elements = this.convertSavedElementsToElements(resp.data.elements, mappingsToApply);
+		const project = new Project(new ProjectState(elements), {
+			id: this.generateNextId(resp.data.id),
+			source: 'share',
+			name: resp.data.name,
+			type: resp.data.type,
+		});
+		this._projectsCache.set(project.id, project);
+
+		const allComponents = await this.api.get<ShareDependencies>(`/share/dependencies/${linkId}`, undefined).toPromise();
+		allComponents.data.dependencies.forEach(comp => this.generateNextId(comp.link));
+		this.setCustomElements(allComponents.data.dependencies, 'share', true);
+
+		return project;
 	}
 
 	/**
 	 * returns mappings to apply to loaded elements
 	 */
-	private saveMappings(dependencies: ProjectDependency[]): Map<number, number> {
+	private saveMappings(dependencies: ProjectDependency[], useLinkForUuid = false): Map<number, number> {
 		const mappingsToApply = new Map<number, number>();
 		dependencies.forEach(dep => {
-			if (this._mappings.hasKey(dep.dependency.id)) {
-				mappingsToApply.set(dep.model, this._mappings.getValue(dep.dependency.id));
+			const uuid = useLinkForUuid ? dep.dependency.link : dep.dependency.id;
+			if (this._mappings.hasKey(uuid)) {
+				mappingsToApply.set(dep.model, this._mappings.getValue(uuid));
 			} else {
-				this._mappings.set(dep.dependency.id, dep.model);
+				this._mappings.set(uuid, dep.model);
 			}
 		});
 		return mappingsToApply;
 	}
 
-	private setCustomElements(components: Partial<ComponentInfo>[], category: 'user' | 'local' | 'share') {
+	private setCustomElements(components: Partial<ComponentInfo>[], category: 'user' | 'local' | 'share', useLinkForUuid = false) {
 		const elements: Partial<ElementType>[] = components.map(comp => {
 			return {
-				id: this._mappings.getValue(comp.id),
+				id: this._mappings.getValue(useLinkForUuid ? comp.link : comp.id),
 				description: comp.description,
 				name: comp.name,
 				minInputs: comp.numInputs,
