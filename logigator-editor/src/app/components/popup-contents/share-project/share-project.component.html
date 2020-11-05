@@ -4,8 +4,8 @@
 	<h4 class="link-head">Share Link</h4>
 	<div class="link">
 		<p>{{link}}</p>
-		<button type="button" class="btn-outline primary link-copy">Copy</button>
-		<button type="button" class="btn-outline secondary link-regenerate">Regenerate</button>
+		<button type="button" class="btn-outline primary link-copy" (click)="copyLink()">Copy</button>
+		<button type="button" class="btn-outline secondary link-regenerate" (click)="regenerateLink()">Regenerate</button>
 	</div>
 
 	<p class="regenerate-warn">Regenerate Warn</p>
@@ -16,7 +16,7 @@
 	</div>
 
 	<div class="buttons">
-		<button type="button" class="btn-raised secondary cancel">cancel</button>
-		<button type="submit" class="btn-raised primary submit">Save</button>
+		<button type="button" class="btn-raised secondary cancel" (click)="cancelClick()">cancel</button>
+		<button type="submit" class="btn-raised primary submit" (click)="saveClick()">Save</button>
 	</div>
 </div>

@@ -96,6 +96,8 @@ export class ProjectSaveManagementService {
 			source: 'server',
 			name: projectData.data.name,
 			hash: projectData.data.elementsFile.hash,
+			public: projectData.data.public,
+			link: projectData.data.link,
 			type,
 		});
 		this._projectsCache.set(project.id, project);
@@ -202,6 +204,9 @@ export class ProjectSaveManagementService {
 			const project = new Project(new ProjectState(), {
 				type: 'comp',
 				source: 'server',
+				hash: resp.data.elementsFile.hash,
+				link: resp.data.link,
+				public: resp.data.public,
 				name,
 				id
 			});
@@ -549,6 +554,10 @@ export class ProjectSaveManagementService {
 		this._mappings.deleteValue(typeId);
 		this._projectsCache.delete(typeId);
 		this.elementProvider.removeElement(typeId);
+	}
+
+	public getUuidForProject(id: number): string {
+		return this._mappings.getKey(id);
 	}
 
 }
