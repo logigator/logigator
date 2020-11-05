@@ -1,15 +1,15 @@
 <div class="open-project">
 	<div class="open-server" *ngIf="isLoggedIn">
-		<app-input [label]="'Search' | translate" [(ngModel)]="searchText" (ngModelChange)="searchTextChanged()"></app-input>
+		<app-input [label]="'POPUP.OPEN.SEARCH' | translate" [(ngModel)]="searchText" (ngModelChange)="searchTextChanged()"></app-input>
 
 		<ng-container *ngIf="projectsList as projects">
 			<div class="single-project-server table-header" *ngIf="projects.count > 0">
-				<p class="name">{{'POPUP.OPEN.TABLE_NAME' | translate}}</p>
-				<p class="last-edit">{{'POPUP.OPEN.TABLE_EDITED' | translate}}</p>
+				<p class="name">{{'POPUP.OPEN.NAME' | translate}}</p>
+				<p class="last-edit">{{'POPUP.OPEN.EDITED' | translate}}</p>
 			</div>
 
 			<div *ngIf="projects.count === 0">
-				<p class="not-found">{{'No projects found' | translate}}</p>
+				<p class="not-found">{{'POPUP.OPEN.NOTHING_FOUND' | translate}}</p>
 			</div>
 
 			<div *ngFor="let p of projects.entries" class="single-project-server">

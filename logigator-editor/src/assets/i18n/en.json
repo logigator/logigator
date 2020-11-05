@@ -67,7 +67,7 @@
 			"CONN_WIRE": "Connect Wires",
 			"SELECT": "Select",
 			"SELECT_CUT": "Select Cut",
-			"ROBBER": "Eraser",
+			"ERASER": "Eraser",
 			"TEXT": "Text",
 			"SIM_SINGLE": "Single Step",
 			"SIM_PAUSE": "Pause",
@@ -88,59 +88,58 @@
 			"ADVANCED": "Advanced",
 			"IO": "IO",
 			"PLUG": "Plug",
-			"USER": "User Defined"
+			"USER": "User Defined",
+			"LOCAL": "Local",
+			"SHARE": "Share"
 		}
 	},
 	"POPUP": {
 		"NEW_COMP": {
 			"TITLE": "New Component",
 			"NAME": "Name",
+			"NAME_REQUIRED": "Name is required",
+			"NAME_MAX_LENGTH": "Name is to long",
+			"NAME_INFO": "Name of the new component",
 			"SYMBOL": "Symbol",
+			"SYMBOL_REQUIRED": "Symbol is required",
+			"SYMBOL_MAX_LENGTH": "Symbol is to long",
+			"SYMBOL_INFO": "Will be shown when placing component.",
 			"DESCRIPTION": "Description",
 			"DESCRIPTION_MAX_LENGTH": "Description is to long",
 			"DESCRIPTION_INFO": "Description of the new component",
-			"CREATE": "CREATE",
-			"NAME_REQUIRED": "Name is required",
-			"NAME_MIN_LENGTH": "Name is to short",
-			"NAME_MAX_LENGTH": "Name is to long",
-			"NAME_PATTERN": "Name must consist of A-Z a-z 0-9 -_",
-			"NAME_INFO": "Name of the new component",
-			"SYMBOL_REQUIRED": "Symbol is required",
-			"SYMBOL_MAX_LENGTH": "Symbol is to long",
-			"SYMBOL_PATTERN": "Symbol must consist of A-Z a-z 0-9 -_",
-			"SYMBOL_INFO": "Will be shown when placing component."
+			"CREATE": "CREATE"
 		},
 		"SAVE": {
 			"TITLE": "Save Project",
 			"NAME": "Name",
 			"NAME_INFO": "Name of the new project",
-			"DESCRIPTION": "Description",
 			"DESCRIPTION_INFO": "Description of the new project",
-			"DOWNLOAD": "DOWNLOAD FILE",
-			"CLOUD": "SAVE IN CLOUD"
+			"DOWNLOAD": "Download file",
+			"CLOUD": "Save in cloud"
 		},
 		"OPEN": {
 			"TITLE": "Open Project",
+			"SEARCH": "Search",
 			"OPEN": "Open",
-			"TABLE_OPEN": "Open",
-			"TABLE_EDITED": "Last edited",
-			"TABLE_NAME": "Name",
+			"EDITED": "Last edited",
+			"NAME": "Name",
 			"OPEN_FILE": "Open from File",
 			"OPEN_CLOUD": "Open from Cloud",
 			"OPEN_SHARE": "Open Share",
 			"SHARE_LABEL": "Id / Link",
-			"NO_FILE": "No File Selected"
+			"NO_FILE": "No File Selected",
+			"NOTHING_FOUND": "No projects found"
 		},
 		"RELOAD": {
 			"TITLE": "Reload Required",
 			"QUESTION": "For this change to take effect, the editor has to be reloaded.<br>Do you want to reload this page now?",
 			"YES": "YES",
-			"POSTPONE": "RELOAD LATER",
-			"CANCEL": "CANCEL"
+			"POSTPONE": "Reload later",
+			"CANCEL": "Cancel"
 		},
 		"SHORTCUTS": {
 			"TITLE": "Customize Shortcuts",
-			"SAVE": "SAVE",
+			"SAVE": "Save",
 			"DESCRIPTION": {
 				"copy": "Copy",
 				"paste": "Paste",
@@ -163,31 +162,29 @@
 				"newProj": "New Project",
 				"openProj": "Open Project",
 				"enterSim": "Enter Simulation",
-				"leaveSim": "Leave Simulation"
+				"leaveSim": "Leave Simulation",
+				"startSim":  "Start Simulation",
+				"pauseSim": "Pause Simulation",
+				"stopSim":  "Stop Simulation",
+				"singleStepSim": "Single Simulation step"
 			}
 		},
 		"UNSAVED_CHANGES": {
 			"TITLE": "Unsaved Changes",
 			"QUESTION": "The current project has unsaved changes, by opening another project, these changes may be lost!",
-			"OK": "CONTINUE ANYWAYS",
-			"CANCEL": "CANCEL"
+			"OK": "Continue anyways",
+			"CANCEL": "Cancel"
 		},
 		"SHARE": {
 			"TITLE": "Share Project {{project}}",
-			"SHARE_ENABLE": "Share this project with others",
-			"PUBLIC": "Public share",
-			"INFO_TEXT": "Please type in the email-addresses or usernames of the users, with whom you want to share this project.",
-			"EMAIL_USER": "Email / username",
-			"EMAIL_USER_ALREADY_ADDED": "Email or username has already been added",
-			"ADD_EMAIL": "Add",
-			"REMOVE_EMAIL": "Remove",
-			"INVITATIONS": "Send email invitations to users",
-			"NOT_FOUND_ERROR": "Some email addresses or user names were not found, share was created or updated anyways.",
-			"SUCCESS": "Created or updated share successfully.",
+			"EXPLANATION": "Anyone who owns the link can view, clone, but not edit the project. If 'Share publicly' is activated, the project will be displayed in all public lists.",
 			"LINK": "Link to share",
+			"PUBLIC": "Share publicly",
+			"REGENERATE": "Regenerate",
+			"REGENERATE_WARN": "Regenerating the link makes to old link invalid.",
 			"COPY": "Copy",
-			"SAVE": "SAVE SETTINGS",
-			"CANCEL": "CANCEL"
+			"SAVE": "Save",
+			"CANCEL": "Cancel"
 		},
 		"TEXT": {
 			"TITLE": "Place Text",
@@ -333,14 +330,14 @@
 		"SELECTED": "Sel"
 	},
 	"WORK_MODE_DES": {
-		"select": "Selecting Elements",
-		"selectCut": "Selecting Elements, but cut wires off",
-		"buildComponent": "Placing Component: {{comp}}",
-		"buildWire": "Placing Wires",
-		"connectWire": "Connecting Wires",
-		"text": "Placing Text",
-		"eraser": "Erase Components",
-		"simulation": "Simulating Circuit"
+		"0": "Selecting Elements",
+		"1": "Selecting Elements, but cut wires off",
+		"2": "Erase Components",
+		"3": "Placing Component: {{comp}}",
+		"4": "Placing Wires",
+		"5": "Connecting Wires",
+		"6": "Placing Text",
+		"7": "Simulating Circuit"
 	},
 	"ERROR": {
 		"COMPILE": {
@@ -349,46 +346,12 @@
 			"WORKER_INIT": "WebWorker failed to initialize."
 		},
 		"PROJECTS": {
-			"GET_PROJECTS": "Unable to get Projects from Server",
-			"GET_COMPS": "Unable to get Components from Server",
-			"OPEN_COMP": "Unable to open Component",
-			"OPEN": "Unable to open Project or Component",
-			"CLONE": "Unable to clone project",
-			"CREATE": "Unable to create project or component",
-			"SAVE": "Unable to save Component or Project on Server",
-			"SAVE_VERSION": "Version Error: Unable to save Component or Project on Server, because someone else updated the project while it was changed.",
-			"COMP_NOT_FOUND": "Component not found, project might be corrupted",
-			"REMOVED_COMP": "A component was not found and was removed from the Project",
-			"COMP_AS_PROJECT": "Unable to open Component as Project",
-			"INVALID_FILE": "Invalid File",
-			"RESOLVE_DEPS": "Unable to resolve dependencies of Project",
-			"PROJECT_AS_COMP": "Unable to open Project as Component",
-			"INVALID_FILE_TYPE": "Invalid File Type. Use a Json File."
-		},
-		"SHARE": {
-			"CREATE": "Unable to create share.",
-			"OPEN": "Unable to open shared Project",
-			"UPDATE": "Unable to update Share",
-			"DELETE": "Unable to delete Share",
-			"GET_INFO": "Unable to get Share information"
 		},
 		"USER": {
-			"SAVE_SHORTCUTS": "Error while Saving Shortcuts",
 			"GET_INFO": "Unable to get User info"
-		},
-		"INVALID_URL": "Invalid Url"
+		}
 	},
 	"INFO": {
-		"PROJECTS": {
-			"CREATE_COMP": "Created Component {{name}}.",
-			"OPEN_COMP": "Opened Component {{name}}.",
-			"OPEN_PROJECT": "Opened Project {{name}}.",
-			"CLONED": "Cloned Project.",
-			"SAVE_SERVER": "Saved {{name}} on Server.",
-			"SAVE_ALL": "Saved Project and all open Components",
-			"EXPORT": "Exported Project and all included Components",
-			"OPEN_SHARE": "Opened shared project {{name}} from {{user}}"
-		},
 		"EASTEREGGS": {
 			"GBOGH": "Go big or go home",
 			"BLD": "AHHH MY EYES, SO MANY LUMENS",
