@@ -1,4 +1,4 @@
-import {ChangeDetectionStrategy, Component, OnInit} from '@angular/core';
+import {ChangeDetectionStrategy, ChangeDetectorRef, Component, OnInit} from '@angular/core';
 import {PopupContentComp} from '../../popup/popup-content-comp';
 import {Project} from '../../../models/project';
 import {ApiService} from '../../../services/api/api.service';
@@ -18,7 +18,11 @@ export class ShareProjectComponent extends PopupContentComp<Project, never> impl
 
 	public link: string;
 
-	constructor(private api: ApiService, private projectSaveManagement: ProjectSaveManagementService) {
+	constructor(
+		private api: ApiService,
+		private projectSaveManagement: ProjectSaveManagementService,
+		private cdr: ChangeDetectorRef
+	) {
 		super();
 	}
 
@@ -43,6 +47,7 @@ export class ShareProjectComponent extends PopupContentComp<Project, never> impl
 		}, undefined).toPromise();
 		this.inputFromOpener.link = resp.data.link;
 		this.link = this.getShareLink(resp.data.link);
+		this.cdr.detectChanges();
 	}
 
 	public async saveClick() {
