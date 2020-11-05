@@ -4,7 +4,7 @@ import {Element} from '../element';
 import {SimulationViewInteractionManager} from './simulation-view-interaction-manager';
 import {EventEmitter, NgZone} from '@angular/core';
 import {ReqInspectElementEvent} from './req-inspect-element-event';
-import {filter, takeUntil} from 'rxjs/operators';
+import {takeUntil} from 'rxjs/operators';
 import {getStaticDI} from '../get-di';
 import {LGraphicsResolver} from './graphics/l-graphics-resolver';
 import {Grid} from './grid';
@@ -12,7 +12,8 @@ import {ElementProviderService} from '../../services/element-provider/element-pr
 import {WorkerCommunicationService} from '../../services/simulation/worker-communication/worker-communication-service-model';
 import {isResetable} from './graphics/l-graphics';
 import {ZoomPanData} from './zoom-pan';
-import {EditorInteractionService} from '../../services/editor-interaction/editor-interaction.service';
+import {ElementTypeId} from '../element-types/element-type-ids';
+import {RomGraphics} from './graphics/rom-graphics';
 
 export class SimulationView extends View {
 
@@ -77,6 +78,9 @@ export class SimulationView extends View {
 		this.allElements.set(element.id, sprite);
 		if (getStaticDI(ElementProviderService).isCustomElement(element.typeId)) {
 			this._simViewInteractionManager.addEventListenersToCustomElement(sprite);
+		}
+		if (element.typeId === ElementTypeId.ROM) {
+			this._simViewInteractionManager.addROMEventListener(sprite as RomGraphics);
 		}
 	}
 

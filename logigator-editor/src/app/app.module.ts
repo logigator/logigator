@@ -55,6 +55,7 @@ import {InputComponent} from './components/input/input.component';
 import {InputErrorComponent} from './components/input-error/input-error.component';
 import {FileInputComponent} from './components/file-input/file-input.component';
 import {SiPipe} from './pipes/si/si.pipe';
+import {RomViewComponent} from './components/popup-contents/rom-view/rom-view.component';
 
 @NgModule({
 	declarations: [
@@ -88,6 +89,7 @@ import {SiPipe} from './pipes/si/si.pipe';
 		ToolbarItemTooltipComponent,
 		StatusBarComponent,
 		RomEditComponent,
+		RomViewComponent,
 		HelpComponent,
 		HelpRendererComponent,
 		HelpWindowComponent,

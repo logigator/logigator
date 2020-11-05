@@ -5,6 +5,9 @@ import {getStaticDI} from '../get-di';
 import {NgZone} from '@angular/core';
 import {LGraphics} from './graphics/l-graphics';
 import {WorkMode} from '../work-modes';
+import {PopupService} from '../../services/popup/popup.service';
+import {RomViewComponent} from '../../components/popup-contents/rom-view/rom-view.component';
+import {RomGraphics} from './graphics/rom-graphics';
 
 export class SimulationViewInteractionManager {
 
@@ -21,6 +24,14 @@ export class SimulationViewInteractionManager {
 				if (getStaticDI(WorkModeService).currentWorkMode !== WorkMode.SIMULATION) return;
 				this.onCompClick(e, sprite);
 			});
+		});
+	}
+
+	public addROMEventListener(sprite: RomGraphics) {
+		sprite.interactive = true;
+		sprite.on('pointerdown', async (e: PIXI.InteractionEvent) => {
+			if (getStaticDI(WorkModeService).currentWorkMode !== WorkMode.SIMULATION) return;
+			await getStaticDI(PopupService).showPopup(RomViewComponent, 'test', true, sprite);
 		});
 	}
 
