@@ -346,9 +346,21 @@
 			"WORKER_INIT": "WebWorker failed to initialize."
 		},
 		"PROJECTS": {
+			"OPEN": "Unable to open Project or Component.",
+			"OPEN_SHARE": "Unable to open shared Project or Component.",
+			"GET_COMPS": "Unable to get Components from Server.",
+			"OPEN_COMP": "Unable to open Component.",
+			"GET_PROJECTS": "Unable to get Projects from Server",
+			"CREATE": "Unable to create project or component",
+			"SAVE": "Unable to save Component or Project on Server",
+			"REGENERATE_SHARE_LINK": "Unable to regenerate share link.",
+			"UPDATE_SHARE_INFO": "Unable to update share information.",
+			"INVALID_FILE_TYPE": "Invalid File Type. Use a Json File.",
+			"INVALID_FILE": "Invalid File"
 		},
 		"USER": {
-			"GET_INFO": "Unable to get User info"
+			"GET_INFO": "Unable to get User info.",
+			"UPDATE_SHORTCUTS": "Error while Saving Shortcuts."
 		}
 	},
 	"INFO": {

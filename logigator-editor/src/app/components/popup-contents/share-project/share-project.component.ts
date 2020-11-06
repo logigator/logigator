@@ -44,7 +44,7 @@ export class ShareProjectComponent extends PopupContentComp<Project, never> impl
 	public async regenerateLink() {
 		const resp = await this.api.patch<ProjectInfo>(`/project/${this.getProjectUuid()}`, {
 			updateLink: true
-		}, undefined).toPromise();
+		}, {errorMessage: 'ERROR.PROJECTS.REGENERATE_SHARE_LINK'}).toPromise();
 		this.inputFromOpener.link = resp.data.link;
 		this.link = this.getShareLink(resp.data.link);
 		this.cdr.detectChanges();
@@ -57,7 +57,7 @@ export class ShareProjectComponent extends PopupContentComp<Project, never> impl
 		}
 		const resp = await this.api.patch<ProjectInfo>(`/project/${this.getProjectUuid()}`, {
 			public: this.isPublic
-		}, undefined).toPromise();
+		}, {errorMessage: 'ERROR.PROJECTS.UPDATE_SHARE_INFO'}).toPromise();
 		this.inputFromOpener.isPublic = resp.data.public;
 		this.requestClose.emit();
 	}
