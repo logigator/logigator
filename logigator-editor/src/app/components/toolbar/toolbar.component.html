@@ -31,7 +31,7 @@
 			<button class="toolbar-button conn-wire" (click)="setWorkMode('CONN_WIRE')" [class.active-button]="isConnWireMode" aria-label="Connect Wire" appToolbarItemTooltip [tooltipText]="('TOOLBAR.TOOLTIP.CONN_WIRE' | translate) + getShortcut('connWireMode')"></button>
 			<button class="toolbar-button select" (click)="setWorkMode('SELECT')" [class.active-button]="isSelectMode" aria-label="Select" appToolbarItemTooltip [tooltipText]="('TOOLBAR.TOOLTIP.SELECT' | translate) + getShortcut('selectMode')"></button>
 			<button class="toolbar-button select-cut" (click)="setWorkMode('CUT_SELECT')" [class.active-button]="isCutSelectMode" aria-label="Select Cut" appToolbarItemTooltip [tooltipText]="('TOOLBAR.TOOLTIP.SELECT_CUT' | translate) + getShortcut('cutSelectMode')"></button>
-			<button class="toolbar-button eraser" (click)="setWorkMode('ERASER')" [class.active-button]="isEraserMode" aria-label="Robber" appToolbarItemTooltip [tooltipText]="('TOOLBAR.TOOLTIP.ROBBER' | translate) + getShortcut('eraserMode')"></button>
+			<button class="toolbar-button eraser" (click)="setWorkMode('ERASER')" [class.active-button]="isEraserMode" aria-label="Eraser" appToolbarItemTooltip [tooltipText]="('TOOLBAR.TOOLTIP.ERASER' | translate) + getShortcut('eraserMode')"></button>
 			<button class="toolbar-button text" (click)="setWorkMode('TEXT')" [class.active-button]="isTextMode" aria-label="Place Text" appToolbarItemTooltip [tooltipText]="('TOOLBAR.TOOLTIP.TEXT' | translate) + getShortcut('textMode')"></button>
 		</ng-container>
 

@@ -55,7 +55,9 @@ export class LedMatrixRenderer extends BaseRenderer {
 					break;
 				case ElementRotation.Left:
 					for (let i = 0; i < this._element.numInputs; i++) {
-						const label = this.getLabelText(this._labels[i], this._size.x, this._size.y - (this._gridSize / 2) - this._gridSize * i + this.scaled(2));
+						const label = this.getLabelText(
+							this._labels[i], this._size.x, this._size.y - (this._gridSize / 2) - this._gridSize * i + this.scaled(2)
+						);
 						label.setAttribute('class', 'l-r');
 						this._group.appendChild(label);
 					}

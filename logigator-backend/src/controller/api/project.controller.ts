@@ -77,7 +77,7 @@ export class ProjectController {
 		const content: ProjectElement[] = contentBuffer?.length ? JSON.parse(contentBuffer.toString()) : [];
 
 		return {
-			...classToPlain(project),
+			...classToPlain(project, {groups: ['showShareLinks']}),
 			dependencies,
 			elements: content ?? []
 		};
@@ -125,6 +125,7 @@ export class ProjectController {
 
 	@Patch('/:projectId')
 	@UseBefore(CheckAuthenticatedApiMiddleware)
+	@ResponseClassTransformOptions({groups: ['showShareLinks']})
 	public async update(@Param('projectId') projectId: string, @CurrentUser() user: User, @Body() body: UpdateProject) {
 		const project = await this.projectRepo.getOwnedProjectOrThrow(projectId, user);
 

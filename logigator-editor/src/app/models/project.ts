@@ -12,23 +12,34 @@ import {ProjectType} from './project-type';
 import {getStaticDI} from './get-di';
 import {ElementTypeId} from './element-types/element-type-ids';
 
-export class Project {
+export interface ProjectConfiguration {
+	id?: number;
+	name?: string;
+	type?: ProjectType;
+	hash?: string;
+	public?: boolean;
+	link?: string;
+	source: 'server' | 'local' | 'share';
+}
 
+export class Project {
 
 	private readonly _id: number;
 	private _name: string;
-	private _type: ProjectType;
+	private _isPublic: boolean;
+	private _link: string;
+	private readonly _type: ProjectType;
 	private _hash: string;
-	private _source: 'server' | 'local' | 'share';
+	private readonly _source: 'server' | 'local' | 'share';
 
-	private _currState: ProjectState;
+	private readonly _currState: ProjectState;
 
 	private readonly _actions: Action[][];
 	private _maxActionCount = 1000;
 	private _currActionPointer: number;
 	private _currMaxActionPointer: number;
 
-	private _changeSubject: Subject<Action[]>;
+	private readonly _changeSubject: Subject<Action[]>;
 
 	public saveDirty = false;
 	public compileDirty = true;
@@ -40,7 +51,7 @@ export class Project {
 	// #!debug
 	public boardRecorder: BoardRecorder;
 
-	public constructor(projectState: ProjectState, config: { id?: number, name?: string, type?: ProjectType, hash?: string, source: 'server' | 'local' | 'share'}) {
+	public constructor(projectState: ProjectState, config: ProjectConfiguration) {
 		this._currState = projectState;
 		this._actions = new Array(this._maxActionCount);
 		this._id = config.id;
@@ -48,6 +59,8 @@ export class Project {
 		this._type = config.type ?? 'comp';
 		this._hash = config.hash;
 		this._source = config.source;
+		this._isPublic = config.public ?? false;
+		this._link = config.link;
 		this._currActionPointer = -1;
 		this._currMaxActionPointer = -1;
 		this._changeSubject = new Subject<Action[]>();
@@ -658,5 +671,21 @@ export class Project {
 
 	get source(): 'server' | 'local' | 'share' {
 		return this._source;
+	}
+
+	get isPublic(): boolean {
+		return this._isPublic;
+	}
+
+	set isPublic(value: boolean) {
+		this._isPublic = value;
+	}
+
+	get link(): string {
+		return this._link;
+	}
+
+	set link(value: string) {
+		this._link = value;
 	}
 }

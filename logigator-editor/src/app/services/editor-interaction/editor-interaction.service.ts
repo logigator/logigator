@@ -10,6 +10,7 @@ import {NewComponentComponent} from '../../components/popup-contents/new-compone
 import {OpenProjectComponent} from '../../components/popup-contents/open/open-project.component';
 import {SaveAsComponent} from '../../components/popup-contents/save-as/save-as.component';
 import {ShareProjectComponent} from '../../components/popup-contents/share-project/share-project.component';
+import {ErrorHandlingService} from '../error-handling/error-handling.service';
 
 @Injectable({
 	providedIn: 'root'
@@ -23,7 +24,8 @@ export class EditorInteractionService {
 		private selection: SelectionService,
 		private copyService: CopyService,
 		private ngZone: NgZone,
-		private popupService: PopupService
+		private popupService: PopupService,
+		private errorHandling: ErrorHandlingService
 	) {}
 
 	public subscribeEditorAction(...actions: EditorAction[]): Observable<EditorAction> {
@@ -135,7 +137,7 @@ export class EditorInteractionService {
 
 	public async openProjectFile(file: File) {
 		if (file.type !== 'application/json') {
-			// this.errorHandling.showErrorMessage('ERROR.PROJECTS.INVALID_FILE_TYPE');
+			this.errorHandling.showErrorMessage('ERROR.PROJECTS.INVALID_FILE_TYPE');
 			return;
 		}
 		if (await this.projectsService.askToSave()) {

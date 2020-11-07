@@ -1,0 +1,31 @@
+name: 'CI logigator-backend'
+on:
+  push:
+    branches:
+      - 'master'
+    paths:
+      - 'logigator-backend/**'
+
+jobs:
+  ci:
+    name: 'CI logigator-backend'
+    runs-on: 'ubuntu-latest'
+    steps:
+      - name: 'Checkout'
+        uses: actions/checkout@v2
+        with:
+          ref: master
+
+      - name: 'Setup Node'
+        uses: actions/setup-node@v1
+        with:
+          node-version: '12.x'
+
+      - name: 'Build'
+        shell: bash
+        working-directory: 'logigator-backend'
+        run: |
+          npm i
+          npm run lint:frontend
+          npm run lint:backend
+          npm run build

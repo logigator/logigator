@@ -118,16 +118,20 @@ export class ProjectsService {
 	}
 
 	public async createComponent(name: string, symbol: string, description: string = '') {
-		const component = await this.projectSaveManagementService.createComponent(name, symbol, description);
-		this._projects.push(component);
-		this._projectOpenedSubject.next(component.id);
+		try {
+			const component = await this.projectSaveManagementService.createComponent(name, symbol, description);
+			this._projects.push(component);
+			this._projectOpenedSubject.next(component.id);
+		} catch {}
 	}
 
 	public async openProjectUuid(id: string) {
 		this.projectSaveManagementService.clearElements('share');
-		const project = await this.projectSaveManagementService.getProjectOrComponentUuid(id, 'project');
-		await this.openNewProject(project);
-		this.location.set('project', id);
+		try {
+			const project = await this.projectSaveManagementService.getProjectOrComponentUuid(id, 'project');
+			await this.openNewProject(project);
+			this.location.set('project', id);
+		} catch {}
 	}
 
 	public async openComponent(id: number) {
@@ -136,22 +140,26 @@ export class ProjectsService {
 			return;
 		}
 
-		const component = await this.projectSaveManagementService.getComponent(id);
-		this._projects.push(component);
-		this._projectOpenedSubject.next(component.id);
+		try {
+			const component = await this.projectSaveManagementService.getComponent(id);
+			this._projects.push(component);
+			this._projectOpenedSubject.next(component.id);
+		} catch {}
 	}
 
 	public async saveProjectServer(name: string, description = '') {
-		const newId = await this.projectSaveManagementService.createProjectServer(name, description, this._mainProject);
-		const project = await this.projectSaveManagementService.getProjectOrComponentUuid(newId, 'project');
-		this._projects.unshift(project);
-		this._projectOpenedSubject.next(project.id);
-		this._mainProject = project;
-		for (let i = 1; i < this._projects.length; i++) {
-			this._projectClosedSubject.next(this._projects[i].id);
-		}
-		this._projects = [this._projects[0]];
-		this.location.set('project', newId);
+		try {
+			const newId = await this.projectSaveManagementService.createProjectServer(name, description, this._mainProject);
+			const project = await this.projectSaveManagementService.getProjectOrComponentUuid(newId, 'project');
+			this._projects.unshift(project);
+			this._projectOpenedSubject.next(project.id);
+			this._mainProject = project;
+			for (let i = 1; i < this._projects.length; i++) {
+				this._projectClosedSubject.next(this._projects[i].id);
+			}
+			this._projects = [this._projects[0]];
+			this.location.set('project', newId);
+		} catch {}
 	}
 
 	public async exportToFile(name?: string) {
@@ -161,16 +169,26 @@ export class ProjectsService {
 	public async openFile(content: string) {
 		this.projectSaveManagementService.clearElements('local');
 		this.projectSaveManagementService.clearElements('share');
-		const project = this.projectSaveManagementService.openFile(content);
-		await this.openNewProject(project);
-		this.location.reset();
+		try {
+			const project = this.projectSaveManagementService.openFile(content);
+			await this.openNewProject(project);
+			this.location.reset();
+		} catch {
+			this.errorHandling.showErrorMessage('ERROR.PROJECTS.INVALID_FILE');
+		}
 	}
 
 	public async openShare(linkId: string) {
 		this.projectSaveManagementService.clearElements('share');
-		const project = await this.projectSaveManagementService.getProjectShare(linkId);
-		await this.openNewProject(project);
-		this.location.set('share', linkId);
+		try {
+			const project = await this.projectSaveManagementService.getProjectShare(linkId);
+			await this.openNewProject(project);
+			this.location.set('share', linkId);
+		} catch {
+			if (this.mainProject.source === 'share') {
+				this.newProject();
+			}
+		}
 	}
 
 	public async newProject() {

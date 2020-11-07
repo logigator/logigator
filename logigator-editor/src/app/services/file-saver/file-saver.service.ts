@@ -2,7 +2,7 @@ import {Injectable, Optional} from '@angular/core';
 // #!electron
 import {ElectronService} from 'ngx-electron';
 // #!electron
-import * as fs from "fs";
+import * as fs from 'fs';
 
 @Injectable({
 	providedIn: 'root'

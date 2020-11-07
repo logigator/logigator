@@ -1,22 +1,22 @@
 <div class="share">
-	<p class="explanation">Explaintion</p>
+	<p class="explanation">{{'POPUP.SHARE.EXPLANATION' | translate}}</p>
 
-	<h4 class="link-head">Share Link</h4>
+	<h4 class="link-head">{{'POPUP.SHARE.LINK' | translate}}</h4>
 	<div class="link">
 		<p>{{link}}</p>
-		<button type="button" class="btn-outline primary link-copy">Copy</button>
-		<button type="button" class="btn-outline secondary link-regenerate">Regenerate</button>
+		<button type="button" class="btn-outline primary link-copy" (click)="copyLink()">{{'POPUP.SHARE.COPY' | translate}}</button>
+		<button type="button" class="btn-outline secondary link-regenerate" (click)="regenerateLink()">{{'POPUP.SHARE.REGENERATE' | translate}}</button>
 	</div>
 
-	<p class="regenerate-warn">Regenerate Warn</p>
+	<p class="regenerate-warn">{{'POPUP.SHARE.REGENERATE_WARN' | translate}}</p>
 
 	<div class="public-switch">
-		<p>Share publicly</p>
+		<p>{{'POPUP.SHARE.PUBLIC' | translate}}</p>
 		<app-switch [(ngModel)]="isPublic"></app-switch>
 	</div>
 
 	<div class="buttons">
-		<button type="button" class="btn-raised secondary cancel">cancel</button>
-		<button type="submit" class="btn-raised primary submit">Save</button>
+		<button type="button" class="btn-raised secondary cancel" (click)="cancelClick()">{{'POPUP.SHARE.CANCEL' | translate}}</button>
+		<button type="submit" class="btn-raised primary submit" (click)="saveClick()">{{'POPUP.SHARE.SAVE' | translate}}</button>
 	</div>
 </div>

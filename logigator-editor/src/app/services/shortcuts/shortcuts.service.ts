@@ -138,7 +138,7 @@ export class ShortcutsService {
 		}
 		await this.apiService.patch<any>('/user', {
 			shortcuts: patchData
-		}).toPromise();
+		}, {errorMessage: 'ERROR.USER.UPDATE_SHORTCUTS'}).toPromise();
 	}
 
 	public get shortcutActionConfig(): Shortcut[] {

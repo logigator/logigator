@@ -79,7 +79,7 @@ export class SingleShortcutConfigComponent implements OnInit, OnDestroy {
 		return {
 			key: this.shortcut.action,
 			config: this._newShortcutConfig
-		}
+		};
 	}
 
 	ngOnDestroy(): void {
