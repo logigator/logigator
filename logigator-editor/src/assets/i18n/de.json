@@ -348,7 +348,8 @@
 		"PROJECTS": {
 		},
 		"USER": {
-			"GET_INFO": "Konnte Benutzerinformationen nicht bekommen"
+			"GET_INFO": "Konnte Benutzerinformationen nicht bekommen",
+			"UPDATE_SHORTCUTS": "Fehler beim speichern der Shortcuts."
 		}
 	},
 	"INFO": {
