@@ -95,7 +95,7 @@ export class RomGraphics extends PIXI.Graphics implements LGraphics, ComponentUp
 		return adjustedSize < environment.gridPixelWidth * 0.9 ? adjustedSize : environment.gridPixelWidth * 0.9;
 	}
 
-	public get getSimState() {
+	public getCurrentSimState(): boolean[] {
 		return this.simActiveState;
 	}
 

@@ -16,7 +16,6 @@ export class WindowDragManager {
 	private _changeSubject = new Subject<void>();
 
 	private readonly _dragBounding: HTMLElement;
-	private readonly _canvasContainer: HTMLElement;
 	private readonly _popup: HTMLElement;
 	private readonly _header: HTMLElement;
 
@@ -27,7 +26,6 @@ export class WindowDragManager {
 
 	constructor(
 		dragBounding: HTMLElement,
-		canvasContainer: HTMLElement,
 		popup: HTMLElement,
 		header: HTMLElement,
 		renderer2: Renderer2,
@@ -35,7 +33,6 @@ export class WindowDragManager {
 		maxSize: PIXI.Point = new PIXI.Point(Infinity, Infinity)
 	) {
 		this._dragBounding = dragBounding;
-		this._canvasContainer = canvasContainer;
 		this._popup = popup;
 		this._header = header;
 		this.renderer2 = renderer2;

@@ -1,8 +1,8 @@
 import {ComponentFixture, TestBed, waitForAsync} from '@angular/core/testing';
 
-import { RomViewComponent } from './rom-edit.component';
+import { RomViewComponent } from './rom-view.component';
 
-describe('RomEditComponent', () => {
+describe('RomViewComponent', () => {
 	let component: RomViewComponent;
 	let fixture: ComponentFixture<RomViewComponent>;
 

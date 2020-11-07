@@ -1,7 +1,6 @@
 import {ChangeDetectionStrategy, Component, ElementRef, OnDestroy, OnInit, ViewChild} from '@angular/core';
 import {RomData} from '../../../models/element-types/advanced/rom';
-import {PopupContentComp} from '../../popup/popup-content-comp';
-import {RomGraphics} from '../../../models/rendering/graphics/rom-graphics';
+import {ElementInspectionComp} from '../element-inspection-comp';
 
 @Component({
 	selector: 'app-rom-view',
@@ -9,7 +8,7 @@ import {RomGraphics} from '../../../models/rendering/graphics/rom-graphics';
 	styleUrls: ['./rom-view.component.scss'],
 	changeDetection: ChangeDetectionStrategy.OnPush
 })
-export class RomViewComponent extends PopupContentComp<RomGraphics, undefined> implements OnInit, OnDestroy {
+export class RomViewComponent extends ElementInspectionComp implements OnInit, OnDestroy {
 
 	@ViewChild('hexInput', {static: true})
 	hexInput: ElementRef<HTMLTextAreaElement>;
@@ -27,8 +26,8 @@ export class RomViewComponent extends PopupContentComp<RomGraphics, undefined> i
 	ngOnInit() {
 		this.hexInput.nativeElement.value = '';
 
-		if (!this.inputFromOpener.element.data) return;
-		const raw = atob(this.inputFromOpener.element.data as RomData);
+		if (!this.sprite.element.data) return;
+		const raw = atob(this.sprite.element.data as RomData);
 		let hex = '';
 		for (let i = 0; i < raw.length; i++ ) {
 			const _hex = raw.charCodeAt(i).toString(16).toUpperCase();
@@ -37,23 +36,23 @@ export class RomViewComponent extends PopupContentComp<RomGraphics, undefined> i
 		this.rows = Math.ceil(hex.length / 48) || 1;
 		this.calcLeftAddresses(this.rows);
 		this.hexInput.nativeElement.value = hex;
-		this.selectAddress(this.inputFromOpener.getSimState);
-		this.inputFromOpener.onChange = (state) => this.selectAddress(state);
+		this.selectAddress(this.sprite.getCurrentSimState());
+		this.sprite.onChange = (state) => this.selectAddress(state);
 	}
 
 	ngOnDestroy(): void {
-		this.inputFromOpener.onChange = undefined;
+		this.sprite.onChange = undefined;
 	}
 
 	selectAddress(state: boolean[]) {
 		// TODO
 		let num = 0;
-		for (let i = 0; i < this.inputFromOpener.element.numInputs; i++) {
+		for (let i = 0; i < this.sprite.element.numInputs; i++) {
 			num |= ((state[i] ? 1 : 0) << i);
 		}
-		let pos = Math.floor(num * this.inputFromOpener.element.numOutputs / 4);
+		let pos = Math.floor(num * this.sprite.element.numOutputs / 4);
 		pos += Math.floor(pos / 2);
-		let length = Math.ceil(this.inputFromOpener.element.numOutputs / 4);
+		let length = Math.ceil(this.sprite.element.numOutputs / 4);
 		length += Math.floor(length / 2);
 		this.hexInput.nativeElement.focus();
 		// TODO: less ugly

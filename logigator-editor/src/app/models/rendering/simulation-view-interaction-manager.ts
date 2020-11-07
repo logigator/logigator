@@ -28,7 +28,7 @@ export class SimulationViewInteractionManager {
 			this._ngZone.run(() => {
 				this._view.requestInspectElemEventEmitter.emit({
 					identifier: `${this._view.parentProjectIdentifier}:${sprite.element.id}`,
-					sprite: sprite as any as ComponentInspectable,
+					sprite: sprite as ComponentInspectable,
 					typeId: sprite.element.typeId,
 					parentNames: [...this._view.parentProjectNames, this._view.project.name],
 					parentTypeIds: [...this._view.parentTypeIds, this._view.project.id]
