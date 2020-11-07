@@ -14,6 +14,7 @@ import {SimulationView} from '../../models/rendering/simulation-view';
 import {WindowDragManager} from './window-drag-manager';
 import {ThemingService} from '../../services/theming/theming.service';
 import {Theme} from '../../models/theming';
+import {ComponentInspectable} from '../../models/rendering/graphics/l-graphics';
 
 @Component({
 	selector: 'app-window-work-area',
@@ -32,6 +33,9 @@ export class WindowWorkAreaComponent extends WorkArea implements OnInit, OnChang
 
 	@Input()
 	public project: Project;
+
+	@Input()
+	public sprite: ComponentInspectable;
 
 	@Input()
 	public projectChange: number;
@@ -66,6 +70,9 @@ export class WindowWorkAreaComponent extends WorkArea implements OnInit, OnChang
 	@ViewChild('canvasContainer', {static: true})
 	private _pixiCanvasContainer: ElementRef<HTMLDivElement>;
 
+	@ViewChild('componentContainer', {static: true})
+	private _componentContainer: ElementRef<HTMLDivElement>;
+
 	@ViewChild('header', {static: true})
 	private _header: ElementRef<HTMLDivElement>;
 
@@ -81,45 +88,65 @@ export class WindowWorkAreaComponent extends WorkArea implements OnInit, OnChang
 
 	ngOnChanges(changes: SimpleChanges): void {
 		if (changes.showing) {
-			if (changes.showing.currentValue) {
+			if (this.showing) {
 				this.show();
 			} else {
 				this.hide();
+				if (this._dragManager) this._dragManager.destroy();
 			}
 		}
-		if (changes.identifier) {
+		if (changes.identifier && this.showing) {
 			this.ticker.removeTickerFunction(changes.identifier.previousValue);
-		}
-		if (changes.projectChange && this.showing) {
-			this.addTickerFunction();
-
 			if (this._activeView) {
 				this._activeView.destroy();
 				// @ts-ignore
 				this._pixiRenderer._lastObjectRendered = null;
 			}
 
-			this._activeView = new SimulationView(
-				this.project,
-				this._pixiCanvasContainer.nativeElement,
-				() => this.ticker.singleFrame(this.identifier),
-				this.requestInspectElementInSim,
-				this.identifier,
-				this.parentNames,
-				this.parentTypeIds
-			);
-			this._activeView.centerView();
-			if (this._dragManager) this._dragManager.destroy();
+			if (this.project) {
+				this._componentContainer.nativeElement.style.display = 'none';
+				this._pixiCanvasContainer.nativeElement.style.display = 'block';
+				this.addTickerFunction();
 
-			this._dragManager =  new WindowDragManager(
-				this.dragBounding,
-				this._pixiCanvasContainer.nativeElement,
-				this._popup.nativeElement,
-				this._header.nativeElement,
-				this.renderer2,
-				this._activeView as SimulationView,
-				this._pixiRenderer
-			);
+				this._activeView = new SimulationView(
+					this.project,
+					this._pixiCanvasContainer.nativeElement,
+					() => this.ticker.singleFrame(this.identifier),
+					this.requestInspectElementInSim,
+					this.identifier,
+					this.parentNames,
+					this.parentTypeIds
+				);
+				this._activeView.centerView();
+
+				if (this._dragManager) this._dragManager.destroy();
+
+				this._dragManager = new WindowDragManager(
+					this.dragBounding,
+					this._pixiCanvasContainer.nativeElement,
+					this._popup.nativeElement,
+					this._header.nativeElement,
+					this.renderer2
+				);
+
+				this._dragManager.onChange$.subscribe(() => {
+					this._pixiRenderer.resize(this._pixiCanvasContainer.nativeElement.offsetWidth, this._pixiCanvasContainer.nativeElement.offsetHeight);
+					this._activeView.updateChunks();
+					this._activeView.requestSingleFrame();
+				});
+			} else if (this.sprite) {
+				this._componentContainer.nativeElement.style.display = 'block';
+				this._pixiCanvasContainer.nativeElement.style.display = 'none';
+
+				// max dimensions for sprite?
+				this._dragManager = new WindowDragManager(
+					this.dragBounding,
+					this._componentContainer.nativeElement,
+					this._popup.nativeElement,
+					this._header.nativeElement,
+					this.renderer2
+				);
+			}
 		}
 	}
 
@@ -155,8 +182,12 @@ export class WindowWorkAreaComponent extends WorkArea implements OnInit, OnChang
 	}
 
 	public show() {
-		this.renderer2.setStyle(this._popup.nativeElement, 'display', 'block');
-		this._pixiRenderer.resize(this._pixiCanvasContainer.nativeElement.offsetWidth, this._pixiCanvasContainer.nativeElement.offsetHeight);
+		if (this.project) {
+			this.renderer2.setStyle(this._popup.nativeElement, 'display', 'block');
+			this._pixiRenderer.resize(this._pixiCanvasContainer.nativeElement.offsetWidth, this._pixiCanvasContainer.nativeElement.offsetHeight);
+		} else if (this.sprite) {
+
+		}
 	}
 
 	public get headerNames(): string[] {

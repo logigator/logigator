@@ -19,11 +19,9 @@ export class SaveComponent {
 	elements: ProjectElement[];
 
 	@IsInt()
-	@IsPositive()
 	numInputs: number;
 
 	@IsInt()
-	@IsPositive()
 	numOutputs: number;
 
 	@IsArray()
