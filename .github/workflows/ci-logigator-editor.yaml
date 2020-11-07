@@ -1,0 +1,30 @@
+name: 'CI logigator-editor'
+on:
+  push:
+    branches:
+      - 'master'
+    paths:
+      - 'logigator-editor/**'
+
+jobs:
+  relase:
+    name: 'CI logigator-editor'
+    runs-on: 'ubuntu-latest'
+    steps:
+      - name: 'Checkout'
+        uses: actions/checkout@v2
+        with:
+          ref: master
+
+      - name: 'Setup Node'
+        uses: actions/setup-node@v1.1.0
+        with:
+          node-version: '12.x'
+
+      - name: 'Build'
+        shell: bash
+        working-directory: 'logigator-editor'
+        run: |
+          npm i
+          npm run lint
+          npm run build:web
