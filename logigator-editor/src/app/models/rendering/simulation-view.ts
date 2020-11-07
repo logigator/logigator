@@ -12,14 +12,14 @@ import {ElementProviderService} from '../../services/element-provider/element-pr
 import {WorkerCommunicationService} from '../../services/simulation/worker-communication/worker-communication-service-model';
 import {isResetable} from './graphics/l-graphics';
 import {ZoomPanData} from './zoom-pan';
-import {ElementTypeId} from '../element-types/element-type-ids';
-import {RomGraphics} from './graphics/rom-graphics';
 
 export class SimulationView extends View {
 
 	private _simViewInteractionManager: SimulationViewInteractionManager;
 
 	public requestInspectElemEventEmitter: EventEmitter<ReqInspectElementEvent>;
+
+	private _elementProviderService = getStaticDI(ElementProviderService);
 
 	public parentProjectIdentifier: string;
 	public parentProjectNames: string[];
@@ -76,11 +76,8 @@ export class SimulationView extends View {
 		sprite.name = element.id.toString();
 		this.addToCorrectChunk(sprite, element.pos);
 		this.allElements.set(element.id, sprite);
-		if (getStaticDI(ElementProviderService).isCustomElement(element.typeId)) {
+		if (this._elementProviderService.isCustomElement(element.typeId) || this._elementProviderService.canInspectWithPopup(element.typeId)) {
 			this._simViewInteractionManager.addEventListenersToCustomElement(sprite);
-		}
-		if (element.typeId === ElementTypeId.ROM) {
-			this._simViewInteractionManager.addROMEventListener(sprite as RomGraphics);
 		}
 	}
 

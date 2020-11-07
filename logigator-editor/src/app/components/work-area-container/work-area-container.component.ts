@@ -6,6 +6,7 @@ import {WorkModeService} from '../../services/work-mode/work-mode.service';
 import {ErrorHandlingService} from '../../services/error-handling/error-handling.service';
 import {ToastContainerDirective} from 'ngx-toastr';
 import {HelpWindowService} from '../../services/help-window/help-window.service';
+import {ElementProviderService} from '../../services/element-provider/element-provider.service';
 
 @Component({
 	selector: 'app-work-area-container',
@@ -32,6 +33,7 @@ export class WorkAreaContainerComponent implements OnInit {
 		private renderer2: Renderer2,
 		private errorHandling: ErrorHandlingService,
 		private helpWindowService: HelpWindowService,
+		private elementProvider: ElementProviderService
 	) { }
 
 	ngOnInit() {
@@ -58,13 +60,17 @@ export class WorkAreaContainerComponent implements OnInit {
 
 		const meta: WindowWorkAreaMeta = {
 			showing: true,
-			project: await this.projectSaveManagement.getComponent(event.typeId),
 			identifier: event.identifier,
 			parentNames: event.parentNames,
 			parentTypesIds: event.parentTypeIds,
-			zIndex: 1,
-			projectChange: Math.random()
+			zIndex: 1
 		};
+
+		if (this.elementProvider.canInspectWithPopup(event.typeId)) {
+			meta.sprite = event.sprite;
+		} else {
+			meta.project = await this.projectSaveManagement.getComponent(event.typeId);
+		}
 
 		this.moveAllBack();
 
@@ -76,7 +82,7 @@ export class WorkAreaContainerComponent implements OnInit {
 			firstHidden.showing = meta.showing;
 			firstHidden.identifier = meta.identifier;
 			firstHidden.project = meta.project;
-			firstHidden.projectChange = meta.projectChange;
+			firstHidden.sprite = meta.sprite;
 			firstHidden.parentNames = meta.parentNames;
 			firstHidden.parentTypesIds = meta.parentTypesIds;
 			firstHidden.zIndex = meta.zIndex;
@@ -87,7 +93,7 @@ export class WorkAreaContainerComponent implements OnInit {
 		this.windowWorkAreas[fromWindow].showing = meta.showing;
 		this.windowWorkAreas[fromWindow].identifier = meta.identifier;
 		this.windowWorkAreas[fromWindow].project = meta.project;
-		this.windowWorkAreas[fromWindow].projectChange = meta.projectChange;
+		this.windowWorkAreas[fromWindow].sprite = meta.sprite;
 		this.windowWorkAreas[fromWindow].parentNames = meta.parentNames;
 		this.windowWorkAreas[fromWindow].parentTypesIds = meta.parentTypesIds;
 		this.windowWorkAreas[fromWindow].zIndex = meta.zIndex;

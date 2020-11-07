@@ -32,6 +32,14 @@ export interface ComponentResetable {
 	resetSimState();
 }
 
+export interface ComponentInspectable {
+
+	/**
+	 * function that is called when the simulation state of the component changes
+	 */
+	onchange: (state: boolean[]) => void;
+}
+
 export interface LGraphics extends PIXI.DisplayObject, ComponentScalable, ComponentSelectable {
 
 	/**

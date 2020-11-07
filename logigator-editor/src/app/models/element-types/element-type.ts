@@ -1,5 +1,6 @@
 import {ProjectsService} from '../../services/projects/projects.service';
 import {Element, ElementRotation} from '../element';
+import {Type} from '@angular/core';
 
 export interface ElementType {
 	id: number;
@@ -15,6 +16,8 @@ export interface ElementType {
 	showSettings: boolean;
 	showSettingsForType: boolean;
 	showInConstructionBox: boolean;
+
+	elementInspectionComp?: Type<any>;
 
 	// translation id for predefined comps
 	description: string;

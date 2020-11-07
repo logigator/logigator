@@ -5,6 +5,7 @@ import {getStaticDI} from '../../get-di';
 import {RomEditComponent} from '../../../components/popup-contents/rom-edit/rom-edit.component';
 import {PopupService} from '../../../services/popup/popup.service';
 import {ElementRotation} from '../../element';
+import {RomViewComponent} from '../../../components/popup-contents/rom-view/rom-view.component';
 
 export const rom: ElementType = {
 	id: ElementTypeId.ROM,
@@ -18,6 +19,8 @@ export const rom: ElementType = {
 	showSettings: true,
 	showSettingsForType: true,
 	showInConstructionBox: true,
+
+	elementInspectionComp: RomViewComponent,
 
 	description: 'ELEMENT_TYPE.ADVANCED.ROM.DESCRIPTION',
 
