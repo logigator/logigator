@@ -31,7 +31,10 @@ export class SvgImageExporter {
 		this._svg = document.createElementNS(this.SVG_NS, 'svg');
 		this.theme = theme ?? 'dark';
 
-		let minX = Number.MAX_SAFE_INTEGER, minY = Number.MAX_SAFE_INTEGER, maxX = 0, maxY = 0;
+		let minX = Number.MAX_SAFE_INTEGER;
+		let minY = Number.MAX_SAFE_INTEGER;
+		let maxX = 0;
+		let maxY = 0;
 
 		for (const action of this.project.getOpenActions()) {
 			if (action.name !== 'addComp' && action.name !== 'addWire')
