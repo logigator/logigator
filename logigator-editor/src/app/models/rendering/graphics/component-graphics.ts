@@ -23,7 +23,7 @@ export class ComponentGraphics extends PIXI.Graphics implements LGraphics, Compo
 
 	private _labels: string[];
 
-	private simActiveState = [];
+	protected simActiveState = [];
 	private shouldHaveActiveState = [];
 
 	constructor(scale: number, element?: Element);
