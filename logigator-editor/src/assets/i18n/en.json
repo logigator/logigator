@@ -35,7 +35,8 @@
 		},
 		"HELP": {
 			"TITLE": "Help",
-			"HELP": "Help"
+			"HELP": "Help",
+			"HEX_BIN_DEC": "Hex-Bin-Dec Converter"
 		},
 		"SETTINGS": {
 			"DARK_MODE": "Dark Mode",
@@ -199,6 +200,12 @@
 		"HELP": {
 			"TITLE": "Help",
 			"EDIT": "Edit on Github"
+		},
+		"HEX_BIN_DEC": {
+			"TITLE": "Hex-Bin-Dec Converter",
+			"HEX": "Hexadecimal",
+			"BIN": "Binary",
+			"DEC": "Decimal"
 		}
 	},
 	"SETTINGS_INFO": {

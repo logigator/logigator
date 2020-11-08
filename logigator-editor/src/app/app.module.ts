@@ -55,6 +55,7 @@ import {InputComponent} from './components/input/input.component';
 import {InputErrorComponent} from './components/input-error/input-error.component';
 import {FileInputComponent} from './components/file-input/file-input.component';
 import {SiPipe} from './pipes/si/si.pipe';
+import {HexBinDecConverterComponent} from './components/popup-contents/hex-bin-dec-converter/hex-bin-dec-converter.component';
 
 @NgModule({
 	declarations: [
@@ -96,7 +97,8 @@ import {SiPipe} from './pipes/si/si.pipe';
 		InputComponent,
 		InputErrorComponent,
 		FileInputComponent,
-		SiPipe
+		SiPipe,
+		HexBinDecConverterComponent
 	],
 	imports: [
 		// #!electron

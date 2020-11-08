@@ -1,6 +1,7 @@
 import {ChangeDetectionStrategy, Component, EventEmitter, OnInit, Output} from '@angular/core';
 import {HelpComponent} from '../../popup-contents/help/help.component';
 import {PopupService} from '../../../services/popup/popup.service';
+import {HexBinDecConverterComponent} from '../../popup-contents/hex-bin-dec-converter/hex-bin-dec-converter.component';
 
 @Component({
 	selector: 'app-help-dropdown',
@@ -24,6 +25,11 @@ export class HelpDropdownComponent implements OnInit {
 
 	public help() {
 		this.popupService.showPopup(HelpComponent, 'POPUP.HELP.TITLE', true);
+		this.close();
+	}
+
+	public hexBinDec() {
+		this.popupService.showPopup(HexBinDecConverterComponent, 'POPUP.HEX_BIN_DEC.TITLE', false);
 		this.close();
 	}
 }
