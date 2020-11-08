@@ -1,0 +1,24 @@
+@include partial('delete-account-popup') {
+	max-width: 40rem;
+
+	@include element('confirm-text') {
+		margin-top: 0;
+		margin-bottom: 1rem;
+	}
+
+	@include element('buttons') {
+		display: flex;
+		flex-direction: row;
+		justify-content: flex-start;
+	}
+
+	@include element('cancel') {
+		padding: 0.7rem !important;
+		margin-right: 0.5rem;
+	}
+
+	@include element('submit') {
+		padding: 0.7rem !important;
+		margin-left: 0.5rem;
+	}
+}

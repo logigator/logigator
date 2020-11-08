@@ -115,4 +115,12 @@ export class MyAccountController {
 		};
 	}
 
+	@Post('/delete/delete')
+	@UseBefore(CheckAuthenticatedFrontMiddleware)
+	public async accountDeleteDelete(@CurrentUser() user: User, @Redirect() redirect: RedirectFunction) {
+		// TODO: do actual deletion
+
+		return redirect({target: '/', showInfoPopup: 'account-deleted'});
+	}
+
 }
