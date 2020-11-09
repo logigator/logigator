@@ -1,10 +1,13 @@
 @import "themes";
 
 div {
+	height: 100%;
+
 	.hex-editor {
 		border-collapse: collapse;
 		table-layout: fixed;
-		margin-bottom: 1rem;
+		padding-bottom: 0.5rem;
+		height: 100%;
 
 		* {
 			padding: 0.2rem;
@@ -38,7 +41,7 @@ div {
 		}
 
 		tbody {
-			max-height: 500px;
+			height: calc(100% - 2em);
 			padding: 0;
 			display: block;
 			overflow-y: scroll;

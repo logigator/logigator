@@ -24,6 +24,7 @@ import {ComponentInspectable} from '../../models/rendering/graphics/l-graphics';
 import {ElementProviderService} from '../../services/element-provider/element-provider.service';
 import {ElementInspectionComp} from '../element-inspection/element-inspection-comp';
 import {TranslateService} from '@ngx-translate/core';
+import * as PIXI from 'pixi.js';
 
 @Component({
 	selector: 'app-window-work-area',
@@ -127,8 +128,8 @@ export class WindowWorkAreaComponent extends WorkArea implements OnInit, OnChang
 			}
 
 			if (this.project) {
-				this._componentContainer.nativeElement.style.display = 'none';
-				this._pixiCanvasContainer.nativeElement.style.display = 'block';
+				this.renderer2.setStyle(this._componentContainer.nativeElement, 'display', 'none');
+				this.renderer2.setStyle(this._pixiCanvasContainer.nativeElement, 'display', 'block');
 				this._pixiRenderer.resize(this._pixiCanvasContainer.nativeElement.offsetWidth, this._pixiCanvasContainer.nativeElement.offsetHeight);
 				this.addTickerFunction();
 
@@ -159,8 +160,8 @@ export class WindowWorkAreaComponent extends WorkArea implements OnInit, OnChang
 				});
 
 			} else if (this.sprite) {
-				this._componentContainer.nativeElement.style.display = 'block';
-				this._pixiCanvasContainer.nativeElement.style.display = 'none';
+				this.renderer2.setStyle(this._componentContainer.nativeElement, 'display', 'block');
+				this.renderer2.setStyle(this._pixiCanvasContainer.nativeElement, 'display', 'none');
 
 				const inspectionComponentType = this.elementProvider.getElementById(this.sprite.element.typeId).elementInspectionComp;
 				const inspectionComponentFactory = this.componentFactoryResolver.resolveComponentFactory(inspectionComponentType);
@@ -169,12 +170,15 @@ export class WindowWorkAreaComponent extends WorkArea implements OnInit, OnChang
 
 				if (this._dragManager) this._dragManager.destroy();
 
-				// max dimensions for sprite?
+				this.renderer2.setStyle(this._popup.nativeElement, 'width', '630px');
+				this.renderer2.setStyle(this._popup.nativeElement, 'height', '500px');
 				this._dragManager = new WindowDragManager(
 					this.dragBounding,
 					this._popup.nativeElement,
 					this._header.nativeElement,
-					this.renderer2
+					this.renderer2,
+					new PIXI.Point(630, 200),
+					new PIXI.Point(630, 1000)
 				);
 			}
 		}
