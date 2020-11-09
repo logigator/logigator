@@ -229,8 +229,8 @@ export class ComponentGraphics extends PIXI.Graphics implements LGraphics, Compo
 		});
 	}
 
-	public applySimState(scale: number) {
-		if (this.shouldHaveActiveState.every((v, i) => v === this.simActiveState[i])) return;
+	public applySimState(scale: number): boolean {
+		if (this.shouldHaveActiveState.every((v, i) => v === this.simActiveState[i])) return false;
 		this.simActiveState = this.shouldHaveActiveState;
 
 		let wireIndex = 0;
@@ -247,6 +247,7 @@ export class ComponentGraphics extends PIXI.Graphics implements LGraphics, Compo
 		}
 		this._scale = scale;
 		this.geometry.invalidate();
+		return true;
 	}
 
 	public setSimulationState(state: boolean[]) {

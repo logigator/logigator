@@ -9,10 +9,12 @@ export class RomGraphics extends ComponentGraphics implements ComponentInspectab
 		return this.simActiveState;
 	}
 
-	public applySimState(scale: number) {
-		super.applySimState(scale);
-		if (this.onChange)
+	public applySimState(scale: number): boolean {
+		if (super.applySimState(scale) && this.onChange) {
 			this.onChange(this.simActiveState);
+			return true;
+		}
+		return false;
 	}
 
 }

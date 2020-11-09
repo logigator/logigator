@@ -63,7 +63,7 @@ div {
 					border-left: border('width') solid themed('accent2');
 				}
 
-				textarea {
+				div {
 					width: 100%;
 					margin-right: 0.5rem;
 					padding: 0;
@@ -72,6 +72,13 @@ div {
 					border: none;
 					overflow: hidden;
 					background-color: transparent;
+
+					span {
+						@include themify() {
+							background-color: themed('accent2');
+						}
+						padding: 0;
+					}
 				}
 			}
 		}
