@@ -3,8 +3,18 @@
 @import "../partials/user-space-nav";
 @import "../partials/account-nav";
 @import "../partials/account-mobile-nav";
+@import "../partials/delete-account-popup";
 
 @include view('my-account-delete') {
 	@include accountPagesShared();
+
+	@include element('headline') {
+		margin: 0;
+		font-weight: 400;
+	}
+
+	@include element('message') {
+		margin-top: 0;
+	}
 
 }

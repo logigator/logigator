@@ -1,0 +1,14 @@
+{{#> popup title=i18n.POPUP.DELETE_ACCOUNT.TITLE  defaultOpen=false triggers='.view-my-account-delete__delete-btn'}}
+	<div class="partial-delete-account-popup">
+		{{#> form action='/my/account/delete/delete' }}
+
+			<p class="partial-delete-account-popup__confirm-text">{{i18n.POPUP.DELETE_ACCOUNT.CONFIRM}}</p>
+
+			<div class="view-project-component-delete-popup__buttons">
+				<button type="button" class="btn-raised secondary partial-delete-account-popup__cancel partial-popup__close">{{i18n.POPUP.DELETE_ACCOUNT.CANCEL}}</button>
+				<button type="submit" class="btn-raised danger partial-delete-account-popup__submit">{{i18n.POPUP.DELETE_ACCOUNT.DELETE}}</button>
+			</div>
+
+		{{/form}}
+	</div>
+{{/popup}}

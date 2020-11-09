@@ -56,6 +56,7 @@ import {InputErrorComponent} from './components/input-error/input-error.componen
 import {FileInputComponent} from './components/file-input/file-input.component';
 import {SiPipe} from './pipes/si/si.pipe';
 import {RomViewComponent} from './components/element-inspection/rom-view/rom-view.component';
+import {HexBinDecConverterComponent} from './components/popup-contents/hex-bin-dec-converter/hex-bin-dec-converter.component';
 
 @NgModule({
 	declarations: [
@@ -98,7 +99,8 @@ import {RomViewComponent} from './components/element-inspection/rom-view/rom-vie
 		InputComponent,
 		InputErrorComponent,
 		FileInputComponent,
-		SiPipe
+		SiPipe,
+		HexBinDecConverterComponent
 	],
 	imports: [
 		// #!electron

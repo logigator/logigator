@@ -8,8 +8,12 @@
 			{{> account-nav }}
 		</div>
 		<div class="view-my-account-delete__main">
-			test
+			<h2 class="view-my-account-delete__headline">{{i18n.USERSPACE.ACCOUNT.DELETE.HEADLINE}}</h2>
+			<p class="view-my-account-delete__message">{{i18n.USERSPACE.ACCOUNT.DELETE.MESSAGE}}</p>
+			<button class="btn-raised danger view-my-account-delete__delete-btn">{{i18n.USERSPACE.ACCOUNT.DELETE.BUTTON}}</button>
 		</div>
 	</section>
 
 </div>
+
+{{> delete-account-popup}}

@@ -186,6 +186,11 @@
 				"PASSWORD_REPEAT_ERR": "Passwörter stimmen nicht überein.",
 				"ERR_UNKNOWN": "Ein unbekannter Fehler ist aufgetreten",
 				"SAVE": "Speichern"
+			},
+			"DELETE": {
+				"HEADLINE": "Account löschen",
+				"MESSAGE": "Wenn du deinen Account löscht, werden all deine Projekte und Komponenten auch gelöscht. Es ist nicht möglich diese Daten wiederherzustellen.",
+				"BUTTON": "Account löschen"
 			}
 		}
 	},
@@ -263,6 +268,12 @@
 			"DELETE": "Löschen bestätigen",
 			"CANCEL": "Abbrechen",
 			"CONFIRM": "Willst du dein Proilbild wirklich löschen?"
+		},
+		"DELETE_ACCOUNT": {
+			"TITLE": "Account löschen",
+			"DELETE": "Löschen bestätigen",
+			"CANCEL": "Abbrechen",
+			"CONFIRM": "Willst du dein Account wirklich löschen? Diese Aktion kann nicht rückgängig gemacht werden."
 		}
 	},
 	"INFO_POPUP": {
@@ -281,6 +292,11 @@
 		"PASSWORD_CHANGED": {
 			"TITLE": "Passwort geändert",
 			"LINE_1": "Passwort wurde erfolgreich gesetzt oder geändert.",
+			"OK_BUTTON": "OK"
+		},
+		"ACCOUNT_DELETED": {
+			"TITLE": "Account gelöscht",
+			"LINE_1": "Dein Account wurde erfolgreich gelöscht.",
 			"OK_BUTTON": "OK"
 		}
 	},
