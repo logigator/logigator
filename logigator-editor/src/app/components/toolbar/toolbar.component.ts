@@ -11,6 +11,7 @@ import {EditorInteractionService} from '../../services/editor-interaction/editor
 import {ShortcutAction} from '../../models/shortcut-action';
 import {ShortcutsService} from '../../services/shortcuts/shortcuts.service';
 import {SimulationManagementService} from '../../services/simulation/simulation-management/simulation-management.service';
+import {Grid} from '../../models/rendering/grid';
 
 @Component({
 	selector: 'app-toolbar',
@@ -61,6 +62,10 @@ export class ToolbarComponent {
 			components: await this.stateCompiler.compile(this.projectService.currProject),
 			links: this.stateCompiler.highestLinkId + 1
 		}));
+	}
+
+	public toggleChunks() {
+		Grid.showChunks(!Grid.chunksVisible);
 	}
 	// #!endif
 
@@ -221,5 +226,4 @@ export class ToolbarComponent {
 	get syncMode(): boolean {
 		return this.simulationManagement.syncMode;
 	}
-
 }
