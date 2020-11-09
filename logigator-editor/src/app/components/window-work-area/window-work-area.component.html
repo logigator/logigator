@@ -12,5 +12,8 @@
 			<img *ngIf="theme === 'dark'" src="assets/icons/dark/close.svg" (click)="doRequestHide()">
 		</div>
 		<div class="canvas-window-container" #canvasContainer></div>
+		<div class="component-window-container" #componentContainer>
+			<ng-container #componentInsertionPoint></ng-container>
+		</div>
 	</div>
 </div>

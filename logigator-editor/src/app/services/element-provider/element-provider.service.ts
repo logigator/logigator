@@ -120,6 +120,10 @@ export class ElementProviderService {
 		return category === 'user' || category === 'share' || category === 'local';
 	}
 
+	public canInspectWithPopup(id: number): boolean {
+		return this._elements.has(id) && !!this._elements.get(id).elementInspectionComp;
+	}
+
 	public getElements(category: 'basic' | 'advanced' | 'plug' | 'io' | 'user' | 'local' | 'share'): ElementType[] {
 		return [...this._elements.values()].filter(e => e.category === category);
 	}

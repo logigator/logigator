@@ -30,6 +30,12 @@
 			cursor: crosshair;
 		}
 
+		.component-window-container {
+			width: 100%;
+			height: calc(100% - 2rem);
+			cursor: default;
+		}
+
 		.header {
 			display: flex;
 

@@ -1,4 +1,4 @@
-import {fromEvent, Subject} from 'rxjs';
+import {fromEvent, Observable, Subject} from 'rxjs';
 import {takeUntil} from 'rxjs/operators';
 import {NgZone, Renderer2} from '@angular/core';
 import {SimulationView} from '../../models/rendering/simulation-view';
@@ -13,32 +13,31 @@ export class WindowDragManager {
 
 	private _currentlyDragging: Border;
 	private _draggingPos = [0, 0];
+	private _changeSubject = new Subject<void>();
 
 	private readonly _dragBounding: HTMLElement;
-	private readonly _canvasContainer: HTMLElement;
 	private readonly _popup: HTMLElement;
 	private readonly _header: HTMLElement;
 
 	private readonly renderer2: Renderer2;
-	private readonly _view: SimulationView;
-	private readonly _pixiRenderer;
+
+	private readonly _minSize: PIXI.Point;
+	private readonly _maxSize: PIXI.Point;
 
 	constructor(
 		dragBounding: HTMLElement,
-		canvasContainer: HTMLElement,
 		popup: HTMLElement,
 		header: HTMLElement,
 		renderer2: Renderer2,
-		view: SimulationView,
-		pixiRenderer: PIXI.Renderer
+		minSize: PIXI.Point = new PIXI.Point(100, header.offsetHeight + 100),
+		maxSize: PIXI.Point = new PIXI.Point(Infinity, Infinity)
 	) {
 		this._dragBounding = dragBounding;
-		this._canvasContainer = canvasContainer;
 		this._popup = popup;
 		this._header = header;
 		this.renderer2 = renderer2;
-		this._view = view;
-		this._pixiRenderer = pixiRenderer;
+		this._minSize = minSize;
+		this._maxSize = maxSize;
 
 		getStaticDI(NgZone).runOutsideAngular(() => {
 			fromEvent(window, 'mousemove').pipe(
@@ -173,9 +172,7 @@ export class WindowDragManager {
 						this.renderer2.setStyle(this._popup, 'left', newX + 'px');
 						this.renderer2.setStyle(this._popup, 'width', this._popup.offsetWidth - changeX + 'px');
 					}
-					this._pixiRenderer.resize(this._canvasContainer.offsetWidth, this._canvasContainer.offsetHeight);
-					this._view.updateChunks();
-					this._view.requestSingleFrame();
+					this._changeSubject.next();
 					break;
 				case 'top-right':
 					if (!this.collision_top(newY, changeY)) {
@@ -185,9 +182,7 @@ export class WindowDragManager {
 					if (!this.collision_right(newX, changeX)) {
 						this.renderer2.setStyle(this._popup, 'width', this._popup.offsetWidth + changeX + 'px');
 					}
-					this._pixiRenderer.resize(this._canvasContainer.offsetWidth, this._canvasContainer.offsetHeight);
-					this._view.updateChunks();
-					this._view.requestSingleFrame();
+					this._changeSubject.next();
 					break;
 				case 'bottom-left':
 					if (!this.collision_bottom(newY, changeY)) {
@@ -197,9 +192,7 @@ export class WindowDragManager {
 						this.renderer2.setStyle(this._popup, 'left', newX + 'px');
 						this.renderer2.setStyle(this._popup, 'width', this._popup.offsetWidth - changeX + 'px');
 					}
-					this._pixiRenderer.resize(this._canvasContainer.offsetWidth, this._canvasContainer.offsetHeight);
-					this._view.updateChunks();
-					this._view.requestSingleFrame();
+					this._changeSubject.next();
 					break;
 				case 'bottom-right':
 					if (!this.collision_bottom(newY, changeY)) {
@@ -208,42 +201,32 @@ export class WindowDragManager {
 					if (!this.collision_right(newX, changeX)) {
 						this.renderer2.setStyle(this._popup, 'width', this._popup.offsetWidth + changeX + 'px');
 					}
-					this._pixiRenderer.resize(this._canvasContainer.offsetWidth, this._canvasContainer.offsetHeight);
-					this._view.updateChunks();
-					this._view.requestSingleFrame();
+					this._changeSubject.next();
 					break;
 				case 'top':
 					if (!this.collision_top(newY, changeY)) {
 						this.renderer2.setStyle(this._popup, 'top', newY + 'px');
 						this.renderer2.setStyle(this._popup, 'height', this._popup.offsetHeight - changeY + 'px');
-						this._pixiRenderer.resize(this._canvasContainer.offsetWidth, this._canvasContainer.offsetHeight);
-						this._view.updateChunks();
-						this._view.requestSingleFrame();
+						this._changeSubject.next();
 					}
 					break;
 				case 'right':
 					if (!this.collision_right(newX, changeX)) {
 						this.renderer2.setStyle(this._popup, 'width', this._popup.offsetWidth + changeX + 'px');
-						this._pixiRenderer.resize(this._canvasContainer.offsetWidth, this._canvasContainer.offsetHeight);
-						this._view.updateChunks();
-						this._view.requestSingleFrame();
+						this._changeSubject.next();
 					}
 					break;
 				case 'bottom':
 					if (!this.collision_bottom(newY, changeY)) {
 						this.renderer2.setStyle(this._popup, 'height', this._popup.offsetHeight + changeY + 'px');
-						this._pixiRenderer.resize(this._canvasContainer.offsetWidth, this._canvasContainer.offsetHeight);
-						this._view.updateChunks();
-						this._view.requestSingleFrame();
+						this._changeSubject.next();
 					}
 					break;
 				case 'left':
 					if (!this.collision_left(newX, changeX)) {
 						this.renderer2.setStyle(this._popup, 'left', newX + 'px');
 						this.renderer2.setStyle(this._popup, 'width', this._popup.offsetWidth - changeX + 'px');
-						this._pixiRenderer.resize(this._canvasContainer.offsetWidth, this._canvasContainer.offsetHeight);
-						this._view.updateChunks();
-						this._view.requestSingleFrame();
+						this._changeSubject.next();
 					}
 					break;
 			}
@@ -251,21 +234,23 @@ export class WindowDragManager {
 	}
 
 	private collision_left(newX: number, changeX?: number): boolean {
-		return newX <= this._dragBounding.offsetLeft || (changeX && this._popup.offsetWidth - changeX <= 100);
+		return newX <= this._dragBounding.offsetLeft
+			|| (changeX && (this._popup.offsetWidth - changeX < this._minSize.x || this._popup.offsetWidth - changeX > this._maxSize.x));
 	}
 
 	private collision_right(newX: number, changeX?: number): boolean {
 		return newX + this._popup.offsetWidth >= this._dragBounding.offsetLeft + this._dragBounding.offsetWidth
-			|| (changeX && this._popup.offsetWidth + changeX <= 100);
+			|| (changeX && (this._popup.offsetWidth + changeX < this._minSize.x || this._popup.offsetWidth + changeX > this._maxSize.x));
 	}
 
 	private collision_top(newY: number, changeY?: number): boolean {
-		return newY <= this._dragBounding.offsetTop || (changeY && this._popup.offsetHeight - changeY <= 100);
+		return newY <= this._dragBounding.offsetTop
+			|| (changeY && (this._popup.offsetHeight - changeY < this._minSize.y || this._popup.offsetHeight - changeY > this._maxSize.y));
 	}
 
 	private collision_bottom(newY: number, changeY?: number): boolean {
 		return newY + this._popup.offsetHeight >= this._dragBounding.offsetTop + this._dragBounding.offsetHeight
-			|| (changeY && this._popup.offsetHeight + changeY <= 100);
+			|| (changeY && (this._popup.offsetHeight + changeY < this._minSize.y || this._popup.offsetHeight + changeY > this._maxSize.y));
 	}
 
 	private mouseDown(event: MouseEvent) {
@@ -280,6 +265,12 @@ export class WindowDragManager {
 			this._currentlyDragging = 'move';
 			this._draggingPos = [ event.screenX, event.screenY ];
 		}
+	}
+
+	public get onChange$(): Observable<void> {
+		return this._changeSubject.asObservable().pipe(
+			takeUntil(this._destroySubject)
+		);
 	}
 
 	private mouseUp() {

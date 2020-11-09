@@ -353,6 +353,7 @@
 			"WORKER_INIT": "WebWorker konnte nicht initialisiert werden."
 		},
 		"PROJECTS": {
+			"INVALID_FILE": "Fehlerhafte Datei"
 		},
 		"USER": {
 			"GET_INFO": "Konnte Benutzerinformationen nicht bekommen",

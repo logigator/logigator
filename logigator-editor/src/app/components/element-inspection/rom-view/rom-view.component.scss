@@ -1,0 +1,99 @@
+@import "themes";
+
+div {
+	height: 100%;
+
+	.hex-editor {
+		border-collapse: collapse;
+		table-layout: fixed;
+		padding-bottom: 0.5rem;
+		height: 100%;
+
+		* {
+			padding: 0.2rem;
+			margin: 0;
+			font-family: 'Roboto Mono', monospace;
+			font-size: 18px;
+			border-collapse: collapse;
+			@include themify() {
+				color: themed('text-primary');
+			}
+		}
+
+		thead {
+			display: block;
+			padding: 0;
+
+			.top-right {
+				width: 95px;
+				@include themify() {
+					border-bottom: border('width') solid themed('accent2');
+					border-right: border('width') solid themed('accent2');
+				}
+			}
+
+			.top-address {
+				@include themify() {
+					border-bottom: border('width') solid themed('accent2');
+					border-left: border('width') solid themed('accent2');
+				}
+			}
+		}
+
+		tbody {
+			height: calc(100% - 2em);
+			padding: 0;
+			display: block;
+			overflow-y: scroll;
+			overflow-x: hidden;
+			@include scrollbar(5px);
+			width: 100%;
+
+			.left-address {
+				width: 95px;
+				padding: 0.25rem;
+				padding-top: 0.2rem;
+
+				@include themify() {
+					border-right: border('width') solid themed('accent2');
+				}
+			}
+
+			.text-area-td {
+				width: 100%;
+				padding-right: 0;
+				@include themify() {
+					border-left: border('width') solid themed('accent2');
+				}
+
+				div {
+					width: 100%;
+					margin-right: 0.5rem;
+					padding: 0;
+					resize: none;
+					outline: none;
+					border: none;
+					overflow: hidden;
+					background-color: transparent;
+
+					span {
+						@include themify() {
+							background-color: themed('accent2');
+						}
+						padding: 0;
+					}
+				}
+			}
+		}
+	}
+
+	.buttons {
+		display: flex;
+		flex-direction: row;
+		justify-content: flex-end;
+
+		button {
+			margin-left: 1rem;
+		}
+	}
+}

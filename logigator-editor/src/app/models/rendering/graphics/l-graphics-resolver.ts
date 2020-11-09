@@ -12,6 +12,7 @@ import {InputOutputGraphics} from './input-output-graphics';
 import {LedGraphics} from './led-graphics';
 import {SegmentDisplayGraphics} from './segment-display-graphics';
 import {LedMatrixGraphics} from './led-matrix-graphics';
+import {RomGraphics} from './rom-graphics';
 
 export abstract class LGraphicsResolver {
 
@@ -38,6 +39,8 @@ export abstract class LGraphicsResolver {
 				return new SegmentDisplayGraphics(scale, element);
 			case ElementTypeId.LED_MATRIX:
 				return new LedMatrixGraphics(scale, element);
+			case ElementTypeId.ROM:
+				return new RomGraphics(scale, element);
 			default:
 				return new ComponentGraphics(scale, element);
 		}

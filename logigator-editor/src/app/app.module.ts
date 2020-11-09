@@ -55,6 +55,7 @@ import {InputComponent} from './components/input/input.component';
 import {InputErrorComponent} from './components/input-error/input-error.component';
 import {FileInputComponent} from './components/file-input/file-input.component';
 import {SiPipe} from './pipes/si/si.pipe';
+import {RomViewComponent} from './components/element-inspection/rom-view/rom-view.component';
 import {HexBinDecConverterComponent} from './components/popup-contents/hex-bin-dec-converter/hex-bin-dec-converter.component';
 
 @NgModule({
@@ -89,6 +90,7 @@ import {HexBinDecConverterComponent} from './components/popup-contents/hex-bin-d
 		ToolbarItemTooltipComponent,
 		StatusBarComponent,
 		RomEditComponent,
+		RomViewComponent,
 		HelpComponent,
 		HelpRendererComponent,
 		HelpWindowComponent,

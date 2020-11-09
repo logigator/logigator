@@ -4,7 +4,7 @@ import {Element} from '../element';
 import {SimulationViewInteractionManager} from './simulation-view-interaction-manager';
 import {EventEmitter, NgZone} from '@angular/core';
 import {ReqInspectElementEvent} from './req-inspect-element-event';
-import {filter, takeUntil} from 'rxjs/operators';
+import {takeUntil} from 'rxjs/operators';
 import {getStaticDI} from '../get-di';
 import {LGraphicsResolver} from './graphics/l-graphics-resolver';
 import {Grid} from './grid';
@@ -12,13 +12,14 @@ import {ElementProviderService} from '../../services/element-provider/element-pr
 import {WorkerCommunicationService} from '../../services/simulation/worker-communication/worker-communication-service-model';
 import {isResetable} from './graphics/l-graphics';
 import {ZoomPanData} from './zoom-pan';
-import {EditorInteractionService} from '../../services/editor-interaction/editor-interaction.service';
 
 export class SimulationView extends View {
 
 	private _simViewInteractionManager: SimulationViewInteractionManager;
 
 	public requestInspectElemEventEmitter: EventEmitter<ReqInspectElementEvent>;
+
+	private _elementProviderService = getStaticDI(ElementProviderService);
 
 	public parentProjectIdentifier: string;
 	public parentProjectNames: string[];
@@ -75,7 +76,7 @@ export class SimulationView extends View {
 		sprite.name = element.id.toString();
 		this.addToCorrectChunk(sprite, element.pos);
 		this.allElements.set(element.id, sprite);
-		if (getStaticDI(ElementProviderService).isCustomElement(element.typeId)) {
+		if (this._elementProviderService.isCustomElement(element.typeId) || this._elementProviderService.canInspectWithPopup(element.typeId)) {
 			this._simViewInteractionManager.addEventListenersToCustomElement(sprite);
 		}
 	}

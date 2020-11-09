@@ -7,6 +7,7 @@ import {getStaticDI} from '../get-di';
 export class Grid {
 
 	private static _gridGeometries: Map<number, PIXI.GraphicsGeometry> = new Map();
+	private static _showChunks = false;
 
 	private static getGridGeometry(scale: number): PIXI.GraphicsGeometry {
 		if (this._gridGeometries.has(scale)) {
@@ -19,11 +20,22 @@ export class Grid {
 				graphics.drawRect(i * environment.gridPixelWidth, j * environment.gridPixelWidth, 1 / scale, 1 / scale);
 			}
 		}
-		// graphics.beginFill(0, 0);
-		// graphics.lineStyle(1 / scale, 0xffffff);
-		// graphics.drawRect(0, 0, environment.gridPixelWidth * environment.chunkSize, environment.gridPixelWidth * environment.chunkSize);
+		if (this._showChunks) {
+			graphics.beginFill(0, 0);
+			graphics.lineStyle(1 / scale, 0xffffff);
+			graphics.drawRect(0, 0, environment.gridPixelWidth * environment.chunkSize, environment.gridPixelWidth * environment.chunkSize);
+		}
 		this._gridGeometries.set(scale, graphics.geometry);
 		return graphics.geometry;
+	}
+
+	public static showChunks(visible: boolean) {
+		this._gridGeometries.clear();
+		this._showChunks = visible;
+	}
+
+	public static get chunksVisible() {
+		return this._showChunks;
 	}
 
 	public static generateGridGraphics(scale: number): PIXI.Graphics {
