@@ -1,14 +1,26 @@
 name: 'CI logigator-editor'
 on:
+  pull_request:
   push:
     branches:
       - 'master'
-    paths:
-      - 'logigator-editor/**'
 
 jobs:
+  pre_job:
+    runs-on: ubuntu-latest
+    outputs:
+      should_skip: ${{ steps.skip_check.outputs.should_skip }}
+    steps:
+      - id: skip_check
+        uses: fkirc/skip-duplicate-actions@master
+        with:
+          github_token: ${{ github.token }}
+          paths: '["logigator-editor/**"]'
+
   ci:
     name: 'CI logigator-editor'
+    needs: pre_job
+    if: ${{ needs.pre_job.outputs.should_skip != 'true' }}
     runs-on: 'ubuntu-latest'
     steps:
       - name: 'Checkout'
