@@ -353,6 +353,16 @@
 			"WORKER_INIT": "WebWorker konnte nicht initialisiert werden."
 		},
 		"PROJECTS": {
+			"OPEN": "Fehler beim öffnen des Projekts.",
+			"OPEN_SHARE": "Fehler beim öffnen des geteilten Projekts.",
+			"GET_COMPS": "Fehler beim laden der Komponenten vom Server.",
+			"OPEN_COMP": "Fehler beim öffnen der Komponente.",
+			"GET_PROJECTS": "Fehler beim laden der Projekte vom Server.",
+			"CREATE": "Fehler beim erstellen der Komponente.",
+			"SAVE": "Fehler beim speichern des Projektes.",
+			"REGENERATE_SHARE_LINK": "Fehler beim neu generieren des Links.",
+			"UPDATE_SHARE_INFO": "Fehler beim aktualisieren des Shares.",
+			"INVALID_FILE_TYPE": "Ungültige Datei. Verwende einen JSON-Datei.",
 			"INVALID_FILE": "Fehlerhafte Datei"
 		},
 		"USER": {
