@@ -5,7 +5,7 @@ import {Profile as TwitterProfile} from 'passport-twitter';
 import {InjectRepository} from 'typeorm-typedi-extensions';
 import {UserRepository} from '../database/repositories/user.repository';
 import {ProfilePictureRepository} from '../database/repositories/profile-picture.repository';
-import {hash, compare} from 'bcrypt';
+import {compare, hash} from 'bcrypt';
 import {FormDataError} from '../errors/form-data.error';
 import {EmailService} from './email.service';
 import {v4 as uuid} from 'uuid';
@@ -13,6 +13,9 @@ import {StandaloneViewService} from './standalone-view.service';
 import {ConfigService} from './config.service';
 import {TranslationService} from './translation.service';
 import {RedisService} from './redis.service';
+import {Transaction, TransactionRepository} from 'typeorm';
+import {ComponentRepository} from '../database/repositories/component.repository';
+import {ProjectRepository} from '../database/repositories/project.repository';
 
 @Service()
 export class UserService {
@@ -234,6 +237,34 @@ export class UserService {
 		}
 		user.googleUserId = profile.id;
 		return this.userRepo.save(user);
+	}
+
+	public async remove(user: User) {
+		await this.removeTransaction(user);
+		await this.userRepo.remove(user);
+	}
+
+	@Transaction()
+	private async removeTransaction(
+		user: User,
+		@TransactionRepository(ComponentRepository) compRepo?: ComponentRepository,
+		@TransactionRepository(ProjectRepository) projRepo?: ProjectRepository,
+		@TransactionRepository(UserRepository) userRepo?: UserRepository,
+		@TransactionRepository(ProfilePictureRepository) profilePicRepo?: ProfilePictureRepository
+	) {
+		const components = await compRepo.find({
+			where: {
+				user
+			}
+		});
+		await compRepo.remove(components);
+		const projects = await projRepo.find({
+			where: {
+				user
+			}
+		});
+		await projRepo.remove(projects);
+		await profilePicRepo.remove(user.image);
 	}
 
 }

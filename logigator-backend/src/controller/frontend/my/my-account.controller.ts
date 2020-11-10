@@ -1,4 +1,15 @@
-import {Body, Controller, CurrentUser, Delete, Get, Post, Render, UseAfter, UseBefore} from 'routing-controllers';
+import {
+	Body,
+	Controller,
+	CurrentUser,
+	Get,
+	Post,
+	Render,
+	Req,
+	Res,
+	UseAfter,
+	UseBefore
+} from 'routing-controllers';
 import {CheckAuthenticatedFrontMiddleware} from '../../../middleware/auth/frontend-guards/check-authenticated-front.middleware';
 import {setTitleMiddleware} from '../../../middleware/action/set-title-middleware';
 import {User} from '../../../database/entities/user.entity';
@@ -13,13 +24,17 @@ import {UserPreferences} from '../../../models/user-preferences';
 import {InjectRepository} from 'typeorm-typedi-extensions';
 import {ProfilePictureRepository} from '../../../database/repositories/profile-picture.repository';
 import {SecurityUpdatePassword} from '../../../models/request/frontend/my-account/security-update-password';
+import {UserRepository} from '../../../database/repositories/user.repository';
+import {updateAuthenticatedCookie} from '../../../functions/update-authenticated-cookie';
+import {Request, Response} from 'express';
 
 @Controller('/my/account')
 export class MyAccountController {
 
 	constructor(
 		private userService: UserService,
-		@InjectRepository() private profilePictureRepo: ProfilePictureRepository
+		@InjectRepository() private profilePictureRepo: ProfilePictureRepository,
+		@InjectRepository() private userRepo: UserRepository
 	) {}
 
 	@Get('/')
@@ -117,9 +132,10 @@ export class MyAccountController {
 
 	@Post('/delete/delete')
 	@UseBefore(CheckAuthenticatedFrontMiddleware)
-	public async accountDeleteDelete(@CurrentUser() user: User, @Redirect() redirect: RedirectFunction) {
-		// TODO: do actual deletion
-
+	public async accountDeleteDelete(@CurrentUser() user: User, @Redirect() redirect: RedirectFunction, @Req() request: Request, @Res() response: Response) {
+		request.logout();
+		updateAuthenticatedCookie(request, response, false);
+		await this.userService.remove(user);
 		return redirect({target: '/', showInfoPopup: 'account-deleted'});
 	}
 

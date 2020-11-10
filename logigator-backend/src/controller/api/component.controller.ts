@@ -115,9 +115,7 @@ export class ComponentController {
 	@Delete('/:componentId')
 	@UseBefore(CheckAuthenticatedApiMiddleware)
 	public async delete(@Param('componentId') componentId: string, @CurrentUser() user: User) {
-		const component = await this.componentRepo.getOwnedComponentOrThrow(componentId, user);
-		await this.componentRepo.remove(component);
-		return component;
+		return await this.componentRepo.deleteComponentForUser(componentId, user);
 	}
 
 	@Patch('/:componentId')
