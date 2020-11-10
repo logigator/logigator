@@ -270,7 +270,8 @@
 			"CONFIRM": "Do you really want to delete your Profile Image?"
 		},
 		"CHANGE_IMAGE": {
-			"TITLE": "Change Image"
+			"TITLE": "Change Image",
+			"FILE": "Drop your image here."
 		},
 		"DELETE_ACCOUNT": {
 			"TITLE": "Delete Account",

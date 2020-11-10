@@ -45,6 +45,7 @@ function popupPartial(node) {
 				if (!opened) {
 					Bem.setState(node, 'open', true);
 					opened = true;
+					document.dispatchEvent(new CustomEvent('popup-opened', {detail: node}));
 				}
 			});
 		});
@@ -54,6 +55,7 @@ function popupPartial(node) {
 		elem.addEventListener('click', () => {
 			Bem.setState(node, 'open', false);
 			opened = false;
+			document.dispatchEvent(new CustomEvent('popup-closed', {detail: node}));
 		});
 	});
 }

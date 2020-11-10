@@ -270,7 +270,8 @@
 			"CONFIRM": "Willst du dein Proilbild wirklich löschen?"
 		},
 		"CHANGE_IMAGE": {
-			"TITLE": "Bild ändern"
+			"TITLE": "Bild ändern",
+			"FILE": "Ziehe dein Bild hierher."
 		},
 		"DELETE_ACCOUNT": {
 			"TITLE": "Account löschen",

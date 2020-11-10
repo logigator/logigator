@@ -1,5 +1,15 @@
-{{#> popup title=i18n.POPUP.CHANGE_IMAGE.TITLE  defaultOpen=false triggers='.view-my-account-profile__picture-change'}}
+{{#> popup title=i18n.POPUP.CHANGE_IMAGE.TITLE defaultOpen=false triggers='.view-my-account-profile__picture-change'}}
 	<div class="partial-change-image-popup">
+
+		<div class="partial-change-image-popup__img-container">
+			<img class="partial-change-image-popup__img" src="{{user.image}}" alt="User Image">
+		</div>
+
+		<div class="partial-change-image-popup__upload-container">
+			<input type="file" accept="image/*" class="partial-change-image-popup__file">
+			{{> icon icon='cloud_upload' alt='Upload' }}
+			<p>{{i18n.POPUP.CHANGE_IMAGE.FILE}}</p>
+		</div>
 
 	</div>
 {{/popup}}
