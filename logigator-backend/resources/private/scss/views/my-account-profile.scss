@@ -4,6 +4,7 @@
 @import "../partials/account-nav";
 @import "../partials/account-mobile-nav";
 @import "../partials/delete-image-popup";
+@import "../partials/change-image-popup";
 
 @include view('my-account-profile') {
 	@include accountPagesShared();

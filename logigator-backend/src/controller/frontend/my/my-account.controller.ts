@@ -50,6 +50,9 @@ export class MyAccountController {
 	@UseBefore(CheckAuthenticatedFrontMiddleware, setTitleMiddleware('TITLE.ACCOUNT_PROFILE'))
 	public accountProfile(@CurrentUser() user: User) {
 		return {
+			viewScript: 'my-account-profile',
+			additionalScript: '/vendor/cropperjs/cropper.min.js',
+			additionalCss: '/vendor/cropperjs/cropper.min.css',
 			active: 'account-profile',
 			userData: {
 				email: user.email,

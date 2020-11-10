@@ -269,6 +269,9 @@
 			"CANCEL": "Cancel",
 			"CONFIRM": "Do you really want to delete your Profile Image?"
 		},
+		"CHANGE_IMAGE": {
+			"TITLE": "Change Image"
+		},
 		"DELETE_ACCOUNT": {
 			"TITLE": "Delete Account",
 			"DELETE": "Confirm Delete",

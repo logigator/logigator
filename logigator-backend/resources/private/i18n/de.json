@@ -269,6 +269,9 @@
 			"CANCEL": "Abbrechen",
 			"CONFIRM": "Willst du dein Proilbild wirklich löschen?"
 		},
+		"CHANGE_IMAGE": {
+			"TITLE": "Bild ändern"
+		},
 		"DELETE_ACCOUNT": {
 			"TITLE": "Account löschen",
 			"DELETE": "Löschen bestätigen",
