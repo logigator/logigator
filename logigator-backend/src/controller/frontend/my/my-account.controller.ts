@@ -27,6 +27,7 @@ import {SecurityUpdatePassword} from '../../../models/request/frontend/my-accoun
 import {UserRepository} from '../../../database/repositories/user.repository';
 import {updateAuthenticatedCookie} from '../../../functions/update-authenticated-cookie';
 import {Request, Response} from 'express';
+import {DeleteDelete} from '../../../models/request/frontend/my-account/delete-delete';
 
 @Controller('/my/account')
 export class MyAccountController {
@@ -124,18 +125,24 @@ export class MyAccountController {
 	@Get('/delete')
 	@Render('my-account-delete')
 	@UseBefore(CheckAuthenticatedFrontMiddleware, setTitleMiddleware('TITLE.ACCOUNT_DELETE'))
-	public accountDelete() {
+	public accountDelete(@CurrentUser() user: User) {
 		return {
-			active: 'account-delete'
+			active: 'account-delete',
+			hasPassword: !!user.password
 		};
 	}
 
 	@Post('/delete/delete')
 	@UseBefore(CheckAuthenticatedFrontMiddleware)
-	public async accountDeleteDelete(@CurrentUser() user: User, @Redirect() redirect: RedirectFunction, @Req() request: Request, @Res() response: Response) {
+	@UseAfter(formErrorMiddleware())
+	public async accountDeleteDelete(@CurrentUser() user: User, @Body() body: DeleteDelete, @Redirect() redirect: RedirectFunction, @Req() request: Request, @Res() response: Response) {
+		try {
+			await this.userService.remove(user, body.password);
+		} catch (e) {
+			throw new FormDataError(body, 'password', 'invalid');
+		}
 		request.logout();
 		updateAuthenticatedCookie(request, response, false);
-		await this.userService.remove(user);
 		return redirect({target: '/', showInfoPopup: 'account-deleted'});
 	}
 

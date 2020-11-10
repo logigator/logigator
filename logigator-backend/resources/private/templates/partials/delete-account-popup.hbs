@@ -1,8 +1,15 @@
-{{#> popup title=i18n.POPUP.DELETE_ACCOUNT.TITLE  defaultOpen=false triggers='.view-my-account-delete__delete-btn'}}
+{{#> popup title=i18n.POPUP.DELETE_ACCOUNT.TITLE  defaultOpen=formErrors.my_account_delete_delete triggers='.view-my-account-delete__delete-btn'}}
 	<div class="partial-delete-account-popup">
 		{{#> form action='/my/account/delete/delete' }}
 
 			<p class="partial-delete-account-popup__confirm-text">{{i18n.POPUP.DELETE_ACCOUNT.CONFIRM}}</p>
+
+			{{#if hasPassword}}
+				{{#> form-input name='password' type='password' label=i18n.LOGIN_FORM.PASSWORD autocomplete='current-password'}}
+					{{> form-error error='isNotEmpty' message=i18n.LOGIN_FORM.PASSWORD_ERR_REQUIRED }}
+					{{> form-error error='invalid' message=i18n.LOGIN_FORM.PASSWORD_ERR_INVALID }}
+				{{/form-input}}
+			{{/if}}
 
 			<div class="view-project-component-delete-popup__buttons">
 				<button type="button" class="btn-raised secondary partial-delete-account-popup__cancel partial-popup__close">{{i18n.POPUP.DELETE_ACCOUNT.CANCEL}}</button>

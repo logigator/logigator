@@ -239,7 +239,12 @@ export class UserService {
 		return this.userRepo.save(user);
 	}
 
-	public async remove(user: User) {
+	public async remove(user: User, password: string) {
+		if (user.password) {
+			if (!(await compare(password, user.password))) {
+				throw new Error('invalid_password');
+			}
+		}
 		await this.removeTransaction(user);
 		await this.userRepo.remove(user);
 	}
