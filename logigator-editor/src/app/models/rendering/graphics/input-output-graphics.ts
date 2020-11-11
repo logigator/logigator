@@ -18,6 +18,7 @@ export class InputOutputGraphics extends PIXI.Graphics implements LGraphics, Com
 	private elemProvService = getStaticDI(ElementProviderService);
 
 	private _symbol: string;
+	private _text: PIXI.BitmapText;
 
 	private simActiveState: boolean;
 	private shouldHaveActiveState: boolean;
@@ -41,15 +42,23 @@ export class InputOutputGraphics extends PIXI.Graphics implements LGraphics, Com
 			this.element = elementOrType;
 			this._symbol = this.element.data as string || this.elemProvService.getElementById(this.element.typeId).symbol;
 		}
+
+		this._text = new PIXI.BitmapText(this._symbol, {
+			fontName: 'Roboto',
+			fontSize: this.calcFontSize(),
+			tint: this.themingService.getEditorColor('fontTint')
+		});
+
+		this._text.anchor = 0.5;
+		this._text.position.x = environment.gridPixelWidth / 2;
+		this._text.position.y = environment.gridPixelWidth / 2;
+
 		this.drawComponent();
+		this.addChild(this._text);
 	}
 
 	private drawComponent() {
 		this.lineStyle(1 / this._scale, this.themingService.getEditorColor('wire'));
-		this.beginFill(this.themingService.getEditorColor('background'));
-		this.moveTo(0, 0);
-
-		this.drawRect(0, 0, environment.gridPixelWidth, environment.gridPixelWidth);
 		this.beginFill(this.themingService.getEditorColor('wire'));
 
 		let rotForRender = this.element.rotation;
@@ -76,19 +85,9 @@ export class InputOutputGraphics extends PIXI.Graphics implements LGraphics, Com
 				break;
 		}
 
-		this.removeChildren(0);
-
-		const text = new PIXI.BitmapText(this._symbol, {
-			fontName: 'Roboto',
-			fontSize: this.calcFontSize(),
-			tint: this.themingService.getEditorColor('fontTint')
-		});
-
-		text.anchor = 0.5;
-		text.position.x = environment.gridPixelWidth / 2;
-		text.position.y = environment.gridPixelWidth / 2;
-
-		this.addChild(text);
+		this.beginFill(this.themingService.getEditorColor('background'));
+		this.moveTo(0, 0);
+		this.drawRect(0, 0, environment.gridPixelWidth, environment.gridPixelWidth);
 	}
 
 	private calcFontSize(): number {
@@ -136,6 +135,18 @@ export class InputOutputGraphics extends PIXI.Graphics implements LGraphics, Com
 		this._scale = scale;
 		this._symbol = this.element.data as string || this.elemProvService.getElementById(this.element.typeId).symbol;
 		this.clear();
+
+		this._text = new PIXI.BitmapText(this._symbol, {
+			fontName: 'Roboto',
+			fontSize: this.calcFontSize(),
+			tint: this.themingService.getEditorColor('fontTint')
+		});
+		this._text.anchor = 0.5;
+		this._text.position.x = environment.gridPixelWidth / 2;
+		this._text.position.y = environment.gridPixelWidth / 2;
+
+		this.removeChildren(0);
+		this.addChild(this._text);
 		this.drawComponent();
 	}
 
