@@ -59,21 +59,19 @@ export class RomViewComponent extends ElementInspectionComp implements OnInit, O
 				this.hexInput.nativeElement.innerHTML.substring(this.selectedIndex + this.selectedLength);
 		}
 		let pos = Math.floor(num * this.sprite.element.numOutputs / 4);
+		let endPos = Math.floor(((num + 1) * this.sprite.element.numOutputs - 1) / 4);
 		pos += Math.floor(pos / 2);
-		let length = Math.ceil(this.sprite.element.numOutputs / 4);
-		length += Math.floor(length / 2);
-		if (pos > this.hexInput.nativeElement.innerHTML.length)
+		endPos += Math.floor(endPos / 2);
+		if (pos >= this.hexInput.nativeElement.innerHTML.length)
 			return;
-		if (pos % 3 === 0 && length > 1)
-			length--;
-		if (pos + length > this.hexInput.nativeElement.innerHTML.length)
-			length = this.hexInput.nativeElement.innerHTML.length - pos;
-		this.selectedValue = this.hexInput.nativeElement.innerHTML.substr(pos, length);
+		if (endPos >= this.hexInput.nativeElement.innerHTML.length)
+			endPos = this.hexInput.nativeElement.innerHTML.length - 1;
+		this.selectedValue = this.hexInput.nativeElement.innerHTML.substring(pos, endPos + 1);
 		const replacement = `<span ${this.hexInput.nativeElement.attributes[0].name}="">${this.selectedValue}</span>`;
 		this.hexInput.nativeElement.innerHTML =
 			this.hexInput.nativeElement.innerHTML.substring(0, pos)
 			+ replacement
-			+ this.hexInput.nativeElement.innerHTML.substring(pos + length);
+			+ this.hexInput.nativeElement.innerHTML.substring(endPos + 1);
 		this.hexInput.nativeElement.firstElementChild.scrollIntoView();
 		this.selectedIndex = pos;
 		this.selectedLength = replacement.length;
