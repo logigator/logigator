@@ -2,6 +2,7 @@ function imageChangeHandling() {
 
 	let node;
 	let cropper;
+	let originalImageSrc;
 
 	document.addEventListener('popup-opened', e => {
 		const popupNode = e.detail.querySelector('.partial-change-image-popup');
@@ -11,6 +12,9 @@ function imageChangeHandling() {
 		if (!node) {
 			node = popupNode;
 			setup();
+		}
+		if (originalImageSrc) {
+			cropper.replace(originalImageSrc);
 		}
 	});
 
@@ -45,9 +49,29 @@ function imageChangeHandling() {
 			Bem.setState(uploadContainer, 'dragging', state);
 		}
 
+		originalImageSrc = Bem.element(node, 'img').src;
+
 		// eslint-disable-next-line no-undef
 		cropper = new Cropper(Bem.element(node, 'img'), {
 			aspectRatio: 1
+		});
+
+		Bem.element(node, 'save').addEventListener('click', () => {
+			cropper.getCroppedCanvas({
+				imageSmoothingEnabled: true,
+				imageSmoothingQuality: 'high',
+				width: 256,
+				height: 256
+			}).toBlob(async blob => {
+				const formData = new FormData();
+				formData.append('image', blob);
+				await fetch('/my/account/profile/update-image', {
+					method: 'POST',
+					redirect: 'follow',
+					body: formData
+				});
+				location.reload();
+			});
 		});
 	}
 

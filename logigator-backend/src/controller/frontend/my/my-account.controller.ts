@@ -6,7 +6,7 @@ import {
 	Post,
 	Render,
 	Req,
-	Res,
+	Res, UploadedFile,
 	UseAfter,
 	UseBefore
 } from 'routing-controllers';
@@ -28,6 +28,8 @@ import {UserRepository} from '../../../database/repositories/user.repository';
 import {updateAuthenticatedCookie} from '../../../functions/update-authenticated-cookie';
 import {Request, Response} from 'express';
 import {DeleteDelete} from '../../../models/request/frontend/my-account/delete-delete';
+import {getUploadedFileOptions} from '../../../functions/get-uploaded-file-options';
+import {ProfilePicture} from '../../../database/entities/profile-picture.entity';
 
 @Controller('/my/account')
 export class MyAccountController {
@@ -95,6 +97,19 @@ export class MyAccountController {
 		}
 		await this.profilePictureRepo.remove(user.image);
 		return redirect();
+	}
+
+	@Post('/profile/update-image')
+	@UseBefore(CheckAuthenticatedFrontMiddleware)
+	public async accountProfileUpdateImage(@CurrentUser() user: User, @UploadedFile('image', {options: getUploadedFileOptions(), required: true}) image: any, @Redirect() redirect: RedirectFunction) {
+		const userImage = user.image ?? new ProfilePicture();
+		userImage.setFileContent(image.buffer);
+		userImage.mimeType = image.mimetype;
+		user.image = userImage;
+		await this.userRepo.save(user);
+		return {
+			success: true
+		};
 	}
 
 	@Get('/security')

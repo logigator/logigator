@@ -271,7 +271,8 @@
 		},
 		"CHANGE_IMAGE": {
 			"TITLE": "Change Image",
-			"FILE": "Drop your image here."
+			"FILE": "Drop your image here.",
+			"SAVE": "Save"
 		},
 		"DELETE_ACCOUNT": {
 			"TITLE": "Delete Account",

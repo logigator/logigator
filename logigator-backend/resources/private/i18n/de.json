@@ -271,7 +271,8 @@
 		},
 		"CHANGE_IMAGE": {
 			"TITLE": "Bild ändern",
-			"FILE": "Ziehe dein Bild hierher."
+			"FILE": "Ziehe dein Bild hierher.",
+			"SAVE": "Speichern"
 		},
 		"DELETE_ACCOUNT": {
 			"TITLE": "Account löschen",
