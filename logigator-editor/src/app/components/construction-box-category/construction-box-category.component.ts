@@ -42,9 +42,12 @@ export class ConstructionBoxCategoryComponent {
 		return toSearch.trim().toLowerCase().replace(' ', '') === 'buttplug';
 	}
 
-	public isInSearchResult(toSearch: string): Observable<boolean> {
-		return this.translate.get(toSearch).pipe(
-			map(translated => translated.toLowerCase().includes(this.searchText.trim().toLowerCase()))
+	public isInSearchResult(toSearch: ElementType): Observable<boolean> {
+		return this.translate.get(toSearch.name).pipe(
+			map(
+				translated => translated.toLowerCase().includes(this.searchText.trim().toLowerCase())
+				|| toSearch.symbol.toLowerCase().includes(this.searchText.trim().toLowerCase())
+			)
 		);
 	}
 

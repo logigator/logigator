@@ -7,7 +7,7 @@
 			<ng-container *ngFor="let comp of components; trackBy: componentsTrackBy">
 				<div class="component-to-select"
 				     *ngIf="comp.showInConstructionBox &&
-				     (searchText == '' || (isInSearchResult(comp.name) | async)) && !isCurrentCustomElement(comp.id)
+				     (searchText == '' || (isInSearchResult(comp) | async)) && !isCurrentCustomElement(comp.id)
 				     || isHiddenPlug(searchText, comp.id)"
 				     (click)="selectComponent(comp.id)"
 				     (dblclick)="openComponent(comp.id)"
