@@ -56,7 +56,11 @@ function imageChangeHandling() {
 			aspectRatio: 1
 		});
 
+		let currentlySaving = false;
 		Bem.element(node, 'save').addEventListener('click', () => {
+			if (currentlySaving) return;
+
+			currentlySaving = true;
 			cropper.getCroppedCanvas({
 				imageSmoothingEnabled: true,
 				imageSmoothingQuality: 'high',
