@@ -18,14 +18,4 @@ export class ProfilePictureRepository extends Repository<ProfilePicture> {
 		return resource;
 	}
 
-	public async importFromUrlIfChanged(url: string, resourceToUpdate: ProfilePicture): Promise<ProfilePicture> {
-		const resp = await fetch(url);
-		const buffer = await resp.buffer();
-		if (resourceToUpdate === null)
-			resourceToUpdate = new ProfilePicture();
-		resourceToUpdate.setFileContent(buffer);
-		resourceToUpdate.mimeType = resp.headers.get('content-type');
-		return resourceToUpdate;
-	}
-
 }

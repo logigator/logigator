@@ -39,7 +39,6 @@ export class UserService {
 
 		if (user) {
 			user.username = profile.displayName;
-			user.image = await this.profilePictureRepo.importFromUrlIfChanged(profile.photos[0].value, user.image);
 			return this.userRepo.save(user);
 		}
 		const existingUser = await this.userRepo.findOne({
@@ -64,7 +63,6 @@ export class UserService {
 		});
 		if (user) {
 			user.username = profile.displayName;
-			user.image = await this.profilePictureRepo.importFromUrlIfChanged(profile.photos[0].value, user.image);
 			return this.userRepo.save(user);
 		}
 		const existingUser = await this.userRepo.findOne({
