@@ -16,9 +16,11 @@ export class RomViewComponent extends ElementInspectionComp implements OnInit, O
 	leftAddress = '00000000';
 
 	private leftAddressCache = new Map<number, string>();
-	private selectedIndex;
-	private selectedLength;
-	private selectedValue;
+	private selected: {
+		index: number,
+		length: number,
+		value: string
+	}[] = [];
 
 	rows = 1;
 
@@ -52,29 +54,48 @@ export class RomViewComponent extends ElementInspectionComp implements OnInit, O
 		for (let i = 0; i < this.sprite.element.numInputs; i++) {
 			num |= ((state[i] ? 1 : 0) << i);
 		}
-		if (this.selectedLength) {
+		for (const selection of this.selected.reverse()) {
 			this.hexInput.nativeElement.innerHTML =
-				this.hexInput.nativeElement.innerHTML.substring(0, this.selectedIndex) +
-				this.selectedValue +
-				this.hexInput.nativeElement.innerHTML.substring(this.selectedIndex + this.selectedLength);
+				this.hexInput.nativeElement.innerHTML.substring(0, selection.index) +
+				selection.value +
+				this.hexInput.nativeElement.innerHTML.substring(selection.index + selection.length);
 		}
-		let pos = Math.floor(num * this.sprite.element.numOutputs / 4);
+		this.selected = [];
+
+		const pos = Math.floor(num * this.sprite.element.numOutputs / 4);
 		let endPos = Math.floor(((num + 1) * this.sprite.element.numOutputs - 1) / 4);
+		if (endPos % 2 === 0) {
+			this.addSelection(endPos + 1, endPos + 1);
+			endPos--;
+		}
+		if (pos % 2 === 1) {
+			this.addSelection(pos + 1, endPos);
+			this.addSelection(pos - 1, pos - 1);
+		} else {
+			this.addSelection(pos, endPos);
+		}
+		this.hexInput.nativeElement.firstElementChild.scrollIntoView();
+	}
+
+	private addSelection(pos: number, endPos: number) {
 		pos += Math.floor(pos / 2);
 		endPos += Math.floor(endPos / 2);
-		if (pos >= this.hexInput.nativeElement.innerHTML.length)
+		if (pos >= this.hexInput.nativeElement.innerHTML.length || endPos < pos)
 			return;
 		if (endPos >= this.hexInput.nativeElement.innerHTML.length)
 			endPos = this.hexInput.nativeElement.innerHTML.length - 1;
-		this.selectedValue = this.hexInput.nativeElement.innerHTML.substring(pos, endPos + 1);
-		const replacement = `<span ${this.hexInput.nativeElement.attributes[0].name}="">${this.selectedValue}</span>`;
+		const selectedValue = this.hexInput.nativeElement.innerHTML.substring(pos, endPos + 1);
+		const replacement = `<span ${this.hexInput.nativeElement.attributes[0].name}="">${selectedValue}</span>`;
 		this.hexInput.nativeElement.innerHTML =
 			this.hexInput.nativeElement.innerHTML.substring(0, pos)
 			+ replacement
 			+ this.hexInput.nativeElement.innerHTML.substring(endPos + 1);
-		this.hexInput.nativeElement.firstElementChild.scrollIntoView();
-		this.selectedIndex = pos;
-		this.selectedLength = replacement.length;
+
+		this.selected.push({
+			index: pos,
+			length: replacement.length,
+			value: selectedValue
+		});
 	}
 
 	private calcLeftAddresses(lineCount: number) {
