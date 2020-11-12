@@ -36,6 +36,7 @@
 			width: 12rem;
 
 			display: flex;
+			position: relative;
 			flex-direction: row;
 			justify-content: space-between;
 			align-items: center;
@@ -67,6 +68,10 @@
 						background-color: lighten(themed('background'), 5%);
 					}
 				}
+			}
+
+			.tab-dragging {
+				display: none;
 			}
 		}
 

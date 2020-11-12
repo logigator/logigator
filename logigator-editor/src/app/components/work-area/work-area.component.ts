@@ -11,6 +11,7 @@ import {WorkMode} from '../../models/work-modes';
 import {EditorInteractionService} from '../../services/editor-interaction/editor-interaction.service';
 import {EditorAction} from '../../models/editor-action';
 import {ElementProviderService} from '../../services/element-provider/element-provider.service';
+import {fromEvent} from 'rxjs';
 
 @Component({
 	selector: 'app-work-area',
@@ -20,9 +21,15 @@ import {ElementProviderService} from '../../services/element-provider/element-pr
 export class WorkAreaComponent extends WorkArea implements OnInit, OnDestroy {
 
 	private _allViews: Map<number, EditorView>;
+	private currentlyDragging: Project;
+	private dragStart: number;
+	private dragElement: HTMLDivElement;
 
 	@ViewChild('pixiCanvasContainer', {static: true})
 	private _pixiCanvasContainer: ElementRef<HTMLDivElement>;
+
+	@ViewChild('tabs', {static: true})
+	private _tabsElement: ElementRef<HTMLDivElement>;
 
 	constructor(
 		private renderer2: Renderer2,
@@ -60,12 +67,45 @@ export class WorkAreaComponent extends WorkArea implements OnInit, OnDestroy {
 				takeUntil(this._destroySubject)
 			).subscribe(action => this.activeView.onZoom(action));
 
+			fromEvent(window, 'mouseup').pipe(
+				takeUntil(this._destroySubject)
+			).subscribe(() => this.mouseUp());
+
+			fromEvent(window, 'mousemove').pipe(
+				takeUntil(this._destroySubject)
+			).subscribe((e: MouseEvent) => this.mouseMove(e));
+
 			this.workMode.isSimulationMode$.subscribe(isSim => this.onSimulationModeChanged(isSim));
 		});
 	}
 
 	getIdentifier(): string {
 		return '0';
+	}
+
+	mouseDown(project: Project, event: MouseEvent, tab: HTMLDivElement) {
+		this.currentlyDragging = project;
+		this.dragStart = event.clientX;
+		this.dragElement = tab;
+		this.switchToProject(project.id);
+	}
+
+	mouseMove(e: MouseEvent) {
+		if (this.currentlyDragging) {
+			const offset = e.clientX - this.dragStart;
+			this.dragElement.style.left = (e.clientX - this.dragStart) + 'px';
+
+			if (this.dragElement.offsetLeft < 0) {
+				this.dragElement.style.left = (offset - this.dragElement.offsetLeft) + 'px';
+			} else if (this.dragElement.offsetLeft + this.dragElement.offsetWidth > this._tabsElement.nativeElement.offsetWidth) {
+				this.dragElement.style.left =
+					(offset - (this.dragElement.offsetLeft + this.dragElement.offsetWidth - this._tabsElement.nativeElement.offsetWidth)) + 'px';
+			}
+		}
+	}
+
+	mouseUp() {
+		this.currentlyDragging = undefined;
 	}
 
 	public get allProjects(): Project[] {
