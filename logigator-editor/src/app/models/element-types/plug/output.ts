@@ -9,7 +9,7 @@ export const output: ElementType = {
 
 	category: 'plug',
 
-	symbol: 'out',
+	symbol: 'OUT',
 
 	showSettings: true,
 	showSettingsForType: true,

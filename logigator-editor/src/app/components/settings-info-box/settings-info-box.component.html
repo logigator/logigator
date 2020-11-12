@@ -28,7 +28,7 @@
 
 		<div class="property" *ngIf="elementType.hasLabel && selectedCompId">
 			<p>{{'SETTINGS_INFO.PLUG_LABEL' | translate}}:</p>
-			<input formControlName="label" type="text" maxlength="3" (focus)="focusInput()" (blur)="blurInput()">
+			<input formControlName="label" type="text" maxlength="4" (focus)="focusInput()" (blur)="blurInput()">
 		</div>
 
 		<div class="property" formArrayName="options" *ngFor="let item of optionsControls; let i = index">
