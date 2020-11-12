@@ -2,9 +2,10 @@ import {ProjectsService} from '../../services/projects/projects.service';
 import {Element, ElementRotation} from '../element';
 import {Type} from '@angular/core';
 import {ElementInspectionComp} from '../../components/element-inspection/element-inspection-comp';
+import {ElementTypeId} from './element-type-ids';
 
 export interface ElementType {
-	id: number;
+	id: ElementTypeId;
 
 	// translation id for predefined comps
 	name: string;
