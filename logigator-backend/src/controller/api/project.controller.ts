@@ -106,7 +106,7 @@ export class ProjectController {
 				.filter(x => !depSet.has(x.dependency.id))
 		);
 
-		project.dependencies = Promise.resolve(deps);
+		await this.projectDepRepo.save(deps);
 		return this.projectRepo.save(project);
 	}
 

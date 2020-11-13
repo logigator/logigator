@@ -107,8 +107,7 @@ export class ComponentController {
 			(await this.componentDepRepo.find({dependent: component}))
 				.filter(x => !depSet.has(x.dependency.id))
 		);
-
-		component.dependencies = Promise.resolve(deps);
+		await this.componentDepRepo.save(deps);
 		return this.componentRepo.save(component);
 	}
 
