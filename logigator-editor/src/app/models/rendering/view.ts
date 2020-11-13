@@ -208,8 +208,6 @@ export abstract class View extends PIXI.Container {
 	protected placeWireOnView(element: Element) {
 		const graphics = LGraphicsResolver.getLGraphicsFromElement(this.zoomPan.currentScale, element);
 		graphics.position = Grid.getLocalChunkPixelPosForGridPosWire(element.pos);
-		graphics.name = element.id.toString();
-
 		this.addToCorrectChunk(graphics, element.pos);
 		this.allElements.set(element.id, graphics);
 	}
