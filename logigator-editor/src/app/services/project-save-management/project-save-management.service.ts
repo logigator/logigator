@@ -522,7 +522,7 @@ export class ProjectSaveManagementService {
 		};
 	}
 
-	private async getAllComponentsInfo() {
+	public async getAllComponentsInfo() {
 		if (this.userService.isLoggedIn) {
 			try {
 				const componentData = await this.api.get<ComponentInfo[]>(`/component`, {errorMessage: 'ERROR.PROJECT.GET_COMPS'}).toPromise();

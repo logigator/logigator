@@ -7,6 +7,9 @@ import {Project} from '../project';
 import {Element} from '../element';
 import {ProjectType} from '../project-type';
 import {LGraphicsResolver} from './graphics/l-graphics-resolver';
+import {isUpdatable} from './graphics/l-graphics';
+import {getStaticDI} from '../get-di';
+import {ElementProviderService} from '../../services/element-provider/element-provider.service';
 
 export class EditorView extends View {
 
@@ -30,6 +33,16 @@ export class EditorView extends View {
 
 	public updateSelectedElementsScale() {
 		this._viewInteractionManager.updateSelectionScale();
+	}
+
+	public updateSymbolUserDefinedElements() {
+		const elementProvider = getStaticDI(ElementProviderService);
+		for (const [id, sprite] of this.allElements) {
+			if (isUpdatable(sprite) && elementProvider.isUserElement(sprite.element.typeId)) {
+				sprite.updateComponent(this.zoomPan.currentScale, sprite.element);
+			}
+		}
+		this.requestSingleFrame();
 	}
 
 	public placeComponentOnView(element: Element) {

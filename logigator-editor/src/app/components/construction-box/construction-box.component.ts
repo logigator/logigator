@@ -61,5 +61,6 @@ export class ConstructionBoxComponent {
 	}
 
 	public reloadUserElements() {
+		this.projects.reloadUserElements();
 	}
 }

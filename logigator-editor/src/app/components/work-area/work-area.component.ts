@@ -56,6 +56,10 @@ export class WorkAreaComponent extends WorkArea implements OnInit, OnDestroy {
 				takeUntil(this._destroySubject)
 			).subscribe(id => this.onProjectSwitch(id));
 
+			this.projectsService.onUserDefinedElementsReload$.pipe(
+				takeUntil(this._destroySubject)
+			).subscribe(() => this.onUserElementsReload());
+
 			this.editorInteraction.subscribeEditorAction(EditorAction.ZOOM_IN, EditorAction.ZOOM_OUT, EditorAction.ZOOM_100).pipe(
 				takeUntil(this._destroySubject)
 			).subscribe(action => this.activeView.onZoom(action));
@@ -140,6 +144,12 @@ export class WorkAreaComponent extends WorkArea implements OnInit, OnDestroy {
 			this.workMode.setWorkMode(WorkMode.SELECT);
 		}
 		this.ticker.singleFrame('0');
+	}
+
+	private onUserElementsReload() {
+		for (const [id, view] of this._allViews) {
+			view.updateSymbolUserDefinedElements();
+		}
 	}
 
 	public tabCloseClicked(id: number, event: MouseEvent) {

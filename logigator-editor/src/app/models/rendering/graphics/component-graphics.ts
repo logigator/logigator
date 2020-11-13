@@ -17,8 +17,7 @@ export class ComponentGraphics extends PIXI.Graphics implements LGraphics, Compo
 	private themingService = getStaticDI(ThemingService);
 	private elemProvService = getStaticDI(ElementProviderService);
 
-	private readonly _symbol: string;
-	private _text: PIXI.BitmapText;
+	private _symbol: string;
 
 	private _size: PIXI.Point;
 
@@ -50,20 +49,13 @@ export class ComponentGraphics extends PIXI.Graphics implements LGraphics, Compo
 			if (elemType.calcLabels) this._labels = elemType.calcLabels(this.element);
 		}
 		this._size = Elements.calcPixelElementSize(this.element);
-		this._text = new PIXI.BitmapText(this._symbol, {
-			fontName: 'Roboto',
-			fontSize: this.calcFontSize(),
-			tint: this.themingService.getEditorColor('fontTint')
-		});
-		this._text.anchor = 0.5;
-		this._text.position.x = this._size.x / 2;
-		this._text.position.y = this._size.y / 2;
-		this.addChild(this._text);
 
 		this.drawComponent();
 	}
 
 	private drawComponent() {
+		this.removeChildren(0);
+
 		this.lineStyle(1 / this._scale, this.themingService.getEditorColor('wire'));
 		this.moveTo(0, 0);
 
@@ -83,6 +75,17 @@ export class ComponentGraphics extends PIXI.Graphics implements LGraphics, Compo
 				this.rotation3(this.element.numInputs, this.element.numOutputs, this._size.y, this._size.x);
 				break;
 		}
+
+		const text = new PIXI.BitmapText(this._symbol, {
+			fontName: 'Roboto',
+			fontSize: this.calcFontSize(),
+			tint: this.themingService.getEditorColor('fontTint')
+		});
+		text.anchor = 0.5;
+		text.position.x = this._size.x / 2;
+		text.position.y = this._size.y / 2;
+
+		this.addChild(text);
 	}
 
 	private calcFontSize(): number {
@@ -292,18 +295,9 @@ export class ComponentGraphics extends PIXI.Graphics implements LGraphics, Compo
 		this._scale = scale;
 		const elemType = this.elemProvService.getElementById(this.element.typeId);
 		if (elemType.calcLabels) this._labels = elemType.calcLabels(this.element);
+		this._symbol = elemType.symbol;
 		this.clear();
 		this._size = Elements.calcPixelElementSize(this.element);
-		this._text = new PIXI.BitmapText(this._symbol, {
-			fontName: 'Roboto',
-			fontSize: this.calcFontSize(),
-			tint: this.themingService.getEditorColor('fontTint')
-		});
-		this._text.anchor = 0.5;
-		this._text.position.x = this._size.x / 2;
-		this._text.position.y = this._size.y / 2;
-		this.removeChildren(0);
-		this.addChild(this._text);
 		this.drawComponent();
 	}
 

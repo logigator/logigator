@@ -30,6 +30,7 @@ export class ProjectsService {
 	private _projectOpenedSubject = new ReplaySubject<number>();
 	private _projectClosedSubject = new Subject<number>();
 	private _projectSwitchSubject = new Subject<number>();
+	private _userDefinedElementsReloadSubject = new Subject<void>();
 
 	constructor(
 		private projectSaveManagementService: ProjectSaveManagementService,
@@ -77,6 +78,11 @@ export class ProjectsService {
 
 	public get onProjectSwitch$(): Observable<number> {
 		return this._projectSwitchSubject.asObservable();
+
+	}
+
+	public get onUserDefinedElementsReload$(): Observable<void> {
+		return this._userDefinedElementsReloadSubject.asObservable();
 	}
 
 	public switchToProject(id: number) {
@@ -228,5 +234,10 @@ export class ProjectsService {
 			if (project.saveDirty) return true;
 		}
 		return false;
+	}
+
+	public async reloadUserElements() {
+		await this.projectSaveManagementService.getAllComponentsInfo();
+		this._userDefinedElementsReloadSubject.next();
 	}
 }
