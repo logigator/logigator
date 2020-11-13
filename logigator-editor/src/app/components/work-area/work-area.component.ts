@@ -86,21 +86,17 @@ export class WorkAreaComponent extends WorkArea implements OnInit, OnDestroy {
 
 	private onSimulationModeChanged(simulation: boolean) {
 		if (simulation) {
-			this.projectsService.allProjects.forEach(proj => {
-				if (proj.type === 'project') {
-					this._activeView = new SimulationView(
-						proj,
-						this._pixiCanvasContainer.nativeElement,
-						() => this.ticker.singleFrame('0'),
-						this.requestInspectElementInSim,
-						'0',
-						[],
-						[],
-						this._activeView.zoomPan.zoomPanData
-					);
-					this.ticker.singleFrame('0');
-				}
-			});
+			this._activeView = new SimulationView(
+				this.projectsService.mainProject,
+				this._pixiCanvasContainer.nativeElement,
+				() => this.ticker.singleFrame('0'),
+				this.requestInspectElementInSim,
+				'0',
+				[],
+				[],
+				this._activeView.zoomPan.zoomPanData
+			);
+			this.ticker.singleFrame('0');
 		} else {
 			if (!this._activeView) return;
 			const editorView = this._allViews.get(this._activeView.project.id);
