@@ -161,7 +161,7 @@ export class WorkAreaComponent extends WorkArea implements OnInit, OnDestroy {
 	public onProjectClose(id: number) {
 		const toClose = this._allViews.get(id);
 		this._allViews.delete(id);
-		if (toClose === this._activeView) {
+		if (toClose === this._activeView && this.allProjects.length > 0) {
 			this.switchToProject(this.allProjects[0].id);
 		}
 		toClose.destroy();
