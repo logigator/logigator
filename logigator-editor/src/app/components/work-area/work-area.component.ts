@@ -22,6 +22,10 @@ export class WorkAreaComponent extends WorkArea implements OnInit, OnDestroy {
 
 	private _allViews: Map<number, EditorView>;
 	private currentlyDragging: Project;
+	private children: {
+		element: HTMLElement,
+		pos: number
+	}[];
 	private dragStart: number;
 	private dragElement: HTMLDivElement;
 
@@ -87,13 +91,23 @@ export class WorkAreaComponent extends WorkArea implements OnInit, OnDestroy {
 		this.currentlyDragging = project;
 		this.dragStart = event.clientX;
 		this.dragElement = tab;
+		this.dragElement.style.transitionDuration = '0s';
+		this.children = [];
+		for (const child of this._tabsElement.nativeElement.children as unknown as HTMLElement[]) {
+			if (child === this.dragElement)
+				continue;
+			this.children.push({
+				element: child,
+				pos: child.offsetLeft
+			});
+		}
 		this.switchToProject(project.id);
 	}
 
 	mouseMove(e: MouseEvent) {
 		if (this.currentlyDragging) {
 			const offset = e.clientX - this.dragStart;
-			this.dragElement.style.left = (e.clientX - this.dragStart) + 'px';
+			this.dragElement.style.left = offset + 'px';
 
 			if (this.dragElement.offsetLeft < 0) {
 				this.dragElement.style.left = (offset - this.dragElement.offsetLeft) + 'px';
@@ -101,11 +115,34 @@ export class WorkAreaComponent extends WorkArea implements OnInit, OnDestroy {
 				this.dragElement.style.left =
 					(offset - (this.dragElement.offsetLeft + this.dragElement.offsetWidth - this._tabsElement.nativeElement.offsetWidth)) + 'px';
 			}
+
+			for (const child of this.children) {
+				if (child.pos + child.element.offsetWidth / 2 <= this.dragElement.offsetLeft - offset
+					&& child.pos + child.element.offsetWidth / 2 > this.dragElement.offsetLeft) {
+					child.element.style.left = this.dragElement.offsetWidth + 8 + 'px';
+				} else if (child.pos - child.element.offsetWidth / 2 >= this.dragElement.offsetLeft - offset
+					&& child.pos - child.element.offsetWidth / 2 < this.dragElement.offsetLeft) {
+					child.element.style.left = -this.dragElement.offsetWidth - 8 + 'px';
+				} else {
+					child.element.style.left = '0px';
+				}
+			}
 		}
 	}
 
 	mouseUp() {
-		this.currentlyDragging = undefined;
+		if (this.currentlyDragging) {
+			this.dragElement.style.transitionDuration = '';
+
+			this.currentlyDragging = undefined;
+			for (const child of Array.prototype.slice.call(this._tabsElement.nativeElement.children)
+				.sort((x: HTMLElement, y: HTMLElement) => x.offsetLeft - y.offsetLeft) as HTMLElement[]) {
+				this._tabsElement.nativeElement.removeChild(child);
+				child.style.left = '0px';
+				this._tabsElement.nativeElement.appendChild(child);
+			}
+			this.currentlyDragging = undefined;
+		}
 	}
 
 	public get allProjects(): Project[] {
