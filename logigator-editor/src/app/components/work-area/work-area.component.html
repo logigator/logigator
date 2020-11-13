@@ -4,9 +4,8 @@
 		<ng-container *ngFor="let project of allProjects">
 			<div class="tab" #tab
 			     *ngIf="!isSimulationMode || project.type === 'project'"
-			     (mousedown)="mouseDown(project, $event, tab)"
 			     [class.tab-active]="project.id === activeView?.project.id">
-				<p appAutoFontSize desiredFontWidth="170">{{project.name}}</p>
+				<div appAutoFontSize desiredFontWidth="170" (mousedown)="mouseDown(project, $event, tab)">{{project.name}}</div>
 				<span *ngIf="project.type !== 'project'" class="tab-close" (click)="tabCloseClicked(project.id, $event)"></span>
 			</div>
 		</ng-container>
