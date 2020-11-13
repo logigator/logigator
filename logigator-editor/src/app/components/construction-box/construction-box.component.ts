@@ -59,4 +59,7 @@ export class ConstructionBoxComponent {
 	public blurSearch() {
 		this.shortcuts.enableShortcutListener();
 	}
+
+	public reloadUserElements() {
+	}
 }
