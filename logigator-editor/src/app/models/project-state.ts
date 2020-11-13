@@ -269,20 +269,20 @@ export class ProjectState {
 			this._inputPlugs = this._inputPlugs.filter(e => e.id !== elementId);
 			for (const plug of this._inputPlugs) {
 				if (plug.plugIndex > outElem.plugIndex) {
-					this.specialActions.push({
-						name: 'plugInd',
-						element: plug,
-						numbers: [plug.plugIndex - 1, plug.plugIndex]
-					});
+					// this.specialActions.push({
+					// 	name: 'plugInd',
+					// 	element: plug,
+					// 	numbers: [plug.plugIndex - 1, plug.plugIndex]
+					// });
 					plug.plugIndex--;
 				}
 			}
 			for (const plug of this._outputPlugs) {
-				this.specialActions.push({
-					name: 'plugInd',
-					element: plug,
-					numbers: [plug.plugIndex - 1, plug.plugIndex]
-				});
+				// this.specialActions.push({
+				// 	name: 'plugInd',
+				// 	element: plug,
+				// 	numbers: [plug.plugIndex - 1, plug.plugIndex]
+				// });
 				plug.plugIndex--;
 			}
 		} else if (outElem.typeId === ElementTypeId.OUTPUT) {
@@ -290,11 +290,11 @@ export class ProjectState {
 			this._outputPlugs = this._outputPlugs.filter(e => e.id !== elementId);
 			for (const plug of this._outputPlugs) {
 				if (plug.plugIndex > outElem.plugIndex) {
-					this.specialActions.push({
-						name: 'plugInd',
-						element: plug,
-						numbers: [plug.plugIndex - 1, plug.plugIndex]
-					});
+					// this.specialActions.push({
+					// 	name: 'plugInd',
+					// 	element: plug,
+					// 	numbers: [plug.plugIndex - 1, plug.plugIndex]
+					// });
 					plug.plugIndex--;
 				}
 			}
