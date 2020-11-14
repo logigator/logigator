@@ -69,13 +69,17 @@ function imageChangeHandling() {
 			}).toBlob(async blob => {
 				const formData = new FormData();
 				formData.append('image', blob);
-				await fetch('/my/account/profile/update-image', {
+				const resp = await fetch('/my/account/profile/update-image', {
 					method: 'POST',
-					redirect: 'follow',
 					body: formData
 				});
-				location.reload();
-			});
+				if (resp.ok) {
+					location.reload();
+				} else {
+					Bem.setState(Bem.element(node, 'save-error'), 'show', true);
+
+				}
+			}, 'image/png');
 		});
 	}
 

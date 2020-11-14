@@ -272,7 +272,8 @@
 		"CHANGE_IMAGE": {
 			"TITLE": "Change Image",
 			"FILE": "Drop your image here.",
-			"SAVE": "Save"
+			"SAVE": "Save",
+			"SAVE_ERROR": "An unknown error occurred."
 		},
 		"DELETE_ACCOUNT": {
 			"TITLE": "Delete Account",

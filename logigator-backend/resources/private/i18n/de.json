@@ -272,7 +272,8 @@
 		"CHANGE_IMAGE": {
 			"TITLE": "Bild ändern",
 			"FILE": "Ziehe dein Bild hierher.",
-			"SAVE": "Speichern"
+			"SAVE": "Speichern",
+			"SAVE_ERROR": "Ein unbekannter Fehler ist aufgetreten."
 		},
 		"DELETE_ACCOUNT": {
 			"TITLE": "Account löschen",

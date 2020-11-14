@@ -50,6 +50,19 @@
 		}
 	}
 
+	@include element('save-error') {
+		text-align: center;
+		display: none;
+
+		@include themify() {
+			color: themed('error');
+		}
+
+		@include state('show') {
+			display: block;
+		}
+	}
+
 	@include element('save') {
 		margin-top: 1rem;
 		padding: 0.7rem !important;
