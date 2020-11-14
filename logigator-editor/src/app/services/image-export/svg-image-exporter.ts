@@ -229,10 +229,20 @@ export class SvgImageExporter {
 			.led {
 				fill: #${this.themingService.getEditorColor('ledOff').toString(16)};
 			}
-			.seg {
+			.seg7 {
 				text-anchor: middle;
-				font-size: ${this.gridSize * 1.5}px;
-				font-family: DSEG7, Roboto, Arial, sans-serif;
+				font-size: ${this.gridSize * 1.35}px;
+				font-family: DSEG7, DSEG14, Roboto, Arial, sans-serif;
+			}
+			.seg14 {
+				text-anchor: middle;
+				font-size: ${this.gridSize * 1.35}px;
+				font-family: DSEG14, Roboto, Arial, sans-serif;
+			}
+			.sb {
+				text-anchor: start;
+				font-size: ${this.gridSize * 0.4}px;
+				font-family: DSEG7, DSEG14, Roboto, Arial, sans-serif;
 			}
 			.l-l {
 				text-anchor: start;

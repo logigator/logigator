@@ -23,7 +23,7 @@ export class SegmentDisplayGraphics extends PIXI.Graphics implements LGraphics, 
 	private simActiveState = [];
 	private shouldHaveActiveState = [];
 
-	private segmentText: PIXI.BitmapText;
+	private segmentText: PIXI.Container;
 	private segmentTextLength: number;
 
 	constructor(scale: number, element?: Element);
@@ -147,17 +147,32 @@ export class SegmentDisplayGraphics extends PIXI.Graphics implements LGraphics, 
 		}
 	}
 
-	private getSegments(): PIXI.BitmapText {
+	private getSegments(): PIXI.Container {
+		const container = new PIXI.Container();
 		this.segmentTextLength = this.getSegmentTextLength();
 		const seg = new PIXI.BitmapText(this.getSegmentString(0, this.segmentTextLength), {
-			fontName: 'DSEG14',
-			fontSize: environment.gridPixelWidth * 1.4,
+			fontName: this.element.options[0] === 1 ? 'DSEG14' : 'DSEG7',
+			fontSize: environment.gridPixelWidth * 1.35,
 			tint: this.themingService.getEditorColor('fontTint'),
 			align: 'center'
 		});
 		seg.anchor = new PIXI.Point(0.5, 0.5);
 		seg.position = new PIXI.Point(this._size.x / 2, this._size.y / 2);
-		return seg;
+
+		const base = new PIXI.BitmapText(this.element.options[0] === 0 ? '10' : (this.element.options[0] === 1 ? '16' : '8'), {
+			fontName: 'DSEG7',
+			fontSize: environment.gridPixelWidth * 0.4,
+			tint: this.themingService.getEditorColor('fontTint'),
+			align: 'center'
+		});
+		base.anchor = new PIXI.Point(0, 0.5);
+		base.position = new PIXI.Point(
+			seg.position.x + seg.width / 2 - (this.element.options[0] !== 2 ? environment.gridPixelWidth * 0.2 : 0),
+			seg.position.y + seg.height / 2
+		);
+		container.addChild(seg);
+		container.addChild(base);
+		return container;
 	}
 
 	private getSegmentString(num: number, length: number): string {
@@ -203,7 +218,7 @@ export class SegmentDisplayGraphics extends PIXI.Graphics implements LGraphics, 
 				numberToDisplay = numberToDisplay << 1;
 			}
 		}
-		this.segmentText.text = this.getSegmentString(numberToDisplay, this.segmentTextLength);
+		(this.segmentText.children[0] as PIXI.BitmapText).text = this.getSegmentString(numberToDisplay, this.segmentTextLength);
 	}
 
 	public setSimulationState(state: boolean[]) {
@@ -251,7 +266,7 @@ export class SegmentDisplayGraphics extends PIXI.Graphics implements LGraphics, 
 		this._labels = elemType.calcLabels(this.element);
 		this.clear();
 		this._size = Elements.calcPixelElementSize(this.element);
-		this.segmentText.destroy();
+		this.segmentText.destroy({children: true});
 		this.segmentText = this.getSegments();
 		this.drawComponent();
 	}

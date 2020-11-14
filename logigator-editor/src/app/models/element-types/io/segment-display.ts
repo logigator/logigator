@@ -61,7 +61,6 @@ export const segmentDisplay: ElementType = {
 				default:
 					return 2 + Math.ceil(Math.log10((2 ** inputs) + 1));
 			}
-
 		} else {
 			return 4;
 		}

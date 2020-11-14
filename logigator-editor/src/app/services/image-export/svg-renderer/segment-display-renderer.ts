@@ -74,11 +74,31 @@ export class SegmentDisplayRenderer extends BaseRenderer {
 		}
 
 		let str = '0';
-		const strLength = Math.ceil(Math.log10((2 ** this.element.numInputs) + 1));
+		let strLength;
+		switch (this.element.options[0]) {
+			case 1:
+				strLength = Math.ceil(this.element.numInputs / 4);
+				break;
+			case 2:
+				strLength = Math.ceil(this.element.numInputs / 3);
+				break;
+			default:
+				strLength = Math.ceil(Math.log10((2 ** this.element.numInputs) + 1));
+		}
 		while (str.length < strLength) str = '0' + str;
-		const segments = this.getLabelText(str, this.size.x / 2, this.size.y / 2 + this.gridSize / 2);
-		segments.setAttribute('class', 'seg');
+		const segments = this.getLabelText(str, this.size.x / 2, this.size.y / 2 + this.gridSize * 0.675);
+		segments.setAttribute('class', this.element.options[0] === 1 ? 'seg14' : 'seg7');
 		this._group.appendChild(segments);
+
+		if (this.quality >= RenderQuality.high) {
+			const base = this.getLabelText(this.element.options[0] === 0 ? '10' : (this.element.options[0] === 1 ? '16' : '8'),
+				this.size.x / 2 + this.gridSize * 0.43 + this.gridSize * 0.56 * (strLength - 1)
+				- (this.element.options[0] !== 2 ? this.gridSize * 0.2 : 0),
+				this.size.y / 2 + this.gridSize * 0.675 + this.gridSize * 0.2
+			);
+			base.setAttribute('class', 'sb');
+			this._group.appendChild(base);
+		}
 		return this._group;
 	}
 }
