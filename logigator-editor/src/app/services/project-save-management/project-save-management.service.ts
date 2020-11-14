@@ -401,7 +401,7 @@ export class ProjectSaveManagementService {
 		this.setCustomElements(resp.data.dependencies.map(dep => dep.dependency), 'share', true);
 		const elements = this.convertSavedElementsToElements(resp.data.elements, mappingsToApply);
 		const project = new Project(new ProjectState(elements), {
-			id: this.generateNextId(resp.data.type === 'comp' ? linkId : resp.data.id),
+			id: this.generateNextId(linkId),
 			source: 'share',
 			name: resp.data.name,
 			type: resp.data.type,
@@ -417,6 +417,12 @@ export class ProjectSaveManagementService {
 		this.setCustomElements(allComponents.data.dependencies, 'share', true);
 
 		return project;
+	}
+
+	public async cloneProjectShare(project: Project) {
+		const link = this._mappings.getKey(project.id);
+		const resp = await this.api.get<ProjectInfo>(`/project/clone/${link}`, {errorMessage: 'ERROR.PROJECTS.CLONE_SHARE'}).toPromise();
+		return await this.getProjectOrComponentUuid(resp.data.id, project.type);
 	}
 
 	/**

@@ -253,4 +253,14 @@ export class ProjectsService {
 		await this.projectSaveManagementService.getAllComponentsInfo();
 		this._userDefinedElementsReloadSubject.next();
 	}
+
+	public async cloneShare() {
+		if (this._mainProject.source !== 'share') return;
+		try {
+			const project = await this.projectSaveManagementService.cloneProjectShare(this._mainProject);
+			this.projectSaveManagementService.clearElements('share');
+			await this.openNewProject(project);
+			this.location.set('project' , this.projectSaveManagementService.getUuidForProject(project.id));
+		} catch {}
+	}
 }

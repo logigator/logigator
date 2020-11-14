@@ -75,7 +75,7 @@ export class FileDropdownComponent {
 	}
 
 	public cloneProject() {
-		// this.projects.cloneShare();
+		this.projects.cloneShare();
 		this.close();
 	}
 
@@ -83,7 +83,6 @@ export class FileDropdownComponent {
 		if (type === 'svg') {
 			this.fileSaverService.saveLocalFile(this.imageExportService.generateSVG(), 'svg', this.projects.currProject.name, 'Save Image As');
 		} else {
-			console.log('!');
 			this.fileSaverService.saveLocalFileBlob(await this.imageExportService.generateImage(type), type, this.projects.currProject.name, 'Save Image As');
 			this.close();
 		}
