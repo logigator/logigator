@@ -371,6 +371,10 @@
 		}
 	},
 	"INFO": {
+		"PROJECTS": {
+			"OPEN_SHARE": "Opened share: {{name}}",
+			"CLONE_SHARE": "Cloned share: {{name}}"
+		},
 		"EASTEREGGS": {
 			"GBOGH": "Go big or go home",
 			"BLD": "AHHH MY EYES, SO MANY LUMENS",

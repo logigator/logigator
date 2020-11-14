@@ -196,6 +196,7 @@ export class ProjectsService {
 				await this.openNewProject(project);
 			}
 			this.location.set('share', linkId);
+			this.errorHandling.showInfo('INFO.PROJECTS.OPEN_SHARE', {name: project.name});
 		} catch {
 			if (this.mainProject.source === 'share') {
 				this.newProject();
@@ -261,6 +262,7 @@ export class ProjectsService {
 			this.projectSaveManagementService.clearElements('share');
 			await this.openNewProject(project);
 			this.location.set('project' , this.projectSaveManagementService.getUuidForProject(project.id));
+			this.errorHandling.showInfo('INFO.PROJECTS.CLONE_SHARE', {name: project.name});
 		} catch {}
 	}
 }

@@ -22,6 +22,7 @@ import {Share} from '../../models/http/response/share';
 import {ComponentLocalFile, ProjectLocalFile} from '../../models/project-local-file';
 import {FileSaverService} from '../file-saver/file-saver.service';
 import {ShareDependencies} from '../../models/http/response/share-dependencies';
+import {ErrorHandlingService} from '../error-handling/error-handling.service';
 
 @Injectable({
 	providedIn: 'root'
@@ -43,7 +44,8 @@ export class ProjectSaveManagementService {
 		private elementProvider: ElementProviderService,
 		private location: LocationService,
 		private userService: UserService,
-		private fileSaverService: FileSaverService
+		private fileSaverService: FileSaverService,
+		private errorHandling: ErrorHandlingService
 	) {
 		this.userService.userInfo$.pipe(
 			skipUntil(this._loadedInitialProjects$)
@@ -75,6 +77,7 @@ export class ProjectSaveManagementService {
 				} else {
 					projects = [shared];
 				}
+				this.errorHandling.showInfo('INFO.PROJECTS.OPEN_SHARE', {name: shared.name});
 			} catch {
 				projects = [this.getEmptyProject()];
 				this.location.reset();
