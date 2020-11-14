@@ -528,7 +528,7 @@ export class ProjectSaveManagementService {
 	public async getAllComponentsInfo() {
 		if (this.userService.isLoggedIn) {
 			try {
-				const componentData = await this.api.get<ComponentInfo[]>(`/component`, {errorMessage: 'ERROR.PROJECT.GET_COMPS'}).toPromise();
+				const componentData = await this.api.get<ComponentInfo[]>(`/component`, {errorMessage: 'ERROR.PROJECTS.GET_COMPS'}).toPromise();
 				componentData.data.forEach(comp => this.generateNextId(comp.id));
 				this.setCustomElements(componentData.data, 'user');
 			} catch {
