@@ -1,7 +1,6 @@
 import {BaseRenderer} from './base-renderer';
 import {RenderQuality} from '../svg-image-exporter';
 import {TextData} from '../../../models/element-types/basic/text';
-import {environment} from '../../../../environments/environment';
 
 export class TextRenderer extends BaseRenderer {
 	render(): SVGGElement {
@@ -20,8 +19,9 @@ export class TextRenderer extends BaseRenderer {
 			const text = document.createElementNS(this.SVG_NS, 'text');
 			text.textContent = textParts[i];
 			text.setAttribute('class', 'text');
+			text.setAttribute('style', `font-size:${this.element.options[0] / 9.5 * this.gridSize}px;`);
 			text.setAttribute('x', this.gridSize + '');
-			text.setAttribute('y',  this.gridSize / 2 + this.gridSize * i + this.scaled(6) + '');
+			text.setAttribute('y',  this.gridSize * this.element.options[0] / 18 + this.gridSize * i * this.element.options[0] / 8 + '');
 			this._group.appendChild(text);
 		}
 

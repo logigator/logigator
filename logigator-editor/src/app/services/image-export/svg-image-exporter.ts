@@ -218,7 +218,7 @@ export class SvgImageExporter {
 			}
 			.text {
 				text-anchor: start;
-				font-size: ${this.gridSize}px;
+				text-align: center;
 			}
 			.led {
 				fill: #${this.themingService.getEditorColor('ledOff').toString(16)};
