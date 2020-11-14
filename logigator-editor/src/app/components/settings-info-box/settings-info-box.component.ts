@@ -173,6 +173,14 @@ export class SettingsInfoBoxComponent implements OnChanges, OnDestroy {
 		return (this.propertiesForm.get('options') as FormArray).controls;
 	}
 
+	public getOptionsDropdownValue(optionConfig: number | {value: number, label: string}): number {
+		return typeof optionConfig === 'number' ? optionConfig : optionConfig.value;
+	}
+
+	public getOptionsDropdownLabel(optionConfig: number | {value: number, label: string}): string {
+		return typeof optionConfig === 'number' ? optionConfig.toString() : optionConfig.label;
+	}
+
 	public focusInput() {
 		this.editorActions.disableShortcutListener();
 	}

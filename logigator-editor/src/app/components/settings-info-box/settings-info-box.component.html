@@ -41,7 +41,7 @@
 			       (blur)="resetOptionsValue(i)"
 			>
 			<select *ngIf="elementType.optionsConfig[i].allowedValues" [formControl]="optionsControls[i]">
-				<option *ngFor="let value of elementType.optionsConfig[i].allowedValues" [value]="value">{{value}}</option>
+				<option *ngFor="let config of elementType.optionsConfig[i].allowedValues" [value]="getOptionsDropdownValue(config)">{{getOptionsDropdownLabel(config) | translate}}</option>
 			</select>
 		</div>
 
