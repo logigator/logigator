@@ -6,8 +6,10 @@ import {Elements} from '../../../models/elements';
 import {getStaticDI} from '../../../models/get-di';
 import {ElementProviderService} from '../../element-provider/element-provider.service';
 import {environment} from '../../../../environments/environment';
+import {Project} from '../../../models/project';
 
 export abstract class BaseRenderer {
+
 	protected readonly elementProvider = getStaticDI(ElementProviderService);
 	protected readonly SVG_NS = 'http://www.w3.org/2000/svg';
 
@@ -18,11 +20,13 @@ export abstract class BaseRenderer {
 	protected _element: Element;
 	protected _gridSize: number;
 	protected _quality: RenderQuality;
+	protected _project: Project;
 
-	public constructor(element: Element, gridSize: number, quality: RenderQuality) {
+	public constructor(element: Element, gridSize: number, quality: RenderQuality, project: Project) {
 		this._element = element;
 		this._gridSize = gridSize;
 		this._quality = quality;
+		this._project = project;
 
 		this._elementType = this.elementProvider.getElementById(element.typeId);
 		this._group = document.createElementNS(this.SVG_NS, 'g');
@@ -74,5 +78,9 @@ export abstract class BaseRenderer {
 
 	get quality(): RenderQuality {
 		return this._quality;
+	}
+
+	get project(): Project {
+		return this._project;
 	}
 }

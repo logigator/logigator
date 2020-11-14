@@ -133,29 +133,29 @@ export class SvgImageExporter {
 		let group: SVGGElement;
 		switch (element.typeId) {
 			case ElementTypeId.TEXT:
-				group = new TextRenderer(element, this.gridSize, this.quality).render();
+				group = new TextRenderer(element, this.gridSize, this.quality, this.project).render();
 				break;
 			case ElementTypeId.LED:
-				group = new LedRenderer(element, this.gridSize, this.quality).render();
+				group = new LedRenderer(element, this.gridSize, this.quality, this.project).render();
 				break;
 			case ElementTypeId.LED_MATRIX:
-				group = new LedMatrixRenderer(element, this.gridSize, this.quality).render();
+				group = new LedMatrixRenderer(element, this.gridSize, this.quality, this.project).render();
 				break;
 			case ElementTypeId.BUTTON:
-				group = new ButtonRenderer(element, this.gridSize, this.quality).render();
+				group = new ButtonRenderer(element, this.gridSize, this.quality, this.project).render();
 				break;
 			case ElementTypeId.INPUT:
 			case ElementTypeId.OUTPUT:
-				group = new InputOutputRenderer(element, this.gridSize, this.quality).render();
+				group = new InputOutputRenderer(element, this.gridSize, this.quality, this.project).render();
 				break;
 			case ElementTypeId.LEVER:
-				group = new LeverRenderer(element, this.gridSize, this.quality).render();
+				group = new LeverRenderer(element, this.gridSize, this.quality, this.project).render();
 				break;
 			case ElementTypeId.SEGMENT_DISPLAY:
-				group = new SegmentDisplayRenderer(element, this.gridSize, this.quality).render();
+				group = new SegmentDisplayRenderer(element, this.gridSize, this.quality, this.project).render();
 				break;
 			default:
-				group = new DefaultRenderer(element, this.gridSize, this.quality).render();
+				group = new DefaultRenderer(element, this.gridSize, this.quality, this.project).render();
 		}
 		if (group) {
 			group.setAttribute('transform', `translate(${element.pos.x * this.gridSize + this.offset.x}, ${element.pos.y * this.gridSize + this.offset.y})`);
@@ -215,6 +215,10 @@ export class SvgImageExporter {
 			.s {
 				text-anchor: middle;
 				font-size: ${this.gridSize * 0.6}px;
+			}
+			.pi {
+				text-anchor: middle;
+				font-size: ${6 * this.gridSize / environment.gridPixelWidth}px;
 			}
 			.text {
 				text-anchor: start;
