@@ -138,8 +138,8 @@ export class SegmentDisplayGraphics extends PIXI.Graphics implements LGraphics, 
 	private getSegments(): PIXI.BitmapText {
 		this.segmentTextLength = Math.ceil(Math.log10((2 ** this.element.numInputs) + 1));
 		const seg = new PIXI.BitmapText(this.getSegmentString(0, this.segmentTextLength), {
-			fontName: 'Segment7',
-			fontSize: environment.gridPixelWidth * 2,
+			fontName: 'DSEG7',
+			fontSize: environment.gridPixelWidth * 1.5,
 			tint: this.themingService.getEditorColor('fontTint'),
 			align: 'center'
 		});
