@@ -313,7 +313,13 @@
 			},
 			"SEGMENT_DISPLAY": {
 				"NAME": "Segment Display",
-				"DESCRIPTION": "Displays a binary input as decimal number"
+				"DESCRIPTION": "Displays a binary input as decimal number",
+				"BASE_LABEL": "Base",
+				"BASE": {
+					"DEC": "Decimal",
+					"HEX": "Hexadecimal",
+					"OCT": "Octal"
+				}
 			},
 			"LED_MATRIX": {
 				"NAME": "LED Matrix",

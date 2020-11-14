@@ -37,7 +37,8 @@ export class SegmentDisplayGraphics extends PIXI.Graphics implements LGraphics, 
 			this.element = {
 				rotation: elementOrType.rotation,
 				numInputs: elementOrType.numInputs,
-				typeId: elementOrType.id
+				typeId: elementOrType.id,
+				options: elementOrType.options
 			} as any as Element;
 			this._labels = elementOrType.calcLabels();
 		} else {
@@ -135,11 +136,22 @@ export class SegmentDisplayGraphics extends PIXI.Graphics implements LGraphics, 
 		});
 	}
 
+	private getSegmentTextLength() {
+		switch (this.element.options[0]) {
+			case 1:
+				return Math.ceil(this.element.numInputs / 4);
+			case 2:
+				return Math.ceil(this.element.numInputs / 3);
+			default:
+				return Math.ceil(Math.log10((2 ** this.element.numInputs) + 1));
+		}
+	}
+
 	private getSegments(): PIXI.BitmapText {
-		this.segmentTextLength = Math.ceil(Math.log10((2 ** this.element.numInputs) + 1));
+		this.segmentTextLength = this.getSegmentTextLength();
 		const seg = new PIXI.BitmapText(this.getSegmentString(0, this.segmentTextLength), {
-			fontName: 'DSEG7',
-			fontSize: environment.gridPixelWidth * 1.5,
+			fontName: 'DSEG14',
+			fontSize: environment.gridPixelWidth * 1.4,
 			tint: this.themingService.getEditorColor('fontTint'),
 			align: 'center'
 		});
@@ -149,7 +161,17 @@ export class SegmentDisplayGraphics extends PIXI.Graphics implements LGraphics, 
 	}
 
 	private getSegmentString(num: number, length: number): string {
-		let str = num.toString();
+		let str;
+		switch (this.element.options[0]) {
+			case 1:
+				str = num.toString(16);
+				break;
+			case 2:
+				str = num.toString(8);
+				break;
+			default:
+				str = num.toString();
+		}
 		while (str.length < length) str = '0' + str;
 		return str;
 	}

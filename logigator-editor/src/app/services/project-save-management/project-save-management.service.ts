@@ -489,7 +489,7 @@ export class ProjectSaveManagementService {
 			if (elementType.hasPlugIndex && elem.n)
 				element.plugIndex = elem.n[0];
 			if (!elementType.hasPlugIndex)
-				element.options = elem.n;
+				element.options = elem.n ?? elementType.options;
 			if (elem.q)
 				element.endPos = new PIXI.Point(elem.q[0], elem.q[1]);
 

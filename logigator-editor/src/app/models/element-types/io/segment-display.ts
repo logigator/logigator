@@ -26,11 +26,42 @@ export const segmentDisplay: ElementType = {
 	minInputs: 1,
 	maxInputs: 16,
 
+	options: [0],
+	optionsConfig: [
+		{
+			name: 'ELEMENT_TYPE.IO.SEGMENT_DISPLAY.BASE_LABEL',
+			allowedValues: [
+				{
+					label: 'ELEMENT_TYPE.IO.SEGMENT_DISPLAY.BASE.DEC',
+					value: 0
+				},
+				{
+					label: 'ELEMENT_TYPE.IO.SEGMENT_DISPLAY.BASE.HEX',
+					value: 1
+				},
+				{
+					label: 'ELEMENT_TYPE.IO.SEGMENT_DISPLAY.BASE.OCT',
+					value: 2
+				}
+			]
+		}
+	],
+
 	width(element?) {
 		const inputs = element ? element.numInputs : this.numInputs;
 		const rotation = element ? element.rotation : this.rotation;
+		const options = element ? element.options : this.options;
+
 		if (rotation % 2 === 0) {
-			return 2 + Math.ceil(Math.log10((2 ** inputs) + 1));
+			switch (options[0]) {
+				case 1:
+					return 2 + Math.ceil(inputs / 4);
+				case 2:
+					return 2 + Math.ceil(inputs / 3);
+				default:
+					return 2 + Math.ceil(Math.log10((2 ** inputs) + 1));
+			}
+
 		} else {
 			return 4;
 		}

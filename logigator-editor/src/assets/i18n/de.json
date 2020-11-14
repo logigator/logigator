@@ -262,7 +262,13 @@
 			"TEXT": {
 				"NAME": "Text",
 				"DESCRIPTION": "Text, der auf der Arbeitsfläche platziert werden kann.",
-				"TEXT_SIZE": "Schriftgröße"
+				"TEXT_SIZE": "Schriftgröße",
+				"BASE_LABEL": "Basis",
+				"BASE": {
+					"DEC": "Dezimal",
+					"HEX": "Hexadezimal",
+					"OCT": "Oktal"
+				}
 			},
 			"TUNNEL": {
 				"NAME": "Tunnel",
