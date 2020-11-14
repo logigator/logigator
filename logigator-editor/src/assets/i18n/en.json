@@ -374,7 +374,13 @@
 	"INFO": {
 		"PROJECTS": {
 			"OPEN_SHARE": "Opened share: {{name}}",
-			"CLONE_SHARE": "Cloned share: {{name}}"
+			"CLONE_SHARE": "Cloned share: {{name}}",
+			"OPEN": "Opened project: {{name}}",
+			"OPEN_FILE": "Opened project from file: {{name}}",
+			"SAVE": "Saved project or Component: {{name}}",
+			"EXPORT_FILE": "Project exported as file: {{name}}",
+			"CREATE_COMP": "Created component: {{name}}",
+			"RELOADED_ELEMENTS": "Reloaded custom elements."
 		},
 		"EASTEREGGS": {
 			"GBOGH": "Go big or go home",

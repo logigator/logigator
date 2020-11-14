@@ -57,6 +57,7 @@ export class ProjectSaveManagementService {
 		if (this.location.isProject) {
 			try {
 				projects = [await this.getProjectOrComponentUuid(this.location.projectUuid, 'project')];
+				this.errorHandling.showInfo('INFO.PROJECTS.OPEN', {name: projects[0].name});
 			} catch {
 				projects = [this.getEmptyProject()];
 				this.location.reset();
@@ -65,6 +66,7 @@ export class ProjectSaveManagementService {
 			try {
 				const comp = await this.getProjectOrComponentUuid(this.location.componentUuid, 'comp');
 				projects = [this.getEmptyProject(), comp];
+				this.errorHandling.showInfo('INFO.PROJECTS.OPEN', {name: comp.name});
 			} catch {
 				projects = [this.getEmptyProject()];
 				this.location.reset();
@@ -273,6 +275,7 @@ export class ProjectSaveManagementService {
 		project.saveDirty = false;
 		project.hash = resp.data.elementsFile.hash;
 		this._projectsCache.set(project.id, project);
+		this.errorHandling.showInfo('INFO.PROJECTS.SAVE', {name: project.name});
 	}
 
 	public async saveProject(project: Project): Promise<void> {
@@ -300,6 +303,7 @@ export class ProjectSaveManagementService {
 		project.saveDirty = false;
 		project.hash = resp.data.elementsFile.hash;
 		this._projectsCache.set(project.id, project);
+		this.errorHandling.showInfo('INFO.PROJECTS.SAVE', {name: project.name});
 	}
 
 	public async exportToFile(project: Project, name?: string) {

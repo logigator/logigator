@@ -128,6 +128,7 @@ export class ProjectsService {
 			const component = await this.projectSaveManagementService.createComponent(name, symbol, description);
 			this._projects.push(component);
 			this._projectOpenedSubject.next(component.id);
+			this.errorHandling.showInfo('INFO.PROJECTS.CREATE_COMP', {name});
 		} catch {}
 	}
 
@@ -137,6 +138,7 @@ export class ProjectsService {
 			const project = await this.projectSaveManagementService.getProjectOrComponentUuid(id, 'project');
 			await this.openNewProject(project);
 			this.location.set('project', id);
+			this.errorHandling.showInfo('INFO.PROJECTS.OPEN', {name: project.name});
 		} catch {}
 	}
 
@@ -165,11 +167,13 @@ export class ProjectsService {
 			}
 			this._projects = [this._projects[0]];
 			this.location.set('project', newId);
+			this.errorHandling.showInfo('INFO.PROJECTS.SAVE', {name});
 		} catch {}
 	}
 
 	public async exportToFile(name?: string) {
-		this.projectSaveManagementService.exportToFile(this._mainProject, name);
+		await this.projectSaveManagementService.exportToFile(this._mainProject, name);
+		this.errorHandling.showInfo('INFO.PROJECTS.EXPORT_FILE', {name});
 	}
 
 	public async openFile(content: string) {
@@ -179,6 +183,7 @@ export class ProjectsService {
 			const project = this.projectSaveManagementService.openFile(content);
 			await this.openNewProject(project);
 			this.location.reset();
+			this.errorHandling.showInfo('INFO.PROJECTS.OPEN_FILE', {name: project.name});
 		} catch {
 			this.errorHandling.showErrorMessage('ERROR.PROJECTS.INVALID_FILE');
 		}
@@ -253,6 +258,7 @@ export class ProjectsService {
 	public async reloadUserElements() {
 		await this.projectSaveManagementService.getAllComponentsInfo();
 		this._userDefinedElementsReloadSubject.next();
+		this.errorHandling.showInfo('INFO.PROJECTS.RELOADED_ELEMENTS');
 	}
 
 	public async cloneShare() {
