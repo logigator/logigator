@@ -247,7 +247,7 @@ export class ProjectsService {
 		const projects = this._projects.filter(p => p !== project);
 		projects.splice(index, 0, project);
 		this._projects = projects;
-  }
+	}
 
 	public async reloadUserElements() {
 		await this.projectSaveManagementService.getAllComponentsInfo();
