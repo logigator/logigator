@@ -81,10 +81,14 @@ export class FileDropdownComponent {
 
 	public async screenshot(type: 'jpeg' | 'png' | 'svg') {
 		if (type === 'svg') {
-			this.fileSaverService.saveLocalFile(this.imageExportService.generateSVG(), 'svg', this.projects.currProject.name, 'Save Image As');
+			this.fileSaverService.saveLocalFile(
+				this.imageExportService.generateSVG(this.projects.currProject), 'svg', this.projects.currProject.name, 'Save Image As'
+			);
 		} else {
-			this.fileSaverService.saveLocalFileBlob(await this.imageExportService.generateImage(type), type, this.projects.currProject.name, 'Save Image As');
-			this.close();
+			this.fileSaverService.saveLocalFileBlob(
+				await this.imageExportService.generateImage(this.projects.currProject, type), type, this.projects.currProject.name, 'Save Image As'
+			);
 		}
+		this.close();
 	}
 }

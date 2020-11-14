@@ -2,22 +2,21 @@ import {Injectable, Optional} from '@angular/core';
 import {ProjectsService} from '../projects/projects.service';
 import {SvgImageExporter} from './svg-image-exporter';
 import * as PIXI from 'pixi.js';
+import {Project} from '../../models/project';
 
 @Injectable({
 	providedIn: 'root'
 })
 export class ImageExportService {
 
-	constructor(
-		private projectsService: ProjectsService
-	) { }
+	constructor() {}
 
-	public generateImage(type: 'jpeg' | 'png', options?: {size?: PIXI.Point; theme?: 'dark' | 'light'}): Promise<Blob> {
-		return this.getBlobImage(new SvgImageExporter(this.projectsService.currProject, new PIXI.Point(1024, 1024), options?.theme), type);
+	public generateImage(project: Project, type: 'jpeg' | 'png', options?: {size?: PIXI.Point; theme?: 'dark' | 'light'}): Promise<Blob> {
+		return this.getBlobImage(new SvgImageExporter(project, new PIXI.Point(1024, 1024), options?.theme), type);
 	}
 
-	public generateSVG(options?: {size?: PIXI.Point; theme?: 'dark' | 'light'}): string {
-		const exporter = new SvgImageExporter(this.projectsService.currProject, new PIXI.Point(1024, 1024), options?.theme);
+	public generateSVG(project: Project, options?: {size?: PIXI.Point; theme?: 'dark' | 'light'}): string {
+		const exporter = new SvgImageExporter(project, new PIXI.Point(1024, 1024), options?.theme);
 		return exporter.serializeSVG();
 	}
 
