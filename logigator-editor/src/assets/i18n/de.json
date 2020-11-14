@@ -261,7 +261,8 @@
 			},
 			"TEXT": {
 				"NAME": "Text",
-				"DESCRIPTION": "Text, der auf der Arbeitsfläche platziert werden kann."
+				"DESCRIPTION": "Text, der auf der Arbeitsfläche platziert werden kann.",
+				"TEXT_SIZE": "Schriftgröße"
 			},
 			"TUNNEL": {
 				"NAME": "Tunnel",

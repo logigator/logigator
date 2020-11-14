@@ -15,6 +15,8 @@ export class TextGraphics extends PIXI.Container implements LGraphics, Component
 	private _texts: PIXI.BitmapText[] = [];
 	private _point: PIXI.Graphics;
 
+	private _selected = false;
+
 	constructor(scale: number, element: Element) {
 		super();
 		this.element = element;
@@ -33,12 +35,12 @@ export class TextGraphics extends PIXI.Container implements LGraphics, Component
 		for (let i = 0; i < textParts.length; i++) {
 			this._texts[i] = new PIXI.BitmapText(textParts[i], {
 				fontName: 'Roboto',
-				fontSize: environment.gridPixelWidth + 6,
-				tint: this.themingService.getEditorColor('fontTint')
+				fontSize: environment.gridPixelWidth * this.element.options[0] / 8,
+				tint: this._selected ? this.themingService.getEditorColor('selectTint') : this.themingService.getEditorColor('fontTint')
 			});
 			this._texts[i].anchor = new PIXI.Point(0, 0.5);
 			this._texts[i].x = environment.gridPixelWidth;
-			this._texts[i].y = environment.gridPixelWidth / 2 + environment.gridPixelWidth * i;
+			this._texts[i].y = environment.gridPixelWidth / 2 + environment.gridPixelWidth * this.element.options[0] / 8 * i;
 			this.addChild(this._texts[i]);
 		}
 	}
@@ -72,6 +74,7 @@ export class TextGraphics extends PIXI.Container implements LGraphics, Component
 		for (const t of this._texts) {
 			t.tint = tint;
 		}
+		this._selected = selected;
 	}
 
 	setSimulationState(state: boolean[]) {

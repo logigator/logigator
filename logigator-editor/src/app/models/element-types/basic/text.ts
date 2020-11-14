@@ -33,6 +33,16 @@ export const text: ElementType = {
 	width: () => undefined,
 	height: () => undefined,
 
+	options: [8],
+
+	optionsConfig: [
+		{
+			name: 'ELEMENT_TYPE.BASIC.TEXT.TEXT_SIZE',
+			min: 1,
+			max: 64
+		}
+	],
+
 	edit: async (typeId: number, id: number, projectsSer: ProjectsService) => {
 		const oText = projectsSer.currProject.currState.getElementById(id).data as TextData;
 		const nText = await getStaticDI(PopupService).showPopup(TextComponent, 'POPUP.TEXT.TITLE', false, oText);

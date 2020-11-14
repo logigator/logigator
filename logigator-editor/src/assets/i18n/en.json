@@ -261,7 +261,8 @@
 			},
 			"TEXT": {
 				"NAME": "Text",
-				"DESCRIPTION": "Text which you can place on the canvas."
+				"DESCRIPTION": "Text which you can place on the canvas.",
+				"TEXT_SIZE": "Fontsize"
 			},
 			"TUNNEL": {
 				"NAME": "Tunnel",
