@@ -1,4 +1,4 @@
-import {Component, Input} from '@angular/core';
+import {Component, EventEmitter, Input, Output} from '@angular/core';
 import {ElementType} from '../../models/element-types/element-type';
 import {WorkMode} from '../../models/work-modes';
 import {WorkModeService} from '../../services/work-mode/work-mode.service';
@@ -20,6 +20,12 @@ export class ConstructionBoxCategoryComponent {
 
 	@Input()
 	public categoryName: string;
+
+	@Input()
+	public showReloadButton: boolean;
+
+	@Output()
+	public reloadElements = new EventEmitter<void>();
 
 	@Input()
 	public searchText: string;
@@ -71,5 +77,9 @@ export class ConstructionBoxCategoryComponent {
 
 	public get currentSelectedComponent(): number {
 		return this.workModeService.currentComponentToBuild;
+	}
+
+	public reloadButtonClick() {
+		this.reloadElements.emit();
 	}
 }

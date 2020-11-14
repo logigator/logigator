@@ -122,7 +122,7 @@ export class ProjectSaveManagementService {
 			const sharedProject = new Project(new ProjectState(compElements), {
 				type: 'comp',
 				name: sharedComp.data.name,
-				source: 'server',
+				source: 'share',
 				id
 			});
 			this._projectsCache.set(sharedProject.id, sharedProject);
@@ -401,12 +401,15 @@ export class ProjectSaveManagementService {
 		this.setCustomElements(resp.data.dependencies.map(dep => dep.dependency), 'share', true);
 		const elements = this.convertSavedElementsToElements(resp.data.elements, mappingsToApply);
 		const project = new Project(new ProjectState(elements), {
-			id: this.generateNextId(resp.data.id),
+			id: this.generateNextId(resp.data.type === 'comp' ? linkId : resp.data.id),
 			source: 'share',
 			name: resp.data.name,
 			type: resp.data.type,
 		});
 		this._projectsCache.set(project.id, project);
+		if (resp.data.type === 'comp') {
+			this.setCustomElements([{...resp.data, link: linkId}], 'share', true);
+		}
 
 		const allComponents = await this.api.get<ShareDependencies>(`/share/dependencies/${linkId}`,
 			{errorMessage: 'ERROR.PROJECTS.OPEN_SHARE'}).toPromise();
@@ -522,7 +525,7 @@ export class ProjectSaveManagementService {
 		};
 	}
 
-	private async getAllComponentsInfo() {
+	public async getAllComponentsInfo() {
 		if (this.userService.isLoggedIn) {
 			try {
 				const componentData = await this.api.get<ComponentInfo[]>(`/component`, {errorMessage: 'ERROR.PROJECT.GET_COMPS'}).toPromise();

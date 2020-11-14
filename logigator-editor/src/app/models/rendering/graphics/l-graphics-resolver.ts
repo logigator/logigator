@@ -13,6 +13,7 @@ import {LedGraphics} from './led-graphics';
 import {SegmentDisplayGraphics} from './segment-display-graphics';
 import {LedMatrixGraphics} from './led-matrix-graphics';
 import {RomGraphics} from './rom-graphics';
+import {Project} from '../../project';
 
 export abstract class LGraphicsResolver {
 
@@ -20,7 +21,7 @@ export abstract class LGraphicsResolver {
 		return getStaticDI(ElementProviderService);
 	}
 
-	public static getLGraphicsFromElement(scale: number, element: Element, parentProjectIdentifier?: string): LGraphics {
+	public static getLGraphicsFromElement(scale: number, element: Element, project?: Project, parentProjectIdentifier?: string): LGraphics {
 		switch (element.typeId) {
 			case ElementTypeId.WIRE:
 				return new WireGraphics(scale, element);
@@ -32,7 +33,7 @@ export abstract class LGraphicsResolver {
 				return new TextGraphics(scale, element);
 			case ElementTypeId.INPUT:
 			case ElementTypeId.OUTPUT:
-				return new InputOutputGraphics(scale, element);
+				return new InputOutputGraphics(scale, element, project);
 			case ElementTypeId.LED:
 				return new LedGraphics(scale, element);
 			case ElementTypeId.SEGMENT_DISPLAY:

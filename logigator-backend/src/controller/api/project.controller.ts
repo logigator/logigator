@@ -29,7 +29,6 @@ import {Component} from '../../database/entities/component.entity';
 import {ComponentDependencyRepository} from '../../database/repositories/component-dependency.repository';
 import {Project} from '../../database/entities/project.entity';
 import {v4 as uuid} from 'uuid';
-import {ImageService} from '../../services/image.service';
 
 @JsonController('/api/project')
 @UseInterceptor(ApiInterceptor)
@@ -39,14 +38,8 @@ export class ProjectController {
 		@InjectRepository() private projectRepo: ProjectRepository,
 		@InjectRepository() private componentRepo: ComponentRepository,
 		@InjectRepository() private userRepo: UserRepository,
-		@InjectRepository() private projectDepRepo: ProjectDependencyRepository,
-		private imageService: ImageService
+		@InjectRepository() private projectDepRepo: ProjectDependencyRepository
 	) {}
-
-	@Get('/render')
-	public async test() {
-		return this.imageService.generateImage();
-	}
 
 	@Get('/')
 	@UseBefore(CheckAuthenticatedApiMiddleware)
@@ -113,7 +106,7 @@ export class ProjectController {
 				.filter(x => !depSet.has(x.dependency.id))
 		);
 
-		project.dependencies = Promise.resolve(deps);
+		await this.projectDepRepo.save(deps);
 		return this.projectRepo.save(project);
 	}
 

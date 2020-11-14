@@ -208,8 +208,6 @@ export abstract class View extends PIXI.Container {
 	protected placeWireOnView(element: Element) {
 		const graphics = LGraphicsResolver.getLGraphicsFromElement(this.zoomPan.currentScale, element);
 		graphics.position = Grid.getLocalChunkPixelPosForGridPosWire(element.pos);
-		graphics.name = element.id.toString();
-
 		this.addToCorrectChunk(graphics, element.pos);
 		this.allElements.set(element.id, graphics);
 	}
@@ -257,6 +255,7 @@ export abstract class View extends PIXI.Container {
 
 	public applyActionsToView(actions: Action[]) {
 		// console.log('incoming actions');
+		// console.log(actions);
 		// Actions.printActions(actions);
 		if (!actions)
 			return;
@@ -290,6 +289,7 @@ export abstract class View extends PIXI.Container {
 			case 'numInpt':
 			case 'ediData':
 			case 'compOpt':
+			case 'plugInd':
 				this.updateComponent(action);
 				break;
 		}

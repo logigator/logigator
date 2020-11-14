@@ -26,6 +26,8 @@
 			categoryName="CONST_BOX.CATEGORIES.USER"
 			[components]="userDefinedComponents"
 			[searchText]="searchText"
+			showReloadButton="true"
+			(reloadElements)="reloadUserElements()"
 		></app-construction-box-category>
 		<app-construction-box-category
 			categoryName="CONST_BOX.CATEGORIES.LOCAL"

@@ -9,7 +9,7 @@ export const input: ElementType = {
 
 	category: 'plug',
 
-	symbol: 'in',
+	symbol: 'IN',
 
 	showSettings: true,
 	showSettingsForType: true,

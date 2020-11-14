@@ -8,6 +8,7 @@ import {ElementProviderService} from '../../../services/element-provider/element
 import {environment} from '../../../../environments/environment';
 import {ElementTypeId} from '../../element-types/element-type-ids';
 import {FontWidthService} from '../../../services/font-width/font-width.service';
+import {Project} from '../../project';
 
 export class InputOutputGraphics extends PIXI.Graphics implements LGraphics, ComponentUpdatable {
 
@@ -18,14 +19,15 @@ export class InputOutputGraphics extends PIXI.Graphics implements LGraphics, Com
 	private elemProvService = getStaticDI(ElementProviderService);
 
 	private _symbol: string;
-	private _text: PIXI.BitmapText;
 
 	private simActiveState: boolean;
 	private shouldHaveActiveState: boolean;
 
-	constructor(scale: number, element?: Element);
+	private project: Project;
+
+	constructor(scale: number, element: Element, project: Project);
 	constructor(scale: number, elementType: ElementType);
-	constructor(scale: number, elementOrType: Element | ElementType) {
+	constructor(scale: number, elementOrType: Element | ElementType, project?: Project) {
 		super();
 		this.interactiveChildren = false;
 		this.sortableChildren = false;
@@ -41,20 +43,10 @@ export class InputOutputGraphics extends PIXI.Graphics implements LGraphics, Com
 		} else {
 			this.element = elementOrType;
 			this._symbol = this.element.data as string || this.elemProvService.getElementById(this.element.typeId).symbol;
+			this.project = project;
 		}
 
-		this._text = new PIXI.BitmapText(this._symbol, {
-			fontName: 'Roboto',
-			fontSize: this.calcFontSize(),
-			tint: this.themingService.getEditorColor('fontTint')
-		});
-
-		this._text.anchor = 0.5;
-		this._text.position.x = environment.gridPixelWidth / 2;
-		this._text.position.y = environment.gridPixelWidth / 2;
-
 		this.drawComponent();
-		this.addChild(this._text);
 	}
 
 	private drawComponent() {
@@ -88,6 +80,40 @@ export class InputOutputGraphics extends PIXI.Graphics implements LGraphics, Com
 		this.beginFill(this.themingService.getEditorColor('background'));
 		this.moveTo(0, 0);
 		this.drawRect(0, 0, environment.gridPixelWidth, environment.gridPixelWidth);
+
+		this.removeChildren(0);
+
+		const symbol = new PIXI.BitmapText(this._symbol, {
+			fontName: 'Roboto',
+			fontSize: this.calcFontSize(),
+			tint: this.themingService.getEditorColor('fontTint')
+		});
+		symbol.anchor = 0.5;
+		symbol.position.x = environment.gridPixelWidth / 2;
+		symbol.position.y = environment.gridPixelWidth / 2 - 2;
+
+		if (this.project) {
+			const plugIndex = new PIXI.BitmapText(this.getPlugIndex(), {
+				fontName: 'Roboto',
+				fontSize: 6,
+				tint: this.themingService.getEditorColor('fontTint')
+			});
+			plugIndex.position.x = environment.gridPixelWidth / 2;
+			plugIndex.position.y = environment.gridPixelWidth;
+			plugIndex.anchor = new PIXI.Point(0.5, 1);
+			this.addChild(plugIndex);
+		}
+
+		this.addChild(symbol);
+
+	}
+
+	private getPlugIndex(): string {
+		if (this.element.typeId === ElementTypeId.INPUT) {
+			return (this.element.plugIndex + 1) + '';
+		} else {
+			return (this.element.plugIndex - this.project.numInputs + 1) + '';
+		}
 	}
 
 	private calcFontSize(): number {
@@ -135,18 +161,6 @@ export class InputOutputGraphics extends PIXI.Graphics implements LGraphics, Com
 		this._scale = scale;
 		this._symbol = this.element.data as string || this.elemProvService.getElementById(this.element.typeId).symbol;
 		this.clear();
-
-		this._text = new PIXI.BitmapText(this._symbol, {
-			fontName: 'Roboto',
-			fontSize: this.calcFontSize(),
-			tint: this.themingService.getEditorColor('fontTint')
-		});
-		this._text.anchor = 0.5;
-		this._text.position.x = environment.gridPixelWidth / 2;
-		this._text.position.y = environment.gridPixelWidth / 2;
-
-		this.removeChildren(0);
-		this.addChild(this._text);
 		this.drawComponent();
 	}
 

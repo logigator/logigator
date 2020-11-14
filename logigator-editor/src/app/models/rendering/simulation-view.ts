@@ -71,9 +71,8 @@ export class SimulationView extends View {
 	}
 
 	public placeComponentOnView(element: Element) {
-		const sprite = LGraphicsResolver.getLGraphicsFromElement(this.zoomPan.currentScale, element, this.parentProjectIdentifier);
+		const sprite = LGraphicsResolver.getLGraphicsFromElement(this.zoomPan.currentScale, element, this.project, this.parentProjectIdentifier);
 		sprite.position = Grid.getLocalChunkPixelPosForGridPos(element.pos);
-		sprite.name = element.id.toString();
 		this.addToCorrectChunk(sprite, element.pos);
 		this.allElements.set(element.id, sprite);
 		if (this._elementProviderService.isCustomElement(element.typeId) || this._elementProviderService.canInspectWithPopup(element.typeId)) {

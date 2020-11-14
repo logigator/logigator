@@ -30,6 +30,7 @@ export class ProjectsService {
 	private _projectOpenedSubject = new ReplaySubject<number>();
 	private _projectClosedSubject = new Subject<number>();
 	private _projectSwitchSubject = new Subject<number>();
+	private _userDefinedElementsReloadSubject = new Subject<void>();
 
 	constructor(
 		private projectSaveManagementService: ProjectSaveManagementService,
@@ -77,6 +78,11 @@ export class ProjectsService {
 
 	public get onProjectSwitch$(): Observable<number> {
 		return this._projectSwitchSubject.asObservable();
+
+	}
+
+	public get onUserDefinedElementsReload$(): Observable<void> {
+		return this._userDefinedElementsReloadSubject.asObservable();
 	}
 
 	public switchToProject(id: number) {
@@ -103,12 +109,12 @@ export class ProjectsService {
 	}
 
 	private async openNewProject(project: Project) {
-		this._projects.unshift(project);
-		this._projectOpenedSubject.next(project.id);
 		this._mainProject = project;
-		for (let i = 1; i < this._projects.length; i++) {
-			this.closeProject(this._projects[i].id);
+		for (const p of this._projects) {
+			await this.closeProject(p.id);
 		}
+		this._projects.push(project);
+		this._projectOpenedSubject.next(project.id);
 	}
 
 	public async saveAllProjects() {
@@ -182,7 +188,13 @@ export class ProjectsService {
 		this.projectSaveManagementService.clearElements('share');
 		try {
 			const project = await this.projectSaveManagementService.getProjectShare(linkId);
-			await this.openNewProject(project);
+			if (project.type === 'comp') {
+				await this.openNewProject(this.projectSaveManagementService.getEmptyProject());
+				this._projects.push(project);
+				this._projectOpenedSubject.next(project.id);
+			} else {
+				await this.openNewProject(project);
+			}
 			this.location.set('share', linkId);
 		} catch {
 			if (this.mainProject.source === 'share') {
@@ -230,9 +242,15 @@ export class ProjectsService {
 		return false;
 	}
 
+
 	public moveProjectToIndex(project: Project, index: number) {
 		const projects = this._projects.filter(p => p !== project);
 		projects.splice(index, 0, project);
 		this._projects = projects;
+  }
+
+	public async reloadUserElements() {
+		await this.projectSaveManagementService.getAllComponentsInfo();
+		this._userDefinedElementsReloadSubject.next();
 	}
 }

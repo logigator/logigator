@@ -69,6 +69,10 @@ export class WorkAreaComponent extends WorkArea implements OnInit, OnDestroy {
 				takeUntil(this._destroySubject)
 			).subscribe(id => this.onProjectSwitch(id));
 
+			this.projectsService.onUserDefinedElementsReload$.pipe(
+				takeUntil(this._destroySubject)
+			).subscribe(() => this.onUserElementsReload());
+
 			this.editorInteraction.subscribeEditorAction(EditorAction.ZOOM_IN, EditorAction.ZOOM_OUT, EditorAction.ZOOM_100).pipe(
 				takeUntil(this._destroySubject)
 			).subscribe(action => this.activeView.onZoom(action));
@@ -165,21 +169,17 @@ export class WorkAreaComponent extends WorkArea implements OnInit, OnDestroy {
 
 	private onSimulationModeChanged(simulation: boolean) {
 		if (simulation) {
-			this.projectsService.allProjects.forEach(proj => {
-				if (proj.type === 'project') {
-					this._activeView = new SimulationView(
-						proj,
-						this._pixiCanvasContainer.nativeElement,
-						() => this.ticker.singleFrame('0'),
-						this.requestInspectElementInSim,
-						'0',
-						[],
-						[],
-						this._activeView.zoomPan.zoomPanData
-					);
-					this.ticker.singleFrame('0');
-				}
-			});
+			this._activeView = new SimulationView(
+				this.projectsService.mainProject,
+				this._pixiCanvasContainer.nativeElement,
+				() => this.ticker.singleFrame('0'),
+				this.requestInspectElementInSim,
+				'0',
+				[],
+				[],
+				this._activeView.zoomPan.zoomPanData
+			);
+			this.ticker.singleFrame('0');
 		} else {
 			if (!this._activeView) return;
 			const editorView = this._allViews.get(this._activeView.project.id);
@@ -225,6 +225,12 @@ export class WorkAreaComponent extends WorkArea implements OnInit, OnDestroy {
 		this.ticker.singleFrame('0');
 	}
 
+	private onUserElementsReload() {
+		for (const [id, view] of this._allViews) {
+			view.updateSymbolUserDefinedElements();
+		}
+	}
+
 	public tabCloseClicked(id: number, event: MouseEvent) {
 		event.stopPropagation();
 		if (this._allViews.size <= 1) return;
@@ -234,7 +240,7 @@ export class WorkAreaComponent extends WorkArea implements OnInit, OnDestroy {
 	public onProjectClose(id: number) {
 		const toClose = this._allViews.get(id);
 		this._allViews.delete(id);
-		if (toClose === this._activeView) {
+		if (toClose === this._activeView && this.allProjects.length > 0) {
 			this.switchToProject(this.allProjects[0].id);
 		}
 		toClose.destroy();
