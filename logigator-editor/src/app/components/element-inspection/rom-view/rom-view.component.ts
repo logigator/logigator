@@ -74,7 +74,7 @@ export class RomViewComponent extends ElementInspectionComp implements OnInit, O
 		} else {
 			this.addSelection(pos, endPos);
 		}
-		this.hexInput.nativeElement.firstElementChild.scrollIntoView();
+		this.hexInput.nativeElement.firstElementChild?.scrollIntoView();
 	}
 
 	private addSelection(pos: number, endPos: number) {
