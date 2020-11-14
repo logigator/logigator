@@ -25,13 +25,10 @@ export class ToolbarItemTooltipComponent implements AfterViewInit {
 		const hostElementPos = this.hostElement.nativeElement.getBoundingClientRect();
 
 		this.renderer2.setStyle(this.tooltipRef.nativeElement, 'top', hostElementPos.top + scrollY + hostElementHeight + 4 + 'px');
+		this.renderer2.setStyle(this.tooltipRef.nativeElement, 'z-index', '100');
 
 		let left = hostElementPos.left + hostElementWidth / 2 - this.tooltipRef.nativeElement.offsetWidth / 2;
 		if (left < 0) left = 0;
-		this.renderer2.setStyle(
-			this.tooltipRef.nativeElement,
-			'left',
-			left + 'px'
-		);
+		this.renderer2.setStyle(this.tooltipRef.nativeElement, 'left', left + 'px');
 	}
 }
