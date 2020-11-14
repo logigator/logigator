@@ -229,4 +229,10 @@ export class ProjectsService {
 		}
 		return false;
 	}
+
+	public moveProjectToIndex(project: Project, index: number) {
+		const projects = this._projects.filter(p => p !== project);
+		projects.splice(index, 0, project);
+		this._projects = projects;
+	}
 }

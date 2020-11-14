@@ -1,4 +1,4 @@
-import {Component, ElementRef, NgZone, OnDestroy, OnInit, Renderer2, ViewChild} from '@angular/core';
+import {ChangeDetectorRef, Component, ElementRef, NgZone, OnDestroy, OnInit, Renderer2, ViewChild} from '@angular/core';
 import {EditorView} from '../../models/rendering/editor-view';
 import {ProjectsService} from '../../services/projects/projects.service';
 import {Project} from '../../models/project';
@@ -21,8 +21,9 @@ import {fromEvent} from 'rxjs';
 export class WorkAreaComponent extends WorkArea implements OnInit, OnDestroy {
 
 	private _allViews: Map<number, EditorView>;
+
 	private currentlyDragging: Project;
-	private children: {
+	private tabChildren: {
 		element: HTMLElement,
 		pos: number
 	}[];
@@ -41,7 +42,8 @@ export class WorkAreaComponent extends WorkArea implements OnInit, OnDestroy {
 		private projectsService: ProjectsService,
 		private workMode: WorkModeService,
 		private editorInteraction: EditorInteractionService,
-		private elementProvider: ElementProviderService
+		private elementProvider: ElementProviderService,
+		private cdr: ChangeDetectorRef
 	) {
 		super();
 	}
@@ -92,14 +94,15 @@ export class WorkAreaComponent extends WorkArea implements OnInit, OnDestroy {
 		this.dragStart = event.clientX;
 		this.dragElement = tab;
 		this.dragElement.style.transitionDuration = '0s';
-		this.children = [];
+		this.tabChildren = [];
 		for (const child of this._tabsElement.nativeElement.children as unknown as HTMLElement[]) {
 			if (child === this.dragElement)
 				continue;
-			this.children.push({
+			this.tabChildren.push({
 				element: child,
 				pos: child.offsetLeft
 			});
+			child.style.transitionDuration = '0.25s';
 		}
 		this.switchToProject(project.id);
 	}
@@ -116,7 +119,7 @@ export class WorkAreaComponent extends WorkArea implements OnInit, OnDestroy {
 					(offset - (this.dragElement.offsetLeft + this.dragElement.offsetWidth - this._tabsElement.nativeElement.offsetWidth)) + 'px';
 			}
 
-			for (const child of this.children) {
+			for (const child of this.tabChildren) {
 				if (child.pos + child.element.offsetWidth / 2 <= this.dragElement.offsetLeft - offset
 					&& child.pos + child.element.offsetWidth / 2 > this.dragElement.offsetLeft) {
 					child.element.style.left = this.dragElement.offsetWidth + 8 + 'px';
@@ -132,15 +135,18 @@ export class WorkAreaComponent extends WorkArea implements OnInit, OnDestroy {
 
 	mouseUp() {
 		if (this.currentlyDragging) {
-			this.dragElement.style.transitionDuration = '';
+			const sortedTabs = Array.from<HTMLElement>(this._tabsElement.nativeElement.children as unknown as HTMLElement[])
+				.sort((x, y) => x.offsetLeft - y.offsetLeft);
+			const dragTabIndex = sortedTabs.indexOf(this.dragElement);
 
-			this.currentlyDragging = undefined;
-			for (const child of Array.prototype.slice.call(this._tabsElement.nativeElement.children)
-				.sort((x: HTMLElement, y: HTMLElement) => x.offsetLeft - y.offsetLeft) as HTMLElement[]) {
-				this._tabsElement.nativeElement.removeChild(child);
-				child.style.left = '0px';
-				this._tabsElement.nativeElement.appendChild(child);
+			for (const child of this._tabsElement.nativeElement.children as unknown as HTMLElement[]) {
+				child.style.left = '';
+				child.style.transitionDuration = '0s';
 			}
+
+			this.projectsService.moveProjectToIndex(this.currentlyDragging, dragTabIndex);
+			this.cdr.detectChanges();
+
 			this.currentlyDragging = undefined;
 		}
 	}
