@@ -146,8 +146,7 @@ export class ProjectController {
 			throw new NotFoundError('ResourceNotFound');
 
 		const dependencies = await this.projectDepRepo.getDependencies(project, true);
-		const clonedProjects = await this.cloneTransaction(project, dependencies, user);
-		return Array.from(clonedProjects.values());
+		return this.cloneTransaction(project, dependencies, user);
 	}
 
 	@Transaction()
@@ -199,8 +198,6 @@ export class ProjectController {
 			return dep;
 		});
 		cloned.dependencies = Promise.resolve(deps);
-		await projRepo.save(cloned);
-
-		return map;
+		return await projRepo.save(cloned);
 	}
 }
