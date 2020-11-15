@@ -673,10 +673,12 @@ export class ProjectState {
 	}
 
 	public setOptions(element: Element, options: number[]): void {
+		this.removeFromChunks(element);
 		element.options = options;
 		const elemType = getStaticDI(ElementProviderService).getElementById(element.typeId);
 		if (elemType.onOptionsChanged) elemType.onOptionsChanged(element);
 		element.endPos = Elements.calcEndPos(element);
+		this.loadIntoChunks(element);
 	}
 
 	public setData(element: Element, data: unknown): void {
