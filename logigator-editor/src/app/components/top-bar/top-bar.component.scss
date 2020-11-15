@@ -46,14 +46,15 @@
 	// #!endif
 
 	.main-menu {
-		// #!web
+		// #!if ELECTRON === 'false'
 		height: 75%;
+		width: 100%;
+		// #!endif
 
 		// #!electron
 		height: 100%;
 
 		display: flex;
-		width: 100%;
 		flex-direction: column;
 		justify-content: space-between;
 		align-self: center;

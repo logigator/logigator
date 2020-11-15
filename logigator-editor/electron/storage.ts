@@ -10,6 +10,11 @@ export class Storage {
 
 	private storageData: object;
 
+	private static getStoragePath(): string {
+		const userDataPath = (app || remote.app).getPath('userData');
+		return path.join(userDataPath, 'electron-savings.json');
+	}
+
 	constructor() {
 		this.readStorage();
 	}
@@ -35,11 +40,6 @@ export class Storage {
 		ipcMain.handle('storageKeyHas', ((event, args: {key: string}) => {
 			return this.has(args.key);
 		}));
-	}
-
-	private static getStoragePath(): string {
-		const userDataPath = (app || remote.app).getPath('userData');
-		return path.join(userDataPath, 'electron-savings.json');
 	}
 
 	public set(key: string, data: any) {

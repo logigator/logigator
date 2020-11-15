@@ -8,7 +8,7 @@ export class WindowResizeHandler {
 		this._window = win;
 	}
 
-	public initResizeListeners() {
+	public initListeners() {
 		ipcMain.handle('windowMaximize', () => this.maximize());
 		ipcMain.handle('windowMinimize', () => this.minimize());
 		ipcMain.handle('windowClose', () => this.close());
