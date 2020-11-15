@@ -252,6 +252,7 @@ export class ProjectSaveManagementService {
 
 		if (project.source !== 'server') {
 			this._projectsCache.set(project.id, project);
+			project.saveDirty = false;
 			return;
 		}
 
@@ -284,6 +285,7 @@ export class ProjectSaveManagementService {
 
 		if (project.source !== 'server') {
 			this._projectsCache.set(project.id, project);
+			project.saveDirty = false;
 			return;
 		}
 
