@@ -68,8 +68,8 @@ export class ThemingService {
 		return 'theme-' + this._currentTheme;
 	}
 
-	public getEditorColor(key: EditorColorKey): number {
-		return this._editorColor[this._currentTheme][key];
+	public getEditorColor(key: EditorColorKey, theme?: Theme): number {
+		return this._editorColor[theme ?? this._currentTheme][key];
 	}
 
 	public get currentTheme(): Theme {
