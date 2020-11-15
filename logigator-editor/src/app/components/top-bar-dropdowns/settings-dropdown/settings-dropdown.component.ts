@@ -9,6 +9,7 @@ import {ElectronService} from 'ngx-electron';
 import {Observable} from 'rxjs';
 import {ElectronUpdateService} from '../../../services/electron-update/electron-update.service';
 import {PopupService} from '../../../services/popup/popup.service';
+import {environment} from '../../../../environments/environment';
 
 @Component({
 	selector: 'app-settings-dropdown',
@@ -63,16 +64,16 @@ export class SettingsDropdownComponent implements OnInit {
 
 	public accountSettings() {
 		// #!web
-		window.open('https://logigator.com/my/settings', '_blank');
+		window.open(`${environment.homeUrl}/my/account/profile`, '_blank');
 		// #!electron
-		this.electronService.shell.openExternal('https://logigator.com/my/settings');
+		this.electronService.shell.openExternal(`${environment.homeUrl}/my/account/profile`);
 	}
 
 	public privacyPolicy() {
 		// #!web
-		window.open('https://logigator.com/privacy-policy', '_blank');
+		window.open(`${environment.homeUrl}/privacy-policy`, '_blank');
 		// #!electron
-		this.electronService.shell.openExternal('https://logigator.com/privacy-policy');
+		this.electronService.shell.openExternal(`${environment.homeUrl}/privacy-policy`);
 	}
 
 	// #! ELECTRON === 'true'
@@ -84,7 +85,7 @@ export class SettingsDropdownComponent implements OnInit {
 	}
 
 	updateClick() {
-		this.electronService.shell.openExternal('https://logigator.com/download');
+		this.electronService.shell.openExternal(`${environment.homeUrl}/download`);
 	}
 	// #!endif
 

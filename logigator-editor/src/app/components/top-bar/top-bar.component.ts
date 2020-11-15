@@ -6,6 +6,7 @@ import {ElectronService} from 'ngx-electron';
 import {User} from '../../models/http/response/user';
 import {WorkMode} from '../../models/work-modes';
 import {WorkModeService} from '../../services/work-mode/work-mode.service';
+import {environment} from '../../../environments/environment';
 
 @Component({
 	selector: 'app-top-bar',
@@ -19,6 +20,8 @@ export class TopBarComponent {
 	public viewDropdownOpen = false;
 	public helpDropdownOpen = false;
 	public settingsDropdownOpen = false;
+
+	public homeUrl = environment.homeUrl;
 
 	constructor(
 		@Optional() private electronService: ElectronService,
