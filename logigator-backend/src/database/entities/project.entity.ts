@@ -60,7 +60,7 @@ export class Project {
 	@Column({default: false, nullable: false})
 	public: boolean;
 
-	@ManyToOne(type => Project, object => object.forks, {nullable: true})
+	@ManyToOne(type => Project, object => object.forks, {nullable: true, onDelete: 'SET NULL'})
 	forkedFrom: Promise<Project>;
 
 	@Expose({name: 'forkedFrom'})

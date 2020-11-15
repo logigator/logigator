@@ -92,7 +92,7 @@ export class Component {
 	@Column({default: false, nullable: false})
 	public: boolean;
 
-	@ManyToOne(type => Component, object => object.forks, {nullable: true})
+	@ManyToOne(type => Component, object => object.forks, {nullable: true, onDelete: 'SET NULL'})
 	forkedFrom: Promise<Component>;
 
 	@Expose({name: 'forkedFrom'})
