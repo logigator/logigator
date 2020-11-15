@@ -4,7 +4,7 @@ import {
 	CurrentUser, Delete,
 	Get, HttpCode,
 	JsonController, NotFoundError, Param, Patch, Post, Put, QueryParam,
-	ResponseClassTransformOptions, UploadedFile,
+	ResponseClassTransformOptions, UploadedFile, UploadedFiles,
 	UseBefore,
 	UseInterceptor
 } from 'routing-controllers';
@@ -114,30 +114,20 @@ export class ComponentController {
 		return this.componentRepo.save(component);
 	}
 
-	@Post('/:componentId/preview-dark')
+	@Post('/:componentId/preview')
 	@UseBefore(CheckAuthenticatedApiMiddleware)
-	public async updatePreviewDark(@Param('componentId') componentId: string, @CurrentUser() user: User, @UploadedFile('preview', {options: getUploadedFileOptions(), required: true}) image) {
+	public async updatePreviews(@Param('componentId') componentId: string, @CurrentUser() user: User, @UploadedFiles('previews', {options: getUploadedFileOptions(2), required: true}) images: any) {
 		const component = await this.componentRepo.getOwnedComponentOrThrow(componentId, user);
-		if (image.mimetype !== 'image/png')
+		if (images[0].mimetype !== 'image/png' || images[1].mimetype !== 'image/png')
 			throw new BadRequestError('Invalid MIME type');
 
 		if (!component.previewDark)
 			component.previewDark = new ComponentPreviewDark();
-		component.previewDark.setFileContent(image.buffer);
-
-		return this.componentRepo.save(component);
-	}
-
-	@Post('/:componentId/preview-light')
-	@UseBefore(CheckAuthenticatedApiMiddleware)
-	public async updatePreviewLight(@Param('componentId') componentId: string, @CurrentUser() user: User, @UploadedFile('preview', {options: getUploadedFileOptions(), required: true}) image) {
-		const component = await this.componentRepo.getOwnedComponentOrThrow(componentId, user);
-		if (image.mimetype !== 'image/png')
-			throw new BadRequestError('Invalid MIME type');
-
 		if (!component.previewLight)
 			component.previewLight = new ComponentPreviewLight();
-		component.previewLight.setFileContent(image.buffer);
+
+		component.previewDark.setFileContent(images[0].buffer);
+		component.previewLight.setFileContent(images[1].buffer);
 
 		return this.componentRepo.save(component);
 	}

@@ -6,7 +6,7 @@ import {
 	HttpCode,
 	JsonController, NotFoundError,
 	Param, Patch,
-	Post, Put, QueryParam, ResponseClassTransformOptions, UploadedFile,
+	Post, Put, QueryParam, ResponseClassTransformOptions, UploadedFile, UploadedFiles,
 	UseBefore,
 	UseInterceptor
 } from 'routing-controllers';
@@ -113,30 +113,20 @@ export class ProjectController {
 		return this.projectRepo.save(project);
 	}
 
-	@Post('/:projectId/preview-dark')
+	@Post('/:projectId/preview')
 	@UseBefore(CheckAuthenticatedApiMiddleware)
-	public async updatePreviewDark(@Param('projectId') projectId: string, @CurrentUser() user: User, @UploadedFile('preview', {options: getUploadedFileOptions(), required: true}) image) {
+	public async updatePreviews(@Param('projectId') projectId: string, @CurrentUser() user: User, @UploadedFiles('previews', {options: getUploadedFileOptions(2), required: true}) images: any) {
 		const project = await this.projectRepo.getOwnedProjectOrThrow(projectId, user);
-		if (image.mimetype !== 'image/png')
+		if (images[0].mimetype !== 'image/png' || images[1].mimetype !== 'image/png')
 			throw new BadRequestError('Invalid MIME type');
 
 		if (!project.previewDark)
 			project.previewDark = new ProjectPreviewDark();
-		project.previewDark.setFileContent(image.buffer);
-
-		return this.projectRepo.save(project);
-	}
-
-	@Post('/:projectId/preview-light')
-	@UseBefore(CheckAuthenticatedApiMiddleware)
-	public async updatePreviewLight(@Param('projectId') projectId: string, @CurrentUser() user: User, @UploadedFile('preview', {options: getUploadedFileOptions(), required: true}) image) {
-		const project = await this.projectRepo.getOwnedProjectOrThrow(projectId, user);
-		if (image.mimetype !== 'image/png')
-			throw new BadRequestError('Invalid MIME type');
-
 		if (!project.previewLight)
 			project.previewLight = new ProjectPreviewLight();
-		project.previewLight.setFileContent(image.buffer);
+
+		project.previewDark.setFileContent(images[0].buffer);
+		project.previewLight.setFileContent(images[1].buffer);
 
 		return this.projectRepo.save(project);
 	}
