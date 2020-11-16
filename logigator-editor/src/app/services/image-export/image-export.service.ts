@@ -1,6 +1,5 @@
-import {Injectable, Optional} from '@angular/core';
-import {ProjectsService} from '../projects/projects.service';
-import {SvgImageExporter} from './svg-image-exporter';
+import {Injectable} from '@angular/core';
+import {SvgImageExporter, Theme} from './svg-image-exporter';
 import * as PIXI from 'pixi.js';
 import {Project} from '../../models/project';
 
@@ -11,12 +10,22 @@ export class ImageExportService {
 
 	constructor() {}
 
-	public generateImage(project: Project, type: 'jpeg' | 'png', options?: {size?: PIXI.Point; theme?: 'dark' | 'light'}): Promise<Blob> {
-		return this.getBlobImage(new SvgImageExporter(project, new PIXI.Point(1024, 1024), options?.theme), type);
+	public async generatePreviews(project: Project) {
+		const exporter = new SvgImageExporter(project, new PIXI.Point(512, 512), Theme.Dark_Transparent);
+		const dark = await this.getBlobImage(exporter, 'png');
+		exporter.changeTheme(Theme.Light_Transparent);
+		return {
+			dark,
+			light: await this.getBlobImage(exporter, 'png')
+		};
 	}
 
-	public generateSVG(project: Project, options?: {size?: PIXI.Point; theme?: 'dark' | 'light'}): string {
-		const exporter = new SvgImageExporter(project, new PIXI.Point(1024, 1024), options?.theme);
+	public generateImage(project: Project, type: 'jpeg' | 'png', options?: {size?: PIXI.Point; theme?: Theme}): Promise<Blob> {
+		return this.getBlobImage(new SvgImageExporter(project, options?.size, options?.theme), type);
+	}
+
+	public generateSVG(project: Project, options?: {size?: PIXI.Point; theme?: Theme}): string {
+		const exporter = new SvgImageExporter(project, options?.size, options?.theme);
 		return exporter.serializeSVG();
 	}
 

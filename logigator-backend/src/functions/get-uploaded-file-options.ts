@@ -1,10 +1,10 @@
 import {Options, memoryStorage} from 'multer';
 
-export function getUploadedFileOptions(): Options {
+export function getUploadedFileOptions(files = 1): Options {
 	return {
 		storage: memoryStorage(),
 		limits: {
-			files: 1,
+			files,
 			fileSize: 1048576
 		}
 	};

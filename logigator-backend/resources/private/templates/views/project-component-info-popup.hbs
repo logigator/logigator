@@ -1,6 +1,8 @@
 {{#> popup title=i18n.POPUP.PROJECT_COMP_INFO.TITLE  defaultOpen=true }}
 	<div class="view-project-component-info-popup">
-		<img src="https://api.logigator.com/images/thumbnails/d884a93d-9256-458b-b6cc-3fffd8fc4bdf" alt="Preview Image" class="view-project-component-info-popup__image">
+		<div class="view-project-component-info-popup__image-container">
+			<img src="{{ternary (expr @root.preferences.theme '===' 'dark') this.previewDark this.previewLight}}" alt="Preview Image" class="view-project-component-info-popup__image">
+		</div>
 		<div class="view-project-component-info-popup__item">
 			<p>{{i18n.POPUP.PROJECT_COMP_INFO.NAME}}:</p>
 			<p>{{name}}</p>
