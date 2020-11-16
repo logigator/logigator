@@ -29,7 +29,8 @@ export class ConnectionPoint extends PIXI.Graphics implements LGraphics {
 	private drawConnPoint(scale: number) {
 		const size = scale < 0.5 ? 3 : 5;
 		this.clear();
-		this.beginFill(this.themingService.getEditorColor('wire'));
+		this.beginFill(0xffffff);
+		this.tint = this._isSelected ? this.themingService.getEditorColor('wireSelectColor') : this.themingService.getEditorColor('wire');
 		let pixelPos: PIXI.IPoint;
 		if (this._isInChunk) {
 			pixelPos = Grid.getLocalChunkPixelPosForGridPosWire(this._gridPos);
@@ -62,9 +63,9 @@ export class ConnectionPoint extends PIXI.Graphics implements LGraphics {
 	public setSelected(selected: boolean) {
 		this._isSelected = selected;
 		if (this._isSelected) {
-			this.tint = this.themingService.getEditorColor('selectTint');
+			this.tint = this.themingService.getEditorColor('wireSelectColor');
 		} else {
-			this.tint = 0xFFFFFF;
+			this.tint = this.themingService.getEditorColor('wire');
 		}
 	}
 

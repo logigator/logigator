@@ -52,7 +52,8 @@ export class TextGraphics extends PIXI.Container implements LGraphics, Component
 
 	drawPoint(scale: number) {
 		this._point.clear();
-		this._point.beginFill(this.themingService.getEditorColor('wire'));
+		this._point.beginFill(0xffffff);
+		this._point.tint = this.themingService.getEditorColor('wire');
 		const size = scale < 0.5 ? 5 : 7;
 		this._point.position = new PIXI.Point(
 			environment.gridPixelWidth / 2 - size / 2 / scale,
@@ -65,14 +66,16 @@ export class TextGraphics extends PIXI.Container implements LGraphics, Component
 	}
 
 	setSelected(selected: boolean) {
-		let tint;
+		let fontTint;
 		if (selected) {
-			tint = this.themingService.getEditorColor('selectTint');
+			fontTint = this.themingService.getEditorColor('selectTint');
+			this._point.tint = this.themingService.getEditorColor('wireSelectColor');
 		} else {
-			tint = this.themingService.getEditorColor('fontTint');
+			fontTint = this.themingService.getEditorColor('fontTint');
+			this._point.tint = this.themingService.getEditorColor('wire');
 		}
 		for (const t of this._texts) {
-			t.tint = tint;
+			t.tint = fontTint;
 		}
 		this._selected = selected;
 	}
