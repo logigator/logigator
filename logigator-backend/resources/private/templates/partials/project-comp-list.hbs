@@ -5,7 +5,7 @@
 				<div class="partial-project-comp-list__tile-wrapper">
 					<div class="partial-project-comp-list__tile">
 						<h3 class="partial-project-comp-list__tile-name" auto-font-size="160">{{this.name}}</h3>
-						<img class="partial-project-comp-list__tile-image" alt="Preview" src="{{this.previewImage}}">
+						<img class="partial-project-comp-list__tile-image" alt="Preview" src="{{ternary (expr @root.preferences.theme '===' 'dark') this.previewDark this.previewLight}}">
 						<div class="partial-project-comp-list__tile-hover">
 							<a href="{{this.editorUrl}}" class="partial-project-comp-list__tile-open partial-project-comp-list__icon" target="_blank" rel="noopener"></a>
 							<div class="partial-project-comp-list__tile-actions" data-id="{{this.id}}">

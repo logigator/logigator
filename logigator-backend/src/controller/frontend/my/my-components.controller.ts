@@ -73,6 +73,8 @@ export class MyComponentsController {
 
 		(component.lastEdited as any) = this.translationService.dateFormatDateTime(component.lastEdited, preferences.lang);
 		(component.createdOn as any) = this.translationService.dateFormatDateTime(component.lastEdited, preferences.lang);
+		(component as any).previewDark = component.previewDark?.publicUrl ?? '/assets/default-preview.svg';
+		(component as any).previewLight = component.previewLight?.publicUrl ?? '/assets/default-preview.svg';
 
 		return {
 			...component,
@@ -212,6 +214,8 @@ export class MyComponentsController {
 			const transformed = classToPlain(entry);
 			transformed.lastEdited= this.translationService.dateFormatDate(entry.lastEdited, language);
 			transformed.editorUrl = this.configService.getConfig('domains').editor + '/component/' + entry.id;
+			transformed.previewDark = entry.previewDark?.publicUrl ?? '/assets/default-preview.svg';
+			transformed.previewLight = entry.previewLight?.publicUrl ?? '/assets/default-preview.svg';
 			return transformed;
 		});
 		return {
