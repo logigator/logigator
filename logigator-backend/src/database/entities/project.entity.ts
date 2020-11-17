@@ -54,11 +54,11 @@ export class Project {
 	private __user__: User;
 
 	@Expose()
-	@OneToOne(type => ProjectPreviewDark, previewDark => previewDark.component, {cascade: true, eager: true})
+	@OneToOne(type => ProjectPreviewDark, previewDark => previewDark.project, {cascade: true, eager: true})
 	previewDark: ProjectPreviewDark;
 
 	@Expose()
-	@OneToOne(type => ProjectPreviewLight, previewLight => previewLight.component, {cascade: true, eager: true})
+	@OneToOne(type => ProjectPreviewLight, previewLight => previewLight.project, {cascade: true, eager: true})
 	previewLight: ProjectPreviewLight;
 
 	@Expose({groups: ['showShareLinks']})
