@@ -2,7 +2,7 @@ import {BrowserWindow, ipcMain} from 'electron';
 
 export class WindowResizeHandler {
 
-	private _window: BrowserWindow;
+	private readonly _window: BrowserWindow;
 
 	constructor(win: BrowserWindow) {
 		this._window = win;

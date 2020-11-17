@@ -1,6 +1,6 @@
 import * as path from 'path';
 import * as fs from 'fs';
-import {app, remote, ipcMain} from 'electron';
+import {app, remote} from 'electron';
 
 export class Storage {
 
@@ -10,13 +10,13 @@ export class Storage {
 
 	private storageData: object;
 
-	private static getStoragePath(): string {
-		const userDataPath = (app || remote.app).getPath('userData');
-		return path.join(userDataPath, 'electron-savings.json');
-	}
-
 	constructor() {
 		this.readStorage();
+	}
+
+	private static getStoragePath(): string {
+		const userDataPath = (app || remote.app).getPath('userData');
+		return path.join(userDataPath, 'logigator-storage.json');
 	}
 
 	public static getInstance(): Storage {
@@ -25,21 +25,6 @@ export class Storage {
 
 		Storage._instance = new Storage();
 		return Storage._instance;
-	}
-
-	public setupCommunicationWithRenderer() {
-		ipcMain.handle('storageKeyChanged', ((event, args: {key: string, data: any}) => {
-			this.set(args.key, args.data);
-		}));
-		ipcMain.handle('storageKeyRemoved', ((event, args: {key: string}) => {
-			this.remove(args.key);
-		}));
-		ipcMain.handle('storageKeyRead', ((event, args: {key: string}) => {
-			return this.get(args.key);
-		}));
-		ipcMain.handle('storageKeyHas', ((event, args: {key: string}) => {
-			return this.has(args.key);
-		}));
 	}
 
 	public set(key: string, data: any) {

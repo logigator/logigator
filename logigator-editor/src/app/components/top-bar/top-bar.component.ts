@@ -48,7 +48,7 @@ export class TopBarComponent {
 
 	public register() {
 		// #!electron
-		this.userService.register();
+		this.electronService.shell.openExternal(`${environment.homeUrl}/register`);
 
 		// #!web
 		window.open('/register', '_blank');

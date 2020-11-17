@@ -55,10 +55,6 @@ export class UserService {
 		this.electronService.ipcRenderer.invoke('login');
 	}
 
-	public register() {
-		this.electronService.ipcRenderer.invoke('register');
-	}
-
 	public logout() {
 		this.electronService.ipcRenderer.invoke('logout');
 	}
