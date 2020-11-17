@@ -3,6 +3,8 @@ import * as path from 'path';
 import {WindowResizeHandler} from './window-resize-handler';
 import {AuthenticationHandler} from './authentication-handler';
 import {getHomeUrl, getHttpFilterUrls} from './utils';
+import * as express from 'express';
+import {AddressInfo} from 'net';
 
 class Main {
 
@@ -12,6 +14,7 @@ class Main {
 	private _windowResizeHandler: WindowResizeHandler;
 	private _authenticationHandler: AuthenticationHandler;
 
+	private _expressServerHostname: string;
 	private _windowHostname: string;
 
 	constructor(isDevMode: boolean) {
@@ -25,7 +28,7 @@ class Main {
 		app.allowRendererProcessReuse = true;
 	}
 
-	private onReady() {
+	private async onReady() {
 		session.defaultSession.setUserAgent('Mozilla/5.0 (Windows NT 10.0; WOW64; rv:46.0) Gecko/20100101 Firefox/46.0');
 
 		this._window = new BrowserWindow({
@@ -41,15 +44,12 @@ class Main {
 
 		this._window.on('closed', () => this.onClosed());
 
+		this._expressServerHostname = await this.startExpressServer();
+
 		if (this._isDevMode) {
-			require('electron-reload')(__dirname, {
-				electron: require(path.join(__dirname, `../../node_modules/electron`))
-			});
 			this._windowHostname = 'http://localhost:8202';
-			this._window.loadURL('http://localhost:8202');
-			this._window.webContents.openDevTools();
 		} else {
-			// TODO: load compiled app
+			this._windowHostname = this._expressServerHostname;
 		}
 
 		this._windowResizeHandler = new WindowResizeHandler(this._window);
@@ -59,6 +59,14 @@ class Main {
 		this._authenticationHandler.initListeners();
 
 		this.registerHttpInterceptor();
+
+		if (this._isDevMode) {
+			require('electron-reload')(__dirname, {
+				electron: require(path.join(__dirname, `../../node_modules/electron`))
+			});
+			this._window.webContents.openDevTools();
+		}
+		await this._window.loadURL(this._windowHostname);
 	}
 
 	private onClosed() {
@@ -71,12 +79,37 @@ class Main {
 		}
 	}
 
+	private startExpressServer(): Promise<string> {
+		const server = express();
+		server.use((req, res, next) => {
+			console.log('express');
+			console.log(req);
+			if (req.method === 'OPTIONS') {
+				res.setHeader('Access-Control-Allow-Credentials', 'true');
+				res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
+				res.setHeader('Access-Control-Allow-Methods', 'GET,POST,PATCH,DELETE,PUT,OPTIONS');
+				res.setHeader('Access-Control-Allow-Origin', req.headers.origin || '*');
+				res.send(200);
+				return;
+			}
+			next();
+		});
+		server.use('/', express.static(path.join(__dirname, '..', 'logigator-editor')));
+
+		return new Promise<string>(resolve => {
+			const infos = server.listen(0, 'localhost', () => resolve(`http://localhost:${(infos.address() as AddressInfo).port}`));
+		});
+	}
+
 	private registerHttpInterceptor() {
 		this._window.webContents.session.webRequest.onBeforeSendHeaders(getHttpFilterUrls(), (details, callback) => {
 			if (this._authenticationHandler.isAuthenticated) {
 				// tslint:disable-next-line:no-string-literal
 				details.requestHeaders['Cookie'] = this._authenticationHandler.sessionCookie;
 			}
+			console.log('before send');
+			console.log(details);
+
 			// tslint:disable-next-line:no-string-literal
 			details.requestHeaders['Origin'] = getHomeUrl();
 			// tslint:disable-next-line:no-string-literal
@@ -94,6 +127,14 @@ class Main {
 			callback({
 				responseHeaders: details.responseHeaders
 			});
+		});
+
+		this._window.webContents.session.webRequest.onBeforeRequest(getHttpFilterUrls(), (details, callback) => {
+			if (details.url.startsWith(getHomeUrl()) && details.method === 'OPTIONS') {
+				callback({cancel: false, redirectURL: this._expressServerHostname});
+				return;
+			}
+			callback({cancel: false});
 		});
 	}
 
