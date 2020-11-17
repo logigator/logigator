@@ -1,6 +1,5 @@
 import {Entity, JoinColumn, OneToOne} from 'typeorm';
 import {PersistedResource} from './persisted-resource.entity';
-import {Component} from './component.entity';
 import {Exclude} from 'class-transformer';
 import {Project} from './project.entity';
 
@@ -12,6 +11,6 @@ export class ProjectPreviewLight extends PersistedResource {
 
 	@OneToOne(type => Project, project => project.previewLight)
 	@JoinColumn()
-	component: Promise<Project>
+	project: Promise<Project>
 
 }

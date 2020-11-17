@@ -35,7 +35,7 @@ lerna-debug.log*
 
 # configs
 /config/*.json
-/tools/*.json
+/tools/*/*.json
 !/config/*.json.example
 
 # persited resources
