@@ -2,9 +2,9 @@ import {BrowserWindow, app, session} from 'electron';
 import * as path from 'path';
 import {WindowResizeHandler} from './window-resize-handler';
 import {AuthenticationHandler} from './authentication-handler';
-import {getHomeUrl, getHttpFilterUrls} from './utils';
 import * as express from 'express';
 import {AddressInfo} from 'net';
+import {ApiHandler} from './api-handler';
 
 class Main {
 
@@ -13,6 +13,7 @@ class Main {
 	private _window: BrowserWindow;
 	private _windowResizeHandler: WindowResizeHandler;
 	private _authenticationHandler: AuthenticationHandler;
+	private _apiHandler: ApiHandler;
 
 	private _expressServerHostname: string;
 	private _windowHostname: string;
@@ -58,6 +59,9 @@ class Main {
 		this._authenticationHandler = new AuthenticationHandler(this._window, this._windowHostname);
 		this._authenticationHandler.initListeners();
 
+		this._apiHandler = new ApiHandler(this._authenticationHandler);
+		this._apiHandler.initListeners();
+
 		this.registerHttpInterceptor();
 
 		if (this._isDevMode) {
@@ -81,19 +85,6 @@ class Main {
 
 	private startExpressServer(): Promise<string> {
 		const server = express();
-		server.use((req, res, next) => {
-			console.log('express');
-			console.log(req);
-			if (req.method === 'OPTIONS') {
-				res.setHeader('Access-Control-Allow-Credentials', 'true');
-				res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
-				res.setHeader('Access-Control-Allow-Methods', 'GET,POST,PATCH,DELETE,PUT,OPTIONS');
-				res.setHeader('Access-Control-Allow-Origin', req.headers.origin || '*');
-				res.send(200);
-				return;
-			}
-			next();
-		});
 		server.use('/', express.static(path.join(__dirname, '..', 'logigator-editor')));
 
 		return new Promise<string>(resolve => {
@@ -102,40 +93,6 @@ class Main {
 	}
 
 	private registerHttpInterceptor() {
-		this._window.webContents.session.webRequest.onBeforeSendHeaders(getHttpFilterUrls(), (details, callback) => {
-			if (this._authenticationHandler.isAuthenticated) {
-				// tslint:disable-next-line:no-string-literal
-				details.requestHeaders['Cookie'] = this._authenticationHandler.sessionCookie;
-			}
-			console.log('before send');
-			console.log(details);
-
-			// tslint:disable-next-line:no-string-literal
-			details.requestHeaders['Origin'] = getHomeUrl();
-			// tslint:disable-next-line:no-string-literal
-			details.requestHeaders['Referer'] = getHomeUrl() + '/';
-
-			callback({
-				requestHeaders: details.requestHeaders
-			});
-		});
-
-		this._window.webContents.session.webRequest.onHeadersReceived(getHttpFilterUrls(), (details, callback) => {
-			// tslint:disable-next-line:no-string-literal
-			details.responseHeaders['Access-Control-Allow-Origin'] = [this._windowHostname];
-
-			callback({
-				responseHeaders: details.responseHeaders
-			});
-		});
-
-		this._window.webContents.session.webRequest.onBeforeRequest(getHttpFilterUrls(), (details, callback) => {
-			if (details.url.startsWith(getHomeUrl()) && details.method === 'OPTIONS') {
-				callback({cancel: false, redirectURL: this._expressServerHostname});
-				return;
-			}
-			callback({cancel: false});
-		});
 	}
 
 }
