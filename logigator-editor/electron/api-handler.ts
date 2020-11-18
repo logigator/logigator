@@ -89,9 +89,11 @@ export class ApiHandler {
 	}
 
 	private getRequestBody(body: any, headers: Headers): BodyInit {
-		headers.set('Content-Type', 'application/json');
-
-		return JSON.stringify(body);
+		if (body.type === 'json') {
+			headers.set('Content-Type', 'application/json');
+			return JSON.stringify(body.body);
+		}
+		console.log(body);
 	}
 
 	private getRequestHeaders(): Headers {

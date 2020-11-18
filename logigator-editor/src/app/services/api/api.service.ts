@@ -37,7 +37,7 @@ export class ApiService {
 			catchError(err => this.handleError(err, errorConfig))
 		);
 		// #!else
-		return from(this.electronService.ipcRenderer.invoke('api-post', environment.api + url, body, params)).pipe(
+		return from(this.getElectronIpcCall('api-post', environment.api + url, body, params)).pipe(
 			map(resp => this.mapElectronResponse(resp, errorConfig))
 		);
 		// #!endif
@@ -49,7 +49,7 @@ export class ApiService {
 			catchError(err => this.handleError(err, errorConfig))
 		);
 		// #!else
-		return from(this.electronService.ipcRenderer.invoke('api-put', environment.api + url, body, params)).pipe(
+		return from(this.getElectronIpcCall('api-put', environment.api + url, body, params)).pipe(
 			map(resp => this.mapElectronResponse(resp, errorConfig))
 		);
 		// #!endif
@@ -61,7 +61,7 @@ export class ApiService {
 			catchError(err => this.handleError(err, errorConfig))
 		);
 		// #!else
-		return from(this.electronService.ipcRenderer.invoke('api-patch', environment.api + url, body, params)).pipe(
+		return from(this.getElectronIpcCall('api-patch', environment.api + url, body, params)).pipe(
 			map(resp => this.mapElectronResponse(resp, errorConfig))
 		);
 		// #!endif
@@ -91,6 +91,32 @@ export class ApiService {
 				url: resp.url
 			}, errorConfig);
 		}
+	}
+
+	private getElectronIpcCall(channel: string, url: string, body: any, params?: { [param: string]: string; }): Promise<any> {
+		return new Promise<any>(async resolve => {
+			let bodyForIpc: object;
+			if (body instanceof FormData) {
+				const serialized: Promise<any>[] = [];
+				body.forEach((value, key) => {
+					if (value instanceof File) {
+						serialized.push(new Promise<any>(async resolveFormField => resolveFormField({key, value: await value.arrayBuffer()})));
+					} else {
+						serialized.push(Promise.resolve({key, value}));
+					}
+				});
+				bodyForIpc = {
+					type: 'formdata',
+					body: await Promise.all(serialized)
+				};
+			} else {
+				bodyForIpc = {
+					type: 'json',
+					body
+				};
+			}
+			resolve(await this.electronService.ipcRenderer.invoke(channel, url, bodyForIpc, params));
+		});
 	}
 
 	private handleError(err: ApiError, errorConfig?: ApiErrorConfig): ObservableInput<any> {
