@@ -104,7 +104,7 @@ export class MyAccountController {
 	@UseBefore(CheckAuthenticatedFrontMiddleware)
 	public async accountProfileUpdateImage(@CurrentUser() user: User, @UploadedFile('image', {options: getUploadedFileOptions(), required: true}) image: any) {
 		if (image.mimetype !== 'image/png')
-			throw new BadRequestError('Invalid mimetype');
+			throw new BadRequestError('Invalid MIME type');
 
 		const userImage = user.image ?? new ProfilePicture();
 		userImage.setFileContent(image.buffer);

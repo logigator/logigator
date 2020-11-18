@@ -6,7 +6,7 @@ import {
 	HttpCode,
 	JsonController, NotFoundError,
 	Param, Patch,
-	Post, Put, QueryParam, ResponseClassTransformOptions,
+	Post, Put, QueryParam, ResponseClassTransformOptions, UploadedFile, UploadedFiles,
 	UseBefore,
 	UseInterceptor
 } from 'routing-controllers';
@@ -29,6 +29,9 @@ import {Component} from '../../database/entities/component.entity';
 import {ComponentDependencyRepository} from '../../database/repositories/component-dependency.repository';
 import {Project} from '../../database/entities/project.entity';
 import {v4 as uuid} from 'uuid';
+import {getUploadedFileOptions} from '../../functions/get-uploaded-file-options';
+import {ProjectPreviewDark} from '../../database/entities/project-preview-dark.entity';
+import {ProjectPreviewLight} from '../../database/entities/project-preview-light.entity';
 
 @JsonController('/api/project')
 @UseInterceptor(ApiInterceptor)
@@ -107,6 +110,24 @@ export class ProjectController {
 		);
 
 		await this.projectDepRepo.save(deps);
+		return this.projectRepo.save(project);
+	}
+
+	@Post('/:projectId/preview')
+	@UseBefore(CheckAuthenticatedApiMiddleware)
+	public async updatePreviews(@Param('projectId') projectId: string, @CurrentUser() user: User, @UploadedFiles('previews', {options: getUploadedFileOptions(2), required: true}) images: any) {
+		const project = await this.projectRepo.getOwnedProjectOrThrow(projectId, user);
+		if (images[0].mimetype !== 'image/png' || images[1].mimetype !== 'image/png')
+			throw new BadRequestError('Invalid MIME type');
+
+		if (!project.previewDark)
+			project.previewDark = new ProjectPreviewDark();
+		if (!project.previewLight)
+			project.previewLight = new ProjectPreviewLight();
+
+		project.previewDark.setFileContent(images[0].buffer);
+		project.previewLight.setFileContent(images[1].buffer);
+
 		return this.projectRepo.save(project);
 	}
 

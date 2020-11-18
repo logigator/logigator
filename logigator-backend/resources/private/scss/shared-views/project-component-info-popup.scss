@@ -1,15 +1,16 @@
 @include view('project-component-info-popup') {
 	max-width: 40rem;
 
+	@include element('image-container') {
+		width: 100%;
+		text-align: center;
+	}
+
 	@include element('image') {
 		width: 100%;
-		max-height: 256px;
+		max-width: 512px;
 		object-fit: contain;
 		margin-bottom: 1rem;
-
-		@include themify() {
-			filter: drop-shadow(0px 0px 2px darken(themed('background'), 30));
-		}
 	}
 
 	@include element('item') {

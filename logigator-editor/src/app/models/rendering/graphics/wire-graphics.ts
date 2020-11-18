@@ -19,7 +19,8 @@ export class WireGraphics extends PIXI.Graphics implements LGraphics {
 		super();
 		this.element = element;
 		this._scale = scale;
-		this.lineStyle(1 / scale, this.themingService.getEditorColor('wire'));
+		this.lineStyle(1 / scale, 0xffffff);
+		this.tint = this.themingService.getEditorColor('wire');
 		this.moveTo(0, 0);
 		const endPos = Grid.getPixelPosForGridPosWire(this.element.endPos);
 		const startPos = Grid.getPixelPosForGridPosWire(this.element.pos);
@@ -66,9 +67,9 @@ export class WireGraphics extends PIXI.Graphics implements LGraphics {
 
 	setSelected(selected: boolean) {
 		if (selected) {
-			this.tint = this.themingService.getEditorColor('selectTint');
+			this.tint = this.themingService.getEditorColor('wireSelectColor');
 		} else {
-			this.tint = 0xffffff;
+			this.tint = this.themingService.getEditorColor('wire');
 		}
 	}
 }

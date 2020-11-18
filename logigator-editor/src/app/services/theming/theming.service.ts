@@ -22,7 +22,8 @@ export class ThemingService {
 			grid: 0x0,
 			wire: 0x0,
 			selectRect: 0,
-			selectTint: 0xd1d1d1,
+			selectTint: 0xD0D0D0,
+			wireSelectColor: 0xB0B0B0,
 			fontTint: 0,
 			ledOn: 0x27AE60,
 			ledOff: 0x0
@@ -33,6 +34,7 @@ export class ThemingService {
 			wire: 0x27AE60,
 			selectRect: 0,
 			selectTint: 0x8a8a8a,
+			wireSelectColor: 0x0F5E36,
 			fontTint: 0xFFFFFF,
 			ledOn: 0x27AE60,
 			ledOff: 0x18592d
@@ -68,8 +70,8 @@ export class ThemingService {
 		return 'theme-' + this._currentTheme;
 	}
 
-	public getEditorColor(key: EditorColorKey): number {
-		return this._editorColor[this._currentTheme][key];
+	public getEditorColor(key: EditorColorKey, theme?: Theme): number {
+		return this._editorColor[theme ?? this._currentTheme][key];
 	}
 
 	public get currentTheme(): Theme {

@@ -16,6 +16,8 @@ import {ProjectFile} from './project-file.entity';
 import {ProjectFileRepository} from '../repositories/project-file.repository';
 import {ProjectDependency} from './project-dependency.entity';
 import {Exclude, Expose} from 'class-transformer';
+import {ProjectPreviewDark} from './project-preview-dark.entity';
+import {ProjectPreviewLight} from './project-preview-light.entity';
 
 @Exclude({toPlainOnly: true})
 @Entity()
@@ -50,6 +52,14 @@ export class Project {
 
 	@Expose({name: 'user', groups: ['detailed']})
 	private __user__: User;
+
+	@Expose()
+	@OneToOne(type => ProjectPreviewDark, previewDark => previewDark.project, {cascade: true, eager: true})
+	previewDark: ProjectPreviewDark;
+
+	@Expose()
+	@OneToOne(type => ProjectPreviewLight, previewLight => previewLight.project, {cascade: true, eager: true})
+	previewLight: ProjectPreviewLight;
 
 	@Expose({groups: ['showShareLinks']})
 	@Column({nullable: false})

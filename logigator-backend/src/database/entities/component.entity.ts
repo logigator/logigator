@@ -17,6 +17,8 @@ import {ComponentFileRepository} from '../repositories/component-file.repository
 import {ComponentDependency} from './component-dependency.entity';
 import {ProjectDependency} from './project-dependency.entity';
 import {Exclude, Expose} from 'class-transformer';
+import {ComponentPreviewDark} from './component-preview-dark.entity';
+import {ComponentPreviewLight} from './component-preview-light.entity';
 
 @Exclude({toPlainOnly: true})
 @Entity()
@@ -82,6 +84,17 @@ export class Component {
 
 	@ManyToOne(type => User, object => object.components, {nullable: false})
 	user: Promise<User>;
+
+	@Expose({name: 'user', groups: ['detailed']})
+	private __user__: User;
+
+	@Expose()
+	@OneToOne(type => ComponentPreviewDark, previewDark => previewDark.component, {cascade: true, eager: true})
+	previewDark: ComponentPreviewDark;
+
+	@Expose()
+	@OneToOne(type => ComponentPreviewLight, previewLight => previewLight.component, {cascade: true, eager: true})
+	previewLight: ComponentPreviewLight;
 
 	@Expose({groups: ['showShareLinks']})
 	@Column({nullable: false})

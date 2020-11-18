@@ -68,6 +68,8 @@ export class MyProjectsController {
 
 		(project.lastEdited as any) = this.translationService.dateFormatDateTime(project.lastEdited, preferences.lang);
 		(project.createdOn as any) = this.translationService.dateFormatDateTime(project.lastEdited, preferences.lang);
+		(project as any).previewDark = project.previewDark?.publicUrl ?? '/assets/default-preview.svg';
+		(project as any).previewLight = project.previewLight?.publicUrl ?? '/assets/default-preview.svg';
 
 		return {
 			...project,
@@ -197,6 +199,8 @@ export class MyProjectsController {
 			const transformed = classToPlain(entry);
 			transformed.lastEdited = this.translationService.dateFormatDate(entry.lastEdited, language);
 			transformed.editorUrl = this.configService.getConfig('domains').editor + '/project/' + entry.id;
+			transformed.previewDark = entry.previewDark?.publicUrl ?? '/assets/default-preview.svg';
+			transformed.previewLight = entry.previewLight?.publicUrl ?? '/assets/default-preview.svg';
 			return transformed;
 		});
 		return {

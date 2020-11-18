@@ -4,7 +4,7 @@ import {
 	CurrentUser, Delete,
 	Get, HttpCode,
 	JsonController, NotFoundError, Param, Patch, Post, Put, QueryParam,
-	ResponseClassTransformOptions,
+	ResponseClassTransformOptions, UploadedFile, UploadedFiles,
 	UseBefore,
 	UseInterceptor
 } from 'routing-controllers';
@@ -24,6 +24,9 @@ import {Transaction, TransactionRepository} from 'typeorm';
 import {Component} from '../../database/entities/component.entity';
 import {ProjectRepository} from '../../database/repositories/project.repository';
 import {v4 as uuid} from 'uuid';
+import {getUploadedFileOptions} from '../../functions/get-uploaded-file-options';
+import {ComponentPreviewDark} from '../../database/entities/component-preview-dark.entity';
+import {ComponentPreviewLight} from '../../database/entities/component-preview-light.entity';
 
 @JsonController('/api/component')
 @UseInterceptor(ApiInterceptor)
@@ -108,6 +111,24 @@ export class ComponentController {
 				.filter(x => !depSet.has(x.dependency.id))
 		);
 		await this.componentDepRepo.save(deps);
+		return this.componentRepo.save(component);
+	}
+
+	@Post('/:componentId/preview')
+	@UseBefore(CheckAuthenticatedApiMiddleware)
+	public async updatePreviews(@Param('componentId') componentId: string, @CurrentUser() user: User, @UploadedFiles('previews', {options: getUploadedFileOptions(2), required: true}) images: any) {
+		const component = await this.componentRepo.getOwnedComponentOrThrow(componentId, user);
+		if (images[0].mimetype !== 'image/png' || images[1].mimetype !== 'image/png')
+			throw new BadRequestError('Invalid MIME type');
+
+		if (!component.previewDark)
+			component.previewDark = new ComponentPreviewDark();
+		if (!component.previewLight)
+			component.previewLight = new ComponentPreviewLight();
+
+		component.previewDark.setFileContent(images[0].buffer);
+		component.previewLight.setFileContent(images[1].buffer);
+
 		return this.componentRepo.save(component);
 	}
 

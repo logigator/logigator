@@ -23,6 +23,7 @@ import {ComponentLocalFile, ProjectLocalFile} from '../../models/project-local-f
 import {FileSaverService} from '../file-saver/file-saver.service';
 import {ShareDependencies} from '../../models/http/response/share-dependencies';
 import {ErrorHandlingService} from '../error-handling/error-handling.service';
+import {ImageExportService} from '../image-export/image-export.service';
 
 @Injectable({
 	providedIn: 'root'
@@ -45,7 +46,8 @@ export class ProjectSaveManagementService {
 		private location: LocationService,
 		private userService: UserService,
 		private fileSaverService: FileSaverService,
-		private errorHandling: ErrorHandlingService
+		private errorHandling: ErrorHandlingService,
+		private imageService: ImageExportService
 	) {
 		this.userService.userInfo$.pipe(
 			skipUntil(this._loadedInitialProjects$)
@@ -271,10 +273,19 @@ export class ProjectSaveManagementService {
 			numOutputs: elementType.numOutputs,
 			labels: elementType.labels
 		};
-		const resp = await this.api.put<ProjectInfo>(`/component/${this._mappings.getKey(project.id)}`, body,
+		const resp = this.api.put<ProjectInfo>(`/component/${this._mappings.getKey(project.id)}`, body,
 			{errorMessage: 'ERROR.PROJECTS.SAVE'}).toPromise();
+
+		const previews = await this.imageService.generatePreviews(project);
+		const formData = new FormData();
+		formData.append('previews', previews.dark);
+		formData.append('previews', previews.light);
+		const previewPromise =  this.api.post(`/component/${this._mappings.getKey(project.id)}/preview`, formData,
+			{errorMessage: 'ERROR.PROJECTS.SAVE'}).toPromise();
+
+		project.hash = (await resp).data.elementsFile.hash;
 		project.saveDirty = false;
-		project.hash = resp.data.elementsFile.hash;
+		await previewPromise;
 		this._projectsCache.set(project.id, project);
 		this.errorHandling.showInfo('INFO.PROJECTS.SAVE', {name: project.name});
 	}
@@ -300,10 +311,19 @@ export class ProjectSaveManagementService {
 			}),
 			elements: convertedElements.elements,
 		};
-		const resp = await this.api.put<ProjectInfo>(`/project/${this._mappings.getKey(project.id)}`, body,
+		const resp = this.api.put<ProjectInfo>(`/project/${this._mappings.getKey(project.id)}`, body,
 			{errorMessage: 'ERROR.PROJECTS.SAVE'}).toPromise();
+
+		const previews = await this.imageService.generatePreviews(project);
+		const formData = new FormData();
+		formData.append('previews', previews.dark);
+		formData.append('previews', previews.light);
+		const previewPromise = this.api.post(`/project/${this._mappings.getKey(project.id)}/preview`, formData,
+			{errorMessage: 'ERROR.PROJECTS.SAVE'}).toPromise();
+
+		project.hash = (await resp).data.elementsFile.hash;
 		project.saveDirty = false;
-		project.hash = resp.data.elementsFile.hash;
+		await previewPromise;
 		this._projectsCache.set(project.id, project);
 		this.errorHandling.showInfo('INFO.PROJECTS.SAVE', {name: project.name});
 	}
