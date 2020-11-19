@@ -5,6 +5,7 @@ import {AuthenticationHandler} from './authentication-handler';
 import * as express from 'express';
 import {AddressInfo} from 'net';
 import {ApiHandler} from './api-handler';
+import {getHomeUrl} from './utils';
 
 class Main {
 
@@ -93,6 +94,14 @@ class Main {
 	}
 
 	private registerHttpInterceptor() {
+		this._window.webContents.session.webRequest.onBeforeRequest((details, callback) => {
+			if (details.method === 'GET' && details.url.startsWith(this._windowHostname + '/persisted/')) {
+				callback({redirectURL: details.url.replace(this._windowHostname + '/persisted/', getHomeUrl() + '/persisted/')});
+				return;
+			}
+
+			callback({cancel: false});
+		});
 	}
 
 }
