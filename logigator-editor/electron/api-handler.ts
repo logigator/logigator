@@ -3,6 +3,7 @@ import fetch, {Response, Headers, BodyInit} from 'node-fetch';
 import {URL} from 'url';
 import {AuthenticationHandler} from './authentication-handler';
 import {getHomeUrl} from './utils';
+import * as FormData from 'form-data';
 
 export class ApiHandler {
 
@@ -93,7 +94,16 @@ export class ApiHandler {
 			headers.set('Content-Type', 'application/json');
 			return JSON.stringify(body.body);
 		}
-		console.log(body);
+		const formData = new FormData();
+		for (const {key, value, mimetype} of body.body) {
+			if (value instanceof ArrayBuffer) {
+				formData.append(key, Buffer.from(value), {contentType: mimetype, filename: 'blob'});
+			} else {
+				formData.append(key, value);
+			}
+		}
+		headers.set('Content-Type', `multipart/form-data; boundary=${formData.getBoundary()}`);
+		return formData;
 	}
 
 	private getRequestHeaders(): Headers {

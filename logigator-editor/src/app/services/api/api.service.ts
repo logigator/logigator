@@ -100,7 +100,9 @@ export class ApiService {
 				const serialized: Promise<any>[] = [];
 				body.forEach((value, key) => {
 					if (value instanceof File) {
-						serialized.push(new Promise<any>(async resolveFormField => resolveFormField({key, value: await value.arrayBuffer()})));
+						serialized.push(new Promise<any>(async resolveFormField => resolveFormField({
+							key, mimetype: value.type, value: await value.arrayBuffer()
+						})));
 					} else {
 						serialized.push(Promise.resolve({key, value}));
 					}

@@ -46,6 +46,7 @@
 		"@ngx-translate/core": "^12.1.2",
 		"bootstrap": "^4.5.2",
 		"express": "^4.17.1",
+		"form-data": "^3.0.0",
 		"github-markdown-css": "^4.0.0",
 		"ngx-electron": "^2.2.0",
 		"ngx-toastr": "^12.1.0",
