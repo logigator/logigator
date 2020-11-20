@@ -94,6 +94,13 @@
 		"webpack-bundle-analyzer": "^3.8.0",
 		"webpack-preprocessor-loader": "github:logigator/preprocessor-loader"
 	},
+	"electronProdDependencies": {
+		"express": "^4.17.1",
+		"form-data": "^3.0.0",
+		"node-fetch": "^2.6.1",
+		"tslib": "^2.0.0",
+		"@logigator/logigator-simulation": "latest"
+	},
 	"developmentInfo": {
 		"": "For Development you should use the local version of shared-cops to use live reload from the libary",
 		"@logigator/logigator-simulation": "file:../logigator-simulation"
