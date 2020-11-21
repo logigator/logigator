@@ -1,6 +1,6 @@
-import {ComponentFactoryResolver, Injectable, ViewContainerRef} from '@angular/core';
+import {ComponentFactoryResolver, Inject, Injectable, ViewContainerRef} from '@angular/core';
 import {HelpWindowComponent} from '../../components/help-window/help-window.component';
-import {LocalStorageService} from '../local-storage/local-storage.service';
+import {StorageService, StorageServiceModel} from '../storage/storage.service';
 
 @Injectable({
 	providedIn: 'root'
@@ -14,7 +14,7 @@ export class HelpWindowService {
 
 	constructor(
 		private componentFactoryResolver: ComponentFactoryResolver,
-		private storage: LocalStorageService
+		@Inject(StorageService) private storage: StorageServiceModel,
 	) {
 		const data = this.storage.get('helpWindows');
 		this._dontShowAgain = data ? new Set<string>(data) : new Set<string>();

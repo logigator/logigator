@@ -6,15 +6,12 @@ export class AuthenticationHandler {
 
 	private readonly _window: BrowserWindow;
 
-	private readonly _windowHostname: string;
-
 	private _currentlyLoggingIn = false;
 
 	private _sessionCookie: string;
 
-	constructor(win: BrowserWindow, windowHostname: string) {
+	constructor(win: BrowserWindow) {
 		this._window = win;
-		this._windowHostname = windowHostname;
 		this.readLoginState();
 	}
 
@@ -77,14 +74,7 @@ export class AuthenticationHandler {
 
 	private setLoginSate(state: boolean, cookie?: Cookie) {
 		if (state) {
-			this._window.webContents.session.cookies.set({
-				name: 'isAuthenticated',
-				value: 'true',
-				url: this._windowHostname,
-				expirationDate: cookie.expirationDate,
-				httpOnly: false,
-				secure: false
-			});
+			this._window.webContents.executeJavaScript(`window.localStorage.setItem('isAuthenticated', 'true')`);
 
 			const sessionCookie = `connect.sid=${cookie.value}`;
 
@@ -93,7 +83,7 @@ export class AuthenticationHandler {
 
 			this._sessionCookie = sessionCookie;
 		} else {
-			this._window.webContents.session.cookies.remove(this._windowHostname, 'isAuthenticated');
+			this._window.webContents.executeJavaScript(`window.localStorage.removeItem('isAuthenticated')`);
 			delete this._sessionCookie;
 			Storage.getInstance().remove('sessionCookie');
 			Storage.getInstance().remove('sessionCookieExpires');
@@ -106,17 +96,12 @@ export class AuthenticationHandler {
 
 			if (expirationDate >= Date.now()) {
 				this._sessionCookie = Storage.getInstance().get('sessionCookie');
-				this._window.webContents.session.cookies.set({
-					name: 'isAuthenticated',
-					value: 'true',
-					url: this._windowHostname,
-					expirationDate,
-					httpOnly: false,
-					secure: false
-				});
+				this._window.webContents.executeJavaScript(`window.localStorage.setItem('isAuthenticated', 'true')`);
 			} else {
 				this.setLoginSate(false);
 			}
+		} else {
+			this.setLoginSate(false);
 		}
 	}
 }

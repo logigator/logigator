@@ -1,11 +1,10 @@
 import {Injectable} from '@angular/core';
+import {StorageServiceModel} from './storage.service';
 
 @Injectable({
 	providedIn: 'root'
 })
-export class CookieStorageService {
-
-	constructor() {}
+export class CookieStorageService extends StorageServiceModel {
 
 	public get(key: string): any {
 		if (!this.has(key))
@@ -41,7 +40,9 @@ export class CookieStorageService {
 	}
 
 	public remove(key: string) {
-
+		const date = new Date();
+		date.setTime(date.getTime() - (24 * 60 * 60 * 1000));
+		document.cookie = `${key}=;expires=${date.toUTCString()};path=/`;
 	}
 
 	public has(key: string): boolean {

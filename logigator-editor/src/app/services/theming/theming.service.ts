@@ -3,7 +3,7 @@ import {DOCUMENT} from '@angular/common';
 import {EditorColorKey, EditorColors, Theme} from '../../models/theming';
 import {Observable, Subject} from 'rxjs';
 import {EastereggService} from '../easteregg/easteregg.service';
-import {CookieStorageService} from '../cookie-storage/cookie-storage.service';
+import {StorageService, StorageServiceModel} from '../storage/storage.service';
 
 @Injectable({
 	providedIn: 'root'
@@ -44,7 +44,7 @@ export class ThemingService {
 	constructor(
 		@Inject(DOCUMENT) private document: HTMLDocument,
 		private eastereggs: EastereggService,
-		private storage: CookieStorageService
+		@Inject(StorageService) private storage: StorageServiceModel,
 	) {
 		this.loadTheme();
 	}

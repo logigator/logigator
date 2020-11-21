@@ -57,6 +57,9 @@ import {FileInputComponent} from './components/file-input/file-input.component';
 import {SiPipe} from './pipes/si/si.pipe';
 import {RomViewComponent} from './components/element-inspection/rom-view/rom-view.component';
 import {HexBinDecConverterComponent} from './components/popup-contents/hex-bin-dec-converter/hex-bin-dec-converter.component';
+import {StorageService} from './services/storage/storage.service';
+import {LocalStorageService} from './services/storage/local-storage.service';
+import {CookieStorageService} from './services/storage/cookie-storage.service';
 
 @NgModule({
 	declarations: [
@@ -132,6 +135,10 @@ import {HexBinDecConverterComponent} from './components/popup-contents/hex-bin-d
 		{
 			provide: WorkerCommunicationService,
 			useClass: ELECTRON ? WorkerCommunicationNodeService : WorkerCommunicationWasmService
+		},
+		{
+			provide: StorageService,
+			useClass: ELECTRON ? LocalStorageService : CookieStorageService
 		}
 	],
 	bootstrap: [AppComponent]
