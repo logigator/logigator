@@ -29,15 +29,13 @@ export class LocationService {
 		return this.pathname.substring(7);
 	}
 
-	public clear() {
-		window.history.pushState(null, null, '/editor/');
-	}
-
 	public set(type: 'project' | 'component' | 'share', uuid: string) {
+		// #!web
 		window.history.pushState(null, null, `/editor/${type}/${uuid}`);
 	}
 
 	public reset() {
+		// #!web
 		window.history.pushState(null, null, `/editor/`);
 	}
 

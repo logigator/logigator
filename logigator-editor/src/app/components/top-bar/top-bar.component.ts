@@ -40,7 +40,7 @@ export class TopBarComponent {
 
 	public login() {
 		// #!electron
-		// TODO
+		this.userService.login();
 
 		// #!web
 		window.open('/login', '_blank');
@@ -48,7 +48,7 @@ export class TopBarComponent {
 
 	public register() {
 		// #!electron
-		// TODO
+		this.electronService.shell.openExternal(`${environment.homeUrl}/register`);
 
 		// #!web
 		window.open('/register', '_blank');
@@ -64,10 +64,9 @@ export class TopBarComponent {
 	}
 
 	public async close() {
-		// const canClose = await this.projectService.askToSave();
-		// if (canClose) {
-		// 	this.electronService.ipcRenderer.invoke('windowClose');
-		// }
+		if (await this.projectService.askToSave()) {
+			this.electronService.ipcRenderer.invoke('windowClose');
+		}
 	}
 	// #!endif
 

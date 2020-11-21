@@ -1,11 +1,10 @@
 import {Injectable} from '@angular/core';
+import {StorageServiceModel} from './storage.service';
 
 @Injectable({
 	providedIn: 'root'
 })
-export class LocalStorageService {
-
-	constructor() {}
+export class LocalStorageService extends StorageServiceModel {
 
 	public get(key: string): any {
 		const data = localStorage.getItem(key);

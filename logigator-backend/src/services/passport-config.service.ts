@@ -74,6 +74,7 @@ export class PassportConfigService {
 		passport.use(new TwitterStrategy(
 			{
 				...this.configService.getConfig('passport').twitter,
+				userAuthorizationURL: 'https://api.twitter.com/oauth/authenticate?force_login=true',
 				includeEmail: true,
 				includeEntities: false,
 				includeStatus: false,

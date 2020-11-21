@@ -2,13 +2,13 @@ import {BrowserWindow, ipcMain} from 'electron';
 
 export class WindowResizeHandler {
 
-	private _window: BrowserWindow;
+	private readonly _window: BrowserWindow;
 
 	constructor(win: BrowserWindow) {
 		this._window = win;
 	}
 
-	public initResizeListeners() {
+	public initListeners() {
 		ipcMain.handle('windowMaximize', () => this.maximize());
 		ipcMain.handle('windowMinimize', () => this.minimize());
 		ipcMain.handle('windowClose', () => this.close());

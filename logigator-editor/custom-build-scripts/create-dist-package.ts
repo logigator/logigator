@@ -2,13 +2,6 @@ import * as fs from 'fs';
 import * as path from 'path';
 const packageFile = require('../../package.json');
 
-const electronDependencies = {
-	'node-fetch': '^2.6.1',
-	tslib: '^1.10.0',
-	express: '^4.17.1',
-	'@logigator/logigator-simulation': 'latest'
-};
-
 const toWrite = `
 {
   "name": "${packageFile.name}",
@@ -17,10 +10,10 @@ const toWrite = `
   "license": "MIT",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/logigator/logigator-editor.git"
+    "url": "git+https://github.com/logigator/editor.git"
   },
   "main": "electron/main.js",
-  "dependencies": ${JSON.stringify(electronDependencies, null, 2)}
+  "dependencies": ${JSON.stringify(packageFile.electronProdDependencies, null, 2)}
 }
 `;
 

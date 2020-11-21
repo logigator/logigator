@@ -32,7 +32,9 @@ export class ElectronUpdateService {
 
 	public get isNewVersionAvailable$(): Observable<boolean> {
 		if (!this._latestReleaseInfo)
-			this._latestReleaseInfo = this.httpClient.get<EditorReleaseData>('https://api.github.com/repos/logigator/logigator-editor/releases/latest').pipe(
+			this._latestReleaseInfo = this.httpClient.get<EditorReleaseData>(
+				'https://api.github.com/repos/logigator/logigator/releases/latest'
+			).pipe(
 				shareReplay(1)
 			);
 

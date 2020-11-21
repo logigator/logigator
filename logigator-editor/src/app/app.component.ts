@@ -7,11 +7,11 @@ import {takeUntil} from 'rxjs/operators';
 import {ProjectsService} from './services/projects/projects.service';
 import {LangChangeEvent, TranslateService} from '@ngx-translate/core';
 import {ElementProviderService} from './services/element-provider/element-provider.service';
-import {CookieStorageService} from './services/cookie-storage/cookie-storage.service';
 import {ShortcutsService} from './services/shortcuts/shortcuts.service';
 import {WorkMode} from './models/work-modes';
 import {EditorInteractionService} from './services/editor-interaction/editor-interaction.service';
 import {EditorAction} from './models/editor-action';
+import {StorageService, StorageServiceModel} from './services/storage/storage.service';
 
 @Component({
 	selector: 'app-root',
@@ -36,7 +36,7 @@ export class AppComponent implements OnInit, OnDestroy {
 		@Inject(DOCUMENT) private document: HTMLDocument,
 		private translate: TranslateService,
 		private elementProviderService: ElementProviderService,
-		private storage: CookieStorageService
+		@Inject(StorageService) private storage: StorageServiceModel,
 	) {
 		this.setupScripts();
 		this.initTranslation();

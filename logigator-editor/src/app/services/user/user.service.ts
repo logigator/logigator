@@ -1,9 +1,10 @@
-import {Injectable} from '@angular/core';
+import {Inject, Injectable, Optional} from '@angular/core';
 import {Observable, ReplaySubject, timer} from 'rxjs';
 import {User} from '../../models/http/response/user';
 import {ApiService} from '../api/api.service';
-import {CookieStorageService} from '../cookie-storage/cookie-storage.service';
 import {distinctUntilChanged, map} from 'rxjs/operators';
+import {ElectronService} from 'ngx-electron';
+import {StorageService, StorageServiceModel} from '../storage/storage.service';
 
 @Injectable({
 	providedIn: 'root'
@@ -14,7 +15,11 @@ export class UserService {
 
 	private _isLoggedIn: boolean;
 
-	constructor(private api: ApiService, private cookie: CookieStorageService) {
+	constructor(
+		private api: ApiService,
+		@Inject(StorageService) private storage: StorageServiceModel,
+		@Optional() private electronService: ElectronService
+	) {
 		this._isLoggedIn = this.checkLoginState();
 
 		timer(0, 1500).pipe(
@@ -45,7 +50,17 @@ export class UserService {
 		return this._userInfo$.asObservable();
 	}
 
+	// #!if ELECTRON === 'true'
+	public login() {
+		this.electronService.ipcRenderer.invoke('login');
+	}
+
+	public logout() {
+		this.electronService.ipcRenderer.invoke('logout');
+	}
+	// #!endif
+
 	private checkLoginState(): boolean {
-		return this.cookie.get('isAuthenticated') === 'true';
+		return this.storage.get('isAuthenticated') + '' === 'true';
 	}
 }
