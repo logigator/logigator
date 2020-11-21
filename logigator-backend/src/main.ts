@@ -2,7 +2,7 @@ import 'reflect-metadata';
 import {useContainer as useContainerRC, useExpressServer} from 'routing-controllers';
 import {createConnection, useContainer as typeOrmUseContainer, ConnectionOptions} from 'typeorm';
 import {useContainer as classValidatorUseContainer} from 'class-validator';
-import express, {urlencoded, static as expressStatic, Request} from 'express';
+import express, {static as expressStatic, Request} from 'express';
 import {Container} from 'typedi';
 import * as exphbs from 'express-handlebars';
 import {HomeController} from './controller/frontend/home.controller';
@@ -57,18 +57,13 @@ async function bootstrap() {
 		app.set('view cache', true);
 	}
 
-	app.engine('hbs', exphbs.create({
-		extname: '.hbs',
-		layoutsDir: path.join(configService.projectRootPath, 'resources', 'private', 'templates', 'layouts'),
-		partialsDir: path.join(configService.projectRootPath, 'resources', 'private', 'templates', 'partials'),
-		defaultLayout: 'default',
-		helpers: handlebarsHelpers
-	}).engine);
-	app.set('views', path.join(configService.projectRootPath, 'resources', 'private', 'templates', 'views'));
-	app.set('view engine', 'hbs');
-
 	app.use(compression());
-	app.use(urlencoded({ extended: false }));
+	app.use(expressStatic(path.join(configService.projectRootPath, 'resources', 'public'), {
+		cacheControl: true,
+		immutable: true,
+		maxAge: '30d'
+	}));
+
 	app.use(cookieParser(configService.getConfig('session').secret));
 	app.use(session({
 		secret: configService.getConfig('session').secret,
@@ -84,8 +79,26 @@ async function bootstrap() {
 	app.use(passport.initialize());
 	app.use(passport.session());
 
-	app.use(expressStatic(path.join(configService.projectRootPath, 'resources', 'public')));
+	app.use(bodyParser.urlencoded({ extended: false }));
 	app.use(bodyParser.json({limit: '10mb'}));
+
+	app.use((req, res, next) => {
+		res.set('Cache-Control', 'no-cache, max-age=0, must-revalidate');
+		next();
+	});
+
+	app.engine('hbs', exphbs.create({
+		extname: '.hbs',
+		layoutsDir: path.join(configService.projectRootPath, 'resources', 'private', 'templates', 'layouts'),
+		partialsDir: path.join(configService.projectRootPath, 'resources', 'private', 'templates', 'partials'),
+		defaultLayout: 'default',
+		helpers: handlebarsHelpers
+	}).engine);
+
+	app.set('views', path.join(configService.projectRootPath, 'resources', 'private', 'templates', 'views'));
+	app.set('view engine', 'hbs');
+	app.set('etag', true);
+
 	useExpressServer(app, {
 		controllers: [
 			HomeController,
@@ -121,6 +134,7 @@ async function bootstrap() {
 			forbidNonWhitelisted: true
 		},
 		development: appContext === 'development',
+		cors: false,
 		defaultErrorHandler: false,
 		currentUserChecker: action => (action.request as Request).user
 	});
