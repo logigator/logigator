@@ -15,7 +15,7 @@ const options = {
 	dir: path.join(__dirname, '..', '..', 'dist'),
 	'app-copyright': 'HTL Rennweg',
 	asar: true,
-	icon: path.join(__dirname, '..', '..', 'icon256.ico'),
+	icon: path.join(__dirname, '..', '..', 'src', 'icon256.ico'),
 	name: 'Logigator',
 	out: path.join(__dirname, '..', '..', 'release'),
 	overwrite: true,

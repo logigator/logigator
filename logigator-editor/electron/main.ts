@@ -39,7 +39,8 @@ class Main {
 			webPreferences: {
 				nodeIntegration: true,
 			},
-			frame: false
+			frame: false,
+			icon: path.join(__dirname, '..', 'logigator-editor', 'assets', 'icons', 'android-chrome-512x512.png'),
 		});
 
 		this._window.on('closed', () => this.onClosed());
