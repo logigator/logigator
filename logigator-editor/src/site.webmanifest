@@ -15,6 +15,6 @@
     ],
     "theme_color": "#27ae60",
     "background_color": "#27ae60",
-    "start_url": "https://logigator.com/editor",
+    "start_url": "https://dev.logigator.com/editor",
     "display": "standalone"
 }
