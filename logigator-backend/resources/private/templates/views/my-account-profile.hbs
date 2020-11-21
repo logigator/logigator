@@ -27,7 +27,6 @@
 						{{> form-error error='isNotEmpty' message=i18n.USERSPACE.ACCOUNT.PROFILE.USERNAME_ERR_REQUIRED }}
 						{{> form-error error='minLength' message=i18n.USERSPACE.ACCOUNT.PROFILE.USERNAME_ERR_MIN clientValData='2'}}
 						{{> form-error error='maxLength' message=i18n.USERSPACE.ACCOUNT.PROFILE.USERNAME_ERR_MAX clientValData='20' }}
-						{{> form-error error='matches' message=i18n.USERSPACE.ACCOUNT.PROFILE.USERNAME_ERR_PATTERN clientValData='^[a-zA-Z0-9_-]+$' }}
 						{{> form-error error='mustChange' message=i18n.USERSPACE.ACCOUNT.PROFILE.USERNAME_ERR_CHANGE clientValData=userData.username }}
 					{{/form-input}}
 

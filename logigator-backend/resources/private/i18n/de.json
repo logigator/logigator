@@ -165,8 +165,7 @@
 				"USERNAME_ERR_REQUIRED": "Benutzername muss angegeben werden.",
 				"USERNAME_ERR_MIN": "Benutzername muss mindestens zwei Zeichen enthalten.",
 				"USERNAME_ERR_MAX": "Benutzername darf maximal 20 Zeichen enthalten.",
-				"USERNAME_ERR_PATTERN": "Benutzername darf nur a-z, A-Z, 0-9, _ oder - enthalten.",
-				"USERNAME_ERR_CHANGE": "Diesr Benutzername ist dein aktueller Benutzername.",
+				"USERNAME_ERR_CHANGE": "Dieser Benutzername ist dein aktueller Benutzername.",
 				"SAVE": "Speichern"
 			},
 			"SECURITY": {
