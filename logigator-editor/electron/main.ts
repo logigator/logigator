@@ -88,6 +88,8 @@ class Main {
 		this._window.webContents.session.webRequest.onBeforeRequest((details, callback) => {
 			if (details.url.startsWith('file:///persisted/')) {
 				callback({redirectURL: details.url.replace('file:///persisted/', getHomeUrl() + '/persisted/')});
+			} else if (details.url.startsWith(this._windowHostname + '/persisted/')) {
+				callback({redirectURL: details.url.replace(this._windowHostname + '/persisted/', getHomeUrl() + '/persisted/')});
 			} else {
 				callback({});
 			}

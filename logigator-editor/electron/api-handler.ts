@@ -71,14 +71,24 @@ export class ApiHandler {
 	}
 
 	private async handleResponse(response: Response): Promise<object> {
-		const json = await response.json();
-		return {
-			response: json,
-			ok: response.ok,
-			status: response.status,
-			url: response.url,
-			statusText: response.statusText
-		};
+		try {
+			const json = await response.json();
+			return {
+				response: json,
+				ok: response.ok,
+				status: response.status,
+				url: response.url,
+				statusText: response.statusText
+			};
+		} catch {
+			return {
+				response: '',
+				ok: response.ok,
+				status: response.status,
+				url: response.url,
+				statusText: response.statusText
+			};
+		}
 	}
 
 	private buildUrl(url: string, params: { [param: string]: string; }): string {

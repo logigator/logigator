@@ -29,7 +29,7 @@ export class AuthenticationHandler {
 	}
 
 	private async onLogin() {
-		if (this._currentlyLoggingIn || this.isAuthenticated) return;
+		if (this._currentlyLoggingIn) return;
 
 		this._currentlyLoggingIn = true;
 		let loginWin = new BrowserWindow({
