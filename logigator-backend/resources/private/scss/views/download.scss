@@ -1,0 +1,47 @@
+@import "../config/config";
+
+@include view('download') {
+
+	@include element('section') {
+		@include section();
+	}
+
+	@include element('header') {
+		display: flex;
+		justify-content: center;
+		flex-direction: row;
+		align-items: center;
+
+		@include media-breakpoint-down('md') {
+			flex-direction: column;
+		}
+	}
+
+	@include element('screenshot') {
+		min-width: 450px;
+		max-width: 700px;
+
+		img {
+			width: 100%;
+		}
+
+		@include media-breakpoint-down('md') {
+			width: 100%;
+			min-width: unset;
+		}
+	}
+
+	@include element('description') {
+		margin-left: 2rem;
+
+		h1 {
+			font-size: 40px;
+			margin-bottom: 0;
+			font-weight: normal;
+		}
+
+		@include media-breakpoint-down('md') {
+			margin-left: 0;
+		}
+	}
+}
