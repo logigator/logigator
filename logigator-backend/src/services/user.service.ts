@@ -186,7 +186,7 @@ export class UserService {
 	}
 
 	public updateUsername(user: User, newUsername: string): Promise<User> {
-		user.username = newUsername;
+		user.username = newUsername.trim();
 		return this.userRepo.save(user);
 	}
 
