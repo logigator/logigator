@@ -15,6 +15,68 @@
 		</div>
 	</section>
 	<section class="view-download__section">
+		<div class="view-download__section-content view-download__platform">
+			<div class="view-download__platform-img">
+				<img src="assets/windows_logo.svg" alt="Windows Logo">
+			</div>
+			<div class="view-download__archs">
+				{{#each windows}}
+					<div class="view-download__arch">
+						<div class="view-download__arch-filename">
+							<p class="view-download__arch-name view-download__arch-title">{{this.name}}</p>
+							<p class="view-download__arch-version">{{@root.version}}</p>
+							<p class="view-download__arch-date-size">{{@root.i18n.DOWNLOAD.FILE_SIZE}}: {{si this.size}}B; {{@root.i18n.DOWNLOAD.DATE}}: {{date @root.date}}</p>
+						</div>
+						<div class="view-download__arch-filesize">
+							<p class="view-download__arch-name">{{@root.i18n.DOWNLOAD.FILE_SIZE}}</p>
+							<p>{{si this.size}}B</p>
+						</div>
+						<div class="view-download__arch-date">
+							<p class="view-download__arch-name">{{@root.i18n.DOWNLOAD.DATE}}</p>
+							<p>{{date @root.date}}</p>
+						</div>
+						<div class="">
+							<a href="{{this.link}}" download>
+								<button class="btn-raised primary view-download__download-button">{{@root.i18n.DOWNLOAD.DOWNLOAD}}</button>
+							</a>
+						</div>
+					</div>
+				{{/each}}
 
+			</div>
+		</div>
+	</section>
+
+	<section class="view-download__section">
+		<div class="view-download__section-content view-download__platform">
+			<div class="view-download__platform-img">
+				<img src="assets/linux_logo.svg" alt="Windows Logo">
+			</div>
+			<div class="view-download__archs">
+				{{#each linux}}
+					<div class="view-download__arch">
+						<div class="view-download__arch-filename">
+							<p class="view-download__arch-name view-download__arch-title">{{this.name}}</p>
+							<p class="view-download__arch-version">{{@root.version}}</p>
+							<p class="view-download__arch-date-size">{{@root.i18n.DOWNLOAD.FILE_SIZE}}: {{si this.size}}B; {{@root.i18n.DOWNLOAD.DATE}}: {{date @root.date}}</p>
+						</div>
+						<div class="view-download__arch-filesize">
+							<p class="view-download__arch-name">{{@root.i18n.DOWNLOAD.FILE_SIZE}}</p>
+							<p>{{si this.size}}B</p>
+						</div>
+						<div class="view-download__arch-date">
+							<p class="view-download__arch-name">{{@root.i18n.DOWNLOAD.DATE}}</p>
+							<p>{{date @root.date}}</p>
+						</div>
+						<div class="">
+							<a href="{{this.link}}" download>
+								<button class="btn-raised primary view-download__download-button">{{@root.i18n.DOWNLOAD.DOWNLOAD}}</button>
+							</a>
+						</div>
+					</div>
+				{{/each}}
+
+			</div>
+		</div>
 	</section>
 </div>

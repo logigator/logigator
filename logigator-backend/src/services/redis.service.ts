@@ -77,7 +77,7 @@ export class RedisService {
 		});
 	}
 
-	public setObject(key: string, value: any, expire: number): Promise<void> {
+	public setObject(key: string, value: { [key: string]: string | number }, expire: number): Promise<void> {
 		return new Promise<void>((resolve, reject) => {
 			this.redisClient.hmset(key, value, (err) => {
 				if (err) {

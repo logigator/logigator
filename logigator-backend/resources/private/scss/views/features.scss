@@ -10,13 +10,17 @@
 	}
 
 	@include element('feature-content') {
-		padding: 1rem;
+		padding: 2rem;
 		display: flex;
 		flex-direction: row;
 
 		@include media-breakpoint-down('xl') {
 			align-items: center;
 			flex-direction: column-reverse;
+		}
+
+		@include media-breakpoint-down('md') {
+			padding: 1rem;
 		}
 
 		@include themify() {

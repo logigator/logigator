@@ -4,6 +4,9 @@
 
 	@include element('section') {
 		@include section();
+
+		padding-top: 0 !important;
+		padding-bottom: 0 !important;
 	}
 
 	@include element('header') {
@@ -11,6 +14,7 @@
 		justify-content: center;
 		flex-direction: row;
 		align-items: center;
+		padding: 2rem 0;
 
 		@include media-breakpoint-down('md') {
 			flex-direction: column;
@@ -21,7 +25,7 @@
 		min-width: 450px;
 		max-width: 700px;
 
-		img {
+		> img {
 			width: 100%;
 		}
 
@@ -34,7 +38,7 @@
 	@include element('description') {
 		margin-left: 2rem;
 
-		h1 {
+		> h1 {
 			font-size: 40px;
 			margin-bottom: 0;
 			font-weight: normal;
@@ -43,5 +47,134 @@
 		@include media-breakpoint-down('md') {
 			margin-left: 0;
 		}
+	}
+
+	@include element('platform') {
+		display: flex;
+		padding: 2rem;
+		margin-bottom: 2rem;
+
+		@include themify() {
+			background-color: themed('accent2');
+		}
+
+		@include media-breakpoint-down('sm') {
+			flex-direction: column;
+
+		}
+	}
+
+	@include element('platform-img') {
+		width: 150px;
+		flex-shrink: 0;
+		text-align: center;
+
+		> img {
+			width: 80%;
+		}
+
+		@include media-breakpoint-down('sm') {
+			text-align: left;
+		}
+	}
+
+	@include element('archs') {
+		width: 100%;
+		padding-left: 2rem;
+
+		@include media-breakpoint-down('sm') {
+			padding-left: 0;
+		}
+	}
+
+	@include element('arch') {
+		display: flex;
+		justify-content: space-between;
+		align-items: center;
+		padding: 2rem 0;
+
+		@include themify() {
+			border-bottom: 1px solid themed('background');
+		}
+
+		&:nth-of-type(1) {
+			padding-top: 1rem;
+		}
+
+		&:last-of-type {
+			border-bottom: none !important;
+			padding-bottom: 0;
+		}
+
+		@include media-breakpoint-down('md') {
+			flex-direction: column;
+			align-items: flex-start;
+			text-align: left;
+		}
+	}
+
+	@include element('arch-filename') {
+		> p {
+			margin: 0;
+		}
+
+		width: 45%;
+		word-break: break-all;
+
+		@include media-breakpoint-down('xl') {
+			width: unset;
+		}
+
+		> * {
+			width: 100%;
+		}
+	}
+
+	@include element('arch-name') {
+		margin-bottom: 0.2rem;
+	}
+
+	@include element('arch-title') {
+		font-size: 24px;
+	}
+
+	@include element('arch-date-size') {
+		display: none;
+		margin-top: 0.5rem !important;
+
+		@include media-breakpoint-down('xl') {
+			display: block;
+		}
+
+		@include media-breakpoint-down('md') {
+			margin: {
+				top: 0.5rem !important;
+				bottom: 1rem !important;
+			};
+		}
+	}
+
+	@include element('arch-filesize') {
+		> p {
+			margin: 0;
+		}
+
+		@include media-breakpoint-down('xl') {
+			display: none;
+		}
+	}
+
+	@include element('arch-date') {
+		> p {
+			margin: 0;
+		}
+
+		@include media-breakpoint-down('xl') {
+			display: none;
+		}
+	}
+
+	@include element('download-button') {
+		font-size: 20px;
 	}
 }

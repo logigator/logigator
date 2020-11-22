@@ -53,7 +53,10 @@ function imageChangeHandling() {
 
 		// eslint-disable-next-line no-undef
 		cropper = new Cropper(Bem.element(node, 'img'), {
-			aspectRatio: 1
+			aspectRatio: 1,
+			zoomable: false,
+			toggleDragModeOnDblclick: false,
+			dragMode: "none"
 		});
 
 		let currentlySaving = false;
