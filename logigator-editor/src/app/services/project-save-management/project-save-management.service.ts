@@ -274,7 +274,7 @@ export class ProjectSaveManagementService {
 			labels: elementType.labels
 		};
 		const resp = this.api.put<ProjectInfo>(`/component/${this._mappings.getKey(project.id)}`, body,
-			{errorMessage: 'ERROR.PROJECTS.SAVE'}).toPromise();
+			{dynamicMsg: err => err.error.error.description === 'VersionMismatch' ? 'ERROR.PROJECTS.SAVE_VERSION' : 'ERROR.PROJECTS.SAVE'}).toPromise();
 
 		const previews = await this.imageService.generatePreviews(project);
 		const formData = new FormData();
@@ -319,7 +319,7 @@ export class ProjectSaveManagementService {
 		formData.append('previews', previews.dark);
 		formData.append('previews', previews.light);
 		const previewPromise = this.api.post(`/project/${this._mappings.getKey(project.id)}/preview`, formData,
-			{errorMessage: 'ERROR.PROJECTS.SAVE'}).toPromise();
+			{dynamicMsg: err => err.error.error.description === 'VersionMismatch' ? 'ERROR.PROJECTS.SAVE_VERSION' : 'ERROR.PROJECTS.SAVE'}).toPromise();
 
 		project.hash = (await resp).data.elementsFile.hash;
 		project.saveDirty = false;
