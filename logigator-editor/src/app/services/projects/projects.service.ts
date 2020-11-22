@@ -32,6 +32,9 @@ export class ProjectsService {
 	private _projectSwitchSubject = new Subject<number>();
 	private _userDefinedElementsReloadSubject = new Subject<void>();
 
+	private _currentlyClosing = new Set<number>();
+	private _currentlyOpening = new Set<number>();
+
 	constructor(
 		private projectSaveManagementService: ProjectSaveManagementService,
 		private popup: PopupService,
@@ -91,9 +94,17 @@ export class ProjectsService {
 	}
 
 	public async closeProject(id: number) {
-		await this.saveProject(id);
-		this._projects = this._projects.filter(p => p.id !== id);
-		this._projectClosedSubject.next(id);
+		if (this._currentlyClosing.has(id))
+			return;
+
+		this._currentlyClosing.add(id);
+		try {
+			await this.saveProject(id);
+			this._projects = this._projects.filter(p => p.id !== id);
+			this._projectClosedSubject.next(id);
+		} catch {} finally {
+			this._currentlyClosing.delete(id);
+		}
 	}
 
 	private async saveProject(id: number) {
@@ -148,11 +159,17 @@ export class ProjectsService {
 			return;
 		}
 
+		if (this._currentlyOpening.has(id))
+			return;
+
+		this._currentlyOpening.add(id);
 		try {
 			const component = await this.projectSaveManagementService.getComponent(id);
 			this._projects.push(component);
 			this._projectOpenedSubject.next(component.id);
-		} catch {}
+		} catch {} finally {
+			this._currentlyOpening.delete(id);
+		}
 	}
 
 	public async saveProjectServer(name: string, description = '') {

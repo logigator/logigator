@@ -367,6 +367,7 @@
 			"GET_PROJECTS": "Fehler beim laden der Projekte vom Server.",
 			"CREATE": "Fehler beim erstellen der Komponente.",
 			"SAVE": "Fehler beim speichern des Projektes.",
+			"SAVE_VERSION": "Fehler beim speichern des Projekts. Versionsproblem",
 			"REGENERATE_SHARE_LINK": "Fehler beim neu generieren des Links.",
 			"UPDATE_SHARE_INFO": "Fehler beim aktualisieren des Shares.",
 			"INVALID_FILE_TYPE": "Ungültige Datei. Verwende einen JSON-Datei.",
