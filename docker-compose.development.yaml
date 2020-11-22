@@ -24,6 +24,8 @@ services:
     user: "node"
     working_dir: /home/node/app
     command: "npm start"
+    environment:
+      - DEBUG=express:*
   #### MYSQL ####
   development_mysql:
     image: mysql:latest
