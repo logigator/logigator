@@ -1,23 +1,23 @@
 import {Controller, Get, InternalServerError, Render, UseBefore} from 'routing-controllers';
 import {setTitleMiddleware} from '../../middleware/action/set-title-middleware';
 import fetch from 'node-fetch';
-import {RedisService} from '../../services/redis.service';
+import {CachingService} from '../../services/caching.service';
 
 @Controller('/download')
 export class DownloadController {
 
-	constructor(private redisService: RedisService) {}
+	constructor(private cachingService: CachingService) {}
 
 	@Get('/')
 	@Render('download')
 	@UseBefore(setTitleMiddleware('TITLE.DOWNLOAD'))
 	public async index() {
-		const data = await this.redisService.getString('cache:electron_releases');
+		const data = await this.cachingService.get('electron_releases');
 
 		if (!data) {
 			return await this.refreshData();
 		} else {
-			this.redisService.ttl('cache:electron_releases').then(ttl => {
+			this.cachingService.ttl('electron_releases').then(ttl => {
 				if (ttl !== -1 && ttl < 60 * 60 * 23)
 					this.refreshData();
 			});
@@ -44,7 +44,7 @@ export class DownloadController {
 				linux: assets.filter(x => x.name.includes('linux'))
 			};
 
-			this.redisService.setString('cache:electron_releases', JSON.stringify(releases), 60 * 60 * 24).catch(e => console.error(e));
+			this.cachingService.set('electron_releases', JSON.stringify(releases), 60 * 60 * 24).catch(e => console.error(e));
 			return releases;
 		} catch (e) {
 			console.error(e);
