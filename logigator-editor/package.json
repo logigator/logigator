@@ -100,6 +100,6 @@
 	},
 	"developmentInfo": {
 		"": "For Development you should use the local version of shared-cops to use live reload from the libary",
-		"@logigator/logigator-simulation": "file:../logigator-simulation"
+		"@logigator/logigator-simulation": "file:../../logigator-simulation"
 	}
 }
