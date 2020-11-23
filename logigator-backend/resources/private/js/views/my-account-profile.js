@@ -56,7 +56,7 @@ function imageChangeHandling() {
 			aspectRatio: 1,
 			zoomable: false,
 			toggleDragModeOnDblclick: false,
-			dragMode: "none"
+			dragMode: 'none'
 		});
 
 		let currentlySaving = false;
