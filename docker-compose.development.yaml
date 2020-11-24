@@ -26,6 +26,7 @@ services:
     command: "npm start"
     environment:
       - DEBUG=express:*
+      - DEBUG_COLORS=on
   #### MYSQL ####
   development_mysql:
     image: mysql:latest
