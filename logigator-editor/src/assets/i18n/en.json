@@ -210,6 +210,7 @@
 	},
 	"SETTINGS_INFO": {
 		"INPUTS": "Inputs",
+		"OUTPUTS": "Outputs",
 		"DIRECTION": "Direction",
 		"DIRECTIONS": {
 			"LEFT": "Left",
@@ -296,6 +297,10 @@
 			"SR_FF": {
 				"NAME": "SR Flip Flop",
 				"DESCRIPTION": "Holds a state. Set (S) to high to set and (R) to high to reset.<br>Triggers on rising edge."
+			},
+			"RANDOM": {
+				"NAME": "Random Number Generator",
+				"DESCRIPTION": "Generates random data.<br>Triggers on rising edge."
 			}
 		},
 		"IO": {
