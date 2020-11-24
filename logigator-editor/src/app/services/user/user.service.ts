@@ -34,6 +34,11 @@ export class UserService {
 			}
 			try {
 				const user = await this.api.get<User>('/user', {errorMessage: 'ERROR.USER.GET_INFO'}).toPromise();
+				if (!user.data.image) {
+					user.data.image = {
+						publicUrl: 'assets/default-user.svg'
+					};
+				}
 				this._userInfo$.next(user.data);
 			} catch {
 				this._isLoggedIn = false;

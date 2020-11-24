@@ -42,7 +42,7 @@
 			<ng-container *ngIf="userInfo$ | async as userInfo; else loginRegister">
 				<div class="logged-in-settings" (click)="closeDropdowns(); settingsDropdownOpen = true;">
 					<p>{{userInfo.username}}</p>
-					<img class="user-img" alt="User image" [src]="userInfo.image?.publicUrl">
+					<img class="user-img" alt="User image" [src]="userInfo.image.publicUrl">
 				</div>
 			</ng-container>
 			<app-settings-dropdown (requestClosed)="closeDropdowns()" *ngIf="settingsDropdownOpen"></app-settings-dropdown>
