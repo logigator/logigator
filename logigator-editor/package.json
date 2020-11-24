@@ -64,7 +64,6 @@
 		"@angular/compiler-cli": "^10.1.0",
 		"@angular/language-service": "^10.1.0",
 		"@ngtools/webpack": "^10.1.0",
-		"@types/gtag.js": "^0.0.3",
 		"@types/jasmine": "~3.3.8",
 		"@types/jasminewd2": "^2.0.8",
 		"@types/node": "^13.7.0",

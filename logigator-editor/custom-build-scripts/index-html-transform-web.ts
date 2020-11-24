@@ -9,7 +9,9 @@ function transform(targetOptions, indexHtml: string): string {
 			${warningPopup.replace('id="compatibility-warning" style="display: none"', 'id="compatibility-warning"')}
 		</noscript>`;
 
-	return indexHtml.replace('<template id="compatibility-warning"></template>', toInject);
+	return indexHtml
+		.replace('<template id="compatibility-warning"></template>', toInject)
+		.replace('##ga-page-placeholder##', '/editor/web');
 }
 
 module.exports = transform;

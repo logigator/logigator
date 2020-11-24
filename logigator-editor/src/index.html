@@ -21,20 +21,17 @@
 	<link rel="preconnect" href="https://www.googletagmanager.com">
 	<link rel="preconnect" href="https://www.gstatic.com">
 
-	<!-- Scripts are loaded in AppComponent -->
 	<script>
-		if ((!!window.navigator.userAgent.match(/Electron/) && !window.location.host.endsWith('8202')) || window.location.host === 'editor.logigator.com') {
-			window.dataLayer = window.dataLayer || [];
-			function gtag(){dataLayer.push(arguments);}
-			gtag('js', new Date());
-
-			gtag('config', 'UA-151071040-3');
+		if (!window.location.host.endsWith('8202') && !window.location.host.startsWith('dev.logigator.com')) {
+			window.ga=window.ga||function(){(ga.q=ga.q||[]).push(arguments)};ga.l=+new date;
+			ga('create', 'ua-151071040-2', 'auto');
+			ga('send', 'pageview', '##ga-page-placeholder##');
 		}
 	</script>
-
+	<script async src='https://www.google-analytics.com/analytics.js'></script>
 </head>
 <body>
-<template id="compatibility-warning"></template>
-<app-root></app-root>
+	<template id="compatibility-warning"></template>
+	<app-root></app-root>
 </body>
 </html>

@@ -38,7 +38,6 @@ export class AppComponent implements OnInit, OnDestroy {
 		private elementProviderService: ElementProviderService,
 		@Inject(StorageService) private storage: StorageServiceModel,
 	) {
-		this.setupScripts();
 		this.initTranslation();
 	}
 
@@ -147,44 +146,6 @@ export class AppComponent implements OnInit, OnDestroy {
 				lang: e.lang
 			});
 		});
-	}
-
-	private setupScripts() {
-		// To defer the loading of scripts a little bit
-		setTimeout(() => {
-			this.loadScripts().then(() => {
-				if ((!!window.navigator.userAgent.match(/Electron/) && !window.location.host.endsWith('8202')) || window.location.host === 'editor.logigator.com') {
-					this.setGoogleAnalytics();
-				}
-			});
-		}, 1000);
-	}
-
-	private loadScripts(): Promise<any> {
-		const scripts = [
-			'https://www.googletagmanager.com/gtag/js?id=UA-151071040-3',
-		];
-		const promises: Promise<void>[] = [];
-		scripts.forEach(scriptUrl => {
-			promises.push(new Promise<void>(resolve => {
-				const script = document.createElement('script');
-				script.type = 'text/javascript';
-				script.src = scriptUrl;
-				script.onload = () => {
-					resolve();
-				};
-				document.getElementsByTagName('head')[0].appendChild(script);
-			}));
-		});
-		return Promise.all(promises);
-	}
-
-	private setGoogleAnalytics() {
-		// #!electron
-		gtag('config', 'UA-151071040-3', { page_path: 'electron' });
-
-		// #!web
-		gtag('config', 'UA-151071040-3', { page_path: 'web' });
 	}
 
 	ngOnDestroy(): void {
