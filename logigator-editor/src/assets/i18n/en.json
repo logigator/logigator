@@ -24,7 +24,8 @@
 			"COPY": "Copy",
 			"PASTE": "Paste",
 			"CUT": "Cut",
-			"DELETE": "Delete"
+			"DELETE": "Delete",
+			"PLUGS": "Component Plugs"
 		},
 		"VIEW": {
 			"TITLE": "View",
@@ -148,6 +149,7 @@
 				"delete": "Delete selected items",
 				"undo": "Undo",
 				"redo": "Redo",
+				"editPlugs": "Edit plugs of custom component",
 				"zoom100": "Zoom to 100%",
 				"zoomIn": "Zoom in",
 				"zoomOut": "Zoom out",
@@ -206,6 +208,9 @@
 			"HEX": "Hexadecimal",
 			"BIN": "Binary",
 			"DEC": "Decimal"
+		},
+		"EDIT_COMPONENT_PLUGS": {
+			"TITLE": "Edit Component Plugs"
 		}
 	},
 	"SETTINGS_INFO": {

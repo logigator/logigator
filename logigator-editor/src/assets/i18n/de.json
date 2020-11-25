@@ -24,7 +24,8 @@
 			"COPY": "Kopieren",
 			"PASTE": "Einfügen",
 			"CUT": "Ausschneiden",
-			"DELETE": "Löschen"
+			"DELETE": "Löschen",
+			"PLUGS": "Komponenten Stecker"
 		},
 		"VIEW": {
 			"TITLE": "Ansicht",
@@ -148,6 +149,7 @@
 				"delete": "Auswahl löschen",
 				"undo": "Rückgängig",
 				"redo": "Wiederholen",
+				"editPlugs": "Stecker benutzerdefinierter Komponente bearbeiten",
 				"zoom100": "Auf 100% zoomen",
 				"zoomIn": "Einzoomen",
 				"zoomOut": "Auszoomen",
@@ -206,6 +208,9 @@
 			"HEX": "Hexadezimal",
 			"BIN": "Binär",
 			"DEC": "Dezimal"
+		},
+		"EDIT_COMPONENT_PLUGS": {
+			"TITLE": "Komponenten Stecker bearbeiten"
 		}
 	},
 	"SETTINGS_INFO": {

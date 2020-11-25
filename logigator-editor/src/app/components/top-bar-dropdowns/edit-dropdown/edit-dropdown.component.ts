@@ -1,5 +1,7 @@
 import {ChangeDetectionStrategy, Component, EventEmitter, Output} from '@angular/core';
 import {EditorInteractionService} from '../../../services/editor-interaction/editor-interaction.service';
+import {ProjectsService} from '../../../services/projects/projects.service';
+import {ElementProviderService} from '../../../services/element-provider/element-provider.service';
 
 @Component({
 	selector: 'app-edit-dropdown',
@@ -12,7 +14,15 @@ export class EditDropdownComponent {
 	@Output()
 	public requestClosed: EventEmitter<any> = new EventEmitter();
 
-	constructor(private editorInteractionService: EditorInteractionService) { }
+	constructor(
+		private editorInteractionService: EditorInteractionService,
+		private projects: ProjectsService,
+		private elemProv: ElementProviderService,
+	) { }
+
+	public get istCustomComponent(): boolean {
+		return this.elemProv.isCustomElement(this.projects.currProject.id);
+	}
 
 	public close() {
 		this.requestClosed.emit();
@@ -45,6 +55,11 @@ export class EditDropdownComponent {
 
 	public delete() {
 		this.editorInteractionService.delete();
+		this.close();
+	}
+
+	public plugs() {
+		this.editorInteractionService.editCustomComponentPlugs();
 		this.close();
 	}
 }
