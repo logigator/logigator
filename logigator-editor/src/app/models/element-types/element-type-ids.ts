@@ -16,6 +16,7 @@ export const enum ElementTypeId {
 	JK_FF = 14,
 	SR_FF = 15,
 	RNG = 16,
+	RAM = 17,
 
 	INPUT = 100,
 	OUTPUT = 101,

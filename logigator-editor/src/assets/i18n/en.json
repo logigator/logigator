@@ -301,6 +301,12 @@
 			"RANDOM": {
 				"NAME": "Random Number Generator",
 				"DESCRIPTION": "Generates random data.<br>Triggers on rising edge."
+			},
+			"RAM": {
+				"NAME": "RAM",
+				"DESCRIPTION": "Random Access Memory. Applies input on rising edge of CLK.<br>Set WE to high to write to current address and to low to read from current address.",
+				"WORD_SIZE": "Word Size",
+				"ADDRESS_SIZE": "Address Size"
 			}
 		},
 		"IO": {

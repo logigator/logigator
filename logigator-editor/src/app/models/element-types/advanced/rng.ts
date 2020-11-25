@@ -57,6 +57,12 @@ export const rng: ElementType = {
 	calcLabels(element?)  {
 		if (!element)
 			element = this;
-		return ['CLK', ...new Array(this.numOutputs).map((x, y) => y + '')];
+
+		const labels = ['CLK'];
+		for (let i = 0; i < element.numOutputs; i++) {
+			labels.push(i + '');
+		}
+
+		return labels;
 	}
 };
