@@ -27,6 +27,7 @@ import {segmentDisplay} from '../../models/element-types/io/segment-display';
 import {ledMatrix} from '../../models/element-types/io/led-matrix';
 import {tunnel} from '../../models/element-types/basic/tunnel';
 import {rng} from '../../models/element-types/advanced/rng';
+import {ram} from '../../models/element-types/advanced/ram';
 
 @Injectable({
 	providedIn: 'root'
@@ -53,6 +54,7 @@ export class ElementProviderService {
 		[jkFF.id, jkFF],
 		[srFF.id, srFF],
 		[rng.id, rng],
+		[ram.id, ram],
 
 		// plug
 		[input.id, input],

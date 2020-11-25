@@ -307,6 +307,12 @@
 			"RANDOM": {
 				"NAME": "Zufallsgenerator",
 				"DESCRIPTION": "Generiert zufällige Daten.<br>Speichert bei Anlegen von (CLK)."
+			},
+			"RAM": {
+				"NAME": "RAM",
+				"DESCRIPTION": "Schreibbarer Speicher. Die Eingänge werden bei Anlegen von CLK angewendet.<br>Wenn WE auf LOW gesetzt ist, wird von der Adresse gelesen, wenn auf HIGH gesetzt ist wird von der Adresse geschrieben.",
+				"WORD_SIZE": "Wortbreite",
+				"ADDRESS_SIZE": "Adressgröße"
 			}
 		},
 		"IO": {
