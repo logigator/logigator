@@ -8,6 +8,7 @@ import {Exclude} from 'class-transformer';
 export class ComponentPreviewDark extends PersistedResource {
 
 	public mimeType = 'image/png';
+	_cacheable = true;
 
 	@OneToOne(type => Component, component => component.previewDark)
 	@JoinColumn()
