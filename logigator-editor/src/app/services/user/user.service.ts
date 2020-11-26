@@ -1,4 +1,4 @@
-import {Inject, Injectable, Optional} from '@angular/core';
+import {Inject, Injectable, NgZone, Optional} from '@angular/core';
 import {Observable, ReplaySubject, timer} from 'rxjs';
 import {User} from '../../models/http/response/user';
 import {ApiService} from '../api/api.service';
@@ -17,33 +17,36 @@ export class UserService {
 
 	constructor(
 		private api: ApiService,
+		private ngZone: NgZone,
 		@Inject(StorageService) private storage: StorageServiceModel,
 		@Optional() private electronService: ElectronService
 	) {
 		this._isLoggedIn = this.checkLoginState();
 
-		timer(0, 1500).pipe(
-			map(() => this.checkLoginState()),
-			distinctUntilChanged(),
-		).subscribe(async loggedIn =>  {
-			this._isLoggedIn = loggedIn;
+		this.ngZone.runOutsideAngular(() => {
+			timer(0, 1500).pipe(
+				map(() => this.checkLoginState()),
+				distinctUntilChanged(),
+			).subscribe(async loggedIn =>  {
+				this._isLoggedIn = loggedIn;
 
-			if (!loggedIn) {
-				this._userInfo$.next(undefined);
-				return;
-			}
-			try {
-				const user = await this.api.get<User>('/user', {errorMessage: 'ERROR.USER.GET_INFO'}).toPromise();
-				if (!user.data.image) {
-					user.data.image = {
-						publicUrl: 'assets/default-user.svg'
-					};
+				if (!loggedIn) {
+					this.ngZone.run(() => this._userInfo$.next(undefined))
+					return;
 				}
-				this._userInfo$.next(user.data);
-			} catch {
-				this._isLoggedIn = false;
-				this._userInfo$.next(undefined);
-			}
+				try {
+					const user = await this.api.get<User>('/user', {errorMessage: 'ERROR.USER.GET_INFO'}).toPromise();
+					if (!user.data.image) {
+						user.data.image = {
+							publicUrl: 'assets/default-user.svg'
+						};
+					}
+					this.ngZone.run(() => this._userInfo$.next(user.data));
+				} catch {
+					this._isLoggedIn = false;
+					this.ngZone.run(() => this._userInfo$.next(undefined));
+				}
+			});
 		});
 	}
 
