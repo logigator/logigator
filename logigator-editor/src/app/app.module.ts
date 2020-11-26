@@ -60,6 +60,7 @@ import {HexBinDecConverterComponent} from './components/popup-contents/hex-bin-d
 import {StorageService} from './services/storage/storage.service';
 import {LocalStorageService} from './services/storage/local-storage.service';
 import {CookieStorageService} from './services/storage/cookie-storage.service';
+import { LoadingSymbolComponent } from './components/loading-symbol/loading-symbol.component';
 
 @NgModule({
 	declarations: [
@@ -103,7 +104,8 @@ import {CookieStorageService} from './services/storage/cookie-storage.service';
 		InputErrorComponent,
 		FileInputComponent,
 		SiPipe,
-		HexBinDecConverterComponent
+		HexBinDecConverterComponent,
+		LoadingSymbolComponent
 	],
 	imports: [
 		// #!electron
