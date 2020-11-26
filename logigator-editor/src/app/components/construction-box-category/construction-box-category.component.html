@@ -5,7 +5,7 @@
 	</div>
 	<div class="content">
 		<ng-container *ngIf="components.length > 0; else noComponents">
-			<ng-container *ngFor="let comp of components; trackBy: componentsTrackBy">
+			<ng-container *ngFor="let comp of components; trackBy:componentsTrackBy">
 				<div class="component-to-select"
 				     *ngIf="comp.showInConstructionBox &&
 				     (searchText == '' || (isInSearchResult(comp) | async)) && !isCurrentCustomElement(comp.id)
