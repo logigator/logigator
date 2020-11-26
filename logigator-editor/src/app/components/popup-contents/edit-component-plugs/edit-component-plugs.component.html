@@ -1,1 +1,22 @@
-<p>edit-component-plugs works!</p>
+<div class="edit-plugs">
+	<div class="component">
+		<form [formGroup]="inputLabelsForm" class="controls inputs">
+			<div *ngFor="let c of inputLabelsControls" class="control">
+				<input [formControl]="c">
+				<div class="drag">
+					<div class="wire-end"></div>
+				</div>
+			</div>
+		</form>
+		<form [formGroup]="outputLabelsForm" class="controls outputs">
+			<div *ngFor="let c of outputLabelsControls" class="control">
+				<input [formControl]="c">
+				<div class="drag">
+					<div class="wire-end"></div>
+				</div>
+			</div>
+		</form>
+	</div>
+
+	<button class="btn-raised primary save" (click)="save()">{{'POPUP.EDIT_COMPONENT_PLUGS.SAVE' | translate}}</button>
+</div>

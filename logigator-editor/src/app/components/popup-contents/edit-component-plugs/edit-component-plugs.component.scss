@@ -1,0 +1,105 @@
+@import "themes";
+
+.edit-plugs {
+	width: 100%;
+
+	.component {
+		width: 10rem;
+		margin: 1rem auto;
+		display: flex;
+		justify-content: space-between;
+
+		@include themify() {
+			border: 1px solid themed('wire');
+		}
+
+		.controls {
+
+			.control {
+				padding: 0.35rem 0;
+				position: relative;
+
+				input {
+					outline: none;
+					border: none;
+					padding: 0.1rem;
+					font-size: 1.1rem;
+					width: 3.5rem;
+					background-color: transparent;
+
+					@include themify() {
+						color: themed('text-primary');
+					}
+				}
+
+				.drag {
+					position: absolute;
+					width: 3rem;
+					top: 0;
+					height: 100%;
+					display: flex;
+					align-items: center;
+					cursor: pointer;
+					background-repeat: no-repeat;
+					background-position-y: center;
+
+					@include themify() {
+						@if (isTheme('dark')) {
+							background-image: url("^assets/icons/dark/drag-points.svg");
+						} @else {
+							background-image: url("^assets/icons/light/drag-points.svg");
+						}
+					}
+
+					.wire-end {
+						width: 1.5rem;
+
+						@include themify() {
+							border-bottom: 1px solid themed('wire');
+						}
+					}
+
+					&:hover {
+						.wire-end {
+							@include themify() {
+								border-bottom: 2px solid themed('wire');
+							}
+						}
+					}
+				}
+			}
+		}
+
+		.inputs {
+			input {
+				text-align: left;
+				margin-left: 0.2rem !important;
+				padding-left: 0 !important;
+			}
+
+			.drag {
+				left: -3rem;
+				justify-content: flex-end;
+				background-position-x: left;
+			}
+		}
+
+		.outputs {
+			input {
+				text-align: right;
+				margin-right: 0.2rem !important;
+				padding-right: 0 !important;
+			}
+
+			.drag {
+				right: -3rem;
+				justify-content: flex-start;
+				background-position-x: right;
+			}
+		}
+	}
+
+	.save {
+		float: right;
+	}
+}

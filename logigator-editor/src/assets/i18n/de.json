@@ -210,7 +210,8 @@
 			"DEC": "Dezimal"
 		},
 		"EDIT_COMPONENT_PLUGS": {
-			"TITLE": "Komponenten Stecker bearbeiten"
+			"TITLE": "Komponenten Stecker bearbeiten",
+			"SAVE": "Speichern"
 		}
 	},
 	"SETTINGS_INFO": {

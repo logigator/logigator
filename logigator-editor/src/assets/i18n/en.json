@@ -210,7 +210,8 @@
 			"DEC": "Decimal"
 		},
 		"EDIT_COMPONENT_PLUGS": {
-			"TITLE": "Edit Component Plugs"
+			"TITLE": "Edit Component Plugs",
+			"SAVE": "Save"
 		}
 	},
 	"SETTINGS_INFO": {
