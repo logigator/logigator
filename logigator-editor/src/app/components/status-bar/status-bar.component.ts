@@ -1,8 +1,10 @@
-import { Component, OnInit } from '@angular/core';
+import {Component} from '@angular/core';
 import {SelectionService} from '../../services/selection/selection.service';
 import {ProjectsService} from '../../services/projects/projects.service';
-import {Observable} from 'rxjs';
+import {fromEvent, Observable, Subscription} from 'rxjs';
 import {WorkModeService} from '../../services/work-mode/work-mode.service';
+import {LoadingService} from '../../services/loading/loading.service';
+import {tap} from 'rxjs/operators';
 
 @Component({
 	selector: 'app-status-bar',
@@ -11,10 +13,15 @@ import {WorkModeService} from '../../services/work-mode/work-mode.service';
 })
 export class StatusBarComponent {
 
+	public showingAllTasks = false;
+
+	private closeTasksSubscription: Subscription;
+
 	constructor(
 		private selectionService: SelectionService,
 		private projectsService: ProjectsService,
-		private workMode: WorkModeService
+		private workMode: WorkModeService,
+		private loadingService: LoadingService
 	) {}
 
 	public get selected(): number {
@@ -28,6 +35,34 @@ export class StatusBarComponent {
 
 	public get workModeDescription$(): Observable<string> {
 		return this.workMode.workModeDescription$;
+	}
+
+	public get tasks$(): Observable<string[]> {
+		return this.loadingService.tasks$.pipe(
+			tap(tasks => {
+				if (tasks.length <= 1) this.closeAllTasks();
+			})
+		);
+	}
+
+	public loadingClick(event: MouseEvent, tasks: string[]) {
+		if (tasks.length <= 1) return;
+
+		this.showingAllTasks = true;
+		event.stopPropagation();
+		this.addCloseTasksListener();
+	}
+
+	private addCloseTasksListener() {
+		if (!this.closeTasksSubscription) {
+			this.closeTasksSubscription = fromEvent(window, 'mousedown').subscribe(() => this.closeAllTasks());
+		}
+	}
+
+	private closeAllTasks() {
+		this.showingAllTasks = false;
+		this.closeTasksSubscription?.unsubscribe();
+		delete this.closeTasksSubscription;
 	}
 }
 

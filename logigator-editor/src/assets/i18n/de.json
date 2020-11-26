@@ -352,7 +352,8 @@
 	"STATUS_BAR": {
 		"UNSAVED": "Ungespeicherte Änderungen",
 		"SAVED": "Gespeichert",
-		"SELECTED": "Sel"
+		"SELECTED": "Sel",
+		"PROCESSES_RUNNING": "{{amount}} Prozesse laufen"
 	},
 	"WORK_MODE_DES": {
 		"0": "Elemente selektieren",

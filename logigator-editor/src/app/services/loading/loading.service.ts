@@ -1,5 +1,5 @@
 import {ComponentFactory, ComponentFactoryResolver, Injectable, ViewContainerRef} from '@angular/core';
-import {ReplaySubject} from 'rxjs';
+import {Observable, ReplaySubject} from 'rxjs';
 import {LoadingSymbolComponent} from '../../components/loading-symbol/loading-symbol.component';
 
 @Injectable({
@@ -7,7 +7,7 @@ import {LoadingSymbolComponent} from '../../components/loading-symbol/loading-sy
 })
 export class LoadingService {
 
-	private _tasks: LoadingTask[] = [];
+	private _tasks = new Set<LoadingTask>();
 	private _tasks$ = new ReplaySubject<string[]>(1);
 	private readonly _factory: ComponentFactory<LoadingSymbolComponent>;
 
@@ -15,11 +15,11 @@ export class LoadingService {
 		this._factory = this.componentFactoryResolver.resolveComponentFactory(LoadingSymbolComponent);
 	}
 
-	public get tasks$() {
-		return this._tasks$;
+	public get tasks$(): Observable<string[]> {
+		return this._tasks$.asObservable();
 	}
 
-	public add(text: string, container?: ViewContainerRef, showTextInContainer = false) {
+	public add(text: string, container?: ViewContainerRef, showTextInContainer = false): () => void {
 		const task: LoadingTask = {
 			text,
 			container,
@@ -30,13 +30,13 @@ export class LoadingService {
 		if (instance && showTextInContainer)
 			instance.instance.text = text;
 
-		this._tasks.push(task);
-		this._tasks$.next(this._tasks.map(x => x.text));
+		this._tasks.add(task);
+		this._tasks$.next([...this._tasks.values()].map(x => x.text));
 
 		return () => {
 			task.container?.clear();
-			this._tasks.filter((x) => x !== task);
-			this._tasks$.next(this._tasks.map(x => x.text));
+			this._tasks.delete(task);
+			this._tasks$.next([...this._tasks.values()].map(x => x.text));
 		};
 	}
 
@@ -44,7 +44,7 @@ export class LoadingService {
 		for (const task of this._tasks) {
 			task.container?.clear();
 		}
-		this._tasks = [];
+		this._tasks.clear();
 		this._tasks$.next([]);
 	}
 }
