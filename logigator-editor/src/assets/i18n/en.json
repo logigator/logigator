@@ -11,9 +11,7 @@
 			"OPEN": "Open",
 			"SAVE": "Save",
 			"EXPORT": "Export to file",
-			"IMAGE_PNG": "Export as PNG Image",
-			"IMAGE_JPEG": "Export as JPEG Image",
-			"IMAGE_SVG": "Export as SVG Image",
+			"IMAGE": "Generate Image",
 			"SHARE": "Share",
 			"CLONE": "Clone Project"
 		},
@@ -99,14 +97,14 @@
 			"TITLE": "New Component",
 			"NAME": "Name",
 			"NAME_REQUIRED": "Name is required",
-			"NAME_MAX_LENGTH": "Name is to long",
+			"NAME_MAX_LENGTH": "Name is too long",
 			"NAME_INFO": "Name of the new component",
 			"SYMBOL": "Symbol",
 			"SYMBOL_REQUIRED": "Symbol is required",
-			"SYMBOL_MAX_LENGTH": "Symbol is to long",
+			"SYMBOL_MAX_LENGTH": "Symbol is too long",
 			"SYMBOL_INFO": "Will be shown when placing component.",
 			"DESCRIPTION": "Description",
-			"DESCRIPTION_MAX_LENGTH": "Description is to long",
+			"DESCRIPTION_MAX_LENGTH": "Description is too long",
 			"DESCRIPTION_INFO": "Description of the new component",
 			"CREATE": "CREATE"
 		},
@@ -206,6 +204,18 @@
 			"HEX": "Hexadecimal",
 			"BIN": "Binary",
 			"DEC": "Decimal"
+		},
+		"IMAGE_EXPORT": {
+			"TITLE": "Export Image",
+			"TRANSPARENT": "Transparent Background",
+			"RESOLUTION": "Custom Resolution",
+			"MIN_ERROR": "Value must be greater than 0.",
+			"REQ_ERROR": "Value is required.",
+			"WIDTH": "Width",
+			"HEIGHT": "Height",
+			"GENERATE_SVG": "Generate SVG",
+			"GENERATE_PNG": "Generate PNG",
+			"GENERATE_JPG": "Generate JPG"
 		}
 	},
 	"SETTINGS_INFO": {

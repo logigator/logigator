@@ -11,9 +11,7 @@
 			"OPEN": "Öffnen",
 			"SAVE": "Speichern",
 			"EXPORT": "Als Datei exportieren",
-			"IMAGE_PNG": "Als PNG exportieren",
-			"IMAGE_JPEG": "Als JPG exportieren",
-			"IMAGE_SVG": "Als SVG exportieren",
+			"IMAGE": "Bild exportieren",
 			"SHARE": "Teilen",
 			"CLONE": "Projekt klonen"
 		},
@@ -206,6 +204,18 @@
 			"HEX": "Hexadezimal",
 			"BIN": "Binär",
 			"DEC": "Dezimal"
+		},
+		"IMAGE_EXPORT": {
+			"TITLE": "Bild exportieren",
+			"TRANSPARENT": "Transparenter Hintergrund",
+			"RESOLUTION": "Benutzerdefinierte Auflösung",
+			"MIN_ERROR": "Wert muss größer als 0 sein.",
+			"REQ_ERROR": "Dies ist ein Pflichtfeld.",
+			"WIDTH": "Breite",
+			"HEIGHT": "Höhe",
+			"GENERATE_SVG": "SVG generieren",
+			"GENERATE_PNG": "PNG generieren",
+			"GENERATE_JPG": "JPG generieren"
 		}
 	},
 	"SETTINGS_INFO": {

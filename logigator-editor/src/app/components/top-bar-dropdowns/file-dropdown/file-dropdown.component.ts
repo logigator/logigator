@@ -4,6 +4,8 @@ import {ProjectsService} from '../../../services/projects/projects.service';
 import {ImageExportService} from '../../../services/image-export/image-export.service';
 import {EditorInteractionService} from '../../../services/editor-interaction/editor-interaction.service';
 import {FileSaverService} from '../../../services/file-saver/file-saver.service';
+import {PopupService} from '../../../services/popup/popup.service';
+import {ImageExportComponent} from '../../popup-contents/image-export/image-export.component';
 
 @Component({
 	selector: 'app-file-dropdown',
@@ -20,8 +22,7 @@ export class FileDropdownComponent {
 		private editorInteractionService: EditorInteractionService,
 		private user: UserService,
 		private projects: ProjectsService,
-		private imageExportService: ImageExportService,
-		private fileSaverService: FileSaverService
+		private popupService: PopupService
 	) { }
 
 	public close() {
@@ -79,16 +80,8 @@ export class FileDropdownComponent {
 		this.close();
 	}
 
-	public async screenshot(type: 'jpeg' | 'png' | 'svg') {
-		if (type === 'svg') {
-			this.fileSaverService.saveLocalFile(
-				this.imageExportService.generateSVG(this.projects.currProject), 'svg', this.projects.currProject.name, 'Save Image As'
-			);
-		} else {
-			this.fileSaverService.saveLocalFileBlob(
-				await this.imageExportService.generateImage(this.projects.currProject, type), type, this.projects.currProject.name, 'Save Image As'
-			);
-		}
+	public async screenshot() {
+		this.popupService.showPopup(ImageExportComponent, 'POPUP.IMAGE_EXPORT.TITLE', false);
 		this.close();
 	}
 }
