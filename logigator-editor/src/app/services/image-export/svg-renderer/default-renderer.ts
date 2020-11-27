@@ -72,14 +72,16 @@ export class DefaultRenderer extends BaseRenderer {
 				case ElementRotation.Right:
 					for (let i = 0; i < this._element.numInputs; i++) {
 						if (!this._labels[i]) continue;
-						const label = this.getLabelText(this._labels[i], 2, (this._gridSize / 2) + this._gridSize * i + this.scaled(2));
+						const label = this.getLabelText(
+							this._labels[i], 2, (this._gridSize / 2) + this._gridSize * i + this.scaled(2)
+						);
 						label.setAttribute('class', 'l-l');
 						this._group.appendChild(label);
 					}
 					for (let i = 0; i < this._element.numOutputs; i++) {
-						if (!this._labels[this._element.numOutputs + i]) continue;
+						if (!this._labels[this._element.numInputs + i]) continue;
 						const label = this.getLabelText(
-							this._labels[this._element.numOutputs + i], this._size.x - 2, (this._gridSize / 2) + this._gridSize * i + this.scaled(2)
+							this._labels[this._element.numInputs + i], this._size.x - 2, (this._gridSize / 2) + this._gridSize * i + this.scaled(2)
 						);
 						label.setAttribute('class', 'l-r');
 						this._group.appendChild(label);
@@ -88,14 +90,16 @@ export class DefaultRenderer extends BaseRenderer {
 				case ElementRotation.Down:
 					for (let i = 0; i < this._element.numInputs; i++) {
 						if (!this._labels[i]) continue;
-						const label = this.getLabelText(this._labels[i], this._size.x - this._gridSize / 2 - this._gridSize * i, this.scaled(6));
+						const label = this.getLabelText(
+							this._labels[i], this._size.x - this._gridSize / 2 - this._gridSize * i, this.scaled(6)
+						);
 						label.setAttribute('class', 'l-t');
 						this._group.appendChild(label);
 					}
 					for (let i = 0; i < this._element.numOutputs; i++) {
-						if (!this._labels[this._element.numOutputs + i]) continue;
+						if (!this._labels[this._element.numInputs + i]) continue;
 						const label = this.getLabelText(
-							this._labels[this._element.numOutputs + i], this._size.x - this._gridSize / 2 - this._gridSize * i, this._size.y - this.scaled(3)
+							this._labels[this._element.numInputs + i], this._size.x - this._gridSize / 2 - this._gridSize * i, this._size.y - this.scaled(3)
 						);
 						label.setAttribute('class', 'l-b');
 						this._group.appendChild(label);
@@ -111,9 +115,9 @@ export class DefaultRenderer extends BaseRenderer {
 						this._group.appendChild(label);
 					}
 					for (let i = 0; i < this._element.numOutputs; i++) {
-						if (!this._labels[this._element.numOutputs + i]) continue;
+						if (!this._labels[this._element.numInputs + i]) continue;
 						const label = this.getLabelText(
-							this._labels[this._element.numOutputs + i], 2, this._size.y - (this._gridSize / 2) - this._gridSize * i + this.scaled(2)
+							this._labels[this._element.numInputs + i], 2, this._size.y - (this._gridSize / 2) - this._gridSize * i + this.scaled(2)
 						);
 						label.setAttribute('class', 'l-l');
 						this._group.appendChild(label);
@@ -122,13 +126,17 @@ export class DefaultRenderer extends BaseRenderer {
 				case ElementRotation.Up:
 					for (let i = 0; i < this._element.numInputs; i++) {
 						if (!this._labels[i]) continue;
-						const label = this.getLabelText(this._labels[i], this._gridSize / 2 + this._gridSize * i, this._size.y - this.scaled(3));
+						const label = this.getLabelText(
+							this._labels[i], this._gridSize / 2 + this._gridSize * i, this._size.y - this.scaled(3)
+						);
 						label.setAttribute('class', 'l-b');
 						this._group.appendChild(label);
 					}
 					for (let i = 0; i < this._element.numOutputs; i++) {
-						if (!this._labels[this._element.numOutputs + i]) continue;
-						const label = this.getLabelText(this._labels[this._element.numOutputs + i], this._gridSize / 2 + this._gridSize * i, this.scaled(6));
+						if (!this._labels[this._element.numInputs + i]) continue;
+						const label = this.getLabelText(
+							this._labels[this._element.numInputs + i], this._gridSize / 2 + this._gridSize * i, this.scaled(6)
+						);
 						label.setAttribute('class', 'l-t');
 						this._group.appendChild(label);
 					}
