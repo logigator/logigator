@@ -48,7 +48,12 @@
 			margin-left: 0.25rem;
 		}
 
-		&:hover {
+		> img {
+			height: 100%;
+			padding: 0.25rem 0;
+		}
+
+		&:not(.showing-all-tasks):hover {
 			@include themify() {
 				background-color: themed('accent1');
 			}
@@ -59,11 +64,12 @@
 			right: -1px;
 			bottom: $status-bar-height;
 			z-index: 100;
+			cursor: default;
 
 			.task {
 				display: flex;
 				align-items: center;
-				padding: 0.25rem 0.5rem;
+				padding: 0.25rem 0.5rem 0.25rem 0.25rem;
 
 				@include themify() {
 					background-color: themed('toolbar');
@@ -76,57 +82,11 @@
 					margin-left: 0.25rem;
 					white-space: nowrap
 				}
+
+				img {
+					height: 100%;
+				}
 			}
 		}
-	}
-
-	.loading-spinner {
-		width: $status-bar-height - 6px;
-		height: $status-bar-height - 6px;
-		border-radius: 50%;
-		position: relative;
-		animation: spin 1.4s infinite linear;
-		transform: translateZ(0);
-
-		@include themify() {
-			background: themed('text-primary');
-			background: linear-gradient(to right, themed('text-primary') 10%, rgba(themed('text-primary'), 0) 42%);
-		}
-
-		&:before {
-			width: 50%;
-			height: 50%;
-			border-radius: 100% 0 0 0;
-			position: absolute;
-			top: 0;
-			left: 0;
-			content: '';
-
-			@include themify() {
-				background: themed('text-primary');
-			}
-		}
-
-		&:after {
-			width: 75%;
-			height: 75%;
-			border-radius: 50%;
-			content: '';
-			margin: auto;
-			position: absolute;
-			top: 0;
-			left: 0;
-			bottom: 0;
-			right: 0;
-
-			@include themify() {
-				background: themed('toolbar');
-			}
-		}
-	}
-
-	@keyframes spin {
-		0% { transform: rotate(0deg); }
-		100% { transform: rotate(360deg); }
 	}
 }

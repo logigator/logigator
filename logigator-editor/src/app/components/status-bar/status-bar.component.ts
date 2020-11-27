@@ -5,6 +5,7 @@ import {fromEvent, Observable, Subscription} from 'rxjs';
 import {WorkModeService} from '../../services/work-mode/work-mode.service';
 import {LoadingService} from '../../services/loading/loading.service';
 import {tap} from 'rxjs/operators';
+import {ThemingService} from '../../services/theming/theming.service';
 
 @Component({
 	selector: 'app-status-bar',
@@ -21,7 +22,8 @@ export class StatusBarComponent {
 		private selectionService: SelectionService,
 		private projectsService: ProjectsService,
 		private workMode: WorkModeService,
-		private loadingService: LoadingService
+		private loadingService: LoadingService,
+		private themingService: ThemingService
 	) {}
 
 	public get selected(): number {
@@ -35,6 +37,10 @@ export class StatusBarComponent {
 
 	public get workModeDescription$(): Observable<string> {
 		return this.workMode.workModeDescription$;
+	}
+
+	public get currTheme(): string {
+		return this.themingService.currentTheme;
 	}
 
 	public get tasks$(): Observable<string[]> {

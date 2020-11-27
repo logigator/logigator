@@ -4,13 +4,15 @@
 	</div>
 	<div class="division">
 		<ng-container  *ngIf="(tasks$ | async) as tasks">
-			<div *ngIf="tasks.length >= 1" class="loading-in-bar padding" (click)="loadingClick($event, tasks)">
-				<div class="loading-spinner"></div>
+			<div *ngIf="tasks.length >= 1" class="loading-in-bar padding" [class.showing-all-tasks]="showingAllTasks" (click)="loadingClick($event, tasks)">
+				<img *ngIf="currTheme === 'light'" src="assets/icons/light/loading.svg">
+				<img *ngIf="currTheme === 'dark'" src="assets/icons/dark/loading.svg">
 				<p *ngIf="tasks.length === 1">{{tasks[0] | translate}}</p>
 				<p *ngIf="tasks.length > 1">{{'STATUS_BAR.PROCESSES_RUNNING' | translate:{amount: tasks.length} }}</p>
 				<div class="all-tasks" *ngIf="showingAllTasks">
 					<div *ngFor="let t of tasks" class="task">
-						<div class="loading-spinner"></div>
+						<img *ngIf="currTheme === 'light'" src="assets/icons/light/loading.svg">
+						<img *ngIf="currTheme === 'dark'" src="assets/icons/dark/loading.svg">
 						<p>{{t | translate}}</p>
 					</div>
 				</div>
