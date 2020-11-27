@@ -1,4 +1,5 @@
 import {
+	ChangeDetectionStrategy,
 	Component,
 	ComponentFactoryResolver,
 	ComponentRef,
@@ -29,7 +30,8 @@ import * as PIXI from 'pixi.js';
 @Component({
 	selector: 'app-window-work-area',
 	templateUrl: './window-work-area.component.html',
-	styleUrls: ['./window-work-area.component.scss']
+	styleUrls: ['./window-work-area.component.scss'],
+	changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class WindowWorkAreaComponent extends WorkArea implements OnInit, OnChanges {
 
