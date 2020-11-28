@@ -24,7 +24,8 @@ jobs:
       - name: 'Get package version'
         id: version
         run: |
-          echo "::set-output name=pkg_version::$(node -e "console.log(require('./logigator-editor/package.json').version);")"
+          $output=(node -e "console.log(require('./logigator-editor/package.json').version);")
+          Write-Output "::set-output name=pkg_version::$output"
 
       - name: 'Create Git Tag'
         run: |
