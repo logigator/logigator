@@ -2,6 +2,8 @@ import {Component, OnInit} from '@angular/core';
 import {PopupContentComp} from '../../popup/popup-content-comp';
 import {Project} from '../../../models/project';
 import {AbstractControl, FormArray, FormBuilder, FormGroup} from '@angular/forms';
+import {ProjectsService} from '../../../services/projects/projects.service';
+import {Element} from '../../../models/element';
 
 @Component({
 	selector: 'app-edit-component-plugs',
@@ -13,20 +15,23 @@ export class EditComponentPlugsComponent extends PopupContentComp<Project, never
 	public inputLabelsForm: FormGroup;
 	public outputLabelsForm: FormGroup;
 
-	constructor(private formBuilder: FormBuilder) {
+	private _inputPlugs: Element[];
+	private _outputPlugs: Element[];
+
+	constructor(private formBuilder: FormBuilder, private projectsService: ProjectsService) {
 		super();
 	}
 
 	ngOnInit(): void {
 		const plugs = this.inputFromOpener.currState.allPlugs();
-		const inputPlugs = plugs.slice(0, this.inputFromOpener.numInputs);
-		const outputPlugs = plugs.slice(this.inputFromOpener.numInputs);
+		this._inputPlugs = plugs.slice(0, this.inputFromOpener.numInputs);
+		this._outputPlugs = plugs.slice(this.inputFromOpener.numInputs);
 
 		this.inputLabelsForm = this.formBuilder.group({
-			labels: this.formBuilder.array(inputPlugs.map(p => this.formBuilder.control(p.data ?? 'IN')))
+			labels: this.formBuilder.array(this._inputPlugs.map(p => this.formBuilder.control(p.data ?? 'IN')))
 		});
 		this.outputLabelsForm = this.formBuilder.group({
-			labels: this.formBuilder.array(outputPlugs.map(p => this.formBuilder.control(p.data ?? 'OUT')))
+			labels: this.formBuilder.array(this._outputPlugs.map(p => this.formBuilder.control(p.data ?? 'OUT')))
 		});
 	}
 
@@ -39,7 +44,21 @@ export class EditComponentPlugsComponent extends PopupContentComp<Project, never
 	}
 
 	public save() {
+		const plugIds = [
+			...shuffle(this._inputPlugs.map(p => p.id)),
+			...shuffle(this._outputPlugs.map(p => p.id))
+		];
+		console.log(this.inputFromOpener.setPlugConfiguration(plugIds, plugIds.map((p, i) => i + '')));
+		this.projectsService.labelsCustomComponentChanged(this.inputFromOpener);
 
+		// only fo testing
+		function shuffle(a) {
+			for (let i = a.length - 1; i > 0; i--) {
+				const j = Math.floor(Math.random() * (i + 1));
+				[a[i], a[j]] = [a[j], a[i]];
+			}
+			return a;
+		}
 	}
 
 }
