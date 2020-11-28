@@ -49,7 +49,7 @@ jobs:
           compress-archive -path ".\release\Logigator-linux-ia32\" -destinationpath ".\release\Logigator-linux-x32.zip" -compressionlevel optimal
 
       - name: Release
-        uses: softprops/action-gh-release@v0.1.5
+        uses: softprops/action-gh-release@master
         with:
           tag_name: refs/tags/${{ steps.version.outputs.pkg_version }}
           name: Logigator Editor - Electron App  ${{ steps.version.outputs.pkg_version }}
