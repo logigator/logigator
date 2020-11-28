@@ -23,14 +23,14 @@ jobs:
 
       - name: 'Get package version'
         id: version
+        shell: powershell
         run: |
-          $output=(node -e "console.log(require('./logigator-editor/package.json').version);")
-          Write-Output "::set-output name=pkg_version::$output"
+          echo "::set-output name=pkg_version::(node -e "console.log(require('./logigator-editor/package.json').version);")"
 
       - name: 'Create Git Tag'
         run: |
-          git tag ${{ steps.version.output.pkg_version }}
-          git push origin ${{ steps.version.output.pkg_version }}
+          git tag ${{ steps.version.outputs.pkg_version }}
+          git push origin ${{ steps.version.outputs.pkg_version }}
 
       - name: Build
         working-directory: logigator-editor
@@ -51,8 +51,8 @@ jobs:
       - name: Release
         uses: softprops/action-gh-release@v0.1.5
         with:
-          tag_name: ${{ steps.version.output.pkg_version }}
-          name: Logigator Editor - Electron App  ${{ steps.version.output.pkg_version }}
+          tag_name: ${{ steps.version.outputs.pkg_version }}
+          name: Logigator Editor - Electron App  ${{ steps.version.outputs.pkg_version }}
           draft: false
           prerelease: false
           files: |
