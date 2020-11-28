@@ -1,4 +1,4 @@
-name: 'CI logigator-editor'
+name: 'logigator-editor check version bumped'
 on:
   pull_request:
     branches:
@@ -33,7 +33,7 @@ jobs:
           node-version: '12.x'
 
       - id: check
-        uses: EndBug/version-check@v1.6
+        uses: EndBug/version-check@v1.6.0
         with:
           file-name: ./logigator-editor/package.json
           file-url: https://raw.githubusercontent.com/logigator/logigator/master/logigator-editor/package.json
