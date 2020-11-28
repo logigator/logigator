@@ -1,0 +1,33 @@
+<div class="image-export">
+	<form [formGroup]="form">
+		<div class="checkbox">
+			<span>{{'POPUP.IMAGE_EXPORT.TRANSPARENT' | translate}}</span>
+			<app-switch formControlName="transparent"></app-switch>
+		</div>
+
+		<div class="checkbox">
+			<span>{{'POPUP.IMAGE_EXPORT.RESOLUTION' | translate}}</span>
+			<app-switch formControlName="customDimensions"></app-switch>
+		</div>
+
+		<div *ngIf="form.controls.customDimensions.value" class="dimensions">
+			<app-input [label]="'POPUP.IMAGE_EXPORT.WIDTH' | translate" formControlName="dimensionX" type="number">
+				<app-input-error error="min">{{'POPUP.IMAGE_EXPORT.MIN_ERROR' | translate}}</app-input-error>
+				<app-input-error error="max">{{'POPUP.IMAGE_EXPORT.MAX_ERROR' | translate}}</app-input-error>
+				<app-input-error error="required">{{'POPUP.IMAGE_EXPORT.REQ_ERROR' | translate}}</app-input-error>
+			</app-input>
+			<app-input [label]="'POPUP.IMAGE_EXPORT.HEIGHT' | translate" formControlName="dimensionY" type="number">
+				<app-input-error error="min">{{'POPUP.IMAGE_EXPORT.MIN_ERROR' | translate}}</app-input-error>
+				<app-input-error error="max">{{'POPUP.IMAGE_EXPORT.MAX_ERROR' | translate}}</app-input-error>
+				<app-input-error error="required">{{'POPUP.IMAGE_EXPORT.REQ_ERROR' | translate}}</app-input-error>
+			</app-input>
+		</div>
+
+		<div class="buttons">
+			<button class="btn-raised primary" (click)="generate('svg')" [disabled]="isInvalid()">{{'POPUP.IMAGE_EXPORT.GENERATE_SVG' | translate}}</button>
+			<button class="btn-raised primary" (click)="generate('png')" [disabled]="isInvalid()">{{'POPUP.IMAGE_EXPORT.GENERATE_PNG' | translate}}</button>
+			<button class="btn-raised primary" (click)="generate('jpeg')" [disabled]="form.controls.transparent.value || isInvalid()">{{'POPUP.IMAGE_EXPORT.GENERATE_JPG' | translate}}</button>
+		</div>
+		<ng-container #loadingRef></ng-container>
+	</form>
+</div>

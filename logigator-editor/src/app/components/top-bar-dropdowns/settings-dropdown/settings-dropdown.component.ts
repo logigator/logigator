@@ -1,7 +1,7 @@
 import {ChangeDetectionStrategy, Component, EventEmitter, OnInit, Optional, Output} from '@angular/core';
 import {ThemingService} from '../../../services/theming/theming.service';
 import {ShortcutConfigComponent} from '../../popup-contents/shortcut-config/shortcut-config/shortcut-config.component';
-import {ReloadQuestionComponent} from '../../popup-contents/relaod-question/reload-question.component';
+import {ReloadQuestionComponent} from '../../popup-contents/reload-question/reload-question.component';
 import {TranslateService} from '@ngx-translate/core';
 import {UserService} from '../../../services/user/user.service';
 import {ProjectsService} from '../../../services/projects/projects.service';

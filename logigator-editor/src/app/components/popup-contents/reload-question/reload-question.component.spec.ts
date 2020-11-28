@@ -2,7 +2,7 @@ import {ComponentFixture, TestBed, waitForAsync} from '@angular/core/testing';
 
 import { ReloadQuestionComponent } from './reload-question.component';
 
-describe('RelaodQuestionComponent', () => {
+describe('ReloadQuestionComponent', () => {
 	let component: ReloadQuestionComponent;
 	let fixture: ComponentFixture<ReloadQuestionComponent>;
 

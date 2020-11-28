@@ -19,7 +19,7 @@ import { SingleShortcutConfigComponent } from './components/popup-contents/short
 import { ShortcutConfigComponent } from './components/popup-contents/shortcut-config/shortcut-config/shortcut-config.component';
 import { WindowWorkAreaComponent } from './components/window-work-area/window-work-area.component';
 import {HttpClientModule} from '@angular/common/http';
-import { ReloadQuestionComponent } from './components/popup-contents/relaod-question/reload-question.component';
+import { ReloadQuestionComponent } from './components/popup-contents/reload-question/reload-question.component';
 import { NewComponentComponent } from './components/popup-contents/new-component/new-component.component';
 import { OpenProjectComponent } from './components/popup-contents/open/open-project.component';
 import { SaveAsComponent } from './components/popup-contents/save-as/save-as.component';
@@ -60,6 +60,8 @@ import {HexBinDecConverterComponent} from './components/popup-contents/hex-bin-d
 import {StorageService} from './services/storage/storage.service';
 import {LocalStorageService} from './services/storage/local-storage.service';
 import {CookieStorageService} from './services/storage/cookie-storage.service';
+import { LoadingSymbolComponent } from './components/loading-symbol/loading-symbol.component';
+import { ImageExportComponent } from './components/popup-contents/image-export/image-export.component';
 
 @NgModule({
 	declarations: [
@@ -103,7 +105,9 @@ import {CookieStorageService} from './services/storage/cookie-storage.service';
 		InputErrorComponent,
 		FileInputComponent,
 		SiPipe,
-		HexBinDecConverterComponent
+		HexBinDecConverterComponent,
+		LoadingSymbolComponent,
+		ImageExportComponent
 	],
 	imports: [
 		// #!electron

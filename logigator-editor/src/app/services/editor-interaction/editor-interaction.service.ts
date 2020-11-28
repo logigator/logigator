@@ -11,6 +11,7 @@ import {OpenProjectComponent} from '../../components/popup-contents/open/open-pr
 import {SaveAsComponent} from '../../components/popup-contents/save-as/save-as.component';
 import {ShareProjectComponent} from '../../components/popup-contents/share-project/share-project.component';
 import {ErrorHandlingService} from '../error-handling/error-handling.service';
+import {LoadingService} from '../loading/loading.service';
 
 @Injectable({
 	providedIn: 'root'
@@ -25,7 +26,8 @@ export class EditorInteractionService {
 		private copyService: CopyService,
 		private ngZone: NgZone,
 		private popupService: PopupService,
-		private errorHandling: ErrorHandlingService
+		private errorHandling: ErrorHandlingService,
+		private loadingService: LoadingService
 	) {}
 
 	public subscribeEditorAction(...actions: EditorAction[]): Observable<EditorAction> {
@@ -141,10 +143,12 @@ export class EditorInteractionService {
 			return;
 		}
 		if (await this.projectsService.askToSave()) {
+			const removeLoading = this.loadingService.add('LOADING.OPENING_FILE');
 			const reader = new FileReader();
 			reader.readAsText(file, 'UTF-8');
-			reader.onload = (event: any) => {
-				this.projectsService.openFile(event.target.result);
+			reader.onload = async (event: any) => {
+				await this.projectsService.openFile(event.target.result);
+				removeLoading();
 			};
 		}
 	}
@@ -152,8 +156,11 @@ export class EditorInteractionService {
 	public newComponent() {
 		return this.ngZone.run(async () => {
 			const compConfig = await this.popupService.showPopup(NewComponentComponent, 'POPUP.NEW_COMP.TITLE', false);
-			if (compConfig)
-				this.projectsService.createComponent(compConfig.name, compConfig.symbol, compConfig.description);
+			if (compConfig) {
+				const removeLoading = this.loadingService.add('LOADING.CREATE_COMPONENT');
+				await this.projectsService.createComponent(compConfig.name, compConfig.symbol, compConfig.description);
+				removeLoading();
+			}
 		});
 	}
 
@@ -169,7 +176,9 @@ export class EditorInteractionService {
 		});
 	}
 
-	public exportToFile(name?: string) {
-		return this.projectsService.exportToFile(name);
+	public async exportToFile(name?: string) {
+		const removeLoading = this.loadingService.add('LOADING.EXPORT_FILE');
+		await this.projectsService.exportToFile(name);
+		removeLoading();
 	}
 }

@@ -11,9 +11,7 @@
 			"OPEN": "Open",
 			"SAVE": "Save",
 			"EXPORT": "Export to file",
-			"IMAGE_PNG": "Export as PNG Image",
-			"IMAGE_JPEG": "Export as JPEG Image",
-			"IMAGE_SVG": "Export as SVG Image",
+			"IMAGE": "Generate Image",
 			"SHARE": "Share",
 			"CLONE": "Clone Project"
 		},
@@ -99,14 +97,14 @@
 			"TITLE": "New Component",
 			"NAME": "Name",
 			"NAME_REQUIRED": "Name is required",
-			"NAME_MAX_LENGTH": "Name is to long",
+			"NAME_MAX_LENGTH": "Name is too long",
 			"NAME_INFO": "Name of the new component",
 			"SYMBOL": "Symbol",
 			"SYMBOL_REQUIRED": "Symbol is required",
-			"SYMBOL_MAX_LENGTH": "Symbol is to long",
+			"SYMBOL_MAX_LENGTH": "Symbol is too long",
 			"SYMBOL_INFO": "Will be shown when placing component.",
 			"DESCRIPTION": "Description",
-			"DESCRIPTION_MAX_LENGTH": "Description is to long",
+			"DESCRIPTION_MAX_LENGTH": "Description is too long",
 			"DESCRIPTION_INFO": "Description of the new component",
 			"CREATE": "CREATE"
 		},
@@ -206,6 +204,19 @@
 			"HEX": "Hexadecimal",
 			"BIN": "Binary",
 			"DEC": "Decimal"
+		},
+		"IMAGE_EXPORT": {
+			"TITLE": "Export Image",
+			"TRANSPARENT": "Transparent Background",
+			"RESOLUTION": "Custom Resolution",
+			"MIN_ERROR": "Value must be greater than 0.",
+			"MAX_ERROR": "Value must be slower than 15.000",
+			"REQ_ERROR": "Value is required.",
+			"WIDTH": "Width",
+			"HEIGHT": "Height",
+			"GENERATE_SVG": "Generate SVG",
+			"GENERATE_PNG": "Generate PNG",
+			"GENERATE_JPG": "Generate JPG"
 		}
 	},
 	"SETTINGS_INFO": {
@@ -352,7 +363,8 @@
 	"STATUS_BAR": {
 		"UNSAVED": "Unsaved Changes",
 		"SAVED": "Saved",
-		"SELECTED": "Sel"
+		"SELECTED": "Sel",
+		"PROCESSES_RUNNING": "{{amount}} Processes running"
 	},
 	"WORK_MODE_DES": {
 		"0": "Selecting Elements",
@@ -405,5 +417,21 @@
 			"BLD": "AHHH MY EYES, SO MANY LUMENS",
 			"LAZ": "Too Lazy for a proper name..."
 		}
+	},
+	"LOADING": {
+		"GENERATING_IMAGE": "Generating Image",
+		"OPENING_INITIAL_PROJECTS": "Opening projects",
+		"RELOAD_ELEMENTS": "Reloading custom elements",
+		"OPENING_FILE": "Opening project from file",
+		"SAVE_PROJECT": "Saving project",
+		"CREATE_COMPONENT": "Creating Component",
+		"SHARE_REGENERATE_LINK": "Regenerating Link",
+		"UPDATE_SHARE_INFO": "Updating share information",
+		"ENTER_SIMULATION": "Simulation mode is loading",
+		"LEAVE_SIMULATION": "Leaving Simulation mode",
+		"EXPORT_FILE": "Exporting project as file",
+		"OPEN_PROJECT": "Opening project",
+		"OPEN_COMPONENT": "Opening component",
+		"OPEN_SHARE": "Opening Share"
 	}
 }
