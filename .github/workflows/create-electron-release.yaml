@@ -1,0 +1,64 @@
+name: 'Create Electron Release'
+on: workflow_dispatch
+
+jobs:
+  releaseElectron:
+    name: 'logigator-editor create Electron Release'
+    runs-on: windows-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2
+        with:
+          ref: master
+
+      – name: 'Initialize mandatory git config'
+        run: |
+          git config user.name "GitHub Actions"
+          git config user.email noreply@github.com
+
+      - name: Setup Node
+        uses: actions/setup-node@v1.1.0
+        with:
+          node-version: '12.x'
+
+      - name: 'Get package version'
+        id: version
+        run: |
+          echo "::set-output name=pkg_version::$(node -e "console.log(require('./logigator-editor/package.json').version);")"
+
+      – name: 'Create Git Tag'
+        run: |
+          git tag ${{ version.pkg_version }}
+          git push origin ${{ version.pkg_version }}
+
+      - name: Build
+          working-directory: logigator-editor
+          run: |
+            npm i
+            npm run build:electron-all-platforms
+
+      - name: Zip
+          shell: powershell
+          working-directory: logigator-editor
+          run: |
+            compress-archive -path ".\release\Logigator-win32-x64\" -destinationpath ".\release\Logigator-win32-x64.zip" -compressionlevel optimal
+            compress-archive -path ".\release\Logigator-win32-ia32\" -destinationpath ".\release\Logigator-win32-x32.zip" -compressionlevel optimal
+            compress-archive -path ".\release\Logigator-win32-arm64\" -destinationpath ".\release\Logigator-win32-arm64.zip" -compressionlevel optimal
+            compress-archive -path ".\release\Logigator-linux-x64\" -destinationpath ".\release\Logigator-linux-x64.zip" -compressionlevel optimal
+            compress-archive -path ".\release\Logigator-linux-ia32\" -destinationpath ".\release\Logigator-linux-x32.zip" -compressionlevel optimal
+
+      - name: Release
+        uses: softprops/action-gh-release@v0.1.5
+        with:
+          tag_name: ${{ version.pkg_version }}
+          name: Logigator Editor - Electron App  ${{ version.pkg_version }}
+          draft: false
+          prerelease: false
+          files: |
+            logigator-editor/release/Logigator-win32-x64.zip
+            logigator-editor/release/Logigator-win32-x32.zip
+            logigator-editor/release/Logigator-win32-arm64.zip
+            logigator-editor/release/Logigator-linux-x64.zip
+            logigator-editor/release/Logigator-linux-x32.zip
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
