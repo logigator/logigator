@@ -11,7 +11,7 @@ jobs:
         with:
           ref: master
 
-      – name: 'Initialize mandatory git config'
+      - name: 'Initialize mandatory git config'
         run: |
           git config user.name "GitHub Actions"
           git config user.email noreply@github.com
@@ -26,7 +26,7 @@ jobs:
         run: |
           echo "::set-output name=pkg_version::$(node -e "console.log(require('./logigator-editor/package.json').version);")"
 
-      – name: 'Create Git Tag'
+      - name: 'Create Git Tag'
         run: |
           git tag ${{ version.pkg_version }}
           git push origin ${{ version.pkg_version }}
