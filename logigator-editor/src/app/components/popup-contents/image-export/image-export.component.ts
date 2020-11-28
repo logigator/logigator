@@ -53,7 +53,7 @@ export class ImageExportComponent extends PopupContentComp implements OnInit {
 
 	async generate(type: 'svg' | 'png' | 'jpeg') {
 		let size: PIXI.Point;
-		const loadingRemove = this.loadingService.add('Generating Image', this._loadingRef, true);
+		const loadingRemove = this.loadingService.add('LOADING.GENERATING_IMAGE', this._loadingRef, true);
 
 		if (this.form.controls.customDimensions.value) {
 			size = new PIXI.Point(

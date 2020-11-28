@@ -406,7 +406,7 @@
 			"CLONE_SHARE": "Share geklont: {{name}}",
 			"OPEN": "Projekt geöffnet: {{name}}",
 			"OPEN_FILE": "Projekt aus Datei geöffnet: {{name}}",
-			"SAVE": "Projekt oder Komponente: {{name}}",
+			"SAVE": "Projekt oder Komponente gespeichert: {{name}}",
 			"EXPORT_FILE": "Projekt als Datei exportiert: {{name}}",
 			"CREATE_COMP": "Komponente erstellt: {{name}}",
 			"RELOADED_ELEMENTS": "Benutzerdefinierte Komponenten neu geladen."
@@ -416,5 +416,22 @@
 			"BLD": "AHHH MEINE AUGEN, SO VIELE LUMEN",
 			"LAZ": "Zu faul für einen gescheiten Namen..."
 		}
+	},
+	"LOADING": {
+		"GENERATING_IMAGE": "Bild wird generiert",
+		"OPENING_INITIAL_PROJECTS": "Projekte werden geöffnet",
+		"RELOAD_ELEMENTS": "Benutzerdefinierten Komponenten neu laden",
+		"OPENING_FILE": "Projekt aus Datei wird geöffnet",
+		"SAVE_PROJECT": "Projekt wird gespeichert",
+		"CREATE_COMPONENT": "Komponente wird erstellt",
+		"SHARE_REGENERATE_LINK": "Link wird generiert",
+		"UPDATE_SHARE_INFO": "Share wird aktualisiert",
+		"ENTER_SIMULATION": "Simulationsmodus wird geladen",
+		"LEAVE_SIMULATION": "Simulationsmodus wird verlassen",
+		"EXPORT_FILE": "Projekt wird exportiert",
+		"OPEN_PROJECT": "Projekt wird geöffnet",
+		"OPEN_COMPONENT": "Komponente wird geöffnet",
+		"OPEN_SHARE": "Share wird geöffnet"
+
 	}
 }

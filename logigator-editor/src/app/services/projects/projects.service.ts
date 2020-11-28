@@ -1,20 +1,15 @@
-import { Injectable } from '@angular/core';
+import {Injectable} from '@angular/core';
 import {Project} from '../../models/project';
 import {Observable, ReplaySubject, Subject} from 'rxjs';
-import {Action} from '../../models/action';
 import {ProjectSaveManagementService} from '../project-save-management/project-save-management.service';
 import {delayWhen} from 'rxjs/operators';
-import {WorkArea} from '../../models/rendering/work-area';
-import {SaveAsComponent} from '../../components/popup-contents/save-as/save-as.component';
 import {ElementProviderService} from '../element-provider/element-provider.service';
 import {ErrorHandlingService} from '../error-handling/error-handling.service';
 import {UnsavedChangesComponent} from '../../components/popup-contents/unsaved-changes/unsaved-changes.component';
 import {PopupService} from '../popup/popup.service';
 import {LocationService} from '../location/location.service';
-import {SelectionService} from '../selection/selection.service';
-import {CopyService} from '../copy/copy.service';
 import {PixiLoaderService} from '../pixi-loader/pixi-loader.service';
-import {addWarning} from '@angular-devkit/build-angular/src/utils/webpack-diagnostics';
+import {LoadingService} from '../loading/loading.service';
 
 @Injectable({
 	providedIn: 'root'
@@ -41,8 +36,10 @@ export class ProjectsService {
 		private elementProvider: ElementProviderService,
 		private errorHandling: ErrorHandlingService,
 		private pixiLoader: PixiLoaderService,
-		private location: LocationService
+		private location: LocationService,
+		private loadingService: LoadingService
 	) {
+		const removeLoading = this.loadingService.add('LOADING.OPENING_INITIAL_PROJECTS');
 		this.projectSaveManagementService.getInitialProjects().then(projects => {
 			this._projects = projects;
 			this._mainProject = projects[0];
@@ -50,6 +47,7 @@ export class ProjectsService {
 			for (const p of this.allProjects) {
 				this._projectOpenedSubject.next(p.id);
 			}
+			removeLoading();
 		});
 	}
 
@@ -109,6 +107,7 @@ export class ProjectsService {
 
 	private async saveProject(id: number) {
 		const project = this.getProjectById(id);
+		const removeLoading = this.loadingService.add('LOADING.SAVE_PROJECT');
 		switch (project.type) {
 			case 'comp':
 				await this.projectSaveManagementService.saveComponent(project);
@@ -117,6 +116,7 @@ export class ProjectsService {
 				await this.projectSaveManagementService.saveProject(project);
 				break;
 		}
+		removeLoading();
 	}
 
 	private async openNewProject(project: Project) {
@@ -144,13 +144,16 @@ export class ProjectsService {
 	}
 
 	public async openProjectUuid(id: string) {
+		const removeLoading = this.loadingService.add('LOADING.OPEN_PROJECT');
 		this.projectSaveManagementService.clearElements('share');
 		try {
 			const project = await this.projectSaveManagementService.getProjectOrComponentUuid(id, 'project');
 			await this.openNewProject(project);
 			this.location.set('project', id);
 			this.errorHandling.showInfo('INFO.PROJECTS.OPEN', {name: project.name});
-		} catch {}
+		} finally {
+			removeLoading();
+		}
 	}
 
 	public async openComponent(id: number) {
@@ -162,13 +165,15 @@ export class ProjectsService {
 		if (this._currentlyOpening.has(id))
 			return;
 
+		const removeLoading = this.loadingService.add('LOADING.OPEN_COMPONENT');
 		this._currentlyOpening.add(id);
 		try {
 			const component = await this.projectSaveManagementService.getComponent(id);
 			this._projects.push(component);
 			this._projectOpenedSubject.next(component.id);
-		} catch {} finally {
+		} finally {
 			this._currentlyOpening.delete(id);
+			removeLoading();
 		}
 	}
 
@@ -207,6 +212,7 @@ export class ProjectsService {
 	}
 
 	public async openShare(linkId: string) {
+		const removeLoading = this.loadingService.add('LOADING.OPEN_SHARE');
 		this.projectSaveManagementService.clearElements('share');
 		try {
 			const project = await this.projectSaveManagementService.getProjectShare(linkId);
@@ -223,6 +229,8 @@ export class ProjectsService {
 			if (this.mainProject.source === 'share') {
 				this.newProject();
 			}
+		} finally {
+			removeLoading();
 		}
 	}
 
@@ -273,9 +281,11 @@ export class ProjectsService {
 	}
 
 	public async reloadUserElements() {
+		const removeLoading = this.loadingService.add('LOADING.RELOAD_ELEMENTS');
 		await this.projectSaveManagementService.getAllComponentsInfo();
 		this._userDefinedElementsReloadSubject.next();
 		this.errorHandling.showInfo('INFO.PROJECTS.RELOADED_ELEMENTS');
+		removeLoading();
 	}
 
 	public async cloneShare() {

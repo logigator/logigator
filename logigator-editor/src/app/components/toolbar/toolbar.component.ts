@@ -1,4 +1,4 @@
-import {Component, Inject} from '@angular/core';
+import {Component, Inject, ViewChild, ViewContainerRef} from '@angular/core';
 import {ProjectsService} from '../../services/projects/projects.service';
 // #!debug
 import {Test} from '../../../../tests/auto-tests/tests';
@@ -27,6 +27,9 @@ export class ToolbarComponent {
 	public targetTickRate = 1;
 
 	public threadCount = 1;
+
+	@ViewChild('enterSimulationLoading', {read: ViewContainerRef, static: true})
+	private _enterSimulationLoading: ViewContainerRef;
 
 	constructor(
 		private workModeService: WorkModeService,
@@ -98,11 +101,11 @@ export class ToolbarComponent {
 	}
 
 	public enterSimulation() {
-		this.workModeService.enterSimulation();
+		this.workModeService.enterSimulation(this._enterSimulationLoading);
 	}
 
 	public leaveSimulation() {
-		this.workModeService.leaveSimulation();
+		this.workModeService.leaveSimulation(this._enterSimulationLoading);
 	}
 
 	public get isSimulationMode(): boolean {

@@ -416,5 +416,21 @@
 			"BLD": "AHHH MY EYES, SO MANY LUMENS",
 			"LAZ": "Too Lazy for a proper name..."
 		}
+	},
+	"LOADING": {
+		"GENERATING_IMAGE": "Generating Image",
+		"OPENING_INITIAL_PROJECTS": "Opening projects",
+		"RELOAD_ELEMENTS": "Reloading custom elements",
+		"OPENING_FILE": "Opening project from file",
+		"SAVE_PROJECT": "Saving project",
+		"CREATE_COMPONENT": "Creating Component",
+		"SHARE_REGENERATE_LINK": "Regenerating Link",
+		"UPDATE_SHARE_INFO": "Updating share information",
+		"ENTER_SIMULATION": "Simulation mode is loading",
+		"LEAVE_SIMULATION": "Leaving Simulation mode",
+		"EXPORT_FILE": "Exporting project as file",
+		"OPEN_PROJECT": "Opening project",
+		"OPEN_COMPONENT": "Opening component",
+		"OPEN_SHARE": "Opening Share"
 	}
 }

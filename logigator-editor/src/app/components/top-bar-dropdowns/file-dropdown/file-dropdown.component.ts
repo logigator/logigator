@@ -66,7 +66,7 @@ export class FileDropdownComponent {
 	}
 
 	public async exportProject() {
-		await this.editorInteractionService.exportToFile();
+		this.editorInteractionService.exportToFile();
 		this.close();
 	}
 
