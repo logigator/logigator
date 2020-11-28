@@ -29,8 +29,8 @@ jobs:
 
       - name: 'Create Git Tag'
         run: |
-          git tag ${{ steps.version.pkg_version }}
-          git push origin ${{ steps.version.pkg_version }}
+          git tag ${{ steps.version.output.pkg_version }}
+          git push origin ${{ steps.version.output.pkg_version }}
 
       - name: Build
         working-directory: logigator-editor
@@ -51,8 +51,8 @@ jobs:
       - name: Release
         uses: softprops/action-gh-release@v0.1.5
         with:
-          tag_name: ${{ steps.version.pkg_version }}
-          name: Logigator Editor - Electron App  ${{ steps.version.pkg_version }}
+          tag_name: ${{ steps.version.output.pkg_version }}
+          name: Logigator Editor - Electron App  ${{ steps.version.output.pkg_version }}
           draft: false
           prerelease: false
           files: |
