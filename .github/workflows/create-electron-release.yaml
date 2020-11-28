@@ -25,7 +25,7 @@ jobs:
         id: version
         shell: powershell
         run: |
-          echo "::set-output name=pkg_version::(node -e "console.log(require('./logigator-editor/package.json').version);")"
+          echo "::set-output name=pkg_version::$(node -e "console.log(require('./logigator-editor/package.json').version);")"
 
       - name: 'Create Git Tag'
         run: |
