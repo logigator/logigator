@@ -210,6 +210,7 @@
 			"TRANSPARENT": "Transparent Background",
 			"RESOLUTION": "Custom Resolution",
 			"MIN_ERROR": "Value must be greater than 0.",
+			"MAX_ERROR": "Value must be slower than 15.000",
 			"REQ_ERROR": "Value is required.",
 			"WIDTH": "Width",
 			"HEIGHT": "Height",

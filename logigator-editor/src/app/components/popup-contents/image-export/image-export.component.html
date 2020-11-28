@@ -13,10 +13,12 @@
 		<div *ngIf="form.controls.customDimensions.value" class="dimensions">
 			<app-input [label]="'POPUP.IMAGE_EXPORT.WIDTH' | translate" formControlName="dimensionX" type="number">
 				<app-input-error error="min">{{'POPUP.IMAGE_EXPORT.MIN_ERROR' | translate}}</app-input-error>
+				<app-input-error error="max">{{'POPUP.IMAGE_EXPORT.MAX_ERROR' | translate}}</app-input-error>
 				<app-input-error error="required">{{'POPUP.IMAGE_EXPORT.REQ_ERROR' | translate}}</app-input-error>
 			</app-input>
 			<app-input [label]="'POPUP.IMAGE_EXPORT.HEIGHT' | translate" formControlName="dimensionY" type="number">
 				<app-input-error error="min">{{'POPUP.IMAGE_EXPORT.MIN_ERROR' | translate}}</app-input-error>
+				<app-input-error error="max">{{'POPUP.IMAGE_EXPORT.MAX_ERROR' | translate}}</app-input-error>
 				<app-input-error error="required">{{'POPUP.IMAGE_EXPORT.REQ_ERROR' | translate}}</app-input-error>
 			</app-input>
 		</div>

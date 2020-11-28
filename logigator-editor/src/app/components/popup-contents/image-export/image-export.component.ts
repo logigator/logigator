@@ -38,11 +38,13 @@ export class ImageExportComponent extends PopupContentComp implements OnInit {
 			customDimensions: [],
 			dimensionX: ['', [
 				Validators.required,
-				Validators.min(1)
+				Validators.min(1),
+				Validators.max(15_000)
 			]],
 			dimensionY: ['', [
 				Validators.required,
-				Validators.min(1)
+				Validators.min(1),
+				Validators.max(15_000)
 			]]
 		});
 	}
@@ -66,21 +68,24 @@ export class ImageExportComponent extends PopupContentComp implements OnInit {
 			(this.form.controls.transparent.value ? Theme.Dark_Transparent : Theme.Dark) :
 			(this.form.controls.transparent.value ? Theme.Light_Transparent : Theme.Light);
 
-		if (type === 'svg') {
-			await this.fileSaverService.saveLocalFile(
-				this.imageExporter.generateSVG(this.projectService.currProject, {
-					size,
-					theme
-				}), 'svg', this.projectService.currProject.name, 'Save Image As'
-			);
-		} else {
-			await this.fileSaverService.saveLocalFileBlob(
-				await this.imageExporter.generateImage(this.projectService.currProject, type as any, {
-					size,
-					theme
-				}), type === 'jpeg' ? 'jpg' : type, this.projectService.currProject.name, 'Save Image As'
-			);
+		try {
+			if (type === 'svg') {
+				await this.fileSaverService.saveLocalFile(
+					this.imageExporter.generateSVG(this.projectService.currProject, {
+						size,
+						theme
+					}), 'svg', this.projectService.currProject.name, 'Save Image As'
+				);
+			} else {
+				await this.fileSaverService.saveLocalFileBlob(
+					await this.imageExporter.generateImage(this.projectService.currProject, type as any, {
+						size,
+						theme
+					}), type === 'jpeg' ? 'jpg' : type, this.projectService.currProject.name, 'Save Image As'
+				);
+			}
+		} finally {
+			loadingRemove();
 		}
-		loadingRemove();
 	}
 }
