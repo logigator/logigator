@@ -51,7 +51,7 @@ jobs:
       - name: Release
         uses: softprops/action-gh-release@master
         with:
-          tag_name: refs/tags/${{ steps.version.outputs.pkg_version }}
+          tag_name: ${{ steps.version.outputs.pkg_version }}
           name: Logigator Editor - Electron App  ${{ steps.version.outputs.pkg_version }}
           draft: false
           prerelease: false
