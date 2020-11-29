@@ -9,17 +9,28 @@ import {ChangeDetectionStrategy, Component, EventEmitter, Input, Output} from '@
 export class HelpWindowComponent {
 
 	@Input()
-	public helpToDisplay: string;
+	public title: string;
+
+	@Input()
+	public text: string;
+
+	@Input()
+	public isLastStep: boolean;
 
 	@Output()
-	requestClose: EventEmitter<boolean> = new EventEmitter<boolean>();
+	skip: EventEmitter<void> = new EventEmitter<void>();
 
-	public dontShowAgain: boolean;
+	@Output()
+	next: EventEmitter<void> = new EventEmitter<void>();
 
 	constructor() { }
 
-	public okClick() {
-		this.requestClose.emit(this.dontShowAgain);
+	public skipClick() {
+		this.skip.emit();
+	}
+
+	public nextClick() {
+		this.next.emit();
 	}
 
 }

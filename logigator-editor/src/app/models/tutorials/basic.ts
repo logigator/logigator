@@ -1,6 +1,7 @@
 import {Tutorial} from '../tutorial';
 
 export const basic: Tutorial = {
+	id: 'basic',
 	name: 'basic tutorial',
 	steps: [
 		{

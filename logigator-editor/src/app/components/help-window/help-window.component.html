@@ -1,9 +1,9 @@
 <div class="help-window">
-	<h3 class="tipp">{{'HELP_WINDOW.TIPP' | translate}}</h3>
-	<p class="help-text">{{'HELP_WINDOW.HELP_TEXTS.' + helpToDisplay | translate}}</p>
-	<div class="dont-again">
-		<app-switch [(ngModel)]="dontShowAgain"></app-switch>
-		<span>{{'HELP_WINDOW.DONT_AGAIN' | translate}}</span>
+	<h3 class="title">{{title | translate}}</h3>
+	<p class="help-text">{{text | translate}}</p>
+	<div class="buttons">
+		<button class="btn-outline primary skip" (click)="skipClick()">{{'TUTORIAL.SKIP' | translate}}</button>
+		<button class="btn-raised primary" (click)="nextClick()" *ngIf="!isLastStep">{{'TUTORIAL.NEXT' | translate}}</button>
+		<button class="btn-raised primary" (click)="nextClick()" *ngIf="isLastStep">{{'TUTORIAL.FINISH' | translate}}</button>
 	</div>
-	<button class="btn-raised primary ok-button" (click)="okClick()">{{'HELP_WINDOW.OK' | translate}}</button>
 </div>

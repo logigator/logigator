@@ -234,14 +234,11 @@
 		"PLUG_INDEX": "Plug Index",
 		"PLUG_LABEL": "Label"
 	},
-	"HELP_WINDOW": {
-		"TIPP": "Hint",
-		"DONT_AGAIN": "Don't show again",
-		"OK": "OK",
-		"HELP_TEXTS": {
-			"ENTER_SIM": "To start the simulation press the play button in the toolbar.",
-			"DRAG": "Use your right mouse button, to drag the view.",
-			"NEEDS_PLUGS": "To be able to place the component, it needs inputs or outputs."
+	"TUTORIAL": {
+		"SKIP": "Skip",
+		"NEXT": "Next",
+		"FINISH": "Finish tutorial",
+		"TUTORIALS": {
 		}
 	},
 	"ELEMENT_TYPE": {

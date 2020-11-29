@@ -1,5 +1,7 @@
 export interface Tutorial {
 
+	id: string;
+
 	/**
 	 * Shown in title of help window
 	 */
