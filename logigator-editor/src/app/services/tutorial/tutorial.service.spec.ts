@@ -1,13 +1,13 @@
 import { TestBed } from '@angular/core/testing';
 
-import { HelpWindowService } from './help-window.service';
+import { TutorialService } from './tutorial.service';
 
-describe('HelpWindowService', () => {
-	let service: HelpWindowService;
+describe('TutorialService', () => {
+	let service: TutorialService;
 
 	beforeEach(() => {
 		TestBed.configureTestingModule({});
-		service = TestBed.inject(HelpWindowService);
+		service = TestBed.inject(TutorialService);
 	});
 
 	it('should be created', () => {

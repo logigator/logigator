@@ -5,7 +5,7 @@ import {ProjectSaveManagementService} from '../../services/project-save-manageme
 import {WorkModeService} from '../../services/work-mode/work-mode.service';
 import {ErrorHandlingService} from '../../services/error-handling/error-handling.service';
 import {ToastContainerDirective} from 'ngx-toastr';
-import {HelpWindowService} from '../../services/help-window/help-window.service';
+import {TutorialService} from '../../services/tutorial/tutorial.service';
 import {ElementProviderService} from '../../services/element-provider/element-provider.service';
 
 @Component({
@@ -32,7 +32,7 @@ export class WorkAreaContainerComponent implements OnInit {
 		private workMode: WorkModeService,
 		private renderer2: Renderer2,
 		private errorHandling: ErrorHandlingService,
-		private helpWindowService: HelpWindowService,
+		private tutorialService: TutorialService,
 		private elementProvider: ElementProviderService
 	) { }
 
@@ -51,8 +51,7 @@ export class WorkAreaContainerComponent implements OnInit {
 		});
 
 		this.errorHandling.setToastrContainer(this.toastContainer);
-		this.helpWindowService.setHelpWindowInsertionPoint(this.helpWindowInsertionPoint);
-		this.helpWindowService.showHelpWindow('DRAG');
+		this.tutorialService.setHelpWindowInsertionPoint(this.helpWindowInsertionPoint);
 	}
 
 	async onRequestElementInspection(event: ReqInspectElementEvent, fromWindow?: number) {
