@@ -51,6 +51,10 @@ export class TutorialService {
 		this._helpWindowInsertionPoint = value;
 	}
 
+	public get allTutorials(): Tutorial[] {
+		return [...this._tutorials.values()];
+	}
+
 	public startTutorial(tutorialName: string) {
 		if (!this._finishedTutorials.has(tutorialName))
 			this.manuallyStartTutorial(tutorialName);
