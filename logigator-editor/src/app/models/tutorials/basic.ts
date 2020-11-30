@@ -8,8 +8,12 @@ export const basic: Tutorial = {
 			text: 'tutorial start'
 		},
 		{
-			text: 'first step',
-			elementToHighlight: 'app-toolbar button.toolbar-button.wire'
+			text: 'construction box',
+			elementToHighlight: 'app-construction-box'
+		},
+		{
+			text: 'select',
+			elementToHighlight: 'app-toolbar button.toolbar-button.select'
 		}
 	]
 };

@@ -22,15 +22,19 @@ export class TutorialService {
 		[basic.id, basic]
 	]);
 
-	private _finishedTutorials: Set<string>;
+	private readonly _finishedTutorials: Set<string>;
 
 	private _currentRunningTutorial: string;
 
 	private _tutorialStepPointer: number;
 
+	private _currentlyHighlightedElement: HTMLElement;
+
 	private _helpWindowInstance: ComponentRef<HelpWindowComponent>;
 	private _skipSubscription: Subscription;
 	private _nextSubscription: Subscription;
+
+	private readonly _tutorialOverlay: HTMLDivElement;
 
 	constructor(
 		private componentFactoryResolver: ComponentFactoryResolver,
@@ -38,6 +42,9 @@ export class TutorialService {
 	) {
 		const data = this.storage.get('tutorials');
 		this._finishedTutorials = data ? new Set<string>(data) : new Set<string>();
+
+		this._tutorialOverlay = document.createElement('div');
+		this._tutorialOverlay.classList.add('tutorial-overlay');
 	}
 
 	public setHelpWindowInsertionPoint(value: ViewContainerRef) {
@@ -77,10 +84,22 @@ export class TutorialService {
 		this._helpWindowInstance.instance.title = tutorial.steps[this._tutorialStepPointer].title ?? tutorial.name;
 		this._helpWindowInstance.instance.text = tutorial.steps[this._tutorialStepPointer].text;
 
-		// TODO: highlight element
+		this.removeElementHighlight();
+
+		if (!tutorial.steps[this._tutorialStepPointer].elementToHighlight)
+			return;
+
+		const elementToHighlight = document.querySelector(tutorial.steps[this._tutorialStepPointer].elementToHighlight) as HTMLElement;
+		if (!elementToHighlight)
+			return;
+
+		this._currentlyHighlightedElement = elementToHighlight;
+		this._currentlyHighlightedElement.classList.add('tutorial-highlighted-element');
+		document.body.appendChild(this._tutorialOverlay);
 	}
 
 	private finishTutorial() {
+		this.removeElementHighlight();
 		this._nextSubscription.unsubscribe();
 		this._skipSubscription.unsubscribe();
 		this._helpWindowInstance.destroy();
@@ -90,5 +109,10 @@ export class TutorialService {
 		this.storage.set('tutorials', [...this._finishedTutorials]);
 
 		delete this._currentRunningTutorial;
+	}
+
+	private removeElementHighlight() {
+		this._currentlyHighlightedElement?.classList?.remove('tutorial-highlighted-element');
+		this._tutorialOverlay.remove();
 	}
 }
