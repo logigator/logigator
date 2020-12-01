@@ -137,7 +137,7 @@ export abstract class Elements {
 		newElem.endPos = new PIXI.Point(end, wire0.pos.y);
 	}
 
-	public static wireEnds(element: Element, rotation?: number, numInputs?: number, dif?: PIXI.Point, save?: boolean): PIXI.Point[] {
+	public static wireEnds(element: Element, rotation?: number, numInputs?: number, dif?: PIXI.Point): PIXI.Point[] {
 		if (element.wireEnds && !(dif || rotation || numInputs))
 			return element.wireEnds.map(p => p.clone());
 		const pos = dif ? new PIXI.Point(element.pos.x + dif.x, element.pos.y + dif.y) : element.pos;
@@ -184,8 +184,7 @@ export abstract class Elements {
 					out[numInputs + i] = new PIXI.Point(pos.x + i, pos.y - 1);
 				break;
 		}
-		if (save)
-			element.wireEnds = out.map(p => p.clone());
+		element.wireEnds = out.map(p => p.clone());
 		return out;
 	}
 
