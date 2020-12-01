@@ -149,7 +149,6 @@ export class Project {
 		return out;
 	}
 
-
 	public chunksToRender(start: PIXI.Point, end: PIXI.Point): { x: number, y: number }[] {
 		const out = CollisionFunctions.inRectChunks(start, end);
 		for (const outerChunk of this._currState.chunksFromCoords(out)) {
@@ -161,7 +160,6 @@ export class Project {
 		}
 		return out;
 	}
-
 
 	public addElements(elements: Element[], dif?: PIXI.Point): boolean {
 		if (!dif)
@@ -205,7 +203,8 @@ export class Project {
 			name: Elements.addActionName(elem),
 			element: elem
 		}];
-		actions.push(...this.autoAssemble([elem]));
+		const changed = this._currState.withWiresOnEdges([elem]);
+		actions.push(...this.autoAssemble(changed));
 		this.newState(actions);
 		return elem;
 	}
@@ -326,6 +325,7 @@ export class Project {
 		for (const elem of elements) {
 			this._currState.moveElement(elem, dif);
 		}
+		changed.push(...this._currState.withWiresOnEdges(elements));
 		const actions: Action[] = [{
 			name: 'movMult',
 			others: elements,

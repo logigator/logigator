@@ -146,7 +146,7 @@ export class ProjectState {
 
 	public removeAllConnectionPoints(elements: Element[]): void {
 		elements.forEach(elem => {
-			for (const pos of this.wireEnds(elem)) {
+			for (const pos of Elements.wireEnds(elem)) {
 				this.removeConFromChunks(pos);
 			}
 		});
@@ -432,7 +432,7 @@ export class ProjectState {
 	private connectWithEdge(other: Element, elem: Element): ChangeType {
 		const oldElems = (elem.typeId === ElementTypeId.WIRE ? [elem] : []).concat(other.typeId === ElementTypeId.WIRE ? [other] : []);
 		if (other.typeId === ElementTypeId.WIRE) {
-			const wireEnds = this.wireEnds(elem);
+			const wireEnds = Elements.wireEnds(elem);
 			for (const endPoint of wireEnds) {
 				if (CollisionFunctions.isPointOnWireNoEdge(other, endPoint)) {
 					return {newElems: this.connectWires(elem, other, endPoint), oldElems};
@@ -440,7 +440,7 @@ export class ProjectState {
 			}
 		}
 		if (elem.typeId === ElementTypeId.WIRE) {
-			const wireEnds = this.wireEnds(other);
+			const wireEnds = Elements.wireEnds(other);
 			for (const endPoint of wireEnds) {
 				if (CollisionFunctions.isPointOnWireNoEdge(elem, endPoint)) {
 					return {newElems: this.connectWires(other, elem, endPoint), oldElems};
