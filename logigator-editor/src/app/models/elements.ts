@@ -93,7 +93,7 @@ export abstract class Elements {
 
 	public static calcElemSize(element: Element, numInputs?: number, numOutputs?: number, rotation?: number): PIXI.Point {
 		const elemType = Elements.elementType(element.typeId);
-		rotation = element.rotation ?? rotation;
+		rotation = rotation === undefined || rotation == null ? element.rotation : rotation;
 		const elemToCalc = {...element, ...{rotation}};
 		if (numInputs !== undefined && numInputs !== null)
 			elemToCalc.numInputs = numInputs;
