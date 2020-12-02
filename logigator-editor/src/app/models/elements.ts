@@ -184,7 +184,8 @@ export abstract class Elements {
 					out[numInputs + i] = new PIXI.Point(pos.x + i, pos.y - 1);
 				break;
 		}
-		element.wireEnds = out.map(p => p.clone());
+		if (!(dif || rotation || numInputs))
+			element.wireEnds = out.map(p => p.clone());
 		return out;
 	}
 

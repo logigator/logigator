@@ -215,7 +215,7 @@ export class Project {
 			_endPos = undefined;
 		}
 		if (!_endPos || _cornerPos.equals(_endPos)) {
-			const elem = this.addElement(0, _pos, _cornerPos);
+			const elem = this.addElement(ElementTypeId.WIRE, _pos, _cornerPos);
 			return elem ? [elem] : null;
 		}
 		const {wire0, wire1} = Elements.gen2Wires(_pos, _cornerPos, _endPos);

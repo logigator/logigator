@@ -653,6 +653,7 @@ export class ProjectState {
 					numbers: [elem.plugIndex, plug.plugIndex]
 				});
 				plug.plugIndex = elem.plugIndex;
+				break;
 			}
 		}
 		elem.plugIndex = id;
