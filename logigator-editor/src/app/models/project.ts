@@ -406,14 +406,17 @@ export class Project {
 
 	public setOptions(elemId: number, options: number[]): void {
 		const elem = this._currState.getElementById(elemId);
+		const canSizeChange = !!getStaticDI(ElementProviderService).getElementById(elem.typeId).onOptionsChanged;
 		const oldOptions = [...elem.options];
+		const changed = canSizeChange ? this._currState.withWiresOnEdges([elem]) : [];
 		this._currState.setOptions(elem, options);
-		const action: Action = {
+		const actions: Action[] = [{
 			element: elem,
 			name: 'compOpt',
 			options: [options, oldOptions]
-		};
-		this.newState([action]);
+		}];
+		if (canSizeChange) actions.push(...this.autoAssemble(changed));
+		this.newState(actions);
 	}
 
 
