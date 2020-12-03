@@ -151,12 +151,11 @@ export class Project {
 
 	public chunksToRender(start: PIXI.Point, end: PIXI.Point): { x: number, y: number }[] {
 		const out = CollisionFunctions.inRectChunks(start, end);
-		for (const outerChunk of this._currState.chunksFromCoords(out)) {
-			for (const elem of outerChunk.elements) {
-				const chunk = CollisionFunctions.gridPosToChunk(elem.pos);
-				if (!out.find(c => c.x === chunk.x && c.y === chunk.y))
-					out.push({x: chunk.x, y: chunk.y});
-			}
+		for (const chunk of this._currState.chunksFromCoords(out)) {
+			chunk.links.forEach((linkedChunk, elementId) => {
+				if (!out.find(c => c.x === linkedChunk.x && c.y === linkedChunk.y))
+					out.push({x: linkedChunk.x, y: linkedChunk.y});
+			});
 		}
 		return out;
 	}

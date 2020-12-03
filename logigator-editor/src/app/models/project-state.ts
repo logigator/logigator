@@ -87,16 +87,20 @@ export class ProjectState {
 		if (!this._chunks[x][y])
 			this._chunks[x][y] = {
 				elements: [],
-				connectionPoints: []
+				connectionPoints: [],
+				links: new Map<number, { x: number, y: number }>()
 			};
 	}
 
 	public loadIntoChunks(element: Element): void {
 		const chunkCoords = CollisionFunctions.inRectChunks(element.pos, element.endPos, Elements.wireEnds(element));
+		// assumes that first chunk is where the element is
+		const firstCunk = { x: chunkCoords[0].x, y: chunkCoords[0].y };
 		for (const coord of chunkCoords) {
 			this.createChunk(coord.x, coord.y);
 			if (!this._chunks[coord.x][coord.y].elements.find(e => e.id === element.id))
 				this._chunks[coord.x][coord.y].elements.push(element);
+			this._chunks[coord.x][coord.y].links.set(element.id, firstCunk);
 		}
 	}
 
@@ -104,6 +108,7 @@ export class ProjectState {
 		const chunkCoords = CollisionFunctions.inRectChunks(element.pos, element.endPos, Elements.wireEnds(element));
 		for (const chunk of this.chunksFromCoords(chunkCoords)) {
 			chunk.elements = chunk.elements.filter(elem => elem.id !== element.id);
+			chunk.links.delete(element.id);
 		}
 	}
 
