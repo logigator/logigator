@@ -98,7 +98,7 @@ export class TutorialService {
 			return;
 
 		this._currentlyHighlightedElement = elementToHighlight;
-		this._currentlyHighlightedElement.classList.add('tutorial-highlighted-element');
+		this.adjustTutorialOverlay();
 		document.body.appendChild(this._tutorialOverlay);
 	}
 
@@ -115,8 +115,17 @@ export class TutorialService {
 		delete this._currentRunningTutorial;
 	}
 
+	private adjustTutorialOverlay() {
+		const elementToHighlightBounding = this._currentlyHighlightedElement.getBoundingClientRect();
+
+		this._tutorialOverlay.style.top = elementToHighlightBounding.top + elementToHighlightBounding.height / 2 + 'px';
+		this._tutorialOverlay.style.left = elementToHighlightBounding.left +  elementToHighlightBounding.width / 2 + 'px';
+		this._tutorialOverlay.style.width = elementToHighlightBounding.width + 10 + 'px';
+		this._tutorialOverlay.style.height = elementToHighlightBounding.height + 10 + 'px';
+	}
+
 	private removeElementHighlight() {
-		this._currentlyHighlightedElement?.classList?.remove('tutorial-highlighted-element');
 		this._tutorialOverlay.remove();
+		delete this._currentlyHighlightedElement;
 	}
 }

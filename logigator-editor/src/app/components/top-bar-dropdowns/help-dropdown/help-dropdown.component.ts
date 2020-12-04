@@ -1,4 +1,4 @@
-import {ChangeDetectionStrategy, Component, EventEmitter, OnInit, Output} from '@angular/core';
+import {ChangeDetectionStrategy, Component, EventEmitter, Output} from '@angular/core';
 import {HelpComponent} from '../../popup-contents/help/help.component';
 import {PopupService} from '../../../services/popup/popup.service';
 import {HexBinDecConverterComponent} from '../../popup-contents/hex-bin-dec-converter/hex-bin-dec-converter.component';

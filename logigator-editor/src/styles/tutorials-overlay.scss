@@ -1,13 +1,9 @@
 .tutorial-overlay {
 	position: fixed;
-	top: 0;
-	left: 0;
-	height: 100%;
-	width: 100%;
 	z-index: 500;
-	background-color: rgba(0, 0, 0, 0.8);
-}
-
-.tutorial-highlighted-element {
-	z-index: 1000;
+	background-color: transparent;
+	outline: 5000px solid rgba(0, 0, 0, 0.7);
+	border-radius: 10px;
+	transform: translateX(-50%) translateY(-50%);
+	pointer-events: none;
 }
