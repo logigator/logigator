@@ -6,9 +6,7 @@ export const basic: Tutorial = {
 	steps: [
 		{
 			title: 'tutorial start',
-			text: 'construction box',
-			elementToExplain: 'app-construction-box',
-			explanationBoxLocation: ExplanationBoxLoc.Right
+			text: 'construction box'
 		},
 		{
 			title: 'tutorial start',

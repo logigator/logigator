@@ -48,10 +48,18 @@ export class TutorialWindowComponent implements OnDestroy {
 	}
 
 	public elementToExplainChanged() {
-		const toExplainBounding = this.step.elementToExplain.getBoundingClientRect();
 		this.tutorialWindow.nativeElement.classList.remove('top', 'left', 'bottom', 'right');
 		delete this.arrowLeft;
 		delete this.arrowTop;
+
+		if (!this.step.elementToExplain) {
+			this.xPos = window.innerWidth / 2 - this.tutorialWindow.nativeElement.offsetWidth / 2;
+			this.yPos = window.innerHeight / 2 - this.tutorialWindow.nativeElement.offsetHeight / 2;
+			this.cdr.detectChanges();
+			return;
+		}
+
+		const toExplainBounding = this.step.elementToExplain.getBoundingClientRect();
 
 		switch (this.step.explanationBoxLocation) {
 			case ExplanationBoxLoc.Top:
