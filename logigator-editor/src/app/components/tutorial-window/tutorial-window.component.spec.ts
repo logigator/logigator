@@ -1,20 +1,20 @@
 import {ComponentFixture, TestBed, waitForAsync} from '@angular/core/testing';
 
-import { HelpWindowComponent } from './help-window.component';
+import { TutorialWindowComponent } from './tutorial-window.component';
 
-describe('HelpWindowComponent', () => {
-	let component: HelpWindowComponent;
-	let fixture: ComponentFixture<HelpWindowComponent>;
+describe('TutorialWindowComponent', () => {
+	let component: TutorialWindowComponent;
+	let fixture: ComponentFixture<TutorialWindowComponent>;
 
 	beforeEach(waitForAsync(() => {
 		TestBed.configureTestingModule({
-			declarations: [ HelpWindowComponent ]
+			declarations: [ TutorialWindowComponent ]
 		})
 			.compileComponents();
 	}));
 
 	beforeEach(() => {
-		fixture = TestBed.createComponent(HelpWindowComponent);
+		fixture = TestBed.createComponent(TutorialWindowComponent);
 		component = fixture.componentInstance;
 		fixture.detectChanges();
 	});

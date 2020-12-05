@@ -8,12 +8,5 @@
 	.work-area-container {
 		width: calc(100vw - #{$construction-box-width});
 		height: calc(100vh - #{$page-header-height + $status-bar-height});
-		position: relative;
-
-		.help-window-container {
-			position: absolute;
-			right: 0.5rem;
-			top: 0.5rem;
-		}
 	}
 }

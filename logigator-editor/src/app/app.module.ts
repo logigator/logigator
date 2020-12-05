@@ -48,7 +48,7 @@ import {WorkerCommunicationNodeService} from './services/simulation/worker-commu
 import { HelpComponent } from './components/popup-contents/help/help.component';
 import { HelpRendererComponent } from './components/popup-contents/help-renderer/help-renderer.component';
 import {ELECTRON} from '../environments/environment';
-import { HelpWindowComponent } from './components/help-window/help-window.component';
+import { TutorialWindowComponent } from './components/tutorial-window/tutorial-window.component';
 import {SwitchComponent} from './components/switch/switch.component';
 import {PopupComponent} from './components/popup/popup.component';
 import {InputComponent} from './components/input/input.component';
@@ -98,7 +98,7 @@ import { ImageExportComponent } from './components/popup-contents/image-export/i
 		RomViewComponent,
 		HelpComponent,
 		HelpRendererComponent,
-		HelpWindowComponent,
+		TutorialWindowComponent,
 		SwitchComponent,
 		PopupComponent,
 		InputComponent,

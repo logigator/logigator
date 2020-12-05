@@ -6,7 +6,6 @@ import {ProjectsService} from '../projects/projects.service';
 import {ElementProviderService} from '../element-provider/element-provider.service';
 import {TranslateService} from '@ngx-translate/core';
 import {SimulationManagementService} from '../simulation/simulation-management/simulation-management.service';
-import {HelpWindowService} from '../help-window/help-window.service';
 import {LoadingService} from '../loading/loading.service';
 
 @Injectable({
@@ -27,7 +26,6 @@ export class WorkModeService {
 		private elemProv: ElementProviderService,
 		private simulationManagement: SimulationManagementService,
 		private translate: TranslateService,
-		private helpWindowService: HelpWindowService,
 		private loadingService: LoadingService
 	) {}
 
@@ -45,7 +43,6 @@ export class WorkModeService {
 		this._currentWorkMode = WorkMode.SIMULATION;
 		this._currentWorkModeSubject.next(WorkMode.SIMULATION);
 		this._simulationModeSubject.next(true);
-		this.helpWindowService.showHelpWindow('ENTER_SIM');
 		removeLoading();
 	}
 
