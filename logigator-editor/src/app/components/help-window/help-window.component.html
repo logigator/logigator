@@ -1,9 +1,0 @@
-<div class="help-window">
-	<h3 class="title">{{title | translate}}</h3>
-	<p class="help-text">{{text | translate}}</p>
-	<div class="buttons">
-		<button class="btn-outline primary skip" (click)="skipClick()">{{'TUTORIAL.SKIP' | translate}}</button>
-		<button class="btn-raised primary" (click)="nextClick()" *ngIf="!isLastStep">{{'TUTORIAL.NEXT' | translate}}</button>
-		<button class="btn-raised primary" (click)="nextClick()" *ngIf="isLastStep">{{'TUTORIAL.FINISH' | translate}}</button>
-	</div>
-</div>

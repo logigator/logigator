@@ -23,9 +23,6 @@ export class WorkAreaContainerComponent implements OnInit {
 	@ViewChild(ToastContainerDirective, {static: true})
 	toastContainer: ToastContainerDirective;
 
-	@ViewChild('helpWindowInsertionPoint', {static: true, read: ViewContainerRef})
-	helpWindowInsertionPoint: ViewContainerRef;
-
 	constructor(
 		private projectSaveManagement: ProjectSaveManagementService,
 		private cdr: ChangeDetectorRef,
@@ -51,7 +48,6 @@ export class WorkAreaContainerComponent implements OnInit {
 		});
 
 		this.errorHandling.setToastrContainer(this.toastContainer);
-		this.tutorialService.setHelpWindowInsertionPoint(this.helpWindowInsertionPoint);
 		this.tutorialService.startTutorial('basic');
 	}
 
