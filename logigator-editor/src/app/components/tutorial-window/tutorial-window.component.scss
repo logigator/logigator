@@ -9,7 +9,7 @@
 
 	@include themify() {
 		background-color: themed('background');
-		border: border('width') solid themed('accent2');
+		border: border('width') solid themed('accent1');
 		color: themed('text-primary');
 	}
 

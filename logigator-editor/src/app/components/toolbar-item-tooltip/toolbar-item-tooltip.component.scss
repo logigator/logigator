@@ -9,6 +9,7 @@
 
 	@include themify() {
 		background-color: themed('accent2');
+		border: 1px solid themed('accent1');
 
 		p {
 			color: themed('text-primary');
