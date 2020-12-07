@@ -253,6 +253,8 @@ export class Project {
 				element: elem
 			};
 			actions.push(action);
+			actions.push(...this._currState.plugIndexActions);
+			this._currState.plugIndexActions = [];
 		});
 		elements.forEach(elem => {
 			for (const pos of Elements.wireEnds(elem)) {
@@ -271,15 +273,16 @@ export class Project {
 		const elements = this._currState.elementsOverLine(from, to);
 		if (elements.length === 0)
 			return;
-		const actions: Action[] = new Array(elements.length);
+		const actions: Action[] = [];
 		const onEdges: Element[] = [];
-		let i = 0;
 		for (const element of elements) {
-			actions[i++] = {
+			actions.push({
 				name: Elements.remActionName(element),
 				element
-			};
+			});
 			this._currState.removeElement(element.id);
+			actions.push(...this._currState.plugIndexActions);
+			this._currState.plugIndexActions = [];
 		}
 		elements.forEach(elem => {
 			for (const pos of Elements.wireEnds(elem)) {

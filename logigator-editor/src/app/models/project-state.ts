@@ -18,6 +18,7 @@ export class ProjectState {
 	private _highestTakenId = 0;
 
 	public specialActions: Action[] = [];
+	public plugIndexActions: Action[] = [];
 
 	public numInputs = 0;
 	public numOutputs = 0;
@@ -253,13 +254,16 @@ export class ProjectState {
 		elem.id = id || this.getNextId();
 		this._model.set(elem.id, elem);
 		if (elem.typeId === ElementTypeId.INPUT) {
-			elem.plugIndex = this.numInputs++;
-			this._inputPlugs.push(elem);
-			for (const plug of this._outputPlugs) {
-				plug.plugIndex++;
+			if (elem.plugIndex === undefined) {
+				for (const plug of this._outputPlugs) {
+					plug.plugIndex++;
+				}
+				elem.plugIndex = this.numInputs++;
 			}
+			this._inputPlugs.push(elem);
+			this.numInputs++;
 		} else if (elem.typeId === ElementTypeId.OUTPUT) {
-			elem.plugIndex = this.numInputs + this.numOutputs++;
+			elem.plugIndex = (elem.plugIndex === undefined) ? (this.numInputs + this.numOutputs++) : elem.plugIndex;
 			this._outputPlugs.push(elem);
 		} else if (elem.typeId === ElementTypeId.TUNNEL) {
 			this._tunnels.push(elem);
@@ -279,20 +283,20 @@ export class ProjectState {
 			this._inputPlugs = this._inputPlugs.filter(e => e.id !== elementId);
 			for (const plug of this._inputPlugs) {
 				if (plug.plugIndex > outElem.plugIndex) {
-					// this.specialActions.push({
-					// 	name: 'plugInd',
-					// 	element: plug,
-					// 	numbers: [plug.plugIndex - 1, plug.plugIndex]
-					// });
+					this.plugIndexActions.push({
+						name: 'plugInd',
+						element: plug,
+						numbers: [plug.plugIndex - 1, plug.plugIndex]
+					});
 					plug.plugIndex--;
 				}
 			}
 			for (const plug of this._outputPlugs) {
-				// this.specialActions.push({
-				// 	name: 'plugInd',
-				// 	element: plug,
-				// 	numbers: [plug.plugIndex - 1, plug.plugIndex]
-				// });
+				this.plugIndexActions.push({
+					name: 'plugInd',
+					element: plug,
+					numbers: [plug.plugIndex - 1, plug.plugIndex]
+				});
 				plug.plugIndex--;
 			}
 		} else if (outElem.typeId === ElementTypeId.OUTPUT) {
@@ -300,11 +304,11 @@ export class ProjectState {
 			this._outputPlugs = this._outputPlugs.filter(e => e.id !== elementId);
 			for (const plug of this._outputPlugs) {
 				if (plug.plugIndex > outElem.plugIndex) {
-					// this.specialActions.push({
-					// 	name: 'plugInd',
-					// 	element: plug,
-					// 	numbers: [plug.plugIndex - 1, plug.plugIndex]
-					// });
+					this.plugIndexActions.push({
+						name: 'plugInd',
+						element: plug,
+						numbers: [plug.plugIndex - 1, plug.plugIndex]
+					});
 					plug.plugIndex--;
 				}
 			}

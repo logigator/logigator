@@ -73,7 +73,8 @@ export abstract class Elements {
 			endPos,
 			rotation: type.rotation,
 			options: type.options ? [...type.options] : undefined,
-			plugIndex: this.elementProviderService.isPlugElement(typeId) ? 0 : undefined
+			// plugIndex: this.elementProviderService.isPlugElement(typeId) ? 0 : undefined
+			plugIndex: undefined
 		};
 	}
 
