@@ -216,6 +216,10 @@ export class ProjectState {
 				}
 			}
 		}
+		for (const wireEnd of wireEnds) {
+			if (wireEnd.x < 0 || wireEnd.y < 0)
+				return false;
+		}
 		return !(startPos.x < 0 || startPos.y < 0);
 	}
 
