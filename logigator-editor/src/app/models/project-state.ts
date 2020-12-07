@@ -100,7 +100,8 @@ export class ProjectState {
 			this.createChunk(coord.x, coord.y);
 			if (!this._chunks[coord.x][coord.y].elements.find(e => e.id === element.id))
 				this._chunks[coord.x][coord.y].elements.push(element);
-			this._chunks[coord.x][coord.y].links.set(element.id, firstCunk);
+			if (!(coord.x === firstCunk.x && coord.y === firstCunk.y))
+				this._chunks[coord.x][coord.y].links.set(element.id, firstCunk);
 		}
 	}
 
