@@ -585,22 +585,22 @@ export class Project {
 		out.push(...merged.actions);
 		const connected = this.autoConnect(merged.elements);
 		out.push(...connected.actions);
-		this._currState.loadConnectionPoints(connected.elements.concat(...elements));
+		this._currState.loadConnectionPoints([...connected.elements, ...elements]);
 		return out;
 	}
 
-	private autoConnect(elements: Element[]): { actions: Action[], elements: Element[] } {
+	private autoConnect(elements: Set<Element>): { actions: Action[], elements: Set<Element> } {
 		const out: Action[] = [];
-		let outElements = [...elements];
-		const elemChanges = this._currState.connectToBoard([...elements]);
+		let outElements = new Set<Element>(elements);
+		const elemChanges = this._currState.connectToBoard(new Set<Element>(elements));
 		outElements = Actions.applyChangeOnArrayAndActions(elemChanges, out, outElements);
 		return {actions: out, elements: outElements};
 	}
 
-	private autoMerge(elements: Set<Element>): { actions: Action[], elements: Element[] } {
+	private autoMerge(elements: Set<Element>): { actions: Action[], elements: Set<Element> } {
 		const out: Action[] = [];
-		let outElements = [...elements];
-		const elemChanges = this._currState.mergeToBoard([...elements]);
+		let outElements = new Set<Element>(elements);
+		const elemChanges = this._currState.mergeToBoard(new Set<Element>(elements));
 		outElements = Actions.applyChangeOnArrayAndActions(elemChanges, out, outElements);
 		return {actions: out, elements: outElements};
 	}

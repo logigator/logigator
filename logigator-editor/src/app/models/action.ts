@@ -119,16 +119,16 @@ export class Actions {
 	}
 
 	public static applyChangeOnArrayAndActions(
-		changes: ChangeType[], out: Action[], outElements: Element[]
-	): Element[] {
+		changes: ChangeType[], out: Action[], outElements: Set<Element>
+	): Set<Element> {
 		changes.forEach(change => {
 			change.oldElems.forEach(e => {
 				out.push({name: Elements.remActionName(e), element: e});
-				outElements = outElements.filter(o => o.id !== e.id);
+				outElements.delete(e);
 			});
 			change.newElems.forEach(e => {
 				out.push({name: Elements.addActionName(e), element: e});
-				outElements.push(e);
+				outElements.add(e);
 			});
 		});
 		return outElements;

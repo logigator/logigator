@@ -392,18 +392,19 @@ export class ProjectState {
 
 
 
-	private actionToBoard(elements: Element[], func: (elem: Element, other: Element) => ChangeType): ChangeType[] {
+	private actionToBoard(elements: Set<Element>, func: (elem: Element, other: Element) => ChangeType): ChangeType[] {
 		const out: ChangeType[] = [];
-		while (elements.length > 0) {
-			const elem = elements.shift();
+		while (elements.size > 0) {
+			const elem = elements.values().next().value;
+			elements.delete(elem);
 			const others = this.elementsInChunks(elem.pos, elem.endPos, Elements.wireEnds(elem));
 			for (const other of others) {
 				if (elem.id === other.id)
 					continue;
 				const change = func(elem, other);
 				if (change) {
-					elements = elements.filter(e => e.id !== other.id);
-					elements.push(...change.newElems);
+					elements.delete(other);
+					change.newElems.forEach(elements.add, elements);
 					out.push(change);
 					break;
 				}
@@ -412,11 +413,11 @@ export class ProjectState {
 		return out;
 	}
 
-	public mergeToBoard(elements: Element[]): ChangeType[] {
+	public mergeToBoard(elements: Set<Element>): ChangeType[] {
 		return this.actionToBoard(elements, this.mergeWires.bind(this));
 	}
 
-	public connectToBoard(elements: Element[]): ChangeType[] {
+	public connectToBoard(elements: Set<Element>): ChangeType[] {
 		return this.actionToBoard(elements, this.connectWithEdge.bind(this));
 	}
 
@@ -484,20 +485,6 @@ export class ProjectState {
 				outWires.push(elem);
 		}
 		return outWires;
-	}
-
-	private wireEnds(element: Element): PIXI.Point[] {
-		const out = Elements.wireEnds(element);
-		return out.filter(point => {
-			for (const wire of this.elemsOnPoint(point)) {
-				if (wire === element)
-					continue;
-				if (Elements.isSameDirection(element, wire)) {
-					return false;
-				}
-			}
-			return true;
-		});
 	}
 
 	public elemsOnPoint(pos: PIXI.Point): Element[] {

@@ -214,16 +214,6 @@ export abstract class Elements {
 		}
 	}
 
-	public static removeDuplicates(elements: Element[]): void {
-		for (let i = 0; i < elements.length - 1; i++) {
-			for (let j = i + 1; j < elements.length; j++) {
-				if (elements[i].id === elements[j].id) {
-					elements.splice(j, 1);
-				}
-			}
-		}
-	}
-
 	public static wireEndIndex(element: Element, pos: PIXI.Point): number {
 		const wireEnds = this.wireEnds(element);
 		for (let i = 0; i < wireEnds.length; i++) {
