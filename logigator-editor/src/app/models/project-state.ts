@@ -525,14 +525,13 @@ export class ProjectState {
 
 
 
-	public withWiresOnEdges(elements: Element[]): Element[] {
-		const out = [...elements];
+	public withWiresOnEdges(elements: Element[]): Set<Element> {
+		const out: Set<Element> = new Set<Element>(elements);
 		for (const element of elements) {
 			for (const pos of Elements.wireEnds(element)) {
 				const elemsOnPos = this.wiresOnPoint(pos);
 				elemsOnPos.forEach(elem => {
-					if (!out.includes(elem))
-						out.push(elem);
+					out.add(elem);
 				});
 			}
 		}

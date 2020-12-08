@@ -233,7 +233,7 @@ export class Project {
 	private actionsFromAddWires(wires: Element[]): Action[] {
 		const actions: Action[] = [];
 		wires.forEach(wire => actions.push({name: 'addWire', element: wire}));
-		actions.push(...this.autoAssemble(wires));
+		actions.push(...this.autoAssemble(new Set<Element>(wires)));
 		return actions;
 	}
 
@@ -242,7 +242,7 @@ export class Project {
 		// #!debug
 		this.boardRecorder.call('removeElementsById', arguments, -1, 0);
 		const actions: Action[] = [];
-		const onEdges: Element[] = [];
+		const onEdges: Set<Element> = new Set<Element>();
 		const elements: Element[] = new Array(ids.length);
 		let i = 0;
 		ids.forEach(id => {
@@ -258,7 +258,7 @@ export class Project {
 		});
 		elements.forEach(elem => {
 			for (const pos of Elements.wireEnds(elem)) {
-				onEdges.push(...this._currState.wiresOnPoint(pos));
+				this._currState.wiresOnPoint(pos).forEach(onEdges.add, onEdges);
 			}
 		});
 		this._currState.loadConnectionPoints(elements);
@@ -274,7 +274,7 @@ export class Project {
 		if (elements.length === 0)
 			return;
 		const actions: Action[] = [];
-		const onEdges: Element[] = [];
+		const onEdges: Set<Element> = new Set<Element>();
 		for (const element of elements) {
 			actions.push({
 				name: Elements.remActionName(element),
@@ -286,7 +286,7 @@ export class Project {
 		}
 		elements.forEach(elem => {
 			for (const pos of Elements.wireEnds(elem)) {
-				onEdges.push(...this._currState.wiresOnPoint(pos));
+				this._currState.wiresOnPoint(pos).forEach(onEdges.add, onEdges);
 			}
 		});
 		this._currState.loadConnectionPoints(elements);
@@ -319,7 +319,7 @@ export class Project {
 		}
 		if (!this._currState.allSpacesFree(elements, dif, new Set<Element>(elements)))
 			return false;
-		const changed = this._currState.withWiresOnEdges(elements);
+		let changed = this._currState.withWiresOnEdges(elements);
 
 		// #!debug
 		this.boardRecorder.call('moveElementsById', arguments, -1, 0);
@@ -327,7 +327,7 @@ export class Project {
 		for (const elem of elements) {
 			this._currState.moveElement(elem, dif);
 		}
-		changed.push(...this._currState.withWiresOnEdges(elements));
+		changed = new Set<Element>([...changed, ...this._currState.withWiresOnEdges(elements)]);
 		const actions: Action[] = [{
 			name: 'movMult',
 			others: elements,
@@ -444,7 +444,7 @@ export class Project {
 		const elem = this._currState.getElementById(elemId);
 		const canSizeChange = !!getStaticDI(ElementProviderService).getElementById(elem.typeId).onOptionsChanged;
 		const oldOptions = [...elem.options];
-		const changed = canSizeChange ? this._currState.withWiresOnEdges([elem]) : [];
+		const changed = canSizeChange ? this._currState.withWiresOnEdges([elem]) : new Set<Element>();
 		this._currState.setOptions(elem, options);
 		const actions: Action[] = [{
 			element: elem,
@@ -573,14 +573,13 @@ export class Project {
 	}
 
 
-	private autoAssemble(elements: Element[]): Action[] {
-		Elements.removeDuplicates(elements);
+	private autoAssemble(elements: Set<Element>): Action[] {
 		const out: Action[] = [];
 		const merged = this.autoMerge(elements);
 		out.push(...merged.actions);
 		const connected = this.autoConnect(merged.elements);
 		out.push(...connected.actions);
-		this._currState.loadConnectionPoints(connected.elements.concat(elements));
+		this._currState.loadConnectionPoints(connected.elements.concat(...elements));
 		return out;
 	}
 
@@ -592,7 +591,7 @@ export class Project {
 		return {actions: out, elements: outElements};
 	}
 
-	private autoMerge(elements: Element[]): { actions: Action[], elements: Element[] } {
+	private autoMerge(elements: Set<Element>): { actions: Action[], elements: Element[] } {
 		const out: Action[] = [];
 		let outElements = [...elements];
 		const elemChanges = this._currState.mergeToBoard([...elements]);
