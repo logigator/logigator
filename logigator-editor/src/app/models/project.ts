@@ -152,7 +152,7 @@ export class Project {
 	public chunksToRender(start: PIXI.Point, end: PIXI.Point): { x: number, y: number }[] {
 		const out = CollisionFunctions.inRectChunks(start, end);
 		for (const chunk of this._currState.chunksFromCoords(out)) {
-			chunk.links.forEach((linkedChunk, elementId) => {
+			chunk.links.forEach((linkedChunk, _) => {
 				if (!out.find(c => c.x === linkedChunk.x && c.y === linkedChunk.y))
 					out.push({x: linkedChunk.x, y: linkedChunk.y});
 			});
@@ -440,19 +440,25 @@ export class Project {
 		return this._currState.possiblePlugIds(this._currState.getElementById(elemId));
 	}
 
-	public setOptions(elemId: number, options: number[]): void {
-		const elem = this._currState.getElementById(elemId);
-		const canSizeChange = !!getStaticDI(ElementProviderService).getElementById(elem.typeId).onOptionsChanged;
-		const oldOptions = [...elem.options];
-		const changed = canSizeChange ? this._currState.withWiresOnEdges([elem]) : new Set<Element>();
-		this._currState.setOptions(elem, options);
+	public setOptions(elemId: number, options: number[]): boolean {
+		const element = this._currState.getElementById(elemId);
+		const canSizeChange = !!getStaticDI(ElementProviderService).getElementById(element.typeId).onOptionsChanged;
+		const oldOptions = [...element.options];
+		const changed = canSizeChange ? this._currState.withWiresOnEdges([element]) : new Set<Element>();
+
+		const clone = Elements.cloneSetOptions(element, options);
+		if (canSizeChange && !this._currState.isFreeSpace(clone.pos, clone.endPos, false,
+			Elements.wireEnds(clone), new Set<Element>([element])))
+			return false;
+		this._currState.setOptions(element, options);
 		const actions: Action[] = [{
-			element: elem,
+			element,
 			name: 'compOpt',
 			options: [options, oldOptions]
 		}];
 		if (canSizeChange) actions.push(...this.autoAssemble(changed));
 		this.newState(actions);
+		return true;
 	}
 
 

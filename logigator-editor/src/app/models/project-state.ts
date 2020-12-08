@@ -42,10 +42,10 @@ export class ProjectState {
 		this._chunks = [];
 		this._outputPlugs = [];
 		this._inputPlugs = [];
-		this._tunnels = [];
 		this.calcAllEndPos();
 		this.loadAllIntoChunks();
 		this.inputOutputCount();
+		this.initTunnels();
 	}
 
 	private findHighestTakenId(): number {
@@ -635,7 +635,6 @@ export class ProjectState {
 		return chunks;
 	}
 
-
 	public inputOutputCount(): {numInputs: number, numOutputs: number} {
 		let numInputs = 0;
 		let numOutputs = 0;
@@ -657,6 +656,15 @@ export class ProjectState {
 		this.numInputs = numInputs;
 		this.numOutputs = numOutputs;
 		return {numInputs, numOutputs};
+	}
+
+	public initTunnels(): void {
+		this._tunnels = [];
+		for (const elem of this._model.values()) {
+			if (elem.typeId === ElementTypeId.TUNNEL) {
+				this._tunnels.push(elem);
+			}
+		}
 	}
 
 	public setPlugId(elem: Element, id: number): void {

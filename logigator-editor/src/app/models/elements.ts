@@ -34,6 +34,17 @@ export abstract class Elements {
 		return out;
 	}
 
+	public static cloneSetOptions(element: Element, options: number[]): Element {
+		const clone = Elements.clone(element);
+		clone.options = options;
+		const elemType = getStaticDI(ElementProviderService).getElementById(element.typeId);
+		if (elemType.onOptionsChanged) {
+			elemType.onOptionsChanged(clone);
+			clone.endPos = Elements.calcEndPos(clone);
+		}
+		return clone;
+	}
+
 	public static equals(elem0: Element, elem1: Element): boolean {
 		for (const k in elem0) {
 			if (k === 'id' || k === 'plugIndex') continue;
