@@ -143,8 +143,10 @@ export class ProjectState {
 			return;
 		let conIndex = -1;
 		for (let i = 0; i < chunk.connectionPoints.length; i++) {
-			if (chunk.connectionPoints[i].equals(con))
+			if (chunk.connectionPoints[i].equals(con)) {
 				conIndex = i;
+				break;
+			}
 		}
 		if (conIndex < 0)
 			return;
