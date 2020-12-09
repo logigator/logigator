@@ -321,7 +321,7 @@ export abstract class View extends PIXI.Container {
 	public centerView() {
 		for (let x = 0; x < this._project.currState.chunks.length; x++) {
 			for (let y = 0; y < this._project.currState.chunks[x].length; y++) {
-				if (this._project.currState.chunks[x][y] && this._project.currState.chunks[x][y].elements.length > 0) {
+				if (this._project.currState.chunks[x][y] && this._project.currState.chunks[x][y].elements.size > 0) {
 					this.zoomPan.translateTo(this.getChunkPos(-x, -y));
 					this.updateChunks();
 					this.requestSingleFrame();
