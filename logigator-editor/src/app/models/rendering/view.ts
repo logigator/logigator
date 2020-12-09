@@ -218,11 +218,18 @@ export abstract class View extends PIXI.Container {
 		this.connectionPoints.set(`${pos.x}:${pos.y}`, connPoint);
 	}
 
-	public addToCorrectChunk(sprite: PIXI.DisplayObject, pos: PIXI.Point) {
+	/**
+	 * @return false if the sprite already is in the correct chunk, true if added
+	 */
+	public addToCorrectChunk(sprite: PIXI.DisplayObject, pos: PIXI.Point): boolean {
 		const chunk = CollisionFunctions.gridPosToChunk(pos);
 
-		this.createChunkIfNeeded(chunk.x, chunk.y);
-		this._chunks[chunk.x][chunk.y].container.addChild(sprite);
+		if (!(this._chunks[chunk.x] && this._chunks[chunk.x][chunk.y]) || this._chunks[chunk.x][chunk.y].container !== sprite.parent) {
+			this.createChunkIfNeeded(chunk.x, chunk.y);
+			this._chunks[chunk.x][chunk.y].container.addChild(sprite);
+			return true;
+		}
+		return false;
 	}
 
 	private removeConnectionPoint(pos: PIXI.Point) {
