@@ -89,7 +89,7 @@ export class ProjectState {
 				this._chunks[x].push(undefined);
 		if (!this._chunks[x][y])
 			this._chunks[x][y] = {
-				elements: [],
+				elements: new Set<Element>(),
 				connectionPoints: [],
 				links: new Map<number, { x: number, y: number }>()
 			};
@@ -101,8 +101,7 @@ export class ProjectState {
 		const firstCunk = { x: chunkCoords[0].x, y: chunkCoords[0].y };
 		for (const coord of chunkCoords) {
 			this.createChunk(coord.x, coord.y);
-			if (!this._chunks[coord.x][coord.y].elements.find(e => e.id === element.id))
-				this._chunks[coord.x][coord.y].elements.push(element);
+			this._chunks[coord.x][coord.y].elements.add(element);
 			if (!(coord.x === firstCunk.x && coord.y === firstCunk.y))
 				this._chunks[coord.x][coord.y].links.set(element.id, firstCunk);
 		}
@@ -111,7 +110,7 @@ export class ProjectState {
 	private removeFromChunks(element: Element): void {
 		const chunkCoords = CollisionFunctions.inRectChunks(element.pos, element.endPos, Elements.wireEnds(element));
 		for (const chunk of this.chunksFromCoords(chunkCoords)) {
-			chunk.elements = chunk.elements.filter(elem => elem.id !== element.id);
+			chunk.elements.delete(element);
 			chunk.links.delete(element.id);
 		}
 	}
@@ -178,7 +177,7 @@ export class ProjectState {
 		});
 	}
 
-	public elementsInChunks(startPos: PIXI.Point, endPos: PIXI.Point, wireEnds?: PIXI.Point[]): Element[] {
+	public elementsInChunks(startPos: PIXI.Point, endPos: PIXI.Point, wireEnds?: PIXI.Point[]): Set<Element> {
 		const chunks = this.chunksFromCoords(CollisionFunctions.inRectChunks(startPos, endPos, wireEnds));
 		if (chunks.length === 1) {
 			return chunks[0].elements;
@@ -189,7 +188,7 @@ export class ProjectState {
 				out.add(elem);
 			}
 		}
-		return [...out];
+		return out;
 	}
 
 	private chunkHasCon(chunk: Chunk, pos: PIXI.Point): boolean {
@@ -248,7 +247,7 @@ export class ProjectState {
 			const newStartPos = new PIXI.Point(elem.pos.x + dif.x, elem.pos.y + dif.y);
 			const newEndPos = new PIXI.Point(elem.endPos.x + dif.x, elem.endPos.y + dif.y);
 			const others = this.elementsInChunks(newStartPos, newEndPos, Elements.wireEndsWithChanges(elem, elem.rotation, elem.numInputs, dif));
-			if (others.length > 0)
+			if (others.size > 0)
 				out.push(elem);
 		}
 		return out;
@@ -555,11 +554,17 @@ export class ProjectState {
 			for (let j = 0; j < this._chunks[i].length; j++) {
 				const ownChunk = this._chunks[i][j];
 				const otherChunk = other._chunks[i][j]; // might crash when test failing, did not happen but possible
-				if (otherChunk.elements.length !== ownChunk.elements.length ||
+				if (otherChunk.elements.size !== ownChunk.elements.size ||
 					otherChunk.connectionPoints.length !== ownChunk.connectionPoints.length)
 					return false;
-				for (let k = 0; k < ownChunk.elements.length; k++) {
-					if (!otherChunk.elements.find(e => Elements.equals(e, ownChunk.elements[k])))
+
+				for (const elem of ownChunk.elements) {
+					let has = false;
+					for (const otherElem of otherChunk.elements) {
+						if (Elements.equals(elem, otherElem))
+							has = true;
+					}
+					if (!has)
 						return false;
 				}
 				for (let k = 0; k < ownChunk.connectionPoints.length; k++) {
@@ -572,8 +577,8 @@ export class ProjectState {
 		return true;
 	}
 
-	public elementsInChunk(c: PIXI.Point): Element[] {
-		return this._chunks[c.x] && this._chunks[c.x][c.y] ? this._chunks[c.x][c.y].elements : [];
+	public elementsInChunk(c: PIXI.Point): Set<Element> {
+		return this._chunks[c.x] && this._chunks[c.x][c.y] ? this._chunks[c.x][c.y].elements : new Set<Element>();
 	}
 
 	public chunksFromCoords(chunkCoords: {x: number, y: number}[]): Chunk[] {
