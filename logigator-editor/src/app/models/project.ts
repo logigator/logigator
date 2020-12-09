@@ -261,7 +261,7 @@ export class Project {
 				this._currState.wiresOnPoint(pos).forEach(onEdges.add, onEdges);
 			}
 		});
-		this._currState.loadConnectionPoints(elements);
+		this._currState.removeAllConnectionPoints(elements);
 		actions.push(...this.autoAssemble(onEdges));
 		this.newState(actions);
 	}
@@ -289,7 +289,7 @@ export class Project {
 				this._currState.wiresOnPoint(pos).forEach(onEdges.add, onEdges);
 			}
 		});
-		this._currState.loadConnectionPoints(elements);
+		this._currState.removeAllConnectionPoints(elements);
 		actions.push(...this.autoAssemble(onEdges), ...this._currState.specialActions);
 		this._currState.specialActions = [];
 		this._actionToApply.push(...actions);
@@ -351,7 +351,7 @@ export class Project {
 		const changed = this._currState.withWiresOnEdges([element]);
 		const newEndPos = Elements.calcEndPos(element, undefined, undefined, rotation);
 		if (!this._currState.isFreeSpace(element.pos, newEndPos, false,
-			Elements.wireEnds(element, rotation), new Set<Element>([element])))
+			Elements.wireEndsWithChanges(element, element.rotation, element.numInputs, new PIXI.Point()), new Set<Element>([element])))
 			return false;
 
 		// #!debug
@@ -375,7 +375,7 @@ export class Project {
 		const changed = this._currState.withWiresOnEdges([element]);
 		const newEndPos = Elements.calcEndPos(element, numInputs);
 		if (!this._currState.isFreeSpace(element.pos, newEndPos, false,
-			Elements.wireEnds(element, undefined, numInputs), new Set<Element>([element])))
+			Elements.wireEndsWithChanges(element, element.rotation, numInputs, new PIXI.Point()), new Set<Element>([element])))
 			return false;
 
 		// #!debug

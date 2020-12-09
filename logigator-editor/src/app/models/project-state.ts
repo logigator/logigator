@@ -163,14 +163,18 @@ export class ProjectState {
 
 	public loadConnectionPoints(elements: Element[], allRemoved?: boolean): void {
 		if (!allRemoved) {
-			elements.forEach(elem => {
-				for (const pos of Elements.wireEnds(elem))
-					this.removeConnectionPoint(pos);
-			});
+			this.removeAllConnectionPoints(elements);
 		}
+		const donePoints = new Map<number, Set<number>>();
 		elements.forEach(elem => {
-			for (const pos of Elements.wireEnds(elem))
+			for (const pos of Elements.wireEnds(elem)) {
+				if (donePoints.has(pos.x) && donePoints.get(pos.x).has(pos.y))
+					continue;
 				this.addConnectionPoint(pos);
+				if (!donePoints.has(pos.x))
+					donePoints.set(pos.x, new Set<number>());
+				donePoints.get(pos.x).add(pos.y);
+			}
 		});
 	}
 
@@ -232,7 +236,7 @@ export class ProjectState {
 			const newStartPos = new PIXI.Point(elem.pos.x + dif.x, elem.pos.y + dif.y);
 			const newEndPos = new PIXI.Point(elem.endPos.x + dif.x, elem.endPos.y + dif.y);
 			if (!this.isFreeSpace(newStartPos, newEndPos, elem.typeId === ElementTypeId.WIRE,
-				Elements.wireEnds(elem, undefined, undefined, dif), except))
+				Elements.wireEndsWithChanges(elem, elem.rotation, elem.numInputs, dif), except))
 				return false;
 		}
 		return true;
@@ -243,7 +247,7 @@ export class ProjectState {
 		for (const elem of elements) {
 			const newStartPos = new PIXI.Point(elem.pos.x + dif.x, elem.pos.y + dif.y);
 			const newEndPos = new PIXI.Point(elem.endPos.x + dif.x, elem.endPos.y + dif.y);
-			const others = this.elementsInChunks(newStartPos, newEndPos, Elements.wireEnds(elem, undefined, undefined, dif));
+			const others = this.elementsInChunks(newStartPos, newEndPos, Elements.wireEndsWithChanges(elem, elem.rotation, elem.numInputs, dif));
 			if (others.length > 0)
 				out.push(elem);
 		}

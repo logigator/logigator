@@ -149,17 +149,19 @@ export abstract class Elements {
 		newElem.endPos = new PIXI.Point(end, wire0.pos.y);
 	}
 
-	public static wireEnds(element: Element, rotation?: number, numInputs?: number, dif?: PIXI.Point): PIXI.Point[] {
-		if (element.wireEnds && !(dif || rotation || numInputs))
+	public static wireEnds(element: Element): PIXI.Point[] {
+		if (element.wireEnds)
 			return element.wireEnds.map(p => p.clone());
-		const pos = dif ? new PIXI.Point(element.pos.x + dif.x, element.pos.y + dif.y) : element.pos;
-		const endPos = dif ? new PIXI.Point(element.endPos.x + dif.x, element.endPos.y + dif.y) : element.endPos;
+		const out = this.wireEndsWithChanges(element, element.rotation, element.numInputs, new PIXI.Point());
+		element.wireEnds = out.map(p => p.clone());
+		return out;
+	}
+
+	public static wireEndsWithChanges(element: Element, rotation: number, numInputs: number, dif: PIXI.Point): PIXI.Point[] {
+		const pos = new PIXI.Point(element.pos.x + dif.x, element.pos.y + dif.y);
+		const endPos = new PIXI.Point(element.endPos.x + dif.x, element.endPos.y + dif.y);
 		if (element.typeId === ElementTypeId.WIRE)
 			return [pos, endPos];
-		if (rotation === undefined)
-			rotation = element.rotation;
-		if (numInputs === undefined)
-			numInputs = element.numInputs;
 		const ignoreOutputs = Elements.elementType(element.typeId).ignoreOutputs;
 		const out: PIXI.Point[] = new Array(numInputs + (ignoreOutputs ? 0 : element.numOutputs));
 		switch (rotation) {
@@ -196,8 +198,6 @@ export abstract class Elements {
 					out[numInputs + i] = new PIXI.Point(pos.x + i, pos.y - 1);
 				break;
 		}
-		if (!(dif || rotation || numInputs))
-			element.wireEnds = out.map(p => p.clone());
 		return out;
 	}
 
