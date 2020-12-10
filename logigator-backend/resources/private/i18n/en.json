@@ -50,14 +50,17 @@
 			"DESCRIPTION": "Build, simulate and manage complex logic circuits for free.",
 			"BUTTON": "START BUILDING NOW"
 		},
-		"EXPLANATION": {
-			"TITLE": "A short Explanation",
-			"DESCRIPTION": "You probably ask yourself - what are logical gates? In a nutshell logical gates are the components that make up the processing unit of a computer. However, this explanation is a bit short, which is why we animated this short video to explain the basics needed to use our website.",
-			"VIDEO": "https://www.youtube.com/embed/weTeJLMGq_Q"
-		},
-		"EXAMPLES": {
-			"TITLE": "A few example circuits for you...",
-			"TRY_NOW": "TRY NOW"
+		"FEATURES": {
+			"TITLE": "Features",
+			"DESCRIPTION": "Build an simulate your own circuits with Logigator, a simple yet powerful online tool.",
+			"PERFORMANCE": "Performance",
+			"PERFORMANCE_DES": "Logigtators' editor can handle even the largest project with ease thanks to WebAssembly and WebGL.",
+			"SUBCIRCUITS": "Subcircuits",
+			"SUBCIRCUITS_DES": "Create Subcircuits and use them all over your projects. This will help keep your projects organized.",
+			"SHARE": "Share Projects",
+			"SHARE_DES": "Share your circuits with other users, so they can learn from your work.",
+			"IMAGES": "Export Images",
+			"IMAGES_DES": "With Logigator you can export high resolution images in three different formats (SVG, PNG, JPG), to uses them anywhere."
 		}
 	},
 	"FEATURES": {

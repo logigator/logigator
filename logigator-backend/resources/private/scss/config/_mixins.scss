@@ -30,7 +30,7 @@
 }
 
 @mixin section($content-element-name: 'section-content', $section-max-width: $container-max-width) {
-	padding-top: 4rem;
+	padding-top: 3rem;
 	padding-bottom: 4rem;
 
 	@include media-breakpoint-down('lg') {

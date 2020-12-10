@@ -6,6 +6,31 @@
 		@include section('s-intro-content', 1200px);
 	}
 
+	@include element('headline') {
+		text-align: center;
+		margin-top: 0;
+		margin-bottom: 0.75rem;
+		font-size: 40px;
+		font-weight: 100;
+
+		@include media-breakpoint-down('md') {
+			font-size: 30px;
+			margin-bottom: 0.5rem;
+		}
+	}
+
+	@include element('subline') {
+		text-align: center;
+		font-size: 24px;
+		margin-top: 0.75rem;
+		margin-bottom: 1rem;
+
+		@include media-breakpoint-down('md') {
+			font-size: 20px;
+			margin-top: 0.5rem;
+		}
+	}
+
 	@include element('s-intro-logo') {
 		width: 100%;
 		max-width: 960px;
@@ -67,7 +92,6 @@
 
 		@include media-breakpoint-down('md') {
 			width: 100%;
-
 		}
 
 		> button {
@@ -77,7 +101,6 @@
 
 			@include media-breakpoint-down('md') {
 				padding: 0.6rem 0 !important;
-
 			}
 		}
 	}
@@ -87,6 +110,54 @@
 
 		@include themify() {
 			background-color: themed('accent2');
+		}
+	}
+
+	@include element('s-feat-features') {
+		display: flex;
+		align-items: flex-start;
+		justify-content: center;
+		flex-wrap: wrap;
+		margin-top: 2rem;
+	}
+
+	@include element('s-feat-feature') {
+		text-align: center;
+		padding: 15px;
+		flex: 0 100%;
+
+		@include media-breakpoint-up('sm') {
+			flex: 0 50%;
+		}
+
+		@include media-breakpoint-up('lg') {
+			flex: 0 25%;
+		}
+
+		.f-img-container {
+			height: 180px;
+
+			@include media-breakpoint-down('md') {
+				height: 150px;
+			}
+
+			> img {
+				height: 100%;
+				display: block;
+				margin: auto;
+			}
+		}
+
+		h3 {
+			margin-top: 0.5rem;
+			margin-bottom: 0.5rem;
+			font-size: 24px;
+			font-weight: 100;
+		}
+
+		p {
+			margin-top: 0.5rem;
+			font-size: 17px;
 		}
 	}
 
