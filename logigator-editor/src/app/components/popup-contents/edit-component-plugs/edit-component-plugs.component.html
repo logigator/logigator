@@ -1,17 +1,17 @@
 <div class="edit-plugs">
 	<div class="component">
-		<form [formGroup]="inputLabelsForm" class="controls inputs">
-			<div *ngFor="let c of inputLabelsControls" class="control">
+		<form [formGroup]="inputLabelsForm" class="controls inputs" #compInputs>
+			<div *ngFor="let c of inputLabelsControls" class="control" #control>
 				<input [formControl]="c">
-				<div class="drag">
+				<div class="drag" (mousedown)="mouseDown($event, control, 'input')">
 					<div class="wire-end"></div>
 				</div>
 			</div>
 		</form>
-		<form [formGroup]="outputLabelsForm" class="controls outputs">
-			<div *ngFor="let c of outputLabelsControls" class="control">
+		<form [formGroup]="outputLabelsForm" class="controls outputs" #compOutputs>
+			<div *ngFor="let c of outputLabelsControls" class="control" #control>
 				<input [formControl]="c">
-				<div class="drag">
+				<div class="drag" (mousedown)="mouseDown($event, control, 'output')">
 					<div class="wire-end"></div>
 				</div>
 			</div>

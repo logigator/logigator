@@ -14,10 +14,13 @@
 		}
 
 		.controls {
+			position: relative;
 
 			.control {
 				padding: 0.35rem 0;
 				position: relative;
+
+				transition: top 0.25s ease;
 
 				input {
 					outline: none;
