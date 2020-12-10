@@ -47,8 +47,8 @@
 	},
 	"HOME": {
 		"INTRO": {
-			"DESCRIPTION": "The editor for logical circuits...",
-			"BUTTON": "TRY NOW"
+			"DESCRIPTION": "Build, simulate and manage complex logic circuits for free.",
+			"BUTTON": "START BUILDING NOW"
 		},
 		"EXPLANATION": {
 			"TITLE": "A short Explanation",

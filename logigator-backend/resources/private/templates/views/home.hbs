@@ -1,17 +1,23 @@
 <div class="view-home">
-	<section class="view-home__section view-home__section-intro">
-		<div class="view-home__section-content">
+	<section class="view-home__s-intro">
+		<div class="view-home__s-intro-content">
 			{{#if (expr preferences.theme '===' 'dark')}}
-				<img src="/assets/logo_light.svg" alt="large Logo">
+				<img src="/assets/logo_light.svg" class="view-home__s-intro-logo" alt="large Logo">
 			{{else}}
-				<img src="/assets/logo.svg" alt="large Logo">
+				<img src="/assets/logo.svg" class="view-home__s-intro-logo" alt="large Logo">
 			{{/if}}
-			<div class="view-home__section-intro-content">
-				<h3 class="view-home__section-intro-headline">{{i18n.HOME.INTRO.DESCRIPTION}}</h3>
-				<a href="{{editorUrl}}" target="_blank" rel="noopener" class="view-home__section-intro-button-link">
+			<h3 class="view-home__s-intro-headline">{{i18n.HOME.INTRO.DESCRIPTION}}</h3>
+			<div class="view-home__s-intro-start">
+				<img src="/assets/adder-image-dark.png" class="view-home__s-intro-img" alt="Adder">
+				<a href="{{editorUrl}}" target="_blank" rel="noopener" class="view-home__s-intro-button">
 					<button class="btn-raised primary view-home__section-intro-button">{{i18n.HOME.INTRO.BUTTON}}</button>
 				</a>
 			</div>
+		</div>
+	</section>
+	<section class="view-home__s-feat">
+		<div class="view-home__s-feat-content">
+			sdf
 		</div>
 	</section>
 </div>
