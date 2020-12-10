@@ -27,8 +27,10 @@ export class SelectionService {
 			for (const chunkCoord of possibleChunkCoords) {
 				const chunk = project.currState.chunksFromCoords([chunkCoord])[0];
 				if (!chunk) continue;
-				if (CollisionFunctions.isRectFullyInRect(new PIXI.Point(chunkCoord.x, chunkCoord.y), new PIXI.Point(chunkCoord.x + 1, chunkCoord.y + 1), start, end)) {
+				const chunkPos = CollisionFunctions.chunkToPoints(new PIXI.Point(chunkCoord.x, chunkCoord.y));
+				if (CollisionFunctions.isRectFullyInRect(chunkPos.start, chunkPos.end, start, end)) {
 					chunk.elements.forEach(elem => ids.add(elem.id));
+					chunk.connectionPoints.forEach(con => cons.push(con));
 				} else {
 					for (const elem of chunk.elements) {
 						if (CollisionFunctions.isElementInFloatRect(elem, start, end)) {
