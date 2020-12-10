@@ -201,6 +201,14 @@ export abstract class Elements {
 		return out;
 	}
 
+	public static wireEndsIfInOtherChunk(element: Element, rotation: number, numInputs: number, dif: PIXI.Point): PIXI.Point[] {
+		if ((element.pos.x + dif.x) % 16 > 0 && (element.pos.y + dif.y) % 16 > 0 && (element.endPos.x + dif.x) % 16 < 15 && (element.endPos.y + dif.y) % 16 < 15) {
+			return [];
+		} else {
+			return Elements.wireEndsWithChanges(element, rotation, numInputs, dif);
+		}
+	}
+
 	public static isInput(element: Element, pos: PIXI.Point): boolean {
 		switch (element.rotation) {
 			case 0:

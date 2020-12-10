@@ -237,7 +237,7 @@ export class ProjectState {
 			const newStartPos = new PIXI.Point(elem.pos.x + dif.x, elem.pos.y + dif.y);
 			const newEndPos = new PIXI.Point(elem.endPos.x + dif.x, elem.endPos.y + dif.y);
 			if (!this.isFreeSpace(newStartPos, newEndPos, elem.typeId === ElementTypeId.WIRE,
-				Elements.wireEndsWithChanges(elem, elem.rotation, elem.numInputs, dif), except))
+				Elements.wireEndsIfInOtherChunk(elem, elem.rotation, elem.numInputs, dif), except))
 				return false;
 		}
 		return true;
