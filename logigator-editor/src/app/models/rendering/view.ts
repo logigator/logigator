@@ -269,6 +269,8 @@ export abstract class View extends PIXI.Container {
 		for (const action of actions) {
 			this.applyAction(action);
 		}
+		this.updateChunks();
+		this.requestSingleFrame();
 	}
 
 	private applyAction(action: Action) {
@@ -300,7 +302,6 @@ export abstract class View extends PIXI.Container {
 				this.updateComponent(action);
 				break;
 		}
-		this.requestSingleFrame();
 	}
 
 	public setLocalChunkPos(element: Element, sprite: PIXI.DisplayObject) {
