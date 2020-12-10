@@ -7,6 +7,7 @@ import {Subscription} from 'rxjs';
 import {ElementTypeId} from '../../models/element-types/element-type-ids';
 import {Element} from '../../models/element';
 import {ShortcutsService} from '../../services/shortcuts/shortcuts.service';
+import {EditorInteractionService} from '../../services/editor-interaction/editor-interaction.service';
 
 @Component({
 	selector: 'app-settings-info-box',
@@ -32,7 +33,8 @@ export class SettingsInfoBoxComponent implements OnChanges, OnDestroy {
 		private elemProvider: ElementProviderService,
 		private projects: ProjectsService,
 		private formBuilder: FormBuilder,
-		private editorActions: ShortcutsService
+		private editorActions: ShortcutsService,
+		private editorInteractionService: EditorInteractionService
 	) { }
 
 	ngOnChanges(changes: SimpleChanges): void {
@@ -119,6 +121,10 @@ export class SettingsInfoBoxComponent implements OnChanges, OnDestroy {
 
 	editClick() {
 		this.elementType.edit(this.selectedElemTypeId, this.selectedCompId, this.projects);
+	}
+
+	customisePlugs() {
+		this.editorInteractionService.editCustomComponentPlugs();
 	}
 
 	public get possiblePlugIndexes(): number[] {

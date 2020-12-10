@@ -51,5 +51,6 @@
 		</div>
 
 		<button class="btn-outline secondary small edit" *ngIf="elementType.edit && (selectedCompId || elementType.canEditType)" (click)="editClick()">{{'SETTINGS_INFO.EDIT' | translate}}</button>
+		<button class="btn-outline secondary small edit" *ngIf="elementType.hasPlugIndex && selectedCompId" (click)="customisePlugs()">{{'SETTINGS_INFO.PLUG_EDIT' | translate}}</button>
 	</div>
 </div>

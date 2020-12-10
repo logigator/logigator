@@ -226,6 +226,7 @@
 		},
 		"DESCRIPTION": "Description",
 		"EDIT": "Edit",
+		"PLUG_EDIT": "Edit In- and Outputs",
 		"PLUG_INDEX": "Plug Index",
 		"PLUG_LABEL": "Label"
 	},

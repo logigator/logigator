@@ -226,6 +226,7 @@
 		},
 		"DESCRIPTION": "Beschreibung",
 		"EDIT": "Bearbeiten",
+		"PLUG_EDIT": "Ein- und Ausgänge bearbeiten",
 		"PLUG_INDEX": "Stecker Index",
 		"PLUG_LABEL": "Beschriftung"
 	},

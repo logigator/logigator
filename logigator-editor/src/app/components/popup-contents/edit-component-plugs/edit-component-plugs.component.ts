@@ -89,8 +89,6 @@ export class EditComponentPlugsComponent extends PopupContentComp<Project, never
 		fromEvent(window, 'mousemove').pipe(
 			takeUntil(this._destroySubject)
 		).subscribe((e: MouseEvent) => this.mouseMove(e));
-
-		console.log(this.inputLabelsForm);
 	}
 
 	public get inputLabelsControls(): AbstractControl[] {
