@@ -127,6 +127,10 @@ export class SettingsInfoBoxComponent implements OnChanges, OnDestroy {
 		this.editorInteractionService.editCustomComponentPlugs();
 	}
 
+	onLabelChange(event: KeyboardEvent) {
+		return event.key !== ',';
+	}
+
 	public get possiblePlugIndexes(): number[] {
 		return this.projects.currProject.possiblePlugIndexes(this.selectedCompId);
 	}

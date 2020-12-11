@@ -1,4 +1,12 @@
-import {IsArray, IsInt, IsNotEmpty, IsPositive, IsString, Length, MaxLength, ValidateNested} from 'class-validator';
+import {
+	IsArray,
+	IsInt,
+	IsNotEmpty,
+	IsString,
+	Length,
+	NotContains,
+	ValidateNested
+} from 'class-validator';
 import {Type} from 'class-transformer';
 import {ProjectElement} from '../project-element';
 import {ProjectMapping} from '../project-mapping';
@@ -26,6 +34,7 @@ export class SaveComponent {
 
 	@IsArray()
 	@IsString({each: true})
-	@Length(0, 4, {each: true})
+	@Length(0, 5, {each: true})
+	@NotContains(',', {each: true})
 	labels: string[]
 }

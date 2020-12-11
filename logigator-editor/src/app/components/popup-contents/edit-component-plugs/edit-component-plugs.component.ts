@@ -1,7 +1,7 @@
 import {AfterViewInit, Component, ElementRef, OnDestroy, OnInit, ViewChild} from '@angular/core';
 import {PopupContentComp} from '../../popup/popup-content-comp';
 import {Project} from '../../../models/project';
-import {AbstractControl, FormArray, FormBuilder, FormGroup} from '@angular/forms';
+import {AbstractControl, FormArray, FormBuilder, FormGroup, Validators} from '@angular/forms';
 import {ProjectsService} from '../../../services/projects/projects.service';
 import {Element} from '../../../models/element';
 import {fromEvent, Subject} from 'rxjs';
@@ -58,10 +58,16 @@ export class EditComponentPlugsComponent extends PopupContentComp<Project, never
 		this._outputPlugs = plugs.slice(this.inputFromOpener.numInputs);
 
 		this.inputLabelsForm = this.formBuilder.group({
-			labels: this.formBuilder.array(this._inputPlugs.map(p => this.formBuilder.control(p.data ?? 'IN')))
+			labels: this.formBuilder.array(this._inputPlugs.map(p => this.formBuilder.control(p.data ?? 'IN', [
+				Validators.maxLength(5),
+				Validators.pattern(/^[^,]*$/)
+			])))
 		});
 		this.outputLabelsForm = this.formBuilder.group({
-			labels: this.formBuilder.array(this._outputPlugs.map(p => this.formBuilder.control(p.data ?? 'OUT')))
+			labels: this.formBuilder.array(this._outputPlugs.map(p => this.formBuilder.control(p.data ?? 'OUT', [
+				Validators.maxLength(5),
+				Validators.pattern(/^[^,]*$/)
+			])))
 		});
 	}
 
@@ -150,6 +156,10 @@ export class EditComponentPlugsComponent extends PopupContentComp<Project, never
 				}
 			}
 		}
+	}
+
+	onChange(event: KeyboardEvent) {
+		return event.key !== ',';
 	}
 
 	public save() {
