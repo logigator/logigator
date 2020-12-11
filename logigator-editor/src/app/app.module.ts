@@ -107,7 +107,7 @@ import { ImageExportComponent } from './components/popup-contents/image-export/i
 		FileInputComponent,
 		SiPipe,
 		HexBinDecConverterComponent,
-		EditComponentPlugsComponent
+		EditComponentPlugsComponent,
 		LoadingSymbolComponent,
 		ImageExportComponent
 	],
