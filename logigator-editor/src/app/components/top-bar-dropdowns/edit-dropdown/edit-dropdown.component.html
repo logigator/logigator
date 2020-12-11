@@ -25,4 +25,11 @@
 		{{'DROPDOWN.EDIT.DELETE' | translate}}
 		<span>{{'delete' | shortcutText}}</span>
 	</div>
+	<ng-container *ngIf="istCustomComponent">
+		<hr>
+		<div (click)="plugs()">
+			{{'DROPDOWN.EDIT.PLUGS' | translate}}
+			<span>{{'editPlugs' | shortcutText}}</span>
+		</div>
+	</ng-container>
 </div>

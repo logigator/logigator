@@ -402,6 +402,40 @@ export class Project {
 		return true;
 	}
 
+	public setPlugConfiguration(plugsIds: number[], labels: string[]): boolean {
+		const numPlugs = this.numInputs + this.numOutputs;
+		if (numPlugs !== plugsIds.length || numPlugs !== labels.length)
+			return false;
+		for (let i = 0; i < this.numInputs; i++) {
+			if (this._currState.getElementById(plugsIds[i]).typeId !== ElementTypeId.INPUT)
+				return false;
+		}
+		for (let i = this.numInputs; i < this.numOutputs; i++) {
+			if (this._currState.getElementById(plugsIds[i]).typeId !== ElementTypeId.OUTPUT)
+				return false;
+		}
+		const actions: Action[] = [];
+		for (let i = 0; i < plugsIds.length; i++) {
+			const element = this._currState.getElementById(plugsIds[i]);
+			const oldIndex = element.plugIndex;
+			this._currState.setPlugIdWithoutChangingOthers(element, i);
+			actions.push({
+				name: 'plugInd',
+				element,
+				numbers: [element.plugIndex, oldIndex]
+			});
+			const oldData = element.data;
+			this._currState.setData(element, labels[i]);
+			actions.push({
+				name: 'ediData',
+				element,
+				data: [element.data, oldData]
+			});
+		}
+		this.newState(actions);
+		return true;
+	}
+
 	public possiblePlugIndexes(elemId: number): number[] {
 		return this._currState.possiblePlugIds(this._currState.getElementById(elemId));
 	}

@@ -11,6 +11,7 @@ import {OpenProjectComponent} from '../../components/popup-contents/open/open-pr
 import {SaveAsComponent} from '../../components/popup-contents/save-as/save-as.component';
 import {ShareProjectComponent} from '../../components/popup-contents/share-project/share-project.component';
 import {ErrorHandlingService} from '../error-handling/error-handling.service';
+import {EditComponentPlugsComponent} from '../../components/popup-contents/edit-component-plugs/edit-component-plugs.component';
 import {LoadingService} from '../loading/loading.service';
 
 @Injectable({
@@ -83,6 +84,11 @@ export class EditorInteractionService {
 		this.projectsService.currProject.stepForward();
 		this.projectsService.inputsOutputsCustomComponentChanged(this.projectsService.currProject);
 		this._editorActionsSubject.next(EditorAction.REDO);
+	}
+
+	public editCustomComponentPlugs() {
+		const projectToEdit = this.projectsService.currProject;
+		this.popupService.showPopup(EditComponentPlugsComponent, 'POPUP.EDIT_COMPONENT_PLUGS.TITLE', false, projectToEdit);
 	}
 
 	public fullscreen() {

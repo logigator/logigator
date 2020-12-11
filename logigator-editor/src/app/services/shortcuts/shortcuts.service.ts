@@ -178,6 +178,9 @@ export class ShortcutsService {
 			case 'redo':
 				this.editorInteraction.redo();
 				break;
+			case 'editPlugs':
+				this.editorInteraction.editCustomComponentPlugs();
+				break;
 			case 'zoomIn':
 				this.editorInteraction.zoomIn();
 				break;

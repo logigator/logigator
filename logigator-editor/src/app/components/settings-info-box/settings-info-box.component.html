@@ -28,7 +28,7 @@
 
 		<div class="property" *ngIf="elementType.hasLabel && selectedCompId">
 			<p>{{'SETTINGS_INFO.PLUG_LABEL' | translate}}:</p>
-			<input formControlName="label" type="text" maxlength="4" (focus)="focusInput()" (blur)="blurInput()">
+			<input formControlName="label" type="text" maxlength="5" (keypress)="onLabelChange($event)" (focus)="focusInput()" (blur)="blurInput()">
 		</div>
 
 		<div class="property" formArrayName="options" *ngFor="let item of optionsControls; let i = index">
@@ -51,5 +51,6 @@
 		</div>
 
 		<button class="btn-outline secondary small edit" *ngIf="elementType.edit && (selectedCompId || elementType.canEditType)" (click)="editClick()">{{'SETTINGS_INFO.EDIT' | translate}}</button>
+		<button class="btn-outline secondary small edit" *ngIf="elementType.hasPlugIndex && selectedCompId" (click)="customisePlugs()">{{'SETTINGS_INFO.PLUG_EDIT' | translate}}</button>
 	</div>
 </div>

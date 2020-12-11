@@ -673,6 +673,10 @@ export class ProjectState {
 		elem.plugIndex = id;
 	}
 
+	public setPlugIdWithoutChangingOthers(elem: Element, id: number): void {
+		elem.plugIndex = id;
+	}
+
 	public possiblePlugIds(elem: Element): number[] {
 		const out: number[] = [];
 		if (elem.typeId === ElementTypeId.INPUT) {

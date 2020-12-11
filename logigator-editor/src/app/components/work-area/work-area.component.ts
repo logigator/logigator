@@ -94,6 +94,8 @@ export class WorkAreaComponent extends WorkArea implements OnInit, OnDestroy {
 	}
 
 	mouseDown(project: Project, event: MouseEvent, tab: HTMLDivElement) {
+		if (event.button !== 0)
+			return;
 		this.currentlyDragging = project;
 		this.dragStart = event.clientX;
 		this.dragElement = tab;
