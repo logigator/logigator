@@ -210,6 +210,7 @@
 		"EDIT_COMPONENT_PLUGS": {
 			"TITLE": "Edit Component Plugs",
 			"SAVE": "Save"
+		},
 		"IMAGE_EXPORT": {
 			"TITLE": "Export Image",
 			"TRANSPARENT": "Transparent Background",

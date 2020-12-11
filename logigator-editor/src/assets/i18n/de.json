@@ -210,6 +210,7 @@
 		"EDIT_COMPONENT_PLUGS": {
 			"TITLE": "Komponenten Stecker bearbeiten",
 			"SAVE": "Speichern"
+		},
 		"IMAGE_EXPORT": {
 			"TITLE": "Bild exportieren",
 			"TRANSPARENT": "Transparenter Hintergrund",
