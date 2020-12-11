@@ -77,7 +77,7 @@ export class ViewInteractionManager {
 
 		merge(
 			this.workModeSer.currentWorkMode$,
-			this.editorInteractionSer.subscribeEditorAction(EditorAction.DELETE, EditorAction.UNDO, EditorAction.REDO)
+			this.editorInteractionSer.subscribeEditorAction(EditorAction.DELETE, EditorAction.UNDO, EditorAction.REDO, EditorAction.CUT)
 		).pipe(takeUntil(this._destroySubject)).subscribe(() => this.cleanUp());
 
 		this.editorInteractionSer.subscribeEditorAction(EditorAction.PASTE).pipe(

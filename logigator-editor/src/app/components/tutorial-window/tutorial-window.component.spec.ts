@@ -1,20 +1,20 @@
 import {ComponentFixture, TestBed, waitForAsync} from '@angular/core/testing';
 
-import { ReloadQuestionComponent } from './reload-question.component';
+import { TutorialWindowComponent } from './tutorial-window.component';
 
-describe('RelaodQuestionComponent', () => {
-	let component: ReloadQuestionComponent;
-	let fixture: ComponentFixture<ReloadQuestionComponent>;
+describe('TutorialWindowComponent', () => {
+	let component: TutorialWindowComponent;
+	let fixture: ComponentFixture<TutorialWindowComponent>;
 
 	beforeEach(waitForAsync(() => {
 		TestBed.configureTestingModule({
-			declarations: [ ReloadQuestionComponent ]
+			declarations: [ TutorialWindowComponent ]
 		})
 			.compileComponents();
 	}));
 
 	beforeEach(() => {
-		fixture = TestBed.createComponent(ReloadQuestionComponent);
+		fixture = TestBed.createComponent(TutorialWindowComponent);
 		component = fixture.componentInstance;
 		fixture.detectChanges();
 	});

@@ -1,4 +1,5 @@
 import {
+	ChangeDetectionStrategy,
 	Component,
 	ComponentFactoryResolver,
 	ComponentRef,
@@ -29,7 +30,8 @@ import * as PIXI from 'pixi.js';
 @Component({
 	selector: 'app-window-work-area',
 	templateUrl: './window-work-area.component.html',
-	styleUrls: ['./window-work-area.component.scss']
+	styleUrls: ['./window-work-area.component.scss'],
+	changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class WindowWorkAreaComponent extends WorkArea implements OnInit, OnChanges {
 
@@ -131,7 +133,7 @@ export class WindowWorkAreaComponent extends WorkArea implements OnInit, OnChang
 				this.renderer2.setStyle(this._componentContainer.nativeElement, 'display', 'none');
 				this.renderer2.setStyle(this._pixiCanvasContainer.nativeElement, 'display', 'block');
 				this._pixiRenderer.resize(this._pixiCanvasContainer.nativeElement.offsetWidth, this._pixiCanvasContainer.nativeElement.offsetHeight);
-				this.addTickerFunction();
+				this.ngZone.runOutsideAngular(() => this.addTickerFunction());
 
 				this._activeView = new SimulationView(
 					this.project,

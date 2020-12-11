@@ -1,4 +1,4 @@
-import {Injectable} from '@angular/core';
+import {Injectable, NgZone} from '@angular/core';
 import {ShortcutConfig} from '../../models/shortcut-config';
 import {defaultShortcuts} from '../../models/default-shortcuts';
 import {ShortcutAction} from '../../models/shortcut-action';
@@ -30,7 +30,8 @@ export class ShortcutsService {
 		private simulationManagement: SimulationManagementService,
 		private userService: UserService,
 		private apiService: ApiService,
-		private popupService: PopupService
+		private popupService: PopupService,
+		private ngZone: NgZone
 	) {
 		this.userService.userInfo$.subscribe(data => {
 			if (!data) {
@@ -59,7 +60,7 @@ export class ShortcutsService {
 		if (!shortcut || !this.isShortcutUsable(shortcut)) return;
 		event.preventDefault();
 		event.stopPropagation();
-		this.applyShortcutAction(shortcut.action);
+		this.ngZone.run(() => this.applyShortcutAction(shortcut.action));
 	}
 
 	public getShortcutConfigFromKeyEvent(event: KeyboardEvent): ShortcutConfig {

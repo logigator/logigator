@@ -59,7 +59,7 @@ export abstract class Elements {
 	}
 
 	public static genNewElement(typeId: number, _pos: PIXI.Point, _endPos?: PIXI.Point): Element {
-		const type = getStaticDI(ElementProviderService).getElementById(typeId);
+		const type = this.elementProviderService.getElementById(typeId);
 		const pos = _pos ? _pos.clone() : undefined;
 		const endPos = _endPos ? _endPos.clone() : undefined;
 		if (pos && endPos)
@@ -73,7 +73,8 @@ export abstract class Elements {
 			endPos,
 			rotation: type.rotation,
 			options: type.options ? [...type.options] : undefined,
-			plugIndex: getStaticDI(ElementProviderService).isPlugElement(typeId) ? 0 : undefined
+			// plugIndex: this.elementProviderService.isPlugElement(typeId) ? 0 : undefined
+			plugIndex: undefined
 		};
 	}
 
@@ -93,7 +94,7 @@ export abstract class Elements {
 
 	public static calcElemSize(element: Element, numInputs?: number, numOutputs?: number, rotation?: number): PIXI.Point {
 		const elemType = Elements.elementType(element.typeId);
-		rotation = element.rotation ?? rotation;
+		rotation = rotation === undefined || rotation == null ? element.rotation : rotation;
 		const elemToCalc = {...element, ...{rotation}};
 		if (numInputs !== undefined && numInputs !== null)
 			elemToCalc.numInputs = numInputs;
@@ -137,7 +138,7 @@ export abstract class Elements {
 		newElem.endPos = new PIXI.Point(end, wire0.pos.y);
 	}
 
-	public static wireEnds(element: Element, rotation?: number, numInputs?: number, dif?: PIXI.Point, save?: boolean): PIXI.Point[] {
+	public static wireEnds(element: Element, rotation?: number, numInputs?: number, dif?: PIXI.Point): PIXI.Point[] {
 		if (element.wireEnds && !(dif || rotation || numInputs))
 			return element.wireEnds.map(p => p.clone());
 		const pos = dif ? new PIXI.Point(element.pos.x + dif.x, element.pos.y + dif.y) : element.pos;
@@ -184,7 +185,7 @@ export abstract class Elements {
 					out[numInputs + i] = new PIXI.Point(pos.x + i, pos.y - 1);
 				break;
 		}
-		if (save)
+		if (!(dif || rotation || numInputs))
 			element.wireEnds = out.map(p => p.clone());
 		return out;
 	}
@@ -243,11 +244,13 @@ export abstract class Elements {
 	}
 
 	public static elementType(typeId: number): ElementType {
-		if (this._elementProviderService) {
-			return this._elementProviderService.getElementById(typeId);
-		} else {
+		return this.elementProviderService.getElementById(typeId);
+	}
+
+	private static get elementProviderService(): ElementProviderService {
+		if (!this._elementProviderService) {
 			this._elementProviderService = getStaticDI(ElementProviderService);
-			return this._elementProviderService.getElementById(typeId);
 		}
+		return this._elementProviderService;
 	}
 }

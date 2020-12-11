@@ -149,19 +149,16 @@ export class Project {
 		return out;
 	}
 
-
 	public chunksToRender(start: PIXI.Point, end: PIXI.Point): { x: number, y: number }[] {
 		const out = CollisionFunctions.inRectChunks(start, end);
-		for (const outerChunk of this._currState.chunksFromCoords(out)) {
-			for (const elem of outerChunk.elements) {
-				const chunk = CollisionFunctions.gridPosToChunk(elem.pos);
-				if (!out.find(c => c.x === chunk.x && c.y === chunk.y))
-					out.push({x: chunk.x, y: chunk.y});
-			}
+		for (const chunk of this._currState.chunksFromCoords(out)) {
+			chunk.links.forEach((linkedChunk, elementId) => {
+				if (!out.find(c => c.x === linkedChunk.x && c.y === linkedChunk.y))
+					out.push({x: linkedChunk.x, y: linkedChunk.y});
+			});
 		}
 		return out;
 	}
-
 
 	public addElements(elements: Element[], dif?: PIXI.Point): boolean {
 		if (!dif)
@@ -205,7 +202,8 @@ export class Project {
 			name: Elements.addActionName(elem),
 			element: elem
 		}];
-		actions.push(...this.autoAssemble([elem]));
+		const changed = this._currState.withWiresOnEdges([elem]);
+		actions.push(...this.autoAssemble(changed));
 		this.newState(actions);
 		return elem;
 	}
@@ -216,7 +214,7 @@ export class Project {
 			_endPos = undefined;
 		}
 		if (!_endPos || _cornerPos.equals(_endPos)) {
-			const elem = this.addElement(0, _pos, _cornerPos);
+			const elem = this.addElement(ElementTypeId.WIRE, _pos, _cornerPos);
 			return elem ? [elem] : null;
 		}
 		const {wire0, wire1} = Elements.gen2Wires(_pos, _cornerPos, _endPos);
@@ -255,6 +253,8 @@ export class Project {
 				element: elem
 			};
 			actions.push(action);
+			actions.push(...this._currState.plugIndexActions);
+			this._currState.plugIndexActions = [];
 		});
 		elements.forEach(elem => {
 			for (const pos of Elements.wireEnds(elem)) {
@@ -273,15 +273,16 @@ export class Project {
 		const elements = this._currState.elementsOverLine(from, to);
 		if (elements.length === 0)
 			return;
-		const actions: Action[] = new Array(elements.length);
+		const actions: Action[] = [];
 		const onEdges: Element[] = [];
-		let i = 0;
 		for (const element of elements) {
-			actions[i++] = {
+			actions.push({
 				name: Elements.remActionName(element),
 				element
-			};
+			});
 			this._currState.removeElement(element.id);
+			actions.push(...this._currState.plugIndexActions);
+			this._currState.plugIndexActions = [];
 		}
 		elements.forEach(elem => {
 			for (const pos of Elements.wireEnds(elem)) {
@@ -326,6 +327,7 @@ export class Project {
 		for (const elem of elements) {
 			this._currState.moveElement(elem, dif);
 		}
+		changed.push(...this._currState.withWiresOnEdges(elements));
 		const actions: Action[] = [{
 			name: 'movMult',
 			others: elements,
@@ -440,14 +442,17 @@ export class Project {
 
 	public setOptions(elemId: number, options: number[]): void {
 		const elem = this._currState.getElementById(elemId);
+		const canSizeChange = !!getStaticDI(ElementProviderService).getElementById(elem.typeId).onOptionsChanged;
 		const oldOptions = [...elem.options];
+		const changed = canSizeChange ? this._currState.withWiresOnEdges([elem]) : [];
 		this._currState.setOptions(elem, options);
-		const action: Action = {
+		const actions: Action[] = [{
 			element: elem,
 			name: 'compOpt',
 			options: [options, oldOptions]
-		};
-		this.newState([action]);
+		}];
+		if (canSizeChange) actions.push(...this.autoAssemble(changed));
+		this.newState(actions);
 	}
 
 

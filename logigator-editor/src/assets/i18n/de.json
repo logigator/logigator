@@ -11,9 +11,7 @@
 			"OPEN": "Öffnen",
 			"SAVE": "Speichern",
 			"EXPORT": "Als Datei exportieren",
-			"IMAGE_PNG": "Als PNG exportieren",
-			"IMAGE_JPEG": "Als JPG exportieren",
-			"IMAGE_SVG": "Als SVG exportieren",
+			"IMAGE": "Bild exportieren",
 			"SHARE": "Teilen",
 			"CLONE": "Projekt klonen"
 		},
@@ -212,6 +210,18 @@
 		"EDIT_COMPONENT_PLUGS": {
 			"TITLE": "Komponenten Stecker bearbeiten",
 			"SAVE": "Speichern"
+		"IMAGE_EXPORT": {
+			"TITLE": "Bild exportieren",
+			"TRANSPARENT": "Transparenter Hintergrund",
+			"RESOLUTION": "Benutzerdefinierte Auflösung",
+			"MIN_ERROR": "Wert muss größer als 0 sein.",
+			"MAX_ERROR": "Wert muss kleiner als 15.000 sein.",
+			"REQ_ERROR": "Dies ist ein Pflichtfeld.",
+			"WIDTH": "Breite",
+			"HEIGHT": "Höhe",
+			"GENERATE_SVG": "SVG generieren",
+			"GENERATE_PNG": "PNG generieren",
+			"GENERATE_JPG": "JPG generieren"
 		}
 	},
 	"SETTINGS_INFO": {
@@ -230,14 +240,11 @@
 		"PLUG_INDEX": "Stecker Index",
 		"PLUG_LABEL": "Beschriftung"
 	},
-	"HELP_WINDOW": {
-		"TIPP": "Tipp",
-		"DONT_AGAIN": "Nicht mehr anzeigen",
-		"OK": "OK",
-		"HELP_TEXTS": {
-			"ENTER_SIM": "Um die Simulation zu starten, drücke den Play Button in der Toolbar.",
-			"DRAG": "Verwende die rechte Maustaste, um die Ansicht zu verschieben.",
-			"NEEDS_PLUGS": "Um die Komponente platzieren zu können, braucht sie Eingänge oder Ausgänge."
+	"TUTORIAL": {
+		"SKIP": "Überspringen",
+		"NEXT": "Weiter",
+		"FINISH": "Abschließen",
+		"TUTORIALS": {
 		}
 	},
 	"ELEMENT_TYPE": {
@@ -359,7 +366,8 @@
 	"STATUS_BAR": {
 		"UNSAVED": "Ungespeicherte Änderungen",
 		"SAVED": "Gespeichert",
-		"SELECTED": "Sel"
+		"SELECTED": "Sel",
+		"PROCESSES_RUNNING": "{{amount}} Prozesse laufen"
 	},
 	"WORK_MODE_DES": {
 		"0": "Elemente selektieren",
@@ -402,7 +410,7 @@
 			"CLONE_SHARE": "Share geklont: {{name}}",
 			"OPEN": "Projekt geöffnet: {{name}}",
 			"OPEN_FILE": "Projekt aus Datei geöffnet: {{name}}",
-			"SAVE": "Projekt oder Komponente: {{name}}",
+			"SAVE": "Projekt oder Komponente gespeichert: {{name}}",
 			"EXPORT_FILE": "Projekt als Datei exportiert: {{name}}",
 			"CREATE_COMP": "Komponente erstellt: {{name}}",
 			"RELOADED_ELEMENTS": "Benutzerdefinierte Komponenten neu geladen."
@@ -412,5 +420,22 @@
 			"BLD": "AHHH MEINE AUGEN, SO VIELE LUMEN",
 			"LAZ": "Zu faul für einen gescheiten Namen..."
 		}
+	},
+	"LOADING": {
+		"GENERATING_IMAGE": "Bild wird generiert",
+		"OPENING_INITIAL_PROJECTS": "Projekte werden geöffnet",
+		"RELOAD_ELEMENTS": "Benutzerdefinierten Komponenten neu laden",
+		"OPENING_FILE": "Projekt aus Datei wird geöffnet",
+		"SAVE_PROJECT": "Projekt wird gespeichert",
+		"CREATE_COMPONENT": "Komponente wird erstellt",
+		"SHARE_REGENERATE_LINK": "Link wird generiert",
+		"UPDATE_SHARE_INFO": "Share wird aktualisiert",
+		"ENTER_SIMULATION": "Simulationsmodus wird geladen",
+		"LEAVE_SIMULATION": "Simulationsmodus wird verlassen",
+		"EXPORT_FILE": "Projekt wird exportiert",
+		"OPEN_PROJECT": "Projekt wird geöffnet",
+		"OPEN_COMPONENT": "Komponente wird geöffnet",
+		"OPEN_SHARE": "Share wird geöffnet"
+
 	}
 }
