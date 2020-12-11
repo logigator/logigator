@@ -12,13 +12,18 @@
 		"sourceMap": true,
 		"outDir": "./dist",
 		"baseUrl": "./src",
-		"incremental": true
+		"incremental": true,
+		"typeRoots": [
+			"./typings",
+			"./node_modules/@types"
+		]
 	},
 	"include": [
 		"src/**/*.ts"
 	],
 	"exclude": [
 		"node_modules",
+		"typings",
 		"test",
 		"dist",
 		"**/*spec.ts"
