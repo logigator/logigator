@@ -209,6 +209,20 @@ export abstract class Elements {
 		}
 	}
 
+	public static allWireEnds(elements: Element[], startMap?: Map<number, Set<number>>): Map<number, Set<number>> {
+		const out = startMap || new Map<number, Set<number>>();
+		for (const elem of elements) {
+			for (const wireEnd of Elements.wireEnds(elem)) {
+				if (out.has(wireEnd.x)) {
+					out.get(wireEnd.x).add(wireEnd.y);
+				} else {
+					out.set(wireEnd.x, new Set<number>([wireEnd.y]));
+				}
+			}
+		}
+		return out;
+	}
+
 	public static isInput(element: Element, pos: PIXI.Point): boolean {
 		switch (element.rotation) {
 			case 0:

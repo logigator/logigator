@@ -134,6 +134,19 @@ export class Actions {
 		return outElements;
 	}
 
+	public static applyChangeOnArrayAndActionsOnly(changes: ChangeType[], out: Action[]): void {
+		for (const change of changes) {
+			if (!change)
+				continue;
+			change.oldElems.forEach(e => {
+				out.push({name: Elements.remActionName(e), element: e});
+			});
+			change.newElems.forEach(e => {
+				out.push({name: Elements.addActionName(e), element: e});
+			});
+		}
+	}
+
 	public static printActions(actions: Action[]): void {
 		if (!actions)
 			return;

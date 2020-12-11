@@ -319,7 +319,7 @@ export class Project {
 		}
 		if (!this._currState.allSpacesFree(elements, dif, new Set<Element>(elements)))
 			return false;
-		let changed = this._currState.withWiresOnEdges(elements);
+		let wireEndsToUpdate = Elements.allWireEnds(elements);
 
 		// #!debug
 		this.boardRecorder.call('moveElementsById', arguments, -1, 0);
@@ -327,13 +327,14 @@ export class Project {
 		for (const elem of elements) {
 			this._currState.moveElement(elem, dif);
 		}
-		changed = new Set<Element>([...changed, ...this._currState.withWiresOnEdges(elements)]);
+		wireEndsToUpdate = Elements.allWireEnds(elements, wireEndsToUpdate);
+		wireEndsToUpdate = this._currState.pointsThatSplit(elements, wireEndsToUpdate);
 		const actions: Action[] = [{
 			name: 'movMult',
 			others: elements,
 			pos: dif
 		}];
-		actions.push(...this.autoAssemble(changed));
+		actions.push(...this.autoAssembleWireEnds(wireEndsToUpdate));
 		this.newState(actions);
 		return true;
 	}
@@ -604,6 +605,24 @@ export class Project {
 		outElements = Actions.applyChangeOnArrayAndActions(elemChanges, out, outElements);
 		return {actions: out, elements: outElements};
 	}
+
+	private autoAssembleWireEnds(wireEnds: Map<number, Set<number>>): Action[] {
+		const out = this._currState.actionToBoardWireEnds(wireEnds);
+		this._currState.loadConnectionPointsWireEnds(wireEnds);
+		return out;
+	}
+
+	// private autoConnectWireEnds(wireEnds: Map<number, Set<number>>): Action[] {
+	// 	const out: Action[] = [];
+	// 	const elemChanges = this._currState.connectToBoard(new Set<Element>(elements));
+	// 	return out;
+	// }
+	//
+	// private autoMergeWireEnds(wireEnds: Map<number, Set<number>>): Action[] {
+	// 	const out: Action[] = [];
+	// 	const elemChanges = this._currState.mergeToBoard(new Set<Element>(elements));
+	// 	return out;
+	// }
 
 
 	public newState(actions: Action[], setStateActionFlag?: boolean, skipSubject?: boolean): void {

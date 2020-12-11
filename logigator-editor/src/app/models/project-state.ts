@@ -3,7 +3,7 @@ import {Element} from './element';
 import {Elements} from './elements';
 import * as PIXI from 'pixi.js';
 import {CollisionFunctions} from './collision-functions';
-import {Action, ChangeType} from './action';
+import {Action, Actions, ChangeType} from './action';
 import {WireEndOnElem} from '../services/simulation/state-compiler/compiler-types';
 import {ElementTypeId} from './element-types/element-type-ids';
 import {getStaticDI} from './get-di';
@@ -177,6 +177,20 @@ export class ProjectState {
 				donePoints.get(pos.x).add(pos.y);
 			}
 		});
+	}
+
+	public loadConnectionPointsWireEnds(wireEnds: Map<number, Set<number>>): void {
+		//
+		// elements.forEach(elem => {
+		// 	for (const pos of Elements.wireEnds(elem)) {
+		// 		if (donePoints.has(pos.x) && donePoints.get(pos.x).has(pos.y))
+		// 			continue;
+		// 		this.addConnectionPoint(pos);
+		// 		if (!donePoints.has(pos.x))
+		// 			donePoints.set(pos.x, new Set<number>());
+		// 		donePoints.get(pos.x).add(pos.y);
+		// 	}
+		// });
 	}
 
 	public elementsInChunks(startPos: PIXI.Point, endPos: PIXI.Point, wireEnds?: PIXI.Point[]): Set<Element> {
@@ -426,6 +440,49 @@ export class ProjectState {
 		return this.actionToBoard(elements, this.connectWithEdge.bind(this));
 	}
 
+	public actionToBoardWireEnds(wireEnds: Map<number, Set<number>>): Action[] {
+		const out: Action[] = [];
+		for (const [x, set] of wireEnds.entries()) {
+			for (const y of set) {
+				const point = new PIXI.Point(x, y);
+				const wiresOnPoint = this.wiresOnPoint(point);
+				for (let i = 0; i < wiresOnPoint.length; i++) {
+					for (let j = i + 1; j < wiresOnPoint.length; j++) {
+						const merged = this.mergeWires(wiresOnPoint[i], wiresOnPoint[j]);
+						if (merged)
+							out.push(...Actions.connectWiresToActions(merged.oldElems, merged.newElems));
+						const connected = this.connectWithEdge(wiresOnPoint[i], wiresOnPoint[j]);
+						if (connected)
+							out.push(...Actions.connectWiresToActions(connected.oldElems, connected.newElems));
+					}
+				}
+				const elemsOnPoint = this.elemsOnPoint(point);
+				if (elemsOnPoint.length === 2) {
+					const merged = this.mergeWires(elemsOnPoint[0], elemsOnPoint[1]);
+					if (merged)
+						out.push(...Actions.connectWiresToActions(merged.oldElems, merged.newElems));
+				} else if (elemsOnPoint.length > 2) {
+					// CONPOINT
+
+					// for (let i = 0; i < elemsOnPoint.length; i++) {
+					// 	for (let j = i + 1; j < elemsOnPoint.length; j++) {
+					// 		out.push(this.connectWithEdge(elemsOnPoint[i], elemsOnPoint[j]));
+					// 	}
+					// }
+				}
+			}
+		}
+		return out;
+	}
+
+	// public mergeToBoardWireEnds(wireEnds: Map<number, Set<number>>): ChangeType[] {
+	// 	return this.actionToBoard(elements, this.mergeWires.bind(this));
+	// }
+	//
+	// public connectToBoardWireEnds(wireEnds: Map<number, Set<number>>): ChangeType[] {
+	// 	return this.actionToBoard(elements, this.connectWithEdge.bind(this));
+	// }
+
 
 
 	public mergeWires(wire0: Element, wire1: Element, doDisconnect?: boolean): ChangeType {
@@ -482,6 +539,16 @@ export class ProjectState {
 		return outWires;
 	}
 
+	public wiresMidOnPoint(pos: PIXI.Point): Element[] {
+		const chunk = CollisionFunctions.gridPosToChunk(pos);
+		const outWires: Element[] = [];
+		for (const elem of this.elementsInChunk(chunk)) {
+			if (elem.typeId === ElementTypeId.WIRE && CollisionFunctions.isPointOnWireNoEdge(elem, pos))
+				outWires.push(elem);
+		}
+		return outWires;
+	}
+
 	public componentsOnPoint(pos: PIXI.Point): Element[] {
 		const chunk = CollisionFunctions.gridPosToChunk(pos);
 		const outWires: Element[] = [];
@@ -522,6 +589,49 @@ export class ProjectState {
 		for (const element of elements) {
 			for (const pos of Elements.wireEnds(element)) {
 				const elemsOnPos = this.wiresOnPoint(pos);
+				elemsOnPos.forEach(elem => {
+					out.add(elem);
+				});
+			}
+		}
+		return out;
+	}
+
+	public pointsThatSplit(elements: Element[], points: Map<number, Set<number>>): Map<number, Set<number>> {
+		const doneChunks = new Set<Chunk>();
+		for (const elem of elements) {
+			if (elem.typeId !== ElementTypeId.WIRE)
+				continue;
+			const chunkCoords = CollisionFunctions.inRectChunks(elem.pos, elem.endPos);
+			for (const chunk of this.chunksFromCoords(chunkCoords)) {
+				if (doneChunks.has(chunk))
+					continue;
+				doneChunks.add(chunk);
+				for (const other of chunk.elements) {
+					if (other.id === elem.id)
+						continue;
+					for (const wireEnd of Elements.wireEnds(other)) {
+						for (const wire of this.wiresMidOnPoint(wireEnd)) {
+							if (points.has(wireEnd.x)) {
+								points.get(wireEnd.x).add(wireEnd.y);
+							} else {
+								points.set(wireEnd.x, new Set<number>([wireEnd.y]));
+							}
+						}
+					}
+				}
+			}
+		}
+		return points;
+	}
+
+	public onlyWiresOnEdges(elements: Element[]): Set<Element> {
+		const out: Set<Element> = new Set<Element>();
+		for (const element of elements) {
+			for (const pos of Elements.wireEnds(element)) {
+				const elemsOnPos = this.wiresOnPoint(pos);
+				if (elemsOnPos.length > 0)
+					out.add(element);
 				elemsOnPos.forEach(elem => {
 					out.add(elem);
 				});
