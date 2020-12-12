@@ -119,9 +119,11 @@ export class EditComponentPlugsComponent extends PopupContentComp<Project, never
 	mouseUp() {
 		if (this._currentlyDragging) {
 			this._dragElement.element.style.transitionDuration = '';
-			for (const child of this._currentlyDragging === 'input' ? this._inputStates : this._outputStates) {
+			const states = this._currentlyDragging === 'input' ? this._inputStates : this._outputStates;
+			for (const child of states) {
 				child.adjustment = Math.round(Number(child.element.style.top.replace('px', '') || '0') / child.element.offsetHeight);
 			}
+			this._dragElement.adjustment = Math.min(this._dragElement.adjustment, states.length - 1 - this._dragElement.pos / this._dragElement.element.offsetHeight);
 			this._dragElement.element.style.top = (this._dragElement.adjustment * this._dragElement.element.offsetHeight) + 'px';
 			this._currentlyDragging = undefined;
 		}
