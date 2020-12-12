@@ -1,4 +1,4 @@
-import {Injectable} from '@angular/core';
+import {Injectable, ViewContainerRef} from '@angular/core';
 import {WorkMode} from '../../models/work-modes';
 import {BehaviorSubject, Observable, Subject} from 'rxjs';
 import {switchMap} from 'rxjs/operators';
@@ -6,7 +6,7 @@ import {ProjectsService} from '../projects/projects.service';
 import {ElementProviderService} from '../element-provider/element-provider.service';
 import {TranslateService} from '@ngx-translate/core';
 import {SimulationManagementService} from '../simulation/simulation-management/simulation-management.service';
-import {HelpWindowService} from '../help-window/help-window.service';
+import {LoadingService} from '../loading/loading.service';
 
 @Injectable({
 	providedIn: 'root'
@@ -26,7 +26,7 @@ export class WorkModeService {
 		private elemProv: ElementProviderService,
 		private simulationManagement: SimulationManagementService,
 		private translate: TranslateService,
-		private helpWindowService: HelpWindowService
+		private loadingService: LoadingService
 	) {}
 
 	public setWorkMode(workMode: WorkMode, compToBuild?: number) {
@@ -35,22 +35,25 @@ export class WorkModeService {
 		this._currentWorkModeSubject.next(workMode);
 	}
 
-	public async enterSimulation() {
+	public async enterSimulation(loadingInsertionPoint?: ViewContainerRef) {
+		const removeLoading = this.loadingService.add('LOADING.ENTER_SIMULATION', loadingInsertionPoint);
 		await this.projects.saveAllProjects();
 		await this.simulationManagement.enterSimulation();
 		delete this._currentComponentTypeToBuild;
 		this._currentWorkMode = WorkMode.SIMULATION;
 		this._currentWorkModeSubject.next(WorkMode.SIMULATION);
 		this._simulationModeSubject.next(true);
-		this.helpWindowService.showHelpWindow('ENTER_SIM');
+		removeLoading();
 	}
 
-	public async leaveSimulation() {
+	public async leaveSimulation(loadingInsertionPoint?: ViewContainerRef) {
+		const removeLoading = this.loadingService.add('LOADING.LEAVE_SIMULATION', loadingInsertionPoint);
 		await this.simulationManagement.leaveSimulation();
 		delete this._currentComponentTypeToBuild;
 		this._currentWorkMode = WorkMode.SELECT;
 		this._currentWorkModeSubject.next(WorkMode.SELECT);
 		this._simulationModeSubject.next(false);
+		removeLoading();
 	}
 
 	public get currentWorkMode(): WorkMode {

@@ -1,0 +1,50 @@
+name: 'logigator-editor check version bumped'
+on:
+  pull_request:
+    branches:
+      - 'master'
+
+jobs:
+  pre_job:
+    runs-on: ubuntu-latest
+    outputs:
+      should_skip: ${{ steps.skip_check.outputs.should_skip }}
+    steps:
+      - id: skip_check
+        uses: fkirc/skip-duplicate-actions@master
+        with:
+          github_token: ${{ github.token }}
+          paths: '["logigator-editor/**"]'
+
+  check_version_bumped:
+    name: 'logigator-editor check version bumped'
+    needs: pre_job
+    if: ${{ needs.pre_job.outputs.should_skip != 'true' }}
+    runs-on: 'ubuntu-latest'
+    steps:
+      - name: 'Checkout'
+        uses: actions/checkout@v2
+        with:
+          ref: development
+
+      - name: 'Setup Node'
+        uses: actions/setup-node@v1
+        with:
+          node-version: '12.x'
+
+      - id: check
+        uses: EndBug/version-check@v1.6.0
+        with:
+          file-name: ./logigator-editor/package.json
+          file-url: https://raw.githubusercontent.com/logigator/logigator/master/logigator-editor/package.json
+          static-checking: localIsNew
+
+      - name: 'Version Changed'
+        if: steps.check.outputs.changed == 'true'
+        run: 'echo "Version change found in commit ${{ steps.check.outputs.commit }}! New version: ${{ steps.check.outputs.version }} (${{ steps.check.outputs.type }})"'
+
+      - name: 'Unchanged'
+        if: steps.check.outputs.changed != 'true'
+        run: |
+          echo "No version change :/"
+          exit 1

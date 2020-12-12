@@ -11,9 +11,7 @@
 			"OPEN": "Open",
 			"SAVE": "Save",
 			"EXPORT": "Export to file",
-			"IMAGE_PNG": "Export as PNG Image",
-			"IMAGE_JPEG": "Export as JPEG Image",
-			"IMAGE_SVG": "Export as SVG Image",
+			"IMAGE": "Generate Image",
 			"SHARE": "Share",
 			"CLONE": "Clone Project"
 		},
@@ -24,7 +22,8 @@
 			"COPY": "Copy",
 			"PASTE": "Paste",
 			"CUT": "Cut",
-			"DELETE": "Delete"
+			"DELETE": "Delete",
+			"PLUGS": "Component Plugs"
 		},
 		"VIEW": {
 			"TITLE": "View",
@@ -99,14 +98,14 @@
 			"TITLE": "New Component",
 			"NAME": "Name",
 			"NAME_REQUIRED": "Name is required",
-			"NAME_MAX_LENGTH": "Name is to long",
+			"NAME_MAX_LENGTH": "Name is too long",
 			"NAME_INFO": "Name of the new component",
 			"SYMBOL": "Symbol",
 			"SYMBOL_REQUIRED": "Symbol is required",
-			"SYMBOL_MAX_LENGTH": "Symbol is to long",
+			"SYMBOL_MAX_LENGTH": "Symbol is too long",
 			"SYMBOL_INFO": "Will be shown when placing component.",
 			"DESCRIPTION": "Description",
-			"DESCRIPTION_MAX_LENGTH": "Description is to long",
+			"DESCRIPTION_MAX_LENGTH": "Description is too long",
 			"DESCRIPTION_INFO": "Description of the new component",
 			"CREATE": "CREATE"
 		},
@@ -148,6 +147,7 @@
 				"delete": "Delete selected items",
 				"undo": "Undo",
 				"redo": "Redo",
+				"editPlugs": "Edit plugs of custom component",
 				"zoom100": "Zoom to 100%",
 				"zoomIn": "Zoom in",
 				"zoomOut": "Zoom out",
@@ -206,10 +206,28 @@
 			"HEX": "Hexadecimal",
 			"BIN": "Binary",
 			"DEC": "Decimal"
+		},
+		"EDIT_COMPONENT_PLUGS": {
+			"TITLE": "Edit Component Plugs",
+			"SAVE": "Save"
+		},
+		"IMAGE_EXPORT": {
+			"TITLE": "Export Image",
+			"TRANSPARENT": "Transparent Background",
+			"RESOLUTION": "Custom Resolution",
+			"MIN_ERROR": "Value must be greater than 0.",
+			"MAX_ERROR": "Value must be slower than 15.000",
+			"REQ_ERROR": "Value is required.",
+			"WIDTH": "Width",
+			"HEIGHT": "Height",
+			"GENERATE_SVG": "Generate SVG",
+			"GENERATE_PNG": "Generate PNG",
+			"GENERATE_JPG": "Generate JPG"
 		}
 	},
 	"SETTINGS_INFO": {
 		"INPUTS": "Inputs",
+		"OUTPUTS": "Outputs",
 		"DIRECTION": "Direction",
 		"DIRECTIONS": {
 			"LEFT": "Left",
@@ -219,17 +237,15 @@
 		},
 		"DESCRIPTION": "Description",
 		"EDIT": "Edit",
+		"PLUG_EDIT": "Edit In- and Outputs",
 		"PLUG_INDEX": "Plug Index",
 		"PLUG_LABEL": "Label"
 	},
-	"HELP_WINDOW": {
-		"TIPP": "Hint",
-		"DONT_AGAIN": "Don't show again",
-		"OK": "OK",
-		"HELP_TEXTS": {
-			"ENTER_SIM": "To start the simulation press the play button in the toolbar.",
-			"DRAG": "Use your right mouse button, to drag the view.",
-			"NEEDS_PLUGS": "To be able to place the component, it needs inputs or outputs."
+	"TUTORIAL": {
+		"SKIP": "Skip",
+		"NEXT": "Next",
+		"FINISH": "Finish tutorial",
+		"TUTORIALS": {
 		}
 	},
 	"ELEMENT_TYPE": {
@@ -296,6 +312,16 @@
 			"SR_FF": {
 				"NAME": "SR Flip Flop",
 				"DESCRIPTION": "Holds a state. Set (S) to high to set and (R) to high to reset.<br>Triggers on rising edge."
+			},
+			"RANDOM": {
+				"NAME": "Random Number Generator",
+				"DESCRIPTION": "Generates random data.<br>Triggers on rising edge."
+			},
+			"RAM": {
+				"NAME": "RAM",
+				"DESCRIPTION": "Random Access Memory. Applies input on rising edge of CLK.<br>Set WE to high to write to current address and to low to read from current address.",
+				"WORD_SIZE": "Word Size",
+				"ADDRESS_SIZE": "Address Size"
 			}
 		},
 		"IO": {
@@ -341,7 +367,8 @@
 	"STATUS_BAR": {
 		"UNSAVED": "Unsaved Changes",
 		"SAVED": "Saved",
-		"SELECTED": "Sel"
+		"SELECTED": "Sel",
+		"PROCESSES_RUNNING": "{{amount}} Processes running"
 	},
 	"WORK_MODE_DES": {
 		"0": "Selecting Elements",
@@ -394,5 +421,21 @@
 			"BLD": "AHHH MY EYES, SO MANY LUMENS",
 			"LAZ": "Too Lazy for a proper name..."
 		}
+	},
+	"LOADING": {
+		"GENERATING_IMAGE": "Generating Image",
+		"OPENING_INITIAL_PROJECTS": "Opening projects",
+		"RELOAD_ELEMENTS": "Reloading custom elements",
+		"OPENING_FILE": "Opening project from file",
+		"SAVE_PROJECT": "Saving project",
+		"CREATE_COMPONENT": "Creating Component",
+		"SHARE_REGENERATE_LINK": "Regenerating Link",
+		"UPDATE_SHARE_INFO": "Updating share information",
+		"ENTER_SIMULATION": "Simulation mode is loading",
+		"LEAVE_SIMULATION": "Leaving Simulation mode",
+		"EXPORT_FILE": "Exporting project as file",
+		"OPEN_PROJECT": "Opening project",
+		"OPEN_COMPONENT": "Opening component",
+		"OPEN_SHARE": "Opening Share"
 	}
 }

@@ -1,4 +1,4 @@
-import {Inject, Injectable} from '@angular/core';
+import {Inject, Injectable, NgZone} from '@angular/core';
 import {
 	WorkerCommunicationService,
 	WorkerCommunicationServiceModel
@@ -20,7 +20,8 @@ export class SimulationManagementService {
 
 	constructor(
 		@Inject(WorkerCommunicationService) private workerCommunication: WorkerCommunicationServiceModel,
-		private renderTicker: RenderTicker
+		private renderTicker: RenderTicker,
+		private ngZone: NgZone
 	) {}
 
 	public async enterSimulation() {
@@ -44,7 +45,7 @@ export class SimulationManagementService {
 			this.workerCommunication.start(this._threadCount);
 		}
 
-		this.renderTicker.startAllContSim();
+		this.ngZone.runOutsideAngular(() => this.renderTicker.startAllContSim());
 	}
 
 	public pauseSim() {

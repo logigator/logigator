@@ -22,27 +22,71 @@
 
 		.divider {
 			height: 100%;
-			margin: 0 0.5rem;
 
 			@include themify() {
 				border-left: border('width') solid themed('accent2');
 			}
 		}
 
-		.no-margin {
-			margin: 0;
-		}
-
 		p {
 			margin: 0;
 		}
 
-		.m-right {
-			margin: 0 0.5rem 0 0;
+		.padding {
+			padding: 0 0.5rem;
+		}
+	}
+
+	.loading-in-bar {
+		height: 100%;
+		display: flex;
+		align-items: center;
+		cursor: pointer;
+		position: relative;
+
+		p {
+			margin-left: 0.25rem;
 		}
 
-		.m-left {
-			margin: 0 0 0 0.5rem;
+		> img {
+			height: 100%;
+			padding: 0.25rem 0;
+		}
+
+		&:not(.showing-all-tasks):hover {
+			@include themify() {
+				background-color: themed('accent1');
+			}
+		}
+
+		.all-tasks {
+			position: absolute;
+			right: -1px;
+			bottom: $status-bar-height;
+			z-index: 100;
+			cursor: default;
+
+			.task {
+				display: flex;
+				align-items: center;
+				padding: 0.25rem 0.5rem 0.25rem 0.25rem;
+
+				@include themify() {
+					background-color: themed('toolbar');
+					border-top: border('width') solid themed('accent2');
+					border-left: border('width') solid themed('accent2');
+					border-right: border('width') solid themed('accent2');
+				}
+
+				p {
+					margin-left: 0.25rem;
+					white-space: nowrap
+				}
+
+				img {
+					height: 100%;
+				}
+			}
 		}
 	}
 }

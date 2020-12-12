@@ -5,6 +5,7 @@ export type ShortcutAction =
 	'delete' |
 	'undo' |
 	'redo' |
+	'editPlugs' |
 	'zoomIn' |
 	'zoomOut' |
 	'zoom100' |

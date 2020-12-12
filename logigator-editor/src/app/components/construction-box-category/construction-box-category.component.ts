@@ -37,9 +37,9 @@ export class ConstructionBoxCategoryComponent {
 		private projects: ProjectsService
 	) { }
 
-	public componentsTrackBy(index, item) {
+	public componentsTrackBy(index, item: ElementType) {
 		if (!item) return null;
-		return item.key;
+		return item.id;
 	}
 
 	public isHiddenPlug(toSearch: string, typeId: number): boolean {

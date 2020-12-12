@@ -1,0 +1,22 @@
+<div class="edit-plugs">
+	<div class="component">
+		<form [formGroup]="inputLabelsForm" class="controls inputs" #compInputs>
+			<div *ngFor="let c of inputLabelsControls" class="control" #control>
+				<input [formControl]="c" maxlength="5" (keypress)="onChange($event)">
+				<div class="drag" (mousedown)="mouseDown($event, control, 'input')">
+					<div class="wire-end"></div>
+				</div>
+			</div>
+		</form>
+		<form [formGroup]="outputLabelsForm" class="controls outputs" #compOutputs>
+			<div *ngFor="let c of outputLabelsControls" class="control" #control>
+				<input [formControl]="c" maxlength="5" (keypress)="onChange($event)">
+				<div class="drag" (mousedown)="mouseDown($event, control, 'output')">
+					<div class="wire-end"></div>
+				</div>
+			</div>
+		</form>
+	</div>
+
+	<button class="btn-raised primary save" (click)="save()" [disabled]="inputLabelsForm.invalid || outputLabelsForm.invalid">{{'POPUP.EDIT_COMPONENT_PLUGS.SAVE' | translate}}</button>
+</div>

@@ -4,6 +4,7 @@ on:
   push:
     branches:
       - 'master'
+      - 'development'
 
 jobs:
   pre_job:
@@ -25,8 +26,6 @@ jobs:
     steps:
       - name: 'Checkout'
         uses: actions/checkout@v2
-        with:
-          ref: master
 
       - name: 'Setup Node'
         uses: actions/setup-node@v1

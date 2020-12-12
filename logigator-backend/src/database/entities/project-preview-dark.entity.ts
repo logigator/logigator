@@ -8,6 +8,7 @@ import {Project} from './project.entity';
 export class ProjectPreviewDark extends PersistedResource {
 
 	public mimeType = 'image/png';
+	_cacheable = true;
 
 	@OneToOne(type => Project, project => project.previewDark)
 	@JoinColumn()

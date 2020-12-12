@@ -6,6 +6,7 @@ import * as PIXI from 'pixi.js';
 import {Elements} from '../../models/elements';
 import {Action} from '../../models/action';
 import {Element} from '../../models/element';
+import {ElementTypeId} from '../../models/element-types/element-type-ids';
 
 @Injectable({
 	providedIn: 'root'
@@ -20,24 +21,24 @@ export class SelectionService {
 	public selectFromRect(project: Project, start: PIXI.Point, end: PIXI.Point): number[] {
 		return this.ngZone.run(() => {
 			this.clearForSelect(project, start, end);
-			const ids = this._selectedIds.get(project.id);
 			const cons = this._selectedConnections.get(project.id);
+			const ids = new Set<number>();
 			const possibleChunkCoords = CollisionFunctions.inRectChunks(start, end);
 			for (const chunk of project.currState.chunksFromCoords(possibleChunkCoords)) {
 				for (const elem of chunk.elements) {
 					if (CollisionFunctions.isElementInFloatRect(elem, start, end)) {
-						if (!ids.find(id => id === elem.id))
-							ids.push(elem.id);
+						ids.add(elem.id);
 					}
 				}
 				for (const con of chunk.connectionPoints) {
 					if (CollisionFunctions.isConPointInRect(con, start, end)) {
-						if (!cons.find(c => c.equals(con)))
-							cons.push(con);
+						cons.push(con);
 					}
 				}
 			}
-			return ids;
+			const idsArr = [...ids];
+			this._selectedIds.set(project.id, idsArr);
+			return idsArr;
 		});
 	}
 
@@ -45,27 +46,27 @@ export class SelectionService {
 		return this.ngZone.run(() => {
 			this.clearForSelect(project, start, end);
 			const out: Action[] = [];
-			const ids = this._selectedIds.get(project.id);
 			const cons = this._selectedConnections.get(project.id);
+			const ids = new Set<number>();
 			const possibleChunkCoords = CollisionFunctions.inRectChunks(start, end);
 			for (const chunk of project.currState.chunksFromCoords(possibleChunkCoords)) {
 				for (const elem of chunk.elements) {
-					if (elem.typeId === 0) {
+					if (elem.typeId === ElementTypeId.WIRE) {
 						this.splitAndSelectWire(elem, start, end, ids, project, out);
 					} else {
 						if (CollisionFunctions.isRectFullyInRect(elem.pos, elem.endPos, start, end)) {
-							if (!ids.find(id => id === elem.id))
-								ids.push(elem.id);
+							ids.add(elem.id);
 						}
 					}
 				}
 				for (const con of chunk.connectionPoints) {
 					if (CollisionFunctions.isConPointInRect(con, start, end)) {
-						if (!cons.find(c => c.equals(con)))
-							cons.push(con);
+						cons.push(con);
 					}
 				}
 			}
+			this._selectedIds.set(project.id, [...ids]);
+
 			out.push(...project.currState.specialActions);
 			if (out.length > 0)
 				project.newState(out, true);
@@ -78,7 +79,7 @@ export class SelectionService {
 		project.cancelLastStep();
 	}
 
-	private splitAndSelectWire(element: Element, start: PIXI.Point, end: PIXI.Point, ids, project: Project, out: Action[]) {
+	private splitAndSelectWire(element: Element, start: PIXI.Point, end: PIXI.Point, ids: Set<number>, project: Project, out: Action[]) {
 		const cuttingPoses = CollisionFunctions.rectCuttingPoints(element, start, end);
 		if (cuttingPoses === undefined)
 			return;
@@ -92,8 +93,7 @@ export class SelectionService {
 		}
 		for (const e of elems) {
 			if (CollisionFunctions.isElementInFloatRect(e, start, end)) {
-				if (!ids.find(id => id === e.id))
-					ids.push(e.id);
+				ids.add(e.id);
 			}
 		}
 	}

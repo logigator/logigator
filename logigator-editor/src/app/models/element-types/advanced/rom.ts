@@ -72,20 +72,13 @@ export const rom: ElementType = {
 	canEditType: false,
 
 	calcLabels(element?)  {
+		if (!element)
+			element = this;
 		const labels = [];
-		if (element) {
-			for (let i = 0; i < element.options[1]; i++) {
-				labels.push('A' + i);
-			}
-			for (let i = 0; i < element.options[0]; i++) {
-				labels.push(i.toString());
-			}
-			return labels;
-		}
-		for (let i = 0; i < this.options[1]; i++) {
+		for (let i = 0; i < element.options[1]; i++) {
 			labels.push('A' + i);
 		}
-		for (let i = 0; i < this.options[0]; i++) {
+		for (let i = 0; i < element.options[0]; i++) {
 			labels.push(i.toString());
 		}
 		return labels;

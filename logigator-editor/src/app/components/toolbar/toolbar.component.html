@@ -83,6 +83,7 @@
 	</div>
 
 	<div class="toolbar-end">
+		<ng-container #enterSimulationLoading></ng-container>
 		<p (click)="enterSimulation()" *ngIf="!isSimulationMode" class="start-sim">{{'TOOLBAR.START_SIM' | translate}}</p>
 		<p (click)="leaveSimulation()" *ngIf="isSimulationMode" class="start-sim">{{'TOOLBAR.EXIT_SIM' | translate}}</p>
 	</div>

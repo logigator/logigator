@@ -18,6 +18,7 @@ export class ProjectState {
 	private _highestTakenId = 0;
 
 	public specialActions: Action[] = [];
+	public plugIndexActions: Action[] = [];
 
 	public numInputs = 0;
 	public numOutputs = 0;
@@ -87,16 +88,21 @@ export class ProjectState {
 		if (!this._chunks[x][y])
 			this._chunks[x][y] = {
 				elements: [],
-				connectionPoints: []
+				connectionPoints: [],
+				links: new Map<number, { x: number, y: number }>()
 			};
 	}
 
 	public loadIntoChunks(element: Element): void {
 		const chunkCoords = CollisionFunctions.inRectChunks(element.pos, element.endPos, Elements.wireEnds(element));
+		// assumes that first chunk is where the element is
+		const firstCunk = { x: chunkCoords[0].x, y: chunkCoords[0].y };
 		for (const coord of chunkCoords) {
 			this.createChunk(coord.x, coord.y);
 			if (!this._chunks[coord.x][coord.y].elements.find(e => e.id === element.id))
 				this._chunks[coord.x][coord.y].elements.push(element);
+			if (!(coord.x === firstCunk.x && coord.y === firstCunk.y))
+				this._chunks[coord.x][coord.y].links.set(element.id, firstCunk);
 		}
 	}
 
@@ -104,6 +110,7 @@ export class ProjectState {
 		const chunkCoords = CollisionFunctions.inRectChunks(element.pos, element.endPos, Elements.wireEnds(element));
 		for (const chunk of this.chunksFromCoords(chunkCoords)) {
 			chunk.elements = chunk.elements.filter(elem => elem.id !== element.id);
+			chunk.links.delete(element.id);
 		}
 	}
 
@@ -146,7 +153,7 @@ export class ProjectState {
 
 	public removeAllConnectionPoints(elements: Element[]): void {
 		elements.forEach(elem => {
-			for (const pos of this.wireEnds(elem)) {
+			for (const pos of Elements.wireEnds(elem)) {
 				this.removeConFromChunks(pos);
 			}
 		});
@@ -211,6 +218,10 @@ export class ProjectState {
 				}
 			}
 		}
+		for (const wireEnd of wireEnds) {
+			if (wireEnd.x < 0 || wireEnd.y < 0)
+				return false;
+		}
 		return !(startPos.x < 0 || startPos.y < 0);
 	}
 
@@ -243,13 +254,16 @@ export class ProjectState {
 		elem.id = id || this.getNextId();
 		this._model.set(elem.id, elem);
 		if (elem.typeId === ElementTypeId.INPUT) {
-			elem.plugIndex = this.numInputs++;
-			this._inputPlugs.push(elem);
-			for (const plug of this._outputPlugs) {
-				plug.plugIndex++;
+			if (elem.plugIndex === undefined) {
+				for (const plug of this._outputPlugs) {
+					plug.plugIndex++;
+				}
+				elem.plugIndex = this.numInputs++;
 			}
+			this._inputPlugs.push(elem);
+			this.numInputs++;
 		} else if (elem.typeId === ElementTypeId.OUTPUT) {
-			elem.plugIndex = this.numInputs + this.numOutputs++;
+			elem.plugIndex = (elem.plugIndex === undefined) ? (this.numInputs + this.numOutputs++) : elem.plugIndex;
 			this._outputPlugs.push(elem);
 		} else if (elem.typeId === ElementTypeId.TUNNEL) {
 			this._tunnels.push(elem);
@@ -269,20 +283,20 @@ export class ProjectState {
 			this._inputPlugs = this._inputPlugs.filter(e => e.id !== elementId);
 			for (const plug of this._inputPlugs) {
 				if (plug.plugIndex > outElem.plugIndex) {
-					// this.specialActions.push({
-					// 	name: 'plugInd',
-					// 	element: plug,
-					// 	numbers: [plug.plugIndex - 1, plug.plugIndex]
-					// });
+					this.plugIndexActions.push({
+						name: 'plugInd',
+						element: plug,
+						numbers: [plug.plugIndex - 1, plug.plugIndex]
+					});
 					plug.plugIndex--;
 				}
 			}
 			for (const plug of this._outputPlugs) {
-				// this.specialActions.push({
-				// 	name: 'plugInd',
-				// 	element: plug,
-				// 	numbers: [plug.plugIndex - 1, plug.plugIndex]
-				// });
+				this.plugIndexActions.push({
+					name: 'plugInd',
+					element: plug,
+					numbers: [plug.plugIndex - 1, plug.plugIndex]
+				});
 				plug.plugIndex--;
 			}
 		} else if (outElem.typeId === ElementTypeId.OUTPUT) {
@@ -290,11 +304,11 @@ export class ProjectState {
 			this._outputPlugs = this._outputPlugs.filter(e => e.id !== elementId);
 			for (const plug of this._outputPlugs) {
 				if (plug.plugIndex > outElem.plugIndex) {
-					// this.specialActions.push({
-					// 	name: 'plugInd',
-					// 	element: plug,
-					// 	numbers: [plug.plugIndex - 1, plug.plugIndex]
-					// });
+					this.plugIndexActions.push({
+						name: 'plugInd',
+						element: plug,
+						numbers: [plug.plugIndex - 1, plug.plugIndex]
+					});
 					plug.plugIndex--;
 				}
 			}
@@ -432,7 +446,7 @@ export class ProjectState {
 	private connectWithEdge(other: Element, elem: Element): ChangeType {
 		const oldElems = (elem.typeId === ElementTypeId.WIRE ? [elem] : []).concat(other.typeId === ElementTypeId.WIRE ? [other] : []);
 		if (other.typeId === ElementTypeId.WIRE) {
-			const wireEnds = this.wireEnds(elem);
+			const wireEnds = Elements.wireEnds(elem);
 			for (const endPoint of wireEnds) {
 				if (CollisionFunctions.isPointOnWireNoEdge(other, endPoint)) {
 					return {newElems: this.connectWires(elem, other, endPoint), oldElems};
@@ -440,7 +454,7 @@ export class ProjectState {
 			}
 		}
 		if (elem.typeId === ElementTypeId.WIRE) {
-			const wireEnds = this.wireEnds(other);
+			const wireEnds = Elements.wireEnds(other);
 			for (const endPoint of wireEnds) {
 				if (CollisionFunctions.isPointOnWireNoEdge(elem, endPoint)) {
 					return {newElems: this.connectWires(other, elem, endPoint), oldElems};
@@ -653,8 +667,13 @@ export class ProjectState {
 					numbers: [elem.plugIndex, plug.plugIndex]
 				});
 				plug.plugIndex = elem.plugIndex;
+				break;
 			}
 		}
+		elem.plugIndex = id;
+	}
+
+	public setPlugIdWithoutChangingOthers(elem: Element, id: number): void {
 		elem.plugIndex = id;
 	}
 
@@ -673,12 +692,14 @@ export class ProjectState {
 	}
 
 	public setOptions(element: Element, options: number[]): void {
-		this.removeFromChunks(element);
 		element.options = options;
 		const elemType = getStaticDI(ElementProviderService).getElementById(element.typeId);
-		if (elemType.onOptionsChanged) elemType.onOptionsChanged(element);
-		element.endPos = Elements.calcEndPos(element);
-		this.loadIntoChunks(element);
+		if (elemType.onOptionsChanged) {
+			this.removeFromChunks(element);
+			elemType.onOptionsChanged(element);
+			element.endPos = Elements.calcEndPos(element);
+			this.loadIntoChunks(element);
+		}
 	}
 
 	public setData(element: Element, data: unknown): void {

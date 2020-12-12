@@ -11,7 +11,7 @@ export class ImageExportService {
 	constructor() {}
 
 	public async generatePreviews(project: Project) {
-		const exporter = new SvgImageExporter(project, new PIXI.Point(512, 512), Theme.Dark_Transparent);
+		const exporter = new SvgImageExporter(project, new PIXI.Point(1024, 1024), Theme.Dark_Transparent);
 		const dark = await this.getBlobImage(exporter, 'png');
 		exporter.changeTheme(Theme.Light_Transparent);
 		return {

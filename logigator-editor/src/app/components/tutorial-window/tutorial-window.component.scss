@@ -1,0 +1,109 @@
+@import "themes";
+
+.tutorial-window {
+	position: fixed;
+	top: 300px;
+	left: 300px;
+	z-index: 500;
+	width: 320px;
+
+	@include themify() {
+		background-color: themed('background');
+		border: border('width') solid themed('accent1');
+		color: themed('text-primary');
+	}
+
+	.arrow {
+		border-bottom: 18px solid transparent;
+		border-left: 18px solid transparent;
+		border-right: 18px solid transparent;
+		border-top: 18px solid transparent;
+		height: 0;
+		position: absolute;
+		width: 0;
+		pointer-events: none;
+	}
+
+	&.top > .arrow {
+		left: 0;
+		bottom:-37px;
+
+		@include themify() {
+			border-top: 18px solid themed('accent2');
+		}
+	}
+
+	&.left > .arrow {
+		top: 0;
+		right:-37px;
+
+		@include themify() {
+			border-left: 18px solid themed('accent2');
+		}
+	}
+
+	&.bottom > .arrow {
+		left: 0;
+		top:-37px;
+
+		@include themify() {
+			border-bottom: 18px solid themed('accent2');
+		}
+	}
+
+	&.right > .arrow {
+		top: 0;
+		left:-37px;
+
+		@include themify() {
+			border-right: 18px solid themed('accent2');
+		}
+	}
+
+	.header {
+		display: flex;
+		width: 100%;
+
+		@media (max-width: 350px) {
+			padding-top: 1rem;
+		}
+
+		@include themify() {
+			background-color: themed('accent2');
+		}
+
+		text-align: center;
+		font-size: 1.2rem;
+		font-weight: normal;
+		justify-content: space-between;
+		align-items: center;
+		padding: 0.5rem;
+
+		img {
+			margin-right: 1px;
+			border-radius: 0.25rem;
+			height: 27px;
+			padding: 0.25rem;
+
+			&:hover {
+				@include themify() {
+					background-color: lighten(themed('background'), 10);
+				}
+			}
+		}
+	}
+
+	.content {
+		margin: 1rem;
+
+		.help-text {
+			margin: 0;
+		}
+
+		.buttons {
+			display: flex;
+			justify-content: flex-start;
+			margin-top: 1rem;
+		}
+	}
+}

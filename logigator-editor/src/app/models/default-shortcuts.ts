@@ -49,6 +49,10 @@ export const defaultShortcuts: Shortcut[] = [
 		}
 	},
 	{
+		action: 'editPlugs',
+		usableIn: 'editor'
+	},
+	{
 		action: 'zoom100',
 		usableIn: 'both',
 		shortcutConfig: {
