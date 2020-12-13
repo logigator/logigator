@@ -1,0 +1,16 @@
+{{! parameters: projects: array, newTab: boolean }}
+<div class="partial-project-teasers">
+	{{#each projects}}
+		<div class="partial-project-teasers__teaser">
+			<div class="partial-project-teasers__teaser-image">
+				<img alt="Preview" src="{{ternary (expr @root.preferences.theme '===' 'dark') this.previewDark this.previewLight}}">
+			</div>
+			<div class="partial-project-teasers__teaser-bottom">
+				<p>{{this.name}}</p>
+				<a href="{{this.link}}" {{#if ../newTab}}target="_blank" rel="noopener" {{/if}}>
+					<button class="btn-raised primary">{{@root.i18n.HOME.PROJECT_TEASERS.VIEW}}</button>
+				</a>
+			</div>
+		</div>
+	{{/each}}
+</div>

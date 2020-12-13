@@ -61,6 +61,13 @@
 			"SHARE_DES": "Share your circuits with other users, so they can learn from your work.",
 			"IMAGES": "Export Images",
 			"IMAGES_DES": "With Logigator you can export high resolution images in three different formats (SVG, PNG, JPG), to uses them anywhere."
+		},
+		"EXAMPLES": {
+			"TITLE": "Example Circuits",
+			"DESCRIPTION": "Learn to design simple to more complex circuits from our examples."
+		},
+		"PROJECT_TEASERS": {
+			"VIEW": "View"
 		}
 	},
 	"FEATURES": {

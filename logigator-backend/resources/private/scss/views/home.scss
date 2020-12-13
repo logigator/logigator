@@ -1,4 +1,5 @@
 @import "../config/config";
+@import "../partials/project-teasers";
 
 @include view('home') {
 
@@ -36,6 +37,11 @@
 		max-width: 960px;
 		display: block;
 		margin: auto;
+		margin-top: 2rem;
+
+		@include media-breakpoint-down('md') {
+			margin-top: 0;
+		}
 	}
 
 	@include element('s-intro-headline') {
@@ -159,6 +165,10 @@
 			margin-top: 0.5rem;
 			font-size: 17px;
 		}
+	}
+
+	@include element('s-examples') {
+		@include section('s-examples-content', 1200px);
 	}
 
 }
