@@ -174,7 +174,7 @@ export class SvgImageExporter {
 		const point = document.createElementNS(this.SVG_NS, 'rect');
 		point.setAttribute('x', (pos.x + 0.5) * this.gridSize + this.offset.x - 2.5 + '');
 		point.setAttribute('y', (pos.y + 0.5) * this.gridSize + this.offset.y - 2.5 + '');
-		point.setAttribute('width', '5');
+		point.setAttribute('width', this.gridSize < 8 ? '3' : '5');
 		point.setAttribute('height', '5');
 		point.setAttribute('class', 'cp');
 		this._svg.appendChild(point);
