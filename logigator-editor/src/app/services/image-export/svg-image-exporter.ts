@@ -172,8 +172,8 @@ export class SvgImageExporter {
 
 	private placeConnPoint(pos: PIXI.Point) {
 		const point = document.createElementNS(this.SVG_NS, 'rect');
-		point.setAttribute('x', (pos.x + 0.5) * this.gridSize + this.offset.x - 2.5 + '');
-		point.setAttribute('y', (pos.y + 0.5) * this.gridSize + this.offset.y - 2.5 + '');
+		point.setAttribute('x', (pos.x + 0.5) * this.gridSize + this.offset.x - (this.gridSize < 8 ? 1.5 : 2.5) + '');
+		point.setAttribute('y', (pos.y + 0.5) * this.gridSize + this.offset.y - (this.gridSize < 8 ? 1.5 : 2.5) + '');
 		point.setAttribute('width', this.gridSize < 8 ? '3' : '5');
 		point.setAttribute('height', this.gridSize < 8 ? '3' : '5');
 		point.setAttribute('class', 'cp');
