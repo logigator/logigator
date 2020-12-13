@@ -254,16 +254,12 @@ export abstract class Elements {
 		return wire.pos.x === wire.endPos.x;
 	}
 
+	public static isHorizontalElem(elem: Element): boolean {
+		return elem.typeId === ElementTypeId.WIRE ? Elements.isHorizontal(elem) : elem.rotation % 2 === 0;
+	}
+
 	public static isSameDirection(elem0: Element, elem1: Element): boolean {
-		const comp = elem0.typeId === 0 ? elem1 : elem0;
-		const wire = elem0.typeId === 0 ? elem0 : elem1;
-		// comp still might be a wire, because it is not tested that well
-		if (comp.typeId === 0)
-			return false;
-		if (comp.rotation % 2 === 0)
-			return Elements.isHorizontal(wire);
-		else
-			return Elements.isVertical(wire);
+		return Elements.isHorizontalElem(elem0) === Elements.isHorizontalElem(elem1);
 	}
 
 	public static elementType(typeId: number): ElementType {
