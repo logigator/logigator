@@ -10,6 +10,7 @@ import {Observable} from 'rxjs';
 import {ElectronUpdateService} from '../../../services/electron-update/electron-update.service';
 import {PopupService} from '../../../services/popup/popup.service';
 import {environment} from '../../../../environments/environment';
+import {SimulationManagementService} from '../../../services/simulation/simulation-management/simulation-management.service';
 
 @Component({
 	selector: 'app-settings-dropdown',
@@ -29,6 +30,7 @@ export class SettingsDropdownComponent implements OnInit {
 
 	constructor(
 		public theming: ThemingService,
+		public simulationMgmt: SimulationManagementService,
 		private popupService: PopupService,
 		private translation: TranslateService,
 		private user: UserService,
