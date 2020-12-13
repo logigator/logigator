@@ -24,6 +24,7 @@ import {FileSaverService} from '../file-saver/file-saver.service';
 import {ShareDependencies} from '../../models/http/response/share-dependencies';
 import {ErrorHandlingService} from '../error-handling/error-handling.service';
 import {ImageExportService} from '../image-export/image-export.service';
+import {ElementTypeId} from '../../models/element-types/element-type-ids';
 
 @Injectable({
 	providedIn: 'root'
@@ -548,7 +549,7 @@ export class ProjectSaveManagementService {
 				element.n = elem.options;
 			if (elem.data)
 				element.s = elem.data as string;
-			if (elem.endPos)
+			if (elem.endPos && elem.typeId === ElementTypeId.WIRE)
 				element.q = [elem.endPos.x, elem.endPos.y];
 
 			return element;
