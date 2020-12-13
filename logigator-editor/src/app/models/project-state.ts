@@ -28,13 +28,17 @@ export class ProjectState {
 
 	private _tunnels: Element[];
 
-	public constructor(elements?: Element[], highestId?: number) {
+	public constructor(elements?: Element[]) {
 		if (elements) {
-			this._model = new Map<number, Element>(elements.map(e => [e.id, e]));
+			this._model = new Map<number, Element>(elements.map((e, i) => {
+				e.id = i;
+				return [i, e];
+			}));
+			this._highestTakenId = elements.length - 1;
 		} else {
 			this._model = new Map<number, Element>();
+			this._highestTakenId = 0;
 		}
-		this._highestTakenId = highestId || this.findHighestTakenId();
 		this._chunks = [];
 		this._outputPlugs = [];
 		this._inputPlugs = [];
@@ -43,8 +47,6 @@ export class ProjectState {
 		this.loadAllIntoChunks();
 		this.inputOutputCount();
 	}
-
-
 
 	private findHighestTakenId(): number {
 		let out = 0;

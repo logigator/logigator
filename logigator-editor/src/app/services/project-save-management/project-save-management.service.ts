@@ -501,7 +501,7 @@ export class ProjectSaveManagementService {
 			const isCustomElement = this.elementProvider.isCustomElement(typeId);
 
 			const element: Element = {
-				id: elem.c,
+				id: 0, /* Will be ignored by project-state */
 				typeId,
 				numInputs: isCustomElement ? elementType.numInputs : (elem.i ?? 0),
 				numOutputs: isCustomElement ? elementType.numOutputs : (elem.o ?? 0),
@@ -532,7 +532,6 @@ export class ProjectSaveManagementService {
 			const elementType = this.elementProvider.getElementById(elem.typeId);
 
 			const element: ProjectElement = {
-				c: elem.id,
 				t: elem.typeId,
 				p: [elem.pos.x, elem.pos.y],
 			};
