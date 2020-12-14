@@ -605,6 +605,7 @@ export class Project {
 		this.saveDirty = true;
 		this.compileDirty = true;
 		if (!setStateActionFlag && !skipSubject) {
+			actions = Actions.reduceActions(actions); // 130/36 - 2336actions
 			this._changeSubject.next(actions);
 		} else if (setStateActionFlag) {
 			this._stateActionFlag = true;
