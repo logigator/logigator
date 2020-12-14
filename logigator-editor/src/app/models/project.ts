@@ -101,10 +101,10 @@ export class Project {
 				}
 				break;
 			case 'conWire':
-				this._currState.loadConIntoChunks(action.pos);
+				this._currState.addConPointIfNotExists(action.pos);
 				break;
 			case 'dcoWire':
-				this._currState.removeConFromChunks(action.pos);
+				this._currState.remConPointIfExists(action.pos);
 				break;
 			case 'rotComp':
 				this._currState.rotateComp(action.element, action.numbers[0]);
@@ -260,7 +260,6 @@ export class Project {
 			this._currState.plugIndexActions = [];
 		});
 		let wireEndsToUpdate = Elements.allWireEnds(elements);
-		this._currState.removeAllConnectionPoints(wireEndsToUpdate);
 		wireEndsToUpdate = this._currState.pointsThatSplit(elements, wireEndsToUpdate);
 		actions.push(...this.autoAssembleWireEnds(wireEndsToUpdate));
 		this.newState(actions);
@@ -284,7 +283,6 @@ export class Project {
 			this._currState.plugIndexActions = [];
 		}
 		let wireEndsToUpdate = Elements.allWireEnds(elements);
-		this._currState.removeAllConnectionPoints(wireEndsToUpdate);
 		wireEndsToUpdate = this._currState.pointsThatSplit(elements, wireEndsToUpdate);
 		actions.push(...this.autoAssembleWireEnds(wireEndsToUpdate), ...this._currState.specialActions);
 		this._currState.specialActions = [];
@@ -319,7 +317,6 @@ export class Project {
 
 		// #!debug
 		this.boardRecorder.call('moveElementsById', arguments, -1, 0);
-		this._currState.removeAllConnectionPoints(wireEndsToUpdate);
 		for (const elem of elements) {
 			this._currState.moveElement(elem, dif);
 		}
@@ -329,7 +326,6 @@ export class Project {
 			pos: dif
 		}];
 		wireEndsToUpdate = Elements.allWireEnds(elements, wireEndsToUpdate);
-		this._currState.removeAllConnectionPoints(wireEndsToUpdate);
 		wireEndsToUpdate = this._currState.pointsThatSplit(elements, wireEndsToUpdate);
 		actions.push(...this.autoAssembleWireEnds(wireEndsToUpdate));
 		this.newState(actions);
@@ -562,7 +558,7 @@ export class Project {
 
 	private disconnectWires(wiresOnPoint: Element[]): Action[] {
 		const newWires = this._currState.disconnectWires(wiresOnPoint);
-		this._currState.loadConnectionPoints(newWires.concat(wiresOnPoint));
+		this._currState.loadConnectionPoints(wiresOnPoint);
 		return Actions.connectWiresToActions(wiresOnPoint, newWires);
 	}
 
@@ -585,8 +581,9 @@ export class Project {
 	}
 
 	private autoAssembleWireEnds(wireEnds: Map<number, Set<number>>): Action[] {
+		// const out = this._currState.removeAllConnectionPoints(wireEnds);
 		const out = this._currState.actionToBoard(wireEnds);
-		this._currState.loadConnectionPointsWireEnds(wireEnds);
+		// this._currState.loadConnectionPointsWireEnds(wireEnds);
 		return out;
 	}
 

@@ -115,29 +115,19 @@ export class ProjectState {
 		}
 	}
 
-
-	private addConnectionPoint(pos: PIXI.Point): void {
-		if (this.elemsOnPoint(pos).length > 2)
-			this.loadConIntoChunks(pos);
-	}
-
-	private removeConnectionPoint(pos: PIXI.Point): void {
-		if (this.elemsOnPoint(pos).length < 3)
-			this.removeConFromChunks(pos);
-	}
-
-	public loadConIntoChunks(con: PIXI.Point): void {
+	public addConPointIfNotExists(con: PIXI.Point): Action {
 		const chunkCoords = CollisionFunctions.inRectChunks(con, con);
 		for (const coord of chunkCoords) {
 			this.createChunk(coord.x, coord.y);
 			if (!this.chunkHasCon(this._chunks[coord.x][coord.y], con)) {
 				this._chunks[coord.x][coord.y].connectionPoints.push(con.clone());
-				this.specialActions.push({name: 'conWire', pos: con.clone()});
+				return {name: 'conWire', pos: con.clone()};
 			}
 		}
+		return null;
 	}
 
-	public removeConFromChunks(con: PIXI.Point): void {
+	public remConPointIfExists(con: PIXI.Point): Action {
 		const chunk = this.chunk(CollisionFunctions.gridPosToChunk(con));
 		if (!chunk)
 			return;
@@ -151,40 +141,40 @@ export class ProjectState {
 		if (conIndex < 0)
 			return;
 		chunk.connectionPoints.splice(conIndex, 1);
-		this.specialActions.push({name: 'dcoWire', pos: con.clone()});
+		return {name: 'dcoWire', pos: con.clone()};
 	}
 
-	public removeAllConnectionPoints(points: Map<number, Set<number>>): void {
+	public removeAllConnectionPoints(points: Map<number, Set<number>>): Action[] {
+		const out: Action[] = [];
 		for (const [x, set] of points) {
 			for (const y of set) {
-				this.removeConFromChunks(new PIXI.Point(x, y));
+				const action = this.remConPointIfExists(new PIXI.Point(x, y));
+				if (action)
+					out.push(action);
 			}
 		}
+		return out;
 	}
 
 	public loadConnectionPoints(elements: Element[], allRemoved?: boolean): void {
 		if (!allRemoved) {
-			this.removeAllConnectionPoints(Elements.allWireEnds(elements));
+			this.specialActions.push(...this.removeAllConnectionPoints(Elements.allWireEnds(elements)));
 		}
 		const donePoints = new Map<number, Set<number>>();
 		elements.forEach(elem => {
 			for (const pos of Elements.wireEnds(elem)) {
 				if (donePoints.has(pos.x) && donePoints.get(pos.x).has(pos.y))
 					continue;
-				this.addConnectionPoint(pos);
+				if (this.elemsOnPoint(pos).length > 2) {
+					const action = this.addConPointIfNotExists(pos);
+					if (action)
+						this.specialActions.push(action);
+				}
 				if (!donePoints.has(pos.x))
 					donePoints.set(pos.x, new Set<number>());
 				donePoints.get(pos.x).add(pos.y);
 			}
 		});
-	}
-
-	public loadConnectionPointsWireEnds(wireEnds: Map<number, Set<number>>): void {
-		for (const [x, set] of wireEnds) {
-			for (const y of set) {
-				this.addConnectionPoint(new PIXI.Point(x, y));
-			}
-		}
 	}
 
 	public elementsInChunks(startPos: PIXI.Point, endPos: PIXI.Point, wireEnds?: PIXI.Point[]): Set<Element> {
@@ -393,7 +383,7 @@ export class ProjectState {
 
 	public actionToBoard(wireEnds: Map<number, Set<number>>): Action[] {
 		const out: Action[] = [];
-		for (const [x, set] of wireEnds.entries()) {
+		for (const [x, set] of wireEnds) {
 			currPoint:
 			for (const y of set) {
 				const point = new PIXI.Point(x, y);
@@ -408,6 +398,9 @@ export class ProjectState {
 								hasConnected = true;
 								out.push(...Actions.connectWiresToActions(connected.oldElems, connected.newElems));
 								elemsOnPoint = this.allOnPoint(point);
+								const action = this.addConPointIfNotExists(point);
+								if (action)
+									out.push(action);
 							}
 						}
 					}
@@ -419,9 +412,23 @@ export class ProjectState {
 						const merged = this.mergeWires(elemsOnPoint[i], elemsOnPoint[j]);
 						if (merged) {
 							out.push(...Actions.connectWiresToActions(merged.oldElems, merged.newElems));
-							continue currPoint;
+							if (elemsOnPoint[i].pos.equals(elemsOnPoint[j].endPos) || elemsOnPoint[i].endPos.equals(elemsOnPoint[j].pos)) {
+								const action = this.remConPointIfExists(point);
+								if (action)
+									out.push(action);
+								continue currPoint;
+							}
 						}
 					}
+				}
+				if (elemsOnPoint.length < 3) {
+					const action = this.remConPointIfExists(point);
+					if (action)
+						out.push(action);
+				} else {
+					const action = this.addConPointIfNotExists(point);
+					if (action)
+						out.push(action);
 				}
 			}
 		}
