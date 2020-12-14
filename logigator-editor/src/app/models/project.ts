@@ -351,7 +351,7 @@ export class Project {
 		// #!debug
 		this.boardRecorder.call('rotateComponent', arguments, 0);
 		this._currState.rotateComp(element, rotation, newEndPos);
-		wireEndsToUpdate = Elements.allWireEnds([element]);
+		wireEndsToUpdate = Elements.allWireEnds([element], wireEndsToUpdate);
 		wireEndsToUpdate = this._currState.pointsThatSplit([element], wireEndsToUpdate);
 		actions.push(...this.autoAssembleWireEnds(wireEndsToUpdate));
 		this.newState(actions);
@@ -377,7 +377,7 @@ export class Project {
 		// #!debug
 		this.boardRecorder.call('setNumInputs', arguments, 0);
 		this._currState.setNumInputs(element, numInputs, newEndPos);
-		wireEndsToUpdate = Elements.allWireEnds([element]);
+		wireEndsToUpdate = Elements.allWireEnds([element], wireEndsToUpdate);
 		wireEndsToUpdate = this._currState.pointsThatSplit([element], wireEndsToUpdate);
 		actions.push(...this.autoAssembleWireEnds(wireEndsToUpdate));
 		this.newState(actions);
@@ -455,7 +455,7 @@ export class Project {
 			options: [options, oldOptions]
 		}];
 		if (canSizeChange) {
-			wireEndsToUpdate = Elements.allWireEnds([element]);
+			wireEndsToUpdate = Elements.allWireEnds([element], wireEndsToUpdate);
 			wireEndsToUpdate = this._currState.pointsThatSplit([element], wireEndsToUpdate);
 			actions.push(...this.autoAssembleWireEnds(wireEndsToUpdate));
 		}
@@ -581,10 +581,7 @@ export class Project {
 	}
 
 	private autoAssembleWireEnds(wireEnds: Map<number, Set<number>>): Action[] {
-		// const out = this._currState.removeAllConnectionPoints(wireEnds);
-		const out = this._currState.actionToBoard(wireEnds);
-		// this._currState.loadConnectionPointsWireEnds(wireEnds);
-		return out;
+		return this._currState.actionToBoard(wireEnds);
 	}
 
 

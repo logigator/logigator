@@ -323,6 +323,7 @@ export class ProjectState {
 		this.removeFromChunks(element);
 		element.rotation = rotation;
 		element.endPos = endPos || Elements.calcEndPos(element, undefined, undefined, rotation);
+		delete element.wireEnds;
 		this.loadIntoChunks(element);
 	}
 
@@ -330,6 +331,7 @@ export class ProjectState {
 		this.removeFromChunks(element);
 		element.numInputs = numInputs;
 		element.endPos = endPos || Elements.calcEndPos(element, numInputs);
+		delete element.wireEnds;
 		this.loadIntoChunks(element);
 	}
 
