@@ -1,4 +1,4 @@
-export abstract class MapHelper {
+export abstract class ArrayHelper {
 
 	public static pushInMapArray<K, V>(map: Map<K, Array<V>>, key: K, value: V): void {
 		if (map.has(key)) {

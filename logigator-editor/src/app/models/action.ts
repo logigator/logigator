@@ -147,6 +147,11 @@ export class Actions {
 		}
 	}
 
+	public static pushIfNotNull(array: Action[], action: Action): void {
+		if (action)
+			array.push(action);
+	}
+
 	public static printActions(actions: Action[]): void {
 		if (!actions)
 			return;

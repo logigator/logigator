@@ -383,6 +383,11 @@ export class ProjectState {
 		return [newWire0, newWire1];
 	}
 
+	/**
+	 * connect everything to everything possible on given point
+	 * if it did connect something, it won't merge anything
+	 * only merges once
+	 */
 	public actionToBoard(wireEnds: Map<number, Set<number>>): Action[] {
 		const out: Action[] = [];
 		for (const [x, set] of wireEnds) {
@@ -390,6 +395,7 @@ export class ProjectState {
 			for (const y of set) {
 				const point = new PIXI.Point(x, y);
 				let elemsOnPoint = this.allOnPoint(point);
+
 				let hasConnected = false;
 				do {
 					hasConnected = false;
@@ -400,38 +406,31 @@ export class ProjectState {
 								hasConnected = true;
 								out.push(...Actions.connectWiresToActions(connected.oldElems, connected.newElems));
 								elemsOnPoint = this.allOnPoint(point);
-								const action = this.addConPointIfNotExists(point);
-								if (action)
-									out.push(action);
+								Actions.pushIfNotNull(out, this.addConPointIfNotExists(point));
 							}
 						}
 					}
 				} while (hasConnected);
+
 				if (hasConnected)
 					continue; // currPoint
+
 				for (let i = 0; i < elemsOnPoint.length; i++) {
 					for (let j = i + 1; j < elemsOnPoint.length; j++) {
 						const merged = this.mergeWires(elemsOnPoint[i], elemsOnPoint[j]);
 						if (merged) {
 							out.push(...Actions.connectWiresToActions(merged.oldElems, merged.newElems));
 							if (elemsOnPoint[i].pos.equals(elemsOnPoint[j].endPos) || elemsOnPoint[i].endPos.equals(elemsOnPoint[j].pos)) {
-								const action = this.remConPointIfExists(point);
-								if (action)
-									out.push(action);
+								Actions.pushIfNotNull(out, this.remConPointIfExists(point));
 								continue currPoint;
 							}
 						}
 					}
 				}
-				if (elemsOnPoint.length < 3) {
-					const action = this.remConPointIfExists(point);
-					if (action)
-						out.push(action);
-				} else {
-					const action = this.addConPointIfNotExists(point);
-					if (action)
-						out.push(action);
-				}
+
+				Actions.pushIfNotNull(out, elemsOnPoint.length < 3
+					? this.remConPointIfExists(point)
+					: this.addConPointIfNotExists(point));
 			}
 		}
 		return out;
