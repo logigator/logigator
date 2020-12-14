@@ -447,18 +447,22 @@ export class ProjectState {
 			for (const y of set) {
 				const point = new PIXI.Point(x, y);
 				let elemsOnPoint = this.allOnPoint(point);
-				for (let i = 0; i < elemsOnPoint.length; i++) {
-					for (let j = i + 1; j < elemsOnPoint.length; j++) {
-						const connected = this.connectWithEdgeGivenPos(elemsOnPoint[i], elemsOnPoint[j], point);
-						if (connected) {
-							console.log('con');
-							out.push(...Actions.connectWiresToActions(connected.oldElems, connected.newElems));
-							continue currPoint;
-							elemsOnPoint = elemsOnPoint.filter(elem => !connected.oldElems.find(old => old.id === elem.id));
-							elemsOnPoint.push(...connected.newElems);
+				let hasConnected = false;
+				do {
+					hasConnected = false;
+					for (let i = 0; i < elemsOnPoint.length; i++) {
+						for (let j = i + 1; j < elemsOnPoint.length; j++) {
+							const connected = this.connectWithEdgeGivenPos(elemsOnPoint[i], elemsOnPoint[j], point);
+							if (connected) {
+								hasConnected = true;
+								out.push(...Actions.connectWiresToActions(connected.oldElems, connected.newElems));
+								elemsOnPoint = this.allOnPoint(point);
+							}
 						}
 					}
-				}
+				} while (hasConnected);
+				if (hasConnected)
+					continue; // currPoint
 				for (let i = 0; i < elemsOnPoint.length; i++) {
 					for (let j = i + 1; j < elemsOnPoint.length; j++) {
 						const merged = this.mergeWires(elemsOnPoint[i], elemsOnPoint[j]);
