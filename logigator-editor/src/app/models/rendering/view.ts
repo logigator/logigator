@@ -218,11 +218,18 @@ export abstract class View extends PIXI.Container {
 		this.connectionPoints.set(`${pos.x}:${pos.y}`, connPoint);
 	}
 
-	public addToCorrectChunk(sprite: PIXI.DisplayObject, pos: PIXI.Point) {
+	/**
+	 * @return false if the sprite already is in the correct chunk, true if added
+	 */
+	public addToCorrectChunk(sprite: PIXI.DisplayObject, pos: PIXI.Point): boolean {
 		const chunk = CollisionFunctions.gridPosToChunk(pos);
 
-		this.createChunkIfNeeded(chunk.x, chunk.y);
-		this._chunks[chunk.x][chunk.y].container.addChild(sprite);
+		if (!(this._chunks[chunk.x] && this._chunks[chunk.x][chunk.y]) || this._chunks[chunk.x][chunk.y].container !== sprite.parent) {
+			this.createChunkIfNeeded(chunk.x, chunk.y);
+			this._chunks[chunk.x][chunk.y].container.addChild(sprite);
+			return true;
+		}
+		return false;
 	}
 
 	private removeConnectionPoint(pos: PIXI.Point) {
@@ -262,6 +269,8 @@ export abstract class View extends PIXI.Container {
 		for (const action of actions) {
 			this.applyAction(action);
 		}
+		this.updateChunks();
+		this.requestSingleFrame();
 	}
 
 	private applyAction(action: Action) {
@@ -293,7 +302,6 @@ export abstract class View extends PIXI.Container {
 				this.updateComponent(action);
 				break;
 		}
-		this.requestSingleFrame();
 	}
 
 	public setLocalChunkPos(element: Element, sprite: PIXI.DisplayObject) {
@@ -314,7 +322,7 @@ export abstract class View extends PIXI.Container {
 	public centerView() {
 		for (let x = 0; x < this._project.currState.chunks.length; x++) {
 			for (let y = 0; y < this._project.currState.chunks[x].length; y++) {
-				if (this._project.currState.chunks[x][y] && this._project.currState.chunks[x][y].elements.length > 0) {
+				if (this._project.currState.chunks[x][y] && this._project.currState.chunks[x][y].elements.size > 0) {
 					this.zoomPan.translateTo(this.getChunkPos(-x, -y));
 					this.updateChunks();
 					this.requestSingleFrame();

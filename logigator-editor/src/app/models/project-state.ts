@@ -28,23 +28,25 @@ export class ProjectState {
 
 	private _tunnels: Element[];
 
-	public constructor(elements?: Element[], highestId?: number) {
+	public constructor(elements?: Element[]) {
 		if (elements) {
-			this._model = new Map<number, Element>(elements.map(e => [e.id, e]));
+			this._model = new Map<number, Element>(elements.map((e, i) => {
+				e.id = i;
+				return [i, e];
+			}));
+			this._highestTakenId = elements.length - 1;
 		} else {
 			this._model = new Map<number, Element>();
+			this._highestTakenId = 0;
 		}
-		this._highestTakenId = highestId || this.findHighestTakenId();
 		this._chunks = [];
 		this._outputPlugs = [];
 		this._inputPlugs = [];
-		this._tunnels = [];
 		this.calcAllEndPos();
 		this.loadAllIntoChunks();
 		this.inputOutputCount();
+		this.initTunnels();
 	}
-
-
 
 	private findHighestTakenId(): number {
 		let out = 0;
@@ -87,7 +89,7 @@ export class ProjectState {
 				this._chunks[x].push(undefined);
 		if (!this._chunks[x][y])
 			this._chunks[x][y] = {
-				elements: [],
+				elements: new Set<Element>(),
 				connectionPoints: [],
 				links: new Map<number, { x: number, y: number }>()
 			};
@@ -99,8 +101,7 @@ export class ProjectState {
 		const firstCunk = { x: chunkCoords[0].x, y: chunkCoords[0].y };
 		for (const coord of chunkCoords) {
 			this.createChunk(coord.x, coord.y);
-			if (!this._chunks[coord.x][coord.y].elements.find(e => e.id === element.id))
-				this._chunks[coord.x][coord.y].elements.push(element);
+			this._chunks[coord.x][coord.y].elements.add(element);
 			if (!(coord.x === firstCunk.x && coord.y === firstCunk.y))
 				this._chunks[coord.x][coord.y].links.set(element.id, firstCunk);
 		}
@@ -109,7 +110,7 @@ export class ProjectState {
 	private removeFromChunks(element: Element): void {
 		const chunkCoords = CollisionFunctions.inRectChunks(element.pos, element.endPos, Elements.wireEnds(element));
 		for (const chunk of this.chunksFromCoords(chunkCoords)) {
-			chunk.elements = chunk.elements.filter(elem => elem.id !== element.id);
+			chunk.elements.delete(element);
 			chunk.links.delete(element.id);
 		}
 	}
@@ -142,8 +143,10 @@ export class ProjectState {
 			return;
 		let conIndex = -1;
 		for (let i = 0; i < chunk.connectionPoints.length; i++) {
-			if (chunk.connectionPoints[i].equals(con))
+			if (chunk.connectionPoints[i].equals(con)) {
 				conIndex = i;
+				break;
+			}
 		}
 		if (conIndex < 0)
 			return;
@@ -161,18 +164,22 @@ export class ProjectState {
 
 	public loadConnectionPoints(elements: Element[], allRemoved?: boolean): void {
 		if (!allRemoved) {
-			elements.forEach(elem => {
-				for (const pos of Elements.wireEnds(elem))
-					this.removeConnectionPoint(pos);
-			});
+			this.removeAllConnectionPoints(elements);
 		}
+		const donePoints = new Map<number, Set<number>>();
 		elements.forEach(elem => {
-			for (const pos of Elements.wireEnds(elem))
+			for (const pos of Elements.wireEnds(elem)) {
+				if (donePoints.has(pos.x) && donePoints.get(pos.x).has(pos.y))
+					continue;
 				this.addConnectionPoint(pos);
+				if (!donePoints.has(pos.x))
+					donePoints.set(pos.x, new Set<number>());
+				donePoints.get(pos.x).add(pos.y);
+			}
 		});
 	}
 
-	public elementsInChunks(startPos: PIXI.Point, endPos: PIXI.Point, wireEnds?: PIXI.Point[]): Element[] {
+	public elementsInChunks(startPos: PIXI.Point, endPos: PIXI.Point, wireEnds?: PIXI.Point[]): Set<Element> {
 		const chunks = this.chunksFromCoords(CollisionFunctions.inRectChunks(startPos, endPos, wireEnds));
 		if (chunks.length === 1) {
 			return chunks[0].elements;
@@ -183,7 +190,7 @@ export class ProjectState {
 				out.add(elem);
 			}
 		}
-		return [...out];
+		return out;
 	}
 
 	private chunkHasCon(chunk: Chunk, pos: PIXI.Point): boolean {
@@ -230,7 +237,7 @@ export class ProjectState {
 			const newStartPos = new PIXI.Point(elem.pos.x + dif.x, elem.pos.y + dif.y);
 			const newEndPos = new PIXI.Point(elem.endPos.x + dif.x, elem.endPos.y + dif.y);
 			if (!this.isFreeSpace(newStartPos, newEndPos, elem.typeId === ElementTypeId.WIRE,
-				Elements.wireEnds(elem, undefined, undefined, dif), except))
+				Elements.wireEndsIfInOtherChunk(elem, elem.rotation, elem.numInputs, dif), except))
 				return false;
 		}
 		return true;
@@ -241,8 +248,8 @@ export class ProjectState {
 		for (const elem of elements) {
 			const newStartPos = new PIXI.Point(elem.pos.x + dif.x, elem.pos.y + dif.y);
 			const newEndPos = new PIXI.Point(elem.endPos.x + dif.x, elem.endPos.y + dif.y);
-			const others = this.elementsInChunks(newStartPos, newEndPos, Elements.wireEnds(elem, undefined, undefined, dif));
-			if (others.length > 0)
+			const others = this.elementsInChunks(newStartPos, newEndPos, Elements.wireEndsWithChanges(elem, elem.rotation, elem.numInputs, dif));
+			if (others.size > 0)
 				out.push(elem);
 		}
 		return out;
@@ -390,18 +397,19 @@ export class ProjectState {
 
 
 
-	private actionToBoard(elements: Element[], func: (elem: Element, other: Element) => ChangeType): ChangeType[] {
+	private actionToBoard(elements: Set<Element>, func: (elem: Element, other: Element) => ChangeType): ChangeType[] {
 		const out: ChangeType[] = [];
-		while (elements.length > 0) {
-			const elem = elements.shift();
+		while (elements.size > 0) {
+			const elem = elements.values().next().value;
+			elements.delete(elem);
 			const others = this.elementsInChunks(elem.pos, elem.endPos, Elements.wireEnds(elem));
 			for (const other of others) {
 				if (elem.id === other.id)
 					continue;
 				const change = func(elem, other);
 				if (change) {
-					elements = elements.filter(e => e.id !== other.id);
-					elements.push(...change.newElems);
+					elements.delete(other);
+					change.newElems.forEach(elements.add, elements);
 					out.push(change);
 					break;
 				}
@@ -410,11 +418,11 @@ export class ProjectState {
 		return out;
 	}
 
-	public mergeToBoard(elements: Element[]): ChangeType[] {
+	public mergeToBoard(elements: Set<Element>): ChangeType[] {
 		return this.actionToBoard(elements, this.mergeWires.bind(this));
 	}
 
-	public connectToBoard(elements: Element[]): ChangeType[] {
+	public connectToBoard(elements: Set<Element>): ChangeType[] {
 		return this.actionToBoard(elements, this.connectWithEdge.bind(this));
 	}
 
@@ -484,20 +492,6 @@ export class ProjectState {
 		return outWires;
 	}
 
-	private wireEnds(element: Element): PIXI.Point[] {
-		const out = Elements.wireEnds(element);
-		return out.filter(point => {
-			for (const wire of this.elemsOnPoint(point)) {
-				if (wire === element)
-					continue;
-				if (Elements.isSameDirection(element, wire)) {
-					return false;
-				}
-			}
-			return true;
-		});
-	}
-
 	public elemsOnPoint(pos: PIXI.Point): Element[] {
 		const chunk = CollisionFunctions.gridPosToChunk(pos);
 		const outWires: Element[] = [];
@@ -523,14 +517,13 @@ export class ProjectState {
 
 
 
-	public withWiresOnEdges(elements: Element[]): Element[] {
-		const out = [...elements];
+	public withWiresOnEdges(elements: Element[]): Set<Element> {
+		const out: Set<Element> = new Set<Element>(elements);
 		for (const element of elements) {
 			for (const pos of Elements.wireEnds(element)) {
 				const elemsOnPos = this.wiresOnPoint(pos);
 				elemsOnPos.forEach(elem => {
-					if (!out.includes(elem))
-						out.push(elem);
+					out.add(elem);
 				});
 			}
 		}
@@ -563,11 +556,17 @@ export class ProjectState {
 			for (let j = 0; j < this._chunks[i].length; j++) {
 				const ownChunk = this._chunks[i][j];
 				const otherChunk = other._chunks[i][j]; // might crash when test failing, did not happen but possible
-				if (otherChunk.elements.length !== ownChunk.elements.length ||
+				if (otherChunk.elements.size !== ownChunk.elements.size ||
 					otherChunk.connectionPoints.length !== ownChunk.connectionPoints.length)
 					return false;
-				for (let k = 0; k < ownChunk.elements.length; k++) {
-					if (!otherChunk.elements.find(e => Elements.equals(e, ownChunk.elements[k])))
+
+				for (const elem of ownChunk.elements) {
+					let has = false;
+					for (const otherElem of otherChunk.elements) {
+						if (Elements.equals(elem, otherElem))
+							has = true;
+					}
+					if (!has)
 						return false;
 				}
 				for (let k = 0; k < ownChunk.connectionPoints.length; k++) {
@@ -580,8 +579,8 @@ export class ProjectState {
 		return true;
 	}
 
-	public elementsInChunk(c: PIXI.Point): Element[] {
-		return this._chunks[c.x] && this._chunks[c.x][c.y] ? this._chunks[c.x][c.y].elements : [];
+	public elementsInChunk(c: PIXI.Point): Set<Element> {
+		return this._chunks[c.x] && this._chunks[c.x][c.y] ? this._chunks[c.x][c.y].elements : new Set<Element>();
 	}
 
 	public chunksFromCoords(chunkCoords: {x: number, y: number}[]): Chunk[] {
@@ -634,7 +633,6 @@ export class ProjectState {
 		return chunks;
 	}
 
-
 	public inputOutputCount(): {numInputs: number, numOutputs: number} {
 		let numInputs = 0;
 		let numOutputs = 0;
@@ -658,6 +656,15 @@ export class ProjectState {
 		return {numInputs, numOutputs};
 	}
 
+	public initTunnels(): void {
+		this._tunnels = [];
+		for (const elem of this._model.values()) {
+			if (elem.typeId === ElementTypeId.TUNNEL) {
+				this._tunnels.push(elem);
+			}
+		}
+	}
+
 	public setPlugId(elem: Element, id: number): void {
 		for (const plug of elem.typeId === ElementTypeId.INPUT ? this._inputPlugs : this._outputPlugs) {
 			if (plug.plugIndex === id) {
@@ -670,6 +677,10 @@ export class ProjectState {
 				break;
 			}
 		}
+		elem.plugIndex = id;
+	}
+
+	public setPlugIdWithoutChangingOthers(elem: Element, id: number): void {
 		elem.plugIndex = id;
 	}
 

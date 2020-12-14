@@ -10,11 +10,6 @@ export interface ProjectData extends ProjectInfo {
 export interface ProjectElement {
 
 	/**
-	 * id
-	 */
-	c: number;
-
-	/**
 	 * typeId
 	 */
 	t: number;

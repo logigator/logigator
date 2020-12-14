@@ -12,10 +12,10 @@ const rename = require("gulp-rename");
 
 
 gulp.task('scss:layouts', function() {
-	return gulp.src(path.join(__dirname, 'resources/private/scss/layouts/**/*.scss').replace(/\\/g, '/').replace(/\\/g, '/'))
+	return gulp.src(path.join(__dirname, 'resources/private/scss/layouts/**/*.scss').replace(/\\/g, '/'))
 		.pipe(sass().on('error', sass.logError))
 		.pipe(cleanCSS({level: 2}))
-		.pipe(gulp.dest(path.join(__dirname, 'resources/public/css/layouts').replace(/\\/g, '/').replace(/\\/g, '/')));
+		.pipe(gulp.dest(path.join(__dirname, 'resources/public/css/layouts').replace(/\\/g, '/')));
 
 });
 

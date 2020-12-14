@@ -7,6 +7,10 @@
 		<label>{{'DROPDOWN.SETTINGS.SHOW_GRID' | translate}}</label>
 		<app-switch [(ngModel)]="this.theming.showGrid"></app-switch>
 	</div>
+	<div class="switch item">
+		<label>{{'DROPDOWN.SETTINGS.AUTOSTART_SIM' | translate}}</label>
+		<app-switch [(ngModel)]="this.simulationMgmt.autoStartSimulation"></app-switch>
+	</div>
 	<div class="select item">
 		<label>{{'DROPDOWN.SETTINGS.LANGUAGE' | translate}}</label>
 		<select [(ngModel)]="currentLang" (ngModelChange)="languageChange()">

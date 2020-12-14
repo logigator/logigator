@@ -66,9 +66,9 @@ export class MyComponentsController {
 	@UseBefore(CheckAuthenticatedFrontMiddleware)
 	public async infoPopup(@Param('id') id: string, @CurrentUser() user: User, @Preferences() preferences: UserPreferences) {
 		const component = await this.componentRepo.getOwnedComponentOrThrow(id, user);
-		const dependencies = (await this.componentDepRepo.getDependencies(component)).map(dep => dep.name).join(', ');
-		const componentDependents = (await this.componentDepRepo.getDependents(component)).map(dep => dep.name).join(', ');
-		const projectDependents = (await this.projectDepRepo.getDependents(component)).map(dep => dep.name).join(', ');
+		const dependencies = await this.componentDepRepo.getDependencies(component);
+		const componentDependents = await this.componentDepRepo.getDependents(component);
+		const projectDependents = await this.projectDepRepo.getDependents(component);
 
 
 		(component.lastEdited as any) = this.translationService.dateFormatDateTime(component.lastEdited, preferences.lang);

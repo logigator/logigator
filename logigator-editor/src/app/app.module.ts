@@ -60,6 +60,7 @@ import {HexBinDecConverterComponent} from './components/popup-contents/hex-bin-d
 import {StorageService} from './services/storage/storage.service';
 import {LocalStorageService} from './services/storage/local-storage.service';
 import {CookieStorageService} from './services/storage/cookie-storage.service';
+import { EditComponentPlugsComponent } from './components/popup-contents/edit-component-plugs/edit-component-plugs.component';
 import { LoadingSymbolComponent } from './components/loading-symbol/loading-symbol.component';
 import { ImageExportComponent } from './components/popup-contents/image-export/image-export.component';
 
@@ -106,6 +107,7 @@ import { ImageExportComponent } from './components/popup-contents/image-export/i
 		FileInputComponent,
 		SiPipe,
 		HexBinDecConverterComponent,
+		EditComponentPlugsComponent,
 		LoadingSymbolComponent,
 		ImageExportComponent
 	],

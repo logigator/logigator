@@ -152,7 +152,7 @@ export class Project {
 	public chunksToRender(start: PIXI.Point, end: PIXI.Point): { x: number, y: number }[] {
 		const out = CollisionFunctions.inRectChunks(start, end);
 		for (const chunk of this._currState.chunksFromCoords(out)) {
-			chunk.links.forEach((linkedChunk, elementId) => {
+			chunk.links.forEach((linkedChunk, _) => {
 				if (!out.find(c => c.x === linkedChunk.x && c.y === linkedChunk.y))
 					out.push({x: linkedChunk.x, y: linkedChunk.y});
 			});
@@ -233,7 +233,7 @@ export class Project {
 	private actionsFromAddWires(wires: Element[]): Action[] {
 		const actions: Action[] = [];
 		wires.forEach(wire => actions.push({name: 'addWire', element: wire}));
-		actions.push(...this.autoAssemble(wires));
+		actions.push(...this.autoAssemble(new Set<Element>(wires)));
 		return actions;
 	}
 
@@ -242,7 +242,7 @@ export class Project {
 		// #!debug
 		this.boardRecorder.call('removeElementsById', arguments, -1, 0);
 		const actions: Action[] = [];
-		const onEdges: Element[] = [];
+		const onEdges: Set<Element> = new Set<Element>();
 		const elements: Element[] = new Array(ids.length);
 		let i = 0;
 		ids.forEach(id => {
@@ -258,10 +258,10 @@ export class Project {
 		});
 		elements.forEach(elem => {
 			for (const pos of Elements.wireEnds(elem)) {
-				onEdges.push(...this._currState.wiresOnPoint(pos));
+				this._currState.wiresOnPoint(pos).forEach(onEdges.add, onEdges);
 			}
 		});
-		this._currState.loadConnectionPoints(elements);
+		this._currState.removeAllConnectionPoints(elements);
 		actions.push(...this.autoAssemble(onEdges));
 		this.newState(actions);
 	}
@@ -274,7 +274,7 @@ export class Project {
 		if (elements.length === 0)
 			return;
 		const actions: Action[] = [];
-		const onEdges: Element[] = [];
+		const onEdges: Set<Element> = new Set<Element>();
 		for (const element of elements) {
 			actions.push({
 				name: Elements.remActionName(element),
@@ -286,10 +286,10 @@ export class Project {
 		}
 		elements.forEach(elem => {
 			for (const pos of Elements.wireEnds(elem)) {
-				onEdges.push(...this._currState.wiresOnPoint(pos));
+				this._currState.wiresOnPoint(pos).forEach(onEdges.add, onEdges);
 			}
 		});
-		this._currState.loadConnectionPoints(elements);
+		this._currState.removeAllConnectionPoints(elements);
 		actions.push(...this.autoAssemble(onEdges), ...this._currState.specialActions);
 		this._currState.specialActions = [];
 		this._actionToApply.push(...actions);
@@ -319,7 +319,7 @@ export class Project {
 		}
 		if (!this._currState.allSpacesFree(elements, dif, new Set<Element>(elements)))
 			return false;
-		const changed = this._currState.withWiresOnEdges(elements);
+		let changed = this._currState.withWiresOnEdges(elements);
 
 		// #!debug
 		this.boardRecorder.call('moveElementsById', arguments, -1, 0);
@@ -327,7 +327,7 @@ export class Project {
 		for (const elem of elements) {
 			this._currState.moveElement(elem, dif);
 		}
-		changed.push(...this._currState.withWiresOnEdges(elements));
+		changed = new Set<Element>([...changed, ...this._currState.withWiresOnEdges(elements)]);
 		const actions: Action[] = [{
 			name: 'movMult',
 			others: elements,
@@ -351,7 +351,7 @@ export class Project {
 		const changed = this._currState.withWiresOnEdges([element]);
 		const newEndPos = Elements.calcEndPos(element, undefined, undefined, rotation);
 		if (!this._currState.isFreeSpace(element.pos, newEndPos, false,
-			Elements.wireEnds(element, rotation), new Set<Element>([element])))
+			Elements.wireEndsWithChanges(element, element.rotation, element.numInputs, new PIXI.Point()), new Set<Element>([element])))
 			return false;
 
 		// #!debug
@@ -375,7 +375,7 @@ export class Project {
 		const changed = this._currState.withWiresOnEdges([element]);
 		const newEndPos = Elements.calcEndPos(element, numInputs);
 		if (!this._currState.isFreeSpace(element.pos, newEndPos, false,
-			Elements.wireEnds(element, undefined, numInputs), new Set<Element>([element])))
+			Elements.wireEndsWithChanges(element, element.rotation, numInputs, new PIXI.Point()), new Set<Element>([element])))
 			return false;
 
 		// #!debug
@@ -402,23 +402,63 @@ export class Project {
 		return true;
 	}
 
+	public setPlugConfiguration(plugsIds: number[], labels: string[]): boolean {
+		const numPlugs = this.numInputs + this.numOutputs;
+		if (numPlugs !== plugsIds.length || numPlugs !== labels.length)
+			return false;
+		for (let i = 0; i < this.numInputs; i++) {
+			if (this._currState.getElementById(plugsIds[i]).typeId !== ElementTypeId.INPUT)
+				return false;
+		}
+		for (let i = this.numInputs; i < this.numOutputs; i++) {
+			if (this._currState.getElementById(plugsIds[i]).typeId !== ElementTypeId.OUTPUT)
+				return false;
+		}
+		const actions: Action[] = [];
+		for (let i = 0; i < plugsIds.length; i++) {
+			const element = this._currState.getElementById(plugsIds[i]);
+			const oldIndex = element.plugIndex;
+			this._currState.setPlugIdWithoutChangingOthers(element, i);
+			actions.push({
+				name: 'plugInd',
+				element,
+				numbers: [element.plugIndex, oldIndex]
+			});
+			const oldData = element.data;
+			this._currState.setData(element, labels[i]);
+			actions.push({
+				name: 'ediData',
+				element,
+				data: [element.data, oldData]
+			});
+		}
+		this.newState(actions);
+		return true;
+	}
+
 	public possiblePlugIndexes(elemId: number): number[] {
 		return this._currState.possiblePlugIds(this._currState.getElementById(elemId));
 	}
 
-	public setOptions(elemId: number, options: number[]): void {
-		const elem = this._currState.getElementById(elemId);
-		const canSizeChange = !!getStaticDI(ElementProviderService).getElementById(elem.typeId).onOptionsChanged;
-		const oldOptions = [...elem.options];
-		const changed = canSizeChange ? this._currState.withWiresOnEdges([elem]) : [];
-		this._currState.setOptions(elem, options);
+	public setOptions(elemId: number, options: number[]): boolean {
+		const element = this._currState.getElementById(elemId);
+		const canSizeChange = !!getStaticDI(ElementProviderService).getElementById(element.typeId).onOptionsChanged;
+		const oldOptions = [...element.options];
+		const changed = canSizeChange ? this._currState.withWiresOnEdges([element]) : new Set<Element>();
+
+		const clone = Elements.cloneSetOptions(element, options);
+		if (canSizeChange && !this._currState.isFreeSpace(clone.pos, clone.endPos, false,
+			Elements.wireEnds(clone), new Set<Element>([element])))
+			return false;
+		this._currState.setOptions(element, options);
 		const actions: Action[] = [{
-			element: elem,
+			element,
 			name: 'compOpt',
 			options: [options, oldOptions]
 		}];
 		if (canSizeChange) actions.push(...this.autoAssemble(changed));
 		this.newState(actions);
+		return true;
 	}
 
 
@@ -539,29 +579,28 @@ export class Project {
 	}
 
 
-	private autoAssemble(elements: Element[]): Action[] {
-		Elements.removeDuplicates(elements);
+	private autoAssemble(elements: Set<Element>): Action[] {
 		const out: Action[] = [];
 		const merged = this.autoMerge(elements);
 		out.push(...merged.actions);
 		const connected = this.autoConnect(merged.elements);
 		out.push(...connected.actions);
-		this._currState.loadConnectionPoints(connected.elements.concat(elements));
+		this._currState.loadConnectionPoints([...connected.elements, ...elements]);
 		return out;
 	}
 
-	private autoConnect(elements: Element[]): { actions: Action[], elements: Element[] } {
+	private autoConnect(elements: Set<Element>): { actions: Action[], elements: Set<Element> } {
 		const out: Action[] = [];
-		let outElements = [...elements];
-		const elemChanges = this._currState.connectToBoard([...elements]);
+		let outElements = new Set<Element>(elements);
+		const elemChanges = this._currState.connectToBoard(new Set<Element>(elements));
 		outElements = Actions.applyChangeOnArrayAndActions(elemChanges, out, outElements);
 		return {actions: out, elements: outElements};
 	}
 
-	private autoMerge(elements: Element[]): { actions: Action[], elements: Element[] } {
+	private autoMerge(elements: Set<Element>): { actions: Action[], elements: Set<Element> } {
 		const out: Action[] = [];
-		let outElements = [...elements];
-		const elemChanges = this._currState.mergeToBoard([...elements]);
+		let outElements = new Set<Element>(elements);
+		const elemChanges = this._currState.mergeToBoard(new Set<Element>(elements));
 		outElements = Actions.applyChangeOnArrayAndActions(elemChanges, out, outElements);
 		return {actions: out, elements: outElements};
 	}

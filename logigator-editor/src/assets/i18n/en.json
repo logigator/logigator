@@ -22,7 +22,8 @@
 			"COPY": "Copy",
 			"PASTE": "Paste",
 			"CUT": "Cut",
-			"DELETE": "Delete"
+			"DELETE": "Delete",
+			"PLUGS": "Component Plugs"
 		},
 		"VIEW": {
 			"TITLE": "View",
@@ -41,6 +42,7 @@
 			"SHOW_GRID": "Show Grid",
 			"LANGUAGE": "Language",
 			"SHORTCUTS": "Customize Shortcuts",
+			"AUTOSTART_SIM": "Autostart Simulation",
 			"ACCOUNT": "Account",
 			"LOGOUT": "Logout",
 			"PRIVACY": "Privacy Policy",
@@ -146,6 +148,7 @@
 				"delete": "Delete selected items",
 				"undo": "Undo",
 				"redo": "Redo",
+				"editPlugs": "Edit plugs of custom component",
 				"zoom100": "Zoom to 100%",
 				"zoomIn": "Zoom in",
 				"zoomOut": "Zoom out",
@@ -205,6 +208,10 @@
 			"BIN": "Binary",
 			"DEC": "Decimal"
 		},
+		"EDIT_COMPONENT_PLUGS": {
+			"TITLE": "Edit Component Plugs",
+			"SAVE": "Save"
+		},
 		"IMAGE_EXPORT": {
 			"TITLE": "Export Image",
 			"TRANSPARENT": "Transparent Background",
@@ -231,6 +238,7 @@
 		},
 		"DESCRIPTION": "Description",
 		"EDIT": "Edit",
+		"PLUG_EDIT": "Edit In- and Outputs",
 		"PLUG_INDEX": "Plug Index",
 		"PLUG_LABEL": "Label"
 	},

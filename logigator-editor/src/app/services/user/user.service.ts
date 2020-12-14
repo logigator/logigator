@@ -31,7 +31,7 @@ export class UserService {
 				this._isLoggedIn = loggedIn;
 
 				if (!loggedIn) {
-					this.ngZone.run(() => this._userInfo$.next(undefined))
+					this.ngZone.run(() => this._userInfo$.next(undefined));
 					return;
 				}
 				try {

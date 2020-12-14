@@ -64,7 +64,7 @@ export class MyProjectsController {
 	@UseBefore(CheckAuthenticatedFrontMiddleware)
 	public async infoPopup(@Param('id') id: string, @CurrentUser() user: User, @Preferences() preferences: UserPreferences) {
 		const project = await this.projectRepo.getOwnedProjectOrThrow(id, user);
-		const dependencies = (await this.projectDepRepo.getDependencies(project)).map(dep => dep.name).join(', ');
+		const dependencies = await this.projectDepRepo.getDependencies(project);
 
 		(project.lastEdited as any) = this.translationService.dateFormatDateTime(project.lastEdited, preferences.lang);
 		(project.createdOn as any) = this.translationService.dateFormatDateTime(project.lastEdited, preferences.lang);

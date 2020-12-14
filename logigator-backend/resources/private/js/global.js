@@ -43,6 +43,7 @@ function popupPartial(node) {
 		triggers.forEach(trigger => {
 			document.querySelector(trigger).addEventListener('click', () => {
 				if (!opened) {
+					setBurgerMenuState(false);
 					Bem.setState(node, 'open', true);
 					opened = true;
 					document.dispatchEvent(new CustomEvent('popup-opened', {detail: node}));

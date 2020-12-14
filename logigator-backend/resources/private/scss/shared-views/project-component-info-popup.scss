@@ -19,7 +19,7 @@
 		flex-direction: row;
 		align-items: center;
 
-		> p {
+		> p, ul {
 			margin-top: 0.5rem;
 			margin-bottom: 0.5rem;
 		}
@@ -29,7 +29,7 @@
 		flex-direction: column;
 		align-items: start;
 
-		> p {
+		> p, ul {
 
 			&:first-child {
 				margin-bottom: 0.25rem;

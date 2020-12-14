@@ -24,15 +24,23 @@ export class SelectionService {
 			const cons = this._selectedConnections.get(project.id);
 			const ids = new Set<number>();
 			const possibleChunkCoords = CollisionFunctions.inRectChunks(start, end);
-			for (const chunk of project.currState.chunksFromCoords(possibleChunkCoords)) {
-				for (const elem of chunk.elements) {
-					if (CollisionFunctions.isElementInFloatRect(elem, start, end)) {
-						ids.add(elem.id);
+			for (const chunkCoord of possibleChunkCoords) {
+				const chunk = project.currState.chunksFromCoords([chunkCoord])[0];
+				if (!chunk) continue;
+				const chunkPos = CollisionFunctions.chunkToPoints(new PIXI.Point(chunkCoord.x, chunkCoord.y));
+				if (CollisionFunctions.isRectFullyInRect(chunkPos.start, chunkPos.end, start, end)) {
+					chunk.elements.forEach(elem => ids.add(elem.id));
+					chunk.connectionPoints.forEach(con => cons.push(con));
+				} else {
+					for (const elem of chunk.elements) {
+						if (CollisionFunctions.isElementInFloatRect(elem, start, end)) {
+							ids.add(elem.id);
+						}
 					}
-				}
-				for (const con of chunk.connectionPoints) {
-					if (CollisionFunctions.isConPointInRect(con, start, end)) {
-						cons.push(con);
+					for (const con of chunk.connectionPoints) {
+						if (CollisionFunctions.isConPointInRect(con, start, end)) {
+							cons.push(con);
+						}
 					}
 				}
 			}

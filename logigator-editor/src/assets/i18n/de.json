@@ -22,7 +22,8 @@
 			"COPY": "Kopieren",
 			"PASTE": "Einfügen",
 			"CUT": "Ausschneiden",
-			"DELETE": "Löschen"
+			"DELETE": "Löschen",
+			"PLUGS": "Komponenten Stecker"
 		},
 		"VIEW": {
 			"TITLE": "Ansicht",
@@ -41,6 +42,7 @@
 			"SHOW_GRID": "Raster anzeigen",
 			"LANGUAGE": "Sprache",
 			"SHORTCUTS": "Tastaturbefehle bearbeiten",
+			"AUTOSTART_SIM": "Simulation autom. starten",
 			"ACCOUNT": "Account",
 			"LOGOUT": "Abmelden",
 			"PRIVACY": "Datenschutz",
@@ -146,6 +148,7 @@
 				"delete": "Auswahl löschen",
 				"undo": "Rückgängig",
 				"redo": "Wiederholen",
+				"editPlugs": "Stecker benutzerdefinierter Komponente bearbeiten",
 				"zoom100": "Auf 100% zoomen",
 				"zoomIn": "Einzoomen",
 				"zoomOut": "Auszoomen",
@@ -205,6 +208,10 @@
 			"BIN": "Binär",
 			"DEC": "Dezimal"
 		},
+		"EDIT_COMPONENT_PLUGS": {
+			"TITLE": "Komponenten Stecker bearbeiten",
+			"SAVE": "Speichern"
+		},
 		"IMAGE_EXPORT": {
 			"TITLE": "Bild exportieren",
 			"TRANSPARENT": "Transparenter Hintergrund",
@@ -231,6 +238,7 @@
 		},
 		"DESCRIPTION": "Beschreibung",
 		"EDIT": "Bearbeiten",
+		"PLUG_EDIT": "Ein- und Ausgänge bearbeiten",
 		"PLUG_INDEX": "Stecker Index",
 		"PLUG_LABEL": "Beschriftung"
 	},

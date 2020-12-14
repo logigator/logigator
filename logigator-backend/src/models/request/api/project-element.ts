@@ -9,12 +9,6 @@ import {
 export class ProjectElement {
 
 	/**
-	 * id
-	 */
-	@IsInt()
-	c: number;
-
-	/**
 	 * typeId
 	 */
 	@IsInt()

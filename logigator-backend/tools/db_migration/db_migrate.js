@@ -306,7 +306,6 @@ async function run() {
 function convertElements(elements) {
 	return elements.map(x => {
 		const element = {
-			c: x.id,
 			t: x.typeId,
 			p: [x.pos.x, x.pos.y]
 		}

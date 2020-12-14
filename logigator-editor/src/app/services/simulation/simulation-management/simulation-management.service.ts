@@ -4,6 +4,7 @@ import {
 	WorkerCommunicationServiceModel
 } from '../worker-communication/worker-communication-service-model';
 import {RenderTicker} from '../../render-ticker/render-ticker.service';
+import {StorageService, StorageServiceModel} from '../../storage/storage.service';
 
 @Injectable({
 	providedIn: 'root'
@@ -18,14 +19,21 @@ export class SimulationManagementService {
 
 	private _threadCount = 1;
 
+	private _autoStartSimulation: boolean;
+
 	constructor(
 		@Inject(WorkerCommunicationService) private workerCommunication: WorkerCommunicationServiceModel,
+		@Inject(StorageService) private storage: StorageServiceModel,
 		private renderTicker: RenderTicker,
 		private ngZone: NgZone
-	) {}
+	) {
+		this._autoStartSimulation = (this.storage.get('autoStartSim') ?? 'true') === 'true';
+	}
 
 	public async enterSimulation() {
 		await this.workerCommunication.init();
+		if (this._autoStartSimulation)
+			this.continueSim();
 	}
 
 	public leaveSimulation() {
@@ -122,5 +130,14 @@ export class SimulationManagementService {
 
 	get threadCount(): number {
 		return this._threadCount;
+	}
+
+	public get autoStartSimulation(): boolean {
+		return this._autoStartSimulation;
+	}
+
+	public set autoStartSimulation(start: boolean) {
+		this._autoStartSimulation = start;
+		this.storage.set('autoStartSim', start);
 	}
 }
