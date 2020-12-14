@@ -1,42 +1,34 @@
-import {Controller, Get, Render, UseBefore} from 'routing-controllers';
+import {Controller, Get, Render, ResponseClassTransformOptions, UseBefore} from 'routing-controllers';
 import {setTitleMiddleware} from '../../middleware/action/set-title-middleware';
 import {ConfigService} from '../../services/config.service';
+import {InjectRepository} from 'typeorm-typedi-extensions';
+import {ProjectRepository} from '../../database/repositories/project.repository';
 
 @Controller('/')
 export class HomeController {
 
-	constructor(private configService: ConfigService) {}
+	constructor(
+		private configService: ConfigService,
+		@InjectRepository() private projectRepo: ProjectRepository
+	) {}
 
 	@Get('/')
 	@Render('home')
+	@ResponseClassTransformOptions({
+		groups: ['showShareLinks']
+	})
 	@UseBefore(setTitleMiddleware('TITLE.HOME'))
 	public async index() {
-		const examples = [
-			{
-				name: 'Basic Gates',
-				previewDark: '/persisted/4904f030-480b-483c-b736-acbc9b7d0fdb.png',
-				previewLight: '/persisted/11e2e3b4-4b81-429f-9330-5a09e3b91a16.png',
-				link: '/editor'
-			},
-			{
-				name: 'Some Example',
-				previewDark: '/persisted/434cde3f-9b0d-4d60-b136-6a1b59e2ab25.png',
-				previewLight: '/persisted/11e2e3b4-4b81-429f-9330-5a09e3b91a16.png',
-				link: '/editor'
-			},
-			{
-				name: 'Advanced',
-				previewDark: '/persisted/4904f030-480b-483c-b736-acbc9b7d0fdb.png',
-				previewLight: '/persisted/11e2e3b4-4b81-429f-9330-5a09e3b91a16.png',
-				link: '/editor'
-			},
-			{
-				name: 'Full Adder',
-				previewDark: '/persisted/4904f030-480b-483c-b736-acbc9b7d0fdb.png',
-				previewLight: '/persisted/11e2e3b4-4b81-429f-9330-5a09e3b91a16.png',
-				link: '/editor'
+		const examples = await this.projectRepo.find({
+			where: {
+				user: '00000000-0000-0000-0000-000000000000'
 			}
-		];
+		}).then(projects => {
+			for (const project of projects) {
+				project.link = this.configService.getConfig('domains').editor + '/share/' + project.link;
+			}
+			return projects;
+		});
 
 		return {
 			editorUrl: this.configService.getConfig('domains').editor,
