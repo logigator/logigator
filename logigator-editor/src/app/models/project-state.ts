@@ -154,17 +154,17 @@ export class ProjectState {
 		this.specialActions.push({name: 'dcoWire', pos: con.clone()});
 	}
 
-	public removeAllConnectionPoints(elements: Element[]): void {
-		elements.forEach(elem => {
-			for (const pos of Elements.wireEnds(elem)) {
-				this.removeConFromChunks(pos);
+	public removeAllConnectionPoints(points: Map<number, Set<number>>): void {
+		for (const [x, set] of points) {
+			for (const y of set) {
+				this.removeConFromChunks(new PIXI.Point(x, y));
 			}
-		});
+		}
 	}
 
 	public loadConnectionPoints(elements: Element[], allRemoved?: boolean): void {
 		if (!allRemoved) {
-			this.removeAllConnectionPoints(elements);
+			this.removeAllConnectionPoints(Elements.allWireEnds(elements));
 		}
 		const donePoints = new Map<number, Set<number>>();
 		elements.forEach(elem => {
@@ -431,7 +431,7 @@ export class ProjectState {
 
 
 	public mergeWires(wire0: Element, wire1: Element, doDisconnect?: boolean): ChangeType {
-		if (wire0.typeId !== 0 || wire1.typeId !== 0 || wire0.id === wire1.id || !CollisionFunctions.doWiresOverlap(wire0, wire1))
+		if (wire0.typeId !== ElementTypeId.WIRE || wire1.typeId !== ElementTypeId.WIRE || wire0.id === wire1.id || !CollisionFunctions.doWiresOverlap(wire0, wire1))
 			return null;
 		if (!doDisconnect) {
 			if (wire0.pos.equals(wire1.endPos) && this.elemsOnPoint(wire0.pos).length > 2 ||

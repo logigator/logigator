@@ -259,8 +259,8 @@ export class Project {
 			actions.push(...this._currState.plugIndexActions);
 			this._currState.plugIndexActions = [];
 		});
-		this._currState.removeAllConnectionPoints(elements);
 		let wireEndsToUpdate = Elements.allWireEnds(elements);
+		this._currState.removeAllConnectionPoints(wireEndsToUpdate);
 		wireEndsToUpdate = this._currState.pointsThatSplit(elements, wireEndsToUpdate);
 		actions.push(...this.autoAssembleWireEnds(wireEndsToUpdate));
 		this.newState(actions);
@@ -283,8 +283,8 @@ export class Project {
 			actions.push(...this._currState.plugIndexActions);
 			this._currState.plugIndexActions = [];
 		}
-		this._currState.removeAllConnectionPoints(elements);
 		let wireEndsToUpdate = Elements.allWireEnds(elements);
+		this._currState.removeAllConnectionPoints(wireEndsToUpdate);
 		wireEndsToUpdate = this._currState.pointsThatSplit(elements, wireEndsToUpdate);
 		actions.push(...this.autoAssembleWireEnds(wireEndsToUpdate), ...this._currState.specialActions);
 		this._currState.specialActions = [];
@@ -319,7 +319,7 @@ export class Project {
 
 		// #!debug
 		this.boardRecorder.call('moveElementsById', arguments, -1, 0);
-		this._currState.removeAllConnectionPoints(elements);
+		this._currState.removeAllConnectionPoints(wireEndsToUpdate);
 		for (const elem of elements) {
 			this._currState.moveElement(elem, dif);
 		}
@@ -329,6 +329,7 @@ export class Project {
 			pos: dif
 		}];
 		wireEndsToUpdate = Elements.allWireEnds(elements, wireEndsToUpdate);
+		this._currState.removeAllConnectionPoints(wireEndsToUpdate);
 		wireEndsToUpdate = this._currState.pointsThatSplit(elements, wireEndsToUpdate);
 		actions.push(...this.autoAssembleWireEnds(wireEndsToUpdate));
 		this.newState(actions);
