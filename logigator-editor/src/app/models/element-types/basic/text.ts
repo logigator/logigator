@@ -49,7 +49,7 @@ export const text: ElementType = {
 		if (nText === oText || nText === undefined) return;
 		projectsSer.currProject.setData(id, nText);
 	},
-	canEditType: true
+	canEditType: false
 };
 
 export type TextData = string;
