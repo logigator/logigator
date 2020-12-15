@@ -12,6 +12,7 @@ import {ShortcutAction} from '../../models/shortcut-action';
 import {ShortcutsService} from '../../services/shortcuts/shortcuts.service';
 import {SimulationManagementService} from '../../services/simulation/simulation-management/simulation-management.service';
 import {Grid} from '../../models/rendering/grid';
+import {BruteForceTester} from '../../../../tests/auto-tests/brute-force-tester';
 
 @Component({
 	selector: 'app-toolbar',
@@ -50,10 +51,12 @@ export class ToolbarComponent {
 	}
 
 	public runTests(): void {
+		const tester = new BruteForceTester(this.projectService.currProject);
+		tester.runAndTestRandom(500, 16 * 4);
 		// this.test = new Test('bugfix', this.projectService.currProject, ManuallyLogged.testTest);
-		for (const name in ManuallyLogged) {
-			Test.runAndCheck(name, false);
-		}
+		// for (const name in ManuallyLogged) {
+		// 	Test.runAndCheck(name, false);
+		// }
 	}
 
 	public runStep(): void {

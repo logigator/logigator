@@ -796,4 +796,8 @@ export class ProjectState {
 	get tunnels(): Element[] {
 		return this._tunnels;
 	}
+
+	get highestTakenId(): number {
+		return this._highestTakenId;
+	}
 }
