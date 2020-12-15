@@ -26,6 +26,8 @@ export class HomeController {
 		}).then(projects => {
 			for (const project of projects) {
 				project.link = this.configService.getConfig('domains').editor + '/share/' + project.link;
+				(project as any).previewDark = project.previewDark?.publicUrl ?? '/assets/default-preview.svg';
+				(project as any).previewLight = project.previewLight?.publicUrl ?? '/assets/default-preview.svg';
 			}
 			return projects;
 		});
