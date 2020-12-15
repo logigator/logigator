@@ -66,6 +66,10 @@
 			"TITLE": "Example Circuits",
 			"DESCRIPTION": "Learn to design simple to more complex circuits from our examples."
 		},
+		"VIDEO": {
+			"TITLE": "What are logic circuits?",
+			"DESCRIPTION": "If you don't know what logic gates and logic circuits are, we have a short explanation for you."
+		},
 		"PROJECT_TEASERS": {
 			"VIEW": "View"
 		}
