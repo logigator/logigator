@@ -150,6 +150,8 @@ export abstract class Elements {
 	}
 
 	public static wireEnds(element: Element): PIXI.Point[] {
+		if (element.typeId === ElementTypeId.WIRE)
+			return [element.pos.clone(), element.endPos.clone()];
 		if (element.wireEnds)
 			return element.wireEnds.map(p => p.clone());
 		const out = this.wireEndsWithChanges(element, element.rotation, element.numInputs, new PIXI.Point());

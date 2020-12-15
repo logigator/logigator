@@ -356,7 +356,7 @@ export class ProjectState {
 			for (const wire1 of wires) {
 				if (wire0 === wire1 || doneWires.find(w => w.id === wire0.id || w.id === wire1.id))
 					continue;
-				const merged = this.mergeWires(wire0, wire1, true);
+				const merged = this.mergeWires(wire0, wire1);
 				if (!merged || !merged.newElems[0])
 					continue;
 				outWires.push(merged.newElems[0]);
@@ -388,24 +388,27 @@ export class ProjectState {
 	 * if it did connect something, it won't merge anything
 	 * only merges once
 	 */
-	public actionToBoard(wireEnds: Map<number, Set<number>>): Action[] {
+	public actionToBoard(points: Map<number, Set<number>>): Action[] {
 		const out: Action[] = [];
-		for (const [x, set] of wireEnds) {
+		for (const [x, set] of points) {
 			currPoint:
 			for (const y of set) {
 				const point = new PIXI.Point(x, y);
-				let elemsOnPoint = this.allOnPoint(point);
+				let { wireEnds, mid } = this.elemsAndWiresMidOnPoint(point);
 
 				let hasConnected = false;
 				do {
 					hasConnected = false;
-					for (let i = 0; i < elemsOnPoint.length; i++) {
-						for (let j = i + 1; j < elemsOnPoint.length; j++) {
-							const connected = this.connectWithEdgeGivenPos(elemsOnPoint[i], elemsOnPoint[j], point);
+
+					for (let i = 0; i < wireEnds.length; i++) {
+						for (let j = 0; j < mid.length; j++) {
+							const connected = this.connectWithEdge(wireEnds[i], mid[j], point);
 							if (connected) {
 								hasConnected = true;
 								out.push(...Actions.connectWiresToActions(connected.oldElems, connected.newElems));
-								elemsOnPoint = this.allOnPoint(point);
+								const wireEndsMid = this.elemsAndWiresMidOnPoint(point);
+								wireEnds = wireEndsMid.wireEnds;
+								mid = wireEndsMid.mid;
 								Actions.pushIfNotNull(out, this.addConPointIfNotExists(point));
 							}
 						}
@@ -415,12 +418,18 @@ export class ProjectState {
 				if (hasConnected)
 					continue; // currPoint
 
-				for (let i = 0; i < elemsOnPoint.length; i++) {
-					for (let j = i + 1; j < elemsOnPoint.length; j++) {
-						const merged = this.mergeWires(elemsOnPoint[i], elemsOnPoint[j]);
+				const allOnPoint = wireEnds.concat(mid);
+				for (let i = 0; i < allOnPoint.length; i++) {
+					for (let j = i + 1; j < allOnPoint.length; j++) {
+						if (i < wireEnds.length && j < wireEnds.length && allOnPoint[i].typeId === ElementTypeId.WIRE && allOnPoint[j].typeId === ElementTypeId.WIRE) {
+							if (allOnPoint[i].pos.equals(allOnPoint[j].endPos) && wireEnds.length > 2 ||
+								allOnPoint[j].pos.equals(allOnPoint[i].endPos) && wireEnds.length > 2)
+								continue;
+						}
+						const merged = this.mergeWires(allOnPoint[i], allOnPoint[j]);
 						if (merged) {
 							out.push(...Actions.connectWiresToActions(merged.oldElems, merged.newElems));
-							if (elemsOnPoint[i].pos.equals(elemsOnPoint[j].endPos) || elemsOnPoint[i].endPos.equals(elemsOnPoint[j].pos)) {
+							if (allOnPoint[i].pos.equals(allOnPoint[j].endPos) || allOnPoint[i].endPos.equals(allOnPoint[j].pos)) {
 								Actions.pushIfNotNull(out, this.remConPointIfExists(point));
 								continue currPoint;
 							}
@@ -428,7 +437,7 @@ export class ProjectState {
 					}
 				}
 
-				Actions.pushIfNotNull(out, elemsOnPoint.length < 3
+				Actions.pushIfNotNull(out, wireEnds.length < 3
 					? this.remConPointIfExists(point)
 					: this.addConPointIfNotExists(point));
 			}
@@ -438,14 +447,9 @@ export class ProjectState {
 
 
 
-	public mergeWires(wire0: Element, wire1: Element, doDisconnect?: boolean): ChangeType {
+	public mergeWires(wire0: Element, wire1: Element): ChangeType {
 		if (wire0.typeId !== ElementTypeId.WIRE || wire1.typeId !== ElementTypeId.WIRE || wire0.id === wire1.id || !CollisionFunctions.doWiresOverlap(wire0, wire1))
 			return null;
-		if (!doDisconnect) {
-			if (wire0.pos.equals(wire1.endPos) && this.elemsOnPoint(wire0.pos).length > 2 ||
-				wire1.pos.equals(wire0.endPos) && this.elemsOnPoint(wire1.pos).length > 2)
-				return null;
-		}
 		const newElem = Elements.genNewElement(0, undefined, undefined);
 		newElem.id = wire0.id;
 		if (Elements.isVertical(wire0) && Elements.isVertical(wire1) && wire0.pos.x === wire1.pos.x) {
@@ -461,20 +465,10 @@ export class ProjectState {
 		return {newElems: [newElem], oldElems: [wire0, wire1]};
 	}
 
-	private connectWithEdgeGivenPos(elem: Element, other: Element, pos: PIXI.Point): ChangeType {
-		if (!Elements.isSameDirection(elem, other)) {
-			if (CollisionFunctions.elemHasWirePoint(elem, pos) || CollisionFunctions.elemHasWirePoint(other, pos)) {
-				if (elem.typeId === ElementTypeId.WIRE) {
-					const newElems = this.splitWire(elem, pos);
-					if (newElems.length > 0)
-						return {newElems, oldElems: [elem]};
-				}
-				if (other.typeId === ElementTypeId.WIRE) {
-					const newElems = this.splitWire(other, pos);
-					if (newElems.length > 0)
-						return {newElems, oldElems: [other]};
-				}
-			}
+	private connectWithEdge(wireEnd: Element, mid: Element, pos: PIXI.Point): ChangeType {
+		if (!Elements.isSameDirection(wireEnd, mid)) {
+			const newElems = this.splitWire(mid, pos);
+			return { oldElems: [mid], newElems };
 		}
 		return null;
 	}
@@ -523,6 +517,24 @@ export class ProjectState {
 			}
 		}
 		return out;
+	}
+
+	public elemsAndWiresMidOnPoint(pos: PIXI.Point): { wireEnds: Element[], mid: Element[] } {
+		const chunk = CollisionFunctions.gridPosToChunk(pos);
+		const wireEnds: Element[] = [];
+		const mid: Element[] = [];
+		for (const elem of this.elementsInChunk(chunk)) {
+			if (elem.typeId === ElementTypeId.WIRE) {
+				if (CollisionFunctions.isPointOnWireNoEdge(elem, pos))
+					mid.push(elem);
+				else if (elem.pos.equals(pos) || elem.endPos.equals(pos))
+					wireEnds.push(elem);
+			} else {
+				if (CollisionFunctions.elemHasWirePoint(elem, pos))
+					wireEnds.push(elem);
+			}
+		}
+		return { wireEnds, mid };
 	}
 
 	public wireEndsOnPoint(pos: PIXI.Point): WireEndOnElem {
