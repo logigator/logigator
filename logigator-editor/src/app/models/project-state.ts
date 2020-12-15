@@ -421,11 +421,8 @@ export class ProjectState {
 				const allOnPoint = wireEnds.concat(mid);
 				for (let i = 0; i < allOnPoint.length; i++) {
 					for (let j = i + 1; j < allOnPoint.length; j++) {
-						if (i < wireEnds.length && j < wireEnds.length && allOnPoint[i].typeId === ElementTypeId.WIRE && allOnPoint[j].typeId === ElementTypeId.WIRE) {
-							if (allOnPoint[i].pos.equals(allOnPoint[j].endPos) && wireEnds.length > 2 ||
-								allOnPoint[j].pos.equals(allOnPoint[i].endPos) && wireEnds.length > 2)
-								continue;
-						}
+						if (this.isConnectedPoint(allOnPoint, i, j, wireEnds.length))
+							continue;
 						const merged = this.mergeWires(allOnPoint[i], allOnPoint[j]);
 						if (merged) {
 							out.push(...Actions.connectWiresToActions(merged.oldElems, merged.newElems));
@@ -443,6 +440,15 @@ export class ProjectState {
 			}
 		}
 		return out;
+	}
+
+	private isConnectedPoint(allOnPoint: Element[], i: number, j: number, wireEndsLength: number): boolean {
+		if (i < wireEndsLength && j < wireEndsLength && allOnPoint[i].typeId === ElementTypeId.WIRE && allOnPoint[j].typeId === ElementTypeId.WIRE) {
+			if (allOnPoint[i].pos.equals(allOnPoint[j].endPos) && wireEndsLength > 2 ||
+				allOnPoint[j].pos.equals(allOnPoint[i].endPos) && wireEndsLength > 2)
+				return true;
+		}
+		return false;
 	}
 
 
@@ -563,7 +569,7 @@ export class ProjectState {
 					if (other.id === elem.id)
 						continue;
 					for (const wireEnd of Elements.wireEnds(other)) {
-						for (const wire of this.wiresMidOnPoint(wireEnd)) {
+						if (Elements.hasWiresMidOnPoint(chunk.elements, wireEnd)) {
 							if (points.has(wireEnd.x)) {
 								points.get(wireEnd.x).add(wireEnd.y);
 							} else {
