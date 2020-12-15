@@ -169,16 +169,15 @@
 
 	@include element('s-examples') {
 		@include section('s-examples-content', 1200px);
+
+		text-align: center;
 	}
 
 	@include element('s-examples-more') {
-		display: block;
-		text-align: center;
-		margin-top: 1rem;
-
 		> button {
 			padding: 0.75rem 3rem !important;
 			font-size: 18px;
+			margin-top: 1rem;
 		}
 	}
 
@@ -215,16 +214,15 @@
 
 	@include element('s-shares') {
 		@include section('s-shares-content', 1200px);
+
+		text-align: center;
 	}
 
 	@include element('s-shares-more') {
-		display: block;
-		text-align: center;
-		margin-top: 1rem;
-
 		> button {
 			padding: 0.75rem 3rem !important;
 			font-size: 18px;
+			margin-top: 1rem;
 		}
 	}
 
