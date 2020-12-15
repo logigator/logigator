@@ -10,7 +10,7 @@
 			<div class="view-home__s-intro-start">
 				<img src="/assets/adder-image-dark.png" class="view-home__s-intro-img" alt="Adder">
 				<a href="{{editorUrl}}" target="_blank" rel="noopener" class="view-home__s-intro-button">
-					<button class="btn-raised primary view-home__section-intro-button">{{i18n.HOME.INTRO.BUTTON}}</button>
+					<button class="btn-raised primary">{{i18n.HOME.INTRO.BUTTON}}</button>
 				</a>
 			</div>
 		</div>
@@ -56,6 +56,9 @@
 			<h3 class="view-home__headline">{{i18n.HOME.EXAMPLES.TITLE}}</h3>
 			<p class="view-home__subline">{{i18n.HOME.EXAMPLES.DESCRIPTION}}</p>
 			{{> project-teasers projects=examples newTab=true}}
+			<a class="view-home__s-examples-more" href="{{linkHref 'examples'}}">
+				<button class="btn-raised primary">{{i18n.HOME.EXAMPLES.MORE}}</button>
+			</a>
 		</div>
 	</section>
 	<section class="view-home__s-video">
@@ -69,6 +72,16 @@
 					<iframe width="960" height="540" src="https://www.youtube.com/embed/114EOH-fdLE" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
 				{{/if}}
 			</div>
+		</div>
+	</section>
+	<section class="view-home__s-shares">
+		<div class="view-home__s-shares-content">
+			<h3 class="view-home__headline">{{i18n.HOME.SHARES.TITLE}}</h3>
+			<p class="view-home__subline">{{i18n.HOME.SHARES.DESCRIPTION}}</p>
+			{{> project-teasers projects=shares newTab=false}}
+			<a class="view-home__s-shares-more" href="{{linkHref 'community'}}">
+				<button class="btn-raised primary">{{i18n.HOME.SHARES.MORE}}</button>
+			</a>
 		</div>
 	</section>
 </div>

@@ -34,7 +34,8 @@ export class HomeController {
 
 		return {
 			editorUrl: this.configService.getConfig('domains').editor,
-			examples
+			examples,
+			shares: []
 		};
 	}
 

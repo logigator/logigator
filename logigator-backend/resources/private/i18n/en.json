@@ -64,11 +64,17 @@
 		},
 		"EXAMPLES": {
 			"TITLE": "Example Circuits",
-			"DESCRIPTION": "Learn to design simple to more complex circuits from our examples."
+			"DESCRIPTION": "Learn to design simple to more complex circuits from our examples.",
+			"MORE": "See More"
 		},
 		"VIDEO": {
 			"TITLE": "What are logic circuits?",
 			"DESCRIPTION": "If you don't know what logic gates and logic circuits are, we have a short explanation for you."
+		},
+		"SHARES": {
+			"TITLE": "Recent shared projects",
+			"DESCRIPTION": "Explore the recent activity of our users. Your Project could be the next on this list.",
+			"MORE": "See More"
 		},
 		"PROJECT_TEASERS": {
 			"VIEW": "View"

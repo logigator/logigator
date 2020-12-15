@@ -171,6 +171,17 @@
 		@include section('s-examples-content', 1200px);
 	}
 
+	@include element('s-examples-more') {
+		display: block;
+		text-align: center;
+		margin-top: 1rem;
+
+		> button {
+			padding: 0.75rem 3rem !important;
+			font-size: 18px;
+		}
+	}
+
 	@include element('s-video') {
 		@include section('s-video-content', 1200px);
 
@@ -199,6 +210,21 @@
 			position: absolute;
 			top: 0;
 			left: 0;
+		}
+	}
+
+	@include element('s-shares') {
+		@include section('s-shares-content', 1200px);
+	}
+
+	@include element('s-shares-more') {
+		display: block;
+		text-align: center;
+		margin-top: 1rem;
+
+		> button {
+			padding: 0.75rem 3rem !important;
+			font-size: 18px;
 		}
 	}
 
