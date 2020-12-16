@@ -73,8 +73,10 @@
 			"DESCRIPTION": "If you don't know what logic gates and logic circuits are, we have a short explanation for you."
 		},
 		"SHARES": {
-			"TITLE": "Recent shared projects",
-			"DESCRIPTION": "Explore the recent activity of our users. Your Project could be the next on this list.",
+			"PROJECTS_TITLE": "Recent shared Projects",
+			"PROJECTS_DESCRIPTION": "Explore the recent activity of our users. Your Project could be the next on this list.",
+			"COMPS_TITLE": "Recent shared Components",
+			"COMPS_DESCRIPTION": "Explore the recent shared Components of our users. They may be useful for you.",
 			"MORE": "See More"
 		},
 		"PROJECT_TEASERS": {

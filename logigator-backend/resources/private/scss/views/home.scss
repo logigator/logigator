@@ -226,4 +226,8 @@
 		}
 	}
 
+	@include element('s-shares-comp-headline') {
+		margin-top: 3rem;
+	}
+
 }
