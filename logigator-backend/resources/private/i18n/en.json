@@ -22,7 +22,8 @@
 		"ACCOUNT_SECURITY": "Logigator - Security",
 		"ACCOUNT_DELETE": "Logigator - Delete Account",
 		"LOGIN": "Logigator - Login",
-		"REGISTER": "Logigator - Register"
+		"REGISTER": "Logigator - Register",
+		"EXAMPLES": "Logigator - Examples"
 	},
 	"SITE_HEADER": {
 		"DOWNLOAD": "Download",
@@ -79,6 +80,9 @@
 		"PROJECT_TEASERS": {
 			"VIEW": "View"
 		}
+	},
+	"EXAMPLES": {
+		"VIEW": "View Example"
 	},
 	"FEATURES": {
 		"WHAT_IS": {
