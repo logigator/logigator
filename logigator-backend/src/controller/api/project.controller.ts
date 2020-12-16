@@ -91,6 +91,7 @@ export class ProjectController {
 			project.elementsFile = new ProjectFile();
 
 		project.elementsFile.setFileContent(JSON.stringify(body.elements));
+		project.lastEdited = new Date();
 
 		const deps = [];
 		const depSet = new Set<string>();

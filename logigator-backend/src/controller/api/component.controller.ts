@@ -93,6 +93,7 @@ export class ComponentController {
 		component.numInputs = body.numInputs;
 		component.numOutputs = body.numOutputs;
 		component.labels = body.labels;
+		component.lastEdited = new Date();
 
 		const deps = [];
 		const depSet = new Set<string>();
