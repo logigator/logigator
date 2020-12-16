@@ -1,0 +1,61 @@
+{
+	"projects": [
+		{
+			"name": "4 Bit Adder",
+			"description": "",
+			"link": "7e6a2c5b-9cc3-4b23-a19d-e9e879b672d5",
+			"elements": "elements/4bit_adder.json",
+			"previewLight": "",
+			"previewDark": "",
+			"dependencies": [
+				{
+					"model": 1000,
+					"dependency": ""
+				}
+			]
+		},
+		{
+			"name": "4 Bit Counter",
+			"description": "",
+			"link": "acefd06a-38f6-47b5-b90b-ad17e3d9915c",
+			"elements": "elements/4bit_counter.json",
+			"previewLight": "",
+			"previewDark": ""
+		},
+		{
+			"name": "Basic Gates",
+			"description": "",
+			"link": "84c816f5-3514-4c2e-a749-5b5c6c15a07b",
+			"elements": "elements/basic_gates.json",
+			"previewLight": "",
+			"previewDark": ""
+		},
+		{
+			"name": "Flip Flops",
+			"description": "",
+			"link": "03b04e81-2bb1-4ed0-a2bd-9983c7138d60",
+			"elements": "elements/flip_flops.json",
+			"previewLight": "",
+			"previewDark": ""
+		},
+		{
+			"name": "Full Adder",
+			"description": "",
+			"link": "2c8462f6-bcf4-436a-838e-b927af143f08",
+			"elements": "elements/full_adder.json",
+			"previewLight": "",
+			"previewDark": ""
+		},
+		{
+			"name": "Half Adder",
+			"description": "",
+			"link": "45176ad4-0b89-4326-9a60-18d75d1566fe",
+			"elements": "elements/half_adder.json",
+			"previewLight": "",
+			"previewDark": ""
+		}
+	],
+	"components": [
+
+	]
+}
