@@ -74,6 +74,7 @@ export class CommunityController {
 			transformed.editorUrl = this.configService.getConfig('domains').editor + '/share/' + entry.link;
 			transformed.previewDark = entry.previewDark?.publicUrl ?? '/assets/default-preview.svg';
 			transformed.previewLight = entry.previewLight?.publicUrl ?? '/assets/default-preview.svg';
+			transformed.stars = 10;
 			return transformed;
 		});
 		return {
@@ -93,6 +94,7 @@ export class CommunityController {
 			transformed.editorUrl =  this.configService.getConfig('domains').editor + '/share/' + entry.link;
 			transformed.previewDark = entry.previewDark?.publicUrl ?? '/assets/default-preview.svg';
 			transformed.previewLight = entry.previewLight?.publicUrl ?? '/assets/default-preview.svg';
+			transformed.stars = 10;
 			return transformed;
 		});
 		return {
