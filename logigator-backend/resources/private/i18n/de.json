@@ -249,7 +249,9 @@
 			"SYMBOL": "Symbol",
 			"SYMBOL_ERR_REQUIRED": "Symbol muss angegeben werden.",
 			"SYMBOL_ERR_MAX": "Symbol darf maximal fünf Zeichen enthalten",
-			"CREATE": "Erstellen"
+			"CREATE": "Erstellen",
+			"PUBLIC": "Öffentlich teilen",
+			"PUBLIC_EXPLANATION": "Ist 'Öffentlich teilen' aktiviert, wird das Projekt, in allen öffentlichen Listen angezeigt."
 		},
 		"PROJECT_COMP_EDIT": {
 			"PROJECT_TITLE": "Projekt bearbeiten",

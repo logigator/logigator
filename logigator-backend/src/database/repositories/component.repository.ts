@@ -62,11 +62,12 @@ export class ComponentRepository extends PageableRepository<Component> {
 		});
 	}
 
-	public async createComponentForUser(name: string, symbol: string, description: string, user: User) {
+	public async createComponentForUser(name: string, symbol: string, description: string, sharePublicly: boolean, user: User) {
 		const component = this.create();
 		component.name = name;
 		component.symbol = symbol;
 		component.description = description;
+		component.public = sharePublicly;
 		component.user = Promise.resolve(user);
 		component.elementsFile = new ComponentFile();
 		component.labels = [];

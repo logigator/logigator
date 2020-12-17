@@ -249,7 +249,9 @@
 			"SYMBOL": "Symbol",
 			"SYMBOL_ERR_REQUIRED": "Symbol is required.",
 			"SYMBOL_ERR_MAX": "Symbol may contain a maximum of 5 characters.",
-			"CREATE": "Create"
+			"CREATE": "Create",
+			"PUBLIC": "Share publicly",
+			"PUBLIC_EXPLANATION": "If 'Share publicly' is activated, the project will be displayed in all public lists."
 		},
 		"PROJECT_COMP_EDIT": {
 			"PROJECT_TITLE": "Edit Project",

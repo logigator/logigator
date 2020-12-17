@@ -121,7 +121,7 @@ export class MyProjectsController {
 	@UseBefore(CheckAuthenticatedFrontMiddleware)
 	@UseAfter(formErrorMiddleware(() => '/my/projects/create-popup'))
 	public async create(@CurrentUser() user: User, @Body() body: CreateProject) {
-		const project = await this.projectRepo.createProjectForUser(body.name, body.description, user);
+		const project = await this.projectRepo.createProjectForUser(body.name, body.description, body.public === 'on', user);
 		return {
 			id: project.id
 		};

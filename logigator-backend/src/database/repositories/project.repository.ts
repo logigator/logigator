@@ -46,10 +46,11 @@ export class ProjectRepository extends PageableRepository<Project> {
 		});
 	}
 
-	public async createProjectForUser(name: string, description: string, user: User) {
+	public async createProjectForUser(name: string, description: string, sharePublicly: boolean, user: User) {
 		const project = this.create();
 		project.name = name;
 		project.description = description;
+		project.public = sharePublicly;
 		project.user = Promise.resolve(user);
 		project.elementsFile = new ProjectFile();
 		return this.save(project);

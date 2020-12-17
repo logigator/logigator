@@ -129,7 +129,7 @@ export class MyComponentsController {
 	@UseBefore(CheckAuthenticatedFrontMiddleware)
 	@UseAfter(formErrorMiddleware(() => '/my/components/create-popup'))
 	public async create(@CurrentUser() user: User, @Body() body: CreateComponent) {
-		const component = await this.componentRepo.createComponentForUser(body.name, body.symbol, body.description, user);
+		const component = await this.componentRepo.createComponentForUser(body.name, body.symbol, body.description, body.public === 'on', user);
 		return {
 			id: component.id
 		};

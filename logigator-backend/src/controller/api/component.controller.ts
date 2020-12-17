@@ -55,7 +55,7 @@ export class ComponentController {
 	@UseBefore(CheckAuthenticatedApiMiddleware)
 	@ResponseClassTransformOptions({groups: ['showShareLinks']})
 	public create(@Body() body: CreateComponent, @CurrentUser() user: User) {
-		return this.componentRepo.createComponentForUser(body.name, body.symbol, body.description, user);
+		return this.componentRepo.createComponentForUser(body.name, body.symbol, body.description, body.public === 'true', user);
 	}
 
 	@Get('/:componentId')

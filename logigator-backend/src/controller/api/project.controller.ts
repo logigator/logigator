@@ -56,7 +56,7 @@ export class ProjectController {
 	@UseBefore(CheckAuthenticatedApiMiddleware)
 	@ResponseClassTransformOptions({groups: ['showShareLinks']})
 	public create(@Body() body: CreateProject, @CurrentUser() user: User) {
-		return this.projectRepo.createProjectForUser(body.name, body.description, user);
+		return this.projectRepo.createProjectForUser(body.name, body.description, body.public === 'true', user);
 	}
 
 	@Get('/:projectId')
