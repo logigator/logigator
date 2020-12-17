@@ -7,19 +7,32 @@
 				</div>
 				<div class="partial-community-list__description-text-mobile">
 					{{#if this.description}}
-						<div class="partial-community-list__text">{{this.description}}</div>
+						<div class="partial-community-list__text">{{handelNewLines this.description}}</div>
 					{{/if}}
-					<button class="btn-raised primary partial-community-list__button">{{@root.i18n.COMMUNITY.VIEW}}</button>
+					<a href="{{linkHref this.url}}">
+						<button class="btn-raised primary partial-community-list__button">{{@root.i18n.COMMUNITY.VIEW}}</button>
+					</a>
+					<a href="{{this.editorUrl}}" target="_blank" rel="noopener">
+						<button class="btn-raised primary partial-community-list__button partial-community-list__open">{{@root.i18n.COMMUNITY.OPEN}}</button>
+					</a>
 				</div>
 			</div>
 			<div class="partial-community-list__description">
-				<h2 class="partial-community-list__title">{{this.name}}</h2>
+				<div class="partial-community-list__header">
+					<h2 class="partial-community-list__title">{{this.name}}</h2>
+
+				</div>
 				<hr class="partial-community-list__divider">
 				<div class="partial-community-list__description-text">
 					{{#if this.description}}
-						<div class="partial-community-list__text">{{this.description}}</div>
+						<div class="partial-community-list__text">{{handelNewLines this.description}}</div>
 					{{/if}}
-					<button class="btn-raised primary partial-community-list__button">{{@root.i18n.COMMUNITY.VIEW}}</button>
+					<a href="{{linkHref this.url}}">
+						<button class="btn-raised primary partial-community-list__button">{{@root.i18n.COMMUNITY.VIEW}}</button>
+					</a>
+					<a href="{{this.editorUrl}}" target="_blank" rel="noopener">
+						<button class="btn-raised primary partial-community-list__button partial-community-list__open">{{@root.i18n.COMMUNITY.OPEN}}</button>
+					</a>
 				</div>
 			</div>
 		</div>

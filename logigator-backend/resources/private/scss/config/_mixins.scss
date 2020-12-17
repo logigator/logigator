@@ -29,6 +29,37 @@
 
 }
 
+@mixin scrollbarInverted($width, $height: -1) {
+	&::-webkit-scrollbar-track
+	{
+		@include themify() {
+			background-color: themed('accent2');
+		}
+	}
+
+	&::-webkit-scrollbar
+	{
+		width: $width;
+		@if ($height != -1) {
+			height: $height;
+		}
+	}
+
+	&::-webkit-scrollbar-thumb
+	{
+		border-radius: $width / 2;
+		@include themify() {
+			background-color: themed('background');
+		}
+	}
+
+	scrollbar-width: thin;
+	@include themify() {
+		scrollbar-color: themed('background') themed('accent2');
+	}
+
+}
+
 @mixin section($content-element-name: 'section-content', $section-max-width: $container-max-width) {
 	padding-top: 3rem;
 	padding-bottom: 4rem;

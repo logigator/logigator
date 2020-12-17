@@ -80,10 +80,18 @@
 		@include media-breakpoint-down('md') {
 			display: none;
 		}
+
+		> div {
+			white-space: pre-wrap;
+		}
 	}
 
 	@include element('example-description-text-mobile') {
 		margin-top: 1rem;
+
+		> div {
+			white-space: pre-wrap;
+		}
 
 		@include media-breakpoint-up('md') {
 			display: none;

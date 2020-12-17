@@ -7,7 +7,7 @@
 						<img alt="Preview" src="{{ternary (expr @root.preferences.theme '===' 'dark') this.previewDark this.previewLight}}">
 					</div>
 					<div class="view-examples__example-description-text-mobile">
-						<div>{{this.description}}</div>
+						<div>{{handelNewLines this.description}}</div>
 						<a href="{{this.link}}" target="_blank" rel="noopener">
 							<button class="btn-raised primary view-examples__example-button">{{@root.i18n.EXAMPLES.VIEW}}</button>
 						</a>
@@ -17,7 +17,7 @@
 					<h2 class="view-examples__example-title">{{this.name}}</h2>
 					<hr class="view-examples__example-divider">
 					<div class="view-examples__example-description-text">
-						<div>{{this.description}}</div>
+						<div>{{handelNewLines this.description}}</div>
 						<a href="{{this.link}}" target="_blank" rel="noopener">
 							<button class="btn-raised primary view-examples__example-button">{{@root.i18n.EXAMPLES.VIEW}}</button>
 						</a>

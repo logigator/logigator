@@ -165,7 +165,8 @@
 		"SEARCH": "Search",
 		"COMPONENTS": "Shared Components",
 		"PROJECTS": "Shared Projects",
-		"VIEW": "View"
+		"VIEW": "View",
+		"OPEN": "Open"
 	},
 	"USERSPACE": {
 		"NAV": {

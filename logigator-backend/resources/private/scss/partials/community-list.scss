@@ -20,6 +20,10 @@
 		@include themify() {
 			background-color: themed('accent2');
 		}
+
+		a {
+			display: inline-block;
+		}
 	}
 
 	@include element('description') {
@@ -35,10 +39,15 @@
 		}
 	}
 
+
+	@include element('header') {
+
+	}
+
 	@include element('title') {
 		margin-top: 0;
 		margin-bottom: 0.2rem;
-		font-size: 30px;
+		font-size: 25px;
 		font-weight: 500;
 	}
 
@@ -88,7 +97,16 @@
 		font-size: 16px;
 	}
 
+	@include element('open') {
+		margin-left: 0.5rem;
+	}
+
 	@include element('text') {
+		@include scrollbarInverted(4px, 4px);
+
 		margin-top: 1rem;
+		white-space: pre-wrap;
+		max-height: 14.8rem;
+		overflow: auto;
 	}
 }

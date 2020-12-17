@@ -71,6 +71,7 @@ export class CommunityController {
 			const transformed = classToPlain(entry, {groups: ['detailed']});
 			transformed.lastEdited = this.translationService.dateFormatDate(entry.lastEdited, language);
 			transformed.url = 'community/project/' + entry.link;
+			transformed.editorUrl = this.configService.getConfig('domains').editor + '/share/' + entry.link;
 			transformed.previewDark = entry.previewDark?.publicUrl ?? '/assets/default-preview.svg';
 			transformed.previewLight = entry.previewLight?.publicUrl ?? '/assets/default-preview.svg';
 			return transformed;
@@ -89,6 +90,7 @@ export class CommunityController {
 			const transformed = classToPlain(entry);
 			transformed.lastEdited = this.translationService.dateFormatDate(entry.lastEdited, language);
 			transformed.url = 'community/component/' + entry.link;
+			transformed.editorUrl =  this.configService.getConfig('domains').editor + '/share/' + entry.link;
 			transformed.previewDark = entry.previewDark?.publicUrl ?? '/assets/default-preview.svg';
 			transformed.previewLight = entry.previewLight?.publicUrl ?? '/assets/default-preview.svg';
 			return transformed;
