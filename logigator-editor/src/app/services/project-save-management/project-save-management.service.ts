@@ -198,7 +198,16 @@ export class ProjectSaveManagementService {
 			}),
 			elements: projectElements.elements,
 		};
-		await this.api.put<ProjectInfo>(`/project/${projectResp.data.id}`, projectBody, {errorMessage: 'ERROR.PROJECTS.SAVE'}).toPromise();
+		const resp = this.api.put<ProjectInfo>(`/project/${projectResp.data.id}`, projectBody, {errorMessage: 'ERROR.PROJECTS.SAVE'}).toPromise();
+
+		const previews = await this.imageService.generatePreviews(project);
+		const formData = new FormData();
+		formData.append('previews', previews.dark);
+		formData.append('previews', previews.light);
+		await this.api.post(`/project/${projectResp.data.id}/preview`, formData,
+			{errorMessage: 'ERROR.PROJECTS.SAVE'}).toPromise();
+
+		await resp;
 		for (const toRemove of tempMappings.values()) {
 			this.removeElement(toRemove);
 		}
@@ -281,7 +290,7 @@ export class ProjectSaveManagementService {
 		const formData = new FormData();
 		formData.append('previews', previews.dark);
 		formData.append('previews', previews.light);
-		const previewPromise =  this.api.post(`/component/${this._mappings.getKey(project.id)}/preview`, formData,
+		const previewPromise = this.api.post(`/component/${this._mappings.getKey(project.id)}/preview`, formData,
 			{errorMessage: 'ERROR.PROJECTS.SAVE'}).toPromise();
 
 		project.hash = (await resp).data.elementsFile.hash;
