@@ -153,8 +153,8 @@ export class ProjectSaveManagementService {
 		return project;
 	}
 
-	public async createProjectServer(name: string, description = '', project: Project): Promise<string> {
-		const projectResp = await this.api.post<ProjectInfo>('/project', {name, description},
+	public async createProjectServer(name: string, description = '', sharePublicly = false, project: Project): Promise<string> {
+		const projectResp = await this.api.post<ProjectInfo>('/project', {name, description, public: sharePublicly + ''},
 			{errorMessage: 'ERROR.PROJECTS.CREATE'}).toPromise();
 		const components = await this.buildDependencyTree(project);
 		const createdComps: ComponentInfo[] = [];
@@ -215,10 +215,10 @@ export class ProjectSaveManagementService {
 		return projectResp.data.id;
 	}
 
-	public async createComponent(name: string, symbol: string, description: string = ''): Promise<Project> {
+	public async createComponent(name: string, symbol: string, description: string = '', sharePublicly = false): Promise<Project> {
 		if (this.userService.isLoggedIn) {
 			const body = {
-				name, symbol, description
+				name, symbol, description, public: sharePublicly + ''
 			};
 
 			const resp = await this.api.post<ComponentInfo>('/component', body, {errorMessage: 'ERROR.PROJECTS.CREATE'}).toPromise();

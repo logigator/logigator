@@ -134,9 +134,9 @@ export class ProjectsService {
 		}
 	}
 
-	public async createComponent(name: string, symbol: string, description: string = '') {
+	public async createComponent(name: string, symbol: string, description: string = '', sharePublicly = false) {
 		try {
-			const component = await this.projectSaveManagementService.createComponent(name, symbol, description);
+			const component = await this.projectSaveManagementService.createComponent(name, symbol, description, sharePublicly);
 			this._projects.push(component);
 			this._projectOpenedSubject.next(component.id);
 			this.errorHandling.showInfo('INFO.PROJECTS.CREATE_COMP', {name});
@@ -177,9 +177,9 @@ export class ProjectsService {
 		}
 	}
 
-	public async saveProjectServer(name: string, description = '') {
+	public async saveProjectServer(name: string, description = '', sharePublicly = false) {
 		try {
-			const newId = await this.projectSaveManagementService.createProjectServer(name, description, this._mainProject);
+			const newId = await this.projectSaveManagementService.createProjectServer(name, description, sharePublicly, this._mainProject);
 			const project = await this.projectSaveManagementService.getProjectOrComponentUuid(newId, 'project');
 			this._projects.unshift(project);
 			this._projectOpenedSubject.next(project.id);

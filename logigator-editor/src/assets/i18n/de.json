@@ -108,7 +108,9 @@
 			"DESCRIPTION": "Beschreibung",
 			"DESCRIPTION_MAX_LENGTH": "Beschreibung ist zu lang",
 			"DESCRIPTION_INFO": "Beschreibung der neuen Komponente",
-			"CREATE": "ERSTELLEN"
+			"CREATE": "ERSTELLEN",
+			"PUBLIC": "Öffentlich teilen",
+			"PUBLIC_EXPLANATION": "Ist 'Öffentlich teilen' aktiviert, wird die Komponente, in allen öffentlichen Listen angezeigt."
 		},
 		"SAVE": {
 			"TITLE": "Projekt speichern",

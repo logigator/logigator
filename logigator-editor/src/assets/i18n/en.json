@@ -108,7 +108,9 @@
 			"DESCRIPTION": "Description",
 			"DESCRIPTION_MAX_LENGTH": "Description is too long",
 			"DESCRIPTION_INFO": "Description of the new component",
-			"CREATE": "CREATE"
+			"CREATE": "CREATE",
+			"PUBLIC": "Share publicly",
+			"PUBLIC_EXPLANATION": "If 'Share publicly' is activated, the component will be displayed in all public lists."
 		},
 		"SAVE": {
 			"TITLE": "Save Project",

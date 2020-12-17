@@ -12,7 +12,7 @@ import {PopupContentComp} from '../../popup/popup-content-comp';
 	changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class SaveAsComponent extends
-	PopupContentComp<never, {name: string, description: string, target: 'local' | 'server'}> implements OnInit {
+	PopupContentComp<never, {name: string, description: string, target: 'local' | 'server', public: boolean}> implements OnInit {
 
 	public saveForm: FormGroup;
 
@@ -26,7 +26,8 @@ export class SaveAsComponent extends
 	ngOnInit() {
 		this.saveForm = this.formBuilder.group({
 			name: ['', [Validators.required, Validators.minLength(2), Validators.maxLength(20), Validators.pattern('^.+$')]],
-			description: ['', [Validators.maxLength(1000)]]
+			description: ['', [Validators.maxLength(1000)]],
+			public: [true]
 		});
 	}
 

@@ -9,7 +9,7 @@ import {PopupContentComp} from '../../popup/popup-content-comp';
 	styleUrls: ['./new-component.component.scss'],
 	changeDetection: ChangeDetectionStrategy.OnPush
 })
-export class NewComponentComponent extends PopupContentComp<any, {name: string, symbol: string, description: string}> implements OnInit {
+export class NewComponentComponent extends PopupContentComp<any, {name: string, symbol: string, description: string, public: boolean}> implements OnInit {
 
 	public newCompForm: FormGroup;
 
@@ -21,7 +21,8 @@ export class NewComponentComponent extends PopupContentComp<any, {name: string, 
 		this.newCompForm = this.formBuilder.group({
 			name: ['', [Validators.required, Validators.maxLength(20)]],
 			symbol: ['', [Validators.required, Validators.maxLength(5)]],
-			description: ['', [Validators.maxLength(2048)]]
+			description: ['', [Validators.maxLength(2048)]],
+			public: [true]
 		});
 	}
 
