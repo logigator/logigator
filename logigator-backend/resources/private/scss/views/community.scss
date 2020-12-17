@@ -12,7 +12,7 @@
 		left: 0;
 		width: 100%;
 		height: $user-space-nav-height;
-		z-index: 800;
+		z-index: 600;
 
 		@include themify() {
 			background-color: themed('accent2');

@@ -29,8 +29,9 @@
 	"SITE_HEADER": {
 		"DOWNLOAD": "Download",
 		"FEATURES": "Features",
-		"PROJECTS": "Projects",
-		"COMPONENTS": "Components",
+		"PROJECTS": "My Projects",
+		"COMPONENTS": "My Components",
+		"COMMUNITY": "Community",
 		"LOGIN": "Login",
 		"REGISTER": "Sign up"
 	},
