@@ -10,7 +10,7 @@ export class ProjectPreviewLight extends PersistedResource {
 	public mimeType = 'image/png';
 	_cacheable = true;
 
-	@OneToOne(type => Project, project => project.previewLight)
+	@OneToOne(type => Project, project => project.previewLight, {onDelete: 'CASCADE', onUpdate: 'CASCADE'})
 	@JoinColumn()
 	project: Promise<Project>
 

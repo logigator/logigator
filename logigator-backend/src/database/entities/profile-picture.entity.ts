@@ -9,7 +9,7 @@ export class ProfilePicture extends PersistedResource {
 
 	_cacheable = true;
 
-	@OneToOne(type => User, user => user.image)
+	@OneToOne(type => User, user => user.image, {onDelete: 'CASCADE', onUpdate: 'CASCADE'})
 	@JoinColumn()
 	user: Promise<User>;
 

@@ -24,7 +24,11 @@ export class HomeController {
 		const examples = await this.projectRepo.find({
 			where: {
 				user: '00000000-0000-0000-0000-000000000000'
-			}
+			},
+			order: {
+				id: 'ASC'
+			},
+			take: 4
 		}).then(projects => {
 			for (const project of projects) {
 				project.link = this.configService.getConfig('domains').editor + '/share/' + project.link;

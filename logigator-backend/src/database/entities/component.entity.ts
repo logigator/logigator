@@ -82,7 +82,7 @@ export class Component {
 	@Expose({name: 'dependencyForProjects', groups: ['detailed']})
 	private __dependencyForProjects__: ProjectDependency[];
 
-	@ManyToOne(type => User, object => object.components, {nullable: false})
+	@ManyToOne(type => User, object => object.components, {nullable: false, onUpdate: 'CASCADE', onDelete: 'CASCADE'})
 	user: Promise<User>;
 
 	@Expose({name: 'user', groups: ['detailed']})

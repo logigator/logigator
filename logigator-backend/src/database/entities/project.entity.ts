@@ -47,7 +47,7 @@ export class Project {
 	@OneToOne(type => ProjectFile, projectFile => projectFile.project, {cascade: true, eager: true})
 	elementsFile: ProjectFile;
 
-	@ManyToOne(type => User, object => object.projects, {nullable: false})
+	@ManyToOne(type => User, object => object.projects, {nullable: false, onDelete: 'CASCADE', onUpdate: 'CASCADE'})
 	user: Promise<User>;
 
 	@Expose({name: 'user', groups: ['detailed']})
