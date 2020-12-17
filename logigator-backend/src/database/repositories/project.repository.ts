@@ -34,6 +34,18 @@ export class ProjectRepository extends PageableRepository<Project> {
 		});
 	}
 
+	public async getSharedProjectPage(pageNr: number, pageSize: number, search?: string): Promise<Page<Project>> {
+		return this.getPage(pageNr, pageSize, {
+			where: {
+				public: true,
+				...(search && {name: Like('%' + search + '%')})
+			},
+			order: {
+				lastEdited: 'DESC'
+			}
+		});
+	}
+
 	public async createProjectForUser(name: string, description: string, user: User) {
 		const project = this.create();
 		project.name = name;

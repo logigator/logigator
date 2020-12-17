@@ -23,7 +23,8 @@
 		"ACCOUNT_DELETE": "Logigator - Delete Account",
 		"LOGIN": "Logigator - Login",
 		"REGISTER": "Logigator - Register",
-		"EXAMPLES": "Logigator - Examples"
+		"EXAMPLES": "Logigator - Examples",
+		"COMMUNITY": "Logigator - Community"
 	},
 	"SITE_HEADER": {
 		"DOWNLOAD": "Download",
@@ -154,6 +155,16 @@
 		"ERR_EMAIL_TAKEN": "Email has already been taken",
 		"ERR_VERIFICATION_MAIL": "Verification-mail could not be sent, try again when signing in.",
 		"ERR_UNKNOWN": "An unknown error occurred."
+	},
+	"COMMUNITY": {
+		"NAV": {
+			"PROJECTS": "Projects",
+			"COMPONENTS": "Components"
+		},
+		"SEARCH": "Search",
+		"COMPONENTS": "Shared Components",
+		"PROJECTS": "Shared Projects",
+		"VIEW": "View"
 	},
 	"USERSPACE": {
 		"NAV": {

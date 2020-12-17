@@ -23,7 +23,8 @@
 		"ACCOUNT_DELETE": "Logigator - Account löschen",
 		"LOGIN": "Logigator - Login",
 		"REGISTER": "Logigator - Registrieren",
-		"EXAMPLES": "Logigator - Beispiele"
+		"EXAMPLES": "Logigator - Beispiele",
+		"COMMUNITY": "Logigator - Community"
 	},
 	"SITE_HEADER": {
 		"DOWNLOAD": "Download",
@@ -132,6 +133,16 @@
 		"ERR_EMAIL_TAKEN": "Email Adresse wird bereits verwendet",
 		"ERR_VERIFICATION_MAIL": "Verfizierungs-Email konnte nicht gesendet werden, versuchen Sie es beim anmelden erneut.",
 		"ERR_UNKNOWN": "Ein unbekannter Fehler ist aufgetreten."
+	},
+	"COMMUNITY": {
+		"NAV": {
+			"PROJECTS": "Projekte",
+			"COMPONENTS": "Komponenten"
+		},
+		"SEARCH": "Suchen",
+		"COMPONENTS": "Geteilte Komponenten",
+		"PROJECTS": "Geteilte Projekte",
+		"VIEW": "Anzeigen"
 	},
 	"USERSPACE": {
 		"NAV": {

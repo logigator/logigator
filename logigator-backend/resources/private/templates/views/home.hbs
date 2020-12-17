@@ -79,13 +79,13 @@
 			<h3 class="view-home__headline">{{i18n.HOME.SHARES.PROJECTS_TITLE}}</h3>
 			<p class="view-home__subline">{{i18n.HOME.SHARES.PROJECTS_DESCRIPTION}}</p>
 			{{> project-teasers projects=sharedProjects newTab=false}}
-			<a class="view-home__s-shares-more" href="{{linkHref 'community?type=projects'}}">
+			<a class="view-home__s-shares-more" href="{{linkHref 'community/projects'}}">
 				<button class="btn-raised primary">{{i18n.HOME.SHARES.MORE}}</button>
 			</a>
 			<h3 class="view-home__headline view-home__s-shares-comp-headline">{{i18n.HOME.SHARES.COMPS_TITLE}}</h3>
 			<p class="view-home__subline">{{i18n.HOME.SHARES.COMPS_DESCRIPTION}}</p>
 			{{> project-teasers projects=sharedComps newTab=false}}
-			<a class="view-home__s-shares-more" href="{{linkHref 'community?type=components'}}">
+			<a class="view-home__s-shares-more" href="{{linkHref 'community/components'}}">
 				<button class="btn-raised primary">{{i18n.HOME.SHARES.MORE}}</button>
 			</a>
 		</div>

@@ -1,0 +1,27 @@
+<div class="partial-community-list" data-current-page="{{currentPage}}" data-total-pages="{{totalPages}}">
+	{{#each entries}}
+		<div class="partial-community-list__item">
+			<div>
+				<div class="partial-community-list__image">
+					<img alt="Preview" src="{{ternary (expr @root.preferences.theme '===' 'dark') this.previewDark this.previewLight}}">
+				</div>
+				<div class="partial-community-list__description-text-mobile">
+					{{#if this.description}}
+						<div class="partial-community-list__text">{{this.description}}</div>
+					{{/if}}
+					<button class="btn-raised primary partial-community-list__button">{{@root.i18n.COMMUNITY.VIEW}}</button>
+				</div>
+			</div>
+			<div class="partial-community-list__description">
+				<h2 class="partial-community-list__title">{{this.name}}</h2>
+				<hr class="partial-community-list__divider">
+				<div class="partial-community-list__description-text">
+					{{#if this.description}}
+						<div class="partial-community-list__text">{{this.description}}</div>
+					{{/if}}
+					<button class="btn-raised primary partial-community-list__button">{{@root.i18n.COMMUNITY.VIEW}}</button>
+				</div>
+			</div>
+		</div>
+	{{/each}}
+</div>

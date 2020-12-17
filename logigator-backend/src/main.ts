@@ -39,6 +39,7 @@ import {AuthPagesController} from './controller/frontend/auth-pages.controller';
 import {UserController} from './controller/api/user.controller';
 import {DownloadController} from './controller/frontend/download.controller';
 import {ExamplesController} from './controller/frontend/examples.controller';
+import {CommunityController} from './controller/frontend/community.controller';
 
 useContainerRC(Container);
 typeOrmUseContainer(Container);
@@ -119,7 +120,8 @@ async function bootstrap() {
 			ShareController,
 			UserController,
 			DownloadController,
-			ExamplesController
+			ExamplesController,
+			CommunityController
 		],
 		middlewares: [
 			DefaultPreferencesMiddleware,

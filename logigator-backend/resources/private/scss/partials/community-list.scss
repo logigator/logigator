@@ -1,0 +1,94 @@
+@include partial('community-list') {
+
+	@include element('item') {
+		margin-top: 0.5rem;
+		margin-bottom-bottom: 0.5rem;
+
+		padding: 2rem;
+		display: flex;
+		flex-direction: row;
+
+		@include media-breakpoint-down('md') {
+			align-items: center;
+			flex-direction: column-reverse;
+		}
+
+		@include media-breakpoint-down('md') {
+			padding: 1rem;
+		}
+
+		@include themify() {
+			background-color: themed('accent2');
+		}
+	}
+
+	@include element('description') {
+		flex-grow: 1;
+
+		@include media-breakpoint-up('md') {
+			margin-left: 1rem;
+		}
+
+		@include media-breakpoint-down('xl') {
+			margin-bottom: 0.5rem;
+			width: 100%;
+		}
+	}
+
+	@include element('title') {
+		margin-top: 0;
+		margin-bottom: 0.2rem;
+		font-size: 30px;
+		font-weight: 500;
+	}
+
+	@include element('divider') {
+		@include themify() {
+			border-width: 0;
+			border-top: 1px solid themed('text-primary');
+		}
+	}
+
+	@include element('image') {
+		height: 22rem;
+		width: 22rem;
+		min-width: 22rem;
+		padding: 15px;
+
+		@include media-breakpoint-down('md') {
+			width: 100%;
+			height: auto;
+			min-width: unset;
+		}
+
+		@include themify() {
+			background-color: themed('background');
+		}
+
+		> img {
+			width: 100%;
+		}
+	}
+
+	@include element('description-text') {
+		@include media-breakpoint-down('md') {
+			display: none;
+		}
+	}
+
+	@include element('description-text-mobile') {
+		@include media-breakpoint-up('md') {
+			display: none;
+		}
+	}
+
+	@include element('button') {
+		margin-top: 1rem;
+		padding: 0.6rem 2rem !important;
+		font-size: 16px;
+	}
+
+	@include element('text') {
+		margin-top: 1rem;
+	}
+}

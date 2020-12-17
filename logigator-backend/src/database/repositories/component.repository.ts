@@ -50,6 +50,18 @@ export class ComponentRepository extends PageableRepository<Component> {
 		});
 	}
 
+	public async getSharedComponentsPage(pageNr: number, pageSize: number, search?: string): Promise<Page<Component>> {
+		return this.getPage(pageNr, pageSize, {
+			where: {
+				public: true,
+				...(search && {name: Like('%' + search + '%')})
+			},
+			order: {
+				lastEdited: 'DESC'
+			}
+		});
+	}
+
 	public async createComponentForUser(name: string, symbol: string, description: string, user: User) {
 		const component = this.create();
 		component.name = name;
