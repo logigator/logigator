@@ -110,12 +110,6 @@
 		}
 	}
 
-	@include element('right') {
-		@include media-breakpoint-down('md') {
-			display: none;
-		}
-	}
-
 	@include element('dropdown-background') {
 		position: fixed;
 		top: $header-height;
@@ -131,7 +125,26 @@
 		}
 	}
 
-	@include element('right-hover') {
+	@include element('right') {
+		display: flex;
+
+		.partial-site-header__links a {
+			padding: 0 0.5rem;
+		}
+
+		@include media-breakpoint-down('md') {
+			display: none;
+		}
+	}
+
+	@include element('right-separator') {
+		height: 60%;
+		width: 1px;
+		align-self: center;
+		background: black;
+	}
+
+	@include element('right-user') {
 		display: flex;
 		flex-direction: row;
 		height: 100%;
@@ -140,6 +153,7 @@
 
 		@include modifier('logged-in') {
 			padding: 0.5rem;
+			padding-left: 0.25rem;
 			cursor: pointer;
 
 			&:hover {

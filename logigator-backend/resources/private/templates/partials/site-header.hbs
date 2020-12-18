@@ -14,21 +14,22 @@
 			<a href="{{linkHref '/features'}}">{{i18n.SITE_HEADER.FEATURES}}</a>
 			<a href="{{linkHref '/community/projects'}}">{{i18n.SITE_HEADER.COMMUNITY}}</a>
 			<a href="{{linkHref '/download'}}">{{i18n.SITE_HEADER.DOWNLOAD}}</a>
-			{{#if isAuthenticated }}
-				<a href="{{linkHref '/my/projects'}}">{{i18n.SITE_HEADER.PROJECTS}}</a>
-				<a href="{{linkHref '/my/components'}}">{{i18n.SITE_HEADER.COMPONENTS}}</a>
-			{{/if}}
 		</div>
 	</div>
 
 	<div class="partial-site-header__right">
 		{{#if isAuthenticated }}
-			<div class="partial-site-header__right-hover partial-site-header__dropdown-trigger partial-site-header__right-hover--logged-in">
+			<div class="partial-site-header__links">
+				<a href="{{linkHref '/my/projects'}}">{{i18n.SITE_HEADER.PROJECTS}}</a>
+				<a href="{{linkHref '/my/components'}}">{{i18n.SITE_HEADER.COMPONENTS}}</a>
+			</div>
+			<div class="partial-site-header__right-separator"></div>
+			<div class="partial-site-header__dropdown-trigger partial-site-header__right-user partial-site-header__right-user--logged-in">
 				<p class="partial-site-header__username">{{user.username}}</p>
 				<img class="partial-site-header__user-img" alt="User Image" src="{{user.image}}">
 			</div>
 		{{else}}
-			<div class="partial-site-header__right-hover">
+			<div class="partial-site-header__right-user">
 				<button class="btn-outline secondary partial-site-header__btn-login">{{i18n.SITE_HEADER.LOGIN}}</button>
 				<button class="btn-outline secondary partial-site-header__btn-register">{{i18n.SITE_HEADER.REGISTER}}</button>
 				<div class="partial-site-header__more partial-site-header__dropdown-trigger"></div>
