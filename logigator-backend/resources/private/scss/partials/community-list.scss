@@ -9,7 +9,6 @@
 		flex-direction: row;
 
 		@include media-breakpoint-down('md') {
-			align-items: center;
 			flex-direction: column-reverse;
 		}
 
@@ -19,10 +18,6 @@
 
 		@include themify() {
 			background-color: themed('accent2');
-		}
-
-		a {
-			display: inline-block;
 		}
 	}
 
@@ -111,7 +106,6 @@
 	}
 
 	@include element('button') {
-		margin-top: 1rem;
 		padding: 0.6rem 2rem !important;
 		font-size: 16px;
 	}
@@ -127,5 +121,41 @@
 		white-space: pre-wrap;
 		max-height: 14.8rem;
 		overflow: auto;
+	}
+
+	@include element('buttons-user') {
+		margin-top: 1rem;
+		display: flex;
+		flex-wrap: wrap;
+		gap: 0.5rem;
+		align-items: center;
+		justify-content: space-between;
+
+		.button-a  {
+			display: inline-block;
+		}
+	}
+
+	@include element('user') {
+		display: flex;
+		align-items: center;
+		text-decoration: none;
+
+		> p {
+			margin: 0;
+			font-size: 18px;
+		}
+
+		> img {
+			width: 38px;
+			height: 38px;
+			margin-left: 0.5rem;
+		}
+
+		&:hover > p {
+			@include themify() {
+				color: themed('primary');
+			}
+		}
 	}
 }

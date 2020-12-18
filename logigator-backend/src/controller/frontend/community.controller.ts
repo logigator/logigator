@@ -67,7 +67,7 @@ export class CommunityController {
 	private async getProjectsPage(pageNumber: number, search: string,  language: string): Promise<any> {
 		const page = await this.projectRepo.getSharedProjectPage(pageNumber ?? 0, 12, search);
 
-		const entries = page.entries.map(entry => {
+		const entries = await Promise.all(page.entries.map(async entry => {
 			const transformed = classToPlain(entry, {groups: ['detailed']});
 			transformed.lastEdited = this.translationService.dateFormatDate(entry.lastEdited, language);
 			transformed.url = 'community/project/' + entry.link;
@@ -75,8 +75,14 @@ export class CommunityController {
 			transformed.previewDark = entry.previewDark?.publicUrl ?? '/assets/default-preview.svg';
 			transformed.previewLight = entry.previewLight?.publicUrl ?? '/assets/default-preview.svg';
 			transformed.stars = 10;
+
+			const user = await entry.user;
+			transformed.username = user.username;
+			transformed.userImage = user.image?.publicUrl ?? '/assets/default-user.svg';
+			transformed.userUrl = 'community/user/' + user.id;
+
 			return transformed;
-		});
+		}));
 		return {
 			entries,
 			currentPage: page.page,
@@ -87,7 +93,7 @@ export class CommunityController {
 	private async getComponentsPage(pageNumber: number, search: string,  language: string): Promise<any> {
 		const page = await this.componentRepo.getSharedComponentsPage(pageNumber ?? 0, 12, search);
 
-		const entries = page.entries.map(entry => {
+		const entries = await Promise.all(page.entries.map(async entry => {
 			const transformed = classToPlain(entry);
 			transformed.lastEdited = this.translationService.dateFormatDate(entry.lastEdited, language);
 			transformed.url = 'community/component/' + entry.link;
@@ -95,8 +101,14 @@ export class CommunityController {
 			transformed.previewDark = entry.previewDark?.publicUrl ?? '/assets/default-preview.svg';
 			transformed.previewLight = entry.previewLight?.publicUrl ?? '/assets/default-preview.svg';
 			transformed.stars = 10;
+
+			const user = await entry.user;
+			transformed.username = user.username;
+			transformed.userImage = user.image?.publicUrl ?? '/assets/default-user.svg';
+			transformed.userUrl = 'community/user/' + user.id;
+
 			return transformed;
-		});
+		}));
 		return {
 			entries,
 			currentPage: page.page,
