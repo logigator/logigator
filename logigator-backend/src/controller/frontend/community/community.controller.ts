@@ -1,14 +1,14 @@
 import {Controller, Get, QueryParam, Render, UseBefore} from 'routing-controllers';
-import {setTitleMiddleware} from '../../middleware/action/set-title-middleware';
-import {ConfigService} from '../../services/config.service';
+import {setTitleMiddleware} from '../../../middleware/action/set-title-middleware';
+import {ConfigService} from '../../../services/config.service';
 import {InjectRepository} from 'typeorm-typedi-extensions';
-import {ProjectRepository} from '../../database/repositories/project.repository';
+import {ProjectRepository} from '../../../database/repositories/project.repository';
 import {classToPlain} from 'class-transformer';
-import {TranslationService} from '../../services/translation.service';
-import {Preferences} from '../../decorator/preferences.decorator';
-import {UserPreferences} from '../../models/user-preferences';
-import {ComponentRepository} from '../../database/repositories/component.repository';
-import {CheckAuthenticatedFrontMiddleware} from '../../middleware/auth/frontend-guards/check-authenticated-front.middleware';
+import {TranslationService} from '../../../services/translation.service';
+import {Preferences} from '../../../decorator/preferences.decorator';
+import {UserPreferences} from '../../../models/user-preferences';
+import {ComponentRepository} from '../../../database/repositories/component.repository';
+import {CheckAuthenticatedFrontMiddleware} from '../../../middleware/auth/frontend-guards/check-authenticated-front.middleware';
 
 @Controller('/community')
 export class CommunityController {
