@@ -1,0 +1,27 @@
+<div class="view-community-proj-comp-star" data-type="{{type}}" data-link="{{link}}">
+	<div class="view-community-proj-comp-star__container">
+		<div class="view-community-proj-comp-star__header">
+			<h2 class="view-community-proj-comp-star__title">{{name}} - Stargazers</h2>
+			<div class="view-community-proj-comp-star__stars {{#if isAuthenticated}}view-community-proj-comp-star__stars--auth{{/if}}">
+				<a class="star-unstar" {{#if isAuthenticated}}href="{{starUnstarUrl}}"{{/if}}>
+					{{> icon icon='features' alt='Star' }}
+					<p>{{ternary isStared 'Unstar' 'Star'}}</p>
+				</a>
+				<a class="stargazers" href="{{linkHref stargazersUrl}}">{{stargazersCount}}</a>
+			</div>
+		</div>
+		<hr class="view-community-proj-comp-star__divider">
+		<div class="view-community-proj-comp-star__list">
+			{{> community-proj-comp-star-list }}
+		</div>
+		<div class="view-community-proj-comp-star__pages">
+			<button class="btn-outline secondary view-community-proj-comp-star__page-button"><<</button>
+			<button class="btn-outline secondary view-community-proj-comp-star__page-button"><</button>
+			<button class="btn-outline secondary view-community-proj-comp-star__page-button">1</button>
+			<button class="btn-outline secondary view-community-proj-comp-star__page-button">2</button>
+			<button class="btn-outline secondary view-community-proj-comp-star__page-button">3</button>
+			<button class="btn-outline secondary view-community-proj-comp-star__page-button">></button>
+			<button class="btn-outline secondary view-community-proj-comp-star__page-button">>></button>
+		</div>
+	</div>
+</div>

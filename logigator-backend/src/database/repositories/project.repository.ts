@@ -71,7 +71,7 @@ export class ProjectRepository extends PageableRepository<Project> {
 
 	public async hasUserStaredProject(project: Project, user: User): Promise<boolean> {
 		const count = await this.createQueryBuilder('project')
-			.leftJoinAndSelect('project.stargazers', 'user')
+			.leftJoin('project.stargazers', 'user')
 			.where('project.id = :projectId', {projectId: project.id})
 			.andWhere('user.id = :userId', {userId: user.id})
 			.getCount();

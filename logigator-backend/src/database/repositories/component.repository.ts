@@ -89,7 +89,7 @@ export class ComponentRepository extends PageableRepository<Component> {
 
 	public async hasUserStaredComponent(component: Component, user: User): Promise<boolean> {
 		const count = await this.createQueryBuilder('component')
-			.leftJoinAndSelect('component.stargazers', 'user')
+			.leftJoin('component.stargazers', 'user')
 			.where('component.id = :compId', {compId: component.id})
 			.andWhere('user.id = :userId', {userId: user.id})
 			.getCount();

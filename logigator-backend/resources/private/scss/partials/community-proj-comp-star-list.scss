@@ -1,0 +1,48 @@
+@include partial('community-proj-comp-star-list') {
+	display: flex;
+	justify-content: center;
+	flex-wrap: wrap;
+
+
+	@include element('item') {
+		margin: 0.5rem;
+		padding: 0.5rem;
+		width: calc(33% - 1rem);
+
+		@include media-breakpoint-down('md') {
+			width: calc(50% - 1rem);
+		}
+
+		@include media-breakpoint-down('sm') {
+			width: 100%;
+		}
+
+		@include themify() {
+			border-bottom: 1px solid themed('text-primary');
+		}
+	}
+
+	@include element('user') {
+		display: flex;
+		align-items: center;
+		text-decoration: none;
+
+		> p {
+			margin: 0;
+			font-size: 18px;
+		}
+
+		> img {
+			width: 42px;
+			height: 42px;
+			margin-right: 0.5rem;
+		}
+
+		&:hover > p {
+			@include themify() {
+				color: themed('primary');
+			}
+		}
+	}
+
+}

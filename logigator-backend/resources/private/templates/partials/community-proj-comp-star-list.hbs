@@ -1,0 +1,10 @@
+<div class="partial-community-proj-comp-star-list" data-current-page="{{currentPage}}" data-total-pages="{{totalPages}}">
+	{{#each entries}}
+		<div class="partial-community-proj-comp-star-list__item">
+			<a class="partial-community-proj-comp-star-list__user" href="{{linkHref this.userUrl}}">
+				<img alt="User Image" src="{{this.userImage}}">
+				<p>{{this.username}}</p>
+			</a>
+		</div>
+	{{/each}}
+</div>

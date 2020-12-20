@@ -4,7 +4,7 @@
 			<h2 class="view-community-proj-comp__title">{{name}}</h2>
 			<div class="view-community-proj-comp__stars {{#if isAuthenticated}}view-community-proj-comp__stars--auth{{/if}}">
 				<a class="star-unstar" {{#if isAuthenticated}}href="{{starUnstarUrl}}"{{/if}}>
-					{{> icon icon='features' alt='Features Link' }}
+					{{> icon icon='features' alt='Star' }}
 					<p>{{ternary isStared 'Unstar' 'Star'}}</p>
 				</a>
 				<a class="stargazers" href="{{linkHref stargazers}}">{{stargazersCount}}</a>
