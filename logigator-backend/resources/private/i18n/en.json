@@ -166,7 +166,9 @@
 		"COMPONENTS": "Shared Components",
 		"PROJECTS": "Shared Projects",
 		"VIEW": "View",
-		"OPEN": "Open"
+		"OPEN": "Open",
+		"CLONE": "Clone",
+		"NO_DESCRIPTION": "No description was provided."
 	},
 	"USERSPACE": {
 		"NAV": {
