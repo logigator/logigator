@@ -76,6 +76,12 @@ export class MyComponentsController {
 		(component as any).previewDark = component.previewDark?.publicUrl ?? '/assets/default-preview.svg';
 		(component as any).previewLight = component.previewLight?.publicUrl ?? '/assets/default-preview.svg';
 
+		const forkedFrom = await component.forkedFrom;
+		if (forkedFrom) {
+			(component as any).forkedFromName = (await forkedFrom.user).username + '/' + forkedFrom.name;
+			(component as any).forkedFromUrl = 'community/project/' + forkedFrom.link;
+		}
+
 		return {
 			...component,
 			dependencies,

@@ -272,6 +272,7 @@
 		"PROJECT_COMP_INFO": {
 			"TITLE": "Information",
 			"NAME": "Name",
+			"FORKED": "Forked from",
 			"CREATED": "Created",
 			"MODIFIED": "Last modified",
 			"INPUTS": "Inputs",

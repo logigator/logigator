@@ -71,6 +71,12 @@ export class MyProjectsController {
 		(project as any).previewDark = project.previewDark?.publicUrl ?? '/assets/default-preview.svg';
 		(project as any).previewLight = project.previewLight?.publicUrl ?? '/assets/default-preview.svg';
 
+		const forkedFrom = await project.forkedFrom;
+		if (forkedFrom) {
+			(project as any).forkedFromName = (await forkedFrom.user).username + '/' + forkedFrom.name;
+			(project as any).forkedFromUrl = 'community/project/' + forkedFrom.link;
+		}
+
 		return {
 			...project,
 			dependencies,
