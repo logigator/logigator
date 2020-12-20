@@ -1,4 +1,4 @@
-import {Controller, CurrentUser, Get, NotFoundError, Param, Render, Req, UseBefore} from 'routing-controllers';
+import {Controller, CurrentUser, Get, NotFoundError, Param, Render, Req, Res, UseBefore} from 'routing-controllers';
 import {ConfigService} from '../../../services/config.service';
 import {TranslationService} from '../../../services/translation.service';
 import {InjectRepository} from 'typeorm-typedi-extensions';
@@ -10,7 +10,8 @@ import {CheckAuthenticatedFrontMiddleware} from '../../../middleware/auth/fronte
 import {User} from '../../../database/entities/user.entity';
 import {UserRepository} from '../../../database/repositories/user.repository';
 import {Redirect, RedirectFunction} from '../../../decorator/redirect.decorator';
-import {Request} from 'express';
+import {Request, Response} from 'express';
+import {setTitle} from '../../../functions/set-title';
 
 @Controller('/community')
 export class CommunityProjCompController {
@@ -25,10 +26,12 @@ export class CommunityProjCompController {
 
 	@Get('/project/:link')
 	@Render('community-proj-comp')
-	public async project(@Param('link') link: string, @Preferences() preferences: UserPreferences, @CurrentUser() currentUser: User, @Req() request: Request) {
+	public async project(@Param('link') link: string, @Preferences() preferences: UserPreferences, @CurrentUser() currentUser: User, @Req() request: Request, @Res() response: Response) {
 		const project = await this.projectRepo.getProjectWithStargazersCountByLink(link);
 		if (!project)
 			throw new NotFoundError();
+
+		setTitle(response, 'Logigator - ' + project.name);
 
 		const user = await project.user;
 
@@ -54,10 +57,12 @@ export class CommunityProjCompController {
 
 	@Get('/component/:link')
 	@Render('community-proj-comp')
-	public async component(@Param('link') link: string, @Preferences() preferences: UserPreferences, @CurrentUser() currentUser: User, @Req() request: Request) {
+	public async component(@Param('link') link: string, @Preferences() preferences: UserPreferences, @CurrentUser() currentUser: User, @Req() request: Request, @Res() response: Response) {
 		const comp = await this.componentRepo.getComponentWithStargazersCountByLink(link);
 		if (!comp)
 			throw new NotFoundError();
+
+		setTitle(response, 'Logigator - ' + comp.name);
 
 		const user = await comp.user;
 
