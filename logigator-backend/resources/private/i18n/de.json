@@ -282,7 +282,8 @@
 			"DEPENDENT_PROJECTS": "Abhängige Projekte",
 			"DEPENDENT_COMPONENTS": "Abhängige Komponenten",
 			"NO_DEPENDENCIES": "keine",
-			"DESCRIPTION": "Beschreibung"
+			"DESCRIPTION": "Beschreibung",
+			"COMMUNITY_PAGE": "Zur Community Seite"
 		},
 		"PROJECT_COMP_DELETE": {
 			"TITLE": "Löschen bestätigen",

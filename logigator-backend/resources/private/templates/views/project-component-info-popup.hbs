@@ -80,7 +80,10 @@
 		<hr class="view-project-component-info-popup__hr">
 		<div class="view-project-component-info-popup__item view-project-component-info-popup__streched">
 			<p>{{i18n.POPUP.PROJECT_COMP_INFO.DESCRIPTION}}:</p>
-			<p>{{description}}</p>
+			<p class="view-project-component-info-popup__desc">{{handelNewLines description}}</p>
 		</div>
+		<a href="{{linkHref communityUrl}}">
+			<button class="btn-raised primary">{{i18n.POPUP.PROJECT_COMP_INFO.COMMUNITY_PAGE}}</button>
+		</a>
 	</div>
 {{/popup}}

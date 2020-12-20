@@ -75,6 +75,7 @@ export class MyComponentsController {
 		(component.createdOn as any) = this.translationService.dateFormatDateTime(component.lastEdited, preferences.lang);
 		(component as any).previewDark = component.previewDark?.publicUrl ?? '/assets/default-preview.svg';
 		(component as any).previewLight = component.previewLight?.publicUrl ?? '/assets/default-preview.svg';
+		(component as any).communityUrl = 'community/component/' + component.link;
 
 		const forkedFrom = await component.forkedFrom;
 		if (forkedFrom) {

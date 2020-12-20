@@ -1,5 +1,5 @@
 @include view('project-component-info-popup') {
-	max-width: 40rem;
+	max-width: 35rem;
 
 	@include element('image-container') {
 		width: 100%;
@@ -51,6 +51,16 @@
 		@include themify() {
 			border-color: themed('text-primary');
 		}
+	}
+
+	@include element('desc') {
+		@include scrollbar(4px, 4px);
+
+		margin-bottom: 0.75rem !important;
+		width: 100%;
+		white-space: pre-wrap;
+		max-height: 10rem;
+		overflow: auto;
 	}
 
 }

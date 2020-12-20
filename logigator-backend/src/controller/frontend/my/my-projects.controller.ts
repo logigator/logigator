@@ -70,6 +70,7 @@ export class MyProjectsController {
 		(project.createdOn as any) = this.translationService.dateFormatDateTime(project.lastEdited, preferences.lang);
 		(project as any).previewDark = project.previewDark?.publicUrl ?? '/assets/default-preview.svg';
 		(project as any).previewLight = project.previewLight?.publicUrl ?? '/assets/default-preview.svg';
+		(project as any).communityUrl = 'community/project/' + project.link;
 
 		const forkedFrom = await project.forkedFrom;
 		if (forkedFrom) {
