@@ -4,7 +4,7 @@ import {
 	CreateDateColumn,
 	Entity,
 	Generated,
-	getCustomRepository,
+	getCustomRepository, JoinTable, ManyToMany,
 	ManyToOne,
 	OneToMany,
 	OneToOne,
@@ -116,6 +116,12 @@ export class Component {
 
 	@Expose({name: 'forks', groups: ['detailed']})
 	private __forks__: Component[];
+
+	@ManyToMany(() => User, user => user.staredComponents)
+	@JoinTable()
+	stargazers: Promise<User[]>
+
+	stargazersCount: number;
 
 	@BeforeRemove()
 	private async removeFile() {

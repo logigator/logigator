@@ -31,12 +31,13 @@
 			font-size: 18px;
 		}
 
-		button {
+		.star-unstar {
 			background-color: transparent;
 			outline: none;
 			border: none;
 			display: flex;
 			padding: 3px 10px;
+			text-decoration: none;
 
 			@include themify() {
 				border-right: 1px solid themed('text-primary');
@@ -51,7 +52,7 @@
 			}
 		}
 
-		a {
+		.stargazers {
 			text-decoration: none;
 			padding: 0 8px;
 
@@ -63,7 +64,7 @@
 		}
 
 		@include modifier('auth') {
-			button {
+			.star-unstar {
 				cursor: pointer;
 
 				&:hover {

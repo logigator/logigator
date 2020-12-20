@@ -3,7 +3,7 @@ import {
 	Check,
 	Column,
 	Entity,
-	getCustomRepository,
+	getCustomRepository, ManyToMany,
 	OneToMany,
 	OneToOne,
 	PrimaryGeneratedColumn
@@ -72,6 +72,12 @@ export class User {
 		return x ?? x.filter(p => p.public);
 	}, {groups: ['extendedUserData']})
 	private __components__: Component[];
+
+	@ManyToMany(() => Project, project => project.stargazers)
+	staredProjects: Promise<Project[]>
+
+	@ManyToMany(() => Component, component => component.stargazers)
+	staredComponents: Promise<Component[]>
 
 	@BeforeRemove()
 	private async removeFile() {

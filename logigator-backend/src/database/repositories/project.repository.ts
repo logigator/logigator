@@ -22,6 +22,13 @@ export class ProjectRepository extends PageableRepository<Project> {
 		return project;
 	}
 
+	public async getProjectWithStargazersCountByLink(link: string): Promise<Project> {
+		return await this.createQueryBuilder('project')
+			.loadRelationCountAndMap('project.stargazersCount', 'project.stargazers')
+			.where('project.link = :link', {link})
+			.getOne();
+	}
+
 	public async getProjectPageForUser(pageNr: number, pageSize: number, user: User, search?: string): Promise<Page<Project>> {
 		return this.getPage(pageNr, pageSize, {
 			where: {
@@ -60,6 +67,23 @@ export class ProjectRepository extends PageableRepository<Project> {
 		const project = await this.getOwnedProjectOrThrow(projectId, user);
 		await this.remove(project);
 		return project;
+	}
+
+	public async hasUserStaredProject(project: Project, user: User): Promise<boolean> {
+		const count = await this.createQueryBuilder('project')
+			.leftJoinAndSelect('project.stargazers', 'user')
+			.where('project.id = :projectId', {projectId: project.id})
+			.andWhere('user.id = :userId', {userId: user.id})
+			.getCount();
+		return Boolean(count);
+	}
+
+	public async getStargazersCount(project: Project): Promise<number> {
+		return (await this.createQueryBuilder('project')
+			.select(['COUNT(project.id) AS count'])
+			.innerJoin('project.stargazers', 'user')
+			.where('project.id = :id', {id: project.id})
+			.getRawOne()).count;
 	}
 
 }

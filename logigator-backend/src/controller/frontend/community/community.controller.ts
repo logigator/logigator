@@ -74,7 +74,7 @@ export class CommunityController {
 			transformed.editorUrl = this.configService.getConfig('domains').editor + '/share/' + entry.link;
 			transformed.previewDark = entry.previewDark?.publicUrl ?? '/assets/default-preview.svg';
 			transformed.previewLight = entry.previewLight?.publicUrl ?? '/assets/default-preview.svg';
-			transformed.stars = 10;
+			transformed.stargazersCount = await this.projectRepo.getStargazersCount(entry);
 
 			const user = await entry.user;
 			transformed.username = user.username;
@@ -100,7 +100,7 @@ export class CommunityController {
 			transformed.editorUrl =  this.configService.getConfig('domains').editor + '/share/' + entry.link;
 			transformed.previewDark = entry.previewDark?.publicUrl ?? '/assets/default-preview.svg';
 			transformed.previewLight = entry.previewLight?.publicUrl ?? '/assets/default-preview.svg';
-			transformed.stars = 10;
+			transformed.stargazersCount = await this.componentRepo.getStargazersCount(entry);
 
 			const user = await entry.user;
 			transformed.username = user.username;

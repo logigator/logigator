@@ -3,11 +3,11 @@
 		<div class="view-community-proj-comp__header">
 			<h2 class="view-community-proj-comp__title">{{name}}</h2>
 			<div class="view-community-proj-comp__stars {{#if isAuthenticated}}view-community-proj-comp__stars--auth{{/if}}">
-				<button>
+				<a class="star-unstar" {{#if isAuthenticated}}href="{{starUnstarUrl}}"{{/if}}>
 					{{> icon icon='features' alt='Features Link' }}
-					<p>Star</p>
-				</button>
-				<a href="{{linkHref stargazers}}">{{stars}}</a>
+					<p>{{ternary isStared 'Unstar' 'Star'}}</p>
+				</a>
+				<a class="stargazers" href="{{linkHref stargazers}}">{{stargazersCount}}</a>
 			</div>
 		</div>
 		<hr class="view-community-proj-comp__divider">

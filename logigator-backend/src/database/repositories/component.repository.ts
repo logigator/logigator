@@ -22,6 +22,13 @@ export class ComponentRepository extends PageableRepository<Component> {
 		return component;
 	}
 
+	public async getComponentWithStargazersCountByLink(link: string): Promise<Component> {
+		return await this.createQueryBuilder('component')
+			.loadRelationCountAndMap('component.stargazersCount', 'component.stargazers')
+			.where('component.link = :link', {link})
+			.getOne();
+	}
+
 	public async clone(component: Component, user: User) {
 		const cloned = this.create();
 		cloned.name = component.name;
@@ -78,5 +85,22 @@ export class ComponentRepository extends PageableRepository<Component> {
 		const component = await this.getOwnedComponentOrThrow(projectId, user);
 		await this.remove(component);
 		return component;
+	}
+
+	public async hasUserStaredComponent(component: Component, user: User): Promise<boolean> {
+		const count = await this.createQueryBuilder('component')
+			.leftJoinAndSelect('component.stargazers', 'user')
+			.where('component.id = :compId', {compId: component.id})
+			.andWhere('user.id = :userId', {userId: user.id})
+			.getCount();
+		return Boolean(count);
+	}
+
+	public async getStargazersCount(component: Component): Promise<number> {
+		return (await this.createQueryBuilder('component')
+			.select(['COUNT(component.id) AS count'])
+			.innerJoin('component.stargazers', 'user')
+			.where('component.id = :id', {id: component.id})
+			.getRawOne()).count;
 	}
 }
