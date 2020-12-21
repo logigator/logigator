@@ -428,8 +428,8 @@ export class ProjectState {
 							out.push(...Actions.connectWiresToActions(merged.oldElems, merged.newElems));
 							if (allOnPoint[i].pos.equals(allOnPoint[j].endPos) || allOnPoint[i].endPos.equals(allOnPoint[j].pos)) {
 								Actions.pushIfNotNull(out, this.remConPointIfExists(point));
-								continue currPoint;
 							}
+							continue currPoint;
 						}
 					}
 				}
