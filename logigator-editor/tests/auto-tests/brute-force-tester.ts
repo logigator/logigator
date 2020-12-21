@@ -25,9 +25,13 @@ export class BruteForceTester {
 	public runAndTestRandom(steps: number, fieldSize: number) {
 		this.failed = false;
 		for (let i = 0; i < steps && !this.failed; i++) {
+			if (Math.floor(i % (steps / 10)) === 0) {
+				console.log('Step ' + i + ' of ' + steps);
+			}
 			this.randomStep(fieldSize);
 			this.checkForErrors(fieldSize);
 		}
+		console.log('Project has ' + this.project.allElements.length + ' elements!');
 		if (this.failed) {
 			console.log('failed');
 		} else {
@@ -39,7 +43,7 @@ export class BruteForceTester {
 		let rand = this.randomInt(0, 30);
 		if (rand > 16)
 			rand = 5;
-		console.log(rand);
+		// console.log(rand);
 		switch (rand) {
 			case 0:
 			case 1:
@@ -139,14 +143,11 @@ export class BruteForceTester {
 				if (chunk) {
 					for (const con of chunk.connectionPoints)
 						this.checkCon(con);
-					for (const elem of chunk.elements)
-						this.checkElem(elem);
 				}
 			}
 		}
-		if (this.project.allElements.length !== View.elemCount) {
-			console.log('elem count differs');
-			this.failed = true;
+		for (const elem of this.project.allElements) {
+			this.checkElem(elem);
 		}
 	}
 
@@ -163,9 +164,9 @@ export class BruteForceTester {
 		for (const wireEnd of Elements.wireEnds(elem)) {
 			const onPoint = this.project.currState.elemsOnPoint(wireEnd);
 			const coord = CollisionFunctions.inRectChunks(wireEnd, wireEnd)[0];
-			if (onPoint.length > 2 && !this.project.currState.chunkHasCon(this.project.currState.chunks[coord.x][coord.y], wireEnd)) {
+			if (this.project.currState.chunkHasCon(this.project.currState.chunks[coord.x][coord.y], wireEnd) !== (onPoint.length > 2)) {
 				// ng.getComponent($0)._pixiRenderer.render(ng.getComponent($0).activeView)
-				console.log('no conPoint at: ', wireEnd);
+				console.log('wrong conPoint or conPoint missing at: ', wireEnd);
 				this.failed = true;
 			}
 		}

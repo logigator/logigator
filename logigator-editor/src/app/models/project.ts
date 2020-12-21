@@ -345,7 +345,7 @@ export class Project {
 		let wireEndsToUpdate = Elements.allWireEnds([element]);
 		const newEndPos = Elements.calcEndPos(element, undefined, undefined, rotation);
 		if (!this._currState.isFreeSpace(element.pos, newEndPos, false,
-			Elements.wireEndsWithChanges(element, element.rotation, element.numInputs, new PIXI.Point()), new Set<Element>([element])))
+			Elements.wireEndsWithChanges(element, rotation, element.numInputs, new PIXI.Point()), new Set<Element>([element])))
 			return false;
 
 		// #!debug

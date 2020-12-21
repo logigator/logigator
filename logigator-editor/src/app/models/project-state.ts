@@ -420,19 +420,30 @@ export class ProjectState {
 				if (hasConnected)
 					continue; // currPoint
 
-				const allOnPoint = wireEnds.concat(mid);
-				for (let i = 0; i < allOnPoint.length; i++) {
-					for (let j = i + 1; j < allOnPoint.length; j++) {
-						if (this.isConnectedPoint(allOnPoint, i, j, wireEnds.length))
-							continue;
-						const merged = this.mergeWires(allOnPoint[i], allOnPoint[j]);
-						if (merged) {
-							out.push(...Actions.connectWiresToActions(merged.oldElems, merged.newElems));
-							if (allOnPoint[i].pos.equals(allOnPoint[j].endPos) || allOnPoint[i].endPos.equals(allOnPoint[j].pos)) {
-								Actions.pushIfNotNull(out, this.remConPointIfExists(point));
-								continue currPoint;
+				merge:
+				for (let hasToMerge = true; hasToMerge;) {
+					hasToMerge = false;
+					const allOnPoint = wireEnds.concat(mid);
+					for (let i = 0; i < allOnPoint.length; i++) {
+						for (let j = i + 1; j < allOnPoint.length; j++) {
+							if (this.isConnectedPoint(allOnPoint, i, j, wireEnds.length))
+								continue;
+							const merged = this.mergeWires(allOnPoint[i], allOnPoint[j]);
+							if (merged) {
+								onPointLength--;
+								out.push(...Actions.connectWiresToActions(merged.oldElems, merged.newElems));
+								if (allOnPoint[i].pos.equals(allOnPoint[j].endPos) || allOnPoint[i].endPos.equals(allOnPoint[j].pos)) {
+									Actions.pushIfNotNull(out, this.remConPointIfExists(point));
+									continue currPoint;
+								}
+								if (allOnPoint.length > 2) {
+									const wireEndsMid = this.elemsAndWiresMidOnPoint(point);
+									wireEnds = wireEndsMid.wireEnds;
+									mid = wireEndsMid.mid;
+									hasToMerge = true;
+									continue merge;
+								}
 							}
-							onPointLength--;
 						}
 					}
 				}
@@ -448,8 +459,9 @@ export class ProjectState {
 	private isConnectedPoint(allOnPoint: Element[], i: number, j: number, wireEndsLength: number): boolean {
 		if (i < wireEndsLength && j < wireEndsLength && allOnPoint[i].typeId === ElementTypeId.WIRE && allOnPoint[j].typeId === ElementTypeId.WIRE) {
 			if (allOnPoint[i].pos.equals(allOnPoint[j].endPos) && wireEndsLength > 2 ||
-				allOnPoint[j].pos.equals(allOnPoint[i].endPos) && wireEndsLength > 2)
+				allOnPoint[j].pos.equals(allOnPoint[i].endPos) && wireEndsLength > 2) {
 				return true;
+			}
 		}
 		return false;
 	}
