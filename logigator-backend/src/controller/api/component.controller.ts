@@ -1,10 +1,18 @@
 import {
 	BadRequestError,
 	Body,
-	CurrentUser, Delete,
-	Get, HttpCode,
-	JsonController, NotFoundError, Param, Patch, Post, Put, QueryParam,
-	ResponseClassTransformOptions, UploadedFile, UploadedFiles,
+	CurrentUser,
+	Delete,
+	Get,
+	HttpCode,
+	JsonController,
+	Param,
+	Patch,
+	Post,
+	Put,
+	QueryParam,
+	ResponseClassTransformOptions,
+	UploadedFiles,
 	UseBefore,
 	UseInterceptor
 } from 'routing-controllers';
@@ -20,20 +28,19 @@ import {ComponentDependencyRepository} from '../../database/repositories/compone
 import {ComponentFile} from '../../database/entities/component-file.entity';
 import {SaveComponent} from '../../models/request/api/component/save-component';
 import {UpdateComponent} from '../../models/request/api/component/update-component';
-import {Transaction, TransactionRepository} from 'typeorm';
-import {Component} from '../../database/entities/component.entity';
-import {ProjectRepository} from '../../database/repositories/project.repository';
 import {v4 as uuid} from 'uuid';
 import {getUploadedFileOptions} from '../../functions/get-uploaded-file-options';
 import {ComponentPreviewDark} from '../../database/entities/component-preview-dark.entity';
 import {ComponentPreviewLight} from '../../database/entities/component-preview-light.entity';
+import {ShareCloningService} from '../../services/share-cloning.service';
 
 @JsonController('/api/component')
 @UseInterceptor(ApiInterceptor)
 export class ComponentController {
 	constructor (
 		@InjectRepository() private componentRepo: ComponentRepository,
-		@InjectRepository() private componentDepRepo: ComponentDependencyRepository
+		@InjectRepository() private componentDepRepo: ComponentDependencyRepository,
+		private shareCloningService: ShareCloningService
 	) {}
 
 	@Get('/')
@@ -160,48 +167,7 @@ export class ComponentController {
 
 	@Get('/clone/:link')
 	@UseBefore(CheckAuthenticatedApiMiddleware)
-	public async clone(@Param('link') link: string, @CurrentUser() user: User) {
-		const component = await this.componentRepo.findOne({
-			where: {
-				link
-			}
-		});
-		if (!component)
-			throw new NotFoundError('ResourceNotFound');
-
-		const dependencies = await this.componentDepRepo.getDependencies(component, true);
-		const clonedProjects = await this.cloneTransaction([component, ...dependencies], user);
-		return Array.from(clonedProjects.values());
-	}
-
-	@Transaction()
-	private async cloneTransaction(
-		dependencies: Component[],
-		user: User,
-		@TransactionRepository(ComponentRepository) compRepo?: ComponentRepository,
-		@TransactionRepository(ProjectRepository) projRepo?: ProjectRepository,
-		@TransactionRepository(ComponentDependencyRepository) compDepRepo?: ComponentDependencyRepository
-	) {
-		const map = new Map<string, Component>();
-		for (const dep of dependencies) {
-			map.set(dep.id, await compRepo.clone(dep, user));
-		}
-
-		for (const comp of map) {
-			const deps = (await compDepRepo.find({
-				where: {
-					dependent: comp[0]
-				}
-			})).map(x => {
-				const dep = compDepRepo.create();
-				dep.dependency = map.get(x.dependency.id);
-				dep.model_id = x.model_id;
-				return dep;
-			});
-			comp[1].dependencies = Promise.resolve(deps);
-			await compRepo.save(comp[1]);
-		}
-
-		return map;
+	public clone(@Param('link') link: string, @CurrentUser() user: User) {
+		return this.shareCloningService.cloneComponent(link, user);
 	}
 }

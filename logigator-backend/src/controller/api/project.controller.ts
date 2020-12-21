@@ -1,12 +1,18 @@
 import {
 	BadRequestError,
 	Body,
-	CurrentUser, Delete,
+	CurrentUser,
+	Delete,
 	Get,
 	HttpCode,
-	JsonController, NotFoundError,
-	Param, Patch,
-	Post, Put, QueryParam, ResponseClassTransformOptions, UploadedFile, UploadedFiles,
+	JsonController,
+	Param,
+	Patch,
+	Post,
+	Put,
+	QueryParam,
+	ResponseClassTransformOptions,
+	UploadedFiles,
 	UseBefore,
 	UseInterceptor
 } from 'routing-controllers';
@@ -16,7 +22,6 @@ import {InjectRepository} from 'typeorm-typedi-extensions';
 import {ProjectRepository} from '../../database/repositories/project.repository';
 import {ApiInterceptor} from '../../interceptors/api.interceptor';
 import {User} from '../../database/entities/user.entity';
-import {UserRepository} from '../../database/repositories/user.repository';
 import {ProjectFile} from '../../database/entities/project-file.entity';
 import {SaveProject} from '../../models/request/api/project/save-project';
 import {UpdateProject} from '../../models/request/api/project/update-project';
@@ -24,14 +29,11 @@ import {ProjectDependencyRepository} from '../../database/repositories/project-d
 import {classToPlain} from 'class-transformer';
 import {ComponentRepository} from '../../database/repositories/component.repository';
 import {ProjectElement} from '../../models/request/api/project-element';
-import {Transaction, TransactionRepository} from 'typeorm';
-import {Component} from '../../database/entities/component.entity';
-import {ComponentDependencyRepository} from '../../database/repositories/component-dependency.repository';
-import {Project} from '../../database/entities/project.entity';
 import {v4 as uuid} from 'uuid';
 import {getUploadedFileOptions} from '../../functions/get-uploaded-file-options';
 import {ProjectPreviewDark} from '../../database/entities/project-preview-dark.entity';
 import {ProjectPreviewLight} from '../../database/entities/project-preview-light.entity';
+import {ShareCloningService} from '../../services/share-cloning.service';
 
 @JsonController('/api/project')
 @UseInterceptor(ApiInterceptor)
@@ -40,8 +42,8 @@ export class ProjectController {
 	constructor (
 		@InjectRepository() private projectRepo: ProjectRepository,
 		@InjectRepository() private componentRepo: ComponentRepository,
-		@InjectRepository() private userRepo: UserRepository,
-		@InjectRepository() private projectDepRepo: ProjectDependencyRepository
+		@InjectRepository() private projectDepRepo: ProjectDependencyRepository,
+		private shareCloningService: ShareCloningService
 	) {}
 
 	@Get('/')
@@ -158,68 +160,7 @@ export class ProjectController {
 
 	@Get('/clone/:link')
 	@UseBefore(CheckAuthenticatedApiMiddleware)
-	public async clone(@Param('link') link: string, @CurrentUser() user: User) {
-		const project = await this.projectRepo.findOne({
-			where: {
-				link
-			}
-		});
-		if (!project)
-			throw new NotFoundError('ResourceNotFound');
-
-		const dependencies = await this.projectDepRepo.getDependencies(project, true);
-		return this.cloneTransaction(project, dependencies, user);
-	}
-
-	@Transaction()
-	private async cloneTransaction(
-		project: Project,
-		dependencies: Component[],
-		user: User,
-		@TransactionRepository(ComponentRepository) compRepo?: ComponentRepository,
-		@TransactionRepository(ProjectRepository) projRepo?: ProjectRepository,
-		@TransactionRepository(ComponentDependencyRepository) compDepRepo?: ComponentDependencyRepository,
-		@TransactionRepository(ProjectDependencyRepository) projDepRepo?: ProjectDependencyRepository
-	) {
-		const map = new Map<string, Component>();
-		for (const dep of dependencies) {
-			map.set(dep.id, await compRepo.clone(dep, user));
-		}
-
-		for (const comp of map) {
-			const deps = (await compDepRepo.find({
-				where: {
-					dependent: comp[0]
-				}
-			})).map(x => {
-				const dep = compDepRepo.create();
-				dep.dependency = map.get(x.dependency.id);
-				dep.model_id = x.model_id;
-				return dep;
-			});
-			comp[1].dependencies = Promise.resolve(deps);
-			await compRepo.save(comp[1]);
-		}
-
-		const cloned = projRepo.create();
-		cloned.name = project.name;
-		cloned.description = project.description;
-		cloned.user = Promise.resolve(user);
-		cloned.forkedFrom = Promise.resolve(project);
-		cloned.createdOn = project.createdOn;
-		cloned.elementsFile = new ProjectFile();
-		if (project.elementsFile) cloned.elementsFile.setFileContent(await project.elementsFile.getFileContent());
-		const deps = (await projDepRepo.find({
-			where: {
-				dependent: project
-			}
-		})).map(x => {
-			const dep = projDepRepo.create();
-			dep.dependency = map.get(x.dependency.id);
-			dep.model_id = x.model_id;
-			return dep;
-		});
-		cloned.dependencies = Promise.resolve(deps);
-		return await projRepo.save(cloned);
+	public clone(@Param('link') link: string, @CurrentUser() user: User) {
+		return this.shareCloningService.cloneProject(link, user);
 	}
 }

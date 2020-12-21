@@ -62,7 +62,7 @@
 	],
 	"components": {
 		"CustomAdder": {
-			"name": "4 Bit Adder",
+			"name": "Full Adder",
 			"symbol": "FA",
 			"description": "",
 			"link": "c3238648-60f4-42f5-b341-2fbeb56d8a83",
