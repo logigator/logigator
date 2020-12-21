@@ -3,6 +3,10 @@ import * as PIXI from 'pixi.js';
 import {getStaticDI} from '../../src/app/models/get-di';
 import {SelectionService} from '../../src/app/services/selection/selection.service';
 import {ElementProviderService} from '../../src/app/services/element-provider/element-provider.service';
+import {Elements} from '../../src/app/models/elements';
+import {Element} from '../../src/app/models/element';
+import {CollisionFunctions} from '../../src/app/models/collision-functions';
+import {View} from '../../src/app/models/rendering/view';
 
 export class BruteForceTester {
 
@@ -23,6 +27,11 @@ export class BruteForceTester {
 		for (let i = 0; i < steps && !this.failed; i++) {
 			this.randomStep(fieldSize);
 			this.checkForErrors(fieldSize);
+		}
+		if (this.failed) {
+			console.log('failed');
+		} else {
+			console.log('success');
 		}
 	}
 
@@ -65,7 +74,6 @@ export class BruteForceTester {
 					break;
 				const id = this.randomElemId();
 				const rot = this.randomInt(0, 4);
-				console.log('rot', id, rot);
 				this.project.rotateComponent(id, rot);
 				break;
 			case 14:
@@ -128,10 +136,17 @@ export class BruteForceTester {
 		for (let x = 0; x <= fieldSize / 16; x++) {
 			for (let y = 0; y <= fieldSize / 16; y++) {
 				const chunk = this.project.currState.chunk(new PIXI.Point(x, y));
-				if (chunk)
+				if (chunk) {
 					for (const con of chunk.connectionPoints)
 						this.checkCon(con);
+					for (const elem of chunk.elements)
+						this.checkElem(elem);
+				}
 			}
+		}
+		if (this.project.allElements.length !== View.elemCount) {
+			console.log('elem count differs');
+			this.failed = true;
 		}
 	}
 
@@ -139,7 +154,20 @@ export class BruteForceTester {
 		const onPoint = this.project.currState.elemsOnPoint(con);
 		if (onPoint.length < 3) {
 			// ng.getComponent($0)._pixiRenderer.render(ng.getComponent($0).activeView)
+			console.log('wrong conPoint at: ', con);
 			this.failed = true;
+		}
+	}
+
+	public checkElem(elem: Element) {
+		for (const wireEnd of Elements.wireEnds(elem)) {
+			const onPoint = this.project.currState.elemsOnPoint(wireEnd);
+			const coord = CollisionFunctions.inRectChunks(wireEnd, wireEnd)[0];
+			if (onPoint.length > 2 && !this.project.currState.chunkHasCon(this.project.currState.chunks[coord.x][coord.y], wireEnd)) {
+				// ng.getComponent($0)._pixiRenderer.render(ng.getComponent($0).activeView)
+				console.log('no conPoint at: ', wireEnd);
+				this.failed = true;
+			}
 		}
 	}
 

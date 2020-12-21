@@ -1,9 +1,8 @@
-import {Component, Inject, ViewChild, ViewContainerRef} from '@angular/core';
+import {Component, ViewChild, ViewContainerRef} from '@angular/core';
 import {ProjectsService} from '../../services/projects/projects.service';
 // #!debug
 import {Test} from '../../../../tests/auto-tests/tests';
 // #!debug
-import {ManuallyLogged} from '../../../../tests/auto-tests/board-recorder';
 import {StateCompilerService} from '../../services/simulation/state-compiler/state-compiler.service';
 import {WorkModeService} from '../../services/work-mode/work-mode.service';
 import {WorkMode} from '../../models/work-modes';
@@ -52,7 +51,7 @@ export class ToolbarComponent {
 
 	public runTests(): void {
 		const tester = new BruteForceTester(this.projectService.currProject);
-		tester.runAndTestRandom(500, 16 * 4);
+		tester.runAndTestRandom(1000, 16 * 4);
 		// this.test = new Test('bugfix', this.projectService.currProject, ManuallyLogged.testTest);
 		// for (const name in ManuallyLogged) {
 		// 	Test.runAndCheck(name, false);

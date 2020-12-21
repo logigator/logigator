@@ -191,7 +191,7 @@ export class ProjectState {
 		return out;
 	}
 
-	private chunkHasCon(chunk: Chunk, pos: PIXI.Point): boolean {
+	public chunkHasCon(chunk: Chunk, pos: PIXI.Point): boolean {
 		return !!chunk.connectionPoints.find(cp => cp.equals(pos));
 	}
 
@@ -395,6 +395,7 @@ export class ProjectState {
 			for (const y of set) {
 				const point = new PIXI.Point(x, y);
 				let { wireEnds, mid } = this.elemsAndWiresMidOnPoint(point);
+				let onPointLength = wireEnds.length;
 
 				let hasConnected = false;
 				do {
@@ -410,6 +411,7 @@ export class ProjectState {
 								wireEnds = wireEndsMid.wireEnds;
 								mid = wireEndsMid.mid;
 								Actions.pushIfNotNull(out, this.addConPointIfNotExists(point));
+								onPointLength += 2;
 							}
 						}
 					}
@@ -428,13 +430,14 @@ export class ProjectState {
 							out.push(...Actions.connectWiresToActions(merged.oldElems, merged.newElems));
 							if (allOnPoint[i].pos.equals(allOnPoint[j].endPos) || allOnPoint[i].endPos.equals(allOnPoint[j].pos)) {
 								Actions.pushIfNotNull(out, this.remConPointIfExists(point));
+								continue currPoint;
 							}
-							continue currPoint;
+							onPointLength--;
 						}
 					}
 				}
 
-				Actions.pushIfNotNull(out, wireEnds.length < 3
+				Actions.pushIfNotNull(out, onPointLength < 3
 					? this.remConPointIfExists(point)
 					: this.addConPointIfNotExists(point));
 			}
