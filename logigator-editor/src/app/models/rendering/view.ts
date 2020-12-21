@@ -260,9 +260,11 @@ export abstract class View extends PIXI.Container {
 		}
 	}
 
+	public static elemCount = 0;
+
 	public applyActionsToView(actions: Action[]) {
 		// console.log('incoming actions');
-		// console.log(actions);
+		console.log(actions);
 		// Actions.printActions(actions);
 		if (!actions)
 			return;
@@ -271,6 +273,7 @@ export abstract class View extends PIXI.Container {
 		}
 		this.updateChunks();
 		this.requestSingleFrame();
+		View.elemCount = this.allElements.size;
 	}
 
 	private applyAction(action: Action) {
