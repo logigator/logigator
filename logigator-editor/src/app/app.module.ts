@@ -63,6 +63,7 @@ import {CookieStorageService} from './services/storage/cookie-storage.service';
 import { EditComponentPlugsComponent } from './components/popup-contents/edit-component-plugs/edit-component-plugs.component';
 import { LoadingSymbolComponent } from './components/loading-symbol/loading-symbol.component';
 import { ImageExportComponent } from './components/popup-contents/image-export/image-export.component';
+import {AutoFontSizeDirective} from './directives/auto-font-size/auto-font-size.directive';
 
 @NgModule({
 	declarations: [
@@ -109,7 +110,8 @@ import { ImageExportComponent } from './components/popup-contents/image-export/i
 		HexBinDecConverterComponent,
 		EditComponentPlugsComponent,
 		LoadingSymbolComponent,
-		ImageExportComponent
+		ImageExportComponent,
+		AutoFontSizeDirective
 	],
 	imports: [
 		// #!electron
