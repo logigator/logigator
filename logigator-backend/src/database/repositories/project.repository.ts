@@ -74,6 +74,7 @@ export class ProjectRepository extends PageableRepository<Project> {
 			.leftJoin('project.stargazers', 'user')
 			.where('project.id = :projectId', {projectId: project.id})
 			.andWhere('user.id = :userId', {userId: user.id})
+			.limit(1)
 			.getCount();
 		return Boolean(count);
 	}

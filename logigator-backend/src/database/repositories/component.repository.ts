@@ -92,6 +92,7 @@ export class ComponentRepository extends PageableRepository<Component> {
 			.leftJoin('component.stargazers', 'user')
 			.where('component.id = :compId', {compId: component.id})
 			.andWhere('user.id = :userId', {userId: user.id})
+			.limit(1)
 			.getCount();
 		return Boolean(count);
 	}
