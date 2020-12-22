@@ -248,7 +248,9 @@ export abstract class View extends PIXI.Container {
 	}
 
 	private removeComponentOrWire(element: Element) {
-		if (!this.allElements.has(element.id)) return;
+		if (!this.allElements.has(element.id)) {
+			return;
+		}
 		this.allElements.get(element.id).destroy();
 		this.allElements.delete(element.id);
 	}

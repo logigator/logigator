@@ -18,7 +18,7 @@ import {ProjectState} from '../../../models/project-state';
 import {CompiledComp} from './compiled-comp';
 import {ProjectSaveManagementService} from '../../project-save-management/project-save-management.service';
 import {ElementProviderService} from '../../element-provider/element-provider.service';
-import {MapHelper} from './map-helper';
+import {ArrayHelper} from './array-helper';
 import {Elements} from '../../../models/elements';
 import {CompileError} from '../../../models/simulation/error';
 import {ElementTypeId} from '../../../models/element-types/element-type-ids';
@@ -204,7 +204,7 @@ export class StateCompilerService {
 	}
 
 	private compilerOuterIfNeeded(conPlugs: number[][], project: Project) {
-		if (!MapHelper.array2dSame(conPlugs, this._udcCache.get(project.id).connectedPlugs)) {
+		if (!ArrayHelper.array2dSame(conPlugs, this._udcCache.get(project.id).connectedPlugs)) {
 			for (const [typeId, compiledComp] of this._udcCache.entries()) {
 				if (compiledComp.includesUdcs.has(project.id)) {
 					this.compileSingle(this._depTree.get(typeId));
@@ -267,7 +267,7 @@ export class StateCompilerService {
 		for (let i = 0; i < element.numOutputs; i++) {
 			const wireIndex = element.numInputs + i;
 			unitElems.elementToUnit.get(element).outputs[i] = ++linkId;
-			MapHelper.pushInMapArray(
+			ArrayHelper.pushInMapArray(
 				this._wireEndsOnLinksCache.get(this._currTypeId),
 				linkId,
 				{component: element, wireIndex }
@@ -316,7 +316,7 @@ export class StateCompilerService {
 			this.setLinks(state, Elements.wireEnds(oppoComp)[0], linksOnWireEnds, linkId,
 				unitElems, compiledComp, coveredPoints);
 		}
-		MapHelper.pushInMapArray(this._wireEndsOnLinksCache.get(this._currTypeId), linkId, {component: elem, wireIndex: 0});
+		ArrayHelper.pushInMapArray(this._wireEndsOnLinksCache.get(this._currTypeId), linkId, {component: elem, wireIndex: 0});
 	}
 
 	/*
@@ -329,7 +329,7 @@ export class StateCompilerService {
 		const oppoPos = Elements.otherWirePos(elem, pos);
 		this.setLinks(state, oppoPos, linksOnWireEnds, linkId,
 			unitElems, compiledComp, coveredPoints);
-		MapHelper.pushInMapArrayUnique(this._wiresOnLinksCache.get(this._currTypeId), linkId, elem);
+		ArrayHelper.pushInMapArrayUnique(this._wiresOnLinksCache.get(this._currTypeId), linkId, elem);
 	}
 
 	/*
@@ -342,7 +342,7 @@ export class StateCompilerService {
 			linksOnWireEnds.set(elem, new Map<number, number>([[wireIndex, linkId]]));
 		}
 		SimulationUnits.setInputOutput(unitElems.elementToUnit.get(elem), wireIndex, linkId);
-		MapHelper.pushInMapArray(this._wireEndsOnLinksCache.get(this._currTypeId), linkId, {component: elem, wireIndex});
+		ArrayHelper.pushInMapArray(this._wireEndsOnLinksCache.get(this._currTypeId), linkId, {component: elem, wireIndex});
 	}
 
 	/*
