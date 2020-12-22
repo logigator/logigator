@@ -16,12 +16,13 @@
 
 	#tabs {
 		position: absolute;
-		width: calc(100% - 1rem - #{$construction-box-width});
+		width: calc(100% - 2rem);
 		margin-left: 1rem;
 		display: flex;
 		flex-direction: row;
 		justify-content: flex-start;
 		overflow: hidden;
+		pointer-events: none;
 
 		.tab {
 			@include themify() {
@@ -42,6 +43,7 @@
 			align-items: center;
 			transition: left ease;
 			left: 0;
+			pointer-events: all;
 
 			padding-right: 0.3rem;
 
