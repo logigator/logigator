@@ -5,6 +5,8 @@ import {getStaticDI} from '../../get-di';
 import {ElementTypeId} from '../element-type-ids';
 import {PopupService} from '../../../services/popup/popup.service';
 import {ElementRotation} from '../../element';
+import {FontWidthService} from '../../../services/font-width/font-width.service';
+import {environment} from '../../../../environments/environment';
 
 export const text: ElementType = {
 	id: ElementTypeId.TEXT,
@@ -30,8 +32,12 @@ export const text: ElementType = {
 	minInputs: 0,
 	maxInputs: 0,
 
-	width: () => undefined,
-	height: () => undefined,
+	width(element) {
+		return element ? Math.ceil(getStaticDI(FontWidthService).getTextWidth(element.data as TextData, `${environment.gridPixelWidth * element.options[0] / 8}px Roboto`) / environment.gridPixelWidth) : 0;
+	},
+	height(element) {
+		return element ? (element.data as TextData).split('\n').length : 0;
+	},
 
 	options: [8],
 
