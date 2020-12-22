@@ -51,7 +51,7 @@ export class ToolbarComponent {
 
 	public runTests(): void {
 		const tester = new BruteForceTester(this.projectService.currProject);
-		tester.runAndTestRandom(1e5, 16 * 6);
+		tester.runAndTestRandom(1e5, 16 * 7);
 		// this.test = new Test('bugfix', this.projectService.currProject, ManuallyLogged.testTest);
 		// for (const name in ManuallyLogged) {
 		// 	Test.runAndCheck(name, false);

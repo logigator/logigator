@@ -40,7 +40,7 @@ export class BruteForceTester {
 	}
 
 	public randomStep(fieldSize: number) {
-		let rand = this.randomInt(0, 30);
+		let rand = this.randomInt(0, 25);
 		if (rand > 16)
 			rand = 5;
 		// console.log(rand);
@@ -146,9 +146,7 @@ export class BruteForceTester {
 				}
 			}
 		}
-		for (const elem of this.project.allElements) {
-			this.checkElem(elem);
-		}
+		this.checkWireEnd(Elements.allWireEnds(this.project.allElements));
 	}
 
 	public checkCon(con: PIXI.Point) {
@@ -160,14 +158,17 @@ export class BruteForceTester {
 		}
 	}
 
-	public checkElem(elem: Element) {
-		for (const wireEnd of Elements.wireEnds(elem)) {
-			const onPoint = this.project.currState.elemsOnPoint(wireEnd);
-			const coord = CollisionFunctions.inRectChunks(wireEnd, wireEnd)[0];
-			if (this.project.currState.chunkHasCon(this.project.currState.chunks[coord.x][coord.y], wireEnd) !== (onPoint.length > 2)) {
-				// ng.getComponent($0)._pixiRenderer.render(ng.getComponent($0).activeView)
-				console.log('wrong conPoint or conPoint missing at: ', wireEnd);
-				this.failed = true;
+	public checkWireEnd(wireEnds: Map<number, Set<number>>) {
+		for (const [x, set] of wireEnds) {
+			for (const y of set) {
+				const wireEnd = new PIXI.Point(x, y);
+				const onPoint = this.project.currState.elemsOnPoint(wireEnd);
+				const coord = CollisionFunctions.inRectChunks(wireEnd, wireEnd)[0];
+				if (this.project.currState.chunkHasCon(this.project.currState.chunks[coord.x][coord.y], wireEnd) !== (onPoint.length > 2)) {
+					// ng.getComponent($0)._pixiRenderer.render(ng.getComponent($0).activeView)
+					console.log('wrong conPoint or conPoint missing at: ', wireEnd);
+					this.failed = true;
+				}
 			}
 		}
 	}
