@@ -169,7 +169,14 @@
 		"VIEW": "View",
 		"OPEN": "Open",
 		"CLONE": "Clone",
-		"NO_DESCRIPTION": "No description was provided."
+		"NO_DESCRIPTION": "No description was provided.",
+		"USER": {
+			"MEMBER_SINCE": "Member since",
+			"COMPONENTS": "Components",
+			"PROJECTS": "Projects",
+			"STARED_COMPONENTS": "Stared Components",
+			"STARED_PROJECTS": "Stared Projects"
+		}
 	},
 	"USERSPACE": {
 		"NAV": {

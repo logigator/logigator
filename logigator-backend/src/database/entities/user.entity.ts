@@ -1,7 +1,7 @@
 import {
 	BeforeRemove,
 	Check,
-	Column,
+	Column, CreateDateColumn,
 	Entity,
 	getCustomRepository, ManyToMany,
 	OneToMany,
@@ -24,6 +24,9 @@ export class User {
 
 	@PrimaryGeneratedColumn('uuid')
 	id: string;
+
+	@CreateDateColumn()
+	memberSince: Date;
 
 	@Expose()
 	@Column({nullable: false})

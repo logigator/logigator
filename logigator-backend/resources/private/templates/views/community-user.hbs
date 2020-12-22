@@ -1,0 +1,26 @@
+<div class="view-community-user">
+	<section class="view-community-user__container">
+		<div class="view-community-user__header">
+			<img alt="User Image" src="{{userImage}}">
+			<div>
+				<h2>{{username}}</h2>
+				<p>{{i18n.COMMUNITY.USER.MEMBER_SINCE}}: {{memberSince}}</p>
+			</div>
+		</div>
+
+		<div class="view-community-user__tabs">
+			<a class="view-community-user__tab {{#if (expr currentTab '===' 'projects')}}is-active{{/if}}" href="{{linkHref projectsLink}}">
+				<p>{{i18n.COMMUNITY.USER.PROJECTS}}</p>
+			</a>
+			<a class="view-community-user__tab {{#if (expr currentTab '===' 'components')}}is-active{{/if}}" href="{{linkHref componentsLink}}">
+				<p>{{i18n.COMMUNITY.USER.COMPONENTS}}</p>
+			</a>
+			<a class="view-community-user__tab {{#if (expr currentTab '===' 'staredProjects')}}is-active{{/if}}" href="{{linkHref staredComponentsLink}}">
+				<p>{{i18n.COMMUNITY.USER.STARED_PROJECTS}}</p>
+			</a>
+			<a class="view-community-user__tab {{#if (expr currentTab '===' 'staredComponents')}}is-active{{/if}}" href="{{linkHref staredProjectsLink}}">
+				<p>{{i18n.COMMUNITY.USER.STARED_COMPONENTS}}</p>
+			</a>
+		</div>
+	</section>
+</div>

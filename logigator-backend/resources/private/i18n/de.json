@@ -169,7 +169,14 @@
 		"VIEW": "Anzeigen",
 		"OPEN": "Öffnen",
 		"CLONE": "Klonen",
-		"NO_DESCRIPTION": "Beschreibung ist nicht verfügbar."
+		"NO_DESCRIPTION": "Beschreibung ist nicht verfügbar.",
+		"USER": {
+			"MEMBER_SINCE": "Mitglied seit",
+			"COMPONENTS": "Komponenten",
+			"PROJECTS": "Projekte",
+			"STARED_COMPONENTS": "Gemerkte Komponenten",
+			"STARED_PROJECTS": "Gemerkte Projekte"
+		}
 	},
 	"USERSPACE": {
 		"NAV": {

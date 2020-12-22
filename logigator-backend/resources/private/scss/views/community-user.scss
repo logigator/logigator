@@ -1,0 +1,81 @@
+@import "../config/config";
+
+@include view('community-user') {
+	@include section('container', 1200px);
+
+	@include element('header') {
+		display: flex;
+		height: 5rem;
+		align-items: center;
+
+		img {
+			height: 100%;
+			width: auto;
+		}
+
+		div {
+			margin-left: 1rem;
+
+			h2 {
+				font-weight: 100;
+				font-size: 32px;
+				margin-top: 0;
+				margin-bottom: 0.5rem;
+			}
+
+			p {
+				margin: 0;
+			}
+		}
+	}
+
+	@include element('tabs') {
+		width: 100%;
+		display: flex;
+		margin-top: 2rem;
+
+		@include themify() {
+			border-bottom: 1px solid themed('text-primary')
+		}
+
+		@include media-breakpoint-down('md') {
+			flex-direction: column;
+		}
+	}
+
+	@include element('tab') {
+		cursor: pointer;
+		text-decoration: none;
+
+		@include themify() {
+			@include media-breakpoint-up('md') {
+				border-right: 1px solid themed('text-primary');
+			}
+
+			@include media-breakpoint-down('md') {
+				border-bottom: 1px solid themed('text-primary');
+			}
+
+			&:hover {
+				background-color: themed('accent2');
+			}
+		}
+
+		&:last-of-type {
+			border-right: none;
+			border-bottom: none;
+		}
+
+		@include state('active') {
+			@include themify() {
+				p {
+					color: themed('primary');
+				}
+			}
+		}
+
+		p {
+			margin: 1rem;
+		}
+	}
+}

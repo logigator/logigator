@@ -42,6 +42,7 @@ import {ExamplesController} from './controller/frontend/examples.controller';
 import {CommunityController} from './controller/frontend/community/community.controller';
 import {CommunityProjCompController} from './controller/frontend/community/community-proj-comp.controller';
 import {CommunityCloneController} from './controller/frontend/community/community-clone.controller';
+import {CommunityUserController} from './controller/frontend/community/community-user.controller';
 
 useContainerRC(Container);
 typeOrmUseContainer(Container);
@@ -125,7 +126,8 @@ async function bootstrap() {
 			ExamplesController,
 			CommunityController,
 			CommunityProjCompController,
-			CommunityCloneController
+			CommunityCloneController,
+			CommunityUserController
 		],
 		middlewares: [
 			DefaultPreferencesMiddleware,
