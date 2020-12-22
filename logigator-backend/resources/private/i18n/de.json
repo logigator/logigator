@@ -86,7 +86,8 @@
 		}
 	},
 	"EXAMPLES": {
-		"VIEW": "Beispiel ansehen"
+		"VIEW": "Beispiel ansehen",
+		"CLONE": "Beispiel Klonen"
 	},
 	"FEATURES": {
 		"WHAT_IS": {

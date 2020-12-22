@@ -1,8 +1,9 @@
-import {Controller, Get, Render, ResponseClassTransformOptions, UseBefore} from 'routing-controllers';
+import {Controller, Get, Render, UseBefore} from 'routing-controllers';
 import {setTitleMiddleware} from '../../middleware/action/set-title-middleware';
 import {ConfigService} from '../../services/config.service';
 import {InjectRepository} from 'typeorm-typedi-extensions';
 import {ProjectRepository} from '../../database/repositories/project.repository';
+import {classToPlain} from 'class-transformer';
 
 @Controller('/examples')
 export class ExamplesController {
@@ -14,9 +15,6 @@ export class ExamplesController {
 
 	@Get('/')
 	@Render('examples')
-	@ResponseClassTransformOptions({
-		groups: ['showShareLinks']
-	})
 	@UseBefore(setTitleMiddleware('TITLE.EXAMPLES'))
 	public async index() {
 		const examples = await this.projectRepo.find({
@@ -24,12 +22,14 @@ export class ExamplesController {
 				user: '00000000-0000-0000-0000-000000000000'
 			}
 		}).then(projects => {
-			for (const project of projects) {
-				project.link = this.configService.getConfig('domains').editor + '/share/' + project.link;
-				(project as any).previewDark = project.previewDark?.publicUrl ?? '/assets/default-preview.svg';
-				(project as any).previewLight = project.previewLight?.publicUrl ?? '/assets/default-preview.svg';
-			}
-			return projects;
+			return projects.map(project => {
+				const p = classToPlain(project);
+				p.link = this.configService.getConfig('domains').editor + '/share/' + project.link;
+				p.cloneLink = '/community/clone/project/' + project.link;
+				p.previewDark = project.previewDark?.publicUrl ?? '/assets/default-preview.svg';
+				p.previewLight = project.previewLight?.publicUrl ?? '/assets/default-preview.svg';
+				return p;
+			});
 		});
 
 		return {

@@ -15,7 +15,6 @@
 		flex-direction: row;
 
 		@include media-breakpoint-down('md') {
-			align-items: center;
 			flex-direction: column-reverse;
 		}
 
@@ -81,16 +80,16 @@
 			display: none;
 		}
 
-		> div {
-			white-space: pre-wrap;
+		a {
+			display: inline-block;
 		}
 	}
 
 	@include element('example-description-text-mobile') {
 		margin-top: 1rem;
 
-		> div {
-			white-space: pre-wrap;
+		a {
+			display: inline-block;
 		}
 
 		@include media-breakpoint-up('md') {
@@ -98,8 +97,22 @@
 		}
 	}
 
+	@include element('desc') {
+		@include scrollbarInverted(4px, 4px);
+
+		margin: 1rem 0;
+		white-space: pre-wrap;
+		max-height: 14.8rem;
+		overflow: auto;
+	}
+
+	@include element('buttons') {
+		display: flex;
+		flex-wrap: wrap;
+		gap: 1rem;
+	}
+
 	@include element('example-button') {
-		margin-top: 1rem;
 		padding: 0.6rem 2rem !important;
 		font-size: 16px;
 	}
