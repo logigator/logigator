@@ -31,6 +31,7 @@ export abstract class Elements {
 		if (element.endPos)
 			out.endPos = element.endPos.clone();
 		delete out.wireEnds;
+		delete out.plugIndex;
 		out.options = out.options ? [...out.options] : undefined;
 		return out;
 	}
