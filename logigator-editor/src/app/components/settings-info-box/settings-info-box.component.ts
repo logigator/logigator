@@ -41,21 +41,21 @@ export class SettingsInfoBoxComponent implements OnChanges, OnDestroy {
 		if (this.formSubscription) {
 			this.formSubscription.unsubscribe();
 		}
-		this._element = this.selectedCompId ? this.projects.currProject.currState.getElementById(this.selectedCompId) : undefined;
+		this._element = this.isElementPlaced ? this.projects.currProject.currState.getElementById(this.selectedCompId) : undefined;
 		this.elementType = this.elemProvider.getElementById(this.selectedElemTypeId);
 		this.propertiesForm = this.formBuilder.group({
-			numInputs: [this.selectedCompId ? this._element.numInputs : this.elementType.numInputs],
-			rotation: [this.selectedCompId ? this._element.rotation : this.elementType.rotation],
-			plugIndex: [this.selectedCompId ? this._element.plugIndex : undefined],
+			numInputs: [this.isElementPlaced ? this._element.numInputs : this.elementType.numInputs],
+			rotation: [this.isElementPlaced ? this._element.rotation : this.elementType.rotation],
+			plugIndex: [this.isElementPlaced ? this._element.plugIndex : undefined],
 			label: [this._element && this._element.data ? this._element.data : ''],
 			options: this.formBuilder.array(
-				this.getOptionsArray(this.elementType, this.selectedCompId ? this._element.options : this.elementType.options)
+				this.getOptionsArray(this.elementType, this.isElementPlaced ? this._element.options : this.elementType.options)
 			)
 		});
 		this.formSubscription = this.propertiesForm.valueChanges.subscribe(data => {
 			data.rotation = Number(data.rotation || 0);
 			// is element placed in project
-			if (this.selectedCompId) {
+			if (this.isElementPlaced) {
 				if (this.elementType.isRotatable && data.rotation !== this._element.rotation) {
 					if (!this.projects.currProject.rotateComponent(this.selectedCompId, Number(data.rotation))) {
 						this.propertiesForm.controls.rotation.setValue(this._element.rotation);
@@ -150,7 +150,7 @@ export class SettingsInfoBoxComponent implements OnChanges, OnDestroy {
 		const currVal = this.propertiesForm.controls.numInputs.value;
 		if (currVal > this.elementType.maxInputs || currVal < this.elementType.minInputs) {
 			let valToSet: number;
-			if (this.selectedCompId) {
+			if (this.isElementPlaced) {
 				valToSet = this.projects.currProject.currState.getElementById(this.selectedCompId).numInputs;
 			} else {
 				valToSet = this.elementType.numInputs;
@@ -163,7 +163,7 @@ export class SettingsInfoBoxComponent implements OnChanges, OnDestroy {
 		const optVal = Number((this.propertiesForm.get('options') as FormArray).controls[index].value);
 		if (optVal > this.elementType.optionsConfig[index].max || optVal < this.elementType.optionsConfig[index].min) {
 			let valToSet: number;
-			if (this.selectedCompId) {
+			if (this.isElementPlaced) {
 				valToSet = this.projects.currProject.currState.getElementById(this.selectedCompId).options[index];
 			} else {
 				valToSet = this.elementType.options[index];
@@ -199,6 +199,10 @@ export class SettingsInfoBoxComponent implements OnChanges, OnDestroy {
 
 	public blurInput() {
 		this.editorActions.enableShortcutListener();
+	}
+
+	private get isElementPlaced(): boolean {
+		return this.selectedCompId !== undefined && this.selectedCompId !== null;
 	}
 
 	ngOnDestroy(): void {
