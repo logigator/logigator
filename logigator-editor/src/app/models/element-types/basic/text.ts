@@ -33,10 +33,17 @@ export const text: ElementType = {
 	maxInputs: 0,
 
 	width(element) {
-		return element ? Math.ceil(getStaticDI(FontWidthService).getTextWidth(element.data as TextData, `${environment.gridPixelWidth * element.options[0] / 8}px Roboto`) / environment.gridPixelWidth) : 0;
+		if (!element)
+			return 0;
+		let longest = 0;
+		for (const line of (element.data as TextData).split('\n')) {
+			const length = Math.ceil(getStaticDI(FontWidthService).getTextWidth(line, `${environment.gridPixelWidth * element.options[0] / 8}px Roboto`) / environment.gridPixelWidth);
+			longest = Math.max(longest, length);
+		}
+		return longest;
 	},
 	height(element) {
-		return element ? (element.data as TextData).split('\n').length : 0;
+		return element ? (element.data as TextData).split('\n').length : 0; // TODO font size
 	},
 
 	options: [8],
@@ -48,6 +55,9 @@ export const text: ElementType = {
 			max: 64
 		}
 	],
+	onOptionsChanged(element?) { // to recalculate size
+		return;
+	},
 
 	edit: async (typeId: number, id: number, projectsSer: ProjectsService) => {
 		const oText = projectsSer.currProject.currState.getElementById(id).data as TextData;

@@ -465,16 +465,17 @@ export class Project {
 
 
 	public addText(text: string, _pos: PIXI.Point): Element {
-		const elem = Elements.genNewElement(ElementTypeId.TEXT, _pos, _pos);
-		elem.data = text;
+		const element = Elements.genNewElement(ElementTypeId.TEXT, _pos);
+		element.data = text;
+		element.endPos = element.endPos || Elements.calcEndPos(element);
 
-		this._currState.addElement(elem);
+		this._currState.addElement(element);
 		const actions: Action[] = [{
-			name: Elements.addActionName(elem),
-			element: elem
+			name: Elements.addActionName(element),
+			element
 		}];
 		this.newState(actions);
-		return elem;
+		return element;
 	}
 
 

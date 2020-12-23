@@ -200,7 +200,7 @@ export class ProjectState {
 	public isFreeSpace(startPos: PIXI.Point, endPos: PIXI.Point, isWire?: boolean, wireEnds?: PIXI.Point[], except?: Set<Element>): boolean {
 		const others = this.elementsInChunks(startPos, endPos);
 		for (const elem of others) {
-			if (except && except.has(elem) || isWire && elem.typeId === ElementTypeId.WIRE)
+			if (elem.typeId === ElementTypeId.TEXT || except && except.has(elem) || isWire && elem.typeId === ElementTypeId.WIRE)
 				continue;
 			if (isWire && CollisionFunctions.isRectInRectLightBorder(elem.pos, elem.endPos, startPos, endPos))
 				return false;
@@ -779,6 +779,9 @@ export class ProjectState {
 
 	public setData(element: Element, data: unknown): void {
 		element.data = data;
+		this.removeFromChunks(element);
+		element.endPos = Elements.calcEndPos(element);
+		this.loadIntoChunks(element);
 	}
 
 	public chunk(c: PIXI.Point): Chunk {
