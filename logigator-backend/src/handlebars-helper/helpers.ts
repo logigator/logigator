@@ -14,7 +14,7 @@ import {infoPopupDataScopeHelper} from './info-popup-data-scope.helper';
 import {safeStringHelper} from './safeString.helper';
 import {siHelper} from './si.helper';
 import {dateHelper} from './date.helper';
-import {handelNewLinesHelper} from './handleNewLines';
+import {handleNewLinesHelper} from './handleNewLines';
 
 export const handlebarsHelpers = {
 	ternary: ternaryHelper(),
@@ -33,5 +33,5 @@ export const handlebarsHelpers = {
 	safeString: safeStringHelper(),
 	si: siHelper(),
 	date: dateHelper(),
-	handelNewLines: handelNewLinesHelper()
+	handleNewLines: handleNewLinesHelper()
 };

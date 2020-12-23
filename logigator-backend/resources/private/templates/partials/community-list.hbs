@@ -7,7 +7,9 @@
 				</div>
 				<div class="partial-community-list__description-text-mobile">
 					{{#if this.description}}
-						<div class="partial-community-list__text">{{handelNewLines this.description}}</div>
+						<div class="partial-community-list__text">{{handleNewLines this.description}}</div>
+					{{else}}
+						<div class="partial-community-list__text">{{@root.i18n.COMMUNITY.NO_DESCRIPTION}}</div>
 					{{/if}}
 					<div class="partial-community-list__buttons-user">
 						<div>
@@ -36,7 +38,9 @@
 				<hr class="partial-community-list__divider">
 				<div class="partial-community-list__description-text">
 					{{#if this.description}}
-						<div class="partial-community-list__text">{{handelNewLines this.description}}</div>
+						<div class="partial-community-list__text">{{handleNewLines this.description}}</div>
+					{{else}}
+						<div class="partial-community-list__text">{{@root.i18n.COMMUNITY.NO_DESCRIPTION}}</div>
 					{{/if}}
 					<div class="partial-community-list__buttons-user">
 						<div>
