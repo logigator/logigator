@@ -129,7 +129,7 @@
 		display: flex;
 
 		.partial-site-header__links a {
-			padding: 0 0.5rem;
+			padding: 0 1rem;
 		}
 
 		@include media-breakpoint-down('md') {
@@ -152,8 +152,7 @@
 		padding: 0;
 
 		@include modifier('logged-in') {
-			padding: 0.5rem;
-			padding-left: 0.25rem;
+			padding: 0 0.5rem;
 			cursor: pointer;
 
 			&:hover {
