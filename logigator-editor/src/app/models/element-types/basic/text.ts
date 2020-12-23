@@ -38,7 +38,7 @@ export const text: ElementType = {
 		let longest = 0;
 		for (const line of (element.data as TextData).split('\n')) {
 			const length = Math.ceil(
-				getStaticDI(FontWidthService).getTextWidth(line, `${environment.gridPixelWidth * element.options[0] / 8}px Roboto`) / environment.gridPixelWidth
+				getStaticDI(FontWidthService).getTextWidth(line, `${environment.gridPixelWidth * element.options[0] / 8}px Roboto`) / 1.2 / environment.gridPixelWidth
 			);
 			longest = Math.max(longest, length);
 		}
