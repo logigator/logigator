@@ -29,7 +29,10 @@ export class SelectionService {
 				if (!chunk) continue;
 				const chunkPos = CollisionFunctions.chunkToPoints(new PIXI.Point(chunkCoord.x, chunkCoord.y));
 				if (CollisionFunctions.isRectFullyInRect(chunkPos.start, chunkPos.end, start, end)) {
-					chunk.elements.forEach(elem => ids.add(elem.id));
+					chunk.elements.forEach(elem => {
+						if (elem.typeId !== ElementTypeId.TEXT)
+							ids.add(elem.id);
+					});
 					chunk.connectionPoints.forEach(con => cons.push(con));
 				} else {
 					for (const elem of chunk.elements) {
@@ -61,6 +64,10 @@ export class SelectionService {
 				for (const elem of chunk.elements) {
 					if (elem.typeId === ElementTypeId.WIRE) {
 						this.splitAndSelectWire(elem, start, end, ids, project, out);
+					} else if (elem.typeId === ElementTypeId.TEXT) {
+						if (CollisionFunctions.isElementInFloatRect(elem, start, end)) {
+							ids.add(elem.id);
+						}
 					} else {
 						if (CollisionFunctions.isRectFullyInRect(elem.pos, elem.endPos, start, end)) {
 							ids.add(elem.id);

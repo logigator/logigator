@@ -88,11 +88,14 @@ export abstract class CollisionFunctions {
 	}
 
 	public static isElementInFloatRect(element: Element, startPos: PIXI.Point, endPos: PIXI.Point): boolean {
-		if (element.typeId !== ElementTypeId.WIRE && element.typeId !== ElementTypeId.TEXT) {
-			return CollisionFunctions.isRectInRectLightBorder(element.pos, element.endPos, startPos, endPos);
-		} else {
+		if (element.typeId === ElementTypeId.WIRE) {
 			return element.pos.x + 0.5 <= endPos.x && element.pos.y + 0.5 <= endPos.y &&
 				element.endPos.x + 0.5 > startPos.x && element.endPos.y + 0.5 > startPos.y;
+		} else if (element.typeId === ElementTypeId.TEXT) {
+			return element.pos.x + 0.5 <= endPos.x && element.pos.y + 0.5 <= endPos.y &&
+				element.pos.x + 0.5 > startPos.x && element.pos.y + 0.5 > startPos.y;
+		} else {
+			return CollisionFunctions.isRectInRectLightBorder(element.pos, element.endPos, startPos, endPos);
 		}
 	}
 
