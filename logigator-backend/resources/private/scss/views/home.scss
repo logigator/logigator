@@ -1,5 +1,6 @@
 @import "../config/config";
 @import "../partials/project-teasers";
+@import "../partials/half-adder-svg";
 
 @include view('home') {
 
@@ -79,11 +80,6 @@
 		@include media-breakpoint-down('sm') {
 			margin-top: 1rem;
 		}
-	}
-
-	@include element('s-intro-img') {
-		max-width: 600px;
-		width: 100%;
 	}
 
 	@include element('s-intro-button') {

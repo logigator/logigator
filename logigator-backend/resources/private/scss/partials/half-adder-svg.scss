@@ -1,0 +1,67 @@
+@include partial('half-adder-svg') {
+	max-width: 500px;
+	width: 100%;
+
+	@include element('wire') {
+		stroke-width: 1px;
+		fill: none;
+		vector-effect: non-scaling-stroke;
+
+		@include themify() {
+			@if (isTheme('dark')) {
+				stroke: themed('primary');
+			} @else {
+				stroke: #000000;
+			}
+		}
+	}
+
+	@include element('comp') {
+		stroke-width: 1px;
+		fill: none;
+		vector-effect: non-scaling-stroke;
+
+		@include themify() {
+			@if (isTheme('dark')) {
+				stroke: themed('primary');
+			} @else {
+				stroke: #000000;
+			}
+		}
+	}
+
+	@include element('comp-text') {
+		text-anchor: middle;
+		font-size: 10px;
+
+		font-family: Roboto, Arial, sans-serif;
+
+		@include themify() {
+			@if (isTheme('dark')) {
+				fill: #ffffff;
+			} @else {
+				fill: #000000;
+			}
+		}
+	}
+
+	@include element('led') {
+		@include themify() {
+			@if (isTheme('dark')) {
+				fill: #18592d
+			} @else {
+				fill: #000000;
+			}
+		}
+	}
+
+	@include element('cp') {
+		@include themify() {
+			@if (isTheme('dark')) {
+				fill: themed('primary')
+			} @else {
+				fill: #000000;
+			}
+		}
+	}
+}
