@@ -41,4 +41,20 @@ export class UserRepository extends Repository<User> {
 		} as Page<User>;
 	}
 
+	public async getUserOwningProject(projectId: string): Promise<User> {
+		return this.createQueryBuilder('user')
+			.leftJoin('user.projects', 'project')
+			.innerJoinAndSelect('user.image', 'image')
+			.where('project.id = :id', {id: projectId})
+			.getOne();
+	}
+
+	public async getUserOwningComponent(componentId: string): Promise<User> {
+		return this.createQueryBuilder('user')
+			.leftJoin('user.components', 'component')
+			.innerJoinAndSelect('user.image', 'image')
+			.where('component.id = :id', {id: componentId})
+			.getOne();
+	}
+
 }

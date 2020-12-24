@@ -42,7 +42,7 @@ export class CommunityProjCompController {
 
 		setTitle(response, 'Logigator - ' + project.name);
 
-		const user = await project.user;
+		const user = await this.userRepo.getUserOwningProject(project.id);
 
 		let isStared = false;
 		if (request.isAuthenticated()) {
@@ -73,7 +73,7 @@ export class CommunityProjCompController {
 
 		setTitle(response, 'Logigator - ' + comp.name);
 
-		const user = await comp.user;
+		const user = await this.userRepo.getUserOwningComponent(comp.id);
 
 		let isStared = false;
 		if (request.isAuthenticated()) {

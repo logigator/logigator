@@ -9,6 +9,7 @@ import {Preferences} from '../../../decorator/preferences.decorator';
 import {UserPreferences} from '../../../models/user-preferences';
 import {ComponentRepository} from '../../../database/repositories/component.repository';
 import {CheckAuthenticatedFrontMiddleware} from '../../../middleware/auth/frontend-guards/check-authenticated-front.middleware';
+import {UserRepository} from '../../../database/repositories/user.repository';
 
 @Controller('/community')
 export class CommunityController {
@@ -17,7 +18,8 @@ export class CommunityController {
 		private configService: ConfigService,
 		private translationService: TranslationService,
 		@InjectRepository() private projectRepo: ProjectRepository,
-		@InjectRepository() private componentRepo: ComponentRepository
+		@InjectRepository() private componentRepo: ComponentRepository,
+		@InjectRepository() private userRepo: UserRepository
 	) {}
 
 	@Get('/projects')
@@ -76,7 +78,7 @@ export class CommunityController {
 			transformed.previewLight = entry.previewLight?.publicUrl ?? '/assets/default-preview.svg';
 			transformed.stargazersCount = await this.projectRepo.getStargazersCount(entry);
 
-			const user = await entry.user;
+			const user = await this.userRepo.getUserOwningProject(entry.id);
 			transformed.username = user.username;
 			transformed.userImage = user.image?.publicUrl ?? '/assets/default-user.svg';
 			transformed.userUrl = 'community/user/' + user.id;
@@ -102,7 +104,7 @@ export class CommunityController {
 			transformed.previewLight = entry.previewLight?.publicUrl ?? '/assets/default-preview.svg';
 			transformed.stargazersCount = await this.componentRepo.getStargazersCount(entry);
 
-			const user = await entry.user;
+			const user = await this.userRepo.getUserOwningComponent(entry.id);
 			transformed.username = user.username;
 			transformed.userImage = user.image?.publicUrl ?? '/assets/default-user.svg';
 			transformed.userUrl = 'community/user/' + user.id;
