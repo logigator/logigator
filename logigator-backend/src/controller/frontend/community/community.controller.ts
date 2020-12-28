@@ -36,7 +36,6 @@ export class CommunityController {
 
 	@Get('/projects/page')
 	@Render('community-page')
-	@UseBefore(CheckAuthenticatedFrontMiddleware)
 	public async projectsPage(@QueryParam('page') pageNumber = 0, @QueryParam('search') search: string, @Preferences() preferences: UserPreferences) {
 		return {
 			...(await this.getProjectsPage(pageNumber, search, preferences.lang)),
@@ -58,7 +57,6 @@ export class CommunityController {
 
 	@Get('/components/page')
 	@Render('community-page')
-	@UseBefore(CheckAuthenticatedFrontMiddleware)
 	public async componentsPage(@QueryParam('page') pageNumber = 0, @QueryParam('search') search: string, @Preferences() preferences: UserPreferences) {
 		return {
 			...(await this.getComponentsPage(pageNumber, search, preferences.lang)),

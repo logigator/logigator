@@ -12,9 +12,11 @@
 							<a href="{{this.link}}" target="_blank" rel="noopener">
 								<button class="btn-raised primary view-examples__example-button">{{@root.i18n.EXAMPLES.VIEW}}</button>
 							</a>
-							<a href="{{this.cloneLink}}">
-								<button class="btn-raised primary view-examples__example-button">{{@root.i18n.EXAMPLES.CLONE}}</button>
-							</a>
+							{{#if @root.isAuthenticated}}
+								<a href="{{this.cloneLink}}">
+									<button class="btn-raised primary view-examples__example-button">{{@root.i18n.EXAMPLES.CLONE}}</button>
+								</a>
+							{{/if}}
 						</div>
 					</div>
 				</div>
@@ -27,9 +29,11 @@
 							<a href="{{this.link}}" target="_blank" rel="noopener">
 								<button class="btn-raised primary view-examples__example-button">{{@root.i18n.EXAMPLES.VIEW}}</button>
 							</a>
-							<a href="{{this.cloneLink}}">
-								<button class="btn-raised primary view-examples__example-button">{{@root.i18n.EXAMPLES.CLONE}}</button>
-							</a>
+							{{#if @root.isAuthenticated}}
+								<a href="{{this.cloneLink}}">
+									<button class="btn-raised primary view-examples__example-button">{{@root.i18n.EXAMPLES.CLONE}}</button>
+								</a>
+							{{/if}}
 						</div>
 					</div>
 				</div>

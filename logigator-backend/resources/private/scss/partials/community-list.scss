@@ -119,8 +119,13 @@
 
 		margin-top: 1rem;
 		white-space: pre-wrap;
-		max-height: 14.8rem;
+		height: 15.15rem;
 		overflow: auto;
+
+		@include media-breakpoint-down('md') {
+			height: auto;
+			max-height: 15.15rem;
+		}
 	}
 
 	@include element('buttons-user') {
