@@ -60,7 +60,30 @@ export class CommunityUserController {
 			staredProjectsLink: '/community/user/' + id + '?tab=staredComponents',
 			staredComponentsLink: '/community/user/' + id + '?tab=staredProjects',
 			currentTab: tab,
-			...(await this.getPage(user, tab, params.page))
+			...(await this.getPage(user, tab, params.page)),
+			viewScript: 'community-user'
+		};
+	}
+
+	@Get('/:id/page')
+	@Render('community-user-page')
+	@ResponseClassTransformOptions({
+		groups: ['showShareLinks']
+	})
+	public async page(@Param('id') id: string, @QueryParams() params: UserTab) {
+		const user = await this.userRepo.findOne({
+			where: {
+				id
+			}
+		});
+		if (!user)
+			throw new NotFoundError('ResourceNotFound');
+
+		const tab = params.tab ?? 'projects';
+
+		return {
+			...(await this.getPage(user, tab, params.page)),
+			layout: false
 		};
 	}
 
