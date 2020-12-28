@@ -6,9 +6,11 @@
 		@if (isTheme('dark')) {
 			--led-off: #18592d;
 			--led-on: #27ae60;
+			--switch-on: #27ae60;
 		} @else {
 			--led-off: #000000;
 			--led-on: #27AE60;
+			--switch-on: #000;
 		}
 	}
 
@@ -72,7 +74,7 @@
 	@for $i from 1 to 7 {
 		@include element('anim#{$i}') {
 			animation-name: half-adder-svg__anim#{$i};
-			animation-duration: 10s;
+			animation-duration: 4s;
 			animation-iteration-count: infinite;
 			animation-timing-function: step-end;
 		}
@@ -123,14 +125,14 @@
 	@keyframes half-adder-svg__anim5 {
 		25% {
 			transform: translateY(-12px);
-			fill: var(--led-on);
+			fill: var(--switch-on);
 		}
 	}
 
 	@keyframes half-adder-svg__anim6 {
 		60% {
 			transform: translateY(-12px);
-			fill: var(--led-on);
+			fill: var(--switch-on);
 		}
 	}
 }
