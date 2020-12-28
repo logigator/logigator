@@ -1,4 +1,5 @@
 @import "../config/config";
+@import "../partials/project-teasers";
 
 @include view('community-user') {
 	@include section('container', 1200px);
@@ -76,6 +77,55 @@
 
 		p {
 			margin: 1rem;
+		}
+	}
+
+	@include element('no-items') {
+		text-align: center;
+	}
+
+	@include element('pages') {
+		width: 100%;
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		margin-top: 1rem;
+	}
+
+	@include element('page-button') {
+		padding: 0.5rem 0.85rem !important;
+		font-size: 1rem;
+		border-radius: 0 !important;
+
+
+		&:first-of-type {
+			border-top-left-radius: 0.1rem !important;
+			border-bottom-left-radius: 0.1rem !important;
+		}
+
+		&:last-of-type {
+			border-top-right-radius: 0.1rem !important;
+			border-bottom-right-radius: 0.1rem !important;
+		}
+
+		@include state('active') {
+			@include themify() {
+				background-color: themed('primary');
+				border-color: themed('primary');
+				color: #000000;
+
+				&:hover {
+					background-color: rgba(themed('primary'), 0.7);
+				}
+
+				&:active {
+					background-color: themed('primary');
+				}
+			}
+		}
+
+		@include state('hidden') {
+			display: none;
 		}
 	}
 }

@@ -22,5 +22,21 @@
 				<p>{{i18n.COMMUNITY.USER.STARED_COMPONENTS}}</p>
 			</a>
 		</div>
+		{{#if entries.length}}
+			<div class="view-community-user__list">
+				{{> community-user-list}}
+			</div>
+			<div class="view-community-user__pages">
+				<button class="btn-outline secondary view-community-user__page-button"><<</button>
+				<button class="btn-outline secondary view-community-user__page-button"><</button>
+				<button class="btn-outline secondary view-community-user__page-button">1</button>
+				<button class="btn-outline secondary view-community-user__page-button">2</button>
+				<button class="btn-outline secondary view-community-user__page-button">3</button>
+				<button class="btn-outline secondary view-community-user__page-button">></button>
+				<button class="btn-outline secondary view-community-user__page-button">>></button>
+			</div>
+		{{else}}
+			<p class="view-community-user__no-items">{{i18n.COMMUNITY.USER.NO_ITEMS}}</p>
+		{{/if}}
 	</section>
 </div>

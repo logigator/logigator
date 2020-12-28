@@ -45,11 +45,12 @@ export class ComponentRepository extends PageableRepository<Component> {
 		return this.save(cloned);
 	}
 
-	public async getComponentPageForUser(pageNr: number, pageSize: number, user: User, search?: string): Promise<Page<Component>> {
+	public getComponentPageForUser(pageNr: number, pageSize: number, user: User, search?: string, onlyShowPublic = false): Promise<Page<Component>> {
 		return this.getPage(pageNr, pageSize, {
 			where: {
 				user: user,
-				...(search && {name: Like('%' + search + '%')})
+				...(search && {name: Like('%' + search + '%')}),
+				...(onlyShowPublic && {public: true})
 			},
 			order: {
 				lastEdited: 'DESC'
@@ -57,7 +58,7 @@ export class ComponentRepository extends PageableRepository<Component> {
 		});
 	}
 
-	public async getSharedComponentsPage(pageNr: number, pageSize: number, search?: string): Promise<Page<Component>> {
+	public getSharedComponentsPage(pageNr: number, pageSize: number, search?: string): Promise<Page<Component>> {
 		return this.getPage(pageNr, pageSize, {
 			where: {
 				public: true,
@@ -69,7 +70,7 @@ export class ComponentRepository extends PageableRepository<Component> {
 		});
 	}
 
-	public async createComponentForUser(name: string, symbol: string, description: string, sharePublicly: boolean, user: User) {
+	public createComponentForUser(name: string, symbol: string, description: string, sharePublicly: boolean, user: User) {
 		const component = this.create();
 		component.name = name;
 		component.symbol = symbol;
@@ -103,5 +104,22 @@ export class ComponentRepository extends PageableRepository<Component> {
 			.innerJoin('component.stargazers', 'user')
 			.where('component.id = :id', {id: component.id})
 			.getRawOne()).count;
+	}
+
+	public async getComponentsStaredByUser(page: number, pageSize: number, user: User): Promise<Page<Component>> {
+		const results = await this.createQueryBuilder('component')
+			.leftJoin('component.stargazers', 'user')
+			.where('component.public = :isPublic', {isPublic: true})
+			.andWhere('user.id = :userId', {userId: user.id})
+			.skip(page * pageSize)
+			.take(pageSize)
+			.getManyAndCount();
+
+		return {
+			page,
+			total: Math.ceil(results[1] / pageSize),
+			count: results[0].length,
+			entries: results[0]
+		} as Page<Component>;
 	}
 }

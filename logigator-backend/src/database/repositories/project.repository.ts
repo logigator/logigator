@@ -29,11 +29,12 @@ export class ProjectRepository extends PageableRepository<Project> {
 			.getOne();
 	}
 
-	public async getProjectPageForUser(pageNr: number, pageSize: number, user: User, search?: string): Promise<Page<Project>> {
+	public getProjectPageForUser(pageNr: number, pageSize: number, user: User, search?: string, onlyShowPublic = false): Promise<Page<Project>> {
 		return this.getPage(pageNr, pageSize, {
 			where: {
 				user: user,
-				...(search && {name: Like('%' + search + '%')})
+				...(search && {name: Like('%' + search + '%')}),
+				...(onlyShowPublic && {public: true})
 			},
 			order: {
 				lastEdited: 'DESC'
@@ -41,7 +42,7 @@ export class ProjectRepository extends PageableRepository<Project> {
 		});
 	}
 
-	public async getSharedProjectPage(pageNr: number, pageSize: number, search?: string): Promise<Page<Project>> {
+	public getSharedProjectPage(pageNr: number, pageSize: number, search?: string): Promise<Page<Project>> {
 		return this.getPage(pageNr, pageSize, {
 			where: {
 				public: true,
@@ -53,7 +54,7 @@ export class ProjectRepository extends PageableRepository<Project> {
 		});
 	}
 
-	public async createProjectForUser(name: string, description: string, sharePublicly: boolean, user: User) {
+	public createProjectForUser(name: string, description: string, sharePublicly: boolean, user: User) {
 		const project = this.create();
 		project.name = name;
 		project.description = description;
@@ -85,6 +86,23 @@ export class ProjectRepository extends PageableRepository<Project> {
 			.innerJoin('project.stargazers', 'user')
 			.where('project.id = :id', {id: project.id})
 			.getRawOne()).count;
+	}
+
+	public async getProjectsStaredByUser(page: number, pageSize: number, user: User): Promise<Page<Project>> {
+		const results = await this.createQueryBuilder('project')
+			.leftJoin('project.stargazers', 'user')
+			.where('project.public = :isPublic', {isPublic: true})
+			.andWhere('user.id = :userId', {userId: user.id})
+			.skip(page * pageSize)
+			.take(pageSize)
+			.getManyAndCount();
+
+		return {
+			page,
+			total: Math.ceil(results[1] / pageSize),
+			count: results[0].length,
+			entries: results[0]
+		} as Page<Project>;
 	}
 
 }

@@ -66,7 +66,7 @@ export class CommunityController {
 		};
 	}
 
-	private async getProjectsPage(pageNumber: number, search: string,  language: string): Promise<any> {
+	private async getProjectsPage(pageNumber: number, search: string, language: string): Promise<any> {
 		const page = await this.projectRepo.getSharedProjectPage(pageNumber ?? 0, 12, search);
 
 		const entries = await Promise.all(page.entries.map(async entry => {
@@ -92,7 +92,7 @@ export class CommunityController {
 		};
 	}
 
-	private async getComponentsPage(pageNumber: number, search: string,  language: string): Promise<any> {
+	private async getComponentsPage(pageNumber: number, search: string, language: string): Promise<any> {
 		const page = await this.componentRepo.getSharedComponentsPage(pageNumber ?? 0, 12, search);
 
 		const entries = await Promise.all(page.entries.map(async entry => {

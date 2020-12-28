@@ -175,7 +175,8 @@
 			"COMPONENTS": "Components",
 			"PROJECTS": "Projects",
 			"STARED_COMPONENTS": "Stared Components",
-			"STARED_PROJECTS": "Stared Projects"
+			"STARED_PROJECTS": "Stared Projects",
+			"NO_ITEMS": "Nothing to show in this category."
 		}
 	},
 	"USERSPACE": {

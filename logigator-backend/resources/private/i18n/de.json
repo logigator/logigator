@@ -175,7 +175,8 @@
 			"COMPONENTS": "Komponenten",
 			"PROJECTS": "Projekte",
 			"STARED_COMPONENTS": "Gemerkte Komponenten",
-			"STARED_PROJECTS": "Gemerkte Projekte"
+			"STARED_PROJECTS": "Gemerkte Projekte",
+			"NO_ITEMS": "Keine Elemente vorhanden."
 		}
 	},
 	"USERSPACE": {
