@@ -21,7 +21,7 @@ export class TwitterAuthenticationMiddleware implements ExpressMiddlewareInterfa
 					return next(loginErr);
 				}
 				updateAuthenticatedCookie(request, response, true);
-				return redirect(request, response, { target: '/'});
+				return redirect(request, response, { target: request.query.state as string ?? '/'});
 			});
 		})(request, response, next);
 	}

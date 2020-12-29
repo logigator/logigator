@@ -45,7 +45,6 @@ export class PassportConfigService {
 		async (request, accessToken, refreshToken, profile, done) => {
 			if (request.isAuthenticated()) {
 				try {
-					request.res.locals.connectedAccounts = true;
 					const user = await this.userService.connectGoogle(request.user, profile);
 					done(null, user, {connectedAccounts: true});
 					return;
@@ -84,7 +83,6 @@ export class PassportConfigService {
 			async (request, accessToken, refreshToken, profile, done) => {
 				if (request.isAuthenticated()) {
 					try {
-						request.res.locals.connectedAccounts = true;
 						const user = await this.userService.connectTwitter(request.user, profile);
 						done(null, user, {connectedAccounts: true});
 						return;
@@ -128,14 +126,12 @@ export class PassportConfigService {
 
 	private getOauthErrorFormName(request: Request): string {
 		switch (request.query.state) {
-			case 'login-page':
+			case '/login':
 				return 'auth_local-login-page';
-			case 'login-electron':
+			case '/login-electron':
 				return 'auth_local-login-electron';
-			case 'register-page':
+			case '/register':
 				return 'auth_local-register-page';
-			case 'register':
-				return 'auth_local-register';
 			default:
 				return 'auth_local-login';
 		}
