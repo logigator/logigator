@@ -134,6 +134,71 @@ export class Actions {
 		return outElements;
 	}
 
+	public static applyChangeOnArrayAndActionsOnly(changes: ChangeType[], out: Action[]): void {
+		for (const change of changes) {
+			if (!change)
+				continue;
+			change.oldElems.forEach(e => {
+				out.push({name: Elements.remActionName(e), element: e});
+			});
+			change.newElems.forEach(e => {
+				out.push({name: Elements.addActionName(e), element: e});
+			});
+		}
+	}
+
+	public static pushIfNotNull(array: Action[], action: Action): void {
+		if (action)
+			array.push(action);
+	}
+
+	private static isRemAction(action: Action): boolean {
+		return action.name.startsWith('rem');
+	}
+
+	private static isAddAction(action: Action): boolean {
+		return action.name.startsWith('add');
+	}
+
+	public static reduceActions(actions: Action[]): Action[] {
+		const out: Action[] = [];
+		const remElems = new Map<Element, Action>();
+		const addElems = new Map<Element, Action>();
+		const dcoWires = new Map<PIXI.Point, Action>();
+		const conWires = new Map<PIXI.Point, Action>();
+		for (const action of actions) {
+			if (Actions.isRemAction(action)) {
+				if (addElems.has(action.element))
+					addElems.delete(action.element);
+				else
+					remElems.set(action.element, action);
+			} else if (Actions.isAddAction(action)) {
+				if (remElems.has(action.element))
+					remElems.delete(action.element);
+				else
+					addElems.set(action.element, action);
+			} else if (action.name === 'dcoWire') {
+				if (conWires.has(action.pos))
+					conWires.delete(action.pos);
+				else
+					dcoWires.set(action.pos, action);
+			} else if (action.name === 'conWire') {
+				if (dcoWires.has(action.pos))
+					dcoWires.delete(action.pos);
+				else
+					conWires.set(action.pos, action);
+			} else {
+				out.push(action);
+			}
+		}
+		remElems.forEach((action, _) => out.push(action));
+		addElems.forEach((action, _) => out.push(action));
+		dcoWires.forEach((action, _) => out.push(action));
+		conWires.forEach((action, _) => out.push(action));
+		return out;
+	}
+
+
 	public static printActions(actions: Action[]): void {
 		if (!actions)
 			return;

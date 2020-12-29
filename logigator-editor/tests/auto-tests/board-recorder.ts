@@ -80,31 +80,35 @@ export class BoardRecorder {
 	}
 
 	public call(name: string, _args: any, idIndex?: number, idsIndex?: number, elemsIndex?: number): void {
-		if (this._isReading) {
-			const args = {..._args};
-			this._names.push(name);
-			this._args.push(args);
-			if (idIndex !== undefined && idIndex > -1) {
-				const elem = this._project.currState.getElementById(args[idIndex]);
-				const positions = [elem.pos.clone(), elem.endPos.clone()];
-				Elements.correctPosOrder(positions[0], positions[1]);
-				args[idIndex] = positions;
-			}
-			if (idsIndex !== undefined && idsIndex > -1) {
-				for (let i = 0; i < args[idsIndex].length; i++) {
-					const elem = this._project.currState.getElementById(args[idsIndex][i]);
+		try {
+			if (this._isReading) {
+				const args = {..._args};
+				this._names.push(name);
+				this._args.push(args);
+				if (idIndex !== undefined && idIndex > -1) {
+					const elem = this._project.currState.getElementById(args[idIndex]);
 					const positions = [elem.pos.clone(), elem.endPos.clone()];
 					Elements.correctPosOrder(positions[0], positions[1]);
-					args[idsIndex] = [...args[idsIndex]];
-					args[idsIndex][i] = positions;
+					args[idIndex] = positions;
+				}
+				if (idsIndex !== undefined && idsIndex > -1) {
+					for (let i = 0; i < args[idsIndex].length; i++) {
+						const elem = this._project.currState.getElementById(args[idsIndex][i]);
+						const positions = [elem.pos.clone(), elem.endPos.clone()];
+						Elements.correctPosOrder(positions[0], positions[1]);
+						args[idsIndex] = [...args[idsIndex]];
+						args[idsIndex][i] = positions;
+					}
+				}
+				if (elemsIndex !== undefined && elemsIndex > -1) {
+					args[elemsIndex] = [...args[elemsIndex]];
+					for (let i = 0; i < args[elemsIndex].length; i++) {
+						args[elemsIndex][i] = Elements.clone(args[elemsIndex][i]);
+					}
 				}
 			}
-			if (elemsIndex !== undefined && elemsIndex > -1) {
-				args[elemsIndex] = [...args[elemsIndex]];
-				for (let i = 0; i < args[elemsIndex].length; i++) {
-					args[elemsIndex][i] = Elements.clone(args[elemsIndex][i]);
-				}
-			}
+		} catch (e) {
+			console.log('boardrecorder error');
 		}
 	}
 

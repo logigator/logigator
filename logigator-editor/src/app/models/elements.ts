@@ -6,6 +6,7 @@ import {ActionType} from './action';
 import {Element} from './element';
 import {ElementType} from './element-types/element-type';
 import {ElementTypeId} from './element-types/element-type-ids';
+import {CollisionFunctions} from './collision-functions';
 
 export abstract class Elements {
 
@@ -30,6 +31,7 @@ export abstract class Elements {
 		if (element.endPos)
 			out.endPos = element.endPos.clone();
 		delete out.wireEnds;
+		delete out.plugIndex;
 		out.options = out.options ? [...out.options] : undefined;
 		return out;
 	}
@@ -150,6 +152,8 @@ export abstract class Elements {
 	}
 
 	public static wireEnds(element: Element): PIXI.Point[] {
+		if (element.typeId === ElementTypeId.WIRE)
+			return [element.pos.clone(), element.endPos.clone()];
 		if (element.wireEnds)
 			return element.wireEnds.map(p => p.clone());
 		const out = this.wireEndsWithChanges(element, element.rotation, element.numInputs, new PIXI.Point());
@@ -209,6 +213,20 @@ export abstract class Elements {
 		}
 	}
 
+	public static allWireEnds(elements: Element[], startMap?: Map<number, Set<number>>): Map<number, Set<number>> {
+		const out = startMap || new Map<number, Set<number>>();
+		for (const elem of elements) {
+			for (const wireEnd of Elements.wireEnds(elem)) {
+				if (out.has(wireEnd.x)) {
+					out.get(wireEnd.x).add(wireEnd.y);
+				} else {
+					out.set(wireEnd.x, new Set<number>([wireEnd.y]));
+				}
+			}
+		}
+		return out;
+	}
+
 	public static isInput(element: Element, pos: PIXI.Point): boolean {
 		switch (element.rotation) {
 			case 0:
@@ -232,6 +250,14 @@ export abstract class Elements {
 		return -1;
 	}
 
+	public static hasWiresMidOnPoint(elements: Set<Element>, pos: PIXI.Point): boolean {
+		for (const elem of elements) {
+			if (elem.typeId === ElementTypeId.WIRE && CollisionFunctions.isPointOnWireNoEdge(elem, pos))
+				return true;
+		}
+		return false;
+	}
+
 	public static isHorizontal(wire: Element): boolean {
 		return wire.pos.y === wire.endPos.y;
 	}
@@ -240,16 +266,12 @@ export abstract class Elements {
 		return wire.pos.x === wire.endPos.x;
 	}
 
+	public static isHorizontalElem(elem: Element): boolean {
+		return elem.typeId === ElementTypeId.WIRE ? Elements.isHorizontal(elem) : elem.rotation % 2 === 0;
+	}
+
 	public static isSameDirection(elem0: Element, elem1: Element): boolean {
-		const comp = elem0.typeId === 0 ? elem1 : elem0;
-		const wire = elem0.typeId === 0 ? elem0 : elem1;
-		// comp still might be a wire, because it is not tested that well
-		if (comp.typeId === 0)
-			return false;
-		if (comp.rotation % 2 === 0)
-			return Elements.isHorizontal(wire);
-		else
-			return Elements.isVertical(wire);
+		return Elements.isHorizontalElem(elem0) === Elements.isHorizontalElem(elem1);
 	}
 
 	public static elementType(typeId: number): ElementType {

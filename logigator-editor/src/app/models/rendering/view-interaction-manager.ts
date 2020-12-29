@@ -227,7 +227,11 @@ export class ViewInteractionManager {
 	private pUpElement(lGraphics: LGraphics) {
 		if (this.workModeSer.currentWorkMode === WorkMode.COMPONENT ||
 			this.workModeSer.currentWorkMode === WorkMode.ERASER ||
-			this._state === ViewIntManState.DRAGGING
+			this._state === ViewIntManState.NEW_WIRE ||
+			this._state === ViewIntManState.DRAGGING ||
+			this._state === ViewIntManState.CUT_DRAGGING ||
+			this._state === ViewIntManState.SELECT ||
+			this._state === ViewIntManState.SELECT_CUT
 		) {
 			return;
 		}
