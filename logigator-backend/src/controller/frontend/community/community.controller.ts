@@ -8,7 +8,6 @@ import {TranslationService} from '../../../services/translation.service';
 import {Preferences} from '../../../decorator/preferences.decorator';
 import {UserPreferences} from '../../../models/user-preferences';
 import {ComponentRepository} from '../../../database/repositories/component.repository';
-import {CheckAuthenticatedFrontMiddleware} from '../../../middleware/auth/frontend-guards/check-authenticated-front.middleware';
 import {UserRepository} from '../../../database/repositories/user.repository';
 
 @Controller('/community')
