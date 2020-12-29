@@ -45,7 +45,7 @@ export const text: ElementType = {
 		return longest;
 	},
 	height(element) {
-		return element ? Math.ceil((element.data as TextData).split('\n').length * element.options[0] / 16) : 0;
+		return element ? Math.ceil(((element.data as TextData).split('\n').length * element.options[0] / 8) - element.options[0] / 16) : 0;
 	},
 
 	options: [8],
