@@ -1,0 +1,63 @@
+<div class="partial-community-list" data-current-page="{{currentPage}}" data-total-pages="{{totalPages}}">
+	{{#each entries}}
+		<div class="partial-community-list__item">
+			<div>
+				<div class="partial-community-list__image">
+					<img alt="Preview" src="{{ternary (expr @root.preferences.theme '===' 'dark') this.previewDark this.previewLight}}">
+				</div>
+				<div class="partial-community-list__description-text-mobile">
+					{{#if this.description}}
+						<div class="partial-community-list__text">{{handleNewLines this.description}}</div>
+					{{else}}
+						<div class="partial-community-list__text">{{@root.i18n.COMMUNITY.NO_DESCRIPTION}}</div>
+					{{/if}}
+					<div class="partial-community-list__buttons-user">
+						<div>
+							<a class="button-a" href="{{linkHref this.url}}">
+								<button class="btn-raised primary partial-community-list__button">{{@root.i18n.COMMUNITY.VIEW}}</button>
+							</a>
+							<a class="button-a" href="{{this.editorUrl}}" target="_blank" rel="noopener">
+								<button class="btn-raised primary partial-community-list__button partial-community-list__open">{{@root.i18n.COMMUNITY.OPEN}}</button>
+							</a>
+						</div>
+						<a class="partial-community-list__user" href="{{linkHref this.userUrl}}">
+							<p>{{this.username}}</p>
+							<img alt="User Image" src="{{this.userImage}}">
+						</a>
+					</div>
+				</div>
+			</div>
+			<div class="partial-community-list__description">
+				<div class="partial-community-list__header">
+					<h2 class="partial-community-list__title">{{this.name}}</h2>
+					<div class="partial-community-list__stars">
+						<p>{{this.stargazersCount}}</p>
+						{{> icon icon='features' alt='Features Link' }}
+					</div>
+				</div>
+				<hr class="partial-community-list__divider">
+				<div class="partial-community-list__description-text">
+					{{#if this.description}}
+						<div class="partial-community-list__text">{{handleNewLines this.description}}</div>
+					{{else}}
+						<div class="partial-community-list__text">{{@root.i18n.COMMUNITY.NO_DESCRIPTION}}</div>
+					{{/if}}
+					<div class="partial-community-list__buttons-user">
+						<div>
+							<a class="button-a" href="{{linkHref this.url}}">
+								<button class="btn-raised primary partial-community-list__button">{{@root.i18n.COMMUNITY.VIEW}}</button>
+							</a>
+							<a class="button-a" href="{{this.editorUrl}}" target="_blank" rel="noopener">
+								<button class="btn-raised primary partial-community-list__button partial-community-list__open">{{@root.i18n.COMMUNITY.OPEN}}</button>
+							</a>
+						</div>
+						<a class="partial-community-list__user" href="{{linkHref this.userUrl}}">
+							<p>{{this.username}}</p>
+							<img alt="User Image" src="{{this.userImage}}">
+						</a>
+					</div>
+				</div>
+			</div>
+		</div>
+	{{/each}}
+</div>

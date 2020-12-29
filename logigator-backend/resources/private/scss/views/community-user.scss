@@ -1,0 +1,131 @@
+@import "../config/config";
+@import "../partials/project-teasers";
+
+@include view('community-user') {
+	@include section('container', 1200px);
+
+	@include element('header') {
+		display: flex;
+		height: 5rem;
+		align-items: center;
+
+		img {
+			height: 100%;
+			width: auto;
+		}
+
+		div {
+			margin-left: 1rem;
+
+			h2 {
+				font-weight: 100;
+				font-size: 32px;
+				margin-top: 0;
+				margin-bottom: 0.5rem;
+			}
+
+			p {
+				margin: 0;
+			}
+		}
+	}
+
+	@include element('tabs') {
+		width: 100%;
+		display: flex;
+		margin-top: 2rem;
+
+		@include themify() {
+			border-bottom: 1px solid themed('text-primary')
+		}
+
+		@include media-breakpoint-down('md') {
+			flex-direction: column;
+		}
+	}
+
+	@include element('tab') {
+		cursor: pointer;
+		text-decoration: none;
+
+		@include themify() {
+			@include media-breakpoint-up('md') {
+				border-right: 1px solid themed('text-primary');
+			}
+
+			@include media-breakpoint-down('md') {
+				border-bottom: 1px solid themed('text-primary');
+			}
+
+			&:hover {
+				background-color: themed('accent2');
+			}
+		}
+
+		&:last-of-type {
+			border-right: none;
+			border-bottom: none;
+		}
+
+		@include state('active') {
+			@include themify() {
+				p {
+					color: themed('primary');
+				}
+			}
+		}
+
+		p {
+			margin: 1rem;
+		}
+	}
+
+	@include element('no-items') {
+		text-align: center;
+	}
+
+	@include element('pages') {
+		width: 100%;
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		margin-top: 1rem;
+	}
+
+	@include element('page-button') {
+		padding: 0.5rem 0.85rem !important;
+		font-size: 1rem;
+		border-radius: 0 !important;
+
+
+		&:first-of-type {
+			border-top-left-radius: 0.1rem !important;
+			border-bottom-left-radius: 0.1rem !important;
+		}
+
+		&:last-of-type {
+			border-top-right-radius: 0.1rem !important;
+			border-bottom-right-radius: 0.1rem !important;
+		}
+
+		@include state('active') {
+			@include themify() {
+				background-color: themed('primary');
+				border-color: themed('primary');
+				color: #000000;
+
+				&:hover {
+					background-color: rgba(themed('primary'), 0.7);
+				}
+
+				&:active {
+					background-color: themed('primary');
+				}
+			}
+		}
+
+		@include state('hidden') {
+			display: none;
+		}
+	}
+}

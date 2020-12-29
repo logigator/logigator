@@ -1,0 +1,27 @@
+<div class="view-community" data-type="{{type}}">
+	<div class="view-community__nav">
+		<div class="view-community__links">
+			<a class="view-community__link" href="{{linkHref '/community/projects' }}">{{i18n.COMMUNITY.NAV.PROJECTS}}</a>
+			<a class="view-community__link" href="{{linkHref '/community/components' }}">{{i18n.COMMUNITY.NAV.COMPONENTS}}</a>
+		</div>
+	</div>
+
+	<section class="view-community__container">
+		<div class="view-community__header">
+			<h1 class="view-community__header-headline">{{ternary (expr type '===' 'projects') i18n.COMMUNITY.PROJECTS i18n.COMMUNITY.COMPONENTS}}</h1>
+			{{> form-input-standalone name='search' type='text' label=i18n.COMMUNITY.SEARCH id='view-community__search' class='view-community__search' value=searchTerm }}
+		</div>
+		<div class="view-community__list">
+			{{> community-list }}
+		</div>
+		<div class="view-community__pages">
+			<button class="btn-outline secondary view-community__page-button"><<</button>
+			<button class="btn-outline secondary view-community__page-button"><</button>
+			<button class="btn-outline secondary view-community__page-button">1</button>
+			<button class="btn-outline secondary view-community__page-button">2</button>
+			<button class="btn-outline secondary view-community__page-button">3</button>
+			<button class="btn-outline secondary view-community__page-button">></button>
+			<button class="btn-outline secondary view-community__page-button">>></button>
+		</div>
+	</section>
+</div>

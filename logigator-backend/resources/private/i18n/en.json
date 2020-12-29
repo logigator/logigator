@@ -22,13 +22,16 @@
 		"ACCOUNT_SECURITY": "Logigator - Security",
 		"ACCOUNT_DELETE": "Logigator - Delete Account",
 		"LOGIN": "Logigator - Login",
-		"REGISTER": "Logigator - Register"
+		"REGISTER": "Logigator - Register",
+		"EXAMPLES": "Logigator - Examples",
+		"COMMUNITY": "Logigator - Community"
 	},
 	"SITE_HEADER": {
 		"DOWNLOAD": "Download",
 		"FEATURES": "Features",
-		"PROJECTS": "Projects",
-		"COMPONENTS": "Components",
+		"PROJECTS": "My Projects",
+		"COMPONENTS": "My Components",
+		"COMMUNITY": "Community",
 		"LOGIN": "Login",
 		"REGISTER": "Sign up"
 	},
@@ -47,18 +50,44 @@
 	},
 	"HOME": {
 		"INTRO": {
-			"DESCRIPTION": "The editor for logical circuits...",
-			"BUTTON": "TRY NOW"
+			"DESCRIPTION": "Build, simulate and manage complex logic circuits for free.",
+			"BUTTON": "START BUILDING NOW"
 		},
-		"EXPLANATION": {
-			"TITLE": "A short Explanation",
-			"DESCRIPTION": "You probably ask yourself - what are logical gates? In a nutshell logical gates are the components that make up the processing unit of a computer. However, this explanation is a bit short, which is why we animated this short video to explain the basics needed to use our website.",
-			"VIDEO": "https://www.youtube.com/embed/weTeJLMGq_Q"
+		"FEATURES": {
+			"TITLE": "Features",
+			"DESCRIPTION": "Build an simulate your own circuits with Logigator, a simple yet powerful online tool.",
+			"PERFORMANCE": "Performance",
+			"PERFORMANCE_DES": "Logigtators' editor can handle even the largest project with ease thanks to WebAssembly and WebGL.",
+			"SUBCIRCUITS": "Subcircuits",
+			"SUBCIRCUITS_DES": "Create Subcircuits and use them all over your projects. This will help keep your projects organized.",
+			"SHARE": "Share Projects",
+			"SHARE_DES": "Share your circuits with other users, so they can learn from your work.",
+			"IMAGES": "Export Images",
+			"IMAGES_DES": "With Logigator you can export high resolution images in three different formats (SVG, PNG, JPG), to uses them anywhere."
 		},
 		"EXAMPLES": {
-			"TITLE": "A few example circuits for you...",
-			"TRY_NOW": "TRY NOW"
+			"TITLE": "Example Circuits",
+			"DESCRIPTION": "Learn to design simple to more complex circuits from our examples.",
+			"MORE": "See More"
+		},
+		"VIDEO": {
+			"TITLE": "What are logic circuits?",
+			"DESCRIPTION": "If you don't know what logic gates and logic circuits are, we have a short explanation for you."
+		},
+		"SHARES": {
+			"PROJECTS_TITLE": "Recent shared Projects",
+			"PROJECTS_DESCRIPTION": "Explore the recent activity of our users. Your Project could be the next on this list.",
+			"COMPS_TITLE": "Recent shared Components",
+			"COMPS_DESCRIPTION": "Explore the recent shared Components of our users. They may be useful for you.",
+			"MORE": "See More"
+		},
+		"PROJECT_TEASERS": {
+			"VIEW": "View"
 		}
+	},
+	"EXAMPLES": {
+		"VIEW": "View Example",
+		"CLONE": "Clone Example"
 	},
 	"FEATURES": {
 		"WHAT_IS": {
@@ -128,6 +157,27 @@
 		"ERR_EMAIL_TAKEN": "Email has already been taken",
 		"ERR_VERIFICATION_MAIL": "Verification-mail could not be sent, try again when signing in.",
 		"ERR_UNKNOWN": "An unknown error occurred."
+	},
+	"COMMUNITY": {
+		"NAV": {
+			"PROJECTS": "Projects",
+			"COMPONENTS": "Components"
+		},
+		"SEARCH": "Search",
+		"COMPONENTS": "Shared Components",
+		"PROJECTS": "Shared Projects",
+		"VIEW": "View",
+		"OPEN": "Open",
+		"CLONE": "Clone",
+		"NO_DESCRIPTION": "No description was provided.",
+		"USER": {
+			"MEMBER_SINCE": "Member since",
+			"COMPONENTS": "Components",
+			"PROJECTS": "Projects",
+			"STARED_COMPONENTS": "Stared Components",
+			"STARED_PROJECTS": "Stared Projects",
+			"NO_ITEMS": "Nothing to show in this category."
+		}
 	},
 	"USERSPACE": {
 		"NAV": {
@@ -211,7 +261,9 @@
 			"SYMBOL": "Symbol",
 			"SYMBOL_ERR_REQUIRED": "Symbol is required.",
 			"SYMBOL_ERR_MAX": "Symbol may contain a maximum of 5 characters.",
-			"CREATE": "Create"
+			"CREATE": "Create",
+			"PUBLIC": "Share publicly",
+			"PUBLIC_EXPLANATION": "If 'Share publicly' is activated, the project will be displayed in all public lists."
 		},
 		"PROJECT_COMP_EDIT": {
 			"PROJECT_TITLE": "Edit Project",
@@ -229,6 +281,7 @@
 		"PROJECT_COMP_INFO": {
 			"TITLE": "Information",
 			"NAME": "Name",
+			"FORKED": "Forked from",
 			"CREATED": "Created",
 			"MODIFIED": "Last modified",
 			"INPUTS": "Inputs",
@@ -238,7 +291,8 @@
 			"DEPENDENT_PROJECTS": "Dependent Projects",
 			"DEPENDENT_COMPONENTS": "Dependent Components",
 			"NO_DEPENDENCIES": "N/A",
-			"DESCRIPTION": "Description"
+			"DESCRIPTION": "Description",
+			"COMMUNITY_PAGE": "Go to Community Page"
 		},
 		"PROJECT_COMP_DELETE": {
 			"TITLE": "Confirm Delete",

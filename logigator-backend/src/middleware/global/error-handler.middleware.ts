@@ -1,4 +1,10 @@
-import {BadRequestError, ExpressErrorMiddlewareInterface, HttpError, Middleware} from 'routing-controllers';
+import {
+	BadRequestError,
+	ExpressErrorMiddlewareInterface,
+	HttpError,
+	Middleware,
+	NotFoundError
+} from 'routing-controllers';
 import {Request, Response} from 'express';
 import {ConfigService} from '../../services/config.service';
 
@@ -42,6 +48,12 @@ export class ErrorHandlerMiddleware implements ExpressErrorMiddlewareInterface {
 			}
 
 			response.send(body);
+			return;
+		}
+
+		if (error instanceof NotFoundError) {
+			response.status(404);
+			response.render('not-found');
 			return;
 		}
 

@@ -12,4 +12,8 @@ export class CreateProject {
 	@MaxLength(2048)
 	description: string;
 
+	@IsOptional()
+	@IsString()
+	public: string;
+
 }

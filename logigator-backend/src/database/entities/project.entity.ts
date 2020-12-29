@@ -4,12 +4,13 @@ import {
 	CreateDateColumn,
 	Entity,
 	Generated,
-	getCustomRepository,
+	getCustomRepository, ManyToMany,
 	ManyToOne,
 	OneToMany,
 	OneToOne,
 	PrimaryGeneratedColumn,
-	UpdateDateColumn
+	UpdateDateColumn,
+	JoinTable
 } from 'typeorm';
 import {User} from './user.entity';
 import {ProjectFile} from './project-file.entity';
@@ -47,7 +48,7 @@ export class Project {
 	@OneToOne(type => ProjectFile, projectFile => projectFile.project, {cascade: true, eager: true})
 	elementsFile: ProjectFile;
 
-	@ManyToOne(type => User, object => object.projects, {nullable: false})
+	@ManyToOne(type => User, object => object.projects, {nullable: false, onDelete: 'CASCADE', onUpdate: 'CASCADE'})
 	user: Promise<User>;
 
 	@Expose({name: 'user', groups: ['detailed']})
@@ -87,6 +88,12 @@ export class Project {
 
 	@Expose({name: 'dependencies', groups: ['detailed']})
 	private __dependencies__: ProjectDependency[];
+
+	@ManyToMany(() => User, user => user.staredProjects)
+	@JoinTable()
+	stargazers: Promise<User[]>
+
+	stargazersCount: number;
 
 	@BeforeRemove()
 	private async removeFile() {

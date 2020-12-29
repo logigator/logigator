@@ -1,0 +1,125 @@
+@import "../config/config";
+@import "../partials/community-list";
+
+@include view('community') {
+	@include section('container', 1200px);
+
+	padding-top: 5rem !important;
+
+	@include element('nav') {
+		position: fixed;
+		top: $header-height;
+		left: 0;
+		width: 100%;
+		height: $user-space-nav-height;
+		z-index: 300;
+
+		@include themify() {
+			background-color: themed('accent2');
+		}
+	}
+
+	@include element('links') {
+		margin: auto;
+		display: flex;
+		justify-content: space-around;
+		align-items: center;
+		flex-direction: row;
+		width: 100%;
+		height: 100%;
+		max-width: 50rem;
+	}
+
+	@include element('link') {
+		text-decoration: none;
+		font-size: 1.2rem;
+
+		&:hover {
+			@include themify() {
+				color: themed('primary');
+			}
+		}
+	}
+
+	@include element('header') {
+		display: flex;
+		align-items: center;
+		justify-content: space-between;
+		margin-bottom: 0.5rem;
+
+		@include media-breakpoint-down('sm') {
+			flex-direction: column;
+		}
+	}
+
+	@include element('header-headline') {
+		margin: 0.5rem 2rem 0.5rem 0;
+		font-size: 2rem;
+		font-weight: 400;
+
+		@include media-breakpoint-down('sm') {
+			margin-right: 0;
+			margin-bottom: 1rem;
+		}
+	}
+
+	@include element('search') {
+		margin: 0.5rem 0;
+		flex-grow: 1;
+		max-width: 300px;
+
+		@include media-breakpoint-down('sm') {
+			max-width: 100%;
+			width: 100%;
+		}
+	}
+
+	@include element('list') {
+		width: 100%;
+	}
+
+	@include element('pages') {
+		width: 100%;
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		margin-top: 1rem;
+	}
+
+	@include element('page-button') {
+		padding: 0.5rem 0.85rem !important;
+		font-size: 1rem;
+		border-radius: 0 !important;
+
+
+		&:first-of-type {
+			border-top-left-radius: 0.1rem !important;
+			border-bottom-left-radius: 0.1rem !important;
+		}
+
+		&:last-of-type {
+			border-top-right-radius: 0.1rem !important;
+			border-bottom-right-radius: 0.1rem !important;
+		}
+
+		@include state('active') {
+			@include themify() {
+				background-color: themed('primary');
+				border-color: themed('primary');
+				color: #000000;
+
+				&:hover {
+					background-color: rgba(themed('primary'), 0.7);
+				}
+
+				&:active {
+					background-color: themed('primary');
+				}
+			}
+		}
+
+		@include state('hidden') {
+			display: none;
+		}
+	}
+}

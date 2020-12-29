@@ -18,6 +18,13 @@
 				{{> form-error error='maxLength' message=i18n.POPUP.PROJECT_COMP_CREATE.DESCRIPTION_ERR_MAX clientValData='2048' }}
 			{{/form-area}}
 
+			<p class="view-project-component-create-popup__public-explanation">{{i18n.POPUP.PROJECT_COMP_CREATE.PUBLIC_EXPLANATION}}</p>
+
+			<div class="view-project-component-create-popup__public-switch">
+				<p>{{i18n.POPUP.PROJECT_COMP_CREATE.PUBLIC}}</p>
+				{{> form-switch name='public' checked=true }}
+			</div>
+
 			<button type="submit" class="btn-raised primary view-project-component-create-popup__submit">{{i18n.POPUP.PROJECT_COMP_CREATE.CREATE}}</button>
 
 		{{/form}}

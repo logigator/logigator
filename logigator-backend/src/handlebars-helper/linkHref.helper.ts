@@ -1,11 +1,11 @@
-import {HelperDelegate} from 'handlebars';
+import {HelperDelegate, HelperOptions} from 'handlebars';
 
 export function linkHrefHelper(): HelperDelegate {
-	return function(url: string) {
+	return function(url: string, options: HelperOptions) {
 		if (arguments.length < 2) {
 			throw new Error('handlebars Helper {{linkHref}} expects 1 arguments (link: string)');
 		}
 
-		return '/' + this.preferences.lang + (url.startsWith('/') ? url : '/' + url);
+		return '/' + options.data.root.preferences.lang + (url.startsWith('/') ? url : '/' + url);
 	};
 }

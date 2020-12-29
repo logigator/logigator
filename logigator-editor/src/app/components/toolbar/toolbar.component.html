@@ -84,7 +84,15 @@
 
 	<div class="toolbar-end">
 		<ng-container #enterSimulationLoading></ng-container>
-		<p (click)="enterSimulation()" *ngIf="!isSimulationMode" class="start-sim">{{'TOOLBAR.START_SIM' | translate}}</p>
-		<p (click)="leaveSimulation()" *ngIf="isSimulationMode" class="start-sim">{{'TOOLBAR.EXIT_SIM' | translate}}</p>
+		<div *ngIf="!isSimulationMode" (click)="enterSimulation()">
+			<img *ngIf="currentTheme === 'dark'" src="/assets/icons/dark/control-play.svg">
+			<img *ngIf="currentTheme === 'light'" src="/assets/icons/light/control-play.svg">
+			<p class="start-sim">{{'TOOLBAR.START_SIM' | translate}}</p>
+		</div>
+		<div *ngIf="isSimulationMode" (click)="leaveSimulation()">
+			<img *ngIf="currentTheme === 'dark'" src="/assets/icons/dark/control-stop.svg">
+			<img *ngIf="currentTheme === 'light'" src="/assets/icons/light/control-stop.svg">
+			<p class="start-sim">{{'TOOLBAR.EXIT_SIM' | translate}}</p>
+		</div>
 	</div>
 </div>

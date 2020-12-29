@@ -11,6 +11,7 @@ import {ShortcutAction} from '../../models/shortcut-action';
 import {ShortcutsService} from '../../services/shortcuts/shortcuts.service';
 import {SimulationManagementService} from '../../services/simulation/simulation-management/simulation-management.service';
 import {Grid} from '../../models/rendering/grid';
+import {ThemingService} from '../../services/theming/theming.service';
 import {BruteForceTester} from '../../../../tests/auto-tests/brute-force-tester';
 
 @Component({
@@ -37,12 +38,17 @@ export class ToolbarComponent {
 		private editorInteractionService: EditorInteractionService,
 		private stateCompiler: StateCompilerService,
 		private shortcutService: ShortcutsService,
-		private simulationManagement: SimulationManagementService
+		private simulationManagement: SimulationManagementService,
+		private themingService: ThemingService
 	) {}
 
 	// #!if DEBUG === 'true'
 	public printElements(): void {
 		console.log(this.projectService.currProject.allElements);
+	}
+
+	public get currentTheme() {
+		return this.themingService.currentTheme;
 	}
 
 	public printCalls(): void {

@@ -48,7 +48,7 @@ async function run() {
 	for (const u of users[0]) {
 		if (u.login_type === 'local_not_verified')
 			continue;
-		const id = uuid.v4();
+		const id = u.username === 'system' ? '00000000-0000-0000-0000-000000000000' : uuid.v4();
 		await conn.execute(`INSERT INTO logigator_new.user (
 				id,
 				username,

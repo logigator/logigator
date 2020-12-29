@@ -22,13 +22,16 @@
 		"ACCOUNT_SECURITY": "Logigator - Sicherheit",
 		"ACCOUNT_DELETE": "Logigator - Account löschen",
 		"LOGIN": "Logigator - Login",
-		"REGISTER": "Logigator - Registrieren"
+		"REGISTER": "Logigator - Registrieren",
+		"EXAMPLES": "Logigator - Beispiele",
+		"COMMUNITY": "Logigator - Community"
 	},
 	"SITE_HEADER": {
 		"DOWNLOAD": "Download",
 		"FEATURES": "Features",
-		"PROJECTS": "Projekte",
-		"COMPONENTS": "Komponenten",
+		"PROJECTS": "Meine Projekte",
+		"COMPONENTS": "Meine Komponenten",
+		"COMMUNITY": "Community",
 		"LOGIN": "Anmelden",
 		"REGISTER": "Registrieren"
 	},
@@ -47,18 +50,44 @@
 	},
 	"HOME": {
 		"INTRO": {
-			"DESCRIPTION": "Der Editor für Logikschaltungen...",
-			"BUTTON": "ZUM EDITOR"
+			"DESCRIPTION": "Baue, simuliere und verwalte komplex Logikschaltungen.",
+			"BUTTON": "Zum Editor"
 		},
-		"EXPLANATION": {
-			"TITLE": "Eine kurze Erklärung",
-			"DESCRIPTION": "Wenn Sie sich jetzt Fragen, was logische Gatter überhaupt sind, dann ist das ganz normal. Kurzgesagt sind logische Gatter jene Bausteine, aus denen die Recheneinheiten eines Computers aufgebaut sind. Aber weil das als Erklärung nicht reicht, haben wir ein Video animiert in dem die Grundprinzipien unserer Diplomarbeit verständlich erklärt werden.",
-			"VIDEO": "https://www.youtube.com/embed/114EOH-fdLE"
+		"FEATURES": {
+			"TITLE": "Features",
+			"DESCRIPTION": "Baue und simuliere deine eigenen Schaltungen mit Logigator, einem einfachem aber mächtigen online Tool.",
+			"PERFORMANCE": "Performance",
+			"PERFORMANCE_DES": "Logigtators' Editor kann dank WebAssembly und WebGL auch mit den größten Projekten umgehen.",
+			"SUBCIRCUITS": "Unterschaltungen",
+			"SUBCIRCUITS_DES": "Erstelle Unterschaltungen und verwende sie in all deinen Projekten. Das wird dir helfen, deine Projekte übersichtlich zu halten.",
+			"SHARE": "Projekte teilen",
+			"SHARE_DES": "Teile deine Schaltungen mit anderen Benutzern, damit sie von deiner Arbeit lernen können.",
+			"IMAGES": "Bilder exportieren",
+			"IMAGES_DES": "Mit Logigator kannst du Bilder in verschieden Formaten (SVG, PNG, JPG) in hoher Auflösung exportieren, um sie überall zu verwenden."
 		},
 		"EXAMPLES": {
-			"TITLE": "Ein paar Beispielschaltungen zum ausprobieren...",
-			"TRY_NOW": "JETZT AUSPROBIEREN"
+			"TITLE": "Beispielschaltungen",
+			"DESCRIPTION": "Lerne mit unseren Beispielen einfache bis komplexe Schaltungen zu bauen.",
+			"MORE": "Mehr ansehen"
+		},
+		"VIDEO": {
+			"TITLE": "Was sind Logikschaltungen?",
+			"DESCRIPTION": "Wenn du nicht weißt was Logikschaltungen und Logikgatter sind, haben wir eine kurze Erklärung für dich."
+		},
+		"SHARES": {
+			"PROJECTS_TITLE": "Zuletzt geteilte Projekte",
+			"PROJECTS_DESCRIPTION": "Erkunde die letzten Aktivitäten unserer Benutzer. Dein Projekt könnte das nächste auf dieser Liste sein.",
+			"COMPS_TITLE": "Zuletzt geteilte Komponenten",
+			"COMPS_DESCRIPTION": "Erkunde die zuletzt geteilten Komponente unserer Benutzer. Sie sind vielleicht hilfreich für dich.",
+			"MORE": "Mehr ansehen"
+		},
+		"PROJECT_TEASERS": {
+			"VIEW": "Öffnen"
 		}
+	},
+	"EXAMPLES": {
+		"VIEW": "Beispiel ansehen",
+		"CLONE": "Beispiel Klonen"
 	},
 	"FEATURES": {
 		"WHAT_IS": {
@@ -128,6 +157,27 @@
 		"ERR_EMAIL_TAKEN": "Email Adresse wird bereits verwendet",
 		"ERR_VERIFICATION_MAIL": "Verfizierungs-Email konnte nicht gesendet werden, versuchen Sie es beim anmelden erneut.",
 		"ERR_UNKNOWN": "Ein unbekannter Fehler ist aufgetreten."
+	},
+	"COMMUNITY": {
+		"NAV": {
+			"PROJECTS": "Projekte",
+			"COMPONENTS": "Komponenten"
+		},
+		"SEARCH": "Suchen",
+		"COMPONENTS": "Geteilte Komponenten",
+		"PROJECTS": "Geteilte Projekte",
+		"VIEW": "Anzeigen",
+		"OPEN": "Öffnen",
+		"CLONE": "Klonen",
+		"NO_DESCRIPTION": "Beschreibung ist nicht verfügbar.",
+		"USER": {
+			"MEMBER_SINCE": "Mitglied seit",
+			"COMPONENTS": "Komponenten",
+			"PROJECTS": "Projekte",
+			"STARED_COMPONENTS": "Gemerkte Komponenten",
+			"STARED_PROJECTS": "Gemerkte Projekte",
+			"NO_ITEMS": "Keine Elemente vorhanden."
+		}
 	},
 	"USERSPACE": {
 		"NAV": {
@@ -211,7 +261,9 @@
 			"SYMBOL": "Symbol",
 			"SYMBOL_ERR_REQUIRED": "Symbol muss angegeben werden.",
 			"SYMBOL_ERR_MAX": "Symbol darf maximal fünf Zeichen enthalten",
-			"CREATE": "Erstellen"
+			"CREATE": "Erstellen",
+			"PUBLIC": "Öffentlich teilen",
+			"PUBLIC_EXPLANATION": "Ist 'Öffentlich teilen' aktiviert, wird das Projekt, in allen öffentlichen Listen angezeigt."
 		},
 		"PROJECT_COMP_EDIT": {
 			"PROJECT_TITLE": "Projekt bearbeiten",
@@ -229,6 +281,7 @@
 		"PROJECT_COMP_INFO": {
 			"TITLE": "Informationen",
 			"NAME": "Name",
+			"FORKED": "Entstammt aus",
 			"CREATED": "Erstellt",
 			"MODIFIED": "Zuletzt bearbeitet",
 			"INPUTS": "Eingänge",
@@ -238,7 +291,8 @@
 			"DEPENDENT_PROJECTS": "Abhängige Projekte",
 			"DEPENDENT_COMPONENTS": "Abhängige Komponenten",
 			"NO_DEPENDENCIES": "keine",
-			"DESCRIPTION": "Beschreibung"
+			"DESCRIPTION": "Beschreibung",
+			"COMMUNITY_PAGE": "Zur Community Seite"
 		},
 		"PROJECT_COMP_DELETE": {
 			"TITLE": "Löschen bestätigen",

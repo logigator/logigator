@@ -8,6 +8,13 @@
 		<app-input-error error="maxlength">{{'POPUP.NEW_COMP.DESCRIPTION_MAX_LENGTH' | translate}}</app-input-error>
 	</app-input>
 
+	<p class="explanation">{{'POPUP.NEW_COMP.PUBLIC_EXPLANATION' | translate}}</p>
+
+	<div class="public-switch">
+		<p>{{'POPUP.NEW_COMP.PUBLIC' | translate}}</p>
+		<app-switch formControlName="public"></app-switch>
+	</div>
+
 	<button class="btn-raised primary" (click)="exportProject()" [disabled]="saveForm.invalid">{{'POPUP.SAVE.DOWNLOAD' | translate}}</button>
 	<button class="btn-raised primary" (click)="saveToServer()" *ngIf="isLoggedIn" [disabled]="saveForm.invalid">{{'POPUP.SAVE.CLOUD' | translate}}</button>
 </form>

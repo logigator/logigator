@@ -153,8 +153,8 @@ export class ProjectSaveManagementService {
 		return project;
 	}
 
-	public async createProjectServer(name: string, description = '', project: Project): Promise<string> {
-		const projectResp = await this.api.post<ProjectInfo>('/project', {name, description},
+	public async createProjectServer(name: string, description = '', sharePublicly = false, project: Project): Promise<string> {
+		const projectResp = await this.api.post<ProjectInfo>('/project', {name, description, public: sharePublicly + ''},
 			{errorMessage: 'ERROR.PROJECTS.CREATE'}).toPromise();
 		const components = await this.buildDependencyTree(project);
 		const createdComps: ComponentInfo[] = [];
@@ -198,7 +198,16 @@ export class ProjectSaveManagementService {
 			}),
 			elements: projectElements.elements,
 		};
-		await this.api.put<ProjectInfo>(`/project/${projectResp.data.id}`, projectBody, {errorMessage: 'ERROR.PROJECTS.SAVE'}).toPromise();
+		const resp = this.api.put<ProjectInfo>(`/project/${projectResp.data.id}`, projectBody, {errorMessage: 'ERROR.PROJECTS.SAVE'}).toPromise();
+
+		const previews = await this.imageService.generatePreviews(project);
+		const formData = new FormData();
+		formData.append('previews', previews.dark);
+		formData.append('previews', previews.light);
+		await this.api.post(`/project/${projectResp.data.id}/preview`, formData,
+			{errorMessage: 'ERROR.PROJECTS.SAVE'}).toPromise();
+
+		await resp;
 		for (const toRemove of tempMappings.values()) {
 			this.removeElement(toRemove);
 		}
@@ -206,10 +215,10 @@ export class ProjectSaveManagementService {
 		return projectResp.data.id;
 	}
 
-	public async createComponent(name: string, symbol: string, description: string = ''): Promise<Project> {
+	public async createComponent(name: string, symbol: string, description: string = '', sharePublicly = false): Promise<Project> {
 		if (this.userService.isLoggedIn) {
 			const body = {
-				name, symbol, description
+				name, symbol, description, public: sharePublicly + ''
 			};
 
 			const resp = await this.api.post<ComponentInfo>('/component', body, {errorMessage: 'ERROR.PROJECTS.CREATE'}).toPromise();
@@ -281,7 +290,7 @@ export class ProjectSaveManagementService {
 		const formData = new FormData();
 		formData.append('previews', previews.dark);
 		formData.append('previews', previews.light);
-		const previewPromise =  this.api.post(`/component/${this._mappings.getKey(project.id)}/preview`, formData,
+		const previewPromise = this.api.post(`/component/${this._mappings.getKey(project.id)}/preview`, formData,
 			{errorMessage: 'ERROR.PROJECTS.SAVE'}).toPromise();
 
 		project.hash = (await resp).data.elementsFile.hash;
