@@ -100,3 +100,7 @@ Hält einen Zustand. (J) repräsentiert `set`, (K) repräsentiert `reset`. Sobal
 Hält einen Zustand. (S) repräsentiert `set`, (R) repräsentiert `reset`. Sobald (CLK) high ist, wird (Q) high, falls (S) high ist, bzw. low, falls (R) high ist. (Q) ändert sich nicht, wenn (S) und (R) gleich sind.
 </div>
 </div>
+
+## Zufallsgenerator
+
+Diese Komponente generiert Zufallszahlen, immer wenn sich der CLK Eingang von Low auf High ändert.

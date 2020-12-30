@@ -100,3 +100,7 @@ Holds a state. (J) represents `set`, (K) represents `reset`. As soon as (CLK) is
 Holds a state. (S) represents `set`, (R) represents `reset`. As soon as (CLK) is set high, (Q) sets high if (S) is set high and sets low if (R) is set high. (Q) does not change when (J) and (K) are the same.
 </div>
 </div>
+
+## Random Number Generator
+
+This component will generate a random number on rising edge of its CLK input.
