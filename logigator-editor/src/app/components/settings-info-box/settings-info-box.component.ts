@@ -201,7 +201,7 @@ export class SettingsInfoBoxComponent implements OnChanges, OnDestroy {
 		this.editorActions.enableShortcutListener();
 	}
 
-	private get isElementPlaced(): boolean {
+	public get isElementPlaced(): boolean {
 		return this.selectedCompId !== undefined && this.selectedCompId !== null;
 	}
 
