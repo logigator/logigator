@@ -147,6 +147,10 @@
 				height: 100%;
 				display: block;
 				margin: auto;
+
+				@include themify() {
+					filter: drop-shadow(2px 2px 4px themed('accent1'));
+				}
 			}
 		}
 
