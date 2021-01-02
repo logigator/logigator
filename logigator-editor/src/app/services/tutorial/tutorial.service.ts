@@ -9,7 +9,7 @@ import {
 import {TutorialWindowComponent} from '../../components/tutorial-window/tutorial-window.component';
 import {StorageService, StorageServiceModel} from '../storage/storage.service';
 import {Tutorial} from '../../models/tutorial';
-import {basic} from '../../models/tutorials/basic';
+import {gettingStarted} from '../../models/tutorials/gettingStarted';
 import {Subscription} from 'rxjs';
 
 @Injectable({
@@ -18,7 +18,7 @@ import {Subscription} from 'rxjs';
 export class TutorialService {
 
 	private _tutorials = new Map<string, Tutorial>([
-		[basic.id, basic]
+		[gettingStarted.id, gettingStarted]
 	]);
 
 	private readonly _finishedTutorials: Set<string>;

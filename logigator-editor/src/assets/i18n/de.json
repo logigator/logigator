@@ -248,7 +248,8 @@
 		"SKIP": "Überspringen",
 		"NEXT": "Weiter",
 		"FINISH": "Abschließen",
-		"TUTORIALS": {
+		"GETTING_STARTED": {
+			"NAME": "Erste Erklärung"
 		}
 	},
 	"ELEMENT_TYPE": {

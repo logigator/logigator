@@ -87,8 +87,8 @@ export class TutorialWindowComponent implements OnDestroy {
 			let desiredPos = toExplainBounding.left + toExplainBounding.width / 2 - this.tutorialWindow.nativeElement.offsetWidth / 2;
 			if (desiredPos < 0) {
 				desiredPos = 5;
-			} else if (desiredPos > window.innerWidth - 320) {
-				desiredPos = window.innerWidth - 325;
+			} else if (desiredPos > window.innerWidth - 380) {
+				desiredPos = window.innerWidth - 385;
 			}
 			this.arrowLeft = toExplainBounding.left + toExplainBounding.width / 2 - desiredPos - 19;
 			this.xPos = desiredPos;

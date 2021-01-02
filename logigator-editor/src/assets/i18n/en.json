@@ -248,7 +248,52 @@
 		"SKIP": "Skip",
 		"NEXT": "Next",
 		"FINISH": "Finish tutorial",
-		"TUTORIALS": {
+		"GETTING_STARTED": {
+			"NAME": "Getting Started",
+			"WELCOME": {
+				"TITLE": "Welcome to Logigator!",
+				"TEXT": "Welcome to Logigator, the simple and yet very powerful tool to build logic circuits for free.<br><br>Let's take a tour."
+			},
+			"ZOOM_PAN": {
+				"TITLE": "Zooming and Panning",
+				"TEXT": "You can zoom the view by using your mouse wheel and pan it by dragging your mouse with the right mouse button pressed."
+			},
+			"PLACING_ELEMS": {
+				"TITLE": "Placing Components",
+				"TEXT": "In order to build a circuit you need to place components. All Components that are available to be used are shown here. User defined components will also be shown here.<br><br> To place a component select it and click somewhere in the work-area."
+			},
+			"WIRES": {
+				"TITLE": "Wires",
+				"TEXT": "For a circuit to work, the individual components must be connected. This is done with wires. <br><br> To place a wire you can use the wire tool. When the tool is active you can start to drag wires with your left mouse button."
+			},
+			"CONN_WIRE": {
+				"TITLE": "Connecting and disconnecting Wires",
+				"TEXT": "If two ore more wires are connected the point of connection is marked with a dot.<br><br> Using this tool you can toggle the connection of these wires."
+			},
+			"SELECT": {
+				"TITLE": "Selecting components and wires",
+				"TEXT": "Using the select tool, you can select multiple components and wires at once by just dragging with your left mouse button.<br><br> It's also possible to select single components by just clicking on them."
+			},
+			"SELECT_CUT": {
+				"TITLE": "Select Cut",
+				"TEXT": "This tool is a special variation of the normal select tool.<br><br> With it only things that are fully contained in the selection will be selected and wires that are partially selected will be cut of. This can be useful if you want to shorten wires for example."
+			},
+			"ERASER": {
+				"TITLE": "Eraser",
+				"TEXT": "The eraser tool does what it sounds like: It erases components and wires from your circuit.<br><br> This can be useful sometimes, when the select tool is not suitable for your task. In order tu use it, drag over the desired components with your left mouse button pressed."
+			},
+			"TEXT": {
+				"TITLE": "Placing Text",
+				"TEXT": "It can be useful to place text somewhere on the work-area. This can be achieved by using this tool.<br><br> It works like placing any other element."
+			},
+			"CUSTOM_COMPONENTS": {
+				"TITLE": "User defined Components",
+				"TEXT": "One of Logigator's creates features is the possibility to create subcircuits or user defined components.<br><br> This can be done here. After you created such an component it will be shown under the 'User Defined' category, ready to be used."
+			},
+			"SIMULATION_MODE": {
+				"TITLE": "Simulation mode",
+				"TEXT": "All you have seen so far is the edit mode of Logigator, where you can design and build your circuits.<br><br> In order to simulate and test them you habe to switch to simulation mode. This can be done here."
+			}
 		}
 	},
 	"ELEMENT_TYPE": {
