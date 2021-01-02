@@ -11,6 +11,7 @@
 		background-color: themed('background');
 		border: border('width') solid themed('accent1');
 		color: themed('text-primary');
+		box-shadow: 0 0 2px 1px themed('accent2');
 	}
 
 	.arrow {
