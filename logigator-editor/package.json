@@ -9,7 +9,7 @@
 	},
 	"scripts": {
 		"start": "npm run start:web",
-		"start:web": "npm run build-custom-build-scripts && env-cmd -e dev-web --use-shell \"ng serve -c dev-web\"",
+		"start:web": "npm run build-custom-build-scripts && npm run cp-sim-wasm-assets && env-cmd -e dev-web --use-shell \"ng serve -c dev-web\"",
 		"start:electron": "npm run build-custom-build-scripts && env-cmd -e dev-electron --use-shell \"electron-rebuild && npm-run-all -p ng:serve:electron electron:serve\"",
 		"build": "npm run build:web",
 		"build:web": "npm run build-custom-build-scripts && npm run cp-sim-wasm-assets && env-cmd -e prod-web --use-shell \"ng build -c prod-web \" && npm run wasm-js-cache-bust",
