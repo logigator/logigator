@@ -329,7 +329,7 @@
 			},
 			"DECODER": {
 				"NAME": "Decoder",
-				"DESCRIPTION": ""
+				"DESCRIPTION": "1-von-n binärer Dekodierer"
 			}
 		},
 		"IO": {

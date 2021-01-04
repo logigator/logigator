@@ -373,7 +373,7 @@
 			},
 			"DECODER": {
 				"NAME": "Decoder",
-				"DESCRIPTION": ""
+				"DESCRIPTION": "1-of-n binary decoder."
 			}
 		},
 		"IO": {
