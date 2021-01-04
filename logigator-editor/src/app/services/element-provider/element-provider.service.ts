@@ -28,6 +28,7 @@ import {ledMatrix} from '../../models/element-types/io/led-matrix';
 import {tunnel} from '../../models/element-types/basic/tunnel';
 import {rng} from '../../models/element-types/advanced/rng';
 import {ram} from '../../models/element-types/advanced/ram';
+import {decoder} from '../../models/element-types/advanced/decoder';
 
 @Injectable({
 	providedIn: 'root'
@@ -55,6 +56,7 @@ export class ElementProviderService {
 		[srFF.id, srFF],
 		[rng.id, rng],
 		[ram.id, ram],
+		[decoder.id, decoder],
 
 		// plug
 		[input.id, input],

@@ -326,6 +326,10 @@
 				"DESCRIPTION": "Schreibbarer Speicher. Die Eingänge werden bei Anlegen von CLK angewendet.<br>Wenn WE auf LOW gesetzt ist, wird von der Adresse gelesen, wenn auf HIGH gesetzt ist wird von der Adresse geschrieben.",
 				"WORD_SIZE": "Wortbreite",
 				"ADDRESS_SIZE": "Adressgröße"
+			},
+			"DECODER": {
+				"NAME": "Decoder",
+				"DESCRIPTION": ""
 			}
 		},
 		"IO": {

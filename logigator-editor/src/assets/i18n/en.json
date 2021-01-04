@@ -370,6 +370,10 @@
 				"DESCRIPTION": "Random Access Memory. Applies input on rising edge of CLK.<br>Set WE to high to write to current address and to low to read from current address.",
 				"WORD_SIZE": "Word Size",
 				"ADDRESS_SIZE": "Address Size"
+			},
+			"DECODER": {
+				"NAME": "Decoder",
+				"DESCRIPTION": ""
 			}
 		},
 		"IO": {

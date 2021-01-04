@@ -17,6 +17,7 @@ export const enum ElementTypeId {
 	SR_FF = 15,
 	RNG = 16,
 	RAM = 17,
+	DECODER = 18,
 
 	INPUT = 100,
 	OUTPUT = 101,
