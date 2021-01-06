@@ -6,12 +6,12 @@
 	left: 300px;
 	z-index: 500;
 	width: 380px;
+	box-shadow: 10px 10px 10px -5px rgba(0,0,0,0.5);
 
 	@include themify() {
 		background-color: themed('background');
 		border: border('width') solid themed('accent1');
 		color: themed('text-primary');
-		box-shadow: 0 0 2px 1px themed('accent2');
 	}
 
 	.arrow {
