@@ -158,6 +158,7 @@ export class WorkerCommunicationNodeService implements WorkerCommunicationServic
 
 		this.pause();
 		this._mode = 'target';
+		this._targetLastRun = Date.now();
 		this.registerStatusWatch();
 	}
 

@@ -253,6 +253,7 @@ export class WorkerCommunicationWasmService implements WorkerCommunicationServic
 		};
 		this._mode = 'target';
 		this._worker.postMessage(request);
+		this._targetLastRun = Date.now();
 		this.registerStatusWatch();
 	}
 
