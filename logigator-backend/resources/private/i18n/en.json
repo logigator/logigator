@@ -68,7 +68,7 @@
 		"EXAMPLES": {
 			"TITLE": "Example Circuits",
 			"DESCRIPTION": "Learn to design simple to more complex circuits from our examples.",
-			"MORE": "See More"
+			"MORE": "See More Examples"
 		},
 		"VIDEO": {
 			"TITLE": "What are logic circuits?",
@@ -79,7 +79,8 @@
 			"PROJECTS_DESCRIPTION": "Explore the recent activity of our users. Your Project could be the next on this list.",
 			"COMPS_TITLE": "Recent shared Components",
 			"COMPS_DESCRIPTION": "Explore the recent shared Components of our users. They may be useful for you.",
-			"MORE": "See More"
+			"MORE_PROJECTS": "See More Projects",
+			"MORE_COMPONENTS": "See More Components"
 		},
 		"PROJECT_TEASERS": {
 			"VIEW": "View"

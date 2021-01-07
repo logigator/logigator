@@ -67,7 +67,7 @@ async function bootstrap() {
 	app.use(expressStatic(path.join(configService.projectRootPath, 'resources', 'public'), {
 		cacheControl: true,
 		immutable: true,
-		maxAge: '30d'
+		maxAge: '90d'
 	}));
 
 	app.use(cookieParser(configService.getConfig('session').secret));

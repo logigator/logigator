@@ -68,7 +68,7 @@
 		"EXAMPLES": {
 			"TITLE": "Beispielschaltungen",
 			"DESCRIPTION": "Lerne mit unseren Beispielen einfache bis komplexe Schaltungen zu bauen.",
-			"MORE": "Mehr ansehen"
+			"MORE": "Weitere Beispielschaltungen"
 		},
 		"VIDEO": {
 			"TITLE": "Was sind Logikschaltungen?",
@@ -79,7 +79,8 @@
 			"PROJECTS_DESCRIPTION": "Erkunde die letzten Aktivitäten unserer Benutzer. Dein Projekt könnte das nächste auf dieser Liste sein.",
 			"COMPS_TITLE": "Zuletzt geteilte Komponenten",
 			"COMPS_DESCRIPTION": "Erkunde die zuletzt geteilten Komponente unserer Benutzer. Sie sind vielleicht hilfreich für dich.",
-			"MORE": "Mehr ansehen"
+			"MORE_PROJECTS": "Weitere Projekte",
+			"MORE_COMPONENTS": "Weitere Komponenten"
 		},
 		"PROJECT_TEASERS": {
 			"VIEW": "Öffnen"

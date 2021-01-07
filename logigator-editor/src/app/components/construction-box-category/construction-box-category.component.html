@@ -1,7 +1,7 @@
 <div class="box">
 	<div class="header">
 		<h2>{{categoryName | translate}}</h2>
-		<button *ngIf="showReloadButton" class="reload" (click)="reloadButtonClick()"></button>
+		<button *ngIf="showReloadButton" class="reload" (click)="reloadButtonClick()" ></button>
 	</div>
 	<div class="content">
 		<ng-container *ngIf="components.length > 0; else noComponents">
