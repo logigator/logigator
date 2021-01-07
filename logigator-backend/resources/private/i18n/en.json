@@ -51,34 +51,34 @@
 	"HOME": {
 		"INTRO": {
 			"DESCRIPTION": "Build, simulate and manage complex logic circuits for free.",
-			"BUTTON": "START BUILDING NOW"
+			"BUTTON": "Start Building Now"
 		},
 		"FEATURES": {
 			"TITLE": "Features",
-			"DESCRIPTION": "Build an simulate your own circuits with Logigator, a simple yet powerful online tool.",
+			"DESCRIPTION": "Build and simulate your own circuits with Logigator, a simple yet powerful online tool.",
 			"PERFORMANCE": "Performance",
-			"PERFORMANCE_DES": "Logigtators' editor can handle even the largest project with ease thanks to WebAssembly and WebGL.",
+			"PERFORMANCE_DES": "Logigators' editor can handle even the largest projects with ease thanks to WebAssembly and WebGL.",
 			"SUBCIRCUITS": "Subcircuits",
-			"SUBCIRCUITS_DES": "Create Subcircuits and use them all over your projects. This will help keep your projects organized.",
+			"SUBCIRCUITS_DES": "Create subcircuits and use them all over your projects. This will help keep your projects organized.",
 			"SHARE": "Share Projects",
 			"SHARE_DES": "Share your circuits with other users, so they can learn from your work.",
 			"IMAGES": "Export Images",
-			"IMAGES_DES": "With Logigator you can export high resolution images in three different formats (SVG, PNG, JPG), to uses them anywhere."
+			"IMAGES_DES": "With Logigator you can export high resolution images in three different formats (SVG, PNG, JPG) to use them anywhere."
 		},
 		"EXAMPLES": {
 			"TITLE": "Example Circuits",
-			"DESCRIPTION": "Learn to design simple to more complex circuits from our examples.",
+			"DESCRIPTION": "Learn to design simple as well as more complex circuits from our examples.",
 			"MORE": "See More Examples"
 		},
 		"VIDEO": {
 			"TITLE": "What are logic circuits?",
-			"DESCRIPTION": "If you don't know what logic gates and logic circuits are, we have a short explanation for you."
+			"DESCRIPTION": "If you don't know what logic gates or logic circuits are, we have made a short explanation you can watch."
 		},
 		"SHARES": {
-			"PROJECTS_TITLE": "Recent shared Projects",
-			"PROJECTS_DESCRIPTION": "Explore the recent activity of our users. Your Project could be the next on this list.",
-			"COMPS_TITLE": "Recent shared Components",
-			"COMPS_DESCRIPTION": "Explore the recent shared Components of our users. They may be useful for you.",
+			"PROJECTS_TITLE": "Recently shared Projects",
+			"PROJECTS_DESCRIPTION": "Explore other projects created by our community. Your Project could be the next on this list.",
+			"COMPS_TITLE": "Recently shared Components",
+			"COMPS_DESCRIPTION": "Explore other components created by our community. They may be useful for you.",
 			"MORE_PROJECTS": "See More Projects",
 			"MORE_COMPONENTS": "See More Components"
 		},
@@ -94,25 +94,25 @@
 		"WHAT_IS": {
 			"TITLE": "What is Logigator",
 			"VIDEO": "https://www.youtube.com/embed/weTeJLMGq_Q",
-			"TEXT": "Logigator is an online simulator for logic gates, which enables the user to build and simulate circuits with logic gates. For example one can build half-adders and full-adders, which can be used for learning. Whether one wants to experiment and explore boolean functions or design new and complex circuits - Logigator is the right tool. <br> In addition, Logigator offers high performance even with large-scale projects. By using “WebAssembly” (https://webassembly.org/) the website can reach simulation speeds that else would not be possible in a browser. "
+			"TEXT": "Logigator is an online simulator for logic gates which enables the user to build and simulate circuits with logic gates. For example, one can build half-adders and full-adders which can be used for learning. Whether one wants to experiment and explore boolean functions or design new and complex circuits - Logigator is the right tool. <br> In addition, Logigator offers high performance even with large-scale projects. By using “WebAssembly” (https://webassembly.org/), the website can reach simulation speeds that would not be possible in a browser otherwise."
 		},
 		"GENERAL": {
 			"TITLE": "General",
 			"VIDEO": "https://www.youtube.com/embed/tX7HT_0MZRo",
-			"TEXT": "The editor can be reached under editor.logigator.com and can be used to design and simulate circuits. <br> To place an element, simply select the wanted element from the construction-kit on the left side of the window. The basic gates consist of: AND, OR, XOR, NOT as well as a delay which doesn’t change the input signal and a clock, which outputs a signal in periodical intervals. Naturally, there are also more complex elements, which are not mentioned here. After one selects an element it can be placed by clicking anywhere in the workspace. Using the selection-tool one can select an element and change settings in the box in bottom right corner. These settings vary from from component to component. The wire-tool can then be used to connect the elements."
+			"TEXT": "The editor can be reached under https://logigator.com/editor and can be used to design and simulate circuits. <br> To place an element, simply select the wanted element from the construction-kit on the left side of the window. The basic gates consist of: AND, OR, XOR, NOT as well as a delay which doesn't change the input signal and a clock, which outputs a signal in periodical intervals. Naturally, there are also more complex elements which are not mentioned here. After one selects an element, it can be placed by clicking anywhere in the canvas. Using the selection-tool one can select an element and change settings in the box in the bottom right corner. These settings vary from component to component. The wire-tool can then be used to connect the elements."
 		},
 		"CUSTOM_COMPS": {
-			"TITLE": "Custom components",
+			"TITLE": "Custom Components",
 			"VIDEO": "https://www.youtube.com/embed/fSErH93I-Wg",
-			"TEXT": "One might want to use a part of a circuit multiple times. To simplify this process it is possible to define custom components, which can easily be placed again and can even be used in other projects. <br> There are two types of plug-components: inputs and outputs. By placing these components one can mark the the inputs and outputs of a custom components. Additionally parts of circuits can be labeled for better overview."
+			"TEXT": "One might want to use a part of a circuit multiple times. To simplify this process it is possible to define custom components, which can easily be placed multiple times and can even be used in other projects. <br> There are two types of plug components: inputs and outputs. By placing these components one can mark the inputs and outputs of a custom components. Additionally parts of circuits can be labeled for better overview."
 		},
 		"SIMULATION": {
-			"TITLE": "Simulation-mode",
+			"TITLE": "Simulation Mode",
 			"VIDEO": "https://www.youtube.com/embed/WjpChcxn18k",
-			"TEXT": "The simulation-mode can be used to test and simulate circuits. To switch to simulation-mode, simply press the “start simulation” button. After switching mode, the Simulation is paused. To start the simulation simply press the play button. Now you can interact with the circuit. In case you want to debug the circuit you can pause the simulation and test it step by step. To return to the original state simply press the stop button. By default the simulation will run as fast as possible. However, the clockspeed can be changed by simply entering the wanted speed or locking it to the displays frequency. The composition of custom components can be observed by simply clicking on them."
+			"TEXT": "The simulation-mode can be used to test and simulate circuits. To switch to simulation mode, simply press the “Start Simulation” button. To start the simulation simply press the play button. Now you can interact with the circuit. In case you want to see what the circuit is doing, you can pause the simulation and test it step by step. To return to the original state simply press the stop button. By default the simulation will run as fast as possible. However, the clock speed can be changed by simply entering the wanted speed or locking it to the display's frequency. The composition of custom components can be observed by simply clicking on them."
 		},
 		"SAVING": {
-			"TITLE": "Saving projects",
+			"TITLE": "Saving Projects",
 			"VIDEO": "https://www.youtube.com/embed/VtS4E0L2MyU",
 			"TEXT": "Projects and Components can either be saved locally as a file or in the cloud, which enables editing on multiple devices. To save projects online the user has to be logged in, which also enables projects to be shared with other users."
 		}
@@ -223,7 +223,7 @@
 				"CONNECTED_ACCOUNTS": "Connected Accounts",
 				"CONNECT_NOW": "Connect now",
 				"CONNECTED": "Connected",
-				"PASSWORD_EXPLANATION": "You can add a Password to your Account to be able to login with it, your Account will stay connected to all other Social Media Accounts.",
+				"PASSWORD_EXPLANATION": "You can add a Password to your Account to be able to login with it. Your Account will stay connected to all other Social Media Accounts.",
 				"CURRENT_PASSWORD": "Current Password",
 				"CURRENT_PASSWORD_ERR_REQUIRED": "Current Password is required.",
 				"CURRENT_PASSWORD_ERR_INVALID": "Password is invalid.",
@@ -388,7 +388,7 @@
 	},
 	"DOWNLOAD": {
 		"HEADLINE": "Download Editor",
-		"DESCRIPTION": "The editor is also available as a Desktop app. This has the advantage, that the simulation is way faster than in the web version. The app can be downloaded below.",
+		"DESCRIPTION": "The editor is also available as a Desktop app. This has the advantage, that the simulation is way faster than on the internet. The app can be downloaded below.",
 		"DOWNLOAD": "Download",
 		"DATE": "Date",
 		"FILE_SIZE": "File Size"
