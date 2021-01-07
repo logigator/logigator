@@ -8,6 +8,7 @@ import {Exclude} from 'class-transformer';
 export class ComponentFile extends PersistedResource {
 
 	public mimeType = 'application/json';
+	protected _path = 'private/components';
 
 	@Exclude()
 	public get publicUrl() {

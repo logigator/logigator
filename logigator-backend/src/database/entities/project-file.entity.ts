@@ -8,6 +8,8 @@ import {Exclude} from 'class-transformer';
 export class ProjectFile extends PersistedResource {
 
 	public mimeType = 'application/json';
+	protected _path = 'private/projects';
+
 
 	@Exclude()
 	public get publicUrl() {
