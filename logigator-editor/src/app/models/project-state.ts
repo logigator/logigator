@@ -584,7 +584,7 @@ export class ProjectState {
 					if (other.id === elem.id)
 						continue;
 					for (const wireEnd of Elements.wireEnds(other)) {
-						if (Elements.hasWiresMidOnPoint(chunk.elements, wireEnd)) {
+						if (CollisionFunctions.hasWiresMidOnPoint(chunk.elements, wireEnd)) {
 							if (points.has(wireEnd.x)) {
 								points.get(wireEnd.x).add(wireEnd.y);
 							} else {

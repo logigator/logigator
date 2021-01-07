@@ -6,7 +6,6 @@ import {ActionType} from './action';
 import {Element} from './element';
 import {ElementType} from './element-types/element-type';
 import {ElementTypeId} from './element-types/element-type-ids';
-import {CollisionFunctions} from './collision-functions';
 
 export abstract class Elements {
 
@@ -252,14 +251,6 @@ export abstract class Elements {
 			}
 		}
 		return -1;
-	}
-
-	public static hasWiresMidOnPoint(elements: Set<Element>, pos: PIXI.Point): boolean {
-		for (const elem of elements) {
-			if (elem.typeId === ElementTypeId.WIRE && CollisionFunctions.isPointOnWireNoEdge(elem, pos))
-				return true;
-		}
-		return false;
 	}
 
 	public static isHorizontal(wire: Element): boolean {

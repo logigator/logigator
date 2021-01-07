@@ -117,6 +117,14 @@ export abstract class CollisionFunctions {
 		}
 	}
 
+	public static hasWiresMidOnPoint(elements: Set<Element>, pos: PIXI.Point): boolean {
+		for (const elem of elements) {
+			if (elem.typeId === ElementTypeId.WIRE && CollisionFunctions.isPointOnWireNoEdge(elem, pos))
+				return true;
+		}
+		return false;
+	}
+
 	public static numWireEndInRect(element: Element, startPos: PIXI.Point, endPos: PIXI.Point): number {
 		return (CollisionFunctions.isWireEndInRect(element.pos, startPos, endPos) ? 0 : 1) +
 			(CollisionFunctions.isWireEndInRect(element.endPos, startPos, endPos) ? 0 : 1);
