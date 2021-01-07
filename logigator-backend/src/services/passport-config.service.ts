@@ -10,6 +10,8 @@ import {InjectRepository} from 'typeorm-typedi-extensions';
 import {UserRepository} from '../database/repositories/user.repository';
 import {FormDataError} from '../errors/form-data.error';
 import {Request} from 'express';
+import {updateAuthenticatedCookie} from '../functions/update-authenticated-cookie';
+import {redirect} from '../functions/redirect';
 
 @Service()
 export class PassportConfigService {
@@ -31,8 +33,13 @@ export class PassportConfigService {
 		passport.serializeUser((user: User, done) => {
 			done(null, user.id);
 		});
-		passport.deserializeUser(async (id: string, done) => {
+		passport.deserializeUser(async (req: Request, id: string, done) => {
 			const user = await this.userRepo.findOne(id);
+			if (user === undefined) {
+				req.logout();
+				updateAuthenticatedCookie(req, req.res, false);
+				return redirect(req, req.res, {target: '/'});
+			}
 			done(null, user);
 		});
 	}
