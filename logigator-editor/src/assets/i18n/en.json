@@ -276,23 +276,23 @@
 			},
 			"SELECT_CUT": {
 				"TITLE": "Select Cut",
-				"TEXT": "This tool is a special variation of the normal select tool.<br><br> With it only things that are fully contained in the selection will be selected and wires that are partially selected will be cut of. This can be useful if you want to shorten wires for example."
+				"TEXT": "There is also a special variation of the normal select tool.<br><br> With it only components that are fully contained in the highlighted area will be selected.<br>Wires that are partially selected will be cut of at the point where the selection ends. <br><br> This can be useful if you want to shorten wires for example."
 			},
 			"ERASER": {
 				"TITLE": "Eraser",
-				"TEXT": "The eraser tool does what it sounds like: It erases components and wires from your circuit.<br><br> This can be useful sometimes, when the select tool is not suitable for your task. In order to use it, drag over the desired components with your left mouse button pressed."
+				"TEXT": "The eraser tool can be used to remove components without highlighting them first.<br><br> In order to use it, drag over the desired components with your left mouse button pressed and everything under your cursor will disappear."
 			},
 			"TEXT": {
 				"TITLE": "Placing Text",
-				"TEXT": "It can be useful to place text somewhere on the work-area. This can be achieved by using this tool.<br><br> It works like placing any other element."
+				"TEXT": "Sometimes it can be useful to place text on the canvas to label an important part of your circuit.<br><br> This tool enables you to place some text on the canvas wherever you like.<br>It works like placing any other element."
 			},
 			"CUSTOM_COMPONENTS": {
 				"TITLE": "User defined Components",
-				"TEXT": "One of Logigator's creates features is the possibility to create subcircuits or user defined components.<br><br> This can be done here. After you created such an component it will be shown under the 'User Defined' category, ready to be used."
+				"TEXT": "One of Logigator's features is the possibility to create subcircuits and pack them in your own components. This can be done here.<br><br> After you created a component it will be shown under the 'User Defined' category on the left side of the screen, ready to be used."
 			},
 			"SIMULATION_MODE": {
 				"TITLE": "Simulation mode",
-				"TEXT": "All you have seen so far is the edit mode of Logigator, where you can design and build your circuits.<br><br> In order to simulate and test them you habe to switch to simulation mode. This can be done here."
+				"TEXT": "All you have seen so far is the edit mode of Logigator, where you can design and build your circuits.<br><br> In order to simulate and test them you have to switch to simulation mode by pressing this button."
 			}
 		}
 	},
