@@ -45,3 +45,7 @@ lerna-debug.log*
 !/resources/public/preview/**/.gitkeep
 /resources/public/profile/*
 !/resources/public/profile/.gitkeep
+/resources/private/projects/*
+!/resources/private/projects/.gitkeep
+/resources/private/components/*
+!/resources/private/components/.gitkeep

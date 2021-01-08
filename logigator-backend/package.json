@@ -34,7 +34,7 @@
 		"url": "git+https://github.com/logigator/logigator.git"
 	},
 	"scripts": {
-		"start": "concurrently \"tsc -p tsconfig.json -w\" \"nodemon -i resources/public/ dist/index.js\"",
+		"start": "concurrently \"tsc -p tsconfig.json -w\" \"nodemon -i resources/public/ -i resources/private/components -i resources/private/projects dist/main.js\"",
 		"prebuild": "rimraf dist",
 		"build": "tsc -p tsconfig.json",
 		"start:prod": "node dist/main.js",

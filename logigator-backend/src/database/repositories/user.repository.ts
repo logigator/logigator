@@ -43,16 +43,16 @@ export class UserRepository extends Repository<User> {
 
 	public async getUserOwningProject(projectId: string): Promise<User> {
 		return this.createQueryBuilder('user')
-			.leftJoin('user.projects', 'project')
-			.innerJoinAndSelect('user.image', 'image')
+			.innerJoin('user.projects', 'project')
+			.leftJoinAndSelect('user.image', 'image')
 			.where('project.id = :id', {id: projectId})
 			.getOne();
 	}
 
 	public async getUserOwningComponent(componentId: string): Promise<User> {
 		return this.createQueryBuilder('user')
-			.leftJoin('user.components', 'component')
-			.innerJoinAndSelect('user.image', 'image')
+			.innerJoin('user.components', 'component')
+			.leftJoinAndSelect('user.image', 'image')
 			.where('component.id = :id', {id: componentId})
 			.getOne();
 	}
