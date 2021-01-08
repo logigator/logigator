@@ -256,15 +256,15 @@
 			},
 			"ZOOM_PAN": {
 				"TITLE": "Kamera",
-				"TEXT": "Das wichtigste zuerst: Die Kamera.<br><br> Verwende dein Mausrad um aus deiner Arbeitsfäche hinaus- oder hinein zu zoomen. Deine Kamera bewegen kannst du, indem du deine rechte Maustaste gedrückt hälst, während du die Maus bewegst."
+				"TEXT": "Das wichtigste zuerst: Die Kamera.<br><br> Verwende dein Mausrad um aus deiner Arbeitsfläche hinaus- oder hinein zu zoomen. Deine Kamera kannst du bewegen, indem du deine rechte Maustaste gedrückt hältst, während du die Maus bewegst."
 			},
 			"PLACING_ELEMS": {
 				"TITLE": "Komponenten platzieren",
-				"TEXT": "Um eine Schaltung zu bauen, müssen wir zuerst einige Komponenten, wie beispielsweise ein AND-Gate, auf die Arbeitsfläche bringen.<br><br> Die vorhandenen Komponenten können hier rechts ausgewählt werden und danach in die Arbeitsfläche durch Klicken gebracht werden. Deine eigenen Komponenten werden hier auch angezeigt werden, mehr dazu etwas später."
+				"TEXT": "Um eine Schaltung zu bauen, müssen wir zuerst einige Komponenten, wie beispielsweise ein UND-Gatter, auf die Arbeitsfläche platzieren.<br><br> Die vorhandenen Komponenten können hier rechts ausgewählt werden und danach, durch Klicken, auf die Arbeitsfläche platziert werden. Deine eigenen Komponenten werden hier auch angezeigt werden, mehr dazu etwas später."
 			},
 			"WIRES": {
 				"TITLE": "Kabel",
-				"TEXT": "Einzelne Komponenten zu plazieren, ohne sie zu verbinden, hat nicht viel Sinn.<br><br> Um ein Kabel zu platzieren, wähle das obige Tool aus und ziehe mit gedrückter Maustaste über die Arbeitsfläche."
+				"TEXT": "Einzelne Komponenten zu platzieren, ohne sie zu verbinden, hat nicht viel Sinn.<br><br> Um ein Kabel zu platzieren, wähle das obige Tool aus und ziehe mit gedrückter Maustaste über die Arbeitsfläche."
 			},
 			"CONN_WIRE": {
 				"TITLE": "Kabel verbinden und trennen",
@@ -276,7 +276,7 @@
 			},
 			"SELECT_CUT": {
 				"TITLE": "Elemente markieren",
-				"TEXT": "Dieses Tool funktioniert ähnlich, wie das normale Selektiertool.<br><br> Der Unterschied liegt darin, dass nur Elemente ausgewählt werden, die vollständig in der markierten Fläche stehen.<br>Kabel werden an der Stelle, an der die Selektion endet, abgeschnitten, anstatt das ganze Kabel auszuwählen.<br><br> Es wird oft genutzt, wenn ein langes Kabel an einer Stelle abgeschnitten werden soll."
+				"TEXT": "Dieses Tool funktioniert ähnlich, wie das normale Selektiertool.<br><br> Der Unterschied liegt darin, dass nur Elemente ausgewählt werden, die sich vollständig in der markierten Fläche befinden.<br>Kabel werden an der Stelle, an der die Selektion endet, abgeschnitten, anstatt das ganze Kabel auszuwählen.<br><br> Es wird oft genutzt, wenn ein langes Kabel an einer Stelle abgeschnitten werden soll."
 			},
 			"ERASER": {
 				"TITLE": "Radiergummi",
@@ -288,7 +288,7 @@
 			},
 			"CUSTOM_COMPONENTS": {
 				"TITLE": "Benutzerdefinierte Komponenten",
-				"TEXT": "Ein großes Feature von Logigator ist die Möglichkeit, kleine Schlaltungen zu erstellen und diese dann in eigene Komponenten zu packen.<br><br> Mit diesen Button erstellst du eine neue Komponente, welche später unter der Kategorie 'Benutzerdefiniert' auf der linken Seite angezeigt wird. Von dort kann sie dann wie jede andere Komponente platziert werden."
+				"TEXT": "Ein großes Feature von Logigator ist die Möglichkeit, kleine Schaltungen zu erstellen und diese dann in eigene Komponenten zu packen.<br><br> Mit diesen Button erstellst du eine neue Komponente, welche später unter der Kategorie 'Benutzerdefiniert' auf der linken Seite angezeigt wird. Von dort kann sie dann wie jede andere Komponente platziert werden."
 			},
 			"SIMULATION_MODE": {
 				"TITLE": "Simulationsmodus",

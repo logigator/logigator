@@ -280,7 +280,7 @@
 			},
 			"ERASER": {
 				"TITLE": "Eraser",
-				"TEXT": "The eraser tool can be used to remove components without highlighting them first.<br><br> In order to use it, drag over the desired components with your left mouse button pressed and everything under your cursor will disappear."
+				"TEXT": "The eraser tool can be used to remove components without highlighting them first.<br><br> In order to use it, drag over the desired components with your left mouse button pressed and everything under your cursor will be deleted."
 			},
 			"TEXT": {
 				"TITLE": "Placing Text",
