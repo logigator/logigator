@@ -252,7 +252,7 @@
 			"NAME": "Erste Erklärung",
 			"WELCOME": {
 				"TITLE": "Willkommen bei Logigator!",
-				"TEXT": "Willkommen bei Logigator, ein einfach zu bedienendes, aber dennoch mächtiges Tool um logische Schaltungen zu lernen und bauen.<br><br>Lass uns eine Tour machen."
+				"TEXT": "Willkommen bei Logigator, ein benutzerfreundliches, aber mächtiges Tool um logische Schaltungen zu lernen und bauen.<br><br>Lass uns eine Tour machen."
 			},
 			"ZOOM_PAN": {
 				"TITLE": "Kamera",
@@ -260,7 +260,7 @@
 			},
 			"PLACING_ELEMS": {
 				"TITLE": "Komponenten platzieren",
-				"TEXT": "Um eine Schaltung zu bauen, müssen wir zuerst einige Komponenten, wie beispielsweise ein UND-Gatter, auf die Arbeitsfläche platzieren.<br><br> Die vorhandenen Komponenten können hier rechts ausgewählt werden und danach, durch Klicken, auf die Arbeitsfläche platziert werden. Deine eigenen Komponenten werden hier auch angezeigt werden, mehr dazu etwas später."
+				"TEXT": "Um eine Schaltung zu bauen, müssen wir zuerst einige Komponenten, wie beispielsweise ein UND-Gatter, auf die Arbeitsfläche platzieren.<br><br> Die vorhandenen Komponenten können hier links ausgewählt werden und danach, durch Klicken, auf die Arbeitsfläche platziert werden. Deine eigenen Komponenten werden hier auch angezeigt werden, mehr dazu etwas später."
 			},
 			"WIRES": {
 				"TITLE": "Kabel",

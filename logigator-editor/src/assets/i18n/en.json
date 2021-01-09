@@ -256,11 +256,11 @@
 			},
 			"ZOOM_PAN": {
 				"TITLE": "Zooming and Panning",
-				"TEXT": "To begin with, we start by looking at controlling the camera.<br><br> You can zoom in and out by using your mouse wheel and pan by dragging with the right mouse button pressed."
+				"TEXT": "First lets take a look at the view-controls.<br><br> You can zoom in and out by using your mouse wheel and pan by dragging with the right mouse button pressed."
 			},
 			"PLACING_ELEMS": {
 				"TITLE": "Placing Components",
-				"TEXT": "In order to build a circuit we need to place components. All Components that are available to be used are shown here.<br><br> Your own components will be shown here as well, more on that later.<br><br> To place a component, select it and click somewhere on the canvas."
+				"TEXT": "In order to build a circuit we need to place components. All available components are shown here.<br><br> Your own components will be shown here as well, more on that later.<br><br> To place a component, select it and click somewhere on the canvas."
 			},
 			"WIRES": {
 				"TITLE": "Wires",
@@ -268,7 +268,7 @@
 			},
 			"CONN_WIRE": {
 				"TITLE": "Connecting and disconnecting Wires",
-				"TEXT": "Wires can of course intersect with each other.<br><br> To indicate if they are connected or only overlap, a dot is either displayed or not at the point of intersection. <br><br> Using this tool you can click on said intersections to connect or disconnect the associated wires."
+				"TEXT": "Wires can of course intersect with each other.<br><br> To indicate whether they are connected or overlapped, a dot is either displayed or not at the point of intersection. <br><br> Using this tool you can click on said intersections to connect or disconnect the associated wires."
 			},
 			"SELECT": {
 				"TITLE": "Selecting components and wires",
@@ -276,7 +276,7 @@
 			},
 			"SELECT_CUT": {
 				"TITLE": "Select Cut",
-				"TEXT": "There is also a special variation of the normal select tool.<br><br> With it only components that are fully contained in the highlighted area will be selected.<br>Wires that are partially selected will be cut of at the point where the selection ends. <br><br> This can be useful if you want to shorten wires for example."
+				"TEXT": "There is also a special variation of the normal select tool.<br><br> With this variation only components that are fully contained in the highlighted area will be selected.<br>Wires that are partially selected will be cut of at the point where the selection ends. <br><br> This can be useful if you want to shorten wires for example."
 			},
 			"ERASER": {
 				"TITLE": "Eraser",
@@ -288,11 +288,11 @@
 			},
 			"CUSTOM_COMPONENTS": {
 				"TITLE": "User defined Components",
-				"TEXT": "One of Logigator's features is the possibility to create subcircuits and pack them in your own components. This can be done here.<br><br> After you created a component it will be shown under the 'User Defined' category on the left side of the screen, ready to be used."
+				"TEXT": "One of Logigator's features is the possibility to create subcircuits and pack them into your own components. This can be done here.<br><br> After you created a component it will be shown under the 'User Defined' category on the left side of the screen, ready to be used."
 			},
 			"SIMULATION_MODE": {
 				"TITLE": "Simulation mode",
-				"TEXT": "All you have seen so far is the edit mode of Logigator, where you can design and build your circuits.<br><br> In order to simulate and test them you have to switch to simulation mode by pressing this button."
+				"TEXT": "All you have seen so far is the edit-mode of Logigator, where you can design and build your circuits.<br><br> In order to simulate and test them you have to switch to simulation-mode by pressing this button."
 			}
 		}
 	},
