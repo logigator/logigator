@@ -185,7 +185,7 @@
 			"LINK": "Link to share",
 			"PUBLIC": "Share publicly",
 			"REGENERATE": "Regenerate",
-			"REGENERATE_WARN": "Regenerating the link makes to old link invalid.",
+			"REGENERATE_WARN": "The old link will become invalid after generating a new one.",
 			"COPY": "Copy",
 			"SAVE": "Save",
 			"CANCEL": "Cancel"
@@ -337,15 +337,15 @@
 		"ADVANCED": {
 			"HALF_ADDER": {
 				"NAME": "Half Adder",
-				"DESCRIPTION": "Adds two 1-bit numbers together."
+				"DESCRIPTION": "Adds up two 1-bit numbers."
 			},
 			"FULL_ADDER": {
 				"NAME": "Full Adder",
-				"DESCRIPTION": "Adds three 1-bit numbers together."
+				"DESCRIPTION": "Adds up three 1-bit numbers."
 			},
 			"ROM": {
 				"NAME": "ROM",
-				"DESCRIPTION": "Read only Memory.<br>Can be used for program code, for example.",
+				"DESCRIPTION": "Read only Memory.<br>Can for example be used in program code.",
 				"WORD_SIZE": "Word Size",
 				"ADDRESS_SIZE": "Address Size"
 			},
@@ -408,11 +408,11 @@
 		"PLUG": {
 			"INPUT": {
 				"NAME": "Input Plug",
-				"DESCRIPTION": "Place this where the inputs of you self-defined components should be"
+				"DESCRIPTION": "Place this where the inputs of your self-defined components should be"
 			},
 			"OUTPUT": {
 				"NAME": "Output Plug",
-				"DESCRIPTION": "Place this where the outputs of you self-defined components should be"
+				"DESCRIPTION": "Place this where the outputs of your self-defined components should be"
 			}
 		}
 	},
