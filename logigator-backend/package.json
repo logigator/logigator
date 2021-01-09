@@ -39,7 +39,11 @@
 		"build": "tsc -p tsconfig.json",
 		"start:prod": "node dist/main.js",
 		"lint:backend": "eslint -c ./src/.eslintrc.js \"src/**/*.ts\"",
-		"lint:frontend": "eslint -c ./resources/private/js/.eslintrc.js \"resources/private/js/**/*.js\""
+		"lint:frontend": "eslint -c ./resources/private/js/.eslintrc.js \"resources/private/js/**/*.js\"",
+		"migration:show": "ts-node ./node_modules/typeorm/cli.js migration:show -f config/ormconfig.json",
+		"migration:run": "ts-node ./node_modules/typeorm/cli.js migration:run -f config/ormconfig.json",
+		"migration:revert": "ts-node ./node_modules/typeorm/cli.js migration:revert -f config/ormconfig.json",
+		"migration:generate": "ts-node ./node_modules/typeorm/cli.js migration:generate -f config/ormconfig.json"
 	},
 	"main": "./dist/main.js",
 	"dependencies": {
@@ -68,6 +72,7 @@
 		"redis": "^3.0.2",
 		"reflect-metadata": "^0.1.13",
 		"routing-controllers": "^0.9.0-alpha.6",
+		"ts-node": "^9.1.1",
 		"typedi": "^0.8.0",
 		"typeorm": "^0.2.29",
 		"typeorm-typedi-extensions": "^0.2.3",
