@@ -5,11 +5,12 @@
 	"username": "root",
 	"password": "root",
 	"database": "test",
-	 "entities": [
+	"entities": [
 	 	"dist/database/entities**/*.entity{.ts,.js}"
-	 ],
-	 "migrations": ["migration/*.ts"],
-     "cli": {
-      	"migrationsDir": "migration"
-     },
+	],
+	"migrationsRun": false,
+	"migrations": ["migration/*.js"],
+	"cli": {
+		"migrationsDir": "migration"
+	},
 }
