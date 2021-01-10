@@ -14,7 +14,7 @@ export class ErrorHandlerMiddleware implements ExpressErrorMiddlewareInterface {
 	private readonly _appContext: string;
 
 	constructor(private configService: ConfigService) {
-		this._appContext = this.configService.getConfig('app-context');
+		this._appContext = this.configService.getConfig('environment').context;
 	}
 
 	error(error: Error, request: Request, response: Response, next: (err?: any) => any): void {

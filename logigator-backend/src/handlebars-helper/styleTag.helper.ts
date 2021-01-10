@@ -7,7 +7,7 @@ import {ConfigService} from '../services/config.service';
 
 export function styleTagHelper(): HelperDelegate {
 
-	const appContext = Container.get(ConfigService).getConfig('app-context');
+	const appContext = Container.get(ConfigService).getConfig('environment').context;
 	const hrefAttrCache = new Map<string, string>();
 
 	return function(options: HelperOptions) {
