@@ -2,9 +2,11 @@ name: 'Create Electron Release'
 on: workflow_dispatch
 
 jobs:
-  releaseElectron:
-    name: 'logigator-editor create Electron Release'
+  createReleaseBuildWindows:
+    name: 'Create Release and Build Windows'
     runs-on: windows-latest
+    outputs:
+      asset_upload_url: ${{ steps.create_release.outputs.upload_url }}
     steps:
       - name: Checkout
         uses: actions/checkout@v2
@@ -36,7 +38,7 @@ jobs:
         working-directory: logigator-editor
         run: |
           npm i
-          npm run build:electron-all-platforms
+          npm run build:electron:win
 
       - name: Zip
         shell: powershell
@@ -45,21 +47,96 @@ jobs:
           compress-archive -path ".\release\Logigator-win32-x64\" -destinationpath ".\release\Logigator-win32-x64.zip" -compressionlevel optimal
           compress-archive -path ".\release\Logigator-win32-ia32\" -destinationpath ".\release\Logigator-win32-x32.zip" -compressionlevel optimal
           compress-archive -path ".\release\Logigator-win32-arm64\" -destinationpath ".\release\Logigator-win32-arm64.zip" -compressionlevel optimal
-          compress-archive -path ".\release\Logigator-linux-x64\" -destinationpath ".\release\Logigator-linux-x64.zip" -compressionlevel optimal
-          compress-archive -path ".\release\Logigator-linux-ia32\" -destinationpath ".\release\Logigator-linux-x32.zip" -compressionlevel optimal
 
-      - name: Release
-        uses: softprops/action-gh-release@master
-        with:
-          tag_name: ${{ steps.version.outputs.pkg_version }}
-          name: Logigator Editor - Electron App  ${{ steps.version.outputs.pkg_version }}
-          draft: false
-          prerelease: false
-          files: |
-            logigator-editor/release/Logigator-win32-x64.zip
-            logigator-editor/release/Logigator-win32-x32.zip
-            logigator-editor/release/Logigator-win32-arm64.zip
-            logigator-editor/release/Logigator-linux-x64.zip
-            logigator-editor/release/Logigator-linux-x32.zip
+      - name: 'Create Release'
+        id: create_release
+        uses: actions/create-release@v1
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          tag_name: ${{ steps.version.outputs.pkg_version }}
+          release_name: Logigator Editor - Electron App  ${{ steps.version.outputs.pkg_version }}
+          draft: false
+          prerelease: false
+
+      - name: 'Upload Asset Win32x64'
+        id: upload-asset-win32x64
+        uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          upload_url: ${{ steps.create_release.outputs.upload_url }}
+          asset_path: ./logigator-editor/release/Logigator-win32-x64.zip
+          asset_name: Logigator-win32-x64.zip
+          asset_content_type: application/zip
+
+      - name: 'Upload Asset Win32x32'
+        id: upload-asset-win32x32
+        uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          upload_url: ${{ steps.create_release.outputs.upload_url }}
+          asset_path: ./logigator-editor/release/Logigator-win32-x32.zip
+          asset_name: Logigator-win32-x32.zip
+          asset_content_type: application/zip
+
+      - name: 'Upload Asset Win32xarm64'
+        id: upload-asset-win32arm64
+        uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          upload_url: ${{ steps.create_release.outputs.upload_url }}
+          asset_path: ./logigator-editor/release/Logigator-win32-arm64.zip
+          asset_name: Logigator-win32-arm64.zip
+          asset_content_type: application/zip
+
+  buildLinux:
+    name: 'Build Linux'
+    needs: createReleaseBuildWindows
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2
+        with:
+          ref: master
+
+      - name: Setup Node
+        uses: actions/setup-node@v1
+        with:
+          node-version: '12.x'
+
+      - name: Build
+        working-directory: logigator-editor
+        run: |
+          npm i
+          npm run build:electron:linux
+
+      - name: Zip
+        working-directory: logigator-editor
+        run: |
+          zip -r ./release/Logigator-linux-x64.zip ./release/Logigator-linux-x64/
+          zip -r ./release/Logigator-linux-x32.zip ./release/Logigator-linux-ia32/
+
+      - name: 'Upload Asset Linuxx64'
+        id: upload-asset-linuxx64
+        uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          upload_url: ${{ needs.createReleaseBuildWindows.outputs.asset_upload_url }}
+          asset_path: ./logigator-editor/release/Logigator-linux-x64.zip
+          asset_name: Logigator-linux-x64.zip
+          asset_content_type: application/zip
+
+      - name: 'Upload Asset Linuxx32'
+        id: upload-asset-linxx32
+        uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          upload_url: ${{ needs.createReleaseBuildWindows.outputs.asset_upload_url }}
+          asset_path: ./logigator-editor/release/Logigator-linux-x32.zip
+          asset_name: Logigator-linux-x32.zip
+          asset_content_type: application/zip

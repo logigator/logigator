@@ -51,14 +51,14 @@ classValidatorUseContainer(Container);
 async function bootstrap() {
 	const configService = Container.get(ConfigService);
 
-	const appContext = configService.getConfig<string>('app-context');
-	process.env.NODE_ENV = appContext;
+	const environment = configService.getConfig<any>('environment');
+	process.env.NODE_ENV = environment.context;
 
 	await createConnection(configService.getConfig<ConnectionOptions>('ormconfig'));
 
 	const app = express();
 
-	if (appContext === 'production') {
+	if (environment.context === 'production') {
 		app.set('env', 'production');
 		app.set('view cache', true);
 	}
@@ -145,12 +145,12 @@ async function bootstrap() {
 			whitelist: true,
 			forbidNonWhitelisted: true
 		},
-		development: appContext === 'development',
+		development: environment.context === 'development',
 		cors: false,
 		defaultErrorHandler: false,
 		currentUserChecker: action => (action.request as Request).user
 	});
-	app.listen(3000, () => {
+	app.listen(environment.port, () => {
 		console.log('App started successfully');
 	});
 }
