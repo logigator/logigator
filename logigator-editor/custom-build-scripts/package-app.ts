@@ -1,4 +1,5 @@
 const packager = require('electron-packager');
+import rebuild from 'electron-rebuild';
 import * as path from 'path';
 
 const platform = process.argv[2];
@@ -20,6 +21,11 @@ const options = {
 	out: path.join(__dirname, '..', '..', 'release'),
 	overwrite: true,
 	prune: true,
+	afterCopy: [(buildPath, electronVersion, plat, a, callback) => {
+		rebuild({ buildPath, electronVersion, arch: a })
+			.then(() => callback())
+			.catch((error) => callback(error));
+	}],
 	'version-string': {
 		CompanyName: 'HTL Rennweg',
 		FileDescription: 'Logigator',
