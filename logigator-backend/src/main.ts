@@ -64,6 +64,17 @@ async function bootstrap() {
 	}
 
 	app.use(compression());
+
+	app.use(configService.getConfig('domains').editor, expressStatic(path.join(configService.projectRootPath, configService.getConfig('environment').editor), {
+		cacheControl: true,
+		immutable: true,
+		maxAge: '90d'
+	}));
+
+	app.use(configService.getConfig('domains').editor, (req, res) => {
+		res.sendFile(path.join(configService.projectRootPath, configService.getConfig('environment').editorPath, 'index.html'));
+	});
+
 	app.use(expressStatic(path.join(configService.projectRootPath, 'resources', 'public'), {
 		cacheControl: true,
 		immutable: true,
