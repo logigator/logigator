@@ -1,4 +1,4 @@
-import {Controller, Get, InternalServerError, Render, UseBefore} from 'routing-controllers';
+import {Controller, Get, Render, UseBefore} from 'routing-controllers';
 import {setTitleMiddleware} from '../../middleware/action/set-title-middleware';
 import fetch from 'node-fetch';
 import {CachingService} from '../../services/caching.service';
