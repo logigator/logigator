@@ -72,7 +72,7 @@ async function bootstrap() {
 	}));
 
 	app.use(configService.getConfig('domains').editor, (req, res) => {
-		res.sendFile(path.join(configService.projectRootPath, configService.getConfig('environment').editorPath, 'index.html'));
+		res.sendFile(path.join(configService.projectRootPath, configService.getConfig('environment').editor, 'index.html'));
 	});
 
 	app.use(expressStatic(path.join(configService.projectRootPath, 'resources', 'public'), {
