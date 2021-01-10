@@ -322,15 +322,23 @@
 		padding-right: 0.7rem;
 		flex: auto;
 
-		p {
-			margin: 0;
-		}
-
-		.start-sim {
-			margin-left: 0.5rem;
+		div {
+			display: flex;
+			align-items: center;
+			height: 100%;
 
 			&:hover {
 				cursor: pointer;
+			}
+
+			p {
+				margin: 0 0 0 0.25rem;
+				line-height: 100%;
+			}
+
+			img {
+				height: 100%;
+				padding: 0.5rem 0;
 			}
 		}
 	}

@@ -1,0 +1,41 @@
+<div class="view-community-proj-comp">
+	<div class="view-community-proj-comp__container">
+		<div class="view-community-proj-comp__header">
+			<h2 class="view-community-proj-comp__title">{{name}}</h2>
+			<div class="view-community-proj-comp__stars {{#if isAuthenticated}}view-community-proj-comp__stars--auth{{/if}}">
+				<a class="star-unstar" {{#if isAuthenticated}}href="{{starUnstarUrl}}"{{/if}}>
+					{{> icon icon='features' alt='Star' }}
+					<p>{{ternary isStared 'Unstar' 'Star'}}</p>
+				</a>
+				<a class="stargazers" href="{{linkHref stargazers}}">{{stargazersCount}}</a>
+			</div>
+		</div>
+		<hr class="view-community-proj-comp__divider">
+		<div class="view-community-proj-comp__img-desc">
+			<div class="view-community-proj-comp__preview">
+				<img alt="Preview" src="{{ternary (expr preferences.theme '===' 'dark') previewDark previewLight}}">
+			</div>
+			{{#if description}}
+				<p>{{description}}</p>
+			{{else}}
+				<p>{{i18n.COMMUNITY.NO_DESCRIPTION}}</p>
+			{{/if}}
+		</div>
+		<div class="view-community-proj-comp__user-btns">
+			<a class="view-community-proj-comp__user" href="{{linkHref userUrl}}">
+				<img alt="User Image" src="{{userImage}}">
+				<p>{{username}}</p>
+			</a>
+			<div>
+				<a class="button-a" href="{{editorUrl}}" target="_blank" rel="noopener">
+					<button class="btn-raised primary view-community-proj-comp__button">{{@root.i18n.COMMUNITY.OPEN}}</button>
+				</a>
+				{{#if isAuthenticated}}
+					<a class="button-a" href="{{cloneUrl}}">
+						<button class="btn-raised primary view-community-proj-comp__button">{{@root.i18n.COMMUNITY.CLONE}}</button>
+					</a>
+				{{/if}}
+			</div>
+		</div>
+	</div>
+</div>

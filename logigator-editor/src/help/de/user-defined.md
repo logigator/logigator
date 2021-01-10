@@ -41,3 +41,16 @@ Steckerelemente haben ein paar Optionen. Diese inkludieren `Steckerindex` und `B
 
 </div>
 </div>
+
+<div class="rows">
+
+![Edit Component Plugs](../../assets/help/edit-comp-plugs.png)
+
+<div class="margin-left">
+
+Es ist auch möglich alle Steckerelemente einer Komponente auf einmal zu bearbeiten.
+
+Um das zu machen, klicken Sie auf 'Ein- und Ausgänge bearbeiten', wenn ein Stecker ausgewählt ist. In dem Pupup das sich öffnet, können Sie die Beschriftung und den Steckerindex der einzelnen Stecker bearbeiten. Um einen Steckerindex zu ändern, verschieben Sie diesen einfach an die gewollte Position.
+
+</div>
+</div>

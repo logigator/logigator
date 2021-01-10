@@ -22,13 +22,16 @@
 		"ACCOUNT_SECURITY": "Logigator - Sicherheit",
 		"ACCOUNT_DELETE": "Logigator - Account löschen",
 		"LOGIN": "Logigator - Login",
-		"REGISTER": "Logigator - Registrieren"
+		"REGISTER": "Logigator - Registrieren",
+		"EXAMPLES": "Logigator - Beispiele",
+		"COMMUNITY": "Logigator - Community"
 	},
 	"SITE_HEADER": {
 		"DOWNLOAD": "Download",
 		"FEATURES": "Features",
-		"PROJECTS": "Projekte",
-		"COMPONENTS": "Komponenten",
+		"PROJECTS": "Meine Projekte",
+		"COMPONENTS": "Meine Komponenten",
+		"COMMUNITY": "Community",
 		"LOGIN": "Anmelden",
 		"REGISTER": "Registrieren"
 	},
@@ -43,48 +46,75 @@
 	"FOOTER": {
 		"DATA_POLICY": "Datenschutzerklärung",
 		"IMPRINT": "Impressum",
-		"CONTRIBUTING": "Contributing"
+		"CONTRIBUTING": "Mitwirken"
 	},
 	"HOME": {
 		"INTRO": {
-			"DESCRIPTION": "Der Editor für Logikschaltungen...",
-			"BUTTON": "ZUM EDITOR"
+			"DESCRIPTION": "Baue, simuliere und verwalte komplexe Logikschaltungen.",
+			"BUTTON": "Zum Editor"
 		},
-		"EXPLANATION": {
-			"TITLE": "Eine kurze Erklärung",
-			"DESCRIPTION": "Wenn Sie sich jetzt Fragen, was logische Gatter überhaupt sind, dann ist das ganz normal. Kurzgesagt sind logische Gatter jene Bausteine, aus denen die Recheneinheiten eines Computers aufgebaut sind. Aber weil das als Erklärung nicht reicht, haben wir ein Video animiert in dem die Grundprinzipien unserer Diplomarbeit verständlich erklärt werden.",
-			"VIDEO": "https://www.youtube.com/embed/114EOH-fdLE"
+		"FEATURES": {
+			"TITLE": "Features",
+			"DESCRIPTION": "Baue und simuliere deine eigenen Schaltungen mit Logigator, einem einfachen aber mächtigen online Tool.",
+			"PERFORMANCE": "Performance",
+			"PERFORMANCE_DES": "Logigators' Editor kann dank WebAssembly und WebGL auch mit den größten Projekten umgehen.",
+			"SUBCIRCUITS": "Unterschaltungen",
+			"SUBCIRCUITS_DES": "Erstelle deine eigenen Komponenten und verwende sie in all deinen Projekten. Somit können deine Projekte übersichtlich und einfach gehalten werden.",
+			"SHARE": "Projekte teilen",
+			"SHARE_DES": "Teile deine Schaltungen mit anderen Benutzern, damit sie von deiner Arbeit lernen können.",
+			"IMAGES": "Bilder exportieren",
+			"IMAGES_DES": "Mit Logigator kannst du hochauflösende Bilder in verschieden Formaten (SVG, PNG, JPG) generieren, um sie überall zu verwenden."
 		},
 		"EXAMPLES": {
-			"TITLE": "Ein paar Beispielschaltungen zum ausprobieren...",
-			"TRY_NOW": "JETZT AUSPROBIEREN"
+			"TITLE": "Beispielschaltungen",
+			"DESCRIPTION": "Lerne mit unseren Beispielen einfache, als auch komplexere Schaltungen zu bauen.",
+			"MORE": "Weitere Beispielschaltungen"
+		},
+		"VIDEO": {
+			"TITLE": "Was sind Logikschaltungen?",
+			"DESCRIPTION": "Wenn du nicht weißt, was Logikschaltungen oder Logikgatter sind, haben wir eine kurze Erklärung für dich gemacht."
+		},
+		"SHARES": {
+			"PROJECTS_TITLE": "Zuletzt geteilte Projekte",
+			"PROJECTS_DESCRIPTION": "Erkunde andere Projekte unserer User. Dein Projekt könnte das nächste auf dieser Liste sein.",
+			"COMPS_TITLE": "Zuletzt geteilte Komponenten",
+			"COMPS_DESCRIPTION": "Erkunde andere Komponenten unserer User. Sie sind vielleicht hilfreich für dich.",
+			"MORE_PROJECTS": "Weitere Projekte",
+			"MORE_COMPONENTS": "Weitere Komponenten"
+		},
+		"PROJECT_TEASERS": {
+			"VIEW": "Öffnen"
 		}
+	},
+	"EXAMPLES": {
+		"VIEW": "Beispiel ansehen",
+		"CLONE": "Beispiel Klonen"
 	},
 	"FEATURES": {
 		"WHAT_IS": {
 			"TITLE": "Was ist Logigator",
 			"VIDEO": "https://www.youtube.com/embed/114EOH-fdLE",
-			"TEXT": "Logigator ist ein Online Logikgatter-Simulator, welcher es einem ermöglicht im Browser Schaltungen aus logischen Gattern aufzubauen und diese dann zu simulieren. Es lassen sich zum Beispiel Halbaddierer und Volladdierer bauen, was gut zu Lernzwecken genutzt werden kann. Ob es nur ums Ausprobieren und Erforschen von boolschen Operationen geht, oder um das Entwerfen von neuen, komplexen Schaltungen - Logigator ist das geeignete Tool dafür. <br> Logigator bietet auch hohe Performanz bei umfangreichen Schaltungen, wie zum Beispiel auch ganzen CPUs (Computer). Mit Hilfe der Technologie “WebAssembly” (https://webassembly.org/) lassen sich Geschwindigkeiten erzielen, welche sonst im Browser nicht möglich wären."
+			"TEXT": "Logigator ist ein Online Logikgatter-Simulator, welcher es einem ermöglicht im Browser Schaltungen aus logischen Gattern aufzubauen und diese dann zu simulieren. Es lassen sich zum Beispiel Halbaddierer oder Volladdierer bauen, was gut zu Lernzwecken genutzt werden kann. Ob es nur ums Ausprobieren und Erforschen von boolschen Operationen geht, oder um das Entwerfen von neuen, komplexen Schaltungen - Logigator ist das geeignete Tool. <br> Logigator bietet auch hohe Performanz bei umfangreicheren Schaltungen, wie zum Beispiel auch ganzen CPUs (Computer). Mit Hilfe der Technologie “WebAssembly” (https://webassembly.org/) lassen sich Geschwindigkeiten erzielen, welche sonst im Browser nicht möglich wären."
 		},
 		"GENERAL": {
 			"TITLE": "Allgemein",
 			"VIDEO": "https://www.youtube.com/embed/aLcu7rsbDHA",
-			"TEXT": "Unter editor.logigator.com erreicht man den Editor, wo man Schaltungen entwerfen und simulieren kann. <br> Um ein Schaltungselement zu platzieren, selektiert man das gewollte Element aus dem Baukasten, der sich auf der linken Seite des Bildschirms befindet. Es gibt folgende grundlegende Gatter: UND, ODER, XODER, NICHT, sowie einen Durchpass, welcher das Eingangssignal nicht verändert und einen Taktgeber, welcher in regelmäßigen Abständen ein Signal ausgibt. Natürlich gibt es aber auch komplexere Elemente, die hier nicht erwähnt wurden. Nachdem man ein Element ausgewählt hat, kann man es mit einem Klick auf der Arbeitsfläche platzieren. Mit dem Selektierwerkzeug kann man ein Element auswählen und mithilfe der Einstellungsbox in der rechten unteren Ecke bearbeiten. Die Möglichkeiten dieser Einstellungen variieren von Komponente zu Komponente. Mit Hilfe des Leitungswerkzeugs lassen sich die einzelnen Elemente verbinden."
+			"TEXT": "Unter https://logigator.com/editor erreicht man den Editor, in dem man Schaltungen entwerfen und simulieren kann. <br> Um ein Schaltungselement zu platzieren, selektiert man das gewollte Element aus dem Baukasten, der sich auf der linken Seite des Bildschirms befindet. Es gibt folgende grundlegende Gatter: UND, ODER, XODER, NICHT, sowie einen Durchpass, welcher das Eingangssignal nicht verändert und einen Taktgeber, welcher in regelmäßigen Abständen ein Signal ausgibt. Natürlich gibt es aber auch komplexere Elemente, die hier nicht erwähnt wurden. Nachdem man ein Element ausgewählt hat, kann man es mit einem Klick auf der Arbeitsfläche platzieren. Mit dem Selektierwerkzeug kann man ein Element auswählen und mithilfe der Einstellungsbox in der rechten unteren Ecke bearbeiten. Die Möglichkeiten dieser Einstellungen variieren von Komponente zu Komponente. Mit Hilfe des Leitungswerkzeugs lassen sich die einzelnen Elemente verbinden."
 		},
 		"CUSTOM_COMPS": {
 			"TITLE": "Benutzererstellte Komponenten",
 			"VIDEO": "https://www.youtube.com/embed/1m9IrqVxTKA",
-			"TEXT": "Oft ist es so, dass man einen Teil einer gebauten Schaltung, öfters verwenden will. Dazu kann man eigene Komponenten definieren, die danach leicht wiederzuverwenden sind, auch in mehreren Projekten. <br> Es gibt 2 Arten von Stecker-Elementen: Eingänge und Ausgänge. Platziert man diese in eigenen Komponenten, lassen sich mit deren Hilfe die Ein- und Ausgänge dieser Komponenten kennzeichnen. Man kann sie außerdem beschriften, um den Überblick zu behalten."
+			"TEXT": "Oft ist es so, dass man einen Teil einer gebauten Schaltung öfters verwenden will. Dazu kann man eigene Komponenten definieren, die danach leicht wiederzuverwenden sind, auch in mehreren Projekten. <br> Es gibt 2 Arten von Stecker-Elementen: Eingänge und Ausgänge. Platziert man diese in eigenen Komponenten, lassen sich mit deren Hilfe die Ein- und Ausgänge dieser Komponenten kennzeichnen. Man kann sie außerdem beschriften, um den Überblick zu behalten."
 		},
 		"SIMULATION": {
 			"TITLE": "Simulation",
 			"VIDEO": "https://www.youtube.com/embed/P8fuF-AHbb0",
-			"TEXT": "Im Simulationsmodus lassen sich aufgebaute Schaltungen testen und simulieren. Um in den Simulationsmodus zu wechseln, drückt man auf den “Simulation Starten” Button. Zu Beginn ist die Simulation pausiert. Um diese zu starten, drückt man den Play Button. Nun kann man mit der Schaltung interagieren. Will man die Schaltung debuggen, kann man diese mit Hilfe des Pause Buttons pausieren und Schritt für Schritt überprüfen. Mit dem Stopp Button kommen wir wieder zum Ausgangszustand zurück. Grundsätzlich läuft die Simulation so schnell wie möglich. Möchte man die Frequenz limitieren, kann man die Zielfrequenz entweder händisch angeben, oder mit der Frequenz des Bildschirms synchronisieren. Will man sich den Inhalt einer eigenen Komponente genauer ansehen, muss man einfach auf diese klicken."
+			"TEXT": "Im Simulationsmodus lassen sich aufgebaute Schaltungen testen und simulieren. Um in den Simulationsmodus zu wechseln, drückt man auf den “Simulation Starten” Button. Um diese zu starten, drückt man den Play Button. Nun kann man mit der Schaltung interagieren. Will man die Schaltung debuggen, kann man diese mit Hilfe des Pause Buttons pausieren und Schritt für Schritt überprüfen. Mit dem Stopp Button kommen wir wieder zum Ausgangszustand zurück. Grundsätzlich läuft die Simulation so schnell wie möglich. Möchte man die Frequenz limitieren, kann man die Zielfrequenz entweder händisch angeben, oder mit der Frequenz des Bildschirms synchronisieren. Will man sich den Inhalt einer eigenen Komponente genauer ansehen, muss man einfach auf diese klicken."
 		},
 		"SAVING": {
 			"TITLE": "Projekte speichern",
 			"VIDEO": "https://www.youtube.com/embed/peOkC2Agkoo",
-			"TEXT": "Projekte und eigene Komponenten können sowohl lokal, als Datei gespeichert werden, als auch in der Cloud, um sie auf mehreren Geräten bearbeiten zu können, wobei man hierfür angemeldet sein muss. Sie können ebenfalls mit anderen Nutzern geteilt werden."
+			"TEXT": "Projekte und eigene Komponenten können sowohl lokal als Datei gespeichert werden, als auch in der Cloud, um sie auf mehreren Geräten bearbeiten zu können, wobei man hierfür angemeldet sein muss. Sie können ebenfalls mit anderen Nutzern geteilt werden."
 		}
 	},
 	"LOGIN_FORM": {
@@ -129,6 +159,27 @@
 		"ERR_VERIFICATION_MAIL": "Verfizierungs-Email konnte nicht gesendet werden, versuchen Sie es beim anmelden erneut.",
 		"ERR_UNKNOWN": "Ein unbekannter Fehler ist aufgetreten."
 	},
+	"COMMUNITY": {
+		"NAV": {
+			"PROJECTS": "Projekte",
+			"COMPONENTS": "Komponenten"
+		},
+		"SEARCH": "Suchen",
+		"COMPONENTS": "Geteilte Komponenten",
+		"PROJECTS": "Geteilte Projekte",
+		"VIEW": "Anzeigen",
+		"OPEN": "Öffnen",
+		"CLONE": "Klonen",
+		"NO_DESCRIPTION": "Beschreibung ist nicht verfügbar.",
+		"USER": {
+			"MEMBER_SINCE": "Mitglied seit",
+			"COMPONENTS": "Komponenten",
+			"PROJECTS": "Projekte",
+			"STARED_COMPONENTS": "Gemerkte Komponenten",
+			"STARED_PROJECTS": "Gemerkte Projekte",
+			"NO_ITEMS": "Keine Elemente vorhanden."
+		}
+	},
 	"USERSPACE": {
 		"NAV": {
 			"PROJECTS": "Projekte",
@@ -172,7 +223,7 @@
 				"CONNECTED_ACCOUNTS": "Verbundene Accounts",
 				"CONNECT_NOW": "Jetzt verbinden",
 				"CONNECTED": "Verbunden",
-				"PASSWORD_EXPLANATION": "Du kannst ein Passwort zu deinem Account hinzufügen, um dich damit anmelden zu können. Alle Social Media Accounts bleiben mit deinem Account verbunden",
+				"PASSWORD_EXPLANATION": "Du kannst ein Passwort zu deinem Account hinzufügen, um dich damit anmelden zu können. Alle Social Media Accounts bleiben mit deinem Account verbunden.",
 				"CURRENT_PASSWORD": "Aktuelles Passwort",
 				"CURRENT_PASSWORD_ERR_REQUIRED": "Aktuelles Passwort muss eingegeben werden.",
 				"CURRENT_PASSWORD_ERR_INVALID": "Password ist falsch.",
@@ -211,7 +262,9 @@
 			"SYMBOL": "Symbol",
 			"SYMBOL_ERR_REQUIRED": "Symbol muss angegeben werden.",
 			"SYMBOL_ERR_MAX": "Symbol darf maximal fünf Zeichen enthalten",
-			"CREATE": "Erstellen"
+			"CREATE": "Erstellen",
+			"PUBLIC": "Öffentlich teilen",
+			"PUBLIC_EXPLANATION": "Ist 'Öffentlich teilen' aktiviert, wird das Projekt, in allen öffentlichen Listen angezeigt."
 		},
 		"PROJECT_COMP_EDIT": {
 			"PROJECT_TITLE": "Projekt bearbeiten",
@@ -229,6 +282,7 @@
 		"PROJECT_COMP_INFO": {
 			"TITLE": "Informationen",
 			"NAME": "Name",
+			"FORKED": "Entstammt aus",
 			"CREATED": "Erstellt",
 			"MODIFIED": "Zuletzt bearbeitet",
 			"INPUTS": "Eingänge",
@@ -238,7 +292,8 @@
 			"DEPENDENT_PROJECTS": "Abhängige Projekte",
 			"DEPENDENT_COMPONENTS": "Abhängige Komponenten",
 			"NO_DEPENDENCIES": "keine",
-			"DESCRIPTION": "Beschreibung"
+			"DESCRIPTION": "Beschreibung",
+			"COMMUNITY_PAGE": "Zur Community Seite"
 		},
 		"PROJECT_COMP_DELETE": {
 			"TITLE": "Löschen bestätigen",

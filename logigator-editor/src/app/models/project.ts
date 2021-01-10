@@ -101,10 +101,10 @@ export class Project {
 				}
 				break;
 			case 'conWire':
-				this._currState.loadConIntoChunks(action.pos);
+				this._currState.addConPointIfNotExists(action.pos);
 				break;
 			case 'dcoWire':
-				this._currState.removeConFromChunks(action.pos);
+				this._currState.remConPointIfExists(action.pos);
 				break;
 			case 'rotComp':
 				this._currState.rotateComp(action.element, action.numbers[0]);
@@ -152,7 +152,7 @@ export class Project {
 	public chunksToRender(start: PIXI.Point, end: PIXI.Point): { x: number, y: number }[] {
 		const out = CollisionFunctions.inRectChunks(start, end);
 		for (const chunk of this._currState.chunksFromCoords(out)) {
-			chunk.links.forEach((linkedChunk, elementId) => {
+			chunk.links.forEach((linkedChunk, _) => {
 				if (!out.find(c => c.x === linkedChunk.x && c.y === linkedChunk.y))
 					out.push({x: linkedChunk.x, y: linkedChunk.y});
 			});
@@ -179,8 +179,9 @@ export class Project {
 			};
 			i++;
 		});
-		const changed = this._currState.withWiresOnEdges(elements);
-		actions.push(...this.autoAssemble(changed));
+		let wireEndsToUpdate = Elements.allWireEnds(elements);
+		wireEndsToUpdate = this._currState.pointsThatSplit(elements, wireEndsToUpdate);
+		actions.push(...this.autoAssembleWireEnds(wireEndsToUpdate));
 		this.newState(actions);
 		return true;
 	}
@@ -190,22 +191,23 @@ export class Project {
 			return null;
 		if (typeId === ElementTypeId.WIRE && _pos.equals(_endPos))
 			return null;
-		const elem = Elements.genNewElement(typeId, _pos, _endPos);
-		elem.endPos = elem.endPos || Elements.calcEndPos(elem);
-		if (!this._currState.isFreeSpace(elem.pos, elem.endPos, typeId === ElementTypeId.WIRE, Elements.wireEnds(elem)))
+		const element = Elements.genNewElement(typeId, _pos, _endPos);
+		element.endPos = element.endPos || Elements.calcEndPos(element);
+		if (!this._currState.isFreeSpace(element.pos, element.endPos, typeId === ElementTypeId.WIRE, Elements.wireEnds(element)))
 			return null;
 
 		// #!debug
 		this.boardRecorder.call('addElement', arguments);
-		this._currState.addElement(elem);
+		this._currState.addElement(element);
 		const actions: Action[] = [{
-			name: Elements.addActionName(elem),
-			element: elem
+			name: Elements.addActionName(element),
+			element
 		}];
-		const changed = this._currState.withWiresOnEdges([elem]);
-		actions.push(...this.autoAssemble(changed));
+		let wireEndsToUpdate = Elements.allWireEnds([element]);
+		wireEndsToUpdate = this._currState.pointsThatSplit([element], wireEndsToUpdate);
+		actions.push(...this.autoAssembleWireEnds(wireEndsToUpdate));
 		this.newState(actions);
-		return elem;
+		return element;
 	}
 
 	public addWire(_pos: PIXI.Point, _cornerPos: PIXI.Point, _endPos?: PIXI.Point): Element[] {
@@ -233,7 +235,9 @@ export class Project {
 	private actionsFromAddWires(wires: Element[]): Action[] {
 		const actions: Action[] = [];
 		wires.forEach(wire => actions.push({name: 'addWire', element: wire}));
-		actions.push(...this.autoAssemble(wires));
+		let wireEndsToUpdate = Elements.allWireEnds(wires);
+		wireEndsToUpdate = this._currState.pointsThatSplit(wires, wireEndsToUpdate);
+		actions.push(...this.autoAssembleWireEnds(wireEndsToUpdate));
 		return actions;
 	}
 
@@ -242,7 +246,6 @@ export class Project {
 		// #!debug
 		this.boardRecorder.call('removeElementsById', arguments, -1, 0);
 		const actions: Action[] = [];
-		const onEdges: Element[] = [];
 		const elements: Element[] = new Array(ids.length);
 		let i = 0;
 		ids.forEach(id => {
@@ -256,13 +259,9 @@ export class Project {
 			actions.push(...this._currState.plugIndexActions);
 			this._currState.plugIndexActions = [];
 		});
-		elements.forEach(elem => {
-			for (const pos of Elements.wireEnds(elem)) {
-				onEdges.push(...this._currState.wiresOnPoint(pos));
-			}
-		});
-		this._currState.loadConnectionPoints(elements);
-		actions.push(...this.autoAssemble(onEdges));
+		let wireEndsToUpdate = Elements.allWireEnds(elements);
+		wireEndsToUpdate = this._currState.pointsThatSplit(elements, wireEndsToUpdate);
+		actions.push(...this.autoAssembleWireEnds(wireEndsToUpdate));
 		this.newState(actions);
 	}
 
@@ -274,7 +273,6 @@ export class Project {
 		if (elements.length === 0)
 			return;
 		const actions: Action[] = [];
-		const onEdges: Element[] = [];
 		for (const element of elements) {
 			actions.push({
 				name: Elements.remActionName(element),
@@ -284,13 +282,9 @@ export class Project {
 			actions.push(...this._currState.plugIndexActions);
 			this._currState.plugIndexActions = [];
 		}
-		elements.forEach(elem => {
-			for (const pos of Elements.wireEnds(elem)) {
-				onEdges.push(...this._currState.wiresOnPoint(pos));
-			}
-		});
-		this._currState.loadConnectionPoints(elements);
-		actions.push(...this.autoAssemble(onEdges), ...this._currState.specialActions);
+		let wireEndsToUpdate = Elements.allWireEnds(elements);
+		wireEndsToUpdate = this._currState.pointsThatSplit(elements, wireEndsToUpdate);
+		actions.push(...this.autoAssembleWireEnds(wireEndsToUpdate), ...this._currState.specialActions);
 		this._currState.specialActions = [];
 		this._actionToApply.push(...actions);
 		this._changeSubject.next(actions);
@@ -319,21 +313,21 @@ export class Project {
 		}
 		if (!this._currState.allSpacesFree(elements, dif, new Set<Element>(elements)))
 			return false;
-		const changed = this._currState.withWiresOnEdges(elements);
+		let wireEndsToUpdate = Elements.allWireEnds(elements);
 
 		// #!debug
 		this.boardRecorder.call('moveElementsById', arguments, -1, 0);
-		this._currState.removeAllConnectionPoints(elements);
 		for (const elem of elements) {
 			this._currState.moveElement(elem, dif);
 		}
-		changed.push(...this._currState.withWiresOnEdges(elements));
 		const actions: Action[] = [{
 			name: 'movMult',
 			others: elements,
 			pos: dif
 		}];
-		actions.push(...this.autoAssemble(changed));
+		wireEndsToUpdate = Elements.allWireEnds(elements, wireEndsToUpdate);
+		wireEndsToUpdate = this._currState.pointsThatSplit(elements, wireEndsToUpdate);
+		actions.push(...this.autoAssembleWireEnds(wireEndsToUpdate));
 		this.newState(actions);
 		return true;
 	}
@@ -348,16 +342,18 @@ export class Project {
 			element,
 			numbers: [rotation, element.rotation]
 		}];
-		const changed = this._currState.withWiresOnEdges([element]);
+		let wireEndsToUpdate = Elements.allWireEnds([element]);
 		const newEndPos = Elements.calcEndPos(element, undefined, undefined, rotation);
 		if (!this._currState.isFreeSpace(element.pos, newEndPos, false,
-			Elements.wireEnds(element, rotation), new Set<Element>([element])))
+			Elements.wireEndsWithChanges(element, rotation, element.numInputs, new PIXI.Point()), new Set<Element>([element])))
 			return false;
 
 		// #!debug
 		this.boardRecorder.call('rotateComponent', arguments, 0);
 		this._currState.rotateComp(element, rotation, newEndPos);
-		actions.push(...this.autoAssemble(changed));
+		wireEndsToUpdate = Elements.allWireEnds([element], wireEndsToUpdate);
+		wireEndsToUpdate = this._currState.pointsThatSplit([element], wireEndsToUpdate);
+		actions.push(...this.autoAssembleWireEnds(wireEndsToUpdate));
 		this.newState(actions);
 		return true;
 	}
@@ -372,16 +368,18 @@ export class Project {
 			element,
 			numbers: [numInputs, element.numInputs]
 		}];
-		const changed = this._currState.withWiresOnEdges([element]);
+		let wireEndsToUpdate = Elements.allWireEnds([element]);
 		const newEndPos = Elements.calcEndPos(element, numInputs);
 		if (!this._currState.isFreeSpace(element.pos, newEndPos, false,
-			Elements.wireEnds(element, undefined, numInputs), new Set<Element>([element])))
+			Elements.wireEndsWithChanges(element, element.rotation, numInputs, new PIXI.Point()), new Set<Element>([element])))
 			return false;
 
 		// #!debug
 		this.boardRecorder.call('setNumInputs', arguments, 0);
 		this._currState.setNumInputs(element, numInputs, newEndPos);
-		actions.push(...this.autoAssemble(changed));
+		wireEndsToUpdate = Elements.allWireEnds([element], wireEndsToUpdate);
+		wireEndsToUpdate = this._currState.pointsThatSplit([element], wireEndsToUpdate);
+		actions.push(...this.autoAssembleWireEnds(wireEndsToUpdate));
 		this.newState(actions);
 		return true;
 	}
@@ -440,33 +438,44 @@ export class Project {
 		return this._currState.possiblePlugIds(this._currState.getElementById(elemId));
 	}
 
-	public setOptions(elemId: number, options: number[]): void {
-		const elem = this._currState.getElementById(elemId);
-		const canSizeChange = !!getStaticDI(ElementProviderService).getElementById(elem.typeId).onOptionsChanged;
-		const oldOptions = [...elem.options];
-		const changed = canSizeChange ? this._currState.withWiresOnEdges([elem]) : [];
-		this._currState.setOptions(elem, options);
+	public setOptions(elemId: number, options: number[]): boolean {
+		const element = this._currState.getElementById(elemId);
+		const canSizeChange = !!getStaticDI(ElementProviderService).getElementById(element.typeId).onOptionsChanged;
+		const oldOptions = [...element.options];
+		let wireEndsToUpdate = canSizeChange ? Elements.allWireEnds([element]) : undefined;
+
+		const clone = Elements.cloneSetOptions(element, options);
+		if (canSizeChange && !this._currState.isFreeSpace(clone.pos, clone.endPos, false,
+			Elements.wireEnds(clone), new Set<Element>([element])))
+			return false;
+		this._currState.setOptions(element, options);
 		const actions: Action[] = [{
-			element: elem,
+			element,
 			name: 'compOpt',
 			options: [options, oldOptions]
 		}];
-		if (canSizeChange) actions.push(...this.autoAssemble(changed));
+		if (canSizeChange) {
+			wireEndsToUpdate = Elements.allWireEnds([element], wireEndsToUpdate);
+			wireEndsToUpdate = this._currState.pointsThatSplit([element], wireEndsToUpdate);
+			actions.push(...this.autoAssembleWireEnds(wireEndsToUpdate));
+		}
 		this.newState(actions);
+		return true;
 	}
 
 
 	public addText(text: string, _pos: PIXI.Point): Element {
-		const elem = Elements.genNewElement(ElementTypeId.TEXT, _pos, _pos);
-		elem.data = text;
+		const element = Elements.genNewElement(ElementTypeId.TEXT, _pos);
+		element.data = text;
+		element.endPos = element.endPos || Elements.calcEndPos(element);
 
-		this._currState.addElement(elem);
+		this._currState.addElement(element);
 		const actions: Action[] = [{
-			name: Elements.addActionName(elem),
-			element: elem
+			name: Elements.addActionName(element),
+			element
 		}];
 		this.newState(actions);
-		return elem;
+		return element;
 	}
 
 
@@ -550,7 +559,7 @@ export class Project {
 
 	private disconnectWires(wiresOnPoint: Element[]): Action[] {
 		const newWires = this._currState.disconnectWires(wiresOnPoint);
-		this._currState.loadConnectionPoints(newWires.concat(wiresOnPoint));
+		this._currState.loadConnectionPoints(wiresOnPoint);
 		return Actions.connectWiresToActions(wiresOnPoint, newWires);
 	}
 
@@ -560,10 +569,10 @@ export class Project {
 		elements: Element[]
 	} {
 		const newWires = this._currState.splitWire(element, pos);
-		if (newWires.length === 1)
+		if (newWires.length === 0)
 			return {
 				actions: [],
-				elements: newWires
+				elements: [element]
 			};
 		this._currState.loadConnectionPoints(newWires);
 		return {
@@ -572,32 +581,8 @@ export class Project {
 		};
 	}
 
-
-	private autoAssemble(elements: Element[]): Action[] {
-		Elements.removeDuplicates(elements);
-		const out: Action[] = [];
-		const merged = this.autoMerge(elements);
-		out.push(...merged.actions);
-		const connected = this.autoConnect(merged.elements);
-		out.push(...connected.actions);
-		this._currState.loadConnectionPoints(connected.elements.concat(elements));
-		return out;
-	}
-
-	private autoConnect(elements: Element[]): { actions: Action[], elements: Element[] } {
-		const out: Action[] = [];
-		let outElements = [...elements];
-		const elemChanges = this._currState.connectToBoard([...elements]);
-		outElements = Actions.applyChangeOnArrayAndActions(elemChanges, out, outElements);
-		return {actions: out, elements: outElements};
-	}
-
-	private autoMerge(elements: Element[]): { actions: Action[], elements: Element[] } {
-		const out: Action[] = [];
-		let outElements = [...elements];
-		const elemChanges = this._currState.mergeToBoard([...elements]);
-		outElements = Actions.applyChangeOnArrayAndActions(elemChanges, out, outElements);
-		return {actions: out, elements: outElements};
+	private autoAssembleWireEnds(wireEnds: Map<number, Set<number>>): Action[] {
+		return this._currState.actionToBoard(wireEnds);
 	}
 
 
@@ -621,6 +606,7 @@ export class Project {
 		this.saveDirty = true;
 		this.compileDirty = true;
 		if (!setStateActionFlag && !skipSubject) {
+			actions = Actions.reduceActions(actions); // 130/36 - 2336actions
 			this._changeSubject.next(actions);
 		} else if (setStateActionFlag) {
 			this._stateActionFlag = true;

@@ -1,5 +1,5 @@
 @include view('project-component-info-popup') {
-	max-width: 40rem;
+	max-width: 35rem;
 
 	@include element('image-container') {
 		width: 100%;
@@ -19,7 +19,7 @@
 		flex-direction: row;
 		align-items: center;
 
-		> p {
+		> p, ul {
 			margin-top: 0.5rem;
 			margin-bottom: 0.5rem;
 		}
@@ -29,7 +29,7 @@
 		flex-direction: column;
 		align-items: start;
 
-		> p {
+		> p, ul {
 
 			&:first-child {
 				margin-bottom: 0.25rem;
@@ -51,6 +51,16 @@
 		@include themify() {
 			border-color: themed('text-primary');
 		}
+	}
+
+	@include element('desc') {
+		@include scrollbar(4px, 4px);
+
+		margin-bottom: 0.75rem !important;
+		width: 100%;
+		white-space: pre-wrap;
+		max-height: 10rem;
+		overflow: auto;
 	}
 
 }

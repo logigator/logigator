@@ -1,0 +1,84 @@
+{
+	"projects": [
+		{
+			"name": "Basic Gates",
+			"description": "Shows the most basic components for building logic circuits like AND, OR, XOR or NOT.\nYou can use the switches to control the inputs.",
+			"link": "84c816f5-3514-4c2e-a749-5b5c6c15a07b",
+			"elements": "elements/basic_gates.json",
+			"previewLight": "previews/basic_gates_light.png",
+			"previewDark": "previews/basic_gates_dark.png",
+			"dependencies": []
+		},
+		{
+			"name": "Half Adder",
+			"description": "A half adder adds two binary bits.\nSum is the single digit sum of the addition. Carry represents the overflow. You can build a half adder yourself using basic gates or you can just use the built-in half adder.",
+			"link": "45176ad4-0b89-4326-9a60-18d75d1566fe",
+			"elements": "elements/half_adder.json",
+			"previewLight": "previews/half_adder_light.png",
+			"previewDark": "previews/half_adder_dark.png",
+			"dependencies": []
+		},
+		{
+			"name": "Full Adder",
+			"description": "The full adder does the same as the half adder, but with 3 bits.\nYou can build it with basic gates or use the built-in element.",
+			"link": "2c8462f6-bcf4-436a-838e-b927af143f08",
+			"elements": "elements/full_adder.json",
+			"previewLight": "previews/full_adder_light.png",
+			"previewDark": "previews/full_adder_dark.png",
+			"dependencies": []
+		},
+		{
+			"name": "Flip Flops",
+			"description": "Flip Flops are used to save a state.\nThere are several different flip flops in Logigator. You can learn more on how they behave and how to use them by reading the help pages found in the editor.",
+			"link": "03b04e81-2bb1-4ed0-a2bd-9983c7138d60",
+			"elements": "elements/flip_flops.json",
+			"previewLight": "previews/flip_flops_light.png",
+			"previewDark": "previews/flip_flops_dark.png",
+			"dependencies": []
+		},
+		{
+			"name": "4 Bit Counter",
+			"description": "An example implementation for a 4 bit binary counter.\nIncreases the output by one every time the button gets pressed.",
+			"link": "acefd06a-38f6-47b5-b90b-ad17e3d9915c",
+			"elements": "elements/4bit_counter.json",
+			"previewLight": "previews/4bit_counter_light.png",
+			"previewDark": "previews/4bit_counter_dark.png",
+			"dependencies": []
+		},
+		{
+			"name": "4 Bit Adder",
+			"description": "Adds two 4-bit numbers.\nIt works by passing the carry bit from the last full adder to the carry in from the next full adder.\n\nOn the left, it is implemented with the built-in full adders, on the right, a custom component is used.\nYou can click on it during simulation to see what's happening in there.",
+			"link": "7e6a2c5b-9cc3-4b23-a19d-e9e879b672d5",
+			"elements": "elements/4bit_adder.json",
+			"previewLight": "previews/4bit_adder_light.png",
+			"previewDark": "previews/4bit_adder_dark.png",
+			"dependencies": [
+				{
+					"model": 1000,
+					"dependency": "CustomAdder"
+				}
+			]
+		}
+	],
+	"components": {
+		"CustomAdder": {
+			"name": "Full Adder",
+			"symbol": "FA",
+			"description": "Implements a full adder.",
+			"link": "c3238648-60f4-42f5-b341-2fbeb56d8a83",
+			"elements": "elements/custom_adder.json",
+			"previewLight": "previews/custom_adder_light.png",
+			"previewDark": "previews/custom_adder_dark.png",
+			"numInputs": 3,
+			"numOutputs": 2,
+			"labels": [
+				"A",
+				"B",
+				"Cin",
+				"S",
+				"C"
+			],
+			"dependencies": []
+		}
+	}
+}

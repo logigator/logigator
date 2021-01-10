@@ -77,8 +77,12 @@ export class ViewInteractionManager {
 
 		merge(
 			this.workModeSer.currentWorkMode$,
-			this.editorInteractionSer.subscribeEditorAction(EditorAction.DELETE, EditorAction.UNDO, EditorAction.REDO, EditorAction.CUT)
-		).pipe(takeUntil(this._destroySubject)).subscribe(() => this.cleanUp());
+			this.editorInteractionSer.subscribeEditorAction(EditorAction.UNDO, EditorAction.REDO)
+		).pipe(takeUntil(this._destroySubject)).subscribe(() => this.cleanUp(true));
+
+		this.editorInteractionSer.subscribeEditorAction(EditorAction.DELETE, EditorAction.CUT).pipe(
+			takeUntil(this._destroySubject)
+		).subscribe(() => this.cleanUp());
 
 		this.editorInteractionSer.subscribeEditorAction(EditorAction.PASTE).pipe(
 			takeUntil(this._destroySubject),
@@ -117,13 +121,13 @@ export class ViewInteractionManager {
 		if (e.data.button !== 0) return;
 
 		if (this.workModeSer.currentWorkMode === WorkMode.ERASER) {
-			this.cleanUp();
+			this.cleanUp(true);
 			this.startEraser(e);
 			return;
 		}
 
 		if (e.target !== this._view) return;
-		this.cleanUp();
+		this.cleanUp(true);
 
 		switch (this.workModeSer.currentWorkMode) {
 			case WorkMode.COMPONENT:
@@ -223,13 +227,16 @@ export class ViewInteractionManager {
 	private pUpElement(lGraphics: LGraphics) {
 		if (this.workModeSer.currentWorkMode === WorkMode.COMPONENT ||
 			this.workModeSer.currentWorkMode === WorkMode.ERASER ||
+			this._state === ViewIntManState.NEW_WIRE ||
 			this._state === ViewIntManState.DRAGGING ||
-			this._selectRect.visible
+			this._state === ViewIntManState.CUT_DRAGGING ||
+			this._state === ViewIntManState.SELECT ||
+			this._state === ViewIntManState.SELECT_CUT
 		) {
 			return;
 		}
 
-		this.cleanUp();
+		this.cleanUp(true);
 		this._state = ViewIntManState.WAIT_FOR_DRAG;
 		this.selectionSer.selectComponent(lGraphics.element.id);
 		lGraphics.setSelected(true);
@@ -417,7 +424,7 @@ export class ViewInteractionManager {
 		if (this._project.moveElementsById(
 			this.selectionSer.selectedIds(), this._actionPos.getGridPosDiffFromStart(this._selectedElements[0].position))
 		) {
-			this.cleanUp();
+			this.cleanUp(true);
 		} else {
 			switch (this._state) {
 				case ViewIntManState.DRAGGING:
@@ -451,7 +458,7 @@ export class ViewInteractionManager {
 
 	private startPaste() {
 		if (this.copySer.copiedElements.length === 0) return;
-		this.cleanUp();
+		this.cleanUp(true);
 		this._state = ViewIntManState.WAIT_FOR_PASTE_DRAG;
 		const bounding = this.copySer.getCopiedElementsBoundingBox();
 		const pasteRectPos =  Grid.getGridPosForPixelPos(new PIXI.Point(
@@ -507,7 +514,7 @@ export class ViewInteractionManager {
 			elementsToAdd,
 			this._actionPos.getGridPosDiffFromStart(this._selectedElements[0].position))
 		) {
-			this.cleanUp();
+			this.cleanUp(true);
 		} else {
 			this._state = ViewIntManState.WAIT_FOR_PASTE_DRAG;
 		}
@@ -533,35 +540,13 @@ export class ViewInteractionManager {
 		return this._view.zoomPan.currentScale;
 	}
 
-	private cleanUp() {
+	private cleanUp(cleanUpSelectedElements = false) {
 		if (this._state === ViewIntManState.WAIT_FOR_CUT_DRAG)
 			this.selectionSer.cancelCut(this._project);
 		this._state = ViewIntManState.IDLE;
 		this.selectionSer.clearSelection();
-		for (const lGraphics of this._selectedElements || []) {
-			try {
-				if (this._selectionNewElements) {
-					lGraphics.destroy();
-				} else {
-					this._view.addToCorrectChunk(lGraphics, lGraphics.element.pos);
-					this._view.setLocalChunkPos(lGraphics.element, lGraphics);
-					lGraphics.setSelected(false);
-				}
-			} catch {}
-		}
-		for (const point of this._selectedConnPoints || []) {
-			try {
-				if (this._selectionNewElements) {
-					point.graphics.destroy();
-				} else {
-					this._view.removeChild(point.graphics);
-					this._view.addToCorrectChunk(point.graphics, point.pos);
-					point.graphics.setSelected(false);
-					point.graphics.setPosition(point.pos, true, this.currScale);
-				}
-			} catch {}
-
-		}
+		if (cleanUpSelectedElements || this._selectionNewElements)
+			this.cleanUpSelectedElements();
 		this._selectRect.visible = false;
 		this._wireGraphics.visible = false;
 		this._wireGraphics.clear();
@@ -571,6 +556,33 @@ export class ViewInteractionManager {
 		delete this._selectionNewElements;
 		delete this._actionPos;
 		this._view.requestSingleFrame();
+	}
+
+	private cleanUpSelectedElements() {
+		for (const lGraphics of this._selectedElements || []) {
+			if (this._selectionNewElements) {
+				lGraphics.destroy();
+			} else {
+				try {
+					if (this._view.addToCorrectChunk(lGraphics, lGraphics.element.pos))
+						this._view.setLocalChunkPos(lGraphics.element, lGraphics);
+					lGraphics.setSelected(false);
+				} catch {}
+			}
+		}
+		for (const point of this._selectedConnPoints || []) {
+			if (this._selectionNewElements) {
+				point.graphics.destroy();
+			} else {
+				try {
+					if (this._view.addToCorrectChunk(point.graphics, point.pos)) {
+						this._view.removeChild(point.graphics);
+						point.graphics.setPosition(point.pos, true, this.currScale);
+					}
+					point.graphics.setSelected(false);
+				} catch {}
+			}
+		}
 	}
 
 	public destroy() {

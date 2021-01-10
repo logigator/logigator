@@ -87,10 +87,10 @@ class Main {
 
 	private registerHttpInterceptor() {
 		this._window.webContents.session.webRequest.onBeforeRequest((details, callback) => {
-			if (details.url.startsWith('file:///persisted/')) {
-				callback({redirectURL: details.url.replace('file:///persisted/', getHomeUrl() + '/persisted/')});
-			} else if (details.url.startsWith(this._windowHostname + '/persisted/')) {
-				callback({redirectURL: details.url.replace(this._windowHostname + '/persisted/', getHomeUrl() + '/persisted/')});
+			if (details.url.startsWith('file:///profile/')) {
+				callback({redirectURL: details.url.replace('file:///profile/', getHomeUrl() + '/profile/')});
+			} else if (details.url.startsWith(this._windowHostname + '/profile/')) {
+				callback({redirectURL: details.url.replace(this._windowHostname + '/profile/', getHomeUrl() + '/profile/')});
 			} else {
 				callback({});
 			}

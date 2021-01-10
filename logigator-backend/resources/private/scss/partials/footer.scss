@@ -2,7 +2,7 @@
 	width: 100%;
 	display: flex;
 	flex-direction: row;
-	justify-content: space-around;
+	justify-content: center;
 	align-items: center;
 	height: $footer-height;
 
@@ -17,6 +17,7 @@
 	@include element('link') {
 		text-decoration: none;
 		color: black;
+		margin: 10px 80px;
 
 		&:hover {
 			text-decoration: underline;

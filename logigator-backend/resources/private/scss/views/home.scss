@@ -1,61 +1,233 @@
 @import "../config/config";
+@import "../partials/project-teasers";
+@import "../partials/half-adder-svg";
 
 @include view('home') {
 
-	@include element('section') {
-		@include section();
+	@include element('s-intro') {
+		@include section('s-intro-content', 1200px);
 	}
 
-	@include element('section-intro-content') {
-		display: flex;
-		flex-direction: row;
-		justify-content: space-between;
-		align-items: center;
+	@include element('headline') {
+		text-align: center;
+		margin-top: 0;
+		margin-bottom: 0.75rem;
+		font-size: 40px;
+		font-weight: 100;
+
+		@include media-breakpoint-down('md') {
+			font-size: 30px;
+			margin-bottom: 0.5rem;
+		}
+	}
+
+	@include element('subline') {
+		text-align: center;
+		font-size: 24px;
+		margin-top: 0.75rem;
+		margin-bottom: 1rem;
+
+		@include media-breakpoint-down('md') {
+			font-size: 20px;
+			margin-top: 0.5rem;
+		}
+	}
+
+	@include element('s-intro-logo') {
 		width: 100%;
-		padding-top: 3rem;
-		padding-bottom: 3rem;
+		max-width: 960px;
+		display: block;
+		margin: auto;
+		margin-top: 2rem;
+
+		@include media-breakpoint-down('md') {
+			margin-top: 0;
+		}
+	}
+
+	@include element('s-intro-headline') {
+		text-align: center;
+		font-size: 40px;
+		font-weight: 100;
+		margin-top: 2rem;
+		margin-bottom: 0;
+
+		@include media-breakpoint-down('lg') {
+			font-size: 30px;
+		}
+
+		@include media-breakpoint-down('md') {
+			margin-top: 1rem;
+			font-size: 25px;
+		}
 
 		@include media-breakpoint-down('sm') {
+			font-size: 20px;
+		}
+	}
+
+	@include element('s-intro-start') {
+		display: flex;
+		align-items: center;
+		margin: auto;
+		margin-top: 3rem;
+		max-width: 960px;
+
+		@include media-breakpoint-down('xl') {
 			flex-direction: column;
-			padding-top: 2rem;
-		}
-	}
-
-	@include element('section-intro-headline') {
-		text-align: start;
-		font-weight: normal;
-		font-size: 2rem;
-		margin: 0 4rem 0 0;
-
-		@include media-breakpoint-between('sm', 'lg') {
-			font-size: 1.8rem;
-			width: 35%;
 		}
 
 		@include media-breakpoint-down('sm') {
-			margin: 0 0 1rem 0;
-			font-size: 1.5rem;
+			margin-top: 1rem;
 		}
 	}
 
-	@include element('section-intro-button-link') {
+	@include element('s-intro-button') {
 		flex-grow: 1;
-		max-width: $container-max-width / 2;
+		margin-left: 1rem;
+		width: 20rem;
+
+		@include media-breakpoint-down('xl') {
+			margin-left: 0;
+			margin-top: 1rem;
+		}
+
+		@include media-breakpoint-down('md') {
+			width: 100%;
+		}
+
+		> button {
+			width: 100%;
+			padding: 1rem 0 !important;
+			font-size: 20px;
+
+			@include media-breakpoint-down('md') {
+				padding: 0.6rem 0 !important;
+			}
+		}
+	}
+
+	@include element('s-feat') {
+		@include section('s-feat-content', 1200px);
+
+		@include themify() {
+			background-color: themed('accent2');
+		}
+	}
+
+	@include element('s-feat-features') {
+		display: flex;
+		align-items: flex-start;
+		justify-content: center;
+		flex-wrap: wrap;
+		margin-top: 2rem;
+	}
+
+	@include element('s-feat-feature') {
+		text-align: center;
+		padding: 15px;
+		flex: 0 100%;
+
+		@include media-breakpoint-up('sm') {
+			flex: 0 50%;
+		}
+
+		@include media-breakpoint-up('lg') {
+			flex: 0 25%;
+		}
+
+		.f-img-container {
+			height: 180px;
+
+			@include media-breakpoint-down('md') {
+				height: 150px;
+			}
+
+			> img {
+				height: 100%;
+				display: block;
+				margin: auto;
+
+				@include themify() {
+					filter: drop-shadow(2px 2px 4px themed('accent1'));
+				}
+			}
+		}
+
+		h3 {
+			margin-top: 0.5rem;
+			margin-bottom: 0.5rem;
+			font-size: 24px;
+			font-weight: 100;
+		}
+
+		p {
+			margin-top: 0.5rem;
+			font-size: 17px;
+		}
+	}
+
+	@include element('s-examples') {
+		@include section('s-examples-content', 1200px);
+
+		text-align: center;
+	}
+
+	@include element('s-examples-more') {
+		> button {
+			padding: 0.75rem 3rem !important;
+			font-size: 18px;
+			margin-top: 1rem;
+		}
+	}
+
+	@include element('s-video') {
+		@include section('s-video-content', 1200px);
+
+		@include themify() {
+			background-color: themed('accent2');
+		}
+	}
+
+	@include element('s-video-iframe') {
+		width: 80%;
+		position: relative;
+		padding-bottom: 45%;
+		height: 0;
+		margin: auto;
+		margin-top: 2rem;
 
 		@include media-breakpoint-down('sm') {
 			width: 100%;
+			padding-bottom: 56.25%;
+			margin-top: 1rem;
+		}
+
+		iframe {
+			width: 100%;
+			height: 100%;
+			position: absolute;
+			top: 0;
+			left: 0;
 		}
 	}
 
-	@include element('section-intro-button') {
-		width: 100%;
-		height: 3rem;
-		font-size: 1.2rem;
+	@include element('s-shares') {
+		@include section('s-shares-content', 1200px);
 
-		@include media-breakpoint-down('sm') {
-			font-size: 1rem;
-			height: 2.5rem;
+		text-align: center;
+	}
+
+	@include element('s-shares-more') {
+		> button {
+			padding: 0.75rem 3rem !important;
+			font-size: 18px;
+			margin-top: 1rem;
 		}
+	}
+
+	@include element('s-shares-comp-headline') {
+		margin-top: 3rem;
 	}
 
 }

@@ -1,0 +1,42 @@
+<div class="view-community-user" data-type="{{currentTab}}" data-user="{{id}}">
+	<section class="view-community-user__container">
+		<div class="view-community-user__header">
+			<img alt="User Image" src="{{userImage}}">
+			<div>
+				<h2>{{username}}</h2>
+				<p>{{i18n.COMMUNITY.USER.MEMBER_SINCE}}: {{memberSince}}</p>
+			</div>
+		</div>
+
+		<div class="view-community-user__tabs">
+			<a class="view-community-user__tab {{#if (expr currentTab '===' 'projects')}}is-active{{/if}}" href="{{linkHref projectsLink}}">
+				<p>{{i18n.COMMUNITY.USER.PROJECTS}}</p>
+			</a>
+			<a class="view-community-user__tab {{#if (expr currentTab '===' 'components')}}is-active{{/if}}" href="{{linkHref componentsLink}}">
+				<p>{{i18n.COMMUNITY.USER.COMPONENTS}}</p>
+			</a>
+			<a class="view-community-user__tab {{#if (expr currentTab '===' 'staredProjects')}}is-active{{/if}}" href="{{linkHref staredComponentsLink}}">
+				<p>{{i18n.COMMUNITY.USER.STARED_PROJECTS}}</p>
+			</a>
+			<a class="view-community-user__tab {{#if (expr currentTab '===' 'staredComponents')}}is-active{{/if}}" href="{{linkHref staredProjectsLink}}">
+				<p>{{i18n.COMMUNITY.USER.STARED_COMPONENTS}}</p>
+			</a>
+		</div>
+		{{#if entries.length}}
+			<div class="view-community-user__list">
+				{{> community-user-list}}
+			</div>
+			<div class="view-community-user__pages">
+				<button class="btn-outline secondary view-community-user__page-button"><<</button>
+				<button class="btn-outline secondary view-community-user__page-button"><</button>
+				<button class="btn-outline secondary view-community-user__page-button">1</button>
+				<button class="btn-outline secondary view-community-user__page-button">2</button>
+				<button class="btn-outline secondary view-community-user__page-button">3</button>
+				<button class="btn-outline secondary view-community-user__page-button">></button>
+				<button class="btn-outline secondary view-community-user__page-button">>></button>
+			</div>
+		{{else}}
+			<p class="view-community-user__no-items">{{i18n.COMMUNITY.USER.NO_ITEMS}}</p>
+		{{/if}}
+	</section>
+</div>

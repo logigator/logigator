@@ -8,13 +8,15 @@ import {Exclude} from 'class-transformer';
 export class ProjectFile extends PersistedResource {
 
 	public mimeType = 'application/json';
+	protected _path = 'private/projects';
+
 
 	@Exclude()
 	public get publicUrl() {
 		return super.publicUrl;
 	}
 
-	@OneToOne(type => Project, project => project.elementsFile)
+	@OneToOne(type => Project, project => project.elementsFile, {onDelete: 'CASCADE', onUpdate: 'CASCADE'})
 	@JoinColumn()
 	project: Promise<Project>
 

@@ -90,17 +90,7 @@ export class AuthController {
 
 	@Get('/google-authenticate')
 	@UseBefore(GoogleAuthenticationMiddleware)
-	@UseAfter(formErrorMiddleware((request, response) => {
-		if (response.locals.connectedAccounts)
-			return '/my/account/security';
-		else if (request.query.state === 'login-page')
-			return '/login';
-		else if (request.query.state === 'register-page')
-			return '/register';
-		else if (request.query.state === 'login-electron')
-			return '/login-electron';
-		return '/';
-	}))
+	@UseAfter(formErrorMiddleware(request => request.query.state as string ?? '/'))
 	public googleAuthenticate() {
 	}
 
@@ -111,17 +101,7 @@ export class AuthController {
 
 	@Get('/twitter-authenticate')
 	@UseBefore(TwitterAuthenticationMiddleware)
-	@UseAfter(formErrorMiddleware((request, response) => {
-		if (response.locals.connectedAccounts)
-			return '/my/account/security';
-		else if (request.query.state === 'login-page')
-			return '/login';
-		else if (request.query.state === 'register-page')
-			return '/register';
-		else if (request.query.state === 'login-electron')
-			return '/login-electron';
-		return '/';
-	}))
+	@UseAfter(formErrorMiddleware(request => request.query.state as string ?? '/'))
 	public twitterAuthenticate() {
 	}
 

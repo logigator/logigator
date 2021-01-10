@@ -19,14 +19,14 @@
 			</select>
 		</div>
 
-		<div class="property" *ngIf="elementType.hasPlugIndex && selectedCompId">
+		<div class="property" *ngIf="elementType.hasPlugIndex && isElementPlaced">
 			<p>{{'SETTINGS_INFO.PLUG_INDEX' | translate}}:</p>
 			<select formControlName="plugIndex">
 				<option *ngFor="let i of possiblePlugIndexes" [value]="i">{{toUserPlugIndex(i)}}</option>
 			</select>
 		</div>
 
-		<div class="property" *ngIf="elementType.hasLabel && selectedCompId">
+		<div class="property" *ngIf="elementType.hasLabel && isElementPlaced">
 			<p>{{'SETTINGS_INFO.PLUG_LABEL' | translate}}:</p>
 			<input formControlName="label" type="text" maxlength="5" (keypress)="onLabelChange($event)" (focus)="focusInput()" (blur)="blurInput()">
 		</div>
@@ -50,7 +50,7 @@
 			<span [innerHTML]="elementType.description | translate"></span>
 		</div>
 
-		<button class="btn-outline secondary small edit" *ngIf="elementType.edit && (selectedCompId || elementType.canEditType)" (click)="editClick()">{{'SETTINGS_INFO.EDIT' | translate}}</button>
-		<button class="btn-outline secondary small edit" *ngIf="elementType.hasPlugIndex && selectedCompId" (click)="customisePlugs()">{{'SETTINGS_INFO.PLUG_EDIT' | translate}}</button>
+		<button class="btn-outline secondary small edit" *ngIf="elementType.edit && (isElementPlaced || elementType.canEditType)" (click)="editClick()">{{'SETTINGS_INFO.EDIT' | translate}}</button>
+		<button class="btn-outline secondary small edit" *ngIf="elementType.hasPlugIndex && isElementPlaced" (click)="customisePlugs()">{{'SETTINGS_INFO.PLUG_EDIT' | translate}}</button>
 	</div>
 </div>

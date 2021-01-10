@@ -4,7 +4,7 @@
 		"EN": "English"
 	},
 	"COOKIE_CONSENT": {
-		"MESSAGE": "This website uses cookies to ensure you get the best experience on our website.",
+		"MESSAGE": "This website uses cookies to ensure the best user experience possible.",
 		"DISMISS": "Got it!",
 		"LINK": "Learn more"
 	},
@@ -22,13 +22,16 @@
 		"ACCOUNT_SECURITY": "Logigator - Security",
 		"ACCOUNT_DELETE": "Logigator - Delete Account",
 		"LOGIN": "Logigator - Login",
-		"REGISTER": "Logigator - Register"
+		"REGISTER": "Logigator - Register",
+		"EXAMPLES": "Logigator - Examples",
+		"COMMUNITY": "Logigator - Community"
 	},
 	"SITE_HEADER": {
 		"DOWNLOAD": "Download",
 		"FEATURES": "Features",
-		"PROJECTS": "Projects",
-		"COMPONENTS": "Components",
+		"PROJECTS": "My Projects",
+		"COMPONENTS": "My Components",
+		"COMMUNITY": "Community",
 		"LOGIN": "Login",
 		"REGISTER": "Sign up"
 	},
@@ -47,42 +50,69 @@
 	},
 	"HOME": {
 		"INTRO": {
-			"DESCRIPTION": "The editor for logical circuits...",
-			"BUTTON": "TRY NOW"
+			"DESCRIPTION": "Build, simulate and manage complex logic circuits for free.",
+			"BUTTON": "Start Building Now"
 		},
-		"EXPLANATION": {
-			"TITLE": "A short Explanation",
-			"DESCRIPTION": "You probably ask yourself - what are logical gates? In a nutshell logical gates are the components that make up the processing unit of a computer. However, this explanation is a bit short, which is why we animated this short video to explain the basics needed to use our website.",
-			"VIDEO": "https://www.youtube.com/embed/weTeJLMGq_Q"
+		"FEATURES": {
+			"TITLE": "Features",
+			"DESCRIPTION": "Build and simulate your own circuits with Logigator, a simple yet powerful online tool.",
+			"PERFORMANCE": "Performance",
+			"PERFORMANCE_DES": "Logigators' editor can handle even the largest projects with ease thanks to WebAssembly and WebGL.",
+			"SUBCIRCUITS": "Subcircuits",
+			"SUBCIRCUITS_DES": "Create subcircuits and use them all over your projects to help keep them organized.",
+			"SHARE": "Share Projects",
+			"SHARE_DES": "Share your circuits with other users, so they can learn from your work.",
+			"IMAGES": "Export Images",
+			"IMAGES_DES": "With Logigator you can export high resolution images in three different formats (SVG, PNG, JPG) to use them anywhere."
 		},
 		"EXAMPLES": {
-			"TITLE": "A few example circuits for you...",
-			"TRY_NOW": "TRY NOW"
+			"TITLE": "Example Circuits",
+			"DESCRIPTION": "Learn to design simple and more complex circuits from our examples.",
+			"MORE": "See More Examples"
+		},
+		"VIDEO": {
+			"TITLE": "What are logic circuits?",
+			"DESCRIPTION": "If you don't know what logic gates or logic circuits are, we animated a short explanation for you to watch."
+		},
+		"SHARES": {
+			"PROJECTS_TITLE": "Recently shared Projects",
+			"PROJECTS_DESCRIPTION": "Explore other projects created by our community. Your Project could be the next on this list.",
+			"COMPS_TITLE": "Recently shared Components",
+			"COMPS_DESCRIPTION": "Explore other components created by our community. They may be useful for you.",
+			"MORE_PROJECTS": "See More Projects",
+			"MORE_COMPONENTS": "See More Components"
+		},
+		"PROJECT_TEASERS": {
+			"VIEW": "View"
 		}
+	},
+	"EXAMPLES": {
+		"VIEW": "View Example",
+		"CLONE": "Clone Example"
 	},
 	"FEATURES": {
 		"WHAT_IS": {
 			"TITLE": "What is Logigator",
 			"VIDEO": "https://www.youtube.com/embed/weTeJLMGq_Q",
-			"TEXT": "Logigator is an online simulator for logic gates, which enables the user to build and simulate circuits with logic gates. For example one can build half-adders and full-adders, which can be used for learning. Whether one wants to experiment and explore boolean functions or design new and complex circuits - Logigator is the right tool. <br> In addition, Logigator offers high performance even with large-scale projects. By using “WebAssembly” (https://webassembly.org/) the website can reach simulation speeds that else would not be possible in a browser. "
+			"TEXT": "Logigator is an online simulator for logic gates which enables the user to build and simulate circuits with logic gates. For example, one can build half-adders and full-adders which can be used for learning. Whether one wants to experiment and explore boolean functions or design new and complex circuits - Logigator is the right tool. <br> In addition, Logigator offers high performance even with large-scale projects. By using “WebAssembly” (https://webassembly.org/), the website can reach simulation speeds that would not be possible in a browser otherwise."
 		},
 		"GENERAL": {
 			"TITLE": "General",
 			"VIDEO": "https://www.youtube.com/embed/tX7HT_0MZRo",
-			"TEXT": "The editor can be reached under editor.logigator.com and can be used to design and simulate circuits. <br> To place an element, simply select the wanted element from the construction-kit on the left side of the window. The basic gates consist of: AND, OR, XOR, NOT as well as a delay which doesn’t change the input signal and a clock, which outputs a signal in periodical intervals. Naturally, there are also more complex elements, which are not mentioned here. After one selects an element it can be placed by clicking anywhere in the workspace. Using the selection-tool one can select an element and change settings in the box in bottom right corner. These settings vary from from component to component. The wire-tool can then be used to connect the elements."
+			"TEXT": "The editor can be reached under https://logigator.com/editor and can be used to design and simulate circuits. <br> To place an element, simply select the wanted element from the construction-kit on the left side of the window. The basic gates consist of: AND, OR, XOR, NOT as well as a delay which doesn't change the input signal and a clock, which outputs a signal in periodical intervals. Naturally, there are also more complex elements which are not mentioned here. After one selects an element, it can be placed by clicking anywhere in the canvas. Using the selection-tool one can select an element and change settings in the box in the bottom right corner. These settings vary from component to component. The wire-tool can then be used to connect the elements."
 		},
 		"CUSTOM_COMPS": {
-			"TITLE": "Custom components",
+			"TITLE": "Custom Components",
 			"VIDEO": "https://www.youtube.com/embed/fSErH93I-Wg",
-			"TEXT": "One might want to use a part of a circuit multiple times. To simplify this process it is possible to define custom components, which can easily be placed again and can even be used in other projects. <br> There are two types of plug-components: inputs and outputs. By placing these components one can mark the the inputs and outputs of a custom components. Additionally parts of circuits can be labeled for better overview."
+			"TEXT": "One might want to use a part of a circuit multiple times. To simplify this process it is possible to define custom components, which can easily be placed multiple times and can even be used in other projects. <br> There are two types of plug components: inputs and outputs. By placing these components one can mark the inputs and outputs of a custom components. Additionally parts of circuits can be labeled for better overview."
 		},
 		"SIMULATION": {
-			"TITLE": "Simulation-mode",
+			"TITLE": "Simulation Mode",
 			"VIDEO": "https://www.youtube.com/embed/WjpChcxn18k",
-			"TEXT": "The simulation-mode can be used to test and simulate circuits. To switch to simulation-mode, simply press the “start simulation” button. After switching mode, the Simulation is paused. To start the simulation simply press the play button. Now you can interact with the circuit. In case you want to debug the circuit you can pause the simulation and test it step by step. To return to the original state simply press the stop button. By default the simulation will run as fast as possible. However, the clockspeed can be changed by simply entering the wanted speed or locking it to the displays frequency. The composition of custom components can be observed by simply clicking on them."
+			"TEXT": "The simulation-mode can be used to test and simulate circuits. To switch to simulation mode, simply press the “Start Simulation” button. To start the simulation simply press the play button. Now you can interact with the circuit. In case you want to see what the circuit is doing, you can pause the simulation and test it step by step. To return to the original state simply press the stop button. By default the simulation will run as fast as possible. However, the clock speed can be changed by simply entering the wanted speed or locking it to the display's frequency. The composition of custom components can be observed by simply clicking on them."
 		},
 		"SAVING": {
-			"TITLE": "Saving projects",
+			"TITLE": "Saving Projects",
 			"VIDEO": "https://www.youtube.com/embed/VtS4E0L2MyU",
 			"TEXT": "Projects and Components can either be saved locally as a file or in the cloud, which enables editing on multiple devices. To save projects online the user has to be logged in, which also enables projects to be shared with other users."
 		}
@@ -97,7 +127,7 @@
 		"PASSWORD": "Password",
 		"PASSWORD_ERR_REQUIRED": "Password is required.",
 		"PASSWORD_ERR_INVALID": "Password is invalid.",
-		"ERR_EMAIL_TAKEN": "Email has already been taken",
+		"ERR_EMAIL_TAKEN": "Email is already registered",
 		"ERR_VERIFICATION_MAIL": "Verification-mail could not be sent.",
 		"ERR_UNKNOWN": "An unknown error occurred.",
 		"LOGIN_BUTTON": "LOGIN",
@@ -109,15 +139,15 @@
 		"EMAIL": "Email",
 		"EMAIL_ERR_REQUIRED": "Email is required.",
 		"EMAIL_ERR_INVALID": "Please enter a valid email address.",
-		"EMAIL_ERR_TAKEN": "Email has already been taken",
+		"EMAIL_ERR_TAKEN": "Email is already registered",
 		"USERNAME": "Username",
 		"USERNAME_ERR_REQUIRED": "Username is required.",
-		"USERNAME_ERR_MIN": "Username has to have at least two characters.",
-		"USERNAME_ERR_MAX": "Username may contain a maximum of 20 characters.",
+		"USERNAME_ERR_MIN": "Password must contain a minimum of two characters.",
+		"USERNAME_ERR_MAX": "Username may only contain a maximum of 20 characters.",
 		"USERNAME_ERR_PATTERN": "Username may only contain a-z, A-Z, 0-9, _ or -",
 		"PASSWORD": "Password",
 		"PASSWORD_ERR_REQUIRED": "Password is required.",
-		"PASSWORD_ERR_MIN": "Password must contain at least eight characters.",
+		"PASSWORD_ERR_MIN": "Password must contain a minimum of eight characters.",
 		"PASSWORD_ERR_COMPLEXITY": "Password must contain letters and digits.",
 		"PASSWORD_REPEAT": "Repeat password",
 		"PASSWORD_REPEAT_ERR_REQUIRED": "Password must be repeated.",
@@ -125,9 +155,30 @@
 		"PRIVACY_POLICY": "By clicking on \"SIGN UP\" you agree that you have read and accepted our data policy.",
 		"REGISTER_BUTTON": "SIGN UP",
 		"OR": "or",
-		"ERR_EMAIL_TAKEN": "Email has already been taken",
+		"ERR_EMAIL_TAKEN": "Email is already registered",
 		"ERR_VERIFICATION_MAIL": "Verification-mail could not be sent, try again when signing in.",
 		"ERR_UNKNOWN": "An unknown error occurred."
+	},
+	"COMMUNITY": {
+		"NAV": {
+			"PROJECTS": "Projects",
+			"COMPONENTS": "Components"
+		},
+		"SEARCH": "Search",
+		"COMPONENTS": "Shared Components",
+		"PROJECTS": "Shared Projects",
+		"VIEW": "View",
+		"OPEN": "Open",
+		"CLONE": "Clone",
+		"NO_DESCRIPTION": "No description was provided.",
+		"USER": {
+			"MEMBER_SINCE": "Member since",
+			"COMPONENTS": "Components",
+			"PROJECTS": "Projects",
+			"STARED_COMPONENTS": "Starred Components",
+			"STARED_PROJECTS": "Starred Projects",
+			"NO_ITEMS": "Nothing to show in this category."
+		}
 	},
 	"USERSPACE": {
 		"NAV": {
@@ -160,10 +211,10 @@
 				"EMAIL_ERR_REQUIRED": "Email is required.",
 				"EMAIL_ERR_INVALID": "Please enter a valid email address.",
 				"EMAIL_ERR_TAKEN": "Email has already been taken.",
-				"EMAIL_ERR_CHANGE": "This is your current Email.",
+				"EMAIL_ERR_CHANGE": "This is your current email.",
 				"USERNAME": "Username",
 				"USERNAME_ERR_REQUIRED": "Username is required.",
-				"USERNAME_ERR_MIN": "Username has to have at least two characters.",
+				"USERNAME_ERR_MIN": "Password must contain a minimum of two characters.",
 				"USERNAME_ERR_MAX": "Username may contain a maximum of 20 characters.",
 				"USERNAME_ERR_CHANGE": "This is your current Username.",
 				"SAVE": "Save"
@@ -172,13 +223,13 @@
 				"CONNECTED_ACCOUNTS": "Connected Accounts",
 				"CONNECT_NOW": "Connect now",
 				"CONNECTED": "Connected",
-				"PASSWORD_EXPLANATION": "You can add a Password to your Account to be able to login with it, your Account will stay connected to all other Social Media Accounts.",
+				"PASSWORD_EXPLANATION": "You can add a Password to your Account to be able to use it for login. Your Account will stay connected to all other Social Media Accounts.",
 				"CURRENT_PASSWORD": "Current Password",
 				"CURRENT_PASSWORD_ERR_REQUIRED": "Current Password is required.",
 				"CURRENT_PASSWORD_ERR_INVALID": "Password is invalid.",
 				"PASSWORD": "Password",
 				"PASSWORD_ERR_REQUIRED": "Password is required.",
-				"PASSWORD_ERR_MIN": "Password must contain at least eight characters.",
+				"PASSWORD_ERR_MIN": "Password must contain a minimum of eight characters.",
 				"PASSWORD_ERR_COMPLEXITY": "Password must contain letters and digits.",
 				"PASSWORD_REPEAT": "Repeat password",
 				"PASSWORD_REPEAT_ERR_REQUIRED": "Password must be repeated.",
@@ -211,7 +262,9 @@
 			"SYMBOL": "Symbol",
 			"SYMBOL_ERR_REQUIRED": "Symbol is required.",
 			"SYMBOL_ERR_MAX": "Symbol may contain a maximum of 5 characters.",
-			"CREATE": "Create"
+			"CREATE": "Create",
+			"PUBLIC": "Share publicly",
+			"PUBLIC_EXPLANATION": "If 'Share publicly' is activated, the project will be displayed in all public lists."
 		},
 		"PROJECT_COMP_EDIT": {
 			"PROJECT_TITLE": "Edit Project",
@@ -229,6 +282,7 @@
 		"PROJECT_COMP_INFO": {
 			"TITLE": "Information",
 			"NAME": "Name",
+			"FORKED": "Forked from",
 			"CREATED": "Created",
 			"MODIFIED": "Last modified",
 			"INPUTS": "Inputs",
@@ -238,7 +292,8 @@
 			"DEPENDENT_PROJECTS": "Dependent Projects",
 			"DEPENDENT_COMPONENTS": "Dependent Components",
 			"NO_DEPENDENCIES": "N/A",
-			"DESCRIPTION": "Description"
+			"DESCRIPTION": "Description",
+			"COMMUNITY_PAGE": "Go to Community Page"
 		},
 		"PROJECT_COMP_DELETE": {
 			"TITLE": "Confirm Delete",
@@ -285,7 +340,7 @@
 		"LOCAL_REGISTER": {
 			"TITLE": "Email verification",
 			"LINE_1": "Welcome to Logigator.",
-			"LINE_2": "Please check your mailbox and verify your email, before you can start to use Logigator.",
+			"LINE_2": "Please check your mailbox and verify your email to complete the registration process.",
 			"OK_BUTTON": "OK"
 		},
 		"EMAIL_UPDATED": {
@@ -333,7 +388,7 @@
 	},
 	"DOWNLOAD": {
 		"HEADLINE": "Download Editor",
-		"DESCRIPTION": "The editor is also available as a Desktop app. This has the advantage, that the simulation is way faster than in the web version. The app can be downloaded below.",
+		"DESCRIPTION": "The editor is also available as a desktop app. This has the advantage, that the simulation is way faster than on the internet. The app can be downloaded below.",
 		"DOWNLOAD": "Download",
 		"DATE": "Date",
 		"FILE_SIZE": "File Size"
@@ -352,7 +407,7 @@
 			"HAVE_FUN": "Have fun building!"
 		},
 		"VERIFY_MAIL_EMAIL_UPDATE": {
-			"SUBJECT": "Verify your new Email",
+			"SUBJECT": "Verify your new email",
 			"CHANGED": "Your e-mail address was changed recently.",
 			"PLEASE_VERIFY": "Please verify your e-mail address.",
 			"TO_DO_SO": "In order to do so",

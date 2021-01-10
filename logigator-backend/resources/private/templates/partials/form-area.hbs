@@ -2,7 +2,7 @@
 
 <div class="partial-form-area {{#formFieldHasErrors name}}is-invalid{{/formFieldHasErrors}}" form-container>
 		<label class="partial-form-area__label" for="{{concat @formName '_' name}}">{{label}}</label>
-		<textarea class="partial-form-area__area" name="{{name}}" id="{{concat @formName '_' name}}" >{{formFieldValue name value}}</textarea>
+		<textarea class="partial-form-area__area" name="{{name}}" id="{{concat @formName '_' name}}">{{handleNewLines (formFieldValue name value)}}</textarea>
 	<div class="partial-form-area__errors" form-errors>
 		{{#formFieldNameScope name }}
 			{{#if @partial-block}}

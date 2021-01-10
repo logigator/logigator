@@ -30,8 +30,20 @@ export abstract class Elements {
 		if (element.endPos)
 			out.endPos = element.endPos.clone();
 		delete out.wireEnds;
+		delete out.plugIndex;
 		out.options = out.options ? [...out.options] : undefined;
 		return out;
+	}
+
+	public static cloneSetOptions(element: Element, options: number[]): Element {
+		const clone = Elements.clone(element);
+		clone.options = options;
+		const elemType = getStaticDI(ElementProviderService).getElementById(element.typeId);
+		if (elemType.onOptionsChanged) {
+			elemType.onOptionsChanged(clone);
+			clone.endPos = Elements.calcEndPos(clone);
+		}
+		return clone;
 	}
 
 	public static equals(elem0: Element, elem1: Element): boolean {
@@ -93,6 +105,10 @@ export abstract class Elements {
 	}
 
 	public static calcElemSize(element: Element, numInputs?: number, numOutputs?: number, rotation?: number): PIXI.Point {
+		if (element.typeId === ElementTypeId.TEXT) {
+			const type = this.elementProviderService.getElementById(element.typeId);
+			return new PIXI.Point(type.width(element), type.height(element));
+		}
 		const elemType = Elements.elementType(element.typeId);
 		rotation = rotation === undefined || rotation == null ? element.rotation : rotation;
 		const elemToCalc = {...element, ...{rotation}};
@@ -138,17 +154,21 @@ export abstract class Elements {
 		newElem.endPos = new PIXI.Point(end, wire0.pos.y);
 	}
 
-	public static wireEnds(element: Element, rotation?: number, numInputs?: number, dif?: PIXI.Point): PIXI.Point[] {
-		if (element.wireEnds && !(dif || rotation || numInputs))
+	public static wireEnds(element: Element): PIXI.Point[] {
+		if (element.typeId === ElementTypeId.WIRE)
+			return [element.pos.clone(), element.endPos.clone()];
+		if (element.wireEnds)
 			return element.wireEnds.map(p => p.clone());
-		const pos = dif ? new PIXI.Point(element.pos.x + dif.x, element.pos.y + dif.y) : element.pos;
-		const endPos = dif ? new PIXI.Point(element.endPos.x + dif.x, element.endPos.y + dif.y) : element.endPos;
+		const out = this.wireEndsWithChanges(element, element.rotation, element.numInputs, new PIXI.Point());
+		element.wireEnds = out.map(p => p.clone());
+		return out;
+	}
+
+	public static wireEndsWithChanges(element: Element, rotation: number, numInputs: number, dif: PIXI.Point): PIXI.Point[] {
+		const pos = new PIXI.Point(element.pos.x + dif.x, element.pos.y + dif.y);
+		const endPos = new PIXI.Point(element.endPos.x + dif.x, element.endPos.y + dif.y);
 		if (element.typeId === ElementTypeId.WIRE)
 			return [pos, endPos];
-		if (rotation === undefined)
-			rotation = element.rotation;
-		if (numInputs === undefined)
-			numInputs = element.numInputs;
 		const ignoreOutputs = Elements.elementType(element.typeId).ignoreOutputs;
 		const out: PIXI.Point[] = new Array(numInputs + (ignoreOutputs ? 0 : element.numOutputs));
 		switch (rotation) {
@@ -185,8 +205,28 @@ export abstract class Elements {
 					out[numInputs + i] = new PIXI.Point(pos.x + i, pos.y - 1);
 				break;
 		}
-		if (!(dif || rotation || numInputs))
-			element.wireEnds = out.map(p => p.clone());
+		return out;
+	}
+
+	public static wireEndsIfInOtherChunk(element: Element, rotation: number, numInputs: number, dif: PIXI.Point): PIXI.Point[] {
+		if ((element.pos.x + dif.x) % 16 > 0 && (element.pos.y + dif.y) % 16 > 0 && (element.endPos.x + dif.x) % 16 < 15 && (element.endPos.y + dif.y) % 16 < 15) {
+			return [];
+		} else {
+			return Elements.wireEndsWithChanges(element, rotation, numInputs, dif);
+		}
+	}
+
+	public static allWireEnds(elements: Element[], startMap?: Map<number, Set<number>>): Map<number, Set<number>> {
+		const out = startMap || new Map<number, Set<number>>();
+		for (const elem of elements) {
+			for (const wireEnd of Elements.wireEnds(elem)) {
+				if (out.has(wireEnd.x)) {
+					out.get(wireEnd.x).add(wireEnd.y);
+				} else {
+					out.set(wireEnd.x, new Set<number>([wireEnd.y]));
+				}
+			}
+		}
 		return out;
 	}
 
@@ -200,16 +240,6 @@ export abstract class Elements {
 				return pos.x >= element.endPos.x;
 			case 3:
 				return pos.y >= element.endPos.y;
-		}
-	}
-
-	public static removeDuplicates(elements: Element[]): void {
-		for (let i = 0; i < elements.length - 1; i++) {
-			for (let j = i + 1; j < elements.length; j++) {
-				if (elements[i].id === elements[j].id) {
-					elements.splice(j, 1);
-				}
-			}
 		}
 	}
 
@@ -231,16 +261,12 @@ export abstract class Elements {
 		return wire.pos.x === wire.endPos.x;
 	}
 
+	public static isHorizontalElem(elem: Element): boolean {
+		return elem.typeId === ElementTypeId.WIRE ? Elements.isHorizontal(elem) : elem.rotation % 2 === 0;
+	}
+
 	public static isSameDirection(elem0: Element, elem1: Element): boolean {
-		const comp = elem0.typeId === 0 ? elem1 : elem0;
-		const wire = elem0.typeId === 0 ? elem0 : elem1;
-		// comp still might be a wire, because it is not tested that well
-		if (comp.typeId === 0)
-			return false;
-		if (comp.rotation % 2 === 0)
-			return Elements.isHorizontal(wire);
-		else
-			return Elements.isVertical(wire);
+		return Elements.isHorizontalElem(elem0) === Elements.isHorizontalElem(elem1);
 	}
 
 	public static elementType(typeId: number): ElementType {

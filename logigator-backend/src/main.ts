@@ -38,6 +38,11 @@ import {ShareController} from './controller/api/share.controller';
 import {AuthPagesController} from './controller/frontend/auth-pages.controller';
 import {UserController} from './controller/api/user.controller';
 import {DownloadController} from './controller/frontend/download.controller';
+import {ExamplesController} from './controller/frontend/examples.controller';
+import {CommunityController} from './controller/frontend/community/community.controller';
+import {CommunityProjCompController} from './controller/frontend/community/community-proj-comp.controller';
+import {CommunityCloneController} from './controller/frontend/community/community-clone.controller';
+import {CommunityUserController} from './controller/frontend/community/community-user.controller';
 
 useContainerRC(Container);
 typeOrmUseContainer(Container);
@@ -62,7 +67,7 @@ async function bootstrap() {
 	app.use(expressStatic(path.join(configService.projectRootPath, 'resources', 'public'), {
 		cacheControl: true,
 		immutable: true,
-		maxAge: '30d'
+		maxAge: '90d'
 	}));
 
 	app.use(cookieParser(configService.getConfig('session').secret));
@@ -117,7 +122,12 @@ async function bootstrap() {
 			ComponentController,
 			ShareController,
 			UserController,
-			DownloadController
+			DownloadController,
+			ExamplesController,
+			CommunityController,
+			CommunityProjCompController,
+			CommunityCloneController,
+			CommunityUserController
 		],
 		middlewares: [
 			DefaultPreferencesMiddleware,

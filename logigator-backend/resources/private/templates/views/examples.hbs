@@ -1,0 +1,43 @@
+<div class="view-examples">
+	{{#each examples}}
+		<section class="view-examples__example">
+			<div class="view-examples__example-content">
+				<div>
+					<div class="view-examples__example-image">
+						<img alt="Preview" src="{{ternary (expr @root.preferences.theme '===' 'dark') this.previewDark this.previewLight}}">
+					</div>
+					<div class="view-examples__example-description-text-mobile">
+						<div class="view-examples__desc">{{handleNewLines this.description}}</div>
+						<div class="view-examples__buttons">
+							<a href="{{this.link}}" target="_blank" rel="noopener">
+								<button class="btn-raised primary view-examples__example-button">{{@root.i18n.EXAMPLES.VIEW}}</button>
+							</a>
+							{{#if @root.isAuthenticated}}
+								<a href="{{this.cloneLink}}">
+									<button class="btn-raised primary view-examples__example-button">{{@root.i18n.EXAMPLES.CLONE}}</button>
+								</a>
+							{{/if}}
+						</div>
+					</div>
+				</div>
+				<div class="view-examples__example-description">
+					<h2 class="view-examples__example-title">{{this.name}}</h2>
+					<hr class="view-examples__example-divider">
+					<div class="view-examples__example-description-text">
+						<div class="view-examples__desc">{{handleNewLines this.description}}</div>
+						<div class="view-examples__buttons">
+							<a href="{{this.link}}" target="_blank" rel="noopener">
+								<button class="btn-raised primary view-examples__example-button">{{@root.i18n.EXAMPLES.VIEW}}</button>
+							</a>
+							{{#if @root.isAuthenticated}}
+								<a href="{{this.cloneLink}}">
+									<button class="btn-raised primary view-examples__example-button">{{@root.i18n.EXAMPLES.CLONE}}</button>
+								</a>
+							{{/if}}
+						</div>
+					</div>
+				</div>
+			</div>
+		</section>
+	{{/each}}
+</div>

@@ -38,8 +38,7 @@ export class UserService {
 		});
 
 		if (user) {
-			user.username = profile.displayName;
-			return this.userRepo.save(user);
+			return user;
 		}
 		const existingUser = await this.userRepo.findOne({
 			email: profile.emails[0].value
@@ -62,8 +61,7 @@ export class UserService {
 			twitterUserId: profile.id
 		});
 		if (user) {
-			user.username = profile.displayName;
-			return this.userRepo.save(user);
+			return user;
 		}
 		const existingUser = await this.userRepo.findOne({
 			email: profile.emails[0].value

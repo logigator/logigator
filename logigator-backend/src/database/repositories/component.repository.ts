@@ -22,6 +22,13 @@ export class ComponentRepository extends PageableRepository<Component> {
 		return component;
 	}
 
+	public async getComponentWithStargazersCountByLink(link: string): Promise<Component> {
+		return await this.createQueryBuilder('component')
+			.loadRelationCountAndMap('component.stargazersCount', 'component.stargazers')
+			.where('component.link = :link', {link})
+			.getOne();
+	}
+
 	public async clone(component: Component, user: User) {
 		const cloned = this.create();
 		cloned.name = component.name;
@@ -38,10 +45,23 @@ export class ComponentRepository extends PageableRepository<Component> {
 		return this.save(cloned);
 	}
 
-	public async getComponentPageForUser(pageNr: number, pageSize: number, user: User, search?: string): Promise<Page<Component>> {
+	public getComponentPageForUser(pageNr: number, pageSize: number, user: User, search?: string, onlyShowPublic = false): Promise<Page<Component>> {
 		return this.getPage(pageNr, pageSize, {
 			where: {
 				user: user,
+				...(search && {name: Like('%' + search + '%')}),
+				...(onlyShowPublic && {public: true})
+			},
+			order: {
+				lastEdited: 'DESC'
+			}
+		});
+	}
+
+	public getSharedComponentsPage(pageNr: number, pageSize: number, search?: string): Promise<Page<Component>> {
+		return this.getPage(pageNr, pageSize, {
+			where: {
+				public: true,
 				...(search && {name: Like('%' + search + '%')})
 			},
 			order: {
@@ -50,11 +70,12 @@ export class ComponentRepository extends PageableRepository<Component> {
 		});
 	}
 
-	public async createComponentForUser(name: string, symbol: string, description: string, user: User) {
+	public createComponentForUser(name: string, symbol: string, description: string, sharePublicly: boolean, user: User) {
 		const component = this.create();
 		component.name = name;
 		component.symbol = symbol;
 		component.description = description;
+		component.public = sharePublicly;
 		component.user = Promise.resolve(user);
 		component.elementsFile = new ComponentFile();
 		component.labels = [];
@@ -65,5 +86,40 @@ export class ComponentRepository extends PageableRepository<Component> {
 		const component = await this.getOwnedComponentOrThrow(projectId, user);
 		await this.remove(component);
 		return component;
+	}
+
+	public async hasUserStaredComponent(component: Component, user: User): Promise<boolean> {
+		const count = await this.createQueryBuilder('component')
+			.leftJoin('component.stargazers', 'user')
+			.where('component.id = :compId', {compId: component.id})
+			.andWhere('user.id = :userId', {userId: user.id})
+			.limit(1)
+			.getCount();
+		return Boolean(count);
+	}
+
+	public async getStargazersCount(component: Component): Promise<number> {
+		return (await this.createQueryBuilder('component')
+			.select(['COUNT(component.id) AS count'])
+			.innerJoin('component.stargazers', 'user')
+			.where('component.id = :id', {id: component.id})
+			.getRawOne()).count;
+	}
+
+	public async getComponentsStaredByUser(page: number, pageSize: number, user: User): Promise<Page<Component>> {
+		const results = await this.createQueryBuilder('component')
+			.leftJoin('component.stargazers', 'user')
+			.where('component.public = :isPublic', {isPublic: true})
+			.andWhere('user.id = :userId', {userId: user.id})
+			.skip(page * pageSize)
+			.take(pageSize)
+			.getManyAndCount();
+
+		return {
+			page,
+			total: Math.ceil(results[1] / pageSize),
+			count: results[0].length,
+			entries: results[0]
+		} as Page<Component>;
 	}
 }

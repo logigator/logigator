@@ -1,9 +1,8 @@
-import {Component, Inject, ViewChild, ViewContainerRef} from '@angular/core';
+import {Component, ViewChild, ViewContainerRef} from '@angular/core';
 import {ProjectsService} from '../../services/projects/projects.service';
 // #!debug
 import {Test} from '../../../../tests/auto-tests/tests';
 // #!debug
-import {ManuallyLogged} from '../../../../tests/auto-tests/board-recorder';
 import {StateCompilerService} from '../../services/simulation/state-compiler/state-compiler.service';
 import {WorkModeService} from '../../services/work-mode/work-mode.service';
 import {WorkMode} from '../../models/work-modes';
@@ -12,6 +11,8 @@ import {ShortcutAction} from '../../models/shortcut-action';
 import {ShortcutsService} from '../../services/shortcuts/shortcuts.service';
 import {SimulationManagementService} from '../../services/simulation/simulation-management/simulation-management.service';
 import {Grid} from '../../models/rendering/grid';
+import {ThemingService} from '../../services/theming/theming.service';
+import {BruteForceTester} from '../../../../tests/auto-tests/brute-force-tester';
 
 @Component({
 	selector: 'app-toolbar',
@@ -37,7 +38,8 @@ export class ToolbarComponent {
 		private editorInteractionService: EditorInteractionService,
 		private stateCompiler: StateCompilerService,
 		private shortcutService: ShortcutsService,
-		private simulationManagement: SimulationManagementService
+		private simulationManagement: SimulationManagementService,
+		private themingService: ThemingService
 	) {}
 
 	// #!if DEBUG === 'true'
@@ -45,15 +47,21 @@ export class ToolbarComponent {
 		console.log(this.projectService.currProject.allElements);
 	}
 
+	public get currentTheme() {
+		return this.themingService.currentTheme;
+	}
+
 	public printCalls(): void {
 		console.log(this.projectService.currProject.boardRecorder.stringify());
 	}
 
 	public runTests(): void {
+		const tester = new BruteForceTester(this.projectService.currProject);
+		tester.runAndTestRandom(1e5, 16 * 7);
 		// this.test = new Test('bugfix', this.projectService.currProject, ManuallyLogged.testTest);
-		for (const name in ManuallyLogged) {
-			Test.runAndCheck(name, false);
-		}
+		// for (const name in ManuallyLogged) {
+		// 	Test.runAndCheck(name, false);
+		// }
 	}
 
 	public runStep(): void {

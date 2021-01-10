@@ -42,7 +42,7 @@ Switches on or off depending on the applied input.
 
 <div class="margin-left">
 
-Seven segment display with a binary input, that displays the input as decimal number. 
+Seven segment display with a binary input, that displays the input as decimal, hexadecimal or octal number. 
 </div>
 </div>
 

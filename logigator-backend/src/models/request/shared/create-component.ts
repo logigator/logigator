@@ -1,4 +1,4 @@
-import {IsNotEmpty, IsString, MaxLength} from 'class-validator';
+import {IsNotEmpty, IsOptional, IsString, MaxLength} from 'class-validator';
 
 export class CreateComponent {
 
@@ -15,5 +15,9 @@ export class CreateComponent {
 	@IsString()
 	@MaxLength(2048)
 	description: string;
+
+	@IsOptional()
+	@IsString()
+	public: string;
 
 }

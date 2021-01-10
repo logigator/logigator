@@ -62,7 +62,7 @@ export class HelpComponent extends PopupContentComp implements OnInit, OnDestroy
 	}
 
 	public get githubEditUrl(): string {
-		return `https://github.com/logigator/logigator-editor/tree/development/src/help/${this.currentLang}/${this.helpToRender}.md`;
+		return `https://github.com/logigator/logigator/tree/development/logigator-editor/src/help/${this.currentLang}/${this.helpToRender}.md`;
 	}
 
 	ngOnDestroy(): void {

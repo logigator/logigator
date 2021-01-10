@@ -1,0 +1,138 @@
+@include partial('half-adder-svg') {
+	max-width: 550px;
+	width: 100%;
+
+	@include themify() {
+		@if (isTheme('dark')) {
+			--led-off: #18592d;
+			--led-on: #27ae60;
+			--switch-on: #27ae60;
+		} @else {
+			--led-off: #000000;
+			--led-on: #27AE60;
+			--switch-on: #000;
+		}
+	}
+
+	@include element('wire') {
+		stroke-width: 1px;
+		fill: none;
+		vector-effect: non-scaling-stroke;
+
+		@include themify() {
+			@if (isTheme('dark')) {
+				stroke: themed('primary');
+			} @else {
+				stroke: #000000;
+			}
+		}
+	}
+
+	@include element('comp') {
+		stroke-width: 1px;
+		fill: none;
+		vector-effect: non-scaling-stroke;
+
+		@include themify() {
+			@if (isTheme('dark')) {
+				stroke: themed('primary');
+			} @else {
+				stroke: #000000;
+			}
+		}
+	}
+
+	@include element('comp-text') {
+		text-anchor: middle;
+		font-size: 10px;
+
+		font-family: Roboto, Arial, sans-serif;
+
+		@include themify() {
+			@if (isTheme('dark')) {
+				fill: #ffffff;
+			} @else {
+				fill: #000000;
+			}
+		}
+	}
+
+	@include element('led') {
+		fill: var(--led-off);
+	}
+
+	@include element('cp') {
+		@include themify() {
+			@if (isTheme('dark')) {
+				fill: themed('primary')
+			} @else {
+				fill: #000000;
+			}
+		}
+	}
+
+	@for $i from 1 to 7 {
+		@include element('anim#{$i}') {
+			animation-name: half-adder-svg__anim#{$i};
+			animation-duration: 4s;
+			animation-iteration-count: infinite;
+			animation-timing-function: step-end;
+		}
+	}
+
+	@keyframes half-adder-svg__anim1 {
+		0% {
+			stroke-width: 1px;
+		}
+		25% {
+			stroke-width: 3px;
+		}
+	}
+
+	@keyframes half-adder-svg__anim2 {
+		0% {
+			stroke-width: 1px;
+		}
+		60% {
+			stroke-width: 3px;
+		}
+	}
+
+	@keyframes half-adder-svg__anim3 {
+		0% {
+			stroke-width: 1px;
+		}
+		25% {
+			stroke-width: 3px;
+			fill: var(--led-on);
+		}
+		60% {
+			stroke-width: 1px;
+			fill: var(--led-off);
+		}
+	}
+
+	@keyframes half-adder-svg__anim4 {
+		0% {
+			stroke-width: 1px;
+		}
+		60% {
+			stroke-width: 3px;
+			fill: var(--led-on);
+		}
+	}
+
+	@keyframes half-adder-svg__anim5 {
+		25% {
+			transform: translateY(-12px);
+			fill: var(--switch-on);
+		}
+	}
+
+	@keyframes half-adder-svg__anim6 {
+		60% {
+			transform: translateY(-12px);
+			fill: var(--switch-on);
+		}
+	}
+}

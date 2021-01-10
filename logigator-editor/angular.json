@@ -190,7 +190,6 @@
 						"host": "0.0.0.0",
 						"port": 8202,
 						"disableHostCheck": true,
-						"proxyConfig": "./proxyconfig.json",
 						"customWebpackConfig": {
 							"path": "./custom-build-scripts/dist/custom-webpack.config.js"
 						},

@@ -1,6 +1,6 @@
 {
 	"name": "logigator-backend",
-	"version": "0.0.0",
+	"version": "1.0.1",
 	"description": "Logigator is a simple, yet powerful web-based online tool to build and simulate logic circuits.",
 	"contributors": [
 		{
@@ -34,12 +34,16 @@
 		"url": "git+https://github.com/logigator/logigator.git"
 	},
 	"scripts": {
-		"start": "concurrently \"tsc -p tsconfig.json -w\" \"nodemon -i resources/public/ dist/index.js\"",
+		"start": "concurrently \"tsc -p tsconfig.json -w\" \"nodemon -i resources/public/ -i resources/private/components -i resources/private/projects dist/main.js\"",
 		"prebuild": "rimraf dist",
 		"build": "tsc -p tsconfig.json",
 		"start:prod": "node dist/main.js",
 		"lint:backend": "eslint -c ./src/.eslintrc.js \"src/**/*.ts\"",
-		"lint:frontend": "eslint -c ./resources/private/js/.eslintrc.js \"resources/private/js/**/*.js\""
+		"lint:frontend": "eslint -c ./resources/private/js/.eslintrc.js \"resources/private/js/**/*.js\"",
+		"migration:show": "ts-node ./node_modules/typeorm/cli.js migration:show -f config/ormconfig.json",
+		"migration:run": "ts-node ./node_modules/typeorm/cli.js migration:run -f config/ormconfig.json",
+		"migration:revert": "ts-node ./node_modules/typeorm/cli.js migration:revert -f config/ormconfig.json",
+		"migration:generate": "ts-node ./node_modules/typeorm/cli.js migration:generate -f config/ormconfig.json"
 	},
 	"main": "./dist/main.js",
 	"dependencies": {
@@ -55,7 +59,7 @@
 		"express-handlebars": "^5.2.0",
 		"express-session": "^1.17.1",
 		"md5": "^2.3.0",
-		"mime": "^2.4.6",
+		"mime": "^2.4.7",
 		"multer": "^1.4.2",
 		"mysql": "^2.18.1",
 		"mysql2": "^2.2.5",
@@ -68,6 +72,7 @@
 		"redis": "^3.0.2",
 		"reflect-metadata": "^0.1.13",
 		"routing-controllers": "^0.9.0-alpha.6",
+		"ts-node": "^9.1.1",
 		"typedi": "^0.8.0",
 		"typeorm": "^0.2.29",
 		"typeorm-typedi-extensions": "^0.2.3",
@@ -75,7 +80,7 @@
 	},
 	"devDependencies": {
 		"@babel/core": "^7.12.10",
-		"@babel/preset-env": "^7.12.10",
+		"@babel/preset-env": "^7.12.11",
 		"@types/bcrypt": "^3.0.0",
 		"@types/body-parser": "^1.19.0",
 		"@types/compression": "^1.7.0",
@@ -87,20 +92,20 @@
 		"@types/md5": "^2.2.1",
 		"@types/mime": "^2.0.3",
 		"@types/multer": "^1.4.5",
-		"@types/node": "^14.14.12",
+		"@types/node": "^14.14.20",
 		"@types/node-fetch": "^2.5.7",
 		"@types/nodemailer": "^6.4.0",
-		"@types/passport": "^1.0.4",
+		"@types/passport": "^1.0.5",
 		"@types/passport-google-oauth": "^1.0.41",
 		"@types/passport-local": "^1.0.33",
 		"@types/passport-twitter": "^1.0.36",
 		"@types/redis": "^2.8.28",
-		"@typescript-eslint/eslint-plugin": "^4.9.1",
-		"@typescript-eslint/parser": "^4.9.1",
+		"@typescript-eslint/eslint-plugin": "^4.12.0",
+		"@typescript-eslint/parser": "^4.12.0",
 		"concurrently": "^5.3.0",
-		"core-js-bundle": "^3.8.1",
+		"core-js-bundle": "^3.8.2",
 		"cropperjs": "^1.5.9",
-		"eslint": "^7.15.0",
+		"eslint": "^7.17.0",
 		"gulp": "^4.0.2",
 		"gulp-babel": "^8.0.0",
 		"gulp-clean-css": "^4.3.0",
@@ -109,9 +114,9 @@
 		"gulp-sass": "^4.1.0",
 		"gulp-sourcemaps": "^2.6.5",
 		"gulp-terser": "^1.4.1",
-		"nodemon": "^2.0.6",
+		"nodemon": "^2.0.7",
 		"regenerator-runtime": "^0.13.7",
 		"rimraf": "^3.0.2",
-		"typescript": "^4.1.2"
+		"typescript": "^4.1.3"
 	}
 }

@@ -11,5 +11,12 @@
 		<app-input-error error="maxlength">{{'POPUP.NEW_COMP.DESCRIPTION_MAX_LENGTH' | translate}}</app-input-error>
 	</app-input>
 
+	<p class="explanation">{{'POPUP.NEW_COMP.PUBLIC_EXPLANATION' | translate}}</p>
+
+	<div class="public-switch">
+		<p>{{'POPUP.NEW_COMP.PUBLIC' | translate}}</p>
+		<app-switch formControlName="public"></app-switch>
+	</div>
+
 	<button type="submit" class="btn-raised primary" [disabled]="newCompForm.invalid">{{'POPUP.NEW_COMP.CREATE' | translate}}</button>
 </form>

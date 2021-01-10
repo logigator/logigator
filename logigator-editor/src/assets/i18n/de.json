@@ -42,6 +42,7 @@
 			"SHOW_GRID": "Raster anzeigen",
 			"LANGUAGE": "Sprache",
 			"SHORTCUTS": "Tastaturbefehle bearbeiten",
+			"AUTOSTART_SIM": "Simulation autom. starten",
 			"ACCOUNT": "Account",
 			"LOGOUT": "Abmelden",
 			"PRIVACY": "Datenschutz",
@@ -107,7 +108,9 @@
 			"DESCRIPTION": "Beschreibung",
 			"DESCRIPTION_MAX_LENGTH": "Beschreibung ist zu lang",
 			"DESCRIPTION_INFO": "Beschreibung der neuen Komponente",
-			"CREATE": "ERSTELLEN"
+			"CREATE": "ERSTELLEN",
+			"PUBLIC": "Öffentlich teilen",
+			"PUBLIC_EXPLANATION": "Ist 'Öffentlich teilen' aktiviert, wird die Komponente, in allen öffentlichen Listen angezeigt."
 		},
 		"SAVE": {
 			"TITLE": "Projekt speichern",
@@ -245,7 +248,52 @@
 		"SKIP": "Überspringen",
 		"NEXT": "Weiter",
 		"FINISH": "Abschließen",
-		"TUTORIALS": {
+		"GETTING_STARTED": {
+			"NAME": "Erste Erklärung",
+			"WELCOME": {
+				"TITLE": "Willkommen bei Logigator!",
+				"TEXT": "Willkommen bei Logigator, ein benutzerfreundliches, aber mächtiges Tool um logische Schaltungen zu lernen und bauen.<br><br>Lass uns eine Tour machen."
+			},
+			"ZOOM_PAN": {
+				"TITLE": "Kamera",
+				"TEXT": "Das wichtigste zuerst: Die Kamera.<br><br> Verwende dein Mausrad um aus deiner Arbeitsfläche hinaus- oder hinein zu zoomen. Deine Kamera kannst du bewegen, indem du deine rechte Maustaste gedrückt hältst, während du die Maus bewegst."
+			},
+			"PLACING_ELEMS": {
+				"TITLE": "Komponenten platzieren",
+				"TEXT": "Um eine Schaltung zu bauen, müssen wir zuerst einige Komponenten, wie beispielsweise ein UND-Gatter, auf die Arbeitsfläche platzieren.<br><br> Die vorhandenen Komponenten können hier links ausgewählt werden und danach, durch Klicken, auf die Arbeitsfläche platziert werden. Deine eigenen Komponenten werden hier auch angezeigt werden, mehr dazu etwas später."
+			},
+			"WIRES": {
+				"TITLE": "Kabel",
+				"TEXT": "Einzelne Komponenten zu platzieren, ohne sie zu verbinden, hat nicht viel Sinn.<br><br> Um ein Kabel zu platzieren, wähle das obige Tool aus und ziehe mit gedrückter Maustaste über die Arbeitsfläche."
+			},
+			"CONN_WIRE": {
+				"TITLE": "Kabel verbinden und trennen",
+				"TEXT": "Einzelne Kabel werden früher oder später aneinander laufen. <br><br>Um zu erkennen, ob zwei kreuzende Kabel verbunden sind oder nicht, wird ein Punkt an der Kreuzung angezeigt. Ist der Punkt vorhanden, sind sie verbunden, andernfalls nicht.<br><br> Um Kabel an einer Kreuzung zu verbinden oder zu trennen, kann dieses Tool verwendet werden. Wähle das Tool aus und klicke danach auf den Punkt, an dem sich die Kabel kreuzen."
+			},
+			"SELECT": {
+				"TITLE": "Elemente markieren",
+				"TEXT": "Verwende dieses Tool, wenn du mehrere Komponenten und Kabel auf einmal selektieren möchtest.<br><br> Mit der linken Maustaste gedrückt kann nun eine markierte Fläche erzeugt werden, in der alle vorhandenen Elemente ausgewählt werden.<br><br> Einzelne Elemente können auch einfach per Linksklick angewählt werden."
+			},
+			"SELECT_CUT": {
+				"TITLE": "Elemente markieren",
+				"TEXT": "Dieses Tool funktioniert ähnlich, wie das normale Selektiertool.<br><br> Der Unterschied liegt darin, dass nur Elemente ausgewählt werden, die sich vollständig in der markierten Fläche befinden.<br>Kabel werden an der Stelle, an der die Selektion endet, abgeschnitten, anstatt das ganze Kabel auszuwählen.<br><br> Es wird oft genutzt, wenn ein langes Kabel an einer Stelle abgeschnitten werden soll."
+			},
+			"ERASER": {
+				"TITLE": "Radiergummi",
+				"TEXT": "Durch den Radiergummi können Elemente gelöscht werden, ohne sie vorher zu markieren.<br><br> Wähle das Werkzeug aus und ziehe mit der linken Maustaste über die Komponenten, welche gelöscht werden sollen."
+			},
+			"TEXT": {
+				"TITLE": "Text platzieren",
+				"TEXT": "Manchmal kann es sehr nützlich sein, wichtige Bereiche deiner Schaltung zu beschriften.<br><br> Dieses Werkzeug ermöglicht es, Text überall auf der Arbeitsfläche zu platzieren."
+			},
+			"CUSTOM_COMPONENTS": {
+				"TITLE": "Benutzerdefinierte Komponenten",
+				"TEXT": "Ein großes Feature von Logigator ist die Möglichkeit, kleine Schaltungen zu erstellen und diese dann in eigene Komponenten zu packen.<br><br> Mit diesen Button erstellst du eine neue Komponente, welche später unter der Kategorie 'Benutzerdefiniert' auf der linken Seite angezeigt wird. Von dort kann sie dann wie jede andere Komponente platziert werden."
+			},
+			"SIMULATION_MODE": {
+				"TITLE": "Simulationsmodus",
+				"TEXT": "Alles, was bisher gezeigt wurde, drehte sich um das Bearbeiten der Schaltung.<br><br> Um die gebaute Schaltung nun zu simulieren, kann hier in den Simulationsmodus gewechselt werden."
+			}
 		}
 	},
 	"ELEMENT_TYPE": {
@@ -278,13 +326,7 @@
 			"TEXT": {
 				"NAME": "Text",
 				"DESCRIPTION": "Text, der auf der Arbeitsfläche platziert werden kann.",
-				"TEXT_SIZE": "Schriftgröße",
-				"BASE_LABEL": "Basis",
-				"BASE": {
-					"DEC": "Dezimal",
-					"HEX": "Hexadezimal",
-					"OCT": "Oktal"
-				}
+				"TEXT_SIZE": "Schriftgröße"
 			},
 			"TUNNEL": {
 				"NAME": "Tunnel",
@@ -328,6 +370,10 @@
 				"DESCRIPTION": "Schreibbarer Speicher. Die Eingänge werden bei Anlegen von CLK angewendet.<br>Wenn WE auf LOW gesetzt ist, wird von der Adresse gelesen, wenn auf HIGH gesetzt ist wird von der Adresse geschrieben.",
 				"WORD_SIZE": "Wortbreite",
 				"ADDRESS_SIZE": "Adressgröße"
+			},
+			"DECODER": {
+				"NAME": "Decoder",
+				"DESCRIPTION": "1-von-n binärer Dekodierer"
 			}
 		},
 		"IO": {
@@ -345,7 +391,13 @@
 			},
 			"SEGMENT_DISPLAY": {
 				"NAME": "Segment Display",
-				"DESCRIPTION": "Stellt die binären Eingänge als Dezimalzahlen dar."
+				"DESCRIPTION": "Stellt die binären Eingänge als Dezimalzahlen dar.",
+				"BASE_LABEL": "Basis",
+				"BASE": {
+					"DEC": "Dezimal",
+					"HEX": "Hexadecimal",
+					"OCT": "Oktal"
+				}
 			},
 			"LED_MATRIX": {
 				"NAME": "LED Matrix",

@@ -1,5 +1,20 @@
 @include view('project-component-create-popup') {
-	max-width: 40rem;
+	max-width: 30rem;
+
+	@include element('public-explanation') {
+		margin: 0 0 1rem;
+	}
+
+	@include element('public-switch') {
+		display: flex;
+		align-items: center;
+		justify-content: space-between;
+		padding: 0.5rem 0 1rem;
+
+		> p {
+			margin: 0;
+		}
+	}
 
 	@include element('submit') {
 		padding: 0.7rem !important;

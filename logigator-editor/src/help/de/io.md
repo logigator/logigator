@@ -42,7 +42,7 @@ Schaltet sich abhängig vom Eingang aus oder ein.
 
 <div class="margin-left">
 
-Stellt die binären Eingänge als Dezimalzahlen dar.
+Stellt die binären Eingänge als Dezimalzahlen, Hexadezimalzahlen oder Oktalzahlen dar.
 </div>
 </div>
 

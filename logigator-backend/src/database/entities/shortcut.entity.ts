@@ -31,6 +31,6 @@ export class Shortcut {
 	@Column({default: false, nullable: false})
 	alt: boolean;
 
-	@ManyToOne(type => User, object => object.shortcuts, {nullable: false, onDelete: 'CASCADE'})
+	@ManyToOne(type => User, object => object.shortcuts, {nullable: false, onDelete: 'CASCADE', onUpdate: 'CASCADE'})
 	user: Promise<User>;
 }

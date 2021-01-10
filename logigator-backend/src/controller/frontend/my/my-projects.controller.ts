@@ -64,12 +64,19 @@ export class MyProjectsController {
 	@UseBefore(CheckAuthenticatedFrontMiddleware)
 	public async infoPopup(@Param('id') id: string, @CurrentUser() user: User, @Preferences() preferences: UserPreferences) {
 		const project = await this.projectRepo.getOwnedProjectOrThrow(id, user);
-		const dependencies = (await this.projectDepRepo.getDependencies(project)).map(dep => dep.name).join(', ');
+		const dependencies = await this.projectDepRepo.getDependencies(project);
 
 		(project.lastEdited as any) = this.translationService.dateFormatDateTime(project.lastEdited, preferences.lang);
 		(project.createdOn as any) = this.translationService.dateFormatDateTime(project.lastEdited, preferences.lang);
 		(project as any).previewDark = project.previewDark?.publicUrl ?? '/assets/default-preview.svg';
 		(project as any).previewLight = project.previewLight?.publicUrl ?? '/assets/default-preview.svg';
+		(project as any).communityUrl = 'community/project/' + project.link;
+
+		const forkedFrom = await project.forkedFrom;
+		if (forkedFrom) {
+			(project as any).forkedFromName = (await forkedFrom.user).username + '/' + forkedFrom.name;
+			(project as any).forkedFromUrl = 'community/project/' + forkedFrom.link;
+		}
 
 		return {
 			...project,
@@ -121,7 +128,7 @@ export class MyProjectsController {
 	@UseBefore(CheckAuthenticatedFrontMiddleware)
 	@UseAfter(formErrorMiddleware(() => '/my/projects/create-popup'))
 	public async create(@CurrentUser() user: User, @Body() body: CreateProject) {
-		const project = await this.projectRepo.createProjectForUser(body.name, body.description, user);
+		const project = await this.projectRepo.createProjectForUser(body.name, body.description, body.public === 'on', user);
 		return {
 			id: project.id
 		};

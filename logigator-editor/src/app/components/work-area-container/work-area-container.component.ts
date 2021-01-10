@@ -48,7 +48,7 @@ export class WorkAreaContainerComponent implements OnInit {
 		});
 
 		this.errorHandling.setToastrContainer(this.toastContainer);
-		this.tutorialService.startTutorial('basic');
+		this.tutorialService.startTutorial('gettingStarted');
 	}
 
 	async onRequestElementInspection(event: ReqInspectElementEvent, fromWindow?: number) {

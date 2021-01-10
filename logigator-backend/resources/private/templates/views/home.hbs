@@ -1,17 +1,93 @@
 <div class="view-home">
-	<section class="view-home__section view-home__section-intro">
-		<div class="view-home__section-content">
+	<section class="view-home__s-intro">
+		<div class="view-home__s-intro-content">
 			{{#if (expr preferences.theme '===' 'dark')}}
-				<img src="/assets/logo_light.svg" alt="large Logo">
+				<img src="/assets/logo_light.svg" class="view-home__s-intro-logo" alt="large Logo">
 			{{else}}
-				<img src="/assets/logo.svg" alt="large Logo">
+				<img src="/assets/logo.svg" class="view-home__s-intro-logo" alt="large Logo">
 			{{/if}}
-			<div class="view-home__section-intro-content">
-				<h3 class="view-home__section-intro-headline">{{i18n.HOME.INTRO.DESCRIPTION}}</h3>
-				<a href="{{editorUrl}}" target="_blank" rel="noopener" class="view-home__section-intro-button-link">
-					<button class="btn-raised primary view-home__section-intro-button">{{i18n.HOME.INTRO.BUTTON}}</button>
+			<h3 class="view-home__s-intro-headline">{{i18n.HOME.INTRO.DESCRIPTION}}</h3>
+			<div class="view-home__s-intro-start">
+				{{> half-adder-svg}}
+				<a href="{{editorUrl}}" target="_blank" rel="noopener" class="view-home__s-intro-button">
+					<button class="btn-raised primary">{{i18n.HOME.INTRO.BUTTON}}</button>
 				</a>
 			</div>
+		</div>
+	</section>
+	<section class="view-home__s-feat">
+		<div class="view-home__s-feat-content">
+			<h3 class="view-home__headline">{{i18n.HOME.FEATURES.TITLE}}</h3>
+			<p class="view-home__subline">{{i18n.HOME.FEATURES.DESCRIPTION}}</p>
+			<div class="view-home__s-feat-features">
+				<div class="view-home__s-feat-feature">
+					<div class="f-img-container">
+						<img src="/assets/feature-icons/tachometer-alt-solid.svg" alt="Tachometer">
+					</div>
+					<h3>{{i18n.HOME.FEATURES.PERFORMANCE}}</h3>
+					<p>{{i18n.HOME.FEATURES.PERFORMANCE_DES}}</p>
+				</div>
+				<div class="view-home__s-feat-feature">
+					<div class="f-img-container">
+						<img src="/assets/feature-icons/subcircuits.svg" alt="Subcircuits">
+					</div>
+					<h3>{{i18n.HOME.FEATURES.SUBCIRCUITS}}</h3>
+					<p>{{i18n.HOME.FEATURES.SUBCIRCUITS_DES}}</p>
+				</div>
+				<div class="view-home__s-feat-feature">
+					<div class="f-img-container">
+						<img src="/assets/feature-icons/share-alt-solid.svg" alt="Share">
+					</div>
+					<h3>{{i18n.HOME.FEATURES.SHARE}}</h3>
+					<p>{{i18n.HOME.FEATURES.SHARE_DES}}</p>
+				</div>
+				<div class="view-home__s-feat-feature">
+					<div class="f-img-container">
+						<img src="/assets/feature-icons/image-regular.svg" alt="Image Icon">
+					</div>
+					<h3>{{i18n.HOME.FEATURES.IMAGES}}</h3>
+					<p>{{i18n.HOME.FEATURES.IMAGES_DES}}</p>
+				</div>
+			</div>
+		</div>
+	</section>
+	<section class="view-home__s-examples">
+		<div class="view-home__s-examples-content">
+			<h3 class="view-home__headline">{{i18n.HOME.EXAMPLES.TITLE}}</h3>
+			<p class="view-home__subline">{{i18n.HOME.EXAMPLES.DESCRIPTION}}</p>
+			{{> project-teasers projects=examples newTab=true}}
+			<a class="view-home__s-examples-more" href="{{linkHref 'examples'}}">
+				<button class="btn-raised primary">{{i18n.HOME.EXAMPLES.MORE}}</button>
+			</a>
+		</div>
+	</section>
+	<section class="view-home__s-video">
+		<div class="view-home__s-video-content">
+			<h3 class="view-home__headline">{{i18n.HOME.VIDEO.TITLE}}</h3>
+			<p class="view-home__subline">{{i18n.HOME.VIDEO.DESCRIPTION}}</p>
+			<div class="view-home__s-video-iframe">
+				{{#if (expr preferences.lang '===' 'en')}}
+					<iframe width="960" height="540" title="Logic Gates - Explained" src="https://www.youtube.com/embed/weTeJLMGq_Q" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
+				{{else}}
+					<iframe width="960" height="540" title="Logische Gatter - Erklärt" src="https://www.youtube.com/embed/114EOH-fdLE" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
+				{{/if}}
+			</div>
+		</div>
+	</section>
+	<section class="view-home__s-shares">
+		<div class="view-home__s-shares-content">
+			<h3 class="view-home__headline">{{i18n.HOME.SHARES.PROJECTS_TITLE}}</h3>
+			<p class="view-home__subline">{{i18n.HOME.SHARES.PROJECTS_DESCRIPTION}}</p>
+			{{> project-teasers projects=sharedProjects newTab=false}}
+			<a class="view-home__s-shares-more" href="{{linkHref 'community/projects'}}">
+				<button class="btn-raised primary">{{i18n.HOME.SHARES.MORE_PROJECTS}}</button>
+			</a>
+			<h3 class="view-home__headline view-home__s-shares-comp-headline">{{i18n.HOME.SHARES.COMPS_TITLE}}</h3>
+			<p class="view-home__subline">{{i18n.HOME.SHARES.COMPS_DESCRIPTION}}</p>
+			{{> project-teasers projects=sharedComps newTab=false}}
+			<a class="view-home__s-shares-more" href="{{linkHref 'community/components'}}">
+				<button class="btn-raised primary">{{i18n.HOME.SHARES.MORE_COMPONENTS}}</button>
+			</a>
 		</div>
 	</section>
 </div>

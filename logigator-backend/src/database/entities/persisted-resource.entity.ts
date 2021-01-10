@@ -90,11 +90,11 @@ export abstract class PersistedResource {
 	}
 
 	public get filePath(): string {
-		return path.join(__dirname, '..', '..', '..', 'resources', 'public', this._path, this._filename + '.' + mime.getExtension(this.mimeType));
+		return path.join(__dirname, '..', '..', '..', 'resources', this._path, this._filename + '.' + mime.getExtension(this.mimeType));
 	}
 
 	@Expose()
 	public get publicUrl(): string {
-		return `/${this._path}/${this._filename}.${mime.getExtension(this.mimeType)}`;
+		return `/${this._path.replace(/^public\//, '')}/${this._filename}.${mime.getExtension(this.mimeType)}`;
 	}
 }

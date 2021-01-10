@@ -36,12 +36,13 @@ export class AppComponent implements OnInit, OnDestroy {
 		@Inject(DOCUMENT) private document: HTMLDocument,
 		private translate: TranslateService,
 		private elementProviderService: ElementProviderService,
-		@Inject(StorageService) private storage: StorageServiceModel,
+		@Inject(StorageService) private storage: StorageServiceModel
 	) {
 		this.initTranslation();
 	}
 
 	ngOnInit(): void {
+		this.document.documentElement.lang = this.translate.currentLang;
 		this.ngZone.runOutsideAngular(() => {
 			this.listenToShortcuts();
 

@@ -24,6 +24,7 @@ import {FileSaverService} from '../file-saver/file-saver.service';
 import {ShareDependencies} from '../../models/http/response/share-dependencies';
 import {ErrorHandlingService} from '../error-handling/error-handling.service';
 import {ImageExportService} from '../image-export/image-export.service';
+import {ElementTypeId} from '../../models/element-types/element-type-ids';
 
 @Injectable({
 	providedIn: 'root'
@@ -152,8 +153,8 @@ export class ProjectSaveManagementService {
 		return project;
 	}
 
-	public async createProjectServer(name: string, description = '', project: Project): Promise<string> {
-		const projectResp = await this.api.post<ProjectInfo>('/project', {name, description},
+	public async createProjectServer(name: string, description = '', sharePublicly = false, project: Project): Promise<string> {
+		const projectResp = await this.api.post<ProjectInfo>('/project', {name, description, public: sharePublicly + ''},
 			{errorMessage: 'ERROR.PROJECTS.CREATE'}).toPromise();
 		const components = await this.buildDependencyTree(project);
 		const createdComps: ComponentInfo[] = [];
@@ -197,7 +198,16 @@ export class ProjectSaveManagementService {
 			}),
 			elements: projectElements.elements,
 		};
-		await this.api.put<ProjectInfo>(`/project/${projectResp.data.id}`, projectBody, {errorMessage: 'ERROR.PROJECTS.SAVE'}).toPromise();
+		const resp = this.api.put<ProjectInfo>(`/project/${projectResp.data.id}`, projectBody, {errorMessage: 'ERROR.PROJECTS.SAVE'}).toPromise();
+
+		const previews = await this.imageService.generatePreviews(project);
+		const formData = new FormData();
+		formData.append('previews', previews.dark);
+		formData.append('previews', previews.light);
+		await this.api.post(`/project/${projectResp.data.id}/preview`, formData,
+			{errorMessage: 'ERROR.PROJECTS.SAVE'}).toPromise();
+
+		await resp;
 		for (const toRemove of tempMappings.values()) {
 			this.removeElement(toRemove);
 		}
@@ -205,10 +215,10 @@ export class ProjectSaveManagementService {
 		return projectResp.data.id;
 	}
 
-	public async createComponent(name: string, symbol: string, description: string = ''): Promise<Project> {
+	public async createComponent(name: string, symbol: string, description: string = '', sharePublicly = false): Promise<Project> {
 		if (this.userService.isLoggedIn) {
 			const body = {
-				name, symbol, description
+				name, symbol, description, public: sharePublicly + ''
 			};
 
 			const resp = await this.api.post<ComponentInfo>('/component', body, {errorMessage: 'ERROR.PROJECTS.CREATE'}).toPromise();
@@ -280,7 +290,7 @@ export class ProjectSaveManagementService {
 		const formData = new FormData();
 		formData.append('previews', previews.dark);
 		formData.append('previews', previews.light);
-		const previewPromise =  this.api.post(`/component/${this._mappings.getKey(project.id)}/preview`, formData,
+		const previewPromise = this.api.post(`/component/${this._mappings.getKey(project.id)}/preview`, formData,
 			{errorMessage: 'ERROR.PROJECTS.SAVE'}).toPromise();
 
 		project.hash = (await resp).data.elementsFile.hash;
@@ -500,7 +510,7 @@ export class ProjectSaveManagementService {
 			const isCustomElement = this.elementProvider.isCustomElement(typeId);
 
 			const element: Element = {
-				id: elem.c,
+				id: 0, /* Will be ignored by project-state */
 				typeId,
 				numInputs: isCustomElement ? elementType.numInputs : (elem.i ?? 0),
 				numOutputs: isCustomElement ? elementType.numOutputs : (elem.o ?? 0),
@@ -531,7 +541,6 @@ export class ProjectSaveManagementService {
 			const elementType = this.elementProvider.getElementById(elem.typeId);
 
 			const element: ProjectElement = {
-				c: elem.id,
 				t: elem.typeId,
 				p: [elem.pos.x, elem.pos.y],
 			};
@@ -548,7 +557,7 @@ export class ProjectSaveManagementService {
 				element.n = elem.options;
 			if (elem.data)
 				element.s = elem.data as string;
-			if (elem.endPos)
+			if (elem.endPos && elem.typeId === ElementTypeId.WIRE)
 				element.q = [elem.endPos.x, elem.endPos.y];
 
 			return element;

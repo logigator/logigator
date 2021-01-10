@@ -135,7 +135,7 @@ export class EditorInteractionService {
 
 			switch (saveResp.target) {
 				case 'server':
-					this.projectsService.saveProjectServer(saveResp.name, saveResp.description);
+					this.projectsService.saveProjectServer(saveResp.name, saveResp.description, saveResp.public);
 					break;
 				case 'local':
 					this.exportToFile(saveResp.name);
@@ -164,7 +164,7 @@ export class EditorInteractionService {
 			const compConfig = await this.popupService.showPopup(NewComponentComponent, 'POPUP.NEW_COMP.TITLE', false);
 			if (compConfig) {
 				const removeLoading = this.loadingService.add('LOADING.CREATE_COMPONENT');
-				await this.projectsService.createComponent(compConfig.name, compConfig.symbol, compConfig.description);
+				await this.projectsService.createComponent(compConfig.name, compConfig.symbol, compConfig.description, compConfig.public);
 				removeLoading();
 			}
 		});

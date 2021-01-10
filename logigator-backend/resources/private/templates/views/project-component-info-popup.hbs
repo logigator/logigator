@@ -8,6 +8,13 @@
 			<p>{{name}}</p>
 		</div>
 		<hr class="view-project-component-info-popup__hr">
+		{{#if forkedFromName}}
+			<div class="view-project-component-info-popup__item">
+				<p>{{i18n.POPUP.PROJECT_COMP_INFO.FORKED}}:</p>
+				<a href="{{linkHref forkedFromUrl}}">{{forkedFromName}}</a>
+			</div>
+			<hr class="view-project-component-info-popup__hr">
+		{{/if}}
 		<div class="view-project-component-info-popup__item">
 			<p>{{i18n.POPUP.PROJECT_COMP_INFO.CREATED}}:</p>
 			<p>{{createdOn}}</p>
@@ -34,40 +41,49 @@
 		{{/if}}
 		<div class="view-project-component-info-popup__item view-project-component-info-popup__streched">
 			<p>{{i18n.POPUP.PROJECT_COMP_INFO.DEPENDENCIES}}:</p>
-			<p>
-				{{#if (expr dependencies '!==' '')}}
-					{{dependencies}}
-				{{else}}
-					{{i18n.POPUP.PROJECT_COMP_INFO.NO_DEPENDENCIES}}
-				{{/if}}
-			</p>
+			{{#if (expr dependencies.length '!==' 0)}}
+				<ul>
+					{{#each dependencies}}
+						<li>{{this.name}}</li>
+					{{/each}}
+				</ul>
+			{{else}}
+				<p>{{i18n.POPUP.PROJECT_COMP_INFO.NO_DEPENDENCIES}}</p>
+			{{/if}}
 		</div>
 		{{#if (expr type '===' 'component') }}
 			<div class="view-project-component-info-popup__item view-project-component-info-popup__streched">
 				<p>{{i18n.POPUP.PROJECT_COMP_INFO.DEPENDENT_PROJECTS}}:</p>
-				<p>
-					{{#if (expr projectDependents '!==' '')}}
-						{{projectDependents}}
-					{{else}}
-						{{i18n.POPUP.PROJECT_COMP_INFO.NO_DEPENDENCIES}}
-					{{/if}}
-				</p>
+				{{#if (expr projectDependents.length '!==' 0)}}
+					<ul>
+						{{#each projectDependents}}
+							<li>{{this.name}}</li>
+						{{/each}}
+					</ul>
+				{{else}}
+					<p>{{i18n.POPUP.PROJECT_COMP_INFO.NO_DEPENDENCIES}}</p>
+				{{/if}}
 			</div>
 			<div class="view-project-component-info-popup__item view-project-component-info-popup__streched">
 				<p>{{i18n.POPUP.PROJECT_COMP_INFO.DEPENDENT_COMPONENTS}}:</p>
-				<p>
-					{{#if (expr componentDependents '!==' '')}}
-						{{componentDependents}}
-					{{else}}
-						{{i18n.POPUP.PROJECT_COMP_INFO.NO_DEPENDENCIES}}
-					{{/if}}
-				</p>
+				{{#if (expr componentDependents.length '!==' 0)}}
+					<ul>
+						{{#each componentDependents}}
+							<li>{{this.name}}</li>
+						{{/each}}
+					</ul>
+				{{else}}
+					<p>{{i18n.POPUP.PROJECT_COMP_INFO.NO_DEPENDENCIES}}</p>
+				{{/if}}
 			</div>
 		{{/if}}
 		<hr class="view-project-component-info-popup__hr">
 		<div class="view-project-component-info-popup__item view-project-component-info-popup__streched">
 			<p>{{i18n.POPUP.PROJECT_COMP_INFO.DESCRIPTION}}:</p>
-			<p>{{description}}</p>
+			<p class="view-project-component-info-popup__desc">{{handleNewLines description}}</p>
 		</div>
+		<a href="{{linkHref communityUrl}}">
+			<button class="btn-raised primary">{{i18n.POPUP.PROJECT_COMP_INFO.COMMUNITY_PAGE}}</button>
+		</a>
 	</div>
 {{/popup}}

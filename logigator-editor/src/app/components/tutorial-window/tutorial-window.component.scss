@@ -5,7 +5,8 @@
 	top: 300px;
 	left: 300px;
 	z-index: 500;
-	width: 320px;
+	width: 380px;
+	box-shadow: 10px 10px 10px -5px rgba(0,0,0,0.5);
 
 	@include themify() {
 		background-color: themed('background');

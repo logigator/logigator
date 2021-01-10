@@ -66,15 +66,22 @@ export class MyComponentsController {
 	@UseBefore(CheckAuthenticatedFrontMiddleware)
 	public async infoPopup(@Param('id') id: string, @CurrentUser() user: User, @Preferences() preferences: UserPreferences) {
 		const component = await this.componentRepo.getOwnedComponentOrThrow(id, user);
-		const dependencies = (await this.componentDepRepo.getDependencies(component)).map(dep => dep.name).join(', ');
-		const componentDependents = (await this.componentDepRepo.getDependents(component)).map(dep => dep.name).join(', ');
-		const projectDependents = (await this.projectDepRepo.getDependents(component)).map(dep => dep.name).join(', ');
+		const dependencies = await this.componentDepRepo.getDependencies(component);
+		const componentDependents = await this.componentDepRepo.getDependents(component);
+		const projectDependents = await this.projectDepRepo.getDependents(component);
 
 
 		(component.lastEdited as any) = this.translationService.dateFormatDateTime(component.lastEdited, preferences.lang);
 		(component.createdOn as any) = this.translationService.dateFormatDateTime(component.lastEdited, preferences.lang);
 		(component as any).previewDark = component.previewDark?.publicUrl ?? '/assets/default-preview.svg';
 		(component as any).previewLight = component.previewLight?.publicUrl ?? '/assets/default-preview.svg';
+		(component as any).communityUrl = 'community/component/' + component.link;
+
+		const forkedFrom = await component.forkedFrom;
+		if (forkedFrom) {
+			(component as any).forkedFromName = (await forkedFrom.user).username + '/' + forkedFrom.name;
+			(component as any).forkedFromUrl = 'community/project/' + forkedFrom.link;
+		}
 
 		return {
 			...component,
@@ -129,7 +136,7 @@ export class MyComponentsController {
 	@UseBefore(CheckAuthenticatedFrontMiddleware)
 	@UseAfter(formErrorMiddleware(() => '/my/components/create-popup'))
 	public async create(@CurrentUser() user: User, @Body() body: CreateComponent) {
-		const component = await this.componentRepo.createComponentForUser(body.name, body.symbol, body.description, user);
+		const component = await this.componentRepo.createComponentForUser(body.name, body.symbol, body.description, body.public === 'on', user);
 		return {
 			id: component.id
 		};
