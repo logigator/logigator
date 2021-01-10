@@ -81,7 +81,7 @@ jobs:
           asset_name: Logigator-win32-x32.zip
           asset_content_type: application/zip
 
-      - name: 'Upload Asset Win32xarm64'
+      - name: 'Upload Asset Win32arm64'
         id: upload-asset-win32arm64
         uses: actions/upload-release-asset@v1
         env:
@@ -114,10 +114,11 @@ jobs:
           npm run build:electron:linux
 
       - name: Zip
-        working-directory: logigator-editor
+        working-directory: logigator-editor/release
         run: |
-          zip -r ./release/Logigator-linux-x64.zip ./release/Logigator-linux-x64/
-          zip -r ./release/Logigator-linux-x32.zip ./release/Logigator-linux-ia32/
+          zip -r -9 ./Logigator-linux-x64.zip ./Logigator-linux-x64/
+          zip -r -9 ./Logigator-linux-x32.zip ./Logigator-linux-ia32/
+          zip -r -9 ./Logigator-linux-arm64.zip ./Logigator-linux-arm64/
 
       - name: 'Upload Asset Linuxx64'
         id: upload-asset-linuxx64
@@ -131,7 +132,7 @@ jobs:
           asset_content_type: application/zip
 
       - name: 'Upload Asset Linuxx32'
-        id: upload-asset-linxx32
+        id: upload-asset-linuxx32
         uses: actions/upload-release-asset@v1
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -139,4 +140,15 @@ jobs:
           upload_url: ${{ needs.createReleaseBuildWindows.outputs.asset_upload_url }}
           asset_path: ./logigator-editor/release/Logigator-linux-x32.zip
           asset_name: Logigator-linux-x32.zip
+          asset_content_type: application/zip
+
+      - name: 'Upload Asset Linuxarm64'
+        id: upload-asset-linuxarm64
+        uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          upload_url: ${{ needs.createReleaseBuildWindows.outputs.asset_upload_url }}
+          asset_path: ./logigator-editor/release/Logigator-linux-arm64.zip
+          asset_name: Logigator-linux-arm64.zip
           asset_content_type: application/zip

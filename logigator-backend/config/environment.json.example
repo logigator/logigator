@@ -1,4 +1,5 @@
 {
 	"context": "development or production",
-	"port": 3000
+	"port": 3000,
+	"editor": "resources/editor"
 }

@@ -1,4 +1,4 @@
 {
 	"rootUrl": "http://dev.logigator.com",
-	"editor": "https://editor.logigator.com"
+	"editor": "/editor"
 }
