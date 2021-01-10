@@ -1,6 +1,6 @@
 {
 	"name": "logigator-backend",
-	"version": "0.0.0",
+	"version": "1.0.1",
 	"description": "Logigator is a simple, yet powerful web-based online tool to build and simulate logic circuits.",
 	"contributors": [
 		{
