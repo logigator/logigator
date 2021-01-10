@@ -1,5 +1,5 @@
 {
 	"context": "development or production",
 	"port": 3000,
-	"editorPath": "resources/editor"
+	"editor": "resources/editor"
 }
