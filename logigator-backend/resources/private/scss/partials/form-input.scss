@@ -38,6 +38,11 @@
 		left: 0.25rem;
 		bottom: 0.25rem;
 		transition: 0.2s ease all;
+
+		@media all and (-ms-high-contrast: none), (-ms-high-contrast: active) {
+			bottom: 1.6rem !important;
+			font-size: 0.7rem !important;
+		}
 	}
 
 	input {
