@@ -1,0 +1,69 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.sitemaps.org/schemas/sitemap/0.9 http://www.sitemaps.org/schemas/sitemap/0.9/sitemap.xsd" xmlns:xhtml="http://www.w3.org/1999/xhtml">
+    <url>
+        <loc>https://logigator.com</loc>
+		<priority>1.0</priority>
+		<xhtml:link rel="alternate" hreflang="en" href="https://logigator.com/en" />
+		<xhtml:link rel="alternate" hreflang="de" href="https://logigator.com/de" />
+    </url>
+    <url>
+        <loc>https://logigator.com/editor</loc>
+		<priority>1.0</priority>
+	</url>
+    <url>
+        <loc>https://logigator.com/features</loc>
+		<priority>0.5</priority>
+		<xhtml:link rel="alternate" hreflang="en" href="https://logigator.com/en/features" />
+		<xhtml:link rel="alternate" hreflang="de" href="https://logigator.com/de/features" />
+	</url>
+    <url>
+        <loc>https://logigator.com/examples</loc>
+		<priority>0.5</priority>
+		<xhtml:link rel="alternate" hreflang="en" href="https://logigator.com/en/examples" />
+		<xhtml:link rel="alternate" hreflang="de" href="https://logigator.com/de/examples" />
+	</url>
+    <url>
+        <loc>https://logigator.com/download</loc>
+		<priority>0.5</priority>
+		<xhtml:link rel="alternate" hreflang="en" href="https://logigator.com/en/download" />
+		<xhtml:link rel="alternate" hreflang="de" href="https://logigator.com/de/download" />
+	</url>
+    <url>
+        <loc>https://logigator.com/community/components</loc>
+		<changefreq>hourly</changefreq>
+		<priority>0.4</priority>
+		<xhtml:link rel="alternate" hreflang="en" href="https://logigator.com/en/community/components" />
+		<xhtml:link rel="alternate" hreflang="de" href="https://logigator.com/de/community/components" />
+	</url>
+    <url>
+        <loc>https://logigator.com/community/projects</loc>
+		<changefreq>hourly</changefreq>
+		<priority>0.4</priority>
+		<xhtml:link rel="alternate" hreflang="en" href="https://logigator.com/en/community/projects" />
+		<xhtml:link rel="alternate" hreflang="de" href="https://logigator.com/de/community/projects" />
+	</url>
+    <url>
+        <loc>https://logigator.com/imprint</loc>
+		<priority>0.2</priority>
+		<xhtml:link rel="alternate" hreflang="en" href="https://logigator.com/en/imprint" />
+		<xhtml:link rel="alternate" hreflang="de" href="https://logigator.com/de/imprint" />
+	</url>
+    <url>
+        <loc>https://logigator.com/privacy-policy</loc>
+		<priority>0.2</priority>
+		<xhtml:link rel="alternate" hreflang="en" href="https://logigator.com/en/privacy-policy" />
+		<xhtml:link rel="alternate" hreflang="de" href="https://logigator.com/de/privacy-policy" />
+	</url>
+	<url>
+		<loc>https://logigator.com/login</loc>
+		<priority>0.2</priority>
+		<xhtml:link rel="alternate" hreflang="en" href="https://logigator.com/en/login" />
+		<xhtml:link rel="alternate" hreflang="de" href="https://logigator.com/de/login" />
+	</url>
+	<url>
+		<loc>https://logigator.com/register</loc>
+		<priority>0.2</priority>
+		<xhtml:link rel="alternate" hreflang="en" href="https://logigator.com/en/register" />
+		<xhtml:link rel="alternate" hreflang="de" href="https://logigator.com/de/register" />
+	</url>
+</urlset>
