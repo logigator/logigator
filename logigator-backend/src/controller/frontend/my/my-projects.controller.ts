@@ -200,7 +200,7 @@ export class MyProjectsController {
 	}
 
 	private async getProjectsPage(pageNumber: number, search: string, user: User, language: string): Promise<any> {
-		const page = await this.projectRepo.getProjectPageForUser(pageNumber ?? 0, 12, user, search);
+		const page = await this.projectRepo.getProjectPageForUser(pageNumber ?? 0, 8, user, search);
 
 		const entries = page.entries.map(entry => {
 			const transformed = classToPlain(entry);

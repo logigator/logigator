@@ -215,7 +215,7 @@ export class MyComponentsController {
 	}
 
 	private async getComponentsPage(pageNumber: number, search: string, user: User, language: string): Promise<any> {
-		const page = await this.componentRepo.getComponentPageForUser(pageNumber ?? 0, 12, user, search);
+		const page = await this.componentRepo.getComponentPageForUser(pageNumber ?? 0, 8, user, search);
 
 		const entries = page.entries.map(entry => {
 			const transformed = classToPlain(entry);
