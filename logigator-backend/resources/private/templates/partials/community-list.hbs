@@ -30,9 +30,12 @@
 			<div class="partial-community-list__description">
 				<div class="partial-community-list__header">
 					<h2 class="partial-community-list__title">{{this.name}}</h2>
-					<div class="partial-community-list__stars">
-						<p>{{this.stargazersCount}}</p>
-						{{> icon icon='features' alt='Features Link' }}
+					<div class="partial-community-list__stars {{#if @root.isAuthenticated}}partial-community-list__stars--auth{{/if}}">
+						<a class="star-unstar" {{#if @root.isAuthenticated}}href="{{this.starUnstarUrl}}"{{/if}}>
+							{{> icon icon='features' alt='Star' }}
+							<p>{{ternary isStared 'Unstar' 'Star'}}</p>
+						</a>
+						<a class="stargazers" href="{{linkHref this.stargazers}}">{{this.stargazersCount}}</a>
 					</div>
 				</div>
 				<hr class="partial-community-list__divider">

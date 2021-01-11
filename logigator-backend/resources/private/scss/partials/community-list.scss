@@ -44,26 +44,70 @@
 		margin: 0;
 		font-size: 25px;
 		font-weight: 500;
+		word-break: break-word;
 	}
 
 	@include element('stars') {
 		align-self: center;
 		display: flex;
 		align-items: center;
+		margin-left: 0.5rem;
+
+		@include themify() {
+			border: 1px solid themed('text-primary');
+			border-radius: 5px;
+		}
 
 		p {
-			font-size: 20px;
 			margin: 0;
+			font-size: 18px;
 		}
 
-		img {
-			width: 22px;
-			height: 22px;
-			margin-left: 0.25rem;
-			position: relative;
-			top: -2px;
+		.star-unstar {
+			background-color: transparent;
+			outline: none;
+			border: none;
+			display: flex;
+			padding: 3px 10px;
+			text-decoration: none;
+
+			@include themify() {
+				border-right: 1px solid themed('text-primary');
+			}
+
+			img {
+				width: 22px;
+				height: 22px;
+				margin-right: 0.25rem;
+				top: -1px;
+				position: relative;
+			}
+		}
+
+		.stargazers {
+			text-decoration: none;
+			padding: 0 8px;
+
+			&:hover {
+				@include themify() {
+					color: themed('primary');
+				}
+			}
+		}
+
+		@include modifier('auth') {
+			.star-unstar {
+				cursor: pointer;
+
+				&:hover {
+					@include themify() {
+						background-color: lighten(themed('accent2'), 10%);
+					}
+				}
+			}
 		}
 	}
+
 
 	@include element('divider') {
 		@include themify() {

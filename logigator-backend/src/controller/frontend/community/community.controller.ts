@@ -74,6 +74,8 @@ export class CommunityController {
 			transformed.previewDark = entry.previewDark?.publicUrl ?? '/assets/default-preview.svg';
 			transformed.previewLight = entry.previewLight?.publicUrl ?? '/assets/default-preview.svg';
 			transformed.stargazersCount = await this.projectRepo.getStargazersCount(entry);
+			transformed.starUnstarUrl = '/community/toggleStar/project/' + entry.link;
+			transformed.stargazers = '/community/project/' + entry.link + '/stargazers';
 
 			const user = await this.userRepo.getUserOwningProject(entry.id);
 			transformed.username = user.username;
@@ -100,6 +102,9 @@ export class CommunityController {
 			transformed.previewDark = entry.previewDark?.publicUrl ?? '/assets/default-preview.svg';
 			transformed.previewLight = entry.previewLight?.publicUrl ?? '/assets/default-preview.svg';
 			transformed.stargazersCount = await this.componentRepo.getStargazersCount(entry);
+			transformed.starUnstarUrl = '/community/toggleStar/component/' + entry.link;
+			transformed.stargazers = '/community/component/' + entry.link + '/stargazers';
+
 
 			const user = await this.userRepo.getUserOwningComponent(entry.id);
 			transformed.username = user.username;
