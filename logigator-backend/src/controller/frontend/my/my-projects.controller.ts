@@ -67,7 +67,7 @@ export class MyProjectsController {
 		const dependencies = await this.projectDepRepo.getDependencies(project);
 
 		(project.lastEdited as any) = this.translationService.dateFormatDateTime(project.lastEdited, preferences.lang);
-		(project.createdOn as any) = this.translationService.dateFormatDateTime(project.lastEdited, preferences.lang);
+		(project.createdOn as any) = this.translationService.dateFormatDateTime(project.createdOn, preferences.lang);
 		(project as any).previewDark = project.previewDark?.publicUrl ?? '/assets/default-preview.svg';
 		(project as any).previewLight = project.previewLight?.publicUrl ?? '/assets/default-preview.svg';
 		(project as any).communityUrl = 'community/project/' + project.link;

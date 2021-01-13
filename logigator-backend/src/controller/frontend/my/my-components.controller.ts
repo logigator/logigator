@@ -72,7 +72,7 @@ export class MyComponentsController {
 
 
 		(component.lastEdited as any) = this.translationService.dateFormatDateTime(component.lastEdited, preferences.lang);
-		(component.createdOn as any) = this.translationService.dateFormatDateTime(component.lastEdited, preferences.lang);
+		(component.createdOn as any) = this.translationService.dateFormatDateTime(component.createdOn, preferences.lang);
 		(component as any).previewDark = component.previewDark?.publicUrl ?? '/assets/default-preview.svg';
 		(component as any).previewLight = component.previewLight?.publicUrl ?? '/assets/default-preview.svg';
 		(component as any).communityUrl = 'community/component/' + component.link;
