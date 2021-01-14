@@ -165,7 +165,7 @@ export class MyProjectsController {
 		return {
 			public: project.public,
 			id: project.id,
-			shareLink: `${this.configService.getConfig('domains').editor}/share/${project.link}`,
+			shareLink: `${this.configService.getConfig('domains').rootUrl}${this.configService.getConfig('domains').editor}/share/${project.link}`,
 			action: '/my/projects/share/',
 			regenerateAction: '/my/projects/regenerate-link/',
 			type: 'project',

@@ -180,7 +180,7 @@ export class MyComponentsController {
 		return {
 			public: component.public,
 			id: component.id,
-			shareLink: `${this.configService.getConfig('domains').editor}/share/${component.link}`,
+			shareLink: `${this.configService.getConfig('domains').rootUrl}${this.configService.getConfig('domains').editor}/share/${component.link}`,
 			action: '/my/components/share/',
 			regenerateAction: '/my/components/regenerate-link/',
 			type: 'component',
