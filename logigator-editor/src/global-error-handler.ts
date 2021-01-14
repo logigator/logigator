@@ -1,5 +1,6 @@
 import {getStaticDI} from './app/models/get-di';
 import {ShortcutsService} from './app/services/shortcuts/shortcuts.service';
+import {environment} from './environments/environment';
 
 window.addEventListener('error', event => {
 	if (event instanceof ErrorEvent) {
@@ -39,20 +40,26 @@ function displayErrorPopup(message: string, stack: string) {
 	document.body.insertAdjacentElement('beforeend', popupElem);
 
 	popupElem.querySelector('.global-error-popup-close').addEventListener('click', () => {
-		popupElem.remove();
-		try {
-			getStaticDI(ShortcutsService).enableShortcutListener();
-		} catch {}
+		sendErrorReport();
 	});
 
 	popupElem.querySelector('.global-error-popup-send').addEventListener('click', () => {
-		const userMsg = (popupElem.querySelector('.global-error-popup-textarea') as HTMLTextAreaElement).value;
-		console.log(userMsg, message, stack);
-		// TODO: send to server
+		const userMessage = (popupElem.querySelector('.global-error-popup-textarea') as HTMLTextAreaElement).value;
+		sendErrorReport(userMessage);
+	});
+
+	async function sendErrorReport(userMessage?: string) {
+		await fetch(environment.api + '/report-error', {
+			method: 'POST',
+			headers: {
+				'Content-Type': 'application/json'
+			},
+			body: JSON.stringify({message, stack, userMessage})
+		});
 
 		popupElem.remove();
 		try {
 			getStaticDI(ShortcutsService).enableShortcutListener();
 		} catch {}
-	});
+	}
 }
