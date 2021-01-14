@@ -125,7 +125,7 @@ export class ProjectSaveManagementService {
 		if (this.elementProvider.getElementById(id).category === 'share') {
 			const link = this._mappings.getKey(id);
 			const sharedComp = await this.api.get<Share>(`/share/${link}`, {errorMessage: 'ERROR.PROJECTS.OPEN_COMP'}).toPromise();
-			const mappings = this.saveMappings(sharedComp.data.dependencies);
+			const mappings = this.saveMappings(sharedComp.data.dependencies, true);
 			const compElements = this.convertSavedElementsToElements(sharedComp.data.elements, mappings);
 			const sharedProject = new Project(new ProjectState(compElements), {
 				type: 'comp',
