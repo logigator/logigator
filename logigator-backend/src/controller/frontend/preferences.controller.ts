@@ -6,6 +6,8 @@ import {Referer} from '../../decorator/referer.decorator';
 import {Request, Response} from 'express';
 import {Redirect, RedirectFunction} from '../../decorator/redirect.decorator';
 import {updatePreferences} from '../../functions/update-preferences';
+import {getPathnameWithoutLang} from '../../functions/get-path-name-without-lang';
+
 
 @Controller('/preferences')
 export class PreferencesController {
@@ -18,11 +20,12 @@ export class PreferencesController {
 			lang: body.lang
 		});
 
-		let redirectTarget = ref.replace(`${req.protocol}://${req.hostname}`, '');
+		let redirectTarget = getPathnameWithoutLang(ref, this.translationService.availableLanguages);
+
 		if (redirectTarget === '/') {
 			redirectTarget += body.lang;
-		} else if (this.translationService.availableLanguages.includes(redirectTarget.substr(1, 2)) && (redirectTarget.length === 3 || redirectTarget.charAt(3) === '/')) {
-			redirectTarget = '/' + body.lang + redirectTarget.substring(3);
+		} else {
+			redirectTarget = '/' + body.lang + redirectTarget;
 		}
 		res.redirect(redirectTarget);
 		return res;

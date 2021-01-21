@@ -43,6 +43,7 @@ import {CommunityController} from './controller/frontend/community/community.con
 import {CommunityProjCompController} from './controller/frontend/community/community-proj-comp.controller';
 import {CommunityCloneController} from './controller/frontend/community/community-clone.controller';
 import {CommunityUserController} from './controller/frontend/community/community-user.controller';
+import {ReportErrorController} from './controller/api/report-error.controller';
 
 useContainerRC(Container);
 typeOrmUseContainer(Container);
@@ -72,7 +73,7 @@ async function bootstrap() {
 	}));
 
 	app.use(configService.getConfig('domains').editor, (req, res) => {
-		res.sendFile(path.join(configService.projectRootPath, configService.getConfig('environment').editorPath, 'index.html'));
+		res.sendFile(path.join(configService.projectRootPath, configService.getConfig('environment').editor, 'index.html'));
 	});
 
 	app.use(expressStatic(path.join(configService.projectRootPath, 'resources', 'public'), {
@@ -138,7 +139,8 @@ async function bootstrap() {
 			CommunityController,
 			CommunityProjCompController,
 			CommunityCloneController,
-			CommunityUserController
+			CommunityUserController,
+			ReportErrorController
 		],
 		middlewares: [
 			DefaultPreferencesMiddleware,

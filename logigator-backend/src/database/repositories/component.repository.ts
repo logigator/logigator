@@ -25,6 +25,8 @@ export class ComponentRepository extends PageableRepository<Component> {
 	public async getComponentWithStargazersCountByLink(link: string): Promise<Component> {
 		return await this.createQueryBuilder('component')
 			.loadRelationCountAndMap('component.stargazersCount', 'component.stargazers')
+			.leftJoinAndSelect('component.previewDark', 'previewDark')
+			.leftJoinAndSelect('component.previewLight', 'previewLight')
 			.where('component.link = :link', {link})
 			.getOne();
 	}

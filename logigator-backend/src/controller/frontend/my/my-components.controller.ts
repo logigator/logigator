@@ -72,7 +72,7 @@ export class MyComponentsController {
 
 
 		(component.lastEdited as any) = this.translationService.dateFormatDateTime(component.lastEdited, preferences.lang);
-		(component.createdOn as any) = this.translationService.dateFormatDateTime(component.lastEdited, preferences.lang);
+		(component.createdOn as any) = this.translationService.dateFormatDateTime(component.createdOn, preferences.lang);
 		(component as any).previewDark = component.previewDark?.publicUrl ?? '/assets/default-preview.svg';
 		(component as any).previewLight = component.previewLight?.publicUrl ?? '/assets/default-preview.svg';
 		(component as any).communityUrl = 'community/component/' + component.link;
@@ -180,7 +180,7 @@ export class MyComponentsController {
 		return {
 			public: component.public,
 			id: component.id,
-			shareLink: `${this.configService.getConfig('domains').editor}/share/${component.link}`,
+			shareLink: `${this.configService.getConfig('domains').rootUrl}${this.configService.getConfig('domains').editor}/share/${component.link}`,
 			action: '/my/components/share/',
 			regenerateAction: '/my/components/regenerate-link/',
 			type: 'component',
@@ -215,7 +215,7 @@ export class MyComponentsController {
 	}
 
 	private async getComponentsPage(pageNumber: number, search: string, user: User, language: string): Promise<any> {
-		const page = await this.componentRepo.getComponentPageForUser(pageNumber ?? 0, 12, user, search);
+		const page = await this.componentRepo.getComponentPageForUser(pageNumber ?? 0, 8, user, search);
 
 		const entries = page.entries.map(entry => {
 			const transformed = classToPlain(entry);

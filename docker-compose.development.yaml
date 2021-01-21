@@ -7,9 +7,11 @@ services:
       - logigator_intern
     volumes:
       - ./docker/development/httpd.conf:/usr/local/apache2/conf/httpd.conf
+      - ./docker/development/ca.crt:/usr/local/apache2/conf/server.crt
+      - ./docker/development/private.key:/usr/local/apache2/conf/server.key
     ports:
-      - "127.0.0.1:80:80"
-      - "127.0.0.1:443:443"
+      - "0.0.0.0:80:80"
+      - "0.0.0.0:443:443"
   #### NODE_JS_BACKEND_HOME ####
   development_backend:
     image: node:12

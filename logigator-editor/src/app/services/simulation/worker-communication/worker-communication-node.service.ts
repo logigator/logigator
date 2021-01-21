@@ -184,7 +184,7 @@ export class WorkerCommunicationNodeService implements WorkerCommunicationServic
 			timer(0, 1000).pipe(
 				takeWhile(() => mode === this._mode),
 			).subscribe(x => {
-				this.updateStatus();
+				this.ngZone.run(() => this.updateStatus());
 			});
 		});
 	}

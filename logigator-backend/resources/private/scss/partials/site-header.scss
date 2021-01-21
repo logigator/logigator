@@ -79,6 +79,7 @@
 	@include element('logo') {
 		img {
 			height: $header-height/1.5;
+			width: $header-height * 3;
 		}
 		padding: 0.5rem;
 	}

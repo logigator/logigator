@@ -9,6 +9,7 @@ const concat = require('gulp-concat');
 const cleanCSS = require('gulp-clean-css');
 const sourceMaps = require('gulp-sourcemaps');
 const rename = require("gulp-rename");
+const addSrc = require("gulp-add-src");
 
 
 gulp.task('scss:layouts', function() {
@@ -101,13 +102,12 @@ gulp.task('js-modern', gulp.parallel(['js:global-modern', 'js:views-modern']));
 
 gulp.task('js:global-legacy', function() {
 	return gulp.src([
-		path.join(__dirname, 'node_modules', 'core-js-bundle', 'minified.js').replace(/\\/g, '/'),
 		path.join(__dirname, 'node_modules', 'regenerator-runtime', 'runtime.js').replace(/\\/g, '/'),
 		path.join(__dirname, 'resources/private/js/bem.js').replace(/\\/g, '/'),
 		path.join(__dirname, 'resources/private/js/global-functions.js').replace(/\\/g, '/'),
 		path.join(__dirname, 'resources/private/js/global.js').replace(/\\/g, '/')
 	]).pipe(sourceMaps.init())
-		.pipe(concat('global-es5.js'))
+		.pipe(concat('sources.js'))
 		.pipe(babel({
 			presets: [
 				['@babel/env', {
@@ -123,6 +123,11 @@ gulp.task('js:global-legacy', function() {
 			console.error(err.message);
 			this.emit('end');
 		})
+		.pipe(addSrc.prepend([
+			path.join(__dirname, 'node_modules', 'core-js-bundle', 'minified.js').replace(/\\/g, '/'),
+			path.join(__dirname, 'node_modules', 'element-closest-polyfill', 'index.js').replace(/\\/g, '/'),
+		]))
+		.pipe(concat('global-es5.js'))
 		.pipe(terser({
 			ecma: 5,
 			safari10: true

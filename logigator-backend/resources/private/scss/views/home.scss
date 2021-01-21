@@ -149,7 +149,7 @@
 				margin: auto;
 
 				@include themify() {
-					filter: drop-shadow(2px 2px 4px themed('accent1'));
+					filter: drop-shadow(2px 2px 4px #1a1a1a);
 				}
 			}
 		}

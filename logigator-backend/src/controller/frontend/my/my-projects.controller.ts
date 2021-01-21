@@ -67,7 +67,7 @@ export class MyProjectsController {
 		const dependencies = await this.projectDepRepo.getDependencies(project);
 
 		(project.lastEdited as any) = this.translationService.dateFormatDateTime(project.lastEdited, preferences.lang);
-		(project.createdOn as any) = this.translationService.dateFormatDateTime(project.lastEdited, preferences.lang);
+		(project.createdOn as any) = this.translationService.dateFormatDateTime(project.createdOn, preferences.lang);
 		(project as any).previewDark = project.previewDark?.publicUrl ?? '/assets/default-preview.svg';
 		(project as any).previewLight = project.previewLight?.publicUrl ?? '/assets/default-preview.svg';
 		(project as any).communityUrl = 'community/project/' + project.link;
@@ -165,7 +165,7 @@ export class MyProjectsController {
 		return {
 			public: project.public,
 			id: project.id,
-			shareLink: `${this.configService.getConfig('domains').editor}/share/${project.link}`,
+			shareLink: `${this.configService.getConfig('domains').rootUrl}${this.configService.getConfig('domains').editor}/share/${project.link}`,
 			action: '/my/projects/share/',
 			regenerateAction: '/my/projects/regenerate-link/',
 			type: 'project',
@@ -200,7 +200,7 @@ export class MyProjectsController {
 	}
 
 	private async getProjectsPage(pageNumber: number, search: string, user: User, language: string): Promise<any> {
-		const page = await this.projectRepo.getProjectPageForUser(pageNumber ?? 0, 12, user, search);
+		const page = await this.projectRepo.getProjectPageForUser(pageNumber ?? 0, 8, user, search);
 
 		const entries = page.entries.map(entry => {
 			const transformed = classToPlain(entry);

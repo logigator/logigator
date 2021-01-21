@@ -25,6 +25,8 @@ export class ProjectRepository extends PageableRepository<Project> {
 	public async getProjectWithStargazersCountByLink(link: string): Promise<Project> {
 		return await this.createQueryBuilder('project')
 			.loadRelationCountAndMap('project.stargazersCount', 'project.stargazers')
+			.leftJoinAndSelect('project.previewDark', 'previewDark')
+			.leftJoinAndSelect('project.previewLight', 'previewLight')
 			.where('project.link = :link', {link})
 			.getOne();
 	}
