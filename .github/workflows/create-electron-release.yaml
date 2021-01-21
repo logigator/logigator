@@ -110,7 +110,7 @@ jobs:
       - name: Build
         working-directory: logigator-editor
         run: |
-          sudo apt-get -qq -y install gcc-multilib g++-multilib
+          sudo apt-get update && sudo apt-get -qq -y install gcc-multilib g++-multilib
           npm i
           npm run build:electron:linux
 
