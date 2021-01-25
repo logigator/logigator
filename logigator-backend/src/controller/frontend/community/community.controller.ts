@@ -1,4 +1,4 @@
-import {Controller, Get, QueryParam, Render, UseBefore} from 'routing-controllers';
+import {Controller, CurrentUser, Get, QueryParam, Render, Req, UseBefore} from 'routing-controllers';
 import {setTitleMiddleware} from '../../../middleware/action/set-title-middleware';
 import {ConfigService} from '../../../services/config.service';
 import {InjectRepository} from 'typeorm-typedi-extensions';
@@ -9,6 +9,7 @@ import {Preferences} from '../../../decorator/preferences.decorator';
 import {UserPreferences} from '../../../models/user-preferences';
 import {ComponentRepository} from '../../../database/repositories/component.repository';
 import {UserRepository} from '../../../database/repositories/user.repository';
+import {User} from '../../../database/entities/user.entity';
 
 @Controller('/community')
 export class CommunityController {
@@ -24,9 +25,9 @@ export class CommunityController {
 	@Get('/projects')
 	@Render('community')
 	@UseBefore(setTitleMiddleware('TITLE.COMMUNITY'))
-	public async projects(@QueryParam('page') pageNumber: number, @QueryParam('search') search: string, @Preferences() preferences: UserPreferences) {
+	public async projects(@QueryParam('page') pageNumber: number, @QueryParam('search') search: string, @CurrentUser() currentUser: User, @Preferences() preferences: UserPreferences) {
 		return {
-			...(await this.getProjectsPage(pageNumber, search, preferences.lang)),
+			...(await this.getProjectsPage(pageNumber, search, preferences.lang, currentUser)),
 			searchTerm: search,
 			type: 'projects',
 			viewScript: 'community'
@@ -35,9 +36,9 @@ export class CommunityController {
 
 	@Get('/projects/page')
 	@Render('community-page')
-	public async projectsPage(@QueryParam('page') pageNumber = 0, @QueryParam('search') search: string, @Preferences() preferences: UserPreferences) {
+	public async projectsPage(@QueryParam('page') pageNumber = 0, @QueryParam('search') search: string, @CurrentUser() currentUser: User, @Preferences() preferences: UserPreferences) {
 		return {
-			...(await this.getProjectsPage(pageNumber, search, preferences.lang)),
+			...(await this.getProjectsPage(pageNumber, search, preferences.lang, currentUser)),
 			layout: false
 		};
 	}
@@ -45,9 +46,9 @@ export class CommunityController {
 	@Get('/components')
 	@Render('community')
 	@UseBefore(setTitleMiddleware('TITLE.COMMUNITY'))
-	public async components(@QueryParam('page') pageNumber: number, @QueryParam('search') search: string, @Preferences() preferences: UserPreferences) {
+	public async components(@QueryParam('page') pageNumber: number, @QueryParam('search') search: string, @CurrentUser() currentUser: User, @Preferences() preferences: UserPreferences) {
 		return {
-			...(await this.getComponentsPage(pageNumber, search, preferences.lang)),
+			...(await this.getComponentsPage(pageNumber, search, preferences.lang, currentUser)),
 			searchTerm: search,
 			type: 'components',
 			viewScript: 'community'
@@ -56,14 +57,14 @@ export class CommunityController {
 
 	@Get('/components/page')
 	@Render('community-page')
-	public async componentsPage(@QueryParam('page') pageNumber = 0, @QueryParam('search') search: string, @Preferences() preferences: UserPreferences) {
+	public async componentsPage(@QueryParam('page') pageNumber = 0, @QueryParam('search') search: string, @CurrentUser() currentUser: User, @Preferences() preferences: UserPreferences) {
 		return {
-			...(await this.getComponentsPage(pageNumber, search, preferences.lang)),
+			...(await this.getComponentsPage(pageNumber, search, preferences.lang, currentUser)),
 			layout: false
 		};
 	}
 
-	private async getProjectsPage(pageNumber: number, search: string, language: string): Promise<any> {
+	private async getProjectsPage(pageNumber: number, search: string, language: string, currentUser?: User): Promise<any> {
 		const page = await this.projectRepo.getSharedProjectPage(pageNumber ?? 0, 12, search);
 
 		const entries = await Promise.all(page.entries.map(async entry => {
@@ -76,6 +77,10 @@ export class CommunityController {
 			transformed.stargazersCount = await this.projectRepo.getStargazersCount(entry);
 			transformed.starUnstarUrl = '/community/toggleStar/project/' + entry.link;
 			transformed.stargazers = '/community/project/' + entry.link + '/stargazers';
+
+			if (currentUser) {
+				transformed.isStared = await this.projectRepo.hasUserStaredProject(entry, currentUser);
+			}
 
 			const user = await this.userRepo.getUserOwningProject(entry.id);
 			transformed.username = user.username;
@@ -91,7 +96,7 @@ export class CommunityController {
 		};
 	}
 
-	private async getComponentsPage(pageNumber: number, search: string, language: string): Promise<any> {
+	private async getComponentsPage(pageNumber: number, search: string, language: string, currentUser?: User): Promise<any> {
 		const page = await this.componentRepo.getSharedComponentsPage(pageNumber ?? 0, 12, search);
 
 		const entries = await Promise.all(page.entries.map(async entry => {
@@ -105,6 +110,9 @@ export class CommunityController {
 			transformed.starUnstarUrl = '/community/toggleStar/component/' + entry.link;
 			transformed.stargazers = '/community/component/' + entry.link + '/stargazers';
 
+			if (currentUser) {
+				transformed.isStared = await this.componentRepo.hasUserStaredComponent(entry, currentUser);
+			}
 
 			const user = await this.userRepo.getUserOwningComponent(entry.id);
 			transformed.username = user.username;
