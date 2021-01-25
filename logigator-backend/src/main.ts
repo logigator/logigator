@@ -66,10 +66,15 @@ async function bootstrap() {
 
 	app.use(compression());
 
+	app.get(configService.getConfig('domains').editor + '/index.html', (req, res) => {
+		res.redirect(configService.getConfig('domains').editor + '/', 301);
+	});
+
 	app.use(configService.getConfig('domains').editor, expressStatic(path.join(configService.projectRootPath, configService.getConfig('environment').editor), {
 		cacheControl: true,
 		immutable: true,
-		maxAge: '90d'
+		maxAge: '90d',
+		index: false
 	}));
 
 	app.use(configService.getConfig('domains').editor, (req, res) => {
@@ -79,7 +84,8 @@ async function bootstrap() {
 	app.use(expressStatic(path.join(configService.projectRootPath, 'resources', 'public'), {
 		cacheControl: true,
 		immutable: true,
-		maxAge: '90d'
+		maxAge: '90d',
+		index: false
 	}));
 
 	app.use(cookieParser(configService.getConfig('session').secret));
