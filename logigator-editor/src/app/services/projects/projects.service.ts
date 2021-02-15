@@ -134,6 +134,12 @@ export class ProjectsService {
 		}
 	}
 
+	public async saveAllComponents() {
+		for (const comp of this.allProjects.filter(p => p.type === 'comp')) {
+			await this.saveProject(comp.id);
+		}
+	}
+
 	public async createComponent(name: string, symbol: string, description: string = '', sharePublicly = false) {
 		try {
 			const component = await this.projectSaveManagementService.createComponent(name, symbol, description, sharePublicly);
