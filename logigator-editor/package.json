@@ -29,7 +29,7 @@
 		"electron-npm-i": "cd dist && npm i --silent",
 		"ng:serve:electron": "ng serve -c dev-electron",
 		"electron:serve": "wait-on http-get://localhost:8202/ && npm run electron:tsc && electron . --serve --inspect=5858",
-		"electron:debug": "npm run build-custom-build-scripts && env-cmd -e dev-electron --use-shell \"electron-rebuild --debug --force && ng:serve:electron\"",
+		"electron:debug": "npm run build-custom-build-scripts && env-cmd -e dev-electron --use-shell \"electron-rebuild --debug --force && npm run ng:serve:electron\"",
 		"electron:tsc": "tsc -p tsconfig.electron.json",
 		"build-custom-build-scripts": "tsc -p custom-build-scripts/tsconfig-custom-build-scripts.json",
 		"lint": "ng lint"
