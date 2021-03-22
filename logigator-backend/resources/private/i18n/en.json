@@ -75,9 +75,9 @@
 			"DESCRIPTION": "If you don't know what logic gates or logic circuits are, we animated a short explanation for you to watch."
 		},
 		"SHARES": {
-			"PROJECTS_TITLE": "Recently shared Projects",
+			"PROJECTS_TITLE": "Community Projects",
 			"PROJECTS_DESCRIPTION": "Explore other projects created by our community. Your Project could be the next on this list.",
-			"COMPS_TITLE": "Recently shared Components",
+			"COMPS_TITLE": "Community Components",
 			"COMPS_DESCRIPTION": "Explore other components created by our community. They may be useful for you.",
 			"MORE_PROJECTS": "See More Projects",
 			"MORE_COMPONENTS": "See More Components"
