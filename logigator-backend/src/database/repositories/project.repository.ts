@@ -44,16 +44,42 @@ export class ProjectRepository extends PageableRepository<Project> {
 		});
 	}
 
-	public getSharedProjectPage(pageNr: number, pageSize: number, search?: string): Promise<Page<Project>> {
-		return this.getPage(pageNr, pageSize, {
-			where: {
-				public: true,
-				...(search && {name: Like('%' + search + '%')})
-			},
-			order: {
-				lastEdited: 'DESC'
-			}
-		});
+	public async getSharedProjectPage(pageNr: number, pageSize: number, search?: string, orderOnlyByTime?: boolean): Promise<Page<Project>> {
+		if (orderOnlyByTime) {
+			return this.getPage(pageNr, pageSize, {
+				where: {
+					public: true,
+					...(search && {name: Like('%' + search + '%')})
+				},
+				order: {
+					lastEdited: 'DESC'
+				}
+			});
+		}
+
+		const query = this.createQueryBuilder('project')
+			.leftJoin('project.stargazers', 'stargazers')
+			.leftJoinAndSelect('project.previewDark', 'previewDark')
+			.leftJoinAndSelect('project.previewLight', 'previewLight')
+			.addSelect('COUNT(stargazers.id)', 'stargazersCount')
+			.where('project.public = :isPublic', {isPublic: true});
+
+		if (search)
+			query.andWhere('project.name like :search', {search: `%${search}%`});
+
+		const results = await query.groupBy('project.id')
+			.orderBy('stargazersCount', 'DESC')
+			.addOrderBy('project.lastEdited', 'DESC')
+			.skip(pageNr * pageSize)
+			.take(pageSize)
+			.getManyAndCount();
+
+		return {
+			page: pageNr,
+			total: Math.ceil(results[1] / pageSize),
+			count: results[0].length,
+			entries: results[0]
+		} as Page<Project>;
 	}
 
 	public createProjectForUser(name: string, description: string, sharePublicly: boolean, user: User) {

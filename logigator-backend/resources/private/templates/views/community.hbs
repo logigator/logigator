@@ -9,7 +9,13 @@
 	<section class="view-community__container">
 		<div class="view-community__header">
 			<h1 class="view-community__header-headline">{{ternary (expr type '===' 'projects') i18n.COMMUNITY.PROJECTS i18n.COMMUNITY.COMPONENTS}}</h1>
-			{{> form-input-standalone name='search' type='text' label=i18n.COMMUNITY.SEARCH id='view-community__search' class='view-community__search' value=searchTerm }}
+			<div class="view-community__header-options">
+				<div class="view-community__order-select">
+					<p class="popularity {{#unless orderByLatest}}is-selected{{/unless}}">Popularity</p>
+					<p class="latest {{#if orderByLatest}}is-selected{{/if}}">Latest</p>
+				</div>
+				{{> form-input-standalone name='search' type='text' label=i18n.COMMUNITY.SEARCH id='view-community__search' class='view-community__search' value=searchTerm }}
+			</div>
 		</div>
 		<div class="view-community__list">
 			{{> community-list }}

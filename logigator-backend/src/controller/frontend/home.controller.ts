@@ -43,7 +43,7 @@ export class HomeController {
 			.leftJoin('component.stargazers', 'stargazers')
 			.leftJoinAndSelect('component.previewDark', 'previewDark')
 			.leftJoinAndSelect('component.previewLight', 'previewLight')
-			.addSelect('COUNT(component.id)', 'stargazersCount')
+			.addSelect('COUNT(stargazers.id)', 'stargazersCount')
 			.where('component.public = true')
 			.groupBy('component.id')
 			.orderBy('stargazersCount', 'DESC')

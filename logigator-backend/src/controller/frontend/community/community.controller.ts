@@ -1,4 +1,4 @@
-import {Controller, CurrentUser, Get, QueryParam, Render, Req, UseBefore} from 'routing-controllers';
+import {Controller, CurrentUser, Get, QueryParam, Render, UseBefore} from 'routing-controllers';
 import {setTitleMiddleware} from '../../../middleware/action/set-title-middleware';
 import {ConfigService} from '../../../services/config.service';
 import {InjectRepository} from 'typeorm-typedi-extensions';
@@ -25,20 +25,21 @@ export class CommunityController {
 	@Get('/projects')
 	@Render('community')
 	@UseBefore(setTitleMiddleware('TITLE.COMMUNITY'))
-	public async projects(@QueryParam('page') pageNumber: number, @QueryParam('search') search: string, @CurrentUser() currentUser: User, @Preferences() preferences: UserPreferences) {
+	public async projects(@QueryParam('page') pageNumber: number, @QueryParam('search') search: string, @QueryParam('orderBy') orderBy: string, @CurrentUser() currentUser: User, @Preferences() preferences: UserPreferences) {
 		return {
-			...(await this.getProjectsPage(pageNumber, search, preferences.lang, currentUser)),
+			...(await this.getProjectsPage(pageNumber, search, preferences.lang, currentUser, orderBy === 'latest')),
 			searchTerm: search,
 			type: 'projects',
+			orderByLatest: orderBy === 'latest',
 			viewScript: 'community'
 		};
 	}
 
 	@Get('/projects/page')
 	@Render('community-page')
-	public async projectsPage(@QueryParam('page') pageNumber = 0, @QueryParam('search') search: string, @CurrentUser() currentUser: User, @Preferences() preferences: UserPreferences) {
+	public async projectsPage(@QueryParam('page') pageNumber = 0, @QueryParam('search') search: string, @QueryParam('orderBy') orderBy: string, @CurrentUser() currentUser: User, @Preferences() preferences: UserPreferences) {
 		return {
-			...(await this.getProjectsPage(pageNumber, search, preferences.lang, currentUser)),
+			...(await this.getProjectsPage(pageNumber, search, preferences.lang, currentUser, orderBy === 'latest')),
 			layout: false
 		};
 	}
@@ -46,26 +47,27 @@ export class CommunityController {
 	@Get('/components')
 	@Render('community')
 	@UseBefore(setTitleMiddleware('TITLE.COMMUNITY'))
-	public async components(@QueryParam('page') pageNumber: number, @QueryParam('search') search: string, @CurrentUser() currentUser: User, @Preferences() preferences: UserPreferences) {
+	public async components(@QueryParam('page') pageNumber: number, @QueryParam('search') search: string, @QueryParam('orderBy') orderBy: string, @CurrentUser() currentUser: User, @Preferences() preferences: UserPreferences) {
 		return {
-			...(await this.getComponentsPage(pageNumber, search, preferences.lang, currentUser)),
+			...(await this.getComponentsPage(pageNumber, search, preferences.lang, currentUser, orderBy === 'latest')),
 			searchTerm: search,
 			type: 'components',
+			orderByLatest: orderBy === 'latest',
 			viewScript: 'community'
 		};
 	}
 
 	@Get('/components/page')
 	@Render('community-page')
-	public async componentsPage(@QueryParam('page') pageNumber = 0, @QueryParam('search') search: string, @CurrentUser() currentUser: User, @Preferences() preferences: UserPreferences) {
+	public async componentsPage(@QueryParam('page') pageNumber = 0, @QueryParam('search') search: string, @QueryParam('orderBy') orderBy: string, @CurrentUser() currentUser: User, @Preferences() preferences: UserPreferences) {
 		return {
-			...(await this.getComponentsPage(pageNumber, search, preferences.lang, currentUser)),
+			...(await this.getComponentsPage(pageNumber, search, preferences.lang, currentUser, orderBy === 'latest')),
 			layout: false
 		};
 	}
 
-	private async getProjectsPage(pageNumber: number, search: string, language: string, currentUser?: User): Promise<any> {
-		const page = await this.projectRepo.getSharedProjectPage(pageNumber ?? 0, 12, search);
+	private async getProjectsPage(pageNumber: number, search: string, language: string, currentUser?: User, orderOnlyByTime?: boolean): Promise<any> {
+		const page = await this.projectRepo.getSharedProjectPage(pageNumber ?? 0, 12, search, orderOnlyByTime);
 
 		const entries = await Promise.all(page.entries.map(async entry => {
 			const transformed = classToPlain(entry, {groups: ['detailed']});
@@ -96,8 +98,8 @@ export class CommunityController {
 		};
 	}
 
-	private async getComponentsPage(pageNumber: number, search: string, language: string, currentUser?: User): Promise<any> {
-		const page = await this.componentRepo.getSharedComponentsPage(pageNumber ?? 0, 12, search);
+	private async getComponentsPage(pageNumber: number, search: string, language: string, currentUser?: User, orderOnlyByTime?: boolean): Promise<any> {
+		const page = await this.componentRepo.getSharedComponentsPage(pageNumber ?? 0, 12, search, orderOnlyByTime);
 
 		const entries = await Promise.all(page.entries.map(async entry => {
 			const transformed = classToPlain(entry);
