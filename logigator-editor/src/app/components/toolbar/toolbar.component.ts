@@ -47,10 +47,6 @@ export class ToolbarComponent {
 		console.log(this.projectService.currProject.allElements);
 	}
 
-	public get currentTheme() {
-		return this.themingService.currentTheme;
-	}
-
 	public printCalls(): void {
 		console.log(this.projectService.currProject.boardRecorder.stringify());
 	}
@@ -79,6 +75,10 @@ export class ToolbarComponent {
 		Grid.showChunks(!Grid.chunksVisible);
 	}
 	// #!endif
+
+	public get currentTheme() {
+		return this.themingService.currentTheme;
+	}
 
 	public setWorkMode(mode: string) {
 		switch (mode) {
