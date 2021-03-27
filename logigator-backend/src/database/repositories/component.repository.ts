@@ -60,16 +60,42 @@ export class ComponentRepository extends PageableRepository<Component> {
 		});
 	}
 
-	public getSharedComponentsPage(pageNr: number, pageSize: number, search?: string): Promise<Page<Component>> {
-		return this.getPage(pageNr, pageSize, {
-			where: {
-				public: true,
-				...(search && {name: Like('%' + search + '%')})
-			},
-			order: {
-				lastEdited: 'DESC'
-			}
-		});
+	public async getSharedComponentsPage(pageNr: number, pageSize: number, search?: string, orderOnlyByTime?: boolean): Promise<Page<Component>> {
+		if (orderOnlyByTime) {
+			return this.getPage(pageNr, pageSize, {
+				where: {
+					public: true,
+					...(search && {name: Like('%' + search + '%')})
+				},
+				order: {
+					lastEdited: 'DESC'
+				}
+			});
+		}
+
+		const query = this.createQueryBuilder('component')
+			.leftJoin('component.stargazers', 'stargazers')
+			.leftJoinAndSelect('component.previewDark', 'previewDark')
+			.leftJoinAndSelect('component.previewLight', 'previewLight')
+			.addSelect('COUNT(stargazers.id)', 'stargazersCount')
+			.where('component.public = :isPublic', {isPublic: true});
+
+		if (search)
+			query.andWhere('component.name like :search', {search: `%${search}%`});
+
+		const results = await query.groupBy('component.id')
+			.orderBy('stargazersCount', 'DESC')
+			.addOrderBy('component.lastEdited', 'DESC')
+			.skip(pageNr * pageSize)
+			.take(pageSize)
+			.getManyAndCount();
+
+		return {
+			page: pageNr,
+			total: Math.ceil(results[1] / pageSize),
+			count: results[0].length,
+			entries: results[0]
+		} as Page<Component>;
 	}
 
 	public createComponentForUser(name: string, symbol: string, description: string, sharePublicly: boolean, user: User) {

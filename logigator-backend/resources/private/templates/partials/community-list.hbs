@@ -33,7 +33,7 @@
 					<div class="partial-community-list__stars {{#if @root.isAuthenticated}}partial-community-list__stars--auth{{/if}}">
 						<a class="star-unstar" {{#if @root.isAuthenticated}}href="{{this.starUnstarUrl}}"{{/if}}>
 							{{> icon icon='features' alt='Star' }}
-							<p>{{ternary isStared 'Unstar' 'Star'}}</p>
+							<p>{{ternary this.isStared 'Unstar' 'Star'}}</p>
 						</a>
 						<a class="stargazers" href="{{linkHref this.stargazers}}">{{this.stargazersCount}}</a>
 					</div>

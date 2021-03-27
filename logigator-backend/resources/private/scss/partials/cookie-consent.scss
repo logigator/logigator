@@ -5,13 +5,11 @@
 	width: 100%;
 	display: flex;
 	align-items: center;
-
-	@include media-breakpoint-down('md') {
-		position: unset;
-	}
+	animation: fadein 1s;
 
 	@include themify() {
-		background-color: themed('accent2');
+		background-color: themed('accent1');
+		border-top: 1px solid themed('primary');
 	}
 
 	@include element('message') {
@@ -21,5 +19,11 @@
 
 	@include element('btn') {
 		margin-right: 1rem;
+		white-space: nowrap;
 	}
+}
+
+@keyframes fadein {
+	from { opacity: 0; }
+	to   { opacity: 1; }
 }

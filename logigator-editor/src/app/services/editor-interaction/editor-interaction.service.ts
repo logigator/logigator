@@ -126,7 +126,9 @@ export class EditorInteractionService {
 	}
 
 	public async saveProject() {
-		if (this.projectsService.mainProject.source !== 'local') {
+		if (this.projectsService.mainProject.source === 'local' && !this.projectsService.mainProject.saveDirty && this.projectsService.allProjects.length > 1) {
+			this.projectsService.saveAllComponents();
+		} else if (this.projectsService.mainProject.source !== 'local') {
 			this.projectsService.saveAllProjects();
 		} else {
 			const saveResp = await this.popupService.showPopup(SaveAsComponent, 'POPUP.SAVE.TITLE', true);

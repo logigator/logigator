@@ -6,7 +6,7 @@ function community() {
 
 	let searchTerm;
 	let currentPage;
-
+	let currentOrder;
 
 	function updatePagination() {
 		const list = document.querySelector('.partial-community-list');
@@ -56,7 +56,7 @@ function community() {
 		pageButtons.forEach((button, index) => {
 			button.addEventListener('click', () => {
 				if (pageButtonTargets[index] !== undefined && !Bem.hasState(button, 'active')) {
-					navigate(pageButtonTargets[index], searchTerm);
+					navigate(pageButtonTargets[index], searchTerm, currentOrder);
 				}
 			});
 		});
@@ -66,17 +66,38 @@ function community() {
 		const searchInput = document.getElementById('view-community__search');
 		const debouncedListener = debounceFunction(() => {
 			searchTerm = searchInput.value;
-			navigate(0, searchTerm);
+			navigate(0, searchTerm, currentOrder);
 		}, 600);
 		searchInput.addEventListener('input', debouncedListener);
 	}
 
-	async function navigate(page, search) {
+	function addSortListener() {
+		const popularity = document.querySelector('.view-community__order-select > .popularity');
+		const latest = document.querySelector('.view-community__order-select > .latest');
+
+		popularity.addEventListener('click', () => {
+			latest.classList.remove('is-selected');
+			popularity.classList.add('is-selected');
+			currentOrder = 'popularity';
+			navigate(currentPage, searchTerm, currentOrder);
+		});
+		latest.addEventListener('click', () => {
+			popularity.classList.remove('is-selected');
+			latest.classList.add('is-selected');
+			currentOrder = 'latest';
+			navigate(currentPage, searchTerm, currentOrder);
+		});
+	}
+
+	async function navigate(page, search, orderBy) {
 		const params = {
 			page
 		};
 		if (search !== undefined && search !== '') {
 			params.search = search;
+		}
+		if (orderBy !== undefined && orderBy !== '') {
+			params.orderBy = orderBy;
 		}
 
 		const searchParams = new URLSearchParams(params).toString();
@@ -91,5 +112,6 @@ function community() {
 	updatePagination();
 	addPageButtonListeners();
 	addSearchListener();
+	addSortListener();
 }
 community();
