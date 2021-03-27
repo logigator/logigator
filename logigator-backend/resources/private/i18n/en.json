@@ -164,6 +164,8 @@
 			"PROJECTS": "Projects",
 			"COMPONENTS": "Components"
 		},
+		"LATEST": "Latest",
+		"POPULARITY": "Popularity",
 		"SEARCH": "Search",
 		"COMPONENTS": "Shared Components",
 		"PROJECTS": "Shared Projects",
