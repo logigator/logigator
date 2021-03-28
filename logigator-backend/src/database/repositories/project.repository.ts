@@ -119,6 +119,8 @@ export class ProjectRepository extends PageableRepository<Project> {
 	public async getProjectsStaredByUser(page: number, pageSize: number, user: User): Promise<Page<Project>> {
 		const results = await this.createQueryBuilder('project')
 			.leftJoin('project.stargazers', 'user')
+			.leftJoinAndSelect('project.previewDark', 'previewDark')
+			.leftJoinAndSelect('project.previewLight', 'previewLight')
 			.where('project.public = :isPublic', {isPublic: true})
 			.andWhere('user.id = :userId', {userId: user.id})
 			.skip(page * pageSize)
