@@ -7,7 +7,7 @@ window.addEventListener('error', event => {
 		try {
 			getStaticDI(ShortcutsService).disableShortcutListener();
 		} finally {
-			displayErrorPopup(event.error.message, event.error.stack);
+			displayErrorPopup(event.message, event.error?.stack ? event.error.stack : 'Stack trace not available.');
 		}
 	}
 });
