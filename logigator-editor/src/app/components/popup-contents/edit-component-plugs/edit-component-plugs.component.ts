@@ -150,8 +150,8 @@ export class EditComponentPlugsComponent extends PopupContentComp<Project, never
 				if (pos + child.element.offsetHeight / 2 <= this._dragElement.pos + adjustment
 					&& pos + child.element.offsetHeight / 2 > this._dragElement.element.offsetTop) {
 					child.element.style.top = this._dragElement.element.offsetHeight + child.adjustment * child.element.offsetHeight + 'px';
-				} else if (pos - child.element.offsetHeight / 2 >= this._dragElement.pos + adjustment
-					&& pos - child.element.offsetHeight / 2 < this._dragElement.element.offsetTop) {
+				} else if (pos - child.element.offsetHeight / 2 > this._dragElement.pos + adjustment
+					&& pos - child.element.offsetHeight / 2 <= this._dragElement.element.offsetTop) {
 					child.element.style.top = -this._dragElement.element.offsetHeight + child.adjustment * child.element.offsetHeight + 'px';
 				} else {
 					child.element.style.top = child.adjustment * child.element.offsetHeight + 'px';

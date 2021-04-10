@@ -17,18 +17,19 @@
 			position: relative;
 
 			.control {
-				padding: 0.35rem 0;
 				position: relative;
+				height: 30px;
 
 				transition: top 0.25s ease;
 
 				input {
 					outline: none;
 					border: none;
-					padding: 0.1rem;
 					font-size: 1.1rem;
 					width: 4.5rem;
 					background-color: transparent;
+					line-height: 30px;
+					height: 30px;
 
 					@include themify() {
 						color: themed('text-primary');
