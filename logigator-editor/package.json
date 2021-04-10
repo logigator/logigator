@@ -1,6 +1,6 @@
 {
 	"name": "logigator-editor",
-	"version": "1.0.5",
+	"version": "1.0.6",
 	"description": "Logigator Editor",
 	"license": "MIT",
 	"repository": {
@@ -56,13 +56,13 @@
 		"pixi.js": "^5.3.9",
 		"run-script-os": "^1.1.6",
 		"rxjs": "~6.5.4",
-		"tslib": "^2.1.0",
+		"tslib": "^2.2.0",
 		"uuid": "^8.3.2",
 		"zone.js": "~0.10.2"
 	},
 	"devDependencies": {
 		"@angular-builders/custom-webpack": "^8.4.1",
-		"@angular-devkit/build-angular": "^0.1001.7",
+		"@angular-devkit/build-angular": "~0.1002.3",
 		"@angular/cli": "^10.2.3",
 		"@angular/compiler-cli": "^10.2.4",
 		"@angular/language-service": "^10.2.4",
@@ -70,7 +70,7 @@
 		"@types/jasmine": "~3.3.8",
 		"@types/jasminewd2": "^2.0.8",
 		"@types/node": "^13.13.48",
-		"@types/node-fetch": "^2.5.8",
+		"@types/node-fetch": "^2.5.10",
 		"codelyzer": "^5.2.2",
 		"electron": "^10.4.2",
 		"electron-packager": "^15.2.0",
@@ -97,7 +97,7 @@
 	"electronProdDependencies": {
 		"form-data": "^3.0.1",
 		"node-fetch": "^2.6.1",
-		"tslib": "^2.1.0",
+		"tslib": "^2.2.0",
 		"@logigator/logigator-simulation": "^1.1.1"
 	},
 	"developmentInfo": {

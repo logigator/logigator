@@ -11,7 +11,7 @@ export abstract class WorkerCommunicationServiceModel {
 
 	public abstract getWireEndState(identifier: string, data?: Uint8Array | boolean[]): Map<Element, boolean[]>;
 
-	public abstract async init(): Promise<void>;
+	public abstract init(): Promise<void>;
 
 	public abstract stop(): void;
 

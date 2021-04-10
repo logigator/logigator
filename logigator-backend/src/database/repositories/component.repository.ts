@@ -137,6 +137,8 @@ export class ComponentRepository extends PageableRepository<Component> {
 	public async getComponentsStaredByUser(page: number, pageSize: number, user: User): Promise<Page<Component>> {
 		const results = await this.createQueryBuilder('component')
 			.leftJoin('component.stargazers', 'user')
+			.leftJoinAndSelect('component.previewDark', 'previewDark')
+			.leftJoinAndSelect('component.previewLight', 'previewLight')
 			.where('component.public = :isPublic', {isPublic: true})
 			.andWhere('user.id = :userId', {userId: user.id})
 			.skip(page * pageSize)
