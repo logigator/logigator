@@ -2,11 +2,14 @@ import {getStaticDI} from './app/models/get-di';
 import {ShortcutsService} from './app/services/shortcuts/shortcuts.service';
 import {environment} from './environments/environment';
 
+let active = false;
+
 window.addEventListener('error', event => {
-	if (event instanceof ErrorEvent) {
+	if (event instanceof ErrorEvent && !active) {
 		try {
 			getStaticDI(ShortcutsService).disableShortcutListener();
 		} finally {
+			active = true;
 			displayErrorPopup(event.message, event.error?.stack ? event.error.stack : 'Stack trace not available.');
 		}
 	}
@@ -40,10 +43,12 @@ function displayErrorPopup(message: string, stack: string) {
 	document.body.insertAdjacentElement('beforeend', popupElem);
 
 	popupElem.querySelector('.global-error-popup-close').addEventListener('click', () => {
-		sendErrorReport();
+		active = false;
+		popupElem.remove();
 	});
 
 	popupElem.querySelector('.global-error-popup-send').addEventListener('click', () => {
+		active = false;
 		const userMessage = (popupElem.querySelector('.global-error-popup-textarea') as HTMLTextAreaElement).value;
 		sendErrorReport(userMessage);
 	});
