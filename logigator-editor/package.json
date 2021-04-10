@@ -97,7 +97,7 @@
 	"electronProdDependencies": {
 		"form-data": "^3.0.1",
 		"node-fetch": "^2.6.1",
-		"tslib": "^2.1.0",
+		"tslib": "^2.2.0",
 		"@logigator/logigator-simulation": "^1.1.1"
 	},
 	"developmentInfo": {
