@@ -201,7 +201,7 @@ export class ProjectsService {
 
 	public async exportToFile(name?: string) {
 		await this.projectSaveManagementService.exportToFile(this._mainProject, name);
-		this.errorHandling.showInfo('INFO.PROJECTS.EXPORT_FILE', {name});
+		this.errorHandling.showInfo('INFO.PROJECTS.EXPORT_FILE', {name: name ?? this._mainProject.name});
 	}
 
 	public async openFile(content: string) {
