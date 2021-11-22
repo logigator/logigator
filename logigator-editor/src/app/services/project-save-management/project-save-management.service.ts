@@ -505,7 +505,7 @@ export class ProjectSaveManagementService {
 			const elementType = this.elementProvider.getElementById(typeId);
 
 			if (!elementType)
-				return;
+				continue;
 
 			const isCustomElement = this.elementProvider.isCustomElement(typeId);
 

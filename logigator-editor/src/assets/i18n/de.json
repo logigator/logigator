@@ -450,7 +450,8 @@
 			"REGENERATE_SHARE_LINK": "Fehler beim neu generieren des Links.",
 			"UPDATE_SHARE_INFO": "Fehler beim aktualisieren des Shares.",
 			"INVALID_FILE_TYPE": "Ungültige Datei. Verwende einen JSON-Datei.",
-			"INVALID_FILE": "Fehlerhafte Datei"
+			"INVALID_FILE": "Fehlerhafte Datei",
+			"COMP_NOT_FOUND": "Komponente konnte nicht gefunden werden!"
 		},
 		"USER": {
 			"GET_INFO": "Konnte Benutzerinformationen nicht bekommen",

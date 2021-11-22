@@ -450,7 +450,8 @@
 			"REGENERATE_SHARE_LINK": "Unable to regenerate share link.",
 			"UPDATE_SHARE_INFO": "Unable to update share information.",
 			"INVALID_FILE_TYPE": "Invalid File Type. Use a Json File.",
-			"INVALID_FILE": "Invalid File"
+			"INVALID_FILE": "Invalid File",
+			"COMP_NOT_FOUND": "Component was not found!"
 		},
 		"USER": {
 			"GET_INFO": "Unable to get User info.",
