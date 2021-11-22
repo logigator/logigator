@@ -30,6 +30,7 @@ import {rng} from '../../models/element-types/advanced/rng';
 import {ram} from '../../models/element-types/advanced/ram';
 import {decoder} from '../../models/element-types/advanced/decoder';
 import {encoder} from '../../models/element-types/advanced/encoder';
+import {mux} from '../../models/element-types/advanced/mux';
 
 @Injectable({
 	providedIn: 'root'
@@ -59,6 +60,7 @@ export class ElementProviderService {
 		[ram.id, ram],
 		[decoder.id, decoder],
 		[encoder.id, encoder],
+		[mux.id, mux],
 
 		// plug
 		[input.id, input],

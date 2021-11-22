@@ -378,6 +378,10 @@
 			"ENCODER": {
 				"NAME": "Encoder",
 				"DESCRIPTION": "n-to-1 binary encoder."
+			},
+			"MUX": {
+				"NAME": "Multiplexer",
+				"DESCRIPTION": "Selects input by address."
 			}
 		},
 		"IO": {

@@ -19,6 +19,7 @@ export const enum ElementTypeId {
 	RAM = 17,
 	DECODER = 18,
 	ENCODER = 19,
+	MUX = 20,
 
 	INPUT = 100,
 	OUTPUT = 101,
