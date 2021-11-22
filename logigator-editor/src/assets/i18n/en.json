@@ -382,6 +382,10 @@
 			"MUX": {
 				"NAME": "Multiplexer",
 				"DESCRIPTION": "Selects input by address."
+			},
+			"DEMUX": {
+				"NAME": "Demultiplexer",
+				"DESCRIPTION": "Selects output by address."
 			}
 		},
 		"IO": {
