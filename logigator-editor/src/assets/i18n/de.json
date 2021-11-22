@@ -374,6 +374,10 @@
 			"DECODER": {
 				"NAME": "Decoder",
 				"DESCRIPTION": "1-von-n binärer Dekodierer"
+			},
+			"ENCODER": {
+				"NAME": "Encoder",
+				"DESCRIPTION": "n-zu-1 binärer Enkodierer."
 			}
 		},
 		"IO": {
