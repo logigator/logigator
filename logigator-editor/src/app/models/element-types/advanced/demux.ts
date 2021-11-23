@@ -20,7 +20,7 @@ export const demux: ElementType = {
 	isRotatable: true,
 	rotation: ElementRotation.Right,
 
-	numOutputs: 1,
+	numOutputs: 2,
 
 	numInputs: 2,
 
