@@ -377,7 +377,7 @@
 			},
 			"ENCODER": {
 				"NAME": "Encoder",
-				"DESCRIPTION": "n-zu-1 binärer Enkodierer."
+				"DESCRIPTION": "2^n-to-n binärer Enkodierer."
 			},
 			"MUX": {
 				"NAME": "Multiplexer",
