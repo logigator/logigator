@@ -22,7 +22,7 @@ export const mux: ElementType = {
 
 	numOutputs: 1,
 
-	numInputs: 2,
+	numInputs: 3,
 
 	minInputs: 0,
 	maxInputs: 0,
