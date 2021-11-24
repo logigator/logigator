@@ -32,8 +32,8 @@ export class ErrorHandlerMiddleware implements ExpressErrorMiddlewareInterface {
 			if (error instanceof BadRequestError && 'errors' in error) {
 				errorResponse.error.errors = (error as any).errors;
 			}
-			console.log(error);
 		}
+		console.error(error);
 
 		response.status(errorResponse.status);
 
