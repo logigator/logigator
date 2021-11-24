@@ -104,3 +104,81 @@ Hält einen Zustand. (S) repräsentiert `set`, (R) repräsentiert `reset`. Sobal
 ## Zufallsgenerator
 
 Diese Komponente generiert Zufallszahlen, immer wenn sich der CLK Eingang von Low auf High ändert.
+
+## RAM
+
+Random Access Memory. Speichert Eingänge, sobald CLK High ist.<br>
+Um zu schreiben setzte WE auf High, um zu lesen, setze es auf Low.
+
+## Dekodierer
+
+<div class="rows">
+
+| I1 | I2 | 0 | 1 | 2 | 3 |
+|----|----|---|---|---|---|
+| 0  | 0  | 1 | 0 | 0 | 0 |
+| 0  | 1  | 0 | 1 | 0 | 0 |
+| 1  | 0  | 0 | 0 | 1 | 0 |
+| 1  | 1  | 0 | 0 | 0 | 1 |
+
+<div class="margin-left">
+
+1-of-n Dekodierer</br>
+Konvertiert binäre Information von n kodierten Eingängen zu 2^n einzigartigen Ausgängen. Zu jedem Zeitpunkt ist nur ein Ausgang High.
+</div>
+</div>
+
+## Enkodierer
+
+<div class="rows">
+
+| I0 | I1 | I2 | I3 | 1 | 2 |
+|----|----|----|----|---|---|
+| 0  | 0  | 0  | 0  | 0 | 0 |
+| 1  | 0  | 0  | 0  | 0 | 0 |
+| X  | 1  | 0  | 0  | 0 | 1 |
+| X  | X  | 1  | 0  | 1 | 0 |
+| X  | X  | X  | 1  | 1 | 1 |
+
+<div class="margin-left">
+
+2^n-to-n Enkodierer</br>
+Kodiert 2^n Eingänge zu n Ausgängen. Nur einer der Eingänge sollte auf High gesetzt sein. Ansonsten wird das MSB als Eingang betrachtet und alle anderen Eingänge werden ignoriert.
+
+</div>
+</div>
+
+## Multiplexer
+
+<div class="rows">
+
+| S0 | S1 | Out        |
+|----|----|------------|
+| 0  | 0  | Wert bei 0 |
+| 0  | 1  | Wert bei 1 |
+| 1  | 0  | Wert bei 2 |
+| 1  | 1  | Wert bei 3 |
+
+<div class="margin-left">
+
+Wählt einen Eingang mit einer Adresse und gibt den gewählten Wert aus. 
+
+</div>
+</div>
+
+## Demultiplexer
+
+<div class="rows">
+
+| I | S0 | S1 | 0 | 1 | 2 | 3 |
+|---|----|----|---|---|---|---|
+| X | 0  | 0  | I | 0 | 0 | 0 |
+| X | 0  | 1  | 0 | I | 0 | 0 |
+| X | 1  | 0  | 0 | 0 | I | 0 |
+| X | 1  | 1  | 0 | 0 | 0 | I |
+
+<div class="margin-left">
+
+Hat einen Dateneingang und n Adresseingänge. Der Wert des Dateneingangs wird wird am gewählten Ausgang ausgegeben.
+</div>
+</div>

@@ -372,11 +372,11 @@
 				"ADDRESS_SIZE": "Adressgröße"
 			},
 			"DECODER": {
-				"NAME": "Decoder",
+				"NAME": "Dekodierer",
 				"DESCRIPTION": "1-von-n binärer Dekodierer"
 			},
 			"ENCODER": {
-				"NAME": "Encoder",
+				"NAME": "Enkodierer",
 				"DESCRIPTION": "2^n-to-n binärer Enkodierer."
 			},
 			"MUX": {
