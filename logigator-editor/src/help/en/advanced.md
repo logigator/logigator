@@ -115,7 +115,7 @@ Set WE to high to write to current address and to low to read from current addre
 <div class="rows">
 	
 | I1 | I2 | 0 | 1 | 2 | 3 |
-| -- | -- | - | - | - | - |
+|----|----|---|---|---|---|
 | 0  | 0  | 1 | 0 | 0 | 0 |
 | 0  | 1  | 0 | 1 | 0 | 0 |
 | 1  | 0  | 0 | 0 | 1 | 0 |
@@ -124,16 +124,16 @@ Set WE to high to write to current address and to low to read from current addre
 <div class="margin-left">
 
 1-of-n Decoder</br>
-It converts binary information from the n coded inputs to 2^n unique outputs. Only one output is set to HIGH at every given time.
+Converts binary information from n coded inputs to 2^n unique outputs. Only one output is set to HIGH at once.
 </div>
 </div>
 
-## Ecoder
+## Encoder
 
 <div class="rows">
 	
 | I0 | I1 | I2 | I3 | 1 | 2 |
-| -- | -- | -- | -- | - | - |
+|----|----|----|----|---|---|
 | 0  | 0  | 0  | 0  | 0 | 0 |
 | 1  | 0  | 0  | 0  | 0 | 0 |
 | X  | 1  | 0  | 0  | 0 | 1 |
@@ -142,7 +142,41 @@ It converts binary information from the n coded inputs to 2^n unique outputs. On
 
 <div class="margin-left">
 
-2^n-to-n Endcoder</br>
-It binary encodes 2^n inputs to n outputs. Only one of the inpuputs should be HIGH at a time. Otherwise the MSB will be consindered as HIGH and all other inputus are treated as Don`t cares.
+2^n-to-n Encoder</br>
+Binary encodes 2^n inputs to n outputs. Only one of the inputs should be HIGH at once. Otherwise the MSB will be considered as HIGH and all other inputs are treated as don`t cares.
+</div>
+</div>
+
+## Multiplexer
+
+<div class="rows">
+
+| S0 | S1 | Out        |
+|----|----|------------|
+| 0  | 0  | value at 0 |
+| 0  | 1  | value at 1 |
+| 1  | 0  | value at 2 |
+| 1  | 1  | value at 3 |
+
+<div class="margin-left">
+
+Selects an input by a give address and writes the value at the selected input to it´s output.
+</div>
+</div>
+
+## Demultiplexer
+
+<div class="rows">
+
+| I | S0 | S1 | 0 | 1 | 2 | 3 |
+|---|----|----|---|---|---|---|
+| X | 0  | 0  | I | 0 | 0 | 0 |
+| X | 0  | 1  | 0 | I | 0 | 0 |
+| X | 1  | 0  | 0 | 0 | I | 0 |
+| X | 1  | 1  | 0 | 0 | 0 | I |
+
+<div class="margin-left">
+
+Takes one data input an n address inputs. The value of the data input is written to the output given by the address inputs.
 </div>
 </div>
