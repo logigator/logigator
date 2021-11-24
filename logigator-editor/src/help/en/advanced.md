@@ -104,3 +104,45 @@ Holds a state. (S) represents `set`, (R) represents `reset`. As soon as (CLK) is
 ## Random Number Generator
 
 This component will generate a random number on rising edge of its CLK input.
+
+## RAM
+
+Random Access Memory. Applies input on rising edge of CLK.<br>
+Set WE to high to write to current address and to low to read from current address.
+
+## Decoder
+
+<div class="rows">
+	
+| I1 | I2 | 0 | 1 | 2 | 3 |
+| -- | -- | - | - | - | - |
+| 0  | 0  | 1 | 0 | 0 | 0 |
+| 0  | 1  | 0 | 1 | 0 | 0 |
+| 1  | 0  | 0 | 0 | 1 | 0 |
+| 1  | 1  | 0 | 0 | 0 | 1 |
+
+<div class="margin-left">
+
+1-of-n Decoder</br>
+It converts binary information from the n coded inputs to 2^n unique outputs. Only one output is set to HIGH at every given time.
+</div>
+</div>
+
+## Ecoder
+
+<div class="rows">
+	
+| I0 | I1 | I2 | I3 | 1 | 2 |
+| -- | -- | -- | -- | - | - |
+| 0  | 0  | 0  | 0  | 0 | 0 |
+| 1  | 0  | 0  | 0  | 0 | 0 |
+| X  | 1  | 0  | 0  | 0 | 1 |
+| X  | X  | 1  | 0  | 1 | 0 |
+| X  | X  | X  | 1  | 1 | 1 |
+
+<div class="margin-left">
+
+2^n-to-n Endcoder</br>
+It binary encodes 2^n inputs to n outputs. Only one of the inpuputs should be HIGH at a time. Otherwise the MSB will be consindered as HIGH and all other inputus are treated as Don`t cares.
+</div>
+</div>
