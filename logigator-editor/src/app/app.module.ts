@@ -30,8 +30,6 @@ import {CacheBustingTranslationLoader} from './models/translation/cache-busting-
 import {AppMissingTranslationHandler} from './models/translation/missing-translation-handler';
 import { OutsideNgZoneEventDirective } from './directives/outside-ng-zone-event/outside-ng-zone-event.directive';
 import { UnsavedChangesComponent } from './components/popup-contents/unsaved-changes/unsaved-changes.component';
-// #!electron
-import { NgxElectronModule } from 'ngx-electron';
 import { WorkAreaContainerComponent } from './components/work-area-container/work-area-container.component';
 import { ShareProjectComponent } from './components/popup-contents/share-project/share-project.component';
 import {setStaticDIInjector} from './models/get-di';
@@ -114,8 +112,6 @@ import {AutoFontSizeDirective} from './directives/auto-font-size/auto-font-size.
 		AutoFontSizeDirective
 	],
 	imports: [
-		// #!electron
-		NgxElectronModule,
 		BrowserModule,
 		FormsModule,
 		HttpClientModule,

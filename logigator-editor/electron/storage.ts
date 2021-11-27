@@ -1,6 +1,6 @@
 import * as path from 'path';
 import * as fs from 'fs';
-import {app, remote} from 'electron';
+import {app} from 'electron';
 
 export class Storage {
 
@@ -15,7 +15,7 @@ export class Storage {
 	}
 
 	private static getStoragePath(): string {
-		const userDataPath = (app || remote.app).getPath('userData');
+		const userDataPath = app.getPath('userData');
 		return path.join(userDataPath, 'logigator-storage.json');
 	}
 

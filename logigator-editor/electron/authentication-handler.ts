@@ -41,10 +41,9 @@ export class AuthenticationHandler {
 			minimizable: false,
 			maximizable: false,
 			webPreferences: {
-				devTools: true,
+				devTools: false,
 				nodeIntegration: false,
-				enableRemoteModule: false,
-				worldSafeExecuteJavaScript: true
+				contextIsolation: true
 			}
 		});
 		loginWin.setMenu(null);

@@ -3,8 +3,8 @@ import {Observable, ReplaySubject, timer} from 'rxjs';
 import {User} from '../../models/http/response/user';
 import {ApiService} from '../api/api.service';
 import {distinctUntilChanged, map} from 'rxjs/operators';
-import {ElectronService} from 'ngx-electron';
 import {StorageService, StorageServiceModel} from '../storage/storage.service';
+import {ElectronService} from '../electron/electron.service';
 
 @Injectable({
 	providedIn: 'root'

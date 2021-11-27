@@ -5,10 +5,9 @@ import {WindowResizeHandler} from './window-resize-handler';
 import {AuthenticationHandler} from './authentication-handler';
 import {ApiHandler} from './api-handler';
 import {getHomeUrl} from './utils';
+import {NativeFunctionsHandler} from './native-functions-hander';
 
 class Main {
-
-	private readonly _isDevMode: boolean;
 
 	private _loadingWindow: BrowserWindow;
 
@@ -16,18 +15,17 @@ class Main {
 	private _windowResizeHandler: WindowResizeHandler;
 	private _authenticationHandler: AuthenticationHandler;
 	private _apiHandler: ApiHandler;
+	private _nativeFunctionsHandler: NativeFunctionsHandler;
 
 	private _windowHostname: string;
-
-	constructor(isDevMode: boolean) {
-		this._isDevMode = isDevMode;
-	}
 
 	public initialize() {
 		app.on('ready', () => this.onReady());
 		app.on('window-all-closed', () => this.onAllWindowsClosed());
 
-		app.allowRendererProcessReuse = true;
+		if (process.env.DEV_MODE) {
+			app.commandLine.appendSwitch('ignore-certificate-errors');
+		}
 	}
 
 	private async onReady() {
@@ -41,6 +39,7 @@ class Main {
 			minHeight: 725,
 			webPreferences: {
 				nodeIntegration: true,
+				contextIsolation: false
 			},
 			frame: false,
 			icon: path.join(__dirname, '..', 'logigator-editor', 'assets', 'icons', 'android-chrome-512x512.png'),
@@ -48,7 +47,7 @@ class Main {
 
 		this._window.on('closed', () => this.onClosed());
 
-		if (this._isDevMode) {
+		if (process.env.DEV_MODE) {
 			this._windowHostname = 'http://localhost:8202';
 		} else {
 			this._windowHostname = new URL(path.join(__dirname, '..', 'logigator-editor', 'index.html'), 'file://').toString();
@@ -63,9 +62,12 @@ class Main {
 		this._apiHandler = new ApiHandler(this._authenticationHandler);
 		this._apiHandler.initListeners();
 
+		this._nativeFunctionsHandler = new NativeFunctionsHandler();
+		this._nativeFunctionsHandler.initListeners();
+
 		this.registerHttpInterceptor();
 
-		if (this._isDevMode) {
+		if (process.env.DEV_MODE) {
 			require('electron-reload')(__dirname, {
 				electron: require(path.join(__dirname, `../../node_modules/electron`))
 			});
@@ -109,7 +111,9 @@ class Main {
 			resizable: false,
 			alwaysOnTop: true,
 			webPreferences: {
-				nodeIntegration: false
+				nodeIntegration: false,
+				contextIsolation: true,
+				devTools: false
 			},
 			frame: false
 		});
@@ -117,5 +121,5 @@ class Main {
 	}
 
 }
-const main = new Main(process.argv.slice(1).some(val => val === '--serve'));
+const main = new Main();
 main.initialize();

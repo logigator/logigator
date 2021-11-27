@@ -1,8 +1,7 @@
 import {Injectable, Optional} from '@angular/core';
 // #!electron
-import {ElectronService} from 'ngx-electron';
-// #!electron
 import * as fs from 'fs';
+import {ElectronService} from '../electron/electron.service';
 
 @Injectable({
 	providedIn: 'root'
@@ -13,14 +12,14 @@ export class FileSaverService {
 
 	// #!if ELECTRON === 'true'
 	private async saveElectron(toSave: string | Blob, name: string, extension: string, dialogText: string): Promise<boolean> {
-		const savePath = await this.getSavePath(name, extension, dialogText);
+		const savePath = await this.electronService.getFileSavePath(name, extension, dialogText);
 		if (savePath.canceled) return false;
 		if (toSave instanceof Blob) {
 			const fileReader = new FileReader();
-			return new Promise(resolve => {
+			return new Promise<boolean>(resolve => {
 				fileReader.onload = (event: any) => {
 					fs.writeFileSync(savePath.filePath, Buffer.from(event.target.result));
-					resolve();
+					resolve(true);
 				};
 				fileReader.readAsArrayBuffer(toSave);
 			});
@@ -28,17 +27,6 @@ export class FileSaverService {
 			fs.writeFileSync(savePath.filePath, toSave);
 			return true;
 		}
-	}
-
-	private getSavePath(name: string, extension: string, dialogText: string) {
-		return this.electronService.remote.dialog.showSaveDialog({
-			title: dialogText,
-			defaultPath: name,
-			filters: [{
-				name: extension,
-				extensions: [extension]
-			}]
-		});
 	}
 	// #!endif
 
