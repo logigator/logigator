@@ -53,8 +53,8 @@ function displayErrorPopup(event: ErrorEvent) {
 		active = false;
 	});
 
-	popupElem.querySelector('.global-error-popup-send').addEventListener('click', async (event: MouseEvent) => {
-		(event.target as HTMLButtonElement).disabled = true;
+	popupElem.querySelector('.global-error-popup-send').addEventListener('click', async (mEvent: MouseEvent) => {
+		(mEvent.target as HTMLButtonElement).disabled = true;
 		const userMessage = (popupElem.querySelector('.global-error-popup-textarea') as HTMLTextAreaElement).value;
 		await sendErrorReport(userMessage);
 
