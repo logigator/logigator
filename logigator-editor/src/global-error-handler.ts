@@ -1,6 +1,9 @@
 import {getStaticDI} from './app/models/get-di';
 import {ShortcutsService} from './app/services/shortcuts/shortcuts.service';
 import {environment} from './environments/environment';
+import {ProjectSaveManagementService} from './app/services/project-save-management/project-save-management.service';
+import {ProjectsService} from './app/services/projects/projects.service';
+import {ProjectLocalFile} from './app/models/project-local-file';
 
 let active = false;
 
@@ -10,13 +13,13 @@ window.addEventListener('error', event => {
 			getStaticDI(ShortcutsService).disableShortcutListener();
 		} finally {
 			active = true;
-			displayErrorPopup(event.message, event.error?.stack ? event.error.stack : 'Stack trace not available.');
+			displayErrorPopup(event);
 		}
 	}
 });
 
 
-function displayErrorPopup(message: string, stack: string) {
+function displayErrorPopup(event: ErrorEvent) {
 	const theme = document.body.classList.contains('theme-dark') ? 'dark' : 'light';
 	const template = `
 		<div class="global-error-popup">
@@ -26,10 +29,10 @@ function displayErrorPopup(message: string, stack: string) {
 					<img src="assets/icons/${theme}/close.svg" class="global-error-popup-close" />
 				</div>
 				<div class="global-error-popup-body">
-					<p class="global-error-popup-message">${message}</p>
-					<pre class="global-error-popup-stack">${stack}</pre>
+					<p class="global-error-popup-message">${event.message ?? 'Message not available.'}</p>
+					<pre class="global-error-popup-stack">${event.error?.stack ?? 'Stack trace not available.'}</pre>
 					<label>To help us identify the problem, please describe what you where doing when the error occurred.</label>
-					<textarea class="global-error-popup-textarea"></textarea>
+					<textarea class="global-error-popup-textarea" maxlength="512"></textarea>
 					<button class="btn-raised primary global-error-popup-send">Send Error Information</button>
 				</div>
 			</div>
@@ -43,28 +46,47 @@ function displayErrorPopup(message: string, stack: string) {
 	document.body.insertAdjacentElement('beforeend', popupElem);
 
 	popupElem.querySelector('.global-error-popup-close').addEventListener('click', () => {
-		active = false;
 		popupElem.remove();
-	});
-
-	popupElem.querySelector('.global-error-popup-send').addEventListener('click', () => {
+		try {
+			getStaticDI(ShortcutsService).enableShortcutListener();
+		} catch {}
 		active = false;
-		const userMessage = (popupElem.querySelector('.global-error-popup-textarea') as HTMLTextAreaElement).value;
-		sendErrorReport(userMessage);
 	});
 
-	async function sendErrorReport(userMessage?: string) {
-		await fetch(environment.api + '/report-error', {
-			method: 'POST',
-			headers: {
-				'Content-Type': 'application/json'
-			},
-			body: JSON.stringify({message, stack, userMessage})
-		});
+	popupElem.querySelector('.global-error-popup-send').addEventListener('click', async (event: MouseEvent) => {
+		(event.target as HTMLButtonElement).disabled = true;
+		const userMessage = (popupElem.querySelector('.global-error-popup-textarea') as HTMLTextAreaElement).value;
+		await sendErrorReport(userMessage);
 
 		popupElem.remove();
 		try {
 			getStaticDI(ShortcutsService).enableShortcutListener();
 		} catch {}
+		active = false;
+	});
+
+	async function sendErrorReport(userMessage?: string) {
+		let projectData: ProjectLocalFile;
+		try {
+			const projectsService = getStaticDI(ProjectsService);
+			const projectSaveManagementService = getStaticDI(ProjectSaveManagementService);
+			projectData = await projectSaveManagementService.generateFileToExport(projectsService.mainProject);
+		} catch {}
+
+		await fetch(environment.api + '/report-error', {
+			method: 'POST',
+			headers: {
+				'Content-Type': 'application/json'
+			},
+			body: JSON.stringify({
+				...(event.lineno && {line: event.lineno}),
+				...(event.colno && {col: event.colno}),
+				...(event.filename && {file: event.filename}),
+				...(event.message && {message: event.message}),
+				...(event.error?.stack && {stack: event.error.stack}),
+				...(projectData && {project: projectData}),
+				...(userMessage && {userMessage})
+			})
+		});
 	}
 }

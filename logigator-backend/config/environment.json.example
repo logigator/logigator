@@ -2,5 +2,8 @@
 	"context": "development or production",
 	"port": 3000,
 	"editor": "resources/editor",
-	"reportErrorLog": "report-error-log.txt"
+	"enableErrorReportsFile": false,
+	"sendErrorReportsAsEmail": false,
+	"reportErrorLogFile": "report-error-log.txt",
+	"adminEmailAddresses": []
 }

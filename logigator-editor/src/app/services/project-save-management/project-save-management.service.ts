@@ -338,7 +338,7 @@ export class ProjectSaveManagementService {
 		this.errorHandling.showInfo('INFO.PROJECTS.SAVE', {name: project.name});
 	}
 
-	public async exportToFile(project: Project, name?: string) {
+	public async generateFileToExport(project: Project, name?: string): Promise<ProjectLocalFile> {
 		const dependencies = await this.buildDependencyTree(project);
 		const components: ComponentLocalFile[] = [];
 		for (const [id, dep] of dependencies) {
@@ -357,14 +357,18 @@ export class ProjectSaveManagementService {
 			});
 		}
 
-		const toSave: ProjectLocalFile = {
+		return {
 			project: {
 				name: name ?? project.name,
 				elements: this.convertElementsToSaveElements(project.allElements).elements
 			},
 			components
 		};
-		await this.fileSaverService.saveLocalFile(JSON.stringify(toSave), 'json', name ?? project.name, undefined);
+	}
+
+	public async exportToFile(project: Project, name?: string) {
+		const projectFile = await this.generateFileToExport(project, name);
+		await this.fileSaverService.saveLocalFile(JSON.stringify(projectFile), 'json', name ?? project.name, undefined);
 	}
 
 	public openFile(content: string): Project {
