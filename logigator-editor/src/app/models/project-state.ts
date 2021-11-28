@@ -251,7 +251,7 @@ export class ProjectState {
 				for (const plug of this._outputPlugs) {
 					plug.plugIndex++;
 				}
-				elem.plugIndex = this.numInputs++;
+				elem.plugIndex = this.numInputs;
 			}
 			this._inputPlugs.push(elem);
 			this.numInputs++;
