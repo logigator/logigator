@@ -2,11 +2,11 @@ import {Component, Optional} from '@angular/core';
 import {ProjectsService} from '../../services/projects/projects.service';
 import {UserService} from '../../services/user/user.service';
 import {Observable} from 'rxjs';
-import {ElectronService} from 'ngx-electron';
 import {User} from '../../models/http/response/user';
 import {WorkMode} from '../../models/work-modes';
 import {WorkModeService} from '../../services/work-mode/work-mode.service';
 import {environment} from '../../../environments/environment';
+import {ElectronService} from '../../services/electron/electron.service';
 
 @Component({
 	selector: 'app-top-bar',
