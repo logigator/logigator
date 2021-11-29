@@ -14,7 +14,7 @@ services:
       - "0.0.0.0:443:443"
   #### NODE_JS_BACKEND_HOME ####
   development_backend:
-    image: node:12
+    image: node:16
     networks:
       logigator_intern:
         aliases:
@@ -23,7 +23,6 @@ services:
       - development_mysql
     volumes:
       - ./logigator-backend/:/home/node/app
-    user: "node"
     working_dir: /home/node/app
     command: "npm start"
     environment:
@@ -62,14 +61,13 @@ services:
       - "127.0.0.1:5001:5001"
   #### NODE_JS_EDITOR ####
   development_editor:
-    image: node:12
+    image: node:16
     networks:
       logigator_intern:
         aliases:
           - editor
     volumes:
       - ./logigator-editor/:/home/node/app
-    user: "node"
     working_dir: /home/node/app
     command: "npm start"
 
