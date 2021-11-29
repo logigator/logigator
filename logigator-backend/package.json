@@ -106,7 +106,7 @@
 		"core-js-bundle": "^3.19.1",
 		"cropperjs": "^1.5.12",
 		"element-closest-polyfill": "^1.0.4",
-		"eslint": "^8.3.0",
+		"eslint": "^7.32.0",
 		"gulp": "^4.0.2",
 		"gulp-add-src": "^1.0.0",
 		"gulp-babel": "^8.0.0",
