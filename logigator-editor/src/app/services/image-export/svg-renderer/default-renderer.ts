@@ -10,7 +10,7 @@ export class DefaultRenderer extends BaseRenderer {
 		// Outline, corners could be removed for lower quality presets
 		switch (this.element.rotation) {
 			case ElementRotation.Right:
-				path = `M 0,0 H ${this._size.x - this.scaled(3)} L ${this._size.x},${this.scaled(3)} V ${this._size.y - this.scaled(3)} L ${this._size.x - 3},${this._size.y} H 0 V 0`;
+				path = `M 0,0 H ${this._size.x - this.scaled(3)} L ${this._size.x},${this.scaled(3)} V ${this._size.y - this.scaled(3)} L ${this._size.x - this.scaled(3)},${this._size.y} H 0 V 0`;
 				break;
 			case ElementRotation.Down:
 				path = `M 0,0 h ${this._size.x} v ${this._size.y - this.scaled(3)} l ${-this.scaled(3)},${this.scaled(3)} H ${this.scaled(3)} L 0,${this._size.y - this.scaled(3)} V 0`;
