@@ -119,7 +119,7 @@ export class Component {
 
 	@ManyToMany(() => User, user => user.staredComponents)
 	@JoinTable()
-	stargazers: Promise<User[]>
+	stargazers: Promise<User[]>;
 
 	stargazersCount: number;
 

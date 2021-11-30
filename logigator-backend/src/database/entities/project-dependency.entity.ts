@@ -15,7 +15,7 @@ export class ProjectDependency {
 	dependent: Project;
 
 	@Expose()
-	@Transform((x: Component) => x.id, {groups: ['compactDependencies']})
+	@Transform(({value}) => value.id, {groups: ['compactDependencies']})
 	@ManyToOne(type => Component, object => object.dependencyForProjects, {
 		primary: true,
 		eager: true,

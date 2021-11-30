@@ -62,8 +62,8 @@ export class User {
 	projects: Promise<Project[]>;
 
 	@Expose({name: 'projects', groups: ['privateUserData', 'extendedUserData']})
-	@Transform((x: Project[]) => {
-		return x ?? x.filter(p => p.public);
+	@Transform(({value}) => {
+		return value ?? value.filter(p => p.public);
 	}, {groups: ['extendedUserData']})
 	private __projects__: Project[];
 
@@ -71,8 +71,8 @@ export class User {
 	components: Promise<Component[]>;
 
 	@Expose({name: 'components', groups: ['privateUserData', 'extendedUserData']})
-	@Transform((x: Component[]) => {
-		return x ?? x.filter(p => p.public);
+	@Transform(({value}) => {
+		return value ?? value.filter(p => p.public);
 	}, {groups: ['extendedUserData']})
 	private __components__: Component[];
 
