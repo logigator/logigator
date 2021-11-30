@@ -1,3 +1,5 @@
+@use 'sass:math';
+
 @include partial('site-header') {
 	height: $header-height;
 	position: fixed;
@@ -64,21 +66,21 @@
 		width: $header-height - 1rem;
 
 		&:nth-child(1) {
-			top: ($header-height / 2) - 0.75rem - 0.125rem;
+			top: math.div($header-height, 2) - 0.75rem - 0.125rem;
 		}
 
 		&:nth-child(2) {
-			top: ($header-height / 2) - 0.125rem;
+			top: math.div($header-height, 2) - 0.125rem;
 		}
 
 		&:nth-child(3) {
-			top: ($header-height / 2) + 0.75rem - 0.125rem;
+			top: math.div($header-height, 2) + 0.75rem - 0.125rem;
 		}
 	}
 
 	@include element('logo') {
 		img {
-			height: $header-height/1.5;
+			height: math.div($header-height, 1.5);
 			width: $header-height * 3;
 		}
 		padding: 0.5rem;
