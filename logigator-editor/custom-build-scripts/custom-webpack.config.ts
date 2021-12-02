@@ -54,7 +54,7 @@ module.exports = (config, options: CustomWebpackBrowserSchema) => {
 };
 
 const preprocessorConfig = {
-	loader: 'webpack-preprocessor-loader',
+	loader: '@logigator/webpack-preprocessor-loader',
 	options: {
 		debug:  process.env.DEBUG === 'true',
 		directives: {

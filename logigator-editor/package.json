@@ -91,7 +91,7 @@
 		"typescript": "4.0.2",
 		"wait-on": "^6.0.0",
 		"webpack-bundle-analyzer": "^4.5.0",
-		"webpack-preprocessor-loader": "github:logigator/preprocessor-loader"
+		"@logigator/webpack-preprocessor-loader": "^1.1.4"
 	},
 	"electronProdDependencies": {
 		"form-data": "^4.0.0",
