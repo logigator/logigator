@@ -29,6 +29,9 @@ import {tunnel} from '../../models/element-types/basic/tunnel';
 import {rng} from '../../models/element-types/advanced/rng';
 import {ram} from '../../models/element-types/advanced/ram';
 import {decoder} from '../../models/element-types/advanced/decoder';
+import {encoder} from '../../models/element-types/advanced/encoder';
+import {mux} from '../../models/element-types/advanced/mux';
+import {demux} from '../../models/element-types/advanced/demux';
 
 @Injectable({
 	providedIn: 'root'
@@ -57,6 +60,9 @@ export class ElementProviderService {
 		[rng.id, rng],
 		[ram.id, ram],
 		[decoder.id, decoder],
+		[encoder.id, encoder],
+		[mux.id, mux],
+		[demux.id, demux],
 
 		// plug
 		[input.id, input],

@@ -18,6 +18,9 @@ export const enum ElementTypeId {
 	RNG = 16,
 	RAM = 17,
 	DECODER = 18,
+	ENCODER = 19,
+	MUX = 20,
+	DEMUX = 21,
 
 	INPUT = 100,
 	OUTPUT = 101,

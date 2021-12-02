@@ -374,6 +374,18 @@
 			"DECODER": {
 				"NAME": "Decoder",
 				"DESCRIPTION": "1-of-n binary decoder."
+			},
+			"ENCODER": {
+				"NAME": "Encoder",
+				"DESCRIPTION": "2^n-to-n binary encoder."
+			},
+			"MUX": {
+				"NAME": "Multiplexer",
+				"DESCRIPTION": "Selects input by address."
+			},
+			"DEMUX": {
+				"NAME": "Demultiplexer",
+				"DESCRIPTION": "Selects output by address."
 			}
 		},
 		"IO": {
@@ -450,7 +462,8 @@
 			"REGENERATE_SHARE_LINK": "Unable to regenerate share link.",
 			"UPDATE_SHARE_INFO": "Unable to update share information.",
 			"INVALID_FILE_TYPE": "Invalid File Type. Use a Json File.",
-			"INVALID_FILE": "Invalid File"
+			"INVALID_FILE": "Invalid File",
+			"COMP_NOT_FOUND": "Component was not found!"
 		},
 		"USER": {
 			"GET_INFO": "Unable to get User info.",

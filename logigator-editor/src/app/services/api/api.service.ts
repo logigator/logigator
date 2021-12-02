@@ -6,7 +6,7 @@ import {from, Observable, ObservableInput} from 'rxjs';
 import {ApiError, ApiErrorConfig} from '../../models/api-error-config';
 import {catchError, map} from 'rxjs/operators';
 import {Response} from '../../models/http/response/response';
-import {ElectronService} from 'ngx-electron';
+import {ElectronService} from '../electron/electron.service';
 
 @Injectable({
 	providedIn: 'root'

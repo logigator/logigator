@@ -19,7 +19,7 @@
 	<div (click)="cloneProject()" *ngIf="canClone">
 		{{'DROPDOWN.FILE.CLONE' | translate}}
 	</div>
-	<div (click)="exportProject()" *ngIf="canExportProject">
+	<div (click)="exportProject()">
 		{{'DROPDOWN.FILE.EXPORT' | translate}}
 	</div>
 	<ng-container *ngIf="canShare">

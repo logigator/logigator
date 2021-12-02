@@ -1,9 +1,7 @@
 import {ChangeDetectionStrategy, Component, EventEmitter, Optional, Output} from '@angular/core';
 import {UserService} from '../../../services/user/user.service';
 import {ProjectsService} from '../../../services/projects/projects.service';
-import {ImageExportService} from '../../../services/image-export/image-export.service';
 import {EditorInteractionService} from '../../../services/editor-interaction/editor-interaction.service';
-import {FileSaverService} from '../../../services/file-saver/file-saver.service';
 import {PopupService} from '../../../services/popup/popup.service';
 import {ImageExportComponent} from '../../popup-contents/image-export/image-export.component';
 
@@ -34,10 +32,6 @@ export class FileDropdownComponent {
 	}
 
 	public get canSave(): boolean {
-		return this.projects.mainProject.source !== 'share';
-	}
-
-	public get canExportProject() {
 		return this.projects.mainProject.source !== 'share';
 	}
 

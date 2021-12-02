@@ -1,7 +1,7 @@
-import {AngularCompilerPlugin} from '@ngtools/webpack';
+import {CustomWebpackBrowserSchema} from '@angular-builders/custom-webpack';
 import * as path from 'path';
 
-module.exports = (config, options) => {
+module.exports = (config, options: CustomWebpackBrowserSchema) => {
 
 	config.module.rules.unshift({
 		test: /\.tsx?$/,
@@ -48,7 +48,7 @@ module.exports = (config, options) => {
 		return;
 	}
 
-	angularCompilerPlugin.options.directTemplateLoading = false;
+	angularCompilerPlugin.pluginOptions.directTemplateLoading = false;
 
 	return config;
 };
@@ -70,9 +70,9 @@ const preprocessorConfig = {
 	}
 };
 
-function findAngularCompilerPlugin(webpackCfg): AngularCompilerPlugin | null {
+function findAngularCompilerPlugin(webpackCfg): any | null {
 	for (const plugin of webpackCfg.plugins) {
-		if (plugin._transformers) {
+		if ('directTemplateLoading' in (plugin?.pluginOptions ?? {})) {
 			return plugin;
 		}
 	}

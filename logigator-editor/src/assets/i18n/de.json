@@ -372,8 +372,20 @@
 				"ADDRESS_SIZE": "Adressgröße"
 			},
 			"DECODER": {
-				"NAME": "Decoder",
+				"NAME": "Dekodierer",
 				"DESCRIPTION": "1-von-n binärer Dekodierer"
+			},
+			"ENCODER": {
+				"NAME": "Enkodierer",
+				"DESCRIPTION": "2^n-to-n binärer Enkodierer."
+			},
+			"MUX": {
+				"NAME": "Multiplexer",
+				"DESCRIPTION": "Wählt Eingang mit einer Adresse."
+			},
+			"DEMUX": {
+				"NAME": "Demultiplexer",
+				"DESCRIPTION": "Wählt Ausgang mit einer Adresse."
 			}
 		},
 		"IO": {
@@ -450,7 +462,8 @@
 			"REGENERATE_SHARE_LINK": "Fehler beim neu generieren des Links.",
 			"UPDATE_SHARE_INFO": "Fehler beim aktualisieren des Shares.",
 			"INVALID_FILE_TYPE": "Ungültige Datei. Verwende einen JSON-Datei.",
-			"INVALID_FILE": "Fehlerhafte Datei"
+			"INVALID_FILE": "Fehlerhafte Datei",
+			"COMP_NOT_FOUND": "Komponente konnte nicht gefunden werden!"
 		},
 		"USER": {
 			"GET_INFO": "Konnte Benutzerinformationen nicht bekommen",
