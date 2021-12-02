@@ -1,6 +1,6 @@
 {
 	"name": "logigator-editor",
-	"version": "1.0.6",
+	"version": "1.1.0",
 	"description": "Logigator Editor",
 	"license": "MIT",
 	"repository": {
@@ -45,7 +45,7 @@
 		"@angular/platform-browser": "^11.2.14",
 		"@angular/platform-browser-dynamic": "^11.2.14",
 		"@angular/router": "^11.2.14",
-		"@logigator/logigator-simulation": "^1.1.1",
+		"@logigator/logigator-simulation": "^1.2.0",
 		"@ngx-translate/core": "^13.0.0",
 		"bootstrap": "^4.6.1",
 		"form-data": "^4.0.0",
@@ -97,7 +97,7 @@
 		"form-data": "^4.0.0",
 		"node-fetch": "^2.6.6",
 		"tslib": "^2.2.0",
-		"@logigator/logigator-simulation": "^1.1.1"
+		"@logigator/logigator-simulation": "^1.2.0"
 	},
 	"developmentInfo": {
 		"": "For Development you should use the local version of shared-cops to use live reload from the libary",
