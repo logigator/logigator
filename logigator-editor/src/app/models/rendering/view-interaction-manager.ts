@@ -75,13 +75,17 @@ export class ViewInteractionManager {
 
 		this.initEventListeners();
 
-		merge(
-			this.workModeSer.currentWorkMode$,
-			this.editorInteractionSer.subscribeEditorAction(EditorAction.UNDO, EditorAction.REDO)
-		).pipe(takeUntil(this._destroySubject)).subscribe(() => this.cleanUp(true));
+		this.workModeSer.currentWorkMode$.pipe(takeUntil(this._destroySubject))
+			.subscribe(() => this.cleanUp(true));
+
+		this.editorInteractionSer.subscribeEditorAction(EditorAction.UNDO, EditorAction.REDO).pipe(
+			takeUntil(this._destroySubject),
+			filter(_ => this._view.project.id === this.projectsSer.currProject.id)
+		).subscribe(() => this.cleanUp(true));
 
 		this.editorInteractionSer.subscribeEditorAction(EditorAction.DELETE, EditorAction.CUT).pipe(
-			takeUntil(this._destroySubject)
+			takeUntil(this._destroySubject),
+			filter(_ => this._view.project.id === this.projectsSer.currProject.id)
 		).subscribe(() => this.cleanUp());
 
 		this.editorInteractionSer.subscribeEditorAction(EditorAction.PASTE).pipe(
