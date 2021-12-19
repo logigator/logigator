@@ -448,7 +448,9 @@
 		"COMPILE": {
 			"CIRCULAR_DEP": "Zirkuläre Abhängigkeit in Komponenten. {{src}} darf nicht {{comp}} beinhalten.",
 			"FAILED": "Board konnte nicht zusammengestellt werden.",
-			"WORKER_INIT": "WebWorker konnte nicht initialisiert werden."
+			"WORKER_INIT": "WebWorker konnte nicht initialisiert werden.",
+			"INVALID_INPUT_PLUGS": "Bitte überprüfe Eingangsstecker mit Stecker Index {{plugIndex}} in der Komponente: {{comp}}.",
+			"INVALID_OUTPUT_PLUGS": "Bitte überprüfe Ausgangsstecker mit Stecker Index {{plugIndex}} in der Komponente: {{comp}}."
 		},
 		"PROJECTS": {
 			"OPEN": "Fehler beim öffnen des Projekts.",

@@ -15,6 +15,7 @@ import {EastereggService} from '../../easteregg/easteregg.service';
 import {WorkerCommunicationServiceModel} from './worker-communication-service-model';
 // #!electron
 import {Board, logicsim, InputEvent as SimInputEvent} from '@logigator/logigator-simulation';
+import {InvalidPlugsError} from '../../../models/simulation/invalid-plugs-error';
 
 @Injectable()
 export class WorkerCommunicationNodeService implements WorkerCommunicationServiceModel {
@@ -107,6 +108,12 @@ export class WorkerCommunicationNodeService implements WorkerCommunicationServic
 			this._initialized = true;
 		} catch (e) {
 			console.error(e);
+			if (e instanceof InvalidPlugsError) {
+				this.errorHandling.showErrorMessage(e.message, {
+					comp: this.elementProvider.getElementById(e.comp).name,
+					plugIndex: e.plugIndex
+				});
+			}
 			if (e instanceof CompileError) {
 				if (e.comp !== undefined && e.src !== undefined) {
 					this.errorHandling.showErrorMessage(e.message, {

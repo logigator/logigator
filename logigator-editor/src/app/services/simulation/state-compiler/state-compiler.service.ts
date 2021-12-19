@@ -4,13 +4,16 @@ import {SimulationUnit} from '../../../models/simulation/simulation-unit';
 import {SimulationUnits} from '../../../models/simulation/simulation-units';
 import {
 	ElementId,
-	ElementToUnit, LinkOnWireEnd,
-	PosOfElem, UnitElementBidir,
-	UnitToElement, WireEndLinksOnElem,
+	LinkOnWireEnd,
+	PosOfElem,
+	UnitElementBidir,
+	WireEndLinksOnElem,
 	WireEndOnComp,
-	WireEndsOnLinks, WireEndsOnLinksCache,
+	WireEndsOnLinks,
+	WireEndsOnLinksCache,
 	WireEndsOnLinksInProject,
-	WiresOnLinks, WiresOnLinksCache,
+	WiresOnLinks,
+	WiresOnLinksCache,
 	WiresOnLinksInProject
 } from './compiler-types';
 import {Element} from '../../../models/element';
@@ -22,6 +25,7 @@ import {ArrayHelper} from './array-helper';
 import {Elements} from '../../../models/elements';
 import {CompileError} from '../../../models/simulation/compile-error';
 import {ElementTypeId} from '../../../models/element-types/element-type-ids';
+import {InvalidPlugsError} from '../../../models/simulation/invalid-plugs-error';
 
 @Injectable({
 	providedIn: 'root'
@@ -181,6 +185,7 @@ export class StateCompilerService {
 		if (this._compiledDeps.has(project.id)) {
 			throw new CompileError('ERROR.COMPILE.CIRCULAR_DEP', this._currTypeId, project.id);
 		}
+		this.validatePlugIndices(project);
 		this._compiledDeps.add(project.id);
 
 		const oldTypeId = this._currTypeId;
@@ -473,6 +478,20 @@ export class StateCompilerService {
 		this._ioElemUnitCache.get(idIdentifier).set(elem.id, realUnit);
 	}
 
+	private validatePlugIndices(project: Project): void {
+		const plugIndices = new Set<number>();
+		for (const element of project.currState.allPlugs()) {
+			if (plugIndices.has(element.plugIndex)) {
+				const isInput = element.typeId === ElementTypeId.INPUT;
+				throw new InvalidPlugsError(
+					isInput ? 'ERROR.COMPILE.INVALID_INPUT_PLUGS' : 'ERROR.COMPILE.INVALID_OUTPUT_PLUGS',
+					project.id,
+					(isInput ? element.plugIndex : element.plugIndex + project.numInputs) + 1
+				);
+			}
+			plugIndices.add(element.plugIndex);
+		}
+	}
 
 	get wiresOnLinks(): Map<string, WiresOnLinks> {
 		return this._wiresOnLinks;

@@ -14,6 +14,7 @@ import {AverageBuffer} from '../../../models/average-buffer';
 import {ElementTypeId} from '../../../models/element-types/element-type-ids';
 import {EastereggService} from '../../easteregg/easteregg.service';
 import {WorkerCommunicationServiceModel} from './worker-communication-service-model';
+import {InvalidPlugsError} from '../../../models/simulation/invalid-plugs-error';
 
 @Injectable()
 export class WorkerCommunicationWasmService implements WorkerCommunicationServiceModel {
@@ -182,6 +183,13 @@ export class WorkerCommunicationWasmService implements WorkerCommunicationServic
 
 			this.finalizeInit(compiledBoard.buffer);
 		} catch (e) {
+			console.error(e);
+			if (e instanceof InvalidPlugsError) {
+				this.errorHandling.showErrorMessage(e.message, {
+					comp: this.elementProvider.getElementById(e.comp).name,
+					plugIndex: e.plugIndex
+				});
+			}
 			if (e instanceof CompileError) {
 				if (e.comp !== undefined && e.src !== undefined) {
 					this.errorHandling.showErrorMessage(e.message, {
