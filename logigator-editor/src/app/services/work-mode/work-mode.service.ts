@@ -38,12 +38,15 @@ export class WorkModeService {
 	public async enterSimulation(loadingInsertionPoint?: ViewContainerRef) {
 		const removeLoading = this.loadingService.add('LOADING.ENTER_SIMULATION', loadingInsertionPoint);
 		await this.projects.saveAllProjects();
-		await this.simulationManagement.enterSimulation();
-		delete this._currentComponentTypeToBuild;
-		this._currentWorkMode = WorkMode.SIMULATION;
-		this._currentWorkModeSubject.next(WorkMode.SIMULATION);
-		this._simulationModeSubject.next(true);
-		removeLoading();
+		try {
+			await this.simulationManagement.enterSimulation();
+			delete this._currentComponentTypeToBuild;
+			this._currentWorkMode = WorkMode.SIMULATION;
+			this._currentWorkModeSubject.next(WorkMode.SIMULATION);
+			this._simulationModeSubject.next(true);
+		} finally {
+			removeLoading();
+		}
 	}
 
 	public async leaveSimulation(loadingInsertionPoint?: ViewContainerRef) {

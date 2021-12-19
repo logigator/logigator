@@ -20,7 +20,7 @@ import {ProjectSaveManagementService} from '../../project-save-management/projec
 import {ElementProviderService} from '../../element-provider/element-provider.service';
 import {ArrayHelper} from './array-helper';
 import {Elements} from '../../../models/elements';
-import {CompileError} from '../../../models/simulation/error';
+import {CompileError} from '../../../models/simulation/compile-error';
 import {ElementTypeId} from '../../../models/element-types/element-type-ids';
 
 @Injectable({
@@ -179,11 +179,7 @@ export class StateCompilerService {
 	 */
 	private compileSingle(project: Project): void {
 		if (this._compiledDeps.has(project.id)) {
-			throw {
-				name: 'ERROR.COMPILE.CIRCULAR_DEP',
-				src: this._currTypeId,
-				comp: project.id
-			} as CompileError;
+			throw new CompileError('ERROR.COMPILE.CIRCULAR_DEP', this._currTypeId, project.id);
 		}
 		this._compiledDeps.add(project.id);
 

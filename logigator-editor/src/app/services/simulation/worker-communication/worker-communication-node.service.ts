@@ -7,7 +7,7 @@ import {Element} from '../../../models/element';
 import {BoardState, BoardStatus, InputEvent} from '../../../models/simulation/board';
 import {takeWhile} from 'rxjs/operators';
 import {ErrorHandlingService} from '../../error-handling/error-handling.service';
-import {CompileError} from '../../../models/simulation/error';
+import {CompileError} from '../../../models/simulation/compile-error';
 import {ElementProviderService} from '../../element-provider/element-provider.service';
 import {AverageBuffer} from '../../../models/average-buffer';
 import {ElementTypeId} from '../../../models/element-types/element-type-ids';
@@ -93,8 +93,7 @@ export class WorkerCommunicationNodeService implements WorkerCommunicationServic
 		try {
 			const compiledBoard = await this.stateCompiler.compile(project);
 			if (!compiledBoard) {
-				this.errorHandling.showErrorMessage('ERROR.COMPILE.FAILED');
-				return;
+				throw new CompileError('ERROR.COMPILE.FAILED');
 			}
 			if (compiledBoard.length > 100_000) {
 				this.eastereggs.achieve('GBOGH');
@@ -107,12 +106,17 @@ export class WorkerCommunicationNodeService implements WorkerCommunicationServic
 			logicsim.init(this._compiledBoard);
 			this._initialized = true;
 		} catch (e) {
-			// #!debug
 			console.error(e);
-			if (!this.elementProvider.hasElement(e.comp) || !this.elementProvider.hasElement(e.src)) return;
-			e.comp = this.elementProvider.getElementById(e.comp).name;
-			e.src = this.elementProvider.getElementById(e.src).name;
-			this.errorHandling.showErrorMessage((e as CompileError).name, e);
+			if (e instanceof CompileError) {
+				if (e.comp !== undefined && e.src !== undefined) {
+					this.errorHandling.showErrorMessage(e.message, {
+						comp: this.elementProvider.getElementById(e.comp).name,
+						src: this.elementProvider.getElementById(e.src).name
+					});
+				} else {
+					this.errorHandling.showErrorMessage(e.message);
+				}
+			}
 			throw e;
 		}
 	}
