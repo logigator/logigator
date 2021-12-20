@@ -448,7 +448,9 @@
 		"COMPILE": {
 			"CIRCULAR_DEP": "Circular dependency in components. {{src}} must not include {{comp}}.",
 			"FAILED": "Failed to compile board.",
-			"WORKER_INIT": "WebWorker failed to initialize."
+			"WORKER_INIT": "WebWorker failed to initialize.",
+			"INVALID_INPUT_PLUGS": "Please check input plugs with plug index {{plugIndex}} in component {{comp}}.",
+			"INVALID_OUTPUT_PLUGS": "Please check output plugs with plug index {{plugIndex}} in component {{comp}}."
 		},
 		"PROJECTS": {
 			"OPEN": "Unable to open Project or Component.",
