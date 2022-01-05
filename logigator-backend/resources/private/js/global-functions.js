@@ -178,8 +178,18 @@ window.autoAdjustFontSize = function (contextToCheck) {
 	contextToCheck.querySelectorAll('[auto-font-size]').forEach(node => {
 		const desiredFontWidth = Number(node.getAttribute('auto-font-size'));
 		const style = window.getComputedStyle(node);
-		const originalWidth = Number(style.fontSize.replace('px', ''));
-		const textWidth = getTextWidth(node.innerText, style.font);
+		const originalWidth = Number(style.getPropertyValue('font-size').replace('px', ''));
+
+		let font = style.getPropertyValue('font');
+		if (!font) {
+			const fontStyle = style.getPropertyValue('font-style');
+			const fontVariant = style.getPropertyValue('font-variant');
+			const fontWeight = style.getPropertyValue('font-weight');
+			const fontSize = style.getPropertyValue('font-size');
+			const fontFamily = style.getPropertyValue('font-family');
+			font = (fontStyle + ' ' + fontVariant + ' ' + fontWeight + ' ' + fontSize + ' ' + fontFamily).replace(/ +/g, ' ').trim();
+		}
+		const textWidth = getTextWidth(node.innerText, font);
 		const adjustedWidth = originalWidth * (desiredFontWidth / textWidth);
 
 		if (adjustedWidth < originalWidth) {
