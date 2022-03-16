@@ -42,8 +42,19 @@ export class AutoFontSizeDirective implements AfterContentChecked, OnChanges {
 
 		const text = this.elementRef.nativeElement.innerText;
 		const style = window.getComputedStyle(this.elementRef.nativeElement);
-		const origWidth = Number(style.fontSize.replace('px', ''));
-		const textWidth = this.fontWidthService.getTextWidth(text, style.font);
+		const origWidth = Number(style.getPropertyValue('font-size').replace('px', ''));
+
+		let font = style.getPropertyValue('font');
+		if (!font) {
+			const fontStyle = style.getPropertyValue('font-style');
+			const fontVariant = style.getPropertyValue('font-variant');
+			const fontWeight = style.getPropertyValue('font-weight');
+			const fontSize = style.getPropertyValue('font-size');
+			const fontFamily = style.getPropertyValue('font-family');
+			font = (fontStyle + ' ' + fontVariant + ' ' + fontWeight + ' ' + fontSize + ' ' + fontFamily).replace(/ +/g, ' ').trim();
+		}
+
+		const textWidth = this.fontWidthService.getTextWidth(text, font);
 		const adjustedWidth = origWidth * (this.desiredFontWidth / textWidth);
 
 		if (adjustedWidth < origWidth)

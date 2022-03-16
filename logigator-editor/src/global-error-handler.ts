@@ -8,7 +8,7 @@ import {ProjectLocalFile} from './app/models/project-local-file';
 let active = false;
 
 window.addEventListener('error', event => {
-	if (event instanceof ErrorEvent && !active) {
+	if (event instanceof ErrorEvent && !active && environment.production) {
 		try {
 			getStaticDI(ShortcutsService).disableShortcutListener();
 		} finally {
