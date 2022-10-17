@@ -377,7 +377,12 @@ export class ViewInteractionManager {
 	}
 
 	private setSelected(elemIds: number[], connPts: PIXI.Point[]) {
-		this._selectedElements = elemIds.map(selId => {
+		this._selectedElements = [];
+		for (const selId of elemIds) {
+			if (!this._view.allElements.has(selId)) {
+				console.log('Element not in View!');
+				continue;
+			}
 			const lGraphics = this._view.allElements.get(selId);
 			lGraphics.setSelected(true);
 			lGraphics.parent.removeChild(lGraphics);
@@ -387,16 +392,17 @@ export class ViewInteractionManager {
 			} else {
 				lGraphics.position = Grid.getPixelPosForGridPos(lGraphics.element.pos);
 			}
-			return lGraphics;
-		});
-		this._selectedConnPoints = connPts.map(point => {
+			this._selectedElements.push(lGraphics);
+		}
+		this._selectedConnPoints = [];
+		for (const point of connPts) {
 			const connPoint = this._view.connectionPoints.get(`${point.x}:${point.y}`);
 			connPoint.setSelected(true);
 			connPoint.parent.removeChild(connPoint);
 			this._view.addChild(connPoint);
 			connPoint.setPosition(point, false, this.currScale);
-			return {graphics: connPoint, pos: point};
-		});
+			this._selectedConnPoints.push({graphics: connPoint, pos: point});
+		}
 	}
 
 	private buildNewComp(e: PIXI.InteractionEvent) {
