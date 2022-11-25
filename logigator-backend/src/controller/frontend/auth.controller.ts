@@ -108,7 +108,7 @@ export class AuthController {
 	@Get('/logout')
 	@UseBefore(CheckAuthenticatedFrontMiddleware)
 	public logout(@Req() request: Request, @Res() response: Response, @Redirect() redirect: RedirectFunction) {
-		request.logout();
+		request.logout((err => console.error(err)));
 		updateAuthenticatedCookie(request, response, false);
 		return redirect({target: '/'});
 	}

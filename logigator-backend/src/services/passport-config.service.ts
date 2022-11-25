@@ -36,7 +36,7 @@ export class PassportConfigService {
 		passport.deserializeUser(async (req: Request, id: string, done) => {
 			const user = await this.userRepo.findOne(id);
 			if (user === undefined) {
-				req.logout();
+				req.logout(err => console.error(err));
 				updateAuthenticatedCookie(req, req.res, false);
 				return redirect(req, req.res, {target: '/'});
 			}
