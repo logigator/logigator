@@ -15,7 +15,6 @@ services:
   #### NODE_JS_BACKEND_HOME ####
   development_backend:
     image: node:16
-    user: node
     networks:
       logigator_intern:
         aliases:
@@ -25,7 +24,7 @@ services:
     volumes:
       - ./logigator-backend/:/home/node/app
     working_dir: /home/node/app
-    command: "npm start"
+    command: "yarn && yarn start"
     environment:
       - DEBUG=express:*
       - DEBUG_COLORS=on
@@ -63,7 +62,6 @@ services:
   #### NODE_JS_EDITOR ####
   development_editor:
     image: node:16
-    user: node
     networks:
       logigator_intern:
         aliases:
@@ -71,7 +69,7 @@ services:
     volumes:
       - ./logigator-editor/:/home/node/app
     working_dir: /home/node/app
-    command: "npm start"
+    command: "yarn && yarn start"
 
 networks:
   logigator_intern:
