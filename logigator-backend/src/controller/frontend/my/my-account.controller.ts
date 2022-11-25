@@ -163,7 +163,7 @@ export class MyAccountController {
 		} catch (e) {
 			throw new FormDataError(body, 'password', 'invalid');
 		}
-		request.logout();
+		request.logout((err) => console.error(err));
 		updateAuthenticatedCookie(request, response, false);
 		return redirect({target: '/', showInfoPopup: 'account-deleted'});
 	}

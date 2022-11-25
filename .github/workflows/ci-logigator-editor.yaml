@@ -36,6 +36,6 @@ jobs:
         shell: bash
         working-directory: 'logigator-editor'
         run: |
-          npm i
-          npm run lint
-          npm run build:web
+          yarn install --frozen-lockfile
+          yarn run lint
+          yarn run build:web

@@ -37,8 +37,8 @@ jobs:
       - name: Build
         working-directory: logigator-editor
         run: |
-          npm i
-          npm run build:electron:win
+          yarn install --frozen-lockfile
+          yarn run build:electron:win
 
       - name: Zip
         shell: powershell
@@ -111,8 +111,8 @@ jobs:
         working-directory: logigator-editor
         run: |
           sudo apt-get update && sudo apt-get -qq -y install gcc-multilib g++-multilib
-          npm i
-          npm run build:electron:linux
+          yarn install --frozen-lockfile
+          yarn run build:electron:linux
 
       - name: Zip
         working-directory: logigator-editor/release
