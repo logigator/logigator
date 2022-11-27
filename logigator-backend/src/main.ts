@@ -88,6 +88,8 @@ async function bootstrap() {
 		index: false
 	}));
 
+	await Container.get(RedisService).init();
+
 	app.use(cookieParser(configService.getConfig('session').secret));
 	app.use(session({
 		secret: configService.getConfig('session').secret,
