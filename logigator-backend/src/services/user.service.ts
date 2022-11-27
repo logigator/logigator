@@ -265,7 +265,9 @@ export class UserService {
 			}
 		});
 		await projRepo.remove(projects);
-		await profilePicRepo.remove(user.image);
+		if (user.image) {
+			await profilePicRepo.remove(user.image);
+		}
 	}
 
 }
