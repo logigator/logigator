@@ -549,7 +549,7 @@ export class ProjectSaveManagementService {
 				p: [elem.pos.x, elem.pos.y],
 			};
 
-			if (elem.rotation && elem.rotation !== 0)
+			if (elem.rotation !== ElementRotation.Right)
 				element.r = elem.rotation;
 			if (elem.numInputs && elem.numInputs !== 0)
 				element.i = elem.numInputs;

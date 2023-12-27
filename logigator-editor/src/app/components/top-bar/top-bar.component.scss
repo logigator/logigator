@@ -1,3 +1,5 @@
+@use "sass:math";
+
 @import "variables";
 @import "themes";
 
@@ -169,11 +171,11 @@
 
 			.settings {
 				// #!if ELECTRON === 'true'
-				height: $top-bar-height  / 1.5;
-				width: $top-bar-height / 1.5;
+				height: math.div($top-bar-height, 1.5);
+				width: math.div($top-bar-height, 1.5);
 				// #!else
-				height: $top-bar-height / 2;
-				width: $top-bar-height / 2;
+				height: math.div($top-bar-height, 2);
+				width: math.div($top-bar-height, 2);
 				// #!endif
 
 				border: none;
@@ -192,8 +194,8 @@
 			}
 
 			.user-img {
-				height: $top-bar-height  / 1.5;
-				width: $top-bar-height / 1.5;
+				height: math.div($top-bar-height, 1.5);
+				width: math.div($top-bar-height, 1.5);
 				outline: none;
 				padding: 0;
 			}

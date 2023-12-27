@@ -56,7 +56,7 @@
  * Zone JS is required by default for Angular itself.
  */
 (window as any).__Zone_disable_requestAnimationFrame = true;
-import 'zone.js/dist/zone';  // Included with Angular CLI.
+import 'zone.js';  // Included with Angular CLI.
 
 // import * as PIXI from 'pixi.js';
 // PIXI.settings.SCALE_MODE = PIXI.SCALE_MODES.NEAREST;
