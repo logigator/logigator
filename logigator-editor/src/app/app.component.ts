@@ -149,7 +149,7 @@ export class AppComponent implements OnInit, OnDestroy {
 	}
 
 	ngOnDestroy(): void {
-		this._destroySubject.next();
+		this._destroySubject.next(null);
 		this._destroySubject.unsubscribe();
 	}
 }

@@ -34,7 +34,7 @@ export class SingleShortcutConfigComponent implements OnInit, OnDestroy {
 	public isRecording = false;
 	private _newShortcutConfig: ShortcutConfig;
 
-	private _destroySubject = new Subject();
+	private _destroySubject = new Subject<void>();
 
 	constructor(private actions: ShortcutsService, private ngZone: NgZone, private cdr: ChangeDetectorRef) { }
 

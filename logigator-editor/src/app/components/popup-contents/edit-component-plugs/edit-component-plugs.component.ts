@@ -28,7 +28,7 @@ export class EditComponentPlugsComponent extends PopupContentComp<Project, never
 		adjustment: number
 	};
 
-	protected _destroySubject = new Subject<any>();
+	protected _destroySubject = new Subject<void>();
 
 	private _inputStates: {
 		element: HTMLElement,
@@ -179,7 +179,7 @@ export class EditComponentPlugsComponent extends PopupContentComp<Project, never
 	}
 
 	ngOnDestroy(): void {
-		this._destroySubject.next();
+		this._destroySubject.next(null);
 		this._destroySubject.complete();
 	}
 

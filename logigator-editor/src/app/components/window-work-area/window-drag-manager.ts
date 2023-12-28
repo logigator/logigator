@@ -9,7 +9,7 @@ type Border = 'move' | 'top-left' | 'top-right' | 'bottom-left' | 'bottom-right'
 
 export class WindowDragManager {
 
-	private _destroySubject = new Subject<any>();
+	private _destroySubject = new Subject<void>();
 
 	private _currentlyDragging: Border;
 	private _draggingPos = [0, 0];
