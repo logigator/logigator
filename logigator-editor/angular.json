@@ -15,7 +15,7 @@
 			"prefix": "app",
 			"architect": {
 				"build": {
-					"builder": "@angular-devkit/build-angular:browser",
+					"builder": "@angular-devkit/build-angular:browser-esbuild",
 					"options": {
 						"outputPath": "dist/logigator-editor",
 						"index": "src/index.html",
@@ -24,18 +24,19 @@
 						"tsConfig": "tsconfig.app.json",
 						"aot": true,
 						"preserveSymlinks": true,
-						"webWorkerTsConfig": "tsconfig.worker.json"
+						"webWorkerTsConfig": "tsconfig.worker.json",
+						"outputHashing": "all"
 					},
 					"configurations": {
 						"dev-web": {
 							"baseHref": "/editor/",
 							"styles": [
-								"src/styles/web/styles.scss"
+								"src/styles/styles.scss"
 							],
 							"stylePreprocessorOptions": {
 								"includePaths": [
-									"src/styles",
-									"src/styles/web"
+									"",
+									"src/styles"
 								]
 							},
 							"fileReplacements": [
@@ -55,12 +56,12 @@
 						"prod-web": {
 							"baseHref": "/editor/",
 							"styles": [
-								"src/styles/web/styles.scss"
+								"src/styles/styles.scss"
 							],
 							"stylePreprocessorOptions": {
 								"includePaths": [
-									"src/styles",
-									"src/styles/web"
+									"",
+									"src/styles"
 								]
 							},
 							"fileReplacements": [

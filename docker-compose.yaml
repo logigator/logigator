@@ -24,7 +24,7 @@ services:
     volumes:
       - ./logigator-backend/:/home/node/app
     working_dir: /home/node/app
-    command: "sh -c 'yarn && yarn start'"
+    command: "sh -c 'yarn && exec yarn start'"
     environment:
       - DEBUG=express:*
       - DEBUG_COLORS=on
@@ -69,7 +69,7 @@ services:
     volumes:
       - ./logigator-editor/:/home/node/app
     working_dir: /home/node/app
-    command: "sh -c 'yarn && yarn start'"
+    command: "sh -c 'yarn && exec yarn start'"
 
 networks:
   logigator_intern:

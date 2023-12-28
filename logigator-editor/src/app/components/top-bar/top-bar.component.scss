@@ -146,7 +146,7 @@
 				outline: none;
 				background-size: cover;
 
-				background-image: url('^assets/icons/light/settings.svg');
+				background-image: url('src/assets/icons/light/settings.svg');
 
 				@include themify() {
 					background-color: themed('primary');
@@ -169,7 +169,7 @@
 			.minimize {
 				width: $top-bar-height;
 				height: $top-bar-height;
-				background-image: url("^assets/icons/light/minimize.svg");
+				background-image: url("src/assets/icons/light/minimize.svg");
 				background-repeat: no-repeat;
 				background-position: bottom;
 
@@ -182,7 +182,7 @@
 			.maximize {
 				width: $top-bar-height;
 				height: $top-bar-height;
-				background-image: url("^assets/icons/light/fullscreen.svg");
+				background-image: url("src/assets/icons/light/fullscreen.svg");
 				background-repeat: no-repeat;
 				background-position: center;
 				&:hover {
@@ -194,7 +194,7 @@
 			.close {
 				width: $top-bar-height;
 				height: $top-bar-height;
-				background-image: url("^assets/icons/light/close.svg");
+				background-image: url("src/assets/icons/light/close.svg");
 				background-repeat: no-repeat;
 				background-position: center;
 				@include themify() {

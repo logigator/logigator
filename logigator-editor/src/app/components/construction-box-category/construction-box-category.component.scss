@@ -46,9 +46,9 @@
 				background-color: transparent;
 
 				@if (isTheme('dark')) {
-					background-image: url("^assets/icons/dark/reload.svg");
+					background-image: url("src/assets/icons/dark/reload.svg");
 				} @else {
-					background-image: url("^assets/icons/light/reload.svg");
+					background-image: url("src/assets/icons/light/reload.svg");
 				}
 			}
 

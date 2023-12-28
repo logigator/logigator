@@ -35,9 +35,9 @@ $search-height: 3.5rem;
 			color: themed('text-primary');
 
 			@if (isTheme('dark')) {
-				background-image: url("^assets/icons/dark/search.svg");
+				background-image: url("src/assets/icons/dark/search.svg");
 			} @else {
-				background-image: url("^assets/icons/light/search.svg");
+				background-image: url("src/assets/icons/light/search.svg");
 			}
 
 			&::placeholder {

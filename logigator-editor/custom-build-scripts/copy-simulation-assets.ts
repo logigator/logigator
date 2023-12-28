@@ -4,7 +4,7 @@
  * The js file is not hashed, because it is hashed by the wasm-js-cache-bust script.
  */
 
-import { readFile, writeFile, readdir, unlink, rename } from 'fs/promises';
+import { readFile, writeFile, readdir, unlink, copyFile } from 'fs/promises';
 import { join } from 'path';
 import { createHash } from 'crypto';
 import { exit } from 'process';
@@ -35,7 +35,7 @@ async function run() {
 	);
 
 	await Promise.all([
-		rename(wasmPath, join(dest, `logigator-simulation.${wasmHash}.wasm`)),
+		copyFile(wasmPath, join(dest, `logigator-simulation.${wasmHash}.wasm`)),
 		writeFile(join(dest, `logigator-simulation.js`), jsFile)
 	]);
 }
