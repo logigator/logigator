@@ -61,7 +61,7 @@ services:
       - "127.0.0.1:5001:5001"
   #### NODE_JS_EDITOR ####
   development_editor:
-    image: node:16
+    image: node:20
     networks:
       logigator_intern:
         aliases:
