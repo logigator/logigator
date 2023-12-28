@@ -19,7 +19,7 @@ export abstract class WorkArea {
 
 	protected _zoomPanInputManager: ZoomPanInputManager;
 
-	protected _destroySubject = new Subject<any>();
+	protected _destroySubject = new Subject<void>();
 
 	protected _activeView: View;
 

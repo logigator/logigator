@@ -1,7 +1,7 @@
 import {AfterViewInit, Component, ElementRef, OnDestroy, OnInit, ViewChild} from '@angular/core';
 import {PopupContentComp} from '../../popup/popup-content-comp';
 import {Project} from '../../../models/project';
-import {AbstractControl, FormArray, FormBuilder, FormGroup, Validators} from '@angular/forms';
+import {AbstractControl, UntypedFormArray, UntypedFormBuilder, UntypedFormGroup, Validators} from '@angular/forms';
 import {ProjectsService} from '../../../services/projects/projects.service';
 import {Element} from '../../../models/element';
 import {fromEvent, Subject} from 'rxjs';
@@ -14,8 +14,8 @@ import {takeUntil} from 'rxjs/operators';
 })
 export class EditComponentPlugsComponent extends PopupContentComp<Project, never> implements OnInit, OnDestroy, AfterViewInit {
 
-	public inputLabelsForm: FormGroup;
-	public outputLabelsForm: FormGroup;
+	public inputLabelsForm: UntypedFormGroup;
+	public outputLabelsForm: UntypedFormGroup;
 
 	private _inputPlugs: Element[];
 	private _outputPlugs: Element[];
@@ -28,7 +28,7 @@ export class EditComponentPlugsComponent extends PopupContentComp<Project, never
 		adjustment: number
 	};
 
-	protected _destroySubject = new Subject<any>();
+	protected _destroySubject = new Subject<void>();
 
 	private _inputStates: {
 		element: HTMLElement,
@@ -48,7 +48,7 @@ export class EditComponentPlugsComponent extends PopupContentComp<Project, never
 	@ViewChild('compOutputs', {static: true})
 	private _compOutputs: ElementRef<HTMLFormElement>;
 
-	constructor(private formBuilder: FormBuilder, private projectsService: ProjectsService) {
+	constructor(private formBuilder: UntypedFormBuilder, private projectsService: ProjectsService) {
 		super();
 	}
 
@@ -98,11 +98,11 @@ export class EditComponentPlugsComponent extends PopupContentComp<Project, never
 	}
 
 	public get inputLabelsControls(): AbstractControl[] {
-		return (this.inputLabelsForm.controls.labels as FormArray).controls;
+		return (this.inputLabelsForm.controls.labels as UntypedFormArray).controls;
 	}
 
 	public get outputLabelsControls(): AbstractControl[] {
-		return (this.outputLabelsForm.controls.labels as FormArray).controls;
+		return (this.outputLabelsForm.controls.labels as UntypedFormArray).controls;
 	}
 
 	mouseDown(event: MouseEvent, control: HTMLDivElement, column: 'input' | 'output') {
@@ -179,7 +179,7 @@ export class EditComponentPlugsComponent extends PopupContentComp<Project, never
 	}
 
 	ngOnDestroy(): void {
-		this._destroySubject.next();
+		this._destroySubject.next(null);
 		this._destroySubject.complete();
 	}
 

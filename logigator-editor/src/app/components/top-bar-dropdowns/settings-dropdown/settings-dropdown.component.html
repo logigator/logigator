@@ -32,22 +32,6 @@
 		{{'DROPDOWN.SETTINGS.ACCOUNT' | translate}}
 	</a>
 
-	<!-- #!if ELECTRON === 'true' -->
-	<a class="link item" *ngIf="isLoggedIn" (click)="logout()">
-		<img *ngIf="this.theming.currentTheme === 'dark'" src="assets/icons/dark/logout.svg">
-		<img *ngIf="this.theming.currentTheme === 'light'" src="assets/icons/light/logout.svg">
-		{{'DROPDOWN.SETTINGS.LOGOUT' | translate}}
-	</a>
-	<!-- #!endif -->
-
-	<!-- #!if ELECTRON === 'true' -->
-	<a *ngIf="isNewVersionAvailable$ | async" class="link item new-version" (click)="updateClick()">
-		<img *ngIf="this.theming.currentTheme === 'dark'" src="assets/icons/dark/info.svg">
-		<img *ngIf="this.theming.currentTheme === 'light'" src="assets/icons/light/info.svg">
-		{{'DROPDOWN.SETTINGS.NEW_VERSION' | translate}}
-	</a>
-	<!-- #!endif -->
-
 	<hr>
 	<div class="link item">
 		<button class="btn-outline secondary small" (click)="privacyPolicy()">{{'DROPDOWN.SETTINGS.PRIVACY' | translate}}</button>

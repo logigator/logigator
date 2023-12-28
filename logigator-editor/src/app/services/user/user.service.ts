@@ -4,7 +4,6 @@ import {User} from '../../models/http/response/user';
 import {ApiService} from '../api/api.service';
 import {distinctUntilChanged, map} from 'rxjs/operators';
 import {StorageService, StorageServiceModel} from '../storage/storage.service';
-import {ElectronService} from '../electron/electron.service';
 
 @Injectable({
 	providedIn: 'root'
@@ -18,8 +17,7 @@ export class UserService {
 	constructor(
 		private api: ApiService,
 		private ngZone: NgZone,
-		@Inject(StorageService) private storage: StorageServiceModel,
-		@Optional() private electronService: ElectronService
+		@Inject(StorageService) private storage: StorageServiceModel
 	) {
 		this._isLoggedIn = this.checkLoginState();
 
@@ -57,16 +55,6 @@ export class UserService {
 	public get userInfo$(): Observable<User> {
 		return this._userInfo$.asObservable();
 	}
-
-	// #!if ELECTRON === 'true'
-	public login() {
-		this.electronService.ipcRenderer.invoke('login');
-	}
-
-	public logout() {
-		this.electronService.ipcRenderer.invoke('logout');
-	}
-	// #!endif
 
 	private checkLoginState(): boolean {
 		return this.storage.get('isAuthenticated') + '' === 'true';

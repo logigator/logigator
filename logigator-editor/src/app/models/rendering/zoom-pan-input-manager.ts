@@ -7,7 +7,7 @@ export class ZoomPanInputManager {
 
 	private _htmlContainer: HTMLElement;
 
-	private _destroySubject = new Subject<any>();
+	private _destroySubject = new Subject<void>();
 	private _interactionStart = new Subject<void>();
 	private _interactionEnd = new Subject<void>();
 	private _zoom = new Subject<void>();

@@ -1,16 +1,10 @@
 <div id="top-bar">
 	<div (click)="closeDropdowns()" *ngIf="dropdownOpen" class="background"></div>
 
-	<!-- #!web -->
 	<a [href]="homeUrl" target="_blank" rel="noopener"><img alt="Logigator" src="assets/logo.svg"></a>
-
-	<!-- #!electron -->
-	<img class="logo-img"  alt="Logigator" src="assets/logo.svg">
-
 
 	<div class="main-menu">
 
-		<!-- #!web -->
 		<p class="project-title">{{mainProjectName}}</p>
 
 		<div class="menu-entries">
@@ -34,10 +28,6 @@
 	</div>
 
 	<div class="top-bar-end">
-
-		<!-- #!electron -->
-		<p class="electron-project-name">{{mainProjectName}}</p>
-
 		<div class="login-register">
 			<ng-container *ngIf="userInfo$ | async as userInfo; else loginRegister">
 				<div class="logged-in-settings" (click)="closeDropdowns(); settingsDropdownOpen = true;">
@@ -47,14 +37,6 @@
 			</ng-container>
 			<app-settings-dropdown (requestClosed)="closeDropdowns()" *ngIf="settingsDropdownOpen"></app-settings-dropdown>
 		</div>
-
-		<!-- #!if ELECTRON === 'true' -->
-		<div class="window-buttons">
-			<div class="minimize" (click)="minimize()"></div>
-			<div class="maximize" (click)="maximizeWin()"></div>
-			<div class="close" (click)="close()"></div>
-		</div>
-		<!-- #!endif -->
 	</div>
 
 </div>

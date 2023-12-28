@@ -1,6 +1,6 @@
 import {ChangeDetectionStrategy, Component, OnDestroy, OnInit} from '@angular/core';
 import {PopupContentComp} from '../../popup/popup-content-comp';
-import {FormBuilder, FormControl, FormGroup, Validators} from '@angular/forms';
+import {FormBuilder, UntypedFormControl, FormGroup, Validators} from '@angular/forms';
 
 @Component({
 	selector: 'app-hex-bin-dec-converter',
@@ -10,9 +10,9 @@ import {FormBuilder, FormControl, FormGroup, Validators} from '@angular/forms';
 })
 export class HexBinDecConverterComponent extends PopupContentComp<never, never> {
 
-	public hex = new FormControl('0', Validators.pattern(/^([0-9]|[A-Fa-f])+$/));
-	public bin = new FormControl('0', Validators.pattern('^(1|0)+$'));
-	public dec = new FormControl('0', Validators.min(0));
+	public hex = new UntypedFormControl('0', Validators.pattern(/^([0-9]|[A-Fa-f])+$/));
+	public bin = new UntypedFormControl('0', Validators.pattern('^(1|0)+$'));
+	public dec = new UntypedFormControl('0', Validators.min(0));
 
 	public hexInput() {
 		if (this.hex.value === '') return;

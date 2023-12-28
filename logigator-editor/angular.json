@@ -30,32 +30,6 @@
 						"webWorkerTsConfig": "tsconfig.worker.json"
 					},
 					"configurations": {
-						"dev-electron": {
-							"styles": [
-								"src/styles/electron/styles.scss"
-							],
-							"stylePreprocessorOptions": {
-								"includePaths": [
-									"src/styles",
-									"src/styles/electron"
-								]
-							},
-							"fileReplacements": [
-								{
-									"replace": "src/environments/environment.ts",
-									"with": "src/environments/environment.dev-electron.ts"
-								}
-							],
-							"indexTransform": "./custom-build-scripts/dist/index-html-transform-electron.js",
-							"assets": [
-								"src/favicon.ico",
-								"src/icon256.ico",
-								"src/assets",
-								"src/site.webmanifest",
-								"src/browserconfig.xml",
-								"src/robots.txt"
-							]
-						},
 						"dev-web": {
 							"baseHref": "/editor/",
 							"deployUrl": "/editor/",
@@ -83,52 +57,6 @@
 								"src/browserconfig.xml",
 								"src/compatibility-check/warning-script.js",
 								"src/compatibility-check/warning-styles.css"
-							]
-						},
-						"prod-electron": {
-							"styles": [
-								"src/styles/electron/styles.scss"
-							],
-							"stylePreprocessorOptions": {
-								"includePaths": [
-									"src/styles",
-									"src/styles/electron"
-								]
-							},
-							"fileReplacements": [
-								{
-									"replace": "src/environments/environment.ts",
-									"with": "src/environments/environment.prod-electron.ts"
-								}
-							],
-							"indexTransform": "./custom-build-scripts/dist/index-html-transform-electron.js",
-							"assets": [
-								"src/favicon.ico",
-								"src/icon256.ico",
-								"src/assets",
-								"src/site.webmanifest",
-								"src/browserconfig.xml",
-								"src/robots.txt"
-							],
-							"optimization": true,
-							"outputHashing": "all",
-							"sourceMap": false,
-							"namedChunks": false,
-							"aot": true,
-							"extractLicenses": true,
-							"vendorChunk": false,
-							"buildOptimizer": true,
-							"budgets": [
-								{
-									"type": "initial",
-									"maximumWarning": "2mb",
-									"maximumError": "5mb"
-								},
-								{
-									"type": "anyComponentStyle",
-									"maximumWarning": "10kb",
-									"maximumError": "20kb"
-								}
 							]
 						},
 						"prod-web": {
@@ -194,14 +122,8 @@
 						"prod-web": {
 							"browserTarget": "logigator-editor:build:prod-web"
 						},
-						"prod-electron": {
-							"browserTarget": "logigator-editor:build:prod-electron"
-						},
 						"dev-web": {
 							"browserTarget": "logigator-editor:build:dev-web"
-						},
-						"dev-electron": {
-							"browserTarget": "logigator-editor:build:dev-electron"
 						}
 					}
 				},
@@ -224,20 +146,6 @@
 						"scripts": []
 					}
 				},
-				"lint": {
-					"builder": "@angular-devkit/build-angular:tslint",
-					"options": {
-						"tsConfig": [
-							"tsconfig.app.json",
-							"tsconfig.spec.json",
-							"e2e/tsconfig.json",
-							"tsconfig.worker.json"
-						],
-						"exclude": [
-							"**/node_modules/**"
-						]
-					}
-				},
 				"e2e": {
 					"builder": "@angular-devkit/build-angular:protractor",
 					"options": {
@@ -252,8 +160,7 @@
 				}
 			}
 		}
-	},
-	"defaultProject": "logigator-editor",
+  },
 	"cli": {
 		"analytics": false
 	}

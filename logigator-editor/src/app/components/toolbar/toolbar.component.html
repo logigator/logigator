@@ -57,28 +57,20 @@
 				</select>
 			</ng-container>
 
-			<!-- #!if ELECTRON === 'true' -->
-			<ng-container>
-				<div class="divider"></div>
-				<p>Threads:</p>
-				<input class="thread-count" type="number" [(ngModel)]="threadCount" (ngModelChange)="setThreadCount()" min="1" max="512">
-			</ng-container>
-			<!-- #!endif -->
-
 			<ng-container *ngIf="simulationRunning">
 				<div class="divider"></div>
 				<p>Current Speed: {{simulationStatus.speed | si : 2}}Hz</p>
 			</ng-container>
 		</ng-container>
 
-		<!-- #!if DEBUG === 'true' -->
-		<button (click)="printBoard()">board</button>
-		<button (click)="printElements()">elements</button>
-		<button (click)="printCalls()">calls</button>
-		<button (click)="runTests()">tests</button>
-		<button (click)="runStep()">step</button>
-		<button (click)="toggleChunks()">chunks</button>
-		<!-- #!endif -->
+		<ng-container *ngIf="!production">
+			<button (click)="printBoard()">board</button>
+			<button (click)="printElements()">elements</button>
+			<button (click)="printCalls()">calls</button>
+			<button (click)="runTests()">tests</button>
+			<button (click)="runStep()">step</button>
+			<button (click)="toggleChunks()">chunks</button>
+		</ng-container>
 
 	</div>
 

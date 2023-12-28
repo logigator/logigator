@@ -1,4 +1,4 @@
-import {Component, Optional} from '@angular/core';
+import {Component} from '@angular/core';
 import {ProjectsService} from '../../services/projects/projects.service';
 import {UserService} from '../../services/user/user.service';
 import {Observable} from 'rxjs';
@@ -6,7 +6,6 @@ import {User} from '../../models/http/response/user';
 import {WorkMode} from '../../models/work-modes';
 import {WorkModeService} from '../../services/work-mode/work-mode.service';
 import {environment} from '../../../environments/environment';
-import {ElectronService} from '../../services/electron/electron.service';
 
 @Component({
 	selector: 'app-top-bar',
@@ -24,7 +23,6 @@ export class TopBarComponent {
 	public homeUrl = environment.homeUrl;
 
 	constructor(
-		@Optional() private electronService: ElectronService,
 		private projectService: ProjectsService,
 		private userService: UserService,
 		private workMode: WorkModeService
@@ -39,36 +37,12 @@ export class TopBarComponent {
 	}
 
 	public login() {
-		// #!electron
-		this.userService.login();
-
-		// #!web
 		window.open('/login', '_blank');
 	}
 
 	public register() {
-		// #!electron
-		this.electronService.shell.openExternal(`${environment.homeUrl}/register`);
-
-		// #!web
 		window.open('/register', '_blank');
 	}
-
-	// #!if ELECTRON === 'true'
-	public minimize() {
-		this.electronService.ipcRenderer.invoke('windowMinimize');
-	}
-
-	public maximizeWin() {
-		this.electronService.ipcRenderer.invoke('windowMaximize');
-	}
-
-	public async close() {
-		if (await this.projectService.askToSave()) {
-			this.electronService.ipcRenderer.invoke('windowClose');
-		}
-	}
-	// #!endif
 
 	public get mainProjectName(): string {
 		if (!this.projectService.mainProject) return '';

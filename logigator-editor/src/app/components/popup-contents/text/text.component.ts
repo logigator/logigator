@@ -1,5 +1,5 @@
 import {ChangeDetectionStrategy, Component, OnInit} from '@angular/core';
-import {FormControl, Validators} from '@angular/forms';
+import {UntypedFormControl, Validators} from '@angular/forms';
 import {PopupContentComp} from '../../popup/popup-content-comp';
 
 @Component({
@@ -10,14 +10,14 @@ import {PopupContentComp} from '../../popup/popup-content-comp';
 })
 export class TextComponent extends PopupContentComp<string, string> implements OnInit {
 
-	public text: FormControl;
+	public text: UntypedFormControl;
 
 	constructor() {
 		super();
 	}
 
 	ngOnInit() {
-		this.text = new FormControl(this.inputFromOpener, [Validators.required]);
+		this.text = new UntypedFormControl(this.inputFromOpener, [Validators.required]);
 	}
 
 	public setText() {

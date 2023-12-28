@@ -39,7 +39,7 @@ export class TutorialWindowComponent implements OnDestroy {
 	public arrowTop: number;
 	public arrowLeft: number;
 
-	private _destroySubject = new Subject();
+	private _destroySubject = new Subject<void>();
 
 	constructor(private theming: ThemingService, private cdr: ChangeDetectorRef) {
 		fromEvent(window, 'resize').pipe(
@@ -117,7 +117,7 @@ export class TutorialWindowComponent implements OnDestroy {
 	}
 
 	ngOnDestroy(): void {
-		this._destroySubject.next();
+		this._destroySubject.next(null);
 		this._destroySubject.unsubscribe();
 	}
 

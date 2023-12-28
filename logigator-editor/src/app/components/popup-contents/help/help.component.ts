@@ -26,7 +26,7 @@ export class HelpComponent extends PopupContentComp implements OnInit, OnDestroy
 	@ViewChild('sidebar', {static: true})
 	private _sidebar: ElementRef<HTMLDivElement>;
 
-	private _destroySubject = new Subject();
+	private _destroySubject = new Subject<void>();
 
 	public helpToRender = 'get-started';
 

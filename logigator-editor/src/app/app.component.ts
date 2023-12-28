@@ -12,6 +12,7 @@ import {WorkMode} from './models/work-modes';
 import {EditorInteractionService} from './services/editor-interaction/editor-interaction.service';
 import {EditorAction} from './models/editor-action';
 import {StorageService, StorageServiceModel} from './services/storage/storage.service';
+import {environment} from '../environments/environment';
 
 @Component({
 	selector: 'app-root',
@@ -107,12 +108,10 @@ export class AppComponent implements OnInit, OnDestroy {
 	}
 
 	private onTabClose(e: Event) {
-		// #!if DEBUG === 'false' && ELECTRON === 'false'
-		if (this.projects.hasUnsavedProjects) {
+		if (environment.production && this.projects.hasUnsavedProjects) {
 			e.preventDefault();
 			e.returnValue = true;
 		}
-		// #!endif
 	}
 
 	public onDragStart(event: Event) {
@@ -150,7 +149,7 @@ export class AppComponent implements OnInit, OnDestroy {
 	}
 
 	ngOnDestroy(): void {
-		this._destroySubject.next();
+		this._destroySubject.next(null);
 		this._destroySubject.unsubscribe();
 	}
 }
