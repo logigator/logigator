@@ -23,7 +23,7 @@ import { ReloadQuestionComponent } from './components/popup-contents/reload-ques
 import { NewComponentComponent } from './components/popup-contents/new-component/new-component.component';
 import { OpenProjectComponent } from './components/popup-contents/open/open-project.component';
 import { SaveAsComponent } from './components/popup-contents/save-as/save-as.component';
-import {ToastContainerModule, ToastrModule} from 'ngx-toastr';
+import {ToastContainerDirective, ToastrModule} from 'ngx-toastr';
 import {BrowserAnimationsModule} from '@angular/platform-browser/animations';
 import {MissingTranslationHandler, TranslateLoader, TranslateModule} from '@ngx-translate/core';
 import {CacheBustingTranslationLoader} from './models/translation/cache-busting-translate-loader';
@@ -112,7 +112,7 @@ import {AutoFontSizeDirective} from './directives/auto-font-size/auto-font-size.
 		HttpClientModule,
 		ReactiveFormsModule,
 		BrowserAnimationsModule,
-		ToastContainerModule,
+		ToastContainerDirective,
 		ToastrModule.forRoot({
 			positionClass: 'toastr-position',
 			easeTime: 100,
