@@ -1,6 +1,6 @@
 import {Component, OnInit, ViewChild, ViewContainerRef} from '@angular/core';
 import {PopupContentComp} from '../../popup/popup-content-comp';
-import {FormBuilder, FormGroup, Validators} from '@angular/forms';
+import {UntypedFormBuilder, UntypedFormGroup, Validators} from '@angular/forms';
 import {ImageExportService} from '../../../services/image-export/image-export.service';
 import {FileSaverService} from '../../../services/file-saver/file-saver.service';
 import {ProjectsService} from '../../../services/projects/projects.service';
@@ -16,13 +16,13 @@ import * as PIXI from 'pixi.js';
 })
 export class ImageExportComponent extends PopupContentComp implements OnInit {
 
-	public form: FormGroup;
+	public form: UntypedFormGroup;
 
 	@ViewChild('loadingRef', {read: ViewContainerRef, static: true})
 	private _loadingRef: ViewContainerRef;
 
 	constructor(
-		private formBuilder: FormBuilder,
+		private formBuilder: UntypedFormBuilder,
 		private imageExporter: ImageExportService,
 		private fileSaverService: FileSaverService,
 		private projectService: ProjectsService,

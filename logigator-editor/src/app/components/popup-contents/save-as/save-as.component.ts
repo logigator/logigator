@@ -2,7 +2,7 @@ import {ChangeDetectionStrategy, Component, OnInit} from '@angular/core';
 import {ProjectSaveManagementService} from '../../../services/project-save-management/project-save-management.service';
 import {Project} from '../../../models/project';
 import {UserService} from '../../../services/user/user.service';
-import {FormBuilder, FormGroup, Validators} from '@angular/forms';
+import {UntypedFormBuilder, UntypedFormGroup, Validators} from '@angular/forms';
 import {PopupContentComp} from '../../popup/popup-content-comp';
 
 @Component({
@@ -14,11 +14,11 @@ import {PopupContentComp} from '../../popup/popup-content-comp';
 export class SaveAsComponent extends
 	PopupContentComp<never, {name: string, description: string, target: 'local' | 'server', public: boolean}> implements OnInit {
 
-	public saveForm: FormGroup;
+	public saveForm: UntypedFormGroup;
 
 	constructor(
 		private user: UserService,
-		private formBuilder: FormBuilder
+		private formBuilder: UntypedFormBuilder
 	) {
 		super();
 	}

@@ -1,5 +1,5 @@
 import {ChangeDetectionStrategy, Component, OnInit} from '@angular/core';
-import {FormBuilder, FormGroup, Validators} from '@angular/forms';
+import {UntypedFormBuilder, UntypedFormGroup, Validators} from '@angular/forms';
 import {EastereggService} from '../../../services/easteregg/easteregg.service';
 import {PopupContentComp} from '../../popup/popup-content-comp';
 
@@ -11,9 +11,9 @@ import {PopupContentComp} from '../../popup/popup-content-comp';
 })
 export class NewComponentComponent extends PopupContentComp<any, {name: string, symbol: string, description: string, public: boolean}> implements OnInit {
 
-	public newCompForm: FormGroup;
+	public newCompForm: UntypedFormGroup;
 
-	constructor(private formBuilder: FormBuilder, private eastereggs: EastereggService) {
+	constructor(private formBuilder: UntypedFormBuilder, private eastereggs: EastereggService) {
 		super();
 	}
 

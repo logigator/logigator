@@ -2,7 +2,7 @@ import {ChangeDetectionStrategy, Component, Input, OnChanges, OnDestroy, SimpleC
 import {ElementProviderService} from '../../services/element-provider/element-provider.service';
 import {ElementType} from '../../models/element-types/element-type';
 import {ProjectsService} from '../../services/projects/projects.service';
-import {AbstractControl, FormArray, FormBuilder, FormControl, FormGroup} from '@angular/forms';
+import {AbstractControl, UntypedFormArray, UntypedFormBuilder, UntypedFormControl, UntypedFormGroup} from '@angular/forms';
 import {Subscription} from 'rxjs';
 import {ElementTypeId} from '../../models/element-types/element-type-ids';
 import {Element} from '../../models/element';
@@ -26,13 +26,13 @@ export class SettingsInfoBoxComponent implements OnChanges, OnDestroy {
 	private _element: Element;
 	public elementType: ElementType;
 
-	public propertiesForm: FormGroup;
+	public propertiesForm: UntypedFormGroup;
 	private formSubscription: Subscription;
 
 	constructor(
 		private elemProvider: ElementProviderService,
 		private projects: ProjectsService,
-		private formBuilder: FormBuilder,
+		private formBuilder: UntypedFormBuilder,
 		private editorActions: ShortcutsService,
 		private editorInteractionService: EditorInteractionService
 	) { }
@@ -87,11 +87,11 @@ export class SettingsInfoBoxComponent implements OnChanges, OnDestroy {
 								const newOptions = [...this._element.options];
 								newOptions[i] = optVal;
 								if (!this.projects.currProject.setOptions(this.selectedCompId, newOptions)) {
-									(this.propertiesForm.controls.options as FormArray).controls[i].setValue(this._element.options[i]);
+									(this.propertiesForm.controls.options as UntypedFormArray).controls[i].setValue(this._element.options[i]);
 								}
 							}
 						} else if (optVal * 10 >= this.elementType.optionsConfig[i].max) {
-							(this.propertiesForm.get('options') as FormArray).controls[i].setValue(this._element.options[i]);
+							(this.propertiesForm.get('options') as UntypedFormArray).controls[i].setValue(this._element.options[i]);
 						}
 					}
 				}
@@ -113,7 +113,7 @@ export class SettingsInfoBoxComponent implements OnChanges, OnDestroy {
 							this.elementType.options[i] = optVal;
 							if (this.elementType.onOptionsChanged) this.elementType.onOptionsChanged();
 						} else if (optVal * 10 >= this.elementType.optionsConfig[i].max) {
-							(this.propertiesForm.get('options') as FormArray).controls[i].setValue(this.elementType.options[i]);
+							(this.propertiesForm.get('options') as UntypedFormArray).controls[i].setValue(this.elementType.options[i]);
 						}
 					}
 				}
@@ -160,7 +160,7 @@ export class SettingsInfoBoxComponent implements OnChanges, OnDestroy {
 	}
 
 	public resetOptionsValue(index: number) {
-		const optVal = Number((this.propertiesForm.get('options') as FormArray).controls[index].value);
+		const optVal = Number((this.propertiesForm.get('options') as UntypedFormArray).controls[index].value);
 		if (optVal > this.elementType.optionsConfig[index].max || optVal < this.elementType.optionsConfig[index].min) {
 			let valToSet: number;
 			if (this.isElementPlaced) {
@@ -168,11 +168,11 @@ export class SettingsInfoBoxComponent implements OnChanges, OnDestroy {
 			} else {
 				valToSet = this.elementType.options[index];
 			}
-			(this.propertiesForm.get('options') as FormArray).controls[index].setValue(valToSet);
+			(this.propertiesForm.get('options') as UntypedFormArray).controls[index].setValue(valToSet);
 		}
 	}
 
-	private getOptionsArray(elemType: ElementType, opts: number[]): FormControl[] {
+	private getOptionsArray(elemType: ElementType, opts: number[]): UntypedFormControl[] {
 		const formArray = [];
 		if (!elemType.optionsConfig) return formArray;
 		elemType.optionsConfig.forEach((oc, index) => {
@@ -182,7 +182,7 @@ export class SettingsInfoBoxComponent implements OnChanges, OnDestroy {
 	}
 
 	public get optionsControls(): AbstractControl[] {
-		return (this.propertiesForm.get('options') as FormArray).controls;
+		return (this.propertiesForm.get('options') as UntypedFormArray).controls;
 	}
 
 	public getOptionsDropdownValue(optionConfig: number | {value: number, label: string}): number {
