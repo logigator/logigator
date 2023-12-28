@@ -39,13 +39,9 @@ import { TextComponent } from './components/popup-contents/text/text.component';
 import { StatusBarComponent } from './components/status-bar/status-bar.component';
 import { RomEditComponent } from './components/popup-contents/rom-edit/rom-edit.component';
 import {WorkerCommunicationService} from './services/simulation/worker-communication/worker-communication-service-model';
-// #!web
-import {WorkerCommunicationWasmService} from './services/simulation/worker-communication/worker-communication-wasm.service';
-// #!electron
-import {WorkerCommunicationNodeService} from './services/simulation/worker-communication/worker-communication-node.service';
+import { WorkerCommunicationWasmService } from './services/simulation/worker-communication/worker-communication-wasm.service';
 import { HelpComponent } from './components/popup-contents/help/help.component';
 import { HelpRendererComponent } from './components/popup-contents/help-renderer/help-renderer.component';
-import {ELECTRON} from '../environments/environment';
 import { TutorialWindowComponent } from './components/tutorial-window/tutorial-window.component';
 import {SwitchComponent} from './components/switch/switch.component';
 import {PopupComponent} from './components/popup/popup.component';
@@ -56,7 +52,6 @@ import {SiPipe} from './pipes/si/si.pipe';
 import {RomViewComponent} from './components/element-inspection/rom-view/rom-view.component';
 import {HexBinDecConverterComponent} from './components/popup-contents/hex-bin-dec-converter/hex-bin-dec-converter.component';
 import {StorageService} from './services/storage/storage.service';
-import {LocalStorageService} from './services/storage/local-storage.service';
 import {CookieStorageService} from './services/storage/cookie-storage.service';
 import { EditComponentPlugsComponent } from './components/popup-contents/edit-component-plugs/edit-component-plugs.component';
 import { LoadingSymbolComponent } from './components/loading-symbol/loading-symbol.component';
@@ -138,11 +133,11 @@ import {AutoFontSizeDirective} from './directives/auto-font-size/auto-font-size.
 	providers: [
 		{
 			provide: WorkerCommunicationService,
-			useClass: ELECTRON ? WorkerCommunicationNodeService : WorkerCommunicationWasmService
+			useClass: WorkerCommunicationWasmService
 		},
 		{
 			provide: StorageService,
-			useClass: ELECTRON ? LocalStorageService : CookieStorageService
+			useClass: CookieStorageService
 		}
 	],
 	bootstrap: [AppComponent]

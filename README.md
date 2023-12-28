@@ -29,13 +29,7 @@ For this to work you need the following services running and correctly [configur
 * MySQL Database
 * Redis
 * NodeJs v12 or higher
-* Some Service to proxy requests to the correct services. ex. Apache with a [config](docker/development/httpd.conf) like this. 
-
-Running the logigator-editor Electron App:
-```shell
-cd logigator-editor && npm start:electron
-```
-To run the Electron App you just need NodeJs v12 or higher.
+* Some Service to proxy requests to the correct services. ex. Apache with a [config](docker/development/httpd.conf) like this.
 
 #### Docker
 There is a [docker-compose](docker-compose.development.yaml) file provided in the repository.
@@ -46,8 +40,6 @@ It defines containers for the following services:
 * Rebrow (Redis UI)
 
 and Logigator itself.
-
-The logigator-editor Electron App can only be run directly on your PC.
 
 ### Configuration
 All configuration files can be found under ``logigator-backend/config``.

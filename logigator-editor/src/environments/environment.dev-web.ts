@@ -6,4 +6,3 @@ export const environment = {
 	url: 'https://dev.logigator.com/editor',
 	homeUrl: 'https://dev.logigator.com'
 };
-export const ELECTRON = false;

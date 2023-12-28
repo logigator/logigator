@@ -5,12 +5,12 @@ import {Elements} from './elements';
 import {Observable, Subject} from 'rxjs';
 import * as PIXI from 'pixi.js';
 import {CollisionFunctions} from './collision-functions';
-// #!debug
 import {BoardRecorder} from '../../../tests/auto-tests/board-recorder';
 import {ElementProviderService} from '../services/element-provider/element-provider.service';
 import {ProjectType} from './project-type';
 import {getStaticDI} from './get-di';
 import {ElementTypeId} from './element-types/element-type-ids';
+import {environment} from '../../environments/environment';
 
 export interface ProjectConfiguration {
 	id?: number;
@@ -48,7 +48,6 @@ export class Project {
 
 	private _actionToApply: Action[] = [];
 
-	// #!debug
 	public boardRecorder: BoardRecorder;
 
 	public constructor(projectState: ProjectState, config: ProjectConfiguration) {
@@ -65,8 +64,8 @@ export class Project {
 		this._currMaxActionPointer = -1;
 		this._changeSubject = new Subject<Action[]>();
 
-		// #!debug
-		this.boardRecorder = new BoardRecorder(this, true);
+		if (!environment.production)
+			this.boardRecorder = new BoardRecorder(this, true);
 	}
 
 	public static empty(name?: string, id?: number): Project {
@@ -166,7 +165,6 @@ export class Project {
 		if (!this._currState.allSpacesFree(elements, dif))
 			return false;
 
-		// #!debug
 		this.boardRecorder.call('addElements', arguments, -1, -1, 0);
 		const actions: Action[] = new Array(elements.length);
 		let i = 0;
@@ -196,8 +194,9 @@ export class Project {
 		if (!this._currState.isFreeSpace(element.pos, element.endPos, typeId === ElementTypeId.WIRE, Elements.wireEnds(element)))
 			return null;
 
-		// #!debug
-		this.boardRecorder.call('addElement', arguments);
+		if (!environment.production)
+			this.boardRecorder.call('addElement', arguments);
+
 		this._currState.addElement(element);
 		const actions: Action[] = [{
 			name: Elements.addActionName(element),
@@ -223,8 +222,9 @@ export class Project {
 		if (!this._currState.allSpacesFree([wire0, wire1], new PIXI.Point(0, 0)))
 			return null;
 
-		// #!debug
-		this.boardRecorder.call('addWire', arguments);
+		if (!environment.production)
+			this.boardRecorder.call('addWire', arguments);
+
 		this._currState.addElement(wire0);
 		this._currState.addElement(wire1);
 		const actions = this.actionsFromAddWires([wire0, wire1]);
@@ -243,8 +243,9 @@ export class Project {
 
 
 	public removeElementsById(ids: number[]): void {
-		// #!debug
-		this.boardRecorder.call('removeElementsById', arguments, -1, 0);
+		if (!environment.production)
+			this.boardRecorder.call('removeElementsById', arguments, -1, 0);
+
 		const actions: Action[] = [];
 		const elements: Element[] = new Array(ids.length);
 		let i = 0;
@@ -267,8 +268,9 @@ export class Project {
 
 
 	public eraseElements(from: PIXI.Point, to: PIXI.Point): void {
-		// #!debug
-		this.boardRecorder.call('eraseElements', arguments);
+		if (!environment.production)
+			this.boardRecorder.call('eraseElements', arguments);
+
 		const elements = this._currState.elementsOverLine(from, to);
 		if (elements.length === 0)
 			return;
@@ -291,8 +293,9 @@ export class Project {
 	}
 
 	public stopErase(): void {
-		// #!debug
-		this.boardRecorder.call('stopErase', arguments);
+		if (!environment.production)
+			this.boardRecorder.call('stopErase', arguments);
+
 		if (this._actionToApply.length === 0)
 			return;
 		this.newState(this._actionToApply, false, true);
@@ -315,8 +318,9 @@ export class Project {
 			return false;
 		let wireEndsToUpdate = Elements.allWireEnds(elements);
 
-		// #!debug
-		this.boardRecorder.call('moveElementsById', arguments, -1, 0);
+		if (!environment.production)
+			this.boardRecorder.call('moveElementsById', arguments, -1, 0);
+
 		for (const elem of elements) {
 			this._currState.moveElement(elem, dif);
 		}
@@ -348,8 +352,9 @@ export class Project {
 			Elements.wireEndsWithChanges(element, rotation, element.numInputs, new PIXI.Point()), new Set<Element>([element])))
 			return false;
 
-		// #!debug
-		this.boardRecorder.call('rotateComponent', arguments, 0);
+		if (!environment.production)
+			this.boardRecorder.call('rotateComponent', arguments, 0);
+
 		this._currState.rotateComp(element, rotation, newEndPos);
 		wireEndsToUpdate = Elements.allWireEnds([element], wireEndsToUpdate);
 		wireEndsToUpdate = this._currState.pointsThatSplit([element], wireEndsToUpdate);
@@ -374,8 +379,9 @@ export class Project {
 			Elements.wireEndsWithChanges(element, element.rotation, numInputs, new PIXI.Point()), new Set<Element>([element])))
 			return false;
 
-		// #!debug
-		this.boardRecorder.call('setNumInputs', arguments, 0);
+		if (!environment.production)
+			this.boardRecorder.call('setNumInputs', arguments, 0);
+
 		this._currState.setNumInputs(element, numInputs, newEndPos);
 		wireEndsToUpdate = Elements.allWireEnds([element], wireEndsToUpdate);
 		wireEndsToUpdate = this._currState.pointsThatSplit([element], wireEndsToUpdate);
@@ -532,8 +538,9 @@ export class Project {
 
 
 	public toggleWireConnection(pos: PIXI.Point): void {
-		// #!debug
-		this.boardRecorder.call('toggleWireConnection', arguments);
+		if (!environment.production)
+			this.boardRecorder.call('toggleWireConnection', arguments);
+
 		const wiresOnPoint = this._currState.wiresOnPoint(pos);
 		let actions: Action[];
 		if (wiresOnPoint.length === 2) {
@@ -617,8 +624,9 @@ export class Project {
 		if (this._currActionPointer < 0)
 			return;
 
-		// #!debug
-		this.boardRecorder.call('stepBack', arguments);
+		if (!environment.production)
+			this.boardRecorder.call('stepBack', arguments);
+
 		const backActions = Actions.reverseActions(this._actions[this._currActionPointer]);
 		this._currActionPointer--;
 		this.applyActions(backActions);
@@ -631,8 +639,9 @@ export class Project {
 		if (this._currActionPointer >= this._maxActionCount || this._currActionPointer === this._currMaxActionPointer)
 			return;
 
-		// #!debug
-		this.boardRecorder.call('stepForward', arguments);
+		if (!environment.production)
+			this.boardRecorder.call('stepForward', arguments);
+
 		const outActions = this._actions[++this._currActionPointer];
 		this.applyActions(outActions);
 		this._changeSubject.next(outActions);

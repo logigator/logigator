@@ -14,12 +14,9 @@
 	},
 	"files": [
 		"copy-simulation-wasm-assets.ts",
-		"create-dist-package.ts",
 		"custom-webpack.config.ts",
-		"index-html-transform-electron.ts",
 		"index-html-transform-web.ts",
 		"markdown-postprocess-loader.ts",
-		"package-app.ts",
 		"wasm-js-cache-bust.ts"
 	],
 	"include": [

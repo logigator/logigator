@@ -1,8 +1,6 @@
 import {Component, ViewChild, ViewContainerRef} from '@angular/core';
 import {ProjectsService} from '../../services/projects/projects.service';
-// #!debug
 import {Test} from '../../../../tests/auto-tests/tests';
-// #!debug
 import {StateCompilerService} from '../../services/simulation/state-compiler/state-compiler.service';
 import {WorkModeService} from '../../services/work-mode/work-mode.service';
 import {WorkMode} from '../../models/work-modes';
@@ -13,6 +11,7 @@ import {SimulationManagementService} from '../../services/simulation/simulation-
 import {Grid} from '../../models/rendering/grid';
 import {ThemingService} from '../../services/theming/theming.service';
 import {BruteForceTester} from '../../../../tests/auto-tests/brute-force-tester';
+import {environment} from '../../../environments/environment';
 
 @Component({
 	selector: 'app-toolbar',
@@ -21,7 +20,6 @@ import {BruteForceTester} from '../../../../tests/auto-tests/brute-force-tester'
 })
 export class ToolbarComponent {
 
-	// #!debug
 	private test: Test;
 
 	public targetMultiplier = '1';
@@ -42,7 +40,12 @@ export class ToolbarComponent {
 		private themingService: ThemingService
 	) {}
 
-	// #!if DEBUG === 'true'
+	get production(): boolean {
+		return environment.production;
+	}
+
+	// TODO: refactor / remove debugging tools
+
 	public printElements(): void {
 		console.log(this.projectService.currProject.allElements);
 	}
@@ -74,7 +77,6 @@ export class ToolbarComponent {
 	public toggleChunks() {
 		Grid.showChunks(!Grid.chunksVisible);
 	}
-	// #!endif
 
 	public get currentTheme() {
 		return this.themingService.currentTheme;
@@ -237,4 +239,6 @@ export class ToolbarComponent {
 	get syncMode(): boolean {
 		return this.simulationManagement.syncMode;
 	}
+
+	protected readonly environment = environment;
 }
