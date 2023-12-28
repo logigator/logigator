@@ -9,10 +9,10 @@
   },
   "scripts": {
     "start": "yarn run start:web",
-    "start:web": "yarn run build-custom-build-scripts && yarn run cp-sim-wasm-assets && env-cmd -e dev-web --use-shell \"ng serve -c dev-web\"",
+    "start:web": "yarn run build-custom-build-scripts && yarn run cp-sim-wasm-assets && ng serve -c dev-web",
     "build": "yarn run build:web",
-    "build:web": "yarn run build-custom-build-scripts && yarn run cp-sim-wasm-assets && env-cmd -e prod-web --use-shell \"ng build -c prod-web \" && yarn run wasm-js-cache-bust",
-    "cp-sim-wasm-assets": "node custom-build-scripts/dist/copy-simulation-wasm-assets.js",
+    "build:web": "yarn run build-custom-build-scripts && yarn run cp-sim-wasm-assets && ng build -c prod-web && yarn run wasm-js-cache-bust",
+    "cp-sim-wasm-assets": "node custom-build-scripts/dist/copy-simulation-assets.js",
     "wasm-js-cache-bust": "node custom-build-scripts/dist/wasm-js-cache-bust.js",
     "build-custom-build-scripts": "tsc -p custom-build-scripts/tsconfig-custom-build-scripts.json",
     "lint": "ng lint"
@@ -32,6 +32,8 @@
     "bootstrap": "^4.6.2",
     "form-data": "^4.0.0",
     "github-markdown-css": "^4.0.0",
+    "marked": "^9.0.0",
+    "ngx-markdown": "^17.1.1",
     "ngx-toastr": "^18.0.0",
     "node-fetch": "^3.3.2",
     "pixi.js": "^5.3.9",

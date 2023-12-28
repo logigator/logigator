@@ -3,7 +3,7 @@
 ## Knopf
 <div class="rows">
 
-![Button](../../assets/help/button.jpg)
+![Button](assets/help/button.jpg)
 
 <div class="margin-left">
 
@@ -14,7 +14,7 @@ Kann gedrückt werden, um einen Puls zu senden. Dieser dauert einen Simulationst
 ## Switch
 <div class="rows">
 
-![Switch](../../assets/help/switch.jpg)
+![Switch](assets/help/switch.jpg)
 
 <div class="margin-left">
 
@@ -26,7 +26,7 @@ Kann an- und ausgeschalten werden.
 
 <div class="rows">
 
-![LED](../../assets/help/led.jpg)
+![LED](assets/help/led.jpg)
 
 <div class="margin-left">
 
@@ -38,7 +38,7 @@ Schaltet sich abhängig vom Eingang aus oder ein.
 
 <div class="rows">
 
-![Segment Display](../../assets/help/segment-display.jpg)
+![Segment Display](assets/help/segment-display.jpg)
 
 <div class="margin-left">
 
@@ -50,7 +50,7 @@ Stellt die binären Eingänge als Dezimalzahlen, Hexadezimalzahlen oder Oktalzah
 
 <div class="rows">
 
-![LED Matrix](../../assets/help/led-matrix.PNG)
+![LED Matrix](assets/help/led-matrix.PNG)
 
 <div class="margin-left">
 

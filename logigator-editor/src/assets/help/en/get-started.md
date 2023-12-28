@@ -8,7 +8,7 @@ No matter if you are a bloody beginner or an absolute professional who needs top
 
 <div class="rows">
 
-![Construction Box](../../assets/help/construction-box.jpg)
+![Construction Box](assets/help/construction-box.jpg)
 
 <div class="margin-left">
 
@@ -23,7 +23,7 @@ After selecting an element you can place it by clicking anywhere on the workarea
 
 <div class="rows">
 
-![Settings Info Box](../../assets/help/settings-info-box.jpg)
+![Settings Info Box](assets/help/settings-info-box.jpg)
 
 <div class="margin-left">
 
@@ -45,11 +45,11 @@ To select elements click on the desired element or drag a select-rect with your 
 #### Select vs. Select Cut
 
 <div class="rows align-center margin-bottom">
-	<img src="../../assets/icons/dark/selection1.svg" title="icon-img" />
+	<img src="assets/icons/dark/selection1.svg" title="icon-img" />
 	<p class="margin-left">Select</p>
 </div>
 <div class="rows align-center margin-bottom">
-	<img src="../../assets/icons/dark/selection_cut.svg" title="icon-img" />
+	<img src="assets/icons/dark/selection_cut.svg" title="icon-img" />
 	<p class="margin-left">Select Cut</p>
 </div>
 
@@ -60,7 +60,7 @@ In contrast, in `Cut Select` Mode wires will only be selected to the edge of the
 
 <div class="rows align-center">
 
-![Place Wires Icon](../../assets/icons/dark/connection.svg "icon-img")
+![Place Wires Icon](assets/icons/dark/connection.svg "icon-img")
 
 <div class="margin-left">
 To place wires select this icon in the toolbar.
@@ -72,7 +72,7 @@ Then you can drag a new wire with your left mouse-button.
 
 <div class="rows align-center">
 
-![Connect Wires Icon](../../assets/icons/dark/connect_wire.svg "icon-img")
+![Connect Wires Icon](assets/icons/dark/connect_wire.svg "icon-img")
 
 <div class="margin-left">
 To connect wires select this icon in the toolbar.
@@ -84,7 +84,7 @@ Click on the intersection of the wire you want to connect to to this. When you c
 
 <div class="rows align-center">
 
-![Connect Wires Icon](../../assets/icons/dark/eraser.svg "icon-img")
+![Connect Wires Icon](assets/icons/dark/eraser.svg "icon-img")
 
 <div class="margin-left">
 To erase elements and wires select this icon in the toolbar.
@@ -96,7 +96,7 @@ Drag your mouse while holding down your left-mouse button, to erase components a
 
 <div class="rows align-center">
 
-![Connect Wires Icon](../../assets/icons/dark/text.svg "icon-img")
+![Connect Wires Icon](assets/icons/dark/text.svg "icon-img")
 
 <div class="margin-left">
 To place text, select this icon in the toolbar.

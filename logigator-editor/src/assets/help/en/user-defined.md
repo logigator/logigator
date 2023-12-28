@@ -4,7 +4,7 @@ You can create subcircuits/components and use it in larger circuits. The amount 
 
 <div class="rows">
 
-![Construction Box](../../assets/help/new-component.jpg)
+![Construction Box](assets/help/new-component.jpg)
 
 <div class="margin-left">
 
@@ -18,7 +18,7 @@ After you created your component, it will automatically be opened in the editor.
 
 <div class="rows">
 
-![Plug Elements](../../assets/help/plug-elements.PNG)
+![Plug Elements](assets/help/plug-elements.PNG)
 
 <div class="margin-left">
 
@@ -28,7 +28,7 @@ You can place so called `Plug Elements` in your components. Logigator provides i
 
 <div class="rows">
 
-![Plug Elements](../../assets/help/input-settings.png)
+![Plug Elements](assets/help/input-settings.png)
 
 <div class="margin-left">
 
@@ -44,7 +44,7 @@ Plug elements have a few options. These options include a 'Plug Index' and a 'La
 
 <div class="rows">
 
-![Edit Component Plugs](../../assets/help/edit-comp-plugs.png)
+![Edit Component Plugs](assets/help/edit-comp-plugs.png)
 
 <div class="margin-left">
 

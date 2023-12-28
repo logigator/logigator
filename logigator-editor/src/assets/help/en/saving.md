@@ -15,7 +15,7 @@ To save your project in the cloud select `File > Save`. Enter a project name and
 
 <div class="rows">
 
-![Construction Box](../../assets/help/open-project.png)
+![Construction Box](assets/help/open-project.png)
 
 <div class="margin-left">
 

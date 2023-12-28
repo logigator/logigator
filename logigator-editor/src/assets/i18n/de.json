@@ -202,6 +202,15 @@
 		},
 		"HELP": {
 			"TITLE": "Hilfe",
+			"PAGE": {
+				"GET_STARTED": "Einstieg",
+				"BASIC": "Grundlegende Gatter",
+				"ADVANCED": "Fortgeschrittene Gatter",
+				"IO": "IO Gatter",
+				"USER_DEFINED": "Benutzerdefinierte Komponenten",
+				"SAVING": "Projekte speichern",
+				"TUTORIAL_VIDS": "Video Tutorials"
+			},
 			"EDIT": "Auf Github bearbeiten"
 		},
 		"HEX_BIN_DEC": {

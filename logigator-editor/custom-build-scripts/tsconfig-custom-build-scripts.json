@@ -1,22 +1,19 @@
 {
 	"compilerOptions": {
 		"module": "commonjs",
-		"target": "es5",
+		"target": "ES2022",
 		"sourceMap": false,
 		"skipLibCheck": true,
 		"outDir": "./dist",
 		"rootDir": ".",
 		"moduleResolution": "node",
-		"lib": ["es2018"],
+		"lib": ["ES2022"],
 		"types": [
 			"node"
 		]
 	},
 	"files": [
-		"copy-simulation-wasm-assets.ts",
-		"custom-webpack.config.ts",
-		"index-html-transform-web.ts",
-		"markdown-postprocess-loader.ts",
+		"copy-simulation-assets.ts",
 		"wasm-js-cache-bust.ts"
 	],
 	"include": [

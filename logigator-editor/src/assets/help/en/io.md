@@ -3,7 +3,7 @@
 ## Button
 <div class="rows">
 
-![Button](../../assets/help/button.jpg)
+![Button](assets/help/button.jpg)
 
 <div class="margin-left">
 
@@ -14,7 +14,7 @@ Can be clicked to emit a pulse signal. Lasts one simulation tick.
 ## Switch
 <div class="rows">
 
-![Switch](../../assets/help/switch.jpg)
+![Switch](assets/help/switch.jpg)
 
 <div class="margin-left">
 
@@ -26,7 +26,7 @@ Can be switched on and off during simulation.
 
 <div class="rows">
 
-![LED](../../assets/help/led.jpg)
+![LED](assets/help/led.jpg)
 
 <div class="margin-left">
 
@@ -38,7 +38,7 @@ Switches on or off depending on the applied input.
 
 <div class="rows">
 
-![Segment Display](../../assets/help/segment-display.jpg)
+![Segment Display](assets/help/segment-display.jpg)
 
 <div class="margin-left">
 
@@ -50,7 +50,7 @@ Seven segment display with a binary input, that displays the input as decimal, h
 
 <div class="rows">
 
-![LED Matrix](../../assets/help/led-matrix.PNG)
+![LED Matrix](assets/help/led-matrix.PNG)
 
 <div class="margin-left">
 

@@ -8,7 +8,7 @@ Egal ob du ein blutiger Anfänger bist der hier erste Lernerfolge erzielt oder e
 
 <div class="rows">
 
-![Construction Box](../../assets/help/construction-box.jpg)
+![Construction Box](assets/help/construction-box.jpg)
 
 <div class="margin-left">
 
@@ -23,7 +23,7 @@ Nachdem Sie ein Element ausgewählt haben, können Sie es mit einem Klick auf de
 
 <div class="rows">
 
-![Settings Info Box](../../assets/help/settings-info-box.jpg)
+![Settings Info Box](assets/help/settings-info-box.jpg)
 
 <div class="margin-left">
 
@@ -45,11 +45,11 @@ Um Elemente auszuwählen, klicken Sie auf das gewollte Elemente oder ziehen mit 
 #### Auswählen vs. Auswählen und Schneiden
 
 <div class="rows align-center margin-bottom">
-	<img src="../../assets/icons/dark/selection1.svg" title="icon-img" />
+	<img src="assets/icons/dark/selection1.svg" title="icon-img" />
 	<p class="margin-left">Auswählen</p>
 </div>
 <div class="rows align-center margin-bottom">
-	<img src="../../assets/icons/dark/selection_cut.svg" title="icon-img" />
+	<img src="assets/icons/dark/selection_cut.svg" title="icon-img" />
 	<p class="margin-left">Auswählen und Schneiden</p>
 </div>
 
@@ -60,7 +60,7 @@ Im `Auswählen und Schneiden` Modus werden Leitungen nur bis zur Kante des Auswa
 
 <div class="rows align-center">
 
-![Place Wires Icon](../../assets/icons/dark/connection.svg "icon-img")
+![Place Wires Icon](assets/icons/dark/connection.svg "icon-img")
 
 <div class="margin-left">
 Um Leitungen zu platzieren, wählen Sie dieses Icon in der Symbolleiste.
@@ -72,7 +72,7 @@ Sie können neue Leitungen mit Hilfe der linken Maustaste platzieren.
 
 <div class="rows align-center">
 
-![Connect Wires Icon](../../assets/icons/dark/connect_wire.svg "icon-img")
+![Connect Wires Icon](assets/icons/dark/connect_wire.svg "icon-img")
 
 <div class="margin-left">
 Um Leitungen zu verbinden, wählen Sie dieses Icon in der Symbolleiste.
@@ -84,7 +84,7 @@ Klicken Sie auf die Kreuzung der Leitungen, die Sie verbinden möchten, um dies 
 
 <div class="rows align-center">
 
-![Connect Wires Icon](../../assets/icons/dark/eraser.svg "icon-img")
+![Connect Wires Icon](assets/icons/dark/eraser.svg "icon-img")
 
 <div class="margin-left">
 Um Elemente oder Leitunngen zu radieren, wählen Sie dieses Icon in der Symbolleiste.
@@ -96,7 +96,7 @@ Bewegen Sie Ihre Maus, während Sie die linke Maustaste drücken, um Elemente un
 
 <div class="rows align-center">
 
-![Connect Wires Icon](../../assets/icons/dark/text.svg "icon-img")
+![Connect Wires Icon](assets/icons/dark/text.svg "icon-img")
 
 <div class="margin-left">
 Um Text zu platzieren, wählen Sie dieses Icon in der Symbolleiste.

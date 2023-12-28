@@ -4,7 +4,7 @@ Sie können eigene Komponenten/Subschaltungen erstellen und diese in größeren 
 
 <div class="rows">
 
-![Construction Box](../../assets/help/new-component.jpg)
+![Construction Box](assets/help/new-component.jpg)
 
 <div class="margin-left">
 
@@ -18,7 +18,7 @@ Nachdem Sie eine eigene Komponente erstellt haben, öffnet sich dies automatisch
 
 <div class="rows">
 
-![Plug Elements](../../assets/help/plug-elements.PNG)
+![Plug Elements](assets/help/plug-elements.PNG)
 
 <div class="margin-left">
 
@@ -28,7 +28,7 @@ Sie können `Stecker Elemente` platzieren. Logigator bieten Eingangs- und Ausgan
 
 <div class="rows">
 
-![Plug Elements](../../assets/help/input-settings.png)
+![Plug Elements](assets/help/input-settings.png)
 
 <div class="margin-left">
 
@@ -44,7 +44,7 @@ Steckerelemente haben ein paar Optionen. Diese inkludieren `Steckerindex` und `B
 
 <div class="rows">
 
-![Edit Component Plugs](../../assets/help/edit-comp-plugs.png)
+![Edit Component Plugs](assets/help/edit-comp-plugs.png)
 
 <div class="margin-left">
 

@@ -15,11 +15,8 @@
 			"prefix": "app",
 			"architect": {
 				"build": {
-					"builder": "@angular-builders/custom-webpack:browser",
+					"builder": "@angular-devkit/build-angular:browser",
 					"options": {
-						"customWebpackConfig": {
-							"path": "./custom-build-scripts/dist/custom-webpack.config.js"
-						},
 						"outputPath": "dist/logigator-editor",
 						"index": "src/index.html",
 						"main": "src/main.ts",
@@ -32,7 +29,6 @@
 					"configurations": {
 						"dev-web": {
 							"baseHref": "/editor/",
-							"deployUrl": "/editor/",
 							"styles": [
 								"src/styles/web/styles.scss"
 							],
@@ -48,20 +44,16 @@
 									"with": "src/environments/environment.dev-web.ts"
 								}
 							],
-							"indexTransform": "./custom-build-scripts/dist/index-html-transform-web.js",
 							"assets": [
 								"src/favicon.ico",
 								"src/assets",
 								"src/site.webmanifest",
 								"src/robots.txt",
-								"src/browserconfig.xml",
-								"src/compatibility-check/warning-script.js",
-								"src/compatibility-check/warning-styles.css"
+								"src/browserconfig.xml"
 							]
 						},
 						"prod-web": {
 							"baseHref": "/editor/",
-							"deployUrl": "/editor/",
 							"styles": [
 								"src/styles/web/styles.scss"
 							],
@@ -77,15 +69,12 @@
 									"with": "src/environments/environment.prod-web.ts"
 								}
 							],
-							"indexTransform": "./custom-build-scripts/dist/index-html-transform-web.js",
 							"assets": [
 								"src/favicon.ico",
 								"src/assets",
 								"src/site.webmanifest",
 								"src/robots.txt",
-								"src/browserconfig.xml",
-								"src/compatibility-check/warning-script.js",
-								"src/compatibility-check/warning-styles.css"
+								"src/browserconfig.xml"
 							],
 							"optimization": true,
 							"outputHashing": "all",
@@ -111,19 +100,19 @@
 					}
 				},
 				"serve": {
-					"builder": "@angular-builders/custom-webpack:dev-server",
+					"builder": "@angular-devkit/build-angular:dev-server",
 					"options": {
 						"host": "0.0.0.0",
 						"port": 8202,
 						"disableHostCheck": true,
-						"browserTarget": "logigator-editor:build:dev-web"
+						"buildTarget": "logigator-editor:build:dev-web"
 					},
 					"configurations": {
 						"prod-web": {
-							"browserTarget": "logigator-editor:build:prod-web"
+							"buildTarget": "logigator-editor:build:prod-web"
 						},
 						"dev-web": {
-							"browserTarget": "logigator-editor:build:dev-web"
+							"buildTarget": "logigator-editor:build:dev-web"
 						}
 					}
 				},

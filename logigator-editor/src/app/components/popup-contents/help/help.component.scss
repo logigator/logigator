@@ -1,4 +1,5 @@
 @import "themes";
+@import "node_modules/github-markdown-css/github-markdown.css";
 
 @include themifyForNoEncapsulation() {
 	.help-popup-container {
@@ -11,16 +12,16 @@
 			min-width: 200px;
 			padding: 1rem;
 			display: flex;
+			gap: 4rem;
 			flex-direction: column;
 			justify-content: space-between;
+			border-right: border('width') solid themed('accent2');
 
 			> a {
 				color: themed('primary');
 			}
 
-			border-right: border('width') solid themed('accent2');
-
-			div > ul {
+			ul {
 				margin: 0;
 				padding: 0;
 				text-align: left;
@@ -54,14 +55,80 @@
 			}
 		}
 
-		.content {
+		.markdown-body {
 			flex-grow: 1;
 			margin: 1rem;
-
-			@include scrollbar(5px);
+			max-height: 80vh;
+			height: 80vh;
+			padding: 0 1rem;
+			font-family: inherit;
+			color: themed('text-primary') !important;
 			overflow-y: auto;
 			overflow-x: hidden;
+
+			h1, h2 {
+				border-bottom-color: themed('text-primary');
+			}
+
+			table tr {
+				background-color: inherit !important;
+			}
+
+			pre, code {
+				background-color: themed('accent2');
+			}
+
+			a {
+				color: themed('primary') !important;
+			}
+
+			img {
+				background-color: transparent;
+			}
+
+			.rows {
+				display: flex;
+				flex-direction: row;
+
+				&.align-center {
+					align-items: center;
+
+					p {
+						margin-bottom: 0;
+					}
+				}
+
+				.margin-left {
+					width: fit-content;
+				}
+
+				table {
+					width: auto;
+					overflow: initial;
+				}
+			}
+
+			.margin-left {
+				margin-left: 1rem;
+			}
+
+			.margin-bottom {
+				margin-bottom: 1rem;
+			}
+
+			img[title="icon-img"] {
+				width: 40px;
+				height: 40px;
+			}
+
+			.video {
+				width: 100%;
+				max-width: 800px;
+			}
 		}
 	}
 }
 
+.help-popup-container .markdown-body {
+	@include scrollbar(10px);
+}

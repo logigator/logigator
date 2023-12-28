@@ -15,7 +15,7 @@ Wählen Sie `Datei > Speichern` und geben Sie Name und Beschreibung des Projekts
 
 <div class="rows">
 
-![Construction Box](../../assets/help/open-project.png)
+![Construction Box](assets/help/open-project.png)
 
 <div class="margin-left">
 

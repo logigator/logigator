@@ -42,7 +42,7 @@ Adds three single binary digits.
 
 <div class="rows">
 
-![Rom Data Edit](../../assets/help/rom-edit.jpg)
+![Rom Data Edit](assets/help/rom-edit.jpg)
 
 <div class="margin-left">
 

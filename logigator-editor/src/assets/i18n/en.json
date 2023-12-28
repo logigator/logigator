@@ -202,7 +202,16 @@
 		},
 		"HELP": {
 			"TITLE": "Help",
-			"EDIT": "Edit on Github"
+			"EDIT": "Edit on Github",
+			"PAGE": {
+				"GET_STARTED": "Getting Started",
+				"BASIC": "Basic Gates",
+				"ADVANCED": "Advanced Gates",
+				"IO": "IO Gates",
+				"USER_DEFINED": "User Defined Components",
+				"SAVING": "Saving Projects",
+				"TUTORIAL_VIDS": "Tutorial Videos"
+			}
 		},
 		"HEX_BIN_DEC": {
 			"TITLE": "Hex-Bin-Dec Converter",

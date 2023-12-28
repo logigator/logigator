@@ -1,5 +1,5 @@
 import { BrowserModule } from '@angular/platform-browser';
-import {Injector, NgModule} from '@angular/core';
+import { Injector, NgModule, SecurityContext } from '@angular/core';
 import { AppComponent } from './app.component';
 import { ToolbarComponent } from './components/toolbar/toolbar.component';
 import { SettingsInfoBoxComponent } from './components/settings-info-box/settings-info-box.component';
@@ -41,7 +41,6 @@ import { RomEditComponent } from './components/popup-contents/rom-edit/rom-edit.
 import {WorkerCommunicationService} from './services/simulation/worker-communication/worker-communication-service-model';
 import { WorkerCommunicationWasmService } from './services/simulation/worker-communication/worker-communication-wasm.service';
 import { HelpComponent } from './components/popup-contents/help/help.component';
-import { HelpRendererComponent } from './components/popup-contents/help-renderer/help-renderer.component';
 import { TutorialWindowComponent } from './components/tutorial-window/tutorial-window.component';
 import {SwitchComponent} from './components/switch/switch.component';
 import {PopupComponent} from './components/popup/popup.component';
@@ -57,6 +56,7 @@ import { EditComponentPlugsComponent } from './components/popup-contents/edit-co
 import { LoadingSymbolComponent } from './components/loading-symbol/loading-symbol.component';
 import { ImageExportComponent } from './components/popup-contents/image-export/image-export.component';
 import {AutoFontSizeDirective} from './directives/auto-font-size/auto-font-size.directive';
+import { MarkdownModule } from 'ngx-markdown';
 
 @NgModule({
 	declarations: [
@@ -92,7 +92,6 @@ import {AutoFontSizeDirective} from './directives/auto-font-size/auto-font-size.
 		RomEditComponent,
 		RomViewComponent,
 		HelpComponent,
-		HelpRendererComponent,
 		TutorialWindowComponent,
 		SwitchComponent,
 		PopupComponent,
@@ -109,6 +108,7 @@ import {AutoFontSizeDirective} from './directives/auto-font-size/auto-font-size.
 	imports: [
 		BrowserModule,
 		FormsModule,
+		MarkdownModule.forRoot(),
 		HttpClientModule,
 		ReactiveFormsModule,
 		BrowserAnimationsModule,
