@@ -2,7 +2,14 @@ import {ChangeDetectionStrategy, Component, Input, OnChanges, OnDestroy, SimpleC
 import {ElementProviderService} from '../../services/element-provider/element-provider.service';
 import {ElementType} from '../../models/element-types/element-type';
 import {ProjectsService} from '../../services/projects/projects.service';
-import {AbstractControl, UntypedFormArray, UntypedFormBuilder, UntypedFormControl, UntypedFormGroup} from '@angular/forms';
+import {
+	AbstractControl, FormArray,
+	FormControl,
+	UntypedFormArray,
+	UntypedFormBuilder,
+	UntypedFormControl,
+	UntypedFormGroup
+} from '@angular/forms';
 import {Subscription} from 'rxjs';
 import {ElementTypeId} from '../../models/element-types/element-type-ids';
 import {Element} from '../../models/element';
@@ -58,19 +65,19 @@ export class SettingsInfoBoxComponent implements OnChanges, OnDestroy {
 			if (this.isElementPlaced) {
 				if (this.elementType.isRotatable && data.rotation !== this._element.rotation) {
 					if (!this.projects.currProject.rotateComponent(this.selectedCompId, Number(data.rotation))) {
-						this.propertiesForm.controls.rotation.setValue(this._element.rotation);
+						this.propertiesForm.controls['rotation'].setValue(this._element.rotation);
 					}
 				}
 				if (data.numInputs <= this.elementType.maxInputs && data.numInputs >= this.elementType.minInputs) {
 					if (data.numInputs !== this._element.numInputs && !this.projects.currProject.setNumInputs(this.selectedCompId, data.numInputs)) {
-						this.propertiesForm.controls.numInputs.setValue(this._element.numInputs);
+						this.propertiesForm.controls['numInputs'].setValue(this._element.numInputs);
 					}
 				} else if (data.numInputs * 10 >= this.elementType.maxInputs && this.elementType.maxInputs !== this.elementType.minInputs) {
-					this.propertiesForm.controls.numInputs.setValue(this._element.numInputs);
+					this.propertiesForm.controls['numInputs'].setValue(this._element.numInputs);
 				}
 				if (this.elementType.hasPlugIndex && data.plugIndex !== this._element.plugIndex) {
 					this.projects.currProject.setPlugIndex(this.selectedCompId, Number(data.plugIndex));
-					this.propertiesForm.controls.plugIndex.setValue(this._element.plugIndex);
+					this.propertiesForm.controls['plugIndex'].setValue(this._element.plugIndex);
 					this.projects.labelsCustomComponentChanged(this.projects.currProject);
 				}
 				if (this.elementType.hasLabel && data.label !== this._element.data) {
@@ -87,7 +94,7 @@ export class SettingsInfoBoxComponent implements OnChanges, OnDestroy {
 								const newOptions = [...this._element.options];
 								newOptions[i] = optVal;
 								if (!this.projects.currProject.setOptions(this.selectedCompId, newOptions)) {
-									(this.propertiesForm.controls.options as UntypedFormArray).controls[i].setValue(this._element.options[i]);
+									(this.propertiesForm.controls['options'] as UntypedFormArray).controls[i].setValue(this._element.options[i]);
 								}
 							}
 						} else if (optVal * 10 >= this.elementType.optionsConfig[i].max) {
@@ -102,7 +109,7 @@ export class SettingsInfoBoxComponent implements OnChanges, OnDestroy {
 				if (data.numInputs <= this.elementType.maxInputs && data.numInputs >= this.elementType.minInputs) {
 					this.elementType.numInputs = data.numInputs;
 				} else if (data.numInputs * 10 >= this.elementType.maxInputs && this.elementType.maxInputs !== this.elementType.minInputs) {
-					this.propertiesForm.controls.numInputs.setValue(this.elementType.numInputs);
+					this.propertiesForm.controls['numInputs'].setValue(this.elementType.numInputs);
 				}
 				if (this.elementType.optionsConfig) {
 					for (let i = 0; i < data.options.length; i++) {
@@ -143,11 +150,13 @@ export class SettingsInfoBoxComponent implements OnChanges, OnDestroy {
 		} else if (this.selectedElemTypeId === ElementTypeId.OUTPUT) {
 			return index - this.projects.currProject.numInputs + 1;
 		}
+
+		return 0;
 	}
 
 
 	public resetNumInputsValue() {
-		const currVal = this.propertiesForm.controls.numInputs.value;
+		const currVal = this.propertiesForm.controls['numInputs'].value;
 		if (currVal > this.elementType.maxInputs || currVal < this.elementType.minInputs) {
 			let valToSet: number;
 			if (this.isElementPlaced) {
@@ -155,7 +164,7 @@ export class SettingsInfoBoxComponent implements OnChanges, OnDestroy {
 			} else {
 				valToSet = this.elementType.numInputs;
 			}
-			this.propertiesForm.controls.numInputs.setValue(valToSet);
+			this.propertiesForm.controls['numInputs'].setValue(valToSet);
 		}
 	}
 
@@ -181,8 +190,8 @@ export class SettingsInfoBoxComponent implements OnChanges, OnDestroy {
 		return formArray;
 	}
 
-	public get optionsControls(): AbstractControl[] {
-		return (this.propertiesForm.get('options') as UntypedFormArray).controls;
+	public get optionsControls(): FormControl[] {
+		return (this.propertiesForm.get('options') as UntypedFormArray).controls as FormControl[];
 	}
 
 	public getOptionsDropdownValue(optionConfig: number | {value: number, label: string}): number {

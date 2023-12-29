@@ -209,7 +209,7 @@ export class WorkerCommunicationWasmService implements WorkerCommunicationServic
 			this._worker.terminate();
 
 		this._initialized = false;
-		this._worker = new Worker(new URL('../../../worker/simulation-worker/simulation.worker', import.meta.url), { type: 'module' });
+		this._worker = new Worker(new URL('../../../worker/simulation-worker/simulation.worker', import.meta.url));
 		this.ngZone.runOutsideAngular(() => {
 			this._worker.addEventListener('message', (event) => this.handleResponse(event as any));
 		});

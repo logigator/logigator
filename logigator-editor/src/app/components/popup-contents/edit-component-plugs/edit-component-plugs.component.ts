@@ -1,7 +1,14 @@
 import {AfterViewInit, Component, ElementRef, OnDestroy, OnInit, ViewChild} from '@angular/core';
 import {PopupContentComp} from '../../popup/popup-content-comp';
 import {Project} from '../../../models/project';
-import {AbstractControl, UntypedFormArray, UntypedFormBuilder, UntypedFormGroup, Validators} from '@angular/forms';
+import {
+	AbstractControl,
+	FormControl,
+	UntypedFormArray,
+	UntypedFormBuilder,
+	UntypedFormGroup,
+	Validators
+} from '@angular/forms';
 import {ProjectsService} from '../../../services/projects/projects.service';
 import {Element} from '../../../models/element';
 import {fromEvent, Subject} from 'rxjs';
@@ -97,12 +104,12 @@ export class EditComponentPlugsComponent extends PopupContentComp<Project, never
 		).subscribe((e: MouseEvent) => this.mouseMove(e));
 	}
 
-	public get inputLabelsControls(): AbstractControl[] {
-		return (this.inputLabelsForm.controls.labels as UntypedFormArray).controls;
+	public get inputLabelsControls(): FormControl[] {
+		return (this.inputLabelsForm.controls['labels'] as UntypedFormArray).controls as FormControl[];
 	}
 
-	public get outputLabelsControls(): AbstractControl[] {
-		return (this.outputLabelsForm.controls.labels as UntypedFormArray).controls;
+	public get outputLabelsControls(): FormControl[] {
+		return (this.outputLabelsForm.controls['labels'] as UntypedFormArray).controls as FormControl[];
 	}
 
 	mouseDown(event: MouseEvent, control: HTMLDivElement, column: 'input' | 'output') {

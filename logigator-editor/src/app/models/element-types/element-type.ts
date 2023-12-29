@@ -45,7 +45,7 @@ export interface ElementType {
 		name: string,
 		min?: number,
 		max?: number,
-		allowedValues?: number[] | {value: number, label: string}[]
+		allowedValues?: (number | {value: number, label: string})[]
 	}[];
 	onOptionsChanged?: (element?: Element) => void;
 

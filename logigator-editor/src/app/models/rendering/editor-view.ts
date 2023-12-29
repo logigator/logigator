@@ -57,7 +57,7 @@ export class EditorView extends View {
 		return this._project.type;
 	}
 
-	public destroy() {
+	public override destroy() {
 		this._viewInteractionManager.destroy();
 		super.destroy();
 	}

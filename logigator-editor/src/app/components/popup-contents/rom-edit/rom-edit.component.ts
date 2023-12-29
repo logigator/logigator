@@ -45,11 +45,13 @@ export class RomEditComponent extends PopupContentComp<Element, string | false> 
 		this.oldValue = hex;
 	}
 
-	onInput(event: InputEvent) {
+	onInput(event: Event) {
+		const inputEvent = event as InputEvent;
+
 		this.selectionChange();
 
 		let newValue = this.hexInput.nativeElement.value.toUpperCase();
-		if (event.inputType.includes('insert') && !(/^[0-9A-F ]+$/.test(newValue))) {
+		if (inputEvent.inputType.includes('insert') && !(/^[0-9A-F ]+$/.test(newValue))) {
 			this.hexInput.nativeElement.value = this.oldValue;
 			return;
 		}
@@ -62,7 +64,7 @@ export class RomEditComponent extends PopupContentComp<Element, string | false> 
 		for (let i = 0; i < newValue.length; i++) {
 			newValueWithSpaces += newValue.charAt(i) + (i !== 0 && (i + 1) % 2 === 0 ? ' ' : '');
 		}
-		newValueWithSpaces = newValueWithSpaces.trimRight();
+		newValueWithSpaces = newValueWithSpaces.trimEnd();
 
 		let oldValueWithSpaces: string;
 
@@ -78,7 +80,7 @@ export class RomEditComponent extends PopupContentComp<Element, string | false> 
 		this.rows = Math.ceil(this.hexInput.nativeElement.value.length / 48) || 1;
 		this.calcLeftAddresses(this.rows);
 
-		if (newValueWithSpaces.length !== oldValueWithSpaces.length && !event.inputType.includes('delete')) {
+		if (newValueWithSpaces.length !== oldValueWithSpaces.length && !inputEvent.inputType.includes('delete')) {
 			this.hexInput.nativeElement.selectionStart = this.selectionStart + 1;
 			this.hexInput.nativeElement.selectionEnd = this.selectionEnd + 1;
 		} else {

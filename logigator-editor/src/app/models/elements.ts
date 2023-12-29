@@ -240,6 +240,8 @@ export abstract class Elements {
 				return pos.x >= element.endPos.x;
 			case 3:
 				return pos.y >= element.endPos.y;
+			default:
+				return false;
 		}
 	}
 

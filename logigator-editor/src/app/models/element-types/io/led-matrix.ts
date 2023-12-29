@@ -116,5 +116,7 @@ function calcWidthHeight(size: number): number {
 			return 12;
 		case 16:
 			return 16;
+		default:
+			throw new Error('Invalid size');
 	}
 }

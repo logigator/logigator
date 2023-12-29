@@ -87,7 +87,7 @@ export class TextGraphics extends PIXI.Container implements LGraphics, Component
 		this.drawPoint(scale);
 	}
 
-	destroy() {
+	override destroy() {
 		for (const text of this._texts) {
 			text.destroy();
 		}

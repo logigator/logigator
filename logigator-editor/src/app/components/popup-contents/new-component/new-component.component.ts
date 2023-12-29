@@ -30,7 +30,7 @@ export class NewComponentComponent extends PopupContentComp<any, {name: string, 
 		if (this.newCompForm.invalid)
 			return;
 
-		const name = this.newCompForm.controls.name.value.toLowerCase().replace(' ', '');
+		const name = this.newCompForm.controls['name'].value.toLowerCase().replace(' ', '');
 		if (name === 'asdf' || name === 'test') {
 			this.eastereggs.achieve('LAZ');
 		}

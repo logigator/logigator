@@ -15,7 +15,7 @@
 				     [class.active-selected-component]="isComponentMode && currentSelectedComponent === comp.id">
 					<div>
 						<img *ngIf="comp.symbolImage" [src]="comp.symbolImage" [alt]="comp.symbol">
-						<p *ngIf="!comp.symbolImage" appAutoFontSize desiredFontWidth="53">{{comp.symbol}}</p>
+						<p *ngIf="!comp.symbolImage" appAutoFontSize [desiredFontWidth]="53">{{comp.symbol}}</p>
 					</div>
 					<p>{{comp.name | translate}}</p>
 				</div>

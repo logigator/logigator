@@ -130,7 +130,7 @@ export class ProjectState {
 	public remConPointIfExists(con: PIXI.Point): Action {
 		const chunk = this.chunk(CollisionFunctions.gridPosToChunk(con));
 		if (!chunk)
-			return;
+			return null;
 		let conIndex = -1;
 		for (let i = 0; i < chunk.connectionPoints.length; i++) {
 			if (chunk.connectionPoints[i].equals(con)) {
@@ -139,7 +139,7 @@ export class ProjectState {
 			}
 		}
 		if (conIndex < 0)
-			return;
+			return null;
 		chunk.connectionPoints.splice(conIndex, 1);
 		return {name: 'dcoWire', pos: con.clone()};
 	}

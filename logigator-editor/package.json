@@ -9,13 +9,13 @@
 	},
 	"scripts": {
 		"start": "yarn run start:web",
-		"start:web": "yarn run build-custom-build-scripts && yarn run cp-sim-wasm-assets && ng serve -c dev-web",
+		"start:web": "yarn run build-custom-build-scripts && yarn run cp-sim-wasm-assets && ng serve",
 		"build": "yarn run build:web",
-		"build:web": "yarn run build-custom-build-scripts && yarn run cp-sim-wasm-assets && ng build -c prod-web && yarn run wasm-js-cache-bust",
+		"build:web": "yarn run build-custom-build-scripts && yarn run cp-sim-wasm-assets && ng build && yarn run wasm-js-cache-bust",
 		"cp-sim-wasm-assets": "node custom-build-scripts/dist/copy-simulation-assets.js",
 		"wasm-js-cache-bust": "node custom-build-scripts/dist/wasm-js-cache-bust.js",
 		"build-custom-build-scripts": "tsc -p custom-build-scripts/tsconfig-custom-build-scripts.json",
-		"lint": "ng lint"
+		"lint": "prettier . --check && ng lint"
 	},
 	"private": true,
 	"dependencies": {
@@ -42,17 +42,27 @@
 	},
 	"devDependencies": {
 		"@angular-devkit/build-angular": "^17.0.8",
+		"@angular-eslint/builder": "17.1.1",
+		"@angular-eslint/eslint-plugin": "17.1.1",
+		"@angular-eslint/eslint-plugin-template": "17.1.1",
+		"@angular-eslint/schematics": "17.1.1",
+		"@angular-eslint/template-parser": "17.1.1",
 		"@angular/cli": "^17.0.8",
 		"@angular/compiler-cli": "^17.0.8",
 		"@angular/language-service": "^17.0.8",
 		"@types/jasmine": "^5.1.4",
 		"@types/node": "^20.10.5",
+		"@typescript-eslint/eslint-plugin": "6.13.1",
+		"@typescript-eslint/parser": "6.13.1",
+		"eslint": "^8.54.0",
+		"eslint-config-prettier": "^9.1.0",
 		"jasmine-core": "^5.1.1",
 		"karma": "^6.4.2",
 		"karma-chrome-launcher": "^3.2.0",
 		"karma-coverage": "^2.2.1",
 		"karma-jasmine": "^5.1.0",
 		"karma-jasmine-html-reporter": "^2.1.0",
+		"prettier": "^3.1.1",
 		"typescript": "5.2.2"
 	},
 	"developmentInfo": {

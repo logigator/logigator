@@ -203,6 +203,7 @@ export abstract class View extends PIXI.Container {
 			return this.zoomPan.zoomTo100(centerX, centerY);
 		}
 
+		return false;
 	}
 
 	protected placeWireOnView(element: Element) {
@@ -341,7 +342,7 @@ export abstract class View extends PIXI.Container {
 		return this._project;
 	}
 
-	public destroy() {
+	public override destroy() {
 		this._destroySubject.next();
 		this._destroySubject.unsubscribe();
 		super.destroy({

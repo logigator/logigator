@@ -103,7 +103,7 @@ export class SimulationView extends View {
 		this.requestSingleFrame();
 	}
 
-	public destroy() {
+	public override destroy() {
 		super.destroy();
 		getStaticDI(WorkerCommunicationService).unsubscribe(this.parentProjectIdentifier);
 	}

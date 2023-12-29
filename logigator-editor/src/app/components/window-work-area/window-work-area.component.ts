@@ -107,17 +107,17 @@ export class WindowWorkAreaComponent extends WorkArea implements OnInit, OnChang
 	}
 
 	ngOnChanges(changes: SimpleChanges): void {
-		if (changes.showing) {
+		if (changes['showing']) {
 			if (this.showing) {
 				this.show();
 			} else {
 				this.hide();
 			}
 		}
-		if (changes.identifier) {
-			this.ticker.removeTickerFunction(changes.identifier.previousValue);
+		if (changes['identifier']) {
+			this.ticker.removeTickerFunction(changes['identifier'].previousValue);
 		}
-		if (changes.identifier && this.showing) {
+		if (changes['identifier'] && this.showing) {
 			if (this._activeView) {
 				this._activeView.destroy();
 				delete this._activeView;

@@ -50,23 +50,23 @@ export class ImageExportComponent extends PopupContentComp implements OnInit {
 	}
 
 	isInvalid() {
-		return this.form.controls.customDimensions.value && this.form.invalid;
+		return this.form.controls['customDimensions'].value && this.form.invalid;
 	}
 
 	async generate(type: 'svg' | 'png' | 'jpeg') {
 		let size: PIXI.Point;
 		const loadingRemove = this.loadingService.add('LOADING.GENERATING_IMAGE', this._loadingRef, true);
 
-		if (this.form.controls.customDimensions.value) {
+		if (this.form.controls['customDimensions'].value) {
 			size = new PIXI.Point(
-				this.form.controls.dimensionX.value,
-				this.form.controls.dimensionY.value
+				this.form.controls['dimensionX'].value,
+				this.form.controls['dimensionY'].value
 			);
 		}
 
 		const theme = this.themingService.currentTheme === 'dark' ?
-			(this.form.controls.transparent.value ? Theme.Dark_Transparent : Theme.Dark) :
-			(this.form.controls.transparent.value ? Theme.Light_Transparent : Theme.Light);
+			(this.form.controls['transparent'].value ? Theme.Dark_Transparent : Theme.Dark) :
+			(this.form.controls['transparent'].value ? Theme.Light_Transparent : Theme.Light);
 
 		try {
 			if (type === 'svg') {

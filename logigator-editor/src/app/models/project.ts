@@ -340,7 +340,7 @@ export class Project {
 	public rotateComponent(id: number, rotation: number): boolean {
 		const element = this._currState.getElementById(id);
 		if (element.typeId === ElementTypeId.WIRE || element.typeId === ElementTypeId.TEXT)
-			return;
+			return false;
 		const actions: Action[] = [{
 			name: 'rotComp',
 			element,
@@ -367,7 +367,7 @@ export class Project {
 	public setNumInputs(id: number, numInputs: number): boolean {
 		const element = this._currState.getElementById(id);
 		if (element.typeId === ElementTypeId.WIRE || element.typeId === ElementTypeId.TEXT)
-			return;
+			return false;
 		const actions: Action[] = [{
 			name: 'numInpt',
 			element,
@@ -622,7 +622,7 @@ export class Project {
 
 	public stepBack(): Action[] {
 		if (this._currActionPointer < 0)
-			return;
+			return null;
 
 		if (!environment.production)
 			this.boardRecorder.call('stepBack', arguments);
@@ -637,7 +637,7 @@ export class Project {
 
 	public stepForward(): Action[] {
 		if (this._currActionPointer >= this._maxActionCount || this._currActionPointer === this._currMaxActionPointer)
-			return;
+			return null;
 
 		if (!environment.production)
 			this.boardRecorder.call('stepForward', arguments);

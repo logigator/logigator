@@ -97,7 +97,9 @@ export class ElementProviderService {
 		if (this._elements.has(id)) {
 			return this._elements.get(id);
 		}
+
 		this.errorHandler.showErrorMessage('ERROR.PROJECTS.COMP_NOT_FOUND');
+		return null;
 	}
 
 	public hasElement(id: number) {
