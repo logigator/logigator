@@ -1,10 +1,15 @@
-import {ChangeDetectionStrategy, ChangeDetectorRef, Component, OnInit} from '@angular/core';
-import {UserService} from '../../../services/user/user.service';
-import {Observable, Subject} from 'rxjs';
-import {PopupContentComp} from '../../popup/popup-content-comp';
-import {ProjectSaveManagementService} from '../../../services/project-save-management/project-save-management.service';
-import {ProjectList} from '../../../models/http/response/project-list';
-import {debounceTime, map, tap} from 'rxjs/operators';
+import {
+	ChangeDetectionStrategy,
+	ChangeDetectorRef,
+	Component,
+	OnInit
+} from '@angular/core';
+import { UserService } from '../../../services/user/user.service';
+import { Observable, Subject } from 'rxjs';
+import { PopupContentComp } from '../../popup/popup-content-comp';
+import { ProjectSaveManagementService } from '../../../services/project-save-management/project-save-management.service';
+import { ProjectList } from '../../../models/http/response/project-list';
+import { debounceTime, map, tap } from 'rxjs/operators';
 
 @Component({
 	selector: 'app-open-project',
@@ -12,8 +17,13 @@ import {debounceTime, map, tap} from 'rxjs/operators';
 	styleUrls: ['./open-project.component.scss'],
 	changeDetection: ChangeDetectionStrategy.OnPush
 })
-export class OpenProjectComponent extends PopupContentComp<never, {type: 'server' | 'local' | 'share', data: any }> implements OnInit {
-
+export class OpenProjectComponent
+	extends PopupContentComp<
+		never,
+		{ type: 'server' | 'local' | 'share'; data: any }
+	>
+	implements OnInit
+{
 	public fileToOpen: File;
 
 	public shareLinkId: string;
@@ -41,13 +51,12 @@ export class OpenProjectComponent extends PopupContentComp<never, {type: 'server
 	}
 
 	ngOnInit() {
-		if (!this.isLoggedIn)
-			return;
+		if (!this.isLoggedIn) return;
 
 		this.getProjectList(0);
-		this.searchTextChange.pipe(
-			debounceTime(500)
-		).subscribe(() => this.getProjectList(0));
+		this.searchTextChange
+			.pipe(debounceTime(500))
+			.subscribe(() => this.getProjectList(0));
 	}
 
 	public get isLoggedIn(): boolean {
@@ -59,9 +68,13 @@ export class OpenProjectComponent extends PopupContentComp<never, {type: 'server
 	}
 
 	private async getProjectList(page?: number) {
-		this.projectsList = await this.projectSave.getProjectsInfo(page, this.searchText !== '' ? this.searchText : undefined).pipe(
-			map(resp => resp.data)
-		).toPromise();
+		this.projectsList = await this.projectSave
+			.getProjectsInfo(
+				page,
+				this.searchText !== '' ? this.searchText : undefined
+			)
+			.pipe(map((resp) => resp.data))
+			.toPromise();
 		this.updatePagination();
 		this.cdr.detectChanges();
 	}
@@ -101,7 +114,8 @@ export class OpenProjectComponent extends PopupContentComp<never, {type: 'server
 		const pageButtonTargets = new Array(7);
 
 		pageButtonTargets[0] = this.projectsList.page > 0 ? 0 : undefined;
-		pageButtonTargets[1] = this.projectsList.page > 0 ? this.projectsList.page - 1 : undefined;
+		pageButtonTargets[1] =
+			this.projectsList.page > 0 ? this.projectsList.page - 1 : undefined;
 
 		pageButtonTargets[2] = undefined;
 		pageButtonTargets[3] = undefined;
@@ -123,8 +137,14 @@ export class OpenProjectComponent extends PopupContentComp<never, {type: 'server
 			pageButtonTargets[i] = page;
 		}
 
-		pageButtonTargets[5] = this.projectsList.page < this.projectsList.total - 1 ? this.projectsList.page + 1 : undefined;
-		pageButtonTargets[6] = this.projectsList.page < this.projectsList.total - 1 ? this.projectsList.total - 1 : undefined;
+		pageButtonTargets[5] =
+			this.projectsList.page < this.projectsList.total - 1
+				? this.projectsList.page + 1
+				: undefined;
+		pageButtonTargets[6] =
+			this.projectsList.page < this.projectsList.total - 1
+				? this.projectsList.total - 1
+				: undefined;
 
 		this.paginationButtons.forEach((button, index) => {
 			if (index <= 1 || index >= 5) {
@@ -140,23 +160,23 @@ export class OpenProjectComponent extends PopupContentComp<never, {type: 'server
 		});
 	}
 
-
 	public openServer(id: string) {
-		this.requestClose.emit({type: 'server', data: id});
+		this.requestClose.emit({ type: 'server', data: id });
 	}
 
 	public openFile() {
-		this.requestClose.emit({type: 'local', data: this.fileToOpen});
+		this.requestClose.emit({ type: 'local', data: this.fileToOpen });
 	}
 
 	public openShare() {
 		let address: string;
 		if (this.shareLinkId.includes('/')) {
-			address = this.shareLinkId.substring(this.shareLinkId.lastIndexOf('/') + 1);
+			address = this.shareLinkId.substring(
+				this.shareLinkId.lastIndexOf('/') + 1
+			);
 		} else {
 			address = this.shareLinkId;
 		}
-		this.requestClose.emit({type: 'share', data: address});
+		this.requestClose.emit({ type: 'share', data: address });
 	}
-
 }

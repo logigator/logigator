@@ -1,13 +1,15 @@
 import * as PIXI from 'pixi.js';
-import {ComponentUpdatable, LGraphics} from './l-graphics';
-import {Element} from '../../element';
-import {ElementType, isElementType} from '../../element-types/element-type';
-import {getStaticDI} from '../../get-di';
-import {ThemingService} from '../../../services/theming/theming.service';
-import {environment} from '../../../../environments/environment';
+import { ComponentUpdatable, LGraphics } from './l-graphics';
+import { Element } from '../../element';
+import { ElementType, isElementType } from '../../element-types/element-type';
+import { getStaticDI } from '../../get-di';
+import { ThemingService } from '../../../services/theming/theming.service';
+import { environment } from '../../../../environments/environment';
 
-export class LedGraphics extends PIXI.Graphics implements LGraphics, ComponentUpdatable {
-
+export class LedGraphics
+	extends PIXI.Graphics
+	implements LGraphics, ComponentUpdatable
+{
 	readonly element: Element;
 
 	private _scale: number;
@@ -27,7 +29,7 @@ export class LedGraphics extends PIXI.Graphics implements LGraphics, ComponentUp
 			this.element = {
 				rotation: elementOrType.rotation,
 				numInputs: elementOrType.numInputs,
-				numOutputs: elementOrType.numOutputs,
+				numOutputs: elementOrType.numOutputs
 			} as any as Element;
 		} else {
 			this.element = elementOrType;
@@ -43,30 +45,52 @@ export class LedGraphics extends PIXI.Graphics implements LGraphics, ComponentUp
 		}
 
 		this.moveTo(0, 0);
-		this.drawCircle(environment.gridPixelWidth / 2, environment.gridPixelWidth / 2, environment.gridPixelWidth / 2);
+		this.drawCircle(
+			environment.gridPixelWidth / 2,
+			environment.gridPixelWidth / 2,
+			environment.gridPixelWidth / 2
+		);
 
 		if (state) {
-			this.lineStyle(3 / this._scale, this.themingService.getEditorColor('wire'));
+			this.lineStyle(
+				3 / this._scale,
+				this.themingService.getEditorColor('wire')
+			);
 		} else {
-			this.lineStyle(1 / this._scale, this.themingService.getEditorColor('wire'));
+			this.lineStyle(
+				1 / this._scale,
+				this.themingService.getEditorColor('wire')
+			);
 		}
 		this.beginFill(this.themingService.getEditorColor('wire'));
 		switch (this.element.rotation) {
 			case 0:
 				this.moveTo(0, environment.gridPixelWidth / 2);
-				this.lineTo(-environment.gridPixelWidth / 2, environment.gridPixelWidth / 2);
+				this.lineTo(
+					-environment.gridPixelWidth / 2,
+					environment.gridPixelWidth / 2
+				);
 				break;
 			case 1:
 				this.moveTo(environment.gridPixelWidth / 2, 0);
-				this.lineTo(environment.gridPixelWidth / 2, -environment.gridPixelWidth / 2);
+				this.lineTo(
+					environment.gridPixelWidth / 2,
+					-environment.gridPixelWidth / 2
+				);
 				break;
 			case 2:
 				this.moveTo(environment.gridPixelWidth, environment.gridPixelWidth / 2);
-				this.lineTo(environment.gridPixelWidth + environment.gridPixelWidth / 2, environment.gridPixelWidth / 2);
+				this.lineTo(
+					environment.gridPixelWidth + environment.gridPixelWidth / 2,
+					environment.gridPixelWidth / 2
+				);
 				break;
 			case 3:
 				this.moveTo(environment.gridPixelWidth / 2, environment.gridPixelWidth);
-				this.lineTo(environment.gridPixelWidth / 2, environment.gridPixelWidth + environment.gridPixelWidth / 2);
+				this.lineTo(
+					environment.gridPixelWidth / 2,
+					environment.gridPixelWidth + environment.gridPixelWidth / 2
+				);
 				break;
 		}
 	}
@@ -120,5 +144,4 @@ export class LedGraphics extends PIXI.Graphics implements LGraphics, ComponentUp
 		this.clear();
 		this.drawComponent(this.simActiveState);
 	}
-
 }

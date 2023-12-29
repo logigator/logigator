@@ -1,15 +1,43 @@
 <div #tutorialWindow class="tutorial-window">
-	<div class="arrow" [ngStyle]="{top: arrowTop ? arrowTop + 'px' : '', left: arrowLeft ? arrowLeft + 'px' : ''}"></div>
+	<div
+		class="arrow"
+		[ngStyle]="{
+			top: arrowTop ? arrowTop + 'px' : '',
+			left: arrowLeft ? arrowLeft + 'px' : ''
+		}"
+	></div>
 	<div class="header">
 		<div>{{ step.title | translate }}</div>
-		<img *ngIf="currentTheme === 'dark'" src="assets/icons/dark/close.svg" (click)="skipClick()" class="dark">
-		<img *ngIf="currentTheme === 'light'" src="assets/icons/light/close.svg" (click)="skipClick()" class="light">
+		<img
+			*ngIf="currentTheme === 'dark'"
+			src="assets/icons/dark/close.svg"
+			(click)="skipClick()"
+			class="dark"
+		/>
+		<img
+			*ngIf="currentTheme === 'light'"
+			src="assets/icons/light/close.svg"
+			(click)="skipClick()"
+			class="light"
+		/>
 	</div>
 	<div class="content">
 		<p class="help-text" [innerHTML]="step.text | translate"></p>
 		<div class="buttons">
-			<button class="btn-raised primary" (click)="nextClick()" *ngIf="!isLastStep">{{'TUTORIAL.NEXT' | translate}}</button>
-			<button class="btn-raised primary" (click)="nextClick()" *ngIf="isLastStep">{{'TUTORIAL.FINISH' | translate}}</button>
+			<button
+				class="btn-raised primary"
+				(click)="nextClick()"
+				*ngIf="!isLastStep"
+			>
+				{{ 'TUTORIAL.NEXT' | translate }}
+			</button>
+			<button
+				class="btn-raised primary"
+				(click)="nextClick()"
+				*ngIf="isLastStep"
+			>
+				{{ 'TUTORIAL.FINISH' | translate }}
+			</button>
 		</div>
 	</div>
 </div>

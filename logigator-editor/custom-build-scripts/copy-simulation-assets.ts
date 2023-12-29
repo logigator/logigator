@@ -9,7 +9,16 @@ import { join } from 'path';
 import { createHash } from 'crypto';
 import { exit } from 'process';
 
-const source = join(__dirname, '..', '..', 'node_modules', '@logigator', 'logigator-simulation', 'webAssembly', 'dist');
+const source = join(
+	__dirname,
+	'..',
+	'..',
+	'node_modules',
+	'@logigator',
+	'logigator-simulation',
+	'webAssembly',
+	'dist'
+);
 const dest = join(__dirname, '..', '..', 'src', 'assets', 'wasm');
 
 const wasmPath = join(source, 'logigator-simulation.wasm');
@@ -29,9 +38,10 @@ async function run() {
 	);
 
 	const existingFiles = await readdir(dest, { recursive: false });
-	await Promise.all(existingFiles
-		.filter((file) => file.match(/logigator-simulation\..*\.(wasm|js)/))
-		.map((file) => unlink(join(dest, file)))
+	await Promise.all(
+		existingFiles
+			.filter((file) => file.match(/logigator-simulation\..*\.(wasm|js)/))
+			.map((file) => unlink(join(dest, file)))
 	);
 
 	await Promise.all([

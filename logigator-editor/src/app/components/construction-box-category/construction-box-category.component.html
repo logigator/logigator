@@ -1,23 +1,44 @@
 <div class="box">
 	<div class="header">
-		<h2>{{categoryName | translate}}</h2>
-		<button *ngIf="showReloadButton" class="reload" (click)="reloadButtonClick()" ></button>
+		<h2>{{ categoryName | translate }}</h2>
+		<button
+			*ngIf="showReloadButton"
+			class="reload"
+			(click)="reloadButtonClick()"
+		></button>
 	</div>
 	<div class="content">
 		<ng-container *ngIf="components.length > 0; else noComponents">
-			<ng-container *ngFor="let comp of components; trackBy:componentsTrackBy">
-				<div class="component-to-select"
-				     *ngIf="comp.showInConstructionBox &&
-				     (searchText == '' || (isInSearchResult(comp) | async)) && !isCurrentCustomElement(comp.id)
-				     || isHiddenPlug(searchText, comp.id)"
-				     (click)="selectComponent(comp.id)"
-				     (dblclick)="openComponent(comp.id)"
-				     [class.active-selected-component]="isComponentMode && currentSelectedComponent === comp.id">
+			<ng-container *ngFor="let comp of components; trackBy: componentsTrackBy">
+				<div
+					class="component-to-select"
+					*ngIf="
+						(comp.showInConstructionBox &&
+							(searchText == '' || (isInSearchResult(comp) | async)) &&
+							!isCurrentCustomElement(comp.id)) ||
+						isHiddenPlug(searchText, comp.id)
+					"
+					(click)="selectComponent(comp.id)"
+					(dblclick)="openComponent(comp.id)"
+					[class.active-selected-component]="
+						isComponentMode && currentSelectedComponent === comp.id
+					"
+				>
 					<div>
-						<img *ngIf="comp.symbolImage" [src]="comp.symbolImage" [alt]="comp.symbol">
-						<p *ngIf="!comp.symbolImage" appAutoFontSize [desiredFontWidth]="53">{{comp.symbol}}</p>
+						<img
+							*ngIf="comp.symbolImage"
+							[src]="comp.symbolImage"
+							[alt]="comp.symbol"
+						/>
+						<p
+							*ngIf="!comp.symbolImage"
+							appAutoFontSize
+							[desiredFontWidth]="53"
+						>
+							{{ comp.symbol }}
+						</p>
 					</div>
-					<p>{{comp.name | translate}}</p>
+					<p>{{ comp.name | translate }}</p>
 				</div>
 			</ng-container>
 		</ng-container>

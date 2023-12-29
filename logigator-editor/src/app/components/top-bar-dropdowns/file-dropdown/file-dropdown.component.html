@@ -1,33 +1,33 @@
 <div class="dropdown">
 	<div (click)="newProject()">
-		{{'DROPDOWN.FILE.NEW_PROJECT' | translate}}
-		<span>{{'newProj' | shortcutText}}</span>
+		{{ 'DROPDOWN.FILE.NEW_PROJECT' | translate }}
+		<span>{{ 'newProj' | shortcutText }}</span>
 	</div>
 	<div (click)="newComponent()">
-		{{'DROPDOWN.FILE.NEW_COMPONENT' | translate}}
-		<span>{{'newComp' | shortcutText}}</span>
+		{{ 'DROPDOWN.FILE.NEW_COMPONENT' | translate }}
+		<span>{{ 'newComp' | shortcutText }}</span>
 	</div>
-	<hr>
+	<hr />
 	<div (click)="openProject()">
-		{{'DROPDOWN.FILE.OPEN' | translate}}
-		<span>{{'openProj' | shortcutText}}</span>
+		{{ 'DROPDOWN.FILE.OPEN' | translate }}
+		<span>{{ 'openProj' | shortcutText }}</span>
 	</div>
 	<div (click)="saveProject()" *ngIf="canSave">
-		{{'DROPDOWN.FILE.SAVE' | translate}}
-		<span>{{'save' | shortcutText}}</span>
+		{{ 'DROPDOWN.FILE.SAVE' | translate }}
+		<span>{{ 'save' | shortcutText }}</span>
 	</div>
 	<div (click)="cloneProject()" *ngIf="canClone">
-		{{'DROPDOWN.FILE.CLONE' | translate}}
+		{{ 'DROPDOWN.FILE.CLONE' | translate }}
 	</div>
 	<div (click)="exportProject()">
-		{{'DROPDOWN.FILE.EXPORT' | translate}}
+		{{ 'DROPDOWN.FILE.EXPORT' | translate }}
 	</div>
 	<ng-container *ngIf="canShare">
-		<hr>
+		<hr />
 		<div (click)="shareProject()">
-			{{'DROPDOWN.FILE.SHARE' | translate}}
+			{{ 'DROPDOWN.FILE.SHARE' | translate }}
 		</div>
 	</ng-container>
-	<hr>
-	<div (click)="screenshot()">{{'DROPDOWN.FILE.IMAGE' | translate}}</div>
+	<hr />
+	<div (click)="screenshot()">{{ 'DROPDOWN.FILE.IMAGE' | translate }}</div>
 </div>

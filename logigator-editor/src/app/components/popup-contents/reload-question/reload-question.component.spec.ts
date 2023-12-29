@@ -1,4 +1,4 @@
-import {ComponentFixture, TestBed, waitForAsync} from '@angular/core/testing';
+import { ComponentFixture, TestBed, waitForAsync } from '@angular/core/testing';
 
 import { ReloadQuestionComponent } from './reload-question.component';
 
@@ -8,9 +8,8 @@ describe('ReloadQuestionComponent', () => {
 
 	beforeEach(waitForAsync(() => {
 		TestBed.configureTestingModule({
-			declarations: [ ReloadQuestionComponent ]
-		})
-			.compileComponents();
+			declarations: [ReloadQuestionComponent]
+		}).compileComponents();
 	}));
 
 	beforeEach(() => {

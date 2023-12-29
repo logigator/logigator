@@ -11,6 +11,7 @@ You can create subcircuits/components and use it in larger circuits. The amount 
 In order to create such subcircuits select `File > New Component`.
 
 Input a name, a symbol and a description for the component. The symbol will be rendered on the component after you place it in another circuit.
+
 </div>
 </div>
 
@@ -23,6 +24,7 @@ After you created your component, it will automatically be opened in the editor.
 <div class="margin-left">
 
 You can place so called `Plug Elements` in your components. Logigator provides input and output plug elements. Place one `Input Plug` for every input your component should have. Everything you connect to this will be directly connected to everything connected to it outside the component.
+
 </div>
 </div>
 
@@ -35,9 +37,9 @@ You can place so called `Plug Elements` in your components. Logigator provides i
 Plug elements have a few options. These options include a 'Plug Index' and a 'Label'.
 
 - Plug Index<br>
-    Defines the position of the input or output on the component, a Plug Index 1 means the selected input is the first input of the component.
+  Defines the position of the input or output on the component, a Plug Index 1 means the selected input is the first input of the component.
 - Label<br>
-    The label is optional and is rendered next to the input when the component is placed on a circuit.   
+  The label is optional and is rendered next to the input when the component is placed on a circuit.
 
 </div>
 </div>

@@ -1,20 +1,28 @@
-import {ChangeDetectionStrategy, Component, Input, OnChanges, OnDestroy, SimpleChanges} from '@angular/core';
-import {ElementProviderService} from '../../services/element-provider/element-provider.service';
-import {ElementType} from '../../models/element-types/element-type';
-import {ProjectsService} from '../../services/projects/projects.service';
 import {
-	AbstractControl, FormArray,
+	ChangeDetectionStrategy,
+	Component,
+	Input,
+	OnChanges,
+	OnDestroy,
+	SimpleChanges
+} from '@angular/core';
+import { ElementProviderService } from '../../services/element-provider/element-provider.service';
+import { ElementType } from '../../models/element-types/element-type';
+import { ProjectsService } from '../../services/projects/projects.service';
+import {
+	AbstractControl,
+	FormArray,
 	FormControl,
 	UntypedFormArray,
 	UntypedFormBuilder,
 	UntypedFormControl,
 	UntypedFormGroup
 } from '@angular/forms';
-import {Subscription} from 'rxjs';
-import {ElementTypeId} from '../../models/element-types/element-type-ids';
-import {Element} from '../../models/element';
-import {ShortcutsService} from '../../services/shortcuts/shortcuts.service';
-import {EditorInteractionService} from '../../services/editor-interaction/editor-interaction.service';
+import { Subscription } from 'rxjs';
+import { ElementTypeId } from '../../models/element-types/element-type-ids';
+import { Element } from '../../models/element';
+import { ShortcutsService } from '../../services/shortcuts/shortcuts.service';
+import { EditorInteractionService } from '../../services/editor-interaction/editor-interaction.service';
 
 @Component({
 	selector: 'app-settings-info-box',
@@ -23,7 +31,6 @@ import {EditorInteractionService} from '../../services/editor-interaction/editor
 	changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class SettingsInfoBoxComponent implements OnChanges, OnDestroy {
-
 	@Input()
 	public selectedElemTypeId: number;
 
@@ -42,94 +49,184 @@ export class SettingsInfoBoxComponent implements OnChanges, OnDestroy {
 		private formBuilder: UntypedFormBuilder,
 		private editorActions: ShortcutsService,
 		private editorInteractionService: EditorInteractionService
-	) { }
+	) {}
 
 	ngOnChanges(changes: SimpleChanges): void {
 		if (this.formSubscription) {
 			this.formSubscription.unsubscribe();
 		}
-		this._element = this.isElementPlaced ? this.projects.currProject.currState.getElementById(this.selectedCompId) : undefined;
-		this.elementType = this.elemProvider.getElementById(this.selectedElemTypeId);
+		this._element = this.isElementPlaced
+			? this.projects.currProject.currState.getElementById(this.selectedCompId)
+			: undefined;
+		this.elementType = this.elemProvider.getElementById(
+			this.selectedElemTypeId
+		);
 		this.propertiesForm = this.formBuilder.group({
-			numInputs: [this.isElementPlaced ? this._element.numInputs : this.elementType.numInputs],
-			rotation: [this.isElementPlaced ? this._element.rotation : this.elementType.rotation],
+			numInputs: [
+				this.isElementPlaced
+					? this._element.numInputs
+					: this.elementType.numInputs
+			],
+			rotation: [
+				this.isElementPlaced
+					? this._element.rotation
+					: this.elementType.rotation
+			],
 			plugIndex: [this.isElementPlaced ? this._element.plugIndex : undefined],
 			label: [this._element && this._element.data ? this._element.data : ''],
 			options: this.formBuilder.array(
-				this.getOptionsArray(this.elementType, this.isElementPlaced ? this._element.options : this.elementType.options)
+				this.getOptionsArray(
+					this.elementType,
+					this.isElementPlaced
+						? this._element.options
+						: this.elementType.options
+				)
 			)
 		});
-		this.formSubscription = this.propertiesForm.valueChanges.subscribe(data => {
-			data.rotation = Number(data.rotation || 0);
-			// is element placed in project
-			if (this.isElementPlaced) {
-				if (this.elementType.isRotatable && data.rotation !== this._element.rotation) {
-					if (!this.projects.currProject.rotateComponent(this.selectedCompId, Number(data.rotation))) {
-						this.propertiesForm.controls['rotation'].setValue(this._element.rotation);
-					}
-				}
-				if (data.numInputs <= this.elementType.maxInputs && data.numInputs >= this.elementType.minInputs) {
-					if (data.numInputs !== this._element.numInputs && !this.projects.currProject.setNumInputs(this.selectedCompId, data.numInputs)) {
-						this.propertiesForm.controls['numInputs'].setValue(this._element.numInputs);
-					}
-				} else if (data.numInputs * 10 >= this.elementType.maxInputs && this.elementType.maxInputs !== this.elementType.minInputs) {
-					this.propertiesForm.controls['numInputs'].setValue(this._element.numInputs);
-				}
-				if (this.elementType.hasPlugIndex && data.plugIndex !== this._element.plugIndex) {
-					this.projects.currProject.setPlugIndex(this.selectedCompId, Number(data.plugIndex));
-					this.propertiesForm.controls['plugIndex'].setValue(this._element.plugIndex);
-					this.projects.labelsCustomComponentChanged(this.projects.currProject);
-				}
-				if (this.elementType.hasLabel && data.label !== this._element.data) {
-					this.projects.currProject.setData(this.selectedCompId, data.label);
-					this.projects.labelsCustomComponentChanged(this.projects.currProject);
-				}
-				if (this.elementType.optionsConfig) {
-					for (let i = 0; i < data.options.length; i++) {
-						const optVal = Number(data.options[i]);
-						if (this.elementType.optionsConfig[i].allowedValues ||
-							(optVal <= this.elementType.optionsConfig[i].max && optVal >= this.elementType.optionsConfig[i].min)
+		this.formSubscription = this.propertiesForm.valueChanges.subscribe(
+			(data) => {
+				data.rotation = Number(data.rotation || 0);
+				// is element placed in project
+				if (this.isElementPlaced) {
+					if (
+						this.elementType.isRotatable &&
+						data.rotation !== this._element.rotation
+					) {
+						if (
+							!this.projects.currProject.rotateComponent(
+								this.selectedCompId,
+								Number(data.rotation)
+							)
 						) {
-							if (this._element.options[i] !== optVal) {
-								const newOptions = [...this._element.options];
-								newOptions[i] = optVal;
-								if (!this.projects.currProject.setOptions(this.selectedCompId, newOptions)) {
-									(this.propertiesForm.controls['options'] as UntypedFormArray).controls[i].setValue(this._element.options[i]);
-								}
-							}
-						} else if (optVal * 10 >= this.elementType.optionsConfig[i].max) {
-							(this.propertiesForm.get('options') as UntypedFormArray).controls[i].setValue(this._element.options[i]);
+							this.propertiesForm.controls['rotation'].setValue(
+								this._element.rotation
+							);
 						}
 					}
-				}
-			} else {
-				if (this.elementType.isRotatable && data.rotation !== this.elementType.rotation) {
-					this.elementType.rotation = data.rotation;
-				}
-				if (data.numInputs <= this.elementType.maxInputs && data.numInputs >= this.elementType.minInputs) {
-					this.elementType.numInputs = data.numInputs;
-				} else if (data.numInputs * 10 >= this.elementType.maxInputs && this.elementType.maxInputs !== this.elementType.minInputs) {
-					this.propertiesForm.controls['numInputs'].setValue(this.elementType.numInputs);
-				}
-				if (this.elementType.optionsConfig) {
-					for (let i = 0; i < data.options.length; i++) {
-						const optVal = Number(data.options[i]);
-						if (this.elementType.optionsConfig[i].allowedValues ||
-							(optVal <= this.elementType.optionsConfig[i].max && optVal >= this.elementType.optionsConfig[i].min)
+					if (
+						data.numInputs <= this.elementType.maxInputs &&
+						data.numInputs >= this.elementType.minInputs
+					) {
+						if (
+							data.numInputs !== this._element.numInputs &&
+							!this.projects.currProject.setNumInputs(
+								this.selectedCompId,
+								data.numInputs
+							)
 						) {
-							this.elementType.options[i] = optVal;
-							if (this.elementType.onOptionsChanged) this.elementType.onOptionsChanged();
-						} else if (optVal * 10 >= this.elementType.optionsConfig[i].max) {
-							(this.propertiesForm.get('options') as UntypedFormArray).controls[i].setValue(this.elementType.options[i]);
+							this.propertiesForm.controls['numInputs'].setValue(
+								this._element.numInputs
+							);
+						}
+					} else if (
+						data.numInputs * 10 >= this.elementType.maxInputs &&
+						this.elementType.maxInputs !== this.elementType.minInputs
+					) {
+						this.propertiesForm.controls['numInputs'].setValue(
+							this._element.numInputs
+						);
+					}
+					if (
+						this.elementType.hasPlugIndex &&
+						data.plugIndex !== this._element.plugIndex
+					) {
+						this.projects.currProject.setPlugIndex(
+							this.selectedCompId,
+							Number(data.plugIndex)
+						);
+						this.propertiesForm.controls['plugIndex'].setValue(
+							this._element.plugIndex
+						);
+						this.projects.labelsCustomComponentChanged(
+							this.projects.currProject
+						);
+					}
+					if (this.elementType.hasLabel && data.label !== this._element.data) {
+						this.projects.currProject.setData(this.selectedCompId, data.label);
+						this.projects.labelsCustomComponentChanged(
+							this.projects.currProject
+						);
+					}
+					if (this.elementType.optionsConfig) {
+						for (let i = 0; i < data.options.length; i++) {
+							const optVal = Number(data.options[i]);
+							if (
+								this.elementType.optionsConfig[i].allowedValues ||
+								(optVal <= this.elementType.optionsConfig[i].max &&
+									optVal >= this.elementType.optionsConfig[i].min)
+							) {
+								if (this._element.options[i] !== optVal) {
+									const newOptions = [...this._element.options];
+									newOptions[i] = optVal;
+									if (
+										!this.projects.currProject.setOptions(
+											this.selectedCompId,
+											newOptions
+										)
+									) {
+										(
+											this.propertiesForm.controls[
+												'options'
+											] as UntypedFormArray
+										).controls[i].setValue(this._element.options[i]);
+									}
+								}
+							} else if (optVal * 10 >= this.elementType.optionsConfig[i].max) {
+								(
+									this.propertiesForm.get('options') as UntypedFormArray
+								).controls[i].setValue(this._element.options[i]);
+							}
+						}
+					}
+				} else {
+					if (
+						this.elementType.isRotatable &&
+						data.rotation !== this.elementType.rotation
+					) {
+						this.elementType.rotation = data.rotation;
+					}
+					if (
+						data.numInputs <= this.elementType.maxInputs &&
+						data.numInputs >= this.elementType.minInputs
+					) {
+						this.elementType.numInputs = data.numInputs;
+					} else if (
+						data.numInputs * 10 >= this.elementType.maxInputs &&
+						this.elementType.maxInputs !== this.elementType.minInputs
+					) {
+						this.propertiesForm.controls['numInputs'].setValue(
+							this.elementType.numInputs
+						);
+					}
+					if (this.elementType.optionsConfig) {
+						for (let i = 0; i < data.options.length; i++) {
+							const optVal = Number(data.options[i]);
+							if (
+								this.elementType.optionsConfig[i].allowedValues ||
+								(optVal <= this.elementType.optionsConfig[i].max &&
+									optVal >= this.elementType.optionsConfig[i].min)
+							) {
+								this.elementType.options[i] = optVal;
+								if (this.elementType.onOptionsChanged)
+									this.elementType.onOptionsChanged();
+							} else if (optVal * 10 >= this.elementType.optionsConfig[i].max) {
+								(
+									this.propertiesForm.get('options') as UntypedFormArray
+								).controls[i].setValue(this.elementType.options[i]);
+							}
 						}
 					}
 				}
 			}
-		});
+		);
 	}
 
 	editClick() {
-		this.elementType.edit(this.selectedElemTypeId, this.selectedCompId, this.projects);
+		this.elementType.edit(
+			this.selectedElemTypeId,
+			this.selectedCompId,
+			this.projects
+		);
 	}
 
 	customisePlugs() {
@@ -154,13 +251,17 @@ export class SettingsInfoBoxComponent implements OnChanges, OnDestroy {
 		return 0;
 	}
 
-
 	public resetNumInputsValue() {
 		const currVal = this.propertiesForm.controls['numInputs'].value;
-		if (currVal > this.elementType.maxInputs || currVal < this.elementType.minInputs) {
+		if (
+			currVal > this.elementType.maxInputs ||
+			currVal < this.elementType.minInputs
+		) {
 			let valToSet: number;
 			if (this.isElementPlaced) {
-				valToSet = this.projects.currProject.currState.getElementById(this.selectedCompId).numInputs;
+				valToSet = this.projects.currProject.currState.getElementById(
+					this.selectedCompId
+				).numInputs;
 			} else {
 				valToSet = this.elementType.numInputs;
 			}
@@ -169,19 +270,32 @@ export class SettingsInfoBoxComponent implements OnChanges, OnDestroy {
 	}
 
 	public resetOptionsValue(index: number) {
-		const optVal = Number((this.propertiesForm.get('options') as UntypedFormArray).controls[index].value);
-		if (optVal > this.elementType.optionsConfig[index].max || optVal < this.elementType.optionsConfig[index].min) {
+		const optVal = Number(
+			(this.propertiesForm.get('options') as UntypedFormArray).controls[index]
+				.value
+		);
+		if (
+			optVal > this.elementType.optionsConfig[index].max ||
+			optVal < this.elementType.optionsConfig[index].min
+		) {
 			let valToSet: number;
 			if (this.isElementPlaced) {
-				valToSet = this.projects.currProject.currState.getElementById(this.selectedCompId).options[index];
+				valToSet = this.projects.currProject.currState.getElementById(
+					this.selectedCompId
+				).options[index];
 			} else {
 				valToSet = this.elementType.options[index];
 			}
-			(this.propertiesForm.get('options') as UntypedFormArray).controls[index].setValue(valToSet);
+			(this.propertiesForm.get('options') as UntypedFormArray).controls[
+				index
+			].setValue(valToSet);
 		}
 	}
 
-	private getOptionsArray(elemType: ElementType, opts: number[]): UntypedFormControl[] {
+	private getOptionsArray(
+		elemType: ElementType,
+		opts: number[]
+	): UntypedFormControl[] {
 		const formArray = [];
 		if (!elemType.optionsConfig) return formArray;
 		elemType.optionsConfig.forEach((oc, index) => {
@@ -191,15 +305,22 @@ export class SettingsInfoBoxComponent implements OnChanges, OnDestroy {
 	}
 
 	public get optionsControls(): FormControl[] {
-		return (this.propertiesForm.get('options') as UntypedFormArray).controls as FormControl[];
+		return (this.propertiesForm.get('options') as UntypedFormArray)
+			.controls as FormControl[];
 	}
 
-	public getOptionsDropdownValue(optionConfig: number | {value: number, label: string}): number {
+	public getOptionsDropdownValue(
+		optionConfig: number | { value: number; label: string }
+	): number {
 		return typeof optionConfig === 'number' ? optionConfig : optionConfig.value;
 	}
 
-	public getOptionsDropdownLabel(optionConfig: number | {value: number, label: string}): string {
-		return typeof optionConfig === 'number' ? optionConfig.toString() : optionConfig.label;
+	public getOptionsDropdownLabel(
+		optionConfig: number | { value: number; label: string }
+	): string {
+		return typeof optionConfig === 'number'
+			? optionConfig.toString()
+			: optionConfig.label;
 	}
 
 	public focusInput() {
@@ -220,5 +341,4 @@ export class SettingsInfoBoxComponent implements OnChanges, OnDestroy {
 			this.formSubscription.unsubscribe();
 		}
 	}
-
 }

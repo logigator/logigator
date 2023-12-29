@@ -1,19 +1,21 @@
 import { Injectable } from '@angular/core';
-import {Element} from '../../models/element';
-import {Elements} from '../../models/elements';
-import {ProjectsService} from '../projects/projects.service';
-import {SelectionService} from '../selection/selection.service';
+import { Element } from '../../models/element';
+import { Elements } from '../../models/elements';
+import { ProjectsService } from '../projects/projects.service';
+import { SelectionService } from '../selection/selection.service';
 import * as PIXI from 'pixi.js';
 
 @Injectable({
 	providedIn: 'root'
 })
 export class CopyService {
-
 	private _copiedElements: Element[] = [];
 	private _copiedConPoints: PIXI.Point[] = [];
 
-	constructor(private selection: SelectionService, private projects: ProjectsService) {}
+	constructor(
+		private selection: SelectionService,
+		private projects: ProjectsService
+	) {}
 
 	public copySelection() {
 		const elementIds = this.selection.selectedIds();
@@ -23,7 +25,9 @@ export class CopyService {
 	}
 
 	public copyIds(ids: number[]): Element[] {
-		return this.copyElements(this.projects.currProject.currState.getElementsById(ids));
+		return this.copyElements(
+			this.projects.currProject.currState.getElementsById(ids)
+		);
 	}
 	public copyElements(elements: Element[]): Element[] {
 		this._copiedElements = new Array(elements.length);

@@ -1,10 +1,9 @@
-import {Injectable} from '@angular/core';
+import { Injectable } from '@angular/core';
 
 @Injectable({
 	providedIn: 'root'
 })
 export class LocationService {
-
 	public get isProject(): boolean {
 		return this.pathname.startsWith('/project/');
 	}

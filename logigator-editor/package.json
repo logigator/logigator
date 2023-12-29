@@ -15,7 +15,8 @@
 		"cp-sim-wasm-assets": "node custom-build-scripts/dist/copy-simulation-assets.js",
 		"wasm-js-cache-bust": "node custom-build-scripts/dist/wasm-js-cache-bust.js",
 		"build-custom-build-scripts": "tsc -p custom-build-scripts/tsconfig-custom-build-scripts.json",
-		"lint": "prettier . --check && ng lint"
+		"lint": "prettier . --check && ng lint",
+		"lint:fix": "prettier . --write && ng lint --fix"
 	},
 	"private": true,
 	"dependencies": {

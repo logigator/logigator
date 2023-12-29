@@ -1,4 +1,4 @@
-@import "themes";
+@import 'themes';
 
 .input-group {
 	margin-bottom: 2rem;
@@ -9,7 +9,6 @@
 		position: relative;
 
 		@include themify() {
-
 			label {
 				position: absolute;
 				font-size: 1rem;
@@ -54,9 +53,9 @@
 				border-bottom: 1px solid themed('text-primary');
 
 				@if (isTheme('dark')) {
-					background-image: url("src/assets/icons/dark/info.svg");
+					background-image: url('src/assets/icons/dark/info.svg');
 				} @else {
-					background-image: url("src/assets/icons/light/info.svg");
+					background-image: url('src/assets/icons/light/info.svg');
 				}
 
 				&:hover {

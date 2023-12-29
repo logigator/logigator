@@ -1,8 +1,7 @@
 import * as PIXI from 'pixi.js';
-import {Element} from '../../element';
+import { Element } from '../../element';
 
 export interface ComponentUpdatable {
-
 	/**
 	 * updates the {Element} LGraphics uses for rendering
 	 * @param scale scale Scale to use for rendering
@@ -16,7 +15,6 @@ export interface ComponentScalable {
 }
 
 export interface ComponentSelectable {
-
 	/**
 	 * sets the selection state of the component
 	 * @param selected is the element selected
@@ -25,7 +23,6 @@ export interface ComponentSelectable {
 }
 
 export interface ComponentResetable {
-
 	/**
 	 * Component state is reset, used for IO Components, when the user clicks the stop simulation button
 	 */
@@ -33,7 +30,6 @@ export interface ComponentResetable {
 }
 
 export interface ComponentInspectable extends LGraphics {
-
 	/**
 	 * function that is called when the simulation state of the component changes
 	 */
@@ -42,8 +38,10 @@ export interface ComponentInspectable extends LGraphics {
 	getCurrentSimState(): boolean[];
 }
 
-export interface LGraphics extends PIXI.DisplayObject, ComponentScalable, ComponentSelectable {
-
+export interface LGraphics
+	extends PIXI.DisplayObject,
+		ComponentScalable,
+		ComponentSelectable {
 	/**
 	 * Element that is rendered by LGraphics
 	 */

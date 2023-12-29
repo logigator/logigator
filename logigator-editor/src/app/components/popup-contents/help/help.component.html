@@ -1,15 +1,67 @@
 <div class="help-popup-container">
 	<div class="sidebar">
 		<ul>
-			<li><p [class.active]="helpToRender === 'get-started'" (click)="helpToRender = 'get-started'">{{'POPUP.HELP.PAGE.GET_STARTED' | translate}}</p></li>
-			<li><p [class.active]="helpToRender === 'basic'" (click)="helpToRender = 'basic'">{{'POPUP.HELP.PAGE.BASIC' | translate}}</p></li>
-			<li><p [class.active]="helpToRender === 'advanced'" (click)="helpToRender = 'advanced'">{{'POPUP.HELP.PAGE.ADVANCED' | translate}}</p></li>
-			<li><p [class.active]="helpToRender === 'io'" (click)="helpToRender = 'io'">{{'POPUP.HELP.PAGE.IO' | translate}}</p></li>
-			<li><p [class.active]="helpToRender === 'user-defined'" (click)="helpToRender = 'user-defined'">{{'POPUP.HELP.PAGE.USER_DEFINED' | translate}}</p></li>
-			<li><p [class.active]="helpToRender === 'saving'" (click)="helpToRender = 'saving'">{{'POPUP.HELP.PAGE.SAVING' | translate}}</p></li>
-			<li><p [class.active]="helpToRender === 'tutorial-vids'" (click)="helpToRender = 'tutorial-vids'">{{'POPUP.HELP.PAGE.TUTORIAL_VIDS' | translate}}</p></li>
+			<li>
+				<p
+					[class.active]="helpToRender === 'get-started'"
+					(click)="helpToRender = 'get-started'"
+				>
+					{{ 'POPUP.HELP.PAGE.GET_STARTED' | translate }}
+				</p>
+			</li>
+			<li>
+				<p
+					[class.active]="helpToRender === 'basic'"
+					(click)="helpToRender = 'basic'"
+				>
+					{{ 'POPUP.HELP.PAGE.BASIC' | translate }}
+				</p>
+			</li>
+			<li>
+				<p
+					[class.active]="helpToRender === 'advanced'"
+					(click)="helpToRender = 'advanced'"
+				>
+					{{ 'POPUP.HELP.PAGE.ADVANCED' | translate }}
+				</p>
+			</li>
+			<li>
+				<p [class.active]="helpToRender === 'io'" (click)="helpToRender = 'io'">
+					{{ 'POPUP.HELP.PAGE.IO' | translate }}
+				</p>
+			</li>
+			<li>
+				<p
+					[class.active]="helpToRender === 'user-defined'"
+					(click)="helpToRender = 'user-defined'"
+				>
+					{{ 'POPUP.HELP.PAGE.USER_DEFINED' | translate }}
+				</p>
+			</li>
+			<li>
+				<p
+					[class.active]="helpToRender === 'saving'"
+					(click)="helpToRender = 'saving'"
+				>
+					{{ 'POPUP.HELP.PAGE.SAVING' | translate }}
+				</p>
+			</li>
+			<li>
+				<p
+					[class.active]="helpToRender === 'tutorial-vids'"
+					(click)="helpToRender = 'tutorial-vids'"
+				>
+					{{ 'POPUP.HELP.PAGE.TUTORIAL_VIDS' | translate }}
+				</p>
+			</li>
 		</ul>
-		<a [href]="githubEditUrl" target="_blank" rel="noopener">{{'POPUP.HELP.EDIT' | translate}}</a>
+		<a [href]="githubEditUrl" target="_blank" rel="noopener">{{
+			'POPUP.HELP.EDIT' | translate
+		}}</a>
 	</div>
-	<markdown class="markdown-body" [disableSanitizer]="true" [src]="markdownUrl"></markdown>
+	<markdown
+		class="markdown-body"
+		[disableSanitizer]="true"
+		[src]="markdownUrl"
+	></markdown>
 </div>

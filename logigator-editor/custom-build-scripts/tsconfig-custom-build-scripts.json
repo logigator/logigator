@@ -8,18 +8,9 @@
 		"rootDir": ".",
 		"moduleResolution": "node",
 		"lib": ["ES2022"],
-		"types": [
-			"node"
-		]
+		"types": ["node"]
 	},
-	"files": [
-		"copy-simulation-assets.ts",
-		"wasm-js-cache-bust.ts"
-	],
-	"include": [
-		"./**/*.ts"
-	],
-	"exclude": [
-		"node_modules"
-	]
+	"files": ["copy-simulation-assets.ts", "wasm-js-cache-bust.ts"],
+	"include": ["./**/*.ts"],
+	"exclude": ["node_modules"]
 }

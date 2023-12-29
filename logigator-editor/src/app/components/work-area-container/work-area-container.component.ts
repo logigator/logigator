@@ -1,12 +1,20 @@
-import {ChangeDetectorRef, Component, ElementRef, OnInit, Renderer2, ViewChild, ViewContainerRef} from '@angular/core';
-import {ReqInspectElementEvent} from '../../models/rendering/req-inspect-element-event';
-import {WindowWorkAreaMeta} from '../../models/rendering/window-work-area-meta';
-import {ProjectSaveManagementService} from '../../services/project-save-management/project-save-management.service';
-import {WorkModeService} from '../../services/work-mode/work-mode.service';
-import {ErrorHandlingService} from '../../services/error-handling/error-handling.service';
-import {ToastContainerDirective} from 'ngx-toastr';
-import {TutorialService} from '../../services/tutorial/tutorial.service';
-import {ElementProviderService} from '../../services/element-provider/element-provider.service';
+import {
+	ChangeDetectorRef,
+	Component,
+	ElementRef,
+	OnInit,
+	Renderer2,
+	ViewChild,
+	ViewContainerRef
+} from '@angular/core';
+import { ReqInspectElementEvent } from '../../models/rendering/req-inspect-element-event';
+import { WindowWorkAreaMeta } from '../../models/rendering/window-work-area-meta';
+import { ProjectSaveManagementService } from '../../services/project-save-management/project-save-management.service';
+import { WorkModeService } from '../../services/work-mode/work-mode.service';
+import { ErrorHandlingService } from '../../services/error-handling/error-handling.service';
+import { ToastContainerDirective } from 'ngx-toastr';
+import { TutorialService } from '../../services/tutorial/tutorial.service';
+import { ElementProviderService } from '../../services/element-provider/element-provider.service';
 
 @Component({
 	selector: 'app-work-area-container',
@@ -14,13 +22,15 @@ import {ElementProviderService} from '../../services/element-provider/element-pr
 	styleUrls: ['./work-area-container.component.scss']
 })
 export class WorkAreaContainerComponent implements OnInit {
+	public windowWorkAreas: WindowWorkAreaMeta[] = [
+		{ showing: false },
+		{ showing: false }
+	];
 
-	public windowWorkAreas: WindowWorkAreaMeta[] = [{showing: false}, {showing: false}];
-
-	@ViewChild('windowDragBounding', {static: true})
+	@ViewChild('windowDragBounding', { static: true })
 	workAreaContainer: ElementRef<HTMLElement>;
 
-	@ViewChild(ToastContainerDirective, {static: true})
+	@ViewChild(ToastContainerDirective, { static: true })
 	toastContainer: ToastContainerDirective;
 
 	constructor(
@@ -31,15 +41,22 @@ export class WorkAreaContainerComponent implements OnInit {
 		private errorHandling: ErrorHandlingService,
 		private tutorialService: TutorialService,
 		private elementProvider: ElementProviderService
-	) { }
+	) {}
 
 	ngOnInit() {
-		this.workMode.isSimulationMode$.subscribe(isSim => {
+		this.workMode.isSimulationMode$.subscribe((isSim) => {
 			if (isSim) {
-				this.renderer2.setStyle(this.workAreaContainer.nativeElement, 'width', '100vw');
+				this.renderer2.setStyle(
+					this.workAreaContainer.nativeElement,
+					'width',
+					'100vw'
+				);
 			} else {
-				this.renderer2.removeStyle(this.workAreaContainer.nativeElement, 'width');
-				this.windowWorkAreas.forEach(a => {
+				this.renderer2.removeStyle(
+					this.workAreaContainer.nativeElement,
+					'width'
+				);
+				this.windowWorkAreas.forEach((a) => {
 					a.identifier = null;
 					a.showing = false;
 				});
@@ -51,8 +68,12 @@ export class WorkAreaContainerComponent implements OnInit {
 		this.tutorialService.startTutorial('gettingStarted');
 	}
 
-	async onRequestElementInspection(event: ReqInspectElementEvent, fromWindow?: number) {
-		if (this.windowWorkAreas.find(a => a.identifier === event.identifier)) return;
+	async onRequestElementInspection(
+		event: ReqInspectElementEvent,
+		fromWindow?: number
+	) {
+		if (this.windowWorkAreas.find((a) => a.identifier === event.identifier))
+			return;
 
 		const meta: WindowWorkAreaMeta = {
 			showing: true,
@@ -65,7 +86,9 @@ export class WorkAreaContainerComponent implements OnInit {
 		if (this.elementProvider.canInspectWithPopup(event.typeId)) {
 			meta.sprite = event.sprite;
 		} else {
-			meta.project = await this.projectSaveManagement.getComponent(event.typeId);
+			meta.project = await this.projectSaveManagement.getComponent(
+				event.typeId
+			);
 		}
 
 		this.moveAllBack();
@@ -73,7 +96,7 @@ export class WorkAreaContainerComponent implements OnInit {
 		if (fromWindow === undefined) {
 			meta.parentNames.shift();
 			meta.parentTypesIds.shift();
-			let firstHidden = this.windowWorkAreas.find(a => !a.showing);
+			let firstHidden = this.windowWorkAreas.find((a) => !a.showing);
 			if (!firstHidden) firstHidden = this.windowWorkAreas[0];
 			firstHidden.showing = meta.showing;
 			firstHidden.identifier = meta.identifier;
@@ -112,5 +135,4 @@ export class WorkAreaContainerComponent implements OnInit {
 		this.windowWorkAreas[window].identifier = null;
 		this.cdr.detectChanges();
 	}
-
 }

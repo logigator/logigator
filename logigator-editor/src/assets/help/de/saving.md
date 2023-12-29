@@ -20,5 +20,6 @@ Wählen Sie `Datei > Speichern` und geben Sie Name und Beschreibung des Projekts
 <div class="margin-left">
 
 Um Projekte zu öffnen, wählen Sie `Datei > Öffnen`.
+
 </div>
 </div>

@@ -167,9 +167,9 @@
 				"openProj": "Projekt öffnen",
 				"enterSim": "Simulation starten",
 				"leaveSim": "Simulation verlassen",
-				"startSim":  "Simulation starten",
+				"startSim": "Simulation starten",
 				"pauseSim": "Simulation pausieren",
-				"stopSim":  "Simulation stoppen",
+				"stopSim": "Simulation stoppen",
 				"singleStepSim": "Einzelner Simulationsschritt"
 			}
 		},
@@ -513,6 +513,5 @@
 		"OPEN_PROJECT": "Projekt wird geöffnet",
 		"OPEN_COMPONENT": "Komponente wird geöffnet",
 		"OPEN_SHARE": "Share wird geöffnet"
-
 	}
 }

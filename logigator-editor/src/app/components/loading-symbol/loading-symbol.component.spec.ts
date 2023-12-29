@@ -8,9 +8,8 @@ describe('LoadingSymbolComponent', () => {
 
 	beforeEach(async () => {
 		await TestBed.configureTestingModule({
-			declarations: [ LoadingSymbolComponent ]
-		})
-			.compileComponents();
+			declarations: [LoadingSymbolComponent]
+		}).compileComponents();
 	});
 
 	beforeEach(() => {

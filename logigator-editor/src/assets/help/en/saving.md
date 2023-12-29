@@ -22,5 +22,6 @@ To save your project in the cloud select `File > Save`. Enter a project name and
 In order to open a project select `File > Open`.
 
 Then you can select a project to open from the cloud or select a file from your local device.
+
 </div>
 </div>

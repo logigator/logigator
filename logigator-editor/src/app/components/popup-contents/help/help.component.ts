@@ -9,10 +9,10 @@ import {
 	ViewChild,
 	ViewEncapsulation
 } from '@angular/core';
-import {TranslateService} from '@ngx-translate/core';
-import {fromEvent, Subject} from 'rxjs';
-import {takeUntil} from 'rxjs/operators';
-import {PopupContentComp} from '../../popup/popup-content-comp';
+import { TranslateService } from '@ngx-translate/core';
+import { fromEvent, Subject } from 'rxjs';
+import { takeUntil } from 'rxjs/operators';
+import { PopupContentComp } from '../../popup/popup-content-comp';
 
 @Component({
 	selector: 'app-help',
@@ -21,7 +21,6 @@ import {PopupContentComp} from '../../popup/popup-content-comp';
 	encapsulation: ViewEncapsulation.None
 })
 export class HelpComponent extends PopupContentComp {
-
 	public helpToRender = 'get-started';
 
 	constructor(private translate: TranslateService) {
@@ -39,5 +38,4 @@ export class HelpComponent extends PopupContentComp {
 	public get githubEditUrl(): string {
 		return `https://github.com/logigator/logigator/tree/development/logigator-editor/src/help/${this.currentLang}/${this.helpToRender}.md`;
 	}
-
 }

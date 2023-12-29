@@ -1,15 +1,14 @@
-import {Element} from '../../../models/element';
-import {RenderQuality} from '../svg-image-exporter';
-import {ElementType} from '../../../models/element-types/element-type';
+import { Element } from '../../../models/element';
+import { RenderQuality } from '../svg-image-exporter';
+import { ElementType } from '../../../models/element-types/element-type';
 import * as PIXI from 'pixi.js';
-import {Elements} from '../../../models/elements';
-import {getStaticDI} from '../../../models/get-di';
-import {ElementProviderService} from '../../element-provider/element-provider.service';
-import {environment} from '../../../../environments/environment';
-import {Project} from '../../../models/project';
+import { Elements } from '../../../models/elements';
+import { getStaticDI } from '../../../models/get-di';
+import { ElementProviderService } from '../../element-provider/element-provider.service';
+import { environment } from '../../../../environments/environment';
+import { Project } from '../../../models/project';
 
 export abstract class BaseRenderer {
-
 	protected readonly elementProvider = getStaticDI(ElementProviderService);
 	protected readonly SVG_NS = 'http://www.w3.org/2000/svg';
 
@@ -22,7 +21,12 @@ export abstract class BaseRenderer {
 	protected _quality: RenderQuality;
 	protected _project: Project;
 
-	public constructor(element: Element, gridSize: number, quality: RenderQuality, project: Project) {
+	public constructor(
+		element: Element,
+		gridSize: number,
+		quality: RenderQuality,
+		project: Project
+	) {
 		this._element = element;
 		this._gridSize = gridSize;
 		this._quality = quality;
@@ -35,13 +39,14 @@ export abstract class BaseRenderer {
 		this._size.x *= gridSize;
 		this._size.y *= gridSize;
 
-		if (this._elementType.calcLabels) this._labels = this._elementType.calcLabels(element);
+		if (this._elementType.calcLabels)
+			this._labels = this._elementType.calcLabels(element);
 	}
 
 	public abstract render(): SVGGElement;
 
 	protected scaled(size: number) {
-		return size * this._gridSize / environment.gridPixelWidth;
+		return (size * this._gridSize) / environment.gridPixelWidth;
 	}
 
 	protected getLabelText(text: string, x: number, y: number): SVGTextElement {

@@ -1,6 +1,6 @@
-import {ElementType} from './element-type';
-import {ProjectsService} from '../../services/projects/projects.service';
-import {ElementRotation} from '../element';
+import { ElementType } from './element-type';
+import { ProjectsService } from '../../services/projects/projects.service';
+import { ElementRotation } from '../element';
 
 export const udcTemplate: Partial<ElementType> = {
 	showSettings: true,
@@ -11,8 +11,10 @@ export const udcTemplate: Partial<ElementType> = {
 	rotation: ElementRotation.Right,
 
 	width: () => 3,
-	height(element? ) {
-		return element ? Math.max(element.numInputs, element.numOutputs) : Math.max(this.numInputs, this.numOutputs);
+	height(element?) {
+		return element
+			? Math.max(element.numInputs, element.numOutputs)
+			: Math.max(this.numInputs, this.numOutputs);
 	},
 
 	edit: (typeId: number, id: number, projectsSer: ProjectsService) => {

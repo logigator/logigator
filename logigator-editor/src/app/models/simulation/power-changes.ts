@@ -1,5 +1,5 @@
 import { Element } from '../element';
-import {InputEvent} from './board';
+import { InputEvent } from './board';
 
 export interface PowerChangeIn {
 	index: number;
@@ -7,4 +7,7 @@ export interface PowerChangeIn {
 	state: ArrayBuffer;
 }
 export type PowerChangesOutWire = Map<Element, boolean>;
-export type PowerChangesOutWireEnd = Map<{component: Element, wireIndex: number}, boolean>;
+export type PowerChangesOutWireEnd = Map<
+	{ component: Element; wireIndex: number },
+	boolean
+>;

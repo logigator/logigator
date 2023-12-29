@@ -1,19 +1,23 @@
 <div id="app-root" #appRoot>
 	<app-top-bar></app-top-bar>
 	<app-toolbar></app-toolbar>
-	<div class="main-area"
-	     [class.simulation-mode]="isSimulationMode"
-	     (dragenter)="onDragStart($event)"
-	     (dragstart)="onDragStart($event)"
-	     (dragover)="onDragStart($event)"
-	     (dragend)="onDragStop($event)"
-	     (dragleave)="onDragStop($event)"
-	     (drop)="onFileDrop($event)">
+	<div
+		class="main-area"
+		[class.simulation-mode]="isSimulationMode"
+		(dragenter)="onDragStart($event)"
+		(dragstart)="onDragStart($event)"
+		(dragover)="onDragStart($event)"
+		(dragend)="onDragStop($event)"
+		(dragleave)="onDragStop($event)"
+		(drop)="onFileDrop($event)"
+	>
 		<app-construction-box *ngIf="!isSimulationMode"></app-construction-box>
 		<app-work-area-container></app-work-area-container>
 	</div>
-	<app-settings-info-box *ngIf="showSettingsInfoBox"
-	                       [selectedElemTypeId]="selectedElemTypeId"
-	                       [selectedCompId]="selectedCompId">
+	<app-settings-info-box
+		*ngIf="showSettingsInfoBox"
+		[selectedElemTypeId]="selectedElemTypeId"
+		[selectedCompId]="selectedCompId"
+	>
 	</app-settings-info-box>
 </div>

@@ -1,4 +1,4 @@
-import {SimulationUnit} from './simulation-unit';
+import { SimulationUnit } from './simulation-unit';
 
 export const enum BoardState {
 	Uninitialized,

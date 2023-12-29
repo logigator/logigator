@@ -1,6 +1,6 @@
-import {BaseRenderer} from './base-renderer';
-import {RenderQuality} from '../svg-image-exporter';
-import {ElementRotation} from '../../../models/element';
+import { BaseRenderer } from './base-renderer';
+import { RenderQuality } from '../svg-image-exporter';
+import { ElementRotation } from '../../../models/element';
 
 export class LedMatrixRenderer extends BaseRenderer {
 	render(): SVGGElement {
@@ -11,22 +11,30 @@ export class LedMatrixRenderer extends BaseRenderer {
 			switch (this.element.rotation) {
 				case ElementRotation.Right:
 					for (let i = 0; i < this._element.numInputs; i++) {
-						path += ` M ${-(this._gridSize / 2)},${(this._gridSize / 2) + this._gridSize * i} h ${this._gridSize / 2}`;
+						path += ` M ${-(this._gridSize / 2)},${
+							this._gridSize / 2 + this._gridSize * i
+						} h ${this._gridSize / 2}`;
 					}
 					break;
 				case ElementRotation.Down:
 					for (let i = 0; i < this._element.numInputs; i++) {
-						path += ` M ${this._size.x - this._gridSize / 2 - this._gridSize * i},0 v ${-this._gridSize / 2}`;
+						path += ` M ${
+							this._size.x - this._gridSize / 2 - this._gridSize * i
+						},0 v ${-this._gridSize / 2}`;
 					}
 					break;
 				case ElementRotation.Left:
 					for (let i = 0; i < this._element.numInputs; i++) {
-						path += ` M ${this._size.x},${this._size.y - (this._gridSize / 2) - this._gridSize * i} h ${this._gridSize / 2}`;
+						path += ` M ${this._size.x},${
+							this._size.y - this._gridSize / 2 - this._gridSize * i
+						} h ${this._gridSize / 2}`;
 					}
 					break;
 				case ElementRotation.Up:
 					for (let i = 0; i < this._element.numInputs; i++) {
-						path += ` M ${this._gridSize / 2 + this._gridSize * i},${this._size.y} v ${this._gridSize / 2}`;
+						path += ` M ${this._gridSize / 2 + this._gridSize * i},${
+							this._size.y
+						} v ${this._gridSize / 2}`;
 					}
 					break;
 			}
@@ -41,14 +49,22 @@ export class LedMatrixRenderer extends BaseRenderer {
 			switch (this._element.rotation) {
 				case ElementRotation.Right:
 					for (let i = 0; i < this._element.numInputs; i++) {
-						const label = this.getLabelText(this._labels[i], 2, (this._gridSize / 2) + this._gridSize * i + this.scaled(2));
+						const label = this.getLabelText(
+							this._labels[i],
+							2,
+							this._gridSize / 2 + this._gridSize * i + this.scaled(2)
+						);
 						label.setAttribute('class', 'l-l');
 						this._group.appendChild(label);
 					}
 					break;
 				case ElementRotation.Down:
 					for (let i = 0; i < this._element.numInputs; i++) {
-						const label = this.getLabelText(this._labels[i], this._size.x - this._gridSize / 2 - this._gridSize * i, this.scaled(6));
+						const label = this.getLabelText(
+							this._labels[i],
+							this._size.x - this._gridSize / 2 - this._gridSize * i,
+							this.scaled(6)
+						);
 						label.setAttribute('class', 'l-t');
 						this._group.appendChild(label);
 					}
@@ -56,7 +72,12 @@ export class LedMatrixRenderer extends BaseRenderer {
 				case ElementRotation.Left:
 					for (let i = 0; i < this._element.numInputs; i++) {
 						const label = this.getLabelText(
-							this._labels[i], this._size.x, this._size.y - (this._gridSize / 2) - this._gridSize * i + this.scaled(2)
+							this._labels[i],
+							this._size.x,
+							this._size.y -
+								this._gridSize / 2 -
+								this._gridSize * i +
+								this.scaled(2)
 						);
 						label.setAttribute('class', 'l-r');
 						this._group.appendChild(label);
@@ -64,7 +85,11 @@ export class LedMatrixRenderer extends BaseRenderer {
 					break;
 				case ElementRotation.Up:
 					for (let i = 0; i < this._element.numInputs; i++) {
-						const label = this.getLabelText(this._labels[i], this._gridSize / 2 + this._gridSize * i, this._size.y - this.scaled(3));
+						const label = this.getLabelText(
+							this._labels[i],
+							this._gridSize / 2 + this._gridSize * i,
+							this._size.y - this.scaled(3)
+						);
 						label.setAttribute('class', 'l-b');
 						this._group.appendChild(label);
 					}
@@ -72,11 +97,14 @@ export class LedMatrixRenderer extends BaseRenderer {
 			}
 		}
 
-		const ledSize = (this._size.x - this.gridSize * 2) / this.element.options[0] - 1;
+		const ledSize =
+			(this._size.x - this.gridSize * 2) / this.element.options[0] - 1;
 		let ledPath = '';
 		for (let y = 0; y < this.element.options[0]; y++) {
 			for (let x = 0; x < this.element.options[0]; x++) {
-				ledPath += `M ${ledSize * x + x},${ledSize * y + y} h ${ledSize} v ${ledSize} h ${-ledSize} v ${-ledSize}`;
+				ledPath += `M ${ledSize * x + x},${
+					ledSize * y + y
+				} h ${ledSize} v ${ledSize} h ${-ledSize} v ${-ledSize}`;
 			}
 		}
 
@@ -85,21 +113,32 @@ export class LedMatrixRenderer extends BaseRenderer {
 		leds.setAttribute('d', ledPath);
 		switch (this.element.rotation) {
 			case ElementRotation.Right:
-				leds.setAttribute('transform', `translate(${1.5 * this.gridSize}, ${this.gridSize})`);
+				leds.setAttribute(
+					'transform',
+					`translate(${1.5 * this.gridSize}, ${this.gridSize})`
+				);
 				break;
 			case ElementRotation.Down:
-				leds.setAttribute('transform', `translate(${this.gridSize}, ${1.5 * this.gridSize})`);
+				leds.setAttribute(
+					'transform',
+					`translate(${this.gridSize}, ${1.5 * this.gridSize})`
+				);
 				break;
 			case ElementRotation.Left:
-				leds.setAttribute('transform', `translate(${0.5 * this.gridSize}, ${this.gridSize})`);
+				leds.setAttribute(
+					'transform',
+					`translate(${0.5 * this.gridSize}, ${this.gridSize})`
+				);
 				break;
 			case ElementRotation.Up:
-				leds.setAttribute('transform', `translate(${this.gridSize}, ${0.5 * this.gridSize})`);
+				leds.setAttribute(
+					'transform',
+					`translate(${this.gridSize}, ${0.5 * this.gridSize})`
+				);
 				break;
 		}
 		this._group.appendChild(leds);
 
 		return this._group;
 	}
-
 }

@@ -1,5 +1,5 @@
 import * as PIXI from 'pixi.js';
-import {ElementTypeId} from './element-types/element-type-ids';
+import { ElementTypeId } from './element-types/element-type-ids';
 
 export interface Element {
 	id: number;

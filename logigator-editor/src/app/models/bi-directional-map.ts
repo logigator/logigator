@@ -1,11 +1,9 @@
 export class BiDirectionalMap<K, V> {
-
 	private readonly map = new Map<K, V>();
 	private readonly reverse = new Map<V, K>();
 
 	constructor(map?: object | Map<K, V> | Array<[K, V]>) {
-		if (!map)
-			return;
+		if (!map) return;
 
 		if (map instanceof Map) {
 			map.forEach((value, key) => {

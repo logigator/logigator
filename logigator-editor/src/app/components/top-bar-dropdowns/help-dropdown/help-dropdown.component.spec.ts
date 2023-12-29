@@ -1,4 +1,4 @@
-import {ComponentFixture, TestBed, waitForAsync} from '@angular/core/testing';
+import { ComponentFixture, TestBed, waitForAsync } from '@angular/core/testing';
 
 import { HelpDropdownComponent } from './help-dropdown.component';
 
@@ -8,9 +8,8 @@ describe('HelpDropdownComponent', () => {
 
 	beforeEach(waitForAsync(() => {
 		TestBed.configureTestingModule({
-			declarations: [ HelpDropdownComponent ]
-		})
-			.compileComponents();
+			declarations: [HelpDropdownComponent]
+		}).compileComponents();
 	}));
 
 	beforeEach(() => {

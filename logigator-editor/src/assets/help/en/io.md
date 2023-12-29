@@ -1,6 +1,7 @@
 # IO Gates
 
 ## Button
+
 <div class="rows">
 
 ![Button](assets/help/button.jpg)
@@ -8,10 +9,12 @@
 <div class="margin-left">
 
 Can be clicked to emit a pulse signal. Lasts one simulation tick.
+
 </div>
 </div>
 
 ## Switch
+
 <div class="rows">
 
 ![Switch](assets/help/switch.jpg)
@@ -19,6 +22,7 @@ Can be clicked to emit a pulse signal. Lasts one simulation tick.
 <div class="margin-left">
 
 Can be switched on and off during simulation.
+
 </div>
 </div>
 
@@ -31,6 +35,7 @@ Can be switched on and off during simulation.
 <div class="margin-left">
 
 Switches on or off depending on the applied input.
+
 </div>
 </div>
 
@@ -42,7 +47,8 @@ Switches on or off depending on the applied input.
 
 <div class="margin-left">
 
-Seven segment display with a binary input, that displays the input as decimal, hexadecimal or octal number. 
+Seven segment display with a binary input, that displays the input as decimal, hexadecimal or octal number.
+
 </div>
 </div>
 
@@ -54,15 +60,15 @@ Seven segment display with a binary input, that displays the input as decimal, h
 
 <div class="margin-left">
 
-Displays up to 256 single LEDs. It is possible to choose between the following sizes: 4x4, 8x8 and 16x16. 
+Displays up to 256 single LEDs. It is possible to choose between the following sizes: 4x4, 8x8 and 16x16.
 
- - **Address Inputs**<br>
-   With the address inputs, the single rows of the matrix can be controlled. When using a 16x16 Matrix, each row is spilt into two addresses (the first 8 LED, the last 8 LEDs).
- 
- - **Data Inputs**<br>
-   The Matrix has between 4 and 8 data Inputs (D0-D7). D0 is the first LED of the row and D7 is the last LED of the row. A 16x16 Matrix also has only 8 Data Inputs. Because of that, every row consists of two addresses. 
+- **Address Inputs**<br>
+  With the address inputs, the single rows of the matrix can be controlled. When using a 16x16 Matrix, each row is spilt into two addresses (the first 8 LED, the last 8 LEDs).
 
- - **Clock**<br>
-   When CLK is HIGH, the data is written to the Matrix. 
+- **Data Inputs**<br>
+  The Matrix has between 4 and 8 data Inputs (D0-D7). D0 is the first LED of the row and D7 is the last LED of the row. A 16x16 Matrix also has only 8 Data Inputs. Because of that, every row consists of two addresses.
+
+- **Clock**<br>
+When CLK is HIGH, the data is written to the Matrix.
 </div>
 </div>

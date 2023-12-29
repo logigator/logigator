@@ -1,5 +1,5 @@
 import * as PIXI from 'pixi.js';
-import {View} from './view';
+import { View } from './view';
 
 export interface ZoomPanData {
 	posX: number;
@@ -8,7 +8,6 @@ export interface ZoomPanData {
 }
 
 export class ZoomPan {
-
 	private static MAX_ZOOM_IN = 2.5;
 	private static MAX_ZOOM_OUT = 0.2;
 
@@ -41,8 +40,13 @@ export class ZoomPan {
 	 * zooms by a given factor to a given point
 	 * @return true if something was actually moved
 	 */
-	public zoomBy(scaleMultiplier: number, scaleCenterX: number, scaleCenterY: number): boolean {
-		const newScale = Math.round(this._view.scale.x * scaleMultiplier * 100000000) / 100000000;
+	public zoomBy(
+		scaleMultiplier: number,
+		scaleCenterX: number,
+		scaleCenterY: number
+	): boolean {
+		const newScale =
+			Math.round(this._view.scale.x * scaleMultiplier * 100000000) / 100000000;
 		return this.zoomTo(newScale, scaleCenterX, scaleCenterY);
 	}
 
@@ -50,7 +54,11 @@ export class ZoomPan {
 		return this.zoomTo(1, scaleCenterX, scaleCenterY);
 	}
 
-	private zoomTo(newScale: number, scaleCenterX: number, scaleCenterY: number): boolean {
+	private zoomTo(
+		newScale: number,
+		scaleCenterX: number,
+		scaleCenterY: number
+	): boolean {
 		const posX = (scaleCenterX - this._view.x) / this._view.scale.x;
 		const posY = (scaleCenterY - this._view.y) / this._view.scale.y;
 
@@ -63,8 +71,8 @@ export class ZoomPan {
 		const newPosX = posX * this._scale + this._view.x;
 		const newPosY = posY * this._scale + this._view.y;
 
-		this._view.x -= (newPosX - scaleCenterX) ;
-		this._view.y -= (newPosY - scaleCenterY) ;
+		this._view.x -= newPosX - scaleCenterX;
+		this._view.y -= newPosY - scaleCenterY;
 		this._view.scale.x = this._scale;
 		this._view.scale.y = this._scale;
 
@@ -79,10 +87,19 @@ export class ZoomPan {
 		return true;
 	}
 
-	public isOnScreen(canvasHeight: number, canvasWidth: number): {start: PIXI.Point, end: PIXI.Point} {
+	public isOnScreen(
+		canvasHeight: number,
+		canvasWidth: number
+	): { start: PIXI.Point; end: PIXI.Point } {
 		return {
-			start: new PIXI.Point(-this.positionX / this.currentScale, -this.positionY / this.currentScale),
-			end: new PIXI.Point((canvasWidth - this.positionX) / this.currentScale, (canvasHeight - this.positionY) / this.currentScale)
+			start: new PIXI.Point(
+				-this.positionX / this.currentScale,
+				-this.positionY / this.currentScale
+			),
+			end: new PIXI.Point(
+				(canvasWidth - this.positionX) / this.currentScale,
+				(canvasHeight - this.positionY) / this.currentScale
+			)
 		};
 	}
 
@@ -100,7 +117,7 @@ export class ZoomPan {
 		return this._scale;
 	}
 
-	public setZoomPanData({scale, posX, posY}: ZoomPanData) {
+	public setZoomPanData({ scale, posX, posY }: ZoomPanData) {
 		this.zoomTo(scale, posX, posY);
 		this.translateTo(new PIXI.Point(posX, posY));
 	}
@@ -112,5 +129,4 @@ export class ZoomPan {
 			scale: this.currentScale
 		};
 	}
-
 }

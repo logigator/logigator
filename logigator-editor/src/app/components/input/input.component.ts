@@ -1,5 +1,19 @@
-import {ChangeDetectorRef, Component, forwardRef, Host, Input, OnInit, Optional, SkipSelf} from '@angular/core';
-import {AbstractControl, ControlContainer, ControlValueAccessor, NG_VALUE_ACCESSOR} from '@angular/forms';
+import {
+	ChangeDetectorRef,
+	Component,
+	forwardRef,
+	Host,
+	Input,
+	OnInit,
+	Optional,
+	SkipSelf
+} from '@angular/core';
+import {
+	AbstractControl,
+	ControlContainer,
+	ControlValueAccessor,
+	NG_VALUE_ACCESSOR
+} from '@angular/forms';
 
 @Component({
 	selector: 'app-input',
@@ -14,7 +28,6 @@ import {AbstractControl, ControlContainer, ControlValueAccessor, NG_VALUE_ACCESS
 	]
 })
 export class InputComponent implements OnInit, ControlValueAccessor {
-
 	@Input()
 	public label: string;
 
@@ -37,7 +50,10 @@ export class InputComponent implements OnInit, ControlValueAccessor {
 	private onChange = (value: unknown) => {};
 	private onTouched = () => {};
 
-	constructor(private cdr: ChangeDetectorRef, @Optional() @Host() @SkipSelf() private controlContainer: ControlContainer) { }
+	constructor(
+		private cdr: ChangeDetectorRef,
+		@Optional() @Host() @SkipSelf() private controlContainer: ControlContainer
+	) {}
 
 	ngOnInit() {
 		if (this.controlContainer) {
@@ -46,8 +62,7 @@ export class InputComponent implements OnInit, ControlValueAccessor {
 	}
 
 	public get invalid(): boolean {
-		if (!this.control)
-			return false;
+		if (!this.control) return false;
 
 		return this.control.touched && this.control.invalid;
 	}
@@ -73,5 +88,4 @@ export class InputComponent implements OnInit, ControlValueAccessor {
 		this.onTouched();
 		this.onChange(this.state);
 	}
-
 }

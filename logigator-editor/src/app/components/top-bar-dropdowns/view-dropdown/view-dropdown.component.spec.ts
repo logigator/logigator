@@ -1,4 +1,4 @@
-import {ComponentFixture, TestBed, waitForAsync} from '@angular/core/testing';
+import { ComponentFixture, TestBed, waitForAsync } from '@angular/core/testing';
 
 import { ViewDropdownComponent } from './view-dropdown.component';
 
@@ -8,9 +8,8 @@ describe('ViewDropdownComponent', () => {
 
 	beforeEach(waitForAsync(() => {
 		TestBed.configureTestingModule({
-			declarations: [ ViewDropdownComponent ]
-		})
-			.compileComponents();
+			declarations: [ViewDropdownComponent]
+		}).compileComponents();
 	}));
 
 	beforeEach(() => {

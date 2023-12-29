@@ -1,18 +1,16 @@
-import {Injectable} from '@angular/core';
-import {StorageServiceModel} from './storage.service';
+import { Injectable } from '@angular/core';
+import { StorageServiceModel } from './storage.service';
 
 @Injectable({
 	providedIn: 'root'
 })
 export class CookieStorageService extends StorageServiceModel {
-
 	public get(key: string): any {
-		if (!this.has(key))
-			return undefined;
+		if (!this.has(key)) return undefined;
 
 		const cookieValue = document.cookie
 			.split('; ')
-			.find(row => row.startsWith(key))
+			.find((row) => row.startsWith(key))
 			.split('=')[1];
 
 		try {
@@ -26,7 +24,6 @@ export class CookieStorageService extends StorageServiceModel {
 		}
 	}
 
-
 	public set(key: string, data: any) {
 		let toSave: string;
 		if (typeof data === 'object') {
@@ -35,17 +32,21 @@ export class CookieStorageService extends StorageServiceModel {
 			toSave = data;
 		}
 		const date = new Date();
-		date.setTime(date.getTime() + (30 * 24 * 60 * 60 * 1000));
-		document.cookie = `${key}=${encodeURIComponent(toSave)};expires=${date.toUTCString()};path=/`;
+		date.setTime(date.getTime() + 30 * 24 * 60 * 60 * 1000);
+		document.cookie = `${key}=${encodeURIComponent(
+			toSave
+		)};expires=${date.toUTCString()};path=/`;
 	}
 
 	public remove(key: string) {
 		const date = new Date();
-		date.setTime(date.getTime() - (24 * 60 * 60 * 1000));
+		date.setTime(date.getTime() - 24 * 60 * 60 * 1000);
 		document.cookie = `${key}=;expires=${date.toUTCString()};path=/`;
 	}
 
 	public has(key: string): boolean {
-		return document.cookie.split(';').some(item => item.trim().startsWith(key + '='));
+		return document.cookie
+			.split(';')
+			.some((item) => item.trim().startsWith(key + '='));
 	}
 }

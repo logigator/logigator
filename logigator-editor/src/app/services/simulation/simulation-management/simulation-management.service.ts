@@ -1,16 +1,18 @@
-import {Inject, Injectable, NgZone} from '@angular/core';
+import { Inject, Injectable, NgZone } from '@angular/core';
 import {
 	WorkerCommunicationService,
 	WorkerCommunicationServiceModel
 } from '../worker-communication/worker-communication-service-model';
-import {RenderTicker} from '../../render-ticker/render-ticker.service';
-import {StorageService, StorageServiceModel} from '../../storage/storage.service';
+import { RenderTicker } from '../../render-ticker/render-ticker.service';
+import {
+	StorageService,
+	StorageServiceModel
+} from '../../storage/storage.service';
 
 @Injectable({
 	providedIn: 'root'
 })
 export class SimulationManagementService {
-
 	private _targetMode = false;
 
 	private _syncMode = false;
@@ -22,18 +24,19 @@ export class SimulationManagementService {
 	private _autoStartSimulation: boolean;
 
 	constructor(
-		@Inject(WorkerCommunicationService) private workerCommunication: WorkerCommunicationServiceModel,
+		@Inject(WorkerCommunicationService)
+		private workerCommunication: WorkerCommunicationServiceModel,
 		@Inject(StorageService) private storage: StorageServiceModel,
 		private renderTicker: RenderTicker,
 		private ngZone: NgZone
 	) {
-		this._autoStartSimulation = (this.storage.get('autoStartSim') ?? 'true') === 'true';
+		this._autoStartSimulation =
+			(this.storage.get('autoStartSim') ?? 'true') === 'true';
 	}
 
 	public async enterSimulation() {
 		await this.workerCommunication.init();
-		if (this._autoStartSimulation)
-			this.continueSim();
+		if (this._autoStartSimulation) this.continueSim();
 	}
 
 	public leaveSimulation() {
@@ -42,8 +45,7 @@ export class SimulationManagementService {
 	}
 
 	public continueSim(override = false) {
-		if (!override && this.simulationRunning)
-			return;
+		if (!override && this.simulationRunning) return;
 
 		if (this._targetMode) {
 			this.workerCommunication.startTarget();
@@ -77,17 +79,14 @@ export class SimulationManagementService {
 			this._syncMode = false;
 		}
 
-		if (this.simulationRunning)
-			this.continueSim(true);
+		if (this.simulationRunning) this.continueSim(true);
 	}
 
 	public toggleSyncMode() {
 		this._syncMode = !this._syncMode;
-		if (this._syncMode)
-			this._targetMode = false;
+		if (this._syncMode) this._targetMode = false;
 
-		if (this.simulationRunning)
-			this.continueSim(true);
+		if (this.simulationRunning) this.continueSim(true);
 	}
 
 	public setTarget(target: number) {
@@ -104,15 +103,12 @@ export class SimulationManagementService {
 	}
 
 	public setThreadCount(threadCount: number) {
-		if (!this._threadCount)
-			return;
+		if (!this._threadCount) return;
 
 		this._threadCount = threadCount;
 
-		if (this._threadCount < 1)
-			this._threadCount = 1;
-		if (this._threadCount > 512)
-			this._threadCount = 512;
+		if (this._threadCount < 1) this._threadCount = 1;
+		if (this._threadCount > 512) this._threadCount = 512;
 
 		if (this.simulationRunning) {
 			this.workerCommunication.pause();

@@ -1,9 +1,14 @@
-import {ChangeDetectionStrategy, Component, EventEmitter, Output} from '@angular/core';
-import {HelpComponent} from '../../popup-contents/help/help.component';
-import {PopupService} from '../../../services/popup/popup.service';
-import {HexBinDecConverterComponent} from '../../popup-contents/hex-bin-dec-converter/hex-bin-dec-converter.component';
-import {TutorialService} from '../../../services/tutorial/tutorial.service';
-import {Tutorial} from '../../../models/tutorial';
+import {
+	ChangeDetectionStrategy,
+	Component,
+	EventEmitter,
+	Output
+} from '@angular/core';
+import { HelpComponent } from '../../popup-contents/help/help.component';
+import { PopupService } from '../../../services/popup/popup.service';
+import { HexBinDecConverterComponent } from '../../popup-contents/hex-bin-dec-converter/hex-bin-dec-converter.component';
+import { TutorialService } from '../../../services/tutorial/tutorial.service';
+import { Tutorial } from '../../../models/tutorial';
 
 @Component({
 	selector: 'app-help-dropdown',
@@ -12,11 +17,13 @@ import {Tutorial} from '../../../models/tutorial';
 	changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class HelpDropdownComponent {
-
 	@Output()
 	public requestClosed: EventEmitter<any> = new EventEmitter();
 
-	constructor(private popupService: PopupService, private tutorialService: TutorialService) { }
+	constructor(
+		private popupService: PopupService,
+		private tutorialService: TutorialService
+	) {}
 
 	public get tutorials(): Tutorial[] {
 		return this.tutorialService.allTutorials;
@@ -37,7 +44,11 @@ export class HelpDropdownComponent {
 	}
 
 	public hexBinDec() {
-		this.popupService.showPopup(HexBinDecConverterComponent, 'POPUP.HEX_BIN_DEC.TITLE', false);
+		this.popupService.showPopup(
+			HexBinDecConverterComponent,
+			'POPUP.HEX_BIN_DEC.TITLE',
+			false
+		);
 		this.close();
 	}
 }

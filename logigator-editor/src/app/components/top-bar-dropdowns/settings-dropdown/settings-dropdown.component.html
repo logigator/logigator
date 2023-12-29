@@ -1,40 +1,58 @@
 <div class="dropdown" [class.hidden]="!showDropDown">
 	<div class="switch item">
-		<label>{{'DROPDOWN.SETTINGS.DARK_MODE' | translate}}</label>
-		<app-switch (click)="showReloadPopup()" [checked]="this.theming.pendingTheme === 'dark'"></app-switch>
+		<label>{{ 'DROPDOWN.SETTINGS.DARK_MODE' | translate }}</label>
+		<app-switch
+			(click)="showReloadPopup()"
+			[checked]="this.theming.pendingTheme === 'dark'"
+		></app-switch>
 	</div>
 	<div class="switch item">
-		<label>{{'DROPDOWN.SETTINGS.SHOW_GRID' | translate}}</label>
+		<label>{{ 'DROPDOWN.SETTINGS.SHOW_GRID' | translate }}</label>
 		<app-switch [(ngModel)]="this.theming.showGrid"></app-switch>
 	</div>
 	<div class="switch item">
-		<label>{{'DROPDOWN.SETTINGS.AUTOSTART_SIM' | translate}}</label>
-		<app-switch [(ngModel)]="this.simulationMgmt.autoStartSimulation"></app-switch>
+		<label>{{ 'DROPDOWN.SETTINGS.AUTOSTART_SIM' | translate }}</label>
+		<app-switch
+			[(ngModel)]="this.simulationMgmt.autoStartSimulation"
+		></app-switch>
 	</div>
 	<div class="select item">
-		<label>{{'DROPDOWN.SETTINGS.LANGUAGE' | translate}}</label>
+		<label>{{ 'DROPDOWN.SETTINGS.LANGUAGE' | translate }}</label>
 		<select [(ngModel)]="currentLang" (ngModelChange)="languageChange()">
-			<option value="en">{{'LANGUAGE.EN' | translate}}</option>
-			<option value="de">{{'LANGUAGE.DE' | translate}}</option>
+			<option value="en">{{ 'LANGUAGE.EN' | translate }}</option>
+			<option value="de">{{ 'LANGUAGE.DE' | translate }}</option>
 		</select>
 	</div>
-	<hr>
+	<hr />
 
 	<a class="link item" (click)="showCustomizeShortcuts()">
-		<img *ngIf="this.theming.currentTheme === 'dark'" src="assets/icons/dark/settings.svg">
-		<img *ngIf="this.theming.currentTheme === 'light'" src="assets/icons/light/settings.svg">
-		{{'DROPDOWN.SETTINGS.SHORTCUTS' | translate}}
+		<img
+			*ngIf="this.theming.currentTheme === 'dark'"
+			src="assets/icons/dark/settings.svg"
+		/>
+		<img
+			*ngIf="this.theming.currentTheme === 'light'"
+			src="assets/icons/light/settings.svg"
+		/>
+		{{ 'DROPDOWN.SETTINGS.SHORTCUTS' | translate }}
 	</a>
 
 	<a class="link item" *ngIf="isLoggedIn" (click)="accountSettings()">
-		<img *ngIf="this.theming.currentTheme === 'dark'" src="assets/icons/dark/user.svg">
-		<img *ngIf="this.theming.currentTheme === 'light'" src="assets/icons/light/user.svg">
-		{{'DROPDOWN.SETTINGS.ACCOUNT' | translate}}
+		<img
+			*ngIf="this.theming.currentTheme === 'dark'"
+			src="assets/icons/dark/user.svg"
+		/>
+		<img
+			*ngIf="this.theming.currentTheme === 'light'"
+			src="assets/icons/light/user.svg"
+		/>
+		{{ 'DROPDOWN.SETTINGS.ACCOUNT' | translate }}
 	</a>
 
-	<hr>
+	<hr />
 	<div class="link item">
-		<button class="btn-outline secondary small" (click)="privacyPolicy()">{{'DROPDOWN.SETTINGS.PRIVACY' | translate}}</button>
+		<button class="btn-outline secondary small" (click)="privacyPolicy()">
+			{{ 'DROPDOWN.SETTINGS.PRIVACY' | translate }}
+		</button>
 	</div>
-
 </div>

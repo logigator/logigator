@@ -1,6 +1,6 @@
-import {ElementType} from '../element-type';
-import {ElementTypeId} from '../element-type-ids';
-import {ElementRotation} from '../../element';
+import { ElementType } from '../element-type';
+import { ElementTypeId } from '../element-type-ids';
+import { ElementRotation } from '../../element';
 
 export const mux: ElementType = {
 	id: ElementTypeId.MUX,
@@ -37,23 +37,20 @@ export const mux: ElementType = {
 	],
 
 	onOptionsChanged(element?) {
-		if (!element)
-			element = this;
+		if (!element) element = this;
 
 		element.numInputs = element.options[0] + Math.pow(2, element.options[0]);
 	},
 
 	width: () => 3,
 	height(element?) {
-		if (!element)
-			element = this;
+		if (!element) element = this;
 
 		return element.numInputs;
 	},
 
-	calcLabels(element?)  {
-		if (!element)
-			element = this;
+	calcLabels(element?) {
+		if (!element) element = this;
 
 		const labels = [];
 		for (let i = 0; i < element.options[0]; i++) {

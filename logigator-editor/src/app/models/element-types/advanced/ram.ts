@@ -1,6 +1,6 @@
-import {ElementType} from '../element-type';
-import {ElementTypeId} from '../element-type-ids';
-import {ElementRotation} from '../../element';
+import { ElementType } from '../element-type';
+import { ElementTypeId } from '../element-type-ids';
+import { ElementRotation } from '../../element';
 
 export const ram: ElementType = {
 	id: ElementTypeId.RAM,
@@ -30,7 +30,9 @@ export const ram: ElementType = {
 
 	width: () => 3,
 	height(element?) {
-		return element ? Math.max(element.numInputs, element.numOutputs) : Math.max(this.numInputs, this.numOutputs);
+		return element
+			? Math.max(element.numInputs, element.numOutputs)
+			: Math.max(this.numInputs, this.numOutputs);
 	},
 
 	options: [4, 4],
@@ -47,16 +49,14 @@ export const ram: ElementType = {
 		}
 	],
 	onOptionsChanged(element?) {
-		if (!element)
-			element = this;
+		if (!element) element = this;
 
 		element.numInputs = element.options[0] + element.options[1] + 2;
 		element.numOutputs = element.options[0];
 	},
 
-	calcLabels(element?)  {
-		if (!element)
-			element = this;
+	calcLabels(element?) {
+		if (!element) element = this;
 
 		const labels = [];
 

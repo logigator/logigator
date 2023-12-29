@@ -1,4 +1,4 @@
-import {Response} from './http/response/response';
+import { Response } from './http/response/response';
 
 export interface ApiErrorConfig {
 	errorMessage?: string;

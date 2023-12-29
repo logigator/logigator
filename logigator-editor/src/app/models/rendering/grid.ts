@@ -1,12 +1,12 @@
 import * as PIXI from 'pixi.js';
-import {environment} from '../../../environments/environment';
+import { environment } from '../../../environments/environment';
 import Point = PIXI.Point;
-import {ThemingService} from '../../services/theming/theming.service';
-import {getStaticDI} from '../get-di';
+import { ThemingService } from '../../services/theming/theming.service';
+import { getStaticDI } from '../get-di';
 
 export class Grid {
-
-	private static _gridGeometries: Map<number, PIXI.GraphicsGeometry> = new Map();
+	private static _gridGeometries: Map<number, PIXI.GraphicsGeometry> =
+		new Map();
 	private static _showChunks = false;
 
 	private static getGridGeometry(scale: number): PIXI.GraphicsGeometry {
@@ -17,13 +17,23 @@ export class Grid {
 		graphics.beginFill(getStaticDI(ThemingService).getEditorColor('grid'));
 		for (let i = 0; i < environment.chunkSize; i++) {
 			for (let j = 0; j < environment.chunkSize; j++) {
-				graphics.drawRect(i * environment.gridPixelWidth, j * environment.gridPixelWidth, 1 / scale, 1 / scale);
+				graphics.drawRect(
+					i * environment.gridPixelWidth,
+					j * environment.gridPixelWidth,
+					1 / scale,
+					1 / scale
+				);
 			}
 		}
 		if (this._showChunks) {
 			graphics.beginFill(0, 0);
 			graphics.lineStyle(1 / scale, 0xffffff);
-			graphics.drawRect(0, 0, environment.gridPixelWidth * environment.chunkSize, environment.gridPixelWidth * environment.chunkSize);
+			graphics.drawRect(
+				0,
+				0,
+				environment.gridPixelWidth * environment.chunkSize,
+				environment.gridPixelWidth * environment.chunkSize
+			);
 		}
 		this._gridGeometries.set(scale, graphics.geometry);
 		return graphics.geometry;
@@ -43,15 +53,24 @@ export class Grid {
 	}
 
 	public static getGridPosForPixelPos(point: PIXI.IPoint): PIXI.Point {
-		return new PIXI.Point(Math.floor(point.x / environment.gridPixelWidth), Math.floor(point.y / environment.gridPixelWidth));
+		return new PIXI.Point(
+			Math.floor(point.x / environment.gridPixelWidth),
+			Math.floor(point.y / environment.gridPixelWidth)
+		);
 	}
 
 	public static getFloatGridPosForPixelPos(point: PIXI.IPoint): PIXI.Point {
-		return new PIXI.Point(point.x / environment.gridPixelWidth, point.y / environment.gridPixelWidth);
+		return new PIXI.Point(
+			point.x / environment.gridPixelWidth,
+			point.y / environment.gridPixelWidth
+		);
 	}
 
 	public static getPixelPosForGridPos(point: PIXI.IPoint): PIXI.Point {
-		return new PIXI.Point(point.x * environment.gridPixelWidth, point.y * environment.gridPixelWidth);
+		return new PIXI.Point(
+			point.x * environment.gridPixelWidth,
+			point.y * environment.gridPixelWidth
+		);
 	}
 
 	public static getLocalChunkPixelPosForGridPos(point: PIXI.Point): PIXI.Point {
@@ -61,7 +80,9 @@ export class Grid {
 		return Grid.getPixelPosForGridPos(newPoint);
 	}
 
-	public static getLocalChunkPixelPosForGridPosWire(point: PIXI.Point): PIXI.Point {
+	public static getLocalChunkPixelPosForGridPosWire(
+		point: PIXI.Point
+	): PIXI.Point {
 		const newPoint = point.clone();
 		newPoint.x += 0.5;
 		newPoint.y += 0.5;
@@ -72,7 +93,9 @@ export class Grid {
 		return Grid.getPixelPosForGridPos(new Point(point.x + 0.5, point.y + 0.5));
 	}
 
-	public static getPixelPosForPixelPosOnGridWire(point: PIXI.IPoint): PIXI.Point {
+	public static getPixelPosForPixelPosOnGridWire(
+		point: PIXI.IPoint
+	): PIXI.Point {
 		const gridPos = Grid.getGridPosForPixelPos(point);
 		gridPos.x += 0.5;
 		gridPos.y += 0.5;
@@ -83,5 +106,4 @@ export class Grid {
 		const gridPos = Grid.getGridPosForPixelPos(point);
 		return Grid.getPixelPosForGridPos(gridPos);
 	}
-
 }

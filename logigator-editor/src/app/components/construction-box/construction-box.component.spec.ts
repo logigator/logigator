@@ -1,4 +1,4 @@
-import {ComponentFixture, TestBed, waitForAsync} from '@angular/core/testing';
+import { ComponentFixture, TestBed, waitForAsync } from '@angular/core/testing';
 
 import { ConstructionBoxComponent } from './construction-box.component';
 
@@ -8,9 +8,8 @@ describe('ConstructionBoxComponent', () => {
 
 	beforeEach(waitForAsync(() => {
 		TestBed.configureTestingModule({
-			declarations: [ ConstructionBoxComponent ]
-		})
-			.compileComponents();
+			declarations: [ConstructionBoxComponent]
+		}).compileComponents();
 	}));
 
 	beforeEach(() => {

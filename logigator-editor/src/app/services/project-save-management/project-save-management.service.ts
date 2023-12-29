@@ -1,36 +1,42 @@
-import {Injectable} from '@angular/core';
-import {Project} from '../../models/project';
+import { Injectable } from '@angular/core';
+import { Project } from '../../models/project';
 import * as PIXI from 'pixi.js';
-import {Element, ElementRotation} from '../../models/element';
-import {ProjectState} from '../../models/project-state';
-import {ElementProviderService} from '../element-provider/element-provider.service';
-import {ElementType} from '../../models/element-types/element-type';
-import {ApiService} from '../api/api.service';
-import {LocationService} from '../location/location.service';
-import {ProjectData, ProjectDependency, ProjectElement} from '../../models/http/response/project-data';
-import {BiDirectionalMap} from '../../models/bi-directional-map';
-import {ComponentInfo} from '../../models/http/response/component-info';
-import {v4 as genUuid} from 'uuid';
-import {ProjectInfo} from '../../models/http/response/project-info';
-import {UserService} from '../user/user.service';
-import {skipUntil} from 'rxjs/operators';
-import {ComponentData} from '../../models/http/response/component-data';
-import {ProjectList} from '../../models/http/response/project-list';
-import {Response} from '../../models/http/response/response';
-import {Observable, ReplaySubject} from 'rxjs';
-import {Share} from '../../models/http/response/share';
-import {ComponentLocalFile, ProjectLocalFile} from '../../models/project-local-file';
-import {FileSaverService} from '../file-saver/file-saver.service';
-import {ShareDependencies} from '../../models/http/response/share-dependencies';
-import {ErrorHandlingService} from '../error-handling/error-handling.service';
-import {ImageExportService} from '../image-export/image-export.service';
-import {ElementTypeId} from '../../models/element-types/element-type-ids';
+import { Element, ElementRotation } from '../../models/element';
+import { ProjectState } from '../../models/project-state';
+import { ElementProviderService } from '../element-provider/element-provider.service';
+import { ElementType } from '../../models/element-types/element-type';
+import { ApiService } from '../api/api.service';
+import { LocationService } from '../location/location.service';
+import {
+	ProjectData,
+	ProjectDependency,
+	ProjectElement
+} from '../../models/http/response/project-data';
+import { BiDirectionalMap } from '../../models/bi-directional-map';
+import { ComponentInfo } from '../../models/http/response/component-info';
+import { v4 as genUuid } from 'uuid';
+import { ProjectInfo } from '../../models/http/response/project-info';
+import { UserService } from '../user/user.service';
+import { skipUntil } from 'rxjs/operators';
+import { ComponentData } from '../../models/http/response/component-data';
+import { ProjectList } from '../../models/http/response/project-list';
+import { Response } from '../../models/http/response/response';
+import { Observable, ReplaySubject } from 'rxjs';
+import { Share } from '../../models/http/response/share';
+import {
+	ComponentLocalFile,
+	ProjectLocalFile
+} from '../../models/project-local-file';
+import { FileSaverService } from '../file-saver/file-saver.service';
+import { ShareDependencies } from '../../models/http/response/share-dependencies';
+import { ErrorHandlingService } from '../error-handling/error-handling.service';
+import { ImageExportService } from '../image-export/image-export.service';
+import { ElementTypeId } from '../../models/element-types/element-type-ids';
 
 @Injectable({
 	providedIn: 'root'
 })
 export class ProjectSaveManagementService {
-
 	/**
 	 * key: uuid
 	 * value: editor number id
@@ -50,26 +56,36 @@ export class ProjectSaveManagementService {
 		private errorHandling: ErrorHandlingService,
 		private imageService: ImageExportService
 	) {
-		this.userService.userInfo$.pipe(
-			skipUntil(this._loadedInitialProjects$)
-		).subscribe(() => this.getAllComponentsInfo());
+		this.userService.userInfo$
+			.pipe(skipUntil(this._loadedInitialProjects$))
+			.subscribe(() => this.getAllComponentsInfo());
 	}
 
 	public async getInitialProjects(): Promise<Project[]> {
 		let projects: Project[];
 		if (this.location.isProject) {
 			try {
-				projects = [await this.getProjectOrComponentUuid(this.location.projectUuid, 'project')];
-				this.errorHandling.showInfo('INFO.PROJECTS.OPEN', {name: projects[0].name});
+				projects = [
+					await this.getProjectOrComponentUuid(
+						this.location.projectUuid,
+						'project'
+					)
+				];
+				this.errorHandling.showInfo('INFO.PROJECTS.OPEN', {
+					name: projects[0].name
+				});
 			} catch {
 				projects = [this.getEmptyProject()];
 				this.location.reset();
 			}
 		} else if (this.location.isComponent) {
 			try {
-				const comp = await this.getProjectOrComponentUuid(this.location.componentUuid, 'comp');
+				const comp = await this.getProjectOrComponentUuid(
+					this.location.componentUuid,
+					'comp'
+				);
 				projects = [this.getEmptyProject(), comp];
-				this.errorHandling.showInfo('INFO.PROJECTS.OPEN', {name: comp.name});
+				this.errorHandling.showInfo('INFO.PROJECTS.OPEN', { name: comp.name });
 			} catch {
 				projects = [this.getEmptyProject()];
 				this.location.reset();
@@ -82,7 +98,9 @@ export class ProjectSaveManagementService {
 				} else {
 					projects = [shared];
 				}
-				this.errorHandling.showInfo('INFO.PROJECTS.OPEN_SHARE', {name: shared.name});
+				this.errorHandling.showInfo('INFO.PROJECTS.OPEN_SHARE', {
+					name: shared.name
+				});
 			} catch {
 				projects = [this.getEmptyProject()];
 				this.location.reset();
@@ -95,16 +113,28 @@ export class ProjectSaveManagementService {
 		return projects;
 	}
 
-	public async getProjectOrComponentUuid(uuid: string, type: 'project' | 'comp'): Promise<Project> {
+	public async getProjectOrComponentUuid(
+		uuid: string,
+		type: 'project' | 'comp'
+	): Promise<Project> {
 		if (this._projectsCache.has(this._mappings.getValue(uuid)))
 			return this._projectsCache.get(this._mappings.getValue(uuid));
 
 		const apiPath = type === 'project' ? 'project' : 'component';
-		const projectData = await this.api.get<ProjectData & ComponentData>(`/${apiPath}/${uuid}`,
-			{errorMessage: 'ERROR.PROJECTS.OPEN'}).toPromise();
+		const projectData = await this.api
+			.get<ProjectData & ComponentData>(`/${apiPath}/${uuid}`, {
+				errorMessage: 'ERROR.PROJECTS.OPEN'
+			})
+			.toPromise();
 		const mappingsToApply = this.saveMappings(projectData.data.dependencies);
-		this.setCustomElements(projectData.data.dependencies.map(dep => dep.dependency), 'user');
-		const elements = this.convertSavedElementsToElements(projectData.data.elements, mappingsToApply);
+		this.setCustomElements(
+			projectData.data.dependencies.map((dep) => dep.dependency),
+			'user'
+		);
+		const elements = this.convertSavedElementsToElements(
+			projectData.data.elements,
+			mappingsToApply
+		);
 		const project = new Project(new ProjectState(elements), {
 			id: this.generateNextId(projectData.data.id),
 			source: 'server',
@@ -112,21 +142,27 @@ export class ProjectSaveManagementService {
 			hash: projectData.data.elementsFile.hash,
 			public: projectData.data.public,
 			link: projectData.data.link,
-			type,
+			type
 		});
 		this._projectsCache.set(project.id, project);
 		return project;
 	}
 
 	public async getComponent(id: number): Promise<Project> {
-		if (this._projectsCache.has(id))
-			return this._projectsCache.get(id);
+		if (this._projectsCache.has(id)) return this._projectsCache.get(id);
 
 		if (this.elementProvider.getElementById(id).category === 'share') {
 			const link = this._mappings.getKey(id);
-			const sharedComp = await this.api.get<Share>(`/share/${link}`, {errorMessage: 'ERROR.PROJECTS.OPEN_COMP'}).toPromise();
+			const sharedComp = await this.api
+				.get<Share>(`/share/${link}`, {
+					errorMessage: 'ERROR.PROJECTS.OPEN_COMP'
+				})
+				.toPromise();
 			const mappings = this.saveMappings(sharedComp.data.dependencies, true);
-			const compElements = this.convertSavedElementsToElements(sharedComp.data.elements, mappings);
+			const compElements = this.convertSavedElementsToElements(
+				sharedComp.data.elements,
+				mappings
+			);
 			const sharedProject = new Project(new ProjectState(compElements), {
 				type: 'comp',
 				name: sharedComp.data.name,
@@ -138,9 +174,16 @@ export class ProjectSaveManagementService {
 		}
 
 		const uuid = this._mappings.getKey(id);
-		const componentData = await this.api.get<ComponentData>(`/component/${uuid}`, {errorMessage: 'ERROR.PROJECTS.OPEN_COMP'}).toPromise();
+		const componentData = await this.api
+			.get<ComponentData>(`/component/${uuid}`, {
+				errorMessage: 'ERROR.PROJECTS.OPEN_COMP'
+			})
+			.toPromise();
 		const mappingsToApply = this.saveMappings(componentData.data.dependencies);
-		const elements = this.convertSavedElementsToElements(componentData.data.elements, mappingsToApply);
+		const elements = this.convertSavedElementsToElements(
+			componentData.data.elements,
+			mappingsToApply
+		);
 
 		const project = new Project(new ProjectState(elements), {
 			type: 'comp',
@@ -153,31 +196,53 @@ export class ProjectSaveManagementService {
 		return project;
 	}
 
-	public async createProjectServer(name: string, description = '', sharePublicly = false, project: Project): Promise<string> {
-		const projectResp = await this.api.post<ProjectInfo>('/project', {name, description, public: sharePublicly + ''},
-			{errorMessage: 'ERROR.PROJECTS.CREATE'}).toPromise();
+	public async createProjectServer(
+		name: string,
+		description = '',
+		sharePublicly = false,
+		project: Project
+	): Promise<string> {
+		const projectResp = await this.api
+			.post<ProjectInfo>(
+				'/project',
+				{ name, description, public: sharePublicly + '' },
+				{ errorMessage: 'ERROR.PROJECTS.CREATE' }
+			)
+			.toPromise();
 		const components = await this.buildDependencyTree(project);
 		const createdComps: ComponentInfo[] = [];
 		const tempMappings = new BiDirectionalMap<string, number>();
 		for (const [id, comp] of components) {
 			if (comp.source === 'local') {
 				const elemType = this.elementProvider.getElementById(id);
-				const createdComp = await this.api.post<ComponentInfo>('/component', {
-					name: elemType.name, symbol: elemType.symbol, description: elemType.description
-				}, {errorMessage: 'ERROR.PROJECTS.CREATE'}).toPromise();
+				const createdComp = await this.api
+					.post<ComponentInfo>(
+						'/component',
+						{
+							name: elemType.name,
+							symbol: elemType.symbol,
+							description: elemType.description
+						},
+						{ errorMessage: 'ERROR.PROJECTS.CREATE' }
+					)
+					.toPromise();
 				tempMappings.set(createdComp.data.id, id);
 				createdComps.push(createdComp.data);
 			}
 		}
 		for (const createdComp of createdComps) {
-			const elementType = this.elementProvider.getElementById(tempMappings.getValue(createdComp.id));
-			const convertedElements = this.convertElementsToSaveElements(components.get(tempMappings.getValue(createdComp.id)).allElements);
+			const elementType = this.elementProvider.getElementById(
+				tempMappings.getValue(createdComp.id)
+			);
+			const convertedElements = this.convertElementsToSaveElements(
+				components.get(tempMappings.getValue(createdComp.id)).allElements
+			);
 			const body = {
 				oldHash: createdComp.elementsFile.hash,
-				dependencies: convertedElements.usedCustomElements.map(cu => {
+				dependencies: convertedElements.usedCustomElements.map((cu) => {
 					return {
 						id: tempMappings.getKey(cu) ?? this._mappings.getKey(cu),
-						model: cu,
+						model: cu
 					};
 				}),
 				elements: convertedElements.elements,
@@ -185,27 +250,40 @@ export class ProjectSaveManagementService {
 				numOutputs: elementType.numOutputs,
 				labels: elementType.labels
 			};
-			await this.api.put<ProjectInfo>(`/component/${createdComp.id}`, body, {errorMessage: 'ERROR.PROJECTS.SAVE'}).toPromise();
+			await this.api
+				.put<ProjectInfo>(`/component/${createdComp.id}`, body, {
+					errorMessage: 'ERROR.PROJECTS.SAVE'
+				})
+				.toPromise();
 		}
-		const projectElements = this.convertElementsToSaveElements(project.allElements);
+		const projectElements = this.convertElementsToSaveElements(
+			project.allElements
+		);
 		const projectBody = {
 			oldHash: projectResp.data.elementsFile.hash,
-			dependencies: projectElements.usedCustomElements.map(cu => {
+			dependencies: projectElements.usedCustomElements.map((cu) => {
 				return {
 					id: tempMappings.getKey(cu) ?? this._mappings.getKey(cu),
-					model: cu,
+					model: cu
 				};
 			}),
-			elements: projectElements.elements,
+			elements: projectElements.elements
 		};
-		const resp = this.api.put<ProjectInfo>(`/project/${projectResp.data.id}`, projectBody, {errorMessage: 'ERROR.PROJECTS.SAVE'}).toPromise();
+		const resp = this.api
+			.put<ProjectInfo>(`/project/${projectResp.data.id}`, projectBody, {
+				errorMessage: 'ERROR.PROJECTS.SAVE'
+			})
+			.toPromise();
 
 		const previews = await this.imageService.generatePreviews(project);
 		const formData = new FormData();
 		formData.append('previews', previews.dark);
 		formData.append('previews', previews.light);
-		await this.api.post(`/project/${projectResp.data.id}/preview`, formData,
-			{errorMessage: 'ERROR.PROJECTS.SAVE'}).toPromise();
+		await this.api
+			.post(`/project/${projectResp.data.id}/preview`, formData, {
+				errorMessage: 'ERROR.PROJECTS.SAVE'
+			})
+			.toPromise();
 
 		await resp;
 		for (const toRemove of tempMappings.values()) {
@@ -215,13 +293,25 @@ export class ProjectSaveManagementService {
 		return projectResp.data.id;
 	}
 
-	public async createComponent(name: string, symbol: string, description: string = '', sharePublicly = false): Promise<Project> {
+	public async createComponent(
+		name: string,
+		symbol: string,
+		description: string = '',
+		sharePublicly = false
+	): Promise<Project> {
 		if (this.userService.isLoggedIn) {
 			const body = {
-				name, symbol, description, public: sharePublicly + ''
+				name,
+				symbol,
+				description,
+				public: sharePublicly + ''
 			};
 
-			const resp = await this.api.post<ComponentInfo>('/component', body, {errorMessage: 'ERROR.PROJECTS.CREATE'}).toPromise();
+			const resp = await this.api
+				.post<ComponentInfo>('/component', body, {
+					errorMessage: 'ERROR.PROJECTS.CREATE'
+				})
+				.toPromise();
 			const id = this.generateNextId(resp.data.id);
 			this.setCustomElements([resp.data], 'user');
 
@@ -238,15 +328,20 @@ export class ProjectSaveManagementService {
 			return project;
 		} else {
 			const id = this.generateNextId();
-			this.setCustomElements([{
-				id: this._mappings.getKey(id),
-				symbol,
-				name,
-				description,
-				numInputs: 0,
-				numOutputs: 0,
-				labels: []
-			}], 'local');
+			this.setCustomElements(
+				[
+					{
+						id: this._mappings.getKey(id),
+						symbol,
+						name,
+						description,
+						numInputs: 0,
+						numOutputs: 0,
+						labels: []
+					}
+				],
+				'local'
+			);
 			const project = new Project(new ProjectState(), {
 				type: 'comp',
 				source: 'local',
@@ -259,8 +354,7 @@ export class ProjectSaveManagementService {
 	}
 
 	public async saveComponent(project: Project): Promise<void> {
-		if (!project.saveDirty)
-			return;
+		if (!project.saveDirty) return;
 
 		if (project.source !== 'server') {
 			this._projectsCache.set(project.id, project);
@@ -269,13 +363,15 @@ export class ProjectSaveManagementService {
 		}
 
 		const elementType = this.elementProvider.getElementById(project.id);
-		const convertedElements = this.convertElementsToSaveElements(project.allElements);
+		const convertedElements = this.convertElementsToSaveElements(
+			project.allElements
+		);
 		const body = {
 			oldHash: project.hash,
-			dependencies: convertedElements.usedCustomElements.map(cu => {
+			dependencies: convertedElements.usedCustomElements.map((cu) => {
 				return {
 					id: this._mappings.getKey(cu),
-					model: cu,
+					model: cu
 				};
 			}),
 			elements: convertedElements.elements,
@@ -283,26 +379,40 @@ export class ProjectSaveManagementService {
 			numOutputs: elementType.numOutputs,
 			labels: elementType.labels
 		};
-		const resp = this.api.put<ProjectInfo>(`/component/${this._mappings.getKey(project.id)}`, body,
-			{dynamicMsg: err => err.error.error.description === 'VersionMismatch' ? 'ERROR.PROJECTS.SAVE_VERSION' : 'ERROR.PROJECTS.SAVE'}).toPromise();
+		const resp = this.api
+			.put<ProjectInfo>(
+				`/component/${this._mappings.getKey(project.id)}`,
+				body,
+				{
+					dynamicMsg: (err) =>
+						err.error.error.description === 'VersionMismatch'
+							? 'ERROR.PROJECTS.SAVE_VERSION'
+							: 'ERROR.PROJECTS.SAVE'
+				}
+			)
+			.toPromise();
 
 		const previews = await this.imageService.generatePreviews(project);
 		const formData = new FormData();
 		formData.append('previews', previews.dark);
 		formData.append('previews', previews.light);
-		const previewPromise = this.api.post(`/component/${this._mappings.getKey(project.id)}/preview`, formData,
-			{errorMessage: 'ERROR.PROJECTS.SAVE'}).toPromise();
+		const previewPromise = this.api
+			.post(
+				`/component/${this._mappings.getKey(project.id)}/preview`,
+				formData,
+				{ errorMessage: 'ERROR.PROJECTS.SAVE' }
+			)
+			.toPromise();
 
 		project.hash = (await resp).data.elementsFile.hash;
 		project.saveDirty = false;
 		await previewPromise;
 		this._projectsCache.set(project.id, project);
-		this.errorHandling.showInfo('INFO.PROJECTS.SAVE', {name: project.name});
+		this.errorHandling.showInfo('INFO.PROJECTS.SAVE', { name: project.name });
 	}
 
 	public async saveProject(project: Project): Promise<void> {
-		if (!project.saveDirty)
-			return;
+		if (!project.saveDirty) return;
 
 		if (project.source !== 'server') {
 			this._projectsCache.set(project.id, project);
@@ -310,35 +420,49 @@ export class ProjectSaveManagementService {
 			return;
 		}
 
-		const convertedElements = this.convertElementsToSaveElements(project.allElements);
+		const convertedElements = this.convertElementsToSaveElements(
+			project.allElements
+		);
 		const body = {
 			oldHash: project.hash,
-			dependencies: convertedElements.usedCustomElements.map(cu => {
+			dependencies: convertedElements.usedCustomElements.map((cu) => {
 				return {
 					id: this._mappings.getKey(cu),
-					model: cu,
+					model: cu
 				};
 			}),
-			elements: convertedElements.elements,
+			elements: convertedElements.elements
 		};
-		const resp = this.api.put<ProjectInfo>(`/project/${this._mappings.getKey(project.id)}`, body,
-			{errorMessage: 'ERROR.PROJECTS.SAVE'}).toPromise();
+		const resp = this.api
+			.put<ProjectInfo>(`/project/${this._mappings.getKey(project.id)}`, body, {
+				errorMessage: 'ERROR.PROJECTS.SAVE'
+			})
+			.toPromise();
 
 		const previews = await this.imageService.generatePreviews(project);
 		const formData = new FormData();
 		formData.append('previews', previews.dark);
 		formData.append('previews', previews.light);
-		const previewPromise = this.api.post(`/project/${this._mappings.getKey(project.id)}/preview`, formData,
-			{dynamicMsg: err => err.error.error.description === 'VersionMismatch' ? 'ERROR.PROJECTS.SAVE_VERSION' : 'ERROR.PROJECTS.SAVE'}).toPromise();
+		const previewPromise = this.api
+			.post(`/project/${this._mappings.getKey(project.id)}/preview`, formData, {
+				dynamicMsg: (err) =>
+					err.error.error.description === 'VersionMismatch'
+						? 'ERROR.PROJECTS.SAVE_VERSION'
+						: 'ERROR.PROJECTS.SAVE'
+			})
+			.toPromise();
 
 		project.hash = (await resp).data.elementsFile.hash;
 		project.saveDirty = false;
 		await previewPromise;
 		this._projectsCache.set(project.id, project);
-		this.errorHandling.showInfo('INFO.PROJECTS.SAVE', {name: project.name});
+		this.errorHandling.showInfo('INFO.PROJECTS.SAVE', { name: project.name });
 	}
 
-	public async generateFileToExport(project: Project, name?: string): Promise<ProjectLocalFile> {
+	public async generateFileToExport(
+		project: Project,
+		name?: string
+	): Promise<ProjectLocalFile> {
 		const dependencies = await this.buildDependencyTree(project);
 		const components: ComponentLocalFile[] = [];
 		for (const [id, dep] of dependencies) {
@@ -360,7 +484,8 @@ export class ProjectSaveManagementService {
 		return {
 			project: {
 				name: name ?? project.name,
-				elements: this.convertElementsToSaveElements(project.allElements).elements
+				elements: this.convertElementsToSaveElements(project.allElements)
+					.elements
 			},
 			components
 		};
@@ -368,7 +493,12 @@ export class ProjectSaveManagementService {
 
 	public async exportToFile(project: Project, name?: string) {
 		const projectFile = await this.generateFileToExport(project, name);
-		await this.fileSaverService.saveLocalFile(JSON.stringify(projectFile), 'json', name ?? project.name, undefined);
+		await this.fileSaverService.saveLocalFile(
+			JSON.stringify(projectFile),
+			'json',
+			name ?? project.name,
+			undefined
+		);
 	}
 
 	public openFile(content: string): Project {
@@ -384,14 +514,20 @@ export class ProjectSaveManagementService {
 				this._mappings.set(genUuid(), component.info.id);
 			}
 		}
-		this.setCustomElements(parsedFile.components.map(c => {
-			return {
-				...c.info,
-				id: this._mappings.getKey(c.info.id)
-			};
-		}), 'local');
+		this.setCustomElements(
+			parsedFile.components.map((c) => {
+				return {
+					...c.info,
+					id: this._mappings.getKey(c.info.id)
+				};
+			}),
+			'local'
+		);
 		for (const component of parsedFile.components) {
-			const elements = this.convertSavedElementsToElements(component.elements, mappingsToApply);
+			const elements = this.convertSavedElementsToElements(
+				component.elements,
+				mappingsToApply
+			);
 			const compProject = new Project(new ProjectState(elements), {
 				type: 'comp',
 				name: component.info.name,
@@ -400,7 +536,10 @@ export class ProjectSaveManagementService {
 			});
 			this._projectsCache.set(compProject.id, compProject);
 		}
-		const projectElements = this.convertSavedElementsToElements(parsedFile.project.elements, mappingsToApply);
+		const projectElements = this.convertSavedElementsToElements(
+			parsedFile.project.elements,
+			mappingsToApply
+		);
 		const project = new Project(new ProjectState(projectElements), {
 			type: 'project',
 			name: parsedFile.project.name,
@@ -411,52 +550,81 @@ export class ProjectSaveManagementService {
 		return project;
 	}
 
-	public async buildDependencyTree(project: Project, resolved?: Map<number, Project>): Promise<Map<number, Project>> {
-		if (!resolved)
-			resolved = new Map<number, Project>();
+	public async buildDependencyTree(
+		project: Project,
+		resolved?: Map<number, Project>
+	): Promise<Map<number, Project>> {
+		if (!resolved) resolved = new Map<number, Project>();
 
 		for (const element of project.allElements) {
-			if (this.elementProvider.isCustomElement(element.typeId) && !resolved.has(element.typeId)) {
+			if (
+				this.elementProvider.isCustomElement(element.typeId) &&
+				!resolved.has(element.typeId)
+			) {
 				const proj = await this.getComponent(element.typeId);
 				resolved.set(element.typeId, proj);
-				resolved = new Map([...resolved, ...(await this.buildDependencyTree(proj, resolved))]);
+				resolved = new Map([
+					...resolved,
+					...(await this.buildDependencyTree(proj, resolved))
+				]);
 			}
 		}
 		return resolved;
 	}
 
-	public getProjectsInfo(page?: number, search?: string): Observable<Response<ProjectList>> {
+	public getProjectsInfo(
+		page?: number,
+		search?: string
+	): Observable<Response<ProjectList>> {
 		const params: any = {
 			size: 5
 		};
 
-		if (page)
-			params.page = page;
-		if (search)
-			params.search = search;
+		if (page) params.page = page;
+		if (search) params.search = search;
 
-		return this.api.get<ProjectList>('/project', {errorMessage: 'ERROR.PROJECTS.GET_PROJECTS'}, params);
+		return this.api.get<ProjectList>(
+			'/project',
+			{ errorMessage: 'ERROR.PROJECTS.GET_PROJECTS' },
+			params
+		);
 	}
 
 	public async getProjectShare(linkId: string): Promise<Project> {
-		const resp = await this.api.get<Share>(`/share/${linkId}`, {errorMessage: 'ERROR.PROJECTS.OPEN_SHARE'}).toPromise();
+		const resp = await this.api
+			.get<Share>(`/share/${linkId}`, {
+				errorMessage: 'ERROR.PROJECTS.OPEN_SHARE'
+			})
+			.toPromise();
 		const mappingsToApply = this.saveMappings(resp.data.dependencies, true);
-		this.setCustomElements(resp.data.dependencies.map(dep => dep.dependency), 'share', true);
-		const elements = this.convertSavedElementsToElements(resp.data.elements, mappingsToApply);
+		this.setCustomElements(
+			resp.data.dependencies.map((dep) => dep.dependency),
+			'share',
+			true
+		);
+		const elements = this.convertSavedElementsToElements(
+			resp.data.elements,
+			mappingsToApply
+		);
 		const project = new Project(new ProjectState(elements), {
 			id: this.generateNextId(linkId),
 			source: 'share',
 			name: resp.data.name,
-			type: resp.data.type,
+			type: resp.data.type
 		});
 		this._projectsCache.set(project.id, project);
 		if (resp.data.type === 'comp') {
-			this.setCustomElements([{...resp.data, link: linkId}], 'share', true);
+			this.setCustomElements([{ ...resp.data, link: linkId }], 'share', true);
 		}
 
-		const allComponents = await this.api.get<ShareDependencies>(`/share/dependencies/${linkId}`,
-			{errorMessage: 'ERROR.PROJECTS.OPEN_SHARE'}).toPromise();
-		allComponents.data.dependencies.forEach(comp => this.generateNextId(comp.link));
+		const allComponents = await this.api
+			.get<ShareDependencies>(`/share/dependencies/${linkId}`, {
+				errorMessage: 'ERROR.PROJECTS.OPEN_SHARE'
+			})
+			.toPromise();
+		allComponents.data.dependencies.forEach((comp) =>
+			this.generateNextId(comp.link)
+		);
 		this.setCustomElements(allComponents.data.dependencies, 'share', true);
 
 		return project;
@@ -464,16 +632,23 @@ export class ProjectSaveManagementService {
 
 	public async cloneProjectShare(project: Project) {
 		const link = this._mappings.getKey(project.id);
-		const resp = await this.api.get<ProjectInfo>(`/project/clone/${link}`, {errorMessage: 'ERROR.PROJECTS.CLONE_SHARE'}).toPromise();
+		const resp = await this.api
+			.get<ProjectInfo>(`/project/clone/${link}`, {
+				errorMessage: 'ERROR.PROJECTS.CLONE_SHARE'
+			})
+			.toPromise();
 		return await this.getProjectOrComponentUuid(resp.data.id, project.type);
 	}
 
 	/**
 	 * returns mappings to apply to loaded elements
 	 */
-	private saveMappings(dependencies: ProjectDependency[], useLinkForUuid = false): Map<number, number> {
+	private saveMappings(
+		dependencies: ProjectDependency[],
+		useLinkForUuid = false
+	): Map<number, number> {
 		const mappingsToApply = new Map<number, number>();
-		dependencies.forEach(dep => {
+		dependencies.forEach((dep) => {
 			const uuid = useLinkForUuid ? dep.dependency.link : dep.dependency.id;
 			if (this._mappings.hasKey(uuid)) {
 				mappingsToApply.set(dep.model, this._mappings.getValue(uuid));
@@ -484,8 +659,12 @@ export class ProjectSaveManagementService {
 		return mappingsToApply;
 	}
 
-	private setCustomElements(components: Partial<ComponentInfo>[], category: 'user' | 'local' | 'share', useLinkForUuid = false) {
-		const elements: Partial<ElementType>[] = components.map(comp => {
+	private setCustomElements(
+		components: Partial<ComponentInfo>[],
+		category: 'user' | 'local' | 'share',
+		useLinkForUuid = false
+	) {
+		const elements: Partial<ElementType>[] = components.map((comp) => {
 			return {
 				id: this._mappings.getValue(useLinkForUuid ? comp.link : comp.id),
 				description: comp.description,
@@ -501,33 +680,33 @@ export class ProjectSaveManagementService {
 		this.elementProvider.addElements(elements, category);
 	}
 
-	private convertSavedElementsToElements(elements: ProjectElement[], mappings: Map<number, number>): Element[] {
+	private convertSavedElementsToElements(
+		elements: ProjectElement[],
+		mappings: Map<number, number>
+	): Element[] {
 		const mapped: Element[] = [];
 
 		for (const elem of elements) {
 			const typeId = mappings.has(elem.t) ? mappings.get(elem.t) : elem.t;
 			const elementType = this.elementProvider.getElementById(typeId);
 
-			if (!elementType)
-				continue;
+			if (!elementType) continue;
 
 			const isCustomElement = this.elementProvider.isCustomElement(typeId);
 
 			const element: Element = {
-				id: 0, /* Will be ignored by project-state */
+				id: 0 /* Will be ignored by project-state */,
 				typeId,
-				numInputs: isCustomElement ? elementType.numInputs : (elem.i ?? 0),
-				numOutputs: isCustomElement ? elementType.numOutputs : (elem.o ?? 0),
+				numInputs: isCustomElement ? elementType.numInputs : elem.i ?? 0,
+				numOutputs: isCustomElement ? elementType.numOutputs : elem.o ?? 0,
 				rotation: elem.r ?? ElementRotation.Right,
 				data: elem.s,
 				pos: new PIXI.Point(elem.p[0], elem.p[1])
 			};
-			if (elementType.hasPlugIndex && elem.n)
-				element.plugIndex = elem.n[0];
+			if (elementType.hasPlugIndex && elem.n) element.plugIndex = elem.n[0];
 			if (!elementType.hasPlugIndex)
 				element.options = elem.n ?? elementType.options;
-			if (elem.q)
-				element.endPos = new PIXI.Point(elem.q[0], elem.q[1]);
+			if (elem.q) element.endPos = new PIXI.Point(elem.q[0], elem.q[1]);
 
 			mapped.push(element);
 		}
@@ -535,32 +714,33 @@ export class ProjectSaveManagementService {
 		return mapped;
 	}
 
-	private convertElementsToSaveElements(elements: Element[]): {elements: ProjectElement[], usedCustomElements: number[]} {
+	private convertElementsToSaveElements(elements: Element[]): {
+		elements: ProjectElement[];
+		usedCustomElements: number[];
+	} {
 		const usedCustomElements: number[] = [];
 
-		const saveElements = elements.map(elem => {
-			if (this.elementProvider.isCustomElement(elem.typeId) && !usedCustomElements.includes(elem.typeId))
+		const saveElements = elements.map((elem) => {
+			if (
+				this.elementProvider.isCustomElement(elem.typeId) &&
+				!usedCustomElements.includes(elem.typeId)
+			)
 				usedCustomElements.push(elem.typeId);
 
 			const elementType = this.elementProvider.getElementById(elem.typeId);
 
 			const element: ProjectElement = {
 				t: elem.typeId,
-				p: [elem.pos.x, elem.pos.y],
+				p: [elem.pos.x, elem.pos.y]
 			};
 
-			if (elem.rotation !== ElementRotation.Right)
-				element.r = elem.rotation;
-			if (elem.numInputs && elem.numInputs !== 0)
-				element.i = elem.numInputs;
-			if (elem.numOutputs && elem.numOutputs !== 0)
-				element.o = elem.numOutputs;
+			if (elem.rotation !== ElementRotation.Right) element.r = elem.rotation;
+			if (elem.numInputs && elem.numInputs !== 0) element.i = elem.numInputs;
+			if (elem.numOutputs && elem.numOutputs !== 0) element.o = elem.numOutputs;
 			if (elementType.hasPlugIndex && elem.plugIndex)
 				element.n = [elem.plugIndex];
-			if (!elementType.hasPlugIndex && elem.options)
-				element.n = elem.options;
-			if (elem.data)
-				element.s = elem.data as string;
+			if (!elementType.hasPlugIndex && elem.options) element.n = elem.options;
+			if (elem.data) element.s = elem.data as string;
 			if (elem.endPos && elem.typeId === ElementTypeId.WIRE)
 				element.q = [elem.endPos.x, elem.endPos.y];
 
@@ -576,8 +756,12 @@ export class ProjectSaveManagementService {
 	public async getAllComponentsInfo() {
 		if (this.userService.isLoggedIn) {
 			try {
-				const componentData = await this.api.get<ComponentInfo[]>(`/component`, {errorMessage: 'ERROR.PROJECTS.GET_COMPS'}).toPromise();
-				componentData.data.forEach(comp => this.generateNextId(comp.id));
+				const componentData = await this.api
+					.get<ComponentInfo[]>(`/component`, {
+						errorMessage: 'ERROR.PROJECTS.GET_COMPS'
+					})
+					.toPromise();
+				componentData.data.forEach((comp) => this.generateNextId(comp.id));
 				this.setCustomElements(componentData.data, 'user');
 			} catch {
 				this.clearElements('user');
@@ -588,15 +772,13 @@ export class ProjectSaveManagementService {
 	}
 
 	private generateNextId(uuid?: string): number {
-		if (this._mappings.hasKey(uuid))
-			return this._mappings.getValue(uuid);
+		if (this._mappings.hasKey(uuid)) return this._mappings.getValue(uuid);
 
 		uuid = uuid ?? genUuid();
 
 		let nextId = 1000;
 		for (const id of this._mappings.values()) {
-			if (id > nextId)
-				nextId = id;
+			if (id > nextId) nextId = id;
 		}
 		nextId += 1;
 
@@ -624,5 +806,4 @@ export class ProjectSaveManagementService {
 	public getUuidForProject(id: number): string {
 		return this._mappings.getKey(id);
 	}
-
 }

@@ -1,4 +1,4 @@
-import {ComponentFixture, TestBed, waitForAsync} from '@angular/core/testing';
+import { ComponentFixture, TestBed, waitForAsync } from '@angular/core/testing';
 
 import { RomViewComponent } from './rom-view.component';
 
@@ -8,9 +8,8 @@ describe('RomViewComponent', () => {
 
 	beforeEach(waitForAsync(() => {
 		TestBed.configureTestingModule({
-			declarations: [ RomViewComponent ]
-		})
-			.compileComponents();
+			declarations: [RomViewComponent]
+		}).compileComponents();
 	}));
 
 	beforeEach(() => {

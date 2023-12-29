@@ -1,4 +1,4 @@
-@import "themes";
+@import 'themes';
 
 .popup {
 	position: fixed;
@@ -29,7 +29,7 @@
 		max-width: 100%;
 		max-height: 100%;
 
-		@media (max-width: 767px){
+		@media (max-width: 767px) {
 			min-width: 100%;
 			min-height: 100%;
 			width: 100%;
@@ -37,14 +37,14 @@
 		}
 		border-radius: border('radius');
 		z-index: 600;
-		box-shadow: 10px 10px 10px -5px rgba(0,0,0,0.5);
+		box-shadow: 10px 10px 10px -5px rgba(0, 0, 0, 0.5);
 
 		.body {
 			margin: auto;
 			padding: 0.5rem;
 			overflow: auto;
 			width: 100%;
-			@include scrollbar(5px)
+			@include scrollbar(5px);
 		}
 
 		.header {

@@ -1,6 +1,9 @@
 @font-face {
 	font-family: 'Roboto Mono';
-	src: local('Roboto Mono Light'), local('RobotoMono-Light'), url('../assets/fonts/robotomono-light-webfont.woff2') format('woff2');
+	src:
+		local('Roboto Mono Light'),
+		local('RobotoMono-Light'),
+		url('../assets/fonts/robotomono-light-webfont.woff2') format('woff2');
 	font-weight: normal;
 	font-style: normal;
 	font-display: swap;
@@ -8,13 +11,17 @@
 
 @font-face {
 	font-family: 'Roboto';
-	src: local('Roboto'), local('Roboto-Regular'), url('../assets/fonts/roboto-regular-webfont.woff2') format('woff2');
+	src:
+		local('Roboto'),
+		local('Roboto-Regular'),
+		url('../assets/fonts/roboto-regular-webfont.woff2') format('woff2');
 	font-weight: normal;
 	font-style: normal;
 	font-display: swap;
 }
 
-html, body {
+html,
+body {
 	margin: 0;
 	padding: 0;
 

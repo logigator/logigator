@@ -1,15 +1,24 @@
-import {Element} from '../../../models/element';
-import {Observable} from 'rxjs';
-import {PowerChangesOutWire} from '../../../models/simulation/power-changes';
-import {InjectionToken} from '@angular/core';
-import {BoardStatus} from '../../../models/simulation/board';
+import { Element } from '../../../models/element';
+import { Observable } from 'rxjs';
+import { PowerChangesOutWire } from '../../../models/simulation/power-changes';
+import { InjectionToken } from '@angular/core';
+import { BoardStatus } from '../../../models/simulation/board';
 
-export const WorkerCommunicationService = new InjectionToken<WorkerCommunicationServiceModel>('WorkerCommunication Injection Token');
+export const WorkerCommunicationService =
+	new InjectionToken<WorkerCommunicationServiceModel>(
+		'WorkerCommunication Injection Token'
+	);
 
 export abstract class WorkerCommunicationServiceModel {
-	public abstract getWireState(identifier: string, data?: Uint8Array | boolean[]): Map<Element, boolean>;
+	public abstract getWireState(
+		identifier: string,
+		data?: Uint8Array | boolean[]
+	): Map<Element, boolean>;
 
-	public abstract getWireEndState(identifier: string, data?: Uint8Array | boolean[]): Map<Element, boolean[]>;
+	public abstract getWireEndState(
+		identifier: string,
+		data?: Uint8Array | boolean[]
+	): Map<Element, boolean[]>;
 
 	public abstract init(): Promise<void>;
 
@@ -29,11 +38,19 @@ export abstract class WorkerCommunicationServiceModel {
 
 	public abstract setFrameTime(frameTime: number): void;
 
-	public abstract setUserInput(identifier: string, element: Element, state: boolean[]): void;
+	public abstract setUserInput(
+		identifier: string,
+		element: Element,
+		state: boolean[]
+	): void;
 
-	public abstract boardStateWires(projectId: string): Observable<PowerChangesOutWire>;
+	public abstract boardStateWires(
+		projectId: string
+	): Observable<PowerChangesOutWire>;
 
-	public abstract boardStateWireEnds(projectId: string): Observable<Map<Element, boolean[]>>;
+	public abstract boardStateWireEnds(
+		projectId: string
+	): Observable<Map<Element, boolean[]>>;
 
 	public abstract onIoCompReset(projectId: string): Observable<void>;
 

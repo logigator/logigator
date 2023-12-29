@@ -5,7 +5,7 @@
 <div class="rows">
 
 | Input | Output |
-| ------| ------ |
+| ----- | ------ |
 | 0     | 1      |
 | 1     | 0      |
 
@@ -72,4 +72,5 @@ Periodically sends a one tick long pulse. The delay between pulses can be config
 If the STP input is high, no clock pulses are produced.
 
 ## Tunnel
+
 Works like a wire, but wireless. Every tunnel is connected to all others with the same id.

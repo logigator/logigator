@@ -1,5 +1,5 @@
-@import "themes";
-@import "node_modules/github-markdown-css/github-markdown.css";
+@import 'themes';
+@import 'node_modules/github-markdown-css/github-markdown.css';
 
 @include themifyForNoEncapsulation() {
 	.help-popup-container {
@@ -66,7 +66,8 @@
 			overflow-y: auto;
 			overflow-x: hidden;
 
-			h1, h2 {
+			h1,
+			h2 {
 				border-bottom-color: themed('text-primary');
 			}
 
@@ -74,7 +75,8 @@
 				background-color: inherit !important;
 			}
 
-			pre, code {
+			pre,
+			code {
 				background-color: themed('accent2');
 			}
 
@@ -116,7 +118,7 @@
 				margin-bottom: 1rem;
 			}
 
-			img[title="icon-img"] {
+			img[title='icon-img'] {
 				width: 40px;
 				height: 40px;
 			}

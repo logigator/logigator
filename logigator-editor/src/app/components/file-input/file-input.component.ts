@@ -1,7 +1,7 @@
-import {Component, forwardRef, Input, OnInit} from '@angular/core';
-import {ControlValueAccessor, NG_VALUE_ACCESSOR} from '@angular/forms';
-import {HttpClient} from '@angular/common/http';
-import {ThemingService} from '../../services/theming/theming.service';
+import { Component, forwardRef, Input, OnInit } from '@angular/core';
+import { ControlValueAccessor, NG_VALUE_ACCESSOR } from '@angular/forms';
+import { HttpClient } from '@angular/common/http';
+import { ThemingService } from '../../services/theming/theming.service';
 
 @Component({
 	selector: 'app-file-input',
@@ -16,7 +16,6 @@ import {ThemingService} from '../../services/theming/theming.service';
 	]
 })
 export class FileInputComponent implements OnInit, ControlValueAccessor {
-
 	@Input()
 	public accept = '*';
 
@@ -27,7 +26,10 @@ export class FileInputComponent implements OnInit, ControlValueAccessor {
 	public onChange = (value: File) => {};
 	public onTouch = () => {};
 
-	constructor(private http: HttpClient, private theme: ThemingService) { }
+	constructor(
+		private http: HttpClient,
+		private theme: ThemingService
+	) {}
 
 	ngOnInit() {
 		this.currTheme = this.theme.currentTheme;
@@ -64,8 +66,7 @@ export class FileInputComponent implements OnInit, ControlValueAccessor {
 		evt.preventDefault();
 		evt.stopPropagation();
 		this.isDragging = false;
-		if (evt.dataTransfer.files)
-			this.onChange(evt.dataTransfer.files[0]);
+		if (evt.dataTransfer.files) this.onChange(evt.dataTransfer.files[0]);
 	}
 
 	public fileChange(event: any) {

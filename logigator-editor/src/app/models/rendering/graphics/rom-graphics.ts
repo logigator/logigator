@@ -1,8 +1,10 @@
-import {ComponentInspectable} from './l-graphics';
-import {ComponentGraphics} from './component-graphics';
+import { ComponentInspectable } from './l-graphics';
+import { ComponentGraphics } from './component-graphics';
 
-export class RomGraphics extends ComponentGraphics implements ComponentInspectable {
-
+export class RomGraphics
+	extends ComponentGraphics
+	implements ComponentInspectable
+{
 	onChange: (state: boolean[]) => void;
 
 	public getCurrentSimState(): boolean[] {
@@ -16,5 +18,4 @@ export class RomGraphics extends ComponentGraphics implements ComponentInspectab
 		}
 		return false;
 	}
-
 }

@@ -1,12 +1,11 @@
-import {LGraphics} from './l-graphics';
+import { LGraphics } from './l-graphics';
 import * as PIXI from 'pixi.js';
-import {getStaticDI} from '../../get-di';
-import {ThemingService} from '../../../services/theming/theming.service';
-import {Element} from '../../element';
-import {Grid} from '../grid';
+import { getStaticDI } from '../../get-di';
+import { ThemingService } from '../../../services/theming/theming.service';
+import { Element } from '../../element';
+import { Grid } from '../grid';
 
 export class WireGraphics extends PIXI.Graphics implements LGraphics {
-
 	readonly element: Element;
 
 	private _scale: number;

@@ -1,6 +1,6 @@
-import {ElementType} from '../element-type';
-import {ElementTypeId} from '../element-type-ids';
-import {ElementRotation} from '../../element';
+import { ElementType } from '../element-type';
+import { ElementTypeId } from '../element-type-ids';
+import { ElementRotation } from '../../element';
 
 export const encoder: ElementType = {
 	id: ElementTypeId.ENCODER,
@@ -37,8 +37,7 @@ export const encoder: ElementType = {
 	],
 
 	onOptionsChanged(element?) {
-		if (!element)
-			element = this;
+		if (!element) element = this;
 
 		element.numOutputs = element.options[0];
 		element.numInputs = Math.pow(2, element.options[0]);
@@ -46,16 +45,14 @@ export const encoder: ElementType = {
 
 	width: () => 3,
 	height(element?) {
-		if (!element)
-			element = this;
+		if (!element) element = this;
 
 		const size = Math.max(element.numInputs, element.numOutputs);
 		return size < 2 ? 2 : size;
 	},
 
-	calcLabels(element?)  {
-		if (!element)
-			element = this;
+	calcLabels(element?) {
+		if (!element) element = this;
 
 		const labels = [];
 		for (let i = 0; i < element.numInputs; i++) {

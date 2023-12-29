@@ -15,16 +15,16 @@ import {
 	ViewChild,
 	ViewContainerRef
 } from '@angular/core';
-import {WorkArea} from '../../models/rendering/work-area';
-import {Project} from '../../models/project';
-import {SimulationView} from '../../models/rendering/simulation-view';
-import {WindowDragManager} from './window-drag-manager';
-import {ThemingService} from '../../services/theming/theming.service';
-import {Theme} from '../../models/theming';
-import {ComponentInspectable} from '../../models/rendering/graphics/l-graphics';
-import {ElementProviderService} from '../../services/element-provider/element-provider.service';
-import {ElementInspectionComp} from '../element-inspection/element-inspection-comp';
-import {TranslateService} from '@ngx-translate/core';
+import { WorkArea } from '../../models/rendering/work-area';
+import { Project } from '../../models/project';
+import { SimulationView } from '../../models/rendering/simulation-view';
+import { WindowDragManager } from './window-drag-manager';
+import { ThemingService } from '../../services/theming/theming.service';
+import { Theme } from '../../models/theming';
+import { ComponentInspectable } from '../../models/rendering/graphics/l-graphics';
+import { ElementProviderService } from '../../services/element-provider/element-provider.service';
+import { ElementInspectionComp } from '../element-inspection/element-inspection-comp';
+import { TranslateService } from '@ngx-translate/core';
 import * as PIXI from 'pixi.js';
 
 @Component({
@@ -33,8 +33,10 @@ import * as PIXI from 'pixi.js';
 	styleUrls: ['./window-work-area.component.scss'],
 	changeDetection: ChangeDetectionStrategy.OnPush
 })
-export class WindowWorkAreaComponent extends WorkArea implements OnInit, OnChanges {
-
+export class WindowWorkAreaComponent
+	extends WorkArea
+	implements OnInit, OnChanges
+{
 	constructor(
 		private renderer2: Renderer2,
 		private ngZone: NgZone,
@@ -79,19 +81,22 @@ export class WindowWorkAreaComponent extends WorkArea implements OnInit, OnChang
 	@Output()
 	requestOnTop = new EventEmitter<void>();
 
-	@ViewChild('popup', {static: true})
+	@ViewChild('popup', { static: true })
 	private _popup: ElementRef<HTMLDivElement>;
 
-	@ViewChild('canvasContainer', {static: true})
+	@ViewChild('canvasContainer', { static: true })
 	private _pixiCanvasContainer: ElementRef<HTMLDivElement>;
 
-	@ViewChild('componentContainer', {static: true})
+	@ViewChild('componentContainer', { static: true })
 	private _componentContainer: ElementRef<HTMLDivElement>;
 
-	@ViewChild('componentInsertionPoint', {read: ViewContainerRef, static: true})
+	@ViewChild('componentInsertionPoint', {
+		read: ViewContainerRef,
+		static: true
+	})
 	private _componentInsertionPoint: ViewContainerRef;
 
-	@ViewChild('header', {static: true})
+	@ViewChild('header', { static: true })
 	private _header: ElementRef<HTMLDivElement>;
 
 	private _dragManager: WindowDragManager;
@@ -130,9 +135,20 @@ export class WindowWorkAreaComponent extends WorkArea implements OnInit, OnChang
 			}
 
 			if (this.project) {
-				this.renderer2.setStyle(this._componentContainer.nativeElement, 'display', 'none');
-				this.renderer2.setStyle(this._pixiCanvasContainer.nativeElement, 'display', 'block');
-				this._pixiRenderer.resize(this._pixiCanvasContainer.nativeElement.offsetWidth, this._pixiCanvasContainer.nativeElement.offsetHeight);
+				this.renderer2.setStyle(
+					this._componentContainer.nativeElement,
+					'display',
+					'none'
+				);
+				this.renderer2.setStyle(
+					this._pixiCanvasContainer.nativeElement,
+					'display',
+					'block'
+				);
+				this._pixiRenderer.resize(
+					this._pixiCanvasContainer.nativeElement.offsetWidth,
+					this._pixiCanvasContainer.nativeElement.offsetHeight
+				);
 				this.ngZone.runOutsideAngular(() => this.addTickerFunction());
 
 				this._activeView = new SimulationView(
@@ -156,18 +172,35 @@ export class WindowWorkAreaComponent extends WorkArea implements OnInit, OnChang
 				);
 
 				this._dragManager.onChange$.subscribe(() => {
-					this._pixiRenderer.resize(this._pixiCanvasContainer.nativeElement.offsetWidth, this._pixiCanvasContainer.nativeElement.offsetHeight);
+					this._pixiRenderer.resize(
+						this._pixiCanvasContainer.nativeElement.offsetWidth,
+						this._pixiCanvasContainer.nativeElement.offsetHeight
+					);
 					this._activeView.updateChunks();
 					this._activeView.requestSingleFrame();
 				});
-
 			} else if (this.sprite) {
-				this.renderer2.setStyle(this._componentContainer.nativeElement, 'display', 'block');
-				this.renderer2.setStyle(this._pixiCanvasContainer.nativeElement, 'display', 'none');
+				this.renderer2.setStyle(
+					this._componentContainer.nativeElement,
+					'display',
+					'block'
+				);
+				this.renderer2.setStyle(
+					this._pixiCanvasContainer.nativeElement,
+					'display',
+					'none'
+				);
 
-				const inspectionComponentType = this.elementProvider.getElementById(this.sprite.element.typeId).elementInspectionComp;
-				const inspectionComponentFactory = this.componentFactoryResolver.resolveComponentFactory(inspectionComponentType);
-				this._componentRef = this._componentInsertionPoint.createComponent(inspectionComponentFactory);
+				const inspectionComponentType = this.elementProvider.getElementById(
+					this.sprite.element.typeId
+				).elementInspectionComp;
+				const inspectionComponentFactory =
+					this.componentFactoryResolver.resolveComponentFactory(
+						inspectionComponentType
+					);
+				this._componentRef = this._componentInsertionPoint.createComponent(
+					inspectionComponentFactory
+				);
 				this._componentRef.instance.sprite = this.sprite;
 
 				if (this._dragManager) this._dragManager.destroy();
@@ -223,7 +256,10 @@ export class WindowWorkAreaComponent extends WorkArea implements OnInit, OnChang
 	private show() {
 		this.renderer2.setStyle(this._popup.nativeElement, 'display', 'block');
 		if (this.project) {
-			this._pixiRenderer.resize(this._pixiCanvasContainer.nativeElement.offsetWidth, this._pixiCanvasContainer.nativeElement.offsetHeight);
+			this._pixiRenderer.resize(
+				this._pixiCanvasContainer.nativeElement.offsetWidth,
+				this._pixiCanvasContainer.nativeElement.offsetHeight
+			);
 		}
 	}
 
@@ -234,7 +270,9 @@ export class WindowWorkAreaComponent extends WorkArea implements OnInit, OnChang
 		if (this.project) {
 			name = this.project.name;
 		} else {
-			name = this.translate.instant(this.elementProvider.getElementById(this.sprite.element.typeId).name);
+			name = this.translate.instant(
+				this.elementProvider.getElementById(this.sprite.element.typeId).name
+			);
 		}
 
 		return [...this.parentNames, name];
@@ -250,5 +288,4 @@ export class WindowWorkAreaComponent extends WorkArea implements OnInit, OnChang
 			parentTypeIds: this.parentTypeIds.slice(0, index)
 		});
 	}
-
 }

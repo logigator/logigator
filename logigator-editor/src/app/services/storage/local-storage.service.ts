@@ -1,11 +1,10 @@
-import {Injectable} from '@angular/core';
-import {StorageServiceModel} from './storage.service';
+import { Injectable } from '@angular/core';
+import { StorageServiceModel } from './storage.service';
 
 @Injectable({
 	providedIn: 'root'
 })
 export class LocalStorageService extends StorageServiceModel {
-
 	public get(key: string): any {
 		const data = localStorage.getItem(key);
 		try {
@@ -16,7 +15,10 @@ export class LocalStorageService extends StorageServiceModel {
 	}
 
 	public set(key: string, data: any) {
-		localStorage.setItem(key, typeof data === 'string' ? data : JSON.stringify(data));
+		localStorage.setItem(
+			key,
+			typeof data === 'string' ? data : JSON.stringify(data)
+		);
 	}
 
 	public remove(key: string) {

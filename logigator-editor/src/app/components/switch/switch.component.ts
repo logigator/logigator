@@ -1,5 +1,13 @@
-import {ChangeDetectorRef, Component, forwardRef, Input, OnChanges, OnInit, SimpleChanges} from '@angular/core';
-import {ControlValueAccessor, NG_VALUE_ACCESSOR} from '@angular/forms';
+import {
+	ChangeDetectorRef,
+	Component,
+	forwardRef,
+	Input,
+	OnChanges,
+	OnInit,
+	SimpleChanges
+} from '@angular/core';
+import { ControlValueAccessor, NG_VALUE_ACCESSOR } from '@angular/forms';
 
 @Component({
 	selector: 'app-switch',
@@ -14,7 +22,6 @@ import {ControlValueAccessor, NG_VALUE_ACCESSOR} from '@angular/forms';
 	]
 })
 export class SwitchComponent implements OnChanges, ControlValueAccessor {
-
 	public state: boolean;
 
 	@Input()
@@ -23,7 +30,7 @@ export class SwitchComponent implements OnChanges, ControlValueAccessor {
 	private onChange = (value: boolean) => {};
 	private onTouched = () => {};
 
-	constructor(private cdr: ChangeDetectorRef) { }
+	constructor(private cdr: ChangeDetectorRef) {}
 
 	ngOnChanges(changes: SimpleChanges): void {
 		if (this.checked === undefined) return;
@@ -38,8 +45,7 @@ export class SwitchComponent implements OnChanges, ControlValueAccessor {
 		this.onTouched = fn;
 	}
 
-	setDisabledState(isDisabled: boolean): void {
-	}
+	setDisabledState(isDisabled: boolean): void {}
 
 	writeValue(value: boolean): void {
 		this.state = value;
@@ -51,5 +57,4 @@ export class SwitchComponent implements OnChanges, ControlValueAccessor {
 		this.onChange(this.state);
 		this.onTouched();
 	}
-
 }

@@ -1,4 +1,4 @@
-import {ComponentFixture, TestBed, waitForAsync} from '@angular/core/testing';
+import { ComponentFixture, TestBed, waitForAsync } from '@angular/core/testing';
 
 import { SettingsInfoBoxComponent } from './settings-info-box.component';
 
@@ -8,9 +8,8 @@ describe('SettingsInfoBoxComponent', () => {
 
 	beforeEach(waitForAsync(() => {
 		TestBed.configureTestingModule({
-			declarations: [ SettingsInfoBoxComponent ]
-		})
-			.compileComponents();
+			declarations: [SettingsInfoBoxComponent]
+		}).compileComponents();
 	}));
 
 	beforeEach(() => {

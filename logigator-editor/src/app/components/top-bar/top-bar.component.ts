@@ -1,11 +1,11 @@
-import {Component} from '@angular/core';
-import {ProjectsService} from '../../services/projects/projects.service';
-import {UserService} from '../../services/user/user.service';
-import {Observable} from 'rxjs';
-import {User} from '../../models/http/response/user';
-import {WorkMode} from '../../models/work-modes';
-import {WorkModeService} from '../../services/work-mode/work-mode.service';
-import {environment} from '../../../environments/environment';
+import { Component } from '@angular/core';
+import { ProjectsService } from '../../services/projects/projects.service';
+import { UserService } from '../../services/user/user.service';
+import { Observable } from 'rxjs';
+import { User } from '../../models/http/response/user';
+import { WorkMode } from '../../models/work-modes';
+import { WorkModeService } from '../../services/work-mode/work-mode.service';
+import { environment } from '../../../environments/environment';
 
 @Component({
 	selector: 'app-top-bar',
@@ -13,7 +13,6 @@ import {environment} from '../../../environments/environment';
 	styleUrls: ['./top-bar.component.scss']
 })
 export class TopBarComponent {
-
 	public editDropdownOpen = false;
 	public fileDropdownOpen = false;
 	public viewDropdownOpen = false;
@@ -26,7 +25,7 @@ export class TopBarComponent {
 		private projectService: ProjectsService,
 		private userService: UserService,
 		private workMode: WorkModeService
-	) { }
+	) {}
 
 	public get isSimulationMode(): boolean {
 		return this.workMode.currentWorkMode === WorkMode.SIMULATION;
@@ -50,7 +49,12 @@ export class TopBarComponent {
 	}
 
 	public dropdownHover(comp: keyof TopBarComponent) {
-		if (this.editDropdownOpen || this.fileDropdownOpen || this.viewDropdownOpen || this.helpDropdownOpen) {
+		if (
+			this.editDropdownOpen ||
+			this.fileDropdownOpen ||
+			this.viewDropdownOpen ||
+			this.helpDropdownOpen
+		) {
 			this.closeDropdowns();
 			// @ts-ignore
 			this[comp] = true;
@@ -66,7 +70,12 @@ export class TopBarComponent {
 	}
 
 	public get dropdownOpen(): boolean {
-		return this.editDropdownOpen || this.fileDropdownOpen || this.viewDropdownOpen || this.helpDropdownOpen || this.settingsDropdownOpen;
+		return (
+			this.editDropdownOpen ||
+			this.fileDropdownOpen ||
+			this.viewDropdownOpen ||
+			this.helpDropdownOpen ||
+			this.settingsDropdownOpen
+		);
 	}
-
 }

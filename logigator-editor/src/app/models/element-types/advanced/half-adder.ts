@@ -1,6 +1,6 @@
-import {ElementType} from '../element-type';
-import {ElementTypeId} from '../element-type-ids';
-import {ElementRotation} from '../../element';
+import { ElementType } from '../element-type';
+import { ElementTypeId } from '../element-type-ids';
+import { ElementRotation } from '../../element';
 
 export const halfAdder: ElementType = {
 	id: ElementTypeId.HALF_ADDER,
@@ -29,7 +29,7 @@ export const halfAdder: ElementType = {
 	width: () => 3,
 	height: () => 2,
 
-	calcLabels: element => {
+	calcLabels: (element) => {
 		return ['A', 'B', 'S', 'C'];
 	}
 };

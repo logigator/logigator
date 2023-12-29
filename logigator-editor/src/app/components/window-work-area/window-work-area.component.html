@@ -1,15 +1,30 @@
-<div class="collision-box" [style.z-index]="zIndex" #popup (mousedown)="doRequestOnTop()">
+<div
+	class="collision-box"
+	[style.z-index]="zIndex"
+	#popup
+	(mousedown)="doRequestOnTop()"
+>
 	<div class="window-container">
 		<div class="header">
 			<div class="identifier-string">
-				<ng-container *ngFor="let name of headerNames; last as last; index as i">
-					<p (click)="inspectParentElement(i)">{{name}}</p>
+				<ng-container
+					*ngFor="let name of headerNames; last as last; index as i"
+				>
+					<p (click)="inspectParentElement(i)">{{ name }}</p>
 					<span *ngIf="!last">&rarr;</span>
 				</ng-container>
 			</div>
 			<div class="drag-header" #header></div>
-			<img *ngIf="theme === 'light'" src="assets/icons/light/close.svg" (click)="doRequestHide()">
-			<img *ngIf="theme === 'dark'" src="assets/icons/dark/close.svg" (click)="doRequestHide()">
+			<img
+				*ngIf="theme === 'light'"
+				src="assets/icons/light/close.svg"
+				(click)="doRequestHide()"
+			/>
+			<img
+				*ngIf="theme === 'dark'"
+				src="assets/icons/dark/close.svg"
+				(click)="doRequestHide()"
+			/>
 		</div>
 		<div class="canvas-window-container" #canvasContainer></div>
 		<div class="component-window-container" #componentContainer>

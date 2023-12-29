@@ -1,5 +1,5 @@
-import {Component, Input, OnInit} from '@angular/core';
-import {ThemingService} from '../../services/theming/theming.service';
+import { Component, Input, OnInit } from '@angular/core';
+import { ThemingService } from '../../services/theming/theming.service';
 
 @Component({
 	selector: 'app-loading-symbol',
@@ -7,16 +7,14 @@ import {ThemingService} from '../../services/theming/theming.service';
 	styleUrls: ['./loading-symbol.component.scss']
 })
 export class LoadingSymbolComponent implements OnInit {
-
 	@Input()
 	public text: string;
 
 	currTheme: string;
 
-	constructor(private theme: ThemingService) { }
+	constructor(private theme: ThemingService) {}
 
 	ngOnInit(): void {
 		this.currTheme = this.theme.currentTheme;
 	}
-
 }

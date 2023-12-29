@@ -1,9 +1,14 @@
 <div class="reload">
 	<p [innerHTML]="'POPUP.RELOAD.QUESTION' | translate"></p>
 	<div class="buttons">
-		<button (click)="reloadConfirm()" class="btn-raised primary">{{'POPUP.RELOAD.YES' | translate}}</button>
-		<button (click)="reloadPostponed()" class="btn-raised secondary">{{'POPUP.RELOAD.POSTPONE' | translate}}</button>
-		<button (click)="close()" class="btn-raised danger">{{'POPUP.RELOAD.CANCEL' | translate}}</button>
+		<button (click)="reloadConfirm()" class="btn-raised primary">
+			{{ 'POPUP.RELOAD.YES' | translate }}
+		</button>
+		<button (click)="reloadPostponed()" class="btn-raised secondary">
+			{{ 'POPUP.RELOAD.POSTPONE' | translate }}
+		</button>
+		<button (click)="close()" class="btn-raised danger">
+			{{ 'POPUP.RELOAD.CANCEL' | translate }}
+		</button>
 	</div>
 </div>
-

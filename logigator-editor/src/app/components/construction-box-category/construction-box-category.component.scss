@@ -1,5 +1,5 @@
-@import "variables";
-@import "themes";
+@import 'variables';
+@import 'themes';
 
 .box {
 	width: $construction-box-width - 0.75rem;
@@ -46,9 +46,9 @@
 				background-color: transparent;
 
 				@if (isTheme('dark')) {
-					background-image: url("src/assets/icons/dark/reload.svg");
+					background-image: url('src/assets/icons/dark/reload.svg');
 				} @else {
-					background-image: url("src/assets/icons/light/reload.svg");
+					background-image: url('src/assets/icons/light/reload.svg');
 				}
 			}
 
@@ -129,7 +129,12 @@
 
 				img {
 					@if isTheme(dark) {
-						filter: invert(99%) sepia(0%) saturate(540%) hue-rotate(169deg) brightness(81%) contrast(100%);
+						filter: invert(99%)
+							sepia(0%)
+							saturate(540%)
+							hue-rotate(169deg)
+							brightness(81%)
+							contrast(100%);
 					} @else {
 						// is black
 					}
@@ -139,9 +144,19 @@
 					color: themed('accent2');
 					img {
 						@if isTheme(dark) {
-							filter: invert(22%) sepia(14%) saturate(285%) hue-rotate(149deg) brightness(94%) contrast(88%);
+							filter: invert(22%)
+								sepia(14%)
+								saturate(285%)
+								hue-rotate(149deg)
+								brightness(94%)
+								contrast(88%);
 						} @else {
-							filter: invert(91%) sepia(0%) saturate(96%) hue-rotate(178deg) brightness(92%) contrast(95%);
+							filter: invert(91%)
+								sepia(0%)
+								saturate(96%)
+								hue-rotate(178deg)
+								brightness(92%)
+								contrast(95%);
 						}
 					}
 				}
@@ -153,9 +168,19 @@
 				color: themed('primary');
 				img {
 					@if isTheme(dark) {
-						filter: invert(50%) sepia(76%) saturate(435%) hue-rotate(93deg) brightness(95%) contrast(88%);
+						filter: invert(50%)
+							sepia(76%)
+							saturate(435%)
+							hue-rotate(93deg)
+							brightness(95%)
+							contrast(88%);
 					} @else {
-						filter: invert(63%) sepia(63%) saturate(498%) hue-rotate(93deg) brightness(93%) contrast(89%);
+						filter: invert(63%)
+							sepia(63%)
+							saturate(498%)
+							hue-rotate(93deg)
+							brightness(93%)
+							contrast(89%);
 					}
 				}
 
@@ -163,9 +188,19 @@
 					color: themed('primary');
 					img {
 						@if isTheme(dark) {
-							filter: invert(50%) sepia(76%) saturate(435%) hue-rotate(93deg) brightness(95%) contrast(88%);
+							filter: invert(50%)
+								sepia(76%)
+								saturate(435%)
+								hue-rotate(93deg)
+								brightness(95%)
+								contrast(88%);
 						} @else {
-							filter: invert(63%) sepia(63%) saturate(498%) hue-rotate(93deg) brightness(93%) contrast(89%);
+							filter: invert(63%)
+								sepia(63%)
+								saturate(498%)
+								hue-rotate(93deg)
+								brightness(93%)
+								contrast(89%);
 						}
 					}
 				}

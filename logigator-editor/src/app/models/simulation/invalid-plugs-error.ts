@@ -1,5 +1,4 @@
 export class InvalidPlugsError extends Error {
-
 	public readonly comp?: number;
 	public readonly plugIndex?: number;
 

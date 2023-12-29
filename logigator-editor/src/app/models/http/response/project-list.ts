@@ -1,4 +1,4 @@
-import {ProjectInfo} from './project-info';
+import { ProjectInfo } from './project-info';
 
 export interface ProjectList {
 	page: number;

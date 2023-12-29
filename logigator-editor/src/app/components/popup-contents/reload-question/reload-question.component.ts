@@ -1,6 +1,6 @@
-import {ChangeDetectionStrategy, Component} from '@angular/core';
-import {ThemingService} from '../../../services/theming/theming.service';
-import {PopupContentComp} from '../../popup/popup-content-comp';
+import { ChangeDetectionStrategy, Component } from '@angular/core';
+import { ThemingService } from '../../../services/theming/theming.service';
+import { PopupContentComp } from '../../popup/popup-content-comp';
 
 @Component({
 	selector: 'app-reload-question',
@@ -9,7 +9,6 @@ import {PopupContentComp} from '../../popup/popup-content-comp';
 	changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class ReloadQuestionComponent extends PopupContentComp {
-
 	constructor(private theming: ThemingService) {
 		super();
 	}
@@ -35,5 +34,4 @@ export class ReloadQuestionComponent extends PopupContentComp {
 			this.theming.setTheme('dark');
 		}
 	}
-
 }

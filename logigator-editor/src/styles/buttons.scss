@@ -1,4 +1,4 @@
-@import "themes";
+@import 'themes';
 
 .btn {
 	padding: 0.4rem 0.75rem;
@@ -19,7 +19,7 @@
 	@if (isTheme('dark')) {
 		@return lighten(themed('accent2'), 35%);
 	} @else {
-		@return darken(themed('accent2'), 35%)
+		@return darken(themed('accent2'), 35%);
 	}
 }
 
@@ -161,7 +161,7 @@
 			}
 
 			&:active {
-				background-color: rgba(themed('primary'), 0.2)
+				background-color: rgba(themed('primary'), 0.2);
 			}
 		}
 
@@ -174,7 +174,7 @@
 			}
 
 			&:active {
-				background-color: rgba(secondaryButtonBgColor(), 0.2)
+				background-color: rgba(secondaryButtonBgColor(), 0.2);
 			}
 		}
 
@@ -187,7 +187,7 @@
 			}
 
 			&:active {
-				background-color: rgba(themed('error'), 0.2)
+				background-color: rgba(themed('error'), 0.2);
 			}
 		}
 	}

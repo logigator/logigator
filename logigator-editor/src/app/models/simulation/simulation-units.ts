@@ -1,15 +1,19 @@
-import {ProjectState} from '../project-state';
-import {ElementToUnit, UnitElementBidir, UnitToElement, WireEndLinksOnElem} from '../../services/simulation/state-compiler/compiler-types';
-import {Element} from '../element';
-import {CompiledComp} from '../../services/simulation/state-compiler/compiled-comp';
-import {SimulationUnit} from './simulation-unit';
-import {ElementTypeId} from '../element-types/element-type-ids';
-import {getStaticDI} from '../get-di';
-import {ElementProviderService} from '../../services/element-provider/element-provider.service';
-import {ArrayHelper} from '../../services/simulation/state-compiler/array-helper';
+import { ProjectState } from '../project-state';
+import {
+	ElementToUnit,
+	UnitElementBidir,
+	UnitToElement,
+	WireEndLinksOnElem
+} from '../../services/simulation/state-compiler/compiler-types';
+import { Element } from '../element';
+import { CompiledComp } from '../../services/simulation/state-compiler/compiled-comp';
+import { SimulationUnit } from './simulation-unit';
+import { ElementTypeId } from '../element-types/element-type-ids';
+import { getStaticDI } from '../get-di';
+import { ElementProviderService } from '../../services/element-provider/element-provider.service';
+import { ArrayHelper } from '../../services/simulation/state-compiler/array-helper';
 
 export abstract class SimulationUnits {
-
 	public static generateUnits(state: ProjectState): UnitElementBidir {
 		const unitToElement: UnitToElement = new Map<SimulationUnit, Element>();
 		const elementToUnit: ElementToUnit = new Map<Element, SimulationUnit>();
@@ -20,7 +24,7 @@ export abstract class SimulationUnits {
 				elementToUnit.set(element, unit);
 			}
 		}
-		return {unitToElement, elementToUnit};
+		return { unitToElement, elementToUnit };
 	}
 
 	public static fromElement(element: Element): SimulationUnit {
@@ -34,7 +38,7 @@ export abstract class SimulationUnits {
 
 			if (out.type === ElementTypeId.ROM) {
 				out.ops = [];
-				const byteChars = atob(element.data as string || '');
+				const byteChars = atob((element.data as string) || '');
 				for (let i = 0; i < byteChars.length; i++) {
 					out.ops.push(byteChars.charCodeAt(i));
 				}
@@ -65,7 +69,11 @@ export abstract class SimulationUnits {
 		return unit.inputs.concat(unit.outputs);
 	}
 
-	public static setInputOutput(unit: SimulationUnit, index: number, value: number): void {
+	public static setInputOutput(
+		unit: SimulationUnit,
+		index: number,
+		value: number
+	): void {
 		if (index < unit.inputs.length) {
 			unit.inputs[index] = value;
 		} else {
@@ -73,12 +81,24 @@ export abstract class SimulationUnits {
 		}
 	}
 
-	public static wireIdHasLink(wireEndLinksOnElem: WireEndLinksOnElem, element: Element, wireIndex: number): boolean {
-		return wireEndLinksOnElem.has(element) && wireEndLinksOnElem.get(element).has(wireIndex);
+	public static wireIdHasLink(
+		wireEndLinksOnElem: WireEndLinksOnElem,
+		element: Element,
+		wireIndex: number
+	): boolean {
+		return (
+			wireEndLinksOnElem.has(element) &&
+			wireEndLinksOnElem.get(element).has(wireIndex)
+		);
 	}
 
-	public static removePlugs(units: SimulationUnit[], compiledComp: CompiledComp) {
-		const plugsByIndexSorted = [...compiledComp.plugsByIndex.values()].sort((a, b) => a - b);
+	public static removePlugs(
+		units: SimulationUnit[],
+		compiledComp: CompiledComp
+	) {
+		const plugsByIndexSorted = [...compiledComp.plugsByIndex.values()].sort(
+			(a, b) => a - b
+		);
 		for (let i = plugsByIndexSorted.length - 1; i >= 0; i--) {
 			units.splice(plugsByIndexSorted[i], 1);
 		}
@@ -89,10 +109,14 @@ export abstract class SimulationUnits {
 		const plugsByIndexKeys = [...plugsByIndex.keys()];
 		for (let i = 0; i < plugsByIndexKeys.length; i++) {
 			const plugIndex = plugsByIndexKeys[i];
-			const value = SimulationUnits.concatIO([...compiledComp.units.keys()][plugsByIndex.get(plugIndex)])[0];
+			const value = SimulationUnits.concatIO(
+				[...compiledComp.units.keys()][plugsByIndex.get(plugIndex)]
+			)[0];
 			for (let j = i + 1; j < plugsByIndexKeys.length; j++) {
 				const otherIndex = plugsByIndexKeys[j];
-				const otherValue = SimulationUnits.concatIO([...compiledComp.units.keys()][plugsByIndex.get(otherIndex)])[0];
+				const otherValue = SimulationUnits.concatIO(
+					[...compiledComp.units.keys()][plugsByIndex.get(otherIndex)]
+				)[0];
 				if (value === otherValue) {
 					let pushed = false;
 					for (const arr of compiledComp.connectedPlugs) {

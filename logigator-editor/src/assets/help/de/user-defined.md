@@ -11,6 +11,7 @@ Sie können eigene Komponenten/Subschaltungen erstellen und diese in größeren 
 Um solche Subschaltungen via `Datei > Neue Komponente` erstellen.
 
 Geben Sie Name, Symbol und Beschreibung der Komponente ein. Das Symbol wird angezeigt, wenn Sie die Komponente in einder anderen Schaltung platzieren.
+
 </div>
 </div>
 
@@ -23,6 +24,7 @@ Nachdem Sie eine eigene Komponente erstellt haben, öffnet sich dies automatisch
 <div class="margin-left">
 
 Sie können `Stecker Elemente` platzieren. Logigator bieten Eingangs- und Ausgangsstecker. Platzieren Sie `Eingangsstecker` für jeden Eingang, den Ihre Komponente haben soll. Alles was Sie damit verbinden, wird direkt mit allem außerhalb der Komponente verbunden.
+
 </div>
 </div>
 
@@ -35,9 +37,9 @@ Sie können `Stecker Elemente` platzieren. Logigator bieten Eingangs- und Ausgan
 Steckerelemente haben ein paar Optionen. Diese inkludieren `Steckerindex` und `Beschriftung`.
 
 - Steckerindex<br>
-    Definiert die Position des Ein/Ausgangs der Komponente, ein Steckerindex von 1 bedeutet, der ausgewählte Stecker ist der erste der Komponente.
+  Definiert die Position des Ein/Ausgangs der Komponente, ein Steckerindex von 1 bedeutet, der ausgewählte Stecker ist der erste der Komponente.
 - Beschriftung<br>
-    Die Beschriftung ist optional und wird neben dem Ein-/Ausgang angezeigt, nachdem die Komponente platziert wurde.
+  Die Beschriftung ist optional und wird neben dem Ein-/Ausgang angezeigt, nachdem die Komponente platziert wurde.
 
 </div>
 </div>

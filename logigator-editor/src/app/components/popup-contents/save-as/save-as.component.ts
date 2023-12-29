@@ -1,9 +1,13 @@
-import {ChangeDetectionStrategy, Component, OnInit} from '@angular/core';
-import {ProjectSaveManagementService} from '../../../services/project-save-management/project-save-management.service';
-import {Project} from '../../../models/project';
-import {UserService} from '../../../services/user/user.service';
-import {UntypedFormBuilder, UntypedFormGroup, Validators} from '@angular/forms';
-import {PopupContentComp} from '../../popup/popup-content-comp';
+import { ChangeDetectionStrategy, Component, OnInit } from '@angular/core';
+import { ProjectSaveManagementService } from '../../../services/project-save-management/project-save-management.service';
+import { Project } from '../../../models/project';
+import { UserService } from '../../../services/user/user.service';
+import {
+	UntypedFormBuilder,
+	UntypedFormGroup,
+	Validators
+} from '@angular/forms';
+import { PopupContentComp } from '../../popup/popup-content-comp';
 
 @Component({
 	selector: 'app-save-as',
@@ -11,9 +15,18 @@ import {PopupContentComp} from '../../popup/popup-content-comp';
 	styleUrls: ['./save-as.component.scss'],
 	changeDetection: ChangeDetectionStrategy.OnPush
 })
-export class SaveAsComponent extends
-	PopupContentComp<never, {name: string, description: string, target: 'local' | 'server', public: boolean}> implements OnInit {
-
+export class SaveAsComponent
+	extends PopupContentComp<
+		never,
+		{
+			name: string;
+			description: string;
+			target: 'local' | 'server';
+			public: boolean;
+		}
+	>
+	implements OnInit
+{
 	public saveForm: UntypedFormGroup;
 
 	constructor(
@@ -25,7 +38,15 @@ export class SaveAsComponent extends
 
 	ngOnInit() {
 		this.saveForm = this.formBuilder.group({
-			name: ['', [Validators.required, Validators.minLength(2), Validators.maxLength(20), Validators.pattern('^.+$')]],
+			name: [
+				'',
+				[
+					Validators.required,
+					Validators.minLength(2),
+					Validators.maxLength(20),
+					Validators.pattern('^.+$')
+				]
+			],
 			description: ['', [Validators.maxLength(1000)]],
 			public: [true]
 		});
@@ -48,5 +69,4 @@ export class SaveAsComponent extends
 			...this.saveForm.value
 		});
 	}
-
 }

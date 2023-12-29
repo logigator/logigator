@@ -1,6 +1,6 @@
-import {ChangeDetectionStrategy, Component, OnInit} from '@angular/core';
-import {UntypedFormControl, Validators} from '@angular/forms';
-import {PopupContentComp} from '../../popup/popup-content-comp';
+import { ChangeDetectionStrategy, Component, OnInit } from '@angular/core';
+import { UntypedFormControl, Validators } from '@angular/forms';
+import { PopupContentComp } from '../../popup/popup-content-comp';
 
 @Component({
 	selector: 'app-text',
@@ -8,8 +8,10 @@ import {PopupContentComp} from '../../popup/popup-content-comp';
 	styleUrls: ['./text.component.scss'],
 	changeDetection: ChangeDetectionStrategy.OnPush
 })
-export class TextComponent extends PopupContentComp<string, string> implements OnInit {
-
+export class TextComponent
+	extends PopupContentComp<string, string>
+	implements OnInit
+{
 	public text: UntypedFormControl;
 
 	constructor() {
@@ -17,11 +19,12 @@ export class TextComponent extends PopupContentComp<string, string> implements O
 	}
 
 	ngOnInit() {
-		this.text = new UntypedFormControl(this.inputFromOpener, [Validators.required]);
+		this.text = new UntypedFormControl(this.inputFromOpener, [
+			Validators.required
+		]);
 	}
 
 	public setText() {
 		this.requestClose.emit(this.text.value);
 	}
-
 }

@@ -1,6 +1,6 @@
-import {ElementType} from '../element-type';
-import {ElementTypeId} from '../element-type-ids';
-import {ElementRotation} from '../../element';
+import { ElementType } from '../element-type';
+import { ElementTypeId } from '../element-type-ids';
+import { ElementRotation } from '../../element';
 
 export const srFF: ElementType = {
 	id: ElementTypeId.SR_FF,
@@ -31,7 +31,7 @@ export const srFF: ElementType = {
 	width: () => 3,
 	height: () => 3,
 
-	calcLabels(element?)  {
+	calcLabels(element?) {
 		return ['S', 'CLK', 'R', 'Q', '!Q'];
 	}
 };

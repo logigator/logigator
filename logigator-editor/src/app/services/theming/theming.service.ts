@@ -1,15 +1,17 @@
-import {Inject, Injectable} from '@angular/core';
-import {DOCUMENT} from '@angular/common';
-import {EditorColorKey, EditorColors, Theme} from '../../models/theming';
-import {Observable, Subject} from 'rxjs';
-import {EastereggService} from '../easteregg/easteregg.service';
-import {StorageService, StorageServiceModel} from '../storage/storage.service';
+import { Inject, Injectable } from '@angular/core';
+import { DOCUMENT } from '@angular/common';
+import { EditorColorKey, EditorColors, Theme } from '../../models/theming';
+import { Observable, Subject } from 'rxjs';
+import { EastereggService } from '../easteregg/easteregg.service';
+import {
+	StorageService,
+	StorageServiceModel
+} from '../storage/storage.service';
 
 @Injectable({
 	providedIn: 'root'
 })
 export class ThemingService {
-
 	private _currentTheme: Theme;
 	private _pendingTheme: Theme;
 
@@ -18,25 +20,25 @@ export class ThemingService {
 
 	private _editorColor: EditorColors = {
 		light: {
-			background: 0xF5F5F5,
+			background: 0xf5f5f5,
 			grid: 0x0,
 			wire: 0x0,
 			selectRect: 0,
-			selectTint: 0xD0D0D0,
-			wireSelectColor: 0xB0B0B0,
+			selectTint: 0xd0d0d0,
+			wireSelectColor: 0xb0b0b0,
 			fontTint: 0,
-			ledOn: 0x27AE60,
+			ledOn: 0x27ae60,
 			ledOff: 0x0
 		},
 		dark: {
 			background: 0x222526,
-			grid: 0x1C8045,
-			wire: 0x27AE60,
+			grid: 0x1c8045,
+			wire: 0x27ae60,
 			selectRect: 0,
 			selectTint: 0x8a8a8a,
-			wireSelectColor: 0x0F5E36,
-			fontTint: 0xFFFFFF,
-			ledOn: 0x27AE60,
+			wireSelectColor: 0x0f5e36,
+			fontTint: 0xffffff,
+			ledOn: 0x27ae60,
 			ledOff: 0x18592d
 		}
 	};
@@ -44,13 +46,14 @@ export class ThemingService {
 	constructor(
 		@Inject(DOCUMENT) private document: HTMLDocument,
 		private eastereggs: EastereggService,
-		@Inject(StorageService) private storage: StorageServiceModel,
+		@Inject(StorageService) private storage: StorageServiceModel
 	) {
 		this.loadTheme();
 	}
 
 	public loadTheme() {
-		this._currentTheme = this.storage.get('preferences')?.theme as Theme ?? 'dark';
+		this._currentTheme =
+			(this.storage.get('preferences')?.theme as Theme) ?? 'dark';
 		this._pendingTheme = this.currentTheme;
 		if (this._currentTheme === 'light') {
 			setTimeout(() => this.eastereggs.achieve('BLD'), 1000);

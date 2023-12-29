@@ -1,4 +1,4 @@
-@import "themes";
+@import 'themes';
 
 .open-project {
 	margin: 1rem 1.5rem;
@@ -48,7 +48,6 @@
 			justify-content: center;
 
 			button {
-
 			}
 			.is-active {
 				@include themify() {

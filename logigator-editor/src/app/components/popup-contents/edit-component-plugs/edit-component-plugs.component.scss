@@ -1,4 +1,4 @@
-@import "themes";
+@import 'themes';
 
 .edit-plugs {
 	width: 100%;
@@ -49,9 +49,9 @@
 
 					@include themify() {
 						@if (isTheme('dark')) {
-							background-image: url("src/assets/icons/dark/drag-points.svg");
+							background-image: url('src/assets/icons/dark/drag-points.svg');
 						} @else {
-							background-image: url("src/assets/icons/light/drag-points.svg");
+							background-image: url('src/assets/icons/light/drag-points.svg');
 						}
 					}
 
