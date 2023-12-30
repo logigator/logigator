@@ -6,7 +6,7 @@ import { join } from 'path';
 import { readdir, readFile, writeFile, rename } from 'fs/promises';
 import { createHash } from 'crypto';
 
-const editorDist = join(__dirname, '..', '..', 'dist', 'logigator-editor');
+const editorDist = join(__dirname, '..', '..', 'dist', 'logigator-editor', 'browser');
 const jsFilePath = join(
 	editorDist,
 	'assets',
