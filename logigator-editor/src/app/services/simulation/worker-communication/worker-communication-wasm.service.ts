@@ -68,7 +68,7 @@ export class WorkerCommunicationWasmService
 		this.initWorker();
 	}
 
-	private handleResponse(event: any): void {
+	private handleResponse(event: MessageEvent): void {
 		if (!this._initialized) {
 			if (event.data.initialized === undefined) return;
 
@@ -244,11 +244,12 @@ export class WorkerCommunicationWasmService
 			new URL(
 				'../../../worker/simulation-worker/simulation.worker',
 				import.meta.url
-			), { type: 'classic' }
+			),
+			{ type: 'classic' }
 		);
 		this.ngZone.runOutsideAngular(() => {
 			this._worker.addEventListener('message', (event) =>
-				this.handleResponse(event as any)
+				this.handleResponse(event)
 			);
 		});
 	}
@@ -324,7 +325,7 @@ export class WorkerCommunicationWasmService
 		this.ngZone.runOutsideAngular(() => {
 			timer(0, 1000)
 				.pipe(takeWhile(() => mode === this._mode))
-				.subscribe((x) => {
+				.subscribe(() => {
 					this._worker.postMessage({
 						method: WasmMethod.status
 					} as WasmRequest);
@@ -373,7 +374,7 @@ export class WorkerCommunicationWasmService
 		} else if (element.typeId === ElementTypeId.LEVER) {
 			inputEvent = InputEvent.Cont;
 		}
-		const stateBuffer = Int8Array.from(state as any).buffer;
+		const stateBuffer = Int8Array.from(state as unknown as number[]).buffer;
 
 		const request = {
 			method: WasmMethod.triggerInput,

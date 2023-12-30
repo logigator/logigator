@@ -71,7 +71,7 @@ export class ProjectsService {
 	public get onProjectOpened$(): Observable<number> {
 		return this._projectOpenedSubject
 			.asObservable()
-			.pipe(delayWhen((value, index) => this.pixiLoader.loaded$));
+			.pipe(delayWhen(() => this.pixiLoader.loaded$));
 	}
 
 	public get onProjectClosed$(): Observable<number> {
@@ -99,7 +99,8 @@ export class ProjectsService {
 			await this.saveProject(id);
 			this._projects = this._projects.filter((p) => p.id !== id);
 			this._projectClosedSubject.next(id);
-		} catch {
+		} catch (e) {
+			console.error(e);
 		} finally {
 			this._currentlyClosing.delete(id);
 		}
@@ -156,7 +157,9 @@ export class ProjectsService {
 			this._projects.push(component);
 			this._projectOpenedSubject.next(component.id);
 			this.errorHandling.showInfo('INFO.PROJECTS.CREATE_COMP', { name });
-		} catch {}
+		} catch (e) {
+			console.error(e);
+		}
 	}
 
 	public async openProjectUuid(id: string) {
@@ -223,7 +226,9 @@ export class ProjectsService {
 			this._projects = [this._projects[0]];
 			this.location.set('project', newId);
 			this.errorHandling.showInfo('INFO.PROJECTS.SAVE', { name });
-		} catch {}
+		} catch (e) {
+			console.error(e);
+		}
 	}
 
 	public async exportToFile(name?: string) {
@@ -307,7 +312,7 @@ export class ProjectsService {
 
 	public async askToSave(): Promise<boolean> {
 		if (!this.hasUnsavedProjects) return true;
-		return await this.popup.showPopup(
+		return this.popup.showPopup(
 			UnsavedChangesComponent,
 			'POPUP.UNSAVED_CHANGES.TITLE',
 			false
@@ -350,6 +355,8 @@ export class ProjectsService {
 			this.errorHandling.showInfo('INFO.PROJECTS.CLONE_SHARE', {
 				name: project.name
 			});
-		} catch {}
+		} catch (e) {
+			console.error(e);
+		}
 	}
 }

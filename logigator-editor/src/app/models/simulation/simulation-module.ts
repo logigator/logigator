@@ -1,3 +1,5 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
+
 import { Pointer } from './wasm-interface';
 import { BoardStatus, InputEvent } from './board';
 

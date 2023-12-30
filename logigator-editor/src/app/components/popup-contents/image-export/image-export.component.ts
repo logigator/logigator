@@ -86,22 +86,20 @@ export class ImageExportComponent extends PopupContentComp implements OnInit {
 						theme
 					}),
 					'svg',
-					this.projectService.currProject.name,
-					'Save Image As'
+					this.projectService.currProject.name
 				);
 			} else {
 				await this.fileSaverService.saveLocalFileBlob(
 					await this.imageExporter.generateImage(
 						this.projectService.currProject,
-						type as any,
+						type,
 						{
 							size,
 							theme
 						}
 					),
 					type === 'jpeg' ? 'jpg' : type,
-					this.projectService.currProject.name,
-					'Save Image As'
+					this.projectService.currProject.name
 				);
 			}
 		} finally {

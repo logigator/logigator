@@ -2,7 +2,6 @@ import {
 	ChangeDetectionStrategy,
 	Component,
 	EventEmitter,
-	OnInit,
 	Output
 } from '@angular/core';
 import { EditorInteractionService } from '../../../services/editor-interaction/editor-interaction.service';
@@ -15,7 +14,7 @@ import { EditorInteractionService } from '../../../services/editor-interaction/e
 })
 export class ViewDropdownComponent {
 	@Output()
-	public requestClosed: EventEmitter<any> = new EventEmitter();
+	public requestClosed: EventEmitter<void> = new EventEmitter();
 
 	constructor(private editorInteractionService: EditorInteractionService) {}
 

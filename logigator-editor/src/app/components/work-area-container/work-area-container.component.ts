@@ -4,8 +4,7 @@ import {
 	ElementRef,
 	OnInit,
 	Renderer2,
-	ViewChild,
-	ViewContainerRef
+	ViewChild
 } from '@angular/core';
 import { ReqInspectElementEvent } from '../../models/rendering/req-inspect-element-event';
 import { WindowWorkAreaMeta } from '../../models/rendering/window-work-area-meta';

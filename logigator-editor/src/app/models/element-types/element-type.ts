@@ -57,7 +57,7 @@ export interface ElementType {
 	calcLabels?: (element?: Element) => string[];
 }
 
-export function isElementType(object: any): object is ElementType {
+export function isElementType(object: object): object is ElementType {
 	return (
 		'name' in object &&
 		'numInputs' in object &&

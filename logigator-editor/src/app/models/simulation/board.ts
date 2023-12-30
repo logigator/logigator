@@ -1,5 +1,3 @@
-import { SimulationUnit } from './simulation-unit';
-
 export const enum BoardState {
 	Uninitialized,
 	Stopped,

@@ -3,7 +3,6 @@ import {
 	Component,
 	EventEmitter,
 	OnInit,
-	Optional,
 	Output
 } from '@angular/core';
 import { ThemingService } from '../../../services/theming/theming.service';
@@ -11,7 +10,6 @@ import { ShortcutConfigComponent } from '../../popup-contents/shortcut-config/sh
 import { ReloadQuestionComponent } from '../../popup-contents/reload-question/reload-question.component';
 import { TranslateService } from '@ngx-translate/core';
 import { UserService } from '../../../services/user/user.service';
-import { ProjectsService } from '../../../services/projects/projects.service';
 import { PopupService } from '../../../services/popup/popup.service';
 import { environment } from '../../../../environments/environment';
 import { SimulationManagementService } from '../../../services/simulation/simulation-management/simulation-management.service';
@@ -24,7 +22,7 @@ import { SimulationManagementService } from '../../../services/simulation/simula
 })
 export class SettingsDropdownComponent implements OnInit {
 	@Output()
-	public requestClosed: EventEmitter<any> = new EventEmitter();
+	public requestClosed: EventEmitter<void> = new EventEmitter();
 
 	public showDropDown = true;
 	public currentLang: string;
@@ -34,8 +32,7 @@ export class SettingsDropdownComponent implements OnInit {
 		public simulationMgmt: SimulationManagementService,
 		private popupService: PopupService,
 		private translation: TranslateService,
-		private user: UserService,
-		private projects: ProjectsService
+		private user: UserService
 	) {}
 
 	ngOnInit(): void {

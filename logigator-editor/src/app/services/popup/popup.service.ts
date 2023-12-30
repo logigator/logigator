@@ -33,7 +33,9 @@ export class PopupService {
 	): Promise<Out> {
 		return new Promise<Out>((resolve) => {
 			const popupFactory =
-				this.componentFactoryResolver.resolveComponentFactory(PopupComponent);
+				this.componentFactoryResolver.resolveComponentFactory(
+					PopupComponent<In, Out>
+				);
 			const popupRef = popupFactory.create(this.injector);
 			popupRef.instance.title = title;
 			popupRef.instance.titleTranslationParams = titleTranslationParams;
@@ -42,7 +44,7 @@ export class PopupService {
 			popupRef.instance.contentComp =
 				this.componentFactoryResolver.resolveComponentFactory(popupContentComp);
 			this.appRef.attachView(popupRef.hostView);
-			const domElem = (popupRef.hostView as EmbeddedViewRef<any>)
+			const domElem = (popupRef.hostView as EmbeddedViewRef<unknown>)
 				.rootNodes[0] as HTMLElement;
 			this.document.body.appendChild(domElem);
 			this._popupOpened = true;

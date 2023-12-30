@@ -37,6 +37,7 @@ export const encoder: ElementType = {
 	],
 
 	onOptionsChanged(element?) {
+		// eslint-disable-next-line @typescript-eslint/no-this-alias
 		if (!element) element = this;
 
 		element.numOutputs = element.options[0];
@@ -45,6 +46,7 @@ export const encoder: ElementType = {
 
 	width: () => 3,
 	height(element?) {
+		// eslint-disable-next-line @typescript-eslint/no-this-alias
 		if (!element) element = this;
 
 		const size = Math.max(element.numInputs, element.numOutputs);
@@ -52,6 +54,7 @@ export const encoder: ElementType = {
 	},
 
 	calcLabels(element?) {
+		// eslint-disable-next-line @typescript-eslint/no-this-alias
 		if (!element) element = this;
 
 		const labels = [];

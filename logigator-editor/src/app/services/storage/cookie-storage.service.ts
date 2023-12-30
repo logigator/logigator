@@ -5,7 +5,7 @@ import { StorageServiceModel } from './storage.service';
 	providedIn: 'root'
 })
 export class CookieStorageService extends StorageServiceModel {
-	public get(key: string): any {
+	public get(key: string): string | unknown {
 		if (!this.has(key)) return undefined;
 
 		const cookieValue = document.cookie
@@ -24,12 +24,12 @@ export class CookieStorageService extends StorageServiceModel {
 		}
 	}
 
-	public set(key: string, data: any) {
+	public set(key: string, data: unknown) {
 		let toSave: string;
 		if (typeof data === 'object') {
 			toSave = `j:${JSON.stringify(data)}`;
 		} else {
-			toSave = data;
+			toSave = String(data);
 		}
 		const date = new Date();
 		date.setTime(date.getTime() + 30 * 24 * 60 * 60 * 1000);

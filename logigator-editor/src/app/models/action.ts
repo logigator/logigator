@@ -202,10 +202,10 @@ export class Actions {
 				out.push(action);
 			}
 		}
-		remElems.forEach((action, _) => out.push(action));
-		addElems.forEach((action, _) => out.push(action));
-		dcoWires.forEach((action, _) => out.push(action));
-		conWires.forEach((action, _) => out.push(action));
+		remElems.forEach((action) => out.push(action));
+		addElems.forEach((action) => out.push(action));
+		dcoWires.forEach((action) => out.push(action));
+		conWires.forEach((action) => out.push(action));
 		return out;
 	}
 

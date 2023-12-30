@@ -41,7 +41,7 @@ export class ComponentGraphics
 				numInputs: elementOrType.numInputs,
 				numOutputs: elementOrType.numOutputs,
 				typeId: elementOrType.id
-			} as any as Element;
+			} as Element;
 			this._symbol = elementOrType.symbol;
 			if (elementOrType.calcLabels) this._labels = elementOrType.calcLabels();
 		} else {
@@ -341,7 +341,7 @@ export class ComponentGraphics
 		this.simActiveState = this.shouldHaveActiveState;
 
 		let wireIndex = 0;
-		// @ts-ignore
+		// @ts-expect-error workaround for something that I don't understand anymore
 		for (const data of this.geometry.graphicsData) {
 			if (data.shape instanceof PIXI.Polygon) {
 				if (this.simActiveState[wireIndex]) {
@@ -370,7 +370,7 @@ export class ComponentGraphics
 
 		let wireIndex = 0;
 
-		// @ts-ignore
+		// @ts-expect-error workaround for something that I don't understand anymore
 		for (const data of this.geometry.graphicsData) {
 			if (data.shape instanceof PIXI.Polygon) {
 				if (this.simActiveState[wireIndex]) {

@@ -1,3 +1,5 @@
+/* eslint-disable */
+
 import { ProjectState } from './project-state';
 import { Action, Actions } from './action';
 import { Element } from './element';

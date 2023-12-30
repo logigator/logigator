@@ -126,7 +126,7 @@ export class WindowWorkAreaComponent
 			if (this._activeView) {
 				this._activeView.destroy();
 				delete this._activeView;
-				// @ts-ignore
+				// @ts-expect-error workaround for something that I don't understand anymore
 				this._pixiRenderer._lastObjectRendered = null;
 			}
 			if (this._componentRef) {
@@ -244,7 +244,7 @@ export class WindowWorkAreaComponent
 		if (this._activeView) {
 			this._activeView.destroy();
 			delete this._activeView;
-			// @ts-ignore
+			// @ts-expect-error workaround for something that I don't understand anymore
 			this._pixiRenderer._lastObjectRendered = null;
 		}
 		if (this._componentRef) {

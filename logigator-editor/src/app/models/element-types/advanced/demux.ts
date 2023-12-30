@@ -37,6 +37,7 @@ export const demux: ElementType = {
 	],
 
 	onOptionsChanged(element?) {
+		// eslint-disable-next-line @typescript-eslint/no-this-alias
 		if (!element) element = this;
 
 		element.numInputs = element.options[0] + 1;
@@ -45,6 +46,7 @@ export const demux: ElementType = {
 
 	width: () => 3,
 	height(element?) {
+		// eslint-disable-next-line @typescript-eslint/no-this-alias
 		if (!element) element = this;
 
 		const size = Math.max(element.numInputs, element.numOutputs);
@@ -52,6 +54,7 @@ export const demux: ElementType = {
 	},
 
 	calcLabels(element?) {
+		// eslint-disable-next-line @typescript-eslint/no-this-alias
 		if (!element) element = this;
 
 		const labels = [];

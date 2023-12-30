@@ -5,8 +5,7 @@ import {
 	Inject,
 	Input,
 	OnChanges,
-	PLATFORM_ID,
-	SimpleChanges
+	PLATFORM_ID
 } from '@angular/core';
 import { isPlatformBrowser } from '@angular/common';
 import { FontWidthService } from '../../services/font-width/font-width.service';
@@ -34,7 +33,7 @@ export class AutoFontSizeDirective implements AfterContentChecked, OnChanges {
 		}
 	}
 
-	ngOnChanges(changes: SimpleChanges): void {
+	ngOnChanges(): void {
 		this.adjustFontSize();
 	}
 

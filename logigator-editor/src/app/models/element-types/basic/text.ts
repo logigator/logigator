@@ -67,7 +67,7 @@ export const text: ElementType = {
 			max: 64
 		}
 	],
-	onOptionsChanged(element?) {
+	onOptionsChanged() {
 		// to recalculate size
 		return;
 	},

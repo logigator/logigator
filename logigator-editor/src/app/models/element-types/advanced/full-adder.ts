@@ -28,7 +28,7 @@ export const fullAdder: ElementType = {
 	width: () => 3,
 	height: () => 3,
 
-	calcLabels: (element) => {
+	calcLabels: () => {
 		return ['A', 'B', 'Cin', 'S', 'C'];
 	}
 };

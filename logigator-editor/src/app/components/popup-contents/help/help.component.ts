@@ -1,17 +1,5 @@
-import {
-	ChangeDetectionStrategy,
-	ChangeDetectorRef,
-	Component,
-	ElementRef,
-	OnDestroy,
-	OnInit,
-	Renderer2,
-	ViewChild,
-	ViewEncapsulation
-} from '@angular/core';
+import { Component, ViewEncapsulation } from '@angular/core';
 import { TranslateService } from '@ngx-translate/core';
-import { fromEvent, Subject } from 'rxjs';
-import { takeUntil } from 'rxjs/operators';
 import { PopupContentComp } from '../../popup/popup-content-comp';
 
 @Component({

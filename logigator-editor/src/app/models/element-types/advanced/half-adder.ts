@@ -29,7 +29,7 @@ export const halfAdder: ElementType = {
 	width: () => 3,
 	height: () => 2,
 
-	calcLabels: (element) => {
+	calcLabels: () => {
 		return ['A', 'B', 'S', 'C'];
 	}
 };

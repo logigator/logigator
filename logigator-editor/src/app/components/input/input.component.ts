@@ -47,8 +47,8 @@ export class InputComponent implements OnInit, ControlValueAccessor {
 
 	public showTooltip = false;
 
-	private onChange = (value: unknown) => {};
-	private onTouched = () => {};
+	private onChange: (...args: unknown[]) => unknown = () => {};
+	private onTouched: (...args: unknown[]) => unknown = () => {};
 
 	constructor(
 		private cdr: ChangeDetectorRef,
@@ -67,11 +67,11 @@ export class InputComponent implements OnInit, ControlValueAccessor {
 		return this.control.touched && this.control.invalid;
 	}
 
-	registerOnChange(fn: any): void {
+	registerOnChange(fn: (...args: unknown[]) => unknown): void {
 		this.onChange = fn;
 	}
 
-	registerOnTouched(fn: any): void {
+	registerOnTouched(fn: (...args: unknown[]) => unknown): void {
 		this.onTouched = fn;
 	}
 

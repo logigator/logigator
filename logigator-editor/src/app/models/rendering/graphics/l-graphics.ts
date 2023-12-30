@@ -51,19 +51,19 @@ export interface LGraphics
 	 * Applies the current simulation state, means the new state is rendered no matter if the component is visible on screen
 	 * @param scale Scale to use for rendering
 	 */
-	applySimState(scale: number);
+	applySimState(scale: number): void;
 
 	/**
 	 * Sets the state of the component, but is only applied if the component is currently visible on screen
 	 * @param state Array of states of all inputs and outputs
 	 */
-	setSimulationState(state: boolean[]);
+	setSimulationState(state: boolean[]): void;
 }
 
-export function isUpdatable(object: any): object is ComponentUpdatable {
+export function isUpdatable(object: object): object is ComponentUpdatable {
 	return 'updateComponent' in object;
 }
 
-export function isResetable(object: any): object is ComponentResetable {
+export function isResetable(object: object): object is ComponentResetable {
 	return 'resetSimState' in object;
 }

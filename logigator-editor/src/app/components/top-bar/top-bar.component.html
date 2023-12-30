@@ -1,5 +1,10 @@
 <div id="top-bar">
-	<div (click)="closeDropdowns()" *ngIf="dropdownOpen" class="background"></div>
+	<div
+		(click)="closeDropdowns()"
+		*ngIf="dropdownOpen"
+		class="background"
+		tabindex="0"
+	></div>
 
 	<a [href]="homeUrl" target="_blank" rel="noopener"
 		><img alt="Logigator" src="assets/logo.svg"
@@ -11,50 +16,58 @@
 		<div class="menu-entries">
 			<div *ngIf="!isSimulationMode">
 				<p
-					(mouseover)="dropdownHover('fileDropdownOpen')"
-					(click)="closeDropdowns(); fileDropdownOpen = true"
+					(mouseover)="switchDropdownIfActive('file')"
+					(focus)="switchDropdownIfActive('file')"
+					(click)="toggleDropdown('file')"
+					tabindex="0"
 				>
 					{{ 'DROPDOWN.FILE.TITLE' | translate }}
 				</p>
 				<app-file-dropdown
 					(requestClosed)="closeDropdowns()"
-					*ngIf="fileDropdownOpen"
+					*ngIf="dropdownOpen === 'file'"
 				></app-file-dropdown>
 			</div>
 			<div *ngIf="!isSimulationMode">
 				<p
-					(mouseover)="dropdownHover('editDropdownOpen')"
-					(click)="closeDropdowns(); editDropdownOpen = true"
+					(mouseover)="switchDropdownIfActive('edit')"
+					(focus)="switchDropdownIfActive('edit')"
+					(click)="toggleDropdown('edit')"
+					tabindex="0"
 				>
 					{{ 'DROPDOWN.EDIT.TITLE' | translate }}
 				</p>
 				<app-edit-dropdown
 					(requestClosed)="closeDropdowns()"
-					*ngIf="editDropdownOpen"
+					*ngIf="dropdownOpen === 'edit'"
 				></app-edit-dropdown>
 			</div>
 			<div>
 				<p
-					(mouseover)="dropdownHover('viewDropdownOpen')"
-					(click)="closeDropdowns(); viewDropdownOpen = true"
+					(mouseover)="switchDropdownIfActive('view')"
+					(focus)="switchDropdownIfActive('view')"
+					(click)="toggleDropdown('view')"
+					tabindex="0"
 				>
 					{{ 'DROPDOWN.VIEW.TITLE' | translate }}
 				</p>
 				<app-view-dropdown
 					(requestClosed)="closeDropdowns()"
-					*ngIf="viewDropdownOpen"
+					*ngIf="dropdownOpen === 'view'"
 				></app-view-dropdown>
 			</div>
 			<div>
 				<p
-					(mouseover)="dropdownHover('helpDropdownOpen')"
-					(click)="closeDropdowns(); helpDropdownOpen = true"
+					(mouseover)="switchDropdownIfActive('help')"
+					(focus)="switchDropdownIfActive('help')"
+					(click)="toggleDropdown('help')"
+					tabindex="0"
 				>
 					{{ 'DROPDOWN.HELP.TITLE' | translate }}
 				</p>
 				<app-help-dropdown
 					(requestClosed)="closeDropdowns()"
-					*ngIf="helpDropdownOpen"
+					*ngIf="dropdownOpen === 'help'"
 				></app-help-dropdown>
 			</div>
 		</div>
@@ -65,7 +78,8 @@
 			<ng-container *ngIf="userInfo$ | async as userInfo; else loginRegister">
 				<div
 					class="logged-in-settings"
-					(click)="closeDropdowns(); settingsDropdownOpen = true"
+					(click)="toggleDropdown('settings')"
+					tabindex="0"
 				>
 					<p>{{ userInfo.username }}</p>
 					<img
@@ -77,20 +91,19 @@
 			</ng-container>
 			<app-settings-dropdown
 				(requestClosed)="closeDropdowns()"
-				*ngIf="settingsDropdownOpen"
+				*ngIf="dropdownOpen === 'settings'"
 			></app-settings-dropdown>
 		</div>
 	</div>
 </div>
 
 <ng-template #loginRegister>
-	<p class="login" (click)="login()">{{ 'TOP_BAR.LOGIN' | translate }}</p>
+	<p class="login" (click)="login()" tabindex="0">
+		{{ 'TOP_BAR.LOGIN' | translate }}
+	</p>
 	<div class="divider"></div>
-	<p class="register" (click)="register()">
+	<p class="register" (click)="register()" tabindex="0">
 		{{ 'TOP_BAR.REGISTER' | translate }}
 	</p>
-	<div
-		(click)="closeDropdowns(); settingsDropdownOpen = true"
-		class="settings"
-	></div>
+	<div (click)="toggleDropdown('settings')" class="settings" tabindex="0"></div>
 </ng-template>

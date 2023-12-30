@@ -131,13 +131,13 @@ export class EditorInteractionService {
 
 				switch (openResp.type) {
 					case 'server':
-						this.projectsService.openProjectUuid(openResp.data);
+						this.projectsService.openProjectUuid(openResp.data as string);
 						break;
 					case 'local':
-						this.openProjectFile(openResp.data);
+						this.openProjectFile(openResp.data as File);
 						break;
 					case 'share':
-						this.projectsService.openShare(openResp.data);
+						this.projectsService.openShare(openResp.data as string);
 						break;
 				}
 			}
@@ -184,8 +184,8 @@ export class EditorInteractionService {
 			const removeLoading = this.loadingService.add('LOADING.OPENING_FILE');
 			const reader = new FileReader();
 			reader.readAsText(file, 'UTF-8');
-			reader.onload = async (event: any) => {
-				await this.projectsService.openFile(event.target.result);
+			reader.onload = async (event: ProgressEvent<FileReader>) => {
+				await this.projectsService.openFile(event.target.result as string);
 				removeLoading();
 			};
 		}

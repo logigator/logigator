@@ -9,12 +9,19 @@
 				class="loading-in-bar padding"
 				[class.showing-all-tasks]="showingAllTasks"
 				(click)="loadingClick($event, tasks)"
+				tabindex="0"
 			>
 				<img
 					*ngIf="currTheme === 'light'"
 					src="assets/icons/light/loading.svg"
+					alt="loading"
 				/>
-				<img *ngIf="currTheme === 'dark'" src="assets/icons/dark/loading.svg" />
+				<img
+					*ngIf="currTheme === 'dark'"
+					src="assets/icons/dark/loading.svg"
+					alt="loading"
+				/>
+
 				<p *ngIf="tasks.length === 1">{{ tasks[0] | translate }}</p>
 				<p *ngIf="tasks.length > 1">
 					{{
@@ -26,10 +33,12 @@
 						<img
 							*ngIf="currTheme === 'light'"
 							src="assets/icons/light/loading.svg"
+							alt="loading"
 						/>
 						<img
 							*ngIf="currTheme === 'dark'"
 							src="assets/icons/dark/loading.svg"
+							alt="loading"
 						/>
 						<p>{{ t | translate }}</p>
 					</div>

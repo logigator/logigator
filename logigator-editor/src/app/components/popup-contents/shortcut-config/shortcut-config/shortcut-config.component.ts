@@ -1,7 +1,6 @@
 import {
 	ChangeDetectionStrategy,
 	Component,
-	OnInit,
 	QueryList,
 	ViewChildren
 } from '@angular/core';
@@ -18,18 +17,13 @@ import { ShortcutConfig } from '../../../../models/shortcut-config';
 	styleUrls: ['./shortcut-config.component.scss'],
 	changeDetection: ChangeDetectionStrategy.OnPush
 })
-export class ShortcutConfigComponent
-	extends PopupContentComp
-	implements OnInit
-{
+export class ShortcutConfigComponent extends PopupContentComp {
 	@ViewChildren(SingleShortcutConfigComponent)
 	singleConfigs: QueryList<SingleShortcutConfigComponent>;
 
 	constructor(private actionsService: ShortcutsService) {
 		super();
 	}
-
-	ngOnInit() {}
 
 	public get shortcuts(): Shortcut[] {
 		return this.actionsService.shortcutActionConfig;

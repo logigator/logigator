@@ -38,7 +38,7 @@ export const clock: ElementType = {
 		}
 	],
 
-	calcLabels: (element) => {
+	calcLabels: () => {
 		return ['STP', 'CLK'];
 	}
 };

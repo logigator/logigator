@@ -29,7 +29,7 @@ export const jkFF: ElementType = {
 	width: () => 3,
 	height: () => 3,
 
-	calcLabels: (element) => {
+	calcLabels: () => {
 		return ['J', 'CLK', 'K', 'Q', '!Q'];
 	}
 };

@@ -7,7 +7,7 @@ import { PopupContentComp } from '../../popup/popup-content-comp';
 	styleUrls: ['./unsaved-changes.component.scss'],
 	changeDetection: ChangeDetectionStrategy.OnPush
 })
-export class UnsavedChangesComponent extends PopupContentComp {
+export class UnsavedChangesComponent extends PopupContentComp<never, boolean> {
 	constructor() {
 		super();
 	}

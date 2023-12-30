@@ -5,6 +5,7 @@
 				<p
 					[class.active]="helpToRender === 'get-started'"
 					(click)="helpToRender = 'get-started'"
+					tabindex="0"
 				>
 					{{ 'POPUP.HELP.PAGE.GET_STARTED' | translate }}
 				</p>
@@ -13,6 +14,7 @@
 				<p
 					[class.active]="helpToRender === 'basic'"
 					(click)="helpToRender = 'basic'"
+					tabindex="0"
 				>
 					{{ 'POPUP.HELP.PAGE.BASIC' | translate }}
 				</p>
@@ -21,12 +23,17 @@
 				<p
 					[class.active]="helpToRender === 'advanced'"
 					(click)="helpToRender = 'advanced'"
+					tabindex="0"
 				>
 					{{ 'POPUP.HELP.PAGE.ADVANCED' | translate }}
 				</p>
 			</li>
 			<li>
-				<p [class.active]="helpToRender === 'io'" (click)="helpToRender = 'io'">
+				<p
+					[class.active]="helpToRender === 'io'"
+					(click)="helpToRender = 'io'"
+					tabindex="0"
+				>
 					{{ 'POPUP.HELP.PAGE.IO' | translate }}
 				</p>
 			</li>
@@ -34,6 +41,7 @@
 				<p
 					[class.active]="helpToRender === 'user-defined'"
 					(click)="helpToRender = 'user-defined'"
+					tabindex="0"
 				>
 					{{ 'POPUP.HELP.PAGE.USER_DEFINED' | translate }}
 				</p>
@@ -42,6 +50,7 @@
 				<p
 					[class.active]="helpToRender === 'saving'"
 					(click)="helpToRender = 'saving'"
+					tabindex="0"
 				>
 					{{ 'POPUP.HELP.PAGE.SAVING' | translate }}
 				</p>
@@ -50,6 +59,7 @@
 				<p
 					[class.active]="helpToRender === 'tutorial-vids'"
 					(click)="helpToRender = 'tutorial-vids'"
+					tabindex="0"
 				>
 					{{ 'POPUP.HELP.PAGE.TUTORIAL_VIDS' | translate }}
 				</p>

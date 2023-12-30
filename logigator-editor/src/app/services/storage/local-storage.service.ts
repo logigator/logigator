@@ -5,7 +5,7 @@ import { StorageServiceModel } from './storage.service';
 	providedIn: 'root'
 })
 export class LocalStorageService extends StorageServiceModel {
-	public get(key: string): any {
+	public get(key: string): string | unknown {
 		const data = localStorage.getItem(key);
 		try {
 			return JSON.parse(data);
@@ -14,7 +14,7 @@ export class LocalStorageService extends StorageServiceModel {
 		}
 	}
 
-	public set(key: string, data: any) {
+	public set(key: string, data: unknown) {
 		localStorage.setItem(
 			key,
 			typeof data === 'string' ? data : JSON.stringify(data)

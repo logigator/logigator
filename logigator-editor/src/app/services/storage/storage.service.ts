@@ -5,9 +5,10 @@ export const StorageService = new InjectionToken<StorageServiceModel>(
 );
 
 export abstract class StorageServiceModel {
+	// eslint-disable-next-line @typescript-eslint/no-explicit-any
 	public abstract get(key: string): any;
 
-	public abstract set(key: string, data: any);
+	public abstract set(key: string, data: unknown);
 
 	public abstract remove(key: string);
 

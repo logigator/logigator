@@ -1,7 +1,6 @@
 import { fromEvent, Observable, Subject } from 'rxjs';
 import { takeUntil } from 'rxjs/operators';
 import { NgZone, Renderer2 } from '@angular/core';
-import { SimulationView } from '../../models/rendering/simulation-view';
 import * as PIXI from 'pixi.js';
 import { getStaticDI } from '../../models/get-di';
 
@@ -66,7 +65,7 @@ export class WindowDragManager {
 
 			fromEvent(window, 'resize')
 				.pipe(takeUntil(this._destroySubject))
-				.subscribe((e: MouseEvent) => {
+				.subscribe(() => {
 					if (this.collision_right(this._popup.offsetLeft)) {
 						let newLoc =
 							this._dragBounding.offsetLeft +

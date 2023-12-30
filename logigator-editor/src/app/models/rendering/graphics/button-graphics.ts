@@ -43,7 +43,7 @@ export class ButtonGraphics
 				numInputs: elementOrType.numInputs,
 				numOutputs: elementOrType.numOutputs,
 				typeId: elementOrType.id
-			} as any as Element;
+			} as Element;
 		} else {
 			this.element = elementOrType;
 			this._projectIdentifier = projectIdentifier;
@@ -117,7 +117,7 @@ export class ButtonGraphics
 		// tslint:disable-next-line:triple-equals
 		if (this.simActiveState == this.shouldHaveActiveState) return;
 		this.simActiveState = this.shouldHaveActiveState;
-		// @ts-ignore
+		// @ts-expect-error workaround for something that I don't understand anymore
 		for (const data of this.geometry.graphicsData) {
 			if (data.shape instanceof PIXI.Polygon) {
 				if (this.simActiveState) {
@@ -173,7 +173,7 @@ export class ButtonGraphics
 		if (this._scale === scale) return;
 		this._scale = scale;
 
-		// @ts-ignore
+		// @ts-expect-error workaround for something that I don't understand anymore
 		for (const data of this.geometry.graphicsData) {
 			if (data.shape instanceof PIXI.Polygon) {
 				if (this.simActiveState) {

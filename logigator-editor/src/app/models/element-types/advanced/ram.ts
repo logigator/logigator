@@ -49,6 +49,7 @@ export const ram: ElementType = {
 		}
 	],
 	onOptionsChanged(element?) {
+		// eslint-disable-next-line @typescript-eslint/no-this-alias
 		if (!element) element = this;
 
 		element.numInputs = element.options[0] + element.options[1] + 2;
@@ -56,6 +57,7 @@ export const ram: ElementType = {
 	},
 
 	calcLabels(element?) {
+		// eslint-disable-next-line @typescript-eslint/no-this-alias
 		if (!element) element = this;
 
 		const labels = [];

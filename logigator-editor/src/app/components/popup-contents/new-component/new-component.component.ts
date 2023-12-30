@@ -15,7 +15,7 @@ import { PopupContentComp } from '../../popup/popup-content-comp';
 })
 export class NewComponentComponent
 	extends PopupContentComp<
-		any,
+		never,
 		{ name: string; symbol: string; description: string; public: boolean }
 	>
 	implements OnInit

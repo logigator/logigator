@@ -224,7 +224,7 @@ export class WorkAreaComponent extends WorkArea implements OnInit, OnDestroy {
 			editorView.updateChunks();
 			this._activeView.destroy();
 			delete this._activeView;
-			// @ts-ignore
+			// @ts-expect-error workaround for something that I don't understand anymore
 			this._pixiRenderer._lastObjectRendered = null;
 			this.switchToProject(this.allProjects[0].id);
 		}
@@ -270,7 +270,8 @@ export class WorkAreaComponent extends WorkArea implements OnInit, OnDestroy {
 	}
 
 	private onUserElementsReload() {
-		for (const [id, view] of this._allViews) {
+		// eslint-disable-next-line @typescript-eslint/no-unused-vars
+		for (const [_, view] of this._allViews) {
 			view.updateSymbolUserDefinedElements();
 		}
 	}
@@ -289,7 +290,7 @@ export class WorkAreaComponent extends WorkArea implements OnInit, OnDestroy {
 			this.switchToProject(this.allProjects[0].id);
 		}
 		toClose.destroy();
-		// @ts-ignore
+		// @ts-expect-error workaround for something that I don't understand anymore
 		this._pixiRenderer._lastObjectRendered = null;
 	}
 

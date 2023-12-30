@@ -5,11 +5,11 @@ import {
 	OnInit
 } from '@angular/core';
 import { UserService } from '../../../services/user/user.service';
-import { Observable, Subject } from 'rxjs';
+import { Subject } from 'rxjs';
 import { PopupContentComp } from '../../popup/popup-content-comp';
 import { ProjectSaveManagementService } from '../../../services/project-save-management/project-save-management.service';
 import { ProjectList } from '../../../models/http/response/project-list';
-import { debounceTime, map, tap } from 'rxjs/operators';
+import { debounceTime, map } from 'rxjs/operators';
 
 @Component({
 	selector: 'app-open-project',
@@ -20,7 +20,7 @@ import { debounceTime, map, tap } from 'rxjs/operators';
 export class OpenProjectComponent
 	extends PopupContentComp<
 		never,
-		{ type: 'server' | 'local' | 'share'; data: any }
+		{ type: 'server' | 'local' | 'share'; data: string | File }
 	>
 	implements OnInit
 {

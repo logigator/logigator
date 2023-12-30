@@ -28,7 +28,7 @@ export class ApiService {
 
 	public post<T>(
 		url: string,
-		body: any,
+		body: unknown,
 		errorConfig?: ApiErrorConfig,
 		params?: { [param: string]: string }
 	): Observable<Response<T>> {
@@ -39,7 +39,7 @@ export class ApiService {
 
 	public put<T>(
 		url: string,
-		body: any,
+		body: unknown,
 		errorConfig?: ApiErrorConfig,
 		params?: { [param: string]: string }
 	): Observable<Response<T>> {
@@ -50,7 +50,7 @@ export class ApiService {
 
 	public patch<T>(
 		url: string,
-		body: any,
+		body: unknown,
 		errorConfig?: ApiErrorConfig,
 		params?: { [param: string]: string }
 	): Observable<Response<T>> {
@@ -72,6 +72,7 @@ export class ApiService {
 	private handleError(
 		err: ApiError,
 		errorConfig?: ApiErrorConfig
+		// eslint-disable-next-line @typescript-eslint/no-explicit-any
 	): ObservableInput<any> {
 		if (!errorConfig) {
 			throw err;

@@ -56,7 +56,9 @@ function displayErrorPopup(event: ErrorEvent) {
 			popupElem.remove();
 			try {
 				getStaticDI(ShortcutsService).enableShortcutListener();
-			} catch {}
+			} catch (e) {
+				console.error(e);
+			}
 			active = false;
 		});
 
@@ -74,7 +76,9 @@ function displayErrorPopup(event: ErrorEvent) {
 			popupElem.remove();
 			try {
 				getStaticDI(ShortcutsService).enableShortcutListener();
-			} catch {}
+			} catch (e) {
+				console.error(e);
+			}
 			active = false;
 		});
 
@@ -88,7 +92,9 @@ function displayErrorPopup(event: ErrorEvent) {
 			projectData = await projectSaveManagementService.generateFileToExport(
 				projectsService.mainProject
 			);
-		} catch {}
+		} catch (e) {
+			console.error(e);
+		}
 
 		await fetch(environment.api + '/report-error', {
 			method: 'POST',

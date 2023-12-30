@@ -1,6 +1,6 @@
 import * as PIXI from 'pixi.js';
 import { EditorView } from './editor-view';
-import { merge, Subject } from 'rxjs';
+import { Subject } from 'rxjs';
 import { LGraphics } from './graphics/l-graphics';
 import { getStaticDI } from '../get-di';
 import { WorkModeService } from '../../services/work-mode/work-mode.service';
@@ -85,7 +85,7 @@ export class ViewInteractionManager {
 			.subscribeEditorAction(EditorAction.UNDO, EditorAction.REDO)
 			.pipe(
 				takeUntil(this._destroySubject),
-				filter((_) => this._view.project.id === this.projectsSer.currProject.id)
+				filter(() => this._view.project.id === this.projectsSer.currProject.id)
 			)
 			.subscribe(() => this.cleanUp(true));
 
@@ -93,7 +93,7 @@ export class ViewInteractionManager {
 			.subscribeEditorAction(EditorAction.DELETE, EditorAction.CUT)
 			.pipe(
 				takeUntil(this._destroySubject),
-				filter((_) => this._view.project.id === this.projectsSer.currProject.id)
+				filter(() => this._view.project.id === this.projectsSer.currProject.id)
 			)
 			.subscribe(() => this.cleanUp());
 
@@ -101,7 +101,7 @@ export class ViewInteractionManager {
 			.subscribeEditorAction(EditorAction.PASTE)
 			.pipe(
 				takeUntil(this._destroySubject),
-				filter((_) => this._view.project.id === this.projectsSer.currProject.id)
+				filter(() => this._view.project.id === this.projectsSer.currProject.id)
 			)
 			.subscribe(() => this.startPaste());
 	}
@@ -109,9 +109,7 @@ export class ViewInteractionManager {
 	public addNewElement(lGraphics: LGraphics) {
 		getStaticDI(NgZone).runOutsideAngular(() => {
 			lGraphics.interactive = true;
-			lGraphics.on('pointerup', (e: PIXI.InteractionEvent) =>
-				this.pUpElement(lGraphics)
-			);
+			lGraphics.on('pointerup', () => this.pUpElement(lGraphics));
 			lGraphics.on('pointerdown', (e: PIXI.InteractionEvent) =>
 				this.pDownElement(e, lGraphics)
 			);
@@ -701,7 +699,9 @@ export class ViewInteractionManager {
 					if (this._view.addToCorrectChunk(lGraphics, lGraphics.element.pos))
 						this._view.setLocalChunkPos(lGraphics.element, lGraphics);
 					lGraphics.setSelected(false);
-				} catch {}
+				} catch (e) {
+					console.error(e);
+				}
 			}
 		}
 		for (const point of this._selectedConnPoints || []) {
@@ -714,7 +714,9 @@ export class ViewInteractionManager {
 						point.graphics.setPosition(point.pos, true, this.currScale);
 					}
 					point.graphics.setSelected(false);
-				} catch {}
+				} catch (e) {
+					console.error(e);
+				}
 			}
 		}
 	}

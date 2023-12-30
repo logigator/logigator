@@ -3,9 +3,7 @@ import {
 	Component,
 	forwardRef,
 	Input,
-	OnChanges,
-	OnInit,
-	SimpleChanges
+	OnChanges
 } from '@angular/core';
 import { ControlValueAccessor, NG_VALUE_ACCESSOR } from '@angular/forms';
 
@@ -27,25 +25,23 @@ export class SwitchComponent implements OnChanges, ControlValueAccessor {
 	@Input()
 	public checked: boolean;
 
-	private onChange = (value: boolean) => {};
-	private onTouched = () => {};
+	private onChange: (...args: unknown[]) => unknown = () => {};
+	private onTouched: (...args: unknown[]) => unknown = () => {};
 
 	constructor(private cdr: ChangeDetectorRef) {}
 
-	ngOnChanges(changes: SimpleChanges): void {
+	ngOnChanges(): void {
 		if (this.checked === undefined) return;
 		this.state = this.checked;
 	}
 
-	registerOnChange(fn: any): void {
+	registerOnChange(fn: (...args: unknown[]) => unknown): void {
 		this.onChange = fn;
 	}
 
-	registerOnTouched(fn: any): void {
+	registerOnTouched(fn: (...args: unknown[]) => unknown): void {
 		this.onTouched = fn;
 	}
-
-	setDisabledState(isDisabled: boolean): void {}
 
 	writeValue(value: boolean): void {
 		this.state = value;

@@ -1,4 +1,4 @@
-import { Inject, Injectable, NgZone, Optional } from '@angular/core';
+import { Inject, Injectable, NgZone } from '@angular/core';
 import { Observable, ReplaySubject, timer } from 'rxjs';
 import { User } from '../../models/http/response/user';
 import { ApiService } from '../api/api.service';

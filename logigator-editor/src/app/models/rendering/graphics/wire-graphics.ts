@@ -30,7 +30,7 @@ export class WireGraphics extends PIXI.Graphics implements LGraphics {
 		if (this._scale === scale) return;
 		this._scale = scale;
 
-		// @ts-ignore
+		// @ts-expect-error workaround for something that I don't understand anymore
 		for (const data of this.geometry.graphicsData) {
 			if (this.simActiveState) {
 				data.lineStyle.width = 3 / scale;
@@ -52,7 +52,7 @@ export class WireGraphics extends PIXI.Graphics implements LGraphics {
 		// tslint:disable-next-line:triple-equals
 		if (this.simActiveState == this.shouldHaveActiveState) return;
 		this.simActiveState = this.shouldHaveActiveState;
-		// @ts-ignore
+		// @ts-expect-error workaround for something that I don't understand anymore
 		for (const data of this.geometry.graphicsData) {
 			if (this.simActiveState) {
 				data.lineStyle.width = 3 / scale;

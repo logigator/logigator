@@ -37,6 +37,7 @@ export const mux: ElementType = {
 	],
 
 	onOptionsChanged(element?) {
+		// eslint-disable-next-line @typescript-eslint/no-this-alias
 		if (!element) element = this;
 
 		element.numInputs = element.options[0] + Math.pow(2, element.options[0]);
@@ -44,12 +45,14 @@ export const mux: ElementType = {
 
 	width: () => 3,
 	height(element?) {
+		// eslint-disable-next-line @typescript-eslint/no-this-alias
 		if (!element) element = this;
 
 		return element.numInputs;
 	},
 
 	calcLabels(element?) {
+		// eslint-disable-next-line @typescript-eslint/no-this-alias
 		if (!element) element = this;
 
 		const labels = [];

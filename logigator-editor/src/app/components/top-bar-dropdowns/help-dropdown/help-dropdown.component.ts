@@ -18,7 +18,7 @@ import { Tutorial } from '../../../models/tutorial';
 })
 export class HelpDropdownComponent {
 	@Output()
-	public requestClosed: EventEmitter<any> = new EventEmitter();
+	public requestClosed: EventEmitter<unknown> = new EventEmitter();
 
 	constructor(
 		private popupService: PopupService,

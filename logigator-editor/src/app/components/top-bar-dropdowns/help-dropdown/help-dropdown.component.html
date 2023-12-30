@@ -1,14 +1,14 @@
 <div class="dropdown">
-	<div (click)="hexBinDec()">
+	<div (click)="hexBinDec()" tabindex="0">
 		{{ 'DROPDOWN.HELP.HEX_BIN_DEC' | translate }}
 	</div>
 	<hr />
-	<div (click)="help()">
+	<div (click)="help()" tabindex="0">
 		{{ 'DROPDOWN.HELP.HELP' | translate }}
 	</div>
 	<ng-container *ngIf="tutorials as tuts">
 		<hr />
-		<div (click)="tutorialClick(t.id)" *ngFor="let t of tuts">
+		<div (click)="tutorialClick(t.id)" *ngFor="let t of tuts" tabindex="0">
 			{{ t.name | translate }}
 		</div>
 	</ng-container>

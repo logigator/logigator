@@ -40,6 +40,7 @@ export class EditorView extends View {
 
 	public updateSymbolUserDefinedElements() {
 		const elementProvider = getStaticDI(ElementProviderService);
+		// eslint-disable-next-line @typescript-eslint/no-unused-vars
 		for (const [id, sprite] of this.allElements) {
 			if (
 				isUpdatable(sprite) &&

@@ -10,7 +10,7 @@
 				<ng-container
 					*ngFor="let name of headerNames; last as last; index as i"
 				>
-					<p (click)="inspectParentElement(i)">{{ name }}</p>
+					<p (click)="inspectParentElement(i)" tabindex="0">{{ name }}</p>
 					<span *ngIf="!last">&rarr;</span>
 				</ng-container>
 			</div>
@@ -19,11 +19,15 @@
 				*ngIf="theme === 'light'"
 				src="assets/icons/light/close.svg"
 				(click)="doRequestHide()"
+				alt="close"
+				tabindex="0"
 			/>
 			<img
 				*ngIf="theme === 'dark'"
 				src="assets/icons/dark/close.svg"
 				(click)="doRequestHide()"
+				alt="close"
+				tabindex="0"
 			/>
 		</div>
 		<div class="canvas-window-container" #canvasContainer></div>

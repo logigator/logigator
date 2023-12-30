@@ -1,16 +1,6 @@
-import {
-	ChangeDetectionStrategy,
-	Component,
-	OnDestroy,
-	OnInit
-} from '@angular/core';
+import { ChangeDetectionStrategy, Component } from '@angular/core';
 import { PopupContentComp } from '../../popup/popup-content-comp';
-import {
-	FormBuilder,
-	UntypedFormControl,
-	FormGroup,
-	Validators
-} from '@angular/forms';
+import { UntypedFormControl, Validators } from '@angular/forms';
 
 @Component({
 	selector: 'app-hex-bin-dec-converter',

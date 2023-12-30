@@ -5,7 +5,6 @@ import {
 	NgZone,
 	OnDestroy,
 	OnInit,
-	Renderer2,
 	ViewChild
 } from '@angular/core';
 import { SelectionService } from './services/selection/selection.service';
@@ -38,7 +37,6 @@ export class AppComponent implements OnInit, OnDestroy {
 	private _destroySubject = new Subject<void>();
 
 	constructor(
-		private renderer2: Renderer2,
 		private ngZone: NgZone,
 		private workMode: WorkModeService,
 		private selection: SelectionService,
@@ -61,7 +59,7 @@ export class AppComponent implements OnInit, OnDestroy {
 			this.editorInteractionService
 				.subscribeEditorAction(EditorAction.FULLSCREEN)
 				.pipe(takeUntil(this._destroySubject))
-				.subscribe((_) => this.onRequestFullscreen());
+				.subscribe(() => this.onRequestFullscreen());
 		});
 		fromEvent(window, 'beforeunload')
 			.pipe(takeUntil(this._destroySubject))
@@ -114,18 +112,18 @@ export class AppComponent implements OnInit, OnDestroy {
 	}
 
 	private onRequestFullscreen() {
-		const elem = this.appRoot.nativeElement as any;
+		const elem = this.appRoot.nativeElement;
 		if (elem.requestFullscreen) {
 			elem.requestFullscreen();
-		} else if (elem.mozRequestFullScreen) {
+		} else if (elem['mozRequestFullScreen']) {
 			/* Firefox */
-			elem.mozRequestFullScreen();
-		} else if (elem.webkitRequestFullscreen) {
+			elem['mozRequestFullScreen']();
+		} else if (elem['webkitRequestFullscreen']) {
 			/* Chrome, Safari & Opera */
-			elem.webkitRequestFullscreen();
-		} else if (elem.msRequestFullscreen) {
+			elem['webkitRequestFullscreen']();
+		} else if (elem['msRequestFullscreen']) {
 			/* IE/Edge */
-			elem.msRequestFullscreen();
+			elem['msRequestFullscreen']();
 		}
 	}
 

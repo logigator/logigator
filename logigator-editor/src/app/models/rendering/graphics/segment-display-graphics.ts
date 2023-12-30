@@ -41,7 +41,7 @@ export class SegmentDisplayGraphics
 				numInputs: elementOrType.numInputs,
 				typeId: elementOrType.id,
 				options: elementOrType.options
-			} as any as Element;
+			} as Element;
 			this._labels = elementOrType.calcLabels();
 		} else {
 			this.element = elementOrType;
@@ -241,7 +241,7 @@ export class SegmentDisplayGraphics
 		this.simActiveState = this.shouldHaveActiveState;
 
 		let wireIndex = 0;
-		// @ts-ignore
+		// @ts-expect-error workaround for something that I don't understand anymore
 		for (const data of this.geometry.graphicsData) {
 			if (data.shape instanceof PIXI.Polygon) {
 				if (this.simActiveState[wireIndex]) {
@@ -280,7 +280,7 @@ export class SegmentDisplayGraphics
 
 		let wireIndex = 0;
 
-		// @ts-ignore
+		// @ts-expect-error workaround for something that I don't understand anymore
 		for (const data of this.geometry.graphicsData) {
 			if (data.shape instanceof PIXI.Polygon) {
 				if (this.simActiveState[wireIndex]) {

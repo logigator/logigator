@@ -18,9 +18,9 @@ import { ThemingService } from '../../services/theming/theming.service';
 	templateUrl: './popup.component.html',
 	styleUrls: ['./popup.component.scss']
 })
-export class PopupComponent implements OnInit {
+export class PopupComponent<In, Out> implements OnInit {
 	@Output()
-	public requestClose: EventEmitter<any> = new EventEmitter();
+	public requestClose: EventEmitter<Out> = new EventEmitter();
 
 	@Input()
 	public title: string;
@@ -29,10 +29,10 @@ export class PopupComponent implements OnInit {
 	public titleTranslationParams: { [key: string]: string };
 
 	@Input()
-	public contentComp: ComponentFactory<PopupContentComp>;
+	public contentComp: ComponentFactory<PopupContentComp<In, Out>>;
 
 	@Input()
-	public contentCompInput: any;
+	public contentCompInput: In;
 
 	@Input()
 	public closeOnClickOutside: boolean;

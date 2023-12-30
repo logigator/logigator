@@ -4,6 +4,7 @@
 		class="shortcut-input-container"
 		[class.recording]="isRecording"
 		(click)="startRecording()"
+		tabindex="0"
 	>
 		<input
 			class="shortcut-input"
@@ -11,6 +12,6 @@
 			readonly
 			#inputContainer
 		/>
-		<div class="save" (click)="saveClick()"></div>
+		<div class="save" (click)="saveClick()" tabindex="0"></div>
 	</div>
 </div>

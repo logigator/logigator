@@ -20,7 +20,7 @@ export class ToolbarItemTooltipDirective {
 
 	private _componentRef: ComponentRef<ToolbarItemTooltipComponent>;
 
-	private _showTimeout: any;
+	private _showTimeout: ReturnType<typeof setTimeout>;
 
 	constructor(
 		private elementRef: ElementRef,
@@ -48,7 +48,7 @@ export class ToolbarItemTooltipDirective {
 			this._componentRef.instance.tooltipText = this.tooltipText;
 			this._componentRef.instance.hostElement = this.elementRef;
 			this.appRef.attachView(this._componentRef.hostView);
-			const domElem = (this._componentRef.hostView as EmbeddedViewRef<any>)
+			const domElem = (this._componentRef.hostView as EmbeddedViewRef<unknown>)
 				.rootNodes[0] as HTMLElement;
 			document.body.appendChild(domElem);
 		}, 100);

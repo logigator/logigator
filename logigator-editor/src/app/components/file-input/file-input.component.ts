@@ -23,8 +23,8 @@ export class FileInputComponent implements OnInit, ControlValueAccessor {
 	public isDisabled = false;
 	public currTheme: string;
 
-	public onChange = (value: File) => {};
-	public onTouch = () => {};
+	public onChange: (...args: unknown[]) => unknown = () => {};
+	public onTouch: (...args: unknown[]) => unknown = () => {};
 
 	constructor(
 		private http: HttpClient,
@@ -35,11 +35,11 @@ export class FileInputComponent implements OnInit, ControlValueAccessor {
 		this.currTheme = this.theme.currentTheme;
 	}
 
-	registerOnChange(fn: any): void {
+	registerOnChange(fn: (...args: unknown[]) => unknown): void {
 		this.onChange = fn;
 	}
 
-	registerOnTouched(fn: any): void {
+	registerOnTouched(fn: (...args: unknown[]) => unknown): void {
 		this.onTouch = fn;
 	}
 
@@ -69,8 +69,10 @@ export class FileInputComponent implements OnInit, ControlValueAccessor {
 		if (evt.dataTransfer.files) this.onChange(evt.dataTransfer.files[0]);
 	}
 
-	public fileChange(event: any) {
-		if (event.target.files && event.target.files.length > 0)
-			this.onChange(event.target.files[0]);
+	public fileChange(event: Event) {
+		const target = event.target as HTMLInputElement;
+		const files = target.files as FileList;
+
+		if (files && files.length > 0) this.onChange(files[0]);
 	}
 }

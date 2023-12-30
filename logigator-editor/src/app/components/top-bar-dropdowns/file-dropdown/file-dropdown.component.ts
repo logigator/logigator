@@ -2,7 +2,6 @@ import {
 	ChangeDetectionStrategy,
 	Component,
 	EventEmitter,
-	Optional,
 	Output
 } from '@angular/core';
 import { UserService } from '../../../services/user/user.service';
@@ -19,7 +18,7 @@ import { ImageExportComponent } from '../../popup-contents/image-export/image-ex
 })
 export class FileDropdownComponent {
 	@Output()
-	public requestClosed: EventEmitter<any> = new EventEmitter();
+	public requestClosed: EventEmitter<unknown> = new EventEmitter();
 
 	constructor(
 		private editorInteractionService: EditorInteractionService,

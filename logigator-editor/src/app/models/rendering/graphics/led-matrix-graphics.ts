@@ -41,7 +41,7 @@ export class LedMatrixGraphics
 				rotation: elementOrType.rotation,
 				numInputs: elementOrType.numInputs,
 				numOutputs: elementOrType.numOutputs
-			} as any as Element;
+			} as Element;
 			this._labels = elementOrType.calcLabels();
 		} else {
 			this.element = elementOrType;
@@ -165,7 +165,7 @@ export class LedMatrixGraphics
 			return;
 		this.simActiveState = this.shouldHaveActiveState;
 		let wireIndex = 0;
-		// @ts-ignore
+		// @ts-expect-error workaround for something that I don't understand anymore
 		for (const data of this.geometry.graphicsData) {
 			if (data.shape instanceof PIXI.Polygon) {
 				if (this.simActiveState[wireIndex]) {
@@ -224,7 +224,7 @@ export class LedMatrixGraphics
 
 		let wireIndex = 0;
 
-		// @ts-ignore
+		// @ts-expect-error workaround for something that I don't understand anymore
 		for (const data of this.geometry.graphicsData) {
 			if (data.shape instanceof PIXI.Polygon) {
 				if (this.simActiveState[wireIndex]) {

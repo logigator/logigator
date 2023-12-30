@@ -15,7 +15,7 @@ export class BiDirectionalMap<K, V> {
 			});
 		} else {
 			Object.keys(map).forEach((key) => {
-				this.set(key as any, map[key]);
+				this.set(key as K, map[key]);
 			});
 		}
 	}

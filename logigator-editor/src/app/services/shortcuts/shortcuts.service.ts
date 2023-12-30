@@ -145,7 +145,7 @@ export class ShortcutsService {
 			} as UserShortcut);
 		}
 		await this.apiService
-			.patch<any>(
+			.patch<unknown>(
 				'/user',
 				{
 					shortcuts: patchData

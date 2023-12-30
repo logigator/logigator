@@ -34,7 +34,7 @@ export class ZoomPanInputManager {
 
 			fromEvent(window, 'mouseup')
 				.pipe(takeUntil(this._destroySubject))
-				.subscribe((e: MouseEvent) => this.mouseUpHandler(e));
+				.subscribe(() => this.mouseUpHandler());
 
 			fromEvent(window, 'contextmenu')
 				.pipe(
@@ -60,7 +60,7 @@ export class ZoomPanInputManager {
 		this._interactionStart.next();
 	}
 
-	private mouseUpHandler(event: MouseEvent) {
+	private mouseUpHandler() {
 		this._mouseDown = false;
 		this._interactionEnd.next();
 		setTimeout(() => (this._mouseMoved = false), 1);

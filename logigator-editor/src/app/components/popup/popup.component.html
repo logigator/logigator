@@ -1,4 +1,4 @@
-<div class="popup" (click)="closeOutside($event)" #outsidePopup>
+<div class="popup" (click)="closeOutside($event)" tabindex="0" #outsidePopup>
 	<div class="content">
 		<div class="header">
 			<div>{{ title | translate: titleTranslationParams }}</div>
@@ -7,12 +7,16 @@
 				src="assets/icons/dark/close.svg"
 				(click)="closeClick()"
 				class="dark"
+				alt="close"
+				tabindex="0"
 			/>
 			<img
 				*ngIf="currentTheme === 'light'"
 				src="assets/icons/light/close.svg"
 				(click)="closeClick()"
 				class="light"
+				alt="close"
+				tabindex="0"
 			/>
 		</div>
 		<div class="body">

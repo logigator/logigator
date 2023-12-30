@@ -13,13 +13,13 @@ import {
 	selector: '[appOutsideNgZoneEvent]'
 })
 export class OutsideNgZoneEventDirective implements OnInit, OnDestroy {
-	private handler: ($event?: Event) => any;
+	private handler: ($event?: Event) => void;
 
 	@Input()
 	event = 'click';
 
 	@Output('appOutsideNgZoneEvent')
-	emitter = new EventEmitter();
+	emitter = new EventEmitter<Event>();
 
 	constructor(
 		private ngZone: NgZone,

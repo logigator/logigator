@@ -70,6 +70,6 @@ export class ConnectionPoint extends PIXI.Graphics implements LGraphics {
 		}
 	}
 
-	applySimState(scale: number) {}
-	setSimulationState(state: boolean[]) {}
+	applySimState() {}
+	setSimulationState() {}
 }

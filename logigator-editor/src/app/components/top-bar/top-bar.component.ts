@@ -13,11 +13,7 @@ import { environment } from '../../../environments/environment';
 	styleUrls: ['./top-bar.component.scss']
 })
 export class TopBarComponent {
-	public editDropdownOpen = false;
-	public fileDropdownOpen = false;
-	public viewDropdownOpen = false;
-	public helpDropdownOpen = false;
-	public settingsDropdownOpen = false;
+	public dropdownOpen: 'edit' | 'file' | 'view' | 'help' | 'settings' = null;
 
 	public homeUrl = environment.homeUrl;
 
@@ -48,34 +44,31 @@ export class TopBarComponent {
 		return this.projectService.mainProject.name;
 	}
 
-	public dropdownHover(comp: keyof TopBarComponent) {
-		if (
-			this.editDropdownOpen ||
-			this.fileDropdownOpen ||
-			this.viewDropdownOpen ||
-			this.helpDropdownOpen
-		) {
-			this.closeDropdowns();
-			// @ts-ignore
-			this[comp] = true;
-		}
+	public openDropdown(
+		dropdown: 'edit' | 'file' | 'view' | 'help' | 'settings'
+	) {
+		this.dropdownOpen = dropdown;
 	}
 
 	public closeDropdowns() {
-		this.editDropdownOpen = false;
-		this.fileDropdownOpen = false;
-		this.viewDropdownOpen = false;
-		this.helpDropdownOpen = false;
-		this.settingsDropdownOpen = false;
+		this.dropdownOpen = null;
 	}
 
-	public get dropdownOpen(): boolean {
-		return (
-			this.editDropdownOpen ||
-			this.fileDropdownOpen ||
-			this.viewDropdownOpen ||
-			this.helpDropdownOpen ||
-			this.settingsDropdownOpen
-		);
+	public switchDropdownIfActive(
+		dropdown: 'edit' | 'file' | 'view' | 'help' | 'settings'
+	) {
+		if (this.dropdownOpen) {
+			this.openDropdown(dropdown);
+		}
+	}
+
+	public toggleDropdown(
+		dropdown: 'edit' | 'file' | 'view' | 'help' | 'settings'
+	) {
+		if (this.dropdownOpen === dropdown) {
+			this.closeDropdowns();
+		} else {
+			this.openDropdown(dropdown);
+		}
 	}
 }

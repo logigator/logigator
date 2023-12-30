@@ -9,7 +9,6 @@ import { Element } from '../element';
 import { CompiledComp } from '../../services/simulation/state-compiler/compiled-comp';
 import { SimulationUnit } from './simulation-unit';
 import { ElementTypeId } from '../element-types/element-type-ids';
-import { getStaticDI } from '../get-di';
 import { ElementProviderService } from '../../services/element-provider/element-provider.service';
 import { ArrayHelper } from '../../services/simulation/state-compiler/array-helper';
 

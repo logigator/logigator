@@ -5,6 +5,7 @@
 			*ngIf="showReloadButton"
 			class="reload"
 			(click)="reloadButtonClick()"
+			aria-label="reload components"
 		></button>
 	</div>
 	<div class="content">
@@ -14,10 +15,11 @@
 					class="component-to-select"
 					*ngIf="
 						(comp.showInConstructionBox &&
-							(searchText == '' || (isInSearchResult(comp) | async)) &&
+							(searchText === '' || (isInSearchResult(comp) | async)) &&
 							!isCurrentCustomElement(comp.id)) ||
 						isHiddenPlug(searchText, comp.id)
 					"
+					tabindex="0"
 					(click)="selectComponent(comp.id)"
 					(dblclick)="openComponent(comp.id)"
 					[class.active-selected-component]="

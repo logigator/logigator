@@ -3,15 +3,12 @@ import {
 	Component,
 	Input,
 	OnChanges,
-	OnDestroy,
-	SimpleChanges
+	OnDestroy
 } from '@angular/core';
 import { ElementProviderService } from '../../services/element-provider/element-provider.service';
 import { ElementType } from '../../models/element-types/element-type';
 import { ProjectsService } from '../../services/projects/projects.service';
 import {
-	AbstractControl,
-	FormArray,
 	FormControl,
 	UntypedFormArray,
 	UntypedFormBuilder,
@@ -51,7 +48,7 @@ export class SettingsInfoBoxComponent implements OnChanges, OnDestroy {
 		private editorInteractionService: EditorInteractionService
 	) {}
 
-	ngOnChanges(changes: SimpleChanges): void {
+	ngOnChanges(): void {
 		if (this.formSubscription) {
 			this.formSubscription.unsubscribe();
 		}

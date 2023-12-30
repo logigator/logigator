@@ -16,7 +16,7 @@ import { ElementProviderService } from '../../../services/element-provider/eleme
 })
 export class EditDropdownComponent {
 	@Output()
-	public requestClosed: EventEmitter<any> = new EventEmitter();
+	public requestClosed: EventEmitter<unknown> = new EventEmitter();
 
 	constructor(
 		private editorInteractionService: EditorInteractionService,

@@ -187,6 +187,7 @@
 				[tooltipText]="
 					('TOOLBAR.TOOLTIP.SIM_CONT' | translate) + getShortcut('startSim')
 				"
+				aria-label="continue simulation"
 			></button>
 			<button
 				class="toolbar-button step"
@@ -196,6 +197,7 @@
 					('TOOLBAR.TOOLTIP.SIM_SINGLE' | translate) +
 					getShortcut('singleStepSim')
 				"
+				aria-label="single step simulation"
 			></button>
 			<button
 				class="toolbar-button pause"
@@ -204,6 +206,7 @@
 				[tooltipText]="
 					('TOOLBAR.TOOLTIP.SIM_PAUSE' | translate) + getShortcut('pauseSim')
 				"
+				aria-label="pause simulation"
 			></button>
 			<button
 				class="toolbar-button stop"
@@ -212,6 +215,7 @@
 				[tooltipText]="
 					('TOOLBAR.TOOLTIP.SIM_STOP' | translate) + getShortcut('stopSim')
 				"
+				aria-label="stop simulation"
 			></button>
 
 			<div class="divider"></div>
@@ -222,6 +226,7 @@
 				(click)="toggleTargetMode()"
 				appToolbarItemTooltip
 				[tooltipText]="'TOOLBAR.TOOLTIP.SIM_TARGET_MODE' | translate"
+				aria-label="target clock speed"
 			></button>
 			<button
 				class="toolbar-button sync-to-frame-rate"
@@ -229,6 +234,7 @@
 				(click)="toggleSyncMode()"
 				appToolbarItemTooltip
 				[tooltipText]="'TOOLBAR.TOOLTIP.SIM_SYNC_MODE' | translate"
+				aria-label="sync to frame rate"
 			></button>
 
 			<ng-container *ngIf="targetMode">
@@ -268,7 +274,7 @@
 
 	<div class="toolbar-end">
 		<ng-container #enterSimulationLoading></ng-container>
-		<div *ngIf="!isSimulationMode" (click)="enterSimulation()">
+		<div *ngIf="!isSimulationMode" (click)="enterSimulation()" tabindex="0">
 			<img
 				*ngIf="currentTheme === 'dark'"
 				src="assets/icons/dark/control-play.svg"
@@ -281,7 +287,7 @@
 			/>
 			<p class="start-sim">{{ 'TOOLBAR.START_SIM' | translate }}</p>
 		</div>
-		<div *ngIf="isSimulationMode" (click)="leaveSimulation()">
+		<div *ngIf="isSimulationMode" (click)="leaveSimulation()" tabindex="0">
 			<img
 				*ngIf="currentTheme === 'dark'"
 				src="assets/icons/dark/control-stop.svg"

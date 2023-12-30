@@ -44,7 +44,7 @@ export class InputOutputGraphics
 				numInputs: elementOrType.numInputs,
 				numOutputs: elementOrType.numOutputs,
 				typeId: elementOrType.id
-			} as any as Element;
+			} as Element;
 			this._symbol = elementOrType.symbol;
 		} else {
 			this.element = elementOrType;
@@ -150,7 +150,7 @@ export class InputOutputGraphics
 		// tslint:disable-next-line:triple-equals
 		if (this.simActiveState == this.shouldHaveActiveState) return;
 		this.simActiveState = this.shouldHaveActiveState;
-		// @ts-ignore
+		// @ts-expect-error workaround for something that I don't understand anymore
 		for (const data of this.geometry.graphicsData) {
 			if (data.shape instanceof PIXI.Polygon) {
 				if (this.simActiveState) {
@@ -181,7 +181,7 @@ export class InputOutputGraphics
 		}
 	}
 
-	updateComponent(scale: number, newElement: Element) {
+	updateComponent(scale: number) {
 		this._scale = scale;
 		this._symbol =
 			(this.element.data as string) ||
@@ -194,7 +194,7 @@ export class InputOutputGraphics
 		if (this._scale === scale) return;
 		this._scale = scale;
 
-		// @ts-ignore
+		// @ts-expect-error workaround for something that I don't understand anymore
 		for (const data of this.geometry.graphicsData) {
 			if (data.shape instanceof PIXI.Polygon) {
 				if (this.simActiveState) {

@@ -30,7 +30,7 @@ export class LedGraphics
 				rotation: elementOrType.rotation,
 				numInputs: elementOrType.numInputs,
 				numOutputs: elementOrType.numOutputs
-			} as any as Element;
+			} as Element;
 		} else {
 			this.element = elementOrType;
 		}
@@ -123,7 +123,7 @@ export class LedGraphics
 		if (this._scale === scale) return;
 		this._scale = scale;
 
-		// @ts-ignore
+		// @ts-expect-error workaround for something that I don't understand anymore
 		for (const data of this.geometry.graphicsData) {
 			if (data.shape instanceof PIXI.Polygon) {
 				if (this.simActiveState) {

@@ -496,8 +496,7 @@ export class ProjectSaveManagementService {
 		await this.fileSaverService.saveLocalFile(
 			JSON.stringify(projectFile),
 			'json',
-			name ?? project.name,
-			undefined
+			name ?? project.name
 		);
 	}
 
@@ -576,12 +575,12 @@ export class ProjectSaveManagementService {
 		page?: number,
 		search?: string
 	): Observable<Response<ProjectList>> {
-		const params: any = {
-			size: 5
+		const params: { [key: string]: string } = {
+			size: '5'
 		};
 
-		if (page) params.page = page;
-		if (search) params.search = search;
+		if (page) params['page'] = String(page);
+		if (search) params['search'] = search;
 
 		return this.api.get<ProjectList>(
 			'/project',

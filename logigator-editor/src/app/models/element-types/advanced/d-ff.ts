@@ -31,7 +31,7 @@ export const dFF: ElementType = {
 	width: () => 3,
 	height: () => 2,
 
-	calcLabels(element?) {
+	calcLabels() {
 		return ['D', 'CLK', 'Q', '!Q'];
 	}
 };

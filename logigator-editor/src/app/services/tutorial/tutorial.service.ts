@@ -5,8 +5,7 @@ import {
 	EmbeddedViewRef,
 	Inject,
 	Injectable,
-	Injector,
-	ViewContainerRef
+	Injector
 } from '@angular/core';
 import { TutorialWindowComponent } from '../../components/tutorial-window/tutorial-window.component';
 import {
@@ -82,8 +81,9 @@ export class TutorialService {
 			}
 		);
 		this.appRef.attachView(this._tutWindowInstance.hostView);
-		const domElem = (this._tutWindowInstance.hostView as EmbeddedViewRef<any>)
-			.rootNodes[0] as HTMLElement;
+		const domElem = (
+			this._tutWindowInstance.hostView as EmbeddedViewRef<unknown>
+		).rootNodes[0] as HTMLElement;
 		document.body.appendChild(domElem);
 		this.tutorialStep();
 	}

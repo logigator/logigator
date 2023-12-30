@@ -1,18 +1,18 @@
 <div class="dropdown">
-	<div (click)="zoomIn()">
+	<div (click)="zoomIn()" tabindex="0">
 		{{ 'DROPDOWN.VIEW.ZOOM_IN' | translate }}
 		<span>{{ 'zoomIn' | shortcutText }}</span>
 	</div>
-	<div (click)="zoomOut()">
+	<div (click)="zoomOut()" tabindex="0">
 		{{ 'DROPDOWN.VIEW.ZOOM_OUT' | translate }}
 		<span>{{ 'zoomOut' | shortcutText }}</span>
 	</div>
-	<div (click)="zoom100()">
+	<div (click)="zoom100()" tabindex="0">
 		{{ 'DROPDOWN.VIEW.100' | translate }}
 		<span>{{ 'zoom100' | shortcutText }}</span>
 	</div>
 	<hr />
-	<div (click)="fullscreen()">
+	<div (click)="fullscreen()" tabindex="0">
 		{{ 'DROPDOWN.VIEW.FULLSCREEN' | translate }}
 		<span>{{ 'fullscreen' | shortcutText }}</span>
 	</div>

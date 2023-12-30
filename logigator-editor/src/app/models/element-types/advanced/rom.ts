@@ -80,6 +80,7 @@ export const rom: ElementType = {
 	canEditType: false,
 
 	calcLabels(element?) {
+		// eslint-disable-next-line @typescript-eslint/no-this-alias
 		if (!element) element = this;
 		const labels = [];
 		for (let i = 0; i < element.options[1]; i++) {

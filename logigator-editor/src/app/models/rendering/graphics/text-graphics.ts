@@ -68,7 +68,7 @@ export class TextGraphics
 		this._point.drawRect(0, 0, size / scale, size / scale);
 	}
 
-	applySimState(scale: number) {}
+	applySimState() {}
 
 	setSelected(selected: boolean) {
 		let fontTint;
@@ -85,7 +85,7 @@ export class TextGraphics
 		this._selected = selected;
 	}
 
-	setSimulationState(state: boolean[]) {}
+	setSimulationState() {}
 
 	updateScale(scale: number) {
 		this.drawPoint(scale);

@@ -1,6 +1,4 @@
 import { ChangeDetectionStrategy, Component, OnInit } from '@angular/core';
-import { ProjectSaveManagementService } from '../../../services/project-save-management/project-save-management.service';
-import { Project } from '../../../models/project';
 import { UserService } from '../../../services/user/user.service';
 import {
 	UntypedFormBuilder,
