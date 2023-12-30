@@ -1,40 +1,44 @@
-version: '3.5'
 services:
-  #### HTTP_PROXY ####
-  development_http_proxy:
-    image: httpd:latest
+  proxy:
+    image: httpd:2.4
     networks:
-      - logigator_intern
+      - net
     volumes:
       - ./docker/development/httpd.conf:/usr/local/apache2/conf/httpd.conf
       - ./docker/development/ca.crt:/usr/local/apache2/conf/server.crt
       - ./docker/development/private.key:/usr/local/apache2/conf/server.key
     ports:
-      - "0.0.0.0:80:80"
-      - "0.0.0.0:443:443"
-  #### NODE_JS_BACKEND_HOME ####
-  development_backend:
-    image: node:16
+      - "127.0.0.1:80:80"
+      - "127.0.0.1:443:443"
+
+  backend:
+    image: node:20
     networks:
-      logigator_intern:
-        aliases:
-          - backend
+      - net
     depends_on:
-      - development_mysql
+      - mysql
+      - redis
     volumes:
       - ./logigator-backend/:/home/node/app
     working_dir: /home/node/app
-    command: "sh -c 'yarn && exec yarn start'"
+    command: "sh -c 'corepack enable && yarn && exec yarn start'"
     environment:
       - DEBUG=express:*
       - DEBUG_COLORS=on
-  #### MYSQL ####
-  development_mysql:
-    image: mysql:latest
+
+  editor:
+    image: node:20
     networks:
-      logigator_intern:
-        aliases:
-          - mysql
+      - net
+    volumes:
+      - ./logigator-editor/:/home/node/app
+    working_dir: /home/node/app
+    command: "sh -c 'corepack enable && yarn && exec yarn start'"
+
+  mysql:
+    image: mysql:8
+    networks:
+      - net
     ports:
       - "127.0.0.1:3306:3306"
     cap_add:
@@ -45,32 +49,19 @@ services:
       - MYSQL_DATABASE=logigator
       - MYSQL_USER=logigator
       - MYSQL_PASSWORD=logigator
-  #### REDIS ####
-  development_redis:
-    image: redis:latest
+
+  redis:
+    image: redis:7
     networks:
-      logigator_intern:
-        aliases:
-          - redis
-  #### REDIS_UI ####
-  development_redis_ui:
+      - net
+
+  redis_ui:
     image: marian/rebrow:latest
     networks:
-      - logigator_intern
+      - net
     ports:
       - "127.0.0.1:5001:5001"
-  #### NODE_JS_EDITOR ####
-  development_editor:
-    image: node:20
-    networks:
-      logigator_intern:
-        aliases:
-          - editor
-    volumes:
-      - ./logigator-editor/:/home/node/app
-    working_dir: /home/node/app
-    command: "sh -c 'yarn && exec yarn start'"
 
 networks:
-  logigator_intern:
+  net:
     driver: bridge

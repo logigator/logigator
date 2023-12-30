@@ -69,5 +69,6 @@
 	"developmentInfo": {
 		"": "For Development you should use the local version of logigator-simulation to use live reload from the libary",
 		"@logigator/logigator-simulation": "file:../../logigator-simulation"
-	}
+	},
+	"packageManager": "yarn@4.0.2"
 }
