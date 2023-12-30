@@ -6,7 +6,14 @@ import { join } from 'path';
 import { readdir, readFile, writeFile, rename } from 'fs/promises';
 import { createHash } from 'crypto';
 
-const editorDist = join(__dirname, '..', '..', 'dist', 'logigator-editor', 'browser');
+const editorDist = join(
+	__dirname,
+	'..',
+	'..',
+	'dist',
+	'logigator-editor',
+	'browser'
+);
 const jsFilePath = join(
 	editorDist,
 	'assets',
@@ -40,7 +47,7 @@ async function run() {
 			filePath,
 			content.replace(
 				'importScripts("assets/wasm/logigator-simulation.js")',
-				`importScripts(\"assets/wasm/logigator-simulation.${jsHash}.js\")`
+				`importScripts("assets/wasm/logigator-simulation.${jsHash}.js")`
 			)
 		);
 		break;
