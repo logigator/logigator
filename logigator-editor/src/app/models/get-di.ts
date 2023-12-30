@@ -1,4 +1,4 @@
-import {InjectionToken, Injector, Type} from '@angular/core';
+import { InjectionToken, Injector, Type } from '@angular/core';
 
 let _injector: Injector;
 

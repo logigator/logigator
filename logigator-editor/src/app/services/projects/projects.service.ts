@@ -1,21 +1,20 @@
-import {Injectable} from '@angular/core';
-import {Project} from '../../models/project';
-import {Observable, ReplaySubject, Subject} from 'rxjs';
-import {ProjectSaveManagementService} from '../project-save-management/project-save-management.service';
-import {delayWhen} from 'rxjs/operators';
-import {ElementProviderService} from '../element-provider/element-provider.service';
-import {ErrorHandlingService} from '../error-handling/error-handling.service';
-import {UnsavedChangesComponent} from '../../components/popup-contents/unsaved-changes/unsaved-changes.component';
-import {PopupService} from '../popup/popup.service';
-import {LocationService} from '../location/location.service';
-import {PixiLoaderService} from '../pixi-loader/pixi-loader.service';
-import {LoadingService} from '../loading/loading.service';
+import { Injectable } from '@angular/core';
+import { Project } from '../../models/project';
+import { Observable, ReplaySubject, Subject } from 'rxjs';
+import { ProjectSaveManagementService } from '../project-save-management/project-save-management.service';
+import { delayWhen } from 'rxjs/operators';
+import { ElementProviderService } from '../element-provider/element-provider.service';
+import { ErrorHandlingService } from '../error-handling/error-handling.service';
+import { UnsavedChangesComponent } from '../../components/popup-contents/unsaved-changes/unsaved-changes.component';
+import { PopupService } from '../popup/popup.service';
+import { LocationService } from '../location/location.service';
+import { PixiLoaderService } from '../pixi-loader/pixi-loader.service';
+import { LoadingService } from '../loading/loading.service';
 
 @Injectable({
 	providedIn: 'root'
 })
 export class ProjectsService {
-
 	private _projects: Project[] = [];
 
 	private _mainProject: Project;
@@ -39,8 +38,10 @@ export class ProjectsService {
 		private location: LocationService,
 		private loadingService: LoadingService
 	) {
-		const removeLoading = this.loadingService.add('LOADING.OPENING_INITIAL_PROJECTS');
-		this.projectSaveManagementService.getInitialProjects().then(projects => {
+		const removeLoading = this.loadingService.add(
+			'LOADING.OPENING_INITIAL_PROJECTS'
+		);
+		this.projectSaveManagementService.getInitialProjects().then((projects) => {
 			this._projects = projects;
 			this._mainProject = projects[0];
 			this._currProject = projects[0];
@@ -64,13 +65,13 @@ export class ProjectsService {
 	}
 
 	public getProjectById(id: number): Project {
-		return this._projects.find(p => p.id === id);
+		return this._projects.find((p) => p.id === id);
 	}
 
 	public get onProjectOpened$(): Observable<number> {
-		return this._projectOpenedSubject.asObservable().pipe(
-			delayWhen((value, index) => this.pixiLoader.loaded$)
-		);
+		return this._projectOpenedSubject
+			.asObservable()
+			.pipe(delayWhen(() => this.pixiLoader.loaded$));
 	}
 
 	public get onProjectClosed$(): Observable<number> {
@@ -79,7 +80,6 @@ export class ProjectsService {
 
 	public get onProjectSwitch$(): Observable<number> {
 		return this._projectSwitchSubject.asObservable();
-
 	}
 
 	public get onUserDefinedElementsReload$(): Observable<void> {
@@ -92,15 +92,16 @@ export class ProjectsService {
 	}
 
 	public async closeProject(id: number) {
-		if (this._currentlyClosing.has(id))
-			return;
+		if (this._currentlyClosing.has(id)) return;
 
 		this._currentlyClosing.add(id);
 		try {
 			await this.saveProject(id);
-			this._projects = this._projects.filter(p => p.id !== id);
+			this._projects = this._projects.filter((p) => p.id !== id);
 			this._projectClosedSubject.next(id);
-		} catch {} finally {
+		} catch (e) {
+			console.error(e);
+		} finally {
 			this._currentlyClosing.delete(id);
 		}
 	}
@@ -135,28 +136,44 @@ export class ProjectsService {
 	}
 
 	public async saveAllComponents() {
-		for (const comp of this.allProjects.filter(p => p.type === 'comp')) {
+		for (const comp of this.allProjects.filter((p) => p.type === 'comp')) {
 			await this.saveProject(comp.id);
 		}
 	}
 
-	public async createComponent(name: string, symbol: string, description: string = '', sharePublicly = false) {
+	public async createComponent(
+		name: string,
+		symbol: string,
+		description: string = '',
+		sharePublicly = false
+	) {
 		try {
-			const component = await this.projectSaveManagementService.createComponent(name, symbol, description, sharePublicly);
+			const component = await this.projectSaveManagementService.createComponent(
+				name,
+				symbol,
+				description,
+				sharePublicly
+			);
 			this._projects.push(component);
 			this._projectOpenedSubject.next(component.id);
-			this.errorHandling.showInfo('INFO.PROJECTS.CREATE_COMP', {name});
-		} catch {}
+			this.errorHandling.showInfo('INFO.PROJECTS.CREATE_COMP', { name });
+		} catch (e) {
+			console.error(e);
+		}
 	}
 
 	public async openProjectUuid(id: string) {
 		const removeLoading = this.loadingService.add('LOADING.OPEN_PROJECT');
 		this.projectSaveManagementService.clearElements('share');
 		try {
-			const project = await this.projectSaveManagementService.getProjectOrComponentUuid(id, 'project');
+			const project =
+				await this.projectSaveManagementService.getProjectOrComponentUuid(
+					id,
+					'project'
+				);
 			await this.openNewProject(project);
 			this.location.set('project', id);
-			this.errorHandling.showInfo('INFO.PROJECTS.OPEN', {name: project.name});
+			this.errorHandling.showInfo('INFO.PROJECTS.OPEN', { name: project.name });
 		} finally {
 			removeLoading();
 		}
@@ -168,13 +185,13 @@ export class ProjectsService {
 			return;
 		}
 
-		if (this._currentlyOpening.has(id))
-			return;
+		if (this._currentlyOpening.has(id)) return;
 
 		const removeLoading = this.loadingService.add('LOADING.OPEN_COMPONENT');
 		this._currentlyOpening.add(id);
 		try {
-			const component = await this.projectSaveManagementService.getComponent(id);
+			const component =
+				await this.projectSaveManagementService.getComponent(id);
 			this._projects.push(component);
 			this._projectOpenedSubject.next(component.id);
 		} finally {
@@ -183,10 +200,23 @@ export class ProjectsService {
 		}
 	}
 
-	public async saveProjectServer(name: string, description = '', sharePublicly = false) {
+	public async saveProjectServer(
+		name: string,
+		description = '',
+		sharePublicly = false
+	) {
 		try {
-			const newId = await this.projectSaveManagementService.createProjectServer(name, description, sharePublicly, this._mainProject);
-			const project = await this.projectSaveManagementService.getProjectOrComponentUuid(newId, 'project');
+			const newId = await this.projectSaveManagementService.createProjectServer(
+				name,
+				description,
+				sharePublicly,
+				this._mainProject
+			);
+			const project =
+				await this.projectSaveManagementService.getProjectOrComponentUuid(
+					newId,
+					'project'
+				);
 			this._projects.unshift(project);
 			this._projectOpenedSubject.next(project.id);
 			this._mainProject = project;
@@ -195,13 +225,20 @@ export class ProjectsService {
 			}
 			this._projects = [this._projects[0]];
 			this.location.set('project', newId);
-			this.errorHandling.showInfo('INFO.PROJECTS.SAVE', {name});
-		} catch {}
+			this.errorHandling.showInfo('INFO.PROJECTS.SAVE', { name });
+		} catch (e) {
+			console.error(e);
+		}
 	}
 
 	public async exportToFile(name?: string) {
-		await this.projectSaveManagementService.exportToFile(this._mainProject, name);
-		this.errorHandling.showInfo('INFO.PROJECTS.EXPORT_FILE', {name: name ?? this._mainProject.name});
+		await this.projectSaveManagementService.exportToFile(
+			this._mainProject,
+			name
+		);
+		this.errorHandling.showInfo('INFO.PROJECTS.EXPORT_FILE', {
+			name: name ?? this._mainProject.name
+		});
 	}
 
 	public async openFile(content: string) {
@@ -211,7 +248,9 @@ export class ProjectsService {
 			const project = this.projectSaveManagementService.openFile(content);
 			await this.openNewProject(project);
 			this.location.reset();
-			this.errorHandling.showInfo('INFO.PROJECTS.OPEN_FILE', {name: project.name});
+			this.errorHandling.showInfo('INFO.PROJECTS.OPEN_FILE', {
+				name: project.name
+			});
 		} catch {
 			this.errorHandling.showErrorMessage('ERROR.PROJECTS.INVALID_FILE');
 		}
@@ -221,16 +260,21 @@ export class ProjectsService {
 		const removeLoading = this.loadingService.add('LOADING.OPEN_SHARE');
 		this.projectSaveManagementService.clearElements('share');
 		try {
-			const project = await this.projectSaveManagementService.getProjectShare(linkId);
+			const project =
+				await this.projectSaveManagementService.getProjectShare(linkId);
 			if (project.type === 'comp') {
-				await this.openNewProject(this.projectSaveManagementService.getEmptyProject());
+				await this.openNewProject(
+					this.projectSaveManagementService.getEmptyProject()
+				);
 				this._projects.push(project);
 				this._projectOpenedSubject.next(project.id);
 			} else {
 				await this.openNewProject(project);
 			}
 			this.location.set('share', linkId);
-			this.errorHandling.showInfo('INFO.PROJECTS.OPEN_SHARE', {name: project.name});
+			this.errorHandling.showInfo('INFO.PROJECTS.OPEN_SHARE', {
+				name: project.name
+			});
 		} catch {
 			if (this.mainProject.source === 'share') {
 				this.newProject();
@@ -255,7 +299,7 @@ export class ProjectsService {
 		elemType.maxInputs = project.numInputs;
 		elemType.numInputs = project.numInputs;
 		elemType.numOutputs = project.numOutputs;
-		this._projects.forEach(p => p.updateInputsOutputs(project.id));
+		this._projects.forEach((p) => p.updateInputsOutputs(project.id));
 		this.labelsCustomComponentChanged(project);
 	}
 
@@ -263,13 +307,16 @@ export class ProjectsService {
 		if (!project || project.type !== 'comp') return;
 		const elemType = this.elementProvider.getElementById(project.id);
 		elemType.labels = project.calcLabels();
-		this._projects.forEach(p => p.updateLabels(project.id));
+		this._projects.forEach((p) => p.updateLabels(project.id));
 	}
 
 	public async askToSave(): Promise<boolean> {
-		if (!this.hasUnsavedProjects)
-			return true;
-		return await this.popup.showPopup(UnsavedChangesComponent, 'POPUP.UNSAVED_CHANGES.TITLE', false);
+		if (!this.hasUnsavedProjects) return true;
+		return this.popup.showPopup(
+			UnsavedChangesComponent,
+			'POPUP.UNSAVED_CHANGES.TITLE',
+			false
+		);
 	}
 
 	public get hasUnsavedProjects(): boolean {
@@ -279,9 +326,8 @@ export class ProjectsService {
 		return false;
 	}
 
-
 	public moveProjectToIndex(project: Project, index: number) {
-		const projects = this._projects.filter(p => p !== project);
+		const projects = this._projects.filter((p) => p !== project);
 		projects.splice(index, 0, project);
 		this._projects = projects;
 	}
@@ -297,11 +343,20 @@ export class ProjectsService {
 	public async cloneShare() {
 		if (this._mainProject.source !== 'share') return;
 		try {
-			const project = await this.projectSaveManagementService.cloneProjectShare(this._mainProject);
+			const project = await this.projectSaveManagementService.cloneProjectShare(
+				this._mainProject
+			);
 			this.projectSaveManagementService.clearElements('share');
 			await this.openNewProject(project);
-			this.location.set('project' , this.projectSaveManagementService.getUuidForProject(project.id));
-			this.errorHandling.showInfo('INFO.PROJECTS.CLONE_SHARE', {name: project.name});
-		} catch {}
+			this.location.set(
+				'project',
+				this.projectSaveManagementService.getUuidForProject(project.id)
+			);
+			this.errorHandling.showInfo('INFO.PROJECTS.CLONE_SHARE', {
+				name: project.name
+			});
+		} catch (e) {
+			console.error(e);
+		}
 	}
 }

@@ -1,5 +1,5 @@
-import {ProjectElement} from './http/response/project-data';
-import {ComponentInfo} from './http/response/component-info';
+import { ProjectElement } from './http/response/project-data';
+import { ComponentInfo } from './http/response/component-info';
 
 export interface ProjectLocalFile {
 	project: {

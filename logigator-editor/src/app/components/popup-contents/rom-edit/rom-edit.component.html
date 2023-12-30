@@ -3,21 +3,25 @@
 		<thead>
 			<tr>
 				<td class="top-right"></td>
-				<td class="top-address">00 01 02 03 04 05 06 07 08 09 0A 0B 0C 0D 0E 0F</td>
+				<td class="top-address">
+					00 01 02 03 04 05 06 07 08 09 0A 0B 0C 0D 0E 0F
+				</td>
 			</tr>
 		</thead>
 		<tbody>
 			<tr>
-				<td valign="top" class="left-address">{{leftAddress}}</td>
+				<td valign="top" class="left-address">{{ leftAddress }}</td>
 				<td class="text-area-td">
-					<textarea spellcheck="false"
-					          cols="45"
-					          [rows]="rows"
-					          (input)="onInput($event)"
-					          (keydown)="selectionChange()"
-					          (click)="selectionChange()"
-					          (focus)="selectionChange()"
-					          #hexInput>
+					<textarea
+						spellcheck="false"
+						cols="45"
+						[rows]="rows"
+						(input)="onInput($event)"
+						(keydown)="selectionChange()"
+						(click)="selectionChange()"
+						(focus)="selectionChange()"
+						#hexInput
+					>
 					</textarea>
 				</td>
 			</tr>
@@ -25,7 +29,11 @@
 	</table>
 
 	<div class="buttons">
-		<button class="btn-raised danger" (click)="cancel()">{{'POPUP.ROM_EDIT.CANCEL' | translate}}</button>
-		<button class="btn-raised primary" (click)="save()">{{'POPUP.ROM_EDIT.SAVE' | translate}}</button>
+		<button class="btn-raised danger" (click)="cancel()">
+			{{ 'POPUP.ROM_EDIT.CANCEL' | translate }}
+		</button>
+		<button class="btn-raised primary" (click)="save()">
+			{{ 'POPUP.ROM_EDIT.SAVE' | translate }}
+		</button>
 	</div>
 </div>

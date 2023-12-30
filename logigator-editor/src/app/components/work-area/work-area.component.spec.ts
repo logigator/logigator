@@ -1,4 +1,4 @@
-import {ComponentFixture, TestBed, waitForAsync} from '@angular/core/testing';
+import { ComponentFixture, TestBed, waitForAsync } from '@angular/core/testing';
 
 import { WorkAreaComponent } from './work-area.component';
 
@@ -8,9 +8,8 @@ describe('WorkAreaComponent', () => {
 
 	beforeEach(waitForAsync(() => {
 		TestBed.configureTestingModule({
-			declarations: [ WorkAreaComponent ]
-		})
-			.compileComponents();
+			declarations: [WorkAreaComponent]
+		}).compileComponents();
 	}));
 
 	beforeEach(() => {

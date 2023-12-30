@@ -1,4 +1,4 @@
-import {ComponentFixture, TestBed, waitForAsync} from '@angular/core/testing';
+import { ComponentFixture, TestBed, waitForAsync } from '@angular/core/testing';
 
 import { SaveAsComponent } from './save-as.component';
 
@@ -8,9 +8,8 @@ describe('SaveAsComponent', () => {
 
 	beforeEach(waitForAsync(() => {
 		TestBed.configureTestingModule({
-			declarations: [ SaveAsComponent ]
-		})
-			.compileComponents();
+			declarations: [SaveAsComponent]
+		}).compileComponents();
 	}));
 
 	beforeEach(() => {

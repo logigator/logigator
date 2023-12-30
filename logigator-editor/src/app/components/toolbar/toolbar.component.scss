@@ -1,5 +1,5 @@
-@import "themes";
-@import "variables";
+@import 'themes';
+@import 'variables';
 
 .toolbar {
 	@include themify() {
@@ -84,221 +84,222 @@
 		@include themify() {
 			.save {
 				@if (isTheme('dark')) {
-					background-image: url("^assets/icons/dark/save_new.svg");
+					background-image: url('src/assets/icons/dark/save_new.svg');
 				} @else {
-					background-image: url("^assets/icons/light/save_new.svg");
+					background-image: url('src/assets/icons/light/save_new.svg');
 				}
 			}
 
 			.open {
 				@if (isTheme('dark')) {
-					background-image: url("^assets/icons/dark/folder.svg");
+					background-image: url('src/assets/icons/dark/folder.svg');
 				} @else {
-					background-image: url("^assets/icons/light/folder.svg");
+					background-image: url('src/assets/icons/light/folder.svg');
 				}
 			}
 
 			.new-comp {
 				@if (isTheme('dark')) {
-					background-image: url("^assets/icons/dark/new-component.svg");
+					background-image: url('src/assets/icons/dark/new-component.svg');
 				} @else {
-					background-image: url("^assets/icons/light/new-component.svg");
+					background-image: url('src/assets/icons/light/new-component.svg');
 				}
 			}
 
 			.paste {
 				@if (isTheme('dark')) {
-					background-image: url("^assets/icons/dark/clipboard.svg");
+					background-image: url('src/assets/icons/dark/clipboard.svg');
 				} @else {
-					background-image: url("^assets/icons/light/clipboard.svg");
+					background-image: url('src/assets/icons/light/clipboard.svg');
 				}
 			}
 
 			.copy {
 				@if (isTheme('dark')) {
-					background-image: url("^assets/icons/dark/files.svg");
+					background-image: url('src/assets/icons/dark/files.svg');
 				} @else {
-					background-image: url("^assets/icons/light/files.svg");
+					background-image: url('src/assets/icons/light/files.svg');
 				}
 			}
 
 			.cut {
 				@if (isTheme('dark')) {
-					background-image: url("^assets/icons/dark/cut.svg");
+					background-image: url('src/assets/icons/dark/cut.svg');
 				} @else {
-					background-image: url("^assets/icons/light/cut.svg");
+					background-image: url('src/assets/icons/light/cut.svg');
 				}
 			}
 
 			.delete {
 				@if (isTheme('dark')) {
-					background-image: url("^assets/icons/dark/trash.svg");
+					background-image: url('src/assets/icons/dark/trash.svg');
 				} @else {
-					background-image: url("^assets/icons/light/trash.svg");
+					background-image: url('src/assets/icons/light/trash.svg');
 				}
 			}
 
 			.undo {
 				@if (isTheme('dark')) {
-					background-image: url("^assets/icons/dark/back-left.svg");
+					background-image: url('src/assets/icons/dark/back-left.svg');
 				} @else {
-					background-image: url("^assets/icons/light/back-left.svg");
+					background-image: url('src/assets/icons/light/back-left.svg');
 				}
 			}
 
 			.redo {
 				@if (isTheme('dark')) {
-					background-image: url("^assets/icons/dark/back-right.svg");
+					background-image: url('src/assets/icons/dark/back-right.svg');
 				} @else {
-					background-image: url("^assets/icons/light/back-right.svg");
+					background-image: url('src/assets/icons/light/back-right.svg');
 				}
 			}
 
 			.text {
 				@if (isTheme('dark')) {
-					background-image: url("^assets/icons/dark/text.svg");
+					background-image: url('src/assets/icons/dark/text.svg');
 				} @else {
-					background-image: url("^assets/icons/light/text.svg");
+					background-image: url('src/assets/icons/light/text.svg');
 				}
 			}
 
 			.eraser {
 				@if (isTheme('dark')) {
-					background-image: url("^assets/icons/dark/eraser.svg");
+					background-image: url('src/assets/icons/dark/eraser.svg');
 				} @else {
-					background-image: url("^assets/icons/light/eraser.svg");
+					background-image: url('src/assets/icons/light/eraser.svg');
 				}
 			}
 
 			.wire {
 				@if (isTheme('dark')) {
-					background-image: url("^assets/icons/dark/connection.svg");
+					background-image: url('src/assets/icons/dark/connection.svg');
 				} @else {
-					background-image: url("^assets/icons/light/connection.svg");
+					background-image: url('src/assets/icons/light/connection.svg');
 				}
 			}
 
 			.conn-wire {
 				@if (isTheme('dark')) {
-					background-image: url("^assets/icons/dark/connect_wire.svg");
+					background-image: url('src/assets/icons/dark/connect_wire.svg');
 				} @else {
-					background-image: url("^assets/icons/light/connect_wire.svg");
+					background-image: url('src/assets/icons/light/connect_wire.svg');
 				}
 			}
 
 			.select {
 				@if (isTheme('dark')) {
-					background-image: url("^assets/icons/dark/selection1.svg");
+					background-image: url('src/assets/icons/dark/selection1.svg');
 				} @else {
-					background-image: url("^assets/icons/light/selection1.svg");
+					background-image: url('src/assets/icons/light/selection1.svg');
 				}
 			}
 
 			.select-cut {
 				@if (isTheme('dark')) {
-					background-image: url("^assets/icons/dark/selection_cut.svg");
+					background-image: url('src/assets/icons/dark/selection_cut.svg');
 				} @else {
-					background-image: url("^assets/icons/light/selection_cut.svg");
+					background-image: url('src/assets/icons/light/selection_cut.svg');
 				}
 			}
 
 			.sim-start {
 				@if (isTheme('dark')) {
-					background-image: url("^assets/icons/dark/control-play.svg");
+					background-image: url('src/assets/icons/dark/control-play.svg');
 				} @else {
-					background-image: url("^assets/icons/light/control-play.svg");
+					background-image: url('src/assets/icons/light/control-play.svg');
 				}
 			}
 
 			.sim-pause {
 				@if (isTheme('dark')) {
-					background-image: url("^assets/icons/dark/control-pause.svg");
+					background-image: url('src/assets/icons/dark/control-pause.svg');
 				} @else {
-					background-image: url("^assets/icons/light/control-pause.svg");
+					background-image: url('src/assets/icons/light/control-pause.svg');
 				}
 			}
 
 			.sim-step {
 				@if (isTheme('dark')) {
-					background-image: url("^assets/icons/dark/angle-right.svg");
+					background-image: url('src/assets/icons/dark/angle-right.svg');
 				} @else {
-					background-image: url("^assets/icons/light/angle-right.svg");
+					background-image: url('src/assets/icons/light/angle-right.svg');
 				}
 			}
 
 			.sim-stop {
 				@if (isTheme('dark')) {
-					background-image: url("^assets/icons/dark/control-stop.svg");
+					background-image: url('src/assets/icons/dark/control-stop.svg');
 				} @else {
-					background-image: url("^assets/icons/light/control-stop.svg");
+					background-image: url('src/assets/icons/light/control-stop.svg');
 				}
 			}
 
 			.zoom-out {
 				@if (isTheme('dark')) {
-					background-image: url("^assets/icons/dark/zoom-out.svg");
+					background-image: url('src/assets/icons/dark/zoom-out.svg');
 				} @else {
-					background-image: url("^assets/icons/light/zoom-out.svg");
+					background-image: url('src/assets/icons/light/zoom-out.svg');
 				}
 			}
 
 			.zoom-in {
 				@if (isTheme('dark')) {
-					background-image: url("^assets/icons/dark/zoom-in.svg");
+					background-image: url('src/assets/icons/dark/zoom-in.svg');
 				} @else {
-					background-image: url("^assets/icons/light/zoom-in.svg");
+					background-image: url('src/assets/icons/light/zoom-in.svg');
 				}
 			}
 
 			.play {
 				@if (isTheme('dark')) {
-					background-image: url("^assets/icons/dark/control-play.svg");
+					background-image: url('src/assets/icons/dark/control-play.svg');
 				} @else {
-					background-image: url("^assets/icons/light/control-play.svg");
+					background-image: url('src/assets/icons/light/control-play.svg');
 				}
 			}
 
 			.pause {
 				@if (isTheme('dark')) {
-					background-image: url("^assets/icons/dark/control-pause.svg");
+					background-image: url('src/assets/icons/dark/control-pause.svg');
 				} @else {
-					background-image: url("^assets/icons/light/control-pause.svg");
+					background-image: url('src/assets/icons/light/control-pause.svg');
 				}
 			}
 
 			.step {
 				@if (isTheme('dark')) {
-					background-image: url("^assets/icons/dark/angle-right.svg");
+					background-image: url('src/assets/icons/dark/angle-right.svg');
 				} @else {
-					background-image: url("^assets/icons/light/angle-right.svg");
+					background-image: url('src/assets/icons/light/angle-right.svg');
 				}
 			}
 
 			.stop {
 				@if (isTheme('dark')) {
-					background-image: url("^assets/icons/dark/control-stop.svg");
+					background-image: url('src/assets/icons/dark/control-stop.svg');
 				} @else {
-					background-image: url("^assets/icons/light/control-stop.svg");
+					background-image: url('src/assets/icons/light/control-stop.svg');
 				}
 			}
 
 			.target-clock-speed {
 				@if (isTheme('dark')) {
-					background-image: url("^assets/icons/dark/speed_limit.svg");
+					background-image: url('src/assets/icons/dark/speed_limit.svg');
 				} @else {
-					background-image: url("^assets/icons/light/speed_limit.svg");
+					background-image: url('src/assets/icons/light/speed_limit.svg');
 				}
 			}
 
 			.sync-to-frame-rate {
 				@if (isTheme('dark')) {
-					background-image: url("^assets/icons/dark/speed_sync.svg");
+					background-image: url('src/assets/icons/dark/speed_sync.svg');
 				} @else {
-					background-image: url("^assets/icons/light/speed_sync.svg");
+					background-image: url('src/assets/icons/light/speed_sync.svg');
 				}
 			}
 
-			.target-tick-rate, .thread-count {
+			.target-tick-rate,
+			.thread-count {
 				outline: none;
 				border: none;
 				margin-left: 0.2rem;

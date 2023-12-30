@@ -1,6 +1,6 @@
-import {ElementType} from '../element-type';
-import {ElementTypeId} from '../element-type-ids';
-import {ElementRotation} from '../../element';
+import { ElementType } from '../element-type';
+import { ElementTypeId } from '../element-type-ids';
+import { ElementRotation } from '../../element';
 
 export const wire: ElementType = {
 	id: ElementTypeId.WIRE,
@@ -26,5 +26,5 @@ export const wire: ElementType = {
 	maxInputs: 0,
 
 	width: () => undefined,
-	height: () => undefined,
+	height: () => undefined
 };

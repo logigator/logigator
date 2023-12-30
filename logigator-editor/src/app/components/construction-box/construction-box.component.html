@@ -1,5 +1,13 @@
 <div id="construction-box">
-	<input id="component-search" [placeholder]="'CONST_BOX.SEARCH' | translate" type="text" [(ngModel)]="searchText" (focus)="focusSearch()" (blur)="blurSearch()" aria-label="Search">
+	<input
+		id="component-search"
+		[placeholder]="'CONST_BOX.SEARCH' | translate"
+		type="text"
+		[(ngModel)]="searchText"
+		(focus)="focusSearch()"
+		(blur)="blurSearch()"
+		aria-label="Search"
+	/>
 	<div class="scroll-container">
 		<app-construction-box-category
 			categoryName="CONST_BOX.CATEGORIES.BASIC"
@@ -26,7 +34,7 @@
 			categoryName="CONST_BOX.CATEGORIES.USER"
 			[components]="userDefinedComponents"
 			[searchText]="searchText"
-			showReloadButton="true"
+			[showReloadButton]="true"
 			(reloadElements)="reloadUserElements()"
 		></app-construction-box-category>
 		<app-construction-box-category

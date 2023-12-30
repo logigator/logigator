@@ -1,4 +1,4 @@
-import {ComponentFixture, TestBed, waitForAsync} from '@angular/core/testing';
+import { ComponentFixture, TestBed, waitForAsync } from '@angular/core/testing';
 
 import { StatusBarComponent } from './status-bar.component';
 
@@ -8,9 +8,8 @@ describe('StatusBarComponent', () => {
 
 	beforeEach(waitForAsync(() => {
 		TestBed.configureTestingModule({
-			declarations: [ StatusBarComponent ]
-		})
-			.compileComponents();
+			declarations: [StatusBarComponent]
+		}).compileComponents();
 	}));
 
 	beforeEach(() => {

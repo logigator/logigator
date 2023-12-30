@@ -1,31 +1,31 @@
-@use "sass:math";
+@use 'sass:math';
 
 $themes: (
 	light: (
-		background: #F5F5F5,
-		primary: #27AE60,
-		accent1: #FFFFFF,
+		background: #f5f5f5,
+		primary: #27ae60,
+		accent1: #ffffff,
 		accent2: #d1d1d1,
 		text-primary: #000000,
-		text-secondary: #F5F5F5,
-		error: #AD2F26,
-		button-text: #F5F5F5,
-		inactive: #5D5D5D,
-		toolbar: #F5F5F5,
+		text-secondary: #f5f5f5,
+		error: #ad2f26,
+		button-text: #f5f5f5,
+		inactive: #5d5d5d,
+		toolbar: #f5f5f5,
 		wire: #000000
 	),
 	dark: (
 		background: #262a2b,
-		primary: #27AE60,
-		accent1: #1A1A1A,
+		primary: #27ae60,
+		accent1: #1a1a1a,
 		accent2: #3a4042,
 		text-primary: #cccccc,
 		text-secondary: #000000,
-		error: #CC392F,
+		error: #cc392f,
 		button-text: #000000,
 		inactive: #979797,
 		toolbar: #262a2b,
-		wire: #27AE60
+		wire: #27ae60
 	)
 );
 
@@ -40,14 +40,18 @@ $border-styles: (
 
 @mixin themify() {
 	@each $theme, $map in $themes {
-
 		$themeForTestFunction: $theme !global;
 
-		@if(&) {
+		@if (&) {
 			:host-context(.theme-#{$theme}) & {
 				$theme-map: () !global;
 				@each $key, $submap in $map {
-					$theme-map: map-merge($theme-map, ($key: $submap)) !global;
+					$theme-map: map-merge(
+						$theme-map,
+						(
+							$key: $submap
+						)
+					) !global;
 				}
 
 				@content;
@@ -58,7 +62,12 @@ $border-styles: (
 			.theme-#{$theme} {
 				$theme-map: () !global;
 				@each $key, $submap in $map {
-					$theme-map: map-merge($theme-map, ($key: $submap)) !global;
+					$theme-map: map-merge(
+						$theme-map,
+						(
+							$key: $submap
+						)
+					) !global;
 				}
 
 				@content;
@@ -66,19 +75,22 @@ $border-styles: (
 				$themeForTestFunction: null !global;
 			}
 		}
-
 	}
 }
 
 @mixin themifyForNoEncapsulation() {
 	@each $theme, $map in $themes {
-
 		$themeForTestFunction: $theme !global;
 
 		.theme-#{$theme} {
 			$theme-map: () !global;
 			@each $key, $submap in $map {
-				$theme-map: map-merge($theme-map, ($key: $submap)) !global;
+				$theme-map: map-merge(
+					$theme-map,
+					(
+						$key: $submap
+					)
+				) !global;
 			}
 
 			@content;
@@ -97,23 +109,20 @@ $border-styles: (
 }
 
 @mixin scrollbar($width, $height: -1) {
-	&::-webkit-scrollbar-track
-	{
+	&::-webkit-scrollbar-track {
 		@include themify() {
 			background-color: themed('background');
 		}
 	}
 
-	&::-webkit-scrollbar
-	{
+	&::-webkit-scrollbar {
 		width: $width;
 		@if ($height != -1) {
 			height: $height;
 		}
 	}
 
-	&::-webkit-scrollbar-thumb
-	{
+	&::-webkit-scrollbar-thumb {
 		border-radius: math.div($width, 2);
 		@include themify() {
 			background-color: themed('accent2');
@@ -124,5 +133,4 @@ $border-styles: (
 	@include themify() {
 		scrollbar-color: themed('accent2') themed('background');
 	}
-
 }

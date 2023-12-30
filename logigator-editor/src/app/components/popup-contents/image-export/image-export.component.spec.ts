@@ -8,9 +8,8 @@ describe('ImageExportComponent', () => {
 
 	beforeEach(async () => {
 		await TestBed.configureTestingModule({
-			declarations: [ ImageExportComponent ]
-		})
-			.compileComponents();
+			declarations: [ImageExportComponent]
+		}).compileComponents();
 	});
 
 	beforeEach(() => {

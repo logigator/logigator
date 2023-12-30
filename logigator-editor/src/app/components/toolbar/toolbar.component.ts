@@ -1,17 +1,17 @@
-import {Component, ViewChild, ViewContainerRef} from '@angular/core';
-import {ProjectsService} from '../../services/projects/projects.service';
-import {Test} from '../../../../tests/auto-tests/tests';
-import {StateCompilerService} from '../../services/simulation/state-compiler/state-compiler.service';
-import {WorkModeService} from '../../services/work-mode/work-mode.service';
-import {WorkMode} from '../../models/work-modes';
-import {EditorInteractionService} from '../../services/editor-interaction/editor-interaction.service';
-import {ShortcutAction} from '../../models/shortcut-action';
-import {ShortcutsService} from '../../services/shortcuts/shortcuts.service';
-import {SimulationManagementService} from '../../services/simulation/simulation-management/simulation-management.service';
-import {Grid} from '../../models/rendering/grid';
-import {ThemingService} from '../../services/theming/theming.service';
-import {BruteForceTester} from '../../../../tests/auto-tests/brute-force-tester';
-import {environment} from '../../../environments/environment';
+import { Component, ViewChild, ViewContainerRef } from '@angular/core';
+import { ProjectsService } from '../../services/projects/projects.service';
+import { Test } from '../../../../tests/auto-tests/tests';
+import { StateCompilerService } from '../../services/simulation/state-compiler/state-compiler.service';
+import { WorkModeService } from '../../services/work-mode/work-mode.service';
+import { WorkMode } from '../../models/work-modes';
+import { EditorInteractionService } from '../../services/editor-interaction/editor-interaction.service';
+import { ShortcutAction } from '../../models/shortcut-action';
+import { ShortcutsService } from '../../services/shortcuts/shortcuts.service';
+import { SimulationManagementService } from '../../services/simulation/simulation-management/simulation-management.service';
+import { Grid } from '../../models/rendering/grid';
+import { ThemingService } from '../../services/theming/theming.service';
+import { BruteForceTester } from '../../../../tests/auto-tests/brute-force-tester';
+import { environment } from '../../../environments/environment';
 
 @Component({
 	selector: 'app-toolbar',
@@ -19,7 +19,6 @@ import {environment} from '../../../environments/environment';
 	styleUrls: ['./toolbar.component.scss']
 })
 export class ToolbarComponent {
-
 	private test: Test;
 
 	public targetMultiplier = '1';
@@ -27,7 +26,7 @@ export class ToolbarComponent {
 
 	public threadCount = 1;
 
-	@ViewChild('enterSimulationLoading', {read: ViewContainerRef, static: true})
+	@ViewChild('enterSimulationLoading', { read: ViewContainerRef, static: true })
 	private _enterSimulationLoading: ViewContainerRef;
 
 	constructor(
@@ -68,10 +67,14 @@ export class ToolbarComponent {
 	}
 
 	public async printBoard() {
-		console.log(JSON.stringify({
-			components: await this.stateCompiler.compile(this.projectService.currProject),
-			links: this.stateCompiler.highestLinkId + 1
-		}));
+		console.log(
+			JSON.stringify({
+				components: await this.stateCompiler.compile(
+					this.projectService.currProject
+				),
+				links: this.stateCompiler.highestLinkId + 1
+			})
+		);
 	}
 
 	public toggleChunks() {

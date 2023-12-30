@@ -1,8 +1,8 @@
-import {ProjectsService} from '../../services/projects/projects.service';
-import {Element, ElementRotation} from '../element';
-import {Type} from '@angular/core';
-import {ElementInspectionComp} from '../../components/element-inspection/element-inspection-comp';
-import {ElementTypeId} from './element-type-ids';
+import { ProjectsService } from '../../services/projects/projects.service';
+import { Element, ElementRotation } from '../element';
+import { Type } from '@angular/core';
+import { ElementInspectionComp } from '../../components/element-inspection/element-inspection-comp';
+import { ElementTypeId } from './element-type-ids';
 
 export interface ElementType {
 	id: ElementTypeId;
@@ -42,10 +42,10 @@ export interface ElementType {
 
 	options?: number[];
 	optionsConfig?: {
-		name: string,
-		min?: number,
-		max?: number,
-		allowedValues?: number[] | {value: number, label: string}[]
+		name: string;
+		min?: number;
+		max?: number;
+		allowedValues?: (number | { value: number; label: string })[];
 	}[];
 	onOptionsChanged?: (element?: Element) => void;
 
@@ -57,8 +57,9 @@ export interface ElementType {
 	calcLabels?: (element?: Element) => string[];
 }
 
-export function isElementType(object: any): object is ElementType {
-	return 'name' in object &&
+export function isElementType(object: object): object is ElementType {
+	return (
+		'name' in object &&
 		'numInputs' in object &&
 		'numOutputs' in object &&
 		'maxInputs' in object &&
@@ -66,5 +67,6 @@ export function isElementType(object: any): object is ElementType {
 		'symbol' in object &&
 		'description' in object &&
 		'rotation' in object &&
-		'category' in object;
+		'category' in object
+	);
 }

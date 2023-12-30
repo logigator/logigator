@@ -1,6 +1,6 @@
-import {ElementType} from '../element-type';
-import {ElementTypeId} from '../element-type-ids';
-import {ElementRotation} from '../../element';
+import { ElementType } from '../element-type';
+import { ElementTypeId } from '../element-type-ids';
+import { ElementRotation } from '../../element';
 
 export const ledMatrix: ElementType = {
 	id: ElementTypeId.LED_MATRIX,
@@ -31,11 +31,14 @@ export const ledMatrix: ElementType = {
 	maxInputs: 0,
 
 	width(element?) {
-		return calcWidthHeight(element?.options ? element.options[0] : this.options[0]);
-
+		return calcWidthHeight(
+			element?.options ? element.options[0] : this.options[0]
+		);
 	},
 	height(element?) {
-		return calcWidthHeight(element?.options ? element.options[0] : this.options[0]);
+		return calcWidthHeight(
+			element?.options ? element.options[0] : this.options[0]
+		);
 	},
 
 	options: [4],
@@ -105,7 +108,6 @@ export const ledMatrix: ElementType = {
 
 		return labels;
 	}
-
 };
 
 function calcWidthHeight(size: number): number {
@@ -116,5 +118,7 @@ function calcWidthHeight(size: number): number {
 			return 12;
 		case 16:
 			return 16;
+		default:
+			throw new Error('Invalid size');
 	}
 }

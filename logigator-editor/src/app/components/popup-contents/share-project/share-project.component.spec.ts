@@ -1,4 +1,4 @@
-import {ComponentFixture, TestBed, waitForAsync} from '@angular/core/testing';
+import { ComponentFixture, TestBed, waitForAsync } from '@angular/core/testing';
 
 import { ShareProjectComponent } from './share-project.component';
 
@@ -8,9 +8,8 @@ describe('ShareProjectComponent', () => {
 
 	beforeEach(waitForAsync(() => {
 		TestBed.configureTestingModule({
-			declarations: [ ShareProjectComponent ]
-		})
-			.compileComponents();
+			declarations: [ShareProjectComponent]
+		}).compileComponents();
 	}));
 
 	beforeEach(() => {

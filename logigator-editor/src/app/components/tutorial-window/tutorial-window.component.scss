@@ -1,4 +1,4 @@
-@import "themes";
+@import 'themes';
 
 .tutorial-window {
 	position: fixed;
@@ -6,7 +6,7 @@
 	left: 300px;
 	z-index: 500;
 	width: 380px;
-	box-shadow: 10px 10px 10px -5px rgba(0,0,0,0.5);
+	box-shadow: 10px 10px 10px -5px rgba(0, 0, 0, 0.5);
 
 	@include themify() {
 		background-color: themed('background');
@@ -27,7 +27,7 @@
 
 	&.top > .arrow {
 		left: 0;
-		bottom:-37px;
+		bottom: -37px;
 
 		@include themify() {
 			border-top: 18px solid themed('accent2');
@@ -36,7 +36,7 @@
 
 	&.left > .arrow {
 		top: 0;
-		right:-37px;
+		right: -37px;
 
 		@include themify() {
 			border-left: 18px solid themed('accent2');
@@ -45,7 +45,7 @@
 
 	&.bottom > .arrow {
 		left: 0;
-		top:-37px;
+		top: -37px;
 
 		@include themify() {
 			border-bottom: 18px solid themed('accent2');
@@ -54,7 +54,7 @@
 
 	&.right > .arrow {
 		top: 0;
-		left:-37px;
+		left: -37px;
 
 		@include themify() {
 			border-right: 18px solid themed('accent2');

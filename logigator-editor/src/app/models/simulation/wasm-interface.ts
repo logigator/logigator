@@ -1,5 +1,5 @@
-import {Board, BoardStatus, InputEvent} from './board';
-import {PowerChangeIn} from './power-changes';
+import { Board, BoardStatus } from './board';
+import { PowerChangeIn } from './power-changes';
 
 export type Pointer = number;
 

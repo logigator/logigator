@@ -1,18 +1,29 @@
-import {Component, ElementRef, Inject, NgZone, OnDestroy, OnInit, Renderer2, ViewChild} from '@angular/core';
-import {SelectionService} from './services/selection/selection.service';
-import {WorkModeService} from './services/work-mode/work-mode.service';
-import {fromEvent, Subject} from 'rxjs';
-import {DOCUMENT} from '@angular/common';
-import {takeUntil} from 'rxjs/operators';
-import {ProjectsService} from './services/projects/projects.service';
-import {LangChangeEvent, TranslateService} from '@ngx-translate/core';
-import {ElementProviderService} from './services/element-provider/element-provider.service';
-import {ShortcutsService} from './services/shortcuts/shortcuts.service';
-import {WorkMode} from './models/work-modes';
-import {EditorInteractionService} from './services/editor-interaction/editor-interaction.service';
-import {EditorAction} from './models/editor-action';
-import {StorageService, StorageServiceModel} from './services/storage/storage.service';
-import {environment} from '../environments/environment';
+import {
+	Component,
+	ElementRef,
+	Inject,
+	NgZone,
+	OnDestroy,
+	OnInit,
+	ViewChild
+} from '@angular/core';
+import { SelectionService } from './services/selection/selection.service';
+import { WorkModeService } from './services/work-mode/work-mode.service';
+import { fromEvent, Subject } from 'rxjs';
+import { DOCUMENT } from '@angular/common';
+import { takeUntil } from 'rxjs/operators';
+import { ProjectsService } from './services/projects/projects.service';
+import { LangChangeEvent, TranslateService } from '@ngx-translate/core';
+import { ElementProviderService } from './services/element-provider/element-provider.service';
+import { ShortcutsService } from './services/shortcuts/shortcuts.service';
+import { WorkMode } from './models/work-modes';
+import { EditorInteractionService } from './services/editor-interaction/editor-interaction.service';
+import { EditorAction } from './models/editor-action';
+import {
+	StorageService,
+	StorageServiceModel
+} from './services/storage/storage.service';
+import { environment } from '../environments/environment';
 
 @Component({
 	selector: 'app-root',
@@ -20,14 +31,12 @@ import {environment} from '../environments/environment';
 	styleUrls: ['./app.component.scss']
 })
 export class AppComponent implements OnInit, OnDestroy {
-
-	@ViewChild('appRoot', {static: true})
+	@ViewChild('appRoot', { static: true })
 	private appRoot: ElementRef<HTMLDivElement>;
 
 	private _destroySubject = new Subject<void>();
 
 	constructor(
-		private renderer2: Renderer2,
 		private ngZone: NgZone,
 		private workMode: WorkModeService,
 		private selection: SelectionService,
@@ -47,63 +56,74 @@ export class AppComponent implements OnInit, OnDestroy {
 		this.ngZone.runOutsideAngular(() => {
 			this.listenToShortcuts();
 
-			this.editorInteractionService.subscribeEditorAction(EditorAction.FULLSCREEN).pipe(
-				takeUntil(this._destroySubject)
-			).subscribe(_ => this.onRequestFullscreen());
+			this.editorInteractionService
+				.subscribeEditorAction(EditorAction.FULLSCREEN)
+				.pipe(takeUntil(this._destroySubject))
+				.subscribe(() => this.onRequestFullscreen());
 		});
-		fromEvent(window, 'beforeunload').pipe(
-			takeUntil(this._destroySubject)
-		).subscribe((e) => this.onTabClose(e as Event));
+		fromEvent(window, 'beforeunload')
+			.pipe(takeUntil(this._destroySubject))
+			.subscribe((e) => this.onTabClose(e as Event));
 	}
 
 	private listenToShortcuts() {
-		fromEvent(this.document, 'keydown').pipe(
-			takeUntil(this._destroySubject)
-		).subscribe((e: KeyboardEvent) => {
-			this.shortcutsService.keyDownListener(e);
-		});
+		fromEvent(this.document, 'keydown')
+			.pipe(takeUntil(this._destroySubject))
+			.subscribe((e: KeyboardEvent) => {
+				this.shortcutsService.keyDownListener(e);
+			});
 	}
 
 	public get isSimulationMode(): boolean {
-		return this.workMode.currentWorkMode ===  WorkMode.SIMULATION;
+		return this.workMode.currentWorkMode === WorkMode.SIMULATION;
 	}
 
 	public get showSettingsInfoBox(): boolean {
 		const seElTypeId = this.selectedElemTypeId;
-		return seElTypeId === undefined ? false : this.elementProviderService.getElementById(seElTypeId).showSettings;
+		return seElTypeId === undefined
+			? false
+			: this.elementProviderService.getElementById(seElTypeId).showSettings;
 	}
 
 	public get selectedElemTypeId(): number {
-		if (this.workMode.currentWorkMode ===  WorkMode.COMPONENT) {
+		if (this.workMode.currentWorkMode === WorkMode.COMPONENT) {
 			return this.workMode.currentComponentToBuild;
 		} else {
 			const selectedIds = this.selection.selectedIds();
 			if (!selectedIds || selectedIds.length === 0 || selectedIds.length > 1) {
 				return undefined;
 			}
-			const elemType = this.projects.currProject.currState.getElementById(selectedIds[0]);
+			const elemType = this.projects.currProject.currState.getElementById(
+				selectedIds[0]
+			);
 			if (!elemType) return undefined;
 			return elemType.typeId;
 		}
 	}
 
 	public get selectedCompId(): number {
-		if (!this.selection.selectedIds() || this.workMode.currentWorkMode === WorkMode.COMPONENT) {
+		if (
+			!this.selection.selectedIds() ||
+			this.workMode.currentWorkMode === WorkMode.COMPONENT
+		) {
 			return undefined;
 		}
 		return this.selection.selectedIds()[0];
 	}
 
 	private onRequestFullscreen() {
-		const elem = this.appRoot.nativeElement as any;
+		const elem = this.appRoot.nativeElement;
 		if (elem.requestFullscreen) {
 			elem.requestFullscreen();
-		} else if (elem.mozRequestFullScreen) { /* Firefox */
-			elem.mozRequestFullScreen();
-		} else if (elem.webkitRequestFullscreen) { /* Chrome, Safari & Opera */
-			elem.webkitRequestFullscreen();
-		} else if (elem.msRequestFullscreen) { /* IE/Edge */
-			elem.msRequestFullscreen();
+		} else if (elem['mozRequestFullScreen']) {
+			/* Firefox */
+			elem['mozRequestFullScreen']();
+		} else if (elem['webkitRequestFullscreen']) {
+			/* Chrome, Safari & Opera */
+			elem['webkitRequestFullscreen']();
+		} else if (elem['msRequestFullscreen']) {
+			/* IE/Edge */
+			elem['msRequestFullscreen']();
 		}
 	}
 

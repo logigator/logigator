@@ -13,8 +13,11 @@ jobs:
       should_skip: ${{ steps.skip_check.outputs.should_skip }}
     steps:
       - id: skip_check
-        uses: fkirc/skip-duplicate-actions@master
+        uses: fkirc/skip-duplicate-actions@v5
         with:
+          concurrent_skipping: 'never'
+          cancel_others: 'true'
+          skip_after_successful_duplicate: 'true'
           github_token: ${{ github.token }}
           paths: '["logigator-backend/**"]'
 
@@ -23,20 +26,29 @@ jobs:
     needs: pre_job
     if: ${{ needs.pre_job.outputs.should_skip != 'true' }}
     runs-on: 'ubuntu-latest'
+    defaults:
+      run:
+        working-directory: ./logigator-backend
     steps:
       - name: 'Checkout'
-        uses: actions/checkout@v2
+        uses: actions/checkout@v3
 
       - name: 'Setup Node'
-        uses: actions/setup-node@v1
+        uses: actions/setup-node@v3
         with:
-          node-version: '16.x'
+          node-version: '20.x'
+
+      - name: Install Dependencies
+        uses: ./.github/actions/yarn-install
+        with:
+          cwd: ./logigator-backend
+
+      - name: 'Lint'
+        shell: bash
+        run: |
+          yarn run lint:frontend
+          yarn run lint:backend
 
       - name: 'Build'
         shell: bash
-        working-directory: 'logigator-backend'
-        run: |
-          yarn install --frozen-lockfile
-          yarn run lint:frontend
-          yarn run lint:backend
-          yarn run build
+        run: yarn run build

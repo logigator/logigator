@@ -1,20 +1,20 @@
-import {Element} from './element';
-import {Elements} from './elements';
+import { Element } from './element';
+import { Elements } from './elements';
 import * as PIXI from 'pixi.js';
 
 export type ActionType =
-	'addComp' |
-	'addWire' |
-	'remComp' |
-	'remWire' |
-	'movMult' |
-	'conWire' |
-	'dcoWire' |
-	'rotComp' |
-	'numInpt' |
-	'plugInd' |
-	'compOpt' |
-	'ediData';
+	| 'addComp'
+	| 'addWire'
+	| 'remComp'
+	| 'remWire'
+	| 'movMult'
+	| 'conWire'
+	| 'dcoWire'
+	| 'rotComp'
+	| 'numInpt'
+	| 'plugInd'
+	| 'compOpt'
+	| 'ediData';
 
 export interface ChangeType {
 	newElems: Element[];
@@ -33,25 +33,24 @@ export interface Action {
 }
 
 export class Actions {
-
-	private static readonly REVERSE_ACTION: Map<ActionType, ActionType[]> = new Map<ActionType, ActionType[]>([
-		['addComp', ['remComp']],
-		['addWire', ['remWire']],
-		['remComp', ['addComp']],
-		['remWire', ['addWire']],
-		['movMult', ['movMult']],
-		['conWire', ['dcoWire']],
-		['dcoWire', ['conWire']],
-		['rotComp', ['rotComp']],
-		['numInpt', ['numInpt']],
-		['plugInd', ['plugInd']],
-		['compOpt', ['compOpt']],
-		['ediData', ['ediData']]
-	]);
+	private static readonly REVERSE_ACTION: Map<ActionType, ActionType[]> =
+		new Map<ActionType, ActionType[]>([
+			['addComp', ['remComp']],
+			['addWire', ['remWire']],
+			['remComp', ['addComp']],
+			['remWire', ['addWire']],
+			['movMult', ['movMult']],
+			['conWire', ['dcoWire']],
+			['dcoWire', ['conWire']],
+			['rotComp', ['rotComp']],
+			['numInpt', ['numInpt']],
+			['plugInd', ['plugInd']],
+			['compOpt', ['compOpt']],
+			['ediData', ['ediData']]
+		]);
 
 	public static reverseActions(actions: Action[]): Action[] {
-		if (!actions)
-			return actions;
+		if (!actions) return actions;
 		const out: Action[] = [];
 		for (let i = actions.length - 1; i > -1; i--) {
 			out.push(...Actions.reverseAction(actions[i]));
@@ -60,7 +59,7 @@ export class Actions {
 	}
 
 	public static reverseAction(action: Action): Action[] {
-		const revActions = [{...action}];
+		const revActions = [{ ...action }];
 		revActions[0].name = Actions.REVERSE_ACTION.get(action.name)[0];
 		for (const revAction of revActions) {
 			revAction.pos = action.pos ? action.pos.clone() : undefined;
@@ -68,7 +67,11 @@ export class Actions {
 			if (revAction.name === 'movMult') {
 				revAction.pos.x *= -1;
 				revAction.pos.y *= -1;
-			} else if (revAction.name === 'rotComp' || revAction.name === 'numInpt' || revAction.name === 'plugInd') {
+			} else if (
+				revAction.name === 'rotComp' ||
+				revAction.name === 'numInpt' ||
+				revAction.name === 'plugInd'
+			) {
 				revAction.numbers = [...action.numbers].reverse();
 			} else if (revAction.name === 'compOpt') {
 				revAction.options = [...action.options].reverse();
@@ -79,7 +82,10 @@ export class Actions {
 		return revActions;
 	}
 
-	public static connectWiresToActions(oldWires: Element[], newWires: Element[]): Action[] {
+	public static connectWiresToActions(
+		oldWires: Element[],
+		newWires: Element[]
+	): Action[] {
 		const outActions: Action[] = new Array(oldWires.length + newWires.length);
 		let i = 0;
 		for (const oldWire of oldWires) {
@@ -97,59 +103,72 @@ export class Actions {
 		return outActions;
 	}
 
-	public static applyActionsToArray(actions: Action[], elements: Element[]): Element[] {
+	public static applyActionsToArray(
+		actions: Action[],
+		elements: Element[]
+	): Element[] {
 		for (const action of actions) {
-			if (action.name[0] === 'a')
-				elements.push(action.element);
+			if (action.name[0] === 'a') elements.push(action.element);
 			if (action.name[0] === 'r')
-				elements = elements.filter(e => e.id !== action.element.id);
+				elements = elements.filter((e) => e.id !== action.element.id);
 		}
 		return elements;
 	}
 
-	public static applyChangeToArray(change: ChangeType, elements: Element[]): Element[] {
-		elements = elements.filter(e => !change.oldElems.find(o => o.id === e.id));
+	public static applyChangeToArray(
+		change: ChangeType,
+		elements: Element[]
+	): Element[] {
+		elements = elements.filter(
+			(e) => !change.oldElems.find((o) => o.id === e.id)
+		);
 		return elements;
 	}
 
-	public static pushChange(changes: ChangeType, newChange: ChangeType): ChangeType {
-		newChange.newElems.forEach(e => changes.newElems.push(e));
-		newChange.oldElems.forEach(e => changes.oldElems.push(e));
+	public static pushChange(
+		changes: ChangeType,
+		newChange: ChangeType
+	): ChangeType {
+		newChange.newElems.forEach((e) => changes.newElems.push(e));
+		newChange.oldElems.forEach((e) => changes.oldElems.push(e));
 		return changes;
 	}
 
 	public static applyChangeOnArrayAndActions(
-		changes: ChangeType[], out: Action[], outElements: Set<Element>
+		changes: ChangeType[],
+		out: Action[],
+		outElements: Set<Element>
 	): Set<Element> {
-		changes.forEach(change => {
-			change.oldElems.forEach(e => {
-				out.push({name: Elements.remActionName(e), element: e});
+		changes.forEach((change) => {
+			change.oldElems.forEach((e) => {
+				out.push({ name: Elements.remActionName(e), element: e });
 				outElements.delete(e);
 			});
-			change.newElems.forEach(e => {
-				out.push({name: Elements.addActionName(e), element: e});
+			change.newElems.forEach((e) => {
+				out.push({ name: Elements.addActionName(e), element: e });
 				outElements.add(e);
 			});
 		});
 		return outElements;
 	}
 
-	public static applyChangeOnArrayAndActionsOnly(changes: ChangeType[], out: Action[]): void {
+	public static applyChangeOnArrayAndActionsOnly(
+		changes: ChangeType[],
+		out: Action[]
+	): void {
 		for (const change of changes) {
-			if (!change)
-				continue;
-			change.oldElems.forEach(e => {
-				out.push({name: Elements.remActionName(e), element: e});
+			if (!change) continue;
+			change.oldElems.forEach((e) => {
+				out.push({ name: Elements.remActionName(e), element: e });
 			});
-			change.newElems.forEach(e => {
-				out.push({name: Elements.addActionName(e), element: e});
+			change.newElems.forEach((e) => {
+				out.push({ name: Elements.addActionName(e), element: e });
 			});
 		}
 	}
 
 	public static pushIfNotNull(array: Action[], action: Action): void {
-		if (action)
-			array.push(action);
+		if (action) array.push(action);
 	}
 
 	private static isRemAction(action: Action): boolean {
@@ -168,46 +187,40 @@ export class Actions {
 		const conWires = new Map<PIXI.Point, Action>();
 		for (const action of actions) {
 			if (Actions.isRemAction(action)) {
-				if (addElems.has(action.element))
-					addElems.delete(action.element);
-				else
-					remElems.set(action.element, action);
+				if (addElems.has(action.element)) addElems.delete(action.element);
+				else remElems.set(action.element, action);
 			} else if (Actions.isAddAction(action)) {
-				if (remElems.has(action.element))
-					remElems.delete(action.element);
-				else
-					addElems.set(action.element, action);
+				if (remElems.has(action.element)) remElems.delete(action.element);
+				else addElems.set(action.element, action);
 			} else if (action.name === 'dcoWire') {
-				if (conWires.has(action.pos))
-					conWires.delete(action.pos);
-				else
-					dcoWires.set(action.pos, action);
+				if (conWires.has(action.pos)) conWires.delete(action.pos);
+				else dcoWires.set(action.pos, action);
 			} else if (action.name === 'conWire') {
-				if (dcoWires.has(action.pos))
-					dcoWires.delete(action.pos);
-				else
-					conWires.set(action.pos, action);
+				if (dcoWires.has(action.pos)) dcoWires.delete(action.pos);
+				else conWires.set(action.pos, action);
 			} else {
 				out.push(action);
 			}
 		}
-		remElems.forEach((action, _) => out.push(action));
-		addElems.forEach((action, _) => out.push(action));
-		dcoWires.forEach((action, _) => out.push(action));
-		conWires.forEach((action, _) => out.push(action));
+		remElems.forEach((action) => out.push(action));
+		addElems.forEach((action) => out.push(action));
+		dcoWires.forEach((action) => out.push(action));
+		conWires.forEach((action) => out.push(action));
 		return out;
 	}
 
-
 	public static printActions(actions: Action[]): void {
-		if (!actions)
-			return;
-		actions.forEach(a => {
+		if (!actions) return;
+		actions.forEach((a) => {
 			if (a.element)
-				console.log(a.name, a.element.id, a.element.pos, a.element.endPos, a.numbers);
-			else
-				console.log(a.name, a.pos, a.endPos);
-
+				console.log(
+					a.name,
+					a.element.id,
+					a.element.pos,
+					a.element.endPos,
+					a.numbers
+				);
+			else console.log(a.name, a.pos, a.endPos);
 		});
 	}
 }

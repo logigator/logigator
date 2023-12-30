@@ -1,6 +1,6 @@
-import {ElementType} from '../element-type';
-import {ElementTypeId} from '../element-type-ids';
-import {ElementRotation} from '../../element';
+import { ElementType } from '../element-type';
+import { ElementTypeId } from '../element-type-ids';
+import { ElementRotation } from '../../element';
 
 export const dFF: ElementType = {
 	id: ElementTypeId.D_FF,
@@ -31,7 +31,7 @@ export const dFF: ElementType = {
 	width: () => 3,
 	height: () => 2,
 
-	calcLabels(element?)  {
+	calcLabels() {
 		return ['D', 'CLK', 'Q', '!Q'];
 	}
 };

@@ -1,12 +1,11 @@
-import {BaseRenderer} from './base-renderer';
-import {RenderQuality} from '../svg-image-exporter';
-import {ElementRotation} from '../../../models/element';
-import {ElementTypeId} from '../../../models/element-types/element-type-ids';
-import {getStaticDI} from '../../../models/get-di';
-import {FontWidthService} from '../../font-width/font-width.service';
+import { BaseRenderer } from './base-renderer';
+import { RenderQuality } from '../svg-image-exporter';
+import { ElementRotation } from '../../../models/element';
+import { ElementTypeId } from '../../../models/element-types/element-type-ids';
+import { getStaticDI } from '../../../models/get-di';
+import { FontWidthService } from '../../font-width/font-width.service';
 
 export class InputOutputRenderer extends BaseRenderer {
-
 	render(): SVGGElement {
 		let path = ` M 0,0 h ${this.gridSize} v ${this.gridSize} H 0 V 0`;
 		if (this.quality >= RenderQuality.high) {
@@ -15,10 +14,14 @@ export class InputOutputRenderer extends BaseRenderer {
 				rotation = (rotation + 2) % 4;
 			switch (rotation) {
 				case ElementRotation.Right:
-					path += ` M ${this.gridSize},${this.gridSize / 2} h ${this.gridSize / 2}`;
+					path += ` M ${this.gridSize},${this.gridSize / 2} h ${
+						this.gridSize / 2
+					}`;
 					break;
 				case ElementRotation.Down:
-					path += ` M ${this.gridSize / 2},${this.gridSize} v ${this.gridSize / 2}`;
+					path += ` M ${this.gridSize / 2},${this.gridSize} v ${
+						this.gridSize / 2
+					}`;
 					break;
 				case ElementRotation.Left:
 					path += ` M 0,${this.gridSize / 2} h ${-this.gridSize / 2}`;
@@ -35,9 +38,13 @@ export class InputOutputRenderer extends BaseRenderer {
 
 		if (this.quality >= RenderQuality.high) {
 			const symbol = document.createElementNS(this.SVG_NS, 'text');
-			const symbolText = this.element.data as string ?? this._elementType.symbol;
+			const symbolText =
+				(this.element.data as string) ?? this._elementType.symbol;
 			symbol.textContent = symbolText;
-			symbol.setAttribute('style', `font-size: ${this.calcSymbolFontSize(symbolText)}px`);
+			symbol.setAttribute(
+				'style',
+				`font-size: ${this.calcSymbolFontSize(symbolText)}px`
+			);
 			symbol.setAttribute('class', 's');
 			symbol.setAttribute('x', this._size.x / 2 + '');
 			symbol.setAttribute('y', this._size.y / 2 + '');
@@ -55,17 +62,19 @@ export class InputOutputRenderer extends BaseRenderer {
 	}
 
 	private calcSymbolFontSize(symbol: string): number {
-		const textWidth = getStaticDI(FontWidthService).getTextWidth(symbol, '10px Roboto');
-		const adjustedSize = 10 * (this.size.x * 0.8 / textWidth);
+		const textWidth = getStaticDI(FontWidthService).getTextWidth(
+			symbol,
+			'10px Roboto'
+		);
+		const adjustedSize = 10 * ((this.size.x * 0.8) / textWidth);
 		return adjustedSize < this.size.x * 0.6 ? adjustedSize : this.size.x * 0.6;
 	}
 
 	private getPlugIndex(): string {
 		if (this.element.typeId === ElementTypeId.INPUT) {
-			return (this.element.plugIndex + 1) + '';
+			return this.element.plugIndex + 1 + '';
 		} else {
-			return (this.element.plugIndex - this.project.numInputs + 1) + '';
+			return this.element.plugIndex - this.project.numInputs + 1 + '';
 		}
 	}
-
 }

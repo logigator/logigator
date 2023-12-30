@@ -1,13 +1,15 @@
 import * as PIXI from 'pixi.js';
-import {ComponentUpdatable, LGraphics} from './l-graphics';
-import {Element} from '../../element';
-import {environment} from '../../../../environments/environment';
-import {getStaticDI} from '../../get-di';
-import {ThemingService} from '../../../services/theming/theming.service';
-import {TextData} from '../../element-types/basic/text';
+import { ComponentUpdatable, LGraphics } from './l-graphics';
+import { Element } from '../../element';
+import { environment } from '../../../../environments/environment';
+import { getStaticDI } from '../../get-di';
+import { ThemingService } from '../../../services/theming/theming.service';
+import { TextData } from '../../element-types/basic/text';
 
-export class TextGraphics extends PIXI.Container implements LGraphics, ComponentUpdatable {
-
+export class TextGraphics
+	extends PIXI.Container
+	implements LGraphics, ComponentUpdatable
+{
 	readonly element: Element;
 
 	private themingService = getStaticDI(ThemingService);
@@ -35,12 +37,16 @@ export class TextGraphics extends PIXI.Container implements LGraphics, Component
 		for (let i = 0; i < textParts.length; i++) {
 			this._texts[i] = new PIXI.BitmapText(textParts[i], {
 				fontName: 'Roboto',
-				fontSize: environment.gridPixelWidth * this.element.options[0] / 8,
-				tint: this._selected ? this.themingService.getEditorColor('selectTint') : this.themingService.getEditorColor('fontTint')
+				fontSize: (environment.gridPixelWidth * this.element.options[0]) / 8,
+				tint: this._selected
+					? this.themingService.getEditorColor('selectTint')
+					: this.themingService.getEditorColor('fontTint')
 			});
 			this._texts[i].anchor = new PIXI.Point(0, 0.5);
 			this._texts[i].x = environment.gridPixelWidth;
-			this._texts[i].y = environment.gridPixelWidth / 2 + environment.gridPixelWidth * this.element.options[0] / 8 * i;
+			this._texts[i].y =
+				environment.gridPixelWidth / 2 +
+				((environment.gridPixelWidth * this.element.options[0]) / 8) * i;
 			this.addChild(this._texts[i]);
 		}
 	}
@@ -62,8 +68,7 @@ export class TextGraphics extends PIXI.Container implements LGraphics, Component
 		this._point.drawRect(0, 0, size / scale, size / scale);
 	}
 
-	applySimState(scale: number) {
-	}
+	applySimState() {}
 
 	setSelected(selected: boolean) {
 		let fontTint;
@@ -80,19 +85,17 @@ export class TextGraphics extends PIXI.Container implements LGraphics, Component
 		this._selected = selected;
 	}
 
-	setSimulationState(state: boolean[]) {
-	}
+	setSimulationState() {}
 
 	updateScale(scale: number) {
 		this.drawPoint(scale);
 	}
 
-	destroy() {
+	override destroy() {
 		for (const text of this._texts) {
 			text.destroy();
 		}
 		this._point.destroy();
 		super.destroy();
 	}
-
 }

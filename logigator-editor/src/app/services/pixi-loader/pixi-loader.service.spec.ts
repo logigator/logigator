@@ -1,6 +1,6 @@
-import {TestBed} from '@angular/core/testing';
+import { TestBed } from '@angular/core/testing';
 
-import {PixiLoaderService} from './pixi-loader.service';
+import { PixiLoaderService } from './pixi-loader.service';
 
 describe('PixiLoaderService', () => {
 	let service: PixiLoaderService;

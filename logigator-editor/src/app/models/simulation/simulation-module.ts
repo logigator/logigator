@@ -1,22 +1,24 @@
-import {Pointer} from './wasm-interface';
-import {BoardStatus, InputEvent} from './board';
+/* eslint-disable @typescript-eslint/no-explicit-any */
+
+import { Pointer } from './wasm-interface';
+import { BoardStatus, InputEvent } from './board';
 
 export type TypedArray =
-	Int8Array |
-	Uint8Array |
-	Uint8ClampedArray |
-	Int16Array |
-	Uint16Array |
-	Int32Array |
-	Uint32Array |
-	Float32Array |
-	Float64Array;
+	| Int8Array
+	| Uint8Array
+	| Uint8ClampedArray
+	| Int16Array
+	| Uint16Array
+	| Int32Array
+	| Uint32Array
+	| Float32Array
+	| Float64Array;
 
 export type EnvironmentType = 'WEB' | 'NODE' | 'SHELL' | 'WORKER';
 export type ValueType = 'number' | 'string' | 'array' | 'boolean';
 export type TypeCompatibleWithC = number | string | any[] | boolean;
 
-export type WebAssemblyImports =  Array<{
+export type WebAssemblyImports = Array<{
 	name: string;
 	kind: string;
 }>;
@@ -79,7 +81,10 @@ interface EmscriptenModule {
 	printErr(str: string): void;
 
 	destroy(object: object): void;
-	getPreloadedPackage(remotePackageName: string, remotePackageSize: number): ArrayBuffer;
+	getPreloadedPackage(
+		remotePackageName: string,
+		remotePackageSize: number
+	): ArrayBuffer;
 	instantiateWasm(
 		imports: WebAssemblyImports,
 		successCallback: (module: WebAssembly.Module) => void
@@ -87,13 +92,29 @@ interface EmscriptenModule {
 	locateFile(url: string): string;
 	onCustomMessage(event: MessageEvent): void;
 
-	ccall(ident: string, returnType: ValueType | null, argTypes: ValueType[], args: TypeCompatibleWithC[], opts?: CCallOpts): any;
-	cwrap(ident: string, returnType: ValueType | null, argTypes: ValueType[], opts?: CCallOpts): (...args: any[]) => any;
+	ccall(
+		ident: string,
+		returnType: ValueType | null,
+		argTypes: ValueType[],
+		args: TypeCompatibleWithC[],
+		opts?: CCallOpts
+	): any;
+	cwrap(
+		ident: string,
+		returnType: ValueType | null,
+		argTypes: ValueType[],
+		opts?: CCallOpts
+	): (...args: any[]) => any;
 
 	setValue(ptr: number, value: any, type: string, noSafe?: boolean): void;
 	getValue(ptr: number, type: string, noSafe?: boolean): number;
 
-	allocate(slab: any, types: string | string[], allocator: number, ptr: number): number;
+	allocate(
+		slab: any,
+		types: string | string[],
+		allocator: number,
+		ptr: number
+	): number;
 
 	addOnPreRun(cb: () => any): void;
 	addOnInit(cb: () => any): void;
@@ -102,7 +123,11 @@ interface EmscriptenModule {
 	addOnPostRun(cb: () => any): void;
 
 	// Tools
-	intArrayFromString(stringy: string, dontAddNull?: boolean, length?: number): number[];
+	intArrayFromString(
+		stringy: string,
+		dontAddNull?: boolean,
+		length?: number
+	): number[];
 	intArrayToString(array: number[]): string;
 	writeStringToMemory(str: string, buffer: number, dontAddNull: boolean): void;
 	writeArrayToMemory(array: number[], buffer: number): void;

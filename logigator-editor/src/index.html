@@ -1,33 +1,141 @@
 <!doctype html>
 <html lang="en">
-<head>
-	<meta charset="utf-8">
-	<title>Logigator: Editor</title>
-	<link rel="apple-touch-icon" sizes="180x180" href="assets/icons/apple-touch-icon.png">
-	<link rel="icon" type="image/png" sizes="32x32" href="assets/icons/favicon-32x32.png">
-	<link rel="icon" type="image/png" sizes="16x16" href="assets/icons/favicon-16x16.png">
-	<link rel="manifest" href="site.webmanifest">
-	<link rel="mask-icon" href="assets/icons/safari-pinned-tab.svg" color="#27ae60">
-	<meta name="apple-mobile-web-app-title" content="Logigator: Editor">
-	<meta name="application-name" content="Logigator: Editor">
-	<meta name="msapplication-TileColor" content="#2b5797">
-	<meta name="theme-color" content="#27ae60">
-	<meta name="Description" content="Build and simulate your own logic circuits with Logigator, a simple yet powerful web-based online tool.">
-	<meta name="keywords" content="logic circuit, simulator, logic, cad, computer aided design, digital, designer, build, simulate, logic circuit simulator, digital circuit simulator, online">
-	<meta name="viewport" content="width=1000">
+	<head>
+		<meta charset="utf-8" />
+		<title>Logigator: Editor</title>
+		<link
+			rel="apple-touch-icon"
+			sizes="180x180"
+			href="assets/icons/apple-touch-icon.png"
+		/>
+		<link
+			rel="icon"
+			type="image/png"
+			sizes="32x32"
+			href="assets/icons/favicon-32x32.png"
+		/>
+		<link
+			rel="icon"
+			type="image/png"
+			sizes="16x16"
+			href="assets/icons/favicon-16x16.png"
+		/>
+		<link rel="manifest" href="site.webmanifest" />
+		<link
+			rel="mask-icon"
+			href="assets/icons/safari-pinned-tab.svg"
+			color="#27ae60"
+		/>
+		<link rel="preconnect" href="https://www.google-analytics.com" />
 
-	<link rel="preconnect" href="https://www.google-analytics.com">
-	<script>
-		if (!window.location.host.endsWith('8202') && !window.location.host.startsWith('dev.logigator.com')) {
-			window.ga=window.ga||function(){(ga.q=ga.q||[]).push(arguments)};ga.l=+new Date;
-			ga('create', 'UA-151071040-2', 'auto');
-			ga('send', 'pageview', '##ga-page-placeholder##');
-		}
-	</script>
-	<script async src='https://www.google-analytics.com/analytics.js'></script>
-</head>
-<body>
-	<template id="compatibility-warning"></template>
-	<app-root></app-root>
-</body>
+		<meta name="apple-mobile-web-app-title" content="Logigator: Editor" />
+		<meta name="application-name" content="Logigator: Editor" />
+		<meta name="msapplication-TileColor" content="#2b5797" />
+		<meta name="theme-color" content="#27ae60" />
+		<meta
+			name="Description"
+			content="Build and simulate your own logic circuits with Logigator, a simple yet powerful web-based online tool."
+		/>
+		<meta
+			name="keywords"
+			content="logic circuit, simulator, logic, cad, computer aided design, digital, designer, build, simulate, logic circuit simulator, digital circuit simulator, online"
+		/>
+		<meta name="viewport" content="width=1000" />
+
+		<style>
+			#compatibility-warning {
+				width: 100%;
+				height: 100%;
+				background-color: rgba(0, 0, 0, 0.9);
+				position: fixed;
+				z-index: 10000;
+			}
+
+			.compatibility-warning-text {
+				color: white;
+				text-align: center;
+				font-size: 1.5em;
+			}
+
+			#compatibility-warning-img {
+				width: 50px;
+				height: 50px;
+				margin: 15px;
+			}
+		</style>
+
+		<script async src="https://www.google-analytics.com/analytics.js"></script>
+		<script>
+			if (
+				!window.location.host.endsWith('8202') &&
+				!window.location.host.startsWith('dev.logigator.com')
+			) {
+				window.ga =
+					window.ga ||
+					function () {
+						(ga.q = ga.q || []).push(arguments);
+					};
+				ga.l = +new Date();
+				ga('create', 'UA-151071040-2', 'auto');
+				ga('send', 'pageview', '/editor/web');
+			}
+		</script>
+		<script>
+			document.addEventListener('DOMContentLoaded', function () {
+				document.getElementById('compatibility-warning').style.display =
+					'block';
+				if (!window) return;
+
+				var el = document.createElement('div');
+
+				if (
+					window.Worker &&
+					typeof WebAssembly === 'object' &&
+					typeof WebAssembly.instantiate === 'function' &&
+					typeof el.style.grid === 'string' &&
+					(window.WebGLRenderingContext || window.WebGL2RenderingContext)
+				) {
+					document.getElementById('compatibility-warning').style.display =
+						'none';
+				}
+
+				if (
+					/Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(
+						navigator.userAgent
+					)
+				) {
+					document.getElementById('compatibility-warning').style.display =
+						'block';
+					document.getElementById('compatibility-warning-text1').innerText =
+						'Unfortunately, mobile support is not yet implemented.';
+					document.getElementById('compatibility-warning-text2').innerText =
+						'Try using a desktop for the best experience.';
+				}
+			});
+		</script>
+	</head>
+	<body>
+		<div id="compatibility-warning" style="display: none">
+			<a
+				id="compatibility-warning-close"
+				href="#"
+				onclick="document.getElementById('compatibility-warning').style.display = 'none'; return false"
+			>
+				<img
+					id="compatibility-warning-img"
+					alt="close"
+					src="assets/icons/dark/close.svg"
+				/>
+			</a>
+			<h2 id="compatibility-warning-text1" class="compatibility-warning-text">
+				Unfortunately, it seems like your browser doesn't fully support this
+				site.
+			</h2>
+			<h2 id="compatibility-warning-text2" class="compatibility-warning-text">
+				If you experience any issues, please try using a different browser.
+			</h2>
+		</div>
+
+		<app-root></app-root>
+	</body>
 </html>

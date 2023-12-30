@@ -8,5 +8,5 @@ export const enum EditorAction {
 	ZOOM_IN = 6,
 	ZOOM_OUT = 7,
 	ZOOM_100 = 8,
-	FULLSCREEN = 9,
+	FULLSCREEN = 9
 }

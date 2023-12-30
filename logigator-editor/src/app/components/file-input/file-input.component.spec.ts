@@ -1,4 +1,4 @@
-import {ComponentFixture, TestBed, waitForAsync} from '@angular/core/testing';
+import { ComponentFixture, TestBed, waitForAsync } from '@angular/core/testing';
 
 import { FileInputComponent } from './file-input.component';
 
@@ -8,9 +8,8 @@ describe('FileInputComponent', () => {
 
 	beforeEach(waitForAsync(() => {
 		TestBed.configureTestingModule({
-			declarations: [ FileInputComponent ]
-		})
-			.compileComponents();
+			declarations: [FileInputComponent]
+		}).compileComponents();
 	}));
 
 	beforeEach(() => {

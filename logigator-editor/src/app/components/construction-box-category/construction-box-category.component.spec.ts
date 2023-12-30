@@ -1,4 +1,4 @@
-import {ComponentFixture, TestBed, waitForAsync} from '@angular/core/testing';
+import { ComponentFixture, TestBed, waitForAsync } from '@angular/core/testing';
 
 import { ConstructionBoxCategoryComponent } from './construction-box-category.component';
 
@@ -8,9 +8,8 @@ describe('ConstructionBoxCategoryComponent', () => {
 
 	beforeEach(waitForAsync(() => {
 		TestBed.configureTestingModule({
-			declarations: [ ConstructionBoxCategoryComponent ]
-		})
-		.compileComponents();
+			declarations: [ConstructionBoxCategoryComponent]
+		}).compileComponents();
 	}));
 
 	beforeEach(() => {

@@ -1,11 +1,11 @@
-import {Component} from '@angular/core';
-import {ProjectsService} from '../../services/projects/projects.service';
-import {UserService} from '../../services/user/user.service';
-import {Observable} from 'rxjs';
-import {User} from '../../models/http/response/user';
-import {WorkMode} from '../../models/work-modes';
-import {WorkModeService} from '../../services/work-mode/work-mode.service';
-import {environment} from '../../../environments/environment';
+import { Component } from '@angular/core';
+import { ProjectsService } from '../../services/projects/projects.service';
+import { UserService } from '../../services/user/user.service';
+import { Observable } from 'rxjs';
+import { User } from '../../models/http/response/user';
+import { WorkMode } from '../../models/work-modes';
+import { WorkModeService } from '../../services/work-mode/work-mode.service';
+import { environment } from '../../../environments/environment';
 
 @Component({
 	selector: 'app-top-bar',
@@ -13,12 +13,7 @@ import {environment} from '../../../environments/environment';
 	styleUrls: ['./top-bar.component.scss']
 })
 export class TopBarComponent {
-
-	public editDropdownOpen = false;
-	public fileDropdownOpen = false;
-	public viewDropdownOpen = false;
-	public helpDropdownOpen = false;
-	public settingsDropdownOpen = false;
+	public dropdownOpen: 'edit' | 'file' | 'view' | 'help' | 'settings' = null;
 
 	public homeUrl = environment.homeUrl;
 
@@ -26,7 +21,7 @@ export class TopBarComponent {
 		private projectService: ProjectsService,
 		private userService: UserService,
 		private workMode: WorkModeService
-	) { }
+	) {}
 
 	public get isSimulationMode(): boolean {
 		return this.workMode.currentWorkMode === WorkMode.SIMULATION;
@@ -49,24 +44,31 @@ export class TopBarComponent {
 		return this.projectService.mainProject.name;
 	}
 
-	public dropdownHover(comp: keyof TopBarComponent) {
-		if (this.editDropdownOpen || this.fileDropdownOpen || this.viewDropdownOpen || this.helpDropdownOpen) {
-			this.closeDropdowns();
-			// @ts-ignore
-			this[comp] = true;
-		}
+	public openDropdown(
+		dropdown: 'edit' | 'file' | 'view' | 'help' | 'settings'
+	) {
+		this.dropdownOpen = dropdown;
 	}
 
 	public closeDropdowns() {
-		this.editDropdownOpen = false;
-		this.fileDropdownOpen = false;
-		this.viewDropdownOpen = false;
-		this.helpDropdownOpen = false;
-		this.settingsDropdownOpen = false;
+		this.dropdownOpen = null;
 	}
 
-	public get dropdownOpen(): boolean {
-		return this.editDropdownOpen || this.fileDropdownOpen || this.viewDropdownOpen || this.helpDropdownOpen || this.settingsDropdownOpen;
+	public switchDropdownIfActive(
+		dropdown: 'edit' | 'file' | 'view' | 'help' | 'settings'
+	) {
+		if (this.dropdownOpen) {
+			this.openDropdown(dropdown);
+		}
 	}
 
+	public toggleDropdown(
+		dropdown: 'edit' | 'file' | 'view' | 'help' | 'settings'
+	) {
+		if (this.dropdownOpen === dropdown) {
+			this.closeDropdowns();
+		} else {
+			this.openDropdown(dropdown);
+		}
+	}
 }

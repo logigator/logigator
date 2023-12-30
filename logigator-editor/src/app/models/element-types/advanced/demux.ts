@@ -1,6 +1,6 @@
-import {ElementType} from '../element-type';
-import {ElementTypeId} from '../element-type-ids';
-import {ElementRotation} from '../../element';
+import { ElementType } from '../element-type';
+import { ElementTypeId } from '../element-type-ids';
+import { ElementRotation } from '../../element';
 
 export const demux: ElementType = {
 	id: ElementTypeId.DEMUX,
@@ -37,8 +37,8 @@ export const demux: ElementType = {
 	],
 
 	onOptionsChanged(element?) {
-		if (!element)
-			element = this;
+		// eslint-disable-next-line @typescript-eslint/no-this-alias
+		if (!element) element = this;
 
 		element.numInputs = element.options[0] + 1;
 		element.numOutputs = Math.pow(2, element.options[0]);
@@ -46,16 +46,16 @@ export const demux: ElementType = {
 
 	width: () => 3,
 	height(element?) {
-		if (!element)
-			element = this;
+		// eslint-disable-next-line @typescript-eslint/no-this-alias
+		if (!element) element = this;
 
 		const size = Math.max(element.numInputs, element.numOutputs);
 		return size < 2 ? 2 : size;
 	},
 
-	calcLabels(element?)  {
-		if (!element)
-			element = this;
+	calcLabels(element?) {
+		// eslint-disable-next-line @typescript-eslint/no-this-alias
+		if (!element) element = this;
 
 		const labels = [];
 		labels.push('I');

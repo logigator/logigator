@@ -6,7 +6,9 @@ describe('ElementProviderService', () => {
 	beforeEach(() => TestBed.configureTestingModule({}));
 
 	it('should be created', () => {
-		const service: ElementProviderService = TestBed.inject(ElementProviderService);
+		const service: ElementProviderService = TestBed.inject(
+			ElementProviderService
+		);
 		expect(service).toBeTruthy();
 	});
 });

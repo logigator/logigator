@@ -1,4 +1,4 @@
-import {waitForAsync, ComponentFixture, TestBed } from '@angular/core/testing';
+import { waitForAsync, ComponentFixture, TestBed } from '@angular/core/testing';
 
 import { UnsavedChangesComponent } from './unsaved-changes.component';
 
@@ -8,9 +8,8 @@ describe('UnsavedChangesComponent', () => {
 
 	beforeEach(waitForAsync(() => {
 		TestBed.configureTestingModule({
-			declarations: [ UnsavedChangesComponent ]
-		})
-			.compileComponents();
+			declarations: [UnsavedChangesComponent]
+		}).compileComponents();
 	}));
 
 	beforeEach(() => {

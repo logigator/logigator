@@ -1,4 +1,4 @@
-import {ComponentFixture, TestBed, waitForAsync} from '@angular/core/testing';
+import { ComponentFixture, TestBed, waitForAsync } from '@angular/core/testing';
 
 import { SwitchComponent } from './switch.component';
 
@@ -8,9 +8,8 @@ describe('SwitchComponent', () => {
 
 	beforeEach(waitForAsync(() => {
 		TestBed.configureTestingModule({
-			declarations: [ SwitchComponent ]
-		})
-			.compileComponents();
+			declarations: [SwitchComponent]
+		}).compileComponents();
 	}));
 
 	beforeEach(() => {

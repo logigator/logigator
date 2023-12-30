@@ -1,4 +1,4 @@
-import {ComponentFixture, TestBed, waitForAsync} from '@angular/core/testing';
+import { ComponentFixture, TestBed, waitForAsync } from '@angular/core/testing';
 
 import { TextComponent } from './text.component';
 
@@ -8,9 +8,8 @@ describe('TextComponent', () => {
 
 	beforeEach(waitForAsync(() => {
 		TestBed.configureTestingModule({
-			declarations: [ TextComponent ]
-		})
-			.compileComponents();
+			declarations: [TextComponent]
+		}).compileComponents();
 	}));
 
 	beforeEach(() => {

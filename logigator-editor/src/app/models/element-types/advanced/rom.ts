@@ -1,11 +1,11 @@
-import {ElementType} from '../element-type';
-import {ElementTypeId} from '../element-type-ids';
-import {ProjectsService} from '../../../services/projects/projects.service';
-import {getStaticDI} from '../../get-di';
-import {RomEditComponent} from '../../../components/popup-contents/rom-edit/rom-edit.component';
-import {PopupService} from '../../../services/popup/popup.service';
-import {ElementRotation} from '../../element';
-import {RomViewComponent} from '../../../components/element-inspection/rom-view/rom-view.component';
+import { ElementType } from '../element-type';
+import { ElementTypeId } from '../element-type-ids';
+import { ProjectsService } from '../../../services/projects/projects.service';
+import { getStaticDI } from '../../get-di';
+import { RomEditComponent } from '../../../components/popup-contents/rom-edit/rom-edit.component';
+import { PopupService } from '../../../services/popup/popup.service';
+import { ElementRotation } from '../../element';
+import { RomViewComponent } from '../../../components/element-inspection/rom-view/rom-view.component';
 
 export const rom: ElementType = {
 	id: ElementTypeId.ROM,
@@ -37,7 +37,9 @@ export const rom: ElementType = {
 
 	width: () => 3,
 	height(element?) {
-		return element ? Math.max(element.numInputs, element.numOutputs) : Math.max(this.numInputs, this.numOutputs);
+		return element
+			? Math.max(element.numInputs, element.numOutputs)
+			: Math.max(this.numInputs, this.numOutputs);
 	},
 
 	options: [4, 4],
@@ -65,15 +67,21 @@ export const rom: ElementType = {
 
 	edit: async (typeId: number, id: number, projectsSer: ProjectsService) => {
 		const romElem = projectsSer.currProject.currState.getElementById(id);
-		const nData = await getStaticDI(PopupService).showPopup(RomEditComponent, 'POPUP.ROM_EDIT.TITLE', false, romElem);
-		if (nData === undefined || nData === false || nData === romElem.data) return;
+		const nData = await getStaticDI(PopupService).showPopup(
+			RomEditComponent,
+			'POPUP.ROM_EDIT.TITLE',
+			false,
+			romElem
+		);
+		if (nData === undefined || nData === false || nData === romElem.data)
+			return;
 		projectsSer.currProject.setData(id, nData);
 	},
 	canEditType: false,
 
-	calcLabels(element?)  {
-		if (!element)
-			element = this;
+	calcLabels(element?) {
+		// eslint-disable-next-line @typescript-eslint/no-this-alias
+		if (!element) element = this;
 		const labels = [];
 		for (let i = 0; i < element.options[1]; i++) {
 			labels.push('A' + i);

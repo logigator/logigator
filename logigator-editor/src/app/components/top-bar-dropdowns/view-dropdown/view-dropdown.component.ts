@@ -1,5 +1,10 @@
-import {ChangeDetectionStrategy, Component, EventEmitter, OnInit, Output} from '@angular/core';
-import {EditorInteractionService} from '../../../services/editor-interaction/editor-interaction.service';
+import {
+	ChangeDetectionStrategy,
+	Component,
+	EventEmitter,
+	Output
+} from '@angular/core';
+import { EditorInteractionService } from '../../../services/editor-interaction/editor-interaction.service';
 
 @Component({
 	selector: 'app-view-dropdown',
@@ -8,11 +13,10 @@ import {EditorInteractionService} from '../../../services/editor-interaction/edi
 	changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class ViewDropdownComponent {
-
 	@Output()
-	public requestClosed: EventEmitter<any> = new EventEmitter();
+	public requestClosed: EventEmitter<void> = new EventEmitter();
 
-	constructor(private editorInteractionService: EditorInteractionService) { }
+	constructor(private editorInteractionService: EditorInteractionService) {}
 
 	public close() {
 		this.requestClosed.emit();

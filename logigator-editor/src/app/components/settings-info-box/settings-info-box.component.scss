@@ -1,5 +1,5 @@
-@import "themes";
-@import "variables";
+@import 'themes';
+@import 'variables';
 
 .box {
 	position: absolute;
@@ -53,17 +53,17 @@
 			}
 
 			input {
-				 outline: none;
-				 border: none;
-				 padding: 0.25rem;
-				 font-size: 0.9rem;
-				 width: 40%;
-				 @include themify() {
-					 border-bottom: 1px solid themed('text-primary');
-					 color: themed('text-primary');
-					 background-color: themed('background');
-				 }
-			 }
+				outline: none;
+				border: none;
+				padding: 0.25rem;
+				font-size: 0.9rem;
+				width: 40%;
+				@include themify() {
+					border-bottom: 1px solid themed('text-primary');
+					color: themed('text-primary');
+					background-color: themed('background');
+				}
+			}
 
 			select {
 				width: 40%;
@@ -92,6 +92,5 @@
 			float: right;
 			min-width: 40%;
 		}
-
 	}
 }

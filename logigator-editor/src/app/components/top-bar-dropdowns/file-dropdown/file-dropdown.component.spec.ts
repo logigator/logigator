@@ -1,4 +1,4 @@
-import {ComponentFixture, TestBed, waitForAsync} from '@angular/core/testing';
+import { ComponentFixture, TestBed, waitForAsync } from '@angular/core/testing';
 
 import { FileDropdownComponent } from './file-dropdown.component';
 
@@ -8,9 +8,8 @@ describe('FileDropdownComponent', () => {
 
 	beforeEach(waitForAsync(() => {
 		TestBed.configureTestingModule({
-			declarations: [ FileDropdownComponent ]
-		})
-			.compileComponents();
+			declarations: [FileDropdownComponent]
+		}).compileComponents();
 	}));
 
 	beforeEach(() => {

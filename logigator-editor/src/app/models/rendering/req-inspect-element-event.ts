@@ -1,4 +1,4 @@
-import {ComponentInspectable} from './graphics/l-graphics';
+import { ComponentInspectable } from './graphics/l-graphics';
 
 export interface ReqInspectElementEvent {
 	identifier: string;

@@ -1,13 +1,12 @@
 import * as PIXi from 'pixi.js';
-import {LGraphics} from './l-graphics';
-import {getStaticDI} from '../../get-di';
-import {ThemingService} from '../../../services/theming/theming.service';
+import { LGraphics } from './l-graphics';
+import { getStaticDI } from '../../get-di';
+import { ThemingService } from '../../../services/theming/theming.service';
 import * as PIXI from 'pixi.js';
-import {Grid} from '../grid';
-import {Element} from '../../element';
+import { Grid } from '../grid';
+import { Element } from '../../element';
 
 export class ConnectionPoint extends PIXI.Graphics implements LGraphics {
-
 	// to make compiler happy
 	readonly element: Element;
 
@@ -30,7 +29,9 @@ export class ConnectionPoint extends PIXI.Graphics implements LGraphics {
 		const size = scale < 0.5 ? 3 : 5;
 		this.clear();
 		this.beginFill(0xffffff);
-		this.tint = this._isSelected ? this.themingService.getEditorColor('wireSelectColor') : this.themingService.getEditorColor('wire');
+		this.tint = this._isSelected
+			? this.themingService.getEditorColor('wireSelectColor')
+			: this.themingService.getEditorColor('wire');
 		let pixelPos: PIXI.IPoint;
 		if (this._isInChunk) {
 			pixelPos = Grid.getLocalChunkPixelPosForGridPosWire(this._gridPos);
@@ -69,7 +70,6 @@ export class ConnectionPoint extends PIXI.Graphics implements LGraphics {
 		}
 	}
 
-	applySimState(scale: number) {}
-	setSimulationState(state: boolean[]) {}
-
+	applySimState() {}
+	setSimulationState() {}
 }

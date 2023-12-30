@@ -1,5 +1,4 @@
 export class CompileError extends Error {
-
 	public readonly src?: number;
 	public readonly comp?: number;
 

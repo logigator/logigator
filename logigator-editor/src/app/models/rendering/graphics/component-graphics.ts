@@ -1,16 +1,18 @@
-import {environment} from '../../../../environments/environment';
+import { environment } from '../../../../environments/environment';
 import * as PIXI from 'pixi.js';
-import {ComponentUpdatable, LGraphics} from './l-graphics';
-import {getStaticDI} from '../../get-di';
-import {ThemingService} from '../../../services/theming/theming.service';
-import {Element} from '../../element';
-import {ElementProviderService} from '../../../services/element-provider/element-provider.service';
-import {ElementType, isElementType} from '../../element-types/element-type';
-import {Elements} from '../../elements';
-import {FontWidthService} from '../../../services/font-width/font-width.service';
+import { ComponentUpdatable, LGraphics } from './l-graphics';
+import { getStaticDI } from '../../get-di';
+import { ThemingService } from '../../../services/theming/theming.service';
+import { Element } from '../../element';
+import { ElementProviderService } from '../../../services/element-provider/element-provider.service';
+import { ElementType, isElementType } from '../../element-types/element-type';
+import { Elements } from '../../elements';
+import { FontWidthService } from '../../../services/font-width/font-width.service';
 
-export class ComponentGraphics extends PIXI.Graphics implements LGraphics, ComponentUpdatable {
-
+export class ComponentGraphics
+	extends PIXI.Graphics
+	implements LGraphics, ComponentUpdatable
+{
 	readonly element: Element;
 
 	private _scale: number;
@@ -39,7 +41,7 @@ export class ComponentGraphics extends PIXI.Graphics implements LGraphics, Compo
 				numInputs: elementOrType.numInputs,
 				numOutputs: elementOrType.numOutputs,
 				typeId: elementOrType.id
-			} as any as Element;
+			} as Element;
 			this._symbol = elementOrType.symbol;
 			if (elementOrType.calcLabels) this._labels = elementOrType.calcLabels();
 		} else {
@@ -63,16 +65,36 @@ export class ComponentGraphics extends PIXI.Graphics implements LGraphics, Compo
 
 		switch (this.element.rotation) {
 			case 0:
-				this.rotation0(this.element.numInputs, this.element.numOutputs, this._size.y, this._size.x);
+				this.rotation0(
+					this.element.numInputs,
+					this.element.numOutputs,
+					this._size.y,
+					this._size.x
+				);
 				break;
 			case 1:
-				this.rotation1(this.element.numInputs, this.element.numOutputs, this._size.y, this._size.x);
+				this.rotation1(
+					this.element.numInputs,
+					this.element.numOutputs,
+					this._size.y,
+					this._size.x
+				);
 				break;
 			case 2:
-				this.rotation2(this.element.numInputs, this.element.numOutputs, this._size.y, this._size.x);
+				this.rotation2(
+					this.element.numInputs,
+					this.element.numOutputs,
+					this._size.y,
+					this._size.x
+				);
 				break;
 			case 3:
-				this.rotation3(this.element.numInputs, this.element.numOutputs, this._size.y, this._size.x);
+				this.rotation3(
+					this.element.numInputs,
+					this.element.numOutputs,
+					this._size.y,
+					this._size.x
+				);
 				break;
 		}
 
@@ -89,30 +111,52 @@ export class ComponentGraphics extends PIXI.Graphics implements LGraphics, Compo
 	}
 
 	private calcFontSize(): number {
-		const textWidth = getStaticDI(FontWidthService).getTextWidth(this._symbol, '10px Roboto');
-		const adjustedSize = 10 * (environment.gridPixelWidth * 1.4 / textWidth);
-		return adjustedSize < environment.gridPixelWidth * 0.9 ? adjustedSize : environment.gridPixelWidth * 0.9;
+		const textWidth = getStaticDI(FontWidthService).getTextWidth(
+			this._symbol,
+			'10px Roboto'
+		);
+		const adjustedSize = 10 * ((environment.gridPixelWidth * 1.4) / textWidth);
+		return adjustedSize < environment.gridPixelWidth * 0.9
+			? adjustedSize
+			: environment.gridPixelWidth * 0.9;
 	}
 
-	private rotation0(inputs: number, outputs: number, height: number, width: number) {
+	private rotation0(
+		inputs: number,
+		outputs: number,
+		height: number,
+		width: number
+	) {
 		for (let i = 0; i < inputs; i++) {
-			this.moveTo(-(environment.gridPixelWidth / 2), (environment.gridPixelWidth / 2) + environment.gridPixelWidth * i);
-			this.lineTo(0, (environment.gridPixelWidth / 2) + environment.gridPixelWidth * i);
+			this.moveTo(
+				-(environment.gridPixelWidth / 2),
+				environment.gridPixelWidth / 2 + environment.gridPixelWidth * i
+			);
+			this.lineTo(
+				0,
+				environment.gridPixelWidth / 2 + environment.gridPixelWidth * i
+			);
 			if (!this._labels || !this._labels[i]) continue;
 			const label = this.getLabelText(this._labels[i]);
 			label.anchor = new PIXI.Point(0, 0.5);
 			label.x = 1;
-			label.y = (environment.gridPixelWidth / 2) + environment.gridPixelWidth * i;
+			label.y = environment.gridPixelWidth / 2 + environment.gridPixelWidth * i;
 			this.addChild(label);
 		}
 		for (let i = 0; i < outputs; i++) {
-			this.moveTo(width, (environment.gridPixelWidth / 2) + environment.gridPixelWidth * i);
-			this.lineTo(width + environment.gridPixelWidth / 2, (environment.gridPixelWidth / 2) + environment.gridPixelWidth * i);
+			this.moveTo(
+				width,
+				environment.gridPixelWidth / 2 + environment.gridPixelWidth * i
+			);
+			this.lineTo(
+				width + environment.gridPixelWidth / 2,
+				environment.gridPixelWidth / 2 + environment.gridPixelWidth * i
+			);
 			if (!this._labels || !this._labels[inputs + i]) continue;
 			const label = this.getLabelText(this._labels[inputs + i]);
 			label.anchor = new PIXI.Point(1, 0.5);
 			label.x = width - 1;
-			label.y = (environment.gridPixelWidth / 2) + environment.gridPixelWidth * i;
+			label.y = environment.gridPixelWidth / 2 + environment.gridPixelWidth * i;
 			this.addChild(label);
 		}
 
@@ -126,24 +170,43 @@ export class ComponentGraphics extends PIXI.Graphics implements LGraphics, Compo
 		this.lineTo(0, 0);
 	}
 
-	private rotation1(inputs: number, outputs: number, height: number, width: number) {
+	private rotation1(
+		inputs: number,
+		outputs: number,
+		height: number,
+		width: number
+	) {
 		for (let i = 0; i < inputs; i++) {
-			this.moveTo(width - environment.gridPixelWidth / 2 - environment.gridPixelWidth * i, 0);
-			this.lineTo(width - environment.gridPixelWidth / 2 - environment.gridPixelWidth * i, -(environment.gridPixelWidth / 2));
+			this.moveTo(
+				width - environment.gridPixelWidth / 2 - environment.gridPixelWidth * i,
+				0
+			);
+			this.lineTo(
+				width - environment.gridPixelWidth / 2 - environment.gridPixelWidth * i,
+				-(environment.gridPixelWidth / 2)
+			);
 			if (!this._labels || !this._labels[i]) continue;
 			const label = this.getLabelText(this._labels[i]);
 			label.anchor = new PIXI.Point(0.5, 0);
-			label.x = width - environment.gridPixelWidth / 2 - environment.gridPixelWidth * i;
+			label.x =
+				width - environment.gridPixelWidth / 2 - environment.gridPixelWidth * i;
 			label.y = 1;
 			this.addChild(label);
 		}
 		for (let i = 0; i < outputs; i++) {
-			this.moveTo(width - environment.gridPixelWidth / 2 - environment.gridPixelWidth * i, height);
-			this.lineTo(width - environment.gridPixelWidth / 2 - environment.gridPixelWidth * i, height + environment.gridPixelWidth / 2);
+			this.moveTo(
+				width - environment.gridPixelWidth / 2 - environment.gridPixelWidth * i,
+				height
+			);
+			this.lineTo(
+				width - environment.gridPixelWidth / 2 - environment.gridPixelWidth * i,
+				height + environment.gridPixelWidth / 2
+			);
 			if (!this._labels || !this._labels[inputs + i]) continue;
 			const label = this.getLabelText(this._labels[inputs + i]);
 			label.anchor = new PIXI.Point(0.5, 1);
-			label.x = width - environment.gridPixelWidth / 2 - environment.gridPixelWidth * i;
+			label.x =
+				width - environment.gridPixelWidth / 2 - environment.gridPixelWidth * i;
 			label.y = height - 1;
 			this.addChild(label);
 		}
@@ -158,25 +221,48 @@ export class ComponentGraphics extends PIXI.Graphics implements LGraphics, Compo
 		this.lineTo(0, 0);
 	}
 
-	private rotation2(inputs: number, outputs: number, height: number, width: number) {
+	private rotation2(
+		inputs: number,
+		outputs: number,
+		height: number,
+		width: number
+	) {
 		for (let i = 0; i < inputs; i++) {
-			this.moveTo(width, height - (environment.gridPixelWidth / 2) - environment.gridPixelWidth * i);
-			this.lineTo(width + (environment.gridPixelWidth / 2), height - (environment.gridPixelWidth / 2) - environment.gridPixelWidth * i);
+			this.moveTo(
+				width,
+				height - environment.gridPixelWidth / 2 - environment.gridPixelWidth * i
+			);
+			this.lineTo(
+				width + environment.gridPixelWidth / 2,
+				height - environment.gridPixelWidth / 2 - environment.gridPixelWidth * i
+			);
 			if (!this._labels || !this._labels[i]) continue;
 			const label = this.getLabelText(this._labels[i]);
 			label.anchor = new PIXI.Point(1, 0.5);
 			label.x = width - 1;
-			label.y = height - (environment.gridPixelWidth / 2) - environment.gridPixelWidth * i;
+			label.y =
+				height -
+				environment.gridPixelWidth / 2 -
+				environment.gridPixelWidth * i;
 			this.addChild(label);
 		}
 		for (let i = 0; i < outputs; i++) {
-			this.moveTo(0, height - environment.gridPixelWidth / 2 - environment.gridPixelWidth * i);
-			this.lineTo(-environment.gridPixelWidth / 2, height - environment.gridPixelWidth / 2 - environment.gridPixelWidth * i);
+			this.moveTo(
+				0,
+				height - environment.gridPixelWidth / 2 - environment.gridPixelWidth * i
+			);
+			this.lineTo(
+				-environment.gridPixelWidth / 2,
+				height - environment.gridPixelWidth / 2 - environment.gridPixelWidth * i
+			);
 			if (!this._labels || !this._labels[inputs + i]) continue;
 			const label = this.getLabelText(this._labels[inputs + i]);
 			label.anchor = new PIXI.Point(0, 0.5);
 			label.x = 1;
-			label.y = height - (environment.gridPixelWidth / 2) - environment.gridPixelWidth * i;
+			label.y =
+				height -
+				environment.gridPixelWidth / 2 -
+				environment.gridPixelWidth * i;
 			this.addChild(label);
 		}
 
@@ -190,10 +276,21 @@ export class ComponentGraphics extends PIXI.Graphics implements LGraphics, Compo
 		this.lineTo(3, 0);
 	}
 
-	private rotation3(inputs: number, outputs: number, height: number, width: number) {
+	private rotation3(
+		inputs: number,
+		outputs: number,
+		height: number,
+		width: number
+	) {
 		for (let i = 0; i < inputs; i++) {
-			this.moveTo((environment.gridPixelWidth / 2) + environment.gridPixelWidth * i, height);
-			this.lineTo((environment.gridPixelWidth / 2) + environment.gridPixelWidth * i, height + (environment.gridPixelWidth / 2));
+			this.moveTo(
+				environment.gridPixelWidth / 2 + environment.gridPixelWidth * i,
+				height
+			);
+			this.lineTo(
+				environment.gridPixelWidth / 2 + environment.gridPixelWidth * i,
+				height + environment.gridPixelWidth / 2
+			);
 			if (!this._labels || !this._labels[i]) continue;
 			const label = this.getLabelText(this._labels[i]);
 			label.anchor = new PIXI.Point(0.5, 1);
@@ -202,8 +299,14 @@ export class ComponentGraphics extends PIXI.Graphics implements LGraphics, Compo
 			this.addChild(label);
 		}
 		for (let i = 0; i < outputs; i++) {
-			this.moveTo(environment.gridPixelWidth / 2 + environment.gridPixelWidth * i, 0);
-			this.lineTo(environment.gridPixelWidth / 2 + environment.gridPixelWidth * i, -(environment.gridPixelWidth / 2));
+			this.moveTo(
+				environment.gridPixelWidth / 2 + environment.gridPixelWidth * i,
+				0
+			);
+			this.lineTo(
+				environment.gridPixelWidth / 2 + environment.gridPixelWidth * i,
+				-(environment.gridPixelWidth / 2)
+			);
 			if (!this._labels || !this._labels[inputs + i]) continue;
 			const label = this.getLabelText(this._labels[inputs + i]);
 			label.anchor = new PIXI.Point(0.5, 0);
@@ -231,11 +334,14 @@ export class ComponentGraphics extends PIXI.Graphics implements LGraphics, Compo
 	}
 
 	public applySimState(scale: number): boolean {
-		if (this.shouldHaveActiveState.every((v, i) => v === this.simActiveState[i])) return false;
+		if (
+			this.shouldHaveActiveState.every((v, i) => v === this.simActiveState[i])
+		)
+			return false;
 		this.simActiveState = this.shouldHaveActiveState;
 
 		let wireIndex = 0;
-		// @ts-ignore
+		// @ts-expect-error workaround for something that I don't understand anymore
 		for (const data of this.geometry.graphicsData) {
 			if (data.shape instanceof PIXI.Polygon) {
 				if (this.simActiveState[wireIndex]) {
@@ -264,7 +370,7 @@ export class ComponentGraphics extends PIXI.Graphics implements LGraphics, Compo
 
 		let wireIndex = 0;
 
-		// @ts-ignore
+		// @ts-expect-error workaround for something that I don't understand anymore
 		for (const data of this.geometry.graphicsData) {
 			if (data.shape instanceof PIXI.Polygon) {
 				if (this.simActiveState[wireIndex]) {
@@ -300,5 +406,4 @@ export class ComponentGraphics extends PIXI.Graphics implements LGraphics, Compo
 		this._size = Elements.calcPixelElementSize(this.element);
 		this.drawComponent();
 	}
-
 }

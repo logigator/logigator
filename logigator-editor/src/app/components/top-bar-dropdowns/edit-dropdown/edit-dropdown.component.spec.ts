@@ -1,4 +1,4 @@
-import {ComponentFixture, TestBed, waitForAsync} from '@angular/core/testing';
+import { ComponentFixture, TestBed, waitForAsync } from '@angular/core/testing';
 
 import { EditDropdownComponent } from './edit-dropdown.component';
 
@@ -8,9 +8,8 @@ describe('EditDropdownComponent', () => {
 
 	beforeEach(waitForAsync(() => {
 		TestBed.configureTestingModule({
-			declarations: [ EditDropdownComponent ]
-		})
-			.compileComponents();
+			declarations: [EditDropdownComponent]
+		}).compileComponents();
 	}));
 
 	beforeEach(() => {

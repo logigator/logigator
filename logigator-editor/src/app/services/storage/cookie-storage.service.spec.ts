@@ -1,6 +1,5 @@
-import {TestBed} from '@angular/core/testing';
-import {CookieStorageService} from './cookie-storage.service';
-
+import { TestBed } from '@angular/core/testing';
+import { CookieStorageService } from './cookie-storage.service';
 
 describe('CookieStorageService', () => {
 	let service: CookieStorageService;

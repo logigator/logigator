@@ -1,12 +1,12 @@
-import {ElementType} from '../element-type';
-import {ProjectsService} from '../../../services/projects/projects.service';
-import {TextComponent} from '../../../components/popup-contents/text/text.component';
-import {getStaticDI} from '../../get-di';
-import {ElementTypeId} from '../element-type-ids';
-import {PopupService} from '../../../services/popup/popup.service';
-import {ElementRotation} from '../../element';
-import {FontWidthService} from '../../../services/font-width/font-width.service';
-import {environment} from '../../../../environments/environment';
+import { ElementType } from '../element-type';
+import { ProjectsService } from '../../../services/projects/projects.service';
+import { TextComponent } from '../../../components/popup-contents/text/text.component';
+import { getStaticDI } from '../../get-di';
+import { ElementTypeId } from '../element-type-ids';
+import { PopupService } from '../../../services/popup/popup.service';
+import { ElementRotation } from '../../element';
+import { FontWidthService } from '../../../services/font-width/font-width.service';
+import { environment } from '../../../../environments/environment';
 
 export const text: ElementType = {
 	id: ElementTypeId.TEXT,
@@ -33,19 +33,29 @@ export const text: ElementType = {
 	maxInputs: 0,
 
 	width(element) {
-		if (!element)
-			return 0;
+		if (!element) return 0;
 		let longest = 0;
 		for (const line of (element.data as TextData).split('\n')) {
 			const length = Math.ceil(
-				getStaticDI(FontWidthService).getTextWidth(line, `${environment.gridPixelWidth * element.options[0] / 8}px Roboto`) / 1.2 / environment.gridPixelWidth
+				getStaticDI(FontWidthService).getTextWidth(
+					line,
+					`${(environment.gridPixelWidth * element.options[0]) / 8}px Roboto`
+				) /
+					1.2 /
+					environment.gridPixelWidth
 			);
 			longest = Math.max(longest, length);
 		}
 		return longest;
 	},
 	height(element) {
-		return element ? Math.ceil(((element.data as TextData).split('\n').length * element.options[0] / 8) - element.options[0] / 16) : 0;
+		return element
+			? Math.ceil(
+					((element.data as TextData).split('\n').length * element.options[0]) /
+						8 -
+						element.options[0] / 16
+				)
+			: 0;
 	},
 
 	options: [8],
@@ -57,13 +67,20 @@ export const text: ElementType = {
 			max: 64
 		}
 	],
-	onOptionsChanged(element?) { // to recalculate size
+	onOptionsChanged() {
+		// to recalculate size
 		return;
 	},
 
 	edit: async (typeId: number, id: number, projectsSer: ProjectsService) => {
-		const oText = projectsSer.currProject.currState.getElementById(id).data as TextData;
-		const nText = await getStaticDI(PopupService).showPopup(TextComponent, 'POPUP.TEXT.TITLE', false, oText);
+		const oText = projectsSer.currProject.currState.getElementById(id)
+			.data as TextData;
+		const nText = await getStaticDI(PopupService).showPopup(
+			TextComponent,
+			'POPUP.TEXT.TITLE',
+			false,
+			oText
+		);
 		if (nText === oText || nText === undefined) return;
 		projectsSer.currProject.setData(id, nText);
 	},

@@ -1,9 +1,14 @@
-import {ChangeDetectionStrategy, Component, EventEmitter, Optional, Output} from '@angular/core';
-import {UserService} from '../../../services/user/user.service';
-import {ProjectsService} from '../../../services/projects/projects.service';
-import {EditorInteractionService} from '../../../services/editor-interaction/editor-interaction.service';
-import {PopupService} from '../../../services/popup/popup.service';
-import {ImageExportComponent} from '../../popup-contents/image-export/image-export.component';
+import {
+	ChangeDetectionStrategy,
+	Component,
+	EventEmitter,
+	Output
+} from '@angular/core';
+import { UserService } from '../../../services/user/user.service';
+import { ProjectsService } from '../../../services/projects/projects.service';
+import { EditorInteractionService } from '../../../services/editor-interaction/editor-interaction.service';
+import { PopupService } from '../../../services/popup/popup.service';
+import { ImageExportComponent } from '../../popup-contents/image-export/image-export.component';
 
 @Component({
 	selector: 'app-file-dropdown',
@@ -12,16 +17,15 @@ import {ImageExportComponent} from '../../popup-contents/image-export/image-expo
 	changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class FileDropdownComponent {
-
 	@Output()
-	public requestClosed: EventEmitter<any> = new EventEmitter();
+	public requestClosed: EventEmitter<unknown> = new EventEmitter();
 
 	constructor(
 		private editorInteractionService: EditorInteractionService,
 		private user: UserService,
 		private projects: ProjectsService,
 		private popupService: PopupService
-	) { }
+	) {}
 
 	public close() {
 		this.requestClosed.emit();
@@ -36,7 +40,9 @@ export class FileDropdownComponent {
 	}
 
 	public get canShare(): boolean {
-		return this.projects.mainProject.source === 'server' && this.user.isLoggedIn;
+		return (
+			this.projects.mainProject.source === 'server' && this.user.isLoggedIn
+		);
 	}
 
 	public newProject() {
@@ -75,7 +81,11 @@ export class FileDropdownComponent {
 	}
 
 	public async screenshot() {
-		this.popupService.showPopup(ImageExportComponent, 'POPUP.IMAGE_EXPORT.TITLE', false);
+		this.popupService.showPopup(
+			ImageExportComponent,
+			'POPUP.IMAGE_EXPORT.TITLE',
+			false
+		);
 		this.close();
 	}
 }

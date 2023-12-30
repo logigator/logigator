@@ -1,6 +1,6 @@
-import {ElementType} from '../element-type';
-import {ElementTypeId} from '../element-type-ids';
-import {ElementRotation} from '../../element';
+import { ElementType } from '../element-type';
+import { ElementTypeId } from '../element-type-ids';
+import { ElementRotation } from '../../element';
 
 export const clock: ElementType = {
 	id: ElementTypeId.CLOCK,
@@ -38,7 +38,7 @@ export const clock: ElementType = {
 		}
 	],
 
-	calcLabels: element => {
+	calcLabels: () => {
 		return ['STP', 'CLK'];
 	}
 };
