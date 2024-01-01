@@ -1,3 +1,4 @@
+// @ts-strict-ignore
 import { Inject, Injectable, PLATFORM_ID } from '@angular/core';
 import { DOCUMENT, isPlatformBrowser } from '@angular/common';
 

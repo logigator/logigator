@@ -1,3 +1,4 @@
+// @ts-strict-ignore
 import * as PIXI from 'pixi.js';
 import { fromEvent, Subject } from 'rxjs';
 import { takeUntil } from 'rxjs/operators';

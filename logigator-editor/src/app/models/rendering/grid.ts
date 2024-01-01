@@ -1,3 +1,4 @@
+// @ts-strict-ignore
 import * as PIXI from 'pixi.js';
 import { environment } from '../../../environments/environment';
 import Point = PIXI.Point;

@@ -1,3 +1,4 @@
+// @ts-strict-ignore
 import { Project } from '../../src/app/models/project';
 import * as PIXI from 'pixi.js';
 import { ProjectState } from '../../src/app/models/project-state';

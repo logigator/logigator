@@ -1,3 +1,4 @@
+// @ts-strict-ignore
 import { ChangeDetectionStrategy, Component, OnInit } from '@angular/core';
 import {
 	UntypedFormBuilder,

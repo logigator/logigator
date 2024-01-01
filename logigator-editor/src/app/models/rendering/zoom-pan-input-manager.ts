@@ -1,3 +1,4 @@
+// @ts-strict-ignore
 import { fromEvent, Observable, Subject } from 'rxjs';
 import { filter, takeUntil } from 'rxjs/operators';
 import { getStaticDI } from '../get-di';

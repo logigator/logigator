@@ -1,3 +1,4 @@
+// @ts-strict-ignore
 import { Injectable, NgZone } from '@angular/core';
 import { Observable, Subject, timer } from 'rxjs';
 import { PowerChangesOutWire } from '../../../models/simulation/power-changes';

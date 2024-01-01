@@ -1,3 +1,4 @@
+// @ts-strict-ignore
 import { Inject, Injectable } from '@angular/core';
 import { DOCUMENT } from '@angular/common';
 import { EditorColorKey, EditorColors, Theme } from '../../models/theming';

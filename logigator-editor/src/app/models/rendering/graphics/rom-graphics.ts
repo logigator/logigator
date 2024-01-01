@@ -1,3 +1,4 @@
+// @ts-strict-ignore
 import { ComponentInspectable } from './l-graphics';
 import { ComponentGraphics } from './component-graphics';
 

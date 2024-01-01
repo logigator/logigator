@@ -1,3 +1,4 @@
+// @ts-strict-ignore
 import { environment } from '../../../../environments/environment';
 import * as PIXI from 'pixi.js';
 import { ComponentUpdatable, LGraphics } from './l-graphics';

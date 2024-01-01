@@ -1,3 +1,4 @@
+// @ts-strict-ignore
 export class BiDirectionalMap<K, V> {
 	private readonly map = new Map<K, V>();
 	private readonly reverse = new Map<V, K>();

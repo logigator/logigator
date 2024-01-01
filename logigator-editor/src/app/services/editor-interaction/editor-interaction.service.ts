@@ -1,3 +1,4 @@
+// @ts-strict-ignore
 import { Injectable, NgZone } from '@angular/core';
 import { Observable, Subject } from 'rxjs';
 import { ProjectsService } from '../projects/projects.service';

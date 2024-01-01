@@ -1,3 +1,4 @@
+// @ts-strict-ignore
 import { Component, ViewChild, ViewContainerRef } from '@angular/core';
 import { ProjectsService } from '../../services/projects/projects.service';
 import { Test } from '../../../../tests/auto-tests/tests';

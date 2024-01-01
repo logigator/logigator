@@ -1,3 +1,4 @@
+// @ts-strict-ignore
 import { Injectable, NgZone } from '@angular/core';
 import { ShortcutConfig } from '../../models/shortcut-config';
 import { defaultShortcuts } from '../../models/default-shortcuts';

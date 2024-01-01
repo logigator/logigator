@@ -1,3 +1,4 @@
+// @ts-strict-ignore
 import { Injectable } from '@angular/core';
 import { Project } from '../../models/project';
 import * as PIXI from 'pixi.js';

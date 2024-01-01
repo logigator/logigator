@@ -1,3 +1,4 @@
+// @ts-strict-ignore
 import { Injectable, NgZone } from '@angular/core';
 import { Project } from '../../models/project';
 import { ProjectsService } from '../projects/projects.service';

@@ -1,3 +1,4 @@
+// @ts-strict-ignore
 import { getStaticDI } from './app/models/get-di';
 import { ShortcutsService } from './app/services/shortcuts/shortcuts.service';
 import { environment } from './environments/environment';

@@ -1,3 +1,4 @@
+// @ts-strict-ignore
 import { Component } from '@angular/core';
 import { ProjectsService } from '../../services/projects/projects.service';
 import { UserService } from '../../services/user/user.service';

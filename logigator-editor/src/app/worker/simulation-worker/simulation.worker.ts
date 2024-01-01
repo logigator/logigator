@@ -1,3 +1,4 @@
+// @ts-strict-ignore
 /// <reference lib="webworker" />
 
 import { SimulationModule } from '../../models/simulation/simulation-module';

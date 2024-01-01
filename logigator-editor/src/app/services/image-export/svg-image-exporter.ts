@@ -1,3 +1,4 @@
+// @ts-strict-ignore
 import { Project } from '../../models/project';
 import { Element } from '../../models/element';
 import * as PIXI from 'pixi.js';

@@ -1,3 +1,4 @@
+// @ts-strict-ignore
 import { ElementType } from '../element-type';
 import { ElementTypeId } from '../element-type-ids';
 import { ProjectsService } from '../../../services/projects/projects.service';

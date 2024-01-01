@@ -1,3 +1,4 @@
+// @ts-strict-ignore
 import { fromEvent, Observable, Subject } from 'rxjs';
 import { takeUntil } from 'rxjs/operators';
 import { NgZone, Renderer2 } from '@angular/core';

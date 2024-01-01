@@ -1,3 +1,4 @@
+// @ts-strict-ignore
 import { Injectable } from '@angular/core';
 import { StorageServiceModel } from './storage.service';
 

@@ -1,3 +1,4 @@
+// @ts-strict-ignore
 import * as PIXI from 'pixi.js';
 import { EditorView } from './editor-view';
 import { Subject } from 'rxjs';

@@ -1,3 +1,4 @@
+// @ts-strict-ignore
 import { Directive, Input } from '@angular/core';
 import { ComponentInspectable } from '../../models/rendering/graphics/l-graphics';
 

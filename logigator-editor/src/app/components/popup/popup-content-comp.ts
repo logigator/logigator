@@ -1,3 +1,4 @@
+// @ts-strict-ignore
 import { EventEmitter, Input, Output, Directive } from '@angular/core';
 
 @Directive()

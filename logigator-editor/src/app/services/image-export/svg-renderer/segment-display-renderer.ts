@@ -1,3 +1,4 @@
+// @ts-strict-ignore
 import { BaseRenderer } from './base-renderer';
 import { RenderQuality } from '../svg-image-exporter';
 import { ElementRotation } from '../../../models/element';

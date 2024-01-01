@@ -1,3 +1,4 @@
+// @ts-strict-ignore
 import { Element } from '../../../models/element';
 import { RenderQuality } from '../svg-image-exporter';
 import { ElementType } from '../../../models/element-types/element-type';

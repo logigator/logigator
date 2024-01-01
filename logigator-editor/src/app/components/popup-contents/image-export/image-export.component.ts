@@ -1,3 +1,4 @@
+// @ts-strict-ignore
 import { Component, OnInit, ViewChild, ViewContainerRef } from '@angular/core';
 import { PopupContentComp } from '../../popup/popup-content-comp';
 import {

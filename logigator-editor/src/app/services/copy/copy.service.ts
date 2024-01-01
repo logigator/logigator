@@ -1,3 +1,4 @@
+// @ts-strict-ignore
 import { Injectable } from '@angular/core';
 import { Element } from '../../models/element';
 import { Elements } from '../../models/elements';

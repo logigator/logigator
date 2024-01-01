@@ -1,3 +1,4 @@
+// @ts-strict-ignore
 import { Element } from './element';
 import * as PIXI from 'pixi.js';
 import { environment } from '../../environments/environment';

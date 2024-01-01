@@ -1,3 +1,4 @@
+// @ts-strict-ignore
 import { Injectable } from '@angular/core';
 import { SvgImageExporter, Theme } from './svg-image-exporter';
 import * as PIXI from 'pixi.js';

@@ -1,3 +1,4 @@
+// @ts-strict-ignore
 import { ProjectInfo } from './project-info';
 import { ComponentInfo } from './component-info';
 import { ElementRotation } from '../../element';

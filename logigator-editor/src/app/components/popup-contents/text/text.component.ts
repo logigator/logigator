@@ -1,3 +1,4 @@
+// @ts-strict-ignore
 import { ChangeDetectionStrategy, Component, OnInit } from '@angular/core';
 import { UntypedFormControl, Validators } from '@angular/forms';
 import { PopupContentComp } from '../../popup/popup-content-comp';

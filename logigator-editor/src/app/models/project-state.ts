@@ -1,3 +1,4 @@
+// @ts-strict-ignore
 import { Chunk } from './chunk';
 import { Element } from './element';
 import { Elements } from './elements';

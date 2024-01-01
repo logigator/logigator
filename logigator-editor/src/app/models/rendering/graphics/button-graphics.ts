@@ -1,3 +1,4 @@
+// @ts-strict-ignore
 import * as PIXI from 'pixi.js';
 import { ComponentResetable, LGraphics } from './l-graphics';
 import { Element } from '../../element';

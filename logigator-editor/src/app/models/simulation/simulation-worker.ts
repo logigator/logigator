@@ -1,3 +1,4 @@
+// @ts-strict-ignore
 import { Board, BoardStatus, InputEvent } from './board';
 import { SimulationModule, TypedArray } from './simulation-module';
 import { Pointer } from './wasm-interface';

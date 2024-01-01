@@ -1,3 +1,4 @@
+// @ts-strict-ignore
 import { InjectionToken } from '@angular/core';
 
 export const StorageService = new InjectionToken<StorageServiceModel>(

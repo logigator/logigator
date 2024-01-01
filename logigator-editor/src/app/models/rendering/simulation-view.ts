@@ -1,3 +1,4 @@
+// @ts-strict-ignore
 import { View } from './view';
 import { Project } from '../project';
 import { Element } from '../element';

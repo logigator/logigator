@@ -1,3 +1,4 @@
+// @ts-strict-ignore
 import * as PIXi from 'pixi.js';
 import { LGraphics } from './l-graphics';
 import { getStaticDI } from '../../get-di';

@@ -1,3 +1,4 @@
+// @ts-strict-ignore
 import * as PIXI from 'pixi.js';
 import { ZoomPan } from './zoom-pan';
 import { RendererChunkData } from './renderer-chunk-data';

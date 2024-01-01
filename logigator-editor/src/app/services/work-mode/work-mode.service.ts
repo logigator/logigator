@@ -1,3 +1,4 @@
+// @ts-strict-ignore
 import { Injectable, ViewContainerRef } from '@angular/core';
 import { WorkMode } from '../../models/work-modes';
 import { BehaviorSubject, Observable, Subject } from 'rxjs';

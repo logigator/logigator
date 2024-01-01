@@ -1,3 +1,4 @@
+// @ts-strict-ignore
 export abstract class ArrayHelper {
 	public static pushInMapArray<K, V>(
 		map: Map<K, Array<V>>,

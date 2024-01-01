@@ -1,3 +1,4 @@
+// @ts-strict-ignore
 import { ElementType } from '../element-type';
 import { ElementTypeId } from '../element-type-ids';
 import { ElementRotation } from '../../element';

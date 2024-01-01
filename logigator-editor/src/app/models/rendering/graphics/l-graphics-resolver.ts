@@ -1,3 +1,4 @@
+// @ts-strict-ignore
 import { LGraphics } from './l-graphics';
 import { Element } from '../../element';
 import { ElementProviderService } from '../../../services/element-provider/element-provider.service';

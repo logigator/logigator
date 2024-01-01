@@ -1,3 +1,4 @@
+// @ts-strict-ignore
 import { Element } from '../../../models/element';
 import { Observable } from 'rxjs';
 import { PowerChangesOutWire } from '../../../models/simulation/power-changes';

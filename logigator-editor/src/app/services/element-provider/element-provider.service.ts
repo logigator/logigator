@@ -1,3 +1,4 @@
+// @ts-strict-ignore
 import { Injectable } from '@angular/core';
 import { wire } from '../../models/element-types/basic/wire';
 import { not } from '../../models/element-types/basic/not';

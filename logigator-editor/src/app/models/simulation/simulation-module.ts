@@ -1,3 +1,4 @@
+// @ts-strict-ignore
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
 import { Pointer } from './wasm-interface';

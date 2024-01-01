@@ -1,3 +1,4 @@
+// @ts-strict-ignore
 import * as PIXI from 'pixi.js';
 import { getStaticDI } from './get-di';
 import { ElementProviderService } from '../services/element-provider/element-provider.service';

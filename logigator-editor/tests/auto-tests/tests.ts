@@ -1,3 +1,4 @@
+// @ts-strict-ignore
 import { Project } from '../../src/app/models/project';
 import { BoardRecorder, ManuallyLogged } from './board-recorder';
 

@@ -1,3 +1,4 @@
+// @ts-strict-ignore
 import { ProjectState } from '../project-state';
 import {
 	ElementToUnit,

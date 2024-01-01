@@ -1,3 +1,4 @@
+// @ts-strict-ignore
 import { ElementType } from './element-type';
 import { ProjectsService } from '../../services/projects/projects.service';
 import { ElementRotation } from '../element';

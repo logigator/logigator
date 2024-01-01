@@ -1,3 +1,4 @@
+// @ts-strict-ignore
 import { ComponentFixture, TestBed, waitForAsync } from '@angular/core/testing';
 
 import { PopupComponent } from './popup.component';
