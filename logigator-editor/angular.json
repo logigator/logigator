@@ -101,17 +101,20 @@
 						"polyfills": ["zone.js", "zone.js/testing"],
 						"tsConfig": "tsconfig.spec.json",
 						"inlineStyleLanguage": "scss",
+						"webWorkerTsConfig": "tsconfig.worker.json",
 						"assets": [
 							"src/favicon.ico",
 							"src/assets",
 							"src/site.webmanifest",
+							"src/robots.txt",
 							"src/browserconfig.xml"
 						],
 						"styles": ["src/styles.scss"],
 						"stylePreprocessorOptions": {
 							"includePaths": ["", "src/styles"]
 						},
-						"scripts": []
+						"scripts": [],
+						"karmaConfig": "karma.conf.js"
 					}
 				},
 				"lint": {

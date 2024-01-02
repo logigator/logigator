@@ -8,8 +8,8 @@ services:
       - ./docker/development/ca.crt:/usr/local/apache2/conf/server.crt
       - ./docker/development/private.key:/usr/local/apache2/conf/server.key
     ports:
-      - "127.0.0.1:80:80"
-      - "127.0.0.1:443:443"
+      - 127.0.0.1:80:80
+      - 127.0.0.1:443:443
 
   backend:
     image: node:20
@@ -19,8 +19,8 @@ services:
       - mysql
       - redis
     volumes:
-      - ./logigator-backend/:/home/node/app
-    working_dir: /home/node/app
+      - ./logigator-backend/:/app
+    working_dir: /app
     command: "sh -c 'corepack enable && yarn && exec yarn start'"
     environment:
       - DEBUG=express:*
@@ -30,9 +30,11 @@ services:
     image: node:20
     networks:
       - net
+    ports:
+      - 9876:9876 # karma
     volumes:
-      - ./logigator-editor/:/home/node/app
-    working_dir: /home/node/app
+      - ./logigator-editor/:/app
+    working_dir: /app
     command: "sh -c 'corepack enable && yarn && exec yarn start'"
 
   mysql:
@@ -40,7 +42,7 @@ services:
     networks:
       - net
     ports:
-      - "127.0.0.1:3306:3306"
+      - 127.0.0.1:3306:3306
     cap_add:
       - SYS_NICE
     command: --default-authentication-plugin=mysql_native_password
@@ -60,7 +62,7 @@ services:
     networks:
       - net
     ports:
-      - "127.0.0.1:5001:5001"
+      - 127.0.0.1:5001:5001
 
 networks:
   net:

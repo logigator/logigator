@@ -34,7 +34,6 @@ export class QuadTree<T extends TreeItem> {
 	private static readonly MAX_LEAF_ELEMENTS = 4;
 	private static readonly MIN_BRANCH_ELEMENTS = 2;
 	private static readonly INITIAL_SIZE = 1024;
-	private static readonly MIN_SIZE = 16;
 
 	private tree: Root<T> = {
 		x: 0,
@@ -66,7 +65,7 @@ export class QuadTree<T extends TreeItem> {
 				entry = this.getChildForPoint(entry as Branch<T>, element.x, element.y);
 			} else {
 				// This is a leaf, so we have to check if we can insert the element here or if we have to split the leaf.
-				if (entry.leafElements.length >= QuadTree.MAX_LEAF_ELEMENTS && entry.size > QuadTree.MIN_SIZE) {
+				if (entry.leafElements.length >= QuadTree.MAX_LEAF_ELEMENTS) {
 					entry = this.getChildForPoint(this.splitLeaf(entry as Leaf<T>), element.x, element.y);
 					continue;
 				}
@@ -206,6 +205,7 @@ export class QuadTree<T extends TreeItem> {
 			}
 		};
 
+		this.minifyBranch(newRoot as Branch<T>);
 		this.tree = newRoot as Root<T>;
 	}
 

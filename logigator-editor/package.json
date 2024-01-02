@@ -16,7 +16,8 @@
 		"wasm-js-cache-bust": "node custom-build-scripts/dist/wasm-js-cache-bust.js",
 		"build-custom-build-scripts": "tsc -p custom-build-scripts/tsconfig-custom-build-scripts.json",
 		"lint": "prettier . --check && ng lint && tsc-strict",
-		"lint:fix": "prettier . --write && ng lint --fix"
+		"lint:fix": "prettier . --write && ng lint --fix",
+		"test": "ng test"
 	},
 	"private": true,
 	"dependencies": {
