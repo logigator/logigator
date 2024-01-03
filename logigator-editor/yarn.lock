@@ -2688,383 +2688,385 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@pixi/accessibility@npm:5.3.12":
-  version: 5.3.12
-  resolution: "@pixi/accessibility@npm:5.3.12"
+"@pixi/accessibility@npm:7.3.3":
+  version: 7.3.3
+  resolution: "@pixi/accessibility@npm:7.3.3"
+  peerDependencies:
+    "@pixi/core": 7.3.3
+    "@pixi/display": 7.3.3
+    "@pixi/events": 7.3.3
+  checksum: c832dde1567cbafb8cf2655b034f53b15d5d6e384b0a38f4a49305f01fc43a5c3eef477c5acf47e5e3729d7a507494b259fb6521e8bc46c1bef20fa42b1a3b4c
+  languageName: node
+  linkType: hard
+
+"@pixi/app@npm:7.3.3":
+  version: 7.3.3
+  resolution: "@pixi/app@npm:7.3.3"
+  peerDependencies:
+    "@pixi/core": 7.3.3
+    "@pixi/display": 7.3.3
+  checksum: 73f042aaed6715b70ff837abc9e288e7473c366e1eda24e68365199107eeb68d08be090356e09415846c82061d936694044b5b5e5cf33e61df015fbddd877037
+  languageName: node
+  linkType: hard
+
+"@pixi/assets@npm:7.3.3":
+  version: 7.3.3
+  resolution: "@pixi/assets@npm:7.3.3"
   dependencies:
-    "@pixi/core": "npm:5.3.12"
-    "@pixi/display": "npm:5.3.12"
-    "@pixi/utils": "npm:5.3.12"
-  checksum: b2bbb7ff8159825c940f9e4215d831f408b5dd324af48568c8dfcad98d1d8d7c69c1840112d437d55c9a38ace5ea5586fd42d5303803d2bf83479ce92570826d
+    "@types/css-font-loading-module": "npm:^0.0.12"
+  peerDependencies:
+    "@pixi/core": 7.3.3
+  checksum: ad0a500ec41fe90f6c3677034852b1ee12d1a5ac41c630af5de9f1497da13461567d29b6dfc3a6c87ba9c548a47956f35c702bff7678c7dcd9be726af973e836
   languageName: node
   linkType: hard
 
-"@pixi/app@npm:5.3.12":
-  version: 5.3.12
-  resolution: "@pixi/app@npm:5.3.12"
+"@pixi/color@npm:7.3.3":
+  version: 7.3.3
+  resolution: "@pixi/color@npm:7.3.3"
   dependencies:
-    "@pixi/core": "npm:5.3.12"
-    "@pixi/display": "npm:5.3.12"
-  checksum: cafcf4c503b09b1094e068f3d31f99a807d37eff0b49a3d0f27560e8bbc31fd826786ee80eeef84f3f62f81661954519ec44d663a9c2a12b315134bce6bef7ed
+    "@pixi/colord": "npm:^2.9.6"
+  checksum: 19bf578abbb09166fe27c2117d0a2a3614074cefeac94f1fff908700798390a3cb6ade77639b8ea8d2499483b0b9f03a16bc916c1568a9ad2ae7674a928a553b
   languageName: node
   linkType: hard
 
-"@pixi/constants@npm:5.3.12":
-  version: 5.3.12
-  resolution: "@pixi/constants@npm:5.3.12"
-  checksum: f76670ae8cde0f6c6435b4038c40064bfc0fe0541907f1e845913ac21e858148f3311da012ce193150b2980c49a424a6c1a0cc4e042221e6052b6add90771d7b
+"@pixi/colord@npm:^2.9.6":
+  version: 2.9.6
+  resolution: "@pixi/colord@npm:2.9.6"
+  checksum: 513636a67140b8bb3292eb4a7a3a5303a394525410fe972ebfe1e5db3749f27f7c0f176e4c84fcb9ab0fa22ee1d8ce2a15b3e32db7021e65ac0561941d2933a3
   languageName: node
   linkType: hard
 
-"@pixi/core@npm:5.3.12":
-  version: 5.3.12
-  resolution: "@pixi/core@npm:5.3.12"
+"@pixi/compressed-textures@npm:7.3.3":
+  version: 7.3.3
+  resolution: "@pixi/compressed-textures@npm:7.3.3"
+  peerDependencies:
+    "@pixi/assets": 7.3.3
+    "@pixi/core": 7.3.3
+  checksum: 36e829894425c5ab270fb7be4ff33482e21ab692d759b50ddbed60631a39d968e029e7ee2fec763968bc0f12348b9e36049317c99b74c2e83a0a149080bb4c33
+  languageName: node
+  linkType: hard
+
+"@pixi/constants@npm:7.3.3":
+  version: 7.3.3
+  resolution: "@pixi/constants@npm:7.3.3"
+  checksum: 7081728a2b9530a9b1fa845ba873b94f2688b98131e1b34ebaeff2c30c3fec4b4a2e4fa6a447c0be9d26e5a1e8fcbe0a3ee92b3fab0e52deedc1577c702c3781
+  languageName: node
+  linkType: hard
+
+"@pixi/core@npm:7.3.3":
+  version: 7.3.3
+  resolution: "@pixi/core@npm:7.3.3"
   dependencies:
-    "@pixi/constants": "npm:5.3.12"
-    "@pixi/math": "npm:5.3.12"
-    "@pixi/runner": "npm:5.3.12"
-    "@pixi/settings": "npm:5.3.12"
-    "@pixi/ticker": "npm:5.3.12"
-    "@pixi/utils": "npm:5.3.12"
-  checksum: d5e41d13c453ff8f4c4247a6cb1772236aa5efbf9c65b0a72f502d7ec7f9250d342d03d9dcc17e34f54899a59ba6cd0efdbadd0404f8eb52a03b16041410da84
+    "@pixi/color": "npm:7.3.3"
+    "@pixi/constants": "npm:7.3.3"
+    "@pixi/extensions": "npm:7.3.3"
+    "@pixi/math": "npm:7.3.3"
+    "@pixi/runner": "npm:7.3.3"
+    "@pixi/settings": "npm:7.3.3"
+    "@pixi/ticker": "npm:7.3.3"
+    "@pixi/utils": "npm:7.3.3"
+    "@types/offscreencanvas": "npm:^2019.6.4"
+  checksum: dee27b490a2b9cfec242674be15baffd585022ebb96ec3218874afe4d27964c2a94886c1c139b2b371ffe4bc4e9e2e3f1a61e27e4af388b24bc2930d1239c5ae
   languageName: node
   linkType: hard
 
-"@pixi/display@npm:5.3.12":
-  version: 5.3.12
-  resolution: "@pixi/display@npm:5.3.12"
+"@pixi/display@npm:7.3.3":
+  version: 7.3.3
+  resolution: "@pixi/display@npm:7.3.3"
+  peerDependencies:
+    "@pixi/core": 7.3.3
+  checksum: d59ffce30f23060d741349ad81805bbe06c61af573d1ae36c8e2437abe9dbb110ca40ccbdbc2fa27e052f595c68616fe6f50b3ffeee2d686032078d6b0604303
+  languageName: node
+  linkType: hard
+
+"@pixi/events@npm:7.3.3":
+  version: 7.3.3
+  resolution: "@pixi/events@npm:7.3.3"
+  peerDependencies:
+    "@pixi/core": 7.3.3
+    "@pixi/display": 7.3.3
+  checksum: e097ac5d9df51523a1bf271c8e661ff3002540e432cbeb90f8abaf68b9fece836618d7b641a2a71d6cd49f7913e3fd656a2230daca1a0f90271ee17168a620bb
+  languageName: node
+  linkType: hard
+
+"@pixi/extensions@npm:7.3.3":
+  version: 7.3.3
+  resolution: "@pixi/extensions@npm:7.3.3"
+  checksum: de2bee81f15e70220ba9a2bbab839ae42e701c9f1e52781f2a03144e4a8dbcf80159e4a5c5d73227a3014b1da79008ead6f6304bb4dd784b9390aa6916de79a1
+  languageName: node
+  linkType: hard
+
+"@pixi/extract@npm:7.3.3":
+  version: 7.3.3
+  resolution: "@pixi/extract@npm:7.3.3"
+  peerDependencies:
+    "@pixi/core": 7.3.3
+  checksum: 252f5865081e0d9f1f4918be1c9f7cba3c0266b55d49b38ed50eeeee22c8d55a113e0840cc89248a02e72c35f72f763a9cc157b3220e6a9f4f02f0ac07f9b77c
+  languageName: node
+  linkType: hard
+
+"@pixi/filter-alpha@npm:7.3.3":
+  version: 7.3.3
+  resolution: "@pixi/filter-alpha@npm:7.3.3"
+  peerDependencies:
+    "@pixi/core": 7.3.3
+  checksum: 3c3f6e347c4269c9d7f4738aef77856327eaf50be2eddd4c9379105c84b7b9fc7db98083b46d7303f58caf7024056f8034c3b5538f229da9acd721a143cacdeb
+  languageName: node
+  linkType: hard
+
+"@pixi/filter-blur@npm:7.3.3":
+  version: 7.3.3
+  resolution: "@pixi/filter-blur@npm:7.3.3"
+  peerDependencies:
+    "@pixi/core": 7.3.3
+  checksum: 3ac7983e7a902b4049500bb9ea1f53e3e6bc0129b38b3a0b8f0f5b1965cd7a7b3de9732be018d25bfd08969025acc51eec0d68bf84b5e34022bce9aabeabd6a5
+  languageName: node
+  linkType: hard
+
+"@pixi/filter-color-matrix@npm:7.3.3":
+  version: 7.3.3
+  resolution: "@pixi/filter-color-matrix@npm:7.3.3"
+  peerDependencies:
+    "@pixi/core": 7.3.3
+  checksum: d2dc320ba55f848b562cf062bd05359eefa62112b17d13a365b954e6ef1aecc2743bbb43f7f3fdcb281b05121fb767f27c8bd216f05bbbad044a05e5a843b063
+  languageName: node
+  linkType: hard
+
+"@pixi/filter-displacement@npm:7.3.3":
+  version: 7.3.3
+  resolution: "@pixi/filter-displacement@npm:7.3.3"
+  peerDependencies:
+    "@pixi/core": 7.3.3
+  checksum: 586e0a0cde63fdf950c4da10f05208f627a4811fb65cd8d145e94742d6d5160a685cfec86dab2ac3864fd70a08b1b1a722363bb1ff68ea56d8d3d3db7fedf8b0
+  languageName: node
+  linkType: hard
+
+"@pixi/filter-fxaa@npm:7.3.3":
+  version: 7.3.3
+  resolution: "@pixi/filter-fxaa@npm:7.3.3"
+  peerDependencies:
+    "@pixi/core": 7.3.3
+  checksum: 1c04ca3f576a62e1beef67f33cd0b8f4248d7072e3f5eabef77ca4ea05b20eeb2803dd48f17b73ef9929be54f662ef5bccfff3e3f665daac3fc95929124f8e61
+  languageName: node
+  linkType: hard
+
+"@pixi/filter-noise@npm:7.3.3":
+  version: 7.3.3
+  resolution: "@pixi/filter-noise@npm:7.3.3"
+  peerDependencies:
+    "@pixi/core": 7.3.3
+  checksum: b917788d060c66403888a88f527627266725dc59501c49dc0df29de62ca70b573d2240f79c877559a648fe68eb471eb0ed74ad92358610f65a3ec8b7cf41cbba
+  languageName: node
+  linkType: hard
+
+"@pixi/graphics@npm:7.3.3":
+  version: 7.3.3
+  resolution: "@pixi/graphics@npm:7.3.3"
+  peerDependencies:
+    "@pixi/core": 7.3.3
+    "@pixi/display": 7.3.3
+    "@pixi/sprite": 7.3.3
+  checksum: 952b6bf0df1a511a21d96cca7dc3febaa946082457347a394d4bb4e8426589c4399a17ef90aacb620c1385605e5c57a3dcee89e2a95c436ede3092459ae4f46a
+  languageName: node
+  linkType: hard
+
+"@pixi/math@npm:7.3.3":
+  version: 7.3.3
+  resolution: "@pixi/math@npm:7.3.3"
+  checksum: 9dd0dc84525de2e5fce642f0cbc6161426c42d21cdf5e146506d00ae6a22d5d2cb7c7baa79e5fd3a0e0f5b74d56845fda7e31b379e5d75a283fd6aa4bf9fe334
+  languageName: node
+  linkType: hard
+
+"@pixi/mesh-extras@npm:7.3.3":
+  version: 7.3.3
+  resolution: "@pixi/mesh-extras@npm:7.3.3"
+  peerDependencies:
+    "@pixi/core": 7.3.3
+    "@pixi/mesh": 7.3.3
+  checksum: c392b990cdfc5e2a64848ff31123a7743dd57a6ca87e298cbc3881e88aa14e44410354593408d1fc00158f197f42465d15570c98e866a344bc725e8ba310bf65
+  languageName: node
+  linkType: hard
+
+"@pixi/mesh@npm:7.3.3":
+  version: 7.3.3
+  resolution: "@pixi/mesh@npm:7.3.3"
+  peerDependencies:
+    "@pixi/core": 7.3.3
+    "@pixi/display": 7.3.3
+  checksum: 902b50ac0ad9a7ad95e77f83b49ea684e0cc160a8bca89f9fe9f5b157ae7375ffb3ccd542d8a79972423cebda0307cbb76eb4cc6c030abfc404ac10b98b4de02
+  languageName: node
+  linkType: hard
+
+"@pixi/mixin-cache-as-bitmap@npm:7.3.3":
+  version: 7.3.3
+  resolution: "@pixi/mixin-cache-as-bitmap@npm:7.3.3"
+  peerDependencies:
+    "@pixi/core": 7.3.3
+    "@pixi/display": 7.3.3
+    "@pixi/sprite": 7.3.3
+  checksum: 87beb527f8fb5d7e8090c339ffe7bdb6e6b7387538c63dabea8def45dbce21293adb7e2c79739a6c4b4ffaef34b0853d37cb5c4c7134a774de79c5be3a52b305
+  languageName: node
+  linkType: hard
+
+"@pixi/mixin-get-child-by-name@npm:7.3.3":
+  version: 7.3.3
+  resolution: "@pixi/mixin-get-child-by-name@npm:7.3.3"
+  peerDependencies:
+    "@pixi/display": 7.3.3
+  checksum: d65127ad0ebb148e76d918a2a6817fd34ca2c801c7ecb46f86ff74172467fe4349809f776f160387231d32736e7ad322f8218f71818755aaf063560cb3bc6331
+  languageName: node
+  linkType: hard
+
+"@pixi/mixin-get-global-position@npm:7.3.3":
+  version: 7.3.3
+  resolution: "@pixi/mixin-get-global-position@npm:7.3.3"
+  peerDependencies:
+    "@pixi/core": 7.3.3
+    "@pixi/display": 7.3.3
+  checksum: ee784ecf3186bddfd942cb4e3bb31639012639753db32bfcab22c996bd0e4845478c61b4b108ae67f294f0345aee72968a84030dcf04291bd44a4113192b899a
+  languageName: node
+  linkType: hard
+
+"@pixi/particle-container@npm:7.3.3":
+  version: 7.3.3
+  resolution: "@pixi/particle-container@npm:7.3.3"
+  peerDependencies:
+    "@pixi/core": 7.3.3
+    "@pixi/display": 7.3.3
+    "@pixi/sprite": 7.3.3
+  checksum: 5d6b93008d561e40664f556c927145bdb858853e7d752c7750a35b17471f80c74c84adf706fc775e87e94d8aebb8759028a65ba47ba3b1883cc5e1888beb081f
+  languageName: node
+  linkType: hard
+
+"@pixi/prepare@npm:7.3.3":
+  version: 7.3.3
+  resolution: "@pixi/prepare@npm:7.3.3"
+  peerDependencies:
+    "@pixi/core": 7.3.3
+    "@pixi/display": 7.3.3
+    "@pixi/graphics": 7.3.3
+    "@pixi/text": 7.3.3
+  checksum: 9413e07c40f5fc0bb827753aacdf0195453eeef0257473f85fb5b3ec102bb52df5430b0e8e2d3a845f843f51d078e8e2e714d5f2aaadaea68e52aa81c0e94a34
+  languageName: node
+  linkType: hard
+
+"@pixi/runner@npm:7.3.3":
+  version: 7.3.3
+  resolution: "@pixi/runner@npm:7.3.3"
+  checksum: 2c38f45a92d4d31493e36a90b12322c574069abc6fc9e1c0183490ec8160d03cbc823d3ea2a89ba4f05b367cc0bee0a99e6288a67c1e16689646838768f87529
+  languageName: node
+  linkType: hard
+
+"@pixi/settings@npm:7.3.3":
+  version: 7.3.3
+  resolution: "@pixi/settings@npm:7.3.3"
   dependencies:
-    "@pixi/math": "npm:5.3.12"
-    "@pixi/settings": "npm:5.3.12"
-    "@pixi/utils": "npm:5.3.12"
-  checksum: fee6c4c414d3e30b3d106d9dbcb5d8aac1a79f394bad8e799770ac34e9d23a45a6991e467550e72828a32d62bee6d519026161b840c61490865f6f8740c3644b
-  languageName: node
-  linkType: hard
-
-"@pixi/extract@npm:5.3.12":
-  version: 5.3.12
-  resolution: "@pixi/extract@npm:5.3.12"
-  dependencies:
-    "@pixi/core": "npm:5.3.12"
-    "@pixi/math": "npm:5.3.12"
-    "@pixi/utils": "npm:5.3.12"
-  checksum: 1678c9b0408f9467ebe90fff985930ac29e3ca4e01ab04c35c8552bd96347d321e82295e407d2efcb5ca2d5375c3b7dc8aae6518528b84dbb6c1a178066363d8
-  languageName: node
-  linkType: hard
-
-"@pixi/filter-alpha@npm:5.3.12":
-  version: 5.3.12
-  resolution: "@pixi/filter-alpha@npm:5.3.12"
-  dependencies:
-    "@pixi/core": "npm:5.3.12"
-  checksum: 4a52ff3a880146d872df30e947e9d4fb63b8ddc71471bfc43e8bc53e70399f6455031cfb36c241427804f93a3daf5232f8a1f7e1c1b779f906ff19b4e219bca0
-  languageName: node
-  linkType: hard
-
-"@pixi/filter-blur@npm:5.3.12":
-  version: 5.3.12
-  resolution: "@pixi/filter-blur@npm:5.3.12"
-  dependencies:
-    "@pixi/core": "npm:5.3.12"
-    "@pixi/settings": "npm:5.3.12"
-  checksum: 784c933a47dcbb33495f820e8a1c65bc2764f85fdba58384b336a87968e933ede8f37f846a0309c0105478b4ec7ba205684549f99835e5c73c20b8af11bff5c1
-  languageName: node
-  linkType: hard
-
-"@pixi/filter-color-matrix@npm:5.3.12":
-  version: 5.3.12
-  resolution: "@pixi/filter-color-matrix@npm:5.3.12"
-  dependencies:
-    "@pixi/core": "npm:5.3.12"
-  checksum: cb41e8afb1244485fc174fed40c4a854dea9e13a563494689af38276218b2ccd4460a741312237af79bda4829512f6e913b99c824388f9a097069d7618a1f232
-  languageName: node
-  linkType: hard
-
-"@pixi/filter-displacement@npm:5.3.12":
-  version: 5.3.12
-  resolution: "@pixi/filter-displacement@npm:5.3.12"
-  dependencies:
-    "@pixi/core": "npm:5.3.12"
-    "@pixi/math": "npm:5.3.12"
-  checksum: f0f6922b90e2c05c34c3699a8f2c1adfbf997a7e2a3b4bad4525f5531dfacf8b38e27b74af5d7187cac435195c1f586e651842ac1fa67788d34fb67cb7c51711
-  languageName: node
-  linkType: hard
-
-"@pixi/filter-fxaa@npm:5.3.12":
-  version: 5.3.12
-  resolution: "@pixi/filter-fxaa@npm:5.3.12"
-  dependencies:
-    "@pixi/core": "npm:5.3.12"
-  checksum: af7dacd40bf953eb6045f37b38d6375e8264d82f95d92837ef9b51db9845d6d67792bd83719e2039cb5a34e083b504d0bfbf2d4434f9b350896213623060f088
-  languageName: node
-  linkType: hard
-
-"@pixi/filter-noise@npm:5.3.12":
-  version: 5.3.12
-  resolution: "@pixi/filter-noise@npm:5.3.12"
-  dependencies:
-    "@pixi/core": "npm:5.3.12"
-  checksum: d49e516eb54060a86dbab02f020068c7ad9d393b5e8b2eb3bd1964d25d5955a6f15b91fcb9cf7b82682759c66eb2a4cef2ca6c3b60b5b1bedd186966f6caab2b
-  languageName: node
-  linkType: hard
-
-"@pixi/graphics@npm:5.3.12":
-  version: 5.3.12
-  resolution: "@pixi/graphics@npm:5.3.12"
-  dependencies:
-    "@pixi/constants": "npm:5.3.12"
-    "@pixi/core": "npm:5.3.12"
-    "@pixi/display": "npm:5.3.12"
-    "@pixi/math": "npm:5.3.12"
-    "@pixi/sprite": "npm:5.3.12"
-    "@pixi/utils": "npm:5.3.12"
-  checksum: a40c8cd5f1d6bc8e19b0daef97b14eb315c8528085c85f9d763b34e91b53725ae0b20e65d2b0040461c6f5ed44a739b1fafb40b523de112d26b4a6146b20deb7
-  languageName: node
-  linkType: hard
-
-"@pixi/interaction@npm:5.3.12":
-  version: 5.3.12
-  resolution: "@pixi/interaction@npm:5.3.12"
-  dependencies:
-    "@pixi/core": "npm:5.3.12"
-    "@pixi/display": "npm:5.3.12"
-    "@pixi/math": "npm:5.3.12"
-    "@pixi/ticker": "npm:5.3.12"
-    "@pixi/utils": "npm:5.3.12"
-  checksum: ffd1ee7bd7aaba149ff56b64bfafafec6fdb4458f34f4abf81469a51b9ff20235a3c54526164548e9fa9b84cbe133221619a902b8ecab169ad98f13d6f7e2994
-  languageName: node
-  linkType: hard
-
-"@pixi/loaders@npm:5.3.12":
-  version: 5.3.12
-  resolution: "@pixi/loaders@npm:5.3.12"
-  dependencies:
-    "@pixi/core": "npm:5.3.12"
-    "@pixi/utils": "npm:5.3.12"
-    resource-loader: "npm:^3.0.1"
-  checksum: f7edabcd3ed5351855e1ec75e73692bc42b20380a05d06b57084443652c7d10237f9549a4f5486d7eef047afc9722486992a32b94c201c653591783365222d2a
-  languageName: node
-  linkType: hard
-
-"@pixi/math@npm:5.3.12":
-  version: 5.3.12
-  resolution: "@pixi/math@npm:5.3.12"
-  checksum: 447d27c91d028311e507aa287bfcc7a05ce10c19887dbe174fa2c918fc6549b06a291d1393f43f487a15a9df18a65b61daec448d412e397f64b7d86d20cad1e0
-  languageName: node
-  linkType: hard
-
-"@pixi/mesh-extras@npm:5.3.12":
-  version: 5.3.12
-  resolution: "@pixi/mesh-extras@npm:5.3.12"
-  dependencies:
-    "@pixi/constants": "npm:5.3.12"
-    "@pixi/core": "npm:5.3.12"
-    "@pixi/math": "npm:5.3.12"
-    "@pixi/mesh": "npm:5.3.12"
-    "@pixi/utils": "npm:5.3.12"
-  checksum: 4b547805c90820088ce5e43ad45963334178e5ded0f609b9a44d8fbd62a93cfbaa8468374958bf86f1ea0411a69b1ef3ad5351c9d0d34026a89a9ec7fca2edd7
-  languageName: node
-  linkType: hard
-
-"@pixi/mesh@npm:5.3.12":
-  version: 5.3.12
-  resolution: "@pixi/mesh@npm:5.3.12"
-  dependencies:
-    "@pixi/constants": "npm:5.3.12"
-    "@pixi/core": "npm:5.3.12"
-    "@pixi/display": "npm:5.3.12"
-    "@pixi/math": "npm:5.3.12"
-    "@pixi/settings": "npm:5.3.12"
-    "@pixi/utils": "npm:5.3.12"
-  checksum: 48c2db5a81f97d614eb2f4efbb6d888872f05db43cf3c79da07b57087596e76bcc05194f606cf5a0d99ededcb7b658eda546bf47d1c5071b3fc8a73f39a5670a
-  languageName: node
-  linkType: hard
-
-"@pixi/mixin-cache-as-bitmap@npm:5.3.12":
-  version: 5.3.12
-  resolution: "@pixi/mixin-cache-as-bitmap@npm:5.3.12"
-  dependencies:
-    "@pixi/core": "npm:5.3.12"
-    "@pixi/display": "npm:5.3.12"
-    "@pixi/math": "npm:5.3.12"
-    "@pixi/settings": "npm:5.3.12"
-    "@pixi/sprite": "npm:5.3.12"
-    "@pixi/utils": "npm:5.3.12"
-  checksum: de52b4590dafddf420a3ac2f9e264f04140fa8e5f090b01439ce15801fbd547a994458472aa772e10cc0d132c012a190460ab85f01aa57d7c33fa285c28e2876
-  languageName: node
-  linkType: hard
-
-"@pixi/mixin-get-child-by-name@npm:5.3.12":
-  version: 5.3.12
-  resolution: "@pixi/mixin-get-child-by-name@npm:5.3.12"
-  dependencies:
-    "@pixi/display": "npm:5.3.12"
-  checksum: 366d4a3016d35ef6a3177a1e22d6ebd9feb9ee4f7c866f5af92fc3504617c0b2d0ce3e5669b7bacdd0d6f2b1f6b441186b7a05704702a211e7449d4e2eb928e7
-  languageName: node
-  linkType: hard
-
-"@pixi/mixin-get-global-position@npm:5.3.12":
-  version: 5.3.12
-  resolution: "@pixi/mixin-get-global-position@npm:5.3.12"
-  dependencies:
-    "@pixi/display": "npm:5.3.12"
-    "@pixi/math": "npm:5.3.12"
-  checksum: a60fc2024dab33c11171915826ad35f4dcf75e007a34179eb4bb26317194a5746baa805101b24fa220952d61167cb7cbc05e844a1a82ad6bd0d7c12090de1d92
-  languageName: node
-  linkType: hard
-
-"@pixi/particles@npm:5.3.12":
-  version: 5.3.12
-  resolution: "@pixi/particles@npm:5.3.12"
-  dependencies:
-    "@pixi/constants": "npm:5.3.12"
-    "@pixi/core": "npm:5.3.12"
-    "@pixi/display": "npm:5.3.12"
-    "@pixi/math": "npm:5.3.12"
-    "@pixi/utils": "npm:5.3.12"
-  checksum: 9a1dd59ba76002b40ec060f352bfd1b2d838c4c66663c9a40d5a9e8b6e14e525c062f9df8ea5ac85b9f72f838f2b4b978c6f5b3e90a98f48284ebc6be073a831
-  languageName: node
-  linkType: hard
-
-"@pixi/polyfill@npm:5.3.12":
-  version: 5.3.12
-  resolution: "@pixi/polyfill@npm:5.3.12"
-  dependencies:
-    es6-promise-polyfill: "npm:^1.2.0"
-    object-assign: "npm:^4.1.1"
-  checksum: 49b6fe5cf2e28b4bb48f0a6f6223b716af7a2821ed24ada309e3cd40fdab0475a264859b42c3ab7ea197585e171dcdccb0df54ea876df73718eb38e4220b5603
-  languageName: node
-  linkType: hard
-
-"@pixi/prepare@npm:5.3.12":
-  version: 5.3.12
-  resolution: "@pixi/prepare@npm:5.3.12"
-  dependencies:
-    "@pixi/core": "npm:5.3.12"
-    "@pixi/display": "npm:5.3.12"
-    "@pixi/graphics": "npm:5.3.12"
-    "@pixi/settings": "npm:5.3.12"
-    "@pixi/text": "npm:5.3.12"
-    "@pixi/ticker": "npm:5.3.12"
-  checksum: c8e6d381febacb273b35b41f057d1d91097bc876b73f42f7b90f2e5f211522972ea7886d8196f256bae954e53effbe5a98cf466edf308eda11a1c4bb1a1d597b
-  languageName: node
-  linkType: hard
-
-"@pixi/runner@npm:5.3.12":
-  version: 5.3.12
-  resolution: "@pixi/runner@npm:5.3.12"
-  checksum: afe7e8f202a7b44262c5515f0b14bae653cd2f41fea364b6e6a5173e28dc76445bcc7c6831f55fadd18acef09e8218d627008f1007ed05a6ffe004307b829645
-  languageName: node
-  linkType: hard
-
-"@pixi/settings@npm:5.3.12":
-  version: 5.3.12
-  resolution: "@pixi/settings@npm:5.3.12"
-  dependencies:
+    "@pixi/constants": "npm:7.3.3"
+    "@types/css-font-loading-module": "npm:^0.0.12"
     ismobilejs: "npm:^1.1.0"
-  checksum: 26bfebf484c2c63f452ac4aa84c1a5313fd53da7e27508b7ce4797022ba0705a197fc9eb11cdd16c5c992f24a44ad3eb0d1ebd40bb6e0ce2d3bd4e079b73a6f1
+  checksum: c248e931cde401053d91d5deb114a45252e2a0e25aa0cf8fec6485163165c7172622b628f489d74521ff592dfaa283a570f4e9600ccdd1396c8444a754f925f7
   languageName: node
   linkType: hard
 
-"@pixi/sprite-animated@npm:5.3.12":
-  version: 5.3.12
-  resolution: "@pixi/sprite-animated@npm:5.3.12"
-  dependencies:
-    "@pixi/core": "npm:5.3.12"
-    "@pixi/sprite": "npm:5.3.12"
-    "@pixi/ticker": "npm:5.3.12"
-  checksum: d71281e476bb28401f4471e1b43f6122e285ad6cdbd343dc216d8f6d786a0c3a8bf864bc5f2e0f346bd0a8dac6e2e4f654c4a576294b5fb5a8e22e223f03b7c6
+"@pixi/sprite-animated@npm:7.3.3":
+  version: 7.3.3
+  resolution: "@pixi/sprite-animated@npm:7.3.3"
+  peerDependencies:
+    "@pixi/core": 7.3.3
+    "@pixi/sprite": 7.3.3
+  checksum: 1cf94e24ca54f22c28dd57ec6b79f58b90c2b57a7c3176e356e046a3b5ce12395aaa91fd9e5fd9dbc52f7e49a4f021f4ddc581050b94da5b0a9da6a72014d9df
   languageName: node
   linkType: hard
 
-"@pixi/sprite-tiling@npm:5.3.12":
-  version: 5.3.12
-  resolution: "@pixi/sprite-tiling@npm:5.3.12"
-  dependencies:
-    "@pixi/constants": "npm:5.3.12"
-    "@pixi/core": "npm:5.3.12"
-    "@pixi/display": "npm:5.3.12"
-    "@pixi/math": "npm:5.3.12"
-    "@pixi/sprite": "npm:5.3.12"
-    "@pixi/utils": "npm:5.3.12"
-  checksum: d617b778be26de5b8bed9d6561cc8d63c210bd2c49faca0ef761ca16765e646788a2027287464f23dca129ef2e276489ced61ff5c6350a05798b225ba52739eb
+"@pixi/sprite-tiling@npm:7.3.3":
+  version: 7.3.3
+  resolution: "@pixi/sprite-tiling@npm:7.3.3"
+  peerDependencies:
+    "@pixi/core": 7.3.3
+    "@pixi/display": 7.3.3
+    "@pixi/sprite": 7.3.3
+  checksum: 1a59a4b061f1c04c964def36af2f3a3c16f0b4e3f2a2d6999752e23cb5a93f37646f75738ef4e6a7735b99ce77e438aea342bf969d5e066106c94b9d428a010b
   languageName: node
   linkType: hard
 
-"@pixi/sprite@npm:5.3.12":
-  version: 5.3.12
-  resolution: "@pixi/sprite@npm:5.3.12"
-  dependencies:
-    "@pixi/constants": "npm:5.3.12"
-    "@pixi/core": "npm:5.3.12"
-    "@pixi/display": "npm:5.3.12"
-    "@pixi/math": "npm:5.3.12"
-    "@pixi/settings": "npm:5.3.12"
-    "@pixi/utils": "npm:5.3.12"
-  checksum: c5ea8ca927ed7e8383dc89e3993d19de0c642583fc297a7313bba2b6713469cbe6730a43bb6119d0bcb9479a2d7ccabb62ccdd4513132709e8d7a70186f46e41
+"@pixi/sprite@npm:7.3.3":
+  version: 7.3.3
+  resolution: "@pixi/sprite@npm:7.3.3"
+  peerDependencies:
+    "@pixi/core": 7.3.3
+    "@pixi/display": 7.3.3
+  checksum: 1816e7fd2b9484b1bf702c17aad90a060b8c6c21c3e0316caab7fb094f54ade7acedeec310a4d356e8a776da476a69ca9c906a9c74dde3f4bf9a2e1e728516ed
   languageName: node
   linkType: hard
 
-"@pixi/spritesheet@npm:5.3.12":
-  version: 5.3.12
-  resolution: "@pixi/spritesheet@npm:5.3.12"
-  dependencies:
-    "@pixi/core": "npm:5.3.12"
-    "@pixi/loaders": "npm:5.3.12"
-    "@pixi/math": "npm:5.3.12"
-    "@pixi/utils": "npm:5.3.12"
-  checksum: 3839a22de74cb9bee9a742c850db88a5ea11af64652dce58426eb68ce84bbb39ed15392f56d836e362131ab59666faf96e1f747fd4b97dbb0d119a0b902caec6
+"@pixi/spritesheet@npm:7.3.3":
+  version: 7.3.3
+  resolution: "@pixi/spritesheet@npm:7.3.3"
+  peerDependencies:
+    "@pixi/assets": 7.3.3
+    "@pixi/core": 7.3.3
+  checksum: 62055b59ebc5c6e519e47e0312e3d48be039cf1a4a81471308a6d2596a6171483542eab8f40e09a60e1bedaddb05cb1ae81b9243df50dc253d8f365de99d3e19
   languageName: node
   linkType: hard
 
-"@pixi/text-bitmap@npm:5.3.12":
-  version: 5.3.12
-  resolution: "@pixi/text-bitmap@npm:5.3.12"
-  dependencies:
-    "@pixi/core": "npm:5.3.12"
-    "@pixi/display": "npm:5.3.12"
-    "@pixi/loaders": "npm:5.3.12"
-    "@pixi/math": "npm:5.3.12"
-    "@pixi/mesh": "npm:5.3.12"
-    "@pixi/settings": "npm:5.3.12"
-    "@pixi/text": "npm:5.3.12"
-    "@pixi/utils": "npm:5.3.12"
-  checksum: d13c12ed071aa5fdd47e0f884da8bbb595f1f64d7b64252f19903c87d05b8dda262a33e0c53da687de4a2f8990698371ad67a00bc53b290cea275af044d9f079
+"@pixi/text-bitmap@npm:7.3.3":
+  version: 7.3.3
+  resolution: "@pixi/text-bitmap@npm:7.3.3"
+  peerDependencies:
+    "@pixi/assets": 7.3.3
+    "@pixi/core": 7.3.3
+    "@pixi/display": 7.3.3
+    "@pixi/mesh": 7.3.3
+    "@pixi/text": 7.3.3
+  checksum: 3af9996d3ade42a549a74bd5de95bbb465aa13d9ce35823715191f813a9a73e3d54fd0ebf9a69f6ddedab11c4d4e9cb21f1fac329ee6bec595a6b59cf8558725
   languageName: node
   linkType: hard
 
-"@pixi/text@npm:5.3.12":
-  version: 5.3.12
-  resolution: "@pixi/text@npm:5.3.12"
-  dependencies:
-    "@pixi/core": "npm:5.3.12"
-    "@pixi/math": "npm:5.3.12"
-    "@pixi/settings": "npm:5.3.12"
-    "@pixi/sprite": "npm:5.3.12"
-    "@pixi/utils": "npm:5.3.12"
-  checksum: 08a1376bff88e2df5e8572260ab92853ff3c13f4448865c39f0d76af112c71217c861f2606309bd485aec0a84eb184e1406709590c0a8832535057498e6fa3a3
+"@pixi/text-html@npm:7.3.3":
+  version: 7.3.3
+  resolution: "@pixi/text-html@npm:7.3.3"
+  peerDependencies:
+    "@pixi/core": 7.3.3
+    "@pixi/display": 7.3.3
+    "@pixi/sprite": 7.3.3
+    "@pixi/text": 7.3.3
+  checksum: e81e1a7ebe0f18514d23541321841082a0b628ac36bbcd582b5a6f26c99c34bc2c8f6dcdbb16c6918b4be4a58d1e0ca6633cd14397a0f059de21a56a9dfba7e5
   languageName: node
   linkType: hard
 
-"@pixi/ticker@npm:5.3.12":
-  version: 5.3.12
-  resolution: "@pixi/ticker@npm:5.3.12"
-  dependencies:
-    "@pixi/settings": "npm:5.3.12"
-  checksum: 07ad18a77739713b4c0cc42f787d370adfebad3a898eddaaf47f5d377fbb9043cb56c0f862c1dc33d294a0460e85f76e32b4262aecb603d0595bd98ef7d646d7
+"@pixi/text@npm:7.3.3":
+  version: 7.3.3
+  resolution: "@pixi/text@npm:7.3.3"
+  peerDependencies:
+    "@pixi/core": 7.3.3
+    "@pixi/sprite": 7.3.3
+  checksum: 4ef27e761ed902a719b00253b7ba299396c993e1d4406e03095a80749b05a2d18052e05a1b8e6b7a45f9fef651dae6ba86d288841edfabc6fe2bf1719c1962fa
   languageName: node
   linkType: hard
 
-"@pixi/utils@npm:5.3.12":
-  version: 5.3.12
-  resolution: "@pixi/utils@npm:5.3.12"
+"@pixi/ticker@npm:7.3.3":
+  version: 7.3.3
+  resolution: "@pixi/ticker@npm:7.3.3"
   dependencies:
-    "@pixi/constants": "npm:5.3.12"
-    "@pixi/settings": "npm:5.3.12"
-    earcut: "npm:^2.1.5"
-    eventemitter3: "npm:^3.1.0"
+    "@pixi/extensions": "npm:7.3.3"
+    "@pixi/settings": "npm:7.3.3"
+    "@pixi/utils": "npm:7.3.3"
+  checksum: 2a2a3954ccd7e91b9dd1c0a4481af3cf15a1a7036f70fca7eb102e6816dac1abd6a18a8a9995ddabfa7a2d0503869a1cb3c221cc513fe5602829facc001ad3a7
+  languageName: node
+  linkType: hard
+
+"@pixi/utils@npm:7.3.3":
+  version: 7.3.3
+  resolution: "@pixi/utils@npm:7.3.3"
+  dependencies:
+    "@pixi/color": "npm:7.3.3"
+    "@pixi/constants": "npm:7.3.3"
+    "@pixi/settings": "npm:7.3.3"
+    "@types/earcut": "npm:^2.1.0"
+    earcut: "npm:^2.2.4"
+    eventemitter3: "npm:^4.0.0"
     url: "npm:^0.11.0"
-  checksum: c020047a3bc28f73c019794af136caedbac7ec5dc61e2b53571ea22f314693f4bb5611754dcc8b34c16150a59dd6a5da9ba1e326a8ef0e276585bd4aa5573aed
+  checksum: 5b86a1830910dbad906288c0c0330cb60940dd8d719abd882da1d7102e7ec9beb313b4e899a03c40a96132e54c016341dcb4be22a56ece58f33c88b085c3627e
   languageName: node
   linkType: hard
 
@@ -3206,6 +3208,13 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@types/css-font-loading-module@npm:^0.0.12":
+  version: 0.0.12
+  resolution: "@types/css-font-loading-module@npm:0.0.12"
+  checksum: b969a8f14f1b6c1f677d4cd7072683766dff3c9cbcb18edd6072f3b10b7c83ed50a5ee3cd050ad6a95bfd1df1ab677339e33a6e34bafc20193014cb6566cc8f3
+  languageName: node
+  linkType: hard
+
 "@types/d3-scale-chromatic@npm:^3.0.0":
   version: 3.0.3
   resolution: "@types/d3-scale-chromatic@npm:3.0.3"
@@ -3235,6 +3244,13 @@ __metadata:
   dependencies:
     "@types/ms": "npm:*"
   checksum: 5dcd465edbb5a7f226e9a5efd1f399c6172407ef5840686b73e3608ce135eeca54ae8037dcd9f16bdb2768ac74925b820a8b9ecc588a58ca09eca6acabe33e2f
+  languageName: node
+  linkType: hard
+
+"@types/earcut@npm:^2.1.0":
+  version: 2.1.4
+  resolution: "@types/earcut@npm:2.1.4"
+  checksum: ab76940f1cc66ac861932f254b8c0344ebdcfed69e356606416d562e17cd112221b08340d52232f73ff1ad08d4dcf9caa5352c73258df4b8a41c9110ba370262
   languageName: node
   linkType: hard
 
@@ -3378,6 +3394,13 @@ __metadata:
   dependencies:
     undici-types: "npm:~5.26.4"
   checksum: be30609aae0bfe492097815f166ccc07f465220cb604647fa4e5ec05a1d16c012a41b82b5f11ecfe2485cbb479d4d20384b95b809ca0bcff6d94d5bbafa645bb
+  languageName: node
+  linkType: hard
+
+"@types/offscreencanvas@npm:^2019.6.4":
+  version: 2019.7.3
+  resolution: "@types/offscreencanvas@npm:2019.7.3"
+  checksum: 6d1dfae721d321cd2b5435f347a0e53b09f33b2f9e9333396480f592823bc323847b8169f7d251d2285cb93dbc1ba2e30741ac5cf4b1c003d660fd4c24526963
   languageName: node
   linkType: hard
 
@@ -5740,7 +5763,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"earcut@npm:^2.1.5":
+"earcut@npm:^2.2.4":
   version: 2.2.4
   resolution: "earcut@npm:2.2.4"
   checksum: 01ca51830edd2787819f904ae580087d37351f6048b4565e7add4b3da8a86b7bc19262ab2aa7fdc64129ab03af2d9cec8cccee4d230c82275f97ef285c79aafb
@@ -5973,13 +5996,6 @@ __metadata:
   version: 1.4.1
   resolution: "es-module-lexer@npm:1.4.1"
   checksum: b7260a138668554d3f0ddcc728cb4b60c2fa463f15545cf155ecbdd5450a1348952d58298a7f48642e900ee579f21d7f5304b6b3c61b3d9fc2d4b2109b5a9dff
-  languageName: node
-  linkType: hard
-
-"es6-promise-polyfill@npm:^1.2.0":
-  version: 1.2.0
-  resolution: "es6-promise-polyfill@npm:1.2.0"
-  checksum: 0c4f1abb7cd72d29d80dc6e33dc77e540ec380ba1460fef77dfe07087259a6593baa95a77d668193e636c32b195cfc0b643c3ccf2e4e6ac11487f256ff5fecb8
   languageName: node
   linkType: hard
 
@@ -6338,13 +6354,6 @@ __metadata:
   version: 1.0.0
   resolution: "eventemitter-asyncresource@npm:1.0.0"
   checksum: 827f6f24dd8bccd762b009c8e15d472821c47c068ca8e7d2892d3164f1ad4ed9f4e06d291c6ffcb8aec51f62396b785fb7f3feea925197c1e2b559764aae6264
-  languageName: node
-  linkType: hard
-
-"eventemitter3@npm:^3.1.0":
-  version: 3.1.2
-  resolution: "eventemitter3@npm:3.1.2"
-  checksum: c67262eccbf85848b7cc6d4abb6c6e34155e15686db2a01c57669fd0d44441a574a19d44d25948b442929e065774cbe5003d8e77eed47674fbf876ac77887793
   languageName: node
   linkType: hard
 
@@ -8376,7 +8385,7 @@ __metadata:
     marked: "npm:^9.0.3"
     ngx-markdown: "npm:^17.1.1"
     ngx-toastr: "npm:^18.0.0"
-    pixi.js: "npm:^5.3.9"
+    pixi.js: "npm:^7.3.3"
     prettier: "npm:^3.1.1"
     rxjs: "npm:^7.8.1"
     tslib: "npm:^2.6.2"
@@ -8873,13 +8882,6 @@ __metadata:
   peerDependencies:
     webpack: ^5.0.0
   checksum: 4862da928f52c18b37daa52d548c9f2a1ac65c900a48b63f7faa3354d8cfcd21618c049696559e73e2e27fc12d46748e6a490e0b885e54276429607d0d08c156
-  languageName: node
-  linkType: hard
-
-"mini-signals@npm:^1.2.0":
-  version: 1.2.0
-  resolution: "mini-signals@npm:1.2.0"
-  checksum: 9bb865b51dda007f2c2a3b74119b73edbf79e940506e7248802b875467c42bea5f293e1ddc9c648044ac366364d7266479207e7e182b507b7f844bb4f8cfdcd0
   languageName: node
   linkType: hard
 
@@ -9496,7 +9498,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"object-assign@npm:^4, object-assign@npm:^4.1.1":
+"object-assign@npm:^4":
   version: 4.1.1
   resolution: "object-assign@npm:4.1.1"
   checksum: 1f4df9945120325d041ccf7b86f31e8bcc14e73d29171e37a7903050e96b81323784ec59f93f102ec635bcf6fa8034ba3ea0a8c7e69fa202b87ae3b6cec5a414
@@ -9768,13 +9770,6 @@ __metadata:
   languageName: node
   linkType: hard
 
-"parse-uri@npm:^1.0.0":
-  version: 1.0.7
-  resolution: "parse-uri@npm:1.0.7"
-  checksum: 6861e4f11675ef8a50532561705ad877b7c6a10f424560bd83d0166fa0a30f476d47e8ec9ec98eab762b221748b2e0912edb69e118e6a46359974f60f52fa385
-  languageName: node
-  linkType: hard
-
 "parse5-html-rewriting-stream@npm:7.0.0":
   version: 7.0.0
   resolution: "parse5-html-rewriting-stream@npm:7.0.0"
@@ -9913,45 +9908,41 @@ __metadata:
   languageName: node
   linkType: hard
 
-"pixi.js@npm:^5.3.9":
-  version: 5.3.12
-  resolution: "pixi.js@npm:5.3.12"
+"pixi.js@npm:^7.3.3":
+  version: 7.3.3
+  resolution: "pixi.js@npm:7.3.3"
   dependencies:
-    "@pixi/accessibility": "npm:5.3.12"
-    "@pixi/app": "npm:5.3.12"
-    "@pixi/constants": "npm:5.3.12"
-    "@pixi/core": "npm:5.3.12"
-    "@pixi/display": "npm:5.3.12"
-    "@pixi/extract": "npm:5.3.12"
-    "@pixi/filter-alpha": "npm:5.3.12"
-    "@pixi/filter-blur": "npm:5.3.12"
-    "@pixi/filter-color-matrix": "npm:5.3.12"
-    "@pixi/filter-displacement": "npm:5.3.12"
-    "@pixi/filter-fxaa": "npm:5.3.12"
-    "@pixi/filter-noise": "npm:5.3.12"
-    "@pixi/graphics": "npm:5.3.12"
-    "@pixi/interaction": "npm:5.3.12"
-    "@pixi/loaders": "npm:5.3.12"
-    "@pixi/math": "npm:5.3.12"
-    "@pixi/mesh": "npm:5.3.12"
-    "@pixi/mesh-extras": "npm:5.3.12"
-    "@pixi/mixin-cache-as-bitmap": "npm:5.3.12"
-    "@pixi/mixin-get-child-by-name": "npm:5.3.12"
-    "@pixi/mixin-get-global-position": "npm:5.3.12"
-    "@pixi/particles": "npm:5.3.12"
-    "@pixi/polyfill": "npm:5.3.12"
-    "@pixi/prepare": "npm:5.3.12"
-    "@pixi/runner": "npm:5.3.12"
-    "@pixi/settings": "npm:5.3.12"
-    "@pixi/sprite": "npm:5.3.12"
-    "@pixi/sprite-animated": "npm:5.3.12"
-    "@pixi/sprite-tiling": "npm:5.3.12"
-    "@pixi/spritesheet": "npm:5.3.12"
-    "@pixi/text": "npm:5.3.12"
-    "@pixi/text-bitmap": "npm:5.3.12"
-    "@pixi/ticker": "npm:5.3.12"
-    "@pixi/utils": "npm:5.3.12"
-  checksum: 2758f1255881be4acf0b856ef642d4725d31fe22e74206183f91d77c8a6fc9d50e78f5f71f4ee0481b2ee1a045839de783cb3f55c5c77f167d2da5b83e4d7889
+    "@pixi/accessibility": "npm:7.3.3"
+    "@pixi/app": "npm:7.3.3"
+    "@pixi/assets": "npm:7.3.3"
+    "@pixi/compressed-textures": "npm:7.3.3"
+    "@pixi/core": "npm:7.3.3"
+    "@pixi/display": "npm:7.3.3"
+    "@pixi/events": "npm:7.3.3"
+    "@pixi/extensions": "npm:7.3.3"
+    "@pixi/extract": "npm:7.3.3"
+    "@pixi/filter-alpha": "npm:7.3.3"
+    "@pixi/filter-blur": "npm:7.3.3"
+    "@pixi/filter-color-matrix": "npm:7.3.3"
+    "@pixi/filter-displacement": "npm:7.3.3"
+    "@pixi/filter-fxaa": "npm:7.3.3"
+    "@pixi/filter-noise": "npm:7.3.3"
+    "@pixi/graphics": "npm:7.3.3"
+    "@pixi/mesh": "npm:7.3.3"
+    "@pixi/mesh-extras": "npm:7.3.3"
+    "@pixi/mixin-cache-as-bitmap": "npm:7.3.3"
+    "@pixi/mixin-get-child-by-name": "npm:7.3.3"
+    "@pixi/mixin-get-global-position": "npm:7.3.3"
+    "@pixi/particle-container": "npm:7.3.3"
+    "@pixi/prepare": "npm:7.3.3"
+    "@pixi/sprite": "npm:7.3.3"
+    "@pixi/sprite-animated": "npm:7.3.3"
+    "@pixi/sprite-tiling": "npm:7.3.3"
+    "@pixi/spritesheet": "npm:7.3.3"
+    "@pixi/text": "npm:7.3.3"
+    "@pixi/text-bitmap": "npm:7.3.3"
+    "@pixi/text-html": "npm:7.3.3"
+  checksum: 56cef6b8113d63ee75b793f5020e2d2f5baa7b990b24a81feff87f9288e9588ad3100b8d3f31344819c9a0966e9bff8179f78ea171e03c83c317b53d5ef70155
   languageName: node
   linkType: hard
 
@@ -10506,16 +10497,6 @@ __metadata:
   bin:
     resolve: bin/resolve
   checksum: 0446f024439cd2e50c6c8fa8ba77eaa8370b4180f401a96abf3d1ebc770ac51c1955e12764cde449fde3fff480a61f84388e3505ecdbab778f4bef5f8212c729
-  languageName: node
-  linkType: hard
-
-"resource-loader@npm:^3.0.1":
-  version: 3.0.1
-  resolution: "resource-loader@npm:3.0.1"
-  dependencies:
-    mini-signals: "npm:^1.2.0"
-    parse-uri: "npm:^1.0.0"
-  checksum: 03bd7411f069b056346b840a043da91730b9858d4726e1e7bfb8d030a98343dda8ae532f4f516dd7ef3aee9f57ead536bad6156e61564f5b3b5d62605af4b272
   languageName: node
   linkType: hard
 
