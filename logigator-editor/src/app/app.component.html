@@ -12,7 +12,7 @@
 		(drop)="onFileDrop($event)"
 	>
 		<app-construction-box *ngIf="!isSimulationMode"></app-construction-box>
-		<!-- <app-work-area-container></app-work-area-container> -->
+		<app-work-area></app-work-area>
 	</div>
 	<app-settings-info-box
 		*ngIf="showSettingsInfoBox"

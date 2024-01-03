@@ -1,13 +1,9 @@
 // @ts-strict-ignore
 /// <reference lib="webworker" />
 
-import { SimulationModule } from '../../models/simulation/simulation-module';
-import {
-	WasmMethod,
-	WasmRequest,
-	WasmResponse
-} from '../../models/simulation/wasm-interface';
-import { SimulationWorker } from '../../models/simulation/simulation-worker';
+import { WasmMethod, WasmRequest, WasmResponse } from '../../models/simulation-worker/wasm-interface';
+import { SimulationModule } from '../../models/simulation-worker/simulation-module';
+import { SimulationWorker } from '../../models/simulation-worker/simulation-worker';
 
 let initialized = false;
 let worker: SimulationWorker;
@@ -44,11 +40,11 @@ addEventListener('message', ({ data }: { data: WasmRequest }) => {
 				error = 'No user inputs received.';
 				break;
 			}
-			worker.triggerInput(
-				data.userInput.index,
-				data.userInput.inputEvent,
-				new Int8Array(data.userInput.state)
-			);
+			// worker.triggerInput(
+			// 	data.userInput.index,
+			// 	data.userInput.inputEvent,
+			// 	new Int8Array(data.userInput.state)
+			// );
 			break;
 		case WasmMethod.init:
 			if (!data.board) {

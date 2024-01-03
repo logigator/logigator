@@ -4,6 +4,7 @@ import { UserService } from '../../services/user/user.service';
 import { Observable } from 'rxjs';
 import { User } from '../../models/http/response/user';
 import { environment } from '../../../environments/environment';
+import { ProjectService } from '../../services/project/project.service';
 
 @Component({
 	selector: 'app-top-bar',
@@ -16,7 +17,8 @@ export class TopBarComponent {
 	public homeUrl = environment.homeUrl;
 
 	constructor(
-		private userService: UserService
+		private userService: UserService,
+		private projectService: ProjectService
 	) {}
 
 	public get isSimulationMode(): boolean {
@@ -37,9 +39,7 @@ export class TopBarComponent {
 	}
 
 	public get mainProjectName(): string {
-		// if (!this.projectService.mainProject) return '';
-		// return this.projectService.mainProject.name;
-		return '';
+		return this.projectService.project.name;
 	}
 
 	public openDropdown(

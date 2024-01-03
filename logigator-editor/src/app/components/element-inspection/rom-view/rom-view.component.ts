@@ -7,7 +7,6 @@ import {
 	OnInit,
 	ViewChild
 } from '@angular/core';
-import { RomData } from '../../../models/element-types/advanced/rom';
 import { ElementInspectionComp } from '../element-inspection-comp';
 
 @Component({

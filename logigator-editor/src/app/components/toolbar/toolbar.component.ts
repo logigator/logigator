@@ -1,11 +1,10 @@
 // @ts-strict-ignore
 import { Component, ViewChild, ViewContainerRef } from '@angular/core';
-import { WorkMode } from '../../models/work-modes';
 import { ShortcutAction } from '../../models/shortcut-action';
-import { SimulationManagementService } from '../../services/simulation/simulation-management/simulation-management.service';
 import { ThemingService } from '../../services/theming/theming.service';
 import { environment } from '../../../environments/environment';
 import { QuadTree } from '../../classes/quad-tree/quad-tree';
+import { BoardStatus } from '../../models/simulation-worker/board';
 
 @Component({
 	selector: 'app-toolbar',
@@ -17,13 +16,10 @@ export class ToolbarComponent {
 	public targetMultiplier = '1';
 	public targetTickRate = 1;
 
-	public threadCount = 1;
-
 	@ViewChild('enterSimulationLoading', { read: ViewContainerRef, static: true })
 	private _enterSimulationLoading: ViewContainerRef;
 
 	constructor(
-		private simulationManagement: SimulationManagementService,
 		private themingService: ThemingService
 	) {}
 
@@ -95,6 +91,7 @@ export class ToolbarComponent {
 		}
 	}
 
+	// eslint-disable-next-line @typescript-eslint/no-unused-vars
 	public getShortcut(action: ShortcutAction): string {
 		// const text = this.shortcutService.getShortcutTextForAction(action);
 		// return text ? ` (${text})` : '';
@@ -189,53 +186,57 @@ export class ToolbarComponent {
 	}
 
 	public continueSim() {
-		this.simulationManagement.continueSim();
+		// this.simulationManagement.continueSim();
 	}
 
 	public pauseSim() {
-		this.simulationManagement.pauseSim();
+		// this.simulationManagement.pauseSim();
 	}
 
 	public stopSim() {
-		this.simulationManagement.stopSim();
+		// this.simulationManagement.stopSim();
 	}
 
 	public singleStepSim() {
-		this.simulationManagement.singleStepSim();
+		// this.simulationManagement.singleStepSim();
 	}
 
 	public toggleTargetMode() {
-		this.simulationManagement.toggleTargetMode();
+		// this.simulationManagement.toggleTargetMode();
 	}
 
 	public toggleSyncMode() {
-		this.simulationManagement.toggleSyncMode();
+		// this.simulationManagement.toggleSyncMode();
 	}
 
-	public setTarget() {
+	public setTarget(): void {
 		const target = this.targetTickRate * Number(this.targetMultiplier);
 		if (target < 0) this.targetTickRate = 0;
-		this.simulationManagement.setTarget(target);
+		// this.simulationManagement.setTarget(target);
 	}
 
-	public setThreadCount() {
-		this.simulationManagement.setThreadCount(this.threadCount);
+	public setThreadCount(): void {
+		// this.simulationManagement.setThreadCount(this.threadCount);
 	}
 
-	public get simulationStatus() {
-		return this.simulationManagement.simulationStatus;
+	public get simulationStatus(): BoardStatus {
+		// return this.simulationManagement.simulationStatus;
+		return null;
 	}
 
-	public get simulationRunning() {
-		return this.simulationManagement.simulationRunning;
+	public get simulationRunning(): boolean {
+		// return this.simulationManagement.simulationRunning;
+		return false;
 	}
 
 	get targetMode(): boolean {
-		return this.simulationManagement.targetMode;
+		// return this.simulationManagement.targetMode;
+		return false;
 	}
 
 	get syncMode(): boolean {
-		return this.simulationManagement.syncMode;
+		// return this.simulationManagement.syncMode;
+		return false;
 	}
 
 	protected readonly environment = environment;

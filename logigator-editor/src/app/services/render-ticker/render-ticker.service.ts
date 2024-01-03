@@ -1,9 +1,5 @@
-import { Inject, Injectable } from '@angular/core';
+import { Injectable } from '@angular/core';
 import * as PIXI from 'pixi.js';
-import {
-	WorkerCommunicationService,
-	WorkerCommunicationServiceModel
-} from '../simulation/worker-communication/worker-communication-service-model';
 
 interface TickerFunction {
 	fn: () => void;
@@ -16,10 +12,7 @@ interface TickerFunction {
 	providedIn: 'root'
 })
 export class RenderTicker {
-	constructor(
-		@Inject(WorkerCommunicationService)
-		private workerCommunicationService: WorkerCommunicationServiceModel
-	) {}
+	constructor() {}
 
 	private _tickerFunctions = new Map<string, TickerFunction>();
 
@@ -122,8 +115,6 @@ export class RenderTicker {
 				resolve();
 			}
 			tf.singleFramePromiseResolveFns = [];
-			if (identifier === '0')
-				this.workerCommunicationService.setFrameTime(this.frameTime);
 		};
 	}
 }

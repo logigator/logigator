@@ -1,7 +1,7 @@
 // @ts-strict-ignore
 import { ProjectInfo } from './project-info';
 import { ComponentInfo } from './component-info';
-import { ElementRotation } from '../../element';
+import { ElementRotation } from '../../element-rotation';
 
 export interface ProjectData extends ProjectInfo {
 	dependencies: ProjectDependency[];

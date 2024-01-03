@@ -6,8 +6,6 @@ import {
 	OnInit,
 	ViewChild
 } from '@angular/core';
-import { Element } from '../../../models/element';
-import { RomData } from '../../../models/element-types/advanced/rom';
 import { PopupContentComp } from '../../popup/popup-content-comp';
 
 @Component({
@@ -40,17 +38,17 @@ export class RomEditComponent
 	ngOnInit() {
 		this.hexInput.nativeElement.value = '';
 
-		if (!this.inputFromOpener.data) return;
-		const raw = atob(this.inputFromOpener.data as RomData);
-		let hex = '';
-		for (let i = 0; i < raw.length; i++) {
-			const _hex = raw.charCodeAt(i).toString(16).toUpperCase();
-			hex += (_hex.length === 2 ? _hex : '0' + _hex) + ' ';
-		}
-		this.rows = Math.ceil(hex.length / 48) || 1;
-		this.calcLeftAddresses(this.rows);
-		this.hexInput.nativeElement.value = hex;
-		this.oldValue = hex;
+		// if (!this.inputFromOpener.data) return;
+		// const raw = atob(this.inputFromOpener.data as RomData);
+		// let hex = '';
+		// for (let i = 0; i < raw.length; i++) {
+		// 	const _hex = raw.charCodeAt(i).toString(16).toUpperCase();
+		// 	hex += (_hex.length === 2 ? _hex : '0' + _hex) + ' ';
+		// }
+		// this.rows = Math.ceil(hex.length / 48) || 1;
+		// this.calcLeftAddresses(this.rows);
+		// this.hexInput.nativeElement.value = hex;
+		// this.oldValue = hex;
 	}
 
 	onInput(event: Event) {
@@ -69,7 +67,7 @@ export class RomEditComponent
 
 		newValue = newValue.replace(/ /g, '');
 
-		const newLength = newValue.length;
+		// const newLength = newValue.length;
 
 		let newValueWithSpaces = '';
 		for (let i = 0; i < newValue.length; i++) {
@@ -80,21 +78,21 @@ export class RomEditComponent
 
 		let oldValueWithSpaces: string;
 
-		if (
-			newLength <=
-			Math.ceil(
-				(this.inputFromOpener.options[0] *
-					2 ** this.inputFromOpener.options[1]) /
-					4
-			)
-		) {
-			oldValueWithSpaces = this.hexInput.nativeElement.value;
-			this.hexInput.nativeElement.value = newValueWithSpaces;
-			this.oldValue = newValueWithSpaces;
-		} else {
-			this.hexInput.nativeElement.value = this.oldValue;
-			return;
-		}
+		// if (
+		// 	newLength <=
+		// 	Math.ceil(
+		// 		(this.inputFromOpener.options[0] *
+		// 			2 ** this.inputFromOpener.options[1]) /
+		// 			4
+		// 	)
+		// ) {
+		// 	oldValueWithSpaces = this.hexInput.nativeElement.value;
+		// 	this.hexInput.nativeElement.value = newValueWithSpaces;
+		// 	this.oldValue = newValueWithSpaces;
+		// } else {
+		// 	this.hexInput.nativeElement.value = this.oldValue;
+		// 	return;
+		// }
 
 		this.rows = Math.ceil(this.hexInput.nativeElement.value.length / 48) || 1;
 		this.calcLeftAddresses(this.rows);

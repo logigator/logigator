@@ -31,14 +31,12 @@ import { AppMissingTranslationHandler } from './models/translation/missing-trans
 import { OutsideNgZoneEventDirective } from './directives/outside-ng-zone-event/outside-ng-zone-event.directive';
 import { UnsavedChangesComponent } from './components/popup-contents/unsaved-changes/unsaved-changes.component';
 import { ShareProjectComponent } from './components/popup-contents/share-project/share-project.component';
-import { setStaticDIInjector } from './models/get-di';
+import { setStaticDIInjector } from './utils/get-di';
 import { ToolbarItemTooltipDirective } from './directives/toolbar-item-tooltip/toolbar-item-tooltip.directive';
 import { ToolbarItemTooltipComponent } from './components/toolbar-item-tooltip/toolbar-item-tooltip.component';
 import { TextComponent } from './components/popup-contents/text/text.component';
 import { StatusBarComponent } from './components/status-bar/status-bar.component';
 import { RomEditComponent } from './components/popup-contents/rom-edit/rom-edit.component';
-import { WorkerCommunicationService } from './services/simulation/worker-communication/worker-communication-service-model';
-import { WorkerCommunicationWasmService } from './services/simulation/worker-communication/worker-communication-wasm.service';
 import { HelpComponent } from './components/popup-contents/help/help.component';
 import { TutorialWindowComponent } from './components/tutorial-window/tutorial-window.component';
 import { SwitchComponent } from './components/switch/switch.component';
@@ -57,6 +55,7 @@ import { AutoFontSizeDirective } from './directives/auto-font-size/auto-font-siz
 import { MarkdownModule } from 'ngx-markdown';
 import { LocalStorageService } from './services/storage/local-storage.service';
 import { ShortcutTextPipe } from './pipes/shortcut-text/shortcut-text.pipe';
+import { WorkAreaComponent } from './components/work-area/work-area.component';
 
 @NgModule({
 	declarations: [
@@ -100,7 +99,8 @@ import { ShortcutTextPipe } from './pipes/shortcut-text/shortcut-text.pipe';
 		EditComponentPlugsComponent,
 		LoadingSymbolComponent,
 		ImageExportComponent,
-		AutoFontSizeDirective
+		AutoFontSizeDirective,
+		WorkAreaComponent
 	],
 	imports: [
 		BrowserModule,
@@ -128,10 +128,6 @@ import { ShortcutTextPipe } from './pipes/shortcut-text/shortcut-text.pipe';
 		})
 	],
 	providers: [
-		{
-			provide: WorkerCommunicationService,
-			useClass: WorkerCommunicationWasmService
-		},
 		{
 			provide: StorageService,
 			useClass: LocalStorageService

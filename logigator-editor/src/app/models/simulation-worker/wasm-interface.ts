@@ -1,5 +1,4 @@
 import { Board, BoardStatus } from './board';
-import { PowerChangeIn } from './power-changes';
 
 export type Pointer = number;
 
@@ -16,7 +15,7 @@ export interface WasmRequest {
 	board?: Board;
 	ticks?: number;
 	time?: number;
-	userInput?: PowerChangeIn;
+	userInput?: never; // TODO
 }
 
 export interface WasmResponse {

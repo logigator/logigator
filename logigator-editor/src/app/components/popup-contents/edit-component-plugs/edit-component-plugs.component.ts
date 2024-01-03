@@ -4,7 +4,6 @@ import {
 	Component,
 	ElementRef,
 	OnDestroy,
-	OnInit,
 	ViewChild
 } from '@angular/core';
 import { PopupContentComp } from '../../popup/popup-content-comp';
@@ -12,10 +11,8 @@ import {
 	FormControl,
 	UntypedFormArray,
 	UntypedFormBuilder,
-	UntypedFormGroup,
-	Validators
+	UntypedFormGroup
 } from '@angular/forms';
-import { Element } from '../../../models/element';
 import { fromEvent, Subject } from 'rxjs';
 import { takeUntil } from 'rxjs/operators';
 import { Project } from '../../../classes/project/project';
@@ -27,7 +24,7 @@ import { Project } from '../../../classes/project/project';
 })
 export class EditComponentPlugsComponent
 	extends PopupContentComp<Project, never>
-	implements OnInit, OnDestroy, AfterViewInit
+	implements OnDestroy, AfterViewInit
 {
 	public inputLabelsForm: UntypedFormGroup;
 	public outputLabelsForm: UntypedFormGroup;
@@ -67,33 +64,6 @@ export class EditComponentPlugsComponent
 		private formBuilder: UntypedFormBuilder,
 	) {
 		super();
-	}
-
-	ngOnInit(): void {
-		// const plugs = this.inputFromOpener.currState.allPlugs();
-		// this._inputPlugs = plugs.slice(0, this.inputFromOpener.numInputs);
-		// this._outputPlugs = plugs.slice(this.inputFromOpener.numInputs);
-
-		this.inputLabelsForm = this.formBuilder.group({
-			labels: this.formBuilder.array(
-				this._inputPlugs.map((p) =>
-					this.formBuilder.control(p.data ?? 'IN', [
-						Validators.maxLength(5),
-						Validators.pattern(/^[^,]*$/)
-					])
-				)
-			)
-		});
-		this.outputLabelsForm = this.formBuilder.group({
-			labels: this.formBuilder.array(
-				this._outputPlugs.map((p) =>
-					this.formBuilder.control(p.data ?? 'OUT', [
-						Validators.maxLength(5),
-						Validators.pattern(/^[^,]*$/)
-					])
-				)
-			)
-		});
 	}
 
 	ngAfterViewInit() {

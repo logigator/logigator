@@ -6,7 +6,6 @@ import {
 	OnChanges,
 	OnDestroy
 } from '@angular/core';
-import { ElementType } from '../../models/element-types/element-type';
 import {
 	FormControl,
 	UntypedFormArray,
@@ -15,8 +14,6 @@ import {
 	UntypedFormGroup
 } from '@angular/forms';
 import { Subscription } from 'rxjs';
-import { ElementTypeId } from '../../models/element-types/element-type-ids';
-import { Element } from '../../models/element';
 
 @Component({
 	selector: 'app-settings-info-box',
@@ -32,7 +29,8 @@ export class SettingsInfoBoxComponent implements OnChanges, OnDestroy {
 	public selectedCompId: number;
 
 	private _element: Element;
-	public elementType: ElementType;
+	// eslint-disable-next-line @typescript-eslint/no-explicit-any
+	public elementType: any = null;
 
 	public propertiesForm: UntypedFormGroup;
 	private formSubscription: Subscription;
@@ -233,66 +231,65 @@ export class SettingsInfoBoxComponent implements OnChanges, OnDestroy {
 		return [];
 	}
 
+	// eslint-disable-next-line @typescript-eslint/no-unused-vars
 	public toUserPlugIndex(index: number): number {
-		if (this.selectedElemTypeId === ElementTypeId.INPUT) {
-			return index + 1;
-		} else if (this.selectedElemTypeId === ElementTypeId.OUTPUT) {
-			// return index - this.projects.currProject.numInputs + 1;
-		}
+		// if (this.selectedElemTypeId === ElementTypeId.INPUT) {
+		// 	return index + 1;
+		// } else if (this.selectedElemTypeId === ElementTypeId.OUTPUT) {
+		// 	// return index - this.projects.currProject.numInputs + 1;
+		// }
 
-		return 0;
+		 return 0;
 	}
 
 	public resetNumInputsValue() {
-		const currVal = this.propertiesForm.controls['numInputs'].value;
-		if (
-			currVal > this.elementType.maxInputs ||
-			currVal < this.elementType.minInputs
-		) {
-			let valToSet: number;
-			if (this.isElementPlaced) {
-				// valToSet = this.projects.currProject.currState.getElementById(
-				// 	this.selectedCompId
-				// ).numInputs;
-			} else {
-				valToSet = this.elementType.numInputs;
-			}
-			this.propertiesForm.controls['numInputs'].setValue(valToSet);
-		}
+		// const currVal = this.propertiesForm.controls['numInputs'].value;
+		// if (
+		// 	currVal > this.elementType.maxInputs ||
+		// 	currVal < this.elementType.minInputs
+		// ) {
+		// 	let valToSet: number;
+		// 	if (this.isElementPlaced) {
+		// 		// valToSet = this.projects.currProject.currState.getElementById(
+		// 		// 	this.selectedCompId
+		// 		// ).numInputs;
+		// 	} else {
+		// 		valToSet = this.elementType.numInputs;
+		// 	}
+		// 	this.propertiesForm.controls['numInputs'].setValue(valToSet);
+		// }
 	}
 
+	// eslint-disable-next-line @typescript-eslint/no-unused-vars
 	public resetOptionsValue(index: number) {
-		const optVal = Number(
-			(this.propertiesForm.get('options') as UntypedFormArray).controls[index]
-				.value
-		);
-		if (
-			optVal > this.elementType.optionsConfig[index].max ||
-			optVal < this.elementType.optionsConfig[index].min
-		) {
-			let valToSet: number;
-			if (this.isElementPlaced) {
-				// valToSet = this.projects.currProject.currState.getElementById(
-				// 	this.selectedCompId
-				// ).options[index];
-			} else {
-				valToSet = this.elementType.options[index];
-			}
-			(this.propertiesForm.get('options') as UntypedFormArray).controls[
-				index
-			].setValue(valToSet);
-		}
+		// const optVal = Number(
+		// 	(this.propertiesForm.get('options') as UntypedFormArray).controls[index]
+		// 		.value
+		// );
+		// if (
+		// 	optVal > this.elementType.optionsConfig[index].max ||
+		// 	optVal < this.elementType.optionsConfig[index].min
+		// ) {
+		// 	let valToSet: number;
+		// 	if (this.isElementPlaced) {
+		// 		// valToSet = this.projects.currProject.currState.getElementById(
+		// 		// 	this.selectedCompId
+		// 		// ).options[index];
+		// 	} else {
+		// 		valToSet = this.elementType.options[index];
+		// 	}
+		// 	(this.propertiesForm.get('options') as UntypedFormArray).controls[
+		// 		index
+		// 	].setValue(valToSet);
+		// }
 	}
 
-	private getOptionsArray(
-		elemType: ElementType,
-		opts: number[]
-	): UntypedFormControl[] {
+	private getOptionsArray(): UntypedFormControl[] {
 		const formArray = [];
-		if (!elemType.optionsConfig) return formArray;
-		elemType.optionsConfig.forEach((oc, index) => {
-			formArray.push(this.formBuilder.control(opts[index]));
-		});
+		// if (!elemType.optionsConfig) return formArray;
+		// elemType.optionsConfig.forEach((oc, index) => {
+		// 	formArray.push(this.formBuilder.control(opts[index]));
+		// });
 		return formArray;
 	}
 
