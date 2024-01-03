@@ -8,7 +8,6 @@ import {
 	ViewChild
 } from '@angular/core';
 import { PopupContentComp } from '../../popup/popup-content-comp';
-import { Project } from '../../../models/project';
 import {
 	FormControl,
 	UntypedFormArray,
@@ -16,10 +15,10 @@ import {
 	UntypedFormGroup,
 	Validators
 } from '@angular/forms';
-import { ProjectsService } from '../../../services/projects/projects.service';
 import { Element } from '../../../models/element';
 import { fromEvent, Subject } from 'rxjs';
 import { takeUntil } from 'rxjs/operators';
+import { Project } from '../../../classes/project/project';
 
 @Component({
 	selector: 'app-edit-component-plugs',
@@ -66,15 +65,14 @@ export class EditComponentPlugsComponent
 
 	constructor(
 		private formBuilder: UntypedFormBuilder,
-		private projectsService: ProjectsService
 	) {
 		super();
 	}
 
 	ngOnInit(): void {
-		const plugs = this.inputFromOpener.currState.allPlugs();
-		this._inputPlugs = plugs.slice(0, this.inputFromOpener.numInputs);
-		this._outputPlugs = plugs.slice(this.inputFromOpener.numInputs);
+		// const plugs = this.inputFromOpener.currState.allPlugs();
+		// this._inputPlugs = plugs.slice(0, this.inputFromOpener.numInputs);
+		// this._outputPlugs = plugs.slice(this.inputFromOpener.numInputs);
 
 		this.inputLabelsForm = this.formBuilder.group({
 			labels: this.formBuilder.array(
@@ -235,27 +233,27 @@ export class EditComponentPlugsComponent
 	}
 
 	public save() {
-		const sorted = [
-			...this._inputStates
-				.map((x, i) => [
-					x,
-					this._inputPlugs[i],
-					this.inputLabelsForm.value.labels[i]
-				])
-				.sort((a, b) => a[0].element.offsetTop - b[0].element.offsetTop),
-			...this._outputStates
-				.map((x, i) => [
-					x,
-					this._outputPlugs[i],
-					this.outputLabelsForm.value.labels[i]
-				])
-				.sort((a, b) => a[0].element.offsetTop - b[0].element.offsetTop)
-		];
-		this.inputFromOpener.setPlugConfiguration(
-			sorted.map((x) => x[1].id),
-			sorted.map((x) => x[2])
-		);
-		this.projectsService.labelsCustomComponentChanged(this.inputFromOpener);
+		// const sorted = [
+		// 	...this._inputStates
+		// 		.map((x, i) => [
+		// 			x,
+		// 			this._inputPlugs[i],
+		// 			this.inputLabelsForm.value.labels[i]
+		// 		])
+		// 		.sort((a, b) => a[0].element.offsetTop - b[0].element.offsetTop),
+		// 	...this._outputStates
+		// 		.map((x, i) => [
+		// 			x,
+		// 			this._outputPlugs[i],
+		// 			this.outputLabelsForm.value.labels[i]
+		// 		])
+		// 		.sort((a, b) => a[0].element.offsetTop - b[0].element.offsetTop)
+		// ];
+		// this.inputFromOpener.setPlugConfiguration(
+		// 	sorted.map((x) => x[1].id),
+		// 	sorted.map((x) => x[2])
+		// );
+		// this.projectsService.labelsCustomComponentChanged(this.inputFromOpener);
 		this.requestClose.emit();
 	}
 

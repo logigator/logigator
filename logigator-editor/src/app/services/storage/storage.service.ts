@@ -1,4 +1,3 @@
-// @ts-strict-ignore
 import { InjectionToken } from '@angular/core';
 
 export const StorageService = new InjectionToken<StorageServiceModel>(
@@ -6,12 +5,11 @@ export const StorageService = new InjectionToken<StorageServiceModel>(
 );
 
 export abstract class StorageServiceModel {
-	// eslint-disable-next-line @typescript-eslint/no-explicit-any
-	public abstract get(key: string): any;
+	public abstract get<T = unknown>(key: string): T | null;
 
-	public abstract set(key: string, data: unknown);
+	public abstract set(key: string, data: unknown): void;
 
-	public abstract remove(key: string);
+	public abstract remove(key: string): void;
 
 	public abstract has(key: string): boolean;
 }

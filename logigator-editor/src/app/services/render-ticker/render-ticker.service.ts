@@ -1,4 +1,3 @@
-// @ts-strict-ignore
 import { Inject, Injectable } from '@angular/core';
 import * as PIXI from 'pixi.js';
 import {
@@ -92,6 +91,8 @@ export class RenderTicker {
 		if (!this._tickerFunctions.has(identifier)) return;
 		if (this._startedAllCont && !force) return;
 		const tf = this._tickerFunctions.get(identifier);
+		if (!tf) return;
+
 		tf.started = false;
 		tf.singleFramePromiseResolveFns = [];
 		PIXI.Ticker.shared.remove(tf.fn, this);
@@ -114,6 +115,8 @@ export class RenderTicker {
 		return () => {
 			originalFn();
 			const tf = this._tickerFunctions.get(identifier);
+			if (!tf) return;
+
 			tf.requestedFrame = false;
 			for (const resolve of tf.singleFramePromiseResolveFns) {
 				resolve();

@@ -4,7 +4,6 @@ import {
 	EventEmitter,
 	Output
 } from '@angular/core';
-import { EditorInteractionService } from '../../../services/editor-interaction/editor-interaction.service';
 
 @Component({
 	selector: 'app-view-dropdown',
@@ -16,29 +15,29 @@ export class ViewDropdownComponent {
 	@Output()
 	public requestClosed: EventEmitter<void> = new EventEmitter();
 
-	constructor(private editorInteractionService: EditorInteractionService) {}
+	constructor() {}
 
 	public close() {
 		this.requestClosed.emit();
 	}
 
 	public zoomIn() {
-		this.editorInteractionService.zoomIn();
+		// this.editorInteractionService.zoomIn();
 		this.close();
 	}
 
 	public zoomOut() {
-		this.editorInteractionService.zoomOut();
+		// this.editorInteractionService.zoomOut();
 		this.close();
 	}
 
 	public zoom100() {
-		this.editorInteractionService.zoom100();
+		// this.editorInteractionService.zoom100();
 		this.close();
 	}
 
 	public fullscreen() {
-		this.editorInteractionService.fullscreen();
+		// this.editorInteractionService.fullscreen();
 		this.close();
 	}
 }

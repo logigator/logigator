@@ -5,8 +5,6 @@ import {
 	Output
 } from '@angular/core';
 import { UserService } from '../../../services/user/user.service';
-import { ProjectsService } from '../../../services/projects/projects.service';
-import { EditorInteractionService } from '../../../services/editor-interaction/editor-interaction.service';
 import { PopupService } from '../../../services/popup/popup.service';
 import { ImageExportComponent } from '../../popup-contents/image-export/image-export.component';
 
@@ -21,9 +19,7 @@ export class FileDropdownComponent {
 	public requestClosed: EventEmitter<unknown> = new EventEmitter();
 
 	constructor(
-		private editorInteractionService: EditorInteractionService,
 		private user: UserService,
-		private projects: ProjectsService,
 		private popupService: PopupService
 	) {}
 
@@ -32,51 +28,52 @@ export class FileDropdownComponent {
 	}
 
 	public get canClone(): boolean {
-		return this.projects.mainProject.source === 'share' && this.user.isLoggedIn;
+		// return this.projects.mainProject.source === 'share' && this.user.isLoggedIn;
+		return false;
 	}
 
 	public get canSave(): boolean {
-		return this.projects.mainProject.source !== 'share';
+		// return this.projects.mainProject.source !== 'share';
+		return false;
 	}
 
 	public get canShare(): boolean {
-		return (
-			this.projects.mainProject.source === 'server' && this.user.isLoggedIn
-		);
+		// return this.projects.mainProject.source === 'server' && this.user.isLoggedIn;
+		return false;
 	}
 
 	public newProject() {
 		this.close();
-		this.editorInteractionService.newProject();
+		// this.editorInteractionService.newProject();
 	}
 
 	public newComponent() {
-		this.editorInteractionService.newComponent();
+		// this.editorInteractionService.newComponent();
 		this.close();
 	}
 
 	public openProject() {
 		this.close();
-		this.editorInteractionService.openProject();
+		// this.editorInteractionService.openProject();
 	}
 
 	public saveProject() {
-		this.editorInteractionService.saveProject();
+		// this.editorInteractionService.saveProject();
 		this.close();
 	}
 
 	public async exportProject() {
-		this.editorInteractionService.exportToFile();
+		// this.editorInteractionService.exportToFile();
 		this.close();
 	}
 
 	public shareProject() {
-		this.editorInteractionService.shareProject();
+		// this.editorInteractionService.shareProject();
 		this.close();
 	}
 
 	public cloneProject() {
-		this.projects.cloneShare();
+		// this.projects.cloneShare();
 		this.close();
 	}
 

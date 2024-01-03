@@ -1,10 +1,6 @@
 // @ts-strict-ignore
 import { ElementType } from '../element-type';
 import { ElementTypeId } from '../element-type-ids';
-import { ProjectsService } from '../../../services/projects/projects.service';
-import { getStaticDI } from '../../get-di';
-import { RomEditComponent } from '../../../components/popup-contents/rom-edit/rom-edit.component';
-import { PopupService } from '../../../services/popup/popup.service';
 import { ElementRotation } from '../../element';
 import { RomViewComponent } from '../../../components/element-inspection/rom-view/rom-view.component';
 
@@ -66,18 +62,18 @@ export const rom: ElementType = {
 		this.numOutputs = this.options[0];
 	},
 
-	edit: async (typeId: number, id: number, projectsSer: ProjectsService) => {
-		const romElem = projectsSer.currProject.currState.getElementById(id);
-		const nData = await getStaticDI(PopupService).showPopup(
-			RomEditComponent,
-			'POPUP.ROM_EDIT.TITLE',
-			false,
-			romElem
-		);
-		if (nData === undefined || nData === false || nData === romElem.data)
-			return;
-		projectsSer.currProject.setData(id, nData);
-	},
+	// edit: async (typeId: number, id: number, projectsSer: ProjectsService) => {
+	// 	const romElem = projectsSer.currProject.currState.getElementById(id);
+	// 	const nData = await getStaticDI(PopupService).showPopup(
+	// 		RomEditComponent,
+	// 		'POPUP.ROM_EDIT.TITLE',
+	// 		false,
+	// 		romElem
+	// 	);
+	// 	if (nData === undefined || nData === false || nData === romElem.data)
+	// 		return;
+	// 	projectsSer.currProject.setData(id, nData);
+	// },
 	canEditType: false,
 
 	calcLabels(element?) {

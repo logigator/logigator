@@ -1,4 +1,3 @@
-// @ts-strict-ignore
 import { Inject, Injectable, PLATFORM_ID } from '@angular/core';
 import { DOCUMENT, isPlatformBrowser } from '@angular/common';
 
@@ -6,7 +5,7 @@ import { DOCUMENT, isPlatformBrowser } from '@angular/common';
 	providedIn: 'root'
 })
 export class FontWidthService {
-	private canvas: HTMLCanvasElement;
+	private readonly canvas: HTMLCanvasElement | null = null;
 
 	constructor(
 		@Inject(PLATFORM_ID) private platformId: string,
@@ -18,12 +17,12 @@ export class FontWidthService {
 	}
 
 	public getTextWidth(text: string, font?: string): number {
-		if (!isPlatformBrowser(this.platformId)) return 1;
+		if (!this.canvas) return 1;
 
 		const context = this.canvas.getContext('2d');
-		context.font = font || window.getComputedStyle(this.document.body).font;
+		if (!context) return 1;
 
-		const metrics = context.measureText(text);
-		return metrics.width;
+		context.font = font || window.getComputedStyle(this.document.body).font;
+		return context.measureText(text).width;
 	}
 }

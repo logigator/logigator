@@ -6,9 +6,7 @@ import {
 	OnChanges,
 	OnDestroy
 } from '@angular/core';
-import { ElementProviderService } from '../../services/element-provider/element-provider.service';
 import { ElementType } from '../../models/element-types/element-type';
-import { ProjectsService } from '../../services/projects/projects.service';
 import {
 	FormControl,
 	UntypedFormArray,
@@ -19,8 +17,6 @@ import {
 import { Subscription } from 'rxjs';
 import { ElementTypeId } from '../../models/element-types/element-type-ids';
 import { Element } from '../../models/element';
-import { ShortcutsService } from '../../services/shortcuts/shortcuts.service';
-import { EditorInteractionService } from '../../services/editor-interaction/editor-interaction.service';
 
 @Component({
 	selector: 'app-settings-info-box',
@@ -42,17 +38,14 @@ export class SettingsInfoBoxComponent implements OnChanges, OnDestroy {
 	private formSubscription: Subscription;
 
 	constructor(
-		private elemProvider: ElementProviderService,
-		private projects: ProjectsService,
-		private formBuilder: UntypedFormBuilder,
-		private editorActions: ShortcutsService,
-		private editorInteractionService: EditorInteractionService
+		private formBuilder: UntypedFormBuilder
 	) {}
 
 	ngOnChanges(): void {
 		if (this.formSubscription) {
 			this.formSubscription.unsubscribe();
 		}
+		/*
 		this._element = this.isElementPlaced
 			? this.projects.currProject.currState.getElementById(this.selectedCompId)
 			: undefined;
@@ -216,19 +209,19 @@ export class SettingsInfoBoxComponent implements OnChanges, OnDestroy {
 					}
 				}
 			}
-		);
+		); */
 	}
 
 	editClick() {
-		this.elementType.edit(
-			this.selectedElemTypeId,
-			this.selectedCompId,
-			this.projects
-		);
+		// this.elementType.edit(
+		// 	this.selectedElemTypeId,
+		// 	this.selectedCompId,
+		// 	this.projects
+		// );
 	}
 
 	customisePlugs() {
-		this.editorInteractionService.editCustomComponentPlugs();
+		// this.editorInteractionService.editCustomComponentPlugs();
 	}
 
 	onLabelChange(event: KeyboardEvent) {
@@ -236,14 +229,15 @@ export class SettingsInfoBoxComponent implements OnChanges, OnDestroy {
 	}
 
 	public get possiblePlugIndexes(): number[] {
-		return this.projects.currProject.possiblePlugIndexes(this.selectedCompId);
+		// return this.projects.currProject.possiblePlugIndexes(this.selectedCompId);
+		return [];
 	}
 
 	public toUserPlugIndex(index: number): number {
 		if (this.selectedElemTypeId === ElementTypeId.INPUT) {
 			return index + 1;
 		} else if (this.selectedElemTypeId === ElementTypeId.OUTPUT) {
-			return index - this.projects.currProject.numInputs + 1;
+			// return index - this.projects.currProject.numInputs + 1;
 		}
 
 		return 0;
@@ -257,9 +251,9 @@ export class SettingsInfoBoxComponent implements OnChanges, OnDestroy {
 		) {
 			let valToSet: number;
 			if (this.isElementPlaced) {
-				valToSet = this.projects.currProject.currState.getElementById(
-					this.selectedCompId
-				).numInputs;
+				// valToSet = this.projects.currProject.currState.getElementById(
+				// 	this.selectedCompId
+				// ).numInputs;
 			} else {
 				valToSet = this.elementType.numInputs;
 			}
@@ -278,9 +272,9 @@ export class SettingsInfoBoxComponent implements OnChanges, OnDestroy {
 		) {
 			let valToSet: number;
 			if (this.isElementPlaced) {
-				valToSet = this.projects.currProject.currState.getElementById(
-					this.selectedCompId
-				).options[index];
+				// valToSet = this.projects.currProject.currState.getElementById(
+				// 	this.selectedCompId
+				// ).options[index];
 			} else {
 				valToSet = this.elementType.options[index];
 			}
@@ -322,11 +316,11 @@ export class SettingsInfoBoxComponent implements OnChanges, OnDestroy {
 	}
 
 	public focusInput() {
-		this.editorActions.disableShortcutListener();
+		// this.editorActions.disableShortcutListener();
 	}
 
 	public blurInput() {
-		this.editorActions.enableShortcutListener();
+		// this.editorActions.enableShortcutListener();
 	}
 
 	public get isElementPlaced(): boolean {
@@ -334,7 +328,7 @@ export class SettingsInfoBoxComponent implements OnChanges, OnDestroy {
 	}
 
 	ngOnDestroy(): void {
-		this.editorActions.enableShortcutListener();
+		// this.editorActions.enableShortcutListener();
 		if (this.formSubscription) {
 			this.formSubscription.unsubscribe();
 		}

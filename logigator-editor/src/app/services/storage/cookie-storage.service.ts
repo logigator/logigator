@@ -1,4 +1,3 @@
-// @ts-strict-ignore
 import { Injectable } from '@angular/core';
 import { StorageServiceModel } from './storage.service';
 
@@ -6,22 +5,24 @@ import { StorageServiceModel } from './storage.service';
 	providedIn: 'root'
 })
 export class CookieStorageService extends StorageServiceModel {
-	public get(key: string): string | unknown {
-		if (!this.has(key)) return undefined;
+	public get<T = unknown>(key: string): T | null {
+		if (!this.has(key)) return null;
 
 		const cookieValue = document.cookie
 			.split('; ')
 			.find((row) => row.startsWith(key))
-			.split('=')[1];
+			?.split('=')[1];
+
+		if (!cookieValue) return null;
 
 		try {
 			const decoded = decodeURIComponent(cookieValue);
 			if (decoded.startsWith('j:')) {
 				return JSON.parse(decoded.substring(2));
 			}
-			return decoded;
+			return decoded as T;
 		} catch {
-			return undefined;
+			return null;
 		}
 	}
 

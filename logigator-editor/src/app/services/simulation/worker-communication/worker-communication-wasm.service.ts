@@ -1,9 +1,6 @@
 // @ts-strict-ignore
 import { Injectable, NgZone } from '@angular/core';
-import { Observable, Subject, timer } from 'rxjs';
-import { PowerChangesOutWire } from '../../../models/simulation/power-changes';
-import { ProjectsService } from '../../projects/projects.service';
-import { StateCompilerService } from '../state-compiler/state-compiler.service';
+import { timer } from 'rxjs';
 import {
 	WasmMethod,
 	WasmRequest,
@@ -18,7 +15,6 @@ import {
 import { takeWhile } from 'rxjs/operators';
 import { ErrorHandlingService } from '../../error-handling/error-handling.service';
 import { CompileError } from '../../../models/simulation/compile-error';
-import { ElementProviderService } from '../../element-provider/element-provider.service';
 import { AverageBuffer } from '../../../models/average-buffer';
 import { ElementTypeId } from '../../../models/element-types/element-type-ids';
 import { EastereggService } from '../../easteregg/easteregg.service';
@@ -29,9 +25,6 @@ import { InvalidPlugsError } from '../../../models/simulation/invalid-plugs-erro
 export class WorkerCommunicationWasmService
 	implements WorkerCommunicationServiceModel
 {
-	private _powerSubjectsWires: Map<string, Subject<PowerChangesOutWire>>;
-	private _powerSubjectsWireEnds: Map<string, Subject<Map<Element, boolean[]>>>;
-	private _ioComponentsResetSubject: Map<string, Subject<void>>;
 	private _worker: Worker;
 
 	private _initialized = false;
@@ -42,8 +35,6 @@ export class WorkerCommunicationWasmService
 	private _targetLastRun = Date.now();
 	private _targetUnprocessedFraction = 0;
 
-	private _dataCache: Uint8Array;
-
 	private _status: BoardStatus = {
 		tick: 0,
 		componentCount: 0,
@@ -53,19 +44,10 @@ export class WorkerCommunicationWasmService
 	};
 
 	constructor(
-		private projectsService: ProjectsService,
-		private stateCompiler: StateCompilerService,
 		private ngZone: NgZone,
 		private errorHandling: ErrorHandlingService,
-		private elementProvider: ElementProviderService,
 		private eastereggs: EastereggService
 	) {
-		this._powerSubjectsWires = new Map<string, Subject<PowerChangesOutWire>>();
-		this._powerSubjectsWireEnds = new Map<
-			string,
-			Subject<Map<Element, boolean[]>>
-		>();
-		this._ioComponentsResetSubject = new Map<string, Subject<void>>();
 		this.initWorker();
 	}
 
@@ -84,43 +66,10 @@ export class WorkerCommunicationWasmService
 
 		const data = event.data as WasmResponse;
 		if (data.success) {
-			const state = new Uint8Array(data.state);
-
-			if (state.length !== this.stateCompiler.highestLinkId + 1) {
-				console.error(data);
-				this.errorHandling.showErrorMessage(
-					`Response data length does not match component count`
-				);
-			}
-			this._dataCache = state;
+			// const state = new Uint8Array(data.state);
 
 			if (data.method === WasmMethod.run || data.method === WasmMethod.reset) {
-				const powerChangesWire = new Map<string, PowerChangesOutWire>();
-				const powerChangesWireEnds = new Map<string, Map<Element, boolean[]>>();
-				for (const identifier of this._powerSubjectsWires.keys()) {
-					powerChangesWire.set(
-						identifier,
-						this.getWireState(identifier, state)
-					);
-					powerChangesWireEnds.set(
-						identifier,
-						this.getWireEndState(identifier, state)
-					);
-				}
-				for (const projId of this._powerSubjectsWires.keys()) {
-					this._powerSubjectsWires
-						.get(projId)
-						.next(powerChangesWire.get(projId));
-					this._powerSubjectsWireEnds
-						.get(projId)
-						.next(powerChangesWireEnds.get(projId));
-				}
-			}
-
-			if (data.method === WasmMethod.reset) {
-				for (const resetSubject of this._ioComponentsResetSubject.values()) {
-					resetSubject.next();
-				}
+				// TODO
 			}
 
 			if (data.method === WasmMethod.run && this._mode === 'continuous') {
@@ -160,53 +109,13 @@ export class WorkerCommunicationWasmService
 		}
 	}
 
-	public getWireState(
-		identifier: string,
-		data?: Uint8Array
-	): Map<Element, boolean> {
-		if (!data) data = this._dataCache;
-		const out = new Map<Element, boolean>();
-		if (!this.stateCompiler.wiresOnLinks.has(identifier)) return out;
-		for (const [link, wires] of this.stateCompiler.wiresOnLinks
-			.get(identifier)
-			.entries()) {
-			for (const wire of wires) {
-				out.set(wire, data[link] as unknown as boolean);
-			}
-		}
-		return out;
-	}
-
-	public getWireEndState(
-		identifier: string,
-		data?: Uint8Array
-	): Map<Element, boolean[]> {
-		if (!data) data = this._dataCache;
-		const out = new Map<Element, boolean[]>();
-		if (!this.stateCompiler.wireEndsOnLinks.has(identifier)) return out;
-		for (const [link, wireEndOnComps] of this.stateCompiler.wireEndsOnLinks
-			.get(identifier)
-			.entries()) {
-			for (const wireEndOnComp of wireEndOnComps) {
-				const elem = wireEndOnComp.component;
-				if (!out.has(elem))
-					out.set(elem, new Array(elem.numInputs + elem.numOutputs));
-				out.get(elem)[wireEndOnComp.wireIndex] = data[
-					link
-				] as unknown as boolean;
-			}
-		}
-		return out;
-	}
-
 	public async init(): Promise<void> {
 		if (!this._initialized) return;
 
-		const project = this.projectsService.mainProject;
+		// const project = this.projectsService.mainProject;
 
 		try {
-			const compiledBoard =
-				await this.stateCompiler.compileAsInt32Array(project);
+			const compiledBoard = null;
 			if (!compiledBoard) {
 				throw new CompileError('ERROR.COMPILE.FAILED');
 			}
@@ -219,16 +128,12 @@ export class WorkerCommunicationWasmService
 			console.error(e);
 			if (e instanceof InvalidPlugsError) {
 				this.errorHandling.showErrorMessage(e.message, {
-					comp: this.elementProvider.getElementById(e.comp).name,
 					plugIndex: e.plugIndex
 				});
 			}
 			if (e instanceof CompileError) {
 				if (e.comp !== undefined && e.src !== undefined) {
-					this.errorHandling.showErrorMessage(e.message, {
-						comp: this.elementProvider.getElementById(e.comp).name,
-						src: this.elementProvider.getElementById(e.src).name
-					});
+					this.errorHandling.showErrorMessage(e.message, {});
 				} else {
 					this.errorHandling.showErrorMessage(e.message);
 				}
@@ -260,7 +165,7 @@ export class WorkerCommunicationWasmService
 			{
 				method: WasmMethod.init,
 				board: {
-					links: this.stateCompiler.highestLinkId + 1,
+					links: 0, // TODO
 					components: compiledBoard
 				}
 			} as WasmRequest,
@@ -366,9 +271,6 @@ export class WorkerCommunicationWasmService
 		element: Element,
 		state: boolean[]
 	): void {
-		const index = this.stateCompiler.ioElemIndexes
-			.get(identifier)
-			.get(element.id);
 		let inputEvent: InputEvent;
 		if (element.typeId === ElementTypeId.BUTTON) {
 			inputEvent = InputEvent.Pulse;
@@ -380,26 +282,12 @@ export class WorkerCommunicationWasmService
 		const request = {
 			method: WasmMethod.triggerInput,
 			userInput: {
-				index,
+				index: 0, // TODO
 				inputEvent,
 				state: stateBuffer
 			}
 		} as WasmRequest;
 		this._worker.postMessage(request, [stateBuffer]);
-	}
-
-	public boardStateWires(projectId: string): Observable<PowerChangesOutWire> {
-		return this._powerSubjectsWires.get(projectId).asObservable();
-	}
-
-	public boardStateWireEnds(
-		projectId: string
-	): Observable<Map<Element, boolean[]>> {
-		return this._powerSubjectsWireEnds.get(projectId).asObservable();
-	}
-
-	public onIoCompReset(projectId: string): Observable<void> {
-		return this._ioComponentsResetSubject.get(projectId).asObservable();
 	}
 
 	public get status(): BoardStatus {
@@ -408,25 +296,5 @@ export class WorkerCommunicationWasmService
 
 	public get isRunning() {
 		return !!this._mode;
-	}
-
-	public subscribe(identifier: string): void {
-		if (!this._powerSubjectsWires.has(identifier)) {
-			this._powerSubjectsWires.set(
-				identifier,
-				new Subject<PowerChangesOutWire>()
-			);
-			this._powerSubjectsWireEnds.set(
-				identifier,
-				new Subject<Map<Element, boolean[]>>()
-			);
-			this._ioComponentsResetSubject.set(identifier, new Subject<void>());
-		}
-	}
-
-	public unsubscribe(identifier: string): void {
-		this._powerSubjectsWires.delete(identifier);
-		this._powerSubjectsWireEnds.delete(identifier);
-		this._ioComponentsResetSubject.delete(identifier);
 	}
 }

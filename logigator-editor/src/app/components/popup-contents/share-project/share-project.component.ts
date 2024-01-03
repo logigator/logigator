@@ -8,12 +8,11 @@ import {
 	ViewContainerRef
 } from '@angular/core';
 import { PopupContentComp } from '../../popup/popup-content-comp';
-import { Project } from '../../../models/project';
 import { ApiService } from '../../../services/api/api.service';
 import { environment } from '../../../../environments/environment';
 import { ProjectInfo } from '../../../models/http/response/project-info';
-import { ProjectSaveManagementService } from '../../../services/project-save-management/project-save-management.service';
 import { LoadingService } from '../../../services/loading/loading.service';
+import { Project } from '../../../classes/project/project';
 
 @Component({
 	selector: 'app-share-project',
@@ -34,16 +33,16 @@ export class ShareProjectComponent
 
 	constructor(
 		private api: ApiService,
-		private projectSaveManagement: ProjectSaveManagementService,
 		private cdr: ChangeDetectorRef,
 		private loadingService: LoadingService
 	) {
 		super();
 	}
 
+	// eslint-disable-next-line @angular-eslint/no-empty-lifecycle-method
 	async ngOnInit() {
-		this.isPublic = this.inputFromOpener.isPublic;
-		this.link = this.getShareLink(this.inputFromOpener.link);
+		// this.isPublic = this.inputFromOpener.isPublic;
+		// this.link = this.getShareLink(this.inputFromOpener.link);
 	}
 
 	public copyLink() {
@@ -71,7 +70,7 @@ export class ShareProjectComponent
 					{ errorMessage: 'ERROR.PROJECTS.REGENERATE_SHARE_LINK' }
 				)
 				.toPromise();
-			this.inputFromOpener.link = resp.data.link;
+			// this.inputFromOpener.link = resp.data.link;
 			this.link = this.getShareLink(resp.data.link);
 		} finally {
 			removeLoading();
@@ -80,26 +79,26 @@ export class ShareProjectComponent
 	}
 
 	public async saveClick() {
-		if (this.inputFromOpener.isPublic === this.isPublic) {
-			this.requestClose.emit();
-			return;
-		}
+		// if (this.inputFromOpener.isPublic === this.isPublic) {
+		// 	this.requestClose.emit();
+		// 	return;
+		// }
 		const removeLoading = this.loadingService.add(
 			'LOADING.UPDATE_SHARE_INFO',
 			this._loadingRef,
 			true
 		);
 		try {
-			const resp = await this.api
-				.patch<ProjectInfo>(
-					`/project/${this.getProjectUuid()}`,
-					{
-						public: this.isPublic
-					},
-					{ errorMessage: 'ERROR.PROJECTS.UPDATE_SHARE_INFO' }
-				)
-				.toPromise();
-			this.inputFromOpener.isPublic = resp.data.public;
+			// const resp = await this.api
+			// 	.patch<ProjectInfo>(
+			// 		`/project/${this.getProjectUuid()}`,
+			// 		{
+			// 			public: this.isPublic
+			// 		},
+			// 		{ errorMessage: 'ERROR.PROJECTS.UPDATE_SHARE_INFO' }
+			// 	)
+			// 	.toPromise();
+			// this.inputFromOpener.isPublic = resp.data.public;
 			this.requestClose.emit();
 		} finally {
 			removeLoading();
@@ -111,9 +110,10 @@ export class ShareProjectComponent
 	}
 
 	private getProjectUuid(): string {
-		return this.projectSaveManagement.getUuidForProject(
-			this.inputFromOpener.id
-		);
+		// return this.projectSaveManagement.getUuidForProject(
+		// 	this.inputFromOpener.id
+		// );
+		return '';
 	}
 
 	private getShareLink(linkId: string): string {

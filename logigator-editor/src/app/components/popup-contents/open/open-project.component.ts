@@ -8,9 +8,8 @@ import {
 import { UserService } from '../../../services/user/user.service';
 import { Subject } from 'rxjs';
 import { PopupContentComp } from '../../popup/popup-content-comp';
-import { ProjectSaveManagementService } from '../../../services/project-save-management/project-save-management.service';
 import { ProjectList } from '../../../models/http/response/project-list';
-import { debounceTime, map } from 'rxjs/operators';
+import { debounceTime } from 'rxjs/operators';
 
 @Component({
 	selector: 'app-open-project',
@@ -45,7 +44,6 @@ export class OpenProjectComponent
 
 	constructor(
 		private user: UserService,
-		private projectSave: ProjectSaveManagementService,
 		private cdr: ChangeDetectorRef
 	) {
 		super();
@@ -68,14 +66,15 @@ export class OpenProjectComponent
 		this.searchTextChange.next();
 	}
 
+	// eslint-disable-next-line @typescript-eslint/no-unused-vars
 	private async getProjectList(page?: number) {
-		this.projectsList = await this.projectSave
-			.getProjectsInfo(
-				page,
-				this.searchText !== '' ? this.searchText : undefined
-			)
-			.pipe(map((resp) => resp.data))
-			.toPromise();
+		// this.projectsList = await this.projectSave
+		// 	.getProjectsInfo(
+		// 		page,
+		// 		this.searchText !== '' ? this.searchText : undefined
+		// 	)
+		// 	.pipe(map((resp) => resp.data))
+		// 	.toPromise();
 		this.updatePagination();
 		this.cdr.detectChanges();
 	}

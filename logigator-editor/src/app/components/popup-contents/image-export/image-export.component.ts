@@ -6,13 +6,9 @@ import {
 	UntypedFormGroup,
 	Validators
 } from '@angular/forms';
-import { ImageExportService } from '../../../services/image-export/image-export.service';
 import { FileSaverService } from '../../../services/file-saver/file-saver.service';
-import { ProjectsService } from '../../../services/projects/projects.service';
 import { ThemingService } from '../../../services/theming/theming.service';
-import { Theme } from '../../../services/image-export/svg-image-exporter';
 import { LoadingService } from '../../../services/loading/loading.service';
-import * as PIXI from 'pixi.js';
 
 @Component({
 	selector: 'app-image-export',
@@ -27,9 +23,7 @@ export class ImageExportComponent extends PopupContentComp implements OnInit {
 
 	constructor(
 		private formBuilder: UntypedFormBuilder,
-		private imageExporter: ImageExportService,
 		private fileSaverService: FileSaverService,
-		private projectService: ProjectsService,
 		private themingService: ThemingService,
 		private loadingService: LoadingService
 	) {
@@ -56,7 +50,7 @@ export class ImageExportComponent extends PopupContentComp implements OnInit {
 	}
 
 	async generate(type: 'svg' | 'png' | 'jpeg') {
-		let size: PIXI.Point;
+		// let size: PIXI.Point;
 		const loadingRemove = this.loadingService.add(
 			'LOADING.GENERATING_IMAGE',
 			this._loadingRef,
@@ -64,44 +58,44 @@ export class ImageExportComponent extends PopupContentComp implements OnInit {
 		);
 
 		if (this.form.controls['customDimensions'].value) {
-			size = new PIXI.Point(
-				this.form.controls['dimensionX'].value,
-				this.form.controls['dimensionY'].value
-			);
+			// size = new PIXI.Point(
+			// 	this.form.controls['dimensionX'].value,
+			// 	this.form.controls['dimensionY'].value
+			// );
 		}
 
-		const theme =
-			this.themingService.currentTheme === 'dark'
-				? this.form.controls['transparent'].value
-					? Theme.Dark_Transparent
-					: Theme.Dark
-				: this.form.controls['transparent'].value
-					? Theme.Light_Transparent
-					: Theme.Light;
+		// const theme =
+		// 	this.themingService.currentTheme === 'dark'
+		// 		? this.form.controls['transparent'].value
+		// 			? Theme.Dark_Transparent
+		// 			: Theme.Dark
+		// 		: this.form.controls['transparent'].value
+		// 			? Theme.Light_Transparent
+		// 			: Theme.Light;
 
 		try {
 			if (type === 'svg') {
-				await this.fileSaverService.saveLocalFile(
-					this.imageExporter.generateSVG(this.projectService.currProject, {
-						size,
-						theme
-					}),
-					'svg',
-					this.projectService.currProject.name
-				);
+				// await this.fileSaverService.saveLocalFile(
+				// 	this.imageExporter.generateSVG(this.projectService.currProject, {
+				// 		size,
+				// 		theme
+				// 	}),
+				// 	'svg',
+				// 	this.projectService.currProject.name
+				// );
 			} else {
-				await this.fileSaverService.saveLocalFileBlob(
-					await this.imageExporter.generateImage(
-						this.projectService.currProject,
-						type,
-						{
-							size,
-							theme
-						}
-					),
-					type === 'jpeg' ? 'jpg' : type,
-					this.projectService.currProject.name
-				);
+				// await this.fileSaverService.saveLocalFileBlob(
+				// 	await this.imageExporter.generateImage(
+				// 		this.projectService.currProject,
+				// 		type,
+				// 		{
+				// 			size,
+				// 			theme
+				// 		}
+				// 	),
+				// 	type === 'jpeg' ? 'jpg' : type,
+				// 	this.projectService.currProject.name
+				// );
 			}
 		} finally {
 			loadingRemove();

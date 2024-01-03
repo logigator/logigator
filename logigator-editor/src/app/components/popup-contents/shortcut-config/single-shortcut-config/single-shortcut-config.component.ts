@@ -13,7 +13,6 @@ import {
 import { fromEvent, Subject } from 'rxjs';
 import { takeUntil } from 'rxjs/operators';
 import { ShortcutConfig } from '../../../../models/shortcut-config';
-import { ShortcutsService } from '../../../../services/shortcuts/shortcuts.service';
 import { Shortcut } from '../../../../models/shortcut';
 import { ShortcutAction } from '../../../../models/shortcut-action';
 
@@ -37,15 +36,14 @@ export class SingleShortcutConfigComponent implements OnInit, OnDestroy {
 	private _destroySubject = new Subject<void>();
 
 	constructor(
-		private actions: ShortcutsService,
 		private ngZone: NgZone,
 		private cdr: ChangeDetectorRef
 	) {}
 
 	ngOnInit() {
-		this.shortcutText = this.actions.getShortcutTextForAction(
-			this.shortcut.action
-		);
+		// this.shortcutText = this.actions.getShortcutTextForAction(
+		// 	this.shortcut.action
+		// );
 		this.ngZone.runOutsideAngular(() => {
 			fromEvent(window, 'click')
 				.pipe(takeUntil(this._destroySubject))
@@ -71,8 +69,8 @@ export class SingleShortcutConfigComponent implements OnInit, OnDestroy {
 		if (!this.isRecording) return;
 		e.preventDefault();
 		e.stopPropagation();
-		this._newShortcutConfig = this.actions.getShortcutConfigFromKeyEvent(e);
-		this.shortcutText = this.actions.getShortcutText(this._newShortcutConfig);
+		// this._newShortcutConfig = this.actions.getShortcutConfigFromKeyEvent(e);
+		// this.shortcutText = this.actions.getShortcutText(this._newShortcutConfig);
 		this.cdr.detectChanges();
 	}
 

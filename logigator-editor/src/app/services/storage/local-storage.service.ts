@@ -1,4 +1,3 @@
-// @ts-strict-ignore
 import { Injectable } from '@angular/core';
 import { StorageServiceModel } from './storage.service';
 
@@ -6,12 +5,14 @@ import { StorageServiceModel } from './storage.service';
 	providedIn: 'root'
 })
 export class LocalStorageService extends StorageServiceModel {
-	public get(key: string): string | unknown {
+	public get<T = unknown>(key: string): T | null {
 		const data = localStorage.getItem(key);
+		if (!data) return null;
+
 		try {
 			return JSON.parse(data);
-		} catch (e) {
-			return data;
+		} catch {
+			return null;
 		}
 	}
 

@@ -15,8 +15,8 @@ export class EastereggService {
 		private errorHandling: ErrorHandlingService,
 		@Inject(StorageService) private storage: StorageServiceModel
 	) {
-		const data = this.storage.get('sneaks');
-		this._done = data ? new Set(data) : new Set<string>();
+		const data = this.storage.get<string[]>('sneaks');
+		this._done = data ? new Set<string>(data) : new Set<string>();
 	}
 
 	public achieve(name: string) {

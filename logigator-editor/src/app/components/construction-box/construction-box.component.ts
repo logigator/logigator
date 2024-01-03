@@ -1,8 +1,5 @@
 import { Component } from '@angular/core';
-import { ElementProviderService } from '../../services/element-provider/element-provider.service';
 import { ElementType } from '../../models/element-types/element-type';
-import { ShortcutsService } from '../../services/shortcuts/shortcuts.service';
-import { ProjectsService } from '../../services/projects/projects.service';
 
 @Component({
 	selector: 'app-construction-box',
@@ -13,53 +10,58 @@ export class ConstructionBoxComponent {
 	public searchText = '';
 
 	constructor(
-		private componentProviderService: ElementProviderService,
-		private shortcuts: ShortcutsService,
-		private projects: ProjectsService
 	) {}
 
 	public get showPlugComponents(): boolean {
-		if (!this.projects.currProject) return false;
-		return this.projects.currProject.type === 'comp';
+		// if (!this.projects.currProject) return false;
+		// return this.projects.currProject.type === 'comp';
+		return false;
 	}
 
 	public get basicComponents(): ElementType[] {
-		return this.componentProviderService.basicElements;
+		// return this.componentProviderService.basicElements;
+		return [];
 	}
 
 	public get advancedComponents(): ElementType[] {
-		return this.componentProviderService.advancedElements;
+		// return this.componentProviderService.advancedElements;
+		return [];
 	}
 
 	public get plugComponents(): ElementType[] {
-		return this.componentProviderService.plugElements;
+		// return this.componentProviderService.plugElements;
+		return [];
 	}
 
 	public get ioComponents(): ElementType[] {
-		return this.componentProviderService.ioElements;
+		// return this.componentProviderService.ioElements;
+		return [];
 	}
 
 	public get userDefinedComponents(): ElementType[] {
-		return this.componentProviderService.userDefinedElements;
+		// return this.componentProviderService.userDefinedElements;
+		return [];
 	}
 
 	public get localComponents(): ElementType[] {
-		return this.componentProviderService.localElements;
+		// return this.componentProviderService.localElements;
+		return [];
 	}
 
 	public get sharedComponents(): ElementType[] {
-		return this.componentProviderService.shareElements;
+		// return this.componentProviderService.shareElements;
+		return [];
 	}
 
 	public focusSearch() {
-		this.shortcuts.disableShortcutListener();
+		// this.shortcuts.disableShortcutListener();
 	}
 
 	public blurSearch() {
-		this.shortcuts.enableShortcutListener();
+		// this.shortcuts.enableShortcutListener();
 	}
 
 	public reloadUserElements() {
-		this.projects.reloadUserElements();
+		// this.projects.reloadUserElements();
 	}
 }

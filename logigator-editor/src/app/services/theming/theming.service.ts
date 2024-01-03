@@ -1,4 +1,3 @@
-// @ts-strict-ignore
 import { Inject, Injectable } from '@angular/core';
 import { DOCUMENT } from '@angular/common';
 import { EditorColorKey, EditorColors, Theme } from '../../models/theming';
@@ -13,8 +12,8 @@ import {
 	providedIn: 'root'
 })
 export class ThemingService {
-	private _currentTheme: Theme;
-	private _pendingTheme: Theme;
+	private _currentTheme: Theme = 'dark'
+	private _pendingTheme: Theme | null = null;
 
 	private _showGrid = true;
 	private _showGridChangeSubject = new Subject<boolean>();
@@ -54,7 +53,7 @@ export class ThemingService {
 
 	public loadTheme() {
 		this._currentTheme =
-			(this.storage.get('preferences')?.theme as Theme) ?? 'dark';
+			(this.storage.get<{theme: Theme}>('preferences')?.theme) ?? 'dark';
 		this._pendingTheme = this.currentTheme;
 		if (this._currentTheme === 'light') {
 			setTimeout(() => this.eastereggs.achieve('BLD'), 1000);
@@ -65,7 +64,7 @@ export class ThemingService {
 	public setTheme(theme: Theme) {
 		this._pendingTheme = theme;
 		this.storage.set('preferences', {
-			...this.storage.get('preferences'),
+			...this.storage.get<object>('preferences'),
 			theme
 		});
 	}
@@ -83,7 +82,7 @@ export class ThemingService {
 	}
 
 	public get pendingTheme(): Theme {
-		return this._pendingTheme;
+		return this._pendingTheme ?? this._currentTheme;
 	}
 
 	public get showGrid(): boolean {

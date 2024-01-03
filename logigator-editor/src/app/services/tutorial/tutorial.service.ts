@@ -41,7 +41,7 @@ export class TutorialService {
 		private injector: Injector,
 		@Inject(StorageService) private storage: StorageServiceModel
 	) {
-		const data = this.storage.get('tutorials');
+		const data = this.storage.get<string[]>('tutorials');
 		this._finishedTutorials = data ? new Set<string>(data) : new Set<string>();
 	}
 

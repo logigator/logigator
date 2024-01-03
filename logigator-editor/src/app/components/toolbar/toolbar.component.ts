@@ -1,17 +1,9 @@
 // @ts-strict-ignore
 import { Component, ViewChild, ViewContainerRef } from '@angular/core';
-import { ProjectsService } from '../../services/projects/projects.service';
-import { Test } from '../../../../tests/auto-tests/tests';
-import { StateCompilerService } from '../../services/simulation/state-compiler/state-compiler.service';
-import { WorkModeService } from '../../services/work-mode/work-mode.service';
 import { WorkMode } from '../../models/work-modes';
-import { EditorInteractionService } from '../../services/editor-interaction/editor-interaction.service';
 import { ShortcutAction } from '../../models/shortcut-action';
-import { ShortcutsService } from '../../services/shortcuts/shortcuts.service';
 import { SimulationManagementService } from '../../services/simulation/simulation-management/simulation-management.service';
-import { Grid } from '../../models/rendering/grid';
 import { ThemingService } from '../../services/theming/theming.service';
-import { BruteForceTester } from '../../../../tests/auto-tests/brute-force-tester';
 import { environment } from '../../../environments/environment';
 import { QuadTree } from '../../classes/quad-tree/quad-tree';
 
@@ -21,7 +13,6 @@ import { QuadTree } from '../../classes/quad-tree/quad-tree';
 	styleUrls: ['./toolbar.component.scss']
 })
 export class ToolbarComponent {
-	private test: Test;
 
 	public targetMultiplier = '1';
 	public targetTickRate = 1;
@@ -32,11 +23,6 @@ export class ToolbarComponent {
 	private _enterSimulationLoading: ViewContainerRef;
 
 	constructor(
-		private workModeService: WorkModeService,
-		private projectService: ProjectsService,
-		private editorInteractionService: EditorInteractionService,
-		private stateCompiler: StateCompilerService,
-		private shortcutService: ShortcutsService,
 		private simulationManagement: SimulationManagementService,
 		private themingService: ThemingService
 	) {}
@@ -44,8 +30,6 @@ export class ToolbarComponent {
 	get production(): boolean {
 		return environment.production;
 	}
-
-	// TODO: refactor / remove debugging tools
 
 	public printElements(): void {
 		const quadTree = new QuadTree();
@@ -66,40 +50,22 @@ export class ToolbarComponent {
 		for (const element of iter) {
 			console.log(element);
 		}
-
-		console.log(this.projectService.currProject.allElements);
 	}
 
 	public printCalls(): void {
-		console.log(this.projectService.currProject.boardRecorder.stringify());
 	}
 
 	public runTests(): void {
-		const tester = new BruteForceTester(this.projectService.currProject);
-		tester.runAndTestRandom(1e5, 16 * 7);
-		// this.test = new Test('bugfix', this.projectService.currProject, ManuallyLogged.testTest);
-		// for (const name in ManuallyLogged) {
-		// 	Test.runAndCheck(name, false);
-		// }
 	}
 
 	public runStep(): void {
-		this.test.runStep(true);
 	}
 
 	public async printBoard() {
-		console.log(
-			JSON.stringify({
-				components: await this.stateCompiler.compile(
-					this.projectService.currProject
-				),
-				links: this.stateCompiler.highestLinkId + 1
-			})
-		);
+
 	}
 
 	public toggleChunks() {
-		Grid.showChunks(!Grid.chunksVisible);
 	}
 
 	public get currentTheme() {
@@ -109,109 +75,117 @@ export class ToolbarComponent {
 	public setWorkMode(mode: string) {
 		switch (mode) {
 			case 'SELECT':
-				this.workModeService.setWorkMode(WorkMode.SELECT);
+				// this.workModeService.setWorkMode(WorkMode.SELECT);
 				break;
 			case 'CUT_SELECT':
-				this.workModeService.setWorkMode(WorkMode.CUT_SELECT);
+				// this.workModeService.setWorkMode(WorkMode.CUT_SELECT);
 				break;
 			case 'ERASER':
-				this.workModeService.setWorkMode(WorkMode.ERASER);
+				// this.workModeService.setWorkMode(WorkMode.ERASER);
 				break;
 			case 'TEXT':
-				this.workModeService.setWorkMode(WorkMode.TEXT);
+				// this.workModeService.setWorkMode(WorkMode.TEXT);
 				break;
 			case 'WIRE':
-				this.workModeService.setWorkMode(WorkMode.WIRE);
+				// this.workModeService.setWorkMode(WorkMode.WIRE);
 				break;
 			case 'CONN_WIRE':
-				this.workModeService.setWorkMode(WorkMode.CONN_WIRE);
+				// this.workModeService.setWorkMode(WorkMode.CONN_WIRE);
 				break;
 		}
 	}
 
 	public getShortcut(action: ShortcutAction): string {
-		const text = this.shortcutService.getShortcutTextForAction(action);
-		return text ? ` (${text})` : '';
+		// const text = this.shortcutService.getShortcutTextForAction(action);
+		// return text ? ` (${text})` : '';
+		return '';
 	}
 
 	public enterSimulation() {
-		this.workModeService.enterSimulation(this._enterSimulationLoading);
+		// this.workModeService.enterSimulation(this._enterSimulationLoading);
 	}
 
 	public leaveSimulation() {
-		this.workModeService.leaveSimulation(this._enterSimulationLoading);
+		// this.workModeService.leaveSimulation(this._enterSimulationLoading);
 	}
 
 	public get isSimulationMode(): boolean {
-		return this.workModeService.currentWorkMode === WorkMode.SIMULATION;
+		// return this.workModeService.currentWorkMode === WorkMode.SIMULATION;
+		return false;
 	}
 
 	public get isSelectMode(): boolean {
-		return this.workModeService.currentWorkMode === WorkMode.SELECT;
+		// return this.workModeService.currentWorkMode === WorkMode.SELECT;
+		return false;
 	}
 
 	public get isCutSelectMode(): boolean {
-		return this.workModeService.currentWorkMode === WorkMode.CUT_SELECT;
+		// return this.workModeService.currentWorkMode === WorkMode.CUT_SELECT;
+		return false;
 	}
 
 	public get isEraserMode(): boolean {
-		return this.workModeService.currentWorkMode === WorkMode.ERASER;
+		// return this.workModeService.currentWorkMode === WorkMode.ERASER;
+		return false;
 	}
 
 	public get isTextMode(): boolean {
-		return this.workModeService.currentWorkMode === WorkMode.TEXT;
+		// return this.workModeService.currentWorkMode === WorkMode.TEXT;
+		return false;
 	}
 
 	public get isWireMode(): boolean {
-		return this.workModeService.currentWorkMode === WorkMode.WIRE;
+		// return this.workModeService.currentWorkMode === WorkMode.WIRE;
+		return false;
 	}
 
 	public get isConnWireMode(): boolean {
-		return this.workModeService.currentWorkMode === WorkMode.CONN_WIRE;
+		// return this.workModeService.currentWorkMode === WorkMode.CONN_WIRE;
+		return false;
 	}
 
 	public zoomIn() {
-		this.editorInteractionService.zoomIn();
+		// this.editorInteractionService.zoomIn();
 	}
 
 	public zoomOut() {
-		this.editorInteractionService.zoomOut();
+		// this.editorInteractionService.zoomOut();
 	}
 
 	public undo() {
-		this.editorInteractionService.undo();
+		// this.editorInteractionService.undo();
 	}
 
 	public redo() {
-		this.editorInteractionService.redo();
+		// this.editorInteractionService.redo();
 	}
 
 	public copy() {
-		this.editorInteractionService.copy();
+		// this.editorInteractionService.copy();
 	}
 
 	public cut() {
-		this.editorInteractionService.cut();
+		// this.editorInteractionService.cut();
 	}
 
 	public paste() {
-		this.editorInteractionService.paste();
+		// this.editorInteractionService.paste();
 	}
 
 	public delete() {
-		this.editorInteractionService.delete();
+		// this.editorInteractionService.delete();
 	}
 
 	public save() {
-		this.editorInteractionService.saveProject();
+		// this.editorInteractionService.saveProject();
 	}
 
 	public newComponent() {
-		this.editorInteractionService.newComponent();
+		// this.editorInteractionService.newComponent();
 	}
 
 	public openProject() {
-		this.editorInteractionService.openProject();
+		// this.editorInteractionService.openProject();
 	}
 
 	public continueSim() {
