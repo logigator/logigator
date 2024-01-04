@@ -1,0 +1,34 @@
+export const enum ElementType {
+	WIRE,
+	TUNNEL,
+
+	NOT,
+	AND,
+	OR,
+	XOR,
+	DELAY,
+	CLOCK,
+	TEXT,
+
+	HALF_ADDER,
+	FULL_ADDER,
+	ROM,
+	D_FF,
+	JK_FF,
+	SR_FF,
+	RNG,
+	RAM,
+	DECODER,
+	ENCODER,
+	MUX,
+	DEMUX,
+
+	BUTTON,
+	LEVER,
+	LED,
+	SEGMENT_DISPLAY,
+	LED_MATRIX,
+
+	INPUT,
+	OUTPUT
+}

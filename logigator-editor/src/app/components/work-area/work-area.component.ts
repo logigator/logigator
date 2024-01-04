@@ -31,6 +31,7 @@ export class WorkAreaComponent extends WorkArea implements OnInit, OnDestroy {
 			this.addTickerFunction();
 			this.preventContextMenu(this._pixiCanvasContainer, this.renderer2);
 			this.initPixi(this._pixiCanvasContainer, this.renderer2);
+			this.ticker.startAllContSim();
 		});
 	}
 

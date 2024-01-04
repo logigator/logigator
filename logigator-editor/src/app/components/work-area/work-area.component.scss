@@ -3,8 +3,8 @@
 
 .main-area {
 	user-select: none;
-	width: 100%;
-	height: 100%;
+	width: calc(100vw - 16rem);
+	height: calc(100vh - 117px);
 	position: relative;
 
 	#canvas-container {

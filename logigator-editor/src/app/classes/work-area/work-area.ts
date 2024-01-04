@@ -11,10 +11,14 @@ import { ThemingService } from '../../services/theming/theming.service';
 import { RenderTicker } from '../../services/render-ticker/render-ticker.service';
 import { getStaticDI } from '../../utils/get-di';
 import { PixiLoaderService } from '../../services/pixi-loader/pixi-loader.service';
+import { View } from '../view/view';
+import { Point } from 'pixi.js';
 
 @Directive()
 export abstract class WorkArea {
 	protected _pixiRenderer: PIXI.Renderer;
+
+	protected _view: View = new View();
 
 	protected _destroySubject = new Subject<void>();
 
@@ -33,7 +37,7 @@ export abstract class WorkArea {
 			antialias: false,
 			powerPreference: 'high-performance',
 			backgroundColor: getStaticDI(ThemingService).getEditorColor('background'),
-			resolution: Math.ceil(window.devicePixelRatio || 1),
+			resolution: window.devicePixelRatio || 1,
 			autoDensity: true
 		});
 
@@ -41,6 +45,14 @@ export abstract class WorkArea {
 			canvasContainer.nativeElement,
 			this._pixiRenderer.view
 		);
+
+		fromEvent(window, 'wheel')
+			.pipe(takeUntil(this._destroySubject))
+			.subscribe(() => {
+				console.log('1');
+				this._view.scale = new Point(this._view.scale.x * 1.1, this._view.scale.y * 1.1);
+				this.ticker.singleFrame(this.getIdentifier());
+			});
 
 		fromEvent(window, 'resize')
 			.pipe(takeUntil(this._destroySubject))
@@ -55,7 +67,7 @@ export abstract class WorkArea {
 
 	protected addTickerFunction() {
 		this.ticker.addTickerFunction(this.getIdentifier(), () => {
-			// this._pixiRenderer.render(this._activeView);
+			this._pixiRenderer.render(this._view);
 		});
 	}
 
