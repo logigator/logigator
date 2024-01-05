@@ -12,7 +12,6 @@ import { RenderTicker } from '../../services/render-ticker/render-ticker.service
 import { getStaticDI } from '../../utils/get-di';
 import { PixiLoaderService } from '../../services/pixi-loader/pixi-loader.service';
 import { View } from '../view/view';
-import { Point } from 'pixi.js';
 
 @Directive()
 export abstract class WorkArea {
@@ -46,12 +45,15 @@ export abstract class WorkArea {
 			this._pixiRenderer.view
 		);
 
-		fromEvent(window, 'wheel')
+		fromEvent(window, 'wheel', { passive: true })
 			.pipe(takeUntil(this._destroySubject))
-			.subscribe(() => {
-				console.log('1');
-				this._view.scale = new Point(this._view.scale.x * 1.1, this._view.scale.y * 1.1);
-				this.ticker.singleFrame(this.getIdentifier());
+			.subscribe((e: WheelEvent) => {
+				console.log(this._view.scale);
+				if (e.deltaY < 0) {
+					this._view.updateScale(this._view.scale.x + 0.25);
+				} else if (e.deltaY > 0) {
+					this._view.updateScale(this._view.scale.x - 0.25);
+				}
 			});
 
 		fromEvent(window, 'resize')
