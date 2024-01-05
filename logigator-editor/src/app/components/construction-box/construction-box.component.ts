@@ -1,5 +1,7 @@
 import { Component } from '@angular/core';
-import { ElementType } from '../../models/element-types/element-type';
+import { ComponentConfig } from '../../classes/rendering/component';
+import { ComponentProviderService } from '../../services/component-provider/component-provider.service';
+import { ElementCategory } from '../../models/element/element-category';
 
 @Component({
 	selector: 'app-construction-box',
@@ -10,6 +12,7 @@ export class ConstructionBoxComponent {
 	public searchText = '';
 
 	constructor(
+		public readonly componentProviderService: ComponentProviderService
 	) {}
 
 	public get showPlugComponents(): boolean {
@@ -18,37 +21,42 @@ export class ConstructionBoxComponent {
 		return false;
 	}
 
-	public get basicComponents(): ElementType[] {
-		// return this.componentProviderService.basicElements;
-		return [];
+	public get basicComponents(): ComponentConfig[] {
+		return this.componentProviderService.getElementsByCategory(
+			ElementCategory.BASIC
+		);
 	}
 
-	public get advancedComponents(): ElementType[] {
-		// return this.componentProviderService.advancedElements;
-		return [];
+	public get advancedComponents(): ComponentConfig[] {
+		return this.componentProviderService.getElementsByCategory(
+			ElementCategory.ADVANCED
+		);
 	}
 
-	public get plugComponents(): ElementType[] {
-		// return this.componentProviderService.plugElements;
-		return [];
+	public get plugComponents(): ComponentConfig[] {
+		return this.componentProviderService.getElementsByCategory(
+			ElementCategory.CONNECTOR
+		);
 	}
 
-	public get ioComponents(): ElementType[] {
-		// return this.componentProviderService.ioElements;
-		return [];
+	public get ioComponents(): ComponentConfig[] {
+		return this.componentProviderService.getElementsByCategory(
+			ElementCategory.IO
+		);
 	}
 
-	public get userDefinedComponents(): ElementType[] {
-		// return this.componentProviderService.userDefinedElements;
-		return [];
+	public get userDefinedComponents(): ComponentConfig[] {
+		return this.componentProviderService.getElementsByCategory(
+			ElementCategory.USER
+		);
 	}
 
-	public get localComponents(): ElementType[] {
+	public get localComponents(): ComponentConfig[] {
 		// return this.componentProviderService.localElements;
 		return [];
 	}
 
-	public get sharedComponents(): ElementType[] {
+	public get sharedComponents(): ComponentConfig[] {
 		// return this.componentProviderService.shareElements;
 		return [];
 	}

@@ -1,10 +1,9 @@
 // @ts-strict-ignore
 import { Component, EventEmitter, Input, Output } from '@angular/core';
-import { ElementType } from '../../models/element-types/element-type';
-import { WorkMode } from '../../models/work-modes';
 import { TranslateService } from '@ngx-translate/core';
 import { Observable } from 'rxjs';
 import { map } from 'rxjs/operators';
+import { ComponentConfig } from '../../classes/rendering/component';
 
 @Component({
 	selector: 'app-construction-box-category',
@@ -13,7 +12,7 @@ import { map } from 'rxjs/operators';
 })
 export class ConstructionBoxCategoryComponent {
 	@Input()
-	public components: ElementType[];
+	public components: ComponentConfig[];
 
 	@Input()
 	public categoryName: string;
@@ -31,17 +30,7 @@ export class ConstructionBoxCategoryComponent {
 		private translate: TranslateService
 	) {}
 
-	public componentsTrackBy(index, item: ElementType) {
-		if (!item) return null;
-		return item.id;
-	}
-
-	public isHiddenPlug(toSearch: string, typeId: number): boolean {
-		if (toSearch === '' || typeId !== 102) return false;
-		return toSearch.trim().toLowerCase().replace(' ', '') === 'buttplug';
-	}
-
-	public isInSearchResult(toSearch: ElementType): Observable<boolean> {
+	public isInSearchResult(toSearch: ComponentConfig): Observable<boolean> {
 		return this.translate
 			.get(toSearch.name)
 			.pipe(

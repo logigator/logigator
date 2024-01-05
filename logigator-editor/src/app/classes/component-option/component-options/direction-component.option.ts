@@ -1,7 +1,7 @@
 import { SelectComponentOption } from './select.component-option';
 import { ElementRotation } from '../../../models/element-rotation';
 
-export class RotationComponentOption extends SelectComponentOption<ElementRotation> {
+export class DirectionComponentOption extends SelectComponentOption<ElementRotation> {
 	constructor() {
 		super(
 			'SETTINGS_INFO.DIRECTION',

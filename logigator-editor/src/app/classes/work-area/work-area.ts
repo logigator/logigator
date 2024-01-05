@@ -48,7 +48,6 @@ export abstract class WorkArea {
 		fromEvent(window, 'wheel', { passive: true })
 			.pipe(takeUntil(this._destroySubject))
 			.subscribe((e: WheelEvent) => {
-				console.log(this._view.scale);
 				if (e.deltaY < 0) {
 					this._view.updateScale(this._view.scale.x + 0.25);
 				} else if (e.deltaY > 0) {

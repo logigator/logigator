@@ -6,11 +6,10 @@ import { Assets } from 'pixi.js';
 	providedIn: 'root'
 })
 export class PixiLoaderService {
-	private _loaded = false;
 
 	private _loaded$ = new ReplaySubject<void>(1);
 
-	public async loadPixiFont() {
+	public loadPixiFont() {
 		Assets.load([
 			'assets/bitmap-fonts/roboto.fnt',
 			'assets/bitmap-fonts/dseg14.fnt',

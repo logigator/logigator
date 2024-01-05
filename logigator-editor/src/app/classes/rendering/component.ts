@@ -1,15 +1,24 @@
-import { Graphics, Matrix, Point } from 'pixi.js';
+import {
+	BitmapText,
+	Graphics,
+	Point
+} from 'pixi.js';
 
 import { ElementType } from '../../models/element/element-type';
 import { ElementCategory } from '../../models/element/element-category';
 import { ComponentOption } from '../component-option/component-option';
-import { environment } from '../../../environments/environment';
 import { ElementRotation } from '../../models/element-rotation';
-import { wireGeometry } from './geometries/wire.geometry';
+import { ThemingService } from '../../services/theming/theming.service';
+import { GeometryService } from '../../services/geometry/geometry.service';
+import { getStaticDI } from '../../utils/get-di';
+import { WireGraphics } from './graphics/wire.graphics';
+import { fromGrid, toGrid } from '../../utils/grid';
 
 export interface ComponentConfig {
-	name: string;
 	type: ElementType;
+	name: string;
+	symbol: string;
+	symbolImage?: string;
 	description: string;
 	category: ElementCategory;
 	// eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -20,9 +29,10 @@ export interface ComponentConfig {
 export class ScalingGraphics extends Graphics {
 	public constantScaleX = false;
 	public constantScaleY = false;
+	public constantRotation = false;
 	public constantScaleChildren = false;
 
-	applyConstantScale(scale: number) {
+	public applyConstantScale(scale: number) {
 		if (this.constantScaleX) {
 			this.scale.x = 1 / scale;
 		}
@@ -37,42 +47,77 @@ export class ScalingGraphics extends Graphics {
 			}
 		}
 	}
+
+	public applyConstantRotation(rotation: number) {
+		if (this.constantRotation) {
+			this.rotation = -rotation;
+		}
+		if (this.constantScaleChildren) {
+			for (const child of this.children) {
+				if (child instanceof ScalingGraphics) {
+					child.applyConstantRotation(rotation);
+				}
+			}
+		}
+	}
 }
 
 export abstract class Component extends ScalingGraphics {
-	override constantScaleChildren = true;
 	override sortableChildren = false;
+	override constantScaleChildren = true;
 
 	public abstract readonly config: ComponentConfig;
 	public readonly options: ComponentOption<unknown>[];
 
-	private _rotation: ElementRotation;
+	protected readonly themingService: ThemingService =
+		getStaticDI(ThemingService);
+	protected readonly geometryService: GeometryService =
+		getStaticDI(GeometryService);
+
+	private _direction: ElementRotation;
 
 	private _numInputs: number;
 	private _numOutputs: number;
 
 	private _inputsGraphics: ScalingGraphics = new ScalingGraphics();
+	private _outputsGraphics: ScalingGraphics = new ScalingGraphics();
 
 	protected constructor(
 		numInputs: number,
 		numOutputs: number,
-		rotation: ElementRotation,
+		direction: ElementRotation,
 		options: ComponentOption<unknown>[]
 	) {
 		super();
 
 		this._numInputs = numInputs;
 		this._numOutputs = numOutputs;
-		this._rotation = rotation;
+		this._direction = direction;
 		this._inputsGraphics.constantScaleChildren = true;
+		this._outputsGraphics.constantScaleChildren = true;
 
 		this.options = options;
 		this.options[0].value;
 
-		this.draw();
+		this._draw();
 	}
 
-	protected abstract get labels(): string[];
+	protected abstract get inputLabels(): string[];
+	protected abstract get outputLabels(): string[];
+
+	public get gridPos(): Point {
+		return new Point(
+			toGrid(this.position.x - this.pivot.x),
+			toGrid(this.position.y - this.pivot.y)
+		);
+	}
+
+	public set gridPos(value: Point) {
+		this.position.set(
+			fromGrid(value.x) + this.pivot.x,
+			fromGrid(value.y) + this.pivot.y
+		);
+	}
 
 	public get numInputs(): number {
 		return this._numInputs;
@@ -90,64 +135,81 @@ export abstract class Component extends ScalingGraphics {
 		this._numOutputs = value;
 	}
 
-	public get gridWidth() {
-		return 3;
+	public get direction(): ElementRotation {
+		return this._direction;
 	}
 
-	public get gridHeight() {
-		return Math.max(this.numInputs, this.numOutputs);
+	public set direction(value: ElementRotation) {
+		this._direction = value;
+		this.rotation = (value * Math.PI) / 2;
+		this.applyConstantRotation((value * Math.PI) / 2);
 	}
 
-	public get rotationMatrix(): Matrix {
-		// TODO: use this.getBounds() or implement own method?
-		const bounds = this.getBounds();
-		const centerX = bounds.x + bounds.width / 2;
-		const centerY = bounds.y + bounds.height / 2;
-
-		return Matrix.IDENTITY.translate(-centerX, -centerY)
-			.rotate((this._rotation * Math.PI) / 2)
-			.translate(centerX, centerY);
-	}
-
-	private rotatePoint(point: Point): Point {
-		return this.rotationMatrix.apply(point);
-	}
-
-	public get inputConnections(): Point[] {
-		const inputs = [];
-		for (let i = 0; i < this.numInputs; i++) {
-			inputs.push(this.rotatePoint(new Point(0, 0.5 + i)));
-		}
-
-		return inputs;
-	}
-
-	protected fromGrid(point: Point): Point {
-		return point.set(
-			point.x * environment.gridPixelWidth,
-			point.y * environment.gridPixelWidth
-		);
-	}
-
-	protected draw(): void {
+	private _draw(): void {
 		this.removeChildren(0);
 		this.clear();
 
-		this.drawInputs();
+		this.draw();
 
+		this.drawConnections(
+			this._numInputs,
+			'inputs'
+		);
+		this.drawConnections(
+			this._numOutputs,
+			'outputs'
+		);
+		this._outputsGraphics.position.set(this.width + fromGrid(0.5), 0);
 		this.addChild(this._inputsGraphics);
+		this.addChild(this._outputsGraphics);
+
+		this.pivot.set(this.width / 2, this.height / 2);
+		this.direction = this._direction;
 	}
 
-	private drawInputs(): void {
-		this._inputsGraphics.removeChildren(0);
+	protected abstract draw(): void;
 
-		for (const connection of this.inputConnections) {
-			const child = new ScalingGraphics(wireGeometry());
-			console.log(connection);
-			child.position = this.fromGrid(connection);
-			child.scale.set(environment.gridPixelWidth, 0.5);
-			child.constantScaleY = true;
-			this._inputsGraphics.addChild(child);
+	private drawConnections(
+		n: number,
+		type: 'inputs' | 'outputs'
+	): void {
+		const geometry = this.geometryService.getGeometry(WireGraphics);
+		const container =
+			type === 'inputs' ? this._inputsGraphics : this._outputsGraphics;
+		const labels = type === 'inputs' ? this.inputLabels : this.outputLabels;
+		container.removeChildren(0);
+
+		for (let i = 0; i < n; i++) {
+			const wire = new ScalingGraphics(geometry);
+			wire.position.set(0, fromGrid(i + 0.5));
+			wire.scale.set(fromGrid(0.5), 1);
+			wire.constantScaleY = true;
+			container.addChild(wire);
+
+			if (labels.length > i) {
+				const text = new BitmapText(labels[i], {
+					fontName: 'Roboto',
+					fontSize: fromGrid(0.5),
+					tint: this.themingService.getEditorColor('fontTint')
+				});
+				text.anchor.set(type === 'inputs' ? 0 : 1, 0.5);
+
+				const child = new ScalingGraphics();
+				child.addChild(text);
+				child.pivot.set((child.width / 2) * (type === 'inputs' ? 1 : -1), 0);
+				if (type === 'inputs') {
+					child.position.set(
+						fromGrid(0.5) + child.width / 2 + 2,
+						fromGrid(i + 0.5)
+					);
+				} else {
+					child.position.set(-child.width / 2 - 2, fromGrid(i + 0.5));
+				}
+
+				child.constantRotation = true;
+
+				container.addChild(child);
+			}
 		}
 	}
 }
