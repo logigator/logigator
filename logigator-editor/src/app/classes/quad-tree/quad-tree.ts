@@ -20,7 +20,9 @@ interface Leaf<T> extends AbstractEntry<T> {
 
 type Entry<T> = Branch<T> | Leaf<T>;
 type Root<T> = Entry<T> & { parent: null };
-type ChildEntry<T> = Entry<T> & { parent: NonNullable<AbstractEntry<T>['parent']> };
+type ChildEntry<T> = Entry<T> & {
+	parent: NonNullable<AbstractEntry<T>['parent']>;
+};
 
 export interface TreeItem {
 	x: number;
@@ -30,7 +32,6 @@ export interface TreeItem {
 }
 
 export class QuadTree<T extends TreeItem> {
-
 	private static readonly MAX_LEAF_ELEMENTS = 4;
 	private static readonly MIN_BRANCH_ELEMENTS = 2;
 	private static readonly INITIAL_SIZE = 1024;
@@ -54,7 +55,7 @@ export class QuadTree<T extends TreeItem> {
 			this.expand();
 		}
 
-		for (let entry: Entry<T> = this.tree;;) {
+		for (let entry: Entry<T> = this.tree; ; ) {
 			if (!this.elementIsContainedInChild(entry, element)) {
 				entry.branchElements.push(element);
 				return;
@@ -66,7 +67,11 @@ export class QuadTree<T extends TreeItem> {
 			} else {
 				// This is a leaf, so we have to check if we can insert the element here or if we have to split the leaf.
 				if (entry.leafElements.length >= QuadTree.MAX_LEAF_ELEMENTS) {
-					entry = this.getChildForPoint(this.splitLeaf(entry as Leaf<T>), element.x, element.y);
+					entry = this.getChildForPoint(
+						this.splitLeaf(entry as Leaf<T>),
+						element.x,
+						element.y
+					);
 					continue;
 				}
 
@@ -82,7 +87,7 @@ export class QuadTree<T extends TreeItem> {
 	 * @returns true if the element was removed, false if it was not found
 	 */
 	public remove(element: T): boolean {
-		for (let entry: Entry<T> = this.tree;;) {
+		for (let entry: Entry<T> = this.tree; ; ) {
 			if (!this.elementIsContainedInChild(entry, element)) {
 				const index = entry.branchElements.indexOf(element);
 
@@ -106,8 +111,7 @@ export class QuadTree<T extends TreeItem> {
 				}
 
 				entry.leafElements.splice(index, 1);
-				if (entry.parent !== null)
-					this.minifyBranch(entry.parent);
+				if (entry.parent !== null) this.minifyBranch(entry.parent);
 				return true;
 			}
 		}
@@ -120,13 +124,29 @@ export class QuadTree<T extends TreeItem> {
 	 * @param x2 x coordinate of the bottom right corner of the range
 	 * @param y2 y coordinate of the bottom right corner of the range
 	 */
-	public *queryRange(x: number, y: number, x2: number, y2: number): Generator<T> {
-		yield *this.queryRangeOfEntry(this.tree, x, y, x2, y2);
+	public *queryRange(
+		x: number,
+		y: number,
+		x2: number,
+		y2: number
+	): Generator<T> {
+		yield* this.queryRangeOfEntry(this.tree, x, y, x2, y2);
 	}
 
-	private *queryRangeOfEntry(entry: Entry<T>, x: number, y: number, x2: number, y2: number): Generator<T> {
+	private *queryRangeOfEntry(
+		entry: Entry<T>,
+		x: number,
+		y: number,
+		x2: number,
+		y2: number
+	): Generator<T> {
 		for (const element of entry.branchElements) {
-			if (element.x2 >= x && element.x <= x2 && element.y2 >= y && element.y <= y2) {
+			if (
+				element.x2 >= x &&
+				element.x <= x2 &&
+				element.y2 >= y &&
+				element.y <= y2
+			) {
 				yield element;
 			}
 		}
@@ -134,23 +154,28 @@ export class QuadTree<T extends TreeItem> {
 		if (entry.children !== null) {
 			if (x < entry.x + entry.size / 2) {
 				if (y < entry.y + entry.size / 2) {
-					yield *this.queryRangeOfEntry(entry.children.nw, x, y, x2, y2);
+					yield* this.queryRangeOfEntry(entry.children.nw, x, y, x2, y2);
 				}
 				if (y2 >= entry.y + entry.size / 2) {
-					yield *this.queryRangeOfEntry(entry.children.sw, x, y, x2, y2);
+					yield* this.queryRangeOfEntry(entry.children.sw, x, y, x2, y2);
 				}
 			}
 			if (x2 >= entry.x + entry.size / 2) {
 				if (y < entry.y + entry.size / 2) {
-					yield *this.queryRangeOfEntry(entry.children.ne, x, y, x2, y2);
+					yield* this.queryRangeOfEntry(entry.children.ne, x, y, x2, y2);
 				}
 				if (y2 >= entry.y + entry.size / 2) {
-					yield *this.queryRangeOfEntry(entry.children.se, x, y, x2, y2);
+					yield* this.queryRangeOfEntry(entry.children.se, x, y, x2, y2);
 				}
 			}
 		} else {
 			for (const element of entry.leafElements) {
-				if (element.x2 >= x && element.x <= x2 && element.y2 >= y && element.y <= y2) {
+				if (
+					element.x2 >= x &&
+					element.x <= x2 &&
+					element.y2 >= y &&
+					element.y <= y2
+				) {
 					yield element;
 				}
 			}
@@ -254,7 +279,11 @@ export class QuadTree<T extends TreeItem> {
 		};
 
 		for (const element of entry.leafElements) {
-			const child = this.getChildForPoint(entry as Entry<T> as Branch<T>, element.x, element.y);
+			const child = this.getChildForPoint(
+				entry as Entry<T> as Branch<T>,
+				element.x,
+				element.y
+			);
 
 			if (this.elementIsContainedInChild(child, element)) {
 				child.leafElements!.push(element);
@@ -305,16 +334,27 @@ export class QuadTree<T extends TreeItem> {
 	 * Returns true if the element would be contained in one of the children of the entry.
 	 * @private
 	 */
-	private elementIsContainedInChild(entry: Entry<T>, element: TreeItem): boolean {
-		return !((element.x < entry.x + entry.size / 2 && element.x2 >= entry.x + entry.size / 2)
-			|| (element.y < entry.y + entry.size / 2 && element.y2 >= entry.y + entry.size / 2));
+	private elementIsContainedInChild(
+		entry: Entry<T>,
+		element: TreeItem
+	): boolean {
+		return !(
+			(element.x < entry.x + entry.size / 2 &&
+				element.x2 >= entry.x + entry.size / 2) ||
+			(element.y < entry.y + entry.size / 2 &&
+				element.y2 >= entry.y + entry.size / 2)
+		);
 	}
 
 	/**
 	 * Returns the child of the entry that contains the point.
 	 * @private
 	 */
-	private getChildForPoint(entry: Branch<T>, x: number, y: number): ChildEntry<T> {
+	private getChildForPoint(
+		entry: Branch<T>,
+		x: number,
+		y: number
+	): ChildEntry<T> {
 		if (x < entry.x + entry.size / 2) {
 			if (y < entry.y + entry.size / 2) {
 				return entry.children.nw;
@@ -329,5 +369,4 @@ export class QuadTree<T extends TreeItem> {
 			}
 		}
 	}
-
 }

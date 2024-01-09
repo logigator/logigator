@@ -2,7 +2,6 @@ import {
 	Component,
 	ElementRef,
 	NgZone,
-	OnDestroy,
 	OnInit,
 	Renderer2,
 	ViewChild
@@ -15,7 +14,7 @@ import { Project } from '../../classes/project/project';
 	templateUrl: './work-area.component.html',
 	styleUrls: ['./work-area.component.scss']
 })
-export class WorkAreaComponent extends WorkArea implements OnInit, OnDestroy {
+export class WorkAreaComponent extends WorkArea implements OnInit {
 	@ViewChild('pixiCanvasContainer', { static: true })
 	private _pixiCanvasContainer!: ElementRef<HTMLDivElement>;
 
@@ -29,9 +28,8 @@ export class WorkAreaComponent extends WorkArea implements OnInit, OnDestroy {
 	ngOnInit() {
 		this.ngZone.runOutsideAngular(() => {
 			this.addTickerFunction();
-			this.preventContextMenu(this._pixiCanvasContainer, this.renderer2);
 			this.initPixi(this._pixiCanvasContainer, this.renderer2);
-			this.ticker.startAllContSim();
+			this.ticker.singleFrame(this.getIdentifier());
 		});
 	}
 
@@ -45,9 +43,5 @@ export class WorkAreaComponent extends WorkArea implements OnInit, OnDestroy {
 
 	public get isSimulationMode(): boolean {
 		return false;
-	}
-
-	ngOnDestroy(): void {
-		super.destroy();
 	}
 }

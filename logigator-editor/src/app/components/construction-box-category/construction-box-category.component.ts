@@ -26,9 +26,7 @@ export class ConstructionBoxCategoryComponent {
 	@Input()
 	public searchText: string;
 
-	constructor(
-		private translate: TranslateService
-	) {}
+	constructor(private translate: TranslateService) {}
 
 	public isInSearchResult(toSearch: ComponentConfig): Observable<boolean> {
 		return this.translate

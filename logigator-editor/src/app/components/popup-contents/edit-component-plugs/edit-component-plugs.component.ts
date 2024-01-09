@@ -60,9 +60,7 @@ export class EditComponentPlugsComponent
 	@ViewChild('compOutputs', { static: true })
 	private _compOutputs: ElementRef<HTMLFormElement>;
 
-	constructor(
-		private formBuilder: UntypedFormBuilder,
-	) {
+	constructor(private formBuilder: UntypedFormBuilder) {
 		super();
 	}
 

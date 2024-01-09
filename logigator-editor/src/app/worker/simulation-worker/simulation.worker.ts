@@ -1,7 +1,11 @@
 // @ts-strict-ignore
 /// <reference lib="webworker" />
 
-import { WasmMethod, WasmRequest, WasmResponse } from '../../models/simulation-worker/wasm-interface';
+import {
+	WasmMethod,
+	WasmRequest,
+	WasmResponse
+} from '../../models/simulation-worker/wasm-interface';
 import { SimulationModule } from '../../models/simulation-worker/simulation-module';
 import { SimulationWorker } from '../../models/simulation-worker/simulation-worker';
 

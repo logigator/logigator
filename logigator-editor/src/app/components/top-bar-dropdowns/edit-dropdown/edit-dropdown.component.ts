@@ -15,8 +15,7 @@ export class EditDropdownComponent {
 	@Output()
 	public requestClosed: EventEmitter<unknown> = new EventEmitter();
 
-	constructor(
-	) {}
+	constructor() {}
 
 	public get istCustomComponent(): boolean {
 		// return this.elemProv.isCustomElement(this.projects.currProject.id);

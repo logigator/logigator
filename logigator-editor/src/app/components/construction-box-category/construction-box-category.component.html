@@ -13,7 +13,10 @@
 			<ng-container *ngFor="let comp of components">
 				<div
 					class="component-to-select"
-					*ngIf="(searchText === '' || (isInSearchResult(comp) | async)) && !isCurrentCustomElement(comp.type)"
+					*ngIf="
+						(searchText === '' || (isInSearchResult(comp) | async)) &&
+						!isCurrentCustomElement(comp.type)
+					"
 					tabindex="0"
 					(click)="selectComponent(comp.type)"
 					(dblclick)="openComponent(comp.type)"

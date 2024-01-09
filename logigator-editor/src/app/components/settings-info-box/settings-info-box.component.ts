@@ -35,9 +35,7 @@ export class SettingsInfoBoxComponent implements OnChanges, OnDestroy {
 	public propertiesForm: UntypedFormGroup;
 	private formSubscription: Subscription;
 
-	constructor(
-		private formBuilder: UntypedFormBuilder
-	) {}
+	constructor(private formBuilder: UntypedFormBuilder) {}
 
 	ngOnChanges(): void {
 		if (this.formSubscription) {
@@ -239,7 +237,7 @@ export class SettingsInfoBoxComponent implements OnChanges, OnDestroy {
 		// 	// return index - this.projects.currProject.numInputs + 1;
 		// }
 
-		 return 0;
+		return 0;
 	}
 
 	public resetNumInputsValue() {

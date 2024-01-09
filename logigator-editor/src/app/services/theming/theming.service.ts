@@ -12,7 +12,7 @@ import {
 	providedIn: 'root'
 })
 export class ThemingService {
-	private _currentTheme: Theme = 'dark'
+	private _currentTheme: Theme = 'dark';
 	private _pendingTheme: Theme | null = null;
 
 	private _showGrid = true;
@@ -53,7 +53,7 @@ export class ThemingService {
 
 	public loadTheme() {
 		this._currentTheme =
-			(this.storage.get<{theme: Theme}>('preferences')?.theme) ?? 'dark';
+			this.storage.get<{ theme: Theme }>('preferences')?.theme ?? 'dark';
 		this._pendingTheme = this.currentTheme;
 		if (this._currentTheme === 'light') {
 			setTimeout(() => this.eastereggs.achieve('BLD'), 1000);

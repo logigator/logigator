@@ -1,7 +1,6 @@
 import { Injectable } from '@angular/core';
 import { Graphics, GraphicsGeometry } from 'pixi.js';
 
-// this any should be (string | number | boolean), but my IDE has a bug and doesn't understand that
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 type CacheableGraphics = new (...args: any[]) => Graphics;
 

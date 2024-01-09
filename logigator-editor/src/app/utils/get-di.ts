@@ -7,5 +7,6 @@ export function setStaticDIInjector(injector: Injector) {
 }
 
 export function getStaticDI<T>(token: Type<T> | InjectionToken<T>): T {
+	if (!_injector) throw new Error('Static DI Injector not set yet!');
 	return _injector.get(token);
 }

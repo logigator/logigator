@@ -1,8 +1,12 @@
-export const environment = {
+import { IEnvironment } from './IEnvironment';
+
+export const environment: IEnvironment = {
 	production: true,
-	chunkSize: 16,
-	gridPixelWidth: 16,
+	gridSize: 16,
 	api: 'https://logigator.com/api',
 	url: 'https://logigator.com/editor',
-	homeUrl: 'https://logigator.com'
+	homeUrl: 'https://logigator.com',
+	debug: {
+		showGridBorders: false
+	}
 };

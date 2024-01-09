@@ -1,21 +1,22 @@
-// @ts-strict-ignore
 import * as PIXI from 'pixi.js';
 import { fromEvent, Subject } from 'rxjs';
 import { takeUntil } from 'rxjs/operators';
-import {
-	Directive,
-	ElementRef,
-	Renderer2
-} from '@angular/core';
+import { Directive, ElementRef, OnDestroy, Renderer2 } from '@angular/core';
 import { ThemingService } from '../../services/theming/theming.service';
 import { RenderTicker } from '../../services/render-ticker/render-ticker.service';
 import { getStaticDI } from '../../utils/get-di';
 import { PixiLoaderService } from '../../services/pixi-loader/pixi-loader.service';
 import { View } from '../view/view';
+import {
+	ViewInputManager,
+	ZoomDirection
+} from '../view-input-manager/view-input-manager';
 
 @Directive()
-export abstract class WorkArea {
-	protected _pixiRenderer: PIXI.Renderer;
+export abstract class WorkArea implements OnDestroy {
+	protected _pixiRenderer: PIXI.Renderer | null = null;
+
+	protected _inputManager: ViewInputManager | null = null;
 
 	protected _view: View = new View();
 
@@ -33,7 +34,7 @@ export abstract class WorkArea {
 		this._pixiRenderer = new PIXI.Renderer({
 			height: canvasContainer.nativeElement.offsetHeight,
 			width: canvasContainer.nativeElement.offsetWidth,
-			antialias: false,
+			antialias: true,
 			powerPreference: 'high-performance',
 			backgroundColor: getStaticDI(ThemingService).getEditorColor('background'),
 			resolution: window.devicePixelRatio || 1,
@@ -45,47 +46,56 @@ export abstract class WorkArea {
 			this._pixiRenderer.view
 		);
 
-		fromEvent(window, 'wheel', { passive: true })
-			.pipe(takeUntil(this._destroySubject))
-			.subscribe((e: WheelEvent) => {
-				if (e.deltaY < 0) {
-					this._view.updateScale(this._view.scale.x + 0.25);
-				} else if (e.deltaY > 0) {
-					this._view.updateScale(this._view.scale.x - 0.25);
-				}
-			});
+		this._view.resize(
+			canvasContainer.nativeElement.offsetWidth,
+			canvasContainer.nativeElement.offsetHeight
+		);
 
 		fromEvent(window, 'resize')
 			.pipe(takeUntil(this._destroySubject))
 			.subscribe(() => {
-				this._pixiRenderer.resize(
+				this._pixiRenderer!.resize(
+					canvasContainer.nativeElement.offsetWidth,
+					canvasContainer.nativeElement.offsetHeight
+				);
+				this._view.resize(
 					canvasContainer.nativeElement.offsetWidth,
 					canvasContainer.nativeElement.offsetHeight
 				);
 				this.ticker.singleFrame(this.getIdentifier());
 			});
+
+		this.initZoomPan(canvasContainer);
 	}
 
 	protected addTickerFunction() {
 		this.ticker.addTickerFunction(this.getIdentifier(), () => {
-			this._pixiRenderer.render(this._view);
+			this._pixiRenderer!.render(this._view);
 		});
 	}
 
-	protected preventContextMenu(
-		canvasContainer: ElementRef<HTMLDivElement>,
-		renderer2: Renderer2
-	) {
-		renderer2.listen(
+	private initZoomPan(canvasContainer: ElementRef<HTMLDivElement>) {
+		if (this._inputManager) return;
+
+		this._inputManager = new ViewInputManager(
 			canvasContainer.nativeElement,
-			'contextmenu',
-			(e: MouseEvent) => {
-				e.preventDefault();
-			}
+			this._destroySubject
 		);
+		this._inputManager.zoom$
+			.pipe(takeUntil(this._destroySubject))
+			.subscribe((dir) => {
+				dir === ZoomDirection.IN ? this._view.zoomIn() : this._view.zoomOut();
+				this.ticker.singleFrame(this.getIdentifier());
+			});
+		this._inputManager.pan$
+			.pipe(takeUntil(this._destroySubject))
+			.subscribe((pt) => {
+				this._view.pan(pt);
+				this.ticker.singleFrame(this.getIdentifier());
+			});
 	}
 
-	protected destroy() {
+	ngOnDestroy() {
 		this._destroySubject.next();
 		this._destroySubject.unsubscribe();
 		this.ticker.removeTickerFunction(this.getIdentifier());

@@ -14,6 +14,8 @@ export class ComponentProviderService {
 	}
 
 	public getElementsByCategory(category: ElementCategory): ComponentConfig[] {
-		return this._components.filter((component) => component.category === category);
+		return this._components.filter(
+			(component) => component.category === category
+		);
 	}
 }

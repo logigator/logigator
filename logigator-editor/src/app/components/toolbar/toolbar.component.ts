@@ -12,16 +12,13 @@ import { BoardStatus } from '../../models/simulation-worker/board';
 	styleUrls: ['./toolbar.component.scss']
 })
 export class ToolbarComponent {
-
 	public targetMultiplier = '1';
 	public targetTickRate = 1;
 
 	@ViewChild('enterSimulationLoading', { read: ViewContainerRef, static: true })
 	private _enterSimulationLoading: ViewContainerRef;
 
-	constructor(
-		private themingService: ThemingService
-	) {}
+	constructor(private themingService: ThemingService) {}
 
 	get production(): boolean {
 		return environment.production;
@@ -42,27 +39,21 @@ export class ToolbarComponent {
 			y2: 96
 		});
 
-		const iter = quadTree.queryRange(0,0, 128, 128);
+		const iter = quadTree.queryRange(0, 0, 128, 128);
 		for (const element of iter) {
 			console.log(element);
 		}
 	}
 
-	public printCalls(): void {
-	}
+	public printCalls(): void {}
 
-	public runTests(): void {
-	}
+	public runTests(): void {}
 
-	public runStep(): void {
-	}
+	public runStep(): void {}
 
-	public async printBoard() {
+	public async printBoard() {}
 
-	}
-
-	public toggleChunks() {
-	}
+	public toggleChunks() {}
 
 	public get currentTheme() {
 		return this.themingService.currentTheme;

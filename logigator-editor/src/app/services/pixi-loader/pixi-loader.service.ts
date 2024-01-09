@@ -6,7 +6,6 @@ import { Assets } from 'pixi.js';
 	providedIn: 'root'
 })
 export class PixiLoaderService {
-
 	private _loaded$ = new ReplaySubject<void>(1);
 
 	public loadPixiFont() {

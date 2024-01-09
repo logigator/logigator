@@ -123,7 +123,7 @@ export class AppComponent implements OnInit, OnDestroy {
 
 	private initTranslation() {
 		this.translate.addLangs(['en', 'de']);
-		const lang = this.storage.get<{lang: string}>('preferences')?.lang;
+		const lang = this.storage.get<{ lang: string }>('preferences')?.lang;
 		if (lang) {
 			this.translate.setDefaultLang(lang);
 			this.translate.use(lang);

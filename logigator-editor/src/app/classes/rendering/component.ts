@@ -1,8 +1,4 @@
-import {
-	BitmapText,
-	Graphics,
-	Point
-} from 'pixi.js';
+import { BitmapText, Container, Graphics, Point } from 'pixi.js';
 
 import { ElementType } from '../../models/element/element-type';
 import { ElementCategory } from '../../models/element/element-category';
@@ -12,7 +8,7 @@ import { ThemingService } from '../../services/theming/theming.service';
 import { GeometryService } from '../../services/geometry/geometry.service';
 import { getStaticDI } from '../../utils/get-di';
 import { WireGraphics } from './graphics/wire.graphics';
-import { fromGrid, toGrid } from '../../utils/grid';
+import { fromGrid } from '../../utils/grid';
 
 export interface ComponentConfig {
 	type: ElementType;
@@ -26,45 +22,14 @@ export interface ComponentConfig {
 	generate: (options: ComponentOption<unknown>[]) => Component;
 }
 
-export class ScalingGraphics extends Graphics {
-	public constantScaleX = false;
-	public constantScaleY = false;
-	public constantRotation = false;
-	public constantScaleChildren = false;
-
-	public applyConstantScale(scale: number) {
-		if (this.constantScaleX) {
-			this.scale.x = 1 / scale;
-		}
-		if (this.constantScaleY) {
-			this.scale.y = 1 / scale;
-		}
-		if (this.constantScaleChildren) {
-			for (const child of this.children) {
-				if (child instanceof ScalingGraphics) {
-					child.applyConstantScale(scale);
-				}
-			}
-		}
-	}
-
-	public applyConstantRotation(rotation: number) {
-		if (this.constantRotation) {
-			this.rotation = -rotation;
-		}
-		if (this.constantScaleChildren) {
-			for (const child of this.children) {
-				if (child instanceof ScalingGraphics) {
-					child.applyConstantRotation(rotation);
-				}
-			}
-		}
-	}
+export const enum ScaleType {
+	X = 1,
+	Y = 2,
+	XY = 3
 }
 
-export abstract class Component extends ScalingGraphics {
+export abstract class Component extends Container {
 	override sortableChildren = false;
-	override constantScaleChildren = true;
 
 	public abstract readonly config: ComponentConfig;
 	public readonly options: ComponentOption<unknown>[];
@@ -75,12 +40,13 @@ export abstract class Component extends ScalingGraphics {
 		getStaticDI(GeometryService);
 
 	private _direction: ElementRotation;
+	private _gridPos: Point = new Point();
 
 	private _numInputs: number;
 	private _numOutputs: number;
 
-	private _inputsGraphics: ScalingGraphics = new ScalingGraphics();
-	private _outputsGraphics: ScalingGraphics = new ScalingGraphics();
+	private _constantScaleContainers: [ScaleType, Container][] = [];
+	private _constantRotationContainers: Container[] = [];
 
 	protected constructor(
 		numInputs: number,
@@ -93,9 +59,6 @@ export abstract class Component extends ScalingGraphics {
 		this._numInputs = numInputs;
 		this._numOutputs = numOutputs;
 		this._direction = direction;
-		this._inputsGraphics.constantScaleChildren = true;
-		this._outputsGraphics.constantScaleChildren = true;
-
 		this.options = options;
 		this.options[0].value;
 
@@ -105,14 +68,20 @@ export abstract class Component extends ScalingGraphics {
 	protected abstract get inputLabels(): string[];
 	protected abstract get outputLabels(): string[];
 
+	protected get gridHeight(): number {
+		return Math.max(this.numInputs, this.numOutputs);
+	}
+
+	protected get gridWidth(): number {
+		return 4;
+	}
+
 	public get gridPos(): Point {
-		return new Point(
-			toGrid(this.position.x - this.pivot.x),
-			toGrid(this.position.y - this.pivot.y)
-		);
+		return this._gridPos;
 	}
 
 	public set gridPos(value: Point) {
+		this._gridPos.copyFrom(value);
 		this.position.set(
 			fromGrid(value.x) + this.pivot.x,
 			fromGrid(value.y) + this.pivot.y
@@ -125,6 +94,7 @@ export abstract class Component extends ScalingGraphics {
 
 	public set numInputs(value: number) {
 		this._numInputs = value;
+		this._draw();
 	}
 
 	public get numOutputs(): number {
@@ -133,6 +103,7 @@ export abstract class Component extends ScalingGraphics {
 
 	public set numOutputs(value: number) {
 		this._numOutputs = value;
+		this._draw();
 	}
 
 	public get direction(): ElementRotation {
@@ -142,26 +113,49 @@ export abstract class Component extends ScalingGraphics {
 	public set direction(value: ElementRotation) {
 		this._direction = value;
 		this.rotation = (value * Math.PI) / 2;
-		this.applyConstantRotation((value * Math.PI) / 2);
+
+		for (const container of this._constantRotationContainers) {
+			container.rotation = -this.rotation;
+		}
+	}
+
+	public applyScale(scale: number): void {
+		for (const [type, container] of this._constantScaleContainers) {
+			if (type & 1) {
+				container.scale.x = 1 / scale;
+			}
+			if (type & 2) {
+				container.scale.y = 1 / scale;
+			}
+		}
+	}
+
+	protected constantScaleContainer(
+		container: Container,
+		type: ScaleType
+	): Container {
+		this._constantScaleContainers.push([type, container]);
+		return container;
+	}
+
+	protected constantRotationContainer(container: Container): Container {
+		this._constantRotationContainers.push(container);
+		return container;
 	}
 
 	private _draw(): void {
+		for (const child of this.children) {
+			child.destroy({ children: true });
+		}
 		this.removeChildren(0);
-		this.clear();
+
+		this._constantScaleContainers = [];
+		this._constantRotationContainers = [];
 
 		this.draw();
 
-		this.drawConnections(
-			this._numInputs,
-			'inputs'
-		);
-		this.drawConnections(
-			this._numOutputs,
-			'outputs'
-		);
-		this._outputsGraphics.position.set(this.width + fromGrid(0.5), 0);
-		this.addChild(this._inputsGraphics);
-		this.addChild(this._outputsGraphics);
+		this.drawConnections(this._numInputs, 'inputs');
+		this.drawConnections(this._numOutputs, 'outputs');
 
 		this.pivot.set(this.width / 2, this.height / 2);
 		this.direction = this._direction;
@@ -169,21 +163,17 @@ export abstract class Component extends ScalingGraphics {
 
 	protected abstract draw(): void;
 
-	private drawConnections(
-		n: number,
-		type: 'inputs' | 'outputs'
-	): void {
+	private drawConnections(n: number, type: 'inputs' | 'outputs'): void {
 		const geometry = this.geometryService.getGeometry(WireGraphics);
-		const container =
-			type === 'inputs' ? this._inputsGraphics : this._outputsGraphics;
+		const container = new Container();
 		const labels = type === 'inputs' ? this.inputLabels : this.outputLabels;
-		container.removeChildren(0);
 
 		for (let i = 0; i < n; i++) {
-			const wire = new ScalingGraphics(geometry);
+			const wire = new Graphics(geometry);
 			wire.position.set(0, fromGrid(i + 0.5));
 			wire.scale.set(fromGrid(0.5), 1);
-			wire.constantScaleY = true;
+			this.constantScaleContainer(wire, ScaleType.Y);
+
 			container.addChild(wire);
 
 			if (labels.length > i) {
@@ -193,23 +183,26 @@ export abstract class Component extends ScalingGraphics {
 					tint: this.themingService.getEditorColor('fontTint')
 				});
 				text.anchor.set(type === 'inputs' ? 0 : 1, 0.5);
+				text.pivot.set((text.width / 2) * (type === 'inputs' ? 1 : -1), 0);
 
-				const child = new ScalingGraphics();
-				child.addChild(text);
-				child.pivot.set((child.width / 2) * (type === 'inputs' ? 1 : -1), 0);
 				if (type === 'inputs') {
-					child.position.set(
-						fromGrid(0.5) + child.width / 2 + 2,
+					text.position.set(
+						fromGrid(0.5) + text.width / 2 + 2,
 						fromGrid(i + 0.5)
 					);
 				} else {
-					child.position.set(-child.width / 2 - 2, fromGrid(i + 0.5));
+					text.position.set(-text.width / 2 - 2, fromGrid(i + 0.5));
 				}
 
-				child.constantRotation = true;
-
-				container.addChild(child);
+				this.constantRotationContainer(text);
+				container.addChild(text);
 			}
 		}
+
+		if (type === 'outputs') {
+			container.position.set(fromGrid(this.gridWidth - 0.5), 0);
+		}
+
+		this.addChild(container);
 	}
 }

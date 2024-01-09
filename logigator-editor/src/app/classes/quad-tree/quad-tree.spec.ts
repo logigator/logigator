@@ -61,9 +61,16 @@ describe('QuadTree', () => {
 
 		const items = insertRandomItems(quadTree, 1000);
 
-		expect(Array.from(quadTree.queryRange(0, 0, Number.MAX_SAFE_INTEGER, Number.MAX_SAFE_INTEGER))).toEqual(
-			arrayWithExactContents(items)
-		);
+		expect(
+			Array.from(
+				quadTree.queryRange(
+					0,
+					0,
+					Number.MAX_SAFE_INTEGER,
+					Number.MAX_SAFE_INTEGER
+				)
+			)
+		).toEqual(arrayWithExactContents(items));
 		expect(Array.from(quadTree.queryRange(0, 0, 5000, 5000))).toEqual(
 			arrayWithExactContents(items.filter((x) => x.x <= 5000 && x.y <= 5000))
 		);
