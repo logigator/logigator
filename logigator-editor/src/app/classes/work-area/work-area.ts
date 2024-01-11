@@ -46,7 +46,7 @@ export abstract class WorkArea implements OnDestroy {
 			this._pixiRenderer.view
 		);
 
-		this._view.resize(
+		this._view.resizeViewport(
 			canvasContainer.nativeElement.offsetWidth,
 			canvasContainer.nativeElement.offsetHeight
 		);
@@ -58,7 +58,7 @@ export abstract class WorkArea implements OnDestroy {
 					canvasContainer.nativeElement.offsetWidth,
 					canvasContainer.nativeElement.offsetHeight
 				);
-				this._view.resize(
+				this._view.resizeViewport(
 					canvasContainer.nativeElement.offsetWidth,
 					canvasContainer.nativeElement.offsetHeight
 				);

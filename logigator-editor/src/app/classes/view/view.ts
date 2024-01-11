@@ -1,4 +1,4 @@
-import { Container, Point, Rectangle } from 'pixi.js';
+import { Container, Point } from 'pixi.js';
 
 import { romComponentConfig } from '../rendering/components/rom.component';
 import { Component, ComponentConfig } from '../rendering/component';
@@ -11,7 +11,7 @@ export class View extends Container {
 
 	private _grid: Grid = new Grid();
 	private _components: Component[] = [];
-	private _size = new Point(0, 0);
+	private _viewPortSize = new Point(0, 0);
 
 	private _scaleStep = 0;
 
@@ -26,25 +26,19 @@ export class View extends Container {
 			// }, 500);
 		});
 
-		this._grid.updateViewport(new Rectangle(0, 0, 32, 32));
 		this.addChild(this._grid);
 	}
 
-	public resize(width: number, height: number) {
-		this._size.x = width;
-		this._size.y = height;
-		this._grid.updateViewport(
-			new Rectangle(this.x, this.y, this._size.x, this._size.y)
-		);
+	public resizeViewport(width: number, height: number) {
+		this._viewPortSize.set(width, height);
+		this._grid.resizeViewport(this._viewPortSize);
 	}
 
 	public pan(point: Point) {
 		this.x += point.x;
 		this.y += point.y;
 
-		this._grid.updateViewport(
-			new Rectangle(this.x, this.y, this._size.x, this._size.y)
-		);
+		this._grid.updatePosition(this.position);
 	}
 
 	public zoomIn() {
@@ -60,6 +54,7 @@ export class View extends Container {
 	}
 
 	public zoom100() {
+		this._scaleStep = 0;
 		this.updateScale(1);
 	}
 
@@ -68,10 +63,10 @@ export class View extends Container {
 
 		this.scale.set(scale);
 
-		this._grid.updateScale(this.scale.x);
+		this._grid.updateScale(scale);
 
 		for (const child of this._components) {
-			child.applyScale(this.scale.x);
+			child.applyScale(scale);
 		}
 	}
 

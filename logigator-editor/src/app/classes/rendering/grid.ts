@@ -1,4 +1,4 @@
-import { Container, Graphics, Rectangle } from 'pixi.js';
+import { Container, Graphics, Point } from 'pixi.js';
 import { GeometryService } from '../../services/geometry/geometry.service';
 import { getStaticDI } from '../../utils/get-di';
 import { GridGraphics } from './graphics/grid.graphics';
@@ -8,16 +8,27 @@ export class Grid extends Container {
 	override sortableChildren = false;
 
 	private readonly _geometryService = getStaticDI(GeometryService);
-	private readonly _gridSize = 32;
+	private readonly _chunkSize = 32;
+	private readonly _chunkSizePx = fromGrid(this._chunkSize);
 	private _scale = 1;
-	private _viewport: Rectangle = new Rectangle(0, 0, 0, 0);
+	private _viewportSize: Point = new Point(0, 0);
+	private _position = new Point(0, 0);
 
 	constructor() {
 		super();
+		this.pivot.set(this._chunkSizePx);
 	}
 
-	public updateViewport(viewport: Rectangle) {
-		this._viewport.copyFrom(viewport);
+	public updatePosition(position: Point) {
+		this._position.set(position.x, position.y);
+		this.position.set(
+			-this.chunkAligned(position.x / this._scale),
+			-this.chunkAligned(position.y / this._scale)
+		);
+	}
+
+	public resizeViewport(viewport: Point) {
+		this._viewportSize.set(viewport.x, viewport.y);
 		this.draw();
 	}
 
@@ -28,56 +39,45 @@ export class Grid extends Container {
 		this.removeChildren(0);
 
 		this._scale = scale;
+		this.updatePosition(this._position);
 		this.draw();
 	}
 
 	private draw(): void {
 		const geometry = this._geometryService.getGeometry(
 			GridGraphics,
-			this._gridSize,
+			this._chunkSize,
 			this._scale
 		);
 
-		const scaledRight = (this._viewport.width - this._viewport.x) / this._scale;
-		const scaledBottom =
-			(this._viewport.height - this._viewport.y) / this._scale;
-		const step = fromGrid(this._gridSize);
+		const viewportScaled = new Point(
+			this._viewportSize.x / this._scale + this._chunkSizePx,
+			this._viewportSize.y / this._scale + this._chunkSizePx
+		);
 
 		let i = 0;
-		for (
-			let x = this.floorToGridSize(-this._viewport.x);
-			x < scaledRight;
-			x += step
-		) {
-			for (
-				let y = this.floorToGridSize(-this._viewport.y);
-				y < scaledBottom;
-				y += step
-			) {
-				const child =
-					this.children.length <= i
-						? this.addChild(new Graphics(geometry))
-						: this.children[i];
-
-				child.position.set(x, y);
-
-				this.children[i++].position.set(x, y);
+		for (let x = 0; x <= viewportScaled.x; x += this._chunkSizePx) {
+			for (let y = 0; y <= viewportScaled.y; y += this._chunkSizePx, ++i) {
+				if (this.children.length <= i) {
+					const child = new Graphics(geometry);
+					child.position.set(x, y);
+					this.addChild(child);
+				} else {
+					this.children[i].position.set(x, y);
+				}
 			}
 		}
 
 		if (i < this.children.length) {
 			const indexFromWhichToRemove = i;
-			for (; i < this.children.length; i++) {
+			for (; i < this.children.length; ++i) {
 				this.children[i].destroy();
 			}
 			this.removeChildren(indexFromWhichToRemove);
 		}
 	}
 
-	private floorToGridSize(value: number) {
-		return (
-			Math.floor(value / fromGrid(this._gridSize) / this._scale) *
-			fromGrid(this._gridSize)
-		);
+	private chunkAligned(num: number): number {
+		return Math.floor(num / this._chunkSizePx) * this._chunkSizePx;
 	}
 }
