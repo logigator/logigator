@@ -7,6 +7,7 @@ export const environment: IEnvironment = {
 	url: 'https://logigator.com/editor',
 	homeUrl: 'https://logigator.com',
 	debug: {
-		showGridBorders: false
+		showGridBorders: false,
+		showHitboxes: false
 	}
 };

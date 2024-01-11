@@ -6,5 +6,6 @@ export interface IEnvironment {
 	homeUrl: string;
 	debug: {
 		showGridBorders: boolean;
+		showHitboxes: boolean;
 	};
 }

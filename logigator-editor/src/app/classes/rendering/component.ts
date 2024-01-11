@@ -9,6 +9,7 @@ import { GeometryService } from '../../services/geometry/geometry.service';
 import { getStaticDI } from '../../utils/get-di';
 import { WireGraphics } from './graphics/wire.graphics';
 import { fromGrid } from '../../utils/grid';
+import { environment } from '../../../environments/environment';
 
 export interface ComponentConfig {
 	type: ElementType;
@@ -83,8 +84,8 @@ export abstract class Component extends Container {
 	public set gridPos(value: Point) {
 		this._gridPos.copyFrom(value);
 		this.position.set(
-			fromGrid(value.x) + this.pivot.x,
-			fromGrid(value.y) + this.pivot.y
+			fromGrid(value.x),
+			fromGrid(value.y)
 		);
 	}
 
@@ -112,6 +113,21 @@ export abstract class Component extends Container {
 
 	public set direction(value: ElementRotation) {
 		this._direction = value;
+
+		switch (value) {
+			case ElementRotation.Down:
+				this.pivot.set(0, this.height);
+				break;
+			case ElementRotation.Left:
+				this.pivot.set(this.width, this.height);
+				break;
+			case ElementRotation.Up:
+				this.pivot.set(this.width, 0);
+				break;
+			default:
+				this.pivot.set(0, 0);
+		}
+
 		this.rotation = (value * Math.PI) / 2;
 
 		for (const container of this._constantRotationContainers) {
@@ -157,8 +173,15 @@ export abstract class Component extends Container {
 		this.drawConnections(this._numInputs, 'inputs');
 		this.drawConnections(this._numOutputs, 'outputs');
 
-		this.pivot.set(this.width / 2, this.height / 2);
 		this.direction = this._direction;
+
+		if (environment.debug.showHitboxes) {
+			const hitbox = new Graphics();
+			hitbox.beginFill(0xff0000, 0.1);
+			hitbox.drawRect(0, 0, this.width, this.height);
+			hitbox.endFill();
+			this.addChild(hitbox);
+		}
 	}
 
 	protected abstract draw(): void;

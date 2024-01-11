@@ -5,6 +5,8 @@ import { Component, ComponentConfig } from '../rendering/component';
 import { getStaticDI } from '../../utils/get-di';
 import { PixiLoaderService } from '../../services/pixi-loader/pixi-loader.service';
 import { Grid } from '../rendering/grid';
+import { ElementRotation } from '../../models/element-rotation';
+import { RenderTicker } from '../../services/render-ticker/render-ticker.service';
 
 export class View extends Container {
 	override sortableChildren = false;
@@ -19,7 +21,56 @@ export class View extends Container {
 		super();
 
 		getStaticDI(PixiLoaderService).loaded$.subscribe(() => {
-			this.addComponent(romComponentConfig, new Point(0, 0));
+			this.addComponent(
+				romComponentConfig,
+				new Point(0, 0),
+				ElementRotation.Right
+			);
+
+			this.addComponent(
+				romComponentConfig,
+				new Point(5, 0),
+				ElementRotation.Right
+			);
+
+			this.addComponent(
+				romComponentConfig,
+				new Point(10, 0),
+				ElementRotation.Right
+			);
+
+			this.addComponent(
+				romComponentConfig,
+				new Point(15, 0),
+				ElementRotation.Right
+			);
+
+
+			this.addComponent(
+				romComponentConfig,
+				new Point(0, 5),
+				ElementRotation.Right
+			);
+
+			this.addComponent(
+				romComponentConfig,
+				new Point(5, 5),
+				ElementRotation.Down
+			);
+
+			this.addComponent(
+				romComponentConfig,
+				new Point(10, 5),
+				ElementRotation.Left
+			);
+
+			this.addComponent(
+				romComponentConfig,
+				new Point(15, 5),
+				ElementRotation.Up
+			);
+
+			getStaticDI(RenderTicker).singleFrame('0');
 
 			// setInterval(() => {
 			// 	component.options[0].value = (component.options[0].value as ElementRotation + 1) % 4
@@ -70,11 +121,16 @@ export class View extends Container {
 		}
 	}
 
-	private addComponent(componentConfig: ComponentConfig, pos: Point) {
+	private addComponent(
+		componentConfig: ComponentConfig,
+		gridPos: Point,
+		direction: ElementRotation = ElementRotation.Right
+	) {
 		const component = componentConfig.generate(
 			componentConfig.options.map((x) => x.clone())
 		);
-		component.gridPos = pos;
+		component.gridPos = gridPos;
+		component.direction = direction;
 
 		this._components.push(component);
 		this.addChild(component);

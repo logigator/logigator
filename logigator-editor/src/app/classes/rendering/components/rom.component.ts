@@ -42,7 +42,7 @@ class RomComponent extends Component {
 
 	protected draw(): void {
 		const componentGraphics = new Graphics(
-			this.geometryService.getGeometry(ComponentGraphics, 3, this.numInputs)
+			this.geometryService.getGeometry(ComponentGraphics, 3, Math.max(this.numInputs, this.numOutputs))
 		);
 		componentGraphics.position.set(fromGrid(0.5), 0);
 		this.addChild(componentGraphics);
