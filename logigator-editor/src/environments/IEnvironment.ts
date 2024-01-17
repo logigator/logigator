@@ -7,5 +7,7 @@ export interface IEnvironment {
 	debug: {
 		showGridBorders: boolean;
 		showHitboxes: boolean;
+		showOrigins: boolean;
+		showConnectionPoints: boolean;
 	};
 }

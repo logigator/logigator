@@ -45,28 +45,27 @@ export class View extends Container {
 				ElementRotation.Right
 			);
 
-
 			this.addComponent(
 				romComponentConfig,
-				new Point(0, 5),
+				new Point(0, 8),
 				ElementRotation.Right
 			);
 
 			this.addComponent(
 				romComponentConfig,
-				new Point(5, 5),
+				new Point(10, 8),
 				ElementRotation.Down
 			);
 
 			this.addComponent(
 				romComponentConfig,
-				new Point(10, 5),
+				new Point(15, 13),
 				ElementRotation.Left
 			);
 
 			this.addComponent(
 				romComponentConfig,
-				new Point(15, 5),
+				new Point(17, 13),
 				ElementRotation.Up
 			);
 

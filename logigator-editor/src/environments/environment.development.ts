@@ -8,6 +8,8 @@ export const environment: IEnvironment = {
 	homeUrl: 'https://dev.logigator.com',
 	debug: {
 		showGridBorders: true,
-		showHitboxes: true
+		showHitboxes: true,
+		showOrigins: true,
+		showConnectionPoints: true
 	}
 };

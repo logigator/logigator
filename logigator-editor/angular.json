@@ -115,7 +115,18 @@
 						},
 						"scripts": [],
 						"karmaConfig": "karma.conf.js"
-					}
+					},
+					"configurations": {
+						"production": {
+							"fileReplacements": [
+								{
+									"replace": "src/environments/environment.ts",
+									"with": "src/environments/environment.production.ts"
+								}
+							]
+						}
+					},
+					"defaultConfiguration": "production"
 				},
 				"lint": {
 					"builder": "@angular-eslint/builder:lint",

@@ -1,20 +1,28 @@
+interface Item<T> {
+	item: T;
+	x: number;
+	y: number;
+	x2: number;
+	y2: number;
+}
+
 interface AbstractEntry<T> {
 	parent: Branch<T> | null;
 	x: number;
 	y: number;
 	size: number;
-	branchElements: T[];
-	leafElements: T[] | null;
+	branchItems: Item<T>[];
+	leafItems: Item<T>[] | null;
 	children: Record<'nw' | 'ne' | 'sw' | 'se', ChildEntry<T>> | null;
 }
 
 interface Branch<T> extends AbstractEntry<T> {
-	leafElements: null;
+	leafItems: null;
 	children: NonNullable<AbstractEntry<T>['children']>;
 }
 
 interface Leaf<T> extends AbstractEntry<T> {
-	leafElements: NonNullable<AbstractEntry<T>['leafElements']>;
+	leafItems: NonNullable<AbstractEntry<T>['leafItems']>;
 	children: null;
 }
 
@@ -24,14 +32,7 @@ type ChildEntry<T> = Entry<T> & {
 	parent: NonNullable<AbstractEntry<T>['parent']>;
 };
 
-export interface TreeItem {
-	x: number;
-	y: number;
-	x2: number;
-	y2: number;
-}
-
-export class QuadTree<T extends TreeItem> {
+export class QuadTree<T> {
 	private static readonly MAX_LEAF_ELEMENTS = 4;
 	private static readonly MIN_BRANCH_ELEMENTS = 2;
 	private static readonly INITIAL_SIZE = 1024;
@@ -40,42 +41,67 @@ export class QuadTree<T extends TreeItem> {
 		x: 0,
 		y: 0,
 		size: QuadTree.INITIAL_SIZE,
-		branchElements: [],
-		leafElements: [],
+		branchItems: [],
+		leafItems: [],
 		children: null,
 		parent: null
 	};
+	private items: Map<T, Entry<T>> = new Map();
 
 	/**
 	 * Inserts an element into the quad tree.
 	 * @param element element to insert
+	 * @param x x coordinate of the top left corner of the element
+	 * @param y y coordinate of the top left corner of the element
+	 * @param x2 x coordinate of the bottom right corner of the element
+	 * @param y2 y coordinate of the bottom right corner of the element
 	 */
-	public insert(element: T): void {
-		while (element.x2 >= this.tree.size || element.y2 >= this.tree.size) {
+	public insert(
+		element: T,
+		x: number,
+		y: number,
+		x2: number,
+		y2: number
+	): void {
+		if (this.items.has(element)) {
+			this.remove(element);
+		}
+
+		while (x2 >= this.tree.size || y2 >= this.tree.size) {
 			this.expand();
 		}
 
 		for (let entry: Entry<T> = this.tree; ; ) {
-			if (!this.elementIsContainedInChild(entry, element)) {
-				entry.branchElements.push(element);
+			if (!this.itemIsContainedInChild(entry, x, y, x2, y2)) {
+				entry.branchItems.push({
+					item: element,
+					x,
+					y,
+					x2,
+					y2
+				});
+				this.items.set(element, entry);
 				return;
 			}
 
 			if (entry.children !== null) {
 				// This is a branch, so we have to go deeper.
-				entry = this.getChildForPoint(entry as Branch<T>, element.x, element.y);
+				entry = this.getChildForPoint(entry as Branch<T>, x, y);
 			} else {
 				// This is a leaf, so we have to check if we can insert the element here or if we have to split the leaf.
-				if (entry.leafElements.length >= QuadTree.MAX_LEAF_ELEMENTS) {
-					entry = this.getChildForPoint(
-						this.splitLeaf(entry as Leaf<T>),
-						element.x,
-						element.y
-					);
+				if (entry.leafItems.length >= QuadTree.MAX_LEAF_ELEMENTS) {
+					entry = this.getChildForPoint(this.splitLeaf(entry as Leaf<T>), x, y);
 					continue;
 				}
 
-				entry.leafElements.push(element);
+				entry.leafItems.push({
+					item: element,
+					x,
+					y,
+					x2,
+					y2
+				});
+				this.items.set(element, entry);
 				return;
 			}
 		}
@@ -87,34 +113,28 @@ export class QuadTree<T extends TreeItem> {
 	 * @returns true if the element was removed, false if it was not found
 	 */
 	public remove(element: T): boolean {
-		for (let entry: Entry<T> = this.tree; ; ) {
-			if (!this.elementIsContainedInChild(entry, element)) {
-				const index = entry.branchElements.indexOf(element);
+		const entry = this.items.get(element);
+		if (entry === undefined) return false;
 
-				if (index === -1) {
-					return false;
-				}
+		let index = entry.branchItems.findIndex((x) => x.item === element);
+		if (index !== -1) {
+			entry.branchItems.splice(index, 1);
+			if (entry.parent !== null) this.minifyBranch(entry.parent);
+			return true;
+		}
 
-				entry.branchElements.splice(index, 1);
-				return true;
-			}
-
-			if (entry.children !== null) {
-				// This is a branch, so we have to go deeper.
-				entry = this.getChildForPoint(entry as Branch<T>, element.x, element.y);
-			} else {
-				// This is a leaf, so we have to check if we can remove the element here or if it is not found.
-				const index = entry.leafElements.indexOf(element);
-
-				if (index === -1) {
-					return false;
-				}
-
-				entry.leafElements.splice(index, 1);
+		if (entry.leafItems) {
+			index = entry.leafItems.findIndex((x) => x.item === element);
+			if (index !== -1) {
+				entry.leafItems.splice(index, 1);
 				if (entry.parent !== null) this.minifyBranch(entry.parent);
 				return true;
 			}
 		}
+
+		throw new Error(
+			'Internal error: element was found in hashmap but not in tree'
+		);
 	}
 
 	/**
@@ -140,14 +160,14 @@ export class QuadTree<T extends TreeItem> {
 		x2: number,
 		y2: number
 	): Generator<T> {
-		for (const element of entry.branchElements) {
+		for (const element of entry.branchItems) {
 			if (
 				element.x2 >= x &&
 				element.x <= x2 &&
 				element.y2 >= y &&
 				element.y <= y2
 			) {
-				yield element;
+				yield element.item;
 			}
 		}
 
@@ -169,14 +189,14 @@ export class QuadTree<T extends TreeItem> {
 				}
 			}
 		} else {
-			for (const element of entry.leafElements) {
+			for (const element of entry.leafItems) {
 				if (
 					element.x2 >= x &&
 					element.x <= x2 &&
 					element.y2 >= y &&
 					element.y <= y2
 				) {
-					yield element;
+					yield element.item;
 				}
 			}
 		}
@@ -191,22 +211,19 @@ export class QuadTree<T extends TreeItem> {
 			x: 0,
 			y: 0,
 			size: this.tree.size * 2,
-			branchElements: [],
-			leafElements: null,
+			branchItems: [],
+			leafItems: null,
 			parent: null
 		};
 
 		(newRoot as Branch<T>).children = {
-			nw: {
-				...this.tree,
-				parent: newRoot as Branch<T>
-			},
+			nw: this.tree as Entry<T> as ChildEntry<T>,
 			ne: {
 				x: this.tree.size,
 				y: 0,
 				size: this.tree.size,
-				branchElements: [],
-				leafElements: [],
+				branchItems: [],
+				leafItems: [],
 				parent: newRoot as Branch<T>,
 				children: null
 			},
@@ -214,8 +231,8 @@ export class QuadTree<T extends TreeItem> {
 				x: 0,
 				y: this.tree.size,
 				size: this.tree.size,
-				branchElements: [],
-				leafElements: [],
+				branchItems: [],
+				leafItems: [],
 				parent: newRoot as Branch<T>,
 				children: null
 			},
@@ -223,12 +240,14 @@ export class QuadTree<T extends TreeItem> {
 				x: this.tree.size,
 				y: this.tree.size,
 				size: this.tree.size,
-				branchElements: [],
-				leafElements: [],
+				branchItems: [],
+				leafItems: [],
 				parent: newRoot as Branch<T>,
 				children: null
 			}
 		};
+
+		(newRoot as Branch<T>).children.nw.parent = newRoot as Branch<T>;
 
 		this.minifyBranch(newRoot as Branch<T>);
 		this.tree = newRoot as Root<T>;
@@ -244,8 +263,8 @@ export class QuadTree<T extends TreeItem> {
 				x: entry.x,
 				y: entry.y,
 				size: entry.size / 2,
-				branchElements: [],
-				leafElements: [],
+				branchItems: [],
+				leafItems: [],
 				parent: entry as Entry<T> as Branch<T>,
 				children: null
 			},
@@ -253,8 +272,8 @@ export class QuadTree<T extends TreeItem> {
 				x: entry.x + entry.size / 2,
 				y: entry.y,
 				size: entry.size / 2,
-				branchElements: [],
-				leafElements: [],
+				branchItems: [],
+				leafItems: [],
 				parent: entry as Entry<T> as Branch<T>,
 				children: null
 			},
@@ -262,8 +281,8 @@ export class QuadTree<T extends TreeItem> {
 				x: entry.x,
 				y: entry.y + entry.size / 2,
 				size: entry.size / 2,
-				branchElements: [],
-				leafElements: [],
+				branchItems: [],
+				leafItems: [],
 				parent: entry as Entry<T> as Branch<T>,
 				children: null
 			},
@@ -271,28 +290,38 @@ export class QuadTree<T extends TreeItem> {
 				x: entry.x + entry.size / 2,
 				y: entry.y + entry.size / 2,
 				size: entry.size / 2,
-				branchElements: [],
-				leafElements: [],
+				branchItems: [],
+				leafItems: [],
 				parent: entry as Entry<T> as Branch<T>,
 				children: null
 			}
 		};
 
-		for (const element of entry.leafElements) {
+		for (const element of entry.leafItems) {
 			const child = this.getChildForPoint(
 				entry as Entry<T> as Branch<T>,
 				element.x,
 				element.y
 			);
 
-			if (this.elementIsContainedInChild(child, element)) {
-				child.leafElements!.push(element);
+			this.items.set(element.item, child);
+
+			if (
+				this.itemIsContainedInChild(
+					child,
+					element.x,
+					element.y,
+					element.x2,
+					element.y2
+				)
+			) {
+				child.leafItems!.push(element);
 			} else {
-				child.branchElements.push(element);
+				child.branchItems.push(element);
 			}
 		}
 
-		(entry as Entry<T>).leafElements = null;
+		(entry as Entry<T>).leafItems = null;
 
 		return entry as Entry<T> as Branch<T>;
 	}
@@ -308,22 +337,24 @@ export class QuadTree<T extends TreeItem> {
 			if (child.children !== null) {
 				childrenCount += this.minifyBranch(child as Branch<T>);
 			} else {
-				childrenCount += child.leafElements.length;
+				childrenCount += child.leafItems.length;
 			}
-			childrenCount += child.branchElements.length;
+			childrenCount += child.branchItems.length;
 		}
 
 		if (childrenCount < QuadTree.MIN_BRANCH_ELEMENTS) {
-			const elements: T[] = [];
+			const elements: Item<T>[] = [];
 			for (const child of Object.values(entry.children)) {
-				for (const element of child.branchElements) {
+				for (const element of child.branchItems) {
+					this.items.set(element.item, entry);
 					elements.push(element);
 				}
-				for (const element of child.leafElements!) {
+				for (const element of child.leafItems!) {
+					this.items.set(element.item, entry);
 					elements.push(element);
 				}
 			}
-			(entry as Entry<T> as Leaf<T>).leafElements = elements;
+			(entry as Entry<T> as Leaf<T>).leafItems = elements;
 			(entry as Entry<T> as Leaf<T>).children = null;
 		}
 
@@ -334,15 +365,16 @@ export class QuadTree<T extends TreeItem> {
 	 * Returns true if the element would be contained in one of the children of the entry.
 	 * @private
 	 */
-	private elementIsContainedInChild(
+	private itemIsContainedInChild(
 		entry: Entry<T>,
-		element: TreeItem
+		x: number,
+		y: number,
+		x2: number,
+		y2: number
 	): boolean {
 		return !(
-			(element.x < entry.x + entry.size / 2 &&
-				element.x2 >= entry.x + entry.size / 2) ||
-			(element.y < entry.y + entry.size / 2 &&
-				element.y2 >= entry.y + entry.size / 2)
+			(x < entry.x + entry.size / 2 && x2 >= entry.x + entry.size / 2) ||
+			(y < entry.y + entry.size / 2 && y2 >= entry.y + entry.size / 2)
 		);
 	}
 

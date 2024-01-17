@@ -1,9 +1,16 @@
-import { QuadTree, TreeItem } from './quad-tree';
+import { QuadTree } from './quad-tree';
 import arrayWithExactContents = jasmine.arrayWithExactContents;
+
+interface TreeItem {
+	x: number;
+	y: number;
+	x2: number;
+	y2: number;
+}
 
 describe('QuadTree', () => {
 	it('inserted item can be retrieved', () => {
-		const quadTree = new QuadTree();
+		const quadTree = new QuadTree<TreeItem>();
 
 		const items: TreeItem[] = [{ x: 0, y: 0, x2: 10, y2: 10 }];
 		insertIntoTree(quadTree, items);
@@ -21,7 +28,7 @@ describe('QuadTree', () => {
 	});
 
 	it('queryRange does not return items outside of range', () => {
-		const quadTree = new QuadTree();
+		const quadTree = new QuadTree<TreeItem>();
 
 		const items: TreeItem[] = [
 			{ x: 10, y: 10, x2: 20, y2: 20 },
@@ -43,7 +50,7 @@ describe('QuadTree', () => {
 	});
 
 	it('inserted item outside of initial size is handled correctly', () => {
-		const quadTree = new QuadTree();
+		const quadTree = new QuadTree<TreeItem>();
 
 		const items: TreeItem[] = [
 			{ x: 10000, y: 10000, x2: 20000, y2: 20000 },
@@ -57,7 +64,7 @@ describe('QuadTree', () => {
 	});
 
 	it('inserting 1000 items works correctly', () => {
-		const quadTree = new QuadTree();
+		const quadTree = new QuadTree<TreeItem>();
 
 		const items = insertRandomItems(quadTree, 1000);
 
@@ -77,7 +84,7 @@ describe('QuadTree', () => {
 	});
 
 	it('removing items works correctly', () => {
-		const quadTree = new QuadTree();
+		const quadTree = new QuadTree<TreeItem>();
 
 		const items = insertRandomItems(quadTree, 10);
 
@@ -124,12 +131,12 @@ function insertRandomItems(
 	return items;
 }
 
-function insertIntoTree<T extends TreeItem>(
-	tree: QuadTree<T>,
-	items: T[]
-): QuadTree<T> {
+function insertIntoTree(
+	tree: QuadTree<TreeItem>,
+	items: TreeItem[]
+): QuadTree<TreeItem> {
 	for (const item of items) {
-		tree.insert(item);
+		tree.insert(item, item.x, item.y, item.x2, item.y2);
 	}
 
 	return tree;

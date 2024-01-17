@@ -1,3 +1,3 @@
 export class Project {
-	name: string = 'NOT IMPLEMENTED';
+	public name: string = 'NOT IMPLEMENTED';
 }
