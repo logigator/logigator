@@ -24,26 +24,7 @@ export class ToolbarComponent {
 		return environment.production;
 	}
 
-	public printElements(): void {
-		const quadTree = new QuadTree();
-		quadTree.insert({
-			x: 0,
-			y: 0,
-			x2: 2,
-			y2: 2
-		});
-		quadTree.insert({
-			x: 64,
-			y: 64,
-			x2: 96,
-			y2: 96
-		});
-
-		const iter = quadTree.queryRange(0, 0, 128, 128);
-		for (const element of iter) {
-			console.log(element);
-		}
-	}
+	public printElements(): void {}
 
 	public printCalls(): void {}
 

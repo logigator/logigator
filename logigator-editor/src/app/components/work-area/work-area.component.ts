@@ -7,7 +7,7 @@ import {
 	ViewChild
 } from '@angular/core';
 import { WorkArea } from '../../classes/work-area/work-area';
-import { Project } from '../../classes/project/project';
+import { ProjectMeta } from '../../classes/project/project-meta';
 
 @Component({
 	selector: 'app-work-area',
@@ -37,7 +37,7 @@ export class WorkAreaComponent extends WorkArea implements OnInit {
 		return '0';
 	}
 
-	public get allProjects(): Project[] {
+	public get allProjects(): ProjectMeta[] {
 		return [];
 	}
 

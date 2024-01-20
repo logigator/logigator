@@ -1,3 +1,5 @@
+import { Container, DisplayObject } from 'pixi.js';
+
 interface Item<T> {
 	item: T;
 	x: number;
@@ -32,7 +34,7 @@ type ChildEntry<T> = Entry<T> & {
 	parent: NonNullable<AbstractEntry<T>['parent']>;
 };
 
-export class QuadTree<T> {
+export class QuadTreeContainer<T extends DisplayObject> extends Container {
 	private static readonly MAX_LEAF_ELEMENTS = 4;
 	private static readonly MIN_BRANCH_ELEMENTS = 2;
 	private static readonly INITIAL_SIZE = 1024;
@@ -41,7 +43,7 @@ export class QuadTree<T> {
 	private tree: Root<T> = {
 		x: 0,
 		y: 0,
-		size: QuadTree.INITIAL_SIZE,
+		size: QuadTreeContainer.INITIAL_SIZE,
 		branchItems: [],
 		leafItems: [],
 		children: null,
@@ -90,7 +92,7 @@ export class QuadTree<T> {
 				entry = this.getChildForPoint(entry as Branch<T>, x, y);
 			} else {
 				// This is a leaf, so we have to check if we can insert the element here or if we have to split the leaf.
-				if (entry.leafItems.length >= QuadTree.MAX_LEAF_ELEMENTS && entry.size >= QuadTree.MIN_LEAF_SIZE * 2) {
+				if (entry.leafItems.length >= QuadTreeContainer.MAX_LEAF_ELEMENTS && entry.size >= QuadTreeContainer.MIN_LEAF_SIZE * 2) {
 					entry = this.getChildForPoint(this.splitLeaf(entry as Leaf<T>), x, y);
 					continue;
 				}
@@ -343,7 +345,7 @@ export class QuadTree<T> {
 			childrenCount += child.branchItems.length;
 		}
 
-		if (childrenCount < QuadTree.MIN_BRANCH_ELEMENTS) {
+		if (childrenCount < QuadTreeContainer.MIN_BRANCH_ELEMENTS) {
 			const elements: Item<T>[] = [];
 			for (const child of Object.values(entry.children)) {
 				for (const element of child.branchItems) {

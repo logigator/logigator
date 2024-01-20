@@ -12,7 +12,7 @@ import { ApiService } from '../../../services/api/api.service';
 import { environment } from '../../../../environments/environment';
 import { ProjectInfo } from '../../../models/http/response/project-info';
 import { LoadingService } from '../../../services/loading/loading.service';
-import { Project } from '../../../classes/project/project';
+import { ProjectMeta } from '../../../classes/project/project-meta';
 
 @Component({
 	selector: 'app-share-project',
@@ -21,7 +21,7 @@ import { Project } from '../../../classes/project/project';
 	changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class ShareProjectComponent
-	extends PopupContentComp<Project, never>
+	extends PopupContentComp<ProjectMeta, never>
 	implements OnInit
 {
 	public isPublic: boolean;

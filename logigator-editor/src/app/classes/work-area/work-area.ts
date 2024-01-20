@@ -6,7 +6,7 @@ import { ThemingService } from '../../services/theming/theming.service';
 import { RenderTicker } from '../../services/render-ticker/render-ticker.service';
 import { getStaticDI } from '../../utils/get-di';
 import { PixiLoaderService } from '../../services/pixi-loader/pixi-loader.service';
-import { View } from '../view/view';
+import { Project } from '../project/project';
 import {
 	ViewInputManager,
 	ZoomDirection
@@ -18,7 +18,7 @@ export abstract class WorkArea implements OnDestroy {
 
 	protected _inputManager: ViewInputManager | null = null;
 
-	protected _view: View = new View();
+	protected _view: Project = new Project();
 
 	protected _destroySubject = new Subject<void>();
 

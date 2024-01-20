@@ -15,7 +15,7 @@ import {
 } from '@angular/forms';
 import { fromEvent, Subject } from 'rxjs';
 import { takeUntil } from 'rxjs/operators';
-import { Project } from '../../../classes/project/project';
+import { ProjectMeta } from '../../../classes/project/project-meta';
 
 @Component({
 	selector: 'app-edit-component-plugs',
@@ -23,7 +23,7 @@ import { Project } from '../../../classes/project/project';
 	styleUrls: ['./edit-component-plugs.component.scss']
 })
 export class EditComponentPlugsComponent
-	extends PopupContentComp<Project, never>
+	extends PopupContentComp<ProjectMeta, never>
 	implements OnDestroy, AfterViewInit
 {
 	public inputLabelsForm: UntypedFormGroup;

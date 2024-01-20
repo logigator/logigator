@@ -1,16 +1,16 @@
 import { Injectable } from '@angular/core';
-import { Project } from '../../classes/project/project';
+import { ProjectMeta } from '../../classes/project/project-meta';
 @Injectable({
 	providedIn: 'root'
 })
 export class ProjectService {
-	private _project: Project;
+	private _project: ProjectMeta;
 
 	constructor() {
-		this._project = new Project();
+		this._project = new ProjectMeta();
 	}
 
-	public get project(): Project {
+	public get project(): ProjectMeta {
 		return this._project;
 	}
 }
