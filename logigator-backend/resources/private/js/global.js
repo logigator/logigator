@@ -62,6 +62,21 @@ function popupPartial(node) {
 }
 document.querySelectorAll('.partial-popup').forEach(popup => popupPartial(popup));
 
+for (const ytElement of document.querySelectorAll('.partial-youtube-overlay')) {
+	ytElement.firstElementChild.addEventListener('click', () => {
+		const iframe = document.createElement('iframe');
+		iframe.setAttribute('frameborder', '0');
+		iframe.setAttribute('allow', 'accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture');
+		iframe.setAttribute('allowfullscreen', '');
+		iframe.setAttribute('title', 'YouTube Video');
+		iframe.setAttribute('src', `https://www.youtube.com/embed/${ytElement.getAttribute('data-id')}?autoplay=1&rel=0`);
+		iframe.setAttribute('width', ytElement.getAttribute('data-width'));
+		iframe.setAttribute('height', ytElement.getAttribute('data-height'));
+
+		ytElement.appendChild(iframe);
+	}, { once: true, passive: true });
+}
+
 // ------------------------------------------------------------------------------------------------
 
 /**
@@ -88,20 +103,36 @@ document.querySelectorAll('form').forEach(form => formValidationForGlobalForms(f
 
 // ------------------------------------------------------------------------------------------------
 
-/**
- * @param {HTMLElement} node
- */
-function cookieConsent(node) {
-	if(!node) return;
-
-	Bem.element(node, 'btn').addEventListener('click', () => {
-		const date = new Date();
-		date.setTime(date.getTime() + (30 * 24 * 60 * 60 * 1000));
-		document.cookie = `acceptedCookies=true; expires=${date.toUTCString()}; path=/`;
-		node.style.display = 'none';
-	});
-}
-cookieConsent(document.querySelector('.partial-cookie-consent'));
+// eslint-disable-next-line no-undef
+CookieConsent.run({
+	language: {
+		default: 'en',
+		autoDetect: 'document',
+		translations: {
+			en: '/cookieconsent.en.json',
+			de: '/cookieconsent.de.json'
+		}
+	},
+	categories: {
+		necessary: {
+			enabled: true,  // this category is enabled by default
+			readOnly: true  // this category cannot be disabled
+		},
+		analytics: {}
+	},
+	cookie: {
+		expiresAfterDays: 365
+	},
+	guiOptions: {
+		consentModal: {
+			layout: 'bar',
+			equalWeightButtons: false
+		},
+		preferencesModal: {
+			equalWeightButtons: false
+		}
+	}
+});
 
 // GLOBAL_CALLS -----------------------------------------------------------------------------------
 

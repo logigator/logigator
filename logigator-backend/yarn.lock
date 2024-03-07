@@ -1799,13 +1799,6 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@types/zen-observable@npm:0.8.3":
-  version: 0.8.3
-  resolution: "@types/zen-observable@npm:0.8.3"
-  checksum: c0605d109e58a32c9b47ab9becb4ee4bcd8ed54f452ccdcfbb025a60eb8abb1341f00fb045caaa6f1a72f1299f2cdf7b7918023aef34bd9bfdfdbae0e21e66eb
-  languageName: node
-  linkType: hard
-
 "@typescript-eslint/eslint-plugin@npm:^5.4.0":
   version: 5.44.0
   resolution: "@typescript-eslint/eslint-plugin@npm:5.44.0"
@@ -5886,10 +5879,11 @@ __metadata:
     routing-controllers: "npm:^0.9.0"
     sass: "npm:^1.44.0"
     typedi: "npm:^0.8.0"
-    typeorm: "npm:^0.2.41"
+    typeorm: "npm:^0.2.45"
     typeorm-typedi-extensions: "npm:^0.4.1"
     typescript: "npm:^4.5.2"
     uuid: "npm:^8.3.2"
+    vanilla-cookieconsent: "npm:^3.0.0"
   languageName: unknown
   linkType: soft
 
@@ -7808,9 +7802,9 @@ __metadata:
   linkType: hard
 
 "sax@npm:>=0.6.0":
-  version: 1.2.4
-  resolution: "sax@npm:1.2.4"
-  checksum: 6e9b05ff443ee5e5096ce92d31c0740a20d33002fad714ebcb8fc7a664d9ee159103ebe8f7aef0a1f7c5ecacdd01f177f510dff95611c589399baf76437d3fe3
+  version: 1.3.0
+  resolution: "sax@npm:1.3.0"
+  checksum: 599dbe0ba9d8bd55e92d920239b21d101823a6cedff71e542589303fa0fa8f3ece6cf608baca0c51be846a2e88365fac94a9101a9c341d94b98e30c4deea5bea
   languageName: node
   linkType: hard
 
@@ -8735,9 +8729,9 @@ __metadata:
   linkType: hard
 
 "tslib@npm:^2.1.0":
-  version: 2.4.1
-  resolution: "tslib@npm:2.4.1"
-  checksum: 9ac0e4fd1033861f0b4f0d848dc3009ebcc3aa4757a06e8602a2d8a7aed252810e3540e54e70709f06c0f95311faa8584f769bcbede48aff785eb7e4d399b9ec
+  version: 2.6.2
+  resolution: "tslib@npm:2.6.2"
+  checksum: e03a8a4271152c8b26604ed45535954c0a45296e32445b4b87f8a5abdb2421f40b59b4ca437c4346af0f28179780d604094eb64546bee2019d903d01c6c19bdb
   languageName: node
   linkType: hard
 
@@ -8823,7 +8817,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"typeorm@npm:^0.2.41":
+"typeorm@npm:^0.2.45":
   version: 0.2.45
   resolution: "typeorm@npm:0.2.45"
   dependencies:
@@ -9183,6 +9177,13 @@ __metadata:
   languageName: node
   linkType: hard
 
+"vanilla-cookieconsent@npm:^3.0.0":
+  version: 3.0.0
+  resolution: "vanilla-cookieconsent@npm:3.0.0"
+  checksum: f3467989b0ff6ee3c7d0beba7af9272fb6440735a7fe6d1dd1c047373dc4e70ed6f2bbcad858e68a57d1e2366d2cd3183827549fa3c765b67b2347148cfc1bb5
+  languageName: node
+  linkType: hard
+
 "vary@npm:^1.1.2, vary@npm:~1.1.2":
   version: 1.1.2
   resolution: "vary@npm:1.1.2"
@@ -9496,8 +9497,8 @@ __metadata:
   linkType: hard
 
 "yargs@npm:^17.0.1":
-  version: 17.6.2
-  resolution: "yargs@npm:17.6.2"
+  version: 17.7.2
+  resolution: "yargs@npm:17.7.2"
   dependencies:
     cliui: "npm:^8.0.1"
     escalade: "npm:^3.1.1"
@@ -9506,7 +9507,7 @@ __metadata:
     string-width: "npm:^4.2.3"
     y18n: "npm:^5.0.5"
     yargs-parser: "npm:^21.1.1"
-  checksum: dd5c89aa8186d2a18625b26b68beb635df648617089135e9661107a92561056427bbd41dbfa228db5a7d968ea1043d96c036c2eb978acf7b61a0ae48bf3be206
+  checksum: ccd7e723e61ad5965fffbb791366db689572b80cca80e0f96aad968dfff4156cd7cd1ad18607afe1046d8241e6fb2d6c08bf7fa7bfb5eaec818735d8feac8f05
   languageName: node
   linkType: hard
 
@@ -9539,12 +9540,11 @@ __metadata:
   linkType: hard
 
 "zen-observable-ts@npm:^1.0.0":
-  version: 1.1.0
-  resolution: "zen-observable-ts@npm:1.1.0"
+  version: 1.2.5
+  resolution: "zen-observable-ts@npm:1.2.5"
   dependencies:
-    "@types/zen-observable": "npm:0.8.3"
     zen-observable: "npm:0.8.15"
-  checksum: 608dc1b82b1f8c66d1068b24017fd855e2355acaec3f5c41f7e3f780d58aa3b1ce3e175c82a65095f1b0f6ec18295b1f1d9aafa81b2f4556d55ae4e4bb6d4ec8
+  checksum: 21d586f3d0543e1d6f05d9333a137b407dbf337907c1ee1c2fa7a7da044f7e1262e4baf4ef8902f230c6f5acb561047659eb7df73df33307233cc451efe46db1
   languageName: node
   linkType: hard
 

@@ -24,17 +24,6 @@
 						<button type="submit" formaction="/auth/google-login" class="btn-outline primary">{{i18n.USERSPACE.ACCOUNT.SECURITY.CONNECT_NOW}}</button>
 					{{/if}}
 				</div>
-				<div class="view-my-account-security__linking-account">
-					<div class="view-my-account-security__linking-account-type">
-						{{> icon icon='twitter' alt='twitter login icon' class='' }}
-						<p>Twitter</p>
-					</div>
-					{{#if connectedTwitter}}
-						<p>{{i18n.USERSPACE.ACCOUNT.SECURITY.CONNECTED}}</p>
-					{{else}}
-						<button type="submit" formaction="/auth/twitter-login" class="btn-outline primary">{{i18n.USERSPACE.ACCOUNT.SECURITY.CONNECT_NOW}}</button>
-					{{/if}}
-				</div>
 
 				{{#> form-general-errors}}
 					{{> form-error error='unknown' message=i18n.USERSPACE.ACCOUNT.SECURITY.ERR_UNKNOWN }}

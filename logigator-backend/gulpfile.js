@@ -37,24 +37,23 @@ gulp.task('scss:watch', function () {
 
 gulp.task('js:global-modern', function() {
 	return gulp.src([
+		path.join(__dirname, 'node_modules', 'vanilla-cookieconsent', 'dist', 'cookieconsent.umd.js').replace(/\\/g, '/'),
 		path.join(__dirname, 'resources/private/js/bem.js').replace(/\\/g, '/'),
 		path.join(__dirname, 'resources/private/js/global-functions.js').replace(/\\/g, '/'),
 		path.join(__dirname, 'resources/private/js/global.js').replace(/\\/g, '/')
-	]).pipe(sourceMaps.init())
+	])
+		.pipe(sourceMaps.init())
 		.pipe(concat('global-es2015.js'))
 		.pipe(babel({
 			presets: [
-				['@babel/env', {
+				['@babel/preset-env', {
 					targets: {
-						browsers: [
-							'Edge >= 16',
-							'Firefox >= 60',
-							'Chrome >= 61',
-							'Safari >= 11',
-							'Opera >= 48'
-						]
+						edge: "17",
+						firefox: "60",
+						chrome: "67",
+						safari: "11.1"
 					}
-			}]
+				}]
 			],
 		}))
 		.on('error', function(err) {
@@ -74,15 +73,12 @@ gulp.task('js:views-modern', function() {
 		.pipe(rename({suffix: '-es2015'}))
 		.pipe(babel({
 			presets: [
-				['@babel/env', {
+				['@babel/preset-env', {
 					targets: {
-						browsers: [
-							'Edge >= 16',
-							'Firefox >= 60',
-							'Chrome >= 61',
-							'Safari >= 11',
-							'Opera >= 48'
-						]
+						edge: "17",
+						firefox: "60",
+						chrome: "67",
+						safari: "11.1"
 					}
 				}]
 			],
@@ -103,6 +99,7 @@ gulp.task('js-modern', gulp.parallel(['js:global-modern', 'js:views-modern']));
 gulp.task('js:global-legacy', function() {
 	return gulp.src([
 		path.join(__dirname, 'node_modules', 'regenerator-runtime', 'runtime.js').replace(/\\/g, '/'),
+		path.join(__dirname, 'node_modules', 'vanilla-cookieconsent', 'dist', 'cookieconsent.umd.js').replace(/\\/g, '/'),
 		path.join(__dirname, 'resources/private/js/bem.js').replace(/\\/g, '/'),
 		path.join(__dirname, 'resources/private/js/global-functions.js').replace(/\\/g, '/'),
 		path.join(__dirname, 'resources/private/js/global.js').replace(/\\/g, '/')

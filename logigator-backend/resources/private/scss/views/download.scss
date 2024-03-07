@@ -21,6 +21,20 @@
 		}
 	}
 
+	@include element('deprecation') {
+		width: 100%;
+
+		p {
+			display: block;
+			margin: 0;
+			font-weight: bold;
+			padding: .75rem;
+			background-color: orange;
+			color: black;
+			text-align: center;
+		}
+	}
+
 	@include element('screenshot') {
 		min-width: 450px;
 		max-width: 700px;

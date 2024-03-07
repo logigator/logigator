@@ -1,10 +1,9 @@
 <div class="view-features">
 	<section class="view-features__feature">
 		<div class="view-features__feature-content">
-			<iframe class="view-features__feature-video" title="{{i18n.FEATURES.WHAT_IS.TITLE}}" width="560" height="340" src="{{i18n.FEATURES.WHAT_IS.VIDEO}}" frameborder="0"
-					allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture"
-					allowfullscreen>
-			</iframe>
+			<div class="view-features__feature-video">
+				{{> youtube-overlay width=560 height=340 id=i18n.FEATURES.WHAT_IS.VIDEO title=i18n.FEATURES.WHAT_IS.TITLE}}
+			</div>
 			<div class="view-features__feature-description">
 				<h2 class="view-features__feature-title">{{i18n.FEATURES.WHAT_IS.TITLE}}</h2>
 				<hr class="view-features__feature-divider">
@@ -15,10 +14,9 @@
 
 	<section class="view-features__feature">
 		<div class="view-features__feature-content">
-			<iframe class="view-features__feature-video" title="{{i18n.FEATURES.WHAT_IS.TITLE}}" width="560" height="340" src="{{i18n.FEATURES.GENERAL.VIDEO}}" frameborder="0"
-					allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture"
-					allowfullscreen>
-			</iframe>
+			<div class="view-features__feature-video">
+				{{> youtube-overlay onlyhq=(expr preferences.lang '===' 'de') width=560 height=340 id=i18n.FEATURES.GENERAL.VIDEO title=i18n.FEATURES.GENERAL.TITLE}}
+			</div>
 			<div class="view-features__feature-description">
 				<h2 class="view-features__feature-title">{{i18n.FEATURES.GENERAL.TITLE}}</h2>
 				<hr class="view-features__feature-divider">
@@ -29,10 +27,9 @@
 
 	<section class="view-features__feature">
 		<div class="view-features__feature-content">
-			<iframe class="view-features__feature-video" title="{{i18n.FEATURES.WHAT_IS.TITLE}}" width="560" height="340" src="{{i18n.FEATURES.CUSTOM_COMPS.VIDEO}}" frameborder="0"
-					allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture"
-					allowfullscreen>
-			</iframe>
+			<div class="view-features__feature-video">
+				{{> youtube-overlay width=560 height=340 id=i18n.FEATURES.CUSTOM_COMPS.VIDEO title=i18n.FEATURES.CUSTOM_COMPS.TITLE}}
+			</div>
 			<div class="view-features__feature-description">
 				<h2 class="view-features__feature-title">{{i18n.FEATURES.CUSTOM_COMPS.TITLE}}</h2>
 				<hr class="view-features__feature-divider">
@@ -43,10 +40,9 @@
 
 	<section class="view-features__feature">
 		<div class="view-features__feature-content">
-			<iframe class="view-features__feature-video" title="{{i18n.FEATURES.WHAT_IS.TITLE}}" width="560" height="340" src="{{i18n.FEATURES.SIMULATION.VIDEO}}" frameborder="0"
-					allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture"
-					allowfullscreen>
-			</iframe>
+			<div class="view-features__feature-video">
+				{{> youtube-overlay width=560 height=340 id=i18n.FEATURES.SIMULATION.VIDEO title=i18n.FEATURES.SIMULATION.TITLE}}
+			</div>
 			<div class="view-features__feature-description">
 				<h2 class="view-features__feature-title">{{i18n.FEATURES.SIMULATION.TITLE}}</h2>
 				<hr class="view-features__feature-divider">
@@ -57,10 +53,9 @@
 
 	<section class="view-features__feature">
 		<div class="view-features__feature-content">
-			<iframe class="view-features__feature-video" title="{{i18n.FEATURES.WHAT_IS.TITLE}}" width="560" height="340" src="{{i18n.FEATURES.SAVING.VIDEO}}" frameborder="0"
-					allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture"
-					allowfullscreen>
-			</iframe>
+			<div class="view-features__feature-video">
+				{{> youtube-overlay onlyhq=(expr preferences.lang '===' 'de') width=560 height=340 id=i18n.FEATURES.SAVING.VIDEO title=i18n.FEATURES.SAVING.TITLE}}
+			</div>
 			<div class="view-features__feature-description">
 				<h2 class="view-features__feature-title">{{i18n.FEATURES.SAVING.TITLE}}</h2>
 				<hr class="view-features__feature-divider">

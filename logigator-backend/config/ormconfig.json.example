@@ -1,10 +1,10 @@
 {
 	"type": "mysql",
-	"host": "localhost",
+	"host": "mysql",
 	"port": 3306,
-	"username": "root",
-	"password": "root",
-	"database": "test",
+	"username": "logigator",
+	"password": "logigator",
+	"database": "logigator",
 	"entities": [
 	 	"dist/database/entities**/*.entity{.ts,.js}"
 	],
@@ -12,5 +12,5 @@
 	"migrations": ["migration/*.js"],
 	"cli": {
 		"migrationsDir": "migration"
-	},
+	}
 }

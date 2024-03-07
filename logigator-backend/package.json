@@ -35,11 +35,12 @@
 	},
 	"scripts": {
 		"start": "concurrently \"tsc -p tsconfig.json -w\" \"nodemon -i resources/public/ -i resources/private/components -i resources/private/projects dist/main.js\"",
-		"build": "rm -fr dist && tsc -p tsconfig.json",
+		"build": "rm -fr dist && tsc -p tsconfig.json && gulp dist-for-prod",
+		"gulp": "gulp",
 		"start:prod": "node dist/main.js",
 		"lint:backend": "eslint -c ./src/.eslintrc.js \"src/**/*.ts\"",
 		"lint:frontend": "eslint -c ./resources/private/js/.eslintrc.js \"resources/private/js/**/*.js\"",
-		"migration:build": "rm -f migration/*.js && tsc migration/*.ts",
+		"migration:build": "tsc migration/*.ts",
 		"migration:show": "yarn run migration:build && typeorm migration:show -f config/ormconfig.json",
 		"migration:run": "yarn run migration:build && typeorm migration:run -f config/ormconfig.json",
 		"migration:revert": "yarn run migration:build && typeorm migration:revert -f config/ormconfig.json",
@@ -73,9 +74,10 @@
 		"reflect-metadata": "^0.1.13",
 		"routing-controllers": "^0.9.0",
 		"typedi": "^0.8.0",
-		"typeorm": "^0.2.41",
+		"typeorm": "^0.2.45",
 		"typeorm-typedi-extensions": "^0.4.1",
-		"uuid": "^8.3.2"
+		"uuid": "^8.3.2",
+		"vanilla-cookieconsent": "^3.0.0"
 	},
 	"devDependencies": {
 		"@babel/core": "^7.16.0",
