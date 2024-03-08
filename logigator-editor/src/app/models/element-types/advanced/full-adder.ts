@@ -1,6 +1,6 @@
-import {ElementType} from '../element-type';
-import {ElementTypeId} from '../element-type-ids';
-import {ElementRotation} from '../../element';
+import { ElementType } from '../element-type';
+import { ElementTypeId } from '../element-type-ids';
+import { ElementRotation } from '../../element';
 
 export const fullAdder: ElementType = {
 	id: ElementTypeId.FULL_ADDER,
@@ -28,7 +28,7 @@ export const fullAdder: ElementType = {
 	width: () => 3,
 	height: () => 3,
 
-	calcLabels: element => {
+	calcLabels: () => {
 		return ['A', 'B', 'Cin', 'S', 'C'];
 	}
 };

@@ -1,5 +1,5 @@
-import {ChangeDetectionStrategy, Component} from '@angular/core';
-import {PopupContentComp} from '../../popup/popup-content-comp';
+import { ChangeDetectionStrategy, Component } from '@angular/core';
+import { PopupContentComp } from '../../popup/popup-content-comp';
 
 @Component({
 	selector: 'app-unsaved-changes',
@@ -7,8 +7,7 @@ import {PopupContentComp} from '../../popup/popup-content-comp';
 	styleUrls: ['./unsaved-changes.component.scss'],
 	changeDetection: ChangeDetectionStrategy.OnPush
 })
-export class UnsavedChangesComponent extends PopupContentComp {
-
+export class UnsavedChangesComponent extends PopupContentComp<never, boolean> {
 	constructor() {
 		super();
 	}
@@ -20,5 +19,4 @@ export class UnsavedChangesComponent extends PopupContentComp {
 	cancelClick() {
 		this.requestClose.emit(false);
 	}
-
 }

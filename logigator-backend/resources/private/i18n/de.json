@@ -93,27 +93,27 @@
 	"FEATURES": {
 		"WHAT_IS": {
 			"TITLE": "Was ist Logigator",
-			"VIDEO": "https://www.youtube.com/embed/114EOH-fdLE",
+			"VIDEO": "114EOH-fdLE",
 			"TEXT": "Logigator ist ein Online Logikgatter-Simulator, welcher es einem ermöglicht im Browser Schaltungen aus logischen Gattern aufzubauen und diese dann zu simulieren. Es lassen sich zum Beispiel Halbaddierer oder Volladdierer bauen, was gut zu Lernzwecken genutzt werden kann. Ob es nur ums Ausprobieren und Erforschen von boolschen Operationen geht, oder um das Entwerfen von neuen, komplexen Schaltungen - Logigator ist das geeignete Tool. <br> Logigator bietet auch hohe Performanz bei umfangreicheren Schaltungen, wie zum Beispiel auch ganzen CPUs (Computer). Mit Hilfe der Technologie “WebAssembly” (https://webassembly.org/) lassen sich Geschwindigkeiten erzielen, welche sonst im Browser nicht möglich wären."
 		},
 		"GENERAL": {
 			"TITLE": "Allgemein",
-			"VIDEO": "https://www.youtube.com/embed/aLcu7rsbDHA",
+			"VIDEO": "aLcu7rsbDHA",
 			"TEXT": "Unter https://logigator.com/editor erreicht man den Editor, in dem man Schaltungen entwerfen und simulieren kann. <br> Um ein Schaltungselement zu platzieren, selektiert man das gewollte Element aus dem Baukasten, der sich auf der linken Seite des Bildschirms befindet. Es gibt folgende grundlegende Gatter: UND, ODER, XODER, NICHT, sowie einen Durchpass, welcher das Eingangssignal nicht verändert und einen Taktgeber, welcher in regelmäßigen Abständen ein Signal ausgibt. Natürlich gibt es aber auch komplexere Elemente, die hier nicht erwähnt wurden. Nachdem man ein Element ausgewählt hat, kann man es mit einem Klick auf der Arbeitsfläche platzieren. Mit dem Selektierwerkzeug kann man ein Element auswählen und mithilfe der Einstellungsbox in der rechten unteren Ecke bearbeiten. Die Möglichkeiten dieser Einstellungen variieren von Komponente zu Komponente. Mit Hilfe des Leitungswerkzeugs lassen sich die einzelnen Elemente verbinden."
 		},
 		"CUSTOM_COMPS": {
 			"TITLE": "Benutzererstellte Komponenten",
-			"VIDEO": "https://www.youtube.com/embed/1m9IrqVxTKA",
+			"VIDEO": "1m9IrqVxTKA",
 			"TEXT": "Oft ist es so, dass man einen Teil einer gebauten Schaltung öfters verwenden will. Dazu kann man eigene Komponenten definieren, die danach leicht wiederzuverwenden sind, auch in mehreren Projekten. <br> Es gibt 2 Arten von Stecker-Elementen: Eingänge und Ausgänge. Platziert man diese in eigenen Komponenten, lassen sich mit deren Hilfe die Ein- und Ausgänge dieser Komponenten kennzeichnen. Man kann sie außerdem beschriften, um den Überblick zu behalten."
 		},
 		"SIMULATION": {
 			"TITLE": "Simulation",
-			"VIDEO": "https://www.youtube.com/embed/P8fuF-AHbb0",
+			"VIDEO": "P8fuF-AHbb0",
 			"TEXT": "Im Simulationsmodus lassen sich aufgebaute Schaltungen testen und simulieren. Um in den Simulationsmodus zu wechseln, drückt man auf den “Simulation Starten” Button. Um diese zu starten, drückt man den Play Button. Nun kann man mit der Schaltung interagieren. Will man die Schaltung debuggen, kann man diese mit Hilfe des Pause Buttons pausieren und Schritt für Schritt überprüfen. Mit dem Stopp Button kommen wir wieder zum Ausgangszustand zurück. Grundsätzlich läuft die Simulation so schnell wie möglich. Möchte man die Frequenz limitieren, kann man die Zielfrequenz entweder händisch angeben, oder mit der Frequenz des Bildschirms synchronisieren. Will man sich den Inhalt einer eigenen Komponente genauer ansehen, muss man einfach auf diese klicken."
 		},
 		"SAVING": {
 			"TITLE": "Projekte speichern",
-			"VIDEO": "https://www.youtube.com/embed/peOkC2Agkoo",
+			"VIDEO": "peOkC2Agkoo",
 			"TEXT": "Projekte und eigene Komponenten können sowohl lokal als Datei gespeichert werden, als auch in der Cloud, um sie auf mehreren Geräten bearbeiten zu können, wobei man hierfür angemeldet sein muss. Sie können ebenfalls mit anderen Nutzern geteilt werden."
 		}
 	},
@@ -169,8 +169,8 @@
 		"SEARCH": "Suchen",
 		"COMPONENTS": "Geteilte Komponenten",
 		"PROJECTS": "Geteilte Projekte",
-		"VIEW": "Anzeigen",
-		"OPEN": "Öffnen",
+		"VIEW": "Details anzeigen",
+		"OPEN": "Im Editor öffnen",
 		"CLONE": "Klonen",
 		"NO_DESCRIPTION": "Beschreibung ist nicht verfügbar.",
 		"USER": {
@@ -181,6 +181,9 @@
 			"STARED_PROJECTS": "Gemerkte Projekte",
 			"NO_ITEMS": "Keine Elemente vorhanden."
 		}
+	},
+	"YOUTUBE_OVERLAY": {
+		"CTA": "Klicke, um das Video zu laden."
 	},
 	"USERSPACE": {
 		"NAV": {

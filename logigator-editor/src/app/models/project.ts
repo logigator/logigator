@@ -1,16 +1,19 @@
-import {ProjectState} from './project-state';
-import {Action, Actions} from './action';
-import {Element} from './element';
-import {Elements} from './elements';
-import {Observable, Subject} from 'rxjs';
+// @ts-strict-ignore
+/* eslint-disable */
+
+import { ProjectState } from './project-state';
+import { Action, Actions } from './action';
+import { Element } from './element';
+import { Elements } from './elements';
+import { Observable, Subject } from 'rxjs';
 import * as PIXI from 'pixi.js';
-import {CollisionFunctions} from './collision-functions';
-// #!debug
-import {BoardRecorder} from '../../../tests/auto-tests/board-recorder';
-import {ElementProviderService} from '../services/element-provider/element-provider.service';
-import {ProjectType} from './project-type';
-import {getStaticDI} from './get-di';
-import {ElementTypeId} from './element-types/element-type-ids';
+import { CollisionFunctions } from './collision-functions';
+import { BoardRecorder } from '../../../tests/auto-tests/board-recorder';
+import { ElementProviderService } from '../services/element-provider/element-provider.service';
+import { ProjectType } from './project-type';
+import { getStaticDI } from './get-di';
+import { ElementTypeId } from './element-types/element-type-ids';
+import { environment } from '../../environments/environment';
 
 export interface ProjectConfiguration {
 	id?: number;
@@ -23,7 +26,6 @@ export interface ProjectConfiguration {
 }
 
 export class Project {
-
 	private readonly _id: number;
 	private _name: string;
 	private _isPublic: boolean;
@@ -48,7 +50,6 @@ export class Project {
 
 	private _actionToApply: Action[] = [];
 
-	// #!debug
 	public boardRecorder: BoardRecorder;
 
 	public constructor(projectState: ProjectState, config: ProjectConfiguration) {
@@ -65,8 +66,8 @@ export class Project {
 		this._currMaxActionPointer = -1;
 		this._changeSubject = new Subject<Action[]>();
 
-		// #!debug
-		this.boardRecorder = new BoardRecorder(this, true);
+		if (!environment.production)
+			this.boardRecorder = new BoardRecorder(this, true);
 	}
 
 	public static empty(name?: string, id?: number): Project {
@@ -78,11 +79,10 @@ export class Project {
 		});
 	}
 
-
 	private applyActions(actions: Action[]): void {
 		this.saveDirty = true;
 		this.compileDirty = true;
-		actions.forEach(action => this.applyAction(action));
+		actions.forEach((action) => this.applyAction(action));
 	}
 
 	private applyAction(action: Action): void {
@@ -136,8 +136,7 @@ export class Project {
 		}
 		for (const chunks of this._currState.chunks) {
 			for (const chunk of chunks) {
-				if (!chunk || !chunk.connectionPoints)
-					continue;
+				if (!chunk || !chunk.connectionPoints) continue;
 				for (const cp of chunk.connectionPoints) {
 					out.push({
 						name: 'conWire',
@@ -149,28 +148,28 @@ export class Project {
 		return out;
 	}
 
-	public chunksToRender(start: PIXI.Point, end: PIXI.Point): { x: number, y: number }[] {
+	public chunksToRender(
+		start: PIXI.Point,
+		end: PIXI.Point
+	): { x: number; y: number }[] {
 		const out = CollisionFunctions.inRectChunks(start, end);
 		for (const chunk of this._currState.chunksFromCoords(out)) {
 			chunk.links.forEach((linkedChunk, _) => {
-				if (!out.find(c => c.x === linkedChunk.x && c.y === linkedChunk.y))
-					out.push({x: linkedChunk.x, y: linkedChunk.y});
+				if (!out.find((c) => c.x === linkedChunk.x && c.y === linkedChunk.y))
+					out.push({ x: linkedChunk.x, y: linkedChunk.y });
 			});
 		}
 		return out;
 	}
 
 	public addElements(elements: Element[], dif?: PIXI.Point): boolean {
-		if (!dif)
-			dif = new PIXI.Point(0, 0);
-		if (!this._currState.allSpacesFree(elements, dif))
-			return false;
+		if (!dif) dif = new PIXI.Point(0, 0);
+		if (!this._currState.allSpacesFree(elements, dif)) return false;
 
-		// #!debug
 		this.boardRecorder.call('addElements', arguments, -1, -1, 0);
 		const actions: Action[] = new Array(elements.length);
 		let i = 0;
-		elements.forEach(elem => {
+		elements.forEach((elem) => {
 			Elements.move(elem, dif);
 			this._currState.addElement(elem);
 			actions[i] = {
@@ -180,37 +179,59 @@ export class Project {
 			i++;
 		});
 		let wireEndsToUpdate = Elements.allWireEnds(elements);
-		wireEndsToUpdate = this._currState.pointsThatSplit(elements, wireEndsToUpdate);
+		wireEndsToUpdate = this._currState.pointsThatSplit(
+			elements,
+			wireEndsToUpdate
+		);
 		actions.push(...this.autoAssembleWireEnds(wireEndsToUpdate));
 		this.newState(actions);
 		return true;
 	}
 
-	public addElement(typeId: number, _pos: PIXI.Point, _endPos?: PIXI.Point): Element {
-		if (typeId === ElementTypeId.WIRE && !_endPos)
-			return null;
-		if (typeId === ElementTypeId.WIRE && _pos.equals(_endPos))
-			return null;
+	public addElement(
+		typeId: number,
+		_pos: PIXI.Point,
+		_endPos?: PIXI.Point
+	): Element {
+		if (typeId === ElementTypeId.WIRE && !_endPos) return null;
+		if (typeId === ElementTypeId.WIRE && _pos.equals(_endPos)) return null;
 		const element = Elements.genNewElement(typeId, _pos, _endPos);
 		element.endPos = element.endPos || Elements.calcEndPos(element);
-		if (!this._currState.isFreeSpace(element.pos, element.endPos, typeId === ElementTypeId.WIRE, Elements.wireEnds(element)))
+		if (
+			!this._currState.isFreeSpace(
+				element.pos,
+				element.endPos,
+				typeId === ElementTypeId.WIRE,
+				Elements.wireEnds(element)
+			)
+		)
 			return null;
 
-		// #!debug
-		this.boardRecorder.call('addElement', arguments);
+		if (!environment.production)
+			this.boardRecorder.call('addElement', arguments);
+
 		this._currState.addElement(element);
-		const actions: Action[] = [{
-			name: Elements.addActionName(element),
-			element
-		}];
+		const actions: Action[] = [
+			{
+				name: Elements.addActionName(element),
+				element
+			}
+		];
 		let wireEndsToUpdate = Elements.allWireEnds([element]);
-		wireEndsToUpdate = this._currState.pointsThatSplit([element], wireEndsToUpdate);
+		wireEndsToUpdate = this._currState.pointsThatSplit(
+			[element],
+			wireEndsToUpdate
+		);
 		actions.push(...this.autoAssembleWireEnds(wireEndsToUpdate));
 		this.newState(actions);
 		return element;
 	}
 
-	public addWire(_pos: PIXI.Point, _cornerPos: PIXI.Point, _endPos?: PIXI.Point): Element[] {
+	public addWire(
+		_pos: PIXI.Point,
+		_cornerPos: PIXI.Point,
+		_endPos?: PIXI.Point
+	): Element[] {
 		if (_cornerPos.equals(_pos)) {
 			_cornerPos = _endPos;
 			_endPos = undefined;
@@ -219,12 +240,12 @@ export class Project {
 			const elem = this.addElement(ElementTypeId.WIRE, _pos, _cornerPos);
 			return elem ? [elem] : null;
 		}
-		const {wire0, wire1} = Elements.gen2Wires(_pos, _cornerPos, _endPos);
+		const { wire0, wire1 } = Elements.gen2Wires(_pos, _cornerPos, _endPos);
 		if (!this._currState.allSpacesFree([wire0, wire1], new PIXI.Point(0, 0)))
 			return null;
 
-		// #!debug
-		this.boardRecorder.call('addWire', arguments);
+		if (!environment.production) this.boardRecorder.call('addWire', arguments);
+
 		this._currState.addElement(wire0);
 		this._currState.addElement(wire1);
 		const actions = this.actionsFromAddWires([wire0, wire1]);
@@ -234,21 +255,21 @@ export class Project {
 
 	private actionsFromAddWires(wires: Element[]): Action[] {
 		const actions: Action[] = [];
-		wires.forEach(wire => actions.push({name: 'addWire', element: wire}));
+		wires.forEach((wire) => actions.push({ name: 'addWire', element: wire }));
 		let wireEndsToUpdate = Elements.allWireEnds(wires);
 		wireEndsToUpdate = this._currState.pointsThatSplit(wires, wireEndsToUpdate);
 		actions.push(...this.autoAssembleWireEnds(wireEndsToUpdate));
 		return actions;
 	}
 
-
 	public removeElementsById(ids: number[]): void {
-		// #!debug
-		this.boardRecorder.call('removeElementsById', arguments, -1, 0);
+		if (!environment.production)
+			this.boardRecorder.call('removeElementsById', arguments, -1, 0);
+
 		const actions: Action[] = [];
 		const elements: Element[] = new Array(ids.length);
 		let i = 0;
-		ids.forEach(id => {
+		ids.forEach((id) => {
 			const elem = this._currState.removeElement(id);
 			elements[i++] = elem;
 			const action: Action = {
@@ -260,18 +281,20 @@ export class Project {
 			this._currState.plugIndexActions = [];
 		});
 		let wireEndsToUpdate = Elements.allWireEnds(elements);
-		wireEndsToUpdate = this._currState.pointsThatSplit(elements, wireEndsToUpdate);
+		wireEndsToUpdate = this._currState.pointsThatSplit(
+			elements,
+			wireEndsToUpdate
+		);
 		actions.push(...this.autoAssembleWireEnds(wireEndsToUpdate));
 		this.newState(actions);
 	}
 
-
 	public eraseElements(from: PIXI.Point, to: PIXI.Point): void {
-		// #!debug
-		this.boardRecorder.call('eraseElements', arguments);
+		if (!environment.production)
+			this.boardRecorder.call('eraseElements', arguments);
+
 		const elements = this._currState.elementsOverLine(from, to);
-		if (elements.length === 0)
-			return;
+		if (elements.length === 0) return;
 		const actions: Action[] = [];
 		for (const element of elements) {
 			actions.push({
@@ -283,112 +306,170 @@ export class Project {
 			this._currState.plugIndexActions = [];
 		}
 		let wireEndsToUpdate = Elements.allWireEnds(elements);
-		wireEndsToUpdate = this._currState.pointsThatSplit(elements, wireEndsToUpdate);
-		actions.push(...this.autoAssembleWireEnds(wireEndsToUpdate), ...this._currState.specialActions);
+		wireEndsToUpdate = this._currState.pointsThatSplit(
+			elements,
+			wireEndsToUpdate
+		);
+		actions.push(
+			...this.autoAssembleWireEnds(wireEndsToUpdate),
+			...this._currState.specialActions
+		);
 		this._currState.specialActions = [];
 		this._actionToApply.push(...actions);
 		this._changeSubject.next(actions);
 	}
 
 	public stopErase(): void {
-		// #!debug
-		this.boardRecorder.call('stopErase', arguments);
-		if (this._actionToApply.length === 0)
-			return;
+		if (!environment.production)
+			this.boardRecorder.call('stopErase', arguments);
+
+		if (this._actionToApply.length === 0) return;
 		this.newState(this._actionToApply, false, true);
 		this._actionToApply = [];
 	}
 
-
 	public moveElementsById(ids: number[], dif: PIXI.Point): boolean {
 		const elements = this._currState.getElementsById(ids);
 		if (dif.x === 0 && dif.y === 0) {
-			this._changeSubject.next([{
-				name: 'movMult',
-				others: elements,
-				pos: dif
-			}]);
+			this._changeSubject.next([
+				{
+					name: 'movMult',
+					others: elements,
+					pos: dif
+				}
+			]);
 			this.cancelLastStep();
 			return true;
 		}
-		if (!this._currState.allSpacesFree(elements, dif, new Set<Element>(elements)))
+		if (
+			!this._currState.allSpacesFree(elements, dif, new Set<Element>(elements))
+		)
 			return false;
 		let wireEndsToUpdate = Elements.allWireEnds(elements);
 
-		// #!debug
-		this.boardRecorder.call('moveElementsById', arguments, -1, 0);
+		if (!environment.production)
+			this.boardRecorder.call('moveElementsById', arguments, -1, 0);
+
 		for (const elem of elements) {
 			this._currState.moveElement(elem, dif);
 		}
-		const actions: Action[] = [{
-			name: 'movMult',
-			others: elements,
-			pos: dif
-		}];
+		const actions: Action[] = [
+			{
+				name: 'movMult',
+				others: elements,
+				pos: dif
+			}
+		];
 		wireEndsToUpdate = Elements.allWireEnds(elements, wireEndsToUpdate);
-		wireEndsToUpdate = this._currState.pointsThatSplit(elements, wireEndsToUpdate);
+		wireEndsToUpdate = this._currState.pointsThatSplit(
+			elements,
+			wireEndsToUpdate
+		);
 		actions.push(...this.autoAssembleWireEnds(wireEndsToUpdate));
 		this.newState(actions);
 		return true;
 	}
-
 
 	public rotateComponent(id: number, rotation: number): boolean {
 		const element = this._currState.getElementById(id);
-		if (element.typeId === ElementTypeId.WIRE || element.typeId === ElementTypeId.TEXT)
-			return;
-		const actions: Action[] = [{
-			name: 'rotComp',
-			element,
-			numbers: [rotation, element.rotation]
-		}];
+		if (
+			element.typeId === ElementTypeId.WIRE ||
+			element.typeId === ElementTypeId.TEXT
+		)
+			return false;
+		const actions: Action[] = [
+			{
+				name: 'rotComp',
+				element,
+				numbers: [rotation, element.rotation]
+			}
+		];
 		let wireEndsToUpdate = Elements.allWireEnds([element]);
-		const newEndPos = Elements.calcEndPos(element, undefined, undefined, rotation);
-		if (!this._currState.isFreeSpace(element.pos, newEndPos, false,
-			Elements.wireEndsWithChanges(element, rotation, element.numInputs, new PIXI.Point()), new Set<Element>([element])))
+		const newEndPos = Elements.calcEndPos(
+			element,
+			undefined,
+			undefined,
+			rotation
+		);
+		if (
+			!this._currState.isFreeSpace(
+				element.pos,
+				newEndPos,
+				false,
+				Elements.wireEndsWithChanges(
+					element,
+					rotation,
+					element.numInputs,
+					new PIXI.Point()
+				),
+				new Set<Element>([element])
+			)
+		)
 			return false;
 
-		// #!debug
-		this.boardRecorder.call('rotateComponent', arguments, 0);
+		if (!environment.production)
+			this.boardRecorder.call('rotateComponent', arguments, 0);
+
 		this._currState.rotateComp(element, rotation, newEndPos);
 		wireEndsToUpdate = Elements.allWireEnds([element], wireEndsToUpdate);
-		wireEndsToUpdate = this._currState.pointsThatSplit([element], wireEndsToUpdate);
+		wireEndsToUpdate = this._currState.pointsThatSplit(
+			[element],
+			wireEndsToUpdate
+		);
 		actions.push(...this.autoAssembleWireEnds(wireEndsToUpdate));
 		this.newState(actions);
 		return true;
 	}
-
 
 	public setNumInputs(id: number, numInputs: number): boolean {
 		const element = this._currState.getElementById(id);
-		if (element.typeId === ElementTypeId.WIRE || element.typeId === ElementTypeId.TEXT)
-			return;
-		const actions: Action[] = [{
-			name: 'numInpt',
-			element,
-			numbers: [numInputs, element.numInputs]
-		}];
+		if (
+			element.typeId === ElementTypeId.WIRE ||
+			element.typeId === ElementTypeId.TEXT
+		)
+			return false;
+		const actions: Action[] = [
+			{
+				name: 'numInpt',
+				element,
+				numbers: [numInputs, element.numInputs]
+			}
+		];
 		let wireEndsToUpdate = Elements.allWireEnds([element]);
 		const newEndPos = Elements.calcEndPos(element, numInputs);
-		if (!this._currState.isFreeSpace(element.pos, newEndPos, false,
-			Elements.wireEndsWithChanges(element, element.rotation, numInputs, new PIXI.Point()), new Set<Element>([element])))
+		if (
+			!this._currState.isFreeSpace(
+				element.pos,
+				newEndPos,
+				false,
+				Elements.wireEndsWithChanges(
+					element,
+					element.rotation,
+					numInputs,
+					new PIXI.Point()
+				),
+				new Set<Element>([element])
+			)
+		)
 			return false;
 
-		// #!debug
-		this.boardRecorder.call('setNumInputs', arguments, 0);
+		if (!environment.production)
+			this.boardRecorder.call('setNumInputs', arguments, 0);
+
 		this._currState.setNumInputs(element, numInputs, newEndPos);
 		wireEndsToUpdate = Elements.allWireEnds([element], wireEndsToUpdate);
-		wireEndsToUpdate = this._currState.pointsThatSplit([element], wireEndsToUpdate);
+		wireEndsToUpdate = this._currState.pointsThatSplit(
+			[element],
+			wireEndsToUpdate
+		);
 		actions.push(...this.autoAssembleWireEnds(wireEndsToUpdate));
 		this.newState(actions);
 		return true;
 	}
 
-
 	public setPlugIndex(elemId: number, index: number): boolean {
 		const element = this._currState.getElementById(elemId);
-		if (!this._currState.possiblePlugIds(element).includes(index))
-			return false;
+		if (!this._currState.possiblePlugIds(element).includes(index)) return false;
 		const oldIndex = element.plugIndex;
 		this._currState.setPlugId(element, index);
 		const action: Action = {
@@ -405,11 +486,17 @@ export class Project {
 		if (numPlugs !== plugsIds.length || numPlugs !== labels.length)
 			return false;
 		for (let i = 0; i < this.numInputs; i++) {
-			if (this._currState.getElementById(plugsIds[i]).typeId !== ElementTypeId.INPUT)
+			if (
+				this._currState.getElementById(plugsIds[i]).typeId !==
+				ElementTypeId.INPUT
+			)
 				return false;
 		}
 		for (let i = this.numInputs; i < this.numOutputs; i++) {
-			if (this._currState.getElementById(plugsIds[i]).typeId !== ElementTypeId.OUTPUT)
+			if (
+				this._currState.getElementById(plugsIds[i]).typeId !==
+				ElementTypeId.OUTPUT
+			)
 				return false;
 		}
 		const actions: Action[] = [];
@@ -435,34 +522,52 @@ export class Project {
 	}
 
 	public possiblePlugIndexes(elemId: number): number[] {
-		return this._currState.possiblePlugIds(this._currState.getElementById(elemId));
+		return this._currState.possiblePlugIds(
+			this._currState.getElementById(elemId)
+		);
 	}
 
 	public setOptions(elemId: number, options: number[]): boolean {
 		const element = this._currState.getElementById(elemId);
-		const canSizeChange = !!getStaticDI(ElementProviderService).getElementById(element.typeId).onOptionsChanged;
+		const canSizeChange = !!getStaticDI(ElementProviderService).getElementById(
+			element.typeId
+		).onOptionsChanged;
 		const oldOptions = [...element.options];
-		let wireEndsToUpdate = canSizeChange ? Elements.allWireEnds([element]) : undefined;
+		let wireEndsToUpdate = canSizeChange
+			? Elements.allWireEnds([element])
+			: undefined;
 
 		const clone = Elements.cloneSetOptions(element, options);
-		if (canSizeChange && !this._currState.isFreeSpace(clone.pos, clone.endPos, false,
-			Elements.wireEnds(clone), new Set<Element>([element])))
+		if (
+			canSizeChange &&
+			!this._currState.isFreeSpace(
+				clone.pos,
+				clone.endPos,
+				false,
+				Elements.wireEnds(clone),
+				new Set<Element>([element])
+			)
+		)
 			return false;
 		this._currState.setOptions(element, options);
-		const actions: Action[] = [{
-			element,
-			name: 'compOpt',
-			options: [options, oldOptions]
-		}];
+		const actions: Action[] = [
+			{
+				element,
+				name: 'compOpt',
+				options: [options, oldOptions]
+			}
+		];
 		if (canSizeChange) {
 			wireEndsToUpdate = Elements.allWireEnds([element], wireEndsToUpdate);
-			wireEndsToUpdate = this._currState.pointsThatSplit([element], wireEndsToUpdate);
+			wireEndsToUpdate = this._currState.pointsThatSplit(
+				[element],
+				wireEndsToUpdate
+			);
 			actions.push(...this.autoAssembleWireEnds(wireEndsToUpdate));
 		}
 		this.newState(actions);
 		return true;
 	}
-
 
 	public addText(text: string, _pos: PIXI.Point): Element {
 		const element = Elements.genNewElement(ElementTypeId.TEXT, _pos);
@@ -470,14 +575,15 @@ export class Project {
 		element.endPos = element.endPos || Elements.calcEndPos(element);
 
 		this._currState.addElement(element);
-		const actions: Action[] = [{
-			name: Elements.addActionName(element),
-			element
-		}];
+		const actions: Action[] = [
+			{
+				name: Elements.addActionName(element),
+				element
+			}
+		];
 		this.newState(actions);
 		return element;
 	}
-
 
 	public setData(elemId: number, data: any): void {
 		const element = this._currState.getElementById(elemId);
@@ -491,11 +597,14 @@ export class Project {
 		this.newState([action]);
 	}
 
-
 	public updateInputsOutputs(typeId?: number): void {
 		const actions: Action[] = [];
 		for (const elem of this.allElements) {
-			if (elem.typeId === typeId || !typeId && getStaticDI(ElementProviderService).isCustomElement(elem.typeId)) {
+			if (
+				elem.typeId === typeId ||
+				(!typeId &&
+					getStaticDI(ElementProviderService).isCustomElement(elem.typeId))
+			) {
 				this._currState.updateNumInputsOutputs(elem);
 				actions.push({
 					name: 'rotComp',
@@ -506,11 +615,14 @@ export class Project {
 		this._changeSubject.next(actions);
 	}
 
-
 	public updateLabels(typeId?: number): void {
 		const actions: Action[] = [];
 		for (const elem of this.allElements) {
-			if (elem.typeId === typeId || !typeId && getStaticDI(ElementProviderService).isCustomElement(elem.typeId)) {
+			if (
+				elem.typeId === typeId ||
+				(!typeId &&
+					getStaticDI(ElementProviderService).isCustomElement(elem.typeId))
+			) {
 				actions.push({
 					name: 'rotComp',
 					element: elem
@@ -520,20 +632,19 @@ export class Project {
 		this._changeSubject.next(actions);
 	}
 
-
 	public calcLabels(): string[] {
 		const plugs = this._currState.allPlugs();
 		const out: string[] = [];
 		for (const plug of plugs) {
-			out.push(plug.data as string || '');
+			out.push((plug.data as string) || '');
 		}
 		return out;
 	}
 
-
 	public toggleWireConnection(pos: PIXI.Point): void {
-		// #!debug
-		this.boardRecorder.call('toggleWireConnection', arguments);
+		if (!environment.production)
+			this.boardRecorder.call('toggleWireConnection', arguments);
+
 		const wiresOnPoint = this._currState.wiresOnPoint(pos);
 		let actions: Action[];
 		if (wiresOnPoint.length === 2) {
@@ -552,7 +663,11 @@ export class Project {
 	}
 
 	private connectWires(pos: PIXI.Point, wiresToConnect: Element[]): Action[] {
-		const newWires = this._currState.connectWires(wiresToConnect[0], wiresToConnect[1], pos);
+		const newWires = this._currState.connectWires(
+			wiresToConnect[0],
+			wiresToConnect[1],
+			pos
+		);
 		this._currState.loadConnectionPoints(newWires);
 		return Actions.connectWiresToActions(wiresToConnect, newWires);
 	}
@@ -563,10 +678,12 @@ export class Project {
 		return Actions.connectWiresToActions(wiresOnPoint, newWires);
 	}
 
-
-	public splitWire(element: Element, pos: PIXI.Point): {
-		actions: Action[],
-		elements: Element[]
+	public splitWire(
+		element: Element,
+		pos: PIXI.Point
+	): {
+		actions: Action[];
+		elements: Element[];
 	} {
 		const newWires = this._currState.splitWire(element, pos);
 		if (newWires.length === 0)
@@ -585,10 +702,12 @@ export class Project {
 		return this._currState.actionToBoard(wireEnds);
 	}
 
-
-	public newState(actions: Action[], setStateActionFlag?: boolean, skipSubject?: boolean): void {
-		if (!actions)
-			return;
+	public newState(
+		actions: Action[],
+		setStateActionFlag?: boolean,
+		skipSubject?: boolean
+	): void {
+		if (!actions) return;
 		actions.push(...this._currState.specialActions);
 		this._currState.specialActions = [];
 		if (this._stateActionFlag) {
@@ -614,12 +733,13 @@ export class Project {
 	}
 
 	public stepBack(): Action[] {
-		if (this._currActionPointer < 0)
-			return;
+		if (this._currActionPointer < 0) return null;
 
-		// #!debug
-		this.boardRecorder.call('stepBack', arguments);
-		const backActions = Actions.reverseActions(this._actions[this._currActionPointer]);
+		if (!environment.production) this.boardRecorder.call('stepBack', arguments);
+
+		const backActions = Actions.reverseActions(
+			this._actions[this._currActionPointer]
+		);
 		this._currActionPointer--;
 		this.applyActions(backActions);
 		this._changeSubject.next(backActions);
@@ -628,11 +748,15 @@ export class Project {
 	}
 
 	public stepForward(): Action[] {
-		if (this._currActionPointer >= this._maxActionCount || this._currActionPointer === this._currMaxActionPointer)
-			return;
+		if (
+			this._currActionPointer >= this._maxActionCount ||
+			this._currActionPointer === this._currMaxActionPointer
+		)
+			return null;
 
-		// #!debug
-		this.boardRecorder.call('stepForward', arguments);
+		if (!environment.production)
+			this.boardRecorder.call('stepForward', arguments);
+
 		const outActions = this._actions[++this._currActionPointer];
 		this.applyActions(outActions);
 		this._changeSubject.next(outActions);
@@ -641,14 +765,12 @@ export class Project {
 	}
 
 	public cancelLastStep(): void {
-		if (this._currActionPointer < 0 || !this._stateActionFlag)
-			return;
+		if (this._currActionPointer < 0 || !this._stateActionFlag) return;
 
 		this.stepBack();
 		this._currMaxActionPointer--;
 		this._stateActionFlag = false;
 	}
-
 
 	get allElements(): Element[] {
 		return this._currState.allElements;

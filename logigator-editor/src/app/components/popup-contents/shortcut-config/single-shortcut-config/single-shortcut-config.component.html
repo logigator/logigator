@@ -1,7 +1,17 @@
 <div class="single-shortcut-config">
-	<p>{{'POPUP.SHORTCUTS.DESCRIPTION.' + shortcut.action | translate}}</p>
-	<div class="shortcut-input-container" [class.recording]="isRecording" (click)="startRecording()">
-		<input class="shortcut-input" [(ngModel)]="shortcutText" readonly #inputContainer>
-		<div class="save" (click)="saveClick()"></div>
+	<p>{{ 'POPUP.SHORTCUTS.DESCRIPTION.' + shortcut.action | translate }}</p>
+	<div
+		class="shortcut-input-container"
+		[class.recording]="isRecording"
+		(click)="startRecording()"
+		tabindex="0"
+	>
+		<input
+			class="shortcut-input"
+			[(ngModel)]="shortcutText"
+			readonly
+			#inputContainer
+		/>
+		<div class="save" (click)="saveClick()" tabindex="0"></div>
 	</div>
 </div>

@@ -1,4 +1,4 @@
-import {ExplanationBoxLoc, Tutorial} from '../tutorial';
+import { ExplanationBoxLoc, Tutorial } from '../tutorial';
 
 export const gettingStarted: Tutorial = {
 	id: 'gettingStarted',

@@ -1,19 +1,20 @@
+// @ts-strict-ignore
 import {
 	AfterContentChecked,
 	Directive,
 	ElementRef,
 	Inject,
-	Input, OnChanges,
-	PLATFORM_ID, SimpleChanges
+	Input,
+	OnChanges,
+	PLATFORM_ID
 } from '@angular/core';
-import {isPlatformBrowser} from '@angular/common';
-import {FontWidthService} from '../../services/font-width/font-width.service';
+import { isPlatformBrowser } from '@angular/common';
+import { FontWidthService } from '../../services/font-width/font-width.service';
 
 @Directive({
 	selector: '[appAutoFontSize]'
 })
 export class AutoFontSizeDirective implements AfterContentChecked, OnChanges {
-
 	@Input()
 	desiredFontWidth: number;
 
@@ -22,8 +23,8 @@ export class AutoFontSizeDirective implements AfterContentChecked, OnChanges {
 	constructor(
 		private elementRef: ElementRef<HTMLElement>,
 		private fontWidthService: FontWidthService,
-		@Inject(PLATFORM_ID) private platformId: string,
-	) { }
+		@Inject(PLATFORM_ID) private platformId: string
+	) {}
 
 	ngAfterContentChecked(): void {
 		const currText = this.elementRef.nativeElement.innerText;
@@ -33,7 +34,7 @@ export class AutoFontSizeDirective implements AfterContentChecked, OnChanges {
 		}
 	}
 
-	ngOnChanges(changes: SimpleChanges): void {
+	ngOnChanges(): void {
 		this.adjustFontSize();
 	}
 
@@ -42,7 +43,9 @@ export class AutoFontSizeDirective implements AfterContentChecked, OnChanges {
 
 		const text = this.elementRef.nativeElement.innerText;
 		const style = window.getComputedStyle(this.elementRef.nativeElement);
-		const origWidth = Number(style.getPropertyValue('font-size').replace('px', ''));
+		const origWidth = Number(
+			style.getPropertyValue('font-size').replace('px', '')
+		);
 
 		let font = style.getPropertyValue('font');
 		if (!font) {
@@ -51,7 +54,19 @@ export class AutoFontSizeDirective implements AfterContentChecked, OnChanges {
 			const fontWeight = style.getPropertyValue('font-weight');
 			const fontSize = style.getPropertyValue('font-size');
 			const fontFamily = style.getPropertyValue('font-family');
-			font = (fontStyle + ' ' + fontVariant + ' ' + fontWeight + ' ' + fontSize + ' ' + fontFamily).replace(/ +/g, ' ').trim();
+			font = (
+				fontStyle +
+				' ' +
+				fontVariant +
+				' ' +
+				fontWeight +
+				' ' +
+				fontSize +
+				' ' +
+				fontFamily
+			)
+				.replace(/ +/g, ' ')
+				.trim();
 		}
 
 		const textWidth = this.fontWidthService.getTextWidth(text, font);
@@ -60,5 +75,4 @@ export class AutoFontSizeDirective implements AfterContentChecked, OnChanges {
 		if (adjustedWidth < origWidth)
 			this.elementRef.nativeElement.style.fontSize = adjustedWidth + 'px';
 	}
-
 }

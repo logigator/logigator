@@ -1,12 +1,12 @@
-import {Injectable} from '@angular/core';
-import {StorageServiceModel} from './storage.service';
+// @ts-strict-ignore
+import { Injectable } from '@angular/core';
+import { StorageServiceModel } from './storage.service';
 
 @Injectable({
 	providedIn: 'root'
 })
 export class LocalStorageService extends StorageServiceModel {
-
-	public get(key: string): any {
+	public get(key: string): string | unknown {
 		const data = localStorage.getItem(key);
 		try {
 			return JSON.parse(data);
@@ -15,8 +15,11 @@ export class LocalStorageService extends StorageServiceModel {
 		}
 	}
 
-	public set(key: string, data: any) {
-		localStorage.setItem(key, typeof data === 'string' ? data : JSON.stringify(data));
+	public set(key: string, data: unknown) {
+		localStorage.setItem(
+			key,
+			typeof data === 'string' ? data : JSON.stringify(data)
+		);
 	}
 
 	public remove(key: string) {

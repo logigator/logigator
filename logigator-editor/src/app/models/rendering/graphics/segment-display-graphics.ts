@@ -1,15 +1,18 @@
-import {environment} from '../../../../environments/environment';
+// @ts-strict-ignore
+import { environment } from '../../../../environments/environment';
 import * as PIXI from 'pixi.js';
-import {ComponentUpdatable, LGraphics} from './l-graphics';
-import {getStaticDI} from '../../get-di';
-import {ThemingService} from '../../../services/theming/theming.service';
-import {Element} from '../../element';
-import {ElementType, isElementType} from '../../element-types/element-type';
-import {Elements} from '../../elements';
-import {ElementProviderService} from '../../../services/element-provider/element-provider.service';
+import { ComponentUpdatable, LGraphics } from './l-graphics';
+import { getStaticDI } from '../../get-di';
+import { ThemingService } from '../../../services/theming/theming.service';
+import { Element } from '../../element';
+import { ElementType, isElementType } from '../../element-types/element-type';
+import { Elements } from '../../elements';
+import { ElementProviderService } from '../../../services/element-provider/element-provider.service';
 
-export class SegmentDisplayGraphics extends PIXI.Graphics implements LGraphics, ComponentUpdatable {
-
+export class SegmentDisplayGraphics
+	extends PIXI.Graphics
+	implements LGraphics, ComponentUpdatable
+{
 	readonly element: Element;
 
 	private _scale: number;
@@ -39,7 +42,7 @@ export class SegmentDisplayGraphics extends PIXI.Graphics implements LGraphics, 
 				numInputs: elementOrType.numInputs,
 				typeId: elementOrType.id,
 				options: elementOrType.options
-			} as any as Element;
+			} as Element;
 			this._labels = elementOrType.calcLabels();
 		} else {
 			this.element = elementOrType;
@@ -82,23 +85,36 @@ export class SegmentDisplayGraphics extends PIXI.Graphics implements LGraphics, 
 
 	private rotation0(inputs: number) {
 		for (let i = 0; i < inputs; i++) {
-			this.moveTo(-(environment.gridPixelWidth / 2), (environment.gridPixelWidth / 2) + environment.gridPixelWidth * i);
-			this.lineTo(0, (environment.gridPixelWidth / 2) + environment.gridPixelWidth * i);
+			this.moveTo(
+				-(environment.gridPixelWidth / 2),
+				environment.gridPixelWidth / 2 + environment.gridPixelWidth * i
+			);
+			this.lineTo(
+				0,
+				environment.gridPixelWidth / 2 + environment.gridPixelWidth * i
+			);
 			const label = this.getLabelText(this._labels[i]);
 			label.anchor = new PIXI.Point(0, 0.5);
 			label.x = 1;
-			label.y = (environment.gridPixelWidth / 2) + environment.gridPixelWidth * i;
+			label.y = environment.gridPixelWidth / 2 + environment.gridPixelWidth * i;
 			this.addChild(label);
 		}
 	}
 
 	private rotation1(inputs: number, width: number) {
 		for (let i = 0; i < inputs; i++) {
-			this.moveTo(width - environment.gridPixelWidth / 2 - environment.gridPixelWidth * i, 0);
-			this.lineTo(width - environment.gridPixelWidth / 2 - environment.gridPixelWidth * i, -(environment.gridPixelWidth / 2));
+			this.moveTo(
+				width - environment.gridPixelWidth / 2 - environment.gridPixelWidth * i,
+				0
+			);
+			this.lineTo(
+				width - environment.gridPixelWidth / 2 - environment.gridPixelWidth * i,
+				-(environment.gridPixelWidth / 2)
+			);
 			const label = this.getLabelText(this._labels[i]);
 			label.anchor = new PIXI.Point(0.5, 0);
-			label.x = width - environment.gridPixelWidth / 2 - environment.gridPixelWidth * i;
+			label.x =
+				width - environment.gridPixelWidth / 2 - environment.gridPixelWidth * i;
 			label.y = 1;
 			this.addChild(label);
 		}
@@ -106,20 +122,35 @@ export class SegmentDisplayGraphics extends PIXI.Graphics implements LGraphics, 
 
 	private rotation2(inputs: number, height: number, width: number) {
 		for (let i = 0; i < inputs; i++) {
-			this.moveTo(width, height - (environment.gridPixelWidth / 2) - environment.gridPixelWidth * i);
-			this.lineTo(width + (environment.gridPixelWidth / 2), height - (environment.gridPixelWidth / 2) - environment.gridPixelWidth * i);
+			this.moveTo(
+				width,
+				height - environment.gridPixelWidth / 2 - environment.gridPixelWidth * i
+			);
+			this.lineTo(
+				width + environment.gridPixelWidth / 2,
+				height - environment.gridPixelWidth / 2 - environment.gridPixelWidth * i
+			);
 			const label = this.getLabelText(this._labels[i]);
 			label.anchor = new PIXI.Point(1, 0.5);
 			label.x = width - 1;
-			label.y = height - (environment.gridPixelWidth / 2) - environment.gridPixelWidth * i;
+			label.y =
+				height -
+				environment.gridPixelWidth / 2 -
+				environment.gridPixelWidth * i;
 			this.addChild(label);
 		}
 	}
 
 	private rotation3(inputs: number, height: number) {
 		for (let i = 0; i < inputs; i++) {
-			this.moveTo((environment.gridPixelWidth / 2) + environment.gridPixelWidth * i, height);
-			this.lineTo((environment.gridPixelWidth / 2) + environment.gridPixelWidth * i, height + (environment.gridPixelWidth / 2));
+			this.moveTo(
+				environment.gridPixelWidth / 2 + environment.gridPixelWidth * i,
+				height
+			);
+			this.lineTo(
+				environment.gridPixelWidth / 2 + environment.gridPixelWidth * i,
+				height + environment.gridPixelWidth / 2
+			);
 			const label = this.getLabelText(this._labels[i]);
 			label.anchor = new PIXI.Point(0.5, 1);
 			label.x = environment.gridPixelWidth / 2 + environment.gridPixelWidth * i;
@@ -143,31 +174,43 @@ export class SegmentDisplayGraphics extends PIXI.Graphics implements LGraphics, 
 			case 2:
 				return Math.ceil(this.element.numInputs / 3);
 			default:
-				return Math.ceil(Math.log10((2 ** this.element.numInputs) + 1));
+				return Math.ceil(Math.log10(2 ** this.element.numInputs + 1));
 		}
 	}
 
 	private getSegments(): PIXI.Container {
 		const container = new PIXI.Container();
 		this.segmentTextLength = this.getSegmentTextLength();
-		const seg = new PIXI.BitmapText(this.getSegmentString(0, this.segmentTextLength), {
-			fontName: this.element.options[0] === 1 ? 'DSEG14' : 'DSEG7',
-			fontSize: environment.gridPixelWidth * 1.35,
-			tint: this.themingService.getEditorColor('fontTint'),
-			align: 'center'
-		});
+		const seg = new PIXI.BitmapText(
+			this.getSegmentString(0, this.segmentTextLength),
+			{
+				fontName: this.element.options[0] === 1 ? 'DSEG14' : 'DSEG7',
+				fontSize: environment.gridPixelWidth * 1.35,
+				tint: this.themingService.getEditorColor('fontTint'),
+				align: 'center'
+			}
+		);
 		seg.anchor = new PIXI.Point(0.5, 0.5);
 		seg.position = new PIXI.Point(this._size.x / 2, this._size.y / 2);
 
-		const base = new PIXI.BitmapText(this.element.options[0] === 0 ? '10' : (this.element.options[0] === 1 ? '16' : '8'), {
-			fontName: 'DSEG7',
-			fontSize: environment.gridPixelWidth * 0.4,
-			tint: this.themingService.getEditorColor('fontTint'),
-			align: 'center'
-		});
+		const base = new PIXI.BitmapText(
+			this.element.options[0] === 0
+				? '10'
+				: this.element.options[0] === 1
+					? '16'
+					: '8',
+			{
+				fontName: 'DSEG7',
+				fontSize: environment.gridPixelWidth * 0.4,
+				tint: this.themingService.getEditorColor('fontTint'),
+				align: 'center'
+			}
+		);
 		base.anchor = new PIXI.Point(0, 0.5);
 		base.position = new PIXI.Point(
-			seg.position.x + seg.width / 2 - (this.element.options[0] !== 2 ? environment.gridPixelWidth * 0.2 : 0),
+			seg.position.x +
+				seg.width / 2 -
+				(this.element.options[0] !== 2 ? environment.gridPixelWidth * 0.2 : 0),
 			seg.position.y + seg.height / 2
 		);
 		container.addChild(seg);
@@ -192,11 +235,14 @@ export class SegmentDisplayGraphics extends PIXI.Graphics implements LGraphics, 
 	}
 
 	public applySimState(scale: number) {
-		if (this.shouldHaveActiveState.every((v, i) => v === this.simActiveState[i])) return;
+		if (
+			this.shouldHaveActiveState.every((v, i) => v === this.simActiveState[i])
+		)
+			return;
 		this.simActiveState = this.shouldHaveActiveState;
 
 		let wireIndex = 0;
-		// @ts-ignore
+		// @ts-expect-error workaround for something that I don't understand anymore
 		for (const data of this.geometry.graphicsData) {
 			if (data.shape instanceof PIXI.Polygon) {
 				if (this.simActiveState[wireIndex]) {
@@ -218,7 +264,8 @@ export class SegmentDisplayGraphics extends PIXI.Graphics implements LGraphics, 
 				numberToDisplay = numberToDisplay << 1;
 			}
 		}
-		(this.segmentText.children[0] as PIXI.BitmapText).text = this.getSegmentString(numberToDisplay, this.segmentTextLength);
+		(this.segmentText.children[0] as PIXI.BitmapText).text =
+			this.getSegmentString(numberToDisplay, this.segmentTextLength);
 	}
 
 	public setSimulationState(state: boolean[]) {
@@ -234,7 +281,7 @@ export class SegmentDisplayGraphics extends PIXI.Graphics implements LGraphics, 
 
 		let wireIndex = 0;
 
-		// @ts-ignore
+		// @ts-expect-error workaround for something that I don't understand anymore
 		for (const data of this.geometry.graphicsData) {
 			if (data.shape instanceof PIXI.Polygon) {
 				if (this.simActiveState[wireIndex]) {
@@ -266,9 +313,8 @@ export class SegmentDisplayGraphics extends PIXI.Graphics implements LGraphics, 
 		this._labels = elemType.calcLabels(this.element);
 		this.clear();
 		this._size = Elements.calcPixelElementSize(this.element);
-		this.segmentText.destroy({children: true});
+		this.segmentText.destroy({ children: true });
 		this.segmentText = this.getSegments();
 		this.drawComponent();
 	}
-
 }

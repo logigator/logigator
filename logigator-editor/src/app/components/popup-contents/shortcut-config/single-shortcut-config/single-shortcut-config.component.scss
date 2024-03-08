@@ -1,4 +1,4 @@
-@import "themes";
+@import 'themes';
 
 .single-shortcut-config {
 	width: 35vw;
@@ -74,9 +74,9 @@
 			.save {
 				@include themify() {
 					@if (isTheme('dark')) {
-						background-image: url("^assets/icons/dark/check.svg");
+						background-image: url('src/assets/icons/dark/check.svg');
 					} @else {
-						background-image: url("^assets/icons/light/check.svg");
+						background-image: url('src/assets/icons/light/check.svg');
 					}
 					background-repeat: no-repeat;
 					background-size: 60%;

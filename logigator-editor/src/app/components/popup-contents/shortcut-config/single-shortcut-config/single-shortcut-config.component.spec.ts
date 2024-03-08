@@ -1,4 +1,4 @@
-import {ComponentFixture, TestBed, waitForAsync} from '@angular/core/testing';
+import { ComponentFixture, TestBed, waitForAsync } from '@angular/core/testing';
 
 import { SingleShortcutConfigComponent } from './single-shortcut-config.component';
 
@@ -8,9 +8,8 @@ describe('SingleShortcutConfigComponent', () => {
 
 	beforeEach(waitForAsync(() => {
 		TestBed.configureTestingModule({
-			declarations: [ SingleShortcutConfigComponent ]
-		})
-			.compileComponents();
+			declarations: [SingleShortcutConfigComponent]
+		}).compileComponents();
 	}));
 
 	beforeEach(() => {

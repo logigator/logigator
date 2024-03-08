@@ -1,5 +1,13 @@
 <div class="loading">
-	<img *ngIf="currTheme === 'light'" src="assets/icons/light/loading.svg">
-	<img *ngIf="currTheme === 'dark'" src="assets/icons/dark/loading.svg">
-	<span *ngIf="text">{{text | translate}}</span>
+	<img
+		*ngIf="currTheme === 'light'"
+		src="assets/icons/light/loading.svg"
+		alt="loading"
+	/>
+	<img
+		*ngIf="currTheme === 'dark'"
+		src="assets/icons/dark/loading.svg"
+		alt="loading"
+	/>
+	<span *ngIf="text">{{ text | translate }}</span>
 </div>

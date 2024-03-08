@@ -1,6 +1,6 @@
-import {ElementType} from '../element-type';
-import {ElementTypeId} from '../element-type-ids';
-import {ElementRotation} from '../../element';
+import { ElementType } from '../element-type';
+import { ElementTypeId } from '../element-type-ids';
+import { ElementRotation } from '../../element';
 
 export const jkFF: ElementType = {
 	id: ElementTypeId.JK_FF,
@@ -29,7 +29,7 @@ export const jkFF: ElementType = {
 	width: () => 3,
 	height: () => 3,
 
-	calcLabels: element => {
+	calcLabels: () => {
 		return ['J', 'CLK', 'K', 'Q', '!Q'];
 	}
 };

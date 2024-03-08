@@ -1,8 +1,8 @@
-import {Project} from '../../src/app/models/project';
-import {BoardRecorder, ManuallyLogged} from './board-recorder';
+// @ts-strict-ignore
+import { Project } from '../../src/app/models/project';
+import { BoardRecorder, ManuallyLogged } from './board-recorder';
 
 export class Test {
-
 	private readonly _name: string;
 	private readonly _project: Project;
 	private _log: BoardRecorder;
@@ -46,5 +46,4 @@ export class Test {
 			console.log('received', this._project.currState);
 		}
 	}
-
 }

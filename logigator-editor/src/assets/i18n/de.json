@@ -167,9 +167,9 @@
 				"openProj": "Projekt öffnen",
 				"enterSim": "Simulation starten",
 				"leaveSim": "Simulation verlassen",
-				"startSim":  "Simulation starten",
+				"startSim": "Simulation starten",
 				"pauseSim": "Simulation pausieren",
-				"stopSim":  "Simulation stoppen",
+				"stopSim": "Simulation stoppen",
 				"singleStepSim": "Einzelner Simulationsschritt"
 			}
 		},
@@ -202,6 +202,15 @@
 		},
 		"HELP": {
 			"TITLE": "Hilfe",
+			"PAGE": {
+				"GET_STARTED": "Einstieg",
+				"BASIC": "Grundlegende Gatter",
+				"ADVANCED": "Fortgeschrittene Gatter",
+				"IO": "IO Gatter",
+				"USER_DEFINED": "Benutzerdefinierte Komponenten",
+				"SAVING": "Projekte speichern",
+				"TUTORIAL_VIDS": "Video Tutorials"
+			},
 			"EDIT": "Auf Github bearbeiten"
 		},
 		"HEX_BIN_DEC": {
@@ -504,6 +513,5 @@
 		"OPEN_PROJECT": "Projekt wird geöffnet",
 		"OPEN_COMPONENT": "Komponente wird geöffnet",
 		"OPEN_SHARE": "Share wird geöffnet"
-
 	}
 }

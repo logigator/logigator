@@ -1,0 +1,64 @@
+{
+	"consentModal": {
+		"title": "Cookie-Einstellungen",
+		"description": "Wir verwenden Cookies und andere Tracking-Technologien, um Ihr Surferlebnis auf unserer Website zu verbessern, Ihnen personalisierte Inhalte anzuzeigen, unseren Website-Verkehr zu analysieren und zu verstehen, woher unsere Besucher kommen.",
+		"acceptAllBtn": "Alle akzeptieren",
+		"acceptNecessaryBtn": "Alle ablehnen",
+		"showPreferencesBtn": "Einstellungen verwalten"
+	},
+	"preferencesModal": {
+		"title": "Cookie-Einstellungen",
+		"acceptAllBtn": "Alle akzeptieren",
+		"acceptNecessaryBtn": "Alle ablehnen",
+		"savePreferencesBtn": "Einstellungen speichern",
+		"closeIconLabel": "Schließen",
+		"sections": [
+			{
+				"title": "Cookie-Nutzung",
+				"description": "Wir verwenden Cookies und andere Tracking-Technologien, um Ihr Surferlebnis auf unserer Website zu verbessern, Ihnen personalisierte Inhalte anzuzeigen, unseren Website-Verkehr zu analysieren und zu verstehen, woher unsere Besucher kommen."
+			},
+			{
+				"title": "Unbedingt erforderliche Cookies",
+				"description": "Diese Cookies sind für das ordnungsgemäße Funktionieren der Website unerlässlich. Ohne diese Cookies würde die Website nicht ordnungsgemäß funktionieren.",
+				"linkedCategory": "necessary"
+			},
+			{
+				"title": "Leistungs- und Analyse-Cookies",
+				"description": "Diese Cookies ermöglichen es uns, unseren Website-Verkehr zu analysieren und zu verstehen, woher unsere Besucher kommen. Wir verwenden diese Informationen, um Ihr Surferlebnis auf unserer Website zu verbessern.",
+				"linkedCategory": "analytics",
+				"cookieTable": {
+					"headers": {
+						"name": "Name",
+						"domain": "Dienst",
+						"description": "Beschreibung",
+						"expiration": "Ablauf"
+					},
+					"body": [
+						{
+							"name": "_ga",
+							"domain": "Google Analytics",
+							"description": "Cookie von Google Analytics gesetzt.",
+							"expiration": "Läuft nach 2 Jahren ab"
+						},
+						{
+							"name": "_ga_(id)",
+							"domain": "Google Analytics",
+							"description": "Cookie von Google Analytics gesetzt.",
+							"expiration": "Läuft nach 2 Jahren ab"
+						},
+						{
+							"name": "_gid",
+							"domain": "Google Analytics",
+							"description": "Cookie von Google Analytics gesetzt.",
+							"expiration": "Sitzung"
+						}
+					]
+				}
+			},
+			{
+				"title": "Weitere Informationen",
+				"description": "Bei Fragen zu unserer Cookie-Richtlinie und Ihren Auswahlmöglichkeiten lesen Sie bitte unsere <a class=\"cc-link\" href=\"/privacy-policy\">Datenschutzerklärung</a>."
+			}
+		]
+	}
+}

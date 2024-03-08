@@ -1,35 +1,35 @@
 <div class="dropdown">
-	<div (click)="undo()">
-		{{'DROPDOWN.EDIT.UNDO' | translate}}
-		<span>{{'undo' | shortcutText}}</span>
+	<div (click)="undo()" tabindex="0">
+		{{ 'DROPDOWN.EDIT.UNDO' | translate }}
+		<span>{{ 'undo' | shortcutText }}</span>
 	</div>
-	<div (click)="redo()">
-		{{'DROPDOWN.EDIT.REDO' | translate}}
-		<span>{{'redo' | shortcutText}}</span>
+	<div (click)="redo()" tabindex="0">
+		{{ 'DROPDOWN.EDIT.REDO' | translate }}
+		<span>{{ 'redo' | shortcutText }}</span>
 	</div>
-	<hr>
-	<div (click)="copy()">
-		{{'DROPDOWN.EDIT.COPY' | translate}}
-		<span>{{'copy' | shortcutText}}</span>
+	<hr />
+	<div (click)="copy()" tabindex="0">
+		{{ 'DROPDOWN.EDIT.COPY' | translate }}
+		<span>{{ 'copy' | shortcutText }}</span>
 	</div>
-	<div (click)="paste()">
-		{{'DROPDOWN.EDIT.PASTE' | translate}}
-		<span>{{'paste' | shortcutText}}</span>
+	<div (click)="paste()" tabindex="0">
+		{{ 'DROPDOWN.EDIT.PASTE' | translate }}
+		<span>{{ 'paste' | shortcutText }}</span>
 	</div>
-	<div (click)="cut()">
-		{{'DROPDOWN.EDIT.CUT' | translate}}
-		<span>{{'cut' | shortcutText}}</span>
+	<div (click)="cut()" tabindex="0">
+		{{ 'DROPDOWN.EDIT.CUT' | translate }}
+		<span>{{ 'cut' | shortcutText }}</span>
 	</div>
-	<hr>
-	<div (click)="delete()">
-		{{'DROPDOWN.EDIT.DELETE' | translate}}
-		<span>{{'delete' | shortcutText}}</span>
+	<hr />
+	<div (click)="delete()" tabindex="0">
+		{{ 'DROPDOWN.EDIT.DELETE' | translate }}
+		<span>{{ 'delete' | shortcutText }}</span>
 	</div>
 	<ng-container *ngIf="istCustomComponent">
-		<hr>
-		<div (click)="plugs()">
-			{{'DROPDOWN.EDIT.PLUGS' | translate}}
-			<span>{{'editPlugs' | shortcutText}}</span>
+		<hr />
+		<div (click)="plugs()" tabindex="0">
+			{{ 'DROPDOWN.EDIT.PLUGS' | translate }}
+			<span>{{ 'editPlugs' | shortcutText }}</span>
 		</div>
 	</ng-container>
 </div>

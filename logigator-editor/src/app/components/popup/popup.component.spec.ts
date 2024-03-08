@@ -1,4 +1,5 @@
-import {ComponentFixture, TestBed, waitForAsync} from '@angular/core/testing';
+// @ts-strict-ignore
+import { ComponentFixture, TestBed, waitForAsync } from '@angular/core/testing';
 
 import { PopupComponent } from './popup.component';
 
@@ -8,9 +9,8 @@ describe('PopupComponent', () => {
 
 	beforeEach(waitForAsync(() => {
 		TestBed.configureTestingModule({
-			declarations: [ PopupComponent ]
-		})
-			.compileComponents();
+			declarations: [PopupComponent]
+		}).compileComponents();
 	}));
 
 	beforeEach(() => {

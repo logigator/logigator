@@ -1,20 +1,49 @@
 <form [formGroup]="saveForm">
-	<app-input [label]="'POPUP.SAVE.NAME' | translate" formControlName="name" [helpTooltip]="'POPUP.SAVE.NAME_INFO' | translate">
-		<app-input-error error="required">{{'POPUP.NEW_COMP.NAME_REQUIRED' | translate}}</app-input-error>
-		<app-input-error error="maxlength">{{'POPUP.NEW_COMP.NAME_MAX_LENGTH' | translate}}</app-input-error>
+	<app-input
+		[label]="'POPUP.SAVE.NAME' | translate"
+		formControlName="name"
+		[helpTooltip]="'POPUP.SAVE.NAME_INFO' | translate"
+	>
+		<app-input-error error="required">{{
+			'POPUP.NEW_COMP.NAME_REQUIRED' | translate
+		}}</app-input-error>
+		<app-input-error error="maxlength">{{
+			'POPUP.NEW_COMP.NAME_MAX_LENGTH' | translate
+		}}</app-input-error>
 	</app-input>
 
-	<app-input [label]="'POPUP.NEW_COMP.DESCRIPTION' | translate" formControlName="description" [helpTooltip]="'POPUP.SAVE.DESCRIPTION_INFO' | translate">
-		<app-input-error error="maxlength">{{'POPUP.NEW_COMP.DESCRIPTION_MAX_LENGTH' | translate}}</app-input-error>
+	<app-input
+		[label]="'POPUP.NEW_COMP.DESCRIPTION' | translate"
+		formControlName="description"
+		[helpTooltip]="'POPUP.SAVE.DESCRIPTION_INFO' | translate"
+	>
+		<app-input-error error="maxlength">{{
+			'POPUP.NEW_COMP.DESCRIPTION_MAX_LENGTH' | translate
+		}}</app-input-error>
 	</app-input>
 
-	<p class="explanation">{{'POPUP.NEW_COMP.PUBLIC_EXPLANATION' | translate}}</p>
+	<p class="explanation">
+		{{ 'POPUP.NEW_COMP.PUBLIC_EXPLANATION' | translate }}
+	</p>
 
 	<div class="public-switch">
-		<p>{{'POPUP.NEW_COMP.PUBLIC' | translate}}</p>
+		<p>{{ 'POPUP.NEW_COMP.PUBLIC' | translate }}</p>
 		<app-switch formControlName="public"></app-switch>
 	</div>
 
-	<button class="btn-raised primary" (click)="exportProject()" [disabled]="saveForm.invalid">{{'POPUP.SAVE.DOWNLOAD' | translate}}</button>
-	<button class="btn-raised primary" (click)="saveToServer()" *ngIf="isLoggedIn" [disabled]="saveForm.invalid">{{'POPUP.SAVE.CLOUD' | translate}}</button>
+	<button
+		class="btn-raised primary"
+		(click)="exportProject()"
+		[disabled]="saveForm.invalid"
+	>
+		{{ 'POPUP.SAVE.DOWNLOAD' | translate }}
+	</button>
+	<button
+		class="btn-raised primary"
+		(click)="saveToServer()"
+		*ngIf="isLoggedIn"
+		[disabled]="saveForm.invalid"
+	>
+		{{ 'POPUP.SAVE.CLOUD' | translate }}
+	</button>
 </form>

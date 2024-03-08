@@ -1,4 +1,5 @@
-import {Inject, Injectable} from '@angular/core';
+// @ts-strict-ignore
+import { Inject, Injectable } from '@angular/core';
 import * as PIXI from 'pixi.js';
 import {
 	WorkerCommunicationService,
@@ -16,8 +17,10 @@ interface TickerFunction {
 	providedIn: 'root'
 })
 export class RenderTicker {
-
-	constructor(@Inject(WorkerCommunicationService) private workerCommunicationService: WorkerCommunicationServiceModel) {}
+	constructor(
+		@Inject(WorkerCommunicationService)
+		private workerCommunicationService: WorkerCommunicationServiceModel
+	) {}
 
 	private _tickerFunctions = new Map<string, TickerFunction>();
 
@@ -46,7 +49,7 @@ export class RenderTicker {
 	 */
 	public singleFrame(identifier: string): Promise<void> {
 		const tf = this._tickerFunctions.get(identifier);
-		return new Promise<void>(resolve => {
+		return new Promise<void>((resolve) => {
 			if (!tf) {
 				resolve();
 				return;
@@ -81,14 +84,19 @@ export class RenderTicker {
 		}
 	}
 
-	public stopTicker(identifier: string, keepRequestFrame = true, force = false) {
+	public stopTicker(
+		identifier: string,
+		keepRequestFrame = true,
+		force = false
+	) {
 		if (!this._tickerFunctions.has(identifier)) return;
 		if (this._startedAllCont && !force) return;
 		const tf = this._tickerFunctions.get(identifier);
 		tf.started = false;
 		tf.singleFramePromiseResolveFns = [];
 		PIXI.Ticker.shared.remove(tf.fn, this);
-		if (tf.requestedFrame && keepRequestFrame) PIXI.Ticker.shared.addOnce(tf.fn, this);
+		if (tf.requestedFrame && keepRequestFrame)
+			PIXI.Ticker.shared.addOnce(tf.fn, this);
 	}
 
 	public get FPS(): number {
@@ -99,7 +107,10 @@ export class RenderTicker {
 		return PIXI.Ticker.shared.elapsedMS;
 	}
 
-	private getTickerFunction(originalFn: () => void, identifier: string): () => void {
+	private getTickerFunction(
+		originalFn: () => void,
+		identifier: string
+	): () => void {
 		return () => {
 			originalFn();
 			const tf = this._tickerFunctions.get(identifier);

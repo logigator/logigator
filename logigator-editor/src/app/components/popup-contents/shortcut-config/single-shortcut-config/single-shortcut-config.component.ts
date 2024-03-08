@@ -1,3 +1,4 @@
+// @ts-strict-ignore
 import {
 	ChangeDetectionStrategy,
 	ChangeDetectorRef,
@@ -9,12 +10,12 @@ import {
 	OnInit,
 	ViewChild
 } from '@angular/core';
-import {fromEvent, Subject} from 'rxjs';
-import {takeUntil} from 'rxjs/operators';
-import {ShortcutConfig} from '../../../../models/shortcut-config';
-import {ShortcutsService} from '../../../../services/shortcuts/shortcuts.service';
-import {Shortcut} from '../../../../models/shortcut';
-import {ShortcutAction} from '../../../../models/shortcut-action';
+import { fromEvent, Subject } from 'rxjs';
+import { takeUntil } from 'rxjs/operators';
+import { ShortcutConfig } from '../../../../models/shortcut-config';
+import { ShortcutsService } from '../../../../services/shortcuts/shortcuts.service';
+import { Shortcut } from '../../../../models/shortcut';
+import { ShortcutAction } from '../../../../models/shortcut-action';
 
 @Component({
 	selector: 'app-single-shortcut-config',
@@ -23,30 +24,35 @@ import {ShortcutAction} from '../../../../models/shortcut-action';
 	changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class SingleShortcutConfigComponent implements OnInit, OnDestroy {
-
 	@Input()
 	public shortcut: Shortcut;
 
-	@ViewChild('inputContainer', {static: true})
+	@ViewChild('inputContainer', { static: true })
 	private inputContainer: ElementRef<HTMLElement>;
 
 	public shortcutText: string;
 	public isRecording = false;
 	private _newShortcutConfig: ShortcutConfig;
 
-	private _destroySubject = new Subject();
+	private _destroySubject = new Subject<void>();
 
-	constructor(private actions: ShortcutsService, private ngZone: NgZone, private cdr: ChangeDetectorRef) { }
+	constructor(
+		private actions: ShortcutsService,
+		private ngZone: NgZone,
+		private cdr: ChangeDetectorRef
+	) {}
 
 	ngOnInit() {
-		this.shortcutText = this.actions.getShortcutTextForAction(this.shortcut.action);
+		this.shortcutText = this.actions.getShortcutTextForAction(
+			this.shortcut.action
+		);
 		this.ngZone.runOutsideAngular(() => {
-			fromEvent(window, 'click').pipe(
-				takeUntil(this._destroySubject)
-			).subscribe(e => this.onWindowClick(e as MouseEvent));
-			fromEvent(this.inputContainer.nativeElement, 'keydown').pipe(
-				takeUntil(this._destroySubject)
-			).subscribe(e => this.onKeyDown(e as KeyboardEvent));
+			fromEvent(window, 'click')
+				.pipe(takeUntil(this._destroySubject))
+				.subscribe((e) => this.onWindowClick(e as MouseEvent));
+			fromEvent(this.inputContainer.nativeElement, 'keydown')
+				.pipe(takeUntil(this._destroySubject))
+				.subscribe((e) => this.onKeyDown(e as KeyboardEvent));
 		});
 	}
 
@@ -74,7 +80,10 @@ export class SingleShortcutConfigComponent implements OnInit, OnDestroy {
 		this.isRecording = true;
 	}
 
-	public get changedShortcutSettings(): { key: ShortcutAction; config: ShortcutConfig } | null {
+	public get changedShortcutSettings(): {
+		key: ShortcutAction;
+		config: ShortcutConfig;
+	} | null {
 		if (!this._newShortcutConfig) return null;
 		return {
 			key: this.shortcut.action,

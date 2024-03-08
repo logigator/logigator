@@ -5,14 +5,9 @@ import { Pipe, PipeTransform } from '@angular/core';
 	pure: true
 })
 export class SiPipe implements PipeTransform {
+	private static siSymbols_gr = ['', 'k', 'M', 'G', 'T', 'P', 'E', 'Z', 'Y'];
 
-	private static siSymbols_gr = [
-		'', 'k', 'M', 'G', 'T', 'P', 'E', 'Z', 'Y'
-	];
-
-	private static siSymbols_lw = [
-		'', 'm', 'μ', 'n', 'p', 'f', 'a', 'z', 'y'
-	];
+	private static siSymbols_lw = ['', 'm', 'μ', 'n', 'p', 'f', 'a', 'z', 'y'];
 
 	transform(value: number, decimals = 2): string {
 		let gr = 0;
@@ -26,7 +21,10 @@ export class SiPipe implements PipeTransform {
 			value *= 1000;
 		}
 
-		return (Math.round(value * Math.pow(10, decimals)) / Math.pow(10, decimals)) + SiPipe.siSymbols_gr[gr] + SiPipe.siSymbols_lw[lw];
+		return (
+			Math.round(value * Math.pow(10, decimals)) / Math.pow(10, decimals) +
+			SiPipe.siSymbols_gr[gr] +
+			SiPipe.siSymbols_lw[lw]
+		);
 	}
-
 }

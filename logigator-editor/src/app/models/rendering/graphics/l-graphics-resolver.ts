@@ -1,27 +1,32 @@
-import {LGraphics} from './l-graphics';
-import {Element} from '../../element';
-import {ElementProviderService} from '../../../services/element-provider/element-provider.service';
-import {getStaticDI} from '../../get-di';
-import {WireGraphics} from './wire-graphics';
-import {ComponentGraphics} from './component-graphics';
-import {ButtonGraphics} from './button-graphics';
-import {LeverGraphics} from './lever-graphics';
-import {ElementTypeId} from '../../element-types/element-type-ids';
-import {TextGraphics} from './text-graphics';
-import {InputOutputGraphics} from './input-output-graphics';
-import {LedGraphics} from './led-graphics';
-import {SegmentDisplayGraphics} from './segment-display-graphics';
-import {LedMatrixGraphics} from './led-matrix-graphics';
-import {RomGraphics} from './rom-graphics';
-import {Project} from '../../project';
+// @ts-strict-ignore
+import { LGraphics } from './l-graphics';
+import { Element } from '../../element';
+import { ElementProviderService } from '../../../services/element-provider/element-provider.service';
+import { getStaticDI } from '../../get-di';
+import { WireGraphics } from './wire-graphics';
+import { ComponentGraphics } from './component-graphics';
+import { ButtonGraphics } from './button-graphics';
+import { LeverGraphics } from './lever-graphics';
+import { ElementTypeId } from '../../element-types/element-type-ids';
+import { TextGraphics } from './text-graphics';
+import { InputOutputGraphics } from './input-output-graphics';
+import { LedGraphics } from './led-graphics';
+import { SegmentDisplayGraphics } from './segment-display-graphics';
+import { LedMatrixGraphics } from './led-matrix-graphics';
+import { RomGraphics } from './rom-graphics';
+import { Project } from '../../project';
 
 export abstract class LGraphicsResolver {
-
 	private static get elementProviderService(): ElementProviderService {
 		return getStaticDI(ElementProviderService);
 	}
 
-	public static getLGraphicsFromElement(scale: number, element: Element, project?: Project, parentProjectIdentifier?: string): LGraphics {
+	public static getLGraphicsFromElement(
+		scale: number,
+		element: Element,
+		project?: Project,
+		parentProjectIdentifier?: string
+	): LGraphics {
 		switch (element.typeId) {
 			case ElementTypeId.WIRE:
 				return new WireGraphics(scale, element);
@@ -48,7 +53,10 @@ export abstract class LGraphicsResolver {
 	}
 
 	// wires and text are not supported !!
-	public static getLGraphicsFromType(scale: number, elemTypeId: number): LGraphics {
+	public static getLGraphicsFromType(
+		scale: number,
+		elemTypeId: number
+	): LGraphics {
 		const elemType = this.elementProviderService.getElementById(elemTypeId);
 		switch (elemTypeId) {
 			case ElementTypeId.BUTTON:
@@ -68,5 +76,4 @@ export abstract class LGraphicsResolver {
 				return new ComponentGraphics(scale, elemType);
 		}
 	}
-
 }

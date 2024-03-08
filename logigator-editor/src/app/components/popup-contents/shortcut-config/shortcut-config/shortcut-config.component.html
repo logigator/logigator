@@ -1,4 +1,9 @@
 <div class="shortcut-config">
-	<app-single-shortcut-config *ngFor="let s of shortcuts" [shortcut]="s"></app-single-shortcut-config>
-	<button class="btn-raised primary" (click)="save()">{{'POPUP.SHORTCUTS.SAVE' | translate}}</button>
+	<app-single-shortcut-config
+		*ngFor="let s of shortcuts"
+		[shortcut]="s"
+	></app-single-shortcut-config>
+	<button class="btn-raised primary" (click)="save()">
+		{{ 'POPUP.SHORTCUTS.SAVE' | translate }}
+	</button>
 </div>

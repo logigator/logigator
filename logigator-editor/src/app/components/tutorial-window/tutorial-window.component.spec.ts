@@ -1,4 +1,4 @@
-import {ComponentFixture, TestBed, waitForAsync} from '@angular/core/testing';
+import { ComponentFixture, TestBed, waitForAsync } from '@angular/core/testing';
 
 import { TutorialWindowComponent } from './tutorial-window.component';
 
@@ -8,9 +8,8 @@ describe('TutorialWindowComponent', () => {
 
 	beforeEach(waitForAsync(() => {
 		TestBed.configureTestingModule({
-			declarations: [ TutorialWindowComponent ]
-		})
-			.compileComponents();
+			declarations: [TutorialWindowComponent]
+		}).compileComponents();
 	}));
 
 	beforeEach(() => {

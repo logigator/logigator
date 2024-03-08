@@ -1,4 +1,4 @@
-@import "themes";
+@import 'themes';
 
 div {
 	display: flex;
@@ -10,7 +10,7 @@ div {
 		margin-bottom: 2rem;
 		outline: none;
 
-		@include themify(){
+		@include themify() {
 			background-color: themed('background');
 			border: 1px solid themed('text-primary');
 			color: themed('text-primary');

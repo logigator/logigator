@@ -93,27 +93,27 @@
 	"FEATURES": {
 		"WHAT_IS": {
 			"TITLE": "What is Logigator",
-			"VIDEO": "https://www.youtube.com/embed/weTeJLMGq_Q",
+			"VIDEO": "weTeJLMGq_Q",
 			"TEXT": "Logigator is an online simulator for logic gates which enables the user to build and simulate circuits with logic gates. For example, one can build half-adders and full-adders which can be used for learning. Whether one wants to experiment and explore boolean functions or design new and complex circuits - Logigator is the right tool. <br> In addition, Logigator offers high performance even with large-scale projects. By using “WebAssembly” (https://webassembly.org/), the website can reach simulation speeds that would not be possible in a browser otherwise."
 		},
 		"GENERAL": {
 			"TITLE": "General",
-			"VIDEO": "https://www.youtube.com/embed/tX7HT_0MZRo",
+			"VIDEO": "tX7HT_0MZRo",
 			"TEXT": "The editor can be reached under https://logigator.com/editor and can be used to design and simulate circuits. <br> To place an element, simply select the wanted element from the construction-kit on the left side of the window. The basic gates consist of: AND, OR, XOR, NOT as well as a delay which doesn't change the input signal and a clock, which outputs a signal in periodical intervals. Naturally, there are also more complex elements which are not mentioned here. After one selects an element, it can be placed by clicking anywhere in the canvas. Using the selection-tool one can select an element and change settings in the box in the bottom right corner. These settings vary from component to component. The wire-tool can then be used to connect the elements."
 		},
 		"CUSTOM_COMPS": {
 			"TITLE": "Custom Components",
-			"VIDEO": "https://www.youtube.com/embed/fSErH93I-Wg",
+			"VIDEO": "fSErH93I-Wg",
 			"TEXT": "One might want to use a part of a circuit multiple times. To simplify this process it is possible to define custom components, which can easily be placed multiple times and can even be used in other projects. <br> There are two types of plug components: inputs and outputs. By placing these components one can mark the inputs and outputs of a custom components. Additionally parts of circuits can be labeled for better overview."
 		},
 		"SIMULATION": {
 			"TITLE": "Simulation Mode",
-			"VIDEO": "https://www.youtube.com/embed/WjpChcxn18k",
+			"VIDEO": "WjpChcxn18k",
 			"TEXT": "The simulation-mode can be used to test and simulate circuits. To switch to simulation mode, simply press the “Start Simulation” button. To start the simulation simply press the play button. Now you can interact with the circuit. In case you want to see what the circuit is doing, you can pause the simulation and test it step by step. To return to the original state simply press the stop button. By default the simulation will run as fast as possible. However, the clock speed can be changed by simply entering the wanted speed or locking it to the display's frequency. The composition of custom components can be observed by simply clicking on them."
 		},
 		"SAVING": {
 			"TITLE": "Saving Projects",
-			"VIDEO": "https://www.youtube.com/embed/VtS4E0L2MyU",
+			"VIDEO": "VtS4E0L2MyU",
 			"TEXT": "Projects and Components can either be saved locally as a file or in the cloud, which enables editing on multiple devices. To save projects online the user has to be logged in, which also enables projects to be shared with other users."
 		}
 	},
@@ -169,8 +169,8 @@
 		"SEARCH": "Search",
 		"COMPONENTS": "Shared Components",
 		"PROJECTS": "Shared Projects",
-		"VIEW": "View",
-		"OPEN": "Open",
+		"VIEW": "View Details",
+		"OPEN": "Open in Editor",
 		"CLONE": "Clone",
 		"NO_DESCRIPTION": "No description was provided.",
 		"USER": {
@@ -245,6 +245,9 @@
 				"BUTTON": "Delete Account"
 			}
 		}
+	},
+	"YOUTUBE_OVERLAY": {
+		"CTA": "Click to watch the video"
 	},
 	"POPUP": {
 		"LOGIN": {

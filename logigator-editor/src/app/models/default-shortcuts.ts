@@ -1,4 +1,4 @@
-import {Shortcut} from './shortcut';
+import { Shortcut } from './shortcut';
 
 export const defaultShortcuts: Shortcut[] = [
 	{
@@ -45,7 +45,7 @@ export const defaultShortcuts: Shortcut[] = [
 		usableIn: 'editor',
 		shortcutConfig: {
 			key_code: 'Y',
-			ctrl: true,
+			ctrl: true
 		}
 	},
 	{
@@ -57,7 +57,7 @@ export const defaultShortcuts: Shortcut[] = [
 		usableIn: 'both',
 		shortcutConfig: {
 			key_code: '0',
-			ctrl: true,
+			ctrl: true
 		}
 	},
 	{
@@ -169,7 +169,7 @@ export const defaultShortcuts: Shortcut[] = [
 	},
 	{
 		action: 'startSim',
-		usableIn: 'simulation',
+		usableIn: 'simulation'
 	},
 	{
 		action: 'pauseSim',

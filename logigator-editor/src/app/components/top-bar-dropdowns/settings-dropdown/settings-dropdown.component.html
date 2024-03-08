@@ -1,56 +1,84 @@
 <div class="dropdown" [class.hidden]="!showDropDown">
 	<div class="switch item">
-		<label>{{'DROPDOWN.SETTINGS.DARK_MODE' | translate}}</label>
-		<app-switch (click)="showReloadPopup()" [checked]="this.theming.pendingTheme === 'dark'"></app-switch>
+		<label for="settings-dropdown__dark-mode">{{
+			'DROPDOWN.SETTINGS.DARK_MODE' | translate
+		}}</label>
+		<app-switch
+			id="settings-dropdown__dark-mode"
+			(click)="showReloadPopup()"
+			[checked]="this.theming.pendingTheme === 'dark'"
+		></app-switch>
 	</div>
 	<div class="switch item">
-		<label>{{'DROPDOWN.SETTINGS.SHOW_GRID' | translate}}</label>
-		<app-switch [(ngModel)]="this.theming.showGrid"></app-switch>
+		<label for="settings-dropdown__show-grid">{{
+			'DROPDOWN.SETTINGS.SHOW_GRID' | translate
+		}}</label>
+		<app-switch
+			[(ngModel)]="this.theming.showGrid"
+			id="settings-dropdown__show-grid"
+		></app-switch>
 	</div>
 	<div class="switch item">
-		<label>{{'DROPDOWN.SETTINGS.AUTOSTART_SIM' | translate}}</label>
-		<app-switch [(ngModel)]="this.simulationMgmt.autoStartSimulation"></app-switch>
+		<label for="settings-dropdown__autostart">{{
+			'DROPDOWN.SETTINGS.AUTOSTART_SIM' | translate
+		}}</label>
+		<app-switch
+			id="settings-dropdown__autostart"
+			[(ngModel)]="this.simulationMgmt.autoStartSimulation"
+		></app-switch>
 	</div>
 	<div class="select item">
-		<label>{{'DROPDOWN.SETTINGS.LANGUAGE' | translate}}</label>
-		<select [(ngModel)]="currentLang" (ngModelChange)="languageChange()">
-			<option value="en">{{'LANGUAGE.EN' | translate}}</option>
-			<option value="de">{{'LANGUAGE.DE' | translate}}</option>
+		<label for="settings-dropdown__langugage">{{
+			'DROPDOWN.SETTINGS.LANGUAGE' | translate
+		}}</label>
+		<select
+			[(ngModel)]="currentLang"
+			(ngModelChange)="languageChange()"
+			id="settings-dropdown__langugage"
+		>
+			<option value="en">{{ 'LANGUAGE.EN' | translate }}</option>
+			<option value="de">{{ 'LANGUAGE.DE' | translate }}</option>
 		</select>
 	</div>
-	<hr>
+	<hr />
 
-	<a class="link item" (click)="showCustomizeShortcuts()">
-		<img *ngIf="this.theming.currentTheme === 'dark'" src="assets/icons/dark/settings.svg">
-		<img *ngIf="this.theming.currentTheme === 'light'" src="assets/icons/light/settings.svg">
-		{{'DROPDOWN.SETTINGS.SHORTCUTS' | translate}}
+	<a class="link item" (click)="showCustomizeShortcuts()" tabindex="0">
+		<img
+			alt="settings icon"
+			*ngIf="this.theming.currentTheme === 'dark'"
+			src="assets/icons/dark/settings.svg"
+		/>
+		<img
+			alt="settings icon"
+			*ngIf="this.theming.currentTheme === 'light'"
+			src="assets/icons/light/settings.svg"
+		/>
+		{{ 'DROPDOWN.SETTINGS.SHORTCUTS' | translate }}
 	</a>
 
-	<a class="link item" *ngIf="isLoggedIn" (click)="accountSettings()">
-		<img *ngIf="this.theming.currentTheme === 'dark'" src="assets/icons/dark/user.svg">
-		<img *ngIf="this.theming.currentTheme === 'light'" src="assets/icons/light/user.svg">
-		{{'DROPDOWN.SETTINGS.ACCOUNT' | translate}}
+	<a
+		class="link item"
+		*ngIf="isLoggedIn"
+		(click)="accountSettings()"
+		tabindex="0"
+	>
+		<img
+			alt="user icon"
+			*ngIf="this.theming.currentTheme === 'dark'"
+			src="assets/icons/dark/user.svg"
+		/>
+		<img
+			alt="user icon"
+			*ngIf="this.theming.currentTheme === 'light'"
+			src="assets/icons/light/user.svg"
+		/>
+		{{ 'DROPDOWN.SETTINGS.ACCOUNT' | translate }}
 	</a>
 
-	<!-- #!if ELECTRON === 'true' -->
-	<a class="link item" *ngIf="isLoggedIn" (click)="logout()">
-		<img *ngIf="this.theming.currentTheme === 'dark'" src="assets/icons/dark/logout.svg">
-		<img *ngIf="this.theming.currentTheme === 'light'" src="assets/icons/light/logout.svg">
-		{{'DROPDOWN.SETTINGS.LOGOUT' | translate}}
-	</a>
-	<!-- #!endif -->
-
-	<!-- #!if ELECTRON === 'true' -->
-	<a *ngIf="isNewVersionAvailable$ | async" class="link item new-version" (click)="updateClick()">
-		<img *ngIf="this.theming.currentTheme === 'dark'" src="assets/icons/dark/info.svg">
-		<img *ngIf="this.theming.currentTheme === 'light'" src="assets/icons/light/info.svg">
-		{{'DROPDOWN.SETTINGS.NEW_VERSION' | translate}}
-	</a>
-	<!-- #!endif -->
-
-	<hr>
+	<hr />
 	<div class="link item">
-		<button class="btn-outline secondary small" (click)="privacyPolicy()">{{'DROPDOWN.SETTINGS.PRIVACY' | translate}}</button>
+		<button class="btn-outline secondary small" (click)="privacyPolicy()">
+			{{ 'DROPDOWN.SETTINGS.PRIVACY' | translate }}
+		</button>
 	</div>
-
 </div>

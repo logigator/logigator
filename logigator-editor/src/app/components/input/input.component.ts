@@ -1,5 +1,20 @@
-import {ChangeDetectorRef, Component, forwardRef, Host, Input, OnInit, Optional, SkipSelf} from '@angular/core';
-import {AbstractControl, ControlContainer, ControlValueAccessor, NG_VALUE_ACCESSOR} from '@angular/forms';
+// @ts-strict-ignore
+import {
+	ChangeDetectorRef,
+	Component,
+	forwardRef,
+	Host,
+	Input,
+	OnInit,
+	Optional,
+	SkipSelf
+} from '@angular/core';
+import {
+	AbstractControl,
+	ControlContainer,
+	ControlValueAccessor,
+	NG_VALUE_ACCESSOR
+} from '@angular/forms';
 
 @Component({
 	selector: 'app-input',
@@ -14,7 +29,6 @@ import {AbstractControl, ControlContainer, ControlValueAccessor, NG_VALUE_ACCESS
 	]
 })
 export class InputComponent implements OnInit, ControlValueAccessor {
-
 	@Input()
 	public label: string;
 
@@ -34,10 +48,13 @@ export class InputComponent implements OnInit, ControlValueAccessor {
 
 	public showTooltip = false;
 
-	private onChange = (value: unknown) => {};
-	private onTouched = () => {};
+	private onChange: (...args: unknown[]) => unknown = () => {};
+	private onTouched: (...args: unknown[]) => unknown = () => {};
 
-	constructor(private cdr: ChangeDetectorRef, @Optional() @Host() @SkipSelf() private controlContainer: ControlContainer) { }
+	constructor(
+		private cdr: ChangeDetectorRef,
+		@Optional() @Host() @SkipSelf() private controlContainer: ControlContainer
+	) {}
 
 	ngOnInit() {
 		if (this.controlContainer) {
@@ -46,17 +63,16 @@ export class InputComponent implements OnInit, ControlValueAccessor {
 	}
 
 	public get invalid(): boolean {
-		if (!this.control)
-			return false;
+		if (!this.control) return false;
 
 		return this.control.touched && this.control.invalid;
 	}
 
-	registerOnChange(fn: any): void {
+	registerOnChange(fn: (...args: unknown[]) => unknown): void {
 		this.onChange = fn;
 	}
 
-	registerOnTouched(fn: any): void {
+	registerOnTouched(fn: (...args: unknown[]) => unknown): void {
 		this.onTouched = fn;
 	}
 
@@ -73,5 +89,4 @@ export class InputComponent implements OnInit, ControlValueAccessor {
 		this.onTouched();
 		this.onChange(this.state);
 	}
-
 }

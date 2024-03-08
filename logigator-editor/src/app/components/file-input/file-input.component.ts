@@ -1,7 +1,8 @@
-import {Component, forwardRef, Input, OnInit} from '@angular/core';
-import {ControlValueAccessor, NG_VALUE_ACCESSOR} from '@angular/forms';
-import {HttpClient} from '@angular/common/http';
-import {ThemingService} from '../../services/theming/theming.service';
+// @ts-strict-ignore
+import { Component, forwardRef, Input, OnInit } from '@angular/core';
+import { ControlValueAccessor, NG_VALUE_ACCESSOR } from '@angular/forms';
+import { HttpClient } from '@angular/common/http';
+import { ThemingService } from '../../services/theming/theming.service';
 
 @Component({
 	selector: 'app-file-input',
@@ -16,7 +17,6 @@ import {ThemingService} from '../../services/theming/theming.service';
 	]
 })
 export class FileInputComponent implements OnInit, ControlValueAccessor {
-
 	@Input()
 	public accept = '*';
 
@@ -24,20 +24,23 @@ export class FileInputComponent implements OnInit, ControlValueAccessor {
 	public isDisabled = false;
 	public currTheme: string;
 
-	public onChange = (value: File) => {};
-	public onTouch = () => {};
+	public onChange: (...args: unknown[]) => unknown = () => {};
+	public onTouch: (...args: unknown[]) => unknown = () => {};
 
-	constructor(private http: HttpClient, private theme: ThemingService) { }
+	constructor(
+		private http: HttpClient,
+		private theme: ThemingService
+	) {}
 
 	ngOnInit() {
 		this.currTheme = this.theme.currentTheme;
 	}
 
-	registerOnChange(fn: any): void {
+	registerOnChange(fn: (...args: unknown[]) => unknown): void {
 		this.onChange = fn;
 	}
 
-	registerOnTouched(fn: any): void {
+	registerOnTouched(fn: (...args: unknown[]) => unknown): void {
 		this.onTouch = fn;
 	}
 
@@ -64,12 +67,13 @@ export class FileInputComponent implements OnInit, ControlValueAccessor {
 		evt.preventDefault();
 		evt.stopPropagation();
 		this.isDragging = false;
-		if (evt.dataTransfer.files)
-			this.onChange(evt.dataTransfer.files[0]);
+		if (evt.dataTransfer.files) this.onChange(evt.dataTransfer.files[0]);
 	}
 
-	public fileChange(event: any) {
-		if (event.target.files && event.target.files.length > 0)
-			this.onChange(event.target.files[0]);
+	public fileChange(event: Event) {
+		const target = event.target as HTMLInputElement;
+		const files = target.files as FileList;
+
+		if (files && files.length > 0) this.onChange(files[0]);
 	}
 }

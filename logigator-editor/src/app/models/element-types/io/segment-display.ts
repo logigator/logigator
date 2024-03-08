@@ -1,6 +1,7 @@
-import {ElementType} from '../element-type';
-import {ElementTypeId} from '../element-type-ids';
-import {ElementRotation} from '../../element';
+// @ts-strict-ignore
+import { ElementType } from '../element-type';
+import { ElementTypeId } from '../element-type-ids';
+import { ElementRotation } from '../../element';
 
 export const segmentDisplay: ElementType = {
 	id: ElementTypeId.SEGMENT_DISPLAY,
@@ -59,7 +60,7 @@ export const segmentDisplay: ElementType = {
 				case 2:
 					return 2 + Math.ceil(inputs / 3);
 				default:
-					return 2 + Math.ceil(Math.log10((2 ** inputs) + 1));
+					return 2 + Math.ceil(Math.log10(2 ** inputs + 1));
 			}
 		} else {
 			return 4;
@@ -74,5 +75,4 @@ export const segmentDisplay: ElementType = {
 			.fill(undefined)
 			.map((value, index) => index.toString());
 	}
-
 };

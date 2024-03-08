@@ -1,12 +1,13 @@
-import {Component, EventEmitter, Input, Output} from '@angular/core';
-import {ElementType} from '../../models/element-types/element-type';
-import {WorkMode} from '../../models/work-modes';
-import {WorkModeService} from '../../services/work-mode/work-mode.service';
-import {TranslateService} from '@ngx-translate/core';
-import {Observable} from 'rxjs';
-import {map} from 'rxjs/operators';
-import {ElementProviderService} from '../../services/element-provider/element-provider.service';
-import {ProjectsService} from '../../services/projects/projects.service';
+// @ts-strict-ignore
+import { Component, EventEmitter, Input, Output } from '@angular/core';
+import { ElementType } from '../../models/element-types/element-type';
+import { WorkMode } from '../../models/work-modes';
+import { WorkModeService } from '../../services/work-mode/work-mode.service';
+import { TranslateService } from '@ngx-translate/core';
+import { Observable } from 'rxjs';
+import { map } from 'rxjs/operators';
+import { ElementProviderService } from '../../services/element-provider/element-provider.service';
+import { ProjectsService } from '../../services/projects/projects.service';
 
 @Component({
 	selector: 'app-construction-box-category',
@@ -14,7 +15,6 @@ import {ProjectsService} from '../../services/projects/projects.service';
 	styleUrls: ['./construction-box-category.component.scss']
 })
 export class ConstructionBoxCategoryComponent {
-
 	@Input()
 	public components: ElementType[];
 
@@ -35,7 +35,7 @@ export class ConstructionBoxCategoryComponent {
 		private translate: TranslateService,
 		private elemProv: ElementProviderService,
 		private projects: ProjectsService
-	) { }
+	) {}
 
 	public componentsTrackBy(index, item: ElementType) {
 		if (!item) return null;
@@ -43,23 +43,31 @@ export class ConstructionBoxCategoryComponent {
 	}
 
 	public isHiddenPlug(toSearch: string, typeId: number): boolean {
-		if (toSearch === '' || typeId !== 102)
-			return false;
+		if (toSearch === '' || typeId !== 102) return false;
 		return toSearch.trim().toLowerCase().replace(' ', '') === 'buttplug';
 	}
 
 	public isInSearchResult(toSearch: ElementType): Observable<boolean> {
-		return this.translate.get(toSearch.name).pipe(
-			map(
-				translated => translated.toLowerCase().includes(this.searchText.trim().toLowerCase())
-				|| toSearch.symbol.toLowerCase().includes(this.searchText.trim().toLowerCase())
-			)
-		);
+		return this.translate
+			.get(toSearch.name)
+			.pipe(
+				map(
+					(translated) =>
+						translated
+							.toLowerCase()
+							.includes(this.searchText.trim().toLowerCase()) ||
+						toSearch.symbol
+							.toLowerCase()
+							.includes(this.searchText.trim().toLowerCase())
+				)
+			);
 	}
 
 	public isCurrentCustomElement(id: number): boolean {
 		if (!this.projects.currProject) return false;
-		return this.elemProv.isCustomElement(id) && this.projects.currProject.id === id;
+		return (
+			this.elemProv.isCustomElement(id) && this.projects.currProject.id === id
+		);
 	}
 
 	public selectComponent(id: number) {

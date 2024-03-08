@@ -1,5 +1,5 @@
-import {SimulationUnit} from '../../../models/simulation/simulation-unit';
-import {Element} from '../../../models/element';
+import { SimulationUnit } from '../../../models/simulation/simulation-unit';
+import { Element } from '../../../models/element';
 
 type UnitToElement = Map<SimulationUnit, Element>;
 type ElementToUnit = Map<Element, SimulationUnit>;
@@ -28,7 +28,20 @@ type WireEndsOnLinksCache = Map<number, WireEndsOnLinks>;
 
 type ElementId = number;
 
-export {UnitToElement, LinkOnWireEnd, PosOfElem, WireEndOnElem,
-	WiresOnLinks, WiresOnLinksInProject, WireEndLinksOnElem,
-	WireEndOnComp, WireEndsOnLinks, WireEndsOnLinksInProject,
-	ElementToUnit, UnitElementBidir, ElementId, WiresOnLinksCache, WireEndsOnLinksCache};
+export {
+	UnitToElement,
+	LinkOnWireEnd,
+	PosOfElem,
+	WireEndOnElem,
+	WiresOnLinks,
+	WiresOnLinksInProject,
+	WireEndLinksOnElem,
+	WireEndOnComp,
+	WireEndsOnLinks,
+	WireEndsOnLinksInProject,
+	ElementToUnit,
+	UnitElementBidir,
+	ElementId,
+	WiresOnLinksCache,
+	WireEndsOnLinksCache
+};

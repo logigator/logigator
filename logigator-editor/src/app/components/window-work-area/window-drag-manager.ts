@@ -1,15 +1,23 @@
-import {fromEvent, Observable, Subject} from 'rxjs';
-import {takeUntil} from 'rxjs/operators';
-import {NgZone, Renderer2} from '@angular/core';
-import {SimulationView} from '../../models/rendering/simulation-view';
+// @ts-strict-ignore
+import { fromEvent, Observable, Subject } from 'rxjs';
+import { takeUntil } from 'rxjs/operators';
+import { NgZone, Renderer2 } from '@angular/core';
 import * as PIXI from 'pixi.js';
-import {getStaticDI} from '../../models/get-di';
+import { getStaticDI } from '../../models/get-di';
 
-type Border = 'move' | 'top-left' | 'top-right' | 'bottom-left' | 'bottom-right' | 'right' | 'left' | 'top' | 'bottom';
+type Border =
+	| 'move'
+	| 'top-left'
+	| 'top-right'
+	| 'bottom-left'
+	| 'bottom-right'
+	| 'right'
+	| 'left'
+	| 'top'
+	| 'bottom';
 
 export class WindowDragManager {
-
-	private _destroySubject = new Subject<any>();
+	private _destroySubject = new Subject<void>();
 
 	private _currentlyDragging: Border;
 	private _draggingPos = [0, 0];
@@ -40,69 +48,89 @@ export class WindowDragManager {
 		this._maxSize = maxSize;
 
 		getStaticDI(NgZone).runOutsideAngular(() => {
-			fromEvent(window, 'mousemove').pipe(
-				takeUntil(this._destroySubject)
-			).subscribe((e: MouseEvent) => this.mouseMove(e));
+			fromEvent(window, 'mousemove')
+				.pipe(takeUntil(this._destroySubject))
+				.subscribe((e: MouseEvent) => this.mouseMove(e));
 
-			fromEvent(window, 'mouseup').pipe(
-				takeUntil(this._destroySubject)
-			).subscribe(() => this.mouseUp());
+			fromEvent(window, 'mouseup')
+				.pipe(takeUntil(this._destroySubject))
+				.subscribe(() => this.mouseUp());
 
-			fromEvent(this._popup, 'mousedown').pipe(
-				takeUntil(this._destroySubject)
-			).subscribe((e: MouseEvent) => this.mouseDown(e));
+			fromEvent(this._popup, 'mousedown')
+				.pipe(takeUntil(this._destroySubject))
+				.subscribe((e: MouseEvent) => this.mouseDown(e));
 
-			fromEvent(this._popup, 'mousemove').pipe(
-				takeUntil(this._destroySubject)
-			).subscribe((e: MouseEvent) => this.pointerOver(e));
+			fromEvent(this._popup, 'mousemove')
+				.pipe(takeUntil(this._destroySubject))
+				.subscribe((e: MouseEvent) => this.pointerOver(e));
 
-			fromEvent(window, 'resize').pipe(
-				takeUntil(this._destroySubject)
-			).subscribe((e: MouseEvent) => {
-				if (this.collision_right(this._popup.offsetLeft)) {
-					let newLoc = (this._dragBounding.offsetLeft + this._dragBounding.offsetWidth) - this._popup.offsetWidth;
-					if (this.collision_left(newLoc))
-						newLoc = this._dragBounding.offsetLeft;
-					this.renderer2.setStyle(this._popup, 'left', newLoc + 'px');
-				}
-				if (this.collision_bottom(this._popup.offsetTop)) {
-					let newLoc = (this._dragBounding.offsetTop + this._dragBounding.offsetHeight) - this._popup.offsetHeight;
-					if (this.collision_top(newLoc))
-						newLoc = this._dragBounding.offsetTop;
-					this.renderer2.setStyle(this._popup, 'top', newLoc + 'px');
-				}
-			});
+			fromEvent(window, 'resize')
+				.pipe(takeUntil(this._destroySubject))
+				.subscribe(() => {
+					if (this.collision_right(this._popup.offsetLeft)) {
+						let newLoc =
+							this._dragBounding.offsetLeft +
+							this._dragBounding.offsetWidth -
+							this._popup.offsetWidth;
+						if (this.collision_left(newLoc))
+							newLoc = this._dragBounding.offsetLeft;
+						this.renderer2.setStyle(this._popup, 'left', newLoc + 'px');
+					}
+					if (this.collision_bottom(this._popup.offsetTop)) {
+						let newLoc =
+							this._dragBounding.offsetTop +
+							this._dragBounding.offsetHeight -
+							this._popup.offsetHeight;
+						if (this.collision_top(newLoc))
+							newLoc = this._dragBounding.offsetTop;
+						this.renderer2.setStyle(this._popup, 'top', newLoc + 'px');
+					}
+				});
 		});
 	}
 
-
-	private static getBoarderCollision(offsetX: number, offsetY: number, element: HTMLElement, borderWidth: number = 7): Border {
+	private static getBoarderCollision(
+		offsetX: number,
+		offsetY: number,
+		element: HTMLElement,
+		borderWidth: number = 7
+	): Border {
 		if (offsetX >= 0 && offsetX <= borderWidth) {
 			if (offsetY >= 0 && offsetY <= borderWidth) {
 				return 'top-left';
-			} else if (offsetY >= element.offsetHeight - borderWidth
-				&& offsetY <= element.offsetHeight) {
+			} else if (
+				offsetY >= element.offsetHeight - borderWidth &&
+				offsetY <= element.offsetHeight
+			) {
 				return 'bottom-left';
 			} else {
 				return 'left';
 			}
 		} else if (offsetY >= 0 && offsetY <= borderWidth) {
-			if (offsetX >= element.offsetWidth - borderWidth
-				&& offsetX <= element.offsetWidth) {
+			if (
+				offsetX >= element.offsetWidth - borderWidth &&
+				offsetX <= element.offsetWidth
+			) {
 				return 'top-right';
 			} else {
 				return 'top';
 			}
-		} else if (offsetY >= element.offsetHeight - borderWidth
-			&& offsetY <= element.offsetHeight) {
-			if (offsetX >= element.offsetWidth - borderWidth
-				&& offsetX <= element.offsetWidth) {
+		} else if (
+			offsetY >= element.offsetHeight - borderWidth &&
+			offsetY <= element.offsetHeight
+		) {
+			if (
+				offsetX >= element.offsetWidth - borderWidth &&
+				offsetX <= element.offsetWidth
+			) {
 				return 'bottom-right';
 			} else {
 				return 'bottom';
 			}
-		} else if (offsetX >= element.offsetWidth - borderWidth
-			&& offsetX <= element.offsetWidth) {
+		} else if (
+			offsetX >= element.offsetWidth - borderWidth &&
+			offsetX <= element.offsetWidth
+		) {
 			return 'right';
 		} else {
 			return null;
@@ -110,15 +138,20 @@ export class WindowDragManager {
 	}
 
 	private pointerOver(event: MouseEvent) {
-		if (this._currentlyDragging)
-			return;
+		if (this._currentlyDragging) return;
 
 		if (event.target === this._header) {
 			this.renderer2.setStyle(this._popup, 'cursor', 'move');
 			return;
 		}
 
-		switch (WindowDragManager.getBoarderCollision(event.offsetX, event.offsetY, this._popup)) {
+		switch (
+			WindowDragManager.getBoarderCollision(
+				event.offsetX,
+				event.offsetY,
+				this._popup
+			)
+		) {
 			case 'top':
 				this.renderer2.setStyle(this._popup, 'cursor', 'n-resize');
 				break;
@@ -151,7 +184,7 @@ export class WindowDragManager {
 		if (this._currentlyDragging) {
 			const changeX = event.screenX - this._draggingPos[0];
 			const changeY = event.screenY - this._draggingPos[1];
-			this._draggingPos = [ event.screenX, event.screenY ];
+			this._draggingPos = [event.screenX, event.screenY];
 
 			const newX = this._popup.offsetLeft + changeX;
 			const newY = this._popup.offsetTop + changeY;
@@ -166,66 +199,114 @@ export class WindowDragManager {
 				case 'top-left':
 					if (!this.collision_top(newY, changeY)) {
 						this.renderer2.setStyle(this._popup, 'top', newY + 'px');
-						this.renderer2.setStyle(this._popup, 'height', this._popup.offsetHeight - changeY + 'px');
+						this.renderer2.setStyle(
+							this._popup,
+							'height',
+							this._popup.offsetHeight - changeY + 'px'
+						);
 					}
 					if (!this.collision_left(newX, changeX)) {
 						this.renderer2.setStyle(this._popup, 'left', newX + 'px');
-						this.renderer2.setStyle(this._popup, 'width', this._popup.offsetWidth - changeX + 'px');
+						this.renderer2.setStyle(
+							this._popup,
+							'width',
+							this._popup.offsetWidth - changeX + 'px'
+						);
 					}
 					this._changeSubject.next();
 					break;
 				case 'top-right':
 					if (!this.collision_top(newY, changeY)) {
 						this.renderer2.setStyle(this._popup, 'top', newY + 'px');
-						this.renderer2.setStyle(this._popup, 'height', this._popup.offsetHeight - changeY + 'px');
+						this.renderer2.setStyle(
+							this._popup,
+							'height',
+							this._popup.offsetHeight - changeY + 'px'
+						);
 					}
 					if (!this.collision_right(newX, changeX)) {
-						this.renderer2.setStyle(this._popup, 'width', this._popup.offsetWidth + changeX + 'px');
+						this.renderer2.setStyle(
+							this._popup,
+							'width',
+							this._popup.offsetWidth + changeX + 'px'
+						);
 					}
 					this._changeSubject.next();
 					break;
 				case 'bottom-left':
 					if (!this.collision_bottom(newY, changeY)) {
-						this.renderer2.setStyle(this._popup, 'height', this._popup.offsetHeight + changeY + 'px');
+						this.renderer2.setStyle(
+							this._popup,
+							'height',
+							this._popup.offsetHeight + changeY + 'px'
+						);
 					}
 					if (!this.collision_left(newX, changeX)) {
 						this.renderer2.setStyle(this._popup, 'left', newX + 'px');
-						this.renderer2.setStyle(this._popup, 'width', this._popup.offsetWidth - changeX + 'px');
+						this.renderer2.setStyle(
+							this._popup,
+							'width',
+							this._popup.offsetWidth - changeX + 'px'
+						);
 					}
 					this._changeSubject.next();
 					break;
 				case 'bottom-right':
 					if (!this.collision_bottom(newY, changeY)) {
-						this.renderer2.setStyle(this._popup, 'height', this._popup.offsetHeight + changeY + 'px');
+						this.renderer2.setStyle(
+							this._popup,
+							'height',
+							this._popup.offsetHeight + changeY + 'px'
+						);
 					}
 					if (!this.collision_right(newX, changeX)) {
-						this.renderer2.setStyle(this._popup, 'width', this._popup.offsetWidth + changeX + 'px');
+						this.renderer2.setStyle(
+							this._popup,
+							'width',
+							this._popup.offsetWidth + changeX + 'px'
+						);
 					}
 					this._changeSubject.next();
 					break;
 				case 'top':
 					if (!this.collision_top(newY, changeY)) {
 						this.renderer2.setStyle(this._popup, 'top', newY + 'px');
-						this.renderer2.setStyle(this._popup, 'height', this._popup.offsetHeight - changeY + 'px');
+						this.renderer2.setStyle(
+							this._popup,
+							'height',
+							this._popup.offsetHeight - changeY + 'px'
+						);
 						this._changeSubject.next();
 					}
 					break;
 				case 'right':
 					if (!this.collision_right(newX, changeX)) {
-						this.renderer2.setStyle(this._popup, 'width', this._popup.offsetWidth + changeX + 'px');
+						this.renderer2.setStyle(
+							this._popup,
+							'width',
+							this._popup.offsetWidth + changeX + 'px'
+						);
 						this._changeSubject.next();
 					}
 					break;
 				case 'bottom':
 					if (!this.collision_bottom(newY, changeY)) {
-						this.renderer2.setStyle(this._popup, 'height', this._popup.offsetHeight + changeY + 'px');
+						this.renderer2.setStyle(
+							this._popup,
+							'height',
+							this._popup.offsetHeight + changeY + 'px'
+						);
 						this._changeSubject.next();
 					}
 					break;
 				case 'left':
 					if (!this.collision_left(newX, changeX)) {
 						this.renderer2.setStyle(this._popup, 'left', newX + 'px');
-						this.renderer2.setStyle(this._popup, 'width', this._popup.offsetWidth - changeX + 'px');
+						this.renderer2.setStyle(
+							this._popup,
+							'width',
+							this._popup.offsetWidth - changeX + 'px'
+						);
 						this._changeSubject.next();
 					}
 					break;
@@ -234,43 +315,64 @@ export class WindowDragManager {
 	}
 
 	private collision_left(newX: number, changeX?: number): boolean {
-		return newX <= this._dragBounding.offsetLeft
-			|| (changeX && (this._popup.offsetWidth - changeX < this._minSize.x || this._popup.offsetWidth - changeX > this._maxSize.x));
+		return (
+			newX <= this._dragBounding.offsetLeft ||
+			(changeX &&
+				(this._popup.offsetWidth - changeX < this._minSize.x ||
+					this._popup.offsetWidth - changeX > this._maxSize.x))
+		);
 	}
 
 	private collision_right(newX: number, changeX?: number): boolean {
-		return newX + this._popup.offsetWidth >= this._dragBounding.offsetLeft + this._dragBounding.offsetWidth
-			|| (changeX && (this._popup.offsetWidth + changeX < this._minSize.x || this._popup.offsetWidth + changeX > this._maxSize.x));
+		return (
+			newX + this._popup.offsetWidth >=
+				this._dragBounding.offsetLeft + this._dragBounding.offsetWidth ||
+			(changeX &&
+				(this._popup.offsetWidth + changeX < this._minSize.x ||
+					this._popup.offsetWidth + changeX > this._maxSize.x))
+		);
 	}
 
 	private collision_top(newY: number, changeY?: number): boolean {
-		return newY <= this._dragBounding.offsetTop
-			|| (changeY && (this._popup.offsetHeight - changeY < this._minSize.y || this._popup.offsetHeight - changeY > this._maxSize.y));
+		return (
+			newY <= this._dragBounding.offsetTop ||
+			(changeY &&
+				(this._popup.offsetHeight - changeY < this._minSize.y ||
+					this._popup.offsetHeight - changeY > this._maxSize.y))
+		);
 	}
 
 	private collision_bottom(newY: number, changeY?: number): boolean {
-		return newY + this._popup.offsetHeight >= this._dragBounding.offsetTop + this._dragBounding.offsetHeight
-			|| (changeY && (this._popup.offsetHeight + changeY < this._minSize.y || this._popup.offsetHeight + changeY > this._maxSize.y));
+		return (
+			newY + this._popup.offsetHeight >=
+				this._dragBounding.offsetTop + this._dragBounding.offsetHeight ||
+			(changeY &&
+				(this._popup.offsetHeight + changeY < this._minSize.y ||
+					this._popup.offsetHeight + changeY > this._maxSize.y))
+		);
 	}
 
 	private mouseDown(event: MouseEvent) {
-		if (event.button !== 0)
-			return;
+		if (event.button !== 0) return;
 
-		const b = WindowDragManager.getBoarderCollision(event.offsetX, event.offsetY, this._popup);
+		const b = WindowDragManager.getBoarderCollision(
+			event.offsetX,
+			event.offsetY,
+			this._popup
+		);
 		if (b) {
 			this._currentlyDragging = b;
-			this._draggingPos = [ event.screenX, event.screenY ];
+			this._draggingPos = [event.screenX, event.screenY];
 		} else if (event.target === this._header) {
 			this._currentlyDragging = 'move';
-			this._draggingPos = [ event.screenX, event.screenY ];
+			this._draggingPos = [event.screenX, event.screenY];
 		}
 	}
 
 	public get onChange$(): Observable<void> {
-		return this._changeSubject.asObservable().pipe(
-			takeUntil(this._destroySubject)
-		);
+		return this._changeSubject
+			.asObservable()
+			.pipe(takeUntil(this._destroySubject));
 	}
 
 	private mouseUp() {

@@ -1,28 +1,59 @@
 <div class="status-bar">
 	<div class="division">
-		<p class="padding">{{workModeDescription$ | async}}</p>
+		<p class="padding">{{ workModeDescription$ | async }}</p>
 	</div>
 	<div class="division">
-		<ng-container  *ngIf="(tasks$ | async) as tasks">
-			<div *ngIf="tasks.length >= 1" class="loading-in-bar padding" [class.showing-all-tasks]="showingAllTasks" (click)="loadingClick($event, tasks)">
-				<img *ngIf="currTheme === 'light'" src="assets/icons/light/loading.svg">
-				<img *ngIf="currTheme === 'dark'" src="assets/icons/dark/loading.svg">
-				<p *ngIf="tasks.length === 1">{{tasks[0] | translate}}</p>
-				<p *ngIf="tasks.length > 1">{{'STATUS_BAR.PROCESSES_RUNNING' | translate:{amount: tasks.length} }}</p>
+		<ng-container *ngIf="tasks$ | async as tasks">
+			<div
+				*ngIf="tasks.length >= 1"
+				class="loading-in-bar padding"
+				[class.showing-all-tasks]="showingAllTasks"
+				(click)="loadingClick($event, tasks)"
+				tabindex="0"
+			>
+				<img
+					*ngIf="currTheme === 'light'"
+					src="assets/icons/light/loading.svg"
+					alt="loading"
+				/>
+				<img
+					*ngIf="currTheme === 'dark'"
+					src="assets/icons/dark/loading.svg"
+					alt="loading"
+				/>
+
+				<p *ngIf="tasks.length === 1">{{ tasks[0] | translate }}</p>
+				<p *ngIf="tasks.length > 1">
+					{{
+						'STATUS_BAR.PROCESSES_RUNNING' | translate: { amount: tasks.length }
+					}}
+				</p>
 				<div class="all-tasks" *ngIf="showingAllTasks">
 					<div *ngFor="let t of tasks" class="task">
-						<img *ngIf="currTheme === 'light'" src="assets/icons/light/loading.svg">
-						<img *ngIf="currTheme === 'dark'" src="assets/icons/dark/loading.svg">
-						<p>{{t | translate}}</p>
+						<img
+							*ngIf="currTheme === 'light'"
+							src="assets/icons/light/loading.svg"
+							alt="loading"
+						/>
+						<img
+							*ngIf="currTheme === 'dark'"
+							src="assets/icons/dark/loading.svg"
+							alt="loading"
+						/>
+						<p>{{ t | translate }}</p>
 					</div>
 				</div>
 			</div>
 		</ng-container>
 
 		<div class="divider"></div>
-		<p class="padding" *ngIf="!isSaved">{{'STATUS_BAR.UNSAVED' | translate}}</p>
-		<p class="padding" *ngIf="isSaved">{{'STATUS_BAR.SAVED' | translate}}</p>
+		<p class="padding" *ngIf="!isSaved">
+			{{ 'STATUS_BAR.UNSAVED' | translate }}
+		</p>
+		<p class="padding" *ngIf="isSaved">{{ 'STATUS_BAR.SAVED' | translate }}</p>
 		<div class="divider"></div>
-		<p class="padding">{{'STATUS_BAR.SELECTED' | translate}}: {{selected}}</p>
+		<p class="padding">
+			{{ 'STATUS_BAR.SELECTED' | translate }}: {{ selected }}
+		</p>
 	</div>
 </div>

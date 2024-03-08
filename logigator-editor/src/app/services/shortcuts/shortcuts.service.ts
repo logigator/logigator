@@ -1,23 +1,23 @@
-import {Injectable, NgZone} from '@angular/core';
-import {ShortcutConfig} from '../../models/shortcut-config';
-import {defaultShortcuts} from '../../models/default-shortcuts';
-import {ShortcutAction} from '../../models/shortcut-action';
-import {Shortcut} from '../../models/shortcut';
-import {WorkMode} from '../../models/work-modes';
-import {WorkModeService} from '../work-mode/work-mode.service';
-import {UserService} from '../user/user.service';
-import {ApiService} from '../api/api.service';
-import {UserShortcut} from '../../models/http/response/user';
-import {EditorInteractionService} from '../editor-interaction/editor-interaction.service';
-import {SimulationManagementService} from '../simulation/simulation-management/simulation-management.service';
-import {PopupService} from '../popup/popup.service';
-import {ProjectsService} from '../projects/projects.service';
+// @ts-strict-ignore
+import { Injectable, NgZone } from '@angular/core';
+import { ShortcutConfig } from '../../models/shortcut-config';
+import { defaultShortcuts } from '../../models/default-shortcuts';
+import { ShortcutAction } from '../../models/shortcut-action';
+import { Shortcut } from '../../models/shortcut';
+import { WorkMode } from '../../models/work-modes';
+import { WorkModeService } from '../work-mode/work-mode.service';
+import { UserService } from '../user/user.service';
+import { ApiService } from '../api/api.service';
+import { UserShortcut } from '../../models/http/response/user';
+import { EditorInteractionService } from '../editor-interaction/editor-interaction.service';
+import { SimulationManagementService } from '../simulation/simulation-management/simulation-management.service';
+import { PopupService } from '../popup/popup.service';
+import { ProjectsService } from '../projects/projects.service';
 
 @Injectable({
 	providedIn: 'root'
 })
 export class ShortcutsService {
-
 	private _shortcutConfig = defaultShortcuts;
 	private _customShortcuts = new Map<ShortcutAction, ShortcutConfig>();
 
@@ -33,14 +33,16 @@ export class ShortcutsService {
 		private popupService: PopupService,
 		private ngZone: NgZone
 	) {
-		this.userService.userInfo$.subscribe(data => {
+		this.userService.userInfo$.subscribe((data) => {
 			if (!data) {
 				this._shortcutConfig = defaultShortcuts;
 				this._customShortcuts.clear();
 				return;
 			}
 			for (const shortcut of data.shortcuts) {
-				const index = this._shortcutConfig.findIndex(x => x.action === shortcut.name);
+				const index = this._shortcutConfig.findIndex(
+					(x) => x.action === shortcut.name
+				);
 				if (index >= 0) {
 					this._shortcutConfig[index].shortcutConfig = {
 						key_code: shortcut.keyCode,
@@ -48,7 +50,10 @@ export class ShortcutsService {
 						ctrl: shortcut.ctrl,
 						alt: shortcut.alt
 					};
-					this._customShortcuts.set(shortcut.name as ShortcutAction, this._shortcutConfig[index].shortcutConfig);
+					this._customShortcuts.set(
+						shortcut.name as ShortcutAction,
+						this._shortcutConfig[index].shortcutConfig
+					);
 				}
 			}
 		});
@@ -91,7 +96,7 @@ export class ShortcutsService {
 	}
 
 	public getShortcutTextForAction(action: ShortcutAction) {
-		const config = this._shortcutConfig.find(a => a.action === action);
+		const config = this._shortcutConfig.find((a) => a.action === action);
 
 		if (!config?.shortcutConfig) return '';
 		return this.getShortcutText(config.shortcutConfig);
@@ -99,7 +104,10 @@ export class ShortcutsService {
 
 	private getShortcutFromKeyEvent(event: KeyboardEvent): Shortcut {
 		for (const shortcut of this._shortcutConfig) {
-			if (shortcut.shortcutConfig && event.key.toUpperCase() === shortcut.shortcutConfig.key_code.toUpperCase() &&
+			if (
+				shortcut.shortcutConfig &&
+				event.key.toUpperCase() ===
+					shortcut.shortcutConfig.key_code.toUpperCase() &&
 				event.shiftKey === !!shortcut.shortcutConfig.shift &&
 				event.ctrlKey === !!shortcut.shortcutConfig.ctrl &&
 				event.altKey === !!shortcut.shortcutConfig.alt
@@ -120,7 +128,7 @@ export class ShortcutsService {
 
 	public async setShortcutConfig(config: Map<ShortcutAction, ShortcutConfig>) {
 		for (const [key, val] of config) {
-			const index = this._shortcutConfig.findIndex(x => x.action === key);
+			const index = this._shortcutConfig.findIndex((x) => x.action === key);
 			if (index >= 0) {
 				this._shortcutConfig[index].shortcutConfig = val;
 				this._customShortcuts.set(key, val);
@@ -137,9 +145,15 @@ export class ShortcutsService {
 				alt: val.alt
 			} as UserShortcut);
 		}
-		await this.apiService.patch<any>('/user', {
-			shortcuts: patchData
-		}, {errorMessage: 'ERROR.USER.UPDATE_SHORTCUTS'}).toPromise();
+		await this.apiService
+			.patch<unknown>(
+				'/user',
+				{
+					shortcuts: patchData
+				},
+				{ errorMessage: 'ERROR.USER.UPDATE_SHORTCUTS' }
+			)
+			.toPromise();
 	}
 
 	public get shortcutActionConfig(): Shortcut[] {
@@ -243,5 +257,4 @@ export class ShortcutsService {
 				break;
 		}
 	}
-
 }

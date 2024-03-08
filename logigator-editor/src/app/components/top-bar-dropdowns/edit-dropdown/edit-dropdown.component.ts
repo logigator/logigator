@@ -1,7 +1,12 @@
-import {ChangeDetectionStrategy, Component, EventEmitter, Output} from '@angular/core';
-import {EditorInteractionService} from '../../../services/editor-interaction/editor-interaction.service';
-import {ProjectsService} from '../../../services/projects/projects.service';
-import {ElementProviderService} from '../../../services/element-provider/element-provider.service';
+import {
+	ChangeDetectionStrategy,
+	Component,
+	EventEmitter,
+	Output
+} from '@angular/core';
+import { EditorInteractionService } from '../../../services/editor-interaction/editor-interaction.service';
+import { ProjectsService } from '../../../services/projects/projects.service';
+import { ElementProviderService } from '../../../services/element-provider/element-provider.service';
 
 @Component({
 	selector: 'app-edit-dropdown',
@@ -10,15 +15,14 @@ import {ElementProviderService} from '../../../services/element-provider/element
 	changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class EditDropdownComponent {
-
 	@Output()
-	public requestClosed: EventEmitter<any> = new EventEmitter();
+	public requestClosed: EventEmitter<unknown> = new EventEmitter();
 
 	constructor(
 		private editorInteractionService: EditorInteractionService,
 		private projects: ProjectsService,
-		private elemProv: ElementProviderService,
-	) { }
+		private elemProv: ElementProviderService
+	) {}
 
 	public get istCustomComponent(): boolean {
 		return this.elemProv.isCustomElement(this.projects.currProject.id);

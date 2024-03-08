@@ -1,7 +1,12 @@
-import {ChangeDetectionStrategy, Component, OnInit} from '@angular/core';
-import {FormBuilder, FormGroup, Validators} from '@angular/forms';
-import {EastereggService} from '../../../services/easteregg/easteregg.service';
-import {PopupContentComp} from '../../popup/popup-content-comp';
+// @ts-strict-ignore
+import { ChangeDetectionStrategy, Component, OnInit } from '@angular/core';
+import {
+	UntypedFormBuilder,
+	UntypedFormGroup,
+	Validators
+} from '@angular/forms';
+import { EastereggService } from '../../../services/easteregg/easteregg.service';
+import { PopupContentComp } from '../../popup/popup-content-comp';
 
 @Component({
 	selector: 'app-new-component',
@@ -9,11 +14,19 @@ import {PopupContentComp} from '../../popup/popup-content-comp';
 	styleUrls: ['./new-component.component.scss'],
 	changeDetection: ChangeDetectionStrategy.OnPush
 })
-export class NewComponentComponent extends PopupContentComp<any, {name: string, symbol: string, description: string, public: boolean}> implements OnInit {
+export class NewComponentComponent
+	extends PopupContentComp<
+		never,
+		{ name: string; symbol: string; description: string; public: boolean }
+	>
+	implements OnInit
+{
+	public newCompForm: UntypedFormGroup;
 
-	public newCompForm: FormGroup;
-
-	constructor(private formBuilder: FormBuilder, private eastereggs: EastereggService) {
+	constructor(
+		private formBuilder: UntypedFormBuilder,
+		private eastereggs: EastereggService
+	) {
 		super();
 	}
 
@@ -27,15 +40,15 @@ export class NewComponentComponent extends PopupContentComp<any, {name: string, 
 	}
 
 	public async fromSubmitClick() {
-		if (this.newCompForm.invalid)
-			return;
+		if (this.newCompForm.invalid) return;
 
-		const name = this.newCompForm.controls.name.value.toLowerCase().replace(' ', '');
+		const name = this.newCompForm.controls['name'].value
+			.toLowerCase()
+			.replace(' ', '');
 		if (name === 'asdf' || name === 'test') {
 			this.eastereggs.achieve('LAZ');
 		}
 
 		this.requestClose.emit(this.newCompForm.value);
 	}
-
 }

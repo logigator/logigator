@@ -1,14 +1,19 @@
+// @ts-strict-ignore
 /// <reference lib="webworker" />
 
-import {SimulationModule} from '../../models/simulation/simulation-module';
-import {WasmMethod, WasmRequest, WasmResponse} from '../../models/simulation/wasm-interface';
-import {SimulationWorker} from '../../models/simulation/simulation-worker';
+import { SimulationModule } from '../../models/simulation/simulation-module';
+import {
+	WasmMethod,
+	WasmRequest,
+	WasmResponse
+} from '../../models/simulation/wasm-interface';
+import { SimulationWorker } from '../../models/simulation/simulation-worker';
 
 let initialized = false;
 let worker: SimulationWorker;
 
 importScripts('assets/wasm/logigator-simulation.js');
-declare var Module: SimulationModule;
+declare let Module: SimulationModule;
 
 Module.onRuntimeInitialized = () => {
 	initialized = true;
@@ -17,7 +22,7 @@ Module.onRuntimeInitialized = () => {
 	});
 };
 
-addEventListener('message', ({ data }: {data: WasmRequest}) => {
+addEventListener('message', ({ data }: { data: WasmRequest }) => {
 	if (!initialized) {
 		postMessage({
 			method: data.method,
@@ -39,7 +44,11 @@ addEventListener('message', ({ data }: {data: WasmRequest}) => {
 				error = 'No user inputs received.';
 				break;
 			}
-			worker.triggerInput(data.userInput.index, data.userInput.inputEvent, new Int8Array(data.userInput.state));
+			worker.triggerInput(
+				data.userInput.index,
+				data.userInput.inputEvent,
+				new Int8Array(data.userInput.state)
+			);
 			break;
 		case WasmMethod.init:
 			if (!data.board) {
@@ -74,17 +83,23 @@ addEventListener('message', ({ data }: {data: WasmRequest}) => {
 
 	const buffer = worker.getLinks().buffer || new ArrayBuffer(0);
 	if (error) {
-		postMessage({
-			method: data.method,
-			success: false,
-			state: buffer,
-			error
-		} as WasmResponse, [ buffer ]);
+		postMessage(
+			{
+				method: data.method,
+				success: false,
+				state: buffer,
+				error
+			} as WasmResponse,
+			[buffer]
+		);
 	} else {
-		postMessage({
-			method: data.method,
-			success: true,
-			state: buffer
-		} as WasmResponse, [ buffer ]);
+		postMessage(
+			{
+				method: data.method,
+				success: true,
+				state: buffer
+			} as WasmResponse,
+			[buffer]
+		);
 	}
 });

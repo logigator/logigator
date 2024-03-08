@@ -1,13 +1,13 @@
-import {fromEvent, Observable, Subject} from 'rxjs';
-import {filter, takeUntil} from 'rxjs/operators';
-import {getStaticDI} from '../get-di';
-import {NgZone} from '@angular/core';
+// @ts-strict-ignore
+import { fromEvent, Observable, Subject } from 'rxjs';
+import { filter, takeUntil } from 'rxjs/operators';
+import { getStaticDI } from '../get-di';
+import { NgZone } from '@angular/core';
 
 export class ZoomPanInputManager {
-
 	private _htmlContainer: HTMLElement;
 
-	private _destroySubject = new Subject<any>();
+	private _destroySubject = new Subject<void>();
 	private _interactionStart = new Subject<void>();
 	private _interactionEnd = new Subject<void>();
 	private _zoom = new Subject<void>();
@@ -29,26 +29,28 @@ export class ZoomPanInputManager {
 
 	private addListeners() {
 		getStaticDI(NgZone).runOutsideAngular(() => {
-			fromEvent(this._htmlContainer, 'mousemove').pipe(
-				takeUntil(this._destroySubject)
-			).subscribe((e: MouseEvent) => this.mouseMoveHandler(e));
+			fromEvent(this._htmlContainer, 'mousemove')
+				.pipe(takeUntil(this._destroySubject))
+				.subscribe((e: MouseEvent) => this.mouseMoveHandler(e));
 
-			fromEvent(window, 'mouseup').pipe(
-				takeUntil(this._destroySubject)
-			).subscribe((e: MouseEvent) => this.mouseUpHandler(e));
+			fromEvent(window, 'mouseup')
+				.pipe(takeUntil(this._destroySubject))
+				.subscribe(() => this.mouseUpHandler());
 
-			fromEvent(window, 'contextmenu').pipe(
-				takeUntil(this._destroySubject),
-				filter(() => this._mouseMoved)
-			).subscribe((e: MouseEvent) => e.preventDefault());
+			fromEvent(window, 'contextmenu')
+				.pipe(
+					takeUntil(this._destroySubject),
+					filter(() => this._mouseMoved)
+				)
+				.subscribe((e: MouseEvent) => e.preventDefault());
 
-			fromEvent(this._htmlContainer, 'mousedown').pipe(
-				takeUntil(this._destroySubject)
-			).subscribe((e: MouseEvent) => this.mouseDownHandler(e));
+			fromEvent(this._htmlContainer, 'mousedown')
+				.pipe(takeUntil(this._destroySubject))
+				.subscribe((e: MouseEvent) => this.mouseDownHandler(e));
 
-			fromEvent(this._htmlContainer, 'wheel', {passive: true}).pipe(
-				takeUntil(this._destroySubject)
-			).subscribe((e: WheelEvent) => this.mouseWheelHandler(e));
+			fromEvent(this._htmlContainer, 'wheel', { passive: true })
+				.pipe(takeUntil(this._destroySubject))
+				.subscribe((e: WheelEvent) => this.mouseWheelHandler(e));
 		});
 	}
 
@@ -59,10 +61,10 @@ export class ZoomPanInputManager {
 		this._interactionStart.next();
 	}
 
-	private mouseUpHandler(event: MouseEvent) {
+	private mouseUpHandler() {
 		this._mouseDown = false;
 		this._interactionEnd.next();
-		setTimeout(() => this._mouseMoved = false, 1);
+		setTimeout(() => (this._mouseMoved = false), 1);
 		this.clearMouseDelta();
 	}
 
@@ -152,5 +154,4 @@ export class ZoomPanInputManager {
 		this._destroySubject.next();
 		this._destroySubject.unsubscribe();
 	}
-
 }

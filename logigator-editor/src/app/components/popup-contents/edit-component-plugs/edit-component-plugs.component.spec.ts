@@ -1,6 +1,6 @@
-import {ComponentFixture, TestBed} from '@angular/core/testing';
+import { ComponentFixture, TestBed } from '@angular/core/testing';
 
-import {EditComponentPlugsComponent} from './edit-component-plugs.component';
+import { EditComponentPlugsComponent } from './edit-component-plugs.component';
 
 describe('EditComponentPlugsComponent', () => {
 	let component: EditComponentPlugsComponent;
@@ -9,8 +9,7 @@ describe('EditComponentPlugsComponent', () => {
 	beforeEach(async () => {
 		await TestBed.configureTestingModule({
 			declarations: [EditComponentPlugsComponent]
-		})
-			.compileComponents();
+		}).compileComponents();
 	});
 
 	beforeEach(() => {

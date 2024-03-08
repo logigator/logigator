@@ -1,21 +1,23 @@
-import {Injectable, ViewContainerRef} from '@angular/core';
-import {WorkMode} from '../../models/work-modes';
-import {BehaviorSubject, Observable, Subject} from 'rxjs';
-import {switchMap} from 'rxjs/operators';
-import {ProjectsService} from '../projects/projects.service';
-import {ElementProviderService} from '../element-provider/element-provider.service';
-import {TranslateService} from '@ngx-translate/core';
-import {SimulationManagementService} from '../simulation/simulation-management/simulation-management.service';
-import {LoadingService} from '../loading/loading.service';
+// @ts-strict-ignore
+import { Injectable, ViewContainerRef } from '@angular/core';
+import { WorkMode } from '../../models/work-modes';
+import { BehaviorSubject, Observable, Subject } from 'rxjs';
+import { switchMap } from 'rxjs/operators';
+import { ProjectsService } from '../projects/projects.service';
+import { ElementProviderService } from '../element-provider/element-provider.service';
+import { TranslateService } from '@ngx-translate/core';
+import { SimulationManagementService } from '../simulation/simulation-management/simulation-management.service';
+import { LoadingService } from '../loading/loading.service';
 
 @Injectable({
 	providedIn: 'root'
 })
 export class WorkModeService {
-
 	private _currentWorkMode: WorkMode = WorkMode.SELECT;
 
-	private _currentWorkModeSubject = new BehaviorSubject<WorkMode>(WorkMode.SELECT);
+	private _currentWorkModeSubject = new BehaviorSubject<WorkMode>(
+		WorkMode.SELECT
+	);
 
 	private _simulationModeSubject = new Subject<boolean>();
 
@@ -36,7 +38,10 @@ export class WorkModeService {
 	}
 
 	public async enterSimulation(loadingInsertionPoint?: ViewContainerRef) {
-		const removeLoading = this.loadingService.add('LOADING.ENTER_SIMULATION', loadingInsertionPoint);
+		const removeLoading = this.loadingService.add(
+			'LOADING.ENTER_SIMULATION',
+			loadingInsertionPoint
+		);
 		await this.projects.saveAllProjects();
 		try {
 			await this.simulationManagement.enterSimulation();
@@ -50,7 +55,10 @@ export class WorkModeService {
 	}
 
 	public async leaveSimulation(loadingInsertionPoint?: ViewContainerRef) {
-		const removeLoading = this.loadingService.add('LOADING.LEAVE_SIMULATION', loadingInsertionPoint);
+		const removeLoading = this.loadingService.add(
+			'LOADING.LEAVE_SIMULATION',
+			loadingInsertionPoint
+		);
 		await this.simulationManagement.leaveSimulation();
 		delete this._currentComponentTypeToBuild;
 		this._currentWorkMode = WorkMode.SELECT;
@@ -73,13 +81,20 @@ export class WorkModeService {
 
 	public get workModeDescription$(): Observable<string> {
 		return this._currentWorkModeSubject.pipe(
-			switchMap(workMode => {
+			switchMap((workMode) => {
 				if (workMode === WorkMode.COMPONENT) {
-					return this.translate.get(this.elemProv.getElementById(this._currentComponentTypeToBuild).name).pipe(
-						switchMap(comp => {
-							return this.translate.get('WORK_MODE_DES.' + workMode, {comp});
-						})
-					);
+					return this.translate
+						.get(
+							this.elemProv.getElementById(this._currentComponentTypeToBuild)
+								.name
+						)
+						.pipe(
+							switchMap((comp) => {
+								return this.translate.get('WORK_MODE_DES.' + workMode, {
+									comp
+								});
+							})
+						);
 				}
 				return this.translate.get('WORK_MODE_DES.' + workMode);
 			})

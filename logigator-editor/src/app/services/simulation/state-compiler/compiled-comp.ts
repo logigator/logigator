@@ -1,5 +1,5 @@
-import {Element} from '../../../models/element';
-import {SimulationUnit} from '../../../models/simulation/simulation-unit';
+import { Element } from '../../../models/element';
+import { SimulationUnit } from '../../../models/simulation/simulation-unit';
 
 export interface CompiledComp {
 	units: Map<SimulationUnit, Element>;

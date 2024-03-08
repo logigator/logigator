@@ -1,17 +1,23 @@
-import {BaseRenderer} from './base-renderer';
-import {RenderQuality} from '../svg-image-exporter';
-import {ElementRotation} from '../../../models/element';
+import { BaseRenderer } from './base-renderer';
+import { RenderQuality } from '../svg-image-exporter';
+import { ElementRotation } from '../../../models/element';
 
 export class LeverRenderer extends BaseRenderer {
 	render(): SVGGElement {
-		let path = `M 0,0 h ${this.gridSize} v ${this.gridSize} H 0 V 0 M 0,${this.gridSize - this.scaled(4)} H ${this.gridSize}`;
+		let path = `M 0,0 h ${this.gridSize} v ${this.gridSize} H 0 V 0 M 0,${
+			this.gridSize - this.scaled(4)
+		} H ${this.gridSize}`;
 		if (this.quality >= RenderQuality.high) {
 			switch (this.element.rotation) {
 				case ElementRotation.Right:
-					path += ` M ${this.gridSize},${this.gridSize / 2} h ${this.gridSize / 2}`;
+					path += ` M ${this.gridSize},${this.gridSize / 2} h ${
+						this.gridSize / 2
+					}`;
 					break;
 				case ElementRotation.Down:
-					path += ` M ${this.gridSize / 2},${this.gridSize} v ${this.gridSize / 2}`;
+					path += ` M ${this.gridSize / 2},${this.gridSize} v ${
+						this.gridSize / 2
+					}`;
 					break;
 				case ElementRotation.Left:
 					path += ` M 0,${this.gridSize / 2} h ${-this.gridSize / 2}`;

@@ -1,5 +1,5 @@
-import {ShortcutAction} from './shortcut-action';
-import {ShortcutConfig} from './shortcut-config';
+import { ShortcutAction } from './shortcut-action';
+import { ShortcutConfig } from './shortcut-config';
 
 export interface Shortcut {
 	action: ShortcutAction;

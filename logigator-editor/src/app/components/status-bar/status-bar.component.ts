@@ -1,11 +1,12 @@
-import {Component} from '@angular/core';
-import {SelectionService} from '../../services/selection/selection.service';
-import {ProjectsService} from '../../services/projects/projects.service';
-import {fromEvent, Observable, Subscription} from 'rxjs';
-import {WorkModeService} from '../../services/work-mode/work-mode.service';
-import {LoadingService} from '../../services/loading/loading.service';
-import {tap} from 'rxjs/operators';
-import {ThemingService} from '../../services/theming/theming.service';
+// @ts-strict-ignore
+import { Component } from '@angular/core';
+import { SelectionService } from '../../services/selection/selection.service';
+import { ProjectsService } from '../../services/projects/projects.service';
+import { fromEvent, Observable, Subscription } from 'rxjs';
+import { WorkModeService } from '../../services/work-mode/work-mode.service';
+import { LoadingService } from '../../services/loading/loading.service';
+import { tap } from 'rxjs/operators';
+import { ThemingService } from '../../services/theming/theming.service';
 
 @Component({
 	selector: 'app-status-bar',
@@ -13,7 +14,6 @@ import {ThemingService} from '../../services/theming/theming.service';
 	styleUrls: ['./status-bar.component.scss']
 })
 export class StatusBarComponent {
-
 	public showingAllTasks = false;
 
 	private closeTasksSubscription: Subscription;
@@ -45,7 +45,7 @@ export class StatusBarComponent {
 
 	public get tasks$(): Observable<string[]> {
 		return this.loadingService.tasks$.pipe(
-			tap(tasks => {
+			tap((tasks) => {
 				if (tasks.length <= 1) this.closeAllTasks();
 			})
 		);
@@ -61,7 +61,9 @@ export class StatusBarComponent {
 
 	private addCloseTasksListener() {
 		if (!this.closeTasksSubscription) {
-			this.closeTasksSubscription = fromEvent(window, 'mousedown').subscribe(() => this.closeAllTasks());
+			this.closeTasksSubscription = fromEvent(window, 'mousedown').subscribe(
+				() => this.closeAllTasks()
+			);
 		}
 	}
 
@@ -71,5 +73,3 @@ export class StatusBarComponent {
 		delete this.closeTasksSubscription;
 	}
 }
-
-

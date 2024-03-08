@@ -1,6 +1,6 @@
-import {BaseRenderer} from './base-renderer';
-import {ElementRotation} from '../../../models/element';
-import {RenderQuality} from '../svg-image-exporter';
+import { BaseRenderer } from './base-renderer';
+import { ElementRotation } from '../../../models/element';
+import { RenderQuality } from '../svg-image-exporter';
 
 export class LedRenderer extends BaseRenderer {
 	render(): SVGGElement {
@@ -9,16 +9,28 @@ export class LedRenderer extends BaseRenderer {
 			input.setAttribute('class', 'w');
 			switch (this._element.rotation) {
 				case ElementRotation.Right:
-					input.setAttribute('d', `M 0,${this.gridSize / 2} h ${-this.gridSize / 2}`);
+					input.setAttribute(
+						'd',
+						`M 0,${this.gridSize / 2} h ${-this.gridSize / 2}`
+					);
 					break;
 				case ElementRotation.Down:
-					input.setAttribute('d', `M ${this.gridSize / 2},0 v ${-this.gridSize / 2}`);
+					input.setAttribute(
+						'd',
+						`M ${this.gridSize / 2},0 v ${-this.gridSize / 2}`
+					);
 					break;
 				case ElementRotation.Left:
-					input.setAttribute('d', `M ${this.gridSize},${this.gridSize / 2} h ${this.gridSize / 2}`);
+					input.setAttribute(
+						'd',
+						`M ${this.gridSize},${this.gridSize / 2} h ${this.gridSize / 2}`
+					);
 					break;
 				case ElementRotation.Up:
-					input.setAttribute('d', `M ${this.gridSize / 2},${this.gridSize} v ${this.gridSize / 2}`);
+					input.setAttribute(
+						'd',
+						`M ${this.gridSize / 2},${this.gridSize} v ${this.gridSize / 2}`
+					);
 					break;
 			}
 			this.group.appendChild(input);

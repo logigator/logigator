@@ -1,4 +1,4 @@
-import {ComponentFixture, TestBed, waitForAsync} from '@angular/core/testing';
+import { ComponentFixture, TestBed, waitForAsync } from '@angular/core/testing';
 
 import { HexBinDecConverterComponent } from './hex-bin-dec-converter.component';
 
@@ -8,9 +8,8 @@ describe('HexBinDecConverterComponent', () => {
 
 	beforeEach(waitForAsync(() => {
 		TestBed.configureTestingModule({
-			declarations: [ HexBinDecConverterComponent ]
-		})
-			.compileComponents();
+			declarations: [HexBinDecConverterComponent]
+		}).compileComponents();
 	}));
 
 	beforeEach(() => {

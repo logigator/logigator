@@ -1,17 +1,20 @@
+// @ts-strict-ignore
 import * as PIXI from 'pixi.js';
-import {ComponentUpdatable, LGraphics} from './l-graphics';
-import {Element} from '../../element';
-import {ElementType, isElementType} from '../../element-types/element-type';
-import {getStaticDI} from '../../get-di';
-import {ThemingService} from '../../../services/theming/theming.service';
-import {ElementProviderService} from '../../../services/element-provider/element-provider.service';
-import {environment} from '../../../../environments/environment';
-import {ElementTypeId} from '../../element-types/element-type-ids';
-import {FontWidthService} from '../../../services/font-width/font-width.service';
-import {Project} from '../../project';
+import { ComponentUpdatable, LGraphics } from './l-graphics';
+import { Element } from '../../element';
+import { ElementType, isElementType } from '../../element-types/element-type';
+import { getStaticDI } from '../../get-di';
+import { ThemingService } from '../../../services/theming/theming.service';
+import { ElementProviderService } from '../../../services/element-provider/element-provider.service';
+import { environment } from '../../../../environments/environment';
+import { ElementTypeId } from '../../element-types/element-type-ids';
+import { FontWidthService } from '../../../services/font-width/font-width.service';
+import { Project } from '../../project';
 
-export class InputOutputGraphics extends PIXI.Graphics implements LGraphics, ComponentUpdatable {
-
+export class InputOutputGraphics
+	extends PIXI.Graphics
+	implements LGraphics, ComponentUpdatable
+{
 	readonly element: Element;
 
 	private _scale: number;
@@ -27,7 +30,11 @@ export class InputOutputGraphics extends PIXI.Graphics implements LGraphics, Com
 
 	constructor(scale: number, element: Element, project: Project);
 	constructor(scale: number, elementType: ElementType);
-	constructor(scale: number, elementOrType: Element | ElementType, project?: Project) {
+	constructor(
+		scale: number,
+		elementOrType: Element | ElementType,
+		project?: Project
+	) {
 		super();
 		this.interactiveChildren = false;
 		this.sortableChildren = false;
@@ -38,11 +45,13 @@ export class InputOutputGraphics extends PIXI.Graphics implements LGraphics, Com
 				numInputs: elementOrType.numInputs,
 				numOutputs: elementOrType.numOutputs,
 				typeId: elementOrType.id
-			} as any as Element;
+			} as Element;
 			this._symbol = elementOrType.symbol;
 		} else {
 			this.element = elementOrType;
-			this._symbol = this.element.data as string || this.elemProvService.getElementById(this.element.typeId).symbol;
+			this._symbol =
+				(this.element.data as string) ||
+				this.elemProvService.getElementById(this.element.typeId).symbol;
 			this.project = project;
 		}
 
@@ -61,19 +70,31 @@ export class InputOutputGraphics extends PIXI.Graphics implements LGraphics, Com
 		switch (rotForRender) {
 			case 0:
 				this.moveTo(environment.gridPixelWidth, environment.gridPixelWidth / 2);
-				this.lineTo(environment.gridPixelWidth / 2 + environment.gridPixelWidth, environment.gridPixelWidth / 2);
+				this.lineTo(
+					environment.gridPixelWidth / 2 + environment.gridPixelWidth,
+					environment.gridPixelWidth / 2
+				);
 				break;
 			case 1:
 				this.moveTo(environment.gridPixelWidth / 2, environment.gridPixelWidth);
-				this.lineTo(environment.gridPixelWidth / 2, environment.gridPixelWidth + environment.gridPixelWidth / 2);
+				this.lineTo(
+					environment.gridPixelWidth / 2,
+					environment.gridPixelWidth + environment.gridPixelWidth / 2
+				);
 				break;
 			case 2:
 				this.moveTo(0, environment.gridPixelWidth / 2);
-				this.lineTo(-environment.gridPixelWidth / 2, environment.gridPixelWidth / 2);
+				this.lineTo(
+					-environment.gridPixelWidth / 2,
+					environment.gridPixelWidth / 2
+				);
 				break;
 			case 3:
 				this.moveTo(environment.gridPixelWidth / 2, 0);
-				this.lineTo(environment.gridPixelWidth / 2, -environment.gridPixelWidth / 2);
+				this.lineTo(
+					environment.gridPixelWidth / 2,
+					-environment.gridPixelWidth / 2
+				);
 				break;
 		}
 
@@ -105,28 +126,32 @@ export class InputOutputGraphics extends PIXI.Graphics implements LGraphics, Com
 		}
 
 		this.addChild(symbol);
-
 	}
 
 	private getPlugIndex(): string {
 		if (this.element.typeId === ElementTypeId.INPUT) {
-			return (this.element.plugIndex + 1) + '';
+			return this.element.plugIndex + 1 + '';
 		} else {
-			return (this.element.plugIndex - this.project.numInputs + 1) + '';
+			return this.element.plugIndex - this.project.numInputs + 1 + '';
 		}
 	}
 
 	private calcFontSize(): number {
-		const textWidth = getStaticDI(FontWidthService).getTextWidth(this._symbol, '10px Roboto');
-		const adjustedSize = 10 * (environment.gridPixelWidth * 0.9 / textWidth);
-		return adjustedSize < environment.gridPixelWidth * 0.8 ? adjustedSize : environment.gridPixelWidth * 0.8;
+		const textWidth = getStaticDI(FontWidthService).getTextWidth(
+			this._symbol,
+			'10px Roboto'
+		);
+		const adjustedSize = 10 * ((environment.gridPixelWidth * 0.9) / textWidth);
+		return adjustedSize < environment.gridPixelWidth * 0.8
+			? adjustedSize
+			: environment.gridPixelWidth * 0.8;
 	}
 
 	applySimState(scale: number) {
 		// tslint:disable-next-line:triple-equals
 		if (this.simActiveState == this.shouldHaveActiveState) return;
 		this.simActiveState = this.shouldHaveActiveState;
-		// @ts-ignore
+		// @ts-expect-error workaround for something that I don't understand anymore
 		for (const data of this.geometry.graphicsData) {
 			if (data.shape instanceof PIXI.Polygon) {
 				if (this.simActiveState) {
@@ -157,9 +182,11 @@ export class InputOutputGraphics extends PIXI.Graphics implements LGraphics, Com
 		}
 	}
 
-	updateComponent(scale: number, newElement: Element) {
+	updateComponent(scale: number) {
 		this._scale = scale;
-		this._symbol = this.element.data as string || this.elemProvService.getElementById(this.element.typeId).symbol;
+		this._symbol =
+			(this.element.data as string) ||
+			this.elemProvService.getElementById(this.element.typeId).symbol;
 		this.clear();
 		this.drawComponent();
 	}
@@ -168,7 +195,7 @@ export class InputOutputGraphics extends PIXI.Graphics implements LGraphics, Com
 		if (this._scale === scale) return;
 		this._scale = scale;
 
-		// @ts-ignore
+		// @ts-expect-error workaround for something that I don't understand anymore
 		for (const data of this.geometry.graphicsData) {
 			if (data.shape instanceof PIXI.Polygon) {
 				if (this.simActiveState) {
@@ -182,5 +209,4 @@ export class InputOutputGraphics extends PIXI.Graphics implements LGraphics, Com
 		}
 		this.geometry.invalidate();
 	}
-
 }

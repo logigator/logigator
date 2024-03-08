@@ -1,105 +1,54 @@
 import {Service} from 'typedi';
 import {ConfigService} from './config.service';
-import {createClient, RedisClient} from 'redis';
+import {createClient, RedisClientType} from 'redis';
 
 @Service()
 export class RedisService {
 
-	private _redisClient: RedisClient;
+	private _redisClient: RedisClientType;
 
-	constructor(private configService: ConfigService) {}
+	constructor(private configService: ConfigService) {
+	}
 
-	public get redisClient(): RedisClient {
-		if (this._redisClient)
-			return this._redisClient;
+	public async init(): Promise<void> {
+		this._redisClient = createClient({
+			legacyMode: true,
+			...this.configService.getConfig('redis')
+		});
+		await this._redisClient.connect();
+	}
 
-		this._redisClient = createClient(this.configService.getConfig('redis'));
+	public get redisClient(): RedisClientType {
 		return this._redisClient;
 	}
 
 	public has(key: string): Promise<boolean> {
-		return new Promise<boolean>((resolve, reject) => {
-			this.redisClient.exists(key, (err, reply) => {
-				if (err) {
-					reject(err);
-					return;
-				}
-				resolve(!!reply);
-			});
-		});
+		return this.redisClient.v4.exists(key);
 	}
 
 	public delete(key: string): Promise<void> {
-		return new Promise<void>((resolve, reject) => {
-			this.redisClient.del(key, (err) => {
-				if (err) {
-					reject(err);
-					return;
-				}
-				resolve();
-			});
-		});
+		return this.redisClient.v4.del(key);
 	}
 
 	public ttl(key: string): Promise<number> {
-		return new Promise<number>((resolve, reject) => {
-			this.redisClient.ttl(key, (err, reply) => {
-				if (err) {
-					reject(err);
-					return;
-				}
-				resolve(reply);
-			});
-		});
+		return this.redisClient.v4.ttl(key);
 	}
 
 	public setString(key: string, value: string, expire: number): Promise<void> {
-		return new Promise<void>((resolve, reject) => {
-			this.redisClient.setex(key, expire, value, (err) => {
-				if (err) {
-					reject(err);
-					return;
-				}
-				resolve();
-			});
-		});
+		return this.redisClient.v4.set(key, value, {EX: expire});
 	}
 
 	public getString(key: string): Promise<string> {
-		return new Promise<string>((resolve, reject) => {
-			this.redisClient.get(key, (err, reply) => {
-				if (err) {
-					reject(err);
-					return;
-				}
-				resolve(reply);
-			});
-		});
+		return this.redisClient.v4.get(key);
 	}
 
-	public setObject(key: string, value: { [key: string]: string | number }, expire: number): Promise<void> {
-		return new Promise<void>((resolve, reject) => {
-			this.redisClient.hmset(key, value, (err) => {
-				if (err) {
-					reject(err);
-					return;
-				}
-				this.redisClient.expire(key, expire);
-				resolve();
-			});
-		});
+	public async setObject(key: string, value: { [key: string]: string | number }, expire: number): Promise<void> {
+		await this.redisClient.v4.HSET(key, value);
+		this.redisClient.v4.expire(key, expire);
 	}
 
 	public getObject(key: string): Promise<any> {
-		return new Promise<any>((resolve, reject) => {
-			this.redisClient.hgetall(key, (err, reply) => {
-				if (err) {
-					reject(err);
-					return;
-				}
-				resolve(reply);
-			});
-		});
+		return this.redisClient.v4.hGetAll(key);
 	}
 
 }
