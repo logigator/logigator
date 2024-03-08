@@ -15,7 +15,7 @@ import {
 export class SimulationManagementService {
 	private _targetMode = false;
 
-	private _syncMode = false;
+	private _syncMode = true;
 
 	private _targetTickRate = 1;
 

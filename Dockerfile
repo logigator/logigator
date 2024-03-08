@@ -7,6 +7,7 @@ RUN corepack enable && yarn install --immutable --inline-builds
 
 COPY ["./logigator-backend", "./"]
 RUN yarn build
+RUN yarn migration:build
 
 # ======================================================================================= #
 
@@ -45,4 +46,5 @@ COPY --from=backend ["/app/dist", "./dist"]
 COPY --from=backend ["/app/config", "./config"]
 COPY --from=backend ["/app/resources", "./resources"]
 COPY --from=backend ["/app/tools", "./tools"]
+COPY --from=backend ["/app/migration", "./migration"]
 COPY --from=editor ["/app/dist/logigator-editor/browser", "./resources/editor"]
