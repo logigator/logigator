@@ -2,7 +2,7 @@ export const environment = {
 	production: false,
 	chunkSize: 16,
 	gridPixelWidth: 16,
-	api: 'https://dev.logigator.com/api',
-	url: 'https://dev.logigator.com/editor',
-	homeUrl: 'https://dev.logigator.com'
+	api: 'http://dev.logigator.com/api',
+	url: 'http://dev.logigator.com/editor',
+	homeUrl: 'http://dev.logigator.com'
 };
