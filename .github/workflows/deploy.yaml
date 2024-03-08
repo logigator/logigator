@@ -29,6 +29,7 @@ jobs:
 
       - name: Extract metadata
         uses: docker/metadata-action@v5
+        id: meta
         with:
           images: |
             ghcr.io/${{ github.repository }}
@@ -41,8 +42,9 @@ jobs:
       - name: Build and push
         uses: docker/build-push-action@v5
         with:
-          build-args: |
-            DOCKER_METADATA_OUTPUT_JSON
           context: .
           push: true
           platforms: linux/amd64
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+          annotations: ${{ steps.meta.outputs.annotations }}
