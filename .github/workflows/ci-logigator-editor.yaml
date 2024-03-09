@@ -45,7 +45,9 @@ jobs:
 
       - name: 'Lint'
         shell: bash
-        run: yarn run lint
+        run: |
+          yarn run format
+          yarn run lint
 
       - name: 'Build'
         shell: bash

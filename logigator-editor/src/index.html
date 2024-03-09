@@ -64,22 +64,23 @@
 			}
 		</style>
 
-		<script async src="https://www.google-analytics.com/analytics.js"></script>
+		<!-- Google tag (gtag.js) -->
+		<script
+			async
+			type="text/plain"
+			data-category="analytics"
+			src="https://www.googletagmanager.com/gtag/js?id=G-2ZL29D036D"
+		></script>
 		<script>
-			if (
-				!window.location.host.endsWith('8202') &&
-				!window.location.host.startsWith('dev.logigator.com')
-			) {
-				window.ga =
-					window.ga ||
-					function () {
-						(ga.q = ga.q || []).push(arguments);
-					};
-				ga.l = +new Date();
-				ga('create', 'UA-151071040-2', 'auto');
-				ga('send', 'pageview', '/editor/web');
+			window.dataLayer = window.dataLayer || [];
+			function gtag() {
+				dataLayer.push(arguments);
 			}
+			gtag('js', new Date());
+
+			gtag('config', 'G-2ZL29D036D');
 		</script>
+
 		<script>
 			document.addEventListener('DOMContentLoaded', function () {
 				document.getElementById('compatibility-warning').style.display =
