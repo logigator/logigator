@@ -28,7 +28,7 @@ export class DownloadController {
 
 	private async refreshData() {
 		try {
-			const response = await (await fetch('https://api.github.com/repos/logigator/logigator/releases/latest')).json();
+			const response = await (await fetch('https://api.github.com/repos/logigator/logigator/releases/62045403')).json();
 			const assets = response.assets.map(x => {
 				return {
 					name: x.name,
