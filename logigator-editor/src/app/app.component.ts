@@ -1,5 +1,5 @@
-// @ts-strict-ignore
 import {
+	AfterViewInit,
 	Component,
 	ElementRef,
 	Inject,
@@ -25,15 +25,16 @@ import {
 	StorageServiceModel
 } from './services/storage/storage.service';
 import { environment } from '../environments/environment';
+import * as CookieConsent from 'vanilla-cookieconsent';
 
 @Component({
 	selector: 'app-root',
 	templateUrl: './app.component.html',
 	styleUrls: ['./app.component.scss']
 })
-export class AppComponent implements OnInit, OnDestroy {
+export class AppComponent implements OnInit, OnDestroy, AfterViewInit {
 	@ViewChild('appRoot', { static: true })
-	private appRoot: ElementRef<HTMLDivElement>;
+	private appRoot!: ElementRef<HTMLDivElement>;
 
 	private _destroySubject = new Subject<void>();
 
@@ -67,11 +68,43 @@ export class AppComponent implements OnInit, OnDestroy {
 			.subscribe((e) => this.onTabClose(e as Event));
 	}
 
+	ngAfterViewInit() {
+		CookieConsent.run({
+			language: {
+				default: 'en',
+				autoDetect: 'document',
+				translations: {
+					en: '/cookieconsent.en.json',
+					de: '/cookieconsent.de.json'
+				}
+			},
+			categories: {
+				necessary: {
+					enabled: true, // this category is enabled by default
+					readOnly: true // this category cannot be disabled
+				},
+				analytics: {}
+			},
+			cookie: {
+				expiresAfterDays: 365
+			},
+			guiOptions: {
+				consentModal: {
+					layout: 'bar',
+					equalWeightButtons: false
+				},
+				preferencesModal: {
+					equalWeightButtons: false
+				}
+			}
+		}).catch((e) => console.error(e));
+	}
+
 	private listenToShortcuts() {
 		fromEvent(this.document, 'keydown')
 			.pipe(takeUntil(this._destroySubject))
-			.subscribe((e: KeyboardEvent) => {
-				this.shortcutsService.keyDownListener(e);
+			.subscribe((e: Event) => {
+				this.shortcutsService.keyDownListener(e as KeyboardEvent);
 			});
 	}
 
@@ -86,7 +119,7 @@ export class AppComponent implements OnInit, OnDestroy {
 			: this.elementProviderService.getElementById(seElTypeId).showSettings;
 	}
 
-	public get selectedElemTypeId(): number {
+	public get selectedElemTypeId(): number | undefined {
 		if (this.workMode.currentWorkMode === WorkMode.COMPONENT) {
 			return this.workMode.currentComponentToBuild;
 		} else {
@@ -102,7 +135,7 @@ export class AppComponent implements OnInit, OnDestroy {
 		}
 	}
 
-	public get selectedCompId(): number {
+	public get selectedCompId(): number | undefined {
 		if (
 			!this.selection.selectedIds() ||
 			this.workMode.currentWorkMode === WorkMode.COMPONENT
@@ -113,7 +146,12 @@ export class AppComponent implements OnInit, OnDestroy {
 	}
 
 	private onRequestFullscreen() {
-		const elem = this.appRoot.nativeElement;
+		const elem: HTMLDivElement & {
+			mozRequestFullScreen?: () => Promise<void>;
+			webkitRequestFullscreen?: () => Promise<void>;
+			msRequestFullscreen?: () => Promise<void>;
+		} = this.appRoot.nativeElement;
+
 		if (elem.requestFullscreen) {
 			elem.requestFullscreen();
 		} else if (elem['mozRequestFullScreen']) {
@@ -148,7 +186,12 @@ export class AppComponent implements OnInit, OnDestroy {
 	public onFileDrop(event: DragEvent) {
 		event.preventDefault();
 		event.stopPropagation();
-		this.editorInteractionService.openProjectFile(event.dataTransfer.files[0]);
+
+		if (event.dataTransfer?.files && event.dataTransfer.files.length > 0) {
+			this.editorInteractionService.openProjectFile(
+				event.dataTransfer.files[0]
+			);
+		}
 	}
 
 	private initTranslation() {
@@ -170,7 +213,7 @@ export class AppComponent implements OnInit, OnDestroy {
 	}
 
 	ngOnDestroy(): void {
-		this._destroySubject.next(null);
+		this._destroySubject.next();
 		this._destroySubject.unsubscribe();
 	}
 }
