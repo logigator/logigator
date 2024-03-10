@@ -24,6 +24,6 @@ export class HelpComponent extends PopupContentComp {
 	}
 
 	public get githubEditUrl(): string {
-		return `https://github.com/logigator/logigator/tree/development/logigator-editor/src/help/${this.currentLang}/${this.helpToRender}.md`;
+		return `https://github.com/logigator/logigator/tree/master/logigator-editor/src/assets/help/${this.currentLang}/${this.helpToRender}.md`;
 	}
 }

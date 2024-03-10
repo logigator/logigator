@@ -1,0 +1,513 @@
+{
+	"DROPDOWN": {
+		"FILE": {
+			"TITLE": "Déposer",
+			"NEW_PROJECT": "Nouveau projet",
+			"NEW_COMPONENT": "Nouveau composant",
+			"OPEN": "Ouvrir",
+			"SAVE": "Sauvegarder",
+			"EXPORT": "Exporter vers un fichier",
+			"IMAGE": "Générer une image",
+			"SHARE": "Partager",
+			"CLONE": "Projet de clonage"
+		},
+		"EDIT": {
+			"TITLE": "Modifier",
+			"UNDO": "annuler",
+			"REDO": "Refaire",
+			"COPY": "Copie",
+			"PASTE": "Pâte",
+			"CUT": "Couper",
+			"DELETE": "Supprimer",
+			"PLUGS": "Fiches de composants"
+		},
+		"VIEW": {
+			"100": "100%",
+			"TITLE": "Voir",
+			"ZOOM_IN": "Agrandir",
+			"ZOOM_OUT": "Dézoomer",
+			"FULLSCREEN": "Plein écran"
+		},
+		"HELP": {
+			"TITLE": "Aide",
+			"HELP": "Aide",
+			"HEX_BIN_DEC": "Convertisseur Hex-Bin-Dec"
+		},
+		"SETTINGS": {
+			"DARK_MODE": "Mode sombre",
+			"SHOW_GRID": "Afficher la grille",
+			"LANGUAGE": "Langue",
+			"SHORTCUTS": "Personnaliser les raccourcis",
+			"AUTOSTART_SIM": "Simulation de démarrage automatique",
+			"ACCOUNT": "Compte",
+			"LOGOUT": "Se déconnecter",
+			"PRIVACY": "politique de confidentialité",
+			"NEW_VERSION": "Nouvelle version disponible"
+		}
+	},
+	"TOOLBAR": {
+		"START_SIM": "Démarrer la simulation",
+		"EXIT_SIM": "Quitter la simulation",
+		"TOOLTIP": {
+			"SAVE": "Sauvegarder",
+			"OPEN": "Ouvrir",
+			"NEW_COMP": "Nouveau composant",
+			"COPY": "Copie",
+			"PASTE": "Pâte",
+			"CUT": "Couper",
+			"DELETE": "Supprimer",
+			"UNDO": "annuler",
+			"REDO": "Refaire",
+			"ZOOM_IN": "Agrandir",
+			"ZOOM_OUT": "Dézoomer",
+			"WIRE": "Placer les fils",
+			"CONN_WIRE": "Connecter les fils",
+			"SELECT": "Sélectionner",
+			"SELECT_CUT": "Sélectionnez Couper",
+			"ERASER": "Gomme",
+			"TEXT": "Texte",
+			"SIM_SINGLE": "Une seule étape",
+			"SIM_PAUSE": "Pause",
+			"SIM_STOP": "Arrêt",
+			"SIM_CONT": "Commencer",
+			"SIM_TARGET_MODE": "Limiter le taux de tick",
+			"SIM_SYNC_MODE": "Synchroniser la fréquence de ticks avec la fréquence d'images"
+		}
+	},
+	"TOP_BAR": {
+		"LOGIN": "Se connecter",
+		"REGISTER": "Registre"
+	},
+	"CONST_BOX": {
+		"SEARCH": "Recherche",
+		"CATEGORIES": {
+			"BASIC": "Basique",
+			"ADVANCED": "Avancé",
+			"IO": "IO",
+			"PLUG": "Prise",
+			"USER": "Défini par l'utilisateur",
+			"LOCAL": "Locale",
+			"SHARE": "Partager"
+		}
+	},
+	"POPUP": {
+		"NEW_COMP": {
+			"TITLE": "Nouveau composant",
+			"NAME": "Nom",
+			"NAME_REQUIRED": "Le nom est requis",
+			"NAME_MAX_LENGTH": "Le nom est trop long",
+			"NAME_INFO": "Nom du nouveau composant",
+			"SYMBOL": "Symbole",
+			"SYMBOL_REQUIRED": "Le symbole est requis",
+			"SYMBOL_MAX_LENGTH": "Le symbole est trop long",
+			"SYMBOL_INFO": "Sera affiché lors du placement du composant.",
+			"DESCRIPTION": "Description",
+			"DESCRIPTION_MAX_LENGTH": "La description est trop longue",
+			"DESCRIPTION_INFO": "Description du nouveau composant",
+			"CREATE": "CRÉER",
+			"PUBLIC": "Partager publiquement",
+			"PUBLIC_EXPLANATION": "Si « Partager publiquement » est activé, le composant sera affiché dans toutes les listes publiques."
+		},
+		"SAVE": {
+			"TITLE": "Sauvegarder le projet",
+			"NAME": "Nom",
+			"NAME_INFO": "Nom du nouveau projet",
+			"DESCRIPTION_INFO": "Description du nouveau projet",
+			"DOWNLOAD": "Télécharger un fichier",
+			"CLOUD": "Enregistrer dans le cloud"
+		},
+		"OPEN": {
+			"TITLE": "Projet ouvert",
+			"SEARCH": "Recherche",
+			"OPEN": "Ouvrir",
+			"EDITED": "Dernière modification",
+			"NAME": "Nom",
+			"OPEN_FILE": "Ouvrir à partir d'un fichier",
+			"OPEN_CLOUD": "Ouvrir depuis le cloud",
+			"OPEN_SHARE": "Ouvrir le partage",
+			"SHARE_LABEL": "Identifiant / Lien",
+			"NO_FILE": "Aucun fichier sélectionné",
+			"NOTHING_FOUND": "Aucun projet trouvé"
+		},
+		"RELOAD": {
+			"TITLE": "Rechargement requis",
+			"QUESTION": "Pour que cette modification prenne effet, l'éditeur doit être rechargé.<br>Voulez-vous recharger cette page maintenant ?",
+			"YES": "OUI",
+			"POSTPONE": "Recharger plus tard",
+			"CANCEL": "Annuler"
+		},
+		"SHORTCUTS": {
+			"TITLE": "Personnaliser les raccourcis",
+			"SAVE": "Sauvegarder",
+			"DESCRIPTION": {
+				"copy": "Copie",
+				"paste": "Pâte",
+				"cut": "Couper",
+				"delete": "Supprimer les éléments sélectionnés",
+				"undo": "annuler",
+				"redo": "Refaire",
+				"editPlugs": "Modifier les plugs du composant personnalisé",
+				"zoom100": "Zoomer à 100%",
+				"zoomIn": "Agrandir",
+				"zoomOut": "Dézoomer",
+				"fullscreen": "Passer en mode plein écran",
+				"connWireMode": "Mode de connexion des fils",
+				"wireMode": "Mode Placer les fils",
+				"selectMode": "Mode de selection",
+				"eraserMode": "Gomme",
+				"cutSelectMode": "Mode de sélection de coupe",
+				"newComp": "Créer un nouveau composant personnalisé",
+				"textMode": "Placer du texte",
+				"save": "Sauvegarder",
+				"newProj": "Nouveau projet",
+				"openProj": "Projet ouvert",
+				"enterSim": "Entrez dans la simulation",
+				"leaveSim": "Quitter la simulation",
+				"startSim": "Démarrer la simulation",
+				"pauseSim": "Suspendre la simulation",
+				"stopSim": "Arrêter la simulation",
+				"singleStepSim": "Étape de simulation unique"
+			}
+		},
+		"UNSAVED_CHANGES": {
+			"TITLE": "Modifications non enregistrées",
+			"QUESTION": "Le projet actuel comporte des modifications non enregistrées, en ouvrant un autre projet, ces modifications risquent d'être perdues !",
+			"OK": "Continue quand même",
+			"CANCEL": "Annuler"
+		},
+		"SHARE": {
+			"TITLE": "Partager le projet {{project}}",
+			"EXPLANATION": "Toute personne possédant le lien peut afficher, cloner, mais pas modifier le projet. ",
+			"LINK": "Lien pour partager",
+			"PUBLIC": "Partager publiquement",
+			"REGENERATE": "Régénérer",
+			"REGENERATE_WARN": "L'ancien lien deviendra invalide après en avoir généré un nouveau.",
+			"COPY": "Copie",
+			"SAVE": "Sauvegarder",
+			"CANCEL": "Annuler"
+		},
+		"TEXT": {
+			"TITLE": "Placer du texte",
+			"SET": "Sauvegarder",
+			"LABEL": "Texte"
+		},
+		"ROM_EDIT": {
+			"TITLE": "Modifier les données ROM",
+			"SAVE": "SAUVEGARDER",
+			"CANCEL": "ANNULER"
+		},
+		"HELP": {
+			"TITLE": "Aide",
+			"EDIT": "Modifier sur Github",
+			"PAGE": {
+				"GET_STARTED": "Commencer",
+				"BASIC": "Portes de base",
+				"ADVANCED": "Portes avancées",
+				"IO": "Portes E/S",
+				"USER_DEFINED": "Composants définis par l'utilisateur",
+				"SAVING": "Sauvegarde de projets",
+				"TUTORIAL_VIDS": "Vidéos tutorielles"
+			}
+		},
+		"HEX_BIN_DEC": {
+			"TITLE": "Convertisseur Hex-Bin-Dec",
+			"HEX": "Hexadécimal",
+			"BIN": "Binaire",
+			"DEC": "Décimal"
+		},
+		"EDIT_COMPONENT_PLUGS": {
+			"TITLE": "Modifier les fiches de composants",
+			"SAVE": "Sauvegarder"
+		},
+		"IMAGE_EXPORT": {
+			"TITLE": "Exporter une image",
+			"TRANSPARENT": "Arrière-plan transparent",
+			"RESOLUTION": "Résolution personnalisée",
+			"MIN_ERROR": "La valeur doit être supérieure à 0.",
+			"MAX_ERROR": "La valeur doit être inférieure à 15 000",
+			"REQ_ERROR": "Valeur est requise.",
+			"WIDTH": "Largeur",
+			"HEIGHT": "Hauteur",
+			"GENERATE_SVG": "Générer SVG",
+			"GENERATE_PNG": "Générer du PNG",
+			"GENERATE_JPG": "Générer des JPG"
+		}
+	},
+	"SETTINGS_INFO": {
+		"INPUTS": "Contributions",
+		"OUTPUTS": "Les sorties",
+		"DIRECTION": "Direction",
+		"DIRECTIONS": {
+			"LEFT": "Gauche",
+			"DOWN": "Vers le bas",
+			"UP": "En haut",
+			"RIGHT": "Droite"
+		},
+		"DESCRIPTION": "Description",
+		"EDIT": "Modifier",
+		"PLUG_EDIT": "Modifier les entrées et sorties",
+		"PLUG_INDEX": "Index des fiches",
+		"PLUG_LABEL": "Étiquette"
+	},
+	"TUTORIAL": {
+		"SKIP": "Sauter",
+		"NEXT": "Suivant",
+		"FINISH": "Terminer le tutoriel",
+		"GETTING_STARTED": {
+			"NAME": "Commencer",
+			"WELCOME": {
+				"TITLE": "Bienvenue sur Logigator !",
+				"TEXT": "Bienvenue sur Logigator, l'outil en ligne simple mais puissant pour créer gratuitement des circuits logiques.<br><br>Faisons un tour."
+			},
+			"ZOOM_PAN": {
+				"TITLE": "Zoom et panoramique",
+				"TEXT": "Jetons d’abord un coup d’œil aux contrôles de vue.<br><br> Vous pouvez zoomer et dézoomer en utilisant la molette de votre souris et effectuer un panoramique en faisant glisser avec le bouton droit de la souris enfoncé."
+			},
+			"PLACING_ELEMS": {
+				"TITLE": "Placer des composants",
+				"TEXT": "Afin de construire un circuit, nous devons placer des composants. <br><br> Vos propres composants seront également affichés ici, nous y reviendrons plus tard.<br><br> Pour placer un composant, sélectionnez-le et cliquez quelque part sur le canevas."
+			},
+			"WIRES": {
+				"TITLE": "Fils",
+				"TEXT": "Pour qu’un circuit fonctionne, les composants individuels doivent être connectés. <br><br> Afin de placer des fils sur le canevas, utilisez l'outil ci-dessus et faites-les glisser avec le bouton gauche de la souris dans la direction dans laquelle vous souhaitez qu'ils aillent."
+			},
+			"CONN_WIRE": {
+				"TITLE": "Connexion et déconnexion des fils",
+				"TEXT": "Les fils peuvent bien entendu se croiser.<br><br> Pour indiquer s'ils sont connectés ou superposés, un point est affiché ou non au point d'intersection. <br><br> A l'aide de cet outil, vous pouvez cliquer sur lesdites intersections pour connecter ou déconnecter les fils associés."
+			},
+			"SELECT": {
+				"TITLE": "Sélection des composants et des fils",
+				"TEXT": "Avec cet outil, vous pouvez sélectionner plusieurs composants et fils à la fois.<br><br> Faire glisser avec le bouton gauche de la souris affichera une zone en surbrillance dans laquelle tous les composants seront sélectionnés.<br><br> Il est également possible de sélectionner des composants individuels en cliquant dessus."
+			},
+			"SELECT_CUT": {
+				"TITLE": "Sélectionnez Couper",
+				"TEXT": "Il existe également une variante spéciale de l'outil de sélection normal.<br><br> Avec cette variante, seuls les composants entièrement contenus dans la zone en surbrillance seront sélectionnés.<br>Les fils partiellement sélectionnés seront coupés au point où se termine la sélection. <br><br> Cela peut être utile si vous souhaitez raccourcir des fils par exemple."
+			},
+			"ERASER": {
+				"TITLE": "Gomme",
+				"TEXT": "L'outil Gomme peut être utilisé pour supprimer des composants sans les mettre en surbrillance au préalable.<br><br> Pour l'utiliser, faites glisser sur les composants souhaités avec le bouton gauche de la souris enfoncé et tout ce qui se trouve sous votre curseur sera supprimé."
+			},
+			"TEXT": {
+				"TITLE": "Placer du texte",
+				"TEXT": "Parfois, il peut être utile de placer du texte sur la toile pour étiqueter une partie importante de votre circuit.<br><br> Cet outil vous permet de placer du texte sur la toile où vous le souhaitez.<br>Cela fonctionne comme placer n’importe quel autre élément."
+			},
+			"CUSTOM_COMPONENTS": {
+				"TITLE": "Composants définis par l'utilisateur",
+				"TEXT": "L'une des fonctionnalités de Logigator est la possibilité de créer des sous-circuits et de les intégrer dans vos propres composants. <br><br> Après avoir créé un composant, il sera affiché dans la catégorie « Défini par l'utilisateur » sur le côté gauche de l'écran, prêt à être utilisé."
+			},
+			"SIMULATION_MODE": {
+				"TITLE": "Mode simulation",
+				"TEXT": "Tout ce que vous avez vu jusqu'à présent, c'est le mode édition de Logigator, dans lequel vous pouvez concevoir et construire vos circuits.<br><br> Afin de les simuler et de les tester, vous devez passer en mode simulation en appuyant sur ce bouton."
+			}
+		}
+	},
+	"ELEMENT_TYPE": {
+		"BASIC": {
+			"AND": {
+				"NAME": "ET Porte",
+				"DESCRIPTION": "La sortie est élevée si toutes les entrées sont élevées."
+			},
+			"NOT": {
+				"NAME": "PAS de porte",
+				"DESCRIPTION": "La sortie est élevée si l’entrée est faible."
+			},
+			"OR": {
+				"NAME": "OU Porte",
+				"DESCRIPTION": "La sortie est haute si au moins une entrée est haute."
+			},
+			"XOR": {
+				"NAME": "Porte XOR",
+				"DESCRIPTION": "La sortie est élevée si un nombre impair d’entrées est élevée."
+			},
+			"DELAY": {
+				"NAME": "Retard",
+				"DESCRIPTION": "La sortie est égale à l’entrée. "
+			},
+			"CLOCK": {
+				"NAME": "Horloge",
+				"DESCRIPTION": "Envoie périodiquement une impulsion longue d’un tick.<br>Le délai entre les impulsions peut être configuré.",
+				"SPEED": "Retard"
+			},
+			"TEXT": {
+				"NAME": "Texte",
+				"DESCRIPTION": "Texte que vous pouvez placer sur la toile.",
+				"TEXT_SIZE": "Taille de police"
+			},
+			"TUNNEL": {
+				"NAME": "Tunnel",
+				"DESCRIPTION": "Fonctionne comme un fil, mais sans fil. ",
+				"ID": "ID du tunnel"
+			}
+		},
+		"ADVANCED": {
+			"HALF_ADDER": {
+				"NAME": "Demi-additionneur",
+				"DESCRIPTION": "Additionne deux nombres de 1 bit."
+			},
+			"FULL_ADDER": {
+				"NAME": "Additionneur complet",
+				"DESCRIPTION": "Additionne trois nombres de 1 bit."
+			},
+			"ROM": {
+				"NAME": "ROM",
+				"DESCRIPTION": "Mémoire en lecture seule.<br>Peut par exemple être utilisé dans le code d'un programme.",
+				"WORD_SIZE": "Taille de mot",
+				"ADDRESS_SIZE": "Taille de l'adresse"
+			},
+			"D_FF": {
+				"NAME": "D Tongs",
+				"DESCRIPTION": "Détient un état. "
+			},
+			"JK_FF": {
+				"NAME": "Tongs JK",
+				"DESCRIPTION": "Détient un état. <br>Se déclenche sur front montant."
+			},
+			"SR_FF": {
+				"NAME": "Tongs SR",
+				"DESCRIPTION": "Détient un état. <br>Se déclenche sur front montant."
+			},
+			"RANDOM": {
+				"NAME": "Générateur de nombres aléatoires",
+				"DESCRIPTION": "Génère des données aléatoires.<br>Se déclenche sur front montant."
+			},
+			"RAM": {
+				"NAME": "RAM",
+				"DESCRIPTION": "Mémoire vive. <br>Réglez WE sur haut pour écrire à l'adresse actuelle et sur bas pour lire à partir de l'adresse actuelle.",
+				"WORD_SIZE": "Taille de mot",
+				"ADDRESS_SIZE": "Taille de l'adresse"
+			},
+			"DECODER": {
+				"NAME": "Décodeur",
+				"DESCRIPTION": "Décodeur binaire 1 sur n."
+			},
+			"ENCODER": {
+				"NAME": "Encodeur",
+				"DESCRIPTION": "Encodeur binaire 2 ^ n à n."
+			},
+			"MUX": {
+				"NAME": "Multiplexeur",
+				"DESCRIPTION": "Sélectionne la saisie par adresse."
+			},
+			"DEMUX": {
+				"NAME": "Démultiplexeur",
+				"DESCRIPTION": "Sélectionne la sortie par adresse."
+			}
+		},
+		"IO": {
+			"BUTTON": {
+				"NAME": "Bouton",
+				"DESCRIPTION": "Peut être cliqué pour émettre un signal d'impulsion."
+			},
+			"LEVER": {
+				"NAME": "Changer",
+				"DESCRIPTION": "Peut être allumé et éteint pendant la simulation."
+			},
+			"LED": {
+				"NAME": "DIRIGÉ",
+				"DESCRIPTION": "S’allume ou s’éteint en fonction de l’entrée appliquée."
+			},
+			"SEGMENT_DISPLAY": {
+				"NAME": "Affichage des segments",
+				"DESCRIPTION": "Affiche une entrée binaire sous forme de nombre décimal",
+				"BASE_LABEL": "Base",
+				"BASE": {
+					"DEC": "Décimal",
+					"HEX": "Hexadécimal",
+					"OCT": "Octal"
+				}
+			},
+			"LED_MATRIX": {
+				"NAME": "Matrice LED",
+				"DESCRIPTION": "Afficher une image",
+				"SIZE": "Largeur hauteur"
+			}
+		},
+		"PLUG": {
+			"INPUT": {
+				"NAME": "Prise d'entrée",
+				"DESCRIPTION": "Placez-le là où les entrées de vos composants auto-définis devraient être"
+			},
+			"OUTPUT": {
+				"NAME": "Prise de sortie",
+				"DESCRIPTION": "Placez-le là où les sorties de vos composants auto-définis devraient être"
+			}
+		}
+	},
+	"STATUS_BAR": {
+		"UNSAVED": "Modifications non enregistrées",
+		"SAVED": "Enregistré",
+		"SELECTED": "Sel",
+		"PROCESSES_RUNNING": "{{amount}} Processus en cours d'exécution"
+	},
+	"WORK_MODE_DES": {
+		"0": "Sélection d'éléments",
+		"1": "Sélectionner des éléments, mais couper les fils",
+		"2": "Effacer les composants",
+		"3": "Placement du composant : {{comp}}",
+		"4": "Placer les fils",
+		"5": "Fils de connexion",
+		"6": "Placer du texte",
+		"7": "Circuit de simulation"
+	},
+	"ERROR": {
+		"COMPILE": {
+			"CIRCULAR_DEP": "Dépendance circulaire dans les composants. {{src}} ne doit pas inclure {{comp}}.",
+			"FAILED": "Échec de la compilation du tableau.",
+			"WORKER_INIT": "WebWorker n'a pas réussi à s'initialiser.",
+			"INVALID_INPUT_PLUGS": "Veuillez vérifier les fiches d'entrée avec l'index des fiches {{plugIndex}} en composant {{comp}}.",
+			"INVALID_OUTPUT_PLUGS": "Veuillez vérifier les fiches de sortie avec l'index des fiches {{plugIndex}} en composant {{comp}}."
+		},
+		"PROJECTS": {
+			"OPEN": "Impossible d'ouvrir le projet ou le composant.",
+			"OPEN_SHARE": "Impossible d'ouvrir un projet ou un composant partagé.",
+			"GET_COMPS": "Impossible d'obtenir les composants du serveur.",
+			"OPEN_COMP": "Impossible d'ouvrir le composant.",
+			"GET_PROJECTS": "Impossible d'obtenir des projets à partir du serveur.",
+			"CREATE": "Impossible de créer un projet ou un composant.",
+			"SAVE": "Impossible d'enregistrer le composant ou le projet sur le serveur.",
+			"SAVE_VERSION": "Impossible d'enregistrer le composant ou le projet sur le serveur. ",
+			"REGENERATE_SHARE_LINK": "Impossible de régénérer le lien de partage.",
+			"UPDATE_SHARE_INFO": "Impossible de mettre à jour les informations de partage.",
+			"INVALID_FILE_TYPE": "Type de fichier invalide. ",
+			"INVALID_FILE": "Fichier non valide",
+			"COMP_NOT_FOUND": "Le composant n'a pas été trouvé !"
+		},
+		"USER": {
+			"GET_INFO": "Impossible d'obtenir les informations sur l'utilisateur.",
+			"UPDATE_SHORTCUTS": "Erreur lors de l'enregistrement des raccourcis."
+		}
+	},
+	"INFO": {
+		"PROJECTS": {
+			"OPEN_SHARE": "Partage ouvert : {{name}}",
+			"CLONE_SHARE": "Partage cloné : {{name}}",
+			"OPEN": "Projet ouvert : {{name}}",
+			"OPEN_FILE": "Projet ouvert à partir du fichier : {{name}}",
+			"SAVE": "Projet ou composant enregistré : {{name}}",
+			"EXPORT_FILE": "Projet exporté sous forme de fichier : {{name}}",
+			"CREATE_COMP": "Composant créé : {{name}}",
+			"RELOADED_ELEMENTS": "Éléments personnalisés rechargés."
+		},
+		"EASTEREGGS": {
+			"GBOGH": "Allez grand ou rentrez chez vous",
+			"BLD": "AHHH MES YEUX, TANT DE LUMENS",
+			"LAZ": "Trop paresseux pour un nom propre..."
+		}
+	},
+	"LOADING": {
+		"GENERATING_IMAGE": "Générer une image",
+		"OPENING_INITIAL_PROJECTS": "Projets d'ouverture",
+		"RELOAD_ELEMENTS": "Rechargement d'éléments personnalisés",
+		"OPENING_FILE": "Ouverture d'un projet à partir d'un fichier",
+		"SAVE_PROJECT": "Sauvegarde du projet",
+		"CREATE_COMPONENT": "Création d'un composant",
+		"SHARE_REGENERATE_LINK": "Lien régénérateur",
+		"UPDATE_SHARE_INFO": "Mise à jour des informations de partage",
+		"ENTER_SIMULATION": "Le mode simulation est en cours de chargement",
+		"LEAVE_SIMULATION": "Quitter le mode Simulation",
+		"EXPORT_FILE": "Exporter le projet sous forme de fichier",
+		"OPEN_PROJECT": "Projet d'ouverture",
+		"OPEN_COMPONENT": "Composant d'ouverture",
+		"OPEN_SHARE": "Partage d'ouverture"
+	}
+}
