@@ -74,11 +74,11 @@ Bascule de `Données` ou de `Délai` - Maintient un état. Lorsque (CLK) est mis
 
 <div class="rows">
 
-| J   | K   | Q         | Q Inverse |
-| --- | --- | --------- | --------- |
-| 1   | 1   | Bascule   | Bascule   |
-| 1   | 0   | 1         | 0         |
-| 0   | 1   | 0         | 1         |
+| J   | K   | Q                | Q Inverse        |
+| --- | --- | ---------------- | ---------------- |
+| 1   | 1   | Bascule          | Bascule          |
+| 1   | 0   | 1                | 0                |
+| 0   | 1   | 0                | 1                |
 | 0   | 0   | Aucun changement | Aucun changement |
 
 <div class="margin-left">
@@ -92,12 +92,12 @@ Maintient un état. (J) représente `fixer`, (K) représente `réinitialiser`. D
 
 <div class="rows">
 
-| S   | R   | Q         | Q Inverse |
-| --- | --- | --------- | --------- |
+| S   | R   | Q                | Q Inverse        |
+| --- | --- | ---------------- | ---------------- |
 | 0   | 0   | Aucun changement | Aucun changement |
-| 1   | 0   | 1         | 0         |
-| 0   | 1   | 0         | 1         |
-| 1   | 1   | Invalide  | Invalide  |
+| 1   | 0   | 1                | 0                |
+| 0   | 1   | 0                | 1                |
+| 1   | 1   | Invalide         | Invalide         |
 
 <div class="margin-left">
 
@@ -119,12 +119,12 @@ Définissez WE sur haut pour écrire à l'adresse actuelle et sur bas pour lire 
 
 <div class="rows">
 
-| I1 | I2 | 0 | 1 | 2 | 3 |
-|----|----|---|---|---|---|
-| 0  | 0  | 1 | 0 | 0 | 0 |
-| 0  | 1  | 0 | 1 | 0 | 0 |
-| 1  | 0  | 0 | 0 | 1 | 0 |
-| 1  | 1  | 0 | 0 | 0 | 1 |
+| I1  | I2  | 0   | 1   | 2   | 3   |
+| --- | --- | --- | --- | --- | --- |
+| 0   | 0   | 1   | 0   | 0   | 0   |
+| 0   | 1   | 0   | 1   | 0   | 0   |
+| 1   | 0   | 0   | 0   | 1   | 0   |
+| 1   | 1   | 0   | 0   | 0   | 1   |
 
 <div class="margin-left">
 
@@ -138,13 +138,13 @@ Convertit les informations binaires des entrées codées en n en 2^n sorties uni
 
 <div class="rows">
 
-| I0 | I1 | I2 | I3 | 1 | 2 |
-|----|----|----|----|---|---|
-| 0  | 0  | 0  | 0  | 0 | 0 |
-| 1  | 0  | 0  | 0  | 0 | 0 |
-| X  | 1  | 0  | 0  | 0 | 1 |
-| X  | X  | 1  | 0  | 1 | 0 |
-| X  | X  | X  | 1  | 1 | 1 |
+| I0  | I1  | I2  | I3  | 1   | 2   |
+| --- | --- | --- | --- | --- | --- |
+| 0   | 0   | 0   | 0   | 0   | 0   |
+| 1   | 0   | 0   | 0   | 0   | 0   |
+| X   | 1   | 0   | 0   | 0   | 1   |
+| X   | X   | 1   | 0   | 1   | 0   |
+| X   | X   | X   | 1   | 1   | 1   |
 
 <div class="margin-left">
 
@@ -158,8 +158,8 @@ Encode en binaire 2^n entrées en n sorties. Seule l'une des entrées doit être
 
 <div class="rows">
 
-| S0  | S1  | Sortie    |
-| --- | --- | --------- |
+| S0  | S1  | Sortie     |
+| --- | --- | ---------- |
 | 0   | 0   | valeur à 0 |
 | 0   | 1   | valeur à 1 |
 | 1   | 0   | valeur à 2 |

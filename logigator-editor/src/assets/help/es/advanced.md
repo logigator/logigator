@@ -73,11 +73,11 @@ Flip-Flop de `Datos` o `Retardo` - Mantiene un estado. Cuando (CLK) se establece
 
 <div class="rows">
 
-| J   | K   | Q         | Q Inversa |
-| --- | --- | --------- | --------- |
-| 1   | 1   | Alternar  | Alternar  |
-| 1   | 0   | 1         | 0         |
-| 0   | 1   | 0         | 1         |
+| J   | K   | Q          | Q Inversa  |
+| --- | --- | ---------- | ---------- |
+| 1   | 1   | Alternar   | Alternar   |
+| 1   | 0   | 1          | 0          |
+| 0   | 1   | 0          | 1          |
 | 0   | 0   | Sin cambio | Sin cambio |
 
 <div class="margin-left">
@@ -91,12 +91,12 @@ Mantiene un estado. (J) representa `establecer`, (K) representa `restablecer`. T
 
 <div class="rows">
 
-| S   | R   | Q         | Q Inversa |
-| --- | --- | --------- | --------- |
+| S   | R   | Q          | Q Inversa  |
+| --- | --- | ---------- | ---------- |
 | 0   | 0   | Sin cambio | Sin cambio |
-| 1   | 0   | 1         | 0         |
-| 0   | 1   | 0         | 1         |
-| 1   | 1   | Inválido  | Inválido  |
+| 1   | 0   | 1          | 0          |
+| 0   | 1   | 0          | 1          |
+| 1   | 1   | Inválido   | Inválido   |
 
 <div class="margin-left">
 
@@ -118,12 +118,12 @@ Establece WE en alto para escribir en la dirección actual y en bajo para leer d
 
 <div class="rows">
 
-| I1 | I2 | 0 | 1 | 2 | 3 |
-|----|----|---|---|---|---|
-| 0  | 0  | 1 | 0 | 0 | 0 |
-| 0  | 1  | 0 | 1 | 0 | 0 |
-| 1  | 0  | 0 | 0 | 1 | 0 |
-| 1  | 1  | 0 | 0 | 0 | 1 |
+| I1  | I2  | 0   | 1   | 2   | 3   |
+| --- | --- | --- | --- | --- | --- |
+| 0   | 0   | 1   | 0   | 0   | 0   |
+| 0   | 1   | 0   | 1   | 0   | 0   |
+| 1   | 0   | 0   | 0   | 1   | 0   |
+| 1   | 1   | 0   | 0   | 0   | 1   |
 
 <div class="margin-left">
 
@@ -137,13 +137,13 @@ Convierte la información binaria de n entradas codificadas en 2^n salidas únic
 
 <div class="rows">
 
-| I0 | I1 | I2 | I3 | 1 | 2 |
-|----|----|----|----|---|---|
-| 0  | 0  | 0  | 0  | 0 | 0 |
-| 1  | 0  | 0  | 0  | 0 | 0 |
-| X  | 1  | 0  | 0  | 0 | 1 |
-| X  | X  | 1  | 0  | 1 | 0 |
-| X  | X  | X  | 1  | 1 | 1 |
+| I0  | I1  | I2  | I3  | 1   | 2   |
+| --- | --- | --- | --- | --- | --- |
+| 0   | 0   | 0   | 0   | 0   | 0   |
+| 1   | 0   | 0   | 0   | 0   | 0   |
+| X   | 1   | 0   | 0   | 0   | 1   |
+| X   | X   | 1   | 0   | 1   | 0   |
+| X   | X   | X   | 1   | 1   | 1   |
 
 <div class="margin-left">
 
@@ -157,12 +157,12 @@ Codifica binariamente 2^n entradas en n salidas. Solo una de las entradas debe e
 
 <div class="rows">
 
-| S0  | S1  | Salida       |
-| --- | --- | ------------ |
-| 0   | 0   | valor en 0   |
-| 0   | 1   | valor en 1   |
-| 1   | 0   | valor en 2   |
-| 1   | 1   | valor en 3   |
+| S0  | S1  | Salida     |
+| --- | --- | ---------- |
+| 0   | 0   | valor en 0 |
+| 0   | 1   | valor en 1 |
+| 1   | 0   | valor en 2 |
+| 1   | 1   | valor en 3 |
 
 <div class="margin-left">
 

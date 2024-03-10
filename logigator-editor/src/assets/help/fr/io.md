@@ -69,6 +69,6 @@ Affiche jusqu'à 256 LED individuelles. Il est possible de choisir entre les tai
   La matrice dispose de 4 à 8 entrées de données (D0-D7). D0 est la première LED de la ligne et D7 est la dernière LED de la ligne. Une matrice 16x16 a également seulement 8 entrées de données. Pour cette raison, chaque ligne est composée de deux adresses.
 
 - **Horloge**<br>
-  Lorsque CLK est à l'état HAUT, les données sont écrites dans la matrice.
+Lorsque CLK est à l'état HAUT, les données sont écrites dans la matrice.
 </div>
 </div>

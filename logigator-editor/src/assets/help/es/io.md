@@ -69,6 +69,6 @@ Muestra hasta 256 LEDs individuales. Es posible elegir entre los siguientes tama
   La matriz tiene entre 4 y 8 entradas de datos (D0-D7). D0 es el primer LED de la fila y D7 es el último LED de la fila. Una matriz 16x16 también tiene solo 8 entradas de datos. Debido a eso, cada fila consta de dos direcciones.
 
 - **Reloj**<br>
-  Cuando CLK está en ALTO, los datos se escriben en la matriz.
+Cuando CLK está en ALTO, los datos se escriben en la matriz.
 </div>
 </div>
