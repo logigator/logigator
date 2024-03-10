@@ -109,8 +109,10 @@ CookieConsent.run({
 		default: 'en',
 		autoDetect: 'document',
 		translations: {
-			en: '/cookieconsent.en.json',
-			de: '/cookieconsent.de.json'
+			en: '/cookieconsent/en.json',
+			de: '/cookieconsent/de.json',
+			es: '/cookieconsent/es.json',
+			fr: '/cookieconsent/fr.json'
 		}
 	},
 	categories: {

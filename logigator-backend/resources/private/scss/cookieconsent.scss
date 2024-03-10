@@ -364,6 +364,7 @@ html.disable--interaction.show--consent, html.disable--interaction.show--consent
 		outline: none;
 		color: #000000;
 		background-color: themed('primary');
+		text-align: center;
 
 		&:hover {
 			cursor: pointer;
@@ -1269,6 +1270,7 @@ html.disable--interaction.show--consent, html.disable--interaction.show--consent
 		outline: none;
 		color: #000000;
 		background-color: themed('primary');
+		text-align: center;
 
 		&:hover {
 			cursor: pointer;

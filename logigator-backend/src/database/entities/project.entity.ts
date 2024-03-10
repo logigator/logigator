@@ -45,21 +45,21 @@ export class Project {
 	lastEdited: Date;
 
 	@Expose()
-	@OneToOne(type => ProjectFile, projectFile => projectFile.project, {cascade: true, eager: true})
+	@OneToOne(() => ProjectFile, projectFile => projectFile.project, {cascade: true, eager: true})
 	elementsFile: ProjectFile;
 
-	@ManyToOne(type => User, object => object.projects, {nullable: false, onDelete: 'CASCADE', onUpdate: 'CASCADE'})
+	@ManyToOne(() => User, object => object.projects, {nullable: false, onDelete: 'CASCADE', onUpdate: 'CASCADE'})
 	user: Promise<User>;
 
 	@Expose({name: 'user', groups: ['detailed']})
 	private __user__: User;
 
 	@Expose()
-	@OneToOne(type => ProjectPreviewDark, previewDark => previewDark.project, {cascade: true, eager: true})
+	@OneToOne(() => ProjectPreviewDark, previewDark => previewDark.project, {cascade: true, eager: true})
 	previewDark: ProjectPreviewDark;
 
 	@Expose()
-	@OneToOne(type => ProjectPreviewLight, previewLight => previewLight.project, {cascade: true, eager: true})
+	@OneToOne(() => ProjectPreviewLight, previewLight => previewLight.project, {cascade: true, eager: true})
 	previewLight: ProjectPreviewLight;
 
 	@Expose({groups: ['showShareLinks']})
@@ -71,19 +71,19 @@ export class Project {
 	@Column({default: false, nullable: false})
 	public: boolean;
 
-	@ManyToOne(type => Project, object => object.forks, {nullable: true, onDelete: 'SET NULL'})
+	@ManyToOne(() => Project, object => object.forks, {nullable: true, onDelete: 'SET NULL'})
 	forkedFrom: Promise<Project>;
 
 	@Expose({name: 'forkedFrom'})
 	private __forkedFrom__: Project;
 
-	@OneToMany(type => Project, object => object.forkedFrom)
+	@OneToMany(() => Project, object => object.forkedFrom)
 	forks: Promise<Project[]>;
 
 	@Expose({name: 'forks', groups: ['detailed']})
 	private __forks__: Project[];
 
-	@OneToMany(type => ProjectDependency, object => object.dependent, {cascade: true})
+	@OneToMany(() => ProjectDependency, object => object.dependent, {cascade: true})
 	dependencies: Promise<ProjectDependency[]>;
 
 	@Expose({name: 'dependencies', groups: ['detailed']})

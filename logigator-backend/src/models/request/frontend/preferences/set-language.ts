@@ -1,9 +1,11 @@
-import {IsNotEmpty, IsString} from 'class-validator';
+import { IsIn, IsNotEmpty, IsString } from 'class-validator';
+import { availableLanguages, LanguageCode } from '../../../../i18n';
 
 export class SetLanguage {
 
 	@IsString()
 	@IsNotEmpty()
-	lang: string;
+	@IsIn(availableLanguages)
+	lang: LanguageCode
 
 }

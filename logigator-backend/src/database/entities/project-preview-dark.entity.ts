@@ -11,7 +11,7 @@ export class ProjectPreviewDark extends PersistedResource {
 	protected _path = 'public/preview/dark';
 	protected _cacheable = true;
 
-	@OneToOne(type => Project, project => project.previewDark, {onUpdate: 'CASCADE', onDelete: 'CASCADE'})
+	@OneToOne(() => Project, project => project.previewDark, {onUpdate: 'CASCADE', onDelete: 'CASCADE'})
 	@JoinColumn()
 	project: Promise<Project>
 

@@ -11,7 +11,7 @@ export class ComponentPreviewDark extends PersistedResource {
 	protected _path = 'public/preview/dark';
 	protected _cacheable = true;
 
-	@OneToOne(type => Component, component => component.previewDark, {onDelete: 'CASCADE', onUpdate: 'CASCADE'})
+	@OneToOne(() => Component, component => component.previewDark, {onDelete: 'CASCADE', onUpdate: 'CASCADE'})
 	@JoinColumn()
 	component: Promise<Component>
 
