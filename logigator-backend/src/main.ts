@@ -171,9 +171,19 @@ async function bootstrap() {
 		defaultErrorHandler: false,
 		currentUserChecker: action => (action.request as Request).user
 	});
-	app.listen(environment.port, () => {
+
+	const server = app.listen(environment.port, () => {
 		console.log('App started successfully');
 	});
+
+	for (const signal of ['SIGINT', 'SIGTERM']) {
+		process.on(signal, () => {
+			console.log(`Received ${signal}: closing HTTP server..`);
+			server.close(() => {
+				process.exit(0);
+			});
+		});
+	}
 }
 
 bootstrap();
