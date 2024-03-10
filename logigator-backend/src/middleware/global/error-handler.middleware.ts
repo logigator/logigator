@@ -17,7 +17,7 @@ export class ErrorHandlerMiddleware implements ExpressErrorMiddlewareInterface {
 		this._appContext = this.configService.getConfig('environment').context;
 	}
 
-	error(error: Error, request: Request, response: Response, next: (err?: any) => any): void {
+	error(error: Error, request: Request, response: Response): void {
 
 		const errorResponse: any = {
 			status: (error as HttpError).httpCode || 500,

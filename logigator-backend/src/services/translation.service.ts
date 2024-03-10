@@ -1,53 +1,36 @@
-import {Service} from 'typedi';
-import * as fs from 'fs';
-import path from 'path';
-import {ConfigService} from './config.service';
+import { Service } from 'typedi';
+import { defaultLanguage, ILanguage, LanguageCode, translations } from '../i18n';
 
 @Service()
 export class TranslationService {
 
-	private _translations = new Map<string, any>();
-
-	constructor(private configService: ConfigService) {
-		this.readTranslations();
-	}
-
-	private readTranslations() {
-		const i18nPath = path.join(this.configService.projectRootPath, 'resources', 'private', 'i18n');
-
-		fs.readdirSync(i18nPath).forEach(translation => {
-			if (!translation.endsWith('.json')) {
-				return;
-			}
-			const config = fs.readFileSync(path.join(i18nPath, translation)).toString();
-			this._translations.set(path.parse(translation).name, JSON.parse(config));
-		});
-	}
-
-	public getTranslation(key: string, lang: string): string {
-		if (!this._translations.has(lang)) {
-			return key;
+	public getTranslation(key: string, lang: LanguageCode): string {
+		if (!translations[lang]) {
+			lang = defaultLanguage;
 		}
+		let translation: ILanguage = translations[lang];
+
 		const translationPath = key.split('.');
-		let translationMap = this._translations.get(lang);
 		for (let i = 0; i < translationPath.length; i++) {
-			if (translationMap[translationPath[i]]) {
-				translationMap = translationMap[translationPath[i]];
+			if (translation[translationPath[i]]) {
+				translation = translation[translationPath[i]];
 			} else {
 				return key;
 			}
 		}
-		if (typeof translationMap === 'string') {
-			return translationMap;
+
+		if (typeof translation === 'string') {
+			return translation;
 		}
+
 		return key;
 	}
 
-	public getTranslations(lang: string): any {
-		return this._translations.get(lang);
+	public getTranslations(lang: LanguageCode): ILanguage {
+		return translations[lang];
 	}
 
-	public dateFormatTime(date: Date | string, lang: string) {
+	public dateFormatTime(date: Date | string, lang: string): string {
 		if (!(date instanceof Date))
 			date = new Date(date);
 		switch (lang) {
@@ -62,25 +45,28 @@ export class TranslationService {
 					hour: '2-digit',
 					minute:'2-digit'
 				});
+			default: return date.toLocaleTimeString(lang, {
+				hour: '2-digit',
+				minute:'2-digit'
+			});
 		}
 	}
 
-	public dateFormatDate(date: Date | string, lang: string) {
+	public dateFormatDate(date: Date | string, lang: string): string {
 		if (!(date instanceof Date))
 			date = new Date(date);
 		switch (lang) {
-			case 'en':
-				return date.toLocaleDateString('en');
 			case 'de':
 				return date.toLocaleDateString('de', {
 					year: 'numeric',
 					month: 'short',
 					day: 'numeric'
 				});
+			default: return date.toLocaleDateString(lang);
 		}
 	}
 
-	public dateFormatDateTime(date: Date | string, lang: string) {
+	public dateFormatDateTime(date: Date | string, lang: string): string {
 		if (!(date instanceof Date))
 			date = new Date(date);
 		switch (lang) {
@@ -101,11 +87,9 @@ export class TranslationService {
 					month: 'short',
 					day: 'numeric'
 				});
+			default:
+				return date.toLocaleString(lang);
 		}
-	}
-
-	public get availableLanguages(): string[] {
-		return [...this._translations.keys()];
 	}
 
 }

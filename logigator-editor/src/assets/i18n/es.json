@@ -1,0 +1,513 @@
+{
+	"DROPDOWN": {
+		"FILE": {
+			"TITLE": "Archivo",
+			"NEW_PROJECT": "Nuevo proyecto",
+			"NEW_COMPONENT": "Nuevo componente",
+			"OPEN": "Abierto",
+			"SAVE": "Ahorrar",
+			"EXPORT": "Exportar a archivo",
+			"IMAGE": "Generar imagen",
+			"SHARE": "Compartir",
+			"CLONE": "Proyecto clon"
+		},
+		"EDIT": {
+			"TITLE": "Editar",
+			"UNDO": "Deshacer",
+			"REDO": "Rehacer",
+			"COPY": "Copiar",
+			"PASTE": "Pegar",
+			"CUT": "Cortar",
+			"DELETE": "Borrar",
+			"PLUGS": "Enchufes de componentes"
+		},
+		"VIEW": {
+			"100": "100%",
+			"TITLE": "Vista",
+			"ZOOM_IN": "Acercarse",
+			"ZOOM_OUT": "Disminuir el zoom",
+			"FULLSCREEN": "Pantalla completa"
+		},
+		"HELP": {
+			"TITLE": "Ayuda",
+			"HELP": "Ayuda",
+			"HEX_BIN_DEC": "Convertidor Hex-Bin-Dec"
+		},
+		"SETTINGS": {
+			"DARK_MODE": "Modo oscuro",
+			"SHOW_GRID": "Mostrar cuadrícula",
+			"LANGUAGE": "Idioma",
+			"SHORTCUTS": "Personalizar atajos",
+			"AUTOSTART_SIM": "Simulación de inicio automático",
+			"ACCOUNT": "Cuenta",
+			"LOGOUT": "Cerrar sesión",
+			"PRIVACY": "política de privacidad",
+			"NEW_VERSION": "Nueva versión disponible"
+		}
+	},
+	"TOOLBAR": {
+		"START_SIM": "Iniciar simulación",
+		"EXIT_SIM": "Salir de la simulación",
+		"TOOLTIP": {
+			"SAVE": "Ahorrar",
+			"OPEN": "Abierto",
+			"NEW_COMP": "Nuevo componente",
+			"COPY": "Copiar",
+			"PASTE": "Pegar",
+			"CUT": "Cortar",
+			"DELETE": "Borrar",
+			"UNDO": "Deshacer",
+			"REDO": "Rehacer",
+			"ZOOM_IN": "Acercarse",
+			"ZOOM_OUT": "Disminuir el zoom",
+			"WIRE": "Colocar cables",
+			"CONN_WIRE": "Conectar cables",
+			"SELECT": "Seleccionar",
+			"SELECT_CUT": "Seleccione Cortar",
+			"ERASER": "Borrador",
+			"TEXT": "Texto",
+			"SIM_SINGLE": "Un solo paso",
+			"SIM_PAUSE": "Pausa",
+			"SIM_STOP": "Detener",
+			"SIM_CONT": "Comenzar",
+			"SIM_TARGET_MODE": "Limitar la tasa de ticks",
+			"SIM_SYNC_MODE": "Sincronizar la velocidad de ticks con la velocidad de fotogramas"
+		}
+	},
+	"TOP_BAR": {
+		"LOGIN": "Acceso",
+		"REGISTER": "Registro"
+	},
+	"CONST_BOX": {
+		"SEARCH": "Buscar",
+		"CATEGORIES": {
+			"BASIC": "Básico",
+			"ADVANCED": "Avanzado",
+			"IO": "OI",
+			"PLUG": "Enchufar",
+			"USER": "Usuario definido",
+			"LOCAL": "Local",
+			"SHARE": "Compartir"
+		}
+	},
+	"POPUP": {
+		"NEW_COMP": {
+			"TITLE": "Nuevo componente",
+			"NAME": "Nombre",
+			"NAME_REQUIRED": "Se requiere el nombre",
+			"NAME_MAX_LENGTH": "El nombre es demasiado largo",
+			"NAME_INFO": "Nombre del nuevo componente",
+			"SYMBOL": "Símbolo",
+			"SYMBOL_REQUIRED": "Se requiere símbolo",
+			"SYMBOL_MAX_LENGTH": "El símbolo es demasiado largo",
+			"SYMBOL_INFO": "Se mostrará al colocar el componente.",
+			"DESCRIPTION": "Descripción",
+			"DESCRIPTION_MAX_LENGTH": "La descripción es demasiado larga.",
+			"DESCRIPTION_INFO": "Descripción del nuevo componente.",
+			"CREATE": "CREAR",
+			"PUBLIC": "Compartir públicamente",
+			"PUBLIC_EXPLANATION": "Si está activado 'Compartir públicamente', el componente se mostrará en todas las listas públicas."
+		},
+		"SAVE": {
+			"TITLE": "Guardar proyecto",
+			"NAME": "Nombre",
+			"NAME_INFO": "Nombre del nuevo proyecto",
+			"DESCRIPTION_INFO": "Descripción del nuevo proyecto.",
+			"DOWNLOAD": "Descargar archivo",
+			"CLOUD": "Guardar en la nube"
+		},
+		"OPEN": {
+			"TITLE": "Proyecto abierto",
+			"SEARCH": "Buscar",
+			"OPEN": "Abierto",
+			"EDITED": "Última edición",
+			"NAME": "Nombre",
+			"OPEN_FILE": "Abrir desde archivo",
+			"OPEN_CLOUD": "Abrir desde la nube",
+			"OPEN_SHARE": "Abrir Compartir",
+			"SHARE_LABEL": "Identificación/Enlace",
+			"NO_FILE": "Ningún archivo seleccionado",
+			"NOTHING_FOUND": "No se encontraron proyectos"
+		},
+		"RELOAD": {
+			"TITLE": "Recarga requerida",
+			"QUESTION": "Para que este cambio surta efecto, es necesario recargar el editor.<br>¿Quieres recargar esta página ahora?",
+			"YES": "SÍ",
+			"POSTPONE": "Recargar más tarde",
+			"CANCEL": "Cancelar"
+		},
+		"SHORTCUTS": {
+			"TITLE": "Personalizar atajos",
+			"SAVE": "Ahorrar",
+			"DESCRIPTION": {
+				"copy": "Copiar",
+				"paste": "Pegar",
+				"cut": "Cortar",
+				"delete": "Eliminar elementos seleccionados",
+				"undo": "Deshacer",
+				"redo": "Rehacer",
+				"editPlugs": "Editar complementos de componente personalizado",
+				"zoom100": "Ampliar al 100%",
+				"zoomIn": "Acercarse",
+				"zoomOut": "Disminuir el zoom",
+				"fullscreen": "Ingrese al modo de pantalla completa",
+				"connWireMode": "Modo conectar cables",
+				"wireMode": "Modo colocar cables",
+				"selectMode": "Modo de selección",
+				"eraserMode": "Borrador",
+				"cutSelectMode": "Modo de selección de corte",
+				"newComp": "Crear nuevo componente personalizado",
+				"textMode": "Colocar texto",
+				"save": "Ahorrar",
+				"newProj": "Nuevo proyecto",
+				"openProj": "Proyecto abierto",
+				"enterSim": "Ingrese a la simulación",
+				"leaveSim": "Salir de la simulación",
+				"startSim": "Iniciar simulación",
+				"pauseSim": "Pausar simulación",
+				"stopSim": "Detener simulación",
+				"singleStepSim": "Paso de simulación único"
+			}
+		},
+		"UNSAVED_CHANGES": {
+			"TITLE": "Cambios no guardados",
+			"QUESTION": "El proyecto actual tiene cambios no guardados; al abrir otro proyecto, ¡estos cambios pueden perderse!",
+			"OK": "Continuar de todos modos",
+			"CANCEL": "Cancelar"
+		},
+		"SHARE": {
+			"TITLE": "Compartir proyecto {{project}}",
+			"EXPLANATION": "Cualquiera que sea propietario del enlace puede ver, clonar, pero no editar el proyecto. ",
+			"LINK": "Enlace para compartir",
+			"PUBLIC": "Compartir públicamente",
+			"REGENERATE": "Regenerado",
+			"REGENERATE_WARN": "El enlace antiguo dejará de ser válido después de generar uno nuevo.",
+			"COPY": "Copiar",
+			"SAVE": "Ahorrar",
+			"CANCEL": "Cancelar"
+		},
+		"TEXT": {
+			"TITLE": "Colocar texto",
+			"SET": "Ahorrar",
+			"LABEL": "Texto"
+		},
+		"ROM_EDIT": {
+			"TITLE": "Editar datos de ROM",
+			"SAVE": "AHORRAR",
+			"CANCEL": "CANCELAR"
+		},
+		"HELP": {
+			"TITLE": "Ayuda",
+			"EDIT": "Editar en Github",
+			"PAGE": {
+				"GET_STARTED": "Empezando",
+				"BASIC": "Puertas básicas",
+				"ADVANCED": "Puertas avanzadas",
+				"IO": "Puertas IO",
+				"USER_DEFINED": "Componentes definidos por el usuario",
+				"SAVING": "Guardar proyectos",
+				"TUTORIAL_VIDS": "Vídeos tutoriales"
+			}
+		},
+		"HEX_BIN_DEC": {
+			"TITLE": "Convertidor Hex-Bin-Dec",
+			"HEX": "hexadecimal",
+			"BIN": "Binario",
+			"DEC": "Decimal"
+		},
+		"EDIT_COMPONENT_PLUGS": {
+			"TITLE": "Editar complementos de componentes",
+			"SAVE": "Ahorrar"
+		},
+		"IMAGE_EXPORT": {
+			"TITLE": "Exportar imagen",
+			"TRANSPARENT": "Fondo transparente",
+			"RESOLUTION": "Resolución personalizada",
+			"MIN_ERROR": "El valor debe ser mayor que 0.",
+			"MAX_ERROR": "El valor debe ser inferior a 15.000.",
+			"REQ_ERROR": "Se requiere valor.",
+			"WIDTH": "Ancho",
+			"HEIGHT": "Altura",
+			"GENERATE_SVG": "Generar SVG",
+			"GENERATE_PNG": "Generar PNG",
+			"GENERATE_JPG": "Generar JPG"
+		}
+	},
+	"SETTINGS_INFO": {
+		"INPUTS": "Entradas",
+		"OUTPUTS": "Salidas",
+		"DIRECTION": "Dirección",
+		"DIRECTIONS": {
+			"LEFT": "Izquierda",
+			"DOWN": "Abajo",
+			"UP": "Arriba",
+			"RIGHT": "Bien"
+		},
+		"DESCRIPTION": "Descripción",
+		"EDIT": "Editar",
+		"PLUG_EDIT": "Editar entradas y salidas",
+		"PLUG_INDEX": "Índice de enchufes",
+		"PLUG_LABEL": "Etiqueta"
+	},
+	"TUTORIAL": {
+		"SKIP": "Saltar",
+		"NEXT": "Próximo",
+		"FINISH": "Terminar el tutorial",
+		"GETTING_STARTED": {
+			"NAME": "Empezando",
+			"WELCOME": {
+				"TITLE": "¡Bienvenido a Logigator!",
+				"TEXT": "Bienvenido a Logigator, la sencilla pero poderosa herramienta en línea para construir circuitos lógicos de forma gratuita.<br><br>Hagamos un recorrido."
+			},
+			"ZOOM_PAN": {
+				"TITLE": "Zoom y panorámica",
+				"TEXT": "Primero echemos un vistazo a los controles de vista.<br><br> Puede acercar y alejar usando la rueda del mouse y desplazarse arrastrando con el botón derecho del mouse presionado."
+			},
+			"PLACING_ELEMS": {
+				"TITLE": "Colocar componentes",
+				"TEXT": "Para construir un circuito necesitamos colocar componentes. <br><br> Aquí también se mostrarán sus propios componentes, hablaremos de ello más adelante.<br><br> Para colocar un componente, selecciónelo y haga clic en algún lugar del lienzo."
+			},
+			"WIRES": {
+				"TITLE": "alambres",
+				"TEXT": "Para que un circuito funcione, los componentes individuales deben estar conectados. <br><br> Para colocar cables en el lienzo, use la herramienta de arriba y arrástrelos con el botón izquierdo del mouse en la dirección que desee."
+			},
+			"CONN_WIRE": {
+				"TITLE": "Conexión y desconexión de cables.",
+				"TEXT": "Por supuesto, los cables pueden cruzarse entre sí.<br><br> Para indicar si están conectados o superpuestos, se muestra o no un punto en el punto de intersección. <br><br> Con esta herramienta puede hacer clic en dichas intersecciones para conectar o desconectar los cables asociados."
+			},
+			"SELECT": {
+				"TITLE": "Seleccionar componentes y cables",
+				"TEXT": "Con esta herramienta, puede seleccionar varios componentes y cables a la vez.<br><br> Al arrastrar con el botón izquierdo del mouse se mostrará un área resaltada en la que se seleccionan todos los componentes.<br><br> También es posible seleccionar componentes individuales haciendo clic en ellos."
+			},
+			"SELECT_CUT": {
+				"TITLE": "Seleccione Cortar",
+				"TEXT": "También hay una variación especial de la herramienta de selección normal.<br><br> Con esta variación sólo se seleccionarán los componentes que estén completamente contenidos en el área resaltada.<br>Los cables que estén parcialmente seleccionados se cortarán en el punto donde termina la selección. <br><br> Esto puede resultar útil si desea acortar cables, por ejemplo."
+			},
+			"ERASER": {
+				"TITLE": "Borrador",
+				"TEXT": "La herramienta de borrador se puede utilizar para eliminar componentes sin resaltarlos primero.<br><br> Para usarlo, arrastre sobre los componentes deseados con el botón izquierdo del mouse presionado y se eliminará todo lo que esté debajo del cursor."
+			},
+			"TEXT": {
+				"TITLE": "Colocar texto",
+				"TEXT": "A veces puede resultar útil colocar texto en el lienzo para etiquetar una parte importante de su circuito.<br><br> Esta herramienta te permite colocar texto en el lienzo donde quieras.<br>Funciona como colocar cualquier otro elemento."
+			},
+			"CUSTOM_COMPONENTS": {
+				"TITLE": "Componentes definidos por el usuario",
+				"TEXT": "Una de las características de Logigator es la posibilidad de crear subcircuitos y empaquetarlos en sus propios componentes. <br><br> Después de crear un componente, se mostrará en la categoría \"Definido por el usuario\" en el lado izquierdo de la pantalla, listo para usarse."
+			},
+			"SIMULATION_MODE": {
+				"TITLE": "Modo de simulación",
+				"TEXT": "Todo lo que has visto hasta ahora es el modo de edición de Logigator, donde puedes diseñar y construir tus circuitos.<br><br> Para simularlos y probarlos, debe cambiar al modo de simulación presionando este botón."
+			}
+		}
+	},
+	"ELEMENT_TYPE": {
+		"BASIC": {
+			"AND": {
+				"NAME": "Y puerta",
+				"DESCRIPTION": "La salida es alta si todas las entradas son altas."
+			},
+			"NOT": {
+				"NAME": "NO puerta",
+				"DESCRIPTION": "La salida es alta si la entrada es baja."
+			},
+			"OR": {
+				"NAME": "O Puerta",
+				"DESCRIPTION": "La salida es alta si al menos una entrada es alta."
+			},
+			"XOR": {
+				"NAME": "Puerta XOR",
+				"DESCRIPTION": "La producción es alta si un número impar de entradas es alto."
+			},
+			"DELAY": {
+				"NAME": "Demora",
+				"DESCRIPTION": "La salida es igual a la entrada. "
+			},
+			"CLOCK": {
+				"NAME": "Reloj",
+				"DESCRIPTION": "Envía periódicamente un pulso de un tic de duración.<br>Se puede configurar el retraso entre pulsos.",
+				"SPEED": "Demora"
+			},
+			"TEXT": {
+				"NAME": "Texto",
+				"DESCRIPTION": "Texto que puedes colocar en el lienzo.",
+				"TEXT_SIZE": "Tamaño de fuente"
+			},
+			"TUNNEL": {
+				"NAME": "Túnel",
+				"DESCRIPTION": "Funciona como un cable, pero inalámbrico. ",
+				"ID": "ID de túnel"
+			}
+		},
+		"ADVANCED": {
+			"HALF_ADDER": {
+				"NAME": "Medio sumador",
+				"DESCRIPTION": "Suma dos números de 1 bit."
+			},
+			"FULL_ADDER": {
+				"NAME": "Sumador completo",
+				"DESCRIPTION": "Suma tres números de 1 bit."
+			},
+			"ROM": {
+				"NAME": "ROM",
+				"DESCRIPTION": "Memoria de sólo lectura.<br>Se puede utilizar, por ejemplo, en el código del programa.",
+				"WORD_SIZE": "Tamaño de la palabra",
+				"ADDRESS_SIZE": "Tamaño de dirección"
+			},
+			"D_FF": {
+				"NAME": "Chanclas D",
+				"DESCRIPTION": "Mantiene un estado. "
+			},
+			"JK_FF": {
+				"NAME": "Chanclas JK",
+				"DESCRIPTION": "Mantiene un estado. <br>Se dispara en el flanco ascendente."
+			},
+			"SR_FF": {
+				"NAME": "Chanclas SR",
+				"DESCRIPTION": "Mantiene un estado. <br>Se dispara en el flanco ascendente."
+			},
+			"RANDOM": {
+				"NAME": "Generador de números aleatorios",
+				"DESCRIPTION": "Genera datos aleatorios.<br>Se dispara en el flanco ascendente."
+			},
+			"RAM": {
+				"NAME": "RAM",
+				"DESCRIPTION": "Memoria de acceso aleatorio. <br>Establezca WE en alto para escribir en la dirección actual y en bajo para leer desde la dirección actual.",
+				"WORD_SIZE": "Tamaño de la palabra",
+				"ADDRESS_SIZE": "Tamaño de dirección"
+			},
+			"DECODER": {
+				"NAME": "Descifrador",
+				"DESCRIPTION": "Decodificador binario 1 de n."
+			},
+			"ENCODER": {
+				"NAME": "Codificador",
+				"DESCRIPTION": "Codificador binario 2^n-to-n."
+			},
+			"MUX": {
+				"NAME": "multiplexor",
+				"DESCRIPTION": "Selecciona la entrada por dirección."
+			},
+			"DEMUX": {
+				"NAME": "Demultiplexor",
+				"DESCRIPTION": "Selecciona la salida por dirección."
+			}
+		},
+		"IO": {
+			"BUTTON": {
+				"NAME": "Botón",
+				"DESCRIPTION": "Se puede hacer clic para emitir una señal de pulso."
+			},
+			"LEVER": {
+				"NAME": "Cambiar",
+				"DESCRIPTION": "Se puede encender y apagar durante la simulación."
+			},
+			"LED": {
+				"NAME": "CONDUJO",
+				"DESCRIPTION": "Se enciende o apaga dependiendo de la entrada aplicada."
+			},
+			"SEGMENT_DISPLAY": {
+				"NAME": "Visualización de segmentos",
+				"DESCRIPTION": "Muestra una entrada binaria como número decimal",
+				"BASE_LABEL": "Base",
+				"BASE": {
+					"DEC": "Decimal",
+					"HEX": "hexadecimal",
+					"OCT": "octal"
+				}
+			},
+			"LED_MATRIX": {
+				"NAME": "Matriz LED",
+				"DESCRIPTION": "Mostrar una imagen",
+				"SIZE": "Ancho/Alto"
+			}
+		},
+		"PLUG": {
+			"INPUT": {
+				"NAME": "Enchufe de entrada",
+				"DESCRIPTION": "Coloque esto donde deberían estar las entradas de sus componentes autodefinidos."
+			},
+			"OUTPUT": {
+				"NAME": "Enchufe de salida",
+				"DESCRIPTION": "Coloque esto donde deberían estar las salidas de sus componentes autodefinidos."
+			}
+		}
+	},
+	"STATUS_BAR": {
+		"UNSAVED": "Cambios no guardados",
+		"SAVED": "Salvado",
+		"SELECTED": "SEL",
+		"PROCESSES_RUNNING": "{{amount}} Procesos en ejecución"
+	},
+	"WORK_MODE_DES": {
+		"0": "Seleccionar elementos",
+		"1": "Seleccionar elementos, pero cortar los cables",
+		"2": "Borrar componentes",
+		"3": "Colocación de componentes: {{comp}}",
+		"4": "Colocando cables",
+		"5": "Cables de conexión",
+		"6": "Colocar texto",
+		"7": "Circuito simulado"
+	},
+	"ERROR": {
+		"COMPILE": {
+			"CIRCULAR_DEP": "Dependencia circular en componentes. {{src}} no debe incluir {{comp}}.",
+			"FAILED": "No se pudo compilar el tablero.",
+			"WORKER_INIT": "WebWorker no pudo inicializarse.",
+			"INVALID_INPUT_PLUGS": "Verifique los enchufes de entrada con el índice de enchufes. {{plugIndex}} en componente {{comp}}.",
+			"INVALID_OUTPUT_PLUGS": "Verifique los enchufes de salida con el índice de enchufes. {{plugIndex}} en componente {{comp}}."
+		},
+		"PROJECTS": {
+			"OPEN": "No se puede abrir el proyecto o el componente.",
+			"OPEN_SHARE": "No se puede abrir el proyecto o componente compartido.",
+			"GET_COMPS": "No se pueden obtener componentes del servidor.",
+			"OPEN_COMP": "No se puede abrir el componente.",
+			"GET_PROJECTS": "No se pueden obtener proyectos del servidor.",
+			"CREATE": "No se puede crear un proyecto o componente.",
+			"SAVE": "No se puede guardar el componente o proyecto en el servidor.",
+			"SAVE_VERSION": "No se puede guardar el componente o proyecto en el servidor. ",
+			"REGENERATE_SHARE_LINK": "No se puede regenerar el enlace para compartir.",
+			"UPDATE_SHARE_INFO": "No se puede actualizar la información compartida.",
+			"INVALID_FILE_TYPE": "Tipo de archivo invalido. ",
+			"INVALID_FILE": "Archivo inválido",
+			"COMP_NOT_FOUND": "¡No se encontró el componente!"
+		},
+		"USER": {
+			"GET_INFO": "No se puede obtener información del usuario.",
+			"UPDATE_SHORTCUTS": "Error al guardar accesos directos."
+		}
+	},
+	"INFO": {
+		"PROJECTS": {
+			"OPEN_SHARE": "Compartir abierto: {{name}}",
+			"CLONE_SHARE": "Compartir clonado: {{name}}",
+			"OPEN": "Proyecto abierto: {{name}}",
+			"OPEN_FILE": "Proyecto abierto desde archivo: {{name}}",
+			"SAVE": "Proyecto o componente guardado: {{name}}",
+			"EXPORT_FILE": "Proyecto exportado como archivo: {{name}}",
+			"CREATE_COMP": "Componente creado: {{name}}",
+			"RELOADED_ELEMENTS": "Elementos personalizados recargados."
+		},
+		"EASTEREGGS": {
+			"GBOGH": "Hazlo a lo grande o vete a casa",
+			"BLD": "AHHH MIS OJOS, TANTOS LUMENES",
+			"LAZ": "Demasiado vago para un nombre propio..."
+		}
+	},
+	"LOADING": {
+		"GENERATING_IMAGE": "Generando imagen",
+		"OPENING_INITIAL_PROJECTS": "Proyectos de apertura",
+		"RELOAD_ELEMENTS": "Recargando elementos personalizados",
+		"OPENING_FILE": "Abrir proyecto desde archivo",
+		"SAVE_PROJECT": "Guardando proyecto",
+		"CREATE_COMPONENT": "Creando componente",
+		"SHARE_REGENERATE_LINK": "Enlace regenerador",
+		"UPDATE_SHARE_INFO": "Actualización de información compartida",
+		"ENTER_SIMULATION": "El modo de simulación se está cargando.",
+		"LEAVE_SIMULATION": "Salir del modo Simulación",
+		"EXPORT_FILE": "Exportar proyecto como archivo",
+		"OPEN_PROJECT": "Proyecto de apertura",
+		"OPEN_COMPONENT": "Componente de apertura",
+		"OPEN_SHARE": "Compartir apertura"
+	}
+}
