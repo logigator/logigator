@@ -75,7 +75,9 @@ export class AppComponent implements OnInit, OnDestroy, AfterViewInit {
 				autoDetect: 'document',
 				translations: {
 					en: '/cookieconsent/en.json',
-					de: '/cookieconsent/de.json'
+					de: '/cookieconsent/de.json',
+					es: '/cookieconsent/es.json',
+					fr: '/cookieconsent/fr.json'
 				}
 			},
 			categories: {
