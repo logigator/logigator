@@ -166,7 +166,9 @@ export class Project {
 		if (!dif) dif = new PIXI.Point(0, 0);
 		if (!this._currState.allSpacesFree(elements, dif)) return false;
 
-		this.boardRecorder.call('addElements', arguments, -1, -1, 0);
+		if (!environment.production)
+			this.boardRecorder.call('addElements', arguments, -1, -1, 0);
+
 		const actions: Action[] = new Array(elements.length);
 		let i = 0;
 		elements.forEach((elem) => {
