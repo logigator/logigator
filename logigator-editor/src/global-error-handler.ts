@@ -24,12 +24,13 @@ function displayErrorPopup(event: ErrorEvent) {
 		? 'dark'
 		: 'light';
 
-	const trace = event.error?.stack
-		?.replace(/&/g, "&amp;")
-		.replace(/</g, "&lt;")
-		.replace(/>/g, "&gt;")
-		.replace(/"/g, "&quot;")
-		.replace(/'/g, "&#039;") ?? 'Stack trace not available.';
+	const trace =
+		event.error?.stack
+			?.replace(/&/g, '&amp;')
+			.replace(/</g, '&lt;')
+			.replace(/>/g, '&gt;')
+			.replace(/"/g, '&quot;')
+			.replace(/'/g, '&#039;') ?? 'Stack trace not available.';
 
 	const template = `
 		<div class="global-error-popup">
