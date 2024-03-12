@@ -464,6 +464,10 @@ export class ViewInteractionManager {
 			const connPoint = this._view.connectionPoints.get(
 				`${point.x}:${point.y}`
 			);
+			if (!connPoint) {
+				continue;
+			}
+
 			connPoint.setSelected(true);
 			connPoint.parent.removeChild(connPoint);
 			this._view.addChild(connPoint);
