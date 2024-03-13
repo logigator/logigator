@@ -6,6 +6,10 @@ export function linkHrefHelper(): HelperDelegate {
 			throw new Error('handlebars Helper {{linkHref}} expects 1 arguments (link: string)');
 		}
 
+		if (url === '/') {
+			return '/' + options.data.root.preferences.lang;
+		}
+
 		return '/' + options.data.root.preferences.lang + (url.startsWith('/') ? url : '/' + url);
 	};
 }

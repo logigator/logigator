@@ -7,7 +7,11 @@ export function redirect(req: Request, res: Response, options?: RedirectFuncOpti
 		};
 	} else {
 		if (options.target) {
-			options.target = `/${req.cookies.preferences.lang}${options.target}`;
+			if (options.target === '/') {
+				options.target = `/${req.cookies.preferences.lang}`;
+			} else {
+				options.target = `/${req.cookies.preferences.lang}${options.target}`;
+			}
 		} else {
 			options.target = req.get('Referer') ?? `/${req.cookies.preferences.lang}`;
 		}
