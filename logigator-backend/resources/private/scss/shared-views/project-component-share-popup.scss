@@ -29,9 +29,9 @@
 		> p {
 			@include scrollbar(0, 3px);
 
-			overflow: scroll;
+			overflow: auto;
 			margin: 0 0.5rem 0 0;
-			height: 1.5rem;
+			height: 2rem;
 			white-space: nowrap;
 		}
 	}
