@@ -13,16 +13,17 @@ export class GlobalViewDataMiddleware implements ExpressMiddlewareInterface {
 		response.locals.i18n = this.translationService.getTranslations(request.cookies.preferences.lang);
 
 		const domain: string = this.configService.getConfig('domains').rootUrl;
+		const url = request.url === '/' ? '' : request.url;
 		response.locals.altPages = [
 			...availableLanguages.map(lang => {
 				return {
 					lang,
-					href: `${domain}/${lang}${request.url}`
+					href: `${domain}/${lang}${url}`
 				};
 			}),
 			{
 				lang: 'x-default',
-				href: `${domain}${request.url}`
+				href: `${domain}${url}`
 			}
 		];
 

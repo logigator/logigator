@@ -44,6 +44,7 @@ import {CommunityProjCompController} from './controller/frontend/community/commu
 import {CommunityCloneController} from './controller/frontend/community/community-clone.controller';
 import {CommunityUserController} from './controller/frontend/community/community-user.controller';
 import {ReportErrorController} from './controller/api/report-error.controller';
+import { TrailingSlashMiddleware } from './middleware/global/trailing-slash.middleware';
 
 useContainerRC(Container);
 typeOrmUseContainer(Container);
@@ -151,6 +152,7 @@ async function bootstrap() {
 			ReportErrorController
 		],
 		middlewares: [
+			TrailingSlashMiddleware,
 			DefaultPreferencesMiddleware,
 			TranslationMiddleware,
 			GlobalViewDataMiddleware,

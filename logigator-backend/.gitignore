@@ -58,6 +58,7 @@ lerna-debug.log*
 !/resources/private/projects/.gitkeep
 /resources/private/components/*
 !/resources/private/components/.gitkeep
+/resources/editor
 
 # migrations
 /migration/*.js
