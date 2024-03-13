@@ -9,7 +9,7 @@
 		<xhtml:link rel="alternate" hreflang="fr" href="https://logigator.com/fr" />
     </url>
     <url>
-        <loc>https://logigator.com/editor</loc>
+        <loc>https://logigator.com/editor/</loc>
 		<priority>0.8</priority>
 	</url>
     <url>
