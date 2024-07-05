@@ -13,7 +13,7 @@ window.addEventListener('error', (event) => {
 		return;
 	}
 
-	if (event.filename?.includes('moz-extension://')) {
+	if (event.filename && !event.filename.includes(environment.url)) {
 		return;
 	}
 
@@ -50,6 +50,7 @@ function displayErrorPopup(event: ErrorEvent) {
 					<p class="global-error-popup-message">${
 						event.message ?? 'Message not available.'
 					}</p>
+					<p>If you encounter further issues, try saving your work and reloading the project.</p>
 					<pre class="global-error-popup-stack">${trace}</pre>
 					<label>To help us identify the problem, please describe what you where doing when the error occurred.</label>
 					<textarea class="global-error-popup-textarea" maxlength="512"></textarea>
