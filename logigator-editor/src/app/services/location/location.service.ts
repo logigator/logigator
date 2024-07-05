@@ -18,7 +18,12 @@ export class LocationService {
 	}
 
 	public get isValidPath(): boolean {
-		return this.pathname === '/' || this.isProject || this.isComponent || this.isShare;
+		return (
+			this.pathname === '/' ||
+			this.isProject ||
+			this.isComponent ||
+			this.isShare
+		);
 	}
 
 	public get projectUuid(): string {
