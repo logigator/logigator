@@ -26,6 +26,7 @@ import {
 } from './services/storage/storage.service';
 import { environment } from '../environments/environment';
 import * as CookieConsent from 'vanilla-cookieconsent';
+import { LocationService } from './services/location/location.service';
 
 @Component({
 	selector: 'app-root',
@@ -48,12 +49,17 @@ export class AppComponent implements OnInit, OnDestroy, AfterViewInit {
 		@Inject(DOCUMENT) private document: HTMLDocument,
 		private translate: TranslateService,
 		private elementProviderService: ElementProviderService,
+		private locationService: LocationService,
 		@Inject(StorageService) private storage: StorageServiceModel
 	) {
 		this.initTranslation();
 	}
 
 	ngOnInit(): void {
+		if (!this.locationService.isValidPath) {
+			this.locationService.reset();
+		}
+
 		this.document.documentElement.lang = this.translate.currentLang;
 		this.ngZone.runOutsideAngular(() => {
 			this.listenToShortcuts();
