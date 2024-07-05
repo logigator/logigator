@@ -17,6 +17,15 @@ export class LocationService {
 		return this.pathname.startsWith('/share/');
 	}
 
+	public get isValidPath(): boolean {
+		return (
+			this.pathname === '/' ||
+			this.isProject ||
+			this.isComponent ||
+			this.isShare
+		);
+	}
+
 	public get projectUuid(): string {
 		return this.pathname.substring(9);
 	}

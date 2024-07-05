@@ -15,9 +15,9 @@ export class PixiLoaderService {
 		this._loaded = true;
 		const loader = PIXI.Loader.shared;
 		loader
-			.add('Roboto', 'assets/bitmap-fonts/roboto.fnt')
-			.add('DSEG14', 'assets/bitmap-fonts/dseg14.fnt')
-			.add('DSEG7', 'assets/bitmap-fonts/dseg7.fnt')
+			.add('Roboto', 'assets/bitmap-fonts/roboto.xml')
+			.add('DSEG14', 'assets/bitmap-fonts/dseg14.xml')
+			.add('DSEG7', 'assets/bitmap-fonts/dseg7.xml')
 			.load(() => {
 				this._loaded$.next();
 			});
