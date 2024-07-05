@@ -9,17 +9,24 @@ import { ProjectLocalFile } from './app/models/project-local-file';
 let active = false;
 
 window.addEventListener('error', (event) => {
-	if (event instanceof ErrorEvent && !active) {
-		try {
-			getStaticDI(ShortcutsService).disableShortcutListener();
-		} finally {
-			active = true;
-			displayErrorPopup(event);
-		}
+	if (!(event instanceof ErrorEvent) || active) {
+		return;
+	}
+
+	if (event.filename?.includes('moz-extension://')) {
+		return;
+	}
+
+	try {
+		getStaticDI(ShortcutsService).disableShortcutListener();
+	} finally {
+		active = true;
+		displayErrorPopup(event);
 	}
 });
 
 function displayErrorPopup(event: ErrorEvent) {
+	console.log(event);
 	const theme = document.body.classList.contains('theme-dark')
 		? 'dark'
 		: 'light';
@@ -115,6 +122,7 @@ function displayErrorPopup(event: ErrorEvent) {
 				...(event.filename && { file: event.filename }),
 				...(event.message && { message: event.message }),
 				...(event.error?.stack && { stack: event.error.stack }),
+				...(navigator?.userAgent && { userAgent: navigator.userAgent }),
 				...(projectData && { project: projectData }),
 				...(userMessage && { userMessage })
 			})
