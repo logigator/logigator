@@ -3,7 +3,6 @@ import { Component, ViewChild, ViewContainerRef } from '@angular/core';
 import { ShortcutAction } from '../../models/shortcut-action';
 import { ThemingService } from '../../services/theming/theming.service';
 import { environment } from '../../../environments/environment';
-import { QuadTree } from '../../classes/quad-tree/quad-tree';
 import { BoardStatus } from '../../models/simulation-worker/board';
 
 @Component({

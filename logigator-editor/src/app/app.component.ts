@@ -16,7 +16,6 @@ import {
 	StorageService,
 	StorageServiceModel
 } from './services/storage/storage.service';
-import { environment } from '../environments/environment';
 import * as CookieConsent from 'vanilla-cookieconsent';
 import { LocationService } from './services/location/location.service';
 
