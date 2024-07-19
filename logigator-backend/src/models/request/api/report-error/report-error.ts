@@ -20,6 +20,11 @@ export class ReportError {
 	@IsOptional()
 	@IsString()
 	@MaxLength(256)
+	userAgent: string;
+
+	@IsOptional()
+	@IsString()
+	@MaxLength(256)
 	message: string;
 
 	@IsOptional()

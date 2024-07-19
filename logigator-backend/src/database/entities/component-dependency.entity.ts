@@ -5,7 +5,7 @@ import {Exclude, Expose, Transform} from 'class-transformer';
 @Exclude({toPlainOnly: true})
 @Entity()
 export class ComponentDependency {
-	@ManyToOne(type => Component, object => object.dependencies, {
+	@ManyToOne(() => Component, object => object.dependencies, {
 		primary: true,
 		eager: true,
 		nullable: false,
@@ -15,7 +15,7 @@ export class ComponentDependency {
 
 	@Expose()
 	@Transform(({value}) => value.id, {groups: ['compactDependencies']})
-	@ManyToOne(type => Component, object => object.dependencyForComponents, {
+	@ManyToOne(() => Component, object => object.dependencyForComponents, {
 		primary: true,
 		eager: true,
 		nullable: false,

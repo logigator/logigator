@@ -15,7 +15,7 @@ export class ComponentFile extends PersistedResource {
 		return super.publicUrl;
 	}
 
-	@OneToOne(type => Component, component => component.elementsFile, {onUpdate: 'CASCADE', onDelete: 'CASCADE'})
+	@OneToOne(() => Component, component => component.elementsFile, {onUpdate: 'CASCADE', onDelete: 'CASCADE'})
 	@JoinColumn()
 	component: Promise<Component>
 

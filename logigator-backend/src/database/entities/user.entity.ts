@@ -49,16 +49,16 @@ export class User {
 	localEmailVerified: boolean;
 
 	@Expose()
-	@OneToOne(type => ProfilePicture, image => image.user, {cascade: true, eager: true})
+	@OneToOne(() => ProfilePicture, image => image.user, {cascade: true, eager: true})
 	image: ProfilePicture;
 
-	@OneToMany(type => Shortcut, object => object.user, {cascade: true})
+	@OneToMany(() => Shortcut, object => object.user, {cascade: true})
 	shortcuts: Promise<Shortcut[]>;
 
 	@Expose({name: 'shortcuts', groups: ['privateUserData']})
 	private __shortcuts__: Shortcut[];
 
-	@OneToMany(type => Project, object => object.user, {cascade: true})
+	@OneToMany(() => Project, object => object.user, {cascade: true})
 	projects: Promise<Project[]>;
 
 	@Expose({name: 'projects', groups: ['privateUserData', 'extendedUserData']})
@@ -67,7 +67,7 @@ export class User {
 	}, {groups: ['extendedUserData']})
 	private __projects__: Project[];
 
-	@OneToMany(type => Component, object => object.user, {cascade: true})
+	@OneToMany(() => Component, object => object.user, {cascade: true})
 	components: Promise<Component[]>;
 
 	@Expose({name: 'components', groups: ['privateUserData', 'extendedUserData']})

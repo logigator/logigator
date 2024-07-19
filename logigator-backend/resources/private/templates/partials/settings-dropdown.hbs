@@ -6,11 +6,13 @@
 		{{/form}}
 	</div>
 	<div class="partial-settings-dropdown__item partial-settings-dropdown__lang">
-		<label>{{i18n.SETTINGS_DROPDOWN.LANGUAGE}}</label>
+		<label for="partial-settings-dropdown__lang-select">{{i18n.SETTINGS_DROPDOWN.LANGUAGE}}</label>
 		{{#> form action='/preferences/set-lang' }}
-			<select name="lang" class="partial-settings-dropdown__lang-select" onchange="this.form.submit()">
-				<option value="en" {{#if (expr preferences.lang '===' 'en') }}selected="selected"{{/if}}>{{i18n.LANGUAGE.EN}}</option>
-				<option value="de" {{#if (expr preferences.lang '===' 'de') }}selected="selected"{{/if}}>{{i18n.LANGUAGE.DE}}</option>
+			<select id="partial-settings-dropdown__lang-select" name="lang" class="partial-settings-dropdown__lang-select" onchange="this.form.submit()">
+				<option value="en" {{#if (expr preferences.lang '===' 'en') }}selected="selected"{{/if}}>English</option>
+				<option value="de" {{#if (expr preferences.lang '===' 'de') }}selected="selected"{{/if}}>Deutsch</option>
+				<option value="es" {{#if (expr preferences.lang '===' 'es') }}selected="selected"{{/if}}>Español</option>
+				<option value="fr" {{#if (expr preferences.lang '===' 'fr') }}selected="selected"{{/if}}>Français</option>
 			</select>
 		{{/form}}
 	</div>

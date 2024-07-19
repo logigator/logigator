@@ -23,6 +23,7 @@
 
 	@include element('description') {
 		flex-grow: 1;
+		min-width: 0;
 
 		@include media-breakpoint-up('md') {
 			margin-left: 1rem;

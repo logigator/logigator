@@ -45,7 +45,7 @@ export class Component {
 	lastEdited: Date;
 
 	@Expose()
-	@OneToOne(type => ComponentFile, componentFile => componentFile.component, {cascade: true, eager: true})
+	@OneToOne(() => ComponentFile, componentFile => componentFile.component, {cascade: true, eager: true})
 	elementsFile: ComponentFile;
 
 	@Expose()
@@ -64,36 +64,36 @@ export class Component {
 	@Column('simple-array', {nullable: false})
 	labels: string[];
 
-	@OneToMany(type => ComponentDependency, object => object.dependent)
+	@OneToMany(() => ComponentDependency, object => object.dependent)
 	dependencies: Promise<ComponentDependency[]>;
 
 	@Expose({name: 'dependencies', groups: ['detailed']})
 	private __dependencies__: ComponentDependency[];
 
-	@OneToMany(type => ComponentDependency, object => object.dependency)
+	@OneToMany(() => ComponentDependency, object => object.dependency)
 	dependencyForComponents: Promise<ComponentDependency[]>;
 
 	@Expose({name: 'dependencyForComponents', groups: ['detailed']})
 	private __dependencyForComponents__: ComponentDependency[];
 
-	@OneToMany(type => ProjectDependency, object => object.dependency)
+	@OneToMany(() => ProjectDependency, object => object.dependency)
 	dependencyForProjects: Promise<ProjectDependency[]>;
 
 	@Expose({name: 'dependencyForProjects', groups: ['detailed']})
 	private __dependencyForProjects__: ProjectDependency[];
 
-	@ManyToOne(type => User, object => object.components, {nullable: false, onUpdate: 'CASCADE', onDelete: 'CASCADE'})
+	@ManyToOne(() => User, object => object.components, {nullable: false, onUpdate: 'CASCADE', onDelete: 'CASCADE'})
 	user: Promise<User>;
 
 	@Expose({name: 'user', groups: ['detailed']})
 	private __user__: User;
 
 	@Expose()
-	@OneToOne(type => ComponentPreviewDark, previewDark => previewDark.component, {cascade: true, eager: true})
+	@OneToOne(() => ComponentPreviewDark, previewDark => previewDark.component, {cascade: true, eager: true})
 	previewDark: ComponentPreviewDark;
 
 	@Expose()
-	@OneToOne(type => ComponentPreviewLight, previewLight => previewLight.component, {cascade: true, eager: true})
+	@OneToOne(() => ComponentPreviewLight, previewLight => previewLight.component, {cascade: true, eager: true})
 	previewLight: ComponentPreviewLight;
 
 	@Expose({groups: ['showShareLinks']})
@@ -105,13 +105,13 @@ export class Component {
 	@Column({default: false, nullable: false})
 	public: boolean;
 
-	@ManyToOne(type => Component, object => object.forks, {nullable: true, onDelete: 'SET NULL'})
+	@ManyToOne(() => Component, object => object.forks, {nullable: true, onDelete: 'SET NULL'})
 	forkedFrom: Promise<Component>;
 
 	@Expose({name: 'forkedFrom'})
 	private __forkedFrom__: Component;
 
-	@OneToMany(type => Component, object => object.forkedFrom)
+	@OneToMany(() => Component, object => object.forkedFrom)
 	forks: Promise<Component[]>;
 
 	@Expose({name: 'forks', groups: ['detailed']})

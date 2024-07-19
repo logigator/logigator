@@ -1,0 +1,64 @@
+{
+	"consentModal": {
+		"title": "Paramètres des cookies",
+		"description": "Nous utilisons des cookies et d'autres technologies de suivi pour améliorer votre expérience de navigation sur notre site Web, vous montrer un contenu personnalisé, analyser le trafic de notre site Web et comprendre d'où viennent nos visiteurs.",
+		"acceptAllBtn": "Accepter tout",
+		"acceptNecessaryBtn": "Rejeter tout",
+		"showPreferencesBtn": "Gérer les préférences"
+	},
+	"preferencesModal": {
+		"title": "Préférences des cookies",
+		"acceptAllBtn": "Accepter tout",
+		"acceptNecessaryBtn": "Rejeter tout",
+		"savePreferencesBtn": "Enregistrer les préférences",
+		"closeIconLabel": "Fermer",
+		"sections": [
+			{
+				"title": "Utilisation des cookies",
+				"description": "Nous utilisons des cookies et d'autres technologies de suivi pour améliorer votre expérience de navigation sur notre site Web, vous montrer un contenu personnalisé, analyser le trafic de notre site Web et comprendre d'où viennent nos visiteurs."
+			},
+			{
+				"title": "Cookies strictement nécessaires",
+				"description": "Ces cookies sont essentiels au bon fonctionnement du site Web. Sans ces cookies, le site Web ne fonctionnerait pas correctement.",
+				"linkedCategory": "necessary"
+			},
+			{
+				"title": "Cookies de performance et d'analyse",
+				"description": "Ces cookies nous permettent d'analyser le trafic de notre site Web et de comprendre d'où viennent nos visiteurs. Nous utilisons ces informations pour améliorer votre expérience de navigation sur notre site Web.",
+				"linkedCategory": "analytics",
+				"cookieTable": {
+					"headers": {
+						"name": "Nom",
+						"domain": "Service",
+						"description": "Description",
+						"expiration": "Expiration"
+					},
+					"body": [
+						{
+							"name": "_ga",
+							"domain": "Google Analytics",
+							"description": "Cookie défini par Google Analytics.",
+							"expiration": "Expire après 2 ans"
+						},
+						{
+							"name": "_ga_(id)",
+							"domain": "Google Analytics",
+							"description": "Cookie défini par Google Analytics.",
+							"expiration": "Expire après 2 ans"
+						},
+						{
+							"name": "_gid",
+							"domain": "Google Analytics",
+							"description": "Cookie défini par Google Analytics.",
+							"expiration": "Session"
+						}
+					]
+				}
+			},
+			{
+				"title": "Plus d'informations",
+				"description": "Pour toute question concernant notre politique en matière de cookies et vos choix, veuillez consulter notre <a class=\"cc-link\" href=\"/politique-de-confidentialite\">politique de confidentialité</a>."
+			}
+		]
+	}
+}

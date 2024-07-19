@@ -1,0 +1,11 @@
+{{! parameters: width: number, height: number, id: string, title: string, onlyhq: boolean }}
+<div class="partial-youtube-overlay" data-id="{{id}}" data-title="{{title}}" data-width="{{width}}" data-height="{{height}}">
+	<div role="button" tabindex="0" title="{{i18n.YOUTUBE_OVERLAY.CTA}}">
+		{{#if onlyhq}}
+			<img srcset="https://i.ytimg.com/vi_webp/{{id}}/hqdefault.webp 360w" src="https://i.ytimg.com/vi/{{id}}/hqdefault.jpg" alt="Click to load video">
+		{{else}}
+			<img srcset="https://i.ytimg.com/vi_webp/{{id}}/hqdefault.webp 360w, https://i.ytimg.com/vi_webp/{{id}}/maxresdefault.webp 720w" src="https://i.ytimg.com/vi/{{id}}/maxresdefault.jpg" alt="Click to load video">
+		{{/if}}
+		<span></span>
+	</div>
+</div>

@@ -9,7 +9,7 @@
 			<h1 class="view-home__s-intro-headline">{{i18n.HOME.INTRO.DESCRIPTION}}</h1>
 			<div class="view-home__s-intro-start">
 				{{> half-adder-svg}}
-				<a href="{{editorUrl}}" target="_blank" rel="noopener" class="view-home__s-intro-button">
+				<a href="{{editorUrl}}/" target="_blank" rel="noopener" class="view-home__s-intro-button">
 					<button class="btn-raised primary">{{i18n.HOME.INTRO.BUTTON}}</button>
 				</a>
 			</div>
@@ -66,11 +66,13 @@
 			<h3 class="view-home__headline">{{i18n.HOME.VIDEO.TITLE}}</h3>
 			<p class="view-home__subline">{{i18n.HOME.VIDEO.DESCRIPTION}}</p>
 			<div class="view-home__s-video-iframe">
-				{{#if (expr preferences.lang '===' 'en')}}
-					<iframe width="960" height="540" title="Logic Gates - Explained" src="https://www.youtube.com/embed/weTeJLMGq_Q" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
-				{{else}}
-					<iframe width="960" height="540" title="Logische Gatter - Erklärt" src="https://www.youtube.com/embed/114EOH-fdLE" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
-				{{/if}}
+				<div>
+					{{#if (expr preferences.lang '===' 'en')}}
+						{{> youtube-overlay id="weTeJLMGq_Q" title="Logic Gates - Explained" width=960 height=540}}
+					{{else}}
+						{{> youtube-overlay id="114EOH-fdLE" title="Logische Gatter - Erklärt" width=960 height=540}}
+					{{/if}}
+				</div>
 			</div>
 		</div>
 	</section>

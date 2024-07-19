@@ -65,9 +65,6 @@
 /logigator-backend/resources/private/components/*
 !/logigator-backend/resources/private/components/.gitkeep
 
-# migrations
-/logigator-backend/migration/*.js
-
 # EDITOR
 # compiled output
 /logigator-editor/dist

@@ -36,6 +36,9 @@ export class ReportErrorController {
 		if (body.file)
 			toAppend += `\nFile: ${body.file}`;
 
+		if (body.userAgent)
+			toAppend += `\nUser Agent: ${body.userAgent}`;
+
 		if (user)
 			toAppend += `\nUser: ${user.id} (Username: ${user.username}, Email: ${user.email})`;
 

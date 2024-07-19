@@ -31,10 +31,10 @@ jobs:
         working-directory: ./logigator-editor
     steps:
       - name: 'Checkout'
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
 
       - name: 'Setup Node'
-        uses: actions/setup-node@v3
+        uses: actions/setup-node@v4
         with:
           node-version: '20.x'
 
@@ -45,7 +45,9 @@ jobs:
 
       - name: 'Lint'
         shell: bash
-        run: yarn run lint
+        run: |
+          yarn run format
+          yarn run lint
 
       - name: 'Build'
         shell: bash

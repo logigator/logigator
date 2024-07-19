@@ -10,6 +10,7 @@ import {redirect} from '../../functions/redirect';
  */
 export function formErrorMiddleware(redirectTargetFunc?: (request: Request, response: Response) => string) {
 
+	// DO NOT REMOVE next parameter, it breaks the middleware for some reason
 	return function (error: any, request: Request, response: Response, next: (err?: any) => any) {
 		if (!(error instanceof BadRequestError && (('errors' in error && 'paramName' in error) || error.name === 'FormDataError'))) {
 			throw error;

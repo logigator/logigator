@@ -17,6 +17,7 @@ export class ErrorHandlerMiddleware implements ExpressErrorMiddlewareInterface {
 		this._appContext = this.configService.getConfig('environment').context;
 	}
 
+	// DO NOT REMOVE next parameter, it breaks the middleware for some reason
 	error(error: Error, request: Request, response: Response, next: (err?: any) => any): void {
 
 		const errorResponse: any = {

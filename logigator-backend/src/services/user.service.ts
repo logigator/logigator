@@ -11,11 +11,12 @@ import {EmailService} from './email.service';
 import {v4 as uuid} from 'uuid';
 import {StandaloneViewService} from './standalone-view.service';
 import {ConfigService} from './config.service';
-import {TranslationService} from './translation.service';
+import { TranslationService } from './translation.service';
 import {RedisService} from './redis.service';
 import {Transaction, TransactionRepository} from 'typeorm';
 import {ComponentRepository} from '../database/repositories/component.repository';
 import {ProjectRepository} from '../database/repositories/project.repository';
+import { LanguageCode } from '../i18n';
 
 @Service()
 export class UserService {
@@ -82,7 +83,7 @@ export class UserService {
 	/**
 	 * @return true on success, false on error (email already in use)
 	 */
-	public async createLocalUser(username: string, email: string, password: string, currentLang: string): Promise<boolean> {
+	public async createLocalUser(username: string, email: string, password: string, currentLang: LanguageCode): Promise<boolean> {
 		const user = await this.userRepo.findOne({
 			email: email
 		});
@@ -120,7 +121,7 @@ export class UserService {
 		return user;
 	}
 
-	public async resendVerificationMail(email: string, password: string, lang: string) {
+	public async resendVerificationMail(email: string, password: string, lang: LanguageCode) {
 		const user = await this.userRepo.findOne({
 			email: email
 		});
@@ -140,7 +141,7 @@ export class UserService {
 
 	}
 
-	private async sendRegisterVerificationMail(user: User, code: string, lang: string) {
+	private async sendRegisterVerificationMail(user: User, code: string, lang: LanguageCode) {
 		const mail = await this.standaloneViewService.renderView('verification-mail-register', {
 			username: user.username,
 			verifyLink: `${this.configService.getConfig('domains').rootUrl}/verify-email/${code}`
@@ -148,7 +149,7 @@ export class UserService {
 		await this.emailService.sendMail('noreply', user.email, this.translationService.getTranslation('MAILS.VERIFY_MAIL_REGISTER.SUBJECT', lang), mail);
 	}
 
-	private async sendEmailUpdateVerificationMail(username: string, newEmail: string, code: string, lang: string) {
+	private async sendEmailUpdateVerificationMail(username: string, newEmail: string, code: string, lang: LanguageCode) {
 		const mail = await this.standaloneViewService.renderView('verification-mail-email-update', {
 			username: username,
 			verifyLink: `${this.configService.getConfig('domains').rootUrl}/verify-email/${code}`
@@ -188,7 +189,7 @@ export class UserService {
 		return this.userRepo.save(user);
 	}
 
-	public async updateEmail(user: User, email: string, lang: string): Promise<boolean> {
+	public async updateEmail(user: User, email: string, lang: LanguageCode): Promise<boolean> {
 		const existingUser = await this.userRepo.findOne({
 			email: email
 		});

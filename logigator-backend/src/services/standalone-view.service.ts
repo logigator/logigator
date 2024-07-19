@@ -2,9 +2,10 @@ import {Service} from 'typedi';
 import * as path from 'path';
 import {promises as fs} from 'fs';
 import {ConfigService} from './config.service';
-import {compile} from 'handlebars';
-import {TranslationService} from './translation.service';
-import {handlebarsHelpers} from '../handlebars-helper/helpers';
+import { compile } from 'handlebars';
+import { TranslationService } from './translation.service';
+import { handlebarsHelpers } from '../handlebars-helper/helpers';
+import { LanguageCode } from '../i18n';
 
 @Service()
 export class StandaloneViewService {
@@ -17,7 +18,7 @@ export class StandaloneViewService {
 		this.VIEW_DIR = path.join(path.join(configService.projectRootPath, 'resources', 'private', 'templates', 'standalone'));
 	}
 
-	public async renderView(view: string, data: any, lang = 'en'): Promise<string> {
+	public async renderView(view: string, data: any, lang: LanguageCode = 'en'): Promise<string> {
 		let template: HandlebarsTemplateDelegate;
 		if (this._viewCache.has(view)) {
 			template = this._viewCache.get(view);

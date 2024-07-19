@@ -5,13 +5,19 @@ import { ProjectLocalFile } from './app/models/project-local-file';
 let active = false;
 
 window.addEventListener('error', (event) => {
-	if (event instanceof ErrorEvent && !active && environment.production) {
-		try {
-			// getStaticDI(ShortcutsService).disableShortcutListener(); TODO
-		} finally {
-			active = true;
-			displayErrorPopup(event);
-		}
+	if (!(event instanceof ErrorEvent) || active) {
+		return;
+	}
+
+	if (event.filename && !event.filename.includes(environment.url)) {
+		return;
+	}
+
+	try {
+		// getStaticDI(ShortcutsService).disableShortcutListener();
+	} finally {
+		active = true;
+		displayErrorPopup(event);
 	}
 });
 
@@ -19,20 +25,28 @@ function displayErrorPopup(event: ErrorEvent) {
 	const theme = document.body.classList.contains('theme-dark')
 		? 'dark'
 		: 'light';
+
+	const trace =
+		event.error?.stack
+			?.replace(/&/g, '&amp;')
+			.replace(/</g, '&lt;')
+			.replace(/>/g, '&gt;')
+			.replace(/"/g, '&quot;')
+			.replace(/'/g, '&#039;') ?? 'Stack trace not available.';
+
 	const template = `
 		<div class="global-error-popup">
 			<div class="global-error-popup-content">
 				<div class="global-error-popup-header">
 					<div>A critical Error occurred!</div>
-					<img src="assets/icons/${theme}/close.svg" class="global-error-popup-close" />
+					<img src="assets/icons/${theme}/close.svg" alt="close" class="global-error-popup-close" />
 				</div>
 				<div class="global-error-popup-body">
 					<p class="global-error-popup-message">${
 						event.message ?? 'Message not available.'
 					}</p>
-					<pre class="global-error-popup-stack">${
-						event.error?.stack ?? 'Stack trace not available.'
-					}</pre>
+					<p>If you encounter further issues, try saving your work and reloading the project.</p>
+					<pre class="global-error-popup-stack">${trace}</pre>
 					<label>To help us identify the problem, please describe what you where doing when the error occurred.</label>
 					<textarea class="global-error-popup-textarea" maxlength="512"></textarea>
 					<button class="btn-raised primary global-error-popup-send">Send Error Information</button>
@@ -104,6 +118,7 @@ function displayErrorPopup(event: ErrorEvent) {
 				...(event.filename && { file: event.filename }),
 				...(event.message && { message: event.message }),
 				...(event.error?.stack && { stack: event.error.stack }),
+				...(navigator?.userAgent && { userAgent: navigator.userAgent }),
 				...(projectData && { project: projectData }),
 				...(userMessage && { userMessage })
 			})

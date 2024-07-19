@@ -10,7 +10,7 @@ export class UserRepository extends Repository<User> {
 	public async getStargazersForProjectByLink(link: string, page: number, pageSize: number): Promise<Page<User>> {
 		const results = await this.createQueryBuilder('user')
 			.leftJoin('user.staredProjects', 'project')
-			.innerJoinAndSelect('user.image', 'image')
+			.leftJoinAndSelect('user.image', 'image')
 			.where('project.link = :link', {link})
 			.skip(page * pageSize)
 			.take(pageSize)

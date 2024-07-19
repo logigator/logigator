@@ -10,9 +10,9 @@ export class PixiLoaderService {
 
 	public loadPixiFont() {
 		Assets.load([
-			'assets/bitmap-fonts/roboto.fnt',
-			'assets/bitmap-fonts/dseg14.fnt',
-			'assets/bitmap-fonts/dseg7.fnt'
+			'assets/bitmap-fonts/roboto.xml',
+			'assets/bitmap-fonts/dseg14.xml',
+			'assets/bitmap-fonts/dseg7.xml'
 		]).then(() => this._loaded$.next());
 	}
 

@@ -8,7 +8,6 @@ import {Redirect, RedirectFunction} from '../../decorator/redirect.decorator';
 import {updatePreferences} from '../../functions/update-preferences';
 import {getPathnameWithoutLang} from '../../functions/get-path-name-without-lang';
 
-
 @Controller('/preferences')
 export class PreferencesController {
 
@@ -20,7 +19,7 @@ export class PreferencesController {
 			lang: body.lang
 		});
 
-		let redirectTarget = getPathnameWithoutLang(ref, this.translationService.availableLanguages);
+		let redirectTarget = getPathnameWithoutLang(ref);
 
 		if (redirectTarget === '/') {
 			redirectTarget += body.lang;

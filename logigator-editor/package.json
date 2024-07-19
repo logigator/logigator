@@ -15,8 +15,10 @@
 		"cp-sim-wasm-assets": "node custom-build-scripts/dist/copy-simulation-assets.js",
 		"wasm-js-cache-bust": "node custom-build-scripts/dist/wasm-js-cache-bust.js",
 		"build-custom-build-scripts": "tsc -p custom-build-scripts/tsconfig-custom-build-scripts.json",
-		"lint": "prettier . --check && ng lint && tsc-strict",
-		"lint:fix": "prettier . --write && ng lint --fix",
+		"lint": "ng lint && tsc-strict",
+		"lint:fix": "ng lint --fix",
+		"format": "prettier . --check",
+		"format:fix": "prettier . --write",
 		"test": "ng test"
 	},
 	"private": true,
@@ -40,6 +42,7 @@
 		"rxjs": "^7.8.1",
 		"tslib": "^2.6.2",
 		"uuid": "^9.0.1",
+		"vanilla-cookieconsent": "^3.0.0",
 		"zone.js": "~0.14.2"
 	},
 	"devDependencies": {

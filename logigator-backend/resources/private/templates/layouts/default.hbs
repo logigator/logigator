@@ -3,13 +3,17 @@
 	<head>
 		<meta charset="utf-8" />
 		<title>{{pageTitle}}</title>
-		<base href="/">
 		<meta name="viewport" content="width=device-width, initial-scale=1">
-		<link rel="apple-touch-icon" sizes="180x180" href="assets/icons/apple-touch-icon.png">
-		<link rel="icon" type="image/png" sizes="32x32" href="assets/icons/favicon-32x32.png">
-		<link rel="icon" type="image/png" sizes="16x16" href="assets/icons/favicon-16x16.png">
-		<link rel="manifest" href="site.webmanifest">
-		<link rel="mask-icon" href="assets/icons/safari-pinned-tab.svg" color="#27ae60">
+		<link rel="apple-touch-icon" sizes="180x180" href="/assets/icons/apple-touch-icon.png">
+		<link rel="icon" type="image/png" sizes="32x32" href="/assets/icons/favicon-32x32.png">
+		<link rel="icon" type="image/png" sizes="16x16" href="/assets/icons/favicon-16x16.png">
+		<link rel="manifest" href="/site.webmanifest">
+		<link rel="mask-icon" href="/assets/icons/safari-pinned-tab.svg" color="#27ae60">
+
+		{{#each altPages}}
+			<link rel="alternate" hreflang="{{lang}}" href="{{href}}">
+		{{/each}}
+
 		<meta name="apple-mobile-web-app-title" content="Logigator">
 		<meta name="application-name" content="Logigator">
 		<meta name="msapplication-TileColor" content="#2b5797">
@@ -35,13 +39,15 @@
 			{{styleTag url=additionalCss }}
 		{{/if}}
 
-		<link rel="preconnect" href="https://www.google-analytics.com">
+		<!-- Google tag (gtag.js) -->
+		<script async type="text/plain" data-category="analytics" src="https://www.googletagmanager.com/gtag/js?id=G-2ZL29D036D"></script>
 		<script>
-			window.ga=window.ga||function(){(ga.q=ga.q||[]).push(arguments)};ga.l=+new Date;
-			ga('create', 'UA-151071040-2', 'auto');
-			ga('send', 'pageview');
+			window.dataLayer = window.dataLayer || [];
+			function gtag(){dataLayer.push(arguments);}
+			gtag('js', new Date());
+
+			gtag('config', 'G-2ZL29D036D');
 		</script>
-		<script async src='https://www.google-analytics.com/analytics.js'></script>
 	</head>
 	<body class="{{#if (expr preferences.theme '===' 'dark') }}theme-dark{{else}}theme-light{{/if}}">
 		{{> site-header }}
@@ -50,9 +56,6 @@
 			{{{body}}}
 		</div>
 		{{> footer }}
-		{{#unless acceptedCookies}}
-			{{> cookie-consent }}
-		{{/unless}}
 		{{> info-popups }}
 
 		{{scriptTag url='/js/global-es2015.js' type='module' }}
