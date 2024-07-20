@@ -36,7 +36,7 @@ Configure them appropriately, then rename them omitting the ``.example``.
 ### hosts file
 Add the following entry to your hosts file (Windows: ``C:\Windows\System32\drivers\etc\hosts``, Linux: `/etc/hosts`):
 ````
-127.0.0.1 dev.logigator.com
+127.0.0.1 logigator.test
 ````
 
 ## License
