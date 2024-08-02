@@ -3,6 +3,8 @@ import { TestRoute } from './routes/test.route';
 import { Route } from './route.model';
 import { Location } from '@angular/common';
 import { parse } from 'regexparam';
+import { RouteKeys } from './route-keys.model';
+import { LoggingService } from '../logging/logging.service';
 
 const ROUTES: Type<Route>[] = [TestRoute];
 
@@ -11,14 +13,12 @@ const ROUTES: Type<Route>[] = [TestRoute];
 })
 export class RouterService {
 	private routes: {
-		instance: Route,
+		instance: Route;
 		keys: string[];
 		pattern: RegExp;
 	}[] = [];
 
-	constructor(private location: Location) {
-		console.log('RouterService created');
-
+	constructor(private readonly logging: LoggingService, private readonly location: Location) {
 		for (const route of ROUTES) {
 			const instance = inject(route);
 			this.routes.push({
@@ -26,30 +26,48 @@ export class RouterService {
 				instance
 			});
 		}
-
-		this.processPath(this.location.path());
 	}
 
-	private processPath(path: string) {
+	public processCurrentRoute() {
+		if (!this.processPath(this.location.path())) {
+			this.logging.error(`No route found for path: ${this.location.path()}`, 'RouterService');
+			this.location.replaceState('/');
+		}
+	}
+
+	public navigate(path: string): boolean {
+		if (this.processPath(path)) {
+			this.location.go(path);
+			return true;
+		}
+
+		return false;
+	}
+
+	private processPath(path: string): boolean {
+		if (path === '' || path === '/') {
+			return true;
+		}
+
 		for (const route of this.routes) {
 			const match = route.pattern.exec(path);
 			if (!match) {
 				continue;
 			}
 
-			const params: Record<string, string | null> = {};
+			const params: RouteKeys<typeof path> = {};
 
 			for (let i = 0; i < route.keys.length; i++) {
-				params[route.keys[i]] = match[i + 1] || null;
+				params[route.keys[i]] = match[i + 1] ?? null;
 			}
 
-			console.log('Route: %s, Params: %o', route, params);
-			// @ts-expect-error This should be reworked to not use any
+			// @ts-expect-error Some unfortunate type issues
 			if (route.instance.onActivation(params)) {
-				return;
+				this.logging.debug({ path, params }, 'RouterService');
+				return true;
 			}
 		}
 
-		this.location.go('/');
+		return false;
 	}
 }
