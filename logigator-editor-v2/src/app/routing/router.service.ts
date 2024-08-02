@@ -18,7 +18,10 @@ export class RouterService {
 		pattern: RegExp;
 	}[] = [];
 
-	constructor(private readonly logging: LoggingService, private readonly location: Location) {
+	constructor(
+		private readonly logging: LoggingService,
+		private readonly location: Location
+	) {
 		for (const route of ROUTES) {
 			const instance = inject(route);
 			this.routes.push({
@@ -30,7 +33,10 @@ export class RouterService {
 
 	public processCurrentRoute() {
 		if (!this.processPath(this.location.path())) {
-			this.logging.error(`No route found for path: ${this.location.path()}`, 'RouterService');
+			this.logging.error(
+				`No route found for path: ${this.location.path()}`,
+				'RouterService'
+			);
 			this.location.replaceState('/');
 		}
 	}

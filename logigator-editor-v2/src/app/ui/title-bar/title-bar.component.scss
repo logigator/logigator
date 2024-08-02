@@ -1,0 +1,22 @@
+.title-bar {
+	display: flex;
+	padding: 0.5rem;
+	gap: 0.5rem;
+	background-color: #27ae60;
+
+	.logo {
+		display: flex;
+		justify-content: center;
+		align-items: center;
+		margin: 0;
+	}
+
+	.menubar {
+		flex-grow: 1;
+	}
+}
+
+:host ::ng-deep .p-menubar {
+	background-color: transparent;
+	border: none;
+}
