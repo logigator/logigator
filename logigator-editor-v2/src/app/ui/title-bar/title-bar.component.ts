@@ -68,9 +68,6 @@ export class TitleBarComponent {
 					separator: true
 				},
 				{
-					separator: true
-				},
-				{
 					label: 'Delete'
 				}
 			]

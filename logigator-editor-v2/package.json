@@ -10,7 +10,9 @@
 	"scripts": {
 		"ng": "ng",
 		"start": "ng serve",
-		"build": "ng build",
+		"build": "ng build && npm run build:purgecss && npm run build:sizereport",
+		"build:purgecss": "cd dist/logigator-editor-v2/browser && purgecss --css '*.css' --content '*.{html,js}' --output .",
+		"build:sizereport": "cd dist/logigator-editor-v2/browser && file-size --gzip --brotli --total *.{html,js,css}",
 		"watch": "ng build --watch --configuration development",
 		"format": "prettier . --check",
 		"format:fix": "prettier . --write",
@@ -28,6 +30,7 @@
 		"@angular/platform-browser": "^18.1.3",
 		"@angular/platform-browser-dynamic": "^18.1.3",
 		"@angular/router": "file:./packages/router-stub",
+		"primeflex": "^3.3.1",
 		"primeng": "^17.18.7",
 		"regexparam": "^3.0.0",
 		"rxjs": "~7.8.1",
@@ -58,6 +61,8 @@
 		"karma-jasmine": "~5.1.0",
 		"karma-jasmine-html-reporter": "~2.1.0",
 		"prettier": "^3.3.3",
+		"purgecss": "^6.0.0",
+		"tiny-file-size": "^0.4.1",
 		"typescript": "~5.5.4"
 	},
 	"packageManager": "yarn@4.3.1"
