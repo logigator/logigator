@@ -509,17 +509,10 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@angular/router@npm:^18.1.3":
-  version: 18.1.3
-  resolution: "@angular/router@npm:18.1.3"
-  dependencies:
-    tslib: "npm:^2.3.0"
-  peerDependencies:
-    "@angular/common": 18.1.3
-    "@angular/core": 18.1.3
-    "@angular/platform-browser": 18.1.3
-    rxjs: ^6.5.3 || ^7.4.0
-  checksum: 10c0/60183e9d3e27b02510c5654068cc899416136b57a781c9e155275c60b01dc65ca7d1a925f7c19aefd7cadcab7f7818e6aab23b5fa4bf89bca5eaffa4572df001
+"@angular/router@file:./packages/router-stub::locator=logigator-editor-v2%40workspace%3A.":
+  version: 0.0.0
+  resolution: "@angular/router@file:./packages/router-stub#./packages/router-stub::hash=d043c8&locator=logigator-editor-v2%40workspace%3A."
+  checksum: 10c0/e6ce105fee6eee97590d40e3eb1d624cb792e82110cbd7ec359bbb657944881c9f2d04a15b44317e6e2fa0f31a8620a6e979b653a007d679b0c21494dcd5b440
   languageName: node
   linkType: hard
 
@@ -7416,7 +7409,7 @@ __metadata:
     "@angular/forms": "npm:^18.1.3"
     "@angular/platform-browser": "npm:^18.1.3"
     "@angular/platform-browser-dynamic": "npm:^18.1.3"
-    "@angular/router": "npm:^18.1.3"
+    "@angular/router": "file:./packages/router-stub"
     "@types/jasmine": "npm:~5.1.4"
     "@typescript-eslint/eslint-plugin": "npm:^8.0.0"
     "@typescript-eslint/parser": "npm:^8.0.0"
