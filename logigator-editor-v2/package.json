@@ -10,7 +10,7 @@
 	"scripts": {
 		"ng": "ng",
 		"start": "ng serve",
-		"build": "ng build && npm run build:purgecss && npm run build:sizereport",
+		"build": "ng build && run build:purgecss && run build:sizereport",
 		"build:purgecss": "cd dist/logigator-editor-v2/browser && purgecss --css '*.css' --content '*.{html,js}' --output .",
 		"build:sizereport": "cd dist/logigator-editor-v2/browser && file-size --gzip --brotli --total *.{html,js,css}",
 		"watch": "ng build --watch --configuration development",

@@ -1,5 +1,5 @@
-import { type environment as Env } from './environment';
+import { Environment } from './environment.model';
 
-export const environment: typeof Env = {
+export const environment: Environment = {
 	production: false
 };
