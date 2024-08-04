@@ -7432,6 +7432,7 @@ __metadata:
     prettier: "npm:^3.3.3"
     primeflex: "npm:^3.3.1"
     primeng: "npm:^17.18.7"
+    primeng-sass-theme: "primefaces/primeng-sass-theme#semver:^17.18.3"
     purgecss: "npm:^6.0.0"
     regexparam: "npm:^3.0.0"
     rxjs: "npm:~7.8.1"
@@ -8797,6 +8798,13 @@ __metadata:
   version: 3.3.1
   resolution: "primeflex@npm:3.3.1"
   checksum: 10c0/6ab3e8fca36b2d0e1dfe7bfde2d80570f12ff6d8fbd43fe427e0dba29dfd4fe96b91a7b78c22023f01d142b11741811d9a2810e1e32c23c5da64a1462f66705b
+  languageName: node
+  linkType: hard
+
+"primeng-sass-theme@primefaces/primeng-sass-theme#semver:^17.18.3":
+  version: 17.18.3
+  resolution: "primeng-sass-theme@https://github.com/primefaces/primeng-sass-theme.git#commit=2f7b1705c8783a098381c078345eb5dbe45c4008"
+  checksum: 10c0/c3723bc3b5d6a1cec634e92e1f655d4d16fe66a5977266c2fc39e32c2a1a27f4ef0ac0581c77d535c2811f041cae0a017656e92c9dd4cb064b468bf7343fbae3
   languageName: node
   linkType: hard
 
