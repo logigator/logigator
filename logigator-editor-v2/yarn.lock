@@ -7431,6 +7431,7 @@ __metadata:
     karma-jasmine-html-reporter: "npm:~2.1.0"
     prettier: "npm:^3.3.3"
     primeflex: "npm:^3.3.1"
+    primeicons: "npm:^7.0.0"
     primeng: "npm:^17.18.7"
     primeng-sass-theme: "primefaces/primeng-sass-theme#semver:^17.18.3"
     purgecss: "npm:^6.0.0"
@@ -8798,6 +8799,13 @@ __metadata:
   version: 3.3.1
   resolution: "primeflex@npm:3.3.1"
   checksum: 10c0/6ab3e8fca36b2d0e1dfe7bfde2d80570f12ff6d8fbd43fe427e0dba29dfd4fe96b91a7b78c22023f01d142b11741811d9a2810e1e32c23c5da64a1462f66705b
+  languageName: node
+  linkType: hard
+
+"primeicons@npm:^7.0.0":
+  version: 7.0.0
+  resolution: "primeicons@npm:7.0.0"
+  checksum: 10c0/a7f6344d6db49e785d2040b35f8cae761d15bb8f8ee70ade8981d45438245414e913fe7235921122aade2b0a11a032c98b44dc527be2da11aa791ff145099c06
   languageName: node
   linkType: hard
 
