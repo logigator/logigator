@@ -68,7 +68,7 @@ $toastShadow: 0 3px 14px 0 rgba(0, 0, 0, 0.3);
 
 /// Opacity of a toast message
 /// @group message
-$toastOpacity: .9;
+$toastOpacity: 0.9;
 
 /// Font weight of a toast message title text
 /// @group message
@@ -80,7 +80,7 @@ $toastDetailMargin: $inlineSpacing 0 0 0;
 
 /// Background of an info message
 /// @group message
-$infoMessageBg: #039BE5;
+$infoMessageBg: #039be5;
 
 /// Border of an info message
 /// @group message
@@ -96,7 +96,7 @@ $infoMessageIconColor: #ffffff;
 
 /// Background of a success message
 /// @group message
-$successMessageBg: #43A047;
+$successMessageBg: #43a047;
 
 /// Border of a success message
 /// @group message
@@ -112,7 +112,7 @@ $successMessageIconColor: #ffffff;
 
 /// Background of a warning message
 /// @group message
-$warningMessageBg: #FFB300;
+$warningMessageBg: #ffb300;
 
 /// Border of a warning message
 /// @group message
@@ -128,7 +128,7 @@ $warningMessageIconColor: $textColor;
 
 /// Background of an error message
 /// @group message
-$errorMessageBg: #E53935;
+$errorMessageBg: #e53935;
 
 /// Border of an error message
 /// @group message

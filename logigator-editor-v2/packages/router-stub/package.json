@@ -1,7 +1,7 @@
 {
-  "name": "@angular/router",
-  "description": "Angular - routing STUB",
-  "module": "index.mjs",
-  "typings": "./index.d.ts",
-  "type": "module"
+	"name": "@angular/router",
+	"description": "Angular - routing STUB",
+	"module": "index.mjs",
+	"typings": "./index.d.ts",
+	"type": "module"
 }

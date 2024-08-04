@@ -24,7 +24,7 @@ $panelHeaderPadding: 1rem;
 
 /// Font weight of a toggleable panel header
 /// @group panel
-$panelToggleableHeaderPadding: .5rem 1rem;
+$panelToggleableHeaderPadding: 0.5rem 1rem;
 
 /// Background of a panel header in hover state e.g. toggleable state
 /// @group panel
@@ -292,36 +292,39 @@ $cardFooterPadding: 1rem 0 0 0;
 
 /// Box shadow of a card
 /// @group panel
-$cardShadow: 0px 2px 1px -1px rgba(0, 0, 0, 0.2), 0px 1px 1px 0px rgba(0, 0, 0, 0.14), 0px 1px 3px 0px rgba(0,0,0,.12);
+$cardShadow:
+	0px 2px 1px -1px rgba(0, 0, 0, 0.2),
+	0px 1px 1px 0px rgba(0, 0, 0, 0.14),
+	0px 1px 3px 0px rgba(0, 0, 0, 0.12);
 
 /// Margin of divider in horizontal layout
 /// @group panel
-$dividerHorizontalMargin:1rem 0;
+$dividerHorizontalMargin: 1rem 0;
 
 /// Padding of divider in horizontal layout
 /// @group panel
-$dividerHorizontalPadding:0 1rem;
+$dividerHorizontalPadding: 0 1rem;
 
 /// Margin of divider in vertical layout
 /// @group panel
-$dividerVerticalMargin:0 1rem;
+$dividerVerticalMargin: 0 1rem;
 
 /// Padding of divider in vertical layout
 /// @group panel
-$dividerVerticalPadding:1rem 0;
+$dividerVerticalPadding: 1rem 0;
 
 /// Border width of the divider
 /// @group panel
-$dividerSize:1px;
+$dividerSize: 1px;
 
 /// Color of the divider border
 /// @group panel
-$dividerColor:#dee2e6;
+$dividerColor: #dee2e6;
 
 /// Background of the splitter gutter
 /// @group panel
-$splitterGutterBg:#f8f9fa;
+$splitterGutterBg: #f8f9fa;
 
 /// Background of the splitter gutter handle
 /// @group panel
-$splitterGutterHandleBg:#dee2e6;
+$splitterGutterHandleBg: #dee2e6;

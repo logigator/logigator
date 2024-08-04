@@ -1,7 +1,4 @@
-import {
-	EnsureLeadingChar,
-	EnsureTrailingChar
-} from '../utility-types/string';
+import { EnsureLeadingChar, EnsureTrailingChar } from '../utility-types/string';
 
 type _RouteKeys<S extends string> = S extends `${string}/:${infer T}/${infer U}`
 	? T extends `${infer V}?${string}`

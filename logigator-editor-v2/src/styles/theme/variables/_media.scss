@@ -20,18 +20,18 @@ $carouselIndicatorWidth: 2rem;
 
 /// Height of a carousel indicator
 /// @group media
-$carouselIndicatorHeight: .5rem;
+$carouselIndicatorHeight: 0.5rem;
 
 /// Background of a galleria modal
 /// @group media
 
 /// Background of a galleria mask
 /// @group media
-$galleriaMaskBg: rgba(0,0,0,0.9);
+$galleriaMaskBg: rgba(0, 0, 0, 0.9);
 
 /// Margin of a galleria close icon
 /// @group media
-$galleriaCloseIconMargin: .5rem;
+$galleriaCloseIconMargin: 0.5rem;
 
 /// Font size of a galleria close icon
 /// @group media
@@ -47,7 +47,7 @@ $galleriaCloseIconColor: #ebedef;
 
 /// Background of a galleria close icon in hover state
 /// @group media
-$galleriaCloseIconHoverBg: rgba(255,255,255,0.1);
+$galleriaCloseIconHoverBg: rgba(255, 255, 255, 0.1);
 
 /// Color of a galleria close icon in hover state
 /// @group media
@@ -67,7 +67,7 @@ $galleriaCloseIconBorderRadius: 50%;
 
 /// Background of a galleria navigator item
 /// @group media
-$galleriaItemNavigatorBg: rgba(0,0,0,.2);
+$galleriaItemNavigatorBg: rgba(0, 0, 0, 0.2);
 
 /// Color of a galleria navigator item
 /// @group media
@@ -75,7 +75,7 @@ $galleriaItemNavigatorColor: #aeb6bf;
 
 /// Margin of a galleria navigator item
 /// @group media
-$galleriaItemNavigatorMargin: .5rem 0;
+$galleriaItemNavigatorMargin: 0.5rem 0;
 
 /// Font size of a galleria navigator item
 /// @group media
@@ -83,7 +83,7 @@ $galleriaItemNavigatorFontSize: 2rem;
 
 /// Background of a galleria navigator item in hover state
 /// @group media
-$galleriaItemNavigatorHoverBg: rgba(0,0,0,.3);
+$galleriaItemNavigatorHoverBg: rgba(0, 0, 0, 0.3);
 
 /// Color of a galleria navigator item in hover state
 /// @group media
@@ -103,7 +103,7 @@ $galleriaItemNavigatorBorderRadius: $borderRadius;
 
 /// Background of a galleria caption
 /// @group media
-$galleriaCaptionBg: rgba(0,0,0,.5);
+$galleriaCaptionBg: rgba(0, 0, 0, 0.5);
 
 /// Color of a galleria caption
 /// @group media
@@ -139,23 +139,23 @@ $galleriaIndicatorHeight: 1rem;
 
 /// Background of a galleria indicator container when placed inside the viewport
 /// @group media
-$galleriaIndicatorsBgOnItem: rgba(0,0,0,.5);
+$galleriaIndicatorsBgOnItem: rgba(0, 0, 0, 0.5);
 
 /// Background of a galleria indicator when placed inside the viewport
 /// @group media
-$galleriaIndicatorBgOnItem: rgba(255,255,255,.4);
+$galleriaIndicatorBgOnItem: rgba(255, 255, 255, 0.4);
 
 /// Background of a galleria indicator in hover state when placed inside the viewport
 /// @group media
-$galleriaIndicatorHoverBgOnItem: rgba(255,255,255,.6);
+$galleriaIndicatorHoverBgOnItem: rgba(255, 255, 255, 0.6);
 
 /// Background of a galleria thumbnail container
 /// @group media
-$galleriaThumbnailContainerBg: rgba(0,0,0,.9);
+$galleriaThumbnailContainerBg: rgba(0, 0, 0, 0.9);
 
 /// Padding of a galleria thumbnail container
 /// @group media
-$galleriaThumbnailContainerPadding: 1rem .25rem;
+$galleriaThumbnailContainerPadding: 1rem 0.25rem;
 
 /// Background of a galleria thumbnail navigator
 /// @group media
@@ -167,7 +167,7 @@ $galleriaThumbnailNavigatorColor: #aeb6bf;
 
 /// Background of a galleria thumbnail navigator in hover state
 /// @group media
-$galleriaThumbnailNavigatorHoverBg: rgba(255,255,255,0.1);
+$galleriaThumbnailNavigatorHoverBg: rgba(255, 255, 255, 0.1);
 
 /// Color of a galleria thumbnail navigator in hover state
 /// @group media
@@ -187,48 +187,48 @@ $galleriaThumbnailNavigatorHeight: 2rem;
 
 /// Background of an image preview modal
 /// @group media
-$imageMaskBg:rgba(0,0,0,0.9) !default;
+$imageMaskBg: rgba(0, 0, 0, 0.9) !default;
 
 /// Padding of image preview toolbar
 /// @group media
-$imagePreviewToolbarPadding:1rem !default;
+$imagePreviewToolbarPadding: 1rem !default;
 
 /// Text color of the image preview indicator
 /// @group media
-$imagePreviewIndicatorColor:#f8f9fa !default;
+$imagePreviewIndicatorColor: #f8f9fa !default;
 
 /// Background of the image preview indicator
 /// @group media
-$imagePreviewIndicatorBg:rgba(0,0,0,0.5) !default;
+$imagePreviewIndicatorBg: rgba(0, 0, 0, 0.5) !default;
 
 /// Background of an image action item
 /// @group media
-$imagePreviewActionIconBg:transparent !default;
+$imagePreviewActionIconBg: transparent !default;
 
 /// Text color of an image action item
 /// @group media
-$imagePreviewActionIconColor:#f8f9fa !default;
+$imagePreviewActionIconColor: #f8f9fa !default;
 
 /// Background of an image action item in hover state
 /// @group media
-$imagePreviewActionIconHoverBg:rgba(255,255,255,0.1) !default;
+$imagePreviewActionIconHoverBg: rgba(255, 255, 255, 0.1) !default;
 
 /// Tect color of an image action item in hover state
 /// @group media
-$imagePreviewActionIconHoverColor:#f8f9fa !default;
+$imagePreviewActionIconHoverColor: #f8f9fa !default;
 
 /// Width of an image action item
 /// @group media
-$imagePreviewActionIconWidth:3rem !default;
+$imagePreviewActionIconWidth: 3rem !default;
 
 /// Height of an image action item
 /// @group media
-$imagePreviewActionIconHeight:3rem !default;
+$imagePreviewActionIconHeight: 3rem !default;
 
 /// Font size of an image action item icon
 /// @group media
-$imagePreviewActionIconFontSize:1.5rem !default;
+$imagePreviewActionIconFontSize: 1.5rem !default;
 
 /// Border radius of an image action item
 /// @group media
-$imagePreviewActionIconBorderRadius:50% !default;
+$imagePreviewActionIconBorderRadius: 50% !default;
