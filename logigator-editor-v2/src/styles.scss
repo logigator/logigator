@@ -3,9 +3,10 @@
 
 @import 'primeflex/primeflex.css';
 
-@import 'primeicons/primeicons.css';
+@import '@phosphor-icons/web/regular';
 
 body {
 	margin: 0;
 	padding: 0;
+	background-color: var(--surface-500);
 }

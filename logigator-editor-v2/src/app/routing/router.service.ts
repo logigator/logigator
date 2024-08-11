@@ -12,7 +12,7 @@ const ROUTES: Type<Route>[] = [TestRoute];
 	providedIn: 'root'
 })
 export class RouterService {
-	private routes: {
+	private _routes: {
 		instance: Route;
 		keys: string[];
 		pattern: RegExp;
@@ -24,7 +24,7 @@ export class RouterService {
 	) {
 		for (const route of ROUTES) {
 			const instance = inject(route);
-			this.routes.push({
+			this._routes.push({
 				...parse(instance.route),
 				instance
 			});
@@ -55,7 +55,7 @@ export class RouterService {
 			return true;
 		}
 
-		for (const route of this.routes) {
+		for (const route of this._routes) {
 			const match = route.pattern.exec(path);
 			if (!match) {
 				continue;
