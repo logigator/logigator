@@ -1,4 +1,4 @@
-<div class="flex flex-column gap-2 p-2">
+<div *transloco="let t" class="flex flex-column gap-2 p-2">
 	<p-iconField iconPosition="right">
 		<p-inputIcon styleClass="ph ph-magnifying-glass"></p-inputIcon>
 		<input
@@ -9,11 +9,11 @@
 		/>
 	</p-iconField>
 	<app-component-list
-		headline="Basic"
+		[headline]="t('components.category.basic')"
 		[components]="basicComponents"
 	></app-component-list>
 	<app-component-list
-		headline="Advanced"
+		[headline]="t('components.category.advanced')"
 		[components]="advancedComponents"
 	></app-component-list>
 </div>

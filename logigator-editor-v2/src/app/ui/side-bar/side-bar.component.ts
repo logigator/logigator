@@ -5,6 +5,7 @@ import { IconFieldModule } from 'primeng/iconfield';
 import { InputIconModule } from 'primeng/inputicon';
 import { ComponentProviderService } from '../../components/component-provider.service';
 import { ComponentListComponent } from './component-list/component-list.component';
+import { TranslocoDirective } from '@jsverse/transloco';
 
 @Component({
 	selector: 'app-side-bar',
@@ -14,7 +15,8 @@ import { ComponentListComponent } from './component-list/component-list.componen
 		FormsModule,
 		IconFieldModule,
 		InputIconModule,
-		ComponentListComponent
+		ComponentListComponent,
+		TranslocoDirective
 	],
 	templateUrl: './side-bar.component.html',
 	styleUrl: './side-bar.component.scss',
