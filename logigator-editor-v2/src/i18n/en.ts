@@ -4,6 +4,9 @@ const en = {
 			basic: 'Basic',
 			advanced: 'Advanced'
 		}
+	},
+	sideBar: {
+		search: 'Search..'
 	}
 };
 
