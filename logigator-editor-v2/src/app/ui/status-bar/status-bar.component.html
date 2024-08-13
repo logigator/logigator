@@ -1,7 +1,9 @@
-<div class="flex border-top-1 border-white-alpha-20">
+<div *transloco="let t" class="flex border-top-1 border-white-alpha-20">
 	<div class="flex-grow-1 px-2 border-right-1 border-white-alpha-20">
 		{{ $workMode() }}
 	</div>
-	<div class="px-2 border-right-1 border-white-alpha-20">Saved</div>
-	<div class="px-2">Sel: 0</div>
+	<div class="px-2 border-right-1 border-white-alpha-20">
+		{{ t('statusBar.saved') }}
+	</div>
+	<div class="px-2">{{ t('statusBar.selected') }}: 0</div>
 </div>

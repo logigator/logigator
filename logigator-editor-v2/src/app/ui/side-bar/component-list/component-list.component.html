@@ -1,4 +1,4 @@
-<div class="border-1 border-white-alpha-20">
+<div *transloco="let t" class="border-1 border-white-alpha-20">
 	<span class="block bg-white-alpha-20 p-2 font-bold text-lg">{{
 		headline()
 	}}</span>
@@ -16,7 +16,7 @@
 				>
 					{{ comp.symbol }}
 				</div>
-				<span class="block text-center">{{ comp.name }}</span>
+				<span class="block text-center">{{ t(comp.name) }}</span>
 			</div>
 		}
 	</div>

@@ -1,4 +1,4 @@
-import type en from './en';
+import type { TranslationSchema } from '../app/translation/translation-schema.model';
 
-const de: Partial<typeof en> = {};
+const de: Partial<TranslationSchema> = {};
 export default de;
