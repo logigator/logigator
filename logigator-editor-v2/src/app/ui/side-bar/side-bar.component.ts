@@ -1,4 +1,4 @@
-import { Component } from '@angular/core';
+import { ChangeDetectionStrategy, Component } from '@angular/core';
 import { InputTextModule } from 'primeng/inputtext';
 import { FormsModule } from '@angular/forms';
 import { IconFieldModule } from 'primeng/iconfield';
@@ -17,7 +17,8 @@ import { ComponentListComponent } from './component-list/component-list.componen
 		ComponentListComponent
 	],
 	templateUrl: './side-bar.component.html',
-	styleUrl: './side-bar.component.scss'
+	styleUrl: './side-bar.component.scss',
+	changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class SideBarComponent {
 	public searchText: string = '';

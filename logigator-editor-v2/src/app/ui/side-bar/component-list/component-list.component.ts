@@ -1,20 +1,20 @@
-import { Component, Input } from '@angular/core';
+import { ChangeDetectionStrategy, Component, input } from '@angular/core';
 import { ComponentDef } from '../../../components/component-def.model';
-import { NgForOf } from '@angular/common';
 import { ButtonModule } from 'primeng/button';
 import { LoggingService } from '../../../logging/logging.service';
 
 @Component({
 	selector: 'app-component-list',
 	standalone: true,
-	imports: [NgForOf, ButtonModule],
+	imports: [ButtonModule],
 	templateUrl: './component-list.component.html',
-	styleUrl: './component-list.component.scss'
+	styleUrl: './component-list.component.scss',
+	changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class ComponentListComponent {
-	@Input() public headline: string = '';
-	@Input() public components: ComponentDef[] = [];
-	@Input() public searchText: string = '';
+	public headline = input<string>('');
+	public components = input<ComponentDef[]>([]);
+	public searchText = input<string>('');
 
 	constructor(private readonly loggingService: LoggingService) {}
 

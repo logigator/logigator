@@ -1,4 +1,4 @@
-import { Component } from '@angular/core';
+import { ChangeDetectionStrategy, Component } from '@angular/core';
 import { RouterService } from './routing/router.service';
 import { TitleBarComponent } from './ui/title-bar/title-bar.component';
 import { ToolBarComponent } from './ui/tool-bar/tool-bar.component';
@@ -9,7 +9,8 @@ import { SideBarComponent } from './ui/side-bar/side-bar.component';
 	standalone: true,
 	imports: [TitleBarComponent, ToolBarComponent, SideBarComponent],
 	templateUrl: './app.component.html',
-	styleUrl: './app.component.scss'
+	styleUrl: './app.component.scss',
+	changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class AppComponent {
 	constructor(private readonly routerService: RouterService) {

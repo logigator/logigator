@@ -1,4 +1,4 @@
-import { Component } from '@angular/core';
+import { ChangeDetectionStrategy, Component } from '@angular/core';
 import { MenubarModule } from 'primeng/menubar';
 import { MenuItem } from 'primeng/api';
 import { LoggingService } from '../../logging/logging.service';
@@ -9,7 +9,8 @@ import { NgOptimizedImage } from '@angular/common';
 	standalone: true,
 	imports: [MenubarModule, NgOptimizedImage],
 	templateUrl: './title-bar.component.html',
-	styleUrl: './title-bar.component.scss'
+	styleUrl: './title-bar.component.scss',
+	changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class TitleBarComponent {
 	public items: MenuItem[] = [

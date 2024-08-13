@@ -1,4 +1,4 @@
-import { Component } from '@angular/core';
+import { ChangeDetectionStrategy, Component } from '@angular/core';
 import { ButtonModule } from 'primeng/button';
 import { DividerModule } from 'primeng/divider';
 import { TooltipModule } from 'primeng/tooltip';
@@ -8,6 +8,7 @@ import { TooltipModule } from 'primeng/tooltip';
 	standalone: true,
 	imports: [ButtonModule, DividerModule, TooltipModule],
 	templateUrl: './tool-bar.component.html',
-	styleUrl: './tool-bar.component.scss'
+	styleUrl: './tool-bar.component.scss',
+	changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class ToolBarComponent {}
