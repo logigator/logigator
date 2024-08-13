@@ -12,7 +12,6 @@ import { WorkModeService } from '../../work-mode/work-mode.service';
 	changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class StatusBarComponent {
-
 	constructor(private readonly workModeService: WorkModeService) {}
 
 	public get $workMode() {

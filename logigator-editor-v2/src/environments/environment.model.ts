@@ -1,1 +1,3 @@
-export type Environment = {};
+export type Environment = {
+	placeholder?: never;
+};

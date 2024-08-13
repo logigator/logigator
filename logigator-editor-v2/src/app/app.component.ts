@@ -25,7 +25,10 @@ export class AppComponent {
 		private readonly loggingService: LoggingService
 	) {
 		if (isDevMode()) {
-			this.loggingService.warn('Application running in development mode', 'App');
+			this.loggingService.warn(
+				'Application running in development mode',
+				'App'
+			);
 		}
 
 		this.routerService.processCurrentRoute();
