@@ -1,3 +1,1 @@
-export type Environment = {
-	production: boolean;
-};
+export type Environment = {};

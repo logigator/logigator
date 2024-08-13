@@ -133,6 +133,7 @@ import { WorkAreaComponent } from './components/work-area/work-area.component';
 			useClass: LocalStorageService
 		}
 	],
+	exports: [StatusBarComponent],
 	bootstrap: [AppComponent]
 })
 export class AppModule {
