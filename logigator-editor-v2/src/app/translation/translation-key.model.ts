@@ -20,6 +20,6 @@ export type PartialTranslationKey<
 	Prefix extends string = never
 > = {
 	[P in string & keyof T]: T[P] extends object
-		? Prefix | TranslationKey<T[P], WithPrefix<Prefix, P>>
+		? Prefix | PartialTranslationKey<T[P], WithPrefix<Prefix, P>>
 		: Prefix | WithPrefix<Prefix, P>;
 }[string & keyof T];
