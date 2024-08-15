@@ -1,3 +1,5 @@
+import type { WorkMode } from '../app/work-mode/work-mode.enum';
+
 const en = {
 	components: {
 		category: {
@@ -21,6 +23,14 @@ const en = {
 		search: 'Search..'
 	},
 	statusBar: {
+		modes: {
+			drawWire: 'Placing Wires',
+			connWire: 'Connecting Wires',
+			sel: 'Selecting Elements',
+			selExact: 'Selecting Elements (Cut Wires at Selection)',
+			erase: 'Erasing Elements',
+			text: 'Adding Text',
+		} as Record<WorkMode, string>,
 		saved: 'Saved',
 		unsaved: 'Unsaved changes',
 		selected: 'Selected'
@@ -96,7 +106,7 @@ const en = {
 		placeWires: 'Place wires',
 		connWires: 'Connect wires',
 		select: 'Select',
-		selCut: 'Select and cut',
+		selExact: 'Select exact',
 		eraser: 'Eraser',
 		text: 'Text'
 	}
