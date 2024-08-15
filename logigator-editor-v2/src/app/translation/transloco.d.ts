@@ -1,5 +1,5 @@
 import type { Observable } from 'rxjs';
-import type { HashMap, TranslocoScope } from '@jsverse/transloco/lib/types';
+import type { HashMap, TranslocoEvents, TranslocoScope } from '@jsverse/transloco/lib/types';
 import type {
 	PartialTranslationKey,
 	TranslationKey
@@ -20,7 +20,9 @@ declare module '@jsverse/transloco' {
 		lang?: string
 	): TranslationResult<T>;
 
-	interface TranslocoService {
+	class TranslocoService {
+		events$: Observable<TranslocoEvents>;
+
 		translate<T extends TranslationKey>(
 			key: T,
 			params?: HashMap,
@@ -32,7 +34,7 @@ declare module '@jsverse/transloco' {
 			params?: HashMap,
 			lang?: string | TranslocoScope | TranslocoScope[],
 			_isObject?: boolean
-		): TranslationResult<T>;
+		): Observable<TranslationResult<T>>;
 
 		translateObject<T extends PartialTranslationKey>(
 			key: T,
@@ -41,8 +43,15 @@ declare module '@jsverse/transloco' {
 		): TranslationResult<T>;
 
 		getTranslation(): Map<string, TranslationSchema>;
+
 		getTranslation(langOrScope: string): TranslationSchema;
 
 		selectTranslation(lang?: string): Observable<TranslationSchema>;
+
+		selectTranslateObject<T extends PartialTranslationKey>(
+			key: T,
+			params?: HashMap,
+			lang?: string
+		): Observable<TranslationResult<T>>;
 	}
 }

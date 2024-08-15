@@ -24,6 +24,81 @@ const en = {
 		saved: 'Saved',
 		unsaved: 'Unsaved changes',
 		selected: 'Selected'
+	},
+	titleBar: {
+		menuBar: {
+			file: {
+				label: 'File',
+				items: {
+					newProject: {
+						label: 'New Project'
+					},
+					newComponent: {
+						label: 'New Component'
+					},
+					open: {
+						label: 'Open'
+					},
+					save: {
+						label: 'Save'
+					},
+					exportFile: {
+						label: 'Export to file'
+					},
+					generateImage: {
+						label: 'Generate image'
+					}
+				}
+			},
+			edit: {
+				label: 'Edit',
+				items: {
+					undo: {
+						label: 'Undo'
+					},
+					redo: {
+						label: 'Redo'
+					},
+					cut: {
+						label: 'Cut'
+					},
+					copy: {
+						label: 'Copy'
+					},
+					paste: {
+						label: 'Paste'
+					},
+					delete: {
+						label: 'Delete'
+					}
+				}
+			},
+			view: {
+				label: 'View'
+			},
+			help: {
+				label: 'Help'
+			}
+		}
+	},
+	toolBar: {
+		save: 'Save',
+		open: 'Open',
+		newComp: 'New Component',
+		copy: 'Copy',
+		cut: 'Cut',
+		paste: 'Paste',
+		delete: 'Delete',
+		undo: 'Undo',
+		redo: 'Redo',
+		zoomOut: 'Zoom out',
+		zoomIn: 'Zoom in',
+		placeWires: 'Place wires',
+		connWires: 'Connect wires',
+		select: 'Select',
+		selCut: 'Select and cut',
+		eraser: 'Eraser',
+		text: 'Text'
 	}
 };
 

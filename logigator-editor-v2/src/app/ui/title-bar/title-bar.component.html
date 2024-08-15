@@ -1,11 +1,11 @@
-<div class="flex p-2 gap-2 bg-primary">
-	<a class="flex align-items-center align-content-center m-0" href="/">
-		<img ngSrc="logo.svg" alt="Logo" height="33" width="150" />
+<div class="flex p-2 align-items-center gap-2 bg-primary h-3rem">
+	<a class="relative w-10rem h-full" href="/">
+		<img [ngSrc]="'logo.svg' | hashed" alt="Logo" fill />
 	</a>
 	<p-menubar
 		class="flex-grow-1"
-		styleClass="bg-transparent border-none"
-		[model]="items"
+		styleClass="bg-transparent border-none p-0"
+		[model]="items()"
 		[autoDisplay]="false"
 	></p-menubar>
 </div>

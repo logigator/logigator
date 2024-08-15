@@ -9,9 +9,13 @@ import { Pipe, PipeTransform } from '@angular/core';
 	name: 'hashed'
 })
 export class HashedPipe implements PipeTransform {
+	// TODO: Implement hashing at build
+	private hash: string = Math.random().toString(36).substring(7);
+
 	constructor() {}
 
-	public transform(filePath: string): string {
-		return filePath;
+	public transform(uri: string): string {
+		const separator = uri.indexOf('?') === -1 ? '?' : '&';
+		return `${uri}${separator}v=${this.hash}`;
 	}
 }

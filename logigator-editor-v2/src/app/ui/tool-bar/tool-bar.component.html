@@ -1,18 +1,21 @@
-<div class="flex flex-wrap p-2 gap-1">
+<div *transloco="let t" class="flex flex-wrap p-2 gap-1">
 	<p-button
-		pTooltip="Save"
+		[pTooltip]="t('toolBar.save')"
+		[ariaLabel]="t('toolBar.save')"
 		tooltipPosition="bottom"
 		icon="ph ph-floppy-disk"
 		severity="secondary"
 	></p-button>
 	<p-button
-		pTooltip="Open"
+		[pTooltip]="t('toolBar.open')"
+		[ariaLabel]="t('toolBar.open')"
 		tooltipPosition="bottom"
 		icon="ph ph-folder-open"
 		severity="secondary"
 	></p-button>
 	<p-button
-		pTooltip="New Component"
+		[pTooltip]="t('toolBar.newComp')"
+		[ariaLabel]="t('toolBar.newComp')"
 		tooltipPosition="bottom"
 		icon="ph ph-cpu"
 		severity="secondary"
@@ -20,25 +23,29 @@
 	<p-divider class="m-2" styleClass="p-0 m-0" layout="vertical"></p-divider>
 
 	<p-button
-		pTooltip="Copy"
+		[pTooltip]="t('toolBar.copy')"
+		[ariaLabel]="t('toolBar.copy')"
 		tooltipPosition="bottom"
 		icon="ph ph-copy"
 		severity="secondary"
 	></p-button>
 	<p-button
-		pTooltip="Cut"
+		[pTooltip]="t('toolBar.cut')"
+		[ariaLabel]="t('toolBar.cut')"
 		tooltipPosition="bottom"
 		icon="ph ph-scissors"
 		severity="secondary"
 	></p-button>
 	<p-button
-		pTooltip="Paste"
+		[pTooltip]="t('toolBar.paste')"
+		[ariaLabel]="t('toolBar.paste')"
 		tooltipPosition="bottom"
 		icon="ph ph-clipboard"
 		severity="secondary"
 	></p-button>
 	<p-button
-		pTooltip="Delete"
+		[pTooltip]="t('toolBar.delete')"
+		[ariaLabel]="t('toolBar.delete')"
 		tooltipPosition="bottom"
 		icon="ph ph-trash"
 		severity="secondary"
@@ -46,13 +53,15 @@
 	<p-divider class="m-2" styleClass="p-0 m-0" layout="vertical"></p-divider>
 
 	<p-button
-		pTooltip="Undo"
+		[pTooltip]="t('toolBar.undo')"
+		[ariaLabel]="t('toolBar.undo')"
 		tooltipPosition="bottom"
 		icon="ph ph-arrow-u-up-left"
 		severity="secondary"
 	></p-button>
 	<p-button
-		pTooltip="Redo"
+		[pTooltip]="t('toolBar.redo')"
+		[ariaLabel]="t('toolBar.redo')"
 		tooltipPosition="bottom"
 		icon="ph ph-arrow-u-up-right"
 		severity="secondary"
@@ -60,13 +69,15 @@
 	<p-divider class="m-2" styleClass="p-0 m-0" layout="vertical"></p-divider>
 
 	<p-button
-		pTooltip="Zoom Out"
+		[pTooltip]="t('toolBar.zoomOut')"
+		[ariaLabel]="t('toolBar.zoomOut')"
 		tooltipPosition="bottom"
 		icon="ph ph-magnifying-glass-minus"
 		severity="secondary"
 	></p-button>
 	<p-button
-		pTooltip="Zoom In"
+		[pTooltip]="t('toolBar.zoomIn')"
+		[ariaLabel]="t('toolBar.zoomIn')"
 		tooltipPosition="bottom"
 		icon="ph ph-magnifying-glass-plus"
 		severity="secondary"
@@ -74,37 +85,43 @@
 	<p-divider class="m-2" styleClass="p-0 m-0" layout="vertical"></p-divider>
 
 	<p-button
-		pTooltip="Place Wires"
+		[pTooltip]="t('toolBar.placeWires')"
+		[ariaLabel]="t('toolBar.placeWires')"
 		tooltipPosition="bottom"
 		icon="ph ph-line-segment"
 		severity="secondary"
 	></p-button>
 	<p-button
-		pTooltip="Connect Wires"
+		[pTooltip]="t('toolBar.connWires')"
+		[ariaLabel]="t('toolBar.connWires')"
 		tooltipPosition="bottom"
 		icon="ph ph-prohibit"
 		severity="secondary"
 	></p-button>
 	<p-button
-		pTooltip="Select"
+		[pTooltip]="t('toolBar.select')"
+		[ariaLabel]="t('toolBar.select')"
 		tooltipPosition="bottom"
 		icon="ph ph-selection"
 		severity="secondary"
 	></p-button>
 	<p-button
-		pTooltip="Select Cut"
+		[pTooltip]="t('toolBar.selCut')"
+		[ariaLabel]="t('toolBar.selCut')"
 		tooltipPosition="bottom"
 		icon="ph ph-selection-slash"
 		severity="secondary"
 	></p-button>
 	<p-button
-		pTooltip="Eraser"
+		[pTooltip]="t('toolBar.eraser')"
+		[ariaLabel]="t('toolBar.eraser')"
 		tooltipPosition="bottom"
 		icon="ph ph-eraser"
 		severity="secondary"
 	></p-button>
 	<p-button
-		pTooltip="Text"
+		[pTooltip]="t('toolBar.text')"
+		[ariaLabel]="t('toolBar.text')"
 		tooltipPosition="bottom"
 		icon="ph ph-text-t"
 		severity="secondary"

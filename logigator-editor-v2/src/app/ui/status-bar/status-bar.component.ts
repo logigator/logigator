@@ -15,7 +15,7 @@ import { TranslocoDirective } from '@jsverse/transloco';
 export class StatusBarComponent {
 	constructor(private readonly workModeService: WorkModeService) {}
 
-	public get $workMode() {
-		return this.workModeService.mode$;
+	public get workMode() {
+		return this.workModeService.mode;
 	}
 }
