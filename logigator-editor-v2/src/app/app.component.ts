@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, Injector, isDevMode } from '@angular/core';
+import { ChangeDetectionStrategy, Component, Injector } from '@angular/core';
 import { RouterService } from './routing/router.service';
 import { TitleBarComponent } from './ui/title-bar/title-bar.component';
 import { ToolBarComponent } from './ui/tool-bar/tool-bar.component';
@@ -28,15 +28,7 @@ export class AppComponent {
 		private readonly routerService: RouterService,
 		private readonly loggingService: LoggingService
 	) {
-		if (isDevMode()) {
-			this.loggingService.warn(
-				'Application running in development mode',
-				'App'
-			);
-		}
-
 		setStaticDIInjector(this.injector);
-
 		this.routerService.processCurrentRoute();
 	}
 }

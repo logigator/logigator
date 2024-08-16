@@ -1,4 +1,10 @@
-import { ChangeDetectionStrategy, Component, ElementRef, OnInit, ViewChild } from '@angular/core';
+import {
+	ChangeDetectionStrategy,
+	Component,
+	ElementRef,
+	OnInit,
+	ViewChild
+} from '@angular/core';
 import { Application } from 'pixi.js';
 import { ThemingService } from '../../theming/theming.service';
 import { Project } from '../../rendering/project';
@@ -16,8 +22,10 @@ export class BoardComponent implements OnInit {
 
 	private readonly app: Application = new Application();
 
-	constructor(private readonly hostEl: ElementRef, private readonly themingService: ThemingService) {
-	}
+	constructor(
+		private readonly hostEl: ElementRef,
+		private readonly themingService: ThemingService
+	) {}
 
 	async ngOnInit(): Promise<void> {
 		await this.app.init({

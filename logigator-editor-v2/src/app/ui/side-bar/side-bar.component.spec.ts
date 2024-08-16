@@ -10,7 +10,7 @@ describe('SideBarComponent', () => {
 	beforeEach(async () => {
 		await TestBed.configureTestingModule({
 			imports: [SideBarComponent],
-			providers: appConfig.providers,
+			providers: appConfig.providers
 		}).compileComponents();
 
 		fixture = TestBed.createComponent(SideBarComponent);

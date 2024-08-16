@@ -10,7 +10,7 @@ describe('StatusBarComponent', () => {
 	beforeEach(async () => {
 		await TestBed.configureTestingModule({
 			imports: [StatusBarComponent],
-			providers: appConfig.providers,
+			providers: appConfig.providers
 		}).compileComponents();
 
 		fixture = TestBed.createComponent(StatusBarComponent);

@@ -201,7 +201,7 @@ export abstract class Component extends Container {
 			hitbox.fill({
 				color: 0xff0000,
 				alpha: 0.1
-			})
+			});
 			this.addChild(hitbox);
 		}
 	}

@@ -15,7 +15,6 @@ import { WorkMode } from '../../work-mode/work-mode.enum';
 	changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class ToolBarComponent {
-
 	protected drawWireStyles = computed(() =>
 		this.workModeService.mode() === WorkMode.WIRE_DRAWING
 			? 'bg-bluegray-300'
@@ -30,7 +29,9 @@ export class ToolBarComponent {
 		this.workModeService.mode() === WorkMode.SELECT ? 'bg-bluegray-300' : ''
 	);
 	protected selectExactStyles = computed(() =>
-		this.workModeService.mode() === WorkMode.SELECT_EXACT ? 'bg-bluegray-300' : ''
+		this.workModeService.mode() === WorkMode.SELECT_EXACT
+			? 'bg-bluegray-300'
+			: ''
 	);
 	protected eraseStyles = computed(() =>
 		this.workModeService.mode() === WorkMode.ERASE ? 'bg-bluegray-300' : ''

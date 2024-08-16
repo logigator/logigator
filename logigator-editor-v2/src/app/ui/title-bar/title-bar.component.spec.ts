@@ -10,7 +10,7 @@ describe('TitleBarComponent', () => {
 	beforeEach(async () => {
 		await TestBed.configureTestingModule({
 			imports: [TitleBarComponent],
-			providers: appConfig.providers,
+			providers: appConfig.providers
 		}).compileComponents();
 
 		fixture = TestBed.createComponent(TitleBarComponent);

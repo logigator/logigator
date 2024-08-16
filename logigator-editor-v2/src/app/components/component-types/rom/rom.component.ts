@@ -5,7 +5,6 @@ import { ComponentRotation } from '../../component-rotation.enum';
 import { Graphics } from 'pixi.js';
 import { ComponentGraphics } from '../../../rendering/graphics/component.graphics';
 
-
 export class RomComponent extends Component {
 	public readonly config = romComponentConfig;
 

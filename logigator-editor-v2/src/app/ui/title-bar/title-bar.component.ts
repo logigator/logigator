@@ -35,7 +35,9 @@ export class TitleBarComponent {
 				label: this.translocoService.translate('titleBar.menuBar.file.label'),
 				items: [
 					{
-						label: this.translocoService.translate('titleBar.menuBar.file.items.newProject.label'),
+						label: this.translocoService.translate(
+							'titleBar.menuBar.file.items.newProject.label'
+						),
 						command: () => this.newProject()
 					},
 					{
@@ -75,28 +77,40 @@ export class TitleBarComponent {
 				label: this.translocoService.translate('titleBar.menuBar.edit.label'),
 				items: [
 					{
-						label: this.translocoService.translate('titleBar.menuBar.edit.items.undo.label')
+						label: this.translocoService.translate(
+							'titleBar.menuBar.edit.items.undo.label'
+						)
 					},
 					{
-						label: this.translocoService.translate('titleBar.menuBar.edit.items.redo.label')
-					},
-					{
-						separator: true
-					},
-					{
-						label: this.translocoService.translate('titleBar.menuBar.edit.items.cut.label')
-					},
-					{
-						label: this.translocoService.translate('titleBar.menuBar.edit.items.copy.label')
-					},
-					{
-						label: this.translocoService.translate('titleBar.menuBar.edit.items.paste.label')
+						label: this.translocoService.translate(
+							'titleBar.menuBar.edit.items.redo.label'
+						)
 					},
 					{
 						separator: true
 					},
 					{
-						label: this.translocoService.translate('titleBar.menuBar.edit.items.delete.label')
+						label: this.translocoService.translate(
+							'titleBar.menuBar.edit.items.cut.label'
+						)
+					},
+					{
+						label: this.translocoService.translate(
+							'titleBar.menuBar.edit.items.copy.label'
+						)
+					},
+					{
+						label: this.translocoService.translate(
+							'titleBar.menuBar.edit.items.paste.label'
+						)
+					},
+					{
+						separator: true
+					},
+					{
+						label: this.translocoService.translate(
+							'titleBar.menuBar.edit.items.delete.label'
+						)
 					}
 				]
 			},

@@ -1,5 +1,9 @@
 import type { Observable } from 'rxjs';
-import type { HashMap, TranslocoEvents, TranslocoScope } from '@jsverse/transloco/lib/types';
+import type {
+	HashMap,
+	TranslocoEvents,
+	TranslocoScope
+} from '@jsverse/transloco/lib/types';
 import type {
 	PartialTranslationKey,
 	TranslationKey
