@@ -1,4 +1,5 @@
 export const enum ComponentType {
 	NOT,
-	AND
+	AND,
+	ROM
 }

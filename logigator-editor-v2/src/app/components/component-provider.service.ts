@@ -1,13 +1,15 @@
 import { Injectable } from '@angular/core';
-import { ComponentDef } from './component-def.model';
+import { ComponentConfig } from './component-config.model';
 import { ComponentType } from './component-type.enum';
-import { notComponentDef } from './definitions/not.comp';
 import { ComponentCategory } from './component-category.enum';
-import { andComponentDef } from './definitions/and.comp';
+import { notComponentConfig } from './component-types/not/not.config';
+import { andComponentConfig } from './component-types/and/and.config';
+import { romComponentConfig } from './component-types/rom/rom.config';
 
-const COMPONENTS: Record<ComponentType, ComponentDef> = {
-	[ComponentType.NOT]: notComponentDef,
-	[ComponentType.AND]: andComponentDef
+const COMPONENTS: Record<ComponentType, ComponentConfig> = {
+	[ComponentType.NOT]: notComponentConfig,
+	[ComponentType.AND]: andComponentConfig,
+	[ComponentType.ROM]: romComponentConfig
 };
 
 @Injectable({
@@ -16,29 +18,29 @@ const COMPONENTS: Record<ComponentType, ComponentDef> = {
 export class ComponentProviderService {
 	private readonly _componentsByCategory: Map<
 		ComponentCategory,
-		ComponentDef[]
+		ComponentConfig[]
 	> = new Map();
 
 	constructor() {
-		for (const def of Object.values(COMPONENTS)) {
-			const category = this._componentsByCategory.get(def.category);
+		for (const config of Object.values(COMPONENTS)) {
+			const category = this._componentsByCategory.get(config.category);
 			if (category) {
-				category.push(def);
+				category.push(config);
 			} else {
-				this._componentsByCategory.set(def.category, [def]);
+				this._componentsByCategory.set(config.category, [config]);
 			}
 		}
 	}
 
-	public getComponent(type: ComponentType): ComponentDef {
+	public getComponent(type: ComponentType): ComponentConfig {
 		return COMPONENTS[type];
 	}
 
-	public get basicComponents(): ComponentDef[] {
+	public get basicComponents(): ComponentConfig[] {
 		return this._componentsByCategory.get(ComponentCategory.BASIC) ?? [];
 	}
 
-	public get advancedComponents(): ComponentDef[] {
+	public get advancedComponents(): ComponentConfig[] {
 		return this._componentsByCategory.get(ComponentCategory.ADVANCED) ?? [];
 	}
 }

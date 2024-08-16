@@ -1,6 +1,7 @@
 import { ChangeDetectionStrategy, Component, ElementRef, OnInit, ViewChild } from '@angular/core';
 import { Application } from 'pixi.js';
 import { ThemingService } from '../../theming/theming.service';
+import { Project } from '../../rendering/project';
 
 @Component({
 	selector: 'app-board',
@@ -32,7 +33,14 @@ export class BoardComponent implements OnInit {
 			antialias: false,
 			hello: true,
 			powerPreference: 'high-performance',
-			backgroundColor: this.themingService.currentTheme().background
+			backgroundColor: this.themingService.currentTheme().background,
+			resolution: window.devicePixelRatio || 1,
+			autoDensity: true
 		});
+
+		const test = new Project();
+		test.resizeViewport(this.app.screen.width, this.app.screen.height);
+
+		this.app.stage.addChild(test);
 	}
 }

@@ -16,6 +16,11 @@ const en = {
 				name: 'AND Gate',
 				description:
 					'A AND gate is a digital logic gate that implements logical conjunction. It behaves according to the truth table shown at right. A HIGH output (1) results only if both the inputs to the AND gate are HIGH (1). If neither or only one input to the AND gate is HIGH, a LOW output results.'
+			},
+			ROM: {
+				name: 'ROM',
+				description:
+					'A read-only memory (ROM) is a type of non-volatile memory used in computers and other electronic devices. Data stored in ROM cannot be electronically modified after the manufacture of the memory device.'
 			}
 		}
 	},
@@ -29,7 +34,7 @@ const en = {
 			sel: 'Selecting Elements',
 			selExact: 'Selecting Elements (Cut Wires at Selection)',
 			erase: 'Erasing Elements',
-			text: 'Adding Text',
+			text: 'Adding Text'
 		} as Record<WorkMode, string>,
 		saved: 'Saved',
 		unsaved: 'Unsaved changes',

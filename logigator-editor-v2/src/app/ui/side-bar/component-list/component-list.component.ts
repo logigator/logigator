@@ -1,5 +1,5 @@
 import { ChangeDetectionStrategy, Component, input } from '@angular/core';
-import { ComponentDef } from '../../../components/component-def.model';
+import { ComponentConfig } from '../../../components/component-config.model';
 import { ButtonModule } from 'primeng/button';
 import { LoggingService } from '../../../logging/logging.service';
 import { TranslocoDirective } from '@jsverse/transloco';
@@ -14,12 +14,12 @@ import { TranslocoDirective } from '@jsverse/transloco';
 })
 export class ComponentListComponent {
 	public headline = input<string>('');
-	public components = input<ComponentDef[]>([]);
+	public components = input<ComponentConfig[]>([]);
 	public searchText = input<string>('');
 
 	constructor(private readonly loggingService: LoggingService) {}
 
-	public selectComponent(component: ComponentDef): void {
+	public selectComponent(component: ComponentConfig): void {
 		this.loggingService.log(component, 'ComponentListComponent');
 	}
 }
