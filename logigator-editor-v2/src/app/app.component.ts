@@ -5,6 +5,7 @@ import { ToolBarComponent } from './ui/tool-bar/tool-bar.component';
 import { SideBarComponent } from './ui/side-bar/side-bar.component';
 import { StatusBarComponent } from './ui/status-bar/status-bar.component';
 import { LoggingService } from './logging/logging.service';
+import { BoardComponent } from './ui/board/board.component';
 
 @Component({
 	selector: 'app-root',
@@ -13,7 +14,8 @@ import { LoggingService } from './logging/logging.service';
 		TitleBarComponent,
 		ToolBarComponent,
 		SideBarComponent,
-		StatusBarComponent
+		StatusBarComponent,
+		BoardComponent
 	],
 	templateUrl: './app.component.html',
 	styleUrl: './app.component.scss',

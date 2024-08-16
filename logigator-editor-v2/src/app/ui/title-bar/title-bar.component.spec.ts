@@ -1,6 +1,7 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 
 import { TitleBarComponent } from './title-bar.component';
+import { appConfig } from '../../app.config';
 
 describe('TitleBarComponent', () => {
 	let component: TitleBarComponent;
@@ -8,7 +9,8 @@ describe('TitleBarComponent', () => {
 
 	beforeEach(async () => {
 		await TestBed.configureTestingModule({
-			imports: [TitleBarComponent]
+			imports: [TitleBarComponent],
+			providers: appConfig.providers,
 		}).compileComponents();
 
 		fixture = TestBed.createComponent(TitleBarComponent);
