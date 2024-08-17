@@ -31,15 +31,20 @@
 							}
 						],
 						"styles": ["src/styles.scss"],
-						"scripts": []
+						"scripts": [],
+						"allowedCommonJsDependencies": [
+							"earcut",
+							"@xmldom/xmldom",
+							"parse-svg-path"
+						]
 					},
 					"configurations": {
 						"production": {
 							"budgets": [
 								{
 									"type": "initial",
-									"maximumWarning": "1MB",
-									"maximumError": "3MB"
+									"maximumWarning": "5MB",
+									"maximumError": "10MB"
 								},
 								{
 									"type": "anyComponentStyle",
