@@ -2,7 +2,10 @@ import {
 	ChangeDetectionStrategy,
 	Component,
 	ElementRef,
+	NgZone,
+	OnDestroy,
 	OnInit,
+	signal,
 	ViewChild
 } from '@angular/core';
 import { Application } from 'pixi.js';
@@ -17,38 +20,44 @@ import { Project } from '../../rendering/project';
 	styleUrl: './board.component.scss',
 	changeDetection: ChangeDetectionStrategy.OnPush
 })
-export class BoardComponent implements OnInit {
+export class BoardComponent implements OnInit, OnDestroy {
 	@ViewChild('canvas', { static: true }) canvas!: ElementRef<HTMLCanvasElement>;
 
-	private readonly app: Application = new Application();
+	private app!: Application;
+
+	protected loaded = signal(false);
 
 	constructor(
 		private readonly hostEl: ElementRef,
-		private readonly themingService: ThemingService
+		private readonly themingService: ThemingService,
+		private readonly ngZone: NgZone
 	) {}
 
 	async ngOnInit(): Promise<void> {
-		await this.app.init({
-			canvas: this.canvas.nativeElement,
-			resizeTo: this.hostEl.nativeElement,
-			eventFeatures: {
-				click: true,
-				move: false,
-				wheel: false,
-				globalMove: false
-			},
-			preference: 'webgpu',
-			antialias: false,
-			hello: true,
-			powerPreference: 'high-performance',
-			backgroundColor: this.themingService.currentTheme().background,
-			resolution: window.devicePixelRatio || 1,
-			autoDensity: true
+		await this.ngZone.runOutsideAngular(async () => {
+			this.app = new Application();
+
+			await this.app.init({
+				canvas: this.canvas.nativeElement,
+				resizeTo: this.hostEl.nativeElement,
+				preference: 'webgpu',
+				antialias: true,
+				hello: true,
+				powerPreference: 'high-performance',
+				backgroundColor: this.themingService.currentTheme().background,
+				resolution: window.devicePixelRatio || 1,
+				autoDensity: true
+			});
+			this.loaded.set(true);
+
+			const test = new Project();
+			test.resizeViewport(this.app.screen.width, this.app.screen.height);
+
+			this.app.stage = test;
 		});
+	}
 
-		const test = new Project();
-		test.resizeViewport(this.app.screen.width, this.app.screen.height);
-
-		this.app.stage.addChild(test);
+	ngOnDestroy(): void {
+		this.app.destroy();
 	}
 }

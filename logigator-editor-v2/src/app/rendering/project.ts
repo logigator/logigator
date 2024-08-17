@@ -1,18 +1,17 @@
-import { Container, Point } from 'pixi.js';
+import { Container, Point, Rectangle } from 'pixi.js';
 
 import { Grid } from './grid';
-import { Component } from '../components/component';
 import { ComponentConfig } from '../components/component-config.model';
 import { ComponentRotation } from '../components/component-rotation.enum';
 import { romComponentConfig } from '../components/component-types/rom/rom.config';
+import { InteractionContainer } from './interaction-container';
+import { Component } from '../components/component';
 
-export class Project extends Container {
-	override sortableChildren = false;
-
+export class Project extends InteractionContainer {
 	// public meta: ProjectMeta = new ProjectMeta();
 
-	private _grid: Grid = new Grid();
-	private _components: Component[] = [];
+	private readonly _grid: Grid = new Grid();
+	private readonly _components = new Container<Component>();
 	private _viewPortSize = new Point(0, 0);
 
 	private _scaleStep = 0;
@@ -20,7 +19,16 @@ export class Project extends Container {
 	constructor() {
 		super();
 
+		this.boundsArea = new Rectangle(
+			-Number.MAX_VALUE / 2,
+			-Number.MAX_VALUE / 2,
+			Number.MAX_VALUE,
+			Number.MAX_VALUE
+		);
+		this.hitArea = this.boundsArea;
+
 		this.addChild(this._grid);
+		this.addChild(this._components);
 
 		this.addComponent(
 			romComponentConfig,
@@ -76,23 +84,27 @@ export class Project extends Container {
 		this._grid.resizeViewport(this._viewPortSize);
 	}
 
-	public pan(point: Point) {
-		this.x += point.x;
-		this.y += point.y;
+	public pan(point: Point): void {
+		this.setPosition(point.add(this.position));
+	}
+
+	public setPosition(point: Point): void {
+		this.x = point.x;
+		this.y = point.y;
 
 		this._grid.updatePosition(this.position);
 	}
 
-	public zoomIn() {
+	public zoomIn(center?: Point) {
 		if (this._scaleStep >= 7) return;
 
-		this.updateScale(Math.pow(1.25, ++this._scaleStep));
+		this.updateScale(Math.pow(1.25, ++this._scaleStep), center);
 	}
 
-	public zoomOut() {
+	public zoomOut(center?: Point) {
 		if (this._scaleStep <= -7) return;
 
-		this.updateScale(Math.pow(1.25, --this._scaleStep));
+		this.updateScale(Math.pow(1.25, --this._scaleStep), center);
 	}
 
 	public zoom100() {
@@ -100,14 +112,30 @@ export class Project extends Container {
 		this.updateScale(1);
 	}
 
-	private updateScale(scale: number) {
+	private updateScale(scale: number, center?: Point) {
 		if (scale === this.scale.x) return;
+
+		if (center) {
+			const dist = new Point(
+				center.x - this.position.x,
+				center.y - this.position.y
+			);
+
+			const scaleChange = scale - this.scale.x;
+
+			this.pan(
+				new Point(
+					-dist.x * scaleChange,
+					-dist.y * scaleChange
+				)
+			);
+		}
 
 		this.scale.set(scale);
 
 		this._grid.updateScale(scale);
 
-		for (const child of this._components) {
+		for (const child of this._components.children) {
 			child.applyScale(scale);
 		}
 	}
@@ -128,7 +156,7 @@ export class Project extends Container {
 		component.gridPos = gridPos;
 		component.direction = direction;
 
-		this._components.push(component);
-		this.addChild(component);
+		this._components.children.push(component);
+		this._components.addChild(component);
 	}
 }

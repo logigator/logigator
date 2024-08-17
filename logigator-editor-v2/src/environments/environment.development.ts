@@ -4,7 +4,7 @@ export const environment: Environment = {
 	gridSize: 16,
 	debug: {
 		showGridBorders: true,
-		showHitboxes: true,
+		showHitboxes: false,
 		showOrigins: true,
 		showConnectionPoints: true
 	}

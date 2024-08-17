@@ -16,8 +16,6 @@ export const enum ScaleType {
 }
 
 export abstract class Component extends Container {
-	override sortableChildren = false;
-
 	public abstract readonly config: ComponentConfig;
 	public readonly options: ComponentOption<unknown>[];
 
@@ -43,6 +41,7 @@ export abstract class Component extends Container {
 	) {
 		super();
 
+		this.interactiveChildren = false;
 		this._numInputs = numInputs;
 		this._numOutputs = numOutputs;
 		this._direction = direction;

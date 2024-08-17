@@ -4,7 +4,7 @@ import { getStaticDI } from '../../utils/get-di';
 import { ThemingService } from '../../theming/theming.service';
 
 export class ComponentGraphics extends GraphicsContext {
-	constructor(width: number, height: number) {
+	constructor(width: number, height: number, scale: number) {
 		super();
 
 		const themingService = getStaticDI(ThemingService);
@@ -18,6 +18,9 @@ export class ComponentGraphics extends GraphicsContext {
 		this.lineTo(widthPx - 3, heightPx);
 		this.lineTo(0, heightPx);
 		this.closePath();
-		this.stroke(themingService.currentTheme().wire);
+		this.stroke({
+			color: themingService.currentTheme().wire,
+			width: 1 / scale
+		});
 	}
 }

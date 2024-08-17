@@ -8,6 +8,8 @@ import { LoggingService } from './logging/logging.service';
 import { BoardComponent } from './ui/board/board.component';
 import { setStaticDIInjector } from './utils/get-di';
 
+import 'pixi.js/math-extras';
+
 @Component({
 	selector: 'app-root',
 	standalone: true,

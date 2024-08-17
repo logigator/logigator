@@ -1,4 +1,4 @@
-import { Container, Graphics, Point } from 'pixi.js';
+import { Container, Graphics, Point, Rectangle } from 'pixi.js';
 import { GridGraphics } from './graphics/grid.graphics';
 import { GraphicsProviderService } from './graphics-provider.service';
 import { fromGrid } from '../utils/grid';
@@ -16,6 +16,17 @@ export class Grid extends Container {
 
 	constructor() {
 		super();
+
+		this.interactiveChildren = false;
+
+		this.boundsArea = new Rectangle(
+			-Number.MAX_VALUE / 2,
+			-Number.MAX_VALUE / 2,
+			Number.MAX_VALUE,
+			Number.MAX_VALUE
+		);
+		this.hitArea = this.boundsArea;
+
 		this.pivot.set(this._chunkSizePx);
 		this.draw();
 	}

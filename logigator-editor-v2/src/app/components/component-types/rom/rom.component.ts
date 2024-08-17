@@ -27,7 +27,8 @@ export class RomComponent extends Component {
 			this.geometryService.getGraphicsContext(
 				ComponentGraphics,
 				3,
-				Math.max(this.numInputs, this.numOutputs)
+				Math.max(this.numInputs, this.numOutputs),
+				1
 			)
 		);
 		componentGraphics.position.set(0, 0);
