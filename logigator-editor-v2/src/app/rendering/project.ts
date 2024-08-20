@@ -1,4 +1,4 @@
-import { Container, Point, Rectangle } from 'pixi.js';
+import { Container, Matrix, ObservablePoint, Point, PointData, Rectangle } from 'pixi.js';
 
 import { Grid } from './grid';
 import { ComponentConfig } from '../components/component-config.model';
@@ -9,6 +9,10 @@ import { Component } from '../components/component';
 
 export class Project extends InteractionContainer {
 	// public meta: ProjectMeta = new ProjectMeta();
+
+	private readonly _scaleStepAmount = 1.25;
+	private readonly _scaleStepMin = -7;
+	private readonly _scaleStepMax = 7;
 
 	private readonly _grid: Grid = new Grid();
 	private readonly _components = new Container<Component>();
@@ -96,15 +100,35 @@ export class Project extends InteractionContainer {
 	}
 
 	public zoomIn(center?: Point) {
-		if (this._scaleStep >= 7) return;
+		if (this._scaleStep >= this._scaleStepMax) return;
 
-		this.updateScale(Math.pow(1.25, ++this._scaleStep), center);
+		if (center) {
+			this.setPosition(
+				new Matrix()
+					.translate(-center.x, -center.y)
+					.scale(this._scaleStepAmount, this._scaleStepAmount)
+					.translate(center.x, center.y)
+					.apply(this.position)
+			);
+		}
+
+		this.updateScale(Math.pow(this._scaleStepAmount, ++this._scaleStep));
 	}
 
 	public zoomOut(center?: Point) {
-		if (this._scaleStep <= -7) return;
+		if (this._scaleStep <= this._scaleStepMin) return;
 
-		this.updateScale(Math.pow(1.25, --this._scaleStep), center);
+		if (center) {
+			this.setPosition(
+				new Matrix()
+					.translate(-center.x, -center.y)
+					.scale(1 / this._scaleStepAmount, 1 / this._scaleStepAmount)
+					.translate(center.x, center.y)
+					.apply(this.position)
+			);
+		}
+
+		this.updateScale(Math.pow(this._scaleStepAmount, --this._scaleStep));
 	}
 
 	public zoom100() {
@@ -112,27 +136,10 @@ export class Project extends InteractionContainer {
 		this.updateScale(1);
 	}
 
-	private updateScale(scale: number, center?: Point) {
+	private updateScale(scale: number) {
 		if (scale === this.scale.x) return;
 
-		if (center) {
-			const dist = new Point(
-				center.x - this.position.x,
-				center.y - this.position.y
-			);
-
-			const scaleChange = scale - this.scale.x;
-
-			this.pan(
-				new Point(
-					-dist.x * scaleChange,
-					-dist.y * scaleChange
-				)
-			);
-		}
-
 		this.scale.set(scale);
-
 		this._grid.updateScale(scale);
 
 		for (const child of this._components.children) {
