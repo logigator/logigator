@@ -2,8 +2,8 @@ import { Component } from '../../component';
 import { romComponentConfig } from './rom.config';
 import { ComponentOption } from '../../component-option';
 import { ComponentRotation } from '../../component-rotation.enum';
-import { Graphics } from 'pixi.js';
 import { ComponentGraphics } from '../../../rendering/graphics/component.graphics';
+import { Graphics } from 'pixi.js';
 
 export class RomComponent extends Component {
 	public readonly config = romComponentConfig;
@@ -28,10 +28,9 @@ export class RomComponent extends Component {
 				ComponentGraphics,
 				3,
 				Math.max(this.numInputs, this.numOutputs),
-				1
+				this.appliedScale
 			)
 		);
-		componentGraphics.position.set(0, 0);
 		this.addChild(componentGraphics);
 	}
 }

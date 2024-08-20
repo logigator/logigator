@@ -1,4 +1,9 @@
-import { Container, Matrix, ObservablePoint, Point, PointData, Rectangle } from 'pixi.js';
+import {
+	Container,
+	Matrix,
+	Point,
+	Rectangle
+} from 'pixi.js';
 
 import { Grid } from './grid';
 import { ComponentConfig } from '../components/component-config.model';
@@ -10,9 +15,9 @@ import { Component } from '../components/component';
 export class Project extends InteractionContainer {
 	// public meta: ProjectMeta = new ProjectMeta();
 
-	private readonly _scaleStepAmount = 1.25;
-	private readonly _scaleStepMin = -7;
-	private readonly _scaleStepMax = 7;
+	private readonly _scaleStepAmount = 1.2;
+	private readonly _scaleStepMin = -12;
+	private readonly _scaleStepMax = 5;
 
 	private readonly _grid: Grid = new Grid();
 	private readonly _components = new Container<Component>();
@@ -93,9 +98,7 @@ export class Project extends InteractionContainer {
 	}
 
 	public setPosition(point: Point): void {
-		this.x = point.x;
-		this.y = point.y;
-
+		this.position.copyFrom(point);
 		this._grid.updatePosition(this.position);
 	}
 

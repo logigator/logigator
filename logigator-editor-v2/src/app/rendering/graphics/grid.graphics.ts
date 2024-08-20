@@ -16,7 +16,10 @@ export class GridGraphics extends GraphicsContext {
 				this.rect(x, y, 1 / scale, 1 / scale);
 			}
 		}
-		this.fill(themingService.currentTheme().grid);
+		this.fill({
+			color: themingService.currentTheme().wire,
+			alpha: scale < 0.25 ? 0.5 : 1
+		});
 
 		if (environment.debug.showGridBorders) {
 			this.rect(0, 0, sizePx, sizePx);

@@ -1,4 +1,4 @@
-import { Container, Graphics, Matrix, Point } from 'pixi.js';
+import { Text, Container, Graphics, Matrix, Point } from 'pixi.js';
 import { ComponentConfig } from './component-config.model';
 import { ThemingService } from '../theming/theming.service';
 import { getStaticDI } from '../utils/get-di';
@@ -26,11 +26,11 @@ export abstract class Component extends Container {
 	);
 
 	private _direction: ComponentRotation;
+	private _appliedScale: number = 1;
 
 	private _numInputs: number;
 	private _numOutputs: number;
 
-	private _constantScaleContainers: [ScaleType, Container][] = [];
 	private _constantRotationContainers: Container[] = [];
 
 	protected constructor(
@@ -100,15 +100,13 @@ export abstract class Component extends Container {
 		this._draw();
 	}
 
+	public get appliedScale(): number {
+		return this._appliedScale;
+	}
+
 	public applyScale(scale: number): void {
-		for (const [type, container] of this._constantScaleContainers) {
-			if (type & 1) {
-				container.scale.x = 1 / scale;
-			}
-			if (type & 2) {
-				container.scale.y = 1 / scale;
-			}
-		}
+		this._appliedScale = scale;
+		this._draw();
 	}
 
 	public get connectionPoints(): Point[] {
@@ -127,14 +125,6 @@ export abstract class Component extends Container {
 		}
 
 		return new Point((this.width - fromGrid(subtract)) / 2, this.height / 2);
-	}
-
-	protected registerConstantScaleContainer(
-		container: Container,
-		type: ScaleType
-	): Container {
-		this._constantScaleContainers.push([type, container]);
-		return container;
 	}
 
 	protected registerConstantRotationContainer(container: Container): Container {
@@ -165,7 +155,6 @@ export abstract class Component extends Container {
 		}
 		this.removeChildren(0);
 
-		this._constantScaleContainers = [];
 		this._constantRotationContainers = [];
 
 		this.draw();
@@ -186,9 +175,8 @@ export abstract class Component extends Container {
 		}
 
 		if (environment.debug.showOrigins) {
-			const origin = this.toLocal(this.position);
 			const originGraphics = new Graphics();
-			originGraphics.rect(origin.x, origin.y, 2, 2);
+			originGraphics.rect(0, 0, 2, 2);
 			originGraphics.fill(0xffffff);
 			this.addChild(originGraphics);
 		}
@@ -213,20 +201,21 @@ export abstract class Component extends Container {
 		for (let i = 0; i < n; i++) {
 			const wire = new Graphics(geometry);
 			wire.position.set(0, fromGrid(i + 0.5));
-			wire.scale.set(fromGrid(0.5), 1);
-			this.registerConstantScaleContainer(wire, ScaleType.Y);
-
+			wire.scale.set(fromGrid(0.5), 1 / this._appliedScale);
 			container.addChild(wire);
 
-			/*
 			if (labels.length > i) {
-				const text = new BitmapText(labels[i], {
-					fontName: 'Roboto',
-					fontSize: fromGrid(0.5),
-					tint: this.themingService.currentTheme().fontTint
-				});
-				text.anchor.set(type === 'inputs' ? 0 : 1, 0.5);
+				const text = new Text({
+					text: labels[i],
+					style: {
+						fontFamily: 'Roboto',
+						fontSize: fromGrid(0.5) * this._appliedScale,
+						fill: this.themingService.currentTheme().fontTint,
+					},
+					anchor: { x: type === 'inputs' ? 0 : 1, y: 0.5 }
+				})
 				text.pivot.set((text.width / 2) * (type === 'inputs' ? 1 : -1), 0);
+				text.scale.set(1 / this._appliedScale);
 
 				if (type === 'inputs') {
 					text.position.set(
@@ -240,7 +229,6 @@ export abstract class Component extends Container {
 				this.registerConstantRotationContainer(text);
 				container.addChild(text);
 			}
-			*/
 		}
 
 		if (type === 'outputs') {
