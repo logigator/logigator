@@ -23,7 +23,7 @@ export class ComponentGraphics extends GraphicsContext {
 			width: 2 / scale
 		});
 		this.fill({
-			color: themingService.currentTheme().background,
+			color: themingService.currentTheme().background
 		});
 	}
 }

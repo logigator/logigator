@@ -6,6 +6,7 @@
 		@for (comp of components(); track comp.type) {
 			<div
 				class="flex flex-column align-items-center gap-1 cursor-pointer hover:bg-black-alpha-10"
+				[class.bg-white-alpha-20]="selectedComponent() === comp.type"
 				(click)="selectComponent(comp)"
 				(keydown.enter)="selectComponent(comp)"
 				tabindex="0"

@@ -1,9 +1,4 @@
-import {
-	Container,
-	Matrix,
-	Point,
-	Rectangle
-} from 'pixi.js';
+import { Container, Matrix, Point, Rectangle } from 'pixi.js';
 
 import { Grid } from './grid';
 import { ComponentConfig } from '../components/component-config.model';
@@ -11,6 +6,8 @@ import { ComponentRotation } from '../components/component-rotation.enum';
 import { romComponentConfig } from '../components/component-types/rom/rom.config';
 import { InteractionContainer } from './interaction-container';
 import { Component } from '../components/component';
+import { Observable, Subject } from 'rxjs';
+import { toGridPoint } from '../utils/grid';
 
 export class Project extends InteractionContainer {
 	// public meta: ProjectMeta = new ProjectMeta();
@@ -24,6 +21,8 @@ export class Project extends InteractionContainer {
 	private _viewPortSize = new Point(0, 0);
 
 	private _scaleStep = 0;
+
+	private readonly _positionChange$ = new Subject<Point>();
 
 	constructor() {
 		super();
@@ -100,6 +99,7 @@ export class Project extends InteractionContainer {
 	public setPosition(point: Point): void {
 		this.position.copyFrom(point);
 		this._grid.updatePosition(this.position);
+		this._positionChange$.next(this.gridPosition);
 	}
 
 	public zoomIn(center?: Point) {
@@ -137,6 +137,14 @@ export class Project extends InteractionContainer {
 	public zoom100() {
 		this._scaleStep = 0;
 		this.updateScale(1);
+	}
+
+	public get positionChange$(): Observable<Point> {
+		return this._positionChange$.asObservable();
+	}
+
+	public get gridPosition() {
+		return toGridPoint(this.position.multiplyScalar(1 / this.scale.x));
 	}
 
 	private updateScale(scale: number) {

@@ -5,13 +5,15 @@ import {
 	NgZone,
 	OnDestroy,
 	OnInit,
+	output,
 	signal,
 	ViewChild
 } from '@angular/core';
-import { Application } from 'pixi.js';
+import { Application, Point } from 'pixi.js';
 import { ThemingService } from '../../theming/theming.service';
 import { Project } from '../../rendering/project';
 import { AssetsService } from '../../rendering/assets.service';
+import { Subject, takeUntil, throttleTime } from 'rxjs';
 
 @Component({
 	selector: 'app-board',
@@ -22,7 +24,12 @@ import { AssetsService } from '../../rendering/assets.service';
 	changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class BoardComponent implements OnInit, OnDestroy {
-	@ViewChild('canvas', { static: true }) readonly canvas!: ElementRef<HTMLCanvasElement>;
+	@ViewChild('canvas', { static: true })
+	readonly canvas!: ElementRef<HTMLCanvasElement>;
+
+	public readonly positionChange = output<Point>();
+
+	private readonly destroy$ = new Subject<void>();
 
 	private readonly app: Application = new Application();
 	private readonly project = new Project();
@@ -34,7 +41,13 @@ export class BoardComponent implements OnInit, OnDestroy {
 		private readonly themingService: ThemingService,
 		private readonly ngZone: NgZone,
 		private readonly assetsService: AssetsService
-	) {}
+	) {
+		this.project.positionChange$
+			.pipe(takeUntil(this.destroy$), throttleTime(33.33))
+			.subscribe((pos) => {
+				this.positionChange.emit(pos);
+			});
+	}
 
 	async ngOnInit(): Promise<void> {
 		await this.assetsService.init();
@@ -57,10 +70,27 @@ export class BoardComponent implements OnInit, OnDestroy {
 				this.project.resizeViewport(w, h);
 			});
 
-			this.project.resizeViewport(this.app.renderer.width, this.app.renderer.height);
+			this.project.resizeViewport(
+				this.app.renderer.width,
+				this.app.renderer.height
+			);
 			this.app.stage = this.project;
 
-			this.app.ticker.start();
+			this.app.ticker.update();
+
+			this.project.ticker$.pipe(takeUntil(this.destroy$)).subscribe((value) => {
+				switch (value) {
+					case 'single':
+						this.app.ticker.update();
+						break;
+					case 'on':
+						this.app.ticker.start();
+						break;
+					case 'off':
+						this.app.ticker.stop();
+						break;
+				}
+			});
 
 			this.loaded.set(true);
 		});
@@ -68,5 +98,6 @@ export class BoardComponent implements OnInit, OnDestroy {
 
 	ngOnDestroy(): void {
 		this.app.destroy();
+		this.destroy$.next();
 	}
 }

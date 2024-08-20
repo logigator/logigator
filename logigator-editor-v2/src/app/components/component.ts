@@ -210,10 +210,10 @@ export abstract class Component extends Container {
 					style: {
 						fontFamily: 'Roboto',
 						fontSize: fromGrid(0.5) * this._appliedScale,
-						fill: this.themingService.currentTheme().fontTint,
+						fill: this.themingService.currentTheme().fontTint
 					},
 					anchor: { x: type === 'inputs' ? 0 : 1, y: 0.5 }
-				})
+				});
 				text.pivot.set((text.width / 2) * (type === 'inputs' ? 1 : -1), 0);
 				text.scale.set(1 / this._appliedScale);
 

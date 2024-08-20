@@ -1,7 +1,9 @@
 import {
 	Container,
 	DestroyOptions,
-	FederatedPointerEvent, FederatedWheelEvent, Point
+	FederatedPointerEvent,
+	FederatedWheelEvent,
+	Point
 } from 'pixi.js';
 import { filter, fromEvent, Subject, takeUntil } from 'rxjs';
 
@@ -9,6 +11,8 @@ export abstract class InteractionContainer extends Container {
 	private _destroySubject$ = new Subject<void>();
 	private _isDragging = false;
 	private _preventContextMenu = false;
+
+	protected _ticker$ = new Subject<'single' | 'on' | 'off'>();
 
 	abstract pan(delta: Point): void;
 	abstract zoomIn(center: Point): void;
@@ -32,6 +36,10 @@ export abstract class InteractionContainer extends Container {
 		this.on('wheel', this._onWheel);
 	}
 
+	public get ticker$() {
+		return this._ticker$.asObservable();
+	}
+
 	private _startPan() {
 		if (this._isDragging) {
 			return;
@@ -40,6 +48,7 @@ export abstract class InteractionContainer extends Container {
 		this._isDragging = true;
 		this._preventContextMenu = true;
 		this.on('pointermove', this._onPan);
+		this._ticker$.next('on');
 	}
 
 	private _stopPan() {
@@ -49,6 +58,7 @@ export abstract class InteractionContainer extends Container {
 
 		this._isDragging = false;
 		this.off('pointermove', this._onPan);
+		this._ticker$.next('off');
 
 		setTimeout(() => {
 			this._preventContextMenu = false;
@@ -65,6 +75,7 @@ export abstract class InteractionContainer extends Container {
 		} else if (e.deltaY < 0) {
 			this.zoomIn(e.screen);
 		}
+		this._ticker$.next('single');
 	}
 
 	override destroy(options?: DestroyOptions) {

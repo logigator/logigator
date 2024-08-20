@@ -1,14 +1,20 @@
-import { ChangeDetectionStrategy, Component, Injector } from '@angular/core';
+import 'pixi.js/math-extras';
+
+import {
+	ChangeDetectionStrategy,
+	Component,
+	Injector,
+	signal
+} from '@angular/core';
+import { Point } from 'pixi.js';
 import { RouterService } from './routing/router.service';
 import { TitleBarComponent } from './ui/title-bar/title-bar.component';
 import { ToolBarComponent } from './ui/tool-bar/tool-bar.component';
 import { SideBarComponent } from './ui/side-bar/side-bar.component';
 import { StatusBarComponent } from './ui/status-bar/status-bar.component';
-import { LoggingService } from './logging/logging.service';
 import { BoardComponent } from './ui/board/board.component';
 import { setStaticDIInjector } from './utils/get-di';
-
-import 'pixi.js/math-extras';
+import { ComponentSettingsComponent } from './ui/component-settings/component-settings.component';
 
 @Component({
 	selector: 'app-root',
@@ -18,17 +24,19 @@ import 'pixi.js/math-extras';
 		ToolBarComponent,
 		SideBarComponent,
 		StatusBarComponent,
-		BoardComponent
+		BoardComponent,
+		ComponentSettingsComponent
 	],
 	templateUrl: './app.component.html',
 	styleUrl: './app.component.scss',
 	changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class AppComponent {
+	protected readonly boardPosition = signal<Point>(new Point(0, 0));
+
 	constructor(
 		private readonly injector: Injector,
-		private readonly routerService: RouterService,
-		private readonly loggingService: LoggingService
+		private readonly routerService: RouterService
 	) {
 		setStaticDIInjector(this.injector);
 		this.routerService.processCurrentRoute();

@@ -5,7 +5,15 @@
 		class="w-20rem border-right-1 border-white-alpha-20"
 	></app-side-bar>
 	<div class="flex-grow-1 flex flex-column">
-		<app-board class="flex-grow-1"></app-board>
-		<app-status-bar></app-status-bar>
+		<div class="relative flex-grow-1">
+			<app-board
+				class="block w-full h-full"
+				(positionChange)="boardPosition.set($event)"
+			></app-board>
+			<app-component-settings
+				class="absolute m-2 bottom-0 right-0"
+			></app-component-settings>
+		</div>
+		<app-status-bar [boardPosition]="boardPosition()"></app-status-bar>
 	</div>
 </div>

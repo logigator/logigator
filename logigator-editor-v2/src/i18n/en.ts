@@ -34,7 +34,8 @@ const en = {
 			sel: 'Selecting Elements',
 			selExact: 'Selecting Elements (Cut Wires at Selection)',
 			erase: 'Erasing Elements',
-			text: 'Adding Text'
+			text: 'Adding Text',
+			placeComp: 'Placing Components: {{componentName}}'
 		} as Record<WorkMode, string>,
 		saved: 'Saved',
 		unsaved: 'Unsaved changes',
