@@ -8,6 +8,7 @@
 		<div class="relative flex-grow-1">
 			<app-board
 				class="block w-full h-full"
+				[project]="projectService.activeProject()"
 				(positionChange)="boardPosition.set($event)"
 			></app-board>
 			<app-component-settings

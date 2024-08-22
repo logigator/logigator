@@ -15,6 +15,8 @@ import { StatusBarComponent } from './ui/status-bar/status-bar.component';
 import { BoardComponent } from './ui/board/board.component';
 import { setStaticDIInjector } from './utils/get-di';
 import { ComponentSettingsComponent } from './ui/component-settings/component-settings.component';
+import { ProjectService } from './project/project.service';
+import { Project } from './project/project';
 
 @Component({
 	selector: 'app-root',
@@ -36,9 +38,12 @@ export class AppComponent {
 
 	constructor(
 		private readonly injector: Injector,
-		private readonly routerService: RouterService
+		private readonly routerService: RouterService,
+		protected readonly projectService: ProjectService
 	) {
 		setStaticDIInjector(this.injector);
 		this.routerService.processCurrentRoute();
+		
+		this.projectService.setMainProject(new Project());
 	}
 }

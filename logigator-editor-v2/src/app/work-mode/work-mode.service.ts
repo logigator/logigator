@@ -13,6 +13,13 @@ export class WorkModeService {
 	private readonly _selectedComponentType = signal<ComponentType | null>(null);
 	public readonly selectedComponentType = computed(this._selectedComponentType);
 
+	public readonly selectedComponentConfig = computed(() => {
+		const componentType = this.selectedComponentType();
+		return componentType
+			? this.componentProviderService.getComponent(componentType)
+			: null;
+	});
+
 	constructor(
 		private readonly componentProviderService: ComponentProviderService
 	) {}

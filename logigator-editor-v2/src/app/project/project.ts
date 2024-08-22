@@ -1,10 +1,10 @@
 import { Container, Matrix, Point, Rectangle } from 'pixi.js';
 
-import { Grid } from './grid';
+import { Grid } from '../rendering/grid';
 import { ComponentConfig } from '../components/component-config.model';
 import { ComponentRotation } from '../components/component-rotation.enum';
 import { romComponentConfig } from '../components/component-types/rom/rom.config';
-import { InteractionContainer } from './interaction-container';
+import { InteractionContainer } from '../rendering/interaction-container';
 import { Component } from '../components/component';
 import { Observable, Subject } from 'rxjs';
 import { toGridPoint } from '../utils/grid';

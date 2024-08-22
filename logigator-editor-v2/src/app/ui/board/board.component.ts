@@ -1,7 +1,9 @@
 import {
 	ChangeDetectionStrategy,
 	Component,
+	effect,
 	ElementRef,
+	input,
 	NgZone,
 	OnDestroy,
 	OnInit,
@@ -11,9 +13,9 @@ import {
 } from '@angular/core';
 import { Application, Point } from 'pixi.js';
 import { ThemingService } from '../../theming/theming.service';
-import { Project } from '../../rendering/project';
+import { Project } from '../../project/project';
 import { AssetsService } from '../../rendering/assets.service';
-import { Subject, takeUntil, throttleTime } from 'rxjs';
+import { merge, Subject, takeUntil, throttleTime } from 'rxjs';
 
 @Component({
 	selector: 'app-board',
@@ -25,16 +27,17 @@ import { Subject, takeUntil, throttleTime } from 'rxjs';
 })
 export class BoardComponent implements OnInit, OnDestroy {
 	@ViewChild('canvas', { static: true })
-	readonly canvas!: ElementRef<HTMLCanvasElement>;
+	protected readonly canvas!: ElementRef<HTMLCanvasElement>;
 
 	public readonly positionChange = output<Point>();
-
-	private readonly destroy$ = new Subject<void>();
-
-	private readonly app: Application = new Application();
-	private readonly project = new Project();
+	public readonly project = input<Project | null>();
 
 	protected readonly loaded = signal(false);
+
+	private readonly destroy$ = new Subject<void>();
+	private readonly projectChange$ = new Subject<Project | null | undefined>();
+
+	private readonly app: Application = new Application();
 
 	constructor(
 		private readonly hostEl: ElementRef,
@@ -42,11 +45,56 @@ export class BoardComponent implements OnInit, OnDestroy {
 		private readonly ngZone: NgZone,
 		private readonly assetsService: AssetsService
 	) {
-		this.project.positionChange$
-			.pipe(takeUntil(this.destroy$), throttleTime(33.33))
-			.subscribe((pos) => {
-				this.positionChange.emit(pos);
+		this.projectChange$.pipe(takeUntil(this.destroy$)).subscribe((project) => {
+			if (!project) {
+				return;
+			}
+
+			this.ngZone.runOutsideAngular(() => {
+				project.resizeViewport(
+					this.app.renderer.width,
+					this.app.renderer.height
+				);
+
+				this.app.stage = project;
+				this.app.ticker.update();
+
+				this.positionChange.emit(project.gridPosition);
+
+				project.positionChange$
+					.pipe(
+						takeUntil(merge(this.destroy$, this.projectChange$)),
+						throttleTime(33.33)
+					)
+					.subscribe((pos) => {
+						this.positionChange.emit(pos);
+					});
+
+				project.ticker$
+					.pipe(takeUntil(merge(this.destroy$, this.projectChange$)))
+					.subscribe((value) => {
+						switch (value) {
+							case 'single':
+								this.app.ticker.update();
+								break;
+							case 'on':
+								this.app.ticker.start();
+								break;
+							case 'off':
+								this.app.ticker.stop();
+								break;
+						}
+					});
 			});
+		});
+
+		effect(() => {
+			if (!this.loaded()) {
+				return;
+			}
+
+			this.projectChange$.next(this.project());
+		});
 	}
 
 	async ngOnInit(): Promise<void> {
@@ -67,29 +115,12 @@ export class BoardComponent implements OnInit, OnDestroy {
 			});
 
 			this.app.renderer.on('resize', (w, h) => {
-				this.project.resizeViewport(w, h);
-			});
-
-			this.project.resizeViewport(
-				this.app.renderer.width,
-				this.app.renderer.height
-			);
-			this.app.stage = this.project;
-
-			this.app.ticker.update();
-
-			this.project.ticker$.pipe(takeUntil(this.destroy$)).subscribe((value) => {
-				switch (value) {
-					case 'single':
-						this.app.ticker.update();
-						break;
-					case 'on':
-						this.app.ticker.start();
-						break;
-					case 'off':
-						this.app.ticker.stop();
-						break;
+				const project = this.project();
+				if (!project) {
+					return;
 				}
+
+				project.resizeViewport(w, h);
 			});
 
 			this.loaded.set(true);

@@ -1,4 +1,5 @@
-import { ChangeDetectionStrategy, Component } from '@angular/core';
+import { ChangeDetectionStrategy, Component, computed } from '@angular/core';
+import { WorkModeService } from '../../work-mode/work-mode.service';
 
 @Component({
 	selector: 'app-component-settings',
@@ -8,4 +9,12 @@ import { ChangeDetectionStrategy, Component } from '@angular/core';
 	styleUrl: './component-settings.component.scss',
 	changeDetection: ChangeDetectionStrategy.OnPush
 })
-export class ComponentSettingsComponent {}
+export class ComponentSettingsComponent {
+	protected config = computed(() => {
+		this.workModeService.selectedComponentConfig();
+	})
+
+	constructor(
+		private readonly workModeService: WorkModeService
+	) {}
+}
