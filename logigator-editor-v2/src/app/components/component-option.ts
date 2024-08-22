@@ -1,13 +1,10 @@
-export enum ComponentOptionType {
-	Number,
-	Select,
-	Checkbox
-}
+import { Subject } from 'rxjs';
+import { TranslationKey } from '../translation/translation-key.model';
 
-export abstract class ComponentOption<T> {
-	public abstract readonly type: ComponentOptionType;
-	public abstract readonly label: string;
-	public onChange: ((value: T) => void) | null = null;
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+export abstract class ComponentOption<T = any> {
+	public abstract readonly label: TranslationKey;
+	public onChange$ = new Subject<T>();
 
 	private _value: T;
 
@@ -21,7 +18,7 @@ export abstract class ComponentOption<T> {
 
 	set value(value: T) {
 		this._value = value;
-		if (this.onChange) this.onChange(value);
+		this.onChange$.next(value);
 	}
 
 	public abstract clone(): ComponentOption<T>;

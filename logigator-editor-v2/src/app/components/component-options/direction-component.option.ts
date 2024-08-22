@@ -4,14 +4,15 @@ import { ComponentRotation } from '../component-rotation.enum';
 export class DirectionComponentOption extends SelectComponentOption<ComponentRotation> {
 	constructor() {
 		super(
-			'SETTINGS_INFO.DIRECTION',
+			'components.options.direction',
 			[
-				{ value: ComponentRotation.Right, label: 'SETTINGS_INFO.RIGHT' },
-				{ value: ComponentRotation.Down, label: 'SETTINGS_INFO.DOWN' },
-				{ value: ComponentRotation.Left, label: 'SETTINGS_INFO.LEFT' },
-				{ value: ComponentRotation.Up, label: 'SETTINGS_INFO.UP' }
+				{ value: ComponentRotation.Right, icon: 'ph ph-arrow-fat-right' },
+				{ value: ComponentRotation.Down, icon: 'ph ph-arrow-fat-down' },
+				{ value: ComponentRotation.Left, icon: 'ph ph-arrow-fat-left' },
+				{ value: ComponentRotation.Up, icon: 'ph ph-arrow-fat-up' }
 			],
-			ComponentRotation.Right
+			ComponentRotation.Right,
+			'button'
 		);
 	}
 }

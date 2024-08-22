@@ -1,4 +1,70 @@
-<div class="p-2 surface-500">
-	<pre class="text-2xl">Component Settings</pre>
-	<pre class="text-xl">Placeholder</pre>
-</div>
+<ng-template let-item="item" #itemTemplate>
+	<div class="flex gap-1 align-items-center">
+		@if (item.icon) {
+			<i [class]="item.icon"></i>
+		}
+		@if (item.label) {
+			<span>{{ item.label }}</span>
+		}
+	</div>
+</ng-template>
+
+<form class="flex flex-column gap-2" *transloco="let t">
+	@for (option of config(); track $index) {
+		<div class="flex gap-4 align-items-center justify-content-between">
+			<label [for]="'component-settings-input-' + $index">{{
+				t(option.label)
+			}}</label>
+			@if (isNumberInput(option)) {
+				<p-inputNumber
+					[id]="'component-settings-input-' + $index"
+					[name]="'component-settings-input-' + $index"
+					[showButtons]="true"
+					[min]="option.min"
+					[max]="option.max"
+					[size]="10"
+					[ngModel]="option.value"
+					(ngModelChange)="option.value = $event"
+				></p-inputNumber>
+			} @else if (isSelectInput(option) && option.type === 'button') {
+				<p-selectButton
+					[id]="'component-settings-input-' + $index"
+					[name]="'component-settings-input-' + $index"
+					optionLabel="label"
+					optionValue="value"
+					[allowEmpty]="false"
+					[options]="option.options"
+					[ngModel]="option.value"
+					(ngModelChange)="option.value = $event"
+				>
+					<ng-template let-item pTemplate>
+						<ng-container
+							*ngTemplateOutlet="itemTemplate; context: { item }"
+						></ng-container>
+					</ng-template>
+				</p-selectButton>
+			} @else if (isSelectInput(option) && option.type === 'dropdown') {
+				<p-dropdown
+					[id]="'component-settings-input-' + $index"
+					[name]="'component-settings-input-' + $index"
+					optionLabel="label"
+					optionValue="value"
+					[options]="option.options"
+					[ngModel]="option.value"
+					(ngModelChange)="option.value = $event"
+				>
+					<ng-template let-item pTemplate="selectedItem">
+						<ng-container
+							*ngTemplateOutlet="itemTemplate; context: { item }"
+						></ng-container>
+					</ng-template>
+					<ng-template let-item pTemplate="item">
+						<ng-container
+							*ngTemplateOutlet="itemTemplate; context: { item }"
+						></ng-container>
+					</ng-template>
+				</p-dropdown>
+			}
+		</div>
+	}
+</form>

@@ -30,12 +30,12 @@ export class BoardComponent implements OnInit, OnDestroy {
 	protected readonly canvas!: ElementRef<HTMLCanvasElement>;
 
 	public readonly positionChange = output<Point>();
-	public readonly project = input<Project | null>();
+	public readonly project = input<Project | null>(null);
 
 	protected readonly loaded = signal(false);
 
 	private readonly destroy$ = new Subject<void>();
-	private readonly projectChange$ = new Subject<Project | null | undefined>();
+	private readonly projectChange$ = new Subject<Project | null>();
 
 	private readonly app: Application = new Application();
 

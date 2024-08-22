@@ -15,7 +15,7 @@ export class WorkModeService {
 
 	public readonly selectedComponentConfig = computed(() => {
 		const componentType = this.selectedComponentType();
-		return componentType
+		return componentType !== null
 			? this.componentProviderService.getComponent(componentType)
 			: null;
 	});

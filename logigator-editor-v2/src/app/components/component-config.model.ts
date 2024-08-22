@@ -10,8 +10,7 @@ export interface ComponentConfig {
 	symbol: string;
 	name: TranslationKey;
 	description: TranslationKey;
+	options: ComponentOption[];
 	// TODO: Make this mandatory, only optional until all components are implemented
-	// eslint-disable-next-line @typescript-eslint/no-explicit-any
-	options?: ComponentOption<any>[];
-	implementation?: { new (options: ComponentOption<unknown>[]): Component };
+	implementation?: { new (options: ComponentOption[]): Component };
 }

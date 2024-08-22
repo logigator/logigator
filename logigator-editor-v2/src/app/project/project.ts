@@ -164,7 +164,7 @@ export class Project extends InteractionContainer {
 		direction: ComponentRotation = ComponentRotation.Right
 	) {
 		// TODO: Remove this check once all components have been implemented
-		if (!componentConfig.implementation || !componentConfig.options) {
+		if (!componentConfig.implementation) {
 			return;
 		}
 

@@ -1,12 +1,12 @@
-import { ComponentOption, ComponentOptionType } from '../component-option';
+import { ComponentOption } from '../component-option';
+import { TranslationKey } from '../../translation/translation-key.model';
 
 export class SelectComponentOption<T> extends ComponentOption<T> {
-	public readonly type = ComponentOptionType.Select;
-
 	constructor(
-		public readonly label: string,
-		public readonly options: { value: T; label: string }[],
-		defaultValue: T
+		public readonly label: TranslationKey,
+		public readonly options: { value: T; label?: string; icon?: string }[],
+		defaultValue: T,
+		public readonly type: 'button' | 'dropdown' = 'dropdown'
 	) {
 		super(defaultValue);
 	}

@@ -6,7 +6,6 @@ import {
 } from '@angular/core';
 import { ComponentConfig } from '../../../components/component-config.model';
 import { ButtonModule } from 'primeng/button';
-import { LoggingService } from '../../../logging/logging.service';
 import { TranslocoDirective } from '@jsverse/transloco';
 import { WorkModeService } from '../../../work-mode/work-mode.service';
 import { WorkMode } from '../../../work-mode/work-mode.enum';
@@ -36,13 +35,9 @@ export class ComponentListComponent {
 		);
 	});
 
-	constructor(
-		private readonly loggingService: LoggingService,
-		private readonly workModeService: WorkModeService
-	) {}
+	constructor(private readonly workModeService: WorkModeService) {}
 
 	public selectComponent(component: ComponentConfig): void {
-		this.loggingService.log(component, 'ComponentListComponent');
 		this.workModeService.setMode(WorkMode.COMPONENT_PLACEMENT);
 		this.workModeService.setSelectedComponentType(component.type);
 	}

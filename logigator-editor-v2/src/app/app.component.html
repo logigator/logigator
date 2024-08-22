@@ -1,6 +1,6 @@
 <app-title-bar></app-title-bar>
 <app-tool-bar class="border-bottom-1 border-white-alpha-20"></app-tool-bar>
-<div class="flex flex-grow-1">
+<div class="flex flex-grow-1" *transloco="let t">
 	<app-side-bar
 		class="w-20rem border-right-1 border-white-alpha-20"
 	></app-side-bar>
@@ -11,9 +11,17 @@
 				[project]="projectService.activeProject()"
 				(positionChange)="boardPosition.set($event)"
 			></app-board>
-			<app-component-settings
-				class="absolute m-2 bottom-0 right-0"
-			></app-component-settings>
+			@if (componentSettings(); as settings) {
+				<p-card
+					class="absolute m-2 bottom-0 right-0 max-w-30rem"
+					[header]="t(settings.name)"
+					[subheader]="t(settings.description)"
+				>
+					<app-component-settings
+						[config]="settings.options"
+					></app-component-settings>
+				</p-card>
+			}
 		</div>
 		<app-status-bar [boardPosition]="boardPosition()"></app-status-bar>
 	</div>

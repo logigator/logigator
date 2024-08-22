@@ -20,8 +20,17 @@ const en = {
 			ROM: {
 				name: 'ROM',
 				description:
-					'A read-only memory (ROM) is a type of non-volatile memory used in computers and other electronic devices. Data stored in ROM cannot be electronically modified after the manufacture of the memory device.'
+					'A read-only memory (ROM) is a type of non-volatile memory used in computers and other electronic devices. Data stored in ROM cannot be electronically modified after the manufacture of the memory device.',
+				options: {
+					wordSize: 'Word Size',
+					addressSize: 'Address Size'
+				}
 			}
+		},
+		options: {
+			direction: 'Direction',
+			inputs: 'Inputs',
+			outputs: 'Outputs'
 		}
 	},
 	sideBar: {

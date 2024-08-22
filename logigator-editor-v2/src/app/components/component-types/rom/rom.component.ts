@@ -4,14 +4,19 @@ import { ComponentOption } from '../../component-option';
 import { ComponentRotation } from '../../component-rotation.enum';
 import { ComponentGraphics } from '../../../rendering/graphics/component.graphics';
 import { Graphics } from 'pixi.js';
+import { Subject, takeUntil } from 'rxjs';
 
 export class RomComponent extends Component {
 	public readonly config = romComponentConfig;
 
-	constructor(options: ComponentOption<unknown>[]) {
+	private readonly destroy$ = new Subject<void>();
+
+	constructor(options: ComponentOption[]) {
 		super(3, 5, options[0].value as ComponentRotation, options);
-		options[0].onChange = () =>
-			(this.direction = options[0].value as ComponentRotation);
+
+		options[0].onChange$.pipe(takeUntil(this.destroy$)).subscribe(() => {
+			this.direction = options[0].value as ComponentRotation;
+		});
 	}
 
 	protected get inputLabels(): string[] {
@@ -32,5 +37,10 @@ export class RomComponent extends Component {
 			)
 		);
 		this.addChild(componentGraphics);
+	}
+
+	public override destroy(): void {
+		this.destroy$.next();
+		super.destroy();
 	}
 }

@@ -5,9 +5,9 @@ import { getStaticDI } from '../utils/get-di';
 import { GraphicsProviderService } from '../rendering/graphics-provider.service';
 import { environment } from '../../environments/environment';
 import { fromGrid, toGridPoint } from '../utils/grid';
-import { ComponentOption } from './component-option';
 import { ComponentRotation } from './component-rotation.enum';
 import { WireGraphics } from '../rendering/graphics/wire.graphics';
+import { ComponentOption } from './component-option';
 
 export const enum ScaleType {
 	X = 1,
@@ -17,7 +17,7 @@ export const enum ScaleType {
 
 export abstract class Component extends Container {
 	public abstract readonly config: ComponentConfig;
-	public readonly options: ComponentOption<unknown>[];
+	public readonly options: ComponentOption[];
 
 	protected readonly themingService: ThemingService =
 		getStaticDI(ThemingService);
@@ -37,7 +37,7 @@ export abstract class Component extends Container {
 		numInputs: number,
 		numOutputs: number,
 		direction: ComponentRotation,
-		options: ComponentOption<unknown>[]
+		options: ComponentOption[]
 	) {
 		super();
 

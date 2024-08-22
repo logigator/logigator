@@ -13,8 +13,13 @@ export const romComponentConfig: ComponentConfig = {
 	description: 'components.def.ROM.description',
 	options: [
 		new DirectionComponentOption(),
-		new NumberComponentOption('Word Size', 1, 64, 4),
-		new NumberComponentOption('Address Size', 1, 16, 4)
+		new NumberComponentOption('components.def.ROM.options.wordSize', 1, 64, 4),
+		new NumberComponentOption(
+			'components.def.ROM.options.addressSize',
+			1,
+			16,
+			4
+		)
 	],
 	implementation: RomComponent
 };
