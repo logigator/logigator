@@ -25,13 +25,15 @@ export abstract class Component extends Container {
 		GraphicsProviderService
 	);
 
-	private _direction: ComponentRotation;
+	private _direction: ComponentRotation = ComponentRotation.Right;
 	private _appliedScale: number = 1;
 
-	private _numInputs: number;
-	private _numOutputs: number;
+	private _numInputs: number = 0;
+	private _numOutputs: number = 0;
 
 	private _constantRotationContainers: Container[] = [];
+
+	private _initialized = false;
 
 	protected constructor(
 		numInputs: number,
@@ -42,10 +44,12 @@ export abstract class Component extends Container {
 		super();
 
 		this.interactiveChildren = false;
-		this._numInputs = numInputs;
-		this._numOutputs = numOutputs;
-		this._direction = direction;
+		this.numInputs = numInputs;
+		this.numOutputs = numOutputs;
+		this.direction = direction;
 		this.options = options;
+
+		this._initialized = true;
 
 		this._draw();
 	}
@@ -150,6 +154,10 @@ export abstract class Component extends Container {
 	}
 
 	private _draw(): void {
+		if (!this._initialized) {
+			return;
+		}
+
 		for (const child of this.children) {
 			child.destroy({ children: true });
 		}

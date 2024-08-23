@@ -16,6 +16,7 @@ import { ThemingService } from '../../theming/theming.service';
 import { Project } from '../../project/project';
 import { AssetsService } from '../../rendering/assets.service';
 import { merge, Subject, takeUntil, throttleTime } from 'rxjs';
+import { WorkModeService } from '../../work-mode/work-mode.service';
 
 @Component({
 	selector: 'app-board',
@@ -43,7 +44,8 @@ export class BoardComponent implements OnInit, OnDestroy {
 		private readonly hostEl: ElementRef,
 		private readonly themingService: ThemingService,
 		private readonly ngZone: NgZone,
-		private readonly assetsService: AssetsService
+		private readonly assetsService: AssetsService,
+		private readonly workModeService: WorkModeService
 	) {
 		this.projectChange$.pipe(takeUntil(this.destroy$)).subscribe((project) => {
 			if (!project) {
@@ -94,6 +96,16 @@ export class BoardComponent implements OnInit, OnDestroy {
 			}
 
 			this.projectChange$.next(this.project());
+		});
+
+		effect(() => {
+			const project = this.project();
+			if (!project) {
+				return;
+			}
+
+			project.mode = this.workModeService.mode();
+			project.componentToPlace = this.workModeService.selectedComponentConfig();
 		});
 	}
 

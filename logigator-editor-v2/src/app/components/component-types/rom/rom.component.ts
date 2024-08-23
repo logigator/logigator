@@ -12,7 +12,12 @@ export class RomComponent extends Component {
 	private readonly destroy$ = new Subject<void>();
 
 	constructor(options: ComponentOption[]) {
-		super(3, 5, options[0].value as ComponentRotation, options);
+		super(
+			options[1].value as ComponentRotation,
+			options[2].value as ComponentRotation,
+			options[0].value as ComponentRotation,
+			options
+		);
 
 		options[0].onChange$.pipe(takeUntil(this.destroy$)).subscribe(() => {
 			this.direction = options[0].value as ComponentRotation;

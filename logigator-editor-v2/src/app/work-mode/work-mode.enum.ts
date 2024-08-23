@@ -1,4 +1,4 @@
-export enum WorkMode {
+export const enum WorkMode {
 	WIRE_DRAWING = 'drawWire',
 	WIRE_CONNECTION = 'connWire',
 	SELECT = 'sel',

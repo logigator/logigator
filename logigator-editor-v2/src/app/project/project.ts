@@ -2,25 +2,25 @@ import { Container, Matrix, Point, Rectangle } from 'pixi.js';
 
 import { Grid } from '../rendering/grid';
 import { ComponentConfig } from '../components/component-config.model';
-import { ComponentRotation } from '../components/component-rotation.enum';
-import { romComponentConfig } from '../components/component-types/rom/rom.config';
 import { InteractionContainer } from '../rendering/interaction-container';
 import { Component } from '../components/component';
 import { Observable, Subject } from 'rxjs';
 import { toGridPoint } from '../utils/grid';
+import { WorkMode } from '../work-mode/work-mode.enum';
 
 export class Project extends InteractionContainer {
-	// public meta: ProjectMeta = new ProjectMeta();
-
 	private readonly _scaleStepAmount = 1.2;
 	private readonly _scaleStepMin = -12;
 	private readonly _scaleStepMax = 5;
+	private _scaleStep = 0;
 
 	private readonly _grid: Grid = new Grid();
 	private readonly _components = new Container<Component>();
-	private _viewPortSize = new Point(0, 0);
+	private readonly _floatingLayer = new Container();
 
-	private _scaleStep = 0;
+	private _viewPortSize = new Point(0, 0);
+	private _mode: WorkMode = WorkMode.WIRE_DRAWING;
+	private _componentToPlace: ComponentConfig | null = null;
 
 	private readonly _positionChange$ = new Subject<Point>();
 
@@ -38,53 +38,19 @@ export class Project extends InteractionContainer {
 		this.addChild(this._grid);
 		this.addChild(this._components);
 
-		this.addComponent(
-			romComponentConfig,
-			new Point(0, 0),
-			ComponentRotation.Right
-		);
-
-		this.addComponent(
-			romComponentConfig,
-			new Point(5, 0),
-			ComponentRotation.Right
-		);
-
-		this.addComponent(
-			romComponentConfig,
-			new Point(10, 0),
-			ComponentRotation.Right
-		);
-
-		this.addComponent(
-			romComponentConfig,
-			new Point(15, 0),
-			ComponentRotation.Right
-		);
-
-		this.addComponent(
-			romComponentConfig,
-			new Point(0, 8),
-			ComponentRotation.Right
-		);
-
-		this.addComponent(
-			romComponentConfig,
-			new Point(10, 8),
-			ComponentRotation.Down
-		);
-
-		this.addComponent(
-			romComponentConfig,
-			new Point(15, 13),
-			ComponentRotation.Left
-		);
-
-		this.addComponent(
-			romComponentConfig,
-			new Point(17, 13),
-			ComponentRotation.Up
-		);
+		this.on('click', (e) => {
+			if (
+				this._mode === WorkMode.COMPONENT_PLACEMENT &&
+				this._componentToPlace
+			) {
+				this.addComponent(
+					this._componentToPlace,
+					toGridPoint(
+						e.global.subtract(this.position).multiplyScalar(1 / this.scale.x)
+					)
+				);
+			}
+		});
 	}
 
 	public resizeViewport(width: number, height: number) {
@@ -147,6 +113,22 @@ export class Project extends InteractionContainer {
 		return toGridPoint(this.position.multiplyScalar(1 / this.scale.x));
 	}
 
+	public get mode(): WorkMode {
+		return this._mode;
+	}
+
+	public set mode(mode: WorkMode) {
+		this._mode = mode;
+	}
+
+	public get componentToPlace(): ComponentConfig | null {
+		return this._componentToPlace;
+	}
+
+	public set componentToPlace(component: ComponentConfig | null) {
+		this._componentToPlace = component;
+	}
+
 	private updateScale(scale: number) {
 		if (scale === this.scale.x) return;
 
@@ -158,11 +140,7 @@ export class Project extends InteractionContainer {
 		}
 	}
 
-	private addComponent(
-		componentConfig: ComponentConfig,
-		gridPos: Point,
-		direction: ComponentRotation = ComponentRotation.Right
-	) {
+	private addComponent(componentConfig: ComponentConfig, gridPos: Point) {
 		// TODO: Remove this check once all components have been implemented
 		if (!componentConfig.implementation) {
 			return;
@@ -172,9 +150,10 @@ export class Project extends InteractionContainer {
 			componentConfig.options.map((x) => x.clone())
 		);
 		component.gridPos = gridPos;
-		component.direction = direction;
+		component.applyScale(this.scale.x);
 
-		this._components.children.push(component);
 		this._components.addChild(component);
+
+		this._ticker$.next('single');
 	}
 }
