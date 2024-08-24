@@ -11,7 +11,11 @@ export class SelectComponentOption<T> extends ComponentOption<T> {
 		super(defaultValue);
 	}
 
-	clone(): SelectComponentOption<T> {
-		return new SelectComponentOption<T>(this.label, this.options, this.value);
+	clone(initialValue?: T): SelectComponentOption<T> {
+		return new SelectComponentOption<T>(
+			this.label,
+			this.options,
+			initialValue ?? this.value
+		);
 	}
 }

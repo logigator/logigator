@@ -7,6 +7,7 @@ import { Component } from '../components/component';
 import { Observable, Subject } from 'rxjs';
 import { toGridPoint } from '../utils/grid';
 import { WorkMode } from '../work-mode/work-mode.enum';
+import { FloatingLayer } from '../rendering/floating-layer';
 
 export class Project extends InteractionContainer {
 	private readonly _scaleStepAmount = 1.2;
@@ -16,7 +17,7 @@ export class Project extends InteractionContainer {
 
 	private readonly _grid: Grid = new Grid();
 	private readonly _components = new Container<Component>();
-	private readonly _floatingLayer = new Container();
+	private readonly _floatingLayer = new FloatingLayer(this, this._ticker$);
 
 	private _viewPortSize = new Point(0, 0);
 	private _mode: WorkMode = WorkMode.WIRE_DRAWING;
@@ -37,20 +38,7 @@ export class Project extends InteractionContainer {
 
 		this.addChild(this._grid);
 		this.addChild(this._components);
-
-		this.on('click', (e) => {
-			if (
-				this._mode === WorkMode.COMPONENT_PLACEMENT &&
-				this._componentToPlace
-			) {
-				this.addComponent(
-					this._componentToPlace,
-					toGridPoint(
-						e.global.subtract(this.position).multiplyScalar(1 / this.scale.x)
-					)
-				);
-			}
-		});
+		this.addChild(this._floatingLayer);
 	}
 
 	public resizeViewport(width: number, height: number) {
@@ -105,6 +93,10 @@ export class Project extends InteractionContainer {
 		this.updateScale(1);
 	}
 
+	public screenPosToProjectPos(mousePos: Point): Point {
+		return mousePos.subtract(this.position).multiplyScalar(1 / this.scale.x);
+	}
+
 	public get positionChange$(): Observable<Point> {
 		return this._positionChange$.asObservable();
 	}
@@ -134,26 +126,26 @@ export class Project extends InteractionContainer {
 
 		this.scale.set(scale);
 		this._grid.updateScale(scale);
+		this._floatingLayer.updateScale(scale);
 
 		for (const child of this._components.children) {
 			child.applyScale(scale);
 		}
 	}
 
-	private addComponent(componentConfig: ComponentConfig, gridPos: Point) {
-		// TODO: Remove this check once all components have been implemented
-		if (!componentConfig.implementation) {
-			return;
+	public addComponent(component: Component, gridPos?: Point) {
+		if (gridPos) {
+			component.gridPos = gridPos;
 		}
-
-		const component = new componentConfig.implementation(
-			componentConfig.options.map((x) => x.clone())
-		);
-		component.gridPos = gridPos;
 		component.applyScale(this.scale.x);
 
 		this._components.addChild(component);
 
 		this._ticker$.next('single');
+	}
+
+	public removeComponent(componentId: number) {
+		// TODO: Implement
+		throw new Error('Not implemented');
 	}
 }

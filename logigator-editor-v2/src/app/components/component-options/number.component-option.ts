@@ -24,12 +24,12 @@ export class NumberComponentOption extends ComponentOption<number> {
 		return super.value;
 	}
 
-	clone(): NumberComponentOption {
+	clone(initialValue?: number): NumberComponentOption {
 		return new NumberComponentOption(
 			this.label,
 			this.min,
 			this.max,
-			this.value
+			initialValue ?? this.value
 		);
 	}
 }

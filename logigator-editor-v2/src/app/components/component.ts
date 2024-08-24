@@ -8,12 +8,9 @@ import { fromGrid, toGridPoint } from '../utils/grid';
 import { ComponentRotation } from './component-rotation.enum';
 import { WireGraphics } from '../rendering/graphics/wire.graphics';
 import { ComponentOption } from './component-option';
+import { SerializedComponent } from './serialized-component.model';
 
-export const enum ScaleType {
-	X = 1,
-	Y = 2,
-	XY = 3
-}
+let COMPONENT_ID_COUNTER = 0;
 
 export abstract class Component extends Container {
 	public abstract readonly config: ComponentConfig;
@@ -25,6 +22,8 @@ export abstract class Component extends Container {
 		GraphicsProviderService
 	);
 
+	private _id: number;
+
 	private _direction: ComponentRotation = ComponentRotation.Right;
 	private _appliedScale: number = 1;
 
@@ -35,6 +34,26 @@ export abstract class Component extends Container {
 
 	private _initialized = false;
 
+	public static serialize(component: Component): SerializedComponent {
+		return {
+			t: component.config.type,
+			p: [component.gridPos.x, component.gridPos.y],
+			o: component.options.map((x) => x.value)
+		};
+	}
+
+	public static deserialize(
+		serialized: SerializedComponent,
+		config: ComponentConfig
+	): Component {
+		const component = new config.implementation(
+			config.options.map((option, i) => option.clone(serialized.o[i]))
+		);
+		component.gridPos = new Point(serialized.p[0], serialized.p[1]);
+
+		return component;
+	}
+
 	protected constructor(
 		numInputs: number,
 		numOutputs: number,
@@ -44,6 +63,8 @@ export abstract class Component extends Container {
 		super();
 
 		this.interactiveChildren = false;
+		this._id = COMPONENT_ID_COUNTER++;
+
 		this.numInputs = numInputs;
 		this.numOutputs = numOutputs;
 		this.direction = direction;
@@ -59,6 +80,14 @@ export abstract class Component extends Container {
 	protected abstract get outputLabels(): string[];
 
 	protected abstract draw(): void;
+
+	public get id(): number {
+		return this._id;
+	}
+
+	public set id(value: number) {
+		this._id = value;
+	}
 
 	public get gridPos(): Point {
 		return toGridPoint(this.position);

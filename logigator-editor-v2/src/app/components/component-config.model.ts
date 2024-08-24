@@ -11,6 +11,5 @@ export interface ComponentConfig {
 	name: TranslationKey;
 	description: TranslationKey;
 	options: ComponentOption[];
-	// TODO: Make this mandatory, only optional until all components are implemented
-	implementation?: { new (options: ComponentOption[]): Component };
+	implementation: { new (options: ComponentOption[]): Component };
 }

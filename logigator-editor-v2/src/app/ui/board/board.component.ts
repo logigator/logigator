@@ -83,6 +83,7 @@ export class BoardComponent implements OnInit, OnDestroy {
 								this.app.ticker.start();
 								break;
 							case 'off':
+								this.app.ticker.update();
 								this.app.ticker.stop();
 								break;
 						}

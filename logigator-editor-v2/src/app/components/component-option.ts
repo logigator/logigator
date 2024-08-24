@@ -21,5 +21,5 @@ export abstract class ComponentOption<T = any> {
 		this.onChange$.next(value);
 	}
 
-	public abstract clone(): ComponentOption<T>;
+	public abstract clone(initialValue?: T): ComponentOption<T>;
 }
