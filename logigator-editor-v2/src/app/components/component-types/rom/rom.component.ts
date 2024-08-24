@@ -25,11 +25,19 @@ export class RomComponent extends Component {
 	}
 
 	protected get inputLabels(): string[] {
-		return ['A1', 'A2', 'A3', 'A4'];
+		const labels = [];
+		for (let i = 1; i <= this.numInputs; i++) {
+			labels.push(`A${i}`);
+		}
+		return labels;
 	}
 
 	protected get outputLabels(): string[] {
-		return ['O1', 'O2', 'O3', 'O4'];
+		const labels = [];
+		for (let i = 1; i <= this.numOutputs; i++) {
+			labels.push(`O${i}`);
+		}
+		return labels;
 	}
 
 	protected draw(): void {
