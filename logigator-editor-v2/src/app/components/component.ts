@@ -246,13 +246,13 @@ export abstract class Component extends Container {
 					text: labels[i],
 					style: {
 						fontFamily: 'Roboto',
-						fontSize: fromGrid(0.5) * this._appliedScale,
+						fontSize: fromGrid(0.5),
 						fill: this.themingService.currentTheme().fontTint
 					},
-					anchor: { x: type === 'inputs' ? 0 : 1, y: 0.5 }
+					anchor: { x: type === 'inputs' ? 0 : 1, y: 0.5 },
+					resolution: this._appliedScale * window.devicePixelRatio
 				});
 				text.pivot.set((text.width / 2) * (type === 'inputs' ? 1 : -1), 0);
-				text.scale.set(1 / this._appliedScale);
 
 				if (type === 'inputs') {
 					text.position.set(

@@ -71,9 +71,9 @@ export abstract class InteractionContainer extends Container {
 
 	private _onWheel(e: FederatedWheelEvent) {
 		if (e.deltaY > 0) {
-			this.zoomOut(e.screen);
+			this.zoomOut(e.global);
 		} else if (e.deltaY < 0) {
-			this.zoomIn(e.screen);
+			this.zoomIn(e.global);
 		}
 		this._ticker$.next('single');
 	}

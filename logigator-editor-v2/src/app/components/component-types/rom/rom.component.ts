@@ -3,7 +3,7 @@ import { romComponentConfig } from './rom.config';
 import { ComponentOption } from '../../component-option';
 import { ComponentRotation } from '../../component-rotation.enum';
 import { ComponentGraphics } from '../../../rendering/graphics/component.graphics';
-import { Graphics } from 'pixi.js';
+import { DestroyOptions, Graphics } from 'pixi.js';
 import { Subject, takeUntil } from 'rxjs';
 
 export class RomComponent extends Component {
@@ -52,8 +52,8 @@ export class RomComponent extends Component {
 		this.addChild(componentGraphics);
 	}
 
-	public override destroy(): void {
+	public override destroy(options?: DestroyOptions): void {
 		this.destroy$.next();
-		super.destroy();
+		super.destroy(options);
 	}
 }

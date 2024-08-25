@@ -60,9 +60,7 @@ export class FloatingLayer extends Container {
 
 		this._dragStart = e.global.clone();
 
-		this.position = alignPointToGrid(
-			this.project.screenPosToProjectPos(e.global)
-		);
+		this.position = alignPointToGrid(e.getLocalPosition(this.project), true);
 
 		switch (this.project.mode) {
 			case WorkMode.COMPONENT_PLACEMENT:
@@ -89,11 +87,12 @@ export class FloatingLayer extends Container {
 		switch (this.project.mode) {
 			case WorkMode.COMPONENT_PLACEMENT:
 				this.position = alignPointToGrid(
-					this.project.screenPosToProjectPos(e.global)
+					e.getLocalPosition(this.project),
+					true
 				);
 				break;
 			case WorkMode.SELECT:
-				this.position = this.project.screenPosToProjectPos(
+				this.position = this.project.toLocal(
 					new Point(
 						Math.min(this._dragStart.x, e.global.x),
 						Math.min(this._dragStart.y, e.global.y)
@@ -145,7 +144,7 @@ export class FloatingLayer extends Container {
 		for (const child of this._selection.children) {
 			this.project.addComponent(
 				child,
-				toGridPoint(this.position.add(child.position))
+				toGridPoint(this.position.add(child.position), true)
 			);
 		}
 

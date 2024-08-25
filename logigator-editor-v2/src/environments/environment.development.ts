@@ -6,6 +6,6 @@ export const environment: Environment = {
 		showGridBorders: true,
 		showHitboxes: false,
 		showOrigins: true,
-		showConnectionPoints: false
+		showConnectionPoints: true
 	}
 };

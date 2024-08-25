@@ -46,7 +46,7 @@ export class Grid extends Container {
 
 	public updateScale(scale: number) {
 		for (const child of this.children) {
-			child.destroy();
+			child.destroy({ children: true });
 		}
 		this.removeChildren(0);
 

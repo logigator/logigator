@@ -58,43 +58,17 @@ export class Project extends InteractionContainer {
 
 	public zoomIn(center?: Point) {
 		if (this._scaleStep >= this._scaleStepMax) return;
-
-		if (center) {
-			this.setPosition(
-				new Matrix()
-					.translate(-center.x, -center.y)
-					.scale(this._scaleStepAmount, this._scaleStepAmount)
-					.translate(center.x, center.y)
-					.apply(this.position)
-			);
-		}
-
-		this.updateScale(Math.pow(this._scaleStepAmount, ++this._scaleStep));
+		this.updateScale(Math.pow(this._scaleStepAmount, ++this._scaleStep), center);
 	}
 
 	public zoomOut(center?: Point) {
 		if (this._scaleStep <= this._scaleStepMin) return;
-
-		if (center) {
-			this.setPosition(
-				new Matrix()
-					.translate(-center.x, -center.y)
-					.scale(1 / this._scaleStepAmount, 1 / this._scaleStepAmount)
-					.translate(center.x, center.y)
-					.apply(this.position)
-			);
-		}
-
-		this.updateScale(Math.pow(this._scaleStepAmount, --this._scaleStep));
+		this.updateScale(Math.pow(this._scaleStepAmount, --this._scaleStep), center);
 	}
 
-	public zoom100() {
+	public zoom100(center?: Point) {
 		this._scaleStep = 0;
-		this.updateScale(1);
-	}
-
-	public screenPosToProjectPos(mousePos: Point): Point {
-		return mousePos.subtract(this.position).multiplyScalar(1 / this.scale.x);
+		this.updateScale(1, center);
 	}
 
 	public get positionChange$(): Observable<Point> {
@@ -102,7 +76,7 @@ export class Project extends InteractionContainer {
 	}
 
 	public get gridPosition() {
-		return toGridPoint(this.position.multiplyScalar(1 / this.scale.x));
+		return toGridPoint(this.position.multiplyScalar(1 / this.scale.x), true);
 	}
 
 	public get mode(): WorkMode {
@@ -121,8 +95,17 @@ export class Project extends InteractionContainer {
 		this._componentToPlace = component;
 	}
 
-	private updateScale(scale: number) {
+	private updateScale(scale: number, center: Point = this._viewPortSize.multiplyScalar(0.5)) {
 		if (scale === this.scale.x) return;
+
+		this.setPosition(
+			new Matrix()
+				.translate(-center.x, -center.y)
+				.scale(1 / this.scale.x, 1 / this.scale.y)
+				.scale(scale, scale)
+				.translate(center.x, center.y)
+				.apply(this.position)
+		);
 
 		this.scale.set(scale);
 		this._grid.updateScale(scale);
