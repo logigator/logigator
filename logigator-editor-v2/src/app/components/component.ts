@@ -36,9 +36,10 @@ export abstract class Component extends Container {
 
 	public static serialize(component: Component): SerializedComponent {
 		return {
-			t: component.config.type,
-			p: [component.gridPos.x, component.gridPos.y],
-			o: component.options.map((x) => x.value)
+			id: component.id,
+			type: component.config.type,
+			pos: [component.gridPos.x, component.gridPos.y],
+			options: component.options.map((x) => x.value)
 		};
 	}
 
@@ -47,9 +48,10 @@ export abstract class Component extends Container {
 		config: ComponentConfig
 	): Component {
 		const component = new config.implementation(
-			config.options.map((option, i) => option.clone(serialized.o[i]))
+			config.options.map((option, i) => option.clone(serialized.options[i]))
 		);
-		component.gridPos = new Point(serialized.p[0], serialized.p[1]);
+		component.id = serialized.id;
+		component.gridPos = new Point(serialized.pos[0], serialized.pos[1]);
 
 		return component;
 	}
@@ -86,6 +88,9 @@ export abstract class Component extends Container {
 	}
 
 	public set id(value: number) {
+		if (value >= COMPONENT_ID_COUNTER) {
+			COMPONENT_ID_COUNTER = value + 1;
+		}
 		this._id = value;
 	}
 

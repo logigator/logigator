@@ -35,6 +35,13 @@ export function toGridPoint(point: Point, inline: boolean = false): Point {
 	return new Point(toGrid(point.x), toGrid(point.y));
 }
 
+export function toHalfGridPoint(point: Point, inline: boolean = false): Point {
+	if (inline) {
+		return point.set(toHalfGrid(point.x), toHalfGrid(point.y));
+	}
+	return new Point(toHalfGrid(point.x), toHalfGrid(point.y));
+}
+
 export function alignPointToGrid(point: Point, inline: boolean = false): Point {
 	return fromGridPoint(toGridPoint(point, inline), true);
 }
@@ -43,5 +50,5 @@ export function alignPointToHalfGrid(
 	point: Point,
 	inline: boolean = false
 ): Point {
-	return fromGridPoint(toGridPoint(point, inline), true);
+	return fromGridPoint(toHalfGridPoint(point, inline), true);
 }

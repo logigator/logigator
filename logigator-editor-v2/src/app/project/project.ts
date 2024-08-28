@@ -8,20 +8,23 @@ import { Observable, Subject } from 'rxjs';
 import { toGridPoint } from '../utils/grid';
 import { WorkMode } from '../work-mode/work-mode.enum';
 import { FloatingLayer } from '../rendering/floating-layer';
+import { ActionManager } from '../actions/action-manager';
+import { Wire } from '../wires/wire';
 
 export class Project extends InteractionContainer {
+	public readonly actionManager = new ActionManager(this);
+
 	private readonly _scaleStepAmount = 1.2;
 	private readonly _scaleStepMin = -12;
 	private readonly _scaleStepMax = 5;
 	private _scaleStep = 0;
 
 	private readonly _grid: Grid = new Grid();
+	private readonly _wires = new Container<Wire>();
 	private readonly _components = new Container<Component>();
 	private readonly _floatingLayer = new FloatingLayer(this, this._ticker$);
 
 	private _viewPortSize = new Point(0, 0);
-	private _mode: WorkMode = WorkMode.WIRE_DRAWING;
-	private _componentToPlace: ComponentConfig | null = null;
 
 	private readonly _positionChange$ = new Subject<Point>();
 
@@ -37,6 +40,7 @@ export class Project extends InteractionContainer {
 		this.hitArea = this.boundsArea;
 
 		this.addChild(this._grid);
+		this.addChild(this._wires);
 		this.addChild(this._components);
 		this.addChild(this._floatingLayer);
 	}
@@ -58,12 +62,18 @@ export class Project extends InteractionContainer {
 
 	public zoomIn(center?: Point) {
 		if (this._scaleStep >= this._scaleStepMax) return;
-		this.updateScale(Math.pow(this._scaleStepAmount, ++this._scaleStep), center);
+		this.updateScale(
+			Math.pow(this._scaleStepAmount, ++this._scaleStep),
+			center
+		);
 	}
 
 	public zoomOut(center?: Point) {
 		if (this._scaleStep <= this._scaleStepMin) return;
-		this.updateScale(Math.pow(this._scaleStepAmount, --this._scaleStep), center);
+		this.updateScale(
+			Math.pow(this._scaleStepAmount, --this._scaleStep),
+			center
+		);
 	}
 
 	public zoom100(center?: Point) {
@@ -80,22 +90,47 @@ export class Project extends InteractionContainer {
 	}
 
 	public get mode(): WorkMode {
-		return this._mode;
+		return this._floatingLayer.mode;
 	}
 
 	public set mode(mode: WorkMode) {
-		this._mode = mode;
+		this._floatingLayer.mode = mode;
 	}
 
 	public get componentToPlace(): ComponentConfig | null {
-		return this._componentToPlace;
+		return this._floatingLayer.componentToPlace;
 	}
 
 	public set componentToPlace(component: ComponentConfig | null) {
-		this._componentToPlace = component;
+		this._floatingLayer.componentToPlace = component;
 	}
 
-	private updateScale(scale: number, center: Point = this._viewPortSize.multiplyScalar(0.5)) {
+	public addComponent(component: Component) {
+		component.applyScale(this.scale.x);
+		this._components.addChild(component);
+		this._ticker$.next('single');
+	}
+
+	public removeComponent(componentId: number) {
+		// TODO: Implement
+		throw new Error('Not implemented');
+	}
+
+	public addWire(wire: Wire) {
+		wire.applyScale(this.scale.x);
+		this._wires.addChild(wire);
+		this._ticker$.next('single');
+	}
+
+	public removeWire(wireId: number) {
+		// TODO: Implement
+		throw new Error('Not implemented');
+	}
+
+	private updateScale(
+		scale: number,
+		center: Point = this._viewPortSize.multiplyScalar(0.5)
+	) {
 		if (scale === this.scale.x) return;
 
 		this.setPosition(
@@ -114,21 +149,8 @@ export class Project extends InteractionContainer {
 		for (const child of this._components.children) {
 			child.applyScale(scale);
 		}
-	}
-
-	public addComponent(component: Component, gridPos?: Point) {
-		if (gridPos) {
-			component.gridPos = gridPos;
+		for (const child of this._wires.children) {
+			child.applyScale(scale);
 		}
-		component.applyScale(this.scale.x);
-
-		this._components.addChild(component);
-
-		this._ticker$.next('single');
-	}
-
-	public removeComponent(componentId: number) {
-		// TODO: Implement
-		throw new Error('Not implemented');
 	}
 }

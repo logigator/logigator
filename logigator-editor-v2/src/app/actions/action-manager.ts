@@ -10,6 +10,7 @@ export class ActionManager {
 	public push(action: Action): void {
 		this._history.splice(this._pointer, Infinity, action);
 		this._pointer = this._history.length;
+		action.do(this.project);
 	}
 
 	public undo(): void {

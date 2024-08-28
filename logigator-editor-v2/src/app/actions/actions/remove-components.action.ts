@@ -5,30 +5,32 @@ import { Component } from '../../components/component';
 import { getStaticDI } from '../../utils/get-di';
 import { ComponentProviderService } from '../../components/component-provider.service';
 
-export class AddComponentAction extends Action {
-	private readonly _componentId: number;
-	private readonly _component: SerializedComponent;
+export class RemoveComponentsAction extends Action {
+	private readonly _components: SerializedComponent[];
 
 	private readonly componentProviderService = getStaticDI(
 		ComponentProviderService
 	);
 
-	constructor(component: Component) {
+	constructor(...components: Component[]) {
 		super();
-		this._component = Component.serialize(component);
-		this._componentId = component.id;
+		this._components = components.map((component) => Component.serialize(component));
 	}
 
 	do(project: Project): void {
-		project.addComponent(
-			Component.deserialize(
-				this._component,
-				this.componentProviderService.getComponent(this._component.t)
-			)
-		);
+		for (const component of this._components) {
+			project.removeComponent(component.id);
+		}
 	}
 
 	undo(project: Project): void {
-		project.removeComponent(this._componentId);
+		for (const component of this._components) {
+			project.addComponent(
+				Component.deserialize(
+					component,
+					this.componentProviderService.getComponent(component.type)
+				)
+			);
+		}
 	}
 }
