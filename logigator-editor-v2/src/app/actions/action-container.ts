@@ -16,8 +16,8 @@ export class ActionContainer extends Action {
 	}
 
 	public undo(project: Project): void {
-		for (const action of this.actions) {
-			action.undo(project);
+		for (let i = this.actions.length - 1; i >= 0; i--) {
+			this.actions[i].undo(project);
 		}
 	}
 
