@@ -100,6 +100,7 @@ export class UserService {
 			const code = await this.generateEmailVerificationCode(newUser.id, newUser.email);
 			await this.sendRegisterVerificationMail(newUser, code, currentLang);
 		} catch (error) {
+			console.error(error);
 			throw new Error('verification_mail');
 		}
 		return true;

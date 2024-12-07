@@ -36,7 +36,7 @@ services:
     command: "sh -c 'corepack enable && yarn && exec yarn start'"
 
   mysql:
-    image: mysql:8
+    image: mysql:8.3
     networks:
       - net
     ports:
