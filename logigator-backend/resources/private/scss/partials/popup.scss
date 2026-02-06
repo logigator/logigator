@@ -78,7 +78,7 @@
 		overflow: auto;
 		width: 100%;
 
-		:first-child {
+		> :first-child {
 			margin-top: 0;
 		}
 
