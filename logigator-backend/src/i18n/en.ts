@@ -158,7 +158,7 @@ export const en = {
 		'ERR_UNKNOWN': 'An unknown error occurred.'
 	},
 	'RESET_PASSWORD_FORM': {
-		'HEADLINE': 'Sign up here',
+		'HEADLINE': 'Reset your password',
 		'PASSWORD': 'Password',
 		'PASSWORD_ERR_REQUIRED': 'Password is required.',
 		'PASSWORD_ERR_MIN': 'Password must contain a minimum of eight characters.',
