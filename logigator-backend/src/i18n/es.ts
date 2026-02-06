@@ -22,7 +22,8 @@ export const es: ILanguage = {
 		'LOGIN': 'Logigator - Iniciar Sesión',
 		'REGISTER': 'Logigator - Registrarse',
 		'EXAMPLES': 'Logigator - Ejemplos',
-		'COMMUNITY': 'Logigator - Comunidad'
+		'COMMUNITY': 'Logigator - Comunidad',
+		'RESET_PASSWORD': 'Logigator - Restablecer contraseña'
 	},
 	'SITE_HEADER': {
 		'DOWNLOAD': 'Descargar',
@@ -130,7 +131,8 @@ export const es: ILanguage = {
 		'ERR_UNKNOWN': 'Ha ocurrido un error desconocido.',
 		'LOGIN_BUTTON': 'INICIAR SESIÓN',
 		'RESEND_BUTTON': 'Reenviar correo de verificación',
-		'OR': 'o'
+		'OR': 'o',
+		'FORGOT_PASSWORD': '¿Olvidaste tu contraseña?'
 	},
 	'REGISTER_FORM': {
 		'HEADLINE': 'Regístrate Aquí',
@@ -156,6 +158,29 @@ export const es: ILanguage = {
 		'ERR_EMAIL_TAKEN': 'El correo electrónico ya está registrado',
 		'ERR_VERIFICATION_MAIL': 'No se pudo enviar el correo de verificación, inténtalo nuevamente al iniciar sesión.',
 		'ERR_UNKNOWN': 'Ha ocurrido un error desconocido.'
+	},
+	'RESET_PASSWORD_FORM': {
+		'HEADLINE': 'Regístrate Aquí',
+		'PASSWORD': 'Contraseña',
+		'PASSWORD_ERR_REQUIRED': 'La contraseña es obligatoria.',
+		'PASSWORD_ERR_MIN': 'La contraseña debe contener un mínimo de ocho caracteres.',
+		'PASSWORD_ERR_COMPLEXITY': 'La contraseña debe contener letras y dígitos.',
+		'PASSWORD_REPEAT': 'Repetir contraseña',
+		'PASSWORD_REPEAT_ERR_REQUIRED': 'La contraseña debe repetirse.',
+		'PASSWORD_REPEAT_ERR': 'Las contraseñas no coinciden.',
+		'SUBMIT': 'RESTABLECER CONTRASEÑA',
+		'ERR_TOKEN_INVALID': 'El token de restablecimiento de contraseña es inválido o ha expirado.',
+		'ERR_UNKNOWN': 'Se ha producido un error desconocido.'
+	},
+	'REQUEST_PASSWORD_RESET_FORM': {
+		'HEADLINE': 'Restablece tu contraseña',
+		'EMAIL': 'Correo Electrónico',
+		'EMAIL_ERR_REQUIRED': 'El correo electrónico es obligatorio.',
+		'EMAIL_ERR_INVALID': 'Por favor, introduce una dirección de correo electrónico válida.',
+		'EMAIL_ERR_NO_USER': 'El correo electrónico no existe.',
+		'SUBMIT': 'RESTABLECER CONTRASEÑA',
+		'ERR_RESET_MAIL': 'No se pudo enviar el correo de restablecimiento.',
+		'ERR_UNKNOWN': 'Se ha producido un error desconocido.'
 	},
 	'COMMUNITY': {
 		'NAV': {
@@ -361,6 +386,18 @@ export const es: ILanguage = {
 			'TITLE': 'Cuenta eliminada',
 			'LINE_1': 'Tu cuenta ha sido eliminada correctamente.',
 			'OK_BUTTON': 'Aceptar'
+		},
+		'PASSWORD_RESET_MAIL_SENT': {
+			'TITLE': 'Correo de restablecimiento enviado',
+			'HEADLINE': 'Correo de restablecimiento enviado',
+			'BODY': 'Si existe una cuenta con el correo introducido, se ha enviado un correo para restablecer la contraseña. Por favor, revisa tu bandeja de entrada.',
+			'OK_BUTTON': 'Aceptar'
+		},
+		'PASSWORD_RESET': {
+			'TITLE': 'Contraseña restablecida',
+			'HEADLINE': 'Contraseña restablecida',
+			'BODY': 'Tu contraseña ha sido restablecida correctamente. Ahora puedes iniciar sesión con tu nueva contraseña.',
+			'OK_BUTTON': 'Aceptar'
 		}
 	},
 	'IMPRINT': {
@@ -494,7 +531,7 @@ export const es: ILanguage = {
 		'<p>Solo transferimos o procesamos datos a países fuera del alcance del RGPD (terceros países) si usted da su consentimiento para este procesamiento o existe otro permiso legal. Esto se aplica en particular si el procesamiento es requerido por ley o necesario para cumplir una relación contractual y, en cualquier caso, solo en la medida en que esté generalmente permitido. En la mayoría de los casos, su consentimiento es la razón más importante por la que procesamos datos en terceros países. El procesamiento de datos personales en terceros países, como los EE. UU., donde muchos fabricantes de software brindan servicios y tienen sus servidores, puede significar que los datos personales se procesen y almacenen de maneras inesperadas.</p>\n' +
 		'<p>Señalamos expresamente que, según la opinión del Tribunal de Justicia de las Comunidades Europeas, actualmente solo existe un nivel adecuado de protección para la transferencia de datos a los EE. UU. si una empresa estadounidense que procesa datos personales de ciudadanos de la UE en los EE. UU. participa activamente en Los marcos de privacidad de datos UE-EE. UU. sí lo son. Puede encontrar más información al respecto en: <a href="https://commission.europa.eu/document/fa09cbad-dd7d-4684-ae60-be03fcb0fddf_en" target="_blank" rel="follow noopener">https://commission.europa.eu/document/fa09cbad-dd7d-4684-ae60-be03fcb0fddf_en</a>\n' +
 		'</p>\n' +
-		'<p>El procesamiento de datos por parte de servicios de EE. UU. que no participan activamente en el Marco de Privacidad de Datos UE-EE. UU. puede dar lugar a que los datos no se procesen ni almacenen de forma anónima. Además, las autoridades del gobierno estadounidense pueden tener acceso a datos individuales. También puede ocurrir que los datos recopilados estén vinculados con datos de otros servicios del mismo proveedor, siempre que disponga de una cuenta de usuario correspondiente. Si es posible, intentamos utilizar ubicaciones de servidores dentro de la UE, si esto está disponible. <br>\n' +
+		'<p>El procesamiento de datos por parte de servicios de EE. UU. que no participan activamente en el Marco de Privacidad de Datos UE-EE.UU. puede dar lugar a que los datos no se procesen ni almacenen de forma anónima. Además, las autoridades del gobierno estadounidense pueden tener acceso a datos individuales. También puede ocurrir que los datos recopilados estén vinculados con datos de otros servicios del mismo proveedor, siempre que disponga de una cuenta de usuario correspondiente. Si es posible, intentamos utilizar ubicaciones de servidores dentro de la UE, si esto está disponible. <br>\n' +
 		'Le informaremos con más detalle sobre la transferencia de datos a terceros países en los lugares correspondientes de esta declaración de protección de datos, si corresponde.</p>\n' +
 		'<h2 id="cookies">Galletas</h2>\n' +
 		'<table border="1" cellpadding="15">\n' +
@@ -711,14 +748,14 @@ export const es: ILanguage = {
 		'<p>El uso de Google Analytics requiere su consentimiento, que obtuvimos con nuestra ventana emergente de cookies. Según <strong>el artículo 6, apartado 1, letra a del RGPD (consentimiento), este</strong> consentimiento representa la base legal para el procesamiento de datos personales, como puede ocurrir cuando se recopilan mediante herramientas de análisis web.</p>\n' +
 		'<p>Además del consentimiento, tenemos un interés legítimo en analizar el comportamiento de los visitantes del sitio web y así mejorar nuestra oferta desde el punto de vista técnico y económico. Con la ayuda de Google Analytics detectamos errores en el sitio web, identificamos ataques y mejoramos la rentabilidad. La base jurídica para ello es <strong>el artículo 6, apartado 1, letra f del RGPD (intereses legítimos)</strong> . Sin embargo, sólo utilizamos Google Analytics si usted ha dado su consentimiento.</p>\n' +
 		'<p>Google también procesa sus datos, entre otros lugares, en EE.UU. Google participa activamente en el Marco de Privacidad de Datos UE-EE.UU., que regula la transferencia correcta y segura de datos personales de ciudadanos de la UE a EE.UU. Puede encontrarse más información en <a href="https://commission.europa.eu/document/fa09cbad-dd7d-4684-ae60-be03fcb0fddf_en" target="_blank" rel="follow noopener">https://commission.europa.eu/document/fa09cbad-dd7d-4684-ae60-be03fcb0fddf_en</a> .</p>\n' +
-		'<p>Google también utiliza las llamadas cláusulas contractuales tipo (= art. 46, apartados 2 y 3 del RGPD). Las Cláusulas Contractuales Estándar (SCC) son plantillas proporcionadas por la Comisión de la UE y tienen como objetivo garantizar que sus datos cumplan con los estándares europeos de protección de datos incluso si se transfieren a terceros países (como los EE. UU.) y se almacenan allí. A través del Marco de Privacidad de Datos UE-EE.UU. y las Cláusulas Contractuales Tipo, Google se compromete a cumplir con el nivel europeo de protección de datos al procesar sus datos relevantes, incluso si los datos se almacenan, procesan y administran en los EE.UU. Estas cláusulas se basan en una decisión de implementación de la Comisión de la UE. Puede encontrar la resolución y las cláusulas contractuales tipo correspondientes aquí: <a href="https://eur-lex.europa.eu/eli/dec_impl/2021/914/oj?locale=de" target="_blank" rel="follow noopener">https://eur-lex.europa.eu/eli/dec_impl/2021/914/oj?locale=de</a>\n' +
+		'<p>Google también utiliza las llamadas cláusulas contractuales tipo (= art. 46, apartados 2 y 3 del RGPD). Las Cláusulas Contractuales Estándar (SCC) son plantillas proporcionadas por la Comisión de la UE y tienen como objetivo garantizar que sus datos cumplan con los estándares europeos de protección de datos incluso si se transfieren a terceros países (como los EE. UU.) y se almacenan allí. A través del Marco de Privacidad de Datos UE-EE.UU. y las Cláusulas Contractuales Tipo, Google se compromete a cumplir con el nivel europeo de protección de datos al procesar sus datos relevantes, incluso si los datos se almacenan, procesan y administran en los EE. UU. Estas cláusulas se basan en una decisión de implementación de la Comisión de la UE. Puede encontrar la resolución y las cláusulas contractuales tipo correspondientes aquí: <a href="https://eur-lex.europa.eu/eli/dec_impl/2021/914/oj?locale=de" target="_blank" rel="follow noopener">https://eur-lex.europa.eu/eli/dec_impl/2021/914/oj?locale=de</a>\n' +
 		'</p>\n' +
 		'<p>Las condiciones de procesamiento de datos de Google Ads, que hacen referencia a las cláusulas contractuales estándar, se pueden encontrar en <a href="https://business.safety.google/intl/de/adsprocessorterms/" target="_blank" rel="follow noopener">https://business.safety.google/intl/de/adsprocessorterms/</a> .</p>\n' +
 		'<p>Esperamos haber podido brindarle la información más importante sobre el procesamiento de datos por parte de Google Analytics. Si desea obtener más información sobre el servicio de seguimiento, le recomendamos estos dos enlaces: <a href="https://marketingplatform.google.com/about/analytics/terms/de/" target="_blank" rel="follow noopener">https://marketingplatform.google.com/about/analytics/terms/de/</a> y <a href="https://support.google.com/analytics/answer/6004245?hl=de" target="_blank" rel="follow noopener">https://support.google.com/analytics/answer / 6004245?hl=de</a> .</p>\n' +
 		'<p>Si desea obtener más información sobre el procesamiento de datos, utilice la política de privacidad de Google en <a href="https://policies.google.com/privacy?hl=de&amp;tid=112741413" target="_blank" rel="follow noopener">https://policies.google.com/privacy?hl=de</a> .</p>\n' +
 		'<h2 id="google-analytics-berichte-zu-demografischen-merkmalen-und-interessen">Informes de Google Analytics sobre datos demográficos e intereses.</h2>\n' +
 		'<p>Hemos activado las funciones de informes publicitarios en Google Analytics. Los informes demográficos y de intereses incluyen información sobre edad, sexo e intereses. Esto nos permite obtener una mejor imagen de nuestros usuarios, sin poder asignar estos datos a personas individuales. Puede obtener más información sobre las funciones publicitarias en&nbsp; <a href="https://support.google.com/analytics/answer/3450482?hl=de_AT&amp;utm_id=ad">https://support.google.com/analytics/answer/3450482?hl=de_AT&amp;utm_id=ad</a> .</p>\n' +
-		'<p>Puede detener el uso de las actividades y la información de su cuenta de Google en "Configuración de publicidad" en <a href="https://adssettings.google.com/authenticated">https://adssettings.google.com/authentication</a> marcando la casilla.</p>\n' +
+		'<p>Puede detener el uso de las actividades y la información de su cuenta de Google en "Configuración de publicidad" en <a href="https://adssettings.google.com/authenticated">https://adssettings.google.com/authenticated</a> marcando la casilla.</p>\n' +
 		'<h2 id="google-analytics-im-einwilligungsmodus">Google Analytics en modo consentimiento</h2>\n' +
 		'<p>Dependiendo de su consentimiento, sus datos personales serán procesados ​​por Google Analytics en el llamado modo de consentimiento. Puede elegir si acepta o no las cookies de Google Analytics. Esto también le permite elegir qué datos puede procesar Google Analytics sobre usted. Estos datos recopilados se utilizan principalmente para medir el comportamiento del usuario en el sitio web, ofrecer publicidad dirigida y proporcionarnos informes de análisis web. Como regla general, usted acepta el procesamiento de datos por parte de Google a través de una herramienta de consentimiento de cookies. Si no da su consentimiento para el procesamiento de datos, solo se recopilarán y procesarán datos agregados. Esto significa que no se pueden asignar datos a usuarios individuales y no se crea ningún perfil de usuario para usted. También puede simplemente aceptar la medición estadística. No se procesan datos personales y por tanto no se utilizan para publicidad o campañas publicitarias.</p>\n' +
 		'<h2 id="content-delivery-networks-einleitung">Introducción a las redes de entrega de contenido</h2>\n' +
@@ -805,7 +842,7 @@ export const es: ILanguage = {
 		'<h3>¿Por qué utilizamos inicios de sesión únicos?</h3>\n' +
 		'<p>Queremos hacer que su vida en nuestro sitio web sea lo más fácil y placentera posible. Es por eso que también ofrecemos inicios de sesión únicos. Esto le ahorra un tiempo valioso porque solo necesita una autenticación. Como sólo hay que recordar una contraseña y sólo se transmite una vez, la seguridad también aumenta. En muchos casos, ya ha guardado su contraseña automáticamente mediante cookies y, por lo tanto, el proceso de inicio de sesión en nuestro sitio web solo lleva unos segundos.</p>\n' +
 		'<h3>¿Qué datos se almacenan mediante inicios de sesión únicos?</h3>\n' +
-		'<p>Aunque inicia sesión en nuestro sitio web mediante este proceso de inicio de sesión especial, la autenticación real se realiza con el proveedor de inicio de sesión único correspondiente. Como operadores de sitios web, recibimos una identificación de usuario como parte de la autenticación. Esto registra que está registrado con el proveedor correspondiente con esta identificación. Esta identificación no se puede utilizar para ningún otro propósito. También es posible que se nos transmitan otros datos, pero esto depende de los proveedores de inicio de sesión único utilizados. También depende de qué datos proporciona voluntariamente durante el proceso de autenticación y qué datos generalmente divulga en su configuración con el proveedor. En la mayoría de los casos, se trata de datos como su dirección de correo electrónico y su nombre de usuario. No conocemos su contraseña, que es necesaria para registrarse, y no la guardaremos. También es importante que sepa que los datos almacenados por nosotros se pueden comparar automáticamente con los datos de la cuenta de usuario respectiva a través del proceso de registro.</p>\n' +
+		'<p>Aunque inicia sesión en nuestro sitio web mediante este proceso de inicio de sesión especial, la autenticación real se realiza con el proveedor de inicio de sesión único correspondiente. Como operadores de sitios web, recibimos una identificación de usuario como parte de la autenticación. Esto registra que está registrado con el proveedor correspondiente con esta identificación. Esta identificación no se puede utilizar para ningún otro propósito. También es posible que se nos transmitan otros datos, pero esto depende de los proveedores de inicios de sesión único utilizados. También depende de qué datos proporciona voluntariamente durante el proceso de autenticación y qué datos generalmente divulga en su configuración con el proveedor. En la mayoría de los casos, se trata de datos como su dirección de correo electrónico y su nombre de usuario. No conocemos su contraseña, que es necesaria para registrarse, y no la guardaremos. También es importante que sepa que los datos almacenados por nosotros se pueden comparar automáticamente con los datos de la cuenta de usuario respectiva a través del proceso de registro.</p>\n' +
 		'<h3>Duración del procesamiento de datos</h3>\n' +
 		'<p>Le informaremos a continuación sobre la duración del procesamiento de datos si tenemos más información. Por ejemplo, la plataforma de redes sociales Facebook almacena datos hasta que ya no son necesarios para sus propios fines. Sin embargo, los datos del cliente que se comparen con sus propios datos de usuario se eliminarán en un plazo de dos días. En general, solo procesamos datos personales durante el tiempo que sea absolutamente necesario para proporcionar nuestros servicios y productos.</p>\n' +
 		'<h3>Derecho a oponerse</h3>\n' +
@@ -817,7 +854,7 @@ export const es: ILanguage = {
 		'<h2 id="google-single-sign-on-datenschutzerklaerung">Política de privacidad de inicio de sesión único de Google</h2>\n' +
 		'<p>También utilizamos el servicio de autenticación de inicio de sesión único de Google para iniciar sesión en nuestro sitio web. El proveedor del servicio es la empresa estadounidense Facebook Inc. En Europa, la empresa Google Ireland Limited (Gordon House, Barrow Street Dublin 4, Irlanda) es responsable de todos los servicios de Google.</p>\n' +
 		'<p>Google también procesa sus datos, entre otros lugares, en EE.UU. Google participa activamente en el Marco de Privacidad de Datos UE-EE.UU., que regula la transferencia correcta y segura de datos personales de ciudadanos de la UE a EE.UU. Puede encontrarse más información en <a href="https://commission.europa.eu/document/fa09cbad-dd7d-4684-ae60-be03fcb0fddf_en" target="_blank" rel="follow noopener">https://commission.europa.eu/document/fa09cbad-dd7d-4684-ae60-be03fcb0fddf_en</a> .</p>\n' +
-		'<p>Google también utiliza las llamadas cláusulas contractuales tipo (= art. 46, apartados 2 y 3 del RGPD). Las Cláusulas Contractuales Estándar (SCC) son plantillas proporcionadas por la Comisión de la UE y tienen como objetivo garantizar que sus datos cumplan con los estándares europeos de protección de datos incluso si se transfieren a terceros países (como los EE. UU.) y se almacenan allí. A través del Marco de Privacidad de Datos UE-EE.UU. y las Cláusulas Contractuales Tipo, Google se compromete a cumplir con el nivel europeo de protección de datos al procesar sus datos relevantes, incluso si los datos se almacenan, procesan y administran en los EE.UU. Estas cláusulas se basan en una decisión de implementación de la Comisión de la UE. Puede encontrar la resolución y las cláusulas contractuales tipo correspondientes aquí: <a href="https://eur-lex.europa.eu/eli/dec_impl/2021/914/oj?locale=de" target="_blank" rel="follow noopener">https://eur-lex.europa.eu/eli/dec_impl/2021/914/oj?locale=de</a>\n' +
+		'<p>Google también utiliza las llamadas cláusulas contractuales tipo (= art. 46, apartados 2 y 3 del RGPD). Las Cláusulas Contractuales Estándar (SCC) son plantillas proporcionadas por la Comisión de la UE y tienen como objetivo garantizar que sus datos cumplan con los estándares europeos de protección de datos incluso si se transfieren a terceros países (como los EE. UU.) y se almacenan allí. A través del Marco de Privacidad de Datos UE-EE.UU. y las Cláusulas Contractuales Tipo, Google se compromete a cumplir con el nivel europeo de protección de datos al procesar sus datos relevantes, incluso si los datos se almacenan, procesan y administran en los EE. UU. Estas cláusulas se basan en una decisión de implementación de la Comisión de la UE. Puede encontrar la resolución y las cláusulas contractuales tipo correspondientes aquí: <a href="https://eur-lex.europa.eu/eli/dec_impl/2021/914/oj?locale=de" target="_blank" rel="follow noopener">https://eur-lex.europa.eu/eli/dec_impl/2021/914/oj?locale=de</a>\n' +
 		'</p>\n' +
 		'<p>Las condiciones de procesamiento de datos de Google Ads, que hacen referencia a las cláusulas contractuales estándar, se pueden encontrar en <a href="https://business.safety.google/intl/de/adsprocessorterms/" target="_blank" rel="follow noopener">https://business.safety.google/intl/de/adsprocessorterms/</a> .</p>\n' +
 		'<p>En Google, puede revocar su consentimiento para el uso de registros de inicio de sesión único mediante la función de exclusión voluntaria en <a href="https://adssettings.google.com/authenticated" target="_blank" rel="follow noopener">https://adssettings.google.com/authenticated . </a>Puede obtener más información sobre los datos procesados ​​mediante el uso del inicio de sesión único de Google en la Política de privacidad en <a href="https://policies.google.com/privacy?hl=de" target="_blank" rel="follow noopener">https://policies.google.com/privacy?hl=de</a> .</p>\n' +
@@ -961,6 +998,13 @@ export const es: ILanguage = {
 			'CHANGED': 'Tu dirección de correo electrónico fue cambiada recientemente.',
 			'PLEASE_VERIFY': 'Por favor, verifica tu dirección de correo electrónico.',
 			'TO_DO_SO': 'Para hacerlo',
+			'CLICK_HERE': 'haz clic aquí',
+			'HAVE_FUN': '¡Diviértete construyendo!'
+		},
+		'RESET_PASSWORD': {
+			'SUBJECT': 'Restablecer contraseña',
+			'TEXT': 'Has solicitado restablecer la contraseña de tu cuenta de Logigator. Si no lo solicitaste, ignora este correo.',
+			'TO_DO_SO': 'Para restablecer tu contraseña',
 			'CLICK_HERE': 'haz clic aquí',
 			'HAVE_FUN': '¡Diviértete construyendo!'
 		}

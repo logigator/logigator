@@ -16,6 +16,8 @@ import {ResendVerificationMail} from '../../models/request/frontend/auth/resend-
 import {Preferences} from '../../decorator/preferences.decorator';
 import {UserPreferences} from '../../models/user-preferences';
 import {updateAuthenticatedCookie} from '../../functions/update-authenticated-cookie';
+import {SendPasswordResetMail} from '../../models/request/frontend/auth/send-password-reset-mail';
+import {ResetPassword} from '../../models/request/frontend/auth/reset-password';
 
 @Controller('/auth')
 export class AuthController {
@@ -66,6 +68,39 @@ export class AuthController {
 	@UseBefore(CheckNotAuthenticatedFrontMiddleware, LocalAuthenticationMiddleware)
 	@UseAfter(formErrorMiddleware())
 	public localLoginElectron() {
+	}
+
+	@Post('/send-password-reset-mail')
+	@UseBefore(CheckNotAuthenticatedFrontMiddleware)
+	@UseAfter(formErrorMiddleware())
+	public async sendPasswordResetMail(@Body() body: SendPasswordResetMail, @Preferences() preferences: UserPreferences, @Redirect() redirect: RedirectFunction) {
+		try {
+			await this.userService.sendResetPasswordMail(body.email, preferences.lang);
+			return redirect({ showInfoPopup: 'password-reset-mail-sent'});
+		} catch (err) {
+			if (err.message === 'reset_mail') {
+				throw new FormDataError(body, undefined, 'resetMail');
+			}
+			if (err.message === 'user_not_found') {
+				throw new FormDataError(body, 'email', 'noUser');
+			}
+			throw err;
+		}
+	}
+
+	@Post('/reset-password')
+	@UseBefore(CheckNotAuthenticatedFrontMiddleware)
+	@UseAfter(formErrorMiddleware())
+	public async resetPassword(@Body() body: ResetPassword, @Redirect() redirect: RedirectFunction) {
+		try {
+			await this.userService.updatePasswordWithToken(body.token, body.password);
+			return redirect({ showInfoPopup: 'password-reset'});
+		} catch (err) {
+			if (err.message === 'reset_timeout' || err.message === 'no_user') {
+				throw new FormDataError(body, undefined, 'tokenInvalid');
+			}
+			throw new FormDataError(body, undefined, 'unknown');
+		}
 	}
 
 	@Post('/resend-verification-mail')

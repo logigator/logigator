@@ -8,7 +8,6 @@ import {ProfilePictureRepository} from '../database/repositories/profile-picture
 import {compare, hash} from 'bcrypt';
 import {FormDataError} from '../errors/form-data.error';
 import {EmailService} from './email.service';
-import {v4 as uuid} from 'uuid';
 import {StandaloneViewService} from './standalone-view.service';
 import {ConfigService} from './config.service';
 import { TranslationService } from './translation.service';
@@ -16,7 +15,8 @@ import {RedisService} from './redis.service';
 import {Transaction, TransactionRepository} from 'typeorm';
 import {ComponentRepository} from '../database/repositories/component.repository';
 import {ProjectRepository} from '../database/repositories/project.repository';
-import { LanguageCode } from '../i18n';
+import {LanguageCode} from '../i18n';
+import {generateToken} from '../functions/generate-token';
 
 @Service()
 export class UserService {
@@ -159,16 +159,25 @@ export class UserService {
 	}
 
 	private async generateEmailVerificationCode(userId: string, emailToVerify: string): Promise<string> {
-		const code = uuid();
+		const code = generateToken();
 		await this.redisService.setObject(`verify-mail:${code}`, {
 			userId: userId,
 			email: emailToVerify
 		}, 60 * 60);
 		return code;
 	}
+
+	private async generatePasswordResetCode(userId: string): Promise<string> {
+		const code = generateToken();
+		await this.redisService.setObject(`reset-password:${code}`, {
+			userId: userId
+		}, 60 * 60);
+		return code;
+	}
+
 	public async verifyEmail(code: string): Promise<void> {
 
-		const verificationData = await  this.redisService.getObject(`verify-mail:${code}`);
+		const verificationData = await this.redisService.getObject(`verify-mail:${code}`);
 		if (!(verificationData?.userId && verificationData?.email))
 			throw new Error('verification_timeout');
 
@@ -206,19 +215,57 @@ export class UserService {
 		return true;
 	}
 
+	public async sendResetPasswordMail(email: string, lang: LanguageCode): Promise<void> {
+		const user = await this.userRepo.findOne({
+			email: email
+		});
+		if (!user) {
+			throw new Error('user_not_found');
+		}
+
+		try {
+			const code = await this.generatePasswordResetCode(user.id);
+			const mail = await this.standaloneViewService.renderView('reset-password-mail', {
+				username: user.username,
+				verifyLink: `${this.configService.getConfig('domains').rootUrl}/reset-password?token=${code}`
+			}, lang);
+			await this.emailService.sendMail('noreply', user.email, this.translationService.getTranslation('MAILS.RESET_PASSWORD.SUBJECT', lang), mail);
+		} catch (error) {
+			console.error(error);
+			throw new Error('reset_mail');
+		}
+	}
+
+	public async updatePasswordWithToken(token: string, newPassword: string): Promise<void> {
+		const resetData = await this.redisService.getObject(`reset-password:${token}`);
+		if (!resetData?.userId) {
+			throw new Error('reset_timeout');
+		}
+
+		const user = await this.userRepo.findOne({
+			id: resetData.userId
+		});
+		if (!user) {
+			throw new Error('no_user');
+		}
+
+		user.password = await hash(newPassword, this.PASSWORD_SALT_ROUNDS);
+		user.localEmailVerified = true;
+
+		await this.userRepo.save(user);
+		await this.redisService.delete(`reset-password:${token}`);
+	}
+
 	public async updatePassword(user: User, newPassword: string, currentPassword?: string): Promise<void> {
 		if (user.password) {
 			if (!(await compare(currentPassword, user.password))) {
 				throw new Error('invalid_password');
 			}
-			user.password = await hash(newPassword, this.PASSWORD_SALT_ROUNDS);
-			await this.userRepo.save(user);
-			return;
-		} else {
-			user.password = await hash(newPassword, this.PASSWORD_SALT_ROUNDS);
-			await this.userRepo.save(user);
-			return;
 		}
+
+		user.password = await hash(newPassword, this.PASSWORD_SALT_ROUNDS);
+		await this.userRepo.save(user);
+		return;
 	}
 
 	public connectTwitter(user: User, profile: TwitterProfile): Promise<User> {

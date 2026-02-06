@@ -77,6 +77,11 @@
 		padding: 1.5rem;
 		overflow: auto;
 		width: 100%;
+
+		:first-child {
+			margin-top: 0;
+		}
+
 		@include scrollbar(5px)
 	}
 }
