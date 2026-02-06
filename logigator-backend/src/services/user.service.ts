@@ -227,7 +227,7 @@ export class UserService {
 			const code = await this.generatePasswordResetCode(user.id);
 			const mail = await this.standaloneViewService.renderView('reset-password-mail', {
 				username: user.username,
-				verifyLink: `${this.configService.getConfig('domains').rootUrl}/reset-password?token=${code}`
+				resetLink: `${this.configService.getConfig('domains').rootUrl}/reset-password?token=${code}`
 			}, lang);
 			await this.emailService.sendMail('noreply', user.email, this.translationService.getTranslation('MAILS.RESET_PASSWORD.SUBJECT', lang), mail);
 		} catch (error) {
