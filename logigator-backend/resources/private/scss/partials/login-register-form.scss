@@ -27,6 +27,11 @@
 		width: 100%;
 	}
 
+	@include element('reset-password') {
+		display: inline-block;
+		margin-top: 1.5rem;
+	}
+
 	@include element('divider') {
 		display: flex;
 		flex-direction: row;

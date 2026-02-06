@@ -22,7 +22,8 @@ export const de: ILanguage = {
 		'LOGIN': 'Logigator - Login',
 		'REGISTER': 'Logigator - Registrieren',
 		'EXAMPLES': 'Logigator - Beispiele',
-		'COMMUNITY': 'Logigator - Community'
+		'COMMUNITY': 'Logigator - Community',
+		'RESET_PASSWORD': 'Logigator - Passwort zurücksetzen'
 	},
 	'SITE_HEADER': {
 		'DOWNLOAD': 'Download',
@@ -130,7 +131,31 @@ export const de: ILanguage = {
 		'ERR_UNKNOWN': 'Ein unbekannter Fehler ist aufgetreten.',
 		'LOGIN_BUTTON': 'ANMELDEN',
 		'RESEND_BUTTON': 'Verifizierungs Email erneut senden',
-		'OR': 'oder'
+		'OR': 'oder',
+		'FORGOT_PASSWORD': 'Passwort vergessen?'
+	},
+	'RESET_PASSWORD_FORM': {
+		'HEADLINE': 'Passwort hier zurücksetzen',
+		'PASSWORD': 'Passwort',
+		'PASSWORD_ERR_REQUIRED': 'Passwort muss angegeben werden.',
+		'PASSWORD_ERR_MIN': 'Passwort muss mindestens acht Zeichen enthalten.',
+		'PASSWORD_ERR_COMPLEXITY': 'Passwort muss Ziffern und Buchstaben enthalten.',
+		'PASSWORD_REPEAT': 'Passwort wiederholen',
+		'PASSWORD_REPEAT_ERR_REQUIRED': 'Passwort muss wiederholt werden.',
+		'PASSWORD_REPEAT_ERR': 'Passwörter stimmen nicht überein.',
+		'SUBMIT': 'PASSWORT ZURÜCKSETZEN',
+		'ERR_TOKEN_INVALID': 'Das Token zum Zurücksetzen des Passworts ist ungültig oder abgelaufen.',
+		'ERR_UNKNOWN': 'Ein unbekannter Fehler ist aufgetreten.'
+	},
+	'REQUEST_PASSWORD_RESET_FORM': {
+		'HEADLINE': 'Passwort zurücksetzen',
+		'EMAIL': 'E-Mail',
+		'EMAIL_ERR_REQUIRED': 'E-Mail muss angegeben werden.',
+		'EMAIL_ERR_INVALID': 'Bitte geben Sie eine valide E-Mail an.',
+		'EMAIL_ERR_NO_USER': 'E-Mail existiert nicht.',
+		'SUBMIT': 'PASSWORT ZURÜCKSETZEN',
+		'ERR_RESET_MAIL': 'Reset-E-Mail konnte nicht gesendet werden.',
+		'ERR_UNKNOWN': 'Ein unbekannter Fehler ist aufgetreten.'
 	},
 	'REGISTER_FORM': {
 		'HEADLINE': 'Registriere dich hier',
@@ -360,6 +385,18 @@ export const de: ILanguage = {
 		'ACCOUNT_DELETED': {
 			'TITLE': 'Account gelöscht',
 			'LINE_1': 'Dein Account wurde erfolgreich gelöscht.',
+			'OK_BUTTON': 'OK'
+		},
+		'PASSWORD_RESET_MAIL_SENT': {
+			'TITLE': 'Passwort-Reset-E-Mail gesendet',
+			'HEADLINE': 'Passwort-Reset-E-Mail gesendet',
+			'BODY': 'Falls ein Account mit der angegebenen E-Mail-Adresse existiert, wurde eine Passwort-Reset-E-Mail an diese Adresse gesendet. Bitte prüfen Sie Ihr Postfach.',
+			'OK_BUTTON': 'OK'
+		},
+		'PASSWORD_RESET': {
+			'TITLE': 'Passwort zurückgesetzt',
+			'HEADLINE': 'Passwort zurückgesetzt',
+			'BODY': 'Ihr Passwort wurde erfolgreich zurückgesetzt. Sie können sich jetzt mit Ihrem neuen Passwort anmelden.',
 			'OK_BUTTON': 'OK'
 		}
 	},
@@ -969,6 +1006,13 @@ export const de: ILanguage = {
 			'CHANGED': 'Deine Email-Addresse wurde kürzlich geändert.',
 			'PLEASE_VERIFY': 'Bitte verifiziere deine E-Mail Adresse.',
 			'TO_DO_SO': 'Um sie jetzt zu verifizieren',
+			'CLICK_HERE': 'klicke hier',
+			'HAVE_FUN': 'Viel Spaß beim Verwenden von Logigator!'
+		},
+		'RESET_PASSWORD': {
+			'SUBJECT': 'Passwort zurücksetzen',
+			'TEXT': 'Du hast eine Passwortzurücksetzung für deinen Logigator-Account angefordert. Wenn du dies nicht angefordert hast, ignoriere diese E-Mail.',
+			'TO_DO_SO': 'Um dein Passwort zurückzusetzen',
 			'CLICK_HERE': 'klicke hier',
 			'HAVE_FUN': 'Viel Spaß beim Verwenden von Logigator!'
 		}

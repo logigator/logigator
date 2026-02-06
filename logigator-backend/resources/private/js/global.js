@@ -72,6 +72,7 @@ for (const ytElement of document.querySelectorAll('.partial-youtube-overlay')) {
 		iframe.setAttribute('src', `https://www.youtube.com/embed/${ytElement.getAttribute('data-id')}?autoplay=1&rel=0`);
 		iframe.setAttribute('width', ytElement.getAttribute('data-width'));
 		iframe.setAttribute('height', ytElement.getAttribute('data-height'));
+		iframe.setAttribute('referrerpolicy', 'strict-origin');
 
 		ytElement.appendChild(iframe);
 	}, { once: true, passive: true });
