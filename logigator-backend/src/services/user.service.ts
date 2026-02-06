@@ -250,7 +250,6 @@ export class UserService {
 		}
 
 		user.password = await hash(newPassword, this.PASSWORD_SALT_ROUNDS);
-		user.localEmailVerified = true;
 
 		await this.userRepo.save(user);
 		await this.redisService.delete(`reset-password:${token}`);
