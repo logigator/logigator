@@ -21,7 +21,7 @@ export const en = {
 		'REGISTER': 'Logigator - Register',
 		'EXAMPLES': 'Logigator - Examples',
 		'COMMUNITY': 'Logigator - Community',
-		'RESET_PASSWORD': 'Logigator - Reset Password',
+		'RESET_PASSWORD': 'Logigator - Reset Password'
 	},
 	'SITE_HEADER': {
 		'DOWNLOAD': 'Download',
