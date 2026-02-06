@@ -22,7 +22,8 @@ export const fr: ILanguage = {
 		'LOGIN': 'Logigator - Connexion',
 		'REGISTER': 'Logigator - S\'inscrire',
 		'EXAMPLES': 'Logigator - Exemples',
-		'COMMUNITY': 'Logigator - Communauté'
+		'COMMUNITY': 'Logigator - Communauté',
+		'RESET_PASSWORD': 'Logigator - Réinitialiser le mot de passe'
 	},
 	'SITE_HEADER': {
 		'DOWNLOAD': 'Télécharger',
@@ -130,7 +131,31 @@ export const fr: ILanguage = {
 		'ERR_UNKNOWN': 'Une erreur inconnue s\'est produite.',
 		'LOGIN_BUTTON': 'CONNEXION',
 		'RESEND_BUTTON': 'Renvoyer le mail de vérification',
-		'OR': 'ou'
+		'OR': 'ou',
+		'FORGOT_PASSWORD': 'Mot de passe oublié ?'
+	},
+	'RESET_PASSWORD_FORM': {
+		'HEADLINE': 'Réinitialisez votre mot de passe',
+		'PASSWORD': 'Mot de passe',
+		'PASSWORD_ERR_REQUIRED': 'Le mot de passe est requis.',
+		'PASSWORD_ERR_MIN': 'Le mot de passe doit contenir un minimum de huit caractères.',
+		'PASSWORD_ERR_COMPLEXITY': 'Le mot de passe doit contenir des lettres et des chiffres.',
+		'PASSWORD_REPEAT': 'Répéter le mot de passe',
+		'PASSWORD_REPEAT_ERR_REQUIRED': 'Le mot de passe doit être répété.',
+		'PASSWORD_REPEAT_ERR': 'Les mots de passe ne correspondent pas.',
+		'SUBMIT': 'RÉINITIALISER LE MOT DE PASSE',
+		'ERR_TOKEN_INVALID': 'Le jeton de réinitialisation du mot de passe est invalide ou a expiré.',
+		'ERR_UNKNOWN': 'Une erreur inconnue s\'est produite.'
+	},
+	'REQUEST_PASSWORD_RESET_FORM': {
+		'HEADLINE': 'Réinitialiser le mot de passe',
+		'EMAIL': 'Email',
+		'EMAIL_ERR_REQUIRED': 'L\'email est requis.',
+		'EMAIL_ERR_INVALID': 'Veuillez saisir une adresse email valide.',
+		'EMAIL_ERR_NO_USER': 'L\'email n\'existe pas.',
+		'SUBMIT': 'RÉINITIALISER LE MOT DE PASSE',
+		'ERR_RESET_MAIL': 'Le mail de réinitialisation n\'a pas pu être envoyé.',
+		'ERR_UNKNOWN': 'Une erreur inconnue s\'est produite.'
 	},
 	'REGISTER_FORM': {
 		'HEADLINE': 'Inscrivez-vous ici',
@@ -360,6 +385,18 @@ export const fr: ILanguage = {
 		'ACCOUNT_DELETED': {
 			'TITLE': 'Compte supprimé',
 			'LINE_1': 'Votre compte a été supprimé avec succès.',
+			'OK_BUTTON': 'OK'
+		},
+		'PASSWORD_RESET_MAIL_SENT': {
+			'TITLE': 'E-mail de réinitialisation envoyé',
+			'HEADLINE': 'E-mail de réinitialisation envoyé',
+			'BODY': 'Si un compte existe avec l\'adresse e-mail renseignée, un e-mail de réinitialisation du mot de passe a été envoyé à cette adresse. Veuillez vérifier votre boîte de réception.',
+			'OK_BUTTON': 'OK'
+		},
+		'PASSWORD_RESET': {
+			'TITLE': 'Mot de passe réinitialisé',
+			'HEADLINE': 'Mot de passe réinitialisé',
+			'BODY': 'Votre mot de passe a été réinitialisé avec succès. Vous pouvez maintenant vous connecter avec votre nouveau mot de passe.',
 			'OK_BUTTON': 'OK'
 		}
 	},
@@ -961,6 +998,13 @@ export const fr: ILanguage = {
 			'CHANGED': 'Votre adresse e-mail a récemment été modifiée.',
 			'PLEASE_VERIFY': 'Veuillez vérifier votre adresse e-mail.',
 			'TO_DO_SO': 'Pour ce faire',
+			'CLICK_HERE': 'cliquez ici',
+			'HAVE_FUN': 'Amusez-vous bien à construire !'
+		},
+		'RESET_PASSWORD': {
+			'SUBJECT': 'Réinitialiser le mot de passe',
+			'TEXT': 'Vous avez demandé une réinitialisation du mot de passe pour votre compte Logigator. Si vous n\'êtes pas à l\'origine de cette demande, ignorez cet e-mail.',
+			'TO_DO_SO': 'Pour réinitialiser votre mot de passe',
 			'CLICK_HERE': 'cliquez ici',
 			'HAVE_FUN': 'Amusez-vous bien à construire !'
 		}
