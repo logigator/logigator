@@ -160,7 +160,7 @@ export const es: ILanguage = {
 		'ERR_UNKNOWN': 'Ha ocurrido un error desconocido.'
 	},
 	'RESET_PASSWORD_FORM': {
-		'HEADLINE': 'Regístrate Aquí',
+		'HEADLINE': 'Establece una nueva contraseña',
 		'PASSWORD': 'Contraseña',
 		'PASSWORD_ERR_REQUIRED': 'La contraseña es obligatoria.',
 		'PASSWORD_ERR_MIN': 'La contraseña debe contener un mínimo de ocho caracteres.',
