@@ -9,7 +9,7 @@ import {
 import { WorkMode } from '../work-mode/work-mode.enum';
 import { Project } from '../project/project';
 import { Component } from '../components/component';
-import { alignPointToGrid, alignPointToHalfGrid, toGrid } from '../utils/grid';
+import { alignPointToGrid, alignPointToHalfGrid } from '../utils/grid';
 import { Subject } from 'rxjs';
 import { AddComponentsAction } from '../actions/actions/add-components.action';
 import { ComponentConfig } from '../components/component-config.model';
@@ -113,10 +113,7 @@ export class FloatingLayer extends Container {
 				break;
 			case WorkMode.SELECT:
 			case WorkMode.SELECT_EXACT:
-				this.position = alignPointToGrid(
-					e.getLocalPosition(this.project),
-					true
-				);
+				this.position = e.getLocalPosition(this.project);
 				this._selectRect.scale.set(0, 0);
 				this.addChild(this._selectRect);
 				break;
@@ -147,8 +144,8 @@ export class FloatingLayer extends Container {
 			case WorkMode.SELECT:
 			case WorkMode.SELECT_EXACT:
 				this._selectRect.scale.set(
-					e.global.x - this._dragStart.x / this.project.scale.x,
-					e.global.y - this._dragStart.y / this.project.scale.y
+					(e.global.x - this._dragStart.x) / this.project.scale.x,
+					(e.global.y - this._dragStart.y) / this.project.scale.y
 				);
 		}
 	}
