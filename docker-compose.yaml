@@ -12,7 +12,7 @@ services:
       - 127.0.0.1:443:443
 
   backend:
-    image: node:20
+    image: node:24
     networks:
       - net
     depends_on:
@@ -27,7 +27,7 @@ services:
       - DEBUG_COLORS=on
 
   editor:
-    image: node:20
+    image: node:24
     networks:
       - net
     ports:
