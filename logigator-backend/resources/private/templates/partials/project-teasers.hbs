@@ -7,7 +7,7 @@
 			</div>
 			<div class="partial-project-teasers__teaser-bottom">
 				<p>{{this.name}}</p>
-				<a href="{{this.link}}"{{#if ../newTab}} target="_blank" rel="noopener"{{/if}}>
+				<a href="{{linkHref this.link}}"{{#if ../newTab}} target="_blank" rel="noopener"{{/if}}>
 					<button class="btn-raised primary">{{@root.i18n.HOME.PROJECT_TEASERS.VIEW}}</button>
 				</a>
 			</div>

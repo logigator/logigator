@@ -16,8 +16,8 @@ export class EmailService {
 
 		const mailTransport = createTransport({
 			...config.transport,
-			connectionTimeout: 3000,
-			greetingTimeout: 3000,
+			connectionTimeout: 10000,
+			greetingTimeout: 10000,
 			socketTimeout: 10000
 		});
 		await mailTransport.verify();

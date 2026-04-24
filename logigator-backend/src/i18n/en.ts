@@ -20,7 +20,8 @@ export const en = {
 		'LOGIN': 'Logigator - Login',
 		'REGISTER': 'Logigator - Register',
 		'EXAMPLES': 'Logigator - Examples',
-		'COMMUNITY': 'Logigator - Community'
+		'COMMUNITY': 'Logigator - Community',
+		'RESET_PASSWORD': 'Logigator - Reset Password'
 	},
 	'SITE_HEADER': {
 		'DOWNLOAD': 'Download',
@@ -128,7 +129,8 @@ export const en = {
 		'ERR_UNKNOWN': 'An unknown error occurred.',
 		'LOGIN_BUTTON': 'LOGIN',
 		'RESEND_BUTTON': 'Resend verification mail',
-		'OR': 'or'
+		'OR': 'or',
+		'FORGOT_PASSWORD': 'Forgot password?'
 	},
 	'REGISTER_FORM': {
 		'HEADLINE': 'Sign up here',
@@ -153,6 +155,29 @@ export const en = {
 		'OR': 'or',
 		'ERR_EMAIL_TAKEN': 'Email is already registered',
 		'ERR_VERIFICATION_MAIL': 'Verification-mail could not be sent, try again when signing in.',
+		'ERR_UNKNOWN': 'An unknown error occurred.'
+	},
+	'RESET_PASSWORD_FORM': {
+		'HEADLINE': 'Reset your password',
+		'PASSWORD': 'Password',
+		'PASSWORD_ERR_REQUIRED': 'Password is required.',
+		'PASSWORD_ERR_MIN': 'Password must contain a minimum of eight characters.',
+		'PASSWORD_ERR_COMPLEXITY': 'Password must contain letters and digits.',
+		'PASSWORD_REPEAT': 'Repeat password',
+		'PASSWORD_REPEAT_ERR_REQUIRED': 'Password must be repeated.',
+		'PASSWORD_REPEAT_ERR': 'Passwords do not match.',
+		'SUBMIT': 'RESET PASSWORD',
+		'ERR_TOKEN_INVALID': 'The password reset token is invalid or expired.',
+		'ERR_UNKNOWN': 'An unknown error occurred.'
+	},
+	'REQUEST_PASSWORD_RESET_FORM': {
+		'HEADLINE': 'Reset your password',
+		'EMAIL': 'Email',
+		'EMAIL_ERR_REQUIRED': 'Email is required.',
+		'EMAIL_ERR_INVALID': 'Please enter a valid email address.',
+		'EMAIL_ERR_NO_USER': 'Email does not exist.',
+		'SUBMIT': 'RESET PASSWORD',
+		'ERR_RESET_MAIL': 'Reset-mail could not be sent.',
 		'ERR_UNKNOWN': 'An unknown error occurred.'
 	},
 	'COMMUNITY': {
@@ -358,6 +383,18 @@ export const en = {
 		'ACCOUNT_DELETED': {
 			'TITLE': 'Account deleted',
 			'LINE_1': 'Your Account has been successfully deleted.',
+			'OK_BUTTON': 'OK'
+		},
+		'PASSWORD_RESET_MAIL_SENT': {
+			'TITLE': 'Password reset mail sent',
+			'HEADLINE': 'Password reset mail sent',
+			'BODY': 'If an account with the provided email address exists, a password reset mail has been sent to this email address. Please check your mailbox.',
+			'OK_BUTTON': 'OK'
+		},
+		'PASSWORD_RESET': {
+			'TITLE': 'Password reset',
+			'HEADLINE': 'Password reset',
+			'BODY': 'Your password has been successfully reset. You can now login with your new password.',
 			'OK_BUTTON': 'OK'
 		}
 	},
@@ -959,6 +996,13 @@ export const en = {
 			'CHANGED': 'Your e-mail address was changed recently.',
 			'PLEASE_VERIFY': 'Please verify your e-mail address.',
 			'TO_DO_SO': 'In order to do so',
+			'CLICK_HERE': 'click here',
+			'HAVE_FUN': 'Have fun building!'
+		},
+		'RESET_PASSWORD': {
+			'SUBJECT': 'Reset your password',
+			'TEXT': 'You have requested a password reset for your Logigator account. If you did not request this, please ignore this email.',
+			'TO_DO_SO': 'In order to reset your password',
 			'CLICK_HERE': 'click here',
 			'HAVE_FUN': 'Have fun building!'
 		}

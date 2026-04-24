@@ -304,15 +304,15 @@
 	"ELEMENT_TYPE": {
 		"BASIC": {
 			"AND": {
-				"NAME": "ET Porte",
+				"NAME": "Porte ET",
 				"DESCRIPTION": "La sortie est élevée si toutes les entrées sont élevées."
 			},
 			"NOT": {
-				"NAME": "PAS de porte",
+				"NAME": "Porte NON",
 				"DESCRIPTION": "La sortie est élevée si l’entrée est faible."
 			},
 			"OR": {
-				"NAME": "OU Porte",
+				"NAME": "Porte OU",
 				"DESCRIPTION": "La sortie est haute si au moins une entrée est haute."
 			},
 			"XOR": {
@@ -399,15 +399,15 @@
 				"DESCRIPTION": "Peut être cliqué pour émettre un signal d'impulsion."
 			},
 			"LEVER": {
-				"NAME": "Changer",
+				"NAME": "Interrupteur",
 				"DESCRIPTION": "Peut être allumé et éteint pendant la simulation."
 			},
 			"LED": {
-				"NAME": "DIRIGÉ",
+				"NAME": "LED",
 				"DESCRIPTION": "S’allume ou s’éteint en fonction de l’entrée appliquée."
 			},
 			"SEGMENT_DISPLAY": {
-				"NAME": "Affichage des segments",
+				"NAME": "Affichage à segments",
 				"DESCRIPTION": "Affiche une entrée binaire sous forme de nombre décimal",
 				"BASE_LABEL": "Base",
 				"BASE": {
@@ -417,7 +417,7 @@
 				}
 			},
 			"LED_MATRIX": {
-				"NAME": "Matrice LED",
+				"NAME": "Matrice de LED",
 				"DESCRIPTION": "Afficher une image",
 				"SIZE": "Largeur hauteur"
 			}
