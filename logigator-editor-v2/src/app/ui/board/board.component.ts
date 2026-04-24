@@ -20,7 +20,6 @@ import { WorkModeService } from '../../work-mode/work-mode.service';
 
 @Component({
 	selector: 'app-board',
-	standalone: true,
 	imports: [],
 	templateUrl: './board.component.html',
 	styleUrl: './board.component.scss',

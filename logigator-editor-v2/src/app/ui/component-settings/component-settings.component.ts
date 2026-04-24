@@ -11,7 +11,6 @@ import { TranslocoDirective } from '@jsverse/transloco';
 
 @Component({
 	selector: 'app-component-settings',
-	standalone: true,
 	imports: [
 		InputNumberModule,
 		FormsModule,

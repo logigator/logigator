@@ -29,7 +29,11 @@ function setupTimedDecorator(
 		const end = performance.now();
 
 		// eslint-disable-next-line no-console
-		console.log(`Execution time for "%s": %s ms`, propertyKey, (end - start).toFixed(2));
+		console.log(
+			`Execution time for "%s": %s ms`,
+			propertyKey,
+			(end - start).toFixed(2)
+		);
 		return result;
 	};
 }

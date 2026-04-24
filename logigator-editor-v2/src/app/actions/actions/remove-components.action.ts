@@ -14,7 +14,9 @@ export class RemoveComponentsAction extends Action {
 
 	constructor(...components: Component[]) {
 		super();
-		this._components = components.map((component) => Component.serialize(component));
+		this._components = components.map((component) =>
+			Component.serialize(component)
+		);
 	}
 
 	do(project: Project): void {

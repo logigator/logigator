@@ -24,7 +24,6 @@ import { TranslocoDirective } from '@jsverse/transloco';
 
 @Component({
 	selector: 'app-root',
-	standalone: true,
 	imports: [
 		TitleBarComponent,
 		ToolBarComponent,

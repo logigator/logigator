@@ -8,7 +8,6 @@ import { WorkMode } from '../../work-mode/work-mode.enum';
 
 @Component({
 	selector: 'app-tool-bar',
-	standalone: true,
 	imports: [ButtonModule, DividerModule, TooltipModule, TranslocoDirective],
 	templateUrl: './tool-bar.component.html',
 	styleUrl: './tool-bar.component.scss',

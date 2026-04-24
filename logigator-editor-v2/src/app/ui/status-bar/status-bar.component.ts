@@ -14,7 +14,6 @@ import { ComponentProviderService } from '../../components/component-provider.se
 
 @Component({
 	selector: 'app-status-bar',
-	standalone: true,
 	imports: [MenubarModule, NgOptimizedImage, TranslocoDirective],
 	templateUrl: './status-bar.component.html',
 	styleUrl: './status-bar.component.scss',

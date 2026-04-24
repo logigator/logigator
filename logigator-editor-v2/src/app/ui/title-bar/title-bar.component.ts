@@ -10,7 +10,6 @@ import { HashedPipe } from '../../hashing/hashed.pipe';
 
 @Component({
 	selector: 'app-title-bar',
-	standalone: true,
 	imports: [MenubarModule, NgOptimizedImage, AsyncPipe, HashedPipe],
 	templateUrl: './title-bar.component.html',
 	styleUrl: './title-bar.component.scss',

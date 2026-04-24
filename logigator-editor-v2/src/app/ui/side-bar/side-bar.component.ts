@@ -9,7 +9,6 @@ import { TranslocoDirective } from '@jsverse/transloco';
 
 @Component({
 	selector: 'app-side-bar',
-	standalone: true,
 	imports: [
 		InputTextModule,
 		FormsModule,

@@ -12,7 +12,6 @@ import { WorkMode } from '../../../work-mode/work-mode.enum';
 
 @Component({
 	selector: 'app-component-list',
-	standalone: true,
 	imports: [ButtonModule, TranslocoDirective],
 	templateUrl: './component-list.component.html',
 	styleUrl: './component-list.component.scss',
