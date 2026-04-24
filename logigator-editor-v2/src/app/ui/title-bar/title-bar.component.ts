@@ -2,7 +2,7 @@ import { ChangeDetectionStrategy, Component, Signal } from '@angular/core';
 import { MenubarModule } from 'primeng/menubar';
 import { MenuItem } from 'primeng/api';
 import { LoggingService } from '../../logging/logging.service';
-import { AsyncPipe, NgOptimizedImage } from '@angular/common';
+import { NgOptimizedImage } from '@angular/common';
 import { TranslocoService } from '@jsverse/transloco';
 import { map } from 'rxjs';
 import { toSignal } from '@angular/core/rxjs-interop';
@@ -10,7 +10,7 @@ import { HashedPipe } from '../../hashing/hashed.pipe';
 
 @Component({
 	selector: 'app-title-bar',
-	imports: [MenubarModule, NgOptimizedImage, AsyncPipe, HashedPipe],
+	imports: [MenubarModule, NgOptimizedImage, HashedPipe],
 	templateUrl: './title-bar.component.html',
 	styleUrl: './title-bar.component.scss',
 	changeDetection: ChangeDetectionStrategy.OnPush

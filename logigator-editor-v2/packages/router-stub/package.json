@@ -3,5 +3,6 @@
 	"description": "Angular - routing STUB",
 	"module": "index.mjs",
 	"typings": "./index.d.ts",
-	"type": "module"
+	"type": "module",
+	"version": "21.0.0"
 }

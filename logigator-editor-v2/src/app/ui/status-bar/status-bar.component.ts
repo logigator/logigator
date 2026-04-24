@@ -5,7 +5,6 @@ import {
 	input
 } from '@angular/core';
 import { MenubarModule } from 'primeng/menubar';
-import { NgOptimizedImage } from '@angular/common';
 import { WorkModeService } from '../../work-mode/work-mode.service';
 import { TranslocoDirective } from '@jsverse/transloco';
 import { TranslationKey } from '../../translation/translation-key.model';
@@ -14,7 +13,7 @@ import { ComponentProviderService } from '../../components/component-provider.se
 
 @Component({
 	selector: 'app-status-bar',
-	imports: [MenubarModule, NgOptimizedImage, TranslocoDirective],
+	imports: [MenubarModule, TranslocoDirective],
 	templateUrl: './status-bar.component.html',
 	styleUrl: './status-bar.component.scss',
 	changeDetection: ChangeDetectionStrategy.OnPush

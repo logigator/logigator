@@ -5,7 +5,7 @@ import { FormsModule } from '@angular/forms';
 import { NumberComponentOption } from '../../components/component-options/number.component-option';
 import { SelectComponentOption } from '../../components/component-options/select.component-option';
 import { SelectButtonModule } from 'primeng/selectbutton';
-import { DropdownModule } from 'primeng/dropdown';
+import { SelectModule } from 'primeng/select';
 import { NgTemplateOutlet } from '@angular/common';
 import { TranslocoDirective } from '@jsverse/transloco';
 
@@ -15,7 +15,7 @@ import { TranslocoDirective } from '@jsverse/transloco';
 		InputNumberModule,
 		FormsModule,
 		SelectButtonModule,
-		DropdownModule,
+		SelectModule,
 		NgTemplateOutlet,
 		TranslocoDirective
 	],

@@ -1,11 +1,20 @@
-@import 'primeng/resources/primeng.css';
-@import './styles/theme/theme';
-
 @import 'primeflex/primeflex.css';
 
 @import '@phosphor-icons/web/regular';
 
+@font-face {
+	font-family: 'Roboto';
+	src:
+		local('Roboto'),
+		local('Roboto-Regular'),
+		url('../public/fonts/roboto-regular-webfont.woff2') format('woff2');
+	font-weight: normal;
+	font-style: normal;
+	font-display: swap;
+}
+
 body {
+	font-family: 'Roboto', sans-serif;
 	margin: 0;
 	padding: 0;
 	overflow: hidden;
