@@ -37,7 +37,7 @@
 					[ngModel]="option.value"
 					(ngModelChange)="option.value = $event"
 				>
-					<ng-template let-item pTemplate>
+					<ng-template #item let-item pTemplate>
 						<ng-container
 							*ngTemplateOutlet="itemTemplate; context: { item }"
 						></ng-container>
@@ -53,12 +53,12 @@
 					[ngModel]="option.value"
 					(ngModelChange)="option.value = $event"
 				>
-					<ng-template let-item pTemplate="selectedItem">
+					<ng-template #item let-item pTemplate="selectedItem">
 						<ng-container
 							*ngTemplateOutlet="itemTemplate; context: { item }"
 						></ng-container>
 					</ng-template>
-					<ng-template let-item pTemplate="item">
+					<ng-template #item let-item pTemplate="item">
 						<ng-container
 							*ngTemplateOutlet="itemTemplate; context: { item }"
 						></ng-container>

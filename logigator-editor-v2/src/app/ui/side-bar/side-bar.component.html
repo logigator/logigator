@@ -1,13 +1,13 @@
 <div *transloco="let t" class="flex flex-col gap-2 p-2">
-	<p-iconField iconPosition="right">
-		<p-inputIcon styleClass="ph ph-magnifying-glass"></p-inputIcon>
+	<p-iconfield iconPosition="right">
+		<p-inputicon class="ph ph-magnifying-glass"></p-inputicon>
 		<input
 			pInputText
 			[placeholder]="t('sideBar.search')"
 			class="w-full"
 			[(ngModel)]="searchText"
 		/>
-	</p-iconField>
+	</p-iconfield>
 	<app-component-list
 		[headline]="t('components.category.basic')"
 		[components]="basicComponents"
