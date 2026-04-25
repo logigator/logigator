@@ -16,10 +16,10 @@ const COMPONENTS: Record<ComponentType, ComponentConfig> = {
 	providedIn: 'root'
 })
 export class ComponentProviderService {
-	private readonly _componentsByCategory: Map<
+	private readonly _componentsByCategory = new Map<
 		ComponentCategory,
 		ComponentConfig[]
-	> = new Map();
+	>();
 
 	constructor() {
 		for (const config of Object.values(COMPONENTS)) {

@@ -12,16 +12,16 @@ const ROUTES: Type<Route>[] = [TestRoute];
 	providedIn: 'root'
 })
 export class RouterService {
+	private readonly logging = inject(LoggingService);
+	private readonly location = inject(Location);
+
 	private _routes: {
 		instance: Route;
 		keys: string[];
 		pattern: RegExp;
 	}[] = [];
 
-	constructor(
-		private readonly logging: LoggingService,
-		private readonly location: Location
-	) {
+	constructor() {
 		for (const route of ROUTES) {
 			const instance = inject(route);
 			this._routes.push({

@@ -11,5 +11,5 @@ export interface ComponentConfig {
 	name: TranslationKey;
 	description: TranslationKey;
 	options: ComponentOption[];
-	implementation: { new (options: ComponentOption[]): Component };
+	implementation: new (options: ComponentOption[]) => Component;
 }

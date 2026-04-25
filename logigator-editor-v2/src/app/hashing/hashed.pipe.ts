@@ -1,4 +1,4 @@
-import { Pipe, PipeTransform } from '@angular/core';
+import { Pipe, PipeTransform, inject } from '@angular/core';
 import { HashingService } from './hashing.service';
 
 @Pipe({
@@ -6,7 +6,7 @@ import { HashingService } from './hashing.service';
 	name: 'hashed'
 })
 export class HashedPipe implements PipeTransform {
-	constructor(private readonly hashingService: HashingService) {}
+	private readonly hashingService = inject(HashingService);
 
 	public transform(uri: string): string {
 		return this.hashingService.hashUrl(uri);

@@ -26,8 +26,6 @@ import { TranslocoDirective } from '@jsverse/transloco';
 export class ComponentSettingsComponent {
 	public readonly config = input<ComponentOption[]>([]);
 
-	constructor() {}
-
 	protected isNumberInput(
 		option: ComponentOption
 	): option is NumberComponentOption {

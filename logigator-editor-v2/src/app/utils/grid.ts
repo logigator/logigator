@@ -21,34 +21,31 @@ export function alignToHalfGrid(val: number): number {
 	return fromGrid(toHalfGrid(val));
 }
 
-export function fromGridPoint(point: Point, inline: boolean = false): Point {
+export function fromGridPoint(point: Point, inline = false): Point {
 	if (inline) {
 		return point.set(fromGrid(point.x), fromGrid(point.y));
 	}
 	return new Point(fromGrid(point.x), fromGrid(point.y));
 }
 
-export function toGridPoint(point: Point, inline: boolean = false): Point {
+export function toGridPoint(point: Point, inline = false): Point {
 	if (inline) {
 		return point.set(toGrid(point.x), toGrid(point.y));
 	}
 	return new Point(toGrid(point.x), toGrid(point.y));
 }
 
-export function toHalfGridPoint(point: Point, inline: boolean = false): Point {
+export function toHalfGridPoint(point: Point, inline = false): Point {
 	if (inline) {
 		return point.set(toHalfGrid(point.x), toHalfGrid(point.y));
 	}
 	return new Point(toHalfGrid(point.x), toHalfGrid(point.y));
 }
 
-export function alignPointToGrid(point: Point, inline: boolean = false): Point {
+export function alignPointToGrid(point: Point, inline = false): Point {
 	return fromGridPoint(toGridPoint(point, inline), true);
 }
 
-export function alignPointToHalfGrid(
-	point: Point,
-	inline: boolean = false
-): Point {
+export function alignPointToHalfGrid(point: Point, inline = false): Point {
 	return fromGridPoint(toHalfGridPoint(point, inline), true);
 }

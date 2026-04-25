@@ -2,7 +2,8 @@ import {
 	ChangeDetectionStrategy,
 	Component,
 	computed,
-	input
+	input,
+	inject
 } from '@angular/core';
 import { ComponentConfig } from '../../../components/component-config.model';
 import { ButtonModule } from 'primeng/button';
@@ -18,6 +19,8 @@ import { WorkMode } from '../../../work-mode/work-mode.enum';
 	changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class ComponentListComponent {
+	private readonly workModeService = inject(WorkModeService);
+
 	public headline = input<string>('');
 	public components = input<ComponentConfig[]>([]);
 	public searchText = input<string>('');
@@ -33,8 +36,6 @@ export class ComponentListComponent {
 			null
 		);
 	});
-
-	constructor(private readonly workModeService: WorkModeService) {}
 
 	public selectComponent(component: ComponentConfig): void {
 		this.workModeService.setMode(WorkMode.COMPONENT_PLACEMENT);

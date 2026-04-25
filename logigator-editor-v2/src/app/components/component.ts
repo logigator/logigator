@@ -25,10 +25,10 @@ export abstract class Component extends Container {
 	private _id: number;
 
 	private _direction: ComponentRotation = ComponentRotation.Right;
-	private _appliedScale: number = 1;
+	private _appliedScale = 1;
 
-	private _numInputs: number = 0;
-	private _numOutputs: number = 0;
+	private _numInputs = 0;
+	private _numOutputs = 0;
 
 	private _constantRotationContainers: Container[] = [];
 

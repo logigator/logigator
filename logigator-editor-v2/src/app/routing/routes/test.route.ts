@@ -1,5 +1,5 @@
 import { Route } from '../route.model';
-import { Injectable } from '@angular/core';
+import { Injectable, inject } from '@angular/core';
 import { RouteKeys } from '../route-keys.model';
 import { LoggingService } from '../../logging/logging.service';
 
@@ -7,9 +7,9 @@ import { LoggingService } from '../../logging/logging.service';
 	providedIn: 'root'
 })
 export class TestRoute implements Route {
-	readonly route = '/test/:param2';
+	private readonly loggingService = inject(LoggingService);
 
-	constructor(private readonly loggingService: LoggingService) {}
+	readonly route = '/test/:param2';
 
 	onActivation(params: RouteKeys<typeof this.route>): boolean {
 		this.loggingService.log(params, 'TestRoute');

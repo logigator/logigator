@@ -111,6 +111,7 @@ export class Project extends InteractionContainer {
 		this._ticker$.next('single');
 	}
 
+	// eslint-disable-next-line @typescript-eslint/no-unused-vars
 	public removeComponent(componentId: number) {
 		// TODO: Implement
 		throw new Error('Not implemented');
@@ -122,6 +123,7 @@ export class Project extends InteractionContainer {
 		this._ticker$.next('single');
 	}
 
+	// eslint-disable-next-line @typescript-eslint/no-unused-vars
 	public removeWire(wireId: number) {
 		// TODO: Implement
 		throw new Error('Not implemented');

@@ -5,7 +5,8 @@ import {
 	Component,
 	computed,
 	Injector,
-	signal
+	signal,
+	inject
 } from '@angular/core';
 import { Point } from 'pixi.js';
 import { RouterService } from './routing/router.service';
@@ -39,18 +40,18 @@ import { TranslocoDirective } from '@jsverse/transloco';
 	changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class AppComponent {
+	private readonly injector = inject(Injector);
+	private readonly routerService = inject(RouterService);
+	protected readonly projectService = inject(ProjectService);
+	private readonly workModeService = inject(WorkModeService);
+
 	protected readonly boardPosition = signal<Point>(new Point(0, 0));
 
 	protected readonly componentSettings = computed(() => {
 		return this.workModeService.selectedComponentConfig();
 	});
 
-	constructor(
-		private readonly injector: Injector,
-		private readonly routerService: RouterService,
-		protected readonly projectService: ProjectService,
-		private readonly workModeService: WorkModeService
-	) {
+	constructor() {
 		setStaticDIInjector(this.injector);
 		this.routerService.processCurrentRoute();
 

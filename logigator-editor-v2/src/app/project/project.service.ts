@@ -13,8 +13,6 @@ export class ProjectService {
 	public readonly openComponents = computed(this._openComponents);
 	public readonly activeProject = computed(this._activeProject);
 
-	constructor() {}
-
 	public setMainProject(project: Project): void {
 		this._mainProject.set(project);
 		this._activeProject.set(project);

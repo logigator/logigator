@@ -1,4 +1,4 @@
-export type Environment = {
+export interface Environment {
 	gridSize: number;
 	debug: {
 		showGridBorders: boolean;
@@ -6,4 +6,4 @@ export type Environment = {
 		showOrigins: boolean;
 		showConnectionPoints: boolean;
 	};
-};
+}

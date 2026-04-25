@@ -19,8 +19,8 @@ import { WireDirection } from '../wires/wire-direction.enum';
 import { ActionContainer } from '../actions/action-container';
 
 export class FloatingLayer extends Container {
-	private readonly _componentSelection: Container<Component> = new Container();
-	private readonly _wireSelection: Container<Wire> = new Container();
+	private readonly _componentSelection = new Container<Component>();
+	private readonly _wireSelection = new Container<Wire>();
 	private readonly _selectRect: Graphics = new Graphics();
 
 	private readonly destroy$ = new Subject<void>();

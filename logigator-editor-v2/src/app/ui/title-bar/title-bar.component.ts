@@ -1,4 +1,9 @@
-import { ChangeDetectionStrategy, Component, Signal } from '@angular/core';
+import {
+	ChangeDetectionStrategy,
+	Component,
+	Signal,
+	inject
+} from '@angular/core';
 import { MenubarModule } from 'primeng/menubar';
 import { MenuItem } from 'primeng/api';
 import { LoggingService } from '../../logging/logging.service';
@@ -16,12 +21,14 @@ import { HashedPipe } from '../../hashing/hashed.pipe';
 	changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class TitleBarComponent {
+	private readonly loggingService = inject(LoggingService);
+	private readonly translocoService = inject(TranslocoService);
+
 	public items: Signal<MenuItem[]>;
 
-	public constructor(
-		private readonly loggingService: LoggingService,
-		private readonly translocoService: TranslocoService
-	) {
+	public constructor() {
+		const translocoService = this.translocoService;
+
 		this.items = toSignal(
 			translocoService.events$.pipe(map(() => this.generateMenuItems())),
 			{ initialValue: [] }

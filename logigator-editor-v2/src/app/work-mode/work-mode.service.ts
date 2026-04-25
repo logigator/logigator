@@ -1,4 +1,4 @@
-import { computed, Injectable, signal } from '@angular/core';
+import { computed, Injectable, signal, inject } from '@angular/core';
 import { WorkMode } from './work-mode.enum';
 import { ComponentType } from '../components/component-type.enum';
 import { ComponentProviderService } from '../components/component-provider.service';
@@ -7,6 +7,8 @@ import { ComponentProviderService } from '../components/component-provider.servi
 	providedIn: 'root'
 })
 export class WorkModeService {
+	private readonly componentProviderService = inject(ComponentProviderService);
+
 	private readonly _mode = signal<WorkMode>(WorkMode.WIRE_DRAWING);
 	public readonly mode = computed(this._mode);
 
@@ -19,10 +21,6 @@ export class WorkModeService {
 			? this.componentProviderService.getComponent(componentType)
 			: null;
 	});
-
-	constructor(
-		private readonly componentProviderService: ComponentProviderService
-	) {}
 
 	public setMode(mode: WorkMode): void {
 		if (mode !== WorkMode.COMPONENT_PLACEMENT) {

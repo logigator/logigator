@@ -1,4 +1,4 @@
-import { Injectable } from '@angular/core';
+import { Injectable, inject } from '@angular/core';
 import { Translation, TranslocoLoader } from '@jsverse/transloco';
 import { LoggingService } from '../logging/logging.service';
 
@@ -6,7 +6,7 @@ import { LoggingService } from '../logging/logging.service';
 	providedIn: 'root'
 })
 export class TranslationLoaderService implements TranslocoLoader {
-	constructor(private readonly loggingService: LoggingService) {}
+	private readonly loggingService = inject(LoggingService);
 
 	async getTranslation(lang: string): Promise<Translation> {
 		try {

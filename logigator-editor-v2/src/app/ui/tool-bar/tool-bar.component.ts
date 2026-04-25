@@ -1,4 +1,9 @@
-import { ChangeDetectionStrategy, Component, computed } from '@angular/core';
+import {
+	ChangeDetectionStrategy,
+	Component,
+	computed,
+	inject
+} from '@angular/core';
 import { ButtonModule } from 'primeng/button';
 import { DividerModule } from 'primeng/divider';
 import { TooltipModule } from 'primeng/tooltip';
@@ -14,6 +19,8 @@ import { WorkMode } from '../../work-mode/work-mode.enum';
 	changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class ToolBarComponent {
+	private readonly workModeService = inject(WorkModeService);
+
 	protected drawWireStyles = computed(() =>
 		this.workModeService.mode() === WorkMode.WIRE_DRAWING
 			? 'bg-bluegray-300'
@@ -38,8 +45,6 @@ export class ToolBarComponent {
 	protected placeTextStyles = computed(() =>
 		this.workModeService.mode() === WorkMode.PLACE_TEXT ? 'bg-bluegray-300' : ''
 	);
-
-	constructor(private readonly workModeService: WorkModeService) {}
 
 	protected setWireDrawMode(): void {
 		this.workModeService.setMode(WorkMode.WIRE_DRAWING);

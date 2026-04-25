@@ -228,9 +228,7 @@ export declare class ActivationStart {
  * class that extends the `BaseRouteReuseStrategy` one.
  * @publicApi
  */
-export declare abstract class BaseRouteReuseStrategy
-	implements RouteReuseStrategy
-{
+export declare abstract class BaseRouteReuseStrategy implements RouteReuseStrategy {
 	/**
 	 * Whether the given route should detach for later reuse.
 	 * Always returns false for `BaseRouteReuseStrategy`.
@@ -1090,8 +1088,7 @@ export declare enum EventType {
  * @publicApi
  */
 export declare interface ExtraOptions
-	extends InMemoryScrollingOptions,
-		RouterConfigOptions {
+	extends InMemoryScrollingOptions, RouterConfigOptions {
 	/**
 	 * When true, log all internal navigation events to the console.
 	 * Use for debugging.
@@ -1880,8 +1877,7 @@ export declare type NavigationErrorHandlerFeature =
  * @publicApi
  */
 export declare interface NavigationExtras
-	extends UrlCreationOptions,
-		NavigationBehaviorOptions {}
+	extends UrlCreationOptions, NavigationBehaviorOptions {}
 
 /**
  * An event triggered when a navigation is skipped.

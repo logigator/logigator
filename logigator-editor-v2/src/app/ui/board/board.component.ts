@@ -9,7 +9,8 @@ import {
 	OnInit,
 	output,
 	signal,
-	ViewChild
+	ViewChild,
+	inject
 } from '@angular/core';
 import { Application, Point } from 'pixi.js';
 import { ThemingService } from '../../theming/theming.service';
@@ -26,6 +27,12 @@ import { WorkModeService } from '../../work-mode/work-mode.service';
 	changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class BoardComponent implements OnInit, OnDestroy {
+	private readonly hostEl = inject(ElementRef);
+	private readonly themingService = inject(ThemingService);
+	private readonly ngZone = inject(NgZone);
+	private readonly assetsService = inject(AssetsService);
+	private readonly workModeService = inject(WorkModeService);
+
 	@ViewChild('canvas', { static: true })
 	protected readonly canvas!: ElementRef<HTMLCanvasElement>;
 
@@ -39,13 +46,7 @@ export class BoardComponent implements OnInit, OnDestroy {
 
 	private readonly app: Application = new Application();
 
-	constructor(
-		private readonly hostEl: ElementRef,
-		private readonly themingService: ThemingService,
-		private readonly ngZone: NgZone,
-		private readonly assetsService: AssetsService,
-		private readonly workModeService: WorkModeService
-	) {
+	constructor() {
 		this.projectChange$.pipe(takeUntil(this.destroy$)).subscribe((project) => {
 			if (!project) {
 				return;

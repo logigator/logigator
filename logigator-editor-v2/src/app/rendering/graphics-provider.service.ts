@@ -7,12 +7,10 @@ type CacheableGraphics = new (...args: never[]) => GraphicsContext;
 	providedIn: 'root'
 })
 export class GraphicsProviderService {
-	private readonly _cache: Map<
+	private readonly _cache = new Map<
 		CacheableGraphics,
 		Map<string, GraphicsContext>
-	> = new Map();
-
-	constructor() {}
+	>();
 
 	public getGraphicsContext<T extends CacheableGraphics>(
 		graphics: T,

@@ -19,8 +19,6 @@ export class ThemingService {
 		() => THEMES[this._currentThemeType()]
 	);
 
-	constructor() {}
-
 	public setTheme(theme: ThemeType): void {
 		this._currentThemeType.set(theme);
 	}

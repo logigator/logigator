@@ -2,7 +2,8 @@ import {
 	ChangeDetectionStrategy,
 	Component,
 	computed,
-	input
+	input,
+	inject
 } from '@angular/core';
 import { MenubarModule } from 'primeng/menubar';
 import { WorkModeService } from '../../work-mode/work-mode.service';
@@ -19,6 +20,9 @@ import { ComponentProviderService } from '../../components/component-provider.se
 	changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class StatusBarComponent {
+	private readonly workModeService = inject(WorkModeService);
+	private readonly componentProviderService = inject(ComponentProviderService);
+
 	public readonly boardPosition = input<Point>(new Point(0, 0));
 
 	protected readonly boardPositionFormatted = computed(
@@ -37,9 +41,4 @@ export class StatusBarComponent {
 		}
 		return this.componentProviderService.getComponent(comp).name;
 	});
-
-	constructor(
-		private readonly workModeService: WorkModeService,
-		private readonly componentProviderService: ComponentProviderService
-	) {}
 }
