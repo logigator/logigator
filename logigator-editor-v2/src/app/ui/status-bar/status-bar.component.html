@@ -1,11 +1,11 @@
-<div *transloco="let t" class="flex border-top-1 border-white-alpha-20">
-	<div class="flex-grow-1 px-2 border-right-1 border-white-alpha-20">
+<div *transloco="let t" class="flex border-t border-white/20">
+	<div class="grow px-2 border-r border-white/20">
 		{{ t(workMode(), { componentName: t(selectedComponentName()) }) }}
 	</div>
-	<div class="px-2 border-right-1 border-white-alpha-20">
+	<div class="px-2 border-r border-white/20">
 		{{ boardPositionFormatted() }}
 	</div>
-	<div class="px-2 border-right-1 border-white-alpha-20">
+	<div class="px-2 border-r border-white/20">
 		{{ t('statusBar.saved') }}
 	</div>
 	<div class="px-2">{{ t('statusBar.selected') }}: 0</div>

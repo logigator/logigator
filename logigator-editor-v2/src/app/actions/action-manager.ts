@@ -3,7 +3,7 @@ import { Project } from '../project/project';
 
 export class ActionManager {
 	private _history: Action[] = [];
-	private _pointer: number = 0;
+	private _pointer = 0;
 
 	constructor(private readonly project: Project) {}
 

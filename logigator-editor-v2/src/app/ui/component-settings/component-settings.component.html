@@ -1,5 +1,5 @@
 <ng-template let-item="item" #itemTemplate>
-	<div class="flex gap-1 align-items-center">
+	<div class="flex gap-1 items-center">
 		@if (item.icon) {
 			<i [class]="item.icon"></i>
 		}
@@ -9,9 +9,9 @@
 	</div>
 </ng-template>
 
-<form class="flex flex-column gap-2" *transloco="let t">
+<form class="flex flex-col gap-2" *transloco="let t">
 	@for (option of config(); track $index) {
-		<div class="flex gap-4 align-items-center justify-content-between">
+		<div class="flex gap-4 items-center justify-between">
 			<label [for]="'component-settings-input-' + $index">{{
 				t(option.label)
 			}}</label>

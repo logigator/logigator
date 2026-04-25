@@ -30,7 +30,7 @@
 								"input": "public"
 							}
 						],
-						"styles": ["src/styles.scss"],
+						"styles": ["src/tailwind.css", "src/styles.scss"],
 						"scripts": [],
 						"allowedCommonJsDependencies": [
 							"earcut",
@@ -99,7 +99,7 @@
 								"input": "public"
 							}
 						],
-						"styles": ["src/styles.scss"],
+						"styles": ["src/tailwind.css", "src/styles.scss"],
 						"scripts": []
 					}
 				},

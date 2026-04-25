@@ -1,11 +1,11 @@
 <app-title-bar></app-title-bar>
-<app-tool-bar class="border-bottom-1 border-white-alpha-20"></app-tool-bar>
-<div class="flex flex-grow-1" *transloco="let t">
+<app-tool-bar class="border-b border-white/20"></app-tool-bar>
+<div class="flex grow" *transloco="let t">
 	<app-side-bar
-		class="w-20rem border-right-1 border-white-alpha-20"
+		class="w-80 border-r border-white/20"
 	></app-side-bar>
-	<div class="flex-grow-1 flex flex-column">
-		<div class="relative flex-grow-1">
+	<div class="grow flex flex-col">
+		<div class="relative grow">
 			<app-board
 				class="block w-full h-full"
 				[project]="projectService.activeProject()"
@@ -13,7 +13,7 @@
 			></app-board>
 			@if (componentSettings(); as settings) {
 				<p-card
-					class="absolute m-2 bottom-0 right-0 max-w-24rem"
+					class="absolute m-2 bottom-0 right-0 max-w-96"
 					[header]="t(settings.name)"
 					[subheader]="t(settings.description)"
 				>

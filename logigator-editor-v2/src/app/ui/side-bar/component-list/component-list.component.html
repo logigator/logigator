@@ -1,19 +1,19 @@
-<div *transloco="let t" class="border-1 border-white-alpha-20">
-	<span class="block bg-white-alpha-20 p-2 font-bold text-lg">{{
+<div *transloco="let t" class="border border-white/20">
+	<span class="block bg-white/20 p-2 font-bold text-lg">{{
 		headline()
 	}}</span>
 	<div class="flex flex-wrap gap-2 m-2">
 		@for (comp of components(); track comp.type) {
 			<div
-				class="flex flex-column align-items-center gap-1 cursor-pointer hover:bg-black-alpha-10"
-				[class.bg-white-alpha-20]="selectedComponent() === comp.type"
+				class="flex flex-col items-center gap-1 cursor-pointer hover:bg-black/10"
+				[class.bg-white/20]="selectedComponent() === comp.type"
 				(click)="selectComponent(comp)"
 				(keydown.enter)="selectComponent(comp)"
 				tabindex="0"
 				aria-roledescription="button"
 			>
 				<div
-					class="flex justify-content-center align-items-center border-1 border-white-alpha-50 w-4rem h-4rem text-center"
+					class="flex justify-center items-center border border-white/50 w-16 h-16 text-center"
 				>
 					{{ comp.symbol }}
 				</div>
