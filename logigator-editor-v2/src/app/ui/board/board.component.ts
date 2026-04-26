@@ -45,6 +45,7 @@ export class BoardComponent implements OnInit, OnDestroy {
 	private readonly projectChange$ = new Subject<Project | null>();
 
 	private readonly app: Application = new Application();
+	private appInitialized = false;
 
 	constructor() {
 		this.projectChange$.pipe(takeUntil(this.destroy$)).subscribe((project) => {
@@ -119,7 +120,7 @@ export class BoardComponent implements OnInit, OnDestroy {
 				resizeTo: this.hostEl.nativeElement,
 				preference: 'webgpu',
 				antialias: true,
-				hello: true,
+				hello: false,
 				powerPreference: 'high-performance',
 				backgroundColor: this.themingService.currentTheme().background,
 				resolution: window.devicePixelRatio || 1,
@@ -136,12 +137,15 @@ export class BoardComponent implements OnInit, OnDestroy {
 				project.resizeViewport(w, h);
 			});
 
+			this.appInitialized = true;
 			this.loaded.set(true);
 		});
 	}
 
 	ngOnDestroy(): void {
-		this.app.destroy();
 		this.destroy$.next();
+		if (this.appInitialized) {
+			this.app.destroy();
+		}
 	}
 }

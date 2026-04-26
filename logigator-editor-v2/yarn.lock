@@ -563,8 +563,8 @@ __metadata:
 
 "@angular/router@file:./packages/router-stub::locator=logigator-editor-v2%40workspace%3A.":
   version: 21.0.0
-  resolution: "@angular/router@file:./packages/router-stub#./packages/router-stub::hash=473c1d&locator=logigator-editor-v2%40workspace%3A."
-  checksum: 10c0/89b5da4676e511e6ce23c7392be4cdf547233401bc52850af3440a1ce8bba06fd12d92618c37cce85f32135e6f03233842c63d1e6b496d4efb56d058d0990d7a
+  resolution: "@angular/router@file:./packages/router-stub#./packages/router-stub::hash=8a7a1a&locator=logigator-editor-v2%40workspace%3A."
+  checksum: 10c0/3e87eb602494f8d773dc2de5bd7b1780247524110341efdea80e0ebbabede7400e9ef335dcc4bd78678a5f9bc42ee30f39a64ad3419325b8c46c1aa86cedfff9
   languageName: node
   linkType: hard
 
