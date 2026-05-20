@@ -159,6 +159,50 @@ export class Project extends InteractionContainer {
 		yield* this._wires.queryRange(rect);
 	}
 
+	public detachForDrag(
+		components: readonly Component[],
+		wires: readonly Wire[]
+	): void {
+		for (const c of components) {
+			this._components.remove(c);
+		}
+		for (const w of wires) {
+			this._wires.remove(w);
+		}
+		this._ticker$.next('single');
+	}
+
+	public reattachFromDrag(
+		components: readonly Component[],
+		wires: readonly Wire[]
+	): void {
+		for (const c of components) {
+			if (!c.destroyed) this._components.insert(c);
+		}
+		for (const w of wires) {
+			if (!w.destroyed) this._wires.insert(w);
+		}
+		this._ticker$.next('single');
+	}
+
+	public moveComponent(id: number, pos: Point): void {
+		const component = Array.from(this._components.items).find(
+			(c) => c.id === id
+		);
+		if (!component) return;
+		component.position.copyFrom(pos);
+		this._components.insert(component);
+		this._ticker$.next('single');
+	}
+
+	public moveWire(id: number, pos: Point): void {
+		const wire = Array.from(this._wires.items).find((w) => w.id === id);
+		if (!wire) return;
+		wire.position.copyFrom(pos);
+		this._wires.insert(wire);
+		this._ticker$.next('single');
+	}
+
 	private updateScale(
 		scale: number,
 		center: Point = this._viewPortSize.multiplyScalar(0.5)
