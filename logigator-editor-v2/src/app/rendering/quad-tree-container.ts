@@ -127,23 +127,20 @@ export class QuadTreeContainer<T extends GridElement> extends Container {
 	}
 
 	/**
-	 * Returns an iterator over all elements that are contained in the given range.
+	 * Returns an iterator over all elements whose bounds intersect the given range.
+	 * Elements that only partially overlap the range are included.
 	 * @param range rectangle defining the range to query
 	 */
 	public *queryRange(range: Rectangle): Generator<T> {
 		yield* this.queryRangeOfEntry(this._tree, range);
 	}
 
-	// Full-containment (containsRect) is intentional: only elements whose
-	// entire gridBounds lies inside the query rectangle are yielded. Partial
-	// overlap is not enough. Selection behaviour matches this — an element
-	// must be fully inside the drag rectangle to be selected.
 	private *queryRangeOfEntry(
 		entry: QuadTreeEntry<T>,
 		range: Rectangle
 	): Generator<T> {
 		for (const element of entry.branchItems.children) {
-			if (range.containsRect(element.gridBounds)) {
+			if (range.intersects(element.gridBounds)) {
 				yield element;
 			}
 		}
@@ -156,7 +153,7 @@ export class QuadTreeContainer<T extends GridElement> extends Container {
 			}
 		} else {
 			for (const element of entry.leafItems!.children) {
-				if (range.containsRect(element.gridBounds)) {
+				if (range.intersects(element.gridBounds)) {
 					yield element;
 				}
 			}

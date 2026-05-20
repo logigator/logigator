@@ -83,13 +83,13 @@ describe('QuadTreeContainer', () => {
 			expect(result).not.toContain(outside);
 		});
 
-		it('item partially overlapping the query range is not returned', () => {
-			// item right edge at 25, range right edge at 20
+		it('item partially overlapping the query range is returned', () => {
+			// item x:15-25, y:15-25 overlaps range x:0-20, y:0-20
 			const partial = makeItem(15, 15, 10, 10);
 			tree.insert(partial);
 
 			const result = Array.from(tree.queryRange(new Rectangle(0, 0, 20, 20)));
-			expect(result).not.toContain(partial);
+			expect(result).toContain(partial);
 		});
 
 		it('multiple items in the same leaf are all returned', () => {
@@ -209,13 +209,13 @@ describe('QuadTreeContainer', () => {
 			).toContain(cross);
 		});
 
-		it('cross-boundary item is not returned by a query range that only partially overlaps it', () => {
+		it('cross-boundary item is returned by a query range that partially overlaps it', () => {
 			const cross = makeItem(30, 2, 5, 3);
 			tree.insert(cross);
-			// range ends at x=32 but item extends to x=35
+			// range ends at x=32 but item extends to x=35; they overlap x:30-32
 			expect(
 				Array.from(tree.queryRange(new Rectangle(0, 0, 32, 10)))
-			).not.toContain(cross);
+			).toContain(cross);
 		});
 
 		it('cross-boundary item can be removed', () => {
