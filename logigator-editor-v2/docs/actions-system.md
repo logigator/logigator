@@ -6,14 +6,17 @@ The actions system implements the **Command pattern** to provide undo/redo for a
 
 ```
 src/app/actions/
-├── action.ts               # Abstract base class
-├── action-manager.ts       # History stack, undo/redo controller
-├── action-container.ts     # Composite action (groups multiple actions)
+├── action.ts                   # Abstract base class
+├── action-manager.ts           # History stack, undo/redo controller
+├── action-container.ts         # Composite action (groups multiple actions)
 └── actions/
     ├── add-components.action.ts
     ├── remove-components.action.ts
     ├── add-wires.action.ts
-    └── remove-wires.action.ts
+    ├── remove-wires.action.ts
+    ├── move-components.action.ts
+    ├── move-wires.action.ts
+    └── move-entry.model.ts     # Shared { id, oldPos, newPos } interface
 ```
 
 ---
@@ -37,11 +40,13 @@ abstract class Action {
 
 ### Serialization at construction time
 
-All concrete actions **serialize their subject immediately in the constructor** (`Component.serialize(c)` / `Wire.serialize(w)`). The action stores `SerializedComponent[]` or `SerializedWire[]`, not live PixiJS object references. This means:
+`AddComponentsAction` / `RemoveComponentsAction` / `AddWiresAction` / `RemoveWiresAction` **serialize their subject immediately in the constructor** (`Component.serialize(c)` / `Wire.serialize(w)`). The action stores `SerializedComponent[]` or `SerializedWire[]`, not live PixiJS object references. This means:
 
 - The action is fully self-contained after construction.
 - Live objects can be destroyed or re-created freely without invalidating recorded history.
 - `do` always deserializes fresh instances from the stored snapshot; `undo` calls `project.removeComponent/removeWire` by ID.
+
+`MoveComponentsAction` / `MoveWiresAction` use a different strategy: they store `MoveEntry[]` — `{ id: number, oldPos: Point, newPos: Point }` — rather than full serialized snapshots. Positions are cloned at construction so they are safe from mutation. IDs are used instead of live references so that undo/redo works correctly even if an element was deleted and re-created (e.g., undo of a delete creates a new instance with the same ID). `project.moveComponent(id, pos)` / `project.moveWire(id, pos)` perform a live lookup at call time.
 
 ---
 
@@ -131,11 +136,37 @@ Same pattern for wires. Wire deserialization does not require a registry; `Wire.
 | `AddWiresAction` | `project.addWire(Wire.deserialize(…))` | `project.removeWire(id)` |
 | `RemoveWiresAction` | `project.removeWire(id)` | `project.addWire(Wire.deserialize(…))` |
 
+### `MoveComponentsAction` / `MoveWiresAction`
+
+Move actions record `MoveEntry[]` — the shared interface in `move-entry.model.ts`:
+
+```ts
+interface MoveEntry {
+    id: number;
+    oldPos: Point;
+    newPos: Point;
+}
+```
+
+`do` applies `newPos`; `undo` applies `oldPos`. Both call `project.moveComponent` / `project.moveWire` which look up the element by ID, update its position, and rebucket it in the quad tree.
+
+These actions are pushed by `FloatingLayer._commitDrag()` after a successful selection drag-move, wrapped in an `ActionContainer` alongside any companion wire or component entries. Selection tint is not cleared on commit — elements remain selected after moving.
+
+| | `do` | `undo` |
+|---|---|---|
+| `MoveComponentsAction` | `project.moveComponent(id, newPos)` for each entry | `project.moveComponent(id, oldPos)` for each entry |
+| `MoveWiresAction` | `project.moveWire(id, newPos)` for each entry | `project.moveWire(id, oldPos)` for each entry |
+
 ---
 
 ## Integration with the rest of the app
 
-`Project` (`project/project.ts:15`) creates and exposes `actionManager` as a public field. The primary call site today is `FloatingLayer.commitSelection()` (`rendering/floating-layer.ts:237–255`), which wraps a placement event into an `ActionContainer` and pushes it.
+`Project` creates and exposes `actionManager` as a public field. Call sites:
+
+| Call site | Action(s) pushed |
+|---|---|
+| `FloatingLayer.commitSelection()` | `AddComponentsAction`, `AddWiresAction` (placement commit) |
+| `FloatingLayer._commitDrag()` | `MoveComponentsAction`, `MoveWiresAction` (selection drag-move) |
 
 Undo/redo keyboard shortcuts are wired through Angular UI components that call `project.actionManager.undo()` / `.redo()` directly.
 
@@ -160,5 +191,7 @@ Action (abstract)
 ├── AddComponentsAction
 ├── RemoveComponentsAction
 ├── AddWiresAction
-└── RemoveWiresAction
+├── RemoveWiresAction
+├── MoveComponentsAction
+└── MoveWiresAction
 ```

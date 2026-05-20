@@ -6,8 +6,9 @@ The project layer is the central owner of all circuit state. `Project` is the ro
 
 ```
 src/app/project/
-├── project.ts          # Circuit root — extends InteractionContainer
-└── project.service.ts  # Angular service — holds and exposes active project signals
+├── project.ts              # Circuit root — extends InteractionContainer
+├── project.service.ts      # Angular service — holds and exposes active project signals
+└── selection-manager.ts    # Committed selection state (tint, sets, observables)
 ```
 
 ---
@@ -45,9 +46,11 @@ All circuit data is stored in **grid units**. The `_gridSpace` container has `sc
 
 Every `Project` owns a public `actionManager: ActionManager` field. All circuit mutations (add/remove component or wire) are routed through it so that the operations can be undone and redone. Direct callers never mutate `_components` or `_wires` directly — they always go through `addComponent`, `removeComponent`, `addWire`, or `removeWire`.
 
-### ActionManager
+### SelectionManager
 
-Every `Project` owns a public `actionManager: ActionManager` field. All circuit mutations (add/remove component or wire) are routed through it so that the operations can be undone and redone. Direct callers never mutate `_components` or `_wires` directly — they always go through `addComponent`, `removeComponent`, `addWire`, or `removeWire`.
+Every `Project` owns a public `selectionManager: SelectionManager` field. It tracks the currently committed selection — the set of components and wires the user has selected with the rectangle or click selection tools. It is a plain TypeScript class (not an Angular service), constructed directly by `Project`.
+
+`SelectionManager` is a peer of `ActionManager`: both are public, both are owned by `Project`, and neither holds Angular DI references. See the [SelectionManager](#selectionmanager-1) section below for its full API.
 
 ---
 
@@ -92,11 +95,28 @@ This ensures the point under the mouse stays stationary. After repositioning, `G
 | Method | Description |
 |---|---|
 | `addComponent(c)` | Calls `c.applyScale(this.scale.x)`, inserts into `_components` quad tree, emits `'single'` on `_ticker$` |
-| `removeComponent(id)` | Finds the component by ID in `_components.items`, removes it from the quad tree, destroys it |
+| `removeComponent(id)` | Calls `selectionManager.evict(component)`, removes from quad tree, destroys it |
 | `addWire(w)` | Calls `w.applyScale(this.scale.x)`, inserts into `_wires` quad tree, emits `'single'` on `_ticker$` |
-| `removeWire(id)` | Finds the wire by ID in `_wires.items`, removes it from the quad tree, destroys it |
+| `removeWire(id)` | Calls `selectionManager.evict(wire)`, removes from quad tree, destroys it |
+| `queryComponentsInRange(rect)` | Generator that yields all components intersecting `rect` (delegates to `_components.queryRange`) |
+| `queryWiresInRange(rect)` | Generator that yields all wires intersecting `rect` (delegates to `_wires.queryRange`) |
 
 `applyScale` is called on add because the project may already be at a non-1 zoom level when an element is inserted (e.g., on undo/redo while zoomed in).
+
+`evict` is called in `removeComponent`/`removeWire` **before** `destroy()`. This prevents `SelectionManager` from holding a stale reference to a destroyed `Container`.
+
+### Drag operations
+
+These methods are used exclusively by `FloatingLayer` during selection drag-move. They operate directly on the quad trees without going through the action system — the caller is responsible for pushing undo actions separately.
+
+| Method | Description |
+|---|---|
+| `detachForDrag(components, wires)` | Removes elements from their quad trees. Elements keep their position and visual state; the caller reparents them into `FloatingLayer._dragLayer`. |
+| `reattachFromDrag(components, wires)` | Re-inserts elements back into their quad trees at their current positions. Skips `destroyed` elements (defensive guard). |
+| `moveComponent(id, pos)` | Looks up the component by ID, sets its position, and re-inserts into the quad tree (rebuckets). Called by `MoveComponentsAction.do/undo`. |
+| `moveWire(id, pos)` | Same as `moveComponent` for wires. Called by `MoveWiresAction.do/undo`. |
+
+`QuadTreeContainer.insert()` already handles the case where an element is already tracked — it removes then re-inserts. `moveComponent`/`moveWire` take advantage of this: they set the position then call `insert()` unconditionally.
 
 ### Work mode
 
@@ -141,8 +161,9 @@ Angular root-provided singleton. Tracks up to three states using Angular `signal
 |---|---|
 | `AppComponent` | Creates the initial `Project` in its constructor (`new Project()`), calls `projectService.setMainProject`. Reads `activeProject()` to feed `BoardComponent`. |
 | `BoardComponent` | Receives `Project` as an `input()`. Sets it as `app.stage`. Subscribes to `ticker$` and `positionChange$`. Forwards work-mode signals via `effect`. |
-| `FloatingLayer` | Holds a direct reference to its parent `Project`. Reads `project.mode`, `project.componentToPlace`, `project.scale`, `project.gridSpace`, and calls `project.actionManager.push(...)` on commit. |
-| `ActionManager` | Owned by `Project` as `project.actionManager`. All action `do`/`undo` implementations receive the `Project` and call `addComponent`, `removeComponent`, `addWire`, or `removeWire`. |
+| `FloatingLayer` | Holds a direct reference to its parent `Project`. Reads `project.mode`, `project.componentToPlace`, `project.scale`, `project.gridSpace`. Calls `project.actionManager.push(...)` on commit, `project.selectionManager.commit/clear/containsPoint` for selection, and `project.detachForDrag/reattachFromDrag` for drag-move. |
+| `ActionManager` | Owned by `Project` as `project.actionManager`. All action `do`/`undo` implementations receive the `Project` and call `addComponent`, `removeComponent`, `addWire`, `removeWire`, `moveComponent`, or `moveWire`. |
+| `SelectionManager` | Owned by `Project` as `project.selectionManager`. `FloatingLayer` calls `commit`, `clear`, `containsPoint`, and reads `selectedComponents`/`selectedWires`. `Project.removeComponent`/`removeWire` call `evict` before destroying elements. |
 | `Grid` | Owned by `Project`. Receives `updatePosition`, `resizeViewport`, and `updateScale` calls. |
 
 ---
@@ -172,10 +193,63 @@ BoardComponent effect (WorkModeService signals change)
 
 ---
 
+## `SelectionManager`
+
+**File:** `project/selection-manager.ts`
+
+Plain TypeScript class. Constructed by `Project`; not an Angular service. Owns the committed selection state that persists across pointer interactions until the user explicitly clears it (mode change, Escape, click on empty space, or undo).
+
+### State
+
+| Field | Type | Purpose |
+|---|---|---|
+| `_selectedComponents` | `Set<Component>` | Live references to currently selected components |
+| `_selectedWires` | `Set<Wire>` | Live references to currently selected wires |
+| `_selectionChange$` | `Subject<void>` | Emits whenever the selection changes |
+| `SELECTION_TINT` (static) | `0x5577aa` | Dark-blue tint applied to selected elements; distinct from the `0xbbbbbb` placement-ghost tint |
+
+### Public API
+
+| Member | Description |
+|---|---|
+| `commit(rect, mode)` | Dispatch: zero-area rect → single-click hit test; non-zero rect → rectangle selection. Clears the previous selection first. |
+| `clear()` | Resets tint to `0xffffff` on every selected element, empties both sets, emits `selectionChange$`. |
+| `evict(element)` | Called from `Project.removeComponent`/`removeWire` before `destroy()`. Drops the ref without touching tint (the element is about to be destroyed). Emits if present. |
+| `containsPoint(gridPoint)` | Returns `true` if any selected element's `gridBounds` contains the point. Used by `FloatingLayer` to decide whether a `pointerdown` in SELECT mode should start a drag-move of the existing selection or open a new rect drag. |
+| `boundingBox()` | Union AABB of all selected elements' `gridBounds`. Returns `null` when empty. Used for computing the drag offset at drag start. |
+| `isEmpty` | `true` when both sets are empty. |
+| `selectionChange$` | The subject exposed as `Observable<void>`. |
+| `selectedComponents` | `ReadonlySet<Component>` — live references. |
+| `selectedWires` | `ReadonlySet<Wire>` — live references. |
+
+### `commit` behavior
+
+**Rectangle drag** (`rect.width > 0 || rect.height > 0`):
+1. Calls `clear()` to remove old tints.
+2. Queries `project.queryComponentsInRange(rect)` and `project.queryWiresInRange(rect)`.
+3. For `SELECT_EXACT` mode: filters to elements whose entire `gridBounds` is contained in `rect` (`rect.containsRect`). For `SELECT` mode: keeps all intersecting results as returned by the quad tree.
+4. Tints each match with `SELECTION_TINT` and adds to the set.
+5. Emits `selectionChange$` once.
+
+**Single click** (`rect.width === 0 && rect.height === 0`):
+1. Calls `clear()`.
+2. Builds a 1×1 grid-unit query rect centered on the click point to work around a PixiJS `Rectangle.intersects()` limitation with zero-area rects.
+3. Queries both trees; post-filters with `gridBounds.contains(px, py)` to remove false positives.
+4. Tie-breaks when both a component and a wire match: the one with the smaller `gridBounds` area wins (more precisely-aimed target).
+5. Tints and adds the winner (if any); emits. Empty result = "click on empty space" = selection cleared.
+
+### Destroyed-element guards
+
+`clear()`, `containsPoint()`, and `boundingBox()` all skip elements where `element.destroyed === true`. This is a defensive guard for the edge case where an element is destroyed via a path other than `Project.removeComponent`/`removeWire` (which always call `evict` first).
+
+---
+
 ## Type Hierarchy
 
 ```
 PixiJS Container
 └── InteractionContainer (abstract)
     └── Project
+
+SelectionManager  (plain class, owned by Project)
 ```
