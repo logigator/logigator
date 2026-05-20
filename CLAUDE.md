@@ -58,13 +58,13 @@ Angular 21 standalone components + PixiJS 8 for canvas rendering.
 
 **Key layers in `src/app/`:**
 
-- `components/` — Circuit element model. Each component extends `Component` (which extends PixiJS `Container`). `ComponentProviderService` acts as a registry/factory. Specific gate implementations live in `component-types/`.
-- `project/` — `Project` class (extends PixiJS `Container`) owns the circuit state. `ProjectService` manages the active project and persistence.
-- `wires/` — Wire model and rendering, separate from components.
-- `rendering/` — PixiJS scene management: `QuadTreeContainer` for spatial indexing of many elements, `FloatingLayer` for transient objects (selection box, placement preview), `GraphicsProviderService` for shared texture/graphics caching.
-- `actions/` — Command pattern undo/redo via `ActionManager`. Each user operation is an `Action` subclass.
-- `work-mode/` — Interaction mode FSM (selection, placement, deletion, wire routing).
-- `ui/` — Angular component wrappers around the canvas and sidebar panels.
+- `components/` — Circuit element model. Each component extends `Component` (which extends PixiJS `Container`). `ComponentProviderService` acts as a registry/factory. Specific gate implementations live in `component-types/`. See [`logigator-editor-v2/docs/component-system.md`](logigator-editor-v2/docs/component-system.md) for full technical documentation.
+- `project/` — `Project` class (extends PixiJS `Container`) owns the circuit state. `ProjectService` manages the active project and persistence. See [`logigator-editor-v2/docs/project.md`](logigator-editor-v2/docs/project.md) for full technical documentation.
+- `wires/` — Wire model and rendering, separate from components. See [`logigator-editor-v2/docs/wires.md`](logigator-editor-v2/docs/wires.md) for full technical documentation.
+- `rendering/` — PixiJS scene management: `QuadTreeContainer` for spatial indexing of many elements, `FloatingLayer` for transient objects (selection box, placement preview), `GraphicsProviderService` for shared texture/graphics caching. See [`logigator-editor-v2/docs/rendering.md`](logigator-editor-v2/docs/rendering.md) for full technical documentation.
+- `actions/` — Command pattern undo/redo via `ActionManager`. Each user operation is an `Action` subclass. See [`logigator-editor-v2/docs/actions-system.md`](logigator-editor-v2/docs/actions-system.md) for full technical documentation.
+- `work-mode/` — Interaction mode FSM (selection, placement, deletion, wire routing). See [`logigator-editor-v2/docs/work-mode.md`](logigator-editor-v2/docs/work-mode.md) for full technical documentation.
+- `ui/` — Angular component wrappers around the canvas and sidebar panels. See [`logigator-editor-v2/docs/ui.md`](logigator-editor-v2/docs/ui.md) for full technical documentation.
 
 **Non-obvious patterns:**
 
