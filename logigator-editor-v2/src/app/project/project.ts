@@ -10,6 +10,7 @@ import { WorkMode } from '../work-mode/work-mode.enum';
 import { FloatingLayer } from '../rendering/floating-layer';
 import { ActionManager } from '../actions/action-manager';
 import { Wire } from '../wires/wire';
+import { QuadTreeContainer } from '../rendering/quad-tree-container';
 
 export class Project extends InteractionContainer {
 	public readonly actionManager = new ActionManager(this);
@@ -20,8 +21,8 @@ export class Project extends InteractionContainer {
 	private _scaleStep = 0;
 
 	private readonly _grid: Grid = new Grid();
-	private readonly _wires = new Container<Wire>();
-	private readonly _components = new Container<Component>();
+	private readonly _wires = new QuadTreeContainer<Wire>();
+	private readonly _components = new QuadTreeContainer<Component>();
 	private readonly _floatingLayer = new FloatingLayer(this, this._ticker$);
 
 	private _viewPortSize = new Point(0, 0);
@@ -107,32 +108,35 @@ export class Project extends InteractionContainer {
 
 	public addComponent(component: Component) {
 		component.applyScale(this.scale.x);
-		this._components.addChild(component);
+		this._components.insert(component);
 		this._ticker$.next('single');
+		console.debug(this._components.debug());
 	}
 
 	public removeComponent(componentId: number) {
-		const component = this._components.children.find(
+		const component = Array.from(this._components.items).find(
 			(c) => c.id === componentId
 		);
 		if (!component) return;
-		this._components.removeChild(component);
+		this._components.remove(component);
 		component.destroy({ children: true });
 		this._ticker$.next('single');
 	}
 
 	public addWire(wire: Wire) {
 		wire.applyScale(this.scale.x);
-		this._wires.addChild(wire);
+		this._wires.insert(wire);
 		this._ticker$.next('single');
+		console.debug(this._wires.debug());
 	}
 
 	public removeWire(wireId: number) {
-		const wire = this._wires.children.find((w) => w.id === wireId);
+		const wire = Array.from(this._wires.items).find((w) => w.id === wireId);
 		if (!wire) return;
-		this._wires.removeChild(wire);
+		this._wires.remove(wire);
 		wire.destroy();
 		this._ticker$.next('single');
+		console.debug(this._wires.debug());
 	}
 
 	private updateScale(
@@ -154,10 +158,10 @@ export class Project extends InteractionContainer {
 		this._grid.updateScale(scale);
 		this._floatingLayer.updateScale(scale);
 
-		for (const child of this._components.children) {
+		for (const child of this._components.items) {
 			child.applyScale(scale);
 		}
-		for (const child of this._wires.children) {
+		for (const child of this._wires.items) {
 			child.applyScale(scale);
 		}
 	}

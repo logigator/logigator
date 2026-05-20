@@ -26,6 +26,12 @@ describe('QuadTreeContainer', () => {
 		);
 	}
 
+	/** Query the full coordinate plane including negative coordinates. */
+	function queryAllFull(): Container[] {
+		const half = Number.MAX_SAFE_INTEGER / 2;
+		return Array.from(tree.queryRange(new Rectangle(-half, -half, half * 2, half * 2)));
+	}
+
 	// ── Sanity check ──────────────────────────────────────────────────────────
 
 	it('standalone Container boundsArea maps to expected world bounds', () => {
@@ -297,6 +303,242 @@ describe('QuadTreeContainer', () => {
 			for (const c of nw.slice(0, 4)) tree.remove(c);
 
 			expect(queryAll()).toEqual([nw[4]]);
+		});
+	});
+
+	// ── negative coordinates ─────────────────────────────────────────────────
+
+	describe('negative coordinates', () => {
+		it('item with negative x is retrievable', () => {
+			const c = makeItem(-500, 10, 5, 5);
+			tree.insert(c);
+			expect(queryAllFull()).toContain(c);
+		});
+
+		it('item with negative y is retrievable', () => {
+			const c = makeItem(10, -500, 5, 5);
+			tree.insert(c);
+			expect(queryAllFull()).toContain(c);
+		});
+
+		it('item with negative x and y is retrievable', () => {
+			const c = makeItem(-500, -500, 5, 5);
+			tree.insert(c);
+			expect(queryAllFull()).toContain(c);
+		});
+
+		it('positive and negative items coexist and are both retrievable', () => {
+			const pos = makeItem(100, 100, 5, 5);
+			const neg = makeItem(-100, -100, 5, 5);
+			tree.insert(pos);
+			tree.insert(neg);
+			expect(queryAllFull()).toEqual(arrayWithExactContents([pos, neg]));
+		});
+
+		it('queryRange scoped to negative space excludes positive items', () => {
+			const pos = makeItem(100, 100, 5, 5);
+			const neg = makeItem(-200, -200, 5, 5);
+			tree.insert(pos);
+			tree.insert(neg);
+
+			const result = Array.from(tree.queryRange(new Rectangle(-300, -300, 200, 200)));
+			expect(result).toContain(neg);
+			expect(result).not.toContain(pos);
+		});
+
+		it('negative-coordinate item can be removed', () => {
+			const c = makeItem(-100, -100, 5, 5);
+			tree.insert(c);
+			expect(tree.remove(c)).toBeTrue();
+			expect(queryAllFull()).not.toContain(c);
+		});
+
+		it('removing a negative-coordinate item leaves positive items intact', () => {
+			const pos = makeItem(100, 100, 5, 5);
+			const neg = makeItem(-100, -100, 5, 5);
+			tree.insert(pos);
+			tree.insert(neg);
+			tree.remove(neg);
+			expect(queryAllFull()).toEqual([pos]);
+		});
+
+		it('many items spread across all four sign quadrants are all retrievable', () => {
+			const items = [
+				makeItem(100, 100, 5, 5),
+				makeItem(-100, 100, 5, 5),
+				makeItem(100, -100, 5, 5),
+				makeItem(-100, -100, 5, 5)
+			];
+			for (const c of items) tree.insert(c);
+			expect(queryAllFull()).toEqual(arrayWithExactContents(items));
+		});
+	});
+
+	// ── panned parent ────────────────────────────────────────────────────────
+	//
+	// All queryRange calls use grid-space (local) coordinates.
+	// Panning the parent shifts screen-space positions but must not affect
+	// where items appear in grid space.
+
+	describe('with a panned parent', () => {
+		let parent: Container;
+
+		beforeEach(() => {
+			parent = new Container();
+			parent.addChild(tree);
+		});
+
+		it('item inserted before pan is found at its original grid coordinates after pan', () => {
+			const c = makeItem(10, 10, 5, 5);
+			tree.insert(c);
+			parent.x = 500;
+			parent.y = 300;
+			expect(
+				Array.from(tree.queryRange(new Rectangle(10, 10, 5, 5)))
+			).toContain(c);
+		});
+
+		it('pan does not shift an item into a different grid position', () => {
+			const c = makeItem(10, 10, 5, 5);
+			tree.insert(c);
+			parent.x = 500;
+			parent.y = 300;
+			// if pan leaked into grid coords, the item would appear at (510, 310)
+			expect(
+				Array.from(tree.queryRange(new Rectangle(510, 310, 5, 5)))
+			).not.toContain(c);
+		});
+
+		it('item inserted after pan lands at grid coordinates, not screen coordinates', () => {
+			parent.x = 500;
+			parent.y = 300;
+			const c = makeItem(10, 10, 5, 5);
+			tree.insert(c);
+			expect(
+				Array.from(tree.queryRange(new Rectangle(10, 10, 5, 5)))
+			).toContain(c);
+			expect(
+				Array.from(tree.queryRange(new Rectangle(510, 310, 5, 5)))
+			).not.toContain(c);
+		});
+
+		it('query correctly scopes to a grid subregion while panned', () => {
+			parent.x = 1000;
+			parent.y = 1000;
+			const near = makeItem(10, 10, 5, 5);
+			const far = makeItem(600, 600, 5, 5);
+			tree.insert(near);
+			tree.insert(far);
+			const result = Array.from(tree.queryRange(new Rectangle(0, 0, 100, 100)));
+			expect(result).toContain(near);
+			expect(result).not.toContain(far);
+		});
+
+		it('items inserted before and after a pan are both retrievable', () => {
+			const before = makeItem(10, 10, 5, 5);
+			tree.insert(before);
+			parent.x = 500;
+			parent.y = 300;
+			const after = makeItem(100, 100, 5, 5);
+			tree.insert(after);
+			expect(queryAll()).toEqual(arrayWithExactContents([before, after]));
+		});
+
+		it('leaf split triggered while panned preserves all items', () => {
+			parent.x = 500;
+			parent.y = 300;
+			// 5 items exceed MAX_LEAF_ELEMENTS and force a split
+			const items = Array.from({ length: 5 }, (_, i) =>
+				makeItem(i * 5, i * 5, 2, 2)
+			);
+			for (const c of items) tree.insert(c);
+			expect(queryAll()).toEqual(arrayWithExactContents(items));
+		});
+
+		it('tree expansion triggered while panned preserves item locations', () => {
+			parent.x = 500;
+			parent.y = 300;
+			const near = makeItem(10, 10, 5, 5);
+			const far = makeItem(5000, 5000, 10, 10);
+			tree.insert(near);
+			tree.insert(far);
+			expect(
+				Array.from(tree.queryRange(new Rectangle(0, 0, 100, 100)))
+			).toContain(near);
+			expect(
+				Array.from(tree.queryRange(new Rectangle(4990, 4990, 30, 30)))
+			).toContain(far);
+			expect(
+				Array.from(tree.queryRange(new Rectangle(0, 0, 100, 100)))
+			).not.toContain(far);
+		});
+
+		it('re-inserting an item with a new position after pan relocates it in grid space', () => {
+			const c = makeItem(10, 10, 5, 5);
+			tree.insert(c);
+			parent.x = 500;
+			parent.y = 300;
+			c.position.set(500, 500);
+			tree.insert(c);
+			expect(
+				Array.from(tree.queryRange(new Rectangle(0, 0, 100, 100)))
+			).not.toContain(c);
+			expect(
+				Array.from(tree.queryRange(new Rectangle(500, 500, 50, 50)))
+			).toContain(c);
+		});
+
+		it('remove after pan correctly removes the item', () => {
+			const c = makeItem(10, 10, 5, 5);
+			tree.insert(c);
+			parent.x = 500;
+			parent.y = 300;
+			expect(tree.remove(c)).toBeTrue();
+			expect(queryAll()).not.toContain(c);
+		});
+
+		it('items survive multiple sequential pan changes', () => {
+			const c = makeItem(10, 10, 5, 5);
+			tree.insert(c);
+			parent.x = 100;
+			parent.y = 100;
+			parent.x = -200;
+			parent.y = 50;
+			parent.x = 999;
+			parent.y = -999;
+			expect(
+				Array.from(tree.queryRange(new Rectangle(10, 10, 5, 5)))
+			).toContain(c);
+		});
+
+		it('100 items inserted while panned are all retrievable', () => {
+			parent.x = 12345;
+			parent.y = -6789;
+			const items: Container[] = [];
+			for (let i = 0; i < 100; i++) {
+				const x = (i % 10) * 20;
+				const y = Math.floor(i / 10) * 20;
+				const c = makeItem(x, y, 5, 5);
+				items.push(c);
+				tree.insert(c);
+			}
+			const result = queryAll();
+			const resultSet = new Set(result);
+			expect(result.length).toBe(items.length);
+			for (const item of items) {
+				expect(resultSet.has(item)).toBeTrue();
+			}
+		});
+
+		it('zoom (parent scale) does not corrupt grid-space lookups', () => {
+			parent.scale.set(2);
+			parent.x = 300;
+			parent.y = 200;
+			const c = makeItem(10, 10, 5, 5);
+			tree.insert(c);
+			expect(
+				Array.from(tree.queryRange(new Rectangle(10, 10, 5, 5)))
+			).toContain(c);
 		});
 	});
 

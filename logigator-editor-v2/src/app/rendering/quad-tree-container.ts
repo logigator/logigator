@@ -25,34 +25,36 @@ export class QuadTreeContainer<T extends ContainerChild> extends Container {
 	private static readonly INITIAL_SIZE = 1024;
 	private static readonly MIN_LEAF_SIZE = 2;
 
-	private tree = super.addChild(
+	private _tree = super.addChild(
 		new QuadTreeEntry<T>(0, 0, QuadTreeContainer.INITIAL_SIZE)
 	);
-	private items = new Map<T, QuadTreeEntry<T>>();
+	private _items = new Map<T, QuadTreeEntry<T>>();
 
 	/**
 	 * Inserts an element into the quad tree.
 	 * @param element element to insert
 	 */
 	public insert(element: T): void {
-		if (this.items.has(element)) {
+		if (this._items.has(element)) {
 			this.remove(element);
 		}
 
+		// element has no parent at this point (removed above or never added),
+		// so getBounds() returns its own local/grid-space bounds directly.
 		const elBounds = element.getBounds().rectangle;
 
-		while (!this.tree.getBounds().rectangle.containsRect(elBounds)) {
-			this.expand();
+		while (!this._tree.boundsArea.containsRect(elBounds)) {
+			this.expand(elBounds);
 		}
 
-		for (let entry = this.tree; ; ) {
+		for (let entry = this._tree; ; ) {
 			const quadrant = this.getContainingQuadrant(
-				entry.getBounds().rectangle,
+				entry.boundsArea,
 				elBounds
 			);
 			if (!quadrant) {
 				entry.branchItems.addChild(element);
-				this.items.set(element, entry);
+				this._items.set(element, entry);
 				return;
 			}
 
@@ -71,7 +73,7 @@ export class QuadTreeContainer<T extends ContainerChild> extends Container {
 				}
 
 				entry.leafItems.addChild(element);
-				this.items.set(element, entry);
+				this._items.set(element, entry);
 				return;
 			} else {
 				throw new Error(
@@ -87,7 +89,7 @@ export class QuadTreeContainer<T extends ContainerChild> extends Container {
 	 * @returns true if the element was removed, false if it was not found
 	 */
 	public remove(element: T): boolean {
-		const entry = this.items.get(element);
+		const entry = this._items.get(element);
 		if (!entry) return false;
 
 		if (entry.branchItems.children.includes(element)) {
@@ -102,8 +104,15 @@ export class QuadTreeContainer<T extends ContainerChild> extends Container {
 
 		if (entry.parent !== this)
 			this.minifyBranch(entry.parent as QuadTreeEntry<T>);
-		this.items.delete(element);
+		this._items.delete(element);
 		return true;
+	}
+
+	/**
+	 * Returns an iterator over all elements contained in the quad tree.
+	 */
+	public get items() {
+		return this._items.keys();
 	}
 
 	/**
@@ -111,7 +120,7 @@ export class QuadTreeContainer<T extends ContainerChild> extends Container {
 	 * @param range rectangle defining the range to query
 	 */
 	public *queryRange(range: Rectangle): Generator<T> {
-		yield* this.queryRangeOfEntry(this.tree, range);
+		yield* this.queryRangeOfEntry(this._tree, range);
 	}
 
 	private *queryRangeOfEntry(
@@ -119,63 +128,98 @@ export class QuadTreeContainer<T extends ContainerChild> extends Container {
 		range: Rectangle
 	): Generator<T> {
 		for (const element of entry.branchItems.children) {
-			if (range.containsRect(element.getBounds().rectangle)) {
+			if (range.containsRect(this.worldRectToLocal(element.getBounds().rectangle))) {
 				yield element;
 			}
 		}
 
 		if (entry.branches) {
 			for (const branch of Object.values(entry.branches)) {
-				if (range.intersects(branch.getBounds().rectangle)) {
+				if (range.intersects(branch.boundsArea)) {
 					yield* this.queryRangeOfEntry(branch, range);
 				}
 			}
 		} else {
 			for (const element of entry.leafItems!.children) {
-				if (range.containsRect(element.getBounds().rectangle)) {
+				if (range.containsRect(this.worldRectToLocal(element.getBounds().rectangle))) {
 					yield element;
 				}
 			}
 		}
 	}
 
+	private worldRectToLocal(r: Rectangle): Rectangle {
+		const tl = this.toLocal({ x: r.x, y: r.y });
+		const br = this.toLocal({ x: r.right, y: r.bottom });
+		return new Rectangle(tl.x, tl.y, br.x - tl.x, br.y - tl.y);
+	}
+
 	/**
 	 * Expands the quad tree by doubling its size.
 	 * @private
 	 */
-	private expand(): void {
-		const oldBounds = this.tree.getBounds().rectangle;
+	private expand(targetBounds: Rectangle): void {
+		const oldBounds = this._tree.boundsArea;
+		const expandLeft = targetBounds.x < oldBounds.x;
+		const expandUp = targetBounds.y < oldBounds.y;
+		const newX = expandLeft ? oldBounds.x - oldBounds.width : oldBounds.x;
+		const newY = expandUp ? oldBounds.y - oldBounds.height : oldBounds.y;
+
 		const newRoot = this.addChild(
-			new QuadTreeEntry<T>(oldBounds.x, oldBounds.y, oldBounds.width * 2)
+			new QuadTreeEntry<T>(newX, newY, oldBounds.width * 2)
 		);
 
-		newRoot.branches = {
-			nw: newRoot.addChild(this.tree),
-			ne: newRoot.addChild(
-				new QuadTreeEntry<T>(
-					oldBounds.x + oldBounds.width,
-					oldBounds.y,
-					oldBounds.width
-				)
-			),
-			sw: newRoot.addChild(
-				new QuadTreeEntry<T>(
-					oldBounds.x,
-					oldBounds.y + oldBounds.height,
-					oldBounds.width
-				)
-			),
-			se: newRoot.addChild(
-				new QuadTreeEntry<T>(
-					oldBounds.x + oldBounds.width,
-					oldBounds.y + oldBounds.height,
-					oldBounds.width
-				)
-			)
-		};
+		const nwEntry = new QuadTreeEntry<T>(newX, newY, oldBounds.width);
+		const neEntry = new QuadTreeEntry<T>(
+			newX + oldBounds.width,
+			newY,
+			oldBounds.width
+		);
+		const swEntry = new QuadTreeEntry<T>(
+			newX,
+			newY + oldBounds.height,
+			oldBounds.width
+		);
+		const seEntry = new QuadTreeEntry<T>(
+			newX + oldBounds.width,
+			newY + oldBounds.height,
+			oldBounds.width
+		);
+
+		// The old tree occupies the quadrant opposite the expansion direction
+		// so its spatial bounds remain unchanged within the new root.
+		if (!expandLeft && !expandUp) {
+			newRoot.branches = {
+				nw: newRoot.addChild(this._tree),
+				ne: newRoot.addChild(neEntry),
+				sw: newRoot.addChild(swEntry),
+				se: newRoot.addChild(seEntry)
+			};
+		} else if (expandLeft && !expandUp) {
+			newRoot.branches = {
+				nw: newRoot.addChild(nwEntry),
+				ne: newRoot.addChild(this._tree),
+				sw: newRoot.addChild(swEntry),
+				se: newRoot.addChild(seEntry)
+			};
+		} else if (!expandLeft && expandUp) {
+			newRoot.branches = {
+				nw: newRoot.addChild(nwEntry),
+				ne: newRoot.addChild(neEntry),
+				sw: newRoot.addChild(this._tree),
+				se: newRoot.addChild(seEntry)
+			};
+		} else {
+			newRoot.branches = {
+				nw: newRoot.addChild(nwEntry),
+				ne: newRoot.addChild(neEntry),
+				sw: newRoot.addChild(swEntry),
+				se: newRoot.addChild(this._tree)
+			};
+		}
 
 		this.minifyBranch(newRoot);
-		this.tree = newRoot;
+		this._tree = newRoot;
 	}
 
 	/**
@@ -187,7 +231,7 @@ export class QuadTreeContainer<T extends ContainerChild> extends Container {
 			throw new Error('PANIC: Trying to split a non-leaf');
 		}
 
-		const b = entry.getBounds().rectangle;
+		const b = entry.boundsArea;
 		const half = b.width / 2;
 
 		entry.branches = {
@@ -198,10 +242,9 @@ export class QuadTreeContainer<T extends ContainerChild> extends Container {
 		};
 
 		for (const element of [...entry.leafItems.children]) {
-			const quadrant = this.getContainingQuadrant(
-				entry.getBounds().rectangle,
-				element.getBounds().rectangle
-			);
+			// elements are in the display hierarchy here, so convert world→local
+			const elLocalBounds = this.worldRectToLocal(element.getBounds().rectangle);
+			const quadrant = this.getContainingQuadrant(entry.boundsArea, elLocalBounds);
 			if (!quadrant) {
 				throw new Error(
 					'PANIC: Invalid Quad Tree state: leaf element is not contained in any quadrant'
@@ -209,8 +252,8 @@ export class QuadTreeContainer<T extends ContainerChild> extends Container {
 			}
 
 			const quadrantInner = this.getContainingQuadrant(
-				entry.branches[quadrant].getBounds().rectangle,
-				element.getBounds().rectangle
+				entry.branches[quadrant].boundsArea,
+				elLocalBounds
 			);
 
 			if (quadrantInner) {
@@ -219,7 +262,7 @@ export class QuadTreeContainer<T extends ContainerChild> extends Container {
 				entry.branches[quadrant].branchItems.addChild(element);
 			}
 
-			this.items.set(element, entry.branches[quadrant]);
+			this._items.set(element, entry.branches[quadrant]);
 		}
 
 		entry.removeChild(entry.leafItems);
@@ -250,12 +293,12 @@ export class QuadTreeContainer<T extends ContainerChild> extends Container {
 
 			for (const child of Object.values(entry.branches)) {
 				for (const element of [...child.branchItems.children]) {
-					this.items.set(element, entry);
+					this._items.set(element, entry);
 					entry.leafItems.addChild(element);
 				}
 				if (child.leafItems) {
 					for (const element of [...child.leafItems.children]) {
-						this.items.set(element, entry);
+						this._items.set(element, entry);
 						entry.leafItems.addChild(element);
 					}
 				}
@@ -266,6 +309,61 @@ export class QuadTreeContainer<T extends ContainerChild> extends Container {
 		}
 
 		return childrenCount;
+	}
+
+	/**
+	 * Returns a human-readable ASCII representation of the tree.
+	 */
+	public debug(): string {
+		const lines: string[] = [
+			`QuadTreeContainer [${this._items.size} item${this._items.size !== 1 ? 's' : ''} total]`
+		];
+		this.debugEntry(this._tree, lines, '', true, 'root');
+		return lines.join('\n');
+	}
+
+	private debugEntry(
+		entry: QuadTreeEntry<T>,
+		lines: string[],
+		prefix: string,
+		isLast: boolean,
+		label: string
+	): void {
+		const b = entry.boundsArea;
+		const branchItemCount = entry.branchItems.children.length;
+		const leafItemCount = entry.leafItems?.children.length ?? 0;
+		const totalItems = branchItemCount + leafItemCount;
+		const isLeaf = !entry.branches;
+
+		const connector = prefix === '' ? '' : isLast ? '└─ ' : '├─ ';
+		const childIndent =
+			prefix === '' ? '  ' : prefix + (isLast ? '   ' : '│  ');
+
+		lines.push(
+			`${prefix}${connector}[${label}] ${b.x},${b.y} ${b.width}×${b.height}` +
+				`  ${isLeaf ? 'leaf' : 'branch'}` +
+				`  ${totalItems} item${totalItems !== 1 ? 's' : ''}`
+		);
+
+		if (branchItemCount > 0) {
+			lines.push(`${childIndent}(spanning: ${branchItemCount})`);
+		}
+
+		if (entry.branches) {
+			const quadrants = Object.entries(entry.branches) as [
+				Quadrant,
+				QuadTreeEntry<T>
+			][];
+			quadrants.forEach(([q, child], i) => {
+				this.debugEntry(
+					child,
+					lines,
+					childIndent,
+					i === quadrants.length - 1,
+					q
+				);
+			});
+		}
 	}
 
 	/**
