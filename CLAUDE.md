@@ -69,7 +69,7 @@ Angular 21 standalone components + PixiJS 8 for canvas rendering.
 **Non-obvious patterns:**
 
 - `setStaticDIInjector()` — bootstraps a static reference to Angular's injector so that model classes (`Component`, `Wire`, etc.) can call `inject()` without being Angular-managed. Used in `app.config.ts`.
-- Grid coordinates vs. pixel coordinates — all circuit data is stored in grid units. `utils/` has conversion helpers. Grid snapping applies to all placements.
+- Grid coordinates vs. pixel coordinates — `Project._gridSpace` has `scale = gridSize`, so all circuit objects (`Component`, `Wire`, `FloatingLayer`) that live inside it use **grid units as their native `position`**. No `fromGrid`/`toGrid` calls at the model layer. Visual children live inside `Component._visualSpace` (scale = `1/gridSize`) where pixel-authored geometry keeps working unchanged. The only remaining conversion helper in `utils/grid.ts` is `fromGrid`, used inside `_visualSpace` and the background grid. Grid snapping uses `roundToGrid` / `roundToHalfGrid`.
 - `@logigator/logigator-simulation` — circuit simulation runs via this external npm package (separate repo, likely WASM). It is not in this monorepo.
 
 ### Backend (logigator-backend)

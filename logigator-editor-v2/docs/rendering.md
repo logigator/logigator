@@ -24,7 +24,7 @@ src/app/rendering/
 
 ### Pixel vs. grid coordinates
 
-All circuit data is stored in **grid units**. One grid unit = `environment.gridSize` pixels (currently 16 px). The `utils/grid.ts` helpers convert between the two spaces: `fromGrid`, `toGrid`, `alignPointToGrid`, etc. Wire endpoints sit on **half-grid** positions (e.g., 0.5, 1.5) so that connection pins align with the midpoints of cell edges.
+All circuit data is stored in **grid units**. The `_gridSpace` container in `Project` has `scale.set(environment.gridSize)`, so any object added to `_gridSpace` with `position.set(gx, gy)` renders at world-pixel `(gx * gridSize, gy * gridSize)`. No manual conversion is needed at the model layer. The remaining helper in `utils/grid.ts` is `fromGrid(n)` (`n * gridSize`), used only inside `Component._visualSpace` and the background grid where geometry is still pixel-authored. Wire endpoints sit on **half-grid** positions (e.g., 0.5, 1.5) so that connection pins align with the midpoints of cell edges.
 
 ### Ticker control
 
@@ -34,13 +34,14 @@ The PixiJS `Application` is created with `autoStart: false` in `BoardComponent`.
 
 ```
 Project (InteractionContainer root, stage)
-├── Grid
-├── Container<Wire>  (_wires)
-├── Container<Component>  (_components)
-└── FloatingLayer
+├── Grid                                    (pixel-authored, outside gridSpace)
+└── _gridSpace  (scale = gridSize)
+    ├── QuadTreeContainer<Wire>  (_wires)
+    ├── QuadTreeContainer<Component>  (_components)
+    └── FloatingLayer
 ```
 
-`Project` extends `InteractionContainer`, which is added directly as the PixiJS `app.stage`. Children are layered in paint order: grid behind wires, wires behind permanent components, `FloatingLayer` always on top.
+`Project` extends `InteractionContainer`, which is added directly as the PixiJS `app.stage`. The background grid is pixel-authored and stays a direct child of `Project`. All circuit content lives inside `_gridSpace` so that setting `position = (gx, gy)` on any circuit object automatically places it at the correct world-pixel location without conversion.
 
 ---
 
@@ -114,7 +115,7 @@ The pivot is set to `chunkSizePx` so the offset math lands on chunk boundaries c
 
 **File:** `floating-layer.ts`
 
-A full-screen PixiJS `Container` that sits above the permanent circuit layers and handles all in-progress user interactions: component placement, wire drawing, and rectangle selection.
+A full-screen PixiJS `Container` that lives inside `_gridSpace` and sits above the permanent circuit layers. It handles all in-progress user interactions: component placement, wire drawing, and rectangle selection. Because it lives in `_gridSpace`, `this.position` is in grid units automatically.
 
 `interactiveChildren = false` — events are captured only on the layer itself. `hitArea` is set to the full coordinate range so pointer events are always received regardless of panning.
 
@@ -128,19 +129,23 @@ A full-screen PixiJS `Container` that sits above the permanent circuit layers an
 
 ### State machine
 
-`FloatingLayer.mode` mirrors `project.mode` (a `WorkMode` enum value). Setting `mode` calls `abortSelection()` which clears all transient children.
+`FloatingLayer.mode` mirrors `project.mode` (a `WorkMode` enum value). Setting `mode` calls `clearSelection()` which clears all transient children.
 
 Only `COMPONENT_PLACEMENT` and `WIRE_DRAWING` are fully implemented. `SELECT` / `SELECT_EXACT` render the selection rectangle but `commitSelection` does not yet query the quad tree for hit testing.
+
+### Coordinate conversion
+
+All pointer-event positions are converted to grid units via `e.getLocalPosition(this.project.gridSpace)`. This returns a `Point` already in grid-unit space, which is then snapped with `roundToGrid` (full-grid) or `roundToHalfGrid` (half-grid) from `utils/grid.ts`.
 
 ### Wire drawing
 
 Two `Wire` objects are created lazily on first non-zero movement: one horizontal, one vertical. Their lengths and positions are updated on every `pointermove`. The drag direction is locked to whichever axis moved first: if horizontal, the vertical segment's X origin tracks the mouse; if vertical, the horizontal segment's Y origin tracks.
 
-Wire origins are snapped to **half-grid** (`alignPointToHalfGrid`); component origins are snapped to **full-grid** (`alignPointToGrid`).
+Wire origins are snapped to **half-grid** (`roundToHalfGrid`); component origins are snapped to **full-grid** (`roundToGrid`).
 
 ### `commitSelection()`
 
-On `pointerup`, translates the floating children's positions into world coordinates (adds `this.position` to each child's local position), then wraps them into `AddComponentsAction` and/or `AddWiresAction` inside an `ActionContainer` and pushes to `project.actionManager`. Zero-length wires are filtered out. After commit, `clearSelection()` destroys the transient children.
+On `pointerup`, translates the floating children's positions into world grid-unit coordinates (adds `this.position` to each child's local position — both are in grid units, so this is a clean integer add), then wraps them into `AddComponentsAction` and/or `AddWiresAction` inside an `ActionContainer` and pushes to `project.actionManager`. Zero-length wires are filtered out. After commit, `clearSelection()` destroys the transient children.
 
 ### `updateScale(scale)`
 
@@ -148,11 +153,18 @@ Called from `Project.updateScale`. Forwards to `applyScale(scale)` on every comp
 
 ---
 
-## `QuadTreeContainer<T>`
+## `QuadTreeContainer<T extends GridElement>`
 
 **File:** `quad-tree-container.ts`
 
-A generic PixiJS `Container` subclass that maintains a spatial quad tree over its children. Intended to replace the flat `Container<Component>` and `Container<Wire>` in `Project` to enable efficient viewport culling and range-based selection queries (currently wired up in the architecture but not yet plugged into `Project`).
+A generic PixiJS `Container` subclass that maintains a spatial quad tree over its children. Used as `_wires` and `_components` in `Project`. The generic constraint requires `T` to implement the `GridElement` interface (`readonly gridBounds: Rectangle`), ensuring the tree never calls PixiJS bounds APIs — it reads from `gridBounds` directly.
+
+### `GridElement` interface
+
+Defined in `grid-element.ts`. Extends `ContainerChild` with:
+- `gridBounds: Rectangle` — the element's axis-aligned bounding box in grid units.
+
+`Connectable` further extends `GridElement` with `connectionPoints: Point[]`. Both `Component` and `Wire` implement `Connectable`.
 
 ### Tree structure
 
@@ -167,15 +179,17 @@ All `QuadTreeEntry` instances live at position `(0, 0)` in the scene graph. Thei
 
 | Constant | Value | Meaning |
 |---|---|---|
-| `INITIAL_SIZE` | 1024 | Root entry covers `(0, 0, 1024, 1024)` at construction |
+| `INITIAL_SIZE` | 64 | Root entry covers `(0, 0, 64, 64)` grid units at construction |
 | `MAX_LEAF_ELEMENTS` | 4 | A leaf with this many elements splits on the next insert |
 | `MIN_BRANCH_ELEMENTS` | 2 | A branch with fewer total descendants collapses on remove |
-| `MIN_LEAF_SIZE` | 2 | Leaves smaller than this are never split (prevents infinite recursion) |
+| `MIN_LEAF_SIZE` | 1 | Leaves of 1 grid cell are never split (prevents infinite recursion) |
+
+The `INITIAL_SIZE` of 64 grid units covers a typical small circuit without any tree expansion. The old pixel-domain value of 1024 covered only ~50 grid cells at `gridSize = 16`.
 
 ### `insert(element: T)`
 
 1. If the element is already tracked, removes it first (handles re-insertion after position change).
-2. Calls `expand()` in a loop until the element's world bounds fit inside the root.
+2. Reads `element.gridBounds` and calls `expand()` in a loop until the bounds fit inside the root.
 3. Walks the tree from the root. At each node, `getContainingQuadrant` checks whether the element fits entirely inside one of the four child rectangles. If not, the element is placed in `branchItems` of the current node. If yes, descend; split if the leaf is full and large enough.
 
 ### `remove(element: T): boolean`
@@ -185,11 +199,11 @@ Looks up the entry via the `items` Map, removes the element from either `branchI
 ### `queryRange(range: Rectangle): Generator<T>`
 
 Recursive generator. For each entry:
-1. Yields `branchItems` children whose bounds are **fully contained** in `range`.
+1. Yields `branchItems` children whose `gridBounds` **intersects** `range` (including partial overlaps).
 2. For each child branch whose region **intersects** `range`, recurses.
-3. For leaf items, yields those fully contained in `range`.
+3. For leaf items, yields those whose `gridBounds` intersects `range`.
 
-Note: only fully contained elements are returned. Elements that partially overlap the query rectangle are excluded. This matches the selection semantics expected by the editor (marquee select requires the element to be fully inside the selection box).
+Elements that partially overlap the query rectangle are included. All coordinate comparisons are against `element.gridBounds` — the tree never calls `getBounds()` or accesses the PixiJS transform chain.
 
 ### Expansion
 
@@ -236,7 +250,7 @@ Parameters: `width` (grid units), `height` (grid units), `scale`.
 
 **File:** `graphics/wire.graphics.ts`
 
-A unit `1×1` pixel rectangle filled with the current theme's wire color. `Wire` scales this up via `scale.x = pixelLength` and compensates line thickness with `scale.y = 1 / projectScale` so the wire is always exactly 1 screen pixel tall.
+A unit `1×1` rectangle filled with the current theme's wire color. `Wire` scales this up via `scale.x = length` (grid units) and compensates line thickness with `scale.y = 1 / (projectScale * gridSize)` so the wire is always exactly 1 screen pixel tall inside `_gridSpace`.
 
 No parameters.
 
@@ -267,7 +281,7 @@ Angular `Injectable` (root-provided). Registers the Roboto woff2 font with PixiJ
 | `InteractionContainer` | `Project` | Extends it; provides `_ticker$` and pan/zoom hooks |
 | `Grid` | `Project` | Instantiated privately; forwarded position/scale changes |
 | `FloatingLayer` | `Project` | Instantiated privately; receives `_ticker$`; commits via `project.actionManager` |
-| `QuadTreeContainer` | (not yet wired into `Project`) | Will replace flat `Container<Component>` / `Container<Wire>` |
+| `QuadTreeContainer` | `Project` | Used as `_wires` and `_components` inside `_gridSpace` |
 | `GraphicsProviderService` | `Wire`, `Grid` (via `getStaticDI`), any component subclass | Shared `GraphicsContext` deduplication |
 | `AssetsService` | `BoardComponent` | Loaded before `Application` init |
 | `ComponentGraphics` | Component subclasses | Via `GraphicsProviderService.getGraphicsContext(ComponentGraphics, w, h, scale)` |
@@ -295,5 +309,7 @@ Angular `Injectable` (root-provided). Registers the Roboto woff2 font with PixiJ
 - **`boundsArea` for infinite containers** — `FloatingLayer`, `InteractionContainer` (via `Project`), and `Grid` all set `boundsArea` to the full coordinate range. This prevents PixiJS from computing tight bounds from children and makes the container always receive hit tests.
 - **`eventMode: 'static'`** — used on containers that need pointer events but whose children do not (`interactiveChildren = false`). Reduces the event walk cost during each pointer event.
 - **Demand-driven render loop** — the ticker is stopped between interactions. `'single'` renders one frame for state changes (add/remove element); `'on'`/`'off'` bracket continuous drags. This avoids burning GPU cycles at 60 fps when the canvas is idle.
-- **Scale-compensated stroke widths** — `ComponentGraphics` bakes `2 / scale` into its stroke width; `GridGraphics` uses `1 / scale` for dot size; `Wire.applyScale` sets `scale.y = 1 / scale`. All three ensure that lines remain a constant screen-pixel width as the user zooms.
+- **Scale-compensated stroke widths** — `ComponentGraphics` bakes `2 / scale` into its stroke width; `GridGraphics` uses `1 / scale` for dot size; `Wire.applyScale` sets `scale.y = 1 / (scale * gridSize)`. `Component` handles the `gridSize` factor via its `_visualSpace` counter-scaling; `Wire` extends `Graphics` directly and must compensate explicitly.
+- **`_visualSpace` counter-scaling** — `Component` owns a child `_visualSpace` with `scale = 1/gridSize`. Visual geometry (chamfers, stroke widths, text) is authored in pixels inside `_visualSpace`; the two scalings (`_gridSpace × gridSize` and `_visualSpace × 1/gridSize`) cancel so existing pixel formulas remain valid.
+- **Quad tree uses `gridBounds`** — `QuadTreeContainer` never calls PixiJS `getBounds()`. It reads `element.gridBounds` (a plain `Rectangle` in grid units) for all spatial decisions. This avoids scene-graph traversal and makes collision detection integer-exact.
 - **Quad tree as PixiJS Container** — `QuadTreeContainer` and its internal `QuadTreeEntry` nodes are real PixiJS `Container` instances in the scene graph. Children keep their world coordinates because all entries sit at position `(0, 0)`; only `boundsArea` encodes the spatial region. This means the tree structure is visible to PixiJS culling and bounds computation without any separate data mirror.

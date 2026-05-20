@@ -28,19 +28,13 @@ src/app/actions/actions/
 
 ### Grid vs. Pixel Coordinates
 
-All circuit data is stored in grid units. `environment.gridSize` (currently `16` px) is the conversion factor used by the helpers in `utils/grid.ts`:
+All circuit data is stored in grid units. `Wire` lives inside `Project._gridSpace` (which has `scale = gridSize`), so its PixiJS `position` **is** the grid-unit coordinate — no conversion is needed. The helper `fromGrid(n)` (`n * gridSize`) is still used inside visual contexts that remain pixel-authored (e.g., `Component._visualSpace`), but wire coordinates themselves need no conversion.
 
-| Helper | Purpose |
-|---|---|
-| `fromGrid(n)` | grid units → pixels: `n * gridSize` |
-| `toGrid(n)` | pixels → grid units (rounded): `Math.round(n / gridSize)` |
-| `toHalfGrid(n)` | pixels → half-grid (for wire centres): rounds to nearest 0.5 |
-
-**Wire centres lie on half-grid positions.** The PixiJS `position` of a wire is set so that the wire visually spans from one grid line to the next. `gridPos` always returns/accepts half-grid coordinates (e.g. `(0.5, 2.5)` means "starting at column 0, row 2").
+**Wire centres lie on half-grid positions.** A wire's `position` has `.x` and `.y` values of the form `n + 0.5` (e.g., `(0.5, 2.5)` means "starting at column 0, row 2"). The `+0.5` is a semantic convention — it aligns the wire's centre-line with component port midpoints — and is added in `deserialize` rather than stored on disk.
 
 ### Constant-Width Stroke
 
-Wires must appear the same visual thickness regardless of zoom level. This is achieved by keeping `scale.y = 1 / currentScale` while `scale.x` encodes the wire's pixel length. `applyScale(scale)` is called by `Project.updateScale` on every zoom change and stores the inverse scale in `scale.y`.
+Wires must appear the same visual thickness regardless of zoom level. `Wire` extends `Graphics` directly and has no `_visualSpace` wrapper, so it must absorb the `gridSize` factor in `applyScale`. The formula is `scale.y = 1 / (scale * gridSize)`, which cancels out both the zoom scale (from `Project.scale.x`) and the gridSize scale (from `_gridSpace`). `applyScale(scale)` is called by `Project.updateScale` on every zoom change.
 
 ---
 
@@ -73,23 +67,23 @@ Each `Wire` gets a monotonically increasing integer ID from a module-level count
 
 | Property | Type | Description |
 |---|---|---|
-| `gridPos` | `Point` | Half-grid position of the wire's start point. Getter converts from pixel `position`; setter writes back via `fromGrid`. |
+| `position` (inherited) | `Point` | Half-grid position of the wire's start point in grid units (e.g., `(0.5, 2.5)`). This IS the canonical circuit coordinate. |
 | `direction` | `WireDirection` | Axis of the wire. Backed by `rotation` (0 or π/2). |
-| `gridLength` | `number` | Length in grid units. Backed by `scale.x` via `fromGrid`/`toGrid`. |
-| `length` | `number` | Length in raw PixiJS scale units (same as `scale.x`). Use `gridLength` for circuit logic. |
+| `length` | `number` | Length in grid units. Backed by `scale.x`. |
+| `gridBounds` | `Rectangle` | Axis-aligned bounding box in grid units; used by `QuadTreeContainer` for spatial indexing. The origin is floored to the nearest integer; width/height is `length + 1` on the spanning axis so the box covers the half-grid padding on both ends. |
 
 ### `connectionPoints`
 
-Returns a tuple `[start, end]` of `Point` values in **grid coordinates** (half-grid):
+Returns a tuple `[start, end]` of `Point` values in **grid-unit coordinates** (half-grid):
 
-- Horizontal wire: `[gridPos, {x: gridPos.x + gridLength, y: gridPos.y}]`
-- Vertical wire: `[gridPos, {x: gridPos.x, y: gridPos.y + gridLength}]`
+- Horizontal wire: `[position, {x: position.x + length, y: position.y}]`
+- Vertical wire: `[position, {x: position.x, y: position.y + length}]`
 
 These are the endpoints that should connect to component ports.
 
 ### `applyScale(scale)`
 
-Sets `scale.y = 1 / scale` to keep the wire's visual height constant as the canvas zooms. Called by `Project` whenever the view scale changes.
+Sets `scale.y = 1 / (scale * environment.gridSize)` to keep the wire's visual height at one device pixel as the canvas zooms. The formula absorbs two scale factors: the project zoom (`scale`) and the `_gridSpace` scaling (`gridSize`). `Component` handles the latter via its `_visualSpace` counter-scaling, but `Wire` extends `Graphics` directly with no wrapper and must compensate explicitly.
 
 ### Serialization
 
@@ -98,7 +92,7 @@ Wire.serialize(wire)       // Wire → SerializedWire  (save/action snapshot)
 Wire.deserialize(serial)   // SerializedWire → Wire  (load/undo restore)
 ```
 
-`serialize` floors the grid position to integer coordinates (the position is stored at the grid-line origin, not the half-grid centre). `deserialize` adds 0.5 back so the internal `gridPos` is correctly centred.
+`serialize` floors `wire.position.x / y` to integer coordinates (the position is stored at the grid-line origin, not the half-grid centre). `deserialize` sets `wire.position` to `[pos[0] + 0.5, pos[1] + 0.5]` — the `+0.5` is a semantic half-grid offset added at load time, not a unit conversion artifact.
 
 ---
 
@@ -129,17 +123,18 @@ A `GraphicsContext` subclass that draws a single 1×1 white rectangle filled wit
 
 ## Project Integration
 
-`Project` owns a dedicated `Container<Wire>` (`_wires`) that sits in the display list between the grid layer and the components layer:
+`Project` owns a `QuadTreeContainer<Wire>` (`_wires`) inside `_gridSpace`:
 
 ```
 Project (InteractionContainer)
 ├── Grid
-├── _wires  ← Container<Wire>
-├── _components
-└── FloatingLayer
+└── _gridSpace  (scale = gridSize)
+    ├── _wires  ← QuadTreeContainer<Wire>
+    ├── _components
+    └── FloatingLayer
 ```
 
-`Project.addWire(wire)` calls `wire.applyScale(this.scale.x)` before adding it to `_wires`, ensuring the wire renders at the correct thickness for the current zoom level. `Project.removeWire(wireId)` is not yet implemented (marked TODO).
+`Project.addWire(wire)` calls `wire.applyScale(this.scale.x)` before inserting it into the quad tree, ensuring the wire renders at the correct thickness for the current zoom level. `Project.removeWire(wireId)` finds the wire by ID in `_wires.items` and removes it from the quad tree.
 
 ---
 
@@ -147,7 +142,7 @@ Project (InteractionContainer)
 
 When `WorkMode.WIRE_DRAWING` is active, `FloatingLayer` handles the user drag gesture:
 
-1. **`pointerdown`** — records the drag start in world space, snapped to the half-grid (`alignPointToHalfGrid`). The `FloatingLayer`'s position is set to this snapped point.
+1. **`pointerdown`** — converts the event to grid-unit coordinates via `e.getLocalPosition(this.project.gridSpace)`, snaps to the half-grid with `roundToHalfGrid`, and sets `FloatingLayer.position` to this snapped point.
 
 2. **`pointermove` → `handleMouseMoveWhilePlacingWire`** — on first non-zero mouse movement, the dominant axis is determined:
    - Movement on X first → `WireDirection.HORIZONTAL` locked.
@@ -158,7 +153,7 @@ When `WorkMode.WIRE_DRAWING` is active, `FloatingLayer` handles the user drag ge
    - The vertical wire's `position.y` tracks the topmost extent (`Math.min(0, mouseY)`).
    - The elbow of the L is placed at the cursor's axis-locked coordinate.
 
-3. **`pointerup` → `commitSelection`** — wires with `gridLength > 0` are collected, their positions are converted from local → world coordinates (adding `FloatingLayer.position`), and an `AddWiresAction` is pushed to the `ActionManager`. Zero-length wires are silently discarded.
+3. **`pointerup` → `commitSelection`** — wires with `length > 0` are collected, their positions are converted from local → world grid-unit coordinates (adding `FloatingLayer.position`), and an `AddWiresAction` is pushed to the `ActionManager`. Zero-length wires are silently discarded.
 
 4. **Mode change or abort** — `abortSelection` destroys the preview wires without committing.
 
@@ -205,6 +200,5 @@ Action (abstract)
 
 ## Known Gaps / TODOs
 
-- `Project.removeWire(wireId)` is not implemented — `RemoveWiresAction.do` will throw at runtime.
 - There is no wire intersection or T-junction detection; the system does not split wires when another wire crosses them.
-- No connectivity graph is maintained. Net-list extraction (required by the simulation layer) must be derived externally from the positional data in `_wires.children`.
+- No connectivity graph is maintained. Net-list extraction (required by the simulation layer) must be derived externally from the positional data available via `_wires.items`.

@@ -27,11 +27,15 @@ src/app/components/
 
 ### Component extends PixiJS Container
 
-Every circuit element is an instance of an `abstract Component extends Container`. Components are scene objects that live in the PixiJS display list, but the **canonical position is stored as grid coordinates** (`gridPos`). The PixiJS `position` is always derived from it and kept in sync. Rotation is expressed as a `ComponentRotation` enum value (four cardinal directions) rather than raw radians.
+Every circuit element is an instance of an `abstract Component extends Container`. Components live in `Project._gridSpace` (which has `scale = gridSize`), so their PixiJS `position` **is** the grid-unit position — no manual conversion is required. Rotation is expressed as a `ComponentRotation` enum value (four cardinal directions) rather than raw radians.
+
+### `_visualSpace` — pixel-authored visual children
+
+Visual children (component body graphics, port wire stubs, text labels) are pixel-authored: their coordinates are in pixels, not grid units. To keep those pixel formulas correct while `Component` itself lives in grid-space, every `Component` owns a private inner `Container` called `_visualSpace` with `scale.set(1 / environment.gridSize)`. The two scalings cancel, so visual geometry is unaffected. Subclasses add all visual objects to `_visualSpace`, never to `this` directly.
 
 ### Grid vs. Pixel Coordinates
 
-All circuit data lives in grid units. Pixel coordinates are only used internally by PixiJS for rendering. Conversion helpers in `utils/` translate between the two. Connection points are computed in local pixel space and projected to global coordinates via PixiJS's `toGlobal()`.
+`Component.position` is in **grid units** — it is the canonical circuit coordinate. All visual authoring happens inside `_visualSpace` where coordinates are back in pixel space. Helpers in `utils/grid.ts` (`fromGrid`) are still used inside `_visualSpace` (e.g., for wire stub offsets), but no conversion is needed at the model layer. Connection points are computed and returned in grid-unit space (parent `_gridSpace` coordinates).
 
 ### Options System
 
@@ -48,7 +52,7 @@ Component  →  Component.serialize(c)         →  SerializedComponent   (save)
 SerializedComponent  →  Component.deserialize(s, config)  →  Component  (load)
 ```
 
-The serialized form stores the type, grid position, and an array of raw option values positionally aligned to `config.options`.
+The serialized form stores the type, grid-unit position (`component.position.x / y`), and an array of raw option values positionally aligned to `config.options`. Because `position` is already in grid units there is no conversion step during serialization or deserialization.
 
 ---
 
@@ -75,18 +79,20 @@ Subclasses must implement:
 
 Key public members:
 
-- `id`, `gridPos`, `direction`, `numInputs`, `numOutputs` — core state; setters on `numInputs`/`numOutputs` and `direction` trigger a redraw
+- `id`, `direction`, `numInputs`, `numOutputs` — core state; setters on `numInputs`/`numOutputs` and `direction` trigger a redraw
+- `position` (inherited from PixiJS Container) — the component's grid-unit position; this IS the canonical circuit coordinate
 - `options: ComponentOption[]` — live option instances owned by this component
-- `connectionPoints: Point[]` — global-space positions of all ports (inputs first, then outputs)
-- `applyScale(scale)` — applies a scale factor and redraws
+- `connectionPoints: Point[]` — port positions in grid-unit space (parent `_gridSpace` coordinates; inputs first, then outputs)
+- `gridBounds: Rectangle` — axis-aligned bounding box in grid units, accounting for rotation; used by `QuadTreeContainer` for spatial indexing
+- `applyScale(scale)` — applies a zoom scale factor and redraws (wires and component stroke widths are scale-dependent)
 - `Component.serialize(c)` / `Component.deserialize(s, config)` — static round-trip helpers
 
 ### Rendering lifecycle
 
-1. The constructor sets initial state and calls `_draw()` once initialization is complete.
-2. `_draw()` clears all children, calls the abstract `draw()` for the component body, then auto-generates wire stubs for every port via `_drawConnections()`.
-3. Port labels are positioned beside their respective wires.
-4. Debug overlays (connection points, origins, hit boxes) are added when enabled via environment config.
+1. The constructor creates `_visualSpace` (with `scale = 1/gridSize`), adds it as a child, sets initial state, and calls `_draw()` once initialization is complete.
+2. `_draw()` clears all children of `_visualSpace`, calls the abstract `draw()` for the component body, then auto-generates wire stubs for every port via `_drawConnections()`.
+3. Port labels are positioned beside their respective wires, all inside `_visualSpace`.
+4. Debug overlays (connection points, origins, hit boxes) are added to `_visualSpace` when enabled via environment config.
 
 ### Dependency injection
 

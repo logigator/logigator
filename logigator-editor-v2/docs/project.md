@@ -22,19 +22,28 @@ Because `Project` extends `InteractionContainer`, it inherits right-drag panning
 
 ### Scene graph layers
 
-The constructor appends four children in paint order:
+The constructor appends two direct children. The background grid is pixel-authored and stays a direct child of `Project`. All circuit content lives inside `_gridSpace`:
 
 ```
 Project (stage root)
-├── Grid               — infinite background dot grid
-├── Container<Wire>    — permanent placed wires
-├── Container<Component> — permanent placed components
-└── FloatingLayer      — transient in-progress interactions (placement preview, wire drawing, selection box)
+├── Grid                        — infinite background dot grid (pixel-authored)
+└── _gridSpace                  — scale = gridSize; coordinates inside are grid units
+    ├── QuadTreeContainer<Wire>       — permanent placed wires
+    ├── QuadTreeContainer<Component>  — permanent placed components
+    └── FloatingLayer                 — transient in-progress interactions
 ```
 
 ### Coordinate system
 
-All circuit data is stored in **grid units**. Pixel coordinates are an internal PixiJS detail. One grid unit equals `environment.gridSize` pixels (currently 16 px). When `Project` is panned or zoomed, `this.position` and `this.scale` change accordingly, but component and wire `gridPos` values remain fixed integers.
+All circuit data is stored in **grid units**. The `_gridSpace` container has `scale.set(environment.gridSize)`, so setting a component's `position` to `(5, 3)` in grid units renders at world-pixel `(5 * gridSize, 3 * gridSize)` — no manual conversion is needed. When `Project` is panned or zoomed, only `Project.position` and `Project.scale` change; component and wire positions remain their fixed grid-unit values.
+
+### `_gridSpace` and `gridSpace` getter
+
+`_gridSpace` is the parent of all circuit objects. It is exposed as a public `gridSpace` getter so that `FloatingLayer` can pass it as the reference container to `e.getLocalPosition(this.project.gridSpace)`, converting screen events directly into grid-unit coordinates.
+
+### ActionManager
+
+Every `Project` owns a public `actionManager: ActionManager` field. All circuit mutations (add/remove component or wire) are routed through it so that the operations can be undone and redone. Direct callers never mutate `_components` or `_wires` directly — they always go through `addComponent`, `removeComponent`, `addWire`, or `removeWire`.
 
 ### ActionManager
 
@@ -48,7 +57,7 @@ Every `Project` owns a public `actionManager: ActionManager` field. All circuit 
 
 ### Construction
 
-The constructor sets `boundsArea` and `hitArea` to the full coordinate range (so the container always receives pointer events regardless of viewport position), then appends the four scene layers as children.
+The constructor sets `boundsArea` and `hitArea` to the full coordinate range (so the container always receives pointer events regardless of viewport position), then builds the two-level scene hierarchy: `_grid` added directly, `_gridSpace` (with `scale.set(environment.gridSize)`) added second, and the three circuit sub-layers (`_wires`, `_components`, `_floatingLayer`) added inside `_gridSpace`.
 
 ### Viewport
 
@@ -57,7 +66,8 @@ The constructor sets `boundsArea` and `hitArea` to the full coordinate range (so
 | `resizeViewport(w, h)` | Stores the new viewport size and forwards it to `Grid.resizeViewport` |
 | `pan(delta)` | Translates by `delta`, calls `setPosition` |
 | `setPosition(p)` | Moves `this.position`, calls `Grid.updatePosition`, emits on `positionChange$` |
-| `gridPosition` | Computed read-only: the current top-left corner in grid units (derived from `position / scale`) |
+| `gridPosition` | Computed read-only: the current top-left corner in grid units — `position.multiplyScalar(1 / (scale.x * gridSize))` |
+| `gridSpace` | Public getter for `_gridSpace`; needed by `FloatingLayer` for coordinate conversion |
 
 ### Zoom
 
@@ -81,10 +91,10 @@ This ensures the point under the mouse stays stationary. After repositioning, `G
 
 | Method | Description |
 |---|---|
-| `addComponent(c)` | Calls `c.applyScale(this.scale.x)`, appends to `_components`, emits `'single'` on `_ticker$` |
-| `removeComponent(id)` | Not yet implemented (throws) |
-| `addWire(w)` | Calls `w.applyScale(this.scale.x)`, appends to `_wires`, emits `'single'` on `_ticker$` |
-| `removeWire(id)` | Not yet implemented (throws) |
+| `addComponent(c)` | Calls `c.applyScale(this.scale.x)`, inserts into `_components` quad tree, emits `'single'` on `_ticker$` |
+| `removeComponent(id)` | Finds the component by ID in `_components.items`, removes it from the quad tree, destroys it |
+| `addWire(w)` | Calls `w.applyScale(this.scale.x)`, inserts into `_wires` quad tree, emits `'single'` on `_ticker$` |
+| `removeWire(id)` | Finds the wire by ID in `_wires.items`, removes it from the quad tree, destroys it |
 
 `applyScale` is called on add because the project may already be at a non-1 zoom level when an element is inserted (e.g., on undo/redo while zoomed in).
 
@@ -131,7 +141,7 @@ Angular root-provided singleton. Tracks up to three states using Angular `signal
 |---|---|
 | `AppComponent` | Creates the initial `Project` in its constructor (`new Project()`), calls `projectService.setMainProject`. Reads `activeProject()` to feed `BoardComponent`. |
 | `BoardComponent` | Receives `Project` as an `input()`. Sets it as `app.stage`. Subscribes to `ticker$` and `positionChange$`. Forwards work-mode signals via `effect`. |
-| `FloatingLayer` | Holds a direct reference to its parent `Project`. Reads `project.mode`, `project.componentToPlace`, `project.scale`, and calls `project.actionManager.push(...)` on commit. |
+| `FloatingLayer` | Holds a direct reference to its parent `Project`. Reads `project.mode`, `project.componentToPlace`, `project.scale`, `project.gridSpace`, and calls `project.actionManager.push(...)` on commit. |
 | `ActionManager` | Owned by `Project` as `project.actionManager`. All action `do`/`undo` implementations receive the `Project` and call `addComponent`, `removeComponent`, `addWire`, or `removeWire`. |
 | `Grid` | Owned by `Project`. Receives `updatePosition`, `resizeViewport`, and `updateScale` calls. |
 
