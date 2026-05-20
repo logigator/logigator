@@ -9,11 +9,13 @@ import { environment } from '../../environments/environment';
 import { WorkMode } from '../work-mode/work-mode.enum';
 import { FloatingLayer } from '../rendering/floating-layer';
 import { ActionManager } from '../actions/action-manager';
+import { SelectionManager } from './selection-manager';
 import { Wire } from '../wires/wire';
 import { QuadTreeContainer } from '../rendering/quad-tree-container';
 
 export class Project extends InteractionContainer {
 	public readonly actionManager = new ActionManager(this);
+	public readonly selectionManager = new SelectionManager(this);
 
 	private readonly _scaleStepAmount = 1.2;
 	private readonly _scaleStepMin = -12;
@@ -128,6 +130,7 @@ export class Project extends InteractionContainer {
 			(c) => c.id === componentId
 		);
 		if (!component) return;
+		this.selectionManager.evict(component);
 		this._components.remove(component);
 		component.destroy({ children: true });
 		this._ticker$.next('single');
@@ -142,9 +145,18 @@ export class Project extends InteractionContainer {
 	public removeWire(wireId: number) {
 		const wire = Array.from(this._wires.items).find((w) => w.id === wireId);
 		if (!wire) return;
+		this.selectionManager.evict(wire);
 		this._wires.remove(wire);
 		wire.destroy();
 		this._ticker$.next('single');
+	}
+
+	public *queryComponentsInRange(rect: Rectangle): Generator<Component> {
+		yield* this._components.queryRange(rect);
+	}
+
+	public *queryWiresInRange(rect: Rectangle): Generator<Wire> {
+		yield* this._wires.queryRange(rect);
 	}
 
 	private updateScale(

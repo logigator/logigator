@@ -20,8 +20,8 @@ import { WireDirection } from '../wires/wire-direction.enum';
 import { ActionContainer } from '../actions/action-container';
 
 export class FloatingLayer extends Container {
-	private readonly _componentSelection = new Container<Component>();
-	private readonly _wireSelection = new Container<Wire>();
+	private readonly _componentGhost = new Container<Component>();
+	private readonly _wirePreview = new Container<Wire>();
 	private readonly _selectRect: Graphics = new Graphics();
 
 	private readonly destroy$ = new Subject<void>();
@@ -44,24 +44,24 @@ export class FloatingLayer extends Container {
 			Number.MAX_VALUE
 		);
 		this.hitArea = this.boundsArea;
-		this._componentSelection.tint = 0xbbbbbb;
+		this._componentGhost.tint = 0xbbbbbb;
 
 		this._selectRect.rect(0, 0, 1, 1);
 		this._selectRect.alpha = 0.3;
 		this._selectRect.fill(0x0);
 
-		this.addChild(this._componentSelection);
-		this.addChild(this._wireSelection);
+		this.addChild(this._componentGhost);
+		this.addChild(this._wirePreview);
 
 		this.on('pointerdown', this.onPointerDown);
 	}
 
 	public updateScale(scale: number) {
-		for (const child of this._componentSelection.children) {
+		for (const child of this._componentGhost.children) {
 			child.applyScale(scale);
 		}
 
-		for (const child of this._wireSelection.children) {
+		for (const child of this._wirePreview.children) {
 			child.applyScale(scale);
 		}
 	}
@@ -72,6 +72,7 @@ export class FloatingLayer extends Container {
 
 	public set mode(value: WorkMode) {
 		this.clearSelection();
+		this.project.selectionManager.clear();
 		this._mode = value;
 		this.project.triggerTicker('single');
 	}
@@ -110,11 +111,22 @@ export class FloatingLayer extends Container {
 				this._wireDragDirection = null;
 				break;
 			case WorkMode.SELECT:
-			case WorkMode.SELECT_EXACT:
-				this.position = e.getLocalPosition(this.project.gridSpace);
+			case WorkMode.SELECT_EXACT: {
+				const localPoint = e.getLocalPosition(this.project.gridSpace);
+				if (
+					!this.project.selectionManager.isEmpty &&
+					this.project.selectionManager.containsPoint(localPoint)
+				) {
+					// Click inside existing selection — future drag-move entry point.
+					// Clear _dragStart so the guard at the top of onPointerDown resets.
+					this._dragStart = null;
+					return;
+				}
+				this.position = localPoint;
 				this._selectRect.scale.set(0, 0);
 				this.addChild(this._selectRect);
 				break;
+			}
 		}
 
 		this.project.triggerTicker('on');
@@ -167,9 +179,12 @@ export class FloatingLayer extends Container {
 				this.commitSelection();
 				break;
 			case WorkMode.SELECT:
-			case WorkMode.SELECT_EXACT:
-				this.clearSelection();
+			case WorkMode.SELECT_EXACT: {
+				const rect = this.normalizeSelectRect();
+				this.removeChild(this._selectRect);
+				this.project.selectionManager.commit(rect, this._mode);
 				break;
+			}
 		}
 
 		this.project.triggerTicker('off');
@@ -189,7 +204,7 @@ export class FloatingLayer extends Container {
 		component.applyScale(this.project.scale.x);
 		component.position = pos;
 
-		this._componentSelection.addChild(component);
+		this._componentGhost.addChild(component);
 	}
 
 	private handleMouseMoveWhilePlacingWire(e: FederatedPointerEvent) {
@@ -205,15 +220,15 @@ export class FloatingLayer extends Container {
 					? WireDirection.HORIZONTAL
 					: WireDirection.VERTICAL;
 
-			this._wireSelection.addChild(new Wire(WireDirection.HORIZONTAL, 0));
-			this._wireSelection.addChild(new Wire(WireDirection.VERTICAL, 0));
+			this._wirePreview.addChild(new Wire(WireDirection.HORIZONTAL, 0));
+			this._wirePreview.addChild(new Wire(WireDirection.VERTICAL, 0));
 
-			for (const wire of this._wireSelection.children) {
+			for (const wire of this._wirePreview.children) {
 				wire.applyScale(this.project.scale.x);
 			}
 		}
 
-		const [horizontalWire, verticalWire] = this._wireSelection.children as [
+		const [horizontalWire, verticalWire] = this._wirePreview.children as [
 			Wire,
 			Wire
 		];
@@ -234,14 +249,14 @@ export class FloatingLayer extends Container {
 	private commitSelection() {
 		const action = new ActionContainer();
 
-		if (this._componentSelection.children.length > 0) {
-			for (const child of this._componentSelection.children) {
+		if (this._componentGhost.children.length > 0) {
+			for (const child of this._componentGhost.children) {
 				child.position = child.position.add(this.position);
 			}
-			action.add(new AddComponentsAction(...this._componentSelection.children));
+			action.add(new AddComponentsAction(...this._componentGhost.children));
 		}
 
-		const wires = this._wireSelection.children.filter((x) => x.length > 0);
+		const wires = this._wirePreview.children.filter((x) => x.length > 0);
 		if (wires.length > 0) {
 			for (const child of wires) {
 				child.position = child.position.add(this.position);
@@ -257,17 +272,28 @@ export class FloatingLayer extends Container {
 	}
 
 	private clearSelection() {
-		for (const child of [...this._componentSelection.children]) {
+		for (const child of [...this._componentGhost.children]) {
 			child.destroy({ children: true });
 		}
-		this._componentSelection.removeChildren(0);
+		this._componentGhost.removeChildren(0);
 
-		for (const child of [...this._wireSelection.children]) {
+		for (const child of [...this._wirePreview.children]) {
 			child.destroy({ children: true });
 		}
-		this._wireSelection.removeChildren(0);
+		this._wirePreview.removeChildren(0);
 
 		this.removeChild(this._selectRect);
+	}
+
+	private normalizeSelectRect(): Rectangle {
+		const sx = this._selectRect.scale.x;
+		const sy = this._selectRect.scale.y;
+		return new Rectangle(
+			sx >= 0 ? this.position.x : this.position.x + sx,
+			sy >= 0 ? this.position.y : this.position.y + sy,
+			Math.abs(sx),
+			Math.abs(sy)
+		);
 	}
 
 	override destroy(options?: DestroyOptions) {
