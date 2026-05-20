@@ -32,14 +32,14 @@ All yarn commands run via `docker compose exec <service> yarn <command>`.
 ### logigator-editor-v2
 ```bash
 docker compose exec editor yarn build          # production build + PureCSS tree-shaking
-docker compose exec editor yarn test           # Karma + Jasmine (full suite)
+docker compose exec editor yarn test --watch=false   # Karma + Jasmine (full suite, single run)
 docker compose exec editor yarn lint           # Angular ESLint + TypeScript strict
 docker compose exec editor yarn format:fix     # Prettier
 ```
 
 Run a single test file:
 ```bash
-docker compose exec editor yarn test --include='**/quad-tree-container.spec.ts'
+docker compose exec editor yarn test --watch=false --include='**/quad-tree-container.spec.ts'
 ```
 
 ### logigator-backend
