@@ -17,7 +17,7 @@ export class GraphicsProviderService {
 		...params: ConstructorParameters<T>
 	): GraphicsContext {
 		const cachedGraphics = this._cache.get(graphics);
-		const paramsHash = params.join();
+		const paramsHash = JSON.stringify(params);
 
 		if (!cachedGraphics) {
 			const context = new graphics(...params);

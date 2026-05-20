@@ -1,4 +1,4 @@
-import { Container, Rectangle } from 'pixi.js';
+import { Container, ContainerChild, Rectangle } from 'pixi.js';
 import { GridElement } from './grid-element';
 
 type Quadrant = 'nw' | 'ne' | 'sw' | 'se';
@@ -115,6 +115,18 @@ export class QuadTreeContainer<T extends GridElement> extends Container {
 	}
 
 	/**
+	 * Blocked — use {@link insert} instead. Direct addChild() calls bypass
+	 * _items tracking and would cause elements to render but never appear in
+	 * queryRange or items.
+	 */
+	// eslint-disable-next-line @typescript-eslint/no-unused-vars
+	override addChild<U extends ContainerChild[]>(...args: U): U[0] {
+		throw new Error(
+			'QuadTreeContainer: use insert() to add elements; addChild() bypasses spatial indexing.'
+		);
+	}
+
+	/**
 	 * Returns an iterator over all elements that are contained in the given range.
 	 * @param range rectangle defining the range to query
 	 */
@@ -122,6 +134,10 @@ export class QuadTreeContainer<T extends GridElement> extends Container {
 		yield* this.queryRangeOfEntry(this._tree, range);
 	}
 
+	// Full-containment (containsRect) is intentional: only elements whose
+	// entire gridBounds lies inside the query rectangle are yielded. Partial
+	// overlap is not enough. Selection behaviour matches this — an element
+	// must be fully inside the drag rectangle to be selected.
 	private *queryRangeOfEntry(
 		entry: QuadTreeEntry<T>,
 		range: Rectangle
@@ -158,7 +174,7 @@ export class QuadTreeContainer<T extends GridElement> extends Container {
 		const newX = expandLeft ? oldBounds.x - oldBounds.width : oldBounds.x;
 		const newY = expandUp ? oldBounds.y - oldBounds.height : oldBounds.y;
 
-		const newRoot = this.addChild(
+		const newRoot = super.addChild(
 			new QuadTreeEntry<T>(newX, newY, oldBounds.width * 2)
 		);
 

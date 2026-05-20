@@ -9,11 +9,11 @@ import { ComponentRotation } from './component-rotation.enum';
 import { WireGraphics } from '../rendering/graphics/wire.graphics';
 import { ComponentOption } from './component-option';
 import { SerializedComponent } from './serialized-component.model';
-import { GridElement } from '../rendering/grid-element';
+import { Connectable } from '../rendering/grid-element';
+import { IdAllocator } from '../utils/id-allocator';
 
-let COMPONENT_ID_COUNTER = 0;
-
-export abstract class Component extends Container implements GridElement {
+export abstract class Component extends Container implements Connectable {
+	private static readonly _idAllocator = new IdAllocator();
 	public abstract readonly config: ComponentConfig;
 	public readonly options: ComponentOption[];
 
@@ -74,7 +74,7 @@ export abstract class Component extends Container implements GridElement {
 		this.addChild(this._visualSpace);
 
 		this.interactiveChildren = false;
-		this._id = COMPONENT_ID_COUNTER++;
+		this._id = Component._idAllocator.next();
 
 		this.numInputs = numInputs;
 		this.numOutputs = numOutputs;
@@ -97,9 +97,7 @@ export abstract class Component extends Container implements GridElement {
 	}
 
 	public set id(value: number) {
-		if (value >= COMPONENT_ID_COUNTER) {
-			COMPONENT_ID_COUNTER = value + 1;
-		}
+		Component._idAllocator.bump(value);
 		this._id = value;
 	}
 

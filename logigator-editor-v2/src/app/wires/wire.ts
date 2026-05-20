@@ -5,11 +5,11 @@ import { GraphicsProviderService } from '../rendering/graphics-provider.service'
 import { WireGraphics } from '../rendering/graphics/wire.graphics';
 import { environment } from '../../environments/environment';
 import { SerializedWire } from './serialized-wire.model';
-import { GridElement } from '../rendering/grid-element';
+import { Connectable } from '../rendering/grid-element';
+import { IdAllocator } from '../utils/id-allocator';
 
-let WIRE_ID_COUNTER = 0;
-
-export class Wire extends Graphics implements GridElement {
+export class Wire extends Graphics implements Connectable {
+	private static readonly _idAllocator = new IdAllocator();
 	private readonly graphicsProviderService = getStaticDI(
 		GraphicsProviderService
 	);
@@ -28,6 +28,9 @@ export class Wire extends Graphics implements GridElement {
 	public static deserialize(serialized: SerializedWire): Wire {
 		const wire = new Wire(serialized.direction, serialized.length);
 		wire.id = serialized.id;
+		// Serialized coordinates are integer grid positions; the +0.5 half-grid
+		// offset is the convention for wire centre-line alignment and is added
+		// at load time rather than stored on disk.
 		wire.position.set(serialized.pos[0] + 0.5, serialized.pos[1] + 0.5);
 
 		return wire;
@@ -40,7 +43,7 @@ export class Wire extends Graphics implements GridElement {
 		this.context =
 			this.graphicsProviderService.getGraphicsContext(WireGraphics);
 
-		this._id = WIRE_ID_COUNTER++;
+		this._id = Wire._idAllocator.next();
 
 		this.direction = direction;
 
@@ -54,9 +57,7 @@ export class Wire extends Graphics implements GridElement {
 	}
 
 	public set id(value: number) {
-		if (value >= WIRE_ID_COUNTER) {
-			WIRE_ID_COUNTER = value + 1;
-		}
+		Wire._idAllocator.bump(value);
 		this._id = value;
 	}
 

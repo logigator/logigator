@@ -24,7 +24,7 @@ export class Project extends InteractionContainer {
 	private readonly _gridSpace = new Container();
 	private readonly _wires = new QuadTreeContainer<Wire>();
 	private readonly _components = new QuadTreeContainer<Component>();
-	private readonly _floatingLayer = new FloatingLayer(this, this._ticker$);
+	private readonly _floatingLayer = new FloatingLayer(this);
 
 	private _viewPortSize = new Point(0, 0);
 

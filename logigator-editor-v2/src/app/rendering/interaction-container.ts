@@ -40,6 +40,10 @@ export abstract class InteractionContainer extends Container {
 		return this._ticker$.asObservable();
 	}
 
+	public triggerTicker(value: 'on' | 'off' | 'single'): void {
+		this._ticker$.next(value);
+	}
+
 	private _startPan() {
 		if (this._isDragging) {
 			return;

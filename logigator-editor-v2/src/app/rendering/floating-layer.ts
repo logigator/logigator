@@ -31,10 +31,7 @@ export class FloatingLayer extends Container {
 	private _dragStart: Point | null = null;
 	private _wireDragDirection: WireDirection | null = null;
 
-	constructor(
-		private readonly project: Project,
-		private readonly _ticker$: Subject<'on' | 'off' | 'single'>
-	) {
+	constructor(private readonly project: Project) {
 		super();
 
 		this.interactiveChildren = false;
@@ -74,9 +71,9 @@ export class FloatingLayer extends Container {
 	}
 
 	public set mode(value: WorkMode) {
-		this.abortSelection();
+		this.clearSelection();
 		this._mode = value;
-		this._ticker$.next('single');
+		this.project.triggerTicker('single');
 	}
 
 	public get componentToPlace(): ComponentConfig | null {
@@ -97,7 +94,7 @@ export class FloatingLayer extends Container {
 
 		this._dragStart = e.global.clone();
 
-		switch (this.project.mode) {
+		switch (this._mode) {
 			case WorkMode.COMPONENT_PLACEMENT:
 				this.position = roundToGrid(
 					e.getLocalPosition(this.project.gridSpace),
@@ -120,7 +117,7 @@ export class FloatingLayer extends Container {
 				break;
 		}
 
-		this._ticker$.next('on');
+		this.project.triggerTicker('on');
 
 		this.on('pointerup', this.onPointerUp);
 		this.on('pointerupoutside', this.onPointerUp);
@@ -132,7 +129,7 @@ export class FloatingLayer extends Container {
 			return;
 		}
 
-		switch (this.project.mode) {
+		switch (this._mode) {
 			case WorkMode.COMPONENT_PLACEMENT:
 				this.position = roundToGrid(
 					e.getLocalPosition(this.project.gridSpace),
@@ -164,7 +161,7 @@ export class FloatingLayer extends Container {
 		this.off('pointerupoutside', this.onPointerUp);
 		this.off('pointermove', this.onPointerMove);
 
-		switch (this.project.mode) {
+		switch (this._mode) {
 			case WorkMode.COMPONENT_PLACEMENT:
 			case WorkMode.WIRE_DRAWING:
 				this.commitSelection();
@@ -175,7 +172,7 @@ export class FloatingLayer extends Container {
 				break;
 		}
 
-		this._ticker$.next('off');
+		this.project.triggerTicker('off');
 
 		this._dragStart = null;
 	}
@@ -234,10 +231,6 @@ export class FloatingLayer extends Container {
 		}
 	}
 
-	private abortSelection() {
-		this.clearSelection();
-	}
-
 	private commitSelection() {
 		const action = new ActionContainer();
 
@@ -264,12 +257,12 @@ export class FloatingLayer extends Container {
 	}
 
 	private clearSelection() {
-		for (const child of this._componentSelection.children) {
+		for (const child of [...this._componentSelection.children]) {
 			child.destroy({ children: true });
 		}
 		this._componentSelection.removeChildren(0);
 
-		for (const child of this._wireSelection.children) {
+		for (const child of [...this._wireSelection.children]) {
 			child.destroy({ children: true });
 		}
 		this._wireSelection.removeChildren(0);
