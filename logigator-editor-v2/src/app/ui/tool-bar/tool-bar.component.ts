@@ -10,6 +10,7 @@ import { TooltipModule } from 'primeng/tooltip';
 import { TranslocoDirective } from '@jsverse/transloco';
 import { WorkModeService } from '../../work-mode/work-mode.service';
 import { WorkMode } from '../../work-mode/work-mode.enum';
+import { ProjectService } from '../../project/project.service';
 
 @Component({
 	selector: 'app-tool-bar',
@@ -20,6 +21,7 @@ import { WorkMode } from '../../work-mode/work-mode.enum';
 })
 export class ToolBarComponent {
 	private readonly workModeService = inject(WorkModeService);
+	private readonly projectService = inject(ProjectService);
 
 	protected drawWireStyles = computed(() =>
 		this.workModeService.mode() === WorkMode.WIRE_DRAWING
@@ -68,5 +70,13 @@ export class ToolBarComponent {
 
 	protected setPlaceTextMode(): void {
 		this.workModeService.setMode(WorkMode.PLACE_TEXT);
+	}
+
+	protected undo(): void {
+		this.projectService.activeProject()?.actionManager.undo();
+	}
+
+	protected redo(): void {
+		this.projectService.activeProject()?.actionManager.redo();
 	}
 }

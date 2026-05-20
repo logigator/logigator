@@ -55,6 +55,7 @@
 	<p-button
 		[pTooltip]="t('toolBar.undo')"
 		[ariaLabel]="t('toolBar.undo')"
+		(onClick)="undo()"
 		tooltipPosition="bottom"
 		icon="ph ph-arrow-u-up-left"
 		severity="secondary"
@@ -62,6 +63,7 @@
 	<p-button
 		[pTooltip]="t('toolBar.redo')"
 		[ariaLabel]="t('toolBar.redo')"
+		(onClick)="redo()"
 		tooltipPosition="bottom"
 		icon="ph ph-arrow-u-up-right"
 		severity="secondary"

@@ -111,10 +111,14 @@ export class Project extends InteractionContainer {
 		this._ticker$.next('single');
 	}
 
-	// eslint-disable-next-line @typescript-eslint/no-unused-vars
 	public removeComponent(componentId: number) {
-		// TODO: Implement
-		throw new Error('Not implemented');
+		const component = this._components.children.find(
+			(c) => c.id === componentId
+		);
+		if (!component) return;
+		this._components.removeChild(component);
+		component.destroy({ children: true });
+		this._ticker$.next('single');
 	}
 
 	public addWire(wire: Wire) {
@@ -123,10 +127,12 @@ export class Project extends InteractionContainer {
 		this._ticker$.next('single');
 	}
 
-	// eslint-disable-next-line @typescript-eslint/no-unused-vars
 	public removeWire(wireId: number) {
-		// TODO: Implement
-		throw new Error('Not implemented');
+		const wire = this._wires.children.find((w) => w.id === wireId);
+		if (!wire) return;
+		this._wires.removeChild(wire);
+		wire.destroy();
+		this._ticker$.next('single');
 	}
 
 	private updateScale(
