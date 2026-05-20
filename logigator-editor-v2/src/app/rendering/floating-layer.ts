@@ -9,7 +9,8 @@ import {
 import { WorkMode } from '../work-mode/work-mode.enum';
 import { Project } from '../project/project';
 import { Component } from '../components/component';
-import { alignPointToGrid, alignPointToHalfGrid } from '../utils/grid';
+import { roundToGrid, roundToHalfGrid } from '../utils/grid';
+import { environment } from '../../environments/environment';
 import { Subject } from 'rxjs';
 import { AddComponentsAction } from '../actions/actions/add-components.action';
 import { ComponentConfig } from '../components/component-config.model';
@@ -98,22 +99,22 @@ export class FloatingLayer extends Container {
 
 		switch (this.project.mode) {
 			case WorkMode.COMPONENT_PLACEMENT:
-				this.position = alignPointToGrid(
-					e.getLocalPosition(this.project),
+				this.position = roundToGrid(
+					e.getLocalPosition(this.project.gridSpace),
 					true
 				);
 				this.placeComponentInSelection(new Point(0, 0));
 				break;
 			case WorkMode.WIRE_DRAWING:
-				this.position = alignPointToHalfGrid(
-					e.getLocalPosition(this.project),
+				this.position = roundToHalfGrid(
+					e.getLocalPosition(this.project.gridSpace),
 					true
 				);
 				this._wireDragDirection = null;
 				break;
 			case WorkMode.SELECT:
 			case WorkMode.SELECT_EXACT:
-				this.position = e.getLocalPosition(this.project);
+				this.position = e.getLocalPosition(this.project.gridSpace);
 				this._selectRect.scale.set(0, 0);
 				this.addChild(this._selectRect);
 				break;
@@ -133,8 +134,8 @@ export class FloatingLayer extends Container {
 
 		switch (this.project.mode) {
 			case WorkMode.COMPONENT_PLACEMENT:
-				this.position = alignPointToGrid(
-					e.getLocalPosition(this.project),
+				this.position = roundToGrid(
+					e.getLocalPosition(this.project.gridSpace),
 					true
 				);
 				break;
@@ -143,9 +144,13 @@ export class FloatingLayer extends Container {
 				break;
 			case WorkMode.SELECT:
 			case WorkMode.SELECT_EXACT:
+				// _selectRect lives in gridSpace, so its scale must be in grid units.
+				// Convert screen-pixel delta → grid units via projectScale * gridSize.
 				this._selectRect.scale.set(
-					(e.global.x - this._dragStart.x) / this.project.scale.x,
-					(e.global.y - this._dragStart.y) / this.project.scale.y
+					(e.global.x - this._dragStart.x) /
+						(this.project.scale.x * environment.gridSize),
+					(e.global.y - this._dragStart.y) /
+						(this.project.scale.y * environment.gridSize)
 				);
 		}
 	}
@@ -191,7 +196,7 @@ export class FloatingLayer extends Container {
 	}
 
 	private handleMouseMoveWhilePlacingWire(e: FederatedPointerEvent) {
-		const mouseAligned = alignPointToGrid(e.getLocalPosition(this), true);
+		const mouseAligned = roundToGrid(e.getLocalPosition(this), true);
 
 		if (this._wireDragDirection === null) {
 			if (mouseAligned.x === 0 && mouseAligned.y === 0) {
@@ -243,7 +248,7 @@ export class FloatingLayer extends Container {
 			action.add(new AddComponentsAction(...this._componentSelection.children));
 		}
 
-		const wires = this._wireSelection.children.filter((x) => x.gridLength > 0);
+		const wires = this._wireSelection.children.filter((x) => x.length > 0);
 		if (wires.length > 0) {
 			for (const child of wires) {
 				child.position = child.position.add(this.position);

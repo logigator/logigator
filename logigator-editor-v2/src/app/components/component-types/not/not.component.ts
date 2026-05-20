@@ -36,7 +36,7 @@ export class NotComponent extends Component {
 				this.appliedScale
 			)
 		);
-		this.addChild(componentGraphics);
+		this._visualSpace.addChild(componentGraphics);
 	}
 
 	public override destroy(options?: DestroyOptions): void {

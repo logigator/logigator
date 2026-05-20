@@ -5,7 +5,7 @@ import { ComponentConfig } from '../components/component-config.model';
 import { InteractionContainer } from '../rendering/interaction-container';
 import { Component } from '../components/component';
 import { Observable, Subject } from 'rxjs';
-import { toGridPoint } from '../utils/grid';
+import { environment } from '../../environments/environment';
 import { WorkMode } from '../work-mode/work-mode.enum';
 import { FloatingLayer } from '../rendering/floating-layer';
 import { ActionManager } from '../actions/action-manager';
@@ -21,6 +21,7 @@ export class Project extends InteractionContainer {
 	private _scaleStep = 0;
 
 	private readonly _grid: Grid = new Grid();
+	private readonly _gridSpace = new Container();
 	private readonly _wires = new QuadTreeContainer<Wire>();
 	private readonly _components = new QuadTreeContainer<Component>();
 	private readonly _floatingLayer = new FloatingLayer(this, this._ticker$);
@@ -40,10 +41,18 @@ export class Project extends InteractionContainer {
 		);
 		this.hitArea = this.boundsArea;
 
+		this._gridSpace.scale.set(environment.gridSize);
+
 		this.addChild(this._grid);
-		this.addChild(this._wires);
-		this.addChild(this._components);
-		this.addChild(this._floatingLayer);
+		this.addChild(this._gridSpace);
+
+		this._gridSpace.addChild(this._wires);
+		this._gridSpace.addChild(this._components);
+		this._gridSpace.addChild(this._floatingLayer);
+	}
+
+	public get gridSpace(): Container {
+		return this._gridSpace;
 	}
 
 	public resizeViewport(width: number, height: number) {
@@ -87,7 +96,9 @@ export class Project extends InteractionContainer {
 	}
 
 	public get gridPosition() {
-		return toGridPoint(this.position.multiplyScalar(1 / this.scale.x), true);
+		return this.position.multiplyScalar(
+			1 / (this.scale.x * environment.gridSize)
+		);
 	}
 
 	public get mode(): WorkMode {
@@ -110,7 +121,6 @@ export class Project extends InteractionContainer {
 		component.applyScale(this.scale.x);
 		this._components.insert(component);
 		this._ticker$.next('single');
-		console.debug(this._components.debug());
 	}
 
 	public removeComponent(componentId: number) {
@@ -127,7 +137,6 @@ export class Project extends InteractionContainer {
 		wire.applyScale(this.scale.x);
 		this._wires.insert(wire);
 		this._ticker$.next('single');
-		console.debug(this._wires.debug());
 	}
 
 	public removeWire(wireId: number) {
@@ -136,7 +145,6 @@ export class Project extends InteractionContainer {
 		this._wires.remove(wire);
 		wire.destroy();
 		this._ticker$.next('single');
-		console.debug(this._wires.debug());
 	}
 
 	private updateScale(

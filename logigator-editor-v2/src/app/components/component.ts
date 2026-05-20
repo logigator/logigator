@@ -1,18 +1,19 @@
-import { Text, Container, Graphics, Matrix, Point } from 'pixi.js';
+import { Text, Container, Graphics, Matrix, Point, Rectangle } from 'pixi.js';
 import { ComponentConfig } from './component-config.model';
 import { ThemingService } from '../theming/theming.service';
 import { getStaticDI } from '../utils/get-di';
 import { GraphicsProviderService } from '../rendering/graphics-provider.service';
 import { environment } from '../../environments/environment';
-import { fromGrid, toGridPoint } from '../utils/grid';
+import { fromGrid } from '../utils/grid';
 import { ComponentRotation } from './component-rotation.enum';
 import { WireGraphics } from '../rendering/graphics/wire.graphics';
 import { ComponentOption } from './component-option';
 import { SerializedComponent } from './serialized-component.model';
+import { GridElement } from '../rendering/grid-element';
 
 let COMPONENT_ID_COUNTER = 0;
 
-export abstract class Component extends Container {
+export abstract class Component extends Container implements GridElement {
 	public abstract readonly config: ComponentConfig;
 	public readonly options: ComponentOption[];
 
@@ -21,6 +22,11 @@ export abstract class Component extends Container {
 	protected readonly geometryService: GraphicsProviderService = getStaticDI(
 		GraphicsProviderService
 	);
+
+	// Visual children are pixel-authored. Counter-scaling by 1/gridSize lets
+	// existing pixel formulas (stroke widths, chamfers, fontSize) keep working
+	// even though the Component itself lives inside the grid-unit gridSpace.
+	protected readonly _visualSpace = new Container();
 
 	private _id: number;
 
@@ -38,7 +44,7 @@ export abstract class Component extends Container {
 		return {
 			id: component.id,
 			type: component.config.type,
-			pos: [component.gridPos.x, component.gridPos.y],
+			pos: [component.position.x, component.position.y],
 			options: component.options.map((x) => x.value)
 		};
 	}
@@ -51,7 +57,7 @@ export abstract class Component extends Container {
 			config.options.map((option, i) => option.clone(serialized.options[i]))
 		);
 		component.id = serialized.id;
-		component.gridPos = new Point(serialized.pos[0], serialized.pos[1]);
+		component.position.set(serialized.pos[0], serialized.pos[1]);
 
 		return component;
 	}
@@ -63,6 +69,9 @@ export abstract class Component extends Container {
 		options: ComponentOption[]
 	) {
 		super();
+
+		this._visualSpace.scale.set(1 / environment.gridSize);
+		this.addChild(this._visualSpace);
 
 		this.interactiveChildren = false;
 		this._id = COMPONENT_ID_COUNTER++;
@@ -92,14 +101,6 @@ export abstract class Component extends Container {
 			COMPONENT_ID_COUNTER = value + 1;
 		}
 		this._id = value;
-	}
-
-	public get gridPos(): Point {
-		return toGridPoint(this.position);
-	}
-
-	public set gridPos(value: Point) {
-		this.position.set(fromGrid(value.x), fromGrid(value.y));
 	}
 
 	public get direction(): ComponentRotation {
@@ -148,9 +149,30 @@ export abstract class Component extends Container {
 	}
 
 	public get connectionPoints(): Point[] {
-		return this._localConnectionPoints.map((x, i) =>
-			toGridPoint(this.toGlobal(x, x, i !== 0))
-		);
+		return this._localConnectionPoints.map((p) => this.position.add(p));
+	}
+
+	public get gridBounds(): Rectangle {
+		const lb = this.getLocalBounds();
+		const x = this.position.x;
+		const y = this.position.y;
+		const w = lb.width;
+		const h = lb.height;
+		const lx = lb.x;
+		const ly = lb.y;
+
+		// AABB in parent (gridSpace) coordinates, accounting for component rotation
+		// around the (0, 0) pivot.
+		switch (this._direction) {
+			case ComponentRotation.Right:
+				return new Rectangle(x + lx, y + ly, w, h);
+			case ComponentRotation.Down:
+				return new Rectangle(x - ly - h, y + lx, h, w);
+			case ComponentRotation.Left:
+				return new Rectangle(x - lx - w, y - ly - h, w, h);
+			case ComponentRotation.Up:
+				return new Rectangle(x + ly, y - lx - w, h, w);
+		}
 	}
 
 	protected get center(): Point {
@@ -162,7 +184,7 @@ export abstract class Component extends Container {
 			subtract += 0.5;
 		}
 
-		return new Point((this.width - fromGrid(subtract)) / 2, this.height / 2);
+		return new Point((this.width - subtract) / 2, this.height / 2);
 	}
 
 	protected registerConstantRotationContainer(container: Container): Container {
@@ -178,10 +200,10 @@ export abstract class Component extends Container {
 		const points: Point[] = [];
 
 		for (let i = 0; i < this.numInputs; i++) {
-			points.push(matrix.apply(new Point(fromGrid(-0.5), fromGrid(i + 0.5))));
+			points.push(matrix.apply(new Point(-0.5, i + 0.5)));
 		}
 		for (let i = 0; i < this.numOutputs; i++) {
-			points.push(matrix.apply(new Point(bounds.right, fromGrid(i + 0.5))));
+			points.push(matrix.apply(new Point(bounds.right, i + 0.5)));
 		}
 
 		return points;
@@ -192,10 +214,12 @@ export abstract class Component extends Container {
 			return;
 		}
 
-		for (const child of this.children) {
+		// destroy() calls removeFromParent which mutates `children` during
+		// iteration — snapshot before iterating so every child gets destroyed.
+		for (const child of [...this._visualSpace.children]) {
 			child.destroy({ children: true });
 		}
-		this.removeChildren(0);
+		this._visualSpace.removeChildren(0);
 
 		this._constantRotationContainers = [];
 
@@ -208,11 +232,11 @@ export abstract class Component extends Container {
 			const connPoints = new Graphics();
 
 			for (const point of this._localConnectionPoints) {
-				connPoints.rect(point.x - 1, point.y - 1, 2, 2);
+				connPoints.rect(fromGrid(point.x) - 1, fromGrid(point.y) - 1, 2, 2);
 			}
 			connPoints.fill(0xffff00);
 
-			this.addChild(connPoints);
+			this._visualSpace.addChild(connPoints);
 			this.registerConstantRotationContainer(connPoints);
 		}
 
@@ -220,18 +244,18 @@ export abstract class Component extends Container {
 			const originGraphics = new Graphics();
 			originGraphics.rect(0, 0, 2, 2);
 			originGraphics.fill(0xffffff);
-			this.addChild(originGraphics);
+			this._visualSpace.addChild(originGraphics);
 		}
 
 		if (environment.debug.showHitboxes) {
-			const bounds = this.getLocalBounds();
+			const bounds = this._visualSpace.getLocalBounds();
 			const hitbox = new Graphics();
 			hitbox.rect(bounds.x, bounds.y, bounds.width, bounds.height);
 			hitbox.fill({
 				color: 0xff0000,
 				alpha: 0.1
 			});
-			this.addChild(hitbox);
+			this._visualSpace.addChild(hitbox);
 		}
 	}
 
@@ -273,12 +297,14 @@ export abstract class Component extends Container {
 			}
 		}
 
+		// container lives inside _visualSpace (pixel domain), so its x must be
+		// in pixels — use _visualSpace's own local bounds, not the component's.
 		if (type === 'outputs') {
-			container.position.x = this.getLocalBounds().right;
+			container.position.x = this._visualSpace.getLocalBounds().right;
 		} else {
 			container.position.x = fromGrid(-0.5);
 		}
 
-		this.addChild(container);
+		this._visualSpace.addChild(container);
 	}
 }

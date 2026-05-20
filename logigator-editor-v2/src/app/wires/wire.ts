@@ -1,14 +1,15 @@
-import { Graphics, Point } from 'pixi.js';
+import { Graphics, Point, Rectangle } from 'pixi.js';
 import { WireDirection } from './wire-direction.enum';
 import { getStaticDI } from '../utils/get-di';
 import { GraphicsProviderService } from '../rendering/graphics-provider.service';
 import { WireGraphics } from '../rendering/graphics/wire.graphics';
-import { fromGrid, toGrid, toHalfGridPoint } from '../utils/grid';
+import { environment } from '../../environments/environment';
 import { SerializedWire } from './serialized-wire.model';
+import { GridElement } from '../rendering/grid-element';
 
 let WIRE_ID_COUNTER = 0;
 
-export class Wire extends Graphics {
+export class Wire extends Graphics implements GridElement {
 	private readonly graphicsProviderService = getStaticDI(
 		GraphicsProviderService
 	);
@@ -18,16 +19,16 @@ export class Wire extends Graphics {
 	public static serialize(wire: Wire): SerializedWire {
 		return {
 			id: wire.id,
-			pos: [Math.floor(wire.gridPos.x), Math.floor(wire.gridPos.y)],
+			pos: [Math.floor(wire.position.x), Math.floor(wire.position.y)],
 			direction: wire.direction,
-			length: wire.gridLength
+			length: wire.length
 		};
 	}
 
 	public static deserialize(serialized: SerializedWire): Wire {
 		const wire = new Wire(serialized.direction, serialized.length);
 		wire.id = serialized.id;
-		wire.gridPos = new Point(serialized.pos[0] + 0.5, serialized.pos[1] + 0.5);
+		wire.position.set(serialized.pos[0] + 0.5, serialized.pos[1] + 0.5);
 
 		return wire;
 	}
@@ -44,7 +45,7 @@ export class Wire extends Graphics {
 		this.direction = direction;
 
 		if (gridLength) {
-			this.gridLength = gridLength;
+			this.length = gridLength;
 		}
 	}
 
@@ -57,14 +58,6 @@ export class Wire extends Graphics {
 			WIRE_ID_COUNTER = value + 1;
 		}
 		this._id = value;
-	}
-
-	public get gridPos(): Point {
-		return toHalfGridPoint(this.position);
-	}
-
-	public set gridPos(value: Point) {
-		this.position.set(fromGrid(value.x), fromGrid(value.y));
 	}
 
 	public get direction(): WireDirection {
@@ -85,26 +78,34 @@ export class Wire extends Graphics {
 		this.scale.x = value;
 	}
 
-	public get gridLength(): number {
-		return toGrid(this.scale.x);
-	}
-
-	public set gridLength(value: number) {
-		this.scale.x = fromGrid(value);
-	}
-
 	public applyScale(scale: number): void {
-		this.scale.y = 1 / scale;
+		// Wire is a leaf Graphics with no _visualSpace wrapper, so it absorbs the
+		// gridSize factor here. Component takes care of this via its _visualSpace
+		// counter-scaling instead.
+		this.scale.y = 1 / (scale * environment.gridSize);
 	}
 
 	public get connectionPoints(): [Point, Point] {
-		const gridPos = this.gridPos;
+		const pos = this.position.clone();
 
 		return [
-			gridPos,
+			pos,
 			this.rotation === 0
-				? new Point(gridPos.x + this.gridLength, gridPos.y)
-				: new Point(gridPos.x, gridPos.y + this.gridLength)
+				? new Point(pos.x + this.length, pos.y)
+				: new Point(pos.x, pos.y + this.length)
 		];
+	}
+
+	public get gridBounds(): Rectangle {
+		// Wires sit at half-grid positions (e.g., x=3.5). Floor the origin and
+		// extend the spanning side by 1 so the rect covers the full half-grid
+		// padding on both ends. For a wire at (3.5, 4.5) of length 5, the visual
+		// extent is x ∈ [3.5, 8.5], which the AABB [3, 9) × [4, 5) encloses.
+		const x = Math.floor(this.position.x);
+		const y = Math.floor(this.position.y);
+		if (this.direction === WireDirection.HORIZONTAL) {
+			return new Rectangle(x, y, this.length + 1, 1);
+		}
+		return new Rectangle(x, y, 1, this.length + 1);
 	}
 }

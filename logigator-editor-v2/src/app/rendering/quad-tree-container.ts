@@ -1,8 +1,9 @@
-import { Container, ContainerChild, Rectangle } from 'pixi.js';
+import { Container, Rectangle } from 'pixi.js';
+import { GridElement } from './grid-element';
 
 type Quadrant = 'nw' | 'ne' | 'sw' | 'se';
 
-class QuadTreeEntry<T extends ContainerChild> extends Container {
+class QuadTreeEntry<T extends GridElement> extends Container {
 	branchItems: Container<T> = this.addChild(new Container<T>());
 	leafItems: Container<T> | null = this.addChild(new Container<T>());
 	branches: Record<Quadrant, QuadTreeEntry<T>> | null = null;
@@ -19,11 +20,11 @@ class QuadTreeEntry<T extends ContainerChild> extends Container {
 	}
 }
 
-export class QuadTreeContainer<T extends ContainerChild> extends Container {
+export class QuadTreeContainer<T extends GridElement> extends Container {
 	private static readonly MAX_LEAF_ELEMENTS = 4;
 	private static readonly MIN_BRANCH_ELEMENTS = 2;
-	private static readonly INITIAL_SIZE = 1024;
-	private static readonly MIN_LEAF_SIZE = 2;
+	private static readonly INITIAL_SIZE = 64;
+	private static readonly MIN_LEAF_SIZE = 1;
 
 	private _tree = super.addChild(
 		new QuadTreeEntry<T>(0, 0, QuadTreeContainer.INITIAL_SIZE)
@@ -39,9 +40,7 @@ export class QuadTreeContainer<T extends ContainerChild> extends Container {
 			this.remove(element);
 		}
 
-		// element has no parent at this point (removed above or never added),
-		// so getBounds() returns its own local/grid-space bounds directly.
-		const elBounds = element.getBounds().rectangle;
+		const elBounds = element.gridBounds;
 
 		while (!this._tree.boundsArea.containsRect(elBounds)) {
 			this.expand(elBounds);
@@ -128,7 +127,7 @@ export class QuadTreeContainer<T extends ContainerChild> extends Container {
 		range: Rectangle
 	): Generator<T> {
 		for (const element of entry.branchItems.children) {
-			if (range.containsRect(this.worldRectToLocal(element.getBounds().rectangle))) {
+			if (range.containsRect(element.gridBounds)) {
 				yield element;
 			}
 		}
@@ -141,17 +140,11 @@ export class QuadTreeContainer<T extends ContainerChild> extends Container {
 			}
 		} else {
 			for (const element of entry.leafItems!.children) {
-				if (range.containsRect(this.worldRectToLocal(element.getBounds().rectangle))) {
+				if (range.containsRect(element.gridBounds)) {
 					yield element;
 				}
 			}
 		}
-	}
-
-	private worldRectToLocal(r: Rectangle): Rectangle {
-		const tl = this.toLocal({ x: r.x, y: r.y });
-		const br = this.toLocal({ x: r.right, y: r.bottom });
-		return new Rectangle(tl.x, tl.y, br.x - tl.x, br.y - tl.y);
 	}
 
 	/**
@@ -242,9 +235,8 @@ export class QuadTreeContainer<T extends ContainerChild> extends Container {
 		};
 
 		for (const element of [...entry.leafItems.children]) {
-			// elements are in the display hierarchy here, so convert world→local
-			const elLocalBounds = this.worldRectToLocal(element.getBounds().rectangle);
-			const quadrant = this.getContainingQuadrant(entry.boundsArea, elLocalBounds);
+			const elBounds = element.gridBounds;
+			const quadrant = this.getContainingQuadrant(entry.boundsArea, elBounds);
 			if (!quadrant) {
 				throw new Error(
 					'PANIC: Invalid Quad Tree state: leaf element is not contained in any quadrant'
@@ -253,7 +245,7 @@ export class QuadTreeContainer<T extends ContainerChild> extends Container {
 
 			const quadrantInner = this.getContainingQuadrant(
 				entry.branches[quadrant].boundsArea,
-				elLocalBounds
+				elBounds
 			);
 
 			if (quadrantInner) {
