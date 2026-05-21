@@ -32,8 +32,11 @@ export class AndComponent extends Component {
 		return [];
 	}
 
+	protected get bodyGridWidth(): number {
+		return 2;
+	}
+
 	protected draw(): void {
-		this._bodyGridWidth = 2;
 		const componentGraphics = new Graphics(
 			this.geometryService.getGraphicsContext(
 				ComponentGraphics,

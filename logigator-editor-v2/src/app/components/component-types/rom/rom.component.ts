@@ -40,8 +40,11 @@ export class RomComponent extends Component {
 		return labels;
 	}
 
+	protected get bodyGridWidth(): number {
+		return 3;
+	}
+
 	protected draw(): void {
-		this._bodyGridWidth = 3;
 		const componentGraphics = new Graphics(
 			this.geometryService.getGraphicsContext(
 				ComponentGraphics,

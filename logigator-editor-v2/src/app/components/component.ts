@@ -38,10 +38,6 @@ export abstract class Component extends Container implements Connectable {
 
 	private _constantRotationContainers: Container[] = [];
 
-	// Set by subclasses in draw() to the body width in grid units so that
-	// output stub containers are placed at the exact path edge (not stroke edge).
-	protected _bodyGridWidth = 0;
-
 	private _initialized = false;
 
 	public static serialize(component: Component): SerializedComponent {
@@ -93,6 +89,8 @@ export abstract class Component extends Container implements Connectable {
 	protected abstract get inputLabels(): string[];
 
 	protected abstract get outputLabels(): string[];
+
+	protected abstract get bodyGridWidth(): number;
 
 	protected abstract draw(): void;
 
@@ -154,26 +152,33 @@ export abstract class Component extends Container implements Connectable {
 		return this._localConnectionPoints.map((p) => this.position.add(p));
 	}
 
+	protected get bodyGridHeight(): number {
+		return Math.max(this.numInputs, this.numOutputs);
+	}
+
 	public get gridBounds(): Rectangle {
-		const lb = this.getLocalBounds();
 		const x = this.position.x;
 		const y = this.position.y;
-		const w = lb.width;
-		const h = lb.height;
-		const lx = lb.x;
-		const ly = lb.y;
+		// Stub offsets in the component's unrotated local frame.
+		// ly is always 0 — stubs are horizontal and don't extend the y extent.
+		const lx = this.numInputs > 0 ? -0.5 : 0;
+		const w =
+			this.bodyGridWidth +
+			(this.numInputs > 0 ? 0.5 : 0) +
+			(this.numOutputs > 0 ? 0.5 : 0);
+		const h = this.bodyGridHeight;
 
 		// AABB in parent (gridSpace) coordinates, accounting for component rotation
 		// around the (0, 0) pivot.
 		switch (this._direction) {
 			case ComponentRotation.Right:
-				return new Rectangle(x + lx, y + ly, w, h);
+				return new Rectangle(x + lx, y, w, h);
 			case ComponentRotation.Down:
-				return new Rectangle(x - ly - h, y + lx, h, w);
+				return new Rectangle(x - h, y + lx, h, w);
 			case ComponentRotation.Left:
-				return new Rectangle(x - lx - w, y - ly - h, w, h);
+				return new Rectangle(x - lx - w, y - h, w, h);
 			case ComponentRotation.Up:
-				return new Rectangle(x + ly, y - lx - w, h, w);
+				return new Rectangle(x, y - lx - w, h, w);
 		}
 	}
 
@@ -299,13 +304,11 @@ export abstract class Component extends Container implements Connectable {
 			}
 		}
 
-		// container lives inside _visualSpace (pixel domain), so its x must be in
-		// pixels. For outputs: use the body path right edge (fromGrid(_bodyGridWidth)),
-		// not getLocalBounds().right, which includes the stroke's miter extension and
-		// would place stubs ~sqrt(2)px too far right — causing valid touching
-		// connections to falsely collide.
+		// For outputs: use bodyGridWidth (path right edge) not getLocalBounds().right,
+		// which includes the stroke's miter extension and would place stubs ~sqrt(2)px
+		// too far right — causing valid touching connections to falsely collide.
 		if (type === 'outputs') {
-			container.position.x = fromGrid(this._bodyGridWidth);
+			container.position.x = fromGrid(this.bodyGridWidth);
 		} else {
 			container.position.x = fromGrid(-0.5);
 		}
