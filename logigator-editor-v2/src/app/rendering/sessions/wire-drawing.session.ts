@@ -61,6 +61,10 @@ export class WireDrawingSession implements DragSession {
 		this._cleanup();
 	}
 
+	canEnd(): boolean {
+		return true;
+	}
+
 	onCancel(): void {
 		this._cleanup();
 	}

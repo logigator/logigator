@@ -33,6 +33,7 @@ export class AndComponent extends Component {
 	}
 
 	protected draw(): void {
+		this._bodyGridWidth = 2;
 		const componentGraphics = new Graphics(
 			this.geometryService.getGraphicsContext(
 				ComponentGraphics,

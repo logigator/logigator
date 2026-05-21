@@ -145,6 +145,7 @@ export class FloatingLayer extends Container {
 	private onPointerUp() {
 		const session = this._activeDrag;
 		if (!session) return;
+		if (!session.canEnd()) return;
 		session.onEnd();
 		this._stopDrag();
 	}

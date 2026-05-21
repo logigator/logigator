@@ -36,6 +36,10 @@ export class SelectRectSession implements DragSession {
 		this.project.selectionManager.commit(rect, this.mode);
 	}
 
+	canEnd(): boolean {
+		return true;
+	}
+
 	onCancel(): void {
 		this.selectRect.destroy();
 	}

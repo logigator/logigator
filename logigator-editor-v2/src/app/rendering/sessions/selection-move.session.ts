@@ -1,4 +1,4 @@
-import { Container, FederatedPointerEvent, Point } from 'pixi.js';
+import { Container, FederatedPointerEvent, Point, Rectangle } from 'pixi.js';
 import { DragSession } from '../drag-session';
 import { Project } from '../../project/project';
 import { Component } from '../../components/component';
@@ -13,6 +13,7 @@ export class SelectionMoveSession implements DragSession {
 	private readonly _components: Component[];
 	private readonly _wires: Wire[];
 	private readonly _pointerStart: Point;
+	private _hasCollision = false;
 
 	constructor(
 		private readonly project: Project,
@@ -28,6 +29,8 @@ export class SelectionMoveSession implements DragSession {
 		project.detachForDrag(this._components, this._wires);
 		for (const c of this._components) dragLayer.addChild(c);
 		for (const w of this._wires) dragLayer.addChild(w);
+		// dragLayer starts at (0,0) offset; selection was non-overlapping before
+		// detach, so no initial collision check is needed.
 	}
 
 	onMove(e: FederatedPointerEvent): void {
@@ -39,6 +42,11 @@ export class SelectionMoveSession implements DragSession {
 			gridPos.x - this._pointerStart.x,
 			gridPos.y - this._pointerStart.y
 		);
+		this._updateCollision();
+	}
+
+	canEnd(): boolean {
+		return !this._hasCollision;
 	}
 
 	onEnd(): void {
@@ -64,6 +72,8 @@ export class SelectionMoveSession implements DragSession {
 		}
 
 		this.dragLayer.position.set(0, 0);
+		this.dragLayer.tint = 0xffffff;
+		this._hasCollision = false;
 		this.project.reattachFromDrag(this._components, this._wires);
 
 		if (hasMove) {
@@ -80,6 +90,27 @@ export class SelectionMoveSession implements DragSession {
 
 	onCancel(): void {
 		this.dragLayer.position.set(0, 0);
+		this.dragLayer.tint = 0xffffff;
+		this._hasCollision = false;
 		this.project.reattachFromDrag(this._components, this._wires);
+	}
+
+	private _boundsWorld(comp: Component): Rectangle {
+		const b = comp.gridBounds;
+		return new Rectangle(
+			b.x + this.dragLayer.position.x,
+			b.y + this.dragLayer.position.y,
+			b.width,
+			b.height
+		);
+	}
+
+	private _updateCollision(): void {
+		const collision = this._components.some((c) =>
+			this.project.hasComponentCollision(this._boundsWorld(c))
+		);
+		if (collision === this._hasCollision) return;
+		this._hasCollision = collision;
+		this.dragLayer.tint = collision ? 0xff4444 : 0xffffff;
 	}
 }

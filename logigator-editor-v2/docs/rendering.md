@@ -148,21 +148,31 @@ All pointer-event positions are converted to grid units via `e.getLocalPosition(
 
 ### Drag dispatch
 
-`onPointerDown` creates the appropriate `DragSession` for the active mode and calls `_startDrag(session)`, which registers `pointerup`/`pointerupoutside`/`pointermove` listeners and starts the ticker. `onPointerMove` delegates to `_activeDrag.onMove(e)`. `onPointerUp` calls `_stopDrag()` (unregisters listeners, nulls session, fires ticker `'off'`) then `session.onEnd()`.
+`onPointerDown` creates the appropriate `DragSession` for the active mode and calls `_startDrag(session)`, which registers `pointerup`/`pointerupoutside`/`pointermove` listeners and starts the ticker. `onPointerMove` delegates to `_activeDrag.onMove(e)`. `onPointerUp` first calls `session.canEnd()` — if it returns `false` (collision), the pointer-up is silently ignored and the session stays live; listeners remain registered and the ghost/selection continues to follow the cursor. If `canEnd()` returns `true`, `session.onEnd()` is called then `_stopDrag()` (unregisters listeners, nulls session, fires ticker `'off'`).
 
-Escape key cancels any active session by calling `_activeDrag.onCancel()` followed by `_stopDrag()`.
+Escape key cancels any active session by calling `_activeDrag.onCancel()` followed by `_stopDrag()`. Cancel always works regardless of collision state.
 
 ### Session classes
 
-Each session lives in `rendering/sessions/` and implements `DragSession` (`onMove`, `onEnd`, `onCancel`).
+Each session lives in `rendering/sessions/` and implements `DragSession` (`onMove`, `onEnd`, `onCancel`, `canEnd`).
 
-**`ComponentPlacementSession`** — creates a ghost `Component` (tinted `0xbbbbbb`) in `_dragLayer`. `_dragLayer.position` tracks the grid-snapped pointer. On `onEnd()`, the component's world position is set from `_dragLayer.position`, then `AddComponentsAction` is pushed (serializes the ghost) and the ghost is destroyed. `_dragLayer.position` is reset to zero.
+**`DragSession.canEnd()`** — called by `FloatingLayer.onPointerUp` before committing. Return `false` to keep the session alive (collision block or silent-discard). `WireDrawingSession` and `SelectRectSession` always return `true`. Collision sessions return `!_hasCollision`.
+
+**`ComponentPlacementSession`** — creates a ghost `Component` (tinted `0x888888`) in `_dragLayer`. `_dragLayer.position` tracks the grid-snapped pointer. On construction and on every `onMove`, calls `project.hasComponentCollision` with the ghost's world `gridBounds` (`dragLayer.position + component.gridBounds` offsets). Collision tints `_component` red (`0xff4444`); clearing restores `0x888888`. `canEnd()` returns `false` while colliding — `pointerup` is ignored and the ghost stays live. On `onEnd()`, the component's world position is set from `_dragLayer.position`, then `AddComponentsAction` is pushed (serializes the ghost) and the ghost is destroyed. `_dragLayer.position` is reset to zero.
+
+**`SelectionMoveSession`** — snapshots the selection, calls `project.detachForDrag`, and reparents elements into `_dragLayer`. `onMove` sets `_dragLayer.position` to the grid-snapped delta from the drag start and runs `project.hasComponentCollision` for each dragged component against the fixed quad tree. Collision tints `dragLayer` red (`0xff4444`); clearing restores `0xffffff`. `canEnd()` returns `false` while colliding. `onEnd` (which requires `canEnd() === true`) applies the delta to each element's own position, resets `_dragLayer.position` and `_dragLayer.tint`, calls `project.reattachFromDrag`, and if the delta was non-zero pushes `MoveComponentsAction`/`MoveWiresAction` wrapped in an `ActionContainer`. `onCancel` resets position and tint before reattaching — always safe regardless of collision state.
 
 **`WireDrawingSession`** — `_wirePreview.position` is the half-grid-snapped start point. Two `Wire` objects (horizontal + vertical) are created lazily on first movement and sized to form an L-shape. The drag direction is locked to whichever axis moved first. `getLocalPosition(_wirePreview)` gives the delta from the start in grid units, which drives wire lengths/positions. On `onEnd()`, non-zero wires have the start position added to their local positions (converting to world grid coords), then `AddWiresAction` is pushed and preview wires are destroyed.
 
 **`SelectRectSession`** — adds `_selectRect` to `FloatingLayer` at the click's grid position. `onMove` sets `_selectRect.scale` to the grid-unit delta from start (negative values handle reverse drags). `onEnd` normalizes the rect to a canonical `Rectangle` (always positive width/height), removes `_selectRect`, and calls `project.selectionManager.commit(rect, mode)`. A zero-area rect (no movement) reaches the selection manager unchanged and is handled as a single-click hit test.
 
-**`SelectionMoveSession`** — snapshots the selection, calls `project.detachForDrag`, and reparents elements into `_dragLayer`. `onMove` sets `_dragLayer.position` to the grid-snapped delta from the drag start. `onEnd` applies the delta to each element's own position, resets `_dragLayer.position`, calls `project.reattachFromDrag`, and if the delta was non-zero pushes `MoveComponentsAction`/`MoveWiresAction` wrapped in an `ActionContainer`. Selection tint is preserved after a move. `onCancel` resets `_dragLayer.position` and reattaches without an action.
+### Collision tint convention
+
+| Value | Meaning |
+|---|---|
+| `0x888888` | Placement ghost default |
+| `0xff4444` | Collision — ghost or drag layer |
+| `0xffffff` | Neutral (drag layer when not colliding) |
 
 ### `updateScale(scale)`
 

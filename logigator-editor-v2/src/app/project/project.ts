@@ -151,6 +151,16 @@ export class Project extends InteractionContainer {
 		this._ticker$.next('single');
 	}
 
+	public hasComponentCollision(
+		bounds: Rectangle,
+		excludeIds: ReadonlySet<number> = new Set()
+	): boolean {
+		for (const comp of this.queryComponentsInRange(bounds)) {
+			if (!excludeIds.has(comp.id)) return true;
+		}
+		return false;
+	}
+
 	public *queryComponentsInRange(rect: Rectangle): Generator<Component> {
 		yield* this._components.queryRange(rect);
 	}

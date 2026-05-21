@@ -1,4 +1,4 @@
-import { Container, FederatedPointerEvent, Point } from 'pixi.js';
+import { Container, FederatedPointerEvent, Point, Rectangle } from 'pixi.js';
 import { DragSession } from '../drag-session';
 import { Project } from '../../project/project';
 import { Component } from '../../components/component';
@@ -8,6 +8,7 @@ import { AddComponentsAction } from '../../actions/actions/add-components.action
 
 export class ComponentPlacementSession implements DragSession {
 	private readonly _component: Component;
+	private _hasCollision = false;
 
 	constructor(
 		private readonly project: Project,
@@ -23,12 +24,18 @@ export class ComponentPlacementSession implements DragSession {
 		this._component.position.set(0, 0);
 		dragLayer.addChild(this._component);
 		dragLayer.position.copyFrom(startPos);
+		this._updateCollision();
 	}
 
 	onMove(e: FederatedPointerEvent): void {
 		this.dragLayer.position.copyFrom(
 			roundToGrid(e.getLocalPosition(this.project.gridSpace), true)
 		);
+		this._updateCollision();
+	}
+
+	canEnd(): boolean {
+		return !this._hasCollision;
 	}
 
 	onEnd(): void {
@@ -44,5 +51,24 @@ export class ComponentPlacementSession implements DragSession {
 	onCancel(): void {
 		this._component.destroy({ children: true });
 		this.dragLayer.position.set(0, 0);
+	}
+
+	private _boundsWorld(): Rectangle {
+		const b = this._component.gridBounds;
+		return new Rectangle(
+			this.dragLayer.position.x + b.x,
+			this.dragLayer.position.y + b.y,
+			b.width,
+			b.height
+		);
+	}
+
+	private _updateCollision(): void {
+		const collision = this.project.hasComponentCollision(this._boundsWorld());
+		if (collision === this._hasCollision) return;
+		this._hasCollision = collision;
+		// Tint this._component directly (not dragLayer) to avoid multiplying
+		// with the container's own tint, which would yield the wrong colour.
+		this._component.tint = collision ? 0xff4444 : 0x888888;
 	}
 }

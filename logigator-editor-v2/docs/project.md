@@ -100,6 +100,7 @@ This ensures the point under the mouse stays stationary. After repositioning, `G
 | `removeWire(id)` | Calls `selectionManager.evict(wire)`, removes from quad tree, destroys it |
 | `queryComponentsInRange(rect)` | Generator that yields all components intersecting `rect` (delegates to `_components.queryRange`) |
 | `queryWiresInRange(rect)` | Generator that yields all wires intersecting `rect` (delegates to `_wires.queryRange`) |
+| `hasComponentCollision(bounds, excludeIds?)` | Returns `true` if any component in the quad tree intersects `bounds`, excluding any whose `id` is in `excludeIds`. Uses `queryComponentsInRange` — no extra check needed because `queryRange` already uses `gridBounds.intersects`. `excludeIds` defaults to an empty set; used by future callers (paste, undo-of-move) where the component being tested is already in the tree. Called by `ComponentPlacementSession` and `SelectionMoveSession` on every `pointermove`. |
 
 `applyScale` is called on add because the project may already be at a non-1 zoom level when an element is inserted (e.g., on undo/redo while zoomed in).
 

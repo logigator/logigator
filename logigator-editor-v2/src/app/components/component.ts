@@ -38,6 +38,10 @@ export abstract class Component extends Container implements Connectable {
 
 	private _constantRotationContainers: Container[] = [];
 
+	// Set by subclasses in draw() to the body width in grid units so that
+	// output stub containers are placed at the exact path edge (not stroke edge).
+	protected _bodyGridWidth = 0;
+
 	private _initialized = false;
 
 	public static serialize(component: Component): SerializedComponent {
@@ -295,10 +299,13 @@ export abstract class Component extends Container implements Connectable {
 			}
 		}
 
-		// container lives inside _visualSpace (pixel domain), so its x must be
-		// in pixels — use _visualSpace's own local bounds, not the component's.
+		// container lives inside _visualSpace (pixel domain), so its x must be in
+		// pixels. For outputs: use the body path right edge (fromGrid(_bodyGridWidth)),
+		// not getLocalBounds().right, which includes the stroke's miter extension and
+		// would place stubs ~sqrt(2)px too far right — causing valid touching
+		// connections to falsely collide.
 		if (type === 'outputs') {
-			container.position.x = this._visualSpace.getLocalBounds().right;
+			container.position.x = fromGrid(this._bodyGridWidth);
 		} else {
 			container.position.x = fromGrid(-0.5);
 		}
