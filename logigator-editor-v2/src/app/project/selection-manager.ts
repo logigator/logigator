@@ -6,7 +6,7 @@ import { Wire } from '../wires/wire';
 import type { Project } from './project';
 
 export class SelectionManager {
-	static readonly SELECTION_TINT = 0x5577aa;
+	static readonly SELECTION_TINT = 0x888888;
 
 	private readonly _selectedComponents = new Set<Component>();
 	private readonly _selectedWires = new Set<Wire>();

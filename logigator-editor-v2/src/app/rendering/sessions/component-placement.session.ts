@@ -18,7 +18,7 @@ export class ComponentPlacementSession implements DragSession {
 		this._component = new config.implementation(
 			config.options.map((x) => x.clone())
 		);
-		this._component.tint = 0xbbbbbb;
+		this._component.tint = 0x888888;
 		this._component.applyScale(project.scale.x);
 		this._component.position.set(0, 0);
 		dragLayer.addChild(this._component);
