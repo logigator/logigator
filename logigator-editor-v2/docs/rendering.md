@@ -7,15 +7,21 @@ The rendering layer owns the PixiJS scene graph structure, viewport interaction,
 ```
 src/app/rendering/
 ├── assets.service.ts               # PixiJS Assets bootstrap (fonts)
+├── drag-session.ts                 # DragSession interface implemented by all session classes
 ├── floating-layer.ts               # Transient placement/wire-drawing/selection overlay
 ├── graphics-provider.service.ts    # Shared GraphicsContext cache
 ├── grid.ts                         # Infinite-seeming background grid
 ├── interaction-container.ts        # Abstract base: pan/zoom pointer handling
 ├── quad-tree-container.ts          # Spatial index for efficient range queries
-└── graphics/
-    ├── component.graphics.ts       # GraphicsContext for component body outline
-    ├── grid.graphics.ts            # GraphicsContext for a grid chunk tile
-    └── wire.graphics.ts            # GraphicsContext for a wire segment
+├── graphics/
+│   ├── component.graphics.ts       # GraphicsContext for component body outline
+│   ├── grid.graphics.ts            # GraphicsContext for a grid chunk tile
+│   └── wire.graphics.ts            # GraphicsContext for a wire segment
+└── sessions/
+    ├── component-placement.session.ts  # Ghost component drag → AddComponentsAction
+    ├── select-rect.session.ts          # Rubber-band rect → selectionManager.commit()
+    ├── selection-move.session.ts       # Drag selected elements → MoveComponentsAction/MoveWiresAction
+    └── wire-drawing.session.ts         # L-shaped wire preview → AddWiresAction
 ```
 
 ---
@@ -115,7 +121,7 @@ The pivot is set to `chunkSizePx` so the offset math lands on chunk boundaries c
 
 **File:** `floating-layer.ts`
 
-A full-screen PixiJS `Container` that lives inside `_gridSpace` and sits above the permanent circuit layers. It handles all in-progress user interactions: component placement, wire drawing, rectangle selection, and selection drag-move. Because it lives in `_gridSpace`, `this.position` is in grid units automatically.
+A full-screen PixiJS `Container` that lives inside `_gridSpace` and sits above the permanent circuit layers. It handles all in-progress user interactions: component placement, wire drawing, rectangle selection, and selection drag-move. Because it lives in `_gridSpace`, coordinates are in grid units automatically.
 
 `interactiveChildren = false` — events are captured only on the layer itself. `hitArea` is set to the full coordinate range so pointer events are always received regardless of panning.
 
@@ -123,87 +129,44 @@ A full-screen PixiJS `Container` that lives inside `_gridSpace` and sits above t
 
 | Field | Type | Purpose |
 |---|---|---|
-| `_componentGhost` | `Container<Component>` | Ghost component(s) during placement; tinted `0xbbbbbb` |
 | `_wirePreview` | `Container<Wire>` | In-progress wires during wire drawing |
-| `_dragLayer` | `Container<Component \| Wire>` | Detached selected elements during drag-move; empty when idle |
+| `_dragLayer` | `Container<Component \| Wire>` | Holds the ghost component during placement **and** detached selected elements during drag-move; empty when idle |
 
-`_selectRect` (`Graphics`) is a **transient** child added and removed from `FloatingLayer` itself during a rectangle selection drag.
+`_selectRect` (`Graphics`) is a **transient** child added to and removed from `FloatingLayer` by `SelectRectSession`.
 
 ### State machine
 
+`FloatingLayer` holds a single `_activeDrag: DragSession | null`. At most one session is active at a time.
+
 `FloatingLayer.mode` mirrors `project.mode` (a `WorkMode` enum value). Setting `mode`:
-1. Cancels any in-progress selection drag (`_cancelDrag()`) if one is active.
-2. Calls `clearSelection()` — clears transient ghost/preview/rect children.
-3. Calls `project.selectionManager.clear()` — removes tints and empties the committed selection.
+1. If a session is active, calls `_activeDrag.onCancel()` then `_stopDrag()` — cancels whatever was in progress.
+2. Calls `project.selectionManager.clear()` — removes tints and empties the committed selection.
 
 ### Coordinate conversion
 
 All pointer-event positions are converted to grid units via `e.getLocalPosition(this.project.gridSpace)`. This returns a `Point` already in grid-unit space, which is then snapped with `roundToGrid` (full-grid) or `roundToHalfGrid` (half-grid) from `utils/grid.ts`.
 
-### Wire drawing
+### Drag dispatch
 
-Two `Wire` objects are created lazily on first non-zero movement: one horizontal, one vertical. Their lengths and positions are updated on every `pointermove`. The drag direction is locked to whichever axis moved first: if horizontal, the vertical segment's X origin tracks the mouse; if vertical, the horizontal segment's Y origin tracks.
+`onPointerDown` creates the appropriate `DragSession` for the active mode and calls `_startDrag(session)`, which registers `pointerup`/`pointerupoutside`/`pointermove` listeners and starts the ticker. `onPointerMove` delegates to `_activeDrag.onMove(e)`. `onPointerUp` calls `_stopDrag()` (unregisters listeners, nulls session, fires ticker `'off'`) then `session.onEnd()`.
 
-Wire origins are snapped to **half-grid** (`roundToHalfGrid`); component origins are snapped to **full-grid** (`roundToGrid`).
+Escape key cancels any active session by calling `_activeDrag.onCancel()` followed by `_stopDrag()`.
 
-### `commitSelection()`
+### Session classes
 
-On `pointerup` in `COMPONENT_PLACEMENT` / `WIRE_DRAWING` mode, translates the floating children's positions into world grid-unit coordinates (adds `this.position` to each child's local position — both are in grid units, so this is a clean integer add), then wraps them into `AddComponentsAction` and/or `AddWiresAction` inside an `ActionContainer` and pushes to `project.actionManager`. Zero-length wires are filtered out. After commit, `clearSelection()` destroys the transient children.
+Each session lives in `rendering/sessions/` and implements `DragSession` (`onMove`, `onEnd`, `onCancel`).
 
-### Rectangle selection
+**`ComponentPlacementSession`** — creates a ghost `Component` (tinted `0xbbbbbb`) in `_dragLayer`. `_dragLayer.position` tracks the grid-snapped pointer. On `onEnd()`, the component's world position is set from `_dragLayer.position`, then `AddComponentsAction` is pushed (serializes the ghost) and the ghost is destroyed. `_dragLayer.position` is reset to zero.
 
-In `SELECT` / `SELECT_EXACT` mode, `onPointerDown` adds `_selectRect` as a transient child and stores the pointer start position. `onPointerMove` updates `_selectRect.scale` to encode the rect dimensions in grid units (scale = screen-pixel delta ÷ `project.scale.x * gridSize`). Negative scale handles right-to-left and bottom-to-top drags.
+**`WireDrawingSession`** — `_wirePreview.position` is the half-grid-snapped start point. Two `Wire` objects (horizontal + vertical) are created lazily on first movement and sized to form an L-shape. The drag direction is locked to whichever axis moved first. `getLocalPosition(_wirePreview)` gives the delta from the start in grid units, which drives wire lengths/positions. On `onEnd()`, non-zero wires have the start position added to their local positions (converting to world grid coords), then `AddWiresAction` is pushed and preview wires are destroyed.
 
-On `pointerup`, `normalizeSelectRect()` converts the potentially negative-scale rect into a canonical `Rectangle` (always positive width/height, correct origin), removes `_selectRect` from the layer, and calls `project.selectionManager.commit(rect, mode)`.
+**`SelectRectSession`** — adds `_selectRect` to `FloatingLayer` at the click's grid position. `onMove` sets `_selectRect.scale` to the grid-unit delta from start (negative values handle reverse drags). `onEnd` normalizes the rect to a canonical `Rectangle` (always positive width/height), removes `_selectRect`, and calls `project.selectionManager.commit(rect, mode)`. A zero-area rect (no movement) reaches the selection manager unchanged and is handled as a single-click hit test.
 
-A zero-area rect (mouse didn't move) is passed through to `selectionManager.commit` unchanged — the manager handles it as a single-click hit test.
-
-**`normalizeSelectRect()`:**
-```ts
-private normalizeSelectRect(): Rectangle {
-    const sx = this._selectRect.scale.x;
-    const sy = this._selectRect.scale.y;
-    return new Rectangle(
-        sx >= 0 ? this.position.x : this.position.x + sx,
-        sy >= 0 ? this.position.y : this.position.y + sy,
-        Math.abs(sx),
-        Math.abs(sy),
-    );
-}
-```
-
-### Selection drag-move
-
-When `pointerdown` fires in `SELECT` / `SELECT_EXACT` mode and `selectionManager.containsPoint(localPoint)` is true (the user clicked inside the existing selection), `FloatingLayer` starts a drag-move instead of a new rect drag.
-
-**Drag start** (`onPointerDown`):
-1. Snapshots `selectionManager.selectedComponents` and `selectionManager.selectedWires` into `_dragComponents[]` / `_dragWires[]` (array snapshots so detach and reattach always operate on the same fixed set regardless of later selection changes).
-2. Calls `project.detachForDrag(_dragComponents, _dragWires)` — removes them from the quad trees.
-3. Reparents detached elements into `_dragLayer`.
-4. Records `_dragPointerStart` (grid-snapped pointer position).
-5. Starts continuous rendering via `triggerTicker('on')`.
-
-**Drag move** (`onPointerMove` with `_isDraggingSelection`):
-Snaps the current pointer to grid, computes the delta from `_dragPointerStart`, and sets `_dragLayer.position` to that delta. No element positions change and no quad tree writes happen during the move — only `_dragLayer.position` shifts.
-
-**Drag drop** (`onPointerUp` → `_commitDrag()`):
-1. Reads `_dragLayer.position` as the final grid delta.
-2. Iterates `_dragLayer.children`; applies the delta to each element's own `position`; collects `{id, oldPos, newPos}` entries.
-3. Resets `_dragLayer.position` to zero.
-4. Calls `project.reattachFromDrag(_dragComponents, _dragWires)` — re-inserts at updated positions.
-5. If any delta was non-zero, pushes `MoveComponentsAction` and/or `MoveWiresAction` wrapped in an `ActionContainer` to `project.actionManager`.
-6. Clears drag state. Selection tint is **preserved** — elements stay selected after a move.
-
-**Escape cancel** (`_cancelDrag()`):
-- Resets `_dragLayer.position` to zero, calls `reattachFromDrag` — elements return to their original positions.
-- Removes pointer listeners, clears drag state. No action pushed.
-- Registered via `window.addEventListener('keydown', this._onKeyDown)` in the constructor; cleaned up in `destroy()`.
-
-**Zero-delta drop**: if `delta.x === 0 && delta.y === 0`, elements are reattached silently and no action is pushed.
+**`SelectionMoveSession`** — snapshots the selection, calls `project.detachForDrag`, and reparents elements into `_dragLayer`. `onMove` sets `_dragLayer.position` to the grid-snapped delta from the drag start. `onEnd` applies the delta to each element's own position, resets `_dragLayer.position`, calls `project.reattachFromDrag`, and if the delta was non-zero pushes `MoveComponentsAction`/`MoveWiresAction` wrapped in an `ActionContainer`. Selection tint is preserved after a move. `onCancel` resets `_dragLayer.position` and reattaches without an action.
 
 ### `updateScale(scale)`
 
-Called from `Project.updateScale`. Forwards `applyScale(scale)` to every element in `_componentGhost`, `_wirePreview`, **and `_dragLayer`**. The `_dragLayer` case is critical: during a drag, selected elements are detached from the quad trees and absent from `project._components.items` / `project._wires.items`, so `Project.updateScale` would miss them without this extra iteration.
+Called from `Project.updateScale`. Forwards `applyScale(scale)` to every element in `_wirePreview` and `_dragLayer`. The `_dragLayer` case is critical: during a selection-move drag, selected elements are detached from the quad trees and absent from `project._components.items` / `project._wires.items`, so `Project.updateScale` would miss them without this extra iteration. During component placement the ghost component in `_dragLayer` is also caught here.
 
 ---
 
