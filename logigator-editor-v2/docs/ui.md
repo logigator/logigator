@@ -68,7 +68,7 @@ All UI components share these conventions:
 - **Standalone + OnPush** — every component declares `standalone: true` (implicit in Angular 21) and uses `ChangeDetectionStrategy.OnPush`. Reactivity flows entirely through Angular signals.
 - **Signal API** — inputs use `input<T>()`, outputs use `output<T>()`, derived values use `computed()`, local mutable state uses `signal()`.
 - **PrimeNG** — all interactive widgets come from PrimeNG v19 (`p-button`, `p-menubar`, `p-card`, `p-select`, `p-inputNumber`, `p-selectButton`, `p-tooltip`, `p-divider`, `p-iconfield`, `p-inputicon`, `p-inputText`).
-- **Tailwind** — layout, spacing, borders, and opacity utilities via Tailwind 4. No custom CSS except targeted `:host` block-level overrides and `canvas` transition rules.
+- **Tailwind** — layout, spacing, borders, and opacity utilities via Tailwind 4. Prefer Tailwind utility classes over custom CSS at all times. Write custom CSS only when a style genuinely cannot be expressed as a utility class (e.g., complex pseudo-element rules or `:host` block-display overrides).
 - **Transloco** — all user-facing strings go through `*transloco="let t"` / `t('key')`. Components inject `TranslocoService` only when they need to read translations imperatively (e.g., building `MenuItem` arrays for PrimeNG menus).
 - **Phosphor icons** — icon classes follow the `ph ph-<name>` pattern from the Phosphor icon font.
 - **Shared signal stores** — `WorkModeService` and `ProjectService` are the two root-provided signal stores that connect the UI components without prop-drilling through `AppComponent`.

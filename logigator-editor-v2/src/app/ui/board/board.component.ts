@@ -18,13 +18,15 @@ import { Project } from '../../project/project';
 import { AssetsService } from '../../rendering/assets.service';
 import { merge, Subject, takeUntil, throttleTime } from 'rxjs';
 import { WorkModeService } from '../../work-mode/work-mode.service';
+import { environment } from '../../../environments/environment';
 
 @Component({
 	selector: 'app-board',
 	imports: [],
 	templateUrl: './board.component.html',
 	styleUrl: './board.component.scss',
-	changeDetection: ChangeDetectionStrategy.OnPush
+	changeDetection: ChangeDetectionStrategy.OnPush,
+	host: { class: 'relative' }
 })
 export class BoardComponent implements OnInit, OnDestroy {
 	private readonly hostEl = inject(ElementRef);
@@ -40,12 +42,14 @@ export class BoardComponent implements OnInit, OnDestroy {
 	public readonly project = input<Project | null>(null);
 
 	protected readonly loaded = signal(false);
+	protected readonly fps = environment.debug.fpsCounter ? signal(0) : null;
 
 	private readonly destroy$ = new Subject<void>();
 	private readonly projectChange$ = new Subject<Project | null>();
 
 	private readonly app: Application = new Application();
 	private appInitialized = false;
+	private fpsInterval: ReturnType<typeof setInterval> | null = null;
 
 	constructor() {
 		this.projectChange$.pipe(takeUntil(this.destroy$)).subscribe((project) => {
@@ -140,10 +144,19 @@ export class BoardComponent implements OnInit, OnDestroy {
 			this.appInitialized = true;
 			this.loaded.set(true);
 		});
+
+		if (this.fps) {
+			this.fpsInterval = setInterval(() => {
+				this.ngZone.run(() => this.fps!.set(Math.round(this.app.ticker.FPS)));
+			}, 500);
+		}
 	}
 
 	ngOnDestroy(): void {
 		this.destroy$.next();
+		if (this.fpsInterval !== null) {
+			clearInterval(this.fpsInterval);
+		}
 		if (this.appInitialized) {
 			this.app.destroy();
 		}
