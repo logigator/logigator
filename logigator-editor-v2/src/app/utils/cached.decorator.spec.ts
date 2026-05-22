@@ -106,9 +106,9 @@ describe('Cached decorator', () => {
 			const Fixture = makeKeyedClass(() => 'same', () => 7);
 			const f = new Fixture();
 
-			f.value;
-			f.value;
-			f.value;
+			void f.value;
+			void f.value;
+			void f.value;
 
 			expect(f.callCount).toBe(1);
 		});
@@ -128,14 +128,14 @@ describe('Cached decorator', () => {
 
 		it('getter is not recomputed when the key returns to the same value', () => {
 			// After key settles to 'a', a second read with key 'a' must be a cache hit.
-			let key = 'a';
+			const key = 'a';
 			let returnVal = 5;
 			const Fixture = makeKeyedClass(() => key, () => returnVal);
 			const f = new Fixture();
 
-			f.value; // key='a', computes once
+			void f.value; // key='a', computes once
 			returnVal = 999; // mutate underlying value
-			f.value; // key='a' still, should NOT recompute
+			void f.value; // key='a' still, should NOT recompute
 
 			expect(f.callCount).toBe(1);
 			// Stale value is returned from cache.

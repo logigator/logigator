@@ -1,3 +1,4 @@
+/* eslint-disable no-console */
 import { Timed } from './timed.decorator';
 
 describe('Timed decorator', () => {
@@ -129,6 +130,7 @@ describe('Timed decorator', () => {
 	describe('applied to a getter', () => {
 		it('decorated getter still returns the correct value', () => {
 			class Fixture {
+				// eslint-disable-next-line @typescript-eslint/class-literal-property-style
 				get answer(): number {
 					return 42;
 				}
@@ -143,6 +145,7 @@ describe('Timed decorator', () => {
 
 		it('console.log is called once when the getter is read', () => {
 			class Fixture {
+				// eslint-disable-next-line @typescript-eslint/class-literal-property-style
 				get label(): string {
 					return 'test';
 				}
@@ -160,6 +163,7 @@ describe('Timed decorator', () => {
 
 		it('console.log message contains the getter property name', () => {
 			class Fixture {
+				// eslint-disable-next-line @typescript-eslint/class-literal-property-style
 				get myProp(): number {
 					return 0;
 				}
@@ -220,6 +224,7 @@ describe('Timed decorator', () => {
 
 		it('console.log is called when the setter is invoked', () => {
 			class Fixture {
+				// eslint-disable-next-line @typescript-eslint/no-empty-function
 				set label(_v: string) {}
 			}
 

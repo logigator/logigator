@@ -27,6 +27,7 @@ export class NotComponent extends Component {
 		return [];
 	}
 
+	// eslint-disable-next-line @typescript-eslint/class-literal-property-style
 	protected get bodyGridWidth(): number {
 		return 2;
 	}

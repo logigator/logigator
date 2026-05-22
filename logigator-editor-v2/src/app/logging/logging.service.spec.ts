@@ -1,3 +1,4 @@
+/* eslint-disable no-console */
 import { TestBed } from '@angular/core/testing';
 
 import { LoggingService } from './logging.service';

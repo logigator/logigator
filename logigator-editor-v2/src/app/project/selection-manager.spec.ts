@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { Injector } from '@angular/core';
 import { TestBed } from '@angular/core/testing';
 import { Rectangle } from 'pixi.js';
@@ -18,28 +19,20 @@ import type { Project } from './project';
  * a plain object. The `evict()` tests use a real AndComponent instead.
  */
 function makeComponent(x: number, y: number, w: number, h: number): any {
-	const c: any = {
+	return {
 		tint: 0xffffff,
 		destroyed: false,
+		get gridBounds() { return new Rectangle(x, y, w, h); },
 	};
-	Object.defineProperty(c, 'gridBounds', {
-		get: () => new Rectangle(x, y, w, h),
-		configurable: true,
-	});
-	return c;
 }
 
 /** Creates a minimal wire-like object. */
 function makeWire(x: number, y: number, w: number, h: number): any {
-	const w2: any = {
+	return {
 		tint: 0xffffff,
 		destroyed: false,
+		get gridBounds() { return new Rectangle(x, y, w, h); },
 	};
-	Object.defineProperty(w2, 'gridBounds', {
-		get: () => new Rectangle(x, y, w, h),
-		configurable: true,
-	});
-	return w2;
 }
 
 /** Create a real AndComponent (requires DI). */

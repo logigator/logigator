@@ -4,7 +4,6 @@ import { setStaticDIInjector } from '../utils/get-di';
 import { AndComponent } from './component-types/and/and.component';
 import { andComponentConfig } from './component-types/and/and.config';
 import { ComponentRotation } from './component-rotation.enum';
-import { Rectangle } from 'pixi.js';
 
 function makeAnd(numInputs = 2): AndComponent {
 	return new AndComponent([
