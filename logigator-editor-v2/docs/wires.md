@@ -198,7 +198,34 @@ Action (abstract)
 
 ---
 
+## Wire Merging
+
+When a new wire is placed (or a moved wire is committed), `Project.computeWireIntegration` computes the minimal set of changes needed to maintain the invariant that no two collinear wires overlap or are unnecessarily adjacent.
+
+### Rules
+
+- **Overlap**: two collinear wires whose segments share interior points always merge into one wire spanning the union of their extents.
+- **Adjacency**: two collinear wires that touch at exactly one endpoint merge — **unless** a third wire (any direction) has that shared point on its segment, which would create a T/X junction. Junction nodes are deferred to a future stage.
+- **Perpendicular / different axis**: wires cross or sit on different tracks freely; no merge.
+
+### `Project.computeWireIntegration(newWires: Wire[])`
+
+Pure query — does not mutate project state. Returns `{ toAdd: Wire[], toRemove: Wire[] }`.
+
+- `toAdd` contains either the original new wires (no merge) or fresh `Wire` objects for the merged spans.
+- `toRemove` contains the live project wires that are absorbed by the merge.
+
+Callers wrap the result in `ActionContainer(RemoveWiresAction, AddWiresAction)` so the entire placement — including any merges — undoes atomically. The merge algorithm itself never runs inside `Action.do/undo`; undo/redo always replays from serialized snapshots.
+
+### Body collision during wire drawing
+
+`Project.hasWireBodyCollision(wireBounds)` checks whether a wire's AABB intersects any component's body (excluding stub padding). `WireDrawingSession` calls this on every `pointermove` and tints colliding preview segments red. `canEnd()` returns `false` while any collision is active, blocking the commit.
+
+A wire endpoint touching a port stub tip is not a collision — the strict `Rectangle.intersects` semantics and body-only bounds ensure this case is handled correctly without special-casing.
+
+---
+
 ## Known Gaps / TODOs
 
-- There is no wire intersection or T-junction detection; the system does not split wires when another wire crosses them.
+- No T/X junction nodes: when two wires cross or three wires meet at a point, no connection node is inserted. This is deferred to a future stage.
 - No connectivity graph is maintained. Net-list extraction (required by the simulation layer) must be derived externally from the positional data available via `_wires.items`.

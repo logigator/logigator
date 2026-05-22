@@ -83,7 +83,8 @@ Key public members:
 - `position` (inherited from PixiJS Container) — the component's grid-unit position; this IS the canonical circuit coordinate
 - `options: ComponentOption[]` — live option instances owned by this component
 - `connectionPoints: Point[]` — port positions in grid-unit space (parent `_gridSpace` coordinates; inputs first, then outputs)
-- `gridBounds: Rectangle` — axis-aligned bounding box in grid units, accounting for rotation; used by `QuadTreeContainer` for spatial indexing
+- `gridBounds: Rectangle` — axis-aligned bounding box in grid units, accounting for rotation; **includes** 0.5-unit stub padding on the input and output sides; used by `QuadTreeContainer` for spatial indexing and component–component collision
+- `bodyGridBounds: Rectangle` — same AABB as `gridBounds` but **excluding** stub padding; used for wire–body collision checks so that a wire endpoint touching a port stub tip is not falsely reported as a collision
 - `applyScale(scale)` — applies a zoom scale factor and redraws (wires and component stroke widths are scale-dependent)
 - `Component.serialize(c)` / `Component.deserialize(s, config)` — static round-trip helpers
 

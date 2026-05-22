@@ -156,6 +156,24 @@ export abstract class Component extends Container implements Connectable {
 		return Math.max(this.numInputs, this.numOutputs);
 	}
 
+	public get bodyGridBounds(): Rectangle {
+		const x = this.position.x;
+		const y = this.position.y;
+		const w = this.bodyGridWidth;
+		const h = this.bodyGridHeight;
+
+		switch (this._direction) {
+			case ComponentRotation.Right:
+				return new Rectangle(x, y, w, h);
+			case ComponentRotation.Down:
+				return new Rectangle(x - h, y, h, w);
+			case ComponentRotation.Left:
+				return new Rectangle(x - w, y - h, w, h);
+			case ComponentRotation.Up:
+				return new Rectangle(x, y - w, h, w);
+		}
+	}
+
 	public get gridBounds(): Rectangle {
 		const x = this.position.x;
 		const y = this.position.y;

@@ -5,11 +5,14 @@ import { Component } from '../../components/component';
 import { Wire } from '../../wires/wire';
 import { WireDirection } from '../../wires/wire-direction.enum';
 import { AddWiresAction } from '../../actions/actions/add-wires.action';
+import { RemoveWiresAction } from '../../actions/actions/remove-wires.action';
+import { ActionContainer } from '../../actions/action-container';
 
 export class WireDrawingSession implements DragSession {
 	private _direction: WireDirection | null = null;
 	private _h: Wire | null = null;
 	private _v: Wire | null = null;
+	private _hasBodyCollision = false;
 
 	constructor(
 		private readonly project: Project,
@@ -49,24 +52,50 @@ export class WireDrawingSession implements DragSession {
 		} else {
 			h.position.y = this.startPos.y + dy;
 		}
+
+		this._updateBodyCollision();
 	}
 
 	onEnd(): void {
-		const wires = ([this._h, this._v] as const).filter(
+		const newWires = ([this._h, this._v] as const).filter(
 			(w): w is Wire => w !== null && w.length > 0
 		);
-		if (wires.length > 0) {
-			this.project.actionManager.push(new AddWiresAction(...wires));
+
+		if (newWires.length > 0) {
+			const { toAdd, toRemove } = this.project.computeWireIntegration(newWires);
+			const action = new ActionContainer();
+			if (toRemove.length > 0) {
+				action.add(new RemoveWiresAction(...toRemove));
+			}
+			action.add(new AddWiresAction(...toAdd));
+			this.project.actionManager.push(action);
 		}
+
 		this._cleanup();
 	}
 
 	canEnd(): boolean {
-		return true;
+		return !this._hasBodyCollision;
 	}
 
 	onCancel(): void {
 		this._cleanup();
+	}
+
+	private _updateBodyCollision(): void {
+		const hCollision =
+			this._h !== null &&
+			this._h.length > 0 &&
+			this.project.hasWireBodyCollision(this._h.gridBounds);
+		const vCollision =
+			this._v !== null &&
+			this._v.length > 0 &&
+			this.project.hasWireBodyCollision(this._v.gridBounds);
+
+		if (this._h) this._h.tint = hCollision ? 0xff4444 : 0xffffff;
+		if (this._v) this._v.tint = vCollision ? 0xff4444 : 0xffffff;
+
+		this._hasBodyCollision = hCollision || vCollision;
 	}
 
 	private _cleanup(): void {
@@ -74,5 +103,6 @@ export class WireDrawingSession implements DragSession {
 		this._v?.destroy({ children: true });
 		this._h = null;
 		this._v = null;
+		this._hasBodyCollision = false;
 	}
 }

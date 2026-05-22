@@ -7,7 +7,10 @@ import { roundToGrid } from '../../utils/grid';
 import { ActionContainer } from '../../actions/action-container';
 import { MoveComponentsAction } from '../../actions/actions/move-components.action';
 import { MoveWiresAction } from '../../actions/actions/move-wires.action';
+import { RemoveWiresAction } from '../../actions/actions/remove-wires.action';
+import { AddWiresAction } from '../../actions/actions/add-wires.action';
 import { MoveEntry } from '../../actions/actions/move-entry.model';
+import { SerializedWire } from '../../wires/serialized-wire.model';
 
 export class SelectionMoveSession implements DragSession {
 	private readonly _components: Component[];
@@ -52,23 +55,22 @@ export class SelectionMoveSession implements DragSession {
 	onEnd(): void {
 		const delta = this.dragLayer.position.clone();
 		const hasMove = delta.x !== 0 || delta.y !== 0;
-		const componentEntries: MoveEntry[] = [];
-		const wireEntries: MoveEntry[] = [];
+
+		// Capture wire snapshots at old positions BEFORE applying the delta.
+		const wireSnapshots: SerializedWire[] = this._wires.map((w) =>
+			Wire.serialize(w)
+		);
+
+		// Capture component old positions before applying the delta.
+		const componentOldPos = new Map(
+			this._components.map((c) => [c.id, c.position.clone()])
+		);
 
 		for (const child of this.dragLayer.children) {
-			const oldPos = child.position.clone();
 			child.position.set(
 				child.position.x + delta.x,
 				child.position.y + delta.y
 			);
-			if (hasMove) {
-				const newPos = child.position.clone();
-				if (child instanceof Component) {
-					componentEntries.push({ id: child.id, oldPos, newPos });
-				} else {
-					wireEntries.push({ id: child.id, oldPos, newPos });
-				}
-			}
 		}
 
 		this.dragLayer.position.set(0, 0);
@@ -76,14 +78,47 @@ export class SelectionMoveSession implements DragSession {
 		this._hasCollision = false;
 		this.project.reattachFromDrag(this._components, this._wires);
 
-		if (hasMove) {
-			const action = new ActionContainer();
-			if (componentEntries.length > 0) {
-				action.add(new MoveComponentsAction(...componentEntries));
-			}
-			if (wireEntries.length > 0) {
+		if (!hasMove) return;
+
+		const action = new ActionContainer();
+
+		if (this._components.length > 0) {
+			const componentEntries: MoveEntry[] = this._components.map((c) => ({
+				id: c.id,
+				oldPos: componentOldPos.get(c.id)!,
+				newPos: c.position.clone()
+			}));
+			action.add(new MoveComponentsAction(...componentEntries));
+		}
+
+		if (this._wires.length > 0) {
+			const { toAdd, toRemove } = this.project.computeWireIntegration(
+				this._wires
+			);
+
+			if (toRemove.length > 0) {
+				// Any merge occurred (with external wires or between moved wires themselves).
+				// Use Remove+Add to record the full before/after state.
+				// Moved wires are recorded at their OLD positions (wireSnapshots) so undo
+				// correctly restores them at the original location.
+				const absorbed = toRemove.filter((w) => !this._wires.includes(w));
+				const absorbedSnapshots = absorbed.map((w) => Wire.serialize(w));
+				action.add(
+					new RemoveWiresAction(...wireSnapshots, ...absorbedSnapshots)
+				);
+				action.add(new AddWiresAction(...toAdd));
+			} else {
+				// Simple move — no merges occurred.
+				const wireEntries: MoveEntry[] = wireSnapshots.map((snap, i) => ({
+					id: snap.id,
+					oldPos: new Point(snap.pos[0] + 0.5, snap.pos[1] + 0.5),
+					newPos: this._wires[i].position.clone()
+				}));
 				action.add(new MoveWiresAction(...wireEntries));
 			}
+		}
+
+		if (action.length > 0) {
 			this.project.actionManager.push(action);
 		}
 	}
