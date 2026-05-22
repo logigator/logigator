@@ -347,3 +347,68 @@ describe('Project.computeWireIntegration', () => {
 		n2.destroy();
 	});
 });
+
+describe('Project.hasComponentBodyWireCollision', () => {
+	let project: Project;
+
+	beforeEach(() => {
+		setStaticDIInjector(TestBed.inject(Injector));
+		project = new Project();
+	});
+
+	afterEach(() => {
+		project.destroy({ children: true });
+	});
+
+	// Body under test: Rectangle(3, 0, 2, 2) — covers x∈[3,5), y∈[0,2)
+
+	it('returns false for an empty project', () => {
+		expect(
+			project.hasComponentBodyWireCollision(new Rectangle(3, 0, 2, 2))
+		).toBeFalse();
+	});
+
+	it('horizontal wire passing through body is a collision', () => {
+		// Wire gx=0, len=4: gridBounds=[0,5)×[0,1) — enters body at x=3
+		const wire = makeWire(0, 0, WireDirection.HORIZONTAL, 4);
+		project.addWire(wire);
+		expect(project.hasComponentBodyWireCollision(new Rectangle(3, 0, 2, 2))).toBeTrue();
+		wire.destroy();
+	});
+
+	it('vertical wire passing through body is a collision', () => {
+		// Vertical wire at (3,0) len=2: gridBounds=[3,4)×[0,3) — overlaps body
+		const wire = makeWire(3, 0, WireDirection.VERTICAL, 2);
+		project.addWire(wire);
+		expect(project.hasComponentBodyWireCollision(new Rectangle(3, 0, 2, 2))).toBeTrue();
+		wire.destroy();
+	});
+
+	it('wire whose right edge is exactly at the body left boundary is not a collision', () => {
+		// Wire gx=0, len=2: gridBounds=[0,3)×[0,1) — right=3 equals body left=3 → no overlap
+		const wire = makeWire(0, 0, WireDirection.HORIZONTAL, 2);
+		project.addWire(wire);
+		expect(project.hasComponentBodyWireCollision(new Rectangle(3, 0, 2, 2))).toBeFalse();
+		wire.destroy();
+	});
+
+	it('wire whose left edge is exactly at the body right boundary is not a collision', () => {
+		// Wire gx=5, len=2: gridBounds=[5,8)×[0,1) — left=5 equals body right=5 → no overlap
+		const wire = makeWire(5, 0, WireDirection.HORIZONTAL, 2);
+		project.addWire(wire);
+		expect(project.hasComponentBodyWireCollision(new Rectangle(3, 0, 2, 2))).toBeFalse();
+		wire.destroy();
+	});
+
+	it('excludeIds exempts a wire that would otherwise collide', () => {
+		const wire = makeWire(0, 0, WireDirection.HORIZONTAL, 4);
+		project.addWire(wire);
+		expect(
+			project.hasComponentBodyWireCollision(
+				new Rectangle(3, 0, 2, 2),
+				new Set([wire.id])
+			)
+		).toBeFalse();
+		wire.destroy();
+	});
+});

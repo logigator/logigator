@@ -63,8 +63,20 @@ export class ComponentPlacementSession implements DragSession {
 		);
 	}
 
+	private _bodyBoundsWorld(): Rectangle {
+		const b = this._component.bodyGridBounds;
+		return new Rectangle(
+			this.dragLayer.position.x + b.x,
+			this.dragLayer.position.y + b.y,
+			b.width,
+			b.height
+		);
+	}
+
 	private _updateCollision(): void {
-		const collision = this.project.hasComponentCollision(this._boundsWorld());
+		const collision =
+			this.project.hasComponentCollision(this._boundsWorld()) ||
+			this.project.hasComponentBodyWireCollision(this._bodyBoundsWorld());
 		if (collision === this._hasCollision) return;
 		this._hasCollision = collision;
 		// Tint this._component directly (not dragLayer) to avoid multiplying

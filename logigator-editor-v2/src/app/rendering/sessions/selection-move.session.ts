@@ -140,10 +140,36 @@ export class SelectionMoveSession implements DragSession {
 		);
 	}
 
-	private _updateCollision(): void {
-		const collision = this._components.some((c) =>
-			this.project.hasComponentCollision(this._boundsWorld(c))
+	private _bodyBoundsWorld(comp: Component): Rectangle {
+		const b = comp.bodyGridBounds;
+		return new Rectangle(
+			b.x + this.dragLayer.position.x,
+			b.y + this.dragLayer.position.y,
+			b.width,
+			b.height
 		);
+	}
+
+	private _wireBoundsWorld(wire: Wire): Rectangle {
+		const b = wire.gridBounds;
+		return new Rectangle(
+			b.x + this.dragLayer.position.x,
+			b.y + this.dragLayer.position.y,
+			b.width,
+			b.height
+		);
+	}
+
+	private _updateCollision(): void {
+		const collision =
+			this._components.some(
+				(c) =>
+					this.project.hasComponentCollision(this._boundsWorld(c)) ||
+					this.project.hasComponentBodyWireCollision(this._bodyBoundsWorld(c))
+			) ||
+			this._wires.some((w) =>
+				this.project.hasWireBodyCollision(this._wireBoundsWorld(w))
+			);
 		if (collision === this._hasCollision) return;
 		this._hasCollision = collision;
 		this.dragLayer.tint = collision ? 0xff4444 : 0xffffff;

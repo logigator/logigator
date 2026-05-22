@@ -181,6 +181,17 @@ export class Project extends InteractionContainer {
 		return false;
 	}
 
+	public hasComponentBodyWireCollision(
+		bodyBounds: Rectangle,
+		excludeIds: ReadonlySet<number> = new Set()
+	): boolean {
+		for (const wire of this.queryWiresInRange(bodyBounds)) {
+			if (excludeIds.has(wire.id)) continue;
+			if (wire.gridBounds.intersects(bodyBounds)) return true;
+		}
+		return false;
+	}
+
 	public computeWireIntegration(
 		newWires: Wire[]
 	): { toAdd: Wire[]; toRemove: Wire[] } {
