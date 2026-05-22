@@ -157,26 +157,10 @@ export abstract class Component extends Container implements Connectable {
 	}
 
 	public get bodyGridBounds(): Rectangle {
-		const x = this.position.x;
-		const y = this.position.y;
-		const w = this.bodyGridWidth;
-		const h = this.bodyGridHeight;
-
-		switch (this._direction) {
-			case ComponentRotation.Right:
-				return new Rectangle(x, y, w, h);
-			case ComponentRotation.Down:
-				return new Rectangle(x - h, y, h, w);
-			case ComponentRotation.Left:
-				return new Rectangle(x - w, y - h, w, h);
-			case ComponentRotation.Up:
-				return new Rectangle(x, y - w, h, w);
-		}
+		return this._rotatedBounds(0, this.bodyGridWidth, this.bodyGridHeight);
 	}
 
 	public get gridBounds(): Rectangle {
-		const x = this.position.x;
-		const y = this.position.y;
 		// Stub offsets in the component's unrotated local frame.
 		// ly is always 0 — stubs are horizontal and don't extend the y extent.
 		const lx = this.numInputs > 0 ? -0.5 : 0;
@@ -184,10 +168,15 @@ export abstract class Component extends Container implements Connectable {
 			this.bodyGridWidth +
 			(this.numInputs > 0 ? 0.5 : 0) +
 			(this.numOutputs > 0 ? 0.5 : 0);
-		const h = this.bodyGridHeight;
+		return this._rotatedBounds(lx, w, this.bodyGridHeight);
+	}
 
-		// AABB in parent (gridSpace) coordinates, accounting for component rotation
-		// around the (0, 0) pivot.
+	// AABB in parent (gridSpace) coordinates for a rectangle of size (w × h) with
+	// an optional unrotated x-offset (lx), accounting for component rotation.
+	private _rotatedBounds(lx: number, w: number, h: number): Rectangle {
+		const x = this.position.x;
+		const y = this.position.y;
+
 		switch (this._direction) {
 			case ComponentRotation.Right:
 				return new Rectangle(x + lx, y, w, h);
