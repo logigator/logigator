@@ -8,7 +8,6 @@ The component system models every circuit element that can be placed on the edit
 src/app/components/
 ├── component.ts                    # Abstract base class
 ├── component-type.enum.ts          # Numeric ID enum for all component types
-├── component-rotation.enum.ts      # Four-direction rotation enum
 ├── component-category.enum.ts      # UI palette grouping enum
 ├── component-option.ts             # Abstract base for configurable options
 ├── component-config.model.ts       # Static metadata + factory interface
@@ -19,6 +18,9 @@ src/app/components/
     └── <name>/
         ├── <name>.config.ts        # ComponentConfig constant
         └── <name>.component.ts     # Component subclass
+
+src/app/utils/
+└── direction.ts                    # Direction enum (E/S/W/N — clockwise from East)
 ```
 
 ---
@@ -27,7 +29,7 @@ src/app/components/
 
 ### Component extends PixiJS Container
 
-Every circuit element is an instance of an `abstract Component extends Container`. Components live in `Project._gridSpace` (which has `scale = gridSize`), so their PixiJS `position` **is** the grid-unit position — no manual conversion is required. Rotation is expressed as a `ComponentRotation` enum value (four cardinal directions) rather than raw radians.
+Every circuit element is an instance of an `abstract Component extends Container`. Components live in `Project._gridSpace` (which has `scale = gridSize`), so their PixiJS `position` **is** the grid-unit position — no manual conversion is required. Rotation is expressed as a `Direction` enum value (four cardinal directions: `E`, `S`, `W`, `N`) rather than raw radians.
 
 ### `_visualSpace` — pixel-authored visual children
 
@@ -60,7 +62,7 @@ The serialized form stores the type, grid-unit position (`component.position.x /
 
 **`ComponentType`** — numeric ID for every component type; used as registry keys and stored in serialized data.
 
-**`ComponentRotation`** — four cardinal directions (Right, Down, Left, Up) mapping directly to 90° increments. The `direction` setter on `Component` applies the PixiJS rotation automatically.
+**`Direction`** (in `utils/direction.ts`) — four cardinal directions clockwise from East: `E = 0`, `S = 1`, `W = 2`, `N = 3`. The numeric layout is load-bearing: `rotation = value * π/2` (Component direction → PixiJS rotation) and `oppositeDir = (value + 2) % 4` (input stub ↔ output stub flip). The `Component.direction` setter applies the PixiJS rotation automatically. Shared with the connection-points layer.
 
 **`ComponentCategory`** — groups components for the UI palette (e.g., Basic, Advanced).
 
@@ -79,10 +81,12 @@ Subclasses must implement:
 
 Key public members:
 
-- `id`, `direction`, `numInputs`, `numOutputs` — core state; setters on `numInputs`/`numOutputs` and `direction` trigger a redraw
+- `id`, `direction`, `numInputs`, `numOutputs` — core state; setters on `numInputs`/`numOutputs` and `direction` trigger a redraw and emit on `portsChange$`
 - `position` (inherited from PixiJS Container) — the component's grid-unit position; this IS the canonical circuit coordinate
 - `options: ComponentOption[]` — live option instances owned by this component
 - `connectionPoints: Point[]` — port positions in grid-unit space (parent `_gridSpace` coordinates; inputs first, then outputs)
+- `portStubs: { tip: Point; direction: Direction }[]` — port positions paired with the cardinal direction each stub extends back toward the body. Indices match `connectionPoints` (inputs first, then outputs). Used by `ConnectionPointManager` to detect junctions where a wire interior crosses a port tip.
+- `portsChange$: Subject<{ oldPorts, newPorts }>` — fires whenever the `direction`, `numInputs`, or `numOutputs` setter runs after construction. `Project.addComponent` subscribes on insert and unsubscribes in `removeComponent`, routing rotation/input-count changes through the CP manager so junction dots stay in sync.
 - `gridBounds: Rectangle` — axis-aligned bounding box in grid units, accounting for rotation; **includes** 0.5-unit stub padding on the input and output sides; used by `QuadTreeContainer` for spatial indexing and component–component collision
 - `bodyGridBounds: Rectangle` — same AABB as `gridBounds` but **excluding** stub padding; used for wire–body collision checks so that a wire endpoint touching a port stub tip is not falsely reported as a collision
 - `applyScale(scale)` — applies a zoom scale factor and redraws (wires and component stroke widths are scale-dependent)
@@ -122,7 +126,7 @@ An observable wrapper around a single configurable value.
 
 **`NumberComponentOption`** — numeric value with `min` and `max` bounds. The value setter clamps automatically.
 
-**`DirectionComponentOption`** — a preset `SelectComponentOption<ComponentRotation>` that exposes the four compass directions. No constructor arguments required.
+**`DirectionComponentOption`** — a preset `SelectComponentOption<Direction>` that exposes the four compass directions. No constructor arguments required. Writing to its value (e.g., from the side panel) flows into `Component.direction = ...`, which fires `portsChange$` and lets the CP manager rebuild dots at the new tip positions.
 
 ---
 

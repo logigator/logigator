@@ -8,6 +8,7 @@ Wires connect circuit elements on the editor canvas. Each wire is an axis-aligne
 src/app/wires/
 ├── wire.ts                    # Wire class (PixiJS Graphics subclass)
 ├── wire-direction.enum.ts     # HORIZONTAL / VERTICAL enum
+├── wire-snapshot.model.ts     # Geometry-only DTO (start/end/direction/gridBounds)
 └── serialized-wire.model.ts   # Persistence DTO
 
 src/app/rendering/graphics/
@@ -81,6 +82,19 @@ Returns a tuple `[start, end]` of `Point` values in **grid-unit coordinates** (h
 
 These are the endpoints that should connect to component ports.
 
+### Geometry predicates
+
+| Method | Use |
+|---|---|
+| `wire.contains(p)` | Returns `true` if `p` lies on the wire's closed axis-aligned segment (endpoint or interior). |
+| `Wire.segmentContains(start, end, dir, p)` | Same predicate against a snapshot or raw segment description. Used when no live `Wire` is available (e.g., comparing against `WireSnapshot`). |
+
+These collapse the previously-duplicated point-on-segment helpers used by `WireIntegrator` and `ConnectionPointManager` into one shared implementation.
+
+### `Wire.snapshot(wire)`
+
+Returns a geometry-only `WireSnapshot` (see below). Used by every code path that needs to remember a wire's pre-mutation geometry without holding the live `Graphics` instance alive. `Project.removeWire`, `Project.moveWire`, and `SelectionMoveSession.onEnd` all snapshot before mutating.
+
 ### `applyScale(scale)`
 
 Sets `scale.y = 1 / (scale * environment.gridSize)` to keep the wire's visual height at one device pixel as the canvas zooms. The formula absorbs two scale factors: the project zoom (`scale`) and the `_gridSpace` scaling (`gridSize`). `Component` handles the latter via its `_visualSpace` counter-scaling, but `Wire` extends `Graphics` directly with no wrapper and must compensate explicitly.
@@ -113,6 +127,28 @@ This is the canonical persistence format used by both the undo/redo action syste
 
 ---
 
+## `WireSnapshot` interface
+
+**File:** `src/app/wires/wire-snapshot.model.ts`
+
+```ts
+interface WireSnapshot {
+    start: Point;
+    end: Point;
+    direction: WireDirection;
+    gridBounds: Rectangle;
+}
+```
+
+Geometry-only DTO independent of the live `Wire` instance. Distinct from `SerializedWire`:
+
+- `SerializedWire` is the **persistence** format — integer positions, designed for disk and undo replay.
+- `WireSnapshot` is a **runtime** comparison form — half-grid endpoints + bounds, used by mutation hooks that need to refer to a wire's geometry after the wire instance has been removed or moved.
+
+Build one with `Wire.snapshot(wire)`.
+
+---
+
 ## `WireGraphics`
 
 **File:** `src/app/rendering/graphics/wire.graphics.ts`
@@ -131,10 +167,11 @@ Project (InteractionContainer)
 └── _gridSpace  (scale = gridSize)
     ├── _wires  ← QuadTreeContainer<Wire>
     ├── _components
+    ├── _connectionPoints.layer
     └── FloatingLayer
 ```
 
-`Project.addWire(wire)` calls `wire.applyScale(this.scale.x)` before inserting it into the quad tree, ensuring the wire renders at the correct thickness for the current zoom level. `Project.removeWire(wireId)` finds the wire by ID in `_wires.items` and removes it from the quad tree.
+`Project.addWire(wire)` calls `wire.applyScale(this.scale.x)` before inserting it into the quad tree, ensuring the wire renders at the correct thickness for the current zoom level. `Project.removeWire(wireId)` finds the wire by ID in `_wires.items`, snapshots its geometry, then removes it from the quad tree. The snapshot is forwarded to `ConnectionPointManager.onWireRemoved` so the CP layer can recompute around the removed segment (see [`connection-points.md`](connection-points.md)).
 
 ---
 
@@ -227,5 +264,5 @@ A wire endpoint touching a port stub tip is not a collision — the strict `Rect
 
 ## Known Gaps / TODOs
 
-- No T/X junction nodes: when two wires cross or three wires meet at a point, no connection node is inserted. This is deferred to a future stage.
+- Visual junction markers exist (see [`connection-points.md`](connection-points.md)) but they are purely visual sugar — no electrical connectivity graph is built from them.
 - No connectivity graph is maintained. Net-list extraction (required by the simulation layer) must be derived externally from the positional data available via `_wires.items`.

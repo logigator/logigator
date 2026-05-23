@@ -31,6 +31,7 @@ Project (stage root)
 └── _gridSpace                  — scale = gridSize; coordinates inside are grid units
     ├── QuadTreeContainer<Wire>       — permanent placed wires
     ├── QuadTreeContainer<Component>  — permanent placed components
+    ├── ConnectionPointLayer         — derived visual junction markers
     └── FloatingLayer                 — transient in-progress interactions
 ```
 
@@ -51,6 +52,12 @@ Every `Project` owns a public `actionManager: ActionManager` field. All circuit 
 Every `Project` owns a public `selectionManager: SelectionManager` field. It tracks the currently committed selection — the set of components and wires the user has selected with the rectangle or click selection tools. It is a plain TypeScript class (not an Angular service), constructed directly by `Project`.
 
 `SelectionManager` is a peer of `ActionManager`: both are public, both are owned by `Project`, and neither holds Angular DI references. See the [SelectionManager](#selectionmanager-1) section below for its full API.
+
+### ConnectionPointManager
+
+Every `Project` owns a private `_connectionPoints: ConnectionPointManager` instance, exposed read-only via the `connectionPoints` getter. It is responsible for the small junction dots drawn at half-grid points where ≥3 cardinal directions are filled and at least one element terminates. The manager owns its own scene layer (added to `_gridSpace` between `_components` and `_floatingLayer`).
+
+CPs are not persisted, not selectable, and have no model presence — they are derived visual sugar driven entirely by `Project`'s mutation methods. See [`connection-points.md`](connection-points.md) for the detection rule, manager API, and drag-move semantics.
 
 ---
 
@@ -94,19 +101,24 @@ This ensures the point under the mouse stays stationary. After repositioning, `G
 
 | Method | Description |
 |---|---|
-| `addComponent(c)` | Calls `c.applyScale(this.scale.x)`, inserts into `_components` quad tree, emits `'single'` on `_ticker$` |
-| `removeComponent(id)` | Calls `selectionManager.evict(component)`, removes from quad tree, destroys it |
-| `addWire(w)` | Calls `w.applyScale(this.scale.x)`, inserts into `_wires` quad tree, emits `'single'` on `_ticker$` |
-| `removeWire(id)` | Calls `selectionManager.evict(wire)`, removes from quad tree, destroys it |
+| `addComponent(c)` | Calls `c.applyScale(this.scale.x)`, inserts into `_components` quad tree, fires `connectionPoints.onComponentAdded(...)`, subscribes to `c.portsChange$` so future rotation / input-count changes route through the CP manager, emits `'single'` on `_ticker$` |
+| `removeComponent(id)` | Snapshots `connectionPoints` **before** removal, calls `selectionManager.evict(component)`, removes from quad tree, fires `connectionPoints.onComponentRemoved(snapshot)`, unsubscribes from `portsChange$`, destroys |
+| `addWire(w)` | Calls `w.applyScale(this.scale.x)`, inserts into `_wires` quad tree, fires `connectionPoints.onWireAdded(Wire.snapshot(w))`, emits `'single'` on `_ticker$` |
+| `removeWire(id)` | Snapshots geometry via `Wire.snapshot(wire)` **before** removal, calls `selectionManager.evict(wire)`, removes from quad tree, fires `connectionPoints.onWireRemoved(snapshot)`, destroys |
+| `moveComponent(id, pos)` | Snapshots old `connectionPoints`, mutates position, re-inserts (rebuckets), fires `onComponentRemoved(oldPorts)` + `onComponentAdded(newPorts)`. Called by `MoveComponentsAction.do/undo`. |
+| `moveWire(id, pos)` | Mirror of `moveComponent` using `Wire.snapshot` for the geometry hooks. Called by `MoveWiresAction.do/undo`. |
 | `queryComponentsInRange(rect)` | Generator that yields all components intersecting `rect` (delegates to `_components.queryRange`) |
 | `queryWiresInRange(rect)` | Generator that yields all wires intersecting `rect` (delegates to `_wires.queryRange`) |
 | `hasComponentCollision(bounds, excludeIds?)` | Returns `true` if any component in the quad tree intersects `bounds`, excluding any whose `id` is in `excludeIds`. Uses `queryComponentsInRange` — no extra check needed because `queryRange` already uses `gridBounds.intersects`. `excludeIds` defaults to an empty set; used by future callers (paste, undo-of-move) where the component being tested is already in the tree. Called by `ComponentPlacementSession` and `SelectionMoveSession` on every `pointermove`. |
 | `hasWireBodyCollision(wireBounds, excludeIds?)` | Returns `true` if `wireBounds` intersects the **body** (stub-free AABB) of any component. Does a coarse `queryComponentsInRange` first, then a precise `intersects(comp.bodyGridBounds)` check. A wire endpoint touching a port stub tip correctly returns `false` because the stub-free body starts at the integer grid boundary, and the wire AABB ends exactly at that boundary (strict `>` comparison). Called by `WireDrawingSession` to show red tint and block commit when a preview wire clips through a component body. |
 | `computeWireIntegration(newWires)` | Pure read — never mutates project state. Given a set of wires about to be placed (or just moved), returns `{ toAdd: Wire[], toRemove: Wire[] }`. `toAdd` contains either the original wires unchanged or fresh merged-span wires. `toRemove` contains existing project wires absorbed by the merge. Callers wrap the result in `ActionContainer(RemoveWiresAction, AddWiresAction)` so the placement + merge undoes atomically. See the Wire Merging section in `docs/wires.md` for the algorithm. |
+| `connectionPoints` | Getter — returns the `ConnectionPointManager`. Used by `SelectionMoveSession` (drag-follow CP capture/discard/restore) and by tests. See [`connection-points.md`](connection-points.md). |
 
 `applyScale` is called on add because the project may already be at a non-1 zoom level when an element is inserted (e.g., on undo/redo while zoomed in).
 
 `evict` is called in `removeComponent`/`removeWire` **before** `destroy()`. This prevents `SelectionManager` from holding a stale reference to a destroyed `Container`.
+
+**Mutation ordering for the CP manager:** every removal path snapshots geometry (`Wire.snapshot` / `component.connectionPoints`) **before** mutating the quad tree, then runs the recompute *after* the tree reflects the post-state. Symmetric for adds. This ordering is critical — the CP manager queries the quad trees to make its decisions.
 
 ### Drag operations
 
@@ -114,12 +126,10 @@ These methods are used exclusively by `FloatingLayer` during selection drag-move
 
 | Method | Description |
 |---|---|
-| `detachForDrag(components, wires)` | Removes elements from their quad trees. Elements keep their position and visual state; the caller reparents them into `FloatingLayer._dragLayer`. |
-| `reattachFromDrag(components, wires)` | Re-inserts elements back into their quad trees at their current positions. Skips `destroyed` elements (defensive guard). |
-| `moveComponent(id, pos)` | Looks up the component by ID, sets its position, and re-inserts into the quad tree (rebuckets). Called by `MoveComponentsAction.do/undo`. |
-| `moveWire(id, pos)` | Same as `moveComponent` for wires. Called by `MoveWiresAction.do/undo`. |
+| `detachForDrag(components, wires)` | Removes elements from their quad trees. Elements keep their position and visual state; the caller reparents them into `FloatingLayer._dragLayer`. **Does not fire CP hooks** — CPs are intentionally frozen during the drag; `SelectionMoveSession` uses `connectionPoints.captureDragCps` to make termination-point CPs follow the drag. |
+| `reattachFromDrag(components, wires)` | Re-inserts elements back into their quad trees at their current positions. Skips `destroyed` elements (defensive guard). **Does not fire CP hooks** — the session calls `connectionPoints.recomputeCpsForMovedSelection` once after reattach. |
 
-`QuadTreeContainer.insert()` already handles the case where an element is already tracked — it removes then re-inserts. `moveComponent`/`moveWire` take advantage of this: they set the position then call `insert()` unconditionally.
+`QuadTreeContainer.insert()` already handles the case where an element is already tracked — it removes then re-inserts. `moveComponent`/`moveWire` (listed in the Circuit mutation table above) take advantage of this: they set the position then call `insert()` unconditionally.
 
 ### Work mode
 

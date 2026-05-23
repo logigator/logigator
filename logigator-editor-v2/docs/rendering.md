@@ -15,6 +15,7 @@ src/app/rendering/
 ├── quad-tree-container.ts          # Spatial index for efficient range queries
 ├── graphics/
 │   ├── component.graphics.ts       # GraphicsContext for component body outline
+│   ├── connection-point.graphics.ts # GraphicsContext for a CP dot
 │   ├── grid.graphics.ts            # GraphicsContext for a grid chunk tile
 │   └── wire.graphics.ts            # GraphicsContext for a wire segment
 └── sessions/
@@ -44,6 +45,7 @@ Project (InteractionContainer root, stage)
 └── _gridSpace  (scale = gridSize)
     ├── QuadTreeContainer<Wire>  (_wires)
     ├── QuadTreeContainer<Component>  (_components)
+    ├── ConnectionPointLayer  (_connectionPoints.layer, see connection-points.md)
     └── FloatingLayer
 ```
 
@@ -86,8 +88,8 @@ Key behaviours relevant to rendering:
 |---|---|
 | `resizeViewport(w, h)` | Forwards to `Grid.resizeViewport` |
 | `setPosition(p)` | Moves self, forwards to `Grid.updatePosition`, emits `positionChange$` |
-| `zoomIn/zoomOut` | Applies `1.2^step` scale, repositions around center, calls `Grid.updateScale`, `FloatingLayer.updateScale`, and `applyScale` on every component and wire |
-| `addComponent / addWire` | Appends to `_components` / `_wires`, calls `applyScale`, emits `'single'` |
+| `zoomIn/zoomOut` | Applies `1.2^step` scale, repositions around center, calls `Grid.updateScale`, `FloatingLayer.updateScale`, `ConnectionPointLayer.applyScale`, and `applyScale` on every component and wire |
+| `addComponent / addWire` | Appends to `_components` / `_wires`, calls `applyScale`, fires the matching `ConnectionPointManager` hook, emits `'single'` |
 
 Zoom is clamped to ±12 steps (scale range roughly `1.2^-12` to `1.2^5`). Pivot-correct zoom uses a matrix chain to keep the pixel under the mouse stationary.
 
@@ -278,6 +280,14 @@ Parameters: `width` (grid units), `height` (grid units), `scale`.
 **File:** `graphics/wire.graphics.ts`
 
 A unit `1×1` rectangle filled with the current theme's wire color. `Wire` scales this up via `scale.x = length` (grid units) and compensates line thickness with `scale.y = 1 / (projectScale * gridSize)` so the wire is always exactly 1 screen pixel tall inside `_gridSpace`.
+
+No parameters.
+
+### `ConnectionPointGraphics`
+
+**File:** `graphics/connection-point.graphics.ts`
+
+A unit `1×1` rectangle filled with the current theme's wire color (CPs reuse the wire colour — no separate theme field). `ConnectionPoint` instances pivot-centre this context (`pivot.set(0.5, 0.5)`) and scale it via `scale.set(SCREEN_SIZE_PX / (scale * gridSize))` so the dot is always exactly `SCREEN_SIZE_PX` (6 px) regardless of zoom.
 
 No parameters.
 
