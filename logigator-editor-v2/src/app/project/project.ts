@@ -4,7 +4,7 @@ import { Grid } from '../rendering/grid';
 import { ComponentConfig } from '../components/component-config.model';
 import { InteractionContainer } from '../rendering/interaction-container';
 import { Component } from '../components/component';
-import { Observable } from 'rxjs';
+import { Observable, Subscription } from 'rxjs';
 import { environment } from '../../environments/environment';
 import { WorkMode } from '../work-mode/work-mode.enum';
 import { FloatingLayer } from '../rendering/floating-layer';
@@ -14,6 +14,7 @@ import { Wire } from '../wires/wire';
 import { QuadTreeContainer } from '../rendering/quad-tree-container';
 import { WireIntegrator } from './wire-integrator';
 import { ViewportController } from './viewport-controller';
+import { ConnectionPointManager } from '../connection-points/connection-point-manager';
 
 export class Project extends InteractionContainer {
 	public readonly actionManager = new ActionManager(this);
@@ -27,6 +28,13 @@ export class Project extends InteractionContainer {
 
 	private readonly _wireIntegrator = new WireIntegrator();
 	private readonly _viewport: ViewportController;
+
+	private readonly _connectionPoints = new ConnectionPointManager(
+		(rect) => this.queryWiresInRange(rect),
+		(rect) => this.queryComponentsInRange(rect),
+		() => this.scale.x
+	);
+	private readonly _portsChangeSubs = new Map<number, Subscription>();
 
 	constructor() {
 		super();
@@ -46,10 +54,12 @@ export class Project extends InteractionContainer {
 
 		this._gridSpace.addChild(this._wires);
 		this._gridSpace.addChild(this._components);
+		this._gridSpace.addChild(this._connectionPoints.layer);
 		this._gridSpace.addChild(this._floatingLayer);
 
 		this._viewport = new ViewportController(this, this._grid, (scale) => {
 			this._floatingLayer.updateScale(scale);
+			this._connectionPoints.layer.applyScale(scale);
 			for (const child of this._components.items) {
 				child.applyScale(scale);
 			}
@@ -61,6 +71,10 @@ export class Project extends InteractionContainer {
 
 	public get gridSpace(): Container {
 		return this._gridSpace;
+	}
+
+	public get connectionPoints(): ConnectionPointManager {
+		return this._connectionPoints;
 	}
 
 	public resizeViewport(width: number, height: number): void {
@@ -114,6 +128,15 @@ export class Project extends InteractionContainer {
 	public addComponent(component: Component) {
 		component.applyScale(this.scale.x);
 		this._components.insert(component);
+		this._connectionPoints.onComponentAdded(component.connectionPoints);
+		this._portsChangeSubs.set(
+			component.id,
+			component.portsChange$.subscribe(({ oldPorts, newPorts }) => {
+				this._connectionPoints.onComponentRemoved(oldPorts);
+				this._connectionPoints.onComponentAdded(newPorts);
+				this._ticker$.next('single');
+			})
+		);
 		this._ticker$.next('single');
 	}
 
@@ -123,7 +146,11 @@ export class Project extends InteractionContainer {
 		);
 		if (!component) return;
 		this.selectionManager.evict(component);
+		const ports = component.connectionPoints;
 		this._components.remove(component);
+		this._connectionPoints.onComponentRemoved(ports);
+		this._portsChangeSubs.get(componentId)?.unsubscribe();
+		this._portsChangeSubs.delete(componentId);
 		component.destroy({ children: true });
 		this._ticker$.next('single');
 	}
@@ -131,6 +158,7 @@ export class Project extends InteractionContainer {
 	public addWire(wire: Wire) {
 		wire.applyScale(this.scale.x);
 		this._wires.insert(wire);
+		this._connectionPoints.onWireAdded(Wire.snapshot(wire));
 		this._ticker$.next('single');
 	}
 
@@ -138,7 +166,9 @@ export class Project extends InteractionContainer {
 		const wire = Array.from(this._wires.items).find((w) => w.id === wireId);
 		if (!wire) return;
 		this.selectionManager.evict(wire);
+		const snapshot = Wire.snapshot(wire);
 		this._wires.remove(wire);
+		this._connectionPoints.onWireRemoved(snapshot);
 		wire.destroy();
 		this._ticker$.next('single');
 	}
@@ -224,16 +254,22 @@ export class Project extends InteractionContainer {
 			(c) => c.id === id
 		);
 		if (!component) return;
+		const oldPorts = component.connectionPoints;
 		component.position.copyFrom(pos);
 		this._components.insert(component);
+		this._connectionPoints.onComponentRemoved(oldPorts);
+		this._connectionPoints.onComponentAdded(component.connectionPoints);
 		this._ticker$.next('single');
 	}
 
 	public moveWire(id: number, pos: Point): void {
 		const wire = Array.from(this._wires.items).find((w) => w.id === id);
 		if (!wire) return;
+		const oldSnap = Wire.snapshot(wire);
 		wire.position.copyFrom(pos);
 		this._wires.insert(wire);
+		this._connectionPoints.onWireRemoved(oldSnap);
+		this._connectionPoints.onWireAdded(Wire.snapshot(wire));
 		this._ticker$.next('single');
 	}
 }

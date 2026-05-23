@@ -3,6 +3,7 @@ import { DragSession } from '../drag-session';
 import { Project } from '../../project/project';
 import { Component } from '../../components/component';
 import { Wire } from '../../wires/wire';
+import { ConnectionPoint } from '../../connection-points/connection-point';
 import { WireDirection } from '../../wires/wire-direction.enum';
 import { AddWiresAction } from '../../actions/actions/add-wires.action';
 import { RemoveWiresAction } from '../../actions/actions/remove-wires.action';
@@ -16,7 +17,7 @@ export class WireDrawingSession implements DragSession {
 
 	constructor(
 		private readonly project: Project,
-		private readonly dragLayer: Container<Component | Wire>,
+		private readonly dragLayer: Container<Component | Wire | ConnectionPoint>,
 		private readonly startPos: Point
 	) {}
 

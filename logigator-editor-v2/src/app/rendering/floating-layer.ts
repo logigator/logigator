@@ -15,9 +15,10 @@ import { ComponentPlacementSession } from './sessions/component-placement.sessio
 import { WireDrawingSession } from './sessions/wire-drawing.session';
 import { SelectRectSession } from './sessions/select-rect.session';
 import { SelectionMoveSession } from './sessions/selection-move.session';
+import { ConnectionPoint } from '../connection-points/connection-point';
 
 export class FloatingLayer extends Container {
-	private readonly _dragLayer = new Container<Component | Wire>();
+	private readonly _dragLayer = new Container<Component | Wire | ConnectionPoint>();
 
 	private _mode: WorkMode = WorkMode.WIRE_DRAWING;
 	private _componentToPlace: ComponentConfig | null = null;

@@ -1,12 +1,13 @@
 import { Injector } from '@angular/core';
 import { TestBed } from '@angular/core/testing';
-import { Rectangle } from 'pixi.js';
+import { Container, Point, Rectangle } from 'pixi.js';
 import { setStaticDIInjector } from '../utils/get-di';
 import { Project } from './project';
 import { AndComponent } from '../components/component-types/and/and.component';
 import { andComponentConfig } from '../components/component-types/and/and.config';
 import { Wire } from '../wires/wire';
 import { WireDirection } from '../wires/wire-direction.enum';
+import { Direction } from '../utils/direction';
 
 function makeAnd(numInputs = 2): AndComponent {
 	return new AndComponent([
@@ -227,5 +228,241 @@ describe('Project.hasComponentBodyWireCollision', () => {
 			)
 		).toBeFalse();
 		wire.destroy();
+	});
+});
+
+function cpAt(project: Project, p: Point): boolean {
+	return project.connectionPoints.hasCpAt(p);
+}
+
+describe('Project connection-point integration', () => {
+	let project: Project;
+
+	beforeEach(() => {
+		setStaticDIInjector(TestBed.inject(Injector));
+		project = new Project();
+	});
+
+	afterEach(() => {
+		project.destroy({ children: true });
+	});
+
+	// T-junction geometry reused across multiple tests:
+	// H wire: makeWire(0,2,H,5) → (0.5,2.5)→(5.5,2.5)
+	// V wire: makeWire(2,0,V,2) → (2.5,0.5)→(2.5,2.5) — V end lands on H interior
+	// Junction at (2.5, 2.5): D={E,W,S}=3, T=1 → CP
+
+	it('addWire creates CP at T-junction', () => {
+		const h = makeWire(0, 2, WireDirection.HORIZONTAL, 5);
+		const v = makeWire(2, 0, WireDirection.VERTICAL, 2);
+		const jn = new Point(2.5, 2.5);
+
+		project.addWire(h);
+		expect(cpAt(project, jn)).toBeFalse();
+
+		project.addWire(v);
+		expect(cpAt(project, jn)).toBeTrue();
+	});
+
+	it('removeWire removes CP that depended on the removed wire', () => {
+		const h = makeWire(0, 2, WireDirection.HORIZONTAL, 5);
+		const v = makeWire(2, 0, WireDirection.VERTICAL, 2);
+		project.addWire(h);
+		project.addWire(v);
+
+		const jn = new Point(2.5, 2.5);
+		expect(cpAt(project, jn)).toBeTrue();
+
+		project.removeWire(v.id);
+		expect(cpAt(project, jn)).toBeFalse();
+	});
+
+	it('pure 2-wire X crossing (no endpoint at crossing) — no CP', () => {
+		// H and V cross at (2.5,2.5) but neither has an endpoint there
+		const h = makeWire(0, 2, WireDirection.HORIZONTAL, 5);
+		const v = makeWire(2, 0, WireDirection.VERTICAL, 5);
+		project.addWire(h);
+		project.addWire(v);
+		expect(cpAt(project, new Point(2.5, 2.5))).toBeFalse();
+	});
+
+	it('2-wire T (V endpoint on H interior) — CP', () => {
+		const h = makeWire(0, 2, WireDirection.HORIZONTAL, 5);
+		const v = makeWire(2, 0, WireDirection.VERTICAL, 2);
+		project.addWire(h);
+		project.addWire(v);
+		expect(cpAt(project, new Point(2.5, 2.5))).toBeTrue();
+	});
+
+	it('detachForDrag does not remove existing CPs, reattachFromDrag does not recompute', () => {
+		const h = makeWire(0, 2, WireDirection.HORIZONTAL, 5);
+		const v = makeWire(2, 0, WireDirection.VERTICAL, 2);
+		project.addWire(h);
+		project.addWire(v);
+
+		const jn = new Point(2.5, 2.5);
+		expect(cpAt(project, jn)).toBeTrue();
+
+		// Detaching V from the quad tree must not fire a CP removal hook.
+		project.detachForDrag([], [v]);
+		expect(cpAt(project, jn)).toBeTrue();
+
+		// Reattaching must not recompute CPs either.
+		project.reattachFromDrag([], [v]);
+		expect(cpAt(project, jn)).toBeTrue();
+	});
+
+	it('captureDragCps moves the CP at wire endpoint into the drag layer', () => {
+		const h = makeWire(0, 2, WireDirection.HORIZONTAL, 5);
+		const v = makeWire(2, 0, WireDirection.VERTICAL, 2);
+		project.addWire(h);
+		project.addWire(v);
+
+		const jn = new Point(2.5, 2.5); // == v.connectionPoints[1] (end of V)
+		expect(cpAt(project, jn)).toBeTrue();
+
+		project.detachForDrag([], [v]);
+		const dragLayer = new Container();
+		const captured = project.connectionPoints.captureDragCps([], [v], dragLayer);
+
+		// CP detached from manager and moved to drag layer.
+		expect(cpAt(project, jn)).toBeFalse();
+		expect(captured.length).toBe(1);
+		expect(dragLayer.children.length).toBe(1);
+
+		dragLayer.destroy({ children: true });
+	});
+
+	it('captureDragCps does not capture CPs that sit at the interior of the dragged wire', () => {
+		// V starts at (2.5, 0.5) which is on H interior → T-junction CP at (2.5, 0.5).
+		// H endpoints are (0.5,0.5) and (5.5,0.5), neither is (2.5,0.5), so that CP
+		// must NOT be captured when H is dragged.
+		const h = makeWire(0, 0, WireDirection.HORIZONTAL, 5);
+		const v = makeWire(2, 0, WireDirection.VERTICAL, 3);
+		project.addWire(h);
+		project.addWire(v);
+
+		const jn = new Point(2.5, 0.5);
+		expect(cpAt(project, jn)).toBeTrue();
+
+		project.detachForDrag([], [h]);
+		const dragLayer = new Container();
+		const captured = project.connectionPoints.captureDragCps([], [h], dragLayer);
+
+		// CP still in manager — not captured because it's not at an H endpoint.
+		expect(cpAt(project, jn)).toBeTrue();
+		expect(captured.length).toBe(0);
+
+		project.reattachFromDrag([], [h]);
+		dragLayer.destroy();
+	});
+
+	it('discardDragCps destroys captured CPs', () => {
+		const h = makeWire(0, 2, WireDirection.HORIZONTAL, 5);
+		const v = makeWire(2, 0, WireDirection.VERTICAL, 2);
+		project.addWire(h);
+		project.addWire(v);
+
+		project.detachForDrag([], [v]);
+		const dragLayer = new Container();
+		const captured = project.connectionPoints.captureDragCps([], [v], dragLayer);
+		expect(captured.length).toBe(1);
+
+		const cp = captured[0];
+		project.connectionPoints.discardDragCps(captured);
+		expect(cp.destroyed).toBeTrue();
+
+		dragLayer.destroy();
+	});
+
+	it('restoreDragCps puts captured CPs back into the manager', () => {
+		const h = makeWire(0, 2, WireDirection.HORIZONTAL, 5);
+		const v = makeWire(2, 0, WireDirection.VERTICAL, 2);
+		project.addWire(h);
+		project.addWire(v);
+
+		const jn = new Point(2.5, 2.5);
+		project.detachForDrag([], [v]);
+		const dragLayer = new Container();
+		const captured = project.connectionPoints.captureDragCps([], [v], dragLayer);
+		expect(cpAt(project, jn)).toBeFalse();
+
+		project.connectionPoints.restoreDragCps(captured);
+		expect(cpAt(project, jn)).toBeTrue();
+
+		project.reattachFromDrag([], [v]);
+		dragLayer.destroy();
+	});
+
+	it('moveWire updates CPs (undo/redo path)', () => {
+		// T-junction at (2.5, 2.5); move V to create a new junction at (4.5, 2.5).
+		const h = makeWire(0, 2, WireDirection.HORIZONTAL, 5);
+		const v = makeWire(2, 0, WireDirection.VERTICAL, 2);
+		project.addWire(h);
+		project.addWire(v);
+
+		expect(cpAt(project, new Point(2.5, 2.5))).toBeTrue();
+
+		project.moveWire(v.id, new Point(4.5, 0.5));
+
+		expect(cpAt(project, new Point(2.5, 2.5))).toBeFalse();
+		expect(cpAt(project, new Point(4.5, 2.5))).toBeTrue();
+	});
+
+	it('rotating a component via the direction setter updates CPs', () => {
+		// Place a Right-facing AND at (3,0): input tips at (2.5, 0.5)/(2.5, 1.5), output at (5.5, 0.5).
+		// Two horizontal wires both ending at the same input tip would yield D=3 (E from stub,
+		// W from each wire's W direction — dedup'd to just W), so use a 3-wire junction
+		// at the (2.5, 0.5) input tip: one H wire ending there + one V wire ending there.
+		// D = E (stub) + W (H wire end) + N (V wire end) = 3, T = 3 → CP.
+		const comp = makeAnd(2);
+		comp.position.set(3, 0);
+		project.addComponent(comp);
+
+		const hWire = new Wire(WireDirection.HORIZONTAL, 2);
+		hWire.position.set(0.5, 0.5);
+		project.addWire(hWire);
+		const vWire = new Wire(WireDirection.VERTICAL, 3);
+		vWire.position.set(2.5, -2.5);
+		project.addWire(vWire);
+
+		const oldTip = new Point(2.5, 0.5);
+		expect(cpAt(project, oldTip)).toBeTrue();
+
+		// Rotate the component. The Down rotation moves port tips elsewhere; the CP
+		// at the old tip should disappear since the stub no longer terminates there.
+		comp.direction = Direction.S;
+
+		expect(cpAt(project, oldTip)).toBeFalse();
+	});
+
+	it('recomputeCpsForMovedSelection drops stale CP and creates new one at moved position', () => {
+		const h = makeWire(0, 2, WireDirection.HORIZONTAL, 5);
+		const v = makeWire(2, 0, WireDirection.VERTICAL, 2);
+		project.addWire(h);
+		project.addWire(v);
+
+		const oldJn = new Point(2.5, 2.5);
+		expect(cpAt(project, oldJn)).toBeTrue();
+
+		// Capture old wire geometry before the move.
+		const oldSnap = Wire.snapshot(v);
+
+		// Simulate SelectionMoveSession commit sequence.
+		project.detachForDrag([], [v]);
+		const dragLayer = new Container();
+		const captured = project.connectionPoints.captureDragCps([], [v], dragLayer);
+
+		// Physically move V to create a new T-junction at (4.5, 2.5).
+		v.position.set(4.5, 0.5);
+		project.reattachFromDrag([], [v]);
+
+		project.connectionPoints.discardDragCps(captured);
+		project.connectionPoints.recomputeCpsForMovedSelection(new Map(), [oldSnap], [], [v]);
+
+		expect(cpAt(project, oldJn)).toBeFalse();
+		expect(cpAt(project, new Point(4.5, 2.5))).toBeTrue();
+
+		dragLayer.destroy();
 	});
 });

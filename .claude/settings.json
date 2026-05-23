@@ -1,0 +1,12 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(docker compose exec editor yarn test *)",
+      "Bash(docker compose exec editor yarn lint *)",
+      "Bash(docker compose exec editor yarn build *)",
+	  "Bash(docker compose exec -T editor yarn test *)",
+	  "Bash(docker compose exec -T editor yarn lint *)",
+	  "Bash(docker compose exec -T editor yarn build *)"
+    ]
+  }
+}

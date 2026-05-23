@@ -1,17 +1,17 @@
 import { SelectComponentOption } from './select.component-option';
-import { ComponentRotation } from '../component-rotation.enum';
+import { Direction } from '../../utils/direction';
 
-export class DirectionComponentOption extends SelectComponentOption<ComponentRotation> {
+export class DirectionComponentOption extends SelectComponentOption<Direction> {
 	constructor() {
 		super(
 			'components.options.direction',
 			[
-				{ value: ComponentRotation.Right, icon: 'ph ph-arrow-fat-right' },
-				{ value: ComponentRotation.Down, icon: 'ph ph-arrow-fat-down' },
-				{ value: ComponentRotation.Left, icon: 'ph ph-arrow-fat-left' },
-				{ value: ComponentRotation.Up, icon: 'ph ph-arrow-fat-up' }
+				{ value: Direction.E, icon: 'ph ph-arrow-fat-right' },
+				{ value: Direction.S, icon: 'ph ph-arrow-fat-down' },
+				{ value: Direction.W, icon: 'ph ph-arrow-fat-left' },
+				{ value: Direction.N, icon: 'ph ph-arrow-fat-up' }
 			],
-			ComponentRotation.Right,
+			Direction.E,
 			'button'
 		);
 	}

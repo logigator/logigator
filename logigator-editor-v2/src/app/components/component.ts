@@ -1,21 +1,37 @@
-import { Text, Container, Graphics, Matrix, Point, Rectangle } from 'pixi.js';
+import { Text, Container, DestroyOptions, Graphics, Matrix, Point, Rectangle } from 'pixi.js';
+import { Subject } from 'rxjs';
 import { ComponentConfig } from './component-config.model';
 import { ThemingService } from '../theming/theming.service';
 import { getStaticDI } from '../utils/get-di';
 import { GraphicsProviderService } from '../rendering/graphics-provider.service';
 import { environment } from '../../environments/environment';
 import { fromGrid } from '../utils/grid';
-import { ComponentRotation } from './component-rotation.enum';
 import { WireGraphics } from '../rendering/graphics/wire.graphics';
 import { ComponentOption } from './component-option';
 import { SerializedComponent } from './serialized-component.model';
 import { Connectable } from '../rendering/grid-element';
 import { IdAllocator } from '../utils/id-allocator';
+import { Direction } from '../utils/direction';
+
+export interface PortStub {
+	tip: Point;
+	direction: Direction;
+}
+
+export interface PortsChange {
+	oldPorts: Point[];
+	newPorts: Point[];
+}
 
 export abstract class Component extends Container implements Connectable {
 	private static readonly _idAllocator = new IdAllocator();
 	public abstract readonly config: ComponentConfig;
 	public readonly options: ComponentOption[];
+
+	// Fires when port positions change (rotation, input/output count). The listener
+	// (typically Project) is responsible for refreshing derived state such as
+	// connection-point markers. Not fired during construction.
+	public readonly portsChange$ = new Subject<PortsChange>();
 
 	protected readonly themingService: ThemingService =
 		getStaticDI(ThemingService);
@@ -30,7 +46,7 @@ export abstract class Component extends Container implements Connectable {
 
 	private _id: number;
 
-	private _direction: ComponentRotation = ComponentRotation.Right;
+	private _direction: Direction = Direction.E;
 	private _appliedScale = 1;
 
 	private _numInputs = 0;
@@ -65,7 +81,7 @@ export abstract class Component extends Container implements Connectable {
 	protected constructor(
 		numInputs: number,
 		numOutputs: number,
-		direction: ComponentRotation,
+		direction: Direction,
 		options: ComponentOption[]
 	) {
 		super();
@@ -103,11 +119,12 @@ export abstract class Component extends Container implements Connectable {
 		this._id = value;
 	}
 
-	public get direction(): ComponentRotation {
+	public get direction(): Direction {
 		return this._direction;
 	}
 
-	public set direction(value: ComponentRotation) {
+	public set direction(value: Direction) {
+		const oldPorts = this._initialized ? this.connectionPoints : null;
 		this._direction = value;
 
 		this.rotation = (value * Math.PI) / 2;
@@ -119,6 +136,10 @@ export abstract class Component extends Container implements Connectable {
 		if (environment.debug.showConnectionPoints) {
 			this._draw();
 		}
+
+		if (oldPorts) {
+			this.portsChange$.next({ oldPorts, newPorts: this.connectionPoints });
+		}
 	}
 
 	public get numInputs(): number {
@@ -126,8 +147,12 @@ export abstract class Component extends Container implements Connectable {
 	}
 
 	public set numInputs(value: number) {
+		const oldPorts = this._initialized ? this.connectionPoints : null;
 		this._numInputs = value;
 		this._draw();
+		if (oldPorts) {
+			this.portsChange$.next({ oldPorts, newPorts: this.connectionPoints });
+		}
 	}
 
 	public get numOutputs(): number {
@@ -135,8 +160,12 @@ export abstract class Component extends Container implements Connectable {
 	}
 
 	public set numOutputs(value: number) {
+		const oldPorts = this._initialized ? this.connectionPoints : null;
 		this._numOutputs = value;
 		this._draw();
+		if (oldPorts) {
+			this.portsChange$.next({ oldPorts, newPorts: this.connectionPoints });
+		}
 	}
 
 	public get appliedScale(): number {
@@ -148,8 +177,30 @@ export abstract class Component extends Container implements Connectable {
 		this._draw();
 	}
 
+	public override destroy(options?: DestroyOptions): void {
+		this.portsChange$.complete();
+		super.destroy(options);
+	}
+
 	public get connectionPoints(): Point[] {
-		return this._localConnectionPoints.map((p) => this.position.add(p));
+		return this._localConnectionPoints.map(
+			(p) => new Point(this.position.x + p.x, this.position.y + p.y)
+		);
+	}
+
+	public get portStubs(): PortStub[] {
+		const tips = this.connectionPoints;
+		// Input stubs point toward the body — same cardinal as the component's facing direction.
+		// Output stubs point opposite: (dir + 2) % 4 flips E↔W and N↔S.
+		const outputDir = ((this._direction + 2) % 4) as Direction;
+		const out: PortStub[] = [];
+		for (let i = 0; i < this._numInputs; i++) {
+			out.push({ tip: tips[i], direction: this._direction });
+		}
+		for (let i = 0; i < this._numOutputs; i++) {
+			out.push({ tip: tips[this._numInputs + i], direction: outputDir });
+		}
+		return out;
 	}
 
 	protected get bodyGridHeight(): number {
@@ -178,13 +229,13 @@ export abstract class Component extends Container implements Connectable {
 		const y = this.position.y;
 
 		switch (this._direction) {
-			case ComponentRotation.Right:
+			case Direction.E:
 				return new Rectangle(x + lx, y, w, h);
-			case ComponentRotation.Down:
+			case Direction.S:
 				return new Rectangle(x - h, y + lx, h, w);
-			case ComponentRotation.Left:
+			case Direction.W:
 				return new Rectangle(x - lx - w, y - h, w, h);
-			case ComponentRotation.Up:
+			case Direction.N:
 				return new Rectangle(x, y - lx - w, h, w);
 		}
 	}

@@ -3,6 +3,7 @@ import { DragSession } from '../drag-session';
 import { Project } from '../../project/project';
 import { Component } from '../../components/component';
 import { Wire } from '../../wires/wire';
+import { ConnectionPoint } from '../../connection-points/connection-point';
 import { roundToGrid } from '../../utils/grid';
 import { ActionContainer } from '../../actions/action-container';
 import { MoveComponentsAction } from '../../actions/actions/move-components.action';
@@ -17,10 +18,11 @@ export class SelectionMoveSession implements DragSession {
 	private readonly _wires: Wire[];
 	private readonly _pointerStart: Point;
 	private _hasCollision = false;
+	private _capturedCps: ConnectionPoint[] = [];
 
 	constructor(
 		private readonly project: Project,
-		private readonly dragLayer: Container<Component | Wire>,
+		private readonly dragLayer: Container<Component | Wire | ConnectionPoint>,
 		components: ReadonlySet<Component>,
 		wires: ReadonlySet<Wire>,
 		pointerStart: Point
@@ -34,6 +36,11 @@ export class SelectionMoveSession implements DragSession {
 		for (const w of this._wires) dragLayer.addChild(w);
 		// dragLayer starts at (0,0) offset; selection was non-overlapping before
 		// detach, so no initial collision check is needed.
+		this._capturedCps = project.connectionPoints.captureDragCps(
+			this._components,
+			this._wires,
+			dragLayer
+		);
 	}
 
 	onMove(e: FederatedPointerEvent): void {
@@ -56,17 +63,21 @@ export class SelectionMoveSession implements DragSession {
 		const delta = this.dragLayer.position.clone();
 		const hasMove = delta.x !== 0 || delta.y !== 0;
 
-		// Capture wire snapshots at old positions BEFORE applying the delta.
+		// All captures here happen BEFORE the delta is applied — wires and components
+		// are still at their pre-drag positions.
 		const wireSnapshots: SerializedWire[] = this._wires.map((w) =>
 			Wire.serialize(w)
 		);
-
-		// Capture component old positions before applying the delta.
+		const oldWireSnapshots = this._wires.map((w) => Wire.snapshot(w));
+		const componentOldPorts = new Map<number, readonly Point[]>(
+			this._components.map((c) => [c.id, c.connectionPoints])
+		);
 		const componentOldPos = new Map(
 			this._components.map((c) => [c.id, c.position.clone()])
 		);
 
 		for (const child of this.dragLayer.children) {
+			if (child instanceof ConnectionPoint) continue;
 			child.position.set(
 				child.position.x + delta.x,
 				child.position.y + delta.y
@@ -78,7 +89,18 @@ export class SelectionMoveSession implements DragSession {
 		this._hasCollision = false;
 		this.project.reattachFromDrag(this._components, this._wires);
 
-		if (!hasMove) return;
+		if (!hasMove) {
+			this.project.connectionPoints.restoreDragCps(this._capturedCps);
+			return;
+		}
+
+		this.project.connectionPoints.discardDragCps(this._capturedCps);
+		this.project.connectionPoints.recomputeCpsForMovedSelection(
+			componentOldPorts,
+			oldWireSnapshots,
+			this._components,
+			this._wires
+		);
 
 		const action = new ActionContainer();
 
@@ -128,6 +150,7 @@ export class SelectionMoveSession implements DragSession {
 		this.dragLayer.tint = 0xffffff;
 		this._hasCollision = false;
 		this.project.reattachFromDrag(this._components, this._wires);
+		this.project.connectionPoints.restoreDragCps(this._capturedCps);
 	}
 
 	private _boundsWorld(comp: Component): Rectangle {

@@ -5,6 +5,7 @@ import { GraphicsProviderService } from '../rendering/graphics-provider.service'
 import { WireGraphics } from '../rendering/graphics/wire.graphics';
 import { environment } from '../../environments/environment';
 import { SerializedWire } from './serialized-wire.model';
+import { WireSnapshot } from './wire-snapshot.model';
 import { Connectable } from '../rendering/grid-element';
 import { IdAllocator } from '../utils/id-allocator';
 
@@ -34,6 +35,28 @@ export class Wire extends Graphics implements Connectable {
 		wire.position.set(serialized.pos[0] + 0.5, serialized.pos[1] + 0.5);
 
 		return wire;
+	}
+
+	public static snapshot(wire: Wire): WireSnapshot {
+		const [start, end] = wire.connectionPoints;
+		return {
+			start,
+			end,
+			direction: wire.direction,
+			gridBounds: wire.gridBounds
+		};
+	}
+
+	public static segmentContains(
+		start: Point,
+		end: Point,
+		direction: WireDirection,
+		p: Point
+	): boolean {
+		if (direction === WireDirection.HORIZONTAL) {
+			return p.y === start.y && p.x >= start.x && p.x <= end.x;
+		}
+		return p.x === start.x && p.y >= start.y && p.y <= end.y;
 	}
 
 	constructor(direction: WireDirection, gridLength?: number) {
@@ -95,6 +118,21 @@ export class Wire extends Graphics implements Connectable {
 				? new Point(pos.x + this.length, pos.y)
 				: new Point(pos.x, pos.y + this.length)
 		];
+	}
+
+	public contains(p: Point): boolean {
+		if (this.direction === WireDirection.HORIZONTAL) {
+			return (
+				p.y === this.position.y &&
+				p.x >= this.position.x &&
+				p.x <= this.position.x + this.length
+			);
+		}
+		return (
+			p.x === this.position.x &&
+			p.y >= this.position.y &&
+			p.y <= this.position.y + this.length
+		);
 	}
 
 	public get gridBounds(): Rectangle {

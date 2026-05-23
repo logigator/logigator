@@ -3,7 +3,7 @@ import { TestBed } from '@angular/core/testing';
 import { setStaticDIInjector } from '../utils/get-di';
 import { AndComponent } from './component-types/and/and.component';
 import { andComponentConfig } from './component-types/and/and.config';
-import { ComponentRotation } from './component-rotation.enum';
+import { Direction } from '../utils/direction';
 
 function makeAnd(numInputs = 2): AndComponent {
 	return new AndComponent([
@@ -41,7 +41,7 @@ describe('Component.gridBounds', () => {
 	it('offset by position: bounds.x = position.x - 0.5 for component with inputs', () => {
 		const comp = makeAnd(2);
 		comp.position.set(5, 3);
-		comp.direction = ComponentRotation.Right;
+		comp.direction = Direction.E;
 
 		expect(comp.gridBounds.x).toBeCloseTo(5 - 0.5, 5);
 
@@ -59,7 +59,7 @@ describe('Component.bodyGridBounds', () => {
 	it('Right: origin at position, size = body only (no stubs)', () => {
 		const comp = makeAnd(2); // height=2
 		comp.position.set(3, 5);
-		comp.direction = ComponentRotation.Right;
+		comp.direction = Direction.E;
 
 		expect(comp.bodyGridBounds.x).toBeCloseTo(3, 5);
 		expect(comp.bodyGridBounds.y).toBeCloseTo(5, 5);
@@ -72,7 +72,7 @@ describe('Component.bodyGridBounds', () => {
 	it('Down: rotated AABB', () => {
 		const comp = makeAnd(2); // bodyGridWidth=2, h=2
 		comp.position.set(4, 3);
-		comp.direction = ComponentRotation.Down;
+		comp.direction = Direction.S;
 
 		// Down: Rectangle(x - h, y, h, w) = (4-2, 3, 2, 2)
 		expect(comp.bodyGridBounds.x).toBeCloseTo(2, 5);
@@ -86,7 +86,7 @@ describe('Component.bodyGridBounds', () => {
 	it('Left: rotated AABB', () => {
 		const comp = makeAnd(2);
 		comp.position.set(4, 4);
-		comp.direction = ComponentRotation.Left;
+		comp.direction = Direction.W;
 
 		// Left: Rectangle(x - w, y - h, w, h) = (4-2, 4-2, 2, 2)
 		expect(comp.bodyGridBounds.x).toBeCloseTo(2, 5);
@@ -100,7 +100,7 @@ describe('Component.bodyGridBounds', () => {
 	it('Up: rotated AABB', () => {
 		const comp = makeAnd(2);
 		comp.position.set(3, 6);
-		comp.direction = ComponentRotation.Up;
+		comp.direction = Direction.N;
 
 		// Up: Rectangle(x, y - w, h, w) = (3, 6-2, 2, 2)
 		expect(comp.bodyGridBounds.x).toBeCloseTo(3, 5);
@@ -113,10 +113,10 @@ describe('Component.bodyGridBounds', () => {
 
 	it('bodyGridBounds strictly inside gridBounds for all rotations', () => {
 		const rotations = [
-			ComponentRotation.Right,
-			ComponentRotation.Down,
-			ComponentRotation.Left,
-			ComponentRotation.Up
+			Direction.E,
+			Direction.S,
+			Direction.W,
+			Direction.N
 		];
 		for (const dir of rotations) {
 			const comp = makeAnd(2);

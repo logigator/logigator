@@ -160,15 +160,8 @@ export class WireIntegrator {
 		const queryRect = new Rectangle(p.x - 1, p.y - 1, 2, 2);
 		for (const w of queryWiresInRange(queryRect)) {
 			if (exclude.has(w)) continue;
-			if (this._pointOnWire(p, w)) return true;
+			if (w.contains(p)) return true;
 		}
 		return false;
-	}
-
-	private _pointOnWire(p: Point, w: Wire): boolean {
-		if (w.direction === WireDirection.HORIZONTAL) {
-			return p.y === w.position.y && p.x >= w.position.x && p.x <= w.position.x + w.length;
-		}
-		return p.x === w.position.x && p.y >= w.position.y && p.y <= w.position.y + w.length;
 	}
 }

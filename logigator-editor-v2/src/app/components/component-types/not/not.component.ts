@@ -1,6 +1,6 @@
 import { Component } from '../../component';
 import { ComponentOption } from '../../component-option';
-import { ComponentRotation } from '../../component-rotation.enum';
+import { Direction } from '../../../utils/direction';
 import { ComponentGraphics } from '../../../rendering/graphics/component.graphics';
 import { DestroyOptions, Graphics } from 'pixi.js';
 import { Subject, takeUntil } from 'rxjs';
@@ -12,10 +12,10 @@ export class NotComponent extends Component {
 	private readonly destroy$ = new Subject<void>();
 
 	constructor(options: ComponentOption[]) {
-		super(1, 1, options[0].value as ComponentRotation, options);
+		super(1, 1, options[0].value as Direction, options);
 
 		options[0].onChange$.pipe(takeUntil(this.destroy$)).subscribe(() => {
-			this.direction = options[0].value as ComponentRotation;
+			this.direction = options[0].value as Direction;
 		});
 	}
 

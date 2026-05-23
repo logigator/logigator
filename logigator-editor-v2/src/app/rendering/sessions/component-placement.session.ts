@@ -3,6 +3,7 @@ import { DragSession } from '../drag-session';
 import { Project } from '../../project/project';
 import { Component } from '../../components/component';
 import { Wire } from '../../wires/wire';
+import { ConnectionPoint } from '../../connection-points/connection-point';
 import { roundToGrid } from '../../utils/grid';
 import { AddComponentsAction } from '../../actions/actions/add-components.action';
 
@@ -12,7 +13,7 @@ export class ComponentPlacementSession implements DragSession {
 
 	constructor(
 		private readonly project: Project,
-		private readonly dragLayer: Container<Component | Wire>,
+		private readonly dragLayer: Container<Component | Wire | ConnectionPoint>,
 		startPos: Point
 	) {
 		const config = project.componentToPlace!;
