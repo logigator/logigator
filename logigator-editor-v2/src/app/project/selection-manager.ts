@@ -3,6 +3,10 @@ import { Observable, Subject } from 'rxjs';
 import { WorkMode } from '../work-mode/work-mode.enum';
 import { Component } from '../components/component';
 import { Wire } from '../wires/wire';
+import { cutWire } from '../wires/wire-cut';
+import { AddWiresAction } from '../actions/actions/add-wires.action';
+import { RemoveWiresAction } from '../actions/actions/remove-wires.action';
+import { ActionContainer } from '../actions/action-container';
 import type { Project } from './project';
 
 export class SelectionManager {
@@ -26,28 +30,82 @@ export class SelectionManager {
 		this.clear();
 
 		for (const component of this.project.queryComponentsInRange(rect)) {
-			if (
-				mode === WorkMode.SELECT_EXACT &&
-				!rect.containsRect(component.gridBounds)
-			) {
-				continue;
-			}
 			component.tint = SelectionManager.SELECTION_TINT;
 			this._selectedComponents.add(component);
 		}
 
-		for (const wire of this.project.queryWiresInRange(rect)) {
-			if (
-				mode === WorkMode.SELECT_EXACT &&
-				!rect.containsRect(wire.gridBounds)
-			) {
+		if (mode === WorkMode.SELECT_EXACT) {
+			this._scissorAndSelectWires(rect);
+		} else {
+			for (const wire of this.project.queryWiresInRange(rect)) {
+				wire.tint = SelectionManager.SELECTION_TINT;
+				this._selectedWires.add(wire);
+			}
+		}
+
+		this._selectionChange$.next();
+	}
+
+	private _scissorAndSelectWires(rect: Rectangle): void {
+		// Snapshot before mutating: queryWiresInRange returns a single-use generator
+		// and the quad-tree is updated synchronously by RemoveWiresAction.do().
+		const candidates = Array.from(this.project.queryWiresInRange(rect));
+
+		const wiresToKeep: Wire[] = [];
+		const toRemove: Wire[] = [];
+		const toAdd: Wire[] = [];
+		const insideIds = new Set<number>();
+
+		for (const wire of candidates) {
+			const result = cutWire(wire, rect);
+			if (result.kind === 'skip') continue;
+			if (result.kind === 'keep') {
+				wiresToKeep.push(wire);
 				continue;
 			}
+			toRemove.push(wire);
+			result.pieces.forEach((p, idx) => {
+				const newWire = new Wire(p.direction, p.length);
+				newWire.position.set(p.position.x, p.position.y);
+				toAdd.push(newWire);
+				if (idx === result.insideIndex) {
+					insideIds.add(newWire.id);
+				}
+			});
+		}
+
+		if (toRemove.length > 0) {
+			this.project.actionManager.push(
+				new ActionContainer(
+					new RemoveWiresAction(...toRemove),
+					new AddWiresAction(...toAdd)
+				)
+			);
+			// AddWiresAction serializes its input at construction time and creates
+			// fresh Wire instances inside do() via deserialize; the toAdd wires are
+			// orphans that never enter the scene, so destroy them to release the
+			// PixiJS Graphics state.
+			for (const orphan of toAdd) orphan.destroy();
+		}
+
+		for (const wire of wiresToKeep) {
+			if (wire.destroyed) continue;
 			wire.tint = SelectionManager.SELECTION_TINT;
 			this._selectedWires.add(wire);
 		}
 
-		this._selectionChange$.next();
+		// Inside pieces are identified by ID: the post-cut quad-tree may also
+		// contain outside pieces (their gridBounds half-cell padding intersects a
+		// non-integer rect), but those IDs are not in insideIds and stay
+		// unselected.
+		if (insideIds.size > 0) {
+			for (const wire of this.project.queryWiresInRange(rect)) {
+				if (!wire.destroyed && insideIds.has(wire.id)) {
+					wire.tint = SelectionManager.SELECTION_TINT;
+					this._selectedWires.add(wire);
+				}
+			}
+		}
 	}
 
 	// A zero-area rect fails PixiJS Rectangle.intersects(), so we build a 1×1

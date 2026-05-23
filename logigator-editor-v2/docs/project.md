@@ -239,10 +239,10 @@ Plain TypeScript class. Constructed by `Project`; not an Angular service. Owns t
 
 **Rectangle drag** (`rect.width > 0 || rect.height > 0`):
 1. Calls `clear()` to remove old tints.
-2. Queries `project.queryComponentsInRange(rect)` and `project.queryWiresInRange(rect)`.
-3. For `SELECT_EXACT` mode: filters to elements whose entire `gridBounds` is contained in `rect` (`rect.containsRect`). For `SELECT` mode: keeps all intersecting results as returned by the quad tree.
-4. Tints each match with `SELECTION_TINT` and adds to the set.
-5. Emits `selectionChange$` once.
+2. Queries `project.queryComponentsInRange(rect)` and tints every result with `SELECTION_TINT` — both modes use the same touching rule for components.
+3. **`SELECT` mode**: Queries `project.queryWiresInRange(rect)` and tints every result.
+4. **`SELECT_EXACT` mode** (scissor select): For each wire returned by `queryWiresInRange(rect)`, calls `cutWire(wire, rect)` (see `wires.md` § *Wire Scissor Cutting*). The result is one of `{kind: 'skip'}` (centerline outside rect — do not select), `{kind: 'keep'}` (no cut needed — select as-is), or `{kind: 'cut', pieces, insideIndex}`. Cut wires are scheduled for removal; new pieces are created with auto-allocated IDs and the inside piece's ID is recorded. All cuts are pushed together in a single `ActionContainer(RemoveWiresAction, AddWiresAction)` so one Ctrl+Z reverts the gesture. After the action runs (synchronously inside `actionManager.push`), the temporary orphan `Wire` instances are `destroy()`-ed and the quad tree is re-queried; matches whose IDs were recorded as inside pieces are tinted and added to the selection set. Selection state is not part of the undo record — undoing a scissor select restores the original wire(s) but leaves the selection empty.
+5. Emits `selectionChange$` once at the end.
 
 **Single click** (`rect.width === 0 && rect.height === 0`):
 1. Calls `clear()`.

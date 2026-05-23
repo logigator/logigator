@@ -26,14 +26,17 @@ Seven string-valued enum members identify the available editing tools:
 | `WIRE_DRAWING` | `'drawWire'` | Implemented |
 | `WIRE_CONNECTION` | `'connWire'` | Enum only — not yet wired to canvas interaction |
 | `SELECT` | `'sel'` | Implemented |
-| `SELECT_EXACT` | `'selExact'` | Implemented (no behavioral difference from `SELECT` yet — see note below) |
+| `SELECT_EXACT` | `'selExact'` | Implemented (scissor select — see note below) |
 | `ERASE` | `'erase'` | Enum only — not yet wired to canvas interaction |
 | `PLACE_TEXT` | `'text'` | Enum only — not yet wired to canvas interaction |
 | `COMPONENT_PLACEMENT` | `'placeComp'` | Implemented |
 
 The string values are used as i18n key suffixes — `statusBar.modes.<value>` — so changing them is a breaking i18n change.
 
-> **SELECT vs SELECT_EXACT**: Both modes produce the same rubber-band selection behavior in `FloatingLayer`. They share fall-through case labels in all three pointer handlers. The intended semantic distinction (exact containment vs. partial intersection) has not yet been implemented.
+> **SELECT vs SELECT_EXACT**: Both modes share the same rubber-band rectangle UI in `FloatingLayer`. They diverge in `SelectionManager.commit`:
+>
+> - **SELECT** selects every component and wire whose `gridBounds` intersect the rect — the standard "touching" rule.
+> - **SELECT_EXACT** also selects every touching **component**, but for **wires** that extend past the rect boundary it scissors them at the boundary, keeps the inside portion selected, and leaves the outside portion(s) as separate, unselected wires. The cut + selection are pushed to `ActionManager` as a single `ActionContainer(RemoveWiresAction, AddWiresAction)` step, so one Ctrl+Z reverts the whole gesture (the selection itself is not part of the undo state, so undo leaves the selection empty). See `wires.md` § *Wire Scissor Cutting* for the cut geometry.
 
 > **WIRE_CONNECTION, ERASE, PLACE_TEXT**: These values can be selected through the toolbar UI, and `WorkModeService` accepts them, but `FloatingLayer` contains no `case` branch for any of them. Pointer events on the canvas are effectively no-ops while these modes are active.
 
@@ -100,7 +103,7 @@ project.componentToPlace = this.workModeService.selectedComponentConfig();
 
 - **`COMPONENT_PLACEMENT`** — on `pointerdown`, snaps to grid and adds a ghost `Component` to the selection container. On `pointermove`, follows the pointer. On `pointerup`, calls `commitSelection()`, which wraps the placed components in an `AddComponentsAction` and pushes it to `ActionManager`.
 - **`WIRE_DRAWING`** — on `pointerdown`, snaps to half-grid (wire endpoints sit between grid cells). During `pointermove`, determines drag direction on first movement and updates two orthogonal `Wire` objects (one horizontal, one vertical) to create an L-shaped preview. On `pointerup`, commits non-zero-length wires via `AddWiresAction`.
-- **`SELECT` / `SELECT_EXACT`** — on `pointerdown`, attaches a `Graphics` rectangle to the layer. During `pointermove`, rescales it to follow the drag. On `pointerup`, clears it. Full selection logic (collecting intersecting elements) is not yet implemented.
+- **`SELECT` / `SELECT_EXACT`** — on `pointerdown`, attaches a `Graphics` rectangle to the layer. During `pointermove`, rescales it to follow the drag. On `pointerup`, normalizes the rect to positive width/height and hands it (with the active mode) to `SelectionManager.commit`, which performs the touching-or-scissor selection described above.
 
 ---
 
@@ -140,5 +143,7 @@ BoardComponent  →  effect()  →  Project.mode / Project.componentToPlace
                               └── pointer handlers  (switch on project.mode)
                                   ├── COMPONENT_PLACEMENT  →  AddComponentsAction
                                   ├── WIRE_DRAWING         →  AddWiresAction
-                                  └── SELECT / SELECT_EXACT →  rubber-band rect (commit unimplemented)
+                                  └── SELECT / SELECT_EXACT →  SelectionManager.commit
+                                                                ├── SELECT       (intersect-touch)
+                                                                └── SELECT_EXACT (scissor cut + select inside)
 ```

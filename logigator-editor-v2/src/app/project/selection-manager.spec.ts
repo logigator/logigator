@@ -1,12 +1,14 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { Injector } from '@angular/core';
 import { TestBed } from '@angular/core/testing';
-import { Rectangle } from 'pixi.js';
+import { Point, Rectangle } from 'pixi.js';
 import { SelectionManager } from './selection-manager';
 import { WorkMode } from '../work-mode/work-mode.enum';
 import { setStaticDIInjector } from '../utils/get-di';
 import { AndComponent } from '../components/component-types/and/and.component';
 import { andComponentConfig } from '../components/component-types/and/and.config';
+import { WireDirection } from '../wires/wire-direction.enum';
+import { ActionContainer } from '../actions/action-container';
 import type { Project } from './project';
 
 // ---------------------------------------------------------------------------
@@ -32,6 +34,33 @@ function makeWire(x: number, y: number, w: number, h: number): any {
 		tint: 0xffffff,
 		destroyed: false,
 		get gridBounds() { return new Rectangle(x, y, w, h); },
+	};
+}
+
+/**
+ * Wire-like fake that also exposes position/direction/length so cutWire() can
+ * inspect it. gridBounds mirrors Wire.gridBounds: floor(position) extended by 1
+ * on the spanning axis.
+ */
+function makeFullWire(
+	direction: WireDirection,
+	posX: number,
+	posY: number,
+	length: number
+): any {
+	const gridX = Math.floor(posX);
+	const gridY = Math.floor(posY);
+	const gridBounds =
+		direction === WireDirection.HORIZONTAL
+			? new Rectangle(gridX, gridY, length + 1, 1)
+			: new Rectangle(gridX, gridY, 1, length + 1);
+	return {
+		tint: 0xffffff,
+		destroyed: false,
+		direction,
+		position: new Point(posX, posY),
+		length,
+		gridBounds
 	};
 }
 
@@ -62,10 +91,15 @@ function setWires(project: jasmine.SpyObj<Project>, ...items: any[]): void {
 }
 
 function makeProject(): jasmine.SpyObj<Project> {
-	return jasmine.createSpyObj<Project>('Project', [
+	const project = jasmine.createSpyObj<Project>('Project', [
 		'queryComponentsInRange',
 		'queryWiresInRange',
+		'addWire',
+		'removeWire',
 	]);
+	// SelectionManager.SELECT_EXACT path may push to actionManager; install a spy.
+	(project as any).actionManager = jasmine.createSpyObj('ActionManager', ['push']);
+	return project;
 }
 
 // ---------------------------------------------------------------------------
@@ -173,11 +207,14 @@ describe('SelectionManager', () => {
 		});
 	});
 
-	// ── commit — SELECT_EXACT mode ─────────────────────────────────────────────
+	// ── commit — SELECT_EXACT mode (scissor select) ───────────────────────────
+	//
+	// SELECT_EXACT selects everything touching the rect (same intersect rule as
+	// SELECT) but additionally scissors wires that extend past the rect at the
+	// rect boundary. The inside piece(s) are then selected via re-query.
 
 	describe('commit — SELECT_EXACT mode', () => {
 		it('includes a component fully inside the rect', () => {
-			// rect: (0,0,10,10)  component: (2,2,3,3) — fully inside
 			const comp = makeComponent(2, 2, 3, 3);
 			setComponents(project, comp);
 
@@ -186,43 +223,128 @@ describe('SelectionManager', () => {
 			expect(manager.selectedComponents.has(comp)).toBeTrue();
 		});
 
-		it('excludes a component that partially overlaps the rect boundary', () => {
-			// rect: (2,2,4,4) ends at x=6. Component starts at x=5 and extends to x=8 — crosses right edge.
+		it('includes a component that partially overlaps the rect boundary (touching rule)', () => {
+			// Old behavior excluded this; new behavior matches SELECT — touch is enough.
 			const comp = makeComponent(5, 2, 3, 2);
 			setComponents(project, comp);
 
 			manager.commit(new Rectangle(2, 2, 4, 4), WorkMode.SELECT_EXACT);
 
-			expect(manager.selectedComponents.has(comp)).toBeFalse();
+			expect(manager.selectedComponents.has(comp)).toBeTrue();
 		});
 
-		it('includes a wire fully inside the rect', () => {
-			const wire = makeWire(1, 1, 2, 1);
+		it('does not push any action when the rect contains no wires', () => {
+			manager.commit(new Rectangle(0, 0, 5, 5), WorkMode.SELECT_EXACT);
+
+			expect((project as any).actionManager.push).not.toHaveBeenCalled();
+		});
+
+		it('selects a wire fully inside the rect without pushing a cut action', () => {
+			// Wire (1.5, 1.5) length 2 → gridBounds (1, 1, 3, 1) fully inside (0,0,5,5).
+			const wire = makeFullWire(WireDirection.HORIZONTAL, 1.5, 1.5, 2);
 			setWires(project, wire);
 
 			manager.commit(new Rectangle(0, 0, 5, 5), WorkMode.SELECT_EXACT);
 
 			expect(manager.selectedWires.has(wire)).toBeTrue();
+			expect((project as any).actionManager.push).not.toHaveBeenCalled();
 		});
 
-		it('excludes a wire whose bounds extend past the rect', () => {
-			// rect: (0,0,3,3). Wire at (2,0) w=2 extends to x=4, outside right edge.
-			const wire = makeWire(2, 0, 2, 1);
+		it('does not cut OR select a wire whose centerline sits outside the rect (half-cell padding only overlap)', () => {
+			// Wire at y=4.5, rect.y=3.7 height=0.4 → rect.bottom=4.1.
+			// gridBounds intersect via half-cell padding but centerline is outside.
+			// SELECT_EXACT must reject it on both counts: no cut action AND not selected.
+			const wire = makeFullWire(WireDirection.HORIZONTAL, 0.5, 4.5, 10);
 			setWires(project, wire);
 
-			manager.commit(new Rectangle(0, 0, 3, 3), WorkMode.SELECT_EXACT);
+			manager.commit(new Rectangle(0, 3.7, 12, 0.4), WorkMode.SELECT_EXACT);
 
+			expect((project as any).actionManager.push).not.toHaveBeenCalled();
 			expect(manager.selectedWires.has(wire)).toBeFalse();
 		});
 
-		it('includes a component whose gridBounds exactly match the selection rect', () => {
-			// Component exactly fills the rect — containsRect should return true.
-			const comp = makeComponent(2, 2, 4, 4);
-			setComponents(project, comp);
+		describe('with real Wire (cut path)', () => {
+			beforeEach(() => {
+				setStaticDIInjector(TestBed.inject(Injector));
+			});
 
-			manager.commit(new Rectangle(2, 2, 4, 4), WorkMode.SELECT_EXACT);
+			it('pushes an ActionContainer when a wire crosses the rect boundary', () => {
+				// Wire (3.5, 4.5) length 5 crossing rect (5, 4, 2, 1).
+				const wire = makeFullWire(WireDirection.HORIZONTAL, 3.5, 4.5, 5);
 
-			expect(manager.selectedComponents.has(comp)).toBeTrue();
+				let calls = 0;
+				project.queryWiresInRange.and.callFake(function* () {
+					yield* calls++ === 0 ? [wire] : [];
+				});
+
+				manager.commit(new Rectangle(5, 4, 2, 1), WorkMode.SELECT_EXACT);
+
+				expect((project as any).actionManager.push).toHaveBeenCalledTimes(1);
+				const pushed = (project as any).actionManager.push.calls.mostRecent()
+					.args[0];
+				expect(pushed).toBeInstanceOf(ActionContainer);
+			});
+
+			it('does not push an action when the only wire is fully inside the rect', () => {
+				const wire = makeFullWire(WireDirection.HORIZONTAL, 1.5, 1.5, 2);
+				setWires(project, wire);
+
+				manager.commit(new Rectangle(0, 0, 5, 5), WorkMode.SELECT_EXACT);
+
+				expect((project as any).actionManager.push).not.toHaveBeenCalled();
+			});
+
+			// Regression test: a free-form drag rect has non-integer bounds, which means
+			// outside-piece gridBounds half-cell padding still intersects the rect via
+			// PixiJS' strict-< rule. The SelectionManager must therefore use id-tracking
+			// rather than a naive post-cut re-query to decide which pieces to select.
+			it('selects only the inside piece when the rect has non-integer bounds', () => {
+				const wire = makeFullWire(WireDirection.HORIZONTAL, 0.5, 4.5, 10);
+
+				const addedWires: any[] = [];
+				project.addWire.and.callFake((w: any) => {
+					addedWires.push(w);
+				});
+
+				// Make push synchronously execute the action against the spy project.
+				// addWire's callFake captures the deserialized wires; we replay them on
+				// the post-cut re-query so the id-based filter has something to inspect.
+				(project as any).actionManager.push.and.callFake((action: any) => {
+					action.do(project);
+				});
+
+				let calls = 0;
+				project.queryWiresInRange.and.callFake(function* () {
+					if (calls++ === 0) {
+						yield wire;
+					} else {
+						yield* addedWires;
+					}
+				});
+
+				manager.commit(new Rectangle(4.7, 4, 2.6, 1), WorkMode.SELECT_EXACT);
+
+				// Cut produces three pieces; AddWiresAction.do() materializes them via
+				// Wire.deserialize, which the addWire callFake captures.
+				expect(addedWires.length).toBe(3);
+
+				const insidePiece = addedWires.find((w) => w.position.x === 3.5);
+				const outsideLeft = addedWires.find((w) => w.position.x === 0.5);
+				const outsideRight = addedWires.find((w) => w.position.x === 8.5);
+
+				expect(insidePiece).toBeDefined();
+				expect(outsideLeft).toBeDefined();
+				expect(outsideRight).toBeDefined();
+
+				expect(manager.selectedWires.has(insidePiece)).toBeTrue();
+				expect(manager.selectedWires.has(outsideLeft)).toBeFalse();
+				expect(manager.selectedWires.has(outsideRight)).toBeFalse();
+
+				// Inside piece is tinted; outside pieces stay at default tint.
+				expect(insidePiece.tint).toBe(SelectionManager.SELECTION_TINT);
+				expect(outsideLeft.tint).toBe(0xffffff);
+				expect(outsideRight.tint).toBe(0xffffff);
+			});
 		});
 	});
 

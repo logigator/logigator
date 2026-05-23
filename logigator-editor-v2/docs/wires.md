@@ -262,6 +262,51 @@ A wire endpoint touching a port stub tip is not a collision — the strict `Rect
 
 ---
 
+## Wire Scissor Cutting
+
+When the user drags a `SELECT_EXACT` rubber-band rectangle, every wire that extends past the rectangle is split at the rectangle boundary. The inside piece is added to the selection; the outside pieces are left in place, unselected. See [`work-mode.md`](work-mode.md) § *SELECT vs SELECT_EXACT* for the user-facing semantics and [`project.md`](project.md) § *`commit` behavior* for the orchestration. The geometry helper itself lives in `wires/wire-cut.ts`.
+
+### `cutWire(wire: Wire, rect: Rectangle): WireCutResult`
+
+Pure function — no DI, no `Project` access. Returns one of three variants:
+
+| Variant | Meaning |
+|---|---|
+| `{ kind: 'skip' }` | The wire's centerline lies outside the rectangle (the half-cell padding of `gridBounds` is what produced the AABB intersect). Caller must not select it. |
+| `{ kind: 'keep' }` | The wire stays whole — either `rect.containsRect(wire.gridBounds)` succeeds, or the rectangle's edges happen to align with the wire's half-grid endpoints so the cut collapses to the original. Caller selects the wire as-is. |
+| `{ kind: 'cut', pieces, insideIndex }` | The wire splits into 2–3 pieces in axis order. `pieces[insideIndex]` is the piece overlapping the rectangle; the others are the outside remnants. |
+
+### Cut formula
+
+For a horizontal wire (vertical is the same mirrored onto the Y axis):
+
+```
+leftCut  = max(wStart, floor(rect.x) - 0.5)
+rightCut = min(wEnd,   ceil(rect.right) + 0.5)
+```
+
+Cuts land on the first half-grid position **outside** the rectangle on each side. This guarantees the outside pieces' `gridBounds.right` (or `.bottom`) lands at an integer ≤ `rect.x` (or ≥ `rect.right` for the bottom), strictly excluding the outside pieces from any future `Rectangle.intersects(rect)` test on integer-aligned rects. For non-integer (user-drawn) rectangles the outside pieces can still half-cell-overlap the rect — `SelectionManager` does not rely on a post-cut re-query but tracks the inside piece's ID directly to decide what to add to the selection.
+
+### Worked example
+
+Wire at `(3.5, 4.5)` length 5 → endpoints `3.5 → 8.5`. Rectangle `(5, 4, 2, 1)` → `rect.x = 5`, `rect.right = 7`.
+
+```
+leftCut  = max(3.5, floor(5) - 0.5)  = 4.5
+rightCut = min(8.5, ceil(7) + 0.5)   = 7.5
+
+pieces:
+  [0] outside-left  position=(3.5, 4.5) length=1   (3.5 → 4.5)
+  [1] inside        position=(4.5, 4.5) length=3   (4.5 → 7.5)   ← insideIndex = 1
+  [2] outside-right position=(7.5, 4.5) length=1   (7.5 → 8.5)
+```
+
+### No wire integration on scissor
+
+`Project.addWire` does NOT invoke `WireIntegrator`, so the cut pieces — which share endpoints at the cut points — stay as separate wires. This is intentional: the whole point of scissoring is to detach the inside from the outside. The `ConnectionPointManager`'s ≥3-direction rule naturally suppresses visible junction dots at the interior cut endpoints, so the cut leaves no visual trace beyond the new selection.
+
+---
+
 ## Known Gaps / TODOs
 
 - Visual junction markers exist (see [`connection-points.md`](connection-points.md)) but they are purely visual sugar — no electrical connectivity graph is built from them.
