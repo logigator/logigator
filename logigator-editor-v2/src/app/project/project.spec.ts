@@ -37,7 +37,7 @@ describe('Project.hasComponentCollision', () => {
 
 	it('returns false for an empty project', () => {
 		const bounds = new Rectangle(0, 0, 10, 10);
-		expect(project.hasComponentCollision(bounds)).toBeFalse();
+		expect(project.hasComponentCollision(bounds, bounds)).toBeFalse();
 	});
 
 	it('detects direct overlap with a placed component', () => {
@@ -47,7 +47,7 @@ describe('Project.hasComponentCollision', () => {
 
 		// Query a rect that clearly overlaps the component body
 		const query = new Rectangle(3, 3, 1, 1);
-		expect(project.hasComponentCollision(query)).toBeTrue();
+		expect(project.hasComponentCollision(query, query)).toBeTrue();
 	});
 
 	it('allows adjacent components whose stubs touch (no collision)', () => {
@@ -60,22 +60,25 @@ describe('Project.hasComponentCollision', () => {
 		const compB = makeAnd(2);
 		compB.position.set(3, 0);
 		// gridBounds of B: x = 3 - 0.5 = 2.5
-		expect(project.hasComponentCollision(compB.gridBounds)).toBeFalse();
+		expect(
+			project.hasComponentCollision(compB.gridBounds, compB.bodyGridBounds)
+		).toBeFalse();
 
 		compB.destroy({ children: true });
 	});
 
-	it('detects stub overlap when components are too close', () => {
-		// Component A at (0,0): body width 2, output stub reaches x=2.5
+	it("detects collision when component B's body enters component A's stub", () => {
+		// Component A at (0,0): body [0,2)×[0,2), output stub [2,2.5)×[0,2)
 		const compA = makeAnd(2);
 		compA.position.set(0, 0);
 		project.addComponent(compA);
 
-		// Component B at (2,0): input stub from x=1.5 → overlaps A's output stub (0→2.5)
+		// Component B at (2,0): body starts at x=2 — inside A's output stub
 		const compB = makeAnd(2);
 		compB.position.set(2, 0);
-		// gridBounds of B: x = 2 - 0.5 = 1.5
-		expect(project.hasComponentCollision(compB.gridBounds)).toBeTrue();
+		expect(
+			project.hasComponentCollision(compB.gridBounds, compB.bodyGridBounds)
+		).toBeTrue();
 
 		compB.destroy({ children: true });
 	});
@@ -87,7 +90,7 @@ describe('Project.hasComponentCollision', () => {
 
 		const bounds = new Rectangle(3, 3, 1, 1);
 		expect(
-			project.hasComponentCollision(bounds, new Set([comp.id]))
+			project.hasComponentCollision(bounds, bounds, new Set([comp.id]))
 		).toBeFalse();
 	});
 });

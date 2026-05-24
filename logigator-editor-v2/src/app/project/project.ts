@@ -188,10 +188,19 @@ export class Project extends InteractionContainer {
 
 	public hasComponentCollision(
 		bounds: Rectangle,
+		bodyBounds: Rectangle,
 		excludeIds: ReadonlySet<number> = new Set()
 	): boolean {
 		for (const comp of this.queryComponentsInRange(bounds)) {
-			if (!excludeIds.has(comp.id)) return true;
+			if (excludeIds.has(comp.id)) continue;
+			// Allow stub-on-stub overlap (e.g. perpendicular wire ends meeting at a
+			// corner). Only block if a body intersects the other component's full
+			// extent (body + stubs), which catches body-body, body-stub, stub-body.
+			if (
+				bodyBounds.intersects(comp.gridBounds) ||
+				bounds.intersects(comp.bodyGridBounds)
+			)
+				return true;
 		}
 		return false;
 	}

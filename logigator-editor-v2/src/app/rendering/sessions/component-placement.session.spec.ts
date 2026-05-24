@@ -7,6 +7,9 @@ import { Wire } from '../../wires/wire';
 import { WireDirection } from '../../wires/wire-direction.enum';
 import { AndComponent } from '../../components/component-types/and/and.component';
 import { andComponentConfig } from '../../components/component-types/and/and.config';
+import { NotComponent } from '../../components/component-types/not/not.component';
+import { notComponentConfig } from '../../components/component-types/not/not.config';
+import { Direction } from '../../utils/direction';
 import { Component } from '../../components/component';
 import { ComponentPlacementSession } from './component-placement.session';
 
@@ -25,6 +28,10 @@ function makeAnd(numInputs = 2): AndComponent {
 		andComponentConfig.options[0].clone(),
 		andComponentConfig.options[1].clone(numInputs)
 	]);
+}
+
+function makeNot(direction: Direction = Direction.E): NotComponent {
+	return new NotComponent([notComponentConfig.options[0].clone(direction)]);
 }
 
 function makeMoveEvent(x: number, y: number): FederatedPointerEvent {
@@ -124,6 +131,38 @@ describe('ComponentPlacementSession collision', () => {
 		expect(verticals.length).toBe(3);
 		const lengths = verticals.map((w) => w.length).sort();
 		expect(lengths).toEqual([1, 1, 3]);
+	});
+
+	// NOT gate geometry (bodyGridWidth=2, bodyGridHeight=1, 1 input, 1 output):
+	//   East at (0,0):  body [0,2]×[0,1],  output stub tip at (2.5, 0.5)
+	//   North at (2,0): body [2,3]×[-2,0], input  stub tip at (2.5,  0.5)
+	// The two stubs share the region [2,2.5]×[0,0.5] — stub-on-stub, not stub-on-body.
+	it('canEnd() is true when perpendicular NOT gates meet only at stub ends', () => {
+		const existing = makeNot(Direction.E);
+		existing.position.set(0, 0);
+		project.addComponent(existing);
+
+		project.componentToPlace = {
+			...notComponentConfig,
+			options: [notComponentConfig.options[0].clone(Direction.N)]
+		};
+		session = new ComponentPlacementSession(project, dragLayer, new Point(2, 0));
+		expect(session.canEnd()).toBeTrue();
+	});
+
+	// North at (2,1): body [2,3]×[-1,1].  East output stub [2,2.5]×[0,1] extends
+	// into that body — stub-in-body is a real collision.
+	it('canEnd() is false when perpendicular NOT gate output stub enters existing body', () => {
+		const existing = makeNot(Direction.E);
+		existing.position.set(0, 0);
+		project.addComponent(existing);
+
+		project.componentToPlace = {
+			...notComponentConfig,
+			options: [notComponentConfig.options[0].clone(Direction.N)]
+		};
+		session = new ComponentPlacementSession(project, dragLayer, new Point(2, 1));
+		expect(session.canEnd()).toBeFalse();
 	});
 
 	it('undo of a placement-with-split restores the original wire', () => {
