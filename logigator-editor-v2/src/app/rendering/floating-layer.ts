@@ -15,6 +15,7 @@ import { ComponentPlacementSession } from './sessions/component-placement.sessio
 import { WireDrawingSession } from './sessions/wire-drawing.session';
 import { SelectRectSession } from './sessions/select-rect.session';
 import { SelectionMoveSession } from './sessions/selection-move.session';
+import { EraseSession } from './sessions/erase.session';
 import { ConnectionPoint } from '../connection-points/connection-point';
 
 export class FloatingLayer extends Container {
@@ -134,6 +135,11 @@ export class FloatingLayer extends Container {
 						)
 					);
 				}
+				break;
+			}
+			case WorkMode.ERASE: {
+				const startPos = e.getLocalPosition(this.project.gridSpace);
+				this._startDrag(new EraseSession(this.project, startPos));
 				break;
 			}
 		}

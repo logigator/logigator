@@ -12,11 +12,17 @@ export class RemoveComponentsAction extends Action {
 		ComponentProviderService
 	);
 
-	constructor(...components: Component[]) {
+	constructor(...components: Component[]);
+	constructor(...components: SerializedComponent[]);
+	constructor(...components: Component[] | SerializedComponent[]) {
 		super();
-		this._components = components.map((component) =>
-			Component.serialize(component)
-		);
+		if (components.length > 0 && components[0] instanceof Component) {
+			this._components = (components as Component[]).map((c) =>
+				Component.serialize(c)
+			);
+		} else {
+			this._components = components as SerializedComponent[];
+		}
 	}
 
 	do(project: Project): void {
