@@ -12,6 +12,7 @@ import { RemoveWiresAction } from '../../actions/actions/remove-wires.action';
 import { AddWiresAction } from '../../actions/actions/add-wires.action';
 import { MoveEntry } from '../../actions/actions/move-entry.model';
 import { SerializedWire } from '../../wires/serialized-wire.model';
+import { WireSnapshot } from '../../wires/wire-snapshot.model';
 
 export class SelectionMoveSession implements DragSession {
 	private readonly _components: Component[];
@@ -68,7 +69,12 @@ export class SelectionMoveSession implements DragSession {
 		const wireSnapshots: SerializedWire[] = this._wires.map((w) =>
 			Wire.serialize(w)
 		);
-		const oldWireSnapshots = this._wires.map((w) => Wire.snapshot(w));
+		const oldWireSnapshotsList: WireSnapshot[] = this._wires.map((w) =>
+			Wire.snapshot(w)
+		);
+		const oldWireSnapshotsById = new Map<number, WireSnapshot>(
+			this._wires.map((w, i) => [w.id, oldWireSnapshotsList[i]])
+		);
 		const componentOldPorts = new Map<number, readonly Point[]>(
 			this._components.map((c) => [c.id, c.connectionPoints])
 		);
@@ -95,9 +101,24 @@ export class SelectionMoveSession implements DragSession {
 		}
 
 		this.project.connectionPoints.discardDragCps(this._capturedCps);
+
+		// Run integration over the post-move scene. The integrator may split wires
+		// whose interiors are now crossed by a moved port/endpoint, and merge wires
+		// at old positions where a port/endpoint no longer blocks.
+		const { toAdd, toRemove } = this.project.computeIntegration({
+			movedWires: this._wires.map((w) => ({
+				wire: w,
+				oldSnapshot: oldWireSnapshotsById.get(w.id)!
+			})),
+			movedComponentPorts: this._components.map((c) => ({
+				oldPorts: componentOldPorts.get(c.id)!,
+				newPorts: c.connectionPoints
+			}))
+		});
+
 		this.project.connectionPoints.recomputeCpsForMovedSelection(
 			componentOldPorts,
-			oldWireSnapshots,
+			oldWireSnapshotsList,
 			this._components,
 			this._wires
 		);
@@ -122,45 +143,59 @@ export class SelectionMoveSession implements DragSession {
 			action.add(new MoveComponentsAction(...componentEntries));
 		}
 
-		if (this._wires.length > 0) {
-			const { toAdd, toRemove } = this.project.computeWireIntegration(
-				this._wires
+		if (toRemove.length > 0) {
+			const removedIds = new Set(toRemove.map((w) => w.id));
+			const movedIds = new Set(this._wires.map((w) => w.id));
+
+			// Moved wires that survived integration — record positional moves.
+			const survived = this._wires.filter((w) => !removedIds.has(w.id));
+			if (survived.length > 0) {
+				const entries: MoveEntry[] = survived.map((w) => {
+					const snap = wireSnapshots.find((s) => s.id === w.id)!;
+					return {
+						id: w.id,
+						oldPos: new Point(snap.pos[0] + 0.5, snap.pos[1] + 0.5),
+						newPos: w.position.clone()
+					};
+				});
+				action.add(new MoveWiresAction(...entries));
+			}
+
+			// Moved wires that the integrator changed: serialize at OLD positions so
+			// the corresponding undo path restores them where they came from.
+			const movedAndChangedSnapshots = wireSnapshots.filter((s) =>
+				removedIds.has(s.id)
+			);
+			// External wires absorbed by merges or split by an arriving port — capture
+			// at their current positions (the project tree still has them).
+			const externalAbsorbed = toRemove.filter((w) => !movedIds.has(w.id));
+			const externalAbsorbedSnapshots = externalAbsorbed.map((w) =>
+				Wire.serialize(w)
 			);
 
-			if (toRemove.length > 0) {
-				// Any merge occurred (with external wires or between moved wires themselves).
-				// Use Remove+Add to record the full before/after state.
-				// Moved wires are recorded at their OLD positions (wireSnapshots) so undo
-				// correctly restores them at the original location.
-				const absorbed = toRemove.filter((w) => !this._wires.includes(w));
-				const absorbedSnapshots = absorbed.map((w) => Wire.serialize(w));
-				const mergeRemove = new RemoveWiresAction(
-					...wireSnapshots,
-					...absorbedSnapshots
-				);
-				const mergeAdd = new AddWiresAction(...toAdd);
-				action.add(mergeRemove);
-				action.add(mergeAdd);
+			const mergeRemove = new RemoveWiresAction(
+				...movedAndChangedSnapshots,
+				...externalAbsorbedSnapshots
+			);
+			const mergeAdd = new AddWiresAction(...toAdd);
+			action.add(mergeRemove);
+			action.add(mergeAdd);
 
-				if (pendingCut) {
-					// We'll register (not push) below — push's do() pass would re-run
-					// the cut container, which would re-deserialize wires with IDs
-					// already in the quad tree and produce duplicates. Apply the
-					// merge mutations manually so the project ends up in the same
-					// state push() would have produced.
-					mergeRemove.do(this.project);
-					mergeAdd.do(this.project);
-				}
-			} else {
-				// Simple move — no merges occurred. Positions are already at post-move
-				// (lines above), so MoveWiresAction.do is idempotent if push() runs.
-				const wireEntries: MoveEntry[] = wireSnapshots.map((snap, i) => ({
-					id: snap.id,
-					oldPos: new Point(snap.pos[0] + 0.5, snap.pos[1] + 0.5),
-					newPos: this._wires[i].position.clone()
-				}));
-				action.add(new MoveWiresAction(...wireEntries));
+			if (pendingCut) {
+				// register() below records the action without re-running its do(); apply
+				// the integrator's mutations directly so the project ends up in the same
+				// state push() would have produced.
+				mergeRemove.do(this.project);
+				mergeAdd.do(this.project);
 			}
+		} else if (this._wires.length > 0) {
+			// No integrator changes — straight move.
+			const wireEntries: MoveEntry[] = wireSnapshots.map((snap, i) => ({
+				id: snap.id,
+				oldPos: new Point(snap.pos[0] + 0.5, snap.pos[1] + 0.5),
+				newPos: this._wires[i].position.clone()
+			}));
+			action.add(new MoveWiresAction(...wireEntries));
 		}
 
 		if (action.length > 0) {

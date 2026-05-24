@@ -247,6 +247,37 @@ describe('SelectionMoveSession collision', () => {
 			expect(new Set(redone.map((w) => w.id)).size).toBe(redone.length);
 		});
 
+		it('drag wire endpoint onto another wire interior splits the underlying wire', () => {
+			// Long horizontal wire (1.5, 0.5)→(11.5, 0.5).
+			const long = makeWire(1, 0, WireDirection.HORIZONTAL, 10);
+			project.addWire(long);
+			// Vertical wire (0.5, -5.5)→(0.5, -0.5) — well clear of the H wire.
+			const v = new Wire(WireDirection.VERTICAL, 5);
+			v.position.set(0.5, -5.5);
+			project.addWire(v);
+
+			session = new SelectionMoveSession(
+				project, dragLayer,
+				new Set(), new Set([v]),
+				new Point(0, -1)
+			);
+			// Move delta = (4, 1) so v ends up at (4.5, -4.5)→(4.5, 0.5).
+			// v.end (4.5, 0.5) lands on long's interior.
+			session.onMove(makeMoveEvent(4, 0));
+			expect(session.canEnd()).toBeTrue();
+			session.onEnd();
+
+			const huge = new Rectangle(-100, -100, 200, 200);
+			const wires = Array.from(project.queryWiresInRange(huge));
+
+			// long should be replaced by two halves.
+			expect(wires.find((w) => w.id === long.id)).toBeUndefined();
+			const horizontals = wires.filter((w) => w.direction === WireDirection.HORIZONTAL);
+			expect(horizontals.length).toBe(2);
+			// CP at (4.5, 0.5).
+			expect(project.connectionPoints.hasCpAt(new Point(4.5, 0.5))).toBeTrue();
+		});
+
 		it('rolls back the tentative cut when the drag ends with no movement', () => {
 			const wire = makeWire(0, 0, WireDirection.HORIZONTAL, 10);
 			project.addWire(wire);

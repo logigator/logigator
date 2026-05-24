@@ -63,7 +63,9 @@ export class WireDrawingSession implements DragSession {
 		);
 
 		if (newWires.length > 0) {
-			const { toAdd, toRemove } = this.project.computeWireIntegration(newWires);
+			const { toAdd, toRemove } = this.project.computeIntegration({
+				addedWires: newWires
+			});
 			const action = new ActionContainer();
 			if (toRemove.length > 0) {
 				action.add(new RemoveWiresAction(...toRemove));

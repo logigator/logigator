@@ -1,6 +1,6 @@
 import { Injector } from '@angular/core';
 import { TestBed } from '@angular/core/testing';
-import { Container, FederatedPointerEvent, Point } from 'pixi.js';
+import { Container, FederatedPointerEvent, Point, Rectangle } from 'pixi.js';
 import { setStaticDIInjector } from '../../utils/get-di';
 import { Project } from '../../project/project';
 import { Wire } from '../../wires/wire';
@@ -102,5 +102,43 @@ describe('ComponentPlacementSession collision', () => {
 		session.onMove(makeMoveEvent(5, 0));
 		expect(session.canEnd()).toBeFalse();
 		wire.destroy();
+	});
+
+	it('placing a component whose port lands on a wire interior splits the wire', () => {
+		// AND at (4, 0) facing East has input ports at (3.5, 0.5) and (3.5, 1.5).
+		// V wire (3.5, -2.5)→(3.5, 2.5) passes through both ports in its interior
+		// without overlapping the body (body x∈[4,6), wire gridBounds.right=4 — touch only).
+		const v = new Wire(WireDirection.VERTICAL, 5);
+		v.position.set(3.5, -2.5);
+		project.addWire(v);
+
+		session = new ComponentPlacementSession(project, dragLayer, new Point(4, 0));
+		expect(session.canEnd()).toBeTrue();
+		session.onEnd();
+
+		const huge = new Rectangle(-100, -100, 200, 200);
+		const wires = Array.from(project.queryWiresInRange(huge));
+		expect(wires.find((w) => w.id === v.id)).toBeUndefined();
+		const verticals = wires.filter((w) => w.direction === WireDirection.VERTICAL);
+		// Two ports split V into three pieces.
+		expect(verticals.length).toBe(3);
+		const lengths = verticals.map((w) => w.length).sort();
+		expect(lengths).toEqual([1, 1, 3]);
+	});
+
+	it('undo of a placement-with-split restores the original wire', () => {
+		const v = new Wire(WireDirection.VERTICAL, 5);
+		v.position.set(3.5, -2.5);
+		project.addWire(v);
+
+		session = new ComponentPlacementSession(project, dragLayer, new Point(4, 0));
+		session.onEnd();
+
+		project.actionManager.undo();
+
+		const huge = new Rectangle(-100, -100, 200, 200);
+		const wires = Array.from(project.queryWiresInRange(huge));
+		expect(wires.length).toBe(1);
+		expect(wires[0].length).toBe(5);
 	});
 });

@@ -1,9 +1,7 @@
 import { Container, Point, Rectangle } from 'pixi.js';
 import { Wire } from '../wires/wire';
-import { WireDirection } from '../wires/wire-direction.enum';
 import { WireSnapshot } from '../wires/wire-snapshot.model';
 import { Component } from '../components/component';
-import { Direction } from '../utils/direction';
 import { ConnectionPoint } from './connection-point';
 import { ConnectionPointLayer } from './connection-point-layer';
 
@@ -92,21 +90,11 @@ export class ConnectionPointManager {
 
 	public affectedPointsForWire(wire: Wire): Iterable<Point> {
 		const [start, end] = wire.connectionPoints;
-		return this._affectedPointsForSegment(
-			start,
-			end,
-			wire.direction,
-			wire.gridBounds
-		);
+		return [start, end];
 	}
 
 	public affectedPointsForSnapshot(snap: WireSnapshot): Iterable<Point> {
-		return this._affectedPointsForSegment(
-			snap.start,
-			snap.end,
-			snap.direction,
-			snap.gridBounds
-		);
+		return [snap.start, snap.end];
 	}
 
 	public getCpAt(p: Point): ConnectionPoint | undefined {
@@ -218,70 +206,26 @@ export class ConnectionPointManager {
 		return `${p.x},${p.y}`;
 	}
 
-	private _affectedPointsForSegment(
-		start: Point,
-		end: Point,
-		direction: WireDirection,
-		bounds: Rectangle
-	): PointSet {
-		const result = new PointSet();
-		result.add(start);
-		result.add(end);
-
-		for (const other of this.queryWiresInRange(bounds)) {
-			const [oStart, oEnd] = other.connectionPoints;
-			if (Wire.segmentContains(start, end, direction, oStart)) result.add(oStart);
-			if (Wire.segmentContains(start, end, direction, oEnd)) result.add(oEnd);
-		}
-
-		for (const comp of this.queryComponentsInRange(bounds)) {
-			for (const port of comp.connectionPoints) {
-				if (Wire.segmentContains(start, end, direction, port)) result.add(port);
-			}
-		}
-
-		return result;
-	}
-
 	private _evaluateAt(p: Point): boolean {
-		// 2×2 query rect centred on P; large enough to catch any wire/component touching P.
+		// Under the split-on-touch invariants, wire interiors never contain a wire
+		// endpoint or component port, so termination counting collapses to exact
+		// endpoint-equality. A CP exists iff at least 3 things terminate at P.
 		const queryRect = new Rectangle(p.x - 1, p.y - 1, 2, 2);
-
-		const directions = new Set<Direction>();
 		let terminations = 0;
-
 		for (const wire of this.queryWiresInRange(queryRect)) {
 			const [start, end] = wire.connectionPoints;
-			const isStart = start.x === p.x && start.y === p.y;
-			const isEnd = end.x === p.x && end.y === p.y;
-
-			if (isStart) {
-				terminations++;
-				directions.add(wire.direction === WireDirection.HORIZONTAL ? Direction.E : Direction.S);
-			} else if (isEnd) {
-				terminations++;
-				directions.add(wire.direction === WireDirection.HORIZONTAL ? Direction.W : Direction.N);
-			} else if (wire.contains(p)) {
-				if (wire.direction === WireDirection.HORIZONTAL) {
-					directions.add(Direction.E);
-					directions.add(Direction.W);
-				} else {
-					directions.add(Direction.N);
-					directions.add(Direction.S);
-				}
-			}
+			if (start.x === p.x && start.y === p.y) terminations++;
+			if (end.x === p.x && end.y === p.y) terminations++;
+			if (terminations >= 3) return true;
 		}
-
 		for (const comp of this.queryComponentsInRange(queryRect)) {
-			for (const stub of comp.portStubs) {
-				if (stub.tip.x === p.x && stub.tip.y === p.y) {
+			for (const port of comp.connectionPoints) {
+				if (port.x === p.x && port.y === p.y) {
 					terminations++;
-					directions.add(stub.direction);
-					break;
+					if (terminations >= 3) return true;
 				}
 			}
 		}
-
-		return directions.size >= 3 && terminations >= 1;
+		return false;
 	}
 }

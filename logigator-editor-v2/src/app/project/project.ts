@@ -12,7 +12,7 @@ import { ActionManager } from '../actions/action-manager';
 import { SelectionManager } from './selection-manager';
 import { Wire } from '../wires/wire';
 import { QuadTreeContainer } from '../rendering/quad-tree-container';
-import { WireIntegrator } from './wire-integrator';
+import { WireIntegrator, IntegrationInput, IntegrationOutput } from './wire-integrator';
 import { ViewportController } from './viewport-controller';
 import { ConnectionPointManager } from '../connection-points/connection-point-manager';
 
@@ -132,6 +132,19 @@ export class Project extends InteractionContainer {
 		this._portsChangeSubs.set(
 			component.id,
 			component.portsChange$.subscribe(({ oldPorts, newPorts }) => {
+				// Rotation/port-count changes can leave a wire's interior crossing a
+				// new port position (I2 violation) or unblock a previously-blocked
+				// collinear merge at an old port. Run the integrator to restore
+				// invariants. Note: this path bypasses ActionManager, so the implied
+				// wire splits/merges are NOT undoable. Rotation itself was already
+				// not undoable before this refactor; full undo support is tracked
+				// as a future task (see wire-connection-refactor.md Phase 4).
+				const { toAdd, toRemove } = this.computeIntegration({
+					movedComponentPorts: [{ oldPorts, newPorts }]
+				});
+				for (const w of toRemove) this.removeWire(w.id);
+				for (const w of toAdd) this.addWire(w);
+
 				this._connectionPoints.onComponentRemoved(oldPorts);
 				this._connectionPoints.onComponentAdded(newPorts);
 				this._ticker$.next('single');
@@ -213,12 +226,11 @@ export class Project extends InteractionContainer {
 		return false;
 	}
 
-	public computeWireIntegration(
-		newWires: Wire[]
-	): { toAdd: Wire[]; toRemove: Wire[] } {
+	public computeIntegration(input: IntegrationInput): IntegrationOutput {
 		return this._wireIntegrator.integrate(
-			newWires,
+			input,
 			(rect) => this.queryWiresInRange(rect),
+			(rect) => this.queryComponentsInRange(rect),
 			this.scale.x
 		);
 	}

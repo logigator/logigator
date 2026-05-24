@@ -1,6 +1,6 @@
 # Connection Points
 
-Connection points (**CPs**) are small dots rendered at half-grid positions where three or more cardinal directions are filled by wires or component port stubs **and** at least one of those things terminates at the point. They are derived visual sugar — **not** persisted, **not** selectable, **not** in any model graph. They appear and disappear automatically as a consequence of wire/component mutations on `Project`.
+Connection points (**CPs**) are small dots rendered at half-grid positions where **three or more wires or component port tips terminate**. They are derived visual sugar — **not** persisted, **not** selectable, **not** in any model graph. They appear and disappear automatically as a consequence of wire/component mutations on `Project`.
 
 ## Directory Layout
 
@@ -19,53 +19,59 @@ src/app/rendering/graphics/
 
 ## Detection Rule
 
-At a candidate half-grid point `P`:
+**A CP exists at `P` iff at least 3 terminations occur at `P`.**
 
-- **Filled directions `D(P)`** — the subset of `{N, E, S, W}` filled by:
-  - A wire whose `start === P`: the direction from `P` toward `end` (horizontal → `E`; vertical → `S`).
-  - A wire whose `end === P`: the direction back toward `start` (horizontal → `W`; vertical → `N`).
-  - A wire whose **interior** contains `P`: both of its axis directions (horizontal → `E + W`; vertical → `N + S`).
-  - A component port tip at `P`: the stub direction from the tip back toward the body (depends on rotation — see below).
+A *termination* at `P` is either:
 
-- **Terminations `T(P)`** — the count of objects that *end* at `P`. Each wire endpoint at `P` is one termination; each component port tip at `P` is one termination. Wire interiors do **not** count.
+- a wire endpoint at `P` — `wire.connectionPoints[0]` or `wire.connectionPoints[1]` equals `P`; or
+- a component port tip at `P` — any `Point` in `component.connectionPoints` equals `P`.
 
-**A CP exists at `P` iff `|D(P)| ≥ 3` AND `T(P) ≥ 1`.**
-
-The `T ≥ 1` guard makes a pure 2-wire crossing (both interiors passing through, no endpoint) yield no CP — the user must "split" the crossing by clicking it for a CP to form. The `|D| ≥ 3` guard makes a simple L-corner or straight join yield no CP either.
+Wire interiors do **not** count. Under the split-on-touch invariants enforced by `WireIntegrator` (see [wires.md](./wires.md)), no wire interior can contain another wire's endpoint or a component port tip — those scenarios are normalized into split wires before the rule ever evaluates them.
 
 ### Worked cases
 
-| Scenario | `D(P)` | `T(P)` | CP? |
-|---|---|---|---|
-| Single wire endpoint at `P`, nothing else | 1 | 1 | no |
-| L-corner: two wires share an endpoint, perpendicular | 2 | 2 | no |
-| Pure crossing: H interior + V interior, no endpoints at `P` | 4 | 0 | **no** (`T = 0`) |
-| 2-wire T: V endpoint on H interior | 3 | 1 | **yes** |
-| 3-wire T (merge-prevented): 2 collinear H endpoints + 1 V endpoint | 3 | 3 | yes |
-| 4-wire X with all four endpoints meeting | 4 | 4 | yes |
-| Port-only at `P`, no wires | 1 | 1 | no |
-| Port + one wire endpoint | 2 | 2 | no |
-| Wire interior crossing a component port tip | 3 | 1 | **yes** |
-| Two wire endpoints + one component port at `P` | 3 | 3 | yes |
-
-### Component port-stub directions
-
-For an unrotated (`Direction.E`) component each input stub extends `E` (back toward the body) and each output stub extends `W`. After rotation:
-
-| Component direction | Input stub | Output stub |
+| Scenario | Terminations at `P` | CP? |
 |---|---|---|
-| `Direction.E` | `E` | `W` |
-| `Direction.S` | `S` | `N` |
-| `Direction.W` | `W` | `E` |
-| `Direction.N` | `N` | `S` |
+| Single wire endpoint at `P` | 1 | no |
+| L-corner: two wires share an endpoint perpendicularly | 2 | no |
+| Pure 2-wire crossing (no endpoint at `P`, no port at `P`) | 0 | **no** |
+| 2-wire T (post auto-split: 3 wires terminate at `P`) | 3 | **yes** |
+| 3-wire T (2 collinear + 1 perpendicular, all endpoints) | 3 | yes |
+| 4-wire X (all four endpoints at `P`) | 4 | yes |
+| Port-only at `P`, no wires | 1 | no |
+| Port + one wire endpoint | 2 | no |
+| Port + wire interior crossing it → wire auto-splits → port + 2 wire endpoints | 3 | **yes** |
+| Port + two wire endpoints (no auto-split needed) | 3 | yes |
 
-The output stub direction is computed as `(direction + 2) % 4` — the opposite cardinal — via the load-bearing numeric layout of `Direction` (see `utils/direction.ts`).
+The "2-wire T" case looks like one wire crossing another wire's body, but under the invariants the underlying body is already split into two wires that both end at the touch point. The CP rule sees three terminations.
 
-`Component.portStubs` returns the `{ tip, direction }` pairs in the canonical order (inputs first, then outputs), preserving the invariant `portStubs[i].tip === connectionPoints[i]`.
+### Implementation
 
-### Toggleability
+`_evaluateAt(P)` queries a 2×2 rectangle centred on `P`, counts wire endpoints exactly equal to `P`, then counts component ports exactly equal to `P`, and short-circuits at 3:
 
-The rule is **value-only** — it does not model whether a CP can be toggled by user interaction. Some CPs are physically non-toggleable: the 2-wire T case (V endpoint sitting on H interior) cannot be "unjoined" by splitting the H wire, because the V wire still terminates on the same point. A future click handler will need a local-geometry `canToggle(P)` check; that check is out of scope for the detection rule.
+```ts
+private _evaluateAt(p: Point): boolean {
+    const queryRect = new Rectangle(p.x - 1, p.y - 1, 2, 2);
+    let terminations = 0;
+    for (const wire of this.queryWiresInRange(queryRect)) {
+        const [start, end] = wire.connectionPoints;
+        if (start.x === p.x && start.y === p.y) terminations++;
+        if (end.x === p.x && end.y === p.y) terminations++;
+        if (terminations >= 3) return true;
+    }
+    for (const comp of this.queryComponentsInRange(queryRect)) {
+        for (const port of comp.connectionPoints) {
+            if (port.x === p.x && port.y === p.y) {
+                terminations++;
+                if (terminations >= 3) return true;
+            }
+        }
+    }
+    return false;
+}
+```
+
+No direction set, no interior counting, no port-stub direction lookups. The previous "non-toggleable CP" special case (where a wire endpoint sat on another wire's interior) is gone — that state is no longer reachable.
 
 ---
 
@@ -150,22 +156,22 @@ The three lambdas are typically bound to the parent `Project`. `getScale` is nee
 | `onComponentAdded(ports)` | `Project.addComponent`, `Component.portsChange$` listener | Recompute each port tip |
 | `onComponentRemoved(ports)` | `Project.removeComponent`, `Component.portsChange$` listener | Recompute each old port tip |
 
-Each hook funnels through `recomputeAt(P)`, which decides whether `P` needs a CP based on the [detection rule](#detection-rule) and creates/destroys the visual accordingly. Recomputes are idempotent — calling `recomputeAt(P)` twice produces exactly one CP (or none).
+Each hook funnels through `recomputeAt(P)`, which decides whether `P` needs a CP and creates/destroys the visual accordingly. Recomputes are idempotent — calling `recomputeAt(P)` twice produces exactly one CP (or none).
 
-`onWireAdded` and `onWireRemoved` share the same body internally — the manager doesn't need to know which side of the transition it is; both ask "given the tree's current state, what should the affected points look like?".
+Under the new invariants, the only points that can change a CP state for a given wire mutation are the wire's two endpoints — `affectedPointsForWire` and `affectedPointsForSnapshot` simply return `[start, end]`.
 
 ### Full recompute and direct API
 
 | Method | Purpose |
 |---|---|
 | `recomputeAll(allWires, allComponents)` | Clear all CPs and rebuild from scratch. Used by loaders that bulk-insert elements directly into the quad trees, bypassing `addWire`/`addComponent`. |
-| `recomputeAt(p)` | Re-evaluate a single point. The detection rule lives entirely inside `_evaluateAt`, called from here. |
+| `recomputeAt(p)` | Re-evaluate a single point. |
 | `recomputeCpsForMovedSelection(oldComponentPorts, oldWireSnapshots, newComponents, newWires)` | Recompute over both old and new affected points after a selection drag commit. Called from `SelectionMoveSession.onEnd` — see [Selection drag-move](#selection-drag-move) below. |
-| `affectedPointsForWire(wire)` / `affectedPointsForSnapshot(snap)` | Returns the set of points whose CP status could change as a result of this wire being added or removed. Used internally and by `recomputeCpsForMovedSelection`. |
+| `affectedPointsForWire(wire)` / `affectedPointsForSnapshot(snap)` | Returns `[start, end]` — under the invariants, only the wire's own endpoints can change CP state. |
 
 ### Drag-follow helpers
 
-These three methods exist so a `SelectionMoveSession` can make CPs *visually follow* dragged elements without recomputing the rule mid-drag:
+These methods let a `SelectionMoveSession` make CPs *visually follow* dragged elements without recomputing the rule mid-drag:
 
 | Method | Purpose |
 |---|---|
@@ -176,13 +182,11 @@ These three methods exist so a `SelectionMoveSession` can make CPs *visually fol
 | `discardDragCps(captured)` | Destroy captured CPs (used on drag commit; recompute follows) |
 | `restoreDragCps(captured)` | Reattach captured CPs to the main layer (used on drag cancel or no-move commit) |
 
-CPs at non-termination points (e.g., a CP that depends on a dragged wire's *interior* pass-through) are intentionally **not** captured — those CPs would be visually wrong if dragged.
+CPs at non-termination points are intentionally **not** captured.
 
-### Internals
+### Numerical safety
 
-- **Affected point set for a wire** — endpoints of the wire plus any other wire-endpoint or component-port-tip lying on the wire's segment. Computed via a quad-tree range query on `wire.gridBounds` plus `Wire.segmentContains` filtering. The source wire shows up in its own query results but the dedup `PointSet` (keyed on `"x,y"`) makes that harmless.
-- **Single-point evaluation** — `_evaluateAt(p)` queries a `2×2` rect centred on `p` (smallest wire/component bound is `1×1`, so any incident element falls inside). Classifies each result as start / end / interior / port stub and accumulates the direction set and termination count.
-- **Numerical safety** — wire endpoints and port tips are exact half-integers (`n + 0.5`). Map keys use `${p.x},${p.y}` directly — no rounding, no epsilon.
+Wire endpoints and port tips are exact half-integers (`n + 0.5`). Map keys use `${p.x},${p.y}` directly — no rounding, no epsilon.
 
 ---
 
@@ -202,38 +206,40 @@ Project
 |---|---|
 | `addWire(w)` | `onWireAdded(Wire.snapshot(w))` after insert |
 | `removeWire(id)` | Snapshot **before** removing from quad tree, then `onWireRemoved(snapshot)` |
-| `moveWire(id, pos)` | Old snapshot before mutation; re-insert; both hooks fire (order doesn't matter — idempotent) |
+| `moveWire(id, pos)` | Old snapshot before mutation; re-insert; both hooks fire |
 | `addComponent(c)` | `onComponentAdded(c.connectionPoints)`; subscribes to `c.portsChange$` |
-| `removeComponent(id)` | Snapshot ports, remove from tree, `onComponentRemoved(ports)`, unsubscribe from `portsChange$` |
+| `removeComponent(id)` | Snapshot ports, remove from tree, `onComponentRemoved(ports)`, unsubscribe |
 | `moveComponent(id, pos)` | Mirror of `moveWire` — old ports captured before mutation |
-| `detachForDrag` / `reattachFromDrag` | Do **not** recompute CPs (the drag-follow helpers handle CP visuals during drag) |
-| `connectionPoints` getter | Exposes the `ConnectionPointManager` for tests and for sessions |
+| `detachForDrag` / `reattachFromDrag` | Do **not** recompute CPs (drag-follow helpers handle visuals) |
 
 **Mutation ordering invariant:** for every removal path the snapshot is captured **before** mutating the quad tree, so the recompute (which runs after) sees a tree that reflects the post-state. Symmetric for adds — the new element is in the tree by the time the hook runs.
 
 ### Component rotation / input-count changes
 
-`Component` fires `portsChange$: Subject<{ oldPorts, newPorts }>` whenever its `direction`, `numInputs`, or `numOutputs` setter runs (guarded by `_initialized` so constructor calls don't fire). `Project.addComponent` subscribes; the handler calls `onComponentRemoved(oldPorts)` followed by `onComponentAdded(newPorts)`. Subscriptions are tracked in a `Map<componentId, Subscription>` and torn down in `removeComponent`.
+`Component` fires `portsChange$: Subject<{ oldPorts, newPorts }>` whenever its `direction`, `numInputs`, or `numOutputs` setter runs (guarded by `_initialized`). `Project.addComponent` subscribes; the handler:
 
-This path covers rotation triggered by the `DirectionComponentOption` from the side panel, which bypasses the action system.
+1. Calls `computeIntegration({ movedComponentPorts: [{ oldPorts, newPorts }] })` to compute any wire splits (a new port landing on a wire interior) or merges (an old port no longer blocks).
+2. Applies the resulting `{ toAdd, toRemove }` directly to the project tree.
+3. Recomputes CPs for old and new port positions.
+
+This path **bypasses `ActionManager`** — rotation has no undo support today, and the implied splits/merges aren't undoable either. Full undo coverage is tracked as future work (see [Future work](#future-work)).
 
 ### Selection drag-move
 
 During `SelectionMoveSession`:
 
 1. **Drag start** — after `project.detachForDrag(...)`, the session calls `project.connectionPoints.captureDragCps(components, wires, dragLayer)`. Captured CPs are reparented into the drag layer so they visually follow.
-2. **Mid-drag** — no CP recompute. The CP layer is frozen; drag-layer CPs ride along with the drag-layer's offset.
-3. **Commit (`hasMove`)** — session captures old wire snapshots (`this._wires.map(w => Wire.snapshot(w))`) and old component ports before applying the delta. After `reattachFromDrag`:
-   - `discardDragCps(captured)` destroys the followed CPs (they're stale — recompute will recreate the correct ones).
-   - `recomputeCpsForMovedSelection(...)` runs over old + new affected points, dropping stale CPs at the old positions and creating new ones at the new positions.
-4. **Commit (no move)** — `restoreDragCps(captured)` returns the CPs to the main layer; their position is unchanged so they snap back visually as the drag-layer offset resets to zero.
-5. **Cancel** — same as no-move: `restoreDragCps(captured)`.
+2. **Mid-drag** — no CP recompute.
+3. **Commit (`hasMove`)** — session captures old wire snapshots and old component ports before applying the delta. After `reattachFromDrag`:
+   - The integrator runs over `movedWires` + `movedComponentPorts` and produces a `{ toAdd, toRemove }` diff.
+   - `discardDragCps(captured)` destroys the followed CPs.
+   - `recomputeCpsForMovedSelection(...)` runs over old + new affected points.
+4. **Commit (no move)** — `restoreDragCps(captured)` returns the CPs to the main layer.
+5. **Cancel** — same as no-move.
 
 ### Undo / redo
 
-Action `do`/`undo` implementations go through the public `Project.addWire` / `removeWire` / `moveWire` (and component analogues). All of these fire the CP hooks, so undo/redo work without any action-layer changes.
-
-The **initial** `MoveWires/MoveComponents` action push from `SelectionMoveSession.onEnd` is the special case — at push time, the elements are already at their new positions, so the action `do()` is an effective no-op for CP purposes. `recomputeCpsForMovedSelection` shoulders the initial-commit recompute. Subsequent undo/redo replays of the same action observe an actual transition and the per-mutation hooks suffice.
+Action `do`/`undo` implementations go through `Project.addWire` / `removeWire` / `moveWire` (and component analogues). All of these fire the CP hooks, so undo/redo work without any action-layer changes. The integrator is **not** re-run on undo/redo — the captured snapshots are the source of truth.
 
 ---
 
@@ -241,13 +247,20 @@ The **initial** `MoveWires/MoveComponents` action push from `SelectionMoveSessio
 
 ### Click-to-toggle
 
-Treat a click on a CP-eligible point as a *wire mutation*: clicking a 2-wire X splits both wires at `P`, producing 4 wires that all end at `P` → CP forms automatically. Clicking a 4-wire X joins each opposing pair back into 2 wires → CP disappears automatically. The future action (`SplitWiresAction` / `JoinWiresAction` or similar) goes through `addWire` / `removeWire` and fires the existing CP hooks. The manager needs no new API.
+Under the new invariants, click-to-toggle becomes trivial:
 
-A `canToggle(P)` predicate based on local geometry will be needed to filter out non-toggleable CPs (e.g., the 2-wire T case where splitting the through-wire wouldn't change electrical connectivity).
+- **Pure 2-wire X (no endpoints at the click point)**: split both wires at the point → 4 endpoints meet → 4 terminations → CP appears via the rule.
+- **4-endpoint X CP**: join opposing pairs back into 2 wires → terminations drop to 0 → CP disappears.
+
+No `canToggle(P)` predicate is needed. The previously "non-toggleable" 2-wire T CP is automatically non-toggleable now: joining the two collinear halves would re-violate I1 (the third wire's endpoint would sit on the merged wire's interior), and the integrator would auto-re-split. The toggle UI can attempt the merge unconditionally; if the integrator un-does it, the click was a no-op.
+
+### Full undo for component rotation / port-count changes
+
+The current `portsChange$` subscription in `Project.addComponent` applies integration mutations directly without action wrapping. Wrapping the property change + integration result into an `ActionContainer(ChangeComponentDirectionAction, RemoveWiresAction, AddWiresAction)` would give full undo coverage. The hand-off requires re-routing the UI side-panel option-change path through `ActionManager`.
 
 ### Bulk loaders
 
-Any code that bulk-inserts elements directly into `_components` / `_wires` quad trees without going through `addComponent` / `addWire` (e.g., a paste or load fast-path that bypasses the action system) **must** call `connectionPoints.recomputeAll(allWires, allComponents)` afterwards to seed the CP set. The action-routed paths already keep CPs in sync without this.
+Any code that bulk-inserts elements directly into `_components` / `_wires` quad trees without going through `addComponent` / `addWire` (e.g., a paste or load fast-path that bypasses the action system) **must** post-process its input so I1/I2/I3 already hold (no wire interior contains another wire's endpoint or port tip, no two collinear wires share an endpoint without a third terminator), then call `connectionPoints.recomputeAll(allWires, allComponents)` to seed the CP set. Alternatively, run the loaded set through `computeIntegration` to normalize.
 
 ---
 

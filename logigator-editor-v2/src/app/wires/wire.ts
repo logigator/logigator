@@ -47,18 +47,6 @@ export class Wire extends Graphics implements Connectable {
 		};
 	}
 
-	public static segmentContains(
-		start: Point,
-		end: Point,
-		direction: WireDirection,
-		p: Point
-	): boolean {
-		if (direction === WireDirection.HORIZONTAL) {
-			return p.y === start.y && p.x >= start.x && p.x <= end.x;
-		}
-		return p.x === start.x && p.y >= start.y && p.y <= end.y;
-	}
-
 	constructor(direction: WireDirection, gridLength?: number) {
 		super();
 

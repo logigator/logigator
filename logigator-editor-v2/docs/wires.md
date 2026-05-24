@@ -87,9 +87,6 @@ These are the endpoints that should connect to component ports.
 | Method | Use |
 |---|---|
 | `wire.contains(p)` | Returns `true` if `p` lies on the wire's closed axis-aligned segment (endpoint or interior). |
-| `Wire.segmentContains(start, end, dir, p)` | Same predicate against a snapshot or raw segment description. Used when no live `Wire` is available (e.g., comparing against `WireSnapshot`). |
-
-These collapse the previously-duplicated point-on-segment helpers used by `WireIntegrator` and `ConnectionPointManager` into one shared implementation.
 
 ### `Wire.snapshot(wire)`
 
@@ -235,24 +232,61 @@ Action (abstract)
 
 ---
 
-## Wire Merging
+## Wire Integration Invariants
 
-When a new wire is placed (or a moved wire is committed), `Project.computeWireIntegration` computes the minimal set of changes needed to maintain the invariant that no two collinear wires overlap or are unnecessarily adjacent.
+After every gesture commit (drawing, moving, placing, removing), the project tree satisfies three invariants:
 
-### Rules
+- **I1** — No wire's interior contains another wire's endpoint.
+- **I2** — No wire's interior contains a component port tip.
+- **I3** — No two collinear wires share an endpoint unless a third *terminating* thing (perpendicular wire endpoint or component port tip) also terminates at that point.
 
-- **Overlap**: two collinear wires whose segments share interior points always merge into one wire spanning the union of their extents.
-- **Adjacency**: two collinear wires that touch at exactly one endpoint merge — **unless** a third wire (any direction) has that shared point on its segment, which would create a T/X junction. Junction nodes are deferred to a future stage.
-- **Perpendicular / different axis**: wires cross or sit on different tracks freely; no merge.
+I1 + I2 are **split-forcing** invariants — when a mutation would land an endpoint/port inside another wire's interior, the interior wire is auto-split at that point. I3 is the **merge-forcing** invariant — when nothing else terminates at a shared endpoint, two collinear wires merge into one.
 
-### `Project.computeWireIntegration(newWires: Wire[])`
+**Scissor cut exception (tentative).** `SelectionManager._pendingCut` deliberately violates I3 *while the cut is unclaimed*. The integrator never runs against the tentative state; the next gesture commit either claims the cut into a real action (move) or rolls it back. The CP rule renders the violation invisible (only 2 terminations at the cut point → no CP), so users don't notice the temporary state.
 
-Pure query — does not mutate project state. Returns `{ toAdd: Wire[], toRemove: Wire[] }`.
+### `Project.computeIntegration(input)`
 
-- `toAdd` contains either the original new wires (no merge) or fresh `Wire` objects for the merged spans.
-- `toRemove` contains the live project wires that are absorbed by the merge.
+The integrator entry point. Pure query — does not mutate project state. Returns `{ toAdd: Wire[], toRemove: Wire[] }`.
 
-Callers wrap the result in `ActionContainer(RemoveWiresAction, AddWiresAction)` so the entire placement — including any merges — undoes atomically. The merge algorithm itself never runs inside `Action.do/undo`; undo/redo always replays from serialized snapshots.
+```ts
+interface IntegrationInput {
+    addedWires?: readonly Wire[];          // Not yet in tree
+    removedWires?: readonly Wire[];        // Currently in tree
+    movedWires?: readonly { wire: Wire; oldSnapshot: WireSnapshot }[];
+    addedComponentPorts?: readonly Point[];
+    removedComponentPorts?: readonly Point[];
+    movedComponentPorts?: readonly { oldPorts: readonly Point[]; newPorts: readonly Point[] }[];
+}
+```
+
+- `toAdd` — fresh `Wire` instances the caller should add to the tree (splits, merges, or `addedWires` that survived integration).
+- `toRemove` — live wires currently in the tree the caller should remove (absorbed by merges, or split sources).
+
+Callers wrap the result in `ActionContainer(RemoveWiresAction, AddWiresAction)` alongside their primary action so the whole gesture — including any splits/merges — undoes atomically. The integrator itself never runs inside `Action.do/undo`; undo/redo replays from captured snapshots.
+
+### Where integration runs
+
+| Mutation site | Inputs passed |
+|---|---|
+| `WireDrawingSession.onEnd` | `addedWires` |
+| `SelectionMoveSession.onEnd` | `movedWires`, `movedComponentPorts` |
+| `ComponentPlacementSession.onEnd` | `addedComponentPorts` |
+| `Component.portsChange$` (rotation, port-count) | `movedComponentPorts` — applied directly without action wrapping (no undo yet; see [`connection-points.md`](connection-points.md) § Future work) |
+
+The integrator runs **once per gesture** at the session/command boundary. Low-level mutators (`Project.addWire`, `removeWire`, `moveWire`, and component analogues) do not invoke it.
+
+### Algorithm
+
+The integrator computes a **fixed-point** over a working set of wires:
+
+1. Seed candidate points from input (endpoints of added/removed/moved wires, port positions).
+2. **Consolidate pass**: for each added/moved wire, absorb any collinear-overlapping existing wires into one merged wire (this handles the case where the caller's wire was drawn on top of an existing one).
+3. **Loop until fixed point**:
+   - **Split pass**: for each candidate `P` where another wire endpoint or component port terminates, split any wire whose interior contains `P` into two halves at `P`.
+   - **Merge pass**: for each candidate `P` where exactly 2 collinear wires end and no third terminator is present, merge them into a single wire spanning the union.
+4. Diff the working set against the original tree wires to produce `{ toAdd, toRemove }`.
+
+The loop is bounded at 8 iterations (in practice converges in 1–2); exceeding the cap throws to fail loudly on algorithmic bugs.
 
 ### Body collision during wire drawing
 
@@ -303,7 +337,7 @@ pieces:
 
 ### No wire integration on scissor
 
-`Project.addWire` does NOT invoke `WireIntegrator`, so the cut pieces — which share endpoints at the cut points — stay as separate wires. This is intentional: the whole point of scissoring is to detach the inside from the outside. The `ConnectionPointManager`'s ≥3-direction rule naturally suppresses visible junction dots at the interior cut endpoints, so the cut leaves no visual trace beyond the new selection.
+`Project.addWire` does NOT invoke `WireIntegrator`, so the cut pieces — which share endpoints at the cut points — stay as separate wires. This is intentional: the whole point of scissoring is to detach the inside from the outside. The CP rule needs ≥3 terminations to draw a dot, so 2 collinear cut-piece endpoints meeting at the cut boundary produce no visible marker. The scissor cut is the one documented exception to invariant I3 — see [Wire Integration Invariants](#wire-integration-invariants) above.
 
 ### Tentative cut + commit on move
 
@@ -321,5 +355,6 @@ This guarantees the wire invariant — collinear wires that touch at one endpoin
 
 ## Known Gaps / TODOs
 
-- Visual junction markers exist (see [`connection-points.md`](connection-points.md)) but they are purely visual sugar — no electrical connectivity graph is built from them.
+- Visual connection-point markers (see [`connection-points.md`](connection-points.md)) are purely visual sugar — no electrical connectivity graph is built from them.
 - No connectivity graph is maintained. Net-list extraction (required by the simulation layer) must be derived externally from the positional data available via `_wires.items`.
+- Component rotation / port-count changes run the integrator but bypass `ActionManager`, so the implied wire splits/merges aren't undoable. Rotation itself was never undoable; full undo coverage is tracked as future work.

@@ -6,6 +6,9 @@ import { Wire } from '../../wires/wire';
 import { ConnectionPoint } from '../../connection-points/connection-point';
 import { roundToGrid } from '../../utils/grid';
 import { AddComponentsAction } from '../../actions/actions/add-components.action';
+import { ActionContainer } from '../../actions/action-container';
+import { RemoveWiresAction } from '../../actions/actions/remove-wires.action';
+import { AddWiresAction } from '../../actions/actions/add-wires.action';
 
 export class ComponentPlacementSession implements DragSession {
 	private readonly _component: Component;
@@ -45,7 +48,22 @@ export class ComponentPlacementSession implements DragSession {
 			this.dragLayer.position.y
 		);
 		this.dragLayer.position.set(0, 0);
-		this.project.actionManager.push(new AddComponentsAction(this._component));
+
+		// Splits any wire whose interior passes under one of the placed component's ports.
+		const { toAdd, toRemove } = this.project.computeIntegration({
+			addedComponentPorts: this._component.connectionPoints
+		});
+
+		const action = new ActionContainer();
+		if (toRemove.length > 0) {
+			action.add(new RemoveWiresAction(...toRemove));
+		}
+		action.add(new AddComponentsAction(this._component));
+		if (toAdd.length > 0) {
+			action.add(new AddWiresAction(...toAdd));
+		}
+		this.project.actionManager.push(action);
+
 		this._component.destroy({ children: true });
 	}
 

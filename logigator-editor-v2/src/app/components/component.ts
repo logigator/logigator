@@ -13,11 +13,6 @@ import { Connectable } from '../rendering/grid-element';
 import { IdAllocator } from '../utils/id-allocator';
 import { Direction } from '../utils/direction';
 
-export interface PortStub {
-	tip: Point;
-	direction: Direction;
-}
-
 export interface PortsChange {
 	oldPorts: Point[];
 	newPorts: Point[];
@@ -186,21 +181,6 @@ export abstract class Component extends Container implements Connectable {
 		return this._localConnectionPoints.map(
 			(p) => new Point(this.position.x + p.x, this.position.y + p.y)
 		);
-	}
-
-	public get portStubs(): PortStub[] {
-		const tips = this.connectionPoints;
-		// Input stubs point toward the body — same cardinal as the component's facing direction.
-		// Output stubs point opposite: (dir + 2) % 4 flips E↔W and N↔S.
-		const outputDir = ((this._direction + 2) % 4) as Direction;
-		const out: PortStub[] = [];
-		for (let i = 0; i < this._numInputs; i++) {
-			out.push({ tip: tips[i], direction: this._direction });
-		}
-		for (let i = 0; i < this._numOutputs; i++) {
-			out.push({ tip: tips[this._numInputs + i], direction: outputDir });
-		}
-		return out;
 	}
 
 	protected get bodyGridHeight(): number {
