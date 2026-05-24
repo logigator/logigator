@@ -24,6 +24,7 @@ function makeComponent(x: number, y: number, w: number, h: number): any {
 	return {
 		tint: 0xffffff,
 		destroyed: false,
+		connectionPoints: [] as Point[],
 		get gridBounds() { return new Rectangle(x, y, w, h); },
 	};
 }
@@ -33,6 +34,7 @@ function makeWire(x: number, y: number, w: number, h: number): any {
 	return {
 		tint: 0xffffff,
 		destroyed: false,
+		connectionPoints: [new Point(x, y), new Point(x + w - 1, y)] as [Point, Point],
 		get gridBounds() { return new Rectangle(x, y, w, h); },
 	};
 }
@@ -54,13 +56,18 @@ function makeFullWire(
 		direction === WireDirection.HORIZONTAL
 			? new Rectangle(gridX, gridY, length + 1, 1)
 			: new Rectangle(gridX, gridY, 1, length + 1);
+	const pos = new Point(posX, posY);
+	const endPoint = direction === WireDirection.HORIZONTAL
+		? new Point(posX + length, posY)
+		: new Point(posX, posY + length);
 	return {
 		tint: 0xffffff,
 		destroyed: false,
 		direction,
-		position: new Point(posX, posY),
+		position: pos,
 		length,
-		gridBounds
+		gridBounds,
+		connectionPoints: [pos, endPoint] as [Point, Point],
 	};
 }
 
@@ -99,6 +106,8 @@ function makeProject(): jasmine.SpyObj<Project> {
 	]);
 	// SelectionManager.SELECT_EXACT path may push to actionManager; install a spy.
 	(project as any).actionManager = jasmine.createSpyObj('ActionManager', ['push']);
+	// retintCps() reads project.connectionPoints.getCpsAtPoints — provide a no-op stub.
+	(project as any).connectionPoints = { getCpsAtPoints: jasmine.createSpy('getCpsAtPoints').and.returnValue([]) };
 	return project;
 }
 
