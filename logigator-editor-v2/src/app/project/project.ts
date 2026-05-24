@@ -306,24 +306,6 @@ export class Project extends InteractionContainer {
 		}
 	}
 
-	private _mergeWirePair(wires: [Wire, Wire]): Wire {
-		const [s0, e0] = wires[0].connectionPoints;
-		const [s1, e1] = wires[1].connectionPoints;
-		if (wires[0].direction === WireDirection.HORIZONTAL) {
-			const minX = Math.min(s0.x, s1.x);
-			const maxX = Math.max(e0.x, e1.x);
-			const merged = new Wire(WireDirection.HORIZONTAL, maxX - minX);
-			merged.position.set(minX, s0.y);
-			return merged;
-		} else {
-			const minY = Math.min(s0.y, s1.y);
-			const maxY = Math.max(e0.y, e1.y);
-			const merged = new Wire(WireDirection.VERTICAL, maxY - minY);
-			merged.position.set(s0.x, minY);
-			return merged;
-		}
-	}
-
 	private _joinAt(p: Point): void {
 		const queryRect = new Rectangle(p.x - 1, p.y - 1, 2, 2);
 		const hWires: Wire[] = [];
@@ -345,12 +327,12 @@ export class Project extends InteractionContainer {
 
 		if (hWires.length === 2) {
 			removedWires.push(...hWires);
-			addedWires.push(this._mergeWirePair([hWires[0], hWires[1]]));
+			addedWires.push(Wire.merge(hWires[0], hWires[1]));
 		}
 
 		if (vWires.length === 2) {
 			removedWires.push(...vWires);
-			addedWires.push(this._mergeWirePair([vWires[0], vWires[1]]));
+			addedWires.push(Wire.merge(vWires[0], vWires[1]));
 		}
 
 		if (addedWires.length === 0) return;
@@ -398,17 +380,8 @@ export class Project extends InteractionContainer {
 
 		if (!hWire || !vWire) return;
 
-		const [hs, he] = hWire.connectionPoints;
-		const hLeft = new Wire(WireDirection.HORIZONTAL, p.x - hs.x);
-		hLeft.position.set(hs.x, hs.y);
-		const hRight = new Wire(WireDirection.HORIZONTAL, he.x - p.x);
-		hRight.position.set(p.x, hs.y);
-
-		const [vs, ve] = vWire.connectionPoints;
-		const vTop = new Wire(WireDirection.VERTICAL, p.y - vs.y);
-		vTop.position.set(vs.x, vs.y);
-		const vBottom = new Wire(WireDirection.VERTICAL, ve.y - p.y);
-		vBottom.position.set(vs.x, p.y);
+		const [hLeft, hRight] = Wire.split(hWire, p);
+		const [vTop, vBottom] = Wire.split(vWire, p);
 
 		const addedWires = [hLeft, hRight, vTop, vBottom];
 		const removedWires = [hWire, vWire];

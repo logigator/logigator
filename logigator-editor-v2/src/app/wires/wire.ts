@@ -47,6 +47,40 @@ export class Wire extends Graphics implements Connectable {
 		};
 	}
 
+	public static split(w: Wire, at: Point): [Wire, Wire] {
+		const [start, end] = w.connectionPoints;
+		const w1 = new Wire(w.direction);
+		const w2 = new Wire(w.direction);
+		w1.position.set(start.x, start.y);
+		w2.position.set(at.x, at.y);
+		if (w.direction === WireDirection.HORIZONTAL) {
+			w1.length = at.x - start.x;
+			w2.length = end.x - at.x;
+		} else {
+			w1.length = at.y - start.y;
+			w2.length = end.y - at.y;
+		}
+		return [w1, w2];
+	}
+
+	public static merge(a: Wire, b: Wire): Wire {
+		const [s0, e0] = a.connectionPoints;
+		const [s1, e1] = b.connectionPoints;
+		if (a.direction === WireDirection.HORIZONTAL) {
+			const minX = Math.min(s0.x, s1.x);
+			const maxX = Math.max(e0.x, e1.x);
+			const merged = new Wire(WireDirection.HORIZONTAL, maxX - minX);
+			merged.position.set(minX, s0.y);
+			return merged;
+		} else {
+			const minY = Math.min(s0.y, s1.y);
+			const maxY = Math.max(e0.y, e1.y);
+			const merged = new Wire(WireDirection.VERTICAL, maxY - minY);
+			merged.position.set(s0.x, minY);
+			return merged;
+		}
+	}
+
 	constructor(direction: WireDirection, gridLength?: number) {
 		super();
 

@@ -206,15 +206,8 @@ export class WireIntegrator {
 					const overlapEnd = Math.min(aEnd, cEnd);
 					if (overlapStart >= overlapEnd) continue;
 
-					const newStart = Math.min(aStart, cStart);
-					const newEnd = Math.max(aEnd, cEnd);
-					const newMerged = this._createMergedWire(
-						mergedW.direction,
-						mergedW.position,
-						newStart,
-						newEnd,
-						scale
-					);
+					const newMerged = Wire.merge(mergedW, c);
+					newMerged.applyScale(scale);
 					internalWires.add(newMerged);
 					consumeWire(mergedW);
 					consumeWire(c);
@@ -334,19 +327,8 @@ export class WireIntegrator {
 					if (this._hasThirdTerminatorAt(p, ending, collectWorkingWiresAt, hasPort)) continue;
 
 					const [wa, wb] = ending;
-					const aStart = this._axisPos(wa);
-					const aEnd = aStart + wa.length;
-					const bStart = this._axisPos(wb);
-					const bEnd = bStart + wb.length;
-					const mergedStart = Math.min(aStart, bStart);
-					const mergedEnd = Math.max(aEnd, bEnd);
-					const merged = this._createMergedWire(
-						direction,
-						wa.position,
-						mergedStart,
-						mergedEnd,
-						scale
-					);
+					const merged = Wire.merge(wa, wb);
+					merged.applyScale(scale);
 					internalWires.add(merged);
 					consumeWire(wa);
 					consumeWire(wb);
@@ -375,18 +357,7 @@ export class WireIntegrator {
 	}
 
 	private _splitWire(w: Wire, p: Point, scale: number): [Wire, Wire] {
-		const [start, end] = w.connectionPoints;
-		const w1 = new Wire(w.direction);
-		const w2 = new Wire(w.direction);
-		w1.position.set(start.x, start.y);
-		w2.position.set(p.x, p.y);
-		if (w.direction === WireDirection.HORIZONTAL) {
-			w1.length = p.x - start.x;
-			w2.length = end.x - p.x;
-		} else {
-			w1.length = p.y - start.y;
-			w2.length = end.y - p.y;
-		}
+		const [w1, w2] = Wire.split(w, p);
 		w1.applyScale(scale);
 		w2.applyScale(scale);
 		return [w1, w2];
@@ -418,20 +389,4 @@ export class WireIntegrator {
 		return a.position.x === b.position.x;
 	}
 
-	private _createMergedWire(
-		direction: WireDirection,
-		refPos: Point,
-		segStart: number,
-		segEnd: number,
-		scale: number
-	): Wire {
-		const merged = new Wire(direction, segEnd - segStart);
-		if (direction === WireDirection.HORIZONTAL) {
-			merged.position.set(segStart, refPos.y);
-		} else {
-			merged.position.set(refPos.x, segStart);
-		}
-		merged.applyScale(scale);
-		return merged;
-	}
 }
