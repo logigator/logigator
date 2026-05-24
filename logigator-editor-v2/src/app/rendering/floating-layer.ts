@@ -16,6 +16,7 @@ import { WireDrawingSession } from './sessions/wire-drawing.session';
 import { SelectRectSession } from './sessions/select-rect.session';
 import { SelectionMoveSession } from './sessions/selection-move.session';
 import { EraseSession } from './sessions/erase.session';
+import { WireConnectionSession } from './sessions/wire-connection.session';
 import { ConnectionPoint } from '../connection-points/connection-point';
 
 export class FloatingLayer extends Container {
@@ -140,6 +141,13 @@ export class FloatingLayer extends Container {
 			case WorkMode.ERASE: {
 				const startPos = e.getLocalPosition(this.project.gridSpace);
 				this._startDrag(new EraseSession(this.project, startPos));
+				break;
+			}
+			case WorkMode.WIRE_CONNECTION: {
+				const startPos = roundToHalfGrid(
+					e.getLocalPosition(this.project.gridSpace)
+				);
+				this._startDrag(new WireConnectionSession(this.project, startPos));
 				break;
 			}
 		}

@@ -487,3 +487,121 @@ describe('Project connection-point integration', () => {
 		dragLayer.destroy();
 	});
 });
+
+describe('Project.toggleConnectionAt', () => {
+	let project: Project;
+
+	beforeEach(() => {
+		setStaticDIInjector(TestBed.inject(Injector));
+		project = new Project();
+	});
+
+	afterEach(() => {
+		project.destroy({ children: true });
+	});
+
+	function wireCount(): number {
+		return [
+			...project.queryWiresInRange(new Rectangle(-100, -100, 200, 200))
+		].length;
+	}
+
+	describe('SPLIT — no CP at click point', () => {
+		it('splits both crossing wires and creates a CP', () => {
+			const h = makeWire(0, 2, WireDirection.HORIZONTAL, 5);
+			const v = makeWire(2, 0, WireDirection.VERTICAL, 5);
+			project.addWire(h);
+			project.addWire(v);
+
+			const p = new Point(2.5, 2.5);
+			expect(cpAt(project, p)).toBeFalse();
+
+			project.toggleConnectionAt(p);
+
+			expect(cpAt(project, p)).toBeTrue();
+			expect(wireCount()).toBe(4);
+		});
+
+		it('is a no-op when only one wire passes through the point (no crossing)', () => {
+			const h = makeWire(0, 2, WireDirection.HORIZONTAL, 5);
+			project.addWire(h);
+
+			const p = new Point(2.5, 2.5);
+			project.toggleConnectionAt(p);
+
+			expect(wireCount()).toBe(1);
+			expect(cpAt(project, p)).toBeFalse();
+		});
+
+		it('supports undo', () => {
+			const h = makeWire(0, 2, WireDirection.HORIZONTAL, 5);
+			const v = makeWire(2, 0, WireDirection.VERTICAL, 5);
+			project.addWire(h);
+			project.addWire(v);
+
+			const p = new Point(2.5, 2.5);
+			project.toggleConnectionAt(p);
+			expect(cpAt(project, p)).toBeTrue();
+
+			project.actionManager.undo();
+			expect(cpAt(project, p)).toBeFalse();
+			expect(wireCount()).toBe(2);
+		});
+	});
+
+	describe('JOIN — CP at click point', () => {
+		function buildXJunction(): void {
+			project.addWire(makeWire(0, 2, WireDirection.HORIZONTAL, 2));
+			project.addWire(makeWire(2, 2, WireDirection.HORIZONTAL, 3));
+			project.addWire(makeWire(2, 0, WireDirection.VERTICAL, 2));
+			project.addWire(makeWire(2, 2, WireDirection.VERTICAL, 3));
+		}
+
+		it('joins both wire pairs and removes the CP', () => {
+			buildXJunction();
+			const p = new Point(2.5, 2.5);
+			expect(cpAt(project, p)).toBeTrue();
+
+			project.toggleConnectionAt(p);
+
+			expect(cpAt(project, p)).toBeFalse();
+			expect(wireCount()).toBe(2);
+		});
+
+		it('is a no-op on a T-junction (3-endpoint, non-toggleable)', () => {
+			const hLeft = makeWire(0, 2, WireDirection.HORIZONTAL, 2);
+			const hRight = makeWire(2, 2, WireDirection.HORIZONTAL, 3);
+			const v = makeWire(2, 0, WireDirection.VERTICAL, 2);
+			project.addWire(hLeft);
+			project.addWire(hRight);
+			project.addWire(v);
+
+			const p = new Point(2.5, 2.5);
+			expect(cpAt(project, p)).toBeTrue();
+			const vId = v.id;
+
+			project.toggleConnectionAt(p);
+
+			expect(cpAt(project, p)).toBeTrue();
+			expect(wireCount()).toBe(3);
+			expect(
+				[
+					...project.queryWiresInRange(
+						new Rectangle(-100, -100, 200, 200)
+					)
+				].some((w) => w.id === vId)
+			).toBeTrue();
+		});
+
+		it('supports undo', () => {
+			buildXJunction();
+			const p = new Point(2.5, 2.5);
+			project.toggleConnectionAt(p);
+			expect(cpAt(project, p)).toBeFalse();
+
+			project.actionManager.undo();
+			expect(cpAt(project, p)).toBeTrue();
+			expect(wireCount()).toBe(4);
+		});
+	});
+});

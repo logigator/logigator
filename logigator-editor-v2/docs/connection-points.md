@@ -243,16 +243,34 @@ Action `do`/`undo` implementations go through `Project.addWire` / `removeWire` /
 
 ---
 
+## Click-to-Toggle
+
+Users can click on a wire crossing to place or remove a CP junction:
+
+- **Pure 2-wire X crossing (no endpoints at the click point)**: `WorkMode.WIRE_CONNECTION` handles a pointer-down + up. `FloatingLayer` snaps the click position to the nearest half-grid point via `roundToHalfGrid`, then delegates to `WireConnectionSession`. On `onEnd`, it calls `Project.toggleConnectionAt(p)`. Because `hasCpAt(p)` is false, `_splitAt(p)` runs: both wires are split into two pieces each, the four new halves are run through `computeIntegration`, and an `ActionContainer(RemoveWiresAction, AddWiresAction)` is pushed to `ActionManager`. The CP rule then sees 4 terminations at `p` → CP appears.
+
+- **4-endpoint X junction (CP present at click point)**: `hasCpAt(p)` is true → `_joinAt(p)` runs. It finds the two H wire endpoints and the two V wire endpoints at `p`, builds a merged wire for each pair, runs integration, and checks if any output wire has an endpoint at `p` (which would indicate the integrator re-split because a third terminator blocked the merge). If not blocked, the action is pushed and the CP disappears.
+
+- **T-junction (3 endpoints, CP present)**: `_joinAt` is called, but one direction has only 1 wire, so only the collinear pair is attempted. The integrator detects that the third wire's endpoint sits on the merged wire's interior (I1 violation) and re-splits it. The blocked check fires → no action is pushed → click is a silent no-op. The CP remains.
+
+### Entry points
+
+| Layer | Detail |
+|---|---|
+| `WorkMode.WIRE_CONNECTION` | Enum value `'connWire'`, already in `work-mode.enum.ts` |
+| `FloatingLayer.onPointerDown` | `case WorkMode.WIRE_CONNECTION` → `roundToHalfGrid` + `WireConnectionSession` |
+| `WireConnectionSession` | Minimal `DragSession`; `onEnd` calls `project.toggleConnectionAt(startPos)` |
+| `Project.toggleConnectionAt(p)` | Dispatches to `_joinAt` or `_splitAt` based on `hasCpAt(p)` |
+| `Project._splitAt(p)` | Splits both crossing wires at `p`, pushes action via `actionManager.push` |
+| `Project._joinAt(p)` | Merges collinear pairs at `p`; no-ops silently if integrator re-splits |
+
+### Undo / redo
+
+Both `_splitAt` and `_joinAt` use `ActionManager.push`, so undo/redo work automatically through the normal action system.
+
+---
+
 ## Future work
-
-### Click-to-toggle
-
-Under the new invariants, click-to-toggle becomes trivial:
-
-- **Pure 2-wire X (no endpoints at the click point)**: split both wires at the point → 4 endpoints meet → 4 terminations → CP appears via the rule.
-- **4-endpoint X CP**: join opposing pairs back into 2 wires → terminations drop to 0 → CP disappears.
-
-No `canToggle(P)` predicate is needed. The previously "non-toggleable" 2-wire T CP is automatically non-toggleable now: joining the two collinear halves would re-violate I1 (the third wire's endpoint would sit on the merged wire's interior), and the integrator would auto-re-split. The toggle UI can attempt the merge unconditionally; if the integrator un-does it, the click was a no-op.
 
 ### Full undo for component rotation / port-count changes
 

@@ -9,12 +9,16 @@ import { environment } from '../../environments/environment';
 import { WorkMode } from '../work-mode/work-mode.enum';
 import { FloatingLayer } from '../rendering/floating-layer';
 import { ActionManager } from '../actions/action-manager';
+import { ActionContainer } from '../actions/action-container';
 import { SelectionManager } from './selection-manager';
 import { Wire } from '../wires/wire';
+import { WireDirection } from '../wires/wire-direction.enum';
 import { QuadTreeContainer } from '../rendering/quad-tree-container';
 import { WireIntegrator, IntegrationInput, IntegrationOutput } from './wire-integrator';
 import { ViewportController } from './viewport-controller';
 import { ConnectionPointManager } from '../connection-points/connection-point-manager';
+import { AddWiresAction } from '../actions/actions/add-wires.action';
+import { RemoveWiresAction } from '../actions/actions/remove-wires.action';
 
 export class Project extends InteractionContainer {
 	public readonly actionManager = new ActionManager(this);
@@ -292,5 +296,129 @@ export class Project extends InteractionContainer {
 		this._connectionPoints.onWireRemoved(oldSnap);
 		this._connectionPoints.onWireAdded(Wire.snapshot(wire));
 		this._ticker$.next('single');
+	}
+
+	public toggleConnectionAt(p: Point): void {
+		if (this._connectionPoints.hasCpAt(p)) {
+			this._joinAt(p);
+		} else {
+			this._splitAt(p);
+		}
+	}
+
+	private _mergeWirePair(wires: [Wire, Wire]): Wire {
+		const [s0, e0] = wires[0].connectionPoints;
+		const [s1, e1] = wires[1].connectionPoints;
+		if (wires[0].direction === WireDirection.HORIZONTAL) {
+			const minX = Math.min(s0.x, s1.x);
+			const maxX = Math.max(e0.x, e1.x);
+			const merged = new Wire(WireDirection.HORIZONTAL, maxX - minX);
+			merged.position.set(minX, s0.y);
+			return merged;
+		} else {
+			const minY = Math.min(s0.y, s1.y);
+			const maxY = Math.max(e0.y, e1.y);
+			const merged = new Wire(WireDirection.VERTICAL, maxY - minY);
+			merged.position.set(s0.x, minY);
+			return merged;
+		}
+	}
+
+	private _joinAt(p: Point): void {
+		const queryRect = new Rectangle(p.x - 1, p.y - 1, 2, 2);
+		const hWires: Wire[] = [];
+		const vWires: Wire[] = [];
+
+		for (const w of this.queryWiresInRange(queryRect)) {
+			const [s, e] = w.connectionPoints;
+			if (
+				(s.x === p.x && s.y === p.y) ||
+				(e.x === p.x && e.y === p.y)
+			) {
+				if (w.direction === WireDirection.HORIZONTAL) hWires.push(w);
+				else vWires.push(w);
+			}
+		}
+
+		const addedWires: Wire[] = [];
+		const removedWires: Wire[] = [];
+
+		if (hWires.length === 2) {
+			removedWires.push(...hWires);
+			addedWires.push(this._mergeWirePair([hWires[0], hWires[1]]));
+		}
+
+		if (vWires.length === 2) {
+			removedWires.push(...vWires);
+			addedWires.push(this._mergeWirePair([vWires[0], vWires[1]]));
+		}
+
+		if (addedWires.length === 0) return;
+
+		const { toAdd, toRemove } = this.computeIntegration({ addedWires, removedWires });
+
+		const blocked = toAdd.some((w) => {
+			const [s, e] = w.connectionPoints;
+			return (s.x === p.x && s.y === p.y) || (e.x === p.x && e.y === p.y);
+		});
+
+		const cleanup = () => {
+			for (const w of addedWires) if (!w.destroyed) w.destroy();
+			for (const w of toAdd) if (!w.destroyed) w.destroy();
+		};
+
+		if (blocked) {
+			cleanup();
+			return;
+		}
+
+		const action = new ActionContainer();
+		if (toRemove.length > 0) action.add(new RemoveWiresAction(...toRemove));
+		if (toAdd.length > 0) action.add(new AddWiresAction(...toAdd));
+		cleanup();
+		this.actionManager.push(action);
+	}
+
+	private _splitAt(p: Point): void {
+		const queryRect = new Rectangle(p.x - 1, p.y - 1, 2, 2);
+		let hWire: Wire | null = null;
+		let vWire: Wire | null = null;
+
+		for (const w of this.queryWiresInRange(queryRect)) {
+			if (!w.contains(p)) continue;
+			const [s, e] = w.connectionPoints;
+			if (
+				(s.x === p.x && s.y === p.y) ||
+				(e.x === p.x && e.y === p.y)
+			)
+				continue;
+			if (w.direction === WireDirection.HORIZONTAL) hWire = w;
+			else vWire = w;
+		}
+
+		if (!hWire || !vWire) return;
+
+		const [hs, he] = hWire.connectionPoints;
+		const hLeft = new Wire(WireDirection.HORIZONTAL, p.x - hs.x);
+		hLeft.position.set(hs.x, hs.y);
+		const hRight = new Wire(WireDirection.HORIZONTAL, he.x - p.x);
+		hRight.position.set(p.x, hs.y);
+
+		const [vs, ve] = vWire.connectionPoints;
+		const vTop = new Wire(WireDirection.VERTICAL, p.y - vs.y);
+		vTop.position.set(vs.x, vs.y);
+		const vBottom = new Wire(WireDirection.VERTICAL, ve.y - p.y);
+		vBottom.position.set(vs.x, p.y);
+
+		const addedWires = [hLeft, hRight, vTop, vBottom];
+		const removedWires = [hWire, vWire];
+
+		const { toAdd, toRemove } = this.computeIntegration({ addedWires, removedWires });
+
+		const action = new ActionContainer();
+		if (toRemove.length > 0) action.add(new RemoveWiresAction(...toRemove));
+		if (toAdd.length > 0) action.add(new AddWiresAction(...toAdd));
+		for (const w of addedWires) if (!w.destroyed) w.destroy();
+		this.actionManager.push(action);
 	}
 }
