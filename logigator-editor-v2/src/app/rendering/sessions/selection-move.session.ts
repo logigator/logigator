@@ -122,6 +122,7 @@ export class SelectionMoveSession implements DragSession {
 			this._components,
 			this._wires
 		);
+		this.project.selectionManager.retintCps();
 
 		const action = new ActionContainer();
 

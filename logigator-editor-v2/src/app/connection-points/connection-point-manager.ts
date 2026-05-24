@@ -101,6 +101,15 @@ export class ConnectionPointManager {
 		return this._cps.get(this._key(p));
 	}
 
+	public getCpsAtPoints(points: Iterable<Point>): ConnectionPoint[] {
+		const result: ConnectionPoint[] = [];
+		for (const p of points) {
+			const cp = this._cps.get(this._key(p));
+			if (cp) result.push(cp);
+		}
+		return result;
+	}
+
 	public detachCp(cp: ConnectionPoint): void {
 		const key = this._key(cp.position);
 		this._cps.delete(key);

@@ -8,6 +8,7 @@ import { AddWiresAction } from '../actions/actions/add-wires.action';
 import { RemoveWiresAction } from '../actions/actions/remove-wires.action';
 import { ActionContainer } from '../actions/action-container';
 import { SerializedWire } from '../wires/serialized-wire.model';
+import { ConnectionPoint } from '../connection-points/connection-point';
 import type { Project } from './project';
 
 interface PendingCut {
@@ -30,6 +31,7 @@ export class SelectionManager {
 	private readonly _selectedWires = new Set<Wire>();
 	private readonly _selectionChange$ = new Subject<void>();
 	private _pendingCut: PendingCut | null = null;
+	private _tintedConnectionPoints: ConnectionPoint[] = [];
 
 	constructor(private readonly project: Project) {}
 
@@ -58,6 +60,7 @@ export class SelectionManager {
 			}
 		}
 
+		this.retintCps();
 		this._selectionChange$.next();
 	}
 
@@ -177,7 +180,36 @@ export class SelectionManager {
 			this._selectedWires.add(bestWire);
 		}
 
+		this.retintCps();
 		this._selectionChange$.next();
+	}
+
+	// Re-evaluates which connection points should be tinted based on the current
+	// selection. Called after initial selection and after a drag-move recomputes CPs.
+	public retintCps(): void {
+		for (const cp of this._tintedConnectionPoints) {
+			if (!cp.destroyed) cp.tint = 0xffffff;
+		}
+
+		const points = [];
+		for (const wire of this._selectedWires) {
+			if (!wire.destroyed) {
+				const [start, end] = wire.connectionPoints;
+				points.push(start, end);
+			}
+		}
+		for (const comp of this._selectedComponents) {
+			if (!comp.destroyed) {
+				for (const port of comp.connectionPoints) {
+					points.push(port);
+				}
+			}
+		}
+
+		this._tintedConnectionPoints = this.project.connectionPoints.getCpsAtPoints(points);
+		for (const cp of this._tintedConnectionPoints) {
+			cp.tint = SelectionManager.SELECTION_TINT;
+		}
 	}
 
 	public clear(): void {
@@ -196,6 +228,10 @@ export class SelectionManager {
 				wire.tint = 0xffffff;
 			}
 		}
+		for (const cp of this._tintedConnectionPoints) {
+			if (!cp.destroyed) cp.tint = 0xffffff;
+		}
+		this._tintedConnectionPoints = [];
 		this._selectedComponents.clear();
 		this._selectedWires.clear();
 		this._selectionChange$.next();
