@@ -23,29 +23,23 @@ export class ToolBarComponent {
 	private readonly workModeService = inject(WorkModeService);
 	private readonly projectService = inject(ProjectService);
 
-	protected drawWireStyles = computed(() =>
-		this.workModeService.mode() === WorkMode.WIRE_DRAWING
-			? 'bg-bluegray-300'
-			: ''
+	protected isWireDrawMode = computed(
+		() => this.workModeService.mode() === WorkMode.WIRE_DRAWING
 	);
-	protected connWireStyles = computed(() =>
-		this.workModeService.mode() === WorkMode.WIRE_CONNECTION
-			? 'bg-bluegray-300'
-			: ''
+	protected isWireConnMode = computed(
+		() => this.workModeService.mode() === WorkMode.WIRE_CONNECTION
 	);
-	protected selectStyles = computed(() =>
-		this.workModeService.mode() === WorkMode.SELECT ? 'bg-bluegray-300' : ''
+	protected isSelectMode = computed(
+		() => this.workModeService.mode() === WorkMode.SELECT
 	);
-	protected selectExactStyles = computed(() =>
-		this.workModeService.mode() === WorkMode.SELECT_EXACT
-			? 'bg-bluegray-300'
-			: ''
+	protected isSelectExactMode = computed(
+		() => this.workModeService.mode() === WorkMode.SELECT_EXACT
 	);
-	protected eraseStyles = computed(() =>
-		this.workModeService.mode() === WorkMode.ERASE ? 'bg-bluegray-300' : ''
+	protected isEraseMode = computed(
+		() => this.workModeService.mode() === WorkMode.ERASE
 	);
-	protected placeTextStyles = computed(() =>
-		this.workModeService.mode() === WorkMode.PLACE_TEXT ? 'bg-bluegray-300' : ''
+	protected isPlaceTextMode = computed(
+		() => this.workModeService.mode() === WorkMode.PLACE_TEXT
 	);
 
 	protected setWireDrawMode(): void {

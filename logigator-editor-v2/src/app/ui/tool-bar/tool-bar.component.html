@@ -89,7 +89,7 @@
 	<p-button
 		[pTooltip]="t('toolBar.placeWires')"
 		[ariaLabel]="t('toolBar.placeWires')"
-		[styleClass]="drawWireStyles()"
+		[outlined]="!isWireDrawMode()"
 		(onClick)="setWireDrawMode()"
 		tooltipPosition="bottom"
 		icon="ph ph-line-segment"
@@ -98,7 +98,7 @@
 	<p-button
 		[pTooltip]="t('toolBar.connWires')"
 		[ariaLabel]="t('toolBar.connWires')"
-		[styleClass]="connWireStyles()"
+		[outlined]="!isWireConnMode()"
 		(onClick)="setWireConnMode()"
 		tooltipPosition="bottom"
 		icon="ph ph-prohibit"
@@ -107,7 +107,7 @@
 	<p-button
 		[pTooltip]="t('toolBar.select')"
 		[ariaLabel]="t('toolBar.select')"
-		[styleClass]="selectStyles()"
+		[outlined]="!isSelectMode()"
 		(onClick)="setSelectMode()"
 		tooltipPosition="bottom"
 		icon="ph ph-selection"
@@ -116,7 +116,7 @@
 	<p-button
 		[pTooltip]="t('toolBar.selExact')"
 		[ariaLabel]="t('toolBar.selExact')"
-		[styleClass]="selectExactStyles()"
+		[outlined]="!isSelectExactMode()"
 		(onClick)="setSelectExactMode()"
 		tooltipPosition="bottom"
 		icon="ph ph-selection-slash"
@@ -125,7 +125,7 @@
 	<p-button
 		[pTooltip]="t('toolBar.eraser')"
 		[ariaLabel]="t('toolBar.eraser')"
-		[styleClass]="eraseStyles()"
+		[outlined]="!isEraseMode()"
 		(onClick)="setEraseMode()"
 		tooltipPosition="bottom"
 		icon="ph ph-eraser"
@@ -134,7 +134,7 @@
 	<p-button
 		[pTooltip]="t('toolBar.text')"
 		[ariaLabel]="t('toolBar.text')"
-		[styleClass]="placeTextStyles()"
+		[outlined]="!isPlaceTextMode()"
 		tooltipPosition="bottom"
 		(onClick)="setPlaceTextMode()"
 		icon="ph ph-text-t"
