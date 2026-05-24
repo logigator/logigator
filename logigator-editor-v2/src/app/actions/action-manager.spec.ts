@@ -3,7 +3,14 @@ import { Action } from './action';
 import { Project } from '../project/project';
 
 function makeProject(): jasmine.SpyObj<Project> {
-	return jasmine.createSpyObj<Project>('Project', ['addComponent']);
+	const project = jasmine.createSpyObj<Project>('Project', ['addComponent']);
+	// ActionManager.undo consults selectionManager.rollbackPendingCut to
+	// short-circuit on a tentative scissor-select cut. Default to "nothing
+	// pending" so the normal history path runs.
+	(project as never as { selectionManager: unknown }).selectionManager = {
+		rollbackPendingCut: () => false
+	};
+	return project;
 }
 
 function makeAction(): jasmine.SpyObj<Action> {
@@ -122,6 +129,32 @@ describe('ActionManager', () => {
 			expect(manager.undoAvailable).toBeFalse();
 			manager.redo();
 			expect(manager.undoAvailable).toBeTrue();
+		});
+	});
+
+	// ── undo intercepts pending scissor cut ──────────────────────────────────
+
+	describe('undo with pending scissor cut', () => {
+		it('rolls back the pending cut and does not consume the history', () => {
+			const action = makeAction();
+			manager.push(action);
+
+			// Pretend a SELECT_EXACT cut is pending.
+			(project as never as { selectionManager: { rollbackPendingCut: () => boolean } })
+				.selectionManager.rollbackPendingCut = () => true;
+
+			manager.undo();
+
+			expect(action.undo).not.toHaveBeenCalled();
+			expect(manager.undoAvailable).toBeTrue();
+		});
+
+		it('falls through to history undo when no cut is pending', () => {
+			const action = makeAction();
+			manager.push(action);
+			// Default rollbackPendingCut returns false (from makeProject).
+			manager.undo();
+			expect(action.undo).toHaveBeenCalledOnceWith(project);
 		});
 	});
 

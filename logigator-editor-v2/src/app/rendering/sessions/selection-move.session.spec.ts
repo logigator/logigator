@@ -1,6 +1,6 @@
 import { Injector } from '@angular/core';
 import { TestBed } from '@angular/core/testing';
-import { Container, FederatedPointerEvent, Point } from 'pixi.js';
+import { Container, FederatedPointerEvent, Point, Rectangle } from 'pixi.js';
 import { setStaticDIInjector } from '../../utils/get-di';
 import { Project } from '../../project/project';
 import { Wire } from '../../wires/wire';
@@ -9,6 +9,7 @@ import { AndComponent } from '../../components/component-types/and/and.component
 import { andComponentConfig } from '../../components/component-types/and/and.config';
 import { Component } from '../../components/component';
 import { SelectionMoveSession } from './selection-move.session';
+import { WorkMode } from '../../work-mode/work-mode.enum';
 
 // SelectionMoveSession places selected items into dragLayer at their original positions.
 // dragLayer.position = roundToGrid(currentCursor) - pointerStart = movement delta.
@@ -173,6 +174,116 @@ describe('SelectionMoveSession collision', () => {
 
 			session.onMove(makeMoveEvent(0, 10));
 			expect(session.canEnd()).toBeTrue();
+		});
+	});
+
+	// Regression: SELECT_EXACT cut + move must not duplicate wires in the quad
+	// tree. The cut materializes new pieces in-memory; folding that cut into
+	// the move's ActionContainer and pushing it would cause ActionManager.push
+	// to re-run cutContainer.do(), which re-deserializes pieces with IDs already
+	// present. SelectionMoveSession uses ActionManager.register (record-without-
+	// do) so cut state is recorded once. This test catches a regression of that.
+	describe('SELECT_EXACT cut + move (full flow)', () => {
+		function allWires(): Wire[] {
+			const huge = new Rectangle(-1000, -1000, 2000, 2000);
+			return Array.from(project.queryWiresInRange(huge));
+		}
+
+		it('produces no duplicate-ID wires after cut + move + push', () => {
+			// Horizontal wire spanning (0.5, 0.5) → (10.5, 0.5).
+			const wire = makeWire(0, 0, WireDirection.HORIZONTAL, 10);
+			project.addWire(wire);
+
+			// Cut at integer rect (5,0)+(2,1): outside [0.5,4.5], inside [4.5,7.5], outside [7.5,10.5].
+			project.selectionManager.commit(
+				new Rectangle(5, 0, 2, 1),
+				WorkMode.SELECT_EXACT
+			);
+
+			expect(project.selectionManager.hasPendingCut).toBeTrue();
+			expect(allWires().length).toBe(3);
+
+			// Find the inside piece (the one selected).
+			const insidePiece = Array.from(project.selectionManager.selectedWires)[0];
+			expect(insidePiece).toBeDefined();
+
+			// Drive a move on the inside piece. _pointerStart is one of the wire's
+			// covered grid cells; onMove provides the post-move cursor position so
+			// the delta lands on integer grid units.
+			session = new SelectionMoveSession(
+				project,
+				dragLayer,
+				new Set(),
+				new Set([insidePiece]),
+				new Point(5, 0)
+			);
+			// Move delta = (0, 5) — drag the inside piece down to a clear row.
+			session.onMove(makeMoveEvent(5, 5));
+			expect(session.canEnd()).toBeTrue();
+			session.onEnd();
+
+			// Cut+move materialized exactly three wires: two outside + one inside.
+			const after = allWires();
+			expect(after.length).toBe(3);
+
+			// No duplicate IDs.
+			const ids = after.map((w) => w.id);
+			expect(new Set(ids).size).toBe(ids.length);
+
+			// Pending cut was claimed.
+			expect(project.selectionManager.hasPendingCut).toBeFalse();
+
+			// Undo restores the pre-cut state (the original wire).
+			project.actionManager.undo();
+			const undone = allWires();
+			expect(undone.length).toBe(1);
+			expect(undone[0].position.x).toBe(0.5);
+			expect(undone[0].length).toBe(10);
+
+			// Redo restores the post-move state.
+			project.actionManager.redo();
+			const redone = allWires();
+			expect(redone.length).toBe(3);
+			expect(new Set(redone.map((w) => w.id)).size).toBe(redone.length);
+		});
+
+		it('rolls back the tentative cut when the drag ends with no movement', () => {
+			const wire = makeWire(0, 0, WireDirection.HORIZONTAL, 10);
+			project.addWire(wire);
+
+			project.selectionManager.commit(
+				new Rectangle(5, 0, 2, 1),
+				WorkMode.SELECT_EXACT
+			);
+
+			expect(allWires().length).toBe(3);
+			const insidePiece = Array.from(project.selectionManager.selectedWires)[0];
+
+			session = new SelectionMoveSession(
+				project,
+				dragLayer,
+				new Set(),
+				new Set([insidePiece]),
+				new Point(5, 0)
+			);
+			// No onMove — delta stays at (0, 0).
+			session.onEnd();
+
+			// hasMove was false, so the session returned early without claiming.
+			// The pending cut survives.
+			expect(project.selectionManager.hasPendingCut).toBeTrue();
+			expect(allWires().length).toBe(3);
+
+			// A subsequent clear (e.g., the user clicks empty space) rolls back.
+			project.selectionManager.clear();
+			expect(project.selectionManager.hasPendingCut).toBeFalse();
+			const after = allWires();
+			expect(after.length).toBe(1);
+			expect(after[0].position.x).toBe(0.5);
+			expect(after[0].length).toBe(10);
+
+			// And the undo history is empty — nothing should have been pushed.
+			expect(project.actionManager.undoAvailable).toBeFalse();
 		});
 	});
 });

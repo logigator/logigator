@@ -6,9 +6,16 @@ import { SerializedWire } from '../../wires/serialized-wire.model';
 export class AddWiresAction extends Action {
 	private readonly _wires: SerializedWire[];
 
-	constructor(...wires: Wire[]) {
+	constructor(...wires: Wire[]);
+	constructor(...wires: SerializedWire[]);
+	constructor(...wires: Wire[] | SerializedWire[]) {
 		super();
-		this._wires = wires.map((wire) => Wire.serialize(wire));
+
+		if (wires.length > 0 && wires[0] instanceof Wire) {
+			this._wires = wires.map((wire) => Wire.serialize(wire as Wire));
+		} else {
+			this._wires = wires as SerializedWire[];
+		}
 	}
 
 	do(project: Project): void {

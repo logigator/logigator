@@ -268,21 +268,29 @@ describe('SelectionManager', () => {
 				setStaticDIInjector(TestBed.inject(Injector));
 			});
 
-			it('pushes an ActionContainer when a wire crosses the rect boundary', () => {
-				// Wire (3.5, 4.5) length 5 crossing rect (5, 4, 2, 1).
+			it('does NOT push to ActionManager when a wire crosses the rect boundary (deferred cut)', () => {
+				// The cut is tentative until SelectionMoveSession claims it. This is
+				// the regression guard for: a SELECT_EXACT drag that scissors a wire
+				// must not pollute the undo history if no move follows.
 				const wire = makeFullWire(WireDirection.HORIZONTAL, 3.5, 4.5, 5);
-
-				let calls = 0;
-				project.queryWiresInRange.and.callFake(function* () {
-					yield* calls++ === 0 ? [wire] : [];
-				});
+				setWires(project, wire);
 
 				manager.commit(new Rectangle(5, 4, 2, 1), WorkMode.SELECT_EXACT);
 
-				expect((project as any).actionManager.push).toHaveBeenCalledTimes(1);
-				const pushed = (project as any).actionManager.push.calls.mostRecent()
-					.args[0];
-				expect(pushed).toBeInstanceOf(ActionContainer);
+				expect((project as any).actionManager.push).not.toHaveBeenCalled();
+				expect(manager.hasPendingCut).toBeTrue();
+			});
+
+			it('mutates the project directly with addWire/removeWire when cutting', () => {
+				const wire = makeFullWire(WireDirection.HORIZONTAL, 3.5, 4.5, 5);
+				setWires(project, wire);
+
+				manager.commit(new Rectangle(5, 4, 2, 1), WorkMode.SELECT_EXACT);
+
+				// Rect (5,4)+(2,1) cuts the wire into 3 pieces: outside-left, inside,
+				// outside-right. Originals are removed via project.removeWire(id).
+				expect(project.removeWire).toHaveBeenCalledTimes(1);
+				expect(project.addWire).toHaveBeenCalledTimes(3);
 			});
 
 			it('does not push an action when the only wire is fully inside the rect', () => {
@@ -296,36 +304,20 @@ describe('SelectionManager', () => {
 
 			// Regression test: a free-form drag rect has non-integer bounds, which means
 			// outside-piece gridBounds half-cell padding still intersects the rect via
-			// PixiJS' strict-< rule. The SelectionManager must therefore use id-tracking
-			// rather than a naive post-cut re-query to decide which pieces to select.
+			// PixiJS' strict-< rule. The SelectionManager must therefore identify
+			// inside pieces by their own bookkeeping rather than any post-cut query.
 			it('selects only the inside piece when the rect has non-integer bounds', () => {
 				const wire = makeFullWire(WireDirection.HORIZONTAL, 0.5, 4.5, 10);
+				setWires(project, wire);
 
 				const addedWires: any[] = [];
 				project.addWire.and.callFake((w: any) => {
 					addedWires.push(w);
 				});
 
-				// Make push synchronously execute the action against the spy project.
-				// addWire's callFake captures the deserialized wires; we replay them on
-				// the post-cut re-query so the id-based filter has something to inspect.
-				(project as any).actionManager.push.and.callFake((action: any) => {
-					action.do(project);
-				});
-
-				let calls = 0;
-				project.queryWiresInRange.and.callFake(function* () {
-					if (calls++ === 0) {
-						yield wire;
-					} else {
-						yield* addedWires;
-					}
-				});
-
 				manager.commit(new Rectangle(4.7, 4, 2.6, 1), WorkMode.SELECT_EXACT);
 
-				// Cut produces three pieces; AddWiresAction.do() materializes them via
-				// Wire.deserialize, which the addWire callFake captures.
+				// Cut produces three live Wire instances added directly via project.addWire.
 				expect(addedWires.length).toBe(3);
 
 				const insidePiece = addedWires.find((w) => w.position.x === 3.5);
@@ -344,6 +336,61 @@ describe('SelectionManager', () => {
 				expect(insidePiece.tint).toBe(SelectionManager.SELECTION_TINT);
 				expect(outsideLeft.tint).toBe(0xffffff);
 				expect(outsideRight.tint).toBe(0xffffff);
+			});
+
+			it('clear() rolls back the pending cut: adds originals back, removes pieces', () => {
+				const wire = makeFullWire(WireDirection.HORIZONTAL, 3.5, 4.5, 5);
+				setWires(project, wire);
+
+				manager.commit(new Rectangle(5, 4, 2, 1), WorkMode.SELECT_EXACT);
+				expect(manager.hasPendingCut).toBeTrue();
+
+				project.addWire.calls.reset();
+				project.removeWire.calls.reset();
+
+				manager.clear();
+
+				expect(manager.hasPendingCut).toBeFalse();
+				// Rollback removes the 3 new pieces and re-adds the 1 original.
+				expect(project.removeWire).toHaveBeenCalledTimes(3);
+				expect(project.addWire).toHaveBeenCalledTimes(1);
+			});
+
+			it('claimPendingCut returns an ActionContainer and clears the pending state', () => {
+				const wire = makeFullWire(WireDirection.HORIZONTAL, 3.5, 4.5, 5);
+				setWires(project, wire);
+
+				manager.commit(new Rectangle(5, 4, 2, 1), WorkMode.SELECT_EXACT);
+				expect(manager.hasPendingCut).toBeTrue();
+
+				project.addWire.calls.reset();
+				project.removeWire.calls.reset();
+
+				const claimed = manager.claimPendingCut();
+
+				expect(claimed).toBeInstanceOf(ActionContainer);
+				expect(manager.hasPendingCut).toBeFalse();
+				// Claim does NOT mutate the project — it just hands the rollback data
+				// to the caller (the move session) to fold into its ActionContainer.
+				expect(project.removeWire).not.toHaveBeenCalled();
+				expect(project.addWire).not.toHaveBeenCalled();
+			});
+
+			it('claimPendingCut returns null when nothing is pending', () => {
+				expect(manager.claimPendingCut()).toBeNull();
+			});
+
+			it('rollbackPendingCut returns true after a cut and false when nothing is pending', () => {
+				const wire = makeFullWire(WireDirection.HORIZONTAL, 3.5, 4.5, 5);
+				setWires(project, wire);
+
+				expect(manager.rollbackPendingCut()).toBeFalse();
+
+				manager.commit(new Rectangle(5, 4, 2, 1), WorkMode.SELECT_EXACT);
+
+				expect(manager.rollbackPendingCut()).toBeTrue();
+				expect(manager.hasPendingCut).toBeFalse();
+				expect(manager.rollbackPendingCut()).toBeFalse();
 			});
 		});
 	});

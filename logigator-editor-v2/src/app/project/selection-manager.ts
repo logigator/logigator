@@ -7,7 +7,21 @@ import { cutWire } from '../wires/wire-cut';
 import { AddWiresAction } from '../actions/actions/add-wires.action';
 import { RemoveWiresAction } from '../actions/actions/remove-wires.action';
 import { ActionContainer } from '../actions/action-container';
+import { SerializedWire } from '../wires/serialized-wire.model';
 import type { Project } from './project';
+
+interface PendingCut {
+	// Originals as they existed pre-cut. Used to restore on rollback and to
+	// build the RemoveWiresAction inside the claimed ActionContainer.
+	originalsSerialized: SerializedWire[];
+	// IDs of the new pieces that the scissor created and added to the project.
+	// Used by rollback to find and remove them via project.removeWire(id).
+	newPieceIds: number[];
+	// Snapshot of the new pieces at the post-cut position. Used by claim to
+	// build the AddWiresAction so undo of the combined cut+move action restores
+	// the pieces at their post-cut positions before the move undo runs.
+	newPiecesSerialized: SerializedWire[];
+}
 
 export class SelectionManager {
 	static readonly SELECTION_TINT = 0x888888;
@@ -15,6 +29,7 @@ export class SelectionManager {
 	private readonly _selectedComponents = new Set<Component>();
 	private readonly _selectedWires = new Set<Wire>();
 	private readonly _selectionChange$ = new Subject<void>();
+	private _pendingCut: PendingCut | null = null;
 
 	constructor(private readonly project: Project) {}
 
@@ -48,12 +63,12 @@ export class SelectionManager {
 
 	private _scissorAndSelectWires(rect: Rectangle): void {
 		// Snapshot before mutating: queryWiresInRange returns a single-use generator
-		// and the quad-tree is updated synchronously by RemoveWiresAction.do().
+		// and the quad-tree is updated synchronously by the addWire/removeWire calls.
 		const candidates = Array.from(this.project.queryWiresInRange(rect));
 
 		const wiresToKeep: Wire[] = [];
-		const toRemove: Wire[] = [];
-		const toAdd: Wire[] = [];
+		const wiresToCut: Wire[] = [];
+		const newPieces: Wire[] = [];
 		const insideIds = new Set<number>();
 
 		for (const wire of candidates) {
@@ -63,29 +78,41 @@ export class SelectionManager {
 				wiresToKeep.push(wire);
 				continue;
 			}
-			toRemove.push(wire);
+			wiresToCut.push(wire);
 			result.pieces.forEach((p, idx) => {
 				const newWire = new Wire(p.direction, p.length);
 				newWire.position.set(p.position.x, p.position.y);
-				toAdd.push(newWire);
+				newPieces.push(newWire);
 				if (idx === result.insideIndex) {
 					insideIds.add(newWire.id);
 				}
 			});
 		}
 
-		if (toRemove.length > 0) {
-			this.project.actionManager.push(
-				new ActionContainer(
-					new RemoveWiresAction(...toRemove),
-					new AddWiresAction(...toAdd)
-				)
-			);
-			// AddWiresAction serializes its input at construction time and creates
-			// fresh Wire instances inside do() via deserialize; the toAdd wires are
-			// orphans that never enter the scene, so destroy them to release the
-			// PixiJS Graphics state.
-			for (const orphan of toAdd) orphan.destroy();
+		if (wiresToCut.length > 0) {
+			// Tentative cut: mutate the project directly so the inside piece is a
+			// real selectable Wire, but DO NOT push to ActionManager. The cut becomes
+			// a real action only when the selection is committed via a real
+			// modification (currently: SelectionMoveSession.onEnd with hasMove).
+			// Cancelling the selection (clear, mode change, Escape, undo) calls
+			// _rollbackPendingCut which restores the originals.
+			const originalsSerialized = wiresToCut.map((w) => Wire.serialize(w));
+			const newPiecesSerialized = newPieces.map((w) => Wire.serialize(w));
+
+			// Match the action-container order (remove originals, then add pieces)
+			// so the CP manager and quad tree see the same transitions as undo/redo.
+			for (const wire of wiresToCut) {
+				this.project.removeWire(wire.id);
+			}
+			for (const piece of newPieces) {
+				this.project.addWire(piece);
+			}
+
+			this._pendingCut = {
+				originalsSerialized,
+				newPieceIds: newPieces.map((p) => p.id),
+				newPiecesSerialized
+			};
 		}
 
 		for (const wire of wiresToKeep) {
@@ -94,15 +121,13 @@ export class SelectionManager {
 			this._selectedWires.add(wire);
 		}
 
-		// Inside pieces are identified by ID: the post-cut quad-tree may also
-		// contain outside pieces (their gridBounds half-cell padding intersects a
-		// non-integer rect), but those IDs are not in insideIds and stay
-		// unselected.
+		// Inside pieces are live in the project now; select them directly by ID.
+		// No re-query is needed because we added them synchronously above.
 		if (insideIds.size > 0) {
-			for (const wire of this.project.queryWiresInRange(rect)) {
-				if (!wire.destroyed && insideIds.has(wire.id)) {
-					wire.tint = SelectionManager.SELECTION_TINT;
-					this._selectedWires.add(wire);
+			for (const piece of newPieces) {
+				if (!piece.destroyed && insideIds.has(piece.id)) {
+					piece.tint = SelectionManager.SELECTION_TINT;
+					this._selectedWires.add(piece);
 				}
 			}
 		}
@@ -156,6 +181,11 @@ export class SelectionManager {
 	}
 
 	public clear(): void {
+		// Roll back any tentative scissor cut first so cancelled selections leave
+		// the project in its pre-cut state. The rollback mutates the project
+		// directly and bypasses ActionManager — see _scissorAndSelectWires.
+		this._rollbackPendingCutInternal();
+
 		for (const component of this._selectedComponents) {
 			if (!component.destroyed) {
 				component.tint = 0xffffff;
@@ -169,6 +199,57 @@ export class SelectionManager {
 		this._selectedComponents.clear();
 		this._selectedWires.clear();
 		this._selectionChange$.next();
+	}
+
+	// Builds the ActionContainer for a tentative cut so the caller can fold it
+	// into a larger committed action (currently: SelectionMoveSession's move
+	// container). Clears _pendingCut without rolling back — the caller is now
+	// responsible for the cut. Returns null when nothing is pending.
+	public claimPendingCut(): ActionContainer | null {
+		if (!this._pendingCut) return null;
+		const cut = this._pendingCut;
+		this._pendingCut = null;
+		return new ActionContainer(
+			new RemoveWiresAction(...cut.originalsSerialized),
+			new AddWiresAction(...cut.newPiecesSerialized)
+		);
+	}
+
+	// Called by ActionManager.undo so Ctrl+Z while a tentative cut is active
+	// reverts the cut instead of consuming the real undo stack. Returns true
+	// when something was rolled back.
+	//
+	// TODO: this is not safe during an in-flight SelectionMoveSession — the
+	// inside pieces are detached from the quad tree (held by dragLayer), so
+	// project.removeWire(id) below silently skips them while the originals are
+	// still re-added. Result is a duplicate-ID tree. Undo during drag is a
+	// pre-existing gap (the move actions aren't tracked either); fix both
+	// together when adding a drag-aware undo guard.
+	public rollbackPendingCut(): boolean {
+		if (!this._pendingCut) return false;
+		this._rollbackPendingCutInternal();
+		this._selectionChange$.next();
+		return true;
+	}
+
+	public get hasPendingCut(): boolean {
+		return this._pendingCut !== null;
+	}
+
+	private _rollbackPendingCutInternal(): void {
+		if (!this._pendingCut) return;
+		const cut = this._pendingCut;
+		this._pendingCut = null;
+
+		// Remove the cut pieces (project.removeWire calls evict, which drops them
+		// from _selectedWires automatically).
+		for (const id of cut.newPieceIds) {
+			this.project.removeWire(id);
+		}
+		// Re-add the originals at their pre-cut positions.
+		for (const serial of cut.originalsSerialized) {
+			this.project.addWire(Wire.deserialize(serial));
+		}
 	}
 
 	// Called from Project.removeComponent/removeWire before destroy() to prevent

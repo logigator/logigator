@@ -285,7 +285,7 @@ leftCut  = max(wStart, floor(rect.x) - 0.5)
 rightCut = min(wEnd,   ceil(rect.right) + 0.5)
 ```
 
-Cuts land on the first half-grid position **outside** the rectangle on each side. This guarantees the outside pieces' `gridBounds.right` (or `.bottom`) lands at an integer ≤ `rect.x` (or ≥ `rect.right` for the bottom), strictly excluding the outside pieces from any future `Rectangle.intersects(rect)` test on integer-aligned rects. For non-integer (user-drawn) rectangles the outside pieces can still half-cell-overlap the rect — `SelectionManager` does not rely on a post-cut re-query but tracks the inside piece's ID directly to decide what to add to the selection.
+Cuts land on the first half-grid position **outside** the rectangle on each side. This guarantees the outside pieces' `gridBounds.right` (or `.bottom`) lands at an integer ≤ `rect.x` (or ≥ `rect.right` for the bottom), strictly excluding the outside pieces from any future `Rectangle.intersects(rect)` test on integer-aligned rects. The outside pieces' positions are not used to decide what's selected — `SelectionManager` holds the new `Wire` instances directly in a local array and picks the inside one by ID — so the non-integer (user-drawn) rectangle case is handled correctly without re-query.
 
 ### Worked example
 
@@ -304,6 +304,18 @@ pieces:
 ### No wire integration on scissor
 
 `Project.addWire` does NOT invoke `WireIntegrator`, so the cut pieces — which share endpoints at the cut points — stay as separate wires. This is intentional: the whole point of scissoring is to detach the inside from the outside. The `ConnectionPointManager`'s ≥3-direction rule naturally suppresses visible junction dots at the interior cut endpoints, so the cut leaves no visual trace beyond the new selection.
+
+### Tentative cut + commit on move
+
+A scissor cut is **tentative** until the user actually modifies the selection. `SelectionManager._scissorAndSelectWires` mutates the project directly via `Project.addWire` / `Project.removeWire` (so the inside piece is a real, selectable `Wire`) but does **not** push anything to `ActionManager`. The rollback data is held in `SelectionManager._pendingCut`.
+
+Three outcomes:
+
+- **Move (`SelectionMoveSession.onEnd` with `hasMove === true`)** — the move session calls `selectionManager.claimPendingCut()`, which returns an `ActionContainer(RemoveWiresAction, AddWiresAction)` representing the cut. The session prepends this to its own action container so cut + move are recorded as a single `ActionContainer` and revert with one `Ctrl+Z`. The `RemoveWiresAction` captures the originals at their pre-cut positions; the `AddWiresAction` captures the new pieces at their **post-cut** positions, so the subsequent move action inside the same container correctly transitions them from post-cut to post-move.
+- **Cancel (`SelectionManager.clear()`, mode change, Escape, Ctrl+Z)** — `_rollbackPendingCutInternal` removes the new pieces and re-adds the originals, restoring the pre-cut state. Nothing is pushed to `ActionManager`. `ActionManager.undo()` consults `selectionManager.rollbackPendingCut()` first so a Ctrl+Z while a tentative cut is active rolls it back instead of consuming the real undo stack.
+- **No-move drag (`SelectionMoveSession.onEnd` with `hasMove === false`)** — the session returns early without claiming, leaving `_pendingCut` intact. The next clear (single-click in empty space, new rect drag, mode change) rolls it back.
+
+This guarantees the wire invariant — collinear wires that touch at one endpoint with no third wire at the junction must merge — is never observably violated. The split state only persists when a move has already separated the pieces.
 
 ---
 

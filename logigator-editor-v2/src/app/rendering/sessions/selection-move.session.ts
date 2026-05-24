@@ -104,6 +104,15 @@ export class SelectionMoveSession implements DragSession {
 
 		const action = new ActionContainer();
 
+		// If this drag started from a SELECT_EXACT selection with a tentative
+		// scissor cut, fold that cut into the action so cut+move undo as one step.
+		// On hasMove === false we returned above without claiming, leaving the
+		// pending cut for the next selection-clear to roll back.
+		const pendingCut = this.project.selectionManager.claimPendingCut();
+		if (pendingCut) {
+			action.add(pendingCut);
+		}
+
 		if (this._components.length > 0) {
 			const componentEntries: MoveEntry[] = this._components.map((c) => ({
 				id: c.id,
@@ -125,12 +134,26 @@ export class SelectionMoveSession implements DragSession {
 				// correctly restores them at the original location.
 				const absorbed = toRemove.filter((w) => !this._wires.includes(w));
 				const absorbedSnapshots = absorbed.map((w) => Wire.serialize(w));
-				action.add(
-					new RemoveWiresAction(...wireSnapshots, ...absorbedSnapshots)
+				const mergeRemove = new RemoveWiresAction(
+					...wireSnapshots,
+					...absorbedSnapshots
 				);
-				action.add(new AddWiresAction(...toAdd));
+				const mergeAdd = new AddWiresAction(...toAdd);
+				action.add(mergeRemove);
+				action.add(mergeAdd);
+
+				if (pendingCut) {
+					// We'll register (not push) below — push's do() pass would re-run
+					// the cut container, which would re-deserialize wires with IDs
+					// already in the quad tree and produce duplicates. Apply the
+					// merge mutations manually so the project ends up in the same
+					// state push() would have produced.
+					mergeRemove.do(this.project);
+					mergeAdd.do(this.project);
+				}
 			} else {
-				// Simple move — no merges occurred.
+				// Simple move — no merges occurred. Positions are already at post-move
+				// (lines above), so MoveWiresAction.do is idempotent if push() runs.
 				const wireEntries: MoveEntry[] = wireSnapshots.map((snap, i) => ({
 					id: snap.id,
 					oldPos: new Point(snap.pos[0] + 0.5, snap.pos[1] + 0.5),
@@ -141,7 +164,16 @@ export class SelectionMoveSession implements DragSession {
 		}
 
 		if (action.length > 0) {
-			this.project.actionManager.push(action);
+			if (pendingCut) {
+				// Cut + move state is already fully materialized in the project
+				// (cut at scissor time, positions in the move loop above, merges
+				// just now). register() records the action without re-running its
+				// do() — which would otherwise re-deserialize cut pieces with
+				// IDs already in the quad tree.
+				this.project.actionManager.register(action);
+			} else {
+				this.project.actionManager.push(action);
+			}
 		}
 	}
 
