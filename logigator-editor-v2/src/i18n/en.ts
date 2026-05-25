@@ -35,8 +35,7 @@ const en = {
 				description:
 					"A text annotation placed on the canvas. The dot marks the label's anchor point.",
 				options: {
-					text: 'Text',
-					dialogTitle: 'Edit text',
+					text: 'Edit text',
 					placeholder: 'Enter text...',
 					fontSize: 'Font size'
 				}

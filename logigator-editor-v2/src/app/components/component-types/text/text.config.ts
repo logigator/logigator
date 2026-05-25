@@ -24,7 +24,6 @@ export const textComponentConfig: ComponentConfig = {
 			'components.def.TEXT.options.text',
 			'[insert text]',
 			{
-				dialogTitle: 'components.def.TEXT.options.dialogTitle',
 				placeholder: 'components.def.TEXT.options.placeholder',
 				maxLength: 500
 			}
