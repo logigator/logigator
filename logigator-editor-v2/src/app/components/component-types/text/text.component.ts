@@ -62,8 +62,8 @@ export class TextComponent extends Component {
 		this._visualSpace.addChild(dot);
 
 		// Access options via this.options (set by base constructor before draw() runs).
-		const textOption = this.options[1] as TextAreaComponentOption;
-		const fontSizeOption = this.options[2] as NumberComponentOption;
+		const fontSizeOption = this.options[1] as NumberComponentOption;
+		const textOption = this.options[2] as TextAreaComponentOption;
 
 		const label = new Text({
 			text: textOption.value,

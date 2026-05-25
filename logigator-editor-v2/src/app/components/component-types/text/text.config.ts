@@ -16,15 +16,19 @@ export const textComponentConfig: ComponentConfig = {
 		new DirectionComponentOption(),
 		new NumberComponentOption(
 			'components.def.TEXT.options.fontSize',
-			8,
+			6,
 			48,
 			12
 		),
-		new TextAreaComponentOption('components.def.TEXT.options.text', '', {
-			dialogTitle: 'components.def.TEXT.options.dialogTitle',
-			placeholder: 'components.def.TEXT.options.placeholder',
-			maxLength: 500
-		})
+		new TextAreaComponentOption(
+			'components.def.TEXT.options.text',
+			'[insert text]',
+			{
+				dialogTitle: 'components.def.TEXT.options.dialogTitle',
+				placeholder: 'components.def.TEXT.options.placeholder',
+				maxLength: 500
+			}
+		)
 	],
 	implementation: TextComponent
 };
