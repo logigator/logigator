@@ -7,7 +7,7 @@ import {
 } from '@angular/core';
 import { ComponentConfig } from '../../../components/component-config.model';
 import { ButtonModule } from 'primeng/button';
-import { TranslocoDirective } from '@jsverse/transloco';
+import { TranslocoDirective, TranslocoService } from '@jsverse/transloco';
 import { WorkModeService } from '../../../work-mode/work-mode.service';
 import { WorkMode } from '../../../work-mode/work-mode.enum';
 
@@ -20,10 +20,19 @@ import { WorkMode } from '../../../work-mode/work-mode.enum';
 })
 export class ComponentListComponent {
 	private readonly workModeService = inject(WorkModeService);
+	private readonly translocoService = inject(TranslocoService);
 
 	public headline = input<string>('');
 	public components = input<ComponentConfig[]>([]);
 	public searchText = input<string>('');
+
+	protected filteredComponents = computed(() => {
+		const search = this.searchText().trim().toLowerCase();
+		if (!search) return this.components();
+		return this.components().filter((comp) =>
+			this.translocoService.translate(comp.name).toLowerCase().includes(search)
+		);
+	});
 
 	protected selectedComponent = computed(() => {
 		const selectedComponent = this.workModeService.selectedComponentType();
@@ -32,8 +41,9 @@ export class ComponentListComponent {
 		}
 
 		return (
-			this.components().find((comp) => comp.type === selectedComponent)?.type ??
-			null
+			this.filteredComponents().find(
+				(comp) => comp.type === selectedComponent
+			)?.type ?? null
 		);
 	});
 

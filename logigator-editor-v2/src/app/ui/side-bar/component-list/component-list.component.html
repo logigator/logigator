@@ -1,7 +1,7 @@
 <div *transloco="let t" class="border border-white/20">
 	<span class="block bg-white/20 p-2 font-bold text-lg">{{ headline() }}</span>
 	<div class="flex flex-wrap gap-2 m-2">
-		@for (comp of components(); track comp.type) {
+		@for (comp of filteredComponents(); track comp.type) {
 			<div
 				class="flex flex-col items-center gap-1 cursor-pointer hover:bg-black/10"
 				[class.bg-white/20]="selectedComponent() === comp.type"
