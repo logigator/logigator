@@ -244,6 +244,7 @@ export class Project extends InteractionContainer {
 	): boolean {
 		for (const comp of this.queryComponentsInRange(wireBounds)) {
 			if (excludeIds.has(comp.id)) continue;
+			if (comp.ignoresWireCollision) continue;
 			if (wireBounds.intersects(comp.bodyGridBounds)) return true;
 		}
 		return false;
@@ -251,8 +252,10 @@ export class Project extends InteractionContainer {
 
 	public hasComponentBodyWireCollision(
 		bodyBounds: Rectangle,
-		excludeIds: ReadonlySet<number> = new Set()
+		excludeIds: ReadonlySet<number> = new Set(),
+		ignoresWires = false
 	): boolean {
+		if (ignoresWires) return false;
 		for (const wire of this.queryWiresInRange(bodyBounds)) {
 			if (excludeIds.has(wire.id)) continue;
 			if (wire.gridBounds.intersects(bodyBounds)) return true;

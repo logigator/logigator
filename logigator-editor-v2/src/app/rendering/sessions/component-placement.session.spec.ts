@@ -9,6 +9,7 @@ import { AndComponent } from '../../components/component-types/and/and.component
 import { andComponentConfig } from '../../components/component-types/and/and.config';
 import { NotComponent } from '../../components/component-types/not/not.component';
 import { notComponentConfig } from '../../components/component-types/not/not.config';
+import { textComponentConfig } from '../../components/component-types/text/text.config';
 import { Direction } from '../../utils/direction';
 import { Component } from '../../components/component';
 import { ComponentPlacementSession } from './component-placement.session';
@@ -206,6 +207,33 @@ describe('ComponentPlacementSession collision', () => {
 			project,
 			dragLayer,
 			new Point(2, 1)
+		);
+		expect(session.canEnd()).toBeFalse();
+	});
+
+	it('TEXT under a wire: canEnd() is true (ignoresWireCollision)', () => {
+		// Wire at (0,0) horizontal length 5. TEXT placed at (1,0) — body inside wire.
+		const wire = makeWire(0, 0, WireDirection.HORIZONTAL, 5);
+		project.addWire(wire);
+		project.componentToPlace = textComponentConfig;
+		session = new ComponentPlacementSession(
+			project,
+			dragLayer,
+			new Point(1, 0)
+		);
+		expect(session.canEnd()).toBeTrue();
+		wire.destroy();
+	});
+
+	it('TEXT on top of existing component: canEnd() is false (body-body collision)', () => {
+		const existing = makeNot();
+		existing.position.set(1, 0);
+		project.addComponent(existing);
+		project.componentToPlace = textComponentConfig;
+		session = new ComponentPlacementSession(
+			project,
+			dragLayer,
+			new Point(1, 0)
 		);
 		expect(session.canEnd()).toBeFalse();
 	});

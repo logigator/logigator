@@ -64,7 +64,7 @@ The serialized form stores the type, grid-unit position (`component.position.x /
 
 **`Direction`** (in `utils/direction.ts`) — four cardinal directions clockwise from East: `E = 0`, `S = 1`, `W = 2`, `N = 3`. The numeric layout is load-bearing: `rotation = value * π/2` (Component direction → PixiJS rotation) and `oppositeDir = (value + 2) % 4` (input stub ↔ output stub flip). The `Component.direction` setter applies the PixiJS rotation automatically. Shared with the connection-points layer.
 
-**`ComponentCategory`** — groups components for the UI palette (e.g., Basic, Advanced).
+**`ComponentCategory`** — groups components for the UI palette. Values: `BASIC`, `ADVANCED`, `HIDDEN`. The sidebar only queries `basicComponents` / `advancedComponents` getters in `ComponentProviderService`, so `HIDDEN` components never appear in the palette. `TextComponent` uses `HIDDEN`.
 
 ---
 
@@ -84,12 +84,17 @@ Key public members:
 - `id`, `direction`, `numInputs`, `numOutputs` — core state; setters on `numInputs`/`numOutputs` and `direction` trigger a redraw and emit on `portsChange$`
 - `position` (inherited from PixiJS Container) — the component's grid-unit position; this IS the canonical circuit coordinate
 - `options: ComponentOption[]` — live option instances owned by this component
+- `ignoresWireCollision: boolean` (default `false`) — when `true`, the component is skipped by `Project.hasWireBodyCollision` (wires may pass through its body) and `hasComponentBodyWireCollision` returns `false` for it. Currently only `TextComponent` sets this to `true`.
 - `connectionPoints: Point[]` — port positions in grid-unit space (parent `_gridSpace` coordinates; inputs first, then outputs)
 - `portsChange$: Subject<{ oldPorts, newPorts }>` — fires whenever the `direction`, `numInputs`, or `numOutputs` setter runs after construction. `Project.addComponent` subscribes on insert and unsubscribes in `removeComponent`. The handler runs `computeIntegration({ movedComponentPorts })` to enforce the split-on-touch invariants (a new port landing on a wire's interior auto-splits that wire), then updates CP markers. The integrator pass is applied directly without `ActionManager` wrapping, so the implied splits/merges aren't undoable — rotation never had undo support anyway. See [Wire Integration Invariants](wires.md#wire-integration-invariants).
 - `gridBounds: Rectangle` — axis-aligned bounding box in grid units, accounting for rotation; **includes** 0.5-unit stub padding on the input and output sides; used by `QuadTreeContainer` for spatial indexing and component–component collision
 - `bodyGridBounds: Rectangle` — same AABB as `gridBounds` but **excluding** stub padding; used for wire–body collision checks so that a wire endpoint touching a port stub tip is not falsely reported as a collision
 - `applyScale(scale)` — applies a zoom scale factor and redraws (wires and component stroke widths are scale-dependent)
 - `Component.serialize(c)` / `Component.deserialize(s, config)` — static round-trip helpers
+
+Protected helpers available to subclasses:
+
+- `redraw()` — triggers a full redraw of `_visualSpace`. Call from option `onChange$` handlers when bespoke component state (other than `numInputs` / `numOutputs` / `direction`) changes the visual. `TextComponent` uses this to react to text content and font-size changes.
 
 ### Rendering lifecycle
 

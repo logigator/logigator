@@ -1,4 +1,5 @@
 export const enum ComponentCategory {
 	BASIC,
-	ADVANCED
+	ADVANCED,
+	HIDDEN
 }

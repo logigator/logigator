@@ -97,7 +97,12 @@ export class ComponentPlacementSession implements DragSession {
 			this.project.hasComponentCollision(
 				this._boundsWorld(),
 				this._bodyBoundsWorld()
-			) || this.project.hasComponentBodyWireCollision(this._bodyBoundsWorld());
+			) ||
+			this.project.hasComponentBodyWireCollision(
+				this._bodyBoundsWorld(),
+				new Set(),
+				this._component.ignoresWireCollision
+			);
 		if (collision === this._hasCollision) return;
 		this._hasCollision = collision;
 		// Tint this._component directly (not dragLayer) to avoid multiplying

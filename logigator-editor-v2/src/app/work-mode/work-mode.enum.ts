@@ -4,6 +4,5 @@ export const enum WorkMode {
 	SELECT = 'sel',
 	SELECT_EXACT = 'selExact',
 	ERASE = 'erase',
-	PLACE_TEXT = 'text',
 	COMPONENT_PLACEMENT = 'placeComp'
 }

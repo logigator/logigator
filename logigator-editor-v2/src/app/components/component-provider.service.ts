@@ -5,11 +5,13 @@ import { ComponentCategory } from './component-category.enum';
 import { notComponentConfig } from './component-types/not/not.config';
 import { andComponentConfig } from './component-types/and/and.config';
 import { romComponentConfig } from './component-types/rom/rom.config';
+import { textComponentConfig } from './component-types/text/text.config';
 
 const COMPONENTS: Record<ComponentType, ComponentConfig> = {
 	[ComponentType.NOT]: notComponentConfig,
 	[ComponentType.AND]: andComponentConfig,
-	[ComponentType.ROM]: romComponentConfig
+	[ComponentType.ROM]: romComponentConfig,
+	[ComponentType.TEXT]: textComponentConfig
 };
 
 @Injectable({

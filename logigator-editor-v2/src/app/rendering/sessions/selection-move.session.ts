@@ -259,7 +259,11 @@ export class SelectionMoveSession implements DragSession {
 						this._boundsWorld(c),
 						this._bodyBoundsWorld(c)
 					) ||
-					this.project.hasComponentBodyWireCollision(this._bodyBoundsWorld(c))
+					this.project.hasComponentBodyWireCollision(
+						this._bodyBoundsWorld(c),
+						new Set(),
+						c.ignoresWireCollision
+					)
 			) ||
 			this._wires.some((w) =>
 				this.project.hasWireBodyCollision(this._wireBoundsWorld(w))

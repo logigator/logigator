@@ -30,9 +30,7 @@ export class TextAreaComponentOption extends ComponentOption<string> {
 
 	override set value(value: string) {
 		super.value =
-			value.length > this.maxLength
-				? value.slice(0, this.maxLength)
-				: value;
+			value.length > this.maxLength ? value.slice(0, this.maxLength) : value;
 	}
 
 	override get value(): string {
@@ -40,14 +38,10 @@ export class TextAreaComponentOption extends ComponentOption<string> {
 	}
 
 	clone(initialValue?: string): TextAreaComponentOption {
-		return new TextAreaComponentOption(
-			this.label,
-			initialValue ?? this.value,
-			{
-				dialogTitle: this.dialogTitle,
-				placeholder: this.placeholder,
-				maxLength: this.maxLength
-			}
-		);
+		return new TextAreaComponentOption(this.label, initialValue ?? this.value, {
+			dialogTitle: this.dialogTitle,
+			placeholder: this.placeholder,
+			maxLength: this.maxLength
+		});
 	}
 }

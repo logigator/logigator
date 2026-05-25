@@ -29,6 +29,7 @@ export interface PortsChange {
 export abstract class Component extends Container implements Connectable {
 	private static readonly _idAllocator = new IdAllocator();
 	public abstract readonly config: ComponentConfig;
+	public readonly ignoresWireCollision: boolean = false;
 	public readonly options: ComponentOption[];
 
 	// Fires when port positions change (rotation, input/output count). The listener
@@ -260,6 +261,10 @@ export abstract class Component extends Container implements Connectable {
 		}
 
 		return points;
+	}
+
+	protected redraw(): void {
+		this._draw();
 	}
 
 	private _draw(): void {

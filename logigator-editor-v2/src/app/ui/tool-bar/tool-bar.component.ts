@@ -10,6 +10,7 @@ import { TooltipModule } from 'primeng/tooltip';
 import { TranslocoDirective } from '@jsverse/transloco';
 import { WorkModeService } from '../../work-mode/work-mode.service';
 import { WorkMode } from '../../work-mode/work-mode.enum';
+import { ComponentType } from '../../components/component-type.enum';
 import { ProjectService } from '../../project/project.service';
 
 @Component({
@@ -39,7 +40,9 @@ export class ToolBarComponent {
 		() => this.workModeService.mode() === WorkMode.ERASE
 	);
 	protected isPlaceTextMode = computed(
-		() => this.workModeService.mode() === WorkMode.PLACE_TEXT
+		() =>
+			this.workModeService.mode() === WorkMode.COMPONENT_PLACEMENT &&
+			this.workModeService.selectedComponentType() === ComponentType.TEXT
 	);
 
 	protected setWireDrawMode(): void {
@@ -63,7 +66,8 @@ export class ToolBarComponent {
 	}
 
 	protected setPlaceTextMode(): void {
-		this.workModeService.setMode(WorkMode.PLACE_TEXT);
+		this.workModeService.setMode(WorkMode.COMPONENT_PLACEMENT);
+		this.workModeService.setSelectedComponentType(ComponentType.TEXT);
 	}
 
 	protected undo(): void {

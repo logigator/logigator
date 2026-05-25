@@ -1,0 +1,65 @@
+import { Injector } from '@angular/core';
+import { TestBed } from '@angular/core/testing';
+import { Container, FederatedPointerEvent, Point } from 'pixi.js';
+import { setStaticDIInjector } from '../../utils/get-di';
+import { Project } from '../../project/project';
+import { Component } from '../../components/component';
+import { Wire } from '../../wires/wire';
+import { ConnectionPoint } from '../../connection-points/connection-point';
+import { WireDrawingSession } from './wire-drawing.session';
+import { textComponentConfig } from '../../components/component-types/text/text.config';
+import { TextComponent } from '../../components/component-types/text/text.component';
+import { andComponentConfig } from '../../components/component-types/and/and.config';
+import { AndComponent } from '../../components/component-types/and/and.component';
+
+function makeMoveEvent(x: number, y: number): FederatedPointerEvent {
+	return {
+		getLocalPosition: () => new Point(x, y)
+	} as unknown as FederatedPointerEvent;
+}
+
+describe('WireDrawingSession + TextComponent (ignoresWireCollision)', () => {
+	let project: Project;
+	let dragLayer: Container<Component | Wire | ConnectionPoint>;
+	let session: WireDrawingSession;
+
+	beforeEach(() => {
+		setStaticDIInjector(TestBed.inject(Injector));
+		project = new Project();
+		dragLayer = new Container();
+	});
+
+	afterEach(() => {
+		session?.onCancel();
+		dragLayer.destroy();
+		project.destroy({ children: true });
+	});
+
+	it('drawing a wire across a TEXT body reports no collision', () => {
+		const text = new TextComponent(
+			textComponentConfig.options.map((o) => o.clone())
+		);
+		text.position.set(3, 0);
+		project.addComponent(text);
+
+		// Start at (0,0), move right to (6,0) — passes through TEXT body at (3,0).
+		session = new WireDrawingSession(project, dragLayer, new Point(0, 0));
+		session.onMove(makeMoveEvent(6, 0));
+
+		expect(session.canEnd()).toBeTrue();
+	});
+
+	it('drawing a wire across a normal component body does report collision', () => {
+		const and = new AndComponent(
+			andComponentConfig.options.map((o) => o.clone())
+		);
+		and.position.set(3, 0);
+		project.addComponent(and);
+
+		// AND body occupies (3,0)–(5,2); wire from (0,0)→(6,0) intersects it.
+		session = new WireDrawingSession(project, dragLayer, new Point(0, 0));
+		session.onMove(makeMoveEvent(6, 0));
+
+		expect(session.canEnd()).toBeFalse();
+	});
+});

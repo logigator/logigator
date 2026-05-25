@@ -297,6 +297,8 @@ The loop is bounded at 8 iterations (in practice converges in 1–2); exceeding 
 
 A wire endpoint touching a port stub tip is not a collision — the strict `Rectangle.intersects` semantics and body-only bounds ensure this case is handled correctly without special-casing.
 
+Components flagged with `ignoresWireCollision = true` are skipped entirely by the wire-vs-body check (currently only `TextComponent`). Wires may therefore pass through a text annotation body without triggering a red collision indicator or blocking `canEnd()`.
+
 ---
 
 ## Wire Scissor Cutting

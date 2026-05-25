@@ -29,6 +29,17 @@ const en = {
 					wordSize: 'Word Size',
 					addressSize: 'Address Size'
 				}
+			},
+			TEXT: {
+				name: 'Text',
+				description:
+					"A text annotation placed on the canvas. The dot marks the label's anchor point.",
+				options: {
+					text: 'Text',
+					dialogTitle: 'Edit text',
+					placeholder: 'Enter text...',
+					fontSize: 'Font size'
+				}
 			}
 		},
 		options: {
@@ -47,9 +58,8 @@ const en = {
 			sel: 'Selecting Elements',
 			selExact: 'Selecting Elements (Cut Wires at Selection)',
 			erase: 'Erasing Elements',
-			text: 'Adding Text',
 			placeComp: 'Placing Components: {{componentName}}'
-		} as Record<WorkMode, string>,
+		} satisfies Record<WorkMode, string>,
 		saved: 'Saved',
 		unsaved: 'Unsaved changes',
 		selected: 'Selected'
