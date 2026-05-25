@@ -1,0 +1,40 @@
+<div *transloco="let t">
+	<p-button
+		[label]="t(option().label)"
+		size="small"
+		severity="secondary"
+		(onClick)="open()"
+	></p-button>
+
+	<p-dialog
+		[visible]="dialogVisible()"
+		(visibleChange)="$event ? null : cancel()"
+		[header]="t(option().dialogTitle)"
+		[modal]="true"
+		[dismissableMask]="false"
+		[style]="{ width: '40rem' }"
+	>
+		<textarea
+			pTextarea
+			rows="12"
+			class="w-full"
+			[maxlength]="option().maxLength"
+			[placeholder]="option().placeholder ? t(option().placeholder!) : ''"
+			[ngModel]="draft()"
+			[ngModelOptions]="{ standalone: true }"
+			(ngModelChange)="draft.set($event)"
+		></textarea>
+
+		<ng-template pTemplate="footer">
+			<p-button
+				[label]="t('common.cancel')"
+				severity="secondary"
+				(onClick)="cancel()"
+			></p-button>
+			<p-button
+				[label]="t('common.save')"
+				(onClick)="save()"
+			></p-button>
+		</ng-template>
+	</p-dialog>
+</div>

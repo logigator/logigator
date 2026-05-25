@@ -1,6 +1,10 @@
 import type { WorkMode } from '../app/work-mode/work-mode.enum';
 
 const en = {
+	common: {
+		save: 'Save',
+		cancel: 'Cancel'
+	},
 	components: {
 		category: {
 			basic: 'Basic',
