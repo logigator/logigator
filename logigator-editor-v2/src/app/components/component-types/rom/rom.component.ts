@@ -54,7 +54,7 @@ export class RomComponent extends Component {
 				this.appliedScale
 			)
 		);
-		this._visualSpace.addChild(componentGraphics);
+		this.addChild(componentGraphics);
 	}
 
 	public override destroy(options?: DestroyOptions): void {

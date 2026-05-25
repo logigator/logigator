@@ -13,7 +13,7 @@ import { ThemingService } from '../theming/theming.service';
 import { getStaticDI } from '../utils/get-di';
 import { GraphicsProviderService } from '../rendering/graphics-provider.service';
 import { environment } from '../../environments/environment';
-import { fromGrid } from '../utils/grid';
+import { PX, fromGrid } from '../utils/grid';
 import { WireGraphics } from '../rendering/graphics/wire.graphics';
 import { ComponentOption } from './component-option';
 import { SerializedComponent } from './serialized-component.model';
@@ -43,11 +43,6 @@ export abstract class Component extends Container implements Connectable {
 		GraphicsProviderService
 	);
 
-	// Visual children are pixel-authored. Counter-scaling by 1/gridSize lets
-	// existing pixel formulas (stroke widths, chamfers, fontSize) keep working
-	// even though the Component itself lives inside the grid-unit gridSpace.
-	protected readonly _visualSpace = new Container();
-
 	private _id: number;
 
 	private _direction: Direction = Direction.E;
@@ -56,7 +51,7 @@ export abstract class Component extends Container implements Connectable {
 	private _numInputs = 0;
 	private _numOutputs = 0;
 
-	private _constantRotationContainers: Container[] = [];
+	private _rotationCounterContainers: Container[] = [];
 
 	private _initialized = false;
 
@@ -89,9 +84,6 @@ export abstract class Component extends Container implements Connectable {
 		options: ComponentOption[]
 	) {
 		super();
-
-		this._visualSpace.scale.set(1 / environment.gridSize);
-		this.addChild(this._visualSpace);
 
 		this.interactiveChildren = false;
 		this._id = Component._idAllocator.next();
@@ -133,7 +125,7 @@ export abstract class Component extends Container implements Connectable {
 
 		this.rotation = (value * Math.PI) / 2;
 
-		for (const container of this._constantRotationContainers) {
+		for (const container of this._rotationCounterContainers) {
 			container.rotation = -this.rotation;
 		}
 
@@ -229,21 +221,9 @@ export abstract class Component extends Container implements Connectable {
 		}
 	}
 
-	protected get center(): Point {
-		let subtract = 0;
-		if (this.numInputs > 0) {
-			subtract += 0.5;
-		}
-		if (this.numOutputs > 0) {
-			subtract += 0.5;
-		}
-
-		return new Point((this.width - subtract) / 2, this.height / 2);
-	}
-
-	protected registerConstantRotationContainer(container: Container): Container {
+	protected registerRotationCounterContainer(container: Container): Container {
 		container.rotation = -this.rotation;
-		this._constantRotationContainers.push(container);
+		this._rotationCounterContainers.push(container);
 		return container;
 	}
 
@@ -274,12 +254,12 @@ export abstract class Component extends Container implements Connectable {
 
 		// destroy() calls removeFromParent which mutates `children` during
 		// iteration — snapshot before iterating so every child gets destroyed.
-		for (const child of [...this._visualSpace.children]) {
+		for (const child of [...this.children]) {
 			child.destroy({ children: true });
 		}
-		this._visualSpace.removeChildren(0);
+		this.removeChildren(0);
 
-		this._constantRotationContainers = [];
+		this._rotationCounterContainers = [];
 
 		this.draw();
 
@@ -290,30 +270,30 @@ export abstract class Component extends Container implements Connectable {
 			const connPoints = new Graphics();
 
 			for (const point of this._localConnectionPoints) {
-				connPoints.rect(fromGrid(point.x) - 1, fromGrid(point.y) - 1, 2, 2);
+				connPoints.rect(point.x - PX, point.y - PX, 2 * PX, 2 * PX);
 			}
 			connPoints.fill(0xffff00);
 
-			this._visualSpace.addChild(connPoints);
-			this.registerConstantRotationContainer(connPoints);
+			this.addChild(connPoints);
+			this.registerRotationCounterContainer(connPoints);
 		}
 
 		if (environment.debug.showOrigins) {
 			const originGraphics = new Graphics();
-			originGraphics.rect(0, 0, 2, 2);
+			originGraphics.rect(0, 0, 2 * PX, 2 * PX);
 			originGraphics.fill(0xffffff);
-			this._visualSpace.addChild(originGraphics);
+			this.addChild(originGraphics);
 		}
 
 		if (environment.debug.showHitboxes) {
-			const bounds = this._visualSpace.getLocalBounds();
+			const bounds = this.getLocalBounds();
 			const hitbox = new Graphics();
 			hitbox.rect(bounds.x, bounds.y, bounds.width, bounds.height);
 			hitbox.fill({
 				color: 0xff0000,
 				alpha: 0.1
 			});
-			this._visualSpace.addChild(hitbox);
+			this.addChild(hitbox);
 		}
 	}
 
@@ -324,8 +304,8 @@ export abstract class Component extends Container implements Connectable {
 
 		for (let i = 0; i < n; i++) {
 			const wire = new Graphics(geometry);
-			wire.position.set(0, fromGrid(i + 0.5));
-			wire.scale.set(fromGrid(0.5), 1 / this._appliedScale);
+			wire.position.set(0, i + 0.5);
+			wire.scale.set(0.5, PX / this._appliedScale);
 			container.addChild(wire);
 
 			if (labels.length > i) {
@@ -339,31 +319,36 @@ export abstract class Component extends Container implements Connectable {
 					anchor: { x: type === 'inputs' ? 0 : 1, y: 0.5 },
 					resolution: this._appliedScale * window.devicePixelRatio
 				});
+
+				// naturalWidth is the pixel width before scale is applied.
+				// Pivot placed at the texture center so that the rotation counter
+				// (applied by registerRotationCounterContainer) rotates around the
+				// center, keeping the label anchored to the same grid point in all
+				// component directions.
+				const naturalWidth = text.width;
+				text.scale.set(PX);
 				text.pivot.set((text.width / 2) * (type === 'inputs' ? 1 : -1), 0);
 
 				if (type === 'inputs') {
-					text.position.set(
-						fromGrid(0.5) + text.width / 2 + 2,
-						fromGrid(i + 0.5)
-					);
+					text.position.set(0.5 + naturalWidth * PX / 2 + 2 * PX, i + 0.5);
 				} else {
-					text.position.set(-text.width / 2 - 2, fromGrid(i + 0.5));
+					text.position.set(-naturalWidth * PX / 2 - 2 * PX, i + 0.5);
 				}
 
-				this.registerConstantRotationContainer(text);
+				this.registerRotationCounterContainer(text);
 				container.addChild(text);
 			}
 		}
 
 		// For outputs: use bodyGridWidth (path right edge) not getLocalBounds().right,
-		// which includes the stroke's miter extension and would place stubs ~sqrt(2)px
+		// which includes the stroke's miter extension and would place stubs ~sqrt(2)*PX
 		// too far right — causing valid touching connections to falsely collide.
 		if (type === 'outputs') {
-			container.position.x = fromGrid(this.bodyGridWidth);
+			container.position.x = this.bodyGridWidth;
 		} else {
-			container.position.x = fromGrid(-0.5);
+			container.position.x = -0.5;
 		}
 
-		this._visualSpace.addChild(container);
+		this.addChild(container);
 	}
 }

@@ -1,6 +1,9 @@
 import { environment } from '../../environments/environment';
 import { Point } from 'pixi.js';
 
+// One physical pixel expressed in grid-unit space.
+export const PX = 1 / environment.gridSize;
+
 export function fromGrid(val: number): number {
 	return val * environment.gridSize;
 }
