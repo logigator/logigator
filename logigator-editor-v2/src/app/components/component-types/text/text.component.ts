@@ -21,6 +21,7 @@ export class TextComponent extends Component {
 
 		options[0].onChange$.pipe(takeUntil(this._destroy$)).subscribe(() => {
 			this.direction = options[0].value as Direction;
+			this.redraw();
 		});
 		(options[1] as TextAreaComponentOption).onChange$
 			.pipe(takeUntil(this._destroy$))
@@ -72,11 +73,18 @@ export class TextComponent extends Component {
 				fontSize: fontSizeOption.value,
 				fill: this.themingService.currentTheme().fontTint
 			},
-			anchor: { x: 0, y: 0.5 },
 			resolution: this.appliedScale * window.devicePixelRatio
 		});
-		label.position.set(fromGrid(0.5) + sizePx / 2 + 2, fromGrid(0.5));
-		this.registerConstantRotationContainer(label);
+		// For W direction the component is rotated 180°, which would flip the glyphs upside-down.
+		// Counter-rotating the label by π keeps glyphs upright; flipping the anchor mirrors
+		// the layout so the text still sits on the far side of the dot (left instead of right).
+		if (this.direction === Direction.W) {
+			label.anchor.set(1, 0.55);
+			label.rotation = Math.PI;
+		} else {
+			label.anchor.set(0, 0.55);
+		}
+		label.position.set(fromGrid(1), fromGrid(0.5));
 		this._visualSpace.addChild(label);
 	}
 
