@@ -10,18 +10,20 @@
 	</div>
 	<div class="content">
 		<ng-container *ngIf="components.length > 0; else noComponents">
-			<ng-container *ngFor="let comp of components">
+			<ng-container *ngFor="let comp of components; trackBy: componentsTrackBy">
 				<div
 					class="component-to-select"
 					*ngIf="
-						(searchText === '' || (isInSearchResult(comp) | async)) &&
-						!isCurrentCustomElement(comp.type)
+						(comp.showInConstructionBox &&
+							(searchText === '' || (isInSearchResult(comp) | async)) &&
+							!isCurrentCustomElement(comp.id)) ||
+						isHiddenPlug(searchText, comp.id)
 					"
 					tabindex="0"
-					(click)="selectComponent(comp.type)"
-					(dblclick)="openComponent(comp.type)"
+					(click)="selectComponent(comp.id)"
+					(dblclick)="openComponent(comp.id)"
 					[class.active-selected-component]="
-						isComponentMode && currentSelectedComponent === comp.type
+						isComponentMode && currentSelectedComponent === comp.id
 					"
 				>
 					<div>

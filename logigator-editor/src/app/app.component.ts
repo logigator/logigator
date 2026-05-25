@@ -8,14 +8,23 @@ import {
 	OnInit,
 	ViewChild
 } from '@angular/core';
+import { SelectionService } from './services/selection/selection.service';
+import { WorkModeService } from './services/work-mode/work-mode.service';
 import { fromEvent, Subject } from 'rxjs';
 import { DOCUMENT } from '@angular/common';
 import { takeUntil } from 'rxjs/operators';
+import { ProjectsService } from './services/projects/projects.service';
 import { LangChangeEvent, TranslateService } from '@ngx-translate/core';
+import { ElementProviderService } from './services/element-provider/element-provider.service';
+import { ShortcutsService } from './services/shortcuts/shortcuts.service';
+import { WorkMode } from './models/work-modes';
+import { EditorInteractionService } from './services/editor-interaction/editor-interaction.service';
+import { EditorAction } from './models/editor-action';
 import {
 	StorageService,
 	StorageServiceModel
 } from './services/storage/storage.service';
+import { environment } from '../environments/environment';
 import * as CookieConsent from 'vanilla-cookieconsent';
 import { LocationService } from './services/location/location.service';
 
@@ -32,8 +41,14 @@ export class AppComponent implements OnInit, OnDestroy, AfterViewInit {
 
 	constructor(
 		private ngZone: NgZone,
+		private workMode: WorkModeService,
+		private selection: SelectionService,
+		private shortcutsService: ShortcutsService,
+		private projects: ProjectsService,
+		private editorInteractionService: EditorInteractionService,
 		@Inject(DOCUMENT) private document: HTMLDocument,
 		private translate: TranslateService,
+		private elementProviderService: ElementProviderService,
 		private locationService: LocationService,
 		@Inject(StorageService) private storage: StorageServiceModel
 	) {
@@ -49,10 +64,10 @@ export class AppComponent implements OnInit, OnDestroy, AfterViewInit {
 		this.ngZone.runOutsideAngular(() => {
 			this.listenToShortcuts();
 
-			// this.editorInteractionService
-			// 	.subscribeEditorAction(EditorAction.FULLSCREEN)
-			// 	.pipe(takeUntil(this._destroySubject))
-			// 	.subscribe(() => this.onRequestFullscreen());
+			this.editorInteractionService
+				.subscribeEditorAction(EditorAction.FULLSCREEN)
+				.pipe(takeUntil(this._destroySubject))
+				.subscribe(() => this.onRequestFullscreen());
 		});
 		fromEvent(window, 'beforeunload')
 			.pipe(takeUntil(this._destroySubject))
@@ -94,32 +109,48 @@ export class AppComponent implements OnInit, OnDestroy, AfterViewInit {
 	}
 
 	private listenToShortcuts() {
-		// fromEvent(this.document, 'keydown')
-		// 	.pipe(takeUntil(this._destroySubject))
-		// 	.subscribe((e: KeyboardEvent) => {
-		// 		this.shortcutsService.keyDownListener(e);
-		// 	});
+		fromEvent(this.document, 'keydown')
+			.pipe(takeUntil(this._destroySubject))
+			.subscribe((e: Event) => {
+				this.shortcutsService.keyDownListener(e as KeyboardEvent);
+			});
 	}
 
 	public get isSimulationMode(): boolean {
-		// return this.workMode.currentWorkMode === WorkMode.SIMULATION;
-		return false;
+		return this.workMode.currentWorkMode === WorkMode.SIMULATION;
 	}
 
 	public get showSettingsInfoBox(): boolean {
-		// const seElTypeId = this.selectedElemTypeId;
-		// return seElTypeId === undefined
-		// 	? false
-		// 	: this.elementProviderService.getElementById(seElTypeId).showSettings;
-		return false;
+		const seElTypeId = this.selectedElemTypeId;
+		return seElTypeId === undefined
+			? false
+			: this.elementProviderService.getElementById(seElTypeId).showSettings;
 	}
 
 	public get selectedElemTypeId(): number | undefined {
-		return undefined;
+		if (this.workMode.currentWorkMode === WorkMode.COMPONENT) {
+			return this.workMode.currentComponentToBuild;
+		} else {
+			const selectedIds = this.selection.selectedIds();
+			if (!selectedIds || selectedIds.length === 0 || selectedIds.length > 1) {
+				return undefined;
+			}
+			const elemType = this.projects.currProject.currState.getElementById(
+				selectedIds[0]
+			);
+			if (!elemType) return undefined;
+			return elemType.typeId;
+		}
 	}
 
 	public get selectedCompId(): number | undefined {
-		return undefined;
+		if (
+			!this.selection.selectedIds() ||
+			this.workMode.currentWorkMode === WorkMode.COMPONENT
+		) {
+			return undefined;
+		}
+		return this.selection.selectedIds()[0];
 	}
 
 	private onRequestFullscreen() {
@@ -143,12 +174,11 @@ export class AppComponent implements OnInit, OnDestroy, AfterViewInit {
 		}
 	}
 
-	// eslint-disable-next-line @typescript-eslint/no-unused-vars
 	private onTabClose(e: Event) {
-		// if (environment.production && this.projects.hasUnsavedProjects) {
-		// 	e.preventDefault();
-		// 	e.returnValue = true;
-		// }
+		if (environment.production && this.projects.hasUnsavedProjects) {
+			e.preventDefault();
+			e.returnValue = true;
+		}
 	}
 
 	public onDragStart(event: Event) {
@@ -165,16 +195,16 @@ export class AppComponent implements OnInit, OnDestroy, AfterViewInit {
 		event.preventDefault();
 		event.stopPropagation();
 
-		// if (event.dataTransfer?.files && event.dataTransfer.files.length > 0) {
-		// 	this.editorInteractionService.openProjectFile(
-		// 		event.dataTransfer.files[0]
-		// 	);
-		// }
+		if (event.dataTransfer?.files && event.dataTransfer.files.length > 0) {
+			this.editorInteractionService.openProjectFile(
+				event.dataTransfer.files[0]
+			);
+		}
 	}
 
 	private initTranslation() {
 		this.translate.addLangs(['en', 'de']);
-		const lang = this.storage.get<{ lang: string }>('preferences')?.lang;
+		const lang = this.storage.get('preferences')?.lang;
 		if (lang) {
 			this.translate.setDefaultLang(lang);
 			this.translate.use(lang);
@@ -184,7 +214,7 @@ export class AppComponent implements OnInit, OnDestroy, AfterViewInit {
 		}
 		this.translate.onLangChange.subscribe((e: LangChangeEvent) => {
 			this.storage.set('preferences', {
-				...this.storage.get<object>('preferences'),
+				...this.storage.get('preferences'),
 				lang: e.lang
 			});
 		});

@@ -1,4 +1,4 @@
-<div class="box" *ngIf="elementType">
+<div class="box">
 	<div class="header">
 		<h2>{{ elementType?.name | translate }}</h2>
 	</div>
@@ -91,7 +91,7 @@
 
 		<button
 			class="btn-outline secondary small edit"
-			*ngIf="false && (isElementPlaced || elementType.canEditType)"
+			*ngIf="elementType.edit && (isElementPlaced || elementType.canEditType)"
 			(click)="editClick()"
 		>
 			{{ 'SETTINGS_INFO.EDIT' | translate }}

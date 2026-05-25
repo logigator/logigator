@@ -18,8 +18,7 @@
 		"lint": "ng lint && tsc-strict",
 		"lint:fix": "ng lint --fix",
 		"format": "prettier . --check",
-		"format:fix": "prettier . --write",
-		"test": "ng test"
+		"format:fix": "prettier . --write"
 	},
 	"private": true,
 	"dependencies": {
@@ -38,7 +37,7 @@
 		"marked": "^9.0.3",
 		"ngx-markdown": "^17.1.1",
 		"ngx-toastr": "^18.0.0",
-		"pixi.js": "^7.3.3",
+		"pixi.js": "^5.3.9",
 		"rxjs": "^7.8.1",
 		"tslib": "^2.6.2",
 		"uuid": "^9.0.1",

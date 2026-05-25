@@ -7,6 +7,7 @@ import {
 } from '@angular/core';
 import { SingleShortcutConfigComponent } from '../single-shortcut-config/single-shortcut-config.component';
 import { PopupContentComp } from '../../../popup/popup-content-comp';
+import { ShortcutsService } from '../../../../services/shortcuts/shortcuts.service';
 import { Shortcut } from '../../../../models/shortcut';
 import { ShortcutAction } from '../../../../models/shortcut-action';
 import { ShortcutConfig } from '../../../../models/shortcut-config';
@@ -21,13 +22,12 @@ export class ShortcutConfigComponent extends PopupContentComp {
 	@ViewChildren(SingleShortcutConfigComponent)
 	singleConfigs: QueryList<SingleShortcutConfigComponent>;
 
-	constructor() {
+	constructor(private actionsService: ShortcutsService) {
 		super();
 	}
 
 	public get shortcuts(): Shortcut[] {
-		// return this.actionsService.shortcutActionConfig;
-		return [];
+		return this.actionsService.shortcutActionConfig;
 	}
 
 	public save() {
@@ -38,7 +38,7 @@ export class ShortcutConfigComponent extends PopupContentComp {
 				changedConfig.set(singleConf.key, singleConf.config);
 			}
 		});
-		// this.actionsService.setShortcutConfig(changedConfig);
+		this.actionsService.setShortcutConfig(changedConfig);
 		this.requestClose.emit();
 	}
 }

@@ -13,6 +13,7 @@ import { TranslateService } from '@ngx-translate/core';
 import { UserService } from '../../../services/user/user.service';
 import { PopupService } from '../../../services/popup/popup.service';
 import { environment } from '../../../../environments/environment';
+import { SimulationManagementService } from '../../../services/simulation/simulation-management/simulation-management.service';
 
 @Component({
 	selector: 'app-settings-dropdown',
@@ -29,6 +30,7 @@ export class SettingsDropdownComponent implements OnInit {
 
 	constructor(
 		public theming: ThemingService,
+		public simulationMgmt: SimulationManagementService,
 		private popupService: PopupService,
 		private translation: TranslateService,
 		private user: UserService

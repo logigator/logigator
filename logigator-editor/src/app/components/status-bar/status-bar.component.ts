@@ -1,6 +1,9 @@
 // @ts-strict-ignore
 import { Component } from '@angular/core';
+import { SelectionService } from '../../services/selection/selection.service';
+import { ProjectsService } from '../../services/projects/projects.service';
 import { fromEvent, Observable, Subscription } from 'rxjs';
+import { WorkModeService } from '../../services/work-mode/work-mode.service';
 import { LoadingService } from '../../services/loading/loading.service';
 import { tap } from 'rxjs/operators';
 import { ThemingService } from '../../services/theming/theming.service';
@@ -16,24 +19,24 @@ export class StatusBarComponent {
 	private closeTasksSubscription: Subscription;
 
 	constructor(
+		private selectionService: SelectionService,
+		private projectsService: ProjectsService,
+		private workMode: WorkModeService,
 		private loadingService: LoadingService,
 		private themingService: ThemingService
 	) {}
 
 	public get selected(): number {
-		// return this.selectionService.selectedIds().length;
-		return 0;
+		return this.selectionService.selectedIds().length;
 	}
 
 	public get isSaved(): boolean {
-		// if (!this.projectsService.currProject) return true;
-		// return !this.projectsService.currProject.saveDirty;
-		return true;
+		if (!this.projectsService.currProject) return true;
+		return !this.projectsService.currProject.saveDirty;
 	}
 
 	public get workModeDescription$(): Observable<string> {
-		// return this.workMode.workModeDescription$;
-		return null;
+		return this.workMode.workModeDescription$;
 	}
 
 	public get currTheme(): string {

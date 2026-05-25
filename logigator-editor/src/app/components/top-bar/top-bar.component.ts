@@ -1,10 +1,12 @@
 // @ts-strict-ignore
 import { Component } from '@angular/core';
+import { ProjectsService } from '../../services/projects/projects.service';
 import { UserService } from '../../services/user/user.service';
 import { Observable } from 'rxjs';
 import { User } from '../../models/http/response/user';
+import { WorkMode } from '../../models/work-modes';
+import { WorkModeService } from '../../services/work-mode/work-mode.service';
 import { environment } from '../../../environments/environment';
-import { ProjectService } from '../../services/project/project.service';
 
 @Component({
 	selector: 'app-top-bar',
@@ -17,13 +19,13 @@ export class TopBarComponent {
 	public homeUrl = environment.homeUrl;
 
 	constructor(
+		private projectService: ProjectsService,
 		private userService: UserService,
-		private projectService: ProjectService
+		private workMode: WorkModeService
 	) {}
 
 	public get isSimulationMode(): boolean {
-		// return this.workMode.currentWorkMode === WorkMode.SIMULATION;
-		return false;
+		return this.workMode.currentWorkMode === WorkMode.SIMULATION;
 	}
 
 	public get userInfo$(): Observable<User> {
@@ -39,7 +41,8 @@ export class TopBarComponent {
 	}
 
 	public get mainProjectName(): string {
-		return this.projectService.project.name;
+		if (!this.projectService.mainProject) return '';
+		return this.projectService.mainProject.name;
 	}
 
 	public openDropdown(

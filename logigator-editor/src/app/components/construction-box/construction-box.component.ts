@@ -1,7 +1,8 @@
 import { Component } from '@angular/core';
-import { ComponentConfig } from '../../classes/rendering/component';
-import { ComponentProviderService } from '../../services/component-provider/component-provider.service';
-import { ElementCategory } from '../../models/element/element-category';
+import { ElementProviderService } from '../../services/element-provider/element-provider.service';
+import { ElementType } from '../../models/element-types/element-type';
+import { ShortcutsService } from '../../services/shortcuts/shortcuts.service';
+import { ProjectsService } from '../../services/projects/projects.service';
 
 @Component({
 	selector: 'app-construction-box',
@@ -12,64 +13,53 @@ export class ConstructionBoxComponent {
 	public searchText = '';
 
 	constructor(
-		public readonly componentProviderService: ComponentProviderService
+		private componentProviderService: ElementProviderService,
+		private shortcuts: ShortcutsService,
+		private projects: ProjectsService
 	) {}
 
 	public get showPlugComponents(): boolean {
-		// if (!this.projects.currProject) return false;
-		// return this.projects.currProject.type === 'comp';
-		return false;
+		if (!this.projects.currProject) return false;
+		return this.projects.currProject.type === 'comp';
 	}
 
-	public get basicComponents(): ComponentConfig[] {
-		return this.componentProviderService.getElementsByCategory(
-			ElementCategory.BASIC
-		);
+	public get basicComponents(): ElementType[] {
+		return this.componentProviderService.basicElements;
 	}
 
-	public get advancedComponents(): ComponentConfig[] {
-		return this.componentProviderService.getElementsByCategory(
-			ElementCategory.ADVANCED
-		);
+	public get advancedComponents(): ElementType[] {
+		return this.componentProviderService.advancedElements;
 	}
 
-	public get plugComponents(): ComponentConfig[] {
-		return this.componentProviderService.getElementsByCategory(
-			ElementCategory.CONNECTOR
-		);
+	public get plugComponents(): ElementType[] {
+		return this.componentProviderService.plugElements;
 	}
 
-	public get ioComponents(): ComponentConfig[] {
-		return this.componentProviderService.getElementsByCategory(
-			ElementCategory.IO
-		);
+	public get ioComponents(): ElementType[] {
+		return this.componentProviderService.ioElements;
 	}
 
-	public get userDefinedComponents(): ComponentConfig[] {
-		return this.componentProviderService.getElementsByCategory(
-			ElementCategory.USER
-		);
+	public get userDefinedComponents(): ElementType[] {
+		return this.componentProviderService.userDefinedElements;
 	}
 
-	public get localComponents(): ComponentConfig[] {
-		// return this.componentProviderService.localElements;
-		return [];
+	public get localComponents(): ElementType[] {
+		return this.componentProviderService.localElements;
 	}
 
-	public get sharedComponents(): ComponentConfig[] {
-		// return this.componentProviderService.shareElements;
-		return [];
+	public get sharedComponents(): ElementType[] {
+		return this.componentProviderService.shareElements;
 	}
 
 	public focusSearch() {
-		// this.shortcuts.disableShortcutListener();
+		this.shortcuts.disableShortcutListener();
 	}
 
 	public blurSearch() {
-		// this.shortcuts.enableShortcutListener();
+		this.shortcuts.enableShortcutListener();
 	}
 
 	public reloadUserElements() {
-		// this.projects.reloadUserElements();
+		this.projects.reloadUserElements();
 	}
 }

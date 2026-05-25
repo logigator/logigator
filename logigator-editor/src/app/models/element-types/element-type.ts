@@ -1,9 +1,11 @@
+import { ProjectsService } from '../../services/projects/projects.service';
+import { Element, ElementRotation } from '../element';
 import { Type } from '@angular/core';
 import { ElementInspectionComp } from '../../components/element-inspection/element-inspection-comp';
-import { ElementRotation } from '../element-rotation';
+import { ElementTypeId } from './element-type-ids';
 
 export interface ElementType {
-	id: number;
+	id: ElementTypeId;
 
 	// translation id for predefined comps
 	name: string;
@@ -47,7 +49,7 @@ export interface ElementType {
 	}[];
 	onOptionsChanged?: (element?: Element) => void;
 
-	edit?: (typeId: number, id: number, projectsSer: unknown) => void;
+	edit?: (typeId: number, id: number, projectsSer: ProjectsService) => void;
 	canEditType?: boolean;
 
 	// only used for udcs, order must be like plugIndices
