@@ -1,9 +1,11 @@
+import { Type } from '@angular/core';
 import { Subject } from 'rxjs';
 import { TranslationKey } from '../translation/translation-key.model';
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export abstract class ComponentOption<T = any> {
 	public abstract readonly label: TranslationKey;
+	public abstract readonly renderer: Type<unknown>;
 	public onChange$ = new Subject<T>();
 
 	private _value: T;

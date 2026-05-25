@@ -231,23 +231,13 @@ A thin bar at the bottom of the board column. Displays four segments separated b
 
 **File:** `component-settings/component-settings.component.ts`
 
-A generic form rendered inside the floating `p-card` in `AppComponent` when a component type is selected for placement. It does not know which component type it is editing — it receives a flat array of `ComponentOption` instances and renders the appropriate PrimeNG widget for each.
+A thin loop rendered inside the floating `p-card` in `AppComponent` when a component type is selected for placement. It receives a flat array of `ComponentOption` instances and instantiates one renderer per option via `*ngComponentOutlet="option.renderer; inputs: { option }"` — each `ComponentOption` subclass declares its own renderer component, so this component owns no per-option chrome. See [`component-options.md`](component-options.md) for the option/renderer contract.
 
 **Input**
 
 | Name     | Type                | Purpose                                                |
 | -------- | ------------------- | ------------------------------------------------------ |
 | `config` | `ComponentOption[]` | Live option instances owned by the component-to-place. |
-
-Widget selection logic (in the template via `@if`):
-
-- `NumberComponentOption` → `p-inputNumber` with `showButtons`, `[min]`, `[max]`, size `small`.
-- `SelectComponentOption` with `type === 'button'` → `p-selectButton` with icon/label template.
-- `SelectComponentOption` with `type === 'dropdown'` → `p-select` with icon/label template for both the selected-item and list-item slots.
-
-All widgets bind via `[ngModel]` / `(ngModelChange)` directly to `option.value`. Writing `option.value` triggers `ComponentOption.onChange$`, which the component class subscribes to for redraws. No intermediary form group is needed.
-
-Type guards `isNumberInput(option)` and `isSelectInput(option)` narrow the union for template type-checking.
 
 ---
 

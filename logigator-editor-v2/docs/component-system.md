@@ -13,7 +13,7 @@ src/app/components/
 ├── component-config.model.ts       # Static metadata + factory interface
 ├── serialized-component.model.ts   # Persistence DTO
 ├── component-provider.service.ts   # Angular service — registry and lookup
-├── component-options/              # Reusable option implementations
+├── component-options/              # Per-option folders (model + renderer); see component-options.md
 └── component-types/                # One subdirectory per component type
     └── <name>/
         ├── <name>.config.ts        # ComponentConfig constant
@@ -119,13 +119,9 @@ An observable wrapper around a single configurable value.
 - `clone(initialValue?)` — must return a fully independent copy; called during instantiation and deserialization
 - `label: TranslationKey` — localization key for the UI label
 
-### Option implementations in `component-options/`
+### Option implementations
 
-**`SelectComponentOption<T>`** — categorical selection from a fixed list of choices. Supports optional icons per choice and a `'button' | 'dropdown'` UI hint.
-
-**`NumberComponentOption`** — numeric value with `min` and `max` bounds. The value setter clamps automatically.
-
-**`DirectionComponentOption`** — a preset `SelectComponentOption<Direction>` that exposes the four compass directions. No constructor arguments required. Writing to its value (e.g., from the side panel) flows into `Component.direction = ...`, which fires `portsChange$` and lets the CP manager rebuild dots at the new tip positions.
+The concrete option classes (`NumberComponentOption`, `SelectButtonComponentOption<T>`, `SelectDropdownComponentOption<T>`, `DirectionComponentOption`) live in per-kind folders under `component-options/`, alongside the Angular components that render them in the side panel. See [`component-options.md`](component-options.md) for the option model, the renderer contract, and how to add a new option kind. Writing to `DirectionComponentOption.value` from the side panel flows into `Component.direction = ...`, which fires `portsChange$` and lets the CP manager rebuild dots at the new tip positions.
 
 ---
 
@@ -174,7 +170,8 @@ PixiJS Container
     └── <concrete component classes>
 
 ComponentOption<T> (abstract)
-├── SelectComponentOption<T>
+├── NumberComponentOption
+├── SelectButtonComponentOption<T>
 │   └── DirectionComponentOption
-└── NumberComponentOption
+└── SelectDropdownComponentOption<T>
 ```

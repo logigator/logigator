@@ -1,7 +1,10 @@
-import { ComponentOption } from '../component-option';
-import { TranslationKey } from '../../translation/translation-key.model';
+import { ComponentOption } from '../../component-option';
+import { TranslationKey } from '../../../translation/translation-key.model';
+import { NumberOptionInputComponent } from './number-option-input.component';
 
 export class NumberComponentOption extends ComponentOption<number> {
+	public readonly renderer = NumberOptionInputComponent;
+
 	constructor(
 		public readonly label: TranslationKey,
 		public readonly min: number,
