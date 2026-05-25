@@ -73,6 +73,7 @@
 	<p-button
 		[pTooltip]="t('toolBar.zoomOut')"
 		[ariaLabel]="t('toolBar.zoomOut')"
+		(onClick)="zoomOut()"
 		tooltipPosition="bottom"
 		icon="ph ph-magnifying-glass-minus"
 		severity="secondary"
@@ -80,6 +81,7 @@
 	<p-button
 		[pTooltip]="t('toolBar.zoomIn')"
 		[ariaLabel]="t('toolBar.zoomIn')"
+		(onClick)="zoomIn()"
 		tooltipPosition="bottom"
 		icon="ph ph-magnifying-glass-plus"
 		severity="secondary"
@@ -135,8 +137,8 @@
 		[pTooltip]="t('toolBar.text')"
 		[ariaLabel]="t('toolBar.text')"
 		[outlined]="!isPlaceTextMode()"
-		tooltipPosition="bottom"
 		(onClick)="setPlaceTextMode()"
+		tooltipPosition="bottom"
 		icon="ph ph-text-t"
 		severity="secondary"
 	></p-button>

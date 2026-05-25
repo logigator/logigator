@@ -33,14 +33,28 @@ export class ViewportController {
 		this._positionChange$.next(this.gridPosition);
 	}
 
+	public get zoomOutPossible(): boolean {
+		return this._scaleStep > this._scaleStepMin;
+	}
+
+	public get zoomInPossible(): boolean {
+		return this._scaleStep < this._scaleStepMax;
+	}
+
 	public zoomIn(center?: Point): void {
-		if (this._scaleStep >= this._scaleStepMax) return;
-		this._updateScale(Math.pow(this._scaleStepAmount, ++this._scaleStep), center);
+		if (!this.zoomInPossible) return;
+		this._updateScale(
+			Math.pow(this._scaleStepAmount, ++this._scaleStep),
+			center
+		);
 	}
 
 	public zoomOut(center?: Point): void {
-		if (this._scaleStep <= this._scaleStepMin) return;
-		this._updateScale(Math.pow(this._scaleStepAmount, --this._scaleStep), center);
+		if (!this.zoomOutPossible) return;
+		this._updateScale(
+			Math.pow(this._scaleStepAmount, --this._scaleStep),
+			center
+		);
 	}
 
 	public zoom100(center?: Point): void {

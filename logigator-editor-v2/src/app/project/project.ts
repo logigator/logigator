@@ -101,6 +101,14 @@ export class Project extends InteractionContainer {
 		this._viewport.zoomOut(center);
 	}
 
+	public get zoomInPossible(): boolean {
+		return this._viewport.zoomInPossible;
+	}
+
+	public get zoomOutPossible(): boolean {
+		return this._viewport.zoomOutPossible;
+	}
+
 	public zoom100(center?: Point): void {
 		this._viewport.zoom100(center);
 	}
@@ -313,10 +321,7 @@ export class Project extends InteractionContainer {
 
 		for (const w of this.queryWiresInRange(queryRect)) {
 			const [s, e] = w.connectionPoints;
-			if (
-				(s.x === p.x && s.y === p.y) ||
-				(e.x === p.x && e.y === p.y)
-			) {
+			if ((s.x === p.x && s.y === p.y) || (e.x === p.x && e.y === p.y)) {
 				if (w.direction === WireDirection.HORIZONTAL) hWires.push(w);
 				else vWires.push(w);
 			}
@@ -337,7 +342,10 @@ export class Project extends InteractionContainer {
 
 		if (addedWires.length === 0) return;
 
-		const { toAdd, toRemove } = this.computeIntegration({ addedWires, removedWires });
+		const { toAdd, toRemove } = this.computeIntegration({
+			addedWires,
+			removedWires
+		});
 
 		const blocked = toAdd.some((w) => {
 			const [s, e] = w.connectionPoints;
@@ -369,10 +377,7 @@ export class Project extends InteractionContainer {
 		for (const w of this.queryWiresInRange(queryRect)) {
 			if (!w.contains(p)) continue;
 			const [s, e] = w.connectionPoints;
-			if (
-				(s.x === p.x && s.y === p.y) ||
-				(e.x === p.x && e.y === p.y)
-			)
+			if ((s.x === p.x && s.y === p.y) || (e.x === p.x && e.y === p.y))
 				continue;
 			if (w.direction === WireDirection.HORIZONTAL) hWire = w;
 			else vWire = w;
@@ -386,7 +391,10 @@ export class Project extends InteractionContainer {
 		const addedWires = [hLeft, hRight, vTop, vBottom];
 		const removedWires = [hWire, vWire];
 
-		const { toAdd, toRemove } = this.computeIntegration({ addedWires, removedWires });
+		const { toAdd, toRemove } = this.computeIntegration({
+			addedWires,
+			removedWires
+		});
 
 		const action = new ActionContainer();
 		if (toRemove.length > 0) action.add(new RemoveWiresAction(...toRemove));

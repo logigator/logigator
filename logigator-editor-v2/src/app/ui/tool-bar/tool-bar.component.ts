@@ -73,4 +73,14 @@ export class ToolBarComponent {
 	protected redo(): void {
 		this.projectService.activeProject()?.actionManager.redo();
 	}
+
+	protected zoomIn(): void {
+		this.projectService.activeProject()?.zoomIn();
+		this.projectService.activeProject()?.triggerTicker('single');
+	}
+
+	protected zoomOut(): void {
+		this.projectService.activeProject()?.zoomOut();
+		this.projectService.activeProject()?.triggerTicker('single');
+	}
 }
