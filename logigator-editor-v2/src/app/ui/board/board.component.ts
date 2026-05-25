@@ -16,7 +16,7 @@ import { Application, Point } from 'pixi.js';
 import { ThemingService } from '../../theming/theming.service';
 import { Project } from '../../project/project';
 import { AssetsService } from '../../rendering/assets.service';
-import { merge, Subject, takeUntil, throttleTime } from 'rxjs';
+import { filter, merge, Subject, takeUntil, throttleTime } from 'rxjs';
 import { WorkModeService } from '../../work-mode/work-mode.service';
 import { environment } from '../../../environments/environment';
 
@@ -39,6 +39,7 @@ export class BoardComponent implements OnInit, OnDestroy {
 	protected readonly canvas!: ElementRef<HTMLCanvasElement>;
 
 	public readonly positionChange = output<Point>();
+	public readonly cursorPositionChange = output<Point>();
 	public readonly project = input<Project | null>(null);
 
 	protected readonly loaded = signal(false);
@@ -50,6 +51,7 @@ export class BoardComponent implements OnInit, OnDestroy {
 	private readonly app: Application = new Application();
 	private appInitialized = false;
 	private fpsInterval: ReturnType<typeof setInterval> | null = null;
+	private _pointerInsideCanvas = false;
 
 	constructor() {
 		this.projectChange$.pipe(takeUntil(this.destroy$)).subscribe((project) => {
@@ -75,6 +77,16 @@ export class BoardComponent implements OnInit, OnDestroy {
 					)
 					.subscribe((pos) => {
 						this.positionChange.emit(pos);
+					});
+
+				project.cursorPosition$
+					.pipe(
+						takeUntil(merge(this.destroy$, this.projectChange$)),
+						filter(() => this._pointerInsideCanvas),
+						throttleTime(33.33)
+					)
+					.subscribe((pos) => {
+						this.cursorPositionChange.emit(pos);
 					});
 
 				project.ticker$
@@ -117,6 +129,13 @@ export class BoardComponent implements OnInit, OnDestroy {
 
 	async ngOnInit(): Promise<void> {
 		await this.assetsService.init();
+
+		this.canvas.nativeElement.addEventListener('pointerenter', () => {
+			this._pointerInsideCanvas = true;
+		});
+		this.canvas.nativeElement.addEventListener('pointerleave', () => {
+			this._pointerInsideCanvas = false;
+		});
 
 		await this.ngZone.runOutsideAngular(async () => {
 			await this.app.init({

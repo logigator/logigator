@@ -23,11 +23,11 @@ export class StatusBarComponent {
 	private readonly workModeService = inject(WorkModeService);
 	private readonly componentProviderService = inject(ComponentProviderService);
 
-	public readonly boardPosition = input<Point>(new Point(0, 0));
+	public readonly cursorPosition = input<Point>(new Point(0, 0));
 
 	protected readonly boardPositionFormatted = computed(
 		() =>
-			`${-Math.round(this.boardPosition().x)}, ${-Math.round(this.boardPosition().y)}`
+			`${Math.round(this.cursorPosition().x)}, ${Math.round(this.cursorPosition().y)}`
 	);
 
 	protected readonly workMode = computed(

@@ -7,7 +7,7 @@
 			<app-board
 				class="block w-full h-full"
 				[project]="projectService.activeProject()"
-				(positionChange)="boardPosition.set($event)"
+				(cursorPositionChange)="cursorPosition.set($event)"
 			></app-board>
 			@if (componentSettings(); as settings) {
 				<p-card
@@ -21,6 +21,6 @@
 				</p-card>
 			}
 		</div>
-		<app-status-bar [boardPosition]="boardPosition()"></app-status-bar>
+		<app-status-bar [cursorPosition]="cursorPosition()"></app-status-bar>
 	</div>
 </div>

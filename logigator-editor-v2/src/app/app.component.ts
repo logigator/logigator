@@ -45,7 +45,7 @@ export class AppComponent {
 	protected readonly projectService = inject(ProjectService);
 	private readonly workModeService = inject(WorkModeService);
 
-	protected readonly boardPosition = signal<Point>(new Point(0, 0));
+	protected readonly cursorPosition = signal<Point>(new Point(0, 0));
 
 	protected readonly componentSettings = computed(() => {
 		return this.workModeService.selectedComponentConfig();

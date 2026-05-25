@@ -1,10 +1,10 @@
-import { Container, Point, Rectangle } from 'pixi.js';
+import { Container, FederatedPointerEvent, Point, Rectangle } from 'pixi.js';
 
 import { Grid } from '../rendering/grid';
 import { ComponentConfig } from '../components/component-config.model';
 import { InteractionContainer } from '../rendering/interaction-container';
 import { Component } from '../components/component';
-import { Observable, Subscription } from 'rxjs';
+import { Observable, Subject, Subscription } from 'rxjs';
 import { environment } from '../../environments/environment';
 import { WorkMode } from '../work-mode/work-mode.enum';
 import { FloatingLayer } from '../rendering/floating-layer';
@@ -32,6 +32,7 @@ export class Project extends InteractionContainer {
 
 	private readonly _wireIntegrator = new WireIntegrator();
 	private readonly _viewport: ViewportController;
+	private readonly _cursorPosition$ = new Subject<Point>();
 
 	private readonly _connectionPoints = new ConnectionPointManager(
 		(rect) => this.queryWiresInRange(rect),
@@ -60,6 +61,10 @@ export class Project extends InteractionContainer {
 		this._gridSpace.addChild(this._components);
 		this._gridSpace.addChild(this._connectionPoints.layer);
 		this._gridSpace.addChild(this._floatingLayer);
+
+		this.on('pointermove', (e: FederatedPointerEvent) => {
+			this._cursorPosition$.next(e.getLocalPosition(this._gridSpace));
+		});
 
 		this._viewport = new ViewportController(this, this._grid, (scale) => {
 			this._floatingLayer.updateScale(scale);
@@ -115,6 +120,10 @@ export class Project extends InteractionContainer {
 
 	public get positionChange$(): Observable<Point> {
 		return this._viewport.positionChange$;
+	}
+
+	public get cursorPosition$(): Observable<Point> {
+		return this._cursorPosition$.asObservable();
 	}
 
 	public get gridPosition(): Point {
