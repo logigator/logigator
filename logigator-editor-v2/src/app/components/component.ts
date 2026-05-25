@@ -13,7 +13,7 @@ import { ThemingService } from '../theming/theming.service';
 import { getStaticDI } from '../utils/get-di';
 import { GraphicsProviderService } from '../rendering/graphics-provider.service';
 import { environment } from '../../environments/environment';
-import { PX, fromGrid } from '../utils/grid';
+import { PX } from '../utils/grid';
 import { WireGraphics } from '../rendering/graphics/wire.graphics';
 import { ComponentOption } from './component-option';
 import { SerializedComponent } from './serialized-component.model';
@@ -313,7 +313,7 @@ export abstract class Component extends Container implements Connectable {
 					text: labels[i],
 					style: {
 						fontFamily: 'Roboto',
-						fontSize: fromGrid(0.5),
+						fontSize: 0.5 / PX,
 						fill: this.themingService.currentTheme().fontTint
 					},
 					anchor: { x: type === 'inputs' ? 0 : 1, y: 0.5 },
@@ -327,7 +327,7 @@ export abstract class Component extends Container implements Connectable {
 				// component directions.
 				const naturalWidth = text.width;
 				text.scale.set(PX);
-				text.pivot.set((text.width / 2) * (type === 'inputs' ? 1 : -1), 0);
+				text.pivot.set((naturalWidth / 2) * (type === 'inputs' ? 1 : -1), 0);
 
 				if (type === 'inputs') {
 					text.position.set(0.5 + naturalWidth * PX / 2 + 2 * PX, i + 0.5);
