@@ -22,7 +22,10 @@ function makeAnd(): AndComponent {
 	]);
 }
 
-function makeEvent(x: number, y: number): jasmine.SpyObj<FederatedPointerEvent> {
+function makeEvent(
+	x: number,
+	y: number
+): jasmine.SpyObj<FederatedPointerEvent> {
 	const e = jasmine.createSpyObj<FederatedPointerEvent>(
 		'FederatedPointerEvent',
 		['getLocalPosition']
@@ -55,8 +58,11 @@ describe('EraseSession', () => {
 		project.queryComponentsInRange.and.callFake(() => gen());
 		project.queryWiresInRange.and.callFake(() => gen());
 
-		(project as unknown as { actionManager: jasmine.SpyObj<ActionManager> }).actionManager =
-			jasmine.createSpyObj<ActionManager>('ActionManager', ['register']);
+		(
+			project as unknown as { actionManager: jasmine.SpyObj<ActionManager> }
+		).actionManager = jasmine.createSpyObj<ActionManager>('ActionManager', [
+			'register'
+		]);
 		(project as unknown as { gridSpace: object }).gridSpace = {};
 	});
 

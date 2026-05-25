@@ -31,8 +31,8 @@ Every user operation is modelled as a pair of inverse operations:
 
 ```ts
 abstract class Action {
-  abstract do(project: Project): void;
-  abstract undo(project: Project): void;
+	abstract do(project: Project): void;
+	abstract undo(project: Project): void;
 }
 ```
 
@@ -101,14 +101,14 @@ A composite `Action` that holds an ordered list of child actions and delegates t
 const action = new ActionContainer();
 
 if (components.length > 0) {
-  action.add(new AddComponentsAction(...components));
+	action.add(new AddComponentsAction(...components));
 }
 if (wires.length > 0) {
-  action.add(new AddWiresAction(...wires));
+	action.add(new AddWiresAction(...wires));
 }
 
 if (action.length > 0) {
-  project.actionManager.push(action);
+	project.actionManager.push(action);
 }
 ```
 
@@ -122,19 +122,19 @@ All four built-in actions follow the same structure: serialize inputs at constru
 
 These two classes are exact inverses. `AddComponentsAction` deserializes via `ComponentProviderService` (accessed through the static DI escape hatch `getStaticDI()`) to reconstruct the correct subclass. `RemoveComponentsAction` removes by ID.
 
-| | `do` | `undo` |
-|---|---|---|
-| `AddComponentsAction` | `project.addComponent(deserialize(…))` | `project.removeComponent(id)` |
-| `RemoveComponentsAction` | `project.removeComponent(id)` | `project.addComponent(deserialize(…))` |
+|                          | `do`                                   | `undo`                                 |
+| ------------------------ | -------------------------------------- | -------------------------------------- |
+| `AddComponentsAction`    | `project.addComponent(deserialize(…))` | `project.removeComponent(id)`          |
+| `RemoveComponentsAction` | `project.removeComponent(id)`          | `project.addComponent(deserialize(…))` |
 
 ### `AddWiresAction` / `RemoveWiresAction`
 
 Same pattern for wires. Wire deserialization does not require a registry; `Wire.deserialize(s)` is sufficient.
 
-| | `do` | `undo` |
-|---|---|---|
-| `AddWiresAction` | `project.addWire(Wire.deserialize(…))` | `project.removeWire(id)` |
-| `RemoveWiresAction` | `project.removeWire(id)` | `project.addWire(Wire.deserialize(…))` |
+|                     | `do`                                   | `undo`                                 |
+| ------------------- | -------------------------------------- | -------------------------------------- |
+| `AddWiresAction`    | `project.addWire(Wire.deserialize(…))` | `project.removeWire(id)`               |
+| `RemoveWiresAction` | `project.removeWire(id)`               | `project.addWire(Wire.deserialize(…))` |
 
 ### `MoveComponentsAction` / `MoveWiresAction`
 
@@ -142,9 +142,9 @@ Move actions record `MoveEntry[]` — the shared interface in `move-entry.model.
 
 ```ts
 interface MoveEntry {
-    id: number;
-    oldPos: Point;
-    newPos: Point;
+	id: number;
+	oldPos: Point;
+	newPos: Point;
 }
 ```
 
@@ -152,10 +152,10 @@ interface MoveEntry {
 
 These actions are pushed by `FloatingLayer._commitDrag()` after a successful selection drag-move, wrapped in an `ActionContainer` alongside any companion wire or component entries. Selection tint is not cleared on commit — elements remain selected after moving.
 
-| | `do` | `undo` |
-|---|---|---|
+|                        | `do`                                               | `undo`                                             |
+| ---------------------- | -------------------------------------------------- | -------------------------------------------------- |
 | `MoveComponentsAction` | `project.moveComponent(id, newPos)` for each entry | `project.moveComponent(id, oldPos)` for each entry |
-| `MoveWiresAction` | `project.moveWire(id, newPos)` for each entry | `project.moveWire(id, oldPos)` for each entry |
+| `MoveWiresAction`      | `project.moveWire(id, newPos)` for each entry      | `project.moveWire(id, oldPos)` for each entry      |
 
 ---
 
@@ -163,10 +163,10 @@ These actions are pushed by `FloatingLayer._commitDrag()` after a successful sel
 
 `Project` creates and exposes `actionManager` as a public field. Call sites:
 
-| Call site | Action(s) pushed |
-|---|---|
-| `FloatingLayer.commitSelection()` | `AddComponentsAction`, `AddWiresAction` (placement commit) |
-| `FloatingLayer._commitDrag()` | `MoveComponentsAction`, `MoveWiresAction` (selection drag-move) |
+| Call site                         | Action(s) pushed                                                |
+| --------------------------------- | --------------------------------------------------------------- |
+| `FloatingLayer.commitSelection()` | `AddComponentsAction`, `AddWiresAction` (placement commit)      |
+| `FloatingLayer._commitDrag()`     | `MoveComponentsAction`, `MoveWiresAction` (selection drag-move) |
 
 Undo/redo keyboard shortcuts are wired through Angular UI components that call `project.actionManager.undo()` / `.redo()` directly.
 

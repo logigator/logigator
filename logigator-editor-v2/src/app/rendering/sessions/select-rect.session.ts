@@ -1,4 +1,10 @@
-import { Container, FederatedPointerEvent, Graphics, Point, Rectangle } from 'pixi.js';
+import {
+	Container,
+	FederatedPointerEvent,
+	Graphics,
+	Point,
+	Rectangle
+} from 'pixi.js';
 
 import { DragSession } from '../drag-session';
 import { Project } from '../../project/project';

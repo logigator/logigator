@@ -112,12 +112,7 @@ describe('Component.bodyGridBounds', () => {
 	});
 
 	it('bodyGridBounds strictly inside gridBounds for all rotations', () => {
-		const rotations = [
-			Direction.E,
-			Direction.S,
-			Direction.W,
-			Direction.N
-		];
+		const rotations = [Direction.E, Direction.S, Direction.W, Direction.N];
 		for (const dir of rotations) {
 			const comp = makeAnd(2);
 			comp.position.set(5, 5);

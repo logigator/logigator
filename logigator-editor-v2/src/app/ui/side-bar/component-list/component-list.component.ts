@@ -41,9 +41,8 @@ export class ComponentListComponent {
 		}
 
 		return (
-			this.filteredComponents().find(
-				(comp) => comp.type === selectedComponent
-			)?.type ?? null
+			this.filteredComponents().find((comp) => comp.type === selectedComponent)
+				?.type ?? null
 		);
 	});
 

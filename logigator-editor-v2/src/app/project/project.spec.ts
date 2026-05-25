@@ -17,7 +17,12 @@ function makeAnd(numInputs = 2): AndComponent {
 }
 
 // Wire at half-grid position (gx+0.5, gy+0.5) with given direction and length
-function makeWire(gx: number, gy: number, dir: WireDirection, length: number): Wire {
+function makeWire(
+	gx: number,
+	gy: number,
+	dir: WireDirection,
+	length: number
+): Wire {
 	const w = new Wire(dir, length);
 	w.position.set(gx + 0.5, gy + 0.5);
 	return w;
@@ -193,7 +198,9 @@ describe('Project.hasComponentBodyWireCollision', () => {
 		// Wire gx=0, len=4: gridBounds=[0,5)×[0,1) — enters body at x=3
 		const wire = makeWire(0, 0, WireDirection.HORIZONTAL, 4);
 		project.addWire(wire);
-		expect(project.hasComponentBodyWireCollision(new Rectangle(3, 0, 2, 2))).toBeTrue();
+		expect(
+			project.hasComponentBodyWireCollision(new Rectangle(3, 0, 2, 2))
+		).toBeTrue();
 		wire.destroy();
 	});
 
@@ -201,7 +208,9 @@ describe('Project.hasComponentBodyWireCollision', () => {
 		// Vertical wire at (3,0) len=2: gridBounds=[3,4)×[0,3) — overlaps body
 		const wire = makeWire(3, 0, WireDirection.VERTICAL, 2);
 		project.addWire(wire);
-		expect(project.hasComponentBodyWireCollision(new Rectangle(3, 0, 2, 2))).toBeTrue();
+		expect(
+			project.hasComponentBodyWireCollision(new Rectangle(3, 0, 2, 2))
+		).toBeTrue();
 		wire.destroy();
 	});
 
@@ -209,7 +218,9 @@ describe('Project.hasComponentBodyWireCollision', () => {
 		// Wire gx=0, len=2: gridBounds=[0,3)×[0,1) — right=3 equals body left=3 → no overlap
 		const wire = makeWire(0, 0, WireDirection.HORIZONTAL, 2);
 		project.addWire(wire);
-		expect(project.hasComponentBodyWireCollision(new Rectangle(3, 0, 2, 2))).toBeFalse();
+		expect(
+			project.hasComponentBodyWireCollision(new Rectangle(3, 0, 2, 2))
+		).toBeFalse();
 		wire.destroy();
 	});
 
@@ -217,7 +228,9 @@ describe('Project.hasComponentBodyWireCollision', () => {
 		// Wire gx=5, len=2: gridBounds=[5,8)×[0,1) — left=5 equals body right=5 → no overlap
 		const wire = makeWire(5, 0, WireDirection.HORIZONTAL, 2);
 		project.addWire(wire);
-		expect(project.hasComponentBodyWireCollision(new Rectangle(3, 0, 2, 2))).toBeFalse();
+		expect(
+			project.hasComponentBodyWireCollision(new Rectangle(3, 0, 2, 2))
+		).toBeFalse();
 		wire.destroy();
 	});
 
@@ -337,7 +350,11 @@ describe('Project connection-point integration', () => {
 
 		project.detachForDrag([], [v]);
 		const dragLayer = new Container();
-		const captured = project.connectionPoints.captureDragCps([], [v], dragLayer);
+		const captured = project.connectionPoints.captureDragCps(
+			[],
+			[v],
+			dragLayer
+		);
 
 		expect(cpAt(project, jn)).toBeFalse();
 		expect(captured.length).toBe(1);
@@ -364,7 +381,11 @@ describe('Project connection-point integration', () => {
 
 		project.detachForDrag([], [longH]);
 		const dragLayer = new Container();
-		const captured = project.connectionPoints.captureDragCps([], [longH], dragLayer);
+		const captured = project.connectionPoints.captureDragCps(
+			[],
+			[longH],
+			dragLayer
+		);
 
 		// longH has no endpoint at (2.5, 0.5), so no CP is captured.
 		expect(cpAt(project, jn)).toBeTrue();
@@ -384,7 +405,11 @@ describe('Project connection-point integration', () => {
 
 		project.detachForDrag([], [v]);
 		const dragLayer = new Container();
-		const captured = project.connectionPoints.captureDragCps([], [v], dragLayer);
+		const captured = project.connectionPoints.captureDragCps(
+			[],
+			[v],
+			dragLayer
+		);
 		expect(captured.length).toBe(1);
 
 		const cp = captured[0];
@@ -405,7 +430,11 @@ describe('Project connection-point integration', () => {
 		const jn = new Point(2.5, 2.5);
 		project.detachForDrag([], [v]);
 		const dragLayer = new Container();
-		const captured = project.connectionPoints.captureDragCps([], [v], dragLayer);
+		const captured = project.connectionPoints.captureDragCps(
+			[],
+			[v],
+			dragLayer
+		);
 		expect(cpAt(project, jn)).toBeFalse();
 
 		project.connectionPoints.restoreDragCps(captured);
@@ -474,13 +503,22 @@ describe('Project connection-point integration', () => {
 
 		project.detachForDrag([], [v]);
 		const dragLayer = new Container();
-		const captured = project.connectionPoints.captureDragCps([], [v], dragLayer);
+		const captured = project.connectionPoints.captureDragCps(
+			[],
+			[v],
+			dragLayer
+		);
 
 		v.position.set(20.5, 20.5);
 		project.reattachFromDrag([], [v]);
 
 		project.connectionPoints.discardDragCps(captured);
-		project.connectionPoints.recomputeCpsForMovedSelection(new Map(), [oldSnap], [], [v]);
+		project.connectionPoints.recomputeCpsForMovedSelection(
+			new Map(),
+			[oldSnap],
+			[],
+			[v]
+		);
 
 		expect(cpAt(project, oldJn)).toBeFalse();
 
@@ -501,9 +539,8 @@ describe('Project.toggleConnectionAt', () => {
 	});
 
 	function wireCount(): number {
-		return [
-			...project.queryWiresInRange(new Rectangle(-100, -100, 200, 200))
-		].length;
+		return [...project.queryWiresInRange(new Rectangle(-100, -100, 200, 200))]
+			.length;
 	}
 
 	describe('SPLIT — no CP at click point', () => {
@@ -586,9 +623,7 @@ describe('Project.toggleConnectionAt', () => {
 			expect(wireCount()).toBe(3);
 			expect(
 				[
-					...project.queryWiresInRange(
-						new Rectangle(-100, -100, 200, 200)
-					)
+					...project.queryWiresInRange(new Rectangle(-100, -100, 200, 200))
 				].some((w) => w.id === vId)
 			).toBeTrue();
 		});

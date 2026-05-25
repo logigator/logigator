@@ -140,8 +140,11 @@ describe('ActionManager', () => {
 			manager.push(action);
 
 			// Pretend a SELECT_EXACT cut is pending.
-			(project as never as { selectionManager: { rollbackPendingCut: () => boolean } })
-				.selectionManager.rollbackPendingCut = () => true;
+			(
+				project as never as {
+					selectionManager: { rollbackPendingCut: () => boolean };
+				}
+			).selectionManager.rollbackPendingCut = () => true;
 
 			manager.undo();
 
@@ -168,9 +171,9 @@ describe('ActionManager', () => {
 
 			manager.push(a1);
 			manager.push(a2);
-			manager.undo();           // pointer now at a1; a2 is in redo history
+			manager.undo(); // pointer now at a1; a2 is in redo history
 
-			manager.push(a3);         // should truncate a2 from redo history
+			manager.push(a3); // should truncate a2 from redo history
 
 			expect(manager.redoAvailable).toBeFalse();
 		});

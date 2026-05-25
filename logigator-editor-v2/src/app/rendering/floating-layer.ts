@@ -20,7 +20,9 @@ import { WireConnectionSession } from './sessions/wire-connection.session';
 import { ConnectionPoint } from '../connection-points/connection-point';
 
 export class FloatingLayer extends Container {
-	private readonly _dragLayer = new Container<Component | Wire | ConnectionPoint>();
+	private readonly _dragLayer = new Container<
+		Component | Wire | ConnectionPoint
+	>();
 
 	private _mode: WorkMode = WorkMode.WIRE_DRAWING;
 	private _componentToPlace: ComponentConfig | null = null;
@@ -92,11 +94,7 @@ export class FloatingLayer extends Container {
 					true
 				);
 				this._startDrag(
-					new ComponentPlacementSession(
-						this.project,
-						this._dragLayer,
-						startPos
-					)
+					new ComponentPlacementSession(this.project, this._dragLayer, startPos)
 				);
 				break;
 			}
@@ -128,12 +126,7 @@ export class FloatingLayer extends Container {
 					);
 				} else {
 					this._startDrag(
-						new SelectRectSession(
-							this.project,
-							this,
-							localPoint,
-							this._mode
-						)
+						new SelectRectSession(this.project, this, localPoint, this._mode)
 					);
 				}
 				break;

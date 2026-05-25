@@ -29,7 +29,10 @@ function makeSimpleClass(returnValue: () => number) {
 }
 
 /** Creates a class whose `value` getter is decorated with a keyGenerator. */
-function makeKeyedClass(keyFn: (self: any) => string, returnValue: (self: any) => number) {
+function makeKeyedClass(
+	keyFn: (self: any) => string,
+	returnValue: (self: any) => number
+) {
 	class Fixture {
 		callCount = 0;
 
@@ -96,14 +99,20 @@ describe('Cached decorator', () => {
 
 	describe('with keyGenerator', () => {
 		it('getter is called on first read', () => {
-			const Fixture = makeKeyedClass(() => 'static', () => 7);
+			const Fixture = makeKeyedClass(
+				() => 'static',
+				() => 7
+			);
 			const f = new Fixture();
 			expect(f.value).toBe(7);
 			expect(f.callCount).toBe(1);
 		});
 
 		it('getter is not called again when key stays the same', () => {
-			const Fixture = makeKeyedClass(() => 'same', () => 7);
+			const Fixture = makeKeyedClass(
+				() => 'same',
+				() => 7
+			);
 			const f = new Fixture();
 
 			void f.value;
@@ -116,7 +125,10 @@ describe('Cached decorator', () => {
 		it('getter is recomputed when the key changes', () => {
 			let key = 'first';
 			let returnVal = 10;
-			const Fixture = makeKeyedClass(() => key, () => returnVal);
+			const Fixture = makeKeyedClass(
+				() => key,
+				() => returnVal
+			);
 			const f = new Fixture();
 
 			expect(f.value).toBe(10); // key = 'first', computes
@@ -130,7 +142,10 @@ describe('Cached decorator', () => {
 			// After key settles to 'a', a second read with key 'a' must be a cache hit.
 			const key = 'a';
 			let returnVal = 5;
-			const Fixture = makeKeyedClass(() => key, () => returnVal);
+			const Fixture = makeKeyedClass(
+				() => key,
+				() => returnVal
+			);
 			const f = new Fixture();
 
 			void f.value; // key='a', computes once

@@ -33,9 +33,18 @@ describe('MoveWiresAction', () => {
 			action.do(project);
 
 			expect(project.moveWire).toHaveBeenCalledTimes(3);
-			expect(project.moveWire).toHaveBeenCalledWith(1, jasmine.objectContaining({ x: 3, y: 4 }));
-			expect(project.moveWire).toHaveBeenCalledWith(2, jasmine.objectContaining({ x: 7, y: 8 }));
-			expect(project.moveWire).toHaveBeenCalledWith(3, jasmine.objectContaining({ x: 9, y: 0 }));
+			expect(project.moveWire).toHaveBeenCalledWith(
+				1,
+				jasmine.objectContaining({ x: 3, y: 4 })
+			);
+			expect(project.moveWire).toHaveBeenCalledWith(
+				2,
+				jasmine.objectContaining({ x: 7, y: 8 })
+			);
+			expect(project.moveWire).toHaveBeenCalledWith(
+				3,
+				jasmine.objectContaining({ x: 9, y: 0 })
+			);
 		});
 
 		it('does not call moveWire when there are no entries', () => {
@@ -69,8 +78,14 @@ describe('MoveWiresAction', () => {
 			action.undo(project);
 
 			expect(project.moveWire).toHaveBeenCalledTimes(2);
-			expect(project.moveWire).toHaveBeenCalledWith(1, jasmine.objectContaining({ x: 0, y: 0 }));
-			expect(project.moveWire).toHaveBeenCalledWith(2, jasmine.objectContaining({ x: 1, y: 1 }));
+			expect(project.moveWire).toHaveBeenCalledWith(
+				1,
+				jasmine.objectContaining({ x: 0, y: 0 })
+			);
+			expect(project.moveWire).toHaveBeenCalledWith(
+				2,
+				jasmine.objectContaining({ x: 1, y: 1 })
+			);
 		});
 
 		it('does not call moveWire when there are no entries', () => {
@@ -93,7 +108,10 @@ describe('MoveWiresAction', () => {
 			oldPos.set(99, 99);
 			action.undo(project);
 
-			expect(project.moveWire).toHaveBeenCalledOnceWith(1, jasmine.objectContaining({ x: 1, y: 2 }));
+			expect(project.moveWire).toHaveBeenCalledOnceWith(
+				1,
+				jasmine.objectContaining({ x: 1, y: 2 })
+			);
 		});
 
 		it('clones newPos so mutating the original does not affect stored entry', () => {
@@ -107,7 +125,10 @@ describe('MoveWiresAction', () => {
 			newPos.set(99, 99);
 			action.do(project);
 
-			expect(project.moveWire).toHaveBeenCalledOnceWith(1, jasmine.objectContaining({ x: 5, y: 6 }));
+			expect(project.moveWire).toHaveBeenCalledOnceWith(
+				1,
+				jasmine.objectContaining({ x: 5, y: 6 })
+			);
 		});
 	});
 });

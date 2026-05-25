@@ -17,7 +17,12 @@ import { ComponentPlacementSession } from './component-placement.session';
 // When dragLayer.position=(px,py): bodyBoundsWorld = Rectangle(px, py, 2, 2).
 // gridBounds (with stubs): lx=-0.5, w=3 → Rectangle(px-0.5, py, 3, 2).
 
-function makeWire(gx: number, gy: number, dir: WireDirection, length: number): Wire {
+function makeWire(
+	gx: number,
+	gy: number,
+	dir: WireDirection,
+	length: number
+): Wire {
 	const w = new Wire(dir, length);
 	w.position.set(gx + 0.5, gy + 0.5);
 	return w;
@@ -35,7 +40,9 @@ function makeNot(direction: Direction = Direction.E): NotComponent {
 }
 
 function makeMoveEvent(x: number, y: number): FederatedPointerEvent {
-	return { getLocalPosition: () => new Point(x, y) } as unknown as FederatedPointerEvent;
+	return {
+		getLocalPosition: () => new Point(x, y)
+	} as unknown as FederatedPointerEvent;
 }
 
 describe('ComponentPlacementSession collision', () => {
@@ -57,7 +64,11 @@ describe('ComponentPlacementSession collision', () => {
 	});
 
 	it('canEnd() is true when placed on empty ground', () => {
-		session = new ComponentPlacementSession(project, dragLayer, new Point(0, 0));
+		session = new ComponentPlacementSession(
+			project,
+			dragLayer,
+			new Point(0, 0)
+		);
 		expect(session.canEnd()).toBeTrue();
 	});
 
@@ -65,7 +76,11 @@ describe('ComponentPlacementSession collision', () => {
 		const existing = makeAnd();
 		existing.position.set(0, 0);
 		project.addComponent(existing);
-		session = new ComponentPlacementSession(project, dragLayer, new Point(0, 0));
+		session = new ComponentPlacementSession(
+			project,
+			dragLayer,
+			new Point(0, 0)
+		);
 		expect(session.canEnd()).toBeFalse();
 	});
 
@@ -74,7 +89,11 @@ describe('ComponentPlacementSession collision', () => {
 		// Wire gx=3, len=3: gridBounds=[3,7)×[0,1) → enters body at x=5.
 		const wire = makeWire(3, 0, WireDirection.HORIZONTAL, 3);
 		project.addWire(wire);
-		session = new ComponentPlacementSession(project, dragLayer, new Point(5, 0));
+		session = new ComponentPlacementSession(
+			project,
+			dragLayer,
+			new Point(5, 0)
+		);
 		expect(session.canEnd()).toBeFalse();
 		wire.destroy();
 	});
@@ -84,7 +103,11 @@ describe('ComponentPlacementSession collision', () => {
 		// Wire right=5 equals body left=5 → no intersection (touches but does not overlap).
 		const wire = makeWire(0, 0, WireDirection.HORIZONTAL, 4);
 		project.addWire(wire);
-		session = new ComponentPlacementSession(project, dragLayer, new Point(5, 0));
+		session = new ComponentPlacementSession(
+			project,
+			dragLayer,
+			new Point(5, 0)
+		);
 		expect(session.canEnd()).toBeTrue();
 		wire.destroy();
 	});
@@ -92,7 +115,11 @@ describe('ComponentPlacementSession collision', () => {
 	it('canEnd() clears to true after onMove moves body off the wire', () => {
 		const wire = makeWire(3, 0, WireDirection.HORIZONTAL, 3);
 		project.addWire(wire);
-		session = new ComponentPlacementSession(project, dragLayer, new Point(5, 0));
+		session = new ComponentPlacementSession(
+			project,
+			dragLayer,
+			new Point(5, 0)
+		);
 		expect(session.canEnd()).toBeFalse();
 
 		session.onMove(makeMoveEvent(20, 0));
@@ -103,7 +130,11 @@ describe('ComponentPlacementSession collision', () => {
 	it('canEnd() sets to false after onMove moves body onto a wire', () => {
 		const wire = makeWire(3, 0, WireDirection.HORIZONTAL, 3);
 		project.addWire(wire);
-		session = new ComponentPlacementSession(project, dragLayer, new Point(0, 10));
+		session = new ComponentPlacementSession(
+			project,
+			dragLayer,
+			new Point(0, 10)
+		);
 		expect(session.canEnd()).toBeTrue();
 
 		session.onMove(makeMoveEvent(5, 0));
@@ -119,14 +150,20 @@ describe('ComponentPlacementSession collision', () => {
 		v.position.set(3.5, -2.5);
 		project.addWire(v);
 
-		session = new ComponentPlacementSession(project, dragLayer, new Point(4, 0));
+		session = new ComponentPlacementSession(
+			project,
+			dragLayer,
+			new Point(4, 0)
+		);
 		expect(session.canEnd()).toBeTrue();
 		session.onEnd();
 
 		const huge = new Rectangle(-100, -100, 200, 200);
 		const wires = Array.from(project.queryWiresInRange(huge));
 		expect(wires.find((w) => w.id === v.id)).toBeUndefined();
-		const verticals = wires.filter((w) => w.direction === WireDirection.VERTICAL);
+		const verticals = wires.filter(
+			(w) => w.direction === WireDirection.VERTICAL
+		);
 		// Two ports split V into three pieces.
 		expect(verticals.length).toBe(3);
 		const lengths = verticals.map((w) => w.length).sort();
@@ -146,7 +183,11 @@ describe('ComponentPlacementSession collision', () => {
 			...notComponentConfig,
 			options: [notComponentConfig.options[0].clone(Direction.N)]
 		};
-		session = new ComponentPlacementSession(project, dragLayer, new Point(2, 0));
+		session = new ComponentPlacementSession(
+			project,
+			dragLayer,
+			new Point(2, 0)
+		);
 		expect(session.canEnd()).toBeTrue();
 	});
 
@@ -161,7 +202,11 @@ describe('ComponentPlacementSession collision', () => {
 			...notComponentConfig,
 			options: [notComponentConfig.options[0].clone(Direction.N)]
 		};
-		session = new ComponentPlacementSession(project, dragLayer, new Point(2, 1));
+		session = new ComponentPlacementSession(
+			project,
+			dragLayer,
+			new Point(2, 1)
+		);
 		expect(session.canEnd()).toBeFalse();
 	});
 
@@ -170,7 +215,11 @@ describe('ComponentPlacementSession collision', () => {
 		v.position.set(3.5, -2.5);
 		project.addWire(v);
 
-		session = new ComponentPlacementSession(project, dragLayer, new Point(4, 0));
+		session = new ComponentPlacementSession(
+			project,
+			dragLayer,
+			new Point(4, 0)
+		);
 		session.onEnd();
 
 		project.actionManager.undo();

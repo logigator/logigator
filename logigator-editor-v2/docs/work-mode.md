@@ -21,22 +21,22 @@ src/app/work-mode/
 
 Seven string-valued enum members identify the available editing tools:
 
-| Member | Value | Status |
-|---|---|---|
-| `WIRE_DRAWING` | `'drawWire'` | Implemented |
-| `WIRE_CONNECTION` | `'connWire'` | Enum only — not yet wired to canvas interaction |
-| `SELECT` | `'sel'` | Implemented |
-| `SELECT_EXACT` | `'selExact'` | Implemented (scissor select — see note below) |
-| `ERASE` | `'erase'` | Implemented |
-| `PLACE_TEXT` | `'text'` | Enum only — not yet wired to canvas interaction |
-| `COMPONENT_PLACEMENT` | `'placeComp'` | Implemented |
+| Member                | Value         | Status                                          |
+| --------------------- | ------------- | ----------------------------------------------- |
+| `WIRE_DRAWING`        | `'drawWire'`  | Implemented                                     |
+| `WIRE_CONNECTION`     | `'connWire'`  | Implemented                                     |
+| `SELECT`              | `'sel'`       | Implemented                                     |
+| `SELECT_EXACT`        | `'selExact'`  | Implemented (scissor select — see note below)   |
+| `ERASE`               | `'erase'`     | Implemented                                     |
+| `PLACE_TEXT`          | `'text'`      | Enum only — not yet wired to canvas interaction |
+| `COMPONENT_PLACEMENT` | `'placeComp'` | Implemented                                     |
 
 The string values are used as i18n key suffixes — `statusBar.modes.<value>` — so changing them is a breaking i18n change.
 
 > **SELECT vs SELECT_EXACT**: Both modes share the same rubber-band rectangle UI in `FloatingLayer`. They diverge in `SelectionManager.commit`:
 >
 > - **SELECT** selects every component and wire whose `gridBounds` intersect the rect — the standard "touching" rule.
-> - **SELECT_EXACT** also selects every touching **component**, but for **wires** that extend past the rect boundary it scissors them at the boundary, keeps the inside portion selected, and leaves the outside portion(s) as separate, unselected wires. The cut is **tentative** — `SelectionManager` mutates the project directly but does not push to `ActionManager`. The cut becomes a real undo entry only when a move follows (`SelectionMoveSession` claims it via `claimPendingCut` and folds it into the move's `ActionContainer`, so cut + move revert with one Ctrl+Z). Any cancel path — selection clear, mode change, Escape, or Ctrl+Z while no move has happened — rolls the cut back, restoring the original wires. See `wires.md` § *Wire Scissor Cutting* for the cut geometry and § *Tentative cut + commit on move* for the lifecycle.
+> - **SELECT_EXACT** also selects every touching **component**, but for **wires** that extend past the rect boundary it scissors them at the boundary, keeps the inside portion selected, and leaves the outside portion(s) as separate, unselected wires. The cut is **tentative** — `SelectionManager` mutates the project directly but does not push to `ActionManager`. The cut becomes a real undo entry only when a move follows (`SelectionMoveSession` claims it via `claimPendingCut` and folds it into the move's `ActionContainer`, so cut + move revert with one Ctrl+Z). Any cancel path — selection clear, mode change, Escape, or Ctrl+Z while no move has happened — rolls the cut back, restoring the original wires. See `wires.md` § _Wire Scissor Cutting_ for the cut geometry and § _Tentative cut + commit on move_ for the lifecycle.
 
 > **WIRE_CONNECTION, PLACE_TEXT**: These values can be selected through the toolbar UI, and `WorkModeService` accepts them, but `FloatingLayer` contains no `case` branch for either of them. Pointer events on the canvas are effectively no-ops while these modes are active.
 

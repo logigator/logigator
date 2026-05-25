@@ -10,7 +10,12 @@ import { AndComponent } from '../components/component-types/and/and.component';
 import { andComponentConfig } from '../components/component-types/and/and.config';
 import { Direction } from '../utils/direction';
 
-function makeWire(gx: number, gy: number, dir: WireDirection, length: number): Wire {
+function makeWire(
+	gx: number,
+	gy: number,
+	dir: WireDirection,
+	length: number
+): Wire {
 	const w = new Wire(dir, length);
 	w.position.set(gx + 0.5, gy + 0.5);
 	return w;

@@ -25,7 +25,9 @@ function makeComponent(x: number, y: number, w: number, h: number): any {
 		tint: 0xffffff,
 		destroyed: false,
 		connectionPoints: [] as Point[],
-		get gridBounds() { return new Rectangle(x, y, w, h); },
+		get gridBounds() {
+			return new Rectangle(x, y, w, h);
+		}
 	};
 }
 
@@ -34,8 +36,13 @@ function makeWire(x: number, y: number, w: number, h: number): any {
 	return {
 		tint: 0xffffff,
 		destroyed: false,
-		connectionPoints: [new Point(x, y), new Point(x + w - 1, y)] as [Point, Point],
-		get gridBounds() { return new Rectangle(x, y, w, h); },
+		connectionPoints: [new Point(x, y), new Point(x + w - 1, y)] as [
+			Point,
+			Point
+		],
+		get gridBounds() {
+			return new Rectangle(x, y, w, h);
+		}
 	};
 }
 
@@ -57,9 +64,10 @@ function makeFullWire(
 			? new Rectangle(gridX, gridY, length + 1, 1)
 			: new Rectangle(gridX, gridY, 1, length + 1);
 	const pos = new Point(posX, posY);
-	const endPoint = direction === WireDirection.HORIZONTAL
-		? new Point(posX + length, posY)
-		: new Point(posX, posY + length);
+	const endPoint =
+		direction === WireDirection.HORIZONTAL
+			? new Point(posX + length, posY)
+			: new Point(posX, posY + length);
 	return {
 		tint: 0xffffff,
 		destroyed: false,
@@ -67,7 +75,7 @@ function makeFullWire(
 		position: pos,
 		length,
 		gridBounds,
-		connectionPoints: [pos, endPoint] as [Point, Point],
+		connectionPoints: [pos, endPoint] as [Point, Point]
 	};
 }
 
@@ -75,7 +83,7 @@ function makeFullWire(
 function makeAnd(numInputs = 2): AndComponent {
 	return new AndComponent([
 		andComponentConfig.options[0].clone(),
-		andComponentConfig.options[1].clone(numInputs),
+		andComponentConfig.options[1].clone(numInputs)
 	]);
 }
 
@@ -84,7 +92,10 @@ function makeAnd(numInputs = 2): AndComponent {
  * Uses callFake so a fresh generator is created on each call (generators are
  * single-use iterators; returnValue would exhaust after the first iteration).
  */
-function setComponents(project: jasmine.SpyObj<Project>, ...items: any[]): void {
+function setComponents(
+	project: jasmine.SpyObj<Project>,
+	...items: any[]
+): void {
 	project.queryComponentsInRange.and.callFake(function* () {
 		yield* items;
 	});
@@ -102,12 +113,16 @@ function makeProject(): jasmine.SpyObj<Project> {
 		'queryComponentsInRange',
 		'queryWiresInRange',
 		'addWire',
-		'removeWire',
+		'removeWire'
 	]);
 	// SelectionManager.SELECT_EXACT path may push to actionManager; install a spy.
-	(project as any).actionManager = jasmine.createSpyObj('ActionManager', ['push']);
+	(project as any).actionManager = jasmine.createSpyObj('ActionManager', [
+		'push'
+	]);
 	// retintCps() reads project.connectionPoints.getCpsAtPoints — provide a no-op stub.
-	(project as any).connectionPoints = { getCpsAtPoints: jasmine.createSpy('getCpsAtPoints').and.returnValue([]) };
+	(project as any).connectionPoints = {
+		getCpsAtPoints: jasmine.createSpy('getCpsAtPoints').and.returnValue([])
+	};
 	return project;
 }
 
@@ -144,7 +159,9 @@ describe('SelectionManager', () => {
 		it('selectionChange$ is an Observable', () => {
 			// Must be subscribable and not throw synchronously.
 			let subscribed = false;
-			manager.selectionChange$.subscribe(() => (subscribed = true)).unsubscribe();
+			manager.selectionChange$
+				.subscribe(() => (subscribed = true))
+				.unsubscribe();
 			// No emission expected on mere subscription.
 			expect(subscribed).toBeFalse();
 		});
@@ -432,7 +449,7 @@ describe('SelectionManager', () => {
 		it('prefers the component over a wire when the component has a smaller bounding area', () => {
 			// Click at (3,3). Component: 1×1 area=1. Wire: 5×2 area=10.
 			const comp = makeComponent(3, 3, 1, 1); // area=1; contains (3,3)
-			const wire = makeWire(0, 2, 5, 2);       // area=10; contains (3,3)
+			const wire = makeWire(0, 2, 5, 2); // area=10; contains (3,3)
 			setComponents(project, comp);
 			setWires(project, wire);
 
@@ -445,7 +462,7 @@ describe('SelectionManager', () => {
 		it('selects the wire when the wire has a smaller area than the component', () => {
 			// Click at (3,3). Component: 4×4 area=16. Wire: 1×1 area=1.
 			const comp = makeComponent(1, 1, 4, 4); // area=16; contains (3,3)
-			const wire = makeWire(3, 3, 1, 1);       // area=1;  contains (3,3)
+			const wire = makeWire(3, 3, 1, 1); // area=1;  contains (3,3)
 			setComponents(project, comp);
 			setWires(project, wire);
 

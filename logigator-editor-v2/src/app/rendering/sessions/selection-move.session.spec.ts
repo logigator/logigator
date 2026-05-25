@@ -15,7 +15,12 @@ import { WorkMode } from '../../work-mode/work-mode.enum';
 // dragLayer.position = roundToGrid(currentCursor) - pointerStart = movement delta.
 // Collision world bounds = item.gridBounds (local) + dragLayer.position (delta).
 
-function makeWire(gx: number, gy: number, dir: WireDirection, length: number): Wire {
+function makeWire(
+	gx: number,
+	gy: number,
+	dir: WireDirection,
+	length: number
+): Wire {
 	const w = new Wire(dir, length);
 	w.position.set(gx + 0.5, gy + 0.5);
 	return w;
@@ -29,7 +34,9 @@ function makeAnd(numInputs = 2): AndComponent {
 }
 
 function makeMoveEvent(x: number, y: number): FederatedPointerEvent {
-	return { getLocalPosition: () => new Point(x, y) } as unknown as FederatedPointerEvent;
+	return {
+		getLocalPosition: () => new Point(x, y)
+	} as unknown as FederatedPointerEvent;
 }
 
 describe('SelectionMoveSession collision', () => {
@@ -61,8 +68,10 @@ describe('SelectionMoveSession collision', () => {
 			project.addComponent(selected);
 
 			session = new SelectionMoveSession(
-				project, dragLayer,
-				new Set([selected]), new Set(),
+				project,
+				dragLayer,
+				new Set([selected]),
+				new Set(),
 				new Point(0, 0)
 			);
 
@@ -83,8 +92,10 @@ describe('SelectionMoveSession collision', () => {
 			project.addComponent(selected);
 
 			session = new SelectionMoveSession(
-				project, dragLayer,
-				new Set([selected]), new Set(),
+				project,
+				dragLayer,
+				new Set([selected]),
+				new Set(),
 				new Point(0, 0)
 			);
 
@@ -102,8 +113,10 @@ describe('SelectionMoveSession collision', () => {
 			project.addComponent(selected);
 
 			session = new SelectionMoveSession(
-				project, dragLayer,
-				new Set([selected]), new Set(),
+				project,
+				dragLayer,
+				new Set([selected]),
+				new Set(),
 				new Point(0, 0)
 			);
 
@@ -127,8 +140,10 @@ describe('SelectionMoveSession collision', () => {
 			project.addWire(wire);
 
 			session = new SelectionMoveSession(
-				project, dragLayer,
-				new Set(), new Set([wire]),
+				project,
+				dragLayer,
+				new Set(),
+				new Set([wire]),
 				new Point(0, 0)
 			);
 
@@ -145,8 +160,10 @@ describe('SelectionMoveSession collision', () => {
 			project.addWire(wire);
 
 			session = new SelectionMoveSession(
-				project, dragLayer,
-				new Set(), new Set([wire]),
+				project,
+				dragLayer,
+				new Set(),
+				new Set([wire]),
 				new Point(0, 0)
 			);
 
@@ -164,8 +181,10 @@ describe('SelectionMoveSession collision', () => {
 			project.addWire(wire);
 
 			session = new SelectionMoveSession(
-				project, dragLayer,
-				new Set(), new Set([wire]),
+				project,
+				dragLayer,
+				new Set(),
+				new Set([wire]),
 				new Point(0, 0)
 			);
 
@@ -257,8 +276,10 @@ describe('SelectionMoveSession collision', () => {
 			project.addWire(v);
 
 			session = new SelectionMoveSession(
-				project, dragLayer,
-				new Set(), new Set([v]),
+				project,
+				dragLayer,
+				new Set(),
+				new Set([v]),
 				new Point(0, -1)
 			);
 			// Move delta = (4, 1) so v ends up at (4.5, -4.5)→(4.5, 0.5).
@@ -272,7 +293,9 @@ describe('SelectionMoveSession collision', () => {
 
 			// long should be replaced by two halves.
 			expect(wires.find((w) => w.id === long.id)).toBeUndefined();
-			const horizontals = wires.filter((w) => w.direction === WireDirection.HORIZONTAL);
+			const horizontals = wires.filter(
+				(w) => w.direction === WireDirection.HORIZONTAL
+			);
 			expect(horizontals.length).toBe(2);
 			// CP at (4.5, 0.5).
 			expect(project.connectionPoints.hasCpAt(new Point(4.5, 0.5))).toBeTrue();

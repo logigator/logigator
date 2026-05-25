@@ -256,9 +256,9 @@ export class SelectionMoveSession implements DragSession {
 			this._components.some(
 				(c) =>
 					this.project.hasComponentCollision(
-					this._boundsWorld(c),
-					this._bodyBoundsWorld(c)
-				) ||
+						this._boundsWorld(c),
+						this._bodyBoundsWorld(c)
+					) ||
 					this.project.hasComponentBodyWireCollision(this._bodyBoundsWorld(c))
 			) ||
 			this._wires.some((w) =>

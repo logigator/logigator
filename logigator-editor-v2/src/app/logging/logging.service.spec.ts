@@ -24,14 +24,22 @@ describe('LoggingService', () => {
 	describe('error', () => {
 		it('passes the context and message to console.error', () => {
 			service.error('err-msg', 'err-ctx');
-			expect(console.error).toHaveBeenCalledWith('[%s] %o', 'err-ctx', 'err-msg');
+			expect(console.error).toHaveBeenCalledWith(
+				'[%s] %o',
+				'err-ctx',
+				'err-msg'
+			);
 		});
 	});
 
 	describe('warn', () => {
 		it('passes the context and message to console.warn', () => {
 			service.warn('warn-msg', 'warn-ctx');
-			expect(console.warn).toHaveBeenCalledWith('[%s] %o', 'warn-ctx', 'warn-msg');
+			expect(console.warn).toHaveBeenCalledWith(
+				'[%s] %o',
+				'warn-ctx',
+				'warn-msg'
+			);
 		});
 	});
 
@@ -45,7 +53,11 @@ describe('LoggingService', () => {
 	describe('info', () => {
 		it('passes the context and message to console.info', () => {
 			service.info('info-msg', 'info-ctx');
-			expect(console.info).toHaveBeenCalledWith('[%s] %o', 'info-ctx', 'info-msg');
+			expect(console.info).toHaveBeenCalledWith(
+				'[%s] %o',
+				'info-ctx',
+				'info-msg'
+			);
 		});
 	});
 

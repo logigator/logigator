@@ -111,7 +111,9 @@ describe('ViewportController', () => {
 		});
 
 		it('converts pixel position to grid units correctly', () => {
-			viewport.setPosition(new Point(environment.gridSize * 5, environment.gridSize * 3));
+			viewport.setPosition(
+				new Point(environment.gridSize * 5, environment.gridSize * 3)
+			);
 			const gp = viewport.gridPosition;
 			expect(gp.x).toBeCloseTo(5, 5);
 			expect(gp.y).toBeCloseTo(3, 5);

@@ -66,6 +66,7 @@ abstract zoomOut(center: Point): void;
 ```
 
 Event binding:
+
 - `rightdown` / `rightup` / `rightupoutside` — starts/stops pan; emits `'on'`/`'off'` on `_ticker$`.
 - `pointermove` during drag — calls `pan(e.movement)`.
 - `wheel` — calls `zoomIn` or `zoomOut`; emits `'single'`.
@@ -84,12 +85,12 @@ Owns all circuit state and sub-layers. Not strictly part of `rendering/` but is 
 
 Key behaviours relevant to rendering:
 
-| Method | Effect |
-|---|---|
-| `resizeViewport(w, h)` | Forwards to `Grid.resizeViewport` |
-| `setPosition(p)` | Moves self, forwards to `Grid.updatePosition`, emits `positionChange$` |
-| `zoomIn/zoomOut` | Applies `1.2^step` scale, repositions around center, calls `Grid.updateScale`, `FloatingLayer.updateScale`, `ConnectionPointLayer.applyScale`, and `applyScale` on every component and wire |
-| `addComponent / addWire` | Appends to `_components` / `_wires`, calls `applyScale`, fires the matching `ConnectionPointManager` hook, emits `'single'` |
+| Method                   | Effect                                                                                                                                                                                      |
+| ------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `resizeViewport(w, h)`   | Forwards to `Grid.resizeViewport`                                                                                                                                                           |
+| `setPosition(p)`         | Moves self, forwards to `Grid.updatePosition`, emits `positionChange$`                                                                                                                      |
+| `zoomIn/zoomOut`         | Applies `1.2^step` scale, repositions around center, calls `Grid.updateScale`, `FloatingLayer.updateScale`, `ConnectionPointLayer.applyScale`, and `applyScale` on every component and wire |
+| `addComponent / addWire` | Appends to `_components` / `_wires`, calls `applyScale`, fires the matching `ConnectionPointManager` hook, emits `'single'`                                                                 |
 
 Zoom is clamped to ±12 steps (scale range roughly `1.2^-12` to `1.2^5`). Pivot-correct zoom uses a matrix chain to keep the pixel under the mouse stationary.
 
@@ -111,11 +112,11 @@ The pivot is set to `chunkSizePx` so the offset math lands on chunk boundaries c
 
 **API:**
 
-| Method | When called |
-|---|---|
-| `updatePosition(pos)` | Every pan step (called from `Project.setPosition`) |
-| `resizeViewport(size)` | Window resize |
-| `updateScale(scale)` | Every zoom step |
+| Method                 | When called                                        |
+| ---------------------- | -------------------------------------------------- |
+| `updatePosition(pos)`  | Every pan step (called from `Project.setPosition`) |
+| `resizeViewport(size)` | Window resize                                      |
+| `updateScale(scale)`   | Every zoom step                                    |
 
 ---
 
@@ -129,10 +130,10 @@ A full-screen PixiJS `Container` that lives inside `_gridSpace` and sits above t
 
 ### Internal children (permanent)
 
-| Field | Type | Purpose |
-|---|---|---|
-| `_wirePreview` | `Container<Wire>` | In-progress wires during wire drawing |
-| `_dragLayer` | `Container<Component \| Wire>` | Holds the ghost component during placement **and** detached selected elements during drag-move; empty when idle |
+| Field          | Type                           | Purpose                                                                                                         |
+| -------------- | ------------------------------ | --------------------------------------------------------------------------------------------------------------- |
+| `_wirePreview` | `Container<Wire>`              | In-progress wires during wire drawing                                                                           |
+| `_dragLayer`   | `Container<Component \| Wire>` | Holds the ghost component during placement **and** detached selected elements during drag-move; empty when idle |
 
 `_selectRect` (`Graphics`) is a **transient** child added to and removed from `FloatingLayer` by `SelectRectSession`.
 
@@ -141,6 +142,7 @@ A full-screen PixiJS `Container` that lives inside `_gridSpace` and sits above t
 `FloatingLayer` holds a single `_activeDrag: DragSession | null`. At most one session is active at a time.
 
 `FloatingLayer.mode` mirrors `project.mode` (a `WorkMode` enum value). Setting `mode`:
+
 1. If a session is active, calls `_activeDrag.onCancel()` then `_stopDrag()` — cancels whatever was in progress.
 2. Calls `project.selectionManager.clear()` — removes tints and empties the committed selection.
 
@@ -170,10 +172,10 @@ Each session lives in `rendering/sessions/` and implements `DragSession` (`onMov
 
 ### Collision tint convention
 
-| Value | Meaning |
-|---|---|
-| `0x888888` | Placement ghost default |
-| `0xff4444` | Collision — ghost or drag layer |
+| Value      | Meaning                                 |
+| ---------- | --------------------------------------- |
+| `0x888888` | Placement ghost default                 |
+| `0xff4444` | Collision — ghost or drag layer         |
 | `0xffffff` | Neutral (drag layer when not colliding) |
 
 ### `updateScale(scale)`
@@ -191,6 +193,7 @@ A generic PixiJS `Container` subclass that maintains a spatial quad tree over it
 ### `GridElement` interface
 
 Defined in `grid-element.ts`. Extends `ContainerChild` with:
+
 - `gridBounds: Rectangle` — the element's axis-aligned bounding box in grid units.
 
 `Connectable` further extends `GridElement` with `connectionPoints: Point[]`. Both `Component` and `Wire` implement `Connectable`.
@@ -198,6 +201,7 @@ Defined in `grid-element.ts`. Extends `ContainerChild` with:
 ### Tree structure
 
 The tree is composed of `QuadTreeEntry<T>` nodes (not exported). Each entry covers a square region and holds:
+
 - `branchItems` — elements whose bounds **straddle** a quadrant boundary (cannot be placed in any child).
 - `leafItems` — elements fully contained within this node; `null` once the node has been split into branches.
 - `branches` — four child `QuadTreeEntry` nodes (`nw`, `ne`, `sw`, `se`); `null` while the node is still a leaf.
@@ -206,12 +210,12 @@ All `QuadTreeEntry` instances live at position `(0, 0)` in the scene graph. Thei
 
 ### Constants
 
-| Constant | Value | Meaning |
-|---|---|---|
-| `INITIAL_SIZE` | 64 | Root entry covers `(0, 0, 64, 64)` grid units at construction |
-| `MAX_LEAF_ELEMENTS` | 4 | A leaf with this many elements splits on the next insert |
-| `MIN_BRANCH_ELEMENTS` | 2 | A branch with fewer total descendants collapses on remove |
-| `MIN_LEAF_SIZE` | 1 | Leaves of 1 grid cell are never split (prevents infinite recursion) |
+| Constant              | Value | Meaning                                                             |
+| --------------------- | ----- | ------------------------------------------------------------------- |
+| `INITIAL_SIZE`        | 64    | Root entry covers `(0, 0, 64, 64)` grid units at construction       |
+| `MAX_LEAF_ELEMENTS`   | 4     | A leaf with this many elements splits on the next insert            |
+| `MIN_BRANCH_ELEMENTS` | 2     | A branch with fewer total descendants collapses on remove           |
+| `MIN_LEAF_SIZE`       | 1     | Leaves of 1 grid cell are never split (prevents infinite recursion) |
 
 The `INITIAL_SIZE` of 64 grid units covers a typical small circuit without any tree expansion. The old pixel-domain value of 1024 covered only ~50 grid cells at `gridSize = 16`.
 
@@ -228,6 +232,7 @@ Looks up the entry via the `items` Map, removes the element from either `branchI
 ### `queryRange(range: Rectangle): Generator<T>`
 
 Recursive generator. For each entry:
+
 1. Yields `branchItems` children whose `gridBounds` **intersects** `range` (including partial overlaps).
 2. For each child branch whose region **intersects** `range`, recurses.
 3. For leaf items, yields those whose `gridBounds` intersects `range`.
@@ -313,21 +318,22 @@ Angular `Injectable` (root-provided). Registers the Roboto woff2 font with PixiJ
 
 ## Integration with the rest of the app
 
-| Rendering class | Consumed by | How |
-|---|---|---|
-| `InteractionContainer` | `Project` | Extends it; provides `_ticker$` and pan/zoom hooks |
-| `Grid` | `Project` | Instantiated privately; forwarded position/scale changes |
-| `FloatingLayer` | `Project` | Instantiated privately; receives `_ticker$`; commits via `project.actionManager` |
-| `QuadTreeContainer` | `Project` | Used as `_wires` and `_components` inside `_gridSpace` |
-| `GraphicsProviderService` | `Wire`, `Grid` (via `getStaticDI`), any component subclass | Shared `GraphicsContext` deduplication |
-| `AssetsService` | `BoardComponent` | Loaded before `Application` init |
-| `ComponentGraphics` | Component subclasses | Via `GraphicsProviderService.getGraphicsContext(ComponentGraphics, w, h, scale)` |
-| `WireGraphics` | `Wire` constructor | Via `GraphicsProviderService.getGraphicsContext(WireGraphics)` |
-| `GridGraphics` | `Grid.draw()` | Via `GraphicsProviderService.getGraphicsContext(GridGraphics, chunkSize, scale)` |
+| Rendering class           | Consumed by                                                | How                                                                              |
+| ------------------------- | ---------------------------------------------------------- | -------------------------------------------------------------------------------- |
+| `InteractionContainer`    | `Project`                                                  | Extends it; provides `_ticker$` and pan/zoom hooks                               |
+| `Grid`                    | `Project`                                                  | Instantiated privately; forwarded position/scale changes                         |
+| `FloatingLayer`           | `Project`                                                  | Instantiated privately; receives `_ticker$`; commits via `project.actionManager` |
+| `QuadTreeContainer`       | `Project`                                                  | Used as `_wires` and `_components` inside `_gridSpace`                           |
+| `GraphicsProviderService` | `Wire`, `Grid` (via `getStaticDI`), any component subclass | Shared `GraphicsContext` deduplication                                           |
+| `AssetsService`           | `BoardComponent`                                           | Loaded before `Application` init                                                 |
+| `ComponentGraphics`       | Component subclasses                                       | Via `GraphicsProviderService.getGraphicsContext(ComponentGraphics, w, h, scale)` |
+| `WireGraphics`            | `Wire` constructor                                         | Via `GraphicsProviderService.getGraphicsContext(WireGraphics)`                   |
+| `GridGraphics`            | `Grid.draw()`                                              | Via `GraphicsProviderService.getGraphicsContext(GridGraphics, chunkSize, scale)` |
 
 ### `BoardComponent` wiring
 
 `BoardComponent` (`ui/board/board.component.ts`) is the Angular host. It:
+
 1. Awaits `AssetsService.init()`.
 2. Creates `Application` with `autoStart: false`, `preference: 'webgpu'`, `resolution: devicePixelRatio`.
 3. Sets `app.stage = project` when a `Project` input arrives.

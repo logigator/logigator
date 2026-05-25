@@ -33,9 +33,18 @@ describe('MoveComponentsAction', () => {
 			action.do(project);
 
 			expect(project.moveComponent).toHaveBeenCalledTimes(3);
-			expect(project.moveComponent).toHaveBeenCalledWith(1, jasmine.objectContaining({ x: 3, y: 4 }));
-			expect(project.moveComponent).toHaveBeenCalledWith(2, jasmine.objectContaining({ x: 7, y: 8 }));
-			expect(project.moveComponent).toHaveBeenCalledWith(3, jasmine.objectContaining({ x: 9, y: 0 }));
+			expect(project.moveComponent).toHaveBeenCalledWith(
+				1,
+				jasmine.objectContaining({ x: 3, y: 4 })
+			);
+			expect(project.moveComponent).toHaveBeenCalledWith(
+				2,
+				jasmine.objectContaining({ x: 7, y: 8 })
+			);
+			expect(project.moveComponent).toHaveBeenCalledWith(
+				3,
+				jasmine.objectContaining({ x: 9, y: 0 })
+			);
 		});
 
 		it('does not call moveComponent when there are no entries', () => {
@@ -69,8 +78,14 @@ describe('MoveComponentsAction', () => {
 			action.undo(project);
 
 			expect(project.moveComponent).toHaveBeenCalledTimes(2);
-			expect(project.moveComponent).toHaveBeenCalledWith(1, jasmine.objectContaining({ x: 0, y: 0 }));
-			expect(project.moveComponent).toHaveBeenCalledWith(2, jasmine.objectContaining({ x: 1, y: 1 }));
+			expect(project.moveComponent).toHaveBeenCalledWith(
+				1,
+				jasmine.objectContaining({ x: 0, y: 0 })
+			);
+			expect(project.moveComponent).toHaveBeenCalledWith(
+				2,
+				jasmine.objectContaining({ x: 1, y: 1 })
+			);
 		});
 
 		it('does not call moveComponent when there are no entries', () => {
@@ -93,7 +108,10 @@ describe('MoveComponentsAction', () => {
 			oldPos.set(99, 99);
 			action.undo(project);
 
-			expect(project.moveComponent).toHaveBeenCalledOnceWith(1, jasmine.objectContaining({ x: 1, y: 2 }));
+			expect(project.moveComponent).toHaveBeenCalledOnceWith(
+				1,
+				jasmine.objectContaining({ x: 1, y: 2 })
+			);
 		});
 
 		it('clones newPos so mutating the original does not affect stored entry', () => {
@@ -107,7 +125,10 @@ describe('MoveComponentsAction', () => {
 			newPos.set(99, 99);
 			action.do(project);
 
-			expect(project.moveComponent).toHaveBeenCalledOnceWith(1, jasmine.objectContaining({ x: 5, y: 6 }));
+			expect(project.moveComponent).toHaveBeenCalledOnceWith(
+				1,
+				jasmine.objectContaining({ x: 5, y: 6 })
+			);
 		});
 	});
 });

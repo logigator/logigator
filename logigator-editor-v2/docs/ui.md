@@ -85,10 +85,10 @@ The PixiJS bridge. Hosts a single `<canvas>` element and owns the `Application` 
 
 **Inputs / Outputs**
 
-| Name | Direction | Type | Purpose |
-|------|-----------|------|---------|
-| `project` | input | `Project \| null` | The active project to display. Swapped into `app.stage` on change. |
-| `positionChange` | output | `Point` | Emits the current grid position whenever the viewport pans. Throttled to 33 ms (≈ 30 fps). |
+| Name             | Direction | Type              | Purpose                                                                                    |
+| ---------------- | --------- | ----------------- | ------------------------------------------------------------------------------------------ |
+| `project`        | input     | `Project \| null` | The active project to display. Swapped into `app.stage` on change.                         |
+| `positionChange` | output    | `Point`           | Emits the current grid position whenever the viewport pans. Throttled to 33 ms (≈ 30 fps). |
 
 **Initialization (`ngOnInit`)**
 
@@ -107,6 +107,7 @@ The PixiJS bridge. Hosts a single `<canvas>` element and owns the `Application` 
 **Project swapping**
 
 An Angular `effect` watches the `project` input and pushes changes into a `projectChange$` subject. On each new non-null project:
+
 - Calls `project.resizeViewport(renderer.width, renderer.height)`.
 - Assigns `app.stage = project` (the `Project` is a PixiJS `Container`).
 - Calls `app.ticker.update()` to force a single frame.
@@ -184,11 +185,11 @@ Renders a labeled grid of component tiles for one category. Used exclusively ins
 
 **Inputs**
 
-| Name | Type | Purpose |
-|------|------|---------|
-| `headline` | `string` | Category label shown in the section header |
-| `components` | `ComponentConfig[]` | The component configs to display |
-| `searchText` | `string` | Passed in from parent (filtering not yet implemented in the template) |
+| Name         | Type                | Purpose                                                               |
+| ------------ | ------------------- | --------------------------------------------------------------------- |
+| `headline`   | `string`            | Category label shown in the section header                            |
+| `components` | `ComponentConfig[]` | The component configs to display                                      |
+| `searchText` | `string`            | Passed in from parent (filtering not yet implemented in the template) |
 
 Each tile shows `comp.symbol` in a 64×64 bordered box and `t(comp.name)` below it. The tile with `selectedComponent() === comp.type` receives a `bg-white/20` highlight.
 
@@ -207,17 +208,17 @@ Clicking (or pressing Enter on) a tile calls `selectComponent(config)`, which:
 
 A thin bar at the bottom of the board column. Displays four segments separated by border dividers:
 
-| Segment | Content |
-|---------|---------|
-| Work mode | Translated work-mode string, e.g. `"Draw Wire"`. Includes selected component name for `COMPONENT_PLACEMENT`. |
-| Board position | `−x, −y` in grid units (negated because the viewport pans opposite to the stage position). Updated via the `boardPosition` input from `AppComponent`. |
-| Save state | Static `t('statusBar.saved')` (save integration not yet implemented). |
-| Selection count | Static `"Selected: 0"` (selection integration not yet implemented). |
+| Segment         | Content                                                                                                                                               |
+| --------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Work mode       | Translated work-mode string, e.g. `"Draw Wire"`. Includes selected component name for `COMPONENT_PLACEMENT`.                                          |
+| Board position  | `−x, −y` in grid units (negated because the viewport pans opposite to the stage position). Updated via the `boardPosition` input from `AppComponent`. |
+| Save state      | Static `t('statusBar.saved')` (save integration not yet implemented).                                                                                 |
+| Selection count | Static `"Selected: 0"` (selection integration not yet implemented).                                                                                   |
 
 **Inputs**
 
-| Name | Type | Purpose |
-|------|------|---------|
+| Name            | Type    | Purpose                                                   |
+| --------------- | ------- | --------------------------------------------------------- |
 | `boardPosition` | `Point` | Current grid-space viewport origin; defaults to `(0, 0)`. |
 
 `boardPositionFormatted` is a `computed` that formats the point as `"x, y"` with `Math.round`.
@@ -234,8 +235,8 @@ A generic form rendered inside the floating `p-card` in `AppComponent` when a co
 
 **Input**
 
-| Name | Type | Purpose |
-|------|------|---------|
+| Name     | Type                | Purpose                                                |
+| -------- | ------------------- | ------------------------------------------------------ |
 | `config` | `ComponentOption[]` | Live option instances owned by the component-to-place. |
 
 Widget selection logic (in the template via `@if`):
@@ -252,14 +253,14 @@ Type guards `isNumberInput(option)` and `isSelectInput(option)` narrow the union
 
 ## Service Dependencies
 
-| Service | Consumers | Role |
-|---------|-----------|------|
-| `WorkModeService` | `BoardComponent`, `ToolBarComponent`, `ComponentListComponent`, `StatusBarComponent`, `AppComponent` | Single source of truth for the active `WorkMode` and the selected `ComponentType`. |
-| `ProjectService` | `AppComponent` | Holds the active `Project`; `AppComponent` passes it into `BoardComponent`. |
-| `ComponentProviderService` | `SideBarComponent`, `StatusBarComponent` | Registry lookup — provides component lists by category and config by type. |
-| `ThemingService` | `BoardComponent` | Supplies the background color for the PixiJS renderer at init time. |
-| `AssetsService` | `BoardComponent` | Preloads PixiJS assets (Roboto font) before the application renders. |
-| `TranslocoService` | `TitleBarComponent` | Imperative translation needed to build `MenuItem[]` objects for `p-menubar`. |
+| Service                    | Consumers                                                                                            | Role                                                                               |
+| -------------------------- | ---------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------- |
+| `WorkModeService`          | `BoardComponent`, `ToolBarComponent`, `ComponentListComponent`, `StatusBarComponent`, `AppComponent` | Single source of truth for the active `WorkMode` and the selected `ComponentType`. |
+| `ProjectService`           | `AppComponent`                                                                                       | Holds the active `Project`; `AppComponent` passes it into `BoardComponent`.        |
+| `ComponentProviderService` | `SideBarComponent`, `StatusBarComponent`                                                             | Registry lookup — provides component lists by category and config by type.         |
+| `ThemingService`           | `BoardComponent`                                                                                     | Supplies the background color for the PixiJS renderer at init time.                |
+| `AssetsService`            | `BoardComponent`                                                                                     | Preloads PixiJS assets (Roboto font) before the application renders.               |
+| `TranslocoService`         | `TitleBarComponent`                                                                                  | Imperative translation needed to build `MenuItem[]` objects for `p-menubar`.       |
 
 ---
 

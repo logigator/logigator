@@ -10,13 +10,23 @@ import { AndComponent } from '../components/component-types/and/and.component';
 import { andComponentConfig } from '../components/component-types/and/and.config';
 import { Direction } from '../utils/direction';
 
-function makeWire(gx: number, gy: number, dir: WireDirection, length: number): Wire {
+function makeWire(
+	gx: number,
+	gy: number,
+	dir: WireDirection,
+	length: number
+): Wire {
 	const w = new Wire(dir, length);
 	w.position.set(gx + 0.5, gy + 0.5);
 	return w;
 }
 
-function makeAnd(numInputs: number, rotation: Direction, px = 0, py = 0): AndComponent {
+function makeAnd(
+	numInputs: number,
+	rotation: Direction,
+	px = 0,
+	py = 0
+): AndComponent {
 	const comp = new AndComponent([
 		andComponentConfig.options[0].clone(rotation),
 		andComponentConfig.options[1].clone(numInputs)
@@ -33,7 +43,9 @@ function makeWireQuery(wires: Wire[]): (rect: Rectangle) => Generator<Wire> {
 	};
 }
 
-function makeComponentQuery(components: Component[]): (rect: Rectangle) => Generator<Component> {
+function makeComponentQuery(
+	components: Component[]
+): (rect: Rectangle) => Generator<Component> {
 	return function* (rect: Rectangle) {
 		for (const c of components) {
 			if (!c.destroyed && c.gridBounds.intersects(rect)) yield c;
@@ -282,7 +294,9 @@ describe('WireIntegrator', () => {
 		);
 		expect(toRemove).toContain(h);
 		// Two split halves of h plus the original v.
-		const horizontals = toAdd.filter((w) => w.direction === WireDirection.HORIZONTAL);
+		const horizontals = toAdd.filter(
+			(w) => w.direction === WireDirection.HORIZONTAL
+		);
 		expect(horizontals.length).toBe(2);
 		expect(toAdd).toContain(v);
 		const lengths = horizontals.map((w) => w.length).sort();
@@ -307,7 +321,9 @@ describe('WireIntegrator', () => {
 		expect(toRemove).not.toContain(v);
 		// h was split — it should NOT be in toAdd; two halves should be.
 		expect(toAdd).not.toContain(h);
-		const horizontals = toAdd.filter((w) => w.direction === WireDirection.HORIZONTAL);
+		const horizontals = toAdd.filter(
+			(w) => w.direction === WireDirection.HORIZONTAL
+		);
 		expect(horizontals.length).toBe(2);
 		const lengths = horizontals.map((w) => w.length).sort();
 		expect(lengths).toEqual([3, 3]);
@@ -332,7 +348,9 @@ describe('WireIntegrator', () => {
 		);
 		expect(toRemove.length).toBe(0);
 		expect(toAdd).not.toContain(h);
-		const horizontals = toAdd.filter((w) => w.direction === WireDirection.HORIZONTAL);
+		const horizontals = toAdd.filter(
+			(w) => w.direction === WireDirection.HORIZONTAL
+		);
 		// Port at (3.5, 0.5) splits h once → 2 halves.
 		// Port at (3.5, 1.5) is NOT on h (different y).
 		expect(horizontals.length).toBe(2);
@@ -353,7 +371,9 @@ describe('WireIntegrator', () => {
 			noComponentsQuery,
 			SCALE
 		);
-		const horizontals = toAdd.filter((w) => w.direction === WireDirection.HORIZONTAL);
+		const horizontals = toAdd.filter(
+			(w) => w.direction === WireDirection.HORIZONTAL
+		);
 		expect(horizontals.length).toBe(3);
 		const lengths = horizontals.map((w) => w.length).sort();
 		expect(lengths).toEqual([2, 2, 3]);
@@ -435,7 +455,9 @@ describe('WireIntegrator', () => {
 		);
 		expect(toRemove).toContain(h);
 		expect(toRemove).not.toContain(v);
-		const horizontals = toAdd.filter((w) => w.direction === WireDirection.HORIZONTAL);
+		const horizontals = toAdd.filter(
+			(w) => w.direction === WireDirection.HORIZONTAL
+		);
 		expect(horizontals.length).toBe(2);
 	});
 
@@ -462,7 +484,9 @@ describe('WireIntegrator', () => {
 		// A and B should merge now.
 		expect(toRemove).toContain(a);
 		expect(toRemove).toContain(b);
-		const merged = toAdd.find((w) => w.direction === WireDirection.HORIZONTAL && w.length === 6);
+		const merged = toAdd.find(
+			(w) => w.direction === WireDirection.HORIZONTAL && w.length === 6
+		);
 		expect(merged).toBeTruthy();
 	});
 
@@ -481,7 +505,9 @@ describe('WireIntegrator', () => {
 			noComponentsQuery,
 			SCALE
 		);
-		const horizontals = toAdd.filter((w) => w.direction === WireDirection.HORIZONTAL);
+		const horizontals = toAdd.filter(
+			(w) => w.direction === WireDirection.HORIZONTAL
+		);
 		expect(horizontals.length).toBe(3);
 		h.destroy();
 	});
@@ -509,7 +535,9 @@ describe('WireIntegrator', () => {
 		expect(toRemove).toContain(d);
 		expect(toRemove).toContain(e);
 		// One unified wire spanning (0.5,2.5)→(6.5,2.5).
-		const horizontals = toAdd.filter((w) => w.direction === WireDirection.HORIZONTAL);
+		const horizontals = toAdd.filter(
+			(w) => w.direction === WireDirection.HORIZONTAL
+		);
 		expect(horizontals.length).toBe(1);
 		expect(horizontals[0].length).toBe(6);
 	});

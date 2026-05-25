@@ -67,9 +67,9 @@ describe('QuadTreeContainer', () => {
 		it('item exactly matching the query range boundary is included', () => {
 			const c = makeItem(10, 10, 5, 5);
 			tree.insert(c);
-			expect(
-				Array.from(tree.queryRange(new Rectangle(10, 10, 5, 5)))
-			).toEqual([c]);
+			expect(Array.from(tree.queryRange(new Rectangle(10, 10, 5, 5)))).toEqual([
+				c
+			]);
 		});
 
 		it('item outside the query range is not returned', () => {

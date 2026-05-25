@@ -1,4 +1,12 @@
-import { Text, Container, DestroyOptions, Graphics, Matrix, Point, Rectangle } from 'pixi.js';
+import {
+	Text,
+	Container,
+	DestroyOptions,
+	Graphics,
+	Matrix,
+	Point,
+	Rectangle
+} from 'pixi.js';
 import { Subject } from 'rxjs';
 import { ComponentConfig } from './component-config.model';
 import { ThemingService } from '../theming/theming.service';

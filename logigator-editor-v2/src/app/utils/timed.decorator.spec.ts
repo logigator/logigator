@@ -16,7 +16,11 @@ describe('Timed decorator', () => {
 
 			const proto = Fixture.prototype;
 			const descriptor = Object.getOwnPropertyDescriptor(proto, 'compute')!;
-			Object.defineProperty(proto, 'compute', Timed(proto, 'compute', descriptor));
+			Object.defineProperty(
+				proto,
+				'compute',
+				Timed(proto, 'compute', descriptor)
+			);
 
 			const f = new Fixture();
 			expect(f.compute(21)).toBe(42);
@@ -48,7 +52,11 @@ describe('Timed decorator', () => {
 
 			const proto = Fixture.prototype;
 			const descriptor = Object.getOwnPropertyDescriptor(proto, 'myOperation')!;
-			Object.defineProperty(proto, 'myOperation', Timed(proto, 'myOperation', descriptor));
+			Object.defineProperty(
+				proto,
+				'myOperation',
+				Timed(proto, 'myOperation', descriptor)
+			);
 
 			new Fixture().myOperation();
 
@@ -89,7 +97,11 @@ describe('Timed decorator', () => {
 
 			const proto = Fixture.prototype;
 			const descriptor = Object.getOwnPropertyDescriptor(proto, 'increment')!;
-			Object.defineProperty(proto, 'increment', Timed(proto, 'increment', descriptor));
+			Object.defineProperty(
+				proto,
+				'increment',
+				Timed(proto, 'increment', descriptor)
+			);
 
 			new Fixture().increment();
 
@@ -120,7 +132,11 @@ describe('Timed decorator', () => {
 
 			const proto = Fixture.prototype;
 			const descriptor = Object.getOwnPropertyDescriptor(proto, 'compute')!;
-			Object.defineProperty(proto, 'compute', Timed(proto, 'compute', descriptor));
+			Object.defineProperty(
+				proto,
+				'compute',
+				Timed(proto, 'compute', descriptor)
+			);
 
 			const f = new Fixture();
 			expect(f.compute(7)).toBe(21);
@@ -138,7 +154,11 @@ describe('Timed decorator', () => {
 
 			const proto = Fixture.prototype;
 			const descriptor = Object.getOwnPropertyDescriptor(proto, 'answer')!;
-			Object.defineProperty(proto, 'answer', Timed(proto, 'answer', descriptor));
+			Object.defineProperty(
+				proto,
+				'answer',
+				Timed(proto, 'answer', descriptor)
+			);
 
 			expect(new Fixture().answer).toBe(42);
 		});
@@ -171,7 +191,11 @@ describe('Timed decorator', () => {
 
 			const proto = Fixture.prototype;
 			const descriptor = Object.getOwnPropertyDescriptor(proto, 'myProp')!;
-			Object.defineProperty(proto, 'myProp', Timed(proto, 'myProp', descriptor));
+			Object.defineProperty(
+				proto,
+				'myProp',
+				Timed(proto, 'myProp', descriptor)
+			);
 
 			// eslint-disable-next-line @typescript-eslint/no-unused-expressions
 			new Fixture().myProp;
@@ -194,7 +218,11 @@ describe('Timed decorator', () => {
 
 			const proto = Fixture.prototype;
 			const descriptor = Object.getOwnPropertyDescriptor(proto, 'counter')!;
-			Object.defineProperty(proto, 'counter', Timed(proto, 'counter', descriptor));
+			Object.defineProperty(
+				proto,
+				'counter',
+				Timed(proto, 'counter', descriptor)
+			);
 
 			// eslint-disable-next-line @typescript-eslint/no-unused-expressions
 			new Fixture().counter;

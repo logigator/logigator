@@ -319,12 +319,23 @@ export class WireIntegrator {
 			// each ending at P) and merge them iff nothing else terminates at P.
 			const mergeSnapshot = [...candidates.values()];
 			for (const p of mergeSnapshot) {
-				for (const direction of [WireDirection.HORIZONTAL, WireDirection.VERTICAL]) {
+				for (const direction of [
+					WireDirection.HORIZONTAL,
+					WireDirection.VERTICAL
+				]) {
 					const ending = collectWorkingWiresAt(p).filter(
 						(w) => w.direction === direction && this._endpointEquals(w, p)
 					);
 					if (ending.length !== 2) continue;
-					if (this._hasThirdTerminatorAt(p, ending, collectWorkingWiresAt, hasPort)) continue;
+					if (
+						this._hasThirdTerminatorAt(
+							p,
+							ending,
+							collectWorkingWiresAt,
+							hasPort
+						)
+					)
+						continue;
 
 					const [wa, wb] = ending;
 					const merged = Wire.merge(wa, wb);
@@ -379,7 +390,9 @@ export class WireIntegrator {
 	}
 
 	private _axisPos(w: Wire): number {
-		return w.direction === WireDirection.HORIZONTAL ? w.position.x : w.position.y;
+		return w.direction === WireDirection.HORIZONTAL
+			? w.position.x
+			: w.position.y;
 	}
 
 	private _isSameAxis(a: Wire, b: Wire): boolean {
@@ -388,5 +401,4 @@ export class WireIntegrator {
 		}
 		return a.position.x === b.position.x;
 	}
-
 }

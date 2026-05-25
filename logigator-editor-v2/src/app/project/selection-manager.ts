@@ -172,7 +172,10 @@ export class SelectionManager {
 		}
 
 		// Tie-break: smaller bounding-box area = more precisely-aimed target.
-		if (bestComponent !== null && (bestWire === null || bestComponentArea <= bestWireArea)) {
+		if (
+			bestComponent !== null &&
+			(bestWire === null || bestComponentArea <= bestWireArea)
+		) {
 			bestComponent.tint = SelectionManager.SELECTION_TINT;
 			this._selectedComponents.add(bestComponent);
 		} else if (bestWire !== null) {
@@ -206,7 +209,8 @@ export class SelectionManager {
 			}
 		}
 
-		this._tintedConnectionPoints = this.project.connectionPoints.getCpsAtPoints(points);
+		this._tintedConnectionPoints =
+			this.project.connectionPoints.getCpsAtPoints(points);
 		for (const cp of this._tintedConnectionPoints) {
 			cp.tint = SelectionManager.SELECTION_TINT;
 		}

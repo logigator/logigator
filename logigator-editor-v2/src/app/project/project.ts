@@ -14,7 +14,11 @@ import { SelectionManager } from './selection-manager';
 import { Wire } from '../wires/wire';
 import { WireDirection } from '../wires/wire-direction.enum';
 import { QuadTreeContainer } from '../rendering/quad-tree-container';
-import { WireIntegrator, IntegrationInput, IntegrationOutput } from './wire-integrator';
+import {
+	WireIntegrator,
+	IntegrationInput,
+	IntegrationOutput
+} from './wire-integrator';
 import { ViewportController } from './viewport-controller';
 import { ConnectionPointManager } from '../connection-points/connection-point-manager';
 import { AddWiresAction } from '../actions/actions/add-wires.action';

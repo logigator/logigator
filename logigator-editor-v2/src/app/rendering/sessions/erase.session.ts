@@ -78,9 +78,7 @@ export class EraseSession implements DragSession {
 		const maxY = Math.max(Math.floor(from.y), Math.floor(to.y)) + 1;
 		const sweepRect = new Rectangle(minX, minY, maxX - minX, maxY - minY);
 
-		for (const comp of [
-			...this.project.queryComponentsInRange(sweepRect)
-		]) {
+		for (const comp of [...this.project.queryComponentsInRange(sweepRect)]) {
 			if (this._deletedComponentIds.has(comp.id)) continue;
 			this._deletedComponentIds.add(comp.id);
 			this._deletedComponents.push(Component.serialize(comp));

@@ -28,7 +28,9 @@ export class ConnectionPointManager {
 
 	constructor(
 		private readonly queryWiresInRange: (rect: Rectangle) => Generator<Wire>,
-		private readonly queryComponentsInRange: (rect: Rectangle) => Generator<Component>,
+		private readonly queryComponentsInRange: (
+			rect: Rectangle
+		) => Generator<Component>,
 		private readonly getScale: () => number
 	) {}
 
@@ -48,7 +50,10 @@ export class ConnectionPointManager {
 		this._recomputeForComponentChange(ports);
 	}
 
-	public recomputeAll(allWires: Iterable<Wire>, allComponents: Iterable<Component>): void {
+	public recomputeAll(
+		allWires: Iterable<Wire>,
+		allComponents: Iterable<Component>
+	): void {
 		// cp.destroy() detaches from the parent layer as well as freeing GPU resources.
 		for (const cp of this._cps.values()) {
 			cp.destroy();

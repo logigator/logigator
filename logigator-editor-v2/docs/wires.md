@@ -47,8 +47,8 @@ src/app/wires/wire-direction.enum.ts
 
 ```ts
 export const enum WireDirection {
-    HORIZONTAL, // = 0
-    VERTICAL    // = 1
+	HORIZONTAL, // = 0
+	VERTICAL // = 1
 }
 ```
 
@@ -66,12 +66,12 @@ Each `Wire` gets a monotonically increasing integer ID from a module-level count
 
 ### Coordinate Properties
 
-| Property | Type | Description |
-|---|---|---|
-| `position` (inherited) | `Point` | Half-grid position of the wire's start point in grid units (e.g., `(0.5, 2.5)`). This IS the canonical circuit coordinate. |
-| `direction` | `WireDirection` | Axis of the wire. Backed by `rotation` (0 or π/2). |
-| `length` | `number` | Length in grid units. Backed by `scale.x`. |
-| `gridBounds` | `Rectangle` | Axis-aligned bounding box in grid units; used by `QuadTreeContainer` for spatial indexing. The origin is floored to the nearest integer; width/height is `length + 1` on the spanning axis so the box covers the half-grid padding on both ends. |
+| Property               | Type            | Description                                                                                                                                                                                                                                      |
+| ---------------------- | --------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `position` (inherited) | `Point`         | Half-grid position of the wire's start point in grid units (e.g., `(0.5, 2.5)`). This IS the canonical circuit coordinate.                                                                                                                       |
+| `direction`            | `WireDirection` | Axis of the wire. Backed by `rotation` (0 or π/2).                                                                                                                                                                                               |
+| `length`               | `number`        | Length in grid units. Backed by `scale.x`.                                                                                                                                                                                                       |
+| `gridBounds`           | `Rectangle`     | Axis-aligned bounding box in grid units; used by `QuadTreeContainer` for spatial indexing. The origin is floored to the nearest integer; width/height is `length + 1` on the spanning axis so the box covers the half-grid padding on both ends. |
 
 ### `connectionPoints`
 
@@ -84,8 +84,8 @@ These are the endpoints that should connect to component ports.
 
 ### Geometry predicates
 
-| Method | Use |
-|---|---|
+| Method             | Use                                                                                          |
+| ------------------ | -------------------------------------------------------------------------------------------- |
 | `wire.contains(p)` | Returns `true` if `p` lies on the wire's closed axis-aligned segment (endpoint or interior). |
 
 ### `Wire.snapshot(wire)`
@@ -99,8 +99,8 @@ Sets `scale.y = 1 / (scale * environment.gridSize)` to keep the wire's visual he
 ### Serialization
 
 ```ts
-Wire.serialize(wire)       // Wire → SerializedWire  (save/action snapshot)
-Wire.deserialize(serial)   // SerializedWire → Wire  (load/undo restore)
+Wire.serialize(wire); // Wire → SerializedWire  (save/action snapshot)
+Wire.deserialize(serial); // SerializedWire → Wire  (load/undo restore)
 ```
 
 `serialize` floors `wire.position.x / y` to integer coordinates (the position is stored at the grid-line origin, not the half-grid centre). `deserialize` sets `wire.position` to `[pos[0] + 0.5, pos[1] + 0.5]` — the `+0.5` is a semantic half-grid offset added at load time, not a unit conversion artifact.
@@ -113,10 +113,10 @@ Wire.deserialize(serial)   // SerializedWire → Wire  (load/undo restore)
 
 ```ts
 interface SerializedWire {
-    id: number;               // Wire ID (for undo/redo lookup)
-    pos: [number, number];    // Integer grid position [x, y] of the start point
-    direction: WireDirection;
-    length: number;           // Grid-unit length
+	id: number; // Wire ID (for undo/redo lookup)
+	pos: [number, number]; // Integer grid position [x, y] of the start point
+	direction: WireDirection;
+	length: number; // Grid-unit length
 }
 ```
 
@@ -130,10 +130,10 @@ This is the canonical persistence format used by both the undo/redo action syste
 
 ```ts
 interface WireSnapshot {
-    start: Point;
-    end: Point;
-    direction: WireDirection;
-    gridBounds: Rectangle;
+	start: Point;
+	end: Point;
+	direction: WireDirection;
+	gridBounds: Rectangle;
 }
 ```
 
@@ -181,7 +181,7 @@ When `WorkMode.WIRE_DRAWING` is active, `FloatingLayer` handles the user drag ge
 2. **`pointermove` → `handleMouseMoveWhilePlacingWire`** — on first non-zero mouse movement, the dominant axis is determined:
    - Movement on X first → `WireDirection.HORIZONTAL` locked.
    - Movement on Y first → `WireDirection.VERTICAL` locked.
-   
+
    Two `Wire` children are added to `_wireSelection` — one horizontal and one vertical — creating an L-shaped preview routed from the drag origin to the cursor. Positions and lengths are updated every frame:
    - The horizontal wire's `position.x` tracks the leftmost extent (`Math.min(0, mouseX)`).
    - The vertical wire's `position.y` tracks the topmost extent (`Math.min(0, mouseY)`).
@@ -201,10 +201,10 @@ Wire mutations go through the `ActionManager` on `Project.actionManager`.
 
 Accepts one or more `Wire` instances at construction time. Immediately serializes them to `SerializedWire[]` so the action is self-contained and immune to further mutations on the live objects.
 
-| Method | Effect |
-|---|---|
-| `do(project)` | Deserializes each wire and calls `project.addWire(...)` |
-| `undo(project)` | Calls `project.removeWire(wire.id)` for each stored ID |
+| Method          | Effect                                                  |
+| --------------- | ------------------------------------------------------- |
+| `do(project)`   | Deserializes each wire and calls `project.addWire(...)` |
+| `undo(project)` | Calls `project.removeWire(wire.id)` for each stored ID  |
 
 ### `RemoveWiresAction`
 
@@ -238,11 +238,11 @@ After every gesture commit (drawing, moving, placing, removing), the project tre
 
 - **I1** — No wire's interior contains another wire's endpoint.
 - **I2** — No wire's interior contains a component port tip.
-- **I3** — No two collinear wires share an endpoint unless a third *terminating* thing (perpendicular wire endpoint or component port tip) also terminates at that point.
+- **I3** — No two collinear wires share an endpoint unless a third _terminating_ thing (perpendicular wire endpoint or component port tip) also terminates at that point.
 
 I1 + I2 are **split-forcing** invariants — when a mutation would land an endpoint/port inside another wire's interior, the interior wire is auto-split at that point. I3 is the **merge-forcing** invariant — when nothing else terminates at a shared endpoint, two collinear wires merge into one.
 
-**Scissor cut exception (tentative).** `SelectionManager._pendingCut` deliberately violates I3 *while the cut is unclaimed*. The integrator never runs against the tentative state; the next gesture commit either claims the cut into a real action (move) or rolls it back. The CP rule renders the violation invisible (only 2 terminations at the cut point → no CP), so users don't notice the temporary state.
+**Scissor cut exception (tentative).** `SelectionManager._pendingCut` deliberately violates I3 _while the cut is unclaimed_. The integrator never runs against the tentative state; the next gesture commit either claims the cut into a real action (move) or rolls it back. The CP rule renders the violation invisible (only 2 terminations at the cut point → no CP), so users don't notice the temporary state.
 
 ### `Project.computeIntegration(input)`
 
@@ -250,12 +250,15 @@ The integrator entry point. Pure query — does not mutate project state. Return
 
 ```ts
 interface IntegrationInput {
-    addedWires?: readonly Wire[];          // Not yet in tree
-    removedWires?: readonly Wire[];        // Currently in tree
-    movedWires?: readonly { wire: Wire; oldSnapshot: WireSnapshot }[];
-    addedComponentPorts?: readonly Point[];
-    removedComponentPorts?: readonly Point[];
-    movedComponentPorts?: readonly { oldPorts: readonly Point[]; newPorts: readonly Point[] }[];
+	addedWires?: readonly Wire[]; // Not yet in tree
+	removedWires?: readonly Wire[]; // Currently in tree
+	movedWires?: readonly { wire: Wire; oldSnapshot: WireSnapshot }[];
+	addedComponentPorts?: readonly Point[];
+	removedComponentPorts?: readonly Point[];
+	movedComponentPorts?: readonly {
+		oldPorts: readonly Point[];
+		newPorts: readonly Point[];
+	}[];
 }
 ```
 
@@ -266,11 +269,11 @@ Callers wrap the result in `ActionContainer(RemoveWiresAction, AddWiresAction)` 
 
 ### Where integration runs
 
-| Mutation site | Inputs passed |
-|---|---|
-| `WireDrawingSession.onEnd` | `addedWires` |
-| `SelectionMoveSession.onEnd` | `movedWires`, `movedComponentPorts` |
-| `ComponentPlacementSession.onEnd` | `addedComponentPorts` |
+| Mutation site                                   | Inputs passed                                                                                                                                    |
+| ----------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `WireDrawingSession.onEnd`                      | `addedWires`                                                                                                                                     |
+| `SelectionMoveSession.onEnd`                    | `movedWires`, `movedComponentPorts`                                                                                                              |
+| `ComponentPlacementSession.onEnd`               | `addedComponentPorts`                                                                                                                            |
 | `Component.portsChange$` (rotation, port-count) | `movedComponentPorts` — applied directly without action wrapping (no undo yet; see [`connection-points.md`](connection-points.md) § Future work) |
 
 The integrator runs **once per gesture** at the session/command boundary. Low-level mutators (`Project.addWire`, `removeWire`, `moveWire`, and component analogues) do not invoke it.
@@ -298,17 +301,17 @@ A wire endpoint touching a port stub tip is not a collision — the strict `Rect
 
 ## Wire Scissor Cutting
 
-When the user drags a `SELECT_EXACT` rubber-band rectangle, every wire that extends past the rectangle is split at the rectangle boundary. The inside piece is added to the selection; the outside pieces are left in place, unselected. See [`work-mode.md`](work-mode.md) § *SELECT vs SELECT_EXACT* for the user-facing semantics and [`project.md`](project.md) § *`commit` behavior* for the orchestration. The geometry helper itself lives in `wires/wire-cut.ts`.
+When the user drags a `SELECT_EXACT` rubber-band rectangle, every wire that extends past the rectangle is split at the rectangle boundary. The inside piece is added to the selection; the outside pieces are left in place, unselected. See [`work-mode.md`](work-mode.md) § _SELECT vs SELECT_EXACT_ for the user-facing semantics and [`project.md`](project.md) § _`commit` behavior_ for the orchestration. The geometry helper itself lives in `wires/wire-cut.ts`.
 
 ### `cutWire(wire: Wire, rect: Rectangle): WireCutResult`
 
 Pure function — no DI, no `Project` access. Returns one of three variants:
 
-| Variant | Meaning |
-|---|---|
-| `{ kind: 'skip' }` | The wire's centerline lies outside the rectangle (the half-cell padding of `gridBounds` is what produced the AABB intersect). Caller must not select it. |
-| `{ kind: 'keep' }` | The wire stays whole — either `rect.containsRect(wire.gridBounds)` succeeds, or the rectangle's edges happen to align with the wire's half-grid endpoints so the cut collapses to the original. Caller selects the wire as-is. |
-| `{ kind: 'cut', pieces, insideIndex }` | The wire splits into 2–3 pieces in axis order. `pieces[insideIndex]` is the piece overlapping the rectangle; the others are the outside remnants. |
+| Variant                                | Meaning                                                                                                                                                                                                                        |
+| -------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `{ kind: 'skip' }`                     | The wire's centerline lies outside the rectangle (the half-cell padding of `gridBounds` is what produced the AABB intersect). Caller must not select it.                                                                       |
+| `{ kind: 'keep' }`                     | The wire stays whole — either `rect.containsRect(wire.gridBounds)` succeeds, or the rectangle's edges happen to align with the wire's half-grid endpoints so the cut collapses to the original. Caller selects the wire as-is. |
+| `{ kind: 'cut', pieces, insideIndex }` | The wire splits into 2–3 pieces in axis order. `pieces[insideIndex]` is the piece overlapping the rectangle; the others are the outside remnants.                                                                              |
 
 ### Cut formula
 
