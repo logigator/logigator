@@ -1,92 +1,107 @@
 # CLAUDE.md
 
-This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
-
 ## Repository Layout
 
-Three independent packages — no workspace manager (no nx/turbo/lerna):
+Three independent packages using **Yarn 4** (corepack) — no workspace manager:
 
-- `logigator-backend/` — Node.js/Express server (TypeScript, TypeORM, Handlebars templates)
-- `logigator-editor/` — Legacy Angular 17 editor (PixiJS 7) — being replaced
-- `logigator-editor-v2/` — Active Angular 21 editor (PixiJS 8, Tailwind 4, PrimeNG) — current focus
+- `logigator-backend/` — Node.js/Express (TypeScript, TypeORM, Handlebars)
+- `logigator-editor/` — Legacy Angular 17 editor (PixiJS 7), being replaced
+- `logigator-editor-v2/` — Angular 21 editor (PixiJS 8, Tailwind 4, PrimeNG), current focus
 
-All packages use **Yarn 4** (corepack). Commands run inside Docker containers — do not run yarn directly on the host.
+All commands run inside Docker containers. Do not run yarn directly on the host.
 
 ## Dev Environment
 
 ```bash
-docker compose up   # starts Apache proxy, backend, editor-v2 dev server, MySQL, Redis
-# Add to /etc/hosts: 127.0.0.1 logigator.test
+docker compose up   # Apache proxy, backend, editor-v2 dev server, MySQL, Redis
+# /etc/hosts: 127.0.0.1 logigator.test
 ```
 
 Backend config files must be created from `.example` files in `logigator-backend/config/`.
 
-The two service names that matter for exec:
-- `editor` → logigator-editor-v2
-- `backend` → logigator-backend
+Service names for exec: `editor` (logigator-editor-v2), `backend` (logigator-backend).
 
 ## Commands
 
-All yarn commands run via `docker compose exec <service> yarn <command>`.
+All via `docker compose exec <service> yarn <command>`.
 
 ### logigator-editor-v2
 ```bash
-docker compose exec editor yarn build          # production build + PureCSS tree-shaking
-docker compose exec editor yarn test --watch=false   # Karma + Jasmine (full suite, single run)
-docker compose exec editor yarn lint           # Angular ESLint + TypeScript strict
-docker compose exec editor yarn format:fix     # Prettier
-```
-
-Run a single test file:
-```bash
-docker compose exec editor yarn test --watch=false --include='**/quad-tree-container.spec.ts'
+docker compose exec editor yarn build                          # production build + PureCSS tree-shaking
+docker compose exec editor yarn test --watch=false             # Karma + Jasmine (full suite, single run)
+docker compose exec editor yarn test --watch=false --include='**/some.spec.ts'  # single test
+docker compose exec editor yarn lint                          # Angular ESLint + TypeScript strict
+docker compose exec editor yarn format:fix                    # Prettier
 ```
 
 ### logigator-backend
 ```bash
-docker compose exec backend yarn build                              # tsc + Gulp asset pipeline
-docker compose exec backend yarn lint:backend                      # ESLint on src/
-docker compose exec backend yarn migration:run                     # run pending TypeORM migrations
-docker compose exec backend yarn migration:generate -- -n Name     # generate migration
+docker compose exec backend yarn build                        # tsc + Gulp asset pipeline
+docker compose exec backend yarn lint:backend                 # ESLint on src/
+docker compose exec backend yarn migration:run                # run pending TypeORM migrations
+docker compose exec backend yarn migration:generate -- -n Name  # generate migration
 ```
 
 ## Architecture
 
 ### Frontend (logigator-editor-v2)
 
-Angular 21 standalone components + PixiJS 8 for canvas rendering.
+Angular 21 standalone components + PixiJS 8 canvas.
 
-**Key layers in `src/app/`:**
+**`src/app/` layers** (each has a doc at `logigator-editor-v2/docs/<name>.md`):
 
-- `components/` — Circuit element model. Each component extends `Component` (which extends PixiJS `Container`) and exposes `connectionPoints`, `portStubs`, and a `portsChange$` Subject for downstream listeners. `ComponentProviderService` acts as a registry/factory. Specific gate implementations live in `component-types/`. See [`logigator-editor-v2/docs/component-system.md`](logigator-editor-v2/docs/component-system.md) for full technical documentation.
-- `components/component-options/` — Per-option folders pairing each `ComponentOption` subclass with the Angular component that renders it; the side-panel form is a thin `*ngComponentOutlet` loop driven by `option.renderer`. See [`logigator-editor-v2/docs/component-options.md`](logigator-editor-v2/docs/component-options.md) for full technical documentation.
-- `project/` — `Project` class (extends PixiJS `Container`) owns the circuit state. `ProjectService` manages the active project and persistence. See [`logigator-editor-v2/docs/project.md`](logigator-editor-v2/docs/project.md) for full technical documentation.
-- `wires/` — Wire model and rendering, separate from components. See [`logigator-editor-v2/docs/wires.md`](logigator-editor-v2/docs/wires.md) for full technical documentation.
-- `connection-points/` — Derived visual junction markers (small dots where ≥3 cardinal directions are filled and ≥1 element terminates). Pure visual sugar driven by `Project` mutation hooks — not persisted, not selectable. See [`logigator-editor-v2/docs/connection-points.md`](logigator-editor-v2/docs/connection-points.md) for full technical documentation.
-- `rendering/` — PixiJS scene management: `QuadTreeContainer` for spatial indexing of many elements, `FloatingLayer` for transient objects (selection box, placement preview), `GraphicsProviderService` for shared texture/graphics caching. See [`logigator-editor-v2/docs/rendering.md`](logigator-editor-v2/docs/rendering.md) for full technical documentation.
-- `actions/` — Command pattern undo/redo via `ActionManager`. Each user operation is an `Action` subclass. See [`logigator-editor-v2/docs/actions-system.md`](logigator-editor-v2/docs/actions-system.md) for full technical documentation.
-- `work-mode/` — Interaction mode FSM (selection, placement, deletion, wire routing). See [`logigator-editor-v2/docs/work-mode.md`](logigator-editor-v2/docs/work-mode.md) for full technical documentation.
-- `ui/` — Angular component wrappers around the canvas and sidebar panels. See [`logigator-editor-v2/docs/ui.md`](logigator-editor-v2/docs/ui.md) for full technical documentation.
+- `components/` — Circuit element model. Each extends `Component` (PixiJS `Container`) with `connectionPoints`, `portStubs`, `portsChange$` Subject. `ComponentProviderService` is the registry/factory. Gate implementations in `component-types/`. Doc: `component-system.md`.
+- `components/component-options/` — `ComponentOption` subclasses each paired with an Angular renderer; side-panel form is `*ngComponentOutlet` driven by `option.renderer`. Doc: `component-options.md`.
+- `project/` — `Project` (PixiJS `Container`) owns circuit state. `ProjectService` manages active project + persistence. Doc: `project.md`.
+- `wires/` — Wire model and rendering. Doc: `wires.md`.
+- `connection-points/` — Derived visual junction dots (≥3 cardinal directions filled + ≥1 element terminates). Pure visual sugar, not persisted or selectable. Doc: `connection-points.md`.
+- `rendering/` — `QuadTreeContainer` (spatial indexing), `FloatingLayer` (selection box, placement preview), `GraphicsProviderService` (shared texture/graphics cache). Doc: `rendering.md`.
+- `actions/` — Command-pattern undo/redo via `ActionManager`. Each user operation is an `Action` subclass. Doc: `actions-system.md`.
+- `work-mode/` — Interaction mode FSM (selection, placement, deletion, wire routing). Doc: `work-mode.md`.
+- `ui/` — Angular wrappers around canvas and sidebar panels. Doc: `ui.md`.
 
 **Non-obvious patterns:**
 
-- `setStaticDIInjector()` — bootstraps a static reference to Angular's injector so that model classes (`Component`, `Wire`, etc.) can call `inject()` without being Angular-managed. Used in `app.config.ts`.
-- Grid coordinates vs. pixel coordinates — `Project._gridSpace` has `scale = gridSize`, so all circuit objects (`Component`, `Wire`, `FloatingLayer`) that live inside it use **grid units as their native `position`**. No `fromGrid`/`toGrid` calls at the model layer. Visual children live inside `Component._visualSpace` (scale = `1/gridSize`) where pixel-authored geometry keeps working unchanged. The only remaining conversion helper in `utils/grid.ts` is `fromGrid`, used inside `_visualSpace` and the background grid. Grid snapping uses `roundToGrid` / `roundToHalfGrid`.
-- `@logigator/logigator-simulation` — circuit simulation runs via this external npm package (separate repo, likely WASM). It is not in this monorepo.
+- `setStaticDIInjector()` in `app.config.ts` — bootstraps static Angular injector so model classes (`Component`, `Wire`) can call `inject()` without being Angular-managed.
+- Grid coordinates — `Project._gridSpace` has `scale = gridSize`, so circuit objects use **grid units as native `position`**. Visual children in `Component._visualSpace` (`scale = 1/gridSize`) keep pixel-authored geometry. Only remaining converter is `fromGrid` in `utils/grid.ts` (used inside `_visualSpace` and background grid). Snapping: `roundToGrid` / `roundToHalfGrid`.
+- `@logigator/logigator-simulation` — external npm package (separate repo, likely WASM) for circuit simulation.
 
 ### Backend (logigator-backend)
 
-Express server with **routing-controllers** (decorator-based routing), **TypeDI** (DI container), **TypeORM** (MySQL), **Passport.js** (auth), **Handlebars** (legacy server-rendered pages).
+Express with **routing-controllers** (decorators), **TypeDI** (DI), **TypeORM** (MySQL), **Passport.js** (auth), **Handlebars** (SSR).
 
-- `src/controller/api/` — JSON REST API for projects, components, users, shares
-- `src/controller/frontend/` — Handlebars-rendered pages (home, auth, community)
-- `src/database/entities/` — TypeORM entities; circuit data itself is stored in `ProjectFile`/`ComponentFile` as JSON blobs (not raw DB columns)
-- `src/services/` — Business logic, email, Redis session caching
+**`src/` layers:**
 
-### Backend ↔ Frontend interaction
+- `controller/` — `@JsonController('/api/...')` for REST JSON (wrapped `{ status, data }` by `ApiInterceptor`) and `@Controller('/...')` for Handlebars HTML pages. Doc: `controllers.md`.
+- `database/entities/` — TypeORM entities: `@Exclude({toPlainOnly: true})` + `@Expose()` for safe serialization, lazy `Promise<T>` relations, serialization groups, `PersistedResource` base for filesystem file storage. Circuit data in `ProjectFile`/`ComponentFile` as disk JSON blobs. Doc: `entities.md`.
+- `database/repositories/` — `PageableRepository<T>` with bounded `Page<T>` pagination, ownership-scoped queries, dependency graph traversal. Doc: `repositories.md`.
+- `services/` — TypeDI singletons: `ConfigService`, `RedisService`, `EmailService`, `TranslationService`, `UserService`, `ShareCloningService`, `StandaloneViewService`. Doc: `services.md`.
+- `middleware/` — Global: trailing slash redirect, language prefix routing, template data injection, dual JSON/HTML error handling. Action: form error flash, page title translation. Doc: `middleware.md`.
+- `models/request/` — `class-validator` DTOs in `shared/`, `api/`, `frontend/`. `FormDataError` → `formErrorMiddleware` → session flash → Handlebars helpers pipeline. Doc: `form-validation.md`.
+- `i18n/` — 4 languages (`en|de|es|fr`) with URL prefix routing (`/en/features`), dot-notation `TranslationService`, SEO hreflang alternates. Doc: `i18n.md`.
+- `handlebars-helper/` — 17 custom helpers (link prefixing, cache-busted assets, form errors, conditions, dates). Templates in `resources/private/templates/`. Doc: `server-side-rendering.md`.
+- `database/entities/persisted-resource.entity.ts` — Abstract base for filesystem files with MD5 change detection + TypeORM lifecycle hooks. Doc: `file-storage.md`.
 
-The backend serves `logigator-editor-v2` as a static SPA at the editor domain. The SPA calls `/api/projects`, `/api/components`, etc. Project/component circuit data is serialized JSON stored via `ProjectFile`/`ComponentFile` entities.
+**Cross-cutting docs** (all in `logigator-backend/docs/`):
+
+- `architecture.md` — DI triple-registration, bootstrap sequence, dual JSON/HTML response architecture
+- `authentication.md` — Passport.js (local + Google + Twitter OAuth), Redis sessions, API/frontend guards, `isAuthenticated` cookie
+- `configuration.md` — `.json` / `.json.example` convention, 7 config files, env-determined behavior
+- `build-system.md` — tsc + Gulp (SCSS → CSS, dual ES2015/ES5 JS bundles)
+
+**Non-obvious patterns:**
+
+- `useContainer` triple registration — `typedi` Container shared across `routing-controllers`, TypeORM, `class-validator`.
+- Language prefix rewriting — `TranslationMiddleware` strips `/en/` from `request.url` before routing; controller routes stay clean (e.g. `/features`).
+- Form error flash — `formErrorMiddleware` catches errors → session flash → redirect. `GlobalViewDataMiddleware` transfers to `res.locals` + clears session. Client JS mirrors via `data-error`/`data-val-data`.
+- `PersistedResource` — files on disk, not DB. Lifecycle hooks manage CRUD. MD5 avoids unnecessary writes. `_cacheable = true` subclasses regenerate UUID filenames on update for cache-busting.
+- `@Exclude({toPlainOnly: true})` class-level + selective `@Expose()` — defense-in-depth against leaking internal fields.
+- Lazy relation proxy properties — `classToPlain` can't resolve `Promise<T>`, so controllers populate private `__property__` fields pre-serialization, gated by `@Expose` groups.
+
+### Backend ↔ Frontend
+
+Backend serves `logigator-editor-v2` as a static SPA. SPA calls `/api/projects`, `/api/components`. Circuit data is serialized JSON via `ProjectFile`/`ComponentFile` entities.
 
 ## Testing
 
-Tests use Karma + Jasmine. Spec files sit next to their source files (e.g., `quad-tree-container.spec.ts` next to `quad-tree-container.ts`). Angular component specs use `TestBed`; pure-logic specs do not.
+Karma + Jasmine. Spec files sit next to source (e.g. `quad-tree-container.spec.ts`). Angular specs use `TestBed`; pure-logic specs don't.
