@@ -330,9 +330,9 @@ export abstract class Component extends Container implements Connectable {
 				text.pivot.set((naturalWidth / 2) * (type === 'inputs' ? 1 : -1), 0);
 
 				if (type === 'inputs') {
-					text.position.set(0.5 + naturalWidth * PX / 2 + 2 * PX, i + 0.5);
+					text.position.set(0.5 + (naturalWidth * PX) / 2 + 2 * PX, i + 0.5);
 				} else {
-					text.position.set(-naturalWidth * PX / 2 - 2 * PX, i + 0.5);
+					text.position.set((-naturalWidth * PX) / 2 - 2 * PX, i + 0.5);
 				}
 
 				this.registerRotationCounterContainer(text);

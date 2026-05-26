@@ -19,7 +19,7 @@ export class ComponentGraphics extends GraphicsContext {
 		this.closePath();
 		this.stroke({
 			color: themingService.currentTheme().wire,
-			width: 2 * PX / scale
+			width: (2 * PX) / scale
 		});
 		this.fill({
 			color: themingService.currentTheme().background

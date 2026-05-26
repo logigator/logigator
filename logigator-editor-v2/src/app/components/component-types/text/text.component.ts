@@ -51,7 +51,7 @@ export class TextComponent extends Component {
 	protected draw(): void {
 		// ConnectionPointGraphics is a 1×1 unit square; scale to SCREEN_SIZE_PX pixels
 		// expressed in grid units, divided by appliedScale to stay constant on screen.
-		const sizeGrid = ConnectionPoint.SCREEN_SIZE_PX * PX / this.appliedScale;
+		const sizeGrid = (ConnectionPoint.SCREEN_SIZE_PX * PX) / this.appliedScale;
 
 		const dot = new Graphics();
 		dot.context = this.geometryService.getGraphicsContext(

@@ -1,4 +1,5 @@
 export interface Environment {
+	apiUrl: string;
 	gridSize: number;
 	debug: {
 		showGridBorders: boolean;
