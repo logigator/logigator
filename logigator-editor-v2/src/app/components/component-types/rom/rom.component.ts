@@ -1,27 +1,27 @@
 import { Component } from '../../component';
-import { romComponentConfig } from './rom.config';
-import { ComponentOption } from '../../component-option';
-import { Direction } from '../../../utils/direction';
+import { romComponentConfig, RomOptions } from './rom.config';
 import { ComponentGraphics } from '../../../rendering/graphics/component.graphics';
 import { DestroyOptions, Graphics } from 'pixi.js';
 import { Subject, takeUntil } from 'rxjs';
 
-export class RomComponent extends Component {
+export class RomComponent extends Component<RomOptions> {
 	public readonly config = romComponentConfig;
 
 	private readonly destroy$ = new Subject<void>();
 
-	constructor(options: ComponentOption[]) {
+	constructor(options: RomOptions) {
 		super(
-			options[1].value as number,
-			options[2].value as number,
-			options[0].value as Direction,
+			options.wordSize.value,
+			options.addressSize.value,
+			options.direction.value,
 			options
 		);
 
-		options[0].onChange$.pipe(takeUntil(this.destroy$)).subscribe(() => {
-			this.direction = options[0].value as Direction;
-		});
+		this.options.direction.onChange$
+			.pipe(takeUntil(this.destroy$))
+			.subscribe(() => {
+				this.direction = this.options.direction.value;
+			});
 	}
 
 	protected get inputLabels(): string[] {

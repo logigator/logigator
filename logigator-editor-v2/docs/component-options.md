@@ -52,15 +52,15 @@ public readonly renderer: Type<unknown>;
 
 ```html
 <form class="flex flex-col gap-2">
-	@for (option of config(); track option) {
+	@for (entry of configEntries(); track entry[0]) {
 	<ng-container
-		*ngComponentOutlet="option.renderer; inputs: { option }"
+		*ngComponentOutlet="entry[1].renderer; inputs: { option: entry[1] }"
 	></ng-container>
 	}
 </form>
 ```
 
-`track option` keys on identity, so swapping an option for a different one at the same array index correctly tears down and re-creates the renderer.
+`ComponentSettingsComponent` receives the options as a `Record<string, ComponentOption>` and exposes `configEntries = computed(() => Object.entries(this.config()))` for iteration. `track entry[0]` keys on the option name string, so swapping an option for a different one at the same key correctly tears down and re-creates the renderer.
 
 The base class types this as `Type<unknown>` because `ngComponentOutlet`'s `inputs` map is `Record<string, unknown>` — narrowing further does not buy any extra type safety.
 

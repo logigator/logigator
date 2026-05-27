@@ -1,7 +1,7 @@
 <form class="flex flex-col gap-2">
-	@for (option of config(); track option) {
+	@for (option of configEntries(); track option[0]) {
 		<ng-container
-			*ngComponentOutlet="option.renderer; inputs: { option }"
+			*ngComponentOutlet="option[1].renderer; inputs: { option: option[1] }"
 		></ng-container>
 	}
 </form>

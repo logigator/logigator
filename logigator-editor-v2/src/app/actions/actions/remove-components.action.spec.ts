@@ -8,10 +8,10 @@ import { andComponentConfig } from '../../components/component-types/and/and.con
 import type { Project } from '../../project/project';
 
 function makeAnd(): AndComponent {
-	return new AndComponent([
-		andComponentConfig.options[0].clone(),
-		andComponentConfig.options[1].clone(2)
-	]);
+	return new AndComponent({
+		direction: andComponentConfig.options.direction.clone(),
+		numInputs: andComponentConfig.options.numInputs.clone(2)
+	});
 }
 
 describe('RemoveComponentsAction', () => {

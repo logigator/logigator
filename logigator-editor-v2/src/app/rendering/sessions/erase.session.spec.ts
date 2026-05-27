@@ -16,10 +16,10 @@ function* gen<T>(...items: T[]): Generator<T> {
 }
 
 function makeAnd(): AndComponent {
-	return new AndComponent([
-		andComponentConfig.options[0].clone(),
-		andComponentConfig.options[1].clone(2)
-	]);
+	return new AndComponent({
+		direction: andComponentConfig.options.direction.clone(),
+		numInputs: andComponentConfig.options.numInputs.clone(2)
+	});
 }
 
 function makeEvent(

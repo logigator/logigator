@@ -8,7 +8,7 @@ import {
 	Rectangle
 } from 'pixi.js';
 import { Subject } from 'rxjs';
-import { ComponentConfig } from './component-config.model';
+import { ComponentConfig, ComponentConfigView } from './component-config.model';
 import { ThemingService } from '../theming/theming.service';
 import { getStaticDI } from '../utils/get-di';
 import { GraphicsProviderService } from '../rendering/graphics-provider.service';
@@ -26,11 +26,13 @@ export interface PortsChange {
 	newPorts: Point[];
 }
 
-export abstract class Component extends Container implements Connectable {
+export abstract class Component<
+	TOptions extends Record<string, ComponentOption> = Record<string, ComponentOption>
+> extends Container implements Connectable {
 	private static readonly _idAllocator = new IdAllocator();
-	public abstract readonly config: ComponentConfig;
+	public abstract readonly config: ComponentConfigView<TOptions>;
 	public readonly ignoresWireCollision: boolean = false;
-	public readonly options: ComponentOption[];
+	public readonly options: TOptions;
 
 	// Fires when port positions change (rotation, input/output count). The listener
 	// (typically Project) is responsible for refreshing derived state such as
@@ -60,17 +62,23 @@ export abstract class Component extends Container implements Connectable {
 			id: component.id,
 			type: component.config.type,
 			pos: [component.position.x, component.position.y],
-			options: component.options.map((x) => x.value)
+			options: Object.fromEntries(
+				Object.entries(component.options).map(([key, opt]) => [key, opt.value])
+			)
 		};
 	}
 
 	public static deserialize(
 		serialized: SerializedComponent,
-		config: ComponentConfig
+		config: ComponentConfig<Record<string, ComponentOption>>
 	): Component {
-		const component = new config.implementation(
-			config.options.map((option, i) => option.clone(serialized.options[i]))
+		const options = Object.fromEntries(
+			Object.entries(config.options).map(([key, proto]) => [
+				key,
+				proto.clone(serialized.options[key])
+			])
 		);
+		const component = new config.implementation(options);
 		component.id = serialized.id;
 		component.position.set(serialized.pos[0], serialized.pos[1]);
 
@@ -81,7 +89,7 @@ export abstract class Component extends Container implements Connectable {
 		numInputs: number,
 		numOutputs: number,
 		direction: Direction,
-		options: ComponentOption[]
+		options: Record<string, ComponentOption>
 	) {
 		super();
 
@@ -91,7 +99,7 @@ export abstract class Component extends Container implements Connectable {
 		this.numInputs = numInputs;
 		this.numOutputs = numOutputs;
 		this.direction = direction;
-		this.options = options;
+		this.options = options as TOptions;
 
 		this._initialized = true;
 

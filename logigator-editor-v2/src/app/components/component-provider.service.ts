@@ -7,7 +7,8 @@ import { andComponentConfig } from './component-types/and/and.config';
 import { romComponentConfig } from './component-types/rom/rom.config';
 import { textComponentConfig } from './component-types/text/text.config';
 
-const COMPONENTS: Record<ComponentType, ComponentConfig> = {
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+const COMPONENTS: Record<ComponentType, ComponentConfig<any>> = {
 	[ComponentType.NOT]: notComponentConfig,
 	[ComponentType.AND]: andComponentConfig,
 	[ComponentType.ROM]: romComponentConfig,

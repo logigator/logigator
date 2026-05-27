@@ -10,10 +10,10 @@ import { WireDirection } from '../wires/wire-direction.enum';
 import { Direction } from '../utils/direction';
 
 function makeAnd(numInputs = 2): AndComponent {
-	return new AndComponent([
-		andComponentConfig.options[0].clone(),
-		andComponentConfig.options[1].clone(numInputs)
-	]);
+	return new AndComponent({
+		direction: andComponentConfig.options.direction.clone(),
+		numInputs: andComponentConfig.options.numInputs.clone(numInputs)
+	});
 }
 
 // Wire at half-grid position (gx+0.5, gy+0.5) with given direction and length

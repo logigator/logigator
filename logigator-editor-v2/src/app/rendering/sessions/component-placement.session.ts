@@ -20,9 +20,12 @@ export class ComponentPlacementSession implements DragSession {
 		startPos: Point
 	) {
 		const config = project.componentToPlace!;
-		this._component = new config.implementation(
-			config.options.map((x) => x.clone())
+		const options = Object.fromEntries(
+			Object.entries(config.options).map(
+				([key, opt]) => [key, opt.clone()]
+			)
 		);
+		this._component = new config.implementation(options);
 		this._component.tint = 0x888888;
 		this._component.applyScale(project.scale.x);
 		this._component.position.set(0, 0);

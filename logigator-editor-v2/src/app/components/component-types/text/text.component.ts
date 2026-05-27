@@ -1,32 +1,31 @@
 import { Component } from '../../component';
-import { textComponentConfig } from './text.config';
-import { ComponentOption } from '../../component-option';
+import { textComponentConfig, TextOptions } from './text.config';
 import { Direction } from '../../../utils/direction';
 import { ConnectionPointGraphics } from '../../../rendering/graphics/connection-point.graphics';
 import { ConnectionPoint } from '../../../connection-points/connection-point';
 import { DestroyOptions, Graphics, Text } from 'pixi.js';
 import { Subject, takeUntil } from 'rxjs';
 import { PX } from '../../../utils/grid';
-import { TextAreaComponentOption } from '../../component-options/text-area/text-area.component-option';
-import { NumberComponentOption } from '../../component-options/number/number.component-option';
 
-export class TextComponent extends Component {
+export class TextComponent extends Component<TextOptions> {
 	public readonly config = textComponentConfig;
 	public override readonly ignoresWireCollision = true;
 
 	private readonly _destroy$ = new Subject<void>();
 
-	constructor(options: ComponentOption[]) {
-		super(0, 0, options[0].value as Direction, options);
+	constructor(options: TextOptions) {
+		super(0, 0, options.direction.value, options);
 
-		options[0].onChange$.pipe(takeUntil(this._destroy$)).subscribe(() => {
-			this.direction = options[0].value as Direction;
-			this.redraw();
-		});
-		(options[1] as TextAreaComponentOption).onChange$
+		this.options.direction.onChange$
+			.pipe(takeUntil(this._destroy$))
+			.subscribe(() => {
+				this.direction = this.options.direction.value;
+				this.redraw();
+			});
+		this.options.text.onChange$
 			.pipe(takeUntil(this._destroy$))
 			.subscribe(() => this.redraw());
-		(options[2] as NumberComponentOption).onChange$
+		this.options.fontSize.onChange$
 			.pipe(takeUntil(this._destroy$))
 			.subscribe(() => this.redraw());
 	}
@@ -62,17 +61,13 @@ export class TextComponent extends Component {
 		dot.position.set(0.5, 0.5);
 		this.addChild(dot);
 
-		// Access options via this.options (set by base constructor before draw() runs).
-		const fontSizeOption = this.options[1] as NumberComponentOption;
-		const textOption = this.options[2] as TextAreaComponentOption;
-
 		// fontSize is a user-set pixel value; scale.set(PX) converts the label
 		// from pixel space to grid space so it can be positioned in grid units.
 		const label = new Text({
-			text: textOption.value,
+			text: this.options.text.value,
 			style: {
 				fontFamily: 'Roboto',
-				fontSize: fontSizeOption.value,
+				fontSize: this.options.fontSize.value,
 				fill: this.themingService.currentTheme().fontTint
 			},
 			resolution: this.appliedScale * window.devicePixelRatio

@@ -6,10 +6,10 @@ import { andComponentConfig } from './component-types/and/and.config';
 import { Direction } from '../utils/direction';
 
 function makeAnd(numInputs = 2): AndComponent {
-	return new AndComponent([
-		andComponentConfig.options[0].clone(),
-		andComponentConfig.options[1].clone(numInputs)
-	]);
+	return new AndComponent({
+		direction: andComponentConfig.options.direction.clone(),
+		numInputs: andComponentConfig.options.numInputs.clone(numInputs)
+	});
 }
 
 describe('Component.gridBounds', () => {

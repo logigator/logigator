@@ -27,10 +27,10 @@ function makeAnd(
 	px = 0,
 	py = 0
 ): AndComponent {
-	const comp = new AndComponent([
-		andComponentConfig.options[0].clone(rotation),
-		andComponentConfig.options[1].clone(numInputs)
-	]);
+	const comp = new AndComponent({
+		direction: andComponentConfig.options.direction.clone(rotation),
+		numInputs: andComponentConfig.options.numInputs.clone(numInputs)
+	});
 	comp.position.set(px, py);
 	return comp;
 }

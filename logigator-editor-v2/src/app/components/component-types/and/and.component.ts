@@ -1,27 +1,22 @@
 import { Component } from '../../component';
-import { ComponentOption } from '../../component-option';
-import { Direction } from '../../../utils/direction';
 import { ComponentGraphics } from '../../../rendering/graphics/component.graphics';
 import { DestroyOptions, Graphics } from 'pixi.js';
 import { Subject, takeUntil } from 'rxjs';
-import { andComponentConfig } from './and.config';
+import { andComponentConfig, AndOptions } from './and.config';
 
-export class AndComponent extends Component {
+export class AndComponent extends Component<AndOptions> {
 	public readonly config = andComponentConfig;
 
 	private readonly destroy$ = new Subject<void>();
 
-	constructor(options: ComponentOption[]) {
-		super(
-			options[1].value as number,
-			1,
-			options[0].value as Direction,
-			options
-		);
+	constructor(options: AndOptions) {
+		super(options.numInputs.value, 1, options.direction.value, options);
 
-		options[0].onChange$.pipe(takeUntil(this.destroy$)).subscribe(() => {
-			this.direction = options[0].value as Direction;
-		});
+		this.options.direction.onChange$
+			.pipe(takeUntil(this.destroy$))
+			.subscribe(() => {
+				this.direction = this.options.direction.value;
+			});
 	}
 
 	protected get inputLabels(): string[] {

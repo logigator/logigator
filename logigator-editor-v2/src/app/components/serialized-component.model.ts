@@ -10,6 +10,6 @@ export interface SerializedComponent {
 	/** Grid Position */
 	pos: [number, number];
 
-	/** Option Values */
-	options: unknown[]; // .value
+	/** Option values keyed by option name */
+	options: Record<string, unknown>;
 }

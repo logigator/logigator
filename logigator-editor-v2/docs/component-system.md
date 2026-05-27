@@ -41,9 +41,9 @@ Visual children (component body graphics, port wire stubs, text labels) are pixe
 
 ### Options System
 
-Each component type exposes a list of `ComponentOption` instances — observable values that drive component state. When a setting changes (e.g., number of inputs, rotation), the option emits on `onChange$` and the component reacts, updating its properties and triggering a redraw.
+Each component type exposes a named record of `ComponentOption` instances — observable values that drive component state. When a setting changes (e.g., number of inputs, rotation), the option emits on `onChange$` and the component reacts, updating its properties and triggering a redraw.
 
-Options defined in `ComponentConfig` serve as **templates**. On instantiation, each option is `.clone()`'d so the live component owns independent copies.
+Options defined in `ComponentConfig` serve as **templates**. On instantiation, each option is `.clone()`'d so the live component owns independent copies. Options are accessed by name (e.g., `options.direction`, `options.numInputs`) rather than by array index.
 
 ### Serialization
 
@@ -54,7 +54,7 @@ Component  →  Component.serialize(c)         →  SerializedComponent   (save)
 SerializedComponent  →  Component.deserialize(s, config)  →  Component  (load)
 ```
 
-The serialized form stores the type, grid-unit position (`component.position.x / y`), and an array of raw option values positionally aligned to `config.options`. Because `position` is already in grid units there is no conversion step during serialization or deserialization.
+The serialized form stores the type, grid-unit position (`component.position.x / y`), and a record of raw option values keyed by option name. Because `position` is already in grid units there is no conversion step during serialization or deserialization.
 
 ---
 
@@ -74,16 +74,18 @@ The serialized form stores the type, grid-unit position (`component.position.x /
 
 Subclasses must implement:
 
-- `config: ComponentConfig` — reference to the singleton config for this type
+- `config: ComponentConfigView<TOptions>` — reference to the singleton config for this type
 - `inputLabels: string[]` — per-port labels rendered beside input wires
 - `outputLabels: string[]` — per-port labels rendered beside output wires
 - `draw(): void` — renders the component body (shapes, symbols, etc.)
+
+`Component` is generic over its options type: `Component<TOptions extends Record<string, ComponentOption>>`. Each component type exports a named options interface (e.g., `AndOptions`, `NotOptions`) that maps option names to their concrete `ComponentOption` subtypes. The component class uses that interface as its type parameter.
 
 Key public members:
 
 - `id`, `direction`, `numInputs`, `numOutputs` — core state; setters on `numInputs`/`numOutputs` and `direction` trigger a redraw and emit on `portsChange$`
 - `position` (inherited from PixiJS Container) — the component's grid-unit position; this IS the canonical circuit coordinate
-- `options: ComponentOption[]` — live option instances owned by this component
+- `options: TOptions` — live option instances owned by this component, accessed by name (e.g., `this.options.direction.value`)
 - `ignoresWireCollision: boolean` (default `false`) — when `true`, the component is skipped by `Project.hasWireBodyCollision` (wires may pass through its body) and `hasComponentBodyWireCollision` returns `false` for it. Currently only `TextComponent` sets this to `true`.
 - `connectionPoints: Point[]` — port positions in grid-unit space (parent `_gridSpace` coordinates; inputs first, then outputs)
 - `portsChange$: Subject<{ oldPorts, newPorts }>` — fires whenever the `direction`, `numInputs`, or `numOutputs` setter runs after construction. `Project.addComponent` subscribes on insert and unsubscribes in `removeComponent`. The handler runs `computeIntegration({ movedComponentPorts })` to enforce the split-on-touch invariants (a new port landing on a wire's interior auto-splits that wire), then updates CP markers. The integrator pass is applied directly without `ActionManager` wrapping, so the implied splits/merges aren't undoable — rotation never had undo support anyway. See [Wire Integration Invariants](wires.md#wire-integration-invariants).
@@ -130,18 +132,23 @@ The concrete option classes (`NumberComponentOption`, `SelectButtonComponentOpti
 
 ---
 
-## `ComponentConfig`
+## `ComponentConfigView` and `ComponentConfig`
 
 **File:** `component-config.model.ts`
 
-Static metadata and factory definition for a component type:
+Static metadata and factory definition for a component type, split into two interfaces:
 
+**`ComponentConfigView<TOptions>`** — the read-only metadata side, exposed by `Component.config`:
 - `type: ComponentType` — unique numeric ID
 - `category: ComponentCategory` — palette grouping
 - `symbol: string` — short label shown in the palette
 - `name`, `description: TranslationKey` — localization keys
-- `options: ComponentOption[]` — option templates, cloned per instance
-- `implementation` — constructor reference used by `deserialize` and any factory code
+- `options: TOptions` — option templates as a named record (e.g., `{ direction: DirectionComponentOption, numInputs: NumberComponentOption }`), cloned per instance
+
+**`ComponentConfig<TOptions>`** extends `ComponentConfigView<TOptions>` and adds the factory:
+- `implementation` — constructor reference used by `deserialize` and any factory code; signature is `new (options: TOptions) => Component<TOptions>`
+
+The separation ensures that a `Component` instance only carries the view interface (it doesn't need its own constructor), while the registry and placement code use the full config with the factory.
 
 ---
 
@@ -159,8 +166,8 @@ To register a new component, add an entry to the `COMPONENTS` record — the ser
 
 1. Add a value to `ComponentType`.
 2. Create `component-types/<name>/` with:
-   - `<name>.config.ts` — export a `ComponentConfig` constant.
-   - `<name>.component.ts` — extend `Component`, implement the four abstract members.
+   - `<name>.config.ts` — export a named options interface (e.g., `AndOptions`) and a `ComponentConfig<YourOptions>` constant with named option keys.
+   - `<name>.component.ts` — extend `Component<YourOptions>`, implement the four abstract members. Access options by name via `this.options.<key>`.
 3. Add the entry to the `COMPONENTS` record in `component-provider.service.ts`.
 
 The component appears in the palette under the category specified in its config.

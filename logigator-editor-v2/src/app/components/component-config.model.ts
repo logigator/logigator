@@ -4,12 +4,25 @@ import { TranslationKey } from '../translation/translation-key.model';
 import { ComponentOption } from './component-option';
 import { Component } from './component';
 
-export interface ComponentConfig {
+export interface ComponentConfigView<
+	TOptions extends Record<string, ComponentOption> = Record<
+		string,
+		ComponentOption
+	>
+> {
 	type: ComponentType;
 	category: ComponentCategory;
 	symbol: string;
 	name: TranslationKey;
 	description: TranslationKey;
-	options: ComponentOption[];
-	implementation: new (options: ComponentOption[]) => Component;
+	options: TOptions;
+}
+
+export interface ComponentConfig<
+	TOptions extends Record<string, ComponentOption> = Record<
+		string,
+		ComponentOption
+	>
+> extends ComponentConfigView<TOptions> {
+	implementation: new (options: TOptions) => Component<TOptions>;
 }

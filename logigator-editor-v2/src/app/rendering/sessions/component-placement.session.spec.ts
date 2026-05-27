@@ -12,6 +12,8 @@ import { notComponentConfig } from '../../components/component-types/not/not.con
 import { textComponentConfig } from '../../components/component-types/text/text.config';
 import { Direction } from '../../utils/direction';
 import { Component } from '../../components/component';
+import { ComponentConfig } from '../../components/component-config.model';
+import { ComponentOption } from '../../components/component-option';
 import { ComponentPlacementSession } from './component-placement.session';
 
 // AND gate: bodyGridWidth=2, bodyGridHeight=max(inputs,1)=2 for 2-input gate.
@@ -30,14 +32,16 @@ function makeWire(
 }
 
 function makeAnd(numInputs = 2): AndComponent {
-	return new AndComponent([
-		andComponentConfig.options[0].clone(),
-		andComponentConfig.options[1].clone(numInputs)
-	]);
+	return new AndComponent({
+		direction: andComponentConfig.options.direction.clone(),
+		numInputs: andComponentConfig.options.numInputs.clone(numInputs)
+	});
 }
 
 function makeNot(direction: Direction = Direction.E): NotComponent {
-	return new NotComponent([notComponentConfig.options[0].clone(direction)]);
+	return new NotComponent({
+		direction: notComponentConfig.options.direction.clone(direction)
+	});
 }
 
 function makeMoveEvent(x: number, y: number): FederatedPointerEvent {
@@ -55,7 +59,7 @@ describe('ComponentPlacementSession collision', () => {
 		setStaticDIInjector(TestBed.inject(Injector));
 		project = new Project();
 		dragLayer = new Container<Component | Wire>();
-		project.componentToPlace = andComponentConfig;
+		project.componentToPlace = andComponentConfig as unknown as ComponentConfig<Record<string, ComponentOption>>;
 	});
 
 	afterEach(() => {
@@ -182,8 +186,8 @@ describe('ComponentPlacementSession collision', () => {
 
 		project.componentToPlace = {
 			...notComponentConfig,
-			options: [notComponentConfig.options[0].clone(Direction.N)]
-		};
+			options: { direction: notComponentConfig.options.direction.clone(Direction.N) }
+		} as unknown as ComponentConfig<Record<string, ComponentOption>>;
 		session = new ComponentPlacementSession(
 			project,
 			dragLayer,
@@ -201,8 +205,8 @@ describe('ComponentPlacementSession collision', () => {
 
 		project.componentToPlace = {
 			...notComponentConfig,
-			options: [notComponentConfig.options[0].clone(Direction.N)]
-		};
+			options: { direction: notComponentConfig.options.direction.clone(Direction.N) }
+		} as unknown as ComponentConfig<Record<string, ComponentOption>>;
 		session = new ComponentPlacementSession(
 			project,
 			dragLayer,
@@ -215,7 +219,7 @@ describe('ComponentPlacementSession collision', () => {
 		// Wire at (0,0) horizontal length 5. TEXT placed at (1,0) — body inside wire.
 		const wire = makeWire(0, 0, WireDirection.HORIZONTAL, 5);
 		project.addWire(wire);
-		project.componentToPlace = textComponentConfig;
+		project.componentToPlace = textComponentConfig as unknown as ComponentConfig<Record<string, ComponentOption>>;
 		session = new ComponentPlacementSession(
 			project,
 			dragLayer,
@@ -229,7 +233,7 @@ describe('ComponentPlacementSession collision', () => {
 		const existing = makeNot();
 		existing.position.set(1, 0);
 		project.addComponent(existing);
-		project.componentToPlace = textComponentConfig;
+		project.componentToPlace = textComponentConfig as unknown as ComponentConfig<Record<string, ComponentOption>>;
 		session = new ComponentPlacementSession(
 			project,
 			dragLayer,
