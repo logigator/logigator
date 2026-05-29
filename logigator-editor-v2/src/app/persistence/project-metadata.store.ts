@@ -1,5 +1,5 @@
-import { Injectable } from '@angular/core';
-import { Subject, Subscription, Observable } from 'rxjs';
+import { Injectable, signal, WritableSignal } from '@angular/core';
+import { Subscription } from 'rxjs';
 import { Project } from '../project/project';
 
 export interface ProjectMetadata {
@@ -14,7 +14,7 @@ export interface ProjectMetadata {
 
 interface ProjectEntry {
 	metadata: ProjectMetadata;
-	dirty: boolean;
+	dirty: WritableSignal<boolean>;
 	/** Monotonic counter incremented on every markDirty call (even when already dirty). */
 	dirtyVersion: number;
 	actionSub?: Subscription;
@@ -23,15 +23,6 @@ interface ProjectEntry {
 @Injectable({ providedIn: 'root' })
 export class ProjectMetadataStore {
 	private readonly _entries = new Map<Project, ProjectEntry>();
-
-	private readonly _dirtyChange$ = new Subject<{
-		project: Project;
-		dirty: boolean;
-	}>();
-
-	public get dirtyChange$(): Observable<{ project: Project; dirty: boolean }> {
-		return this._dirtyChange$.asObservable();
-	}
 
 	/**
 	 * Registers a project with its metadata.
@@ -48,7 +39,7 @@ export class ProjectMetadataStore {
 	): void {
 		const entry: ProjectEntry = {
 			metadata,
-			dirty: false,
+			dirty: signal(false),
 			dirtyVersion: 0
 		};
 		if (trackDirty) {
@@ -85,20 +76,17 @@ export class ProjectMetadataStore {
 		const entry = this._entries.get(project);
 		if (!entry) return;
 		entry.dirtyVersion++;
-		if (entry.dirty) return; // flag already set; no event needed
-		entry.dirty = true;
-		this._dirtyChange$.next({ project, dirty: true });
+		entry.dirty.set(true);
 	}
 
 	public clearDirty(project: Project): void {
 		const entry = this._entries.get(project);
-		if (!entry || !entry.dirty) return;
-		entry.dirty = false;
-		this._dirtyChange$.next({ project, dirty: false });
+		if (!entry) return;
+		entry.dirty.set(false);
 	}
 
 	public isDirty(project: Project): boolean {
-		return this._entries.get(project)?.dirty ?? false;
+		return this._entries.get(project)?.dirty() ?? false;
 	}
 
 	/**

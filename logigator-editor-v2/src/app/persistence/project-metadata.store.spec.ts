@@ -90,75 +90,49 @@ describe('ProjectMetadataStore', () => {
 			expect(store.isDirty(project)).toBeFalse();
 		});
 
-		it('markDirty flips to dirty and emits once', () => {
+		it('markDirty marks the project dirty', () => {
 			const project = new Project();
 			store.register(project, makeMetadata());
-
-			const events: { project: Project; dirty: boolean }[] = [];
-			const sub = store.dirtyChange$.subscribe((e) => events.push(e));
 
 			store.markDirty(project);
 
 			expect(store.isDirty(project)).toBeTrue();
-			expect(events).toEqual([{ project, dirty: true }]);
-
-			sub.unsubscribe();
 		});
 
-		it('markDirty is idempotent on the flag (no duplicate emission)', () => {
+		it('markDirty is idempotent on the flag', () => {
 			const project = new Project();
 			store.register(project, makeMetadata());
 
-			const events: { project: Project; dirty: boolean }[] = [];
-			const sub = store.dirtyChange$.subscribe((e) => events.push(e));
-
 			store.markDirty(project);
 			store.markDirty(project);
 			store.markDirty(project);
 
-			expect(events.length).toBe(1);
-			sub.unsubscribe();
+			expect(store.isDirty(project)).toBeTrue();
 		});
 
-		it('clearDirty emits dirty=false', () => {
+		it('clearDirty clears the dirty flag', () => {
 			const project = new Project();
 			store.register(project, makeMetadata());
 			store.markDirty(project);
-
-			const events: { project: Project; dirty: boolean }[] = [];
-			const sub = store.dirtyChange$.subscribe((e) => events.push(e));
 
 			store.clearDirty(project);
 
 			expect(store.isDirty(project)).toBeFalse();
-			expect(events).toEqual([{ project, dirty: false }]);
-
-			sub.unsubscribe();
 		});
 
-		it('clearDirty on already-clean project does not emit', () => {
+		it('clearDirty on already-clean project is a no-op', () => {
 			const project = new Project();
 			store.register(project, makeMetadata());
 
-			const events: { project: Project; dirty: boolean }[] = [];
-			const sub = store.dirtyChange$.subscribe((e) => events.push(e));
-
-			store.clearDirty(project);
-
-			expect(events.length).toBe(0);
-			sub.unsubscribe();
+			expect(() => store.clearDirty(project)).not.toThrow();
+			expect(store.isDirty(project)).toBeFalse();
 		});
 
 		it('markDirty / clearDirty on unknown project is a no-op', () => {
 			const project = new Project();
-			const events: { project: Project; dirty: boolean }[] = [];
-			const sub = store.dirtyChange$.subscribe((e) => events.push(e));
 
-			store.markDirty(project);
-			store.clearDirty(project);
-
-			expect(events.length).toBe(0);
-			sub.unsubscribe();
+			expect(() => store.markDirty(project)).not.toThrow();
+			expect(() => store.clearDirty(project)).not.toThrow();
 		});
 	});
 

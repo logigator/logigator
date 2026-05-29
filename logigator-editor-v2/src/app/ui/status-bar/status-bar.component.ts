@@ -2,14 +2,10 @@ import {
 	ChangeDetectionStrategy,
 	Component,
 	computed,
-	effect,
 	input,
-	inject,
-	signal,
-	OnDestroy
+	inject
 } from '@angular/core';
 import { MenubarModule } from 'primeng/menubar';
-import { Subscription } from 'rxjs';
 import { WorkModeService } from '../../work-mode/work-mode.service';
 import { TranslocoDirective } from '@jsverse/transloco';
 import { TranslationKey } from '../../translation/translation-key.model';
@@ -25,7 +21,7 @@ import { ProjectService } from '../../project/project.service';
 	styleUrl: './status-bar.component.scss',
 	changeDetection: ChangeDetectionStrategy.OnPush
 })
-export class StatusBarComponent implements OnDestroy {
+export class StatusBarComponent {
 	private readonly workModeService = inject(WorkModeService);
 	private readonly componentProviderService = inject(ComponentProviderService);
 	private readonly metadataStore = inject(ProjectMetadataStore);
@@ -33,9 +29,10 @@ export class StatusBarComponent implements OnDestroy {
 
 	public readonly cursorPosition = input<Point>(new Point(0, 0));
 
-	protected readonly dirty = signal(false);
-
-	private readonly _dirtySub: Subscription;
+	protected readonly dirty = computed(() => {
+		const project = this.projectService.mainProject();
+		return project ? this.metadataStore.isDirty(project) : false;
+	});
 
 	protected readonly boardPositionFormatted = computed(
 		() =>
@@ -54,25 +51,4 @@ export class StatusBarComponent implements OnDestroy {
 		return this.componentProviderService.getComponent(comp)?.name ?? '';
 	});
 
-	constructor() {
-		// Re-derive dirty for the new main project on every project switch.
-		// The live subscription below only fires when dirtyChange$ emits, which
-		// doesn't happen on the project swap itself.
-		effect(() => {
-			const project = this.projectService.mainProject();
-			this.dirty.set(project ? this.metadataStore.isDirty(project) : false);
-		});
-
-		this._dirtySub = this.metadataStore.dirtyChange$.subscribe(
-			({ project, dirty }) => {
-				if (project === this.projectService.mainProject()) {
-					this.dirty.set(dirty);
-				}
-			}
-		);
-	}
-
-	ngOnDestroy(): void {
-		this._dirtySub.unsubscribe();
-	}
 }
