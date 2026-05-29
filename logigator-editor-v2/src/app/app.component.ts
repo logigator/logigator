@@ -8,6 +8,7 @@ import {
 	signal,
 	inject
 } from '@angular/core';
+import { Location } from '@angular/common';
 import { Point } from 'pixi.js';
 import { RouterService } from './routing/router.service';
 import { TitleBarComponent } from './ui/title-bar/title-bar.component';
@@ -18,8 +19,8 @@ import { BoardComponent } from './ui/board/board.component';
 import { setStaticDIInjector } from './utils/get-di';
 import { ComponentSettingsComponent } from './ui/component-settings/component-settings.component';
 import { ProjectService } from './project/project.service';
-import { Project } from './project/project';
 import { WorkModeService } from './work-mode/work-mode.service';
+import { PersistenceService } from './persistence/persistence.service';
 import { CardModule } from 'primeng/card';
 import { TranslocoDirective } from '@jsverse/transloco';
 
@@ -42,8 +43,10 @@ import { TranslocoDirective } from '@jsverse/transloco';
 export class AppComponent {
 	private readonly injector = inject(Injector);
 	private readonly routerService = inject(RouterService);
+	private readonly persistenceService = inject(PersistenceService);
 	protected readonly projectService = inject(ProjectService);
 	private readonly workModeService = inject(WorkModeService);
+	private readonly location = inject(Location);
 
 	protected readonly cursorPosition = signal<Point>(new Point(0, 0));
 
@@ -53,8 +56,11 @@ export class AppComponent {
 
 	constructor() {
 		setStaticDIInjector(this.injector);
-		this.routerService.processCurrentRoute();
 
-		this.projectService.setMainProject(new Project());
+		if (!this.routerService.matches(this.location.path())) {
+			this.persistenceService.createAndSetEmptyProject();
+		}
+
+		void this.routerService.processCurrentRoute();
 	}
 }

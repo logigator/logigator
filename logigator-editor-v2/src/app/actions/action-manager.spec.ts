@@ -319,4 +319,100 @@ describe('ActionManager', () => {
 			expect(callOrder).toEqual(['a3', 'a2', 'a1']);
 		});
 	});
+
+	// ── actionChange$ stream ──────────────────────────────────────────────────
+	//
+	// Dirty tracking in PersistenceService depends on this Subject firing on
+	// every state transition. Cover all four entry points (push / undo / redo
+	// / register).
+
+	describe('actionChange$', () => {
+		it('emits on push', () => {
+			let count = 0;
+			manager.actionChange$.subscribe(() => count++);
+
+			manager.push(makeAction());
+			expect(count).toBe(1);
+		});
+
+		it('emits on register without calling action.do()', () => {
+			let count = 0;
+			const action = makeAction();
+			manager.actionChange$.subscribe(() => count++);
+
+			manager.register(action);
+
+			expect(count).toBe(1);
+			expect(action.do).not.toHaveBeenCalled();
+		});
+
+		it('emits on undo', () => {
+			manager.push(makeAction());
+
+			let count = 0;
+			manager.actionChange$.subscribe(() => count++);
+
+			manager.undo();
+			expect(count).toBe(1);
+		});
+
+		it('emits on redo', () => {
+			manager.push(makeAction());
+			manager.undo();
+
+			let count = 0;
+			manager.actionChange$.subscribe(() => count++);
+
+			manager.redo();
+			expect(count).toBe(1);
+		});
+
+		it('does not emit when undo is a no-op (empty history)', () => {
+			let count = 0;
+			manager.actionChange$.subscribe(() => count++);
+
+			manager.undo();
+			expect(count).toBe(0);
+		});
+
+		it('does not emit when redo is a no-op (end of history)', () => {
+			manager.push(makeAction());
+
+			let count = 0;
+			manager.actionChange$.subscribe(() => count++);
+
+			manager.redo();
+			expect(count).toBe(0);
+		});
+
+		it('does not emit when undo is intercepted by a pending scissor cut', () => {
+			manager.push(makeAction());
+
+			(
+				project as never as {
+					selectionManager: { rollbackPendingCut: () => boolean };
+				}
+			).selectionManager.rollbackPendingCut = () => true;
+
+			let count = 0;
+			manager.actionChange$.subscribe(() => count++);
+
+			manager.undo();
+			expect(count).toBe(0);
+		});
+
+		it('emits on each transition in a long sequence', () => {
+			let count = 0;
+			manager.actionChange$.subscribe(() => count++);
+
+			manager.push(makeAction()); // 1
+			manager.push(makeAction()); // 2
+			manager.undo(); // 3
+			manager.undo(); // 4
+			manager.redo(); // 5
+			manager.register(makeAction()); // 6
+
+			expect(count).toBe(6);
+		});
+	});
 });

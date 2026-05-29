@@ -1,12 +1,13 @@
 import { inject, Injectable, Type } from '@angular/core';
-import { TestRoute } from './routes/test.route';
+import { ProjectRoute } from './routes/project.route';
+import { ShareRoute } from './routes/share.route';
 import { Route } from './route.model';
 import { Location } from '@angular/common';
 import { parse } from 'regexparam';
 import { RouteKeys } from './route-keys.model';
 import { LoggingService } from '../logging/logging.service';
 
-const ROUTES: Type<Route>[] = [TestRoute];
+const ROUTES: Type<Route>[] = [ProjectRoute, ShareRoute];
 
 @Injectable({
 	providedIn: 'root'
@@ -31,8 +32,8 @@ export class RouterService {
 		}
 	}
 
-	public processCurrentRoute() {
-		if (!this.processPath(this.location.path())) {
+	public async processCurrentRoute(): Promise<void> {
+		if (!(await this.processPath(this.location.path()))) {
 			this.logging.error(
 				`No route found for path: ${this.location.path()}`,
 				'RouterService'
@@ -41,8 +42,12 @@ export class RouterService {
 		}
 	}
 
-	public navigate(path: string): boolean {
-		if (this.processPath(path)) {
+	public matches(path: string): boolean {
+		return [...this._routes.values()].some((route) => route.pattern.test(path));
+	}
+
+	public async navigate(path: string): Promise<boolean> {
+		if (await this.processPath(path)) {
 			this.location.go(path);
 			return true;
 		}
@@ -50,7 +55,7 @@ export class RouterService {
 		return false;
 	}
 
-	private processPath(path: string): boolean {
+	private async processPath(path: string): Promise<boolean> {
 		if (path === '' || path === '/') {
 			return true;
 		}
@@ -68,7 +73,7 @@ export class RouterService {
 			}
 
 			// @ts-expect-error Some unfortunate type issues
-			if (route.instance.onActivation(params)) {
+			if (await route.instance.onActivation(params)) {
 				this.logging.debug({ path, params }, 'RouterService');
 				return true;
 			}

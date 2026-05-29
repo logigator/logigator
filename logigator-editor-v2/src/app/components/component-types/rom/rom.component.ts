@@ -11,8 +11,8 @@ export class RomComponent extends Component<RomOptions> {
 
 	constructor(options: RomOptions) {
 		super(
-			options.wordSize.value,
 			options.addressSize.value,
+			options.wordSize.value,
 			options.direction.value,
 			options
 		);

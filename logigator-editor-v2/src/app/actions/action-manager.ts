@@ -1,3 +1,4 @@
+import { Subject, Observable } from 'rxjs';
 import { Action } from './action';
 import { Project } from '../project/project';
 
@@ -5,12 +6,17 @@ export class ActionManager {
 	private _history: Action[] = [];
 	private _pointer = 0;
 
+	private readonly _actionChange$ = new Subject<void>();
+	public readonly actionChange$: Observable<void> =
+		this._actionChange$.asObservable();
+
 	constructor(private readonly project: Project) {}
 
 	public push(action: Action): void {
 		this._history.splice(this._pointer, Infinity, action);
 		this._pointer = this._history.length;
 		action.do(this.project);
+		this._actionChange$.next();
 	}
 
 	// Records an action without calling action.do() — for cases where the
@@ -22,6 +28,7 @@ export class ActionManager {
 	public register(action: Action): void {
 		this._history.splice(this._pointer, Infinity, action);
 		this._pointer = this._history.length;
+		this._actionChange$.next();
 	}
 
 	public undo(): void {
@@ -37,6 +44,7 @@ export class ActionManager {
 
 		const action = this._history[--this._pointer];
 		action.undo(this.project);
+		this._actionChange$.next();
 	}
 
 	public redo(): void {
@@ -44,6 +52,7 @@ export class ActionManager {
 
 		const action = this._history[this._pointer++];
 		action.do(this.project);
+		this._actionChange$.next();
 	}
 
 	public clear(): void {

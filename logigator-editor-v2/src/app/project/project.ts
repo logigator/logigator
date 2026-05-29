@@ -1,4 +1,10 @@
-import { Container, FederatedPointerEvent, Point, Rectangle } from 'pixi.js';
+import {
+	Container,
+	DestroyOptions,
+	FederatedPointerEvent,
+	Point,
+	Rectangle
+} from 'pixi.js';
 
 import { Grid } from '../rendering/grid';
 import { ComponentConfig } from '../components/component-config.model';
@@ -124,6 +130,14 @@ export class Project extends InteractionContainer {
 
 	public get positionChange$(): Observable<Point> {
 		return this._viewport.positionChange$;
+	}
+
+	public get components(): Iterable<Component> {
+		return this._components.items;
+	}
+
+	public get wires(): Iterable<Wire> {
+		return this._wires.items;
 	}
 
 	public get cursorPosition$(): Observable<Point> {
@@ -417,5 +431,15 @@ export class Project extends InteractionContainer {
 		if (toAdd.length > 0) action.add(new AddWiresAction(...toAdd));
 		for (const w of addedWires) if (!w.destroyed) w.destroy();
 		this.actionManager.push(action);
+	}
+
+	public override destroy(options?: DestroyOptions): void {
+		this._cursorPosition$.complete();
+		for (const sub of this._portsChangeSubs.values()) {
+			sub.unsubscribe();
+		}
+		this._portsChangeSubs.clear();
+		this._viewport.dispose();
+		super.destroy(options ?? { children: true });
 	}
 }

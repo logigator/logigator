@@ -72,6 +72,10 @@ export class ViewportController {
 		);
 	}
 
+	public dispose(): void {
+		this._positionChange$.complete();
+	}
+
 	private _updateScale(
 		scale: number,
 		center: Point = this._viewPortSize.multiplyScalar(0.5)

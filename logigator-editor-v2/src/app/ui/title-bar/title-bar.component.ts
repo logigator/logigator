@@ -12,6 +12,8 @@ import { TranslocoService } from '@jsverse/transloco';
 import { map } from 'rxjs';
 import { toSignal } from '@angular/core/rxjs-interop';
 import { HashedPipe } from '../../hashing/hashed.pipe';
+import { PersistenceService } from '../../persistence/persistence.service';
+import { ProjectService } from '../../project/project.service';
 
 @Component({
 	selector: 'app-title-bar',
@@ -23,6 +25,8 @@ import { HashedPipe } from '../../hashing/hashed.pipe';
 export class TitleBarComponent {
 	private readonly loggingService = inject(LoggingService);
 	private readonly translocoService = inject(TranslocoService);
+	private readonly persistenceService = inject(PersistenceService);
+	private readonly projectService = inject(ProjectService);
 
 	public items: Signal<MenuItem[]>;
 
@@ -57,12 +61,14 @@ export class TitleBarComponent {
 					{
 						label: this.translocoService.translate(
 							'titleBar.menuBar.file.items.open.label'
-						)
+						),
+						command: () => this.openProject()
 					},
 					{
 						label: this.translocoService.translate(
 							'titleBar.menuBar.file.items.save.label'
-						)
+						),
+						command: () => this.saveProject()
 					},
 					{
 						label: this.translocoService.translate(
@@ -85,12 +91,14 @@ export class TitleBarComponent {
 					{
 						label: this.translocoService.translate(
 							'titleBar.menuBar.edit.items.undo.label'
-						)
+						),
+						command: () => this.undo()
 					},
 					{
 						label: this.translocoService.translate(
 							'titleBar.menuBar.edit.items.redo.label'
-						)
+						),
+						command: () => this.redo()
 					},
 					{
 						separator: true
@@ -129,7 +137,42 @@ export class TitleBarComponent {
 		];
 	}
 
-	public newProject(): void {
-		this.loggingService.log('New project', 'TitleBarComponent');
+	private newProject(): void {
+		const name = prompt('Project name:');
+		if (name) {
+			this.persistenceService
+				.createProject(name)
+				.catch(() => this.loggingService.error('Failed to create project', 'TitleBarComponent'));
+		}
+	}
+
+	private saveProject(): void {
+		const project = this.projectService.mainProject();
+		if (project) {
+			this.persistenceService
+				.saveProject(project)
+				.catch(() => this.loggingService.error('Failed to save project', 'TitleBarComponent'));
+		}
+	}
+
+	private openProject(): void {
+		this.persistenceService.listProjects().subscribe({
+			next: (page) => {
+				this.loggingService.log(
+					`Found ${page.total} projects`,
+					'TitleBarComponent'
+				);
+			},
+			error: () =>
+				this.loggingService.error('Failed to list projects', 'TitleBarComponent')
+		});
+	}
+
+	private undo(): void {
+		this.projectService.mainProject()?.actionManager.undo();
+	}
+
+	private redo(): void {
+		this.projectService.mainProject()?.actionManager.redo();
 	}
 }

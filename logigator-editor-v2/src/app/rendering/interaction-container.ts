@@ -84,6 +84,8 @@ export abstract class InteractionContainer extends Container {
 
 	override destroy(options?: DestroyOptions) {
 		this._destroySubject$.next();
+		this._destroySubject$.complete();
+		this._ticker$.complete();
 		super.destroy(options);
 	}
 }
