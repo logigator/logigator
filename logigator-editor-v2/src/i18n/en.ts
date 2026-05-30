@@ -119,6 +119,16 @@ const en = {
 			}
 		}
 	},
+	openProjectDialog: {
+		title: 'Open Project',
+		localProjects: 'Local Projects',
+		serverProjects: 'Server Projects',
+		notLoggedIn: 'Log in to see your server projects',
+		noLocalProjects: 'No local projects yet',
+		noServerProjects: 'No server projects yet',
+		close: 'Close',
+		loading: 'Loading...'
+	},
 	toolBar: {
 		save: 'Save',
 		open: 'Open',

@@ -1,6 +1,7 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 
 import { TitleBarComponent } from './title-bar.component';
+import { DialogService } from 'primeng/dynamicdialog';
 import { appConfig } from '../../app.config';
 
 describe('TitleBarComponent', () => {
@@ -10,7 +11,10 @@ describe('TitleBarComponent', () => {
 	beforeEach(async () => {
 		await TestBed.configureTestingModule({
 			imports: [TitleBarComponent],
-			providers: appConfig.providers
+			providers: [
+				...appConfig.providers,
+				{ provide: DialogService, useValue: { open: () => null } }
+			]
 		}).compileComponents();
 
 		fixture = TestBed.createComponent(TitleBarComponent);

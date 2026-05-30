@@ -14,10 +14,13 @@ import { toSignal } from '@angular/core/rxjs-interop';
 import { HashedPipe } from '../../hashing/hashed.pipe';
 import { PersistenceService } from '../../persistence/persistence.service';
 import { ProjectService } from '../../project/project.service';
+import { DialogService } from 'primeng/dynamicdialog';
+import { OpenProjectDialogComponent } from '../open-project-dialog/open-project-dialog.component';
 
 @Component({
 	selector: 'app-title-bar',
 	imports: [MenubarModule, NgOptimizedImage, HashedPipe],
+	providers: [DialogService],
 	templateUrl: './title-bar.component.html',
 	styleUrl: './title-bar.component.scss',
 	changeDetection: ChangeDetectionStrategy.OnPush
@@ -27,6 +30,7 @@ export class TitleBarComponent {
 	private readonly translocoService = inject(TranslocoService);
 	private readonly persistenceService = inject(PersistenceService);
 	private readonly projectService = inject(ProjectService);
+	private readonly dialogService = inject(DialogService);
 
 	public items: Signal<MenuItem[]>;
 
@@ -142,7 +146,12 @@ export class TitleBarComponent {
 		if (name) {
 			this.persistenceService
 				.createProject(name)
-				.catch(() => this.loggingService.error('Failed to create project', 'TitleBarComponent'));
+				.catch(() =>
+					this.loggingService.error(
+						'Failed to create project',
+						'TitleBarComponent'
+					)
+				);
 		}
 	}
 
@@ -151,20 +160,21 @@ export class TitleBarComponent {
 		if (project) {
 			this.persistenceService
 				.saveProject(project)
-				.catch(() => this.loggingService.error('Failed to save project', 'TitleBarComponent'));
+				.catch(() =>
+					this.loggingService.error(
+						'Failed to save project',
+						'TitleBarComponent'
+					)
+				);
 		}
 	}
 
 	private openProject(): void {
-		this.persistenceService.listProjects().subscribe({
-			next: (page) => {
-				this.loggingService.log(
-					`Found ${page.total} projects`,
-					'TitleBarComponent'
-				);
-			},
-			error: () =>
-				this.loggingService.error('Failed to list projects', 'TitleBarComponent')
+		this.dialogService.open(OpenProjectDialogComponent, {
+			header: this.translocoService.translate('openProjectDialog.title'),
+			width: '32rem',
+			modal: true,
+			closable: true
 		});
 	}
 

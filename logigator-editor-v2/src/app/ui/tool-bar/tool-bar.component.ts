@@ -7,17 +7,20 @@ import {
 import { ButtonModule } from 'primeng/button';
 import { DividerModule } from 'primeng/divider';
 import { TooltipModule } from 'primeng/tooltip';
-import { TranslocoDirective } from '@jsverse/transloco';
+import { TranslocoDirective, TranslocoService } from '@jsverse/transloco';
 import { WorkModeService } from '../../work-mode/work-mode.service';
 import { WorkMode } from '../../work-mode/work-mode.enum';
 import { ComponentType } from '../../components/component-type.enum';
 import { ProjectService } from '../../project/project.service';
 import { PersistenceService } from '../../persistence/persistence.service';
 import { LoggingService } from '../../logging/logging.service';
+import { DialogService } from 'primeng/dynamicdialog';
+import { OpenProjectDialogComponent } from '../open-project-dialog/open-project-dialog.component';
 
 @Component({
 	selector: 'app-tool-bar',
 	imports: [ButtonModule, DividerModule, TooltipModule, TranslocoDirective],
+	providers: [DialogService],
 	templateUrl: './tool-bar.component.html',
 	styleUrl: './tool-bar.component.scss',
 	changeDetection: ChangeDetectionStrategy.OnPush
@@ -27,6 +30,8 @@ export class ToolBarComponent {
 	private readonly projectService = inject(ProjectService);
 	private readonly persistenceService = inject(PersistenceService);
 	private readonly loggingService = inject(LoggingService);
+	private readonly dialogService = inject(DialogService);
+	private readonly translocoService = inject(TranslocoService);
 
 	protected isWireDrawMode = computed(
 		() => this.workModeService.mode() === WorkMode.WIRE_DRAWING
@@ -91,6 +96,15 @@ export class ToolBarComponent {
 					this.loggingService.error('Failed to save project', 'ToolBarComponent')
 				);
 		}
+	}
+
+	protected open(): void {
+		this.dialogService.open(OpenProjectDialogComponent, {
+			header: this.translocoService.translate('openProjectDialog.title'),
+			width: '40rem',
+			modal: true,
+			closable: true
+		});
 	}
 
 	protected zoomIn(): void {
