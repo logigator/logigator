@@ -7,6 +7,6 @@ export const environment = {
 	chunkSize: 16,
 	gridPixelWidth: 16,
 	api: 'http://logigator.test/api',
-	url: 'http://logigator.test/editor',
+	url: 'http://logigator.test/editor-old',
 	homeUrl: 'http://logigator.test'
 };
