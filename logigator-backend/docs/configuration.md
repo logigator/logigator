@@ -157,7 +157,7 @@ Defines the public-facing URLs used for link generation, CORS, and cookie domain
 
 ```json
 {
-    "rootUrl": "https://dev.logigator.com",
+    "rootUrl": "https://logigator.test",
     "editor": "/editor"
 }
 ```
@@ -259,12 +259,12 @@ OAuth provider credentials for social login.
     "google": {
         "clientID": "...",
         "clientSecret": "...",
-        "callbackURL": "https://dev.logigator.com/auth/google-authenticate"
+        "callbackURL": "https://logigator.test/auth/google-authenticate"
     },
     "twitter": {
         "consumerKey": "...",
         "consumerSecret": "...",
-        "callbackURL": "https://dev.logigator.com/auth/twitter-authenticate"
+        "callbackURL": "https://logigator.test/auth/twitter-authenticate"
     }
 }
 ```
