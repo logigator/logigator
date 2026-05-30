@@ -1,7 +1,10 @@
 import { Injector } from '@angular/core';
 import { TestBed } from '@angular/core/testing';
 import { Subject } from 'rxjs';
-import { ProjectMetadataStore, ProjectMetadata } from './project-metadata.store';
+import {
+	ProjectMetadataStore,
+	ProjectMetadata
+} from './project-metadata.store';
 import { Project } from '../project/project';
 import { setStaticDIInjector } from '../utils/get-di';
 
@@ -9,7 +12,7 @@ function makeMetadata(
 	overrides: Partial<ProjectMetadata> = {}
 ): ProjectMetadata {
 	return {
-		serverUuid: 'uuid-1',
+		id: 'uuid-1',
 		name: 'Test',
 		type: 'project',
 		source: 'server',
@@ -45,19 +48,19 @@ describe('ProjectMetadataStore', () => {
 		});
 	});
 
-	describe('getHandleByUuid', () => {
-		it('finds a registered project by serverUuid', () => {
+	describe('getHandleById', () => {
+		it('finds a registered project by id', () => {
 			const project = new Project();
-			store.register(project, makeMetadata({ serverUuid: 'abc' }));
+			store.register(project, makeMetadata({ id: 'abc' }));
 
-			const handle = store.getHandleByUuid('abc');
+			const handle = store.getHandleById('abc');
 			expect(handle).toBeDefined();
 			expect(handle!.project).toBe(project);
-			expect(handle!.metadata.serverUuid).toBe('abc');
+			expect(handle!.metadata.id).toBe('abc');
 		});
 
 		it('returns undefined when no match', () => {
-			expect(store.getHandleByUuid('missing')).toBeUndefined();
+			expect(store.getHandleById('missing')).toBeUndefined();
 		});
 	});
 
@@ -184,6 +187,20 @@ describe('ProjectMetadataStore', () => {
 		it('is a no-op for unknown project', () => {
 			const project = new Project();
 			expect(() => store.updateHash(project, 'x')).not.toThrow();
+		});
+	});
+
+	describe('updateId', () => {
+		it('updates the id on existing metadata', () => {
+			const project = new Project();
+			store.register(project, makeMetadata({ id: '' }));
+			store.updateId(project, 'generated-id');
+			expect(store.getMetadata(project)!.id).toBe('generated-id');
+		});
+
+		it('is a no-op for unknown project', () => {
+			const project = new Project();
+			expect(() => store.updateId(project, 'x')).not.toThrow();
 		});
 	});
 

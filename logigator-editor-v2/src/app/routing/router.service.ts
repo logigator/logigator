@@ -1,13 +1,14 @@
 import { inject, Injectable, Type } from '@angular/core';
 import { ProjectRoute } from './routes/project.route';
 import { ShareRoute } from './routes/share.route';
+import { LocalProjectRoute } from './routes/local-project.route';
 import { Route } from './route.model';
 import { Location } from '@angular/common';
 import { parse } from 'regexparam';
 import { RouteKeys } from './route-keys.model';
 import { LoggingService } from '../logging/logging.service';
 
-const ROUTES: Type<Route>[] = [ProjectRoute, ShareRoute];
+const ROUTES: Type<Route>[] = [ProjectRoute, ShareRoute, LocalProjectRoute];
 
 @Injectable({
 	providedIn: 'root'

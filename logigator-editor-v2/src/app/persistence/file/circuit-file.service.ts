@@ -10,7 +10,6 @@ import { InvalidFileError } from './circuit-file.errors';
 import {
 	CURRENT_FILE_VERSION,
 	CircuitFileComponentV1,
-	CircuitFileV1,
 	CircuitFileWireV1,
 	CurrentCircuitFile
 } from './circuit-file.types';
