@@ -52,7 +52,8 @@ Angular 21 standalone components + PixiJS 8 canvas.
 
 - `components/` — Circuit element model. Each extends `Component` (PixiJS `Container`) with `connectionPoints`, `portStubs`, `portsChange$` Subject. `ComponentProviderService` is the registry/factory. Gate implementations in `component-types/`. Doc: `component-system.md`.
 - `components/component-options/` — `ComponentOption` subclasses each paired with an Angular renderer; side-panel form is `*ngComponentOutlet` driven by `option.renderer`. Doc: `component-options.md`.
-- `project/` — `Project` (PixiJS `Container`) owns circuit state. `ProjectService` manages active project + persistence. Doc: `project.md`.
+- `project/` — `Project` (PixiJS `Container`) owns circuit state. `ProjectService` tracks the loaded/active projects. Doc: `project.md`.
+- `persistence/` — `PersistenceService` (lifecycle: API load/save + local file import/export), `CircuitSerializer` (`Project` ↔ legacy `ProjectElement[]` wire format used by the API), `ProjectMetadataStore` (name/source/dirty). `persistence/file/` holds the **native versioned file format** + a migration chain (legacy→v1, …) for save-to-file / load-from-file. Doc: `persistence.md`.
 - `wires/` — Wire model and rendering. Doc: `wires.md`.
 - `connection-points/` — Derived visual junction dots (≥3 cardinal directions filled + ≥1 element terminates). Pure visual sugar, not persisted or selectable. Doc: `connection-points.md`.
 - `rendering/` — `QuadTreeContainer` (spatial indexing), `FloatingLayer` (selection box, placement preview), `GraphicsProviderService` (shared texture/graphics cache). Doc: `rendering.md`.
@@ -65,6 +66,7 @@ Angular 21 standalone components + PixiJS 8 canvas.
 - `setStaticDIInjector()` in `app.config.ts` — bootstraps static Angular injector so model classes (`Component`, `Wire`) can call `inject()` without being Angular-managed.
 - Grid coordinates — `Project._gridSpace` has `scale = gridSize`, so circuit objects use **grid units as native `position`**. Visual children in `Component._visualSpace` (`scale = 1/gridSize`) keep pixel-authored geometry. Only remaining converter is `fromGrid` in `utils/grid.ts` (used inside `_visualSpace` and background grid). Snapping: `roundToGrid` / `roundToHalfGrid`.
 - `@logigator/logigator-simulation` — external npm package (separate repo, likely WASM) for circuit simulation.
+- Two serialization encodings: the **API** uses the legacy positional `ProjectElement[]` wire format (`t/p/q/r/i/o/n/s`) via `CircuitSerializer`; **local files** use a **native, versioned** format (named options, wires as `pos/direction/length`) under `persistence/file/`. Files have a `version` field (absent ⇒ legacy v0); a migration chain upgrades older files to the newest version on load, and only the newest version is ever saved. `SerializedComponent`/`SerializedWire` are a *third*, separate in-memory snapshot used by undo/redo — not a persistence format.
 
 ### Backend (logigator-backend)
 
@@ -100,7 +102,7 @@ Express with **routing-controllers** (decorators), **TypeDI** (DI), **TypeORM** 
 
 ### Backend ↔ Frontend
 
-Backend serves `logigator-editor-v2` as a static SPA. SPA calls `/api/projects`, `/api/components`. Circuit data is serialized JSON via `ProjectFile`/`ComponentFile` entities.
+Backend serves `logigator-editor-v2` as a static SPA. SPA calls `/api/projects`, `/api/components`; circuit data crosses the wire as the legacy `ProjectElement[]` format and is stored server-side as serialized JSON via `ProjectFile`/`ComponentFile` entities. Independently, the editor can save/load circuits to/from **local files** in its own native versioned format (see `persistence.md`); these never touch the backend.
 
 ## Testing
 

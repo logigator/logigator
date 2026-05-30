@@ -69,8 +69,10 @@ export abstract class Component<
 	}
 
 	public static deserialize(
-		serialized: SerializedComponent,
-		config: ComponentConfig<Record<string, ComponentOption>>
+		// `id` is optional: if not specified, a fresh id is
+		// allocated by the constructor.
+		serialized: Omit<SerializedComponent, 'id' | 'type'> & { id?: number },
+		config: ComponentConfig
 	): Component {
 		const options = Object.fromEntries(
 			Object.entries(config.options).map(([key, proto]) => [
@@ -79,7 +81,9 @@ export abstract class Component<
 			])
 		);
 		const component = new config.implementation(options);
-		component.id = serialized.id;
+		if (serialized.id !== undefined) {
+			component.id = serialized.id;
+		}
 		component.position.set(serialized.pos[0], serialized.pos[1]);
 
 		return component;

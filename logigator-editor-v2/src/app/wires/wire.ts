@@ -26,9 +26,15 @@ export class Wire extends Graphics implements Connectable {
 		};
 	}
 
-	public static deserialize(serialized: SerializedWire): Wire {
+	public static deserialize(
+		// `id` is optional: when omitted, fresh id is
+		// allocated by the constructor.
+		serialized: Omit<SerializedWire, 'id'> & { id?: number }
+	): Wire {
 		const wire = new Wire(serialized.direction, serialized.length);
-		wire.id = serialized.id;
+		if (serialized.id !== undefined) {
+			wire.id = serialized.id;
+		}
 		// Serialized coordinates are integer grid positions; the +0.5 half-grid
 		// offset is the convention for wire centre-line alignment and is added
 		// at load time rather than stored on disk.

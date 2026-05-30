@@ -6,6 +6,7 @@ import { ProjectApiService } from '../api/api-services/project-api.service';
 import { ShareApiService } from '../api/api-services/share-api.service';
 import { UserApiService } from '../api/api-services/user-api.service';
 import { CircuitSerializer } from './circuit-serializer';
+import { CircuitFileService } from './file/circuit-file.service';
 import { ProjectMetadataStore } from './project-metadata.store';
 import { ProjectService } from '../project/project.service';
 import { LoggingService } from '../logging/logging.service';
@@ -26,6 +27,7 @@ export class PersistenceService {
 	private readonly shareApi = inject(ShareApiService);
 	private readonly userApi = inject(UserApiService);
 	private readonly serializer = inject(CircuitSerializer);
+	private readonly circuitFile = inject(CircuitFileService);
 	private readonly metadataStore = inject(ProjectMetadataStore);
 	private readonly projectService = inject(ProjectService);
 	private readonly logging = inject(LoggingService);
@@ -190,6 +192,48 @@ export class PersistenceService {
 		});
 
 		this._replaceMainProject(project);
+		return project;
+	}
+
+	/**
+	 * Serializes a project to the current native file format. The name is read
+	 * from project metadata (the `Project` itself has no name). Returns the JSON
+	 * string; triggering an actual download is a UI concern handled elsewhere.
+	 */
+	exportProjectToJson(project: Project): string {
+		const name = this.metadataStore.getMetadata(project)?.name ?? 'Untitled';
+		return this.circuitFile.toJson(project, name);
+	}
+
+	/**
+	 * Loads a circuit from file content into a new local project and sets it as
+	 * the main project. Throws (`InvalidFileError` / `UnsupportedVersionError`) on
+	 * an unreadable file — unlike server loads, there is no fallback here; the
+	 * caller decides how to surface it. Unsupported component types are dropped
+	 * silently (warning only).
+	 */
+	importProjectFromJson(content: string): Project {
+		const { name, components, wires } = this.circuitFile.fromJson(content);
+
+		const project = new Project();
+		for (const c of components) project.addComponent(c);
+		for (const w of wires) project.addWire(w);
+
+		// Imported circuits have no server counterpart yet; register as a clean
+		// local project (mirrors createAndSetEmptyProject). addComponent/addWire
+		// don't push to the ActionManager, so it starts non-dirty.
+		this.metadataStore.register(project, {
+			serverUuid: '',
+			name,
+			type: 'project',
+			source: 'local',
+			hash: '',
+			isPublic: false
+		});
+
+		this._replaceMainProject(project);
+		// Deliberately no location.go: there is no server uuid. A stale
+		// /project/:uuid URL is a future-UI concern.
 		return project;
 	}
 

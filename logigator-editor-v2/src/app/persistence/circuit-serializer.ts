@@ -30,6 +30,51 @@ function isReservedKey(key: string): key is ReservedKey {
 	return key in RESERVED_KEY_TO_ELEMENT_FIELD;
 }
 
+/**
+ * Maps a legacy `ProjectElement`'s positional option slots (reserved `r`/`i`/`o`
+ * fields, the `n` numbers array, and the single `s` string) to **named** option
+ * values keyed by the component config's option names — the inverse of how the
+ * serializer packs them.
+ *
+ * Pure: reads only the config's option metadata (key order, `wireSlot`, default
+ * `value`); it does NOT clone options or construct any render objects. Shared by
+ * {@link CircuitSerializer._buildOptions} (which clones the values into
+ * `ComponentOption` instances) and the legacy→v1 file migration (which keeps the
+ * raw values). Keeping the slot→value semantics here is the single source of
+ * truth for both.
+ */
+export function buildOptionValues(
+	element: ProjectElement,
+	config: ComponentConfig
+): Record<string, unknown> {
+	const values: Record<string, unknown> = {};
+	let nIndex = 0;
+	let sConsumed = false;
+
+	for (const [key, proto] of Object.entries(config.options)) {
+		if (isReservedKey(key)) {
+			const field = RESERVED_KEY_TO_ELEMENT_FIELD[key];
+			values[key] = element[field] ?? proto.value;
+			continue;
+		}
+
+		if (proto.wireSlot === 'n') {
+			values[key] =
+				element.n && nIndex < element.n.length
+					? element.n[nIndex++]
+					: proto.value;
+		} else if (proto.wireSlot === 's') {
+			values[key] =
+				!sConsumed && element.s !== undefined ? element.s : proto.value;
+			sConsumed = true;
+		} else {
+			values[key] = proto.value;
+		}
+	}
+
+	return values;
+}
+
 @Injectable({ providedIn: 'root' })
 export class CircuitSerializer {
 	private readonly componentProvider = inject(ComponentProviderService);
@@ -159,32 +204,11 @@ export class CircuitSerializer {
 		element: ProjectElement,
 		config: ComponentConfig
 	): Record<string, ComponentOption> {
+		const values = buildOptionValues(element, config);
 		const result: Record<string, ComponentOption> = {};
-		let nIndex = 0;
-		let sConsumed = false;
 
 		for (const [key, proto] of Object.entries(config.options)) {
-			if (isReservedKey(key)) {
-				const field = RESERVED_KEY_TO_ELEMENT_FIELD[key];
-				const raw = element[field];
-				result[key] = proto.clone(raw ?? proto.value);
-				continue;
-			}
-
-			if (proto.wireSlot === 'n') {
-				const value =
-					element.n && nIndex < element.n.length
-						? element.n[nIndex++]
-						: proto.value;
-				result[key] = proto.clone(value);
-			} else if (proto.wireSlot === 's') {
-				const value =
-					!sConsumed && element.s !== undefined ? element.s : proto.value;
-				sConsumed = true;
-				result[key] = proto.clone(value);
-			} else {
-				result[key] = proto.clone();
-			}
+			result[key] = proto.clone(values[key]);
 		}
 
 		return result;

@@ -19,6 +19,7 @@ import { Project } from '../project/project';
 import { ProjectElement } from '../api/models/project-element';
 import { setStaticDIInjector } from '../utils/get-di';
 import { environment } from '../../environments/environment';
+import { InvalidFileError } from './file/circuit-file.errors';
 
 const PROJECT_URL = (uuid: string) =>
 	`${environment.apiUrl}/api/project/${uuid}`;
@@ -543,8 +544,57 @@ describe('PersistenceService', () => {
 
 			const project = await promise;
 			expect(Array.from(project.components).length).toBe(2);
+			// LoggingService.warn forwards to console.warn('[%s] %o', context, message).
 			expect(warnSpy).toHaveBeenCalledWith(
+				'[%s] %o',
+				'CircuitSerializer',
 				jasmine.stringContaining('Unknown component type ID: 100')
+			);
+		});
+	});
+
+	describe('file import / export', () => {
+		it('exportProjectToJson emits the current version and metadata name', () => {
+			const project = new Project();
+			metadataStore.register(project, {
+				serverUuid: '',
+				name: 'My Circuit',
+				type: 'project',
+				source: 'local',
+				hash: '',
+				isPublic: false
+			});
+
+			const parsed = JSON.parse(service.exportProjectToJson(project));
+			expect(parsed.version).toBe(1);
+			expect(parsed.name).toBe('My Circuit');
+			expect(parsed.components).toEqual([]);
+			expect(parsed.wires).toEqual([]);
+		});
+
+		it('importProjectFromJson sets a clean local main project from file content', () => {
+			const content = JSON.stringify({
+				version: 1,
+				name: 'Imported',
+				components: [{ type: 1, pos: [2, 3], options: {} }],
+				wires: []
+			});
+
+			const project = service.importProjectFromJson(content);
+			const metadata = metadataStore.getMetadata(project);
+
+			expect(projectService.mainProject()).toBe(project);
+			expect(metadata!.source).toBe('local');
+			expect(metadata!.serverUuid).toBe('');
+			expect(metadata!.name).toBe('Imported');
+			expect(metadataStore.isDirty(project)).toBeFalse();
+			expect(Array.from(project.components).length).toBe(1);
+			expect(locationGo).not.toHaveBeenCalled();
+		});
+
+		it('importProjectFromJson throws on an unreadable file', () => {
+			expect(() => service.importProjectFromJson('{not json')).toThrowError(
+				InvalidFileError
 			);
 		});
 	});
