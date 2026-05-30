@@ -1,14 +1,14 @@
 services:
   proxy:
-    image: httpd:2.4
+    image: caddy:2-alpine
     networks:
       - net
     volumes:
-      - ./docker/development/httpd.conf:/usr/local/apache2/conf/httpd.conf
-      - ./docker/development/ca.crt:/usr/local/apache2/conf/server.crt
-      - ./docker/development/private.key:/usr/local/apache2/conf/server.key
+      - ./Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy_data:/data
     ports:
       - 127.0.0.1:80:80
+      - 127.0.0.1:443:443
 
   backend:
     image: node:24
@@ -75,6 +75,9 @@ services:
       - net
     ports:
       - 127.0.0.1:5001:5001
+
+volumes:
+  caddy_data:
 
 networks:
   net:
