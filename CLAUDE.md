@@ -13,13 +13,13 @@ All commands run inside Docker containers. Do not run yarn directly on the host.
 ## Dev Environment
 
 ```bash
-docker compose up   # Apache proxy, backend, editor-v2 dev server, MySQL, Redis
+docker compose up   # Caddy proxy, backend, editor-v2 dev server, legacy editor, MySQL, Redis
 # /etc/hosts: 127.0.0.1 logigator.test
 ```
 
 Backend config files must be created from `.example` files in `logigator-backend/config/`.
 
-Service names for exec: `editor` (logigator-editor-v2), `backend` (logigator-backend).
+Service names for exec: `editor` (logigator-editor-v2), `editor-old` (logigator-editor), `backend` (logigator-backend).
 
 ## Commands
 

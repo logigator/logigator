@@ -78,15 +78,16 @@ Append to `/etc/hosts` (Linux/macOS) or `C:\Windows\System32\drivers\etc\hosts` 
 docker compose up
 ```
 
-The stack starts an Apache reverse proxy on ports 80/443. Open `https://logigator.test` in your browser. Accept the self-signed certificate (the key/cert pair in `docker/development/` is pre-generated for local use only).
+The stack starts a Caddy reverse proxy on ports 80/443 with automatic self-signed certificates for local development. Open `https://logigator.test` in your browser.
 
 **Services started by `docker compose up`:**
 
 | Service | Purpose | Exposed port |
 |---|---|---|
-| `proxy` | Apache HTTPS reverse proxy | 80, 443 |
+| `proxy` | Caddy HTTPS reverse proxy | 80, 443 |
 | `backend` | Node.js API + dev server | — (proxied) |
-| `editor` | Angular dev server (HMR) | — (proxied) |
+| `editor` | Angular dev server (HMR, v2) | — (proxied) |
+| `editor-old` | Legacy Angular dev server (v1) | — (proxied) |
 | `mysql` | MySQL 8 database | 3306 (localhost only) |
 | `redis` | Session / cache store | — (internal) |
 | `redis_ui` | Rebrow Redis browser UI | 5001 |
