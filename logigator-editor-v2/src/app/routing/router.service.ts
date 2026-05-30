@@ -75,7 +75,7 @@ export class RouterService {
 
 			// @ts-expect-error Some unfortunate type issues
 			if (await route.instance.onActivation(params)) {
-				this.logging.debug({ path, params }, 'RouterService');
+				this.logging.debug({ path, route: route.instance.route, params }, 'RouterService');
 				return true;
 			}
 		}
