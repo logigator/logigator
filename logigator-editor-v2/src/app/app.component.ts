@@ -23,6 +23,7 @@ import { WorkModeService } from './work-mode/work-mode.service';
 import { PersistenceService } from './persistence/persistence.service';
 import { CardModule } from 'primeng/card';
 import { ConfirmPopup } from 'primeng/confirmpopup';
+import { Toast } from 'primeng/toast';
 import { TranslocoDirective } from '@jsverse/transloco';
 
 @Component({
@@ -36,6 +37,7 @@ import { TranslocoDirective } from '@jsverse/transloco';
 		ComponentSettingsComponent,
 		CardModule,
 		ConfirmPopup,
+		Toast,
 		TranslocoDirective
 	],
 	templateUrl: './app.component.html',

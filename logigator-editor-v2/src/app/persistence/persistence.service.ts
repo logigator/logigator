@@ -413,7 +413,7 @@ export class PersistenceService {
 			if (this.metadataStore.dirtyVersion(project) === versionAtSnapshot) {
 				this.metadataStore.clearDirty(project);
 			}
-			this.logging.log('Project saved', 'PersistenceService');
+			this.logging.info('Project saved', 'PersistenceService');
 		} catch (err) {
 			if (this._isVersionMismatch(err)) {
 				this.logging.error(
@@ -453,7 +453,7 @@ export class PersistenceService {
 		if (this.metadataStore.dirtyVersion(project) === versionAtSnapshot) {
 			this.metadataStore.clearDirty(project);
 		}
-		this.logging.log('Project saved to browser storage', 'PersistenceService');
+		this.logging.info('Project saved to browser storage', 'PersistenceService');
 	}
 
 	private _replaceMainProject(newProject: Project): void {

@@ -155,6 +155,13 @@ const en = {
 		selExact: 'Select exact',
 		eraser: 'Eraser',
 		text: 'Text'
+	},
+	logging: {
+		error: 'Error',
+		warn: 'Warning',
+		success: 'Success',
+		info: 'Info',
+		debug: 'Debug'
 	}
 };
 

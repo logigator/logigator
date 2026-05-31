@@ -1,7 +1,7 @@
 <p-confirmpopup />
 <app-title-bar></app-title-bar>
 <app-tool-bar class="border-b border-white/20"></app-tool-bar>
-<div class="flex grow" *transloco="let t">
+<div class="flex grow">
 	<app-side-bar class="w-80 border-r border-white/20"></app-side-bar>
 	<div class="grow flex flex-col">
 		<div class="relative grow">
@@ -10,8 +10,10 @@
 				[project]="projectService.activeProject()"
 				(cursorPositionChange)="cursorPosition.set($event)"
 			></app-board>
+			<p-toast position="bottom-left" class="absolute! -mb-4" />
 			@if (componentSettings(); as settings) {
 				<p-card
+					*transloco="let t"
 					class="absolute m-2 bottom-0 right-0 max-w-96"
 					[header]="t(settings.name)"
 					[subheader]="t(settings.description)"
