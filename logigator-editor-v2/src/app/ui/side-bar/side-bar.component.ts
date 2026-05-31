@@ -27,10 +27,10 @@ export class SideBarComponent {
 	public searchText = '';
 
 	public get basicComponents() {
-		return this.componentProviderService.basicComponents;
+		return this.componentProviderService.basicComponents();
 	}
 
 	public get advancedComponents() {
-		return this.componentProviderService.advancedComponents;
+		return this.componentProviderService.advancedComponents();
 	}
 }

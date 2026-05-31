@@ -1,6 +1,5 @@
-import { Injectable } from '@angular/core';
+import { computed, Injectable, Signal, signal } from '@angular/core';
 import { ComponentConfig } from './component-config.model';
-import { ComponentType } from './component-type.enum';
 import { ComponentCategory } from './component-category.enum';
 import { notComponentConfig } from './component-types/not/not.config';
 import { andComponentConfig } from './component-types/and/and.config';
@@ -8,42 +7,59 @@ import { romComponentConfig } from './component-types/rom/rom.config';
 import { textComponentConfig } from './component-types/text/text.config';
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
-const COMPONENTS: Record<ComponentType, ComponentConfig<any>> = {
-	[ComponentType.NOT]: notComponentConfig,
-	[ComponentType.AND]: andComponentConfig,
-	[ComponentType.ROM]: romComponentConfig,
-	[ComponentType.TEXT]: textComponentConfig
-};
+const BUILT_IN_COMPONENTS: ComponentConfig<any>[] = [
+	notComponentConfig,
+	andComponentConfig,
+	romComponentConfig,
+	textComponentConfig
+];
 
 @Injectable({
 	providedIn: 'root'
 })
 export class ComponentProviderService {
-	private readonly _componentsByCategory = new Map<
-		ComponentCategory,
-		ComponentConfig[]
-	>();
+	// Keyed by numeric type id (not the closed `ComponentType` enum) so
+	// runtime-allocated custom configs can be registered alongside built-ins.
+	// A signal so the reactive category lists below update on register/unregister.
+	private readonly _configs = signal<ReadonlyMap<number, ComponentConfig>>(
+		new Map(BUILT_IN_COMPONENTS.map((config) => [config.type, config]))
+	);
 
-	constructor() {
-		for (const config of Object.values(COMPONENTS)) {
-			const category = this._componentsByCategory.get(config.category);
-			if (category) {
-				category.push(config);
-			} else {
-				this._componentsByCategory.set(config.category, [config]);
-			}
-		}
+	public readonly basicComponents = this._categorySignal(
+		ComponentCategory.BASIC
+	);
+	public readonly advancedComponents = this._categorySignal(
+		ComponentCategory.ADVANCED
+	);
+	public readonly userComponents = this._categorySignal(ComponentCategory.USER);
+	public readonly ioComponents = this._categorySignal(ComponentCategory.IO);
+
+	public getComponent(type: number): ComponentConfig | undefined {
+		return this._configs().get(type);
 	}
 
-	public getComponent(type: ComponentType): ComponentConfig {
-		return COMPONENTS[type];
+	public register(config: ComponentConfig): void {
+		this._configs.update((configs) =>
+			new Map(configs).set(config.type, config)
+		);
 	}
 
-	public get basicComponents(): ComponentConfig[] {
-		return this._componentsByCategory.get(ComponentCategory.BASIC) ?? [];
+	public unregister(typeId: number): void {
+		this._configs.update((configs) => {
+			if (!configs.has(typeId)) return configs;
+			const next = new Map(configs);
+			next.delete(typeId);
+			return next;
+		});
 	}
 
-	public get advancedComponents(): ComponentConfig[] {
-		return this._componentsByCategory.get(ComponentCategory.ADVANCED) ?? [];
+	private _categorySignal(
+		category: ComponentCategory
+	): Signal<ComponentConfig[]> {
+		return computed(() =>
+			[...this._configs().values()].filter(
+				(config) => config.category === category
+			)
+		);
 	}
 }

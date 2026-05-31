@@ -640,3 +640,49 @@ describe('Project.toggleConnectionAt', () => {
 		});
 	});
 });
+
+describe('Project portsChange$ rebucket', () => {
+	let project: Project;
+
+	beforeEach(() => {
+		setStaticDIInjector(TestBed.inject(Injector));
+		project = new Project();
+	});
+
+	afterEach(() => {
+		project.destroy({ children: true });
+	});
+
+	it('re-queries a component at its grown bounds after a numInputs increase', () => {
+		// The quad tree (root [0,64]²) re-filters every *visited* element against
+		// its live gridBounds, so a stale bucket is only observable once the tree
+		// has branched: a query that never descends into the component's old
+		// quadrant can't re-filter it. Force a split by exceeding the 4-element
+		// leaf cap, with one filler per quadrant.
+		const target = makeAnd(2); // NW: gridBounds ≈ x[1.5,4.5] y[2,4]
+		target.position.set(2, 2);
+		project.addComponent(target);
+		for (const [x, y] of [
+			[40, 2], // NE
+			[2, 40], // SW
+			[40, 40], // SE
+			[45, 5] // NE (5th element → root leaf splits into quadrants)
+		] as const) {
+			const filler = makeAnd(2);
+			filler.position.set(x, y);
+			project.addComponent(filler);
+		}
+
+		// A rect deep in the SW quadrant: outside target's original NW bounds, and
+		// the traversal won't descend the NW branch for it — target not found yet.
+		const farRect = new Rectangle(2, 40, 1, 1);
+		expect([...project.queryComponentsInRange(farRect)]).not.toContain(target);
+
+		// Growing numInputs grows bodyGridHeight (→ gridBounds y[2,52], spanning the
+		// NW and SW quadrants) and fires portsChange$, whose handler must re-bucket
+		// target so spatial queries reflect the new bounds.
+		target.numInputs = 50;
+
+		expect([...project.queryComponentsInRange(farRect)]).toContain(target);
+	});
+});

@@ -171,6 +171,11 @@ export class Project extends InteractionContainer {
 		this._portsChangeSubs.set(
 			component.id,
 			component.portsChange$.subscribe(({ oldPorts, newPorts }) => {
+				// A port-count (or rotation) change resizes the component's
+				// gridBounds, so it must be re-bucketed in the quad tree before any
+				// spatial query below sees stale bounds. insert() does a
+				// remove-then-reinsert for an already-tracked element.
+				this._components.insert(component);
 				// Rotation/port-count changes can leave a wire's interior crossing a
 				// new port position (I2 violation) or unblock a previously-blocked
 				// collinear merge at an old port. Run the integrator to restore

@@ -19,5 +19,5 @@ export const notComponentConfig: ComponentConfig<NotOptions> = {
 	options: {
 		direction: new DirectionComponentOption()
 	},
-	implementation: NotComponent
+	create: (options) => new NotComponent(options)
 };

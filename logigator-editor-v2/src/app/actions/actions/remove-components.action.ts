@@ -33,12 +33,11 @@ export class RemoveComponentsAction extends Action {
 
 	undo(project: Project): void {
 		for (const component of this._components) {
-			project.addComponent(
-				Component.deserialize(
-					component,
-					this.componentProviderService.getComponent(component.type)
-				)
+			const config = this.componentProviderService.getComponent(
+				component.type
 			);
+			if (!config) continue;
+			project.addComponent(Component.deserialize(component, config));
 		}
 	}
 }

@@ -194,7 +194,7 @@ export class CircuitSerializer {
 		}
 
 		const options = this._buildOptions(element, config);
-		const component = new config.implementation(options);
+		const component = config.create(options);
 		component.position.set(element.p[0], element.p[1]);
 
 		return component;

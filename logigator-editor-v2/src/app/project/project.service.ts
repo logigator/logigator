@@ -18,6 +18,10 @@ export class ProjectService {
 		this._activeProject.set(project);
 	}
 
+	public setActiveProject(project: Project): void {
+		this._activeProject.set(project);
+	}
+
 	public addOpenComponent(project: Project): void {
 		this._openComponents.update((v) => [...v, project]);
 	}

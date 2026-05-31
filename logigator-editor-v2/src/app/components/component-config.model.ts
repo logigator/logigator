@@ -24,5 +24,11 @@ export interface ComponentConfig<
 		ComponentOption
 	>
 > extends ComponentConfigView<TOptions> {
-	implementation: new (options: TOptions) => Component<TOptions>;
+	/**
+	 * Factory for a component instance from its options. Replaces a bare
+	 * constructor reference so a config can close over per-definition state
+	 * (e.g. a custom component's definition) instead of being limited to a
+	 * `new (options) => Component` signature.
+	 */
+	create(options: TOptions): Component<TOptions>;
 }

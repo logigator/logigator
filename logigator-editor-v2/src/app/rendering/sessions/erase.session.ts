@@ -58,12 +58,9 @@ export class EraseSession implements DragSession {
 			this.project.addWire(Wire.deserialize(wire));
 		}
 		for (const comp of this._deletedComponents) {
-			this.project.addComponent(
-				Component.deserialize(
-					comp,
-					this.componentProviderService.getComponent(comp.type)
-				)
-			);
+			const config = this.componentProviderService.getComponent(comp.type);
+			if (!config) continue;
+			this.project.addComponent(Component.deserialize(comp, config));
 		}
 	}
 

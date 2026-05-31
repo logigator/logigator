@@ -22,5 +22,5 @@ export const andComponentConfig: ComponentConfig<AndOptions> = {
 		direction: new DirectionComponentOption(),
 		numInputs: new NumberComponentOption('components.options.inputs', 2, 64, 2)
 	},
-	implementation: AndComponent
+	create: (options) => new AndComponent(options)
 };

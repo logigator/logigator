@@ -29,5 +29,5 @@ export const romComponentConfig: ComponentConfig<RomOptions> = {
 			4
 		)
 	},
-	implementation: RomComponent
+	create: (options) => new RomComponent(options)
 };

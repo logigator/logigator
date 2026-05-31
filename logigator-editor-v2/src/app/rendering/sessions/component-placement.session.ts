@@ -25,7 +25,7 @@ export class ComponentPlacementSession implements DragSession {
 				([key, opt]) => [key, opt.clone()]
 			)
 		);
-		this._component = new config.implementation(options);
+		this._component = config.create(options);
 		this._component.tint = 0x888888;
 		this._component.applyScale(project.scale.x);
 		this._component.position.set(0, 0);

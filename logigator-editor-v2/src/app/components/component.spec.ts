@@ -1,6 +1,7 @@
 import { Injector } from '@angular/core';
 import { TestBed } from '@angular/core/testing';
 import { setStaticDIInjector } from '../utils/get-di';
+import { Component } from './component';
 import { AndComponent } from './component-types/and/and.component';
 import { andComponentConfig } from './component-types/and/and.config';
 import { Direction } from '../utils/direction';
@@ -11,6 +12,37 @@ function makeAnd(numInputs = 2): AndComponent {
 		numInputs: andComponentConfig.options.numInputs.clone(numInputs)
 	});
 }
+
+describe('Component.deserialize (create() factory)', () => {
+	beforeEach(() => {
+		setStaticDIInjector(TestBed.inject(Injector));
+	});
+
+	it('builds an instance of the config implementation via create()', () => {
+		const comp = Component.deserialize(
+			{ pos: [4, 7], options: { direction: Direction.E, numInputs: 3 } },
+			andComponentConfig
+		);
+
+		expect(comp).toBeInstanceOf(AndComponent);
+		expect(comp.numInputs).toBe(3);
+		expect(comp.position.x).toBe(4);
+		expect(comp.position.y).toBe(7);
+
+		comp.destroy({ children: true });
+	});
+
+	it('preserves an explicit id when one is provided', () => {
+		const comp = Component.deserialize(
+			{ id: 42, pos: [0, 0], options: { direction: Direction.E, numInputs: 2 } },
+			andComponentConfig
+		);
+
+		expect(comp.id).toBe(42);
+
+		comp.destroy({ children: true });
+	});
+});
 
 describe('Component.gridBounds', () => {
 	beforeEach(() => {

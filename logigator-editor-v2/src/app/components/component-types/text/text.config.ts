@@ -37,5 +37,5 @@ export const textComponentConfig: ComponentConfig<TextOptions> = {
 			}
 		)
 	},
-	implementation: TextComponent
+	create: (options) => new TextComponent(options)
 };

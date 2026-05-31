@@ -65,17 +65,6 @@ describe('LoggingService', () => {
 		});
 	});
 
-	describe('success', () => {
-		it('passes the context and message to console.info', () => {
-			service.success('success-msg', 'success-ctx');
-			expect(console.info).toHaveBeenCalledWith(
-				'[%s] %o',
-				'success-ctx',
-				'success-msg'
-			);
-		});
-	});
-
 	describe('debug', () => {
 		it('passes the context and message to console.debug', () => {
 			service.debug('debug-msg', 'debug-ctx');

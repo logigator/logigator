@@ -80,7 +80,7 @@ export abstract class Component<
 				proto.clone(serialized.options[key])
 			])
 		);
-		const component = new config.implementation(options);
+		const component = config.create(options);
 		if (serialized.id !== undefined) {
 			component.id = serialized.id;
 		}
