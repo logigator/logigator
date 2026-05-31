@@ -6,6 +6,7 @@ import {
 } from '@angular/core';
 import { MenubarModule } from 'primeng/menubar';
 import { MenuItem } from 'primeng/api';
+import { ToastService } from '../../logging/toast.service';
 import { LoggingService } from '../../logging/logging.service';
 import { NgOptimizedImage } from '@angular/common';
 import { TranslocoService } from '@jsverse/transloco';
@@ -26,7 +27,8 @@ import { OpenProjectDialogComponent } from '../open-project-dialog/open-project-
 	changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class TitleBarComponent {
-	private readonly loggingService = inject(LoggingService);
+	private readonly toastService = inject(ToastService);
+	private readonly logging = inject(LoggingService);
 	private readonly translocoService = inject(TranslocoService);
 	private readonly persistenceService = inject(PersistenceService);
 	private readonly projectService = inject(ProjectService);
@@ -146,12 +148,13 @@ export class TitleBarComponent {
 		if (name) {
 			this.persistenceService
 				.createProject(name)
-				.catch(() =>
-					this.loggingService.error(
+				.catch(() => {
+					this.logging.error(
 						'Failed to create project',
 						'TitleBarComponent'
-					)
-				);
+					);
+					this.toastService.error('Failed to create project');
+				});
 		}
 	}
 
@@ -160,12 +163,13 @@ export class TitleBarComponent {
 		if (project) {
 			this.persistenceService
 				.saveProject(project)
-				.catch(() =>
-					this.loggingService.error(
+				.catch(() => {
+					this.logging.error(
 						'Failed to save project',
 						'TitleBarComponent'
-					)
-				);
+					);
+					this.toastService.error('Failed to save project');
+				});
 		}
 	}
 

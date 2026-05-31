@@ -9,6 +9,8 @@ import {
 	HttpTestingController,
 	provideHttpClientTesting
 } from '@angular/common/http/testing';
+import { TranslocoService } from '@jsverse/transloco';
+import { MessageService } from 'primeng/api';
 import { AuthRequiredError, PersistenceService } from './persistence.service';
 import { ProjectMetadataStore } from './project-metadata.store';
 import { ProjectService } from '../project/project.service';
@@ -183,7 +185,9 @@ describe('PersistenceService', () => {
 						subscribe: () => ({ unsubscribe: () => undefined })
 					}
 				},
-				{ provide: BrowserProjectStore, useValue: browserStore }
+				{ provide: BrowserProjectStore, useValue: browserStore },
+					MessageService,
+					{ provide: TranslocoService, useValue: jasmine.createSpyObj('TranslocoService', ['translate']) }
 			]
 		});
 		setStaticDIInjector(TestBed.inject(Injector));

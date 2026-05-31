@@ -11,6 +11,7 @@ import { BrowserProjectStore } from './browser/browser-project.store';
 import { BrowserProjectSummary } from './browser/browser-project.types';
 import { ProjectMetadataStore } from './project-metadata.store';
 import { ProjectService } from '../project/project.service';
+import { ToastService } from '../logging/toast.service';
 import { LoggingService } from '../logging/logging.service';
 import { Project } from '../project/project';
 import { Component } from '../components/component';
@@ -35,6 +36,7 @@ export class PersistenceService {
 	private readonly browserStore = inject(BrowserProjectStore);
 	private readonly metadataStore = inject(ProjectMetadataStore);
 	private readonly projectService = inject(ProjectService);
+	private readonly toast = inject(ToastService);
 	private readonly logging = inject(LoggingService);
 	private readonly location = inject(Location);
 
@@ -192,6 +194,9 @@ export class PersistenceService {
 				`Cannot clone share ${linkId}: user not authenticated`,
 				'PersistenceService'
 			);
+			this.toast.error(
+				`Cannot clone share ${linkId}: user not authenticated`
+			);
 			throw new AuthRequiredError();
 		}
 
@@ -291,6 +296,9 @@ export class PersistenceService {
 					`Failed to load project ${uuid}: ${this._formatError(e)}`,
 					'PersistenceService'
 				);
+				this.toast.error(
+					`Failed to load project ${uuid}: ${this._formatError(e)}`
+				);
 				if (!this.projectService.mainProject()) {
 					this.createAndSetEmptyProject();
 				}
@@ -316,6 +324,9 @@ export class PersistenceService {
 				this.logging.error(
 					`Failed to load share ${linkId}: ${this._formatError(e)}`,
 					'PersistenceService'
+				);
+				this.toast.error(
+					`Failed to load share ${linkId}: ${this._formatError(e)}`
 				);
 				if (!this.projectService.mainProject()) {
 					this.createAndSetEmptyProject();
@@ -374,6 +385,9 @@ export class PersistenceService {
 					`Failed to load browser project ${id}: ${this._formatError(e)}`,
 					'PersistenceService'
 				);
+				this.toast.error(
+					`Failed to load browser project ${id}: ${this._formatError(e)}`
+				);
 				if (!this.projectService.mainProject()) {
 					this.createAndSetEmptyProject();
 				}
@@ -413,18 +427,20 @@ export class PersistenceService {
 			if (this.metadataStore.dirtyVersion(project) === versionAtSnapshot) {
 				this.metadataStore.clearDirty(project);
 			}
-			this.logging.info('Project saved', 'PersistenceService');
+			this.toast.success('Project saved');
 		} catch (err) {
 			if (this._isVersionMismatch(err)) {
 				this.logging.error(
 					'Version mismatch — reload required',
 					'PersistenceService'
 				);
+				this.toast.error('Version mismatch — reload required');
 			} else {
 				this.logging.error(
 					`Save failed: ${this._formatError(err)}`,
 					'PersistenceService'
 				);
+				this.toast.error(`Save failed: ${this._formatError(err)}`);
 			}
 			throw err;
 		}
@@ -453,7 +469,7 @@ export class PersistenceService {
 		if (this.metadataStore.dirtyVersion(project) === versionAtSnapshot) {
 			this.metadataStore.clearDirty(project);
 		}
-		this.logging.info('Project saved to browser storage', 'PersistenceService');
+		this.toast.success('Project saved to browser storage');
 	}
 
 	private _replaceMainProject(newProject: Project): void {

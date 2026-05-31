@@ -12,6 +12,7 @@ import { FileUploadModule, type FileSelectEvent } from 'primeng/fileupload';
 import { ConfirmationService } from 'primeng/api';
 import { TranslocoDirective, TranslocoService } from '@jsverse/transloco';
 import { PersistenceService } from '../../persistence/persistence.service';
+import { ToastService } from '../../logging/toast.service';
 import { LoggingService } from '../../logging/logging.service';
 import type { BrowserProjectSummary } from '../../persistence/browser/browser-project.types';
 import { Button } from 'primeng/button';
@@ -25,6 +26,7 @@ import { Button } from 'primeng/button';
 export class OpenProjectDialogComponent implements OnInit {
 	private readonly ref = inject(DynamicDialogRef);
 	private readonly persistenceService = inject(PersistenceService);
+	private readonly toastService = inject(ToastService);
 	private readonly loggingService = inject(LoggingService);
 	private readonly confirmationService = inject(ConfirmationService);
 	private readonly translocoService = inject(TranslocoService);
@@ -51,6 +53,7 @@ export class OpenProjectDialogComponent implements OnInit {
 					'Failed to list local projects',
 					'OpenProjectDialogComponent'
 				);
+				this.toastService.error('Failed to list local projects');
 				this.loadingLocal.set(false);
 			});
 	}
@@ -58,12 +61,13 @@ export class OpenProjectDialogComponent implements OnInit {
 	protected openLocalProject(id: string): void {
 		this.persistenceService
 			.loadLocalProjectAsMain(id)
-			.catch(() =>
+			.catch(() => {
 				this.loggingService.error(
 					'Failed to open local project',
 					'OpenProjectDialogComponent'
-				)
-			);
+				);
+				this.toastService.error('Failed to open local project');
+			});
 		this.ref.close();
 	}
 
@@ -118,6 +122,9 @@ export class OpenProjectDialogComponent implements OnInit {
 					this.loggingService.error(
 						`Failed to import file: ${message}`,
 						'OpenProjectDialogComponent'
+					);
+					this.toastService.error(
+						`Failed to import file: ${message}`
 					);
 					this.importError.set(message);
 				});

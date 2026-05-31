@@ -6,6 +6,7 @@ import { Route } from './route.model';
 import { Location } from '@angular/common';
 import { parse } from 'regexparam';
 import { RouteKeys } from './route-keys.model';
+import { ToastService } from '../logging/toast.service';
 import { LoggingService } from '../logging/logging.service';
 
 const ROUTES: Type<Route>[] = [ProjectRoute, ShareRoute, LocalProjectRoute];
@@ -14,6 +15,7 @@ const ROUTES: Type<Route>[] = [ProjectRoute, ShareRoute, LocalProjectRoute];
 	providedIn: 'root'
 })
 export class RouterService {
+	private readonly toast = inject(ToastService);
 	private readonly logging = inject(LoggingService);
 	private readonly location = inject(Location);
 
@@ -38,6 +40,9 @@ export class RouterService {
 			this.logging.error(
 				`No route found for path: ${this.location.path()}`,
 				'RouterService'
+			);
+			this.toast.error(
+				`No route found for path: ${this.location.path()}`
 			);
 			this.location.replaceState('/');
 		}

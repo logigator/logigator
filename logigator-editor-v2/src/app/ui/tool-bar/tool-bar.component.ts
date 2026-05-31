@@ -13,6 +13,7 @@ import { WorkMode } from '../../work-mode/work-mode.enum';
 import { ComponentType } from '../../components/component-type.enum';
 import { ProjectService } from '../../project/project.service';
 import { PersistenceService } from '../../persistence/persistence.service';
+import { ToastService } from '../../logging/toast.service';
 import { LoggingService } from '../../logging/logging.service';
 import { DialogService } from 'primeng/dynamicdialog';
 import { OpenProjectDialogComponent } from '../open-project-dialog/open-project-dialog.component';
@@ -29,6 +30,7 @@ export class ToolBarComponent {
 	private readonly workModeService = inject(WorkModeService);
 	private readonly projectService = inject(ProjectService);
 	private readonly persistenceService = inject(PersistenceService);
+	private readonly toastService = inject(ToastService);
 	private readonly loggingService = inject(LoggingService);
 	private readonly dialogService = inject(DialogService);
 	private readonly translocoService = inject(TranslocoService);
@@ -90,11 +92,10 @@ export class ToolBarComponent {
 	protected save(): void {
 		const project = this.projectService.mainProject();
 		if (project) {
-			this.persistenceService
-				.saveProject(project)
-				.catch(() =>
-					this.loggingService.error('Failed to save project', 'ToolBarComponent')
-				);
+			this.persistenceService.saveProject(project).catch(() => {
+				this.loggingService.error('Failed to save project', 'ToolBarComponent');
+				this.toastService.error('Failed to save project');
+			});
 		}
 	}
 
