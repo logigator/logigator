@@ -60,11 +60,11 @@ The serialized form stores the type, grid-unit position (`component.position.x /
 
 ## Enums
 
-**`ComponentType`** — numeric ID for every component type; used as registry keys and stored in serialized data.
+**`ComponentType`** — numeric ID for every component type; used as registry keys and stored in serialized data. Built-ins: `NOT = 1`, `AND = 2`, `TEXT = 7`, `ROM = 12`, plus the plug types `INPUT = 100` / `OUTPUT = 101`. Numeric ids ≥ `CUSTOM_TYPE_ID_BASE` (1000) are runtime-allocated custom components.
 
 **`Direction`** (in `utils/direction.ts`) — four cardinal directions clockwise from East: `E = 0`, `S = 1`, `W = 2`, `N = 3`. The numeric layout is load-bearing: `rotation = value * π/2` (Component direction → PixiJS rotation) and `oppositeDir = (value + 2) % 4` (input stub ↔ output stub flip). The `Component.direction` setter applies the PixiJS rotation automatically. Shared with the connection-points layer.
 
-**`ComponentCategory`** — groups components for the UI palette. Values: `BASIC`, `ADVANCED`, `HIDDEN`. The sidebar only queries `basicComponents` / `advancedComponents` getters in `ComponentProviderService`, so `HIDDEN` components never appear in the palette. `TextComponent` uses `HIDDEN`.
+**`ComponentCategory`** — groups components for the UI palette. Values: `BASIC`, `ADVANCED`, `HIDDEN`, `USER`, `IO`. The sidebar queries the matching reactive list in `ComponentProviderService` (`basicComponents` / `advancedComponents` / `userComponents` / `ioComponents`), so `HIDDEN` components never appear in the palette. `TextComponent` uses `HIDDEN`. `USER` is for custom (user-defined) components; `IO` is the INPUT/OUTPUT plug components, shown only while editing a custom component. The INPUT/OUTPUT plugs are built-ins whose port counts are fixed (`super(0, 1)` / `super(1, 0)`) and whose `label`/`index` options round-trip through the `s`/`n[0]` wire slots.
 
 ---
 
@@ -128,7 +128,7 @@ An observable wrapper around a single configurable value.
 
 ### Option implementations
 
-The concrete option classes (`NumberComponentOption`, `SelectButtonComponentOption<T>`, `SelectDropdownComponentOption<T>`, `DirectionComponentOption`) live in per-kind folders under `component-options/`, alongside the Angular components that render them in the side panel. See [`component-options.md`](component-options.md) for the option model, the renderer contract, and how to add a new option kind. Writing to `DirectionComponentOption.value` from the side panel flows into `Component.direction = ...`, which fires `portsChange$` and lets the CP manager rebuild dots at the new tip positions.
+The concrete option classes (`NumberComponentOption`, `SelectButtonComponentOption<T>`, `SelectDropdownComponentOption<T>`, `DirectionComponentOption`, `TextAreaComponentOption`, `TextInputComponentOption`) live in per-kind folders under `component-options/`, alongside the Angular components that render them in the side panel. See [`component-options.md`](component-options.md) for the option model, the renderer contract, and how to add a new option kind. Writing to `DirectionComponentOption.value` from the side panel flows into `Component.direction = ...`, which fires `portsChange$` and lets the CP manager rebuild dots at the new tip positions.
 
 ---
 

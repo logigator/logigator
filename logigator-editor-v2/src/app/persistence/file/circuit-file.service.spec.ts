@@ -66,6 +66,20 @@ describe('CircuitFileService', () => {
 				options: { direction: 0, numInputs: 2 }
 			});
 		});
+
+		it('encodes a plug with its named label/index options', () => {
+			const project = buildProject([
+				{ t: 100, p: [4, 4], o: 1, n: [3], s: 'CLK' }
+			]);
+			const json = JSON.parse(service.toJson(project, 'Plug'));
+
+			expect(json.components.length).toBe(1);
+			expect(json.components[0]).toEqual({
+				type: 100,
+				pos: [4, 4],
+				options: { direction: 0, label: 'CLK', index: 3 }
+			});
+		});
 	});
 
 	describe('round-trip', () => {
@@ -75,6 +89,8 @@ describe('CircuitFileService', () => {
 				{ t: 2, p: [15, 3], i: 2, o: 1 }, // AND
 				{ t: 12, p: [10, 5], i: 3, o: 8, n: [8, 3] }, // ROM
 				{ t: 7, p: [2, 2], n: [14], s: 'Hello' }, // TEXT
+				{ t: 100, p: [0, 8], o: 1, n: [0], s: 'A' }, // INPUT plug
+				{ t: 101, p: [20, 8], i: 1, n: [1], s: 'Q' }, // OUTPUT plug
 				{ t: 0, p: [7, 3], q: [15, 3] } // wire
 			];
 			const project = buildProject(elements);

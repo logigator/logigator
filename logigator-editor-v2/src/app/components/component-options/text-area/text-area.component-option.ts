@@ -41,7 +41,7 @@ export class TextAreaComponentOption extends ComponentOption<string> {
 		return super.value;
 	}
 
-	clone(initialValue?: string): TextAreaComponentOption {
+	protected cloneWithValue(initialValue?: string): TextAreaComponentOption {
 		return new TextAreaComponentOption(this.label, initialValue ?? this.value, {
 			dialogTitle: this.dialogTitle,
 			placeholder: this.placeholder,

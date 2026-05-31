@@ -5,13 +5,17 @@ import { notComponentConfig } from './component-types/not/not.config';
 import { andComponentConfig } from './component-types/and/and.config';
 import { romComponentConfig } from './component-types/rom/rom.config';
 import { textComponentConfig } from './component-types/text/text.config';
+import { inputComponentConfig } from './component-types/input/input.config';
+import { outputComponentConfig } from './component-types/output/output.config';
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 const BUILT_IN_COMPONENTS: ComponentConfig<any>[] = [
 	notComponentConfig,
 	andComponentConfig,
 	romComponentConfig,
-	textComponentConfig
+	textComponentConfig,
+	inputComponentConfig,
+	outputComponentConfig
 ];
 
 @Injectable({

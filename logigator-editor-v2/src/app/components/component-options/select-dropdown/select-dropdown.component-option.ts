@@ -19,7 +19,7 @@ export class SelectDropdownComponentOption<T> extends ComponentOption<T> {
 		super(defaultValue);
 	}
 
-	clone(initialValue?: T): SelectDropdownComponentOption<T> {
+	protected cloneWithValue(initialValue?: T): SelectDropdownComponentOption<T> {
 		return new SelectDropdownComponentOption<T>(
 			this.label,
 			this.options,

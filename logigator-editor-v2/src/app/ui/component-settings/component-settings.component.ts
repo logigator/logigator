@@ -11,5 +11,11 @@ import { ComponentOption } from '../../components/component-option';
 })
 export class ComponentSettingsComponent {
 	public readonly config = input<Record<string, ComponentOption>>({});
-	public readonly configEntries = computed(() => Object.entries(this.config()));
+	// Inspector-hidden options (e.g. a plug's system-managed `index`) still
+	// round-trip through the wire format but are never rendered in the form.
+	public readonly configEntries = computed(() =>
+		Object.entries(this.config()).filter(
+			([, option]) => !option.inspectorHidden
+		)
+	);
 }

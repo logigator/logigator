@@ -18,6 +18,14 @@ src/app/components/component-options/
 │   ├── select-dropdown.component-option.ts
 │   ├── select-dropdown-option-input.component.ts
 │   └── select-dropdown-option-input.component.html
+├── text-area/
+│   ├── text-area.component-option.ts          # multi-line text (dialog editor)
+│   ├── text-area-option-input.component.ts
+│   └── text-area-option-input.component.html
+├── text-input/
+│   ├── text-input.component-option.ts         # short single-line text
+│   ├── text-input-option-input.component.ts
+│   └── text-input-option-input.component.html
 └── direction/
     └── direction.component-option.ts         # preset, reuses select-button renderer
 ```
@@ -33,10 +41,28 @@ ComponentOption<T> (abstract)
 ├── NumberComponentOption
 ├── SelectButtonComponentOption<T>
 │   └── DirectionComponentOption
-└── SelectDropdownComponentOption<T>
+├── SelectDropdownComponentOption<T>
+├── TextAreaComponentOption
+└── TextInputComponentOption
 ```
 
 `DirectionComponentOption` is a preset `SelectButtonComponentOption<Direction>` with the four cardinal directions baked in. It inherits the renderer from `SelectButtonComponentOption` — no override.
+
+---
+
+## Cloning and cross-cutting flags
+
+Options are cloned on every deserialize/placement path (`ComponentOption.clone(initialValue?)` returns the same concrete subtype via a polymorphic `this` return). Cloning is a **template method**: the base `clone` calls the subclass's `protected cloneWithValue(initialValue?)` and then copies cross-cutting flags so they survive the clone. Concrete subclasses implement `cloneWithValue`, never `clone`.
+
+The one cross-cutting flag today is `inspectorHidden` (default `false`). When `true`, the option still round-trips through the wire format but is omitted from the rendered settings form — `ComponentSettingsComponent.configEntries` filters it out:
+
+```ts
+public readonly configEntries = computed(() =>
+    Object.entries(this.config()).filter(([, option]) => !option.inspectorHidden)
+);
+```
+
+Set it fluently in a config: `new NumberComponentOption(...).hideFromInspector()`. Used for a plug's system-managed `index` option, which is driven by the (future) Ports panel rather than typed by the user.
 
 ---
 
@@ -60,7 +86,7 @@ public readonly renderer: Type<unknown>;
 </form>
 ```
 
-`ComponentSettingsComponent` receives the options as a `Record<string, ComponentOption>` and exposes `configEntries = computed(() => Object.entries(this.config()))` for iteration. `track entry[0]` keys on the option name string, so swapping an option for a different one at the same key correctly tears down and re-creates the renderer.
+`ComponentSettingsComponent` receives the options as a `Record<string, ComponentOption>` and exposes `configEntries` (a `computed` over `Object.entries(this.config())`, filtered to drop `inspectorHidden` options — see [Cloning and cross-cutting flags](#cloning-and-cross-cutting-flags)) for iteration. `track entry[0]` keys on the option name string, so swapping an option for a different one at the same key correctly tears down and re-creates the renderer.
 
 The base class types this as `Type<unknown>` because `ngComponentOutlet`'s `inputs` map is `Record<string, unknown>` — narrowing further does not buy any extra type safety.
 
@@ -121,12 +147,20 @@ The button and dropdown templates share an `#itemTemplate` shape (icon + label `
 
 A no-arg preset: `SelectButtonComponentOption<Direction>` pre-loaded with the four cardinal arrow icons. Inherits its renderer from `SelectButtonComponentOption`.
 
+### `TextAreaComponentOption`
+
+Multi-line string (`wireSlot: 's'`). Renders as a "edit" button that opens a `<p-dialog>` with a `<textarea>`; the dialog has draft/save/cancel semantics so edits commit only on save. Constrained by `maxLength`. Used by the TEXT component.
+
+### `TextInputComponentOption`
+
+Short single-line string (`wireSlot: 's'`), rendered as an inline `<input pInputText>` row — the single-line counterpart to `TextAreaComponentOption`. Generic: constraints are supplied per-use via config (`maxLength`, and `forbiddenChars` for characters stripped on every write), not baked in. The INPUT/OUTPUT plug port labels configure `maxLength: 5` + `forbiddenChars: /,/g` to fit the backend's comma-joined label column.
+
 ---
 
 ## Adding a new option kind
 
 1. Create a folder under `component-options/<name>/`.
-2. Write the option model class extending `ComponentOption<T>` (or `SelectButtonComponentOption<T>` / `SelectDropdownComponentOption<T>` if a select fits). Override `renderer` to point at your renderer component.
+2. Write the option model class extending `ComponentOption<T>` (or `SelectButtonComponentOption<T>` / `SelectDropdownComponentOption<T>` if a select fits). Override `renderer` to point at your renderer component, declare `wireSlot`, and implement `protected cloneWithValue(initialValue?)` (not `clone` — the base provides that).
 3. Write the renderer as a standalone OnPush component with `option = input.required<YourComponentOption>()`. `import type` the option to avoid the value-import cycle.
 4. The renderer template owns the row (wrapper + label + input) and uses `[ngModel]` / `(ngModelChange)` to write through the option's setter.
 5. Add option-model and (at minimum) renderer specs alongside the source files.

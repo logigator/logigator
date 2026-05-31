@@ -31,7 +31,7 @@ export class NumberComponentOption extends ComponentOption<number> {
 		return super.value;
 	}
 
-	clone(initialValue?: number): NumberComponentOption {
+	protected cloneWithValue(initialValue?: number): NumberComponentOption {
 		return new NumberComponentOption(
 			this.label,
 			this.min,

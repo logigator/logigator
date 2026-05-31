@@ -51,6 +51,17 @@ const fixtures: Fixture[] = [
 		elements: [{ t: 7, p: [4, 4], r: 3, n: [12], s: 'sideways' }]
 	},
 	{
+		// Plug: `n[0]` carries the port index, `s` the port label. INPUT has a
+		// single output (o:1) and no input — the `i`/`o` fields come from the
+		// instance's fixed counts, not from the element.
+		name: 'INPUT plug (index 0, label A)',
+		elements: [{ t: 100, p: [3, 3], o: 1, n: [0], s: 'A' }]
+	},
+	{
+		name: 'OUTPUT plug (index 2, label Q, rotated South)',
+		elements: [{ t: 101, p: [6, 3], i: 1, r: 1, n: [2], s: 'Q' }]
+	},
+	{
 		name: 'Horizontal and vertical wires (crossing)',
 		elements: [
 			{ t: 0, p: [3, 5], q: [8, 5] },
@@ -151,6 +162,20 @@ describe('CircuitSerializer', () => {
 			const project = new Project();
 			const { dependencies } = serializer.serializeProject(project);
 			expect(dependencies).toEqual([]);
+		});
+
+		it('ignores element i/o for plugs — counts come from the definition', () => {
+			// A plug's port counts are fixed by its type, not the wire fields.
+			// Even a bogus i/o must not change the instance's port count.
+			const elements: ProjectElement[] = [
+				{ t: 100, p: [0, 0], i: 9, o: 5, n: [0], s: 'A' }
+			];
+
+			const { components } = serializer.deserializeProject(elements);
+
+			expect(components.length).toBe(1);
+			expect(components[0].numInputs).toBe(0);
+			expect(components[0].numOutputs).toBe(1);
 		});
 
 		it('preserves ROM input/output mapping (addressSize → i, wordSize → o)', () => {

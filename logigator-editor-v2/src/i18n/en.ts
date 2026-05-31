@@ -39,12 +39,24 @@ const en = {
 					placeholder: 'Enter text...',
 					fontSize: 'Font size'
 				}
+			},
+			INPUT: {
+				name: 'Input',
+				description:
+					"An input plug. Defines one of a custom component's input ports; its label names the port and its order determines the port position."
+			},
+			OUTPUT: {
+				name: 'Output',
+				description:
+					"An output plug. Defines one of a custom component's output ports; its label names the port and its order determines the port position."
 			}
 		},
 		options: {
 			direction: 'Direction',
 			inputs: 'Inputs',
-			outputs: 'Outputs'
+			outputs: 'Outputs',
+			label: 'Label',
+			index: 'Index'
 		}
 	},
 	sideBar: {

@@ -633,7 +633,7 @@ describe('PersistenceService', () => {
 		it('loadProject silently skips unknown component types', async () => {
 			const elements: ProjectElement[] = [
 				{ t: 1, p: [0, 0], i: 1, o: 1 }, // NOT — known
-				{ t: 100, p: [5, 5] }, // INPUT — not implemented in v2 yet
+				{ t: 999, p: [5, 5] }, // unimplemented legacy type
 				{ t: 1, p: [10, 0], i: 1, o: 1 } // NOT — known
 			];
 			const warnSpy = spyOn(console, 'warn');
@@ -649,7 +649,7 @@ describe('PersistenceService', () => {
 			expect(warnSpy).toHaveBeenCalledWith(
 				'[%s] %o',
 				'CircuitSerializer',
-				jasmine.stringContaining('Unknown component type ID: 100')
+				jasmine.stringContaining('Unknown component type ID: 999')
 			);
 		});
 	});

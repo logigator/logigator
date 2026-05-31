@@ -21,7 +21,7 @@ export class SelectButtonComponentOption<T> extends ComponentOption<T> {
 		super(defaultValue);
 	}
 
-	clone(initialValue?: T): SelectButtonComponentOption<T> {
+	protected cloneWithValue(initialValue?: T): SelectButtonComponentOption<T> {
 		return new SelectButtonComponentOption<T>(
 			this.label,
 			this.options,

@@ -58,7 +58,12 @@ describe('ComponentProviderService', () => {
 			ComponentType.ROM
 		]);
 		expect(service.userComponents()).toEqual([]);
-		expect(service.ioComponents()).toEqual([]);
+		expect(service.ioComponents().map((c) => c.type)).toEqual(
+			jasmine.arrayWithExactContents([
+				ComponentType.INPUT,
+				ComponentType.OUTPUT
+			])
+		);
 	});
 
 	describe('register / unregister', () => {
