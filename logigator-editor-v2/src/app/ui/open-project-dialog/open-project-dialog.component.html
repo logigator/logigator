@@ -20,17 +20,23 @@
 					} @else {
 						@for (project of localProjects(); track project.id) {
 							<div
-								class="flex items-center justify-between px-4 py-3 cursor-pointer
-									hover:bg-surface-100 dark:hover:bg-surface-800
-									border-b border-surface-200 dark:border-surface-700
-									transition-colors"
+								class="flex items-center justify-between px-4 py-3 cursor-pointer hover:bg-surface-100 dark:hover:bg-surface-800 border-b border-surface-200 dark:border-surface-700 transition-colors"
 								(click)="openLocalProject(project.id)"
 								(keydown.enter)="openLocalProject(project.id)"
 								tabindex="0"
 							>
 								<span class="font-medium">{{ project.name }}</span>
-								<span class="text-sm text-surface-500">
-									{{ project.lastEdited | date: 'mediumDate' }}
+								<span class="flex items-center gap-4">
+									<span class="text-sm text-surface-500">
+										{{ project.lastEdited | date: 'mediumDate' }}
+									</span>
+									<p-button
+										icon="ph ph-trash"
+										severity="danger"
+										[text]="true"
+										[ariaLabel]="t('openProjectDialog.deleteProject')"
+										(click)="deleteLocalProject($event, project)"
+									></p-button>
 								</span>
 							</div>
 						}
@@ -63,9 +69,7 @@
 					/>
 					@if (importError()) {
 						<div
-							class="flex items-center gap-2 text-red-500
-								bg-red-50 dark:bg-red-950/30
-								px-4 py-2 rounded-lg text-sm"
+							class="flex items-center gap-2 text-red-500 bg-red-50 dark:bg-red-950/30 px-4 py-2 rounded-lg text-sm"
 						>
 							<i class="ph ph-warning text-lg"></i>
 							<span>{{ importError() }}</span>

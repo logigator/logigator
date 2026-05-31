@@ -172,7 +172,7 @@ export class TitleBarComponent {
 	private openProject(): void {
 		this.dialogService.open(OpenProjectDialogComponent, {
 			header: this.translocoService.translate('openProjectDialog.title'),
-			width: '32rem',
+			width: '40rem',
 			modal: true,
 			closable: true
 		});

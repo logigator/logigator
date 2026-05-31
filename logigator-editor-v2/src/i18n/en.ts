@@ -130,7 +130,12 @@ const en = {
 		close: 'Close',
 		loading: 'Loading...',
 		uploadPrompt: 'Open a circuit file saved on your device.',
-		chooseFile: 'Choose File'
+		chooseFile: 'Choose File',
+		deleteProject: 'Delete Project',
+		deleteConfirmMessage:
+			'Are you sure you want to delete "{{name}}"? This cannot be undone.',
+		deleteAccept: 'Delete',
+		deleteReject: 'Cancel'
 	},
 	toolBar: {
 		save: 'Save',

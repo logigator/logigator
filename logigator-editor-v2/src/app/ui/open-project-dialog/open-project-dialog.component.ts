@@ -9,14 +9,16 @@ import { DatePipe } from '@angular/common';
 import { DynamicDialogRef } from 'primeng/dynamicdialog';
 import { TabsModule } from 'primeng/tabs';
 import { FileUploadModule, type FileSelectEvent } from 'primeng/fileupload';
-import { TranslocoDirective } from '@jsverse/transloco';
+import { ConfirmationService } from 'primeng/api';
+import { TranslocoDirective, TranslocoService } from '@jsverse/transloco';
 import { PersistenceService } from '../../persistence/persistence.service';
 import { LoggingService } from '../../logging/logging.service';
 import type { BrowserProjectSummary } from '../../persistence/browser/browser-project.types';
+import { Button } from 'primeng/button';
 
 @Component({
 	selector: 'app-open-project-dialog',
-	imports: [TabsModule, FileUploadModule, TranslocoDirective, DatePipe],
+	imports: [TabsModule, FileUploadModule, TranslocoDirective, DatePipe, Button],
 	templateUrl: './open-project-dialog.component.html',
 	changeDetection: ChangeDetectionStrategy.OnPush
 })
@@ -24,6 +26,8 @@ export class OpenProjectDialogComponent implements OnInit {
 	private readonly ref = inject(DynamicDialogRef);
 	private readonly persistenceService = inject(PersistenceService);
 	private readonly loggingService = inject(LoggingService);
+	private readonly confirmationService = inject(ConfirmationService);
+	private readonly translocoService = inject(TranslocoService);
 
 	protected readonly activeTab = signal<string>('local');
 	protected readonly localProjects = signal<BrowserProjectSummary[]>([]);
@@ -63,6 +67,40 @@ export class OpenProjectDialogComponent implements OnInit {
 		this.ref.close();
 	}
 
+	protected deleteLocalProject(
+		event: Event,
+		project: BrowserProjectSummary
+	): void {
+		event.stopPropagation();
+		event.preventDefault();
+
+		this.confirmationService.confirm({
+			target: event.currentTarget as HTMLElement,
+			message: this.translocoService.translate(
+				'openProjectDialog.deleteConfirmMessage',
+				{ name: project.name }
+			),
+			acceptButtonProps: {
+				severity: 'danger'
+			},
+			acceptLabel: this.translocoService.translate(
+				'openProjectDialog.deleteAccept'
+			),
+			rejectButtonProps: {
+				severity: 'secondary',
+				outlined: true
+			},
+			rejectLabel: this.translocoService.translate(
+				'openProjectDialog.deleteReject'
+			),
+			accept: () => {
+				this.persistenceService.deleteBrowserProject(project.id).then(() => {
+					this.loadLocalProjects();
+				});
+			}
+		});
+	}
+
 	protected onFileSelect(event: FileSelectEvent): void {
 		const file = event.files[0];
 		if (!file) return;
@@ -76,8 +114,7 @@ export class OpenProjectDialogComponent implements OnInit {
 				.importProjectFromJson(content)
 				.then(() => this.ref.close())
 				.catch((err: unknown) => {
-					const message =
-						err instanceof Error ? err.message : String(err);
+					const message = err instanceof Error ? err.message : String(err);
 					this.loggingService.error(
 						`Failed to import file: ${message}`,
 						'OpenProjectDialogComponent'
