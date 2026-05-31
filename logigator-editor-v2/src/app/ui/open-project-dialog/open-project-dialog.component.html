@@ -3,6 +3,7 @@
 		<p-tablist>
 			<p-tab value="local">{{ t('openProjectDialog.localProjects') }}</p-tab>
 			<p-tab value="server">{{ t('openProjectDialog.serverProjects') }}</p-tab>
+			<p-tab value="file">{{ t('openProjectDialog.fromFile') }}</p-tab>
 		</p-tablist>
 		<p-tabpanels>
 			<!-- Local Projects -->
@@ -42,6 +43,34 @@
 				<div class="flex flex-col items-center gap-3 py-12 text-surface-500">
 					<i class="ph ph-warning-circle text-3xl"></i>
 					<p class="text-center">{{ t('openProjectDialog.notLoggedIn') }}</p>
+				</div>
+			</p-tabpanel>
+
+			<!-- From File -->
+			<p-tabpanel value="file">
+				<div class="flex flex-col items-center gap-4 py-8">
+					<p class="text-surface-600 dark:text-surface-400 text-center">
+						{{ t('openProjectDialog.uploadPrompt') }}
+					</p>
+					<p-fileupload
+						mode="basic"
+						accept="application/json"
+						[fileLimit]="1"
+						[customUpload]="true"
+						[chooseLabel]="t('openProjectDialog.chooseFile')"
+						chooseIcon="ph ph-cloud-arrow-up"
+						(onSelect)="onFileSelect($event)"
+					/>
+					@if (importError()) {
+						<div
+							class="flex items-center gap-2 text-red-500
+								bg-red-50 dark:bg-red-950/30
+								px-4 py-2 rounded-lg text-sm"
+						>
+							<i class="ph ph-warning text-lg"></i>
+							<span>{{ importError() }}</span>
+						</div>
+					}
 				</div>
 			</p-tabpanel>
 		</p-tabpanels>

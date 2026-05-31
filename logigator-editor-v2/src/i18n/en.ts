@@ -123,11 +123,14 @@ const en = {
 		title: 'Open Project',
 		localProjects: 'Local Projects',
 		serverProjects: 'Server Projects',
+		fromFile: 'From File',
 		notLoggedIn: 'Log in to see your server projects',
 		noLocalProjects: 'No local projects yet',
 		noServerProjects: 'No server projects yet',
 		close: 'Close',
-		loading: 'Loading...'
+		loading: 'Loading...',
+		uploadPrompt: 'Open a circuit file saved on your device.',
+		chooseFile: 'Choose File'
 	},
 	toolBar: {
 		save: 'Save',
