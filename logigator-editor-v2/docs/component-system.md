@@ -109,9 +109,9 @@ Protected helpers available to subclasses:
 
 `Component` uses the static DI escape hatch (`getStaticDI()`) to access `ThemingService` and `GraphicsProviderService`. This is necessary because components are created with plain `new`, not by Angular's injector.
 
-### `registerConstantRotationContainer(container)`
+### `registerRotationCounterContainer(container)`
 
-Children that must not rotate with the parent (e.g., text labels) can be registered here. The base class counteracts the parent rotation for these containers on every redraw.
+Children that must not rotate with the parent (e.g., text labels, a custom component's symbol) can be registered here. The base class counteracts the parent rotation for these containers on every redraw.
 
 ---
 
@@ -139,6 +139,7 @@ The concrete option classes (`NumberComponentOption`, `SelectButtonComponentOpti
 Static metadata and factory definition for a component type, split into two interfaces:
 
 **`ComponentConfigView<TOptions>`** — the read-only metadata side, exposed by `Component.config`:
+
 - `type: ComponentType` — unique numeric ID
 - `category: ComponentCategory` — palette grouping
 - `symbol: string` — short label shown in the palette
@@ -146,7 +147,8 @@ Static metadata and factory definition for a component type, split into two inte
 - `options: TOptions` — option templates as a named record (e.g., `{ direction: DirectionComponentOption, numInputs: NumberComponentOption }`), cloned per instance
 
 **`ComponentConfig<TOptions>`** extends `ComponentConfigView<TOptions>` and adds the factory:
-- `implementation` — constructor reference used by `deserialize` and any factory code; signature is `new (options: TOptions) => Component<TOptions>`
+
+- `create(options: TOptions): Component<TOptions>` — builds an instance from its options; called by `Component.deserialize` and placement code. A factory (rather than a bare constructor reference) lets a config close over per-definition state — this is what lets one `CustomComponent` class back every custom type (see [`custom-components.md`](custom-components.md)).
 
 The separation ensures that a `Component` instance only carries the view interface (it doesn't need its own constructor), while the registry and placement code use the full config with the factory.
 
@@ -156,9 +158,9 @@ The separation ensures that a `Component` instance only carries the view interfa
 
 **File:** `component-provider.service.ts`
 
-Angular root-provided singleton. Wraps a static `COMPONENTS` record that maps every `ComponentType` to its `ComponentConfig`. Exposes lookup by type and grouped accessors by category (used by the UI palette).
+Angular root-provided singleton. Holds a signal-backed `Map<number, ComponentConfig>`, seeded from the built-in configs and keyed by numeric type id (not the closed `ComponentType` enum) so runtime-allocated custom configs can be registered alongside built-ins. `getComponent(type: number)` looks up by id; `register(config)` / `unregister(typeId)` add/remove custom configs dynamically; the reactive per-category lists (`basicComponents` / `advancedComponents` / `userComponents` / `ioComponents`) are `computed` over the map, so the palette updates automatically as configs are registered.
 
-To register a new component, add an entry to the `COMPONENTS` record — the service and palette pick it up automatically.
+To add a new built-in, add its config to the `BUILT_IN_COMPONENTS` array. Custom components are registered at runtime by the [`CustomComponentRegistry`](custom-components.md).
 
 ---
 
