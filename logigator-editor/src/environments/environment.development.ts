@@ -1,5 +1,6 @@
 export const environment = {
 	production: false,
+	version: 'development',
 	chunkSize: 16,
 	gridPixelWidth: 16,
 	api: 'http://dev.logigator.com/api',

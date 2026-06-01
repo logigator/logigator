@@ -8,11 +8,12 @@ import {
 	WasmResponse
 } from '../../models/simulation/wasm-interface';
 import { SimulationWorker } from '../../models/simulation/simulation-worker';
+import { environment } from '../../../environments/environment.production';
 
 let initialized = false;
 let worker: SimulationWorker;
 
-importScripts('assets/wasm/logigator-simulation.js');
+importScripts(`assets/wasm/logigator-simulation.js?v=${environment.version}`);
 declare let Module: SimulationModule;
 
 Module.onRuntimeInitialized = () => {
