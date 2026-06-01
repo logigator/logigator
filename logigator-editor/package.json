@@ -30,7 +30,7 @@
 		"@angular/platform-browser": "^17.0.8",
 		"@angular/platform-browser-dynamic": "^17.0.8",
 		"@angular/router": "^17.0.8",
-		"@logigator/logigator-simulation": "^1.2.0",
+		"@logigator/logigator-simulation": "^1.2.1",
 		"@ngx-translate/core": "^15.0.0",
 		"bootstrap": "^4.6.2",
 		"github-markdown-css": "^4.0.0",
