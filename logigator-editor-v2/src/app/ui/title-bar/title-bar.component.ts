@@ -17,6 +17,7 @@ import { PersistenceService } from '../../persistence/persistence.service';
 import { ProjectService } from '../../project/project.service';
 import { DialogService } from 'primeng/dynamicdialog';
 import { OpenProjectDialogComponent } from '../open-project-dialog/open-project-dialog.component';
+import { NewComponentDialogComponent } from '../new-component-dialog/new-component-dialog.component';
 
 @Component({
 	selector: 'app-title-bar',
@@ -59,7 +60,8 @@ export class TitleBarComponent {
 					{
 						label: this.translocoService.translate(
 							'titleBar.menuBar.file.items.newComponent.label'
-						)
+						),
+						command: () => this.newComponent()
 					},
 					{
 						separator: true
@@ -161,6 +163,17 @@ export class TitleBarComponent {
 				this.toastService.error('Failed to save project');
 			});
 		}
+	}
+
+	private newComponent(): void {
+		this.dialogService.open(NewComponentDialogComponent, {
+			header: this.translocoService.translate(
+				'titleBar.menuBar.file.items.newComponent.label'
+			),
+			width: '28rem',
+			modal: true,
+			closable: true
+		});
 	}
 
 	private openProject(): void {

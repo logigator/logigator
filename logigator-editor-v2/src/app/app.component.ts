@@ -3,7 +3,6 @@ import 'pixi.js/math-extras';
 import {
 	ChangeDetectionStrategy,
 	Component,
-	computed,
 	Injector,
 	signal,
 	inject
@@ -14,21 +13,15 @@ import { RouterService } from './routing/router.service';
 import { TitleBarComponent } from './ui/title-bar/title-bar.component';
 import { ToolBarComponent } from './ui/tool-bar/tool-bar.component';
 import { SideBarComponent } from './ui/side-bar/side-bar.component';
+import { TabBarComponent } from './ui/tab-bar/tab-bar.component';
 import { StatusBarComponent } from './ui/status-bar/status-bar.component';
 import { BoardComponent } from './ui/board/board.component';
 import { setStaticDIInjector } from './utils/get-di';
 import { ComponentSettingsComponent } from './ui/component-settings/component-settings.component';
 import { ProjectService } from './project/project.service';
-import { WorkModeService } from './work-mode/work-mode.service';
 import { PersistenceService } from './persistence/persistence.service';
-import { CardModule } from 'primeng/card';
 import { ConfirmPopup } from 'primeng/confirmpopup';
 import { Toast } from 'primeng/toast';
-import { TranslocoService } from '@jsverse/transloco';
-import {
-	LocalizableText,
-	resolveLocalizableText
-} from './components/component-config.model';
 
 @Component({
 	selector: 'app-root',
@@ -36,10 +29,10 @@ import {
 		TitleBarComponent,
 		ToolBarComponent,
 		SideBarComponent,
+		TabBarComponent,
 		StatusBarComponent,
 		BoardComponent,
 		ComponentSettingsComponent,
-		CardModule,
 		ConfirmPopup,
 		Toast
 	],
@@ -52,22 +45,9 @@ export class AppComponent {
 	private readonly routerService = inject(RouterService);
 	private readonly persistenceService = inject(PersistenceService);
 	protected readonly projectService = inject(ProjectService);
-	private readonly workModeService = inject(WorkModeService);
 	private readonly location = inject(Location);
-	private readonly translocoService = inject(TranslocoService);
 
 	protected readonly cursorPosition = signal<Point>(new Point(0, 0));
-
-	protected readonly componentSettings = computed(() => {
-		return this.workModeService.selectedComponentConfig();
-	});
-
-	/** Resolves display text: translates a key, returns a literal verbatim. */
-	protected text(value: LocalizableText): string {
-		return resolveLocalizableText(value, (key) =>
-			this.translocoService.translate(key)
-		);
-	}
 
 	constructor() {
 		setStaticDIInjector(this.injector);

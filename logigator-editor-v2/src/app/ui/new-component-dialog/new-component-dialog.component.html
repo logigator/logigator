@@ -1,0 +1,50 @@
+<form class="flex flex-col gap-4" (ngSubmit)="create()">
+	<div class="flex flex-col gap-1">
+		<label for="new-component-name">Name</label>
+		<input
+			pInputText
+			id="new-component-name"
+			type="text"
+			maxlength="20"
+			[ngModel]="name()"
+			(ngModelChange)="name.set($event)"
+			[ngModelOptions]="{ standalone: true }"
+		/>
+	</div>
+	<div class="flex flex-col gap-1">
+		<label for="new-component-symbol">Symbol</label>
+		<input
+			pInputText
+			id="new-component-symbol"
+			type="text"
+			maxlength="5"
+			[ngModel]="symbol()"
+			(ngModelChange)="symbol.set($event)"
+			[ngModelOptions]="{ standalone: true }"
+		/>
+	</div>
+	<div class="flex flex-col gap-1">
+		<label for="new-component-description">Description</label>
+		<input
+			pInputText
+			id="new-component-description"
+			type="text"
+			[ngModel]="description()"
+			(ngModelChange)="description.set($event)"
+			[ngModelOptions]="{ standalone: true }"
+		/>
+	</div>
+	<div class="flex gap-2 items-center">
+		<p-checkbox
+			inputId="new-component-public"
+			[binary]="true"
+			[ngModel]="isPublic()"
+			(ngModelChange)="isPublic.set($event)"
+			[ngModelOptions]="{ standalone: true }"
+		/>
+		<label for="new-component-public">Public</label>
+	</div>
+	<div class="flex justify-end">
+		<p-button type="submit" label="Create" [disabled]="!canCreate" />
+	</div>
+</form>

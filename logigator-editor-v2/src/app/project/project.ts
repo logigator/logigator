@@ -197,10 +197,16 @@ export class Project extends InteractionContainer {
 		this._ticker$.next('single');
 	}
 
+	/** Looks up a tracked component by its instance id; `undefined` if none. */
+	public getComponentById(componentId: number): Component | undefined {
+		for (const component of this._components.items) {
+			if (component.id === componentId) return component;
+		}
+		return undefined;
+	}
+
 	public removeComponent(componentId: number) {
-		const component = Array.from(this._components.items).find(
-			(c) => c.id === componentId
-		);
+		const component = this.getComponentById(componentId);
 		if (!component) return;
 		this.selectionManager.evict(component);
 		const ports = component.connectionPoints;
@@ -318,9 +324,7 @@ export class Project extends InteractionContainer {
 	}
 
 	public moveComponent(id: number, pos: Point): void {
-		const component = Array.from(this._components.items).find(
-			(c) => c.id === id
-		);
+		const component = this.getComponentById(id);
 		if (!component) return;
 		const oldPorts = component.connectionPoints;
 		component.position.copyFrom(pos);

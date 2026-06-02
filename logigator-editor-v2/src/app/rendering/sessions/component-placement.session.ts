@@ -2,6 +2,7 @@ import { Container, FederatedPointerEvent, Point, Rectangle } from 'pixi.js';
 import { DragSession } from '../drag-session';
 import { Project } from '../../project/project';
 import { Component } from '../../components/component';
+import { ComponentConfig } from '../../components/component-config.model';
 import { Wire } from '../../wires/wire';
 import { ConnectionPoint } from '../../connection-points/connection-point';
 import { roundToGrid } from '../../utils/grid';
@@ -9,6 +10,9 @@ import { AddComponentsAction } from '../../actions/actions/add-components.action
 import { ActionContainer } from '../../actions/action-container';
 import { RemoveWiresAction } from '../../actions/actions/remove-wires.action';
 import { AddWiresAction } from '../../actions/actions/add-wires.action';
+import { getStaticDI } from '../../utils/get-di';
+import { CustomComponentRegistry } from '../../components/custom/custom-component-registry.service';
+import { ComponentProviderService } from '../../components/component-provider.service';
 
 export class ComponentPlacementSession implements DragSession {
 	private readonly _component: Component;
@@ -19,7 +23,9 @@ export class ComponentPlacementSession implements DragSession {
 		private readonly dragLayer: Container<Component | Wire | ConnectionPoint>,
 		startPos: Point
 	) {
-		const config = project.componentToPlace!;
+		const config = ComponentPlacementSession._resolvePlacementConfig(
+			project.componentToPlace!
+		);
 		const options = Object.fromEntries(
 			Object.entries(config.options).map(([key, opt]) => [key, opt.clone()])
 		);
@@ -109,5 +115,25 @@ export class ComponentPlacementSession implements DragSession {
 		// Tint this._component directly (not dragLayer) to avoid multiplying
 		// with the container's own tint, which would yield the wrong colour.
 		this._component.tint = collision ? 0xff4444 : 0x888888;
+	}
+
+	/**
+	 * The palette lists custom **masters**, but a placed instance must wrap a
+	 * **frozen snapshot** of the master's current state (snapshot-at-place-time).
+	 * So when the config to place is a master, snapshot it now and place from the
+	 * snapshot's config; placing the same master after editing it yields a fresh
+	 * snapshot with the new shape. Built-ins (and snapshot configs) pass through.
+	 */
+	private static _resolvePlacementConfig(
+		config: ComponentConfig
+	): ComponentConfig {
+		const registry = getStaticDI(CustomComponentRegistry);
+		const def = registry.getDefinition(config.type);
+		if (def?.kind !== 'master') return config;
+		const snapshot = registry.snapshot(def.typeId);
+		return (
+			getStaticDI(ComponentProviderService).getComponent(snapshot.typeId) ??
+			config
+		);
 	}
 }

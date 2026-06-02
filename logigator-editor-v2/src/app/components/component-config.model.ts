@@ -2,6 +2,7 @@ import { ComponentCategory } from './component-category.enum';
 import { ComponentType } from './component-type.enum';
 import { TranslationKey } from '../translation/translation-key.model';
 import { ComponentOption } from './component-option';
+import { ComponentAction } from './component-action';
 import { Component } from './component';
 
 /**
@@ -37,6 +38,11 @@ export interface ComponentConfigView<
 	name: LocalizableText;
 	description: LocalizableText;
 	options: TOptions;
+	/**
+	 * Valueless inspector actions (buttons) rendered after the options form, each
+	 * via its own renderer. Omitted by component types that contribute none.
+	 */
+	actions?: ComponentAction[];
 }
 
 export interface ComponentConfig<

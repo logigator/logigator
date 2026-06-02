@@ -8,7 +8,9 @@ const en = {
 	components: {
 		category: {
 			basic: 'Basic',
-			advanced: 'Advanced'
+			advanced: 'Advanced',
+			user: 'User Components',
+			io: 'Inputs / Outputs'
 		},
 		def: {
 			NOT: {

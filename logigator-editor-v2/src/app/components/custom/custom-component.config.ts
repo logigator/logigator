@@ -4,6 +4,8 @@ import { ComponentOption } from '../component-option';
 import { DirectionComponentOption } from '../component-options/direction/direction.component-option';
 import { CustomComponentDefinition } from './custom-component-definition.model';
 import { CustomComponent } from './custom-component';
+import { EditComponentAction } from './actions/edit-component.component-action';
+import { UpdateInstanceComponentAction } from './actions/update-instance.component-action';
 
 /**
  * Option set for every custom component instance. Unlike built-ins, a custom
@@ -52,6 +54,10 @@ export function buildCustomComponentConfig(
 		options: {
 			direction: new DirectionComponentOption()
 		},
+		// Inspector actions for a placed instance: open its master, and (when behind)
+		// pull the latest. Rendered generically by the settings panel; only a
+		// selected snapshot instance ever surfaces them.
+		actions: [new EditComponentAction(), new UpdateInstanceComponentAction()],
 		create: (options) => new CustomComponent(options, def, config)
 	};
 	return config;
