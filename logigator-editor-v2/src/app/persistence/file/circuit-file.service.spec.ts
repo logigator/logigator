@@ -3,36 +3,68 @@ import { TestBed } from '@angular/core/testing';
 import { CircuitFileService } from './circuit-file.service';
 import { CircuitSerializer } from '../circuit-serializer';
 import { LoggingService } from '../../logging/logging.service';
+import { ComponentProviderService } from '../../components/component-provider.service';
+import { CustomComponentRegistry } from '../../components/custom/custom-component-registry.service';
+import { BuiltInComponentType } from '../../components/component-type.enum';
+import { Component } from '../../components/component';
 import { Project } from '../../project/project';
 import { ProjectElement } from '../../api/models/project-element';
+import { SerializedCircuitBody } from '../serialized-circuit';
 import { InvalidFileError } from './circuit-file.errors';
 import { setStaticDIInjector } from '../../utils/get-di';
 
-// Sort components/wires into a stable order so structurally-equal circuits with
-// different element ordering compare equal (mirrors circuit-serializer.spec).
-function normalize(json: string): string {
-	const parsed = JSON.parse(json);
-	const components = [...(parsed.components ?? [])].sort((a, b) =>
+interface BodyComponent {
+	type: number;
+	pos: [number, number];
+	options: Record<string, unknown>;
+}
+interface BodyWire {
+	pos: [number, number];
+	direction: number;
+	length: number;
+}
+
+function sortComponents(components: BodyComponent[]): BodyComponent[] {
+	return [...components].sort((a, b) =>
 		`${a.type}-${a.pos[0]}-${a.pos[1]}`.localeCompare(
 			`${b.type}-${b.pos[0]}-${b.pos[1]}`
 		)
 	);
-	const wires = [...(parsed.wires ?? [])].sort((a, b) =>
+}
+
+function sortWires(wires: BodyWire[]): BodyWire[] {
+	return [...wires].sort((a, b) =>
 		`${a.pos[0]}-${a.pos[1]}-${a.direction}`.localeCompare(
 			`${b.pos[0]}-${b.pos[1]}-${b.direction}`
 		)
 	);
+}
+
+// Sort components/wires (and recursively, embedded definitions) into a stable
+// order so structurally-equal documents with different element ordering compare
+// equal (mirrors circuit-serializer.spec).
+function normalize(json: string): string {
+	const parsed = JSON.parse(json);
 	return JSON.stringify({
 		version: parsed.version,
 		name: parsed.name,
-		components,
-		wires
+		components: sortComponents(parsed.components ?? []),
+		wires: sortWires(parsed.wires ?? []),
+		definitions: [...(parsed.definitions ?? [])]
+			.sort((a, b) => a.type - b.type)
+			.map((d) => ({
+				...d,
+				components: sortComponents(d.components),
+				wires: sortWires(d.wires)
+			}))
 	});
 }
 
 describe('CircuitFileService', () => {
 	let service: CircuitFileService;
 	let serializer: CircuitSerializer;
+	let provider: ComponentProviderService;
+	let registry: CustomComponentRegistry;
 	let logging: LoggingService;
 
 	beforeEach(() => {
@@ -40,6 +72,8 @@ describe('CircuitFileService', () => {
 		setStaticDIInjector(TestBed.inject(Injector));
 		service = TestBed.inject(CircuitFileService);
 		serializer = TestBed.inject(CircuitSerializer);
+		provider = TestBed.inject(ComponentProviderService);
+		registry = TestBed.inject(CustomComponentRegistry);
 		logging = TestBed.inject(LoggingService);
 	});
 
@@ -51,14 +85,48 @@ describe('CircuitFileService', () => {
 		return project;
 	}
 
+	function rebuild(json: string): Project {
+		const { components, wires } = service.fromJson(json);
+		const project = new Project();
+		for (const c of components) project.addComponent(c);
+		for (const w of wires) project.addWire(w);
+		return project;
+	}
+
+	function place(project: Project, snapTypeId: number, pos: [number, number]) {
+		const config = provider.getComponent(snapTypeId)!;
+		project.addComponent(
+			Component.deserialize({ pos, options: { direction: 0 } }, config)
+		);
+	}
+
+	// A single INPUT + OUTPUT plug pair — the contents shared by the nested-custom
+	// fixtures, exercising plug round-tripping inside an embedded definition.
+	const plugCircuit: SerializedCircuitBody = {
+		components: [
+			{
+				type: BuiltInComponentType.INPUT,
+				pos: [0, 0],
+				options: { direction: 0, label: 'in', index: 0 }
+			},
+			{
+				type: BuiltInComponentType.OUTPUT,
+				pos: [5, 0],
+				options: { direction: 0, label: 'out', index: 0 }
+			}
+		],
+		wires: []
+	};
+
 	describe('toJson', () => {
-		it('encodes version, name, and named options', () => {
+		it('encodes version, name, named options, and empty definitions', () => {
 			const project = buildProject([{ t: 2, p: [15, 3], i: 2, o: 1 }]);
 			const json = JSON.parse(service.toJson(project, 'My Circuit'));
 
-			expect(json.version).toBe(1);
+			expect(json.version).toBe(2);
 			expect(json.name).toBe('My Circuit');
 			expect(json.wires).toEqual([]);
+			expect(json.definitions).toEqual([]);
 			expect(json.components.length).toBe(1);
 			expect(json.components[0]).toEqual({
 				type: 2,
@@ -93,15 +161,92 @@ describe('CircuitFileService', () => {
 				{ t: 101, p: [20, 8], i: 1, n: [1], s: 'Q' }, // OUTPUT plug
 				{ t: 0, p: [7, 3], q: [15, 3] } // wire
 			];
-			const project = buildProject(elements);
-			const json = service.toJson(project, 'Round');
+			const json = service.toJson(buildProject(elements), 'Round');
+			const json2 = service.toJson(rebuild(json), 'Round');
 
-			const { components, wires } = service.fromJson(json);
-			const project2 = new Project();
-			for (const c of components) project2.addComponent(c);
-			for (const w of wires) project2.addWire(w);
-			const json2 = service.toJson(project2, 'Round');
+			expect(normalize(json2)).toEqual(normalize(json));
+		});
 
+		it('round-trips a 1-deep custom (with plugs) and embeds it as a definition', () => {
+			const masterB = registry.createMaster(
+				{
+					id: 'id-b',
+					symbol: 'B',
+					numInputs: 1,
+					numOutputs: 1,
+					labels: ['in', 'out'],
+					circuit: plugCircuit
+				},
+				'browser'
+			);
+			const project = new Project();
+			place(project, registry.snapshot(masterB).typeId, [3, 3]);
+
+			const json = service.toJson(project, 'OneDeep');
+			const parsed = JSON.parse(json);
+
+			expect(parsed.definitions.length).toBe(1);
+			expect(parsed.definitions[0].type).toBe(1000);
+			expect(parsed.definitions[0].numInputs).toBe(1);
+			expect(parsed.definitions[0].components.map((c: BodyComponent) => c.type)).toEqual([
+				BuiltInComponentType.INPUT,
+				BuiltInComponentType.OUTPUT
+			]);
+			expect(parsed.components[0].type).toBe(1000);
+
+			const json2 = service.toJson(rebuild(json), 'OneDeep');
+			expect(normalize(json2)).toEqual(normalize(json));
+		});
+
+		it('round-trips a 2-deep nested custom and opens it post-load (id-space rule)', () => {
+			const masterB = registry.createMaster(
+				{
+					id: 'id-b',
+					symbol: 'B',
+					numInputs: 1,
+					numOutputs: 1,
+					labels: ['in', 'out'],
+					circuit: plugCircuit
+				},
+				'browser'
+			);
+			const snapB = registry.snapshot(masterB).typeId;
+			const masterA = registry.createMaster(
+				{
+					id: 'id-a',
+					symbol: 'A',
+					circuit: {
+						components: [{ type: snapB, pos: [2, 2], options: { direction: 0 } }],
+						wires: []
+					}
+				},
+				'browser'
+			);
+			const project = new Project();
+			place(project, registry.snapshot(masterA).typeId, [4, 4]);
+
+			const json = service.toJson(project, 'TwoDeep');
+			const parsed = JSON.parse(json);
+
+			// A (1000) embeds a reference to B (1001) in its body.
+			const defA = parsed.definitions.find((d: { symbol: string }) => d.symbol === 'A');
+			const defB = parsed.definitions.find((d: { symbol: string }) => d.symbol === 'B');
+			expect(defA.type).toBe(1000);
+			expect(defB.type).toBe(1001);
+			expect(defA.components.map((c: BodyComponent) => c.type)).toEqual([1001]);
+
+			// Reload: the main instance resolves, and its definition's nested ref also
+			// resolves against the session id space (nothing dangles).
+			const { components } = service.fromJson(json);
+			const reloadedType = components[0].config.type;
+			const reloadedDefA = registry.getDefinition(reloadedType)!;
+			expect(reloadedDefA.symbol).toBe('A');
+			const nestedType = reloadedDefA.circuit!.components[0].type;
+			const nestedDefB = registry.getDefinition(nestedType)!;
+			expect(nestedDefB.symbol).toBe('B');
+			expect(provider.getComponent(nestedType)).toBeTruthy();
+
+			const json2 = service.toJson(rebuild(json), 'TwoDeep');
 			expect(normalize(json2)).toEqual(normalize(json));
 		});
 	});
@@ -119,27 +264,27 @@ describe('CircuitFileService', () => {
 		});
 
 		it('throws InvalidFileError on malformed JSON', () => {
-			expect(() => service.fromJson('{not json')).toThrowError(
-				InvalidFileError
-			);
+			expect(() => service.fromJson('{not json')).toThrowError(InvalidFileError);
 		});
 
 		it('throws InvalidFileError on a structurally invalid component', () => {
 			const file = JSON.stringify({
-				version: 1,
+				version: 2,
 				name: 'x',
 				components: [{ type: 1, pos: 'nope', options: {} }],
-				wires: []
+				wires: [],
+				definitions: []
 			});
 			expect(() => service.fromJson(file)).toThrowError(InvalidFileError);
 		});
 
 		it('throws InvalidFileError on a structurally invalid wire', () => {
 			const file = JSON.stringify({
-				version: 1,
+				version: 2,
 				name: 'x',
 				components: [],
-				wires: [{ pos: [0, 0], direction: 5, length: 3 }]
+				wires: [{ pos: [0, 0], direction: 5, length: 3 }],
+				definitions: []
 			});
 			expect(() => service.fromJson(file)).toThrowError(InvalidFileError);
 		});
@@ -147,13 +292,14 @@ describe('CircuitFileService', () => {
 		it('drops unknown component types with a warning', () => {
 			const warnSpy = spyOn(logging, 'warn');
 			const file = JSON.stringify({
-				version: 1,
+				version: 2,
 				name: 'x',
 				components: [
 					{ type: 99, pos: [0, 0], options: {} },
 					{ type: 1, pos: [1, 1], options: {} }
 				],
-				wires: []
+				wires: [],
+				definitions: []
 			});
 
 			const { components } = service.fromJson(file);

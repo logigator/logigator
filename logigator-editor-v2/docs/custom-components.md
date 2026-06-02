@@ -11,11 +11,14 @@ carrying provenance back to the library entry. Editing the library entry does
 per-instance action (a later phase). This keeps placed instances side-effect-free
 (no cross-document port/size churn) and every saved document self-contained.
 
-This doc covers the **in-memory core** that exists today (registry, definition
-model, the single `CustomComponent` rendering class, and summary derivation).
-Persistence, editing tabs, and the explicit "update" action land in later phases.
-Plug components (`INPUT`/`OUTPUT`) are documented in
-[`component-system.md`](component-system.md).
+This doc covers the **in-memory core** (registry, definition model, the single
+`CustomComponent` rendering class, summary derivation) and how it ties into
+persistence. A placed custom and the customs it nests are embedded as **frozen
+snapshots** in every saved document via the universal codec — see
+[`persistence.md`](persistence.md) for the file/browser encoding and the
+`collectSnapshots` / `ingestSnapshots` round-trip. The server target and the
+explicit per-instance "update" action land in a later phase. Plug components
+(`INPUT`/`OUTPUT`) are documented in [`component-system.md`](component-system.md).
 
 ## Roles: master vs. snapshot
 

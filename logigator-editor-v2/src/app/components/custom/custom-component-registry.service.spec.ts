@@ -215,6 +215,76 @@ describe('CustomComponentRegistry', () => {
 		});
 	});
 
+	describe('setMasterCircuit', () => {
+		it('replaces the master circuit, leaving earlier snapshots frozen', () => {
+			const master = registry.createMaster(
+				{
+					symbol: 'M',
+					circuit: {
+						components: [{ type: 100, pos: [0, 0], options: {} }],
+						wires: []
+					}
+				},
+				'browser'
+			);
+			const snap = registry.snapshot(master);
+
+			registry.setMasterCircuit(master, {
+				components: [{ type: 101, pos: [1, 1], options: {} }],
+				wires: []
+			});
+
+			// The earlier snapshot deep-copied the old circuit and is untouched.
+			expect(snap.circuit?.components.map((c) => c.type)).toEqual([100]);
+			// A new snapshot reflects the replaced circuit.
+			expect(
+				registry.snapshot(master).circuit?.components.map((c) => c.type)
+			).toEqual([101]);
+		});
+
+		it('no-ops for a snapshot', () => {
+			const master = registry.createMaster({ symbol: 'M' }, 'browser');
+			const snap = registry.snapshot(master);
+			registry.setMasterCircuit(snap.typeId, {
+				components: [{ type: 1, pos: [0, 0], options: {} }],
+				wires: []
+			});
+			expect(registry.getDefinition(snap.typeId)?.circuit).toBeUndefined();
+		});
+	});
+
+	describe('ingestSnapshots', () => {
+		it('registers each as a resolvable HIDDEN snapshot and returns the remap', () => {
+			const remap = registry.ingestSnapshots([
+				{
+					type: 1000,
+					source: { id: 'id-x', version: 3 },
+					name: 'X',
+					symbol: 'X',
+					description: '',
+					numInputs: 2,
+					numOutputs: 1,
+					labels: ['a', 'b', 'q'],
+					components: [],
+					wires: []
+				}
+			]);
+
+			const sessionType = remap.get(1000)!;
+			expect(sessionType).toBeGreaterThanOrEqual(CUSTOM_TYPE_ID_BASE);
+			const def = registry.getDefinition(sessionType)!;
+			expect(def.kind).toBe('snapshot');
+			expect(def.id).toBe('id-x');
+			expect(def.version).toBe(3);
+			expect(def.numInputs).toBe(2);
+			expect(provider.getComponent(sessionType)?.category).toBe(
+				ComponentCategory.HIDDEN
+			);
+			// Snapshots are not added to the masters id index.
+			expect(registry.masterTypeIdForId('id-x')).toBeUndefined();
+		});
+	});
+
 	describe('library dependency graph', () => {
 		it('reports direct dependencies set via setDependencies', () => {
 			const a = registry.createMaster({ symbol: 'A' }, 'browser');

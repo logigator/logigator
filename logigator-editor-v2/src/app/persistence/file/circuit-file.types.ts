@@ -9,45 +9,37 @@
  * shipped files keep their meaning.
  *
  * The current format mirrors the editor's in-memory model (named options, wires
- * as start/direction/length) rather than the legacy positional wire format.
+ * as start/direction/length) and is self-contained: it embeds a frozen snapshot
+ * of every custom component it transitively uses in {@link CircuitFileV2.definitions}
+ * via the universal codec (`persistence/snapshots.ts`).
  */
 import { ProjectElement } from '../../api/models/project-element';
+import {
+	SerializedComponentBody,
+	SerializedWireBody,
+	SnapshotDefinition
+} from '../serialized-circuit';
 
-export const CURRENT_FILE_VERSION = 1;
-export type CurrentCircuitFile = CircuitFileV1;
+export const CURRENT_FILE_VERSION = 2;
+export type CurrentCircuitFile = CircuitFileV2;
 
-// ---- Version 1 (current, native) ----
+// ---- Version 2 (current, native, self-contained) ----
 
-export interface CircuitFileComponentV1 {
-	/** Component type id (matches {@link ComponentType}). */
-	type: number;
-	/** Grid position [x, y]. */
-	pos: [number, number];
-	/** Option values keyed by the component config's option names. */
-	options: Record<string, unknown>;
-}
-
-export interface CircuitFileWireV1 {
-	/** Start position [x, y] in integer grid units. */
-	pos: [number, number];
-	/** Wire direction (0 = horizontal, 1 = vertical). */
-	direction: number;
-	/** Length in grid units. */
-	length: number;
-}
-
-export interface CircuitFileV1 {
-	version: 1;
+export interface CircuitFileV2 {
+	version: 2;
 	name: string;
-	components: CircuitFileComponentV1[];
-	wires: CircuitFileWireV1[];
+	/** The main circuit. Custom `type`s are file-local ids defined in {@link definitions}. */
+	components: SerializedComponentBody[];
+	wires: SerializedWireBody[];
+	/** Frozen snapshots of every custom this file transitively uses (recursive). */
+	definitions: SnapshotDefinition[];
 }
 
-// ---- Version 0 (legacy) ----
+// ---- Version 0 (legacy old-editor format) ----
 export type CircuitFileElementV0 = ProjectElement;
 
 export interface CircuitFileV0 {
 	project?: { name?: string; elements?: CircuitFileElementV0[] };
-	/** Legacy sub-circuit definitions — preserved historically, ignored by v2. */
+	/** Legacy sub-circuit definitions — preserved historically, ignored on import. */
 	components?: unknown[];
 }

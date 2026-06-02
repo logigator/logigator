@@ -2,6 +2,7 @@ import { inject, Injectable } from '@angular/core';
 import { Project } from '../project/project';
 import { ProjectService } from '../project/project.service';
 import { ProjectMetadataStore } from '../persistence/project-metadata.store';
+import { PersistenceService } from '../persistence/persistence.service';
 import { CustomComponentRegistry } from '../components/custom/custom-component-registry.service';
 import { ComponentProviderService } from '../components/component-provider.service';
 import { CustomComponent } from '../components/custom/custom-component';
@@ -23,9 +24,10 @@ export interface NewComponentMeta {
  * component editor is just a {@link Project} registered with `type: 'comp'`,
  * carrying a {@link DefinitionBinding} that keeps its master's summary current.
  *
- * Phase 3 is in-memory only: masters are created in the browser id space, opening
- * is limited to re-focusing an already-open editor, and closing disposes the
- * editor without saving (component persistence lands in later phases).
+ * Masters live in the browser id space: creating opens an empty editor, opening
+ * loads a saved master's circuit from the browser `components` store (or re-focuses
+ * an already-open editor), and closing saves a dirty editor before disposing it.
+ * The server target lands in a later phase.
  */
 @Injectable({ providedIn: 'root' })
 export class CustomComponentService {
@@ -33,6 +35,7 @@ export class CustomComponentService {
 	private readonly provider = inject(ComponentProviderService);
 	private readonly projectService = inject(ProjectService);
 	private readonly metadataStore = inject(ProjectMetadataStore);
+	private readonly persistence = inject(PersistenceService);
 	private readonly toast = inject(ToastService);
 
 	private readonly _bindings = new Map<Project, DefinitionBinding>();
@@ -72,25 +75,50 @@ export class CustomComponentService {
 	}
 
 	/**
-	 * Brings the editor for a master to the front. Phase 3 can only re-focus an
-	 * **already-open** editor — loading a saved master's circuit is the embedded-
-	 * snapshot path that lands with persistence (Phase 4/5).
+	 * Brings the editor for a master to the front, re-focusing an already-open
+	 * editor or loading the master's circuit from the browser `components` store
+	 * (the universal embedded-snapshot path). A reused master shares its session
+	 * type id, so the palette tile and the editor stay one definition.
 	 */
-	public openComponentForEdit(masterId: string): void {
+	public async openComponentForEdit(masterId: string): Promise<void> {
 		const open = this._findOpenEditor(masterId);
 		if (open) {
 			this.projectService.setActiveProject(open);
 			return;
 		}
-		this.toast.error('Opening a saved component is not available yet');
+		try {
+			const { project, masterTypeId } =
+				await this.persistence.loadComponentForEdit(masterId);
+			this.projectService.addOpenComponent(project);
+			this.projectService.setActiveProject(project);
+			this._bindings.set(
+				project,
+				new DefinitionBinding(project, masterTypeId, this.registry)
+			);
+		} catch {
+			this.toast.error('Failed to open component');
+		}
 	}
 
 	/**
-	 * Closes a component editor tab. Phase 3 has no component persistence, so this
-	 * disposes the editor Project without saving; a save-on-close / discard prompt
-	 * lands with persistence.
+	 * Closes a component editor tab. A dirty editor is saved to its store before
+	 * being disposed (so edits are not lost); a clean editor is disposed straight
+	 * away. Disposing tears down the binding, the tab and the editor Project — the
+	 * master definition itself stays registered (it remains in the palette).
 	 */
 	public closeComponent(project: Project): void {
+		if (this.metadataStore.isDirty(project)) {
+			// Save fully before disposing — the save reads the live project.
+			void this.persistence
+				.saveProject(project)
+				.catch(() => undefined)
+				.then(() => this._disposeEditor(project));
+			return;
+		}
+		this._disposeEditor(project);
+	}
+
+	private _disposeEditor(project: Project): void {
 		this._bindings.get(project)?.dispose();
 		this._bindings.delete(project);
 		this.projectService.removeOpenComponent(project);

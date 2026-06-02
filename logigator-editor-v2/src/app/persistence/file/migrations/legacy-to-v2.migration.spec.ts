@@ -1,12 +1,12 @@
 import { TestBed } from '@angular/core/testing';
-import { legacyToV1Migration } from './legacy-to-v1.migration';
+import { legacyToV2Migration } from './legacy-to-v2.migration';
 import { MigrationContext } from './migration';
 import { ComponentProviderService } from '../../../components/component-provider.service';
 import { LoggingService } from '../../../logging/logging.service';
 import { InvalidFileError } from '../circuit-file.errors';
 import { CircuitFileV0 } from '../circuit-file.types';
 
-describe('legacyToV1Migration', () => {
+describe('legacyToV2Migration', () => {
 	let ctx: MigrationContext;
 
 	beforeEach(() => {
@@ -18,10 +18,10 @@ describe('legacyToV1Migration', () => {
 	});
 
 	function migrate(input: CircuitFileV0) {
-		return legacyToV1Migration.migrate(input, ctx);
+		return legacyToV2Migration.migrate(input, ctx);
 	}
 
-	it('maps a full legacy file to v1 with named options', () => {
+	it('maps a full legacy file to v2 with named options and empty definitions', () => {
 		const result = migrate({
 			project: {
 				name: 'Legacy Circuit',
@@ -35,8 +35,10 @@ describe('legacyToV1Migration', () => {
 			}
 		});
 
-		expect(result.version).toBe(1);
+		expect(result.version).toBe(2);
 		expect(result.name).toBe('Legacy Circuit');
+		// Legacy files carry no native custom snapshots; sub-circuits are dropped.
+		expect(result.definitions).toEqual([]);
 
 		const and = result.components.find((c) => c.type === 2)!;
 		expect(and.pos).toEqual([3, 4]);
@@ -73,7 +75,7 @@ describe('legacyToV1Migration', () => {
 		expect(result.components[0].type).toBe(1);
 		expect(warnSpy).toHaveBeenCalledWith(
 			jasmine.stringContaining('Unknown component type ID: 3'),
-			'legacyToV1Migration'
+			'legacyToV2Migration'
 		);
 	});
 

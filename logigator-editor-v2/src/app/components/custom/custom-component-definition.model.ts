@@ -1,3 +1,5 @@
+import { SerializedCircuitBody } from '../../persistence/serialized-circuit';
+
 /**
  * A session definition of a custom component — enough to render and place a
  * black-box instance. Every definition is one of two **kinds**:
@@ -40,12 +42,12 @@ export interface CustomComponentDefinition {
 	/** Port labels, inputs first then outputs, in plug-index order. */
 	labels: string[];
 	/**
-	 * The definition's own circuit. For a snapshot: travels embedded with the
-	 * host document (present once loaded). For a master: materialised while open
-	 * for editing / freshly created. Not consumed yet — persistence lands in
-	 * later phases.
+	 * The definition's own circuit in the native body encoding, holding **session**
+	 * type ids. For a snapshot: travels embedded with the host document (present
+	 * once loaded). For a master: materialised from its open editor Project (see
+	 * `DefinitionBinding`) / freshly created.
 	 */
-	circuit?: { components: unknown[]; wires: unknown[] };
+	circuit?: SerializedCircuitBody;
 }
 
 /**

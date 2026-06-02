@@ -7,7 +7,7 @@ import {
 	InvalidFileError,
 	UnsupportedVersionError
 } from './circuit-file.errors';
-import { CURRENT_FILE_VERSION, CircuitFileV1 } from './circuit-file.types';
+import { CURRENT_FILE_VERSION, CircuitFileV2 } from './circuit-file.types';
 
 describe('circuit-file-migrator', () => {
 	describe('detectVersion', () => {
@@ -55,23 +55,25 @@ describe('circuit-file-migrator', () => {
 		});
 
 		it('returns an already-current document unchanged', () => {
-			const doc: CircuitFileV1 = {
-				version: 1,
+			const doc: CircuitFileV2 = {
+				version: 2,
 				name: 'X',
 				components: [],
-				wires: []
+				wires: [],
+				definitions: []
 			};
 			expect(migrateToCurrent(doc, ctx)).toBe(doc);
 		});
 
-		it('runs the legacy→v1 migration for a versionless document', () => {
+		it('runs the legacy→v2 migration for a versionless document', () => {
 			const legacy = {
 				project: { name: 'Legacy', elements: [{ t: 1, p: [0, 0], i: 1, o: 1 }] }
 			};
 			const result = migrateToCurrent(legacy, ctx);
-			expect(result.version).toBe(1);
+			expect(result.version).toBe(2);
 			expect(result.name).toBe('Legacy');
 			expect(result.components.length).toBe(1);
+			expect(result.definitions).toEqual([]);
 		});
 	});
 });

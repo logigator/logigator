@@ -24,7 +24,6 @@ describe('BrowserProjectStore', () => {
 
 		expect(record.id).toBeTruthy();
 		expect(record.name).toBe('Alpha');
-		expect(record.type).toBe('project');
 		expect(record.createdOn).toBe(record.lastEdited);
 
 		const loaded = await store.get(record.id);

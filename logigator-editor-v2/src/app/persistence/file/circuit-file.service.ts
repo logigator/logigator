@@ -3,16 +3,17 @@ import { Project } from '../../project/project';
 import { Component } from '../../components/component';
 import { Wire } from '../../wires/wire';
 import { ComponentProviderService } from '../../components/component-provider.service';
+import { CustomComponentRegistry } from '../../components/custom/custom-component-registry.service';
 import { LoggingService } from '../../logging/logging.service';
 import { MigrationContext } from './migrations/migration';
 import { migrateToCurrent } from './circuit-file-migrator';
 import { InvalidFileError } from './circuit-file.errors';
 import {
 	CURRENT_FILE_VERSION,
-	CircuitFileComponentV1,
-	CircuitFileWireV1,
 	CurrentCircuitFile
 } from './circuit-file.types';
+import { remapComponentTypes } from '../serialized-circuit';
+import { collectSnapshots, serializeProjectBody } from '../snapshots';
 
 function isNumberPair(value: unknown): value is [number, number] {
 	return (
@@ -28,12 +29,16 @@ function isNumberPair(value: unknown): value is [number, number] {
  * version; decoding parses, migrates any older document up to current (via the
  * migration chain), then turns it into editor instances.
  *
- * This is purely the file-format codec — it does not touch project metadata or
- * the active-project lifecycle (that is `PersistenceService`'s job).
+ * It is a thin adapter over the universal snapshot codec (`persistence/snapshots.ts`):
+ * encoding embeds a frozen snapshot of every custom the project uses and rewrites
+ * the body to file-local type ids; decoding ingests those snapshots into the
+ * registry and remaps the body back to session type ids. It does not touch project
+ * metadata or the active-project lifecycle (that is `PersistenceService`'s job).
  */
 @Injectable({ providedIn: 'root' })
 export class CircuitFileService {
 	private readonly componentProvider = inject(ComponentProviderService);
+	private readonly registry = inject(CustomComponentRegistry);
 	private readonly logging = inject(LoggingService);
 
 	private get migrationContext(): MigrationContext {
@@ -45,34 +50,18 @@ export class CircuitFileService {
 
 	/** Serializes a project to a current-version file JSON string. */
 	toJson(project: Project, name: string): string {
-		const components: CircuitFileComponentV1[] = [];
-		for (const component of project.components) {
-			components.push({
-				type: component.config.type,
-				pos: [component.position.x, component.position.y],
-				options: Object.fromEntries(
-					Object.entries(component.options).map(([key, opt]) => [
-						key,
-						opt.value
-					])
-				)
-			});
-		}
-
-		const wires: CircuitFileWireV1[] = [];
-		for (const wire of project.wires) {
-			wires.push({
-				pos: [Math.floor(wire.position.x), Math.floor(wire.position.y)],
-				direction: wire.direction,
-				length: wire.length
-			});
-		}
+		const { definitions, sessionToLocal } = collectSnapshots(
+			project,
+			this.registry
+		);
+		const body = serializeProjectBody(project);
 
 		const file: CurrentCircuitFile = {
 			version: CURRENT_FILE_VERSION,
 			name,
-			components,
-			wires
+			components: remapComponentTypes(body.components, sessionToLocal),
+			wires: body.wires,
+			definitions
 		};
 		return JSON.stringify(file);
 	}
@@ -89,16 +78,22 @@ export class CircuitFileService {
 	}
 
 	/**
-	 * Decodes a current-version document into editor instances. Sole structural
-	 * validator for native files (the migrator passes an already-current document
-	 * through untouched): structurally broken elements throw `InvalidFileError`,
-	 * while unknown component types are dropped with a warning. Elements carry no
-	 * id, so fresh ids are allocated on construction.
+	 * Decodes a current-version document into editor instances. First ingests the
+	 * embedded snapshots into the registry (so custom `type`s resolve) and remaps
+	 * the body's file-local ids to session ids, then builds instances. Sole
+	 * structural validator for native files (the migrator passes an already-current
+	 * document through untouched): structurally broken elements throw
+	 * `InvalidFileError`, while unknown component types are dropped with a warning.
+	 * Elements carry no id, so fresh ids are allocated on construction.
 	 */
 	deserialize(file: CurrentCircuitFile): {
 		components: Component[];
 		wires: Wire[];
 	} {
+		const remap = this.registry.ingestSnapshots(
+			this._asArray(file.definitions, 'definitions')
+		);
+
 		const components: Component[] = [];
 		for (const c of this._asArray(file.components, 'components')) {
 			if (
@@ -110,7 +105,8 @@ export class CircuitFileService {
 			) {
 				throw new InvalidFileError('Invalid component in file');
 			}
-			const config = this.componentProvider.getComponent(c.type);
+			const sessionType = remap.get(c.type) ?? c.type;
+			const config = this.componentProvider.getComponent(sessionType);
 			if (!config) {
 				this.logging.warn(
 					`Unknown component type ID: ${c.type} — skipping element at [${c.pos[0]}, ${c.pos[1]}]`,

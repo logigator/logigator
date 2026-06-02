@@ -8,7 +8,11 @@ import { UserApiService } from '../api/services/user-api.service';
 import { CircuitSerializer } from './circuit-serializer';
 import { CircuitFileService } from './file/circuit-file.service';
 import { BrowserProjectStore } from './browser/browser-project.store';
-import { BrowserProjectSummary } from './browser/browser-project.types';
+import { BrowserComponentStore } from './browser/browser-component.store';
+import {
+	BrowserComponentSummary,
+	BrowserProjectSummary
+} from './browser/browser-project.types';
 import { ProjectMetadataStore } from './project-metadata.store';
 import { ProjectService } from '../project/project.service';
 import { ToastService } from '../logging/toast.service';
@@ -18,6 +22,11 @@ import { Component } from '../components/component';
 import { Wire } from '../wires/wire';
 import { ProjectSummary } from '../api/models/project';
 import { Page } from '../api/models/shared';
+import { CustomComponentRegistry } from '../components/custom/custom-component-registry.service';
+import { CustomComponentDefinition } from '../components/custom/custom-component-definition.model';
+import { ComponentProviderService } from '../components/component-provider.service';
+import { SerializedCircuitBody } from './serialized-circuit';
+import { deriveSummary } from '../custom-component/definition-derivation';
 
 export class AuthRequiredError extends Error {
 	constructor() {
@@ -34,6 +43,9 @@ export class PersistenceService {
 	private readonly serializer = inject(CircuitSerializer);
 	private readonly circuitFile = inject(CircuitFileService);
 	private readonly browserStore = inject(BrowserProjectStore);
+	private readonly browserComponentStore = inject(BrowserComponentStore);
+	private readonly registry = inject(CustomComponentRegistry);
+	private readonly provider = inject(ComponentProviderService);
 	private readonly metadataStore = inject(ProjectMetadataStore);
 	private readonly projectService = inject(ProjectService);
 	private readonly toast = inject(ToastService);
@@ -84,7 +96,9 @@ export class PersistenceService {
 		if (!metadata) return;
 
 		let work: Promise<void> | undefined;
-		if (metadata.source === 'server') {
+		if (metadata.type === 'comp' && metadata.source === 'browser') {
+			work = this._doBrowserComponentSave(project);
+		} else if (metadata.source === 'server') {
 			work = this._doServerSave(project);
 		} else if (metadata.source === 'browser') {
 			work = this._doBrowserSave(project);
@@ -249,6 +263,11 @@ export class PersistenceService {
 		const { name, components, wires } = this.circuitFile.fromJson(content);
 		const project = this._buildProject(components, wires);
 
+		// Adopt any imported custom that has no local master into the browser
+		// components library, so the user can re-place it. (No stable cross-file
+		// identity ⇒ re-importing the same file creates duplicate library rows.)
+		await this._adoptSnapshots(project);
+
 		// addComponent/addWire don't push to the ActionManager, so the project
 		// starts non-dirty even though it was just populated.
 		this.metadataStore.register(project, {
@@ -360,6 +379,57 @@ export class PersistenceService {
 		return project;
 	}
 
+	/** Lists library masters stored in the browser (IndexedDB), newest first. */
+	listBrowserComponents(): Promise<BrowserComponentSummary[]> {
+		return this.browserComponentStore.list();
+	}
+
+	/**
+	 * Loads a browser-stored **library master** into a fresh editor Project and
+	 * registers it (reusing the master's session type id if it is already known, so
+	 * placing it from the palette and opening it share one definition). Returns the
+	 * Project plus the master type id so the caller can attach a `DefinitionBinding`
+	 * and open a tab. The circuit is self-contained — its embedded snapshots are
+	 * ingested with no cross-row resolution. Rejects if no record exists for `id`.
+	 */
+	async loadComponentForEdit(
+		id: string
+	): Promise<{ project: Project; masterTypeId: number }> {
+		const record = await this.browserComponentStore.get(id);
+		if (!record) {
+			throw new Error(`No browser component with id ${id}`);
+		}
+		const { components, wires } = this.circuitFile.fromJson(record.content);
+		const project = this._buildProject(components, wires);
+
+		const masterTypeId =
+			this.registry.masterTypeIdForId(id) ??
+			this.registry.createMaster(
+				{
+					id,
+					version: record.version,
+					name: record.name,
+					symbol: record.symbol,
+					description: record.description,
+					numInputs: record.numInputs,
+					numOutputs: record.numOutputs,
+					labels: record.labels
+				},
+				'browser'
+			);
+
+		this.metadataStore.register(project, {
+			id,
+			name: record.name,
+			type: 'comp',
+			source: 'browser',
+			hash: '',
+			isPublic: false
+		});
+
+		return { project, masterTypeId };
+	}
+
 	async loadLocalProjectAsMain(
 		id: string,
 		opts?: { skipUrlUpdate?: boolean }
@@ -400,6 +470,92 @@ export class PersistenceService {
 		for (const c of components) project.addComponent(c);
 		for (const w of wires) project.addWire(w);
 		return project;
+	}
+
+	/**
+	 * Creates a browser library master for every custom directly placed in an
+	 * imported project that has no local master yet, so it appears in the palette
+	 * and survives a reload. Already-known masters (matched by provenance id) are
+	 * left alone. Nested-only customs are not adopted — they live inside their
+	 * parent's snapshot and aren't independently placeable here.
+	 */
+	private async _adoptSnapshots(project: Project): Promise<void> {
+		const seen = new Set<number>();
+		for (const component of project.components) {
+			const typeId = component.config.type;
+			if (seen.has(typeId)) continue;
+			seen.add(typeId);
+			const def = this.registry.getDefinition(typeId);
+			if (!def || def.kind !== 'snapshot') continue;
+			if (
+				def.id !== undefined &&
+				this.registry.masterTypeIdForId(def.id) !== undefined
+			) {
+				continue;
+			}
+			await this._adoptSnapshotAsMaster(def);
+		}
+	}
+
+	private async _adoptSnapshotAsMaster(
+		def: CustomComponentDefinition
+	): Promise<void> {
+		const circuit = def.circuit ?? { components: [], wires: [] };
+		// Re-emit the snapshot's circuit (+ its own nested snapshots) as the new
+		// master's self-contained content.
+		const { components, wires } = this._instantiateBody(circuit);
+		const tmp = this._buildProject(components, wires);
+		let content: string;
+		try {
+			content = this.circuitFile.toJson(tmp, def.name);
+		} finally {
+			tmp.destroy();
+		}
+
+		const record = await this.browserComponentStore.save({
+			version: 1,
+			name: def.name,
+			symbol: def.symbol,
+			description: def.description,
+			numInputs: def.numInputs,
+			numOutputs: def.numOutputs,
+			labels: def.labels,
+			content
+		});
+		this.registry.createMaster(
+			{
+				id: record.id,
+				version: 1,
+				name: def.name,
+				symbol: def.symbol,
+				description: def.description,
+				numInputs: def.numInputs,
+				numOutputs: def.numOutputs,
+				labels: def.labels,
+				circuit
+			},
+			'browser'
+		);
+	}
+
+	/** Instantiates a native body (session type ids) into editor objects. */
+	private _instantiateBody(body: SerializedCircuitBody): {
+		components: Component[];
+		wires: Wire[];
+	} {
+		const components: Component[] = [];
+		for (const c of body.components) {
+			const config = this.provider.getComponent(c.type);
+			if (config) {
+				components.push(
+					Component.deserialize({ pos: c.pos, options: c.options }, config)
+				);
+			}
+		}
+		const wires = body.wires.map((w) =>
+			Wire.deserialize({ pos: w.pos, direction: w.direction, length: w.length })
+		);
+		return { components, wires };
 	}
 
 	private async _doServerSave(project: Project): Promise<void> {
@@ -468,6 +624,42 @@ export class PersistenceService {
 			this.metadataStore.clearDirty(project);
 		}
 		this.toast.success('Project saved to browser storage');
+	}
+
+	/**
+	 * Saves a custom-component editor (`type: 'comp'`) to the browser `components`
+	 * store: its summary columns (recomputed from its plugs at save time) plus its
+	 * `content` (own circuit + embedded snapshots of its dependencies). Does not
+	 * retroactively change placed instances — they are frozen snapshots; this only
+	 * affects future placements and explicit per-instance updates.
+	 */
+	private async _doBrowserComponentSave(project: Project): Promise<void> {
+		const metadata = this.metadataStore.getMetadata(project)!;
+		const masterTypeId = this.registry.masterTypeIdForId(metadata.id);
+		const master =
+			masterTypeId !== undefined
+				? this.registry.getDefinition(masterTypeId)
+				: undefined;
+		const versionAtSnapshot = this.metadataStore.dirtyVersion(project);
+		const summary = deriveSummary(project);
+		const content = this.circuitFile.toJson(project, metadata.name);
+
+		await this.browserComponentStore.save({
+			id: metadata.id || undefined,
+			version: master?.version ?? 1,
+			name: metadata.name,
+			symbol: master?.symbol ?? '',
+			description: master?.description ?? '',
+			numInputs: summary.numInputs,
+			numOutputs: summary.numOutputs,
+			labels: summary.labels,
+			content
+		});
+
+		if (this.metadataStore.dirtyVersion(project) === versionAtSnapshot) {
+			this.metadataStore.clearDirty(project);
+		}
+		this.toast.success('Component saved to browser storage');
 	}
 
 	private _replaceMainProject(newProject: Project): void {

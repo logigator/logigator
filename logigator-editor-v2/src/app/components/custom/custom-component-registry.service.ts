@@ -8,6 +8,12 @@ import {
 	CustomComponentSummaryPatch
 } from './custom-component-definition.model';
 import { buildCustomComponentConfig } from './custom-component.config';
+import {
+	cloneCircuit,
+	remapComponentTypes,
+	SerializedCircuitBody,
+	SnapshotDefinition
+} from '../../persistence/serialized-circuit';
 
 /** A definition without its (registry-allocated) type id. */
 type DefinitionInit = Omit<CustomComponentDefinition, 'typeId'>;
@@ -67,7 +73,7 @@ export class CustomComponentRegistry {
 			numInputs: meta.numInputs ?? 0,
 			numOutputs: meta.numOutputs ?? 0,
 			labels: meta.labels ? [...meta.labels] : [],
-			circuit: meta.circuit
+			circuit: meta.circuit ? cloneCircuit(meta.circuit) : undefined
 		});
 		this._idToMasterTypeId.set(id, typeId);
 		return typeId;
@@ -95,7 +101,9 @@ export class CustomComponentRegistry {
 			numInputs: master.numInputs,
 			numOutputs: master.numOutputs,
 			labels: [...master.labels],
-			circuit: master.circuit
+			// Deep-copy: a frozen snapshot must never share circuit state with its
+			// master, so later edits to the master cannot mutate placed instances.
+			circuit: master.circuit ? cloneCircuit(master.circuit) : undefined
 		});
 		return this._definitions.get(typeId)!;
 	}
@@ -107,6 +115,53 @@ export class CustomComponentRegistry {
 	 */
 	public registerSnapshot(def: DefinitionInit): number {
 		return this._register(def);
+	}
+
+	/**
+	 * Registers a document's embedded snapshots (the universal load path for file,
+	 * browser, and server-new-client) and returns the `fileLocalType → sessionType`
+	 * remap the caller applies to the document body.
+	 *
+	 * Two passes so nested references resolve: pass 1 allocates a session type id
+	 * per incoming definition; pass 2 registers each, rewriting the type ids inside
+	 * its own circuit body from file-local to session. The stored circuit therefore
+	 * holds post-remap session ids, so re-saving or opening it resolves correctly
+	 * (the id-space rule). Snapshots carry provenance + circuit but are not added to
+	 * the masters id index.
+	 */
+	public ingestSnapshots(defs: SnapshotDefinition[]): Map<number, number> {
+		const remap = new Map<number, number>();
+		for (const def of defs) {
+			remap.set(def.type, this._nextTypeId++);
+		}
+		for (const def of defs) {
+			const typeId = remap.get(def.type)!;
+			this._store({
+				typeId,
+				kind: 'snapshot',
+				// Embedded snapshots carry only `{id, version}` provenance, not which
+				// library it came from; default to 'browser' (best-effort — opening a
+				// file offers no "update" anyway).
+				source: 'browser',
+				id: def.source?.id,
+				version: def.source?.version,
+				name: def.name,
+				symbol: def.symbol,
+				description: def.description,
+				numInputs: def.numInputs,
+				numOutputs: def.numOutputs,
+				labels: [...def.labels],
+				circuit: {
+					components: remapComponentTypes(def.components, remap),
+					wires: def.wires.map((w) => ({
+						pos: [w.pos[0], w.pos[1]],
+						direction: w.direction,
+						length: w.length
+					}))
+				}
+			});
+		}
+		return remap;
 	}
 
 	/**
@@ -130,6 +185,21 @@ export class CustomComponentRegistry {
 		if (patch.description !== undefined) def.description = patch.description;
 
 		this._change$.next(def);
+	}
+
+	/**
+	 * Materialises a **master's** own circuit from its open editor (see
+	 * `DefinitionBinding`). Replaces `circuit` with a fresh deep copy rather than
+	 * mutating in place, so snapshots taken earlier (which copied the previous
+	 * object) stay frozen. No-ops for a snapshot or unknown type id.
+	 */
+	public setMasterCircuit(
+		masterTypeId: number,
+		circuit: SerializedCircuitBody
+	): void {
+		const def = this._definitions.get(masterTypeId);
+		if (!def || def.kind !== 'master') return;
+		def.circuit = cloneCircuit(circuit);
 	}
 
 	public getDefinition(typeId: number): CustomComponentDefinition | undefined {
@@ -191,13 +261,19 @@ export class CustomComponentRegistry {
 	}
 
 	private _register(def: DefinitionInit): number {
-		const typeId = this._nextTypeId++;
-		const full: CustomComponentDefinition = { ...def, typeId };
-		this._definitions.set(typeId, full);
-		// Register the matching config so the serializer/actions/palette resolve
-		// this custom type through the same provider path as built-ins. Masters
-		// surface in the USER palette; snapshots are HIDDEN (resolvable, not listed).
-		this._provider.register(buildCustomComponentConfig(full));
-		return typeId;
+		const full: CustomComponentDefinition = { ...def, typeId: this._nextTypeId++ };
+		this._store(full);
+		return full.typeId;
+	}
+
+	/**
+	 * Indexes a fully-formed definition (its type id already allocated) and
+	 * registers the matching config so the serializer/actions/palette resolve this
+	 * custom type through the same provider path as built-ins. Masters surface in
+	 * the USER palette; snapshots are HIDDEN (resolvable, not listed).
+	 */
+	private _store(def: CustomComponentDefinition): void {
+		this._definitions.set(def.typeId, def);
+		this._provider.register(buildCustomComponentConfig(def));
 	}
 }

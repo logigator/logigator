@@ -20,7 +20,16 @@ import { setStaticDIInjector } from '../utils/get-di';
 import { environment } from '../../environments/environment';
 import { InvalidFileError } from './file/circuit-file.errors';
 import { BrowserProjectStore } from './browser/browser-project.store';
-import { StoredBrowserProject } from './browser/browser-project.types';
+import { BrowserComponentStore } from './browser/browser-component.store';
+import {
+	StoredBrowserComponent,
+	StoredBrowserProject
+} from './browser/browser-project.types';
+import { CircuitSerializer } from './circuit-serializer';
+import { CustomComponentRegistry } from '../components/custom/custom-component-registry.service';
+import { ComponentProviderService } from '../components/component-provider.service';
+import { CustomComponent } from '../components/custom/custom-component';
+import { SerializedCircuitBody } from './serialized-circuit';
 
 /**
  * In-memory stand-in for the IndexedDB store, so PersistenceService orchestration
@@ -42,7 +51,6 @@ class FakeBrowserProjectStore {
 		const record: StoredBrowserProject = {
 			id,
 			name: params.name,
-			type: 'project',
 			createdOn: existing?.createdOn ?? now,
 			lastEdited: now,
 			content: params.content
@@ -64,6 +72,55 @@ class FakeBrowserProjectStore {
 				lastEdited
 			})
 		);
+	}
+
+	async delete(id: string): Promise<void> {
+		this.records.delete(id);
+	}
+}
+
+/** In-memory stand-in for the IndexedDB `components` store (library masters). */
+class FakeBrowserComponentStore {
+	readonly records = new Map<string, StoredBrowserComponent>();
+	private _counter = 0;
+
+	async save(params: {
+		id?: string;
+		version: number;
+		name: string;
+		symbol: string;
+		description: string;
+		numInputs: number;
+		numOutputs: number;
+		labels: string[];
+		content: string;
+	}): Promise<StoredBrowserComponent> {
+		const id = params.id ?? `comp-id-${++this._counter}`;
+		const existing = params.id ? this.records.get(params.id) : undefined;
+		const now = 1000 + ++this._counter;
+		const record: StoredBrowserComponent = {
+			id,
+			version: params.version,
+			name: params.name,
+			symbol: params.symbol,
+			description: params.description,
+			numInputs: params.numInputs,
+			numOutputs: params.numOutputs,
+			labels: [...params.labels],
+			createdOn: existing?.createdOn ?? now,
+			lastEdited: now,
+			content: params.content
+		};
+		this.records.set(id, record);
+		return record;
+	}
+
+	async get(id: string): Promise<StoredBrowserComponent | undefined> {
+		return this.records.get(id);
+	}
+
+	async list() {
+		return [...this.records.values()];
 	}
 
 	async delete(id: string): Promise<void> {
@@ -168,11 +225,16 @@ describe('PersistenceService', () => {
 	let httpMock: HttpTestingController;
 	let locationGo: jasmine.Spy;
 	let browserStore: FakeBrowserProjectStore;
+	let componentStore: FakeBrowserComponentStore;
+	let registry: CustomComponentRegistry;
+	let provider: ComponentProviderService;
+	let serializer: CircuitSerializer;
 
 	beforeEach(() => {
 		spyOn(console, 'error');
 		locationGo = jasmine.createSpy('Location.go');
 		browserStore = new FakeBrowserProjectStore();
+		componentStore = new FakeBrowserComponentStore();
 		TestBed.configureTestingModule({
 			providers: [
 				provideHttpClient(withInterceptorsFromDi()),
@@ -187,6 +249,7 @@ describe('PersistenceService', () => {
 					}
 				},
 				{ provide: BrowserProjectStore, useValue: browserStore },
+				{ provide: BrowserComponentStore, useValue: componentStore },
 				MessageService,
 				{
 					provide: TranslocoService,
@@ -198,6 +261,9 @@ describe('PersistenceService', () => {
 		service = TestBed.inject(PersistenceService);
 		metadataStore = TestBed.inject(ProjectMetadataStore);
 		projectService = TestBed.inject(ProjectService);
+		registry = TestBed.inject(CustomComponentRegistry);
+		provider = TestBed.inject(ComponentProviderService);
+		serializer = TestBed.inject(CircuitSerializer);
 		httpMock = TestBed.inject(HttpTestingController);
 	});
 
@@ -671,18 +737,20 @@ describe('PersistenceService', () => {
 			});
 
 			const parsed = JSON.parse(service.exportProjectToJson(project));
-			expect(parsed.version).toBe(1);
+			expect(parsed.version).toBe(2);
 			expect(parsed.name).toBe('My Circuit');
 			expect(parsed.components).toEqual([]);
 			expect(parsed.wires).toEqual([]);
+			expect(parsed.definitions).toEqual([]);
 		});
 
 		it('importProjectFromJson persists a clean browser project and navigates to /local/:id', async () => {
 			const content = JSON.stringify({
-				version: 1,
+				version: 2,
 				name: 'Imported',
 				components: [{ type: 1, pos: [2, 3], options: {} }],
-				wires: []
+				wires: [],
+				definitions: []
 			});
 
 			const project = await service.importProjectFromJson(content);
@@ -713,10 +781,11 @@ describe('PersistenceService', () => {
 			// Seed a record using the same encoding the service writes.
 			const imported = await service.importProjectFromJson(
 				JSON.stringify({
-					version: 1,
+					version: 2,
 					name: 'Seed',
 					components: [{ type: 1, pos: [4, 4], options: {} }],
-					wires: []
+					wires: [],
+					definitions: []
 				})
 			);
 			const id = metadataStore.getMetadata(imported)!.id;
@@ -738,10 +807,11 @@ describe('PersistenceService', () => {
 			const record = await browserStore.save({
 				name: 'Stored',
 				content: JSON.stringify({
-					version: 1,
+					version: 2,
 					name: 'Stored',
 					components: [],
-					wires: []
+					wires: [],
+					definitions: []
 				})
 			});
 
@@ -759,6 +829,185 @@ describe('PersistenceService', () => {
 
 			const list = await service.listBrowserProjects();
 			expect(list.map((p) => p.name).sort()).toEqual(['One', 'Two']);
+		});
+	});
+
+	describe('custom component persistence (browser)', () => {
+		const plugCircuit: SerializedCircuitBody = {
+			components: [
+				{ type: 100, pos: [0, 0], options: { direction: 0, label: 'in', index: 0 } },
+				{ type: 101, pos: [5, 0], options: { direction: 0, label: 'out', index: 0 } }
+			],
+			wires: []
+		};
+
+		function registerBrowserProject(): Project {
+			const project = new Project();
+			metadataStore.register(project, {
+				id: '',
+				name: 'Host',
+				type: 'project',
+				source: 'browser',
+				hash: '',
+				isPublic: false
+			});
+			return project;
+		}
+
+		// Mirror the placement session: snapshot the master, place an instance.
+		function placeSnapshot(project: Project, masterTypeId: number): CustomComponent {
+			const def = registry.snapshot(masterTypeId);
+			const config = provider.getComponent(def.typeId)!;
+			const instance = config.create({
+				direction: config.options['direction'].clone()
+			}) as CustomComponent;
+			project.addComponent(instance);
+			return instance;
+		}
+
+		function customInstanceOf(project: Project): CustomComponent {
+			return [...project.components].find(
+				(c): c is CustomComponent => c instanceof CustomComponent
+			)!;
+		}
+
+		it('saves a project placing a custom and reopens it self-contained', async () => {
+			const master = registry.createMaster(
+				{
+					id: 'm1',
+					symbol: 'M',
+					numInputs: 1,
+					numOutputs: 1,
+					labels: ['in', 'out'],
+					circuit: plugCircuit
+				},
+				'browser'
+			);
+			const project = registerBrowserProject();
+			placeSnapshot(project, master);
+			metadataStore.markDirty(project);
+
+			await service.saveProject(project);
+			const id = metadataStore.getMetadata(project)!.id;
+			expect(id).toBeTruthy();
+
+			const reopened = await service.loadLocalProject(id);
+			const instance = customInstanceOf(reopened);
+			expect(instance.numInputs).toBe(1);
+			expect(instance.numOutputs).toBe(1);
+		});
+
+		it('keeps a placed instance frozen across a save when its master changes', async () => {
+			const master = registry.createMaster(
+				{
+					id: 'm2',
+					symbol: 'M',
+					numInputs: 1,
+					numOutputs: 0,
+					labels: ['in'],
+					circuit: {
+						components: [
+							{ type: 100, pos: [0, 0], options: { direction: 0, label: 'in', index: 0 } }
+						],
+						wires: []
+					}
+				},
+				'browser'
+			);
+			const project = registerBrowserProject();
+			placeSnapshot(project, master); // captures shape: 1 input
+
+			// Master grows a second input after placement.
+			registry.updateDefinition(master, {
+				numInputs: 2,
+				numOutputs: 0,
+				labels: ['a', 'b']
+			});
+			metadataStore.markDirty(project);
+
+			await service.saveProject(project);
+			const id = metadataStore.getMetadata(project)!.id;
+
+			const reopened = await service.loadLocalProject(id);
+			// The embedded snapshot was frozen at place time — still 1 input.
+			expect(customInstanceOf(reopened).numInputs).toBe(1);
+		});
+
+		it('saves a component master to the components store and reopens its circuit', async () => {
+			const masterTypeId = registry.createMaster(
+				{ id: 'cm1', name: 'Comp', symbol: 'C', description: 'd' },
+				'browser'
+			);
+			const id = registry.idForTypeId(masterTypeId)!;
+
+			const { components } = serializer.deserializeProject([
+				{ t: 100, p: [0, 0], n: [0], s: 'in' },
+				{ t: 101, p: [5, 0], n: [0], s: 'out' }
+			]);
+			const editor = new Project();
+			for (const c of components) editor.addComponent(c);
+			metadataStore.register(editor, {
+				id,
+				name: 'Comp',
+				type: 'comp',
+				source: 'browser',
+				hash: '',
+				isPublic: false
+			});
+			metadataStore.markDirty(editor);
+
+			await service.saveProject(editor);
+
+			const record = componentStore.records.get(id)!;
+			expect(record.numInputs).toBe(1);
+			expect(record.numOutputs).toBe(1);
+			expect(record.labels).toEqual(['in', 'out']);
+			expect(record.symbol).toBe('C');
+
+			const { project: reopened, masterTypeId: reopenedType } =
+				await service.loadComponentForEdit(id);
+			// The session master is reused, not duplicated.
+			expect(reopenedType).toBe(masterTypeId);
+			expect([...reopened.components].length).toBe(2);
+		});
+
+		it('loadComponentForEdit rejects when no master record exists', async () => {
+			await expectAsync(service.loadComponentForEdit('missing')).toBeRejected();
+		});
+
+		it('importProjectFromJson adopts a master-less custom into the library', async () => {
+			// A file embedding one custom whose provenance master is not registered.
+			const content = JSON.stringify({
+				version: 2,
+				name: 'Imported',
+				components: [{ type: 1000, pos: [3, 3], options: { direction: 0 } }],
+				wires: [],
+				definitions: [
+					{
+						type: 1000,
+						source: { id: 'external-id', version: 2 },
+						name: 'Ext',
+						symbol: 'E',
+						description: '',
+						numInputs: 1,
+						numOutputs: 1,
+						labels: ['in', 'out'],
+						components: plugCircuit.components,
+						wires: []
+					}
+				]
+			});
+
+			const project = await service.importProjectFromJson(content);
+			expect(customInstanceOf(project).numInputs).toBe(1);
+
+			// The custom now exists as a browser library master (palette + store).
+			const records = [...componentStore.records.values()];
+			expect(records.length).toBe(1);
+			expect(records[0].name).toBe('Ext');
+			expect(records[0].numInputs).toBe(1);
+			expect(records[0].labels).toEqual(['in', 'out']);
+			expect(registry.masterTypeIdForId(records[0].id)).toBeDefined();
 		});
 	});
 });
