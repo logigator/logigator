@@ -1,6 +1,11 @@
-import { Type } from '@angular/core';
+import { Signal, Type } from '@angular/core';
 import { Subject } from 'rxjs';
 import { TranslationKey } from '../translation/translation-key.model';
+
+export interface ComponentOptionInput<T> {
+	readonly option: Signal<ComponentOption<T>>;
+	readonly commit: Signal<(value: T) => void>;
+}
 
 /**
  * Wire slot in `ProjectElement` this option contributes to.
@@ -15,7 +20,7 @@ export type ComponentOptionWireSlot = 'n' | 's' | null;
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export abstract class ComponentOption<T = any> {
 	public abstract readonly label: TranslationKey;
-	public abstract readonly renderer: Type<unknown>;
+	public abstract readonly renderer: Type<ComponentOptionInput<T>>;
 	public onChange$ = new Subject<T>();
 
 	/**

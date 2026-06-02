@@ -5,7 +5,7 @@ import type { Project } from '../../project/project';
 
 class IndexOption extends ComponentOption<number> {
 	public readonly label = 'components.options.index' as never;
-	public readonly renderer = class {};
+	public readonly renderer = class {} as never;
 	public readonly wireSlot = 'n' as const;
 	constructor(value: number) {
 		super(value);

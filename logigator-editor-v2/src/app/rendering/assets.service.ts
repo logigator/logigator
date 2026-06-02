@@ -9,12 +9,12 @@ export class AssetsService {
 	private readonly hashingService = inject(HashingService);
 
 	constructor() {
-		const hashingService = this.hashingService;
-
-		Assets.add({
-			alias: 'Roboto',
-			src: hashingService.hashUrl('fonts/roboto-regular-webfont.woff2')
-		});
+		if (!Assets.resolver.hasKey('Roboto')) {
+			Assets.add({
+				alias: 'Roboto',
+				src: this.hashingService.hashUrl('fonts/roboto-regular-webfont.woff2')
+			});
+		}
 	}
 
 	async init() {

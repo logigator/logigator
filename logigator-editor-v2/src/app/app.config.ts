@@ -1,7 +1,7 @@
 import {
 	ApplicationConfig,
 	isDevMode,
-	provideZoneChangeDetection
+	provideZonelessChangeDetection
 } from '@angular/core';
 import { provideTransloco } from '@jsverse/transloco';
 import { TranslationLoaderService } from './translation/translation-loader.service';
@@ -12,7 +12,7 @@ import { provideHttpClient } from '@angular/common/http';
 
 export const appConfig: ApplicationConfig = {
 	providers: [
-		provideZoneChangeDetection({ eventCoalescing: true }),
+		provideZonelessChangeDetection(),
 		providePrimeNG({ theme: { preset: Aura } }),
 		ConfirmationService,
 		MessageService,

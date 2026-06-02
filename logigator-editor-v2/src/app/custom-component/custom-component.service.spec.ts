@@ -1,5 +1,5 @@
 import { Injector } from '@angular/core';
-import { fakeAsync, TestBed, tick } from '@angular/core/testing';
+import { TestBed } from '@angular/core/testing';
 import { setStaticDIInjector } from '../utils/get-di';
 import { appConfig } from '../app.config';
 import { CustomComponentService } from './custom-component.service';
@@ -31,6 +31,7 @@ describe('CustomComponentService', () => {
 	let main: Project;
 
 	beforeEach(() => {
+		jasmine.clock().install();
 		TestBed.configureTestingModule({ providers: appConfig.providers });
 		setStaticDIInjector(TestBed.inject(Injector));
 		service = TestBed.inject(CustomComponentService);
@@ -49,6 +50,10 @@ describe('CustomComponentService', () => {
 			isPublic: false
 		});
 		projectService.setMainProject(main);
+	});
+
+	afterEach(() => {
+		jasmine.clock().uninstall();
 	});
 
 	function masterTypeIdOf(editor: Project): number {
@@ -96,7 +101,7 @@ describe('CustomComponentService', () => {
 		expect(metadataStore.getMetadata(editor)).toBeUndefined();
 	});
 
-	it('keeps the master summary in sync with its plugs (DefinitionBinding)', fakeAsync(() => {
+	it('keeps the master summary in sync with its plugs (DefinitionBinding)', () => {
 		const editor = service.createComponent({
 			name: 'X',
 			symbol: 'X',
@@ -105,10 +110,10 @@ describe('CustomComponentService', () => {
 		const masterTypeId = masterTypeIdOf(editor);
 
 		editor.actionManager.push(new AddComponentsAction(makeInput(0)));
-		tick(1);
+		jasmine.clock().tick(1);
 
 		expect(registry.getDefinition(masterTypeId)?.numInputs).toBe(1);
-	}));
+	});
 
 	it('a ChangeOptionAction marks the project dirty and undo reverts the value', () => {
 		const input = makeInput(0);
@@ -134,7 +139,7 @@ describe('CustomComponentService', () => {
 		expect(placed.options.label.value).toBe('');
 	});
 
-	it('placed instances stay frozen when the master changes', fakeAsync(() => {
+	it('placed instances stay frozen when the master changes', () => {
 		const editor = service.createComponent({
 			name: 'X',
 			symbol: 'X',
@@ -143,18 +148,18 @@ describe('CustomComponentService', () => {
 		const masterTypeId = masterTypeIdOf(editor);
 
 		editor.actionManager.push(new AddComponentsAction(makeInput(0)));
-		tick(1);
+		jasmine.clock().tick(1);
 		const instance = placeInstance(masterTypeId, main);
 		expect(instance.numInputs).toBe(1);
 
 		// Edit the master after placing — the instance must not change.
 		editor.actionManager.push(new AddComponentsAction(makeInput(1)));
-		tick(1);
+		jasmine.clock().tick(1);
 		expect(registry.getDefinition(masterTypeId)?.numInputs).toBe(2);
 		expect(instance.numInputs).toBe(1);
-	}));
+	});
 
-	it('buildInstanceUpdate replaces the instance with the master shape, undoable', fakeAsync(() => {
+	it('buildInstanceUpdate replaces the instance with the master shape, undoable', () => {
 		const editor = service.createComponent({
 			name: 'X',
 			symbol: 'X',
@@ -163,12 +168,12 @@ describe('CustomComponentService', () => {
 		const masterTypeId = masterTypeIdOf(editor);
 
 		editor.actionManager.push(new AddComponentsAction(makeInput(0)));
-		tick(1);
+		jasmine.clock().tick(1);
 		const instance = placeInstance(masterTypeId, main);
 
 		// Master grows a second input after placement.
 		editor.actionManager.push(new AddComponentsAction(makeInput(1)));
-		tick(1);
+		jasmine.clock().tick(1);
 
 		const action = service.buildInstanceUpdate(instance)!;
 		expect(action).toBeTruthy();
@@ -184,5 +189,5 @@ describe('CustomComponentService', () => {
 			(c): c is CustomComponent => c instanceof CustomComponent
 		)!;
 		expect(restored.numInputs).toBe(1);
-	}));
+	});
 });

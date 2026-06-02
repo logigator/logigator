@@ -6551,7 +6551,6 @@ __metadata:
     typescript: "npm:~5.9.3"
     typescript-eslint: "npm:^8.59.0"
     uuid: "npm:^14.0.0"
-    zone.js: "npm:~0.15.1"
   languageName: unknown
   linkType: soft
 
@@ -9203,12 +9202,5 @@ __metadata:
   version: 4.3.6
   resolution: "zod@npm:4.3.6"
   checksum: 10c0/860d25a81ab41d33aa25f8d0d07b091a04acb426e605f396227a796e9e800c44723ed96d0f53a512b57be3d1520f45bf69c0cb3b378a232a00787a2609625307
-  languageName: node
-  linkType: hard
-
-"zone.js@npm:~0.15.1":
-  version: 0.15.1
-  resolution: "zone.js@npm:0.15.1"
-  checksum: 10c0/4eca000f90dbea1c34f62e88ce56910dace8cdecbe14747b214f2af37aa511264c7bd50faf3e9b00612e95dc4567da156a9690fef1983bfcf74604a630d190ef
   languageName: node
   linkType: hard

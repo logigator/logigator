@@ -18,7 +18,7 @@
 		[options]="option().options"
 		[ngModel]="option().value"
 		[ngModelOptions]="{ standalone: true }"
-		(ngModelChange)="option().value = $event"
+		(ngModelChange)="commit()($event)"
 	>
 		<ng-template #item let-item pTemplate="selectedItem">
 			<ng-container

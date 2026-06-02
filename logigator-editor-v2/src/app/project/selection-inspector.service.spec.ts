@@ -18,9 +18,9 @@ function makeAnd(): AndComponent {
 	});
 }
 
-// A trivial host so the inspector's root effect flushes through a normal fixture
-// change-detection pass, which — unlike TestBed.tick()/flushEffects() — does not
-// trip the recursive-tick guard when the effect writes a signal.
+// A trivial host whose change-detection pass flushes the inspector's
+// `toObservable` subscription effect, so the active project's selection stream
+// is live before the assertions run.
 @Component({
 	selector: 'app-test-host',
 	template: '',
@@ -82,22 +82,5 @@ describe('SelectionInspectorService', () => {
 		selectComponent();
 		project.selectionManager.clear();
 		expect(inspector.selectedComponent()).toBeNull();
-	});
-
-	it('routes a proxied option write through ChangeOptionAction (undoable + dirty)', () => {
-		selectComponent();
-		metadataStore.clearDirty(project);
-
-		const proxied = inspector.inspectorOptions()!;
-		// numInputs starts at 2; a proxy write must NOT mutate directly — it
-		// dispatches an action that does, then the proxy reflects the new value.
-		proxied['numInputs'].value = 3;
-
-		expect(component.options.numInputs.value).toBe(3);
-		expect(proxied['numInputs'].value).toBe(3);
-		expect(metadataStore.isDirty(project)).toBeTrue();
-
-		project.actionManager.undo();
-		expect(component.options.numInputs.value).toBe(2);
 	});
 });

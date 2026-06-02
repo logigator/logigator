@@ -170,6 +170,7 @@ describe('PersistenceService', () => {
 	let browserStore: FakeBrowserProjectStore;
 
 	beforeEach(() => {
+		spyOn(console, 'error');
 		locationGo = jasmine.createSpy('Location.go');
 		browserStore = new FakeBrowserProjectStore();
 		TestBed.configureTestingModule({

@@ -9,6 +9,7 @@ import { ButtonModule } from 'primeng/button';
 import { DialogModule } from 'primeng/dialog';
 import { Textarea } from 'primeng/textarea';
 import { TranslocoDirective } from '@jsverse/transloco';
+import type { ComponentOptionInput } from '../../component-option';
 import type { TextAreaComponentOption } from './text-area.component-option';
 
 @Component({
@@ -23,8 +24,9 @@ import type { TextAreaComponentOption } from './text-area.component-option';
 	templateUrl: './text-area-option-input.component.html',
 	changeDetection: ChangeDetectionStrategy.OnPush
 })
-export class TextAreaOptionInputComponent {
+export class TextAreaOptionInputComponent implements ComponentOptionInput<string> {
 	public readonly option = input.required<TextAreaComponentOption>();
+	public readonly commit = input.required<(value: string) => void>();
 	protected readonly dialogVisible = signal(false);
 	protected readonly draft = signal('');
 
@@ -34,7 +36,7 @@ export class TextAreaOptionInputComponent {
 	}
 
 	protected save(): void {
-		this.option().value = this.draft();
+		this.commit()(this.draft());
 		this.dialogVisible.set(false);
 	}
 

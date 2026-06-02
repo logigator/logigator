@@ -4,7 +4,6 @@ import {
 	effect,
 	ElementRef,
 	input,
-	NgZone,
 	OnDestroy,
 	OnInit,
 	output,
@@ -31,7 +30,6 @@ import { environment } from '../../../environments/environment';
 export class BoardComponent implements OnInit, OnDestroy {
 	private readonly hostEl = inject(ElementRef);
 	private readonly themingService = inject(ThemingService);
-	private readonly ngZone = inject(NgZone);
 	private readonly assetsService = inject(AssetsService);
 	private readonly workModeService = inject(WorkModeService);
 
@@ -59,53 +57,48 @@ export class BoardComponent implements OnInit, OnDestroy {
 				return;
 			}
 
-			this.ngZone.runOutsideAngular(() => {
-				project.resizeViewport(
-					this.app.renderer.width,
-					this.app.renderer.height
-				);
+			project.resizeViewport(this.app.renderer.width, this.app.renderer.height);
 
-				this.app.stage = project;
-				this.app.ticker.update();
+			this.app.stage = project;
+			this.app.ticker.update();
 
-				this.positionChange.emit(project.gridPosition);
+			this.positionChange.emit(project.gridPosition);
 
-				project.positionChange$
-					.pipe(
-						takeUntil(merge(this.destroy$, this.projectChange$)),
-						throttleTime(33.33)
-					)
-					.subscribe((pos) => {
-						this.positionChange.emit(pos);
-					});
+			project.positionChange$
+				.pipe(
+					takeUntil(merge(this.destroy$, this.projectChange$)),
+					throttleTime(33.33)
+				)
+				.subscribe((pos) => {
+					this.positionChange.emit(pos);
+				});
 
-				project.cursorPosition$
-					.pipe(
-						takeUntil(merge(this.destroy$, this.projectChange$)),
-						filter(() => this._pointerInsideCanvas),
-						throttleTime(33.33)
-					)
-					.subscribe((pos) => {
-						this.cursorPositionChange.emit(pos);
-					});
+			project.cursorPosition$
+				.pipe(
+					takeUntil(merge(this.destroy$, this.projectChange$)),
+					filter(() => this._pointerInsideCanvas),
+					throttleTime(33.33)
+				)
+				.subscribe((pos) => {
+					this.cursorPositionChange.emit(pos);
+				});
 
-				project.ticker$
-					.pipe(takeUntil(merge(this.destroy$, this.projectChange$)))
-					.subscribe((value) => {
-						switch (value) {
-							case 'single':
-								this.app.ticker.update();
-								break;
-							case 'on':
-								this.app.ticker.start();
-								break;
-							case 'off':
-								this.app.ticker.update();
-								this.app.ticker.stop();
-								break;
-						}
-					});
-			});
+			project.ticker$
+				.pipe(takeUntil(merge(this.destroy$, this.projectChange$)))
+				.subscribe((value) => {
+					switch (value) {
+						case 'single':
+							this.app.ticker.update();
+							break;
+						case 'on':
+							this.app.ticker.start();
+							break;
+						case 'off':
+							this.app.ticker.update();
+							this.app.ticker.stop();
+							break;
+					}
+				});
 		});
 
 		effect(() => {
@@ -137,36 +130,34 @@ export class BoardComponent implements OnInit, OnDestroy {
 			this._pointerInsideCanvas = false;
 		});
 
-		await this.ngZone.runOutsideAngular(async () => {
-			await this.app.init({
-				canvas: this.canvas.nativeElement,
-				resizeTo: this.hostEl.nativeElement,
-				preference: 'webgpu',
-				antialias: true,
-				hello: false,
-				powerPreference: 'high-performance',
-				backgroundColor: this.themingService.currentTheme().background,
-				resolution: window.devicePixelRatio || 1,
-				autoDensity: true,
-				autoStart: false
-			});
-
-			this.app.renderer.on('resize', (w, h) => {
-				const project = this.project();
-				if (!project) {
-					return;
-				}
-
-				project.resizeViewport(w, h);
-			});
-
-			this.appInitialized = true;
-			this.loaded.set(true);
+		await this.app.init({
+			canvas: this.canvas.nativeElement,
+			resizeTo: this.hostEl.nativeElement,
+			preference: 'webgpu',
+			antialias: true,
+			hello: false,
+			powerPreference: 'high-performance',
+			backgroundColor: this.themingService.currentTheme().background,
+			resolution: window.devicePixelRatio || 1,
+			autoDensity: true,
+			autoStart: false
 		});
+
+		this.app.renderer.on('resize', (w, h) => {
+			const project = this.project();
+			if (!project) {
+				return;
+			}
+
+			project.resizeViewport(w, h);
+		});
+
+		this.appInitialized = true;
+		this.loaded.set(true);
 
 		if (this.fps) {
 			this.fpsInterval = setInterval(() => {
-				this.ngZone.run(() => this.fps!.set(Math.round(this.app.ticker.FPS)));
+				this.fps!.set(Math.round(this.app.ticker.FPS));
 			}, 500);
 		}
 	}

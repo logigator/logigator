@@ -21,7 +21,7 @@
 						"baseHref": "/editor/",
 						"index": "src/index.html",
 						"browser": "src/main.ts",
-						"polyfills": ["zone.js"],
+						"polyfills": [],
 						"tsConfig": "tsconfig.app.json",
 						"inlineStyleLanguage": "scss",
 						"assets": [
@@ -91,7 +91,7 @@
 					"builder": "@angular/build:karma",
 					"options": {
 						"browsers": "ChromeHeadlessNoSandbox",
-						"polyfills": ["zone.js", "zone.js/testing"],
+						"polyfills": [],
 						"tsConfig": "tsconfig.spec.json",
 						"inlineStyleLanguage": "scss",
 						"assets": [

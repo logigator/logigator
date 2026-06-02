@@ -8,6 +8,6 @@
 		size="small"
 		[ngModel]="option().value"
 		[ngModelOptions]="{ standalone: true }"
-		(ngModelChange)="option().value = $event"
+		(ngModelChange)="commit()($event)"
 	></p-inputNumber>
 </div>

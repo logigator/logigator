@@ -3,6 +3,7 @@ import { FormsModule } from '@angular/forms';
 import { NgTemplateOutlet } from '@angular/common';
 import { SelectButtonModule } from 'primeng/selectbutton';
 import { TranslocoDirective } from '@jsverse/transloco';
+import type { ComponentOptionInput } from '../../component-option';
 import type { SelectButtonComponentOption } from './select-button.component-option';
 
 let nextId = 0;
@@ -18,8 +19,10 @@ let nextId = 0;
 	templateUrl: './select-button-option-input.component.html',
 	changeDetection: ChangeDetectionStrategy.OnPush
 })
-export class SelectButtonOptionInputComponent {
-	public readonly option =
-		input.required<SelectButtonComponentOption<unknown>>();
+export class SelectButtonOptionInputComponent<
+	T
+> implements ComponentOptionInput<T> {
+	public readonly option = input.required<SelectButtonComponentOption<T>>();
+	public readonly commit = input.required<(value: T) => void>();
 	protected readonly inputId = `component-settings-input-${++nextId}`;
 }

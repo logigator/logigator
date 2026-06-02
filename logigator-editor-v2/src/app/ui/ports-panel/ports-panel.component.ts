@@ -2,19 +2,15 @@ import {
 	ChangeDetectionStrategy,
 	Component,
 	computed,
-	effect,
-	inject,
-	NgZone,
-	OnDestroy,
-	signal
+	inject
 } from '@angular/core';
+import { toObservable, toSignal } from '@angular/core/rxjs-interop';
 import {
 	CdkDragDrop,
 	DragDropModule,
 	moveItemInArray
 } from '@angular/cdk/drag-drop';
-import { Subscription } from 'rxjs';
-import { Project } from '../../project/project';
+import { of, scan, startWith, switchMap } from 'rxjs';
 import { ProjectService } from '../../project/project.service';
 import { InputComponent } from '../../components/component-types/input/input.component';
 import { OutputComponent } from '../../components/component-types/output/output.component';
@@ -54,14 +50,27 @@ interface PlugRow {
 	styleUrl: './ports-panel.component.scss',
 	changeDetection: ChangeDetectionStrategy.OnPush
 })
-export class PortsPanelComponent implements OnDestroy {
+export class PortsPanelComponent {
 	private readonly projectService = inject(ProjectService);
-	private readonly ngZone = inject(NgZone);
 
-	// Bumped on every action in the watched project to re-derive the plug lists.
-	private readonly _revision = signal(0);
-	private _watched: Project | null = null;
-	private _sub?: Subscription;
+	// Re-emits on every action in the active project so the derived plug lists
+	// stay live; `startWith` seeds the first render when a project becomes
+	// active, and switchMap re-targets the stream on project change. As a signal
+	// it notifies change detection regardless of which context the action fired
+	// from (e.g. PixiJS plug add/delete handlers). `scan` turns the void
+	// emissions into a monotonic counter so each one is a distinct value that
+	// survives toSignal's equality check (otherwise identical `undefined`s would
+	// be deduped and the lists would not refresh).
+	private readonly actionTick = toSignal(
+		toObservable(this.projectService.activeProject).pipe(
+			switchMap((project) =>
+				project
+					? project.actionManager.actionChange$.pipe(startWith(void 0))
+					: of(void 0)
+			),
+			scan((n) => n + 1, 0)
+		)
+	);
 
 	public readonly inputRows = computed(() =>
 		this._rows(InputComponent, 'Input')
@@ -69,10 +78,6 @@ export class PortsPanelComponent implements OnDestroy {
 	public readonly outputRows = computed(() =>
 		this._rows(OutputComponent, 'Output')
 	);
-
-	constructor() {
-		effect(() => this._watch(this.projectService.activeProject()));
-	}
 
 	public dropInput(event: CdkDragDrop<PlugRow[]>): void {
 		this._applyReorder(
@@ -100,27 +105,6 @@ export class PortsPanelComponent implements OnDestroy {
 		);
 	}
 
-	ngOnDestroy(): void {
-		this._sub?.unsubscribe();
-	}
-
-	private _watch(project: Project | null): void {
-		if (project === this._watched) return;
-		this._sub?.unsubscribe();
-		this._watched = project;
-		if (!project) return;
-		// actionChange$ can fire from PixiJS handlers (plug add/delete) outside the
-		// Angular zone — re-enter so the OnPush view updates, but only when not
-		// already inside it (in-zone edits would otherwise recurse the tick).
-		this._sub = project.actionManager.actionChange$.subscribe(() => {
-			if (NgZone.isInAngularZone()) {
-				this._revision.update((v) => v + 1);
-			} else {
-				this.ngZone.run(() => this._revision.update((v) => v + 1));
-			}
-		});
-	}
-
 	private _applyReorder(
 		rows: PlugRow[],
 		previousIndex: number,
@@ -145,7 +129,7 @@ export class PortsPanelComponent implements OnDestroy {
 		prefix: string
 	): PlugRow[] {
 		// Establish the dependency on action changes so the lists stay live.
-		this._revision();
+		this.actionTick();
 		const project = this.projectService.activeProject();
 		if (!project) return [];
 

@@ -5,9 +5,12 @@
 		[subheader]="text(settings.description)"
 	>
 		<form class="flex flex-col gap-2">
-			@for (option of options(); track option[0]) {
+			@for (o of options(); track o.key) {
 				<ng-container
-					*ngComponentOutlet="option[1].renderer; inputs: { option: option[1] }"
+					*ngComponentOutlet="
+						o.option.renderer;
+						inputs: { option: o.option, commit: o.commit }
+					"
 				></ng-container>
 			}
 			@if (settings.context; as ctx) {
