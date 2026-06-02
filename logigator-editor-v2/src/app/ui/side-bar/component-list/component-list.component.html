@@ -1,4 +1,4 @@
-<div *transloco="let t" class="border border-white/20">
+<div class="border border-white/20">
 	<span class="block bg-white/20 p-2 font-bold text-lg">{{ headline() }}</span>
 	<div class="flex flex-wrap gap-2 m-2">
 		@for (comp of filteredComponents(); track comp.type) {
@@ -15,7 +15,7 @@
 				>
 					{{ comp.symbol }}
 				</div>
-				<span class="block text-center">{{ t(comp.name) }}</span>
+				<span class="block text-center">{{ text(comp.name) }}</span>
 			</div>
 		}
 	</div>

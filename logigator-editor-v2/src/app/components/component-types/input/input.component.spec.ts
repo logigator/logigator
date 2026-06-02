@@ -2,7 +2,7 @@ import { Injector } from '@angular/core';
 import { TestBed } from '@angular/core/testing';
 import { setStaticDIInjector } from '../../../utils/get-di';
 import { Component } from '../../component';
-import { ComponentType } from '../../component-type.enum';
+import { BuiltInComponentType } from '../../component-type.enum';
 import { inputComponentConfig } from './input.config';
 import { InputComponent } from './input.component';
 
@@ -20,7 +20,7 @@ describe('InputComponent', () => {
 	}
 
 	it('has the INPUT type id (100)', () => {
-		expect(inputComponentConfig.type).toBe(ComponentType.INPUT);
+		expect(inputComponentConfig.type).toBe(BuiltInComponentType.INPUT);
 	});
 
 	it('exposes exactly one output and no inputs', () => {

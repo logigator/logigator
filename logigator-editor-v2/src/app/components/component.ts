@@ -27,8 +27,14 @@ export interface PortsChange {
 }
 
 export abstract class Component<
-	TOptions extends Record<string, ComponentOption> = Record<string, ComponentOption>
-> extends Container implements Connectable {
+	TOptions extends Record<string, ComponentOption> = Record<
+		string,
+		ComponentOption
+	>
+>
+	extends Container
+	implements Connectable
+{
 	private static readonly _idAllocator = new IdAllocator();
 	public abstract readonly config: ComponentConfigView<TOptions>;
 	public readonly ignoresWireCollision: boolean = false;

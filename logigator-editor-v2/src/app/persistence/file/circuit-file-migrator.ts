@@ -1,7 +1,10 @@
 import { MIGRATIONS } from './migrations/migrations';
 import { MigrationContext } from './migrations/migration';
 import { CURRENT_FILE_VERSION, CurrentCircuitFile } from './circuit-file.types';
-import { InvalidFileError, UnsupportedVersionError } from './circuit-file.errors';
+import {
+	InvalidFileError,
+	UnsupportedVersionError
+} from './circuit-file.errors';
 
 /**
  * Reads a parsed file's format version. Legacy files have no `version` field, so

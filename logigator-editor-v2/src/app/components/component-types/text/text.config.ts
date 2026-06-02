@@ -1,5 +1,5 @@
 import { ComponentConfig } from '../../component-config.model';
-import { ComponentType } from '../../component-type.enum';
+import { BuiltInComponentType } from '../../component-type.enum';
 import { ComponentCategory } from '../../component-category.enum';
 import { ComponentOption } from '../../component-option';
 import { DirectionComponentOption } from '../../component-options/direction/direction.component-option';
@@ -15,7 +15,7 @@ export interface TextOptions {
 }
 
 export const textComponentConfig: ComponentConfig<TextOptions> = {
-	type: ComponentType.TEXT,
+	type: BuiltInComponentType.TEXT,
 	category: ComponentCategory.HIDDEN,
 	symbol: 'T',
 	name: 'components.def.TEXT.name',

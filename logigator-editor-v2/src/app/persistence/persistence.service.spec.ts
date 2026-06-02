@@ -186,8 +186,11 @@ describe('PersistenceService', () => {
 					}
 				},
 				{ provide: BrowserProjectStore, useValue: browserStore },
-					MessageService,
-					{ provide: TranslocoService, useValue: jasmine.createSpyObj('TranslocoService', ['translate']) }
+				MessageService,
+				{
+					provide: TranslocoService,
+					useValue: jasmine.createSpyObj('TranslocoService', ['translate'])
+				}
 			]
 		});
 		setStaticDIInjector(TestBed.inject(Injector));

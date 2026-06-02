@@ -74,5 +74,4 @@ export abstract class ComponentOption<T = any> {
 	 * no wire representation yet.
 	 */
 	public abstract readonly wireSlot: ComponentOptionWireSlot;
-
 }

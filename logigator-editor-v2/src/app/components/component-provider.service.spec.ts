@@ -4,7 +4,7 @@ import { setStaticDIInjector } from '../utils/get-di';
 import { ComponentProviderService } from './component-provider.service';
 import { ComponentConfig } from './component-config.model';
 import { ComponentCategory } from './component-category.enum';
-import { ComponentType } from './component-type.enum';
+import { BuiltInComponentType } from './component-type.enum';
 import { Component } from './component';
 import { DirectionComponentOption } from './component-options/direction/direction.component-option';
 
@@ -15,7 +15,7 @@ const CUSTOM_TYPE = 1234;
 // registration/lookup), so it returns a placeholder.
 function makeStubConfig(): ComponentConfig {
 	return {
-		type: CUSTOM_TYPE as unknown as ComponentType,
+		type: CUSTOM_TYPE,
 		category: ComponentCategory.USER,
 		symbol: 'X',
 		name: 'components.def.AND.name',
@@ -38,11 +38,11 @@ describe('ComponentProviderService', () => {
 	});
 
 	it('resolves built-in configs by numeric type id', () => {
-		expect(service.getComponent(ComponentType.AND)?.type).toBe(
-			ComponentType.AND
+		expect(service.getComponent(BuiltInComponentType.AND)?.type).toBe(
+			BuiltInComponentType.AND
 		);
-		expect(service.getComponent(ComponentType.NOT)?.type).toBe(
-			ComponentType.NOT
+		expect(service.getComponent(BuiltInComponentType.NOT)?.type).toBe(
+			BuiltInComponentType.NOT
 		);
 	});
 
@@ -52,16 +52,19 @@ describe('ComponentProviderService', () => {
 
 	it('seeds the reactive category lists from the built-ins', () => {
 		expect(service.basicComponents().map((c) => c.type)).toEqual(
-			jasmine.arrayWithExactContents([ComponentType.NOT, ComponentType.AND])
+			jasmine.arrayWithExactContents([
+				BuiltInComponentType.NOT,
+				BuiltInComponentType.AND
+			])
 		);
 		expect(service.advancedComponents().map((c) => c.type)).toEqual([
-			ComponentType.ROM
+			BuiltInComponentType.ROM
 		]);
 		expect(service.userComponents()).toEqual([]);
 		expect(service.ioComponents().map((c) => c.type)).toEqual(
 			jasmine.arrayWithExactContents([
-				ComponentType.INPUT,
-				ComponentType.OUTPUT
+				BuiltInComponentType.INPUT,
+				BuiltInComponentType.OUTPUT
 			])
 		);
 	});
@@ -90,8 +93,8 @@ describe('ComponentProviderService', () => {
 		it('does not disturb built-ins when registering/unregistering customs', () => {
 			service.register(makeStubConfig());
 			service.unregister(CUSTOM_TYPE);
-			expect(service.getComponent(ComponentType.AND)?.type).toBe(
-				ComponentType.AND
+			expect(service.getComponent(BuiltInComponentType.AND)?.type).toBe(
+				BuiltInComponentType.AND
 			);
 		});
 	});

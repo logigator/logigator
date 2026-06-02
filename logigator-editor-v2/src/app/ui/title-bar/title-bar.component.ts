@@ -146,30 +146,20 @@ export class TitleBarComponent {
 	private newProject(): void {
 		const name = prompt('Project name:');
 		if (name) {
-			this.persistenceService
-				.createProject(name)
-				.catch(() => {
-					this.logging.error(
-						'Failed to create project',
-						'TitleBarComponent'
-					);
-					this.toastService.error('Failed to create project');
-				});
+			this.persistenceService.createProject(name).catch(() => {
+				this.logging.error('Failed to create project', 'TitleBarComponent');
+				this.toastService.error('Failed to create project');
+			});
 		}
 	}
 
 	private saveProject(): void {
 		const project = this.projectService.mainProject();
 		if (project) {
-			this.persistenceService
-				.saveProject(project)
-				.catch(() => {
-					this.logging.error(
-						'Failed to save project',
-						'TitleBarComponent'
-					);
-					this.toastService.error('Failed to save project');
-				});
+			this.persistenceService.saveProject(project).catch(() => {
+				this.logging.error('Failed to save project', 'TitleBarComponent');
+				this.toastService.error('Failed to save project');
+			});
 		}
 	}
 

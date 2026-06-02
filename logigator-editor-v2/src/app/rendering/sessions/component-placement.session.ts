@@ -21,9 +21,7 @@ export class ComponentPlacementSession implements DragSession {
 	) {
 		const config = project.componentToPlace!;
 		const options = Object.fromEntries(
-			Object.entries(config.options).map(
-				([key, opt]) => [key, opt.clone()]
-			)
+			Object.entries(config.options).map(([key, opt]) => [key, opt.clone()])
 		);
 		this._component = config.create(options);
 		this._component.tint = 0x888888;

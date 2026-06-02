@@ -10,7 +10,7 @@ import { TooltipModule } from 'primeng/tooltip';
 import { TranslocoDirective, TranslocoService } from '@jsverse/transloco';
 import { WorkModeService } from '../../work-mode/work-mode.service';
 import { WorkMode } from '../../work-mode/work-mode.enum';
-import { ComponentType } from '../../components/component-type.enum';
+import { BuiltInComponentType } from '../../components/component-type.enum';
 import { ProjectService } from '../../project/project.service';
 import { PersistenceService } from '../../persistence/persistence.service';
 import { ToastService } from '../../logging/toast.service';
@@ -53,7 +53,7 @@ export class ToolBarComponent {
 	protected isPlaceTextMode = computed(
 		() =>
 			this.workModeService.mode() === WorkMode.COMPONENT_PLACEMENT &&
-			this.workModeService.selectedComponentType() === ComponentType.TEXT
+			this.workModeService.selectedComponentType() === BuiltInComponentType.TEXT
 	);
 
 	protected setWireDrawMode(): void {
@@ -78,7 +78,7 @@ export class ToolBarComponent {
 
 	protected setPlaceTextMode(): void {
 		this.workModeService.setMode(WorkMode.COMPONENT_PLACEMENT);
-		this.workModeService.setSelectedComponentType(ComponentType.TEXT);
+		this.workModeService.setSelectedComponentType(BuiltInComponentType.TEXT);
 	}
 
 	protected undo(): void {

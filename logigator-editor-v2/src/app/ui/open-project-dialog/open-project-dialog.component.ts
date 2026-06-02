@@ -59,15 +59,13 @@ export class OpenProjectDialogComponent implements OnInit {
 	}
 
 	protected openLocalProject(id: string): void {
-		this.persistenceService
-			.loadLocalProjectAsMain(id)
-			.catch(() => {
-				this.loggingService.error(
-					'Failed to open local project',
-					'OpenProjectDialogComponent'
-				);
-				this.toastService.error('Failed to open local project');
-			});
+		this.persistenceService.loadLocalProjectAsMain(id).catch(() => {
+			this.loggingService.error(
+				'Failed to open local project',
+				'OpenProjectDialogComponent'
+			);
+			this.toastService.error('Failed to open local project');
+		});
 		this.ref.close();
 	}
 
@@ -123,9 +121,7 @@ export class OpenProjectDialogComponent implements OnInit {
 						`Failed to import file: ${message}`,
 						'OpenProjectDialogComponent'
 					);
-					this.toastService.error(
-						`Failed to import file: ${message}`
-					);
+					this.toastService.error(`Failed to import file: ${message}`);
 					this.importError.set(message);
 				});
 		};

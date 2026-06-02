@@ -119,7 +119,9 @@ describe('CircuitFileService', () => {
 		});
 
 		it('throws InvalidFileError on malformed JSON', () => {
-			expect(() => service.fromJson('{not json')).toThrowError(InvalidFileError);
+			expect(() => service.fromJson('{not json')).toThrowError(
+				InvalidFileError
+			);
 		});
 
 		it('throws InvalidFileError on a structurally invalid component', () => {

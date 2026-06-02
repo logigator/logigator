@@ -4,6 +4,27 @@ import { TranslationKey } from '../translation/translation-key.model';
 import { ComponentOption } from './component-option';
 import { Component } from './component';
 
+/**
+ * Display text that is either a built-in's {@link TranslationKey} (resolved
+ * through the translation service) or a custom component's user-authored
+ * `literal` string (shown verbatim). The literal arm keeps key typing strict for
+ * built-ins while letting runtime strings opt out of the translation schema.
+ */
+export type LocalizableText = TranslationKey | { readonly literal: string };
+
+/**
+ * Resolves {@link LocalizableText} to a display string: a key is run through
+ * `translate`, a literal is returned verbatim. `translate` is supplied by the
+ * caller (e.g. `TranslocoService.translate`) so this stays free of an Angular
+ * dependency.
+ */
+export function resolveLocalizableText(
+	value: LocalizableText,
+	translate: (key: TranslationKey) => string
+): string {
+	return typeof value === 'string' ? translate(value) : value.literal;
+}
+
 export interface ComponentConfigView<
 	TOptions extends Record<string, ComponentOption> = Record<
 		string,
@@ -13,8 +34,8 @@ export interface ComponentConfigView<
 	type: ComponentType;
 	category: ComponentCategory;
 	symbol: string;
-	name: TranslationKey;
-	description: TranslationKey;
+	name: LocalizableText;
+	description: LocalizableText;
 	options: TOptions;
 }
 
@@ -25,10 +46,9 @@ export interface ComponentConfig<
 	>
 > extends ComponentConfigView<TOptions> {
 	/**
-	 * Factory for a component instance from its options. Replaces a bare
-	 * constructor reference so a config can close over per-definition state
-	 * (e.g. a custom component's definition) instead of being limited to a
-	 * `new (options) => Component` signature.
+	 * Builds a component instance from its options. A factory (rather than a
+	 * constructor reference) so a config can close over per-definition state,
+	 * such as a custom component's definition.
 	 */
 	create(options: TOptions): Component<TOptions>;
 }

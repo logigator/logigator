@@ -1,5 +1,5 @@
 import { ComponentConfig } from '../../component-config.model';
-import { ComponentType } from '../../component-type.enum';
+import { BuiltInComponentType } from '../../component-type.enum';
 import { ComponentCategory } from '../../component-category.enum';
 import { ComponentOption } from '../../component-option';
 import { DirectionComponentOption } from '../../component-options/direction/direction.component-option';
@@ -19,7 +19,7 @@ export interface OutputOptions {
 }
 
 export const outputComponentConfig: ComponentConfig<OutputOptions> = {
-	type: ComponentType.OUTPUT,
+	type: BuiltInComponentType.OUTPUT,
 	category: ComponentCategory.IO,
 	symbol: 'OUT',
 	name: 'components.def.OUTPUT.name',

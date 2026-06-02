@@ -34,7 +34,11 @@ describe('Component.deserialize (create() factory)', () => {
 
 	it('preserves an explicit id when one is provided', () => {
 		const comp = Component.deserialize(
-			{ id: 42, pos: [0, 0], options: { direction: Direction.E, numInputs: 2 } },
+			{
+				id: 42,
+				pos: [0, 0],
+				options: { direction: Direction.E, numInputs: 2 }
+			},
 			andComponentConfig
 		);
 

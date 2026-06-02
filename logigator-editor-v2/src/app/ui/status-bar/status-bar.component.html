@@ -1,6 +1,6 @@
 <div *transloco="let t" class="flex border-t border-white/20">
 	<div class="grow px-2 border-r border-white/20">
-		{{ t(workMode(), { componentName: t(selectedComponentName()) }) }}
+		{{ t(workMode(), { componentName: text(selectedComponentName()) }) }}
 	</div>
 	<div class="px-2 border-r border-white/20">
 		{{ boardPositionFormatted() }}

@@ -3,7 +3,10 @@ import { detectVersion, migrateToCurrent } from './circuit-file-migrator';
 import { MigrationContext } from './migrations/migration';
 import { ComponentProviderService } from '../../components/component-provider.service';
 import { LoggingService } from '../../logging/logging.service';
-import { InvalidFileError, UnsupportedVersionError } from './circuit-file.errors';
+import {
+	InvalidFileError,
+	UnsupportedVersionError
+} from './circuit-file.errors';
 import { CURRENT_FILE_VERSION, CircuitFileV1 } from './circuit-file.types';
 
 describe('circuit-file-migrator', () => {

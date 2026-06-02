@@ -5,15 +5,19 @@ import {
 	input,
 	inject
 } from '@angular/core';
-import { ComponentConfig } from '../../../components/component-config.model';
+import {
+	ComponentConfig,
+	LocalizableText,
+	resolveLocalizableText
+} from '../../../components/component-config.model';
 import { ButtonModule } from 'primeng/button';
-import { TranslocoDirective, TranslocoService } from '@jsverse/transloco';
+import { TranslocoService } from '@jsverse/transloco';
 import { WorkModeService } from '../../../work-mode/work-mode.service';
 import { WorkMode } from '../../../work-mode/work-mode.enum';
 
 @Component({
 	selector: 'app-component-list',
-	imports: [ButtonModule, TranslocoDirective],
+	imports: [ButtonModule],
 	templateUrl: './component-list.component.html',
 	styleUrl: './component-list.component.scss',
 	changeDetection: ChangeDetectionStrategy.OnPush
@@ -30,9 +34,16 @@ export class ComponentListComponent {
 		const search = this.searchText().trim().toLowerCase();
 		if (!search) return this.components();
 		return this.components().filter((comp) =>
-			this.translocoService.translate(comp.name).toLowerCase().includes(search)
+			this.text(comp.name).toLowerCase().includes(search)
 		);
 	});
+
+	/** Resolves display text: translates a key, returns a literal verbatim. */
+	protected text(value: LocalizableText): string {
+		return resolveLocalizableText(value, (key) =>
+			this.translocoService.translate(key)
+		);
+	}
 
 	protected selectedComponent = computed(() => {
 		const selectedComponent = this.workModeService.selectedComponentType();

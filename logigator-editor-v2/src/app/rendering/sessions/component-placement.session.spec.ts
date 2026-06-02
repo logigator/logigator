@@ -59,7 +59,9 @@ describe('ComponentPlacementSession collision', () => {
 		setStaticDIInjector(TestBed.inject(Injector));
 		project = new Project();
 		dragLayer = new Container<Component | Wire>();
-		project.componentToPlace = andComponentConfig as unknown as ComponentConfig<Record<string, ComponentOption>>;
+		project.componentToPlace = andComponentConfig as unknown as ComponentConfig<
+			Record<string, ComponentOption>
+		>;
 	});
 
 	afterEach(() => {
@@ -186,7 +188,9 @@ describe('ComponentPlacementSession collision', () => {
 
 		project.componentToPlace = {
 			...notComponentConfig,
-			options: { direction: notComponentConfig.options.direction.clone(Direction.N) }
+			options: {
+				direction: notComponentConfig.options.direction.clone(Direction.N)
+			}
 		} as unknown as ComponentConfig<Record<string, ComponentOption>>;
 		session = new ComponentPlacementSession(
 			project,
@@ -205,7 +209,9 @@ describe('ComponentPlacementSession collision', () => {
 
 		project.componentToPlace = {
 			...notComponentConfig,
-			options: { direction: notComponentConfig.options.direction.clone(Direction.N) }
+			options: {
+				direction: notComponentConfig.options.direction.clone(Direction.N)
+			}
 		} as unknown as ComponentConfig<Record<string, ComponentOption>>;
 		session = new ComponentPlacementSession(
 			project,
@@ -219,7 +225,10 @@ describe('ComponentPlacementSession collision', () => {
 		// Wire at (0,0) horizontal length 5. TEXT placed at (1,0) — body inside wire.
 		const wire = makeWire(0, 0, WireDirection.HORIZONTAL, 5);
 		project.addWire(wire);
-		project.componentToPlace = textComponentConfig as unknown as ComponentConfig<Record<string, ComponentOption>>;
+		project.componentToPlace =
+			textComponentConfig as unknown as ComponentConfig<
+				Record<string, ComponentOption>
+			>;
 		session = new ComponentPlacementSession(
 			project,
 			dragLayer,
@@ -233,7 +242,10 @@ describe('ComponentPlacementSession collision', () => {
 		const existing = makeNot();
 		existing.position.set(1, 0);
 		project.addComponent(existing);
-		project.componentToPlace = textComponentConfig as unknown as ComponentConfig<Record<string, ComponentOption>>;
+		project.componentToPlace =
+			textComponentConfig as unknown as ComponentConfig<
+				Record<string, ComponentOption>
+			>;
 		session = new ComponentPlacementSession(
 			project,
 			dragLayer,

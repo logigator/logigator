@@ -194,9 +194,7 @@ export class PersistenceService {
 				`Cannot clone share ${linkId}: user not authenticated`,
 				'PersistenceService'
 			);
-			this.toast.error(
-				`Cannot clone share ${linkId}: user not authenticated`
-			);
+			this.toast.error(`Cannot clone share ${linkId}: user not authenticated`);
 			throw new AuthRequiredError();
 		}
 

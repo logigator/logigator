@@ -22,8 +22,8 @@ export class CustomComponent extends Component<CustomComponentOptions> {
 	public readonly config: ComponentConfig<CustomComponentOptions>;
 
 	private readonly destroy$ = new Subject<void>();
-	// Assigned in the constructor body, i.e. after super() — so it is undefined
-	// during the base constructor's initial draw. Every read guards for that.
+	// Set after super(), so it is undefined during the base constructor's initial
+	// draw. Every read guards for that.
 	private readonly _def: CustomComponentDefinition | undefined;
 
 	constructor(
@@ -42,10 +42,9 @@ export class CustomComponent extends Component<CustomComponentOptions> {
 				this.direction = this.options.direction.value;
 			});
 
-		// The base constructor already drew once (box + stubs), but without the
-		// symbol/labels because `_def` was still undefined then. Redraw now that it
-		// is set so the symbol and port labels appear. The snapshot is frozen, so
-		// there is nothing further to react to after this.
+		// The base constructor's initial draw runs without `_def`, so it omits the
+		// symbol and labels. Redraw now that `_def` is set to add them. The snapshot
+		// is frozen, so nothing reacts after this.
 		this.redraw();
 	}
 

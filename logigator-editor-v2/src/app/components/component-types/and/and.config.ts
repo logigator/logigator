@@ -1,5 +1,5 @@
 import { ComponentConfig } from '../../component-config.model';
-import { ComponentType } from '../../component-type.enum';
+import { BuiltInComponentType } from '../../component-type.enum';
 import { ComponentCategory } from '../../component-category.enum';
 import { ComponentOption } from '../../component-option';
 import { DirectionComponentOption } from '../../component-options/direction/direction.component-option';
@@ -13,7 +13,7 @@ export interface AndOptions {
 }
 
 export const andComponentConfig: ComponentConfig<AndOptions> = {
-	type: ComponentType.AND,
+	type: BuiltInComponentType.AND,
 	category: ComponentCategory.BASIC,
 	symbol: '&',
 	name: 'components.def.AND.name',

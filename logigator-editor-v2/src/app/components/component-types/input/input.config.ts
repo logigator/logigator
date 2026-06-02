@@ -1,5 +1,5 @@
 import { ComponentConfig } from '../../component-config.model';
-import { ComponentType } from '../../component-type.enum';
+import { BuiltInComponentType } from '../../component-type.enum';
 import { ComponentCategory } from '../../component-category.enum';
 import { ComponentOption } from '../../component-option';
 import { DirectionComponentOption } from '../../component-options/direction/direction.component-option';
@@ -19,7 +19,7 @@ export interface InputOptions {
 }
 
 export const inputComponentConfig: ComponentConfig<InputOptions> = {
-	type: ComponentType.INPUT,
+	type: BuiltInComponentType.INPUT,
 	category: ComponentCategory.IO,
 	symbol: 'IN',
 	name: 'components.def.INPUT.name',

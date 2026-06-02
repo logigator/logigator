@@ -32,7 +32,12 @@ describe('ComponentSettingsComponent', () => {
 			10,
 			2
 		).clone();
-		const hidden = new NumberComponentOption('components.options.index', 0, 999, 0)
+		const hidden = new NumberComponentOption(
+			'components.options.index',
+			0,
+			999,
+			0
+		)
 			.hideFromInspector()
 			.clone();
 

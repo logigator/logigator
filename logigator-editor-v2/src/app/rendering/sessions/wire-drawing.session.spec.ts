@@ -36,9 +36,11 @@ describe('WireDrawingSession + TextComponent (ignoresWireCollision)', () => {
 	});
 
 	it('drawing a wire across a TEXT body reports no collision', () => {
-		const text = new TextComponent(
-			{ direction: textComponentConfig.options.direction.clone(), fontSize: textComponentConfig.options.fontSize.clone(), text: textComponentConfig.options.text.clone() }
-		);
+		const text = new TextComponent({
+			direction: textComponentConfig.options.direction.clone(),
+			fontSize: textComponentConfig.options.fontSize.clone(),
+			text: textComponentConfig.options.text.clone()
+		});
 		text.position.set(3, 0);
 		project.addComponent(text);
 
@@ -50,9 +52,10 @@ describe('WireDrawingSession + TextComponent (ignoresWireCollision)', () => {
 	});
 
 	it('drawing a wire across a normal component body does report collision', () => {
-		const and = new AndComponent(
-			{ direction: andComponentConfig.options.direction.clone(), numInputs: andComponentConfig.options.numInputs.clone() }
-		);
+		const and = new AndComponent({
+			direction: andComponentConfig.options.direction.clone(),
+			numInputs: andComponentConfig.options.numInputs.clone()
+		});
 		and.position.set(3, 0);
 		project.addComponent(and);
 

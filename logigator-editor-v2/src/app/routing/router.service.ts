@@ -41,9 +41,7 @@ export class RouterService {
 				`No route found for path: ${this.location.path()}`,
 				'RouterService'
 			);
-			this.toast.error(
-				`No route found for path: ${this.location.path()}`
-			);
+			this.toast.error(`No route found for path: ${this.location.path()}`);
 			this.location.replaceState('/');
 		}
 	}
@@ -80,7 +78,10 @@ export class RouterService {
 
 			// @ts-expect-error Some unfortunate type issues
 			if (await route.instance.onActivation(params)) {
-				this.logging.debug({ path, route: route.instance.route, params }, 'RouterService');
+				this.logging.debug(
+					{ path, route: route.instance.route, params },
+					'RouterService'
+				);
 				return true;
 			}
 		}

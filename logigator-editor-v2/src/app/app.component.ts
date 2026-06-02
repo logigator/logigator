@@ -24,7 +24,11 @@ import { PersistenceService } from './persistence/persistence.service';
 import { CardModule } from 'primeng/card';
 import { ConfirmPopup } from 'primeng/confirmpopup';
 import { Toast } from 'primeng/toast';
-import { TranslocoDirective } from '@jsverse/transloco';
+import { TranslocoService } from '@jsverse/transloco';
+import {
+	LocalizableText,
+	resolveLocalizableText
+} from './components/component-config.model';
 
 @Component({
 	selector: 'app-root',
@@ -37,8 +41,7 @@ import { TranslocoDirective } from '@jsverse/transloco';
 		ComponentSettingsComponent,
 		CardModule,
 		ConfirmPopup,
-		Toast,
-		TranslocoDirective
+		Toast
 	],
 	templateUrl: './app.component.html',
 	styleUrl: './app.component.scss',
@@ -51,12 +54,20 @@ export class AppComponent {
 	protected readonly projectService = inject(ProjectService);
 	private readonly workModeService = inject(WorkModeService);
 	private readonly location = inject(Location);
+	private readonly translocoService = inject(TranslocoService);
 
 	protected readonly cursorPosition = signal<Point>(new Point(0, 0));
 
 	protected readonly componentSettings = computed(() => {
 		return this.workModeService.selectedComponentConfig();
 	});
+
+	/** Resolves display text: translates a key, returns a literal verbatim. */
+	protected text(value: LocalizableText): string {
+		return resolveLocalizableText(value, (key) =>
+			this.translocoService.translate(key)
+		);
+	}
 
 	constructor() {
 		setStaticDIInjector(this.injector);

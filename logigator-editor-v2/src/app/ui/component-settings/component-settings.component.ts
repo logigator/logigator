@@ -1,4 +1,9 @@
-import { ChangeDetectionStrategy, Component, computed, input } from '@angular/core';
+import {
+	ChangeDetectionStrategy,
+	Component,
+	computed,
+	input
+} from '@angular/core';
 import { NgComponentOutlet } from '@angular/common';
 import { ComponentOption } from '../../components/component-option';
 

@@ -15,7 +15,9 @@ describe('ToastService', () => {
 		spyOn(console, 'info');
 		spyOn(console, 'debug');
 
-		const translocoSpy = jasmine.createSpyObj('TranslocoService', ['translate']);
+		const translocoSpy = jasmine.createSpyObj('TranslocoService', [
+			'translate'
+		]);
 		translocoSpy.translate.and.callFake((key: string) => key);
 
 		TestBed.configureTestingModule({

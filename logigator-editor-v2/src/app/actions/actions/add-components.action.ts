@@ -21,9 +21,7 @@ export class AddComponentsAction extends Action {
 
 	do(project: Project): void {
 		for (const component of this._components) {
-			const config = this.componentProviderService.getComponent(
-				component.type
-			);
+			const config = this.componentProviderService.getComponent(component.type);
 			if (!config) continue;
 			project.addComponent(Component.deserialize(component, config));
 		}
