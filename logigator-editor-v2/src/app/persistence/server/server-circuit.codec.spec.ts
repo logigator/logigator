@@ -1,10 +1,19 @@
 import { Injector } from '@angular/core';
 import { TestBed } from '@angular/core/testing';
-import { CircuitSerializer, WIRE_TYPE_ID } from './circuit-serializer';
-import { LoggingService } from '../logging/logging.service';
-import { Project } from '../project/project';
-import { ProjectElement } from '../api/models/project-element';
-import { setStaticDIInjector } from '../utils/get-di';
+import {
+	serializeProject,
+	toCircuitFileV0,
+	WIRE_TYPE_ID
+} from './server-circuit.codec';
+import { CircuitFileService } from '../file/circuit-file.service';
+import { Project } from '../../project/project';
+import { ProjectElement } from '../../api/models/project-element';
+import { setStaticDIInjector } from '../../utils/get-di';
+
+// The server transport is legacy v0-over-HTTP: decode routes through the
+// permanent `v0ToV1` migration (covered in v0-to-v1.migration.spec), encode
+// through this temporary codec. The round-trip tests below pin the decode→encode
+// identity property — the primary guardrail against an `i/o/n/s` transposition.
 
 interface Fixture {
 	name: string;
@@ -98,16 +107,25 @@ function normalize(elements: ProjectElement[]): string {
 	return JSON.stringify(sorted);
 }
 
-describe('CircuitSerializer', () => {
-	let serializer: CircuitSerializer;
-	let logging: LoggingService;
+describe('server-circuit.codec', () => {
+	let circuitFile: CircuitFileService;
 
 	beforeEach(() => {
 		TestBed.configureTestingModule({});
 		setStaticDIInjector(TestBed.inject(Injector));
-		logging = TestBed.inject(LoggingService);
-		serializer = TestBed.inject(CircuitSerializer);
+		circuitFile = TestBed.inject(CircuitFileService);
 	});
+
+	/** Full server-read decode (migration + instance build) for a v0 element list. */
+	function decode(elements: ProjectElement[]): Project {
+		const { components, wires } = circuitFile.decode(
+			toCircuitFileV0({ name: 'X', elements })
+		);
+		const project = new Project();
+		for (const c of components) project.addComponent(c);
+		for (const w of wires) project.addWire(w);
+		return project;
+	}
 
 	describe('WIRE_TYPE_ID', () => {
 		it('should be 0 (matching old editor ElementTypeId.WIRE)', () => {
@@ -115,81 +133,37 @@ describe('CircuitSerializer', () => {
 		});
 	});
 
-	describe('fixture round-trip', () => {
+	describe('fixture round-trip (decode → encode)', () => {
 		for (const fixture of fixtures) {
 			it(`round-trips ${fixture.name}`, () => {
-				const { components, wires } = serializer.deserializeProject(
-					fixture.elements
-				);
-
-				const project = new Project();
-				for (const c of components) project.addComponent(c);
-				for (const w of wires) project.addWire(w);
-
-				const { elements } = serializer.serializeProject(project);
-
+				const { elements } = serializeProject(decode(fixture.elements));
 				expect(normalize(elements)).toEqual(normalize(fixture.elements));
 			});
 		}
 	});
 
-	describe('deserializeProject edge cases', () => {
-		it('skips unknown component type IDs gracefully', () => {
-			const spy = spyOn(logging, 'warn');
-			const elements: ProjectElement[] = [
-				{ t: 99, p: [0, 0] },
-				{ t: 1, p: [5, 5] }
-			];
-
-			const { components, wires } = serializer.deserializeProject(elements);
-
-			expect(components.length).toBe(1);
-			expect(components[0].config.type).toBe(1);
-			expect(wires.length).toBe(0);
-			expect(spy).toHaveBeenCalledWith(
-				jasmine.stringContaining('Unknown component type ID: 99'),
-				'CircuitSerializer'
-			);
-		});
-
-		it('returns empty arrays for empty elements', () => {
-			const { components, wires } = serializer.deserializeProject([]);
-			expect(components.length).toBe(0);
-			expect(wires.length).toBe(0);
-		});
-
-		it('returns empty dependencies from serializeProject', () => {
-			const project = new Project();
-			const { dependencies } = serializer.serializeProject(project);
+	describe('serializeProject', () => {
+		it('returns empty dependencies', () => {
+			const { dependencies } = serializeProject(new Project());
 			expect(dependencies).toEqual([]);
 		});
 
 		it('ignores element i/o for plugs — counts come from the definition', () => {
 			// A plug's port counts are fixed by its type, not the wire fields.
 			// Even a bogus i/o must not change the instance's port count.
-			const elements: ProjectElement[] = [
-				{ t: 100, p: [0, 0], i: 9, o: 5, n: [0], s: 'A' }
+			const [plug] = [
+				...decode([{ t: 100, p: [0, 0], i: 9, o: 5, n: [0], s: 'A' }])
+					.components
 			];
-
-			const { components } = serializer.deserializeProject(elements);
-
-			expect(components.length).toBe(1);
-			expect(components[0].numInputs).toBe(0);
-			expect(components[0].numOutputs).toBe(1);
+			expect(plug.numInputs).toBe(0);
+			expect(plug.numOutputs).toBe(1);
 		});
 
 		it('preserves ROM input/output mapping (addressSize → i, wordSize → o)', () => {
 			// Regression: old editor had numInputs=addressSize, numOutputs=wordSize.
-			// Bug in the new ROM constructor previously swapped these — fixed by
-			// the persistence layer change.
-			const elements: ProjectElement[] = [
-				{ t: 12, p: [0, 0], i: 5, o: 6, n: [6, 5] }
+			const [rom] = [
+				...decode([{ t: 12, p: [0, 0], i: 5, o: 6, n: [6, 5] }]).components
 			];
-
-			const { components } = serializer.deserializeProject(elements);
-
-			expect(components.length).toBe(1);
-			const rom = components[0];
 			expect(rom.numInputs).toBe(5);
 			expect(rom.numOutputs).toBe(6);
 		});
@@ -199,16 +173,12 @@ describe('CircuitSerializer', () => {
 		it('correctly round-trips wire position with half-grid offset', () => {
 			const elements: ProjectElement[] = [{ t: 0, p: [3, 5], q: [8, 5] }];
 
-			const { wires } = serializer.deserializeProject(elements);
-			expect(wires.length).toBe(1);
-			expect(wires[0].position.x).toBe(3.5);
-			expect(wires[0].position.y).toBe(5.5);
+			const project = decode(elements);
+			const wire = [...project.wires][0];
+			expect(wire.position.x).toBe(3.5);
+			expect(wire.position.y).toBe(5.5);
 
-			const project = new Project();
-			for (const w of wires) project.addWire(w);
-
-			const { elements: serialized } = serializer.serializeProject(project);
-			expect(serialized).toEqual(elements);
+			expect(serializeProject(project).elements).toEqual(elements);
 		});
 	});
 });

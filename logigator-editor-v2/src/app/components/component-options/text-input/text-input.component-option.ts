@@ -1,7 +1,4 @@
-import {
-	ComponentOption,
-	ComponentOptionWireSlot
-} from '../../component-option';
+import { ComponentOption } from '../../component-option';
 import { TranslationKey } from '../../../translation/translation-key.model';
 import { TextInputOptionInputComponent } from './text-input-option-input.component';
 
@@ -25,7 +22,6 @@ export interface TextInputComponentOptionConfig {
  */
 export class TextInputComponentOption extends ComponentOption<string> {
 	public readonly renderer = TextInputOptionInputComponent;
-	public readonly wireSlot: ComponentOptionWireSlot = 's';
 	public readonly placeholder: TranslationKey | undefined;
 	public readonly maxLength: number | undefined;
 	public readonly forbiddenChars: RegExp | undefined;

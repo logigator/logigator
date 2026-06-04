@@ -34,5 +34,6 @@ export const romComponentConfig: ComponentConfig<RomOptions> = {
 			4
 		)
 	},
+	legacyV0Slots: { r: 'direction', n: ['wordSize', 'addressSize'] },
 	create: (options) => new RomComponent(options)
 };

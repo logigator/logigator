@@ -1,12 +1,14 @@
 import { TestBed } from '@angular/core/testing';
-import { legacyToV2Migration } from './legacy-to-v2.migration';
+import { v0ToV1Migration } from './v0-to-v1.migration';
 import { MigrationContext } from './migration';
 import { ComponentProviderService } from '../../../components/component-provider.service';
 import { LoggingService } from '../../../logging/logging.service';
 import { InvalidFileError } from '../circuit-file.errors';
 import { CircuitFileV0 } from '../circuit-file.types';
+import { BuiltInComponentType } from '../../../components/component-type.enum';
+import { LegacyV0Slots } from '../../../components/component-config.model';
 
-describe('legacyToV2Migration', () => {
+describe('v0ToV1Migration', () => {
 	let ctx: MigrationContext;
 
 	beforeEach(() => {
@@ -18,10 +20,10 @@ describe('legacyToV2Migration', () => {
 	});
 
 	function migrate(input: CircuitFileV0) {
-		return legacyToV2Migration.migrate(input, ctx);
+		return v0ToV1Migration.migrate(input, ctx);
 	}
 
-	it('maps a full legacy file to v2 with named options and empty definitions', () => {
+	it('maps a full legacy file to v1 with named options and empty definitions', () => {
 		const result = migrate({
 			project: {
 				name: 'Legacy Circuit',
@@ -35,7 +37,7 @@ describe('legacyToV2Migration', () => {
 			}
 		});
 
-		expect(result.version).toBe(2);
+		expect(result.version).toBe(1);
 		expect(result.name).toBe('Legacy Circuit');
 		// Legacy files carry no native custom snapshots; sub-circuits are dropped.
 		expect(result.definitions).toEqual([]);
@@ -65,7 +67,7 @@ describe('legacyToV2Migration', () => {
 		const result = migrate({
 			project: {
 				elements: [
-					{ t: 3, p: [0, 0] }, // OR — not supported in v2
+					{ t: 3, p: [0, 0] }, // OR — not supported in v1
 					{ t: 1, p: [5, 5], i: 1, o: 1 } // NOT — supported
 				]
 			}
@@ -75,7 +77,7 @@ describe('legacyToV2Migration', () => {
 		expect(result.components[0].type).toBe(1);
 		expect(warnSpy).toHaveBeenCalledWith(
 			jasmine.stringContaining('Unknown component type ID: 3'),
-			'legacyToV2Migration'
+			'v0ToV1Migration'
 		);
 	});
 
@@ -89,5 +91,43 @@ describe('legacyToV2Migration', () => {
 		expect(() => migrate({ project: {} } as CircuitFileV0)).toThrowError(
 			InvalidFileError
 		);
+	});
+
+	// Pins each built-in's legacyV0Slots descriptor exactly. A new built-in
+	// without one — or a wrong n[]/s mapping — would silently drop or transpose
+	// options on decode; this catches it. Mirrors the encoder, which reads the
+	// same descriptor in reverse (server-circuit.codec.spec round-trips).
+	describe('legacyV0Slots descriptors', () => {
+		const expected: Record<number, LegacyV0Slots> = {
+			[BuiltInComponentType.NOT]: { r: 'direction' },
+			[BuiltInComponentType.AND]: { r: 'direction', i: 'numInputs' },
+			[BuiltInComponentType.TEXT]: {
+				r: 'direction',
+				n: ['fontSize'],
+				s: 'text'
+			},
+			[BuiltInComponentType.ROM]: {
+				r: 'direction',
+				n: ['wordSize', 'addressSize']
+			},
+			[BuiltInComponentType.INPUT]: {
+				r: 'direction',
+				s: 'label',
+				n: ['index']
+			},
+			[BuiltInComponentType.OUTPUT]: {
+				r: 'direction',
+				s: 'label',
+				n: ['index']
+			}
+		};
+
+		for (const [type, slots] of Object.entries(expected)) {
+			it(`pins the descriptor for built-in type ${type}`, () => {
+				expect(
+					ctx.componentProvider.getComponent(Number(type))?.legacyV0Slots
+				).toEqual(slots);
+			});
+		}
 	});
 });

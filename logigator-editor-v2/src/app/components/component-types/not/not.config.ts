@@ -19,5 +19,6 @@ export const notComponentConfig: ComponentConfig<NotOptions> = {
 	options: {
 		direction: new DirectionComponentOption()
 	},
+	legacyV0Slots: { r: 'direction' },
 	create: (options) => new NotComponent(options)
 };

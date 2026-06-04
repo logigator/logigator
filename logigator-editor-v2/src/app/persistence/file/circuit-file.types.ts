@@ -10,36 +10,31 @@
  *
  * The current format mirrors the editor's in-memory model (named options, wires
  * as start/direction/length) and is self-contained: it embeds a frozen snapshot
- * of every custom component it transitively uses in {@link CircuitFileV2.definitions}
+ * of every custom component it transitively uses in {@link PersistedCircuitV1.definitions}
  * via the universal codec (`persistence/snapshots.ts`).
+ *
+ * Each `CircuitFileV<N>` is the file-target envelope around the shared
+ * version payload in `persistence/persisted-circuit.types.ts`.
  */
-import { ProjectElement } from '../../api/models/project-element';
 import {
-	SerializedComponentBody,
-	SerializedWireBody,
-	SnapshotDefinition
-} from '../serialized-circuit';
+	PersistedCircuitV0,
+	PersistedCircuitV1
+} from '../persisted-circuit.types';
 
-export const CURRENT_FILE_VERSION = 2;
-export type CurrentCircuitFile = CircuitFileV2;
+export const CURRENT_FILE_VERSION = 1;
+export type CurrentCircuitFile = CircuitFileV1;
 
-// ---- Version 2 (current, native, self-contained) ----
+// ---- Version 1 (current, native, self-contained) ----
 
-export interface CircuitFileV2 {
-	version: 2;
+export interface CircuitFileV1 extends PersistedCircuitV1 {
+	version: 1;
 	name: string;
-	/** The main circuit. Custom `type`s are file-local ids defined in {@link definitions}. */
-	components: SerializedComponentBody[];
-	wires: SerializedWireBody[];
-	/** Frozen snapshots of every custom this file transitively uses (recursive). */
-	definitions: SnapshotDefinition[];
 }
 
 // ---- Version 0 (legacy old-editor format) ----
-export type CircuitFileElementV0 = ProjectElement;
 
-export interface CircuitFileV0 {
-	project?: { name?: string; elements?: CircuitFileElementV0[] };
+export interface CircuitFileV0 extends PersistedCircuitV0 {
+	project?: { name?: string; elements?: PersistedCircuitV0['elements'] };
 	/** Legacy sub-circuit definitions — preserved historically, ignored on import. */
 	components?: unknown[];
 }

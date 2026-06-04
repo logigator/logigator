@@ -26,6 +26,29 @@ export function resolveLocalizableText(
 	return typeof value === 'string' ? translate(value) : value.literal;
 }
 
+/**
+ * Declarative map from a built-in's named options to the legacy positional `v0`
+ * wire slots (`r`/`i`/`o`/`n`/`s`). Single source of truth for the permanent
+ * `v0ToV1` file migration (decode) and the temporary server encoder (encode).
+ *
+ * FROZEN: it describes the *immutable* legacy `ProjectElement` format and names
+ * **v1-era option keys**. If a live option is later renamed, do NOT edit this to
+ * match — add a `v1→v2` migration instead. The mapping is purely positional;
+ * a config needing computed legacy decode would handle it separately.
+ */
+export interface LegacyV0Slots {
+	/** Option populated from `element.r` (rotation/direction). */
+	r?: string;
+	/** Option populated from `element.i` (input count). */
+	i?: string;
+	/** Option populated from `element.o` (output count). */
+	o?: string;
+	/** Options consuming `element.n[0]`, `n[1]`, … in declaration order. */
+	n?: string[];
+	/** The single option consuming `element.s`. */
+	s?: string;
+}
+
 export interface ComponentConfigView<
 	TOptions extends Record<string, ComponentOption> = Record<
 		string,
@@ -43,6 +66,12 @@ export interface ComponentConfigView<
 	 * via its own renderer. Omitted by component types that contribute none.
 	 */
 	actions?: ComponentAction[];
+	/**
+	 * Legacy positional wire-slot descriptor — present on built-ins that exist in
+	 * the v0 format, absent on custom components (v0 has no customs). See
+	 * {@link LegacyV0Slots}.
+	 */
+	legacyV0Slots?: LegacyV0Slots;
 }
 
 export interface ComponentConfig<

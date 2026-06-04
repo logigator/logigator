@@ -37,5 +37,6 @@ export const inputComponentConfig: ComponentConfig<InputOptions> = {
 			0
 		).hideFromInspector()
 	},
+	legacyV0Slots: { r: 'direction', s: 'label', n: ['index'] },
 	create: (options) => new InputComponent(options)
 };

@@ -149,18 +149,18 @@ A no-arg preset: `SelectButtonComponentOption<Direction>` pre-loaded with the fo
 
 ### `TextAreaComponentOption`
 
-Multi-line string (`wireSlot: 's'`). Renders as a "edit" button that opens a `<p-dialog>` with a `<textarea>`; the dialog has draft/save/cancel semantics so edits commit only on save. Constrained by `maxLength`. Used by the TEXT component.
+Multi-line string. Renders as a "edit" button that opens a `<p-dialog>` with a `<textarea>`; the dialog has draft/save/cancel semantics so edits commit only on save. Constrained by `maxLength`. Used by the TEXT component.
 
 ### `TextInputComponentOption`
 
-Short single-line string (`wireSlot: 's'`), rendered as an inline `<input pInputText>` row — the single-line counterpart to `TextAreaComponentOption`. Generic: constraints are supplied per-use via config (`maxLength`, and `forbiddenChars` for characters stripped on every write), not baked in. The INPUT/OUTPUT plug port labels configure `maxLength: 5` + `forbiddenChars: /,/g` to fit the backend's comma-joined label column.
+Short single-line string, rendered as an inline `<input pInputText>` row — the single-line counterpart to `TextAreaComponentOption`. Generic: constraints are supplied per-use via config (`maxLength`, and `forbiddenChars` for characters stripped on every write), not baked in. The INPUT/OUTPUT plug port labels configure `maxLength: 5` + `forbiddenChars: /,/g` to fit the backend's comma-joined label column.
 
 ---
 
 ## Adding a new option kind
 
 1. Create a folder under `component-options/<name>/`.
-2. Write the option model class extending `ComponentOption<T>` (or `SelectButtonComponentOption<T>` / `SelectDropdownComponentOption<T>` if a select fits). Override `renderer` to point at your renderer component, declare `wireSlot`, and implement `protected cloneWithValue(initialValue?)` (not `clone` — the base provides that).
+2. Write the option model class extending `ComponentOption<T>` (or `SelectButtonComponentOption<T>` / `SelectDropdownComponentOption<T>` if a select fits). Override `renderer` to point at your renderer component and implement `protected cloneWithValue(initialValue?)` (not `clone` — the base provides that). A built-in that must round-trip through the legacy v0 server/file format also adds a `legacyV0Slots` entry on its `ComponentConfig` (see `persistence.md`).
 3. Write the renderer as a standalone OnPush component with `option = input.required<YourComponentOption>()`. `import type` the option to avoid the value-import cycle.
 4. The renderer template owns the row (wrapper + label + input) and uses `[ngModel]` / `(ngModelChange)` to write through the option's setter.
 5. Add option-model and (at minimum) renderer specs alongside the source files.

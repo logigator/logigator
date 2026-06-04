@@ -1,7 +1,4 @@
-import {
-	ComponentOption,
-	ComponentOptionWireSlot
-} from '../../component-option';
+import { ComponentOption } from '../../component-option';
 import { TranslationKey } from '../../../translation/translation-key.model';
 import { TextAreaOptionInputComponent } from './text-area-option-input.component';
 
@@ -15,7 +12,6 @@ export interface TextAreaComponentOptionConfig {
 
 export class TextAreaComponentOption extends ComponentOption<string> {
 	public readonly renderer = TextAreaOptionInputComponent;
-	public readonly wireSlot: ComponentOptionWireSlot = 's';
 	public readonly dialogTitle: TranslationKey;
 	public readonly placeholder: TranslationKey | undefined;
 	public readonly maxLength: number;

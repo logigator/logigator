@@ -2,7 +2,7 @@
  * The native, named-option serialized circuit body shared by every snapshot
  * transport (local file, browser store) and held in memory as a definition's
  * own circuit. Distinct from the legacy positional `ProjectElement[]` wire
- * format (server) — see `circuit-serializer.ts`.
+ * format (server) — see `server/server-circuit.codec.ts`.
  *
  * Pure data + pure helpers, with **no** imports, so it can be referenced from
  * both the component layer (a definition's `circuit`) and the persistence layer
@@ -61,7 +61,9 @@ export function cloneComponentBody(
 }
 
 /** Deep-copies a circuit body so frozen snapshots never share mutable state. */
-export function cloneCircuit(circuit: SerializedCircuitBody): SerializedCircuitBody {
+export function cloneCircuit(
+	circuit: SerializedCircuitBody
+): SerializedCircuitBody {
 	return {
 		components: circuit.components.map(cloneComponentBody),
 		wires: circuit.wires.map((w) => ({

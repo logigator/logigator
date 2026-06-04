@@ -1,15 +1,9 @@
-import {
-	ComponentOption,
-	ComponentOptionWireSlot
-} from '../../component-option';
+import { ComponentOption } from '../../component-option';
 import { TranslationKey } from '../../../translation/translation-key.model';
 import { SelectDropdownOptionInputComponent } from './select-dropdown-option-input.component';
 
 export class SelectDropdownComponentOption<T> extends ComponentOption<T> {
 	public readonly renderer = SelectDropdownOptionInputComponent;
-	// Generic select-dropdown values aren't reliably representable in the wire
-	// format. Subclasses with custom persistence must override.
-	public readonly wireSlot: ComponentOptionWireSlot = null;
 
 	constructor(
 		public readonly label: TranslationKey,

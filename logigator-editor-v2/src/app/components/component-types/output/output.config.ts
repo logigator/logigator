@@ -37,5 +37,6 @@ export const outputComponentConfig: ComponentConfig<OutputOptions> = {
 			0
 		).hideFromInspector()
 	},
+	legacyV0Slots: { r: 'direction', s: 'label', n: ['index'] },
 	create: (options) => new OutputComponent(options)
 };

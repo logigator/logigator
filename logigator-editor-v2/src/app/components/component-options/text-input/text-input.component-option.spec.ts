@@ -3,10 +3,6 @@ import { TextInputComponentOption } from './text-input.component-option';
 const LABEL = 'components.options.label';
 
 describe('TextInputComponentOption', () => {
-	it('declares the `s` wire slot', () => {
-		expect(new TextInputComponentOption(LABEL).wireSlot).toBe('s');
-	});
-
 	it('defaults to an empty string', () => {
 		expect(new TextInputComponentOption(LABEL).value).toBe('');
 	});

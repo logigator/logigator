@@ -8,10 +8,7 @@ import { LoggingService } from '../../logging/logging.service';
 import { MigrationContext } from './migrations/migration';
 import { migrateToCurrent } from './circuit-file-migrator';
 import { InvalidFileError } from './circuit-file.errors';
-import {
-	CURRENT_FILE_VERSION,
-	CurrentCircuitFile
-} from './circuit-file.types';
+import { CURRENT_FILE_VERSION, CurrentCircuitFile } from './circuit-file.types';
 import { remapComponentTypes } from '../serialized-circuit';
 import { collectSnapshots, serializeProjectBody } from '../snapshots';
 
@@ -66,15 +63,22 @@ export class CircuitFileService {
 		return JSON.stringify(file);
 	}
 
-	/** Parses + migrates file content to a current-version document. */
-	parse(content: string): CurrentCircuitFile {
-		let parsed: unknown;
-		try {
-			parsed = JSON.parse(content);
-		} catch {
-			throw new InvalidFileError('Malformed JSON');
-		}
-		return migrateToCurrent(parsed, this.migrationContext);
+	/**
+	 * Migrates an already-parsed document up to the current version and turns it
+	 * into editor instances. The object-level entry shared by file reads
+	 * ({@link fromJson}) and server reads (which wrap their `ProjectElement[]`
+	 * response as a {@link CircuitFileV0} via `server.toCircuitFileV0`, so they
+	 * route through the same `v0ToV1` migration). Returns the document `name`
+	 * alongside the instances.
+	 */
+	decode(data: unknown): {
+		name: string;
+		components: Component[];
+		wires: Wire[];
+	} {
+		const file = migrateToCurrent(data, this.migrationContext);
+		const name = typeof file.name === 'string' ? file.name : 'Untitled';
+		return { name, ...this.deserialize(file) };
 	}
 
 	/**
@@ -141,15 +145,19 @@ export class CircuitFileService {
 		return { components, wires };
 	}
 
-	/** Convenience: parse + migrate + deserialize into editor instances. */
+	/** Convenience: parse JSON + migrate + deserialize into editor instances. */
 	fromJson(content: string): {
 		name: string;
 		components: Component[];
 		wires: Wire[];
 	} {
-		const file = this.parse(content);
-		const name = typeof file.name === 'string' ? file.name : 'Untitled';
-		return { name, ...this.deserialize(file) };
+		let parsed: unknown;
+		try {
+			parsed = JSON.parse(content);
+		} catch {
+			throw new InvalidFileError('Malformed JSON');
+		}
+		return this.decode(parsed);
 	}
 
 	private _asArray<T>(value: T[] | undefined, field: string): T[] {

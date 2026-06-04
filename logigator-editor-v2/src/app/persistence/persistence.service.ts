@@ -5,7 +5,7 @@ import { HttpErrorResponse } from '@angular/common/http';
 import { ProjectApiService } from '../api/services/project-api.service';
 import { ShareApiService } from '../api/services/share-api.service';
 import { UserApiService } from '../api/services/user-api.service';
-import { CircuitSerializer } from './circuit-serializer';
+import * as server from './server/server-circuit.codec';
 import { CircuitFileService } from './file/circuit-file.service';
 import { BrowserProjectStore } from './browser/browser-project.store';
 import { BrowserComponentStore } from './browser/browser-component.store';
@@ -40,7 +40,6 @@ export class PersistenceService {
 	private readonly projectApi = inject(ProjectApiService);
 	private readonly shareApi = inject(ShareApiService);
 	private readonly userApi = inject(UserApiService);
-	private readonly serializer = inject(CircuitSerializer);
 	private readonly circuitFile = inject(CircuitFileService);
 	private readonly browserStore = inject(BrowserProjectStore);
 	private readonly browserComponentStore = inject(BrowserComponentStore);
@@ -60,8 +59,8 @@ export class PersistenceService {
 
 	async loadProject(uuid: string): Promise<Project> {
 		const detail = await firstValueFrom(this.projectApi.open(uuid));
-		const { components, wires } = this.serializer.deserializeProject(
-			detail.elements
+		const { components, wires } = this.circuitFile.decode(
+			server.toCircuitFileV0(detail)
 		);
 		const project = this._buildProject(components, wires);
 
@@ -136,8 +135,7 @@ export class PersistenceService {
 			isPublic: isPublic ?? false
 		});
 
-		const { elements, dependencies } =
-			this.serializer.serializeProject(project);
+		const { elements, dependencies } = server.serializeProject(project);
 		const saveResponse = await firstValueFrom(
 			this.projectApi.save(response.id, {
 				oldHash: response.elementsFile?.hash ?? '',
@@ -177,8 +175,8 @@ export class PersistenceService {
 		linkId: string
 	): Promise<{ project: Project; type: 'project' | 'comp' }> {
 		const detail = await firstValueFrom(this.shareApi.get(linkId));
-		const { components, wires } = this.serializer.deserializeProject(
-			detail.elements
+		const { components, wires } = this.circuitFile.decode(
+			server.toCircuitFileV0(detail)
 		);
 		const project = this._buildProject(components, wires);
 
@@ -565,8 +563,7 @@ export class PersistenceService {
 		// changes still in the editor.
 		const metadata = this.metadataStore.getMetadata(project)!;
 		const versionAtSnapshot = this.metadataStore.dirtyVersion(project);
-		const { elements, dependencies } =
-			this.serializer.serializeProject(project);
+		const { elements, dependencies } = server.serializeProject(project);
 
 		try {
 			const response = await firstValueFrom(

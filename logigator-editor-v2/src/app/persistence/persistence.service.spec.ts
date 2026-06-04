@@ -25,10 +25,10 @@ import {
 	StoredBrowserComponent,
 	StoredBrowserProject
 } from './browser/browser-project.types';
-import { CircuitSerializer } from './circuit-serializer';
 import { CustomComponentRegistry } from '../components/custom/custom-component-registry.service';
 import { ComponentProviderService } from '../components/component-provider.service';
 import { CustomComponent } from '../components/custom/custom-component';
+import { Component } from '../components/component';
 import { SerializedCircuitBody } from './serialized-circuit';
 
 /**
@@ -228,7 +228,6 @@ describe('PersistenceService', () => {
 	let componentStore: FakeBrowserComponentStore;
 	let registry: CustomComponentRegistry;
 	let provider: ComponentProviderService;
-	let serializer: CircuitSerializer;
 
 	beforeEach(() => {
 		spyOn(console, 'error');
@@ -263,7 +262,6 @@ describe('PersistenceService', () => {
 		projectService = TestBed.inject(ProjectService);
 		registry = TestBed.inject(CustomComponentRegistry);
 		provider = TestBed.inject(ComponentProviderService);
-		serializer = TestBed.inject(CircuitSerializer);
 		httpMock = TestBed.inject(HttpTestingController);
 	});
 
@@ -715,10 +713,12 @@ describe('PersistenceService', () => {
 
 			const project = await promise;
 			expect(Array.from(project.components).length).toBe(2);
-			// LoggingService.warn forwards to console.warn('[%s] %o', context, message).
+			// Server reads route through the v0→v1 migration, which drops unknown
+			// types with a warning. LoggingService.warn forwards to
+			// console.warn('[%s] %o', context, message).
 			expect(warnSpy).toHaveBeenCalledWith(
 				'[%s] %o',
-				'CircuitSerializer',
+				'v0ToV1Migration',
 				jasmine.stringContaining('Unknown component type ID: 999')
 			);
 		});
@@ -737,7 +737,7 @@ describe('PersistenceService', () => {
 			});
 
 			const parsed = JSON.parse(service.exportProjectToJson(project));
-			expect(parsed.version).toBe(2);
+			expect(parsed.version).toBe(1);
 			expect(parsed.name).toBe('My Circuit');
 			expect(parsed.components).toEqual([]);
 			expect(parsed.wires).toEqual([]);
@@ -746,7 +746,7 @@ describe('PersistenceService', () => {
 
 		it('importProjectFromJson persists a clean browser project and navigates to /local/:id', async () => {
 			const content = JSON.stringify({
-				version: 2,
+				version: 1,
 				name: 'Imported',
 				components: [{ type: 1, pos: [2, 3], options: {} }],
 				wires: [],
@@ -781,7 +781,7 @@ describe('PersistenceService', () => {
 			// Seed a record using the same encoding the service writes.
 			const imported = await service.importProjectFromJson(
 				JSON.stringify({
-					version: 2,
+					version: 1,
 					name: 'Seed',
 					components: [{ type: 1, pos: [4, 4], options: {} }],
 					wires: [],
@@ -807,7 +807,7 @@ describe('PersistenceService', () => {
 			const record = await browserStore.save({
 				name: 'Stored',
 				content: JSON.stringify({
-					version: 2,
+					version: 1,
 					name: 'Stored',
 					components: [],
 					wires: [],
@@ -835,8 +835,16 @@ describe('PersistenceService', () => {
 	describe('custom component persistence (browser)', () => {
 		const plugCircuit: SerializedCircuitBody = {
 			components: [
-				{ type: 100, pos: [0, 0], options: { direction: 0, label: 'in', index: 0 } },
-				{ type: 101, pos: [5, 0], options: { direction: 0, label: 'out', index: 0 } }
+				{
+					type: 100,
+					pos: [0, 0],
+					options: { direction: 0, label: 'in', index: 0 }
+				},
+				{
+					type: 101,
+					pos: [5, 0],
+					options: { direction: 0, label: 'out', index: 0 }
+				}
 			],
 			wires: []
 		};
@@ -855,7 +863,10 @@ describe('PersistenceService', () => {
 		}
 
 		// Mirror the placement session: snapshot the master, place an instance.
-		function placeSnapshot(project: Project, masterTypeId: number): CustomComponent {
+		function placeSnapshot(
+			project: Project,
+			masterTypeId: number
+		): CustomComponent {
 			const def = registry.snapshot(masterTypeId);
 			const config = provider.getComponent(def.typeId)!;
 			const instance = config.create({
@@ -907,7 +918,11 @@ describe('PersistenceService', () => {
 					labels: ['in'],
 					circuit: {
 						components: [
-							{ type: 100, pos: [0, 0], options: { direction: 0, label: 'in', index: 0 } }
+							{
+								type: 100,
+								pos: [0, 0],
+								options: { direction: 0, label: 'in', index: 0 }
+							}
 						],
 						wires: []
 					}
@@ -940,12 +955,19 @@ describe('PersistenceService', () => {
 			);
 			const id = registry.idForTypeId(masterTypeId)!;
 
-			const { components } = serializer.deserializeProject([
-				{ t: 100, p: [0, 0], n: [0], s: 'in' },
-				{ t: 101, p: [5, 0], n: [0], s: 'out' }
-			]);
 			const editor = new Project();
-			for (const c of components) editor.addComponent(c);
+			editor.addComponent(
+				Component.deserialize(
+					{ pos: [0, 0], options: { direction: 0, label: 'in', index: 0 } },
+					provider.getComponent(100)!
+				)
+			);
+			editor.addComponent(
+				Component.deserialize(
+					{ pos: [5, 0], options: { direction: 0, label: 'out', index: 0 } },
+					provider.getComponent(101)!
+				)
+			);
 			metadataStore.register(editor, {
 				id,
 				name: 'Comp',
@@ -978,7 +1000,7 @@ describe('PersistenceService', () => {
 		it('importProjectFromJson adopts a master-less custom into the library', async () => {
 			// A file embedding one custom whose provenance master is not registered.
 			const content = JSON.stringify({
-				version: 2,
+				version: 1,
 				name: 'Imported',
 				components: [{ type: 1000, pos: [3, 3], options: { direction: 0 } }],
 				wires: [],

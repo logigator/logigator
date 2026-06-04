@@ -1,13 +1,9 @@
-import {
-	ComponentOption,
-	ComponentOptionWireSlot
-} from '../../component-option';
+import { ComponentOption } from '../../component-option';
 import { TranslationKey } from '../../../translation/translation-key.model';
 import { NumberOptionInputComponent } from './number-option-input.component';
 
 export class NumberComponentOption extends ComponentOption<number> {
 	public readonly renderer = NumberOptionInputComponent;
-	public readonly wireSlot: ComponentOptionWireSlot = 'n';
 
 	constructor(
 		public readonly label: TranslationKey,

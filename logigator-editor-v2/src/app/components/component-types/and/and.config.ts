@@ -22,5 +22,6 @@ export const andComponentConfig: ComponentConfig<AndOptions> = {
 		direction: new DirectionComponentOption(),
 		numInputs: new NumberComponentOption('components.options.inputs', 2, 64, 2)
 	},
+	legacyV0Slots: { r: 'direction', i: 'numInputs' },
 	create: (options) => new AndComponent(options)
 };

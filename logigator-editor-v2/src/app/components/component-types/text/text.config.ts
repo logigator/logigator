@@ -37,5 +37,6 @@ export const textComponentConfig: ComponentConfig<TextOptions> = {
 			}
 		)
 	},
+	legacyV0Slots: { r: 'direction', n: ['fontSize'], s: 'text' },
 	create: (options) => new TextComponent(options)
 };

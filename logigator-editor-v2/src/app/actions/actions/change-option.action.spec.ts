@@ -6,7 +6,6 @@ import type { Project } from '../../project/project';
 class FakeOption extends ComponentOption<number> {
 	public readonly label = 'components.options.index' as never;
 	public readonly renderer = class {} as never;
-	public readonly wireSlot = null;
 	constructor(value: number) {
 		super(value);
 	}
