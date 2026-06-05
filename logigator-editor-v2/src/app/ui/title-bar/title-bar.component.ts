@@ -81,7 +81,8 @@ export class TitleBarComponent {
           {
             label: this.translocoService.translate(
               'titleBar.menuBar.file.items.exportFile.label'
-            )
+            ),
+            command: () => this.exportFile()
           },
           {
             separator: true
@@ -162,6 +163,13 @@ export class TitleBarComponent {
         this.logging.error('Failed to save project', 'TitleBarComponent');
         this.toastService.error('Failed to save project');
       });
+    }
+  }
+
+  private exportFile(): void {
+    const project = this.projectService.mainProject();
+    if (project) {
+      this.persistenceService.exportProjectToFile(project);
     }
   }
 

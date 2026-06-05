@@ -165,11 +165,28 @@ export class PersistenceService {
   /**
    * Serializes a project to the current native file format. The name is read
    * from project metadata (the `Project` itself has no name). Returns the JSON
-   * string; triggering an actual download is a UI concern handled elsewhere.
+   * string.
    */
   exportProjectToJson(project: Project): string {
     const name = this.metadataStore.getMetadata(project)?.name ?? 'Untitled';
     return this.circuitFile.toJson(project, name);
+  }
+
+  /**
+   * Exports a project as a downloadable `.json` file. Serializes to the current
+   * native file format and triggers a browser download.
+   */
+  exportProjectToFile(project: Project): void {
+    const json = this.exportProjectToJson(project);
+    const metadata = this.metadataStore.getMetadata(project);
+    const name = metadata?.name ?? 'Untitled';
+    const blob = new Blob([json], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = `${name}.json`;
+    link.click();
+    URL.revokeObjectURL(url);
   }
 
   /**
