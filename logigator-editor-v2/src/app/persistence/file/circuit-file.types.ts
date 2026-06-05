@@ -20,6 +20,7 @@ import {
 	PersistedCircuitV0,
 	PersistedCircuitV1
 } from '../persisted-circuit.types';
+import { EmbeddedDependency } from '../../api/models/dependencies';
 
 export const CURRENT_FILE_VERSION = 1;
 export type CurrentCircuitFile = CircuitFileV1;
@@ -37,4 +38,10 @@ export interface CircuitFileV0 extends PersistedCircuitV0 {
 	project?: { name?: string; elements?: PersistedCircuitV0['elements'] };
 	/** Legacy sub-circuit definitions — preserved historically, ignored on import. */
 	components?: unknown[];
+	/**
+	 * Server-transport only: the response `dependencies`, each carrying the
+	 * additive embedded `snapshot` (R14). Old-editor *files* never have this; the
+	 * `v0ToV1` migration revives present snapshots into `definitions[]`.
+	 */
+	dependencies?: EmbeddedDependency[];
 }

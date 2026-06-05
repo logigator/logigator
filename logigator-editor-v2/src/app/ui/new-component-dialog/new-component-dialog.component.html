@@ -34,6 +34,33 @@
 			[ngModelOptions]="{ standalone: true }"
 		/>
 	</div>
+	<div class="flex flex-col gap-1">
+		<span>Store</span>
+		<div class="flex gap-4 items-center">
+			<label class="flex gap-2 items-center">
+				<input
+					type="radio"
+					name="new-component-source"
+					value="server"
+					[ngModel]="source()"
+					(ngModelChange)="source.set($event)"
+					[ngModelOptions]="{ standalone: true }"
+				/>
+				Account
+			</label>
+			<label class="flex gap-2 items-center">
+				<input
+					type="radio"
+					name="new-component-source"
+					value="browser"
+					[ngModel]="source()"
+					(ngModelChange)="source.set($event)"
+					[ngModelOptions]="{ standalone: true }"
+				/>
+				Browser
+			</label>
+		</div>
+	</div>
 	<div class="flex gap-2 items-center">
 		<p-checkbox
 			inputId="new-component-public"

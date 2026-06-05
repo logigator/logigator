@@ -1,11 +1,6 @@
 import { Injectable, inject } from '@angular/core';
 import { Location } from '@angular/common';
-import { firstValueFrom, Observable } from 'rxjs';
-import { HttpErrorResponse } from '@angular/common/http';
-import { ProjectApiService } from '../api/services/project-api.service';
-import { ShareApiService } from '../api/services/share-api.service';
-import { UserApiService } from '../api/services/user-api.service';
-import * as server from './server/server-circuit.codec';
+import { Observable } from 'rxjs';
 import { CircuitFileService } from './file/circuit-file.service';
 import { BrowserProjectStore } from './browser/browser-project.store';
 import { BrowserComponentStore } from './browser/browser-component.store';
@@ -18,28 +13,21 @@ import { ProjectService } from '../project/project.service';
 import { ToastService } from '../logging/toast.service';
 import { LoggingService } from '../logging/logging.service';
 import { Project } from '../project/project';
-import { Component } from '../components/component';
-import { Wire } from '../wires/wire';
 import { ProjectSummary } from '../api/models/project';
 import { Page } from '../api/models/shared';
 import { CustomComponentRegistry } from '../components/custom/custom-component-registry.service';
 import { CustomComponentDefinition } from '../components/custom/custom-component-definition.model';
 import { ComponentProviderService } from '../components/component-provider.service';
-import { SerializedCircuitBody } from './serialized-circuit';
 import { deriveSummary } from '../custom-component/definition-derivation';
+import { DefinitionBinding } from '../custom-component/definition-binding';
+import { buildProject, instantiateBody } from './circuit-builder';
+import { formatHttpError } from './persistence-errors';
+import { ServerPersistenceGateway } from './server/server-persistence.gateway';
 
-export class AuthRequiredError extends Error {
-	constructor() {
-		super('AuthRequired');
-		this.name = 'AuthRequiredError';
-	}
-}
+export { AuthRequiredError } from './persistence-errors';
 
 @Injectable({ providedIn: 'root' })
 export class PersistenceService {
-	private readonly projectApi = inject(ProjectApiService);
-	private readonly shareApi = inject(ShareApiService);
-	private readonly userApi = inject(UserApiService);
 	private readonly circuitFile = inject(CircuitFileService);
 	private readonly browserStore = inject(BrowserProjectStore);
 	private readonly browserComponentStore = inject(BrowserComponentStore);
@@ -50,31 +38,20 @@ export class PersistenceService {
 	private readonly toast = inject(ToastService);
 	private readonly logging = inject(LoggingService);
 	private readonly location = inject(Location);
+	private readonly server = inject(ServerPersistenceGateway);
 
 	private _mainLoadToken = 0;
 	private _shareLoadToken = 0;
 	private readonly _saveInFlight = new WeakMap<Project, Promise<void>>();
+	// Bindings for component editors opened **as main** (the /component/:uuid
+	// route). Tab-opened editors track their own bindings in CustomComponentService;
+	// these are disposed in _disposeProject when the main slot is replaced.
+	private readonly _componentBindings = new WeakMap<Project, DefinitionBinding>();
 
 	// -- Public API ----------------------------------------------------------
 
-	async loadProject(uuid: string): Promise<Project> {
-		const detail = await firstValueFrom(this.projectApi.open(uuid));
-		const { components, wires } = this.circuitFile.decode(
-			server.toCircuitFileV0(detail)
-		);
-		const project = this._buildProject(components, wires);
-
-		this.metadataStore.register(project, {
-			id: uuid,
-			name: detail.name,
-			type: 'project',
-			source: 'server',
-			hash: detail.elementsFile?.hash ?? '',
-			isPublic: detail.public,
-			link: detail.link
-		});
-
-		return project;
+	loadProject(uuid: string): Promise<Project> {
+		return this.server.loadProject(uuid);
 	}
 
 	/**
@@ -95,10 +72,15 @@ export class PersistenceService {
 		if (!metadata) return;
 
 		let work: Promise<void> | undefined;
-		if (metadata.type === 'comp' && metadata.source === 'browser') {
-			work = this._doBrowserComponentSave(project);
+		if (metadata.type === 'comp') {
+			if (metadata.source === 'server') {
+				work = this.server.saveComponent(project);
+			} else if (metadata.source === 'browser') {
+				work = this._doBrowserComponentSave(project);
+			}
+			// comp + share is read-only: nothing to save.
 		} else if (metadata.source === 'server') {
-			work = this._doServerSave(project);
+			work = this.server.saveProject(project);
 		} else if (metadata.source === 'browser') {
 			work = this._doBrowserSave(project);
 		}
@@ -117,48 +99,21 @@ export class PersistenceService {
 		description?: string,
 		isPublic?: boolean
 	): Promise<string> {
-		const response = await firstValueFrom(
-			this.projectApi.create({
-				name,
-				description,
-				public: isPublic ? 'true' : 'false'
-			})
-		);
-
-		const project = new Project();
-		this.metadataStore.register(project, {
-			id: response.id,
+		const { project, id } = await this.server.createProject(
 			name,
-			type: 'project',
-			source: 'server',
-			hash: response.elementsFile?.hash ?? '',
-			isPublic: isPublic ?? false
-		});
-
-		const { elements, dependencies } = server.serializeProject(project);
-		const saveResponse = await firstValueFrom(
-			this.projectApi.save(response.id, {
-				oldHash: response.elementsFile?.hash ?? '',
-				dependencies,
-				elements
-			})
+			description,
+			isPublic
 		);
-		this.metadataStore.updateHash(
-			project,
-			saveResponse.elementsFile?.hash ?? ''
-		);
-
 		this._replaceMainProject(project);
-		this.location.go(`/project/${response.id}`);
-
-		return response.id;
+		this.location.go(`/project/${id}`);
+		return id;
 	}
 
 	listProjects(
 		page?: number,
 		search?: string
 	): Observable<Page<ProjectSummary>> {
-		return this.projectApi.list(page ?? 1, 5, search);
+		return this.server.listProjects(page, search);
 	}
 
 	/** Lists circuits stored in the browser (IndexedDB), newest first. */
@@ -171,49 +126,15 @@ export class PersistenceService {
 		return this.browserStore.delete(id);
 	}
 
-	async loadShare(
+	loadShare(
 		linkId: string
 	): Promise<{ project: Project; type: 'project' | 'comp' }> {
-		const detail = await firstValueFrom(this.shareApi.get(linkId));
-		const { components, wires } = this.circuitFile.decode(
-			server.toCircuitFileV0(detail)
-		);
-		const project = this._buildProject(components, wires);
-
-		// Shares are read-only — disable dirty tracking subscription.
-		this.metadataStore.register(
-			project,
-			{
-				id: detail.id,
-				name: detail.name,
-				type: detail.type,
-				source: 'share',
-				hash: detail.elementsFile?.hash ?? '',
-				isPublic: true,
-				link: detail.link
-			},
-			false
-		);
-
-		return { project, type: detail.type };
+		return this.server.loadShare(linkId);
 	}
 
 	async cloneShare(linkId: string): Promise<Project> {
-		try {
-			await firstValueFrom(this.userApi.get());
-		} catch {
-			this.logging.error(
-				`Cannot clone share ${linkId}: user not authenticated`,
-				'PersistenceService'
-			);
-			this.toast.error(`Cannot clone share ${linkId}: user not authenticated`);
-			throw new AuthRequiredError();
-		}
-
-		const response = await firstValueFrom(
-			this.projectApi.cloneFromShare(linkId)
-		);
-		await this.loadProjectAsMain(response.id);
+		const id = await this.server.cloneFromShare(linkId);
+		await this.loadProjectAsMain(id);
 		return this.projectService.mainProject()!;
 	}
 
@@ -259,7 +180,7 @@ export class PersistenceService {
 	 */
 	async importProjectFromJson(content: string): Promise<Project> {
 		const { name, components, wires } = this.circuitFile.fromJson(content);
-		const project = this._buildProject(components, wires);
+		const project = buildProject(components, wires);
 
 		// Adopt any imported custom that has no local master into the browser
 		// components library, so the user can re-place it. (No stable cross-file
@@ -308,11 +229,11 @@ export class PersistenceService {
 		} catch (e) {
 			if (token === this._mainLoadToken) {
 				this.logging.error(
-					`Failed to load project ${uuid}: ${this._formatError(e)}`,
+					`Failed to load project ${uuid}: ${formatHttpError(e)}`,
 					'PersistenceService'
 				);
 				this.toast.error(
-					`Failed to load project ${uuid}: ${this._formatError(e)}`
+					`Failed to load project ${uuid}: ${formatHttpError(e)}`
 				);
 				if (!this.projectService.mainProject()) {
 					this.createAndSetEmptyProject();
@@ -337,11 +258,11 @@ export class PersistenceService {
 		} catch (e) {
 			if (token === this._shareLoadToken) {
 				this.logging.error(
-					`Failed to load share ${linkId}: ${this._formatError(e)}`,
+					`Failed to load share ${linkId}: ${formatHttpError(e)}`,
 					'PersistenceService'
 				);
 				this.toast.error(
-					`Failed to load share ${linkId}: ${this._formatError(e)}`
+					`Failed to load share ${linkId}: ${formatHttpError(e)}`
 				);
 				if (!this.projectService.mainProject()) {
 					this.createAndSetEmptyProject();
@@ -363,7 +284,7 @@ export class PersistenceService {
 		const { name, components, wires } = this.circuitFile.fromJson(
 			record.content
 		);
-		const project = this._buildProject(components, wires);
+		const project = buildProject(components, wires);
 
 		this.metadataStore.register(project, {
 			id: record.id,
@@ -398,7 +319,7 @@ export class PersistenceService {
 			throw new Error(`No browser component with id ${id}`);
 		}
 		const { components, wires } = this.circuitFile.fromJson(record.content);
-		const project = this._buildProject(components, wires);
+		const project = buildProject(components, wires);
 
 		const masterTypeId =
 			this.registry.masterTypeIdForId(id) ??
@@ -428,6 +349,73 @@ export class PersistenceService {
 		return { project, masterTypeId };
 	}
 
+	/**
+	 * Creates a new **server** library master: POSTs to `/api/component`, registers
+	 * the master, opens an empty editor Project and persists the initial empty
+	 * circuit to establish a hash. Returns the Project + master type id so the
+	 * caller (`CustomComponentService`) opens the tab and attaches a binding.
+	 */
+	createServerComponent(meta: {
+		name: string;
+		symbol: string;
+		description: string;
+		isPublic?: boolean;
+	}): Promise<{ project: Project; masterTypeId: number }> {
+		return this.server.createComponent(meta);
+	}
+
+	/**
+	 * Loads a **server** library master into a fresh editor Project. Returns the
+	 * Project + master type id for the caller to open a tab / set as main and
+	 * attach a binding.
+	 */
+	loadServerComponent(
+		uuid: string
+	): Promise<{ project: Project; masterTypeId: number }> {
+		return this.server.loadComponent(uuid);
+	}
+
+	/**
+	 * Loads a server component **as the main project** for standalone editing
+	 * (the `/component/:uuid` route, mirroring `loadProjectAsMain`). Attaches a
+	 * `DefinitionBinding` so its summary stays current; the binding is disposed
+	 * when the main slot is later replaced (`_disposeProject`).
+	 */
+	async loadComponentAsMain(
+		uuid: string,
+		opts?: { skipUrlUpdate?: boolean }
+	): Promise<void> {
+		const token = ++this._mainLoadToken;
+		try {
+			const { project, masterTypeId } = await this.loadServerComponent(uuid);
+			if (token !== this._mainLoadToken) {
+				this._disposeProject(project);
+				return;
+			}
+			this._replaceMainProject(project);
+			this._componentBindings.set(
+				project,
+				new DefinitionBinding(project, masterTypeId, this.registry)
+			);
+			if (!opts?.skipUrlUpdate) {
+				this.location.go(`/component/${uuid}`);
+			}
+		} catch (e) {
+			if (token === this._mainLoadToken) {
+				this.logging.error(
+					`Failed to load component ${uuid}: ${formatHttpError(e)}`,
+					'PersistenceService'
+				);
+				this.toast.error(
+					`Failed to load component ${uuid}: ${formatHttpError(e)}`
+				);
+				if (!this.projectService.mainProject()) {
+					this.createAndSetEmptyProject();
+				}
+			}
+		}
+	}
+
 	async loadLocalProjectAsMain(
 		id: string,
 		opts?: { skipUrlUpdate?: boolean }
@@ -448,11 +436,11 @@ export class PersistenceService {
 		} catch (e) {
 			if (token === this._mainLoadToken) {
 				this.logging.error(
-					`Failed to load browser project ${id}: ${this._formatError(e)}`,
+					`Failed to load browser project ${id}: ${formatHttpError(e)}`,
 					'PersistenceService'
 				);
 				this.toast.error(
-					`Failed to load browser project ${id}: ${this._formatError(e)}`
+					`Failed to load browser project ${id}: ${formatHttpError(e)}`
 				);
 				if (!this.projectService.mainProject()) {
 					this.createAndSetEmptyProject();
@@ -462,13 +450,6 @@ export class PersistenceService {
 	}
 
 	// -- Private helpers -----------------------------------------------------
-
-	private _buildProject(components: Component[], wires: Wire[]): Project {
-		const project = new Project();
-		for (const c of components) project.addComponent(c);
-		for (const w of wires) project.addWire(w);
-		return project;
-	}
 
 	/**
 	 * Creates a browser library master for every custom directly placed in an
@@ -501,8 +482,8 @@ export class PersistenceService {
 		const circuit = def.circuit ?? { components: [], wires: [] };
 		// Re-emit the snapshot's circuit (+ its own nested snapshots) as the new
 		// master's self-contained content.
-		const { components, wires } = this._instantiateBody(circuit);
-		const tmp = this._buildProject(components, wires);
+		const { components, wires } = instantiateBody(this.provider, circuit);
+		const tmp = buildProject(components, wires);
 		let content: string;
 		try {
 			content = this.circuitFile.toJson(tmp, def.name);
@@ -534,67 +515,6 @@ export class PersistenceService {
 			},
 			'browser'
 		);
-	}
-
-	/** Instantiates a native body (session type ids) into editor objects. */
-	private _instantiateBody(body: SerializedCircuitBody): {
-		components: Component[];
-		wires: Wire[];
-	} {
-		const components: Component[] = [];
-		for (const c of body.components) {
-			const config = this.provider.getComponent(c.type);
-			if (config) {
-				components.push(
-					Component.deserialize({ pos: c.pos, options: c.options }, config)
-				);
-			}
-		}
-		const wires = body.wires.map((w) =>
-			Wire.deserialize({ pos: w.pos, direction: w.direction, length: w.length })
-		);
-		return { components, wires };
-	}
-
-	private async _doServerSave(project: Project): Promise<void> {
-		// Capture metadata and a dirty version snapshot *before* serializing.
-		// If new edits land between snapshot and save completion, we must NOT
-		// clear the dirty flag — otherwise the user sees "Saved" with unsaved
-		// changes still in the editor.
-		const metadata = this.metadataStore.getMetadata(project)!;
-		const versionAtSnapshot = this.metadataStore.dirtyVersion(project);
-		const { elements, dependencies } = server.serializeProject(project);
-
-		try {
-			const response = await firstValueFrom(
-				this.projectApi.save(metadata.id, {
-					oldHash: metadata.hash,
-					dependencies,
-					elements
-				})
-			);
-
-			this.metadataStore.updateHash(project, response.elementsFile?.hash ?? '');
-			if (this.metadataStore.dirtyVersion(project) === versionAtSnapshot) {
-				this.metadataStore.clearDirty(project);
-			}
-			this.toast.success('Project saved');
-		} catch (err) {
-			if (this._isVersionMismatch(err)) {
-				this.logging.error(
-					'Version mismatch — reload required',
-					'PersistenceService'
-				);
-				this.toast.error('Version mismatch — reload required');
-			} else {
-				this.logging.error(
-					`Save failed: ${this._formatError(err)}`,
-					'PersistenceService'
-				);
-				this.toast.error(`Save failed: ${this._formatError(err)}`);
-			}
-			throw err;
-		}
 	}
 
 	private async _doBrowserSave(project: Project): Promise<void> {
@@ -668,25 +588,9 @@ export class PersistenceService {
 	}
 
 	private _disposeProject(project: Project): void {
+		this._componentBindings.get(project)?.dispose();
+		this._componentBindings.delete(project);
 		this.metadataStore.remove(project);
 		project.destroy();
-	}
-
-	private _isVersionMismatch(err: unknown): boolean {
-		return (
-			err instanceof HttpErrorResponse &&
-			err.status === 400 &&
-			(err.error as { message?: string })?.message === 'VersionMismatch'
-		);
-	}
-
-	private _formatError(err: unknown): string {
-		if (err instanceof HttpErrorResponse) {
-			return `HTTP ${err.status} ${err.statusText}`;
-		}
-		if (err instanceof Error) {
-			return err.message;
-		}
-		return String(err);
 	}
 }

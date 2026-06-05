@@ -67,4 +67,13 @@ export class ActionManager {
 	public get redoAvailable(): boolean {
 		return this._pointer < this._history.length;
 	}
+
+	/**
+	 * Completes {@link actionChange$} so subscribers (dirty tracking, a
+	 * `DefinitionBinding`) release without an explicit unsubscribe. Called from
+	 * `Project.destroy`; the manager is single-use afterwards.
+	 */
+	public destroy(): void {
+		this._actionChange$.complete();
+	}
 }

@@ -444,6 +444,7 @@ export class Project extends InteractionContainer {
 
 	public override destroy(options?: DestroyOptions): void {
 		this._cursorPosition$.complete();
+		this.actionManager.destroy();
 		for (const sub of this._portsChangeSubs.values()) {
 			sub.unsubscribe();
 		}

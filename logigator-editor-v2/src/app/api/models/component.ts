@@ -1,6 +1,6 @@
 import type { CircuitResource } from './shared';
 import type { ProjectElement } from './project-element';
-import type { DependencyMapping } from './dependencies';
+import type { DependencyMapping, DependencySnapshot } from './dependencies';
 
 // ---- Entity (list / summary) ----
 
@@ -10,6 +10,8 @@ export interface ComponentSummary extends CircuitResource {
 	numOutputs: number;
 	labels: string[];
 	stargazersCount?: number;
+	/** Additive (R14) — monotonic, bumped on each component save. */
+	version?: number;
 }
 
 // ---- Dependency (response) ----
@@ -17,6 +19,8 @@ export interface ComponentSummary extends CircuitResource {
 export interface ComponentDependency {
 	dependency: ComponentSummary;
 	model: number;
+	/** Additive (R14) — the frozen embedded circuit as placed. */
+	snapshot?: DependencySnapshot;
 }
 
 // ---- GET /:componentId response ----

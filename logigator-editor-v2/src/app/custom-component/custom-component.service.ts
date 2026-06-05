@@ -16,6 +16,8 @@ export interface NewComponentMeta {
 	symbol: string;
 	description: string;
 	isPublic?: boolean;
+	/** Which library the new master lives in. Chosen by the user in the dialog. */
+	source: 'server' | 'browser';
 }
 
 /**
@@ -41,10 +43,23 @@ export class CustomComponentService {
 	private readonly _bindings = new Map<Project, DefinitionBinding>();
 
 	/**
-	 * Creates a new editable master and opens an empty editor tab for it. Phase 3
-	 * mints a browser master; the server target lands in Phase 5.
+	 * Creates a new editable master and opens an empty editor tab for it. The
+	 * user picks the store in the new-component dialog: a `'server'` master is
+	 * created via the API (POST), a `'browser'` master is minted locally.
 	 */
-	public createComponent(meta: NewComponentMeta): Project {
+	public async createComponent(meta: NewComponentMeta): Promise<Project> {
+		if (meta.source === 'server') {
+			try {
+				const { project, masterTypeId } =
+					await this.persistence.createServerComponent(meta);
+				this._openEditor(project, masterTypeId);
+				return project;
+			} catch (e) {
+				this.toast.error('Failed to create component');
+				throw e;
+			}
+		}
+
 		const masterTypeId = this.registry.createMaster(
 			{
 				name: meta.name,
@@ -65,20 +80,16 @@ export class CustomComponentService {
 			isPublic: meta.isPublic ?? false
 		});
 
-		this.projectService.addOpenComponent(project);
-		this.projectService.setActiveProject(project);
-		this._bindings.set(
-			project,
-			new DefinitionBinding(project, masterTypeId, this.registry)
-		);
+		this._openEditor(project, masterTypeId);
 		return project;
 	}
 
 	/**
 	 * Brings the editor for a master to the front, re-focusing an already-open
-	 * editor or loading the master's circuit from the browser `components` store
-	 * (the universal embedded-snapshot path). A reused master shares its session
-	 * type id, so the palette tile and the editor stay one definition.
+	 * editor or loading the master's circuit (the universal embedded-snapshot
+	 * path) from whichever library the master belongs to — server (GET) or the
+	 * browser `components` store. A reused master shares its session type id, so
+	 * the palette tile and the editor stay one definition.
 	 */
 	public async openComponentForEdit(masterId: string): Promise<void> {
 		const open = this._findOpenEditor(masterId);
@@ -88,16 +99,31 @@ export class CustomComponentService {
 		}
 		try {
 			const { project, masterTypeId } =
-				await this.persistence.loadComponentForEdit(masterId);
-			this.projectService.addOpenComponent(project);
-			this.projectService.setActiveProject(project);
-			this._bindings.set(
-				project,
-				new DefinitionBinding(project, masterTypeId, this.registry)
-			);
+				this._sourceForMaster(masterId) === 'server'
+					? await this.persistence.loadServerComponent(masterId)
+					: await this.persistence.loadComponentForEdit(masterId);
+			this._openEditor(project, masterTypeId);
 		} catch {
 			this.toast.error('Failed to open component');
 		}
+	}
+
+	/** Adds the editor as a tab, focuses it, and attaches its definition binding. */
+	private _openEditor(project: Project, masterTypeId: number): void {
+		this.projectService.addOpenComponent(project);
+		this.projectService.setActiveProject(project);
+		this._bindings.set(
+			project,
+			new DefinitionBinding(project, masterTypeId, this.registry)
+		);
+	}
+
+	/** The library a registered master belongs to; defaults to browser if unknown. */
+	private _sourceForMaster(masterId: string): 'server' | 'browser' {
+		const typeId = this.registry.masterTypeIdForId(masterId);
+		const def =
+			typeId !== undefined ? this.registry.getDefinition(typeId) : undefined;
+		return def?.source === 'server' ? 'server' : 'browser';
 	}
 
 	/**

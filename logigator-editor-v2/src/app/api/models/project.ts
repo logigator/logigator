@@ -1,6 +1,6 @@
 import type { CircuitResource } from './shared';
 import type { ProjectElement } from './project-element';
-import type { DependencyMapping } from './dependencies';
+import type { DependencyMapping, DependencySnapshot } from './dependencies';
 import type { ComponentSummary } from './component';
 
 // ---- Entity (list / summary) ----
@@ -14,6 +14,8 @@ export interface ProjectSummary extends CircuitResource {
 export interface ProjectDependency {
 	dependency: ComponentSummary;
 	model: number;
+	/** Additive (R14) — the frozen embedded circuit as placed. */
+	snapshot?: DependencySnapshot;
 }
 
 // ---- GET /:projectId response ----

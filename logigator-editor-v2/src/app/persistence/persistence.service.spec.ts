@@ -682,6 +682,9 @@ describe('PersistenceService', () => {
 			httpMock
 				.expectOne(CLONE_URL('link-1'))
 				.flush(projectSummaryResponse({ id: 'cloned-uuid' }));
+			// cloneShare awaits the gateway clone, then loadProjectAsMain — two
+			// async hops to drain before the project GET is issued.
+			await Promise.resolve();
 			await Promise.resolve();
 
 			httpMock
@@ -1030,6 +1033,232 @@ describe('PersistenceService', () => {
 			expect(records[0].numInputs).toBe(1);
 			expect(records[0].labels).toEqual(['in', 'out']);
 			expect(registry.masterTypeIdForId(records[0].id)).toBeDefined();
+		});
+	});
+
+	describe('custom component persistence (server)', () => {
+		const COMPONENTS_URL = `${environment.apiUrl}/api/component`;
+		const COMPONENT_URL = (id: string) =>
+			`${environment.apiUrl}/api/component/${id}`;
+
+		const plugCircuit: SerializedCircuitBody = {
+			components: [
+				{
+					type: 100,
+					pos: [0, 0],
+					options: { direction: 0, label: 'in', index: 0 }
+				},
+				{
+					type: 101,
+					pos: [5, 0],
+					options: { direction: 0, label: 'out', index: 0 }
+				}
+			],
+			wires: []
+		};
+
+		function componentSummaryResponse(
+			o: Partial<{ id: string; hash: string; version: number }> = {}
+		) {
+			return {
+				status: 200,
+				data: {
+					id: o.id ?? 'srv-comp',
+					name: 'Comp',
+					description: '',
+					symbol: 'C',
+					numInputs: 0,
+					numOutputs: 0,
+					labels: [],
+					createdOn: '2024-01-01',
+					lastEdited: '2024-01-01',
+					elementsFile: {
+						hash: o.hash ?? 'h1',
+						mimeType: 'application/json',
+						publicUrl: ''
+					},
+					previewDark: null,
+					previewLight: null,
+					public: false,
+					version: o.version
+				}
+			};
+		}
+
+		function customInstanceOf(project: Project): CustomComponent {
+			return [...project.components].find(
+				(c): c is CustomComponent => c instanceof CustomComponent
+			)!;
+		}
+
+		// Snapshot a master and place an instance, mirroring snapshot-on-place.
+		function placeSnapshot(project: Project, masterTypeId: number): void {
+			const def = registry.snapshot(masterTypeId);
+			const config = provider.getComponent(def.typeId)!;
+			project.addComponent(
+				config.create({ direction: config.options['direction'].clone() })
+			);
+		}
+
+		it('createServerComponent POSTs, PUTs an empty initial save, registers a server master', async () => {
+			const promise = service.createServerComponent({
+				name: 'Comp',
+				symbol: 'C',
+				description: 'd'
+			});
+
+			const post = httpMock.expectOne(COMPONENTS_URL);
+			expect(post.request.method).toBe('POST');
+			post.flush(componentSummaryResponse({ id: 'srv-comp', hash: 'h0' }));
+
+			// Drain microtasks so the PUT chained after the POST is issued.
+			await Promise.resolve();
+
+			const put = httpMock.expectOne(COMPONENT_URL('srv-comp'));
+			expect(put.request.method).toBe('PUT');
+			expect(put.request.body.elements).toEqual([]);
+			expect(put.request.body.numInputs).toBe(0);
+			expect(put.request.body.labels).toEqual([]);
+			put.flush(componentSummaryResponse({ id: 'srv-comp', hash: 'h1' }));
+
+			const { project, masterTypeId } = await promise;
+			const meta = metadataStore.getMetadata(project)!;
+			expect(meta.type).toBe('comp');
+			expect(meta.source).toBe('server');
+			expect(meta.hash).toBe('h1');
+			expect(registry.masterTypeIdForId('srv-comp')).toBe(masterTypeId);
+		});
+
+		it('loadServerComponent revives the embedded snapshot — ports come from it (Inv. A)', async () => {
+			const promise = service.loadServerComponent('host-comp');
+
+			const get = httpMock.expectOne(COMPONENT_URL('host-comp'));
+			expect(get.request.method).toBe('GET');
+			get.flush({
+				status: 200,
+				data: {
+					id: 'host-comp',
+					name: 'Host',
+					description: '',
+					symbol: 'H',
+					numInputs: 0,
+					numOutputs: 0,
+					labels: [],
+					createdOn: '2024-01-01',
+					lastEdited: '2024-01-01',
+					elementsFile: { hash: 'gh', mimeType: 'application/json', publicUrl: '' },
+					previewDark: null,
+					previewLight: null,
+					public: false,
+					version: 4,
+					elements: [{ t: 1000, p: [3, 3], i: 9, o: 9 }],
+					dependencies: [
+						{
+							dependency: { id: 'dep-master', version: 6 },
+							model: 1000,
+							snapshot: {
+								version: 4,
+								name: 'Dep',
+								symbol: 'D',
+								description: '',
+								numInputs: 1,
+								numOutputs: 1,
+								labels: ['in', 'out'],
+								elements: [
+									{ t: 100, p: [0, 0], o: 1, n: [0], s: 'in' },
+									{ t: 101, p: [5, 0], i: 1, n: [0], s: 'out' }
+								]
+							}
+						}
+					]
+				}
+			});
+
+			const { project, masterTypeId } = await promise;
+			const instance = customInstanceOf(project);
+			// Counts come from the snapshot, not the body element's bogus i/o.
+			expect(instance.numInputs).toBe(1);
+			expect(instance.numOutputs).toBe(1);
+			expect(metadataStore.getMetadata(project)!.source).toBe('server');
+			expect(registry.masterTypeIdForId('host-comp')).toBe(masterTypeId);
+		});
+
+		it('server project save embeds dependencies[].snapshot plus legacy { id, model }', async () => {
+			const master = registry.createMaster(
+				{
+					id: 'pm1',
+					version: 3,
+					symbol: 'M',
+					numInputs: 1,
+					numOutputs: 1,
+					labels: ['in', 'out'],
+					circuit: plugCircuit
+				},
+				'server'
+			);
+			const project = new Project();
+			metadataStore.register(project, {
+				id: 'proj-1',
+				name: 'P',
+				type: 'project',
+				source: 'server',
+				hash: 'ph',
+				isPublic: false
+			});
+			placeSnapshot(project, master);
+			metadataStore.markDirty(project);
+
+			const promise = service.saveProject(project);
+			const put = httpMock.expectOne(PROJECT_URL('proj-1'));
+			expect(put.request.method).toBe('PUT');
+			const dep = put.request.body.dependencies[0];
+			expect(dep.id).toBe('pm1');
+			expect(dep.model).toBe(1000);
+			expect(dep.snapshot.version).toBe(3);
+			expect(dep.snapshot.numInputs).toBe(1);
+			expect(dep.snapshot.labels).toEqual(['in', 'out']);
+			expect(dep.snapshot.elements.length).toBeGreaterThan(0);
+			put.flush(projectSummaryResponse({ id: 'proj-1', hash: 'ph2' }));
+
+			await promise;
+			expect(metadataStore.isDirty(project)).toBeFalse();
+		});
+
+		it('server component save sends the recomputed summary and adopts the returned version', async () => {
+			const masterType = registry.createMaster(
+				{ id: 'ec1', version: 2, symbol: 'E' },
+				'server'
+			);
+			const editor = new Project();
+			metadataStore.register(editor, {
+				id: 'ec1',
+				name: 'E',
+				type: 'comp',
+				source: 'server',
+				hash: 'eh',
+				isPublic: false
+			});
+			editor.addComponent(
+				Component.deserialize(
+					{ pos: [0, 0], options: { direction: 0, label: 'in', index: 0 } },
+					provider.getComponent(100)!
+				)
+			);
+			metadataStore.markDirty(editor);
+
+			const promise = service.saveProject(editor);
+			const put = httpMock.expectOne(COMPONENT_URL('ec1'));
+			expect(put.request.method).toBe('PUT');
+			expect(put.request.body.numInputs).toBe(1);
+			expect(put.request.body.labels).toEqual(['in']);
+			put.flush(
+				componentSummaryResponse({ id: 'ec1', hash: 'eh2', version: 7 })
+			);
+
+			await promise;
+			// The server's save-time version stamp is adopted onto the master.
+			expect(registry.getDefinition(masterType)!.version).toBe(7);
+			expect(metadataStore.isDirty(editor)).toBeFalse();
 		});
 	});
 });

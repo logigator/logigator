@@ -202,6 +202,19 @@ export class CustomComponentRegistry {
 		def.circuit = cloneCircuit(circuit);
 	}
 
+	/**
+	 * Adopts the monotonic `version` a save returned for a **master** (the
+	 * save-time stamp; {@link updateDefinition} deliberately leaves it alone).
+	 * Snapshots placed afterwards carry it as `source.version`, so a placed
+	 * instance can detect "a newer version exists". No-ops for a snapshot or
+	 * unknown type id.
+	 */
+	public setMasterVersion(masterTypeId: number, version: number): void {
+		const def = this._definitions.get(masterTypeId);
+		if (!def || def.kind !== 'master') return;
+		def.version = version;
+	}
+
 	public getDefinition(typeId: number): CustomComponentDefinition | undefined {
 		return this._definitions.get(typeId);
 	}

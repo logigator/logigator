@@ -75,11 +75,12 @@ describe('CustomComponentService', () => {
 		return instance;
 	}
 
-	it('createComponent opens an empty editor tab and activates it', () => {
-		const editor = service.createComponent({
+	it('createComponent opens an empty editor tab and activates it', async () => {
+		const editor = await service.createComponent({
 			name: 'Half Adder',
 			symbol: 'HA',
-			description: ''
+			description: '',
+			source: 'browser'
 		});
 
 		expect(projectService.openComponents()).toContain(editor);
@@ -87,11 +88,12 @@ describe('CustomComponentService', () => {
 		expect(metadataStore.getMetadata(editor)?.type).toBe('comp');
 	});
 
-	it('closeComponent disposes the editor and reverts to the main project', () => {
-		const editor = service.createComponent({
+	it('closeComponent disposes the editor and reverts to the main project', async () => {
+		const editor = await service.createComponent({
 			name: 'X',
 			symbol: 'X',
-			description: ''
+			description: '',
+			source: 'browser'
 		});
 
 		service.closeComponent(editor);
@@ -101,11 +103,12 @@ describe('CustomComponentService', () => {
 		expect(metadataStore.getMetadata(editor)).toBeUndefined();
 	});
 
-	it('keeps the master summary in sync with its plugs (DefinitionBinding)', () => {
-		const editor = service.createComponent({
+	it('keeps the master summary in sync with its plugs (DefinitionBinding)', async () => {
+		const editor = await service.createComponent({
 			name: 'X',
 			symbol: 'X',
-			description: ''
+			description: '',
+			source: 'browser'
 		});
 		const masterTypeId = masterTypeIdOf(editor);
 
@@ -139,11 +142,12 @@ describe('CustomComponentService', () => {
 		expect(placed.options.label.value).toBe('');
 	});
 
-	it('placed instances stay frozen when the master changes', () => {
-		const editor = service.createComponent({
+	it('placed instances stay frozen when the master changes', async () => {
+		const editor = await service.createComponent({
 			name: 'X',
 			symbol: 'X',
-			description: ''
+			description: '',
+			source: 'browser'
 		});
 		const masterTypeId = masterTypeIdOf(editor);
 
@@ -159,11 +163,12 @@ describe('CustomComponentService', () => {
 		expect(instance.numInputs).toBe(1);
 	});
 
-	it('buildInstanceUpdate replaces the instance with the master shape, undoable', () => {
-		const editor = service.createComponent({
+	it('buildInstanceUpdate replaces the instance with the master shape, undoable', async () => {
+		const editor = await service.createComponent({
 			name: 'X',
 			symbol: 'X',
-			description: ''
+			description: '',
+			source: 'browser'
 		});
 		const masterTypeId = masterTypeIdOf(editor);
 

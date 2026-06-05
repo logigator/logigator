@@ -31,6 +31,7 @@ export class NewComponentDialogComponent {
 	protected readonly symbol = signal('');
 	protected readonly description = signal('');
 	protected readonly isPublic = signal(false);
+	protected readonly source = signal<'server' | 'browser'>('server');
 
 	protected get canCreate(): boolean {
 		return this.name().trim().length > 0 && this.symbol().trim().length > 0;
@@ -38,12 +39,17 @@ export class NewComponentDialogComponent {
 
 	protected create(): void {
 		if (!this.canCreate) return;
-		this.customComponentService.createComponent({
-			name: this.name().trim(),
-			symbol: this.symbol().trim(),
-			description: this.description().trim(),
-			isPublic: this.isPublic()
-		});
+		// Fire-and-forget: a server create is async (POST) but the dialog closes
+		// optimistically; failures surface via a toast from the service.
+		void this.customComponentService
+			.createComponent({
+				name: this.name().trim(),
+				symbol: this.symbol().trim(),
+				description: this.description().trim(),
+				isPublic: this.isPublic(),
+				source: this.source()
+			})
+			.catch(() => undefined);
 		this.ref.close();
 	}
 }

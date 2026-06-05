@@ -5,10 +5,18 @@ import {
 	toCircuitFileV0,
 	WIRE_TYPE_ID
 } from './server-circuit.codec';
+import { EmbeddedDependency } from '../../api/models/dependencies';
 import { CircuitFileService } from '../file/circuit-file.service';
 import { Project } from '../../project/project';
 import { ProjectElement } from '../../api/models/project-element';
 import { setStaticDIInjector } from '../../utils/get-di';
+import { ComponentProviderService } from '../../components/component-provider.service';
+import { CustomComponentRegistry } from '../../components/custom/custom-component-registry.service';
+import {
+	BuiltInComponentType,
+	CUSTOM_TYPE_ID_BASE
+} from '../../components/component-type.enum';
+import { SerializedCircuitBody } from '../serialized-circuit';
 
 // The server transport is legacy v0-over-HTTP: decode routes through the
 // permanent `v0ToV1` migration (covered in v0-to-v1.migration.spec), encode
@@ -109,17 +117,28 @@ function normalize(elements: ProjectElement[]): string {
 
 describe('server-circuit.codec', () => {
 	let circuitFile: CircuitFileService;
+	let registry: CustomComponentRegistry;
+	let provider: ComponentProviderService;
 
 	beforeEach(() => {
 		TestBed.configureTestingModule({});
 		setStaticDIInjector(TestBed.inject(Injector));
 		circuitFile = TestBed.inject(CircuitFileService);
+		registry = TestBed.inject(CustomComponentRegistry);
+		provider = TestBed.inject(ComponentProviderService);
 	});
 
+	function encode(project: Project) {
+		return serializeProject(project, registry, provider);
+	}
+
 	/** Full server-read decode (migration + instance build) for a v0 element list. */
-	function decode(elements: ProjectElement[]): Project {
+	function decode(
+		elements: ProjectElement[],
+		dependencies?: EmbeddedDependency[]
+	): Project {
 		const { components, wires } = circuitFile.decode(
-			toCircuitFileV0({ name: 'X', elements })
+			toCircuitFileV0({ name: 'X', elements, dependencies })
 		);
 		const project = new Project();
 		for (const c of components) project.addComponent(c);
@@ -136,7 +155,7 @@ describe('server-circuit.codec', () => {
 	describe('fixture round-trip (decode → encode)', () => {
 		for (const fixture of fixtures) {
 			it(`round-trips ${fixture.name}`, () => {
-				const { elements } = serializeProject(decode(fixture.elements));
+				const { elements } = encode(decode(fixture.elements));
 				expect(normalize(elements)).toEqual(normalize(fixture.elements));
 			});
 		}
@@ -144,7 +163,7 @@ describe('server-circuit.codec', () => {
 
 	describe('serializeProject', () => {
 		it('returns empty dependencies', () => {
-			const { dependencies } = serializeProject(new Project());
+			const { dependencies } = encode(new Project());
 			expect(dependencies).toEqual([]);
 		});
 
@@ -169,6 +188,156 @@ describe('server-circuit.codec', () => {
 		});
 	});
 
+	// A custom snapshot is folded into a dependency entry — legacy { id, model }
+	// for old-client compat PLUS the additive frozen `snapshot`. New clients
+	// render from the snapshot with zero extra fetches; ports come from the
+	// snapshot, never from the element's i/o (Invariant A).
+	describe('custom-component snapshots', () => {
+		// A master (1 in / 1 out, two plugs) + a frozen snapshot placed from it.
+		function placeOneCustom(direction = 1): {
+			project: Project;
+			snapType: number;
+		} {
+			const circuit: SerializedCircuitBody = {
+				components: [
+					{
+						type: BuiltInComponentType.INPUT,
+						pos: [0, 0],
+						options: { direction: 0, label: 'A', index: 0 }
+					},
+					{
+						type: BuiltInComponentType.OUTPUT,
+						pos: [5, 0],
+						options: { direction: 0, label: 'Q', index: 0 }
+					}
+				],
+				wires: [{ pos: [1, 0], direction: 0, length: 4 }]
+			};
+			const master = registry.createMaster(
+				{
+					id: 'master-uuid',
+					version: 3,
+					name: 'Half Adder',
+					symbol: 'HA',
+					description: 'demo',
+					numInputs: 1,
+					numOutputs: 1,
+					labels: ['A', 'Q'],
+					circuit
+				},
+				'server'
+			);
+			const snapType = registry.snapshot(master).typeId;
+			const config = provider.getComponent(snapType)!;
+			const instance = config.create({
+				direction: config.options['direction'].clone(direction)
+			});
+			instance.position.set(7, 2);
+
+			const project = new Project();
+			project.addComponent(instance);
+			return { project, snapType };
+		}
+
+		it('emits both legacy { id, model } and the additive snapshot', () => {
+			const { project } = placeOneCustom();
+			const { elements, dependencies } = encode(project);
+
+			expect(dependencies.length).toBe(1);
+			const dep = dependencies[0];
+			// Legacy compat fields.
+			expect(dep.id).toBe('master-uuid');
+			expect(dep.model).toBe(CUSTOM_TYPE_ID_BASE);
+			// The body references the dependency by the same file-local id.
+			const customEl = elements.find((e) => e.t >= CUSTOM_TYPE_ID_BASE)!;
+			expect(customEl.t).toBe(dep.model);
+			expect(customEl.r).toBe(1); // direction round-trips
+
+			// The additive frozen snapshot: provenance, summary, and its circuit.
+			expect(dep.snapshot).toBeDefined();
+			expect(dep.snapshot!.version).toBe(3);
+			expect(dep.snapshot!.numInputs).toBe(1);
+			expect(dep.snapshot!.numOutputs).toBe(1);
+			expect(dep.snapshot!.labels).toEqual(['A', 'Q']);
+			// The snapshot body carries the plugs + wire positionally.
+			const plugTypes = dep.snapshot!.elements
+				.filter((e) => e.t !== WIRE_TYPE_ID)
+				.map((e) => e.t)
+				.sort();
+			expect(plugTypes).toEqual([
+				BuiltInComponentType.INPUT,
+				BuiltInComponentType.OUTPUT
+			]);
+			expect(
+				dep.snapshot!.elements.filter((e) => e.t === WIRE_TYPE_ID).length
+			).toBe(1);
+		});
+
+		it('loads from the embedded snapshot — ports come from it (Inv. A)', () => {
+			const encoded = encode(placeOneCustom(2).project);
+			const reopened = decode(encoded.elements, encoded.dependencies);
+
+			const instance = [...reopened.components].find(
+				(c) => c.config.type >= CUSTOM_TYPE_ID_BASE
+			)!;
+			expect(instance).toBeDefined();
+			expect(instance.numInputs).toBe(1);
+			expect(instance.numOutputs).toBe(1);
+			expect(instance.direction).toBe(2); // direction survived the round-trip
+
+			// Provenance survives so the editor can offer "update available".
+			const def = registry.getDefinition(instance.config.type)!;
+			expect(def.kind).toBe('snapshot');
+			expect(def.id).toBe('master-uuid');
+			expect(def.version).toBe(3);
+			expect(def.labels).toEqual(['A', 'Q']);
+		});
+
+		it('ignores element i/o on load — counts come from the snapshot', () => {
+			// A hand-built response with deliberately bogus i/o on the custom body
+			// element: the instance must still adopt the snapshot's 1/1, proving the
+			// decode pulls counts from the definition, not the wire fields.
+			const dependencies: EmbeddedDependency[] = [
+				{
+					dependency: { id: 'master-uuid', version: 5 },
+					model: CUSTOM_TYPE_ID_BASE,
+					snapshot: {
+						version: 3,
+						name: 'HA',
+						symbol: 'HA',
+						description: '',
+						numInputs: 1,
+						numOutputs: 1,
+						labels: ['A', 'Q'],
+						elements: [
+							{ t: BuiltInComponentType.INPUT, p: [0, 0], o: 1, n: [0], s: 'A' },
+							{ t: BuiltInComponentType.OUTPUT, p: [5, 0], i: 1, n: [0], s: 'Q' }
+						]
+					}
+				}
+			];
+			const reopened = decode(
+				[{ t: CUSTOM_TYPE_ID_BASE, p: [3, 3], i: 9, o: 9 }],
+				dependencies
+			);
+			const instance = [...reopened.components].find(
+				(c) => c.config.type >= CUSTOM_TYPE_ID_BASE
+			)!;
+			expect(instance.numInputs).toBe(1);
+			expect(instance.numOutputs).toBe(1);
+		});
+
+		it('skips reference-only dependencies (no embedded snapshot)', () => {
+			// Old always-latest model: a dependency with no `snapshot`. Nothing to
+			// ingest — the custom ref stays unresolved (tombstone territory) and is
+			// dropped here rather than throwing.
+			const reopened = decode([{ t: BuiltInComponentType.AND, p: [0, 0], i: 2 }], [
+				{ dependency: { id: 'x' }, model: CUSTOM_TYPE_ID_BASE }
+			]);
+			expect([...reopened.components].length).toBe(1);
+		});
+	});
+
 	describe('wire round-trip detail', () => {
 		it('correctly round-trips wire position with half-grid offset', () => {
 			const elements: ProjectElement[] = [{ t: 0, p: [3, 5], q: [8, 5] }];
@@ -178,7 +347,7 @@ describe('server-circuit.codec', () => {
 			expect(wire.position.x).toBe(3.5);
 			expect(wire.position.y).toBe(5.5);
 
-			expect(serializeProject(project).elements).toEqual(elements);
+			expect(encode(project).elements).toEqual(elements);
 		});
 	});
 });

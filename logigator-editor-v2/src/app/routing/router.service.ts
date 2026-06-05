@@ -1,5 +1,6 @@
 import { inject, Injectable, Type } from '@angular/core';
 import { ProjectRoute } from './routes/project.route';
+import { ComponentRoute } from './routes/component.route';
 import { ShareRoute } from './routes/share.route';
 import { LocalProjectRoute } from './routes/local-project.route';
 import { Route } from './route.model';
@@ -9,7 +10,12 @@ import { RouteKeys } from './route-keys.model';
 import { ToastService } from '../logging/toast.service';
 import { LoggingService } from '../logging/logging.service';
 
-const ROUTES: Type<Route>[] = [ProjectRoute, ShareRoute, LocalProjectRoute];
+const ROUTES: Type<Route>[] = [
+	ProjectRoute,
+	ComponentRoute,
+	ShareRoute,
+	LocalProjectRoute
+];
 
 @Injectable({
 	providedIn: 'root'
