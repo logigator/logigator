@@ -563,8 +563,8 @@ __metadata:
 
 "@angular/router@file:./packages/router-stub::locator=logigator-editor-v2%40workspace%3A.":
   version: 21.0.0
-  resolution: "@angular/router@file:./packages/router-stub#./packages/router-stub::hash=8a7a1a&locator=logigator-editor-v2%40workspace%3A."
-  checksum: 10c0/3e87eb602494f8d773dc2de5bd7b1780247524110341efdea80e0ebbabede7400e9ef335dcc4bd78678a5f9bc42ee30f39a64ad3419325b8c46c1aa86cedfff9
+  resolution: "@angular/router@file:./packages/router-stub#./packages/router-stub::hash=0cc055&locator=logigator-editor-v2%40workspace%3A."
+  checksum: 10c0/7af4020ed6b9f6d49c5ada4bccb997017859c6494c7cc978b0a67a1f031db99922abbaa48ba2be5a19c8ee6d0fa3115aa4915012da906d21134ea77d0429458b
   languageName: node
   linkType: hard
 
@@ -4323,7 +4323,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"color-name@npm:~1.1.4":
+"color-name@npm:^1.1.4, color-name@npm:~1.1.4":
   version: 1.1.4
   resolution: "color-name@npm:1.1.4"
   checksum: 10c0/a1a3f914156960902f46f7f56bc62effc6c94e84b2cae157a526b1c1f74b677a47ec602bf68a61abfa2b42d15b7c5651c6dbe72a43af720bc588dff885b10f95
@@ -4471,6 +4471,13 @@ __metadata:
   bin:
     cssesc: bin/cssesc
   checksum: 10c0/6bcfd898662671be15ae7827120472c5667afb3d7429f1f917737f3bf84c4176003228131b643ae74543f17a394446247df090c597bb9a728cce298606ed0aa7
+  languageName: node
+  linkType: hard
+
+"cssfontparser@npm:^1.2.1":
+  version: 1.2.1
+  resolution: "cssfontparser@npm:1.2.1"
+  checksum: 10c0/ceb9b2976d503dbff3ac2aff0229b263affb4fb221a6947b357682cd8a952f6995253646ca5f820020d2fe05b5e29b56dbdd2343388c32203e8dd0ed15bdc1ca
   languageName: node
   linkType: hard
 
@@ -6354,6 +6361,7 @@ __metadata:
     typescript-eslint: "npm:^8.59.0"
     uuid: "npm:^14.0.0"
     vitest: "npm:^4.1.8"
+    vitest-canvas-mock: "npm:^1.1.4"
   languageName: unknown
   linkType: soft
 
@@ -6652,6 +6660,15 @@ __metadata:
   bin:
     mkdirp: bin/cmd.js
   checksum: 10c0/46ea0f3ffa8bc6a5bc0c7081ffc3907777f0ed6516888d40a518c5111f8366d97d2678911ad1a6882bf592fa9de6c784fea32e1687bb94e1f4944170af48a5cf
+  languageName: node
+  linkType: hard
+
+"moo-color@npm:^1.0.3":
+  version: 1.0.3
+  resolution: "moo-color@npm:1.0.3"
+  dependencies:
+    color-name: "npm:^1.1.4"
+  checksum: 10c0/778c82f67f638c03a1d0fa78dcd6ea376a9f17b5e78e349c7e34a290b496dbdb43fd0b1c38070e2062d5e784bcf08e57f499015fcbcf52b3a1887d7825ebb80d
   languageName: node
   linkType: hard
 
@@ -8709,6 +8726,18 @@ __metadata:
   bin:
     vite: bin/vite.js
   checksum: 10c0/d75be3fbe2f63e6a8145325970338afaf0dd4d96ba9175c13f9a286fd5f95afc489401b693e4fa6c0899a4dd0e137be91cdf9401a40a635563911ad5036e3467
+  languageName: node
+  linkType: hard
+
+"vitest-canvas-mock@npm:^1.1.4":
+  version: 1.1.4
+  resolution: "vitest-canvas-mock@npm:1.1.4"
+  dependencies:
+    cssfontparser: "npm:^1.2.1"
+    moo-color: "npm:^1.0.3"
+  peerDependencies:
+    vitest: ^3.0.0 || ^4.0.0
+  checksum: 10c0/f0a6de8541533e0316dae7690d9ca8ee9cd3f775099a528e7ce21a3eb93ef7793ef4a7edee1fe65f6bdf92c771cf34602d2b7ad9f3bade4b1f040f584d0ba262
   languageName: node
   linkType: hard
 

@@ -1,3 +1,4 @@
+import { describe, beforeEach, it, expect, vi } from 'vitest';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { Injector } from '@angular/core';
 import { By } from '@angular/platform-browser';
@@ -29,7 +30,9 @@ describe('ComponentSettingsComponent', () => {
   let workModeService: WorkModeService;
 
   beforeEach(async () => {
-    spyOn(console, 'warn');
+    // Suppress Transloco's "Missing translation for ..." warnings — the tests
+    // don't load translation files and the fallback keys are sufficient.
+    vi.spyOn(console, 'warn').mockImplementation(() => {});
     await TestBed.configureTestingModule({
       imports: [ComponentSettingsComponent],
       providers: appConfig.providers
@@ -95,7 +98,7 @@ describe('ComponentSettingsComponent', () => {
     numberInput.commit()(3);
 
     expect(and.options.numInputs.value).toBe(3);
-    expect(metadataStore.isDirty(project)).toBeTrue();
+    expect(metadataStore.isDirty(project)).toBe(true);
 
     project.actionManager.undo();
     expect(and.options.numInputs.value).toBe(2);

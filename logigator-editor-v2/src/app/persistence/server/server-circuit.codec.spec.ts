@@ -1,3 +1,4 @@
+import { describe, beforeEach, it, expect, vi } from 'vitest';
 import { Injector } from '@angular/core';
 import { TestBed } from '@angular/core/testing';
 import { MessageService } from 'primeng/api';
@@ -123,10 +124,10 @@ describe('server-circuit.codec', () => {
   let provider: ComponentProviderService;
 
   beforeEach(() => {
-    const translocoSpy = jasmine.createSpyObj('TranslocoService', [
-      'translate'
-    ]);
-    translocoSpy.translate.and.callFake((key: string) => key);
+    const translocoSpy = {
+      translate: vi.fn().mockName('TranslocoService.translate')
+    };
+    translocoSpy.translate.mockImplementation((key: string) => key);
     TestBed.configureTestingModule({
       providers: [
         MessageService,

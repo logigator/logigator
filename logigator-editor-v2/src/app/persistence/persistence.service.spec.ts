@@ -1,3 +1,5 @@
+import { describe, beforeEach, afterEach, it, expect, vi } from 'vitest';
+import type { Mock } from 'vitest';
 import { Injector } from '@angular/core';
 import { Location } from '@angular/common';
 import { TestBed } from '@angular/core/testing';
@@ -168,7 +170,11 @@ function projectDetailResponse(
 }
 
 function projectSummaryResponse(
-  overrides: Partial<{ id: string; name: string; hash: string }> = {}
+  overrides: Partial<{
+    id: string;
+    name: string;
+    hash: string;
+  }> = {}
 ) {
   return {
     status: 200,
@@ -223,15 +229,16 @@ describe('PersistenceService', () => {
   let metadataStore: ProjectMetadataStore;
   let projectService: ProjectService;
   let httpMock: HttpTestingController;
-  let locationGo: jasmine.Spy;
+  let locationGo: Mock;
   let browserStore: FakeBrowserProjectStore;
   let componentStore: FakeBrowserComponentStore;
   let registry: CustomComponentRegistry;
   let provider: ComponentProviderService;
 
   beforeEach(() => {
-    spyOn(console, 'error');
-    locationGo = jasmine.createSpy('Location.go');
+    // Console output from expected error-path tests is suppressed.
+    vi.spyOn(console, 'error').mockImplementation(() => {});
+    locationGo = vi.fn();
     browserStore = new FakeBrowserProjectStore();
     componentStore = new FakeBrowserComponentStore();
     TestBed.configureTestingModule({
@@ -252,7 +259,9 @@ describe('PersistenceService', () => {
         MessageService,
         {
           provide: TranslocoService,
-          useValue: jasmine.createSpyObj('TranslocoService', ['translate'])
+          useValue: {
+            translate: vi.fn().mockName('TranslocoService.translate')
+          }
         }
       ]
     });
@@ -278,7 +287,7 @@ describe('PersistenceService', () => {
       expect(metadata!.source).toBe('browser');
       expect(metadata!.id).toBe('');
       expect(metadata!.name).toBe('Untitled');
-      expect(metadataStore.isDirty(project)).toBeFalse();
+      expect(metadataStore.isDirty(project)).toBe(false);
       expect(projectService.mainProject()).toBe(project);
       // A fresh draft leaves no storage record until the first save.
       expect(browserStore.records.size).toBe(0);
@@ -320,7 +329,7 @@ describe('PersistenceService', () => {
 
       await service.saveProject(project);
       expect(browserStore.records.size).toBe(0);
-      expect(metadataStore.isDirty(project)).toBeTrue();
+      expect(metadataStore.isDirty(project)).toBe(true);
     });
 
     it('writes a dirty browser project to storage and clears dirty', async () => {
@@ -340,7 +349,7 @@ describe('PersistenceService', () => {
       const record = browserStore.records.get('browser-1');
       expect(record).toBeDefined();
       expect(JSON.parse(record!.content).name).toBe('Local');
-      expect(metadataStore.isDirty(project)).toBeFalse();
+      expect(metadataStore.isDirty(project)).toBe(false);
     });
 
     it('promotes a fresh browser draft: generates an id and updates the URL', async () => {
@@ -351,9 +360,9 @@ describe('PersistenceService', () => {
 
       const id = metadataStore.getMetadata(project)!.id;
       expect(id).toBeTruthy();
-      expect(browserStore.records.has(id)).toBeTrue();
+      expect(browserStore.records.has(id)).toBe(true);
       expect(locationGo).toHaveBeenCalledWith(`/local/${id}`);
-      expect(metadataStore.isDirty(project)).toBeFalse();
+      expect(metadataStore.isDirty(project)).toBe(false);
     });
 
     it('PUTs elements, updates hash, and clears dirty on success', async () => {
@@ -377,7 +386,7 @@ describe('PersistenceService', () => {
 
       await promise;
       expect(metadataStore.getMetadata(project)!.hash).toBe('new-hash');
-      expect(metadataStore.isDirty(project)).toBeFalse();
+      expect(metadataStore.isDirty(project)).toBe(false);
     });
 
     it('deduplicates concurrent saves into a single request', async () => {
@@ -423,9 +432,9 @@ describe('PersistenceService', () => {
         { status: 400, statusText: 'Bad Request' }
       );
 
-      await expectAsync(promise).toBeRejected();
+      await expect(promise).rejects.toThrow();
       expect(metadataStore.getMetadata(project)!.hash).toBe('stale-hash');
-      expect(metadataStore.isDirty(project)).toBeTrue();
+      expect(metadataStore.isDirty(project)).toBe(true);
     });
 
     it('keeps dirty=true when an edit lands during the save (race protection)', async () => {
@@ -453,7 +462,7 @@ describe('PersistenceService', () => {
       // Hash advances, but dirty stays true because a concurrent edit
       // fired while we were saving the previous snapshot.
       expect(metadataStore.getMetadata(project)!.hash).toBe('h1');
-      expect(metadataStore.isDirty(project)).toBeTrue();
+      expect(metadataStore.isDirty(project)).toBe(true);
     });
   });
 
@@ -471,7 +480,7 @@ describe('PersistenceService', () => {
       expect(metadata!.id).toBe('test-uuid');
       expect(metadata!.hash).toBe('h1');
       expect(metadata!.source).toBe('server');
-      expect(metadataStore.isDirty(project)).toBeFalse();
+      expect(metadataStore.isDirty(project)).toBe(false);
       expect(Array.from(project.components).length).toBe(1);
     });
 
@@ -482,7 +491,7 @@ describe('PersistenceService', () => {
         { status: 404, message: 'NotFound' },
         { status: 404, statusText: 'Not Found' }
       );
-      await expectAsync(loadPromise).toBeRejected();
+      await expect(loadPromise).rejects.toThrow();
     });
   });
 
@@ -571,7 +580,7 @@ describe('PersistenceService', () => {
       const { project, type } = await promise;
       expect(type).toBe('project');
       expect(metadataStore.getMetadata(project)!.source).toBe('share');
-      expect(metadataStore.isDirty(project)).toBeFalse();
+      expect(metadataStore.isDirty(project)).toBe(false);
     });
 
     it('loadShareAsMain swaps main project for project-type shares', async () => {
@@ -665,9 +674,7 @@ describe('PersistenceService', () => {
           { status: 401, statusText: 'Unauthorized' }
         );
 
-      await expectAsync(promise).toBeRejectedWith(
-        jasmine.any(AuthRequiredError)
-      );
+      await expect(promise).rejects.toEqual(expect.any(AuthRequiredError));
     });
 
     it('clones, loads, sets as main, and updates URL', async () => {
@@ -707,7 +714,7 @@ describe('PersistenceService', () => {
         { t: 999, p: [5, 5] }, // unimplemented legacy type
         { t: 1, p: [10, 0], i: 1, o: 1 } // NOT — known
       ];
-      const warnSpy = spyOn(console, 'warn');
+      const warnSpy = vi.spyOn(console, 'warn').mockImplementation(() => {});
 
       const promise = service.loadProject('test-uuid');
       httpMock
@@ -722,7 +729,7 @@ describe('PersistenceService', () => {
       expect(warnSpy).toHaveBeenCalledWith(
         '[%s] %o',
         'v0ToV1Migration',
-        jasmine.stringContaining('Unknown component type ID: 999')
+        expect.stringContaining('Unknown component type ID: 999')
       );
     });
   });
@@ -763,18 +770,18 @@ describe('PersistenceService', () => {
       expect(metadata!.source).toBe('browser');
       expect(metadata!.id).toBeTruthy();
       expect(metadata!.name).toBe('Imported');
-      expect(metadataStore.isDirty(project)).toBeFalse();
+      expect(metadataStore.isDirty(project)).toBe(false);
       expect(Array.from(project.components).length).toBe(1);
 
       // Persisted immediately, and the URL reflects the new id.
-      expect(browserStore.records.has(metadata!.id)).toBeTrue();
+      expect(browserStore.records.has(metadata!.id)).toBe(true);
       expect(locationGo).toHaveBeenCalledWith(`/local/${metadata!.id}`);
     });
 
     it('importProjectFromJson rejects on an unreadable file (and stores nothing)', async () => {
-      await expectAsync(
+      await expect(
         service.importProjectFromJson('{not json')
-      ).toBeRejectedWithError(InvalidFileError);
+      ).rejects.toThrowError(InvalidFileError);
       expect(browserStore.records.size).toBe(0);
     });
   });
@@ -803,7 +810,7 @@ describe('PersistenceService', () => {
     });
 
     it('loadLocalProject rejects when no record exists', async () => {
-      await expectAsync(service.loadLocalProject('nope')).toBeRejected();
+      await expect(service.loadLocalProject('nope')).rejects.toThrow();
     });
 
     it('loadLocalProjectAsMain sets the project as main and updates the URL', async () => {
@@ -997,7 +1004,7 @@ describe('PersistenceService', () => {
     });
 
     it('loadComponentForEdit rejects when no master record exists', async () => {
-      await expectAsync(service.loadComponentForEdit('missing')).toBeRejected();
+      await expect(service.loadComponentForEdit('missing')).rejects.toThrow();
     });
 
     it('importProjectFromJson adopts a master-less custom into the library', async () => {
@@ -1058,7 +1065,11 @@ describe('PersistenceService', () => {
     };
 
     function componentSummaryResponse(
-      o: Partial<{ id: string; hash: string; version: number }> = {}
+      o: Partial<{
+        id: string;
+        hash: string;
+        version: number;
+      }> = {}
     ) {
       return {
         status: 200,
@@ -1225,7 +1236,7 @@ describe('PersistenceService', () => {
       put.flush(projectSummaryResponse({ id: 'proj-1', hash: 'ph2' }));
 
       await promise;
-      expect(metadataStore.isDirty(project)).toBeFalse();
+      expect(metadataStore.isDirty(project)).toBe(false);
     });
 
     it('server component save sends the recomputed summary and adopts the returned version', async () => {
@@ -1262,7 +1273,7 @@ describe('PersistenceService', () => {
       await promise;
       // The server's save-time version stamp is adopted onto the master.
       expect(registry.getDefinition(masterType)!.version).toBe(7);
-      expect(metadataStore.isDirty(editor)).toBeFalse();
+      expect(metadataStore.isDirty(editor)).toBe(false);
     });
   });
 });

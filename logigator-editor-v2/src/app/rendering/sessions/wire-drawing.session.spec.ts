@@ -1,3 +1,4 @@
+import { describe, beforeEach, afterEach, it, expect, vi } from 'vitest';
 import { Injector } from '@angular/core';
 import { TestBed } from '@angular/core/testing';
 import { Container, FederatedPointerEvent, Point } from 'pixi.js';
@@ -48,7 +49,7 @@ describe('WireDrawingSession + TextComponent (ignoresWireCollision)', () => {
     session = new WireDrawingSession(project, dragLayer, new Point(0, 0));
     session.onMove(makeMoveEvent(6, 0));
 
-    expect(session.canEnd()).toBeTrue();
+    expect(session.canEnd()).toBe(true);
   });
 
   it('drawing a wire across a normal component body does report collision', () => {
@@ -63,6 +64,6 @@ describe('WireDrawingSession + TextComponent (ignoresWireCollision)', () => {
     session = new WireDrawingSession(project, dragLayer, new Point(0, 0));
     session.onMove(makeMoveEvent(6, 0));
 
-    expect(session.canEnd()).toBeFalse();
+    expect(session.canEnd()).toBe(false);
   });
 });

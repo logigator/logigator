@@ -1,3 +1,5 @@
+import { describe, beforeEach, it, expect, vi } from 'vitest';
+import type { MockedObject } from 'vitest';
 import { ChangeOptionAction } from './change-option.action';
 import { ComponentOption } from '../../components/component-option';
 import type { Component } from '../../components/component';
@@ -17,13 +19,15 @@ class FakeOption extends ComponentOption<number> {
 describe('ChangeOptionAction', () => {
   let option: FakeOption;
   let component: Component;
-  let project: jasmine.SpyObj<Project>;
+  let project: MockedObject<Project>;
 
   beforeEach(() => {
     option = new FakeOption(1);
     component = { options: { count: option } } as unknown as Component;
-    project = jasmine.createSpyObj<Project>('Project', ['getComponentById']);
-    project.getComponentById.and.returnValue(component);
+    project = {
+      getComponentById: vi.fn().mockName('Project.getComponentById')
+    } as unknown as MockedObject<Project>;
+    project.getComponentById.mockReturnValue(component);
   });
 
   it('do() sets the option to the new value through the setter', () => {
@@ -55,7 +59,7 @@ describe('ChangeOptionAction', () => {
   });
 
   it('no-ops when the component is gone', () => {
-    project.getComponentById.and.returnValue(undefined);
+    project.getComponentById.mockReturnValue(undefined);
     const action = new ChangeOptionAction(7, 'count', 1, 42);
 
     expect(() => action.do(project)).not.toThrow();

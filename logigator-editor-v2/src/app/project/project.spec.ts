@@ -1,3 +1,4 @@
+import { describe, beforeEach, afterEach, it, expect, vi } from 'vitest';
 import { Injector } from '@angular/core';
 import { TestBed } from '@angular/core/testing';
 import { Container, Point, Rectangle } from 'pixi.js';
@@ -42,7 +43,7 @@ describe('Project.hasComponentCollision', () => {
 
   it('returns false for an empty project', () => {
     const bounds = new Rectangle(0, 0, 10, 10);
-    expect(project.hasComponentCollision(bounds, bounds)).toBeFalse();
+    expect(project.hasComponentCollision(bounds, bounds)).toBe(false);
   });
 
   it('detects direct overlap with a placed component', () => {
@@ -52,7 +53,7 @@ describe('Project.hasComponentCollision', () => {
 
     // Query a rect that clearly overlaps the component body
     const query = new Rectangle(3, 3, 1, 1);
-    expect(project.hasComponentCollision(query, query)).toBeTrue();
+    expect(project.hasComponentCollision(query, query)).toBe(true);
   });
 
   it('allows adjacent components whose stubs touch (no collision)', () => {
@@ -67,7 +68,7 @@ describe('Project.hasComponentCollision', () => {
     // gridBounds of B: x = 3 - 0.5 = 2.5
     expect(
       project.hasComponentCollision(compB.gridBounds, compB.bodyGridBounds)
-    ).toBeFalse();
+    ).toBe(false);
 
     compB.destroy({ children: true });
   });
@@ -83,7 +84,7 @@ describe('Project.hasComponentCollision', () => {
     compB.position.set(2, 0);
     expect(
       project.hasComponentCollision(compB.gridBounds, compB.bodyGridBounds)
-    ).toBeTrue();
+    ).toBe(true);
 
     compB.destroy({ children: true });
   });
@@ -96,7 +97,7 @@ describe('Project.hasComponentCollision', () => {
     const bounds = new Rectangle(3, 3, 1, 1);
     expect(
       project.hasComponentCollision(bounds, bounds, new Set([comp.id]))
-    ).toBeFalse();
+    ).toBe(false);
   });
 });
 
@@ -124,7 +125,7 @@ describe('Project.hasWireBodyCollision', () => {
     // Wire from x=0.5 length 2 → ends at 2.5
     const wire = makeWire(0, 0, WireDirection.HORIZONTAL, 2);
     // wire.position = (0.5, 0.5), length=2, endpoints (0.5,0.5) and (2.5,0.5)
-    expect(project.hasWireBodyCollision(wire.gridBounds)).toBeFalse();
+    expect(project.hasWireBodyCollision(wire.gridBounds)).toBe(false);
     wire.destroy();
   });
 
@@ -135,7 +136,7 @@ describe('Project.hasWireBodyCollision', () => {
 
     // Wire from x=0.5 length 3 → ends at (3.5, 0.5), inside body
     const wire = makeWire(0, 0, WireDirection.HORIZONTAL, 3);
-    expect(project.hasWireBodyCollision(wire.gridBounds)).toBeTrue();
+    expect(project.hasWireBodyCollision(wire.gridBounds)).toBe(true);
     wire.destroy();
   });
 
@@ -146,7 +147,7 @@ describe('Project.hasWireBodyCollision', () => {
 
     // Wire from x=0.5 length 6 → passes through entire body
     const wire = makeWire(0, 0, WireDirection.HORIZONTAL, 6);
-    expect(project.hasWireBodyCollision(wire.gridBounds)).toBeTrue();
+    expect(project.hasWireBodyCollision(wire.gridBounds)).toBe(true);
     wire.destroy();
   });
 
@@ -157,7 +158,7 @@ describe('Project.hasWireBodyCollision', () => {
 
     // Vertical wire at x=2.5 (input stub column), y span [0.5, 4.5]
     const wire = makeWire(2, 0, WireDirection.VERTICAL, 4);
-    expect(project.hasWireBodyCollision(wire.gridBounds)).toBeFalse();
+    expect(project.hasWireBodyCollision(wire.gridBounds)).toBe(false);
     wire.destroy();
   });
 
@@ -169,7 +170,7 @@ describe('Project.hasWireBodyCollision', () => {
     const wire = makeWire(0, 0, WireDirection.HORIZONTAL, 3);
     expect(
       project.hasWireBodyCollision(wire.gridBounds, new Set([comp.id]))
-    ).toBeFalse();
+    ).toBe(false);
     wire.destroy();
   });
 });
@@ -191,7 +192,7 @@ describe('Project.hasComponentBodyWireCollision', () => {
   it('returns false for an empty project', () => {
     expect(
       project.hasComponentBodyWireCollision(new Rectangle(3, 0, 2, 2))
-    ).toBeFalse();
+    ).toBe(false);
   });
 
   it('horizontal wire passing through body is a collision', () => {
@@ -200,7 +201,7 @@ describe('Project.hasComponentBodyWireCollision', () => {
     project.addWire(wire);
     expect(
       project.hasComponentBodyWireCollision(new Rectangle(3, 0, 2, 2))
-    ).toBeTrue();
+    ).toBe(true);
     wire.destroy();
   });
 
@@ -210,7 +211,7 @@ describe('Project.hasComponentBodyWireCollision', () => {
     project.addWire(wire);
     expect(
       project.hasComponentBodyWireCollision(new Rectangle(3, 0, 2, 2))
-    ).toBeTrue();
+    ).toBe(true);
     wire.destroy();
   });
 
@@ -220,7 +221,7 @@ describe('Project.hasComponentBodyWireCollision', () => {
     project.addWire(wire);
     expect(
       project.hasComponentBodyWireCollision(new Rectangle(3, 0, 2, 2))
-    ).toBeFalse();
+    ).toBe(false);
     wire.destroy();
   });
 
@@ -230,7 +231,7 @@ describe('Project.hasComponentBodyWireCollision', () => {
     project.addWire(wire);
     expect(
       project.hasComponentBodyWireCollision(new Rectangle(3, 0, 2, 2))
-    ).toBeFalse();
+    ).toBe(false);
     wire.destroy();
   });
 
@@ -242,7 +243,7 @@ describe('Project.hasComponentBodyWireCollision', () => {
         new Rectangle(3, 0, 2, 2),
         new Set([wire.id])
       )
-    ).toBeFalse();
+    ).toBe(false);
     wire.destroy();
   });
 });
@@ -278,10 +279,10 @@ describe('Project connection-point integration', () => {
 
     project.addWire(h1);
     project.addWire(h2);
-    expect(cpAt(project, jn)).toBeFalse();
+    expect(cpAt(project, jn)).toBe(false);
 
     project.addWire(v);
-    expect(cpAt(project, jn)).toBeTrue();
+    expect(cpAt(project, jn)).toBe(true);
   });
 
   it('removeWire removes CP that depended on the removed wire', () => {
@@ -293,10 +294,10 @@ describe('Project connection-point integration', () => {
     project.addWire(v);
 
     const jn = new Point(2.5, 2.5);
-    expect(cpAt(project, jn)).toBeTrue();
+    expect(cpAt(project, jn)).toBe(true);
 
     project.removeWire(v.id);
-    expect(cpAt(project, jn)).toBeFalse();
+    expect(cpAt(project, jn)).toBe(false);
   });
 
   it('pure 2-wire X crossing (no endpoint at crossing) — no CP', () => {
@@ -306,7 +307,7 @@ describe('Project connection-point integration', () => {
     const v = makeWire(2, 0, WireDirection.VERTICAL, 5);
     project.addWire(h);
     project.addWire(v);
-    expect(cpAt(project, new Point(2.5, 2.5))).toBeFalse();
+    expect(cpAt(project, new Point(2.5, 2.5))).toBe(false);
   });
 
   it('3-wire T (2 collinear H endpoints + 1 V endpoint) — CP', () => {
@@ -316,7 +317,7 @@ describe('Project connection-point integration', () => {
     project.addWire(h1);
     project.addWire(h2);
     project.addWire(v);
-    expect(cpAt(project, new Point(2.5, 2.5))).toBeTrue();
+    expect(cpAt(project, new Point(2.5, 2.5))).toBe(true);
   });
 
   it('detachForDrag does not remove existing CPs, reattachFromDrag does not recompute', () => {
@@ -328,13 +329,13 @@ describe('Project connection-point integration', () => {
     project.addWire(v);
 
     const jn = new Point(2.5, 2.5);
-    expect(cpAt(project, jn)).toBeTrue();
+    expect(cpAt(project, jn)).toBe(true);
 
     project.detachForDrag([], [v]);
-    expect(cpAt(project, jn)).toBeTrue();
+    expect(cpAt(project, jn)).toBe(true);
 
     project.reattachFromDrag([], [v]);
-    expect(cpAt(project, jn)).toBeTrue();
+    expect(cpAt(project, jn)).toBe(true);
   });
 
   it('captureDragCps moves the CP at wire endpoint into the drag layer', () => {
@@ -346,7 +347,7 @@ describe('Project connection-point integration', () => {
     project.addWire(v);
 
     const jn = new Point(2.5, 2.5);
-    expect(cpAt(project, jn)).toBeTrue();
+    expect(cpAt(project, jn)).toBe(true);
 
     project.detachForDrag([], [v]);
     const dragLayer = new Container();
@@ -356,7 +357,7 @@ describe('Project connection-point integration', () => {
       dragLayer
     );
 
-    expect(cpAt(project, jn)).toBeFalse();
+    expect(cpAt(project, jn)).toBe(false);
     expect(captured.length).toBe(1);
     expect(dragLayer.children.length).toBe(1);
 
@@ -377,7 +378,7 @@ describe('Project connection-point integration', () => {
     project.addWire(v);
 
     const jn = new Point(2.5, 0.5);
-    expect(cpAt(project, jn)).toBeTrue();
+    expect(cpAt(project, jn)).toBe(true);
 
     project.detachForDrag([], [longH]);
     const dragLayer = new Container();
@@ -388,7 +389,7 @@ describe('Project connection-point integration', () => {
     );
 
     // longH has no endpoint at (2.5, 0.5), so no CP is captured.
-    expect(cpAt(project, jn)).toBeTrue();
+    expect(cpAt(project, jn)).toBe(true);
     expect(captured.length).toBe(0);
 
     project.reattachFromDrag([], [longH]);
@@ -414,7 +415,7 @@ describe('Project connection-point integration', () => {
 
     const cp = captured[0];
     project.connectionPoints.discardDragCps(captured);
-    expect(cp.destroyed).toBeTrue();
+    expect(cp.destroyed).toBe(true);
 
     dragLayer.destroy();
   });
@@ -435,10 +436,10 @@ describe('Project connection-point integration', () => {
       [v],
       dragLayer
     );
-    expect(cpAt(project, jn)).toBeFalse();
+    expect(cpAt(project, jn)).toBe(false);
 
     project.connectionPoints.restoreDragCps(captured);
-    expect(cpAt(project, jn)).toBeTrue();
+    expect(cpAt(project, jn)).toBe(true);
 
     project.reattachFromDrag([], [v]);
     dragLayer.destroy();
@@ -453,11 +454,11 @@ describe('Project connection-point integration', () => {
     project.addWire(h2);
     project.addWire(v);
 
-    expect(cpAt(project, new Point(2.5, 2.5))).toBeTrue();
+    expect(cpAt(project, new Point(2.5, 2.5))).toBe(true);
 
     project.moveWire(v.id, new Point(20.5, 20.5));
 
-    expect(cpAt(project, new Point(2.5, 2.5))).toBeFalse();
+    expect(cpAt(project, new Point(2.5, 2.5))).toBe(false);
   });
 
   it('rotating a component via the direction setter updates CPs', () => {
@@ -478,13 +479,13 @@ describe('Project connection-point integration', () => {
     project.addWire(vWire);
 
     const oldTip = new Point(2.5, 0.5);
-    expect(cpAt(project, oldTip)).toBeTrue();
+    expect(cpAt(project, oldTip)).toBe(true);
 
     // Rotate the component. The Down rotation moves port tips elsewhere; the CP
     // at the old tip should disappear since the stub no longer terminates there.
     comp.direction = Direction.S;
 
-    expect(cpAt(project, oldTip)).toBeFalse();
+    expect(cpAt(project, oldTip)).toBe(false);
   });
 
   it('recomputeCpsForMovedSelection drops stale CP at old position', () => {
@@ -497,7 +498,7 @@ describe('Project connection-point integration', () => {
     project.addWire(v);
 
     const oldJn = new Point(2.5, 2.5);
-    expect(cpAt(project, oldJn)).toBeTrue();
+    expect(cpAt(project, oldJn)).toBe(true);
 
     const oldSnap = Wire.snapshot(v);
 
@@ -520,7 +521,7 @@ describe('Project connection-point integration', () => {
       [v]
     );
 
-    expect(cpAt(project, oldJn)).toBeFalse();
+    expect(cpAt(project, oldJn)).toBe(false);
 
     dragLayer.destroy();
   });
@@ -551,11 +552,11 @@ describe('Project.toggleConnectionAt', () => {
       project.addWire(v);
 
       const p = new Point(2.5, 2.5);
-      expect(cpAt(project, p)).toBeFalse();
+      expect(cpAt(project, p)).toBe(false);
 
       project.toggleConnectionAt(p);
 
-      expect(cpAt(project, p)).toBeTrue();
+      expect(cpAt(project, p)).toBe(true);
       expect(wireCount()).toBe(4);
     });
 
@@ -567,7 +568,7 @@ describe('Project.toggleConnectionAt', () => {
       project.toggleConnectionAt(p);
 
       expect(wireCount()).toBe(1);
-      expect(cpAt(project, p)).toBeFalse();
+      expect(cpAt(project, p)).toBe(false);
     });
 
     it('supports undo', () => {
@@ -578,10 +579,10 @@ describe('Project.toggleConnectionAt', () => {
 
       const p = new Point(2.5, 2.5);
       project.toggleConnectionAt(p);
-      expect(cpAt(project, p)).toBeTrue();
+      expect(cpAt(project, p)).toBe(true);
 
       project.actionManager.undo();
-      expect(cpAt(project, p)).toBeFalse();
+      expect(cpAt(project, p)).toBe(false);
       expect(wireCount()).toBe(2);
     });
   });
@@ -597,11 +598,11 @@ describe('Project.toggleConnectionAt', () => {
     it('joins both wire pairs and removes the CP', () => {
       buildXJunction();
       const p = new Point(2.5, 2.5);
-      expect(cpAt(project, p)).toBeTrue();
+      expect(cpAt(project, p)).toBe(true);
 
       project.toggleConnectionAt(p);
 
-      expect(cpAt(project, p)).toBeFalse();
+      expect(cpAt(project, p)).toBe(false);
       expect(wireCount()).toBe(2);
     });
 
@@ -614,28 +615,28 @@ describe('Project.toggleConnectionAt', () => {
       project.addWire(v);
 
       const p = new Point(2.5, 2.5);
-      expect(cpAt(project, p)).toBeTrue();
+      expect(cpAt(project, p)).toBe(true);
       const vId = v.id;
 
       project.toggleConnectionAt(p);
 
-      expect(cpAt(project, p)).toBeTrue();
+      expect(cpAt(project, p)).toBe(true);
       expect(wireCount()).toBe(3);
       expect(
         [
           ...project.queryWiresInRange(new Rectangle(-100, -100, 200, 200))
         ].some((w) => w.id === vId)
-      ).toBeTrue();
+      ).toBe(true);
     });
 
     it('supports undo', () => {
       buildXJunction();
       const p = new Point(2.5, 2.5);
       project.toggleConnectionAt(p);
-      expect(cpAt(project, p)).toBeFalse();
+      expect(cpAt(project, p)).toBe(false);
 
       project.actionManager.undo();
-      expect(cpAt(project, p)).toBeTrue();
+      expect(cpAt(project, p)).toBe(true);
       expect(wireCount()).toBe(4);
     });
   });

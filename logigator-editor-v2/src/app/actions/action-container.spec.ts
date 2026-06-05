@@ -1,17 +1,26 @@
+import { describe, beforeEach, it, expect, vi } from 'vitest';
+import type { MockedObject } from 'vitest';
 import { ActionContainer } from './action-container';
 import { Action } from './action';
 import { Project } from '../project/project';
 
-function makeProject(): jasmine.SpyObj<Project> {
-  return jasmine.createSpyObj<Project>('Project', ['addComponent']);
+function makeProject(): MockedObject<Project> {
+   
+  return {
+    addComponent: vi.fn().mockName('Project.addComponent')
+  } as unknown as MockedObject<Project>;
 }
 
-function makeAction(): jasmine.SpyObj<Action> {
-  return jasmine.createSpyObj<Action>('Action', ['do', 'undo']);
+function makeAction(): MockedObject<Action> {
+   
+  return {
+    do: vi.fn().mockName('Action.do'),
+    undo: vi.fn().mockName('Action.undo')
+  } as unknown as MockedObject<Action>;
 }
 
 describe('ActionContainer', () => {
-  let project: jasmine.SpyObj<Project>;
+  let project: MockedObject<Project>;
 
   beforeEach(() => {
     project = makeProject();
@@ -65,9 +74,13 @@ describe('ActionContainer', () => {
 
       container.do(project);
 
-      expect(a1.do).toHaveBeenCalledOnceWith(project);
-      expect(a2.do).toHaveBeenCalledOnceWith(project);
-      expect(a3.do).toHaveBeenCalledOnceWith(project);
+      expect(a1.do).toHaveBeenCalledTimes(1);
+
+      expect(a1.do).toHaveBeenCalledWith(project);
+      expect(a2.do).toHaveBeenCalledTimes(1);
+      expect(a2.do).toHaveBeenCalledWith(project);
+      expect(a3.do).toHaveBeenCalledTimes(1);
+      expect(a3.do).toHaveBeenCalledWith(project);
     });
 
     it('calls do() in forward order (first to last)', () => {
@@ -76,9 +89,9 @@ describe('ActionContainer', () => {
       const a2 = makeAction();
       const a3 = makeAction();
 
-      a1.do.and.callFake(() => callOrder.push(1));
-      a2.do.and.callFake(() => callOrder.push(2));
-      a3.do.and.callFake(() => callOrder.push(3));
+      a1.do.mockImplementation(() => callOrder.push(1));
+      a2.do.mockImplementation(() => callOrder.push(2));
+      a3.do.mockImplementation(() => callOrder.push(3));
 
       const container = new ActionContainer(a1, a2, a3);
       container.do(project);
@@ -109,9 +122,13 @@ describe('ActionContainer', () => {
 
       container.undo(project);
 
-      expect(a1.undo).toHaveBeenCalledOnceWith(project);
-      expect(a2.undo).toHaveBeenCalledOnceWith(project);
-      expect(a3.undo).toHaveBeenCalledOnceWith(project);
+      expect(a1.undo).toHaveBeenCalledTimes(1);
+
+      expect(a1.undo).toHaveBeenCalledWith(project);
+      expect(a2.undo).toHaveBeenCalledTimes(1);
+      expect(a2.undo).toHaveBeenCalledWith(project);
+      expect(a3.undo).toHaveBeenCalledTimes(1);
+      expect(a3.undo).toHaveBeenCalledWith(project);
     });
 
     it('calls undo() in REVERSE order (last to first)', () => {
@@ -120,9 +137,9 @@ describe('ActionContainer', () => {
       const a2 = makeAction();
       const a3 = makeAction();
 
-      a1.undo.and.callFake(() => callOrder.push(1));
-      a2.undo.and.callFake(() => callOrder.push(2));
-      a3.undo.and.callFake(() => callOrder.push(3));
+      a1.undo.mockImplementation(() => callOrder.push(1));
+      a2.undo.mockImplementation(() => callOrder.push(2));
+      a3.undo.mockImplementation(() => callOrder.push(3));
 
       const container = new ActionContainer(a1, a2, a3);
       container.undo(project);
@@ -166,7 +183,9 @@ describe('ActionContainer', () => {
       container.add(added);
       container.do(project);
 
-      expect(added.do).toHaveBeenCalledOnceWith(project);
+      expect(added.do).toHaveBeenCalledTimes(1);
+
+      expect(added.do).toHaveBeenCalledWith(project);
     });
 
     it('the added action is included in a subsequent undo()', () => {
@@ -177,7 +196,9 @@ describe('ActionContainer', () => {
       container.add(added);
       container.undo(project);
 
-      expect(added.undo).toHaveBeenCalledOnceWith(project);
+      expect(added.undo).toHaveBeenCalledTimes(1);
+
+      expect(added.undo).toHaveBeenCalledWith(project);
     });
 
     it('the added action is called last in do() (appended at the end)', () => {
@@ -185,8 +206,8 @@ describe('ActionContainer', () => {
       const a1 = makeAction();
       const a2 = makeAction();
 
-      a1.do.and.callFake(() => callOrder.push('a1'));
-      a2.do.and.callFake(() => callOrder.push('a2'));
+      a1.do.mockImplementation(() => callOrder.push('a1'));
+      a2.do.mockImplementation(() => callOrder.push('a2'));
 
       const container = new ActionContainer(a1);
       container.add(a2);
@@ -200,8 +221,8 @@ describe('ActionContainer', () => {
       const a1 = makeAction();
       const a2 = makeAction();
 
-      a1.undo.and.callFake(() => callOrder.push('a1'));
-      a2.undo.and.callFake(() => callOrder.push('a2'));
+      a1.undo.mockImplementation(() => callOrder.push('a1'));
+      a2.undo.mockImplementation(() => callOrder.push('a2'));
 
       const container = new ActionContainer(a1);
       container.add(a2);

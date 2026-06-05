@@ -1,7 +1,28 @@
+import { describe, beforeEach, it, expect, vi } from 'vitest';
 import { Container, Rectangle } from 'pixi.js';
 import { QuadTreeContainer } from './quad-tree-container';
 import { GridElement } from './grid-element';
-import arrayWithExactContents = jasmine.arrayWithExactContents;
+/**
+ * Vitest-compatible replacement for jasmine.arrayWithExactContents.
+ * Returns an asymmetric matcher that succeeds when the actual array contains
+ * exactly the expected items (any order, no extras), compared by identity.
+ */
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+function arrayWithExactContents<T>(expected: T[]): any {
+  return {
+    asymmetricMatch(actual: unknown): boolean {
+      if (!Array.isArray(actual)) return false;
+      if (actual.length !== expected.length) return false;
+      const remaining = [...actual];
+      for (const item of expected) {
+        const idx = remaining.indexOf(item);
+        if (idx === -1) return false;
+        remaining.splice(idx, 1);
+      }
+      return remaining.length === 0;
+    }
+  };
+}
 
 type TestItem = Container & GridElement;
 
@@ -155,7 +176,7 @@ describe('QuadTreeContainer', () => {
       const resultSet = new Set(result);
       expect(result.length).toBe(items.length);
       for (const item of items) {
-        expect(resultSet.has(item)).toBeTrue();
+        expect(resultSet.has(item)).toBe(true);
       }
     });
 
@@ -221,7 +242,7 @@ describe('QuadTreeContainer', () => {
     it('cross-boundary item can be removed', () => {
       const cross = makeItem(30, 2, 5, 3);
       tree.insert(cross);
-      expect(tree.remove(cross)).toBeTrue();
+      expect(tree.remove(cross)).toBe(true);
       expect(queryAll()).not.toContain(cross);
     });
 
@@ -358,7 +379,7 @@ describe('QuadTreeContainer', () => {
     it('negative-coordinate item can be removed', () => {
       const c = makeItem(-100, -100, 5, 5);
       tree.insert(c);
-      expect(tree.remove(c)).toBeTrue();
+      expect(tree.remove(c)).toBe(true);
       expect(queryAllFull()).not.toContain(c);
     });
 
@@ -502,7 +523,7 @@ describe('QuadTreeContainer', () => {
       tree.insert(c);
       parent.x = 500;
       parent.y = 300;
-      expect(tree.remove(c)).toBeTrue();
+      expect(tree.remove(c)).toBe(true);
       expect(queryAll()).not.toContain(c);
     });
 
@@ -535,7 +556,7 @@ describe('QuadTreeContainer', () => {
       const resultSet = new Set(result);
       expect(result.length).toBe(items.length);
       for (const item of items) {
-        expect(resultSet.has(item)).toBeTrue();
+        expect(resultSet.has(item)).toBe(true);
       }
     });
 

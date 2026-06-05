@@ -1,3 +1,4 @@
+import { describe, beforeEach, it, expect, vi } from 'vitest';
 import { Injector } from '@angular/core';
 import { TestBed } from '@angular/core/testing';
 import { setStaticDIInjector } from '../utils/get-di';
@@ -51,8 +52,10 @@ describe('ComponentProviderService', () => {
   });
 
   it('seeds the reactive category lists from the built-ins', () => {
+    // TODO: vitest-migration: Verify this matches strict array content (multiset equality). Vitest's arrayContaining is a subset check.
+    expect(service.basicComponents().map((c) => c.type)).toHaveLength(2);
     expect(service.basicComponents().map((c) => c.type)).toEqual(
-      jasmine.arrayWithExactContents([
+      expect.arrayContaining([
         BuiltInComponentType.NOT,
         BuiltInComponentType.AND
       ])
@@ -61,8 +64,10 @@ describe('ComponentProviderService', () => {
       BuiltInComponentType.ROM
     ]);
     expect(service.userComponents()).toEqual([]);
+    // TODO: vitest-migration: Verify this matches strict array content (multiset equality). Vitest's arrayContaining is a subset check.
+    expect(service.ioComponents().map((c) => c.type)).toHaveLength(2);
     expect(service.ioComponents().map((c) => c.type)).toEqual(
-      jasmine.arrayWithExactContents([
+      expect.arrayContaining([
         BuiltInComponentType.INPUT,
         BuiltInComponentType.OUTPUT
       ])

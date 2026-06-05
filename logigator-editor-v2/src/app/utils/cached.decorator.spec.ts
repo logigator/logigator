@@ -1,3 +1,4 @@
+import { describe, beforeEach, it, expect, vi } from 'vitest';
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { Cached } from './cached.decorator';
 

@@ -1,9 +1,11 @@
+import { describe, beforeEach, it, expect, vi } from 'vitest';
 /* eslint-disable no-console */
 import { Timed } from './timed.decorator';
 
 describe('Timed decorator', () => {
   beforeEach(() => {
-    spyOn(console, 'log');
+    // eslint-disable-next-line @typescript-eslint/no-empty-function
+    vi.spyOn(console, 'log').mockImplementation(() => {}).mockClear();
   });
 
   describe('applied to a method', () => {
@@ -61,9 +63,9 @@ describe('Timed decorator', () => {
       new Fixture().myOperation();
 
       expect(console.log).toHaveBeenCalledWith(
-        jasmine.any(String),
+        expect.any(String),
         'myOperation',
-        jasmine.any(String)
+        expect.any(String)
       );
     });
 
@@ -201,9 +203,9 @@ describe('Timed decorator', () => {
       new Fixture().myProp;
 
       expect(console.log).toHaveBeenCalledWith(
-        jasmine.any(String),
+        expect.any(String),
         'myProp',
-        jasmine.any(String)
+        expect.any(String)
       );
     });
 

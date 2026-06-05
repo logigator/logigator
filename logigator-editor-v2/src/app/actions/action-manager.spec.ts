@@ -1,24 +1,30 @@
+import { describe, beforeEach, it, expect, vi } from 'vitest';
+import type { MockedObject } from 'vitest';
 import { ActionManager } from './action-manager';
 import { Action } from './action';
 import { Project } from '../project/project';
 
-function makeProject(): jasmine.SpyObj<Project> {
-  const project = jasmine.createSpyObj<Project>('Project', ['addComponent']);
-  // ActionManager.undo consults selectionManager.rollbackPendingCut to
-  // short-circuit on a tentative scissor-select cut. Default to "nothing
-  // pending" so the normal history path runs.
-  (project as never as { selectionManager: unknown }).selectionManager = {
-    rollbackPendingCut: () => false
+function makeProject(): MockedObject<Project> {
+  const project = {
+    addComponent: vi.fn().mockName('Project.addComponent'),
+    selectionManager: {
+      rollbackPendingCut: () => false
+    }
   };
-  return project;
+   
+  return project as unknown as MockedObject<Project>;
 }
 
-function makeAction(): jasmine.SpyObj<Action> {
-  return jasmine.createSpyObj<Action>('Action', ['do', 'undo']);
+function makeAction(): MockedObject<Action> {
+   
+  return {
+    do: vi.fn().mockName('Action.do'),
+    undo: vi.fn().mockName('Action.undo')
+  } as unknown as MockedObject<Action>;
 }
 
 describe('ActionManager', () => {
-  let project: jasmine.SpyObj<Project>;
+  let project: MockedObject<Project>;
   let manager: ActionManager;
 
   beforeEach(() => {
@@ -30,11 +36,11 @@ describe('ActionManager', () => {
 
   describe('initial state', () => {
     it('undoAvailable is false on a new manager', () => {
-      expect(manager.undoAvailable).toBeFalse();
+      expect(manager.undoAvailable).toBe(false);
     });
 
     it('redoAvailable is false on a new manager', () => {
-      expect(manager.redoAvailable).toBeFalse();
+      expect(manager.redoAvailable).toBe(false);
     });
   });
 
@@ -44,17 +50,18 @@ describe('ActionManager', () => {
     it('calls action.do() with the project', () => {
       const action = makeAction();
       manager.push(action);
-      expect(action.do).toHaveBeenCalledOnceWith(project);
+      expect(action.do).toHaveBeenCalledTimes(1);
+      expect(action.do).toHaveBeenCalledWith(project);
     });
 
     it('makes undoAvailable true after a push', () => {
       manager.push(makeAction());
-      expect(manager.undoAvailable).toBeTrue();
+      expect(manager.undoAvailable).toBe(true);
     });
 
     it('redoAvailable remains false after a push', () => {
       manager.push(makeAction());
-      expect(manager.redoAvailable).toBeFalse();
+      expect(manager.redoAvailable).toBe(false);
     });
   });
 
@@ -65,18 +72,19 @@ describe('ActionManager', () => {
       const action = makeAction();
       manager.push(action);
       manager.undo();
-      expect(action.undo).toHaveBeenCalledOnceWith(project);
+      expect(action.undo).toHaveBeenCalledTimes(1);
+      expect(action.undo).toHaveBeenCalledWith(project);
     });
 
     it('makes undoAvailable false after undoing the only action', () => {
       manager.push(makeAction());
       manager.undo();
-      expect(manager.undoAvailable).toBeFalse();
+      expect(manager.undoAvailable).toBe(false);
     });
 
     it('does nothing when history is empty', () => {
       expect(() => manager.undo()).not.toThrow();
-      expect(manager.undoAvailable).toBeFalse();
+      expect(manager.undoAvailable).toBe(false);
     });
 
     it('does not call undo on any action when history is empty', () => {
@@ -84,7 +92,7 @@ describe('ActionManager', () => {
       // push then undo to empty undo stack, then undo again
       manager.push(action);
       manager.undo();
-      action.undo.calls.reset();
+      action.undo.mockClear();
       manager.undo();
       expect(action.undo).not.toHaveBeenCalled();
     });
@@ -97,28 +105,29 @@ describe('ActionManager', () => {
       const action = makeAction();
       manager.push(action);
       manager.undo();
-      action.do.calls.reset();
+      action.do.mockClear();
       manager.redo();
-      expect(action.do).toHaveBeenCalledOnceWith(project);
+      expect(action.do).toHaveBeenCalledTimes(1);
+      expect(action.do).toHaveBeenCalledWith(project);
     });
 
     it('makes redoAvailable false after redoing the only undone action', () => {
       manager.push(makeAction());
       manager.undo();
       manager.redo();
-      expect(manager.redoAvailable).toBeFalse();
+      expect(manager.redoAvailable).toBe(false);
     });
 
     it('does nothing when at the end of history', () => {
       manager.push(makeAction());
       expect(() => manager.redo()).not.toThrow();
-      expect(manager.redoAvailable).toBeFalse();
+      expect(manager.redoAvailable).toBe(false);
     });
 
     it('does not call do on any action when there is nothing to redo', () => {
       const action = makeAction();
       manager.push(action);
-      action.do.calls.reset();
+      action.do.mockClear();
       manager.redo();
       expect(action.do).not.toHaveBeenCalled();
     });
@@ -126,9 +135,9 @@ describe('ActionManager', () => {
     it('makes undoAvailable true again after redo', () => {
       manager.push(makeAction());
       manager.undo();
-      expect(manager.undoAvailable).toBeFalse();
+      expect(manager.undoAvailable).toBe(false);
       manager.redo();
-      expect(manager.undoAvailable).toBeTrue();
+      expect(manager.undoAvailable).toBe(true);
     });
   });
 
@@ -142,14 +151,16 @@ describe('ActionManager', () => {
       // Pretend a SELECT_EXACT cut is pending.
       (
         project as never as {
-          selectionManager: { rollbackPendingCut: () => boolean };
+          selectionManager: {
+            rollbackPendingCut: () => boolean;
+          };
         }
       ).selectionManager.rollbackPendingCut = () => true;
 
       manager.undo();
 
       expect(action.undo).not.toHaveBeenCalled();
-      expect(manager.undoAvailable).toBeTrue();
+      expect(manager.undoAvailable).toBe(true);
     });
 
     it('falls through to history undo when no cut is pending', () => {
@@ -157,7 +168,8 @@ describe('ActionManager', () => {
       manager.push(action);
       // Default rollbackPendingCut returns false (from makeProject).
       manager.undo();
-      expect(action.undo).toHaveBeenCalledOnceWith(project);
+      expect(action.undo).toHaveBeenCalledTimes(1);
+      expect(action.undo).toHaveBeenCalledWith(project);
     });
   });
 
@@ -175,7 +187,7 @@ describe('ActionManager', () => {
 
       manager.push(a3); // should truncate a2 from redo history
 
-      expect(manager.redoAvailable).toBeFalse();
+      expect(manager.redoAvailable).toBe(false);
     });
 
     it('the old future action is never redone after truncation', () => {
@@ -186,7 +198,7 @@ describe('ActionManager', () => {
       manager.push(a1);
       manager.push(a2);
       manager.undo();
-      a2.do.calls.reset();
+      a2.do.mockClear();
 
       manager.push(a3);
       // redo is not available so this is a no-op; a2.do must not be called
@@ -202,7 +214,7 @@ describe('ActionManager', () => {
       manager.undo();
       manager.push(a2);
 
-      expect(manager.undoAvailable).toBeTrue();
+      expect(manager.undoAvailable).toBe(true);
     });
   });
 
@@ -212,21 +224,21 @@ describe('ActionManager', () => {
     it('resets undoAvailable to false', () => {
       manager.push(makeAction());
       manager.clear();
-      expect(manager.undoAvailable).toBeFalse();
+      expect(manager.undoAvailable).toBe(false);
     });
 
     it('resets redoAvailable to false', () => {
       manager.push(makeAction());
       manager.undo();
       manager.clear();
-      expect(manager.redoAvailable).toBeFalse();
+      expect(manager.redoAvailable).toBe(false);
     });
 
     it('makes undo a no-op after clearing', () => {
       const action = makeAction();
       manager.push(action);
       manager.clear();
-      action.undo.calls.reset();
+      action.undo.mockClear();
       manager.undo();
       expect(action.undo).not.toHaveBeenCalled();
     });
@@ -236,7 +248,7 @@ describe('ActionManager', () => {
       manager.push(action);
       manager.undo();
       manager.clear();
-      action.do.calls.reset();
+      action.do.mockClear();
       manager.redo();
       expect(action.do).not.toHaveBeenCalled();
     });
@@ -257,18 +269,18 @@ describe('ActionManager', () => {
 
       manager.undo();
       // pointer = 2, undo=true, redo=true
-      expect(manager.undoAvailable).toBeTrue();
-      expect(manager.redoAvailable).toBeTrue();
+      expect(manager.undoAvailable).toBe(true);
+      expect(manager.redoAvailable).toBe(true);
 
       manager.undo();
       // pointer = 1, undo=true, redo=true
-      expect(manager.undoAvailable).toBeTrue();
-      expect(manager.redoAvailable).toBeTrue();
+      expect(manager.undoAvailable).toBe(true);
+      expect(manager.redoAvailable).toBe(true);
 
       manager.redo();
       // pointer = 2, undo=true, redo=true
-      expect(manager.undoAvailable).toBeTrue();
-      expect(manager.redoAvailable).toBeTrue();
+      expect(manager.undoAvailable).toBe(true);
+      expect(manager.redoAvailable).toBe(true);
     });
 
     it('push 3, undo 3 — undoAvailable false, redoAvailable true', () => {
@@ -279,8 +291,8 @@ describe('ActionManager', () => {
       manager.undo();
       manager.undo();
 
-      expect(manager.undoAvailable).toBeFalse();
-      expect(manager.redoAvailable).toBeTrue();
+      expect(manager.undoAvailable).toBe(false);
+      expect(manager.redoAvailable).toBe(true);
     });
 
     it('push 3, undo 3, redo 3 — undoAvailable true, redoAvailable false', () => {
@@ -294,8 +306,8 @@ describe('ActionManager', () => {
       manager.redo();
       manager.redo();
 
-      expect(manager.undoAvailable).toBeTrue();
-      expect(manager.redoAvailable).toBeFalse();
+      expect(manager.undoAvailable).toBe(true);
+      expect(manager.redoAvailable).toBe(false);
     });
 
     it('undo calls are made in LIFO order', () => {
@@ -304,9 +316,9 @@ describe('ActionManager', () => {
       const a2 = makeAction();
       const a3 = makeAction();
 
-      a1.undo.and.callFake(() => callOrder.push('a1'));
-      a2.undo.and.callFake(() => callOrder.push('a2'));
-      a3.undo.and.callFake(() => callOrder.push('a3'));
+      a1.undo.mockImplementation(() => callOrder.push('a1'));
+      a2.undo.mockImplementation(() => callOrder.push('a2'));
+      a3.undo.mockImplementation(() => callOrder.push('a3'));
 
       manager.push(a1);
       manager.push(a2);
@@ -390,7 +402,9 @@ describe('ActionManager', () => {
 
       (
         project as never as {
-          selectionManager: { rollbackPendingCut: () => boolean };
+          selectionManager: {
+            rollbackPendingCut: () => boolean;
+          };
         }
       ).selectionManager.rollbackPendingCut = () => true;
 

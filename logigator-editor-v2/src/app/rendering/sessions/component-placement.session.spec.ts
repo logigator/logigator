@@ -1,3 +1,4 @@
+import { describe, beforeEach, afterEach, it, expect, vi } from 'vitest';
 import { Injector } from '@angular/core';
 import { TestBed } from '@angular/core/testing';
 import { Container, FederatedPointerEvent, Point, Rectangle } from 'pixi.js';
@@ -76,7 +77,7 @@ describe('ComponentPlacementSession collision', () => {
       dragLayer,
       new Point(0, 0)
     );
-    expect(session.canEnd()).toBeTrue();
+    expect(session.canEnd()).toBe(true);
   });
 
   it('canEnd() is false when body overlaps an existing component', () => {
@@ -88,7 +89,7 @@ describe('ComponentPlacementSession collision', () => {
       dragLayer,
       new Point(0, 0)
     );
-    expect(session.canEnd()).toBeFalse();
+    expect(session.canEnd()).toBe(false);
   });
 
   it('canEnd() is false when body lands on a wire — catches missing wire check bug', () => {
@@ -101,7 +102,7 @@ describe('ComponentPlacementSession collision', () => {
       dragLayer,
       new Point(5, 0)
     );
-    expect(session.canEnd()).toBeFalse();
+    expect(session.canEnd()).toBe(false);
     wire.destroy();
   });
 
@@ -115,7 +116,7 @@ describe('ComponentPlacementSession collision', () => {
       dragLayer,
       new Point(5, 0)
     );
-    expect(session.canEnd()).toBeTrue();
+    expect(session.canEnd()).toBe(true);
     wire.destroy();
   });
 
@@ -127,10 +128,10 @@ describe('ComponentPlacementSession collision', () => {
       dragLayer,
       new Point(5, 0)
     );
-    expect(session.canEnd()).toBeFalse();
+    expect(session.canEnd()).toBe(false);
 
     session.onMove(makeMoveEvent(20, 0));
-    expect(session.canEnd()).toBeTrue();
+    expect(session.canEnd()).toBe(true);
     wire.destroy();
   });
 
@@ -142,10 +143,10 @@ describe('ComponentPlacementSession collision', () => {
       dragLayer,
       new Point(0, 10)
     );
-    expect(session.canEnd()).toBeTrue();
+    expect(session.canEnd()).toBe(true);
 
     session.onMove(makeMoveEvent(5, 0));
-    expect(session.canEnd()).toBeFalse();
+    expect(session.canEnd()).toBe(false);
     wire.destroy();
   });
 
@@ -162,7 +163,7 @@ describe('ComponentPlacementSession collision', () => {
       dragLayer,
       new Point(4, 0)
     );
-    expect(session.canEnd()).toBeTrue();
+    expect(session.canEnd()).toBe(true);
     session.onEnd();
 
     const huge = new Rectangle(-100, -100, 200, 200);
@@ -197,7 +198,7 @@ describe('ComponentPlacementSession collision', () => {
       dragLayer,
       new Point(2, 0)
     );
-    expect(session.canEnd()).toBeTrue();
+    expect(session.canEnd()).toBe(true);
   });
 
   // North at (2,1): body [2,3]×[-1,1].  East output stub [2,2.5]×[0,1] extends
@@ -218,7 +219,7 @@ describe('ComponentPlacementSession collision', () => {
       dragLayer,
       new Point(2, 1)
     );
-    expect(session.canEnd()).toBeFalse();
+    expect(session.canEnd()).toBe(false);
   });
 
   it('TEXT under a wire: canEnd() is true (ignoresWireCollision)', () => {
@@ -234,7 +235,7 @@ describe('ComponentPlacementSession collision', () => {
       dragLayer,
       new Point(1, 0)
     );
-    expect(session.canEnd()).toBeTrue();
+    expect(session.canEnd()).toBe(true);
     wire.destroy();
   });
 
@@ -251,7 +252,7 @@ describe('ComponentPlacementSession collision', () => {
       dragLayer,
       new Point(1, 0)
     );
-    expect(session.canEnd()).toBeFalse();
+    expect(session.canEnd()).toBe(false);
   });
 
   it('undo of a placement-with-split restores the original wire', () => {

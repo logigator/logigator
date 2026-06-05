@@ -1,3 +1,5 @@
+import { describe, beforeEach, afterEach, it, expect, vi } from 'vitest';
+import type { MockedObject } from 'vitest';
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { Injector } from '@angular/core';
 import { TestBed } from '@angular/core/testing';
@@ -92,38 +94,36 @@ function makeAnd(numInputs = 2): AndComponent {
  * Uses callFake so a fresh generator is created on each call (generators are
  * single-use iterators; returnValue would exhaust after the first iteration).
  */
-function setComponents(
-  project: jasmine.SpyObj<Project>,
-  ...items: any[]
-): void {
-  project.queryComponentsInRange.and.callFake(function* () {
+function setComponents(project: MockedObject<Project>, ...items: any[]): void {
+  project.queryComponentsInRange.mockImplementation(function* () {
     yield* items;
   });
 }
 
 /** Configure the project spy so queryWiresInRange yields the given items. */
-function setWires(project: jasmine.SpyObj<Project>, ...items: any[]): void {
-  project.queryWiresInRange.and.callFake(function* () {
+function setWires(project: MockedObject<Project>, ...items: any[]): void {
+  project.queryWiresInRange.mockImplementation(function* () {
     yield* items;
   });
 }
 
-function makeProject(): jasmine.SpyObj<Project> {
-  const project = jasmine.createSpyObj<Project>('Project', [
-    'queryComponentsInRange',
-    'queryWiresInRange',
-    'addWire',
-    'removeWire'
-  ]);
+function makeProject(): MockedObject<Project> {
+  const project = {
+    queryComponentsInRange: vi.fn().mockName('Project.queryComponentsInRange'),
+    queryWiresInRange: vi.fn().mockName('Project.queryWiresInRange'),
+    addWire: vi.fn().mockName('Project.addWire'),
+    removeWire: vi.fn().mockName('Project.removeWire')
+  };
   // SelectionManager.SELECT_EXACT path may push to actionManager; install a spy.
-  (project as any).actionManager = jasmine.createSpyObj('ActionManager', [
-    'push'
-  ]);
+  (project as any).actionManager = {
+    push: vi.fn().mockName('ActionManager.push')
+  };
   // retintCps() reads project.connectionPoints.getCpsAtPoints — provide a no-op stub.
   (project as any).connectionPoints = {
-    getCpsAtPoints: jasmine.createSpy('getCpsAtPoints').and.returnValue([])
+    getCpsAtPoints: vi.fn().mockReturnValue([])
   };
-  return project;
+   
+  return project as unknown as MockedObject<Project>;
 }
 
 // ---------------------------------------------------------------------------
@@ -131,7 +131,7 @@ function makeProject(): jasmine.SpyObj<Project> {
 // ---------------------------------------------------------------------------
 
 describe('SelectionManager', () => {
-  let project: jasmine.SpyObj<Project>;
+  let project: MockedObject<Project>;
   let manager: SelectionManager;
 
   beforeEach(() => {
@@ -145,7 +145,7 @@ describe('SelectionManager', () => {
 
   describe('isEmpty / initial state', () => {
     it('is empty on construction', () => {
-      expect(manager.isEmpty).toBeTrue();
+      expect(manager.isEmpty).toBe(true);
     });
 
     it('selectedComponents is empty on construction', () => {
@@ -163,7 +163,7 @@ describe('SelectionManager', () => {
         .subscribe(() => (subscribed = true))
         .unsubscribe();
       // No emission expected on mere subscription.
-      expect(subscribed).toBeFalse();
+      expect(subscribed).toBe(false);
     });
   });
 
@@ -176,7 +176,7 @@ describe('SelectionManager', () => {
 
       manager.commit(new Rectangle(0, 0, 5, 5), WorkMode.SELECT);
 
-      expect(manager.selectedComponents.has(comp)).toBeTrue();
+      expect(manager.selectedComponents.has(comp)).toBe(true);
     });
 
     it('sets SELECTION_TINT on selected components', () => {
@@ -194,7 +194,7 @@ describe('SelectionManager', () => {
 
       manager.commit(new Rectangle(0, 0, 5, 5), WorkMode.SELECT);
 
-      expect(manager.selectedWires.has(wire)).toBeTrue();
+      expect(manager.selectedWires.has(wire)).toBe(true);
     });
 
     it('sets SELECTION_TINT on selected wires', () => {
@@ -217,8 +217,8 @@ describe('SelectionManager', () => {
       setWires(project);
       manager.commit(new Rectangle(10, 10, 5, 5), WorkMode.SELECT);
 
-      expect(manager.selectedComponents.has(compA)).toBeFalse();
-      expect(manager.selectedComponents.has(compB)).toBeTrue();
+      expect(manager.selectedComponents.has(compA)).toBe(false);
+      expect(manager.selectedComponents.has(compB)).toBe(true);
       // tint of previously selected component is restored.
       expect(compA.tint).toBe(0xffffff);
     });
@@ -229,7 +229,7 @@ describe('SelectionManager', () => {
 
       manager.commit(new Rectangle(0, 0, 5, 5), WorkMode.SELECT);
 
-      expect(manager.isEmpty).toBeFalse();
+      expect(manager.isEmpty).toBe(false);
     });
   });
 
@@ -246,7 +246,7 @@ describe('SelectionManager', () => {
 
       manager.commit(new Rectangle(0, 0, 10, 10), WorkMode.SELECT_EXACT);
 
-      expect(manager.selectedComponents.has(comp)).toBeTrue();
+      expect(manager.selectedComponents.has(comp)).toBe(true);
     });
 
     it('includes a component that partially overlaps the rect boundary (touching rule)', () => {
@@ -256,7 +256,7 @@ describe('SelectionManager', () => {
 
       manager.commit(new Rectangle(2, 2, 4, 4), WorkMode.SELECT_EXACT);
 
-      expect(manager.selectedComponents.has(comp)).toBeTrue();
+      expect(manager.selectedComponents.has(comp)).toBe(true);
     });
 
     it('does not push any action when the rect contains no wires', () => {
@@ -272,7 +272,7 @@ describe('SelectionManager', () => {
 
       manager.commit(new Rectangle(0, 0, 5, 5), WorkMode.SELECT_EXACT);
 
-      expect(manager.selectedWires.has(wire)).toBeTrue();
+      expect(manager.selectedWires.has(wire)).toBe(true);
       expect((project as any).actionManager.push).not.toHaveBeenCalled();
     });
 
@@ -286,7 +286,7 @@ describe('SelectionManager', () => {
       manager.commit(new Rectangle(0, 3.7, 12, 0.4), WorkMode.SELECT_EXACT);
 
       expect((project as any).actionManager.push).not.toHaveBeenCalled();
-      expect(manager.selectedWires.has(wire)).toBeFalse();
+      expect(manager.selectedWires.has(wire)).toBe(false);
     });
 
     describe('with real Wire (cut path)', () => {
@@ -304,7 +304,7 @@ describe('SelectionManager', () => {
         manager.commit(new Rectangle(5, 4, 2, 1), WorkMode.SELECT_EXACT);
 
         expect((project as any).actionManager.push).not.toHaveBeenCalled();
-        expect(manager.hasPendingCut).toBeTrue();
+        expect(manager.hasPendingCut).toBe(true);
       });
 
       it('mutates the project directly with addWire/removeWire when cutting', () => {
@@ -337,7 +337,7 @@ describe('SelectionManager', () => {
         setWires(project, wire);
 
         const addedWires: any[] = [];
-        project.addWire.and.callFake((w: any) => {
+        project.addWire.mockImplementation((w: any) => {
           addedWires.push(w);
         });
 
@@ -354,9 +354,9 @@ describe('SelectionManager', () => {
         expect(outsideLeft).toBeDefined();
         expect(outsideRight).toBeDefined();
 
-        expect(manager.selectedWires.has(insidePiece)).toBeTrue();
-        expect(manager.selectedWires.has(outsideLeft)).toBeFalse();
-        expect(manager.selectedWires.has(outsideRight)).toBeFalse();
+        expect(manager.selectedWires.has(insidePiece)).toBe(true);
+        expect(manager.selectedWires.has(outsideLeft)).toBe(false);
+        expect(manager.selectedWires.has(outsideRight)).toBe(false);
 
         // Inside piece is tinted; outside pieces stay at default tint.
         expect(insidePiece.tint).toBe(SelectionManager.SELECTION_TINT);
@@ -369,14 +369,14 @@ describe('SelectionManager', () => {
         setWires(project, wire);
 
         manager.commit(new Rectangle(5, 4, 2, 1), WorkMode.SELECT_EXACT);
-        expect(manager.hasPendingCut).toBeTrue();
+        expect(manager.hasPendingCut).toBe(true);
 
-        project.addWire.calls.reset();
-        project.removeWire.calls.reset();
+        project.addWire.mockClear();
+        project.removeWire.mockClear();
 
         manager.clear();
 
-        expect(manager.hasPendingCut).toBeFalse();
+        expect(manager.hasPendingCut).toBe(false);
         // Rollback removes the 3 new pieces and re-adds the 1 original.
         expect(project.removeWire).toHaveBeenCalledTimes(3);
         expect(project.addWire).toHaveBeenCalledTimes(1);
@@ -387,15 +387,15 @@ describe('SelectionManager', () => {
         setWires(project, wire);
 
         manager.commit(new Rectangle(5, 4, 2, 1), WorkMode.SELECT_EXACT);
-        expect(manager.hasPendingCut).toBeTrue();
+        expect(manager.hasPendingCut).toBe(true);
 
-        project.addWire.calls.reset();
-        project.removeWire.calls.reset();
+        project.addWire.mockClear();
+        project.removeWire.mockClear();
 
         const claimed = manager.claimPendingCut();
 
         expect(claimed).toBeInstanceOf(ActionContainer);
-        expect(manager.hasPendingCut).toBeFalse();
+        expect(manager.hasPendingCut).toBe(false);
         // Claim does NOT mutate the project — it just hands the rollback data
         // to the caller (the move session) to fold into its ActionContainer.
         expect(project.removeWire).not.toHaveBeenCalled();
@@ -410,13 +410,13 @@ describe('SelectionManager', () => {
         const wire = makeFullWire(WireDirection.HORIZONTAL, 3.5, 4.5, 5);
         setWires(project, wire);
 
-        expect(manager.rollbackPendingCut()).toBeFalse();
+        expect(manager.rollbackPendingCut()).toBe(false);
 
         manager.commit(new Rectangle(5, 4, 2, 1), WorkMode.SELECT_EXACT);
 
-        expect(manager.rollbackPendingCut()).toBeTrue();
-        expect(manager.hasPendingCut).toBeFalse();
-        expect(manager.rollbackPendingCut()).toBeFalse();
+        expect(manager.rollbackPendingCut()).toBe(true);
+        expect(manager.hasPendingCut).toBe(false);
+        expect(manager.rollbackPendingCut()).toBe(false);
       });
     });
   });
@@ -431,7 +431,7 @@ describe('SelectionManager', () => {
 
       manager.commit(new Rectangle(3, 3, 0, 0), WorkMode.SELECT);
 
-      expect(manager.selectedComponents.has(comp)).toBeTrue();
+      expect(manager.selectedComponents.has(comp)).toBe(true);
       expect(comp.tint).toBe(SelectionManager.SELECTION_TINT);
     });
 
@@ -442,7 +442,7 @@ describe('SelectionManager', () => {
 
       manager.commit(new Rectangle(2, 3, 0, 0), WorkMode.SELECT);
 
-      expect(manager.selectedWires.has(wire)).toBeTrue();
+      expect(manager.selectedWires.has(wire)).toBe(true);
       expect(wire.tint).toBe(SelectionManager.SELECTION_TINT);
     });
 
@@ -455,8 +455,8 @@ describe('SelectionManager', () => {
 
       manager.commit(new Rectangle(3, 3, 0, 0), WorkMode.SELECT);
 
-      expect(manager.selectedComponents.has(comp)).toBeTrue();
-      expect(manager.selectedWires.has(wire)).toBeFalse();
+      expect(manager.selectedComponents.has(comp)).toBe(true);
+      expect(manager.selectedWires.has(wire)).toBe(false);
     });
 
     it('selects the wire when the wire has a smaller area than the component', () => {
@@ -468,8 +468,8 @@ describe('SelectionManager', () => {
 
       manager.commit(new Rectangle(3, 3, 0, 0), WorkMode.SELECT);
 
-      expect(manager.selectedComponents.has(comp)).toBeFalse();
-      expect(manager.selectedWires.has(wire)).toBeTrue();
+      expect(manager.selectedComponents.has(comp)).toBe(false);
+      expect(manager.selectedWires.has(wire)).toBe(true);
     });
 
     it('selects nothing when the click point is in empty space', () => {
@@ -479,7 +479,7 @@ describe('SelectionManager', () => {
 
       manager.commit(new Rectangle(3, 3, 0, 0), WorkMode.SELECT);
 
-      expect(manager.isEmpty).toBeTrue();
+      expect(manager.isEmpty).toBe(true);
     });
 
     it('ignores destroyed components during single-click resolution', () => {
@@ -489,7 +489,7 @@ describe('SelectionManager', () => {
 
       manager.commit(new Rectangle(3, 3, 0, 0), WorkMode.SELECT);
 
-      expect(manager.isEmpty).toBeTrue();
+      expect(manager.isEmpty).toBe(true);
     });
 
     it('selects the component when component and wire have equal bounding area', () => {
@@ -501,8 +501,8 @@ describe('SelectionManager', () => {
 
       manager.commit(new Rectangle(3, 3, 0, 0), WorkMode.SELECT);
 
-      expect(manager.selectedComponents.has(comp)).toBeTrue();
-      expect(manager.selectedWires.has(wire)).toBeFalse();
+      expect(manager.selectedComponents.has(comp)).toBe(true);
+      expect(manager.selectedWires.has(wire)).toBe(false);
     });
   });
 
@@ -583,7 +583,7 @@ describe('SelectionManager', () => {
 
       manager.clear();
 
-      expect(manager.isEmpty).toBeTrue();
+      expect(manager.isEmpty).toBe(true);
     });
   });
 
@@ -608,22 +608,22 @@ describe('SelectionManager', () => {
       // Manually insert the real component into the manager via commit.
       setComponents(project, comp);
       manager.commit(new Rectangle(-10, -10, 20, 20), WorkMode.SELECT);
-      expect(manager.selectedComponents.has(comp)).toBeTrue();
+      expect(manager.selectedComponents.has(comp)).toBe(true);
 
       manager.evict(comp);
 
-      expect(manager.selectedComponents.has(comp)).toBeFalse();
+      expect(manager.selectedComponents.has(comp)).toBe(false);
     });
 
     it('removes a selected wire from selectedWires', () => {
       const wire = makeWire(0, 0, 3, 1);
       setWires(project, wire);
       manager.commit(new Rectangle(0, 0, 5, 5), WorkMode.SELECT);
-      expect(manager.selectedWires.has(wire)).toBeTrue();
+      expect(manager.selectedWires.has(wire)).toBe(true);
 
       manager.evict(wire);
 
-      expect(manager.selectedWires.has(wire)).toBeFalse();
+      expect(manager.selectedWires.has(wire)).toBe(false);
     });
 
     it('does not emit selectionChange$ when evicting a component not in selection', () => {
@@ -667,7 +667,7 @@ describe('SelectionManager', () => {
       setComponents(project, comp);
       manager.commit(new Rectangle(0, 0, 10, 10), WorkMode.SELECT);
 
-      expect(manager.containsPoint({ x: 3, y: 3 })).toBeTrue();
+      expect(manager.containsPoint({ x: 3, y: 3 })).toBe(true);
     });
 
     it('returns false when the point is outside all selected bounds', () => {
@@ -675,7 +675,7 @@ describe('SelectionManager', () => {
       setComponents(project, comp);
       manager.commit(new Rectangle(0, 0, 10, 10), WorkMode.SELECT);
 
-      expect(manager.containsPoint({ x: 10, y: 10 })).toBeFalse();
+      expect(manager.containsPoint({ x: 10, y: 10 })).toBe(false);
     });
 
     it('returns true when a selected wire bounds contain the point', () => {
@@ -683,11 +683,11 @@ describe('SelectionManager', () => {
       setWires(project, wire);
       manager.commit(new Rectangle(0, 0, 15, 15), WorkMode.SELECT);
 
-      expect(manager.containsPoint({ x: 5, y: 5 })).toBeTrue();
+      expect(manager.containsPoint({ x: 5, y: 5 })).toBe(true);
     });
 
     it('returns false when the selection is empty', () => {
-      expect(manager.containsPoint({ x: 0, y: 0 })).toBeFalse();
+      expect(manager.containsPoint({ x: 0, y: 0 })).toBe(false);
     });
 
     it('returns false for a destroyed component even if its bounds would contain the point', () => {
@@ -697,7 +697,7 @@ describe('SelectionManager', () => {
 
       comp.destroyed = true;
 
-      expect(manager.containsPoint({ x: 2, y: 2 })).toBeFalse();
+      expect(manager.containsPoint({ x: 2, y: 2 })).toBe(false);
     });
 
     it('returns false for a destroyed wire even if its bounds would contain the point', () => {
@@ -707,7 +707,7 @@ describe('SelectionManager', () => {
 
       wire.destroyed = true;
 
-      expect(manager.containsPoint({ x: 2, y: 2 })).toBeFalse();
+      expect(manager.containsPoint({ x: 2, y: 2 })).toBe(false);
     });
   });
 

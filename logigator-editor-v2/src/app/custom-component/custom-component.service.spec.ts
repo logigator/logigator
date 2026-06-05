@@ -1,3 +1,4 @@
+import { describe, beforeEach, afterEach, it, expect, vi } from 'vitest';
 import { Injector } from '@angular/core';
 import { TestBed } from '@angular/core/testing';
 import { setStaticDIInjector } from '../utils/get-di';
@@ -31,7 +32,7 @@ describe('CustomComponentService', () => {
   let main: Project;
 
   beforeEach(() => {
-    jasmine.clock().install();
+    vi.useFakeTimers();
     TestBed.configureTestingModule({ providers: appConfig.providers });
     setStaticDIInjector(TestBed.inject(Injector));
     service = TestBed.inject(CustomComponentService);
@@ -53,7 +54,7 @@ describe('CustomComponentService', () => {
   });
 
   afterEach(() => {
-    jasmine.clock().uninstall();
+    vi.useRealTimers();
   });
 
   function masterTypeIdOf(editor: Project): number {
@@ -113,7 +114,7 @@ describe('CustomComponentService', () => {
     const masterTypeId = masterTypeIdOf(editor);
 
     editor.actionManager.push(new AddComponentsAction(makeInput(0)));
-    jasmine.clock().tick(1);
+    vi.advanceTimersByTime(1);
 
     expect(registry.getDefinition(masterTypeId)?.numInputs).toBe(1);
   });
@@ -135,7 +136,7 @@ describe('CustomComponentService', () => {
       )
     );
 
-    expect(metadataStore.isDirty(main)).toBeTrue();
+    expect(metadataStore.isDirty(main)).toBe(true);
     expect(placed.options.label.value).toBe('A');
 
     main.actionManager.undo();
@@ -152,13 +153,13 @@ describe('CustomComponentService', () => {
     const masterTypeId = masterTypeIdOf(editor);
 
     editor.actionManager.push(new AddComponentsAction(makeInput(0)));
-    jasmine.clock().tick(1);
+    vi.advanceTimersByTime(1);
     const instance = placeInstance(masterTypeId, main);
     expect(instance.numInputs).toBe(1);
 
     // Edit the master after placing — the instance must not change.
     editor.actionManager.push(new AddComponentsAction(makeInput(1)));
-    jasmine.clock().tick(1);
+    vi.advanceTimersByTime(1);
     expect(registry.getDefinition(masterTypeId)?.numInputs).toBe(2);
     expect(instance.numInputs).toBe(1);
   });
@@ -173,12 +174,12 @@ describe('CustomComponentService', () => {
     const masterTypeId = masterTypeIdOf(editor);
 
     editor.actionManager.push(new AddComponentsAction(makeInput(0)));
-    jasmine.clock().tick(1);
+    vi.advanceTimersByTime(1);
     const instance = placeInstance(masterTypeId, main);
 
     // Master grows a second input after placement.
     editor.actionManager.push(new AddComponentsAction(makeInput(1)));
-    jasmine.clock().tick(1);
+    vi.advanceTimersByTime(1);
 
     const action = service.buildInstanceUpdate(instance)!;
     expect(action).toBeTruthy();

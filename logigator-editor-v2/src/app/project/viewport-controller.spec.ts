@@ -1,3 +1,5 @@
+import { describe, beforeEach, afterEach, it, expect, vi } from 'vitest';
+import type { Mock } from 'vitest';
 import 'pixi.js/math-extras';
 import { Injector } from '@angular/core';
 import { TestBed } from '@angular/core/testing';
@@ -11,13 +13,13 @@ describe('ViewportController', () => {
   let viewport: ViewportController;
   let container: Container;
   let grid: Grid;
-  let applyScaleSpy: jasmine.Spy;
+  let applyScaleSpy: Mock;
 
   beforeEach(() => {
     setStaticDIInjector(TestBed.inject(Injector));
     container = new Container();
     grid = new Grid();
-    applyScaleSpy = jasmine.createSpy('onApplyScale');
+    applyScaleSpy = vi.fn();
     viewport = new ViewportController(container, grid, applyScaleSpy);
   });
 

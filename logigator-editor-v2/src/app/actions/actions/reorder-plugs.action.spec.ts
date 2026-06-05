@@ -1,3 +1,5 @@
+import { describe, beforeEach, it, expect, vi } from 'vitest';
+import type { MockedObject } from 'vitest';
 import { ReorderPlugsAction } from './reorder-plugs.action';
 import { ComponentOption } from '../../components/component-option';
 import type { Component } from '../../components/component';
@@ -16,7 +18,7 @@ class IndexOption extends ComponentOption<number> {
 
 describe('ReorderPlugsAction', () => {
   let options: Map<number, IndexOption>;
-  let project: jasmine.SpyObj<Project>;
+  let project: MockedObject<Project>;
 
   beforeEach(() => {
     options = new Map([
@@ -24,8 +26,10 @@ describe('ReorderPlugsAction', () => {
       [2, new IndexOption(1)],
       [3, new IndexOption(2)]
     ]);
-    project = jasmine.createSpyObj<Project>('Project', ['getComponentById']);
-    project.getComponentById.and.callFake(
+    project = {
+      getComponentById: vi.fn().mockName('Project.getComponentById')
+    } as unknown as MockedObject<Project>;
+    project.getComponentById.mockImplementation(
       (id: number) =>
         ({ options: { index: options.get(id) } }) as unknown as Component
     );

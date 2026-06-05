@@ -1,3 +1,5 @@
+import { describe, beforeEach, afterEach, it, expect, vi } from 'vitest';
+import type { MockedObject } from 'vitest';
 import { Injector } from '@angular/core';
 import { TestBed } from '@angular/core/testing';
 import { setStaticDIInjector } from '../../utils/get-di';
@@ -7,15 +9,15 @@ import { WireDirection } from '../../wires/wire-direction.enum';
 import type { Project } from '../../project/project';
 
 describe('RemoveWiresAction', () => {
-  let project: jasmine.SpyObj<Project>;
+  let project: MockedObject<Project>;
   let wiresToDestroy: Wire[];
 
   beforeEach(() => {
     setStaticDIInjector(TestBed.inject(Injector));
-    project = jasmine.createSpyObj<Project>('Project', [
-      'addWire',
-      'removeWire'
-    ]);
+    project = {
+      addWire: vi.fn().mockName('Project.addWire'),
+      removeWire: vi.fn().mockName('Project.removeWire')
+    } as unknown as MockedObject<Project>;
     wiresToDestroy = [];
   });
 
@@ -34,7 +36,9 @@ describe('RemoveWiresAction', () => {
 
       action.do(project);
 
-      expect(project.removeWire).toHaveBeenCalledOnceWith(wireId);
+      expect(project.removeWire).toHaveBeenCalledTimes(1);
+
+      expect(project.removeWire).toHaveBeenCalledWith(wireId);
     });
 
     it('calls removeWire once per wire for multiple wires', () => {
@@ -88,7 +92,7 @@ describe('RemoveWiresAction', () => {
 
       action.undo(project);
 
-      expect(project.addWire).toHaveBeenCalledWith(jasmine.any(Wire));
+      expect(project.addWire).toHaveBeenCalledWith(expect.any(Wire));
     });
 
     it('calls addWire once per wire for multiple wires', () => {
@@ -131,7 +135,9 @@ describe('RemoveWiresAction', () => {
 
       action.do(project);
 
-      expect(project.removeWire).toHaveBeenCalledOnceWith(expectedId);
+      expect(project.removeWire).toHaveBeenCalledTimes(1);
+
+      expect(project.removeWire).toHaveBeenCalledWith(expectedId);
     });
   });
 });

@@ -1,3 +1,4 @@
+import { describe, beforeEach, it, expect, vi } from 'vitest';
 import { TestBed } from '@angular/core/testing';
 
 import { TranslationLoaderService } from './translation-loader.service';

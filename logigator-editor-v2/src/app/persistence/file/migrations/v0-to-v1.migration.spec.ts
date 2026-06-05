@@ -1,3 +1,4 @@
+import { describe, beforeEach, it, expect, vi } from 'vitest';
 import { TestBed } from '@angular/core/testing';
 import { v0ToV1Migration } from './v0-to-v1.migration';
 import { MigrationContext } from './migration';
@@ -12,6 +13,8 @@ describe('v0ToV1Migration', () => {
   let ctx: MigrationContext;
 
   beforeEach(() => {
+    // Suppress console.warn from expected warning-path tests.
+    vi.spyOn(console, 'warn').mockImplementation(() => {});
     TestBed.configureTestingModule({});
     ctx = {
       componentProvider: TestBed.inject(ComponentProviderService),
@@ -63,7 +66,7 @@ describe('v0ToV1Migration', () => {
   });
 
   it('drops unsupported component types with a warning', () => {
-    const warnSpy = spyOn(ctx.logging, 'warn');
+    const warnSpy = vi.spyOn(ctx.logging, 'warn');
     const result = migrate({
       project: {
         elements: [
@@ -76,7 +79,7 @@ describe('v0ToV1Migration', () => {
     expect(result.components.length).toBe(1);
     expect(result.components[0].type).toBe(1);
     expect(warnSpy).toHaveBeenCalledWith(
-      jasmine.stringContaining('Unknown component type ID: 3'),
+      expect.stringContaining('Unknown component type ID: 3'),
       'v0ToV1Migration'
     );
   });

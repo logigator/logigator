@@ -1,3 +1,4 @@
+import { describe, beforeEach, it, expect, vi } from 'vitest';
 import { Injector } from '@angular/core';
 import { TestBed } from '@angular/core/testing';
 import { MessageService } from 'primeng/api';
@@ -73,10 +74,13 @@ describe('CircuitFileService', () => {
   let messageService: MessageService;
 
   beforeEach(() => {
-    const translocoSpy = jasmine.createSpyObj('TranslocoService', [
-      'translate'
-    ]);
-    translocoSpy.translate.and.callFake((key: string) => key);
+    // Suppress console output from expected warning/error paths exercised by the tests.
+    vi.spyOn(console, 'warn').mockImplementation(() => {});
+    vi.spyOn(console, 'error').mockImplementation(() => {});
+    const translocoSpy = {
+      translate: vi.fn().mockName('TranslocoService.translate')
+    };
+    translocoSpy.translate.mockImplementation((key: string) => key);
     TestBed.configureTestingModule({
       providers: [
         MessageService,
@@ -315,7 +319,7 @@ describe('CircuitFileService', () => {
     });
 
     it('drops unknown component types with a warning', () => {
-      const warnSpy = spyOn(logging, 'warn');
+      const warnSpy = vi.spyOn(logging, 'warn');
       const file = JSON.stringify({
         version: 1,
         name: 'x',
@@ -331,14 +335,14 @@ describe('CircuitFileService', () => {
 
       expect(components.length).toBe(1);
       expect(warnSpy).toHaveBeenCalledWith(
-        jasmine.stringContaining('Unknown component type ID: 99'),
+        expect.stringContaining('Unknown component type ID: 99'),
         'CircuitFileService'
       );
     });
 
     it('drops a custom whose snapshot is missing and warns the user', () => {
-      const warnSpy = spyOn(logging, 'warn');
-      const toastSpy = spyOn(messageService, 'add');
+      const warnSpy = vi.spyOn(logging, 'warn');
+      const toastSpy = vi.spyOn(messageService, 'add');
       // A custom-range body element with no matching definition — an old
       // reference-only / client-stripped document.
       const file = JSON.stringify({
@@ -356,7 +360,7 @@ describe('CircuitFileService', () => {
 
       expect(components.length).toBe(1);
       expect(warnSpy).toHaveBeenCalledWith(
-        jasmine.stringContaining(
+        expect.stringContaining(
           `Unknown component type ID: ${CUSTOM_TYPE_ID_BASE}`
         ),
         'CircuitFileService'
@@ -364,7 +368,7 @@ describe('CircuitFileService', () => {
       // Unlike unknown built-ins, a missing custom is surfaced to the user.
       expect(toastSpy).toHaveBeenCalledTimes(1);
       expect(toastSpy).toHaveBeenCalledWith(
-        jasmine.objectContaining({ severity: 'warn' })
+        expect.objectContaining({ severity: 'warn' })
       );
     });
 
@@ -374,8 +378,8 @@ describe('CircuitFileService', () => {
       // to THIS component. The id-space branch must skip it instead.
       const occupant = registry.createMaster({ symbol: 'Z' }, 'browser');
       expect(occupant).toBe(CUSTOM_TYPE_ID_BASE);
-      spyOn(logging, 'warn');
-      spyOn(messageService, 'add');
+      vi.spyOn(logging, 'warn');
+      vi.spyOn(messageService, 'add');
 
       const file = JSON.stringify({
         version: 1,

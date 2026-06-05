@@ -1,3 +1,4 @@
+import { describe, beforeEach, it, expect, vi } from 'vitest';
 import { Injector } from '@angular/core';
 import { TestBed } from '@angular/core/testing';
 import { Subject } from 'rxjs';
@@ -77,7 +78,7 @@ describe('ProjectMetadataStore', () => {
       // After removal, action changes must not re-mark the project dirty.
       // We can't fire actionChange$ directly without ActionManager state,
       // but isDirty stays false because the entry is gone.
-      expect(store.isDirty(project)).toBeFalse();
+      expect(store.isDirty(project)).toBe(false);
     });
 
     it('is a no-op on unknown projects', () => {
@@ -90,7 +91,7 @@ describe('ProjectMetadataStore', () => {
     it('starts clean after register', () => {
       const project = new Project();
       store.register(project, makeMetadata());
-      expect(store.isDirty(project)).toBeFalse();
+      expect(store.isDirty(project)).toBe(false);
     });
 
     it('markDirty marks the project dirty', () => {
@@ -99,7 +100,7 @@ describe('ProjectMetadataStore', () => {
 
       store.markDirty(project);
 
-      expect(store.isDirty(project)).toBeTrue();
+      expect(store.isDirty(project)).toBe(true);
     });
 
     it('markDirty is idempotent on the flag', () => {
@@ -110,7 +111,7 @@ describe('ProjectMetadataStore', () => {
       store.markDirty(project);
       store.markDirty(project);
 
-      expect(store.isDirty(project)).toBeTrue();
+      expect(store.isDirty(project)).toBe(true);
     });
 
     it('clearDirty clears the dirty flag', () => {
@@ -120,7 +121,7 @@ describe('ProjectMetadataStore', () => {
 
       store.clearDirty(project);
 
-      expect(store.isDirty(project)).toBeFalse();
+      expect(store.isDirty(project)).toBe(false);
     });
 
     it('clearDirty on already-clean project is a no-op', () => {
@@ -128,7 +129,7 @@ describe('ProjectMetadataStore', () => {
       store.register(project, makeMetadata());
 
       expect(() => store.clearDirty(project)).not.toThrow();
-      expect(store.isDirty(project)).toBeFalse();
+      expect(store.isDirty(project)).toBe(false);
     });
 
     it('markDirty / clearDirty on unknown project is a no-op', () => {
@@ -209,18 +210,20 @@ describe('ProjectMetadataStore', () => {
       const project = new Project();
       store.register(project, makeMetadata());
 
-      expect(store.isDirty(project)).toBeFalse();
+      expect(store.isDirty(project)).toBe(false);
 
       // actionChange$ is an Observable<void> exposed from a Subject inside
       // ActionManager. Trigger a real action push so the chain wires up.
       // Using the underlying subject directly via type assertion keeps the
       // test focused on the metadata store's reaction.
       const subject = (
-        project.actionManager as unknown as { _actionChange$: Subject<void> }
+        project.actionManager as unknown as {
+          _actionChange$: Subject<void>;
+        }
       )._actionChange$;
       subject.next();
 
-      expect(store.isDirty(project)).toBeTrue();
+      expect(store.isDirty(project)).toBe(true);
     });
 
     it('does not subscribe when trackDirty=false (read-only shares)', () => {
@@ -228,11 +231,13 @@ describe('ProjectMetadataStore', () => {
       store.register(project, makeMetadata({ source: 'share' }), false);
 
       const subject = (
-        project.actionManager as unknown as { _actionChange$: Subject<void> }
+        project.actionManager as unknown as {
+          _actionChange$: Subject<void>;
+        }
       )._actionChange$;
       subject.next();
 
-      expect(store.isDirty(project)).toBeFalse();
+      expect(store.isDirty(project)).toBe(false);
     });
 
     it('unsubscribes on remove (subsequent action changes do not mark dirty)', () => {
@@ -245,11 +250,13 @@ describe('ProjectMetadataStore', () => {
       store.register(project, makeMetadata(), false);
 
       const subject = (
-        project.actionManager as unknown as { _actionChange$: Subject<void> }
+        project.actionManager as unknown as {
+          _actionChange$: Subject<void>;
+        }
       )._actionChange$;
       subject.next();
 
-      expect(store.isDirty(project)).toBeFalse();
+      expect(store.isDirty(project)).toBe(false);
     });
   });
 });

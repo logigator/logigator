@@ -1,3 +1,5 @@
+import { describe, beforeEach, afterEach, it, expect, vi } from 'vitest';
+import type { MockedObject } from 'vitest';
 import { Injector } from '@angular/core';
 import { TestBed } from '@angular/core/testing';
 import { setStaticDIInjector } from '../../utils/get-di';
@@ -15,15 +17,15 @@ function makeAnd(): AndComponent {
 }
 
 describe('AddComponentsAction', () => {
-  let project: jasmine.SpyObj<Project>;
+  let project: MockedObject<Project>;
   let compsToDestroy: Component[];
 
   beforeEach(() => {
     setStaticDIInjector(TestBed.inject(Injector));
-    project = jasmine.createSpyObj<Project>('Project', [
-      'addComponent',
-      'removeComponent'
-    ]);
+    project = {
+      addComponent: vi.fn().mockName('Project.addComponent'),
+      removeComponent: vi.fn().mockName('Project.removeComponent')
+    } as unknown as MockedObject<Project>;
     compsToDestroy = [];
   });
 
@@ -52,7 +54,7 @@ describe('AddComponentsAction', () => {
       action.do(project);
 
       expect(project.addComponent).toHaveBeenCalledWith(
-        jasmine.any(AndComponent)
+        expect.any(AndComponent)
       );
     });
 
@@ -95,7 +97,9 @@ describe('AddComponentsAction', () => {
 
       action.undo(project);
 
-      expect(project.removeComponent).toHaveBeenCalledOnceWith(compId);
+      expect(project.removeComponent).toHaveBeenCalledTimes(1);
+
+      expect(project.removeComponent).toHaveBeenCalledWith(compId);
     });
 
     it('calls removeComponent once per component for multiple components', () => {
@@ -141,7 +145,9 @@ describe('AddComponentsAction', () => {
 
       action.undo(project);
 
-      expect(project.removeComponent).toHaveBeenCalledOnceWith(expectedId);
+      expect(project.removeComponent).toHaveBeenCalledTimes(1);
+
+      expect(project.removeComponent).toHaveBeenCalledWith(expectedId);
     });
   });
 });

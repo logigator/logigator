@@ -1,3 +1,4 @@
+import { describe, beforeEach, it, expect, vi } from 'vitest';
 import { TestBed } from '@angular/core/testing';
 import { MessageService } from 'primeng/api';
 import { TranslocoService } from '@jsverse/transloco';
@@ -9,16 +10,16 @@ describe('ToastService', () => {
   let messageService: MessageService;
 
   beforeEach(() => {
-    spyOn(console, 'error');
-    spyOn(console, 'warn');
-    spyOn(console, 'log');
-    spyOn(console, 'info');
-    spyOn(console, 'debug');
+    vi.spyOn(console, 'error');
+    vi.spyOn(console, 'warn');
+    vi.spyOn(console, 'log');
+    vi.spyOn(console, 'info');
+    vi.spyOn(console, 'debug');
 
-    const translocoSpy = jasmine.createSpyObj('TranslocoService', [
-      'translate'
-    ]);
-    translocoSpy.translate.and.callFake((key: string) => key);
+    const translocoSpy = {
+      translate: vi.fn().mockName('TranslocoService.translate')
+    };
+    translocoSpy.translate.mockImplementation((key: string) => key);
 
     TestBed.configureTestingModule({
       providers: [
@@ -29,7 +30,7 @@ describe('ToastService', () => {
     service = TestBed.inject(ToastService);
     messageService = TestBed.inject(MessageService);
 
-    spyOn(messageService, 'add');
+    vi.spyOn(messageService, 'add');
   });
 
   it('should be created', () => {
@@ -40,7 +41,7 @@ describe('ToastService', () => {
     it('shows a danger toast with translated summary', () => {
       service.error('err-msg');
       expect(messageService.add).toHaveBeenCalledWith(
-        jasmine.objectContaining({
+        expect.objectContaining({
           severity: 'danger',
           summary: 'logging.error',
           detail: 'err-msg'
@@ -53,7 +54,7 @@ describe('ToastService', () => {
     it('shows a warning toast with translated summary', () => {
       service.warn('warn-msg');
       expect(messageService.add).toHaveBeenCalledWith(
-        jasmine.objectContaining({
+        expect.objectContaining({
           severity: 'warn',
           summary: 'logging.warn',
           detail: 'warn-msg'
@@ -66,7 +67,7 @@ describe('ToastService', () => {
     it('shows a success toast with translated summary', () => {
       service.success('success-msg');
       expect(messageService.add).toHaveBeenCalledWith(
-        jasmine.objectContaining({
+        expect.objectContaining({
           severity: 'success',
           summary: 'logging.success',
           detail: 'success-msg'
@@ -79,7 +80,7 @@ describe('ToastService', () => {
     it('shows an info toast with translated summary', () => {
       service.info('info-msg');
       expect(messageService.add).toHaveBeenCalledWith(
-        jasmine.objectContaining({
+        expect.objectContaining({
           severity: 'info',
           summary: 'logging.info',
           detail: 'info-msg'

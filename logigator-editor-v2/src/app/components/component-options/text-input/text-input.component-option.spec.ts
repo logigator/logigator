@@ -1,3 +1,4 @@
+import { describe, beforeEach, it, expect, vi } from 'vitest';
 import { TextInputComponentOption } from './text-input.component-option';
 
 const LABEL = 'components.options.label';
@@ -60,13 +61,13 @@ describe('TextInputComponentOption', () => {
 
   it('preserves inspectorHidden across clone', () => {
     const option = new TextInputComponentOption(LABEL).hideFromInspector();
-    expect(option.inspectorHidden).toBeTrue();
-    expect(option.clone().inspectorHidden).toBeTrue();
+    expect(option.inspectorHidden).toBe(true);
+    expect(option.clone().inspectorHidden).toBe(true);
   });
 
   it('does not mark a normal option as inspectorHidden', () => {
     const option = new TextInputComponentOption(LABEL);
-    expect(option.inspectorHidden).toBeFalse();
-    expect(option.clone().inspectorHidden).toBeFalse();
+    expect(option.inspectorHidden).toBe(false);
+    expect(option.clone().inspectorHidden).toBe(false);
   });
 });

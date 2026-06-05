@@ -1,3 +1,4 @@
+import { describe, beforeEach, it, expect, vi } from 'vitest';
 import { IdAllocator } from './id-allocator';
 
 describe('IdAllocator', () => {

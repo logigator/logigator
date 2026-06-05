@@ -1,3 +1,4 @@
+import { describe, beforeEach, it, expect, vi } from 'vitest';
 import { Injector } from '@angular/core';
 import { TestBed } from '@angular/core/testing';
 import { setStaticDIInjector } from '../../utils/get-di';
@@ -337,18 +338,18 @@ describe('CustomComponentRegistry', () => {
       });
 
       it('flags placing a master into its own editor', () => {
-        expect(registry.wouldCycle(a, a)).toBeTrue();
+        expect(registry.wouldCycle(a, a)).toBe(true);
       });
 
       it('flags placing a transitive dependent into the host', () => {
-        expect(registry.wouldCycle(a, b)).toBeTrue();
-        expect(registry.wouldCycle(a, c)).toBeTrue();
+        expect(registry.wouldCycle(a, b)).toBe(true);
+        expect(registry.wouldCycle(a, c)).toBe(true);
       });
 
       it('allows placing a non-dependent', () => {
-        expect(registry.wouldCycle(a, unrelated)).toBeFalse();
+        expect(registry.wouldCycle(a, unrelated)).toBe(false);
         // Placing A into C is fine — C already depends on A, the other way.
-        expect(registry.wouldCycle(c, a)).toBeFalse();
+        expect(registry.wouldCycle(c, a)).toBe(false);
       });
     });
   });

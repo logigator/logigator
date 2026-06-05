@@ -1,12 +1,16 @@
+import { describe, beforeEach, it, expect, vi } from 'vitest';
+import type { MockedObject } from 'vitest';
 import { Point } from 'pixi.js';
 import { MoveComponentsAction } from './move-components.action';
 import type { Project } from '../../project/project';
 
 describe('MoveComponentsAction', () => {
-  let project: jasmine.SpyObj<Project>;
+  let project: MockedObject<Project>;
 
   beforeEach(() => {
-    project = jasmine.createSpyObj<Project>('Project', ['moveComponent']);
+    project = {
+      moveComponent: vi.fn().mockName('Project.moveComponent')
+    } as unknown as MockedObject<Project>;
   });
 
   describe('do()', () => {
@@ -20,7 +24,9 @@ describe('MoveComponentsAction', () => {
 
       action.do(project);
 
-      expect(project.moveComponent).toHaveBeenCalledOnceWith(1, newPos);
+      expect(project.moveComponent).toHaveBeenCalledTimes(1);
+
+      expect(project.moveComponent).toHaveBeenCalledWith(1, newPos);
     });
 
     it('calls moveComponent once per entry for multiple entries', () => {
@@ -35,15 +41,15 @@ describe('MoveComponentsAction', () => {
       expect(project.moveComponent).toHaveBeenCalledTimes(3);
       expect(project.moveComponent).toHaveBeenCalledWith(
         1,
-        jasmine.objectContaining({ x: 3, y: 4 })
+        expect.objectContaining({ x: 3, y: 4 })
       );
       expect(project.moveComponent).toHaveBeenCalledWith(
         2,
-        jasmine.objectContaining({ x: 7, y: 8 })
+        expect.objectContaining({ x: 7, y: 8 })
       );
       expect(project.moveComponent).toHaveBeenCalledWith(
         3,
-        jasmine.objectContaining({ x: 9, y: 0 })
+        expect.objectContaining({ x: 9, y: 0 })
       );
     });
 
@@ -66,7 +72,9 @@ describe('MoveComponentsAction', () => {
 
       action.undo(project);
 
-      expect(project.moveComponent).toHaveBeenCalledOnceWith(1, oldPos);
+      expect(project.moveComponent).toHaveBeenCalledTimes(1);
+
+      expect(project.moveComponent).toHaveBeenCalledWith(1, oldPos);
     });
 
     it('calls moveComponent once per entry for multiple entries', () => {
@@ -80,11 +88,11 @@ describe('MoveComponentsAction', () => {
       expect(project.moveComponent).toHaveBeenCalledTimes(2);
       expect(project.moveComponent).toHaveBeenCalledWith(
         1,
-        jasmine.objectContaining({ x: 0, y: 0 })
+        expect.objectContaining({ x: 0, y: 0 })
       );
       expect(project.moveComponent).toHaveBeenCalledWith(
         2,
-        jasmine.objectContaining({ x: 1, y: 1 })
+        expect.objectContaining({ x: 1, y: 1 })
       );
     });
 
@@ -108,9 +116,11 @@ describe('MoveComponentsAction', () => {
       oldPos.set(99, 99);
       action.undo(project);
 
-      expect(project.moveComponent).toHaveBeenCalledOnceWith(
+      expect(project.moveComponent).toHaveBeenCalledTimes(1);
+
+      expect(project.moveComponent).toHaveBeenCalledWith(
         1,
-        jasmine.objectContaining({ x: 1, y: 2 })
+        expect.objectContaining({ x: 1, y: 2 })
       );
     });
 
@@ -125,9 +135,11 @@ describe('MoveComponentsAction', () => {
       newPos.set(99, 99);
       action.do(project);
 
-      expect(project.moveComponent).toHaveBeenCalledOnceWith(
+      expect(project.moveComponent).toHaveBeenCalledTimes(1);
+
+      expect(project.moveComponent).toHaveBeenCalledWith(
         1,
-        jasmine.objectContaining({ x: 5, y: 6 })
+        expect.objectContaining({ x: 5, y: 6 })
       );
     });
   });

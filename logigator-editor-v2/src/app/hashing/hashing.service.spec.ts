@@ -1,3 +1,4 @@
+import { describe, beforeEach, it, expect, vi } from 'vitest';
 import { TestBed } from '@angular/core/testing';
 
 import { HashingService } from './hashing.service';
@@ -37,7 +38,7 @@ describe('HashingService', () => {
 
   it('returned string starts with the original URI', () => {
     const uri = 'path/to/file.js';
-    expect(service.hashUrl(uri).startsWith(uri)).toBeTrue();
+    expect(service.hashUrl(uri).startsWith(uri)).toBe(true);
   });
 
   it('appends a non-empty hash value after v=', () => {

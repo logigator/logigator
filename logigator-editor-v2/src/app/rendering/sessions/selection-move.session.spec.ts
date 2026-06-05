@@ -1,3 +1,4 @@
+import { describe, beforeEach, afterEach, it, expect, vi } from 'vitest';
 import { Injector } from '@angular/core';
 import { TestBed } from '@angular/core/testing';
 import { Container, FederatedPointerEvent, Point, Rectangle } from 'pixi.js';
@@ -77,7 +78,7 @@ describe('SelectionMoveSession collision', () => {
 
       // Move selected component to (5,0) → overlaps stationary
       session.onMove(makeMoveEvent(5, 0));
-      expect(session.canEnd()).toBeFalse();
+      expect(session.canEnd()).toBe(false);
     });
 
     it('canEnd() is false when component body is moved onto a wire — catches missing wire check bug', () => {
@@ -100,7 +101,7 @@ describe('SelectionMoveSession collision', () => {
       );
 
       session.onMove(makeMoveEvent(5, 0));
-      expect(session.canEnd()).toBeFalse();
+      expect(session.canEnd()).toBe(false);
       wire.destroy();
     });
 
@@ -122,7 +123,7 @@ describe('SelectionMoveSession collision', () => {
 
       // Move to (0,10) — far from the wire
       session.onMove(makeMoveEvent(0, 10));
-      expect(session.canEnd()).toBeTrue();
+      expect(session.canEnd()).toBe(true);
       wire.destroy();
     });
   });
@@ -148,7 +149,7 @@ describe('SelectionMoveSession collision', () => {
       );
 
       session.onMove(makeMoveEvent(5, 0));
-      expect(session.canEnd()).toBeFalse();
+      expect(session.canEnd()).toBe(false);
     });
 
     it('canEnd() is true when wire is moved to clear space', () => {
@@ -169,7 +170,7 @@ describe('SelectionMoveSession collision', () => {
 
       // Move to (0,10) — clear of the component
       session.onMove(makeMoveEvent(0, 10));
-      expect(session.canEnd()).toBeTrue();
+      expect(session.canEnd()).toBe(true);
     });
 
     it('canEnd() is false when wire is moved onto a component, then clears when moved away', () => {
@@ -189,10 +190,10 @@ describe('SelectionMoveSession collision', () => {
       );
 
       session.onMove(makeMoveEvent(5, 0));
-      expect(session.canEnd()).toBeFalse();
+      expect(session.canEnd()).toBe(false);
 
       session.onMove(makeMoveEvent(0, 10));
-      expect(session.canEnd()).toBeTrue();
+      expect(session.canEnd()).toBe(true);
     });
   });
 
@@ -219,7 +220,7 @@ describe('SelectionMoveSession collision', () => {
         WorkMode.SELECT_EXACT
       );
 
-      expect(project.selectionManager.hasPendingCut).toBeTrue();
+      expect(project.selectionManager.hasPendingCut).toBe(true);
       expect(allWires().length).toBe(3);
 
       // Find the inside piece (the one selected).
@@ -238,7 +239,7 @@ describe('SelectionMoveSession collision', () => {
       );
       // Move delta = (0, 5) — drag the inside piece down to a clear row.
       session.onMove(makeMoveEvent(5, 5));
-      expect(session.canEnd()).toBeTrue();
+      expect(session.canEnd()).toBe(true);
       session.onEnd();
 
       // Cut+move materialized exactly three wires: two outside + one inside.
@@ -250,7 +251,7 @@ describe('SelectionMoveSession collision', () => {
       expect(new Set(ids).size).toBe(ids.length);
 
       // Pending cut was claimed.
-      expect(project.selectionManager.hasPendingCut).toBeFalse();
+      expect(project.selectionManager.hasPendingCut).toBe(false);
 
       // Undo restores the pre-cut state (the original wire).
       project.actionManager.undo();
@@ -285,7 +286,7 @@ describe('SelectionMoveSession collision', () => {
       // Move delta = (4, 1) so v ends up at (4.5, -4.5)→(4.5, 0.5).
       // v.end (4.5, 0.5) lands on long's interior.
       session.onMove(makeMoveEvent(4, 0));
-      expect(session.canEnd()).toBeTrue();
+      expect(session.canEnd()).toBe(true);
       session.onEnd();
 
       const huge = new Rectangle(-100, -100, 200, 200);
@@ -298,7 +299,7 @@ describe('SelectionMoveSession collision', () => {
       );
       expect(horizontals.length).toBe(2);
       // CP at (4.5, 0.5).
-      expect(project.connectionPoints.hasCpAt(new Point(4.5, 0.5))).toBeTrue();
+      expect(project.connectionPoints.hasCpAt(new Point(4.5, 0.5))).toBe(true);
     });
 
     it('rolls back the tentative cut when the drag ends with no movement', () => {
@@ -325,19 +326,19 @@ describe('SelectionMoveSession collision', () => {
 
       // hasMove was false, so the session returned early without claiming.
       // The pending cut survives.
-      expect(project.selectionManager.hasPendingCut).toBeTrue();
+      expect(project.selectionManager.hasPendingCut).toBe(true);
       expect(allWires().length).toBe(3);
 
       // A subsequent clear (e.g., the user clicks empty space) rolls back.
       project.selectionManager.clear();
-      expect(project.selectionManager.hasPendingCut).toBeFalse();
+      expect(project.selectionManager.hasPendingCut).toBe(false);
       const after = allWires();
       expect(after.length).toBe(1);
       expect(after[0].position.x).toBe(0.5);
       expect(after[0].length).toBe(10);
 
       // And the undo history is empty — nothing should have been pushed.
-      expect(project.actionManager.undoAvailable).toBeFalse();
+      expect(project.actionManager.undoAvailable).toBe(false);
     });
   });
 });
