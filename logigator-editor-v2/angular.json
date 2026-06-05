@@ -88,21 +88,7 @@
 					"builder": "@angular/build:extract-i18n"
 				},
 				"test": {
-					"builder": "@angular/build:karma",
-					"options": {
-						"browsers": "ChromeHeadlessNoSandbox",
-						"polyfills": [],
-						"tsConfig": "tsconfig.spec.json",
-						"inlineStyleLanguage": "scss",
-						"assets": [
-							{
-								"glob": "**/*",
-								"input": "public"
-							}
-						],
-						"styles": ["src/tailwind.css", "src/styles.scss"],
-						"scripts": []
-					}
+					"builder": "@angular/build:unit-test"
 				},
 				"lint": {
 					"builder": "@angular-eslint/builder:lint",

@@ -2,7 +2,16 @@
 	"name": "@angular/router",
 	"description": "Angular - routing STUB",
 	"module": "index.mjs",
+	"main": "index.mjs",
 	"typings": "./index.d.ts",
 	"type": "module",
+	"exports": {
+		".": {
+			"types": "./index.d.ts",
+			"import": "./index.mjs",
+			"default": "./index.mjs"
+		},
+		"./*": "./*"
+	},
 	"version": "21.0.0"
 }
