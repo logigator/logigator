@@ -9,20 +9,20 @@ import type { SelectButtonComponentOption } from './select-button.component-opti
 let nextId = 0;
 
 @Component({
-	selector: 'app-select-button-option-input',
-	imports: [
-		FormsModule,
-		SelectButtonModule,
-		NgTemplateOutlet,
-		TranslocoDirective
-	],
-	templateUrl: './select-button-option-input.component.html',
-	changeDetection: ChangeDetectionStrategy.OnPush
+  selector: 'app-select-button-option-input',
+  imports: [
+    FormsModule,
+    SelectButtonModule,
+    NgTemplateOutlet,
+    TranslocoDirective
+  ],
+  templateUrl: './select-button-option-input.component.html',
+  changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class SelectButtonOptionInputComponent<
-	T
+  T
 > implements ComponentOptionInput<T> {
-	public readonly option = input.required<SelectButtonComponentOption<T>>();
-	public readonly commit = input.required<(value: T) => void>();
-	protected readonly inputId = `component-settings-input-${++nextId}`;
+  public readonly option = input.required<SelectButtonComponentOption<T>>();
+  public readonly commit = input.required<(value: T) => void>();
+  protected readonly inputId = `component-settings-input-${++nextId}`;
 }

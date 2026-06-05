@@ -31,8 +31,8 @@ Every user operation is modelled as a pair of inverse operations:
 
 ```ts
 abstract class Action {
-	abstract do(project: Project): void;
-	abstract undo(project: Project): void;
+  abstract do(project: Project): void;
+  abstract undo(project: Project): void;
 }
 ```
 
@@ -101,14 +101,14 @@ A composite `Action` that holds an ordered list of child actions and delegates t
 const action = new ActionContainer();
 
 if (components.length > 0) {
-	action.add(new AddComponentsAction(...components));
+  action.add(new AddComponentsAction(...components));
 }
 if (wires.length > 0) {
-	action.add(new AddWiresAction(...wires));
+  action.add(new AddWiresAction(...wires));
 }
 
 if (action.length > 0) {
-	project.actionManager.push(action);
+  project.actionManager.push(action);
 }
 ```
 
@@ -142,9 +142,9 @@ Move actions record `MoveEntry[]` — the shared interface in `move-entry.model.
 
 ```ts
 interface MoveEntry {
-	id: number;
-	oldPos: Point;
-	newPos: Point;
+  id: number;
+  oldPos: Point;
+  newPos: Point;
 }
 ```
 

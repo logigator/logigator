@@ -4,21 +4,21 @@ import { SideBarComponent } from './side-bar.component';
 import { appConfig } from '../../app.config';
 
 describe('SideBarComponent', () => {
-	let component: SideBarComponent;
-	let fixture: ComponentFixture<SideBarComponent>;
+  let component: SideBarComponent;
+  let fixture: ComponentFixture<SideBarComponent>;
 
-	beforeEach(async () => {
-		await TestBed.configureTestingModule({
-			imports: [SideBarComponent],
-			providers: appConfig.providers
-		}).compileComponents();
+  beforeEach(async () => {
+    await TestBed.configureTestingModule({
+      imports: [SideBarComponent],
+      providers: appConfig.providers
+    }).compileComponents();
 
-		fixture = TestBed.createComponent(SideBarComponent);
-		component = fixture.componentInstance;
-		fixture.detectChanges();
-	});
+    fixture = TestBed.createComponent(SideBarComponent);
+    component = fixture.componentInstance;
+    fixture.detectChanges();
+  });
 
-	it('should create', () => {
-		expect(component).toBeTruthy();
-	});
+  it('should create', () => {
+    expect(component).toBeTruthy();
+  });
 });

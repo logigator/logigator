@@ -22,46 +22,46 @@ import { deriveSummary } from './definition-derivation';
  * untouched, so editing a master never changes already-placed instances.
  */
 export class DefinitionBinding {
-	private readonly _sub: Subscription;
+  private readonly _sub: Subscription;
 
-	constructor(
-		private readonly project: Project,
-		private readonly masterTypeId: number,
-		private readonly registry: CustomComponentRegistry
-	) {
-		this._sub = project.actionManager.actionChange$
-			.pipe(auditTime(0))
-			.subscribe(() => this._recompute());
-		this._recompute();
-	}
+  constructor(
+    private readonly project: Project,
+    private readonly masterTypeId: number,
+    private readonly registry: CustomComponentRegistry
+  ) {
+    this._sub = project.actionManager.actionChange$
+      .pipe(auditTime(0))
+      .subscribe(() => this._recompute());
+    this._recompute();
+  }
 
-	private _recompute(): void {
-		const summary = deriveSummary(this.project);
-		this.registry.updateDefinition(this.masterTypeId, summary);
+  private _recompute(): void {
+    const summary = deriveSummary(this.project);
+    this.registry.updateDefinition(this.masterTypeId, summary);
 
-		// Materialise the master's circuit so a snapshot taken at place/update time
-		// carries the current contents. Snapshots deep-copy it, so this never
-		// touches already-placed frozen instances.
-		this.registry.setMasterCircuit(
-			this.masterTypeId,
-			serializeProjectBody(this.project)
-		);
+    // Materialise the master's circuit so a snapshot taken at place/update time
+    // carries the current contents. Snapshots deep-copy it, so this never
+    // touches already-placed frozen instances.
+    this.registry.setMasterCircuit(
+      this.masterTypeId,
+      serializeProjectBody(this.project)
+    );
 
-		// A master's library dependencies are the distinct masters behind the
-		// snapshots it places (provenance via source.id). Frozen snapshots add no
-		// edges of their own; only placing master X into this one creates X → this.
-		const deps = new Set<number>();
-		for (const component of this.project.components) {
-			if (!(component instanceof CustomComponent)) continue;
-			const def = this.registry.getDefinition(component.config.type);
-			if (def?.id === undefined) continue;
-			const dependencyMaster = this.registry.masterTypeIdForId(def.id);
-			if (dependencyMaster !== undefined) deps.add(dependencyMaster);
-		}
-		this.registry.setDependencies(this.masterTypeId, deps);
-	}
+    // A master's library dependencies are the distinct masters behind the
+    // snapshots it places (provenance via source.id). Frozen snapshots add no
+    // edges of their own; only placing master X into this one creates X → this.
+    const deps = new Set<number>();
+    for (const component of this.project.components) {
+      if (!(component instanceof CustomComponent)) continue;
+      const def = this.registry.getDefinition(component.config.type);
+      if (def?.id === undefined) continue;
+      const dependencyMaster = this.registry.masterTypeIdForId(def.id);
+      if (dependencyMaster !== undefined) deps.add(dependencyMaster);
+    }
+    this.registry.setDependencies(this.masterTypeId, deps);
+  }
 
-	public dispose(): void {
-		this._sub.unsubscribe();
-	}
+  public dispose(): void {
+    this._sub.unsubscribe();
+  }
 }

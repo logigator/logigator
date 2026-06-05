@@ -105,7 +105,7 @@ browser target reuses the native format, so it shares `CircuitFileService` end t
 
 |           | Legacy v0 (`ProjectElement`)                                   | Native v1 (`CircuitFileV1`)                             |
 | --------- | -------------------------------------------------------------- | ------------------------------------------------------- |
-| Used by   | Server API (temporary)                                         | Browser storage **and** save/load-to-file              |
+| Used by   | Server API (temporary)                                         | Browser storage **and** save/load-to-file               |
 | Component | `{ t, p, i?, o?, r?, n?[], s? }` — options packed positionally | `{ type, pos, options }` — options keyed by config name |
 | Wire      | `{ t: 0, p, q }` — endpoints                                   | `{ pos, direction, length }`                            |
 | Customs   | dropped (v0 has none)                                          | embedded as `definitions[]` snapshots                   |
@@ -170,7 +170,7 @@ legacyV0Slots: { r: 'direction', s: 'label', n: ['index'] }
 - `s` — the single option consuming `element.s`.
 - Options not listed take their default on decode.
 
-> **Frozen.** `legacyV0Slots` describes the *immutable* legacy format and names **v1-era
+> **Frozen.** `legacyV0Slots` describes the _immutable_ legacy format and names **v1-era
 > option keys**. If a live option is later renamed, do **not** edit the descriptor — add a
 > `v1→v2` migration instead.
 
@@ -185,9 +185,9 @@ legacyV0Slots: { r: 'direction', s: 'label', n: ['index'] }
 
 ```ts
 interface CircuitFileV1 extends PersistedCircuitV1 {
-	version: 1;
-	name: string;
-	// from PersistedCircuitV1: components, wires, definitions[]
+  version: 1;
+  name: string;
+  // from PersistedCircuitV1: components, wires, definitions[]
 }
 ```
 
@@ -207,9 +207,9 @@ Rules that keep the format maintainable:
 
 `circuit-file-migrator.ts` runs the chain:
 
-| Function                      | Behavior                                                                                                                                                                                                          |
-| ----------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `detectVersion(data)`         | Integer `version` field → that number; missing/non-integer → `0` (legacy); non-object → `InvalidFileError`.                                                                                                       |
+| Function                      | Behavior                                                                                                                                                                                                                                                                                              |
+| ----------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `detectVersion(data)`         | Integer `version` field → that number; missing/non-integer → `0` (legacy); non-object → `InvalidFileError`.                                                                                                                                                                                           |
 | `migrateToCurrent(data, ctx)` | Newer-than-supported → `UnsupportedVersionError`. Otherwise walk `MIGRATIONS`, applying the entry whose `from` matches the current version until `CURRENT_FILE_VERSION`. Each entry advances to the **next** version, never straight to newest. An already-current document passes through untouched. |
 
 `MIGRATIONS` (`migrations/migrations.ts`) is the ordered list; `v0ToV1` is the only entry
@@ -243,12 +243,12 @@ rewrites the body to file-local type ids; decoding ingests those snapshots into 
 registry and remaps back to session ids. It does not touch metadata or the
 active-project lifecycle.
 
-| Method                  | Description                                                                                                                                                                                                  |
-| ----------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `toJson(project, name)` | Encodes to a **current-version** JSON string: `collectSnapshots` + `serializeProjectBody`, then `remapComponentTypes` to file-local ids. Builds the v1 shape explicitly (not via `Component.serialize`).    |
-| `decode(data)`          | Object-level entry: `migrateToCurrent` + `deserialize` → `{ name, components, wires }`. **Shared by file reads (`fromJson`) and server reads** (`server.toCircuitFileV0(detail)` wraps the API response).   |
+| Method                  | Description                                                                                                                                                                                                                                                                                                                                |
+| ----------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `toJson(project, name)` | Encodes to a **current-version** JSON string: `collectSnapshots` + `serializeProjectBody`, then `remapComponentTypes` to file-local ids. Builds the v1 shape explicitly (not via `Component.serialize`).                                                                                                                                   |
+| `decode(data)`          | Object-level entry: `migrateToCurrent` + `deserialize` → `{ name, components, wires }`. **Shared by file reads (`fromJson`) and server reads** (`server.toCircuitFileV0(detail)` wraps the API response).                                                                                                                                  |
 | `deserialize(file)`     | Current document → `{ components, wires }`. **Sole structural validator for native files** (the migrator passes an already-current doc through untouched): broken elements throw `InvalidFileError`; unknown component types are dropped with a warning; ingests `definitions[]` and remaps file-local → session ids; fresh ids allocated. |
-| `fromJson(content)`     | Convenience: `JSON.parse` (malformed → `InvalidFileError`) then `decode`.                                                                                                                                  |
+| `fromJson(content)`     | Convenience: `JSON.parse` (malformed → `InvalidFileError`) then `decode`.                                                                                                                                                                                                                                                                  |
 
 ### Error types
 
@@ -275,7 +275,7 @@ component it (transitively) uses, so it can be loaded with no library present.
     display fields (`name`, `symbol`, `numInputs`, …).
   - `cloneComponentBody` / `cloneCircuit` (deep copy) and `remapComponentTypes`
     (translate `type` ids through a map; ids absent from the map pass through).
-- **`snapshots.ts`** — the universal codec, owning *which* customs a document embeds and
+- **`snapshots.ts`** — the universal codec, owning _which_ customs a document embeds and
   the session ↔ file-local type-id remap (but not a byte layout — each target encodes the
   body its own way):
   - `serializeProjectBody` / `serializeComponentBody` / `serializeWireBody` turn live
@@ -314,10 +314,10 @@ document is self-contained, and the migration chain upgrades stored circuits on 
 free. Summary columns (`name`; for masters also `symbol`/`numInputs`/`labels`/…) are
 duplicated out of `content` so listing does not parse every blob.
 
-| Store                    | Record                  | Save params                                                            |
-| ------------------------ | ----------------------- | --------------------------------------------------------------------- |
-| `BrowserProjectStore`    | `StoredBrowserProject`  | `{ id?, name, content }`                                              |
-| `BrowserComponentStore`  | `StoredBrowserComponent`| `{ id?, version, name, symbol, description, numInputs, numOutputs, labels, content }` |
+| Store                   | Record                   | Save params                                                                           |
+| ----------------------- | ------------------------ | ------------------------------------------------------------------------------------- |
+| `BrowserProjectStore`   | `StoredBrowserProject`   | `{ id?, name, content }`                                                              |
+| `BrowserComponentStore` | `StoredBrowserComponent` | `{ id?, version, name, symbol, description, numInputs, numOutputs, labels, content }` |
 
 Both expose `save` (upsert: no `id` → generate + stamp `createdOn`; existing `id` →
 preserve it; always set `lastEdited`), `get(id)`, `list()` (summaries, newest first), and
@@ -335,18 +335,18 @@ Root-provided singleton; the single entry point for loading and saving. Race-tok
 (`_mainLoadToken`, `_shareLoadToken`) discard stale async loads; `_saveInFlight`
 deduplicates concurrent saves.
 
-| Method                                                | Description                                                                                                                                                                                                                                                                                                              |
-| ----------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `loadProject(uuid)` / `loadProjectAsMain(uuid)`       | GET from API → `circuitFile.decode(server.toCircuitFileV0(detail))` → register `source:'server'` → (As Main) set as main + update URL.                                                                                                                                                                                    |
-| `loadLocalProject(id)` / `loadLocalProjectAsMain(id)` | Read from `projects` store → `circuitFile.fromJson` → register `source:'browser'` → (As Main) set as main + `/local/:id`. Shares `_mainLoadToken` with the server path (both own the single main slot).                                                                                                                    |
-| `loadComponentForEdit(id)`                            | Read a **library master** from the `components` store → build a Project from its self-contained circuit → reuse or `createMaster` its session type id → register `type:'comp', source:'browser'`. Returns the Project + master type id so the caller can open a tab.                                                       |
-| `saveProject(project)`                                | No-op unless dirty. Dispatches on metadata: `comp`+`browser` → `_doBrowserComponentSave`; `server` → `server.serializeProject` + PUT (clears dirty only if no edit landed mid-round-trip; logs `VersionMismatch`); `browser` → `circuitFile.toJson` + `BrowserProjectStore.save` (a fresh draft is promoted to `/local/:id`). `share` is read-only → no-op. |
-| `createProject(name, …)`                              | POST + initial PUT (`server.serializeProject`), register, set as main, update URL.                                                                                                                                                                                                                                       |
-| `loadShare` / `loadShareAsMain` / `cloneShare`        | Share read paths (`source:'share'`, dirty tracking disabled); decode via the same server v0 route.                                                                                                                                                                                                                       |
-| `createAndSetEmptyProject()`                          | Blank `source:'browser'` project with empty id, set as main. **Not written to storage** until the first save of a dirty project.                                                                                                                                                                                          |
-| `exportProjectToJson(project)`                        | Reads name from metadata, delegates to `circuitFile.toJson`. Source-agnostic. Returns the JSON string — triggering a download is a UI concern.                                                                                                                                                                            |
-| `importProjectFromJson(content)`                      | `circuitFile.fromJson` → build a Project → **adopt** any master-less embedded customs into the `components` library → register `source:'browser'` (clean) → **persist immediately** (re-encoded current-version) → set as main → `/local/:id`. **Throws** on an unreadable file (no fallback, unlike server loads).        |
-| `listBrowserProjects` / `deleteBrowserProject` / `listBrowserComponents` | Browser-store listing/removal for the two stores.                                                                                                                                                                              |
+| Method                                                                   | Description                                                                                                                                                                                                                                                                                                                                                 |
+| ------------------------------------------------------------------------ | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `loadProject(uuid)` / `loadProjectAsMain(uuid)`                          | GET from API → `circuitFile.decode(server.toCircuitFileV0(detail))` → register `source:'server'` → (As Main) set as main + update URL.                                                                                                                                                                                                                      |
+| `loadLocalProject(id)` / `loadLocalProjectAsMain(id)`                    | Read from `projects` store → `circuitFile.fromJson` → register `source:'browser'` → (As Main) set as main + `/local/:id`. Shares `_mainLoadToken` with the server path (both own the single main slot).                                                                                                                                                     |
+| `loadComponentForEdit(id)`                                               | Read a **library master** from the `components` store → build a Project from its self-contained circuit → reuse or `createMaster` its session type id → register `type:'comp', source:'browser'`. Returns the Project + master type id so the caller can open a tab.                                                                                        |
+| `saveProject(project)`                                                   | No-op unless dirty. Dispatches on metadata: `comp`+`browser` → `_doBrowserComponentSave`; `server` → `server.serializeProject` + PUT (clears dirty only if no edit landed mid-round-trip; logs `VersionMismatch`); `browser` → `circuitFile.toJson` + `BrowserProjectStore.save` (a fresh draft is promoted to `/local/:id`). `share` is read-only → no-op. |
+| `createProject(name, …)`                                                 | POST + initial PUT (`server.serializeProject`), register, set as main, update URL.                                                                                                                                                                                                                                                                          |
+| `loadShare` / `loadShareAsMain` / `cloneShare`                           | Share read paths (`source:'share'`, dirty tracking disabled); decode via the same server v0 route.                                                                                                                                                                                                                                                          |
+| `createAndSetEmptyProject()`                                             | Blank `source:'browser'` project with empty id, set as main. **Not written to storage** until the first save of a dirty project.                                                                                                                                                                                                                            |
+| `exportProjectToJson(project)`                                           | Reads name from metadata, delegates to `circuitFile.toJson`. Source-agnostic. Returns the JSON string — triggering a download is a UI concern.                                                                                                                                                                                                              |
+| `importProjectFromJson(content)`                                         | `circuitFile.fromJson` → build a Project → **adopt** any master-less embedded customs into the `components` library → register `source:'browser'` (clean) → **persist immediately** (re-encoded current-version) → set as main → `/local/:id`. **Throws** on an unreadable file (no fallback, unlike server loads).                                         |
+| `listBrowserProjects` / `deleteBrowserProject` / `listBrowserComponents` | Browser-store listing/removal for the two stores.                                                                                                                                                                                                                                                                                                           |
 
 ### Flows
 

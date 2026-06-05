@@ -4,33 +4,33 @@ import { ComponentType } from '../components/component-type.enum';
 import { ComponentProviderService } from '../components/component-provider.service';
 
 @Injectable({
-	providedIn: 'root'
+  providedIn: 'root'
 })
 export class WorkModeService {
-	private readonly componentProviderService = inject(ComponentProviderService);
+  private readonly componentProviderService = inject(ComponentProviderService);
 
-	private readonly _mode = signal<WorkMode>(WorkMode.WIRE_DRAWING);
-	public readonly mode = computed(this._mode);
+  private readonly _mode = signal<WorkMode>(WorkMode.WIRE_DRAWING);
+  public readonly mode = computed(this._mode);
 
-	private readonly _selectedComponentType = signal<ComponentType | null>(null);
-	public readonly selectedComponentType = computed(this._selectedComponentType);
+  private readonly _selectedComponentType = signal<ComponentType | null>(null);
+  public readonly selectedComponentType = computed(this._selectedComponentType);
 
-	public readonly selectedComponentConfig = computed(() => {
-		const componentType = this.selectedComponentType();
-		return componentType !== null
-			? (this.componentProviderService.getComponent(componentType) ?? null)
-			: null;
-	});
+  public readonly selectedComponentConfig = computed(() => {
+    const componentType = this.selectedComponentType();
+    return componentType !== null
+      ? (this.componentProviderService.getComponent(componentType) ?? null)
+      : null;
+  });
 
-	public setMode(mode: WorkMode): void {
-		if (mode !== WorkMode.COMPONENT_PLACEMENT) {
-			this.setSelectedComponentType(null);
-		}
+  public setMode(mode: WorkMode): void {
+    if (mode !== WorkMode.COMPONENT_PLACEMENT) {
+      this.setSelectedComponentType(null);
+    }
 
-		this._mode.set(mode);
-	}
+    this._mode.set(mode);
+  }
 
-	public setSelectedComponentType(componentType: ComponentType | null): void {
-		this._selectedComponentType.set(componentType);
-	}
+  public setSelectedComponentType(componentType: ComponentType | null): void {
+    this._selectedComponentType.set(componentType);
+  }
 }

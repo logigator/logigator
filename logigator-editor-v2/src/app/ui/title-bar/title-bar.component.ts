@@ -1,8 +1,8 @@
 import {
-	ChangeDetectionStrategy,
-	Component,
-	Signal,
-	inject
+  ChangeDetectionStrategy,
+  Component,
+  Signal,
+  inject
 } from '@angular/core';
 import { MenubarModule } from 'primeng/menubar';
 import { MenuItem } from 'primeng/api';
@@ -20,176 +20,176 @@ import { OpenProjectDialogComponent } from '../open-project-dialog/open-project-
 import { NewComponentDialogComponent } from '../new-component-dialog/new-component-dialog.component';
 
 @Component({
-	selector: 'app-title-bar',
-	imports: [MenubarModule, NgOptimizedImage, HashedPipe],
-	providers: [DialogService],
-	templateUrl: './title-bar.component.html',
-	styleUrl: './title-bar.component.scss',
-	changeDetection: ChangeDetectionStrategy.OnPush
+  selector: 'app-title-bar',
+  imports: [MenubarModule, NgOptimizedImage, HashedPipe],
+  providers: [DialogService],
+  templateUrl: './title-bar.component.html',
+  styleUrl: './title-bar.component.scss',
+  changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class TitleBarComponent {
-	private readonly toastService = inject(ToastService);
-	private readonly logging = inject(LoggingService);
-	private readonly translocoService = inject(TranslocoService);
-	private readonly persistenceService = inject(PersistenceService);
-	private readonly projectService = inject(ProjectService);
-	private readonly dialogService = inject(DialogService);
+  private readonly toastService = inject(ToastService);
+  private readonly logging = inject(LoggingService);
+  private readonly translocoService = inject(TranslocoService);
+  private readonly persistenceService = inject(PersistenceService);
+  private readonly projectService = inject(ProjectService);
+  private readonly dialogService = inject(DialogService);
 
-	public items: Signal<MenuItem[]>;
+  public items: Signal<MenuItem[]>;
 
-	public constructor() {
-		const translocoService = this.translocoService;
+  public constructor() {
+    const translocoService = this.translocoService;
 
-		this.items = toSignal(
-			translocoService.events$.pipe(map(() => this.generateMenuItems())),
-			{ initialValue: [] }
-		);
-	}
+    this.items = toSignal(
+      translocoService.events$.pipe(map(() => this.generateMenuItems())),
+      { initialValue: [] }
+    );
+  }
 
-	private generateMenuItems(): MenuItem[] {
-		return [
-			{
-				label: this.translocoService.translate('titleBar.menuBar.file.label'),
-				items: [
-					{
-						label: this.translocoService.translate(
-							'titleBar.menuBar.file.items.newProject.label'
-						),
-						command: () => this.newProject()
-					},
-					{
-						label: this.translocoService.translate(
-							'titleBar.menuBar.file.items.newComponent.label'
-						),
-						command: () => this.newComponent()
-					},
-					{
-						separator: true
-					},
-					{
-						label: this.translocoService.translate(
-							'titleBar.menuBar.file.items.open.label'
-						),
-						command: () => this.openProject()
-					},
-					{
-						label: this.translocoService.translate(
-							'titleBar.menuBar.file.items.save.label'
-						),
-						command: () => this.saveProject()
-					},
-					{
-						label: this.translocoService.translate(
-							'titleBar.menuBar.file.items.exportFile.label'
-						)
-					},
-					{
-						separator: true
-					},
-					{
-						label: this.translocoService.translate(
-							'titleBar.menuBar.file.items.generateImage.label'
-						)
-					}
-				]
-			},
-			{
-				label: this.translocoService.translate('titleBar.menuBar.edit.label'),
-				items: [
-					{
-						label: this.translocoService.translate(
-							'titleBar.menuBar.edit.items.undo.label'
-						),
-						command: () => this.undo()
-					},
-					{
-						label: this.translocoService.translate(
-							'titleBar.menuBar.edit.items.redo.label'
-						),
-						command: () => this.redo()
-					},
-					{
-						separator: true
-					},
-					{
-						label: this.translocoService.translate(
-							'titleBar.menuBar.edit.items.cut.label'
-						)
-					},
-					{
-						label: this.translocoService.translate(
-							'titleBar.menuBar.edit.items.copy.label'
-						)
-					},
-					{
-						label: this.translocoService.translate(
-							'titleBar.menuBar.edit.items.paste.label'
-						)
-					},
-					{
-						separator: true
-					},
-					{
-						label: this.translocoService.translate(
-							'titleBar.menuBar.edit.items.delete.label'
-						)
-					}
-				]
-			},
-			{
-				label: 'View'
-			},
-			{
-				label: 'Help'
-			}
-		];
-	}
+  private generateMenuItems(): MenuItem[] {
+    return [
+      {
+        label: this.translocoService.translate('titleBar.menuBar.file.label'),
+        items: [
+          {
+            label: this.translocoService.translate(
+              'titleBar.menuBar.file.items.newProject.label'
+            ),
+            command: () => this.newProject()
+          },
+          {
+            label: this.translocoService.translate(
+              'titleBar.menuBar.file.items.newComponent.label'
+            ),
+            command: () => this.newComponent()
+          },
+          {
+            separator: true
+          },
+          {
+            label: this.translocoService.translate(
+              'titleBar.menuBar.file.items.open.label'
+            ),
+            command: () => this.openProject()
+          },
+          {
+            label: this.translocoService.translate(
+              'titleBar.menuBar.file.items.save.label'
+            ),
+            command: () => this.saveProject()
+          },
+          {
+            label: this.translocoService.translate(
+              'titleBar.menuBar.file.items.exportFile.label'
+            )
+          },
+          {
+            separator: true
+          },
+          {
+            label: this.translocoService.translate(
+              'titleBar.menuBar.file.items.generateImage.label'
+            )
+          }
+        ]
+      },
+      {
+        label: this.translocoService.translate('titleBar.menuBar.edit.label'),
+        items: [
+          {
+            label: this.translocoService.translate(
+              'titleBar.menuBar.edit.items.undo.label'
+            ),
+            command: () => this.undo()
+          },
+          {
+            label: this.translocoService.translate(
+              'titleBar.menuBar.edit.items.redo.label'
+            ),
+            command: () => this.redo()
+          },
+          {
+            separator: true
+          },
+          {
+            label: this.translocoService.translate(
+              'titleBar.menuBar.edit.items.cut.label'
+            )
+          },
+          {
+            label: this.translocoService.translate(
+              'titleBar.menuBar.edit.items.copy.label'
+            )
+          },
+          {
+            label: this.translocoService.translate(
+              'titleBar.menuBar.edit.items.paste.label'
+            )
+          },
+          {
+            separator: true
+          },
+          {
+            label: this.translocoService.translate(
+              'titleBar.menuBar.edit.items.delete.label'
+            )
+          }
+        ]
+      },
+      {
+        label: 'View'
+      },
+      {
+        label: 'Help'
+      }
+    ];
+  }
 
-	private newProject(): void {
-		const name = prompt('Project name:');
-		if (name) {
-			this.persistenceService.createProject(name).catch(() => {
-				this.logging.error('Failed to create project', 'TitleBarComponent');
-				this.toastService.error('Failed to create project');
-			});
-		}
-	}
+  private newProject(): void {
+    const name = prompt('Project name:');
+    if (name) {
+      this.persistenceService.createProject(name).catch(() => {
+        this.logging.error('Failed to create project', 'TitleBarComponent');
+        this.toastService.error('Failed to create project');
+      });
+    }
+  }
 
-	private saveProject(): void {
-		const project = this.projectService.mainProject();
-		if (project) {
-			this.persistenceService.saveProject(project).catch(() => {
-				this.logging.error('Failed to save project', 'TitleBarComponent');
-				this.toastService.error('Failed to save project');
-			});
-		}
-	}
+  private saveProject(): void {
+    const project = this.projectService.mainProject();
+    if (project) {
+      this.persistenceService.saveProject(project).catch(() => {
+        this.logging.error('Failed to save project', 'TitleBarComponent');
+        this.toastService.error('Failed to save project');
+      });
+    }
+  }
 
-	private newComponent(): void {
-		this.dialogService.open(NewComponentDialogComponent, {
-			header: this.translocoService.translate(
-				'titleBar.menuBar.file.items.newComponent.label'
-			),
-			width: '28rem',
-			modal: true,
-			closable: true
-		});
-	}
+  private newComponent(): void {
+    this.dialogService.open(NewComponentDialogComponent, {
+      header: this.translocoService.translate(
+        'titleBar.menuBar.file.items.newComponent.label'
+      ),
+      width: '28rem',
+      modal: true,
+      closable: true
+    });
+  }
 
-	private openProject(): void {
-		this.dialogService.open(OpenProjectDialogComponent, {
-			header: this.translocoService.translate('openProjectDialog.title'),
-			width: '40rem',
-			modal: true,
-			closable: true
-		});
-	}
+  private openProject(): void {
+    this.dialogService.open(OpenProjectDialogComponent, {
+      header: this.translocoService.translate('openProjectDialog.title'),
+      width: '40rem',
+      modal: true,
+      closable: true
+    });
+  }
 
-	private undo(): void {
-		this.projectService.mainProject()?.actionManager.undo();
-	}
+  private undo(): void {
+    this.projectService.mainProject()?.actionManager.undo();
+  }
 
-	private redo(): void {
-		this.projectService.mainProject()?.actionManager.redo();
-	}
+  private redo(): void {
+    this.projectService.mainProject()?.actionManager.redo();
+  }
 }

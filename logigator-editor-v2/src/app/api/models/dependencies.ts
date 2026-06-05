@@ -16,26 +16,26 @@ import type { ProjectElement } from './project-element';
  * `dependency.version` is how "a newer version exists" is detected.
  */
 export interface DependencySnapshot {
-	/** The master version this copy was taken at. */
-	version: number;
-	name: string;
-	symbol: string;
-	description: string;
-	numInputs: number;
-	numOutputs: number;
-	labels: string[];
-	elements: ProjectElement[];
+  /** The master version this copy was taken at. */
+  version: number;
+  name: string;
+  symbol: string;
+  description: string;
+  numInputs: number;
+  numOutputs: number;
+  labels: string[];
+  elements: ProjectElement[];
 }
 
 /** A dependency reference sent when saving a project or component. */
 export interface DependencyMapping {
-	id: string;
-	model: number;
-	/**
-	 * Additive (R14) — the frozen embedded circuit (see {@link DependencySnapshot}).
-	 * Absent for non-custom dependencies and for old write clients.
-	 */
-	snapshot?: DependencySnapshot;
+  id: string;
+  model: number;
+  /**
+   * Additive (R14) — the frozen embedded circuit (see {@link DependencySnapshot}).
+   * Absent for non-custom dependencies and for old write clients.
+   */
+  snapshot?: DependencySnapshot;
 }
 
 /**
@@ -46,8 +46,8 @@ export interface DependencyMapping {
  * no reshaping.
  */
 export interface EmbeddedDependency {
-	id?: string;
-	dependency?: { id: string; version?: number };
-	model: number;
-	snapshot?: DependencySnapshot;
+  id?: string;
+  dependency?: { id: string; version?: number };
+  model: number;
+  snapshot?: DependencySnapshot;
 }

@@ -1,12 +1,12 @@
 <div *transloco="let t" class="flex border-t border-white/20">
-	<div class="grow px-2 border-r border-white/20">
-		{{ t(workMode(), { componentName: text(selectedComponentName()) }) }}
-	</div>
-	<div class="px-2 border-r border-white/20">
-		{{ boardPositionFormatted() }}
-	</div>
-	<div class="px-2 border-r border-white/20">
-		{{ dirty() ? t('statusBar.unsaved') : t('statusBar.saved') }}
-	</div>
-	<div class="px-2">{{ t('statusBar.selected') }}: 0</div>
+  <div class="grow px-2 border-r border-white/20">
+    {{ t(workMode(), { componentName: text(selectedComponentName()) }) }}
+  </div>
+  <div class="px-2 border-r border-white/20">
+    {{ boardPositionFormatted() }}
+  </div>
+  <div class="px-2 border-r border-white/20">
+    {{ dirty() ? t('statusBar.unsaved') : t('statusBar.saved') }}
+  </div>
+  <div class="px-2">{{ t('statusBar.selected') }}: 0</div>
 </div>

@@ -78,11 +78,11 @@ public readonly renderer: Type<unknown>;
 
 ```html
 <form class="flex flex-col gap-2">
-	@for (entry of configEntries(); track entry[0]) {
-	<ng-container
-		*ngComponentOutlet="entry[1].renderer; inputs: { option: entry[1] }"
-	></ng-container>
-	}
+  @for (entry of configEntries(); track entry[0]) {
+  <ng-container
+    *ngComponentOutlet="entry[1].renderer; inputs: { option: entry[1] }"
+  ></ng-container>
+  }
 </form>
 ```
 

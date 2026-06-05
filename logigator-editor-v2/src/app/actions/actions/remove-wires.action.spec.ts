@@ -7,131 +7,131 @@ import { WireDirection } from '../../wires/wire-direction.enum';
 import type { Project } from '../../project/project';
 
 describe('RemoveWiresAction', () => {
-	let project: jasmine.SpyObj<Project>;
-	let wiresToDestroy: Wire[];
+  let project: jasmine.SpyObj<Project>;
+  let wiresToDestroy: Wire[];
 
-	beforeEach(() => {
-		setStaticDIInjector(TestBed.inject(Injector));
-		project = jasmine.createSpyObj<Project>('Project', [
-			'addWire',
-			'removeWire'
-		]);
-		wiresToDestroy = [];
-	});
+  beforeEach(() => {
+    setStaticDIInjector(TestBed.inject(Injector));
+    project = jasmine.createSpyObj<Project>('Project', [
+      'addWire',
+      'removeWire'
+    ]);
+    wiresToDestroy = [];
+  });
 
-	afterEach(() => {
-		for (const wire of wiresToDestroy) {
-			wire.destroy();
-		}
-	});
+  afterEach(() => {
+    for (const wire of wiresToDestroy) {
+      wire.destroy();
+    }
+  });
 
-	describe('do()', () => {
-		it('calls removeWire with the wire id for a single wire', () => {
-			const wire = new Wire(WireDirection.HORIZONTAL, 3);
-			wiresToDestroy.push(wire);
-			const wireId = wire.id;
-			const action = new RemoveWiresAction(wire);
+  describe('do()', () => {
+    it('calls removeWire with the wire id for a single wire', () => {
+      const wire = new Wire(WireDirection.HORIZONTAL, 3);
+      wiresToDestroy.push(wire);
+      const wireId = wire.id;
+      const action = new RemoveWiresAction(wire);
 
-			action.do(project);
+      action.do(project);
 
-			expect(project.removeWire).toHaveBeenCalledOnceWith(wireId);
-		});
+      expect(project.removeWire).toHaveBeenCalledOnceWith(wireId);
+    });
 
-		it('calls removeWire once per wire for multiple wires', () => {
-			const wire1 = new Wire(WireDirection.HORIZONTAL, 3);
-			const wire2 = new Wire(WireDirection.VERTICAL, 5);
-			wiresToDestroy.push(wire1, wire2);
-			const id1 = wire1.id;
-			const id2 = wire2.id;
-			const action = new RemoveWiresAction(wire1, wire2);
+    it('calls removeWire once per wire for multiple wires', () => {
+      const wire1 = new Wire(WireDirection.HORIZONTAL, 3);
+      const wire2 = new Wire(WireDirection.VERTICAL, 5);
+      wiresToDestroy.push(wire1, wire2);
+      const id1 = wire1.id;
+      const id2 = wire2.id;
+      const action = new RemoveWiresAction(wire1, wire2);
 
-			action.do(project);
+      action.do(project);
 
-			expect(project.removeWire).toHaveBeenCalledTimes(2);
-			expect(project.removeWire).toHaveBeenCalledWith(id1);
-			expect(project.removeWire).toHaveBeenCalledWith(id2);
-		});
+      expect(project.removeWire).toHaveBeenCalledTimes(2);
+      expect(project.removeWire).toHaveBeenCalledWith(id1);
+      expect(project.removeWire).toHaveBeenCalledWith(id2);
+    });
 
-		it('does not call addWire during do()', () => {
-			const wire = new Wire(WireDirection.HORIZONTAL, 3);
-			wiresToDestroy.push(wire);
-			const action = new RemoveWiresAction(wire);
+    it('does not call addWire during do()', () => {
+      const wire = new Wire(WireDirection.HORIZONTAL, 3);
+      wiresToDestroy.push(wire);
+      const action = new RemoveWiresAction(wire);
 
-			action.do(project);
+      action.do(project);
 
-			expect(project.addWire).not.toHaveBeenCalled();
-		});
+      expect(project.addWire).not.toHaveBeenCalled();
+    });
 
-		it('does not call removeWire when constructed with no wires', () => {
-			const action = new RemoveWiresAction();
+    it('does not call removeWire when constructed with no wires', () => {
+      const action = new RemoveWiresAction();
 
-			expect(() => action.do(project)).not.toThrow();
-			expect(project.removeWire).not.toHaveBeenCalled();
-		});
-	});
+      expect(() => action.do(project)).not.toThrow();
+      expect(project.removeWire).not.toHaveBeenCalled();
+    });
+  });
 
-	describe('undo()', () => {
-		it('calls addWire once for a single wire', () => {
-			const wire = new Wire(WireDirection.HORIZONTAL, 3);
-			wiresToDestroy.push(wire);
-			const action = new RemoveWiresAction(wire);
+  describe('undo()', () => {
+    it('calls addWire once for a single wire', () => {
+      const wire = new Wire(WireDirection.HORIZONTAL, 3);
+      wiresToDestroy.push(wire);
+      const action = new RemoveWiresAction(wire);
 
-			action.undo(project);
+      action.undo(project);
 
-			expect(project.addWire).toHaveBeenCalledTimes(1);
-		});
+      expect(project.addWire).toHaveBeenCalledTimes(1);
+    });
 
-		it('calls addWire with a Wire instance', () => {
-			const wire = new Wire(WireDirection.HORIZONTAL, 3);
-			wiresToDestroy.push(wire);
-			const action = new RemoveWiresAction(wire);
+    it('calls addWire with a Wire instance', () => {
+      const wire = new Wire(WireDirection.HORIZONTAL, 3);
+      wiresToDestroy.push(wire);
+      const action = new RemoveWiresAction(wire);
 
-			action.undo(project);
+      action.undo(project);
 
-			expect(project.addWire).toHaveBeenCalledWith(jasmine.any(Wire));
-		});
+      expect(project.addWire).toHaveBeenCalledWith(jasmine.any(Wire));
+    });
 
-		it('calls addWire once per wire for multiple wires', () => {
-			const wire1 = new Wire(WireDirection.HORIZONTAL, 3);
-			const wire2 = new Wire(WireDirection.VERTICAL, 5);
-			const wire3 = new Wire(WireDirection.HORIZONTAL, 2);
-			wiresToDestroy.push(wire1, wire2, wire3);
-			const action = new RemoveWiresAction(wire1, wire2, wire3);
+    it('calls addWire once per wire for multiple wires', () => {
+      const wire1 = new Wire(WireDirection.HORIZONTAL, 3);
+      const wire2 = new Wire(WireDirection.VERTICAL, 5);
+      const wire3 = new Wire(WireDirection.HORIZONTAL, 2);
+      wiresToDestroy.push(wire1, wire2, wire3);
+      const action = new RemoveWiresAction(wire1, wire2, wire3);
 
-			action.undo(project);
+      action.undo(project);
 
-			expect(project.addWire).toHaveBeenCalledTimes(3);
-		});
+      expect(project.addWire).toHaveBeenCalledTimes(3);
+    });
 
-		it('does not call removeWire during undo()', () => {
-			const wire = new Wire(WireDirection.HORIZONTAL, 3);
-			wiresToDestroy.push(wire);
-			const action = new RemoveWiresAction(wire);
+    it('does not call removeWire during undo()', () => {
+      const wire = new Wire(WireDirection.HORIZONTAL, 3);
+      wiresToDestroy.push(wire);
+      const action = new RemoveWiresAction(wire);
 
-			action.undo(project);
+      action.undo(project);
 
-			expect(project.removeWire).not.toHaveBeenCalled();
-		});
+      expect(project.removeWire).not.toHaveBeenCalled();
+    });
 
-		it('does not call addWire when constructed with no wires', () => {
-			const action = new RemoveWiresAction();
+    it('does not call addWire when constructed with no wires', () => {
+      const action = new RemoveWiresAction();
 
-			expect(() => action.undo(project)).not.toThrow();
-			expect(project.addWire).not.toHaveBeenCalled();
-		});
-	});
+      expect(() => action.undo(project)).not.toThrow();
+      expect(project.addWire).not.toHaveBeenCalled();
+    });
+  });
 
-	describe('id preservation', () => {
-		it('do() uses the id that was captured at construction time', () => {
-			const wire = new Wire(WireDirection.VERTICAL, 4);
-			wiresToDestroy.push(wire);
-			wire.position.set(2, 5);
-			const expectedId = wire.id;
-			const action = new RemoveWiresAction(wire);
+  describe('id preservation', () => {
+    it('do() uses the id that was captured at construction time', () => {
+      const wire = new Wire(WireDirection.VERTICAL, 4);
+      wiresToDestroy.push(wire);
+      wire.position.set(2, 5);
+      const expectedId = wire.id;
+      const action = new RemoveWiresAction(wire);
 
-			action.do(project);
+      action.do(project);
 
-			expect(project.removeWire).toHaveBeenCalledOnceWith(expectedId);
-		});
-	});
+      expect(project.removeWire).toHaveBeenCalledOnceWith(expectedId);
+    });
+  });
 });

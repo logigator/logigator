@@ -10,8 +10,8 @@ import { LoggingService } from '../../../logging/logging.service';
  * data transforms and ignore this context.
  */
 export interface MigrationContext {
-	componentProvider: ComponentProviderService;
-	logging: LoggingService;
+  componentProvider: ComponentProviderService;
+  logging: LoggingService;
 }
 
 /**
@@ -19,7 +19,7 @@ export interface MigrationContext {
  * `from` into a document of version `to`.
  */
 export interface Migration<TIn = unknown, TOut = unknown> {
-	readonly from: number;
-	readonly to: number;
-	migrate(input: TIn, ctx: MigrationContext): TOut;
+  readonly from: number;
+  readonly to: number;
+  migrate(input: TIn, ctx: MigrationContext): TOut;
 }

@@ -8,45 +8,45 @@ import { TranslocoService } from '@jsverse/transloco';
  * {@link LoggingService} directly where console output is needed.
  */
 @Injectable({
-	providedIn: 'root'
+  providedIn: 'root'
 })
 export class ToastService {
-	private readonly messageService = inject(MessageService);
-	private readonly translocoService = inject(TranslocoService);
+  private readonly messageService = inject(MessageService);
+  private readonly translocoService = inject(TranslocoService);
 
-	public error(message: string): void {
-		this.messageService.add({
-			severity: 'danger',
-			summary: this.translocoService.translate('logging.error'),
-			detail: message,
-			life: 8000
-		});
-	}
+  public error(message: string): void {
+    this.messageService.add({
+      severity: 'danger',
+      summary: this.translocoService.translate('logging.error'),
+      detail: message,
+      life: 8000
+    });
+  }
 
-	public warn(message: string): void {
-		this.messageService.add({
-			severity: 'warn',
-			summary: this.translocoService.translate('logging.warn'),
-			detail: message,
-			life: 5000
-		});
-	}
+  public warn(message: string): void {
+    this.messageService.add({
+      severity: 'warn',
+      summary: this.translocoService.translate('logging.warn'),
+      detail: message,
+      life: 5000
+    });
+  }
 
-	public success(message: string): void {
-		this.messageService.add({
-			severity: 'success',
-			summary: this.translocoService.translate('logging.success'),
-			detail: message,
-			life: 5000
-		});
-	}
+  public success(message: string): void {
+    this.messageService.add({
+      severity: 'success',
+      summary: this.translocoService.translate('logging.success'),
+      detail: message,
+      life: 5000
+    });
+  }
 
-	public info(message: string): void {
-		this.messageService.add({
-			severity: 'info',
-			summary: this.translocoService.translate('logging.info'),
-			detail: message,
-			life: 5000
-		});
-	}
+  public info(message: string): void {
+    this.messageService.add({
+      severity: 'info',
+      summary: this.translocoService.translate('logging.info'),
+      detail: message,
+      life: 5000
+    });
+  }
 }

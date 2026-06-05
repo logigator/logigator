@@ -14,8 +14,8 @@ import { UpdateInstanceComponentAction } from './actions/update-instance.compone
  * in the custom-components plan).
  */
 export interface CustomComponentOptions {
-	[key: string]: ComponentOption;
-	direction: DirectionComponentOption;
+  [key: string]: ComponentOption;
+  direction: DirectionComponentOption;
 }
 
 /**
@@ -34,31 +34,31 @@ export interface CustomComponentOptions {
  * (hence `component.config.type === def.typeId`, which the serializer relies on).
  */
 export function buildCustomComponentConfig(
-	def: CustomComponentDefinition
+  def: CustomComponentDefinition
 ): ComponentConfig<CustomComponentOptions> {
-	const config: ComponentConfig<CustomComponentOptions> = {
-		type: def.typeId,
-		category:
-			def.kind === 'master' ? ComponentCategory.USER : ComponentCategory.HIDDEN,
-		get symbol(): string {
-			return def.symbol;
-		},
-		// User-authored strings, shown verbatim (the literal arm of LocalizableText)
-		// rather than resolved against the translation schema.
-		get name(): LocalizableText {
-			return { literal: def.name };
-		},
-		get description(): LocalizableText {
-			return { literal: def.description };
-		},
-		options: {
-			direction: new DirectionComponentOption()
-		},
-		// Inspector actions for a placed instance: open its master, and (when behind)
-		// pull the latest. Rendered generically by the settings panel; only a
-		// selected snapshot instance ever surfaces them.
-		actions: [new EditComponentAction(), new UpdateInstanceComponentAction()],
-		create: (options) => new CustomComponent(options, def, config)
-	};
-	return config;
+  const config: ComponentConfig<CustomComponentOptions> = {
+    type: def.typeId,
+    category:
+      def.kind === 'master' ? ComponentCategory.USER : ComponentCategory.HIDDEN,
+    get symbol(): string {
+      return def.symbol;
+    },
+    // User-authored strings, shown verbatim (the literal arm of LocalizableText)
+    // rather than resolved against the translation schema.
+    get name(): LocalizableText {
+      return { literal: def.name };
+    },
+    get description(): LocalizableText {
+      return { literal: def.description };
+    },
+    options: {
+      direction: new DirectionComponentOption()
+    },
+    // Inspector actions for a placed instance: open its master, and (when behind)
+    // pull the latest. Rendered generically by the settings panel; only a
+    // selected snapshot instance ever surfaces them.
+    actions: [new EditComponentAction(), new UpdateInstanceComponentAction()],
+    create: (options) => new CustomComponent(options, def, config)
+  };
+  return config;
 }

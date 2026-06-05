@@ -1,11 +1,11 @@
 import 'pixi.js/math-extras';
 
 import {
-	ChangeDetectionStrategy,
-	Component,
-	Injector,
-	signal,
-	inject
+  ChangeDetectionStrategy,
+  Component,
+  Injector,
+  signal,
+  inject
 } from '@angular/core';
 import { Location } from '@angular/common';
 import { Point } from 'pixi.js';
@@ -24,38 +24,38 @@ import { ConfirmPopup } from 'primeng/confirmpopup';
 import { Toast } from 'primeng/toast';
 
 @Component({
-	selector: 'app-root',
-	imports: [
-		TitleBarComponent,
-		ToolBarComponent,
-		SideBarComponent,
-		TabBarComponent,
-		StatusBarComponent,
-		BoardComponent,
-		ComponentSettingsComponent,
-		ConfirmPopup,
-		Toast
-	],
-	templateUrl: './app.component.html',
-	styleUrl: './app.component.scss',
-	changeDetection: ChangeDetectionStrategy.OnPush
+  selector: 'app-root',
+  imports: [
+    TitleBarComponent,
+    ToolBarComponent,
+    SideBarComponent,
+    TabBarComponent,
+    StatusBarComponent,
+    BoardComponent,
+    ComponentSettingsComponent,
+    ConfirmPopup,
+    Toast
+  ],
+  templateUrl: './app.component.html',
+  styleUrl: './app.component.scss',
+  changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class AppComponent {
-	private readonly injector = inject(Injector);
-	private readonly routerService = inject(RouterService);
-	private readonly persistenceService = inject(PersistenceService);
-	protected readonly projectService = inject(ProjectService);
-	private readonly location = inject(Location);
+  private readonly injector = inject(Injector);
+  private readonly routerService = inject(RouterService);
+  private readonly persistenceService = inject(PersistenceService);
+  protected readonly projectService = inject(ProjectService);
+  private readonly location = inject(Location);
 
-	protected readonly cursorPosition = signal<Point>(new Point(0, 0));
+  protected readonly cursorPosition = signal<Point>(new Point(0, 0));
 
-	constructor() {
-		setStaticDIInjector(this.injector);
+  constructor() {
+    setStaticDIInjector(this.injector);
 
-		if (!this.routerService.matches(this.location.path())) {
-			this.persistenceService.createAndSetEmptyProject();
-		}
+    if (!this.routerService.matches(this.location.path())) {
+      this.persistenceService.createAndSetEmptyProject();
+    }
 
-		void this.routerService.processCurrentRoute();
-	}
+    void this.routerService.processCurrentRoute();
+  }
 }

@@ -12,9 +12,9 @@
  */
 import { ProjectElement } from '../api/models/project-element';
 import {
-	SerializedComponentBody,
-	SerializedWireBody,
-	SnapshotDefinition
+  SerializedComponentBody,
+  SerializedWireBody,
+  SnapshotDefinition
 } from './serialized-circuit';
 
 // ---- V0: legacy positional format ("v0 of the file format", also today's
@@ -31,7 +31,7 @@ export type PersistedComponentV0 = ProjectElement;
  * is optional on the base.
  */
 export interface PersistedCircuitV0 {
-	elements?: PersistedComponentV0[];
+  elements?: PersistedComponentV0[];
 }
 
 // ---- V1: native current format. Named options, components and wires split. ----
@@ -49,7 +49,7 @@ export type PersistedWireV1 = SerializedWireBody;
  * format".
  */
 export interface PersistedCircuitV1 {
-	components: PersistedComponentV1[];
-	wires: PersistedWireV1[];
-	definitions: SnapshotDefinition[];
+  components: PersistedComponentV1[];
+  wires: PersistedWireV1[];
+  definitions: SnapshotDefinition[];
 }

@@ -2,9 +2,9 @@ import { ActionContainer } from '../action-container';
 import { ChangeOptionAction } from './change-option.action';
 
 export interface PlugReorderEntry {
-	componentId: number;
-	oldIndex: number;
-	newIndex: number;
+  componentId: number;
+  oldIndex: number;
+  newIndex: number;
 }
 
 /**
@@ -15,19 +15,19 @@ export interface PlugReorderEntry {
  * duplicate/gappy ordering structurally impossible.
  */
 export class ReorderPlugsAction extends ActionContainer {
-	constructor(entries: PlugReorderEntry[]) {
-		super(
-			...entries
-				.filter((entry) => entry.oldIndex !== entry.newIndex)
-				.map(
-					(entry) =>
-						new ChangeOptionAction(
-							entry.componentId,
-							'index',
-							entry.oldIndex,
-							entry.newIndex
-						)
-				)
-		);
-	}
+  constructor(entries: PlugReorderEntry[]) {
+    super(
+      ...entries
+        .filter((entry) => entry.oldIndex !== entry.newIndex)
+        .map(
+          (entry) =>
+            new ChangeOptionAction(
+              entry.componentId,
+              'index',
+              entry.oldIndex,
+              entry.newIndex
+            )
+        )
+    );
+  }
 }

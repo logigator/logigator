@@ -8,8 +8,8 @@ import type { Project } from '../project/project';
  * placed-instance mode (there is no instance behind a placement ghost).
  */
 export interface ComponentActionContext {
-	component: Component;
-	project: Project;
+  component: Component;
+  project: Project;
 }
 
 /**
@@ -23,5 +23,5 @@ export interface ComponentActionContext {
  * inspector action is self-contained and never touches the app shell.
  */
 export abstract class ComponentAction {
-	public abstract readonly renderer: Type<unknown>;
+  public abstract readonly renderer: Type<unknown>;
 }

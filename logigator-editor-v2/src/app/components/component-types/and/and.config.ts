@@ -7,21 +7,21 @@ import { NumberComponentOption } from '../../component-options/number/number.com
 import { AndComponent } from './and.component';
 
 export interface AndOptions {
-	[key: string]: ComponentOption;
-	direction: DirectionComponentOption;
-	numInputs: NumberComponentOption;
+  [key: string]: ComponentOption;
+  direction: DirectionComponentOption;
+  numInputs: NumberComponentOption;
 }
 
 export const andComponentConfig: ComponentConfig<AndOptions> = {
-	type: BuiltInComponentType.AND,
-	category: ComponentCategory.BASIC,
-	symbol: '&',
-	name: 'components.def.AND.name',
-	description: 'components.def.AND.description',
-	options: {
-		direction: new DirectionComponentOption(),
-		numInputs: new NumberComponentOption('components.options.inputs', 2, 64, 2)
-	},
-	legacyV0Slots: { r: 'direction', i: 'numInputs' },
-	create: (options) => new AndComponent(options)
+  type: BuiltInComponentType.AND,
+  category: ComponentCategory.BASIC,
+  symbol: '&',
+  name: 'components.def.AND.name',
+  description: 'components.def.AND.description',
+  options: {
+    direction: new DirectionComponentOption(),
+    numInputs: new NumberComponentOption('components.options.inputs', 2, 64, 2)
+  },
+  legacyV0Slots: { r: 'direction', i: 'numInputs' },
+  create: (options) => new AndComponent(options)
 };

@@ -6,19 +6,19 @@ import { DirectionComponentOption } from '../../component-options/direction/dire
 import { NotComponent } from './not.component';
 
 export interface NotOptions {
-	[key: string]: ComponentOption;
-	direction: DirectionComponentOption;
+  [key: string]: ComponentOption;
+  direction: DirectionComponentOption;
 }
 
 export const notComponentConfig: ComponentConfig<NotOptions> = {
-	type: BuiltInComponentType.NOT,
-	category: ComponentCategory.BASIC,
-	symbol: '!',
-	name: 'components.def.NOT.name',
-	description: 'components.def.NOT.description',
-	options: {
-		direction: new DirectionComponentOption()
-	},
-	legacyV0Slots: { r: 'direction' },
-	create: (options) => new NotComponent(options)
+  type: BuiltInComponentType.NOT,
+  category: ComponentCategory.BASIC,
+  symbol: '!',
+  name: 'components.def.NOT.name',
+  description: 'components.def.NOT.description',
+  options: {
+    direction: new DirectionComponentOption()
+  },
+  legacyV0Slots: { r: 'direction' },
+  create: (options) => new NotComponent(options)
 };

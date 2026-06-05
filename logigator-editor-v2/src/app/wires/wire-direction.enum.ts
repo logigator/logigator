@@ -1,4 +1,4 @@
 export const enum WireDirection {
-	HORIZONTAL,
-	VERTICAL
+  HORIZONTAL,
+  VERTICAL
 }

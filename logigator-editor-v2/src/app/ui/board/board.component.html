@@ -1,12 +1,12 @@
 <canvas
-	#canvas
-	class="absolute transition-opacity duration-150 ease-out"
-	[class.opacity-0]="!loaded()"
+  #canvas
+  class="absolute transition-opacity duration-150 ease-out"
+  [class.opacity-0]="!loaded()"
 ></canvas>
 @if (fps !== null) {
-	<div
-		class="absolute top-2 left-2 py-0.5 px-1.5 bg-black/55 text-green-400 font-mono text-xs rounded pointer-events-none"
-	>
-		{{ fps() }} FPS
-	</div>
+  <div
+    class="absolute top-2 left-2 py-0.5 px-1.5 bg-black/55 text-green-400 font-mono text-xs rounded pointer-events-none"
+  >
+    {{ fps() }} FPS
+  </div>
 }

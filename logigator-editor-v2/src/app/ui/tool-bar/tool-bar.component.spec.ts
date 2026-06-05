@@ -5,24 +5,24 @@ import { DialogService } from 'primeng/dynamicdialog';
 import { appConfig } from '../../app.config';
 
 describe('ToolBarComponent', () => {
-	let component: ToolBarComponent;
-	let fixture: ComponentFixture<ToolBarComponent>;
+  let component: ToolBarComponent;
+  let fixture: ComponentFixture<ToolBarComponent>;
 
-	beforeEach(async () => {
-		await TestBed.configureTestingModule({
-			imports: [ToolBarComponent],
-			providers: [
-				...appConfig.providers,
-				{ provide: DialogService, useValue: { open: () => null } }
-			]
-		}).compileComponents();
+  beforeEach(async () => {
+    await TestBed.configureTestingModule({
+      imports: [ToolBarComponent],
+      providers: [
+        ...appConfig.providers,
+        { provide: DialogService, useValue: { open: () => null } }
+      ]
+    }).compileComponents();
 
-		fixture = TestBed.createComponent(ToolBarComponent);
-		component = fixture.componentInstance;
-		fixture.detectChanges();
-	});
+    fixture = TestBed.createComponent(ToolBarComponent);
+    component = fixture.componentInstance;
+    fixture.detectChanges();
+  });
 
-	it('should create', () => {
-		expect(component).toBeTruthy();
-	});
+  it('should create', () => {
+    expect(component).toBeTruthy();
+  });
 });

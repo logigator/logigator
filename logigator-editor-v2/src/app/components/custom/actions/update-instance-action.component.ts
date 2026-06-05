@@ -1,9 +1,9 @@
 import {
-	ChangeDetectionStrategy,
-	Component,
-	computed,
-	inject,
-	input
+  ChangeDetectionStrategy,
+  Component,
+  computed,
+  inject,
+  input
 } from '@angular/core';
 import { Button } from 'primeng/button';
 import { ComponentActionContext } from '../../component-action';
@@ -18,46 +18,46 @@ import { CustomComponentService } from '../../../custom-component/custom-compone
  * active project. Self-contained — owns its own visibility and dispatch.
  */
 @Component({
-	selector: 'app-update-instance-action',
-	imports: [Button],
-	template: `@if (updatable()) {
-		<p-button
-			size="small"
-			severity="warn"
-			label="Update to latest"
-			class="float-right"
-			(onClick)="update()"
-		/>
-	}`,
-	changeDetection: ChangeDetectionStrategy.OnPush
+  selector: 'app-update-instance-action',
+  imports: [Button],
+  template: `@if (updatable()) {
+    <p-button
+      size="small"
+      severity="warn"
+      label="Update to latest"
+      class="float-right"
+      (onClick)="update()"
+    />
+  }`,
+  changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class UpdateInstanceActionComponent {
-	public readonly context = input.required<ComponentActionContext>();
+  public readonly context = input.required<ComponentActionContext>();
 
-	private readonly registry = inject(CustomComponentRegistry);
-	private readonly customComponentService = inject(CustomComponentService);
+  private readonly registry = inject(CustomComponentRegistry);
+  private readonly customComponentService = inject(CustomComponentService);
 
-	protected readonly updatable = computed(() => {
-		const def = this.registry.getDefinition(
-			this.context().component.config.type
-		);
-		if (def?.id === undefined) return false;
-		const masterTypeId = this.registry.masterTypeIdForId(def.id);
-		const master =
-			masterTypeId !== undefined
-				? this.registry.getDefinition(masterTypeId)
-				: undefined;
-		return (
-			master?.version !== undefined &&
-			def.version !== undefined &&
-			master.version > def.version
-		);
-	});
+  protected readonly updatable = computed(() => {
+    const def = this.registry.getDefinition(
+      this.context().component.config.type
+    );
+    if (def?.id === undefined) return false;
+    const masterTypeId = this.registry.masterTypeIdForId(def.id);
+    const master =
+      masterTypeId !== undefined
+        ? this.registry.getDefinition(masterTypeId)
+        : undefined;
+    return (
+      master?.version !== undefined &&
+      def.version !== undefined &&
+      master.version > def.version
+    );
+  });
 
-	protected update(): void {
-		const { component, project } = this.context();
-		if (!(component instanceof CustomComponent)) return;
-		const action = this.customComponentService.buildInstanceUpdate(component);
-		if (action) project.actionManager.push(action);
-	}
+  protected update(): void {
+    const { component, project } = this.context();
+    if (!(component instanceof CustomComponent)) return;
+    const action = this.customComponentService.buildInstanceUpdate(component);
+    if (action) project.actionManager.push(action);
+  }
 }

@@ -4,38 +4,38 @@ import { GraphicsContext } from 'pixi.js';
 type CacheableGraphics = new (...args: never[]) => GraphicsContext;
 
 @Injectable({
-	providedIn: 'root'
+  providedIn: 'root'
 })
 export class GraphicsProviderService {
-	private readonly _cache = new Map<
-		CacheableGraphics,
-		Map<string, GraphicsContext>
-	>();
+  private readonly _cache = new Map<
+    CacheableGraphics,
+    Map<string, GraphicsContext>
+  >();
 
-	public getGraphicsContext<T extends CacheableGraphics>(
-		graphics: T,
-		...params: ConstructorParameters<T>
-	): GraphicsContext {
-		const cachedGraphics = this._cache.get(graphics);
-		const paramsHash = JSON.stringify(params);
+  public getGraphicsContext<T extends CacheableGraphics>(
+    graphics: T,
+    ...params: ConstructorParameters<T>
+  ): GraphicsContext {
+    const cachedGraphics = this._cache.get(graphics);
+    const paramsHash = JSON.stringify(params);
 
-		if (!cachedGraphics) {
-			const context = new graphics(...params);
+    if (!cachedGraphics) {
+      const context = new graphics(...params);
 
-			this._cache.set(graphics, new Map([[paramsHash, context]]));
+      this._cache.set(graphics, new Map([[paramsHash, context]]));
 
-			return context;
-		}
+      return context;
+    }
 
-		const cachedContext = cachedGraphics.get(paramsHash);
-		if (!cachedContext) {
-			const geometry = new graphics(...params);
+    const cachedContext = cachedGraphics.get(paramsHash);
+    if (!cachedContext) {
+      const geometry = new graphics(...params);
 
-			cachedGraphics.set(paramsHash, geometry);
+      cachedGraphics.set(paramsHash, geometry);
 
-			return geometry;
-		}
+      return geometry;
+    }
 
-		return cachedContext;
-	}
+    return cachedContext;
+  }
 }

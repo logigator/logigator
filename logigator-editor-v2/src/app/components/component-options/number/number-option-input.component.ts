@@ -8,13 +8,13 @@ import type { NumberComponentOption } from './number.component-option';
 let nextId = 0;
 
 @Component({
-	selector: 'app-number-option-input',
-	imports: [FormsModule, InputNumberModule, TranslocoDirective],
-	templateUrl: './number-option-input.component.html',
-	changeDetection: ChangeDetectionStrategy.OnPush
+  selector: 'app-number-option-input',
+  imports: [FormsModule, InputNumberModule, TranslocoDirective],
+  templateUrl: './number-option-input.component.html',
+  changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class NumberOptionInputComponent implements ComponentOptionInput<number> {
-	public readonly option = input.required<NumberComponentOption>();
-	public readonly commit = input.required<(value: number) => void>();
-	protected readonly inputId = `component-settings-input-${++nextId}`;
+  public readonly option = input.required<NumberComponentOption>();
+  public readonly commit = input.required<(value: number) => void>();
+  protected readonly inputId = `component-settings-input-${++nextId}`;
 }

@@ -20,10 +20,10 @@ export type LocalizableText = TranslationKey | { readonly literal: string };
  * dependency.
  */
 export function resolveLocalizableText(
-	value: LocalizableText,
-	translate: (key: TranslationKey) => string
+  value: LocalizableText,
+  translate: (key: TranslationKey) => string
 ): string {
-	return typeof value === 'string' ? translate(value) : value.literal;
+  return typeof value === 'string' ? translate(value) : value.literal;
 }
 
 /**
@@ -37,53 +37,53 @@ export function resolveLocalizableText(
  * a config needing computed legacy decode would handle it separately.
  */
 export interface LegacyV0Slots {
-	/** Option populated from `element.r` (rotation/direction). */
-	r?: string;
-	/** Option populated from `element.i` (input count). */
-	i?: string;
-	/** Option populated from `element.o` (output count). */
-	o?: string;
-	/** Options consuming `element.n[0]`, `n[1]`, … in declaration order. */
-	n?: string[];
-	/** The single option consuming `element.s`. */
-	s?: string;
+  /** Option populated from `element.r` (rotation/direction). */
+  r?: string;
+  /** Option populated from `element.i` (input count). */
+  i?: string;
+  /** Option populated from `element.o` (output count). */
+  o?: string;
+  /** Options consuming `element.n[0]`, `n[1]`, … in declaration order. */
+  n?: string[];
+  /** The single option consuming `element.s`. */
+  s?: string;
 }
 
 export interface ComponentConfigView<
-	TOptions extends Record<string, ComponentOption> = Record<
-		string,
-		ComponentOption
-	>
+  TOptions extends Record<string, ComponentOption> = Record<
+    string,
+    ComponentOption
+  >
 > {
-	type: ComponentType;
-	category: ComponentCategory;
-	symbol: string;
-	name: LocalizableText;
-	description: LocalizableText;
-	options: TOptions;
-	/**
-	 * Valueless inspector actions (buttons) rendered after the options form, each
-	 * via its own renderer. Omitted by component types that contribute none.
-	 */
-	actions?: ComponentAction[];
-	/**
-	 * Legacy positional wire-slot descriptor — present on built-ins that exist in
-	 * the v0 format, absent on custom components (v0 has no customs). See
-	 * {@link LegacyV0Slots}.
-	 */
-	legacyV0Slots?: LegacyV0Slots;
+  type: ComponentType;
+  category: ComponentCategory;
+  symbol: string;
+  name: LocalizableText;
+  description: LocalizableText;
+  options: TOptions;
+  /**
+   * Valueless inspector actions (buttons) rendered after the options form, each
+   * via its own renderer. Omitted by component types that contribute none.
+   */
+  actions?: ComponentAction[];
+  /**
+   * Legacy positional wire-slot descriptor — present on built-ins that exist in
+   * the v0 format, absent on custom components (v0 has no customs). See
+   * {@link LegacyV0Slots}.
+   */
+  legacyV0Slots?: LegacyV0Slots;
 }
 
 export interface ComponentConfig<
-	TOptions extends Record<string, ComponentOption> = Record<
-		string,
-		ComponentOption
-	>
+  TOptions extends Record<string, ComponentOption> = Record<
+    string,
+    ComponentOption
+  >
 > extends ComponentConfigView<TOptions> {
-	/**
-	 * Builds a component instance from its options. A factory (rather than a
-	 * constructor reference) so a config can close over per-definition state,
-	 * such as a custom component's definition.
-	 */
-	create(options: TOptions): Component<TOptions>;
+  /**
+   * Builds a component instance from its options. A factory (rather than a
+   * constructor reference) so a config can close over per-definition state,
+   * such as a custom component's definition.
+   */
+  create(options: TOptions): Component<TOptions>;
 }

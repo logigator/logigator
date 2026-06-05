@@ -8,140 +8,140 @@ import { andComponentConfig } from '../../components/component-types/and/and.con
 import type { Project } from '../../project/project';
 
 function makeAnd(): AndComponent {
-	return new AndComponent({
-		direction: andComponentConfig.options.direction.clone(),
-		numInputs: andComponentConfig.options.numInputs.clone(2)
-	});
+  return new AndComponent({
+    direction: andComponentConfig.options.direction.clone(),
+    numInputs: andComponentConfig.options.numInputs.clone(2)
+  });
 }
 
 describe('AddComponentsAction', () => {
-	let project: jasmine.SpyObj<Project>;
-	let compsToDestroy: Component[];
+  let project: jasmine.SpyObj<Project>;
+  let compsToDestroy: Component[];
 
-	beforeEach(() => {
-		setStaticDIInjector(TestBed.inject(Injector));
-		project = jasmine.createSpyObj<Project>('Project', [
-			'addComponent',
-			'removeComponent'
-		]);
-		compsToDestroy = [];
-	});
+  beforeEach(() => {
+    setStaticDIInjector(TestBed.inject(Injector));
+    project = jasmine.createSpyObj<Project>('Project', [
+      'addComponent',
+      'removeComponent'
+    ]);
+    compsToDestroy = [];
+  });
 
-	afterEach(() => {
-		for (const comp of compsToDestroy) {
-			comp.destroy({ children: true });
-		}
-	});
+  afterEach(() => {
+    for (const comp of compsToDestroy) {
+      comp.destroy({ children: true });
+    }
+  });
 
-	describe('do()', () => {
-		it('calls addComponent once for a single component', () => {
-			const comp = makeAnd();
-			compsToDestroy.push(comp);
-			const action = new AddComponentsAction(comp);
+  describe('do()', () => {
+    it('calls addComponent once for a single component', () => {
+      const comp = makeAnd();
+      compsToDestroy.push(comp);
+      const action = new AddComponentsAction(comp);
 
-			action.do(project);
+      action.do(project);
 
-			expect(project.addComponent).toHaveBeenCalledTimes(1);
-		});
+      expect(project.addComponent).toHaveBeenCalledTimes(1);
+    });
 
-		it('calls addComponent with an AndComponent instance', () => {
-			const comp = makeAnd();
-			compsToDestroy.push(comp);
-			const action = new AddComponentsAction(comp);
+    it('calls addComponent with an AndComponent instance', () => {
+      const comp = makeAnd();
+      compsToDestroy.push(comp);
+      const action = new AddComponentsAction(comp);
 
-			action.do(project);
+      action.do(project);
 
-			expect(project.addComponent).toHaveBeenCalledWith(
-				jasmine.any(AndComponent)
-			);
-		});
+      expect(project.addComponent).toHaveBeenCalledWith(
+        jasmine.any(AndComponent)
+      );
+    });
 
-		it('calls addComponent once per component for multiple components', () => {
-			const comp1 = makeAnd();
-			const comp2 = makeAnd();
-			const comp3 = makeAnd();
-			compsToDestroy.push(comp1, comp2, comp3);
-			const action = new AddComponentsAction(comp1, comp2, comp3);
+    it('calls addComponent once per component for multiple components', () => {
+      const comp1 = makeAnd();
+      const comp2 = makeAnd();
+      const comp3 = makeAnd();
+      compsToDestroy.push(comp1, comp2, comp3);
+      const action = new AddComponentsAction(comp1, comp2, comp3);
 
-			action.do(project);
+      action.do(project);
 
-			expect(project.addComponent).toHaveBeenCalledTimes(3);
-		});
+      expect(project.addComponent).toHaveBeenCalledTimes(3);
+    });
 
-		it('does not call removeComponent during do()', () => {
-			const comp = makeAnd();
-			compsToDestroy.push(comp);
-			const action = new AddComponentsAction(comp);
+    it('does not call removeComponent during do()', () => {
+      const comp = makeAnd();
+      compsToDestroy.push(comp);
+      const action = new AddComponentsAction(comp);
 
-			action.do(project);
+      action.do(project);
 
-			expect(project.removeComponent).not.toHaveBeenCalled();
-		});
+      expect(project.removeComponent).not.toHaveBeenCalled();
+    });
 
-		it('does not call addComponent when constructed with no components', () => {
-			const action = new AddComponentsAction();
+    it('does not call addComponent when constructed with no components', () => {
+      const action = new AddComponentsAction();
 
-			expect(() => action.do(project)).not.toThrow();
-			expect(project.addComponent).not.toHaveBeenCalled();
-		});
-	});
+      expect(() => action.do(project)).not.toThrow();
+      expect(project.addComponent).not.toHaveBeenCalled();
+    });
+  });
 
-	describe('undo()', () => {
-		it('calls removeComponent with the component id for a single component', () => {
-			const comp = makeAnd();
-			compsToDestroy.push(comp);
-			const compId = comp.id;
-			const action = new AddComponentsAction(comp);
+  describe('undo()', () => {
+    it('calls removeComponent with the component id for a single component', () => {
+      const comp = makeAnd();
+      compsToDestroy.push(comp);
+      const compId = comp.id;
+      const action = new AddComponentsAction(comp);
 
-			action.undo(project);
+      action.undo(project);
 
-			expect(project.removeComponent).toHaveBeenCalledOnceWith(compId);
-		});
+      expect(project.removeComponent).toHaveBeenCalledOnceWith(compId);
+    });
 
-		it('calls removeComponent once per component for multiple components', () => {
-			const comp1 = makeAnd();
-			const comp2 = makeAnd();
-			const id1 = comp1.id;
-			const id2 = comp2.id;
-			compsToDestroy.push(comp1, comp2);
-			const action = new AddComponentsAction(comp1, comp2);
+    it('calls removeComponent once per component for multiple components', () => {
+      const comp1 = makeAnd();
+      const comp2 = makeAnd();
+      const id1 = comp1.id;
+      const id2 = comp2.id;
+      compsToDestroy.push(comp1, comp2);
+      const action = new AddComponentsAction(comp1, comp2);
 
-			action.undo(project);
+      action.undo(project);
 
-			expect(project.removeComponent).toHaveBeenCalledTimes(2);
-			expect(project.removeComponent).toHaveBeenCalledWith(id1);
-			expect(project.removeComponent).toHaveBeenCalledWith(id2);
-		});
+      expect(project.removeComponent).toHaveBeenCalledTimes(2);
+      expect(project.removeComponent).toHaveBeenCalledWith(id1);
+      expect(project.removeComponent).toHaveBeenCalledWith(id2);
+    });
 
-		it('does not call addComponent during undo()', () => {
-			const comp = makeAnd();
-			compsToDestroy.push(comp);
-			const action = new AddComponentsAction(comp);
+    it('does not call addComponent during undo()', () => {
+      const comp = makeAnd();
+      compsToDestroy.push(comp);
+      const action = new AddComponentsAction(comp);
 
-			action.undo(project);
+      action.undo(project);
 
-			expect(project.addComponent).not.toHaveBeenCalled();
-		});
+      expect(project.addComponent).not.toHaveBeenCalled();
+    });
 
-		it('does not call removeComponent when constructed with no components', () => {
-			const action = new AddComponentsAction();
+    it('does not call removeComponent when constructed with no components', () => {
+      const action = new AddComponentsAction();
 
-			expect(() => action.undo(project)).not.toThrow();
-			expect(project.removeComponent).not.toHaveBeenCalled();
-		});
-	});
+      expect(() => action.undo(project)).not.toThrow();
+      expect(project.removeComponent).not.toHaveBeenCalled();
+    });
+  });
 
-	describe('id preservation', () => {
-		it('undo uses the same id that was assigned at construction time', () => {
-			const comp = makeAnd();
-			comp.position.set(3, 4);
-			const expectedId = comp.id;
-			compsToDestroy.push(comp);
-			const action = new AddComponentsAction(comp);
+  describe('id preservation', () => {
+    it('undo uses the same id that was assigned at construction time', () => {
+      const comp = makeAnd();
+      comp.position.set(3, 4);
+      const expectedId = comp.id;
+      compsToDestroy.push(comp);
+      const action = new AddComponentsAction(comp);
 
-			action.undo(project);
+      action.undo(project);
 
-			expect(project.removeComponent).toHaveBeenCalledOnceWith(expectedId);
-		});
-	});
+      expect(project.removeComponent).toHaveBeenCalledOnceWith(expectedId);
+    });
+  });
 });

@@ -2,9 +2,9 @@ import { Migration, MigrationContext } from './migration';
 import { CircuitFileV0, CircuitFileV1 } from '../circuit-file.types';
 import { InvalidFileError } from '../circuit-file.errors';
 import {
-	SerializedComponentBody,
-	SerializedWireBody,
-	SnapshotDefinition
+  SerializedComponentBody,
+  SerializedWireBody,
+  SnapshotDefinition
 } from '../../serialized-circuit';
 import { ProjectElement } from '../../../api/models/project-element';
 import { WireDirection } from '../../../wires/wire-direction.enum';
@@ -15,14 +15,14 @@ import { CUSTOM_TYPE_ID_BASE } from '../../../components/component-type.enum';
 const WIRE_TYPE_ID = 0;
 
 function legacyWireToBody(el: ProjectElement): SerializedWireBody {
-	const [px, py] = el.p;
-	const [qx, qy] = el.q!;
-	const horizontal = qy === py;
-	return {
-		pos: [px, py],
-		direction: horizontal ? WireDirection.HORIZONTAL : WireDirection.VERTICAL,
-		length: horizontal ? qx - px : qy - py
-	};
+  const [px, py] = el.p;
+  const [qx, qy] = el.q!;
+  const horizontal = qy === py;
+  return {
+    pos: [px, py],
+    direction: horizontal ? WireDirection.HORIZONTAL : WireDirection.VERTICAL,
+    length: horizontal ? qx - px : qy - py
+  };
 }
 
 /**
@@ -33,28 +33,28 @@ function legacyWireToBody(el: ProjectElement): SerializedWireBody {
  * render objects.
  */
 function decodeOptions(
-	element: ProjectElement,
-	config: ComponentConfig
+  element: ProjectElement,
+  config: ComponentConfig
 ): Record<string, unknown> {
-	const slots = config.legacyV0Slots ?? {};
-	const values: Record<string, unknown> = {};
-	for (const [key, proto] of Object.entries(config.options)) {
-		values[key] = proto.value;
-	}
+  const slots = config.legacyV0Slots ?? {};
+  const values: Record<string, unknown> = {};
+  for (const [key, proto] of Object.entries(config.options)) {
+    values[key] = proto.value;
+  }
 
-	if (slots.r && element.r !== undefined) values[slots.r] = element.r;
-	if (slots.i && element.i !== undefined) values[slots.i] = element.i;
-	if (slots.o && element.o !== undefined) values[slots.o] = element.o;
-	if (slots.n && element.n) {
-		slots.n.forEach((key, index) => {
-			if (element.n && index < element.n.length) {
-				values[key] = element.n[index];
-			}
-		});
-	}
-	if (slots.s && element.s !== undefined) values[slots.s] = element.s;
+  if (slots.r && element.r !== undefined) values[slots.r] = element.r;
+  if (slots.i && element.i !== undefined) values[slots.i] = element.i;
+  if (slots.o && element.o !== undefined) values[slots.o] = element.o;
+  if (slots.n && element.n) {
+    slots.n.forEach((key, index) => {
+      if (element.n && index < element.n.length) {
+        values[key] = element.n[index];
+      }
+    });
+  }
+  if (slots.s && element.s !== undefined) values[slots.s] = element.s;
 
-	return values;
+  return values;
 }
 
 /**
@@ -68,44 +68,44 @@ function decodeOptions(
  * dropped with a warning, consistent with the editor's silent-drop behaviour.
  */
 function decodeElements(
-	elements: ProjectElement[],
-	ctx: MigrationContext
+  elements: ProjectElement[],
+  ctx: MigrationContext
 ): { components: SerializedComponentBody[]; wires: SerializedWireBody[] } {
-	const components: SerializedComponentBody[] = [];
-	const wires: SerializedWireBody[] = [];
+  const components: SerializedComponentBody[] = [];
+  const wires: SerializedWireBody[] = [];
 
-	for (const element of elements) {
-		if (element.t === WIRE_TYPE_ID) {
-			wires.push(legacyWireToBody(element));
-			continue;
-		}
+  for (const element of elements) {
+    if (element.t === WIRE_TYPE_ID) {
+      wires.push(legacyWireToBody(element));
+      continue;
+    }
 
-		if (element.t >= CUSTOM_TYPE_ID_BASE) {
-			components.push({
-				type: element.t,
-				pos: [element.p[0], element.p[1]],
-				options: { direction: element.r ?? 0 }
-			});
-			continue;
-		}
+    if (element.t >= CUSTOM_TYPE_ID_BASE) {
+      components.push({
+        type: element.t,
+        pos: [element.p[0], element.p[1]],
+        options: { direction: element.r ?? 0 }
+      });
+      continue;
+    }
 
-		const config = ctx.componentProvider.getComponent(element.t);
-		if (!config || !config.legacyV0Slots) {
-			ctx.logging.warn(
-				`Unknown component type ID: ${element.t} — skipping element at [${element.p[0]}, ${element.p[1]}]`,
-				'v0ToV1Migration'
-			);
-			continue;
-		}
+    const config = ctx.componentProvider.getComponent(element.t);
+    if (!config || !config.legacyV0Slots) {
+      ctx.logging.warn(
+        `Unknown component type ID: ${element.t} — skipping element at [${element.p[0]}, ${element.p[1]}]`,
+        'v0ToV1Migration'
+      );
+      continue;
+    }
 
-		components.push({
-			type: element.t,
-			pos: [element.p[0], element.p[1]],
-			options: decodeOptions(element, config)
-		});
-	}
+    components.push({
+      type: element.t,
+      pos: [element.p[0], element.p[1]],
+      options: decodeOptions(element, config)
+    });
+  }
 
-	return { components, wires };
+  return { components, wires };
 }
 
 /**
@@ -120,29 +120,29 @@ function decodeElements(
  * on load (see `CircuitFileService.deserialize`).
  */
 function decodeDependencies(
-	input: CircuitFileV0,
-	ctx: MigrationContext
+  input: CircuitFileV0,
+  ctx: MigrationContext
 ): SnapshotDefinition[] {
-	const definitions: SnapshotDefinition[] = [];
-	for (const dep of input.dependencies ?? []) {
-		if (!dep.snapshot) continue;
-		const { components, wires } = decodeElements(dep.snapshot.elements, ctx);
-		const id = dep.id ?? dep.dependency?.id;
-		definitions.push({
-			type: dep.model,
-			source:
-				id !== undefined ? { id, version: dep.snapshot.version } : undefined,
-			name: dep.snapshot.name,
-			symbol: dep.snapshot.symbol,
-			description: dep.snapshot.description,
-			numInputs: dep.snapshot.numInputs,
-			numOutputs: dep.snapshot.numOutputs,
-			labels: [...dep.snapshot.labels],
-			components,
-			wires
-		});
-	}
-	return definitions;
+  const definitions: SnapshotDefinition[] = [];
+  for (const dep of input.dependencies ?? []) {
+    if (!dep.snapshot) continue;
+    const { components, wires } = decodeElements(dep.snapshot.elements, ctx);
+    const id = dep.id ?? dep.dependency?.id;
+    definitions.push({
+      type: dep.model,
+      source:
+        id !== undefined ? { id, version: dep.snapshot.version } : undefined,
+      name: dep.snapshot.name,
+      symbol: dep.snapshot.symbol,
+      description: dep.snapshot.description,
+      numInputs: dep.snapshot.numInputs,
+      numOutputs: dep.snapshot.numOutputs,
+      labels: [...dep.snapshot.labels],
+      components,
+      wires
+    });
+  }
+  return definitions;
 }
 
 /**
@@ -160,21 +160,21 @@ function decodeDependencies(
  * from a file load downstream).
  */
 export const v0ToV1Migration: Migration<CircuitFileV0, CircuitFileV1> = {
-	from: 0,
-	to: 1,
-	migrate(input, ctx: MigrationContext): CircuitFileV1 {
-		if (!input?.project || !Array.isArray(input.project.elements)) {
-			throw new InvalidFileError('Legacy file is missing project elements');
-		}
+  from: 0,
+  to: 1,
+  migrate(input, ctx: MigrationContext): CircuitFileV1 {
+    if (!input?.project || !Array.isArray(input.project.elements)) {
+      throw new InvalidFileError('Legacy file is missing project elements');
+    }
 
-		const { components, wires } = decodeElements(input.project.elements, ctx);
+    const { components, wires } = decodeElements(input.project.elements, ctx);
 
-		return {
-			version: 1,
-			name: input.project.name ?? 'Untitled',
-			components,
-			wires,
-			definitions: decodeDependencies(input, ctx)
-		};
-	}
+    return {
+      version: 1,
+      name: input.project.name ?? 'Untitled',
+      components,
+      wires,
+      definitions: decodeDependencies(input, ctx)
+    };
+  }
 };

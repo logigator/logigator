@@ -11,24 +11,24 @@
 
 /** One placed component: its type id, grid position, and named option values. */
 export interface SerializedComponentBody {
-	/** Component type id. In a definition's in-memory circuit this is a session
-	 * type id; in an on-disk {@link SnapshotDefinition} it is a file-local id. */
-	type: number;
-	pos: [number, number];
-	options: Record<string, unknown>;
+  /** Component type id. In a definition's in-memory circuit this is a session
+   * type id; in an on-disk {@link SnapshotDefinition} it is a file-local id. */
+  type: number;
+  pos: [number, number];
+  options: Record<string, unknown>;
 }
 
 /** One wire: start position, direction (0 = horizontal, 1 = vertical), length. */
 export interface SerializedWireBody {
-	pos: [number, number];
-	direction: number;
-	length: number;
+  pos: [number, number];
+  direction: number;
+  length: number;
 }
 
 /** A circuit's components and wires in the native body encoding. */
 export interface SerializedCircuitBody {
-	components: SerializedComponentBody[];
-	wires: SerializedWireBody[];
+  components: SerializedComponentBody[];
+  wires: SerializedWireBody[];
 }
 
 /**
@@ -38,40 +38,40 @@ export interface SerializedCircuitBody {
  * master, absent for a never-saved-to-library local.
  */
 export interface SnapshotDefinition extends SerializedCircuitBody {
-	/** File-/document-local type id; remapped to a session type id on load. */
-	type: number;
-	source?: { id: string; version: number };
-	name: string;
-	symbol: string;
-	description: string;
-	numInputs: number;
-	numOutputs: number;
-	labels: string[];
+  /** File-/document-local type id; remapped to a session type id on load. */
+  type: number;
+  source?: { id: string; version: number };
+  name: string;
+  symbol: string;
+  description: string;
+  numInputs: number;
+  numOutputs: number;
+  labels: string[];
 }
 
 /** Deep-copies a component body (positions and option values copied by value). */
 export function cloneComponentBody(
-	component: SerializedComponentBody
+  component: SerializedComponentBody
 ): SerializedComponentBody {
-	return {
-		type: component.type,
-		pos: [component.pos[0], component.pos[1]],
-		options: { ...component.options }
-	};
+  return {
+    type: component.type,
+    pos: [component.pos[0], component.pos[1]],
+    options: { ...component.options }
+  };
 }
 
 /** Deep-copies a circuit body so frozen snapshots never share mutable state. */
 export function cloneCircuit(
-	circuit: SerializedCircuitBody
+  circuit: SerializedCircuitBody
 ): SerializedCircuitBody {
-	return {
-		components: circuit.components.map(cloneComponentBody),
-		wires: circuit.wires.map((w) => ({
-			pos: [w.pos[0], w.pos[1]],
-			direction: w.direction,
-			length: w.length
-		}))
-	};
+  return {
+    components: circuit.components.map(cloneComponentBody),
+    wires: circuit.wires.map((w) => ({
+      pos: [w.pos[0], w.pos[1]],
+      direction: w.direction,
+      length: w.length
+    }))
+  };
 }
 
 /**
@@ -80,12 +80,12 @@ export function cloneCircuit(
  * built-in ids (below the custom range) are preserved.
  */
 export function remapComponentTypes(
-	components: SerializedComponentBody[],
-	map: ReadonlyMap<number, number>
+  components: SerializedComponentBody[],
+  map: ReadonlyMap<number, number>
 ): SerializedComponentBody[] {
-	return components.map((c) => ({
-		type: map.get(c.type) ?? c.type,
-		pos: [c.pos[0], c.pos[1]],
-		options: { ...c.options }
-	}));
+  return components.map((c) => ({
+    type: map.get(c.type) ?? c.type,
+    pos: [c.pos[0], c.pos[1]],
+    options: { ...c.options }
+  }));
 }

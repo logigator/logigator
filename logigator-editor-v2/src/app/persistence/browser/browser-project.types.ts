@@ -9,14 +9,14 @@
  * not a field — is the discriminator.
  */
 export interface StoredBrowserProject {
-	/** Generated client-side; the `/local/:id` route key. */
-	id: string;
-	/** Duplicated out of `content` so listing does not have to parse every blob. */
-	name: string;
-	createdOn: number;
-	lastEdited: number;
-	/** `CircuitFileService.toJson(...)` output (native versioned file format). */
-	content: string;
+  /** Generated client-side; the `/local/:id` route key. */
+  id: string;
+  /** Duplicated out of `content` so listing does not have to parse every blob. */
+  name: string;
+  createdOn: number;
+  lastEdited: number;
+  /** `CircuitFileService.toJson(...)` output (native versioned file format). */
+  content: string;
 }
 
 /**
@@ -27,40 +27,40 @@ export interface StoredBrowserProject {
  * {@link StoredBrowserProject.id}.
  */
 export interface StoredBrowserComponent {
-	id: string;
-	/** Bumped on save; copied into placed snapshots' `source.version`. */
-	version: number;
-	name: string;
-	symbol: string;
-	description: string;
-	// Summary columns, duplicated out of `content` so the palette lists masters
-	// without parsing each blob.
-	numInputs: number;
-	numOutputs: number;
-	labels: string[];
-	createdOn: number;
-	lastEdited: number;
-	/** `CircuitFileService.toJson(...)` output (body + `definitions[]`). */
-	content: string;
+  id: string;
+  /** Bumped on save; copied into placed snapshots' `source.version`. */
+  version: number;
+  name: string;
+  symbol: string;
+  description: string;
+  // Summary columns, duplicated out of `content` so the palette lists masters
+  // without parsing each blob.
+  numInputs: number;
+  numOutputs: number;
+  labels: string[];
+  createdOn: number;
+  lastEdited: number;
+  /** `CircuitFileService.toJson(...)` output (body + `definitions[]`). */
+  content: string;
 }
 
 /** Lightweight projection for listing stored projects without their circuit data. */
 export type BrowserProjectSummary = Pick<
-	StoredBrowserProject,
-	'id' | 'name' | 'createdOn' | 'lastEdited'
+  StoredBrowserProject,
+  'id' | 'name' | 'createdOn' | 'lastEdited'
 >;
 
 /** Lightweight projection for listing stored masters without their circuit data. */
 export type BrowserComponentSummary = Pick<
-	StoredBrowserComponent,
-	| 'id'
-	| 'name'
-	| 'symbol'
-	| 'description'
-	| 'numInputs'
-	| 'numOutputs'
-	| 'labels'
-	| 'version'
-	| 'createdOn'
-	| 'lastEdited'
+  StoredBrowserComponent,
+  | 'id'
+  | 'name'
+  | 'symbol'
+  | 'description'
+  | 'numInputs'
+  | 'numOutputs'
+  | 'labels'
+  | 'version'
+  | 'createdOn'
+  | 'lastEdited'
 >;

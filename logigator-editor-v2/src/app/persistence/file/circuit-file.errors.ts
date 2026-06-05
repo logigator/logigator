@@ -3,10 +3,10 @@
  * element, or an envelope that doesn't match any known format.
  */
 export class InvalidFileError extends Error {
-	constructor(message = 'InvalidFile') {
-		super(message);
-		this.name = 'InvalidFileError';
-	}
+  constructor(message = 'InvalidFile') {
+    super(message);
+    this.name = 'InvalidFileError';
+  }
 }
 
 /**
@@ -15,13 +15,13 @@ export class InvalidFileError extends Error {
  * it and we cannot safely migrate forward.
  */
 export class UnsupportedVersionError extends Error {
-	constructor(
-		public readonly fileVersion: number,
-		public readonly supportedVersion: number
-	) {
-		super(
-			`UnsupportedVersion: file=${fileVersion} supported<=${supportedVersion}`
-		);
-		this.name = 'UnsupportedVersionError';
-	}
+  constructor(
+    public readonly fileVersion: number,
+    public readonly supportedVersion: number
+  ) {
+    super(
+      `UnsupportedVersion: file=${fileVersion} supported<=${supportedVersion}`
+    );
+    this.name = 'UnsupportedVersionError';
+  }
 }

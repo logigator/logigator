@@ -4,23 +4,23 @@ import { TextInputComponentOption } from './text-input.component-option';
 import { appConfig } from '../../../app.config';
 
 describe('TextInputOptionInputComponent', () => {
-	let fixture: ComponentFixture<TextInputOptionInputComponent>;
+  let fixture: ComponentFixture<TextInputOptionInputComponent>;
 
-	beforeEach(async () => {
-		await TestBed.configureTestingModule({
-			imports: [TextInputOptionInputComponent],
-			providers: appConfig.providers
-		}).compileComponents();
+  beforeEach(async () => {
+    await TestBed.configureTestingModule({
+      imports: [TextInputOptionInputComponent],
+      providers: appConfig.providers
+    }).compileComponents();
 
-		fixture = TestBed.createComponent(TextInputOptionInputComponent);
-		fixture.componentRef.setInput(
-			'option',
-			new TextInputComponentOption('components.options.label', 'A')
-		);
-		fixture.detectChanges();
-	});
+    fixture = TestBed.createComponent(TextInputOptionInputComponent);
+    fixture.componentRef.setInput(
+      'option',
+      new TextInputComponentOption('components.options.label', 'A')
+    );
+    fixture.detectChanges();
+  });
 
-	it('creates without error', () => {
-		expect(fixture.componentInstance).toBeTruthy();
-	});
+  it('creates without error', () => {
+    expect(fixture.componentInstance).toBeTruthy();
+  });
 });

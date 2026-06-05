@@ -1,15 +1,15 @@
 import { ComponentType } from './component-type.enum';
 
 export interface SerializedComponent {
-	/** Component ID */
-	id: number;
+  /** Component ID */
+  id: number;
 
-	/** Component type */
-	type: ComponentType;
+  /** Component type */
+  type: ComponentType;
 
-	/** Grid Position */
-	pos: [number, number];
+  /** Grid Position */
+  pos: [number, number];
 
-	/** Option values keyed by option name */
-	options: Record<string, unknown>;
+  /** Option values keyed by option name */
+  options: Record<string, unknown>;
 }

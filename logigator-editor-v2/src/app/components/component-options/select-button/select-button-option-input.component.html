@@ -1,30 +1,30 @@
 <ng-template let-item="item" #itemTemplate>
-	<div class="flex gap-1 items-center">
-		@if (item.icon) {
-			<i [class]="item.icon"></i>
-		}
-		@if (item.label) {
-			<span>{{ item.label }}</span>
-		}
-	</div>
+  <div class="flex gap-1 items-center">
+    @if (item.icon) {
+      <i [class]="item.icon"></i>
+    }
+    @if (item.label) {
+      <span>{{ item.label }}</span>
+    }
+  </div>
 </ng-template>
 
 <div class="flex gap-4 items-center justify-between" *transloco="let t">
-	<label [for]="inputId">{{ t(option().label) }}</label>
-	<p-selectButton
-		[id]="inputId"
-		optionLabel="value"
-		optionValue="value"
-		[allowEmpty]="false"
-		[options]="option().options"
-		[ngModel]="option().value"
-		[ngModelOptions]="{ standalone: true }"
-		(ngModelChange)="commit()($event)"
-	>
-		<ng-template #item let-item pTemplate>
-			<ng-container
-				*ngTemplateOutlet="itemTemplate; context: { item }"
-			></ng-container>
-		</ng-template>
-	</p-selectButton>
+  <label [for]="inputId">{{ t(option().label) }}</label>
+  <p-selectButton
+    [id]="inputId"
+    optionLabel="value"
+    optionValue="value"
+    [allowEmpty]="false"
+    [options]="option().options"
+    [ngModel]="option().value"
+    [ngModelOptions]="{ standalone: true }"
+    (ngModelChange)="commit()($event)"
+  >
+    <ng-template #item let-item pTemplate>
+      <ng-container
+        *ngTemplateOutlet="itemTemplate; context: { item }"
+      ></ng-container>
+    </ng-template>
+  </p-selectButton>
 </div>

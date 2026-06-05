@@ -5,8 +5,8 @@ import { WireDirection } from './wire-direction.enum';
 // Used by mutation paths that need to compare pre/post wire state without
 // keeping the original Graphics instance alive.
 export interface WireSnapshot {
-	start: Point;
-	end: Point;
-	direction: WireDirection;
-	gridBounds: Rectangle;
+  start: Point;
+  end: Point;
+  direction: WireDirection;
+  gridBounds: Rectangle;
 }

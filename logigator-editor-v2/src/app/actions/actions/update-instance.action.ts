@@ -13,10 +13,10 @@ import { Component } from '../../components/component';
  * this project only, exactly when the user asked.
  */
 export class UpdateInstanceAction extends ActionContainer {
-	constructor(oldInstance: Component, newInstance: Component) {
-		super(
-			new RemoveComponentsAction(oldInstance),
-			new AddComponentsAction(newInstance)
-		);
-	}
+  constructor(oldInstance: Component, newInstance: Component) {
+    super(
+      new RemoveComponentsAction(oldInstance),
+      new AddComponentsAction(newInstance)
+    );
+  }
 }

@@ -16,12 +16,12 @@ import { remapComponentTypes } from '../serialized-circuit';
 import { collectSnapshots, serializeProjectBody } from '../snapshots';
 
 function isNumberPair(value: unknown): value is [number, number] {
-	return (
-		Array.isArray(value) &&
-		value.length >= 2 &&
-		typeof value[0] === 'number' &&
-		typeof value[1] === 'number'
-	);
+  return (
+    Array.isArray(value) &&
+    value.length >= 2 &&
+    typeof value[0] === 'number' &&
+    typeof value[1] === 'number'
+  );
 }
 
 /**
@@ -37,164 +37,164 @@ function isNumberPair(value: unknown): value is [number, number] {
  */
 @Injectable({ providedIn: 'root' })
 export class CircuitFileService {
-	private readonly componentProvider = inject(ComponentProviderService);
-	private readonly registry = inject(CustomComponentRegistry);
-	private readonly logging = inject(LoggingService);
-	private readonly toast = inject(ToastService);
+  private readonly componentProvider = inject(ComponentProviderService);
+  private readonly registry = inject(CustomComponentRegistry);
+  private readonly logging = inject(LoggingService);
+  private readonly toast = inject(ToastService);
 
-	private get migrationContext(): MigrationContext {
-		return {
-			componentProvider: this.componentProvider,
-			logging: this.logging
-		};
-	}
+  private get migrationContext(): MigrationContext {
+    return {
+      componentProvider: this.componentProvider,
+      logging: this.logging
+    };
+  }
 
-	/** Serializes a project to a current-version file JSON string. */
-	toJson(project: Project, name: string): string {
-		const { definitions, sessionToLocal } = collectSnapshots(
-			project,
-			this.registry
-		);
-		const body = serializeProjectBody(project);
+  /** Serializes a project to a current-version file JSON string. */
+  toJson(project: Project, name: string): string {
+    const { definitions, sessionToLocal } = collectSnapshots(
+      project,
+      this.registry
+    );
+    const body = serializeProjectBody(project);
 
-		const file: CurrentCircuitFile = {
-			version: CURRENT_FILE_VERSION,
-			name,
-			components: remapComponentTypes(body.components, sessionToLocal),
-			wires: body.wires,
-			definitions
-		};
-		return JSON.stringify(file);
-	}
+    const file: CurrentCircuitFile = {
+      version: CURRENT_FILE_VERSION,
+      name,
+      components: remapComponentTypes(body.components, sessionToLocal),
+      wires: body.wires,
+      definitions
+    };
+    return JSON.stringify(file);
+  }
 
-	/**
-	 * Migrates an already-parsed document up to the current version and turns it
-	 * into editor instances. The object-level entry shared by file reads
-	 * ({@link fromJson}) and server reads (which wrap their `ProjectElement[]`
-	 * response as a {@link CircuitFileV0} via `server.toCircuitFileV0`, so they
-	 * route through the same `v0ToV1` migration). Returns the document `name`
-	 * alongside the instances.
-	 */
-	decode(data: unknown): {
-		name: string;
-		components: Component[];
-		wires: Wire[];
-	} {
-		const file = migrateToCurrent(data, this.migrationContext);
-		const name = typeof file.name === 'string' ? file.name : 'Untitled';
-		return { name, ...this.deserialize(file) };
-	}
+  /**
+   * Migrates an already-parsed document up to the current version and turns it
+   * into editor instances. The object-level entry shared by file reads
+   * ({@link fromJson}) and server reads (which wrap their `ProjectElement[]`
+   * response as a {@link CircuitFileV0} via `server.toCircuitFileV0`, so they
+   * route through the same `v0ToV1` migration). Returns the document `name`
+   * alongside the instances.
+   */
+  decode(data: unknown): {
+    name: string;
+    components: Component[];
+    wires: Wire[];
+  } {
+    const file = migrateToCurrent(data, this.migrationContext);
+    const name = typeof file.name === 'string' ? file.name : 'Untitled';
+    return { name, ...this.deserialize(file) };
+  }
 
-	/**
-	 * Decodes a current-version document into editor instances. First ingests the
-	 * embedded snapshots into the registry (so custom `type`s resolve) and remaps
-	 * the body's file-local ids to session ids, then builds instances. Sole
-	 * structural validator for native files (the migrator passes an already-current
-	 * document through untouched): structurally broken elements throw
-	 * `InvalidFileError`, while unresolvable component types are dropped with a
-	 * warning. A custom whose snapshot is missing (an old reference-only or
-	 * client-stripped server document) is dropped and counted, then surfaced as one
-	 * aggregated toast — the user sees that data was skipped, but the rest loads.
-	 * Elements carry no id, so fresh ids are allocated on construction.
-	 */
-	deserialize(file: CurrentCircuitFile): {
-		components: Component[];
-		wires: Wire[];
-	} {
-		const remap = this.registry.ingestSnapshots(
-			this._asArray(file.definitions, 'definitions')
-		);
+  /**
+   * Decodes a current-version document into editor instances. First ingests the
+   * embedded snapshots into the registry (so custom `type`s resolve) and remaps
+   * the body's file-local ids to session ids, then builds instances. Sole
+   * structural validator for native files (the migrator passes an already-current
+   * document through untouched): structurally broken elements throw
+   * `InvalidFileError`, while unresolvable component types are dropped with a
+   * warning. A custom whose snapshot is missing (an old reference-only or
+   * client-stripped server document) is dropped and counted, then surfaced as one
+   * aggregated toast — the user sees that data was skipped, but the rest loads.
+   * Elements carry no id, so fresh ids are allocated on construction.
+   */
+  deserialize(file: CurrentCircuitFile): {
+    components: Component[];
+    wires: Wire[];
+  } {
+    const remap = this.registry.ingestSnapshots(
+      this._asArray(file.definitions, 'definitions')
+    );
 
-		const components: Component[] = [];
-		let skippedCustom = 0;
-		for (const c of this._asArray(file.components, 'components')) {
-			if (
-				!c ||
-				typeof c.type !== 'number' ||
-				!isNumberPair(c.pos) ||
-				typeof c.options !== 'object' ||
-				c.options === null
-			) {
-				throw new InvalidFileError('Invalid component in file');
-			}
-			const isCustom = c.type >= CUSTOM_TYPE_ID_BASE;
-			// A custom-range id resolves ONLY through the snapshot remap; a built-in
-			// resolves directly. Never fall a custom id through to its own value:
-			// file-local and session custom ids both count up from CUSTOM_TYPE_ID_BASE,
-			// so a missing snapshot would otherwise alias an unrelated session type.
-			let config: ComponentConfig | undefined;
-			if (isCustom) {
-				const sessionType = remap.get(c.type);
-				config =
-					sessionType === undefined
-						? undefined
-						: this.componentProvider.getComponent(sessionType);
-			} else {
-				config = this.componentProvider.getComponent(c.type);
-			}
-			if (!config) {
-				this.logging.warn(
-					`Unknown component type ID: ${c.type} — skipping element at [${c.pos[0]}, ${c.pos[1]}]`,
-					'CircuitFileService'
-				);
-				if (isCustom) skippedCustom++;
-				continue;
-			}
-			components.push(
-				Component.deserialize({ pos: c.pos, options: c.options }, config)
-			);
-		}
+    const components: Component[] = [];
+    let skippedCustom = 0;
+    for (const c of this._asArray(file.components, 'components')) {
+      if (
+        !c ||
+        typeof c.type !== 'number' ||
+        !isNumberPair(c.pos) ||
+        typeof c.options !== 'object' ||
+        c.options === null
+      ) {
+        throw new InvalidFileError('Invalid component in file');
+      }
+      const isCustom = c.type >= CUSTOM_TYPE_ID_BASE;
+      // A custom-range id resolves ONLY through the snapshot remap; a built-in
+      // resolves directly. Never fall a custom id through to its own value:
+      // file-local and session custom ids both count up from CUSTOM_TYPE_ID_BASE,
+      // so a missing snapshot would otherwise alias an unrelated session type.
+      let config: ComponentConfig | undefined;
+      if (isCustom) {
+        const sessionType = remap.get(c.type);
+        config =
+          sessionType === undefined
+            ? undefined
+            : this.componentProvider.getComponent(sessionType);
+      } else {
+        config = this.componentProvider.getComponent(c.type);
+      }
+      if (!config) {
+        this.logging.warn(
+          `Unknown component type ID: ${c.type} — skipping element at [${c.pos[0]}, ${c.pos[1]}]`,
+          'CircuitFileService'
+        );
+        if (isCustom) skippedCustom++;
+        continue;
+      }
+      components.push(
+        Component.deserialize({ pos: c.pos, options: c.options }, config)
+      );
+    }
 
-		if (skippedCustom > 0) {
-			const plural = skippedCustom === 1 ? '' : 's';
-			this.toast.warn(
-				`${skippedCustom} custom component${plural} could not be loaded — ` +
-					`${skippedCustom === 1 ? 'its' : 'their'} definition is missing — and ${skippedCustom === 1 ? 'was' : 'were'} skipped.`
-			);
-		}
+    if (skippedCustom > 0) {
+      const plural = skippedCustom === 1 ? '' : 's';
+      this.toast.warn(
+        `${skippedCustom} custom component${plural} could not be loaded — ` +
+          `${skippedCustom === 1 ? 'its' : 'their'} definition is missing — and ${skippedCustom === 1 ? 'was' : 'were'} skipped.`
+      );
+    }
 
-		const wires: Wire[] = [];
-		for (const w of this._asArray(file.wires, 'wires')) {
-			if (
-				!w ||
-				!isNumberPair(w.pos) ||
-				(w.direction !== 0 && w.direction !== 1) ||
-				typeof w.length !== 'number'
-			) {
-				throw new InvalidFileError('Invalid wire in file');
-			}
-			wires.push(
-				Wire.deserialize({
-					pos: w.pos,
-					direction: w.direction,
-					length: w.length
-				})
-			);
-		}
+    const wires: Wire[] = [];
+    for (const w of this._asArray(file.wires, 'wires')) {
+      if (
+        !w ||
+        !isNumberPair(w.pos) ||
+        (w.direction !== 0 && w.direction !== 1) ||
+        typeof w.length !== 'number'
+      ) {
+        throw new InvalidFileError('Invalid wire in file');
+      }
+      wires.push(
+        Wire.deserialize({
+          pos: w.pos,
+          direction: w.direction,
+          length: w.length
+        })
+      );
+    }
 
-		return { components, wires };
-	}
+    return { components, wires };
+  }
 
-	/** Convenience: parse JSON + migrate + deserialize into editor instances. */
-	fromJson(content: string): {
-		name: string;
-		components: Component[];
-		wires: Wire[];
-	} {
-		let parsed: unknown;
-		try {
-			parsed = JSON.parse(content);
-		} catch {
-			throw new InvalidFileError('Malformed JSON');
-		}
-		return this.decode(parsed);
-	}
+  /** Convenience: parse JSON + migrate + deserialize into editor instances. */
+  fromJson(content: string): {
+    name: string;
+    components: Component[];
+    wires: Wire[];
+  } {
+    let parsed: unknown;
+    try {
+      parsed = JSON.parse(content);
+    } catch {
+      throw new InvalidFileError('Malformed JSON');
+    }
+    return this.decode(parsed);
+  }
 
-	private _asArray<T>(value: T[] | undefined, field: string): T[] {
-		if (value === undefined) return [];
-		if (!Array.isArray(value)) {
-			throw new InvalidFileError(`File "${field}" must be an array`);
-		}
-		return value;
-	}
+  private _asArray<T>(value: T[] | undefined, field: string): T[] {
+    if (value === undefined) return [];
+    if (!Array.isArray(value)) {
+      throw new InvalidFileError(`File "${field}" must be an array`);
+    }
+    return value;
+  }
 }

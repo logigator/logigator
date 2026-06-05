@@ -3,10 +3,10 @@ import { InputComponent } from '../components/component-types/input/input.compon
 import { OutputComponent } from '../components/component-types/output/output.component';
 
 export interface DerivedSummary {
-	numInputs: number;
-	numOutputs: number;
-	/** Port labels, all inputs first then all outputs, in plug order. */
-	labels: string[];
+  numInputs: number;
+  numOutputs: number;
+  /** Port labels, all inputs first then all outputs, in plug order. */
+  labels: string[];
 }
 
 /**
@@ -20,31 +20,31 @@ export interface DerivedSummary {
  * or legacy data might contain them. This stays a total order and never throws.
  */
 export function deriveSummary(project: Project): DerivedSummary {
-	const inputs: InputComponent[] = [];
-	const outputs: OutputComponent[] = [];
+  const inputs: InputComponent[] = [];
+  const outputs: OutputComponent[] = [];
 
-	for (const component of project.components) {
-		if (component instanceof InputComponent) {
-			inputs.push(component);
-		} else if (component instanceof OutputComponent) {
-			outputs.push(component);
-		}
-	}
+  for (const component of project.components) {
+    if (component instanceof InputComponent) {
+      inputs.push(component);
+    } else if (component instanceof OutputComponent) {
+      outputs.push(component);
+    }
+  }
 
-	const byOrder = (
-		a: InputComponent | OutputComponent,
-		b: InputComponent | OutputComponent
-	): number => a.options.index.value - b.options.index.value || a.id - b.id;
+  const byOrder = (
+    a: InputComponent | OutputComponent,
+    b: InputComponent | OutputComponent
+  ): number => a.options.index.value - b.options.index.value || a.id - b.id;
 
-	inputs.sort(byOrder);
-	outputs.sort(byOrder);
+  inputs.sort(byOrder);
+  outputs.sort(byOrder);
 
-	return {
-		numInputs: inputs.length,
-		numOutputs: outputs.length,
-		labels: [
-			...inputs.map((c) => c.options.label.value),
-			...outputs.map((c) => c.options.label.value)
-		]
-	};
+  return {
+    numInputs: inputs.length,
+    numOutputs: outputs.length,
+    labels: [
+      ...inputs.map((c) => c.options.label.value),
+      ...outputs.map((c) => c.options.label.value)
+    ]
+  };
 }

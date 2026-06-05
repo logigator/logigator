@@ -13,56 +13,56 @@ import { andComponentConfig } from '../../components/component-types/and/and.con
 import { AndComponent } from '../../components/component-types/and/and.component';
 
 function makeMoveEvent(x: number, y: number): FederatedPointerEvent {
-	return {
-		getLocalPosition: () => new Point(x, y)
-	} as unknown as FederatedPointerEvent;
+  return {
+    getLocalPosition: () => new Point(x, y)
+  } as unknown as FederatedPointerEvent;
 }
 
 describe('WireDrawingSession + TextComponent (ignoresWireCollision)', () => {
-	let project: Project;
-	let dragLayer: Container<Component | Wire | ConnectionPoint>;
-	let session: WireDrawingSession;
+  let project: Project;
+  let dragLayer: Container<Component | Wire | ConnectionPoint>;
+  let session: WireDrawingSession;
 
-	beforeEach(() => {
-		setStaticDIInjector(TestBed.inject(Injector));
-		project = new Project();
-		dragLayer = new Container();
-	});
+  beforeEach(() => {
+    setStaticDIInjector(TestBed.inject(Injector));
+    project = new Project();
+    dragLayer = new Container();
+  });
 
-	afterEach(() => {
-		session?.onCancel();
-		dragLayer.destroy();
-		project.destroy({ children: true });
-	});
+  afterEach(() => {
+    session?.onCancel();
+    dragLayer.destroy();
+    project.destroy({ children: true });
+  });
 
-	it('drawing a wire across a TEXT body reports no collision', () => {
-		const text = new TextComponent({
-			direction: textComponentConfig.options.direction.clone(),
-			fontSize: textComponentConfig.options.fontSize.clone(),
-			text: textComponentConfig.options.text.clone()
-		});
-		text.position.set(3, 0);
-		project.addComponent(text);
+  it('drawing a wire across a TEXT body reports no collision', () => {
+    const text = new TextComponent({
+      direction: textComponentConfig.options.direction.clone(),
+      fontSize: textComponentConfig.options.fontSize.clone(),
+      text: textComponentConfig.options.text.clone()
+    });
+    text.position.set(3, 0);
+    project.addComponent(text);
 
-		// Start at (0,0), move right to (6,0) — passes through TEXT body at (3,0).
-		session = new WireDrawingSession(project, dragLayer, new Point(0, 0));
-		session.onMove(makeMoveEvent(6, 0));
+    // Start at (0,0), move right to (6,0) — passes through TEXT body at (3,0).
+    session = new WireDrawingSession(project, dragLayer, new Point(0, 0));
+    session.onMove(makeMoveEvent(6, 0));
 
-		expect(session.canEnd()).toBeTrue();
-	});
+    expect(session.canEnd()).toBeTrue();
+  });
 
-	it('drawing a wire across a normal component body does report collision', () => {
-		const and = new AndComponent({
-			direction: andComponentConfig.options.direction.clone(),
-			numInputs: andComponentConfig.options.numInputs.clone()
-		});
-		and.position.set(3, 0);
-		project.addComponent(and);
+  it('drawing a wire across a normal component body does report collision', () => {
+    const and = new AndComponent({
+      direction: andComponentConfig.options.direction.clone(),
+      numInputs: andComponentConfig.options.numInputs.clone()
+    });
+    and.position.set(3, 0);
+    project.addComponent(and);
 
-		// AND body occupies (3,0)–(5,2); wire from (0,0)→(6,0) intersects it.
-		session = new WireDrawingSession(project, dragLayer, new Point(0, 0));
-		session.onMove(makeMoveEvent(6, 0));
+    // AND body occupies (3,0)–(5,2); wire from (0,0)→(6,0) intersects it.
+    session = new WireDrawingSession(project, dragLayer, new Point(0, 0));
+    session.onMove(makeMoveEvent(6, 0));
 
-		expect(session.canEnd()).toBeFalse();
-	});
+    expect(session.canEnd()).toBeFalse();
+  });
 });

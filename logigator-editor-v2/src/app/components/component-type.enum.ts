@@ -1,12 +1,12 @@
 // Values match the old editor's ElementTypeId for wire-format compatibility.
 export const enum BuiltInComponentType {
-	NOT = 1,
-	AND = 2,
-	TEXT = 7,
-	ROM = 12,
-	// INPUT/OUTPUT plug components define a custom component's ports.
-	INPUT = 100,
-	OUTPUT = 101
+  NOT = 1,
+  AND = 2,
+  TEXT = 7,
+  ROM = 12,
+  // INPUT/OUTPUT plug components define a custom component's ports.
+  INPUT = 100,
+  OUTPUT = 101
 }
 
 /** A runtime-allocated custom component type id ({@link CUSTOM_TYPE_ID_BASE}+). */

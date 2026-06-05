@@ -111,7 +111,7 @@ Key methods:
   for a snapshot or unknown id) and fires `definitionChange$`. Does **not** bump
   `version` — that is a save-time stamp.
 - `setMasterCircuit(masterTypeId, circuit)` / `setMasterVersion(masterTypeId,
-  version)` → replace a master's materialised circuit (a fresh deep copy, so
+version)` → replace a master's materialised circuit (a fresh deep copy, so
   earlier snapshots stay frozen) and adopt the save-returned version.
 - `wouldCycle(hostMasterTypeId, placedMasterTypeId)` → the single cycle predicate
   (`placed === host || dependentsOf(host).has(placed)`), shared by the palette

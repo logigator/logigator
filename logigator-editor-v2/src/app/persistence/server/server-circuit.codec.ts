@@ -35,9 +35,9 @@ import type { Wire } from '../../wires/wire';
 import type { ComponentProviderService } from '../../components/component-provider.service';
 import type { CustomComponentRegistry } from '../../components/custom/custom-component-registry.service';
 import type {
-	SerializedComponentBody,
-	SerializedWireBody,
-	SnapshotDefinition
+  SerializedComponentBody,
+  SerializedWireBody,
+  SnapshotDefinition
 } from '../serialized-circuit';
 import { WireDirection } from '../../wires/wire-direction.enum';
 import { CUSTOM_TYPE_ID_BASE } from '../../components/component-type.enum';
@@ -50,8 +50,8 @@ export const WIRE_TYPE_ID = 0;
 
 /** The old API transport: a v0 circuit plus its dependency mappings. */
 export interface ServerCircuitV0 extends PersistedCircuitV0 {
-	elements: ProjectElement[];
-	dependencies: DependencyMapping[];
+  elements: ProjectElement[];
+  dependencies: DependencyMapping[];
 }
 
 /**
@@ -60,14 +60,14 @@ export interface ServerCircuitV0 extends PersistedCircuitV0 {
  * `v0ToV1` migration can revive them into `definitions[]`.
  */
 export function toCircuitFileV0(detail: {
-	name: string;
-	elements: ProjectElement[];
-	dependencies?: CircuitFileV0['dependencies'];
+  name: string;
+  elements: ProjectElement[];
+  dependencies?: CircuitFileV0['dependencies'];
 }): CircuitFileV0 {
-	return {
-		project: { name: detail.name, elements: detail.elements },
-		dependencies: detail.dependencies
-	};
+  return {
+    project: { name: detail.name, elements: detail.elements },
+    dependencies: detail.dependencies
+  };
 }
 
 /**
@@ -77,93 +77,93 @@ export function toCircuitFileV0(detail: {
  * {@link collectSnapshots}, so they match the embedded snapshots' `type`s.
  */
 export function serializeProject(
-	project: Project,
-	registry: CustomComponentRegistry,
-	provider: ComponentProviderService
+  project: Project,
+  registry: CustomComponentRegistry,
+  provider: ComponentProviderService
 ): ServerCircuitV0 {
-	const { definitions, sessionToLocal } = collectSnapshots(project, registry);
+  const { definitions, sessionToLocal } = collectSnapshots(project, registry);
 
-	const elements: ProjectElement[] = [];
-	for (const component of project.components) {
-		const el = serializeComponent(component);
-		const local = sessionToLocal.get(el.t);
-		if (local !== undefined) el.t = local; // custom: session id -> file-local id
-		elements.push(el);
-	}
-	for (const wire of project.wires) {
-		elements.push(serializeWire(wire));
-	}
+  const elements: ProjectElement[] = [];
+  for (const component of project.components) {
+    const el = serializeComponent(component);
+    const local = sessionToLocal.get(el.t);
+    if (local !== undefined) el.t = local; // custom: session id -> file-local id
+    elements.push(el);
+  }
+  for (const wire of project.wires) {
+    elements.push(serializeWire(wire));
+  }
 
-	const dependencies: DependencyMapping[] = definitions.map((def) => ({
-		// Provenance back to the library master; '' for a never-saved-to-library
-		// local (promotion into the server library is a deferred follow-up).
-		id: def.source?.id ?? '',
-		model: def.type, // file-local id, matches the body `t` and the snapshot
-		snapshot: {
-			version: def.source?.version ?? 1,
-			name: def.name,
-			symbol: def.symbol,
-			description: def.description,
-			numInputs: def.numInputs,
-			numOutputs: def.numOutputs,
-			labels: [...def.labels],
-			elements: encodeDefinitionElements(def, provider)
-		}
-	}));
+  const dependencies: DependencyMapping[] = definitions.map((def) => ({
+    // Provenance back to the library master; '' for a never-saved-to-library
+    // local (promotion into the server library is a deferred follow-up).
+    id: def.source?.id ?? '',
+    model: def.type, // file-local id, matches the body `t` and the snapshot
+    snapshot: {
+      version: def.source?.version ?? 1,
+      name: def.name,
+      symbol: def.symbol,
+      description: def.description,
+      numInputs: def.numInputs,
+      numOutputs: def.numOutputs,
+      labels: [...def.labels],
+      elements: encodeDefinitionElements(def, provider)
+    }
+  }));
 
-	return { elements, dependencies };
+  return { elements, dependencies };
 }
 
 function serializeComponent(component: Component): ProjectElement {
-	// Every real config is a full ComponentConfig; the base only narrows it to
-	// the view. The descriptor lives on the config, so widen back.
-	const config = component.config as ComponentConfig;
-	const el: ProjectElement = {
-		t: config.type,
-		p: [component.position.x, component.position.y]
-	};
+  // Every real config is a full ComponentConfig; the base only narrows it to
+  // the view. The descriptor lives on the config, so widen back.
+  const config = component.config as ComponentConfig;
+  const el: ProjectElement = {
+    t: config.type,
+    p: [component.position.x, component.position.y]
+  };
 
-	if (component.numInputs > 0) {
-		el.i = component.numInputs;
-	}
-	if (component.numOutputs > 0) {
-		el.o = component.numOutputs;
-	}
-	if (component.direction !== 0) {
-		el.r = component.direction;
-	}
+  if (component.numInputs > 0) {
+    el.i = component.numInputs;
+  }
+  if (component.numOutputs > 0) {
+    el.o = component.numOutputs;
+  }
+  if (component.direction !== 0) {
+    el.r = component.direction;
+  }
 
-	const slots = config.legacyV0Slots;
-	if (slots?.n && slots.n.length > 0) {
-		el.n = slots.n.map((key) => component.options[key].value as number);
-	}
-	if (slots?.s) {
-		el.s = component.options[slots.s].value as string;
-	}
+  const slots = config.legacyV0Slots;
+  if (slots?.n && slots.n.length > 0) {
+    el.n = slots.n.map((key) => component.options[key].value as number);
+  }
+  if (slots?.s) {
+    el.s = component.options[slots.s].value as string;
+  }
 
-	return el;
+  return el;
 }
 
 function serializeWire(wire: Wire): ProjectElement {
-	const gridX = Math.floor(wire.position.x);
-	const gridY = Math.floor(wire.position.y);
+  const gridX = Math.floor(wire.position.x);
+  const gridY = Math.floor(wire.position.y);
 
-	let endX: number;
-	let endY: number;
+  let endX: number;
+  let endY: number;
 
-	if (wire.direction === WireDirection.HORIZONTAL) {
-		endX = gridX + wire.length;
-		endY = gridY;
-	} else {
-		endX = gridX;
-		endY = gridY + wire.length;
-	}
+  if (wire.direction === WireDirection.HORIZONTAL) {
+    endX = gridX + wire.length;
+    endY = gridY;
+  } else {
+    endX = gridX;
+    endY = gridY + wire.length;
+  }
 
-	return {
-		t: WIRE_TYPE_ID,
-		p: [gridX, gridY],
-		q: [endX, endY]
-	};
+  return {
+    t: WIRE_TYPE_ID,
+    p: [gridX, gridY],
+    q: [endX, endY]
+  };
 }
 
 /**
@@ -175,68 +175,68 @@ function serializeWire(wire: Wire): ProjectElement {
  * intentionally not emitted here.
  */
 function encodeDefinitionElements(
-	def: SnapshotDefinition,
-	provider: ComponentProviderService
+  def: SnapshotDefinition,
+  provider: ComponentProviderService
 ): ProjectElement[] {
-	const elements: ProjectElement[] = [];
-	for (const component of def.components) {
-		elements.push(encodeBodyComponent(component, provider));
-	}
-	for (const wire of def.wires) {
-		elements.push(encodeBodyWire(wire));
-	}
-	return elements;
+  const elements: ProjectElement[] = [];
+  for (const component of def.components) {
+    elements.push(encodeBodyComponent(component, provider));
+  }
+  for (const wire of def.wires) {
+    elements.push(encodeBodyWire(wire));
+  }
+  return elements;
 }
 
 function encodeBodyComponent(
-	component: SerializedComponentBody,
-	provider: ComponentProviderService
+  component: SerializedComponentBody,
+  provider: ComponentProviderService
 ): ProjectElement {
-	const el: ProjectElement = {
-		t: component.type,
-		p: [component.pos[0], component.pos[1]]
-	};
+  const el: ProjectElement = {
+    t: component.type,
+    p: [component.pos[0], component.pos[1]]
+  };
 
-	if (component.type >= CUSTOM_TYPE_ID_BASE) {
-		// Nested custom: no legacy slots — only the direction round-trips; the
-		// instance's counts/labels come from its own definition on load (Inv. A).
-		const dir = component.options['direction'];
-		if (typeof dir === 'number' && dir !== 0) el.r = dir;
-		return el;
-	}
+  if (component.type >= CUSTOM_TYPE_ID_BASE) {
+    // Nested custom: no legacy slots — only the direction round-trips; the
+    // instance's counts/labels come from its own definition on load (Inv. A).
+    const dir = component.options['direction'];
+    if (typeof dir === 'number' && dir !== 0) el.r = dir;
+    return el;
+  }
 
-	const config = provider.getComponent(component.type);
-	const slots = (config as ComponentConfig | undefined)?.legacyV0Slots;
-	if (!slots) return el;
+  const config = provider.getComponent(component.type);
+  const slots = (config as ComponentConfig | undefined)?.legacyV0Slots;
+  if (!slots) return el;
 
-	if (slots.r) {
-		const v = component.options[slots.r];
-		if (typeof v === 'number' && v !== 0) el.r = v;
-	}
-	if (slots.i) {
-		const v = component.options[slots.i];
-		if (typeof v === 'number') el.i = v;
-	}
-	if (slots.o) {
-		const v = component.options[slots.o];
-		if (typeof v === 'number') el.o = v;
-	}
-	if (slots.n && slots.n.length > 0) {
-		el.n = slots.n.map((key) => component.options[key] as number);
-	}
-	if (slots.s) {
-		const v = component.options[slots.s];
-		if (v !== undefined) el.s = v as string;
-	}
+  if (slots.r) {
+    const v = component.options[slots.r];
+    if (typeof v === 'number' && v !== 0) el.r = v;
+  }
+  if (slots.i) {
+    const v = component.options[slots.i];
+    if (typeof v === 'number') el.i = v;
+  }
+  if (slots.o) {
+    const v = component.options[slots.o];
+    if (typeof v === 'number') el.o = v;
+  }
+  if (slots.n && slots.n.length > 0) {
+    el.n = slots.n.map((key) => component.options[key] as number);
+  }
+  if (slots.s) {
+    const v = component.options[slots.s];
+    if (v !== undefined) el.s = v as string;
+  }
 
-	return el;
+  return el;
 }
 
 function encodeBodyWire(wire: SerializedWireBody): ProjectElement {
-	const [x, y] = wire.pos;
-	const end: [number, number] =
-		wire.direction === WireDirection.HORIZONTAL
-			? [x + wire.length, y]
-			: [x, y + wire.length];
-	return { t: WIRE_TYPE_ID, p: [x, y], q: end };
+  const [x, y] = wire.pos;
+  const end: [number, number] =
+    wire.direction === WireDirection.HORIZONTAL
+      ? [x + wire.length, y]
+      : [x, y + wire.length];
+  return { t: WIRE_TYPE_ID, p: [x, y], q: end };
 }

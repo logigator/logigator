@@ -47,8 +47,8 @@ src/app/wires/wire-direction.enum.ts
 
 ```ts
 export const enum WireDirection {
-	HORIZONTAL, // = 0
-	VERTICAL // = 1
+  HORIZONTAL, // = 0
+  VERTICAL // = 1
 }
 ```
 
@@ -113,10 +113,10 @@ Wire.deserialize(serial); // SerializedWire → Wire  (load/undo restore)
 
 ```ts
 interface SerializedWire {
-	id: number; // Wire ID (for undo/redo lookup)
-	pos: [number, number]; // Integer grid position [x, y] of the start point
-	direction: WireDirection;
-	length: number; // Grid-unit length
+  id: number; // Wire ID (for undo/redo lookup)
+  pos: [number, number]; // Integer grid position [x, y] of the start point
+  direction: WireDirection;
+  length: number; // Grid-unit length
 }
 ```
 
@@ -130,10 +130,10 @@ This is the canonical persistence format used by both the undo/redo action syste
 
 ```ts
 interface WireSnapshot {
-	start: Point;
-	end: Point;
-	direction: WireDirection;
-	gridBounds: Rectangle;
+  start: Point;
+  end: Point;
+  direction: WireDirection;
+  gridBounds: Rectangle;
 }
 ```
 
@@ -250,15 +250,15 @@ The integrator entry point. Pure query — does not mutate project state. Return
 
 ```ts
 interface IntegrationInput {
-	addedWires?: readonly Wire[]; // Not yet in tree
-	removedWires?: readonly Wire[]; // Currently in tree
-	movedWires?: readonly { wire: Wire; oldSnapshot: WireSnapshot }[];
-	addedComponentPorts?: readonly Point[];
-	removedComponentPorts?: readonly Point[];
-	movedComponentPorts?: readonly {
-		oldPorts: readonly Point[];
-		newPorts: readonly Point[];
-	}[];
+  addedWires?: readonly Wire[]; // Not yet in tree
+  removedWires?: readonly Wire[]; // Currently in tree
+  movedWires?: readonly { wire: Wire; oldSnapshot: WireSnapshot }[];
+  addedComponentPorts?: readonly Point[];
+  removedComponentPorts?: readonly Point[];
+  movedComponentPorts?: readonly {
+    oldPorts: readonly Point[];
+    newPorts: readonly Point[];
+  }[];
 }
 ```
 
