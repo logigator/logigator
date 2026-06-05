@@ -26,9 +26,7 @@ services:
       - DEBUG_COLORS=on
 
   editor:
-    build:
-      context: ./logigator-editor-v2
-      dockerfile: dev.Dockerfile
+    image: node:24
     networks:
       - net
     ports:
