@@ -1,4 +1,4 @@
-import { describe, beforeEach, afterEach, it, expect, vi } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 import { Injector } from '@angular/core';
 import { TestBed } from '@angular/core/testing';
 import { Container, FederatedPointerEvent, Point, Rectangle } from 'pixi.js';

@@ -1,18 +1,16 @@
-import { describe, beforeEach, it, expect, vi } from 'vitest';
 import type { MockedObject } from 'vitest';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { ActionContainer } from './action-container';
 import { Action } from './action';
 import { Project } from '../project/project';
 
 function makeProject(): MockedObject<Project> {
-   
   return {
     addComponent: vi.fn().mockName('Project.addComponent')
   } as unknown as MockedObject<Project>;
 }
 
 function makeAction(): MockedObject<Action> {
-   
   return {
     do: vi.fn().mockName('Action.do'),
     undo: vi.fn().mockName('Action.undo')

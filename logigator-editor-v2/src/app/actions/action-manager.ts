@@ -1,4 +1,4 @@
-import { Subject, Observable } from 'rxjs';
+import { Observable, Subject } from 'rxjs';
 import { Action } from './action';
 import { Project } from '../project/project';
 

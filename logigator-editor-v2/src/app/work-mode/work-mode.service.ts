@@ -1,4 +1,4 @@
-import { computed, Injectable, signal, inject } from '@angular/core';
+import { computed, inject, Injectable, signal } from '@angular/core';
 import { WorkMode } from './work-mode.enum';
 import { ComponentType } from '../components/component-type.enum';
 import { ComponentProviderService } from '../components/component-provider.service';

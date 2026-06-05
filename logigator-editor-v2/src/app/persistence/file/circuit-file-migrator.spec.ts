@@ -1,4 +1,4 @@
-import { describe, beforeEach, it, expect, vi } from 'vitest';
+import { beforeEach, describe, expect, it } from 'vitest';
 import { TestBed } from '@angular/core/testing';
 import { detectVersion, migrateToCurrent } from './circuit-file-migrator';
 import { MigrationContext } from './migrations/migration';
@@ -8,7 +8,7 @@ import {
   InvalidFileError,
   UnsupportedVersionError
 } from './circuit-file.errors';
-import { CURRENT_FILE_VERSION, CircuitFileV1 } from './circuit-file.types';
+import { CircuitFileV1, CURRENT_FILE_VERSION } from './circuit-file.types';
 
 describe('circuit-file-migrator', () => {
   describe('detectVersion', () => {

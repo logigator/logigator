@@ -1,10 +1,10 @@
-import { Injectable, inject } from '@angular/core';
+import { inject, Injectable } from '@angular/core';
 import { Observable } from 'rxjs';
 import { ApiBaseService } from './api-base.service';
 import type { Page } from '../models/shared';
 import type {
-  ComponentSummary,
   ComponentDetail,
+  ComponentSummary,
   CreateComponentRequest,
   SaveComponentRequest,
   UpdateComponentRequest

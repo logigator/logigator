@@ -1,5 +1,5 @@
-import { describe, beforeEach, afterEach, it, expect, vi } from 'vitest';
 import type { MockedObject } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { Injector } from '@angular/core';
 import { TestBed } from '@angular/core/testing';
 import { setStaticDIInjector } from '../../utils/get-di';

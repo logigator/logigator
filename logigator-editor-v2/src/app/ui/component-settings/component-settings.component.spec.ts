@@ -1,4 +1,6 @@
-import { describe, beforeEach, it, expect, vi } from 'vitest';
+/* eslint-disable @typescript-eslint/no-empty-function */
+
+import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { Injector } from '@angular/core';
 import { By } from '@angular/platform-browser';

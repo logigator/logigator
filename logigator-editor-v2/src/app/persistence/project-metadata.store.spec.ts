@@ -1,10 +1,10 @@
-import { describe, beforeEach, it, expect, vi } from 'vitest';
+import { beforeEach, describe, expect, it } from 'vitest';
 import { Injector } from '@angular/core';
 import { TestBed } from '@angular/core/testing';
 import { Subject } from 'rxjs';
 import {
-  ProjectMetadataStore,
-  ProjectMetadata
+  ProjectMetadata,
+  ProjectMetadataStore
 } from './project-metadata.store';
 import { Project } from '../project/project';
 import { setStaticDIInjector } from '../utils/get-di';

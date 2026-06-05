@@ -1,5 +1,5 @@
-import { describe, beforeEach, afterEach, it, expect, vi } from 'vitest';
 import type { Mock } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import 'pixi.js/math-extras';
 import { Injector } from '@angular/core';
 import { TestBed } from '@angular/core/testing';

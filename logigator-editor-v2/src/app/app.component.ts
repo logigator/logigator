@@ -3,9 +3,9 @@ import 'pixi.js/math-extras';
 import {
   ChangeDetectionStrategy,
   Component,
+  inject,
   Injector,
-  signal,
-  inject
+  signal
 } from '@angular/core';
 import { Location } from '@angular/common';
 import { Point } from 'pixi.js';

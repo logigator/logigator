@@ -1,5 +1,5 @@
-import { describe, beforeEach, it, expect, vi } from 'vitest';
 import type { MockedObject } from 'vitest';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { Injector } from '@angular/core';
 import { TestBed } from '@angular/core/testing';
 import { FederatedPointerEvent, Point } from 'pixi.js';
@@ -29,7 +29,7 @@ function makeEvent(x: number, y: number): MockedObject<FederatedPointerEvent> {
     getLocalPosition: vi.fn().mockName('FederatedPointerEvent.getLocalPosition')
   };
   e.getLocalPosition.mockReturnValue(new Point(x, y));
-   
+
   return e as unknown as MockedObject<FederatedPointerEvent>;
 }
 
@@ -56,7 +56,6 @@ describe('EraseSession', () => {
         .fn()
         .mockName('Project.queryComponentsInRange'),
       queryWiresInRange: vi.fn().mockName('Project.queryWiresInRange')
-     
     } as unknown as MockedObject<Project>;
     // Use callFake so each call gets a fresh (non-exhausted) iterable
     project.queryComponentsInRange.mockImplementation(() => gen());
@@ -66,7 +65,6 @@ describe('EraseSession', () => {
       project as unknown as {
         actionManager: MockedObject<ActionManager>;
       }
-     
     ).actionManager = {
       register: vi.fn().mockName('ActionManager.register')
     } as unknown as MockedObject<ActionManager>;

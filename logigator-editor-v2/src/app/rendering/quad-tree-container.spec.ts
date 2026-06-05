@@ -1,7 +1,8 @@
-import { describe, beforeEach, it, expect, vi } from 'vitest';
+import { beforeEach, describe, expect, it } from 'vitest';
 import { Container, Rectangle } from 'pixi.js';
 import { QuadTreeContainer } from './quad-tree-container';
 import { GridElement } from './grid-element';
+
 /**
  * Vitest-compatible replacement for jasmine.arrayWithExactContents.
  * Returns an asymmetric matcher that succeeds when the actual array contains

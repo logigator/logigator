@@ -21,9 +21,9 @@ import { Wire } from '../wires/wire';
 import { WireDirection } from '../wires/wire-direction.enum';
 import { QuadTreeContainer } from '../rendering/quad-tree-container';
 import {
-  WireIntegrator,
   IntegrationInput,
-  IntegrationOutput
+  IntegrationOutput,
+  WireIntegrator
 } from './wire-integrator';
 import { ViewportController } from './viewport-controller';
 import { ConnectionPointManager } from '../connection-points/connection-point-manager';

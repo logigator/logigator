@@ -1,11 +1,11 @@
 import {
-  Text,
   Container,
   DestroyOptions,
   Graphics,
   Matrix,
   Point,
-  Rectangle
+  Rectangle,
+  Text
 } from 'pixi.js';
 import { Subject } from 'rxjs';
 import { ComponentConfig, ComponentConfigView } from './component-config.model';

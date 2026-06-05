@@ -1,4 +1,4 @@
-import { Injectable, inject } from '@angular/core';
+import { inject, Injectable } from '@angular/core';
 import { Assets } from 'pixi.js';
 import { HashingService } from '../hashing/hashing.service';
 

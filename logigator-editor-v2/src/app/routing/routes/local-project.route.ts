@@ -1,5 +1,5 @@
 import { Route } from '../route.model';
-import { Injectable, inject } from '@angular/core';
+import { inject, Injectable } from '@angular/core';
 import { PersistenceService } from '../../persistence/persistence.service';
 import { RouteKeys } from '../route-keys.model';
 

@@ -1,5 +1,5 @@
-import { describe, beforeEach, afterEach, it, expect, vi } from 'vitest';
 import type { MockedObject } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { Injector } from '@angular/core';
 import { TestBed } from '@angular/core/testing';
@@ -122,7 +122,7 @@ function makeProject(): MockedObject<Project> {
   (project as any).connectionPoints = {
     getCpsAtPoints: vi.fn().mockReturnValue([])
   };
-   
+
   return project as unknown as MockedObject<Project>;
 }
 

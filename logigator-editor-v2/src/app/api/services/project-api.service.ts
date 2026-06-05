@@ -1,12 +1,12 @@
-import { Injectable, inject } from '@angular/core';
-import { Observable, map } from 'rxjs';
+import { inject, Injectable } from '@angular/core';
+import { map, Observable } from 'rxjs';
 import { ApiBaseService } from './api-base.service';
 import type { Page } from '../models/shared';
 import type { ProjectElement } from '../models/project-element';
 import type {
-  ProjectSummary,
-  ProjectDetail,
   CreateProjectRequest,
+  ProjectDetail,
+  ProjectSummary,
   SaveProjectRequest,
   UpdateProjectRequest
 } from '../models/project';

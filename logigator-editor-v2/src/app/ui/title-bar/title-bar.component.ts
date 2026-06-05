@@ -1,8 +1,8 @@
 import {
   ChangeDetectionStrategy,
   Component,
-  Signal,
-  inject
+  inject,
+  Signal
 } from '@angular/core';
 import { MenubarModule } from 'primeng/menubar';
 import { MenuItem } from 'primeng/api';

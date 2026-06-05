@@ -1,11 +1,13 @@
-import { describe, beforeEach, it, expect, vi } from 'vitest';
-/* eslint-disable no-console */
+/* eslint-disable no-console, @typescript-eslint/no-empty-function */
+
+import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { Timed } from './timed.decorator';
 
 describe('Timed decorator', () => {
   beforeEach(() => {
-    // eslint-disable-next-line @typescript-eslint/no-empty-function
-    vi.spyOn(console, 'log').mockImplementation(() => {}).mockClear();
+    vi.spyOn(console, 'log')
+      .mockImplementation(() => {})
+      .mockClear();
   });
 
   describe('applied to a method', () => {
@@ -254,7 +256,6 @@ describe('Timed decorator', () => {
 
     it('console.log is called when the setter is invoked', () => {
       class Fixture {
-        // eslint-disable-next-line @typescript-eslint/no-empty-function
         set label(_v: string) {}
       }
 

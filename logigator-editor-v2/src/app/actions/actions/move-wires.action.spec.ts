@@ -1,5 +1,5 @@
-import { describe, beforeEach, it, expect, vi } from 'vitest';
 import type { MockedObject } from 'vitest';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { Point } from 'pixi.js';
 import { MoveWiresAction } from './move-wires.action';
 import type { Project } from '../../project/project';

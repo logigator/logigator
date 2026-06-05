@@ -1,5 +1,5 @@
-import { describe, beforeEach, it, expect, vi } from 'vitest';
 import type { MockedObject } from 'vitest';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { ReorderPlugsAction } from './reorder-plugs.action';
 import { ComponentOption } from '../../components/component-option';
 import type { Component } from '../../components/component';

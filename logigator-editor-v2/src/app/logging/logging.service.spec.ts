@@ -1,7 +1,7 @@
-import { describe, beforeEach, it, expect, vi } from 'vitest';
-/* eslint-disable no-console */
-import { TestBed } from '@angular/core/testing';
+/* eslint-disable no-console, @typescript-eslint/no-empty-function */
 
+import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { TestBed } from '@angular/core/testing';
 import { LoggingService } from './logging.service';
 
 describe('LoggingService', () => {
@@ -10,16 +10,21 @@ describe('LoggingService', () => {
   beforeEach(() => {
     // Spy on console methods and suppress output — these tests assert on the spy
     // calls, not the actual console output.
-    // eslint-disable-next-line @typescript-eslint/no-empty-function
-    vi.spyOn(console, 'error').mockImplementation(() => {}).mockClear();
-    // eslint-disable-next-line @typescript-eslint/no-empty-function
-    vi.spyOn(console, 'warn').mockImplementation(() => {}).mockClear();
-    // eslint-disable-next-line @typescript-eslint/no-empty-function
-    vi.spyOn(console, 'log').mockImplementation(() => {}).mockClear();
-    // eslint-disable-next-line @typescript-eslint/no-empty-function
-    vi.spyOn(console, 'info').mockImplementation(() => {}).mockClear();
-    // eslint-disable-next-line @typescript-eslint/no-empty-function
-    vi.spyOn(console, 'debug').mockImplementation(() => {}).mockClear();
+    vi.spyOn(console, 'error')
+      .mockImplementation(() => {})
+      .mockClear();
+    vi.spyOn(console, 'warn')
+      .mockImplementation(() => {})
+      .mockClear();
+    vi.spyOn(console, 'log')
+      .mockImplementation(() => {})
+      .mockClear();
+    vi.spyOn(console, 'info')
+      .mockImplementation(() => {})
+      .mockClear();
+    vi.spyOn(console, 'debug')
+      .mockImplementation(() => {})
+      .mockClear();
 
     TestBed.configureTestingModule({});
     service = TestBed.inject(LoggingService);

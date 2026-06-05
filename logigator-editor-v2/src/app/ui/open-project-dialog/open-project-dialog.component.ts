@@ -8,7 +8,7 @@ import {
 import { DatePipe } from '@angular/common';
 import { DynamicDialogRef } from 'primeng/dynamicdialog';
 import { TabsModule } from 'primeng/tabs';
-import { FileUploadModule, type FileSelectEvent } from 'primeng/fileupload';
+import { type FileSelectEvent, FileUploadModule } from 'primeng/fileupload';
 import { ConfirmationService } from 'primeng/api';
 import { TranslocoDirective, TranslocoService } from '@jsverse/transloco';
 import { PersistenceService } from '../../persistence/persistence.service';

@@ -2,8 +2,8 @@ import {
   ChangeDetectionStrategy,
   Component,
   computed,
-  input,
-  inject
+  inject,
+  input
 } from '@angular/core';
 import {
   ComponentConfig,

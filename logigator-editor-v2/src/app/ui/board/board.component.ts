@@ -3,13 +3,13 @@ import {
   Component,
   effect,
   ElementRef,
+  inject,
   input,
   OnDestroy,
   OnInit,
   output,
   signal,
-  ViewChild,
-  inject
+  ViewChild
 } from '@angular/core';
 import { Application, Point } from 'pixi.js';
 import { ThemingService } from '../../theming/theming.service';

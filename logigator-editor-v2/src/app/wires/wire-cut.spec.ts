@@ -1,4 +1,4 @@
-import { describe, beforeEach, it, expect, vi } from 'vitest';
+import { describe, expect, it } from 'vitest';
 import { Point, Rectangle } from 'pixi.js';
 import { cutWire } from './wire-cut';
 import { Wire } from './wire';

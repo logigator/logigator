@@ -1,5 +1,7 @@
-import { describe, beforeEach, afterEach, it, expect, vi } from 'vitest';
+/* eslint-disable @typescript-eslint/no-empty-function */
+
 import type { Mock } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { Injector } from '@angular/core';
 import { Location } from '@angular/common';
 import { TestBed } from '@angular/core/testing';

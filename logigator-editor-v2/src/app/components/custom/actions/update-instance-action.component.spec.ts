@@ -1,4 +1,4 @@
-import { describe, beforeEach, it, expect, vi } from 'vitest';
+import { beforeEach, describe, expect, it } from 'vitest';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { UpdateInstanceActionComponent } from './update-instance-action.component';
 import { ComponentActionContext } from '../../component-action';

@@ -1,4 +1,4 @@
-import { describe, beforeEach, it, expect, vi } from 'vitest';
+import { describe, expect, it } from 'vitest';
 import { TextInputComponentOption } from './text-input.component-option';
 
 const LABEL = 'components.options.label';

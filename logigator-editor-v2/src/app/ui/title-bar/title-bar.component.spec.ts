@@ -1,4 +1,4 @@
-import { describe, beforeAll, beforeEach, it, expect, vi } from 'vitest';
+import { beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 
 import { TitleBarComponent } from './title-bar.component';
