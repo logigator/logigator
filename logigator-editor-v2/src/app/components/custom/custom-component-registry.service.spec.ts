@@ -319,5 +319,37 @@ describe('CustomComponentRegistry', () => {
 
 			expect([...registry.dependentsOf(a)].sort()).toEqual([b, c, d].sort());
 		});
+
+		describe('wouldCycle', () => {
+			// C depends on B, B depends on A => editing A, placing A/B/C cycles.
+			let a: number;
+			let b: number;
+			let c: number;
+			let unrelated: number;
+
+			beforeEach(() => {
+				a = registry.createMaster({ symbol: 'A' }, 'browser');
+				b = registry.createMaster({ symbol: 'B' }, 'browser');
+				c = registry.createMaster({ symbol: 'C' }, 'browser');
+				unrelated = registry.createMaster({ symbol: 'U' }, 'browser');
+				registry.setDependencies(b, [a]);
+				registry.setDependencies(c, [b]);
+			});
+
+			it('flags placing a master into its own editor', () => {
+				expect(registry.wouldCycle(a, a)).toBeTrue();
+			});
+
+			it('flags placing a transitive dependent into the host', () => {
+				expect(registry.wouldCycle(a, b)).toBeTrue();
+				expect(registry.wouldCycle(a, c)).toBeTrue();
+			});
+
+			it('allows placing a non-dependent', () => {
+				expect(registry.wouldCycle(a, unrelated)).toBeFalse();
+				// Placing A into C is fine — C already depends on A, the other way.
+				expect(registry.wouldCycle(c, a)).toBeFalse();
+			});
+		});
 	});
 });

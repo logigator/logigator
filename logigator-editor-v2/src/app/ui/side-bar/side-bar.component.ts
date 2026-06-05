@@ -65,9 +65,8 @@ export class SideBarComponent {
 		const masterTypeId = this.registry.masterTypeIdForId(meta.id);
 		if (masterTypeId === undefined) return all;
 
-		const dependents = this.registry.dependentsOf(masterTypeId);
 		return all.filter(
-			(config) => config.type !== masterTypeId && !dependents.has(config.type)
+			(config) => !this.registry.wouldCycle(masterTypeId, config.type)
 		);
 	});
 }

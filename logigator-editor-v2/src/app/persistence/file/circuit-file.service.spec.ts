@@ -1,11 +1,16 @@
 import { Injector } from '@angular/core';
 import { TestBed } from '@angular/core/testing';
+import { MessageService } from 'primeng/api';
+import { TranslocoService } from '@jsverse/transloco';
 import { CircuitFileService } from './circuit-file.service';
 import { toCircuitFileV0 } from '../server/server-circuit.codec';
 import { LoggingService } from '../../logging/logging.service';
 import { ComponentProviderService } from '../../components/component-provider.service';
 import { CustomComponentRegistry } from '../../components/custom/custom-component-registry.service';
-import { BuiltInComponentType } from '../../components/component-type.enum';
+import {
+	BuiltInComponentType,
+	CUSTOM_TYPE_ID_BASE
+} from '../../components/component-type.enum';
 import { Component } from '../../components/component';
 import { Project } from '../../project/project';
 import { ProjectElement } from '../../api/models/project-element';
@@ -65,14 +70,23 @@ describe('CircuitFileService', () => {
 	let provider: ComponentProviderService;
 	let registry: CustomComponentRegistry;
 	let logging: LoggingService;
+	let messageService: MessageService;
 
 	beforeEach(() => {
-		TestBed.configureTestingModule({});
+		const translocoSpy = jasmine.createSpyObj('TranslocoService', ['translate']);
+		translocoSpy.translate.and.callFake((key: string) => key);
+		TestBed.configureTestingModule({
+			providers: [
+				MessageService,
+				{ provide: TranslocoService, useValue: translocoSpy }
+			]
+		});
 		setStaticDIInjector(TestBed.inject(Injector));
 		service = TestBed.inject(CircuitFileService);
 		provider = TestBed.inject(ComponentProviderService);
 		registry = TestBed.inject(CustomComponentRegistry);
 		logging = TestBed.inject(LoggingService);
+		messageService = TestBed.inject(MessageService);
 	});
 
 	// Build a Project from legacy positional elements via the server-read decode
@@ -318,6 +332,60 @@ describe('CircuitFileService', () => {
 				jasmine.stringContaining('Unknown component type ID: 99'),
 				'CircuitFileService'
 			);
+		});
+
+		it('drops a custom whose snapshot is missing and warns the user', () => {
+			const warnSpy = spyOn(logging, 'warn');
+			const toastSpy = spyOn(messageService, 'add');
+			// A custom-range body element with no matching definition — an old
+			// reference-only / client-stripped document.
+			const file = JSON.stringify({
+				version: 1,
+				name: 'x',
+				components: [
+					{ type: CUSTOM_TYPE_ID_BASE, pos: [0, 0], options: { direction: 0 } },
+					{ type: BuiltInComponentType.AND, pos: [1, 1], options: {} }
+				],
+				wires: [],
+				definitions: []
+			});
+
+			const { components } = service.fromJson(file);
+
+			expect(components.length).toBe(1);
+			expect(warnSpy).toHaveBeenCalledWith(
+				jasmine.stringContaining(`Unknown component type ID: ${CUSTOM_TYPE_ID_BASE}`),
+				'CircuitFileService'
+			);
+			// Unlike unknown built-ins, a missing custom is surfaced to the user.
+			expect(toastSpy).toHaveBeenCalledTimes(1);
+			expect(toastSpy).toHaveBeenCalledWith(
+				jasmine.objectContaining({ severity: 'warn' })
+			);
+		});
+
+		it('does not alias a missing custom snapshot to an unrelated session type', () => {
+			// Occupy session type id 1000 with an unrelated master, so a naive
+			// `remap.get(t) ?? t` fallthrough would resolve a missing file-local 1000
+			// to THIS component. The id-space branch must skip it instead.
+			const occupant = registry.createMaster({ symbol: 'Z' }, 'browser');
+			expect(occupant).toBe(CUSTOM_TYPE_ID_BASE);
+			spyOn(logging, 'warn');
+			spyOn(messageService, 'add');
+
+			const file = JSON.stringify({
+				version: 1,
+				name: 'x',
+				components: [
+					{ type: CUSTOM_TYPE_ID_BASE, pos: [0, 0], options: { direction: 0 } }
+				],
+				wires: [],
+				definitions: []
+			});
+
+			const { components } = service.fromJson(file);
+
+			expect(components.length).toBe(0);
 		});
 
 		it('allocates fresh ids for loaded components and wires', () => {

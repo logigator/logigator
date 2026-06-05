@@ -1,5 +1,7 @@
 import { Injector } from '@angular/core';
 import { TestBed } from '@angular/core/testing';
+import { MessageService } from 'primeng/api';
+import { TranslocoService } from '@jsverse/transloco';
 import {
 	serializeProject,
 	toCircuitFileV0,
@@ -121,7 +123,14 @@ describe('server-circuit.codec', () => {
 	let provider: ComponentProviderService;
 
 	beforeEach(() => {
-		TestBed.configureTestingModule({});
+		const translocoSpy = jasmine.createSpyObj('TranslocoService', ['translate']);
+		translocoSpy.translate.and.callFake((key: string) => key);
+		TestBed.configureTestingModule({
+			providers: [
+				MessageService,
+				{ provide: TranslocoService, useValue: translocoSpy }
+			]
+		});
 		setStaticDIInjector(TestBed.inject(Injector));
 		circuitFile = TestBed.inject(CircuitFileService);
 		registry = TestBed.inject(CustomComponentRegistry);

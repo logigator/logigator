@@ -264,6 +264,22 @@ export class CustomComponentRegistry {
 	}
 
 	/**
+	 * Whether placing master `placedMasterTypeId` inside the editor for master
+	 * `hostMasterTypeId` would close a dependency cycle — true if it *is* the host
+	 * or (transitively) depends on it. The single definition of "this placement
+	 * cycles", shared by the palette filter and the placement-time guard ([§H]).
+	 */
+	public wouldCycle(
+		hostMasterTypeId: number,
+		placedMasterTypeId: number
+	): boolean {
+		return (
+			placedMasterTypeId === hostMasterTypeId ||
+			this.dependentsOf(hostMasterTypeId).has(placedMasterTypeId)
+		);
+	}
+
+	/**
 	 * Emits whenever a **master's** summary changes (palette/editor refresh).
 	 * Snapshots are frozen and never emit; a placed instance does not subscribe.
 	 */

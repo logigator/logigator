@@ -115,8 +115,9 @@ function decodeElements(
  * the summary travels frozen inside the `snapshot` (so a stale instance renders
  * at its own ports, not the master's current ones); `source` provenance comes
  * from the dependency id + the snapshot version. Reference-only dependencies (no
- * embedded `snapshot`, i.e. the old always-latest model) are skipped here — they
- * surface as unresolved customs and are handled by the tombstone fallback.
+ * embedded `snapshot`, i.e. the old always-latest model) are skipped here — their
+ * body elements then surface as unresolved customs and are dropped with a warning
+ * on load (see `CircuitFileService.deserialize`).
  */
 function decodeDependencies(
 	input: CircuitFileV0,

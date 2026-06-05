@@ -3,8 +3,11 @@ import { Project } from '../../project/project';
 import { Component } from '../../components/component';
 import { Wire } from '../../wires/wire';
 import { ComponentProviderService } from '../../components/component-provider.service';
+import { ComponentConfig } from '../../components/component-config.model';
+import { CUSTOM_TYPE_ID_BASE } from '../../components/component-type.enum';
 import { CustomComponentRegistry } from '../../components/custom/custom-component-registry.service';
 import { LoggingService } from '../../logging/logging.service';
+import { ToastService } from '../../logging/toast.service';
 import { MigrationContext } from './migrations/migration';
 import { migrateToCurrent } from './circuit-file-migrator';
 import { InvalidFileError } from './circuit-file.errors';
@@ -37,6 +40,7 @@ export class CircuitFileService {
 	private readonly componentProvider = inject(ComponentProviderService);
 	private readonly registry = inject(CustomComponentRegistry);
 	private readonly logging = inject(LoggingService);
+	private readonly toast = inject(ToastService);
 
 	private get migrationContext(): MigrationContext {
 		return {
@@ -87,7 +91,10 @@ export class CircuitFileService {
 	 * the body's file-local ids to session ids, then builds instances. Sole
 	 * structural validator for native files (the migrator passes an already-current
 	 * document through untouched): structurally broken elements throw
-	 * `InvalidFileError`, while unknown component types are dropped with a warning.
+	 * `InvalidFileError`, while unresolvable component types are dropped with a
+	 * warning. A custom whose snapshot is missing (an old reference-only or
+	 * client-stripped server document) is dropped and counted, then surfaced as one
+	 * aggregated toast — the user sees that data was skipped, but the rest loads.
 	 * Elements carry no id, so fresh ids are allocated on construction.
 	 */
 	deserialize(file: CurrentCircuitFile): {
@@ -99,6 +106,7 @@ export class CircuitFileService {
 		);
 
 		const components: Component[] = [];
+		let skippedCustom = 0;
 		for (const c of this._asArray(file.components, 'components')) {
 			if (
 				!c ||
@@ -109,17 +117,39 @@ export class CircuitFileService {
 			) {
 				throw new InvalidFileError('Invalid component in file');
 			}
-			const sessionType = remap.get(c.type) ?? c.type;
-			const config = this.componentProvider.getComponent(sessionType);
+			const isCustom = c.type >= CUSTOM_TYPE_ID_BASE;
+			// A custom-range id resolves ONLY through the snapshot remap; a built-in
+			// resolves directly. Never fall a custom id through to its own value:
+			// file-local and session custom ids both count up from CUSTOM_TYPE_ID_BASE,
+			// so a missing snapshot would otherwise alias an unrelated session type.
+			let config: ComponentConfig | undefined;
+			if (isCustom) {
+				const sessionType = remap.get(c.type);
+				config =
+					sessionType === undefined
+						? undefined
+						: this.componentProvider.getComponent(sessionType);
+			} else {
+				config = this.componentProvider.getComponent(c.type);
+			}
 			if (!config) {
 				this.logging.warn(
 					`Unknown component type ID: ${c.type} — skipping element at [${c.pos[0]}, ${c.pos[1]}]`,
 					'CircuitFileService'
 				);
+				if (isCustom) skippedCustom++;
 				continue;
 			}
 			components.push(
 				Component.deserialize({ pos: c.pos, options: c.options }, config)
+			);
+		}
+
+		if (skippedCustom > 0) {
+			const plural = skippedCustom === 1 ? '' : 's';
+			this.toast.warn(
+				`${skippedCustom} custom component${plural} could not be loaded — ` +
+					`${skippedCustom === 1 ? 'its' : 'their'} definition is missing — and ${skippedCustom === 1 ? 'was' : 'were'} skipped.`
 			);
 		}
 
