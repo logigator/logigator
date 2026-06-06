@@ -22,6 +22,18 @@ export class RomComponent extends Component<RomOptions> {
       .subscribe(() => {
         this.direction = this.options.direction.value;
       });
+
+    this.options.addressSize.onChange$
+      .pipe(takeUntil(this.destroy$))
+      .subscribe(() => {
+        this.numInputs = this.options.addressSize.value;
+      });
+
+    this.options.wordSize.onChange$
+      .pipe(takeUntil(this.destroy$))
+      .subscribe(() => {
+        this.numOutputs = this.options.wordSize.value;
+      });
   }
 
   protected get inputLabels(): string[] {

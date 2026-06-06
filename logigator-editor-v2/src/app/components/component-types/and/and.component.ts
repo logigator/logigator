@@ -17,6 +17,12 @@ export class AndComponent extends Component<AndOptions> {
       .subscribe(() => {
         this.direction = this.options.direction.value;
       });
+
+    this.options.numInputs.onChange$
+      .pipe(takeUntil(this.destroy$))
+      .subscribe(() => {
+        this.numInputs = this.options.numInputs.value;
+      });
   }
 
   protected get inputLabels(): string[] {
