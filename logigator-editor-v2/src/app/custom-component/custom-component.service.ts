@@ -80,6 +80,9 @@ export class CustomComponentService {
       isPublic: meta.isPublic ?? false
     });
 
+    this.metadataStore.markDirty(project);
+    await this.persistence.saveProject(project);
+
     this._openEditor(project, masterTypeId);
     return project;
   }
