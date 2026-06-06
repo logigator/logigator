@@ -203,7 +203,7 @@ export abstract class Component<
   }
 
   protected get bodyGridHeight(): number {
-    return Math.max(this.numInputs, this.numOutputs);
+    return Math.max(1, this.numInputs, this.numOutputs);
   }
 
   public get bodyGridBounds(): Rectangle {
