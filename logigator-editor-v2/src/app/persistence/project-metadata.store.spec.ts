@@ -259,4 +259,65 @@ describe('ProjectMetadataStore', () => {
       expect(store.isDirty(project)).toBe(false);
     });
   });
+
+  describe('anyDirty', () => {
+    it('is false when no projects are registered', () => {
+      expect(store.anyDirty()).toBe(false);
+    });
+
+    it('starts false after registering a clean project', () => {
+      const project = new Project();
+      store.register(project, makeMetadata());
+      expect(store.anyDirty()).toBe(false);
+    });
+
+    it('becomes true when a project is marked dirty', () => {
+      const project = new Project();
+      store.register(project, makeMetadata());
+      store.markDirty(project);
+      expect(store.anyDirty()).toBe(true);
+    });
+
+    it('returns to false when the last dirty project is cleaned', () => {
+      const project = new Project();
+      store.register(project, makeMetadata());
+      store.markDirty(project);
+      store.clearDirty(project);
+      expect(store.anyDirty()).toBe(false);
+    });
+
+    it('reacts to a project registered after the computed was first read', () => {
+      // First read primes the computed with an empty map.
+      expect(store.anyDirty()).toBe(false);
+
+      const project = new Project();
+      store.register(project, makeMetadata());
+      store.markDirty(project);
+
+      expect(store.anyDirty()).toBe(true);
+    });
+
+    it('stops tracking a removed project', () => {
+      const project = new Project();
+      store.register(project, makeMetadata());
+      store.markDirty(project);
+      expect(store.anyDirty()).toBe(true);
+
+      store.remove(project);
+      expect(store.anyDirty()).toBe(false);
+    });
+
+    it('is true when one of multiple projects is dirty', () => {
+      const p1 = new Project();
+      const p2 = new Project();
+      store.register(p1, makeMetadata({ id: 'a' }));
+      store.register(p2, makeMetadata({ id: 'b' }));
+
+      store.markDirty(p2);
+      expect(store.anyDirty()).toBe(true);
+
+      store.clearDirty(p2);
+      expect(store.anyDirty()).toBe(false);
+    });
+  });
 });

@@ -20,6 +20,7 @@ import { setStaticDIInjector } from './utils/get-di';
 import { ComponentSettingsComponent } from './ui/component-settings/component-settings.component';
 import { ProjectService } from './project/project.service';
 import { PersistenceService } from './persistence/persistence.service';
+import { UnsavedChangesGuard } from './persistence/unsaved-changes.guard';
 import { ConfirmPopup } from 'primeng/confirmpopup';
 import { Toast } from 'primeng/toast';
 
@@ -45,6 +46,7 @@ export class AppComponent {
   private readonly routerService = inject(RouterService);
   private readonly persistenceService = inject(PersistenceService);
   protected readonly projectService = inject(ProjectService);
+  private readonly unsavedChangesGuard = inject(UnsavedChangesGuard);
   private readonly location = inject(Location);
 
   protected readonly cursorPosition = signal<Point>(new Point(0, 0));
@@ -59,5 +61,7 @@ export class AppComponent {
     }
 
     void this.routerService.processCurrentRoute();
+
+    this.unsavedChangesGuard.attach();
   }
 }

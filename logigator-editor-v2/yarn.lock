@@ -6346,6 +6346,7 @@ __metadata:
     eslint: "npm:^10.2.1"
     eslint-config-prettier: "npm:^10.1.8"
     jsdom: "npm:^29.1.1"
+    ngxtension: "npm:^7.2.0"
     pixi.js: "npm:^8.18.1"
     postcss: "npm:^8.5.3"
     prettier: "npm:^3.8.3"
@@ -6779,6 +6780,23 @@ __metadata:
   version: 1.0.0
   resolution: "negotiator@npm:1.0.0"
   checksum: 10c0/4c559dd52669ea48e1914f9d634227c561221dd54734070791f999c52ed0ff36e437b2e07d5c1f6e32909fc625fe46491c16e4a8f0572567d4dd15c3a4fda04b
+  languageName: node
+  linkType: hard
+
+"ngxtension@npm:^7.2.0":
+  version: 7.2.0
+  resolution: "ngxtension@npm:7.2.0"
+  dependencies:
+    tslib: "npm:^2.3.0"
+  peerDependencies:
+    "@angular/common": ">=19.0.0"
+    "@angular/core": ">=19.0.0"
+    "@use-gesture/vanilla": ^10.0.0
+    rxjs: ^6.0.0 || ^7.0.0
+  peerDependenciesMeta:
+    "@use-gesture/vanilla":
+      optional: true
+  checksum: 10c0/80d0af912ff3589fd0faf5eeaf61ab6cb9812172b3b8411add4659171b0bd6495505dcfbad097bb172eed6abb00135a598f44df8eb94631de3b1a5fbd3c7ba91
   languageName: node
   linkType: hard
 

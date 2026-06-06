@@ -1,5 +1,6 @@
-import { Injectable, signal, WritableSignal } from '@angular/core';
+import { computed, Injectable, signal, WritableSignal } from '@angular/core';
 import { Subscription } from 'rxjs';
+import { SignalMap } from 'ngxtension/collections';
 import { Project } from '../project/project';
 
 export interface ProjectMetadata {
@@ -27,7 +28,14 @@ interface ProjectEntry {
 
 @Injectable({ providedIn: 'root' })
 export class ProjectMetadataStore {
-  private readonly _entries = new Map<Project, ProjectEntry>();
+  private readonly _entries = new SignalMap<Project, ProjectEntry>();
+
+  public readonly anyDirty = computed(() => {
+    for (const entry of this._entries.values()) {
+      if (entry.dirty()) return true;
+    }
+    return false;
+  });
 
   /**
    * Registers a project with its metadata.
