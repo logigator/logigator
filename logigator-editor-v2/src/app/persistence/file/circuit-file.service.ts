@@ -12,7 +12,7 @@ import { MigrationContext } from './migrations/migration';
 import { migrateToCurrent } from './circuit-file-migrator';
 import { InvalidFileError } from './circuit-file.errors';
 import { CURRENT_FILE_VERSION, CurrentCircuitFile } from './circuit-file.types';
-import { remapComponentTypes } from '../serialized-circuit';
+import { remapComponentTypes, SerializedCircuitBody } from '../serialized-circuit';
 import { collectSnapshots, serializeProjectBody } from '../snapshots';
 
 function isNumberPair(value: unknown): value is [number, number] {
@@ -188,6 +188,32 @@ export class CircuitFileService {
       throw new InvalidFileError('Malformed JSON');
     }
     return this.decode(parsed);
+  }
+
+  /**
+   * Parses and migrates a JSON string, ingests its embedded snapshots into the
+   * registry, and returns the remapped serialized circuit body. Cheaper than
+   * {@link fromJson} — no live PixiJS objects are constructed. Used by the
+   * startup preload path to register masters without opening editor projects.
+   */
+  decodeToBody(content: string): SerializedCircuitBody {
+    let parsed: unknown;
+    try {
+      parsed = JSON.parse(content);
+    } catch {
+      throw new InvalidFileError('Malformed JSON');
+    }
+    const file = migrateToCurrent(parsed, this.migrationContext);
+    const remap = this.registry.ingestSnapshots(
+      this._asArray(file.definitions, 'definitions')
+    );
+    return {
+      components: remapComponentTypes(
+        this._asArray(file.components, 'components'),
+        remap
+      ),
+      wires: this._asArray(file.wires, 'wires')
+    };
   }
 
   private _asArray<T>(value: T[] | undefined, field: string): T[] {

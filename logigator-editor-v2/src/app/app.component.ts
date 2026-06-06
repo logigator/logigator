@@ -52,6 +52,8 @@ export class AppComponent {
   constructor() {
     setStaticDIInjector(this.injector);
 
+    void this.persistenceService.preloadBrowserMasters();
+
     if (!this.routerService.matches(this.location.path())) {
       this.persistenceService.createAndSetEmptyProject();
     }

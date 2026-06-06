@@ -324,6 +324,45 @@ export class PersistenceService {
   }
 
   /**
+   * Registers all browser-stored custom component masters into the registry so
+   * the palette shows them at startup. Masters already in the registry (loaded
+   * by a prior project open) are skipped. Errors are caught per-component so
+   * one bad record does not prevent the rest from loading.
+   */
+  async preloadBrowserMasters(): Promise<void> {
+    const summaries = await this.browserComponentStore.list();
+    await Promise.all(
+      summaries.map(async ({ id }) => {
+        if (this.registry.masterTypeIdForId(id) !== undefined) return;
+        try {
+          const record = await this.browserComponentStore.get(id);
+          if (!record) return;
+          const circuit = this.circuitFile.decodeToBody(record.content);
+          this.registry.createMaster(
+            {
+              id: record.id,
+              version: record.version,
+              name: record.name,
+              symbol: record.symbol,
+              description: record.description,
+              numInputs: record.numInputs,
+              numOutputs: record.numOutputs,
+              labels: record.labels,
+              circuit
+            },
+            'browser'
+          );
+        } catch (e) {
+          this.logging.warn(
+            `Failed to preload browser component ${id}`,
+            'PersistenceService'
+          );
+        }
+      })
+    );
+  }
+
+  /**
    * Loads a browser-stored **library master** into a fresh editor Project and
    * registers it (reusing the master's session type id if it is already known, so
    * placing it from the palette and opening it share one definition). Returns the
