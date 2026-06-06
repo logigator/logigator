@@ -356,6 +356,24 @@ export class SelectionManager {
     return new Rectangle(minX, minY, maxX - minX, maxY - minY);
   }
 
+  public select(components: Component[], wires: Wire[]): void {
+    this.clear();
+    for (const c of components) {
+      if (!c.destroyed) {
+        c.tint = SelectionManager.SELECTION_TINT;
+        this._selectedComponents.add(c);
+      }
+    }
+    for (const w of wires) {
+      if (!w.destroyed) {
+        w.tint = SelectionManager.SELECTION_TINT;
+        this._selectedWires.add(w);
+      }
+    }
+    this.retintCps();
+    this._selectionChange$.next();
+  }
+
   public get isEmpty(): boolean {
     return (
       this._selectedComponents.size === 0 && this._selectedWires.size === 0

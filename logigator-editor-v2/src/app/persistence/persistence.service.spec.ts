@@ -25,112 +25,15 @@ import { environment } from '../../environments/environment';
 import { InvalidFileError } from './file/circuit-file.errors';
 import { BrowserProjectStore } from './browser/browser-project.store';
 import { BrowserComponentStore } from './browser/browser-component.store';
-import {
-  StoredBrowserComponent,
-  StoredBrowserProject
-} from './browser/browser-project.types';
 import { CustomComponentRegistry } from '../components/custom/custom-component-registry.service';
 import { ComponentProviderService } from '../components/component-provider.service';
 import { CustomComponent } from '../components/custom/custom-component';
 import { Component } from '../components/component';
 import { SerializedCircuitBody } from './serialized-circuit';
-
-/**
- * In-memory stand-in for the IndexedDB store, so PersistenceService orchestration
- * (import persists, save dispatches, local load reads) is tested deterministically.
- * The real store is covered by browser-project.store.spec.ts.
- */
-class FakeBrowserProjectStore {
-  readonly records = new Map<string, StoredBrowserProject>();
-  private _counter = 0;
-
-  async save(params: {
-    id?: string;
-    name: string;
-    content: string;
-  }): Promise<StoredBrowserProject> {
-    const id = params.id ?? `browser-id-${++this._counter}`;
-    const existing = params.id ? this.records.get(params.id) : undefined;
-    const now = 1000 + ++this._counter;
-    const record: StoredBrowserProject = {
-      id,
-      name: params.name,
-      createdOn: existing?.createdOn ?? now,
-      lastEdited: now,
-      content: params.content
-    };
-    this.records.set(id, record);
-    return record;
-  }
-
-  async get(id: string): Promise<StoredBrowserProject | undefined> {
-    return this.records.get(id);
-  }
-
-  async list() {
-    return [...this.records.values()].map(
-      ({ id, name, createdOn, lastEdited }) => ({
-        id,
-        name,
-        createdOn,
-        lastEdited
-      })
-    );
-  }
-
-  async delete(id: string): Promise<void> {
-    this.records.delete(id);
-  }
-}
-
-/** In-memory stand-in for the IndexedDB `components` store (library masters). */
-class FakeBrowserComponentStore {
-  readonly records = new Map<string, StoredBrowserComponent>();
-  private _counter = 0;
-
-  async save(params: {
-    id?: string;
-    version: number;
-    name: string;
-    symbol: string;
-    description: string;
-    numInputs: number;
-    numOutputs: number;
-    labels: string[];
-    content: string;
-  }): Promise<StoredBrowserComponent> {
-    const id = params.id ?? `comp-id-${++this._counter}`;
-    const existing = params.id ? this.records.get(params.id) : undefined;
-    const now = 1000 + ++this._counter;
-    const record: StoredBrowserComponent = {
-      id,
-      version: params.version,
-      name: params.name,
-      symbol: params.symbol,
-      description: params.description,
-      numInputs: params.numInputs,
-      numOutputs: params.numOutputs,
-      labels: [...params.labels],
-      createdOn: existing?.createdOn ?? now,
-      lastEdited: now,
-      content: params.content
-    };
-    this.records.set(id, record);
-    return record;
-  }
-
-  async get(id: string): Promise<StoredBrowserComponent | undefined> {
-    return this.records.get(id);
-  }
-
-  async list() {
-    return [...this.records.values()];
-  }
-
-  async delete(id: string): Promise<void> {
-    this.records.delete(id);
-  }
-}
+import {
+  FakeBrowserComponentStore,
+  FakeBrowserProjectStore
+} from '../../testing/fake-browser-stores';
 
 const PROJECT_URL = (uuid: string) =>
   `${environment.apiUrl}/api/project/${uuid}`;

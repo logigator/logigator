@@ -12,6 +12,7 @@ import { ComponentConfig } from '../components/component-config.model';
 import { Wire } from '../wires/wire';
 import { DragSession } from './drag-session';
 import { ComponentPlacementSession } from './sessions/component-placement.session';
+import { PastePlacementSession } from './sessions/paste-placement.session';
 import { WireDrawingSession } from './sessions/wire-drawing.session';
 import { SelectRectSession } from './sessions/select-rect.session';
 import { SelectionMoveSession } from './sessions/selection-move.session';
@@ -83,8 +84,35 @@ export class FloatingLayer extends Container {
     this._componentToPlace = value;
   }
 
+  public startPasteSession(components: Component[], wires: Wire[]): void {
+    if (this._activeDrag) {
+      this._activeDrag.onCancel();
+      this._stopDrag();
+    }
+    this.project.selectionManager.clear();
+    this._startDrag(
+      new PastePlacementSession(this.project, this._dragLayer, components, wires)
+    );
+  }
+
   private onPointerDown(e: FederatedPointerEvent) {
-    if (this._activeDrag || e.button !== 0) return;
+    if (e.button !== 0) return;
+
+    if (
+      this._activeDrag instanceof PastePlacementSession &&
+      !this._activeDrag.isDragging
+    ) {
+      const localPoint = e.getLocalPosition(this.project.gridSpace);
+      if (this._activeDrag.containsPoint(localPoint)) {
+        this._activeDrag.beginDrag(roundToGrid(localPoint, true));
+      } else {
+        this._activeDrag.onCancel();
+        this._stopDrag();
+      }
+      return;
+    }
+
+    if (this._activeDrag) return;
 
     switch (this._mode) {
       case WorkMode.COMPONENT_PLACEMENT: {

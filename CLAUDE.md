@@ -56,8 +56,9 @@ Angular 21 standalone components + PixiJS 8 canvas.
 - `persistence/` — `PersistenceService` (lifecycle: API load/save + local file import/export), `ProjectMetadataStore` (name/source/dirty). The legacy server API transports `ProjectElement[]` — *file-format v0 over HTTP*: reads route through the permanent `v0ToV1` migration, encode through the temporary `persistence/server/` codec (deleted when the native API ships). `persistence/file/` holds the **native versioned file format** + a migration chain (v0→v1, …) for save-to-file / load-from-file. Doc: `persistence.md`.
 - `wires/` — Wire model and rendering. Doc: `wires.md`.
 - `connection-points/` — Derived visual junction dots (≥3 cardinal directions filled + ≥1 element terminates). Pure visual sugar, not persisted or selectable. Doc: `connection-points.md`.
-- `rendering/` — `QuadTreeContainer` (spatial indexing), `FloatingLayer` (selection box, placement preview), `GraphicsProviderService` (shared texture/graphics cache). Doc: `rendering.md`.
-- `actions/` — Command-pattern undo/redo via `ActionManager`. Each user operation is an `Action` subclass. Doc: `actions-system.md`.
+- `rendering/` — `QuadTreeContainer` (spatial indexing), `FloatingLayer` (selection box, placement preview, paste placement), `GraphicsProviderService` (shared texture/graphics cache), `DragCollisionState` (shared collision for drag sessions). `sessions/` contains per-interaction `DragSession` implementations. Doc: `rendering.md`.
+- `actions/` — Command-pattern undo/redo via `ActionManager`. Each user operation is an `Action` subclass. `ActionContainer` groups multiple actions atomically. Doc: `actions-system.md`.
+- `clipboard/` — `ClipboardService` (copy/cut/paste/delete). Copy serializes selected components and wires into a typed `SerializedComponent[]`/`SerializedWire[]` snapshot. Paste deserializes fresh instances (new IDs, positions offset by `+2` grid units), then opens a `PastePlacementSession` where the user positions the pasted elements with collision checking. Cut = copy + delete (folded into one undo step). Delete folds any pending scissor cut (SELECT_EXACT) into the same undo container so cut + delete is one undo. No separate doc (covered by `rendering.md` and `actions-system.md`).
 - `work-mode/` — Interaction mode FSM (selection, placement, deletion, wire routing). Doc: `work-mode.md`.
 - `ui/` — Angular wrappers around canvas and sidebar panels. Doc: `ui.md`.
 
@@ -67,6 +68,8 @@ Angular 21 standalone components + PixiJS 8 canvas.
 - Grid coordinates — `Project._gridSpace` has `scale = gridSize`, so circuit objects use **grid units as native `position`**. Visual children in `Component._visualSpace` (`scale = 1/gridSize`) keep pixel-authored geometry. Only remaining converter is `fromGrid` in `utils/grid.ts` (used inside `_visualSpace` and background grid). Snapping: `roundToGrid` / `roundToHalfGrid`.
 - `@logigator/logigator-simulation` — external npm package (separate repo, likely WASM) for circuit simulation.
 - Two serialization encodings: the **API** uses the legacy positional `ProjectElement[]` wire format (`t/p/q/r/i/o/n/s`) — *file-format v0 over HTTP*, decoded by the `v0ToV1` migration and encoded by the temporary `persistence/server/` codec; **local files** use a **native, versioned** format (named options, wires as `pos/direction/length`) under `persistence/file/`. Files have a `version` field (absent ⇒ legacy v0; native current = v1); a migration chain upgrades older files to the newest version on load, and only the newest version is ever saved. The built-in configs' `legacyV0Slots` descriptor is the single source of truth the v0 decode and encode share. `SerializedComponent`/`SerializedWire` are a *third*, separate in-memory snapshot used by undo/redo — not a persistence format.
+- Paste flow — `ClipboardService.paste()` deserializes clipboard snapshots into fresh `Component`/`Wire` instances (new IDs, positions shifted by `PASTE_OFFSET = 2` grid units), then delegates to `Project.startPasteSession()` → `FloatingLayer.startPasteSession()` → `PastePlacementSession`. Pasting is a non-modal drag session: elements appear as tinted ghosts in `_dragLayer`, follow the cursor, and check collision via `DragCollisionState`. `isDragging` stays false until the user clicks on one of the ghosts, at which point `beginDrag` locks in the anchor. Clicking off the ghost group commits at the started-at position; Escape cancels (destroys the fresh instances). `SelectionMoveSession` shares `DragCollisionState` for its own collision check.
+- `src/testing/` — shared test fakes (`FakeBrowserProjectStore`, `FakeBrowserComponentStore`). In-memory stand-ins for the IndexedDB-backed stores, extracted so both `persistence.service.spec` and `custom-component.service.spec` can use them without duplication.
 
 ### Backend (logigator-backend)
 
@@ -106,4 +109,4 @@ Backend serves `logigator-editor-v2` as a static SPA. SPA calls `/api/projects`,
 
 ## Testing
 
-Karma + Jasmine. Spec files sit next to source (e.g. `quad-tree-container.spec.ts`). Angular specs use `TestBed`; pure-logic specs don't.
+Vitest via Angular's `@angular/build:unit-test` builder. Spec files sit next to source (e.g. `quad-tree-container.spec.ts`). Angular specs use `TestBed`; pure-logic specs don't. Shared test fakes live in `src/testing/`.

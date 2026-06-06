@@ -14,6 +14,12 @@ import { InputComponent } from '../components/component-types/input/input.compon
 import { inputComponentConfig } from '../components/component-types/input/input.config';
 import { AddComponentsAction } from '../actions/actions/add-components.action';
 import { ChangeOptionAction } from '../actions/actions/change-option.action';
+import { BrowserComponentStore } from '../persistence/browser/browser-component.store';
+import { BrowserProjectStore } from '../persistence/browser/browser-project.store';
+import {
+  FakeBrowserComponentStore,
+  FakeBrowserProjectStore
+} from '../../testing/fake-browser-stores';
 
 function makeInput(index = 0): InputComponent {
   return new InputComponent({
@@ -33,7 +39,15 @@ describe('CustomComponentService', () => {
 
   beforeEach(() => {
     vi.useFakeTimers();
-    TestBed.configureTestingModule({ providers: appConfig.providers });
+    const fakeComponentStore = new FakeBrowserComponentStore();
+    const fakeProjectStore = new FakeBrowserProjectStore();
+    TestBed.configureTestingModule({
+      providers: [
+        ...appConfig.providers,
+        { provide: BrowserComponentStore, useValue: fakeComponentStore },
+        { provide: BrowserProjectStore, useValue: fakeProjectStore }
+      ]
+    });
     setStaticDIInjector(TestBed.inject(Injector));
     service = TestBed.inject(CustomComponentService);
     projectService = TestBed.inject(ProjectService);

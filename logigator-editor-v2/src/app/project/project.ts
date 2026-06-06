@@ -164,6 +164,10 @@ export class Project extends InteractionContainer {
     this._floatingLayer.componentToPlace = component;
   }
 
+  public startPasteSession(components: Component[], wires: Wire[]): void {
+    this._floatingLayer.startPasteSession(components, wires);
+  }
+
   public addComponent(component: Component) {
     component.applyScale(this.scale.x);
     this._components.insert(component);

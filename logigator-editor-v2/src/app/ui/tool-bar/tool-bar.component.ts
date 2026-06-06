@@ -10,6 +10,7 @@ import { TooltipModule } from 'primeng/tooltip';
 import { TranslocoDirective, TranslocoService } from '@jsverse/transloco';
 import { WorkModeService } from '../../work-mode/work-mode.service';
 import { WorkMode } from '../../work-mode/work-mode.enum';
+import { ClipboardService } from '../../clipboard/clipboard.service';
 import { BuiltInComponentType } from '../../components/component-type.enum';
 import { ProjectService } from '../../project/project.service';
 import { PersistenceService } from '../../persistence/persistence.service';
@@ -34,6 +35,7 @@ export class ToolBarComponent {
   private readonly loggingService = inject(LoggingService);
   private readonly dialogService = inject(DialogService);
   private readonly translocoService = inject(TranslocoService);
+  private readonly clipboardService = inject(ClipboardService);
 
   protected isWireDrawMode = computed(
     () => this.workModeService.mode() === WorkMode.WIRE_DRAWING
@@ -81,6 +83,26 @@ export class ToolBarComponent {
     this.workModeService.setSelectedComponentType(BuiltInComponentType.TEXT);
   }
 
+  protected copy(): void {
+    const project = this.projectService.activeProject();
+    if (project) this.clipboardService.copy(project);
+  }
+
+  protected cut(): void {
+    const project = this.projectService.activeProject();
+    if (project) this.clipboardService.cut(project);
+  }
+
+  protected paste(): void {
+    const project = this.projectService.activeProject();
+    if (project) this.clipboardService.paste(project);
+  }
+
+  protected delete(): void {
+    const project = this.projectService.activeProject();
+    if (project) this.clipboardService.delete(project);
+  }
+
   protected undo(): void {
     this.projectService.activeProject()?.actionManager.undo();
   }
@@ -90,7 +112,7 @@ export class ToolBarComponent {
   }
 
   protected save(): void {
-    const project = this.projectService.mainProject();
+    const project = this.projectService.activeProject();
     if (project) {
       this.persistenceService.saveProject(project).catch(() => {
         this.loggingService.error('Failed to save project', 'ToolBarComponent');

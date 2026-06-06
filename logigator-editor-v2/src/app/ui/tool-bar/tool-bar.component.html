@@ -27,6 +27,7 @@
   <p-button
     [pTooltip]="t('toolBar.copy')"
     [ariaLabel]="t('toolBar.copy')"
+    (onClick)="copy()"
     tooltipPosition="bottom"
     icon="ph ph-copy"
     severity="secondary"
@@ -34,6 +35,7 @@
   <p-button
     [pTooltip]="t('toolBar.cut')"
     [ariaLabel]="t('toolBar.cut')"
+    (onClick)="cut()"
     tooltipPosition="bottom"
     icon="ph ph-scissors"
     severity="secondary"
@@ -41,6 +43,7 @@
   <p-button
     [pTooltip]="t('toolBar.paste')"
     [ariaLabel]="t('toolBar.paste')"
+    (onClick)="paste()"
     tooltipPosition="bottom"
     icon="ph ph-clipboard"
     severity="secondary"
@@ -48,6 +51,7 @@
   <p-button
     [pTooltip]="t('toolBar.delete')"
     [ariaLabel]="t('toolBar.delete')"
+    (onClick)="delete()"
     tooltipPosition="bottom"
     icon="ph ph-trash"
     severity="secondary"

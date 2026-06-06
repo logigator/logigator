@@ -18,6 +18,7 @@ import { ProjectService } from '../../project/project.service';
 import { DialogService } from 'primeng/dynamicdialog';
 import { OpenProjectDialogComponent } from '../open-project-dialog/open-project-dialog.component';
 import { NewComponentDialogComponent } from '../new-component-dialog/new-component-dialog.component';
+import { ClipboardService } from '../../clipboard/clipboard.service';
 
 @Component({
   selector: 'app-title-bar',
@@ -34,6 +35,7 @@ export class TitleBarComponent {
   private readonly persistenceService = inject(PersistenceService);
   private readonly projectService = inject(ProjectService);
   private readonly dialogService = inject(DialogService);
+  private readonly clipboardService = inject(ClipboardService);
 
   public items: Signal<MenuItem[]>;
 
@@ -115,17 +117,20 @@ export class TitleBarComponent {
           {
             label: this.translocoService.translate(
               'titleBar.menuBar.edit.items.cut.label'
-            )
+            ),
+            command: () => this.cut()
           },
           {
             label: this.translocoService.translate(
               'titleBar.menuBar.edit.items.copy.label'
-            )
+            ),
+            command: () => this.copy()
           },
           {
             label: this.translocoService.translate(
               'titleBar.menuBar.edit.items.paste.label'
-            )
+            ),
+            command: () => this.paste()
           },
           {
             separator: true
@@ -133,7 +138,8 @@ export class TitleBarComponent {
           {
             label: this.translocoService.translate(
               'titleBar.menuBar.edit.items.delete.label'
-            )
+            ),
+            command: () => this.delete()
           }
         ]
       },
@@ -157,7 +163,7 @@ export class TitleBarComponent {
   }
 
   private saveProject(): void {
-    const project = this.projectService.mainProject();
+    const project = this.projectService.activeProject();
     if (project) {
       this.persistenceService.saveProject(project).catch(() => {
         this.logging.error('Failed to save project', 'TitleBarComponent');
@@ -191,6 +197,26 @@ export class TitleBarComponent {
       modal: true,
       closable: true
     });
+  }
+
+  private cut(): void {
+    const project = this.projectService.activeProject();
+    if (project) this.clipboardService.cut(project);
+  }
+
+  private copy(): void {
+    const project = this.projectService.activeProject();
+    if (project) this.clipboardService.copy(project);
+  }
+
+  private paste(): void {
+    const project = this.projectService.activeProject();
+    if (project) this.clipboardService.paste(project);
+  }
+
+  private delete(): void {
+    const project = this.projectService.activeProject();
+    if (project) this.clipboardService.delete(project);
   }
 
   private undo(): void {

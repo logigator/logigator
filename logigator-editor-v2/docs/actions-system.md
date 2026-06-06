@@ -97,6 +97,8 @@ A composite `Action` that holds an ordered list of child actions and delegates t
 
 ### Typical usage
 
+**`push`** — action applies the state (used when the state hasn't been applied yet):
+
 ```ts
 const action = new ActionContainer();
 
@@ -108,8 +110,23 @@ if (wires.length > 0) {
 }
 
 if (action.length > 0) {
-  project.actionManager.push(action);
+  project.actionManager.push(action);  // calls action.do(project) internally
 }
+```
+
+**`register`** — state already applied; action is recorded for undo only:
+
+```ts
+const action = new ActionContainer();
+if (components.length > 0)
+  action.add(new RemoveComponentsAction(...components));
+if (wires.length > 0)
+  action.add(new RemoveWiresAction(...wires));
+
+for (const c of components) project.removeComponent(c.id);  // state already mutated
+for (const w of wires) project.removeWire(w.id);
+
+project.actionManager.register(action);  // does NOT call action.do()
 ```
 
 ---
@@ -163,12 +180,24 @@ These actions are pushed by `FloatingLayer._commitDrag()` after a successful sel
 
 `Project` creates and exposes `actionManager` as a public field. Call sites:
 
-| Call site                         | Action(s) pushed                                                |
-| --------------------------------- | --------------------------------------------------------------- |
-| `FloatingLayer.commitSelection()` | `AddComponentsAction`, `AddWiresAction` (placement commit)      |
-| `FloatingLayer._commitDrag()`     | `MoveComponentsAction`, `MoveWiresAction` (selection drag-move) |
+| Call site                               | Action(s) pushed                                                                                           |
+| --------------------------------------- | ---------------------------------------------------------------------------------------------------------- |
+| `FloatingLayer.commitSelection()`       | `AddComponentsAction`, `AddWiresAction` (placement commit)                                                 |
+| `FloatingLayer._commitDrag()`           | `MoveComponentsAction`, `MoveWiresAction` (selection drag-move)                                            |
+| `PastePlacementSession.onEnd()`         | `AddComponentsAction`, `AddWiresAction` (paste commit)                                                     |
+| `ClipboardService._applyDelete()`       | `ActionContainer(RemoveComponentsAction, RemoveWiresAction)` (delete / cut; folds in pending scissor cut)  |
+| `SelectionMoveSession.onEnd()`          | `ActionContainer(MoveComponentsAction, MoveWiresAction, …)` (also folds in pending scissor cut if present) |
+| `EraseSession.onEnd()`                  | `ActionContainer(RemoveComponentsAction, RemoveWiresAction)`                                               |
+| `WireDrawingSession.onEnd()`            | `AddWiresAction` (also `RemoveWiresAction` / `AddWiresAction` when wire integration triggers splits/merges) |
 
 Undo/redo keyboard shortcuts are wired through Angular UI components that call `project.actionManager.undo()` / `.redo()` directly.
+
+### `register` vs `push`
+
+`ActionManager` has two registration methods:
+
+- **`push(action)`** — calls `action.do(project)` immediately, then splices the history at the current pointer. Used when the action's effects have not yet been applied to the project (e.g., `ComponentPlacementSession` — the ghost is a temporary preview, and the real components do not exist until `AddComponentsAction.do()` runs).
+- **`register(action)`** — records the action without calling `do()`. Used when the caller has already applied the state changes to the project (e.g., paste, delete, erase, selection moves). The action is pushed straight into undo history as a done deed. This is the preferred pattern for operations that mutate live project state directly before recording.
 
 ---
 

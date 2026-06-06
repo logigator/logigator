@@ -7,8 +7,9 @@ The rendering layer owns the PixiJS scene graph structure, viewport interaction,
 ```
 src/app/rendering/
 ├── assets.service.ts               # PixiJS Assets bootstrap (fonts)
+├── drag-collision.ts               # Shared collision detection for drag sessions
 ├── drag-session.ts                 # DragSession interface implemented by all session classes
-├── floating-layer.ts               # Transient placement/wire-drawing/selection overlay
+├── floating-layer.ts               # Transient placement/wire-drawing/selection/paste overlay
 ├── graphics-provider.service.ts    # Shared GraphicsContext cache
 ├── grid.ts                         # Infinite-seeming background grid
 ├── interaction-container.ts        # Abstract base: pan/zoom pointer handling
@@ -20,6 +21,7 @@ src/app/rendering/
 │   └── wire.graphics.ts            # GraphicsContext for a wire segment
 └── sessions/
     ├── component-placement.session.ts  # Ghost component drag → AddComponentsAction
+    ├── paste-placement.session.ts      # Paste preview drag → AddComponentsAction/AddWiresAction
     ├── select-rect.session.ts          # Rubber-band rect → selectionManager.commit()
     ├── selection-move.session.ts       # Drag selected elements → MoveComponentsAction/MoveWiresAction
     └── wire-drawing.session.ts         # L-shaped wire preview → AddWiresAction
@@ -156,6 +158,8 @@ All pointer-event positions are converted to grid units via `e.getLocalPosition(
 
 Escape key cancels any active session by calling `_activeDrag.onCancel()` followed by `_stopDrag()`. Cancel always works regardless of collision state.
 
+**Paste placement** is a special flow that bypasses the work-mode switch. `startPasteSession` is called directly by `Project` (via the `ClipboardService`), not through `onPointerDown`. It cancels any active session, clears the selection, then creates a `PastePlacementSession` in hover mode (`isDragging = false`). In hover mode, the ghosts do not follow the cursor — the pasted elements sit where they were placed (original clipboard position + `PASTE_OFFSET`). `onPointerDown` detects an active-but-non-dragging `PastePlacementSession`: if the click hits a ghost element's bounds, `beginDrag()` is called and subsequent `pointermove` events drag the group on a grid-snapped cursor. If the click falls outside the ghost group, the session ends immediately (committing at the initial position).
+
 ### Session classes
 
 Each session lives in `rendering/sessions/` and implements `DragSession` (`onMove`, `onEnd`, `onCancel`, `canEnd`).
@@ -169,6 +173,27 @@ Each session lives in `rendering/sessions/` and implements `DragSession` (`onMov
 **`WireDrawingSession`** — `_wirePreview.position` is the half-grid-snapped start point. Two `Wire` objects (horizontal + vertical) are created lazily on first movement and sized to form an L-shape. The drag direction is locked to whichever axis moved first. `getLocalPosition(_wirePreview)` gives the delta from the start in grid units, which drives wire lengths/positions. On `onEnd()`, non-zero wires have the start position added to their local positions (converting to world grid coords), then `AddWiresAction` is pushed and preview wires are destroyed.
 
 **`SelectRectSession`** — adds `_selectRect` to `FloatingLayer` at the click's grid position. `onMove` sets `_selectRect.scale` to the grid-unit delta from start (negative values handle reverse drags). `onEnd` normalizes the rect to a canonical `Rectangle` (always positive width/height), removes `_selectRect`, and calls `project.selectionManager.commit(rect, mode)`. A zero-area rect (no movement) reaches the selection manager unchanged and is handled as a single-click hit test.
+
+**`PastePlacementSession`** — created by `FloatingLayer.startPasteSession()` when the user invokes paste. Receives pre-deserialized `Component[]` and `Wire[]` (fresh instances with new IDs and positions already offset by `PASTE_OFFSET = 2` grid units). Elements are added to `_dragLayer` with tint `0x888888` (placement ghost colour). Two-phase interaction:
+
+1. **Hover phase** (`isDragging = false`) — elements sit at their initial positions. `onMove` is a no-op. The user can click on a ghost to begin dragging, or click off the ghosts to commit immediately at the initial position.
+2. **Drag phase** (`isDragging = true`) — after `beginDrag(anchor)`, `onMove` sets `_dragLayer.position` to the grid-snapped cursor delta from the anchor. Collision is checked after every move via `DragCollisionState`.
+
+`canEnd()` returns `false` while colliding — `pointerup` is ignored and the ghosts stay live. `onEnd()` applies the `_dragLayer` delta to each element's position, resets `_dragLayer.position` and tint, transfers elements to the project via `addComponent`/`addWire`, wraps them in an `ActionContainer(AddComponentsAction, AddWiresAction)`, calls `selectionManager.select()` to select the pasted elements, and registers the action (state already applied — no `do()` call). `onCancel()` destroys all ghost components and wires without adding them to the project.
+
+### `DragCollisionState`
+
+**File:** `drag-collision.ts`
+
+Shared collision detection extracted from `SelectionMoveSession` and reused by `PastePlacementSession`. Constructed with the project, drag layer, and the moving components/wires arrays. On each `update()`, computes world-space bounds (`gridBounds + dragLayer.position`) for each element and checks:
+
+- Component–component collision via `project.hasComponentCollision(bounds, bodyBounds)`.
+- Component–wire body collision via `project.hasComponentBodyWireCollision(bodyBounds, …)`.
+- Wire–component body collision via `project.hasWireBodyCollision(bounds)`.
+
+Tints `_dragLayer` red (`0xff4444`) on collision, white (`0xffffff`) otherwise. Only emits tint changes when the collision state actually flips, avoiding redundant GPU updates.
+
+`ComponentPlacementSession` keeps its own inline collision check because it manages a single component with direct tint control on the ghost rather than on a shared drag layer.
 
 ### Collision tint convention
 
@@ -322,7 +347,8 @@ Angular `Injectable` (root-provided). Registers the Roboto woff2 font with PixiJ
 | ------------------------- | ---------------------------------------------------------- | -------------------------------------------------------------------------------- |
 | `InteractionContainer`    | `Project`                                                  | Extends it; provides `_ticker$` and pan/zoom hooks                               |
 | `Grid`                    | `Project`                                                  | Instantiated privately; forwarded position/scale changes                         |
-| `FloatingLayer`           | `Project`                                                  | Instantiated privately; receives `_ticker$`; commits via `project.actionManager` |
+| `FloatingLayer`           | `Project`, `ClipboardService` (via `Project`)              | Instantiated privately; receives `_ticker$`; commits via `project.actionManager` |
+| `DragCollisionState`      | `PastePlacementSession`, `SelectionMoveSession`            | Shared component+wire collision detection against the project's quad trees       |
 | `QuadTreeContainer`       | `Project`                                                  | Used as `_wires` and `_components` inside `_gridSpace`                           |
 | `GraphicsProviderService` | `Wire`, `Grid` (via `getStaticDI`), any component subclass | Shared `GraphicsContext` deduplication                                           |
 | `AssetsService`           | `BoardComponent`                                           | Loaded before `Application` init                                                 |

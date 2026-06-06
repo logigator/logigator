@@ -141,7 +141,7 @@ The menu model is a `Signal<MenuItem[]>` built by `generateMenuItems()` and re-d
 - **View** — (no items yet)
 - **Help** — (no items yet)
 
-Most menu items are stubs — only `newProject` has a handler (currently logs to `LoggingService`). The `p-menubar` uses `[autoDisplay]="false"` so submenus open only on click, not hover.
+Most file menu items are stubs — only `newProject` has a handler (currently logs to `LoggingService`). Edit menu items (Cut, Copy, Paste, Delete, Undo, Redo) are wired to `ClipboardService` and `ActionManager`. The `p-menubar` uses `[autoDisplay]="false"` so submenus open only on click, not hover.
 
 The logo `<img>` uses Angular's `NgOptimizedImage` directive (`[ngSrc]`) with the `hashed` pipe, which appends a content hash to the URL for cache-busting.
 
@@ -155,9 +155,9 @@ A horizontal row of icon-only `p-button` elements (severity `secondary`, tooltip
 
 Button groups (separated by `p-divider`):
 
-1. **File actions** — Save, Open, New Component (no `WorkMode` change; stubs)
-2. **Clipboard** — Copy, Cut, Paste, Delete (stubs)
-3. **History** — Undo, Redo (stubs)
+1. **File actions** — Save, Open, New Component (Save delegates to `PersistenceService`; Open and New Component are stubs)
+2. **Clipboard** — Copy, Cut, Paste, Delete (wired to `ClipboardService`)
+3. **History** — Undo, Redo (wired to `ActionManager`)
 4. **Zoom** — Zoom Out, Zoom In (stubs)
 5. **Drawing tools** — Place Wires, Connect Wires, Select, Select Exact, Erase, Place Text
 
@@ -246,7 +246,8 @@ A thin loop rendered inside the floating `p-card` in `AppComponent` when a compo
 | Service                    | Consumers                                                                                            | Role                                                                               |
 | -------------------------- | ---------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------- |
 | `WorkModeService`          | `BoardComponent`, `ToolBarComponent`, `ComponentListComponent`, `StatusBarComponent`, `AppComponent` | Single source of truth for the active `WorkMode` and the selected `ComponentType`. |
-| `ProjectService`           | `AppComponent`                                                                                       | Holds the active `Project`; `AppComponent` passes it into `BoardComponent`.        |
+| `ProjectService`           | `AppComponent`, `TitleBarComponent`, `ToolBarComponent`                                              | Holds the active `Project`; `AppComponent` passes it into `BoardComponent`.        |
+| `ClipboardService`         | `TitleBarComponent`, `ToolBarComponent`                                                              | Copy/cut/paste/delete operations; serializes selected elements and drives paste sessions. |
 | `ComponentProviderService` | `SideBarComponent`, `StatusBarComponent`                                                             | Registry lookup — provides component lists by category and config by type.         |
 | `ThemingService`           | `BoardComponent`                                                                                     | Supplies the background color for the PixiJS renderer at init time.                |
 | `AssetsService`            | `BoardComponent`                                                                                     | Preloads PixiJS assets (Roboto font) before the application renders.               |
