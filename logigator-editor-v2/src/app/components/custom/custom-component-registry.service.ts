@@ -48,6 +48,10 @@ export class CustomComponentRegistry {
   // Library dependency edges: masterTypeId -> the distinct master type ids its
   // circuit places. Reverse-traversed by dependentsOf for cycle filtering.
   private readonly _dependencies = new Map<number, Set<number>>();
+  // Placement-time snapshot cache: masterTypeId -> the snapshot type id that
+  // represents the master's current state. Cleared by any method that mutates
+  // master content so subsequent placements get a fresh snapshot.
+  private readonly _masterToSnapshotTypeId = new Map<number, number>();
   private readonly _change$ = new Subject<CustomComponentDefinition>();
 
   /**
@@ -81,15 +85,20 @@ export class CustomComponentRegistry {
 
   /**
    * Freezes a master's **current** state into a snapshot definition (with
-   * `source`/`id`/`version` provenance) and registers it, returning the frozen
-   * definition. Used at place time and by `UpdateInstanceAction`. Each call
-   * produces a distinct snapshot type id; snapshots are never mutated.
+   * `source`/`id`/`version` provenance) and returns it. Repeated calls for the
+   * same unchanged master return the cached snapshot so all placements share one
+   * type id and produce one definition in the save file. The cache is invalidated
+   * by {@link updateDefinition}, {@link setMasterCircuit}, and
+   * {@link setMasterVersion} — any of which mutate master content — so the next
+   * call after an edit always produces a fresh snapshot.
    */
   public snapshot(masterTypeId: number): CustomComponentDefinition {
     const master = this._definitions.get(masterTypeId);
     if (!master || master.kind !== 'master') {
       throw new Error(`No master definition for type id ${masterTypeId}`);
     }
+    const cached = this._masterToSnapshotTypeId.get(masterTypeId);
+    if (cached !== undefined) return this._definitions.get(cached)!;
     const typeId = this.registerSnapshot({
       kind: 'snapshot',
       source: master.source,
@@ -105,6 +114,7 @@ export class CustomComponentRegistry {
       // master, so later edits to the master cannot mutate placed instances.
       circuit: master.circuit ? cloneCircuit(master.circuit) : undefined
     });
+    this._masterToSnapshotTypeId.set(masterTypeId, typeId);
     return this._definitions.get(typeId)!;
   }
 
@@ -161,6 +171,21 @@ export class CustomComponentRegistry {
         }
       });
     }
+    // Pre-populate the placement cache for ingested snapshots whose source
+    // matches a currently-loaded library master at the same version. This
+    // ensures that palette placements after loading an existing project reuse
+    // the ingested type id instead of creating a duplicate definition on save.
+    for (const def of defs) {
+      if (!def.source) continue;
+      const masterTypeId = this._idToMasterTypeId.get(def.source.id);
+      if (masterTypeId === undefined) continue;
+      const master = this._definitions.get(masterTypeId);
+      if (!master || master.version !== def.source.version) continue;
+      if (!this._masterToSnapshotTypeId.has(masterTypeId)) {
+        this._masterToSnapshotTypeId.set(masterTypeId, remap.get(def.type)!);
+      }
+    }
+
     return remap;
   }
 
@@ -184,6 +209,7 @@ export class CustomComponentRegistry {
     if (patch.name !== undefined) def.name = patch.name;
     if (patch.description !== undefined) def.description = patch.description;
 
+    this._masterToSnapshotTypeId.delete(masterTypeId);
     this._change$.next(def);
   }
 
@@ -200,6 +226,7 @@ export class CustomComponentRegistry {
     const def = this._definitions.get(masterTypeId);
     if (!def || def.kind !== 'master') return;
     def.circuit = cloneCircuit(circuit);
+    this._masterToSnapshotTypeId.delete(masterTypeId);
   }
 
   /**
@@ -213,6 +240,7 @@ export class CustomComponentRegistry {
     const def = this._definitions.get(masterTypeId);
     if (!def || def.kind !== 'master') return;
     def.version = version;
+    this._masterToSnapshotTypeId.delete(masterTypeId);
   }
 
   public getDefinition(typeId: number): CustomComponentDefinition | undefined {

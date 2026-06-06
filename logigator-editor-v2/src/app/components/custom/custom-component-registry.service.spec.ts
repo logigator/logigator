@@ -140,6 +140,97 @@ describe('CustomComponentRegistry', () => {
     });
   });
 
+  describe('snapshot caching', () => {
+    it('returns the same type id for repeated placements of the same master', () => {
+      const master = registry.createMaster({ symbol: 'M' }, 'browser');
+      const snap1 = registry.snapshot(master);
+      const snap2 = registry.snapshot(master);
+      expect(snap1.typeId).toBe(snap2.typeId);
+    });
+
+    it('creates a fresh snapshot after updateDefinition', () => {
+      const master = registry.createMaster(
+        { symbol: 'M', numInputs: 1 },
+        'browser'
+      );
+      const snap1 = registry.snapshot(master);
+      registry.updateDefinition(master, { numInputs: 2, numOutputs: 0, labels: [] });
+      const snap2 = registry.snapshot(master);
+      expect(snap2.typeId).not.toBe(snap1.typeId);
+      expect(snap2.numInputs).toBe(2);
+    });
+
+    it('creates a fresh snapshot after setMasterCircuit', () => {
+      const master = registry.createMaster({ symbol: 'M' }, 'browser');
+      const snap1 = registry.snapshot(master);
+      registry.setMasterCircuit(master, {
+        components: [{ type: 99, pos: [0, 0], options: {} }],
+        wires: []
+      });
+      const snap2 = registry.snapshot(master);
+      expect(snap2.typeId).not.toBe(snap1.typeId);
+      expect(snap2.circuit?.components.map((c) => c.type)).toEqual([99]);
+    });
+
+    it('creates a fresh snapshot after setMasterVersion', () => {
+      const master = registry.createMaster(
+        { symbol: 'M', version: 1 },
+        'browser'
+      );
+      const snap1 = registry.snapshot(master);
+      registry.setMasterVersion(master, 2);
+      const snap2 = registry.snapshot(master);
+      expect(snap2.typeId).not.toBe(snap1.typeId);
+      expect(snap2.version).toBe(2);
+    });
+
+    it('pre-populates from ingestSnapshots when source matches current master version', () => {
+      const masterTypeId = registry.createMaster(
+        { id: 'id-x', symbol: 'X', version: 3 },
+        'server'
+      );
+      const remap = registry.ingestSnapshots([
+        {
+          type: 5000,
+          source: { id: 'id-x', version: 3 },
+          name: '',
+          symbol: 'X',
+          description: '',
+          numInputs: 0,
+          numOutputs: 0,
+          labels: [],
+          components: [],
+          wires: []
+        }
+      ]);
+      const placed = registry.snapshot(masterTypeId);
+      expect(placed.typeId).toBe(remap.get(5000)!);
+    });
+
+    it('does not pre-populate from ingestSnapshots when versions differ', () => {
+      const masterTypeId = registry.createMaster(
+        { id: 'id-x', symbol: 'X', version: 4 },
+        'server'
+      );
+      const remap = registry.ingestSnapshots([
+        {
+          type: 5000,
+          source: { id: 'id-x', version: 3 },
+          name: '',
+          symbol: 'X',
+          description: '',
+          numInputs: 0,
+          numOutputs: 0,
+          labels: [],
+          components: [],
+          wires: []
+        }
+      ]);
+      const placed = registry.snapshot(masterTypeId);
+      expect(placed.typeId).not.toBe(remap.get(5000)!);
+    });
+  });
+
   describe('updateDefinition', () => {
     it('mutates the master object in place (never replaces it)', () => {
       const typeId = registry.createMaster({ numInputs: 1 }, 'browser');

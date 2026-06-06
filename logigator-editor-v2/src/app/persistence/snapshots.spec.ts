@@ -120,6 +120,42 @@ describe('snapshots codec', () => {
       ).toBe(1);
     });
 
+    it('emits one definition when the same master is placed multiple times', () => {
+      const master = registry.createMaster({ symbol: 'M' }, 'browser');
+      // Simulate palette placements: each calls registry.snapshot independently.
+      const snap1 = registry.snapshot(master).typeId;
+      const snap2 = registry.snapshot(master).typeId;
+      const snap3 = registry.snapshot(master).typeId;
+      const { definitions } = collectSnapshots(
+        fakeProject([snap1, snap2, snap3]),
+        registry
+      );
+      expect(definitions.length).toBe(1);
+    });
+
+    it('emits two definitions when port count changes between placements (guards against unsafe source-key dedup)', () => {
+      const master = registry.createMaster(
+        { symbol: 'M', numInputs: 1, numOutputs: 1, labels: ['i', 'o'] },
+        'browser'
+      );
+      const snap1 = registry.snapshot(master).typeId;
+      // Change port count without bumping version — source.{id,version} would be
+      // identical, but the two snapshots have different content.
+      registry.updateDefinition(master, {
+        numInputs: 2,
+        numOutputs: 1,
+        labels: ['a', 'b', 'o']
+      });
+      const snap2 = registry.snapshot(master).typeId;
+      const { definitions } = collectSnapshots(
+        fakeProject([snap1, snap2]),
+        registry
+      );
+      expect(definitions.length).toBe(2);
+      expect(definitions.find((d) => d.numInputs === 1)).toBeTruthy();
+      expect(definitions.find((d) => d.numInputs === 2)).toBeTruthy();
+    });
+
     it('walks nested customs and rewrites the parent body to file-local ids', () => {
       const { snapA } = buildNestedSnapshots();
       const { definitions } = collectSnapshots(fakeProject([snapA]), registry);
