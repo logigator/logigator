@@ -620,9 +620,13 @@ export class PersistenceService {
     const summary = deriveSummary(project);
     const content = this.circuitFile.toJson(project, metadata.name);
 
+    // Auto-increment the monotonic version so that placed instances frozen at an
+    // older version can detect "a newer master exists" and offer the update button.
+    const newVersion = (master?.version ?? 0) + 1;
+
     await this.browserComponentStore.save({
       id: metadata.id || undefined,
-      version: master?.version ?? 1,
+      version: newVersion,
       name: metadata.name,
       symbol: master?.symbol ?? '',
       description: master?.description ?? '',
@@ -631,6 +635,13 @@ export class PersistenceService {
       labels: summary.labels,
       content
     });
+
+    // Adopt the bumped version so the in-memory master reflects it, invalidates
+    // the placement snapshot cache, and placed instances behind this version can
+    // detect "a newer master exists".
+    if (masterTypeId !== undefined) {
+      this.registry.setMasterVersion(masterTypeId, newVersion);
+    }
 
     if (this.metadataStore.dirtyVersion(project) === versionAtSnapshot) {
       this.metadataStore.clearDirty(project);
