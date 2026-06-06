@@ -109,10 +109,10 @@ export class WireIntegrator {
     }
 
     // Net port-presence delta at each position relative to what queries return.
-    // Moved component ports already sit at newPorts in the project tree, so queries
-    // reflect newPorts already; we only need -1 for oldPorts to mask the obsolete
-    // positions (which queries no longer return anyway — but a stationary port at
-    // the same coordinate would still be counted correctly).
+    // addedComponentPorts are not yet in the tree → +1. removedComponentPorts are
+    // still in the tree but should be treated as gone → -1. movedComponentPorts
+    // need no delta: the component is already at its new position, so queries
+    // return new ports correctly and old port positions return nothing.
     const portDelta = new Map<string, number>();
     const bumpPort = (p: Point, delta: number) => {
       const k = pointKey(p);
@@ -120,9 +120,6 @@ export class WireIntegrator {
     };
     for (const p of addedComponentPorts) bumpPort(p, 1);
     for (const p of removedComponentPorts) bumpPort(p, -1);
-    for (const { oldPorts } of movedComponentPorts) {
-      for (const p of oldPorts) bumpPort(p, -1);
-    }
 
     // hasPort: does the post-state contain a port at P?
     const hasPort = (p: Point): boolean => {
