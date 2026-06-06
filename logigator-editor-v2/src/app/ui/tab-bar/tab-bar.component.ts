@@ -31,6 +31,10 @@ export class TabBarComponent {
     return this.metadataStore.getMetadata(project)?.name ?? 'Untitled';
   }
 
+  protected isDirty(project: Project): boolean {
+    return this.metadataStore.isDirty(project);
+  }
+
   protected activate(project: Project): void {
     this.projectService.setActiveProject(project);
   }
