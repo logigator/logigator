@@ -35,7 +35,7 @@ export class StatusBarComponent {
   public readonly cursorPosition = input<Point>(new Point(0, 0));
 
   protected readonly dirty = computed(() => {
-    const project = this.projectService.mainProject();
+    const project = this.projectService.activeProject();
     return project ? this.metadataStore.isDirty(project) : false;
   });
 
