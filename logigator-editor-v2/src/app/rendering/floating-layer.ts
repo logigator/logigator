@@ -91,7 +91,12 @@ export class FloatingLayer extends Container {
     }
     this.project.selectionManager.clear();
     this._startDrag(
-      new PastePlacementSession(this.project, this._dragLayer, components, wires)
+      new PastePlacementSession(
+        this.project,
+        this._dragLayer,
+        components,
+        wires
+      )
     );
   }
 

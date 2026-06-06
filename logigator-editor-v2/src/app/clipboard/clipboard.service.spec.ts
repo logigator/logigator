@@ -96,7 +96,7 @@ describe('ClipboardService', () => {
       const project = makeProject([comp]);
       service.copy(project);
       expect(
-        (project.selectionManager.claimPendingCut as ReturnType<typeof vi.fn>)
+        project.selectionManager.claimPendingCut as ReturnType<typeof vi.fn>
       ).not.toHaveBeenCalled();
     });
 
@@ -288,8 +288,9 @@ describe('ClipboardService', () => {
       service.copy(src);
 
       // Corrupt the type to an unknown value
-      (service as unknown as { _clipboard: { components: Array<{ type: string }> } })
-        ._clipboard!.components[0].type = 'nonexistent_type' as never;
+      (
+        service as unknown as { _clipboard: { components: { type: string }[] } }
+      )._clipboard!.components[0].type = 'nonexistent_type' as never;
 
       const dest = makeProject();
       expect(() => service.paste(dest)).not.toThrow();

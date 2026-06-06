@@ -100,7 +100,7 @@ describe('PastePlacementSession', () => {
       session = new PastePlacementSession(project, dragLayer, [comp], []);
       expect(session.canEnd()).toBe(false);
 
-      session.beginDrag(new Point(0, 0));   // anchor = (0,0)
+      session.beginDrag(new Point(0, 0)); // anchor = (0,0)
       session.onMove(makeMoveEvent(10, 0)); // delta = (10,0) — clear of existing
       expect(session.canEnd()).toBe(true);
     });
@@ -158,7 +158,7 @@ describe('PastePlacementSession', () => {
       const comp = makeAnd(2, Direction.E, 2, 0);
       session = new PastePlacementSession(project, dragLayer, [comp], []);
 
-      session.beginDrag(new Point(0, 0));  // anchor = (0,0)
+      session.beginDrag(new Point(0, 0)); // anchor = (0,0)
       session.onMove(makeMoveEvent(3, 0)); // delta = (3,0)
       session.onEnd();
       session = undefined;
@@ -172,7 +172,7 @@ describe('PastePlacementSession', () => {
       const wire = makeWire(0, 0, WireDirection.HORIZONTAL); // position (0.5, 0.5)
       session = new PastePlacementSession(project, dragLayer, [], [wire]);
 
-      session.beginDrag(new Point(0, 0));  // anchor = (0,0)
+      session.beginDrag(new Point(0, 0)); // anchor = (0,0)
       session.onMove(makeMoveEvent(2, 0)); // delta = (2,0)
       session.onEnd();
       session = undefined;
@@ -212,9 +212,7 @@ describe('PastePlacementSession', () => {
       session.onEnd();
       session = undefined;
 
-      expect(
-        project.selectionManager.selectedComponents.has(comp)
-      ).toBe(true);
+      expect(project.selectionManager.selectedComponents.has(comp)).toBe(true);
     });
 
     it('selects pasted wires after commit', () => {

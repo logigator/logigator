@@ -12,7 +12,10 @@ import { MigrationContext } from './migrations/migration';
 import { migrateToCurrent } from './circuit-file-migrator';
 import { InvalidFileError } from './circuit-file.errors';
 import { CURRENT_FILE_VERSION, CurrentCircuitFile } from './circuit-file.types';
-import { remapComponentTypes, SerializedCircuitBody } from '../serialized-circuit';
+import {
+  remapComponentTypes,
+  SerializedCircuitBody
+} from '../serialized-circuit';
 import { collectSnapshots, serializeProjectBody } from '../snapshots';
 
 function isNumberPair(value: unknown): value is [number, number] {

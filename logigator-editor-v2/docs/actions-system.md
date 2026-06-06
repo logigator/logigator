@@ -110,7 +110,7 @@ if (wires.length > 0) {
 }
 
 if (action.length > 0) {
-  project.actionManager.push(action);  // calls action.do(project) internally
+  project.actionManager.push(action); // calls action.do(project) internally
 }
 ```
 
@@ -120,13 +120,12 @@ if (action.length > 0) {
 const action = new ActionContainer();
 if (components.length > 0)
   action.add(new RemoveComponentsAction(...components));
-if (wires.length > 0)
-  action.add(new RemoveWiresAction(...wires));
+if (wires.length > 0) action.add(new RemoveWiresAction(...wires));
 
-for (const c of components) project.removeComponent(c.id);  // state already mutated
+for (const c of components) project.removeComponent(c.id); // state already mutated
 for (const w of wires) project.removeWire(w.id);
 
-project.actionManager.register(action);  // does NOT call action.do()
+project.actionManager.register(action); // does NOT call action.do()
 ```
 
 ---
@@ -180,15 +179,15 @@ These actions are pushed by `FloatingLayer._commitDrag()` after a successful sel
 
 `Project` creates and exposes `actionManager` as a public field. Call sites:
 
-| Call site                               | Action(s) pushed                                                                                           |
-| --------------------------------------- | ---------------------------------------------------------------------------------------------------------- |
-| `FloatingLayer.commitSelection()`       | `AddComponentsAction`, `AddWiresAction` (placement commit)                                                 |
-| `FloatingLayer._commitDrag()`           | `MoveComponentsAction`, `MoveWiresAction` (selection drag-move)                                            |
-| `PastePlacementSession.onEnd()`         | `AddComponentsAction`, `AddWiresAction` (paste commit)                                                     |
-| `ClipboardService._applyDelete()`       | `ActionContainer(RemoveComponentsAction, RemoveWiresAction)` (delete / cut; folds in pending scissor cut)  |
-| `SelectionMoveSession.onEnd()`          | `ActionContainer(MoveComponentsAction, MoveWiresAction, …)` (also folds in pending scissor cut if present) |
-| `EraseSession.onEnd()`                  | `ActionContainer(RemoveComponentsAction, RemoveWiresAction)`                                               |
-| `WireDrawingSession.onEnd()`            | `AddWiresAction` (also `RemoveWiresAction` / `AddWiresAction` when wire integration triggers splits/merges) |
+| Call site                         | Action(s) pushed                                                                                            |
+| --------------------------------- | ----------------------------------------------------------------------------------------------------------- |
+| `FloatingLayer.commitSelection()` | `AddComponentsAction`, `AddWiresAction` (placement commit)                                                  |
+| `FloatingLayer._commitDrag()`     | `MoveComponentsAction`, `MoveWiresAction` (selection drag-move)                                             |
+| `PastePlacementSession.onEnd()`   | `AddComponentsAction`, `AddWiresAction` (paste commit)                                                      |
+| `ClipboardService._applyDelete()` | `ActionContainer(RemoveComponentsAction, RemoveWiresAction)` (delete / cut; folds in pending scissor cut)   |
+| `SelectionMoveSession.onEnd()`    | `ActionContainer(MoveComponentsAction, MoveWiresAction, …)` (also folds in pending scissor cut if present)  |
+| `EraseSession.onEnd()`            | `ActionContainer(RemoveComponentsAction, RemoveWiresAction)`                                                |
+| `WireDrawingSession.onEnd()`      | `AddWiresAction` (also `RemoveWiresAction` / `AddWiresAction` when wire integration triggers splits/merges) |
 
 Undo/redo keyboard shortcuts are wired through Angular UI components that call `project.actionManager.undo()` / `.redo()` directly.
 

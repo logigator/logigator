@@ -32,12 +32,14 @@ export class FakeBrowserProjectStore {
   }
 
   async list() {
-    return [...this.records.values()].map(({ id, name, createdOn, lastEdited }) => ({
-      id,
-      name,
-      createdOn,
-      lastEdited
-    }));
+    return [...this.records.values()].map(
+      ({ id, name, createdOn, lastEdited }) => ({
+        id,
+        name,
+        createdOn,
+        lastEdited
+      })
+    );
   }
 
   async delete(id: string): Promise<void> {

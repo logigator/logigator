@@ -54,6 +54,7 @@ export class ClipboardService {
     for (const s of components) {
       const config = provider.getComponent(s.type);
       if (!config) continue;
+      // eslint-disable-next-line @typescript-eslint/no-unused-vars
       const { id: _id, type: _type, pos, ...rest } = s;
       freshComponents.push(
         Component.deserialize(
@@ -64,6 +65,7 @@ export class ClipboardService {
     }
 
     const freshWires: Wire[] = wires.map((w) => {
+      // eslint-disable-next-line @typescript-eslint/no-unused-vars
       const { id: _id, pos, ...rest } = w;
       return Wire.deserialize({
         ...rest,

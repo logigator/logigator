@@ -81,7 +81,6 @@ function makeFullWire(
   };
 }
 
-
 /**
  * Configure the project spy so queryComponentsInRange yields the given items.
  * Uses callFake so a fresh generator is created on each call (generators are

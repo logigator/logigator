@@ -18,9 +18,9 @@ describe('UnsavedChangesGuard', () => {
         UnsavedChangesGuard,
         {
           provide: ProjectMetadataStore,
-          useValue: { anyDirty: anyDirty.asReadonly() },
-        },
-      ],
+          useValue: { anyDirty: anyDirty.asReadonly() }
+        }
+      ]
     });
     guard = TestBed.inject(UnsavedChangesGuard);
 

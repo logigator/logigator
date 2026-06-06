@@ -8,7 +8,9 @@
     >
       {{ name(main) }}
       @if (isDirty(main)) {
-        <span class="ml-1.5 w-1.5 h-1.5 rounded-full bg-current opacity-60 inline-block"></span>
+        <span
+          class="ml-1.5 w-1.5 h-1.5 rounded-full bg-current opacity-60 inline-block"
+        ></span>
       }
     </button>
   }
@@ -23,7 +25,9 @@
     >
       <span>{{ name(comp) }}</span>
       @if (isDirty(comp)) {
-        <span class="w-1.5 h-1.5 rounded-full bg-current opacity-60 inline-block -mr-1"></span>
+        <span
+          class="w-1.5 h-1.5 rounded-full bg-current opacity-60 inline-block -mr-1"
+        ></span>
       }
       <i
         class="ph ph-x cursor-pointer hover:text-red-400"

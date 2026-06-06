@@ -352,7 +352,7 @@ export class PersistenceService {
             },
             'browser'
           );
-        } catch (e) {
+        } catch {
           this.logging.warn(
             `Failed to preload browser component ${id}`,
             'PersistenceService'

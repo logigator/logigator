@@ -243,15 +243,15 @@ A thin loop rendered inside the floating `p-card` in `AppComponent` when a compo
 
 ## Service Dependencies
 
-| Service                    | Consumers                                                                                            | Role                                                                               |
-| -------------------------- | ---------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------- |
-| `WorkModeService`          | `BoardComponent`, `ToolBarComponent`, `ComponentListComponent`, `StatusBarComponent`, `AppComponent` | Single source of truth for the active `WorkMode` and the selected `ComponentType`. |
-| `ProjectService`           | `AppComponent`, `TitleBarComponent`, `ToolBarComponent`                                              | Holds the active `Project`; `AppComponent` passes it into `BoardComponent`.        |
+| Service                    | Consumers                                                                                            | Role                                                                                      |
+| -------------------------- | ---------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------- |
+| `WorkModeService`          | `BoardComponent`, `ToolBarComponent`, `ComponentListComponent`, `StatusBarComponent`, `AppComponent` | Single source of truth for the active `WorkMode` and the selected `ComponentType`.        |
+| `ProjectService`           | `AppComponent`, `TitleBarComponent`, `ToolBarComponent`                                              | Holds the active `Project`; `AppComponent` passes it into `BoardComponent`.               |
 | `ClipboardService`         | `TitleBarComponent`, `ToolBarComponent`                                                              | Copy/cut/paste/delete operations; serializes selected elements and drives paste sessions. |
-| `ComponentProviderService` | `SideBarComponent`, `StatusBarComponent`                                                             | Registry lookup — provides component lists by category and config by type.         |
-| `ThemingService`           | `BoardComponent`                                                                                     | Supplies the background color for the PixiJS renderer at init time.                |
-| `AssetsService`            | `BoardComponent`                                                                                     | Preloads PixiJS assets (Roboto font) before the application renders.               |
-| `TranslocoService`         | `TitleBarComponent`                                                                                  | Imperative translation needed to build `MenuItem[]` objects for `p-menubar`.       |
+| `ComponentProviderService` | `SideBarComponent`, `StatusBarComponent`                                                             | Registry lookup — provides component lists by category and config by type.                |
+| `ThemingService`           | `BoardComponent`                                                                                     | Supplies the background color for the PixiJS renderer at init time.                       |
+| `AssetsService`            | `BoardComponent`                                                                                     | Preloads PixiJS assets (Roboto font) before the application renders.                      |
+| `TranslocoService`         | `TitleBarComponent`                                                                                  | Imperative translation needed to build `MenuItem[]` objects for `p-menubar`.              |
 
 ---
 

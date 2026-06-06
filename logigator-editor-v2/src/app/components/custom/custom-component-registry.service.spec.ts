@@ -154,7 +154,11 @@ describe('CustomComponentRegistry', () => {
         'browser'
       );
       const snap1 = registry.snapshot(master);
-      registry.updateDefinition(master, { numInputs: 2, numOutputs: 0, labels: [] });
+      registry.updateDefinition(master, {
+        numInputs: 2,
+        numOutputs: 0,
+        labels: []
+      });
       const snap2 = registry.snapshot(master);
       expect(snap2.typeId).not.toBe(snap1.typeId);
       expect(snap2.numInputs).toBe(2);
