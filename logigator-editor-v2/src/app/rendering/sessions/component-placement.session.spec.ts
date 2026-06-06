@@ -1,55 +1,25 @@
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 import { Injector } from '@angular/core';
 import { TestBed } from '@angular/core/testing';
-import { Container, FederatedPointerEvent, Point, Rectangle } from 'pixi.js';
+import { Container, Point, Rectangle } from 'pixi.js';
 import { setStaticDIInjector } from '../../utils/get-di';
 import { Project } from '../../project/project';
 import { Wire } from '../../wires/wire';
 import { WireDirection } from '../../wires/wire-direction.enum';
-import { AndComponent } from '../../components/component-types/and/and.component';
-import { andComponentConfig } from '../../components/component-types/and/and.config';
-import { NotComponent } from '../../components/component-types/not/not.component';
-import { notComponentConfig } from '../../components/component-types/not/not.config';
 import { textComponentConfig } from '../../components/component-types/text/text.config';
 import { Direction } from '../../utils/direction';
 import { Component } from '../../components/component';
 import { ComponentConfig } from '../../components/component-config.model';
 import { ComponentOption } from '../../components/component-option';
 import { ComponentPlacementSession } from './component-placement.session';
-
-// AND gate: bodyGridWidth=2, bodyGridHeight=max(inputs,1)=2 for 2-input gate.
-// When dragLayer.position=(px,py): bodyBoundsWorld = Rectangle(px, py, 2, 2).
-// gridBounds (with stubs): lx=-0.5, w=3 → Rectangle(px-0.5, py, 3, 2).
-
-function makeWire(
-  gx: number,
-  gy: number,
-  dir: WireDirection,
-  length: number
-): Wire {
-  const w = new Wire(dir, length);
-  w.position.set(gx + 0.5, gy + 0.5);
-  return w;
-}
-
-function makeAnd(numInputs = 2): AndComponent {
-  return new AndComponent({
-    direction: andComponentConfig.options.direction.clone(),
-    numInputs: andComponentConfig.options.numInputs.clone(numInputs)
-  });
-}
-
-function makeNot(direction: Direction = Direction.E): NotComponent {
-  return new NotComponent({
-    direction: notComponentConfig.options.direction.clone(direction)
-  });
-}
-
-function makeMoveEvent(x: number, y: number): FederatedPointerEvent {
-  return {
-    getLocalPosition: () => new Point(x, y)
-  } as unknown as FederatedPointerEvent;
-}
+import {
+  makeAnd,
+  makeMoveEvent,
+  makeNot,
+  makeWire
+} from '../../../testing/factories';
+import { andComponentConfig } from '../../components/component-types/and/and.config';
+import { notComponentConfig } from '../../components/component-types/not/not.config';
 
 describe('ComponentPlacementSession collision', () => {
   let project: Project;

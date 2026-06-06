@@ -8,16 +8,9 @@ import { SelectionInspectorService } from './selection-inspector.service';
 import { ProjectService } from './project.service';
 import { ProjectMetadataStore } from '../persistence/project-metadata.store';
 import { Project } from './project';
-import { AndComponent } from '../components/component-types/and/and.component';
-import { andComponentConfig } from '../components/component-types/and/and.config';
 import { WorkMode } from '../work-mode/work-mode.enum';
-
-function makeAnd(): AndComponent {
-  return new AndComponent({
-    direction: andComponentConfig.options.direction.clone(),
-    numInputs: andComponentConfig.options.numInputs.clone(2)
-  });
-}
+import { makeAnd } from '../../testing/factories';
+import { AndComponent } from '../components/component-types/and/and.component';
 
 // A trivial host whose change-detection pass flushes the inspector's
 // `toObservable` subscription effect, so the active project's selection stream

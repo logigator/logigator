@@ -7,11 +7,11 @@ import { Point, Rectangle } from 'pixi.js';
 import { SelectionManager } from './selection-manager';
 import { WorkMode } from '../work-mode/work-mode.enum';
 import { setStaticDIInjector } from '../utils/get-di';
-import { AndComponent } from '../components/component-types/and/and.component';
-import { andComponentConfig } from '../components/component-types/and/and.config';
 import { WireDirection } from '../wires/wire-direction.enum';
 import { ActionContainer } from '../actions/action-container';
 import type { Project } from './project';
+import { makeAnd } from '../../testing/factories';
+import { AndComponent } from '../components/component-types/and/and.component';
 
 // ---------------------------------------------------------------------------
 // Fake factories
@@ -81,13 +81,6 @@ function makeFullWire(
   };
 }
 
-/** Create a real AndComponent (requires DI). */
-function makeAnd(numInputs = 2): AndComponent {
-  return new AndComponent({
-    direction: andComponentConfig.options.direction.clone(),
-    numInputs: andComponentConfig.options.numInputs.clone(numInputs)
-  });
-}
 
 /**
  * Configure the project spy so queryComponentsInRange yields the given items.

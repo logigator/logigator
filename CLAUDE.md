@@ -109,4 +109,9 @@ Backend serves `logigator-editor-v2` as a static SPA. SPA calls `/api/projects`,
 
 ## Testing
 
-Vitest via Angular's `@angular/build:unit-test` builder. Spec files sit next to source (e.g. `quad-tree-container.spec.ts`). Angular specs use `TestBed`; pure-logic specs don't. Shared test fakes live in `src/testing/`.
+Vitest via Angular's `@angular/build:unit-test` builder. Spec files sit next to source. Angular specs use `TestBed`; pure-logic specs don't. Shared helpers in `src/testing/`:
+
+- `fake-browser-stores.ts` — `FakeBrowserProjectStore`, `FakeBrowserComponentStore` (in-memory IndexedDB stand-ins)
+- `factories.ts` — `makeAnd`, `makeNot`, `makeWire`, `makeInput`, `makeMoveEvent` (circuit-element and pointer-event stubs)
+- `action-mocks.ts` — `makeAction` (mocked `Action` with named `do`/`undo` spies)
+- `vitest-helpers.ts` — `arrayWithExactContents` (asymmetric matcher replacing Jasmine's), `gen` (generator helper)

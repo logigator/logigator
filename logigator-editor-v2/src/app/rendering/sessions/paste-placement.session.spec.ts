@@ -1,40 +1,16 @@
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 import { Injector } from '@angular/core';
 import { TestBed } from '@angular/core/testing';
-import { Container, FederatedPointerEvent, Point } from 'pixi.js';
+import { Container, Point } from 'pixi.js';
 import { setStaticDIInjector } from '../../utils/get-di';
 import { Project } from '../../project/project';
 import { Component } from '../../components/component';
 import { Wire } from '../../wires/wire';
 import { WireDirection } from '../../wires/wire-direction.enum';
+import { Direction } from '../../utils/direction';
 import { ConnectionPoint } from '../../connection-points/connection-point';
 import { PastePlacementSession } from './paste-placement.session';
-import { AndComponent } from '../../components/component-types/and/and.component';
-import { andComponentConfig } from '../../components/component-types/and/and.config';
-
-// ── helpers ───────────────────────────────────────────────────────────────────
-
-function makeAnd(x = 0, y = 0): AndComponent {
-  const c = new AndComponent({
-    direction: andComponentConfig.options.direction.clone(),
-    numInputs: andComponentConfig.options.numInputs.clone(2)
-  });
-  c.position.set(x, y);
-  return c;
-}
-
-function makeHWire(x: number, y: number, length = 4): Wire {
-  const w = new Wire(WireDirection.HORIZONTAL, length);
-  // Deserialized wires get +0.5 added; pass already-deserialized coordinates.
-  w.position.set(x + 0.5, y + 0.5);
-  return w;
-}
-
-function makeMoveEvent(x: number, y: number): FederatedPointerEvent {
-  return {
-    getLocalPosition: () => new Point(x, y)
-  } as unknown as FederatedPointerEvent;
-}
+import { makeAnd, makeMoveEvent, makeWire } from '../../../testing/factories';
 
 function hasComponent(project: Project, comp: Component): boolean {
   return [...project.components].includes(comp);
@@ -70,27 +46,27 @@ describe('PastePlacementSession', () => {
 
   describe('constructor', () => {
     it('adds components to dragLayer', () => {
-      const comp = makeAnd(3, 0);
+      const comp = makeAnd(2, Direction.E, 3, 0);
       session = new PastePlacementSession(project, dragLayer, [comp], []);
       expect(dragLayer.children).toContain(comp);
     });
 
     it('adds wires to dragLayer', () => {
-      const wire = makeHWire(2, 1);
+      const wire = makeWire(2, 1, WireDirection.HORIZONTAL);
       session = new PastePlacementSession(project, dragLayer, [], [wire]);
       expect(dragLayer.children).toContain(wire);
     });
 
     it('adds both components and wires to dragLayer', () => {
-      const comp = makeAnd(0, 0);
-      const wire = makeHWire(5, 0);
+      const comp = makeAnd(2, Direction.E, 0, 0);
+      const wire = makeWire(5, 0, WireDirection.HORIZONTAL);
       session = new PastePlacementSession(project, dragLayer, [comp], [wire]);
       expect(dragLayer.children).toContain(comp);
       expect(dragLayer.children).toContain(wire);
     });
 
     it('does not add elements to the project', () => {
-      const comp = makeAnd(3, 0);
+      const comp = makeAnd(2, Direction.E, 3, 0);
       session = new PastePlacementSession(project, dragLayer, [comp], []);
       expect([...project.components]).toHaveLength(0);
     });
@@ -100,27 +76,27 @@ describe('PastePlacementSession', () => {
 
   describe('canEnd()', () => {
     it('returns true when no existing elements block the paste position', () => {
-      const comp = makeAnd(10, 10);
+      const comp = makeAnd(2, Direction.E, 10, 10);
       session = new PastePlacementSession(project, dragLayer, [comp], []);
       expect(session.canEnd()).toBe(true);
     });
 
     it('returns false when a pasted component overlaps an existing component', () => {
       // Existing AND at (0,0); pasted AND also at (0,0).
-      const existing = makeAnd(0, 0);
+      const existing = makeAnd(2, Direction.E, 0, 0);
       project.addComponent(existing);
 
-      const comp = makeAnd(0, 0);
+      const comp = makeAnd(2, Direction.E, 0, 0);
       session = new PastePlacementSession(project, dragLayer, [comp], []);
 
       expect(session.canEnd()).toBe(false);
     });
 
     it('returns true again after moving pasted component away from collision', () => {
-      const existing = makeAnd(0, 0);
+      const existing = makeAnd(2, Direction.E, 0, 0);
       project.addComponent(existing);
 
-      const comp = makeAnd(0, 0); // starts overlapping
+      const comp = makeAnd(2, Direction.E, 0, 0); // starts overlapping
       session = new PastePlacementSession(project, dragLayer, [comp], []);
       expect(session.canEnd()).toBe(false);
 
@@ -134,7 +110,7 @@ describe('PastePlacementSession', () => {
 
   describe('onMove()', () => {
     it('does nothing before beginDrag() is called (hover phase)', () => {
-      const comp = makeAnd(0, 0);
+      const comp = makeAnd(2, Direction.E, 0, 0);
       session = new PastePlacementSession(project, dragLayer, [comp], []);
 
       session.onMove(makeMoveEvent(4, 0));
@@ -144,7 +120,7 @@ describe('PastePlacementSession', () => {
     });
 
     it('moves the dragLayer relative to the beginDrag anchor', () => {
-      const comp = makeAnd(0, 0);
+      const comp = makeAnd(2, Direction.E, 0, 0);
       session = new PastePlacementSession(project, dragLayer, [comp], []);
 
       session.beginDrag(new Point(2, 0)); // anchor at (2,0)
@@ -155,7 +131,7 @@ describe('PastePlacementSession', () => {
     });
 
     it('snaps cursor to grid during drag', () => {
-      const comp = makeAnd(0, 0);
+      const comp = makeAnd(2, Direction.E, 0, 0);
       session = new PastePlacementSession(project, dragLayer, [comp], []);
 
       session.beginDrag(new Point(0, 0)); // anchor = (0,0)
@@ -166,7 +142,7 @@ describe('PastePlacementSession', () => {
     });
 
     it('isDragging is false before beginDrag, true after', () => {
-      const comp = makeAnd(0, 0);
+      const comp = makeAnd(2, Direction.E, 0, 0);
       session = new PastePlacementSession(project, dragLayer, [comp], []);
 
       expect(session.isDragging).toBe(false);
@@ -179,7 +155,7 @@ describe('PastePlacementSession', () => {
 
   describe('onEnd()', () => {
     it('adds components to the project at their final position', () => {
-      const comp = makeAnd(2, 0);
+      const comp = makeAnd(2, Direction.E, 2, 0);
       session = new PastePlacementSession(project, dragLayer, [comp], []);
 
       session.beginDrag(new Point(0, 0));  // anchor = (0,0)
@@ -193,7 +169,7 @@ describe('PastePlacementSession', () => {
     });
 
     it('adds wires to the project at their final position', () => {
-      const wire = makeHWire(0, 0); // position (0.5, 0.5)
+      const wire = makeWire(0, 0, WireDirection.HORIZONTAL); // position (0.5, 0.5)
       session = new PastePlacementSession(project, dragLayer, [], [wire]);
 
       session.beginDrag(new Point(0, 0));  // anchor = (0,0)
@@ -206,7 +182,7 @@ describe('PastePlacementSession', () => {
     });
 
     it('places elements at initial positions when no drag occurred', () => {
-      const comp = makeAnd(4, 2);
+      const comp = makeAnd(2, Direction.E, 4, 2);
       session = new PastePlacementSession(project, dragLayer, [comp], []);
 
       session.onEnd();
@@ -218,7 +194,7 @@ describe('PastePlacementSession', () => {
     });
 
     it('resets dragLayer position to (0,0) after commit', () => {
-      const comp = makeAnd(0, 0);
+      const comp = makeAnd(2, Direction.E, 0, 0);
       session = new PastePlacementSession(project, dragLayer, [comp], []);
 
       session.beginDrag(new Point(0, 0));
@@ -231,7 +207,7 @@ describe('PastePlacementSession', () => {
     });
 
     it('selects pasted components after commit', () => {
-      const comp = makeAnd(0, 0);
+      const comp = makeAnd(2, Direction.E, 0, 0);
       session = new PastePlacementSession(project, dragLayer, [comp], []);
       session.onEnd();
       session = undefined;
@@ -242,7 +218,7 @@ describe('PastePlacementSession', () => {
     });
 
     it('selects pasted wires after commit', () => {
-      const wire = makeHWire(0, 0);
+      const wire = makeWire(0, 0, WireDirection.HORIZONTAL);
       session = new PastePlacementSession(project, dragLayer, [], [wire]);
       session.onEnd();
       session = undefined;
@@ -251,7 +227,7 @@ describe('PastePlacementSession', () => {
     });
 
     it('records the paste in the action history (undoAvailable becomes true)', () => {
-      const comp = makeAnd(0, 0);
+      const comp = makeAnd(2, Direction.E, 0, 0);
       session = new PastePlacementSession(project, dragLayer, [comp], []);
       session.onEnd();
       session = undefined;
@@ -260,7 +236,7 @@ describe('PastePlacementSession', () => {
     });
 
     it('undo removes pasted elements from the project', () => {
-      const comp = makeAnd(5, 0);
+      const comp = makeAnd(2, Direction.E, 5, 0);
       session = new PastePlacementSession(project, dragLayer, [comp], []);
       session.onEnd();
       session = undefined;
@@ -272,8 +248,8 @@ describe('PastePlacementSession', () => {
     });
 
     it('redo re-adds pasted elements to the project', () => {
-      const comp = makeAnd(5, 0);
-      const wire = makeHWire(0, 0);
+      const comp = makeAnd(2, Direction.E, 5, 0);
+      const wire = makeWire(0, 0, WireDirection.HORIZONTAL);
       session = new PastePlacementSession(project, dragLayer, [comp], [wire]);
       session.onEnd();
       session = undefined;
@@ -292,7 +268,7 @@ describe('PastePlacementSession', () => {
 
   describe('onCancel()', () => {
     it('destroys all components', () => {
-      const comp = makeAnd(3, 0);
+      const comp = makeAnd(2, Direction.E, 3, 0);
       session = new PastePlacementSession(project, dragLayer, [comp], []);
       session.onCancel();
       session = undefined;
@@ -301,7 +277,7 @@ describe('PastePlacementSession', () => {
     });
 
     it('destroys all wires', () => {
-      const wire = makeHWire(0, 0);
+      const wire = makeWire(0, 0, WireDirection.HORIZONTAL);
       session = new PastePlacementSession(project, dragLayer, [], [wire]);
       session.onCancel();
       session = undefined;
@@ -310,7 +286,7 @@ describe('PastePlacementSession', () => {
     });
 
     it('does not add elements to the project', () => {
-      const comp = makeAnd(3, 0);
+      const comp = makeAnd(2, Direction.E, 3, 0);
       session = new PastePlacementSession(project, dragLayer, [comp], []);
       session.onCancel();
       session = undefined;
@@ -319,7 +295,7 @@ describe('PastePlacementSession', () => {
     });
 
     it('resets dragLayer position to (0,0)', () => {
-      const comp = makeAnd(0, 0);
+      const comp = makeAnd(2, Direction.E, 0, 0);
       session = new PastePlacementSession(project, dragLayer, [comp], []);
       session.beginDrag(new Point(0, 0));
       session.onMove(makeMoveEvent(4, 3));
@@ -331,7 +307,7 @@ describe('PastePlacementSession', () => {
     });
 
     it('does not record anything in the action history', () => {
-      const comp = makeAnd(0, 0);
+      const comp = makeAnd(2, Direction.E, 0, 0);
       session = new PastePlacementSession(project, dragLayer, [comp], []);
       session.onCancel();
       session = undefined;

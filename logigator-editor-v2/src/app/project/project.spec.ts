@@ -4,30 +4,10 @@ import { TestBed } from '@angular/core/testing';
 import { Container, Point, Rectangle } from 'pixi.js';
 import { setStaticDIInjector } from '../utils/get-di';
 import { Project } from './project';
-import { AndComponent } from '../components/component-types/and/and.component';
-import { andComponentConfig } from '../components/component-types/and/and.config';
 import { Wire } from '../wires/wire';
 import { WireDirection } from '../wires/wire-direction.enum';
 import { Direction } from '../utils/direction';
-
-function makeAnd(numInputs = 2): AndComponent {
-  return new AndComponent({
-    direction: andComponentConfig.options.direction.clone(),
-    numInputs: andComponentConfig.options.numInputs.clone(numInputs)
-  });
-}
-
-// Wire at half-grid position (gx+0.5, gy+0.5) with given direction and length
-function makeWire(
-  gx: number,
-  gy: number,
-  dir: WireDirection,
-  length: number
-): Wire {
-  const w = new Wire(dir, length);
-  w.position.set(gx + 0.5, gy + 0.5);
-  return w;
-}
+import { makeAnd, makeWire } from '../../testing/factories';
 
 describe('Project.hasComponentCollision', () => {
   let project: Project;

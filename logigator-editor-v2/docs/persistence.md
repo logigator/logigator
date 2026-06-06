@@ -413,6 +413,7 @@ The guardrails that pin the legacy mapping:
 
 `browser-project.store.spec` runs against the **real** IndexedDB (Karma uses a real
 browser), clearing records between tests rather than deleting the DB (which would block on
-open connections). `persistence.service.spec` swaps in in-memory fake stores (`useValue`)
-so the orchestration — import persists, save dispatches by source, browser load reads back
-— is tested deterministically without touching IndexedDB.
+open connections). `persistence.service.spec` swaps in the in-memory stores from
+`src/testing/fake-browser-stores.ts` (`useValue`) so the orchestration — import persists,
+save dispatches by source, browser load reads back — is tested deterministically without
+touching IndexedDB.

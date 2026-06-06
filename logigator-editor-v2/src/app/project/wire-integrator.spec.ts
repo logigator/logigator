@@ -7,34 +7,8 @@ import { WireIntegrator } from './wire-integrator';
 import { Wire } from '../wires/wire';
 import { WireDirection } from '../wires/wire-direction.enum';
 import { Component } from '../components/component';
-import { AndComponent } from '../components/component-types/and/and.component';
-import { andComponentConfig } from '../components/component-types/and/and.config';
 import { Direction } from '../utils/direction';
-
-function makeWire(
-  gx: number,
-  gy: number,
-  dir: WireDirection,
-  length: number
-): Wire {
-  const w = new Wire(dir, length);
-  w.position.set(gx + 0.5, gy + 0.5);
-  return w;
-}
-
-function makeAnd(
-  numInputs: number,
-  rotation: Direction,
-  px = 0,
-  py = 0
-): AndComponent {
-  const comp = new AndComponent({
-    direction: andComponentConfig.options.direction.clone(rotation),
-    numInputs: andComponentConfig.options.numInputs.clone(numInputs)
-  });
-  comp.position.set(px, py);
-  return comp;
-}
+import { makeAnd, makeWire } from '../../testing/factories';
 
 function makeWireQuery(wires: Wire[]): (rect: Rectangle) => Generator<Wire> {
   return function* (rect: Rectangle) {

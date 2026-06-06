@@ -8,18 +8,10 @@ import { Project } from '../project/project';
 import { Component } from '../components/component';
 import { Wire } from '../wires/wire';
 import { WireDirection } from '../wires/wire-direction.enum';
-import { AndComponent } from '../components/component-types/and/and.component';
-import { andComponentConfig } from '../components/component-types/and/and.config';
 import { ActionContainer } from '../actions/action-container';
+import { makeAnd } from '../../testing/factories';
 
 // ── helpers ───────────────────────────────────────────────────────────────────
-
-function makeAnd(): AndComponent {
-  return new AndComponent({
-    direction: andComponentConfig.options.direction.clone(),
-    numInputs: andComponentConfig.options.numInputs.clone(2)
-  });
-}
 
 function makeWire(): Wire {
   const w = new Wire(WireDirection.HORIZONTAL, 4);

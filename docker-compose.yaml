@@ -29,8 +29,6 @@ services:
     image: node:24
     networks:
       - net
-    ports:
-      - 9876:9876 # karma
     volumes:
       - ./logigator-editor-v2/:/app
     working_dir: /app

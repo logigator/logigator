@@ -2,36 +2,17 @@ import type { MockedObject } from 'vitest';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { Injector } from '@angular/core';
 import { TestBed } from '@angular/core/testing';
-import { FederatedPointerEvent, Point } from 'pixi.js';
+import { Point } from 'pixi.js';
 import { setStaticDIInjector } from '../../utils/get-di';
 import { EraseSession } from './erase.session';
 import { Wire } from '../../wires/wire';
 import { WireDirection } from '../../wires/wire-direction.enum';
 import { ActionContainer } from '../../actions/action-container';
-import { AndComponent } from '../../components/component-types/and/and.component';
-import { andComponentConfig } from '../../components/component-types/and/and.config';
 import type { Project } from '../../project/project';
 import type { ActionManager } from '../../actions/action-manager';
-
-function* gen<T>(...items: T[]): Generator<T> {
-  yield* items;
-}
-
-function makeAnd(): AndComponent {
-  return new AndComponent({
-    direction: andComponentConfig.options.direction.clone(),
-    numInputs: andComponentConfig.options.numInputs.clone(2)
-  });
-}
-
-function makeEvent(x: number, y: number): MockedObject<FederatedPointerEvent> {
-  const e = {
-    getLocalPosition: vi.fn().mockName('FederatedPointerEvent.getLocalPosition')
-  };
-  e.getLocalPosition.mockReturnValue(new Point(x, y));
-
-  return e as unknown as MockedObject<FederatedPointerEvent>;
-}
+import { makeAnd, makeMoveEvent } from '../../../testing/factories';
+import { gen } from '../../../testing/vitest-helpers';
+import { AndComponent } from '../../components/component-types/and/and.component';
 
 describe('EraseSession', () => {
   let project: MockedObject<Project>;
@@ -115,7 +96,7 @@ describe('EraseSession', () => {
       const session = new EraseSession(project, new Point(0, 0));
 
       project.queryWiresInRange.mockImplementation(() => gen(wire));
-      session.onMove(makeEvent(5, 3));
+      session.onMove(makeMoveEvent(5, 3));
 
       expect(project.removeWire).toHaveBeenCalledWith(wire.id);
       wire.destroy();
@@ -123,7 +104,7 @@ describe('EraseSession', () => {
 
     it('sweeps the AABB between previous and current positions', () => {
       const session = new EraseSession(project, new Point(2, 1));
-      session.onMove(makeEvent(7, 4));
+      session.onMove(makeMoveEvent(7, 4));
 
       expect(project.queryWiresInRange).toHaveBeenCalledWith(
         expect.objectContaining({ x: 2, y: 1, width: 6, height: 4 })
@@ -136,8 +117,8 @@ describe('EraseSession', () => {
 
       const session = new EraseSession(project, new Point(0, 0));
       // Wire already erased in constructor; subsequent moves should skip it
-      session.onMove(makeEvent(3, 2));
-      session.onMove(makeEvent(4, 2));
+      session.onMove(makeMoveEvent(3, 2));
+      session.onMove(makeMoveEvent(4, 2));
 
       expect(project.removeWire).toHaveBeenCalledTimes(1);
 
@@ -152,7 +133,7 @@ describe('EraseSession', () => {
 
       project.queryComponentsInRange.mockImplementation(() => gen(comp));
       project.queryWiresInRange.mockImplementation(() => gen(wire));
-      session.onMove(makeEvent(3, 3));
+      session.onMove(makeMoveEvent(3, 3));
 
       expect(project.removeComponent).toHaveBeenCalledWith(comp.id);
       expect(project.removeWire).toHaveBeenCalledWith(wire.id);

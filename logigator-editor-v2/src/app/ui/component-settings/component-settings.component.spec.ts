@@ -13,18 +13,10 @@ import { BuiltInComponentType } from '../../components/component-type.enum';
 import { ProjectService } from '../../project/project.service';
 import { ProjectMetadataStore } from '../../persistence/project-metadata.store';
 import { Project } from '../../project/project';
-import { AndComponent } from '../../components/component-types/and/and.component';
-import { andComponentConfig } from '../../components/component-types/and/and.config';
 import { NumberOptionInputComponent } from '../../components/component-options/number/number-option-input.component';
 import { setStaticDIInjector } from '../../utils/get-di';
 import { WorkMode } from '../../work-mode/work-mode.enum';
-
-function makeAnd(): AndComponent {
-  return new AndComponent({
-    direction: andComponentConfig.options.direction.clone(),
-    numInputs: andComponentConfig.options.numInputs.clone(2)
-  });
-}
+import { makeAnd } from '../../../testing/factories';
 
 describe('ComponentSettingsComponent', () => {
   let component: ComponentSettingsComponent;

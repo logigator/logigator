@@ -1,7 +1,7 @@
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 import { Injector } from '@angular/core';
 import { TestBed } from '@angular/core/testing';
-import { Container, FederatedPointerEvent, Point } from 'pixi.js';
+import { Container, Point } from 'pixi.js';
 import { setStaticDIInjector } from '../../utils/get-di';
 import { Project } from '../../project/project';
 import { Component } from '../../components/component';
@@ -12,12 +12,7 @@ import { textComponentConfig } from '../../components/component-types/text/text.
 import { TextComponent } from '../../components/component-types/text/text.component';
 import { andComponentConfig } from '../../components/component-types/and/and.config';
 import { AndComponent } from '../../components/component-types/and/and.component';
-
-function makeMoveEvent(x: number, y: number): FederatedPointerEvent {
-  return {
-    getLocalPosition: () => new Point(x, y)
-  } as unknown as FederatedPointerEvent;
-}
+import { makeMoveEvent } from '../../../testing/factories';
 
 describe('WireDrawingSession + TextComponent (ignoresWireCollision)', () => {
   let project: Project;

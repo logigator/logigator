@@ -3,16 +3,10 @@ import { Injector } from '@angular/core';
 import { TestBed } from '@angular/core/testing';
 import { setStaticDIInjector } from '../utils/get-di';
 import { Component } from './component';
-import { AndComponent } from './component-types/and/and.component';
 import { andComponentConfig } from './component-types/and/and.config';
 import { Direction } from '../utils/direction';
-
-function makeAnd(numInputs = 2): AndComponent {
-  return new AndComponent({
-    direction: andComponentConfig.options.direction.clone(),
-    numInputs: andComponentConfig.options.numInputs.clone(numInputs)
-  });
-}
+import { makeAnd } from '../../testing/factories';
+import { AndComponent } from './component-types/and/and.component';
 
 describe('Component.deserialize (create() factory)', () => {
   beforeEach(() => {

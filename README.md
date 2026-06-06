@@ -211,18 +211,22 @@ docker compose exec editor yarn test --watch=false --include='**/quad-tree-conta
 
 ## Testing
 
-Tests use **Karma + Jasmine**. Spec files sit next to their source files (e.g., `quad-tree-container.spec.ts` beside `quad-tree-container.ts`).
+Tests use **Vitest** via Angular's `@angular/build:unit-test` builder. Spec files sit next to their source files (e.g., `quad-tree-container.spec.ts` beside `quad-tree-container.ts`).
 
 - Angular component specs use `TestBed`.
 - Pure-logic specs (rendering math, grid utilities, action system) do not.
+
+Shared test helpers in `logigator-editor-v2/src/testing/`:
+- `fake-browser-stores.ts` — in-memory IndexedDB stand-ins
+- `factories.ts` — circuit-element and pointer-event stubs
+- `action-mocks.ts` — mocked `Action` with named `do`/`undo` spies
+- `vitest-helpers.ts` — asymmetric matchers and generator helpers
 
 Run the full suite:
 
 ```sh
 docker compose exec editor yarn test --watch=false
 ```
-
-Karma is also reachable at `http://localhost:9876` while the editor container is running, which lets you open tests in a real browser.
 
 ---
 

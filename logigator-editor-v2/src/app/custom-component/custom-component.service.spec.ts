@@ -10,8 +10,6 @@ import { CustomComponentRegistry } from '../components/custom/custom-component-r
 import { ComponentProviderService } from '../components/component-provider.service';
 import { Project } from '../project/project';
 import { CustomComponent } from '../components/custom/custom-component';
-import { InputComponent } from '../components/component-types/input/input.component';
-import { inputComponentConfig } from '../components/component-types/input/input.config';
 import { AddComponentsAction } from '../actions/actions/add-components.action';
 import { ChangeOptionAction } from '../actions/actions/change-option.action';
 import { BrowserComponentStore } from '../persistence/browser/browser-component.store';
@@ -20,14 +18,8 @@ import {
   FakeBrowserComponentStore,
   FakeBrowserProjectStore
 } from '../../testing/fake-browser-stores';
-
-function makeInput(index = 0): InputComponent {
-  return new InputComponent({
-    direction: inputComponentConfig.options.direction.clone(),
-    label: inputComponentConfig.options.label.clone(''),
-    index: inputComponentConfig.options.index.clone(index)
-  });
-}
+import { makeInput } from '../../testing/factories';
+import { InputComponent } from '../components/component-types/input/input.component';
 
 describe('CustomComponentService', () => {
   let service: CustomComponentService;

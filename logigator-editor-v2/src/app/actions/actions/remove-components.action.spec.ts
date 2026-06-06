@@ -6,15 +6,8 @@ import { setStaticDIInjector } from '../../utils/get-di';
 import { RemoveComponentsAction } from './remove-components.action';
 import { Component } from '../../components/component';
 import { AndComponent } from '../../components/component-types/and/and.component';
-import { andComponentConfig } from '../../components/component-types/and/and.config';
 import type { Project } from '../../project/project';
-
-function makeAnd(): AndComponent {
-  return new AndComponent({
-    direction: andComponentConfig.options.direction.clone(),
-    numInputs: andComponentConfig.options.numInputs.clone(2)
-  });
-}
+import { makeAnd } from '../../../testing/factories';
 
 describe('RemoveComponentsAction', () => {
   let project: MockedObject<Project>;
