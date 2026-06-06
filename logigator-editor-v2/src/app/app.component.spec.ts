@@ -1,8 +1,9 @@
-import { beforeEach, describe, expect, it } from 'vitest';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { TestBed } from '@angular/core/testing';
 import { Location } from '@angular/common';
 import { provideHttpClientTesting } from '@angular/common/http/testing';
 import { AppComponent } from './app.component';
+import { PersistenceService } from './persistence/persistence.service';
 import { appConfig } from './app.config';
 
 describe('AppComponent', () => {
@@ -19,6 +20,14 @@ describe('AppComponent', () => {
             go: () => undefined,
             replaceState: () => undefined,
             subscribe: () => ({ unsubscribe: () => undefined })
+          }
+        },
+        {
+          provide: PersistenceService,
+          useValue: {
+            preloadBrowserMasters: vi.fn().mockResolvedValue(undefined),
+            createAndSetEmptyProject: vi.fn(),
+            registerOpenProject: vi.fn()
           }
         }
       ]
