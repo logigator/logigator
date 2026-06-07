@@ -129,6 +129,11 @@ export class PersistenceService {
     return this.browserStore.delete(id);
   }
 
+  /** Removes a server project via the API. */
+  deleteProject(uuid: string): Observable<void> {
+    return this.server.deleteProject(uuid);
+  }
+
   loadShare(
     linkId: string
   ): Promise<{ project: Project; type: 'project' | 'comp' }> {

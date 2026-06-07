@@ -1,5 +1,5 @@
 <div *transloco="let t">
-  <p-tabs [(value)]="activeTab">
+  <p-tabs [value]="activeTab()" (valueChange)="onTabChange($event)">
     <p-tablist>
       <p-tab value="local">{{ t('openProjectDialog.localProjects') }}</p-tab>
       <p-tab value="server">{{ t('openProjectDialog.serverProjects') }}</p-tab>
@@ -8,54 +8,43 @@
     <p-tabpanels>
       <!-- Local Projects -->
       <p-tabpanel value="local">
-        <div class="max-h-80 overflow-y-auto">
-          @if (loadingLocal()) {
-            <p class="text-center text-surface-500 py-8">
-              {{ t('openProjectDialog.loading') }}
-            </p>
-          } @else if (localProjects().length === 0) {
-            <p class="text-center text-surface-500 py-8">
-              {{ t('openProjectDialog.noLocalProjects') }}
-            </p>
-          } @else {
-            @for (project of localProjects(); track project.id) {
-              <div
-                class="flex items-center justify-between px-4 py-3 cursor-pointer hover:bg-surface-100 dark:hover:bg-surface-800 border-b border-surface-200 dark:border-surface-700 transition-colors"
-                (click)="openLocalProject(project.id)"
-                (keydown.enter)="openLocalProject(project.id)"
-                tabindex="0"
-              >
-                <span class="font-medium">{{ project.name }}</span>
-                <span class="flex items-center gap-4">
-                  <span class="text-sm text-surface-500">
-                    {{ project.lastEdited | date: 'mediumDate' }}
-                  </span>
-                  <p-button
-                    icon="ph ph-trash"
-                    severity="danger"
-                    [text]="true"
-                    [ariaLabel]="t('openProjectDialog.deleteProject')"
-                    (click)="deleteLocalProject($event, project)"
-                  ></p-button>
-                </span>
-              </div>
-            }
-          }
-        </div>
+        <app-project-list
+          [items]="localItems()"
+          [loading]="loadingLocal()"
+          [page]="localPage()"
+          [totalItems]="localTotal()"
+          (open)="openLocalProject($event)"
+          (delete)="deleteLocalConfirmed($event)"
+          (pageChange)="localPage.set($event)"
+          (searchChange)="onLocalSearch($event)"
+        />
       </p-tabpanel>
 
-      <!-- Server Projects (placeholder) -->
+      <!-- Server Projects -->
       <p-tabpanel value="server">
-        <div class="flex flex-col items-center gap-3 py-12 text-surface-500">
-          <i class="ph ph-warning-circle text-3xl"></i>
-          <p class="text-center">{{ t('openProjectDialog.notLoggedIn') }}</p>
-        </div>
+        @if (!userService.user()) {
+          <div class="flex flex-col items-center gap-3 py-12 text-surface-500">
+            <i class="ph ph-warning-circle text-3xl"></i>
+            <p class="text-center">{{ t('openProjectDialog.notLoggedIn') }}</p>
+          </div>
+        } @else {
+          <app-project-list
+            [items]="serverItems()"
+            [loading]="loadingServer()"
+            [page]="serverPage()"
+            [totalItems]="serverTotal()"
+            (open)="openServerProject($event)"
+            (delete)="deleteServerConfirmed($event)"
+            (pageChange)="onServerPageChange($event)"
+            (searchChange)="onServerSearch($event)"
+          />
+        }
       </p-tabpanel>
 
       <!-- From File -->
       <p-tabpanel value="file">
         <div class="flex flex-col items-center gap-4 py-8">
-          <p class="text-surface-600 dark:text-surface-400 text-center">
+          <p class="text-center text-surface-600 dark:text-surface-400">
             {{ t('openProjectDialog.uploadPrompt') }}
           </p>
           <p-fileupload
@@ -69,7 +58,7 @@
           />
           @if (importError()) {
             <div
-              class="flex items-center gap-2 text-red-500 bg-red-50 dark:bg-red-950/30 px-4 py-2 rounded-lg text-sm"
+              class="flex items-center gap-2 rounded-lg bg-red-50 px-4 py-2 text-sm text-red-500 dark:bg-red-950/30"
             >
               <i class="ph ph-warning text-lg"></i>
               <span>{{ importError() }}</span>

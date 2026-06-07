@@ -2,6 +2,13 @@ import { definePreset } from '@primeuix/themes';
 import Aura from '@primeuix/themes/aura';
 
 const AppTheme = definePreset(Aura, {
+  components: {
+    paginator: {
+      navButton: {
+        borderRadius: '{borderRadiusMd}'
+      }
+    },
+  },
   semantic: {
     colorScheme: {
       light: {

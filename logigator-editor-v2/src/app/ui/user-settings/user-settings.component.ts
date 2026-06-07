@@ -41,7 +41,7 @@ export class UserSettingsComponent {
   protected readonly menuItems = computed<MenuItem[]>(() => {
     const items: MenuItem[] = [{ separator: true }];
 
-    if (this.userService.isLoggedIn()) {
+    if (this.userService.user()) {
       items.push({
         label: 'Account',
         icon: 'ph ph-user',

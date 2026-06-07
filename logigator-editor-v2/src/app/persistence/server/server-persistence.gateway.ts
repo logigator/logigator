@@ -1,5 +1,5 @@
 import { inject, Injectable } from '@angular/core';
-import { firstValueFrom, Observable } from 'rxjs';
+import { firstValueFrom, map, Observable } from 'rxjs';
 import { HttpErrorResponse } from '@angular/common/http';
 import { ProjectApiService } from '../../api/services/project-api.service';
 import { ComponentApiService } from '../../api/services/component-api.service';
@@ -105,7 +105,11 @@ export class ServerPersistenceGateway {
     page?: number,
     search?: string
   ): Observable<Page<ProjectSummary>> {
-    return this.projectApi.list(page ?? 1, 5, search);
+    return this.projectApi.list(page ?? 1, 20, search);
+  }
+
+  deleteProject(uuid: string): Observable<void> {
+    return this.projectApi.delete(uuid).pipe(map(() => undefined));
   }
 
   async loadShare(

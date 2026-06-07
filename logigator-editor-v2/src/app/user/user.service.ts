@@ -12,15 +12,16 @@ export class UserService {
   private readonly toastService = inject(ToastService);
   private readonly cookieService = inject(CookieService);
 
-  private readonly _user = signal<UserData | null>(null);
-  readonly user = this._user.asReadonly();
-  readonly isLoggedIn = computed(
+  private readonly _hasAuthenticatedFlag = computed(
     () => this.cookieService.get('isAuthenticated') === 'true'
   );
 
+  private readonly _user = signal<UserData | null>(null);
+  readonly user = this._user.asReadonly();
+
   constructor() {
     effect(() => {
-      if (this.isLoggedIn()) {
+      if (this._hasAuthenticatedFlag()) {
         this.loadUser();
       } else {
         this._user.set(null);

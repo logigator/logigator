@@ -151,8 +151,6 @@ const en = {
     serverProjects: 'Server Projects',
     fromFile: 'From File',
     notLoggedIn: 'Log in to see your server projects',
-    noLocalProjects: 'No local projects yet',
-    noServerProjects: 'No server projects yet',
     close: 'Close',
     loading: 'Loading...',
     uploadPrompt: 'Open a circuit file saved on your device.',
@@ -161,7 +159,10 @@ const en = {
     deleteConfirmMessage:
       'Are you sure you want to delete "{{name}}"? This cannot be undone.',
     deleteAccept: 'Delete',
-    deleteReject: 'Cancel'
+    deleteReject: 'Cancel',
+    searchPlaceholder: 'Search projects...',
+    searchButton: 'Search',
+    noSearchResults: 'No projects found'
   },
   toolBar: {
     save: 'Save',

@@ -1,0 +1,67 @@
+<div *transloco="let t">
+  <!-- Search -->
+  <div
+    class="flex gap-2 p-3 border-b border-surface-200 dark:border-surface-700"
+  >
+    <p-iconfield class="flex-1">
+      <p-inputicon class="ph ph-magnifying-glass" />
+      <input
+        pInputText
+        class="w-full"
+        type="text"
+        [placeholder]="t('openProjectDialog.searchPlaceholder')"
+        [(ngModel)]="searchQuery"
+        (keydown.enter)="onSearchSubmit()"
+      />
+    </p-iconfield>
+    <p-button
+      icon="ph ph-magnifying-glass"
+      [ariaLabel]="t('openProjectDialog.searchButton')"
+      (click)="onSearchSubmit()"
+    />
+  </div>
+
+  <!-- List -->
+  <div class="max-h-64 overflow-y-auto">
+    @if (loading()) {
+      <p class="py-8 text-center text-surface-500">
+        {{ t('openProjectDialog.loading') }}
+      </p>
+    } @else if (items().length === 0) {
+      <p class="py-8 text-center text-surface-500">{{ t('openProjectDialog.noSearchResults') }}</p>
+    } @else {
+      @for (item of items(); track item.id) {
+        <div
+          class="flex cursor-pointer items-center justify-between border-b border-surface-200 px-4 py-3 transition-colors hover:bg-surface-100 dark:border-surface-700 dark:hover:bg-surface-800"
+          (click)="open.emit(item.id)"
+          (keydown.enter)="open.emit(item.id)"
+          tabindex="0"
+        >
+          <span class="font-medium">{{ item.name }}</span>
+          <span class="flex items-center gap-4">
+            <span class="text-sm text-surface-500">
+              {{ item.lastEdited | date: 'mediumDate' }}
+            </span>
+            <p-button
+              icon="ph ph-trash"
+              severity="danger"
+              [text]="true"
+              [ariaLabel]="t('openProjectDialog.deleteProject')"
+              (click)="onDeleteClick($event, item)"
+            />
+          </span>
+        </div>
+      }
+    }
+  </div>
+
+  <!-- Pagination -->
+  @if (totalItems() > pageSize) {
+    <p-paginator
+      [first]="paginatorFirst()"
+      [rows]="pageSize"
+      [totalRecords]="totalItems()"
+      (onPageChange)="onPaginatorChange($event)"
+    />
+  }
+</div>
