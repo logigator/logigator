@@ -1,11 +1,27 @@
-<div class="flex p-2 items-center gap-2 bg-primary h-12">
-  <a class="relative w-40 h-full" href="/">
-    <img [ngSrc]="'logo.svg' | hashed" alt="Logo" fill priority />
-  </a>
-  <p-menubar
-    class="grow"
-    styleClass="bg-transparent border-none p-0"
-    [model]="items()"
-    [autoDisplay]="false"
-  ></p-menubar>
-</div>
+<p-menubar
+  [model]="items()"
+  [dt]="menuTheme"
+  class="border-0!"
+>
+  <ng-template #start>
+    <a class="relative w-40 h-8" href="/">
+      <img [ngSrc]="'logo.svg' | hashed" alt="Logo" fill priority />
+    </a>
+  </ng-template>
+  <ng-template #item let-item let-root="root">
+    <a pRipple class="flex items-center px-3 py-2 cursor-pointer gap-2">
+      <span>{{ item.label }}</span>
+
+      @if (item.shortcut) {
+        <app-shortcut-display [binding]="item.shortcut" class="ml-auto pl-4"></app-shortcut-display>
+      }
+
+      @if (item.items) {
+        <i [class]="['ms-auto', 'ph', root ? 'ph-caret-down' : 'ph-caret-right']"></i>
+      }
+    </a>
+  </ng-template>
+  <ng-template #end>
+    hi
+  </ng-template>
+</p-menubar>

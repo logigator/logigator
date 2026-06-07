@@ -9,6 +9,8 @@ const THEMES: Record<ThemeType, Theme> = {
   [ThemeType.DARK]: DarkTheme
 };
 
+const STORAGE_KEY = 'logigator.theme';
+
 @Injectable({
   providedIn: 'root'
 })
@@ -19,7 +21,21 @@ export class ThemingService {
     () => THEMES[this._currentThemeType()]
   );
 
+  constructor() {
+    this.loadTheme();
+  }
+
   public setTheme(theme: ThemeType): void {
     this._currentThemeType.set(theme);
+    document.documentElement.classList.toggle(
+      'dark-mode',
+      theme === ThemeType.DARK
+    );
+    localStorage.setItem(STORAGE_KEY, String(theme));
+  }
+
+  public loadTheme(): void {
+    const theme = localStorage.getItem(STORAGE_KEY) as ThemeType | null;
+    this.setTheme(theme && THEMES[theme] ? theme : ThemeType.DARK);
   }
 }
