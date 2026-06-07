@@ -1,9 +1,7 @@
 <div *transloco="let t">
   <!-- Search -->
-  <div
-    class="flex gap-2 p-3 border-b border-surface-200 dark:border-surface-700"
-  >
-    <p-iconfield class="flex-1">
+  <div class="p-3 border-b border-surface-200 dark:border-surface-700">
+    <p-iconfield class="w-full">
       <p-inputicon class="ph ph-magnifying-glass" />
       <input
         pInputText
@@ -11,14 +9,9 @@
         type="text"
         [placeholder]="t('openProjectDialog.searchPlaceholder')"
         [(ngModel)]="searchQuery"
-        (keydown.enter)="onSearchSubmit()"
+        (input)="onSearchInput()"
       />
     </p-iconfield>
-    <p-button
-      icon="ph ph-magnifying-glass"
-      [ariaLabel]="t('openProjectDialog.searchButton')"
-      (click)="onSearchSubmit()"
-    />
   </div>
 
   <!-- List -->

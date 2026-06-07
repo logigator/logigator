@@ -28,16 +28,24 @@ export class WireDrawingSession implements DragSession {
 
     if (dx === 0 && dy === 0) {
       this._direction = null;
-    } else if (this._direction === null) {
-      if (dx === 0 && dy === 0) return;
+      if (this._h) this._h.length = 0;
+      if (this._v) this._v.length = 0;
+      this._updateBodyCollision();
+      return;
+    }
+
+    if (this._direction === null) {
       this._direction =
         dx !== 0 ? WireDirection.HORIZONTAL : WireDirection.VERTICAL;
-      this._h = new Wire(WireDirection.HORIZONTAL, 0);
-      this._v = new Wire(WireDirection.VERTICAL, 0);
-      this._h.applyScale(this.project.scale.x);
-      this._v.applyScale(this.project.scale.x);
-      this.dragLayer.addChild(this._h);
-      this.dragLayer.addChild(this._v);
+
+      if (!this._h) {
+        this._h = new Wire(WireDirection.HORIZONTAL, 0);
+        this._v = new Wire(WireDirection.VERTICAL, 0);
+        this._h.applyScale(this.project.scale.x);
+        this._v.applyScale(this.project.scale.x);
+        this.dragLayer.addChild(this._h);
+        this.dragLayer.addChild(this._v);
+      }
     }
 
     const h = this._h!;

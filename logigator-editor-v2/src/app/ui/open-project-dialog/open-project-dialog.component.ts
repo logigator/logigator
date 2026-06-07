@@ -10,7 +10,8 @@ import { DynamicDialogRef } from 'primeng/dynamicdialog';
 import { TabsModule } from 'primeng/tabs';
 import { type FileSelectEvent, FileUploadModule } from 'primeng/fileupload';
 import { TranslocoDirective } from '@jsverse/transloco';
-import { firstValueFrom } from 'rxjs';
+import { debounceTime, distinctUntilChanged, firstValueFrom, Subject } from 'rxjs';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { PersistenceService } from '../../persistence/persistence.service';
 import { ToastService } from '../../logging/toast.service';
 import { LoggingService } from '../../logging/logging.service';
@@ -42,7 +43,7 @@ export class OpenProjectDialogComponent implements OnInit {
   // --- Local source ---
   private readonly localAllItems = signal<BrowserProjectSummary[]>([]);
   protected readonly loadingLocal = signal(false);
-  protected readonly localPage = signal(1);
+  protected readonly localPage = signal(0);
   protected readonly localSearch = signal('');
 
   protected readonly localFiltered = computed(() => {
@@ -52,7 +53,7 @@ export class OpenProjectDialogComponent implements OnInit {
   });
 
   protected readonly localItems = computed((): ProjectListItem[] => {
-    const start = (this.localPage() - 1) * PAGE_SIZE;
+    const start = this.localPage() * PAGE_SIZE;
     return this.localFiltered()
       .slice(start, start + PAGE_SIZE)
       .map((p) => ({ id: p.id, name: p.name, lastEdited: p.lastEdited }));
@@ -63,9 +64,22 @@ export class OpenProjectDialogComponent implements OnInit {
   // --- Server source ---
   protected readonly serverItems = signal<ProjectListItem[]>([]);
   protected readonly loadingServer = signal(false);
-  protected readonly serverPage = signal(1);
+  protected readonly serverPage = signal(0);
   protected readonly serverTotal = signal(0);
   private readonly serverLoaded = signal(false);
+  private readonly serverSearch = signal('');
+  private readonly serverSearch$ = new Subject<string>();
+
+  constructor() {
+    this.serverSearch$.pipe(
+      debounceTime(300),
+      distinctUntilChanged(),
+      takeUntilDestroyed()
+    ).subscribe((query) => {
+      this.serverSearch.set(query);
+      void this.loadServerProjects(0);
+    });
+  }
 
   ngOnInit(): void {
     this.loadLocalProjects();
@@ -101,7 +115,7 @@ export class OpenProjectDialogComponent implements OnInit {
 
   protected onLocalSearch(query: string): void {
     this.localSearch.set(query);
-    this.localPage.set(1);
+    this.localPage.set(0);
   }
 
   protected openLocalProject(id: string): void {
@@ -130,11 +144,11 @@ export class OpenProjectDialogComponent implements OnInit {
 
   // --- Server handlers ---
 
-  private async loadServerProjects(page = 1): Promise<void> {
+  private async loadServerProjects(page = 0): Promise<void> {
     this.loadingServer.set(true);
     try {
       const result = await firstValueFrom(
-        this.persistenceService.listProjects(page)
+        this.persistenceService.listProjects(page, this.serverSearch())
       );
       this.serverItems.set(
         result.entries.map((p) => ({
@@ -158,27 +172,7 @@ export class OpenProjectDialogComponent implements OnInit {
   }
 
   protected onServerSearch(query: string): void {
-    this.loadingServer.set(true);
-    firstValueFrom(this.persistenceService.listProjects(1, query))
-      .then((result) => {
-        this.serverItems.set(
-          result.entries.map((p) => ({
-            id: p.id,
-            name: p.name,
-            lastEdited: p.lastEdited
-          }))
-        );
-        this.serverTotal.set(result.total);
-        this.serverPage.set(1);
-      })
-      .catch(() => {
-        this.loggingService.error(
-          'Failed to search server projects',
-          'OpenProjectDialogComponent'
-        );
-        this.toastService.error('Failed to search server projects');
-      })
-      .finally(() => this.loadingServer.set(false));
+    this.serverSearch$.next(query);
   }
 
   protected onServerPageChange(page: number): void {

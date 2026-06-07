@@ -105,7 +105,7 @@ export class ServerPersistenceGateway {
     page?: number,
     search?: string
   ): Observable<Page<ProjectSummary>> {
-    return this.projectApi.list(page ?? 1, 20, search);
+    return this.projectApi.list(page ?? 0, 20, search);
   }
 
   deleteProject(uuid: string): Observable<void> {

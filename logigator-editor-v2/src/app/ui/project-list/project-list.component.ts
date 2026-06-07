@@ -1,6 +1,7 @@
 import {
   ChangeDetectionStrategy,
-  Component, computed,
+  Component,
+  computed,
   inject,
   input,
   output
@@ -44,7 +45,7 @@ export class ProjectListComponent {
 
   readonly items = input<ProjectListItem[]>([]);
   readonly loading = input(false);
-  readonly page = input(1);
+  readonly page = input(0);
   readonly totalItems = input(0);
 
   readonly open = output<string>();
@@ -55,9 +56,9 @@ export class ProjectListComponent {
   protected readonly pageSize = PAGE_SIZE;
   protected searchQuery = '';
 
-  protected paginatorFirst = computed(() => (this.page() - 1) * PAGE_SIZE);
+  protected paginatorFirst = computed(() => this.page() * PAGE_SIZE);
 
-  protected onSearchSubmit(): void {
+  protected onSearchInput(): void {
     this.searchChange.emit(this.searchQuery);
   }
 
@@ -84,6 +85,6 @@ export class ProjectListComponent {
   }
 
   protected onPaginatorChange(state: PaginatorState): void {
-    this.pageChange.emit((state.page ?? 0) + 1);
+    this.pageChange.emit(state.page ?? 0);
   }
 }
