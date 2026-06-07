@@ -74,7 +74,8 @@ export class TitleBarComponent {
     color: '{surface.900}',
     itemColor: '',
     submenuColor: '{surface.300}',
-    submenuIconColor: '{surface.600}'
+    submenuIconColor: '{surface.600}',
+    padding: '0.25rem'
   };
 
   public constructor() {
@@ -147,14 +148,16 @@ export class TitleBarComponent {
               'titleBar.menuBar.edit.items.undo.label'
             ),
             shortcut: this.shortcutService.binding(ShortcutActionEnum.UNDO)(),
-            command: () => this.undo()
+            command: () =>
+              this.projectService.mainProject()?.actionManager.undo()
           },
           {
             label: this.translocoService.translate(
               'titleBar.menuBar.edit.items.redo.label'
             ),
             shortcut: this.shortcutService.binding(ShortcutActionEnum.REDO)(),
-            command: () => this.redo()
+            command: () =>
+              this.projectService.mainProject()?.actionManager.redo()
           },
           {
             separator: true
@@ -200,7 +203,36 @@ export class TitleBarComponent {
         ]
       },
       {
-        label: 'View'
+        label: 'View',
+        items: [
+          {
+            label: this.translocoService.translate(
+              'titleBar.menuBar.view.items.zoomOut.label'
+            ),
+            shortcut: this.shortcutService.binding(
+              ShortcutActionEnum.ZOOM_OUT
+            )(),
+            command: () => this.projectService.mainProject()?.zoomOut()
+          },
+          {
+            label: this.translocoService.translate(
+              'titleBar.menuBar.view.items.zoomIn.label'
+            ),
+            shortcut: this.shortcutService.binding(
+              ShortcutActionEnum.ZOOM_IN
+            )(),
+            command: () => this.projectService.mainProject()?.zoomIn()
+          },
+          {
+            label: this.translocoService.translate(
+              'titleBar.menuBar.view.items.zoom100.label'
+            ),
+            shortcut: this.shortcutService.binding(
+              ShortcutActionEnum.ZOOM_100
+            )(),
+            command: () => this.projectService.mainProject()?.zoom100()
+          }
+        ]
       },
       {
         label: 'Help'
@@ -283,13 +315,5 @@ export class TitleBarComponent {
   private delete(): void {
     const project = this.projectService.activeProject();
     if (project) this.clipboardService.delete(project);
-  }
-
-  private undo(): void {
-    this.projectService.mainProject()?.actionManager.undo();
-  }
-
-  private redo(): void {
-    this.projectService.mainProject()?.actionManager.redo();
   }
 }

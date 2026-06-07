@@ -53,15 +53,12 @@ export class ShortcutService implements OnDestroy {
     (navigator as any).userAgentData?.platform ?? navigator.platform
   );
 
-  private static readonly COOLDOWN_MS = 300;
-  private readonly _lastFire = new Map<ShortcutActionEnum, number>();
   private _enabled = true;
 
   private readonly _triggered$ = new Subject<{
     action: ShortcutActionEnum;
     event: KeyboardEvent;
   }>();
-  public readonly shortcutTriggered$ = this._triggered$.asObservable();
 
   private readonly _keydownSub: Subscription;
   private readonly STORAGE_KEY = 'logigator.shortcuts';
@@ -88,12 +85,8 @@ export class ShortcutService implements OnDestroy {
         )
       )
       .subscribe((e) => {
-        const now = Date.now();
         for (const [action, binding] of this._bindings.entries()) {
           if (binding && this._matchesBinding(binding, e)) {
-            const last = this._lastFire.get(action) ?? 0;
-            if (now - last < ShortcutService.COOLDOWN_MS) return;
-            this._lastFire.set(action, now);
             e.preventDefault();
             this._triggered$.next({ action, event: e });
             return;
@@ -226,7 +219,6 @@ export class ShortcutService implements OnDestroy {
       const project = this.projectService.activeProject();
       if (project) {
         project.zoomIn();
-        project.triggerTicker('single');
       }
     });
 
@@ -234,7 +226,13 @@ export class ShortcutService implements OnDestroy {
       const project = this.projectService.activeProject();
       if (project) {
         project.zoomOut();
-        project.triggerTicker('single');
+      }
+    });
+
+    this.on(ShortcutActionEnum.ZOOM_100).subscribe(() => {
+      const project = this.projectService.activeProject();
+      if (project) {
+        project.zoom100();
       }
     });
 

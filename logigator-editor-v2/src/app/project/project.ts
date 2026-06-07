@@ -110,10 +110,12 @@ export class Project extends InteractionContainer {
 
   public zoomIn(center?: Point): void {
     this._viewport.zoomIn(center);
+    this.triggerTicker('single');
   }
 
   public zoomOut(center?: Point): void {
     this._viewport.zoomOut(center);
+    this.triggerTicker('single');
   }
 
   public get zoomInPossible(): boolean {
@@ -126,6 +128,7 @@ export class Project extends InteractionContainer {
 
   public zoom100(center?: Point): void {
     this._viewport.zoom100(center);
+    this.triggerTicker('single');
   }
 
   public get positionChange$(): Observable<Point> {

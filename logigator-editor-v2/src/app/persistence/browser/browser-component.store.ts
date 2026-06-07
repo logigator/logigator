@@ -4,7 +4,7 @@ import {
   BrowserComponentSummary,
   StoredBrowserComponent
 } from './browser-project.types';
-import { COMPONENTS_STORE, IndexedDbStore } from './indexed-db-store';
+import { COMPONENTS_STORE, IndexedDbStore } from '../../storage/indexed-db-store';
 
 /**
  * CRUD over browser-local (IndexedDB) **library masters**, keyed by master id.

@@ -2,6 +2,7 @@ import {
   ChangeDetectionStrategy,
   Component,
   computed,
+  inject,
   signal
 } from '@angular/core';
 import { AvatarModule } from 'primeng/avatar';
@@ -11,7 +12,7 @@ import { Ripple } from 'primeng/ripple';
 import { MenuItem } from 'primeng/api';
 import { ThemeSwitcherComponent } from '../../theming/theme-switcher/theme-switcher.component';
 import { LanguageSwitcherComponent } from '../../translation/language-switcher/language-switcher.component';
-import type { UserData } from '../../api/models/user';
+import { UserService } from '../../user/user.service';
 
 @Component({
   selector: 'app-user-settings',
@@ -27,54 +28,38 @@ import type { UserData } from '../../api/models/user';
   changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class UserSettingsComponent {
+  protected readonly userService = inject(UserService);
   protected readonly menuOpen = signal(false);
 
-  protected readonly currentUser = signal<UserData | null>(null);
-
-  protected readonly isLoggedIn = computed(() => this.currentUser() !== null);
   protected readonly userImageUrl = computed(
-    () => this.currentUser()?.image?.publicUrl ?? undefined
+    () => this.userService.user()?.image?.publicUrl ?? undefined
   );
   protected readonly userInitial = computed(
-    () => this.currentUser()?.username.slice(0, 1).toUpperCase() ?? ''
+    () => this.userService.user()?.username.slice(0, 1).toUpperCase() ?? ''
   );
 
-  protected readonly menuItems = computed<MenuItem[]>(() =>
-    {
-      const items: MenuItem[] = [
-        {
-          separator: true
-        }
-      ];
+  protected readonly menuItems = computed<MenuItem[]>(() => {
+    const items: MenuItem[] = [{ separator: true }];
 
-      if (this.isLoggedIn()) {
-        items.push({
-          label: 'Account',
-          icon: 'ph ph-user',
-          command: () => this.logout()
-        });
-        items.push({
-          label: 'Log Out',
-          icon: 'ph ph-sign-out',
-          command: () => this.logout()
-        });
-      } else {
-        items.push({
-          label: 'Log In',
-          icon: 'ph ph-sign-in',
-          command: () => this.login()
-        });
-      }
-
-      return items;
+    if (this.userService.isLoggedIn()) {
+      items.push({
+        label: 'Account',
+        icon: 'ph ph-user',
+        command: () => this.userService.openAccountSettings()
+      });
+      items.push({
+        label: 'Log Out',
+        icon: 'ph ph-sign-out',
+        command: () => this.userService.logout()
+      });
+    } else {
+      items.push({
+        label: 'Log In',
+        icon: 'ph ph-sign-in',
+        command: () => this.userService.login()
+      });
     }
-  );
 
-  protected logout(): void {
-    // TODO
-  }
-
-  protected login(): void {
-    // TODO
-  }
+    return items;
+  });
 }

@@ -127,7 +127,18 @@ const en = {
         }
       },
       view: {
-        label: 'View'
+        label: 'View',
+        items: {
+          zoomIn: {
+            label: 'Zoom In'
+          },
+          zoomOut: {
+            label: 'Zoom Out'
+          },
+          zoom100: {
+            label: 'Zoom 100%'
+          }
+        }
       },
       help: {
         label: 'Help'
@@ -192,6 +203,7 @@ const en = {
       delete: 'Delete',
       zoomIn: 'Zoom In',
       zoomOut: 'Zoom Out',
+      zoom100: 'Zoom 100%',
       toolWireDrawing: 'Place Wires',
       toolWireConnection: 'Connect Wires',
       toolSelect: 'Select',

@@ -34,13 +34,19 @@ export const DEFAULT_SHORTCUTS: Record<ShortcutActionEnum, ShortcutBinding> = {
     alt: false
   },
   [ShortcutActionEnum.ZOOM_IN]: {
-    key: '=',
+    key: '+',
     ctrl: true,
     shift: false,
     alt: false
   },
   [ShortcutActionEnum.ZOOM_OUT]: {
     key: '-',
+    ctrl: true,
+    shift: false,
+    alt: false
+  },
+  [ShortcutActionEnum.ZOOM_100]: {
+    key: '0',
     ctrl: true,
     shift: false,
     alt: false

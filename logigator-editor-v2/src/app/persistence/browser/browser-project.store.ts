@@ -4,7 +4,7 @@ import {
   BrowserProjectSummary,
   StoredBrowserProject
 } from './browser-project.types';
-import { IndexedDbStore, PROJECTS_STORE } from './indexed-db-store';
+import { IndexedDbStore, PROJECTS_STORE } from '../../storage/indexed-db-store';
 
 /**
  * CRUD over browser-local (IndexedDB) circuits, keyed by project id. It owns every

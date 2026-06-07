@@ -5,18 +5,18 @@
   [class.bg-surface-900]="menuOpen()"
   [class.text-white]="menuOpen()"
 >
-  @if (isLoggedIn()) {
+  @if (userService.user(); as user) {
     <p-avatar
       [image]="userImageUrl()"
       [label]="userImageUrl() ? undefined : userInitial()"
       shape="circle"
     />
-    <span class="text-sm font-medium">{{ currentUser()!.username }}</span>
+    <span class="font-medium">{{ user.username }}</span>
   } @else {
     <p-avatar icon="ph ph-user" shape="circle" />
-    <span class="text-sm font-medium">Not signed in</span>
+    <span class="font-medium">Not signed in</span>
   }
-  <i class="ph ph-caret-down text-sm"></i>
+  <i class="ph ph-caret-down"></i>
 </button>
 
 <p-menu
@@ -25,18 +25,17 @@
   [popup]="true"
   (onShow)="menuOpen.set(true)"
   (onHide)="menuOpen.set(false)"
-  class="py-3"
 >
   <ng-template #start>
     <div class="flex flex-col items-center gap-2 px-4 pt-4">
-      @if (isLoggedIn()) {
+      @if (userService.user(); as user) {
         <p-avatar
           [image]="userImageUrl()"
           [label]="userImageUrl() ? undefined : userInitial()"
           shape="circle"
           size="xlarge"
         />
-        <span class="font-semibold">{{ currentUser()!.username }}</span>
+        <span class="font-semibold text-lg">{{ user.username }}</span>
       } @else {
         <p-avatar icon="ph ph-user" shape="circle" size="xlarge" />
         <span class="text-sm">Not signed in</span>
@@ -46,7 +45,7 @@
     <div class="flex flex-col gap-4 px-4 pb-4">
       <div class="flex flex-col gap-2">
         <span class="text-xs font-semibold uppercase tracking-wider text-surface-500">Theme</span>
-        <app-theme-switcher />
+        <app-theme-switcher class="min-w-64"/>
       </div>
       <div class="flex flex-col gap-2">
         <span class="text-xs font-semibold uppercase tracking-wider text-surface-500">Language</span>

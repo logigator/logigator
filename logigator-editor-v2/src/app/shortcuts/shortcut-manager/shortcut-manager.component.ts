@@ -53,7 +53,11 @@ export class ShortcutManagerComponent {
     },
     {
       labelKey: 'shortcuts.groups.viewOps',
-      actions: [ShortcutActionEnum.ZOOM_IN, ShortcutActionEnum.ZOOM_OUT]
+      actions: [
+        ShortcutActionEnum.ZOOM_IN,
+        ShortcutActionEnum.ZOOM_OUT,
+        ShortcutActionEnum.ZOOM_100
+      ]
     },
     {
       labelKey: 'shortcuts.groups.tools',

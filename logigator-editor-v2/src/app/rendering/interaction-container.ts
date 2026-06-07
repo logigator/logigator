@@ -79,7 +79,6 @@ export abstract class InteractionContainer extends Container {
     } else if (e.deltaY < 0) {
       this.zoomIn(e.global);
     }
-    this._ticker$.next('single');
   }
 
   override destroy(options?: DestroyOptions) {

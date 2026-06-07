@@ -17,4 +17,12 @@ export class UserApiService {
   update(body: UpdateUserRequest): Observable<UserData> {
     return this.api.patch<UserData>(this.path, body);
   }
+
+  /**
+   * GET /auth/logout — clears the server session and sets isAuthenticated cookie to false.
+   * Uses fetch with redirect:manual so the 302 response doesn't navigate the page away.
+   */
+  async logout(): Promise<void> {
+    await fetch('/auth/logout', { redirect: 'manual' });
+  }
 }
