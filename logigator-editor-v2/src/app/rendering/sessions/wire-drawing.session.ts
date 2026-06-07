@@ -26,7 +26,9 @@ export class WireDrawingSession implements DragSession {
     const dx = Math.round(local.x - this.startPos.x);
     const dy = Math.round(local.y - this.startPos.y);
 
-    if (this._direction === null) {
+    if (dx === 0 && dy === 0) {
+      this._direction = null;
+    } else if (this._direction === null) {
       if (dx === 0 && dy === 0) return;
       this._direction =
         dx !== 0 ? WireDirection.HORIZONTAL : WireDirection.VERTICAL;
