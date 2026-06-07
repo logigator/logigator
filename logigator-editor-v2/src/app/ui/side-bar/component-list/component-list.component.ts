@@ -19,7 +19,6 @@ import { WorkMode } from '../../../work-mode/work-mode.enum';
   selector: 'app-component-list',
   imports: [ButtonModule],
   templateUrl: './component-list.component.html',
-  styleUrl: './component-list.component.scss',
   changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class ComponentListComponent {

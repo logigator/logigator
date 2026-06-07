@@ -28,7 +28,6 @@ import { CustomComponentRegistry } from '../../components/custom/custom-componen
     TranslocoDirective
   ],
   templateUrl: './side-bar.component.html',
-  styleUrl: './side-bar.component.scss',
   changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class SideBarComponent {

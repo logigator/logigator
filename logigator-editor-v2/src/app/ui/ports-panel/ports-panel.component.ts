@@ -47,7 +47,6 @@ interface PlugRow {
   selector: 'app-ports-panel',
   imports: [DragDropModule],
   templateUrl: './ports-panel.component.html',
-  styleUrl: './ports-panel.component.scss',
   changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class PortsPanelComponent {

@@ -23,7 +23,6 @@ import { environment } from '../../../environments/environment';
   selector: 'app-board',
   imports: [],
   templateUrl: './board.component.html',
-  styleUrl: './board.component.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
   host: { class: 'relative' }
 })

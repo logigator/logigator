@@ -20,7 +20,6 @@ import { ChangeOptionAction } from '../../actions/actions/change-option.action';
   selector: 'app-component-settings',
   imports: [NgComponentOutlet, Card],
   templateUrl: './component-settings.component.html',
-  styleUrl: './component-settings.component.scss',
   changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class ComponentSettingsComponent {

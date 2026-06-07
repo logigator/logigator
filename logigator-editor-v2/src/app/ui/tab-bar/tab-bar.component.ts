@@ -15,7 +15,6 @@ import { Project } from '../../project/project';
   selector: 'app-tab-bar',
   imports: [],
   templateUrl: './tab-bar.component.html',
-  styleUrl: './tab-bar.component.scss',
   changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class TabBarComponent {

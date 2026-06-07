@@ -26,7 +26,6 @@ import { formatShortcutLabel } from '../../shortcuts/shortcut-binding.model';
   selector: 'app-tool-bar',
   imports: [ButtonModule, DividerModule, TooltipModule, TranslocoDirective],
   templateUrl: './tool-bar.component.html',
-  styleUrl: './tool-bar.component.scss',
   changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class ToolBarComponent {

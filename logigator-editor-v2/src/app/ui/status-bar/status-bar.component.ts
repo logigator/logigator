@@ -22,7 +22,6 @@ import { ProjectService } from '../../project/project.service';
   selector: 'app-status-bar',
   imports: [MenubarModule, TranslocoDirective],
   templateUrl: './status-bar.component.html',
-  styleUrl: './status-bar.component.scss',
   changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class StatusBarComponent {

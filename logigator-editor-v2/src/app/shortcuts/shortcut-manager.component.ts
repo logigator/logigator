@@ -25,7 +25,6 @@ interface ShortcutGroup {
     ShortcutEditComponent
   ],
   templateUrl: './shortcut-manager.component.html',
-  styleUrl: './shortcut-manager.component.scss',
   changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class ShortcutManagerComponent {

@@ -29,7 +29,6 @@ import { map } from 'rxjs/operators';
   selector: 'app-title-bar',
   imports: [MenubarModule, NgOptimizedImage, HashedPipe],
   templateUrl: './title-bar.component.html',
-  styleUrl: './title-bar.component.scss',
   changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class TitleBarComponent {
