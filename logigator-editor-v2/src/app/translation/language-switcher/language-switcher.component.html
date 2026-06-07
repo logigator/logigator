@@ -1,0 +1,8 @@
+<p-select
+  [options]="langOptions"
+  [ngModel]="currentLang()"
+  (ngModelChange)="setLang($event)"
+  optionLabel="label"
+  optionValue="id"
+  fluid
+/>

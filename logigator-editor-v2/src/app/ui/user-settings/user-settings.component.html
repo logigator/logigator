@@ -1,0 +1,65 @@
+<button
+  (click)="menu.toggle($event)"
+  pRipple
+  class="flex items-center gap-2 px-3 py-2 cursor-pointer rounded transition-colors hover:bg-surface-900 hover:text-white"
+  [class.bg-surface-900]="menuOpen()"
+  [class.text-white]="menuOpen()"
+>
+  @if (isLoggedIn()) {
+    <p-avatar
+      [image]="userImageUrl()"
+      [label]="userImageUrl() ? undefined : userInitial()"
+      shape="circle"
+    />
+    <span class="text-sm font-medium">{{ currentUser()!.username }}</span>
+  } @else {
+    <p-avatar icon="ph ph-user" shape="circle" />
+    <span class="text-sm font-medium">Not signed in</span>
+  }
+  <i class="ph ph-caret-down text-sm"></i>
+</button>
+
+<p-menu
+  #menu
+  [model]="menuItems()"
+  [popup]="true"
+  (onShow)="menuOpen.set(true)"
+  (onHide)="menuOpen.set(false)"
+  class="py-3"
+>
+  <ng-template #start>
+    <div class="flex flex-col items-center gap-2 px-4 pt-4">
+      @if (isLoggedIn()) {
+        <p-avatar
+          [image]="userImageUrl()"
+          [label]="userImageUrl() ? undefined : userInitial()"
+          shape="circle"
+          size="xlarge"
+        />
+        <span class="font-semibold">{{ currentUser()!.username }}</span>
+      } @else {
+        <p-avatar icon="ph ph-user" shape="circle" size="xlarge" />
+        <span class="text-sm">Not signed in</span>
+      }
+    </div>
+    <p-divider />
+    <div class="flex flex-col gap-4 px-4 pb-4">
+      <div class="flex flex-col gap-2">
+        <span class="text-xs font-semibold uppercase tracking-wider text-surface-500">Theme</span>
+        <app-theme-switcher />
+      </div>
+      <div class="flex flex-col gap-2">
+        <span class="text-xs font-semibold uppercase tracking-wider text-surface-500">Language</span>
+        <app-language-switcher />
+      </div>
+    </div>
+  </ng-template>
+  <ng-template #item let-item>
+    <a pRipple class="flex cursor-pointer items-center gap-2 px-3 py-2">
+      @if (item.icon) {
+        <i [class]="item.icon"></i>
+      }
+      <span>{{ item.label }}</span>
+    </a>
+  </ng-template>
+</p-menu>

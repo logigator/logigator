@@ -1,6 +1,7 @@
 import {
   ChangeDetectionStrategy,
   Component,
+  computed,
   inject,
   Signal
 } from '@angular/core';
@@ -25,6 +26,8 @@ import { ShortcutManagerComponent } from '../../shortcuts/shortcut-manager/short
 import { map } from 'rxjs/operators';
 import { Ripple } from 'primeng/ripple';
 import { ShortcutDisplayComponent } from '../../shortcuts/shortcut-display/shortcut-display.component';
+import { UserSettingsComponent } from '../user-settings/user-settings.component';
+import { ProjectMetadataStore } from '../../persistence/project-metadata.store';
 
 @Component({
   selector: 'app-title-bar',
@@ -33,7 +36,8 @@ import { ShortcutDisplayComponent } from '../../shortcuts/shortcut-display/short
     NgOptimizedImage,
     HashedPipe,
     Ripple,
-    ShortcutDisplayComponent
+    ShortcutDisplayComponent,
+    UserSettingsComponent
   ],
   templateUrl: './title-bar.component.html',
   changeDetection: ChangeDetectionStrategy.OnPush
@@ -44,11 +48,25 @@ export class TitleBarComponent {
   private readonly translocoService = inject(TranslocoService);
   private readonly persistenceService = inject(PersistenceService);
   private readonly projectService = inject(ProjectService);
+  private readonly projectMetadataStore = inject(ProjectMetadataStore);
   private readonly dialogService = inject(DialogService);
   private readonly clipboardService = inject(ClipboardService);
   private readonly shortcutService = inject(ShortcutService);
 
   protected items: Signal<MenuItem[]>;
+
+  protected readonly projectMetadata = computed(() => {
+    const project = this.projectService.mainProject();
+    if (!project) {
+      return null;
+    }
+
+    return this.projectMetadataStore.getMetadata(project) ?? null;
+  });
+
+  protected readonly projectName = computed(
+    () => this.projectMetadata()?.name ?? ''
+  );
 
   protected readonly menuTheme = {
     background: '{primary.400}',
@@ -75,6 +93,8 @@ export class TitleBarComponent {
             label: this.translocoService.translate(
               'titleBar.menuBar.file.items.newProject.label'
             ),
+
+            icon: 'ph ph-trash',
             command: () => this.newProject()
           },
           {
