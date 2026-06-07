@@ -1,15 +1,15 @@
 <div *transloco="let t" class="flex flex-wrap p-2 gap-1">
   <p-button
-    [pTooltip]="t('toolBar.save')"
-    [ariaLabel]="t('toolBar.save')"
+    [pTooltip]="saveTooltip()"
+    [ariaLabel]="saveTooltip()"
     (onClick)="save()"
     tooltipPosition="bottom"
     icon="ph ph-floppy-disk"
     severity="secondary"
   ></p-button>
   <p-button
-    [pTooltip]="t('toolBar.open')"
-    [ariaLabel]="t('toolBar.open')"
+    [pTooltip]="openTooltip()"
+    [ariaLabel]="openTooltip()"
     (onClick)="open()"
     tooltipPosition="bottom"
     icon="ph ph-folder-open"
@@ -23,34 +23,33 @@
     severity="secondary"
   ></p-button>
   <p-divider class="m-2" styleClass="p-0 m-0" layout="vertical"></p-divider>
-
   <p-button
-    [pTooltip]="t('toolBar.copy')"
-    [ariaLabel]="t('toolBar.copy')"
+    [pTooltip]="copyTooltip()"
+    [ariaLabel]="copyTooltip()"
     (onClick)="copy()"
     tooltipPosition="bottom"
     icon="ph ph-copy"
     severity="secondary"
   ></p-button>
   <p-button
-    [pTooltip]="t('toolBar.cut')"
-    [ariaLabel]="t('toolBar.cut')"
+    [pTooltip]="cutTooltip()"
+    [ariaLabel]="cutTooltip()"
     (onClick)="cut()"
     tooltipPosition="bottom"
     icon="ph ph-scissors"
     severity="secondary"
   ></p-button>
   <p-button
-    [pTooltip]="t('toolBar.paste')"
-    [ariaLabel]="t('toolBar.paste')"
+    [pTooltip]="pasteTooltip()"
+    [ariaLabel]="pasteTooltip()"
     (onClick)="paste()"
     tooltipPosition="bottom"
     icon="ph ph-clipboard"
     severity="secondary"
   ></p-button>
   <p-button
-    [pTooltip]="t('toolBar.delete')"
-    [ariaLabel]="t('toolBar.delete')"
+    [pTooltip]="deleteTooltip()"
+    [ariaLabel]="deleteTooltip()"
     (onClick)="delete()"
     tooltipPosition="bottom"
     icon="ph ph-trash"
@@ -59,16 +58,16 @@
   <p-divider class="m-2" styleClass="p-0 m-0" layout="vertical"></p-divider>
 
   <p-button
-    [pTooltip]="t('toolBar.undo')"
-    [ariaLabel]="t('toolBar.undo')"
+    [pTooltip]="undoTooltip()"
+    [ariaLabel]="undoTooltip()"
     (onClick)="undo()"
     tooltipPosition="bottom"
     icon="ph ph-arrow-u-up-left"
     severity="secondary"
   ></p-button>
   <p-button
-    [pTooltip]="t('toolBar.redo')"
-    [ariaLabel]="t('toolBar.redo')"
+    [pTooltip]="redoTooltip()"
+    [ariaLabel]="redoTooltip()"
     (onClick)="redo()"
     tooltipPosition="bottom"
     icon="ph ph-arrow-u-up-right"
@@ -77,16 +76,16 @@
   <p-divider class="m-2" styleClass="p-0 m-0" layout="vertical"></p-divider>
 
   <p-button
-    [pTooltip]="t('toolBar.zoomOut')"
-    [ariaLabel]="t('toolBar.zoomOut')"
+    [pTooltip]="zoomOutTooltip()"
+    [ariaLabel]="zoomOutTooltip()"
     (onClick)="zoomOut()"
     tooltipPosition="bottom"
     icon="ph ph-magnifying-glass-minus"
     severity="secondary"
   ></p-button>
   <p-button
-    [pTooltip]="t('toolBar.zoomIn')"
-    [ariaLabel]="t('toolBar.zoomIn')"
+    [pTooltip]="zoomInTooltip()"
+    [ariaLabel]="zoomInTooltip()"
     (onClick)="zoomIn()"
     tooltipPosition="bottom"
     icon="ph ph-magnifying-glass-plus"
@@ -95,8 +94,8 @@
   <p-divider class="m-2" styleClass="p-0 m-0" layout="vertical"></p-divider>
 
   <p-button
-    [pTooltip]="t('toolBar.placeWires')"
-    [ariaLabel]="t('toolBar.placeWires')"
+    [pTooltip]="placeWiresTooltip()"
+    [ariaLabel]="placeWiresTooltip()"
     [outlined]="!isWireDrawMode()"
     (onClick)="setWireDrawMode()"
     tooltipPosition="bottom"
@@ -104,8 +103,8 @@
     severity="secondary"
   ></p-button>
   <p-button
-    [pTooltip]="t('toolBar.connWires')"
-    [ariaLabel]="t('toolBar.connWires')"
+    [pTooltip]="connWiresTooltip()"
+    [ariaLabel]="connWiresTooltip()"
     [outlined]="!isWireConnMode()"
     (onClick)="setWireConnMode()"
     tooltipPosition="bottom"
@@ -113,8 +112,8 @@
     severity="secondary"
   ></p-button>
   <p-button
-    [pTooltip]="t('toolBar.select')"
-    [ariaLabel]="t('toolBar.select')"
+    [pTooltip]="selectTooltip()"
+    [ariaLabel]="selectTooltip()"
     [outlined]="!isSelectMode()"
     (onClick)="setSelectMode()"
     tooltipPosition="bottom"
@@ -122,8 +121,8 @@
     severity="secondary"
   ></p-button>
   <p-button
-    [pTooltip]="t('toolBar.selExact')"
-    [ariaLabel]="t('toolBar.selExact')"
+    [pTooltip]="selExactTooltip()"
+    [ariaLabel]="selExactTooltip()"
     [outlined]="!isSelectExactMode()"
     (onClick)="setSelectExactMode()"
     tooltipPosition="bottom"
@@ -131,8 +130,8 @@
     severity="secondary"
   ></p-button>
   <p-button
-    [pTooltip]="t('toolBar.eraser')"
-    [ariaLabel]="t('toolBar.eraser')"
+    [pTooltip]="eraserTooltip()"
+    [ariaLabel]="eraserTooltip()"
     [outlined]="!isEraseMode()"
     (onClick)="setEraseMode()"
     tooltipPosition="bottom"
@@ -140,8 +139,8 @@
     severity="secondary"
   ></p-button>
   <p-button
-    [pTooltip]="t('toolBar.text')"
-    [ariaLabel]="t('toolBar.text')"
+    [pTooltip]="textTooltip()"
+    [ariaLabel]="textTooltip()"
     [outlined]="!isPlaceTextMode()"
     (onClick)="setPlaceTextMode()"
     tooltipPosition="bottom"

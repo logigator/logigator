@@ -18,11 +18,13 @@ import { ToastService } from '../../logging/toast.service';
 import { LoggingService } from '../../logging/logging.service';
 import { DialogService } from 'primeng/dynamicdialog';
 import { OpenProjectDialogComponent } from '../open-project-dialog/open-project-dialog.component';
+import { ShortcutService } from '../../shortcuts/shortcut.service';
+import { ShortcutActionEnum } from '../../shortcuts/shortcut-action.enum';
+import { formatShortcutLabel } from '../../shortcuts/shortcut-binding.model';
 
 @Component({
   selector: 'app-tool-bar',
   imports: [ButtonModule, DividerModule, TooltipModule, TranslocoDirective],
-  providers: [DialogService],
   templateUrl: './tool-bar.component.html',
   styleUrl: './tool-bar.component.scss',
   changeDetection: ChangeDetectionStrategy.OnPush
@@ -36,6 +38,79 @@ export class ToolBarComponent {
   private readonly dialogService = inject(DialogService);
   private readonly translocoService = inject(TranslocoService);
   private readonly clipboardService = inject(ClipboardService);
+  private readonly shortcutService = inject(ShortcutService);
+
+  private _fmt(action: ShortcutActionEnum): string {
+    const binding = this.shortcutService.binding(action)();
+    return binding
+      ? formatShortcutLabel(binding, this.shortcutService.isMac)
+      : '';
+  }
+
+  protected saveTooltip = computed(
+    () =>
+      `${this.translocoService.translate('toolBar.save')} (${this._fmt(ShortcutActionEnum.SAVE)})`
+  );
+  protected openTooltip = computed(
+    () =>
+      `${this.translocoService.translate('toolBar.open')} (${this._fmt(ShortcutActionEnum.OPEN)})`
+  );
+  protected copyTooltip = computed(
+    () =>
+      `${this.translocoService.translate('toolBar.copy')} (${this._fmt(ShortcutActionEnum.COPY)})`
+  );
+  protected cutTooltip = computed(
+    () =>
+      `${this.translocoService.translate('toolBar.cut')} (${this._fmt(ShortcutActionEnum.CUT)})`
+  );
+  protected pasteTooltip = computed(
+    () =>
+      `${this.translocoService.translate('toolBar.paste')} (${this._fmt(ShortcutActionEnum.PASTE)})`
+  );
+  protected deleteTooltip = computed(
+    () =>
+      `${this.translocoService.translate('toolBar.delete')} (${this._fmt(ShortcutActionEnum.DELETE)})`
+  );
+  protected undoTooltip = computed(
+    () =>
+      `${this.translocoService.translate('toolBar.undo')} (${this._fmt(ShortcutActionEnum.UNDO)})`
+  );
+  protected redoTooltip = computed(
+    () =>
+      `${this.translocoService.translate('toolBar.redo')} (${this._fmt(ShortcutActionEnum.REDO)})`
+  );
+  protected zoomOutTooltip = computed(
+    () =>
+      `${this.translocoService.translate('toolBar.zoomOut')} (${this._fmt(ShortcutActionEnum.ZOOM_OUT)})`
+  );
+  protected zoomInTooltip = computed(
+    () =>
+      `${this.translocoService.translate('toolBar.zoomIn')} (${this._fmt(ShortcutActionEnum.ZOOM_IN)})`
+  );
+  protected placeWiresTooltip = computed(
+    () =>
+      `${this.translocoService.translate('toolBar.placeWires')} (${this._fmt(ShortcutActionEnum.TOOL_WIRE_DRAWING)})`
+  );
+  protected connWiresTooltip = computed(
+    () =>
+      `${this.translocoService.translate('toolBar.connWires')} (${this._fmt(ShortcutActionEnum.TOOL_WIRE_CONNECTION)})`
+  );
+  protected selectTooltip = computed(
+    () =>
+      `${this.translocoService.translate('toolBar.select')} (${this._fmt(ShortcutActionEnum.TOOL_SELECT)})`
+  );
+  protected selExactTooltip = computed(
+    () =>
+      `${this.translocoService.translate('toolBar.selExact')} (${this._fmt(ShortcutActionEnum.TOOL_SELECT_EXACT)})`
+  );
+  protected eraserTooltip = computed(
+    () =>
+      `${this.translocoService.translate('toolBar.eraser')} (${this._fmt(ShortcutActionEnum.TOOL_ERASE)})`
+  );
+  protected textTooltip = computed(
+    () =>
+      `${this.translocoService.translate('toolBar.text')} (${this._fmt(ShortcutActionEnum.TOOL_PLACE_TEXT)})`
+  );
 
   protected isWireDrawMode = computed(
     () => this.workModeService.mode() === WorkMode.WIRE_DRAWING

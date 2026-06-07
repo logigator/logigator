@@ -7,6 +7,7 @@ import { provideTransloco } from '@jsverse/transloco';
 import { TranslationLoaderService } from './translation/translation-loader.service';
 import { providePrimeNG } from 'primeng/config';
 import { ConfirmationService, MessageService } from 'primeng/api';
+import { DialogService } from 'primeng/dynamicdialog';
 import Aura from '@primeuix/themes/aura';
 import { provideHttpClient } from '@angular/common/http';
 
@@ -16,6 +17,7 @@ export const appConfig: ApplicationConfig = {
     providePrimeNG({ theme: { preset: Aura } }),
     ConfirmationService,
     MessageService,
+    DialogService,
     provideTransloco({
       config: {
         defaultLang: 'en',

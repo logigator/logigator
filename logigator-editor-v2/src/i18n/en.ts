@@ -1,4 +1,5 @@
 import type { WorkMode } from '../app/work-mode/work-mode.enum';
+import type { ShortcutActionEnum } from '../app/shortcuts/shortcut-action.enum';
 
 const en = {
   common: {
@@ -176,6 +177,49 @@ const en = {
     success: 'Success',
     info: 'Info',
     debug: 'Debug'
+  },
+  shortcuts: {
+    title: 'Keyboard Shortcuts',
+    actions: {
+      save: 'Save',
+      open: 'Open',
+      newComponent: 'New Component',
+      undo: 'Undo',
+      redo: 'Redo',
+      copy: 'Copy',
+      cut: 'Cut',
+      paste: 'Paste',
+      delete: 'Delete',
+      zoomIn: 'Zoom In',
+      zoomOut: 'Zoom Out',
+      toolWireDrawing: 'Place Wires',
+      toolWireConnection: 'Connect Wires',
+      toolSelect: 'Select',
+      toolSelectExact: 'Select Exact',
+      toolErase: 'Erase',
+      toolComponentPlacement: 'Place Component',
+      toolPlaceText: 'Place Text',
+      cancel: 'Cancel'
+    } satisfies Record<ShortcutActionEnum, string>,
+    groups: {
+      fileOps: 'File',
+      editOps: 'Edit',
+      viewOps: 'View',
+      tools: 'Tools',
+      interaction: 'Interaction'
+    },
+    manager: {
+      resetAll: 'Reset All',
+      reset: 'Reset',
+      unassign: 'Unassign',
+      edit: 'Edit Shortcut',
+      recordPrompt: 'Press keys…'
+    },
+    toast: {
+      reassignedFrom: 'Shortcut unassigned from "{{action}}"',
+      loadFailed:
+        'Could not load configured shortcuts, falling back to defaults.'
+    }
   }
 };
 

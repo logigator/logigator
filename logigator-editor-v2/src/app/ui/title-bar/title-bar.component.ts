@@ -10,7 +10,6 @@ import { ToastService } from '../../logging/toast.service';
 import { LoggingService } from '../../logging/logging.service';
 import { NgOptimizedImage } from '@angular/common';
 import { TranslocoService } from '@jsverse/transloco';
-import { map } from 'rxjs';
 import { toSignal } from '@angular/core/rxjs-interop';
 import { HashedPipe } from '../../hashing/hashed.pipe';
 import { PersistenceService } from '../../persistence/persistence.service';
@@ -19,11 +18,15 @@ import { DialogService } from 'primeng/dynamicdialog';
 import { OpenProjectDialogComponent } from '../open-project-dialog/open-project-dialog.component';
 import { NewComponentDialogComponent } from '../new-component-dialog/new-component-dialog.component';
 import { ClipboardService } from '../../clipboard/clipboard.service';
+import { ShortcutService } from '../../shortcuts/shortcut.service';
+import { ShortcutActionEnum } from '../../shortcuts/shortcut-action.enum';
+import { formatShortcutLabel } from '../../shortcuts/shortcut-binding.model';
+import { ShortcutManagerComponent } from '../../shortcuts/shortcut-manager.component';
+import { map } from 'rxjs/operators';
 
 @Component({
   selector: 'app-title-bar',
   imports: [MenubarModule, NgOptimizedImage, HashedPipe],
-  providers: [DialogService],
   templateUrl: './title-bar.component.html',
   styleUrl: './title-bar.component.scss',
   changeDetection: ChangeDetectionStrategy.OnPush
@@ -36,16 +39,22 @@ export class TitleBarComponent {
   private readonly projectService = inject(ProjectService);
   private readonly dialogService = inject(DialogService);
   private readonly clipboardService = inject(ClipboardService);
+  private readonly shortcutService = inject(ShortcutService);
 
   public items: Signal<MenuItem[]>;
 
   public constructor() {
-    const translocoService = this.translocoService;
-
     this.items = toSignal(
-      translocoService.events$.pipe(map(() => this.generateMenuItems())),
+      this.translocoService.events$.pipe(map(() => this.generateMenuItems())),
       { initialValue: [] }
     );
+  }
+
+  private _fmt(action: ShortcutActionEnum): string {
+    const binding = this.shortcutService.binding(action)();
+    return binding
+      ? ` (${formatShortcutLabel(binding, this.shortcutService.isMac)})`
+      : ' (-)';
   }
 
   private generateMenuItems(): MenuItem[] {
@@ -60,24 +69,27 @@ export class TitleBarComponent {
             command: () => this.newProject()
           },
           {
-            label: this.translocoService.translate(
-              'titleBar.menuBar.file.items.newComponent.label'
-            ),
+            label:
+              this.translocoService.translate(
+                'titleBar.menuBar.file.items.newComponent.label'
+              ) + this._fmt(ShortcutActionEnum.NEW_COMPONENT),
             command: () => this.newComponent()
           },
           {
             separator: true
           },
           {
-            label: this.translocoService.translate(
-              'titleBar.menuBar.file.items.open.label'
-            ),
+            label:
+              this.translocoService.translate(
+                'titleBar.menuBar.file.items.open.label'
+              ) + this._fmt(ShortcutActionEnum.OPEN),
             command: () => this.openProject()
           },
           {
-            label: this.translocoService.translate(
-              'titleBar.menuBar.file.items.save.label'
-            ),
+            label:
+              this.translocoService.translate(
+                'titleBar.menuBar.file.items.save.label'
+              ) + this._fmt(ShortcutActionEnum.SAVE),
             command: () => this.saveProject()
           },
           {
@@ -100,46 +112,59 @@ export class TitleBarComponent {
         label: this.translocoService.translate('titleBar.menuBar.edit.label'),
         items: [
           {
-            label: this.translocoService.translate(
-              'titleBar.menuBar.edit.items.undo.label'
-            ),
+            label:
+              this.translocoService.translate(
+                'titleBar.menuBar.edit.items.undo.label'
+              ) + this._fmt(ShortcutActionEnum.UNDO),
             command: () => this.undo()
           },
           {
-            label: this.translocoService.translate(
-              'titleBar.menuBar.edit.items.redo.label'
-            ),
+            label:
+              this.translocoService.translate(
+                'titleBar.menuBar.edit.items.redo.label'
+              ) + this._fmt(ShortcutActionEnum.REDO),
             command: () => this.redo()
           },
           {
             separator: true
           },
           {
-            label: this.translocoService.translate(
-              'titleBar.menuBar.edit.items.cut.label'
-            ),
+            label:
+              this.translocoService.translate(
+                'titleBar.menuBar.edit.items.cut.label'
+              ) + this._fmt(ShortcutActionEnum.CUT),
             command: () => this.cut()
           },
           {
-            label: this.translocoService.translate(
-              'titleBar.menuBar.edit.items.copy.label'
-            ),
+            label:
+              this.translocoService.translate(
+                'titleBar.menuBar.edit.items.copy.label'
+              ) + this._fmt(ShortcutActionEnum.COPY),
             command: () => this.copy()
           },
           {
-            label: this.translocoService.translate(
-              'titleBar.menuBar.edit.items.paste.label'
-            ),
+            label:
+              this.translocoService.translate(
+                'titleBar.menuBar.edit.items.paste.label'
+              ) + this._fmt(ShortcutActionEnum.PASTE),
             command: () => this.paste()
           },
           {
             separator: true
           },
           {
-            label: this.translocoService.translate(
-              'titleBar.menuBar.edit.items.delete.label'
-            ),
+            label:
+              this.translocoService.translate(
+                'titleBar.menuBar.edit.items.delete.label'
+              ) + this._fmt(ShortcutActionEnum.DELETE),
             command: () => this.delete()
+          },
+          {
+            separator: true
+          },
+          {
+            label: this.translocoService.translate('shortcuts.title'),
+            command: () => this.openShortcutManager()
           }
         ]
       },
@@ -150,6 +175,15 @@ export class TitleBarComponent {
         label: 'Help'
       }
     ];
+  }
+
+  private openShortcutManager(): void {
+    this.dialogService.open(ShortcutManagerComponent, {
+      header: this.translocoService.translate('shortcuts.title'),
+      width: '40rem',
+      modal: true,
+      closable: true
+    });
   }
 
   private newProject(): void {

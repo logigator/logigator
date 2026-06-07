@@ -1,0 +1,25 @@
+<div class="flex items-center gap-2" *transloco="let t">
+  @if (!isRecording()) {
+    <app-shortcut-display [binding]="binding()" />
+    <p-button
+      icon="ph ph-pencil"
+      severity="secondary"
+      [text]="true"
+      size="small"
+      [pTooltip]="t('shortcuts.manager.edit')"
+      tooltipPosition="bottom"
+      (onClick)="startRecording()"
+    />
+  } @else {
+    <span class="text-sm italic text-primary animate-pulse">{{
+      t('shortcuts.manager.recordPrompt')
+    }}</span>
+    <p-button
+      icon="ph ph-x"
+      severity="warn"
+      [text]="true"
+      size="small"
+      (onClick)="stopRecording()"
+    />
+  }
+</div>

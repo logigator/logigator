@@ -4,6 +4,7 @@ import {
   FederatedPointerEvent,
   Rectangle
 } from 'pixi.js';
+import { Subscription } from 'rxjs';
 import { WorkMode } from '../work-mode/work-mode.enum';
 import { Project } from '../project/project';
 import { Component } from '../components/component';
@@ -19,6 +20,9 @@ import { SelectionMoveSession } from './sessions/selection-move.session';
 import { EraseSession } from './sessions/erase.session';
 import { WireConnectionSession } from './sessions/wire-connection.session';
 import { ConnectionPoint } from '../connection-points/connection-point';
+import { ShortcutService } from '../shortcuts/shortcut.service';
+import { ShortcutActionEnum } from '../shortcuts/shortcut-action.enum';
+import { getStaticDI } from '../utils/get-di';
 
 export class FloatingLayer extends Container {
   private readonly _dragLayer = new Container<
@@ -29,12 +33,7 @@ export class FloatingLayer extends Container {
   private _componentToPlace: ComponentConfig | null = null;
   private _activeDrag: DragSession | null = null;
 
-  private readonly _onKeyDown = (e: KeyboardEvent) => {
-    if (e.key === 'Escape' && this._activeDrag) {
-      this._activeDrag.onCancel();
-      this._stopDrag();
-    }
-  };
+  private _cancelSub?: Subscription;
 
   constructor(private readonly project: Project) {
     super();
@@ -53,7 +52,15 @@ export class FloatingLayer extends Container {
     this.addChild(this._dragLayer);
 
     this.on('pointerdown', this.onPointerDown);
-    window.addEventListener('keydown', this._onKeyDown);
+
+    this._cancelSub = getStaticDI(ShortcutService)
+      .on(ShortcutActionEnum.CANCEL)
+      .subscribe(() => {
+        if (this._activeDrag) {
+          this._activeDrag.onCancel();
+          this._stopDrag();
+        }
+      });
   }
 
   public updateScale(scale: number) {
@@ -208,7 +215,7 @@ export class FloatingLayer extends Container {
   }
 
   override destroy(options?: DestroyOptions) {
-    window.removeEventListener('keydown', this._onKeyDown);
+    this._cancelSub?.unsubscribe();
     super.destroy(options);
   }
 }
