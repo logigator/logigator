@@ -10,7 +10,12 @@ import { DynamicDialogRef } from 'primeng/dynamicdialog';
 import { TabsModule } from 'primeng/tabs';
 import { type FileSelectEvent, FileUploadModule } from 'primeng/fileupload';
 import { TranslocoDirective } from '@jsverse/transloco';
-import { debounceTime, distinctUntilChanged, firstValueFrom, Subject } from 'rxjs';
+import {
+  debounceTime,
+  distinctUntilChanged,
+  firstValueFrom,
+  Subject
+} from 'rxjs';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { PersistenceService } from '../../persistence/persistence.service';
 import { ToastService } from '../../logging/toast.service';
@@ -26,7 +31,12 @@ const PAGE_SIZE = 20;
 
 @Component({
   selector: 'app-open-project-dialog',
-  imports: [TabsModule, FileUploadModule, TranslocoDirective, ProjectListComponent],
+  imports: [
+    TabsModule,
+    FileUploadModule,
+    TranslocoDirective,
+    ProjectListComponent
+  ],
   templateUrl: './open-project-dialog.component.html',
   changeDetection: ChangeDetectionStrategy.OnPush
 })
@@ -71,14 +81,12 @@ export class OpenProjectDialogComponent implements OnInit {
   private readonly serverSearch$ = new Subject<string>();
 
   constructor() {
-    this.serverSearch$.pipe(
-      debounceTime(300),
-      distinctUntilChanged(),
-      takeUntilDestroyed()
-    ).subscribe((query) => {
-      this.serverSearch.set(query);
-      void this.loadServerProjects(0);
-    });
+    this.serverSearch$
+      .pipe(debounceTime(300), distinctUntilChanged(), takeUntilDestroyed())
+      .subscribe((query) => {
+        this.serverSearch.set(query);
+        void this.loadServerProjects(0);
+      });
   }
 
   ngOnInit(): void {

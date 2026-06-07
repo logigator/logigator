@@ -7,7 +7,7 @@ const AppTheme = definePreset(Aura, {
       navButton: {
         borderRadius: '{borderRadiusMd}'
       }
-    },
+    }
   },
   semantic: {
     colorScheme: {

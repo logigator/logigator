@@ -21,7 +21,9 @@
         {{ t('openProjectDialog.loading') }}
       </p>
     } @else if (items().length === 0) {
-      <p class="py-8 text-center text-surface-500">{{ t('openProjectDialog.noSearchResults') }}</p>
+      <p class="py-8 text-center text-surface-500">
+        {{ t('openProjectDialog.noSearchResults') }}
+      </p>
     } @else {
       @for (item of items(); track item.id) {
         <div
