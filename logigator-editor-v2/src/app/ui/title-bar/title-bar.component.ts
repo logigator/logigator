@@ -17,6 +17,7 @@ import { ProjectService } from '../../project/project.service';
 import { DialogService } from 'primeng/dynamicdialog';
 import { OpenProjectDialogComponent } from '../open-project-dialog/open-project-dialog.component';
 import { NewComponentDialogComponent } from '../new-component-dialog/new-component-dialog.component';
+import { NewProjectDialogComponent } from '../new-project-dialog/new-project-dialog.component';
 import { ClipboardService } from '../../clipboard/clipboard.service';
 import { ShortcutService } from '../../shortcuts/shortcut.service';
 import { ShortcutActionEnum } from '../../shortcuts/shortcut-action.enum';
@@ -187,13 +188,14 @@ export class TitleBarComponent {
   }
 
   private newProject(): void {
-    const name = prompt('Project name:');
-    if (name) {
-      this.persistenceService.createProject(name).catch(() => {
-        this.logging.error('Failed to create project', 'TitleBarComponent');
-        this.toastService.error('Failed to create project');
-      });
-    }
+    this.dialogService.open(NewProjectDialogComponent, {
+      header: this.translocoService.translate(
+        'titleBar.menuBar.file.items.newProject.label'
+      ),
+      width: '28rem',
+      modal: true,
+      closable: true
+    });
   }
 
   private saveProject(): void {

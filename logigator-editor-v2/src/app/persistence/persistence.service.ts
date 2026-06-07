@@ -141,6 +141,19 @@ export class PersistenceService {
     return this.projectService.mainProject()!;
   }
 
+  createLocalProject(name: string): void {
+    const project = new Project();
+    this.metadataStore.register(project, {
+      id: '',
+      name,
+      type: 'project',
+      source: 'browser',
+      hash: '',
+      isPublic: false
+    });
+    this._replaceMainProject(project);
+  }
+
   /**
    * Creates a blank project and sets it as main. It registers as a `'browser'`
    * project with an empty id and is **not** written to storage yet — a fresh draft
