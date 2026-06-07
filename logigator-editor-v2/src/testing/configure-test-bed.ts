@@ -4,11 +4,19 @@ import { provideHttpClientTesting } from '@angular/common/http/testing';
 import { TranslocoService } from '@jsverse/transloco';
 import { appConfig } from '../app/app.config';
 import { setStaticDIInjector } from '../app/utils/get-di';
+import { TranslocoPersistLangService } from '@jsverse/transloco-persist-lang';
 
 // Stub that returns the key so tests don't log "Missing translation".
 const TRANSLOCO_STUB = {
   translate: (key: string) => key
 } as unknown as TranslocoService;
+
+const TRANSLOCO_PERSIST_STUB = {
+  getCachedLang: () => null,
+  clear: () => {
+    /* empty */
+  }
+} as unknown as TranslocoPersistLangService;
 
 /**
  * Configures TestBed with the full application provider set (appConfig.providers)
@@ -25,6 +33,10 @@ export function configureTestBed(overrides: Provider[] = []): void {
       ...appConfig.providers,
       provideHttpClientTesting(),
       { provide: TranslocoService, useValue: TRANSLOCO_STUB },
+      {
+        provide: TranslocoPersistLangService,
+        useValue: TRANSLOCO_PERSIST_STUB
+      },
       ...overrides
     ]
   });
