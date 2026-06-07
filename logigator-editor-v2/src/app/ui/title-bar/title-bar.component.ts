@@ -22,7 +22,7 @@ import { ClipboardService } from '../../clipboard/clipboard.service';
 import { ShortcutService } from '../../shortcuts/shortcut.service';
 import { ShortcutActionEnum } from '../../shortcuts/shortcut-action.enum';
 import { formatShortcutLabel } from '../../shortcuts/shortcut-binding.model';
-import { ShortcutManagerComponent } from '../../shortcuts/shortcut-manager.component';
+import { ShortcutManagerComponent } from '../../shortcuts/shortcut-manager/shortcut-manager.component';
 import { map } from 'rxjs/operators';
 
 @Component({

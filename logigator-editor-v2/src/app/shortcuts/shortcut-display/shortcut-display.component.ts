@@ -5,8 +5,8 @@ import {
   inject,
   input
 } from '@angular/core';
-import { ShortcutBinding, formatKey } from './shortcut-binding.model';
-import { ShortcutService } from './shortcut.service';
+import { ShortcutBinding, formatKey } from '../shortcut-binding.model';
+import { ShortcutService } from '../shortcut.service';
 
 @Component({
   selector: 'app-shortcut-display',

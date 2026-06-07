@@ -11,9 +11,9 @@ import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { ButtonModule } from 'primeng/button';
 import { TooltipModule } from 'primeng/tooltip';
 import { TranslocoDirective } from '@jsverse/transloco';
-import { ShortcutDisplayComponent } from './shortcut-display.component';
-import { ShortcutBinding } from './shortcut-binding.model';
-import { ShortcutService } from './shortcut.service';
+import { ShortcutDisplayComponent } from '../shortcut-display/shortcut-display.component';
+import { ShortcutBinding } from '../shortcut-binding.model';
+import { ShortcutService } from '../shortcut.service';
 
 @Component({
   selector: 'app-shortcut-edit',

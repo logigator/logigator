@@ -4,11 +4,11 @@ import { ButtonModule } from 'primeng/button';
 import { DividerModule } from 'primeng/divider';
 import { TooltipModule } from 'primeng/tooltip';
 import { TranslocoDirective } from '@jsverse/transloco';
-import { ShortcutService } from './shortcut.service';
-import { ShortcutActionEnum } from './shortcut-action.enum';
-import { ShortcutBinding, DEFAULT_SHORTCUTS } from './shortcut-binding.model';
-import { ShortcutEditComponent } from './shortcut-edit.component';
-import { TranslationKey } from '../translation/translation-key.model';
+import { ShortcutService } from '../shortcut.service';
+import { ShortcutActionEnum } from '../shortcut-action.enum';
+import { ShortcutBinding, DEFAULT_SHORTCUTS } from '../shortcut-binding.model';
+import { ShortcutEditComponent } from '../shortcut-edit/shortcut-edit.component';
+import { TranslationKey } from '../../translation/translation-key.model';
 
 interface ShortcutGroup {
   labelKey: TranslationKey;
