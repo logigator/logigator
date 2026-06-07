@@ -1,8 +1,7 @@
 import { beforeEach, describe, expect, it } from 'vitest';
-import { Injector } from '@angular/core';
 import { TestBed } from '@angular/core/testing';
 import { Container, Text } from 'pixi.js';
-import { setStaticDIInjector } from '../../utils/get-di';
+import { configureTestBed } from '../../../testing/configure-test-bed';
 import { Component } from '../component';
 import { ComponentProviderService } from '../component-provider.service';
 import { Project } from '../../project/project';
@@ -27,7 +26,7 @@ describe('CustomComponent', () => {
   let provider: ComponentProviderService;
 
   beforeEach(() => {
-    setStaticDIInjector(TestBed.inject(Injector));
+    configureTestBed();
     registry = TestBed.inject(CustomComponentRegistry);
     provider = TestBed.inject(ComponentProviderService);
   });

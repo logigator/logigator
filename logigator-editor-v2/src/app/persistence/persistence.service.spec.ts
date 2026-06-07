@@ -2,25 +2,15 @@
 
 import type { Mock } from 'vitest';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import { Injector } from '@angular/core';
 import { Location } from '@angular/common';
 import { TestBed } from '@angular/core/testing';
-import {
-  provideHttpClient,
-  withInterceptorsFromDi
-} from '@angular/common/http';
-import {
-  HttpTestingController,
-  provideHttpClientTesting
-} from '@angular/common/http/testing';
+import { HttpTestingController } from '@angular/common/http/testing';
 import { TranslocoService } from '@jsverse/transloco';
-import { MessageService } from 'primeng/api';
 import { AuthRequiredError, PersistenceService } from './persistence.service';
 import { ProjectMetadataStore } from './project-metadata.store';
 import { ProjectService } from '../project/project.service';
 import { Project } from '../project/project';
 import { ProjectElement } from '../api/models/project-element';
-import { setStaticDIInjector } from '../utils/get-di';
 import { environment } from '../../environments/environment';
 import { InvalidFileError } from './file/circuit-file.errors';
 import { BrowserProjectStore } from './browser/browser-project.store';
@@ -34,6 +24,7 @@ import {
   FakeBrowserComponentStore,
   FakeBrowserProjectStore
 } from '../../testing/fake-browser-stores';
+import { configureTestBed } from '../../testing/configure-test-bed';
 
 const PROJECT_URL = (uuid: string) =>
   `${environment.apiUrl}/api/project/${uuid}`;
@@ -146,31 +137,25 @@ describe('PersistenceService', () => {
     locationGo = vi.fn();
     browserStore = new FakeBrowserProjectStore();
     componentStore = new FakeBrowserComponentStore();
-    TestBed.configureTestingModule({
-      providers: [
-        provideHttpClient(withInterceptorsFromDi()),
-        provideHttpClientTesting(),
-        {
-          provide: Location,
-          useValue: {
-            path: () => '/',
-            go: locationGo,
-            replaceState: () => undefined,
-            subscribe: () => ({ unsubscribe: () => undefined })
-          }
-        },
-        { provide: BrowserProjectStore, useValue: browserStore },
-        { provide: BrowserComponentStore, useValue: componentStore },
-        MessageService,
-        {
-          provide: TranslocoService,
-          useValue: {
-            translate: vi.fn().mockName('TranslocoService.translate')
-          }
+    configureTestBed([
+      {
+        provide: Location,
+        useValue: {
+          path: () => '/',
+          go: locationGo,
+          replaceState: () => undefined,
+          subscribe: () => ({ unsubscribe: () => undefined })
         }
-      ]
-    });
-    setStaticDIInjector(TestBed.inject(Injector));
+      },
+      { provide: BrowserProjectStore, useValue: browserStore },
+      { provide: BrowserComponentStore, useValue: componentStore },
+      {
+        provide: TranslocoService,
+        useValue: {
+          translate: vi.fn().mockName('TranslocoService.translate')
+        }
+      }
+    ]);
     service = TestBed.inject(PersistenceService);
     metadataStore = TestBed.inject(ProjectMetadataStore);
     projectService = TestBed.inject(ProjectService);

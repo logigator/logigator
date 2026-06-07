@@ -1,7 +1,5 @@
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
-import { Injector } from '@angular/core';
-import { TestBed } from '@angular/core/testing';
-import { setStaticDIInjector } from '../utils/get-di';
+import { configureTestBed } from '../../testing/configure-test-bed';
 import { Component } from '../components/component';
 import { Project } from '../project/project';
 import { inputComponentConfig } from '../components/component-types/input/input.config';
@@ -13,7 +11,7 @@ describe('deriveSummary', () => {
   let project: Project;
 
   beforeEach(() => {
-    setStaticDIInjector(TestBed.inject(Injector));
+    configureTestBed();
     project = new Project();
   });
 

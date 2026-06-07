@@ -1,8 +1,6 @@
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
-import { Injector } from '@angular/core';
-import { TestBed } from '@angular/core/testing';
 import { Container, Point } from 'pixi.js';
-import { setStaticDIInjector } from '../../utils/get-di';
+import { configureTestBed } from '../../../testing/configure-test-bed';
 import { Project } from '../../project/project';
 import { Component } from '../../components/component';
 import { Wire } from '../../wires/wire';
@@ -20,7 +18,7 @@ describe('WireDrawingSession + TextComponent (ignoresWireCollision)', () => {
   let session: WireDrawingSession;
 
   beforeEach(() => {
-    setStaticDIInjector(TestBed.inject(Injector));
+    configureTestBed();
     project = new Project();
     dragLayer = new Container();
   });

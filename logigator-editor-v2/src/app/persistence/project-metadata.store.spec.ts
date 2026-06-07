@@ -1,5 +1,4 @@
 import { beforeEach, describe, expect, it } from 'vitest';
-import { Injector } from '@angular/core';
 import { TestBed } from '@angular/core/testing';
 import { Subject } from 'rxjs';
 import {
@@ -7,7 +6,7 @@ import {
   ProjectMetadataStore
 } from './project-metadata.store';
 import { Project } from '../project/project';
-import { setStaticDIInjector } from '../utils/get-di';
+import { configureTestBed } from '../../testing/configure-test-bed';
 
 function makeMetadata(
   overrides: Partial<ProjectMetadata> = {}
@@ -29,8 +28,7 @@ describe('ProjectMetadataStore', () => {
   let store: ProjectMetadataStore;
 
   beforeEach(() => {
-    TestBed.configureTestingModule({});
-    setStaticDIInjector(TestBed.inject(Injector));
+    configureTestBed();
     store = TestBed.inject(ProjectMetadataStore);
   });
 

@@ -1,8 +1,6 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import { Injector } from '@angular/core';
 import { TestBed } from '@angular/core/testing';
-import { setStaticDIInjector } from '../utils/get-di';
-import { appConfig } from '../app.config';
+import { configureTestBed } from '../../testing/configure-test-bed';
 import { CustomComponentService } from './custom-component.service';
 import { ProjectService } from '../project/project.service';
 import { ProjectMetadataStore } from '../persistence/project-metadata.store';
@@ -33,14 +31,10 @@ describe('CustomComponentService', () => {
     vi.useFakeTimers();
     const fakeComponentStore = new FakeBrowserComponentStore();
     const fakeProjectStore = new FakeBrowserProjectStore();
-    TestBed.configureTestingModule({
-      providers: [
-        ...appConfig.providers,
-        { provide: BrowserComponentStore, useValue: fakeComponentStore },
-        { provide: BrowserProjectStore, useValue: fakeProjectStore }
-      ]
-    });
-    setStaticDIInjector(TestBed.inject(Injector));
+    configureTestBed([
+      { provide: BrowserComponentStore, useValue: fakeComponentStore },
+      { provide: BrowserProjectStore, useValue: fakeProjectStore }
+    ]);
     service = TestBed.inject(CustomComponentService);
     projectService = TestBed.inject(ProjectService);
     metadataStore = TestBed.inject(ProjectMetadataStore);

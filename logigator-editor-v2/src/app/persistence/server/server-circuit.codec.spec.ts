@@ -1,8 +1,7 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
-import { Injector } from '@angular/core';
 import { TestBed } from '@angular/core/testing';
-import { MessageService } from 'primeng/api';
 import { TranslocoService } from '@jsverse/transloco';
+import { configureTestBed } from '../../../testing/configure-test-bed';
 import {
   serializeProject,
   toCircuitFileV0,
@@ -12,7 +11,6 @@ import { EmbeddedDependency } from '../../api/models/dependencies';
 import { CircuitFileService } from '../file/circuit-file.service';
 import { Project } from '../../project/project';
 import { ProjectElement } from '../../api/models/project-element';
-import { setStaticDIInjector } from '../../utils/get-di';
 import { ComponentProviderService } from '../../components/component-provider.service';
 import { CustomComponentRegistry } from '../../components/custom/custom-component-registry.service';
 import {
@@ -128,13 +126,7 @@ describe('server-circuit.codec', () => {
       translate: vi.fn().mockName('TranslocoService.translate')
     };
     translocoSpy.translate.mockImplementation((key: string) => key);
-    TestBed.configureTestingModule({
-      providers: [
-        MessageService,
-        { provide: TranslocoService, useValue: translocoSpy }
-      ]
-    });
-    setStaticDIInjector(TestBed.inject(Injector));
+    configureTestBed([{ provide: TranslocoService, useValue: translocoSpy }]);
     circuitFile = TestBed.inject(CircuitFileService);
     registry = TestBed.inject(CustomComponentRegistry);
     provider = TestBed.inject(ComponentProviderService);

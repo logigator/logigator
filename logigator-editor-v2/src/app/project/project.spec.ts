@@ -1,8 +1,6 @@
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
-import { Injector } from '@angular/core';
-import { TestBed } from '@angular/core/testing';
 import { Container, Point, Rectangle } from 'pixi.js';
-import { setStaticDIInjector } from '../utils/get-di';
+import { configureTestBed } from '../../testing/configure-test-bed';
 import { Project } from './project';
 import { Wire } from '../wires/wire';
 import { WireDirection } from '../wires/wire-direction.enum';
@@ -13,7 +11,7 @@ describe('Project.hasComponentCollision', () => {
   let project: Project;
 
   beforeEach(() => {
-    setStaticDIInjector(TestBed.inject(Injector));
+    configureTestBed();
     project = new Project();
   });
 
@@ -85,7 +83,7 @@ describe('Project.hasWireBodyCollision', () => {
   let project: Project;
 
   beforeEach(() => {
-    setStaticDIInjector(TestBed.inject(Injector));
+    configureTestBed();
     project = new Project();
   });
 
@@ -159,7 +157,7 @@ describe('Project.hasComponentBodyWireCollision', () => {
   let project: Project;
 
   beforeEach(() => {
-    setStaticDIInjector(TestBed.inject(Injector));
+    configureTestBed();
     project = new Project();
   });
 
@@ -236,7 +234,7 @@ describe('Project connection-point integration', () => {
   let project: Project;
 
   beforeEach(() => {
-    setStaticDIInjector(TestBed.inject(Injector));
+    configureTestBed();
     project = new Project();
   });
 
@@ -511,7 +509,7 @@ describe('Project.toggleConnectionAt', () => {
   let project: Project;
 
   beforeEach(() => {
-    setStaticDIInjector(TestBed.inject(Injector));
+    configureTestBed();
     project = new Project();
   });
 
@@ -626,7 +624,7 @@ describe('Project portsChange$ rebucket', () => {
   let project: Project;
 
   beforeEach(() => {
-    setStaticDIInjector(TestBed.inject(Injector));
+    configureTestBed();
     project = new Project();
   });
 

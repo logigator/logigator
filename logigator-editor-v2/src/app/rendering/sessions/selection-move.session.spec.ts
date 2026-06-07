@@ -1,8 +1,6 @@
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
-import { Injector } from '@angular/core';
-import { TestBed } from '@angular/core/testing';
 import { Container, Point, Rectangle } from 'pixi.js';
-import { setStaticDIInjector } from '../../utils/get-di';
+import { configureTestBed } from '../../../testing/configure-test-bed';
 import { Project } from '../../project/project';
 import { Wire } from '../../wires/wire';
 import { WireDirection } from '../../wires/wire-direction.enum';
@@ -17,7 +15,7 @@ describe('SelectionMoveSession collision', () => {
   let session: SelectionMoveSession;
 
   beforeEach(() => {
-    setStaticDIInjector(TestBed.inject(Injector));
+    configureTestBed();
     project = new Project();
     dragLayer = new Container<Component | Wire>();
   });
