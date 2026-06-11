@@ -14,7 +14,10 @@ import { getStaticDI } from '../utils/get-di';
 import { GraphicsProviderService } from '../rendering/graphics-provider.service';
 import { environment } from '../../environments/environment';
 import { PX } from '../utils/grid';
-import { WireGraphics } from '../rendering/graphics/wire.graphics';
+import {
+  POWERED_WIRE_THICKNESS,
+  WireGraphics
+} from '../rendering/graphics/wire.graphics';
 import { ComponentOption } from './component-option';
 import { SerializedComponent } from './serialized-component.model';
 import { Connectable } from '../rendering/grid-element';
@@ -60,6 +63,12 @@ export abstract class Component<
   private _numOutputs = 0;
 
   private _rotationCounterContainers: Container[] = [];
+
+  // Stub graphics in `connectionPoints` order, rebuilt by _drawConnections.
+  private _portStubs: Graphics[] = [];
+  // Powered port indexes survive redraws (zoom applyScale, theme change) —
+  // _drawConnections re-applies them to the rebuilt stubs.
+  private readonly _poweredPorts = new Set<number>();
 
   private _initialized = false;
 
@@ -202,6 +211,44 @@ export abstract class Component<
     );
   }
 
+  /** Stub graphics in `connectionPoints` order (rebuilt on every redraw). */
+  public get portStubs(): readonly Graphics[] {
+    return this._portStubs;
+  }
+
+  /**
+   * Swaps one port stub between the powered (thick) and unpowered shared
+   * contexts during simulation. `portIndex` follows `connectionPoints` order.
+   */
+  public setPortPowered(portIndex: number, powered: boolean): void {
+    if (powered) {
+      this._poweredPorts.add(portIndex);
+    } else {
+      this._poweredPorts.delete(portIndex);
+    }
+    const stub = this._portStubs[portIndex];
+    if (stub) {
+      stub.context = this._stubContext(powered);
+    }
+  }
+
+  /** Resets all port stubs to unpowered. */
+  public clearPortPower(): void {
+    this._poweredPorts.clear();
+    for (const stub of this._portStubs) {
+      stub.context = this._stubContext(false);
+    }
+  }
+
+  private _stubContext(powered: boolean) {
+    return powered
+      ? this.geometryService.getGraphicsContext(
+          WireGraphics,
+          POWERED_WIRE_THICKNESS
+        )
+      : this.geometryService.getGraphicsContext(WireGraphics);
+  }
+
   protected get bodyGridHeight(): number {
     return Math.max(1, this.numInputs, this.numOutputs);
   }
@@ -278,6 +325,7 @@ export abstract class Component<
     this.removeChildren(0);
 
     this._rotationCounterContainers = [];
+    this._portStubs = [];
 
     this.draw();
 
@@ -321,9 +369,15 @@ export abstract class Component<
     const labels = type === 'inputs' ? this.inputLabels : this.outputLabels;
 
     for (let i = 0; i < n; i++) {
-      const wire = new Graphics(geometry);
+      const portIndex = type === 'inputs' ? i : this._numInputs + i;
+      const wire = new Graphics(
+        this._poweredPorts.has(portIndex)
+          ? this._stubContext(true)
+          : geometry
+      );
       wire.position.set(0, i + 0.5);
       wire.scale.set(0.5, PX / this._appliedScale);
+      this._portStubs[portIndex] = wire;
       container.addChild(wire);
 
       if (labels.length > i) {

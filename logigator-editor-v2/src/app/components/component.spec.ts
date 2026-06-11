@@ -7,6 +7,12 @@ import { andComponentConfig } from './component-types/and/and.config';
 import { Direction } from '../utils/direction';
 import { makeAnd } from '../../testing/factories';
 import { AndComponent } from './component-types/and/and.component';
+import { configureTestBed } from '../../testing/configure-test-bed';
+import { GraphicsProviderService } from '../rendering/graphics-provider.service';
+import {
+  POWERED_WIRE_THICKNESS,
+  WireGraphics
+} from '../rendering/graphics/wire.graphics';
 
 describe('Component.deserialize (create() factory)', () => {
   beforeEach(() => {
@@ -158,5 +164,70 @@ describe('Component.bodyGridBounds', () => {
 
       comp.destroy({ children: true });
     }
+  });
+});
+
+describe('Component port power', () => {
+  let provider: GraphicsProviderService;
+
+  beforeEach(() => {
+    configureTestBed();
+    provider = TestBed.inject(GraphicsProviderService);
+  });
+
+  function poweredContext() {
+    return provider.getGraphicsContext(WireGraphics, POWERED_WIRE_THICKNESS);
+  }
+
+  function unpoweredContext() {
+    return provider.getGraphicsContext(WireGraphics);
+  }
+
+  it('swaps only the addressed stub to the powered context', () => {
+    const comp = makeAnd(2); // stubs 0,1 = inputs; 2 = output
+
+    comp.setPortPowered(2, true);
+
+    expect(comp.portStubs[2].context).toBe(poweredContext());
+    expect(comp.portStubs[0].context).toBe(unpoweredContext());
+    expect(comp.portStubs[1].context).toBe(unpoweredContext());
+
+    comp.setPortPowered(2, false);
+    expect(comp.portStubs[2].context).toBe(unpoweredContext());
+
+    comp.destroy({ children: true });
+  });
+
+  it('survives a forced redraw (applyScale mid-power)', () => {
+    const comp = makeAnd(2);
+
+    comp.setPortPowered(0, true);
+    const stubBefore = comp.portStubs[0];
+    comp.applyScale(2);
+
+    // The redraw rebuilt the stub registry and re-applied the power state.
+    expect(comp.portStubs[0]).not.toBe(stubBefore);
+    expect(comp.portStubs[0].context).toBe(poweredContext());
+    expect(comp.portStubs[1].context).toBe(unpoweredContext());
+
+    comp.destroy({ children: true });
+  });
+
+  it('clearPortPower resets every stub, including across redraws', () => {
+    const comp = makeAnd(2);
+
+    comp.setPortPowered(0, true);
+    comp.setPortPowered(2, true);
+    comp.clearPortPower();
+
+    for (const stub of comp.portStubs) {
+      expect(stub.context).toBe(unpoweredContext());
+    }
+    comp.applyScale(2);
+    for (const stub of comp.portStubs) {
+      expect(stub.context).toBe(unpoweredContext());
+    }
+
+    comp.destroy({ children: true });
   });
 });

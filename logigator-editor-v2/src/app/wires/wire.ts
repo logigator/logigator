@@ -2,7 +2,10 @@ import { Graphics, Point, Rectangle } from 'pixi.js';
 import { WireDirection } from './wire-direction.enum';
 import { getStaticDI } from '../utils/get-di';
 import { GraphicsProviderService } from '../rendering/graphics-provider.service';
-import { WireGraphics } from '../rendering/graphics/wire.graphics';
+import {
+  POWERED_WIRE_THICKNESS,
+  WireGraphics
+} from '../rendering/graphics/wire.graphics';
 import { environment } from '../../environments/environment';
 import { SerializedWire } from './serialized-wire.model';
 import { WireSnapshot } from './wire-snapshot.model';
@@ -128,6 +131,19 @@ export class Wire extends Graphics implements Connectable {
 
   public set length(value: number) {
     this.scale.x = value;
+  }
+
+  /**
+   * Swaps between the powered (thick) and unpowered shared contexts during
+   * simulation. Color is unchanged; only the thickness differs.
+   */
+  public setPowered(powered: boolean): void {
+    this.context = powered
+      ? this.graphicsProviderService.getGraphicsContext(
+          WireGraphics,
+          POWERED_WIRE_THICKNESS
+        )
+      : this.graphicsProviderService.getGraphicsContext(WireGraphics);
   }
 
   public applyScale(scale: number): void {
