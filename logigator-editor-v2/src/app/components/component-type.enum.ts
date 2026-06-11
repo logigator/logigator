@@ -6,7 +6,10 @@ export const enum BuiltInComponentType {
   ROM = 12,
   // INPUT/OUTPUT plug components define a custom component's ports.
   INPUT = 100,
-  OUTPUT = 101
+  OUTPUT = 101,
+  // User-input components driving a running simulation.
+  BUTTON = 200,
+  LEVER = 201
 }
 
 /** A runtime-allocated custom component type id ({@link CUSTOM_TYPE_ID_BASE}+). */
