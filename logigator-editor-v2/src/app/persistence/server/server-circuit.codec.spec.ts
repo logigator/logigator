@@ -80,6 +80,15 @@ const fixtures: Fixture[] = [
     elements: [{ t: 101, p: [6, 3], i: 1, r: 1, n: [2], s: 'Q' }]
   },
   {
+    // Button/lever carry only rotation (plus the fixed single output).
+    name: 'BUTTON rotated South',
+    elements: [{ t: 200, p: [4, 4], o: 1, r: 1 }]
+  },
+  {
+    name: 'LEVER (default rotation)',
+    elements: [{ t: 201, p: [2, 6], o: 1 }]
+  },
+  {
     name: 'Horizontal and vertical wires (crossing)',
     elements: [
       { t: 0, p: [3, 5], q: [8, 5] },

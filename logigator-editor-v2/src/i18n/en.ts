@@ -52,6 +52,16 @@ const en = {
         name: 'Output',
         description:
           "An output plug. Defines one of a custom component's output ports; its label names the port and its order determines the port position."
+      },
+      BUTTON: {
+        name: 'Button',
+        description:
+          'A momentary push button. While the simulation is running, clicking it emits a single pulse on its output.'
+      },
+      LEVER: {
+        name: 'Lever',
+        description:
+          'A latching switch. While the simulation is running, clicking it toggles its output between on and off.'
       }
     },
     options: {

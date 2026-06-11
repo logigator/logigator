@@ -2,7 +2,12 @@ import { beforeEach, afterEach, describe, expect, it, vi } from 'vitest';
 import { TestBed } from '@angular/core/testing';
 import { Point } from 'pixi.js';
 import { configureTestBed } from '../../../testing/configure-test-bed';
-import { makeAnd, makeNot } from '../../../testing/factories';
+import {
+  makeAnd,
+  makeButton,
+  makeLever,
+  makeNot
+} from '../../../testing/factories';
 import { Component } from '../../components/component';
 import { ComponentProviderService } from '../../components/component-provider.service';
 import { CustomComponentRegistry } from '../../components/custom/custom-component-registry.service';
@@ -387,6 +392,39 @@ describe('BoardCompilerService', () => {
     expect(board.diagnostics[0].instancePath).toBe(String(instance.id));
     // The inner component id is template-local (fresh per build), not romId.
     expect(board.diagnostics[0].componentId).not.toBe(romId);
+  });
+
+  it('emits button/lever units and registers them as user inputs', () => {
+    // The example-board shape (gate subset): user input feeding gates.
+    const lever = place(makeLever(0, 0));
+    const button = place(makeButton(0, 4));
+    const and = makeAnd(2, undefined, 8, 0);
+    place(and);
+    placeWire(lever.connectionPoints[0], and.connectionPoints[0]);
+    const corner = new Point(
+      button.connectionPoints[0].x,
+      and.connectionPoints[1].y
+    );
+    placeWire(button.connectionPoints[0], corner);
+    placeWire(corner, and.connectionPoints[1]);
+
+    const board = compiler.compile(project);
+
+    expect(board.diagnostics).toEqual([]);
+    expect(board.descriptor).toEqual({
+      links: 3,
+      components: [
+        { type: 201, inputs: [], outputs: [0] },
+        { type: 200, inputs: [], outputs: [1] },
+        { type: 2, inputs: [0, 1], outputs: [2] }
+      ]
+    });
+    expect(board.userInputs).toEqual(
+      new Map([
+        [lever.id, 0],
+        [button.id, 1]
+      ])
+    );
   });
 
   it('compiles deterministically', () => {

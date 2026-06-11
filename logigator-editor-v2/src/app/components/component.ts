@@ -211,6 +211,14 @@ export abstract class Component<
     );
   }
 
+  /**
+   * Resets transient simulation visual state (button pressed, lever on) when
+   * a simulation stops. No-op for components without sim state.
+   */
+  public clearSimState(): void {
+    // Overridden by user-input components.
+  }
+
   /** Stub graphics in `connectionPoints` order (rebuilt on every redraw). */
   public get portStubs(): readonly Graphics[] {
     return this._portStubs;
