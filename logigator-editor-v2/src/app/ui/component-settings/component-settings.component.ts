@@ -6,6 +6,7 @@ import {
 } from '@angular/core';
 import { NgComponentOutlet } from '@angular/common';
 import { WorkModeService } from '../../work-mode/work-mode.service';
+import { WorkMode } from '../../work-mode/work-mode.enum';
 import { SelectionInspectorService } from '../../project/selection-inspector.service';
 import { ProjectService } from '../../project/project.service';
 import { Card } from 'primeng/card';
@@ -37,6 +38,12 @@ export class ComponentSettingsComponent {
   // inspector actions + the context they act on; the ghost has none (the
   // buttons are instance-scoped).
   protected readonly componentSettings = computed(() => {
+    // Hidden during simulation: editing is locked, and the mode switch has
+    // already cleared selection and placement state anyway.
+    if (this.workModeService.mode() === WorkMode.SIMULATION) {
+      return null;
+    }
+
     const ghost = this.workModeService.selectedComponentConfig();
     if (ghost) {
       return {

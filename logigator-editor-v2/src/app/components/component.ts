@@ -379,9 +379,7 @@ export abstract class Component<
     for (let i = 0; i < n; i++) {
       const portIndex = type === 'inputs' ? i : this._numInputs + i;
       const wire = new Graphics(
-        this._poweredPorts.has(portIndex)
-          ? this._stubContext(true)
-          : geometry
+        this._poweredPorts.has(portIndex) ? this._stubContext(true) : geometry
       );
       wire.position.set(0, i + 0.5);
       wire.scale.set(0.5, PX / this._appliedScale);

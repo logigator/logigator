@@ -161,6 +161,14 @@ export class ShortcutService implements OnDestroy {
     this._saveToStorage();
   }
 
+  /**
+   * Editing actions (undo/redo/clipboard/tool switches) are gated off while a
+   * simulation locks editing; Escape (CANCEL) exits the simulation instead.
+   */
+  private _editingLocked(): boolean {
+    return this.workModeService.mode() === WorkMode.SIMULATION;
+  }
+
   private _setupActionHandlers(): void {
     this.on(ShortcutActionEnum.SAVE).subscribe(() => {
       const project = this.projectService.activeProject();
@@ -188,29 +196,35 @@ export class ShortcutService implements OnDestroy {
     });
 
     this.on(ShortcutActionEnum.UNDO).subscribe(() => {
+      if (this._editingLocked()) return;
       this.projectService.activeProject()?.actionManager.undo();
     });
 
     this.on(ShortcutActionEnum.REDO).subscribe(() => {
+      if (this._editingLocked()) return;
       this.projectService.activeProject()?.actionManager.redo();
     });
 
     this.on(ShortcutActionEnum.COPY).subscribe(() => {
+      if (this._editingLocked()) return;
       const project = this.projectService.activeProject();
       if (project) this.clipboardService.copy(project);
     });
 
     this.on(ShortcutActionEnum.CUT).subscribe(() => {
+      if (this._editingLocked()) return;
       const project = this.projectService.activeProject();
       if (project) this.clipboardService.cut(project);
     });
 
     this.on(ShortcutActionEnum.PASTE).subscribe(() => {
+      if (this._editingLocked()) return;
       const project = this.projectService.activeProject();
       if (project) this.clipboardService.paste(project);
     });
 
     this.on(ShortcutActionEnum.DELETE).subscribe(() => {
+      if (this._editingLocked()) return;
       const project = this.projectService.activeProject();
       if (project) this.clipboardService.delete(project);
     });
@@ -237,30 +251,37 @@ export class ShortcutService implements OnDestroy {
     });
 
     this.on(ShortcutActionEnum.TOOL_WIRE_DRAWING).subscribe(() => {
+      if (this._editingLocked()) return;
       this.workModeService.setMode(WorkMode.WIRE_DRAWING);
     });
 
     this.on(ShortcutActionEnum.TOOL_WIRE_CONNECTION).subscribe(() => {
+      if (this._editingLocked()) return;
       this.workModeService.setMode(WorkMode.WIRE_CONNECTION);
     });
 
     this.on(ShortcutActionEnum.TOOL_SELECT).subscribe(() => {
+      if (this._editingLocked()) return;
       this.workModeService.setMode(WorkMode.SELECT);
     });
 
     this.on(ShortcutActionEnum.TOOL_SELECT_EXACT).subscribe(() => {
+      if (this._editingLocked()) return;
       this.workModeService.setMode(WorkMode.SELECT_EXACT);
     });
 
     this.on(ShortcutActionEnum.TOOL_ERASE).subscribe(() => {
+      if (this._editingLocked()) return;
       this.workModeService.setMode(WorkMode.ERASE);
     });
 
     this.on(ShortcutActionEnum.TOOL_COMPONENT_PLACEMENT).subscribe(() => {
+      if (this._editingLocked()) return;
       this.workModeService.setMode(WorkMode.COMPONENT_PLACEMENT);
     });
 
     this.on(ShortcutActionEnum.TOOL_PLACE_TEXT).subscribe(() => {
+      if (this._editingLocked()) return;
       this.workModeService.setMode(WorkMode.COMPONENT_PLACEMENT);
       this.workModeService.setSelectedComponentType(BuiltInComponentType.TEXT);
     });

@@ -65,11 +65,13 @@ describe('ComponentProviderService', () => {
     ]);
     expect(service.userComponents()).toEqual([]);
     // TODO: vitest-migration: Verify this matches strict array content (multiset equality). Vitest's arrayContaining is a subset check.
-    expect(service.ioComponents().map((c) => c.type)).toHaveLength(2);
+    expect(service.ioComponents().map((c) => c.type)).toHaveLength(4);
     expect(service.ioComponents().map((c) => c.type)).toEqual(
       expect.arrayContaining([
         BuiltInComponentType.INPUT,
-        BuiltInComponentType.OUTPUT
+        BuiltInComponentType.OUTPUT,
+        BuiltInComponentType.BUTTON,
+        BuiltInComponentType.LEVER
       ])
     );
   });

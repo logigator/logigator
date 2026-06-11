@@ -82,7 +82,8 @@ const en = {
       sel: 'Selecting Elements',
       selExact: 'Selecting Elements (Cut Wires at Selection)',
       erase: 'Erasing Elements',
-      placeComp: 'Placing Components: {{componentName}}'
+      placeComp: 'Placing Components: {{componentName}}',
+      simulation: 'Simulating'
     } satisfies Record<WorkMode, string>,
     saved: 'Saved',
     unsaved: 'Unsaved changes',
@@ -191,7 +192,16 @@ const en = {
     select: 'Select',
     selExact: 'Select exact',
     eraser: 'Eraser',
-    text: 'Text'
+    text: 'Text',
+    startSim: 'Start simulation',
+    exitSim: 'Exit simulation',
+    play: 'Run',
+    pause: 'Pause',
+    step: 'Step',
+    stopSim: 'Stop',
+    targetHz: 'Target speed (Hz)',
+    syncToFrame: 'Sync to frame',
+    measuredHz: '{{hz}} Hz'
   },
   logging: {
     error: 'Error',

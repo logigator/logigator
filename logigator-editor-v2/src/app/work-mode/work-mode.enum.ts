@@ -4,5 +4,8 @@ export const enum WorkMode {
   SELECT = 'sel',
   SELECT_EXACT = 'selExact',
   ERASE = 'erase',
-  COMPONENT_PLACEMENT = 'placeComp'
+  COMPONENT_PLACEMENT = 'placeComp',
+  // Running/inspecting a simulation: editing is locked, buttons/levers are
+  // clickable, pan/zoom keep working.
+  SIMULATION = 'simulation'
 }

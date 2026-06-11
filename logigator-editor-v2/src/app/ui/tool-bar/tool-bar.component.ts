@@ -6,6 +6,7 @@ import {
 } from '@angular/core';
 import { ButtonModule } from 'primeng/button';
 import { DividerModule } from 'primeng/divider';
+import { InputTextModule } from 'primeng/inputtext';
 import { TooltipModule } from 'primeng/tooltip';
 import { TranslocoDirective, TranslocoService } from '@jsverse/transloco';
 import { WorkModeService } from '../../work-mode/work-mode.service';
@@ -21,10 +22,17 @@ import { OpenProjectDialogComponent } from '../open-project-dialog/open-project-
 import { ShortcutService } from '../../shortcuts/shortcut.service';
 import { ShortcutActionEnum } from '../../shortcuts/shortcut-action.enum';
 import { formatShortcutLabel } from '../../shortcuts/shortcut-binding.model';
+import { SimulationService } from '../../simulation/simulation.service';
 
 @Component({
   selector: 'app-tool-bar',
-  imports: [ButtonModule, DividerModule, TooltipModule, TranslocoDirective],
+  imports: [
+    ButtonModule,
+    DividerModule,
+    InputTextModule,
+    TooltipModule,
+    TranslocoDirective
+  ],
   templateUrl: './tool-bar.component.html',
   changeDetection: ChangeDetectionStrategy.OnPush
 })
@@ -38,6 +46,7 @@ export class ToolBarComponent {
   private readonly translocoService = inject(TranslocoService);
   private readonly clipboardService = inject(ClipboardService);
   private readonly shortcutService = inject(ShortcutService);
+  private readonly simulationService = inject(SimulationService);
 
   private _fmt(action: ShortcutActionEnum): string {
     const binding = this.shortcutService.binding(action)();
@@ -110,6 +119,13 @@ export class ToolBarComponent {
     () =>
       `${this.translocoService.translate('toolBar.text')} (${this._fmt(ShortcutActionEnum.TOOL_PLACE_TEXT)})`
   );
+
+  // Swaps the toolbar between the editing tool set and the simulation
+  // controls (run controls stay inert until the worker phase).
+  protected isSimulationMode = computed(
+    () => this.workModeService.mode() === WorkMode.SIMULATION
+  );
+  protected measuredHz = this.simulationService.measuredHz;
 
   protected isWireDrawMode = computed(
     () => this.workModeService.mode() === WorkMode.WIRE_DRAWING
@@ -202,6 +218,14 @@ export class ToolBarComponent {
       modal: true,
       closable: true
     });
+  }
+
+  protected startSimulation(): void {
+    this.simulationService.enter();
+  }
+
+  protected exitSimulation(): void {
+    this.simulationService.exit();
   }
 
   protected zoomIn(): void {

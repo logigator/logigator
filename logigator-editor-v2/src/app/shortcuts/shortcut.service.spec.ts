@@ -11,6 +11,7 @@ import { ProjectService } from '../project/project.service';
 import { PersistenceService } from '../persistence/persistence.service';
 import { ClipboardService } from '../clipboard/clipboard.service';
 import { WorkModeService } from '../work-mode/work-mode.service';
+import { WorkMode } from '../work-mode/work-mode.enum';
 
 const STORAGE_KEY = 'logigator.shortcuts';
 
@@ -62,6 +63,7 @@ describe('ShortcutService', () => {
         {
           provide: WorkModeService,
           useValue: {
+            mode: vi.fn().mockReturnValue(WorkMode.WIRE_DRAWING),
             setMode: vi.fn(),
             setSelectedComponentType: vi.fn()
           }
@@ -145,6 +147,46 @@ describe('ShortcutService', () => {
         makeKeyEvent(undoDefault.key, { ctrlKey: undoDefault.ctrl })
       );
     }));
+
+  it('gates editing actions while in simulation mode', () => {
+    const workMode = TestBed.inject(WorkModeService) as unknown as {
+      mode: ReturnType<typeof vi.fn>;
+      setMode: ReturnType<typeof vi.fn>;
+    };
+    const clipboard = TestBed.inject(ClipboardService) as unknown as {
+      copy: ReturnType<typeof vi.fn>;
+    };
+    const projectService = TestBed.inject(ProjectService) as unknown as {
+      activeProject: ReturnType<typeof vi.fn>;
+    };
+    const undo = vi.fn();
+    projectService.activeProject.mockReturnValue({ actionManager: { undo } });
+    workMode.mode.mockReturnValue(WorkMode.SIMULATION);
+
+    const copyDefault = DEFAULT_SHORTCUTS[ShortcutActionEnum.COPY]!;
+    window.dispatchEvent(
+      makeKeyEvent(copyDefault.key, { ctrlKey: copyDefault.ctrl })
+    );
+    const undoDefault = DEFAULT_SHORTCUTS[ShortcutActionEnum.UNDO]!;
+    window.dispatchEvent(
+      makeKeyEvent(undoDefault.key, { ctrlKey: undoDefault.ctrl })
+    );
+    const selectDefault = DEFAULT_SHORTCUTS[ShortcutActionEnum.TOOL_SELECT]!;
+    window.dispatchEvent(
+      makeKeyEvent(selectDefault.key, { ctrlKey: selectDefault.ctrl })
+    );
+
+    expect(clipboard.copy).not.toHaveBeenCalled();
+    expect(undo).not.toHaveBeenCalled();
+    expect(workMode.setMode).not.toHaveBeenCalled();
+
+    // Leaving simulation mode unlocks the same shortcuts again.
+    workMode.mode.mockReturnValue(WorkMode.SELECT);
+    window.dispatchEvent(
+      makeKeyEvent(undoDefault.key, { ctrlKey: undoDefault.ctrl })
+    );
+    expect(undo).toHaveBeenCalledOnce();
+  });
 
   it('should persist bindings to localStorage', () => {
     const newBinding: ShortcutBinding = {

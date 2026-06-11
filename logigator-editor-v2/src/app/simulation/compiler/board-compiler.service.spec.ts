@@ -43,7 +43,10 @@ function makePlug(
 }
 
 /** Serializes live elements into a snapshot circuit body, destroying them. */
-function liveToBody(components: Component[], wires: Wire[]): SerializedCircuitBody {
+function liveToBody(
+  components: Component[],
+  wires: Wire[]
+): SerializedCircuitBody {
   const body: SerializedCircuitBody = {
     components: components.map((component) => {
       const serialized = Component.serialize(component);

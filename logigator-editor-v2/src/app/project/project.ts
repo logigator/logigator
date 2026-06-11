@@ -43,6 +43,10 @@ export class Project extends InteractionContainer {
   private readonly _wireIntegrator = new WireIntegrator();
   private readonly _viewport: ViewportController;
   private readonly _cursorPosition$ = new Subject<Point>();
+  // User-input components (button/lever) clicked while in simulation mode.
+  // The model layer stays service-free: SimulationService subscribes while a
+  // simulation is active.
+  private readonly _userInput$ = new Subject<Component>();
 
   private readonly _connectionPoints = new ConnectionPointManager(
     (rect) => this.queryWiresInRange(rect),
@@ -145,6 +149,14 @@ export class Project extends InteractionContainer {
 
   public get cursorPosition$(): Observable<Point> {
     return this._cursorPosition$.asObservable();
+  }
+
+  public get userInput$(): Observable<Component> {
+    return this._userInput$.asObservable();
+  }
+
+  public emitUserInput(component: Component): void {
+    this._userInput$.next(component);
   }
 
   public get gridPosition(): Point {
@@ -451,6 +463,7 @@ export class Project extends InteractionContainer {
 
   public override destroy(options?: DestroyOptions): void {
     this._cursorPosition$.complete();
+    this._userInput$.complete();
     this.actionManager.destroy();
     for (const sub of this._portsChangeSubs.values()) {
       sub.unsubscribe();

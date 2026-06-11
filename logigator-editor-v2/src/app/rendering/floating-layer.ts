@@ -23,6 +23,7 @@ import { ConnectionPoint } from '../connection-points/connection-point';
 import { ShortcutService } from '../shortcuts/shortcut.service';
 import { ShortcutActionEnum } from '../shortcuts/shortcut-action.enum';
 import { getStaticDI } from '../utils/get-di';
+import { BuiltInComponentType } from '../components/component-type.enum';
 
 export class FloatingLayer extends Container {
   private readonly _dragLayer = new Container<
@@ -181,6 +182,30 @@ export class FloatingLayer extends Container {
           e.getLocalPosition(this.project.gridSpace)
         );
         this._startDrag(new WireConnectionSession(this.project, startPos));
+        break;
+      }
+      case WorkMode.SIMULATION: {
+        // No drag sessions in simulation mode — editing is structurally
+        // locked at the canvas level. The only interaction is clicking a
+        // user-input component (button/lever).
+        const localPoint = e.getLocalPosition(this.project.gridSpace);
+        const queryRect = new Rectangle(
+          localPoint.x - 0.5,
+          localPoint.y - 0.5,
+          1,
+          1
+        );
+        for (const comp of this.project.queryComponentsInRange(queryRect)) {
+          const type = comp.config.type;
+          if (
+            (type === BuiltInComponentType.BUTTON ||
+              type === BuiltInComponentType.LEVER) &&
+            comp.bodyGridBounds.contains(localPoint.x, localPoint.y)
+          ) {
+            this.project.emitUserInput(comp);
+            break;
+          }
+        }
         break;
       }
     }
