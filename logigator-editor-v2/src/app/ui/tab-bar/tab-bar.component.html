@@ -1,0 +1,42 @@
+<div class="flex items-stretch gap-px bg-white/10 text-sm overflow-x-auto">
+  @if (mainProject(); as main) {
+    <button
+      type="button"
+      class="flex items-center px-3 py-1.5 whitespace-nowrap cursor-pointer hover:bg-white/10"
+      [class.bg-white/20]="activeProject() === main"
+      (click)="activate(main)"
+    >
+      {{ name(main) }}
+      @if (isDirty(main)) {
+        <span
+          class="ml-1.5 w-1.5 h-1.5 rounded-full bg-current opacity-60 inline-block"
+        ></span>
+      }
+    </button>
+  }
+  @for (comp of openComponents(); track comp) {
+    <div
+      class="flex items-center gap-2 px-3 py-1.5 whitespace-nowrap cursor-pointer hover:bg-white/10"
+      [class.bg-white/20]="activeProject() === comp"
+      (click)="activate(comp)"
+      (keydown.enter)="activate(comp)"
+      tabindex="0"
+      aria-roledescription="button"
+    >
+      <span>{{ name(comp) }}</span>
+      @if (isDirty(comp)) {
+        <span
+          class="w-1.5 h-1.5 rounded-full bg-current opacity-60 inline-block -mr-1"
+        ></span>
+      }
+      <i
+        class="ph ph-x cursor-pointer hover:text-red-400"
+        (click)="close($event, comp)"
+        (keydown.enter)="close($event, comp)"
+        tabindex="0"
+        aria-roledescription="button"
+        aria-label="Close"
+      ></i>
+    </div>
+  }
+</div>

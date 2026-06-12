@@ -1,0 +1,13 @@
+<div class="flex gap-4 items-center justify-between" *transloco="let t">
+  <label [for]="inputId">{{ t(option().label) }}</label>
+  <p-inputNumber
+    [inputId]="inputId"
+    [showButtons]="true"
+    [min]="option().min"
+    [max]="option().max"
+    size="small"
+    [ngModel]="option().value"
+    [ngModelOptions]="{ standalone: true }"
+    (ngModelChange)="commit()($event)"
+  ></p-inputNumber>
+</div>

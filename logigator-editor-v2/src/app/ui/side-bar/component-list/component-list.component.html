@@ -1,0 +1,22 @@
+<div class="border border-white/20">
+  <span class="block bg-white/20 p-2 font-bold text-lg">{{ headline() }}</span>
+  <div class="flex flex-wrap gap-2 m-2">
+    @for (comp of filteredComponents(); track comp.type) {
+      <div
+        class="flex flex-col items-center gap-1 cursor-pointer hover:bg-black/10"
+        [class.bg-white/20]="selectedComponent() === comp.type"
+        (click)="selectComponent(comp)"
+        (keydown.enter)="selectComponent(comp)"
+        tabindex="0"
+        aria-roledescription="button"
+      >
+        <div
+          class="flex justify-center items-center border border-white/50 w-16 h-16 text-center"
+        >
+          {{ comp.symbol }}
+        </div>
+        <span class="block text-center">{{ text(comp.name) }}</span>
+      </div>
+    }
+  </div>
+</div>

@@ -1,0 +1,13 @@
+<div class="inline-flex gap-1 items-center">
+  @for (part of parts(); track $index) {
+    <kbd
+      class="font-mono leading-normal inline-block px-1 text-xs rounded border bg-surface-600 border-surface-400"
+      >{{ part }}</kbd
+    >
+    @if (!shortcutService.isMac && !$last) {
+      <span class="text-xs text-surface-400">+</span>
+    }
+  } @empty {
+    <span class="text-xs text-surface-400">–</span>
+  }
+</div>

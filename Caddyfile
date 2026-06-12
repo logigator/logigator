@@ -1,0 +1,22 @@
+logigator.test {
+	tls internal
+
+	@editor path /editor /editor/*
+	handle @editor {
+		reverse_proxy editor:4200
+	}
+
+	@editorOld path /editor-old /editor-old/*
+	handle @editorOld {
+		reverse_proxy editor-old:8202
+	}
+
+	handle {
+		reverse_proxy backend:3000
+	}
+
+	log {
+		output stdout
+		level warn
+	}
+}

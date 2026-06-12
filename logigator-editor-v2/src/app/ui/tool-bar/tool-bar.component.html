@@ -1,0 +1,242 @@
+<div *transloco="let t" class="flex flex-wrap gap-2 p-2">
+  @if (isSimulationMode()) {
+    <div class="flex flex-wrap gap-1">
+      <p-button
+        [pTooltip]="t('toolBar.exitSim')"
+        [ariaLabel]="t('toolBar.exitSim')"
+        (onClick)="exitSimulation()"
+        tooltipPosition="bottom"
+        icon="ph ph-sign-out"
+        severity="secondary"
+      ></p-button>
+    </div>
+    <p-divider layout="vertical" class="mx-1!"></p-divider>
+    <!-- Run controls render inert until the worker/WASM phase wires them up. -->
+    <div class="flex flex-wrap gap-1">
+      <p-button
+        [pTooltip]="t('toolBar.play')"
+        [ariaLabel]="t('toolBar.play')"
+        [disabled]="true"
+        tooltipPosition="bottom"
+        icon="ph ph-play"
+        severity="secondary"
+      ></p-button>
+      <p-button
+        [pTooltip]="t('toolBar.pause')"
+        [ariaLabel]="t('toolBar.pause')"
+        [disabled]="true"
+        tooltipPosition="bottom"
+        icon="ph ph-pause"
+        severity="secondary"
+      ></p-button>
+      <p-button
+        [pTooltip]="t('toolBar.step')"
+        [ariaLabel]="t('toolBar.step')"
+        [disabled]="true"
+        tooltipPosition="bottom"
+        icon="ph ph-skip-forward"
+        severity="secondary"
+      ></p-button>
+      <p-button
+        [pTooltip]="t('toolBar.stopSim')"
+        [ariaLabel]="t('toolBar.stopSim')"
+        [disabled]="true"
+        tooltipPosition="bottom"
+        icon="ph ph-stop"
+        severity="secondary"
+      ></p-button>
+    </div>
+    <p-divider layout="vertical" class="mx-1!"></p-divider>
+    <div class="flex flex-wrap items-center gap-2">
+      <input
+        pInputText
+        type="number"
+        class="w-24"
+        [disabled]="true"
+        [pTooltip]="t('toolBar.targetHz')"
+        [ariaLabel]="t('toolBar.targetHz')"
+        tooltipPosition="bottom"
+        value="1000"
+      />
+      <p-button
+        [pTooltip]="t('toolBar.syncToFrame')"
+        [ariaLabel]="t('toolBar.syncToFrame')"
+        [disabled]="true"
+        [outlined]="true"
+        tooltipPosition="bottom"
+        icon="ph ph-monitor-play"
+        severity="secondary"
+      ></p-button>
+      <span class="text-sm opacity-70 select-none">
+        {{ t('toolBar.measuredHz', { hz: measuredHz() }) }}
+      </span>
+    </div>
+  } @else {
+    <div class="flex flex-wrap gap-1">
+      <p-button
+        [pTooltip]="saveTooltip()"
+        [ariaLabel]="saveTooltip()"
+        (onClick)="save()"
+        tooltipPosition="bottom"
+        icon="ph ph-floppy-disk"
+        severity="secondary"
+      ></p-button>
+      <p-button
+        [pTooltip]="openTooltip()"
+        [ariaLabel]="openTooltip()"
+        (onClick)="open()"
+        tooltipPosition="bottom"
+        icon="ph ph-folder-open"
+        severity="secondary"
+      ></p-button>
+      <p-button
+        [pTooltip]="t('toolBar.newComp')"
+        [ariaLabel]="t('toolBar.newComp')"
+        tooltipPosition="bottom"
+        icon="ph ph-cpu"
+        severity="secondary"
+      ></p-button>
+    </div>
+    <p-divider layout="vertical" class="mx-1!"></p-divider>
+    <div class="flex flex-wrap gap-1">
+      <p-button
+        [pTooltip]="copyTooltip()"
+        [ariaLabel]="copyTooltip()"
+        (onClick)="copy()"
+        tooltipPosition="bottom"
+        icon="ph ph-copy"
+        severity="secondary"
+      ></p-button>
+      <p-button
+        [pTooltip]="cutTooltip()"
+        [ariaLabel]="cutTooltip()"
+        (onClick)="cut()"
+        tooltipPosition="bottom"
+        icon="ph ph-scissors"
+        severity="secondary"
+      ></p-button>
+      <p-button
+        [pTooltip]="pasteTooltip()"
+        [ariaLabel]="pasteTooltip()"
+        (onClick)="paste()"
+        tooltipPosition="bottom"
+        icon="ph ph-clipboard"
+        severity="secondary"
+      ></p-button>
+      <p-button
+        [pTooltip]="deleteTooltip()"
+        [ariaLabel]="deleteTooltip()"
+        (onClick)="delete()"
+        tooltipPosition="bottom"
+        icon="ph ph-trash"
+        severity="secondary"
+      ></p-button>
+    </div>
+    <p-divider layout="vertical" class="mx-1!"></p-divider>
+    <div class="flex flex-wrap gap-1">
+      <p-button
+        [pTooltip]="undoTooltip()"
+        [ariaLabel]="undoTooltip()"
+        (onClick)="undo()"
+        tooltipPosition="bottom"
+        icon="ph ph-arrow-u-up-left"
+        severity="secondary"
+      ></p-button>
+      <p-button
+        [pTooltip]="redoTooltip()"
+        [ariaLabel]="redoTooltip()"
+        (onClick)="redo()"
+        tooltipPosition="bottom"
+        icon="ph ph-arrow-u-up-right"
+        severity="secondary"
+      ></p-button>
+    </div>
+    <p-divider layout="vertical" class="mx-1!"></p-divider>
+    <div class="flex flex-wrap gap-1">
+      <p-button
+        [pTooltip]="zoomOutTooltip()"
+        [ariaLabel]="zoomOutTooltip()"
+        (onClick)="zoomOut()"
+        tooltipPosition="bottom"
+        icon="ph ph-magnifying-glass-minus"
+        severity="secondary"
+      ></p-button>
+      <p-button
+        [pTooltip]="zoomInTooltip()"
+        [ariaLabel]="zoomInTooltip()"
+        (onClick)="zoomIn()"
+        tooltipPosition="bottom"
+        icon="ph ph-magnifying-glass-plus"
+        severity="secondary"
+      ></p-button>
+    </div>
+    <p-divider layout="vertical" class="mx-1!"></p-divider>
+    <div class="flex flex-wrap gap-1">
+      <p-button
+        [pTooltip]="placeWiresTooltip()"
+        [ariaLabel]="placeWiresTooltip()"
+        [outlined]="!isWireDrawMode()"
+        (onClick)="setWireDrawMode()"
+        tooltipPosition="bottom"
+        icon="ph ph-line-segment"
+        severity="secondary"
+      ></p-button>
+      <p-button
+        [pTooltip]="connWiresTooltip()"
+        [ariaLabel]="connWiresTooltip()"
+        [outlined]="!isWireConnMode()"
+        (onClick)="setWireConnMode()"
+        tooltipPosition="bottom"
+        icon="ph ph-prohibit"
+        severity="secondary"
+      ></p-button>
+      <p-button
+        [pTooltip]="selectTooltip()"
+        [ariaLabel]="selectTooltip()"
+        [outlined]="!isSelectMode()"
+        (onClick)="setSelectMode()"
+        tooltipPosition="bottom"
+        icon="ph ph-selection"
+        severity="secondary"
+      ></p-button>
+      <p-button
+        [pTooltip]="selExactTooltip()"
+        [ariaLabel]="selExactTooltip()"
+        [outlined]="!isSelectExactMode()"
+        (onClick)="setSelectExactMode()"
+        tooltipPosition="bottom"
+        icon="ph ph-selection-slash"
+        severity="secondary"
+      ></p-button>
+      <p-button
+        [pTooltip]="eraserTooltip()"
+        [ariaLabel]="eraserTooltip()"
+        [outlined]="!isEraseMode()"
+        (onClick)="setEraseMode()"
+        tooltipPosition="bottom"
+        icon="ph ph-eraser"
+        severity="secondary"
+      ></p-button>
+      <p-button
+        [pTooltip]="textTooltip()"
+        [ariaLabel]="textTooltip()"
+        [outlined]="!isPlaceTextMode()"
+        (onClick)="setPlaceTextMode()"
+        tooltipPosition="bottom"
+        icon="ph ph-text-t"
+        severity="secondary"
+      ></p-button>
+    </div>
+    <p-divider layout="vertical" class="mx-1!"></p-divider>
+    <div class="flex flex-wrap gap-1">
+      <p-button
+        [pTooltip]="t('toolBar.startSim')"
+        [ariaLabel]="t('toolBar.startSim')"
+        (onClick)="startSimulation()"
+        tooltipPosition="bottom"
+        icon="ph ph-play"
+        severity="secondary"
+      ></p-button>
+    </div>
+  }
+</div>

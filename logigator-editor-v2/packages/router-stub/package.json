@@ -1,0 +1,9 @@
+{
+  "name": "@angular/router",
+  "description": "Angular - routing STUB",
+  "module": "index.mjs",
+  "main": "index.mjs",
+  "typings": "./index.d.ts",
+  "type": "module",
+  "version": "21.0.0"
+}

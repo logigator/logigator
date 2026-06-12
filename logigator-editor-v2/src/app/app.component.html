@@ -1,0 +1,19 @@
+<p-confirmpopup />
+<app-title-bar></app-title-bar>
+<app-tool-bar class="border-b border-white/20"></app-tool-bar>
+<div class="flex grow">
+  <app-side-bar class="w-80 border-r border-white/20"></app-side-bar>
+  <div class="grow flex flex-col">
+    <app-tab-bar></app-tab-bar>
+    <div class="relative grow">
+      <app-board
+        class="block w-full h-full"
+        [project]="projectService.activeProject()"
+        (cursorPositionChange)="cursorPosition.set($event)"
+      ></app-board>
+      <p-toast position="bottom-left" class="absolute! -mb-4" />
+      <app-component-settings></app-component-settings>
+    </div>
+    <app-status-bar [cursorPosition]="cursorPosition()"></app-status-bar>
+  </div>
+</div>

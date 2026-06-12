@@ -1,0 +1,27 @@
+@if (componentSettings(); as settings) {
+  <p-card
+    class="absolute m-2 bottom-0 right-0 max-w-96"
+    [header]="text(settings.name)"
+    [subheader]="text(settings.description)"
+  >
+    <form class="flex flex-col gap-2">
+      @for (o of options(); track o.key) {
+        <ng-container
+          *ngComponentOutlet="
+            o.option.renderer;
+            inputs: { option: o.option, commit: o.commit }
+          "
+        ></ng-container>
+      }
+      @if (settings.context; as ctx) {
+        @if (settings.actions.length > 0) {
+          @for (action of settings.actions; track $index) {
+            <ng-container
+              *ngComponentOutlet="action.renderer; inputs: { context: ctx }"
+            ></ng-container>
+          }
+        }
+      }
+    </form>
+  </p-card>
+}

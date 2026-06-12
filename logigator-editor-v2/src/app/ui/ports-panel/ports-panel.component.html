@@ -1,0 +1,63 @@
+<div class="border border-white/20">
+  <span class="block bg-white/20 p-2 font-bold text-lg">Ports</span>
+  <div class="flex flex-col gap-3 m-2">
+    <div class="flex flex-col gap-1">
+      <span class="text-sm opacity-70">Inputs</span>
+      @if (inputRows().length === 0) {
+        <span class="text-sm opacity-50 italic">No input plugs</span>
+      }
+      <div
+        cdkDropList
+        (cdkDropListDropped)="dropInput($event)"
+        class="flex flex-col gap-1"
+      >
+        @for (row of inputRows(); track row.component.id) {
+          <div
+            cdkDrag
+            class="flex items-center gap-2 p-1 border border-white/20 bg-white/5"
+          >
+            <i class="ph ph-dots-six-vertical cursor-move" cdkDragHandle></i>
+            <i class="ph ph-arrow-fat-right opacity-60"></i>
+            <input
+              class="grow bg-transparent border-b border-white/20 text-sm px-1 outline-none"
+              type="text"
+              maxlength="5"
+              [value]="row.label"
+              [placeholder]="row.placeholder"
+              (change)="setLabel(row, $any($event.target).value)"
+            />
+          </div>
+        }
+      </div>
+    </div>
+    <div class="flex flex-col gap-1">
+      <span class="text-sm opacity-70">Outputs</span>
+      @if (outputRows().length === 0) {
+        <span class="text-sm opacity-50 italic">No output plugs</span>
+      }
+      <div
+        cdkDropList
+        (cdkDropListDropped)="dropOutput($event)"
+        class="flex flex-col gap-1"
+      >
+        @for (row of outputRows(); track row.component.id) {
+          <div
+            cdkDrag
+            class="flex items-center gap-2 p-1 border border-white/20 bg-white/5"
+          >
+            <i class="ph ph-dots-six-vertical cursor-move" cdkDragHandle></i>
+            <i class="ph ph-arrow-fat-left opacity-60"></i>
+            <input
+              class="grow bg-transparent border-b border-white/20 text-sm px-1 outline-none"
+              type="text"
+              maxlength="5"
+              [value]="row.label"
+              [placeholder]="row.placeholder"
+              (change)="setLabel(row, $any($event.target).value)"
+            />
+          </div>
+        }
+      </div>
+    </div>
+  </div>
+</div>

@@ -39,11 +39,11 @@ export class LocationService {
 	}
 
 	public set(type: 'project' | 'component' | 'share', uuid: string) {
-		window.history.pushState(null, null, `/editor/${type}/${uuid}`);
+		window.history.pushState(null, null, `/editor-old/${type}/${uuid}`);
 	}
 
 	public reset() {
-		window.history.pushState(null, null, `/editor/`);
+		window.history.pushState(null, null, `/editor-old/`);
 	}
 
 	private get pathname(): string {

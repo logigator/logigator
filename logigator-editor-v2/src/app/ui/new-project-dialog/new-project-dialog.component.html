@@ -1,0 +1,55 @@
+<form class="flex flex-col gap-4" (ngSubmit)="create()">
+  <div class="flex flex-col gap-1">
+    <label for="new-project-name">Name</label>
+    <input
+      pInputText
+      id="new-project-name"
+      type="text"
+      [ngModel]="name()"
+      (ngModelChange)="name.set($event)"
+      [ngModelOptions]="{ standalone: true }"
+    />
+  </div>
+  <div class="flex flex-col gap-1">
+    <span>Destination</span>
+    <div class="flex gap-4 items-center">
+      <label class="flex gap-2 items-center">
+        <input
+          type="radio"
+          name="new-project-destination"
+          value="server"
+          [ngModel]="destination()"
+          (ngModelChange)="destination.set($event)"
+          [ngModelOptions]="{ standalone: true }"
+        />
+        Server
+      </label>
+      <label class="flex gap-2 items-center">
+        <input
+          type="radio"
+          name="new-project-destination"
+          value="local"
+          [ngModel]="destination()"
+          (ngModelChange)="destination.set($event)"
+          [ngModelOptions]="{ standalone: true }"
+        />
+        Local
+      </label>
+    </div>
+  </div>
+  @if (destination() === 'server') {
+    <div class="flex gap-2 items-center">
+      <p-checkbox
+        inputId="new-project-public"
+        [binary]="true"
+        [ngModel]="isPublic()"
+        (ngModelChange)="isPublic.set($event)"
+        [ngModelOptions]="{ standalone: true }"
+      />
+      <label for="new-project-public">Public</label>
+    </div>
+  }
+  <div class="flex justify-end">
+    <p-button type="submit" label="Create" [disabled]="!canCreate" />
+  </div>
+</form>

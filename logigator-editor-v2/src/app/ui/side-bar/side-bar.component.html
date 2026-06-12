@@ -1,0 +1,34 @@
+<div *transloco="let t" class="flex flex-col gap-2 p-2">
+  <p-iconfield iconPosition="right">
+    <p-inputicon class="ph ph-magnifying-glass"></p-inputicon>
+    <input
+      pInputText
+      [placeholder]="t('sideBar.search')"
+      class="w-full"
+      [(ngModel)]="searchText"
+    />
+  </p-iconfield>
+  <app-component-list
+    [headline]="t('components.category.basic')"
+    [components]="basicComponents()"
+    [searchText]="searchText"
+  ></app-component-list>
+  <app-component-list
+    [headline]="t('components.category.advanced')"
+    [components]="advancedComponents()"
+    [searchText]="searchText"
+  ></app-component-list>
+  <app-component-list
+    [headline]="t('components.category.user')"
+    [components]="userComponents()"
+    [searchText]="searchText"
+  ></app-component-list>
+  @if (isEditingComponent()) {
+    <app-component-list
+      [headline]="t('components.category.io')"
+      [components]="ioComponents()"
+      [searchText]="searchText"
+    ></app-component-list>
+    <app-ports-panel></app-ports-panel>
+  }
+</div>

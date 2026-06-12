@@ -1,0 +1,12 @@
+<canvas
+  #canvas
+  class="absolute transition-opacity duration-150 ease-out"
+  [class.opacity-0]="!loaded()"
+></canvas>
+@if (fps !== null) {
+  <div
+    class="font-medium absolute top-2 left-2 py-0.5 px-1.5 bg-black/50 text-primary font-mono text-xs rounded pointer-events-none"
+  >
+    {{ fps() }} FPS
+  </div>
+}

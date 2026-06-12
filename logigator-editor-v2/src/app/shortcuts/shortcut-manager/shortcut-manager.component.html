@@ -1,0 +1,54 @@
+<ng-container *transloco="let t">
+  <div class="flex flex-col gap-2">
+    @for (group of groups; track group.labelKey; let last = $last) {
+      <div>
+        <h3 class="text-sm font-semibold uppercase text-surface-400 mb-2">
+          {{ t(group.labelKey) }}
+        </h3>
+        @for (action of group.actions; track action) {
+          <div class="flex items-center justify-between py-2 px-1 rounded">
+            <span class="text-sm">{{ t('shortcuts.actions.' + action) }}</span>
+            <div class="flex items-center gap-1">
+              <app-shortcut-edit
+                [binding]="shortcutService.binding(action)()"
+                (bindingChange)="onBindingChange(action, $event)"
+              />
+              <p-button
+                icon="ph ph-arrow-counter-clockwise"
+                severity="secondary"
+                [text]="true"
+                size="small"
+                [disabled]="isDefault(action)"
+                [pTooltip]="t('shortcuts.manager.reset')"
+                tooltipPosition="bottom"
+                (onClick)="shortcutService.resetBinding(action)"
+              />
+              <p-button
+                icon="ph ph-trash"
+                severity="secondary"
+                [text]="true"
+                size="small"
+                [disabled]="!shortcutService.binding(action)()"
+                [pTooltip]="t('shortcuts.manager.unassign')"
+                tooltipPosition="bottom"
+                (onClick)="shortcutService.setBinding(action, null)"
+              />
+            </div>
+          </div>
+        }
+      </div>
+      @if (!last) {
+        <p-divider />
+      }
+    }
+  </div>
+
+  <div class="flex justify-end mt-4">
+    <p-button
+      [label]="t('shortcuts.manager.resetAll')"
+      severity="danger"
+      [outlined]="true"
+      (onClick)="resetAll()"
+    />
+  </div>
+</ng-container>

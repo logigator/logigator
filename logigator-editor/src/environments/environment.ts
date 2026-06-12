@@ -7,7 +7,7 @@ export const environment = {
 	version: '',
 	chunkSize: 16,
 	gridPixelWidth: 16,
-	api: 'http://dev.logigator.com/api',
-	url: 'http://dev.logigator.com/editor',
-	homeUrl: 'http://dev.logigator.com'
+	api: 'http://logigator.test/api',
+	url: 'http://logigator.test/editor-old',
+	homeUrl: 'http://logigator.test'
 };
