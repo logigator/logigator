@@ -2,7 +2,8 @@ import { ChangeDetectionStrategy, Component, inject } from '@angular/core';
 import { ProjectService } from '../../project/project.service';
 import { ProjectMetadataStore } from '../../persistence/project-metadata.store';
 import { CustomComponentService } from '../../custom-component/custom-component.service';
-import { SimulationService } from '../../simulation/simulation.service';
+import { WorkMode } from '../../work-mode/work-mode.enum';
+import { WorkModeService } from '../../work-mode/work-mode.service';
 import { Project } from '../../project/project';
 
 /**
@@ -22,7 +23,7 @@ export class TabBarComponent {
   private readonly projectService = inject(ProjectService);
   private readonly metadataStore = inject(ProjectMetadataStore);
   private readonly customComponentService = inject(CustomComponentService);
-  private readonly simulationService = inject(SimulationService);
+  private readonly workModeService = inject(WorkModeService);
 
   protected readonly mainProject = this.projectService.mainProject;
   protected readonly openComponents = this.projectService.openComponents;
@@ -39,13 +40,13 @@ export class TabBarComponent {
   // Tab switching is disabled while simulating — the simulation binds to the
   // active project (a read-only variant comes with nested inspection later).
   protected activate(project: Project): void {
-    if (this.simulationService.isSimulating()) return;
+    if (this.workModeService.mode() === WorkMode.SIMULATION) return;
     this.projectService.setActiveProject(project);
   }
 
   protected close(event: Event, project: Project): void {
     event.stopPropagation();
-    if (this.simulationService.isSimulating()) return;
+    if (this.workModeService.mode() === WorkMode.SIMULATION) return;
     this.customComponentService.closeComponent(project);
   }
 }

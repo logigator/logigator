@@ -151,7 +151,6 @@ describe('ShortcutService', () => {
   it('gates editing actions while in simulation mode', () => {
     const workMode = TestBed.inject(WorkModeService) as unknown as {
       mode: ReturnType<typeof vi.fn>;
-      setMode: ReturnType<typeof vi.fn>;
     };
     const clipboard = TestBed.inject(ClipboardService) as unknown as {
       copy: ReturnType<typeof vi.fn>;
@@ -171,14 +170,8 @@ describe('ShortcutService', () => {
     window.dispatchEvent(
       makeKeyEvent(undoDefault.key, { ctrlKey: undoDefault.ctrl })
     );
-    const selectDefault = DEFAULT_SHORTCUTS[ShortcutActionEnum.TOOL_SELECT]!;
-    window.dispatchEvent(
-      makeKeyEvent(selectDefault.key, { ctrlKey: selectDefault.ctrl })
-    );
-
     expect(clipboard.copy).not.toHaveBeenCalled();
     expect(undo).not.toHaveBeenCalled();
-    expect(workMode.setMode).not.toHaveBeenCalled();
 
     // Leaving simulation mode unlocks the same shortcuts again.
     workMode.mode.mockReturnValue(WorkMode.SELECT);

@@ -33,9 +33,6 @@ export class SimulationService {
   private readonly projectService = inject(ProjectService);
   private readonly toastService = inject(ToastService);
 
-  private readonly _simulating = signal(false);
-  public readonly isSimulating = computed(this._simulating);
-
   // Fed by the worker phase (status polling); 0 while no simulation runs.
   private readonly _measuredHz = signal(0);
   public readonly measuredHz = computed(this._measuredHz);
@@ -69,7 +66,7 @@ export class SimulationService {
    * diagnostics, surfaces a toast and stays in the previous mode.
    */
   public enter(): void {
-    if (this._simulating()) {
+    if (this.workModeService.mode() === WorkMode.SIMULATION) {
       return;
     }
     const project = this.projectService.activeProject();
@@ -93,13 +90,12 @@ export class SimulationService {
     this._userInputSub = project.userInput$.subscribe((component) =>
       this._onUserInput(component)
     );
-    this.workModeService.setMode(WorkMode.SIMULATION);
-    this._simulating.set(true);
+    this.workModeService.setSimulationMode(true);
   }
 
   /** Stops the session, resets all sim visuals, and restores SELECT mode. */
   public exit(): void {
-    if (!this._simulating()) {
+    if (this.workModeService.mode() !== WorkMode.SIMULATION) {
       return;
     }
     this._userInputSub?.unsubscribe();
@@ -116,8 +112,7 @@ export class SimulationService {
     this._board = null;
     this._applier = null;
     this._project = null;
-    this.workModeService.setMode(WorkMode.SELECT);
-    this._simulating.set(false);
+    this.workModeService.setSimulationMode(false);
   }
 
   private _onUserInput(component: Component): void {

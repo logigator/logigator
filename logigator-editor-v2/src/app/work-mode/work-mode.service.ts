@@ -23,6 +23,14 @@ export class WorkModeService {
   });
 
   public setMode(mode: WorkMode): void {
+    if (mode === WorkMode.SIMULATION) {
+      throw new Error(
+        'Simulation mode is entered via SimulationService.enter()'
+      );
+    }
+    if (this._mode() === WorkMode.SIMULATION) {
+      return; // editing is locked while a simulation runs
+    }
     if (mode !== WorkMode.COMPONENT_PLACEMENT) {
       this.setSelectedComponentType(null);
     }
@@ -30,7 +38,16 @@ export class WorkModeService {
     this._mode.set(mode);
   }
 
+  /** The simulation lifecycle's only doorway past the editing lock above. */
+  public setSimulationMode(simulating: boolean): void {
+    this._selectedComponentType.set(null);
+    this._mode.set(simulating ? WorkMode.SIMULATION : WorkMode.SELECT);
+  }
+
   public setSelectedComponentType(componentType: ComponentType | null): void {
+    if (this._mode() === WorkMode.SIMULATION) {
+      return;
+    }
     this._selectedComponentType.set(componentType);
   }
 }

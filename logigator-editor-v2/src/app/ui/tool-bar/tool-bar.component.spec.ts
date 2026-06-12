@@ -5,7 +5,6 @@ import { ToolBarComponent } from './tool-bar.component';
 import { DialogService } from 'primeng/dynamicdialog';
 import { appConfig } from '../../app.config';
 import { WorkModeService } from '../../work-mode/work-mode.service';
-import { WorkMode } from '../../work-mode/work-mode.enum';
 
 describe('ToolBarComponent', () => {
   let component: ToolBarComponent;
@@ -48,7 +47,7 @@ describe('ToolBarComponent', () => {
   });
 
   it('swaps to the simulation control set in simulation mode', async () => {
-    TestBed.inject(WorkModeService).setMode(WorkMode.SIMULATION);
+    TestBed.inject(WorkModeService).setSimulationMode(true);
     const el = await waitForRender();
     expect(el.querySelector('.ph-sign-out')).not.toBeNull(); // exit
     expect(el.querySelector('.ph-pause')).not.toBeNull();

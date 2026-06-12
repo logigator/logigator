@@ -57,9 +57,6 @@ export class ComponentListComponent {
   });
 
   public selectComponent(component: ComponentConfig): void {
-    // Editing is locked while simulating — placement would leave the
-    // simulation work mode without going through SimulationService.exit().
-    if (this.workModeService.mode() === WorkMode.SIMULATION) return;
     this.workModeService.setMode(WorkMode.COMPONENT_PLACEMENT);
     this.workModeService.setSelectedComponentType(component.type);
   }

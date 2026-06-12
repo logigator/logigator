@@ -36,7 +36,6 @@ describe('SimulationService', () => {
 
     service.enter();
 
-    expect(service.isSimulating()).toBe(true);
     expect(workModeService.mode()).toBe(WorkMode.SIMULATION);
     expect(service.board).not.toBeNull();
     expect(service.applier).not.toBeNull();
@@ -51,7 +50,6 @@ describe('SimulationService', () => {
 
     service.enter();
 
-    expect(service.isSimulating()).toBe(false);
     expect(workModeService.mode()).toBe(previousMode);
     expect(error).toHaveBeenCalledOnce();
   });
@@ -93,7 +91,6 @@ describe('SimulationService', () => {
 
     service.exit();
 
-    expect(service.isSimulating()).toBe(false);
     expect(workModeService.mode()).toBe(WorkMode.SELECT);
     expect(lever.isOn).toBe(false);
     expect(service.board).toBeNull();

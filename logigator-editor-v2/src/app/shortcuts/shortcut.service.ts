@@ -162,8 +162,9 @@ export class ShortcutService implements OnDestroy {
   }
 
   /**
-   * Editing actions (undo/redo/clipboard/tool switches) are gated off while a
-   * simulation locks editing; Escape (CANCEL) exits the simulation instead.
+   * Editing actions (undo/redo/clipboard) are gated off while a simulation
+   * locks editing; Escape (CANCEL) exits the simulation instead. Tool
+   * switches need no gate — WorkModeService.setMode ignores them itself.
    */
   private _editingLocked(): boolean {
     return this.workModeService.mode() === WorkMode.SIMULATION;
@@ -251,37 +252,30 @@ export class ShortcutService implements OnDestroy {
     });
 
     this.on(ShortcutActionEnum.TOOL_WIRE_DRAWING).subscribe(() => {
-      if (this._editingLocked()) return;
       this.workModeService.setMode(WorkMode.WIRE_DRAWING);
     });
 
     this.on(ShortcutActionEnum.TOOL_WIRE_CONNECTION).subscribe(() => {
-      if (this._editingLocked()) return;
       this.workModeService.setMode(WorkMode.WIRE_CONNECTION);
     });
 
     this.on(ShortcutActionEnum.TOOL_SELECT).subscribe(() => {
-      if (this._editingLocked()) return;
       this.workModeService.setMode(WorkMode.SELECT);
     });
 
     this.on(ShortcutActionEnum.TOOL_SELECT_EXACT).subscribe(() => {
-      if (this._editingLocked()) return;
       this.workModeService.setMode(WorkMode.SELECT_EXACT);
     });
 
     this.on(ShortcutActionEnum.TOOL_ERASE).subscribe(() => {
-      if (this._editingLocked()) return;
       this.workModeService.setMode(WorkMode.ERASE);
     });
 
     this.on(ShortcutActionEnum.TOOL_COMPONENT_PLACEMENT).subscribe(() => {
-      if (this._editingLocked()) return;
       this.workModeService.setMode(WorkMode.COMPONENT_PLACEMENT);
     });
 
     this.on(ShortcutActionEnum.TOOL_PLACE_TEXT).subscribe(() => {
-      if (this._editingLocked()) return;
       this.workModeService.setMode(WorkMode.COMPONENT_PLACEMENT);
       this.workModeService.setSelectedComponentType(BuiltInComponentType.TEXT);
     });

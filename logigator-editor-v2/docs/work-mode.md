@@ -8,7 +8,7 @@ The work mode system tracks which editing tool is currently active and routes po
 src/app/work-mode/
 ├── work-mode.enum.ts          # Enum of all mode identifiers
 ├── work-mode.service.ts       # Angular signal-based state holder
-└── work-mode.service.spec.ts  # Basic smoke test
+└── work-mode.service.spec.ts  # Mode switching + simulation-lock tests
 ```
 
 ---
@@ -19,17 +19,17 @@ src/app/work-mode/
 
 **File:** `work-mode.enum.ts`
 
-Seven string-valued enum members identify the available editing tools:
+Seven string-valued enum members identify the available interaction modes:
 
-| Member                | Value         | Status                                          |
-| --------------------- | ------------- | ----------------------------------------------- |
-| `WIRE_DRAWING`        | `'drawWire'`  | Implemented                                     |
-| `WIRE_CONNECTION`     | `'connWire'`  | Implemented                                     |
-| `SELECT`              | `'sel'`       | Implemented                                     |
-| `SELECT_EXACT`        | `'selExact'`  | Implemented (scissor select — see note below)   |
-| `ERASE`               | `'erase'`     | Implemented                                     |
-| `PLACE_TEXT`          | `'text'`      | Enum only — not yet wired to canvas interaction |
-| `COMPONENT_PLACEMENT` | `'placeComp'` | Implemented                                     |
+| Member                | Value          | Notes                                              |
+| --------------------- | -------------- | -------------------------------------------------- |
+| `WIRE_DRAWING`        | `'drawWire'`   |                                                    |
+| `WIRE_CONNECTION`     | `'connWire'`   |                                                    |
+| `SELECT`              | `'sel'`        |                                                    |
+| `SELECT_EXACT`        | `'selExact'`   | Scissor select — see note below                    |
+| `ERASE`               | `'erase'`      |                                                    |
+| `COMPONENT_PLACEMENT` | `'placeComp'`  | Also covers text placement (TEXT component type)   |
+| `SIMULATION`          | `'simulation'` | Editing locked — see `WorkModeService` below       |
 
 The string values are used as i18n key suffixes — `statusBar.modes.<value>` — so changing them is a breaking i18n change.
 
@@ -38,7 +38,7 @@ The string values are used as i18n key suffixes — `statusBar.modes.<value>` �
 > - **SELECT** selects every component and wire whose `gridBounds` intersect the rect — the standard "touching" rule.
 > - **SELECT_EXACT** also selects every touching **component**, but for **wires** that extend past the rect boundary it scissors them at the boundary, keeps the inside portion selected, and leaves the outside portion(s) as separate, unselected wires. The cut is **tentative** — `SelectionManager` mutates the project directly but does not push to `ActionManager`. The cut becomes a real undo entry only when a move follows (`SelectionMoveSession` claims it via `claimPendingCut` and folds it into the move's `ActionContainer`, so cut + move revert with one Ctrl+Z). Any cancel path — selection clear, mode change, Escape, or Ctrl+Z while no move has happened — rolls the cut back, restoring the original wires. See `wires.md` § _Wire Scissor Cutting_ for the cut geometry and § _Tentative cut + commit on move_ for the lifecycle.
 
-> **WIRE_CONNECTION, PLACE_TEXT**: These values can be selected through the toolbar UI, and `WorkModeService` accepts them, but `FloatingLayer` contains no `case` branch for either of them. Pointer events on the canvas are effectively no-ops while these modes are active.
+> **SIMULATION**: No drag sessions — `FloatingLayer`'s `pointerdown` branch only hit-tests for user-input components (button/lever) and emits them on `Project.userInput$`; `SimulationService` reacts to those events. Pan/zoom keep working.
 
 ---
 
@@ -58,11 +58,17 @@ Root-provided Angular service. Holds the current mode and the selected component
 
 **`setMode(mode: WorkMode): void`**
 
-Sets the active mode. If `mode` is anything other than `COMPONENT_PLACEMENT`, `selectedComponentType` is cleared to `null`. This is the only non-trivial logic in the service: the placement type cannot survive a mode switch.
+Sets the active mode. If `mode` is anything other than `COMPONENT_PLACEMENT`, `selectedComponentType` is cleared to `null` — the placement type cannot survive a mode switch.
+
+`SIMULATION` is fenced off: requesting it through `setMode` throws (a simulation session needs a compiled board, which only `SimulationService.enter()` provides), and while the current mode is `SIMULATION` all `setMode` calls are silently ignored — editing is locked, so tool shortcuts and palette clicks during a simulation are no-ops without needing guards at each call site.
+
+**`setSimulationMode(simulating: boolean): void`**
+
+The simulation lifecycle's only doorway past that lock: `true` enters `SIMULATION`, `false` returns to `SELECT`; both clear `selectedComponentType`. Called exclusively by `SimulationService.enter()`/`exit()`.
 
 **`setSelectedComponentType(componentType: ComponentType | null): void`**
 
-Sets the component type independently. Callers should normally use the higher-level flow below rather than calling this directly.
+Sets the component type independently. Ignored while `SIMULATION` is active, for the same editing-lock reason. Callers should normally use the higher-level flow below rather than calling this directly.
 
 ---
 
