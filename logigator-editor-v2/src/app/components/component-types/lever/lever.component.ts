@@ -1,7 +1,6 @@
 import { DestroyOptions, Graphics } from 'pixi.js';
 import { Subject, takeUntil } from 'rxjs';
 import { Component } from '../../component';
-import { ComponentGraphics } from '../../../rendering/graphics/component.graphics';
 import { LeverGraphics } from '../../../rendering/graphics/lever.graphics';
 import { leverComponentConfig, LeverOptions } from './lever.config';
 
@@ -63,15 +62,7 @@ export class LeverComponent extends Component<LeverOptions> {
   }
 
   protected draw(): void {
-    const box = new Graphics(
-      this.geometryService.getGraphicsContext(
-        ComponentGraphics,
-        1,
-        1,
-        this.appliedScale
-      )
-    );
-    this.addChild(box);
+    this.addBody(1, 1);
 
     const bar = new Graphics(
       this.geometryService.getGraphicsContext(LeverGraphics, this.isOn)

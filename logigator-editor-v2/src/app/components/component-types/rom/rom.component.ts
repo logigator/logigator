@@ -1,7 +1,6 @@
 import { Component } from '../../component';
 import { romComponentConfig, RomOptions } from './rom.config';
-import { ComponentGraphics } from '../../../rendering/graphics/component.graphics';
-import { DestroyOptions, Graphics } from 'pixi.js';
+import { DestroyOptions } from 'pixi.js';
 import { Subject, takeUntil } from 'rxjs';
 
 export class RomComponent extends Component<RomOptions> {
@@ -58,15 +57,7 @@ export class RomComponent extends Component<RomOptions> {
   }
 
   protected draw(): void {
-    const componentGraphics = new Graphics(
-      this.geometryService.getGraphicsContext(
-        ComponentGraphics,
-        3,
-        Math.max(this.numInputs, this.numOutputs),
-        this.appliedScale
-      )
-    );
-    this.addChild(componentGraphics);
+    this.addBody(3, Math.max(this.numInputs, this.numOutputs));
   }
 
   public override destroy(options?: DestroyOptions): void {

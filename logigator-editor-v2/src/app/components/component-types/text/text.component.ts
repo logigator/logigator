@@ -48,30 +48,31 @@ export class TextComponent extends Component<TextOptions> {
   }
 
   protected draw(): void {
-    // ConnectionPointGraphics is a 1×1 unit square; scale to SCREEN_SIZE_PX pixels
-    // expressed in grid units, divided by appliedScale to stay constant on screen.
-    const sizeGrid = (ConnectionPoint.SCREEN_SIZE_PX * PX) / this.appliedScale;
-
     const dot = new Graphics();
     dot.context = this.geometryService.getGraphicsContext(
       ConnectionPointGraphics
     );
     dot.pivot.set(0.5, 0.5);
-    dot.scale.set(sizeGrid);
     dot.position.set(0.5, 0.5);
+    // ConnectionPointGraphics is a 1×1 unit square; scale to SCREEN_SIZE_PX pixels
+    // expressed in grid units, divided by zoom scale to stay constant on screen.
+    this.onApplyScale((scale) =>
+      dot.scale.set((ConnectionPoint.SCREEN_SIZE_PX * PX) / scale)
+    );
     this.addChild(dot);
 
     // fontSize is a user-set pixel value; scale.set(PX) converts the label
     // from pixel space to grid space so it can be positioned in grid units.
-    const label = new Text({
-      text: this.options.text.value,
-      style: {
-        fontFamily: 'Roboto',
-        fontSize: this.options.fontSize.value,
-        fill: this.themingService.currentTheme().fontTint
-      },
-      resolution: this.appliedScale * window.devicePixelRatio
-    });
+    const label = this.trackTextResolution(
+      new Text({
+        text: this.options.text.value,
+        style: {
+          fontFamily: 'Roboto',
+          fontSize: this.options.fontSize.value,
+          fill: this.themingService.currentTheme().fontTint
+        }
+      })
+    );
     label.scale.set(PX);
     // For W direction the component is rotated 180°, which would flip the glyphs upside-down.
     // Counter-rotating the label by π keeps glyphs upright; flipping the anchor mirrors

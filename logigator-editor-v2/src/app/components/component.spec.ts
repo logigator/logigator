@@ -198,15 +198,16 @@ describe('Component port power', () => {
     comp.destroy({ children: true });
   });
 
-  it('survives a forced redraw (applyScale mid-power)', () => {
+  it('preserves the powered stub across applyScale (no rebuild)', () => {
     const comp = makeAnd(2);
 
     comp.setPortPowered(0, true);
     const stubBefore = comp.portStubs[0];
     comp.applyScale(2);
 
-    // The redraw rebuilt the stub registry and re-applied the power state.
-    expect(comp.portStubs[0]).not.toBe(stubBefore);
+    // applyScale updates scale-dependent props in place rather than rebuilding,
+    // so the powered stub object and its context both survive untouched.
+    expect(comp.portStubs[0]).toBe(stubBefore);
     expect(comp.portStubs[0].context).toBe(poweredContext());
     expect(comp.portStubs[1].context).toBe(unpoweredContext());
 

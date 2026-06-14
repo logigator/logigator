@@ -1,8 +1,7 @@
-import { DestroyOptions, Graphics, Text } from 'pixi.js';
+import { DestroyOptions, Text } from 'pixi.js';
 import { Subject, takeUntil } from 'rxjs';
 import { Component } from '../component';
 import { ComponentConfig } from '../component-config.model';
-import { ComponentGraphics } from '../../rendering/graphics/component.graphics';
 import { PX } from '../../utils/grid';
 import { CustomComponentOptions } from './custom-component.config';
 import { CustomComponentDefinition } from './custom-component-definition.model';
@@ -66,31 +65,24 @@ export class CustomComponent extends Component<CustomComponentOptions> {
   }
 
   protected draw(): void {
-    const box = new Graphics(
-      this.geometryService.getGraphicsContext(
-        ComponentGraphics,
-        this.bodyGridWidth,
-        this.bodyGridHeight,
-        this.appliedScale
-      )
-    );
-    this.addChild(box);
+    this.addBody(this.bodyGridWidth, this.bodyGridHeight);
 
     // Runs once from the base constructor before `_def` exists — the box above
     // is enough then; the symbol is added by the constructor's redraw().
     const def = this._def;
     if (!def) return;
 
-    const symbol = new Text({
-      text: def.symbol,
-      style: {
-        fontFamily: 'Roboto',
-        fontSize: 0.5 / PX,
-        fill: this.themingService.currentTheme().fontTint
-      },
-      anchor: { x: 0.5, y: 0.5 },
-      resolution: this.appliedScale * window.devicePixelRatio
-    });
+    const symbol = this.trackTextResolution(
+      new Text({
+        text: def.symbol,
+        style: {
+          fontFamily: 'Roboto',
+          fontSize: 0.5 / PX,
+          fill: this.themingService.currentTheme().fontTint
+        },
+        anchor: { x: 0.5, y: 0.5 }
+      })
+    );
     symbol.scale.set(PX);
     symbol.position.set(this.bodyGridWidth / 2, this.bodyGridHeight / 2);
     // Keep the symbol upright regardless of the component's rotation.

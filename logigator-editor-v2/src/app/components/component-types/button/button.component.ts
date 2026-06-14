@@ -1,7 +1,6 @@
-import { DestroyOptions, Graphics } from 'pixi.js';
+import { DestroyOptions } from 'pixi.js';
 import { Subject, takeUntil } from 'rxjs';
 import { Component } from '../../component';
-import { ComponentGraphics } from '../../../rendering/graphics/component.graphics';
 import { ButtonGraphics } from '../../../rendering/graphics/button.graphics';
 import { buttonComponentConfig, ButtonOptions } from './button.config';
 
@@ -59,24 +58,14 @@ export class ButtonComponent extends Component<ButtonOptions> {
   }
 
   protected draw(): void {
-    const box = new Graphics(
-      this.geometryService.getGraphicsContext(
-        ComponentGraphics,
-        1,
-        1,
-        this.appliedScale
-      )
-    );
-    this.addChild(box);
-
-    const inner = new Graphics(
+    this.addBody(1, 1);
+    this.addScaledGraphics((scale) =>
       this.geometryService.getGraphicsContext(
         ButtonGraphics,
-        this.appliedScale,
+        scale,
         this.pressed
       )
     );
-    this.addChild(inner);
   }
 
   public override destroy(options?: DestroyOptions): void {

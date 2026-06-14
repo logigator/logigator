@@ -91,12 +91,20 @@ Key public members:
 - `portsChange$: Subject<{ oldPorts, newPorts }>` — fires whenever the `direction`, `numInputs`, or `numOutputs` setter runs after construction. `Project.addComponent` subscribes on insert and unsubscribes in `removeComponent`. The handler runs `computeIntegration({ movedComponentPorts })` to enforce the split-on-touch invariants (a new port landing on a wire's interior auto-splits that wire), then updates CP markers. The integrator pass is applied directly without `ActionManager` wrapping, so the implied splits/merges aren't undoable — rotation never had undo support anyway. See [Wire Integration Invariants](wires.md#wire-integration-invariants).
 - `gridBounds: Rectangle` — axis-aligned bounding box in grid units, accounting for rotation; **includes** 0.5-unit stub padding on the input and output sides; used by `QuadTreeContainer` for spatial indexing and component–component collision
 - `bodyGridBounds: Rectangle` — same AABB as `gridBounds` but **excluding** stub padding; used for wire–body collision checks so that a wire endpoint touching a port stub tip is not falsely reported as a collision
-- `applyScale(scale)` — applies a zoom scale factor and redraws (wires and component stroke widths are scale-dependent)
+- `applyScale(scale)` — updates zoom-dependent visual props **in place** (port-stub thickness, text resolution, scaled `GraphicsContext` swaps) without rebuilding the visual tree. It runs the rescalers registered during the last `draw()` — it does **not** call `_draw()` or re-rasterize any `Text`, so it stays cheap on large projects during continuous zoom.
 - `Component.serialize(c)` / `Component.deserialize(s, config)` — static round-trip helpers
 
 Protected helpers available to subclasses:
 
-- `redraw()` — triggers a full redraw of `_visualSpace`. Call from option `onChange$` handlers when bespoke component state (other than `numInputs` / `numOutputs` / `direction`) changes the visual. `TextComponent` uses this to react to text content and font-size changes.
+- `redraw()` — triggers a full redraw (structural rebuild). Call from option `onChange$` handlers when bespoke component state (other than `numInputs` / `numOutputs` / `direction`) changes the visual. `TextComponent` uses this to react to text content and font-size changes.
+- `onApplyScale(fn)` — registers a zoom-scale-dependent visual update. The callback runs immediately with the current scale and again on every `applyScale`. Reset on each `draw()`, so register from inside `draw()`.
+- `addBody(width, height)` — adds the standard chamfered body outline; its `ComponentGraphics` stroke stays screen-constant across zoom via a registered context swap. Returns the `Graphics`.
+- `addScaledGraphics(contextFor)` — adds a `Graphics` whose shared `GraphicsContext` depends on zoom scale (e.g. `ButtonGraphics`), swapping to the correctly-scaled cached context on `applyScale`.
+- `trackTextResolution(text)` — keeps a `Text`'s render resolution matched to zoom (crisp glyphs) by updating `resolution` in place rather than recreating the `Text`.
+
+### Build vs. rescale
+
+A component's visual tree is built once per **structural** change (construction, `numInputs`/`numOutputs`/`direction`/option changes, theme — all routed through `_draw()`). **Zoom** is handled separately: `applyScale` only refreshes the scale-dependent properties of the already-built elements via the rescalers each `draw()` registers. This split keeps zooming a large circuit from destroying and re-rasterizing every component every wheel notch. When writing a `draw()`, register any element whose on-screen size must stay constant across zoom through `onApplyScale` / `addBody` / `addScaledGraphics` / `trackTextResolution` rather than reading `appliedScale` directly.
 
 ### Rendering lifecycle
 

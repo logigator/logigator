@@ -1,6 +1,5 @@
 import { Component } from '../../component';
-import { ComponentGraphics } from '../../../rendering/graphics/component.graphics';
-import { DestroyOptions, Graphics } from 'pixi.js';
+import { DestroyOptions } from 'pixi.js';
 import { Subject, takeUntil } from 'rxjs';
 import { notComponentConfig, NotOptions } from './not.config';
 
@@ -33,15 +32,7 @@ export class NotComponent extends Component<NotOptions> {
   }
 
   protected draw(): void {
-    const componentGraphics = new Graphics(
-      this.geometryService.getGraphicsContext(
-        ComponentGraphics,
-        2,
-        Math.max(this.numInputs, this.numOutputs),
-        this.appliedScale
-      )
-    );
-    this.addChild(componentGraphics);
+    this.addBody(2, Math.max(this.numInputs, this.numOutputs));
   }
 
   public override destroy(options?: DestroyOptions): void {

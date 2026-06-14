@@ -2,6 +2,7 @@ import {
   Container,
   DestroyOptions,
   Graphics,
+  GraphicsContext,
   Matrix,
   Point,
   Rectangle,
@@ -12,6 +13,7 @@ import { ComponentConfig, ComponentConfigView } from './component-config.model';
 import { ThemingService } from '../theming/theming.service';
 import { getStaticDI } from '../utils/get-di';
 import { GraphicsProviderService } from '../rendering/graphics-provider.service';
+import { ComponentGraphics } from '../rendering/graphics/component.graphics';
 import { environment } from '../../environments/environment';
 import { PX } from '../utils/grid';
 import {
@@ -66,6 +68,10 @@ export abstract class Component<
 
   // Stub graphics in `connectionPoints` order, rebuilt by _drawConnections.
   private _portStubs: Graphics[] = [];
+  // Scale-dependent visual updates registered during draw(). applyScale runs
+  // these in place on zoom instead of rebuilding the whole visual tree (which
+  // would re-rasterize every Text on every zoom step). Reset on each _draw().
+  private _rescalers: ((scale: number) => void)[] = [];
   // Powered port indexes survive redraws (zoom applyScale, theme change) —
   // _drawConnections re-applies them to the rebuilt stubs.
   private readonly _poweredPorts = new Set<number>();
@@ -197,7 +203,59 @@ export abstract class Component<
 
   public applyScale(scale: number): void {
     this._appliedScale = scale;
-    this._draw();
+    for (const rescale of this._rescalers) {
+      rescale(scale);
+    }
+  }
+
+  /**
+   * Registers a scale-dependent visual update. The callback runs immediately
+   * with the current scale (so draw-time setup is covered) and again on every
+   * applyScale, without rebuilding the component. Call from draw() for any
+   * element whose on-screen size must stay constant across zoom.
+   */
+  protected onApplyScale(rescale: (scale: number) => void): void {
+    this._rescalers.push(rescale);
+    rescale(this._appliedScale);
+  }
+
+  /**
+   * Adds a Graphics whose shared GraphicsContext depends on zoom scale, swapping
+   * to the correctly-scaled cached context on every applyScale. Context swaps are
+   * cheap (no geometry rebuild), so this stays fast on large projects.
+   */
+  protected addScaledGraphics(
+    contextFor: (scale: number) => GraphicsContext
+  ): Graphics {
+    const graphics = new Graphics();
+    this.onApplyScale((scale) => (graphics.context = contextFor(scale)));
+    return this.addChild(graphics);
+  }
+
+  /**
+   * Adds the standard chamfered component body outline (width/height in grid
+   * units) and keeps its stroke screen-constant across zoom.
+   */
+  protected addBody(width: number, height: number): Graphics {
+    return this.addScaledGraphics((scale) =>
+      this.geometryService.getGraphicsContext(
+        ComponentGraphics,
+        width,
+        height,
+        scale
+      )
+    );
+  }
+
+  /**
+   * Keeps a Text's render resolution matched to zoom so glyphs stay crisp,
+   * refreshed in place on applyScale rather than by recreating the Text.
+   */
+  protected trackTextResolution(text: Text): Text {
+    this.onApplyScale(
+      (scale) => (text.resolution = scale * window.devicePixelRatio)
+    );
+    return text;
   }
 
   public override destroy(options?: DestroyOptions): void {
@@ -334,6 +392,7 @@ export abstract class Component<
 
     this._rotationCounterContainers = [];
     this._portStubs = [];
+    this._rescalers = [];
 
     this.draw();
 
@@ -382,21 +441,23 @@ export abstract class Component<
         this._poweredPorts.has(portIndex) ? this._stubContext(true) : geometry
       );
       wire.position.set(0, i + 0.5);
-      wire.scale.set(0.5, PX / this._appliedScale);
+      // Stub stays 1 screen pixel thick: scale.y compensates for zoom.
+      this.onApplyScale((scale) => wire.scale.set(0.5, PX / scale));
       this._portStubs[portIndex] = wire;
       container.addChild(wire);
 
       if (labels.length > i) {
-        const text = new Text({
-          text: labels[i],
-          style: {
-            fontFamily: 'Roboto',
-            fontSize: 0.5 / PX,
-            fill: this.themingService.currentTheme().fontTint
-          },
-          anchor: { x: type === 'inputs' ? 0 : 1, y: 0.5 },
-          resolution: this._appliedScale * window.devicePixelRatio
-        });
+        const text = this.trackTextResolution(
+          new Text({
+            text: labels[i],
+            style: {
+              fontFamily: 'Roboto',
+              fontSize: 0.5 / PX,
+              fill: this.themingService.currentTheme().fontTint
+            },
+            anchor: { x: type === 'inputs' ? 0 : 1, y: 0.5 }
+          })
+        );
 
         // naturalWidth is the pixel width before scale is applied.
         // Pivot placed at the texture center so that the rotation counter
