@@ -30,6 +30,9 @@
                 "input": "public"
               }
             ],
+            "loader": {
+              ".wasm": "file"
+            },
             "styles": ["src/tailwind.css", "src/styles.scss"],
             "scripts": [],
             "allowedCommonJsDependencies": [
@@ -81,7 +84,10 @@
           "defaultConfiguration": "development",
           "options": {
             "host": "0.0.0.0",
-            "allowedHosts": ["logigator.test"]
+            "allowedHosts": ["logigator.test"],
+            "prebundle": {
+              "exclude": ["@logigator/sim"]
+            }
           }
         },
         "extract-i18n": {

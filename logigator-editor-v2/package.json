@@ -33,6 +33,8 @@
     "@angular/router": "file:./packages/router-stub",
     "@jsverse/transloco": "^8.3.0",
     "@jsverse/transloco-persist-lang": "^8.3.0",
+    "@jsverse/utils": "1.0.0-beta.5",
+    "@logigator/sim": "^0.1.3",
     "@primeuix/themes": "^2.0.3",
     "ngxtension": "^7.2.0",
     "pixi.js": "^8.18.1",
