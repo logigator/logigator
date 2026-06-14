@@ -137,8 +137,8 @@ async function handle(msg: MainToWorkerMessage): Promise<void> {
         kind: 'status',
         reqId: msg.reqId,
         tick: status.tick,
-        componentCount: status.component_count,
-        linkCount: status.link_count
+        componentCount: status.componentCount,
+        linkCount: status.linkCount
       });
       break;
     }
@@ -208,11 +208,11 @@ function sendSnapshot(reqId: number): void {
   try {
     const mem = new Uint8Array(memory!.buffer);
     // len / values_len are byte counts (delta ids are u32 LE, so 4 bytes each).
-    const ids = view.is_delta
+    const ids = view.isDelta
       ? mem.subarray(view.ptr, view.ptr + view.len)
       : null;
-    const values = view.is_delta
-      ? mem.subarray(view.values_ptr, view.values_ptr + view.values_len)
+    const values = view.isDelta
+      ? mem.subarray(view.valuesPtr, view.valuesPtr + view.valuesLen)
       : mem.subarray(view.ptr, view.ptr + view.len);
     const packed = packSnapshot(bufferPool.pop(), ids, values);
     postMessage(
@@ -220,7 +220,7 @@ function sendSnapshot(reqId: number): void {
         kind: 'snapshot',
         reqId,
         tick: view.tick,
-        isDelta: view.is_delta,
+        isDelta: view.isDelta,
         ...packed
       },
       [packed.buffer]
