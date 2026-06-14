@@ -1,5 +1,6 @@
 import type { WorkMode } from '../app/work-mode/work-mode.enum';
 import type { ShortcutActionEnum } from '../app/shortcuts/shortcut-action.enum';
+import type { ComponentCategory } from '../app/components/component-category.enum';
 
 const en = {
   common: {
@@ -8,11 +9,13 @@ const en = {
   },
   components: {
     category: {
+      hidden: 'Hidden',
       basic: 'Basic',
       advanced: 'Advanced',
-      user: 'User Components',
-      io: 'Inputs / Outputs'
-    },
+      io: 'Inputs / Outputs',
+      port: 'Ports',
+      user: 'User Components'
+    } satisfies Record<ComponentCategory, string>,
     def: {
       NOT: {
         name: 'NOT Gate',

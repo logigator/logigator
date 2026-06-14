@@ -43,6 +43,7 @@ export class SideBarComponent {
   public readonly advancedComponents =
     this.componentProviderService.advancedComponents;
   public readonly ioComponents = this.componentProviderService.ioComponents;
+  public readonly portComponents = this.componentProviderService.portComponents;
 
   /** True while the active tab is a custom-component editor (`type: 'comp'`). */
   public readonly isEditingComponent = computed(() => {

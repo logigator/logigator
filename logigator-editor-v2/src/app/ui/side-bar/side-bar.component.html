@@ -19,16 +19,21 @@
     [searchText]="searchText"
   ></app-component-list>
   <app-component-list
-    [headline]="t('components.category.user')"
-    [components]="userComponents()"
+    [headline]="t('components.category.io')"
+    [components]="ioComponents()"
     [searchText]="searchText"
   ></app-component-list>
   @if (isEditingComponent()) {
     <app-component-list
-      [headline]="t('components.category.io')"
-      [components]="ioComponents()"
+      [headline]="t('components.category.plug')"
+      [components]="portComponents()"
       [searchText]="searchText"
     ></app-component-list>
     <app-ports-panel></app-ports-panel>
   }
+  <app-component-list
+    [headline]="t('components.category.user')"
+    [components]="userComponents()"
+    [searchText]="searchText"
+  ></app-component-list>
 </div>

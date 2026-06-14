@@ -1,9 +1,9 @@
 export const enum ComponentCategory {
-  BASIC,
-  ADVANCED,
-  HIDDEN,
+  HIDDEN = 'hidden',
+  BASIC = 'basic',
+  ADVANCED = 'advanced',
+  IO = 'io',
+  PORT = 'port',
   // User-defined custom components.
-  USER,
-  // INPUT/OUTPUT plugs — shown only while editing a custom component.
-  IO
+  USER = 'user'
 }

@@ -20,7 +20,7 @@ export interface OutputOptions {
 
 export const outputComponentConfig: ComponentConfig<OutputOptions> = {
   type: BuiltInComponentType.OUTPUT,
-  category: ComponentCategory.IO,
+  category: ComponentCategory.PORT,
   symbol: 'OUT',
   name: 'components.def.OUTPUT.name',
   description: 'components.def.OUTPUT.description',

@@ -39,8 +39,9 @@ export class ComponentProviderService {
   public readonly advancedComponents = this._categorySignal(
     ComponentCategory.ADVANCED
   );
-  public readonly userComponents = this._categorySignal(ComponentCategory.USER);
   public readonly ioComponents = this._categorySignal(ComponentCategory.IO);
+  public readonly portComponents = this._categorySignal(ComponentCategory.PORT);
+  public readonly userComponents = this._categorySignal(ComponentCategory.USER);
 
   public getComponent(type: number): ComponentConfig | undefined {
     return this._configs().get(type);

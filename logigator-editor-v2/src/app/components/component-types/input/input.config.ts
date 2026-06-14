@@ -20,7 +20,7 @@ export interface InputOptions {
 
 export const inputComponentConfig: ComponentConfig<InputOptions> = {
   type: BuiltInComponentType.INPUT,
-  category: ComponentCategory.IO,
+  category: ComponentCategory.PORT,
   symbol: 'IN',
   name: 'components.def.INPUT.name',
   description: 'components.def.INPUT.description',
