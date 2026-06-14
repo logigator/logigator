@@ -23,6 +23,7 @@ import { ShortcutService } from '../../shortcuts/shortcut.service';
 import { ShortcutActionEnum } from '../../shortcuts/shortcut-action.enum';
 import { formatShortcutLabel } from '../../shortcuts/shortcut-binding.model';
 import { SimulationService } from '../../simulation/simulation.service';
+import { SiPipe } from '../../utils/si/si.pipe';
 
 @Component({
   selector: 'app-tool-bar',
@@ -31,7 +32,8 @@ import { SimulationService } from '../../simulation/simulation.service';
     DividerModule,
     InputTextModule,
     TooltipModule,
-    TranslocoDirective
+    TranslocoDirective,
+    SiPipe
   ],
   templateUrl: './tool-bar.component.html',
   changeDetection: ChangeDetectionStrategy.OnPush
@@ -121,11 +123,16 @@ export class ToolBarComponent {
   );
 
   // Swaps the toolbar between the editing tool set and the simulation
-  // controls (run controls stay inert until the worker phase).
+  // controls.
   protected isSimulationMode = computed(
     () => this.workModeService.mode() === WorkMode.SIMULATION
   );
+  protected isSimReady = this.simulationService.isReady;
+  protected isSimRunning = this.simulationService.isRunning;
+  protected simMode = this.simulationService.mode;
+  protected targetHz = this.simulationService.targetHz;
   protected measuredHz = this.simulationService.measuredHz;
+  protected simTick = this.simulationService.tick;
 
   protected isWireDrawMode = computed(
     () => this.workModeService.mode() === WorkMode.WIRE_DRAWING
@@ -226,6 +233,36 @@ export class ToolBarComponent {
 
   protected exitSimulation(): void {
     this.simulationService.exit();
+  }
+
+  protected playSimulation(): void {
+    this.simulationService.play();
+  }
+
+  protected pauseSimulation(): void {
+    this.simulationService.pause();
+  }
+
+  protected stepSimulation(): void {
+    this.simulationService.step();
+  }
+
+  protected stopSimulation(): void {
+    this.simulationService.stop();
+  }
+
+  protected toggleTargetMode(): void {
+    this.simulationService.toggleTargetMode();
+  }
+
+  protected toggleSyncMode(): void {
+    this.simulationService.toggleSyncMode();
+  }
+
+  protected onTargetHzChange(event: Event): void {
+    this.simulationService.setTargetHz(
+      Number((event.target as HTMLInputElement).value)
+    );
   }
 
   protected zoomIn(): void {

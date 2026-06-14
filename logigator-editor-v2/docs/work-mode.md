@@ -21,15 +21,15 @@ src/app/work-mode/
 
 Seven string-valued enum members identify the available interaction modes:
 
-| Member                | Value          | Notes                                              |
-| --------------------- | -------------- | -------------------------------------------------- |
-| `WIRE_DRAWING`        | `'drawWire'`   |                                                    |
-| `WIRE_CONNECTION`     | `'connWire'`   |                                                    |
-| `SELECT`              | `'sel'`        |                                                    |
-| `SELECT_EXACT`        | `'selExact'`   | Scissor select — see note below                    |
-| `ERASE`               | `'erase'`      |                                                    |
-| `COMPONENT_PLACEMENT` | `'placeComp'`  | Also covers text placement (TEXT component type)   |
-| `SIMULATION`          | `'simulation'` | Editing locked — see `WorkModeService` below       |
+| Member                | Value          | Notes                                            |
+| --------------------- | -------------- | ------------------------------------------------ |
+| `WIRE_DRAWING`        | `'drawWire'`   |                                                  |
+| `WIRE_CONNECTION`     | `'connWire'`   |                                                  |
+| `SELECT`              | `'sel'`        |                                                  |
+| `SELECT_EXACT`        | `'selExact'`   | Scissor select — see note below                  |
+| `ERASE`               | `'erase'`      |                                                  |
+| `COMPONENT_PLACEMENT` | `'placeComp'`  | Also covers text placement (TEXT component type) |
+| `SIMULATION`          | `'simulation'` | Editing locked — see `WorkModeService` below     |
 
 The string values are used as i18n key suffixes — `statusBar.modes.<value>` — so changing them is a breaking i18n change.
 

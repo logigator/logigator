@@ -11,12 +11,13 @@
       ></p-button>
     </div>
     <p-divider layout="vertical" class="mx-1!"></p-divider>
-    <!-- Run controls render inert until the worker/WASM phase wires them up. -->
+    <!-- Run controls come alive once the worker session reports ready. -->
     <div class="flex flex-wrap gap-1">
       <p-button
         [pTooltip]="t('toolBar.play')"
         [ariaLabel]="t('toolBar.play')"
-        [disabled]="true"
+        [disabled]="!isSimReady() || isSimRunning()"
+        (onClick)="playSimulation()"
         tooltipPosition="bottom"
         icon="ph ph-play"
         severity="secondary"
@@ -24,7 +25,8 @@
       <p-button
         [pTooltip]="t('toolBar.pause')"
         [ariaLabel]="t('toolBar.pause')"
-        [disabled]="true"
+        [disabled]="!isSimRunning()"
+        (onClick)="pauseSimulation()"
         tooltipPosition="bottom"
         icon="ph ph-pause"
         severity="secondary"
@@ -32,7 +34,8 @@
       <p-button
         [pTooltip]="t('toolBar.step')"
         [ariaLabel]="t('toolBar.step')"
-        [disabled]="true"
+        [disabled]="!isSimReady() || isSimRunning()"
+        (onClick)="stepSimulation()"
         tooltipPosition="bottom"
         icon="ph ph-skip-forward"
         severity="secondary"
@@ -40,7 +43,8 @@
       <p-button
         [pTooltip]="t('toolBar.stopSim')"
         [ariaLabel]="t('toolBar.stopSim')"
-        [disabled]="true"
+        [disabled]="!isSimReady()"
+        (onClick)="stopSimulation()"
         tooltipPosition="bottom"
         icon="ph ph-stop"
         severity="secondary"
@@ -48,27 +52,42 @@
     </div>
     <p-divider layout="vertical" class="mx-1!"></p-divider>
     <div class="flex flex-wrap items-center gap-2">
+      <p-button
+        [pTooltip]="t('toolBar.targetMode')"
+        [ariaLabel]="t('toolBar.targetMode')"
+        [disabled]="!isSimReady()"
+        [outlined]="simMode() !== 'target'"
+        (onClick)="toggleTargetMode()"
+        tooltipPosition="bottom"
+        icon="ph ph-gauge"
+        severity="secondary"
+      ></p-button>
       <input
         pInputText
         type="number"
+        min="1"
         class="w-24"
-        [disabled]="true"
+        [disabled]="!isSimReady()"
         [pTooltip]="t('toolBar.targetHz')"
         [ariaLabel]="t('toolBar.targetHz')"
         tooltipPosition="bottom"
-        value="1000"
+        [value]="targetHz()"
+        (change)="onTargetHzChange($event)"
       />
       <p-button
         [pTooltip]="t('toolBar.syncToFrame')"
         [ariaLabel]="t('toolBar.syncToFrame')"
-        [disabled]="true"
-        [outlined]="true"
+        [disabled]="!isSimReady()"
+        [outlined]="simMode() !== 'sync'"
+        (onClick)="toggleSyncMode()"
         tooltipPosition="bottom"
         icon="ph ph-monitor-play"
         severity="secondary"
       ></p-button>
       <span class="text-sm opacity-70 select-none">
-        {{ t('toolBar.measuredHz', { hz: measuredHz() }) }}
+        {{ t('toolBar.measuredHz', { hz: measuredHz() | si: 0 }) }}
+        &middot;
+        {{ t('toolBar.ticks', { ticks: simTick() }) }}
       </span>
     </div>
   } @else {

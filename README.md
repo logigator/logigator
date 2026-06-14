@@ -244,14 +244,15 @@ Key layers in `src/app/`:
 - **`rendering/`** — PixiJS scene management: `QuadTreeContainer` for spatial indexing, `FloatingLayer` for transient objects (selection box, placement preview), `GraphicsProviderService` for shared texture/graphics caching.
 - **`actions/`** — Command-pattern undo/redo via `ActionManager`. Every user operation is an `Action` subclass.
 - **`work-mode/`** — Interaction FSM (select, place, delete, wire-routing modes).
+- **`simulation/`** — Compiles the circuit into a board, runs it on a WebAssembly engine in a Web Worker, and lights up powered wires/ports on the canvas.
 - **`ui/`** — Angular component wrappers around the canvas and sidebar panels.
 
 **Coordinate system:** `Project._gridSpace` has `scale = gridSize`, so all circuit objects use **grid units as their native PixiJS `position`** — no manual pixel↔grid conversion at the model layer. Visual children live inside a per-component `_visualSpace` container with `scale = 1/gridSize`, keeping pixel-authored geometry correct.
 
-**Simulation** runs via the external `@logigator/logigator-simulation` npm package.
+**Simulation** runs the external `@logigator/sim` WASM engine inside a Web Worker. The active circuit is compiled into a board (nets, units, link ids), the engine free-runs in the worker, and the main thread pulls per-frame state snapshots to repaint powered wires/ports. See `simulation.md`.
 
 Detailed technical docs for each subsystem are in `logigator-editor-v2/docs/`:
-`actions-system.md`, `component-system.md`, `project.md`, `rendering.md`, `ui.md`, `wires.md`, `work-mode.md`.
+`actions-system.md`, `component-system.md`, `project.md`, `rendering.md`, `simulation.md`, `ui.md`, `wires.md`, `work-mode.md`.
 
 ### Backend (`logigator-backend`)
 

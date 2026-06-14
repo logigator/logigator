@@ -82,19 +82,32 @@ export class BoardComponent implements OnInit, OnDestroy {
           this.cursorPositionChange.emit(pos);
         });
 
+      // The continuous ticker is reference-counted: any number of concerns
+      // (a simulation run, a pan, a drag session) can hold it on at once, and
+      // it stops only once the last one releases. Without this, a transient
+      // interaction's 'off' (e.g. finishing a pan) would stop the ticker a
+      // running simulation still needs. Reset per project (fresh closure).
+      let runDepth = 0;
       project.ticker$
         .pipe(takeUntil(merge(this.destroy$, this.projectChange$)))
         .subscribe((value) => {
           switch (value) {
             case 'single':
-              this.app.ticker.update();
+              // Already rendering every frame while a run holds the ticker.
+              if (runDepth === 0) {
+                this.app.ticker.update();
+              }
               break;
             case 'on':
+              runDepth++;
               this.app.ticker.start();
               break;
             case 'off':
-              this.app.ticker.update();
-              this.app.ticker.stop();
+              runDepth = Math.max(0, runDepth - 1);
+              if (runDepth === 0) {
+                this.app.ticker.update();
+                this.app.ticker.stop();
+              }
               break;
           }
         });

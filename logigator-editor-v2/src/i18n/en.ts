@@ -203,8 +203,10 @@ const en = {
     step: 'Step',
     stopSim: 'Stop',
     targetHz: 'Target speed (Hz)',
+    targetMode: 'Limit to target speed',
     syncToFrame: 'Sync to frame',
-    measuredHz: '{{hz}} Hz'
+    measuredHz: '{{hz}}Hz',
+    ticks: '{{ticks}} ticks'
   },
   logging: {
     error: 'Error',

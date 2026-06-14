@@ -13,16 +13,25 @@ import { WorkModeService } from '../work-mode/work-mode.service';
 import { BoardCompilerService } from './compiler/board-compiler.service';
 import { CompiledBoard, TOP_LEVEL_PATH } from './compiler/compiled-board.model';
 import { LinkStateApplier } from './state/link-state-applier';
+import { INPUT_EVENT_CONT, INPUT_EVENT_PULSE } from './worker/protocol';
+import {
+  SimulationRunMode,
+  SimulationWorkerService
+} from './worker/simulation-worker.service';
 
 /** How long a clicked button shows its pressed state. */
 const BUTTON_FLASH_MS = 150;
 
 /**
+ * Session lifecycle: `inactive` outside simulation mode, `starting` while the
+ * worker boots the WASM engine, then `ready` (paused) ⇄ `running`.
+ */
+export type SimulationState = 'inactive' | 'starting' | 'ready' | 'running';
+
+/**
  * Facade for the simulation lifecycle: entering/leaving simulation mode,
- * compiling the active circuit, and reacting to canvas user input. The run
- * controls (play/pause/step/stop) come alive with the worker phase once the
- * WASM module ships; until then a session only locks editing and reflects
- * button/lever interaction.
+ * compiling the active circuit, the run controls (play/pause/step/stop and
+ * the run-mode selection), and forwarding canvas user input to the engine.
  */
 @Injectable({
   providedIn: 'root'
@@ -32,10 +41,23 @@ export class SimulationService {
   private readonly workModeService = inject(WorkModeService);
   private readonly projectService = inject(ProjectService);
   private readonly toastService = inject(ToastService);
+  private readonly workerService = inject(SimulationWorkerService);
 
-  // Fed by the worker phase (status polling); 0 while no simulation runs.
-  private readonly _measuredHz = signal(0);
-  public readonly measuredHz = computed(this._measuredHz);
+  private readonly _state = signal<SimulationState>('inactive');
+  public readonly state = computed(this._state);
+  /** True once the engine is up — the run controls are live. */
+  public readonly isReady = computed(
+    () => this._state() === 'ready' || this._state() === 'running'
+  );
+  public readonly isRunning = computed(() => this._state() === 'running');
+
+  private readonly _mode = signal<SimulationRunMode>('sync');
+  public readonly mode = computed(this._mode);
+  private readonly _targetHz = signal(1000);
+  public readonly targetHz = computed(this._targetHz);
+
+  public readonly measuredHz = this.workerService.measuredHz;
+  public readonly tick = this.workerService.tick;
 
   // Compiled artifacts live for one session: rebuilt on every enter(),
   // discarded on exit(). Editing is locked in between, so the mapping's live
@@ -51,7 +73,7 @@ export class SimulationService {
       .subscribe(() => this.exit());
   }
 
-  /** The current session's link applier (worker phase feeds it deltas). */
+  /** The current session's link applier (the worker bridge feeds it deltas). */
   public get applier(): LinkStateApplier | null {
     return this._applier;
   }
@@ -62,8 +84,9 @@ export class SimulationService {
   }
 
   /**
-   * Compiles the active project and enters simulation mode. On compile
-   * diagnostics, surfaces a toast and stays in the previous mode.
+   * Compiles the active project, enters simulation mode, and boots the
+   * worker. On compile diagnostics, surfaces a toast and stays in the
+   * previous mode; on worker failure, reports and leaves simulation mode.
    */
   public enter(): void {
     if (this.workModeService.mode() === WorkMode.SIMULATION) {
@@ -83,14 +106,37 @@ export class SimulationService {
     }
 
     this._board = board;
-    this._applier = new LinkStateApplier(
+    const applier = new LinkStateApplier(
       board.mapping.get(TOP_LEVEL_PATH) ?? []
     );
+    this._applier = applier;
     this._project = project;
     this._userInputSub = project.userInput$.subscribe((component) =>
       this._onUserInput(component)
     );
     this.workModeService.setSimulationMode(true);
+
+    this._state.set('starting');
+    this.workerService
+      .startSession(board.descriptor, {
+        applier,
+        repaint: () => this._project?.triggerTicker('single'),
+        onError: (message) => {
+          this.toastService.error(message);
+          this.exit();
+        }
+      })
+      .then(() => {
+        if (this._state() === 'starting') {
+          this._state.set('ready');
+        }
+      })
+      .catch((err: Error) => {
+        if (this._state() === 'starting') {
+          this.toastService.error(err.message);
+          this.exit();
+        }
+      });
   }
 
   /** Stops the session, resets all sim visuals, and restores SELECT mode. */
@@ -100,13 +146,15 @@ export class SimulationService {
     }
     this._userInputSub?.unsubscribe();
     this._userInputSub = undefined;
+    this.workerService.endSession();
+    this._state.set('inactive');
 
     this._applier?.reset();
     if (this._project && !this._project.destroyed) {
       for (const component of this._project.components) {
         component.clearSimState();
       }
-      this._project.triggerTicker('single');
+      this._project.triggerTicker('off');
     }
 
     this._board = null;
@@ -115,11 +163,119 @@ export class SimulationService {
     this.workModeService.setSimulationMode(false);
   }
 
+  /** Starts running in the selected mode; the ticker renders continuously. */
+  public play(): void {
+    if (this._state() !== 'ready') {
+      return;
+    }
+    this._state.set('running');
+    this._project?.triggerTicker('on');
+    this.workerService
+      .start(this._mode(), this._targetHz())
+      .catch((err: Error) => this._onRunControlError(err));
+  }
+
+  /** Interrupts the run; the engine state stays put for step/play. */
+  public pause(): void {
+    if (this._state() !== 'running') {
+      return;
+    }
+    this._state.set('ready');
+    this._project?.triggerTicker('off');
+    this.workerService.pause().catch((err: Error) => {
+      this._onRunControlError(err);
+    });
+  }
+
+  /** One engine tick while paused. */
+  public step(): void {
+    if (this._state() !== 'ready') {
+      return;
+    }
+    this.workerService.step().catch((err: Error) => {
+      this._onRunControlError(err);
+    });
+  }
+
+  /** Resets the simulation to tick 0 and clears all powered visuals. */
+  public stop(): void {
+    if (!this.isReady()) {
+      return;
+    }
+    if (this._state() === 'running') {
+      this._project?.triggerTicker('off');
+    }
+    this._state.set('ready');
+    this.workerService
+      .reset()
+      .then(() => {
+        this._applier?.reset();
+        if (this._project && !this._project.destroyed) {
+          for (const component of this._project.components) {
+            component.clearSimState();
+          }
+          this._project.triggerTicker('single');
+        }
+      })
+      .catch((err: Error) => this._onRunControlError(err));
+  }
+
+  public setTargetHz(hz: number): void {
+    const clamped = Math.max(1, Math.floor(hz) || 1);
+    if (clamped === this._targetHz()) {
+      return;
+    }
+    this._targetHz.set(clamped);
+    if (this._mode() === 'target') {
+      this._restartIfRunning();
+    }
+  }
+
+  public toggleTargetMode(): void {
+    this._mode.update((m) => (m === 'target' ? 'continuous' : 'target'));
+    this._restartIfRunning();
+  }
+
+  public toggleSyncMode(): void {
+    this._mode.update((m) => (m === 'sync' ? 'continuous' : 'sync'));
+    this._restartIfRunning();
+  }
+
+  /** Re-paces an active run after a mode or target-rate change. */
+  private _restartIfRunning(): void {
+    if (this._state() !== 'running') {
+      return;
+    }
+    this.workerService
+      .start(this._mode(), this._targetHz())
+      .catch((err: Error) => this._onRunControlError(err));
+  }
+
+  private _onRunControlError(err: Error): void {
+    if (!this.isReady()) {
+      return;
+    }
+    this.toastService.error(err.message);
+    if (this._state() === 'running') {
+      this._state.set('ready');
+      this._project?.triggerTicker('off');
+    }
+  }
+
   private _onUserInput(component: Component): void {
+    const boardIndex = this._board?.userInputs.get(component.id);
     if (component instanceof LeverComponent) {
       component.toggle();
+      if (boardIndex !== undefined) {
+        this.workerService.triggerInput(boardIndex, INPUT_EVENT_CONT, [
+          component.isOn
+        ]);
+      }
     } else if (component instanceof ButtonComponent) {
       component.setPressed(true);
+      if (boardIndex !== undefined) {
+        this.workerService.triggerInput(boardIndex, INPUT_EVENT_PULSE, [true]);
+      }
       setTimeout(() => {
         if (!component.destroyed) {
           component.setPressed(false);
@@ -127,7 +283,6 @@ export class SimulationService {
         }
       }, BUTTON_FLASH_MS);
     }
-    // Worker phase: forward triggerInput via this._board.userInputs here.
     this._project?.triggerTicker('single');
   }
 }

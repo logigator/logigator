@@ -3,6 +3,7 @@ import 'pixi.js/math-extras';
 import {
   ChangeDetectionStrategy,
   Component,
+  computed,
   inject,
   Injector,
   signal
@@ -23,6 +24,8 @@ import { PersistenceService } from './persistence/persistence.service';
 import { UnsavedChangesGuard } from './persistence/unsaved-changes.guard';
 import { ConfirmPopup } from 'primeng/confirmpopup';
 import { Toast } from 'primeng/toast';
+import { WorkMode } from './work-mode/work-mode.enum';
+import { WorkModeService } from './work-mode/work-mode.service';
 
 @Component({
   selector: 'app-root',
@@ -48,8 +51,13 @@ export class AppComponent {
   protected readonly projectService = inject(ProjectService);
   private readonly unsavedChangesGuard = inject(UnsavedChangesGuard);
   private readonly location = inject(Location);
+  private readonly workModeService = inject(WorkModeService);
 
   protected readonly cursorPosition = signal<Point>(new Point(0, 0));
+
+  public readonly isSimulation = computed(
+    () => this.workModeService.mode() === WorkMode.SIMULATION
+  );
 
   constructor() {
     setStaticDIInjector(this.injector);

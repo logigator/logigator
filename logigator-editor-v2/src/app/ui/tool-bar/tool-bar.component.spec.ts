@@ -56,7 +56,8 @@ describe('ToolBarComponent', () => {
     expect(el.querySelector('.ph-line-segment')).toBeNull(); // tools hidden
     expect(el.querySelector('.ph-trash')).toBeNull(); // delete hidden
 
-    // Run controls stay inert until the worker phase.
+    // Run controls stay disabled until the worker session reports ready —
+    // here no session was started, so they render inert.
     const playButton = el
       .querySelector('.ph-play')
       ?.closest('button') as HTMLButtonElement;

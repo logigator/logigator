@@ -2,7 +2,9 @@
 <app-title-bar></app-title-bar>
 <app-tool-bar class="border-b border-white/20"></app-tool-bar>
 <div class="flex grow">
-  <app-side-bar class="w-80 border-r border-white/20"></app-side-bar>
+  @if (!isSimulation()) {
+    <app-side-bar class="w-80 border-r border-white/20"></app-side-bar>
+  }
   <div class="grow flex flex-col">
     <app-tab-bar></app-tab-bar>
     <div class="relative grow">
