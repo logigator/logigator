@@ -360,11 +360,26 @@ Angular `Injectable` (root-provided). Registers the Roboto woff2 font with PixiJ
 
 `BoardComponent` (`ui/board/board.component.ts`) is the Angular host. It:
 
-1. Awaits `AssetsService.init()`.
-2. Creates `Application` with `autoStart: false`, `preference: 'webgpu'`, `resolution: devicePixelRatio`.
-3. Sets `app.stage = project` when a `Project` input arrives.
-4. Subscribes to `project.ticker$` and translates `'single'`/`'on'`/`'off'` into `app.ticker.update()` / `.start()` / `.stop()`.
-5. Forwards renderer resize events to `project.resizeViewport`.
+1. Registers `CullerPlugin` (`extensions.add` at module load — see [Culling](#culling)).
+2. Awaits `AssetsService.init()`.
+3. Creates `Application` with `autoStart: false`, `preference: 'webgpu'`, `resolution: devicePixelRatio`.
+4. Sets `app.stage = project` when a `Project` input arrives.
+5. Subscribes to `project.ticker$` and translates `'single'`/`'on'`/`'off'` into `app.ticker.update()` / `.start()` / `.stop()`.
+6. Forwards renderer resize events to `project.resizeViewport`.
+
+### Culling
+
+Off-screen scene nodes are skipped at render time via PixiJS's native `CullerPlugin`. The plugin patches `app.render` to run `Culler.shared.cull(stage, renderer.screen)` before each render; because it has a higher extension priority (10) than `TickerPlugin` (which captures the `app.render` reference at init), the cull pass runs on every ticker-driven render — including the demand-driven `'single'` frames. No extra render scheduling is needed: pan/zoom already re-render, so the cull rect stays current.
+
+What is marked `cullable`:
+
+- **Each `QuadTreeEntry`** — `cullable` with `cullArea` set to its grid-unit region. The Culler tests the branch against the viewport with a single transformed-rectangle intersection (no child-bounds walk). Crucially, when a node is `culled` the Culler **stops recursing into its subtree** (`Culler._cullRecursive`), so an off-screen branch costs one rect test and skips everything under it. This is what makes culling sublinear — the quad tree partitions space and the native Culler prunes whole branches.
+- **`Component` and `Wire`** — `cullable` with no `cullArea`, so the Culler falls back to global bounds (correct under rotation, where `gridBounds` is in parent space rather than the element's local space). This only runs for elements inside an on-screen branch (culled branches stop the recursion first), and it catches long wires / large components parked in a high-level node's `branchItems`.
+- **`Grid`** sets `cullableChildren = false`: its chunks are repositioned every frame to fill the viewport, so they are always on-screen and never worth a per-chunk bounds check.
+
+`ConnectionPointLayer` dots are not currently culled (a flat layer with no spatial index would cost an O(n) bounds check per dot with no subtree pruning).
+
+Culling sets only the PixiJS `culled` flag and never touches the quad tree's own arrays, so `queryRange` and all collision/connection-point logic are unaffected.
 
 ### Work-mode integration
 
@@ -381,4 +396,4 @@ Angular `Injectable` (root-provided). Registers the Roboto woff2 font with PixiJ
 - **Scale-compensated stroke widths** — `ComponentGraphics` bakes `2 / scale` into its stroke width; `GridGraphics` uses `1 / scale` for dot size; `Wire.applyScale` sets `scale.y = 1 / (scale * gridSize)`. `Component` handles the `gridSize` factor via its `_visualSpace` counter-scaling; `Wire` extends `Graphics` directly and must compensate explicitly. On zoom, `Component.applyScale` swaps each scaled element to its correctly-scaled (shared, cached) `GraphicsContext` and updates stub/text scale **in place** — it never rebuilds the component or re-rasterizes a `Text`, so zoom stays cheap on large circuits (see `component-system.md`, "Build vs. rescale").
 - **`_visualSpace` counter-scaling** — `Component` owns a child `_visualSpace` with `scale = 1/gridSize`. Visual geometry (chamfers, stroke widths, text) is authored in pixels inside `_visualSpace`; the two scalings (`_gridSpace × gridSize` and `_visualSpace × 1/gridSize`) cancel so existing pixel formulas remain valid.
 - **Quad tree uses `gridBounds`** — `QuadTreeContainer` never calls PixiJS `getBounds()`. It reads `element.gridBounds` (a plain `Rectangle` in grid units) for all spatial decisions. This avoids scene-graph traversal and makes collision detection integer-exact.
-- **Quad tree as PixiJS Container** — `QuadTreeContainer` and its internal `QuadTreeEntry` nodes are real PixiJS `Container` instances in the scene graph. Children keep their world coordinates because all entries sit at position `(0, 0)`; only `boundsArea` encodes the spatial region. This means the tree structure is visible to PixiJS culling and bounds computation without any separate data mirror.
+- **Quad tree as PixiJS Container** — `QuadTreeContainer` and its internal `QuadTreeEntry` nodes are real PixiJS `Container` instances in the scene graph. Children keep their world coordinates because all entries sit at position `(0, 0)`; only `boundsArea` encodes the spatial region. The same region is reused as each entry's `cullArea`, so the native Culler prunes off-screen branches wholesale (see [Culling](#culling)) — the tree doubles as both the spatial index for queries and the cull hierarchy, with no separate data mirror.

@@ -11,8 +11,15 @@ class QuadTreeEntry<T extends GridElement> extends Container {
   // x, y, size encode the spatial region via boundsArea.
   // The container itself always sits at position (0, 0) so that elements
   // reparented between entries never shift their world coordinates.
+  //
+  // The same region also drives native culling: cullArea (in grid units, the
+  // entry's local space) lets PixiJS's Culler test the branch against the
+  // viewport via a single transformed-rect intersection. When the branch is
+  // off-screen its whole subtree is skipped — the quad tree makes culling
+  // sublinear without any per-element work for hidden regions.
   constructor(x: number, y: number, size: number) {
-    super({ boundsArea: new Rectangle(x, y, size, size) });
+    const region = new Rectangle(x, y, size, size);
+    super({ boundsArea: region, cullable: true, cullArea: region });
   }
 
   get size() {

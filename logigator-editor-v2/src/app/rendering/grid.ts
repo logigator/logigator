@@ -18,6 +18,9 @@ export class Grid extends Container {
     super();
 
     this.interactiveChildren = false;
+    // Grid chunks are repositioned every frame to fill the viewport, so they are
+    // always on-screen — skip the Culler's per-chunk bounds checks.
+    this.cullableChildren = false;
 
     this.boundsArea = new Rectangle(
       -Number.MAX_VALUE / 2,
@@ -45,11 +48,8 @@ export class Grid extends Container {
   }
 
   public updateScale(scale: number) {
-    for (const child of this.children) {
-      child.destroy({ children: true });
-    }
-    this.removeChildren(0);
-
+    // Chunks are reused across scales — draw() swaps each one's context to the
+    // new-scale geometry rather than destroying and recreating the whole set.
     this._elScale = scale;
     this.updatePosition(this._elPosition);
     this.draw();
@@ -70,13 +70,16 @@ export class Grid extends Container {
     let i = 0;
     for (let x = 0; x <= viewportScaled.x; x += this._chunkSizePx) {
       for (let y = 0; y <= viewportScaled.y; y += this._chunkSizePx, ++i) {
-        if (this.children.length <= i) {
-          const child = new Graphics(geometry);
-          child.position.set(x, y);
+        let child = this.children[i] as Graphics | undefined;
+        if (!child) {
+          child = new Graphics(geometry);
           this.addChild(child);
-        } else {
-          this.children[i].position.set(x, y);
+        } else if (child.context !== geometry) {
+          // Reused from a previous scale: swap to the current-scale geometry.
+          // Pure pan/resize keeps the same context, so this is a no-op then.
+          child.context = geometry;
         }
+        child.position.set(x, y);
       }
     }
 

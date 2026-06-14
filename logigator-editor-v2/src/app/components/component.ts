@@ -119,6 +119,7 @@ export abstract class Component<
     super();
 
     this.interactiveChildren = false;
+    this.cullableChildren = false;
     this._id = Component._idAllocator.next();
 
     this.numInputs = numInputs;

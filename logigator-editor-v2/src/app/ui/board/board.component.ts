@@ -11,13 +11,19 @@ import {
   signal,
   ViewChild
 } from '@angular/core';
-import { Application, Point } from 'pixi.js';
+import { Application, CullerPlugin, extensions, Point } from 'pixi.js';
 import { ThemingService } from '../../theming/theming.service';
 import { Project } from '../../project/project';
 import { AssetsService } from '../../rendering/assets.service';
 import { filter, merge, Subject, takeUntil, throttleTime } from 'rxjs';
 import { WorkModeService } from '../../work-mode/work-mode.service';
 import { environment } from '../../../environments/environment';
+
+// Off-screen scene nodes (quad-tree branches, components, wires) are skipped at
+// render time when marked `cullable`. CullerPlugin (priority 10) initialises
+// before TickerPlugin (which captures `app.render` by reference), so the cull
+// pass runs on every ticker-driven render. Added once at module load.
+extensions.add(CullerPlugin);
 
 @Component({
   selector: 'app-board',
@@ -152,7 +158,13 @@ export class BoardComponent implements OnInit, OnDestroy {
       backgroundColor: this.themingService.currentTheme().background,
       resolution: window.devicePixelRatio || 1,
       autoDensity: true,
-      autoStart: false
+      autoStart: false,
+      // Recompute transforms during the cull pass. The Culler runs before the
+      // render, so by default it reads each node's stale (previous-frame)
+      // worldTransform — after a pan/zoom the newly-revealed edge elements
+      // would be culled until the next render. updateTransform keeps culling
+      // in step with the current viewport.
+      culler: { updateTransform: true }
     });
 
     this.app.renderer.on('resize', (w, h) => {

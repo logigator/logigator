@@ -94,6 +94,9 @@ export class Wire extends Graphics implements Connectable {
     super();
 
     this.interactiveChildren = false;
+    // Skipped at render time when off-screen; see Component for the no-cullArea
+    // rationale. Catches long wires parked in a high-level branch's branchItems.
+    this.cullable = true;
     this.context =
       this.graphicsProviderService.getGraphicsContext(WireGraphics);
 
