@@ -17,6 +17,7 @@ import { Project } from '../../project/project';
 import { AssetsService } from '../../rendering/assets.service';
 import { filter, merge, Subject, takeUntil, throttleTime } from 'rxjs';
 import { WorkModeService } from '../../work-mode/work-mode.service';
+import { BoardRenderScheduler } from '../../rendering/board-render-scheduler';
 import { environment } from '../../../environments/environment';
 
 // Off-screen scene nodes (quad-tree branches, components, wires) are skipped at
@@ -55,6 +56,7 @@ export class BoardComponent implements OnInit, OnDestroy {
   private appInitialized = false;
   private fpsInterval: ReturnType<typeof setInterval> | null = null;
   private _pointerInsideCanvas = false;
+  private _renderScheduler: BoardRenderScheduler | null = null;
 
   constructor() {
     this.projectChange$.pipe(takeUntil(this.destroy$)).subscribe((project) => {
@@ -88,35 +90,10 @@ export class BoardComponent implements OnInit, OnDestroy {
           this.cursorPositionChange.emit(pos);
         });
 
-      // The continuous ticker is reference-counted: any number of concerns
-      // (a simulation run, a pan, a drag session) can hold it on at once, and
-      // it stops only once the last one releases. Without this, a transient
-      // interaction's 'off' (e.g. finishing a pan) would stop the ticker a
-      // running simulation still needs. Reset per project (fresh closure).
-      let runDepth = 0;
-      project.ticker$
-        .pipe(takeUntil(merge(this.destroy$, this.projectChange$)))
-        .subscribe((value) => {
-          switch (value) {
-            case 'single':
-              // Already rendering every frame while a run holds the ticker.
-              if (runDepth === 0) {
-                this.app.ticker.update();
-              }
-              break;
-            case 'on':
-              runDepth++;
-              this.app.ticker.start();
-              break;
-            case 'off':
-              runDepth = Math.max(0, runDepth - 1);
-              if (runDepth === 0) {
-                this.app.ticker.update();
-                this.app.ticker.stop();
-              }
-              break;
-          }
-        });
+      // One scheduler per project; drop the previous so its run-count and any
+      // queued frame don't leak across stages.
+      this._renderScheduler?.destroy();
+      this._renderScheduler = new BoardRenderScheduler(this.app, project.ticker$);
     });
 
     effect(() => {
@@ -188,6 +165,7 @@ export class BoardComponent implements OnInit, OnDestroy {
 
   ngOnDestroy(): void {
     this.destroy$.next();
+    this._renderScheduler?.destroy();
     if (this.fpsInterval !== null) {
       clearInterval(this.fpsInterval);
     }

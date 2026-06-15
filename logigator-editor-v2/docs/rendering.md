@@ -7,6 +7,7 @@ The rendering layer owns the PixiJS scene graph structure, viewport interaction,
 ```
 src/app/rendering/
 ├── assets.service.ts               # PixiJS Assets bootstrap (fonts)
+├── board-render-scheduler.ts       # Translates project ticker signals into Application renders
 ├── drag-collision.ts               # Shared collision detection for drag sessions
 ├── drag-session.ts                 # DragSession interface implemented by all session classes
 ├── floating-layer.ts               # Transient placement/wire-drawing/selection/paste overlay
@@ -37,7 +38,7 @@ All circuit data is stored in **grid units**. The `_gridSpace` container in `Pro
 
 ### Ticker control
 
-The PixiJS `Application` is created with `autoStart: false` in `BoardComponent`. Rendering frames are emitted on demand via the `_ticker$` Subject exposed as `ticker$` on `InteractionContainer`. Three signal values control the ticker: `'single'` fires one frame (for state changes that don't involve continuous motion), `'on'` starts continuous rendering (during pointer drags), and `'off'` fires one final frame then stops.
+The PixiJS `Application` is created with `autoStart: false` in `BoardComponent`. Rendering frames are emitted on demand via the `_ticker$` Subject exposed as `ticker$` on `InteractionContainer`. Three signal values control the ticker: `'single'` fires one frame (for state changes that don't involve continuous motion), `'on'` starts continuous rendering (during pointer drags), and `'off'` fires one final frame then stops. `BoardRenderScheduler` (see below) consumes these signals and turns them into renders.
 
 ### Scene graph order inside `Project`
 
@@ -76,6 +77,26 @@ Event binding:
 Context menu suppression: a `window` `contextmenu` listener (via RxJS `fromEvent`) is activated during right-drag and cleared 1 ms after `rightup` to eat the browser context menu that fires after right-click without drag.
 
 `ticker$` (public Observable) exposes the internal `_ticker$` Subject to consumers (e.g., `BoardComponent`).
+
+---
+
+## `BoardRenderScheduler`
+
+**File:** `board-render-scheduler.ts`
+
+Translates a project's `ticker$` signals into renders of the board's PixiJS `Application`. `BoardComponent` constructs one per project (passing `this.app` and `project.ticker$`) and `destroy()`s it on project switch and on component teardown, so a project's run-count and any queued frame never leak across stages.
+
+| Signal     | Effect                                                                                              |
+| ---------- | --------------------------------------------------------------------------------------------------- |
+| `'on'`     | Increments the run-count and `app.ticker.start()` — continuous rendering.                            |
+| `'off'`    | Decrements; at zero, cancels any queued single frame, fires one final `app.ticker.update()`, stops. |
+| `'single'` | While the run-count is zero, schedules one render (see coalescing below); otherwise a no-op.         |
+
+**Reference-counted run-count** — any number of concerns (a simulation run, a pan, a drag session) can hold the continuous ticker on at once via `'on'`/`'off'`; it stops only once the last one releases. Without this, a transient interaction's `'off'` (e.g. finishing a pan) would stop the ticker a running simulation still needs. While the run-count is non-zero the board already renders every frame, so `'single'` signals are ignored.
+
+**`'single'` coalescing** — a single user operation can emit many `'single'` signals synchronously (e.g. undoing a move re-positions N elements, each calling `triggerTicker('single')`); rendering once per signal would do N full-board renders for one frame's worth of change. The scheduler collapses them onto **one** `requestAnimationFrame`-driven render: the first `'single'` queues a frame, subsequent ones are no-ops until it fires, and the rAF callback re-checks the run-count (a run may have started while it was queued, in which case it already renders). The result is that we never draw more frames than the display can show, regardless of signal count — while preserving the stop-when-idle property (no always-running rAF loop).
+
+> Renders are therefore deferred to the next animation frame (≤ ~16 ms) rather than fully synchronous. For an interactive editor this is imperceptible, but code must not assume the canvas is visually up-to-date in the same synchronous tick as a `'single'` emit.
 
 ---
 
@@ -346,6 +367,7 @@ Angular `Injectable` (root-provided). Registers the Roboto woff2 font with PixiJ
 | Rendering class           | Consumed by                                                | How                                                                              |
 | ------------------------- | ---------------------------------------------------------- | -------------------------------------------------------------------------------- |
 | `InteractionContainer`    | `Project`                                                  | Extends it; provides `_ticker$` and pan/zoom hooks                               |
+| `BoardRenderScheduler`    | `BoardComponent`                                           | One per project; turns `project.ticker$` signals into `Application` renders       |
 | `Grid`                    | `Project`                                                  | Instantiated privately; forwarded position/scale changes                         |
 | `FloatingLayer`           | `Project`, `ClipboardService` (via `Project`)              | Instantiated privately; receives `_ticker$`; commits via `project.actionManager` |
 | `DragCollisionState`      | `PastePlacementSession`, `SelectionMoveSession`            | Shared component+wire collision detection against the project's quad trees       |
@@ -364,7 +386,7 @@ Angular `Injectable` (root-provided). Registers the Roboto woff2 font with PixiJ
 2. Awaits `AssetsService.init()`.
 3. Creates `Application` with `autoStart: false`, `preference: 'webgpu'`, `resolution: devicePixelRatio`.
 4. Sets `app.stage = project` when a `Project` input arrives.
-5. Subscribes to `project.ticker$` and translates `'single'`/`'on'`/`'off'` into `app.ticker.update()` / `.start()` / `.stop()`.
+5. Creates a `BoardRenderScheduler` per project (over `project.ticker$`) that translates `'single'`/`'on'`/`'off'` into `app.ticker.update()` / `.start()` / `.stop()`.
 6. Forwards renderer resize events to `project.resizeViewport`.
 
 ### Culling
@@ -393,7 +415,7 @@ Culling sets only the PixiJS `culled` flag and never touches the quad tree's own
 - **`GraphicsContext` sharing** — all geometry is defined once and shared. `Graphics` instances are lightweight wrappers that apply a transform on top of a shared context. This is the PixiJS v8 equivalent of v7 `PIXI.Texture` sharing.
 - **`boundsArea` for infinite containers** — `FloatingLayer`, `InteractionContainer` (via `Project`), and `Grid` all set `boundsArea` to the full coordinate range. This prevents PixiJS from computing tight bounds from children and makes the container always receive hit tests.
 - **`eventMode: 'static'`** — used on containers that need pointer events but whose children do not (`interactiveChildren = false`). Reduces the event walk cost during each pointer event.
-- **Demand-driven render loop** — the ticker is stopped between interactions. `'single'` renders one frame for state changes (add/remove element); `'on'`/`'off'` bracket continuous drags. This avoids burning GPU cycles at 60 fps when the canvas is idle.
+- **Demand-driven render loop** — the ticker is stopped between interactions. `'single'` renders one frame for state changes (add/remove element); `'on'`/`'off'` bracket continuous drags. This avoids burning GPU cycles at 60 fps when the canvas is idle. `BoardRenderScheduler` coalesces bursts of `'single'` signals onto a single rAF-driven render so a multi-element operation (undo of a large move, paste, delete) costs one frame, not one per element.
 - **Scale-compensated stroke widths** — `ComponentGraphics` bakes `2 / scale` into its stroke width; `GridGraphics` uses `1 / scale` for dot size; `Wire.applyScale` sets `scale.y = 1 / (scale * gridSize)`. `Component` handles the `gridSize` factor via its `_visualSpace` counter-scaling; `Wire` extends `Graphics` directly and must compensate explicitly. On zoom, `Component.applyScale` swaps each scaled element to its correctly-scaled (shared, cached) `GraphicsContext` and updates stub/text scale **in place** — it never rebuilds the component or re-rasterizes a `Text`, so zoom stays cheap on large circuits (see `component-system.md`, "Build vs. rescale").
 - **`_visualSpace` counter-scaling** — `Component` owns a child `_visualSpace` with `scale = 1/gridSize`. Visual geometry (chamfers, stroke widths, text) is authored in pixels inside `_visualSpace`; the two scalings (`_gridSpace × gridSize` and `_visualSpace × 1/gridSize`) cancel so existing pixel formulas remain valid.
 - **Quad tree uses `gridBounds`** — `QuadTreeContainer` never calls PixiJS `getBounds()`. It reads `element.gridBounds` (a plain `Rectangle` in grid units) for all spatial decisions. This avoids scene-graph traversal and makes collision detection integer-exact.
