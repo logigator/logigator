@@ -7,7 +7,7 @@ circuit is locked for editing.
 
 The engine itself is the external [`@logigator/sim`](https://www.npmjs.com/package/@logigator/sim)
 npm package (a separate repo, Rust → WASM via wasm-bindgen). This package only
-*drives* it.
+_drives_ it.
 
 ## Directory Layout
 

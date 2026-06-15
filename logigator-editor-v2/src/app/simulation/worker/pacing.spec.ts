@@ -1,9 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import {
-  nextPaceDelayMs,
-  PACE_INTERVAL_MS,
-  ticksDue
-} from './pacing';
+import { nextPaceDelayMs, PACE_INTERVAL_MS, ticksDue } from './pacing';
 
 describe('pacing', () => {
   describe('ticksDue', () => {
