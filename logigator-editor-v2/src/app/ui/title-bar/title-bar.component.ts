@@ -12,7 +12,7 @@ import { LoggingService } from '../../logging/logging.service';
 import { NgOptimizedImage } from '@angular/common';
 import { TranslocoService } from '@jsverse/transloco';
 import { toSignal } from '@angular/core/rxjs-interop';
-import { HashedPipe } from '../../hashing/hashed.pipe';
+import logoUrl from '@assets/logo.svg';
 import { PersistenceService } from '../../persistence/persistence.service';
 import { ProjectService } from '../../project/project.service';
 import { DialogService } from 'primeng/dynamicdialog';
@@ -34,7 +34,6 @@ import { ProjectMetadataStore } from '../../persistence/project-metadata.store';
   imports: [
     MenubarModule,
     NgOptimizedImage,
-    HashedPipe,
     Ripple,
     ShortcutDisplayComponent,
     UserSettingsComponent
@@ -52,6 +51,8 @@ export class TitleBarComponent {
   private readonly dialogService = inject(DialogService);
   private readonly clipboardService = inject(ClipboardService);
   private readonly shortcutService = inject(ShortcutService);
+
+  protected readonly logoUrl = logoUrl;
 
   protected items: Signal<MenuItem[]>;
 

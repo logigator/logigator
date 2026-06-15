@@ -1,18 +1,16 @@
-import { inject, Injectable } from '@angular/core';
+import { Injectable } from '@angular/core';
 import { Assets } from 'pixi.js';
-import { HashingService } from '../hashing/hashing.service';
+import robotoUrl from '@assets/roboto-regular-webfont.woff2';
 
 @Injectable({
   providedIn: 'root'
 })
 export class AssetsService {
-  private readonly hashingService = inject(HashingService);
-
   constructor() {
     if (!Assets.resolver.hasKey('Roboto')) {
       Assets.add({
         alias: 'Roboto',
-        src: this.hashingService.hashUrl('fonts/roboto-regular-webfont.woff2')
+        src: robotoUrl
       });
     }
   }

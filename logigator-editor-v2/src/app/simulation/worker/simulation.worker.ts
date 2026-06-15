@@ -12,11 +12,7 @@ import {
   packSnapshot,
   WorkerToMainMessage
 } from './protocol';
-
-// `?url` makes the bundler emit the .wasm as an asset and return its URL,
-// instead of attempting to ESM-instantiate it
-// @ts-expect-error Wasm module not recognized by TS
-import wasmUrl from '@logigator/sim/wasm/sim_wasm_bg.wasm?url';
+import wasmUrl from '@logigator/sim/wasm/sim_wasm_bg.wasm';
 
 const postMessage = self.postMessage as (
   message: WorkerToMainMessage,

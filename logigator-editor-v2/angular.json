@@ -31,7 +31,9 @@
               }
             ],
             "loader": {
-              ".wasm": "file"
+              ".wasm": "file",
+              ".svg": "file",
+              ".woff2": "file"
             },
             "styles": ["src/tailwind.css", "src/styles.scss"],
             "scripts": [],
