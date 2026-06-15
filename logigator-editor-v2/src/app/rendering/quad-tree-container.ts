@@ -17,9 +17,16 @@ class QuadTreeEntry<T extends GridElement> extends Container {
   // viewport via a single transformed-rect intersection. When the branch is
   // off-screen its whole subtree is skipped — the quad tree makes culling
   // sublinear without any per-element work for hidden regions.
+  //
+  // Culling stops at the entry level: the element containers are marked
+  // cullableChildren = false, so the Culler never descends to individual
+  // components/wires. An on-screen entry renders all its elements; an
+  // off-screen entry is culled whole. No element is ever bounds-checked.
   constructor(x: number, y: number, size: number) {
     const region = new Rectangle(x, y, size, size);
     super({ boundsArea: region, cullable: true, cullArea: region });
+    this.branchItems.cullableChildren = false;
+    this.leafItems!.cullableChildren = false;
   }
 
   get size() {
@@ -298,7 +305,10 @@ export class QuadTreeContainer<T extends GridElement> extends Container {
     }
 
     if (childrenCount < QuadTreeContainer.MIN_BRANCH_ELEMENTS) {
-      entry.leafItems = entry.addChild(new Container<T>());
+      const leaf = new Container<T>();
+      // Cull at the entry level only — never descend to the elements.
+      leaf.cullableChildren = false;
+      entry.leafItems = entry.addChild(leaf);
 
       for (const child of Object.values(entry.branches)) {
         for (const element of [...child.branchItems.children]) {

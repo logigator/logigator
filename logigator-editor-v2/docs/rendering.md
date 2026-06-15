@@ -110,7 +110,7 @@ Renders an infinite-looking dot grid by tiling fixed-size `Graphics` chunks. Chu
 
 The pivot is set to `chunkSizePx` so the offset math lands on chunk boundaries correctly.
 
-`updateScale` destroys and rebuilds all chunks because the `GraphicsContext` needs a different scale baked into its stroke widths (dots are `1/scale × 1/scale` pixels so they stay 1 screen pixel regardless of zoom). At zoom < 0.25 the dot alpha is reduced to 0.5.
+`updateScale` reuses the existing chunks, swapping each one's `GraphicsContext` to the new-scale geometry (the context bakes a different scale into its stroke widths — dots are `1/scale × 1/scale` pixels so they stay 1 screen pixel regardless of zoom) rather than destroying and rebuilding the whole set. At zoom < 0.25 the dot alpha is reduced to 0.5.
 
 **API:**
 
@@ -369,15 +369,16 @@ Angular `Injectable` (root-provided). Registers the Roboto woff2 font with PixiJ
 
 ### Culling
 
-Off-screen scene nodes are skipped at render time via PixiJS's native `CullerPlugin`. The plugin patches `app.render` to run `Culler.shared.cull(stage, renderer.screen)` before each render; because it has a higher extension priority (10) than `TickerPlugin` (which captures the `app.render` reference at init), the cull pass runs on every ticker-driven render — including the demand-driven `'single'` frames. No extra render scheduling is needed: pan/zoom already re-render, so the cull rect stays current.
+Off-screen scene nodes are skipped at render time via PixiJS's native `CullerPlugin`. The plugin patches `app.render` to run `Culler.shared.cull(stage, renderer.screen)` before each render; because it has a higher extension priority (10) than `TickerPlugin` (which captures the `app.render` reference at init), the cull pass runs on every ticker-driven render — including the demand-driven `'single'` frames. No extra render scheduling is needed: pan/zoom already re-render, so the cull rect stays current. `culler: { updateTransform: true }` is set in `app.init` so the cull pass recomputes transforms; otherwise it reads each node's previous-frame `worldTransform` and would drop the edge elements a pan/zoom just revealed until the next render.
 
-What is marked `cullable`:
+**Culling happens only at the quad-tree level — individual elements are never bounds-checked:**
 
-- **Each `QuadTreeEntry`** — `cullable` with `cullArea` set to its grid-unit region. The Culler tests the branch against the viewport with a single transformed-rectangle intersection (no child-bounds walk). Crucially, when a node is `culled` the Culler **stops recursing into its subtree** (`Culler._cullRecursive`), so an off-screen branch costs one rect test and skips everything under it. This is what makes culling sublinear — the quad tree partitions space and the native Culler prunes whole branches.
-- **`Component` and `Wire`** — `cullable` with no `cullArea`, so the Culler falls back to global bounds (correct under rotation, where `gridBounds` is in parent space rather than the element's local space). This only runs for elements inside an on-screen branch (culled branches stop the recursion first), and it catches long wires / large components parked in a high-level node's `branchItems`.
-- **`Grid`** sets `cullableChildren = false`: its chunks are repositioned every frame to fill the viewport, so they are always on-screen and never worth a per-chunk bounds check.
+- **Each `QuadTreeEntry`** — `cullable` with `cullArea` set to its grid-unit region. The Culler tests the branch against the viewport with a single transformed-rectangle intersection (no child-bounds walk). When a node is `culled` the Culler **stops recursing into its subtree** (`Culler._cullRecursive`), so an off-screen branch costs one rect test and skips everything under it. This is what makes culling sublinear — the quad tree partitions space and the native Culler prunes whole branches.
+- **An entry's element containers** (`branchItems`, `leafItems`) set `cullableChildren = false`, so the Culler stops at the entry and never descends to the individual `Component`/`Wire` nodes. An on-screen entry renders all its elements; an off-screen entry is culled whole. The components and wires themselves carry no culling config (their `culled` flag stays `false` and the render pipeline skips them via their culled ancestor entry). This keeps the per-frame cull cost proportional to the number of visible _branches_, not visible _elements_.
+- **`Grid`** sets `cullableChildren = false`: its chunks are repositioned every frame to fill the viewport, so they are always on-screen and never worth visiting.
+- **`Component`** also keeps `cullableChildren = false` so that while detached into `_dragLayer` (outside the quad tree) the Culler does not recurse into its body/stub/label graphics.
 
-`ConnectionPointLayer` dots are not currently culled (a flat layer with no spatial index would cost an O(n) bounds check per dot with no subtree pruning).
+`ConnectionPointLayer` dots are not culled (a flat layer with no spatial index would cost an O(n) bounds check per dot with no subtree pruning).
 
 Culling sets only the PixiJS `culled` flag and never touches the quad tree's own arrays, so `queryRange` and all collision/connection-point logic are unaffected.
 
