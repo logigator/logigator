@@ -13,6 +13,7 @@ import { MenuItem } from 'primeng/api';
 import { ThemeSwitcherComponent } from '../../theming/theme-switcher/theme-switcher.component';
 import { LanguageSwitcherComponent } from '../../translation/language-switcher/language-switcher.component';
 import { UserService } from '../../user/user.service';
+import { SettingsComponent } from '../../settings/settings.component';
 
 @Component({
   selector: 'app-user-settings',
@@ -22,7 +23,8 @@ import { UserService } from '../../user/user.service';
     MenuModule,
     Ripple,
     ThemeSwitcherComponent,
-    LanguageSwitcherComponent
+    LanguageSwitcherComponent,
+    SettingsComponent
   ],
   templateUrl: './user-settings.component.html',
   changeDetection: ChangeDetectionStrategy.OnPush

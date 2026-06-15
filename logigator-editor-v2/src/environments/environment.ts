@@ -7,7 +7,6 @@ export const environment: Environment = {
     showGridBorders: false,
     showHitboxes: false,
     showOrigins: false,
-    showConnectionPoints: false,
-    fpsCounter: false
+    showConnectionPoints: false
   }
 };

@@ -7,6 +7,11 @@ const en = {
     save: 'Save',
     cancel: 'Cancel'
   },
+  settings: {
+    options: {
+      fpsCounter: 'FPS Counter'
+    }
+  },
   components: {
     category: {
       hidden: 'Hidden',

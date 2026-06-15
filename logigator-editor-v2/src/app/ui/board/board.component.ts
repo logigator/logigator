@@ -11,14 +11,15 @@ import {
   signal,
   ViewChild
 } from '@angular/core';
-import { Application, CullerPlugin, extensions, Point } from 'pixi.js';
+import { Application, CullerPlugin, extensions, Point, Ticker } from 'pixi.js';
 import { ThemingService } from '../../theming/theming.service';
 import { Project } from '../../project/project';
 import { AssetsService } from '../../rendering/assets.service';
 import { filter, merge, Subject, takeUntil, throttleTime } from 'rxjs';
 import { WorkModeService } from '../../work-mode/work-mode.service';
 import { TickerScheduler } from '../../rendering/ticker-scheduler';
-import { environment } from '../../../environments/environment';
+import { EditorSettingsService } from '../../settings/editor-settings.service';
+import { FpsCounterComponent } from './fps-counter/fps-counter.component';
 
 // Off-screen scene nodes (quad-tree branches, components, wires) are skipped at
 // render time when marked `cullable`. CullerPlugin (priority 10) initialises
@@ -28,7 +29,7 @@ extensions.add(CullerPlugin);
 
 @Component({
   selector: 'app-board',
-  imports: [],
+  imports: [FpsCounterComponent],
   templateUrl: './board.component.html',
   changeDetection: ChangeDetectionStrategy.OnPush,
   host: { class: 'relative' }
@@ -38,6 +39,7 @@ export class BoardComponent implements OnInit, OnDestroy {
   private readonly themingService = inject(ThemingService);
   private readonly assetsService = inject(AssetsService);
   private readonly workModeService = inject(WorkModeService);
+  protected readonly editorSettings = inject(EditorSettingsService);
 
   @ViewChild('canvas', { static: true })
   protected readonly canvas!: ElementRef<HTMLCanvasElement>;
@@ -47,18 +49,19 @@ export class BoardComponent implements OnInit, OnDestroy {
   public readonly project = input<Project | null>(null);
 
   protected readonly loaded = signal(false);
-  protected readonly fps = environment.debug.fpsCounter ? signal(0) : null;
 
   private readonly destroy$ = new Subject<void>();
   private readonly projectChange$ = new Subject<Project | null>();
 
   private readonly app: Application = new Application();
   private appInitialized = false;
-  private fpsInterval: ReturnType<typeof setInterval> | null = null;
-  private _frameCount = 0;
-  private _lastFpsSampleTime = 0;
   private _pointerInsideCanvas = false;
   private _renderScheduler: TickerScheduler | null = null;
+
+  /** The render loop's ticker; only valid once `loaded()` is true. */
+  protected get ticker(): Ticker {
+    return this.app.ticker;
+  }
 
   constructor() {
     this.projectChange$.pipe(takeUntil(this.destroy$)).subscribe((project) => {
@@ -157,41 +160,11 @@ export class BoardComponent implements OnInit, OnDestroy {
 
     this.appInitialized = true;
     this.loaded.set(true);
-
-    if (this.fps) {
-      // `ticker.FPS` is the instantaneous 1000/elapsedMS of the last frame,
-      // so on imperfect vsync it quantizes to the display grid (e.g. 144/72)
-      // rather than the true rate. Count frames over each sample window and
-      // divide by real elapsed time for an averaged, accurate reading. Only
-      // continuously-driven frames count; one-off `ticker.update()` renders
-      // (idle/single) run with `started === false` and are excluded so sparse
-      // renders don't read as a near-zero rate.
-      this._lastFpsSampleTime = performance.now();
-      this.app.ticker.add(this._countFrame);
-      this.fpsInterval = setInterval(() => {
-        const now = performance.now();
-        const elapsed = now - this._lastFpsSampleTime;
-        this._lastFpsSampleTime = now;
-        this.fps!.set(
-          elapsed > 0 ? Math.round((this._frameCount * 1000) / elapsed) : 0
-        );
-        this._frameCount = 0;
-      }, 500);
-    }
   }
-
-  private readonly _countFrame = (): void => {
-    if (this.app.ticker.started) {
-      this._frameCount++;
-    }
-  };
 
   ngOnDestroy(): void {
     this.destroy$.next();
     this._renderScheduler?.destroy();
-    if (this.fpsInterval !== null) {
-      clearInterval(this.fpsInterval);
-    }
     if (this.appInitialized) {
       this.app.destroy();
     }

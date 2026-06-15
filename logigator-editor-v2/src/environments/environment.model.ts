@@ -6,6 +6,5 @@ export interface Environment {
     showHitboxes: boolean;
     showOrigins: boolean;
     showConnectionPoints: boolean;
-    fpsCounter: boolean;
   };
 }
