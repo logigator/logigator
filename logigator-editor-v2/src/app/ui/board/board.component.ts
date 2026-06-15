@@ -17,7 +17,7 @@ import { Project } from '../../project/project';
 import { AssetsService } from '../../rendering/assets.service';
 import { filter, merge, Subject, takeUntil, throttleTime } from 'rxjs';
 import { WorkModeService } from '../../work-mode/work-mode.service';
-import { BoardRenderScheduler } from '../../rendering/board-render-scheduler';
+import { TickerScheduler } from '../../rendering/ticker-scheduler';
 import { environment } from '../../../environments/environment';
 
 // Off-screen scene nodes (quad-tree branches, components, wires) are skipped at
@@ -55,8 +55,10 @@ export class BoardComponent implements OnInit, OnDestroy {
   private readonly app: Application = new Application();
   private appInitialized = false;
   private fpsInterval: ReturnType<typeof setInterval> | null = null;
+  private _frameCount = 0;
+  private _lastFpsSampleTime = 0;
   private _pointerInsideCanvas = false;
-  private _renderScheduler: BoardRenderScheduler | null = null;
+  private _renderScheduler: TickerScheduler | null = null;
 
   constructor() {
     this.projectChange$.pipe(takeUntil(this.destroy$)).subscribe((project) => {
@@ -93,7 +95,7 @@ export class BoardComponent implements OnInit, OnDestroy {
       // One scheduler per project; drop the previous so its run-count and any
       // queued frame don't leak across stages.
       this._renderScheduler?.destroy();
-      this._renderScheduler = new BoardRenderScheduler(this.app, project.ticker$);
+      this._renderScheduler = new TickerScheduler(this.app.ticker, project.ticker$);
     });
 
     effect(() => {
@@ -157,11 +159,32 @@ export class BoardComponent implements OnInit, OnDestroy {
     this.loaded.set(true);
 
     if (this.fps) {
+      // `ticker.FPS` is the instantaneous 1000/elapsedMS of the last frame,
+      // so on imperfect vsync it quantizes to the display grid (e.g. 144/72)
+      // rather than the true rate. Count frames over each sample window and
+      // divide by real elapsed time for an averaged, accurate reading. Only
+      // continuously-driven frames count; one-off `ticker.update()` renders
+      // (idle/single) run with `started === false` and are excluded so sparse
+      // renders don't read as a near-zero rate.
+      this._lastFpsSampleTime = performance.now();
+      this.app.ticker.add(this._countFrame);
       this.fpsInterval = setInterval(() => {
-        this.fps!.set(Math.round(this.app.ticker.FPS));
+        const now = performance.now();
+        const elapsed = now - this._lastFpsSampleTime;
+        this._lastFpsSampleTime = now;
+        this.fps!.set(
+          elapsed > 0 ? Math.round((this._frameCount * 1000) / elapsed) : 0
+        );
+        this._frameCount = 0;
       }, 500);
     }
   }
+
+  private readonly _countFrame = (): void => {
+    if (this.app.ticker.started) {
+      this._frameCount++;
+    }
+  };
 
   ngOnDestroy(): void {
     this.destroy$.next();
