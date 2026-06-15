@@ -54,10 +54,10 @@ export class TextComponent extends Component<TextOptions> {
     );
     dot.pivot.set(0.5, 0.5);
     dot.position.set(0.5, 0.5);
-    // ConnectionPointGraphics is a 1×1 unit square; scale to SCREEN_SIZE_PX pixels
-    // expressed in grid units, divided by zoom scale to stay constant on screen.
+    // ConnectionPointGraphics is a 1×1 unit square; size it identically to a
+    // connection point (zoom-dependent screen px) expressed in grid units.
     this.onApplyScale((scale) =>
-      dot.scale.set((ConnectionPoint.SCREEN_SIZE_PX * PX) / scale)
+      dot.scale.set((ConnectionPoint.screenSizePxForScale(scale) * PX) / scale)
     );
     this.addChild(dot);
 

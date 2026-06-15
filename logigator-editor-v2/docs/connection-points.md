@@ -116,8 +116,10 @@ Extends PixiJS `Graphics`. Each instance:
 - compensates zoom + grid scale via `applyScale(scale)`, identical convention to `Wire`:
 
 ```
-scale.set(SCREEN_SIZE_PX / (scale * gridSize))   // SCREEN_SIZE_PX = 6
+scale.set(screenSizePxForScale(scale) / (scale * gridSize))
 ```
+
+The screen size is one of two fixed values: `SCREEN_SIZE_PX_SMALL` (4 px) when zoomed well out (`scale < SIZE_THRESHOLD_SCALE`, currently `0.5`) and `SCREEN_SIZE_PX_LARGE` (6 px) otherwise. `screenSizePxForScale(scale)` is a static helper so other dots (the text component's anchor dot) render at the same size.
 
 `ConnectionPoint` does **not** implement `GridElement`, is **not** in any quad tree, and is **not** interactive (`interactiveChildren = false`).
 

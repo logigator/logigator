@@ -5,7 +5,11 @@ import { ConnectionPointGraphics } from '../rendering/graphics/connection-point.
 import { environment } from '../../environments/environment';
 
 export class ConnectionPoint extends Graphics {
-  public static readonly SCREEN_SIZE_PX = 6;
+  // Connection points render at one of two fixed screen sizes: the smaller one
+  // when zoomed well out, the larger one otherwise.
+  public static readonly SCREEN_SIZE_PX_SMALL = 4;
+  public static readonly SCREEN_SIZE_PX_LARGE = 6;
+  public static readonly SIZE_THRESHOLD_SCALE = 0.5;
 
   private readonly _graphicsProviderService = getStaticDI(
     GraphicsProviderService
@@ -23,9 +27,18 @@ export class ConnectionPoint extends Graphics {
     this.pivot.set(0.5, 0.5);
   }
 
+  // Screen size in pixels at the given zoom scale: small when well zoomed out,
+  // large otherwise. Shared so other dots (e.g. the text anchor) render equal.
+  public static screenSizePxForScale(scale: number): number {
+    return scale < ConnectionPoint.SIZE_THRESHOLD_SCALE
+      ? ConnectionPoint.SCREEN_SIZE_PX_SMALL
+      : ConnectionPoint.SCREEN_SIZE_PX_LARGE;
+  }
+
   public applyScale(scale: number): void {
     const sizeInGridUnits =
-      ConnectionPoint.SCREEN_SIZE_PX / (scale * environment.gridSize);
+      ConnectionPoint.screenSizePxForScale(scale) /
+      (scale * environment.gridSize);
     this.scale.set(sizeInGridUnits);
   }
 }

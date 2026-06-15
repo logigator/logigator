@@ -317,7 +317,7 @@ No parameters.
 
 **File:** `graphics/connection-point.graphics.ts`
 
-A unit `1×1` rectangle filled with the current theme's wire color (CPs reuse the wire colour — no separate theme field). `ConnectionPoint` instances pivot-centre this context (`pivot.set(0.5, 0.5)`) and scale it via `scale.set(SCREEN_SIZE_PX / (scale * gridSize))` so the dot is always exactly `SCREEN_SIZE_PX` (6 px) regardless of zoom.
+A unit `1×1` rectangle filled with the current theme's wire color (CPs reuse the wire colour — no separate theme field). `ConnectionPoint` instances pivot-centre this context (`pivot.set(0.5, 0.5)`) and scale it via `scale.set(screenSizePxForScale(scale) / (scale * gridSize))` so the dot stays a fixed screen size regardless of zoom — 4 px when zoomed well out, 6 px otherwise.
 
 No parameters.
 
