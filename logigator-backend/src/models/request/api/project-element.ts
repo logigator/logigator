@@ -1,9 +1,11 @@
 import {
 	ArrayMaxSize, ArrayMinSize,
+	IsArray,
 	IsInt,
 	IsNumber,
 	IsOptional,
-	MaxLength
+	MaxLength,
+	Min
 } from 'class-validator';
 
 export class ProjectElement {
@@ -66,4 +68,24 @@ export class ProjectElement {
 	@IsOptional()
 	@MaxLength(32768)
 	s: string;
+
+	/**
+	 * negated input-port indices (0-based within the input group)
+	 */
+	@IsOptional()
+	@IsArray()
+	@ArrayMaxSize(256)
+	@IsInt({each: true})
+	@Min(0, {each: true})
+	negInputs: number[];
+
+	/**
+	 * negated output-port indices (0-based within the output group)
+	 */
+	@IsOptional()
+	@IsArray()
+	@ArrayMaxSize(256)
+	@IsInt({each: true})
+	@Min(0, {each: true})
+	negOutputs: number[];
 }
