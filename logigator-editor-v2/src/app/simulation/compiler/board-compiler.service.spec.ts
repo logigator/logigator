@@ -173,6 +173,22 @@ describe('BoardCompilerService', () => {
     });
   });
 
+  it('emits no negation fields while engine support is gated off', () => {
+    const and = makeAnd(2, undefined, 0, 0);
+    and.setPortNegated('in', 1, true);
+    and.setPortNegated('out', 0, true);
+    place(and);
+
+    const unit = compiler
+      .compile(project)
+      .descriptor.components.find((c) => c.type === 2)!;
+
+    // NEGATION_SIM_ENABLED is false until the engine ships: negation is drawn
+    // and persisted but never reaches the descriptor.
+    expect('negInputs' in unit).toBe(false);
+    expect('negOutputs' in unit).toBe(false);
+  });
+
   it('gives wire-only nets no link and keeps them out of the mapping', () => {
     place(makeNot());
     const loneWire = placeWire(new Point(10.5, 10.5), new Point(14.5, 10.5));

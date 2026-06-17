@@ -8,6 +8,7 @@ import {
   CUSTOM_TYPE_ID_BASE
 } from '../../components/component-type.enum';
 import { instantiateBody } from '../../persistence/circuit-builder';
+import { NEGATION_SIM_ENABLED } from '../../components/negation-sim-support';
 import { Project } from '../../project/project';
 import {
   BoardComponentDescriptor,
@@ -31,6 +32,24 @@ interface EmittedUnit {
   type: number;
   inputs: number[];
   outputs: number[];
+  /** Negated pin indices into inputs[]/outputs[]; invariant under node remap. */
+  negInputs?: number[];
+  negOutputs?: number[];
+}
+
+/**
+ * Copies a unit's negation forward unchanged. Pin reorderings during
+ * flattening (node→local, node→link) remap pin *values* but preserve pin
+ * *order*, so the negated indices stay valid.
+ */
+function copyNegation(unit: EmittedUnit): {
+  negInputs?: number[];
+  negOutputs?: number[];
+} {
+  return {
+    ...(unit.negInputs ? { negInputs: unit.negInputs } : {}),
+    ...(unit.negOutputs ? { negOutputs: unit.negOutputs } : {})
+  };
 }
 
 /**
@@ -95,10 +114,30 @@ export class BoardCompilerService {
   private readonly provider = inject(ComponentProviderService);
   private readonly registry = inject(CustomComponentRegistry);
 
+  // Whether negation reaches the descriptor. Mirrors the module constant; the
+  // single switch that turns simulation negation on once the engine ships
+  // (plan §6d). A field rather than reading the constant inline so a test can
+  // exercise the emission path before the production flip.
+  private readonly _negationEmissionEnabled = NEGATION_SIM_ENABLED;
+
   // Keyed by snapshot type id; snapshots are frozen, so entries never
   // invalidate for the lifetime of the session.
   private readonly _templates = new Map<number, CompiledTemplate>();
   private readonly _templatesInProgress = new Set<number>();
+
+  /**
+   * Negation to carry on a freshly-emitted unit, gated off until the engine
+   * understands it. Within-group indices (into inputs[]/outputs[]), sorted,
+   * in-range, omitted when empty — the shape the persisted form uses.
+   */
+  private _negationFor(component: Component): {
+    negInputs?: number[];
+    negOutputs?: number[];
+  } {
+    return this._negationEmissionEnabled
+      ? Component.serializeNegations(component)
+      : {};
+  }
 
   public compile(project: Project): CompiledBoard {
     const ctx: EmitContext = {
@@ -144,7 +183,8 @@ export class BoardCompilerService {
       (unit) => ({
         type: unit.type,
         inputs: unit.inputs.map(linkFor),
-        outputs: unit.outputs.map(linkFor)
+        outputs: unit.outputs.map(linkFor),
+        ...copyNegation(unit)
       })
     );
     const links = linkOfClass.size;
@@ -205,7 +245,8 @@ export class BoardCompilerService {
       ctx.units.push({
         type,
         inputs: pinNodes.slice(0, component.numInputs),
-        outputs: pinNodes.slice(component.numInputs)
+        outputs: pinNodes.slice(component.numInputs),
+        ...this._negationFor(component)
       });
       return;
     }
@@ -263,7 +304,8 @@ export class BoardCompilerService {
       ctx.units.push({
         type: unit.type,
         inputs: unit.inputs.map((node) => localNodes[node]),
-        outputs: unit.outputs.map((node) => localNodes[node])
+        outputs: unit.outputs.map((node) => localNodes[node]),
+        ...copyNegation(unit)
       });
     }
     for (const diagnostic of template.diagnostics) {
@@ -402,7 +444,8 @@ export class BoardCompilerService {
       const units = ctx.units.map((unit) => ({
         type: unit.type,
         inputs: unit.inputs.map(localId),
-        outputs: unit.outputs.map(localId)
+        outputs: unit.outputs.map(localId),
+        ...copyNegation(unit)
       }));
       const inputBindings = inputBindingNodes.map(localId);
       const outputBindings = outputBindingNodes.map(localId);
