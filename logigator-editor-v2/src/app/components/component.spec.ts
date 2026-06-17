@@ -93,10 +93,12 @@ describe('Component.bodyGridBounds', () => {
 
   // AndComponent: bodyGridWidth=2, bodyGridHeight=max(inputs,outputs)
 
+  // Construct with the direction (the constructor does not re-anchor) so these
+  // assert the bodyGridBounds geometry for a known position. The interactive
+  // re-anchoring of the `direction` setter is covered separately below.
+
   it('Right: origin at position, size = body only (no stubs)', () => {
-    const comp = makeAnd(2); // height=2
-    comp.position.set(3, 5);
-    comp.direction = Direction.E;
+    const comp = makeAnd(2, Direction.E, 3, 5); // height=2
 
     expect(comp.bodyGridBounds.x).toBeCloseTo(3, 5);
     expect(comp.bodyGridBounds.y).toBeCloseTo(5, 5);
@@ -107,9 +109,7 @@ describe('Component.bodyGridBounds', () => {
   });
 
   it('Down: rotated AABB', () => {
-    const comp = makeAnd(2); // bodyGridWidth=2, h=2
-    comp.position.set(4, 3);
-    comp.direction = Direction.S;
+    const comp = makeAnd(2, Direction.S, 4, 3); // bodyGridWidth=2, h=2
 
     // Down: Rectangle(x - h, y, h, w) = (4-2, 3, 2, 2)
     expect(comp.bodyGridBounds.x).toBeCloseTo(2, 5);
@@ -121,9 +121,7 @@ describe('Component.bodyGridBounds', () => {
   });
 
   it('Left: rotated AABB', () => {
-    const comp = makeAnd(2);
-    comp.position.set(4, 4);
-    comp.direction = Direction.W;
+    const comp = makeAnd(2, Direction.W, 4, 4);
 
     // Left: Rectangle(x - w, y - h, w, h) = (4-2, 4-2, 2, 2)
     expect(comp.bodyGridBounds.x).toBeCloseTo(2, 5);
@@ -135,9 +133,7 @@ describe('Component.bodyGridBounds', () => {
   });
 
   it('Up: rotated AABB', () => {
-    const comp = makeAnd(2);
-    comp.position.set(3, 6);
-    comp.direction = Direction.N;
+    const comp = makeAnd(2, Direction.N, 3, 6);
 
     // Up: Rectangle(x, y - w, h, w) = (3, 6-2, 2, 2)
     expect(comp.bodyGridBounds.x).toBeCloseTo(3, 5);
@@ -164,6 +160,86 @@ describe('Component.bodyGridBounds', () => {
 
       comp.destroy({ children: true });
     }
+  });
+});
+
+describe('Component.direction re-anchoring (legacy-editor behavior)', () => {
+  beforeEach(() => {
+    setStaticDIInjector(TestBed.inject(Injector));
+  });
+
+  it('keeps the body top-left fixed across every rotation', () => {
+    const comp = makeAnd(3, Direction.E, 3, 4); // W=2, H=3
+    const anchorX = comp.bodyGridBounds.x;
+    const anchorY = comp.bodyGridBounds.y;
+
+    for (const dir of [Direction.S, Direction.W, Direction.N, Direction.E]) {
+      comp.direction = dir;
+      expect(comp.bodyGridBounds.x).toBeCloseTo(anchorX, 5);
+      expect(comp.bodyGridBounds.y).toBeCloseTo(anchorY, 5);
+    }
+
+    comp.destroy({ children: true });
+  });
+
+  it('shifts position to the rotation pivot per direction', () => {
+    // Body anchor [3,4], W=2, H=3 → pivots E(3,4) S(6,4) W(5,7) N(3,6),
+    // matching the v0→v1 migration's legacyAnchorToPivot offsets.
+    const comp = makeAnd(3, Direction.E, 3, 4);
+
+    const pivots: Record<Direction, [number, number]> = {
+      [Direction.S]: [6, 4],
+      [Direction.W]: [5, 7],
+      [Direction.N]: [3, 6],
+      [Direction.E]: [3, 4]
+    };
+
+    for (const dir of [Direction.S, Direction.W, Direction.N, Direction.E]) {
+      comp.direction = dir;
+      expect(comp.position.x).toBeCloseTo(pivots[dir][0], 5);
+      expect(comp.position.y).toBeCloseTo(pivots[dir][1], 5);
+    }
+
+    comp.destroy({ children: true });
+  });
+});
+
+describe('Component port-count re-anchoring (legacy-editor behavior)', () => {
+  beforeEach(() => {
+    setStaticDIInjector(TestBed.inject(Injector));
+  });
+
+  it('keeps the body top-left fixed when ports are added, in every direction', () => {
+    for (const dir of [Direction.E, Direction.S, Direction.W, Direction.N]) {
+      const comp = makeAnd(2, dir, 5, 5);
+      const anchorX = comp.bodyGridBounds.x;
+      const anchorY = comp.bodyGridBounds.y;
+
+      comp.numInputs = 5;
+
+      expect(comp.bodyGridBounds.x).toBeCloseTo(anchorX, 5);
+      expect(comp.bodyGridBounds.y).toBeCloseTo(anchorY, 5);
+
+      comp.destroy({ children: true });
+    }
+  });
+
+  it('grows toward the bottom when horizontal-facing, the right when vertical-facing', () => {
+    // E (horizontal): added inputs grow the body downward, width constant.
+    const e = makeAnd(2, Direction.E, 0, 0);
+    const eBefore = e.bodyGridBounds;
+    e.numInputs = 5;
+    expect(e.bodyGridBounds.width).toBeCloseTo(eBefore.width, 5);
+    expect(e.bodyGridBounds.height).toBeGreaterThan(eBefore.height);
+    e.destroy({ children: true });
+
+    // S (vertical): added inputs grow the body rightward, height constant.
+    const s = makeAnd(2, Direction.S, 0, 0);
+    const sBefore = s.bodyGridBounds;
+    s.numInputs = 5;
+    expect(s.bodyGridBounds.height).toBeCloseTo(sBefore.height, 5);
+    expect(s.bodyGridBounds.width).toBeGreaterThan(sBefore.width);
+    s.destroy({ children: true });
   });
 });
 

@@ -10,6 +10,12 @@ import { ProjectElement } from '../../../api/models/project-element';
 import { WireDirection } from '../../../wires/wire-direction.enum';
 import { ComponentConfig } from '../../../components/component-config.model';
 import { CUSTOM_TYPE_ID_BASE } from '../../../components/component-type.enum';
+import { Direction } from '../../../utils/direction';
+import {
+  LEGACY_BODY_WIDTHS,
+  legacyAnchorToPivot,
+  legacyBodyHeight
+} from '../../legacy-anchor';
 
 /** Old editor's ElementTypeId.WIRE — the canonical type ID for wires in the v0 format. */
 const WIRE_TYPE_ID = 0;
@@ -98,9 +104,19 @@ function decodeElements(
       continue;
     }
 
+    const direction: Direction = element.r ?? Direction.E;
+    const width = LEGACY_BODY_WIDTHS[element.t] ?? 1;
+    const height = legacyBodyHeight(element.i ?? 0, element.o ?? 0);
+
     components.push({
       type: element.t,
-      pos: [element.p[0], element.p[1]],
+      pos: legacyAnchorToPivot(
+        element.p[0],
+        element.p[1],
+        direction,
+        width,
+        height
+      ),
       options: decodeOptions(element, config)
     });
   }

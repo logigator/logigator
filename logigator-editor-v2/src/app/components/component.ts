@@ -155,13 +155,14 @@ export abstract class Component<
 
   public set direction(value: Direction) {
     const oldPorts = this._initialized ? this.connectionPoints : null;
-    this._direction = value;
 
-    this.rotation = (value * Math.PI) / 2;
-
-    for (const container of this._rotationCounterContainers) {
-      container.rotation = -this.rotation;
-    }
+    this._withFixedBodyAnchor(() => {
+      this._direction = value;
+      this.rotation = (value * Math.PI) / 2;
+      for (const container of this._rotationCounterContainers) {
+        container.rotation = -this.rotation;
+      }
+    });
 
     if (environment.debug.showConnectionPoints) {
       this._draw();
@@ -178,7 +179,7 @@ export abstract class Component<
 
   public set numInputs(value: number) {
     const oldPorts = this._initialized ? this.connectionPoints : null;
-    this._numInputs = value;
+    this._withFixedBodyAnchor(() => (this._numInputs = value));
     this._draw();
     if (oldPorts) {
       this.portsChange$.next({ oldPorts, newPorts: this.connectionPoints });
@@ -191,10 +192,30 @@ export abstract class Component<
 
   public set numOutputs(value: number) {
     const oldPorts = this._initialized ? this.connectionPoints : null;
-    this._numOutputs = value;
+    this._withFixedBodyAnchor(() => (this._numOutputs = value));
     this._draw();
     if (oldPorts) {
       this.portsChange$.next({ oldPorts, newPorts: this.connectionPoints });
+    }
+  }
+
+  /**
+   * Runs a mutation that changes the body's size or rotation while holding its
+   * top-left corner fixed (legacy-editor behavior): the body is drawn from — and
+   * rotated around — the local origin, so without this a turn would swing it off
+   * its corner and a port-count change would grow it from the origin. Shifting
+   * `position` by the change in `bodyGridBounds` keeps the corner put, so
+   * rotation never moves the element and added ports expand it toward the bottom
+   * (E/W) or the right (S/N). No-op before construction completes — the caller
+   * sets `position` afterwards.
+   */
+  private _withFixedBodyAnchor(mutate: () => void): void {
+    const oldAnchor = this._initialized ? this.bodyGridBounds : null;
+    mutate();
+    if (oldAnchor) {
+      const newAnchor = this.bodyGridBounds;
+      this.position.x += oldAnchor.x - newAnchor.x;
+      this.position.y += oldAnchor.y - newAnchor.y;
     }
   }
 

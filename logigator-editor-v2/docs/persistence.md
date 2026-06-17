@@ -174,6 +174,27 @@ legacyV0Slots: { r: 'direction', s: 'label', n: ['index'] }
 > option keys**. If a live option is later renamed, do **not** edit the descriptor — add a
 > `v1→v2` migration instead.
 
+### Legacy-anchor conversion (`persistence/legacy-anchor.ts`)
+
+The old editor anchors a component by its body's **top-left corner**, held fixed across
+rotation; editor-v2 anchors by the **rotation pivot** (body drawn from the local origin,
+rotated around `position`). The two coincide only for `Direction.E`, so a rotated
+component's `p` must be re-anchored when crossing the v0 boundary, or it lands offset.
+
+`legacy-anchor.ts` is the single source of truth for that conversion, shared like
+`legacyV0Slots` between the permanent decode and the temporary encode:
+
+- **Decode** (`v0ToV1` migration) — `legacyAnchorToPivot(p, direction, w, h)` shifts the
+  legacy top-left to the v2 pivot. `w` comes from the frozen `LEGACY_BODY_WIDTHS` map
+  (per-type `bodyGridWidth`, so no render object is instantiated); `h = legacyBodyHeight(i, o)`.
+- **Encode** (`server-circuit.codec`) — `pivotToLegacyAnchor` reverses it. For a live
+  `Project` component the codec just emits `component.bodyGridBounds` (whose corner already
+  **is** the legacy anchor); for built-ins inside a snapshot body (decoded through the same
+  migration) it calls `pivotToLegacyAnchor` with the frozen width map.
+
+Customs (`t ≥ CUSTOM_TYPE_ID_BASE`) keep `p` verbatim on both sides — re-anchoring rotated
+customs is a deferred follow-up (their `bodyGridWidth` isn't in the frozen map).
+
 ---
 
 ## File Format & Migrations (`persistence/file/`)

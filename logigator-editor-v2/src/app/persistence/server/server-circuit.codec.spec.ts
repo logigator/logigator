@@ -265,6 +265,9 @@ describe('server-circuit.codec', () => {
       const customEl = elements.find((e) => e.t >= CUSTOM_TYPE_ID_BASE)!;
       expect(customEl.t).toBe(dep.model);
       expect(customEl.r).toBe(1); // direction round-trips
+      // Custom placed at (7,2): position is kept verbatim (not re-anchored via
+      // bodyGridBounds), symmetric with the migration's verbatim custom decode.
+      expect(customEl.p).toEqual([7, 2]);
 
       // The additive frozen snapshot: provenance, summary, and its circuit.
       expect(dep.snapshot).toBeDefined();
@@ -284,6 +287,55 @@ describe('server-circuit.codec', () => {
       expect(
         dep.snapshot!.elements.filter((e) => e.t === WIRE_TYPE_ID).length
       ).toBe(1);
+    });
+
+    it('re-anchors a rotated built-in inside a snapshot body', () => {
+      // A snapshot body is decoded through the same v0→v1 migration, so encode
+      // must reverse the pivot re-anchor for its inner built-ins. OUTPUT plug
+      // (W=1, H=1) rotated South at v1 pivot [7,3] → legacy anchor [6,3].
+      const circuit: SerializedCircuitBody = {
+        components: [
+          {
+            type: BuiltInComponentType.INPUT,
+            pos: [0, 0],
+            options: { direction: 0, label: 'A', index: 0 }
+          },
+          {
+            type: BuiltInComponentType.OUTPUT,
+            pos: [7, 3],
+            options: { direction: 1, label: 'Q', index: 0 }
+          }
+        ],
+        wires: []
+      };
+      const master = registry.createMaster(
+        {
+          id: 'rot-uuid',
+          version: 1,
+          name: 'Rotated',
+          symbol: 'R',
+          description: '',
+          numInputs: 1,
+          numOutputs: 1,
+          labels: ['A', 'Q'],
+          circuit
+        },
+        'server'
+      );
+      const snapType = registry.snapshot(master).typeId;
+      const config = provider.getComponent(snapType)!;
+      const instance = config.create({
+        direction: config.options['direction'].clone(0)
+      });
+      const project = new Project();
+      project.addComponent(instance);
+
+      const { dependencies } = encode(project);
+      const out = dependencies[0].snapshot!.elements.find(
+        (e) => e.t === BuiltInComponentType.OUTPUT
+      )!;
+      expect(out.r).toBe(1);
+      expect(out.p).toEqual([6, 3]);
     });
 
     it('loads from the embedded snapshot — ports come from it (Inv. A)', () => {

@@ -48,7 +48,9 @@ describe('v0ToV1Migration', () => {
     expect(result.definitions).toEqual([]);
 
     const and = result.components.find((c) => c.type === 2)!;
-    expect(and.pos).toEqual([3, 4]);
+    // Rotated South (W=2, H=max(1,3)=3): legacy anchors by the body's fixed
+    // top-left, v2 by the rotation pivot, so the pivot shifts by +H on x.
+    expect(and.pos).toEqual([6, 4]);
     expect(and.options).toEqual({ direction: 1, numInputs: 3 });
 
     const rom = result.components.find((c) => c.type === 12)!;
@@ -64,6 +66,25 @@ describe('v0ToV1Migration', () => {
     expect(result.wires).toEqual([
       { pos: [3, 5], direction: 0, length: 5 },
       { pos: [5, 2], direction: 1, length: 5 }
+    ]);
+  });
+
+  it('re-anchors a rotated component from body top-left to rotation pivot', () => {
+    // Same AND (type 2, W=2, H=max(1,3)=3) at legacy anchor [3,4] in each
+    // direction. The legacy top-left is fixed; the v2 pivot offsets per the
+    // body extent: E (0,0), S (+H,0), W (+W,+H), N (0,+W).
+    const positions = [0, 1, 2, 3].map((r) => {
+      const result = migrate({
+        project: { elements: [{ t: 2, p: [3, 4], i: 3, r }] }
+      });
+      return result.components[0].pos;
+    });
+
+    expect(positions).toEqual([
+      [3, 4], // E
+      [6, 4], // S: +H
+      [5, 7], // W: +W, +H
+      [3, 6] // N: +W
     ]);
   });
 

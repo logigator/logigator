@@ -41,6 +41,11 @@ import type {
 } from '../serialized-circuit';
 import { WireDirection } from '../../wires/wire-direction.enum';
 import { CUSTOM_TYPE_ID_BASE } from '../../components/component-type.enum';
+import {
+  LEGACY_BODY_WIDTHS,
+  legacyBodyHeight,
+  pivotToLegacyAnchor
+} from '../legacy-anchor';
 import { PersistedCircuitV0 } from '../persisted-circuit.types';
 import { CircuitFileV0 } from '../file/circuit-file.types';
 import { collectSnapshots } from '../snapshots';
@@ -118,9 +123,17 @@ function serializeComponent(component: Component): ProjectElement {
   // Every real config is a full ComponentConfig; the base only narrows it to
   // the view. The descriptor lives on the config, so widen back.
   const config = component.config as ComponentConfig;
+  // v0 anchors by the body's top-left, not the rotation pivot — for a live
+  // built-in that corner *is* `bodyGridBounds` (see legacy-anchor.ts). Customs
+  // keep `position` verbatim: the migration decodes them verbatim too, and
+  // re-anchoring rotated customs is a deferred follow-up.
+  const anchor =
+    config.type >= CUSTOM_TYPE_ID_BASE
+      ? component.position
+      : component.bodyGridBounds;
   const el: ProjectElement = {
     t: config.type,
-    p: [component.position.x, component.position.y]
+    p: [anchor.x, anchor.y]
   };
 
   if (component.numInputs > 0) {
@@ -228,6 +241,18 @@ function encodeBodyComponent(
     const v = component.options[slots.s];
     if (v !== undefined) el.s = v as string;
   }
+
+  // Reverse the v0→v1 pivot re-anchor (the snapshot body was decoded through
+  // the same migration), so built-ins round-trip to their legacy top-left.
+  const width = LEGACY_BODY_WIDTHS[component.type] ?? 1;
+  const height = legacyBodyHeight(el.i ?? 0, el.o ?? 0);
+  el.p = pivotToLegacyAnchor(
+    component.pos[0],
+    component.pos[1],
+    el.r ?? 0,
+    width,
+    height
+  );
 
   return el;
 }
