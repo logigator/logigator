@@ -1,5 +1,6 @@
-import { Injectable } from '@angular/core';
+import { inject, Injectable } from '@angular/core';
 import { GraphicsContext } from 'pixi.js';
+import { ThemingService } from '../theming/theming.service';
 
 type CacheableGraphics = new (...args: never[]) => GraphicsContext;
 
@@ -7,6 +8,8 @@ type CacheableGraphics = new (...args: never[]) => GraphicsContext;
   providedIn: 'root'
 })
 export class GraphicsProviderService {
+  private readonly _themingService = inject(ThemingService);
+
   private readonly _cache = new Map<
     CacheableGraphics,
     Map<string, GraphicsContext>
@@ -17,7 +20,9 @@ export class GraphicsProviderService {
     ...params: ConstructorParameters<T>
   ): GraphicsContext {
     const cachedGraphics = this._cache.get(graphics);
-    const paramsHash = JSON.stringify(params);
+    // Theme is part of the key: the graphics classes bake theme colors into the
+    // context at construction, so each theme needs its own cached instance.
+    const paramsHash = `${this._themingService.currentThemeType()}:${JSON.stringify(params)}`;
 
     if (!cachedGraphics) {
       const context = new graphics(...params);

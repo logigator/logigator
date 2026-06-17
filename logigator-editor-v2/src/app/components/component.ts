@@ -396,7 +396,7 @@ export abstract class Component<
     return points;
   }
 
-  protected redraw(): void {
+  public redraw(): void {
     this._draw();
   }
 

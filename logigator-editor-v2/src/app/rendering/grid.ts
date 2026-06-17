@@ -47,6 +47,15 @@ export class Grid extends Container {
     this.draw();
   }
 
+  /**
+   * Re-runs draw() so each chunk picks up a freshly-built GridGraphics context.
+   * Used on theme change: the cache is theme-keyed, so getGraphicsContext now
+   * returns a new context and the `child.context !== geometry` swap repaints.
+   */
+  public redraw(): void {
+    this.draw();
+  }
+
   public updateScale(scale: number) {
     // Chunks are reused across scales — draw() swaps each one's context to the
     // new-scale geometry rather than destroying and recreating the whole set.

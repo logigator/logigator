@@ -10,3 +10,9 @@ export function getStaticDI<T>(token: Type<T> | InjectionToken<T>): T {
   if (!_injector) throw new Error('Static DI Injector not set yet!');
   return _injector.get(token);
 }
+
+/** The static injector itself, e.g. to pass to `effect(fn, { injector })`. */
+export function getStaticInjector(): Injector {
+  if (!_injector) throw new Error('Static DI Injector not set yet!');
+  return _injector;
+}

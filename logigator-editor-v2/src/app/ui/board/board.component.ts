@@ -99,7 +99,10 @@ export class BoardComponent implements OnInit, OnDestroy {
       // One scheduler per project; drop the previous so its run-count and any
       // queued frame don't leak across stages.
       this._renderScheduler?.destroy();
-      this._renderScheduler = new TickerScheduler(this.app.ticker, project.ticker$);
+      this._renderScheduler = new TickerScheduler(
+        this.app.ticker,
+        project.ticker$
+      );
     });
 
     effect(() => {
@@ -122,6 +125,17 @@ export class BoardComponent implements OnInit, OnDestroy {
 
     effect(() => {
       this.project()?.setGridVisible(this.editorSettings.showGrid.value());
+    });
+
+    // The renderer background is read once at app.init; keep it in sync with the
+    // theme. Per-element colors are handled by each Project's own theme effect.
+    effect(() => {
+      const background = this.themingService.currentTheme().background;
+      if (!this.loaded()) {
+        return;
+      }
+      this.app.renderer.background.color = background;
+      this.project()?.triggerTicker('single');
     });
   }
 

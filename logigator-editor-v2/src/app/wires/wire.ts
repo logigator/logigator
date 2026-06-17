@@ -20,6 +20,10 @@ export class Wire extends Graphics implements Connectable {
 
   private _id: number;
 
+  // Survives a theme refresh: refreshTheme() re-applies it to the rebuilt
+  // context, mirroring Component's _poweredPorts.
+  private _powered = false;
+
   public static serialize(wire: Wire): SerializedWire {
     return {
       id: wire.id,
@@ -138,12 +142,22 @@ export class Wire extends Graphics implements Connectable {
    * simulation. Color is unchanged; only the thickness differs.
    */
   public setPowered(powered: boolean): void {
+    this._powered = powered;
     this.context = powered
       ? this.graphicsProviderService.getGraphicsContext(
           WireGraphics,
           POWERED_WIRE_THICKNESS
         )
       : this.graphicsProviderService.getGraphicsContext(WireGraphics);
+  }
+
+  /**
+   * Re-fetches the wire's context after a theme change, preserving powered
+   * thickness. The cache is theme-keyed, so this returns a freshly-coloured
+   * context.
+   */
+  public refreshTheme(): void {
+    this.setPowered(this._powered);
   }
 
   public applyScale(scale: number): void {

@@ -5,8 +5,11 @@ import {
   Point,
   Rectangle
 } from 'pixi.js';
+import { effect, EffectRef } from '@angular/core';
 
 import { Grid } from '../rendering/grid';
+import { ThemingService } from '../theming/theming.service';
+import { getStaticDI, getStaticInjector } from '../utils/get-di';
 import { ComponentConfig } from '../components/component-config.model';
 import { InteractionContainer } from '../rendering/interaction-container';
 import { Component } from '../components/component';
@@ -55,6 +58,13 @@ export class Project extends InteractionContainer {
   );
   private readonly _portsChangeSubs = new Map<number, Subscription>();
 
+  private readonly _themingService = getStaticDI(ThemingService);
+  // Theme colors are baked into cached GraphicsContexts, so a theme switch
+  // requires re-fetching every context. Each project self-heals via this
+  // effect — including inactive (background) tabs, which the stage swap never
+  // redraws. Created/run after the scene graph is wired up below.
+  private _themeEffect: EffectRef | null = null;
+
   constructor() {
     super();
 
@@ -90,6 +100,39 @@ export class Project extends InteractionContainer {
         child.applyScale(scale);
       }
     });
+
+    this._themeEffect = effect(
+      () => {
+        // Establish the dependency, then rebuild against the new theme.
+        this._themingService.currentTheme();
+        this.applyTheme();
+      },
+      { injector: getStaticInjector() }
+    );
+  }
+
+  /**
+   * Re-fetches every theme-dependent GraphicsContext after a theme change. The
+   * cache is theme-keyed, so redrawing each element picks up the new colors.
+   * Runs once on construction (a no-op on the still-empty scene).
+   */
+  public applyTheme(): void {
+    this._grid.redraw();
+    for (const component of this._components.items) {
+      component.redraw();
+    }
+    for (const wire of this._wires.items) {
+      wire.refreshTheme();
+    }
+    this._connectionPoints.recomputeAll(
+      this._wires.items,
+      this._components.items
+    );
+    // recomputeAll recreates every CP instance, so their selection tint is lost
+    // (component/wire tint lives on the object and survives redraw). Re-apply it
+    // to the new CPs. Selected components and wires keep their own tint.
+    this.selectionManager.retintCps();
+    this._ticker$.next('single');
   }
 
   public get gridSpace(): Container {
@@ -467,6 +510,7 @@ export class Project extends InteractionContainer {
   }
 
   public override destroy(options?: DestroyOptions): void {
+    this._themeEffect?.destroy();
     this._cursorPosition$.complete();
     this._userInput$.complete();
     this.actionManager.destroy();
