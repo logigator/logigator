@@ -57,6 +57,7 @@ export class BoardComponent implements OnInit, OnDestroy {
   private appInitialized = false;
   private _pointerInsideCanvas = false;
   private _renderScheduler: TickerScheduler | null = null;
+  private _resizeObserver: ResizeObserver | null = null;
 
   /** The render loop's ticker; only valid once `loaded()` is true. */
   protected get ticker(): Ticker {
@@ -162,12 +163,20 @@ export class BoardComponent implements OnInit, OnDestroy {
       project.resizeViewport(w, h);
     });
 
+    // `resizeTo` only re-measures on window `resize` events, so layout changes
+    // that resize the host without resizing the window (e.g. the side bar
+    // disappearing in simulation mode) leave the canvas stale. Observe the host
+    // directly and let the plugin re-measure on the next frame.
+    this._resizeObserver = new ResizeObserver(() => this.app.queueResize());
+    this._resizeObserver.observe(this.hostEl.nativeElement);
+
     this.appInitialized = true;
     this.loaded.set(true);
   }
 
   ngOnDestroy(): void {
     this.destroy$.next();
+    this._resizeObserver?.disconnect();
     this._renderScheduler?.destroy();
     if (this.appInitialized) {
       this.app.destroy();
