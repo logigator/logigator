@@ -20,6 +20,11 @@ import {
   POWERED_WIRE_THICKNESS,
   WireGraphics
 } from '../rendering/graphics/wire.graphics';
+import {
+  NegationBubbleGraphics,
+  NEGATION_BUBBLE_RADIUS
+} from '../rendering/graphics/negation-bubble.graphics';
+import { NEGATION_SIM_ENABLED } from './negation-sim-support';
 import { ComponentOption } from './component-option';
 import { SerializedComponent } from './serialized-component.model';
 import { Connectable } from '../rendering/grid-element';
@@ -71,6 +76,9 @@ export abstract class Component<
 
   // Stub graphics in `connectionPoints` order, rebuilt by _drawConnections.
   private _portStubs: Graphics[] = [];
+  // Inverter-bubble graphics keyed by `connectionPoints` index, only for
+  // negated ports; rebuilt by _drawConnections alongside the stubs.
+  private _portBubbles = new Map<number, Graphics>();
   // Scale-dependent visual updates registered during draw(). applyScale runs
   // these in place on zoom instead of rebuilding the whole visual tree (which
   // would re-rasterize every Text on every zoom step). Reset on each _draw().
@@ -314,6 +322,14 @@ export abstract class Component<
     return this._portStubs;
   }
 
+  /**
+   * Inverter-bubble graphics keyed by `connectionPoints` index, present only
+   * for negated ports (rebuilt on every redraw).
+   */
+  public get portBubbles(): ReadonlyMap<number, Graphics> {
+    return this._portBubbles;
+  }
+
   /** Negated input-port indices (0-based within the input group). Read-only. */
   public get negatedInputs(): ReadonlySet<number> {
     return this._negatedInputs;
@@ -366,13 +382,23 @@ export abstract class Component<
     if (stub) {
       stub.context = this._stubContext(powered);
     }
+    // A negated port's bubble shows the gate-side value (link XOR negated):
+    // the bubble exists only where negated, so that is the inverse of the
+    // link's powered state. Gated until a negation-capable engine ships.
+    const bubble = this._portBubbles.get(portIndex);
+    if (bubble && NEGATION_SIM_ENABLED) {
+      bubble.context = this._bubbleContext(!powered);
+    }
   }
 
-  /** Resets all port stubs to unpowered. */
+  /** Resets all port stubs (and bubbles) to unpowered. */
   public clearPortPower(): void {
     this._poweredPorts.clear();
     for (const stub of this._portStubs) {
       stub.context = this._stubContext(false);
+    }
+    for (const bubble of this._portBubbles.values()) {
+      bubble.context = this._bubbleContext(false);
     }
   }
 
@@ -383,6 +409,10 @@ export abstract class Component<
           POWERED_WIRE_THICKNESS
         )
       : this.geometryService.getGraphicsContext(WireGraphics);
+  }
+
+  private _bubbleContext(lit: boolean): GraphicsContext {
+    return this.geometryService.getGraphicsContext(NegationBubbleGraphics, lit);
   }
 
   protected get bodyGridHeight(): number {
@@ -462,6 +492,7 @@ export abstract class Component<
 
     this._rotationCounterContainers = [];
     this._portStubs = [];
+    this._portBubbles = new Map();
     this._rescalers = [];
 
     this.draw();
@@ -515,6 +546,22 @@ export abstract class Component<
       this.onApplyScale((scale) => wire.scale.set(0.5, PX / scale));
       this._portStubs[portIndex] = wire;
       container.addChild(wire);
+
+      if (this.isPortNegated(type === 'inputs' ? 'in' : 'out', i)) {
+        // Sits on the stub at the body edge so its background fill interrupts
+        // the stub — the classic inverter look. Added after the stub so it
+        // draws on top. Grid-sized (no rescaler), so it scales with the body
+        // and its context survives zoom like the stub. Drawn unlit; the
+        // gate-side power tint is applied later via setPortPowered.
+        const bubble = new Graphics(this._bubbleContext(false));
+        const localX =
+          type === 'inputs'
+            ? 0.5 - NEGATION_BUBBLE_RADIUS
+            : NEGATION_BUBBLE_RADIUS;
+        bubble.position.set(localX, i + 0.5);
+        this._portBubbles.set(portIndex, bubble);
+        container.addChild(bubble);
+      }
 
       if (labels.length > i) {
         const text = this.trackTextResolution(

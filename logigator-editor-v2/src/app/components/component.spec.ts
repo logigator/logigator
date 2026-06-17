@@ -13,6 +13,10 @@ import {
   POWERED_WIRE_THICKNESS,
   WireGraphics
 } from '../rendering/graphics/wire.graphics';
+import {
+  NegationBubbleGraphics,
+  NEGATION_BUBBLE_RADIUS
+} from '../rendering/graphics/negation-bubble.graphics';
 
 describe('Component.deserialize (create() factory)', () => {
   beforeEach(() => {
@@ -397,6 +401,110 @@ describe('Component port negation', () => {
 
     comp.setPortNegated('in', 40, true);
     expect(comp.isPortNegated('in', 40)).toBe(true);
+
+    comp.destroy({ children: true });
+  });
+});
+
+describe('Component negation bubble rendering', () => {
+  let provider: GraphicsProviderService;
+
+  beforeEach(() => {
+    configureTestBed();
+    provider = TestBed.inject(GraphicsProviderService);
+  });
+
+  function bubbleContext(lit = false) {
+    return provider.getGraphicsContext(NegationBubbleGraphics, lit);
+  }
+
+  it('draws no bubbles when nothing is negated', () => {
+    const comp = makeAnd(2);
+
+    expect(comp.portBubbles.size).toBe(0);
+
+    comp.destroy({ children: true });
+  });
+
+  it('adds a bubble keyed by the connectionPoints index for inputs', () => {
+    const comp = makeAnd(2); // inputs 0,1; output 2
+
+    comp.setPortNegated('in', 1, true);
+
+    expect(comp.portBubbles.has(1)).toBe(true);
+    expect(comp.portBubbles.size).toBe(1);
+
+    comp.destroy({ children: true });
+  });
+
+  it('keys an output bubble by numInputs + index', () => {
+    const comp = makeAnd(2); // output port index = 2
+
+    comp.setPortNegated('out', 0, true);
+
+    expect(comp.portBubbles.has(2)).toBe(true);
+
+    comp.destroy({ children: true });
+  });
+
+  it('removes the bubble when the port is un-negated', () => {
+    const comp = makeAnd(2);
+
+    comp.setPortNegated('in', 0, true);
+    expect(comp.portBubbles.has(0)).toBe(true);
+
+    comp.setPortNegated('in', 0, false);
+    expect(comp.portBubbles.has(0)).toBe(false);
+
+    comp.destroy({ children: true });
+  });
+
+  it('places the bubble at the body-edge end of the stub, clear of the tip', () => {
+    const comp = makeAnd(2);
+
+    comp.setPortNegated('in', 0, true);
+    comp.setPortNegated('out', 0, true);
+
+    // Stub container origins are x=-0.5 (inputs) / x=bodyGridWidth (outputs);
+    // the bubble sits one radius inside the body edge, so the connection-point
+    // dot at the stub tip (0.5 unit away) never overlaps it.
+    expect(comp.portBubbles.get(0)!.position.x).toBeCloseTo(
+      0.5 - NEGATION_BUBBLE_RADIUS,
+      5
+    );
+    expect(comp.portBubbles.get(2)!.position.x).toBeCloseTo(
+      NEGATION_BUBBLE_RADIUS,
+      5
+    );
+
+    comp.destroy({ children: true });
+  });
+
+  it('keeps the bubble and its context across applyScale (no rebuild)', () => {
+    const comp = makeAnd(2);
+
+    comp.setPortNegated('in', 0, true);
+    const bubbleBefore = comp.portBubbles.get(0);
+    comp.applyScale(2);
+
+    expect(comp.portBubbles.get(0)).toBe(bubbleBefore);
+    expect(comp.portBubbles.get(0)!.context).toBe(bubbleContext(false));
+
+    comp.destroy({ children: true });
+  });
+
+  it('does not tint the bubble during simulation while emission is gated off', () => {
+    // NEGATION_SIM_ENABLED is false until the engine ships, so the gate-side
+    // power tint stays inert and the bubble keeps its static appearance.
+    const comp = makeAnd(2);
+
+    comp.setPortNegated('in', 0, true);
+    comp.setPortPowered(0, true);
+
+    expect(comp.portBubbles.get(0)!.context).toBe(bubbleContext(false));
+
+    comp.clearPortPower();
+    expect(comp.portBubbles.get(0)!.context).toBe(bubbleContext(false));
 
     comp.destroy({ children: true });
   });
