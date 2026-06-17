@@ -1,5 +1,5 @@
 import { inject, Injectable } from '@angular/core';
-import { firstValueFrom, map, Observable } from 'rxjs';
+import { firstValueFrom, map, Observable, tap } from 'rxjs';
 import { HttpErrorResponse } from '@angular/common/http';
 import { ProjectApiService } from '../../api/services/project-api.service';
 import { ComponentApiService } from '../../api/services/component-api.service';
@@ -163,6 +163,26 @@ export class ServerPersistenceGateway {
 
   deleteProject(uuid: string): Observable<void> {
     return this.projectApi.delete(uuid).pipe(map(() => undefined));
+  }
+
+  /**
+   * Renames a server project via `PATCH /api/project/:id`. If the project is
+   * currently open, its in-memory metadata — and thus the title bar — is synced
+   * on success.
+   */
+  renameProject(uuid: string, name: string): Observable<void> {
+    return this.projectApi.update(uuid, { name }).pipe(
+      tap(() => {
+        const handle = this.metadataStore.getHandleById(uuid);
+        if (
+          handle?.metadata.source === 'server' &&
+          handle.metadata.type === 'project'
+        ) {
+          this.metadataStore.update(handle.project, { name });
+        }
+      }),
+      map(() => undefined)
+    );
   }
 
   async loadShare(

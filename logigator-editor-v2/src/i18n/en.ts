@@ -183,6 +183,8 @@ const en = {
     uploadPrompt: 'Open a circuit file saved on your device.',
     chooseFile: 'Choose File',
     deleteProject: 'Delete Project',
+    renameProject: 'Rename Project',
+    cancelRename: 'Cancel',
     deleteConfirmMessage:
       'Are you sure you want to delete "{{name}}"? This cannot be undone.',
     deleteAccept: 'Delete',

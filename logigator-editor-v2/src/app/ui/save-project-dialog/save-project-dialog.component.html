@@ -5,6 +5,7 @@
       pInputText
       id="save-project-name"
       type="text"
+      [maxlength]="nameMaxLength"
       [ngModel]="name()"
       (ngModelChange)="name.set($event)"
       [ngModelOptions]="{ standalone: true }"

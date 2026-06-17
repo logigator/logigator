@@ -150,6 +150,19 @@ export class OpenProjectDialogComponent implements OnInit {
       });
   }
 
+  protected renameLocal(change: { id: string; name: string }): void {
+    this.persistenceService
+      .renameBrowserProject(change.id, change.name)
+      .then(() => this.loadLocalProjects())
+      .catch(() => {
+        this.loggingService.error(
+          'Failed to rename local project',
+          'OpenProjectDialogComponent'
+        );
+        this.toastService.error('Failed to rename local project');
+      });
+  }
+
   // --- Server handlers ---
 
   private async loadServerProjects(page = 0): Promise<void> {
@@ -207,6 +220,20 @@ export class OpenProjectDialogComponent implements OnInit {
           'OpenProjectDialogComponent'
         );
         this.toastService.error('Failed to delete server project');
+      });
+  }
+
+  protected renameServer(change: { id: string; name: string }): void {
+    firstValueFrom(
+      this.persistenceService.renameProject(change.id, change.name)
+    )
+      .then(() => this.loadServerProjects(this.serverPage()))
+      .catch(() => {
+        this.loggingService.error(
+          'Failed to rename server project',
+          'OpenProjectDialogComponent'
+        );
+        this.toastService.error('Failed to rename server project');
       });
   }
 

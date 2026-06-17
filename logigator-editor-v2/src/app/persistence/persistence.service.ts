@@ -134,6 +134,35 @@ export class PersistenceService {
     return this.server.deleteProject(uuid);
   }
 
+  /**
+   * Renames a browser-stored project. The display name is duplicated out of the
+   * stored content blob (the codec reads the blob's top-level `name` on open, not
+   * the summary column), so both must change: the blob's `name` field is rewritten
+   * and the new value re-saved as the column. If the project is currently open,
+   * its in-memory metadata — and thus the title bar — is synced too.
+   */
+  async renameBrowserProject(id: string, name: string): Promise<void> {
+    const record = await this.browserStore.get(id);
+    if (!record) throw new Error(`No browser project with id ${id}`);
+    await this.browserStore.save({
+      id,
+      name,
+      content: this._withRenamedContent(record.content, name)
+    });
+    const handle = this.metadataStore.getHandleById(id);
+    if (
+      handle?.metadata.source === 'browser' &&
+      handle.metadata.type === 'project'
+    ) {
+      this.metadataStore.update(handle.project, { name });
+    }
+  }
+
+  /** Renames a server project via the API (PATCH metadata). */
+  renameProject(uuid: string, name: string): Observable<void> {
+    return this.server.renameProject(uuid, name);
+  }
+
   loadShare(
     linkId: string
   ): Promise<{ project: Project; type: 'project' | 'comp' }> {
@@ -605,6 +634,23 @@ export class PersistenceService {
       },
       'browser'
     );
+  }
+
+  /**
+   * Returns the stored circuit JSON with its top-level `name` replaced. Browser
+   * blobs are always current-version with a top-level `name` (every write path
+   * goes through `CircuitFileService.toJson`), so a structural rewrite suffices —
+   * decoding to instances would needlessly ingest the project's custom snapshots
+   * into the live registry as a side effect of a background rename.
+   */
+  private _withRenamedContent(content: string, name: string): string {
+    let parsed: Record<string, unknown>;
+    try {
+      parsed = JSON.parse(content) as Record<string, unknown>;
+    } catch {
+      throw new Error('Stored project content is not valid JSON');
+    }
+    return JSON.stringify({ ...parsed, name });
   }
 
   private async _doBrowserSave(project: Project): Promise<void> {

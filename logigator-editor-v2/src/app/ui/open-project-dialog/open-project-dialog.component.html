@@ -15,6 +15,7 @@
           [totalItems]="localTotal()"
           (open)="openLocalProject($event)"
           (delete)="deleteLocalConfirmed($event)"
+          (rename)="renameLocal($event)"
           (pageChange)="localPage.set($event)"
           (searchChange)="onLocalSearch($event)"
         />
@@ -35,6 +36,7 @@
             [totalItems]="serverTotal()"
             (open)="openServerProject($event)"
             (delete)="deleteServerConfirmed($event)"
+            (rename)="renameServer($event)"
             (pageChange)="onServerPageChange($event)"
             (searchChange)="onServerSearch($event)"
           />

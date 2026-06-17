@@ -2,6 +2,7 @@
 
 import type { Mock } from 'vitest';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import { firstValueFrom } from 'rxjs';
 import { Location } from '@angular/common';
 import { TestBed } from '@angular/core/testing';
 import { HttpTestingController } from '@angular/common/http/testing';
@@ -791,6 +792,80 @@ describe('PersistenceService', () => {
 
       const list = await service.listBrowserProjects();
       expect(list.map((p) => p.name).sort()).toEqual(['One', 'Two']);
+    });
+
+    it('renameBrowserProject rewrites both the summary column and the blob name', async () => {
+      const record = await browserStore.save({
+        name: 'Old',
+        content: JSON.stringify({
+          version: 1,
+          name: 'Old',
+          components: [],
+          wires: [],
+          definitions: []
+        })
+      });
+
+      await service.renameBrowserProject(record.id, 'New');
+
+      const stored = browserStore.records.get(record.id)!;
+      expect(stored.name).toBe('New');
+      const parsed = JSON.parse(stored.content);
+      expect(parsed.name).toBe('New');
+      // The rest of the blob is preserved.
+      expect(parsed.version).toBe(1);
+
+      // Reopening reflects the new name — the codec reads the blob, not the column.
+      const reopened = await service.loadLocalProject(record.id);
+      expect(metadataStore.getMetadata(reopened)!.name).toBe('New');
+    });
+
+    it('renameBrowserProject syncs the metadata of an already-open project', async () => {
+      const record = await browserStore.save({
+        name: 'Open',
+        content: JSON.stringify({
+          version: 1,
+          name: 'Open',
+          components: [],
+          wires: [],
+          definitions: []
+        })
+      });
+      await service.loadLocalProjectAsMain(record.id);
+      const project = projectService.mainProject()!;
+      expect(metadataStore.getMetadata(project)!.name).toBe('Open');
+
+      await service.renameBrowserProject(record.id, 'Renamed');
+
+      expect(metadataStore.getMetadata(project)!.name).toBe('Renamed');
+    });
+
+    it('renameBrowserProject rejects when no record exists', async () => {
+      await expect(service.renameBrowserProject('nope', 'x')).rejects.toThrow();
+    });
+  });
+
+  describe('renameProject (server)', () => {
+    it('PATCHes the new name and syncs an open project', async () => {
+      const project = new Project();
+      metadataStore.register(project, {
+        id: 'srv-1',
+        name: 'Before',
+        type: 'project',
+        source: 'server',
+        hash: 'h',
+        isPublic: false
+      });
+
+      const promise = firstValueFrom(service.renameProject('srv-1', 'After'));
+
+      const req = httpMock.expectOne(PROJECT_URL('srv-1'));
+      expect(req.request.method).toBe('PATCH');
+      expect(req.request.body).toEqual({ name: 'After' });
+      req.flush(projectSummaryResponse({ id: 'srv-1', name: 'After' }));
+
+      await promise;
+      expect(metadataStore.getMetadata(project)!.name).toBe('After');
     });
   });
 

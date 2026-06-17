@@ -16,6 +16,9 @@ export interface SaveProjectDialogResult {
   isPublic: boolean;
 }
 
+/** Mirrors the backend `UpdateProject`/`CreateProject` `name` `@MaxLength(20)`. */
+const NAME_MAX_LENGTH = 20;
+
 /**
  * Prompts for the name + destination of a never-saved project draft on its
  * first save. Collects input only — it closes the dialog with a
@@ -35,6 +38,7 @@ export class SaveProjectDialogComponent {
   protected readonly name = signal<string>(this.config.data?.name ?? '');
   protected readonly destination = signal<'server' | 'local'>('local');
   protected readonly isPublic = signal(false);
+  protected readonly nameMaxLength = NAME_MAX_LENGTH;
 
   protected get canSave(): boolean {
     return this.name().trim().length > 0;
