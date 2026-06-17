@@ -308,3 +308,96 @@ describe('Component port power', () => {
     comp.destroy({ children: true });
   });
 });
+
+describe('Component port negation', () => {
+  beforeEach(() => {
+    configureTestBed();
+  });
+
+  it('has no negated ports by default', () => {
+    const comp = makeAnd(2);
+
+    expect(comp.negatedInputs.size).toBe(0);
+    expect(comp.negatedOutputs.size).toBe(0);
+    expect(comp.isPortNegated('in', 0)).toBe(false);
+    expect(comp.isPortNegated('out', 0)).toBe(false);
+
+    comp.destroy({ children: true });
+  });
+
+  it('toggles a single port on and off', () => {
+    const comp = makeAnd(2);
+
+    comp.setPortNegated('in', 1, true);
+    expect(comp.isPortNegated('in', 1)).toBe(true);
+    expect([...comp.negatedInputs]).toEqual([1]);
+
+    comp.setPortNegated('in', 1, false);
+    expect(comp.isPortNegated('in', 1)).toBe(false);
+    expect(comp.negatedInputs.size).toBe(0);
+
+    comp.destroy({ children: true });
+  });
+
+  it('keeps input and output negation sets independent', () => {
+    const comp = makeAnd(2);
+
+    comp.setPortNegated('in', 0, true);
+    comp.setPortNegated('out', 0, true);
+
+    expect(comp.isPortNegated('in', 0)).toBe(true);
+    expect(comp.isPortNegated('out', 0)).toBe(true);
+
+    comp.setPortNegated('in', 0, false);
+    // Dropping input 0 must not disturb output 0.
+    expect(comp.isPortNegated('out', 0)).toBe(true);
+
+    comp.destroy({ children: true });
+  });
+
+  it('redraws on a real change but not on a redundant set', () => {
+    const comp = makeAnd(2);
+    let draws = 0;
+    const originalRedraw = comp.redraw.bind(comp);
+    comp.redraw = () => {
+      draws++;
+      originalRedraw();
+    };
+
+    comp.setPortNegated('in', 0, true);
+    expect(draws).toBe(1);
+
+    // Already negated — no state change, so no redraw.
+    comp.setPortNegated('in', 0, true);
+    expect(draws).toBe(1);
+
+    comp.destroy({ children: true });
+  });
+
+  it('does not prune out-of-range indices on a port-count shrink (lazy resize)', () => {
+    const comp = makeAnd(5);
+
+    comp.setPortNegated('in', 3, true);
+    expect(comp.isPortNegated('in', 3)).toBe(true);
+
+    // Shrinking below the negated index keeps it: the setter never mutates the
+    // negation set, so a shrink-then-grow round-trip preserves negation and the
+    // count change stays undoable via ChangeOptionAction.
+    comp.numInputs = 2;
+    expect(comp.isPortNegated('in', 3)).toBe(true);
+
+    comp.numInputs = 5;
+    expect(comp.isPortNegated('in', 3)).toBe(true);
+
+    comp.destroy({ children: true });
+  });
+
+  it('supports indices beyond a 32-bit word (no bitmask limit)', () => {
+    const comp = makeAnd(50);
+
+    comp.setPortNegated('in', 40, true);
+    expect(comp.isPortNegated('in', 40)).toBe(true);
+
+    comp.destroy({ children: true });
+  });
+});

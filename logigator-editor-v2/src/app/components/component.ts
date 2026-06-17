@@ -31,6 +31,9 @@ export interface PortsChange {
   newPorts: Point[];
 }
 
+/** Which port group a negation index addresses (0-based within that group). */
+export type PortSide = 'in' | 'out';
+
 export abstract class Component<
   TOptions extends Record<string, ComponentOption> = Record<
     string,
@@ -75,6 +78,13 @@ export abstract class Component<
   // Powered port indexes survive redraws (zoom applyScale, theme change) —
   // _drawConnections re-applies them to the rebuilt stubs.
   private readonly _poweredPorts = new Set<number>();
+
+  // Negated ports, indexed 0-based within each group (separate sets so an
+  // input-count change can never shift output indices). Out-of-range entries
+  // are ignored on read (rendering/serialize/compile) and pruned on serialize,
+  // so a count change never has to mutate these — keeping resize undo-safe.
+  private readonly _negatedInputs = new Set<number>();
+  private readonly _negatedOutputs = new Set<number>();
 
   private _initialized = false;
 
@@ -302,6 +312,44 @@ export abstract class Component<
   /** Stub graphics in `connectionPoints` order (rebuilt on every redraw). */
   public get portStubs(): readonly Graphics[] {
     return this._portStubs;
+  }
+
+  /** Negated input-port indices (0-based within the input group). Read-only. */
+  public get negatedInputs(): ReadonlySet<number> {
+    return this._negatedInputs;
+  }
+
+  /** Negated output-port indices (0-based within the output group). Read-only. */
+  public get negatedOutputs(): ReadonlySet<number> {
+    return this._negatedOutputs;
+  }
+
+  /** Whether port `index` on `side` is negated (an inverter bubble is drawn). */
+  public isPortNegated(side: PortSide, index: number): boolean {
+    return this._negationSet(side).has(index);
+  }
+
+  /**
+   * Toggles negation on a single port. Rebuilds the visual tree (via redraw)
+   * so the bubble appears/disappears immediately; a no-op when already in the
+   * requested state, so undo/redo stay idempotent. Does not touch port counts,
+   * so it never needs an out-of-range prune (see `_negatedInputs`).
+   */
+  public setPortNegated(side: PortSide, index: number, negated: boolean): void {
+    const set = this._negationSet(side);
+    if (set.has(index) === negated) {
+      return;
+    }
+    if (negated) {
+      set.add(index);
+    } else {
+      set.delete(index);
+    }
+    this.redraw();
+  }
+
+  private _negationSet(side: PortSide): Set<number> {
+    return side === 'in' ? this._negatedInputs : this._negatedOutputs;
   }
 
   /**
