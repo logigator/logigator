@@ -186,6 +186,22 @@ describe('CircuitFileService', () => {
       expect(normalize(json2)).toEqual(normalize(json));
     });
 
+    it('round-trips port negation on a built-in through toJson → fromJson', () => {
+      const project = buildProject([{ t: 2, p: [5, 3], i: 3, o: 1 }]); // AND, 3 inputs
+      const and = [...project.components][0];
+      and.setPortNegated('in', 2, true);
+      and.setPortNegated('out', 0, true);
+
+      const parsed = JSON.parse(service.toJson(project, 'Neg'));
+      expect(parsed.components[0].negInputs).toEqual([2]);
+      expect(parsed.components[0].negOutputs).toEqual([0]);
+
+      const reloaded = rebuild(service.toJson(project, 'Neg'));
+      const restored = [...reloaded.components][0];
+      expect(restored.isPortNegated('in', 2)).toBe(true);
+      expect(restored.isPortNegated('out', 0)).toBe(true);
+    });
+
     it('round-trips a 1-deep custom (with plugs) and embeds it as a definition', () => {
       const masterB = registry.createMaster(
         {
@@ -391,6 +407,30 @@ describe('CircuitFileService', () => {
       const { components } = service.fromJson(file);
 
       expect(components.length).toBe(0);
+    });
+
+    it('tolerates malformed negation fields, sanitizing rather than crashing', () => {
+      const file = JSON.stringify({
+        version: 1,
+        name: 'x',
+        components: [
+          {
+            type: BuiltInComponentType.AND,
+            pos: [0, 0],
+            options: { direction: 0, numInputs: 2 },
+            negInputs: 'garbage', // not an array → ignored
+            negOutputs: [0, -1, 1.5] // sanitized to [0]
+          }
+        ],
+        wires: [],
+        definitions: []
+      });
+
+      const { components } = service.fromJson(file);
+
+      expect(components.length).toBe(1);
+      expect(components[0].isPortNegated('in', 0)).toBe(false);
+      expect(components[0].isPortNegated('out', 0)).toBe(true);
     });
 
     it('allocates fresh ids for loaded components and wires', () => {

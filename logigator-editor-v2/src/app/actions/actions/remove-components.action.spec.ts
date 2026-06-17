@@ -6,8 +6,9 @@ import { setStaticDIInjector } from '../../utils/get-di';
 import { RemoveComponentsAction } from './remove-components.action';
 import { Component } from '../../components/component';
 import { AndComponent } from '../../components/component-types/and/and.component';
-import type { Project } from '../../project/project';
+import { Project } from '../../project/project';
 import { makeAnd } from '../../../testing/factories';
+import { configureTestBed } from '../../../testing/configure-test-bed';
 
 describe('RemoveComponentsAction', () => {
   let project: MockedObject<Project>;
@@ -142,5 +143,38 @@ describe('RemoveComponentsAction', () => {
 
       expect(project.removeComponent).toHaveBeenCalledWith(expectedId);
     });
+  });
+});
+
+describe('RemoveComponentsAction negation round-trip', () => {
+  let project: Project;
+
+  beforeEach(() => {
+    configureTestBed();
+    project = new Project();
+  });
+
+  afterEach(() => {
+    project.destroy({ children: true });
+  });
+
+  it('restores a negated port (and its bubble) on undo', () => {
+    const and = makeAnd(2, undefined, 2, 2);
+    project.addComponent(and);
+    and.setPortNegated('in', 1, true);
+    and.setPortNegated('out', 0, true);
+    const id = and.id;
+
+    // The action snapshots the component (with its negation) at construction.
+    project.actionManager.push(new RemoveComponentsAction(and));
+    expect(project.getComponentById(id)).toBeUndefined();
+
+    project.actionManager.undo();
+
+    const restored = project.getComponentById(id)!;
+    expect(restored.isPortNegated('in', 1)).toBe(true);
+    expect(restored.isPortNegated('out', 0)).toBe(true);
+    expect(restored.portBubbles.has(1)).toBe(true); // input 1
+    expect(restored.portBubbles.has(2)).toBe(true); // output 0 = numInputs + 0
   });
 });

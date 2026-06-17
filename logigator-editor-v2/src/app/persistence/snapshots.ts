@@ -1,5 +1,5 @@
 import type { Project } from '../project/project';
-import type { Component } from '../components/component';
+import { Component } from '../components/component';
 import type { Wire } from '../wires/wire';
 import type { CustomComponentRegistry } from '../components/custom/custom-component-registry.service';
 import { CUSTOM_TYPE_ID_BASE } from '../components/component-type.enum';
@@ -34,7 +34,8 @@ export function serializeComponentBody(
     pos: [component.position.x, component.position.y],
     options: Object.fromEntries(
       Object.entries(component.options).map(([key, opt]) => [key, opt.value])
-    )
+    ),
+    ...Component.serializeNegations(component)
   };
 }
 
@@ -128,7 +129,9 @@ export function collectSnapshots(
       components: circuit.components.map((c) => ({
         type: sessionToLocal.get(c.type) ?? c.type,
         pos: [c.pos[0], c.pos[1]],
-        options: { ...c.options }
+        options: { ...c.options },
+        ...(c.negInputs ? { negInputs: [...c.negInputs] } : {}),
+        ...(c.negOutputs ? { negOutputs: [...c.negOutputs] } : {})
       })),
       wires: circuit.wires.map((w) => ({
         pos: [w.pos[0], w.pos[1]],

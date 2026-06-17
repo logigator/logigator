@@ -28,6 +28,17 @@ function isNumberPair(value: unknown): value is [number, number] {
 }
 
 /**
+ * Negation indices from an untrusted file: keep only non-negative integers,
+ * `undefined` when absent or not an array. Tolerant rather than throwing —
+ * a stray index is harmless (rendering/compile ignore out-of-range), but a
+ * non-array would otherwise crash the `for…of` in `Component.deserialize`.
+ */
+function sanitizeNegArray(value: unknown): number[] | undefined {
+  if (!Array.isArray(value)) return undefined;
+  return value.filter((i) => Number.isInteger(i) && i >= 0);
+}
+
+/**
  * Reads/writes the native circuit file format. Encoding always emits the current
  * version; decoding parses, migrates any older document up to current (via the
  * migration chain), then turns it into editor instances.
@@ -144,7 +155,15 @@ export class CircuitFileService {
         continue;
       }
       components.push(
-        Component.deserialize({ pos: c.pos, options: c.options }, config)
+        Component.deserialize(
+          {
+            pos: c.pos,
+            options: c.options,
+            negInputs: sanitizeNegArray(c.negInputs),
+            negOutputs: sanitizeNegArray(c.negOutputs)
+          },
+          config
+        )
       );
     }
 

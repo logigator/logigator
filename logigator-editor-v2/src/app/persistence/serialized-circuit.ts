@@ -16,6 +16,10 @@ export interface SerializedComponentBody {
   type: number;
   pos: [number, number];
   options: Record<string, unknown>;
+  /** Negated input-port indices (sorted, within-group). Omitted when empty. */
+  negInputs?: number[];
+  /** Negated output-port indices (sorted, within-group). Omitted when empty. */
+  negOutputs?: number[];
 }
 
 /** One wire: start position, direction (0 = horizontal, 1 = vertical), length. */
@@ -49,14 +53,16 @@ export interface SnapshotDefinition extends SerializedCircuitBody {
   labels: string[];
 }
 
-/** Deep-copies a component body (positions and option values copied by value). */
+/** Deep-copies a component body (positions, option values, and negation copied by value). */
 export function cloneComponentBody(
   component: SerializedComponentBody
 ): SerializedComponentBody {
   return {
     type: component.type,
     pos: [component.pos[0], component.pos[1]],
-    options: { ...component.options }
+    options: { ...component.options },
+    ...(component.negInputs ? { negInputs: [...component.negInputs] } : {}),
+    ...(component.negOutputs ? { negOutputs: [...component.negOutputs] } : {})
   };
 }
 
@@ -86,6 +92,8 @@ export function remapComponentTypes(
   return components.map((c) => ({
     type: map.get(c.type) ?? c.type,
     pos: [c.pos[0], c.pos[1]],
-    options: { ...c.options }
+    options: { ...c.options },
+    ...(c.negInputs ? { negInputs: [...c.negInputs] } : {}),
+    ...(c.negOutputs ? { negOutputs: [...c.negOutputs] } : {})
   }));
 }

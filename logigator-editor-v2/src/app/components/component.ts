@@ -103,7 +103,29 @@ export abstract class Component<
       pos: [component.position.x, component.position.y],
       options: Object.fromEntries(
         Object.entries(component.options).map(([key, opt]) => [key, opt.value])
-      )
+      ),
+      ...Component.serializeNegations(component)
+    };
+  }
+
+  /**
+   * Sorted, in-range negation indices for serialization (native body, undo
+   * snapshot, clipboard, server). Out-of-range entries left by a port-count
+   * shrink are dropped here and empty groups are omitted, so a component with
+   * no negation serializes to nothing. Single source of truth shared by both
+   * the {@link SerializedComponent} and `SerializedComponentBody` producers.
+   */
+  public static serializeNegations(component: Component): {
+    negInputs?: number[];
+    negOutputs?: number[];
+  } {
+    const inRange = (set: ReadonlySet<number>, count: number) =>
+      [...set].filter((i) => i < count).sort((a, b) => a - b);
+    const negInputs = inRange(component.negatedInputs, component.numInputs);
+    const negOutputs = inRange(component.negatedOutputs, component.numOutputs);
+    return {
+      ...(negInputs.length ? { negInputs } : {}),
+      ...(negOutputs.length ? { negOutputs } : {})
     };
   }
 
@@ -124,6 +146,13 @@ export abstract class Component<
       component.id = serialized.id;
     }
     component.position.set(serialized.pos[0], serialized.pos[1]);
+
+    if (serialized.negInputs?.length || serialized.negOutputs?.length) {
+      component.setNegations(
+        serialized.negInputs ?? [],
+        serialized.negOutputs ?? []
+      );
+    }
 
     return component;
   }
@@ -382,6 +411,22 @@ export abstract class Component<
 
   private _negationSet(side: PortSide): Set<number> {
     return side === 'in' ? this._negatedInputs : this._negatedOutputs;
+  }
+
+  /**
+   * Replaces both negation sets in a single redraw. Used by deserialize to
+   * apply persisted negation after construction; callers skip it when there is
+   * nothing to negate, so the common no-negation load pays no extra redraw.
+   */
+  public setNegations(
+    inputs: Iterable<number>,
+    outputs: Iterable<number>
+  ): void {
+    this._negatedInputs.clear();
+    this._negatedOutputs.clear();
+    for (const i of inputs) this._negatedInputs.add(i);
+    for (const i of outputs) this._negatedOutputs.add(i);
+    this.redraw();
   }
 
   /**

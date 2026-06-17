@@ -24,7 +24,15 @@ export function instantiateBody(
     const config = provider.getComponent(c.type);
     if (config) {
       components.push(
-        Component.deserialize({ pos: c.pos, options: c.options }, config)
+        Component.deserialize(
+          {
+            pos: c.pos,
+            options: c.options,
+            negInputs: c.negInputs,
+            negOutputs: c.negOutputs
+          },
+          config
+        )
       );
     }
   }

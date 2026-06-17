@@ -509,3 +509,93 @@ describe('Component negation bubble rendering', () => {
     comp.destroy({ children: true });
   });
 });
+
+describe('Component negation serialization', () => {
+  beforeEach(() => {
+    configureTestBed();
+  });
+
+  it('serializes negation as sorted within-group arrays, omitting empty groups', () => {
+    const comp = makeAnd(3); // inputs 0,1,2; output 0
+    comp.setPortNegated('in', 2, true);
+    comp.setPortNegated('in', 0, true);
+
+    const s = Component.serialize(comp);
+
+    expect(s.negInputs).toEqual([0, 2]);
+    expect('negOutputs' in s).toBe(false);
+
+    comp.destroy({ children: true });
+  });
+
+  it('omits both groups when nothing is negated', () => {
+    const comp = makeAnd(2);
+
+    const s = Component.serialize(comp);
+
+    expect('negInputs' in s).toBe(false);
+    expect('negOutputs' in s).toBe(false);
+
+    comp.destroy({ children: true });
+  });
+
+  it('drops out-of-range indices left by a shrink (normalize on serialize)', () => {
+    const comp = makeAnd(5);
+    comp.setPortNegated('in', 4, true);
+    comp.numInputs = 2; // index 4 stays in the set but is now out of range
+
+    const s = Component.serialize(comp);
+
+    expect('negInputs' in s).toBe(false);
+
+    comp.destroy({ children: true });
+  });
+
+  it('deserializes negation back onto the ports (with bubbles)', () => {
+    const comp = Component.deserialize(
+      {
+        pos: [0, 0],
+        options: { direction: Direction.E, numInputs: 3 },
+        negInputs: [1],
+        negOutputs: [0]
+      },
+      andComponentConfig
+    );
+
+    expect(comp.isPortNegated('in', 1)).toBe(true);
+    expect(comp.isPortNegated('out', 0)).toBe(true);
+    expect(comp.portBubbles.has(1)).toBe(true); // input 1
+    expect(comp.portBubbles.has(3)).toBe(true); // output 0 = numInputs + 0
+
+    comp.destroy({ children: true });
+  });
+
+  it('round-trips serialize → deserialize', () => {
+    const comp = makeAnd(3);
+    comp.setPortNegated('in', 2, true);
+    comp.setPortNegated('out', 0, true);
+
+    const restored = Component.deserialize(
+      Component.serialize(comp),
+      andComponentConfig
+    );
+
+    expect([...restored.negatedInputs]).toEqual([2]);
+    expect([...restored.negatedOutputs]).toEqual([0]);
+
+    comp.destroy({ children: true });
+    restored.destroy({ children: true });
+  });
+
+  it('treats a serialized form without negation fields as no negation', () => {
+    const comp = Component.deserialize(
+      { pos: [0, 0], options: { direction: Direction.E, numInputs: 2 } },
+      andComponentConfig
+    );
+
+    expect(comp.negatedInputs.size).toBe(0);
+    expect(comp.negatedOutputs.size).toBe(0);
+
+    comp.destroy({ children: true });
+  });
+});

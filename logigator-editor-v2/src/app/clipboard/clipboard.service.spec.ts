@@ -279,6 +279,26 @@ describe('ClipboardService', () => {
       }
     });
 
+    it('carries port negation through copy/paste', () => {
+      const comp = makeAnd(3);
+      comp.setPortNegated('in', 1, true);
+      comp.setPortNegated('out', 0, true);
+      compsToDestroy.push(comp);
+      const src = makeProject([comp]);
+      service.copy(src);
+
+      const dest = makeProject();
+      service.paste(dest);
+
+      const mockFn = dest.startPasteSession as ReturnType<typeof vi.fn>;
+      const [freshComps] = mockFn.mock.calls[0] as [Component[], Wire[]];
+      expect(freshComps[0].isPortNegated('in', 1)).toBe(true);
+      expect(freshComps[0].isPortNegated('out', 0)).toBe(true);
+      for (const c of freshComps) {
+        if (!c.destroyed) c.destroy({ children: true });
+      }
+    });
+
     it('skips unknown component types gracefully', () => {
       // Manually set clipboard with an unknown type; paste should not throw
       // and startPasteSession receives an empty component array.
