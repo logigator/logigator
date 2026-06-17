@@ -118,6 +118,10 @@ export class BoardComponent implements OnInit, OnDestroy {
       project.mode = this.workModeService.mode();
       project.componentToPlace = this.workModeService.selectedComponentConfig();
     });
+
+    effect(() => {
+      this.project()?.setGridVisible(this.editorSettings.showGrid.value());
+    });
   }
 
   async ngOnInit(): Promise<void> {

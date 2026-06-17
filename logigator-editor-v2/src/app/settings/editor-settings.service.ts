@@ -22,7 +22,17 @@ export class EditorSettingsService {
     () => this.persist()
   );
 
-  public readonly settings: readonly EditorSetting[] = [this.fpsCounter];
+  public readonly showGrid = new EditorSetting(
+    'showGrid',
+    'settings.options.showGrid',
+    this.stored['showGrid'] ?? true,
+    () => this.persist()
+  );
+
+  public readonly settings: readonly EditorSetting[] = [
+    this.fpsCounter,
+    this.showGrid
+  ];
 
   private load(): Record<string, boolean> {
     const raw = localStorage.getItem(STORAGE_KEY);

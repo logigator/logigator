@@ -9,7 +9,8 @@ const en = {
   },
   settings: {
     options: {
-      fpsCounter: 'FPS Counter'
+      fpsCounter: 'FPS Counter',
+      showGrid: 'Show Grid'
     }
   },
   components: {

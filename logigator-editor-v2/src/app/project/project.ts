@@ -100,6 +100,11 @@ export class Project extends InteractionContainer {
     return this._connectionPoints;
   }
 
+  public setGridVisible(visible: boolean): void {
+    this._grid.visible = visible;
+    this.triggerTicker('single');
+  }
+
   public resizeViewport(width: number, height: number): void {
     this._viewport.resizeViewport(width, height);
   }
