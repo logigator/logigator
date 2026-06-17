@@ -480,6 +480,38 @@ describe('Component negation bubble rendering', () => {
     comp.destroy({ children: true });
   });
 
+  it('anchors the bubble at the rendered bubble position (E facing)', () => {
+    const comp = makeAnd(2, Direction.E, 4, 7); // bodyGridWidth = 2
+
+    const input0 = comp.negationBubbleAnchor('in', 0);
+    expect(input0.x).toBeCloseTo(4 - NEGATION_BUBBLE_RADIUS, 5);
+    expect(input0.y).toBeCloseTo(7.5, 5);
+
+    const output0 = comp.negationBubbleAnchor('out', 0);
+    expect(output0.x).toBeCloseTo(4 + 2 + NEGATION_BUBBLE_RADIUS, 5);
+    expect(output0.y).toBeCloseTo(7.5, 5);
+
+    comp.destroy({ children: true });
+  });
+
+  it('keeps the bubble anchor one radius inside the tip across all rotations', () => {
+    // The anchor sits NEGATION_BUBBLE_RADIUS from the body edge, i.e.
+    // (0.5 - radius) from the connection-point tip. Rotation is rigid, so that
+    // offset is invariant — this pins the negationBubbleAnchor rotation math
+    // the hover ghost relies on.
+    const expected = 0.5 - NEGATION_BUBBLE_RADIUS;
+    for (const dir of [Direction.E, Direction.S, Direction.W, Direction.N]) {
+      const comp = makeAnd(2, dir, 5, 5);
+      const anchor = comp.negationBubbleAnchor('in', 0);
+      const tip = comp.connectionPoints[0];
+      expect(Math.hypot(anchor.x - tip.x, anchor.y - tip.y)).toBeCloseTo(
+        expected,
+        5
+      );
+      comp.destroy({ children: true });
+    }
+  });
+
   it('keeps the bubble and its context across applyScale (no rebuild)', () => {
     const comp = makeAnd(2);
 
