@@ -86,3 +86,69 @@ describe('FloatingLayer in SIMULATION mode', () => {
     expect(tickerValues).toContain('off');
   });
 });
+
+describe('FloatingLayer in PORT_NEGATION mode', () => {
+  let project: Project;
+  let layer: FloatingLayer;
+
+  beforeEach(() => {
+    configureTestBed();
+    project = new Project();
+    layer = new FloatingLayer(project);
+  });
+
+  afterEach(() => {
+    layer.destroy({ children: true });
+    project.destroy({ children: true });
+  });
+
+  it('toggles negation on the clicked input port, undoably', () => {
+    const and = makeAnd(2, undefined, 2, 2);
+    project.addComponent(and);
+    layer.mode = WorkMode.PORT_NEGATION;
+    const cp = and.connectionPoints; // 0,1 inputs; 2 output
+
+    layer.emit('pointerdown', downEvent(cp[0].x, cp[0].y));
+
+    expect(and.isPortNegated('in', 0)).toBe(true);
+    expect(project.actionManager.undoAvailable).toBe(true);
+
+    project.actionManager.undo();
+    expect(and.isPortNegated('in', 0)).toBe(false);
+  });
+
+  it('toggles the output port back off on a second click', () => {
+    const and = makeAnd(2, undefined, 2, 2);
+    project.addComponent(and);
+    layer.mode = WorkMode.PORT_NEGATION;
+    const out = and.connectionPoints[2];
+
+    layer.emit('pointerdown', downEvent(out.x, out.y));
+    expect(and.isPortNegated('out', 0)).toBe(true);
+
+    layer.emit('pointerdown', downEvent(out.x, out.y));
+    expect(and.isPortNegated('out', 0)).toBe(false);
+  });
+
+  it('does nothing when the click is outside port tolerance', () => {
+    const and = makeAnd(2, undefined, 2, 2);
+    project.addComponent(and);
+    layer.mode = WorkMode.PORT_NEGATION;
+    const cp = and.connectionPoints[0];
+
+    // 0.3gu away — within the quad-tree query box but past the 0.25gu hit test.
+    layer.emit('pointerdown', downEvent(cp.x + 0.3, cp.y));
+
+    expect(and.isPortNegated('in', 0)).toBe(false);
+    expect(project.actionManager.undoAvailable).toBe(false);
+  });
+
+  it('does nothing when clicking empty canvas', () => {
+    project.addComponent(makeAnd(2, undefined, 2, 2));
+    layer.mode = WorkMode.PORT_NEGATION;
+
+    layer.emit('pointerdown', downEvent(20, 20));
+
+    expect(project.actionManager.undoAvailable).toBe(false);
+  });
+});

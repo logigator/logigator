@@ -245,6 +245,15 @@
         icon="ph ph-text-t"
         severity="secondary"
       ></p-button>
+      <p-button
+        [pTooltip]="negateTooltip()"
+        [ariaLabel]="negateTooltip()"
+        [outlined]="!isPortNegationMode()"
+        (onClick)="setPortNegationMode()"
+        tooltipPosition="bottom"
+        icon="ph ph-circle-half-tilt"
+        severity="secondary"
+      ></p-button>
     </div>
     <p-divider layout="vertical" class="mx-1!"></p-divider>
     <div class="flex flex-wrap gap-1">

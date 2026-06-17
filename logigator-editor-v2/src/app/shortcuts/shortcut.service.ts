@@ -279,6 +279,10 @@ export class ShortcutService implements OnDestroy {
       this.workModeService.setMode(WorkMode.COMPONENT_PLACEMENT);
       this.workModeService.setSelectedComponentType(BuiltInComponentType.TEXT);
     });
+
+    this.on(ShortcutActionEnum.TOOL_PORT_NEGATION).subscribe(() => {
+      this.workModeService.setMode(WorkMode.PORT_NEGATION);
+    });
   }
 
   private _matchesBinding(binding: ShortcutBinding, e: KeyboardEvent): boolean {

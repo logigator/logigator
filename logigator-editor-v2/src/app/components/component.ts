@@ -310,6 +310,22 @@ export abstract class Component<
   }
 
   /**
+   * Grid-space centre of the inverter bubble for a port (0-based within its
+   * group) — where a bubble is, or would be, drawn. Mirrors the bubble
+   * placement in `_drawConnections` so the port-negation tool's hover preview
+   * lands exactly on the real bubble's spot.
+   */
+  public negationBubbleAnchor(side: PortSide, index: number): Point {
+    const matrix = Matrix.IDENTITY.rotate(this.rotation);
+    const local =
+      side === 'in'
+        ? new Point(-NEGATION_BUBBLE_RADIUS, index + 0.5)
+        : new Point(this.bodyGridWidth + NEGATION_BUBBLE_RADIUS, index + 0.5);
+    const rotated = matrix.apply(local);
+    return new Point(this.position.x + rotated.x, this.position.y + rotated.y);
+  }
+
+  /**
    * Resets transient simulation visual state (button pressed, lever on) when
    * a simulation stops. No-op for components without sim state.
    */

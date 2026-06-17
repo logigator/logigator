@@ -2,12 +2,14 @@ import {
   Container,
   DestroyOptions,
   FederatedPointerEvent,
+  Graphics,
+  Point,
   Rectangle
 } from 'pixi.js';
 import { Subscription } from 'rxjs';
 import { WorkMode } from '../work-mode/work-mode.enum';
 import { Project } from '../project/project';
-import { Component } from '../components/component';
+import { Component, PortSide } from '../components/component';
 import { roundToGrid, roundToHalfGrid } from '../utils/grid';
 import { ComponentConfig } from '../components/component-config.model';
 import { Wire } from '../wires/wire';
@@ -23,7 +25,22 @@ import { ConnectionPoint } from '../connection-points/connection-point';
 import { ShortcutService } from '../shortcuts/shortcut.service';
 import { ShortcutActionEnum } from '../shortcuts/shortcut-action.enum';
 import { getStaticDI } from '../utils/get-di';
-import { BuiltInComponentType } from '../components/component-type.enum';
+import {
+  BuiltInComponentType,
+  CUSTOM_TYPE_ID_BASE
+} from '../components/component-type.enum';
+import { TogglePortNegationAction } from '../actions/actions/toggle-port-negation.action';
+import { GraphicsProviderService } from './graphics-provider.service';
+import { NegationBubbleGraphics } from './graphics/negation-bubble.graphics';
+
+/** Click tolerance (grid units) for hitting a port in PORT_NEGATION mode. */
+const PORT_HIT_TOLERANCE = 0.25;
+
+interface PortHit {
+  comp: Component;
+  side: PortSide;
+  index: number;
+}
 
 export class FloatingLayer extends Container {
   private readonly _dragLayer = new Container<
@@ -33,6 +50,11 @@ export class FloatingLayer extends Container {
   private _mode: WorkMode = WorkMode.WIRE_DRAWING;
   private _componentToPlace: ComponentConfig | null = null;
   private _activeDrag: DragSession | null = null;
+
+  // Ghost bubble shown under the cursor while in PORT_NEGATION mode, previewing
+  // the port the next click would toggle. Lazily created, hidden when no port
+  // is in range.
+  private _negationHoverGhost: Graphics | null = null;
 
   private _cancelSub?: Subscription;
 
@@ -80,7 +102,13 @@ export class FloatingLayer extends Container {
       this._stopDrag();
     }
     this.project.selectionManager.clear();
+    if (this._mode === WorkMode.PORT_NEGATION) {
+      this._exitNegationMode();
+    }
     this._mode = value;
+    if (value === WorkMode.PORT_NEGATION) {
+      this._enterNegationMode();
+    }
     this.project.triggerTicker('single');
   }
 
@@ -184,6 +212,24 @@ export class FloatingLayer extends Container {
         this._startDrag(new WireConnectionSession(this.project, startPos));
         break;
       }
+      case WorkMode.PORT_NEGATION: {
+        // A click action, not a drag session: toggle the negation of the port
+        // under the cursor through the undo stack.
+        const hit = this._findPortAt(
+          e.getLocalPosition(this.project.gridSpace)
+        );
+        if (hit) {
+          this.project.actionManager.push(
+            new TogglePortNegationAction(
+              hit.comp.id,
+              hit.side,
+              hit.index,
+              !hit.comp.isPortNegated(hit.side, hit.index)
+            )
+          );
+        }
+        break;
+      }
       case WorkMode.SIMULATION: {
         // No drag sessions in simulation mode — editing is structurally
         // locked at the canvas level. The only interaction is clicking a
@@ -237,6 +283,79 @@ export class FloatingLayer extends Container {
     this.off('pointermove', this.onPointerMove);
     this._activeDrag = null;
     this.project.triggerTicker('off');
+  }
+
+  /**
+   * Nearest negatable port to a grid-space point, within tolerance. Uses the
+   * quad-tree range query (never iterates every component) and rejects placed
+   * custom instances — their external ports are not independently negatable.
+   */
+  private _findPortAt(localPoint: Point): PortHit | null {
+    const queryRect = new Rectangle(
+      localPoint.x - 0.5,
+      localPoint.y - 0.5,
+      1,
+      1
+    );
+    for (const comp of this.project.queryComponentsInRange(queryRect)) {
+      if (comp.config.type >= CUSTOM_TYPE_ID_BASE) continue;
+      const points = comp.connectionPoints;
+      for (let i = 0; i < points.length; i++) {
+        const dx = points[i].x - localPoint.x;
+        const dy = points[i].y - localPoint.y;
+        if (dx * dx + dy * dy <= PORT_HIT_TOLERANCE * PORT_HIT_TOLERANCE) {
+          const side: PortSide = i < comp.numInputs ? 'in' : 'out';
+          return {
+            comp,
+            side,
+            index: side === 'in' ? i : i - comp.numInputs
+          };
+        }
+      }
+    }
+    return null;
+  }
+
+  private _enterNegationMode(): void {
+    this.cursor = 'pointer';
+    this.on('pointermove', this._onNegationHover);
+  }
+
+  private _exitNegationMode(): void {
+    this.cursor = 'default';
+    this.off('pointermove', this._onNegationHover);
+    if (this._negationHoverGhost) {
+      this._negationHoverGhost.visible = false;
+    }
+  }
+
+  private _onNegationHover(e: FederatedPointerEvent): void {
+    const hit = this._findPortAt(e.getLocalPosition(this.project.gridSpace));
+    if (hit) {
+      const ghost = this._ensureNegationHoverGhost();
+      ghost.position.copyFrom(hit.comp.negationBubbleAnchor(hit.side, hit.index));
+      ghost.visible = true;
+    } else if (this._negationHoverGhost) {
+      this._negationHoverGhost.visible = false;
+    }
+    this.project.triggerTicker('single');
+  }
+
+  private _ensureNegationHoverGhost(): Graphics {
+    if (!this._negationHoverGhost) {
+      const ghost = new Graphics(
+        getStaticDI(GraphicsProviderService).getGraphicsContext(
+          NegationBubbleGraphics,
+          false
+        )
+      );
+      ghost.alpha = 0.5;
+      // Above components/wires since the floating layer is the top child of
+      // gridSpace; shares its grid-unit coordinate space.
+      this.addChild(ghost);
+      this._negationHoverGhost = ghost;
+    }
+    return this._negationHoverGhost;
   }
 
   override destroy(options?: DestroyOptions) {

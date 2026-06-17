@@ -92,6 +92,7 @@ const en = {
       selExact: 'Selecting Elements (Cut Wires at Selection)',
       erase: 'Erasing Elements',
       placeComp: 'Placing Components: {{componentName}}',
+      negPort: 'Negating Ports',
       simulation: 'Simulating'
     } satisfies Record<WorkMode, string>,
     saved: 'Saved',
@@ -211,6 +212,7 @@ const en = {
     selExact: 'Select exact',
     eraser: 'Eraser',
     text: 'Text',
+    negate: 'Negate ports',
     startSim: 'Start simulation',
     exitSim: 'Exit simulation',
     play: 'Run',
@@ -252,6 +254,7 @@ const en = {
       toolErase: 'Erase',
       toolComponentPlacement: 'Place Component',
       toolPlaceText: 'Place Text',
+      toolPortNegation: 'Negate Ports',
       cancel: 'Cancel'
     } satisfies Record<ShortcutActionEnum, string>,
     groups: {

@@ -21,6 +21,7 @@ export enum ShortcutActionEnum {
   TOOL_ERASE = 'toolErase',
   TOOL_COMPONENT_PLACEMENT = 'toolComponentPlacement',
   TOOL_PLACE_TEXT = 'toolPlaceText',
+  TOOL_PORT_NEGATION = 'toolPortNegation',
 
   CANCEL = 'cancel'
 }

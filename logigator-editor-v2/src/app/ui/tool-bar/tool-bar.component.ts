@@ -117,6 +117,10 @@ export class ToolBarComponent {
     () =>
       `${this.translocoService.translate('toolBar.text')} (${this._fmt(ShortcutActionEnum.TOOL_PLACE_TEXT)})`
   );
+  protected negateTooltip = computed(
+    () =>
+      `${this.translocoService.translate('toolBar.negate')} (${this._fmt(ShortcutActionEnum.TOOL_PORT_NEGATION)})`
+  );
 
   // Swaps the toolbar between the editing tool set and the simulation
   // controls.
@@ -150,6 +154,9 @@ export class ToolBarComponent {
       this.workModeService.mode() === WorkMode.COMPONENT_PLACEMENT &&
       this.workModeService.selectedComponentType() === BuiltInComponentType.TEXT
   );
+  protected isPortNegationMode = computed(
+    () => this.workModeService.mode() === WorkMode.PORT_NEGATION
+  );
 
   protected setWireDrawMode(): void {
     this.workModeService.setMode(WorkMode.WIRE_DRAWING);
@@ -174,6 +181,10 @@ export class ToolBarComponent {
   protected setPlaceTextMode(): void {
     this.workModeService.setMode(WorkMode.COMPONENT_PLACEMENT);
     this.workModeService.setSelectedComponentType(BuiltInComponentType.TEXT);
+  }
+
+  protected setPortNegationMode(): void {
+    this.workModeService.setMode(WorkMode.PORT_NEGATION);
   }
 
   protected copy(): void {

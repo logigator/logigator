@@ -93,6 +93,12 @@ export const DEFAULT_SHORTCUTS: Record<ShortcutActionEnum, ShortcutBinding> = {
     shift: false,
     alt: false
   },
+  [ShortcutActionEnum.TOOL_PORT_NEGATION]: {
+    key: 'n',
+    ctrl: false,
+    shift: false,
+    alt: false
+  },
   [ShortcutActionEnum.CANCEL]: {
     key: 'Escape',
     ctrl: false,
