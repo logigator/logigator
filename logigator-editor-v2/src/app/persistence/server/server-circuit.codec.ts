@@ -30,7 +30,7 @@ import type { ProjectElement } from '../../api/models/project-element';
 import type { DependencyMapping } from '../../api/models/dependencies';
 import type { ComponentConfig } from '../../components/component-config.model';
 import type { Project } from '../../project/project';
-import type { Component } from '../../components/component';
+import { Component } from '../../components/component';
 import type { Wire } from '../../wires/wire';
 import type { ComponentProviderService } from '../../components/component-provider.service';
 import type { CustomComponentRegistry } from '../../components/custom/custom-component-registry.service';
@@ -154,6 +154,10 @@ function serializeComponent(component: Component): ProjectElement {
     el.s = component.options[slots.s].value as string;
   }
 
+  // Negation has no positional v0 slot — it rides as additive arrays (sorted,
+  // in-range, omitted when empty), shared shape with the native body.
+  Object.assign(el, Component.serializeNegations(component));
+
   return el;
 }
 
@@ -241,6 +245,11 @@ function encodeBodyComponent(
     const v = component.options[slots.s];
     if (v !== undefined) el.s = v as string;
   }
+
+  // Built-ins inside a custom definition keep their negation (already sorted,
+  // in-range from serializeComponentBody); copy it onto the v0 element.
+  if (component.negInputs?.length) el.negInputs = [...component.negInputs];
+  if (component.negOutputs?.length) el.negOutputs = [...component.negOutputs];
 
   // Reverse the v0→v1 pivot re-anchor (the snapshot body was decoded through
   // the same migration), so built-ins round-trip to their legacy top-left.

@@ -19,4 +19,8 @@ export interface ProjectElement {
   n?: number[];
   /** string data (up to 32768 chars) */
   s?: string;
+  /** negated input-port indices (0-based within the input group) */
+  negInputs?: number[];
+  /** negated output-port indices (0-based within the output group) */
+  negOutputs?: number[];
 }

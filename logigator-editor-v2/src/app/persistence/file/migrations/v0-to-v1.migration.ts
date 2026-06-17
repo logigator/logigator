@@ -117,11 +117,32 @@ function decodeElements(
         width,
         height
       ),
-      options: decodeOptions(element, config)
+      options: decodeOptions(element, config),
+      ...decodeNegation(element)
     });
   }
 
   return { components, wires };
+}
+
+/**
+ * Copies a v0 element's negation arrays into the native body, omitting empty or
+ * non-array fields. Defensive against the array shape so a stray value can't
+ * crash the later `Component.deserialize` iteration (the backend DTO already
+ * validates them, this just keeps the permanent decode path robust).
+ */
+function decodeNegation(element: ProjectElement): {
+  negInputs?: number[];
+  negOutputs?: number[];
+} {
+  return {
+    ...(Array.isArray(element.negInputs) && element.negInputs.length
+      ? { negInputs: [...element.negInputs] }
+      : {}),
+    ...(Array.isArray(element.negOutputs) && element.negOutputs.length
+      ? { negOutputs: [...element.negOutputs] }
+      : {})
+  };
 }
 
 /**

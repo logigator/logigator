@@ -180,6 +180,29 @@ describe('server-circuit.codec', () => {
       expect(dependencies).toEqual([]);
     });
 
+    it('round-trips port negation through decode → encode (additive arrays)', () => {
+      // negInputs/negOutputs have no positional v0 slot; they ride as additive
+      // arrays. The normalize() helper drops them, so assert them explicitly.
+      const project = decode([
+        { t: 2, p: [3, 4], i: 3, o: 1, negInputs: [2], negOutputs: [0] }
+      ]);
+      const [and] = [...project.components];
+      expect(and.isPortNegated('in', 2)).toBe(true);
+      expect(and.isPortNegated('out', 0)).toBe(true);
+
+      const comp = encode(project).elements.find((e) => e.t === 2)!;
+      expect(comp.negInputs).toEqual([2]);
+      expect(comp.negOutputs).toEqual([0]);
+    });
+
+    it('omits negation arrays for an un-negated component', () => {
+      const comp = encode(decode([{ t: 2, p: [0, 0], i: 2, o: 1 }])).elements.find(
+        (e) => e.t === 2
+      )!;
+      expect('negInputs' in comp).toBe(false);
+      expect('negOutputs' in comp).toBe(false);
+    });
+
     it('ignores element i/o for plugs — counts come from the definition', () => {
       // A plug's port counts are fixed by its type, not the wire fields.
       // Even a bogus i/o must not change the instance's port count.

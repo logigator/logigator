@@ -24,6 +24,8 @@ interface BodyComponent {
   type: number;
   pos: [number, number];
   options: Record<string, unknown>;
+  negInputs?: number[];
+  negOutputs?: number[];
 }
 interface BodyWire {
   pos: [number, number];
@@ -230,6 +232,45 @@ describe('CircuitFileService', () => {
 
       const json2 = service.toJson(rebuild(json), 'OneDeep');
       expect(normalize(json2)).toEqual(normalize(json));
+    });
+
+    it('preserves negation on a built-in embedded inside a custom definition', () => {
+      const master = registry.createMaster(
+        {
+          id: 'id-neg',
+          symbol: 'N',
+          numInputs: 1,
+          numOutputs: 1,
+          labels: ['in', 'out'],
+          circuit: {
+            components: [
+              {
+                type: BuiltInComponentType.AND,
+                pos: [2, 2],
+                options: { direction: 0, numInputs: 2 },
+                negInputs: [1]
+              }
+            ],
+            wires: []
+          }
+        },
+        'browser'
+      );
+      const project = new Project();
+      place(project, registry.snapshot(master).typeId, [3, 3]);
+
+      const parsed = JSON.parse(service.toJson(project, 'NegCustom'));
+      const andBody = parsed.definitions[0].components.find(
+        (c: BodyComponent) => c.type === BuiltInComponentType.AND
+      );
+      expect(andBody.negInputs).toEqual([1]);
+
+      // The embedded negation survives a full reload + re-encode.
+      const json2 = service.toJson(rebuild(service.toJson(project, 'X')), 'X');
+      const reAnd = JSON.parse(json2).definitions[0].components.find(
+        (c: BodyComponent) => c.type === BuiltInComponentType.AND
+      );
+      expect(reAnd.negInputs).toEqual([1]);
     });
 
     it('round-trips a 2-deep nested custom and opens it post-load (id-space rule)', () => {
