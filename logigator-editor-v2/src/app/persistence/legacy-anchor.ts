@@ -33,7 +33,10 @@ export const LEGACY_BODY_WIDTHS: Record<number, number> = {
 };
 
 /** Unrotated body height — mirrors `Component.bodyGridHeight`. */
-export function legacyBodyHeight(numInputs: number, numOutputs: number): number {
+export function legacyBodyHeight(
+  numInputs: number,
+  numOutputs: number
+): number {
   return Math.max(1, numInputs, numOutputs);
 }
 

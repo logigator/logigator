@@ -88,9 +88,9 @@ Translates a project's `ticker$` signals into renders of the board's PixiJS `App
 
 | Signal     | Effect                                                                                              |
 | ---------- | --------------------------------------------------------------------------------------------------- |
-| `'on'`     | Increments the run-count and `app.ticker.start()` — continuous rendering.                            |
+| `'on'`     | Increments the run-count and `app.ticker.start()` — continuous rendering.                           |
 | `'off'`    | Decrements; at zero, cancels any queued single frame, fires one final `app.ticker.update()`, stops. |
-| `'single'` | While the run-count is zero, schedules one render (see coalescing below); otherwise a no-op.         |
+| `'single'` | While the run-count is zero, schedules one render (see coalescing below); otherwise a no-op.        |
 
 **Reference-counted run-count** — any number of concerns (a simulation run, a pan, a drag session) can hold the continuous ticker on at once via `'on'`/`'off'`; it stops only once the last one releases. Without this, a transient interaction's `'off'` (e.g. finishing a pan) would stop the ticker a running simulation still needs. While the run-count is non-zero the board already renders every frame, so `'single'` signals are ignored.
 
@@ -367,7 +367,7 @@ Angular `Injectable` (root-provided). Registers the Roboto woff2 font with PixiJ
 | Rendering class           | Consumed by                                                | How                                                                              |
 | ------------------------- | ---------------------------------------------------------- | -------------------------------------------------------------------------------- |
 | `InteractionContainer`    | `Project`                                                  | Extends it; provides `_ticker$` and pan/zoom hooks                               |
-| `BoardRenderScheduler`    | `BoardComponent`                                           | One per project; turns `project.ticker$` signals into `Application` renders       |
+| `BoardRenderScheduler`    | `BoardComponent`                                           | One per project; turns `project.ticker$` signals into `Application` renders      |
 | `Grid`                    | `Project`                                                  | Instantiated privately; forwarded position/scale changes                         |
 | `FloatingLayer`           | `Project`, `ClipboardService` (via `Project`)              | Instantiated privately; receives `_ticker$`; commits via `project.actionManager` |
 | `DragCollisionState`      | `PastePlacementSession`, `SelectionMoveSession`            | Shared component+wire collision detection against the project's quad trees       |
