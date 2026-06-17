@@ -146,17 +146,30 @@ export class PersistenceService {
     return this.projectService.mainProject()!;
   }
 
-  createLocalProject(name: string): void {
-    const project = new Project();
-    this.metadataStore.register(project, {
-      id: '',
-      name,
-      type: 'project',
-      source: 'browser',
-      hash: '',
-      isPublic: false
-    });
-    this._replaceMainProject(project);
+  /**
+   * First save of a fresh draft to the **browser** store: applies the
+   * user-chosen name, then writes to IndexedDB (which generates the id and
+   * updates the URL to `/local/:id`). Bypasses the `saveProject` dirty-guard so
+   * a pristine, never-edited new board can still be named and persisted.
+   */
+  async saveDraftAsLocal(project: Project, name: string): Promise<void> {
+    this.metadataStore.update(project, { name });
+    await this._doBrowserSave(project);
+  }
+
+  /**
+   * First save of a fresh draft to the **server**: creates the project record
+   * and PUTs the current circuit (see
+   * {@link ServerPersistenceGateway.promoteToServer}), then navigates to
+   * `/project/:id`.
+   */
+  async saveDraftAsServer(
+    project: Project,
+    name: string,
+    isPublic: boolean
+  ): Promise<void> {
+    const id = await this.server.promoteToServer(project, name, isPublic);
+    this.location.go(`/project/${id}`);
   }
 
   /**

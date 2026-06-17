@@ -14,9 +14,7 @@ import { WorkMode } from '../../work-mode/work-mode.enum';
 import { ClipboardService } from '../../clipboard/clipboard.service';
 import { BuiltInComponentType } from '../../components/component-type.enum';
 import { ProjectService } from '../../project/project.service';
-import { PersistenceService } from '../../persistence/persistence.service';
-import { ToastService } from '../../logging/toast.service';
-import { LoggingService } from '../../logging/logging.service';
+import { SaveCoordinatorService } from '../save-coordinator.service';
 import { DialogService } from 'primeng/dynamicdialog';
 import { OpenProjectDialogComponent } from '../open-project-dialog/open-project-dialog.component';
 import { ShortcutService } from '../../shortcuts/shortcut.service';
@@ -41,9 +39,7 @@ import { SiPipe } from '../../utils/si/si.pipe';
 export class ToolBarComponent {
   private readonly workModeService = inject(WorkModeService);
   private readonly projectService = inject(ProjectService);
-  private readonly persistenceService = inject(PersistenceService);
-  private readonly toastService = inject(ToastService);
-  private readonly loggingService = inject(LoggingService);
+  private readonly saveCoordinator = inject(SaveCoordinatorService);
   private readonly dialogService = inject(DialogService);
   private readonly translocoService = inject(TranslocoService);
   private readonly clipboardService = inject(ClipboardService);
@@ -210,12 +206,7 @@ export class ToolBarComponent {
 
   protected save(): void {
     const project = this.projectService.activeProject();
-    if (project) {
-      this.persistenceService.saveProject(project).catch(() => {
-        this.loggingService.error('Failed to save project', 'ToolBarComponent');
-        this.toastService.error('Failed to save project');
-      });
-    }
+    if (project) void this.saveCoordinator.requestSave(project);
   }
 
   protected open(): void {

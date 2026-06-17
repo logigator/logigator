@@ -504,6 +504,68 @@ describe('PersistenceService', () => {
     });
   });
 
+  describe('saveDraftAsLocal', () => {
+    it('applies the chosen name, persists to storage, assigns an id and updates the URL', async () => {
+      const project = service.createAndSetEmptyProject();
+      // A pristine, never-edited draft is not dirty — the first save must
+      // persist it anyway (the saveProject dirty-guard is bypassed).
+      expect(metadataStore.isDirty(project)).toBe(false);
+
+      await service.saveDraftAsLocal(project, 'My Local Circuit');
+
+      const metadata = metadataStore.getMetadata(project)!;
+      expect(metadata.name).toBe('My Local Circuit');
+      expect(metadata.id).toBeTruthy();
+      const record = browserStore.records.get(metadata.id);
+      expect(record).toBeDefined();
+      expect(JSON.parse(record!.content).name).toBe('My Local Circuit');
+      expect(locationGo).toHaveBeenCalledWith(`/local/${metadata.id}`);
+    });
+  });
+
+  describe('saveDraftAsServer', () => {
+    it('creates the server project, PUTs current content, flips metadata in place and navigates', async () => {
+      const project = service.createAndSetEmptyProject();
+
+      const promise = service.saveDraftAsServer(
+        project,
+        'My Server Circuit',
+        true
+      );
+
+      const postReq = httpMock.expectOne(PROJECTS_LIST_URL);
+      expect(postReq.request.method).toBe('POST');
+      expect(postReq.request.body).toEqual({
+        name: 'My Server Circuit',
+        public: 'true'
+      });
+      postReq.flush(projectSummaryResponse({ id: 'srv-uuid', hash: 'h0' }));
+
+      // Drain the microtask queue so the PUT chained after the POST is issued.
+      await Promise.resolve();
+
+      const putReq = httpMock.expectOne(PROJECT_URL('srv-uuid'));
+      expect(putReq.request.method).toBe('PUT');
+      expect(putReq.request.body.oldHash).toBe('h0');
+      putReq.flush(projectSummaryResponse({ id: 'srv-uuid', hash: 'h1' }));
+
+      await promise;
+
+      const metadata = metadataStore.getMetadata(project)!;
+      expect(metadata.source).toBe('server');
+      expect(metadata.id).toBe('srv-uuid');
+      expect(metadata.name).toBe('My Server Circuit');
+      expect(metadata.isPublic).toBe(true);
+      expect(metadata.hash).toBe('h1');
+      expect(locationGo).toHaveBeenCalledWith('/project/srv-uuid');
+      // The live project instance is retained — its circuit and undo history
+      // are preserved across promotion (not replaced by a fresh empty one).
+      expect(projectService.mainProject()).toBe(project);
+      // No storage record is written for a server promotion.
+      expect(browserStore.records.size).toBe(0);
+    });
+  });
+
   describe('createProject', () => {
     it('POSTs, then PUTs initial empty save, sets as main, updates URL', async () => {
       const promise = service.createProject('My Project', undefined, false);

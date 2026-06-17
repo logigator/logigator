@@ -8,7 +8,7 @@ import { ShortcutService } from './shortcut.service';
 import { ShortcutActionEnum } from './shortcut-action.enum';
 import { DEFAULT_SHORTCUTS, ShortcutBinding } from './shortcut-binding.model';
 import { ProjectService } from '../project/project.service';
-import { PersistenceService } from '../persistence/persistence.service';
+import { SaveCoordinatorService } from '../ui/save-coordinator.service';
 import { ClipboardService } from '../clipboard/clipboard.service';
 import { WorkModeService } from '../work-mode/work-mode.service';
 import { WorkMode } from '../work-mode/work-mode.enum';
@@ -50,7 +50,10 @@ describe('ShortcutService', () => {
           provide: ProjectService,
           useValue: { activeProject: vi.fn().mockReturnValue(null) }
         },
-        { provide: PersistenceService, useValue: { saveProject: vi.fn() } },
+        {
+          provide: SaveCoordinatorService,
+          useValue: { requestSave: vi.fn() }
+        },
         {
           provide: ClipboardService,
           useValue: {

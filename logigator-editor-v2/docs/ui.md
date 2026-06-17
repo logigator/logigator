@@ -141,7 +141,7 @@ The menu model is a `Signal<MenuItem[]>` built by `generateMenuItems()` and re-d
 - **View** — (no items yet)
 - **Help** — (no items yet)
 
-Most file menu items are stubs — only `newProject` has a handler (currently logs to `LoggingService`). Edit menu items (Cut, Copy, Paste, Delete, Undo, Redo) are wired to `ClipboardService` and `ActionManager`. The `p-menubar` uses `[autoDisplay]="false"` so submenus open only on click, not hover.
+Wired file menu items: **New Project** creates a blank board (`PersistenceService.createAndSetEmptyProject`) — no name/destination prompt up front; if the current project is dirty it first asks to discard via the modal `<p-confirmdialog />` (a keyless `ConfirmationService.confirm(...)`). The app shell hosts two confirm targets: the **keyless** `<p-confirmdialog />` is the generic modal confirm, and `<p-confirmpopup key="inline" />` is the anchored inline confirm — callers opt into the popup with `confirm({ key: 'inline', target })` (e.g. the project-list delete), while plain `confirm(...)` routes to the dialog. **Save** delegates to `SaveCoordinatorService` (see below). **Open** opens `OpenProjectDialogComponent`; **Export File** downloads the native file. Edit menu items (Cut, Copy, Paste, Delete, Undo, Redo) are wired to `ClipboardService` and `ActionManager`. The `p-menubar` uses `[autoDisplay]="false"` so submenus open only on click, not hover.
 
 The logo `<img>` uses Angular's `NgOptimizedImage` directive (`[ngSrc]`) with the `hashed` pipe, which appends a content hash to the URL for cache-busting.
 
@@ -155,7 +155,7 @@ A horizontal row of icon-only `p-button` elements (severity `secondary`, tooltip
 
 Button groups (separated by `p-divider`):
 
-1. **File actions** — Save, Open, New Component (Save delegates to `PersistenceService`; Open and New Component are stubs)
+1. **File actions** — Save, Open, New Component (Save delegates to `SaveCoordinatorService`; Open and New Component are stubs)
 2. **Clipboard** — Copy, Cut, Paste, Delete (wired to `ClipboardService`)
 3. **History** — Undo, Redo (wired to `ActionManager`)
 4. **Zoom** — Zoom Out, Zoom In (stubs)
@@ -164,6 +164,19 @@ Button groups (separated by `p-divider`):
 Each drawing-tool button has a `[styleClass]` bound to a `computed()` that returns `'bg-bluegray-300'` when its corresponding `WorkMode` is active, providing a visual active state.
 
 Clicking any drawing-tool button calls `WorkModeService.setMode(mode)`. Because `setMode` clears `selectedComponentType` for any mode other than `COMPONENT_PLACEMENT`, activating a drawing tool also implicitly deselects any component chosen in the palette — which causes the floating `component-settings` card to disappear.
+
+---
+
+### `SaveCoordinatorService`
+
+**File:** `save-coordinator.service.ts`
+
+Single entry point for the **Save** action, shared by the title bar, tool bar and Ctrl+S shortcut (`ShortcutService`). `requestSave(project)` decides whether a save needs a name/destination prompt first:
+
+- A **never-saved project draft** (`type:'project'`, `source:'browser'`, empty id — the blank board created on a project-less page load or via New Project) opens `SaveProjectDialogComponent` (name + Server/Local destination + Public flag). On confirm it routes to `PersistenceService.saveDraftAsLocal` or `saveDraftAsServer`; cancelling does nothing.
+- Everything already persisted (server projects, browser projects with an id, component editors) goes straight to `PersistenceService.saveProject`.
+
+Errors are caught and surfaced as a toast centrally here, so the three call sites just `void requestSave(project)`. The service lives in `ui/` (not `persistence/`) because it orchestrates a dialog; persistence stays UI-free. `SaveProjectDialogComponent` only collects input — it closes with a `SaveProjectDialogResult` (or `undefined`) and performs no persistence itself.
 
 ---
 

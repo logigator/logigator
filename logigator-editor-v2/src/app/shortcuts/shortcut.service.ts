@@ -16,7 +16,7 @@ import {
 } from './shortcut-action.enum';
 import { DEFAULT_SHORTCUTS, ShortcutBinding } from './shortcut-binding.model';
 import { ProjectService } from '../project/project.service';
-import { PersistenceService } from '../persistence/persistence.service';
+import { SaveCoordinatorService } from '../ui/save-coordinator.service';
 import { ClipboardService } from '../clipboard/clipboard.service';
 import { WorkModeService } from '../work-mode/work-mode.service';
 import { WorkMode } from '../work-mode/work-mode.enum';
@@ -32,7 +32,7 @@ export class ShortcutService implements OnDestroy {
   private readonly toastService = inject(ToastService);
   private readonly translocoService = inject(TranslocoService);
   private readonly projectService = inject(ProjectService);
-  private readonly persistenceService = inject(PersistenceService);
+  private readonly saveCoordinator = inject(SaveCoordinatorService);
   private readonly clipboardService = inject(ClipboardService);
   private readonly workModeService = inject(WorkModeService);
   private readonly dialogService = inject(DialogService);
@@ -173,7 +173,7 @@ export class ShortcutService implements OnDestroy {
   private _setupActionHandlers(): void {
     this.on(ShortcutActionEnum.SAVE).subscribe(() => {
       const project = this.projectService.activeProject();
-      if (project) void this.persistenceService.saveProject(project);
+      if (project) void this.saveCoordinator.requestSave(project);
     });
 
     this.on(ShortcutActionEnum.OPEN).subscribe(() => {

@@ -7,8 +7,6 @@ import {
 } from '@angular/core';
 import { MenubarModule } from 'primeng/menubar';
 import { MenuItem } from 'primeng/api';
-import { ToastService } from '../../logging/toast.service';
-import { LoggingService } from '../../logging/logging.service';
 import { NgOptimizedImage } from '@angular/common';
 import { TranslocoService } from '@jsverse/transloco';
 import { toSignal } from '@angular/core/rxjs-interop';
@@ -16,9 +14,10 @@ import logoUrl from '@assets/logo.svg';
 import { PersistenceService } from '../../persistence/persistence.service';
 import { ProjectService } from '../../project/project.service';
 import { DialogService } from 'primeng/dynamicdialog';
+import { ConfirmationService } from 'primeng/api';
 import { OpenProjectDialogComponent } from '../open-project-dialog/open-project-dialog.component';
 import { NewComponentDialogComponent } from '../new-component-dialog/new-component-dialog.component';
-import { NewProjectDialogComponent } from '../new-project-dialog/new-project-dialog.component';
+import { SaveCoordinatorService } from '../save-coordinator.service';
 import { ClipboardService } from '../../clipboard/clipboard.service';
 import { ShortcutService } from '../../shortcuts/shortcut.service';
 import { ShortcutActionEnum } from '../../shortcuts/shortcut-action.enum';
@@ -42,15 +41,15 @@ import { ProjectMetadataStore } from '../../persistence/project-metadata.store';
   changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class TitleBarComponent {
-  private readonly toastService = inject(ToastService);
-  private readonly logging = inject(LoggingService);
   private readonly translocoService = inject(TranslocoService);
   private readonly persistenceService = inject(PersistenceService);
   private readonly projectService = inject(ProjectService);
   private readonly projectMetadataStore = inject(ProjectMetadataStore);
   private readonly dialogService = inject(DialogService);
+  private readonly confirmationService = inject(ConfirmationService);
   private readonly clipboardService = inject(ClipboardService);
   private readonly shortcutService = inject(ShortcutService);
+  private readonly saveCoordinator = inject(SaveCoordinatorService);
 
   protected readonly logoUrl = logoUrl;
 
@@ -250,25 +249,40 @@ export class TitleBarComponent {
     });
   }
 
+  /**
+   * Creates a fresh blank board. No name/destination is asked up front — that
+   * prompt is deferred to the first save (see {@link SaveCoordinatorService}).
+   * If the current project has unsaved changes, confirms the discard first since
+   * replacing the main project throws them away.
+   */
   private newProject(): void {
-    this.dialogService.open(NewProjectDialogComponent, {
-      header: this.translocoService.translate(
-        'titleBar.menuBar.file.items.newProject.label'
-      ),
-      width: '28rem',
-      modal: true,
-      closable: true
-    });
+    const project = this.projectService.mainProject();
+    if (project && this.projectMetadataStore.isDirty(project)) {
+      this.confirmationService.confirm({
+        header: this.translocoService.translate(
+          'titleBar.discardChanges.header'
+        ),
+        message: this.translocoService.translate(
+          'titleBar.discardChanges.message'
+        ),
+        acceptButtonProps: { severity: 'danger' },
+        acceptLabel: this.translocoService.translate(
+          'titleBar.discardChanges.accept'
+        ),
+        rejectButtonProps: { severity: 'secondary', outlined: true },
+        rejectLabel: this.translocoService.translate(
+          'titleBar.discardChanges.reject'
+        ),
+        accept: () => this.persistenceService.createAndSetEmptyProject()
+      });
+    } else {
+      this.persistenceService.createAndSetEmptyProject();
+    }
   }
 
   private saveProject(): void {
     const project = this.projectService.activeProject();
-    if (project) {
-      this.persistenceService.saveProject(project).catch(() => {
-        this.logging.error('Failed to save project', 'TitleBarComponent');
-        this.toastService.error('Failed to save project');
-      });
-    }
+    if (project) void this.saveCoordinator.requestSave(project);
   }
 
   private exportFile(): void {

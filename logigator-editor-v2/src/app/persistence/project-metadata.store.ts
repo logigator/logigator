@@ -128,4 +128,21 @@ export class ProjectMetadataStore {
       entry.metadata.id = id;
     }
   }
+
+  /**
+   * Merges `patch` into a project's metadata. Unlike {@link updateId} /
+   * {@link updateHash} (which mutate in place because nothing reactive reads
+   * those fields), this re-`set`s the map entry so reactive readers — e.g. the
+   * title bar's project-name computed — observe the change. Used by the
+   * first-save flow to apply the user-chosen name and, when promoting a draft to
+   * the server, to flip `source`/`id`/`isPublic` in one step.
+   */
+  public update(project: Project, patch: Partial<ProjectMetadata>): void {
+    const entry = this._entries.get(project);
+    if (!entry) return;
+    this._entries.set(project, {
+      ...entry,
+      metadata: { ...entry.metadata, ...patch }
+    });
+  }
 }

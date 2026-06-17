@@ -163,6 +163,13 @@ const en = {
       help: {
         label: 'Help'
       }
+    },
+    discardChanges: {
+      header: 'Discard changes?',
+      message:
+        'The current project has unsaved changes that will be lost. Create a new project anyway?',
+      accept: 'Discard',
+      reject: 'Cancel'
     }
   },
   openProjectDialog: {

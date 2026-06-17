@@ -67,6 +67,7 @@ export class ProjectListComponent {
     event.preventDefault();
 
     this.confirmationService.confirm({
+      key: 'inline',
       target: event.currentTarget as HTMLElement,
       message: this.translocoService.translate(
         'openProjectDialog.deleteConfirmMessage',

@@ -1,4 +1,5 @@
 import { beforeEach, describe, expect, it } from 'vitest';
+import { computed } from '@angular/core';
 import { TestBed } from '@angular/core/testing';
 import { Subject } from 'rxjs';
 import {
@@ -200,6 +201,49 @@ describe('ProjectMetadataStore', () => {
     it('is a no-op for unknown project', () => {
       const project = new Project();
       expect(() => store.updateId(project, 'x')).not.toThrow();
+    });
+  });
+
+  describe('update', () => {
+    it('merges the patch into existing metadata', () => {
+      const project = new Project();
+      store.register(project, makeMetadata({ name: 'Untitled', id: '' }));
+
+      store.update(project, { name: 'Renamed', source: 'browser', id: 'x' });
+
+      const meta = store.getMetadata(project)!;
+      expect(meta.name).toBe('Renamed');
+      expect(meta.source).toBe('browser');
+      expect(meta.id).toBe('x');
+      // Untouched fields survive the merge.
+      expect(meta.type).toBe('project');
+    });
+
+    it('preserves dirty state and dirty version across the re-set', () => {
+      const project = new Project();
+      store.register(project, makeMetadata());
+      store.markDirty(project);
+      const version = store.dirtyVersion(project);
+
+      store.update(project, { name: 'Renamed' });
+
+      expect(store.isDirty(project)).toBe(true);
+      expect(store.dirtyVersion(project)).toBe(version);
+    });
+
+    it('notifies reactive readers of the change', () => {
+      const project = new Project();
+      store.register(project, makeMetadata({ name: 'Untitled' }));
+      const name = computed(() => store.getMetadata(project)?.name);
+
+      expect(name()).toBe('Untitled');
+      store.update(project, { name: 'Renamed' });
+      expect(name()).toBe('Renamed');
+    });
+
+    it('is a no-op for unknown project', () => {
+      const project = new Project();
+      expect(() => store.update(project, { name: 'x' })).not.toThrow();
     });
   });
 

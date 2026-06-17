@@ -1,9 +1,9 @@
-<form class="flex flex-col gap-4" (ngSubmit)="create()">
+<form class="flex flex-col gap-4" (ngSubmit)="save()">
   <div class="flex flex-col gap-1">
-    <label for="new-project-name">Name</label>
+    <label for="save-project-name">Name</label>
     <input
       pInputText
-      id="new-project-name"
+      id="save-project-name"
       type="text"
       [ngModel]="name()"
       (ngModelChange)="name.set($event)"
@@ -16,7 +16,7 @@
       <label class="flex gap-2 items-center">
         <input
           type="radio"
-          name="new-project-destination"
+          name="save-project-destination"
           value="server"
           [ngModel]="destination()"
           (ngModelChange)="destination.set($event)"
@@ -27,7 +27,7 @@
       <label class="flex gap-2 items-center">
         <input
           type="radio"
-          name="new-project-destination"
+          name="save-project-destination"
           value="local"
           [ngModel]="destination()"
           (ngModelChange)="destination.set($event)"
@@ -40,16 +40,16 @@
   @if (destination() === 'server') {
     <div class="flex gap-2 items-center">
       <p-checkbox
-        inputId="new-project-public"
+        inputId="save-project-public"
         [binary]="true"
         [ngModel]="isPublic()"
         (ngModelChange)="isPublic.set($event)"
         [ngModelOptions]="{ standalone: true }"
       />
-      <label for="new-project-public">Public</label>
+      <label for="save-project-public">Public</label>
     </div>
   }
   <div class="flex justify-end">
-    <p-button type="submit" label="Create" [disabled]="!canCreate" />
+    <p-button type="submit" label="Save" [disabled]="!canSave" />
   </div>
 </form>

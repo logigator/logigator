@@ -101,6 +101,59 @@ export class ServerPersistenceGateway {
     return { project, id: response.id };
   }
 
+  /**
+   * Promotes a fresh in-memory draft to a **server** project without discarding
+   * its circuit or undo history: POSTs `/api/project` to create the record,
+   * flips the project's metadata to `source:'server'`, then PUTs its current
+   * content. Mirrors {@link createProject}, but operates on the live project
+   * instead of a fresh empty one. Returns the new server id. The dirty-version
+   * snapshot guard matches {@link saveProject}: an edit landing mid-promote
+   * keeps the project dirty.
+   */
+  async promoteToServer(
+    project: Project,
+    name: string,
+    isPublic: boolean
+  ): Promise<string> {
+    const versionAtSnapshot = this.metadataStore.dirtyVersion(project);
+    const response = await firstValueFrom(
+      this.projectApi.create({
+        name,
+        public: isPublic ? 'true' : 'false'
+      })
+    );
+
+    this.metadataStore.update(project, {
+      source: 'server',
+      id: response.id,
+      name,
+      isPublic,
+      hash: response.elementsFile?.hash ?? ''
+    });
+
+    const { elements, dependencies } = server.serializeProject(
+      project,
+      this.registry,
+      this.provider
+    );
+    const saveResponse = await firstValueFrom(
+      this.projectApi.save(response.id, {
+        oldHash: response.elementsFile?.hash ?? '',
+        dependencies,
+        elements
+      })
+    );
+    this.metadataStore.updateHash(
+      project,
+      saveResponse.elementsFile?.hash ?? ''
+    );
+    if (this.metadataStore.dirtyVersion(project) === versionAtSnapshot) {
+      this.metadataStore.clearDirty(project);
+    }
+    this.toast.success('Project saved');
+    return response.id;
+  }
+
   listProjects(
     page?: number,
     search?: string
