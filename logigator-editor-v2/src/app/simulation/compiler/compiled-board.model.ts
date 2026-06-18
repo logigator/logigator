@@ -10,8 +10,7 @@ export interface BoardComponentDescriptor {
   /**
    * Negated input-pin indices (into `inputs[]`) the engine inverts before the
    * kernel runs; `negOutputs` into `outputs[]`, inverted after. Sparse index
-   * arrays (no bitmask), separate from per-type `ops`. Omitted when empty —
-   * and never emitted until {@link NEGATION_SIM_ENABLED} (the engine ships).
+   * arrays (no bitmask), separate from per-type `ops`. Omitted when empty.
    */
   negInputs?: number[];
   negOutputs?: number[];

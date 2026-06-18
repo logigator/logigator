@@ -24,7 +24,6 @@ import {
   NegationBubbleGraphics,
   NEGATION_BUBBLE_RADIUS
 } from '../rendering/graphics/negation-bubble.graphics';
-import { NEGATION_SIM_ENABLED } from './negation-sim-support';
 import { ComponentOption } from './component-option';
 import { SerializedComponent } from './serialized-component.model';
 import { Connectable } from '../rendering/grid-element';
@@ -445,9 +444,9 @@ export abstract class Component<
     }
     // A negated port's bubble shows the gate-side value (link XOR negated):
     // the bubble exists only where negated, so that is the inverse of the
-    // link's powered state. Gated until a negation-capable engine ships.
+    // link's powered state.
     const bubble = this._portBubbles.get(portIndex);
-    if (bubble && NEGATION_SIM_ENABLED) {
+    if (bubble) {
       bubble.context = this._bubbleContext(!powered);
     }
   }

@@ -9,12 +9,9 @@ import { BuiltInComponentType } from '../../components/component-type.enum';
 import { Project } from '../../project/project';
 import { BoardCompilerService } from './board-compiler.service';
 
-// Exercises the emission path with the engine-support gate forced ON. The
-// production constant NEGATION_SIM_ENABLED stays false until @logigator/sim
-// ships (plan §6d); flipping it is what makes simulation honour negation. The
-// Angular unit-test system rejects vi.mock on relative imports, so we poke the
-// service's gate field directly (same pattern as clipboard.service.spec).
-describe('BoardCompilerService negation emission (gate forced on)', () => {
+// The compiler emits negation into the descriptor verbatim; the negation-capable
+// @logigator/sim engine consumes the index arrays (plan §6).
+describe('BoardCompilerService negation emission', () => {
   let compiler: BoardCompilerService;
   let registry: CustomComponentRegistry;
   let provider: ComponentProviderService;
@@ -25,9 +22,6 @@ describe('BoardCompilerService negation emission (gate forced on)', () => {
     compiler = TestBed.inject(BoardCompilerService);
     registry = TestBed.inject(CustomComponentRegistry);
     provider = TestBed.inject(ComponentProviderService);
-    (
-      compiler as unknown as { _negationEmissionEnabled: boolean }
-    )._negationEmissionEnabled = true;
     project = new Project();
   });
 

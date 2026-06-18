@@ -8,7 +8,6 @@ import {
   CUSTOM_TYPE_ID_BASE
 } from '../../components/component-type.enum';
 import { instantiateBody } from '../../persistence/circuit-builder';
-import { NEGATION_SIM_ENABLED } from '../../components/negation-sim-support';
 import { Project } from '../../project/project';
 import {
   BoardComponentDescriptor,
@@ -114,29 +113,21 @@ export class BoardCompilerService {
   private readonly provider = inject(ComponentProviderService);
   private readonly registry = inject(CustomComponentRegistry);
 
-  // Whether negation reaches the descriptor. Mirrors the module constant; the
-  // single switch that turns simulation negation on once the engine ships
-  // (plan §6d). A field rather than reading the constant inline so a test can
-  // exercise the emission path before the production flip.
-  private readonly _negationEmissionEnabled = NEGATION_SIM_ENABLED;
-
   // Keyed by snapshot type id; snapshots are frozen, so entries never
   // invalidate for the lifetime of the session.
   private readonly _templates = new Map<number, CompiledTemplate>();
   private readonly _templatesInProgress = new Set<number>();
 
   /**
-   * Negation to carry on a freshly-emitted unit, gated off until the engine
-   * understands it. Within-group indices (into inputs[]/outputs[]), sorted,
-   * in-range, omitted when empty — the shape the persisted form uses.
+   * Negation to carry on a freshly-emitted unit. Within-group indices (into
+   * inputs[]/outputs[]), sorted, in-range, omitted when empty — the shape the
+   * persisted form uses, which the engine consumes verbatim.
    */
   private _negationFor(component: Component): {
     negInputs?: number[];
     negOutputs?: number[];
   } {
-    return this._negationEmissionEnabled
-      ? Component.serializeNegations(component)
-      : {};
+    return Component.serializeNegations(component);
   }
 
   public compile(project: Project): CompiledBoard {

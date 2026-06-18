@@ -2095,58 +2095,58 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@logigator/sim-darwin-arm64@npm:0.2.0":
-  version: 0.2.0
-  resolution: "@logigator/sim-darwin-arm64@npm:0.2.0"
+"@logigator/sim-darwin-arm64@npm:0.4.0":
+  version: 0.4.0
+  resolution: "@logigator/sim-darwin-arm64@npm:0.4.0"
   conditions: os=darwin & cpu=arm64
   languageName: node
   linkType: hard
 
-"@logigator/sim-darwin-x64@npm:0.2.0":
-  version: 0.2.0
-  resolution: "@logigator/sim-darwin-x64@npm:0.2.0"
+"@logigator/sim-darwin-x64@npm:0.4.0":
+  version: 0.4.0
+  resolution: "@logigator/sim-darwin-x64@npm:0.4.0"
   conditions: os=darwin & cpu=x64
   languageName: node
   linkType: hard
 
-"@logigator/sim-linux-arm64-gnu@npm:0.2.0":
-  version: 0.2.0
-  resolution: "@logigator/sim-linux-arm64-gnu@npm:0.2.0"
+"@logigator/sim-linux-arm64-gnu@npm:0.4.0":
+  version: 0.4.0
+  resolution: "@logigator/sim-linux-arm64-gnu@npm:0.4.0"
   conditions: os=linux & cpu=arm64 & libc=glibc
   languageName: node
   linkType: hard
 
-"@logigator/sim-linux-x64-gnu@npm:0.2.0":
-  version: 0.2.0
-  resolution: "@logigator/sim-linux-x64-gnu@npm:0.2.0"
+"@logigator/sim-linux-x64-gnu@npm:0.4.0":
+  version: 0.4.0
+  resolution: "@logigator/sim-linux-x64-gnu@npm:0.4.0"
   conditions: os=linux & cpu=x64 & libc=glibc
   languageName: node
   linkType: hard
 
-"@logigator/sim-linux-x64-musl@npm:0.2.0":
-  version: 0.2.0
-  resolution: "@logigator/sim-linux-x64-musl@npm:0.2.0"
+"@logigator/sim-linux-x64-musl@npm:0.4.0":
+  version: 0.4.0
+  resolution: "@logigator/sim-linux-x64-musl@npm:0.4.0"
   conditions: os=linux & cpu=x64 & libc=musl
   languageName: node
   linkType: hard
 
-"@logigator/sim-win32-x64-msvc@npm:0.2.0":
-  version: 0.2.0
-  resolution: "@logigator/sim-win32-x64-msvc@npm:0.2.0"
+"@logigator/sim-win32-x64-msvc@npm:0.4.0":
+  version: 0.4.0
+  resolution: "@logigator/sim-win32-x64-msvc@npm:0.4.0"
   conditions: os=win32 & cpu=x64
   languageName: node
   linkType: hard
 
-"@logigator/sim@npm:^0.2.0":
-  version: 0.2.0
-  resolution: "@logigator/sim@npm:0.2.0"
+"@logigator/sim@npm:^0.4.0":
+  version: 0.4.0
+  resolution: "@logigator/sim@npm:0.4.0"
   dependencies:
-    "@logigator/sim-darwin-arm64": "npm:0.2.0"
-    "@logigator/sim-darwin-x64": "npm:0.2.0"
-    "@logigator/sim-linux-arm64-gnu": "npm:0.2.0"
-    "@logigator/sim-linux-x64-gnu": "npm:0.2.0"
-    "@logigator/sim-linux-x64-musl": "npm:0.2.0"
-    "@logigator/sim-win32-x64-msvc": "npm:0.2.0"
+    "@logigator/sim-darwin-arm64": "npm:0.4.0"
+    "@logigator/sim-darwin-x64": "npm:0.4.0"
+    "@logigator/sim-linux-arm64-gnu": "npm:0.4.0"
+    "@logigator/sim-linux-x64-gnu": "npm:0.4.0"
+    "@logigator/sim-linux-x64-musl": "npm:0.4.0"
+    "@logigator/sim-win32-x64-msvc": "npm:0.4.0"
   dependenciesMeta:
     "@logigator/sim-darwin-arm64":
       optional: true
@@ -2162,7 +2162,7 @@ __metadata:
       optional: true
   bin:
     logigator-sim: bin/sim.js
-  checksum: 10c0/bcc4b37d60d69f1f1611838c26fff5976f00aa61450267bb36a731275e58fa70f93ddaefb4e6eed01a217a0791aa666da27c5b43ebe1c07f4092c4b15afd060a
+  checksum: 10c0/409965358898cd82d94c9172350315360ff1812229d2540a336236f6605768572e4b57c33afaef981a727c13656b8aea4b2900600bcb33743cf28259fd349531
   languageName: node
   linkType: hard
 
@@ -6425,7 +6425,7 @@ __metadata:
     "@jsverse/transloco": "npm:^8.3.0"
     "@jsverse/transloco-persist-lang": "npm:^8.3.0"
     "@jsverse/utils": "npm:1.0.0-beta.5"
-    "@logigator/sim": "npm:^0.2.0"
+    "@logigator/sim": "npm:^0.4.0"
     "@phosphor-icons/web": "npm:^2.1.2"
     "@primeuix/themes": "npm:^2.0.3"
     "@tailwindcss/postcss": "npm:^4.2.4"

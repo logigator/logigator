@@ -525,14 +525,19 @@ describe('Component negation bubble rendering', () => {
     comp.destroy({ children: true });
   });
 
-  it('does not tint the bubble during simulation while emission is gated off', () => {
-    // NEGATION_SIM_ENABLED is false until the engine ships, so the gate-side
-    // power tint stays inert and the bubble keeps its static appearance.
+  it('tints the bubble with the gate-side value during simulation', () => {
+    // The bubble shows link XOR negated. A bubble exists only on a negated
+    // port, so the lit bubble is the inverse of the link's powered state.
     const comp = makeAnd(2);
 
     comp.setPortNegated('in', 0, true);
-    comp.setPortPowered(0, true);
 
+    // Unpowered link → the gate consumes 1 → bubble lit.
+    comp.setPortPowered(0, false);
+    expect(comp.portBubbles.get(0)!.context).toBe(bubbleContext(true));
+
+    // Powered link → the gate consumes 0 → bubble unlit.
+    comp.setPortPowered(0, true);
     expect(comp.portBubbles.get(0)!.context).toBe(bubbleContext(false));
 
     comp.clearPortPower();

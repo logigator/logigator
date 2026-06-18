@@ -173,7 +173,7 @@ describe('BoardCompilerService', () => {
     });
   });
 
-  it('emits no negation fields while engine support is gated off', () => {
+  it('emits negation fields into the descriptor', () => {
     const and = makeAnd(2, undefined, 0, 0);
     and.setPortNegated('in', 1, true);
     and.setPortNegated('out', 0, true);
@@ -183,10 +183,9 @@ describe('BoardCompilerService', () => {
       .compile(project)
       .descriptor.components.find((c) => c.type === 2)!;
 
-    // NEGATION_SIM_ENABLED is false until the engine ships: negation is drawn
-    // and persisted but never reaches the descriptor.
-    expect('negInputs' in unit).toBe(false);
-    expect('negOutputs' in unit).toBe(false);
+    // The engine consumes within-group index arrays verbatim (plan §6).
+    expect(unit.negInputs).toEqual([1]);
+    expect(unit.negOutputs).toEqual([0]);
   });
 
   it('gives wire-only nets no link and keeps them out of the mapping', () => {
