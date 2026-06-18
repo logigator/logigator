@@ -28,6 +28,15 @@ const BUTTON_FLASH_MS = 150;
  */
 export type SimulationState = 'inactive' | 'starting' | 'ready' | 'running';
 
+/** Unit the target speed is entered in; multiplies the typed value to Hz. */
+export type TargetSpeedUnit = 'Hz' | 'kHz' | 'MHz';
+
+const TARGET_SPEED_MULTIPLIER: Record<TargetSpeedUnit, number> = {
+  Hz: 1,
+  kHz: 1_000,
+  MHz: 1_000_000
+};
+
 /**
  * Facade for the simulation lifecycle: entering/leaving simulation mode,
  * compiling the active circuit, the run controls (play/pause/step/stop and
@@ -53,8 +62,16 @@ export class SimulationService {
 
   private readonly _mode = signal<SimulationRunMode>('sync');
   public readonly mode = computed(this._mode);
-  private readonly _targetHz = signal(1000);
-  public readonly targetHz = computed(this._targetHz);
+  // Target speed is held as the typed value plus its unit; the Hz the engine
+  // is paced at is derived. Switching unit keeps the typed value and re-reads
+  // it in the new unit (10 Hz → 10 kHz), so the value never changes on its own.
+  private readonly _targetValue = signal(1000);
+  public readonly targetValue = computed(this._targetValue);
+  private readonly _targetUnit = signal<TargetSpeedUnit>('Hz');
+  public readonly targetUnit = computed(this._targetUnit);
+  public readonly targetHz = computed(
+    () => this._targetValue() * TARGET_SPEED_MULTIPLIER[this._targetUnit()]
+  );
 
   public readonly measuredHz = this.workerService.measuredHz;
   public readonly tick = this.workerService.tick;
@@ -171,7 +188,7 @@ export class SimulationService {
     this._state.set('running');
     this._project?.triggerTicker('on');
     this.workerService
-      .start(this._mode(), this._targetHz())
+      .start(this._mode(), this.targetHz())
       .catch((err: Error) => this._onRunControlError(err));
   }
 
@@ -220,12 +237,31 @@ export class SimulationService {
       .catch((err: Error) => this._onRunControlError(err));
   }
 
-  public setTargetHz(hz: number): void {
-    const clamped = Math.max(1, Math.floor(hz) || 1);
-    if (clamped === this._targetHz()) {
+  /**
+   * Sets the typed target-speed value (in the current unit). Invalid input —
+   * non-finite or non-positive, e.g. an emptied field mid-edit — is ignored so
+   * the last valid value keeps driving the sim and the box isn't rewritten
+   * under the user's caret.
+   */
+  public setTargetValue(value: number): void {
+    if (!Number.isFinite(value) || value <= 0) {
       return;
     }
-    this._targetHz.set(clamped);
+    if (value === this._targetValue()) {
+      return;
+    }
+    this._targetValue.set(value);
+    if (this._mode() === 'target') {
+      this._restartIfRunning();
+    }
+  }
+
+  /** Switches the unit the typed value is read in, re-pacing if running. */
+  public setTargetUnit(unit: TargetSpeedUnit): void {
+    if (unit === this._targetUnit()) {
+      return;
+    }
+    this._targetUnit.set(unit);
     if (this._mode() === 'target') {
       this._restartIfRunning();
     }
@@ -247,7 +283,7 @@ export class SimulationService {
       return;
     }
     this.workerService
-      .start(this._mode(), this._targetHz())
+      .start(this._mode(), this.targetHz())
       .catch((err: Error) => this._onRunControlError(err));
   }
 

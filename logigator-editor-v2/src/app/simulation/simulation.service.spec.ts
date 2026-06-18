@@ -150,7 +150,7 @@ describe('SimulationService', () => {
       hz: 1000
     });
 
-    service.setTargetHz(250);
+    service.setTargetValue(250);
     await vi.waitFor(() =>
       expect(fakeWorker.postedOfKind('start')).toHaveLength(2)
     );
@@ -158,6 +158,43 @@ describe('SimulationService', () => {
       mode: 'target',
       hz: 250
     });
+  });
+
+  it('re-paces with the unit multiplier when the unit changes', async () => {
+    project.addComponent(makeLever());
+    await enterAndBoot();
+    service.toggleTargetMode();
+    service.setTargetValue(5);
+
+    service.play();
+    await vi.waitFor(() =>
+      expect(fakeWorker.postedOfKind('start')).toHaveLength(1)
+    );
+    expect(fakeWorker.postedOfKind('start')[0].config).toEqual({
+      mode: 'target',
+      hz: 5
+    });
+
+    // 5 read in kHz is 5000 Hz; the typed value is kept, not converted.
+    service.setTargetUnit('kHz');
+    await vi.waitFor(() =>
+      expect(fakeWorker.postedOfKind('start')).toHaveLength(2)
+    );
+    expect(service.targetValue()).toBe(5);
+    expect(service.targetHz()).toBe(5000);
+    expect(fakeWorker.postedOfKind('start')[1].config).toEqual({
+      mode: 'target',
+      hz: 5000
+    });
+  });
+
+  it('ignores invalid target-speed input so the box is not rewritten mid-edit', () => {
+    service.setTargetValue(0);
+    expect(service.targetValue()).toBe(1000);
+    service.setTargetValue(Number.NaN);
+    expect(service.targetValue()).toBe(1000);
+    service.setTargetValue(-5);
+    expect(service.targetValue()).toBe(1000);
   });
 
   it('steps only while paused', async () => {

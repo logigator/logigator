@@ -66,14 +66,26 @@
         pInputText
         type="number"
         min="1"
+        step="any"
         class="w-24"
         [disabled]="!isSimReady()"
-        [pTooltip]="t('toolBar.targetHz')"
-        [ariaLabel]="t('toolBar.targetHz')"
+        [pTooltip]="t('toolBar.targetSpeed')"
+        [ariaLabel]="t('toolBar.targetSpeed')"
         tooltipPosition="bottom"
-        [value]="targetHz()"
-        (change)="onTargetHzChange($event)"
+        [value]="targetValue()"
+        (input)="onTargetValueInput($event)"
       />
+      <p-select
+        [options]="targetUnitOptions"
+        [ngModel]="targetUnit()"
+        (ngModelChange)="onTargetUnitChange($event)"
+        [disabled]="!isSimReady()"
+        optionLabel="label"
+        optionValue="value"
+        [pTooltip]="t('toolBar.targetUnit')"
+        [ariaLabel]="t('toolBar.targetUnit')"
+        tooltipPosition="bottom"
+      ></p-select>
       <p-button
         [pTooltip]="t('toolBar.syncToFrame')"
         [ariaLabel]="t('toolBar.syncToFrame')"
