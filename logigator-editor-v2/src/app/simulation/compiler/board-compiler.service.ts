@@ -26,6 +26,15 @@ const UNIT_TYPES: ReadonlySet<number> = new Set([
   BuiltInComponentType.LEVER
 ]);
 
+/**
+ * The simulator's UserInput type id. The editor's BUTTON and LEVER are both
+ * UserInputs to the engine and must emit this exact type — the engine rejects
+ * any other id (it previously accepted the whole 200–299 block). Button vs.
+ * lever behaviour is a `Pulse`/`Cont` distinction made at `triggerInput` time
+ * from the component instance, not from the descriptor type.
+ */
+const ENGINE_USER_INPUT_TYPE = 200;
+
 /** One emitted unit, pins as union-find node ids (link ids come later). */
 interface EmittedUnit {
   type: number;
@@ -226,15 +235,14 @@ export class BoardCompilerService {
     }
 
     if (UNIT_TYPES.has(type)) {
-      if (
-        ctx.userInputs &&
-        (type === BuiltInComponentType.BUTTON ||
-          type === BuiltInComponentType.LEVER)
-      ) {
+      const isUserInput =
+        type === BuiltInComponentType.BUTTON ||
+        type === BuiltInComponentType.LEVER;
+      if (ctx.userInputs && isUserInput) {
         ctx.userInputs.set(component.id, ctx.units.length);
       }
       ctx.units.push({
-        type,
+        type: isUserInput ? ENGINE_USER_INPUT_TYPE : type,
         inputs: pinNodes.slice(0, component.numInputs),
         outputs: pinNodes.slice(component.numInputs),
         ...this._negationFor(component)

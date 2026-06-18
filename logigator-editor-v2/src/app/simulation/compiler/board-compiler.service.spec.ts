@@ -429,10 +429,12 @@ describe('BoardCompilerService', () => {
     const board = compiler.compile(project);
 
     expect(board.diagnostics).toEqual([]);
+    // Both lever and button emit the engine's UserInput type (200); the engine
+    // rejects any other id. Button vs. lever is a triggerInput-time distinction.
     expect(board.descriptor).toEqual({
       links: 3,
       components: [
-        { type: 201, inputs: [], outputs: [0] },
+        { type: 200, inputs: [], outputs: [0] },
         { type: 200, inputs: [], outputs: [1] },
         { type: 2, inputs: [0, 1], outputs: [2] }
       ]
