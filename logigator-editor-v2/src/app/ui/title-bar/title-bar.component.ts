@@ -73,8 +73,10 @@ export class TitleBarComponent {
     borderRadius: '0',
     color: '{surface.900}',
     itemColor: '',
-    submenuColor: '{surface.300}',
-    submenuIconColor: '{surface.600}',
+    // Popup submenu sits on the themed content surface, so its text/icon track
+    // the active theme instead of a fixed light-grey that washes out in light.
+    submenuColor: '{text.color}',
+    submenuIconColor: '{text.muted.color}',
     padding: '0.25rem'
   };
 

@@ -84,6 +84,14 @@ const en = {
   sideBar: {
     search: 'Search..'
   },
+  portsPanel: {
+    title: 'Ports',
+    badge: 'component',
+    inputs: 'Inputs',
+    outputs: 'Outputs',
+    noInputs: 'No input plugs',
+    noOutputs: 'No output plugs'
+  },
   statusBar: {
     modes: {
       drawWire: 'Placing Wires',

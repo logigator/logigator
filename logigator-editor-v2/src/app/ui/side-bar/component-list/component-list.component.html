@@ -1,22 +1,51 @@
-<div class="border border-white/20">
-  <span class="block bg-white/20 p-2 font-bold text-lg">{{ headline() }}</span>
-  <div class="flex flex-wrap gap-2 m-2">
-    @for (comp of filteredComponents(); track comp.type) {
-      <div
-        class="flex flex-col items-center gap-1 cursor-pointer hover:bg-black/10"
-        [class.bg-white/20]="selectedComponent() === comp.type"
-        (click)="selectComponent(comp)"
-        (keydown.enter)="selectComponent(comp)"
-        tabindex="0"
-        aria-roledescription="button"
-      >
-        <div
-          class="flex justify-center items-center border border-white/50 w-16 h-16 text-center"
-        >
-          {{ comp.symbol }}
-        </div>
-        <span class="block text-center">{{ text(comp.name) }}</span>
-      </div>
-    }
+<p-card *transloco="let t">
+  <ng-template #title>
+    <span class="flex items-center gap-2 text-lg mb-2">
+      <i class="ph ph-dresser text-primary"></i>
+      <span>Components</span>
+    </span>
+  </ng-template>
+  <div class="flex flex-col gap-2">
+    <p-iconfield iconPosition="right">
+      <p-inputicon class="ph ph-magnifying-glass"></p-inputicon>
+      <input
+        pInputText
+        [placeholder]="t('sideBar.search')"
+        class="w-full"
+        [ngModel]="searchText()"
+        (ngModelChange)="searchText.set($event)"
+      />
+    </p-iconfield>
+
+    <p-accordion
+      [multiple]="true"
+      [value]="openPanels()"
+      (valueChange)="onPanelChange($event)"
+      [dt]="{
+        'content.padding': '0 0 1.125rem 0',
+        'header.padding': '1.125rem 0'
+      }"
+    >
+      @for (cat of categories(); track cat.key) {
+        <p-accordion-panel [value]="cat.key" [class.border-b-0!]="$last">
+          <p-accordion-header>
+            <span class="flex items-center gap-2 w-full font-semibold">
+              {{ t(cat.labelKey) }}
+              <p-badge
+                [dt]="{ borderRadius: '9999px' }"
+                class="ml-auto mr-2"
+                [value]="cat.components.length"
+                severity="secondary"
+              ></p-badge>
+            </span>
+          </p-accordion-header>
+          <p-accordion-content>
+            <app-component-list-category
+              [components]="cat.components"
+            ></app-component-list-category>
+          </p-accordion-content>
+        </p-accordion-panel>
+      }
+    </p-accordion>
   </div>
-</div>
+</p-card>

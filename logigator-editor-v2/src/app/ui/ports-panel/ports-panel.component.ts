@@ -10,6 +10,10 @@ import {
   DragDropModule,
   moveItemInArray
 } from '@angular/cdk/drag-drop';
+import { Card } from 'primeng/card';
+import { Tag } from 'primeng/tag';
+import { InputTextModule } from 'primeng/inputtext';
+import { TranslocoDirective } from '@jsverse/transloco';
 import { of, scan, startWith, switchMap } from 'rxjs';
 import { ProjectService } from '../../project/project.service';
 import { InputComponent } from '../../components/component-types/input/input.component';
@@ -19,6 +23,8 @@ import {
   PlugReorderEntry,
   ReorderPlugsAction
 } from '../../actions/actions/reorder-plugs.action';
+import { ComponentListCategoryComponent } from '../side-bar/component-list-category/component-list-category.component';
+import { ComponentProviderService } from '../../components/component-provider.service';
 
 type Plug = InputComponent | OutputComponent;
 
@@ -45,12 +51,20 @@ interface PlugRow {
  */
 @Component({
   selector: 'app-ports-panel',
-  imports: [DragDropModule],
+  imports: [
+    DragDropModule,
+    Card,
+    Tag,
+    InputTextModule,
+    TranslocoDirective,
+    ComponentListCategoryComponent
+  ],
   templateUrl: './ports-panel.component.html',
   changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class PortsPanelComponent {
   private readonly projectService = inject(ProjectService);
+  private readonly componentProviderService = inject(ComponentProviderService);
 
   // Re-emits on every action in the active project so the derived plug lists
   // stay live; `startWith` seeds the first render when a project becomes
@@ -71,14 +85,17 @@ export class PortsPanelComponent {
     )
   );
 
-  public readonly inputRows = computed(() =>
+  protected readonly portComponents =
+    this.componentProviderService.portComponents;
+
+  protected readonly inputRows = computed(() =>
     this._rows(InputComponent, 'Input')
   );
-  public readonly outputRows = computed(() =>
+  protected readonly outputRows = computed(() =>
     this._rows(OutputComponent, 'Output')
   );
 
-  public dropInput(event: CdkDragDrop<PlugRow[]>): void {
+  protected dropInput(event: CdkDragDrop<PlugRow[]>): void {
     this._applyReorder(
       this.inputRows(),
       event.previousIndex,
@@ -86,7 +103,7 @@ export class PortsPanelComponent {
     );
   }
 
-  public dropOutput(event: CdkDragDrop<PlugRow[]>): void {
+  protected dropOutput(event: CdkDragDrop<PlugRow[]>): void {
     this._applyReorder(
       this.outputRows(),
       event.previousIndex,
@@ -94,7 +111,7 @@ export class PortsPanelComponent {
     );
   }
 
-  public setLabel(row: PlugRow, value: string): void {
+  protected setLabel(row: PlugRow, value: string): void {
     const project = this.projectService.activeProject();
     if (!project) return;
     const oldValue = row.component.options.label.value;

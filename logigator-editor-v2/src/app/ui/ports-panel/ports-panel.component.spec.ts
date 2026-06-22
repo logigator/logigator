@@ -21,7 +21,7 @@ describe('PortsPanelComponent', () => {
 
   it('should create with no active project', () => {
     expect(component).toBeTruthy();
-    expect(component.inputRows()).toEqual([]);
-    expect(component.outputRows()).toEqual([]);
+    expect(component['inputRows']()).toEqual([]);
+    expect(component['outputRows']()).toEqual([]);
   });
 });

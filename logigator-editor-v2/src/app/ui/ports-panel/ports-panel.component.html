@@ -1,10 +1,27 @@
-<div class="border border-white/20">
-  <span class="block bg-white/20 p-2 font-bold text-lg">Ports</span>
-  <div class="flex flex-col gap-3 m-2">
+<p-card *transloco="let t">
+  <ng-template #title>
+    <span class="flex items-center gap-2 text-lg mb-2">
+      <i class="ph ph-plugs text-primary"></i>
+      <span>{{ t('portsPanel.title') }}</span>
+      <p-tag
+        [value]="t('portsPanel.badge')"
+        severity="info"
+        [rounded]="true"
+        class="ml-auto"
+      />
+    </span>
+  </ng-template>
+  <app-component-list-category
+    class="block mb-4"
+    [components]="portComponents()"
+  ></app-component-list-category>
+  <div class="flex flex-col gap-3">
     <div class="flex flex-col gap-1">
-      <span class="text-sm opacity-70">Inputs</span>
+      <span class="text-sm opacity-70">{{ t('portsPanel.inputs') }}</span>
       @if (inputRows().length === 0) {
-        <span class="text-sm opacity-50 italic">No input plugs</span>
+        <span class="text-sm opacity-50 italic">{{
+          t('portsPanel.noInputs')
+        }}</span>
       }
       <div
         cdkDropList
@@ -14,14 +31,16 @@
         @for (row of inputRows(); track row.component.id) {
           <div
             cdkDrag
-            class="flex items-center gap-2 p-1 border border-white/20 bg-white/5"
+            class="flex items-center gap-2 p-1 border bg-surface-800 border-surface-600"
           >
             <i class="ph ph-dots-six-vertical cursor-move" cdkDragHandle></i>
             <i class="ph ph-arrow-fat-right opacity-60"></i>
             <input
-              class="grow bg-transparent border-b border-white/20 text-sm px-1 outline-none"
+              pInputText
+              pSize="small"
+              class="grow"
               type="text"
-              maxlength="5"
+              maxlength="8"
               [value]="row.label"
               [placeholder]="row.placeholder"
               (change)="setLabel(row, $any($event.target).value)"
@@ -31,9 +50,11 @@
       </div>
     </div>
     <div class="flex flex-col gap-1">
-      <span class="text-sm opacity-70">Outputs</span>
+      <span class="text-sm opacity-70">{{ t('portsPanel.outputs') }}</span>
       @if (outputRows().length === 0) {
-        <span class="text-sm opacity-50 italic">No output plugs</span>
+        <span class="text-sm opacity-50 italic">{{
+          t('portsPanel.noOutputs')
+        }}</span>
       }
       <div
         cdkDropList
@@ -43,14 +64,16 @@
         @for (row of outputRows(); track row.component.id) {
           <div
             cdkDrag
-            class="flex items-center gap-2 p-1 border border-white/20 bg-white/5"
+            class="flex items-center gap-2 p-1 border bg-surface-800 border-surface-600"
           >
             <i class="ph ph-dots-six-vertical cursor-move" cdkDragHandle></i>
             <i class="ph ph-arrow-fat-left opacity-60"></i>
             <input
-              class="grow bg-transparent border-b border-white/20 text-sm px-1 outline-none"
+              pInputText
+              pSize="small"
+              class="grow"
               type="text"
-              maxlength="5"
+              maxlength="8"
               [value]="row.label"
               [placeholder]="row.placeholder"
               (change)="setLabel(row, $any($event.target).value)"
@@ -60,4 +83,4 @@
       </div>
     </div>
   </div>
-</div>
+</p-card>

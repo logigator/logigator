@@ -45,7 +45,7 @@
       <!-- From File -->
       <p-tabpanel value="file">
         <div class="flex flex-col items-center gap-4 py-8">
-          <p class="text-center text-surface-600 dark:text-surface-400">
+          <p class="text-center text-muted">
             {{ t('openProjectDialog.uploadPrompt') }}
           </p>
           <p-fileupload
@@ -59,7 +59,7 @@
           />
           @if (importError()) {
             <div
-              class="flex items-center gap-2 rounded-lg bg-red-50 px-4 py-2 text-sm text-red-500 dark:bg-red-950/30"
+              class="flex items-center gap-2 rounded-lg bg-error-surface px-4 py-2 text-sm text-error"
             >
               <i class="ph ph-warning text-lg"></i>
               <span>{{ importError() }}</span>

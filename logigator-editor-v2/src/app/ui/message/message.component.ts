@@ -14,13 +14,11 @@ export type MessageSeverity = 'none' | 'info' | 'warn' | 'success' | 'error';
  * literal class strings so Tailwind's scanner keeps them.
  */
 const SEVERITY_CLASSES: Record<MessageSeverity, string> = {
-  none: 'border-transparent text-surface-500',
-  info: 'border-blue-200 bg-blue-50 text-blue-600 dark:border-blue-900 dark:bg-blue-950/40 dark:text-blue-400',
-  warn: 'border-amber-200 bg-amber-50 text-amber-600 dark:border-amber-900 dark:bg-amber-950/40 dark:text-amber-400',
-  success:
-    'border-green-200 bg-green-50 text-green-600 dark:border-green-900 dark:bg-green-950/40 dark:text-green-400',
-  error:
-    'border-red-200 bg-red-50 text-red-600 dark:border-red-900 dark:bg-red-950/40 dark:text-red-400'
+  none: 'border-transparent text-muted',
+  info: 'border-info-border bg-info-surface text-info',
+  warn: 'border-warn-border bg-warn-surface text-warn',
+  success: 'border-success-border bg-success-surface text-success',
+  error: 'border-error-border bg-error-surface text-error'
 };
 
 /** Default Phosphor icon per severity, overridable via the `icon` input. */

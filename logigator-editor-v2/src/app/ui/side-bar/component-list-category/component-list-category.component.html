@@ -1,0 +1,32 @@
+<div class="flex flex-wrap gap-2">
+  @for (comp of components(); track comp.type) {
+    @let selected = selectedComponent() === comp.type;
+    <button
+      type="button"
+      class="relative w-14 group flex flex-col items-center gap-1 rounded-md cursor-pointer outline-none focus-visible:ring-2 focus-visible:ring-primary"
+      (click)="selectComponent(comp)"
+    >
+      <span
+        class="relative flex justify-center items-center w-14 h-14 rounded-md border bg-content-hover text-text font-mono font-semibold transition-colors group-hover:border-primary"
+        [class]="
+          selected ? 'border-primary ring-1 ring-primary' : 'border-border'
+        "
+      >
+        {{ comp.symbol }}
+        @if (selected) {
+          <span
+            class="absolute -top-1.5 -right-1.5 flex items-center justify-center w-4 h-4 rounded-full bg-primary text-surface-950"
+          >
+            <i class="ph ph-check text-xs"></i>
+          </span>
+        }
+      </span>
+      <span
+        class="block text-center text-xs max-w-full text-ellipsis overflow-hidden"
+        [class]="selected ? 'text-primary' : 'text-muted'"
+      >
+        {{ text(comp.name) }}
+      </span>
+    </button>
+  }
+</div>
