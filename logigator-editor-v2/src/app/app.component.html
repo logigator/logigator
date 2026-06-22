@@ -2,9 +2,9 @@
 <p-confirm-dialog />
 <app-title-bar></app-title-bar>
 <app-tool-bar class="border-b border-border"></app-tool-bar>
-<div class="flex grow">
+<div class="flex grow min-h-0">
   @if (!isSimulation()) {
-    <app-side-bar class="w-77 border-r border-border"></app-side-bar>
+    <app-side-bar class="w-77 border-r border-border overflow-y-auto"></app-side-bar>
   }
   <div class="grow flex flex-col">
     <app-tab-bar></app-tab-bar>
