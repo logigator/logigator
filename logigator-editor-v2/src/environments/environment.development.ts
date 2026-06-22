@@ -6,7 +6,7 @@ export const environment: Environment = {
   debug: {
     showGridBorders: true,
     showHitboxes: false,
-    showOrigins: true,
+    showOrigins: false,
     showConnectionPoints: false,
     showQuadTrees: false
   }
