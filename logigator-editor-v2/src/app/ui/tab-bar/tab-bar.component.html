@@ -1,42 +1,72 @@
-<div class="flex items-stretch gap-px bg-white/10 text-sm overflow-x-auto">
+<div
+  *transloco="let t"
+  class="flex items-stretch bg-content-hover border-b border-border overflow-x-auto"
+>
   @if (mainProject(); as main) {
     <button
       type="button"
-      class="flex items-center px-3 py-1.5 whitespace-nowrap cursor-pointer hover:bg-white/10"
-      [class.bg-white/20]="activeProject() === main"
+      class="tab group"
+      [class.tab--active]="isActive(main)"
+      [title]="name(main)"
+      [attr.aria-label]="t('tabBar.mainProject') + ': ' + name(main)"
       (click)="activate(main)"
     >
-      {{ name(main) }}
+      <i
+        class="ph ph-house text-base shrink-0"
+        [class.opacity-70]="!isActive(main)"
+      ></i>
+      <span class="truncate max-w-56">{{ name(main) }}</span>
       @if (isDirty(main)) {
-        <span
-          class="ml-1.5 w-1.5 h-1.5 rounded-full bg-current opacity-60 inline-block"
-        ></span>
+        <span class="inline-flex items-center justify-center w-4 h-4 shrink-0">
+          <span class="w-2 h-2 rounded-full bg-current opacity-60"></span>
+        </span>
       }
     </button>
   }
-  @for (comp of openComponents(); track comp) {
-    <div
-      class="flex items-center gap-2 px-3 py-1.5 whitespace-nowrap cursor-pointer hover:bg-white/10"
-      [class.bg-white/20]="activeProject() === comp"
-      (click)="activate(comp)"
-      (keydown.enter)="activate(comp)"
-      tabindex="0"
-      aria-roledescription="button"
-    >
-      <span>{{ name(comp) }}</span>
-      @if (isDirty(comp)) {
-        <span
-          class="w-1.5 h-1.5 rounded-full bg-current opacity-60 inline-block -mr-1"
-        ></span>
-      }
-      <i
-        class="ph ph-x cursor-pointer hover:text-red-400"
-        (click)="close($event, comp)"
-        (keydown.enter)="close($event, comp)"
+
+  <div
+    cdkDropList
+    cdkDropListOrientation="horizontal"
+    [cdkDropListDisabled]="isSimulation()"
+    (cdkDropListDropped)="drop($event)"
+    class="flex items-stretch"
+  >
+    @for (comp of openComponents(); track comp) {
+      <div
+        cdkDrag
+        cdkDragLockAxis="x"
+        [cdkDragDisabled]="isSimulation()"
+        class="tab group"
+        [class.tab--active]="isActive(comp)"
+        [title]="name(comp)"
         tabindex="0"
-        aria-roledescription="button"
-        aria-label="Close"
-      ></i>
-    </div>
-  }
+        role="tab"
+        [attr.aria-selected]="isActive(comp)"
+        (click)="activate(comp)"
+        (keydown.enter)="activate(comp)"
+      >
+        <i
+          class="ph ph-circuitry text-base shrink-0"
+          [class.opacity-70]="!isActive(comp)"
+        ></i>
+        <span class="truncate max-w-56">{{ name(comp) }}</span>
+        <span class="inline-flex items-center justify-center w-4 h-4 shrink-0">
+          @if (isDirty(comp)) {
+            <span
+              class="w-2 h-2 rounded-full bg-current opacity-60 group-hover:hidden"
+            ></span>
+          }
+          <button
+            type="button"
+            class="hidden group-hover:inline-flex p-0.5 items-center justify-center rounded text-muted hover:text-error hover:bg-error-surface cursor-pointer"
+            [attr.aria-label]="t('tabBar.close')"
+            (click)="close($event, comp)"
+            (keydown.enter)="close($event, comp)"
+          >
+            <i class="ph ph-x"></i>
+          </button>
+        </span>
+      </div>
+    }
+  </div>
 </div>

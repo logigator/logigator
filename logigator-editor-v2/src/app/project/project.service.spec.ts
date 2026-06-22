@@ -103,4 +103,35 @@ describe('ProjectService', () => {
       expect(service.openComponents()).toEqual([]);
     });
   });
+
+  describe('reorderOpenComponents', () => {
+    let p1: Project;
+    let p2: Project;
+    let p3: Project;
+
+    beforeEach(() => {
+      p1 = {} as Project;
+      p2 = {} as Project;
+      p3 = {} as Project;
+      service.addOpenComponent(p1);
+      service.addOpenComponent(p2);
+      service.addOpenComponent(p3);
+    });
+
+    it('moves a project forward to the target index', () => {
+      service.reorderOpenComponents(0, 2);
+      expect(service.openComponents()).toEqual([p2, p3, p1]);
+    });
+
+    it('moves a project backward to the target index', () => {
+      service.reorderOpenComponents(2, 0);
+      expect(service.openComponents()).toEqual([p3, p1, p2]);
+    });
+
+    it('is a no-op when the indices are equal', () => {
+      const before = service.openComponents();
+      service.reorderOpenComponents(1, 1);
+      expect(service.openComponents()).toBe(before);
+    });
+  });
 });

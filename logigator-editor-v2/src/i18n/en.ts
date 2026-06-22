@@ -84,6 +84,10 @@ const en = {
   sideBar: {
     search: 'Search..'
   },
+  tabBar: {
+    mainProject: 'Main project',
+    close: 'Close'
+  },
   portsPanel: {
     title: 'Ports',
     badge: 'component',

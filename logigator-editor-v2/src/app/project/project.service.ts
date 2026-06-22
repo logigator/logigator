@@ -32,4 +32,20 @@ export class ProjectService {
     }
     this._openComponents.update((v) => v.filter((p) => p !== project));
   }
+
+  // Reorders the open-component tabs in place. Both indices are relative to the
+  // `openComponents` array (the pinned main project is not part of it). Session
+  // state only — the order is not persisted.
+  public reorderOpenComponents(
+    previousIndex: number,
+    currentIndex: number
+  ): void {
+    if (previousIndex === currentIndex) return;
+    this._openComponents.update((v) => {
+      const next = [...v];
+      const [moved] = next.splice(previousIndex, 1);
+      next.splice(currentIndex, 0, moved);
+      return next;
+    });
+  }
 }
