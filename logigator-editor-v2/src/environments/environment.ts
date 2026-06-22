@@ -7,6 +7,7 @@ export const environment: Environment = {
     showGridBorders: false,
     showHitboxes: false,
     showOrigins: false,
-    showConnectionPoints: false
+    showConnectionPoints: false,
+    showQuadTrees: false
   }
 };

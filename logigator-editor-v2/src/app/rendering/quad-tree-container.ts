@@ -1,5 +1,6 @@
-import { Container, ContainerChild, Rectangle } from 'pixi.js';
+import { Container, ContainerChild, Graphics, Rectangle } from 'pixi.js';
 import { GridElement } from './grid-element';
+import { environment } from '../../environments/environment';
 
 type Quadrant = 'nw' | 'ne' | 'sw' | 'se';
 
@@ -45,11 +46,50 @@ export class QuadTreeContainer<T extends GridElement> extends Container {
   );
   private _items = new Map<T, QuadTreeEntry<T>>();
 
+  // Debug overlay rendering the live quadrant subdivision, gated by
+  // environment.debug.showQuadTrees. Null (and every debug path a no-op) when
+  // the flag is off, so production builds carry no overhead.
+  private _debugOverlay: Graphics | null = null;
+  // Mutations only flag the overlay dirty; the actual (full-tree) redraw is
+  // coalesced to at most once per frame in onRender. A bulk load fires
+  // thousands of insert()s — redrawing on each would be O(elements × tree) and
+  // hang the page.
+  private _debugDirty = false;
+
+  /**
+   * @param debugColor base hue for the debug quadrant overlay. Pass distinct
+   * colors when multiple trees share the same space so their grids stay
+   * distinguishable (e.g. wires vs components).
+   */
+  constructor(private readonly _debugColor = 0xff00ff) {
+    super();
+
+    if (environment.debug.showQuadTrees) {
+      // zIndex keeps the overlay above the entries (expand() appends a new root
+      // on top of it); non-interactive so it never steals pointer events from
+      // the elements underneath.
+      this.sortableChildren = true;
+      this._debugOverlay = super.addChild(new Graphics());
+      this._debugOverlay.eventMode = 'none';
+      this._debugOverlay.zIndex = 1;
+      this.onRender = () => {
+        if (!this._debugDirty) return;
+        this._debugDirty = false;
+        this.redrawDebug();
+      };
+    }
+  }
+
   /**
    * Inserts an element into the quad tree.
    * @param element element to insert
    */
   public insert(element: T): void {
+    this.insertElement(element);
+    this._debugDirty = true;
+  }
+
+  private insertElement(element: T): void {
     if (this._items.has(element)) {
       this.remove(element);
     }
@@ -99,6 +139,12 @@ export class QuadTreeContainer<T extends GridElement> extends Container {
    * @returns true if the element was removed, false if it was not found
    */
   public remove(element: T): boolean {
+    const removed = this.removeElement(element);
+    if (removed) this._debugDirty = true;
+    return removed;
+  }
+
+  private removeElement(element: T): boolean {
     const entry = this._items.get(element);
     if (!entry) return false;
 
@@ -331,57 +377,39 @@ export class QuadTreeContainer<T extends GridElement> extends Container {
   }
 
   /**
-   * Returns a human-readable ASCII representation of the tree.
+   * Redraws the debug overlay from scratch, mirroring the current tree
+   * structure. Driven by the dirty flag from onRender — coalesces a burst of
+   * mutations into a single redraw per frame.
    */
-  public debug(): string {
-    const lines: string[] = [
-      `QuadTreeContainer [${this._items.size} item${this._items.size !== 1 ? 's' : ''} total]`
-    ];
-    this.debugEntry(this._tree, lines, '', true, 'root');
-    return lines.join('\n');
+  private redrawDebug(): void {
+    if (!this._debugOverlay) return;
+    this._debugOverlay.clear();
+    this.drawDebugEntry(this._tree, 0);
   }
 
-  private debugEntry(
-    entry: QuadTreeEntry<T>,
-    lines: string[],
-    prefix: string,
-    isLast: boolean,
-    label: string
-  ): void {
+  private drawDebugEntry(entry: QuadTreeEntry<T>, depth: number): void {
+    const overlay = this._debugOverlay!;
     const b = entry.boundsArea;
-    const branchItemCount = entry.branchItems.children.length;
-    const leafItemCount = entry.leafItems?.children.length ?? 0;
-    const totalItems = branchItemCount + leafItemCount;
     const isLeaf = !entry.branches;
 
-    const connector = prefix === '' ? '' : isLast ? '└─ ' : '├─ ';
-    const childIndent =
-      prefix === '' ? '  ' : prefix + (isLast ? '   ' : '│  ');
-
-    lines.push(
-      `${prefix}${connector}[${label}] ${b.x},${b.y} ${b.width}×${b.height}` +
-        `  ${isLeaf ? 'leaf' : 'branch'}` +
-        `  ${totalItems} item${totalItems !== 1 ? 's' : ''}`
-    );
-
-    if (branchItemCount > 0) {
-      lines.push(`${childIndent}(spanning: ${branchItemCount})`);
+    overlay.rect(b.x, b.y, b.width, b.height);
+    if (isLeaf) {
+      overlay.fill({
+        color: this._debugColor,
+        alpha: Math.min(0.015 + depth * 0.015, 0.1)
+      });
     }
+    overlay.stroke({
+      color: this._debugColor,
+      alpha: 0.5,
+      width: 1,
+      pixelLine: true
+    });
 
     if (entry.branches) {
-      const quadrants = Object.entries(entry.branches) as [
-        Quadrant,
-        QuadTreeEntry<T>
-      ][];
-      quadrants.forEach(([q, child], i) => {
-        this.debugEntry(
-          child,
-          lines,
-          childIndent,
-          i === quadrants.length - 1,
-          q
-        );
-      });
+      for (const child of Object.values(entry.branches)) {
+        this.drawDebugEntry(child, depth + 1);
+      }
     }
   }
 

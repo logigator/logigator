@@ -39,8 +39,10 @@ export class Project extends InteractionContainer {
 
   private readonly _grid: Grid = new Grid();
   private readonly _gridSpace = new Container();
-  private readonly _wires = new QuadTreeContainer<Wire>();
-  private readonly _components = new QuadTreeContainer<Component>();
+  // Distinct debug-overlay hues so the two overlapping quad trees stay legible
+  // when environment.debug.showQuadTrees is on (cyan = wires, orange = components).
+  private readonly _wires = new QuadTreeContainer<Wire>(0x00e5ff);
+  private readonly _components = new QuadTreeContainer<Component>(0xff9100);
   private readonly _floatingLayer = new FloatingLayer(this);
 
   private readonly _wireIntegrator = new WireIntegrator();
