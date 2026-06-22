@@ -31,6 +31,7 @@
         @for (row of inputRows(); track row.component.id) {
           <div
             cdkDrag
+            cdkDragLockAxis="y"
             class="flex items-center gap-2 p-1 border bg-surface-800 border-surface-600"
           >
             <i class="ph ph-dots-six-vertical cursor-move" cdkDragHandle></i>
@@ -38,7 +39,7 @@
             <input
               pInputText
               pSize="small"
-              class="grow"
+              class="grow min-w-0"
               type="text"
               maxlength="8"
               [value]="row.label"
@@ -64,6 +65,7 @@
         @for (row of outputRows(); track row.component.id) {
           <div
             cdkDrag
+            cdkDragLockAxis="y"
             class="flex items-center gap-2 p-1 border bg-surface-800 border-surface-600"
           >
             <i class="ph ph-dots-six-vertical cursor-move" cdkDragHandle></i>
@@ -71,7 +73,7 @@
             <input
               pInputText
               pSize="small"
-              class="grow"
+              class="grow min-w-0"
               type="text"
               maxlength="8"
               [value]="row.label"

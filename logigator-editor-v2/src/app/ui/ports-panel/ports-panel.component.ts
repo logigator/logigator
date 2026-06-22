@@ -60,6 +60,7 @@ interface PlugRow {
     ComponentListCategoryComponent
   ],
   templateUrl: './ports-panel.component.html',
+  styleUrl: './ports-panel.component.scss',
   changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class PortsPanelComponent {
