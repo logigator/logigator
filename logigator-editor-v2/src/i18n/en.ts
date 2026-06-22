@@ -194,6 +194,18 @@ const en = {
     searchButton: 'Search',
     noSearchResults: 'No projects found'
   },
+  saveProjectDialog: {
+    name: 'Name',
+    destination: 'Destination',
+    destinationServer: 'Server',
+    destinationBrowser: 'Browser',
+    notLoggedIn: 'You must be logged in to save projects to the server.',
+    public: 'Public',
+    publicInfo:
+      'Public projects are published on your profile and accessible to everyone via a share link. Private projects are only visible to you.',
+    browserWarning:
+      'Browser projects are not persisted across devices and may be lost.'
+  },
   toolBar: {
     save: 'Save',
     open: 'Open',

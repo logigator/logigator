@@ -24,10 +24,9 @@
       <!-- Server Projects -->
       <p-tabpanel value="server">
         @if (!userService.user()) {
-          <div class="flex flex-col items-center gap-3 py-12 text-surface-500">
-            <i class="ph ph-warning-circle text-3xl"></i>
-            <p class="text-center">{{ t('openProjectDialog.notLoggedIn') }}</p>
-          </div>
+          <app-message centered class="py-12">
+            {{ t('openProjectDialog.notLoggedIn') }}
+          </app-message>
         } @else {
           <app-project-list
             [items]="serverItems()"

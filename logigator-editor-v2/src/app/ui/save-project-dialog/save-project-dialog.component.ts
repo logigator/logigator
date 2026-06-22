@@ -7,8 +7,13 @@ import {
 import { FormsModule } from '@angular/forms';
 import { DynamicDialogConfig, DynamicDialogRef } from 'primeng/dynamicdialog';
 import { InputTextModule } from 'primeng/inputtext';
-import { CheckboxModule } from 'primeng/checkbox';
+import { ToggleSwitchModule } from 'primeng/toggleswitch';
+import { SelectButtonModule } from 'primeng/selectbutton';
+import { TooltipModule } from 'primeng/tooltip';
 import { Button } from 'primeng/button';
+import { TranslocoDirective, TranslocoService } from '@jsverse/transloco';
+import { UserService } from '../../user/user.service';
+import { MessageComponent } from '../message/message.component';
 
 export interface SaveProjectDialogResult {
   name: string;
@@ -27,21 +32,46 @@ const NAME_MAX_LENGTH = 20;
  */
 @Component({
   selector: 'app-save-project-dialog',
-  imports: [FormsModule, InputTextModule, CheckboxModule, Button],
+  imports: [
+    FormsModule,
+    InputTextModule,
+    ToggleSwitchModule,
+    SelectButtonModule,
+    TooltipModule,
+    Button,
+    TranslocoDirective,
+    MessageComponent
+  ],
   templateUrl: './save-project-dialog.component.html',
   changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class SaveProjectDialogComponent {
   private readonly ref = inject(DynamicDialogRef);
   private readonly config = inject(DynamicDialogConfig);
+  private readonly transloco = inject(TranslocoService);
+  protected readonly userService = inject(UserService);
+
+  protected readonly destinationOptions = [
+    {
+      label: this.transloco.translate('saveProjectDialog.destinationServer'),
+      value: 'server' as const
+    },
+    {
+      label: this.transloco.translate('saveProjectDialog.destinationBrowser'),
+      value: 'local' as const
+    }
+  ];
 
   protected readonly name = signal<string>(this.config.data?.name ?? '');
-  protected readonly destination = signal<'server' | 'local'>('local');
-  protected readonly isPublic = signal(false);
+  protected readonly destination = signal<'server' | 'local'>('server');
+  protected readonly isPublic = signal(true);
   protected readonly nameMaxLength = NAME_MAX_LENGTH;
 
   protected get canSave(): boolean {
-    return this.name().trim().length > 0;
+    if (this.name().trim().length === 0) return false;
+    if (this.destination() === 'server' && !this.userService.user())
+      return false;
+    return true;
   }
 
   protected save(): void {

@@ -1,6 +1,6 @@
-<form class="flex flex-col gap-4" (ngSubmit)="save()">
+<form *transloco="let t" class="flex flex-col gap-4" (ngSubmit)="save()">
   <div class="flex flex-col gap-1">
-    <label for="save-project-name">Name</label>
+    <label for="save-project-name">{{ t('saveProjectDialog.name') }}</label>
     <input
       pInputText
       id="save-project-name"
@@ -12,45 +12,45 @@
     />
   </div>
   <div class="flex flex-col gap-1">
-    <span>Destination</span>
-    <div class="flex gap-4 items-center">
-      <label class="flex gap-2 items-center">
-        <input
-          type="radio"
-          name="save-project-destination"
-          value="server"
-          [ngModel]="destination()"
-          (ngModelChange)="destination.set($event)"
-          [ngModelOptions]="{ standalone: true }"
-        />
-        Server
-      </label>
-      <label class="flex gap-2 items-center">
-        <input
-          type="radio"
-          name="save-project-destination"
-          value="local"
-          [ngModel]="destination()"
-          (ngModelChange)="destination.set($event)"
-          [ngModelOptions]="{ standalone: true }"
-        />
-        Local
-      </label>
-    </div>
+    <span>{{ t('saveProjectDialog.destination') }}</span>
+    <p-selectButton
+      [options]="destinationOptions"
+      optionLabel="label"
+      optionValue="value"
+      [allowEmpty]="false"
+      [ngModel]="destination()"
+      (ngModelChange)="destination.set($event)"
+      [ngModelOptions]="{ standalone: true }"
+    />
   </div>
   @if (destination() === 'server') {
-    <div class="flex gap-2 items-center">
-      <p-checkbox
-        inputId="save-project-public"
-        [binary]="true"
-        [ngModel]="isPublic()"
-        (ngModelChange)="isPublic.set($event)"
-        [ngModelOptions]="{ standalone: true }"
-      />
-      <label for="save-project-public">Public</label>
-    </div>
+    @if (!userService.user()) {
+      <app-message severity="warn">
+        {{ t('saveProjectDialog.notLoggedIn') }}
+      </app-message>
+    } @else {
+      <div class="flex gap-2 items-center">
+        <p-toggleswitch
+          inputId="save-project-public"
+          [ngModel]="isPublic()"
+          (ngModelChange)="isPublic.set($event)"
+          [ngModelOptions]="{ standalone: true }"
+        />
+        <label for="save-project-public">{{
+          t('saveProjectDialog.public')
+        }}</label>
+        <i
+          class="ph ph-info cursor-help text-surface-500"
+          [pTooltip]="t('saveProjectDialog.publicInfo')"
+        ></i>
+      </div>
+    }
+  } @else {
+    <app-message severity="info">
+      {{ t('saveProjectDialog.browserWarning') }}
+    </app-message>
   }
   <div class="flex justify-end">
-    <p-button type="submit" label="Save" [disabled]="!canSave" />
+    <p-button type="submit" [label]="t('common.save')" [disabled]="!canSave" />
   </div>
 </form>

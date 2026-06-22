@@ -25,6 +25,7 @@ import {
   ProjectListComponent,
   type ProjectListItem
 } from '../project-list/project-list.component';
+import { MessageComponent } from '../message/message.component';
 import type { BrowserProjectSummary } from '../../persistence/browser/browser-project.types';
 
 const PAGE_SIZE = 20;
@@ -35,7 +36,8 @@ const PAGE_SIZE = 20;
     TabsModule,
     FileUploadModule,
     TranslocoDirective,
-    ProjectListComponent
+    ProjectListComponent,
+    MessageComponent
   ],
   templateUrl: './open-project-dialog.component.html',
   changeDetection: ChangeDetectionStrategy.OnPush
