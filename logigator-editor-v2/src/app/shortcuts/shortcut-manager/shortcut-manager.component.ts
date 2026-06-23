@@ -62,6 +62,7 @@ export class ShortcutManagerComponent {
     {
       labelKey: 'shortcuts.groups.tools',
       actions: [
+        ShortcutActionEnum.TOOL_PAN,
         ShortcutActionEnum.TOOL_WIRE_DRAWING,
         ShortcutActionEnum.TOOL_WIRE_CONNECTION,
         ShortcutActionEnum.TOOL_SELECT,

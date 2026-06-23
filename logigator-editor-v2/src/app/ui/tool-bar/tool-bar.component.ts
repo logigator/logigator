@@ -4,16 +4,17 @@ import {
   computed,
   inject
 } from '@angular/core';
-import { FormsModule } from '@angular/forms';
 import { ButtonModule } from 'primeng/button';
 import { DividerModule } from 'primeng/divider';
-import { InputTextModule } from 'primeng/inputtext';
 import { TooltipModule } from 'primeng/tooltip';
 import { TranslocoDirective, TranslocoService } from '@jsverse/transloco';
 import { WorkModeService } from '../../work-mode/work-mode.service';
 import { WorkMode } from '../../work-mode/work-mode.enum';
+import {
+  createWorkModeTools,
+  WorkModeToolDescriptor
+} from '../../work-mode/work-mode-tools';
 import { ClipboardService } from '../../clipboard/clipboard.service';
-import { BuiltInComponentType } from '../../components/component-type.enum';
 import { ProjectService } from '../../project/project.service';
 import { SaveCoordinatorService } from '../save-coordinator.service';
 import { DialogService } from 'primeng/dynamicdialog';
@@ -21,24 +22,17 @@ import { OpenProjectDialogComponent } from '../open-project-dialog/open-project-
 import { ShortcutService } from '../../shortcuts/shortcut.service';
 import { ShortcutActionEnum } from '../../shortcuts/shortcut-action.enum';
 import { formatShortcutLabel } from '../../shortcuts/shortcut-binding.model';
-import {
-  SimulationService,
-  TargetSpeedUnit
-} from '../../simulation/simulation.service';
-import { SiPipe } from '../../utils/si/si.pipe';
-import { Select } from 'primeng/select';
+import { SimulationService } from '../../simulation/simulation.service';
+import { SimulationControlsComponent } from '../simulation-controls/simulation-controls.component';
 
 @Component({
   selector: 'app-tool-bar',
   imports: [
-    FormsModule,
     ButtonModule,
     DividerModule,
-    InputTextModule,
     TooltipModule,
     TranslocoDirective,
-    SiPipe,
-    Select
+    SimulationControlsComponent
   ],
   templateUrl: './tool-bar.component.html',
   changeDetection: ChangeDetectionStrategy.OnPush
@@ -100,108 +94,21 @@ export class ToolBarComponent {
     () =>
       `${this.translocoService.translate('toolBar.zoomIn')} (${this._fmt(ShortcutActionEnum.ZOOM_IN)})`
   );
-  protected placeWiresTooltip = computed(
-    () =>
-      `${this.translocoService.translate('toolBar.placeWires')} (${this._fmt(ShortcutActionEnum.TOOL_WIRE_DRAWING)})`
+  /** Shared editing tool set; the desktop bar and mobile HUD both render it. */
+  protected readonly tools: WorkModeToolDescriptor[] = createWorkModeTools(
+    this.workModeService
   );
-  protected connWiresTooltip = computed(
-    () =>
-      `${this.translocoService.translate('toolBar.connWires')} (${this._fmt(ShortcutActionEnum.TOOL_WIRE_CONNECTION)})`
-  );
-  protected selectTooltip = computed(
-    () =>
-      `${this.translocoService.translate('toolBar.select')} (${this._fmt(ShortcutActionEnum.TOOL_SELECT)})`
-  );
-  protected selExactTooltip = computed(
-    () =>
-      `${this.translocoService.translate('toolBar.selExact')} (${this._fmt(ShortcutActionEnum.TOOL_SELECT_EXACT)})`
-  );
-  protected eraserTooltip = computed(
-    () =>
-      `${this.translocoService.translate('toolBar.eraser')} (${this._fmt(ShortcutActionEnum.TOOL_ERASE)})`
-  );
-  protected textTooltip = computed(
-    () =>
-      `${this.translocoService.translate('toolBar.text')} (${this._fmt(ShortcutActionEnum.TOOL_PLACE_TEXT)})`
-  );
-  protected negateTooltip = computed(
-    () =>
-      `${this.translocoService.translate('toolBar.negate')} (${this._fmt(ShortcutActionEnum.TOOL_PORT_NEGATION)})`
-  );
+
+  /** Formats the keybinding hint shown in a tool's tooltip. */
+  protected shortcutLabel(action: ShortcutActionEnum): string {
+    return this._fmt(action);
+  }
 
   // Swaps the toolbar between the editing tool set and the simulation
   // controls.
   protected isSimulationMode = computed(
     () => this.workModeService.mode() === WorkMode.SIMULATION
   );
-  protected isSimReady = this.simulationService.isReady;
-  protected isSimRunning = this.simulationService.isRunning;
-  protected simMode = this.simulationService.mode;
-  protected targetValue = this.simulationService.targetValue;
-  protected targetUnit = this.simulationService.targetUnit;
-  protected readonly targetUnitOptions: {
-    label: string;
-    value: TargetSpeedUnit;
-  }[] = [
-    { label: 'Hz', value: 'Hz' },
-    { label: 'kHz', value: 'kHz' },
-    { label: 'MHz', value: 'MHz' }
-  ];
-  protected measuredHz = this.simulationService.measuredHz;
-  protected simTick = this.simulationService.tick;
-
-  protected isWireDrawMode = computed(
-    () => this.workModeService.mode() === WorkMode.WIRE_DRAWING
-  );
-  protected isWireConnMode = computed(
-    () => this.workModeService.mode() === WorkMode.WIRE_CONNECTION
-  );
-  protected isSelectMode = computed(
-    () => this.workModeService.mode() === WorkMode.SELECT
-  );
-  protected isSelectExactMode = computed(
-    () => this.workModeService.mode() === WorkMode.SELECT_EXACT
-  );
-  protected isEraseMode = computed(
-    () => this.workModeService.mode() === WorkMode.ERASE
-  );
-  protected isPlaceTextMode = computed(
-    () =>
-      this.workModeService.mode() === WorkMode.COMPONENT_PLACEMENT &&
-      this.workModeService.selectedComponentType() === BuiltInComponentType.TEXT
-  );
-  protected isPortNegationMode = computed(
-    () => this.workModeService.mode() === WorkMode.PORT_NEGATION
-  );
-
-  protected setWireDrawMode(): void {
-    this.workModeService.setMode(WorkMode.WIRE_DRAWING);
-  }
-
-  protected setWireConnMode(): void {
-    this.workModeService.setMode(WorkMode.WIRE_CONNECTION);
-  }
-
-  protected setSelectMode(): void {
-    this.workModeService.setMode(WorkMode.SELECT);
-  }
-
-  protected setSelectExactMode(): void {
-    this.workModeService.setMode(WorkMode.SELECT_EXACT);
-  }
-
-  protected setEraseMode(): void {
-    this.workModeService.setMode(WorkMode.ERASE);
-  }
-
-  protected setPlaceTextMode(): void {
-    this.workModeService.setMode(WorkMode.COMPONENT_PLACEMENT);
-    this.workModeService.setSelectedComponentType(BuiltInComponentType.TEXT);
-  }
-
-  protected setPortNegationMode(): void {
-    this.workModeService.setMode(WorkMode.PORT_NEGATION);
-  }
 
   protected copy(): void {
     const project = this.projectService.activeProject();
@@ -251,40 +158,6 @@ export class ToolBarComponent {
 
   protected exitSimulation(): void {
     this.simulationService.exit();
-  }
-
-  protected playSimulation(): void {
-    this.simulationService.play();
-  }
-
-  protected pauseSimulation(): void {
-    this.simulationService.pause();
-  }
-
-  protected stepSimulation(): void {
-    this.simulationService.step();
-  }
-
-  protected stopSimulation(): void {
-    this.simulationService.stop();
-  }
-
-  protected toggleTargetMode(): void {
-    this.simulationService.toggleTargetMode();
-  }
-
-  protected toggleSyncMode(): void {
-    this.simulationService.toggleSyncMode();
-  }
-
-  protected onTargetValueInput(event: Event): void {
-    this.simulationService.setTargetValue(
-      Number((event.target as HTMLInputElement).value)
-    );
-  }
-
-  protected onTargetUnitChange(unit: TargetSpeedUnit): void {
-    this.simulationService.setTargetUnit(unit);
   }
 
   protected zoomIn(): void {

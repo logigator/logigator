@@ -21,6 +21,7 @@ import { SelectRectSession } from './sessions/select-rect.session';
 import { SelectionMoveSession } from './sessions/selection-move.session';
 import { EraseSession } from './sessions/erase.session';
 import { WireConnectionSession } from './sessions/wire-connection.session';
+import { PanSession } from './sessions/pan.session';
 import { ConnectionPoint } from '../connection-points/connection-point';
 import { ShortcutService } from '../shortcuts/shortcut.service';
 import { ShortcutActionEnum } from '../shortcuts/shortcut-action.enum';
@@ -32,9 +33,12 @@ import {
 import { TogglePortNegationAction } from '../actions/actions/toggle-port-negation.action';
 import { GraphicsProviderService } from './graphics-provider.service';
 import { NegationBubbleGraphics } from './graphics/negation-bubble.graphics';
+import { LayoutService } from '../layout/layout.service';
 
 /** Click tolerance (grid units) for hitting a port in PORT_NEGATION mode. */
 const PORT_HIT_TOLERANCE = 0.25;
+/** Widened tolerance for fat-finger taps on touch devices. */
+const PORT_HIT_TOLERANCE_TOUCH = 0.5;
 
 interface PortHit {
   comp: Component;
@@ -47,7 +51,7 @@ export class FloatingLayer extends Container {
     Component | Wire | ConnectionPoint
   >();
 
-  private _mode: WorkMode = WorkMode.WIRE_DRAWING;
+  private _mode: WorkMode = WorkMode.PAN;
   private _componentToPlace: ComponentConfig | null = null;
   private _activeDrag: DragSession | null = null;
 
@@ -57,6 +61,8 @@ export class FloatingLayer extends Container {
   private _negationHoverGhost: Graphics | null = null;
 
   private _cancelSub?: Subscription;
+
+  private readonly _layout = getStaticDI(LayoutService);
 
   constructor(private readonly project: Project) {
     super();
@@ -120,6 +126,19 @@ export class FloatingLayer extends Container {
     this._componentToPlace = value;
   }
 
+  /**
+   * Cancels any in-progress single-pointer drag without committing it — each
+   * session's `onCancel` reverts its in-progress effect. Called when a second
+   * finger lands so the multi-touch gesture can take over without the
+   * first-finger tool action registering (see plan §10).
+   */
+  public abortActiveDrag(): void {
+    if (this._activeDrag) {
+      this._activeDrag.onCancel();
+      this._stopDrag();
+    }
+  }
+
   public startPasteSession(components: Component[], wires: Wire[]): void {
     if (this._activeDrag) {
       this._activeDrag.onCancel();
@@ -156,6 +175,16 @@ export class FloatingLayer extends Container {
     if (this._activeDrag) return;
 
     switch (this._mode) {
+      case WorkMode.PAN: {
+        this._startDrag(
+          new PanSession(
+            this.project,
+            e.global.clone(),
+            e.getLocalPosition(this.project.gridSpace)
+          )
+        );
+        break;
+      }
       case WorkMode.COMPONENT_PLACEMENT: {
         if (!this._componentToPlace) return;
         const startPos = roundToGrid(
@@ -291,11 +320,14 @@ export class FloatingLayer extends Container {
    * custom instances — their external ports are not independently negatable.
    */
   private _findPortAt(localPoint: Point): PortHit | null {
+    const tolerance = this._layout.isTouch()
+      ? PORT_HIT_TOLERANCE_TOUCH
+      : PORT_HIT_TOLERANCE;
     const queryRect = new Rectangle(
-      localPoint.x - 0.5,
-      localPoint.y - 0.5,
-      1,
-      1
+      localPoint.x - tolerance,
+      localPoint.y - tolerance,
+      tolerance * 2,
+      tolerance * 2
     );
     for (const comp of this.project.queryComponentsInRange(queryRect)) {
       if (comp.config.type >= CUSTOM_TYPE_ID_BASE) continue;
@@ -303,7 +335,7 @@ export class FloatingLayer extends Container {
       for (let i = 0; i < points.length; i++) {
         const dx = points[i].x - localPoint.x;
         const dy = points[i].y - localPoint.y;
-        if (dx * dx + dy * dy <= PORT_HIT_TOLERANCE * PORT_HIT_TOLERANCE) {
+        if (dx * dx + dy * dy <= tolerance * tolerance) {
           const side: PortSide = i < comp.numInputs ? 'in' : 'out';
           return {
             comp,

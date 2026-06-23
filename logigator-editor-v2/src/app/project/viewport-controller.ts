@@ -62,6 +62,25 @@ export class ViewportController {
     this._updateScale(1, center);
   }
 
+  /**
+   * Continuous zoom for pinch gestures: multiplies the current scale by
+   * `factor`, clamped to the same bounds the stepped zoom respects, anchored at
+   * `center`. Resyncs the discrete step so a later stepped zoomIn/zoomOut or a
+   * +/- button continues from the pinched scale rather than snapping back.
+   */
+  public zoomBy(factor: number, center?: Point): void {
+    const min = Math.pow(this._scaleStepAmount, this._scaleStepMin);
+    const max = Math.pow(this._scaleStepAmount, this._scaleStepMax);
+    const target = Math.min(
+      Math.max(this._container.scale.x * factor, min),
+      max
+    );
+    this._updateScale(target, center);
+    this._scaleStep = Math.round(
+      Math.log(target) / Math.log(this._scaleStepAmount)
+    );
+  }
+
   public get positionChange$(): Observable<Point> {
     return this._positionChange$.asObservable();
   }

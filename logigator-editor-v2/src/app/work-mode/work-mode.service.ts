@@ -9,7 +9,8 @@ import { ComponentProviderService } from '../components/component-provider.servi
 export class WorkModeService {
   private readonly componentProviderService = inject(ComponentProviderService);
 
-  private readonly _mode = signal<WorkMode>(WorkMode.WIRE_DRAWING);
+  // Navigate-first: the board boots ready to pan, not to mutate.
+  private readonly _mode = signal<WorkMode>(WorkMode.PAN);
   public readonly mode = computed(this._mode);
 
   private readonly _selectedComponentType = signal<ComponentType | null>(null);
@@ -41,7 +42,8 @@ export class WorkModeService {
   /** The simulation lifecycle's only doorway past the editing lock above. */
   public setSimulationMode(simulating: boolean): void {
     this._selectedComponentType.set(null);
-    this._mode.set(simulating ? WorkMode.SIMULATION : WorkMode.SELECT);
+    // Leaving a simulation lands back in the navigate-first default.
+    this._mode.set(simulating ? WorkMode.SIMULATION : WorkMode.PAN);
   }
 
   public setSelectedComponentType(componentType: ComponentType | null): void {

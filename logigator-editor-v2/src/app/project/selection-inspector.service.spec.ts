@@ -77,4 +77,17 @@ describe('SelectionInspectorService', () => {
     project.selectionManager.clear();
     expect(inspector.selectedComponent()).toBeNull();
   });
+
+  it('tracks selection count and presence', () => {
+    expect(inspector.selectionCount()).toBe(0);
+    expect(inspector.hasSelection()).toBe(false);
+
+    selectComponent();
+    expect(inspector.selectionCount()).toBe(1);
+    expect(inspector.hasSelection()).toBe(true);
+
+    project.selectionManager.clear();
+    expect(inspector.selectionCount()).toBe(0);
+    expect(inspector.hasSelection()).toBe(false);
+  });
 });

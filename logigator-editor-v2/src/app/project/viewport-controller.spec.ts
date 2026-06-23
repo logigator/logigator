@@ -80,6 +80,28 @@ describe('ViewportController', () => {
     });
   });
 
+  describe('zoomBy', () => {
+    it('multiplies the current scale by the factor', () => {
+      viewport.zoomBy(2, new Point(0, 0));
+      expect(container.scale.x).toBeCloseTo(2, 5);
+    });
+
+    it('clamps to the min/max scale bounds', () => {
+      viewport.zoomBy(1000, new Point(0, 0));
+      expect(container.scale.x).toBeCloseTo(Math.pow(1.2, 5), 5);
+
+      viewport.zoomBy(0.00001, new Point(0, 0));
+      expect(container.scale.x).toBeCloseTo(Math.pow(1.2, -12), 5);
+    });
+
+    it('resyncs the step so a later stepped zoomIn continues from the pinched scale', () => {
+      // 1.2^3 ≈ 1.728; nearest step is 3, so zoomIn should land on 1.2^4.
+      viewport.zoomBy(Math.pow(1.2, 3), new Point(0, 0));
+      viewport.zoomIn(new Point(0, 0));
+      expect(container.scale.x).toBeCloseTo(Math.pow(1.2, 4), 5);
+    });
+  });
+
   describe('setPosition / pan', () => {
     it('setPosition updates container position', () => {
       viewport.setPosition(new Point(100, 200));

@@ -44,4 +44,17 @@ export class SelectionInspectorService {
       ? [...sm.selectedComponents][0]
       : null;
   });
+
+  /** Total selected elements (components + wires) in the active project. */
+  public readonly selectionCount = computed<number>(() => {
+    this.selectionTick();
+    const sm = this.projectService.activeProject()?.selectionManager;
+    if (!sm) return 0;
+    return sm.selectedComponents.size + sm.selectedWires.size;
+  });
+
+  /** True when anything is selected — drives the mobile selection action bar. */
+  public readonly hasSelection = computed<boolean>(
+    () => this.selectionCount() > 0
+  );
 }

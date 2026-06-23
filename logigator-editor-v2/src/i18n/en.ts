@@ -98,6 +98,7 @@ const en = {
   },
   statusBar: {
     modes: {
+      pan: 'Panning',
       drawWire: 'Placing Wires',
       connWire: 'Connecting Wires',
       sel: 'Selecting Elements',
@@ -230,6 +231,10 @@ const en = {
     redo: 'Redo',
     zoomOut: 'Zoom out',
     zoomIn: 'Zoom in',
+    pan: 'Pan',
+    parts: 'Parts',
+    placeComponent: 'Placing component',
+    more: 'More tools',
     placeWires: 'Place wires',
     connWires: 'Connect wires',
     select: 'Select',
@@ -249,6 +254,12 @@ const en = {
     syncToFrame: 'Sync to frame',
     measuredHz: '{{hz}}Hz',
     ticks: '{{ticks}} ticks'
+  },
+  mobile: {
+    menu: 'Menu',
+    palette: 'Components',
+    settings: 'Settings',
+    ports: 'Ports'
   },
   logging: {
     error: 'Error',
@@ -272,6 +283,7 @@ const en = {
       zoomIn: 'Zoom In',
       zoomOut: 'Zoom Out',
       zoom100: 'Zoom 100%',
+      toolPan: 'Pan',
       toolWireDrawing: 'Place Wires',
       toolWireConnection: 'Connect Wires',
       toolSelect: 'Select',

@@ -50,15 +50,19 @@
           [class.opacity-70]="!isActive(comp)"
         ></i>
         <span class="truncate max-w-56">{{ name(comp) }}</span>
-        <span class="inline-flex items-center justify-center w-4 h-4 shrink-0">
+        <span class="inline-flex items-center justify-center shrink-0 w-4 h-4">
           @if (isDirty(comp)) {
             <span
               class="w-2 h-2 rounded-full bg-current opacity-60 group-hover:hidden"
+              [class.hidden]="isTouch()"
             ></span>
           }
           <button
             type="button"
-            class="hidden group-hover:inline-flex p-0.5 items-center justify-center rounded text-muted hover:text-error hover:bg-error-surface cursor-pointer"
+            [class]="
+              (isTouch() ? 'inline-flex' : 'hidden group-hover:inline-flex') +
+              ' p-0.5 items-center justify-center rounded text-muted hover:text-error hover:bg-error-surface cursor-pointer'
+            "
             [attr.aria-label]="t('tabBar.close')"
             (click)="close($event, comp)"
             (keydown.enter)="close($event, comp)"

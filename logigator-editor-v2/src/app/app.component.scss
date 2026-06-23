@@ -4,5 +4,9 @@
   flex-direction: column;
   flex-shrink: 0;
   width: 100vw;
+  // 100vh on mobile is the *large* viewport (toolbars hidden), so the app and
+  // its bottom-anchored chrome slip under the browser's dynamic UI. dvh tracks
+  // the currently-visible viewport; 100vh stays as a fallback for old engines.
   height: 100vh;
+  height: 100dvh;
 }

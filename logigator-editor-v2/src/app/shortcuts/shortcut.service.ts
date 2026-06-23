@@ -251,6 +251,10 @@ export class ShortcutService implements OnDestroy {
       }
     });
 
+    this.on(ShortcutActionEnum.TOOL_PAN).subscribe(() => {
+      this.workModeService.setMode(WorkMode.PAN);
+    });
+
     this.on(ShortcutActionEnum.TOOL_WIRE_DRAWING).subscribe(() => {
       this.workModeService.setMode(WorkMode.WIRE_DRAWING);
     });
