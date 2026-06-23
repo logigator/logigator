@@ -13,6 +13,7 @@ import {
 import { TranslocoService } from '@jsverse/transloco';
 import { WorkModeService } from '../../../work-mode/work-mode.service';
 import { WorkMode } from '../../../work-mode/work-mode.enum';
+import { MobileUiService } from '../../../layout/mobile-ui.service';
 
 @Component({
   selector: 'app-component-list-category',
@@ -23,6 +24,7 @@ import { WorkMode } from '../../../work-mode/work-mode.enum';
 export class ComponentListCategoryComponent {
   private readonly workModeService = inject(WorkModeService);
   private readonly translocoService = inject(TranslocoService);
+  private readonly mobileUi = inject(MobileUiService);
 
   /** The palette tiles to render; already filtered by the parent's search. */
   public components = input<ComponentConfig[]>([]);
@@ -51,5 +53,8 @@ export class ComponentListCategoryComponent {
   public selectComponent(component: ComponentConfig): void {
     this.workModeService.setMode(WorkMode.COMPONENT_PLACEMENT);
     this.workModeService.setSelectedComponentType(component.type);
+    // On mobile the palette is a sheet; picking from it dismisses it so the
+    // canvas is clear for placement. A no-op on desktop (no sheet is open).
+    this.mobileUi.close();
   }
 }
