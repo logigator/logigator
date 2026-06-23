@@ -233,6 +233,7 @@ const en = {
     zoomIn: 'Zoom in',
     pan: 'Pan',
     parts: 'Parts',
+    placeComponent: 'Placing component',
     more: 'More tools',
     placeWires: 'Place wires',
     connWires: 'Connect wires',

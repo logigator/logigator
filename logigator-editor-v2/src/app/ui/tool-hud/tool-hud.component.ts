@@ -8,6 +8,8 @@ import { ButtonModule } from 'primeng/button';
 import { Popover } from 'primeng/popover';
 import { TranslocoDirective } from '@jsverse/transloco';
 import { WorkModeService } from '../../work-mode/work-mode.service';
+import { WorkMode } from '../../work-mode/work-mode.enum';
+import { BuiltInComponentType } from '../../components/component-type.enum';
 import {
   createWorkModeTools,
   WorkModeToolId
@@ -53,16 +55,31 @@ export class ToolHudComponent {
     (t) => !PRIMARY_IDS.includes(t.id)
   );
 
-  protected readonly partsOpen = computed(
-    () => this.mobileUi.activeSheet() === 'palette'
+  /**
+   * Placing a palette component (the Parts flow) — TEXT excluded, since it has
+   * its own tool in the "more" popover that lights up instead.
+   */
+  protected readonly placingComponent = computed(
+    () =>
+      this.workModeService.mode() === WorkMode.COMPONENT_PLACEMENT &&
+      this.workModeService.selectedComponentType() !== BuiltInComponentType.TEXT
+  );
+
+  // The Parts button is "armed" while the palette sheet is open or a palette
+  // component is being placed, so it reads as active like the other mode tools.
+  protected readonly partsActive = computed(
+    () => this.mobileUi.activeSheet() === 'palette' || this.placingComponent()
   );
   protected readonly moreActive = computed(() =>
     this.moreTools.some((t) => t.isActive())
   );
-  /** Label of the active tool, shown above the row; null while none is armed. */
-  protected readonly activeLabelKey = computed(
-    () => this.tools.find((t) => t.isActive())?.labelKey ?? null
-  );
+  /** Label shown above the row; null while no mode is armed. */
+  protected readonly activeLabelKey = computed(() => {
+    const activeTool = this.tools.find((t) => t.isActive());
+    if (activeTool) return activeTool.labelKey;
+    if (this.placingComponent()) return 'toolBar.placeComponent';
+    return null;
+  });
 
   protected toggleParts(): void {
     this.mobileUi.toggle('palette');
