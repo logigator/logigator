@@ -25,6 +25,7 @@ import { ProjectService } from '../../project/project.service';
         <p-button
           icon="ph ph-copy"
           severity="secondary"
+          rounded
           text
           [ariaLabel]="t('toolBar.copy')"
           (onClick)="copy()"
@@ -32,6 +33,7 @@ import { ProjectService } from '../../project/project.service';
         <p-button
           icon="ph ph-scissors"
           severity="secondary"
+          rounded
           text
           [ariaLabel]="t('toolBar.cut')"
           (onClick)="cut()"
@@ -39,6 +41,7 @@ import { ProjectService } from '../../project/project.service';
         <p-button
           icon="ph ph-clipboard"
           severity="secondary"
+          rounded
           text
           [ariaLabel]="t('toolBar.paste')"
           (onClick)="paste()"
@@ -46,6 +49,7 @@ import { ProjectService } from '../../project/project.service';
         <p-button
           icon="ph ph-trash"
           severity="secondary"
+          rounded
           text
           [ariaLabel]="t('toolBar.delete')"
           (onClick)="delete()"
