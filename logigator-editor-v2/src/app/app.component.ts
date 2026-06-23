@@ -45,6 +45,7 @@ import { MobileStatusComponent } from './ui/mobile-status/mobile-status.componen
 import { SimulationControlsComponent } from './ui/simulation-controls/simulation-controls.component';
 import { ComponentListComponent } from './ui/side-bar/component-list/component-list.component';
 import { PortsPanelComponent } from './ui/ports-panel/ports-panel.component';
+import { UserSettingsComponent } from './ui/user-settings/user-settings.component';
 
 @Component({
   selector: 'app-root',
@@ -69,7 +70,8 @@ import { PortsPanelComponent } from './ui/ports-panel/ports-panel.component';
     MobileStatusComponent,
     SimulationControlsComponent,
     ComponentListComponent,
-    PortsPanelComponent
+    PortsPanelComponent,
+    UserSettingsComponent
   ],
   templateUrl: './app.component.html',
   styleUrl: './app.component.scss',
