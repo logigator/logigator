@@ -4,6 +4,7 @@ import {
   ChangeDetectionStrategy,
   Component,
   computed,
+  effect,
   inject,
   Injector,
   signal
@@ -25,8 +26,25 @@ import { UnsavedChangesGuard } from './persistence/unsaved-changes.guard';
 import { ConfirmPopup } from 'primeng/confirmpopup';
 import { ConfirmDialog } from 'primeng/confirmdialog';
 import { Toast } from 'primeng/toast';
+import { Drawer } from 'primeng/drawer';
+import { PanelMenu } from 'primeng/panelmenu';
+import { TranslocoDirective } from '@jsverse/transloco';
 import { WorkMode } from './work-mode/work-mode.enum';
 import { WorkModeService } from './work-mode/work-mode.service';
+import { LayoutService } from './layout/layout.service';
+import { MobileUiService } from './layout/mobile-ui.service';
+import { EditorMenuService } from './ui/editor-menu.service';
+import { SelectionInspectorService } from './project/selection-inspector.service';
+import { ProjectMetadataStore } from './persistence/project-metadata.store';
+import { Component as CircuitComponent } from './components/component';
+import { MobileTopBarComponent } from './ui/mobile-top-bar/mobile-top-bar.component';
+import { ToolHudComponent } from './ui/tool-hud/tool-hud.component';
+import { SelectionActionBarComponent } from './ui/selection-action-bar/selection-action-bar.component';
+import { ZoomFabComponent } from './ui/zoom-fab/zoom-fab.component';
+import { MobileStatusComponent } from './ui/mobile-status/mobile-status.component';
+import { SimulationControlsComponent } from './ui/simulation-controls/simulation-controls.component';
+import { ComponentListComponent } from './ui/side-bar/component-list/component-list.component';
+import { PortsPanelComponent } from './ui/ports-panel/ports-panel.component';
 
 @Component({
   selector: 'app-root',
@@ -40,7 +58,18 @@ import { WorkModeService } from './work-mode/work-mode.service';
     ComponentSettingsComponent,
     ConfirmPopup,
     ConfirmDialog,
-    Toast
+    Toast,
+    Drawer,
+    PanelMenu,
+    TranslocoDirective,
+    MobileTopBarComponent,
+    ToolHudComponent,
+    SelectionActionBarComponent,
+    ZoomFabComponent,
+    MobileStatusComponent,
+    SimulationControlsComponent,
+    ComponentListComponent,
+    PortsPanelComponent
   ],
   templateUrl: './app.component.html',
   styleUrl: './app.component.scss',
@@ -54,15 +83,46 @@ export class AppComponent {
   private readonly unsavedChangesGuard = inject(UnsavedChangesGuard);
   private readonly location = inject(Location);
   private readonly workModeService = inject(WorkModeService);
+  protected readonly layout = inject(LayoutService);
+  protected readonly mobileUi = inject(MobileUiService);
+  private readonly metadataStore = inject(ProjectMetadataStore);
+  private readonly selectionInspector = inject(SelectionInspectorService);
 
   protected readonly cursorPosition = signal<Point>(new Point(0, 0));
+
+  protected readonly menuItems = inject(EditorMenuService).items;
 
   public readonly isSimulation = computed(
     () => this.workModeService.mode() === WorkMode.SIMULATION
   );
 
+  /** True while the active tab is a custom-component editor — gates the Ports sheet. */
+  protected readonly isEditingComponent = computed(() => {
+    const active = this.projectService.activeProject();
+    return !!active && this.metadataStore.getMetadata(active)?.type === 'comp';
+  });
+
+  // Auto-opens the settings sheet on mobile when a component becomes selected,
+  // so the only door to it actually opens. Suppressed during placement (a modal
+  // sheet would block tap-to-place — see plan §6.2). Reacts only to selection
+  // *transitions* so opening another sheet while a component stays selected
+  // doesn't yank the user back to settings.
+  private _prevSelected: CircuitComponent | null = null;
+
   constructor() {
     setStaticDIInjector(this.injector);
+
+    effect(() => {
+      const selected = this.selectionInspector.selectedComponent();
+      const compact = this.layout.isCompact();
+      const placing =
+        this.workModeService.mode() === WorkMode.COMPONENT_PLACEMENT;
+      const prev = this._prevSelected;
+      this._prevSelected = selected;
+      if (compact && selected && selected !== prev && !placing) {
+        this.mobileUi.open('settings');
+      }
+    });
 
     void this.persistenceService.preloadBrowserMasters();
 
@@ -73,5 +133,10 @@ export class AppComponent {
     void this.routerService.processCurrentRoute();
 
     this.unsavedChangesGuard.attach();
+  }
+
+  /** A Drawer reporting itself hidden (mask click / Esc) clears the active sheet. */
+  protected onSheetClosed(visible: boolean): void {
+    if (!visible) this.mobileUi.close();
   }
 }

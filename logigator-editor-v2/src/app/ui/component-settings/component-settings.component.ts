@@ -2,7 +2,8 @@ import {
   ChangeDetectionStrategy,
   Component,
   computed,
-  inject
+  inject,
+  input
 } from '@angular/core';
 import { NgComponentOutlet } from '@angular/common';
 import { WorkModeService } from '../../work-mode/work-mode.service';
@@ -28,6 +29,12 @@ export class ComponentSettingsComponent {
   private readonly inspector = inject(SelectionInspectorService);
   private readonly projectService = inject(ProjectService);
   private readonly translocoService = inject(TranslocoService);
+
+  /**
+   * Desktop floats the card in the board's bottom-right corner; the mobile
+   * settings Drawer sets this false so the card renders in-flow instead.
+   */
+  public readonly floating = input(true);
 
   // The settings panel shows the placement ghost while placing, otherwise the
   // single selected placed component (R11). Each branch supplies a `commit`
