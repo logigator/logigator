@@ -185,6 +185,17 @@ export class Project extends InteractionContainer {
     this.triggerTicker('single');
   }
 
+  public zoomBy(factor: number, center?: Point): void {
+    this._viewport.zoomBy(factor, center);
+    this.triggerTicker('single');
+  }
+
+  /** Cancels any in-progress single-pointer drag (e.g. when a second finger
+   *  lands and the multi-touch gesture takes over). */
+  public abortActiveDrag(): void {
+    this._floatingLayer.abortActiveDrag();
+  }
+
   public get positionChange$(): Observable<Point> {
     return this._viewport.positionChange$;
   }

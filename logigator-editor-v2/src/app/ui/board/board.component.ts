@@ -20,6 +20,7 @@ import { WorkModeService } from '../../work-mode/work-mode.service';
 import { TickerScheduler } from '../../rendering/ticker-scheduler';
 import { EditorSettingsService } from '../../settings/editor-settings.service';
 import { FpsCounterComponent } from './fps-counter/fps-counter.component';
+import { MultiTouchGesture } from '../../rendering/multi-touch-gesture';
 
 // Off-screen scene nodes (quad-tree branches, components, wires) are skipped at
 // render time when marked `cullable`. CullerPlugin (priority 10) initialises
@@ -58,6 +59,19 @@ export class BoardComponent implements OnInit, OnDestroy {
   private _pointerInsideCanvas = false;
   private _renderScheduler: TickerScheduler | null = null;
   private _resizeObserver: ResizeObserver | null = null;
+
+  // Two-finger pan + pinch-zoom. Driven by native pointer events on the canvas
+  // (reliable multi-touch with a stable pointerId), not PixiJS federated events
+  // whose two-finger delivery is finicky. Targets whatever project is active.
+  private readonly _gesture = new MultiTouchGesture({
+    pan: (delta) => this.project()?.pan(delta),
+    zoomBy: (factor, center) => this.project()?.zoomBy(factor, center),
+    abortActiveDrag: () => this.project()?.abortActiveDrag(),
+    setActive: (active) => this.project()?.triggerTicker(active ? 'on' : 'off')
+  });
+  private readonly _gestureListeners = new AbortController();
+  // Cached at gesture start; the full-bleed canvas does not move mid-gesture.
+  private _canvasRect: DOMRect | null = null;
 
   /** The render loop's ticker; only valid once `loaded()` is true. */
   protected get ticker(): Ticker {
@@ -184,16 +198,71 @@ export class BoardComponent implements OnInit, OnDestroy {
     this._resizeObserver = new ResizeObserver(() => this.app.queueResize());
     this._resizeObserver.observe(this.hostEl.nativeElement);
 
+    // Wire the gesture listeners *after* app.init so PixiJS's federated
+    // pointerdown handler (registered during init, on the same canvas) runs
+    // before ours. On a second-finger-down that ordering matters: PixiJS sees
+    // the first finger's drag still active and its `if (_activeDrag) return`
+    // guard skips starting a session for the second finger; only then does our
+    // handler abort the first finger's drag and take over the gesture. Wiring
+    // earlier would invert that and leak a stray single-pointer session.
+    this._wireTouchGestures();
+
     this.appInitialized = true;
     this.loaded.set(true);
   }
 
   ngOnDestroy(): void {
     this.destroy$.next();
+    this._gestureListeners.abort();
     this._resizeObserver?.disconnect();
     this._renderScheduler?.destroy();
     if (this.appInitialized) {
       this.app.destroy();
     }
+  }
+
+  /**
+   * Routes native touch-pointer events on the canvas into the multi-touch
+   * gesture. Only `pointerType === 'touch'` is tracked — mouse/pen keep their
+   * existing single-pointer path (PanSession, right-drag pan, wheel zoom). Touch
+   * pointers have implicit capture, so move/up still arrive after a finger
+   * leaves the canvas bounds.
+   */
+  private _wireTouchGestures(): void {
+    const canvas = this.canvas.nativeElement;
+    const opts = { signal: this._gestureListeners.signal };
+
+    const toLocal = (e: PointerEvent): { x: number; y: number } => {
+      const rect = this._canvasRect ?? canvas.getBoundingClientRect();
+      return { x: e.clientX - rect.left, y: e.clientY - rect.top };
+    };
+
+    canvas.addEventListener(
+      'pointerdown',
+      (e) => {
+        if (e.pointerType !== 'touch') return;
+        this._canvasRect = canvas.getBoundingClientRect();
+        const p = toLocal(e);
+        this._gesture.onPointerDown(e.pointerId, p.x, p.y);
+      },
+      opts
+    );
+
+    canvas.addEventListener(
+      'pointermove',
+      (e) => {
+        if (e.pointerType !== 'touch') return;
+        const p = toLocal(e);
+        this._gesture.onPointerMove(e.pointerId, p.x, p.y);
+      },
+      opts
+    );
+
+    const onUp = (e: PointerEvent): void => {
+      if (e.pointerType !== 'touch') return;
+      this._gesture.onPointerUp(e.pointerId);
+    };
+    canvas.addEventListener('pointerup', onUp, opts);
+    canvas.addEventListener('pointercancel', onUp, opts);
   }
 }
