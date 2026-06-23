@@ -21,6 +21,7 @@ import { SelectRectSession } from './sessions/select-rect.session';
 import { SelectionMoveSession } from './sessions/selection-move.session';
 import { EraseSession } from './sessions/erase.session';
 import { WireConnectionSession } from './sessions/wire-connection.session';
+import { PanSession } from './sessions/pan.session';
 import { ConnectionPoint } from '../connection-points/connection-point';
 import { ShortcutService } from '../shortcuts/shortcut.service';
 import { ShortcutActionEnum } from '../shortcuts/shortcut-action.enum';
@@ -47,7 +48,7 @@ export class FloatingLayer extends Container {
     Component | Wire | ConnectionPoint
   >();
 
-  private _mode: WorkMode = WorkMode.WIRE_DRAWING;
+  private _mode: WorkMode = WorkMode.PAN;
   private _componentToPlace: ComponentConfig | null = null;
   private _activeDrag: DragSession | null = null;
 
@@ -156,6 +157,10 @@ export class FloatingLayer extends Container {
     if (this._activeDrag) return;
 
     switch (this._mode) {
+      case WorkMode.PAN: {
+        this._startDrag(new PanSession(this.project, e.global.clone()));
+        break;
+      }
       case WorkMode.COMPONENT_PLACEMENT: {
         if (!this._componentToPlace) return;
         const startPos = roundToGrid(

@@ -1,4 +1,7 @@
 export const enum WorkMode {
+  // Hand tool: one pointer pans the board. The navigate-first default on every
+  // device — a fresh board moves on first drag rather than mutating.
+  PAN = 'pan',
   WIRE_DRAWING = 'drawWire',
   WIRE_CONNECTION = 'connWire',
   SELECT = 'sel',

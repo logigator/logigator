@@ -98,6 +98,7 @@ const en = {
   },
   statusBar: {
     modes: {
+      pan: 'Panning',
       drawWire: 'Placing Wires',
       connWire: 'Connecting Wires',
       sel: 'Selecting Elements',
