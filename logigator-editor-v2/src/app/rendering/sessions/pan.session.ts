@@ -33,8 +33,10 @@ export class PanSession implements DragSession {
     this._lastGlobal.copyFrom(g);
   }
 
+  // eslint-disable-next-line @typescript-eslint/no-empty-function
   onEnd(): void {}
 
+  // eslint-disable-next-line @typescript-eslint/no-empty-function
   onCancel(): void {}
 
   canEnd(): boolean {
