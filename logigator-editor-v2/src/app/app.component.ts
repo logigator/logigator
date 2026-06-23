@@ -104,9 +104,10 @@ export class AppComponent {
     return !!active && this.metadataStore.getMetadata(active)?.type === 'comp';
   });
 
-  // Auto-opens the settings sheet on mobile when a component becomes selected,
-  // so the only door to it actually opens. Suppressed during placement (a modal
-  // sheet would block tap-to-place — see plan §6.2). Reacts only to selection
+  // Opens the settings sheet on mobile when a component becomes selected (the
+  // only door to it) and closes it again when the selection goes away so it
+  // never lingers as a blank panel. Suppressed during placement (a modal sheet
+  // would block tap-to-place — see plan §6.2). Reacts only to selection
   // *transitions* so opening another sheet while a component stays selected
   // doesn't yank the user back to settings.
   private _prevSelected: CircuitComponent | null = null;
@@ -121,8 +122,15 @@ export class AppComponent {
         this.workModeService.mode() === WorkMode.COMPONENT_PLACEMENT;
       const prev = this._prevSelected;
       this._prevSelected = selected;
-      if (compact && selected && selected !== prev && !placing) {
+      if (!compact) return;
+      if (selected && selected !== prev && !placing) {
         this.mobileUi.open('settings');
+      } else if (!selected && prev && this.mobileUi.activeSheet() === 'settings') {
+        // The selection that opened the settings sheet is gone (e.g. opening
+        // the component editor switched tabs), so the sheet would only show a
+        // blank panel — close it. Guarded to the settings sheet so a different
+        // open sheet is left alone.
+        this.mobileUi.close();
       }
     });
 
