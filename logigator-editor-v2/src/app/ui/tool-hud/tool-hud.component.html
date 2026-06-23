@@ -47,6 +47,15 @@
           (onClick)="tool.activate(); morePop.hide()"
         ></p-button>
       }
+      @if (isEditingComponent()) {
+        <p-button
+          icon="ph ph-plugs"
+          severity="secondary"
+          text
+          [ariaLabel]="t('mobile.ports')"
+          (onClick)="openPorts(); morePop.hide()"
+        ></p-button>
+      }
     </div>
   </p-popover>
 </div>

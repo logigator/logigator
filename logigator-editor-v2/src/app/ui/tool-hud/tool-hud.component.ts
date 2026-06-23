@@ -13,6 +13,8 @@ import {
   WorkModeToolId
 } from '../../work-mode/work-mode-tools';
 import { MobileUiService } from '../../layout/mobile-ui.service';
+import { ProjectService } from '../../project/project.service';
+import { ProjectMetadataStore } from '../../persistence/project-metadata.store';
 
 /** Tool ids shown directly in the HUD's always-visible primary row. */
 const PRIMARY_IDS: readonly WorkModeToolId[] = ['pan', 'select', 'wire'];
@@ -32,8 +34,17 @@ const PRIMARY_IDS: readonly WorkModeToolId[] = ['pan', 'select', 'wire'];
 export class ToolHudComponent {
   private readonly workModeService = inject(WorkModeService);
   protected readonly mobileUi = inject(MobileUiService);
+  private readonly projectService = inject(ProjectService);
+  private readonly metadataStore = inject(ProjectMetadataStore);
 
   private readonly tools = createWorkModeTools(this.workModeService);
+
+  /** True while the active tab is a custom-component editor — the desktop side
+   *  bar shows the Ports panel here; the HUD's "more" popover exposes it. */
+  protected readonly isEditingComponent = computed(() => {
+    const active = this.projectService.activeProject();
+    return !!active && this.metadataStore.getMetadata(active)?.type === 'comp';
+  });
 
   protected readonly primaryTools = PRIMARY_IDS.map(
     (id) => this.tools.find((t) => t.id === id)!
@@ -55,5 +66,9 @@ export class ToolHudComponent {
 
   protected toggleParts(): void {
     this.mobileUi.toggle('palette');
+  }
+
+  protected openPorts(): void {
+    this.mobileUi.open('ports');
   }
 }
