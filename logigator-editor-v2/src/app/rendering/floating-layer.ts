@@ -176,7 +176,13 @@ export class FloatingLayer extends Container {
 
     switch (this._mode) {
       case WorkMode.PAN: {
-        this._startDrag(new PanSession(this.project, e.global.clone()));
+        this._startDrag(
+          new PanSession(
+            this.project,
+            e.global.clone(),
+            e.getLocalPosition(this.project.gridSpace)
+          )
+        );
         break;
       }
       case WorkMode.COMPONENT_PLACEMENT: {

@@ -1,6 +1,10 @@
-import { FederatedPointerEvent, Point } from 'pixi.js';
+import { FederatedPointerEvent, Point, Rectangle } from 'pixi.js';
 import { DragSession } from '../drag-session';
 import { Project } from '../../project/project';
+import { WorkMode } from '../../work-mode/work-mode.enum';
+
+/** Screen-space movement (px) beyond which a press counts as a pan, not a tap. */
+const CLICK_MOVE_THRESHOLD = 5;
 
 /**
  * One-pointer pan (the hand tool / WorkMode.PAN). Shared by mouse and touch.
@@ -14,27 +18,51 @@ import { Project } from '../../project/project';
  *
  * `e.global` is screen space, which is exactly what `Project.pan` expects (it
  * adds the delta to the stage position). Do not convert to grid space here.
+ *
+ * A press that never moves past a small threshold is treated as a click/tap and
+ * single-selects the element under it (clearing on empty space), reusing SELECT
+ * mode's click path — so PAN stays navigate-first but a tap still selects. The
+ * board does not move until the threshold is crossed, so a tap never nudges it.
  */
 export class PanSession implements DragSession {
   private readonly _lastGlobal: Point;
+  private readonly _startGlobal: Point;
+  private readonly _clickPoint: Point;
+  private _moved = false;
 
   constructor(
     private readonly project: Project,
-    startGlobal: Point
+    startGlobal: Point,
+    clickPoint: Point
   ) {
     this._lastGlobal = startGlobal.clone();
+    this._startGlobal = startGlobal.clone();
+    this._clickPoint = clickPoint.clone();
   }
 
   onMove(e: FederatedPointerEvent): void {
     const g = e.global;
+    if (!this._moved) {
+      const dx = g.x - this._startGlobal.x;
+      const dy = g.y - this._startGlobal.y;
+      if (dx * dx + dy * dy <= CLICK_MOVE_THRESHOLD * CLICK_MOVE_THRESHOLD) {
+        return; // still within tap tolerance — don't pan yet
+      }
+      this._moved = true;
+    }
     this.project.pan(
       new Point(g.x - this._lastGlobal.x, g.y - this._lastGlobal.y)
     );
     this._lastGlobal.copyFrom(g);
   }
 
-  // eslint-disable-next-line @typescript-eslint/no-empty-function
-  onEnd(): void {}
+  onEnd(): void {
+    if (this._moved) return; // it was a pan; leave the selection untouched
+    this.project.selectionManager.commit(
+      new Rectangle(this._clickPoint.x, this._clickPoint.y, 0, 0),
+      WorkMode.SELECT
+    );
+  }
 
   // eslint-disable-next-line @typescript-eslint/no-empty-function
   onCancel(): void {}
