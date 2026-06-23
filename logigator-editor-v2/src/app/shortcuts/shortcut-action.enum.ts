@@ -14,6 +14,7 @@ export enum ShortcutActionEnum {
   ZOOM_OUT = 'zoomOut',
   ZOOM_100 = 'zoom100',
 
+  TOOL_PAN = 'toolPan',
   TOOL_WIRE_DRAWING = 'toolWireDrawing',
   TOOL_WIRE_CONNECTION = 'toolWireConnection',
   TOOL_SELECT = 'toolSelect',

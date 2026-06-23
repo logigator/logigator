@@ -97,7 +97,7 @@ describe('SimulationService', () => {
 
     fakeWorker.emit({ kind: 'error', reqId: null, message: 'engine died' });
 
-    expect(workModeService.mode()).toBe(WorkMode.SELECT);
+    expect(workModeService.mode()).toBe(WorkMode.PAN);
     expect(service.state()).toBe('inactive');
     expect(error).toHaveBeenCalledWith('engine died');
   });
@@ -270,7 +270,7 @@ describe('SimulationService', () => {
     }
   });
 
-  it('exit resets sim state and restores SELECT mode', async () => {
+  it('exit resets sim state and restores PAN mode', async () => {
     const lever = makeLever();
     project.addComponent(lever);
     await enterAndBoot();
@@ -278,7 +278,7 @@ describe('SimulationService', () => {
 
     service.exit();
 
-    expect(workModeService.mode()).toBe(WorkMode.SELECT);
+    expect(workModeService.mode()).toBe(WorkMode.PAN);
     expect(lever.isOn).toBe(false);
     expect(service.board).toBeNull();
     expect(service.applier).toBeNull();

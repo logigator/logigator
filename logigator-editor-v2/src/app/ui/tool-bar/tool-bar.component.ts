@@ -12,8 +12,11 @@ import { TooltipModule } from 'primeng/tooltip';
 import { TranslocoDirective, TranslocoService } from '@jsverse/transloco';
 import { WorkModeService } from '../../work-mode/work-mode.service';
 import { WorkMode } from '../../work-mode/work-mode.enum';
+import {
+  createWorkModeTools,
+  WorkModeToolDescriptor
+} from '../../work-mode/work-mode-tools';
 import { ClipboardService } from '../../clipboard/clipboard.service';
-import { BuiltInComponentType } from '../../components/component-type.enum';
 import { ProjectService } from '../../project/project.service';
 import { SaveCoordinatorService } from '../save-coordinator.service';
 import { DialogService } from 'primeng/dynamicdialog';
@@ -100,34 +103,15 @@ export class ToolBarComponent {
     () =>
       `${this.translocoService.translate('toolBar.zoomIn')} (${this._fmt(ShortcutActionEnum.ZOOM_IN)})`
   );
-  protected placeWiresTooltip = computed(
-    () =>
-      `${this.translocoService.translate('toolBar.placeWires')} (${this._fmt(ShortcutActionEnum.TOOL_WIRE_DRAWING)})`
+  /** Shared editing tool set; the desktop bar and mobile HUD both render it. */
+  protected readonly tools: WorkModeToolDescriptor[] = createWorkModeTools(
+    this.workModeService
   );
-  protected connWiresTooltip = computed(
-    () =>
-      `${this.translocoService.translate('toolBar.connWires')} (${this._fmt(ShortcutActionEnum.TOOL_WIRE_CONNECTION)})`
-  );
-  protected selectTooltip = computed(
-    () =>
-      `${this.translocoService.translate('toolBar.select')} (${this._fmt(ShortcutActionEnum.TOOL_SELECT)})`
-  );
-  protected selExactTooltip = computed(
-    () =>
-      `${this.translocoService.translate('toolBar.selExact')} (${this._fmt(ShortcutActionEnum.TOOL_SELECT_EXACT)})`
-  );
-  protected eraserTooltip = computed(
-    () =>
-      `${this.translocoService.translate('toolBar.eraser')} (${this._fmt(ShortcutActionEnum.TOOL_ERASE)})`
-  );
-  protected textTooltip = computed(
-    () =>
-      `${this.translocoService.translate('toolBar.text')} (${this._fmt(ShortcutActionEnum.TOOL_PLACE_TEXT)})`
-  );
-  protected negateTooltip = computed(
-    () =>
-      `${this.translocoService.translate('toolBar.negate')} (${this._fmt(ShortcutActionEnum.TOOL_PORT_NEGATION)})`
-  );
+
+  /** Formats the keybinding hint shown in a tool's tooltip. */
+  protected shortcutLabel(action: ShortcutActionEnum): string {
+    return this._fmt(action);
+  }
 
   // Swaps the toolbar between the editing tool set and the simulation
   // controls.
@@ -149,59 +133,6 @@ export class ToolBarComponent {
   ];
   protected measuredHz = this.simulationService.measuredHz;
   protected simTick = this.simulationService.tick;
-
-  protected isWireDrawMode = computed(
-    () => this.workModeService.mode() === WorkMode.WIRE_DRAWING
-  );
-  protected isWireConnMode = computed(
-    () => this.workModeService.mode() === WorkMode.WIRE_CONNECTION
-  );
-  protected isSelectMode = computed(
-    () => this.workModeService.mode() === WorkMode.SELECT
-  );
-  protected isSelectExactMode = computed(
-    () => this.workModeService.mode() === WorkMode.SELECT_EXACT
-  );
-  protected isEraseMode = computed(
-    () => this.workModeService.mode() === WorkMode.ERASE
-  );
-  protected isPlaceTextMode = computed(
-    () =>
-      this.workModeService.mode() === WorkMode.COMPONENT_PLACEMENT &&
-      this.workModeService.selectedComponentType() === BuiltInComponentType.TEXT
-  );
-  protected isPortNegationMode = computed(
-    () => this.workModeService.mode() === WorkMode.PORT_NEGATION
-  );
-
-  protected setWireDrawMode(): void {
-    this.workModeService.setMode(WorkMode.WIRE_DRAWING);
-  }
-
-  protected setWireConnMode(): void {
-    this.workModeService.setMode(WorkMode.WIRE_CONNECTION);
-  }
-
-  protected setSelectMode(): void {
-    this.workModeService.setMode(WorkMode.SELECT);
-  }
-
-  protected setSelectExactMode(): void {
-    this.workModeService.setMode(WorkMode.SELECT_EXACT);
-  }
-
-  protected setEraseMode(): void {
-    this.workModeService.setMode(WorkMode.ERASE);
-  }
-
-  protected setPlaceTextMode(): void {
-    this.workModeService.setMode(WorkMode.COMPONENT_PLACEMENT);
-    this.workModeService.setSelectedComponentType(BuiltInComponentType.TEXT);
-  }
-
-  protected setPortNegationMode(): void {
-    this.workModeService.setMode(WorkMode.PORT_NEGATION);
-  }
 
   protected copy(): void {
     const project = this.projectService.activeProject();

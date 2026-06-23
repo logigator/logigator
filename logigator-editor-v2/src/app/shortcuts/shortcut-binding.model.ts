@@ -51,6 +51,12 @@ export const DEFAULT_SHORTCUTS: Record<ShortcutActionEnum, ShortcutBinding> = {
     shift: false,
     alt: false
   },
+  [ShortcutActionEnum.TOOL_PAN]: {
+    key: 'h',
+    ctrl: false,
+    shift: false,
+    alt: false
+  },
   [ShortcutActionEnum.TOOL_WIRE_DRAWING]: {
     key: 'd',
     ctrl: false,
