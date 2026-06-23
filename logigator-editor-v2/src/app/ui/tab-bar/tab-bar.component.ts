@@ -12,6 +12,7 @@ import { CustomComponentService } from '../../custom-component/custom-component.
 import { WorkMode } from '../../work-mode/work-mode.enum';
 import { WorkModeService } from '../../work-mode/work-mode.service';
 import { Project } from '../../project/project';
+import { LayoutService } from '../../layout/layout.service';
 
 /**
  * The tab strip above the board: the pinned main project plus one tab per open
@@ -38,6 +39,10 @@ export class TabBarComponent {
   private readonly metadataStore = inject(ProjectMetadataStore);
   private readonly customComponentService = inject(CustomComponentService);
   private readonly workModeService = inject(WorkModeService);
+  private readonly layout = inject(LayoutService);
+
+  /** A finger can't hover, so the tab close button can't hide behind hover. */
+  protected readonly isTouch = this.layout.isTouch;
 
   protected readonly mainProject = this.projectService.mainProject;
   protected readonly openComponents = this.projectService.openComponents;
