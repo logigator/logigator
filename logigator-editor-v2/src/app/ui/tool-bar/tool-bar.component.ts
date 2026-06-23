@@ -4,10 +4,8 @@ import {
   computed,
   inject
 } from '@angular/core';
-import { FormsModule } from '@angular/forms';
 import { ButtonModule } from 'primeng/button';
 import { DividerModule } from 'primeng/divider';
-import { InputTextModule } from 'primeng/inputtext';
 import { TooltipModule } from 'primeng/tooltip';
 import { TranslocoDirective, TranslocoService } from '@jsverse/transloco';
 import { WorkModeService } from '../../work-mode/work-mode.service';
@@ -24,24 +22,17 @@ import { OpenProjectDialogComponent } from '../open-project-dialog/open-project-
 import { ShortcutService } from '../../shortcuts/shortcut.service';
 import { ShortcutActionEnum } from '../../shortcuts/shortcut-action.enum';
 import { formatShortcutLabel } from '../../shortcuts/shortcut-binding.model';
-import {
-  SimulationService,
-  TargetSpeedUnit
-} from '../../simulation/simulation.service';
-import { SiPipe } from '../../utils/si/si.pipe';
-import { Select } from 'primeng/select';
+import { SimulationService } from '../../simulation/simulation.service';
+import { SimulationControlsComponent } from '../simulation-controls/simulation-controls.component';
 
 @Component({
   selector: 'app-tool-bar',
   imports: [
-    FormsModule,
     ButtonModule,
     DividerModule,
-    InputTextModule,
     TooltipModule,
     TranslocoDirective,
-    SiPipe,
-    Select
+    SimulationControlsComponent
   ],
   templateUrl: './tool-bar.component.html',
   changeDetection: ChangeDetectionStrategy.OnPush
@@ -118,21 +109,6 @@ export class ToolBarComponent {
   protected isSimulationMode = computed(
     () => this.workModeService.mode() === WorkMode.SIMULATION
   );
-  protected isSimReady = this.simulationService.isReady;
-  protected isSimRunning = this.simulationService.isRunning;
-  protected simMode = this.simulationService.mode;
-  protected targetValue = this.simulationService.targetValue;
-  protected targetUnit = this.simulationService.targetUnit;
-  protected readonly targetUnitOptions: {
-    label: string;
-    value: TargetSpeedUnit;
-  }[] = [
-    { label: 'Hz', value: 'Hz' },
-    { label: 'kHz', value: 'kHz' },
-    { label: 'MHz', value: 'MHz' }
-  ];
-  protected measuredHz = this.simulationService.measuredHz;
-  protected simTick = this.simulationService.tick;
 
   protected copy(): void {
     const project = this.projectService.activeProject();
@@ -182,40 +158,6 @@ export class ToolBarComponent {
 
   protected exitSimulation(): void {
     this.simulationService.exit();
-  }
-
-  protected playSimulation(): void {
-    this.simulationService.play();
-  }
-
-  protected pauseSimulation(): void {
-    this.simulationService.pause();
-  }
-
-  protected stepSimulation(): void {
-    this.simulationService.step();
-  }
-
-  protected stopSimulation(): void {
-    this.simulationService.stop();
-  }
-
-  protected toggleTargetMode(): void {
-    this.simulationService.toggleTargetMode();
-  }
-
-  protected toggleSyncMode(): void {
-    this.simulationService.toggleSyncMode();
-  }
-
-  protected onTargetValueInput(event: Event): void {
-    this.simulationService.setTargetValue(
-      Number((event.target as HTMLInputElement).value)
-    );
-  }
-
-  protected onTargetUnitChange(unit: TargetSpeedUnit): void {
-    this.simulationService.setTargetUnit(unit);
   }
 
   protected zoomIn(): void {
