@@ -1,0 +1,49 @@
+<div *transloco="let t" class="flex flex-col items-center gap-1">
+  @if (activeLabelKey(); as labelKey) {
+    <span
+      class="rounded bg-content/90 px-2 py-0.5 text-xs text-muted shadow backdrop-blur"
+    >
+      {{ t(labelKey) }}
+    </span>
+  }
+  <div
+    class="flex items-center gap-1 rounded-full bg-content/95 px-1.5 py-1 shadow-lg backdrop-blur"
+  >
+    @for (tool of primaryTools; track tool.id) {
+      <p-button
+        [icon]="tool.icon"
+        severity="secondary"
+        [text]="!tool.isActive()"
+        [ariaLabel]="t(tool.labelKey)"
+        (onClick)="tool.activate()"
+      ></p-button>
+    }
+    <p-button
+      icon="ph ph-plus"
+      severity="secondary"
+      [text]="!partsOpen()"
+      [ariaLabel]="t('toolBar.parts')"
+      (onClick)="toggleParts()"
+    ></p-button>
+    <p-button
+      icon="ph ph-dots-three"
+      severity="secondary"
+      [text]="!moreActive()"
+      [ariaLabel]="t('toolBar.more')"
+      (onClick)="morePop.toggle($event)"
+    ></p-button>
+  </div>
+  <p-popover #morePop>
+    <div class="flex items-center gap-1">
+      @for (tool of moreTools; track tool.id) {
+        <p-button
+          [icon]="tool.icon"
+          severity="secondary"
+          [text]="!tool.isActive()"
+          [ariaLabel]="t(tool.labelKey)"
+          (onClick)="tool.activate(); morePop.hide()"
+        ></p-button>
+      }
+    </div>
+  </p-popover>
+</div>

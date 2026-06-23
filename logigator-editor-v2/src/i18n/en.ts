@@ -232,6 +232,8 @@ const en = {
     zoomOut: 'Zoom out',
     zoomIn: 'Zoom in',
     pan: 'Pan',
+    parts: 'Parts',
+    more: 'More tools',
     placeWires: 'Place wires',
     connWires: 'Connect wires',
     select: 'Select',
@@ -251,6 +253,12 @@ const en = {
     syncToFrame: 'Sync to frame',
     measuredHz: '{{hz}}Hz',
     ticks: '{{ticks}} ticks'
+  },
+  mobile: {
+    menu: 'Menu',
+    palette: 'Components',
+    settings: 'Settings',
+    ports: 'Ports'
   },
   logging: {
     error: 'Error',
