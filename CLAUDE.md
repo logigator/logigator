@@ -27,8 +27,8 @@ All via `docker compose exec <service> yarn <command>`.
 
 ### logigator-editor-v2
 ```bash
-docker compose exec editor yarn build                          # production build + PureCSS tree-shaking
-docker compose exec editor yarn test --watch=false             # Karma + Jasmine (full suite, single run)
+docker compose exec editor yarn build                          # production build (ng build)
+docker compose exec editor yarn test --watch=false             # Vitest (full suite, single run)
 docker compose exec editor yarn test --watch=false --include='**/some.spec.ts'  # single test
 docker compose exec editor yarn lint                          # Angular ESLint + TypeScript strict
 docker compose exec editor yarn format:fix                    # Prettier
