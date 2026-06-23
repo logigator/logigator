@@ -1,4 +1,9 @@
-import { ChangeDetectionStrategy, Component, inject } from '@angular/core';
+import {
+  ChangeDetectionStrategy,
+  Component,
+  inject,
+  input
+} from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { ButtonModule } from 'primeng/button';
 import { DividerModule } from 'primeng/divider';
@@ -35,6 +40,13 @@ import { SiPipe } from '../../utils/si/si.pipe';
 })
 export class SimulationControlsComponent {
   private readonly simulationService = inject(SimulationService);
+
+  /**
+   * Desktop tool bar wraps the controls onto multiple rows when space is tight;
+   * the mobile sim bar instead lays them out as a single intrinsic-width row so
+   * its `overflow-x-auto` container scrolls cleanly rather than line-breaking.
+   */
+  public readonly wrap = input(true);
 
   protected isSimReady = this.simulationService.isReady;
   protected isSimRunning = this.simulationService.isRunning;

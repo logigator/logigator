@@ -10,7 +10,9 @@
 
 <div class="flex grow min-h-0">
   @if (!layout.isCompact() && !isSimulation()) {
-    <app-side-bar class="w-80 border-r border-border overflow-y-auto"></app-side-bar>
+    <app-side-bar
+      class="w-80 border-r border-border overflow-y-auto"
+    ></app-side-bar>
   }
   <div class="grow flex flex-col min-w-0">
     <app-tab-bar></app-tab-bar>
@@ -52,7 +54,8 @@
     @if (layout.isCompact()) {
       @if (isSimulation()) {
         <app-simulation-controls
-          class="flex gap-2 overflow-x-auto border-t border-border p-2"
+          [wrap]="false"
+          class="block overflow-x-auto border-t border-border p-2"
           style="padding-bottom: env(safe-area-inset-bottom)"
         ></app-simulation-controls>
       }
@@ -68,7 +71,7 @@
       [visible]="mobileUi.activeSheet() === 'palette'"
       (visibleChange)="onSheetClosed($event)"
       position="bottom"
-      styleClass="h-[70vh]!"
+      styleClass="h-[90vh]!"
       [header]="t('mobile.palette')"
     >
       <app-component-list></app-component-list>
@@ -78,6 +81,7 @@
       [visible]="mobileUi.activeSheet() === 'settings'"
       (visibleChange)="onSheetClosed($event)"
       position="bottom"
+      styleClass="h-[70vh]!"
       [header]="t('mobile.settings')"
     >
       <app-component-settings [floating]="false"></app-component-settings>

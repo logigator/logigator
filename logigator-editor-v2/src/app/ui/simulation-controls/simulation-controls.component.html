@@ -1,4 +1,11 @@
-<div *transloco="let t" class="flex flex-wrap items-center gap-2">
+<div
+  *transloco="let t"
+  [class]="
+    wrap()
+      ? 'flex flex-wrap items-center gap-2'
+      : 'flex items-center gap-2 w-max'
+  "
+>
   <!-- Run controls come alive once the worker session reports ready. -->
   <div class="flex flex-wrap gap-1">
     <p-button
