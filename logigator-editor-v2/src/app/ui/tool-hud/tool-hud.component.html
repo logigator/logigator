@@ -13,6 +13,7 @@
       <p-button
         [icon]="tool.icon"
         severity="secondary"
+        rounded
         [text]="!tool.isActive()"
         [ariaLabel]="t(tool.labelKey)"
         (onClick)="tool.activate()"
@@ -21,6 +22,7 @@
     <p-button
       icon="ph ph-plus"
       severity="secondary"
+      rounded
       [text]="!partsOpen()"
       [ariaLabel]="t('toolBar.parts')"
       (onClick)="toggleParts()"
@@ -28,6 +30,7 @@
     <p-button
       icon="ph ph-dots-three"
       severity="secondary"
+      rounded
       [text]="!moreActive()"
       [ariaLabel]="t('toolBar.more')"
       (onClick)="morePop.toggle($event)"

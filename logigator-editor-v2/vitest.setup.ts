@@ -4,9 +4,15 @@ import 'vitest-canvas-mock';
 // canvas. A no-op stub keeps board instantiation from throwing in tests.
 if (typeof globalThis.ResizeObserver === 'undefined') {
   globalThis.ResizeObserver = class {
-    observe(): void {}
-    unobserve(): void {}
-    disconnect(): void {}
+    observe(): void {
+      /* empty */
+    }
+    unobserve(): void {
+      /* empty */
+    }
+    disconnect(): void {
+      /* empty */
+    }
   } as unknown as typeof ResizeObserver;
 }
 
@@ -22,10 +28,18 @@ if (typeof window !== 'undefined' && typeof window.matchMedia !== 'function') {
         matches: false,
         media: query,
         onchange: null,
-        addListener: () => {},
-        removeListener: () => {},
-        addEventListener: () => {},
-        removeEventListener: () => {},
+        addListener: () => {
+          /* empty */
+        },
+        removeListener: () => {
+          /* empty */
+        },
+        addEventListener: () => {
+          /* empty */
+        },
+        removeEventListener: () => {
+          /* empty */
+        },
         dispatchEvent: () => false
       }) as unknown as MediaQueryList
   });
