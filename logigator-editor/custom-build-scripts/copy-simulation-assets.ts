@@ -33,8 +33,8 @@ async function run() {
 	const wasmHash = createHash('md5').update(wasmFile).digest('base64url');
 
 	jsFile = jsFile.replace(
-		/var wasmBinaryFile ?= ?["'](.*?)["'];/,
-		`var wasmBinaryFile=\'assets/wasm/logigator-simulation.${wasmHash}.wasm\';`
+		'logigator-simulation.wasm',
+		`assets/wasm/logigator-simulation.${wasmHash}.wasm`
 	);
 
 	const existingFiles = await readdir(dest, { recursive: false });

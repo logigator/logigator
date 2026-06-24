@@ -2441,14 +2441,14 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@logigator/logigator-simulation@npm:^1.2.0":
-  version: 1.2.0
-  resolution: "@logigator/logigator-simulation@npm:1.2.0"
+"@logigator/logigator-simulation@npm:^1.2.1":
+  version: 1.2.1
+  resolution: "@logigator/logigator-simulation@npm:1.2.1"
   dependencies:
     nan: "npm:^2.15.0"
     node-gyp: "npm:latest"
     run-script-os: "npm:^1.1.6"
-  checksum: 4286120b29d1d516ebd2bc6191e01616e0b76bc54494591e4008b93650e4dfbf0e67789c8f52dfa3aacf24a73f900a0954327bcb324ac4ce0aa471de20212d13
+  checksum: 69fede13b7d509dcd4c40975ae8678af5410f8d39c4b538b03441cfa21cdddf32a13556c66b01e9a089470f6ea759c3f498e2ffc2087ed9be3f5803e2d3100e3
   languageName: node
   linkType: hard
 
@@ -8357,7 +8357,7 @@ __metadata:
     "@angular/platform-browser": "npm:^17.0.8"
     "@angular/platform-browser-dynamic": "npm:^17.0.8"
     "@angular/router": "npm:^17.0.8"
-    "@logigator/logigator-simulation": "npm:^1.2.0"
+    "@logigator/logigator-simulation": "npm:^1.2.1"
     "@ngx-translate/core": "npm:^15.0.0"
     "@types/jasmine": "npm:^5.1.4"
     "@types/node": "npm:^20.10.5"

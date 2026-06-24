@@ -10,7 +10,7 @@
 		"lib": ["ES2022"],
 		"types": ["node"]
 	},
-	"files": ["copy-simulation-assets.ts", "wasm-js-cache-bust.ts"],
+	"files": ["copy-simulation-assets.ts"],
 	"include": ["./**/*.ts"],
 	"exclude": ["node_modules"]
 }
