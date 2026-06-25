@@ -157,11 +157,15 @@ describe('BoardSnapshotService', () => {
     expect(previews).not.toBeNull();
     expect(previews!.dark).toBeInstanceOf(Blob);
     expect(previews!.light).toBeInstanceOf(Blob);
-    // One render call per theme, each fit to 512 on the longest side.
-    const sized = renderCalls.filter(
-      (c) => Math.max(c.target.width, c.target.height) === 512
+    // One render call per theme, each a transparent 512×512 square.
+    const squareTransparent = renderCalls.filter(
+      (c) =>
+        c.target.width === 512 &&
+        c.target.height === 512 &&
+        Array.isArray(c.clearColor) &&
+        (c.clearColor as number[]).every((v) => v === 0)
     );
-    expect(sized.length).toBe(2);
+    expect(squareTransparent.length).toBe(2);
     // Both themes were visited and the original restored.
     expect(theming.currentThemeType()).toBe(original);
   });

@@ -121,10 +121,10 @@ export class BoardSnapshotService {
   }
 
   /**
-   * Renders dark- and light-themed PNG previews of the project (longest side
-   * fit to `sizePx`) for server-side thumbnails, using a solid theme background.
-   * Resolves `null` when no renderer is available so the save flow can skip the
-   * upload silently.
+   * Renders dark- and light-themed PNG previews of the project for server-side
+   * thumbnails: a square `sizePx × sizePx` image with a **transparent**
+   * background and the content centered. Resolves `null` when no renderer is
+   * available so the save flow can skip the upload silently.
    *
    * Theme colors are baked into cached graphics, so each theme is produced by
    * briefly switching the global theme and redrawing the project (the same path
@@ -161,13 +161,23 @@ export class BoardSnapshotService {
     sizePx: number
   ): HTMLCanvasElement {
     this._applyThemeForRender(project, theme);
-    const region = this.computeRegion(project);
-    const longestUnits = Math.max(region.width, region.height);
-    const multiplier = sizePx / (longestUnits * environment.gridSize);
+    const region = this._squareRegion(this.computeRegion(project));
+    const multiplier = sizePx / (region.width * environment.gridSize);
     return this.renderRegionToCanvas(project, region, {
       multiplier,
-      background: 'solid'
+      background: 'transparent'
     });
+  }
+
+  /** Expands a region to a square centered on it (pads the shorter axis). */
+  private _squareRegion(region: Rectangle): Rectangle {
+    const side = Math.max(region.width, region.height);
+    return new Rectangle(
+      region.x - (side - region.width) / 2,
+      region.y - (side - region.height) / 2,
+      side,
+      side
+    );
   }
 
   /** Switches the global theme and redraws the project without a screen tick. */
