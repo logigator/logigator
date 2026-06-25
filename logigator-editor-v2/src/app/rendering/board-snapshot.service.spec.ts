@@ -98,6 +98,23 @@ describe('BoardSnapshotService', () => {
     texture.destroy(true);
   });
 
+  it('re-tunes content scale to the multiplier and restores it afterwards', () => {
+    const comp = makeAnd(2);
+    comp.position.set(0, 0);
+    project.addComponent(comp);
+    const spy = vi.spyOn(comp, 'applyScale');
+
+    const texture = service.renderProjectToTexture(project, {
+      multiplier: 3,
+      background: 'solid'
+    });
+
+    const scales = spy.mock.calls.map((c) => c[0]);
+    expect(scales).toContain(3); // export scale applied
+    expect(scales.at(-1)).toBe(project.scale.x); // restored to live scale last
+    texture.destroy(true);
+  });
+
   it('restores overlay visibility after rendering', () => {
     const spy = vi.spyOn(project, 'setOverlayVisible');
     const texture = service.renderProjectToTexture(project, {

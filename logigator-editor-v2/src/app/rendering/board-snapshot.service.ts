@@ -195,6 +195,13 @@ export class BoardSnapshotService {
     // visible; the next on-screen frame re-culls against the live viewport.
     this._uncull(project.gridSpace);
     project.setOverlayVisible(false);
+
+    // Scale-dependent visuals (screen-constant strokes, Text glyph resolution)
+    // are tuned to the live zoom. Re-tune them to the export scale so line
+    // weights are zoom-independent and text stays crisp at high multipliers,
+    // then restore. No flicker: nothing renders on-screen between the calls.
+    const liveScale = project.scale.x;
+    this._applyContentScale(project, options.multiplier);
     try {
       renderer.render({
         container: project.gridSpace,
@@ -205,6 +212,7 @@ export class BoardSnapshotService {
         clear: !withGrid
       });
     } finally {
+      this._applyContentScale(project, liveScale);
       project.setOverlayVisible(true);
       grid?.destroy({ children: true });
     }
@@ -238,6 +246,13 @@ export class BoardSnapshotService {
       }
     }
     return container;
+  }
+
+  /** Re-tunes every content element's scale-dependent visuals (see `applyScale`). */
+  private _applyContentScale(project: Project, scale: number): void {
+    for (const component of project.components) component.applyScale(scale);
+    for (const wire of project.wires) wire.applyScale(scale);
+    project.connectionPoints.layer.applyScale(scale);
   }
 
   private _uncull(container: Container): void {
