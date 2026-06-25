@@ -182,6 +182,13 @@ export class BoardSnapshotService {
     const pxPerUnit = gridSize * options.multiplier;
     const { width, height } = this.outputSize(region, options.multiplier);
 
+    // Scale that drives line weights / grid-dot sizes. Capped at the 100%
+    // reference so weights grow proportionally for multipliers ≥ 1, but for
+    // multipliers < 1 (capped huge boards, previews) it tracks the multiplier
+    // so strokes and dots never render thinner than they do at 100% zoom —
+    // otherwise they go sub-pixel and the thumbnail washes out.
+    const lineScale = Math.min(REFERENCE_SCALE, options.multiplier);
+
     const texture = RenderTexture.create({
       width,
       height,
@@ -201,10 +208,10 @@ export class BoardSnapshotService {
 
     let grid: Container | null = null;
     if (withGrid) {
-      // The export grid is authored in project-pixel space (gridSize px per
-      // grid unit) at the 100%-reference scale, so the matrix scales it by the
-      // multiplier — dot size and spacing both grow with the multiplier.
-      grid = this._buildGrid(region);
+      // Dots authored at `lineScale` (project-pixel space); the matrix scales
+      // them by the multiplier. Spacing always grows with the multiplier; dot
+      // size grows for multipliers ≥ 1 and is floored at ~1px below that.
+      grid = this._buildGrid(region, lineScale);
       const gridMatrix = new Matrix()
         .scale(options.multiplier, options.multiplier)
         .translate(tx, ty);
@@ -230,17 +237,18 @@ export class BoardSnapshotService {
     this._uncull(project.gridSpace);
     project.setOverlayVisible(false);
 
-    // Render the content at the 100%-reference scale (REFERENCE_SCALE),
-    // independent of the live zoom, so the export matches the natural look and
-    // the matrix scales line weights / grid dots up *proportionally* with the
-    // multiplier (a higher resolution is the same picture with more pixels, not
-    // thinner lines). Text is a pre-rasterized texture, so its glyph resolution
-    // is bumped to the multiplier separately to stay crisp. Everything is
-    // restored afterwards — no flicker, since nothing renders on-screen between.
+    // Render the content at `lineScale`, independent of the live zoom, so the
+    // export matches the natural look: the matrix scales line weights up
+    // proportionally with the multiplier (higher resolution = the same picture
+    // with more pixels, not thinner lines) while the `lineScale` floor keeps
+    // them visible below 1×. Text is a pre-rasterized texture, so its glyph
+    // resolution is bumped to the multiplier separately to stay crisp.
+    // Everything is restored afterwards — no flicker, nothing renders on-screen
+    // between the calls.
     const liveScale = project.scale.x;
     const texts = this._collectTexts(project.gridSpace);
     const textResolutions = texts.map((t) => t.resolution);
-    this._applyContentScale(project, REFERENCE_SCALE);
+    this._applyContentScale(project, lineScale);
     for (const text of texts) text.resolution = options.multiplier;
     try {
       renderer.render({
@@ -267,12 +275,12 @@ export class BoardSnapshotService {
    * context, so even a large region stays cheap. Chunks overhanging the region
    * are clipped by the texture bounds.
    */
-  private _buildGrid(region: Rectangle): Container {
+  private _buildGrid(region: Rectangle, lineScale: number): Container {
     const gridSize = environment.gridSize;
     const context = this.graphicsProvider.getGraphicsContext(
       GridGraphics,
       GRID_CHUNK,
-      REFERENCE_SCALE
+      lineScale
     );
     const container = new Container();
     const startX = Math.floor(region.x / GRID_CHUNK) * GRID_CHUNK;

@@ -122,6 +122,23 @@ describe('BoardSnapshotService', () => {
     texture.destroy(true);
   });
 
+  it('floors line weights at the multiplier when below 1× so they stay visible', () => {
+    const comp = makeAnd(2);
+    comp.position.set(0, 0);
+    project.addComponent(comp);
+    const spy = vi.spyOn(comp, 'applyScale');
+
+    const texture = service.renderProjectToTexture(project, {
+      multiplier: 0.5,
+      background: 'solid'
+    });
+
+    // Below 1× the weight scale tracks the multiplier (min(1, 0.5) = 0.5),
+    // keeping strokes ~1× px rather than going sub-pixel.
+    expect(spy.mock.calls.map((c) => c[0])).toContain(0.5);
+    texture.destroy(true);
+  });
+
   it('generatePreview returns null without a renderer', async () => {
     TestBed.inject(RendererHandleService).set(null);
     expect(await service.generatePreview(project, 512)).toBeNull();
