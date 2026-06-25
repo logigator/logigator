@@ -208,6 +208,39 @@ export class Project extends InteractionContainer {
     return this._wires.items;
   }
 
+  /**
+   * Tight axis-aligned bounds (grid units) covering all committed content
+   * (components incl. port stubs + wires), or `null` when the project is empty.
+   * Pure arithmetic over each element's `gridBounds` — no render-bounds
+   * traversal — and run once per snapshot, so the O(n) cost is negligible.
+   * Transient overlays are excluded.
+   */
+  public getContentBounds(): Rectangle | null {
+    let minX = Infinity;
+    let minY = Infinity;
+    let maxX = -Infinity;
+    let maxY = -Infinity;
+    const fold = (b: Rectangle): void => {
+      if (b.x < minX) minX = b.x;
+      if (b.y < minY) minY = b.y;
+      if (b.right > maxX) maxX = b.right;
+      if (b.bottom > maxY) maxY = b.bottom;
+    };
+    for (const component of this._components.items) fold(component.gridBounds);
+    for (const wire of this._wires.items) fold(wire.gridBounds);
+    if (!Number.isFinite(minX)) return null;
+    return new Rectangle(minX, minY, maxX - minX, maxY - minY);
+  }
+
+  /**
+   * Toggles the transient overlay (drag ghosts, wire preview, paste ghosts) so
+   * an offscreen snapshot captures only committed circuit content. The snapshot
+   * renders {@link gridSpace}, which contains this overlay as a child.
+   */
+  public setOverlayVisible(visible: boolean): void {
+    this._floatingLayer.renderable = visible;
+  }
+
   public get cursorPosition$(): Observable<Point> {
     return this._cursorPosition$.asObservable();
   }
