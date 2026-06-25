@@ -117,8 +117,12 @@ export class Project extends InteractionContainer {
    * Re-fetches every theme-dependent GraphicsContext after a theme change. The
    * cache is theme-keyed, so redrawing each element picks up the new colors.
    * Runs once on construction (a no-op on the still-empty scene).
+   *
+   * @param triggerRender request an on-screen frame after redrawing. Pass
+   * `false` when redrawing only to feed an offscreen snapshot (dual-theme
+   * previews), so the live canvas isn't repainted in the temporary theme.
    */
-  public applyTheme(): void {
+  public applyTheme(triggerRender = true): void {
     this._grid.redraw();
     for (const component of this._components.items) {
       component.redraw();
@@ -134,7 +138,7 @@ export class Project extends InteractionContainer {
     // (component/wire tint lives on the object and survives redraw). Re-apply it
     // to the new CPs. Selected components and wires keep their own tint.
     this.selectionManager.retintCps();
-    this._ticker$.next('single');
+    if (triggerRender) this._ticker$.next('single');
   }
 
   public get gridSpace(): Container {

@@ -6,6 +6,7 @@ import { Project } from '../project/project';
 import { makeAnd } from '../../testing/factories';
 import { BoardSnapshotService } from './board-snapshot.service';
 import { RendererHandleService } from './renderer-handle.service';
+import { ThemingService } from '../theming/theming.service';
 
 interface RenderCall {
   transform: { a: number; d: number; tx: number; ty: number };
@@ -139,20 +140,44 @@ describe('BoardSnapshotService', () => {
     texture.destroy(true);
   });
 
-  it('generatePreview returns null without a renderer', async () => {
+  it('generatePreviews returns null without a renderer', async () => {
     TestBed.inject(RendererHandleService).set(null);
-    expect(await service.generatePreview(project, 512)).toBeNull();
+    expect(await service.generatePreviews(project, 512)).toBeNull();
   });
 
-  it('generatePreview fits the longest side to the requested size', async () => {
+  it('generatePreviews renders both themes, fits the size, and restores the theme', async () => {
     const comp = makeAnd(2);
     comp.position.set(0, 0);
     project.addComponent(comp);
+    const theming = TestBed.inject(ThemingService);
+    const original = theming.currentThemeType();
 
-    const blob = await service.generatePreview(project, 512);
-    expect(blob).not.toBeNull();
-    const target = renderCalls.at(-1)!.target;
-    expect(Math.max(target.width, target.height)).toBe(512);
+    const previews = await service.generatePreviews(project, 512);
+
+    expect(previews).not.toBeNull();
+    expect(previews!.dark).toBeInstanceOf(Blob);
+    expect(previews!.light).toBeInstanceOf(Blob);
+    // One render call per theme, each fit to 512 on the longest side.
+    const sized = renderCalls.filter(
+      (c) => Math.max(c.target.width, c.target.height) === 512
+    );
+    expect(sized.length).toBe(2);
+    // Both themes were visited and the original restored.
+    expect(theming.currentThemeType()).toBe(original);
+  });
+
+  it('generatePreviews restores the theme even if rendering throws', async () => {
+    const comp = makeAnd(2);
+    comp.position.set(0, 0);
+    project.addComponent(comp);
+    const theming = TestBed.inject(ThemingService);
+    const original = theming.currentThemeType();
+    vi.spyOn(project, 'applyTheme').mockImplementationOnce(() => {
+      throw new Error('boom');
+    });
+
+    await expect(service.generatePreviews(project, 512)).rejects.toThrow();
+    expect(theming.currentThemeType()).toBe(original);
   });
 
   it('restores overlay visibility after rendering', () => {

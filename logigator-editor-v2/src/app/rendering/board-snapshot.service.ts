@@ -12,6 +12,7 @@ import { RendererHandleService } from './renderer-handle.service';
 import { GraphicsProviderService } from './graphics-provider.service';
 import { GridGraphics } from './graphics/grid.graphics';
 import { ThemingService } from '../theming/theming.service';
+import { ThemeType } from '../theming/theme-type.enum';
 import { Project } from '../project/project';
 import { environment } from '../../environments/environment';
 
@@ -120,23 +121,62 @@ export class BoardSnapshotService {
   }
 
   /**
-   * Renders a square-ish PNG preview of the project (longest side fit to
-   * `sizePx`) for server-side thumbnails. Uses a solid theme background for a
-   * clean thumbnail. Resolves `null` when no renderer is available so the save
-   * flow can skip the upload silently.
+   * Renders dark- and light-themed PNG previews of the project (longest side
+   * fit to `sizePx`) for server-side thumbnails, using a solid theme background.
+   * Resolves `null` when no renderer is available so the save flow can skip the
+   * upload silently.
+   *
+   * Theme colors are baked into cached graphics, so each theme is produced by
+   * briefly switching the global theme and redrawing the project (the same path
+   * a live theme toggle uses). All switching + offscreen rendering happens
+   * synchronously and the original theme is restored in a `finally` *before* the
+   * first `await`, so no wrong-theme frame can paint on the live canvas.
    */
-  public async generatePreview(
+  public async generatePreviews(
     project: Project,
     sizePx: number = PREVIEW_SIZE
-  ): Promise<Blob | null> {
+  ): Promise<{ dark: Blob; light: Blob } | null> {
     if (!this.available) return null;
+
+    const original = this.themingService.currentThemeType();
+    let darkCanvas!: HTMLCanvasElement;
+    let lightCanvas!: HTMLCanvasElement;
+    try {
+      darkCanvas = this._renderThemedPreview(project, ThemeType.DARK, sizePx);
+      lightCanvas = this._renderThemedPreview(project, ThemeType.LIGHT, sizePx);
+    } finally {
+      // Always restore the live theme, even if a render throws — the caller
+      // swallows errors, so a leaked theme switch would be silent and baffling.
+      this._applyThemeForRender(project, original);
+    }
+
+    const dark = await this._canvasToBlob(darkCanvas);
+    const light = await this._canvasToBlob(lightCanvas);
+    return dark && light ? { dark, light } : null;
+  }
+
+  private _renderThemedPreview(
+    project: Project,
+    theme: ThemeType,
+    sizePx: number
+  ): HTMLCanvasElement {
+    this._applyThemeForRender(project, theme);
     const region = this.computeRegion(project);
     const longestUnits = Math.max(region.width, region.height);
     const multiplier = sizePx / (longestUnits * environment.gridSize);
-    const canvas = this.renderProjectToCanvas(project, {
+    return this.renderRegionToCanvas(project, region, {
       multiplier,
       background: 'solid'
     });
+  }
+
+  /** Switches the global theme and redraws the project without a screen tick. */
+  private _applyThemeForRender(project: Project, theme: ThemeType): void {
+    this.themingService.setActiveThemeType(theme);
+    project.applyTheme(false);
+  }
+
+  private _canvasToBlob(canvas: HTMLCanvasElement): Promise<Blob | null> {
     return new Promise((resolve) =>
       canvas.toBlob((blob) => resolve(blob), 'image/png')
     );

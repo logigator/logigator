@@ -466,19 +466,19 @@ export class ServerPersistenceGateway {
   }
 
   /**
-   * Renders and uploads a project thumbnail after a successful server save.
-   * Fire-and-forget: a preview is a nice-to-have, so any failure is logged and
-   * swallowed rather than surfaced or allowed to fail the save. The backend
-   * requires two files (dark + light); we send the same current-theme render to
-   * both slots (see plans/image-export.md §8).
+   * Renders and uploads dark + light project thumbnails after a successful
+   * server save. Fire-and-forget: a preview is a nice-to-have, so any failure
+   * is logged and swallowed rather than surfaced or allowed to fail the save.
+   * Order matters — the backend maps `previews[0]` to the dark slot and
+   * `previews[1]` to the light slot.
    */
   private async _uploadPreview(project: Project, projectId: string): Promise<void> {
     try {
-      const blob = await this.snapshot.generatePreview(project);
-      if (!blob) return;
+      const previews = await this.snapshot.generatePreviews(project);
+      if (!previews) return;
       const formData = new FormData();
-      formData.append('previews', blob, 'preview.png');
-      formData.append('previews', blob, 'preview.png');
+      formData.append('previews', previews.dark, 'preview-dark.png');
+      formData.append('previews', previews.light, 'preview-light.png');
       await firstValueFrom(this.projectApi.updatePreviews(projectId, formData));
     } catch (err) {
       this.logging.warn(
