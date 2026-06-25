@@ -15,6 +15,7 @@ import { OpenProjectDialogComponent } from './open-project-dialog/open-project-d
 import { NewComponentDialogComponent } from './new-component-dialog/new-component-dialog.component';
 import { ShortcutManagerComponent } from '../shortcuts/shortcut-manager/shortcut-manager.component';
 import { ExportImageDialogComponent } from './export-image-dialog/export-image-dialog.component';
+import { DebugMenuService } from './debug-menu.service';
 
 /**
  * Builds the File/Edit/View/Help menu model and owns the commands behind it.
@@ -32,6 +33,7 @@ export class EditorMenuService {
   private readonly clipboardService = inject(ClipboardService);
   private readonly shortcutService = inject(ShortcutService);
   private readonly saveCoordinator = inject(SaveCoordinatorService);
+  private readonly debugMenuService = inject(DebugMenuService);
 
   /** Rebuilt whenever the active language changes so labels stay translated. */
   public readonly items: Signal<MenuItem[]> = toSignal(
@@ -40,7 +42,7 @@ export class EditorMenuService {
   );
 
   private generateMenuItems(): MenuItem[] {
-    return [
+    const items: MenuItem[] = [
       {
         label: this.translocoService.translate('titleBar.menuBar.file.label'),
         items: [
@@ -193,6 +195,11 @@ export class EditorMenuService {
         label: 'Help'
       }
     ];
+
+    const debugMenu = this.debugMenuService.buildMenuItem();
+    if (debugMenu) items.push(debugMenu);
+
+    return items;
   }
 
   private openShortcutManager(): void {

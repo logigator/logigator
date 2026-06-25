@@ -7,5 +7,8 @@ export interface Environment {
     showOrigins: boolean;
     showConnectionPoints: boolean;
     showQuadTrees: boolean;
+    /** Shows the title-bar "Debug" menu (compiled-board/renderer dumps, Project
+     * Dump export/import). Off in production. */
+    debugMenu: boolean;
   };
 }

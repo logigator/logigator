@@ -1,6 +1,7 @@
 import { Action } from '../action';
 import type { Project } from '../../project/project';
-import { MoveEntry } from './move-entry.model';
+import { MoveEntry, serializeMoveEntries } from './move-entry.model';
+import { SerializedAction } from '../serialized-action.model';
 
 export class MoveWiresAction extends Action {
   private readonly _entries: MoveEntry[];
@@ -12,6 +13,10 @@ export class MoveWiresAction extends Action {
       oldPos: e.oldPos.clone(),
       newPos: e.newPos.clone()
     }));
+  }
+
+  serialize(): SerializedAction {
+    return { type: 'moveWires', entries: serializeMoveEntries(this._entries) };
   }
 
   do(project: Project): void {

@@ -1,5 +1,6 @@
 import { Action } from './action';
 import { Project } from '../project/project';
+import { SerializedAction } from './serialized-action.model';
 
 export class ActionContainer extends Action {
   private readonly actions: Action[];
@@ -7,6 +8,13 @@ export class ActionContainer extends Action {
   constructor(...actions: Action[]) {
     super();
     this.actions = actions;
+  }
+
+  public serialize(): SerializedAction {
+    return {
+      type: 'container',
+      actions: this.actions.map((action) => action.serialize())
+    };
   }
 
   public do(project: Project): void {
