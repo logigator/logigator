@@ -1,6 +1,7 @@
 import { Action } from '../action';
 import { Project } from '../../project/project';
 import { PortSide } from '../../components/component';
+import { SerializedAction } from '../serialized-action.model';
 
 /**
  * Toggles negation on a single component port. `negated` is the post-`do`
@@ -16,6 +17,16 @@ export class TogglePortNegationAction extends Action {
     private readonly negated: boolean
   ) {
     super();
+  }
+
+  serialize(): SerializedAction {
+    return {
+      type: 'togglePortNegation',
+      componentId: this.componentId,
+      side: this.side,
+      index: this.index,
+      negated: this.negated
+    };
   }
 
   do(project: Project): void {

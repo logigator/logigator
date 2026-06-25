@@ -1,5 +1,6 @@
 import { Action } from '../action';
 import { SerializedComponent } from '../../components/serialized-component.model';
+import { SerializedAction } from '../serialized-action.model';
 import { Project } from '../../project/project';
 import { Component } from '../../components/component';
 import { getStaticDI } from '../../utils/get-di';
@@ -12,11 +13,21 @@ export class AddComponentsAction extends Action {
     ComponentProviderService
   );
 
-  constructor(...components: Component[]) {
+  constructor(...components: Component[]);
+  constructor(...components: SerializedComponent[]);
+  constructor(...components: Component[] | SerializedComponent[]) {
     super();
-    this._components = components.map((component) =>
-      Component.serialize(component)
-    );
+    if (components.length > 0 && components[0] instanceof Component) {
+      this._components = (components as Component[]).map((component) =>
+        Component.serialize(component)
+      );
+    } else {
+      this._components = components as SerializedComponent[];
+    }
+  }
+
+  serialize(): SerializedAction {
+    return { type: 'addComponents', components: this._components };
   }
 
   do(project: Project): void {

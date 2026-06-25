@@ -1,5 +1,6 @@
 import { Action } from '../action';
 import { Project } from '../../project/project';
+import { SerializedAction } from '../serialized-action.model';
 
 export class ChangeOptionAction<T = unknown> extends Action {
   constructor(
@@ -9,6 +10,16 @@ export class ChangeOptionAction<T = unknown> extends Action {
     private readonly newValue: T
   ) {
     super();
+  }
+
+  serialize(): SerializedAction {
+    return {
+      type: 'changeOption',
+      componentId: this.componentId,
+      optionKey: this.optionKey,
+      oldValue: this.oldValue,
+      newValue: this.newValue
+    };
   }
 
   do(project: Project): void {

@@ -1,5 +1,6 @@
 import { Action } from '../action';
 import { SerializedComponent } from '../../components/serialized-component.model';
+import { SerializedAction } from '../serialized-action.model';
 import { Project } from '../../project/project';
 import { Component } from '../../components/component';
 import { getStaticDI } from '../../utils/get-di';
@@ -23,6 +24,10 @@ export class RemoveComponentsAction extends Action {
     } else {
       this._components = components as SerializedComponent[];
     }
+  }
+
+  serialize(): SerializedAction {
+    return { type: 'removeComponents', components: this._components };
   }
 
   do(project: Project): void {

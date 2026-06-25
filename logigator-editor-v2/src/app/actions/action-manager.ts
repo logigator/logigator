@@ -60,6 +60,29 @@ export class ActionManager {
     this._pointer = 0;
   }
 
+  /** The recorded actions, oldest first. Read-only view for the debug dump. */
+  public get history(): readonly Action[] {
+    return this._history;
+  }
+
+  /** Index of the next redo (== number of done actions). For the debug dump. */
+  public get pointer(): number {
+    return this._pointer;
+  }
+
+  /**
+   * Replaces the history and pointer wholesale **without** re-applying any
+   * action — the project is expected to already hold the matching post-`do`
+   * state (debug Project Dump import loads the circuit body first, then restores
+   * this stack so undo/redo walks the real session history). The pointer is
+   * clamped into range.
+   */
+  public restore(history: Action[], pointer: number): void {
+    this._history = [...history];
+    this._pointer = Math.max(0, Math.min(pointer, this._history.length));
+    this._actionChange$.next();
+  }
+
   public get undoAvailable(): boolean {
     return this._pointer > 0;
   }
