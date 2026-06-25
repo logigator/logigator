@@ -9,6 +9,6 @@ export interface Environment {
     showQuadTrees: boolean;
     /** Shows the title-bar "Debug" menu (compiled-board/renderer dumps, Project
      * Dump export/import). Off in production. */
-    menu: boolean;
+    debugMenu: boolean;
   };
 }

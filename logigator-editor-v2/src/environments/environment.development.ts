@@ -9,6 +9,6 @@ export const environment: Environment = {
     showOrigins: false,
     showConnectionPoints: false,
     showQuadTrees: false,
-    menu: true
+    debugMenu: true
   }
 };

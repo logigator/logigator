@@ -12,7 +12,7 @@ import { pickTextFile } from '../utils/file-picker';
 
 /**
  * Builds the title-bar "Debug" menu and owns its commands. Gated by
- * `environment.debug.menu` — {@link buildMenuItem} returns `null` when disabled,
+ * `environment.debug.debugMenu` — {@link buildMenuItem} returns `null` when disabled,
  * so the menu is absent in production. Output goes to the console (and a toast
  * where a console object is not enough); these are developer tools and are
  * intentionally untranslated.
@@ -25,7 +25,7 @@ export class DebugMenuService {
   private readonly persistence = inject(PersistenceService);
   private readonly toast = inject(ToastService);
 
-  public readonly enabled = environment.debug.menu;
+  public readonly enabled = environment.debug.debugMenu;
 
   /** The top-level "Debug" menubar item, or `null` when the menu is disabled. */
   public buildMenuItem(): MenuItem | null {
