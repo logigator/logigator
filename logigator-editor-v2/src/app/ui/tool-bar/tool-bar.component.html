@@ -115,7 +115,9 @@
     <div class="flex flex-wrap gap-1">
       @for (tool of tools; track tool.id) {
         <p-button
-          [pTooltip]="t(tool.labelKey) + ' (' + shortcutLabel(tool.shortcut) + ')'"
+          [pTooltip]="
+            t(tool.labelKey) + ' (' + shortcutLabel(tool.shortcut) + ')'
+          "
           [ariaLabel]="t(tool.labelKey)"
           [outlined]="!tool.isActive()"
           (onClick)="tool.activate()"

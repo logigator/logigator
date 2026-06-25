@@ -365,7 +365,9 @@ export class FloatingLayer extends Container {
     const hit = this._findPortAt(e.getLocalPosition(this.project.gridSpace));
     if (hit) {
       const ghost = this._ensureNegationHoverGhost();
-      ghost.position.copyFrom(hit.comp.negationBubbleAnchor(hit.side, hit.index));
+      ghost.position.copyFrom(
+        hit.comp.negationBubbleAnchor(hit.side, hit.index)
+      );
       ghost.visible = true;
     } else if (this._negationHoverGhost) {
       this._negationHoverGhost.visible = false;

@@ -41,7 +41,10 @@ export class LayoutService {
   }
 
   private _mql(query: string): MediaQueryList | null {
-    if (typeof window === 'undefined' || typeof window.matchMedia !== 'function') {
+    if (
+      typeof window === 'undefined' ||
+      typeof window.matchMedia !== 'function'
+    ) {
       return null;
     }
     return window.matchMedia(query);

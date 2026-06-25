@@ -31,8 +31,10 @@ describe('LayoutService', () => {
             return captured.matches;
           },
           media: query,
-          addEventListener: (_: string, cb: (e: { matches: boolean }) => void) =>
-            captured.listeners.push(cb),
+          addEventListener: (
+            _: string,
+            cb: (e: { matches: boolean }) => void
+          ) => captured.listeners.push(cb),
           removeEventListener: vi.fn()
         } as unknown as MediaQueryList;
       }
