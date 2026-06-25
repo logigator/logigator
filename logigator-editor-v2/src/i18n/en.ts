@@ -311,6 +311,7 @@ const en = {
       toolComponentPlacement: 'Place Component',
       toolPlaceText: 'Place Text',
       toolPortNegation: 'Negate Ports',
+      toggleSimulation: 'Start/Stop Simulation',
       cancel: 'Cancel'
     } satisfies Record<ShortcutActionEnum, string>,
     groups: {

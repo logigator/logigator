@@ -253,8 +253,11 @@ main-thread from status-poll tick deltas), `tick`.
 
 ### User input
 
-In `SIMULATION` mode `FloatingLayer` runs no drag sessions — its `pointerdown`
-only hit-tests for button/lever components and emits them on `Project.userInput$`.
+In `SIMULATION` mode `FloatingLayer`'s `pointerdown` starts a `PanSession` (the
+same one-finger / left-drag pan as `WorkMode.PAN`), but editing stays locked:
+the session's tap callback — fired only when the press never crosses the pan
+threshold — hit-tests for a button/lever under the cursor and emits it on
+`Project.userInput$`. A drag pans instead of activating anything.
 `SimulationService._onUserInput` reacts:
 
 - **Lever** — toggles its visual state and forwards `INPUT_EVENT_CONT` (set and

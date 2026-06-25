@@ -1,17 +1,17 @@
 <div *transloco="let t" class="flex flex-wrap gap-2 p-2">
   @if (isSimulationMode()) {
-    <div class="flex flex-wrap gap-1">
+    <app-simulation-controls></app-simulation-controls>
+    <div class="ml-auto flex flex-wrap gap-1">
       <p-button
-        [pTooltip]="t('toolBar.exitSim')"
+        [pTooltip]="exitSimTooltip()"
         [ariaLabel]="t('toolBar.exitSim')"
+        [label]="t('toolBar.exitSim')"
         (onClick)="exitSimulation()"
         tooltipPosition="bottom"
         icon="ph ph-sign-out"
         severity="secondary"
       ></p-button>
     </div>
-    <p-divider layout="vertical" class="mx-1!"></p-divider>
-    <app-simulation-controls></app-simulation-controls>
   } @else {
     <div class="flex flex-wrap gap-1">
       <p-button
@@ -127,11 +127,11 @@
         ></p-button>
       }
     </div>
-    <p-divider layout="vertical" class="mx-1!"></p-divider>
-    <div class="flex flex-wrap gap-1">
+    <div class="ml-auto flex flex-wrap gap-1">
       <p-button
-        [pTooltip]="t('toolBar.startSim')"
+        [pTooltip]="startSimTooltip()"
         [ariaLabel]="t('toolBar.startSim')"
+        [label]="t('toolBar.startSim')"
         (onClick)="startSimulation()"
         tooltipPosition="bottom"
         icon="ph ph-play"

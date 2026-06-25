@@ -105,6 +105,12 @@ export const DEFAULT_SHORTCUTS: Record<ShortcutActionEnum, ShortcutBinding> = {
     shift: false,
     alt: false
   },
+  [ShortcutActionEnum.TOGGLE_SIMULATION]: {
+    key: 'Enter',
+    ctrl: false,
+    shift: false,
+    alt: false
+  },
   [ShortcutActionEnum.CANCEL]: {
     key: 'Escape',
     ctrl: false,

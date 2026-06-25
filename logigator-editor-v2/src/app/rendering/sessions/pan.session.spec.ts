@@ -86,6 +86,39 @@ describe('PanSession', () => {
     expect(project.selectionManager.commit).not.toHaveBeenCalled();
   });
 
+  it('invokes onTap instead of selecting on a tap when provided', () => {
+    const project = makeProject();
+    const onTap = vi.fn();
+    const session = new PanSession(
+      project,
+      new Point(100, 100),
+      new Point(3, 4),
+      onTap
+    );
+
+    session.onEnd();
+
+    expect(onTap).toHaveBeenCalledTimes(1);
+    expect(onTap.mock.calls[0][0]).toMatchObject({ x: 3, y: 4 });
+    expect(project.selectionManager.commit).not.toHaveBeenCalled();
+  });
+
+  it('does not invoke onTap after a pan', () => {
+    const project = makeProject();
+    const onTap = vi.fn();
+    const session = new PanSession(
+      project,
+      new Point(100, 100),
+      new Point(3, 4),
+      onTap
+    );
+
+    session.onMove(makePanEvent(140, 100)); // 40px — a clear pan
+    session.onEnd();
+
+    expect(onTap).not.toHaveBeenCalled();
+  });
+
   it('does not select on cancel; canEnd is always true', () => {
     const project = makeProject();
     const session = new PanSession(project, new Point(0, 0), new Point(1, 1));

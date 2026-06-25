@@ -260,27 +260,42 @@ export class FloatingLayer extends Container {
         break;
       }
       case WorkMode.SIMULATION: {
-        // No drag sessions in simulation mode — editing is structurally
-        // locked at the canvas level. The only interaction is clicking a
-        // user-input component (button/lever).
-        const localPoint = e.getLocalPosition(this.project.gridSpace);
-        const queryRect = new Rectangle(
-          localPoint.x - 0.5,
-          localPoint.y - 0.5,
-          1,
-          1
+        // Editing stays structurally locked, but one-finger / left-drag pans
+        // the viewport like the hand tool. A tap that never crosses the pan
+        // threshold instead activates a button/lever under the cursor.
+        this._startDrag(
+          new PanSession(
+            this.project,
+            e.global.clone(),
+            e.getLocalPosition(this.project.gridSpace),
+            (clickPoint) => this._emitUserInputAt(clickPoint)
+          )
         );
-        for (const comp of this.project.queryComponentsInRange(queryRect)) {
-          const type = comp.config.type;
-          if (
-            (type === BuiltInComponentType.BUTTON ||
-              type === BuiltInComponentType.LEVER) &&
-            comp.bodyGridBounds.contains(localPoint.x, localPoint.y)
-          ) {
-            this.project.emitUserInput(comp);
-            break;
-          }
-        }
+        break;
+      }
+    }
+  }
+
+  /**
+   * Activates the button/lever whose body contains the grid-space point, if
+   * any. The simulation-mode tap handler — the only canvas interaction allowed
+   * while editing is locked.
+   */
+  private _emitUserInputAt(localPoint: Point): void {
+    const queryRect = new Rectangle(
+      localPoint.x - 0.5,
+      localPoint.y - 0.5,
+      1,
+      1
+    );
+    for (const comp of this.project.queryComponentsInRange(queryRect)) {
+      const type = comp.config.type;
+      if (
+        (type === BuiltInComponentType.BUTTON ||
+          type === BuiltInComponentType.LEVER) &&
+        comp.bodyGridBounds.contains(localPoint.x, localPoint.y)
+      ) {
+        this.project.emitUserInput(comp);
         break;
       }
     }

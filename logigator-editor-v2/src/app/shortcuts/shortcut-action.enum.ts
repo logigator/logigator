@@ -24,6 +24,7 @@ export enum ShortcutActionEnum {
   TOOL_PLACE_TEXT = 'toolPlaceText',
   TOOL_PORT_NEGATION = 'toolPortNegation',
 
+  TOGGLE_SIMULATION = 'toggleSimulation',
   CANCEL = 'cancel'
 }
 

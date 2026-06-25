@@ -74,7 +74,7 @@ export class ShortcutManagerComponent {
     },
     {
       labelKey: 'shortcuts.groups.interaction',
-      actions: [ShortcutActionEnum.CANCEL]
+      actions: [ShortcutActionEnum.TOGGLE_SIMULATION, ShortcutActionEnum.CANCEL]
     }
   ];
 

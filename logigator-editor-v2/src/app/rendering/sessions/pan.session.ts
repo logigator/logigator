@@ -19,10 +19,13 @@ const CLICK_MOVE_THRESHOLD = 5;
  * `e.global` is screen space, which is exactly what `Project.pan` expects (it
  * adds the delta to the stage position). Do not convert to grid space here.
  *
- * A press that never moves past a small threshold is treated as a click/tap and
- * single-selects the element under it (clearing on empty space), reusing SELECT
- * mode's click path — so PAN stays navigate-first but a tap still selects. The
- * board does not move until the threshold is crossed, so a tap never nudges it.
+ * A press that never moves past a small threshold is treated as a click/tap.
+ * By default it single-selects the element under it (clearing on empty space),
+ * reusing SELECT mode's click path — so PAN stays navigate-first but a tap still
+ * selects. The board does not move until the threshold is crossed, so a tap
+ * never nudges it. Passing `onTap` overrides the tap action (simulation mode
+ * uses it to activate a button/lever instead of selecting), keeping the same
+ * drag-to-pan navigation.
  */
 export class PanSession implements DragSession {
   private readonly _lastGlobal: Point;
@@ -33,7 +36,8 @@ export class PanSession implements DragSession {
   constructor(
     private readonly project: Project,
     startGlobal: Point,
-    clickPoint: Point
+    clickPoint: Point,
+    private readonly onTap?: (clickPoint: Point) => void
   ) {
     this._lastGlobal = startGlobal.clone();
     this._startGlobal = startGlobal.clone();
@@ -57,7 +61,11 @@ export class PanSession implements DragSession {
   }
 
   onEnd(): void {
-    if (this._moved) return; // it was a pan; leave the selection untouched
+    if (this._moved) return; // it was a pan; leave the tap action untouched
+    if (this.onTap) {
+      this.onTap(this._clickPoint);
+      return;
+    }
     this.project.selectionManager.commit(
       new Rectangle(this._clickPoint.x, this._clickPoint.y, 0, 0),
       WorkMode.SELECT

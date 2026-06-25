@@ -94,6 +94,14 @@ export class ToolBarComponent {
     () =>
       `${this.translocoService.translate('toolBar.zoomIn')} (${this._fmt(ShortcutActionEnum.ZOOM_IN)})`
   );
+  protected startSimTooltip = computed(
+    () =>
+      `${this.translocoService.translate('toolBar.startSim')} (${this._fmt(ShortcutActionEnum.TOGGLE_SIMULATION)})`
+  );
+  protected exitSimTooltip = computed(
+    () =>
+      `${this.translocoService.translate('toolBar.exitSim')} (${this._fmt(ShortcutActionEnum.TOGGLE_SIMULATION)})`
+  );
   /** Shared editing tool set; the desktop bar and mobile HUD both render it. */
   protected readonly tools: WorkModeToolDescriptor[] = createWorkModeTools(
     this.workModeService

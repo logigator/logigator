@@ -38,7 +38,7 @@ The string values are used as i18n key suffixes — `statusBar.modes.<value>` �
 > - **SELECT** selects every component and wire whose `gridBounds` intersect the rect — the standard "touching" rule.
 > - **SELECT_EXACT** also selects every touching **component**, but for **wires** that extend past the rect boundary it scissors them at the boundary, keeps the inside portion selected, and leaves the outside portion(s) as separate, unselected wires. The cut is **tentative** — `SelectionManager` mutates the project directly but does not push to `ActionManager`. The cut becomes a real undo entry only when a move follows (`SelectionMoveSession` claims it via `claimPendingCut` and folds it into the move's `ActionContainer`, so cut + move revert with one Ctrl+Z). Any cancel path — selection clear, mode change, Escape, or Ctrl+Z while no move has happened — rolls the cut back, restoring the original wires. See `wires.md` § _Wire Scissor Cutting_ for the cut geometry and § _Tentative cut + commit on move_ for the lifecycle.
 
-> **SIMULATION**: No drag sessions — `FloatingLayer`'s `pointerdown` branch only hit-tests for user-input components (button/lever) and emits them on `Project.userInput$`; `SimulationService` reacts to those events. Pan/zoom keep working.
+> **SIMULATION**: `FloatingLayer`'s `pointerdown` branch starts a `PanSession` (one-finger / left-drag pan, like `WorkMode.PAN`); a tap that never crosses the pan threshold instead hit-tests for a user-input component (button/lever) and emits it on `Project.userInput$`, which `SimulationService` reacts to. Editing stays locked — no tool drag sessions; pan/zoom keep working.
 
 ---
 

@@ -1,4 +1,5 @@
-import { afterEach, beforeEach, describe, expect, it } from 'vitest';
+import 'pixi.js/math-extras';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { FederatedPointerEvent, Point } from 'pixi.js';
 import { configureTestBed } from '../../testing/configure-test-bed';
 import { makeAnd, makeButton, makeLever } from '../../testing/factories';
@@ -10,8 +11,13 @@ import { FloatingLayer } from './floating-layer';
 function downEvent(x: number, y: number): FederatedPointerEvent {
   return {
     button: 0,
+    global: new Point(x, y),
     getLocalPosition: () => new Point(x, y)
   } as unknown as FederatedPointerEvent;
+}
+
+function moveEvent(x: number, y: number): FederatedPointerEvent {
+  return { global: new Point(x, y) } as unknown as FederatedPointerEvent;
 }
 
 describe('FloatingLayer in SIMULATION mode', () => {
@@ -35,22 +41,24 @@ describe('FloatingLayer in SIMULATION mode', () => {
     project.destroy({ children: true });
   });
 
-  it('emits userInput$ for a clicked button', () => {
+  it('emits userInput$ for a tapped button', () => {
     const button = makeButton(2, 2);
     project.addComponent(button);
     layer.mode = WorkMode.SIMULATION;
 
     layer.emit('pointerdown', downEvent(2.4, 2.6));
+    layer.emit('pointerup', moveEvent(0, 0)); // a tap (no movement) activates the button
 
     expect(emissions).toEqual([button]);
   });
 
-  it('emits userInput$ for a clicked lever', () => {
+  it('emits userInput$ for a tapped lever', () => {
     const lever = makeLever(0, 0);
     project.addComponent(lever);
     layer.mode = WorkMode.SIMULATION;
 
     layer.emit('pointerdown', downEvent(0.5, 0.5));
+    layer.emit('pointerup', moveEvent(0, 0));
 
     expect(emissions).toEqual([lever]);
   });
@@ -60,19 +68,25 @@ describe('FloatingLayer in SIMULATION mode', () => {
     layer.mode = WorkMode.SIMULATION;
 
     layer.emit('pointerdown', downEvent(3, 3)); // inside the AND body
+    layer.emit('pointerup', moveEvent(0, 0));
     layer.emit('pointerdown', downEvent(20, 20)); // empty canvas
+    layer.emit('pointerup', moveEvent(0, 0));
 
     expect(emissions).toEqual([]);
   });
 
-  it('starts no drag session in simulation mode', () => {
+  it('pans on a one-finger drag instead of activating a component', () => {
+    const button = makeButton(2, 2);
+    project.addComponent(button);
+    const panSpy = vi.spyOn(project, 'pan');
     layer.mode = WorkMode.SIMULATION;
-    tickerValues.length = 0;
 
-    layer.emit('pointerdown', downEvent(5, 5));
+    layer.emit('pointerdown', downEvent(2.4, 2.6));
+    layer.emit('pointermove', moveEvent(60, 60)); // well past the tap threshold
+    layer.emit('pointerup', moveEvent(0, 0));
 
-    // A drag session would turn the ticker 'on' (see _startDrag).
-    expect(tickerValues).not.toContain('on');
+    expect(panSpy).toHaveBeenCalled();
+    expect(emissions).toEqual([]); // it was a pan, not a tap
   });
 
   it('entering simulation mode cancels an active drag', () => {

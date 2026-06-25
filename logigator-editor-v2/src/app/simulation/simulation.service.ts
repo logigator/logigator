@@ -85,9 +85,15 @@ export class SimulationService {
   private _userInputSub?: Subscription;
 
   constructor() {
-    inject(ShortcutService)
-      .on(ShortcutActionEnum.CANCEL)
-      .subscribe(() => this.exit());
+    const shortcutService = inject(ShortcutService);
+    shortcutService.on(ShortcutActionEnum.CANCEL).subscribe(() => this.exit());
+    shortcutService.on(ShortcutActionEnum.TOGGLE_SIMULATION).subscribe(() => {
+      if (this.workModeService.mode() === WorkMode.SIMULATION) {
+        this.exit();
+      } else {
+        this.enter();
+      }
+    });
   }
 
   /** The current session's link applier (the worker bridge feeds it deltas). */
