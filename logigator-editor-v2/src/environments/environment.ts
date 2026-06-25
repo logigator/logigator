@@ -8,6 +8,7 @@ export const environment: Environment = {
     showHitboxes: false,
     showOrigins: false,
     showConnectionPoints: false,
-    showQuadTrees: false
+    showQuadTrees: false,
+    menu: false
   }
 };
