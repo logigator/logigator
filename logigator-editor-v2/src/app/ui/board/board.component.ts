@@ -21,6 +21,7 @@ import { TickerScheduler } from '../../rendering/ticker-scheduler';
 import { EditorSettingsService } from '../../settings/editor-settings.service';
 import { FpsCounterComponent } from './fps-counter/fps-counter.component';
 import { MultiTouchGesture } from '../../rendering/multi-touch-gesture';
+import { RendererHandleService } from '../../rendering/renderer-handle.service';
 
 // Off-screen scene nodes (quad-tree branches, components, wires) are skipped at
 // render time when marked `cullable`. CullerPlugin (priority 10) initialises
@@ -40,6 +41,7 @@ export class BoardComponent implements OnInit, OnDestroy {
   private readonly themingService = inject(ThemingService);
   private readonly assetsService = inject(AssetsService);
   private readonly workModeService = inject(WorkModeService);
+  private readonly rendererHandle = inject(RendererHandleService);
   protected readonly editorSettings = inject(EditorSettingsService);
 
   @ViewChild('canvas', { static: true })
@@ -207,6 +209,10 @@ export class BoardComponent implements OnInit, OnDestroy {
     // earlier would invert that and leak a stray single-pointer session.
     this._wireTouchGestures();
 
+    // Expose the renderer for offscreen snapshots (image export, server
+    // previews). Cleared in ngOnDestroy before the app is destroyed.
+    this.rendererHandle.set(this.app.renderer);
+
     this.appInitialized = true;
     this.loaded.set(true);
   }
@@ -216,6 +222,7 @@ export class BoardComponent implements OnInit, OnDestroy {
     this._gestureListeners.abort();
     this._resizeObserver?.disconnect();
     this._renderScheduler?.destroy();
+    this.rendererHandle.set(null);
     if (this.appInitialized) {
       this.app.destroy();
     }
