@@ -24,6 +24,8 @@ import { buildProject, instantiateBody } from './circuit-builder';
 import { formatHttpError } from './persistence-errors';
 import { ServerPersistenceGateway } from './server/server-persistence.gateway';
 import { downloadBlob } from '../utils/download';
+import { ProjectDump, PROJECT_DUMP_VERSION } from './dump/project-dump.types';
+import { deserializeAction } from '../actions/action-codec';
 
 export { AuthRequiredError } from './persistence-errors';
 
@@ -257,7 +259,19 @@ export class PersistenceService {
   async importProjectFromJson(content: string): Promise<Project> {
     const { name, components, wires } = this.circuitFile.fromJson(content);
     const project = buildProject(components, wires);
+    await this._persistImportedProject(project, name);
+    return project;
+  }
 
+  /**
+   * Common tail of the import paths: adopts orphan custom snapshots, registers
+   * metadata, writes a fresh browser draft (so a reload restores it), then sets
+   * the project as main and navigates to `/local/:id`.
+   */
+  private async _persistImportedProject(
+    project: Project,
+    name: string
+  ): Promise<void> {
     // Adopt any imported custom that has no local master into the browser
     // components library, so the user can re-place it. (No stable cross-file
     // identity ⇒ re-importing the same file creates duplicate library rows.)
@@ -284,6 +298,75 @@ export class PersistenceService {
 
     this._replaceMainProject(project);
     this.location.go(`/local/${record.id}`);
+  }
+
+  /**
+   * Builds a debug {@link ProjectDump}: the native circuit document plus the
+   * original element ids (the format drops them on load) and the serialized undo
+   * history — enough to reconstruct the exact in-memory session.
+   */
+  buildProjectDump(project: Project): ProjectDump {
+    const name = this.metadataStore.getMetadata(project)?.name ?? 'Untitled';
+    const actionManager = project.actionManager;
+    return {
+      dumpVersion: PROJECT_DUMP_VERSION,
+      name,
+      project: JSON.parse(this.circuitFile.toJson(project, name)),
+      componentIds: [...project.components].map((c) => c.id),
+      wireIds: [...project.wires].map((w) => w.id),
+      actions: {
+        history: actionManager.history.map((a) => a.serialize()),
+        pointer: actionManager.pointer
+      }
+    };
+  }
+
+  /** Exports a {@link ProjectDump} as a downloadable `.dump.json` file. */
+  exportProjectDumpToFile(project: Project): void {
+    const dump = this.buildProjectDump(project);
+    const blob = new Blob([JSON.stringify(dump)], {
+      type: 'application/json'
+    });
+    downloadBlob(blob, `${dump.name}.dump.json`);
+  }
+
+  /**
+   * Imports a debug {@link ProjectDump}: loads the circuit body exactly like a
+   * file import, re-stamps the saved element ids onto the freshly-built
+   * instances, then restores the undo history so undo/redo walks the real
+   * session. If the loaded element count no longer matches the id lists (e.g. a
+   * custom dropped because its definition is missing), id and history restoration
+   * are skipped with a warning — the circuit still loads.
+   */
+  async importProjectDump(content: string): Promise<Project> {
+    const dump = JSON.parse(content) as ProjectDump;
+    if (!dump || typeof dump !== 'object' || dump.project === undefined) {
+      throw new Error('Not a Project Dump file');
+    }
+
+    const { name, components, wires } = this.circuitFile.decode(dump.project);
+
+    const idsMatch =
+      components.length === dump.componentIds?.length &&
+      wires.length === dump.wireIds?.length;
+    if (idsMatch) {
+      components.forEach((c, i) => (c.id = dump.componentIds[i]));
+      wires.forEach((w, i) => (w.id = dump.wireIds[i]));
+    } else {
+      this.toast.warn(
+        'Project Dump element count changed on load — ids and action history were not restored.'
+      );
+    }
+
+    const project = buildProject(components, wires);
+    await this._persistImportedProject(project, name);
+
+    if (idsMatch && dump.actions) {
+      project.actionManager.restore(
+        dump.actions.history.map(deserializeAction),
+        dump.actions.pointer
+      );
+    }
     return project;
   }
 
