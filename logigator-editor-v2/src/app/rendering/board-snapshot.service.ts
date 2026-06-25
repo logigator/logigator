@@ -54,24 +54,79 @@ export class BoardSnapshotService {
   }
 
   /**
-   * Renders a project's tight content bounds (plus a margin) into a texture,
-   * falling back to a small fixed box for empty projects.
+   * The region (grid units) a full-project snapshot covers: tight content
+   * bounds plus a margin, or a small fixed box when the project is empty.
+   */
+  public computeRegion(
+    project: Project,
+    marginGrid: number = EXPORT_MARGIN_GRID
+  ): Rectangle {
+    const content =
+      project.getContentBounds() ??
+      new Rectangle(0, 0, EMPTY_FALLBACK_GRID, EMPTY_FALLBACK_GRID);
+    return new Rectangle(
+      content.x - marginGrid,
+      content.y - marginGrid,
+      content.width + 2 * marginGrid,
+      content.height + 2 * marginGrid
+    );
+  }
+
+  /** Output pixel dimensions for a region at a multiplier. */
+  public outputSize(
+    region: Rectangle,
+    multiplier: number
+  ): { width: number; height: number } {
+    const pxPerUnit = environment.gridSize * multiplier;
+    return {
+      width: Math.max(1, Math.round(region.width * pxPerUnit)),
+      height: Math.max(1, Math.round(region.height * pxPerUnit))
+    };
+  }
+
+  /**
+   * Renders a project's content (tight bounds + margin, or empty fallback) into
+   * a texture. Caller owns the returned texture.
    */
   public renderProjectToTexture(
     project: Project,
     options: SnapshotOptions
   ): RenderTexture {
-    const margin = options.marginGrid ?? EXPORT_MARGIN_GRID;
-    const content =
-      project.getContentBounds() ??
-      new Rectangle(0, 0, EMPTY_FALLBACK_GRID, EMPTY_FALLBACK_GRID);
-    const region = new Rectangle(
-      content.x - margin,
-      content.y - margin,
-      content.width + 2 * margin,
-      content.height + 2 * margin
-    );
+    const region = this.computeRegion(project, options.marginGrid);
     return this.renderRegionToTexture(project, region, options);
+  }
+
+  /**
+   * Renders a project's content into an `HTMLCanvasElement` (extracted from the
+   * texture). The texture is destroyed before returning; the canvas is a
+   * standalone copy.
+   */
+  public renderProjectToCanvas(
+    project: Project,
+    options: SnapshotOptions
+  ): HTMLCanvasElement {
+    const region = this.computeRegion(project, options.marginGrid);
+    return this.renderRegionToCanvas(project, region, options);
+  }
+
+  /** Renders a region into an `HTMLCanvasElement`. See {@link renderProjectToCanvas}. */
+  public renderRegionToCanvas(
+    project: Project,
+    region: Rectangle,
+    options: SnapshotOptions
+  ): HTMLCanvasElement {
+    const renderer = this.rendererHandle.renderer;
+    if (!renderer) {
+      throw new Error('BoardSnapshotService: no renderer registered');
+    }
+    const texture = this.renderRegionToTexture(project, region, options);
+    try {
+      return renderer.extract.canvas({
+        target: texture
+      }) as HTMLCanvasElement;
+    } finally {
+      texture.destroy(true);
+    }
   }
 
   /**
@@ -92,8 +147,7 @@ export class BoardSnapshotService {
 
     const gridSize = environment.gridSize;
     const pxPerUnit = gridSize * options.multiplier;
-    const width = Math.max(1, Math.round(region.width * pxPerUnit));
-    const height = Math.max(1, Math.round(region.height * pxPerUnit));
+    const { width, height } = this.outputSize(region, options.multiplier);
 
     const texture = RenderTexture.create({
       width,
