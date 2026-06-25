@@ -60,21 +60,25 @@ export class ExportImageDialogComponent {
     { label: '4×', value: 4 }
   ];
 
-  /** Main project plus any open component editors, labelled by their name. */
-  protected readonly projectOptions = computed(() => {
+  /** Main project plus any open component editors. */
+  private readonly _projects = computed<Project[]>(() => {
     const main = this.projectService.mainProject();
-    const projects = [
-      ...(main ? [main] : []),
-      ...this.projectService.openComponents()
-    ];
-    return projects.map((project) => ({
-      label: this._projectName(project),
-      value: project
-    }));
+    return [...(main ? [main] : []), ...this.projectService.openComponents()];
   });
 
-  protected readonly project = signal<Project | null>(
-    this.projectService.activeProject() ?? this.projectService.mainProject()
+  // Options carry the array index (a primitive) rather than the Project itself:
+  // a Project is a deep, circular PixiJS Container, and p-select would run
+  // deepEquals over it for option matching.
+  protected readonly projectOptions = computed(() =>
+    this._projects().map((project, index) => ({
+      label: this._projectName(project),
+      value: index
+    }))
+  );
+
+  protected readonly selectedIndex = signal(this._initialIndex());
+  protected readonly project = computed<Project | null>(
+    () => this._projects()[this.selectedIndex()] ?? null
   );
   protected readonly format = signal<ImageFormat>('png');
   protected readonly multiplier = signal(2);
@@ -114,6 +118,12 @@ export class ExportImageDialogComponent {
 
   protected cancel(): void {
     this.ref.close();
+  }
+
+  private _initialIndex(): number {
+    const active = this.projectService.activeProject();
+    const index = active ? this._projects().indexOf(active) : -1;
+    return index >= 0 ? index : 0;
   }
 
   private _projectName(project: Project): string {

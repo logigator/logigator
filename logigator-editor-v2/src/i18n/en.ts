@@ -296,6 +296,7 @@ const en = {
     backgroundHint: 'Theme color and grid',
     quality: 'Quality',
     dimensions: '{{width}} × {{height}} px',
+    clampedHint: '(reduced to fit device limits)',
     export: 'Export',
     cancel: 'Cancel',
     error: {

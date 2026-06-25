@@ -7,8 +7,8 @@
         [options]="projectOptions()"
         optionLabel="label"
         optionValue="value"
-        [ngModel]="project()"
-        (ngModelChange)="project.set($event)"
+        [ngModel]="selectedIndex()"
+        (ngModelChange)="selectedIndex.set($event)"
         [ngModelOptions]="{ standalone: true }"
       />
     </div>
@@ -39,6 +39,9 @@
     @if (dimensions(); as d) {
       <span class="text-sm text-muted">
         {{ t('imageExport.dimensions', { width: d.width, height: d.height }) }}
+        @if (d.clamped) {
+          {{ t('imageExport.clampedHint') }}
+        }
       </span>
     }
   </div>
