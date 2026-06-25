@@ -43,6 +43,9 @@ export class MemoryDataComponentOption extends ComponentOption<string> {
   }
 
   protected cloneWithValue(initialValue?: string): MemoryDataComponentOption {
-    return new MemoryDataComponentOption(this.label, initialValue ?? this.value);
+    return new MemoryDataComponentOption(
+      this.label,
+      initialValue ?? this.value
+    );
   }
 }

@@ -167,7 +167,10 @@ describe('HexEditorComponent', () => {
     comp.radix.set('binary');
 
     // A digit invalid in binary is blocked.
-    const blocked = { data: '2', preventDefault: vi.fn() } as unknown as InputEvent;
+    const blocked = {
+      data: '2',
+      preventDefault: vi.fn()
+    } as unknown as InputEvent;
     comp.onCellBeforeInput(blocked);
     expect(blocked.preventDefault).toHaveBeenCalled();
 
