@@ -82,8 +82,13 @@ The compiler walks components sorted **by id** (quad-tree iteration order is not
 stable; sorting makes the submission order — and with it `triggerInput` indices
 and the engine's output layout — reproducible). For each component:
 
-- **Unit types** (`NOT`, `AND`, `BUTTON`, `LEVER`) are emitted as one
-  `EmittedUnit` with its pins recorded as union-find node ids.
+- **Unit types** (`NOT`, `AND`, `BUTTON`, `LEVER`, `ROM`) are emitted as one
+  `EmittedUnit` with its pins recorded as union-find node ids. `ROM` also
+  carries an `ops` blob — its contents bit-packed by `rom-data.codec.ts`
+  (`encodeRomOps`, over the generic `utils/packed-buffer.ts`) to the exact byte
+  table the engine reads (LSB-first; bit `address × wordSize + k`).
+  `ops` rides through node remapping and template flattening alongside the
+  negation fields (`copyNegation`).
 - **Custom components** (`type >= CUSTOM_TYPE_ID_BASE`) are flattened — see
   [Custom-component flattening](#custom-component-flattening).
 - `TEXT` has no ports; top-level `INPUT`/`OUTPUT` plugs are inert decoration
@@ -285,3 +290,6 @@ The board index sent to the engine comes from `CompiledBoard.userInputs`
    it on `Project.userInput$` from `FloatingLayer`'s simulation `pointerdown`
    branch.
 4. Otherwise it emits as a plain unit; its pins map by `connectionPoints` order.
+5. If the type takes engine `ops` (per-type parameters), encode them in
+   `_opsFor`. `ROM` is the worked example: its `data` option holds a base64
+   blob that `rom-data.codec.ts` turns into the engine's byte table.

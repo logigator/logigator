@@ -8,6 +8,7 @@ import {
   CUSTOM_TYPE_ID_BASE
 } from '../../components/component-type.enum';
 import { instantiateBody } from '../../persistence/circuit-builder';
+import { encodeRomOps } from '../../components/component-types/rom/rom-data.codec';
 import { Project } from '../../project/project';
 import {
   BoardComponentDescriptor,
@@ -23,7 +24,8 @@ const UNIT_TYPES: ReadonlySet<number> = new Set([
   BuiltInComponentType.NOT,
   BuiltInComponentType.AND,
   BuiltInComponentType.BUTTON,
-  BuiltInComponentType.LEVER
+  BuiltInComponentType.LEVER,
+  BuiltInComponentType.ROM
 ]);
 
 /**
@@ -43,20 +45,24 @@ interface EmittedUnit {
   /** Negated pin indices into inputs[]/outputs[]; invariant under node remap. */
   negInputs?: number[];
   negOutputs?: number[];
+  /** Per-type parameter blob (e.g. ROM contents); invariant under node remap. */
+  ops?: number[];
 }
 
 /**
- * Copies a unit's negation forward unchanged. Pin reorderings during
- * flattening (node→local, node→link) remap pin *values* but preserve pin
- * *order*, so the negated indices stay valid.
+ * Copies a unit's negation and per-type ops forward unchanged. Pin reorderings
+ * during flattening (node→local, node→link) remap pin *values* but preserve pin
+ * *order*, so the negated indices and ops stay valid.
  */
 function copyNegation(unit: EmittedUnit): {
   negInputs?: number[];
   negOutputs?: number[];
+  ops?: number[];
 } {
   return {
     ...(unit.negInputs ? { negInputs: unit.negInputs } : {}),
-    ...(unit.negOutputs ? { negOutputs: unit.negOutputs } : {})
+    ...(unit.negOutputs ? { negOutputs: unit.negOutputs } : {}),
+    ...(unit.ops ? { ops: unit.ops } : {})
   };
 }
 
@@ -137,6 +143,20 @@ export class BoardCompilerService {
     negOutputs?: number[];
   } {
     return Component.serializeNegations(component);
+  }
+
+  /**
+   * Per-type `ops` blob for the engine. Only ROM carries one: its contents are
+   * bit-packed to a byte table sized to `addressSize` × `wordSize` (the address
+   * and word pin counts), the exact format the engine reads — see
+   * `rom-data.codec.ts`.
+   */
+  private _opsFor(component: Component): { ops?: number[] } {
+    if (component.config.type !== BuiltInComponentType.ROM) return {};
+    const contents = (component.options['data']?.value as string) ?? '';
+    return {
+      ops: encodeRomOps(contents, component.numInputs, component.numOutputs)
+    };
   }
 
   public compile(project: Project): CompiledBoard {
@@ -245,6 +265,7 @@ export class BoardCompilerService {
         type: isUserInput ? ENGINE_USER_INPUT_TYPE : type,
         inputs: pinNodes.slice(0, component.numInputs),
         outputs: pinNodes.slice(component.numInputs),
+        ...this._opsFor(component),
         ...this._negationFor(component)
       });
       return;

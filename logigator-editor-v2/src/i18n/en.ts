@@ -7,6 +7,23 @@ const en = {
     save: 'Save',
     cancel: 'Cancel'
   },
+  hexEditor: {
+    wordView: 'Words',
+    byteView: 'Bytes',
+    hex: 'Hex',
+    decimal: 'Decimal',
+    octal: 'Octal',
+    binary: 'Binary',
+    address: 'Addr',
+    goto: 'Go to address',
+    gotoPlaceholder: 'Address…',
+    activeAddress: 'Address',
+    value: 'Value',
+    noActiveCell: 'No cell selected',
+    clear: 'Clear',
+    copy: 'Copy',
+    clearConfirm: 'Clear all memory contents?'
+  },
   settings: {
     options: {
       fpsCounter: 'FPS Counter',
@@ -39,7 +56,9 @@ const en = {
           'A read-only memory (ROM) is a type of non-volatile memory used in computers and other electronic devices. Data stored in ROM cannot be electronically modified after the manufacture of the memory device.',
         options: {
           wordSize: 'Word Size',
-          addressSize: 'Address Size'
+          addressSize: 'Address Size',
+          data: 'Edit contents',
+          dataEditorTitle: 'Edit ROM contents'
         }
       },
       TEXT: {

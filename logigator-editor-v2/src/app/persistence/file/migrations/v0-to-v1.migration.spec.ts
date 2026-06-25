@@ -34,7 +34,7 @@ describe('v0ToV1Migration', () => {
         name: 'Legacy Circuit',
         elements: [
           { t: 2, p: [3, 4], i: 3, r: 1 }, // AND, 3 inputs, rotated South
-          { t: 12, p: [10, 5], i: 3, o: 8, n: [8, 3] }, // ROM word=8 addr=3
+          { t: 12, p: [10, 5], i: 3, o: 8, n: [8, 3], s: 'gQ==' }, // ROM word=8 addr=3, contents 0x81
           { t: 7, p: [2, 2], n: [14], s: 'Hello world' }, // TEXT
           { t: 0, p: [3, 5], q: [8, 5] }, // horizontal wire
           { t: 0, p: [5, 2], q: [5, 7] } // vertical wire
@@ -54,7 +54,12 @@ describe('v0ToV1Migration', () => {
     expect(and.options).toEqual({ direction: 1, numInputs: 3 });
 
     const rom = result.components.find((c) => c.type === 12)!;
-    expect(rom.options).toEqual({ direction: 0, wordSize: 8, addressSize: 3 });
+    expect(rom.options).toEqual({
+      direction: 0,
+      wordSize: 8,
+      addressSize: 3,
+      data: 'gQ==' // legacy `s` blob decodes verbatim into the data option
+    });
 
     const text = result.components.find((c) => c.type === 7)!;
     expect(text.options).toEqual({
@@ -134,6 +139,7 @@ describe('v0ToV1Migration', () => {
       },
       [BuiltInComponentType.ROM]: {
         r: 'direction',
+        s: 'data',
         n: ['wordSize', 'addressSize']
       },
       [BuiltInComponentType.INPUT]: {

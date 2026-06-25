@@ -7,7 +7,8 @@ import {
   ManualFrameScheduler
 } from '../../testing/fake-simulation-worker';
 import { Component } from '../components/component';
-import { romComponentConfig } from '../components/component-types/rom/rom.config';
+import { ComponentProviderService } from '../components/component-provider.service';
+import { CustomComponentRegistry } from '../components/custom/custom-component-registry.service';
 import { ToastService } from '../logging/toast.service';
 import { Project } from '../project/project';
 import { ProjectService } from '../project/project.service';
@@ -79,8 +80,24 @@ describe('SimulationService', () => {
 
   it('refuses to enter on diagnostics and reports via toast', () => {
     const error = vi.spyOn(toastService, 'error');
+    // A custom whose circuit has no plugs but declares one port compiles to a
+    // blocking plug-mismatch diagnostic.
+    const broken = TestBed.inject(CustomComponentRegistry).registerSnapshot({
+      kind: 'snapshot',
+      source: 'browser',
+      name: 'Broken',
+      symbol: 'B',
+      description: '',
+      numInputs: 1,
+      numOutputs: 0,
+      labels: ['A'],
+      circuit: { components: [], wires: [] }
+    });
+    const config = TestBed.inject(ComponentProviderService).getComponent(
+      broken
+    )!;
     project.addComponent(
-      Component.deserialize({ pos: [0, 0], options: {} }, romComponentConfig)
+      Component.deserialize({ pos: [0, 0], options: {} }, config)
     );
     const previousMode = workModeService.mode();
 

@@ -1,0 +1,190 @@
+<div *transloco="let t" class="flex flex-col">
+  <!-- Toolbar. On compact (<md) it stacks into three rows — selectors, search,
+       action buttons — instead of wrapping awkwardly in a single line. -->
+  <div class="flex flex-col md:flex-row md:items-center gap-2 mb-3">
+    <!-- View + radix selectors -->
+    <div class="flex flex-wrap items-center gap-2">
+      <p-selectButton
+        [options]="viewOptions"
+        optionValue="value"
+        [allowEmpty]="false"
+        [ngModel]="view()"
+        (ngModelChange)="view.set($event)"
+        [ngModelOptions]="{ standalone: true }"
+        size="small"
+      >
+        <ng-template #item let-o>{{ t(o.label) }}</ng-template>
+      </p-selectButton>
+
+      <p-selectButton
+        [options]="radixOptions"
+        optionValue="value"
+        [allowEmpty]="false"
+        [ngModel]="radix()"
+        (ngModelChange)="radix.set($event)"
+        [ngModelOptions]="{ standalone: true }"
+        size="small"
+      >
+        <ng-template #item let-o>{{ t(o.label) }}</ng-template>
+      </p-selectButton>
+    </div>
+
+    <!-- Go-to-address search -->
+    <div class="flex items-center gap-1 w-full md:w-auto md:ms-auto">
+      <input
+        pInputText
+        pSize="small"
+        type="text"
+        spellcheck="false"
+        autocomplete="off"
+        class="grow md:grow-0"
+        [invalid]="gotoInvalid()"
+        [placeholder]="t('hexEditor.gotoPlaceholder')"
+        [ngModel]="gotoInput()"
+        (ngModelChange)="gotoInput.set($event)"
+        (keyup.enter)="goto()"
+        [ngModelOptions]="{ standalone: true }"
+        [attr.aria-label]="t('hexEditor.goto')"
+      />
+      <p-button
+        icon="ph ph-magnifying-glass"
+        severity="secondary"
+        size="small"
+        (onClick)="goto()"
+        [attr.aria-label]="t('hexEditor.goto')"
+      />
+    </div>
+
+    <!-- Action buttons -->
+    <div class="flex items-center gap-2">
+      <p-button
+        [label]="t('hexEditor.copy')"
+        icon="ph ph-copy"
+        severity="secondary"
+        [outlined]="true"
+        size="small"
+        (onClick)="copyAll()"
+      />
+      <p-button
+        [label]="t('hexEditor.clear')"
+        icon="ph ph-eraser"
+        severity="secondary"
+        [outlined]="true"
+        size="small"
+        (onClick)="confirmClear($event)"
+      />
+    </div>
+  </div>
+
+  <!-- Grid: header + virtualized body share one horizontal-scroll context, so
+       they scroll together and overflow sideways when the row can't fit. -->
+  <div
+    #gridScroll
+    class="overflow-x-auto rounded-md border border-border outline-none"
+    tabindex="0"
+  >
+    <div [style.min-width.ch]="rowMinWidthCh()">
+      <!-- Column header. Padded on the end by the body's scrollbar width, and
+           the same font size as the body, so its ch-based columns line up. -->
+      <div
+        class="flex items-stretch font-mono text-sm text-muted border-b border-border bg-content overflow-y-auto"
+        [style]="{ 'scrollbar-gutter': 'stable' }"
+      >
+        <div
+          class="shrink-0 pr-2 py-1 text-end border-e border-border"
+          [style.width.ch]="gutterWidthCh()"
+        >
+          {{ addressText }}
+        </div>
+        <div #headerCols class="flex flex-1">
+          @for (c of columnIndexes(); track c) {
+            <div
+              class="flex-1 text-center px-1 py-1"
+              [style.min-width.ch]="cellMinWidthCh()"
+            >
+              {{ c.toString(16).toUpperCase() }}
+            </div>
+          }
+        </div>
+      </div>
+
+      <!-- Virtualized body. `scrollbar-gutter: stable` always reserves the
+           scrollbar's width even when the content doesn't overflow, so the
+           body width — and thus the header's matching end padding — stays
+           constant whether or not the bar is showing. -->
+      <p-scroller
+        [items]="rows()"
+        [itemSize]="rowHeight()"
+        scrollHeight="28rem"
+        [style]="{ 'scrollbar-gutter': 'stable' }"
+        styleClass="w-full font-mono text-sm"
+      >
+        <ng-template #item let-rowStart>
+          <div class="flex items-stretch" [style.height.px]="rowHeight()">
+            <div
+              class="shrink-0 flex items-center justify-end pr-2 text-muted bg-content border-e border-border select-none"
+              [style.width.ch]="gutterWidthCh()"
+            >
+              {{ addressLabel(rowStart) }}
+            </div>
+            <div class="flex flex-1">
+              @for (c of columnIndexes(); track c) {
+                @let idx = rowStart + c;
+                <input
+                  #cell
+                  class="flex-1 text-center uppercase bg-transparent outline-none border-e border-b border-border/50 focus:bg-primary-500/15 focus:text-primary-700 dark:focus:text-primary-300 disabled:opacity-0"
+                  type="text"
+                  spellcheck="false"
+                  autocomplete="off"
+                  [style.width.ch]="cellMinWidthCh()"
+                  [style.min-width.ch]="cellMinWidthCh()"
+                  [disabled]="isPadCell(idx)"
+                  [attr.maxlength]="cellDigits()"
+                  [value]="cellValue(idx)"
+                  (focus)="cell.select(); activeCell.set(idx)"
+                  (beforeinput)="onCellBeforeInput($event)"
+                  (paste)="onCellPaste(idx, $event)"
+                  (change)="onCellCommit(idx, cell)"
+                  (keyup.enter)="cell.blur()"
+                />
+              }
+            </div>
+          </div>
+        </ng-template>
+      </p-scroller>
+    </div>
+  </div>
+
+  <!-- Status box: the focused cell's address and value. -->
+  <div
+    class="mt-2 px-3 py-1.5 rounded-md border border-border bg-content text-sm flex flex-wrap items-center gap-x-4 gap-y-1"
+  >
+    @if (active(); as a) {
+      <span>
+        <span class="text-muted">{{ t('hexEditor.activeAddress') }}:</span>
+        <span class="font-mono">0x{{ a.address }}</span>
+      </span>
+      <span>
+        <span class="text-muted">{{ t('hexEditor.value') }}:</span>
+        <span class="font-mono">{{ a.value }}</span>
+        <span class="text-muted">({{ a.decimal }})</span>
+      </span>
+    } @else {
+      <span class="text-muted">{{ t('hexEditor.noActiveCell') }}</span>
+    }
+  </div>
+
+  <!-- Footer actions -->
+  <div class="mt-3 flex justify-end gap-2">
+    <p-button
+      [label]="t('common.cancel')"
+      severity="secondary"
+      (onClick)="dismiss()"
+    />
+    <p-button
+      [label]="t('common.save')"
+      icon="ph ph-check"
+      (onClick)="commit()"
+    />
+  </div>
+</div>

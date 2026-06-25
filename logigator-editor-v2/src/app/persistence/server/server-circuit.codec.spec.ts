@@ -57,8 +57,8 @@ const fixtures: Fixture[] = [
     elements: [{ t: 2, p: [10, 10], i: 4, o: 1, r: 2 }]
   },
   {
-    name: 'ROM with distinct word/address sizes',
-    elements: [{ t: 12, p: [10, 5], i: 3, o: 8, n: [8, 3] }]
+    name: 'ROM with distinct word/address sizes and contents',
+    elements: [{ t: 12, p: [10, 5], i: 3, o: 8, n: [8, 3], s: 'gQ==' }]
   },
   {
     name: 'TEXT with text and fontSize',
@@ -196,9 +196,9 @@ describe('server-circuit.codec', () => {
     });
 
     it('omits negation arrays for an un-negated component', () => {
-      const comp = encode(decode([{ t: 2, p: [0, 0], i: 2, o: 1 }])).elements.find(
-        (e) => e.t === 2
-      )!;
+      const comp = encode(
+        decode([{ t: 2, p: [0, 0], i: 2, o: 1 }])
+      ).elements.find((e) => e.t === 2)!;
       expect('negInputs' in comp).toBe(false);
       expect('negOutputs' in comp).toBe(false);
     });

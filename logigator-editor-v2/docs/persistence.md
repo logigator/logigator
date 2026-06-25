@@ -157,8 +157,8 @@ options to the legacy positional slots — the single source of truth for both t
 permanent decode and the temporary encode:
 
 ```ts
-// rom.config.ts
-legacyV0Slots: { r: 'direction', n: ['wordSize', 'addressSize'] }
+// rom.config.ts — `s` carries the ROM contents (base64 bit-packed blob)
+legacyV0Slots: { r: 'direction', s: 'data', n: ['wordSize', 'addressSize'] }
 // input.config.ts
 legacyV0Slots: { r: 'direction', s: 'label', n: ['index'] }
 ```

@@ -15,6 +15,7 @@ import { inputComponentConfig } from '../../components/component-types/input/inp
 import { outputComponentConfig } from '../../components/component-types/output/output.config';
 import { textComponentConfig } from '../../components/component-types/text/text.config';
 import { romComponentConfig } from '../../components/component-types/rom/rom.config';
+import { bytesToBase64 } from '../../utils/packed-buffer';
 import { SerializedCircuitBody } from '../../persistence/serialized-circuit';
 import { Project } from '../../project/project';
 import { Wire } from '../../wires/wire';
@@ -233,19 +234,29 @@ describe('BoardCompilerService', () => {
     expect(board.diagnostics).toEqual([]);
   });
 
-  it('reports a blocking diagnostic for ROM', () => {
-    const rom = placeByType(romComponentConfig.type, [0, 0]);
+  it('emits a ROM unit with its contents bit-packed into ops', () => {
+    // 1-bit address, 4-bit word: addr0 → output 0 high (value 1), addr1 →
+    // output 3 high (value 8) packs LSB-first to the single byte 0x81.
+    const data = bytesToBase64(Uint8Array.from([0x81]));
+    place(
+      Component.deserialize(
+        {
+          pos: [0, 0],
+          options: { direction: 0, addressSize: 1, wordSize: 4, data }
+        },
+        romComponentConfig
+      )
+    );
 
     const board = compiler.compile(project);
 
-    expect(board.diagnostics).toEqual([
-      expect.objectContaining({
-        kind: 'unsupported',
-        instancePath: '',
-        componentType: romComponentConfig.type,
-        componentId: rom.id
-      })
-    ]);
+    expect(board.diagnostics).toEqual([]);
+    expect(board.descriptor).toEqual({
+      links: 5,
+      components: [
+        { type: 12, inputs: [0], outputs: [1, 2, 3, 4], ops: [0x81] }
+      ]
+    });
   });
 
   it('expands two placements of one snapshot into distinct global links', () => {
@@ -374,21 +385,26 @@ describe('BoardCompilerService', () => {
       circuit: liveToBody([inPlug], [])
     });
 
-    placeByType(broken, [0, 0]);
+    const instance = placeByType(broken, [0, 0]);
 
     const board = compiler.compile(project);
 
     expect(board.diagnostics).toEqual([
       expect.objectContaining({ kind: 'plug-mismatch' })
     ]);
+    // The inner diagnostic is prefixed with the placing instance's path.
+    expect(board.diagnostics[0].instancePath).toBe(String(instance.id));
   });
 
-  it('prefixes inner diagnostics with the instance path', () => {
+  it('propagates a nested ROM’s ops through template flattening', () => {
+    const data = bytesToBase64(Uint8Array.from([0x81]));
     const rom = Component.deserialize(
-      { pos: [0, 0], options: {} },
+      {
+        pos: [0, 0],
+        options: { direction: 0, addressSize: 1, wordSize: 4, data }
+      },
       romComponentConfig
     );
-    const romId = rom.id;
     const withRom = registry.registerSnapshot({
       kind: 'snapshot',
       source: 'browser',
@@ -401,15 +417,17 @@ describe('BoardCompilerService', () => {
       circuit: liveToBody([rom], [])
     });
 
-    const instance = placeByType(withRom, [0, 0]);
+    placeByType(withRom, [0, 0]);
 
     const board = compiler.compile(project);
 
-    expect(board.diagnostics).toHaveLength(1);
-    expect(board.diagnostics[0].kind).toBe('unsupported');
-    expect(board.diagnostics[0].instancePath).toBe(String(instance.id));
-    // The inner component id is template-local (fresh per build), not romId.
-    expect(board.diagnostics[0].componentId).not.toBe(romId);
+    expect(board.diagnostics).toEqual([]);
+    expect(board.descriptor).toEqual({
+      links: 5,
+      components: [
+        { type: 12, inputs: [0], outputs: [1, 2, 3, 4], ops: [0x81] }
+      ]
+    });
   });
 
   it('emits button/lever units and registers them as user inputs', () => {

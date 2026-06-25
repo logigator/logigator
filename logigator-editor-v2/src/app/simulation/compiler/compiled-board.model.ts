@@ -8,6 +8,12 @@ export interface BoardComponentDescriptor {
   inputs: number[];
   outputs: number[];
   /**
+   * Per-type parameter blob (e.g. a ROM's bit-packed contents table). Opaque to
+   * the compiler and invariant under pin remapping; omitted when the type takes
+   * no ops.
+   */
+  ops?: number[];
+  /**
    * Negated input-pin indices (into `inputs[]`) the engine inverts before the
    * kernel runs; `negOutputs` into `outputs[]`, inverted after. Sparse index
    * arrays (no bitmask), separate from per-type `ops`. Omitted when empty.
