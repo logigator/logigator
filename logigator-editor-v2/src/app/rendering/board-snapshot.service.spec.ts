@@ -104,7 +104,7 @@ describe('BoardSnapshotService', () => {
     texture.destroy(true);
   });
 
-  it('re-tunes content scale to the multiplier and restores it afterwards', () => {
+  it('renders at the reference scale (not the multiplier) and restores live scale', () => {
     const comp = makeAnd(2);
     comp.position.set(0, 0);
     project.addComponent(comp);
@@ -116,7 +116,8 @@ describe('BoardSnapshotService', () => {
     });
 
     const scales = spy.mock.calls.map((c) => c[0]);
-    expect(scales).toContain(3); // export scale applied
+    expect(scales).toContain(1); // reference scale → proportional line weights
+    expect(scales).not.toContain(3); // not scaled by the multiplier
     expect(scales.at(-1)).toBe(project.scale.x); // restored to live scale last
     texture.destroy(true);
   });

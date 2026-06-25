@@ -5,6 +5,7 @@ import {
   Matrix,
   Rectangle,
   RenderTexture,
+  Text,
   type ColorSource
 } from 'pixi.js';
 import { RendererHandleService } from './renderer-handle.service';
@@ -33,6 +34,13 @@ export const EMPTY_FALLBACK_GRID = 16;
 export const PREVIEW_SIZE = 1024;
 /** Grid units per export-grid chunk; matches the live {@link Grid}. */
 const GRID_CHUNK = 32;
+/**
+ * The "100% zoom" scale the export renders content at. Decoupling the export
+ * from the live zoom keeps it deterministic, and rendering at scale 1 lets the
+ * output matrix scale line weights and grid dots up proportionally with the
+ * multiplier instead of holding them screen-constant.
+ */
+const REFERENCE_SCALE = 1;
 
 /**
  * Renders a project's content into an offscreen `RenderTexture`. The reusable
@@ -194,8 +202,9 @@ export class BoardSnapshotService {
     let grid: Container | null = null;
     if (withGrid) {
       // The export grid is authored in project-pixel space (gridSize px per
-      // grid unit), so it scales by the multiplier only.
-      grid = this._buildGrid(region, options.multiplier);
+      // grid unit) at the 100%-reference scale, so the matrix scales it by the
+      // multiplier — dot size and spacing both grow with the multiplier.
+      grid = this._buildGrid(region);
       const gridMatrix = new Matrix()
         .scale(options.multiplier, options.multiplier)
         .translate(tx, ty);
@@ -221,12 +230,18 @@ export class BoardSnapshotService {
     this._uncull(project.gridSpace);
     project.setOverlayVisible(false);
 
-    // Scale-dependent visuals (screen-constant strokes, Text glyph resolution)
-    // are tuned to the live zoom. Re-tune them to the export scale so line
-    // weights are zoom-independent and text stays crisp at high multipliers,
-    // then restore. No flicker: nothing renders on-screen between the calls.
+    // Render the content at the 100%-reference scale (REFERENCE_SCALE),
+    // independent of the live zoom, so the export matches the natural look and
+    // the matrix scales line weights / grid dots up *proportionally* with the
+    // multiplier (a higher resolution is the same picture with more pixels, not
+    // thinner lines). Text is a pre-rasterized texture, so its glyph resolution
+    // is bumped to the multiplier separately to stay crisp. Everything is
+    // restored afterwards — no flicker, since nothing renders on-screen between.
     const liveScale = project.scale.x;
-    this._applyContentScale(project, options.multiplier);
+    const texts = this._collectTexts(project.gridSpace);
+    const textResolutions = texts.map((t) => t.resolution);
+    this._applyContentScale(project, REFERENCE_SCALE);
+    for (const text of texts) text.resolution = options.multiplier;
     try {
       renderer.render({
         container: project.gridSpace,
@@ -238,6 +253,7 @@ export class BoardSnapshotService {
       });
     } finally {
       this._applyContentScale(project, liveScale);
+      texts.forEach((text, i) => (text.resolution = textResolutions[i]));
       project.setOverlayVisible(true);
       grid?.destroy({ children: true });
     }
@@ -251,12 +267,12 @@ export class BoardSnapshotService {
    * context, so even a large region stays cheap. Chunks overhanging the region
    * are clipped by the texture bounds.
    */
-  private _buildGrid(region: Rectangle, multiplier: number): Container {
+  private _buildGrid(region: Rectangle): Container {
     const gridSize = environment.gridSize;
     const context = this.graphicsProvider.getGraphicsContext(
       GridGraphics,
       GRID_CHUNK,
-      multiplier
+      REFERENCE_SCALE
     );
     const container = new Container();
     const startX = Math.floor(region.x / GRID_CHUNK) * GRID_CHUNK;
@@ -278,6 +294,17 @@ export class BoardSnapshotService {
     for (const component of project.components) component.applyScale(scale);
     for (const wire of project.wires) wire.applyScale(scale);
     project.connectionPoints.layer.applyScale(scale);
+  }
+
+  /** Collects every `Text` node under a container (for glyph-resolution tuning). */
+  private _collectTexts(container: Container): Text[] {
+    const out: Text[] = [];
+    const visit = (node: Container): void => {
+      if (node instanceof Text) out.push(node);
+      for (const child of node.children) visit(child as Container);
+    };
+    visit(container);
+    return out;
   }
 
   private _uncull(container: Container): void {
