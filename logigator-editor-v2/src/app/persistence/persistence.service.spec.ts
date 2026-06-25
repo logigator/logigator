@@ -20,6 +20,8 @@ import { CustomComponentRegistry } from '../components/custom/custom-component-r
 import { ComponentProviderService } from '../components/component-provider.service';
 import { CustomComponent } from '../components/custom/custom-component';
 import { Component } from '../components/component';
+import { Point } from 'pixi.js';
+import { MoveComponentsAction } from '../actions/actions/move-components.action';
 import { SerializedCircuitBody } from './serialized-circuit';
 import {
   FakeBrowserComponentStore,
@@ -736,6 +738,84 @@ describe('PersistenceService', () => {
         service.importProjectFromJson('{not json')
       ).rejects.toThrowError(InvalidFileError);
       expect(browserStore.records.size).toBe(0);
+    });
+  });
+
+  describe('Project Dump', () => {
+    it('round-trips element ids and the undo history', async () => {
+      const source = await service.importProjectFromJson(
+        JSON.stringify({
+          version: 1,
+          name: 'Dumpee',
+          components: [
+            { type: 1, pos: [2, 3], options: {} },
+            { type: 1, pos: [5, 6], options: {} }
+          ],
+          wires: [{ pos: [0, 0], direction: 0, length: 4 }],
+          definitions: []
+        })
+      );
+
+      // Push a real action so the history is non-empty and the body reflects it.
+      const movedId = Array.from(source.components)[0].id;
+      source.actionManager.push(
+        new MoveComponentsAction({
+          id: movedId,
+          oldPos: new Point(2, 3),
+          newPos: new Point(9, 9)
+        })
+      );
+      const sourceComponentIds = Array.from(source.components).map((c) => c.id);
+      const sourceWireIds = Array.from(source.wires).map((w) => w.id);
+
+      const dumpJson = JSON.stringify(service.buildProjectDump(source));
+      const restored = await service.importProjectDump(dumpJson);
+
+      // Ids re-stamped exactly (the native format drops them on load).
+      expect(Array.from(restored.components).map((c) => c.id)).toEqual(
+        sourceComponentIds
+      );
+      expect(Array.from(restored.wires).map((w) => w.id)).toEqual(
+        sourceWireIds
+      );
+
+      // History + pointer restored without re-applying.
+      expect(restored.actionManager.history.length).toBe(1);
+      expect(restored.actionManager.pointer).toBe(1);
+
+      // The restored action targets the re-stamped element: the body shows the
+      // moved position, and undo reverts it.
+      const moved = restored.getComponentById(movedId)!;
+      expect([moved.position.x, moved.position.y]).toEqual([9, 9]);
+      restored.actionManager.undo();
+      expect([moved.position.x, moved.position.y]).toEqual([2, 3]);
+    });
+
+    it('skips id/history restore when the element count changed', async () => {
+      const source = await service.importProjectFromJson(
+        JSON.stringify({
+          version: 1,
+          name: 'Dumpee',
+          components: [{ type: 1, pos: [2, 3], options: {} }],
+          wires: [],
+          definitions: []
+        })
+      );
+      source.actionManager.push(
+        new MoveComponentsAction({
+          id: Array.from(source.components)[0].id,
+          oldPos: new Point(2, 3),
+          newPos: new Point(9, 9)
+        })
+      );
+
+      // Tamper with the saved id list so it no longer lines up with the body.
+      const dump = service.buildProjectDump(source);
+      dump.componentIds = [...dump.componentIds, 999];
+      const restored = await service.importProjectDump(JSON.stringify(dump));
+
+      expect(Array.from(restored.components).length).toBe(1);
+      expect(restored.actionManager.history.length).toBe(0);
     });
   });
 
