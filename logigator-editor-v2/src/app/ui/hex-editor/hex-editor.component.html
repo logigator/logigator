@@ -157,18 +157,20 @@
 
   <!-- Status box: the focused cell's address and value. -->
   <div
-    class="mt-2 px-3 py-1.5 rounded-md border border-border bg-content text-sm flex flex-wrap items-center gap-x-4 gap-y-1"
+    class="max-w-full mt-2 px-3 py-1.5 rounded-md border border-border bg-content text-sm flex flex-wrap items-center gap-x-4 gap-y-1"
   >
     @if (active(); as a) {
-      <span>
+      <div class="flex gap-1 max-w-full">
         <span class="text-muted">{{ t('hexEditor.activeAddress') }}:</span>
         <span class="font-mono">0x{{ a.address }}</span>
-      </span>
-      <span>
+      </div>
+      <div class="flex gap-1 max-w-full">
         <span class="text-muted">{{ t('hexEditor.value') }}:</span>
-        <span class="font-mono">{{ a.value }}</span>
+        <span class="overflow-hidden font-mono text-ellipsis">{{
+          a.value
+        }}</span>
         <span class="text-muted">({{ a.decimal }})</span>
-      </span>
+      </div>
     } @else {
       <span class="text-muted">{{ t('hexEditor.noActiveCell') }}</span>
     }
