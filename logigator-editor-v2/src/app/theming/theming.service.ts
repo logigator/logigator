@@ -38,4 +38,14 @@ export class ThemingService {
     const theme = localStorage.getItem(STORAGE_KEY) as ThemeType | null;
     this.setTheme(theme && THEMES[theme] ? theme : ThemeType.DARK);
   }
+
+  /**
+   * Sets the active theme type without the DOM-class / localStorage side
+   * effects of {@link setTheme}. Intended for briefly switching theme to render
+   * an offscreen snapshot (dual-theme previews); always pair it with a
+   * synchronous restore.
+   */
+  public setActiveThemeType(type: ThemeType): void {
+    this._currentThemeType.set(type);
+  }
 }

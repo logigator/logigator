@@ -18,6 +18,7 @@ import { ComponentProviderService } from '../../components/component-provider.se
 import { deriveSummary } from '../../custom-component/definition-derivation';
 import { buildProject } from '../circuit-builder';
 import { AuthRequiredError, formatHttpError } from '../persistence-errors';
+import { BoardSnapshotService } from '../../rendering/board-snapshot.service';
 
 /**
  * Server transport + codec + metadata + build, returning `Project`s. Owns every
@@ -37,6 +38,7 @@ export class ServerPersistenceGateway {
   private readonly metadataStore = inject(ProjectMetadataStore);
   private readonly toast = inject(ToastService);
   private readonly logging = inject(LoggingService);
+  private readonly snapshot = inject(BoardSnapshotService);
 
   async loadProject(uuid: string): Promise<Project> {
     const detail = await firstValueFrom(this.projectApi.open(uuid));
@@ -151,6 +153,7 @@ export class ServerPersistenceGateway {
       this.metadataStore.clearDirty(project);
     }
     this.toast.success('Project saved');
+    void this._uploadPreview(project, response.id);
     return response.id;
   }
 
@@ -382,6 +385,7 @@ export class ServerPersistenceGateway {
         this.metadataStore.clearDirty(project);
       }
       this.toast.success('Project saved');
+      void this._uploadPreview(project, metadata.id);
     } catch (err) {
       if (this._isVersionMismatch(err)) {
         this.logging.error(
@@ -458,6 +462,29 @@ export class ServerPersistenceGateway {
         this.toast.error(`Save failed: ${formatHttpError(err)}`);
       }
       throw err;
+    }
+  }
+
+  /**
+   * Renders and uploads dark + light project thumbnails after a successful
+   * server save. Fire-and-forget: a preview is a nice-to-have, so any failure
+   * is logged and swallowed rather than surfaced or allowed to fail the save.
+   * Order matters — the backend maps `previews[0]` to the dark slot and
+   * `previews[1]` to the light slot.
+   */
+  private async _uploadPreview(project: Project, projectId: string): Promise<void> {
+    try {
+      const previews = await this.snapshot.generatePreviews(project);
+      if (!previews) return;
+      const formData = new FormData();
+      formData.append('previews', previews.dark, 'preview-dark.png');
+      formData.append('previews', previews.light, 'preview-light.png');
+      await firstValueFrom(this.projectApi.updatePreviews(projectId, formData));
+    } catch (err) {
+      this.logging.warn(
+        `Preview upload failed: ${formatHttpError(err)}`,
+        'ServerPersistenceGateway'
+      );
     }
   }
 

@@ -620,6 +620,52 @@ describe('Project.toggleConnectionAt', () => {
   });
 });
 
+describe('Project.getContentBounds', () => {
+  let project: Project;
+
+  beforeEach(() => {
+    configureTestBed();
+    project = new Project();
+  });
+
+  afterEach(() => {
+    project.destroy({ children: true });
+  });
+
+  it('returns null for an empty project', () => {
+    expect(project.getContentBounds()).toBeNull();
+  });
+
+  it('returns a single component’s gridBounds', () => {
+    const comp = makeAnd(2);
+    comp.position.set(3, 0);
+    project.addComponent(comp);
+
+    const b = project.getContentBounds()!;
+    const g = comp.gridBounds;
+    expect(b.x).toBeCloseTo(g.x);
+    expect(b.y).toBeCloseTo(g.y);
+    expect(b.right).toBeCloseTo(g.right);
+    expect(b.bottom).toBeCloseTo(g.bottom);
+  });
+
+  it('unions components and wires across the board', () => {
+    // AND at (3,0): gridBounds x∈[2.5,5.5], y∈[0,2]
+    const comp = makeAnd(2);
+    comp.position.set(3, 0);
+    project.addComponent(comp);
+    // Vertical wire at (2,5): gridBounds x∈[2,3], y∈[5,10]
+    const wire = makeWire(2, 5, WireDirection.VERTICAL, 4);
+    project.addWire(wire);
+
+    const b = project.getContentBounds()!;
+    expect(b.x).toBeCloseTo(2); // wire left edge
+    expect(b.y).toBeCloseTo(0); // component top
+    expect(b.right).toBeCloseTo(5.5); // component output stub tip
+    expect(b.bottom).toBeCloseTo(10); // wire bottom
+  });
+});
+
 describe('Project portsChange$ rebucket', () => {
   let project: Project;
 

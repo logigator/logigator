@@ -287,6 +287,27 @@ const en = {
     info: 'Info',
     debug: 'Debug'
   },
+  imageExport: {
+    title: 'Export image',
+    project: 'Project',
+    format: 'Format',
+    resolution: 'Resolution',
+    background: 'Background',
+    backgroundHint: 'Theme color and grid',
+    quality: 'Quality',
+    dimensions: '{{width}} × {{height}} px',
+    clampedHint: '(reduced to fit device limits)',
+    export: 'Export',
+    cancel: 'Cancel',
+    error: {
+      unavailable: 'The editor is not ready yet. Try again in a moment.',
+      failed: 'Image export failed.'
+    },
+    warn: {
+      clamped:
+        'Resolution reduced to fit device limits; exported at {{width}} × {{height}} px.'
+    }
+  },
   shortcuts: {
     title: 'Keyboard Shortcuts',
     actions: {
