@@ -69,6 +69,23 @@ export class ImageExportService {
     return this._maxMultiplier(this.snapshot.computeRegion(project));
   }
 
+  /**
+   * Output dimensions for a project at a multiplier, with the effective
+   * (possibly clamped) value applied. Drives the dialog's live size preview and
+   * needs no renderer (bounds-only).
+   */
+  public previewSize(
+    project: Project,
+    multiplier: number
+  ): { width: number; height: number; clamped: boolean } {
+    const region = this.snapshot.computeRegion(project);
+    const effective = Math.min(multiplier, this._maxMultiplier(region));
+    return {
+      ...this.snapshot.outputSize(region, effective),
+      clamped: effective < multiplier
+    };
+  }
+
   public async exportImage(options: ImageExportOptions): Promise<void> {
     if (!this.snapshot.available) {
       this.toast.error(this.transloco.translate('imageExport.error.unavailable'));

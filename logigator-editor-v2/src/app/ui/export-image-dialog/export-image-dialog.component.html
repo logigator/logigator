@@ -1,0 +1,84 @@
+<form *transloco="let t" class="flex flex-col gap-4" (ngSubmit)="export()">
+  @if (projectOptions().length > 1) {
+    <div class="flex flex-col gap-1">
+      <label for="export-project">{{ t('imageExport.project') }}</label>
+      <p-select
+        inputId="export-project"
+        [options]="projectOptions()"
+        optionLabel="label"
+        optionValue="value"
+        [ngModel]="project()"
+        (ngModelChange)="project.set($event)"
+        [ngModelOptions]="{ standalone: true }"
+      />
+    </div>
+  }
+  <div class="flex flex-col gap-1">
+    <span>{{ t('imageExport.format') }}</span>
+    <p-selectButton
+      [options]="formatOptions"
+      optionLabel="label"
+      optionValue="value"
+      [allowEmpty]="false"
+      [ngModel]="format()"
+      (ngModelChange)="format.set($event)"
+      [ngModelOptions]="{ standalone: true }"
+    />
+  </div>
+  <div class="flex flex-col gap-1">
+    <span>{{ t('imageExport.resolution') }}</span>
+    <p-selectButton
+      [options]="resolutionOptions"
+      optionLabel="label"
+      optionValue="value"
+      [allowEmpty]="false"
+      [ngModel]="multiplier()"
+      (ngModelChange)="multiplier.set($event)"
+      [ngModelOptions]="{ standalone: true }"
+    />
+    @if (dimensions(); as d) {
+      <span class="text-sm text-muted">
+        {{ t('imageExport.dimensions', { width: d.width, height: d.height }) }}
+      </span>
+    }
+  </div>
+  <div class="flex items-center gap-2">
+    <p-toggleswitch
+      inputId="export-background"
+      [ngModel]="background()"
+      (ngModelChange)="background.set($event)"
+      [ngModelOptions]="{ standalone: true }"
+    />
+    <label for="export-background">{{ t('imageExport.background') }}</label>
+    <span class="text-sm text-muted">{{ t('imageExport.backgroundHint') }}</span>
+  </div>
+  @if (showQuality()) {
+    <div class="flex flex-col gap-1">
+      <label for="export-quality"
+        >{{ t('imageExport.quality') }} — {{ quality() }}%</label
+      >
+      <p-slider
+        [min]="10"
+        [max]="100"
+        [ngModel]="quality()"
+        (ngModelChange)="quality.set($event)"
+        [ngModelOptions]="{ standalone: true }"
+      />
+    </div>
+  }
+  <div class="flex justify-end gap-2">
+    <p-button
+      type="button"
+      severity="secondary"
+      [outlined]="true"
+      [label]="t('imageExport.cancel')"
+      (onClick)="cancel()"
+    />
+    <p-button
+      type="submit"
+      [label]="t('imageExport.export')"
+      [disabled]="!canExport"
+      [loading]="exporting()"
+    />
+  </div>
+</form>

@@ -14,6 +14,7 @@ import { SaveCoordinatorService } from './save-coordinator.service';
 import { OpenProjectDialogComponent } from './open-project-dialog/open-project-dialog.component';
 import { NewComponentDialogComponent } from './new-component-dialog/new-component-dialog.component';
 import { ShortcutManagerComponent } from '../shortcuts/shortcut-manager/shortcut-manager.component';
+import { ExportImageDialogComponent } from './export-image-dialog/export-image-dialog.component';
 
 /**
  * Builds the File/Edit/View/Help menu model and owns the commands behind it.
@@ -89,7 +90,8 @@ export class EditorMenuService {
           {
             label: this.translocoService.translate(
               'titleBar.menuBar.file.items.generateImage.label'
-            )
+            ),
+            command: () => this.generateImage()
           }
         ]
       },
@@ -243,6 +245,15 @@ export class EditorMenuService {
     if (project) {
       this.persistenceService.exportProjectToFile(project);
     }
+  }
+
+  private generateImage(): void {
+    this.dialogService.open(ExportImageDialogComponent, {
+      header: this.translocoService.translate('imageExport.title'),
+      width: '28rem',
+      modal: true,
+      closable: true
+    });
   }
 
   private newComponent(): void {
