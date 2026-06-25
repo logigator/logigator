@@ -29,6 +29,8 @@ export interface SnapshotOptions {
 export const EXPORT_MARGIN_GRID = 1;
 /** Fallback content box (grid units) used when the project is empty. */
 export const EMPTY_FALLBACK_GRID = 16;
+/** Default edge length (px) of a server-save preview. */
+export const PREVIEW_SIZE = 1024;
 /** Grid units per export-grid chunk; matches the live {@link Grid}. */
 const GRID_CHUNK = 32;
 
@@ -107,6 +109,29 @@ export class BoardSnapshotService {
   ): HTMLCanvasElement {
     const region = this.computeRegion(project, options.marginGrid);
     return this.renderRegionToCanvas(project, region, options);
+  }
+
+  /**
+   * Renders a square-ish PNG preview of the project (longest side fit to
+   * `sizePx`) for server-side thumbnails. Uses a solid theme background for a
+   * clean thumbnail. Resolves `null` when no renderer is available so the save
+   * flow can skip the upload silently.
+   */
+  public async generatePreview(
+    project: Project,
+    sizePx: number = PREVIEW_SIZE
+  ): Promise<Blob | null> {
+    if (!this.available) return null;
+    const region = this.computeRegion(project);
+    const longestUnits = Math.max(region.width, region.height);
+    const multiplier = sizePx / (longestUnits * environment.gridSize);
+    const canvas = this.renderProjectToCanvas(project, {
+      multiplier,
+      background: 'solid'
+    });
+    return new Promise((resolve) =>
+      canvas.toBlob((blob) => resolve(blob), 'image/png')
+    );
   }
 
   /** Renders a region into an `HTMLCanvasElement`. See {@link renderProjectToCanvas}. */

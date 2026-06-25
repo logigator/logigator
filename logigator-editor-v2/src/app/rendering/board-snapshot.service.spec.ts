@@ -25,7 +25,13 @@ describe('BoardSnapshotService', () => {
 
     renderCalls = [];
     const renderer = {
-      render: vi.fn((opts: RenderCall) => renderCalls.push(opts))
+      render: vi.fn((opts: RenderCall) => renderCalls.push(opts)),
+      extract: {
+        canvas: () =>
+          ({
+            toBlob: (cb: BlobCallback) => cb(new Blob(['x']))
+          }) as unknown as HTMLCanvasElement
+      }
     } as unknown as Renderer;
     TestBed.inject(RendererHandleService).set(renderer);
     service = TestBed.inject(BoardSnapshotService);
@@ -113,6 +119,22 @@ describe('BoardSnapshotService', () => {
     expect(scales).toContain(3); // export scale applied
     expect(scales.at(-1)).toBe(project.scale.x); // restored to live scale last
     texture.destroy(true);
+  });
+
+  it('generatePreview returns null without a renderer', async () => {
+    TestBed.inject(RendererHandleService).set(null);
+    expect(await service.generatePreview(project, 512)).toBeNull();
+  });
+
+  it('generatePreview fits the longest side to the requested size', async () => {
+    const comp = makeAnd(2);
+    comp.position.set(0, 0);
+    project.addComponent(comp);
+
+    const blob = await service.generatePreview(project, 512);
+    expect(blob).not.toBeNull();
+    const target = renderCalls.at(-1)!.target;
+    expect(Math.max(target.width, target.height)).toBe(512);
   });
 
   it('restores overlay visibility after rendering', () => {
