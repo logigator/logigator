@@ -238,6 +238,21 @@ const en = {
     browserWarning:
       'Browser projects are not persisted across devices and may be lost.'
   },
+  newComponentDialog: {
+    name: 'Name',
+    symbol: 'Symbol',
+    description: 'Description',
+    store: 'Store',
+    storeServer: 'Account',
+    storeBrowser: 'Browser',
+    notLoggedIn: 'You must be logged in to save components to your account.',
+    public: 'Public',
+    publicInfo:
+      'Public components are published on your profile and accessible to everyone via a share link. Private components are only visible to you.',
+    browserWarning:
+      'Browser components are not persisted across devices and may be lost.',
+    create: 'Create'
+  },
   toolBar: {
     save: 'Save',
     open: 'Open',

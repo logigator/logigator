@@ -1,6 +1,6 @@
-<form class="flex flex-col gap-4" (ngSubmit)="create()">
+<form *transloco="let t" class="flex flex-col gap-4" (ngSubmit)="create()">
   <div class="flex flex-col gap-1">
-    <label for="new-component-name">Name</label>
+    <label for="new-component-name">{{ t('newComponentDialog.name') }}</label>
     <input
       pInputText
       id="new-component-name"
@@ -12,7 +12,9 @@
     />
   </div>
   <div class="flex flex-col gap-1">
-    <label for="new-component-symbol">Symbol</label>
+    <label for="new-component-symbol">{{
+      t('newComponentDialog.symbol')
+    }}</label>
     <input
       pInputText
       id="new-component-symbol"
@@ -24,7 +26,9 @@
     />
   </div>
   <div class="flex flex-col gap-1">
-    <label for="new-component-description">Description</label>
+    <label for="new-component-description">{{
+      t('newComponentDialog.description')
+    }}</label>
     <input
       pInputText
       id="new-component-description"
@@ -35,43 +39,49 @@
     />
   </div>
   <div class="flex flex-col gap-1">
-    <span>Store</span>
-    <div class="flex gap-4 items-center">
-      <label class="flex gap-2 items-center">
-        <input
-          type="radio"
-          name="new-component-source"
-          value="server"
-          [ngModel]="source()"
-          (ngModelChange)="source.set($event)"
-          [ngModelOptions]="{ standalone: true }"
-        />
-        Account
-      </label>
-      <label class="flex gap-2 items-center">
-        <input
-          type="radio"
-          name="new-component-source"
-          value="browser"
-          [ngModel]="source()"
-          (ngModelChange)="source.set($event)"
-          [ngModelOptions]="{ standalone: true }"
-        />
-        Browser
-      </label>
-    </div>
-  </div>
-  <div class="flex gap-2 items-center">
-    <p-checkbox
-      inputId="new-component-public"
-      [binary]="true"
-      [ngModel]="isPublic()"
-      (ngModelChange)="isPublic.set($event)"
+    <span>{{ t('newComponentDialog.store') }}</span>
+    <p-selectButton
+      [options]="sourceOptions"
+      optionLabel="label"
+      optionValue="value"
+      [allowEmpty]="false"
+      [ngModel]="source()"
+      (ngModelChange)="source.set($event)"
       [ngModelOptions]="{ standalone: true }"
     />
-    <label for="new-component-public">Public</label>
   </div>
+  @if (source() === 'server') {
+    @if (!userService.user()) {
+      <app-message severity="warn">
+        {{ t('newComponentDialog.notLoggedIn') }}
+      </app-message>
+    } @else {
+      <div class="flex gap-2 items-center">
+        <p-toggleswitch
+          inputId="new-component-public"
+          [ngModel]="isPublic()"
+          (ngModelChange)="isPublic.set($event)"
+          [ngModelOptions]="{ standalone: true }"
+        />
+        <label for="new-component-public">{{
+          t('newComponentDialog.public')
+        }}</label>
+        <i
+          class="ph ph-info cursor-help text-surface-500"
+          [pTooltip]="t('newComponentDialog.publicInfo')"
+        ></i>
+      </div>
+    }
+  } @else {
+    <app-message severity="info">
+      {{ t('newComponentDialog.browserWarning') }}
+    </app-message>
+  }
   <div class="flex justify-end">
-    <p-button type="submit" label="Create" [disabled]="!canCreate" />
+    <p-button
+      type="submit"
+      [label]="t('newComponentDialog.create')"
+      [disabled]="!canCreate"
+    />
   </div>
 </form>

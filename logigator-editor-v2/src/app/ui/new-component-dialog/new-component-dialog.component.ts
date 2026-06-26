@@ -7,9 +7,14 @@ import {
 import { FormsModule } from '@angular/forms';
 import { DynamicDialogRef } from 'primeng/dynamicdialog';
 import { InputTextModule } from 'primeng/inputtext';
-import { CheckboxModule } from 'primeng/checkbox';
+import { ToggleSwitchModule } from 'primeng/toggleswitch';
+import { SelectButtonModule } from 'primeng/selectbutton';
+import { TooltipModule } from 'primeng/tooltip';
 import { Button } from 'primeng/button';
+import { TranslocoDirective, TranslocoService } from '@jsverse/transloco';
 import { CustomComponentService } from '../../custom-component/custom-component.service';
+import { UserService } from '../../user/user.service';
+import { MessageComponent } from '../message/message.component';
 
 /**
  * Collects the metadata for a new custom component (name, symbol, description,
@@ -19,22 +24,47 @@ import { CustomComponentService } from '../../custom-component/custom-component.
  */
 @Component({
   selector: 'app-new-component-dialog',
-  imports: [FormsModule, InputTextModule, CheckboxModule, Button],
+  imports: [
+    FormsModule,
+    InputTextModule,
+    ToggleSwitchModule,
+    SelectButtonModule,
+    TooltipModule,
+    Button,
+    TranslocoDirective,
+    MessageComponent
+  ],
   templateUrl: './new-component-dialog.component.html',
   changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class NewComponentDialogComponent {
   private readonly ref = inject(DynamicDialogRef);
   private readonly customComponentService = inject(CustomComponentService);
+  private readonly transloco = inject(TranslocoService);
+  protected readonly userService = inject(UserService);
+
+  protected readonly sourceOptions = [
+    {
+      label: this.transloco.translate('newComponentDialog.storeServer'),
+      value: 'server' as const
+    },
+    {
+      label: this.transloco.translate('newComponentDialog.storeBrowser'),
+      value: 'browser' as const
+    }
+  ];
 
   protected readonly name = signal('');
   protected readonly symbol = signal('');
   protected readonly description = signal('');
-  protected readonly isPublic = signal(false);
+  protected readonly isPublic = signal(true);
   protected readonly source = signal<'server' | 'browser'>('server');
 
   protected get canCreate(): boolean {
-    return this.name().trim().length > 0 && this.symbol().trim().length > 0;
+    if (this.name().trim().length === 0 || this.symbol().trim().length === 0)
+      return false;
+    if (this.source() === 'server' && !this.userService.user()) return false;
+    return true;
   }
 
   protected create(): void {
