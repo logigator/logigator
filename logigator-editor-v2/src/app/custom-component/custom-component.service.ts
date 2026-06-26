@@ -9,6 +9,8 @@ import { CustomComponent } from '../components/custom/custom-component';
 import { Action } from '../actions/action';
 import { UpdateInstanceAction } from '../actions/actions/update-instance.action';
 import { ToastService } from '../logging/toast.service';
+import { ConfirmationService } from 'primeng/api';
+import { UserService } from '../user/user.service';
 import { DefinitionBinding } from './definition-binding';
 
 export interface NewComponentMeta {
@@ -39,6 +41,8 @@ export class CustomComponentService {
   private readonly metadataStore = inject(ProjectMetadataStore);
   private readonly persistence = inject(PersistenceService);
   private readonly toast = inject(ToastService);
+  private readonly confirmation = inject(ConfirmationService);
+  private readonly user = inject(UserService);
 
   private readonly _bindings = new Map<Project, DefinitionBinding>();
 
@@ -185,6 +189,67 @@ export class CustomComponentService {
     // real instance is created by the action's add on do(). Drop this one.
     replacement.destroy({ children: true });
     return action;
+  }
+
+  /**
+   * Uploads (moves) a local master to the user's cloud library. Requires being
+   * signed in. When the component embeds other local components, a confirmation
+   * first lists them — they ride along as embedded copies and stay in the local
+   * library; only the chosen component moves to the cloud. A no-dependency upload
+   * proceeds straight away.
+   */
+  public async uploadComponent(masterTypeId: number): Promise<void> {
+    const def = this.registry.getDefinition(masterTypeId);
+    if (!def || def.kind !== 'master' || def.source !== 'browser') return;
+
+    if (this.user.user() === null) {
+      this.toast.error('Sign in to upload components to the cloud');
+      return;
+    }
+
+    let deps: string[];
+    try {
+      deps = await this.persistence.localDependencyNames(masterTypeId);
+    } catch {
+      deps = [];
+    }
+
+    const run = async (): Promise<void> => {
+      try {
+        await this.persistence.promoteComponentToServer(masterTypeId);
+        this.toast.success('Component uploaded to the cloud');
+      } catch {
+        this.toast.error('Failed to upload component');
+      }
+    };
+
+    if (deps.length === 0) {
+      await run();
+      return;
+    }
+
+    this.confirmation.confirm({
+      header: 'Upload to cloud',
+      message:
+        `“${def.name}” uses these local components, which will be uploaded ` +
+        `as copies (they stay in your local library):\n\n${deps
+          .map((d) => `• ${d}`)
+          .join('\n')}`,
+      acceptLabel: 'Upload',
+      rejectLabel: 'Cancel',
+      rejectButtonProps: { severity: 'secondary', outlined: true },
+      accept: () => void run()
+    });
+  }
+
+  /**
+   * Ensures a master's circuit is loaded before it is placed or updated. Cloud
+   * masters are preloaded summary-only (no circuit); this lazily fetches the
+   * circuit on first use. No-op for built-ins, browser masters, and already-loaded
+   * masters.
+   */
+  public ensureMasterCircuit(masterTypeId: number): Promise<void> {
+    return this.persistence.ensureServerMasterCircuit(masterTypeId);
   }
 
   private _findOpenEditor(masterId: string): Project | undefined {

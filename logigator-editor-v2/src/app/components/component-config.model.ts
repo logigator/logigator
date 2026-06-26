@@ -60,6 +60,12 @@ export interface ComponentConfigView<
   symbol: string;
   name: LocalizableText;
   description: LocalizableText;
+  /**
+   * Which library a custom component lives in — `'server'` (cloud) or
+   * `'browser'` (local). A live view of its definition's source, so it tracks an
+   * upload-to-cloud promotion. Absent on built-ins (which have no storage location).
+   */
+  source?: 'server' | 'browser';
   options: TOptions;
   /**
    * Valueless inspector actions (buttons) rendered after the options form, each

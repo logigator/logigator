@@ -17,6 +17,7 @@ import { CustomComponentRegistry } from '../../components/custom/custom-componen
 import { ComponentProviderService } from '../../components/component-provider.service';
 import { deriveSummary } from '../../custom-component/definition-derivation';
 import { buildProject } from '../circuit-builder';
+import type { SerializedCircuitBody } from '../serialized-circuit';
 import { AuthRequiredError, formatHttpError } from '../persistence-errors';
 import { BoardSnapshotService } from '../../rendering/board-snapshot.service';
 
@@ -311,6 +312,56 @@ export class ServerPersistenceGateway {
   }
 
   /**
+   * Promotes a browser master to the server library: POSTs `/api/component` to
+   * mint the record, then PUTs the given (temp) project's circuit — embedding a
+   * self-contained snapshot of every custom it places, exactly like a normal
+   * component save. Returns the new server id + save-time version. The caller owns
+   * flipping the registry/metadata and removing the browser record; this method is
+   * pure transport (no local state changes), so a failed POST/PUT leaves nothing
+   * to unwind.
+   */
+  async promoteComponentFromProject(
+    project: Project,
+    meta: {
+      name: string;
+      symbol: string;
+      description: string;
+      isPublic?: boolean;
+    }
+  ): Promise<{ id: string; version: number }> {
+    const response = await firstValueFrom(
+      this.componentApi.create({
+        name: meta.name,
+        symbol: meta.symbol,
+        description: meta.description,
+        public: meta.isPublic ? 'true' : 'false'
+      })
+    );
+
+    const summary = deriveSummary(project);
+    const { elements, dependencies } = server.serializeProject(
+      project,
+      this.registry,
+      this.provider
+    );
+    const saveResponse = await firstValueFrom(
+      this.componentApi.save(response.id, {
+        oldHash: response.elementsFile?.hash ?? '',
+        dependencies,
+        elements,
+        numInputs: summary.numInputs,
+        numOutputs: summary.numOutputs,
+        labels: summary.labels
+      })
+    );
+
+    return {
+      id: response.id,
+      version: saveResponse.version ?? response.version ?? 1
+    };
+  }
+
+  /**
    * Loads a **server** library master into a fresh editor Project (the universal
    * embedded-snapshot path: the response's `dependencies[].snapshot` are revived
    * by the `v0ToV1` migration, so no extra fetches). Registers the master,
@@ -356,6 +407,62 @@ export class ServerPersistenceGateway {
     });
 
     return { project, masterTypeId };
+  }
+
+  /**
+   * Registers every cloud (server) library master into the registry at startup so
+   * they show in the palette and resolve through the promotion alias map after a
+   * reload (the alias points at a server id that must be loaded to be useful).
+   *
+   * Uses only the list response (`GET /api/component`) — one request, no circuits.
+   * The summary carries everything a master needs except its circuit body, which
+   * is fetched lazily on first placement / update (see
+   * {@link PersistenceService.ensureServerMasterCircuit}). Best-effort: skips when
+   * unauthenticated/offline (the list call fails). Masters already known (loaded by
+   * an open project) are left alone.
+   */
+  async preloadServerMasters(): Promise<void> {
+    let summaries;
+    try {
+      summaries = await firstValueFrom(this.componentApi.list());
+    } catch {
+      // Not authenticated (401) or offline — no cloud library to preload.
+      return;
+    }
+
+    for (const summary of summaries) {
+      if (this.registry.masterTypeIdForId(summary.id) !== undefined) continue;
+      this.registry.createMaster(
+        {
+          id: summary.id,
+          version: summary.version ?? 1,
+          name: summary.name,
+          symbol: summary.symbol,
+          description: summary.description,
+          numInputs: summary.numInputs,
+          numOutputs: summary.numOutputs,
+          labels: summary.labels
+          // circuit omitted — loaded on demand by ensureServerMasterCircuit
+        },
+        'server'
+      );
+    }
+  }
+
+  /**
+   * Fetches a server component's circuit body (GET `/api/component/:id`) for lazy
+   * hydration of a summary-only master. Used the first time a preloaded cloud
+   * master is placed or updated.
+   */
+  async loadComponentCircuit(uuid: string): Promise<SerializedCircuitBody> {
+    const detail = await firstValueFrom(this.componentApi.open(uuid));
+    return this.circuitFile.decodeToBodyFromData(
+      server.toCircuitFileV0({
+        name: detail.name,
+        elements: detail.elements,
+        dependencies: detail.dependencies
+      })
+    );
   }
 
   async saveProject(project: Project): Promise<void> {

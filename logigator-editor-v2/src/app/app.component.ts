@@ -138,7 +138,9 @@ export class AppComponent {
       }
     });
 
+    void this.persistenceService.preloadComponentIdAliases();
     void this.persistenceService.preloadBrowserMasters();
+    void this.persistenceService.preloadServerMasters();
 
     if (!this.routerService.matches(this.location.path())) {
       this.persistenceService.createAndSetEmptyProject();

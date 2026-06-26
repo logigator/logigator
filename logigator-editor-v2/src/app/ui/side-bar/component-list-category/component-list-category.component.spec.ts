@@ -27,12 +27,13 @@ describe('ComponentListCategoryComponent', () => {
     expect(component).toBeTruthy();
   });
 
-  it('arms placement and closes the open mobile sheet on selection', () => {
+  it('arms placement and closes the open mobile sheet on selection', async () => {
     const mobileUi = TestBed.inject(MobileUiService);
     const workMode = TestBed.inject(WorkModeService);
     mobileUi.open('palette');
 
-    component.selectComponent(andComponentConfig);
+    // selectComponent awaits a (no-op for built-ins) circuit-ensure before arming.
+    await component.selectComponent(andComponentConfig);
 
     expect(workMode.mode()).toBe(WorkMode.COMPONENT_PLACEMENT);
     expect(workMode.selectedComponentType()).toBe(andComponentConfig.type);

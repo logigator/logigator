@@ -4,6 +4,7 @@ import { Observable } from 'rxjs';
 import { CircuitFileService } from './file/circuit-file.service';
 import { BrowserProjectStore } from './browser/browser-project.store';
 import { BrowserComponentStore } from './browser/browser-component.store';
+import { ComponentIdMapStore } from './browser/component-id-map.store';
 import {
   BrowserComponentSummary,
   BrowserProjectSummary
@@ -21,6 +22,7 @@ import { ComponentProviderService } from '../components/component-provider.servi
 import { deriveSummary } from '../custom-component/definition-derivation';
 import { DefinitionBinding } from '../custom-component/definition-binding';
 import { buildProject, instantiateBody } from './circuit-builder';
+import { collectSnapshots } from './snapshots';
 import { formatHttpError } from './persistence-errors';
 import { ServerPersistenceGateway } from './server/server-persistence.gateway';
 import { downloadBlob } from '../utils/download';
@@ -34,6 +36,7 @@ export class PersistenceService {
   private readonly circuitFile = inject(CircuitFileService);
   private readonly browserStore = inject(BrowserProjectStore);
   private readonly browserComponentStore = inject(BrowserComponentStore);
+  private readonly componentIdMapStore = inject(ComponentIdMapStore);
   private readonly registry = inject(CustomComponentRegistry);
   private readonly provider = inject(ComponentProviderService);
   private readonly metadataStore = inject(ProjectMetadataStore);
@@ -499,6 +502,132 @@ export class PersistenceService {
         }
       })
     );
+  }
+
+  /**
+   * Registers all of the signed-in user's cloud library masters into the registry
+   * at startup (so they appear in the palette and resolve through the promotion
+   * alias after a reload). Delegates to the server gateway; a no-op when signed
+   * out. Call once at startup, after {@link preloadComponentIdAliases}.
+   */
+  preloadServerMasters(): Promise<void> {
+    return this.server.preloadServerMasters();
+  }
+
+  /**
+   * Lazily hydrates a preloaded server master's circuit (GET `/api/component/:id`)
+   * the first time it is needed — placement or update-to-latest. No-op for a master
+   * that is not server-sourced or whose circuit is already loaded. Safe to call
+   * repeatedly; only the first call for a given master fetches.
+   */
+  async ensureServerMasterCircuit(masterTypeId: number): Promise<void> {
+    const def = this.registry.getDefinition(masterTypeId);
+    if (
+      !def ||
+      def.kind !== 'master' ||
+      def.source !== 'server' ||
+      !def.id ||
+      def.circuit
+    ) {
+      return;
+    }
+    const circuit = await this.server.loadComponentCircuit(def.id);
+    this.registry.setMasterCircuit(masterTypeId, circuit);
+  }
+
+  /**
+   * Hydrates the registry's promotion alias map from the persistent id-map so
+   * components that embedded a master before it was uploaded to the cloud still
+   * resolve it (its id changed on promotion). Call once at startup, alongside
+   * {@link preloadBrowserMasters}. Best-effort: failures are logged, not thrown.
+   */
+  async preloadComponentIdAliases(): Promise<void> {
+    try {
+      const mappings = await this.componentIdMapStore.list();
+      for (const { id, newId } of mappings) {
+        this.registry.registerIdAlias(id, newId);
+      }
+    } catch {
+      this.logging.warn(
+        'Failed to load component id aliases',
+        'PersistenceService'
+      );
+    }
+  }
+
+  /**
+   * Names of the **local** custom components a browser master embeds (transitively),
+   * for the upload-to-cloud confirmation. Built from the master's stored circuit:
+   * each embedded custom whose provenance master is still browser-sourced (or can
+   * no longer be resolved) is listed — those already in the cloud are omitted.
+   * Returns an empty list for a server master or one with no local dependencies.
+   */
+  async localDependencyNames(masterTypeId: number): Promise<string[]> {
+    const def = this.registry.getDefinition(masterTypeId);
+    if (!def || def.kind !== 'master' || !def.id) return [];
+    const record = await this.browserComponentStore.get(def.id);
+    if (!record) return [];
+
+    const { components, wires } = this.circuitFile.fromJson(record.content);
+    const temp = buildProject(components, wires);
+    try {
+      const { definitions } = collectSnapshots(temp, this.registry);
+      const names = new Set<string>();
+      for (const dep of definitions) {
+        const masterId = dep.source?.id;
+        const resolvedMasterTypeId =
+          masterId !== undefined
+            ? this.registry.masterTypeIdForId(masterId)
+            : undefined;
+        const master =
+          resolvedMasterTypeId !== undefined
+            ? this.registry.getDefinition(resolvedMasterTypeId)
+            : undefined;
+        // Already in the cloud — its copy is fine, nothing local to mention.
+        if (master?.source === 'server') continue;
+        names.add(dep.name);
+      }
+      return [...names];
+    } finally {
+      temp.destroy();
+    }
+  }
+
+  /**
+   * Uploads (moves) a **browser** master to the server library: creates the server
+   * record and pushes its circuit (embedding a self-contained copy of every custom
+   * it places), flips the registry to the new server id while keeping the old id
+   * as an alias, persists that alias, then removes the browser record. The master
+   * keeps its session type id, so placed instances and the palette tile survive —
+   * the tile's indicator just flips to "cloud". Rejects if the master is not a
+   * local component or its stored record is missing.
+   */
+  async promoteComponentToServer(masterTypeId: number): Promise<void> {
+    const def = this.registry.getDefinition(masterTypeId);
+    if (!def || def.kind !== 'master' || def.source !== 'browser' || !def.id) {
+      throw new Error('Not a local component');
+    }
+    const oldId = def.id;
+    const record = await this.browserComponentStore.get(oldId);
+    if (!record) {
+      throw new Error(`No browser component with id ${oldId}`);
+    }
+
+    const { components, wires } = this.circuitFile.fromJson(record.content);
+    const temp = buildProject(components, wires);
+    try {
+      const { id: newId, version } =
+        await this.server.promoteComponentFromProject(temp, {
+          name: def.name,
+          symbol: def.symbol,
+          description: def.description
+        });
+      this.registry.promoteMaster(masterTypeId, newId, version);
+      await this.componentIdMapStore.put(oldId, newId);
+      await this.browserComponentStore.delete(oldId);
+    } finally {
+      temp.destroy();
+    }
   }
 
   /**

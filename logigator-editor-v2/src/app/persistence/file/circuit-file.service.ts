@@ -225,7 +225,17 @@ export class CircuitFileService {
     } catch {
       throw new InvalidFileError('Malformed JSON');
     }
-    const file = migrateToCurrent(parsed, this.migrationContext);
+    return this.decodeToBodyFromData(parsed);
+  }
+
+  /**
+   * The object-level form of {@link decodeToBody}: migrates an already-parsed
+   * document (e.g. a server response wrapped via `server.toCircuitFileV0`),
+   * ingests its embedded snapshots and returns the remapped body — no JSON parse,
+   * no live instances. Used by the startup preload of server masters.
+   */
+  decodeToBodyFromData(data: unknown): SerializedCircuitBody {
+    const file = migrateToCurrent(data, this.migrationContext);
     const remap = this.registry.ingestSnapshots(
       this._asArray(file.definitions, 'definitions')
     );

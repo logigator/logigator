@@ -6,6 +6,7 @@ import { CustomComponentDefinition } from './custom-component-definition.model';
 import { CustomComponent } from './custom-component';
 import { EditComponentAction } from './actions/edit-component.component-action';
 import { UpdateInstanceComponentAction } from './actions/update-instance.component-action';
+import { UploadComponentAction } from './actions/upload-component.component-action';
 
 /**
  * Option set for every custom component instance. Unlike built-ins, a custom
@@ -43,6 +44,11 @@ export function buildCustomComponentConfig(
     get symbol(): string {
       return def.symbol;
     },
+    // Live view of the definition's library, so the palette tile's cloud/local
+    // indicator tracks an upload-to-cloud promotion without rebuilding the config.
+    get source(): 'server' | 'browser' {
+      return def.source;
+    },
     // User-authored strings, shown verbatim (the literal arm of LocalizableText)
     // rather than resolved against the translation schema.
     get name(): LocalizableText {
@@ -57,7 +63,11 @@ export function buildCustomComponentConfig(
     // Inspector actions for a placed instance: open its master, and (when behind)
     // pull the latest. Rendered generically by the settings panel; only a
     // selected snapshot instance ever surfaces them.
-    actions: [new EditComponentAction(), new UpdateInstanceComponentAction()],
+    actions: [
+      new EditComponentAction(),
+      new UpdateInstanceComponentAction(),
+      new UploadComponentAction()
+    ],
     create: (options) => new CustomComponent(options, def, config)
   };
   return config;
