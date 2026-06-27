@@ -15,10 +15,11 @@ import { WorkModeService } from '../../../work-mode/work-mode.service';
 import { WorkMode } from '../../../work-mode/work-mode.enum';
 import { MobileUiService } from '../../../layout/mobile-ui.service';
 import { CustomComponentService } from '../../../custom-component/custom-component.service';
+import { SourceIndicatorComponent } from '../../source-indicator/source-indicator.component';
 
 @Component({
   selector: 'app-component-list-category',
-  imports: [],
+  imports: [SourceIndicatorComponent],
   templateUrl: './component-list-category.component.html',
   changeDetection: ChangeDetectionStrategy.OnPush
 })
@@ -54,8 +55,14 @@ export class ComponentListCategoryComponent {
   /** Arms the component for placement (sticky until another tool is chosen). */
   public async selectComponent(component: ComponentConfig): Promise<void> {
     // Cloud masters are preloaded summary-only; fetch the circuit before arming so
-    // the placement snapshot has real content. No-op for built-ins / loaded masters.
-    await this.customComponentService.ensureMasterCircuit(component.type);
+    // the placement snapshot has real content. No-op for built-ins / loaded
+    // masters; bail (the service has already toasted) if the cloud fetch fails so
+    // we never arm placement against empty content.
+    if (
+      !(await this.customComponentService.ensureMasterCircuit(component.type))
+    ) {
+      return;
+    }
     this.workModeService.setMode(WorkMode.COMPONENT_PLACEMENT);
     this.workModeService.setSelectedComponentType(component.type);
     // On mobile the palette is a sheet; picking from it dismisses it so the

@@ -6,22 +6,7 @@
       <span class="flex items-center gap-2 flex-wrap">
         <span>{{ text(settings.name) }}</span>
         @if (settings.source; as source) {
-          <span
-            class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-normal border"
-            [class]="
-              source === 'server'
-                ? 'text-sky-400 border-sky-400/40'
-                : 'text-muted border-border'
-            "
-            [title]="
-              source === 'server'
-                ? 'Saved in your cloud library'
-                : 'Saved in this browser only'
-            "
-          >
-            <i [class]="source === 'server' ? 'ph ph-cloud' : 'ph ph-browser'"></i>
-            {{ source === 'server' ? 'Cloud' : 'Local' }}
-          </span>
+          <app-source-indicator [source]="source" />
         }
       </span>
     </ng-template>

@@ -138,9 +138,17 @@ export class AppComponent {
       }
     });
 
-    void this.persistenceService.preloadComponentIdAliases();
-    void this.persistenceService.preloadBrowserMasters();
-    void this.persistenceService.preloadServerMasters();
+    // Load promotion aliases first: the browser preload skips records whose id
+    // was promoted to the cloud, and snapshots embedded before a promotion resolve
+    // through the alias — both need the alias map in place. Masters then load
+    // concurrently.
+    void (async () => {
+      await this.persistenceService.preloadComponentIdAliases();
+      await Promise.all([
+        this.persistenceService.preloadBrowserMasters(),
+        this.persistenceService.preloadServerMasters()
+      ]);
+    })();
 
     if (!this.routerService.matches(this.location.path())) {
       this.persistenceService.createAndSetEmptyProject();

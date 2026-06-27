@@ -225,10 +225,13 @@ export class CustomComponentRegistry {
   }
 
   /**
-   * Materialises a **master's** own circuit from its open editor (see
-   * `DefinitionBinding`). Replaces `circuit` with a fresh deep copy rather than
-   * mutating in place, so snapshots taken earlier (which copied the previous
-   * object) stay frozen. No-ops for a snapshot or unknown type id.
+   * Materialises a **master's** own circuit (from its open editor — see
+   * `DefinitionBinding` — or a lazily-fetched cloud circuit). Replaces `circuit`
+   * with a fresh deep copy rather than mutating in place, so snapshots taken
+   * earlier (which copied the previous object) stay frozen, and recomputes the
+   * master's direct library dependencies from the new circuit so cycle detection
+   * stays correct for any path that sets a circuit (not just an open editor).
+   * No-ops for a snapshot or unknown type id.
    */
   public setMasterCircuit(
     masterTypeId: number,
@@ -238,6 +241,27 @@ export class CustomComponentRegistry {
     if (!def || def.kind !== 'master') return;
     def.circuit = cloneCircuit(circuit);
     this._masterToSnapshotTypeId.delete(masterTypeId);
+    this._recomputeDependencies(masterTypeId, circuit);
+  }
+
+  /**
+   * Derives a master's direct library dependencies (the distinct master type ids
+   * behind the custom snapshots its circuit places, resolved through the promotion
+   * alias) and records them for cycle prevention. Built-ins (no registry def) and
+   * unresolvable types contribute no edge.
+   */
+  private _recomputeDependencies(
+    masterTypeId: number,
+    circuit: SerializedCircuitBody
+  ): void {
+    const deps = new Set<number>();
+    for (const c of circuit.components) {
+      const childId = this._definitions.get(c.type)?.id;
+      if (childId === undefined) continue;
+      const dependencyMaster = this.masterTypeIdForId(childId);
+      if (dependencyMaster !== undefined) deps.add(dependencyMaster);
+    }
+    this._dependencies.set(masterTypeId, deps);
   }
 
   /**
@@ -274,10 +298,22 @@ export class CustomComponentRegistry {
 
   /**
    * Records an old-id -> current-id alias (idempotent). Used at startup to hydrate
-   * the alias map from the persistent id-map so promotions survive a reload.
+   * the alias map from the persistent id-map so promotions survive a reload. Bumps
+   * the revision so signal readers that resolved before the aliases loaded
+   * re-resolve once they are in place.
    */
   public registerIdAlias(oldId: string, newId: string): void {
     this._idAliases.set(oldId, newId);
+    this._revision.update((r) => r + 1);
+  }
+
+  /**
+   * Whether `id` is a recorded pre-promotion (old) id — i.e. a browser master
+   * with this id was uploaded to the cloud. The startup browser preload uses this
+   * to ignore a stale local record left behind by a partially-failed promotion.
+   */
+  public isPromotedId(id: string): boolean {
+    return this._idAliases.has(id);
   }
 
   /**

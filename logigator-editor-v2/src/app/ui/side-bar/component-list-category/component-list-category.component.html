@@ -14,20 +14,7 @@
       >
         {{ comp.symbol }}
         @if (comp.source; as source) {
-          <span
-            class="absolute -top-1.5 -left-1.5 flex items-center justify-center w-4 h-4 rounded-full bg-content border border-border"
-            [title]="
-              source === 'server'
-                ? 'Saved in your cloud library'
-                : 'Saved in this browser only'
-            "
-          >
-            @if (source === 'server') {
-              <i class="ph ph-cloud text-sky-400 text-[0.6rem]"></i>
-            } @else {
-              <i class="ph ph-browser text-muted text-[0.6rem]"></i>
-            }
-          </span>
+          <app-source-indicator [source]="source" variant="badge" />
         }
         @if (selected) {
           <span

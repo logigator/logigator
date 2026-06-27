@@ -14,7 +14,8 @@ import { InvalidFileError } from './circuit-file.errors';
 import { CURRENT_FILE_VERSION, CurrentCircuitFile } from './circuit-file.types';
 import {
   remapComponentTypes,
-  SerializedCircuitBody
+  SerializedCircuitBody,
+  SnapshotDefinition
 } from '../serialized-circuit';
 import { collectSnapshots, serializeProjectBody } from '../snapshots';
 
@@ -246,6 +247,24 @@ export class CircuitFileService {
       ),
       wires: this._asArray(file.wires, 'wires')
     };
+  }
+
+  /**
+   * Parses and migrates a stored circuit and returns its embedded snapshot
+   * definitions **without ingesting them into the registry** — a read-only peek
+   * for inspecting a component's dependencies (e.g. the upload-to-cloud
+   * confirmation). Builds no live instances and allocates no type ids, so unlike
+   * {@link decodeToBody} it leaves the registry untouched.
+   */
+  peekDefinitions(content: string): SnapshotDefinition[] {
+    let parsed: unknown;
+    try {
+      parsed = JSON.parse(content);
+    } catch {
+      throw new InvalidFileError('Malformed JSON');
+    }
+    const file = migrateToCurrent(parsed, this.migrationContext);
+    return this._asArray(file.definitions, 'definitions');
   }
 
   private _asArray<T>(value: T[] | undefined, field: string): T[] {

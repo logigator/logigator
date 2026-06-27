@@ -1283,6 +1283,127 @@ describe('PersistenceService', () => {
       ).rejects.toThrow();
     });
 
+    it('promoteComponentToServer succeeds (no throw) even if the local cleanup fails after the upload', async () => {
+      const circuitFile = TestBed.inject(CircuitFileService);
+      await componentStore.save({
+        id: 'local-1',
+        version: 1,
+        name: 'Comp',
+        symbol: 'C',
+        description: '',
+        numInputs: 0,
+        numOutputs: 0,
+        labels: [],
+        content: circuitFile.toJson(new Project(), 'Comp')
+      });
+      const masterTypeId = registry.createMaster(
+        { id: 'local-1', symbol: 'C', name: 'Comp' },
+        'browser'
+      );
+      // The upload has already committed server-side when the local record delete
+      // fails — the operation must NOT surface as a failure (that would lie and
+      // hide the now-disabled retry).
+      vi.spyOn(componentStore, 'delete').mockRejectedValue(new Error('boom'));
+      const tick = () => new Promise((r) => setTimeout(r, 0));
+
+      const promise = service.promoteComponentToServer(masterTypeId);
+      await tick();
+      httpMock
+        .expectOne(COMPONENTS_URL)
+        .flush(componentSummaryResponse({ id: 'srv-comp', hash: 'h0' }));
+      await tick();
+      httpMock
+        .expectOne(COMPONENT_URL('srv-comp'))
+        .flush(componentSummaryResponse({ id: 'srv-comp', version: 5 }));
+
+      await expect(promise).resolves.toBeUndefined();
+      const def = registry.getDefinition(masterTypeId)!;
+      expect(def.source).toBe('server');
+      // The durable alias was written before the (failed) delete, so a reload
+      // self-heals (the browser preload skips the orphaned record).
+      expect(idMapStore.records.get('local-1')).toBe('srv-comp');
+    });
+
+    it('promoteComponentToServer re-points an open editor of the master to the new server identity', async () => {
+      const circuitFile = TestBed.inject(CircuitFileService);
+      await componentStore.save({
+        id: 'local-1',
+        version: 1,
+        name: 'Comp',
+        symbol: 'C',
+        description: '',
+        numInputs: 0,
+        numOutputs: 0,
+        labels: [],
+        content: circuitFile.toJson(new Project(), 'Comp')
+      });
+      const masterTypeId = registry.createMaster(
+        { id: 'local-1', symbol: 'C', name: 'Comp' },
+        'browser'
+      );
+      // The master's editor tab is open (browser comp), registered under its old id.
+      const editor = new Project();
+      metadataStore.register(editor, {
+        id: 'local-1',
+        name: 'Comp',
+        type: 'comp',
+        source: 'browser',
+        hash: '',
+        isPublic: false
+      });
+      const tick = () => new Promise((r) => setTimeout(r, 0));
+
+      const promise = service.promoteComponentToServer(masterTypeId);
+      await tick();
+      httpMock
+        .expectOne(COMPONENTS_URL)
+        .flush(componentSummaryResponse({ id: 'srv-comp', hash: 'h0' }));
+      await tick();
+      httpMock
+        .expectOne(COMPONENT_URL('srv-comp'))
+        .flush(
+          componentSummaryResponse({ id: 'srv-comp', version: 5, hash: 'h2' })
+        );
+      await promise;
+
+      // The editor now points at the cloud record, so a later save routes to the
+      // server instead of re-creating the deleted browser record.
+      const meta = metadataStore.getMetadata(editor)!;
+      expect(meta.source).toBe('server');
+      expect(meta.id).toBe('srv-comp');
+      expect(meta.hash).toBe('h2');
+      editor.destroy();
+    });
+
+    it('preloadBrowserMasters skips a record whose id was promoted to the cloud', async () => {
+      const circuitFile = TestBed.inject(CircuitFileService);
+      // The cloud master and the persisted promotion alias (as hydrated at startup).
+      const serverType = registry.createMaster(
+        { id: 'srv-1', symbol: 'C', name: 'Comp' },
+        'server'
+      );
+      registry.registerIdAlias('local-1', 'srv-1');
+      // A stale local record left behind by a partially-failed promotion.
+      await componentStore.save({
+        id: 'local-1',
+        version: 1,
+        name: 'Comp',
+        symbol: 'C',
+        description: '',
+        numInputs: 0,
+        numOutputs: 0,
+        labels: [],
+        content: circuitFile.toJson(new Project(), 'Comp')
+      });
+
+      await service.preloadBrowserMasters();
+
+      // No browser duplicate: the old id still resolves through the alias to the
+      // single (server) master, instead of a freshly-registered browser dupe.
+      expect(registry.masterTypeIdForId('local-1')).toBe(serverType);
+      expect(registry.getDefinition(serverType)?.source).toBe('server');
+    });
+
     it('localDependencyNames returns [] for a master with no embedded customs', async () => {
       const circuitFile = TestBed.inject(CircuitFileService);
       await componentStore.save({
@@ -1401,7 +1522,11 @@ describe('PersistenceService', () => {
           labels: [],
           createdOn: '2024-01-01',
           lastEdited: '2024-01-01',
-          elementsFile: { hash: 'h', mimeType: 'application/json', publicUrl: '' },
+          elementsFile: {
+            hash: 'h',
+            mimeType: 'application/json',
+            publicUrl: ''
+          },
           previewDark: null,
           previewLight: null,
           public: false,

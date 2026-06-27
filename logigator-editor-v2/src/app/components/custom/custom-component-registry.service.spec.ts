@@ -347,6 +347,28 @@ describe('CustomComponentRegistry', () => {
       });
       expect(registry.getDefinition(snap.typeId)?.circuit).toBeUndefined();
     });
+
+    it('recomputes the master library dependencies from the new circuit', () => {
+      // The dependency graph is now derived here (not only by DefinitionBinding),
+      // so any path that sets a circuit — including lazy cloud hydration — keeps
+      // cycle detection correct.
+      const b = registry.createMaster({ id: 'b-id', symbol: 'B' }, 'browser');
+      const bSnap = registry.snapshot(b);
+      const a = registry.createMaster({ symbol: 'A' }, 'browser');
+
+      registry.setMasterCircuit(a, {
+        components: [{ type: bSnap.typeId, pos: [0, 0], options: {} }],
+        wires: []
+      });
+      expect([...registry.dependenciesOf(a)]).toEqual([b]);
+
+      // A built-in placement (no registry def) contributes no edge.
+      registry.setMasterCircuit(a, {
+        components: [{ type: 1, pos: [0, 0], options: {} }],
+        wires: []
+      });
+      expect([...registry.dependenciesOf(a)]).toEqual([]);
+    });
   });
 
   describe('ingestSnapshots', () => {
@@ -475,7 +497,10 @@ describe('CustomComponentRegistry', () => {
   describe('promoteMaster', () => {
     it('flips source/id/version and bumps the revision', () => {
       const before = registry.revision();
-      const m = registry.createMaster({ id: 'local-1', symbol: 'M' }, 'browser');
+      const m = registry.createMaster(
+        { id: 'local-1', symbol: 'M' },
+        'browser'
+      );
       registry.promoteMaster(m, 'server-1', 7);
 
       const def = registry.getDefinition(m)!;
@@ -486,7 +511,10 @@ describe('CustomComponentRegistry', () => {
     });
 
     it('re-points the id index to the new id and keeps the old id resolvable', () => {
-      const m = registry.createMaster({ id: 'local-1', symbol: 'M' }, 'browser');
+      const m = registry.createMaster(
+        { id: 'local-1', symbol: 'M' },
+        'browser'
+      );
       registry.promoteMaster(m, 'server-1', 1);
 
       // New id resolves directly; old id resolves through the alias.
@@ -495,7 +523,10 @@ describe('CustomComponentRegistry', () => {
     });
 
     it('lets a snapshot taken before promotion still resolve to the master', () => {
-      const m = registry.createMaster({ id: 'local-1', symbol: 'M' }, 'browser');
+      const m = registry.createMaster(
+        { id: 'local-1', symbol: 'M' },
+        'browser'
+      );
       const snapType = registry.snapshot(m).typeId; // captures id 'local-1'
       registry.promoteMaster(m, 'server-1', 1);
 
@@ -505,13 +536,19 @@ describe('CustomComponentRegistry', () => {
     });
 
     it('re-registers the config so the palette reflects the new source', () => {
-      const m = registry.createMaster({ id: 'local-1', symbol: 'M' }, 'browser');
+      const m = registry.createMaster(
+        { id: 'local-1', symbol: 'M' },
+        'browser'
+      );
       registry.promoteMaster(m, 'server-1', 1);
       expect(provider.getComponent(m)?.source).toBe('server');
     });
 
     it('no-ops for a snapshot or unknown type id', () => {
-      const m = registry.createMaster({ id: 'local-1', symbol: 'M' }, 'browser');
+      const m = registry.createMaster(
+        { id: 'local-1', symbol: 'M' },
+        'browser'
+      );
       const snapType = registry.snapshot(m).typeId;
       registry.promoteMaster(snapType, 'x', 1);
       registry.promoteMaster(123_456, 'x', 1);
@@ -521,9 +558,20 @@ describe('CustomComponentRegistry', () => {
 
   describe('registerIdAlias', () => {
     it('resolves an aliased id to the current master', () => {
-      const m = registry.createMaster({ id: 'server-1', symbol: 'M' }, 'server');
+      const m = registry.createMaster(
+        { id: 'server-1', symbol: 'M' },
+        'server'
+      );
       registry.registerIdAlias('old-local-1', 'server-1');
       expect(registry.masterTypeIdForId('old-local-1')).toBe(m);
+    });
+
+    it('marks the old id as promoted and bumps the revision', () => {
+      const before = registry.revision();
+      registry.registerIdAlias('old-local-1', 'server-1');
+      expect(registry.isPromotedId('old-local-1')).toBe(true);
+      expect(registry.isPromotedId('server-1')).toBe(false);
+      expect(registry.revision()).toBeGreaterThan(before);
     });
   });
 });

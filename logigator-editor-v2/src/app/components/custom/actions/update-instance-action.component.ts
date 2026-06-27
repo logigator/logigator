@@ -63,8 +63,12 @@ export class UpdateInstanceActionComponent {
       def?.id !== undefined
         ? this.registry.masterTypeIdForId(def.id)
         : undefined;
-    if (masterTypeId !== undefined) {
-      await this.customComponentService.ensureMasterCircuit(masterTypeId);
+    if (
+      masterTypeId !== undefined &&
+      !(await this.customComponentService.ensureMasterCircuit(masterTypeId))
+    ) {
+      // Cloud fetch failed (the service toasted) — leave the instance as-is.
+      return;
     }
     const action = this.customComponentService.buildInstanceUpdate(component);
     if (action) project.actionManager.push(action);

@@ -19,10 +19,11 @@ import { TranslocoService } from '@jsverse/transloco';
 import { ChangeOptionAction } from '../../actions/actions/change-option.action';
 import { CustomComponentRegistry } from '../../components/custom/custom-component-registry.service';
 import { CUSTOM_TYPE_ID_BASE } from '../../components/component-type.enum';
+import { SourceIndicatorComponent } from '../source-indicator/source-indicator.component';
 
 @Component({
   selector: 'app-component-settings',
-  imports: [NgComponentOutlet, Card],
+  imports: [NgComponentOutlet, Card, SourceIndicatorComponent],
   templateUrl: './component-settings.component.html',
   changeDetection: ChangeDetectionStrategy.OnPush
 })

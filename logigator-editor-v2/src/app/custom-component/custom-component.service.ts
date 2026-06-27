@@ -246,10 +246,18 @@ export class CustomComponentService {
    * Ensures a master's circuit is loaded before it is placed or updated. Cloud
    * masters are preloaded summary-only (no circuit); this lazily fetches the
    * circuit on first use. No-op for built-ins, browser masters, and already-loaded
-   * masters.
+   * masters. Returns whether the circuit is ready: a failed cloud fetch shows a
+   * toast and returns `false` so the caller can abort (rather than arm placement /
+   * apply an update against empty content).
    */
-  public ensureMasterCircuit(masterTypeId: number): Promise<void> {
-    return this.persistence.ensureServerMasterCircuit(masterTypeId);
+  public async ensureMasterCircuit(masterTypeId: number): Promise<boolean> {
+    try {
+      await this.persistence.ensureServerMasterCircuit(masterTypeId);
+      return true;
+    } catch {
+      this.toast.error('Failed to load component from the cloud');
+      return false;
+    }
   }
 
   private _findOpenEditor(masterId: string): Project | undefined {

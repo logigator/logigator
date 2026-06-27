@@ -22,7 +22,6 @@ import { ComponentProviderService } from '../components/component-provider.servi
 import { deriveSummary } from '../custom-component/definition-derivation';
 import { DefinitionBinding } from '../custom-component/definition-binding';
 import { buildProject, instantiateBody } from './circuit-builder';
-import { collectSnapshots } from './snapshots';
 import { formatHttpError } from './persistence-errors';
 import { ServerPersistenceGateway } from './server/server-persistence.gateway';
 import { downloadBlob } from '../utils/download';
@@ -476,6 +475,12 @@ export class PersistenceService {
     await Promise.all(
       summaries.map(async ({ id }) => {
         if (this.registry.masterTypeIdForId(id) !== undefined) return;
+        // A record whose id was promoted to the cloud is stale — its component
+        // moved to the server library. This guards the case where a previous
+        // promotion uploaded + aliased the component but failed to delete the
+        // local record; ignoring it here keeps a single (server) master. Relies
+        // on the alias map being hydrated first (see app startup ordering).
+        if (this.registry.isPromotedId(id)) return;
         try {
           const record = await this.browserComponentStore.get(id);
           if (!record) return;
@@ -568,29 +573,27 @@ export class PersistenceService {
     const record = await this.browserComponentStore.get(def.id);
     if (!record) return [];
 
-    const { components, wires } = this.circuitFile.fromJson(record.content);
-    const temp = buildProject(components, wires);
-    try {
-      const { definitions } = collectSnapshots(temp, this.registry);
-      const names = new Set<string>();
-      for (const dep of definitions) {
-        const masterId = dep.source?.id;
-        const resolvedMasterTypeId =
-          masterId !== undefined
-            ? this.registry.masterTypeIdForId(masterId)
-            : undefined;
-        const master =
-          resolvedMasterTypeId !== undefined
-            ? this.registry.getDefinition(resolvedMasterTypeId)
-            : undefined;
-        // Already in the cloud — its copy is fine, nothing local to mention.
-        if (master?.source === 'server') continue;
-        names.add(dep.name);
-      }
-      return [...names];
-    } finally {
-      temp.destroy();
+    // Read the embedded snapshot definitions straight from the stored file — the
+    // transitive closure is already baked in at save time — without building a
+    // live project or ingesting throwaway definitions into the registry. Each
+    // embedded custom whose provenance master is still browser-sourced (or can no
+    // longer be resolved) is a local component that rides along as a copy.
+    const names = new Set<string>();
+    for (const dep of this.circuitFile.peekDefinitions(record.content)) {
+      const masterId = dep.source?.id;
+      const resolvedMasterTypeId =
+        masterId !== undefined
+          ? this.registry.masterTypeIdForId(masterId)
+          : undefined;
+      const master =
+        resolvedMasterTypeId !== undefined
+          ? this.registry.getDefinition(resolvedMasterTypeId)
+          : undefined;
+      // Already in the cloud — its copy is fine, nothing local to mention.
+      if (master?.source === 'server') continue;
+      names.add(dep.name);
     }
+    return [...names];
   }
 
   /**
@@ -613,20 +616,73 @@ export class PersistenceService {
       throw new Error(`No browser component with id ${oldId}`);
     }
 
+    // Upload to the server first — the only irreversible, fail-able step. If it
+    // throws, nothing local has changed: the master is still browser-sourced, the
+    // record is intact and the upload button stays visible for a retry.
     const { components, wires } = this.circuitFile.fromJson(record.content);
     const temp = buildProject(components, wires);
+    let newId: string;
+    let version: number;
+    let newHash: string;
     try {
-      const { id: newId, version } =
-        await this.server.promoteComponentFromProject(temp, {
-          name: def.name,
-          symbol: def.symbol,
-          description: def.description
-        });
-      this.registry.promoteMaster(masterTypeId, newId, version);
-      await this.componentIdMapStore.put(oldId, newId);
-      await this.browserComponentStore.delete(oldId);
+      ({
+        id: newId,
+        version,
+        hash: newHash
+      } = await this.server.promoteComponentFromProject(temp, {
+        name: def.name,
+        symbol: def.symbol,
+        description: def.description
+      }));
     } finally {
       temp.destroy();
+    }
+
+    // The component now lives in the cloud — past the point of no return. Persist
+    // the durable old→new alias and drop the local record *before* the in-memory
+    // flip, so a reload stays consistent even if interrupted here. These local
+    // writes must not fail the operation: the upload already succeeded, so
+    // surfacing an error would be a lie (and would hide the now-disabled retry).
+    // A failure here self-heals on reload — the browser preload ignores a record
+    // whose id has been promoted (see preloadBrowserMasters / isPromotedId).
+    try {
+      await this.componentIdMapStore.put(oldId, newId);
+      await this.browserComponentStore.delete(oldId);
+    } catch {
+      this.logging.warn(
+        `Component ${oldId} uploaded to the cloud, but local cleanup failed`,
+        'PersistenceService'
+      );
+    }
+
+    this.registry.promoteMaster(masterTypeId, newId, version);
+    // If the master's own editor tab is open, flip its metadata to the new server
+    // identity so a later save routes to the cloud instead of re-creating the
+    // browser record that was just deleted.
+    this._reconcilePromotedEditor(oldId, newId, newHash);
+  }
+
+  /**
+   * After a master is promoted to the cloud, re-points an open editor tab for it
+   * (matched by the old browser id) to the new server identity, so closing/saving
+   * that editor routes to the server save path rather than resurrecting the
+   * deleted browser record. No-op when no such editor is open.
+   */
+  private _reconcilePromotedEditor(
+    oldId: string,
+    newId: string,
+    hash: string
+  ): void {
+    const handle = this.metadataStore.getHandleById(oldId);
+    if (
+      handle?.metadata.type === 'comp' &&
+      handle.metadata.source === 'browser'
+    ) {
+      this.metadataStore.update(handle.project, {
+        source: 'server',
+        id: newId,
+        hash
+      });
     }
   }
 

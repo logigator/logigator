@@ -12,7 +12,12 @@ import { ToastService } from '../../logging/toast.service';
 import { LoggingService } from '../../logging/logging.service';
 import { Project } from '../../project/project';
 import { ProjectSummary } from '../../api/models/project';
+import type {
+  ComponentDetail,
+  ComponentSummary
+} from '../../api/models/component';
 import { Page } from '../../api/models/shared';
+import type { CircuitFileV0 } from '../file/circuit-file.types';
 import { CustomComponentRegistry } from '../../components/custom/custom-component-registry.service';
 import { ComponentProviderService } from '../../components/component-provider.service';
 import { deriveSummary } from '../../custom-component/definition-derivation';
@@ -276,22 +281,11 @@ export class ServerPersistenceGateway {
       isPublic: meta.isPublic ?? false
     });
 
-    const summary = deriveSummary(project);
-    const { elements, dependencies } = server.serializeProject(
-      project,
-      this.registry,
-      this.provider
-    );
     try {
-      const saveResponse = await firstValueFrom(
-        this.componentApi.save(response.id, {
-          oldHash: response.elementsFile?.hash ?? '',
-          dependencies,
-          elements,
-          numInputs: summary.numInputs,
-          numOutputs: summary.numOutputs,
-          labels: summary.labels
-        })
+      const saveResponse = await this._saveComponentCircuit(
+        response.id,
+        project,
+        response.elementsFile?.hash ?? ''
       );
       this.metadataStore.updateHash(
         project,
@@ -318,7 +312,8 @@ export class ServerPersistenceGateway {
    * component save. Returns the new server id + save-time version. The caller owns
    * flipping the registry/metadata and removing the browser record; this method is
    * pure transport (no local state changes), so a failed POST/PUT leaves nothing
-   * to unwind.
+   * to unwind. Returns the new server id, save-time version, and content hash (so
+   * the caller can re-point an open editor's metadata).
    */
   async promoteComponentFromProject(
     project: Project,
@@ -328,7 +323,7 @@ export class ServerPersistenceGateway {
       description: string;
       isPublic?: boolean;
     }
-  ): Promise<{ id: string; version: number }> {
+  ): Promise<{ id: string; version: number; hash: string }> {
     const response = await firstValueFrom(
       this.componentApi.create({
         name: meta.name,
@@ -338,26 +333,16 @@ export class ServerPersistenceGateway {
       })
     );
 
-    const summary = deriveSummary(project);
-    const { elements, dependencies } = server.serializeProject(
+    const saveResponse = await this._saveComponentCircuit(
+      response.id,
       project,
-      this.registry,
-      this.provider
-    );
-    const saveResponse = await firstValueFrom(
-      this.componentApi.save(response.id, {
-        oldHash: response.elementsFile?.hash ?? '',
-        dependencies,
-        elements,
-        numInputs: summary.numInputs,
-        numOutputs: summary.numOutputs,
-        labels: summary.labels
-      })
+      response.elementsFile?.hash ?? ''
     );
 
     return {
       id: response.id,
-      version: saveResponse.version ?? response.version ?? 1
+      version: saveResponse.version ?? response.version ?? 1,
+      hash: saveResponse.elementsFile?.hash ?? ''
     };
   }
 
@@ -373,11 +358,7 @@ export class ServerPersistenceGateway {
   ): Promise<{ project: Project; masterTypeId: number }> {
     const detail = await firstValueFrom(this.componentApi.open(uuid));
     const { components, wires } = this.circuitFile.decode(
-      server.toCircuitFileV0({
-        name: detail.name,
-        elements: detail.elements,
-        dependencies: detail.dependencies
-      })
+      this._componentDetailToV0(detail)
     );
     const project = buildProject(components, wires);
 
@@ -457,11 +438,7 @@ export class ServerPersistenceGateway {
   async loadComponentCircuit(uuid: string): Promise<SerializedCircuitBody> {
     const detail = await firstValueFrom(this.componentApi.open(uuid));
     return this.circuitFile.decodeToBodyFromData(
-      server.toCircuitFileV0({
-        name: detail.name,
-        elements: detail.elements,
-        dependencies: detail.dependencies
-      })
+      this._componentDetailToV0(detail)
     );
   }
 
@@ -524,23 +501,12 @@ export class ServerPersistenceGateway {
     const metadata = this.metadataStore.getMetadata(project)!;
     const masterTypeId = this.registry.masterTypeIdForId(metadata.id);
     const versionAtSnapshot = this.metadataStore.dirtyVersion(project);
-    const summary = deriveSummary(project);
-    const { elements, dependencies } = server.serializeProject(
-      project,
-      this.registry,
-      this.provider
-    );
 
     try {
-      const response = await firstValueFrom(
-        this.componentApi.save(metadata.id, {
-          oldHash: metadata.hash,
-          dependencies,
-          elements,
-          numInputs: summary.numInputs,
-          numOutputs: summary.numOutputs,
-          labels: summary.labels
-        })
+      const response = await this._saveComponentCircuit(
+        metadata.id,
+        project,
+        metadata.hash
       );
 
       this.metadataStore.updateHash(project, response.elementsFile?.hash ?? '');
@@ -573,13 +539,59 @@ export class ServerPersistenceGateway {
   }
 
   /**
+   * Serializes `project` and PUTs it to `/api/component/:id` — the shared
+   * create/save/promote tail: derive the summary, embed a self-contained snapshot
+   * of every custom it places, and push. Returns the save response (new hash +
+   * version). Pure transport; the caller owns metadata/registry/dirty handling.
+   */
+  private _saveComponentCircuit(
+    componentId: string,
+    project: Project,
+    oldHash: string
+  ): Promise<ComponentSummary> {
+    const summary = deriveSummary(project);
+    const { elements, dependencies } = server.serializeProject(
+      project,
+      this.registry,
+      this.provider
+    );
+    return firstValueFrom(
+      this.componentApi.save(componentId, {
+        oldHash,
+        dependencies,
+        elements,
+        numInputs: summary.numInputs,
+        numOutputs: summary.numOutputs,
+        labels: summary.labels
+      })
+    );
+  }
+
+  /**
+   * Wraps a component detail response as a {@link CircuitFileV0} envelope so it
+   * routes through the permanent `v0ToV1` migration — shared by the full load
+   * ({@link loadComponent}) and the lazy circuit hydration
+   * ({@link loadComponentCircuit}).
+   */
+  private _componentDetailToV0(detail: ComponentDetail): CircuitFileV0 {
+    return server.toCircuitFileV0({
+      name: detail.name,
+      elements: detail.elements,
+      dependencies: detail.dependencies
+    });
+  }
+
+  /**
    * Renders and uploads dark + light project thumbnails after a successful
    * server save. Fire-and-forget: a preview is a nice-to-have, so any failure
    * is logged and swallowed rather than surfaced or allowed to fail the save.
    * Order matters — the backend maps `previews[0]` to the dark slot and
    * `previews[1]` to the light slot.
    */
-  private async _uploadPreview(project: Project, projectId: string): Promise<void> {
+  private async _uploadPreview(
+    project: Project,
+    projectId: string
+  ): Promise<void> {
     try {
       const previews = await this.snapshot.generatePreviews(project);
       if (!previews) return;
