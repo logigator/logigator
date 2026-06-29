@@ -7,10 +7,9 @@ import {
 } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { DynamicDialogRef } from 'primeng/dynamicdialog';
-import { SelectButtonModule } from 'primeng/selectbutton';
 import { SelectModule } from 'primeng/select';
 import { SliderModule } from 'primeng/slider';
-import { LgButton, LgToggleSwitch } from '@logigator/ui';
+import { LgButton, LgSelectButton, LgToggleSwitch } from '@logigator/ui';
 import { TranslocoDirective } from '@jsverse/transloco';
 import { ProjectService } from '../../project/project.service';
 import { ProjectMetadataStore } from '../../persistence/project-metadata.store';
@@ -32,7 +31,7 @@ const DEFAULT_QUALITY_PERCENT = 92;
   selector: 'app-export-image-dialog',
   imports: [
     FormsModule,
-    SelectButtonModule,
+    LgSelectButton,
     SelectModule,
     LgToggleSwitch,
     SliderModule,

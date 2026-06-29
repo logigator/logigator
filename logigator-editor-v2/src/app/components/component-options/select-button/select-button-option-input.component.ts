@@ -1,7 +1,7 @@
 import { ChangeDetectionStrategy, Component, input } from '@angular/core';
 import { FormsModule } from '@angular/forms';
+import { LgSelectButton } from '@logigator/ui';
 import { NgTemplateOutlet } from '@angular/common';
-import { SelectButtonModule } from 'primeng/selectbutton';
 import { TranslocoDirective } from '@jsverse/transloco';
 import type { ComponentOptionInput } from '../../component-option';
 import type { SelectButtonComponentOption } from './select-button.component-option';
@@ -12,7 +12,7 @@ let nextId = 0;
   selector: 'app-select-button-option-input',
   imports: [
     FormsModule,
-    SelectButtonModule,
+    LgSelectButton,
     NgTemplateOutlet,
     TranslocoDirective
   ],
