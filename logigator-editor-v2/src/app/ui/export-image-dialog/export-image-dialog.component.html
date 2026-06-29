@@ -53,14 +53,16 @@
       [ngModelOptions]="{ standalone: true }"
     />
     <label for="export-background">{{ t('imageExport.background') }}</label>
-    <span class="text-sm text-muted">{{ t('imageExport.backgroundHint') }}</span>
+    <span class="text-sm text-muted">{{
+      t('imageExport.backgroundHint')
+    }}</span>
   </div>
   @if (showQuality()) {
     <div class="flex flex-col gap-1">
       <label for="export-quality"
         >{{ t('imageExport.quality') }} — {{ quality() }}%</label
       >
-      <p-slider
+      <lg-slider
         [min]="10"
         [max]="100"
         [ngModel]="quality()"
