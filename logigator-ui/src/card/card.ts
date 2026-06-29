@@ -1,0 +1,40 @@
+import { NgTemplateOutlet } from '@angular/common';
+import {
+  ChangeDetectionStrategy,
+  Component,
+  contentChild,
+  TemplateRef
+} from '@angular/core';
+
+/**
+ * A floating content panel. Projects an optional `#title` and `#subtitle`
+ * template plus default body content. Consumer classes merge onto the host
+ * (e.g. positioning a floating card).
+ */
+@Component({
+  selector: 'lg-card',
+  changeDetection: ChangeDetectionStrategy.OnPush,
+  imports: [NgTemplateOutlet],
+  host: {
+    class:
+      'block rounded-xl bg-content p-5 text-text shadow-[0_1px_3px_0_rgba(0,0,0,0.1),0_1px_2px_-1px_rgba(0,0,0,0.1)]'
+  },
+  template: `
+    @if (titleTpl()) {
+      <div class="mb-2 text-xl font-semibold">
+        <ng-container [ngTemplateOutlet]="titleTpl()!" />
+      </div>
+    }
+    @if (subtitleTpl()) {
+      <div class="-mt-1 mb-3 text-muted">
+        <ng-container [ngTemplateOutlet]="subtitleTpl()!" />
+      </div>
+    }
+    <ng-content />
+  `
+})
+export class LgCard {
+  protected readonly titleTpl = contentChild<TemplateRef<unknown>>('title');
+  protected readonly subtitleTpl =
+    contentChild<TemplateRef<unknown>>('subtitle');
+}

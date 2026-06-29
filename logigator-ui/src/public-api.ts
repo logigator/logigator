@@ -13,3 +13,9 @@ export type { LgSeverity } from './tokens/severity';
 export type { LgSize } from './tokens/size';
 
 export { LgButton } from './button/button';
+export { LgDivider } from './divider/divider';
+export { LgTag } from './tag/tag';
+export { LgBadge } from './badge/badge';
+export { LgAvatar } from './avatar/avatar';
+export { LgCard } from './card/card';
+export { LgRipple } from './ripple/ripple';
