@@ -91,6 +91,15 @@
 		}
 	},
 	"POPUP": {
+		"NEW_EDITOR_FORMAT": {
+			"TITLE": "Proyecto del nuevo editor",
+			"INTRO": "Este proyecto se creó o se guardó por última vez con el nuevo editor de Logigator.",
+			"UNSUPPORTED": "Algunas de sus funciones, como los puertos negados, no son compatibles aquí y se perderán.",
+			"SAVE_WARNING": "Guardar desde este editor eliminará esas funciones y puede alterar cómo se almacenan los componentes personalizados. Esto puede degradar el proyecto al abrirlo de nuevo en el nuevo editor.",
+			"OK": "Entendido",
+			"SAVE_OK": "Guardar de todos modos",
+			"CANCEL": "Cancelar"
+		},
 		"NEW_COMP": {
 			"TITLE": "Nuevo componente",
 			"NAME": "Nombre",

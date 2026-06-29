@@ -7,6 +7,7 @@ import { delayWhen } from 'rxjs/operators';
 import { ElementProviderService } from '../element-provider/element-provider.service';
 import { ErrorHandlingService } from '../error-handling/error-handling.service';
 import { UnsavedChangesComponent } from '../../components/popup-contents/unsaved-changes/unsaved-changes.component';
+import { NewEditorFormatComponent } from '../../components/popup-contents/new-editor-format/new-editor-format.component';
 import { PopupService } from '../popup/popup.service';
 import { LocationService } from '../location/location.service';
 import { PixiLoaderService } from '../pixi-loader/pixi-loader.service';
@@ -175,6 +176,14 @@ export class ProjectsService {
 			await this.openNewProject(project);
 			this.location.set('project', id);
 			this.errorHandling.showInfo('INFO.PROJECTS.OPEN', { name: project.name });
+			if (project.newFormat) {
+				this.popup.showPopup(
+					NewEditorFormatComponent,
+					'POPUP.NEW_EDITOR_FORMAT.TITLE',
+					true,
+					'open'
+				);
+			}
 		} finally {
 			removeLoading();
 		}

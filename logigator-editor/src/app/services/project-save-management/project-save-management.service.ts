@@ -143,6 +143,7 @@ export class ProjectSaveManagementService {
 			hash: projectData.data.elementsFile.hash,
 			public: projectData.data.public,
 			link: projectData.data.link,
+			newFormat: projectData.data.legacyFormat === false,
 			type
 		});
 		this._projectsCache.set(project.id, project);
@@ -646,7 +647,10 @@ export class ProjectSaveManagementService {
 		useLinkForUuid = false
 	): Map<number, number> {
 		const mappingsToApply = new Map<number, number>();
-		dependencies.forEach((dep) => {
+		// New-editor projects may carry snapshot-only dependencies (local custom
+		// components never uploaded to the library) that have no `dependency`. This
+		// editor cannot resolve them; skip so the rest of the project still loads.
+		dependencies.filter((dep) => dep.dependency).forEach((dep) => {
 			const uuid = useLinkForUuid ? dep.dependency.link : dep.dependency.id;
 			if (this._mappings.hasKey(uuid)) {
 				mappingsToApply.set(dep.model, this._mappings.getValue(uuid));
@@ -662,7 +666,7 @@ export class ProjectSaveManagementService {
 		category: 'user' | 'local' | 'share',
 		useLinkForUuid = false
 	) {
-		const elements: Partial<ElementType>[] = components.map((comp) => {
+		const elements: Partial<ElementType>[] = components.filter((comp) => comp).map((comp) => {
 			return {
 				id: this._mappings.getValue(useLinkForUuid ? comp.link : comp.id),
 				description: comp.description,

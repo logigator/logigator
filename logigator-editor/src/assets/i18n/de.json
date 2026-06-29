@@ -91,6 +91,15 @@
 		}
 	},
 	"POPUP": {
+		"NEW_EDITOR_FORMAT": {
+			"TITLE": "Projekt aus dem neuen Editor",
+			"INTRO": "Dieses Projekt wurde mit dem neuen Logigator-Editor erstellt oder zuletzt gespeichert.",
+			"UNSUPPORTED": "Einige Funktionen – etwa negierte Anschlüsse – werden hier nicht unterstützt und fehlen.",
+			"SAVE_WARNING": "Beim Speichern in diesem Editor gehen diese Funktionen verloren und die Ablage benutzerdefinierter Komponenten kann sich ändern. Das kann das Projekt beeinträchtigen, wenn es erneut im neuen Editor geöffnet wird.",
+			"OK": "Verstanden",
+			"SAVE_OK": "Trotzdem speichern",
+			"CANCEL": "Abbrechen"
+		},
 		"NEW_COMP": {
 			"TITLE": "Neue Komponente",
 			"NAME": "Name",

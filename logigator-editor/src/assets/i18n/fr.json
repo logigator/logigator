@@ -91,6 +91,15 @@
 		}
 	},
 	"POPUP": {
+		"NEW_EDITOR_FORMAT": {
+			"TITLE": "Projet du nouvel éditeur",
+			"INTRO": "Ce projet a été créé ou enregistré pour la dernière fois avec le nouvel éditeur Logigator.",
+			"UNSUPPORTED": "Certaines de ses fonctionnalités — comme les ports inversés — ne sont pas prises en charge ici et seront absentes.",
+			"SAVE_WARNING": "Enregistrer depuis cet éditeur supprimera ces fonctionnalités et peut modifier le stockage des composants personnalisés. Cela peut dégrader le projet lorsqu'il est rouvert dans le nouvel éditeur.",
+			"OK": "Compris",
+			"SAVE_OK": "Enregistrer quand même",
+			"CANCEL": "Annuler"
+		},
 		"NEW_COMP": {
 			"TITLE": "Nouveau composant",
 			"NAME": "Nom",

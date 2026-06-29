@@ -1,0 +1,22 @@
+.new-editor-format {
+	margin: 2rem 1.5rem;
+	max-width: 32rem;
+
+	p {
+		margin-bottom: 0.75rem;
+	}
+
+	.warning {
+		font-weight: bold;
+	}
+
+	.buttons {
+		display: flex;
+		justify-content: flex-end;
+		margin-top: 1.5rem;
+
+		button {
+			margin-left: 0.5rem;
+		}
+	}
+}

@@ -34,6 +34,7 @@ import { CacheBustingTranslationLoader } from './models/translation/cache-bustin
 import { AppMissingTranslationHandler } from './models/translation/missing-translation-handler';
 import { OutsideNgZoneEventDirective } from './directives/outside-ng-zone-event/outside-ng-zone-event.directive';
 import { UnsavedChangesComponent } from './components/popup-contents/unsaved-changes/unsaved-changes.component';
+import { NewEditorFormatComponent } from './components/popup-contents/new-editor-format/new-editor-format.component';
 import { WorkAreaContainerComponent } from './components/work-area-container/work-area-container.component';
 import { ShareProjectComponent } from './components/popup-contents/share-project/share-project.component';
 import { setStaticDIInjector } from './models/get-di';
@@ -86,6 +87,7 @@ import { MarkdownModule } from 'ngx-markdown';
 		SaveAsComponent,
 		OutsideNgZoneEventDirective,
 		UnsavedChangesComponent,
+		NewEditorFormatComponent,
 		WorkAreaContainerComponent,
 		ShareProjectComponent,
 		ToolbarItemTooltipDirective,

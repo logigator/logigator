@@ -87,6 +87,22 @@ export function serializeStoredCircuit(elements: ProjectElement[], mappings: Pro
 }
 
 /**
+ * Whether a stored circuit predates the new editor's format — it carries neither
+ * embedded snapshots nor port negation. Computed from the *stored* blob (before
+ * read-time snapshot synthesis), so it reflects which editor last saved it. The
+ * editors surface a warning on the version mismatch from this flag.
+ */
+export function isLegacyFormat(elements: ProjectElement[], storedSnapshots: StoredDependencySnapshot[]): boolean {
+	if (storedSnapshots.length > 0)
+		return false;
+
+	return !elements.some(element =>
+		(element.negInputs && element.negInputs.length > 0) ||
+		(element.negOutputs && element.negOutputs.length > 0)
+	);
+}
+
+/**
  * Backfills snapshots for dependency rows that have none stored (e.g. a project
  * authored by the old editor, which embeds nothing). The frozen circuit is
  * reconstructed from the live master's elements + metadata, so the new editor can

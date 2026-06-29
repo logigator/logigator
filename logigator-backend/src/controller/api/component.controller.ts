@@ -22,7 +22,7 @@ import {User} from '../../database/entities/user.entity';
 import {InjectRepository} from 'typeorm-typedi-extensions';
 import {ComponentRepository} from '../../database/repositories/component.repository';
 import {CreateComponent} from '../../models/request/shared/create-component';
-import {buildDependencyResponse, parseStoredCircuit, serializeStoredCircuit, synthesizeMissingSnapshots} from '../../functions/circuit-content';
+import {buildDependencyResponse, isLegacyFormat, parseStoredCircuit, serializeStoredCircuit, synthesizeMissingSnapshots} from '../../functions/circuit-content';
 import {classToPlain} from 'class-transformer';
 import {ComponentDependencyRepository} from '../../database/repositories/component-dependency.repository';
 import {ComponentFile} from '../../database/entities/component-file.entity';
@@ -82,7 +82,8 @@ export class ComponentController {
 		return {
 			...classToPlain(component),
 			dependencies: buildDependencyResponse(dependencies, enriched),
-			elements
+			elements,
+			legacyFormat: isLegacyFormat(elements, snapshots)
 		};
 	}
 

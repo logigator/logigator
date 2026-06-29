@@ -23,6 +23,12 @@ export interface ProjectDependency {
 export interface ProjectDetail extends ProjectSummary {
   dependencies: ProjectDependency[];
   elements: ProjectElement[];
+  /**
+   * Additive — `true` when the stored circuit predates this editor's format (no
+   * embedded snapshots, no negation). Saving here converts it, which can degrade
+   * it for the old editor; the load path warns on it.
+   */
+  legacyFormat?: boolean;
 }
 
 // ---- POST / request ----
