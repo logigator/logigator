@@ -10,7 +10,7 @@ import {ComponentRepository} from '../../database/repositories/component.reposit
 import {UserRepository} from '../../database/repositories/user.repository';
 import {ProjectDependencyRepository} from '../../database/repositories/project-dependency.repository';
 import {classToPlain} from 'class-transformer';
-import {buildDependencyResponse, parseStoredCircuit} from '../../functions/circuit-content';
+import {buildDependencyResponse, parseStoredCircuit, synthesizeMissingSnapshots} from '../../functions/circuit-content';
 import {Project} from '../../database/entities/project.entity';
 import {ComponentDependencyRepository} from '../../database/repositories/component-dependency.repository';
 import {Component} from '../../database/entities/component.entity';
@@ -48,11 +48,12 @@ export class ShareController {
 		});
 		const contentBuffer = await project.elementsFile?.getFileContent();
 		const {elements, snapshots} = parseStoredCircuit(contentBuffer);
+		const enriched = await synthesizeMissingSnapshots(dependencies, snapshots);
 
 		return {
 			type: project instanceof Project ? 'project' : 'comp',
 			...classToPlain(project),
-			dependencies: buildDependencyResponse(dependencies, snapshots, ['showShareLinks']),
+			dependencies: buildDependencyResponse(dependencies, enriched, ['showShareLinks']),
 			elements
 		};
 	}

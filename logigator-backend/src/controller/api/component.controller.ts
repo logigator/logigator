@@ -22,7 +22,7 @@ import {User} from '../../database/entities/user.entity';
 import {InjectRepository} from 'typeorm-typedi-extensions';
 import {ComponentRepository} from '../../database/repositories/component.repository';
 import {CreateComponent} from '../../models/request/shared/create-component';
-import {buildDependencyResponse, parseStoredCircuit, serializeStoredCircuit} from '../../functions/circuit-content';
+import {buildDependencyResponse, parseStoredCircuit, serializeStoredCircuit, synthesizeMissingSnapshots} from '../../functions/circuit-content';
 import {classToPlain} from 'class-transformer';
 import {ComponentDependencyRepository} from '../../database/repositories/component-dependency.repository';
 import {ComponentFile} from '../../database/entities/component-file.entity';
@@ -77,10 +77,11 @@ export class ComponentController {
 
 		const contentBuffer = await component.elementsFile?.getFileContent();
 		const {elements, snapshots} = parseStoredCircuit(contentBuffer);
+		const enriched = await synthesizeMissingSnapshots(dependencies, snapshots);
 
 		return {
 			...classToPlain(component),
-			dependencies: buildDependencyResponse(dependencies, snapshots),
+			dependencies: buildDependencyResponse(dependencies, enriched),
 			elements
 		};
 	}
@@ -93,10 +94,12 @@ export class ComponentController {
 		if (component.elementsFile && component.elementsFile.hash !== body.oldHash)
 			throw new BadRequestError('VersionMismatch');
 
+		const previous = parseStoredCircuit(await component.elementsFile?.getFileContent());
+
 		if (!component.elementsFile)
 			component.elementsFile = new ComponentFile();
 
-		component.elementsFile.setFileContent(serializeStoredCircuit(body.elements, body.dependencies));
+		component.elementsFile.setFileContent(serializeStoredCircuit(body.elements, body.dependencies, previous.snapshots));
 		component.numInputs = body.numInputs;
 		component.numOutputs = body.numOutputs;
 		component.labels = body.labels;

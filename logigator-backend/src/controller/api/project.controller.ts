@@ -28,7 +28,7 @@ import {UpdateProject} from '../../models/request/api/project/update-project';
 import {ProjectDependencyRepository} from '../../database/repositories/project-dependency.repository';
 import {classToPlain} from 'class-transformer';
 import {ComponentRepository} from '../../database/repositories/component.repository';
-import {buildDependencyResponse, parseStoredCircuit, serializeStoredCircuit} from '../../functions/circuit-content';
+import {buildDependencyResponse, parseStoredCircuit, serializeStoredCircuit, synthesizeMissingSnapshots} from '../../functions/circuit-content';
 import {v4 as uuid} from 'uuid';
 import {getUploadedFileOptions} from '../../functions/get-uploaded-file-options';
 import {ProjectPreviewDark} from '../../database/entities/project-preview-dark.entity';
@@ -73,10 +73,11 @@ export class ProjectController {
 
 		const contentBuffer = await project.elementsFile?.getFileContent();
 		const {elements, snapshots} = parseStoredCircuit(contentBuffer);
+		const enriched = await synthesizeMissingSnapshots(dependencies, snapshots);
 
 		return {
 			...classToPlain(project, {groups: ['showShareLinks']}),
-			dependencies: buildDependencyResponse(dependencies, snapshots),
+			dependencies: buildDependencyResponse(dependencies, enriched),
 			elements
 		};
 	}
@@ -89,10 +90,12 @@ export class ProjectController {
 		if (project.elementsFile && project.elementsFile.hash !== body.oldHash)
 			throw new BadRequestError('VersionMismatch');
 
+		const previous = parseStoredCircuit(await project.elementsFile?.getFileContent());
+
 		if (!project.elementsFile)
 			project.elementsFile = new ProjectFile();
 
-		project.elementsFile.setFileContent(serializeStoredCircuit(body.elements, body.dependencies));
+		project.elementsFile.setFileContent(serializeStoredCircuit(body.elements, body.dependencies, previous.snapshots));
 		project.lastEdited = new Date();
 
 		const deps = [];
