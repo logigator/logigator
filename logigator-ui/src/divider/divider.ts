@@ -16,7 +16,7 @@ import {
   template: '',
   host: {
     role: 'separator',
-    '[attr.aria-orientation]': "layout()",
+    '[attr.aria-orientation]': 'layout()',
     '[class]': 'rootClass()'
   }
 })

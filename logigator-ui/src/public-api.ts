@@ -19,3 +19,10 @@ export { LgBadge } from './badge/badge';
 export { LgAvatar } from './avatar/avatar';
 export { LgCard } from './card/card';
 export { LgRipple } from './ripple/ripple';
+
+export { LgInputText } from './input-text/input-text';
+export { LgTextarea } from './textarea/textarea';
+export { LgToggleSwitch } from './toggle-switch/toggle-switch';
+export { LgSelectButton } from './select-button/select-button';
+export { LgInputNumber } from './input-number/input-number';
+export { LgSlider } from './slider/slider';

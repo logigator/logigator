@@ -13,7 +13,8 @@ const BASE =
 // Subtle (tinted) treatment per severity, on the themeable surface/state palette.
 const SEVERITY: Record<'primary' | LgSeverity, string> = {
   primary: 'bg-primary-100 text-primary-700',
-  secondary: 'bg-surface-100 text-surface-600 dark:bg-surface-700 dark:text-surface-200',
+  secondary:
+    'bg-surface-100 text-surface-600 dark:bg-surface-700 dark:text-surface-200',
   info: 'bg-info-surface text-info',
   warn: 'bg-warn-surface text-warn',
   danger: 'bg-error-surface text-error'

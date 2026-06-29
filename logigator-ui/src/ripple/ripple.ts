@@ -28,7 +28,8 @@ export class LgRipple {
       `top:${event.clientY - rect.top - size / 2}px;transform:scale(0);`;
     el.appendChild(ripple);
     requestAnimationFrame(() => {
-      ripple.style.transition = 'transform 0.4s ease-out, opacity 0.5s ease-out';
+      ripple.style.transition =
+        'transform 0.4s ease-out, opacity 0.5s ease-out';
       ripple.style.transform = 'scale(1)';
       ripple.style.opacity = '0';
     });
