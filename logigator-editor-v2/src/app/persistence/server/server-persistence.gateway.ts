@@ -1,4 +1,5 @@
 import { inject, Injectable } from '@angular/core';
+import { TranslocoService } from '@jsverse/transloco';
 import { firstValueFrom, map, Observable, tap } from 'rxjs';
 import { HttpErrorResponse } from '@angular/common/http';
 import { ProjectApiService } from '../../api/services/project-api.service';
@@ -44,6 +45,7 @@ export class ServerPersistenceGateway {
   private readonly metadataStore = inject(ProjectMetadataStore);
   private readonly toast = inject(ToastService);
   private readonly logging = inject(LoggingService);
+  private readonly transloco = inject(TranslocoService);
   private readonly snapshot = inject(BoardSnapshotService);
 
   async loadProject(uuid: string): Promise<Project> {
@@ -65,9 +67,7 @@ export class ServerPersistenceGateway {
 
     if (!detail.newFormat) {
       this.toast.warn(
-        'This project was made with the old editor. Saving here converts it to ' +
-          'the new format — reopening it in the old editor afterwards may drop or ' +
-          'misrender custom components.'
+        this.transloco.translate('persistence.legacyProjectWarning')
       );
     }
 
