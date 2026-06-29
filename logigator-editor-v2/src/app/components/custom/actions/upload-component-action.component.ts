@@ -5,7 +5,7 @@ import {
   inject,
   input
 } from '@angular/core';
-import { Button } from 'primeng/button';
+import { LgButton } from '@logigator/ui';
 import { Tooltip } from 'primeng/tooltip';
 import { DialogService } from 'primeng/dynamicdialog';
 import { TranslocoDirective, TranslocoService } from '@jsverse/transloco';
@@ -28,10 +28,10 @@ import {
  */
 @Component({
   selector: 'app-upload-component-action',
-  imports: [Button, Tooltip, TranslocoDirective],
+  imports: [LgButton, Tooltip, TranslocoDirective],
   template: `<ng-container *transloco="let t">
     @if (visible()) {
-      <p-button
+      <lg-button
         size="small"
         icon="ph ph-cloud-arrow-up"
         [label]="t('uploadComponent.button')"

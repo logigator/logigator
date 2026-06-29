@@ -1,6 +1,6 @@
 import { ChangeDetectionStrategy, Component, inject } from '@angular/core';
 import { DynamicDialogRef } from 'primeng/dynamicdialog';
-import { ButtonModule } from 'primeng/button';
+import { LgButton } from '@logigator/ui';
 import { DividerModule } from 'primeng/divider';
 import { TooltipModule } from 'primeng/tooltip';
 import { TranslocoDirective } from '@jsverse/transloco';
@@ -18,7 +18,7 @@ interface ShortcutGroup {
 @Component({
   selector: 'app-shortcut-manager',
   imports: [
-    ButtonModule,
+    LgButton,
     DividerModule,
     TooltipModule,
     TranslocoDirective,

@@ -1,5 +1,5 @@
 import { ChangeDetectionStrategy, Component, inject } from '@angular/core';
-import { ButtonModule } from 'primeng/button';
+import { LgButton } from '@logigator/ui';
 import { TranslocoDirective } from '@jsverse/transloco';
 import { SelectionInspectorService } from '../../project/selection-inspector.service';
 import { ClipboardService } from '../../clipboard/clipboard.service';
@@ -12,7 +12,7 @@ import { ProjectService } from '../../project/project.service';
  */
 @Component({
   selector: 'app-selection-action-bar',
-  imports: [ButtonModule, TranslocoDirective],
+  imports: [LgButton, TranslocoDirective],
   template: `
     @if (inspector.hasSelection()) {
       <div
@@ -22,38 +22,38 @@ import { ProjectService } from '../../project/project.service';
         <span class="px-1 text-sm text-muted tabular-nums">{{
           inspector.selectionCount()
         }}</span>
-        <p-button
+        <lg-button
           icon="ph ph-copy"
           severity="secondary"
           rounded
           text
           [ariaLabel]="t('toolBar.copy')"
           (onClick)="copy()"
-        ></p-button>
-        <p-button
+        ></lg-button>
+        <lg-button
           icon="ph ph-scissors"
           severity="secondary"
           rounded
           text
           [ariaLabel]="t('toolBar.cut')"
           (onClick)="cut()"
-        ></p-button>
-        <p-button
+        ></lg-button>
+        <lg-button
           icon="ph ph-clipboard"
           severity="secondary"
           rounded
           text
           [ariaLabel]="t('toolBar.paste')"
           (onClick)="paste()"
-        ></p-button>
-        <p-button
+        ></lg-button>
+        <lg-button
           icon="ph ph-trash"
           severity="secondary"
           rounded
           text
           [ariaLabel]="t('toolBar.delete')"
           (onClick)="delete()"
-        ></p-button>
+        ></lg-button>
       </div>
     }
   `,

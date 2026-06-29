@@ -13,7 +13,7 @@
                 [binding]="shortcutService.binding(action)()"
                 (bindingChange)="onBindingChange(action, $event)"
               />
-              <p-button
+              <lg-button
                 icon="ph ph-arrow-counter-clockwise"
                 severity="secondary"
                 [text]="true"
@@ -23,7 +23,7 @@
                 tooltipPosition="bottom"
                 (onClick)="shortcutService.resetBinding(action)"
               />
-              <p-button
+              <lg-button
                 icon="ph ph-trash"
                 severity="secondary"
                 [text]="true"
@@ -44,7 +44,7 @@
   </div>
 
   <div class="flex justify-end mt-4">
-    <p-button
+    <lg-button
       [label]="t('shortcuts.manager.resetAll')"
       severity="danger"
       [outlined]="true"

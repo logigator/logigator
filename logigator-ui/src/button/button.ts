@@ -1,4 +1,5 @@
 import {
+  booleanAttribute,
   ChangeDetectionStrategy,
   Component,
   computed,
@@ -92,11 +93,11 @@ export class LgButton {
   readonly icon = input<IconSlot>();
   readonly severity = input<LgSeverity>();
   readonly size = input<LgSize>();
-  readonly text = input(false);
-  readonly outlined = input(false);
-  readonly rounded = input(false);
-  readonly disabled = input(false);
-  readonly loading = input(false);
+  readonly text = input(false, { transform: booleanAttribute });
+  readonly outlined = input(false, { transform: booleanAttribute });
+  readonly rounded = input(false, { transform: booleanAttribute });
+  readonly disabled = input(false, { transform: booleanAttribute });
+  readonly loading = input(false, { transform: booleanAttribute });
   readonly type = input<'button' | 'submit' | 'reset'>('button');
   readonly ariaLabel = input<string>();
   readonly styleClass = input<string>();

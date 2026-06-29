@@ -46,7 +46,7 @@
         [ngModelOptions]="{ standalone: true }"
         [attr.aria-label]="t('hexEditor.goto')"
       />
-      <p-button
+      <lg-button
         icon="ph ph-magnifying-glass"
         severity="secondary"
         size="small"
@@ -57,7 +57,7 @@
 
     <!-- Action buttons -->
     <div class="flex items-center gap-2">
-      <p-button
+      <lg-button
         [label]="t('hexEditor.copy')"
         icon="ph ph-copy"
         severity="secondary"
@@ -65,7 +65,7 @@
         size="small"
         (onClick)="copyAll()"
       />
-      <p-button
+      <lg-button
         [label]="t('hexEditor.clear')"
         icon="ph ph-eraser"
         severity="secondary"
@@ -178,12 +178,12 @@
 
   <!-- Footer actions -->
   <div class="mt-3 flex justify-end gap-2">
-    <p-button
+    <lg-button
       [label]="t('common.cancel')"
       severity="secondary"
       (onClick)="dismiss()"
     />
-    <p-button
+    <lg-button
       [label]="t('common.save')"
       icon="ph ph-check"
       (onClick)="commit()"

@@ -30,7 +30,7 @@ describe('ToolBarComponent', () => {
     const el: HTMLElement = fixture.nativeElement;
     await vi.waitFor(() => {
       fixture.detectChanges();
-      expect(el.querySelector('p-button')).not.toBeNull();
+      expect(el.querySelector('lg-button')).not.toBeNull();
     });
     return el;
   }

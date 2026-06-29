@@ -14,7 +14,7 @@ import {
 import { FormsModule } from '@angular/forms';
 import { TranslocoDirective, TranslocoService } from '@jsverse/transloco';
 import { ConfirmationService } from 'primeng/api';
-import { ButtonModule } from 'primeng/button';
+import { LgButton } from '@logigator/ui';
 import { SelectButtonModule } from 'primeng/selectbutton';
 import { InputTextModule } from 'primeng/inputtext';
 import { Scroller, ScrollerModule } from 'primeng/scroller';
@@ -66,7 +66,7 @@ const RADICES: Record<Radix, RadixSpec> = {
   imports: [
     FormsModule,
     TranslocoDirective,
-    ButtonModule,
+    LgButton,
     SelectButtonModule,
     InputTextModule,
     ScrollerModule

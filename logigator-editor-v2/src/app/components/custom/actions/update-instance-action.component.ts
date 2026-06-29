@@ -5,7 +5,7 @@ import {
   inject,
   input
 } from '@angular/core';
-import { Button } from 'primeng/button';
+import { LgButton } from '@logigator/ui';
 import { ComponentActionContext } from '../../component-action';
 import { CustomComponent } from '../custom-component';
 import { CustomComponentRegistry } from '../custom-component-registry.service';
@@ -19,9 +19,9 @@ import { CustomComponentService } from '../../../custom-component/custom-compone
  */
 @Component({
   selector: 'app-update-instance-action',
-  imports: [Button],
+  imports: [LgButton],
   template: `@if (updatable()) {
-    <p-button
+    <lg-button
       size="small"
       severity="warn"
       label="Update to latest"

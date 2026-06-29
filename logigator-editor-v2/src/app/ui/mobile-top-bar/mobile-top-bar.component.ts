@@ -4,7 +4,7 @@ import {
   computed,
   inject
 } from '@angular/core';
-import { ButtonModule } from 'primeng/button';
+import { LgButton } from '@logigator/ui';
 import { TranslocoDirective } from '@jsverse/transloco';
 import { WorkModeService } from '../../work-mode/work-mode.service';
 import { WorkMode } from '../../work-mode/work-mode.enum';
@@ -21,58 +21,58 @@ import { MobileUiService } from '../../layout/mobile-ui.service';
  */
 @Component({
   selector: 'app-mobile-top-bar',
-  imports: [ButtonModule, TranslocoDirective],
+  imports: [LgButton, TranslocoDirective],
   template: `
     <div
       *transloco="let t"
       class="flex h-12 items-center gap-1 border-b border-border px-1"
     >
-      <p-button
+      <lg-button
         icon="ph ph-list"
         severity="secondary"
         text
         [ariaLabel]="t('mobile.menu')"
         (onClick)="openMenu()"
-      ></p-button>
+      ></lg-button>
       <span class="grow truncate px-1 text-center font-semibold">{{
         projectName()
       }}</span>
       @if (isSimulation()) {
-        <p-button
+        <lg-button
           icon="ph ph-sign-out"
           severity="secondary"
           text
           [ariaLabel]="t('toolBar.exitSim')"
           (onClick)="exitSimulation()"
-        ></p-button>
+        ></lg-button>
       } @else {
-        <p-button
+        <lg-button
           icon="ph ph-arrow-u-up-left"
           severity="secondary"
           text
           [ariaLabel]="t('toolBar.undo')"
           (onClick)="undo()"
-        ></p-button>
-        <p-button
+        ></lg-button>
+        <lg-button
           icon="ph ph-arrow-u-up-right"
           severity="secondary"
           text
           [ariaLabel]="t('toolBar.redo')"
           (onClick)="redo()"
-        ></p-button>
-        <p-button
+        ></lg-button>
+        <lg-button
           icon="ph ph-floppy-disk"
           severity="secondary"
           text
           [ariaLabel]="t('toolBar.save')"
           (onClick)="save()"
-        ></p-button>
-        <p-button
+        ></lg-button>
+        <lg-button
           icon="ph ph-play"
           severity="secondary"
           [ariaLabel]="t('toolBar.startSim')"
           (onClick)="startSimulation()"
-        ></p-button>
+        ></lg-button>
       }
     </div>
   `,

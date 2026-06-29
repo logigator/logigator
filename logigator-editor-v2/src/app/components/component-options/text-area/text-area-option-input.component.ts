@@ -5,7 +5,7 @@ import {
   signal
 } from '@angular/core';
 import { FormsModule } from '@angular/forms';
-import { ButtonModule } from 'primeng/button';
+import { LgButton } from '@logigator/ui';
 import { DialogModule } from 'primeng/dialog';
 import { Textarea } from 'primeng/textarea';
 import { TranslocoDirective } from '@jsverse/transloco';
@@ -16,7 +16,7 @@ import type { TextAreaComponentOption } from './text-area.component-option';
   selector: 'app-text-area-option-input',
   imports: [
     FormsModule,
-    ButtonModule,
+    LgButton,
     DialogModule,
     Textarea,
     TranslocoDirective

@@ -5,7 +5,7 @@ import {
   input
 } from '@angular/core';
 import { TranslocoDirective, TranslocoService } from '@jsverse/transloco';
-import { ButtonModule } from 'primeng/button';
+import { LgButton } from '@logigator/ui';
 import { DialogService } from 'primeng/dynamicdialog';
 import { ComponentOptionInput } from '../../component-option';
 import type { MemoryDataComponentOption } from './memory-data.component-option';
@@ -26,7 +26,7 @@ import {
  */
 @Component({
   selector: 'app-memory-data-option-input',
-  imports: [TranslocoDirective, ButtonModule],
+  imports: [TranslocoDirective, LgButton],
   templateUrl: './memory-data-option-input.component.html',
   changeDetection: ChangeDetectionStrategy.OnPush
 })

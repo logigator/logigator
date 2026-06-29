@@ -88,6 +88,17 @@ describe('LgButton', () => {
     expect(button(f).className).toContain('text-primary');
   });
 
+  it('coerces bare/string boolean attributes (booleanAttribute)', () => {
+    const f = create();
+    f.componentRef.setInput('label', 'X');
+    // bare attribute (`rounded`) passes '' which must coerce to true
+    f.componentRef.setInput('rounded', '');
+    f.componentRef.setInput('text', 'true');
+    f.detectChanges();
+    expect(button(f).className).toContain('rounded-[2rem]');
+    expect(button(f).className).not.toContain('border-primary-200');
+  });
+
   it('reflects type and ariaLabel', () => {
     const f = create();
     f.componentRef.setInput('type', 'submit');

@@ -11,7 +11,7 @@ import { SelectButtonModule } from 'primeng/selectbutton';
 import { SelectModule } from 'primeng/select';
 import { ToggleSwitchModule } from 'primeng/toggleswitch';
 import { SliderModule } from 'primeng/slider';
-import { Button } from 'primeng/button';
+import { LgButton } from '@logigator/ui';
 import { TranslocoDirective } from '@jsverse/transloco';
 import { ProjectService } from '../../project/project.service';
 import { ProjectMetadataStore } from '../../persistence/project-metadata.store';
@@ -37,7 +37,7 @@ const DEFAULT_QUALITY_PERCENT = 92;
     SelectModule,
     ToggleSwitchModule,
     SliderModule,
-    Button,
+    LgButton,
     TranslocoDirective
   ],
   templateUrl: './export-image-dialog.component.html',

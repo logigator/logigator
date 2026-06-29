@@ -14,7 +14,7 @@ import {
 import { DatePipe } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { ConfirmationService } from 'primeng/api';
-import { Button } from 'primeng/button';
+import { LgButton } from '@logigator/ui';
 import { InputTextModule } from 'primeng/inputtext';
 import { IconFieldModule } from 'primeng/iconfield';
 import { InputIconModule } from 'primeng/inputicon';
@@ -36,7 +36,7 @@ const NAME_MAX_LENGTH = 20;
   imports: [
     DatePipe,
     FormsModule,
-    Button,
+    LgButton,
     InputTextModule,
     IconFieldModule,
     InputIconModule,

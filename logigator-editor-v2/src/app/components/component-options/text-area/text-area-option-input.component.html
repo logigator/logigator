@@ -1,11 +1,11 @@
 <div *transloco="let t">
-  <p-button
+  <lg-button
     class="float-right"
     [label]="t(option().label)"
     size="small"
     severity="secondary"
     (onClick)="open()"
-  ></p-button>
+  ></lg-button>
 
   <p-dialog
     [visible]="dialogVisible()"
@@ -27,12 +27,12 @@
     ></textarea>
 
     <ng-template pTemplate="footer">
-      <p-button
+      <lg-button
         [label]="t('common.cancel')"
         severity="secondary"
         (onClick)="cancel()"
-      ></p-button>
-      <p-button [label]="t('common.save')" (onClick)="save()"></p-button>
+      ></lg-button>
+      <lg-button [label]="t('common.save')" (onClick)="save()"></lg-button>
     </ng-template>
   </p-dialog>
 </div>

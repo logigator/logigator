@@ -2,7 +2,7 @@
   @if (isSimulationMode()) {
     <app-simulation-controls></app-simulation-controls>
     <div class="ml-auto flex flex-wrap gap-1">
-      <p-button
+      <lg-button
         [pTooltip]="exitSimTooltip()"
         [ariaLabel]="t('toolBar.exitSim')"
         [label]="t('toolBar.exitSim')"
@@ -10,111 +10,111 @@
         tooltipPosition="bottom"
         icon="ph ph-sign-out"
         severity="secondary"
-      ></p-button>
+      ></lg-button>
     </div>
   } @else {
     <div class="flex flex-wrap gap-1">
-      <p-button
+      <lg-button
         [pTooltip]="saveTooltip()"
         [ariaLabel]="saveTooltip()"
         (onClick)="save()"
         tooltipPosition="bottom"
         icon="ph ph-floppy-disk"
         severity="secondary"
-      ></p-button>
-      <p-button
+      ></lg-button>
+      <lg-button
         [pTooltip]="openTooltip()"
         [ariaLabel]="openTooltip()"
         (onClick)="open()"
         tooltipPosition="bottom"
         icon="ph ph-folder-open"
         severity="secondary"
-      ></p-button>
-      <p-button
+      ></lg-button>
+      <lg-button
         [pTooltip]="t('toolBar.newComp')"
         [ariaLabel]="t('toolBar.newComp')"
         tooltipPosition="bottom"
         icon="ph ph-cpu"
         severity="secondary"
-      ></p-button>
+      ></lg-button>
     </div>
     <p-divider layout="vertical" class="mx-1!"></p-divider>
     <div class="flex flex-wrap gap-1">
-      <p-button
+      <lg-button
         [pTooltip]="copyTooltip()"
         [ariaLabel]="copyTooltip()"
         (onClick)="copy()"
         tooltipPosition="bottom"
         icon="ph ph-copy"
         severity="secondary"
-      ></p-button>
-      <p-button
+      ></lg-button>
+      <lg-button
         [pTooltip]="cutTooltip()"
         [ariaLabel]="cutTooltip()"
         (onClick)="cut()"
         tooltipPosition="bottom"
         icon="ph ph-scissors"
         severity="secondary"
-      ></p-button>
-      <p-button
+      ></lg-button>
+      <lg-button
         [pTooltip]="pasteTooltip()"
         [ariaLabel]="pasteTooltip()"
         (onClick)="paste()"
         tooltipPosition="bottom"
         icon="ph ph-clipboard"
         severity="secondary"
-      ></p-button>
-      <p-button
+      ></lg-button>
+      <lg-button
         [pTooltip]="deleteTooltip()"
         [ariaLabel]="deleteTooltip()"
         (onClick)="delete()"
         tooltipPosition="bottom"
         icon="ph ph-trash"
         severity="secondary"
-      ></p-button>
+      ></lg-button>
     </div>
     <p-divider layout="vertical" class="mx-1!"></p-divider>
     <div class="flex flex-wrap gap-1">
-      <p-button
+      <lg-button
         [pTooltip]="undoTooltip()"
         [ariaLabel]="undoTooltip()"
         (onClick)="undo()"
         tooltipPosition="bottom"
         icon="ph ph-arrow-u-up-left"
         severity="secondary"
-      ></p-button>
-      <p-button
+      ></lg-button>
+      <lg-button
         [pTooltip]="redoTooltip()"
         [ariaLabel]="redoTooltip()"
         (onClick)="redo()"
         tooltipPosition="bottom"
         icon="ph ph-arrow-u-up-right"
         severity="secondary"
-      ></p-button>
+      ></lg-button>
     </div>
     <p-divider layout="vertical" class="mx-1!"></p-divider>
     <div class="flex flex-wrap gap-1">
-      <p-button
+      <lg-button
         [pTooltip]="zoomOutTooltip()"
         [ariaLabel]="zoomOutTooltip()"
         (onClick)="zoomOut()"
         tooltipPosition="bottom"
         icon="ph ph-magnifying-glass-minus"
         severity="secondary"
-      ></p-button>
-      <p-button
+      ></lg-button>
+      <lg-button
         [pTooltip]="zoomInTooltip()"
         [ariaLabel]="zoomInTooltip()"
         (onClick)="zoomIn()"
         tooltipPosition="bottom"
         icon="ph ph-magnifying-glass-plus"
         severity="secondary"
-      ></p-button>
+      ></lg-button>
     </div>
     <p-divider layout="vertical" class="mx-1!"></p-divider>
     <div class="flex flex-wrap gap-1">
       @for (tool of tools; track tool.id) {
-        <p-button
+        <lg-button
           [pTooltip]="
             t(tool.labelKey) + ' (' + shortcutLabel(tool.shortcut) + ')'
           "
@@ -124,11 +124,11 @@
           tooltipPosition="bottom"
           [icon]="tool.icon"
           severity="secondary"
-        ></p-button>
+        ></lg-button>
       }
     </div>
     <div class="ml-auto flex flex-wrap gap-1">
-      <p-button
+      <lg-button
         [pTooltip]="startSimTooltip()"
         [ariaLabel]="t('toolBar.startSim')"
         [label]="t('toolBar.startSim')"
@@ -136,7 +136,7 @@
         tooltipPosition="bottom"
         icon="ph ph-play"
         severity="secondary"
-      ></p-button>
+      ></lg-button>
     </div>
   }
 </div>

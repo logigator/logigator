@@ -10,7 +10,7 @@ import { InputTextModule } from 'primeng/inputtext';
 import { ToggleSwitchModule } from 'primeng/toggleswitch';
 import { SelectButtonModule } from 'primeng/selectbutton';
 import { TooltipModule } from 'primeng/tooltip';
-import { Button } from 'primeng/button';
+import { LgButton } from '@logigator/ui';
 import { TranslocoDirective, TranslocoService } from '@jsverse/transloco';
 import { CustomComponentService } from '../../custom-component/custom-component.service';
 import { UserService } from '../../user/user.service';
@@ -30,7 +30,7 @@ import { MessageComponent } from '../message/message.component';
     ToggleSwitchModule,
     SelectButtonModule,
     TooltipModule,
-    Button,
+    LgButton,
     TranslocoDirective,
     MessageComponent
   ],

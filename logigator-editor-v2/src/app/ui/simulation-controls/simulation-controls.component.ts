@@ -5,7 +5,7 @@ import {
   input
 } from '@angular/core';
 import { FormsModule } from '@angular/forms';
-import { ButtonModule } from 'primeng/button';
+import { LgButton } from '@logigator/ui';
 import { DividerModule } from 'primeng/divider';
 import { InputTextModule } from 'primeng/inputtext';
 import { TooltipModule } from 'primeng/tooltip';
@@ -27,7 +27,7 @@ import { SiPipe } from '../../utils/si/si.pipe';
   selector: 'app-simulation-controls',
   imports: [
     FormsModule,
-    ButtonModule,
+    LgButton,
     DividerModule,
     InputTextModule,
     TooltipModule,

@@ -8,7 +8,7 @@
 >
   <!-- Run controls come alive once the worker session reports ready. -->
   <div class="flex flex-wrap gap-1">
-    <p-button
+    <lg-button
       [pTooltip]="t('toolBar.play')"
       [ariaLabel]="t('toolBar.play')"
       [disabled]="!isSimReady() || isSimRunning()"
@@ -16,8 +16,8 @@
       tooltipPosition="bottom"
       icon="ph ph-play"
       severity="secondary"
-    ></p-button>
-    <p-button
+    ></lg-button>
+    <lg-button
       [pTooltip]="t('toolBar.pause')"
       [ariaLabel]="t('toolBar.pause')"
       [disabled]="!isSimRunning()"
@@ -25,8 +25,8 @@
       tooltipPosition="bottom"
       icon="ph ph-pause"
       severity="secondary"
-    ></p-button>
-    <p-button
+    ></lg-button>
+    <lg-button
       [pTooltip]="t('toolBar.step')"
       [ariaLabel]="t('toolBar.step')"
       [disabled]="!isSimReady() || isSimRunning()"
@@ -34,8 +34,8 @@
       tooltipPosition="bottom"
       icon="ph ph-skip-forward"
       severity="secondary"
-    ></p-button>
-    <p-button
+    ></lg-button>
+    <lg-button
       [pTooltip]="t('toolBar.stopSim')"
       [ariaLabel]="t('toolBar.stopSim')"
       [disabled]="!isSimReady()"
@@ -43,11 +43,11 @@
       tooltipPosition="bottom"
       icon="ph ph-stop"
       severity="secondary"
-    ></p-button>
+    ></lg-button>
   </div>
   <p-divider layout="vertical" class="mx-1!"></p-divider>
   <div class="flex flex-wrap items-center gap-2">
-    <p-button
+    <lg-button
       [pTooltip]="t('toolBar.targetMode')"
       [ariaLabel]="t('toolBar.targetMode')"
       [disabled]="!isSimReady()"
@@ -56,7 +56,7 @@
       tooltipPosition="bottom"
       icon="ph ph-gauge"
       severity="secondary"
-    ></p-button>
+    ></lg-button>
     <input
       pInputText
       type="number"
@@ -81,7 +81,7 @@
       [ariaLabel]="t('toolBar.targetUnit')"
       tooltipPosition="bottom"
     ></p-select>
-    <p-button
+    <lg-button
       [pTooltip]="t('toolBar.syncToFrame')"
       [ariaLabel]="t('toolBar.syncToFrame')"
       [disabled]="!isSimReady()"
@@ -90,7 +90,7 @@
       tooltipPosition="bottom"
       icon="ph ph-monitor-play"
       severity="secondary"
-    ></p-button>
+    ></lg-button>
     <span class="text-sm opacity-70 select-none">
       {{ t('toolBar.measuredHz', { hz: measuredHz() | si: 0 }) }}
       &middot;
