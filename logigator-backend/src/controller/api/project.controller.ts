@@ -28,7 +28,7 @@ import {UpdateProject} from '../../models/request/api/project/update-project';
 import {ProjectDependencyRepository} from '../../database/repositories/project-dependency.repository';
 import {classToPlain} from 'class-transformer';
 import {ComponentRepository} from '../../database/repositories/component.repository';
-import {ProjectElement} from '../../models/request/api/project-element';
+import {buildDependencyResponse, parseStoredCircuit, serializeStoredCircuit} from '../../functions/circuit-content';
 import {v4 as uuid} from 'uuid';
 import {getUploadedFileOptions} from '../../functions/get-uploaded-file-options';
 import {ProjectPreviewDark} from '../../database/entities/project-preview-dark.entity';
@@ -72,12 +72,12 @@ export class ProjectController {
 		});
 
 		const contentBuffer = await project.elementsFile?.getFileContent();
-		const content: ProjectElement[] = contentBuffer?.length ? JSON.parse(contentBuffer.toString()) : [];
+		const {elements, snapshots} = parseStoredCircuit(contentBuffer);
 
 		return {
 			...classToPlain(project, {groups: ['showShareLinks']}),
-			dependencies,
-			elements: content ?? []
+			dependencies: buildDependencyResponse(dependencies, snapshots),
+			elements
 		};
 	}
 
@@ -92,12 +92,16 @@ export class ProjectController {
 		if (!project.elementsFile)
 			project.elementsFile = new ProjectFile();
 
-		project.elementsFile.setFileContent(JSON.stringify(body.elements));
+		project.elementsFile.setFileContent(serializeStoredCircuit(body.elements, body.dependencies));
 		project.lastEdited = new Date();
 
 		const deps = [];
 		const depSet = new Set<string>();
 		for (const mapping of body.dependencies) {
+			// Local-only customs (never uploaded to the library) carry no master
+			// id — they live solely in the embedded snapshot, so create no row.
+			if (!mapping.id)
+				continue;
 			const depComp = await this.componentRepo.getOwnedComponentOrThrow(mapping.id, user, `Component for mapping '${mapping.id}' not found.`);
 			const dep = this.projectDepRepo.create();
 			dep.dependency = depComp;
