@@ -4,7 +4,7 @@
       <label [for]="'setting-' + setting.key" class="text-sm">{{
         t(setting.labelKey)
       }}</label>
-      <p-toggleswitch
+      <lg-toggle-switch
         [inputId]="'setting-' + setting.key"
         [ngModel]="setting.value()"
         (ngModelChange)="setting.set($event)"

@@ -30,7 +30,7 @@
       </app-message>
     } @else {
       <div class="flex gap-2 items-center">
-        <p-toggleswitch
+        <lg-toggle-switch
           inputId="save-project-public"
           [ngModel]="isPublic()"
           (ngModelChange)="isPublic.set($event)"

@@ -14,7 +14,7 @@
 
   @if (userService.user()) {
     <div class="flex gap-2 items-center">
-      <p-toggleswitch
+      <lg-toggle-switch
         inputId="upload-component-public"
         [ngModel]="isPublic()"
         (ngModelChange)="isPublic.set($event)"
