@@ -1,0 +1,126 @@
+import { afterEach, describe, expect, it } from 'vitest';
+import { ChangeDetectionStrategy, Component, signal } from '@angular/core';
+import { FormsModule } from '@angular/forms';
+import { TestBed } from '@angular/core/testing';
+import { LgSelect } from './select';
+
+interface Opt {
+  label: string;
+  value: number;
+}
+
+@Component({
+  changeDetection: ChangeDetectionStrategy.OnPush,
+  imports: [LgSelect, FormsModule],
+  template: `
+    <lg-select
+      [options]="options"
+      optionLabel="label"
+      optionValue="value"
+      [disabled]="disabled()"
+      [ngModel]="selected()"
+      (ngModelChange)="selected.set($event)"
+      [ngModelOptions]="{ standalone: true }"
+    />
+  `
+})
+class HostComponent {
+  readonly options: Opt[] = [
+    { label: 'One', value: 1 },
+    { label: 'Two', value: 2 },
+    { label: 'Three', value: 3 }
+  ];
+  readonly selected = signal<number>(2);
+  readonly disabled = signal(false);
+}
+
+function panelOptions(): HTMLElement[] {
+  return Array.from(
+    document.querySelectorAll<HTMLElement>('.cdk-overlay-container [role=option]')
+  );
+}
+
+async function setup() {
+  const f = TestBed.createComponent(HostComponent);
+  f.detectChanges();
+  await f.whenStable();
+  f.detectChanges();
+  const button = f.nativeElement.querySelector('button') as HTMLButtonElement;
+  return { f, button };
+}
+
+describe('LgSelect', () => {
+  afterEach(() => {
+    document
+      .querySelectorAll('.cdk-overlay-container')
+      .forEach((el) => el.remove());
+  });
+
+  it('renders the selected option label on the closed trigger', async () => {
+    const { button } = await setup();
+    expect(button.textContent).toContain('Two');
+    expect(button.getAttribute('aria-expanded')).toBe('false');
+  });
+
+  it('opens a listbox of options on click', async () => {
+    const { f, button } = await setup();
+    button.click();
+    f.detectChanges();
+    expect(button.getAttribute('aria-expanded')).toBe('true');
+    expect(panelOptions().map((o) => o.textContent?.trim())).toEqual([
+      'One',
+      'Two',
+      'Three'
+    ]);
+  });
+
+  it('marks the matching option selected by primitive value (===), not by object identity', async () => {
+    const { f, button } = await setup();
+    button.click();
+    f.detectChanges();
+    const selected = panelOptions().filter(
+      (o) => o.getAttribute('aria-selected') === 'true'
+    );
+    expect(selected).toHaveLength(1);
+    expect(selected[0].textContent).toContain('Two');
+  });
+
+  it('commits the chosen option value through ngModel and closes', async () => {
+    const { f, button } = await setup();
+    const host = f.componentInstance;
+    button.click();
+    f.detectChanges();
+    panelOptions()[0].click();
+    f.detectChanges();
+    expect(host.selected()).toBe(1);
+    expect(button.getAttribute('aria-expanded')).toBe('false');
+    expect(button.textContent).toContain('One');
+  });
+
+  it('does not open when disabled', async () => {
+    const { f, button } = await setup();
+    f.componentInstance.disabled.set(true);
+    f.detectChanges();
+    button.click();
+    f.detectChanges();
+    expect(button.getAttribute('aria-expanded')).toBe('false');
+    expect(panelOptions()).toHaveLength(0);
+  });
+
+  it('closes on backdrop (outside) click', async () => {
+    const { f, button } = await setup();
+    button.click();
+    f.detectChanges();
+    const backdrop = document.querySelector(
+      '.cdk-overlay-backdrop'
+    ) as HTMLElement;
+    backdrop.click();
+    f.detectChanges();
+    expect(button.getAttribute('aria-expanded')).toBe('false');
+  });
+
+  it('uses a type="button" trigger so it cannot submit an enclosing form', async () => {
+    const { button } = await setup();
+    expect(button.getAttribute('type')).toBe('button');
+  });
+});
