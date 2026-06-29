@@ -26,3 +26,6 @@ export { LgToggleSwitch } from './toggle-switch/toggle-switch';
 export { LgSelectButton } from './select-button/select-button';
 export { LgInputNumber } from './input-number/input-number';
 export { LgSlider } from './slider/slider';
+
+export { LgTooltip } from './tooltip/tooltip';
+export { LgPopover } from './popover/popover';
