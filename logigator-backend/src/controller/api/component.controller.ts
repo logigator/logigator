@@ -22,7 +22,7 @@ import {User} from '../../database/entities/user.entity';
 import {InjectRepository} from 'typeorm-typedi-extensions';
 import {ComponentRepository} from '../../database/repositories/component.repository';
 import {CreateComponent} from '../../models/request/shared/create-component';
-import {buildDependencyResponse, isLegacyFormat, parseStoredCircuit, serializeStoredCircuit, synthesizeMissingSnapshots} from '../../functions/circuit-content';
+import {buildDependencyResponse, parseStoredCircuit, serializeStoredCircuit, synthesizeMissingSnapshots} from '../../functions/circuit-content';
 import {classToPlain} from 'class-transformer';
 import {ComponentDependencyRepository} from '../../database/repositories/component-dependency.repository';
 import {ComponentFile} from '../../database/entities/component-file.entity';
@@ -83,7 +83,7 @@ export class ComponentController {
 			...classToPlain(component),
 			dependencies: buildDependencyResponse(dependencies, enriched),
 			elements,
-			legacyFormat: isLegacyFormat(elements, snapshots)
+			legacyFormat: !component.newFormat
 		};
 	}
 
@@ -101,6 +101,7 @@ export class ComponentController {
 			component.elementsFile = new ComponentFile();
 
 		component.elementsFile.setFileContent(serializeStoredCircuit(body.elements, body.dependencies, previous.snapshots));
+		component.newFormat = body.newFormat ?? false;
 		component.numInputs = body.numInputs;
 		component.numOutputs = body.numOutputs;
 		component.labels = body.labels;

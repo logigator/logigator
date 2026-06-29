@@ -45,6 +45,8 @@ export interface SaveProjectRequest {
   oldHash: string;
   dependencies: DependencyMapping[];
   elements: ProjectElement[];
+  /** Marks the saved circuit as this editor's format (drives the old editor's warning). */
+  newFormat: boolean;
 }
 
 // ---- PATCH /:projectId request ----

@@ -71,6 +71,14 @@ export class Project {
 	@Column({default: false, nullable: false})
 	public: boolean;
 
+	/**
+	 * Set by the new editor on save; absent on saves by the old editor or old API
+	 * clients, which default it to `false` (legacy). The read responses derive
+	 * `legacyFormat` from it so the editors can warn on a version mismatch.
+	 */
+	@Column({default: false, nullable: false})
+	newFormat: boolean;
+
 	@ManyToOne(() => Project, object => object.forks, {nullable: true, onDelete: 'SET NULL'})
 	forkedFrom: Promise<Project>;
 

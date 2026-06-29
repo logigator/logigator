@@ -106,7 +106,8 @@ export class ServerPersistenceGateway {
       this.projectApi.save(response.id, {
         oldHash: response.elementsFile?.hash ?? '',
         dependencies,
-        elements
+        elements,
+        newFormat: true
       })
     );
     this.metadataStore.updateHash(
@@ -156,7 +157,8 @@ export class ServerPersistenceGateway {
       this.projectApi.save(response.id, {
         oldHash: response.elementsFile?.hash ?? '',
         dependencies,
-        elements
+        elements,
+        newFormat: true
       })
     );
     this.metadataStore.updateHash(
@@ -468,7 +470,8 @@ export class ServerPersistenceGateway {
         this.projectApi.save(metadata.id, {
           oldHash: metadata.hash,
           dependencies,
-          elements
+          elements,
+          newFormat: true
         })
       );
 
@@ -570,7 +573,8 @@ export class ServerPersistenceGateway {
         elements,
         numInputs: summary.numInputs,
         numOutputs: summary.numOutputs,
-        labels: summary.labels
+        labels: summary.labels,
+        newFormat: true
       })
     );
   }

@@ -10,7 +10,7 @@ import {ComponentRepository} from '../../database/repositories/component.reposit
 import {UserRepository} from '../../database/repositories/user.repository';
 import {ProjectDependencyRepository} from '../../database/repositories/project-dependency.repository';
 import {classToPlain} from 'class-transformer';
-import {buildDependencyResponse, isLegacyFormat, parseStoredCircuit, synthesizeMissingSnapshots} from '../../functions/circuit-content';
+import {buildDependencyResponse, parseStoredCircuit, synthesizeMissingSnapshots} from '../../functions/circuit-content';
 import {Project} from '../../database/entities/project.entity';
 import {ComponentDependencyRepository} from '../../database/repositories/component-dependency.repository';
 import {Component} from '../../database/entities/component.entity';
@@ -55,7 +55,7 @@ export class ShareController {
 			...classToPlain(project),
 			dependencies: buildDependencyResponse(dependencies, enriched, ['showShareLinks']),
 			elements,
-			legacyFormat: isLegacyFormat(elements, snapshots)
+			legacyFormat: !project.newFormat
 		};
 	}
 

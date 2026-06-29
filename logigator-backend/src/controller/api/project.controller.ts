@@ -28,7 +28,7 @@ import {UpdateProject} from '../../models/request/api/project/update-project';
 import {ProjectDependencyRepository} from '../../database/repositories/project-dependency.repository';
 import {classToPlain} from 'class-transformer';
 import {ComponentRepository} from '../../database/repositories/component.repository';
-import {buildDependencyResponse, isLegacyFormat, parseStoredCircuit, serializeStoredCircuit, synthesizeMissingSnapshots} from '../../functions/circuit-content';
+import {buildDependencyResponse, parseStoredCircuit, serializeStoredCircuit, synthesizeMissingSnapshots} from '../../functions/circuit-content';
 import {v4 as uuid} from 'uuid';
 import {getUploadedFileOptions} from '../../functions/get-uploaded-file-options';
 import {ProjectPreviewDark} from '../../database/entities/project-preview-dark.entity';
@@ -79,7 +79,7 @@ export class ProjectController {
 			...classToPlain(project, {groups: ['showShareLinks']}),
 			dependencies: buildDependencyResponse(dependencies, enriched),
 			elements,
-			legacyFormat: isLegacyFormat(elements, snapshots)
+			legacyFormat: !project.newFormat
 		};
 	}
 
@@ -97,6 +97,7 @@ export class ProjectController {
 			project.elementsFile = new ProjectFile();
 
 		project.elementsFile.setFileContent(serializeStoredCircuit(body.elements, body.dependencies, previous.snapshots));
+		project.newFormat = body.newFormat ?? false;
 		project.lastEdited = new Date();
 
 		const deps = [];
