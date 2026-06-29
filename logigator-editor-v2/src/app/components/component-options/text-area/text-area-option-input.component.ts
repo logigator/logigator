@@ -5,9 +5,8 @@ import {
   signal
 } from '@angular/core';
 import { FormsModule } from '@angular/forms';
-import { LgButton } from '@logigator/ui';
+import { LgButton, LgTextarea } from '@logigator/ui';
 import { DialogModule } from 'primeng/dialog';
-import { Textarea } from 'primeng/textarea';
 import { TranslocoDirective } from '@jsverse/transloco';
 import type { ComponentOptionInput } from '../../component-option';
 import type { TextAreaComponentOption } from './text-area.component-option';
@@ -18,7 +17,7 @@ import type { TextAreaComponentOption } from './text-area.component-option';
     FormsModule,
     LgButton,
     DialogModule,
-    Textarea,
+    LgTextarea,
     TranslocoDirective
   ],
   templateUrl: './text-area-option-input.component.html',

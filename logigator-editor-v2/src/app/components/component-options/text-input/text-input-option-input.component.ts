@@ -1,6 +1,6 @@
 import { ChangeDetectionStrategy, Component, input } from '@angular/core';
 import { FormsModule } from '@angular/forms';
-import { InputTextModule } from 'primeng/inputtext';
+import { LgInputText } from '@logigator/ui';
 import { TranslocoDirective } from '@jsverse/transloco';
 import type { ComponentOptionInput } from '../../component-option';
 import type { TextInputComponentOption } from './text-input.component-option';
@@ -9,7 +9,7 @@ let nextId = 0;
 
 @Component({
   selector: 'app-text-input-option-input',
-  imports: [FormsModule, InputTextModule, TranslocoDirective],
+  imports: [FormsModule, LgInputText, TranslocoDirective],
   templateUrl: './text-input-option-input.component.html',
   changeDetection: ChangeDetectionStrategy.OnPush
 })

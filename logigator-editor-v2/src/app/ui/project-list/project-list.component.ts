@@ -14,8 +14,7 @@ import {
 import { DatePipe } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { ConfirmationService } from 'primeng/api';
-import { LgButton } from '@logigator/ui';
-import { InputTextModule } from 'primeng/inputtext';
+import { LgButton, LgInputText } from '@logigator/ui';
 import { IconFieldModule } from 'primeng/iconfield';
 import { InputIconModule } from 'primeng/inputicon';
 import { Paginator, type PaginatorState } from 'primeng/paginator';
@@ -37,7 +36,7 @@ const NAME_MAX_LENGTH = 20;
     DatePipe,
     FormsModule,
     LgButton,
-    InputTextModule,
+    LgInputText,
     IconFieldModule,
     InputIconModule,
     Paginator,

@@ -14,9 +14,8 @@ import {
 import { FormsModule } from '@angular/forms';
 import { TranslocoDirective, TranslocoService } from '@jsverse/transloco';
 import { ConfirmationService } from 'primeng/api';
-import { LgButton } from '@logigator/ui';
+import { LgButton, LgInputText } from '@logigator/ui';
 import { SelectButtonModule } from 'primeng/selectbutton';
-import { InputTextModule } from 'primeng/inputtext';
 import { Scroller, ScrollerModule } from 'primeng/scroller';
 import { LayoutService } from '../../layout/layout.service';
 import {
@@ -68,7 +67,7 @@ const RADICES: Record<Radix, RadixSpec> = {
     TranslocoDirective,
     LgButton,
     SelectButtonModule,
-    InputTextModule,
+    LgInputText,
     ScrollerModule
   ],
   templateUrl: './hex-editor.component.html',

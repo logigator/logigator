@@ -6,11 +6,10 @@ import {
 } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { DynamicDialogConfig, DynamicDialogRef } from 'primeng/dynamicdialog';
-import { InputTextModule } from 'primeng/inputtext';
 import { ToggleSwitchModule } from 'primeng/toggleswitch';
 import { SelectButtonModule } from 'primeng/selectbutton';
 import { TooltipModule } from 'primeng/tooltip';
-import { LgButton } from '@logigator/ui';
+import { LgButton, LgInputText } from '@logigator/ui';
 import { TranslocoDirective, TranslocoService } from '@jsverse/transloco';
 import { UserService } from '../../user/user.service';
 import { MessageComponent } from '../message/message.component';
@@ -34,7 +33,7 @@ const NAME_MAX_LENGTH = 20;
   selector: 'app-save-project-dialog',
   imports: [
     FormsModule,
-    InputTextModule,
+    LgInputText,
     ToggleSwitchModule,
     SelectButtonModule,
     TooltipModule,

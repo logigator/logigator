@@ -5,8 +5,7 @@ import {
   input
 } from '@angular/core';
 import { FormsModule } from '@angular/forms';
-import { LgButton, LgDivider } from '@logigator/ui';
-import { InputTextModule } from 'primeng/inputtext';
+import { LgButton, LgDivider, LgInputText } from '@logigator/ui';
 import { TooltipModule } from 'primeng/tooltip';
 import { Select } from 'primeng/select';
 import { TranslocoDirective } from '@jsverse/transloco';
@@ -28,7 +27,7 @@ import { SiPipe } from '../../utils/si/si.pipe';
     FormsModule,
     LgButton,
     LgDivider,
-    InputTextModule,
+    LgInputText,
     TooltipModule,
     Select,
     SiPipe,

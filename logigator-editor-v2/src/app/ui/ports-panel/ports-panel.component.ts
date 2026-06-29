@@ -10,8 +10,7 @@ import {
   DragDropModule,
   moveItemInArray
 } from '@angular/cdk/drag-drop';
-import { LgCard, LgTag } from '@logigator/ui';
-import { InputTextModule } from 'primeng/inputtext';
+import { LgCard, LgInputText, LgTag } from '@logigator/ui';
 import { TranslocoDirective } from '@jsverse/transloco';
 import { of, scan, startWith, switchMap } from 'rxjs';
 import { ProjectService } from '../../project/project.service';
@@ -54,7 +53,7 @@ interface PlugRow {
     DragDropModule,
     LgCard,
     LgTag,
-    InputTextModule,
+    LgInputText,
     TranslocoDirective,
     ComponentListCategoryComponent
   ],
