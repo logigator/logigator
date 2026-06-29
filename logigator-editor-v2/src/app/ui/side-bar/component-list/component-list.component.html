@@ -1,4 +1,4 @@
-<p-card *transloco="let t">
+<lg-card *transloco="let t">
   <ng-template #title>
     <span class="flex items-center gap-2 text-lg mb-2">
       <i class="ph ph-dresser text-primary"></i>
@@ -31,12 +31,12 @@
           <p-accordion-header>
             <span class="flex items-center gap-2 w-full font-semibold">
               {{ t(cat.labelKey) }}
-              <p-badge
-                [dt]="{ borderRadius: '9999px' }"
+              <lg-badge
+                rounded
                 class="ml-auto mr-2"
                 [value]="cat.components.length"
                 severity="secondary"
-              ></p-badge>
+              ></lg-badge>
             </span>
           </p-accordion-header>
           <p-accordion-content>
@@ -48,4 +48,4 @@
       }
     </p-accordion>
   </div>
-</p-card>
+</lg-card>

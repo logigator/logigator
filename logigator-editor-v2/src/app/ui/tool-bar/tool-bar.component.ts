@@ -4,8 +4,7 @@ import {
   computed,
   inject
 } from '@angular/core';
-import { LgButton } from '@logigator/ui';
-import { DividerModule } from 'primeng/divider';
+import { LgButton, LgDivider } from '@logigator/ui';
 import { TooltipModule } from 'primeng/tooltip';
 import { TranslocoDirective, TranslocoService } from '@jsverse/transloco';
 import { WorkModeService } from '../../work-mode/work-mode.service';
@@ -29,7 +28,7 @@ import { SimulationControlsComponent } from '../simulation-controls/simulation-c
   selector: 'app-tool-bar',
   imports: [
     LgButton,
-    DividerModule,
+    LgDivider,
     TooltipModule,
     TranslocoDirective,
     SimulationControlsComponent

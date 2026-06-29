@@ -8,7 +8,7 @@ import { MenubarModule } from 'primeng/menubar';
 import { NgOptimizedImage } from '@angular/common';
 import logoUrl from '@assets/logo.svg';
 import { ProjectService } from '../../project/project.service';
-import { Ripple } from 'primeng/ripple';
+import { LgRipple } from '@logigator/ui';
 import { ShortcutDisplayComponent } from '../../shortcuts/shortcut-display/shortcut-display.component';
 import { UserSettingsComponent } from '../user-settings/user-settings.component';
 import { ProjectMetadataStore } from '../../persistence/project-metadata.store';
@@ -19,7 +19,7 @@ import { EditorMenuService } from '../editor-menu.service';
   imports: [
     MenubarModule,
     NgOptimizedImage,
-    Ripple,
+    LgRipple,
     ShortcutDisplayComponent,
     UserSettingsComponent
   ],

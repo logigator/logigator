@@ -10,8 +10,7 @@ import { FormsModule } from '@angular/forms';
 import { IconFieldModule } from 'primeng/iconfield';
 import { InputIconModule } from 'primeng/inputicon';
 import { AccordionModule } from 'primeng/accordion';
-import { BadgeModule } from 'primeng/badge';
-import { Card } from 'primeng/card';
+import { LgBadge, LgCard } from '@logigator/ui';
 import { TranslocoDirective, TranslocoService } from '@jsverse/transloco';
 import { ComponentProviderService } from '../../../components/component-provider.service';
 import { ComponentListCategoryComponent } from '../component-list-category/component-list-category.component';
@@ -41,8 +40,8 @@ interface PaletteCategory {
     IconFieldModule,
     InputIconModule,
     AccordionModule,
-    BadgeModule,
-    Card,
+    LgBadge,
+    LgCard,
     ComponentListCategoryComponent,
     TranslocoDirective
   ],

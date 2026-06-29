@@ -10,7 +10,7 @@ import { WorkModeService } from '../../work-mode/work-mode.service';
 import { WorkMode } from '../../work-mode/work-mode.enum';
 import { SelectionInspectorService } from '../../project/selection-inspector.service';
 import { ProjectService } from '../../project/project.service';
-import { Card } from 'primeng/card';
+import { LgCard } from '@logigator/ui';
 import {
   LocalizableText,
   resolveLocalizableText
@@ -23,7 +23,7 @@ import { SourceIndicatorComponent } from '../source-indicator/source-indicator.c
 
 @Component({
   selector: 'app-component-settings',
-  imports: [NgComponentOutlet, Card, SourceIndicatorComponent],
+  imports: [NgComponentOutlet, LgCard, SourceIndicatorComponent],
   templateUrl: './component-settings.component.html',
   changeDetection: ChangeDetectionStrategy.OnPush
 })

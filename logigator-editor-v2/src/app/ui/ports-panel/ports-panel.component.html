@@ -1,9 +1,9 @@
-<p-card *transloco="let t">
+<lg-card *transloco="let t">
   <ng-template #title>
     <span class="flex items-center gap-2 text-lg mb-2">
       <i class="ph ph-plugs text-primary"></i>
       <span>{{ t('portsPanel.title') }}</span>
-      <p-tag
+      <lg-tag
         [value]="t('portsPanel.badge')"
         severity="info"
         [rounded]="true"
@@ -85,4 +85,4 @@
       </div>
     </div>
   </div>
-</p-card>
+</lg-card>

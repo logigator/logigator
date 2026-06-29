@@ -45,7 +45,7 @@ describe('ComponentSettingsComponent', () => {
 
   it('renders no panel while nothing is being placed or selected', () => {
     const host = fixture.nativeElement as HTMLElement;
-    expect(host.querySelector('p-card')).toBeNull();
+    expect(host.querySelector('lg-card')).toBeNull();
   });
 
   it('omits inspector-hidden options from the rendered form', () => {
@@ -56,7 +56,7 @@ describe('ComponentSettingsComponent', () => {
     fixture.detectChanges();
 
     const host = fixture.nativeElement as HTMLElement;
-    expect(host.querySelector('p-card')).not.toBeNull();
+    expect(host.querySelector('lg-card')).not.toBeNull();
     expect(host.querySelector('app-text-input-option-input')).not.toBeNull();
     expect(host.querySelector('app-select-button-option-input')).not.toBeNull();
     expect(host.querySelector('app-number-option-input')).toBeNull();
