@@ -1,5 +1,13 @@
 @import 'tailwindcss';
 @import 'tailwindcss-primeui';
+/* @logigator/ui palette — coexists with PrimeNG's --p-* during migration.
+   The @theme mapping (theme.tw.css) is NOT imported yet; it lands at the
+   Phase 8 cutover when --color-* is repointed off --p-*. */
+@import '../../logigator-ui/styles/theme.css';
+
+/* Scan the library's templates so their Tailwind utilities are generated
+   (needed from Phase 2 on, while <lg-*> components are still being added). */
+@source '../../logigator-ui/src';
 
 @custom-variant dark (&:where(.dark-mode, .dark-mode *));
 
