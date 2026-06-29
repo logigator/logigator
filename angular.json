@@ -10,8 +10,8 @@
           "style": "scss"
         }
       },
-      "root": "",
-      "sourceRoot": "src",
+      "root": "logigator-editor-v2",
+      "sourceRoot": "logigator-editor-v2/src",
       "prefix": "app",
       "architect": {
         "build": {
@@ -19,15 +19,15 @@
           "options": {
             "outputPath": "dist/logigator-editor-v2",
             "baseHref": "/editor/",
-            "index": "src/index.html",
-            "browser": "src/main.ts",
+            "index": "logigator-editor-v2/src/index.html",
+            "browser": "logigator-editor-v2/src/main.ts",
             "polyfills": [],
-            "tsConfig": "tsconfig.app.json",
+            "tsConfig": "logigator-editor-v2/tsconfig.app.json",
             "inlineStyleLanguage": "scss",
             "assets": [
               {
                 "glob": "**/*",
-                "input": "public"
+                "input": "logigator-editor-v2/public"
               }
             ],
             "loader": {
@@ -35,7 +35,10 @@
               ".svg": "file",
               ".woff2": "file"
             },
-            "styles": ["src/tailwind.css", "src/styles.scss"],
+            "styles": [
+              "logigator-editor-v2/src/tailwind.css",
+              "logigator-editor-v2/src/styles.scss"
+            ],
             "scripts": [],
             "allowedCommonJsDependencies": [
               "earcut",
@@ -65,8 +68,8 @@
               "sourceMap": true,
               "fileReplacements": [
                 {
-                  "replace": "src/environments/environment.ts",
-                  "with": "src/environments/environment.development.ts"
+                  "replace": "logigator-editor-v2/src/environments/environment.ts",
+                  "with": "logigator-editor-v2/src/environments/environment.development.ts"
                 }
               ]
             }
@@ -97,12 +100,54 @@
         },
         "test": {
           "builder": "@angular/build:unit-test",
-          "options": { "runnerConfig": "vitest.config.ts" }
+          "options": {
+            "runnerConfig": "logigator-editor-v2/vitest.config.ts"
+          }
         },
         "lint": {
           "builder": "@angular-eslint/builder:lint",
           "options": {
-            "lintFilePatterns": ["src/**/*.ts", "src/**/*.html"]
+            "eslintConfig": "logigator-editor-v2/eslint.config.js",
+            "lintFilePatterns": [
+              "logigator-editor-v2/src/**/*.ts",
+              "logigator-editor-v2/src/**/*.html"
+            ]
+          }
+        }
+      }
+    },
+    "logigator-ui": {
+      "projectType": "library",
+      "root": "logigator-ui",
+      "sourceRoot": "logigator-ui/src",
+      "prefix": "lg",
+      "architect": {
+        "build": {
+          "builder": "@angular/build:ng-packagr",
+          "options": {
+            "project": "logigator-ui/ng-package.json",
+            "tsConfig": "logigator-ui/tsconfig.lib.json"
+          },
+          "configurations": {
+            "production": {},
+            "development": {}
+          },
+          "defaultConfiguration": "production"
+        },
+        "test": {
+          "builder": "@angular/build:unit-test",
+          "options": {
+            "runnerConfig": "logigator-ui/vitest.config.ts"
+          }
+        },
+        "lint": {
+          "builder": "@angular-eslint/builder:lint",
+          "options": {
+            "eslintConfig": "logigator-ui/eslint.config.js",
+            "lintFilePatterns": [
+              "logigator-ui/src/**/*.ts",
+              "logigator-ui/src/**/*.html"
+            ]
           }
         }
       }

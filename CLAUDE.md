@@ -2,34 +2,43 @@
 
 ## Repository Layout
 
-Three independent packages using **Yarn 4** (corepack) — no workspace manager:
+The repo root is a **shared Angular CLI workspace** + **Yarn 4 workspace** (corepack). Two members:
+
+- `logigator-editor-v2/` — Angular 21 editor (PixiJS 8, Tailwind 4), current focus
+- `logigator-ui/` — `@logigator/ui`, in-house Angular component library replacing PrimeNG;
+  path-mapped to its TypeScript source in dev (no build step). See `plans/logigator-ui.md`.
+
+Two packages stay **independent** (own `yarn.lock`/`.yarnrc.yml`, *not* workspace members):
 
 - `logigator-backend/` — Node.js/Express (TypeScript, TypeORM, Handlebars)
 - `logigator-editor/` — Legacy Angular 17 editor (PixiJS 7), being replaced
-- `logigator-editor-v2/` — Angular 21 editor (PixiJS 8, Tailwind 4, PrimeNG), current focus
 
-All commands run inside Docker containers. Do not run yarn directly on the host.
+Commands run **locally** with `yarn`/`ng` (no Docker daemon required).
 
 ## Dev Environment
 
 Backend config files must be created from `.example` files in `logigator-backend/config/`.
 
-Service names for exec: `editor` (logigator-editor-v2), `editor-old` (logigator-editor), `backend` (logigator-backend).
+`docker-compose.yaml` service names: `editor` (the editor-v2 + logigator-ui workspace),
+`editor-old` (logigator-editor), `backend` (logigator-backend).
 
 ## Commands
 
-All via `yarn <command>`.
+Editor + library: run **from the repo root** (Angular CLI targets / root Yarn scripts). The backend
+is independent: run its commands from `logigator-backend/`.
 
-### logigator-editor-v2
+### Workspace (editor-v2 + logigator-ui), from repo root
 ```bash
-yarn build                          # production build (ng build)
-yarn test --watch=false             # Vitest (full suite, single run)
+yarn build                          # ng build logigator-editor-v2 (production)
+yarn test --watch=false             # Vitest (full editor suite, single run)
 yarn test --watch=false --include='**/some.spec.ts'  # single test
-yarn lint                          # Angular ESLint + TypeScript strict
-yarn format:fix                    # Prettier
+yarn lint                           # ng lint (both projects)
+yarn format:fix                     # Prettier
+yarn build:ui                       # ng build logigator-ui (ng-packagr; publish deferred)
+yarn test:ui                        # Vitest (logigator-ui)
 ```
 
-### logigator-backend
+### logigator-backend (from logigator-backend/)
 ```bash
 yarn build                        # tsc + Gulp asset pipeline
 yarn lint:backend                 # ESLint on src/

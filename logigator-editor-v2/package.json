@@ -9,14 +9,14 @@
   },
   "scripts": {
     "ng": "ng",
-    "start": "ng serve",
-    "build": "ng build",
-    "watch": "ng build --watch --configuration development",
+    "start": "ng serve logigator-editor-v2",
+    "build": "ng build logigator-editor-v2",
+    "watch": "ng build logigator-editor-v2 --watch --configuration development",
     "format": "prettier . -c",
     "format:fix": "prettier . -lw",
-    "lint": "ng lint",
-    "lint:fix": "ng lint --fix",
-    "test": "ng test"
+    "lint": "ng lint logigator-editor-v2",
+    "lint:fix": "ng lint logigator-editor-v2 --fix",
+    "test": "ng test logigator-editor-v2"
   },
   "private": true,
   "dependencies": {

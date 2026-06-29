@@ -1,0 +1,13 @@
+/* ng-packagr library build config. Extends the workspace base tsconfig. */
+{
+  "extends": "../tsconfig.json",
+  "compilerOptions": {
+    "outDir": "../dist/out-tsc/lib",
+    "declaration": true,
+    "declarationMap": true,
+    "inlineSources": true,
+    "types": []
+  },
+  "exclude": ["**/*.spec.ts"],
+  "include": ["src/**/*.ts"]
+}
