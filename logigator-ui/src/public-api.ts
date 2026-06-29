@@ -7,3 +7,9 @@
  */
 
 export const LOGIGATOR_UI_VERSION = '0.0.0';
+
+export type { IconSlot } from './internal/icon';
+export type { LgSeverity } from './tokens/severity';
+export type { LgSize } from './tokens/size';
+
+export { LgButton } from './button/button';
