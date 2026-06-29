@@ -14,10 +14,14 @@ import {
 import { DatePipe } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { ConfirmationService } from 'primeng/api';
-import { LgButton, LgInputText } from '@logigator/ui';
+import {
+  LgButton,
+  LgInputText,
+  LgPaginator,
+  type LgPaginatorState
+} from '@logigator/ui';
 import { IconFieldModule } from 'primeng/iconfield';
 import { InputIconModule } from 'primeng/inputicon';
-import { Paginator, type PaginatorState } from 'primeng/paginator';
 import { TranslocoDirective, TranslocoService } from '@jsverse/transloco';
 
 export interface ProjectListItem {
@@ -39,7 +43,7 @@ const NAME_MAX_LENGTH = 20;
     LgInputText,
     IconFieldModule,
     InputIconModule,
-    Paginator,
+    LgPaginator,
     TranslocoDirective
   ],
   templateUrl: './project-list.component.html',
@@ -139,7 +143,7 @@ export class ProjectListComponent {
     });
   }
 
-  protected onPaginatorChange(state: PaginatorState): void {
+  protected onPaginatorChange(state: LgPaginatorState): void {
     this.pageChange.emit(state.page ?? 0);
   }
 }

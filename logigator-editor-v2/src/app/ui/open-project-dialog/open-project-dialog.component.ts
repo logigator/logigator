@@ -7,8 +7,13 @@ import {
   signal
 } from '@angular/core';
 import { DynamicDialogRef } from 'primeng/dynamicdialog';
-import { TabsModule } from 'primeng/tabs';
-import { type FileSelectEvent, FileUploadModule } from 'primeng/fileupload';
+import {
+  LgFileUpload,
+  type LgFileSelectEvent,
+  LgTab,
+  LgTabPanel,
+  LgTabs
+} from '@logigator/ui';
 import { TranslocoDirective } from '@jsverse/transloco';
 import {
   debounceTime,
@@ -33,8 +38,10 @@ const PAGE_SIZE = 20;
 @Component({
   selector: 'app-open-project-dialog',
   imports: [
-    TabsModule,
-    FileUploadModule,
+    LgTabs,
+    LgTab,
+    LgTabPanel,
+    LgFileUpload,
     TranslocoDirective,
     ProjectListComponent,
     MessageComponent
@@ -241,7 +248,7 @@ export class OpenProjectDialogComponent implements OnInit {
 
   // --- File import ---
 
-  protected onFileSelect(event: FileSelectEvent): void {
+  protected onFileSelect(event: LgFileSelectEvent): void {
     const file = event.files[0];
     if (!file) return;
 

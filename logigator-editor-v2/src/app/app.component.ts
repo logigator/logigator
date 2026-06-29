@@ -27,7 +27,7 @@ import { ConfirmPopup } from 'primeng/confirmpopup';
 import { ConfirmDialog } from 'primeng/confirmdialog';
 import { Toast } from 'primeng/toast';
 import { Drawer } from 'primeng/drawer';
-import { PanelMenu } from 'primeng/panelmenu';
+import { LgPanelMenu } from '@logigator/ui';
 import { TranslocoDirective } from '@jsverse/transloco';
 import { WorkMode } from './work-mode/work-mode.enum';
 import { WorkModeService } from './work-mode/work-mode.service';
@@ -61,7 +61,7 @@ import { UserSettingsComponent } from './ui/user-settings/user-settings.componen
     ConfirmDialog,
     Toast,
     Drawer,
-    PanelMenu,
+    LgPanelMenu,
     TranslocoDirective,
     MobileTopBarComponent,
     ToolHudComponent,

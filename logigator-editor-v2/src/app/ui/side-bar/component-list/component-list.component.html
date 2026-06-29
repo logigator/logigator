@@ -17,18 +17,14 @@
       />
     </p-iconfield>
 
-    <p-accordion
+    <lg-accordion
       [multiple]="true"
       [value]="openPanels()"
       (valueChange)="onPanelChange($event)"
-      [dt]="{
-        'content.padding': '0 0 1.125rem 0',
-        'header.padding': '1.125rem 0'
-      }"
     >
       @for (cat of categories(); track cat.key) {
-        <p-accordion-panel [value]="cat.key" [class.border-b-0!]="$last">
-          <p-accordion-header>
+        <lg-accordion-panel [value]="cat.key" [class.border-b-0!]="$last">
+          <ng-template #header>
             <span class="flex items-center gap-2 w-full font-semibold">
               {{ t(cat.labelKey) }}
               <lg-badge
@@ -38,14 +34,12 @@
                 severity="secondary"
               ></lg-badge>
             </span>
-          </p-accordion-header>
-          <p-accordion-content>
-            <app-component-list-category
-              [components]="cat.components"
-            ></app-component-list-category>
-          </p-accordion-content>
-        </p-accordion-panel>
+          </ng-template>
+          <app-component-list-category
+            [components]="cat.components"
+          ></app-component-list-category>
+        </lg-accordion-panel>
       }
-    </p-accordion>
+    </lg-accordion>
   </div>
 </lg-card>
