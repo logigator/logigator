@@ -1,11 +1,11 @@
 import { ChangeDetectionStrategy, Component, inject } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { TranslocoService } from '@jsverse/transloco';
-import { Select } from 'primeng/select';
+import { LgSelect } from '@logigator/ui';
 
 @Component({
   selector: 'app-language-switcher',
-  imports: [FormsModule, Select],
+  imports: [FormsModule, LgSelect],
   templateUrl: './language-switcher.component.html',
   changeDetection: ChangeDetectionStrategy.OnPush
 })

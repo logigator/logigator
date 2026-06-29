@@ -7,9 +7,9 @@ import {
 } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { DynamicDialogRef } from 'primeng/dynamicdialog';
-import { SelectModule } from 'primeng/select';
 import {
   LgButton,
+  LgSelect,
   LgSelectButton,
   LgSlider,
   LgToggleSwitch
@@ -35,8 +35,8 @@ const DEFAULT_QUALITY_PERCENT = 92;
   selector: 'app-export-image-dialog',
   imports: [
     FormsModule,
+    LgSelect,
     LgSelectButton,
-    SelectModule,
     LgToggleSwitch,
     LgSlider,
     LgButton,

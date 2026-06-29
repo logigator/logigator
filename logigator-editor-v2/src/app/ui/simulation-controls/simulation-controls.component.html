@@ -70,7 +70,7 @@
       [value]="targetValue()"
       (input)="onTargetValueInput($event)"
     />
-    <p-select
+    <lg-select
       [options]="targetUnitOptions"
       [ngModel]="targetUnit()"
       (ngModelChange)="onTargetUnitChange($event)"
@@ -80,7 +80,7 @@
       [lgTooltip]="t('toolBar.targetUnit')"
       [ariaLabel]="t('toolBar.targetUnit')"
       tooltipPosition="bottom"
-    ></p-select>
+    ></lg-select>
     <lg-button
       [lgTooltip]="t('toolBar.syncToFrame')"
       [ariaLabel]="t('toolBar.syncToFrame')"

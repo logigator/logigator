@@ -2,7 +2,7 @@
   @if (projectOptions().length > 1) {
     <div class="flex flex-col gap-1">
       <label for="export-project">{{ t('imageExport.project') }}</label>
-      <p-select
+      <lg-select
         inputId="export-project"
         [options]="projectOptions()"
         optionLabel="label"
