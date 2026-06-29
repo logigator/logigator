@@ -1,0 +1,58 @@
+<div *transloco="let t" class="flex flex-col gap-4">
+  <p>{{ t('uploadComponent.intro', { name: name }) }}</p>
+
+  @if (dependencies().length) {
+    <div class="flex flex-col gap-1">
+      <span>{{ t('uploadComponent.depsTitle') }}</span>
+      <ul class="m-0 flex list-disc flex-col gap-1 pl-5">
+        @for (dep of dependencies(); track dep.name) {
+          <li>{{ dep.name }}</li>
+        }
+      </ul>
+    </div>
+  }
+
+  @if (userService.user()) {
+    <div class="flex gap-2 items-center">
+      <p-toggleswitch
+        inputId="upload-component-public"
+        [ngModel]="isPublic()"
+        (ngModelChange)="isPublic.set($event)"
+        [ngModelOptions]="{ standalone: true }"
+      />
+      <label for="upload-component-public">{{
+        t('uploadComponent.public')
+      }}</label>
+      <i
+        class="ph ph-info cursor-help text-surface-500"
+        [pTooltip]="t('uploadComponent.publicInfo')"
+      ></i>
+    </div>
+  } @else {
+    <app-message severity="warn">
+      {{ t('uploadComponent.notLoggedIn') }}
+    </app-message>
+  }
+
+  <div class="flex justify-end gap-2">
+    <p-button
+      severity="secondary"
+      [outlined]="true"
+      [label]="t('uploadComponent.cancel')"
+      (onClick)="cancel()"
+    />
+    <p-button
+      [label]="t('uploadComponent.upload')"
+      [disabled]="!userService.user()"
+      (onClick)="upload()"
+    />
+    @if (uploadableDependencies().length) {
+      <p-button
+        icon="ph ph-stack"
+        [label]="t('uploadComponent.uploadWithDeps')"
+        [disabled]="!userService.user()"
+        (onClick)="uploadWithDependencies($event)"
+      />
+    }
+  </div>
+</div>

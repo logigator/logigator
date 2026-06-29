@@ -9,7 +9,7 @@ import { CustomComponent } from '../components/custom/custom-component';
 import { Action } from '../actions/action';
 import { UpdateInstanceAction } from '../actions/actions/update-instance.action';
 import { ToastService } from '../logging/toast.service';
-import { ConfirmationService } from 'primeng/api';
+import { TranslocoService } from '@jsverse/transloco';
 import { UserService } from '../user/user.service';
 import { DefinitionBinding } from './definition-binding';
 
@@ -41,7 +41,7 @@ export class CustomComponentService {
   private readonly metadataStore = inject(ProjectMetadataStore);
   private readonly persistence = inject(PersistenceService);
   private readonly toast = inject(ToastService);
-  private readonly confirmation = inject(ConfirmationService);
+  private readonly transloco = inject(TranslocoService);
   private readonly user = inject(UserService);
 
   private readonly _bindings = new Map<Project, DefinitionBinding>();
@@ -192,54 +192,106 @@ export class CustomComponentService {
   }
 
   /**
-   * Uploads (moves) a local master to the user's cloud library. Requires being
-   * signed in. When the component embeds other local components, a confirmation
-   * first lists them — they ride along as embedded copies and stay in the local
-   * library; only the chosen component moves to the cloud. A no-dependency upload
-   * proceeds straight away.
+   * The local components embedded in a master (transitively), each with its master
+   * type id when it is still a registered browser master (`null` when it only
+   * survives embedded). Used to warn the user before an upload that they ride along
+   * as copies, and to drive "upload with dependencies". Empty when the lookup fails.
    */
-  public async uploadComponent(masterTypeId: number): Promise<void> {
+  public async localDependencies(
+    masterTypeId: number
+  ): Promise<{ name: string; masterTypeId: number | null }[]> {
+    try {
+      return await this.persistence.localDependencies(masterTypeId);
+    } catch {
+      return [];
+    }
+  }
+
+  /**
+   * Uploads (moves) a local master to the user's cloud library at the chosen
+   * visibility. Requires being signed in. Embedded local components ride along as
+   * copies and stay in the local library; only the chosen component moves to the
+   * cloud. The caller is responsible for confirming with the user first.
+   */
+  public async uploadComponent(
+    masterTypeId: number,
+    isPublic = false
+  ): Promise<void> {
     const def = this.registry.getDefinition(masterTypeId);
     if (!def || def.kind !== 'master' || def.source !== 'browser') return;
 
     if (this.user.user() === null) {
-      this.toast.error('Sign in to upload components to the cloud');
+      this.toast.error(
+        this.transloco.translate('uploadComponent.signInRequired')
+      );
       return;
     }
 
-    let deps: string[];
     try {
-      deps = await this.persistence.localDependencyNames(masterTypeId);
+      await this.persistence.promoteComponentToServer(masterTypeId, isPublic);
+      this.toast.success(this.transloco.translate('uploadComponent.success'));
     } catch {
-      deps = [];
+      this.toast.error(this.transloco.translate('uploadComponent.failure'));
     }
+  }
 
-    const run = async (): Promise<void> => {
-      try {
-        await this.persistence.promoteComponentToServer(masterTypeId);
-        this.toast.success('Component uploaded to the cloud');
-      } catch {
-        this.toast.error('Failed to upload component');
-      }
-    };
+  /**
+   * Uploads a local master **and** each resolvable local dependency to the cloud as
+   * separate library entries, all at the chosen visibility. The server model has no
+   * linking, so every entry stays self-contained (the master still embeds its own
+   * copies); the dependencies simply also appear in the user's cloud library.
+   *
+   * The master is uploaded first — it is the primary intent and self-contained, so
+   * if it fails nothing else is attempted. Dependencies are then uploaded
+   * best-effort: each is independent and individually irreversible, so a single
+   * failure is reported as a count rather than unwinding the rest.
+   */
+  public async uploadComponentWithDependencies(
+    masterTypeId: number,
+    isPublic = false
+  ): Promise<void> {
+    const def = this.registry.getDefinition(masterTypeId);
+    if (!def || def.kind !== 'master' || def.source !== 'browser') return;
 
-    if (deps.length === 0) {
-      await run();
+    if (this.user.user() === null) {
+      this.toast.error(
+        this.transloco.translate('uploadComponent.signInRequired')
+      );
       return;
     }
 
-    this.confirmation.confirm({
-      header: 'Upload to cloud',
-      message:
-        `“${def.name}” uses these local components, which will be uploaded ` +
-        `as copies (they stay in your local library):\n\n${deps
-          .map((d) => `• ${d}`)
-          .join('\n')}`,
-      acceptLabel: 'Upload',
-      rejectLabel: 'Cancel',
-      rejectButtonProps: { severity: 'secondary', outlined: true },
-      accept: () => void run()
-    });
+    // Resolve the dependency ids *before* promoting the master — promotion deletes
+    // the master's browser record, which is where the dependency list is read from.
+    const dependencyIds = (await this.localDependencies(masterTypeId))
+      .map((d) => d.masterTypeId)
+      .filter((id): id is number => id !== null);
+
+    try {
+      await this.persistence.promoteComponentToServer(masterTypeId, isPublic);
+    } catch {
+      this.toast.error(this.transloco.translate('uploadComponent.failure'));
+      return;
+    }
+
+    let failed = 0;
+    for (const id of dependencyIds) {
+      try {
+        await this.persistence.promoteComponentToServer(id, isPublic);
+      } catch {
+        failed++;
+      }
+    }
+
+    if (failed > 0) {
+      this.toast.warn(
+        this.transloco.translate('uploadComponent.partialFailure', {
+          failed,
+          total: dependencyIds.length
+        })
+      );
+    } else {
+      this.toast.success(this.transloco.translate('uploadComponent.success'));
+    }
   }
 
   /**

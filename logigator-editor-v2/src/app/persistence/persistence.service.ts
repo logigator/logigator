@@ -568,6 +568,22 @@ export class PersistenceService {
    * Returns an empty list for a server master or one with no local dependencies.
    */
   async localDependencyNames(masterTypeId: number): Promise<string[]> {
+    return (await this.localDependencies(masterTypeId)).map((d) => d.name);
+  }
+
+  /**
+   * The **local** custom components a browser master embeds (transitively), each
+   * paired with its registry master type id when it is still a registered browser
+   * master — `null` when the dependency only survives as an embedded snapshot and
+   * can no longer be resolved to its own master. Only the resolvable ones can be
+   * promoted to the cloud as separate library entries; the rest always ride along
+   * as embedded copies. Server-sourced embeds are omitted (already in the cloud).
+   * Drives the upload-to-cloud dialog: its names warn the user, its ids feed an
+   * "upload with dependencies". Empty for a server master or one with no local deps.
+   */
+  async localDependencies(
+    masterTypeId: number
+  ): Promise<{ name: string; masterTypeId: number | null }[]> {
     const def = this.registry.getDefinition(masterTypeId);
     if (!def || def.kind !== 'master' || !def.id) return [];
     const record = await this.browserComponentStore.get(def.id);
@@ -578,7 +594,8 @@ export class PersistenceService {
     // live project or ingesting throwaway definitions into the registry. Each
     // embedded custom whose provenance master is still browser-sourced (or can no
     // longer be resolved) is a local component that rides along as a copy.
-    const names = new Set<string>();
+    const seen = new Set<string>();
+    const deps: { name: string; masterTypeId: number | null }[] = [];
     for (const dep of this.circuitFile.peekDefinitions(record.content)) {
       const masterId = dep.source?.id;
       const resolvedMasterTypeId =
@@ -591,9 +608,17 @@ export class PersistenceService {
           : undefined;
       // Already in the cloud — its copy is fine, nothing local to mention.
       if (master?.source === 'server') continue;
-      names.add(dep.name);
+      if (seen.has(dep.name)) continue;
+      seen.add(dep.name);
+      deps.push({
+        name: dep.name,
+        masterTypeId:
+          master?.source === 'browser' && resolvedMasterTypeId !== undefined
+            ? resolvedMasterTypeId
+            : null
+      });
     }
-    return [...names];
+    return deps;
   }
 
   /**
@@ -605,7 +630,10 @@ export class PersistenceService {
    * the tile's indicator just flips to "cloud". Rejects if the master is not a
    * local component or its stored record is missing.
    */
-  async promoteComponentToServer(masterTypeId: number): Promise<void> {
+  async promoteComponentToServer(
+    masterTypeId: number,
+    isPublic = false
+  ): Promise<void> {
     const def = this.registry.getDefinition(masterTypeId);
     if (!def || def.kind !== 'master' || def.source !== 'browser' || !def.id) {
       throw new Error('Not a local component');
@@ -632,7 +660,8 @@ export class PersistenceService {
       } = await this.server.promoteComponentFromProject(temp, {
         name: def.name,
         symbol: def.symbol,
-        description: def.description
+        description: def.description,
+        isPublic
       }));
     } finally {
       temp.destroy();

@@ -253,6 +253,31 @@ const en = {
       'Browser components are not persisted across devices and may be lost.',
     create: 'Create'
   },
+  uploadComponent: {
+    button: 'Upload to cloud',
+    signInTooltip: 'Sign in to upload to the cloud',
+    dialogHeader: 'Upload to cloud',
+    intro:
+      '“{{name}}” is moved out of your local library and stored on your account.',
+    depsTitle:
+      'It embeds these local components as copies, which stay in your local library:',
+    public: 'Public',
+    publicInfo:
+      'Public components are published on your profile and accessible to everyone via a share link. Private components are only visible to you.',
+    notLoggedIn: 'You must be logged in to upload components to your account.',
+    cancel: 'Cancel',
+    upload: 'Upload',
+    uploadWithDeps: 'Upload with dependencies',
+    withDepsConfirm:
+      'This also uploads {{count}} local component(s) to your account with the same visibility. They become separate cloud components. Continue?',
+    withDepsAccept: 'Upload all',
+    withDepsReject: 'Cancel',
+    signInRequired: 'Sign in to upload components to the cloud',
+    success: 'Component uploaded to the cloud',
+    failure: 'Failed to upload component',
+    partialFailure:
+      'Component uploaded, but {{failed}} of {{total}} dependencies failed'
+  },
   toolBar: {
     save: 'Save',
     open: 'Open',
