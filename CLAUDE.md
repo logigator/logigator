@@ -12,34 +12,29 @@ All commands run inside Docker containers. Do not run yarn directly on the host.
 
 ## Dev Environment
 
-```bash
-docker compose up   # Caddy proxy, backend, editor-v2 dev server, legacy editor, MySQL, Redis
-# /etc/hosts: 127.0.0.1 logigator.test
-```
-
 Backend config files must be created from `.example` files in `logigator-backend/config/`.
 
 Service names for exec: `editor` (logigator-editor-v2), `editor-old` (logigator-editor), `backend` (logigator-backend).
 
 ## Commands
 
-All via `docker compose exec <service> yarn <command>`.
+All via `yarn <command>`.
 
 ### logigator-editor-v2
 ```bash
-docker compose exec editor yarn build                          # production build (ng build)
-docker compose exec editor yarn test --watch=false             # Vitest (full suite, single run)
-docker compose exec editor yarn test --watch=false --include='**/some.spec.ts'  # single test
-docker compose exec editor yarn lint                          # Angular ESLint + TypeScript strict
-docker compose exec editor yarn format:fix                    # Prettier
+yarn build                          # production build (ng build)
+yarn test --watch=false             # Vitest (full suite, single run)
+yarn test --watch=false --include='**/some.spec.ts'  # single test
+yarn lint                          # Angular ESLint + TypeScript strict
+yarn format:fix                    # Prettier
 ```
 
 ### logigator-backend
 ```bash
-docker compose exec backend yarn build                        # tsc + Gulp asset pipeline
-docker compose exec backend yarn lint:backend                 # ESLint on src/
-docker compose exec backend yarn migration:run                # run pending TypeORM migrations
-docker compose exec backend yarn migration:generate -- -n Name  # generate migration
+yarn build                        # tsc + Gulp asset pipeline
+yarn lint:backend                 # ESLint on src/
+yarn migration:run                # run pending TypeORM migrations
+yarn migration:generate -- -n Name  # generate migration
 ```
 
 ## Architecture
