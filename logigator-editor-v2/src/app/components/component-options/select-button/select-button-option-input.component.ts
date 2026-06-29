@@ -10,12 +10,7 @@ let nextId = 0;
 
 @Component({
   selector: 'app-select-button-option-input',
-  imports: [
-    FormsModule,
-    LgSelectButton,
-    NgTemplateOutlet,
-    TranslocoDirective
-  ],
+  imports: [FormsModule, LgSelectButton, NgTemplateOutlet, TranslocoDirective],
   templateUrl: './select-button-option-input.component.html',
   changeDetection: ChangeDetectionStrategy.OnPush
 })

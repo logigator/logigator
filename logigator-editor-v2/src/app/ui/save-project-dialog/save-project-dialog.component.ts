@@ -7,7 +7,12 @@ import {
 import { FormsModule } from '@angular/forms';
 import { DynamicDialogConfig, DynamicDialogRef } from 'primeng/dynamicdialog';
 import { TooltipModule } from 'primeng/tooltip';
-import { LgButton, LgInputText, LgSelectButton, LgToggleSwitch } from '@logigator/ui';
+import {
+  LgButton,
+  LgInputText,
+  LgSelectButton,
+  LgToggleSwitch
+} from '@logigator/ui';
 import { TranslocoDirective, TranslocoService } from '@jsverse/transloco';
 import { UserService } from '../../user/user.service';
 import { MessageComponent } from '../message/message.component';
