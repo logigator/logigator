@@ -713,7 +713,38 @@ export class ProjectSaveManagementService {
 			mapped.push(element);
 		}
 
+		this.shiftIntoPositiveSpace(mapped);
+
 		return mapped;
+	}
+
+	/**
+	 * The chunk grid is indexed by non-negative coordinates, so a project
+	 * authored in the new editor's negative coordinate space crashes on load.
+	 * Translate every element by a uniform offset so the whole project sits in
+	 * positive space again. A pure translation preserves the circuit topology;
+	 * the shifted coordinates persist if the project is saved back.
+	 */
+	private shiftIntoPositiveSpace(elements: Element[]): void {
+		let minX = 0;
+		let minY = 0;
+		for (const element of elements) {
+			minX = Math.min(minX, element.pos.x, element.endPos?.x ?? element.pos.x);
+			minY = Math.min(minY, element.pos.y, element.endPos?.y ?? element.pos.y);
+		}
+
+		if (minX >= 0 && minY >= 0) return;
+
+		const offsetX = -Math.floor(minX);
+		const offsetY = -Math.floor(minY);
+		for (const element of elements) {
+			element.pos.x += offsetX;
+			element.pos.y += offsetY;
+			if (element.endPos) {
+				element.endPos.x += offsetX;
+				element.endPos.y += offsetY;
+			}
+		}
 	}
 
 	private convertElementsToSaveElements(elements: Element[]): {
