@@ -47,6 +47,23 @@ export class FakeBrowserProjectStore {
   }
 }
 
+/** In-memory stand-in for {@link ComponentIdMapStore} (which uses IndexedDB). */
+export class FakeComponentIdMapStore {
+  readonly records = new Map<string, string>();
+
+  async put(oldId: string, newId: string): Promise<void> {
+    this.records.set(oldId, newId);
+  }
+
+  async list(): Promise<{ id: string; newId: string; lastEdited: number }[]> {
+    return [...this.records.entries()].map(([id, newId]) => ({
+      id,
+      newId,
+      lastEdited: 0
+    }));
+  }
+}
+
 /** In-memory stand-in for {@link BrowserComponentStore} (which uses IndexedDB). */
 export class FakeBrowserComponentStore {
   readonly records = new Map<string, StoredBrowserComponent>();

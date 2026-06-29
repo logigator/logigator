@@ -54,9 +54,22 @@ export class UpdateInstanceActionComponent {
     );
   });
 
-  protected update(): void {
+  protected async update(): Promise<void> {
     const { component, project } = this.context();
     if (!(component instanceof CustomComponent)) return;
+    // The master may be a summary-only cloud preload; load its circuit first.
+    const def = this.registry.getDefinition(component.config.type);
+    const masterTypeId =
+      def?.id !== undefined
+        ? this.registry.masterTypeIdForId(def.id)
+        : undefined;
+    if (
+      masterTypeId !== undefined &&
+      !(await this.customComponentService.ensureMasterCircuit(masterTypeId))
+    ) {
+      // Cloud fetch failed (the service toasted) — leave the instance as-is.
+      return;
+    }
     const action = this.customComponentService.buildInstanceUpdate(component);
     if (action) project.actionManager.push(action);
   }

@@ -16,6 +16,8 @@ import { environment } from '../../environments/environment';
 import { InvalidFileError } from './file/circuit-file.errors';
 import { BrowserProjectStore } from './browser/browser-project.store';
 import { BrowserComponentStore } from './browser/browser-component.store';
+import { ComponentIdMapStore } from './browser/component-id-map.store';
+import { CircuitFileService } from './file/circuit-file.service';
 import { CustomComponentRegistry } from '../components/custom/custom-component-registry.service';
 import { ComponentProviderService } from '../components/component-provider.service';
 import { CustomComponent } from '../components/custom/custom-component';
@@ -25,7 +27,8 @@ import { MoveComponentsAction } from '../actions/actions/move-components.action'
 import { SerializedCircuitBody } from './serialized-circuit';
 import {
   FakeBrowserComponentStore,
-  FakeBrowserProjectStore
+  FakeBrowserProjectStore,
+  FakeComponentIdMapStore
 } from '../../testing/fake-browser-stores';
 import { configureTestBed } from '../../testing/configure-test-bed';
 
@@ -131,6 +134,7 @@ describe('PersistenceService', () => {
   let locationGo: Mock;
   let browserStore: FakeBrowserProjectStore;
   let componentStore: FakeBrowserComponentStore;
+  let idMapStore: FakeComponentIdMapStore;
   let registry: CustomComponentRegistry;
   let provider: ComponentProviderService;
 
@@ -140,6 +144,7 @@ describe('PersistenceService', () => {
     locationGo = vi.fn();
     browserStore = new FakeBrowserProjectStore();
     componentStore = new FakeBrowserComponentStore();
+    idMapStore = new FakeComponentIdMapStore();
     configureTestBed([
       {
         provide: Location,
@@ -152,6 +157,7 @@ describe('PersistenceService', () => {
       },
       { provide: BrowserProjectStore, useValue: browserStore },
       { provide: BrowserComponentStore, useValue: componentStore },
+      { provide: ComponentIdMapStore, useValue: idMapStore },
       {
         provide: TranslocoService,
         useValue: {
@@ -1217,6 +1223,345 @@ describe('PersistenceService', () => {
         config.create({ direction: config.options['direction'].clone() })
       );
     }
+
+    it('promoteComponentToServer uploads a local master, flips it to server, and removes the local record', async () => {
+      // A local master with its circuit stored in the browser components store.
+      const circuitFile = TestBed.inject(CircuitFileService);
+      const content = circuitFile.toJson(new Project(), 'Comp');
+      await componentStore.save({
+        id: 'local-1',
+        version: 1,
+        name: 'Comp',
+        symbol: 'C',
+        description: '',
+        numInputs: 0,
+        numOutputs: 0,
+        labels: [],
+        content
+      });
+      const masterTypeId = registry.createMaster(
+        { id: 'local-1', symbol: 'C', name: 'Comp' },
+        'browser'
+      );
+
+      // The POST is issued only after the store read + temp-project build, so
+      // flush pending microtasks (a macrotask tick) before each HTTP expectation.
+      const tick = () => new Promise((r) => setTimeout(r, 0));
+
+      const promise = service.promoteComponentToServer(masterTypeId);
+
+      await tick();
+      const post = httpMock.expectOne(COMPONENTS_URL);
+      expect(post.request.method).toBe('POST');
+      post.flush(componentSummaryResponse({ id: 'srv-comp', hash: 'h0' }));
+
+      await tick();
+      const put = httpMock.expectOne(COMPONENT_URL('srv-comp'));
+      expect(put.request.method).toBe('PUT');
+      put.flush(componentSummaryResponse({ id: 'srv-comp', version: 5 }));
+
+      await promise;
+
+      const def = registry.getDefinition(masterTypeId)!;
+      expect(def.source).toBe('server');
+      expect(def.id).toBe('srv-comp');
+      expect(def.version).toBe(5);
+      // Old local id still resolves (alias) and was persisted to the id-map.
+      expect(registry.masterTypeIdForId('local-1')).toBe(masterTypeId);
+      expect(idMapStore.records.get('local-1')).toBe('srv-comp');
+      // The local record is gone — the component moved to the cloud.
+      expect(await componentStore.get('local-1')).toBeUndefined();
+    });
+
+    it('promoteComponentToServer rejects a server master (nothing to upload)', async () => {
+      const masterTypeId = registry.createMaster(
+        { id: 'srv-x', symbol: 'X' },
+        'server'
+      );
+      await expect(
+        service.promoteComponentToServer(masterTypeId)
+      ).rejects.toThrow();
+    });
+
+    it('promoteComponentToServer succeeds (no throw) even if the local cleanup fails after the upload', async () => {
+      const circuitFile = TestBed.inject(CircuitFileService);
+      await componentStore.save({
+        id: 'local-1',
+        version: 1,
+        name: 'Comp',
+        symbol: 'C',
+        description: '',
+        numInputs: 0,
+        numOutputs: 0,
+        labels: [],
+        content: circuitFile.toJson(new Project(), 'Comp')
+      });
+      const masterTypeId = registry.createMaster(
+        { id: 'local-1', symbol: 'C', name: 'Comp' },
+        'browser'
+      );
+      // The upload has already committed server-side when the local record delete
+      // fails — the operation must NOT surface as a failure (that would lie and
+      // hide the now-disabled retry).
+      vi.spyOn(componentStore, 'delete').mockRejectedValue(new Error('boom'));
+      const tick = () => new Promise((r) => setTimeout(r, 0));
+
+      const promise = service.promoteComponentToServer(masterTypeId);
+      await tick();
+      httpMock
+        .expectOne(COMPONENTS_URL)
+        .flush(componentSummaryResponse({ id: 'srv-comp', hash: 'h0' }));
+      await tick();
+      httpMock
+        .expectOne(COMPONENT_URL('srv-comp'))
+        .flush(componentSummaryResponse({ id: 'srv-comp', version: 5 }));
+
+      await expect(promise).resolves.toBeUndefined();
+      const def = registry.getDefinition(masterTypeId)!;
+      expect(def.source).toBe('server');
+      // The durable alias was written before the (failed) delete, so a reload
+      // self-heals (the browser preload skips the orphaned record).
+      expect(idMapStore.records.get('local-1')).toBe('srv-comp');
+    });
+
+    it('promoteComponentToServer re-points an open editor of the master to the new server identity', async () => {
+      const circuitFile = TestBed.inject(CircuitFileService);
+      await componentStore.save({
+        id: 'local-1',
+        version: 1,
+        name: 'Comp',
+        symbol: 'C',
+        description: '',
+        numInputs: 0,
+        numOutputs: 0,
+        labels: [],
+        content: circuitFile.toJson(new Project(), 'Comp')
+      });
+      const masterTypeId = registry.createMaster(
+        { id: 'local-1', symbol: 'C', name: 'Comp' },
+        'browser'
+      );
+      // The master's editor tab is open (browser comp), registered under its old id.
+      const editor = new Project();
+      metadataStore.register(editor, {
+        id: 'local-1',
+        name: 'Comp',
+        type: 'comp',
+        source: 'browser',
+        hash: '',
+        isPublic: false
+      });
+      const tick = () => new Promise((r) => setTimeout(r, 0));
+
+      const promise = service.promoteComponentToServer(masterTypeId);
+      await tick();
+      httpMock
+        .expectOne(COMPONENTS_URL)
+        .flush(componentSummaryResponse({ id: 'srv-comp', hash: 'h0' }));
+      await tick();
+      httpMock
+        .expectOne(COMPONENT_URL('srv-comp'))
+        .flush(
+          componentSummaryResponse({ id: 'srv-comp', version: 5, hash: 'h2' })
+        );
+      await promise;
+
+      // The editor now points at the cloud record, so a later save routes to the
+      // server instead of re-creating the deleted browser record.
+      const meta = metadataStore.getMetadata(editor)!;
+      expect(meta.source).toBe('server');
+      expect(meta.id).toBe('srv-comp');
+      expect(meta.hash).toBe('h2');
+      editor.destroy();
+    });
+
+    it('preloadBrowserMasters skips a record whose id was promoted to the cloud', async () => {
+      const circuitFile = TestBed.inject(CircuitFileService);
+      // The cloud master and the persisted promotion alias (as hydrated at startup).
+      const serverType = registry.createMaster(
+        { id: 'srv-1', symbol: 'C', name: 'Comp' },
+        'server'
+      );
+      registry.registerIdAlias('local-1', 'srv-1');
+      // A stale local record left behind by a partially-failed promotion.
+      await componentStore.save({
+        id: 'local-1',
+        version: 1,
+        name: 'Comp',
+        symbol: 'C',
+        description: '',
+        numInputs: 0,
+        numOutputs: 0,
+        labels: [],
+        content: circuitFile.toJson(new Project(), 'Comp')
+      });
+
+      await service.preloadBrowserMasters();
+
+      // No browser duplicate: the old id still resolves through the alias to the
+      // single (server) master, instead of a freshly-registered browser dupe.
+      expect(registry.masterTypeIdForId('local-1')).toBe(serverType);
+      expect(registry.getDefinition(serverType)?.source).toBe('server');
+    });
+
+    it('localDependencyNames returns [] for a master with no embedded customs', async () => {
+      const circuitFile = TestBed.inject(CircuitFileService);
+      await componentStore.save({
+        id: 'local-2',
+        version: 1,
+        name: 'Plain',
+        symbol: 'P',
+        description: '',
+        numInputs: 0,
+        numOutputs: 0,
+        labels: [],
+        content: circuitFile.toJson(new Project(), 'Plain')
+      });
+      const masterTypeId = registry.createMaster(
+        { id: 'local-2', symbol: 'P' },
+        'browser'
+      );
+      expect(await service.localDependencyNames(masterTypeId)).toEqual([]);
+    });
+
+    it('localDependencyNames lists the local customs a master embeds', async () => {
+      const circuitFile = TestBed.inject(CircuitFileService);
+      // Local dependency master B, embedded by master A.
+      const bType = registry.createMaster(
+        { id: 'dep-b', symbol: 'B', name: 'Dep B' },
+        'browser'
+      );
+      const aProject = new Project();
+      placeSnapshot(aProject, bType);
+      const contentA = circuitFile.toJson(aProject, 'A');
+      aProject.destroy();
+
+      await componentStore.save({
+        id: 'local-a',
+        version: 1,
+        name: 'A',
+        symbol: 'A',
+        description: '',
+        numInputs: 0,
+        numOutputs: 0,
+        labels: [],
+        content: contentA
+      });
+      const aType = registry.createMaster(
+        { id: 'local-a', symbol: 'A', name: 'A' },
+        'browser'
+      );
+
+      expect(await service.localDependencyNames(aType)).toEqual(['Dep B']);
+    });
+
+    it('preloadServerMasters registers cloud masters from the list alone (no per-component fetch)', async () => {
+      const tick = () => new Promise((r) => setTimeout(r, 0));
+      const promise = service.preloadServerMasters();
+
+      await tick();
+      const list = httpMock.expectOne(COMPONENTS_URL);
+      expect(list.request.method).toBe('GET');
+      list.flush({
+        status: 200,
+        data: [
+          {
+            id: 'srv-1',
+            name: 'Cloud Comp',
+            description: 'desc',
+            symbol: 'CL',
+            numInputs: 1,
+            numOutputs: 1,
+            labels: ['a', 'q'],
+            createdOn: '2024-01-01',
+            lastEdited: '2024-01-01',
+            elementsFile: null,
+            previewDark: null,
+            previewLight: null,
+            public: false,
+            version: 2
+          }
+        ]
+      });
+
+      await promise;
+
+      const typeId = registry.masterTypeIdForId('srv-1');
+      expect(typeId).toBeDefined();
+      const def = registry.getDefinition(typeId!)!;
+      expect(def.source).toBe('server');
+      expect(def.name).toBe('Cloud Comp');
+      expect(def.numInputs).toBe(1);
+      expect(def.version).toBe(2);
+      // No circuit yet — it is fetched lazily on first placement / update.
+      expect(def.circuit).toBeUndefined();
+      // verify() in afterEach asserts no per-component GET was issued.
+    });
+
+    it('ensureServerMasterCircuit fetches and sets the circuit on demand', async () => {
+      const tick = () => new Promise((r) => setTimeout(r, 0));
+      const masterTypeId = registry.createMaster(
+        { id: 'srv-2', symbol: 'C', name: 'C' },
+        'server'
+      );
+      expect(registry.getDefinition(masterTypeId)?.circuit).toBeUndefined();
+
+      const promise = service.ensureServerMasterCircuit(masterTypeId);
+      await tick();
+      const open = httpMock.expectOne(COMPONENT_URL('srv-2'));
+      expect(open.request.method).toBe('GET');
+      open.flush({
+        status: 200,
+        data: {
+          id: 'srv-2',
+          name: 'C',
+          description: '',
+          symbol: 'C',
+          numInputs: 0,
+          numOutputs: 0,
+          labels: [],
+          createdOn: '2024-01-01',
+          lastEdited: '2024-01-01',
+          elementsFile: {
+            hash: 'h',
+            mimeType: 'application/json',
+            publicUrl: ''
+          },
+          previewDark: null,
+          previewLight: null,
+          public: false,
+          version: 1,
+          elements: [],
+          dependencies: []
+        }
+      });
+      await promise;
+
+      expect(registry.getDefinition(masterTypeId)?.circuit).toBeDefined();
+    });
+
+    it('ensureServerMasterCircuit is a no-op for a browser master (no fetch)', async () => {
+      const masterTypeId = registry.createMaster(
+        { id: 'local-x', symbol: 'X' },
+        'browser'
+      );
+      await service.ensureServerMasterCircuit(masterTypeId);
+      // verify() in afterEach asserts no HTTP request was made.
+    });
+
+    it('preloadServerMasters is a silent no-op when signed out (list 401s)', async () => {
+      const tick = () => new Promise((r) => setTimeout(r, 0));
+      const promise = service.preloadServerMasters();
+
+      await tick();
+      const list = httpMock.expectOne(COMPONENTS_URL);
+      list.flush(
+        { status: 401, data: null },
+        { status: 401, statusText: 'Unauthorized' }
+      );
+
+      await expect(promise).resolves.toBeUndefined();
+    });
 
     it('createServerComponent POSTs, PUTs an empty initial save, registers a server master', async () => {
       const promise = service.createServerComponent({

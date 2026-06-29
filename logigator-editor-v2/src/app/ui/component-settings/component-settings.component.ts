@@ -17,10 +17,13 @@ import {
 } from '../../components/component-config.model';
 import { TranslocoService } from '@jsverse/transloco';
 import { ChangeOptionAction } from '../../actions/actions/change-option.action';
+import { CustomComponentRegistry } from '../../components/custom/custom-component-registry.service';
+import { CUSTOM_TYPE_ID_BASE } from '../../components/component-type.enum';
+import { SourceIndicatorComponent } from '../source-indicator/source-indicator.component';
 
 @Component({
   selector: 'app-component-settings',
-  imports: [NgComponentOutlet, Card],
+  imports: [NgComponentOutlet, Card, SourceIndicatorComponent],
   templateUrl: './component-settings.component.html',
   changeDetection: ChangeDetectionStrategy.OnPush
 })
@@ -29,6 +32,7 @@ export class ComponentSettingsComponent {
   private readonly inspector = inject(SelectionInspectorService);
   private readonly projectService = inject(ProjectService);
   private readonly translocoService = inject(TranslocoService);
+  private readonly registry = inject(CustomComponentRegistry);
 
   /**
    * Desktop floats the card in the board's bottom-right corner; the mobile
@@ -61,7 +65,8 @@ export class ComponentSettingsComponent {
           ghost.options[key].value = value;
         },
         actions: [],
-        context: null
+        context: null,
+        source: this._customSource(ghost.type)
       };
     }
 
@@ -80,7 +85,8 @@ export class ComponentSettingsComponent {
           );
         },
         actions: selected.config.actions ?? [],
-        context: { component: selected, project }
+        context: { component: selected, project },
+        source: this._customSource(selected.config.type)
       };
     }
 
@@ -103,6 +109,18 @@ export class ComponentSettingsComponent {
         commit: (value: unknown) => settings.commit(key, value)
       }));
   });
+
+  /**
+   * The cloud/local library of a custom component (master or placed snapshot),
+   * resolved through its master so a placed instance reads the master's current
+   * source. `null` for built-ins. Reads the registry revision so the chip
+   * re-resolves after an upload-to-cloud flips the source.
+   */
+  private _customSource(typeId: number): 'server' | 'browser' | null {
+    this.registry.revision();
+    if (typeId < CUSTOM_TYPE_ID_BASE) return null;
+    return this.registry.resolveMaster(typeId)?.master.source ?? null;
+  }
 
   /** Resolves display text: translates a key, returns a literal verbatim. */
   protected text(value: LocalizableText): string {

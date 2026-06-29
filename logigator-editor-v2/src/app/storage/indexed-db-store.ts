@@ -1,11 +1,17 @@
 const DB_NAME = 'logigator-editor';
-const DB_VERSION = 2;
+const DB_VERSION = 3;
 const LAST_EDITED_INDEX = 'lastEdited';
 
 /** Object store holding saved projects (`StoredBrowserProject`). */
 export const PROJECTS_STORE = 'projects';
 /** Object store holding library masters (`StoredBrowserComponent`). */
 export const COMPONENTS_STORE = 'components';
+/**
+ * Object store mapping a master's old (pre-promotion) local id to the server id
+ * it was promoted to (`StoredComponentIdMapping`). Lets snapshots that captured
+ * the old id still resolve to the promoted master after an upload-to-cloud.
+ */
+export const COMPONENT_ID_MAP_STORE = 'componentIdMap';
 
 let dbPromise: Promise<IDBDatabase> | undefined;
 
@@ -24,7 +30,11 @@ function openDatabase(): Promise<IDBDatabase> {
       const request = indexedDB.open(DB_NAME, DB_VERSION);
       request.onupgradeneeded = () => {
         const db = request.result;
-        for (const name of [PROJECTS_STORE, COMPONENTS_STORE]) {
+        for (const name of [
+          PROJECTS_STORE,
+          COMPONENTS_STORE,
+          COMPONENT_ID_MAP_STORE
+        ]) {
           if (!db.objectStoreNames.contains(name)) {
             const store = db.createObjectStore(name, { keyPath: 'id' });
             store.createIndex(LAST_EDITED_INDEX, 'lastEdited');

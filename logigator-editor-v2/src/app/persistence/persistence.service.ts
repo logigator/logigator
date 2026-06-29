@@ -4,6 +4,7 @@ import { Observable } from 'rxjs';
 import { CircuitFileService } from './file/circuit-file.service';
 import { BrowserProjectStore } from './browser/browser-project.store';
 import { BrowserComponentStore } from './browser/browser-component.store';
+import { ComponentIdMapStore } from './browser/component-id-map.store';
 import {
   BrowserComponentSummary,
   BrowserProjectSummary
@@ -34,6 +35,7 @@ export class PersistenceService {
   private readonly circuitFile = inject(CircuitFileService);
   private readonly browserStore = inject(BrowserProjectStore);
   private readonly browserComponentStore = inject(BrowserComponentStore);
+  private readonly componentIdMapStore = inject(ComponentIdMapStore);
   private readonly registry = inject(CustomComponentRegistry);
   private readonly provider = inject(ComponentProviderService);
   private readonly metadataStore = inject(ProjectMetadataStore);
@@ -473,6 +475,12 @@ export class PersistenceService {
     await Promise.all(
       summaries.map(async ({ id }) => {
         if (this.registry.masterTypeIdForId(id) !== undefined) return;
+        // A record whose id was promoted to the cloud is stale — its component
+        // moved to the server library. This guards the case where a previous
+        // promotion uploaded + aliased the component but failed to delete the
+        // local record; ignoring it here keeps a single (server) master. Relies
+        // on the alias map being hydrated first (see app startup ordering).
+        if (this.registry.isPromotedId(id)) return;
         try {
           const record = await this.browserComponentStore.get(id);
           if (!record) return;
@@ -499,6 +507,212 @@ export class PersistenceService {
         }
       })
     );
+  }
+
+  /**
+   * Registers all of the signed-in user's cloud library masters into the registry
+   * at startup (so they appear in the palette and resolve through the promotion
+   * alias after a reload). Delegates to the server gateway; a no-op when signed
+   * out. Call once at startup, after {@link preloadComponentIdAliases}.
+   */
+  preloadServerMasters(): Promise<void> {
+    return this.server.preloadServerMasters();
+  }
+
+  /**
+   * Lazily hydrates a preloaded server master's circuit (GET `/api/component/:id`)
+   * the first time it is needed — placement or update-to-latest. No-op for a master
+   * that is not server-sourced or whose circuit is already loaded. Safe to call
+   * repeatedly; only the first call for a given master fetches.
+   */
+  async ensureServerMasterCircuit(masterTypeId: number): Promise<void> {
+    const def = this.registry.getDefinition(masterTypeId);
+    if (
+      !def ||
+      def.kind !== 'master' ||
+      def.source !== 'server' ||
+      !def.id ||
+      def.circuit
+    ) {
+      return;
+    }
+    const circuit = await this.server.loadComponentCircuit(def.id);
+    this.registry.setMasterCircuit(masterTypeId, circuit);
+  }
+
+  /**
+   * Hydrates the registry's promotion alias map from the persistent id-map so
+   * components that embedded a master before it was uploaded to the cloud still
+   * resolve it (its id changed on promotion). Call once at startup, alongside
+   * {@link preloadBrowserMasters}. Best-effort: failures are logged, not thrown.
+   */
+  async preloadComponentIdAliases(): Promise<void> {
+    try {
+      const mappings = await this.componentIdMapStore.list();
+      for (const { id, newId } of mappings) {
+        this.registry.registerIdAlias(id, newId);
+      }
+    } catch {
+      this.logging.warn(
+        'Failed to load component id aliases',
+        'PersistenceService'
+      );
+    }
+  }
+
+  /**
+   * Names of the **local** custom components a browser master embeds (transitively),
+   * for the upload-to-cloud confirmation. Built from the master's stored circuit:
+   * each embedded custom whose provenance master is still browser-sourced (or can
+   * no longer be resolved) is listed — those already in the cloud are omitted.
+   * Returns an empty list for a server master or one with no local dependencies.
+   */
+  async localDependencyNames(masterTypeId: number): Promise<string[]> {
+    return (await this.localDependencies(masterTypeId)).map((d) => d.name);
+  }
+
+  /**
+   * The **local** custom components a browser master embeds (transitively), each
+   * paired with its registry master type id when it is still a registered browser
+   * master — `null` when the dependency only survives as an embedded snapshot and
+   * can no longer be resolved to its own master. Only the resolvable ones can be
+   * promoted to the cloud as separate library entries; the rest always ride along
+   * as embedded copies. Server-sourced embeds are omitted (already in the cloud).
+   * Drives the upload-to-cloud dialog: its names warn the user, its ids feed an
+   * "upload with dependencies". Empty for a server master or one with no local deps.
+   */
+  async localDependencies(
+    masterTypeId: number
+  ): Promise<{ name: string; masterTypeId: number | null }[]> {
+    const def = this.registry.getDefinition(masterTypeId);
+    if (!def || def.kind !== 'master' || !def.id) return [];
+    const record = await this.browserComponentStore.get(def.id);
+    if (!record) return [];
+
+    // Read the embedded snapshot definitions straight from the stored file — the
+    // transitive closure is already baked in at save time — without building a
+    // live project or ingesting throwaway definitions into the registry. Each
+    // embedded custom whose provenance master is still browser-sourced (or can no
+    // longer be resolved) is a local component that rides along as a copy.
+    const seen = new Set<string>();
+    const deps: { name: string; masterTypeId: number | null }[] = [];
+    for (const dep of this.circuitFile.peekDefinitions(record.content)) {
+      const masterId = dep.source?.id;
+      const resolvedMasterTypeId =
+        masterId !== undefined
+          ? this.registry.masterTypeIdForId(masterId)
+          : undefined;
+      const master =
+        resolvedMasterTypeId !== undefined
+          ? this.registry.getDefinition(resolvedMasterTypeId)
+          : undefined;
+      // Already in the cloud — its copy is fine, nothing local to mention.
+      if (master?.source === 'server') continue;
+      if (seen.has(dep.name)) continue;
+      seen.add(dep.name);
+      deps.push({
+        name: dep.name,
+        masterTypeId:
+          master?.source === 'browser' && resolvedMasterTypeId !== undefined
+            ? resolvedMasterTypeId
+            : null
+      });
+    }
+    return deps;
+  }
+
+  /**
+   * Uploads (moves) a **browser** master to the server library: creates the server
+   * record and pushes its circuit (embedding a self-contained copy of every custom
+   * it places), flips the registry to the new server id while keeping the old id
+   * as an alias, persists that alias, then removes the browser record. The master
+   * keeps its session type id, so placed instances and the palette tile survive —
+   * the tile's indicator just flips to "cloud". Rejects if the master is not a
+   * local component or its stored record is missing.
+   */
+  async promoteComponentToServer(
+    masterTypeId: number,
+    isPublic = false
+  ): Promise<void> {
+    const def = this.registry.getDefinition(masterTypeId);
+    if (!def || def.kind !== 'master' || def.source !== 'browser' || !def.id) {
+      throw new Error('Not a local component');
+    }
+    const oldId = def.id;
+    const record = await this.browserComponentStore.get(oldId);
+    if (!record) {
+      throw new Error(`No browser component with id ${oldId}`);
+    }
+
+    // Upload to the server first — the only irreversible, fail-able step. If it
+    // throws, nothing local has changed: the master is still browser-sourced, the
+    // record is intact and the upload button stays visible for a retry.
+    const { components, wires } = this.circuitFile.fromJson(record.content);
+    const temp = buildProject(components, wires);
+    let newId: string;
+    let version: number;
+    let newHash: string;
+    try {
+      ({
+        id: newId,
+        version,
+        hash: newHash
+      } = await this.server.promoteComponentFromProject(temp, {
+        name: def.name,
+        symbol: def.symbol,
+        description: def.description,
+        isPublic
+      }));
+    } finally {
+      temp.destroy();
+    }
+
+    // The component now lives in the cloud — past the point of no return. Persist
+    // the durable old→new alias and drop the local record *before* the in-memory
+    // flip, so a reload stays consistent even if interrupted here. These local
+    // writes must not fail the operation: the upload already succeeded, so
+    // surfacing an error would be a lie (and would hide the now-disabled retry).
+    // A failure here self-heals on reload — the browser preload ignores a record
+    // whose id has been promoted (see preloadBrowserMasters / isPromotedId).
+    try {
+      await this.componentIdMapStore.put(oldId, newId);
+      await this.browserComponentStore.delete(oldId);
+    } catch {
+      this.logging.warn(
+        `Component ${oldId} uploaded to the cloud, but local cleanup failed`,
+        'PersistenceService'
+      );
+    }
+
+    this.registry.promoteMaster(masterTypeId, newId, version);
+    // If the master's own editor tab is open, flip its metadata to the new server
+    // identity so a later save routes to the cloud instead of re-creating the
+    // browser record that was just deleted.
+    this._reconcilePromotedEditor(oldId, newId, newHash);
+  }
+
+  /**
+   * After a master is promoted to the cloud, re-points an open editor tab for it
+   * (matched by the old browser id) to the new server identity, so closing/saving
+   * that editor routes to the server save path rather than resurrecting the
+   * deleted browser record. No-op when no such editor is open.
+   */
+  private _reconcilePromotedEditor(
+    oldId: string,
+    newId: string,
+    hash: string
+  ): void {
+    const handle = this.metadataStore.getHandleById(oldId);
+    if (
+      handle?.metadata.type === 'comp' &&
+      handle.metadata.source === 'browser'
+    ) {
+      this.metadataStore.update(handle.project, {
+        source: 'server',
+        id: newId,
+        hash
+      });
+    }
   }
 
   /**

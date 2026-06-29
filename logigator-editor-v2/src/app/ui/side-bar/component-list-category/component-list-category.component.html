@@ -13,6 +13,9 @@
         "
       >
         {{ comp.symbol }}
+        @if (comp.source; as source) {
+          <app-source-indicator [source]="source" variant="badge" />
+        }
         @if (selected) {
           <span
             class="absolute -top-1.5 -right-1.5 flex items-center justify-center w-4 h-4 rounded-full bg-primary text-surface-950"

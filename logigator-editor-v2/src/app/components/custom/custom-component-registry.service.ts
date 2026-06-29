@@ -1,4 +1,4 @@
-import { inject, Injectable } from '@angular/core';
+import { inject, Injectable, signal } from '@angular/core';
 import { filter, Observable, Subject } from 'rxjs';
 import { v4 as uuidv4 } from 'uuid';
 import { ComponentProviderService } from '../component-provider.service';
@@ -45,6 +45,11 @@ export class CustomComponentRegistry {
   // Masters only: persistent id -> masterTypeId. Snapshots are excluded — one id
   // maps to many snapshot type ids, so the reverse lookup is masters-only.
   private readonly _idToMasterTypeId = new Map<string, number>();
+  // Old (pre-promotion) id -> current id. A master promoted browser->server keeps
+  // its old local id here so snapshots that captured it still resolve to the
+  // now-server master. Populated live by promoteMaster and at startup from the
+  // persistent id-map (registerIdAlias).
+  private readonly _idAliases = new Map<string, string>();
   // Library dependency edges: masterTypeId -> the distinct master type ids its
   // circuit places. Reverse-traversed by dependentsOf for cycle filtering.
   private readonly _dependencies = new Map<number, Set<number>>();
@@ -53,6 +58,12 @@ export class CustomComponentRegistry {
   // master content so subsequent placements get a fresh snapshot.
   private readonly _masterToSnapshotTypeId = new Map<number, number>();
   private readonly _change$ = new Subject<CustomComponentDefinition>();
+  // Bumped on mutations that change a master's identity/source (currently
+  // promotion). Lets signal-based readers (the settings panel chip + upload
+  // button) recompute a master's resolved source after an upload-to-cloud.
+  private readonly _revision = signal(0);
+  /** Increments whenever a master is promoted; a dependency for reactive readers. */
+  public readonly revision = this._revision.asReadonly();
 
   /**
    * Registers a new editable library **master** and returns its type id. A
@@ -214,10 +225,13 @@ export class CustomComponentRegistry {
   }
 
   /**
-   * Materialises a **master's** own circuit from its open editor (see
-   * `DefinitionBinding`). Replaces `circuit` with a fresh deep copy rather than
-   * mutating in place, so snapshots taken earlier (which copied the previous
-   * object) stay frozen. No-ops for a snapshot or unknown type id.
+   * Materialises a **master's** own circuit (from its open editor — see
+   * `DefinitionBinding` — or a lazily-fetched cloud circuit). Replaces `circuit`
+   * with a fresh deep copy rather than mutating in place, so snapshots taken
+   * earlier (which copied the previous object) stay frozen, and recomputes the
+   * master's direct library dependencies from the new circuit so cycle detection
+   * stays correct for any path that sets a circuit (not just an open editor).
+   * No-ops for a snapshot or unknown type id.
    */
   public setMasterCircuit(
     masterTypeId: number,
@@ -227,6 +241,27 @@ export class CustomComponentRegistry {
     if (!def || def.kind !== 'master') return;
     def.circuit = cloneCircuit(circuit);
     this._masterToSnapshotTypeId.delete(masterTypeId);
+    this._recomputeDependencies(masterTypeId, circuit);
+  }
+
+  /**
+   * Derives a master's direct library dependencies (the distinct master type ids
+   * behind the custom snapshots its circuit places, resolved through the promotion
+   * alias) and records them for cycle prevention. Built-ins (no registry def) and
+   * unresolvable types contribute no edge.
+   */
+  private _recomputeDependencies(
+    masterTypeId: number,
+    circuit: SerializedCircuitBody
+  ): void {
+    const deps = new Set<number>();
+    for (const c of circuit.components) {
+      const childId = this._definitions.get(c.type)?.id;
+      if (childId === undefined) continue;
+      const dependencyMaster = this.masterTypeIdForId(childId);
+      if (dependencyMaster !== undefined) deps.add(dependencyMaster);
+    }
+    this._dependencies.set(masterTypeId, deps);
   }
 
   /**
@@ -247,9 +282,86 @@ export class CustomComponentRegistry {
     return this._definitions.get(typeId);
   }
 
-  /** Masters-only reverse lookup: persistent id -> masterTypeId. */
+  /**
+   * Masters-only reverse lookup: persistent id -> masterTypeId. Falls back
+   * through the promotion alias map, so an id captured before an upload-to-cloud
+   * still resolves to the (now-server) master under its new id.
+   */
   public masterTypeIdForId(id: string): number | undefined {
-    return this._idToMasterTypeId.get(id);
+    const direct = this._idToMasterTypeId.get(id);
+    if (direct !== undefined) return direct;
+    const aliased = this._idAliases.get(id);
+    return aliased !== undefined
+      ? this._idToMasterTypeId.get(aliased)
+      : undefined;
+  }
+
+  /**
+   * Records an old-id -> current-id alias (idempotent). Used at startup to hydrate
+   * the alias map from the persistent id-map so promotions survive a reload. Bumps
+   * the revision so signal readers that resolved before the aliases loaded
+   * re-resolve once they are in place.
+   */
+  public registerIdAlias(oldId: string, newId: string): void {
+    this._idAliases.set(oldId, newId);
+    this._revision.update((r) => r + 1);
+  }
+
+  /**
+   * Whether `id` is a recorded pre-promotion (old) id — i.e. a browser master
+   * with this id was uploaded to the cloud. The startup browser preload uses this
+   * to ignore a stale local record left behind by a partially-failed promotion.
+   */
+  public isPromotedId(id: string): boolean {
+    return this._idAliases.has(id);
+  }
+
+  /**
+   * Resolves any custom type id to its master entry: a master returns itself, a
+   * snapshot follows its provenance id (through the promotion alias). Returns
+   * undefined for a built-in, unknown, or unresolvable type id.
+   */
+  public resolveMaster(
+    typeId: number
+  ): { masterTypeId: number; master: CustomComponentDefinition } | undefined {
+    const def = this._definitions.get(typeId);
+    if (!def) return undefined;
+    if (def.kind === 'master') return { masterTypeId: typeId, master: def };
+    if (def.id === undefined) return undefined;
+    const masterTypeId = this.masterTypeIdForId(def.id);
+    if (masterTypeId === undefined) return undefined;
+    const master = this._definitions.get(masterTypeId);
+    return master ? { masterTypeId, master } : undefined;
+  }
+
+  /**
+   * Promotes a **browser** master to the server library after its content has
+   * been saved server-side: flips `source`/`id`/`version`, re-points the masters
+   * id index to the new id while keeping the old id as an alias (so snapshots that
+   * already captured it still resolve), invalidates the placement-snapshot cache,
+   * re-registers the config (so the palette reflects the new source) and bumps the
+   * revision. No-op for a snapshot or unknown type id.
+   */
+  public promoteMaster(
+    masterTypeId: number,
+    newId: string,
+    version: number
+  ): void {
+    const def = this._definitions.get(masterTypeId);
+    if (!def || def.kind !== 'master') return;
+    const oldId = def.id;
+    if (oldId !== undefined) {
+      this._idToMasterTypeId.delete(oldId);
+      this._idAliases.set(oldId, newId);
+    }
+    def.source = 'server';
+    def.id = newId;
+    def.version = version;
+    this._idToMasterTypeId.set(newId, masterTypeId);
+    this._masterToSnapshotTypeId.delete(masterTypeId);
+    this._provider.register(buildCustomComponentConfig(def));
+    this._revision.update((r) => r + 1);
+    this._change$.next(def);
   }
 
   /** A snapshot's `source.id` provenance, or a master's own id. */

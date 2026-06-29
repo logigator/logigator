@@ -9,6 +9,8 @@ import { CustomComponent } from '../components/custom/custom-component';
 import { Action } from '../actions/action';
 import { UpdateInstanceAction } from '../actions/actions/update-instance.action';
 import { ToastService } from '../logging/toast.service';
+import { TranslocoService } from '@jsverse/transloco';
+import { UserService } from '../user/user.service';
 import { DefinitionBinding } from './definition-binding';
 
 export interface NewComponentMeta {
@@ -39,6 +41,8 @@ export class CustomComponentService {
   private readonly metadataStore = inject(ProjectMetadataStore);
   private readonly persistence = inject(PersistenceService);
   private readonly toast = inject(ToastService);
+  private readonly transloco = inject(TranslocoService);
+  private readonly user = inject(UserService);
 
   private readonly _bindings = new Map<Project, DefinitionBinding>();
 
@@ -185,6 +189,127 @@ export class CustomComponentService {
     // real instance is created by the action's add on do(). Drop this one.
     replacement.destroy({ children: true });
     return action;
+  }
+
+  /**
+   * The local components embedded in a master (transitively), each with its master
+   * type id when it is still a registered browser master (`null` when it only
+   * survives embedded). Used to warn the user before an upload that they ride along
+   * as copies, and to drive "upload with dependencies". Empty when the lookup fails.
+   */
+  public async localDependencies(
+    masterTypeId: number
+  ): Promise<{ name: string; masterTypeId: number | null }[]> {
+    try {
+      return await this.persistence.localDependencies(masterTypeId);
+    } catch {
+      return [];
+    }
+  }
+
+  /**
+   * Uploads (moves) a local master to the user's cloud library at the chosen
+   * visibility. Requires being signed in. Embedded local components ride along as
+   * copies and stay in the local library; only the chosen component moves to the
+   * cloud. The caller is responsible for confirming with the user first.
+   */
+  public async uploadComponent(
+    masterTypeId: number,
+    isPublic = false
+  ): Promise<void> {
+    const def = this.registry.getDefinition(masterTypeId);
+    if (!def || def.kind !== 'master' || def.source !== 'browser') return;
+
+    if (this.user.user() === null) {
+      this.toast.error(
+        this.transloco.translate('uploadComponent.signInRequired')
+      );
+      return;
+    }
+
+    try {
+      await this.persistence.promoteComponentToServer(masterTypeId, isPublic);
+      this.toast.success(this.transloco.translate('uploadComponent.success'));
+    } catch {
+      this.toast.error(this.transloco.translate('uploadComponent.failure'));
+    }
+  }
+
+  /**
+   * Uploads a local master **and** each resolvable local dependency to the cloud as
+   * separate library entries, all at the chosen visibility. The server model has no
+   * linking, so every entry stays self-contained (the master still embeds its own
+   * copies); the dependencies simply also appear in the user's cloud library.
+   *
+   * The master is uploaded first — it is the primary intent and self-contained, so
+   * if it fails nothing else is attempted. Dependencies are then uploaded
+   * best-effort: each is independent and individually irreversible, so a single
+   * failure is reported as a count rather than unwinding the rest.
+   */
+  public async uploadComponentWithDependencies(
+    masterTypeId: number,
+    isPublic = false
+  ): Promise<void> {
+    const def = this.registry.getDefinition(masterTypeId);
+    if (!def || def.kind !== 'master' || def.source !== 'browser') return;
+
+    if (this.user.user() === null) {
+      this.toast.error(
+        this.transloco.translate('uploadComponent.signInRequired')
+      );
+      return;
+    }
+
+    // Resolve the dependency ids *before* promoting the master — promotion deletes
+    // the master's browser record, which is where the dependency list is read from.
+    const dependencyIds = (await this.localDependencies(masterTypeId))
+      .map((d) => d.masterTypeId)
+      .filter((id): id is number => id !== null);
+
+    try {
+      await this.persistence.promoteComponentToServer(masterTypeId, isPublic);
+    } catch {
+      this.toast.error(this.transloco.translate('uploadComponent.failure'));
+      return;
+    }
+
+    let failed = 0;
+    for (const id of dependencyIds) {
+      try {
+        await this.persistence.promoteComponentToServer(id, isPublic);
+      } catch {
+        failed++;
+      }
+    }
+
+    if (failed > 0) {
+      this.toast.warn(
+        this.transloco.translate('uploadComponent.partialFailure', {
+          failed,
+          total: dependencyIds.length
+        })
+      );
+    } else {
+      this.toast.success(this.transloco.translate('uploadComponent.success'));
+    }
+  }
+
+  /**
+   * Ensures a master's circuit is loaded before it is placed or updated. Cloud
+   * masters are preloaded summary-only (no circuit); this lazily fetches the
+   * circuit on first use. No-op for built-ins, browser masters, and already-loaded
+   * masters. Returns whether the circuit is ready: a failed cloud fetch shows a
+   * toast and returns `false` so the caller can abort (rather than arm placement /
+   * apply an update against empty content).
+   */
+  public async ensureMasterCircuit(masterTypeId: number): Promise<boolean> {
+    try {
+      await this.persistence.ensureServerMasterCircuit(masterTypeId);
+      return true;
+    } catch {
+      this.toast.error('Failed to load component from the cloud');
+      return false;
+    }
   }
 
   private _findOpenEditor(masterId: string): Project | undefined {

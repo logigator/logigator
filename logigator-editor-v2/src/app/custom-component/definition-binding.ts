@@ -1,6 +1,5 @@
 import { auditTime, Subscription } from 'rxjs';
 import { Project } from '../project/project';
-import { CustomComponent } from '../components/custom/custom-component';
 import { CustomComponentRegistry } from '../components/custom/custom-component-registry.service';
 import { serializeProjectBody } from '../persistence/snapshots';
 import { deriveSummary } from './definition-derivation';
@@ -41,24 +40,12 @@ export class DefinitionBinding {
 
     // Materialise the master's circuit so a snapshot taken at place/update time
     // carries the current contents. Snapshots deep-copy it, so this never
-    // touches already-placed frozen instances.
+    // touches already-placed frozen instances. `setMasterCircuit` also recomputes
+    // the master's library dependencies from the circuit (for cycle prevention).
     this.registry.setMasterCircuit(
       this.masterTypeId,
       serializeProjectBody(this.project)
     );
-
-    // A master's library dependencies are the distinct masters behind the
-    // snapshots it places (provenance via source.id). Frozen snapshots add no
-    // edges of their own; only placing master X into this one creates X → this.
-    const deps = new Set<number>();
-    for (const component of this.project.components) {
-      if (!(component instanceof CustomComponent)) continue;
-      const def = this.registry.getDefinition(component.config.type);
-      if (def?.id === undefined) continue;
-      const dependencyMaster = this.registry.masterTypeIdForId(def.id);
-      if (dependencyMaster !== undefined) deps.add(dependencyMaster);
-    }
-    this.registry.setDependencies(this.masterTypeId, deps);
   }
 
   public dispose(): void {
