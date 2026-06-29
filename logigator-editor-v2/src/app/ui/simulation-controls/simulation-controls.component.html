@@ -9,7 +9,7 @@
   <!-- Run controls come alive once the worker session reports ready. -->
   <div class="flex flex-wrap gap-1">
     <lg-button
-      [pTooltip]="t('toolBar.play')"
+      [lgTooltip]="t('toolBar.play')"
       [ariaLabel]="t('toolBar.play')"
       [disabled]="!isSimReady() || isSimRunning()"
       (onClick)="playSimulation()"
@@ -18,7 +18,7 @@
       severity="secondary"
     ></lg-button>
     <lg-button
-      [pTooltip]="t('toolBar.pause')"
+      [lgTooltip]="t('toolBar.pause')"
       [ariaLabel]="t('toolBar.pause')"
       [disabled]="!isSimRunning()"
       (onClick)="pauseSimulation()"
@@ -27,7 +27,7 @@
       severity="secondary"
     ></lg-button>
     <lg-button
-      [pTooltip]="t('toolBar.step')"
+      [lgTooltip]="t('toolBar.step')"
       [ariaLabel]="t('toolBar.step')"
       [disabled]="!isSimReady() || isSimRunning()"
       (onClick)="stepSimulation()"
@@ -36,7 +36,7 @@
       severity="secondary"
     ></lg-button>
     <lg-button
-      [pTooltip]="t('toolBar.stopSim')"
+      [lgTooltip]="t('toolBar.stopSim')"
       [ariaLabel]="t('toolBar.stopSim')"
       [disabled]="!isSimReady()"
       (onClick)="stopSimulation()"
@@ -48,7 +48,7 @@
   <lg-divider layout="vertical" class="mx-1!"></lg-divider>
   <div class="flex flex-wrap items-center gap-2">
     <lg-button
-      [pTooltip]="t('toolBar.targetMode')"
+      [lgTooltip]="t('toolBar.targetMode')"
       [ariaLabel]="t('toolBar.targetMode')"
       [disabled]="!isSimReady()"
       [outlined]="simMode() !== 'target'"
@@ -64,7 +64,7 @@
       step="any"
       class="w-24"
       [disabled]="!isSimReady()"
-      [pTooltip]="t('toolBar.targetSpeed')"
+      [lgTooltip]="t('toolBar.targetSpeed')"
       [ariaLabel]="t('toolBar.targetSpeed')"
       tooltipPosition="bottom"
       [value]="targetValue()"
@@ -77,12 +77,12 @@
       [disabled]="!isSimReady()"
       optionLabel="label"
       optionValue="value"
-      [pTooltip]="t('toolBar.targetUnit')"
+      [lgTooltip]="t('toolBar.targetUnit')"
       [ariaLabel]="t('toolBar.targetUnit')"
       tooltipPosition="bottom"
     ></p-select>
     <lg-button
-      [pTooltip]="t('toolBar.syncToFrame')"
+      [lgTooltip]="t('toolBar.syncToFrame')"
       [ariaLabel]="t('toolBar.syncToFrame')"
       [disabled]="!isSimReady()"
       [outlined]="simMode() !== 'sync'"

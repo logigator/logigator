@@ -36,7 +36,7 @@
       (onClick)="morePop.toggle($event)"
     ></lg-button>
   </div>
-  <p-popover #morePop>
+  <lg-popover #morePop>
     <div class="flex items-center gap-1">
       @for (tool of moreTools; track tool.id) {
         <lg-button
@@ -57,5 +57,5 @@
         ></lg-button>
       }
     </div>
-  </p-popover>
+  </lg-popover>
 </div>

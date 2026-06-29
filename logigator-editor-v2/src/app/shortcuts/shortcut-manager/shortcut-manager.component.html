@@ -19,7 +19,7 @@
                 [text]="true"
                 size="small"
                 [disabled]="isDefault(action)"
-                [pTooltip]="t('shortcuts.manager.reset')"
+                [lgTooltip]="t('shortcuts.manager.reset')"
                 tooltipPosition="bottom"
                 (onClick)="shortcutService.resetBinding(action)"
               />
@@ -29,7 +29,7 @@
                 [text]="true"
                 size="small"
                 [disabled]="!shortcutService.binding(action)()"
-                [pTooltip]="t('shortcuts.manager.unassign')"
+                [lgTooltip]="t('shortcuts.manager.unassign')"
                 tooltipPosition="bottom"
                 (onClick)="shortcutService.setBinding(action, null)"
               />

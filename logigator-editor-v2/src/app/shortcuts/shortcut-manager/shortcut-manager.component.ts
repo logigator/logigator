@@ -1,7 +1,6 @@
 import { ChangeDetectionStrategy, Component, inject } from '@angular/core';
 import { DynamicDialogRef } from 'primeng/dynamicdialog';
-import { LgButton, LgDivider } from '@logigator/ui';
-import { TooltipModule } from 'primeng/tooltip';
+import { LgButton, LgDivider, LgTooltip } from '@logigator/ui';
 import { TranslocoDirective } from '@jsverse/transloco';
 import { ShortcutService } from '../shortcut.service';
 import { ShortcutActionEnum } from '../shortcut-action.enum';
@@ -19,7 +18,7 @@ interface ShortcutGroup {
   imports: [
     LgButton,
     LgDivider,
-    TooltipModule,
+    LgTooltip,
     TranslocoDirective,
     ShortcutEditComponent
   ],

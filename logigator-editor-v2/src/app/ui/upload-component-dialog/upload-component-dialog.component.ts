@@ -7,8 +7,7 @@ import {
 } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { DynamicDialogConfig, DynamicDialogRef } from 'primeng/dynamicdialog';
-import { TooltipModule } from 'primeng/tooltip';
-import { LgButton, LgToggleSwitch } from '@logigator/ui';
+import { LgButton, LgToggleSwitch, LgTooltip } from '@logigator/ui';
 import { ConfirmationService } from 'primeng/api';
 import { TranslocoDirective, TranslocoService } from '@jsverse/transloco';
 import { CustomComponentService } from '../../custom-component/custom-component.service';
@@ -40,7 +39,7 @@ export interface UploadComponentDialogResult {
   imports: [
     FormsModule,
     LgToggleSwitch,
-    TooltipModule,
+    LgTooltip,
     LgButton,
     TranslocoDirective,
     MessageComponent

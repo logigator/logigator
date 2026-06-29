@@ -5,8 +5,7 @@ import {
   inject,
   input
 } from '@angular/core';
-import { LgButton } from '@logigator/ui';
-import { Tooltip } from 'primeng/tooltip';
+import { LgButton, LgTooltip } from '@logigator/ui';
 import { DialogService } from 'primeng/dynamicdialog';
 import { TranslocoDirective, TranslocoService } from '@jsverse/transloco';
 import { ComponentActionContext } from '../../component-action';
@@ -28,7 +27,7 @@ import {
  */
 @Component({
   selector: 'app-upload-component-action',
-  imports: [LgButton, Tooltip, TranslocoDirective],
+  imports: [LgButton, LgTooltip, TranslocoDirective],
   template: `<ng-container *transloco="let t">
     @if (visible()) {
       <lg-button
@@ -37,7 +36,7 @@ import {
         [label]="t('uploadComponent.button')"
         class="float-right"
         [disabled]="!authenticated()"
-        [pTooltip]="authenticated() ? '' : t('uploadComponent.signInTooltip')"
+        [lgTooltip]="authenticated() ? '' : t('uploadComponent.signInTooltip')"
         tooltipPosition="top"
         (onClick)="upload()"
       />

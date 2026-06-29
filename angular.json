@@ -36,6 +36,7 @@
               ".woff2": "file"
             },
             "styles": [
+              "node_modules/@angular/cdk/overlay-prebuilt.css",
               "logigator-editor-v2/src/tailwind.css",
               "logigator-editor-v2/src/styles.scss"
             ],
