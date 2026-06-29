@@ -1,7 +1,7 @@
 <div class="flex items-center gap-2" *transloco="let t">
   @if (!isRecording()) {
     <app-shortcut-display [binding]="binding()" />
-    <p-button
+    <lg-button
       icon="ph ph-pencil"
       severity="secondary"
       [text]="true"
@@ -14,7 +14,7 @@
     <span class="text-sm italic text-primary animate-pulse">{{
       t('shortcuts.manager.recordPrompt')
     }}</span>
-    <p-button
+    <lg-button
       icon="ph ph-x"
       severity="warn"
       [text]="true"

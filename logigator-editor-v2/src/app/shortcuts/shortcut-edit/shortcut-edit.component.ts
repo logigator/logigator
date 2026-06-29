@@ -8,7 +8,7 @@ import {
 } from '@angular/core';
 import { fromEvent, Subscription } from 'rxjs';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
-import { ButtonModule } from 'primeng/button';
+import { LgButton } from '@logigator/ui';
 import { TooltipModule } from 'primeng/tooltip';
 import { TranslocoDirective } from '@jsverse/transloco';
 import { ShortcutDisplayComponent } from '../shortcut-display/shortcut-display.component';
@@ -18,7 +18,7 @@ import { ShortcutService } from '../shortcut.service';
 @Component({
   selector: 'app-shortcut-edit',
   imports: [
-    ButtonModule,
+    LgButton,
     TooltipModule,
     TranslocoDirective,
     ShortcutDisplayComponent
