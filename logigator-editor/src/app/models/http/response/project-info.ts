@@ -11,9 +11,9 @@ export interface ProjectInfo {
 	link: string;
 	public: boolean;
 	/**
-	 * Additive — `true` when the stored circuit predates the new editor's format.
-	 * `false` means it was saved by the new editor (may use features like negated
-	 * ports that this editor does not support). Absent on older backends.
+	 * Additive — `true` when the circuit was saved by the new editor (may use
+	 * features like negated ports that this editor does not support). Absent or
+	 * `false` means a legacy project. Absent on older backends.
 	 */
-	legacyFormat?: boolean;
+	newFormat?: boolean;
 }

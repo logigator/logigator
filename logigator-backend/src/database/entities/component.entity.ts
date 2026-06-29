@@ -107,8 +107,8 @@ export class Component {
 
 	/**
 	 * Set by the new editor on save; absent on saves by the old editor or old API
-	 * clients, which default it to `false` (legacy). The read responses derive
-	 * `legacyFormat` from it so the editors can warn on a version mismatch.
+	 * clients, which default it to `false` (legacy). The read responses return it
+	 * as `newFormat` so the editors can warn on a version mismatch.
 	 */
 	@Column({default: false, nullable: false})
 	newFormat: boolean;

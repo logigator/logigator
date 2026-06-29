@@ -63,7 +63,7 @@ export class ServerPersistenceGateway {
       link: detail.link
     });
 
-    if (detail.legacyFormat) {
+    if (!detail.newFormat) {
       this.toast.warn(
         'This project was made with the old editor. Saving here converts it to ' +
           'the new format — reopening it in the old editor afterwards may drop or ' +

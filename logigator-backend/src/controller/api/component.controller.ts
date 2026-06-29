@@ -83,7 +83,7 @@ export class ComponentController {
 			...classToPlain(component),
 			dependencies: buildDependencyResponse(dependencies, enriched),
 			elements,
-			legacyFormat: !component.newFormat
+			newFormat: component.newFormat
 		};
 	}
 

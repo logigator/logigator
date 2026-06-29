@@ -55,7 +55,7 @@ export class ShareController {
 			...classToPlain(project),
 			dependencies: buildDependencyResponse(dependencies, enriched, ['showShareLinks']),
 			elements,
-			legacyFormat: !project.newFormat
+			newFormat: project.newFormat
 		};
 	}
 

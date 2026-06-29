@@ -79,7 +79,7 @@ export class ProjectController {
 			...classToPlain(project, {groups: ['showShareLinks']}),
 			dependencies: buildDependencyResponse(dependencies, enriched),
 			elements,
-			legacyFormat: !project.newFormat
+			newFormat: project.newFormat
 		};
 	}
 

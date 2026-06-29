@@ -143,7 +143,7 @@ export class ProjectSaveManagementService {
 			hash: projectData.data.elementsFile.hash,
 			public: projectData.data.public,
 			link: projectData.data.link,
-			newFormat: projectData.data.legacyFormat === false,
+			newFormat: projectData.data.newFormat === true,
 			type
 		});
 		this._projectsCache.set(project.id, project);
