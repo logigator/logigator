@@ -7,7 +7,7 @@
     (onClick)="open()"
   ></lg-button>
 
-  <p-dialog
+  <lg-dialog
     [visible]="dialogVisible()"
     (visibleChange)="$event ? null : cancel()"
     [header]="t(option().dialogTitle)"
@@ -26,7 +26,7 @@
       (ngModelChange)="draft.set($event)"
     ></textarea>
 
-    <ng-template pTemplate="footer">
+    <ng-template #footer>
       <lg-button
         [label]="t('common.cancel')"
         severity="secondary"
@@ -34,5 +34,5 @@
       ></lg-button>
       <lg-button [label]="t('common.save')" (onClick)="save()"></lg-button>
     </ng-template>
-  </p-dialog>
+  </lg-dialog>
 </div>

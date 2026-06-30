@@ -68,7 +68,7 @@
 
 @if (layout.isCompact()) {
   <ng-container *transloco="let t">
-    <p-drawer
+    <lg-drawer
       [visible]="mobileUi.activeSheet() === 'palette'"
       (visibleChange)="onSheetClosed($event)"
       position="bottom"
@@ -76,9 +76,9 @@
       [header]="t('mobile.palette')"
     >
       <app-component-list></app-component-list>
-    </p-drawer>
+    </lg-drawer>
 
-    <p-drawer
+    <lg-drawer
       [visible]="mobileUi.activeSheet() === 'settings'"
       (visibleChange)="onSheetClosed($event)"
       position="bottom"
@@ -86,20 +86,20 @@
       [header]="t('mobile.settings')"
     >
       <app-component-settings [floating]="false"></app-component-settings>
-    </p-drawer>
+    </lg-drawer>
 
     @if (isEditingComponent()) {
-      <p-drawer
+      <lg-drawer
         [visible]="mobileUi.activeSheet() === 'ports'"
         (visibleChange)="onSheetClosed($event)"
         position="right"
         [header]="t('mobile.ports')"
       >
         <app-ports-panel></app-ports-panel>
-      </p-drawer>
+      </lg-drawer>
     }
 
-    <p-drawer
+    <lg-drawer
       [visible]="mobileUi.activeSheet() === 'menu'"
       (visibleChange)="onSheetClosed($event)"
       position="left"
@@ -111,6 +111,6 @@
         </div>
         <lg-panel-menu [model]="menuItems()"></lg-panel-menu>
       </div>
-    </p-drawer>
+    </lg-drawer>
   </ng-container>
 }

@@ -26,8 +26,7 @@ import { UnsavedChangesGuard } from './persistence/unsaved-changes.guard';
 import { ConfirmPopup } from 'primeng/confirmpopup';
 import { ConfirmDialog } from 'primeng/confirmdialog';
 import { Toast } from 'primeng/toast';
-import { Drawer } from 'primeng/drawer';
-import { LgPanelMenu } from '@logigator/ui';
+import { LgDrawer, LgPanelMenu } from '@logigator/ui';
 import { TranslocoDirective } from '@jsverse/transloco';
 import { WorkMode } from './work-mode/work-mode.enum';
 import { WorkModeService } from './work-mode/work-mode.service';
@@ -60,7 +59,7 @@ import { UserSettingsComponent } from './ui/user-settings/user-settings.componen
     ConfirmPopup,
     ConfirmDialog,
     Toast,
-    Drawer,
+    LgDrawer,
     LgPanelMenu,
     TranslocoDirective,
     MobileTopBarComponent,
