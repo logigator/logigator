@@ -5,8 +5,8 @@ import {
   signal
 } from '@angular/core';
 import { FormsModule } from '@angular/forms';
-import { DynamicDialogRef } from 'primeng/dynamicdialog';
 import {
+  DialogRef,
   LgButton,
   LgInputText,
   LgSelectButton,
@@ -40,7 +40,7 @@ import { MessageComponent } from '../message/message.component';
   changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class NewComponentDialogComponent {
-  private readonly ref = inject(DynamicDialogRef);
+  private readonly ref = inject(DialogRef);
   private readonly customComponentService = inject(CustomComponentService);
   private readonly transloco = inject(TranslocoService);
   protected readonly userService = inject(UserService);

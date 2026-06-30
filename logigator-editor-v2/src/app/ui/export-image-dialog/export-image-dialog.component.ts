@@ -6,8 +6,8 @@ import {
   signal
 } from '@angular/core';
 import { FormsModule } from '@angular/forms';
-import { DynamicDialogRef } from 'primeng/dynamicdialog';
 import {
+  DialogRef,
   LgButton,
   LgSelect,
   LgSelectButton,
@@ -46,7 +46,7 @@ const DEFAULT_QUALITY_PERCENT = 92;
   changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class ExportImageDialogComponent {
-  private readonly ref = inject(DynamicDialogRef);
+  private readonly ref = inject(DialogRef);
   private readonly projectService = inject(ProjectService);
   private readonly metadataStore = inject(ProjectMetadataStore);
   private readonly imageExport = inject(ImageExportService);

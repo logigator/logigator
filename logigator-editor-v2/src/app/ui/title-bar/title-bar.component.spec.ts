@@ -2,7 +2,7 @@ import { beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 
 import { TitleBarComponent } from './title-bar.component';
-import { DialogService } from 'primeng/dynamicdialog';
+import { DialogService } from '@logigator/ui';
 import { appConfig } from '../../app.config';
 
 describe('TitleBarComponent', () => {

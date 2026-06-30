@@ -2,7 +2,7 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 
 import { ToolBarComponent } from './tool-bar.component';
-import { DialogService } from 'primeng/dynamicdialog';
+import { DialogService } from '@logigator/ui';
 import { appConfig } from '../../app.config';
 import { WorkModeService } from '../../work-mode/work-mode.service';
 

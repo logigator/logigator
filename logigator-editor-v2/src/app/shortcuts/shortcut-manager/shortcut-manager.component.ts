@@ -1,6 +1,5 @@
 import { ChangeDetectionStrategy, Component, inject } from '@angular/core';
-import { DynamicDialogRef } from 'primeng/dynamicdialog';
-import { LgButton, LgDivider, LgTooltip } from '@logigator/ui';
+import { DialogRef, LgButton, LgDivider, LgTooltip } from '@logigator/ui';
 import { TranslocoDirective } from '@jsverse/transloco';
 import { ShortcutService } from '../shortcut.service';
 import { ShortcutActionEnum } from '../shortcut-action.enum';
@@ -26,7 +25,7 @@ interface ShortcutGroup {
   changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class ShortcutManagerComponent {
-  private readonly ref = inject(DynamicDialogRef);
+  private readonly ref = inject(DialogRef);
   protected readonly shortcutService = inject(ShortcutService);
 
   protected readonly groups: ShortcutGroup[] = [

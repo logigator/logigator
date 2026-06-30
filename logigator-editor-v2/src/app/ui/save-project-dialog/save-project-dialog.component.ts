@@ -5,8 +5,9 @@ import {
   signal
 } from '@angular/core';
 import { FormsModule } from '@angular/forms';
-import { DynamicDialogConfig, DynamicDialogRef } from 'primeng/dynamicdialog';
 import {
+  DialogConfig,
+  DialogRef,
   LgButton,
   LgInputText,
   LgSelectButton,
@@ -48,8 +49,8 @@ const NAME_MAX_LENGTH = 20;
   changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class SaveProjectDialogComponent {
-  private readonly ref = inject(DynamicDialogRef);
-  private readonly config = inject(DynamicDialogConfig);
+  private readonly ref = inject(DialogRef);
+  private readonly config = inject(DialogConfig);
   private readonly transloco = inject(TranslocoService);
   protected readonly userService = inject(UserService);
 
@@ -64,7 +65,9 @@ export class SaveProjectDialogComponent {
     }
   ];
 
-  protected readonly name = signal<string>(this.config.data?.name ?? '');
+  protected readonly name = signal<string>(
+    (this.config.data as { name?: string } | undefined)?.name ?? ''
+  );
   protected readonly destination = signal<'server' | 'local'>('server');
   protected readonly isPublic = signal(true);
   protected readonly nameMaxLength = NAME_MAX_LENGTH;

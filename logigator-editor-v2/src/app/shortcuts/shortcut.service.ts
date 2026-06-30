@@ -8,7 +8,7 @@ import {
   Subscription
 } from 'rxjs';
 import { SignalMap } from 'ngxtension/collections';
-import { DialogService } from 'primeng/dynamicdialog';
+import { DialogService } from '@logigator/ui';
 import { TranslocoService } from '@jsverse/transloco';
 import {
   ShortcutActionEnum,

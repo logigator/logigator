@@ -6,8 +6,13 @@ import {
   signal
 } from '@angular/core';
 import { FormsModule } from '@angular/forms';
-import { DynamicDialogConfig, DynamicDialogRef } from 'primeng/dynamicdialog';
-import { LgButton, LgToggleSwitch, LgTooltip } from '@logigator/ui';
+import {
+  DialogConfig,
+  DialogRef,
+  LgButton,
+  LgToggleSwitch,
+  LgTooltip
+} from '@logigator/ui';
 import { ConfirmationService } from 'primeng/api';
 import { TranslocoDirective, TranslocoService } from '@jsverse/transloco';
 import { CustomComponentService } from '../../custom-component/custom-component.service';
@@ -48,8 +53,8 @@ export interface UploadComponentDialogResult {
   changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class UploadComponentDialogComponent {
-  private readonly ref = inject(DynamicDialogRef);
-  private readonly config = inject(DynamicDialogConfig);
+  private readonly ref = inject(DialogRef);
+  private readonly config = inject(DialogConfig);
   private readonly customComponentService = inject(CustomComponentService);
   private readonly confirmation = inject(ConfirmationService);
   private readonly transloco = inject(TranslocoService);

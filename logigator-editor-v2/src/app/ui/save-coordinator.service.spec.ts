@@ -1,7 +1,7 @@
 import { describe, expect, it, vi } from 'vitest';
 import { TestBed } from '@angular/core/testing';
 import { of } from 'rxjs';
-import { DialogService } from 'primeng/dynamicdialog';
+import { DialogService } from '@logigator/ui';
 import { SaveCoordinatorService } from './save-coordinator.service';
 import { PersistenceService } from '../persistence/persistence.service';
 import {

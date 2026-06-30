@@ -5,8 +5,7 @@ import {
   inject,
   input
 } from '@angular/core';
-import { LgButton, LgTooltip } from '@logigator/ui';
-import { DialogService } from 'primeng/dynamicdialog';
+import { DialogService, LgButton, LgTooltip } from '@logigator/ui';
 import { TranslocoDirective, TranslocoService } from '@jsverse/transloco';
 import { ComponentActionContext } from '../../component-action';
 import { CustomComponentRegistry } from '../custom-component-registry.service';
@@ -71,7 +70,10 @@ export class UploadComponentActionComponent {
     if (!resolved) return;
     const { masterTypeId, master } = resolved;
 
-    const ref = this.dialogService.open(UploadComponentDialogComponent, {
+    const ref = this.dialogService.open<
+      UploadComponentDialogComponent,
+      UploadComponentDialogResult
+    >(UploadComponentDialogComponent, {
       header: this.transloco.translate('uploadComponent.dialogHeader'),
       width: '28rem',
       modal: true,

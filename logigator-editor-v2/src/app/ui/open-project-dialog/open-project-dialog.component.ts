@@ -6,8 +6,8 @@ import {
   OnInit,
   signal
 } from '@angular/core';
-import { DynamicDialogRef } from 'primeng/dynamicdialog';
 import {
+  DialogRef,
   LgFileUpload,
   type LgFileSelectEvent,
   LgTab,
@@ -50,7 +50,7 @@ const PAGE_SIZE = 20;
   changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class OpenProjectDialogComponent implements OnInit {
-  private readonly ref = inject(DynamicDialogRef);
+  private readonly ref = inject(DialogRef);
   private readonly persistenceService = inject(PersistenceService);
   private readonly toastService = inject(ToastService);
   private readonly loggingService = inject(LoggingService);

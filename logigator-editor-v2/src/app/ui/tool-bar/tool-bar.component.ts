@@ -4,7 +4,7 @@ import {
   computed,
   inject
 } from '@angular/core';
-import { LgButton, LgDivider, LgTooltip } from '@logigator/ui';
+import { DialogService, LgButton, LgDivider, LgTooltip } from '@logigator/ui';
 import { TranslocoDirective, TranslocoService } from '@jsverse/transloco';
 import { WorkModeService } from '../../work-mode/work-mode.service';
 import { WorkMode } from '../../work-mode/work-mode.enum';
@@ -15,7 +15,6 @@ import {
 import { ClipboardService } from '../../clipboard/clipboard.service';
 import { ProjectService } from '../../project/project.service';
 import { SaveCoordinatorService } from '../save-coordinator.service';
-import { DialogService } from 'primeng/dynamicdialog';
 import { OpenProjectDialogComponent } from '../open-project-dialog/open-project-dialog.component';
 import { ShortcutService } from '../../shortcuts/shortcut.service';
 import { ShortcutActionEnum } from '../../shortcuts/shortcut-action.enum';
