@@ -22,6 +22,12 @@ export interface MenuItem {
   disabled?: boolean;
   visible?: boolean;
   styleClass?: string;
-  shortcut?: string;
+  /**
+   * Opaque per-item metadata the library carries but never renders itself — a
+   * consumer reads it in its own `#item` template (e.g. the editor stores a
+   * keyboard-binding object here and renders it via a custom shortcut display).
+   * Typed `unknown` so consumers attach whatever shape they need.
+   */
+  shortcut?: unknown;
   expanded?: boolean;
 }
