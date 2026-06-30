@@ -26,7 +26,12 @@
     "format:fix": "prettier logigator-editor-v2 logigator-ui -lw"
   },
   "devDependencies": {
+    "@angular-eslint/builder": "^21.3.1",
     "@angular/cli": "^21.2.8",
-    "prettier": "^3.8.3"
+    "@eslint/js": "^10.0.1",
+    "angular-eslint": "^21.3.1",
+    "eslint": "^10.2.1",
+    "prettier": "^3.8.3",
+    "typescript-eslint": "^8.59.0"
   }
 }

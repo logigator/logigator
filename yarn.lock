@@ -5248,17 +5248,6 @@ __metadata:
   languageName: node
   linkType: hard
 
-"eslint-config-prettier@npm:^10.1.8":
-  version: 10.1.8
-  resolution: "eslint-config-prettier@npm:10.1.8"
-  peerDependencies:
-    eslint: ">=7.0.0"
-  bin:
-    eslint-config-prettier: bin/cli.js
-  checksum: 10c0/e1bcfadc9eccd526c240056b1e59c5cd26544fe59feb85f38f4f1f116caed96aea0b3b87868e68b3099e55caaac3f2e5b9f58110f85db893e83a332751192682
-  languageName: node
-  linkType: hard
-
 "eslint-scope@npm:9.1.2, eslint-scope@npm:^9.1.2":
   version: 9.1.2
   resolution: "eslint-scope@npm:9.1.2"
@@ -6633,7 +6622,6 @@ __metadata:
   dependencies:
     "@angular-devkit/core": "npm:^21.2.8"
     "@angular-devkit/schematics": "npm:^21.2.8"
-    "@angular-eslint/builder": "npm:^21.3.1"
     "@angular/animations": "npm:^21.2.10"
     "@angular/build": "npm:^21.2.8"
     "@angular/cdk": "npm:^21.2.8"
@@ -6646,16 +6634,12 @@ __metadata:
     "@angular/platform-browser": "npm:^21.2.10"
     "@angular/platform-browser-dynamic": "npm:^21.2.10"
     "@angular/router": "file:./packages/router-stub"
-    "@eslint/js": "npm:^10.0.1"
     "@jsverse/transloco": "npm:^8.3.0"
     "@jsverse/transloco-persist-lang": "npm:^8.3.0"
     "@jsverse/utils": "npm:1.0.0-beta.5"
     "@logigator/sim": "npm:^0.4.0"
     "@phosphor-icons/web": "npm:^2.1.2"
     "@tailwindcss/postcss": "npm:^4.2.4"
-    angular-eslint: "npm:^21.3.1"
-    eslint: "npm:^10.2.1"
-    eslint-config-prettier: "npm:^10.1.8"
     jsdom: "npm:^29.1.1"
     ngxtension: "npm:^7.2.0"
     pixi.js: "npm:^8.18.1"
@@ -6665,7 +6649,6 @@ __metadata:
     tailwindcss: "npm:^4.2.4"
     tslib: "npm:^2.8.1"
     typescript: "npm:~5.9.3"
-    typescript-eslint: "npm:^8.59.0"
     uuid: "npm:^14.0.0"
     vitest: "npm:^4.1.8"
     vitest-canvas-mock: "npm:^1.1.4"
@@ -6676,8 +6659,13 @@ __metadata:
   version: 0.0.0-use.local
   resolution: "logigator-workspace@workspace:."
   dependencies:
+    "@angular-eslint/builder": "npm:^21.3.1"
     "@angular/cli": "npm:^21.2.8"
+    "@eslint/js": "npm:^10.0.1"
+    angular-eslint: "npm:^21.3.1"
+    eslint: "npm:^10.2.1"
     prettier: "npm:^3.8.3"
+    typescript-eslint: "npm:^8.59.0"
   languageName: unknown
   linkType: soft
 
