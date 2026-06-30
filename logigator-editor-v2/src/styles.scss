@@ -8,3 +8,8 @@ body {
   padding: 0;
   overflow: hidden;
 }
+
+// Deepen CDK's modal backdrop from its 0.32 default to the 0.6 the design uses.
+.cdk-overlay-dark-backdrop {
+  background: rgb(0 0 0 / 0.6);
+}
