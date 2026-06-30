@@ -98,7 +98,7 @@ export class LgDialog implements OnDestroy {
 
   protected readonly panelClasses = computed(() =>
     [
-      'flex max-h-[90vh] max-w-[90vw] flex-col rounded-lg bg-content text-text shadow-xl',
+      'flex max-h-[90vh] max-w-[90vw] flex-col rounded-xl border border-border bg-content text-text shadow-xl',
       'transition duration-200 ease-out',
       this.modalOverlay.shown() ? 'scale-100 opacity-100' : 'scale-95 opacity-0'
     ].join(' ')
