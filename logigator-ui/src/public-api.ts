@@ -44,3 +44,7 @@ export { LgMenubar } from './menu/menubar';
 export { LgPaginator } from './paginator/paginator';
 export { LgFileUpload } from './file-upload/file-upload';
 export { LgScroller } from './scroller/scroller';
+
+export { DialogService } from './dynamic-dialog/dialog.service';
+export { DialogRef } from './dynamic-dialog/dialog-ref';
+export { DialogConfig } from './dynamic-dialog/dialog-config';
