@@ -37,6 +37,8 @@ export { LgSelect } from './select/select';
 export { LgAccordion, LgAccordionPanel } from './accordion/accordion';
 export { LgTabs, LgTab, LgTabPanel } from './tabs/tabs';
 export { LgPanelMenu } from './panel-menu/panel-menu';
+export { LgMenu } from './menu/menu';
+export { LgMenubar } from './menu/menubar';
 export { LgPaginator } from './paginator/paginator';
 export { LgFileUpload } from './file-upload/file-upload';
 export { LgScroller } from './scroller/scroller';
