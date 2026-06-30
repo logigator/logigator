@@ -33,6 +33,8 @@ export { LgSlider } from './slider/slider';
 export { LgTooltip } from './tooltip/tooltip';
 export { LgPopover } from './popover/popover';
 export { LgSelect } from './select/select';
+export { LgDialog } from './dialog/dialog';
+export { LgDrawer } from './drawer/drawer';
 
 export { LgAccordion, LgAccordionPanel } from './accordion/accordion';
 export { LgTabs, LgTab, LgTabPanel } from './tabs/tabs';

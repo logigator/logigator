@@ -144,3 +144,62 @@ export function createConnectedOverlay(
     disposeOnNavigation: true
   });
 }
+
+/**
+ * Where a global (viewport-positioned, non-anchored) overlay sits: centred for
+ * modal dialogs, or pinned to an edge for drawers.
+ */
+export type LgOverlayPlacement = 'center' | 'left' | 'right' | 'top' | 'bottom';
+
+export interface GlobalOverlayOptions {
+  placement: LgOverlayPlacement;
+  hasBackdrop?: boolean;
+  backdropClass?: string;
+  panelClass?: string | string[];
+  /**
+   * Block page scroll while open. Defaults to **false** — the consumers are
+   * full-screen, non-scrolling apps where blocking only risks a layout shift.
+   */
+  blockScroll?: boolean;
+}
+
+/**
+ * Build a global (viewport-positioned) {@link OverlayRef}: centred for modal
+ * dialogs, edge-pinned for drawers. Edge placements pin the corner; the panel
+ * itself supplies the cross-axis size (`h-screen` for a side drawer, `w-screen`
+ * for a bottom/top one). Backdrop and dismissal wiring stay with the caller.
+ */
+export function createGlobalOverlay(
+  overlay: Overlay,
+  options: GlobalOverlayOptions
+): OverlayRef {
+  const strategy = overlay.position().global();
+  switch (options.placement) {
+    case 'center':
+      strategy.centerHorizontally().centerVertically();
+      break;
+    case 'left':
+      strategy.left('0').top('0');
+      break;
+    case 'right':
+      strategy.right('0').top('0');
+      break;
+    case 'top':
+      strategy.top('0').left('0');
+      break;
+    case 'bottom':
+      strategy.bottom('0').left('0');
+      break;
+  }
+
+  return overlay.create({
+    positionStrategy: strategy,
+    scrollStrategy: options.blockScroll
+      ? overlay.scrollStrategies.block()
+      : overlay.scrollStrategies.noop(),
+    hasBackdrop: options.hasBackdrop ?? true,
+    backdropClass: options.backdropClass ?? 'cdk-overlay-dark-backdrop',
+    panelClass: options.panelClass,
+    disposeOnNavigation: true
+  });
+}
