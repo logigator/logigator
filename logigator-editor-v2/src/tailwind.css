@@ -1,8 +1,7 @@
 @import 'tailwindcss';
 
-/* @logigator/ui owns the palette (--lg-*) and the Tailwind @theme mapping
-   (--color-* → var(--lg-*)). theme.tw.css replaces what tailwindcss-primeui +
-   the old --p-* @theme block provided. */
+/* @logigator/ui owns the palette (theme.css → --lg-*) and the Tailwind @theme
+   mapping (theme.tw.css → --color-* aliased to var(--lg-*)). */
 @import '../../logigator-ui/styles/theme.css';
 @import '../../logigator-ui/styles/theme.tw.css';
 
