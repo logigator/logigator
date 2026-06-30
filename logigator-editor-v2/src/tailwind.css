@@ -1,35 +1,16 @@
 @import 'tailwindcss';
-@import 'tailwindcss-primeui';
-/* @logigator/ui palette — coexists with PrimeNG's --p-* during migration.
-   The @theme mapping (theme.tw.css) is NOT imported yet; it lands at the
-   Phase 8 cutover when --color-* is repointed off --p-*. */
-@import '../../logigator-ui/styles/theme.css';
 
-/* Scan the library's templates so their Tailwind utilities are generated
-   (needed from Phase 2 on, while <lg-*> components are still being added). */
+/* @logigator/ui owns the palette (--lg-*) and the Tailwind @theme mapping
+   (--color-* → var(--lg-*)). theme.tw.css replaces what tailwindcss-primeui +
+   the old --p-* @theme block provided. */
+@import '../../logigator-ui/styles/theme.css';
+@import '../../logigator-ui/styles/theme.tw.css';
+
+/* Scan the library's templates so their Tailwind utilities are generated. */
 @source '../../logigator-ui/src';
 
 @custom-variant dark (&:where(.dark-mode, .dark-mode *));
 
 @theme {
   --font-mono: 'Roboto Mono', monospace;
-
-  --color-content: var(--p-content-background);
-  --color-content-hover: var(--p-content-hover-background);
-  --color-border: var(--p-content-border-color);
-  --color-text: var(--p-text-color);
-  --color-muted: var(--p-text-muted-color);
-
-  --color-info: var(--p-info-color);
-  --color-info-surface: var(--p-info-background);
-  --color-info-border: var(--p-info-border-color);
-  --color-success: var(--p-success-color);
-  --color-success-surface: var(--p-success-background);
-  --color-success-border: var(--p-success-border-color);
-  --color-warn: var(--p-warn-color);
-  --color-warn-surface: var(--p-warn-background);
-  --color-warn-border: var(--p-warn-border-color);
-  --color-error: var(--p-error-color);
-  --color-error-surface: var(--p-error-background);
-  --color-error-border: var(--p-error-border-color);
 }
