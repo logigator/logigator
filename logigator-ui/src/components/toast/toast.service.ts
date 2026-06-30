@@ -7,7 +7,7 @@ import { Observable, Subject } from 'rxjs';
  */
 export type LgToastSeverity = 'success' | 'info' | 'warn' | 'error' | 'danger';
 
-/** A toast notification handed to {@link MessageService.add}. */
+/** A toast notification handed to {@link ToastService.add}. */
 export interface ToastMessage {
   severity?: LgToastSeverity;
   summary?: string;
@@ -23,7 +23,7 @@ export interface ToastMessage {
  * needed at call sites.
  */
 @Injectable({ providedIn: 'root' })
-export class MessageService {
+export class ToastService {
   private readonly messages = new Subject<ToastMessage>();
   readonly messageObserver: Observable<ToastMessage> =
     this.messages.asObservable();

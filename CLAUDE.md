@@ -79,7 +79,7 @@ Angular 21 standalone components + PixiJS 8 canvas.
 
 - `components/` — one folder per component:
   - Declarative components: `button/`, `divider/`, `tag/`, `badge/`, `avatar/`, `card/`, `ripple/`, `icon-field/` (`LgIconField` + `LgInputIcon`), `input-text/`, `textarea/`, `toggle-switch/`, `select-button/`, `input-number/`, `slider/`, `tooltip/`, `popover/`, `select/`, `dialog/`, `drawer/`, `accordion/`, `tabs/`, `panel-menu/`, `menu/` (`LgMenu` popup + `LgMenubar`), `paginator/`, `file-upload/`, `scroller/`.
-  - Imperative services + their outlet components: `dynamic-dialog/` (`DialogService` → `DialogRef`/`DialogConfig`), `confirm/` (`ConfirmationService` + `LgConfirmDialog`/`LgConfirmPopup`), `toast/` (`MessageService` + `LgToast`; `danger` severity maps to `error`).
+  - Imperative services + their outlet components: `dynamic-dialog/` (`DialogService` → `DialogRef`/`DialogConfig`), `confirm/` (`ConfirmationService` + `LgConfirmDialog`/`LgConfirmPopup`), `toast/` (`ToastService` + `LgToast`; `danger` severity maps to `error`).
 - `internal/` — shared, non-exported plumbing: CDK-based `overlay`/`modal-overlay` foundation, `focus-trap`, `key-manager`, `after-paint`, `caret`, `icon`.
 - `tokens/` — shared types (`LgSeverity`, `LgSize`, form-field tokens).
 - `styles/theme.css` defines the `--lg-*` vars; `styles/theme.tw.css` maps them into Tailwind's `@theme` for editor-v2.

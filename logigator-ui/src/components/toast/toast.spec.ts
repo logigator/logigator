@@ -2,7 +2,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { ChangeDetectionStrategy, Component } from '@angular/core';
 import { TestBed } from '@angular/core/testing';
 import { LgToast } from './toast';
-import { MessageService } from './message.service';
+import { ToastService } from './toast.service';
 
 @Component({
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -14,7 +14,7 @@ class HostComponent {}
 function setup() {
   const f = TestBed.createComponent(HostComponent);
   f.detectChanges();
-  return { f, service: TestBed.inject(MessageService) };
+  return { f, service: TestBed.inject(ToastService) };
 }
 
 function toasts(host: HTMLElement): HTMLElement[] {

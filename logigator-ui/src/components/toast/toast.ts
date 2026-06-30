@@ -9,7 +9,7 @@ import {
 } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { afterPaint } from '../../internal/after-paint';
-import { MessageService, ToastMessage } from './message.service';
+import { ToastService, ToastMessage } from './toast.service';
 
 /** The themed severities (`danger` is normalized to `error`). */
 type ResolvedSeverity = 'success' | 'info' | 'warn' | 'error';
@@ -50,7 +50,7 @@ function resolveSeverity(severity?: string): ResolvedSeverity {
 }
 
 /**
- * The {@link MessageService} outlet: a fixed-position CSS stack of toasts (no
+ * The {@link ToastService} outlet: a fixed-position CSS stack of toasts (no
  * overlay). Each toast slides/fades in and auto-dismisses after its `life`. The
  * host carries the stack's position (corner from `position`); a consumer's own
  * `class` (e.g. `absolute! -mb-4`) merges and `!`-overrides as needed.
@@ -102,7 +102,7 @@ export class LgToast {
   private readonly timers = new Set<ReturnType<typeof setTimeout>>();
 
   constructor() {
-    inject(MessageService)
+    inject(ToastService)
       .messageObserver.pipe(takeUntilDestroyed())
       .subscribe((message) => this.add(message));
     inject(DestroyRef).onDestroy(() => {

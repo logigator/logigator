@@ -1,6 +1,6 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { TestBed } from '@angular/core/testing';
-import { DialogService, MessageService } from '@logigator/ui';
+import { DialogService, ToastService } from '@logigator/ui';
 import { provideTransloco } from '@jsverse/transloco';
 import { TranslationLoaderService } from '../translation/translation-loader.service';
 import { ShortcutService } from './shortcut.service';
@@ -43,7 +43,7 @@ describe('ShortcutService', () => {
     TestBed.configureTestingModule({
       providers: [
         ShortcutService,
-        { provide: MessageService, useValue: { add: messageAdd } },
+        { provide: ToastService, useValue: { add: messageAdd } },
         { provide: DialogService, useValue: { open: vi.fn() } },
         {
           provide: ProjectService,

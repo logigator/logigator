@@ -57,6 +57,6 @@ export { LgConfirmDialog } from './components/confirm/confirm-dialog';
 export { LgConfirmPopup } from './components/confirm/confirm-popup';
 export type { Confirmation, ConfirmButtonProps } from './components/confirm/confirmation';
 
-export { MessageService } from './components/toast/message.service';
+export { ToastService } from './components/toast/toast.service';
 export { LgToast } from './components/toast/toast';
-export type { ToastMessage, LgToastSeverity } from './components/toast/message.service';
+export type { ToastMessage, LgToastSeverity } from './components/toast/toast.service';

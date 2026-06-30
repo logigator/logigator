@@ -2,7 +2,7 @@
 
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { TestBed } from '@angular/core/testing';
-import { MessageService } from '@logigator/ui';
+import { ToastService } from '@logigator/ui';
 import { TranslocoService } from '@jsverse/transloco';
 import { configureTestBed } from '../../../testing/configure-test-bed';
 import { CircuitFileService } from './circuit-file.service';
@@ -74,7 +74,7 @@ describe('CircuitFileService', () => {
   let provider: ComponentProviderService;
   let registry: CustomComponentRegistry;
   let logging: LoggingService;
-  let messageService: MessageService;
+  let messageService: ToastService;
 
   beforeEach(() => {
     // Suppress console output from expected warning/error paths exercised by the tests.
@@ -89,7 +89,7 @@ describe('CircuitFileService', () => {
     provider = TestBed.inject(ComponentProviderService);
     registry = TestBed.inject(CustomComponentRegistry);
     logging = TestBed.inject(LoggingService);
-    messageService = TestBed.inject(MessageService);
+    messageService = TestBed.inject(ToastService);
   });
 
   // Build a Project from legacy positional elements via the server-read decode
