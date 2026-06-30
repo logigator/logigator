@@ -5,29 +5,31 @@ import {
   computed,
   input
 } from '@angular/core';
-
-export type MessageSeverity = 'none' | 'info' | 'warn' | 'success' | 'error';
+import { LgSeverity } from '../tokens/severity';
 
 /**
  * Border/background/text classes per severity. `none` is borderless with muted
- * text — an empty-state placeholder rather than a tinted banner. Written as full
- * literal class strings so Tailwind's scanner keeps them.
+ * text — an empty-state placeholder rather than a tinted banner; `secondary` is
+ * a bordered neutral banner. `danger` renders the red `error-*` palette. Written
+ * as full literal class strings so Tailwind's scanner keeps them.
  */
-const SEVERITY_CLASSES: Record<MessageSeverity, string> = {
+const SEVERITY_CLASSES: Record<LgSeverity, string> = {
   none: 'border-transparent text-muted',
+  secondary: 'border-border text-muted',
   info: 'border-info-border bg-info-surface text-info',
-  warn: 'border-warn-border bg-warn-surface text-warn',
   success: 'border-success-border bg-success-surface text-success',
-  error: 'border-error-border bg-error-surface text-error'
+  warn: 'border-warn-border bg-warn-surface text-warn',
+  danger: 'border-error-border bg-error-surface text-error'
 };
 
 /** Default Phosphor icon per severity, overridable via the `icon` input. */
-const SEVERITY_ICONS: Record<MessageSeverity, string> = {
+const SEVERITY_ICONS: Record<LgSeverity, string> = {
   none: 'ph-warning-circle',
+  secondary: 'ph-info',
   info: 'ph-info',
-  warn: 'ph-warning',
   success: 'ph-check-circle',
-  error: 'ph-x-circle'
+  warn: 'ph-warning',
+  danger: 'ph-x-circle'
 };
 
 /**
@@ -38,7 +40,7 @@ const SEVERITY_ICONS: Record<MessageSeverity, string> = {
  * spacing is left to the consumer via the host element's classes.
  */
 @Component({
-  selector: 'app-message',
+  selector: 'lg-message',
   template: `
     <div
       class="flex gap-3 rounded-lg border px-4 py-3 {{ containerClasses() }}"
@@ -52,9 +54,9 @@ const SEVERITY_ICONS: Record<MessageSeverity, string> = {
   },
   changeDetection: ChangeDetectionStrategy.OnPush
 })
-export class MessageComponent {
-  /** Visual severity; `none` renders borderless with muted text. */
-  readonly severity = input<MessageSeverity>('none');
+export class LgMessage {
+  /** Visual severity; `none` (default) renders borderless with muted text. */
+  readonly severity = input<LgSeverity>('none');
   /** Stack the icon above centered text instead of a left-aligned row. */
   readonly centered = input(false, { transform: booleanAttribute });
   /** Phosphor icon class; defaults to a per-severity icon. */

@@ -19,6 +19,7 @@ export { LgButton } from './button/button';
 export { LgDivider } from './divider/divider';
 export { LgTag } from './tag/tag';
 export { LgBadge } from './badge/badge';
+export { LgMessage } from './message/message';
 export { LgAvatar } from './avatar/avatar';
 export { LgCard } from './card/card';
 export { LgRipple } from './ripple/ripple';

@@ -10,6 +10,7 @@ import {
   DialogRef,
   LgFileUpload,
   type LgFileSelectEvent,
+  LgMessage,
   LgTab,
   LgTabPanel,
   LgTabs
@@ -30,7 +31,6 @@ import {
   ProjectListComponent,
   type ProjectListItem
 } from '../project-list/project-list.component';
-import { MessageComponent } from '../message/message.component';
 import type { BrowserProjectSummary } from '../../persistence/browser/browser-project.types';
 
 const PAGE_SIZE = 20;
@@ -44,7 +44,7 @@ const PAGE_SIZE = 20;
     LgFileUpload,
     TranslocoDirective,
     ProjectListComponent,
-    MessageComponent
+    LgMessage
   ],
   templateUrl: './open-project-dialog.component.html',
   changeDetection: ChangeDetectionStrategy.OnPush

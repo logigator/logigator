@@ -11,13 +11,13 @@ import {
   DialogConfig,
   DialogRef,
   LgButton,
+  LgMessage,
   LgToggleSwitch,
   LgTooltip
 } from '@logigator/ui';
 import { TranslocoDirective, TranslocoService } from '@jsverse/transloco';
 import { CustomComponentService } from '../../custom-component/custom-component.service';
 import { UserService } from '../../user/user.service';
-import { MessageComponent } from '../message/message.component';
 
 export interface UploadComponentDialogData {
   masterTypeId: number;
@@ -47,7 +47,7 @@ export interface UploadComponentDialogResult {
     LgTooltip,
     LgButton,
     TranslocoDirective,
-    MessageComponent
+    LgMessage
   ],
   templateUrl: './upload-component-dialog.component.html',
   changeDetection: ChangeDetectionStrategy.OnPush

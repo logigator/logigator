@@ -10,13 +10,13 @@ import {
   DialogRef,
   LgButton,
   LgInputText,
+  LgMessage,
   LgSelectButton,
   LgToggleSwitch,
   LgTooltip
 } from '@logigator/ui';
 import { TranslocoDirective, TranslocoService } from '@jsverse/transloco';
 import { UserService } from '../../user/user.service';
-import { MessageComponent } from '../message/message.component';
 
 export interface SaveProjectDialogResult {
   name: string;
@@ -43,7 +43,7 @@ const NAME_MAX_LENGTH = 20;
     LgTooltip,
     LgButton,
     TranslocoDirective,
-    MessageComponent
+    LgMessage
   ],
   templateUrl: './save-project-dialog.component.html',
   changeDetection: ChangeDetectionStrategy.OnPush

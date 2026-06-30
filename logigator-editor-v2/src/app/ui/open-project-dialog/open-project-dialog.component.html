@@ -22,9 +22,9 @@
     <!-- Server Projects -->
     <lg-tab-panel value="server">
       @if (!userService.user()) {
-        <app-message centered class="py-12">
+        <lg-message centered class="py-12">
           {{ t('openProjectDialog.notLoggedIn') }}
-        </app-message>
+        </lg-message>
       } @else {
         <app-project-list
           [items]="serverItems()"

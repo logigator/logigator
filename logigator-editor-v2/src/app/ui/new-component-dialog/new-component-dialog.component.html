@@ -52,9 +52,9 @@
   </div>
   @if (source() === 'server') {
     @if (!userService.user()) {
-      <app-message severity="warn">
+      <lg-message severity="warn">
         {{ t('newComponentDialog.notLoggedIn') }}
-      </app-message>
+      </lg-message>
     } @else {
       <div class="flex gap-2 items-center">
         <lg-toggle-switch
@@ -73,9 +73,9 @@
       </div>
     }
   } @else {
-    <app-message severity="info">
+    <lg-message severity="info">
       {{ t('newComponentDialog.browserWarning') }}
-    </app-message>
+    </lg-message>
   }
   <div class="flex justify-end">
     <lg-button

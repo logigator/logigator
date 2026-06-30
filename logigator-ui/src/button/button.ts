@@ -23,36 +23,43 @@ const BASE =
   'focus-visible:outline focus-visible:outline-1 focus-visible:outline-offset-2 focus-visible:outline-current';
 
 // Severity → class table. primary/secondary track the themeable primary/surface
-// scales (an exact match for Aura); info/warn/danger use the semantic state
-// palette (a deliberate, themeable consolidation of Aura's button-specific
-// sky/orange/red — flagged for the Phase 8 visual pass).
+// scales (an exact match for Aura); info/success/warn/danger use the semantic
+// state palette (a deliberate, themeable consolidation of Aura's button-specific
+// sky/green/orange/red — flagged for the Phase 8 visual pass); none is a muted,
+// chromeless neutral.
 const SEVERITY: Record<LgButtonVariant, Record<SeverityKey, string>> = {
   solid: {
     primary:
       'bg-primary text-primary-contrast hover:bg-primary-emphasis active:bg-primary-emphasis-alt',
+    none: 'text-muted hover:bg-surface-100 active:bg-surface-200 dark:hover:bg-surface-800 dark:active:bg-surface-700',
     secondary:
       'bg-surface-100 text-surface-600 hover:bg-surface-200 active:bg-surface-300 ' +
       'dark:bg-surface-800 dark:text-surface-300 dark:hover:bg-surface-700 dark:active:bg-surface-600',
     info: 'bg-info text-white hover:brightness-95 active:brightness-90',
+    success: 'bg-success text-white hover:brightness-95 active:brightness-90',
     warn: 'bg-warn text-white hover:brightness-95 active:brightness-90',
     danger: 'bg-error text-white hover:brightness-95 active:brightness-90'
   },
   outlined: {
     primary:
       'text-primary border-primary-200 hover:bg-primary-50 active:bg-primary-100 dark:border-primary-700',
+    none: 'text-muted border-border hover:bg-surface-50 active:bg-surface-100 dark:hover:bg-surface-800',
     secondary:
       'text-surface-500 border-surface-200 hover:bg-surface-50 active:bg-surface-100 ' +
       'dark:text-surface-400 dark:border-surface-700',
     info: 'text-info border-info hover:bg-info/10 active:bg-info/20',
+    success: 'text-success border-success hover:bg-success/10 active:bg-success/20',
     warn: 'text-warn border-warn hover:bg-warn/10 active:bg-warn/20',
     danger: 'text-error border-error hover:bg-error/10 active:bg-error/20'
   },
   text: {
     primary:
       'text-primary hover:bg-primary-50 active:bg-primary-100 dark:hover:bg-surface-800',
+    none: 'text-muted hover:bg-surface-50 active:bg-surface-100 dark:hover:bg-surface-800',
     secondary:
       'text-surface-500 hover:bg-surface-50 active:bg-surface-100 dark:text-surface-400 dark:hover:bg-surface-800',
     info: 'text-info hover:bg-info/10 active:bg-info/20',
+    success: 'text-success hover:bg-success/10 active:bg-success/20',
     warn: 'text-warn hover:bg-warn/10 active:bg-warn/20',
     danger: 'text-error hover:bg-error/10 active:bg-error/20'
   }

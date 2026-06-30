@@ -9,6 +9,7 @@ import {
   DialogRef,
   LgButton,
   LgInputText,
+  LgMessage,
   LgSelectButton,
   LgToggleSwitch,
   LgTooltip
@@ -16,7 +17,6 @@ import {
 import { TranslocoDirective, TranslocoService } from '@jsverse/transloco';
 import { CustomComponentService } from '../../custom-component/custom-component.service';
 import { UserService } from '../../user/user.service';
-import { MessageComponent } from '../message/message.component';
 
 /**
  * Collects the metadata for a new custom component (name, symbol, description,
@@ -34,7 +34,7 @@ import { MessageComponent } from '../message/message.component';
     LgTooltip,
     LgButton,
     TranslocoDirective,
-    MessageComponent
+    LgMessage
   ],
   templateUrl: './new-component-dialog.component.html',
   changeDetection: ChangeDetectionStrategy.OnPush
