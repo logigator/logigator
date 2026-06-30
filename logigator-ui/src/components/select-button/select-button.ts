@@ -11,7 +11,7 @@ import {
   TemplateRef
 } from '@angular/core';
 import { ControlValueAccessor, NG_VALUE_ACCESSOR } from '@angular/forms';
-import { controlPadding, LgSize } from '../../tokens/size';
+import { LgSize } from '../../tokens/size';
 
 /**
  * A segmented group of mutually-exclusive toggle buttons. `ControlValueAccessor`
@@ -84,9 +84,12 @@ export class LgSelectButton implements ControlValueAccessor {
   private onChange: (value: unknown) => void = () => undefined;
   protected onTouched: () => void = () => undefined;
 
+  // The group is the form-surface "track" (no border); the selected segment
+  // floats above it as a raised pill, the rest are flat muted text — Aura's
+  // segmented-toggle look, not a primary fill.
   protected readonly groupClasses = computed(() =>
     [
-      'overflow-hidden rounded-md border border-border',
+      'rounded-md p-1 bg-surface-0 dark:bg-surface-950',
       this.fluid() ? 'flex w-full' : 'inline-flex'
     ].join(' ')
   );
@@ -116,16 +119,20 @@ export class LgSelectButton implements ControlValueAccessor {
   }
 
   protected buttonClasses(selected: boolean): string {
+    const pad =
+      this.size() === 'small'
+        ? 'px-2.5 py-0.5 text-sm'
+        : 'px-3 py-1 text-base';
     return [
-      'inline-flex items-center justify-center gap-1 border-e border-border last:border-e-0',
+      'inline-flex items-center justify-center gap-1 rounded',
       'transition-colors duration-200 cursor-pointer select-none',
       'disabled:pointer-events-none disabled:opacity-60',
       'focus:outline-none focus-visible:outline focus-visible:outline-1 focus-visible:-outline-offset-1 focus-visible:outline-primary',
       this.fluid() ? 'flex-1' : '',
-      controlPadding(this.size()),
+      pad,
       selected
-        ? 'bg-primary text-primary-contrast'
-        : 'bg-content text-muted hover:bg-content-hover hover:text-text'
+        ? 'bg-surface-0 dark:bg-surface-800 text-surface-900 dark:text-text shadow-sm'
+        : 'text-muted hover:text-text'
     ]
       .filter(Boolean)
       .join(' ');
