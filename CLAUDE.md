@@ -13,14 +13,9 @@ Two packages stay **independent** (own `yarn.lock`/`.yarnrc.yml`, *not* workspac
 - `logigator-backend/` — Node.js/Express (TypeScript, TypeORM, Handlebars)
 - `logigator-editor/` — Legacy Angular 17 editor (PixiJS 7), being replaced
 
-Commands run **locally** with `yarn`/`ng` (no Docker daemon required).
-
 ## Dev Environment
 
 Backend config files must be created from `.example` files in `logigator-backend/config/`.
-
-`docker-compose.yaml` service names: `editor` (the editor-v2 + logigator-ui workspace),
-`editor-old` (logigator-editor), `backend` (logigator-backend).
 
 ## Commands
 

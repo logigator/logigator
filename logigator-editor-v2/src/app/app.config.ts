@@ -1,9 +1,12 @@
 import {
   ApplicationConfig,
+  inject,
   isDevMode,
+  provideAppInitializer,
   provideZonelessChangeDetection
 } from '@angular/core';
-import { provideTransloco } from '@jsverse/transloco';
+import { firstValueFrom } from 'rxjs';
+import { provideTransloco, TranslocoService } from '@jsverse/transloco';
 import { TranslationLoaderService } from './translation/translation-loader.service';
 import { provideHttpClient } from '@angular/common/http';
 import { provideTranslocoPersistLang } from '@jsverse/transloco-persist-lang';
@@ -41,6 +44,10 @@ export const appConfig: ApplicationConfig = {
       storage: {
         useValue: localStorage
       }
+    }),
+    provideAppInitializer(() => {
+      const transloco = inject(TranslocoService);
+      return firstValueFrom(transloco.load(transloco.getActiveLang()));
     }),
     provideHttpClient()
   ]

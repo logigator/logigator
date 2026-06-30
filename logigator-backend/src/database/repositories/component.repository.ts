@@ -42,6 +42,7 @@ export class ComponentRepository extends PageableRepository<Component> {
 		cloned.numInputs = component.numInputs;
 		cloned.numOutputs = component.numOutputs;
 		cloned.symbol = component.symbol;
+		cloned.newFormat = component.newFormat;
 		cloned.elementsFile = new ComponentFile();
 		if (component.elementsFile) cloned.elementsFile.setFileContent(await component.elementsFile.getFileContent());
 		return this.save(cloned);

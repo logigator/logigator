@@ -48,6 +48,8 @@ export interface SaveComponentRequest {
   numInputs: number;
   numOutputs: number;
   labels: string[];
+  /** Marks the saved circuit as this editor's format (drives the old editor's warning). */
+  newFormat: boolean;
 }
 
 // ---- PATCH /:componentId request ----

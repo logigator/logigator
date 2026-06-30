@@ -23,6 +23,12 @@ export interface ProjectDependency {
 export interface ProjectDetail extends ProjectSummary {
   dependencies: ProjectDependency[];
   elements: ProjectElement[];
+  /**
+   * Additive — `true` when the stored circuit was saved in this editor's format.
+   * Absent/`false` means a legacy project: saving here converts it, which can
+   * degrade it for the old editor; the load path warns on it.
+   */
+  newFormat?: boolean;
 }
 
 // ---- POST / request ----
@@ -39,6 +45,8 @@ export interface SaveProjectRequest {
   oldHash: string;
   dependencies: DependencyMapping[];
   elements: ProjectElement[];
+  /** Marks the saved circuit as this editor's format (drives the old editor's warning). */
+  newFormat: boolean;
 }
 
 // ---- PATCH /:projectId request ----

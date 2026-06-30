@@ -86,6 +86,7 @@ export class ShareCloningService {
 		cloned.user = Promise.resolve(user);
 		cloned.forkedFrom = Promise.resolve(project);
 		cloned.createdOn = project.createdOn;
+		cloned.newFormat = project.newFormat;
 		cloned.elementsFile = new ProjectFile();
 		if (project.elementsFile) cloned.elementsFile.setFileContent(await project.elementsFile.getFileContent());
 		const deps = (await projDepRepo.find({

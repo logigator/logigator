@@ -23,6 +23,8 @@ export interface ProjectConfiguration {
 	public?: boolean;
 	link?: string;
 	source: 'server' | 'local' | 'share';
+	/** `true` when the loaded circuit was saved by the new editor. */
+	newFormat?: boolean;
 }
 
 export class Project {
@@ -33,6 +35,7 @@ export class Project {
 	private readonly _type: ProjectType;
 	private _hash: string;
 	private readonly _source: 'server' | 'local' | 'share';
+	private readonly _newFormat: boolean;
 
 	private readonly _currState: ProjectState;
 
@@ -60,6 +63,7 @@ export class Project {
 		this._type = config.type ?? 'comp';
 		this._hash = config.hash;
 		this._source = config.source;
+		this._newFormat = config.newFormat ?? false;
 		this._isPublic = config.public ?? false;
 		this._link = config.link;
 		this._currActionPointer = -1;
@@ -820,6 +824,10 @@ export class Project {
 
 	get source(): 'server' | 'local' | 'share' {
 		return this._source;
+	}
+
+	get newFormat(): boolean {
+		return this._newFormat;
 	}
 
 	get isPublic(): boolean {
