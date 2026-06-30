@@ -48,3 +48,8 @@ export { LgScroller } from './scroller/scroller';
 export { DialogService } from './dynamic-dialog/dialog.service';
 export { DialogRef } from './dynamic-dialog/dialog-ref';
 export { DialogConfig } from './dynamic-dialog/dialog-config';
+
+export { ConfirmationService } from './confirm/confirmation.service';
+export { LgConfirmDialog } from './confirm/confirm-dialog';
+export { LgConfirmPopup } from './confirm/confirm-popup';
+export type { Confirmation, ConfirmButtonProps } from './confirm/confirmation';
