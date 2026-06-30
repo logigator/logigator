@@ -101,6 +101,29 @@ describe('LgMenu', () => {
     expect(f.componentInstance.open()).toBe(false);
   });
 
+  it('ignores keys a nested control already handled (defaultPrevented)', () => {
+    const { f, trigger } = setup();
+    trigger.click();
+    f.detectChanges();
+    const panel = document.querySelector(
+      '.cdk-overlay-container [role=menu]'
+    ) as HTMLElement;
+    // A capturing listener stands in for the nested control consuming the key.
+    const consume = (e: Event) => e.preventDefault();
+    document.addEventListener('keydown', consume, true);
+    panel.dispatchEvent(
+      new KeyboardEvent('keydown', {
+        key: 'Escape',
+        bubbles: true,
+        cancelable: true
+      })
+    );
+    document.removeEventListener('keydown', consume, true);
+    f.detectChanges();
+    // Escape was pre-handled, so the menu must NOT close.
+    expect(f.componentInstance.open()).toBe(true);
+  });
+
   it('renders menu rows as type="button" so they cannot submit a form', () => {
     const { f, trigger } = setup();
     trigger.click();

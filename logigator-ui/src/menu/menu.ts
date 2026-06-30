@@ -156,6 +156,11 @@ export class LgMenu implements OnDestroy {
   }
 
   protected onKeydown(event: KeyboardEvent): void {
+    // A nested control in the #start slot (e.g. an lg-select) handles its own
+    // keys and preventDefaults them; don't also rove/close the menu on those.
+    if (event.defaultPrevented) {
+      return;
+    }
     if (event.key === 'Escape') {
       event.preventDefault();
       this.hide();

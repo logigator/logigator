@@ -250,6 +250,11 @@ export class LgMenubar implements OnDestroy {
   }
 
   protected onSubmenuKeydown(event: KeyboardEvent): void {
+    // A nested control that already handled (and preventDefaulted) the key
+    // shouldn't also drive submenu roving.
+    if (event.defaultPrevented) {
+      return;
+    }
     if (event.key === 'Escape') {
       event.preventDefault();
       this.closeAndFocusTop();

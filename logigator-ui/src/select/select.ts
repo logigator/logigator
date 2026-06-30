@@ -95,6 +95,7 @@ let nextId = 0;
       [class]="triggerClasses"
       (click)="toggle()"
       (keydown)="onTriggerKeydown($event)"
+      (keyup.space)="$event.preventDefault()"
       (blur)="onTouched()"
     >
       <span class="flex-1 truncate text-left">
@@ -237,6 +238,10 @@ export class LgSelect implements ControlValueAccessor, OnDestroy {
     this.focusTrigger();
   }
 
+  // Enter/Space are handled here (open / navigate / select). A native button
+  // also synthesises a click from Space on *keyup*, which keydown's
+  // preventDefault can't cancel — the template's `(keyup.space)` does, so the
+  // synthesised click never re-toggles the panel.
   protected onTriggerKeydown(event: KeyboardEvent): void {
     if (this.isDisabled()) {
       return;

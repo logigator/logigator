@@ -123,4 +123,39 @@ describe('LgSelect', () => {
     const { button } = await setup();
     expect(button.getAttribute('type')).toBe('button');
   });
+
+  it('opens on ArrowDown from the closed trigger', async () => {
+    const { f, button } = await setup();
+    button.dispatchEvent(
+      new KeyboardEvent('keydown', { key: 'ArrowDown', bubbles: true })
+    );
+    f.detectChanges();
+    expect(button.getAttribute('aria-expanded')).toBe('true');
+  });
+
+  it('selects the active option with Enter when open', async () => {
+    const { f, button } = await setup();
+    button.click();
+    f.detectChanges();
+    // Highlight the first option, then confirm it with Enter.
+    panelOptions()[0].dispatchEvent(new MouseEvent('mouseenter'));
+    f.detectChanges();
+    button.dispatchEvent(
+      new KeyboardEvent('keydown', { key: 'Enter', bubbles: true })
+    );
+    f.detectChanges();
+    expect(f.componentInstance.selected()).toBe(1);
+    expect(button.getAttribute('aria-expanded')).toBe('false');
+  });
+
+  it('cancels the click a native button synthesises from Space keyup', async () => {
+    const { button } = await setup();
+    const event = new KeyboardEvent('keyup', {
+      key: ' ',
+      bubbles: true,
+      cancelable: true
+    });
+    button.dispatchEvent(event);
+    expect(event.defaultPrevented).toBe(true);
+  });
 });
