@@ -1,6 +1,4 @@
-import { inject, Injectable, Signal } from '@angular/core';
-import { toSignal } from '@angular/core/rxjs-interop';
-import { map } from 'rxjs/operators';
+import { computed, inject, Injectable, Signal } from '@angular/core';
 import {
   ConfirmationService,
   DialogService,
@@ -38,10 +36,15 @@ export class EditorMenuService {
   private readonly saveCoordinator = inject(SaveCoordinatorService);
   private readonly debugMenuService = inject(DebugMenuService);
 
-  /** Rebuilt whenever the active language changes so labels stay translated. */
-  public readonly items: Signal<MenuItem[]> = toSignal(
-    this.translocoService.events$.pipe(map(() => this.generateMenuItems())),
-    { initialValue: [] }
+  /**
+   * Rebuilt whenever the active language changes so labels stay translated.
+   * Driven by `selectTranslation()` rather than `events$`: that source replays
+   * the current language to late subscribers (this service is instantiated only
+   * once the title bar renders, after the initial load event has fired), so the
+   * menu is built immediately instead of waiting for the next language change.
+   */
+  public readonly items: Signal<MenuItem[]> = computed(() =>
+    this.generateMenuItems()
   );
 
   private generateMenuItems(): MenuItem[] {
