@@ -1,0 +1,69 @@
+/*
+ * @logigator/ui — Tailwind `@theme` mapping.
+ *
+ * Repoints Tailwind's `--color-*` utility tokens onto the `--lg-*` palette
+ * (theme.css). Import this AFTER `tailwindcss` and `theme.css` in the app's
+ * stylesheet.
+ *
+ * The split is deliberate and must be preserved: the primary + surface families
+ * use `@theme inline` (exactly as `tailwindcss-primeui` did), the
+ * content/text/border + state families use plain `@theme` (exactly as the app's
+ * own `tailwind.css` did). This is what makes the `/NN` opacity modifiers
+ * (`bg-primary-500/15`, `bg-content/80`, `bg-error/10`, `border-border/50`)
+ * compile to the same `color-mix(...)` against the `var()` chain as before — the
+ * single most likely silent regression at cutover. Don't merge the two blocks.
+ */
+
+@theme inline {
+  --color-primary: var(--lg-primary);
+  --color-primary-emphasis: var(--lg-primary-emphasis);
+  --color-primary-emphasis-alt: var(--lg-primary-emphasis-alt);
+  --color-primary-contrast: var(--lg-primary-contrast);
+  --color-primary-50: var(--lg-primary-50);
+  --color-primary-100: var(--lg-primary-100);
+  --color-primary-200: var(--lg-primary-200);
+  --color-primary-300: var(--lg-primary-300);
+  --color-primary-400: var(--lg-primary-400);
+  --color-primary-500: var(--lg-primary-500);
+  --color-primary-600: var(--lg-primary-600);
+  --color-primary-700: var(--lg-primary-700);
+  --color-primary-800: var(--lg-primary-800);
+  --color-primary-900: var(--lg-primary-900);
+  --color-primary-950: var(--lg-primary-950);
+
+  --color-surface-0: var(--lg-surface-0);
+  --color-surface-50: var(--lg-surface-50);
+  --color-surface-100: var(--lg-surface-100);
+  --color-surface-200: var(--lg-surface-200);
+  --color-surface-300: var(--lg-surface-300);
+  --color-surface-400: var(--lg-surface-400);
+  --color-surface-500: var(--lg-surface-500);
+  --color-surface-600: var(--lg-surface-600);
+  --color-surface-700: var(--lg-surface-700);
+  --color-surface-800: var(--lg-surface-800);
+  --color-surface-900: var(--lg-surface-900);
+  --color-surface-950: var(--lg-surface-950);
+}
+
+@theme {
+  --color-content: var(--lg-content);
+  --color-content-hover: var(--lg-content-hover);
+  --color-border: var(--lg-border);
+  --color-text: var(--lg-text);
+  --color-text-hover: var(--lg-text-hover);
+  --color-muted: var(--lg-muted);
+  --color-muted-hover: var(--lg-muted-hover);
+
+  --color-info: var(--lg-info);
+  --color-info-surface: var(--lg-info-surface);
+  --color-info-border: var(--lg-info-border);
+  --color-success: var(--lg-success);
+  --color-success-surface: var(--lg-success-surface);
+  --color-success-border: var(--lg-success-border);
+  --color-warn: var(--lg-warn);
+  --color-warn-surface: var(--lg-warn-surface);
+  --color-warn-border: var(--lg-warn-border);
+  --color-error: var(--lg-error);
+  --color-error-surface: var(--lg-error-surface);
+  --color-error-border: var(--lg-error-border);
+}
