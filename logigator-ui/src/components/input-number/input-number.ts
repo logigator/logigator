@@ -43,12 +43,14 @@ import { controlPadding, LgSize } from '../../tokens/size';
         (blur)="onBlur()"
       />
       @if (showButtons()) {
-        <div class="flex flex-col border-s border-border">
+        <div
+          class="flex flex-col border-s border-surface-300 dark:border-surface-600"
+        >
           <button
             type="button"
             tabindex="-1"
             aria-hidden="true"
-            class="flex flex-1 items-center justify-center border-b border-border px-2 text-xs leading-none text-muted hover:bg-content-hover hover:text-text disabled:opacity-40 disabled:pointer-events-none"
+            class="flex flex-1 items-center justify-center border-b border-surface-300 px-2 text-xs leading-none text-muted hover:bg-content-hover hover:text-text disabled:opacity-40 disabled:pointer-events-none dark:border-surface-600"
             [disabled]="disabled() || atMax()"
             (click)="stepBy(1)"
           >
@@ -86,8 +88,8 @@ export class LgInputNumber implements ControlValueAccessor {
 
   protected readonly wrapperClasses = computed(() =>
     [
-      'inline-flex items-stretch overflow-hidden rounded-md border border-border bg-content text-text',
-      'transition-colors duration-200 hover:border-muted focus-within:border-primary',
+      'inline-flex items-stretch overflow-hidden rounded-md border border-surface-300 bg-surface-0 text-text dark:border-surface-600 dark:bg-surface-950',
+      'transition-colors duration-200 hover:border-surface-400 dark:hover:border-surface-500 focus-within:border-primary',
       this.disabled() ? 'opacity-60' : ''
     ]
       .filter(Boolean)
