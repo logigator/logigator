@@ -1,6 +1,6 @@
 /* eslint-disable no-console -- this menu's purpose is raw console output */
 import { inject, Injectable } from '@angular/core';
-import { MenuItem } from 'primeng/api';
+import { type MenuItem } from '@logigator/ui';
 import { RendererType, type Renderer, type WebGLRenderer } from 'pixi.js';
 import { environment } from '../../environments/environment';
 import { ProjectService } from '../project/project.service';

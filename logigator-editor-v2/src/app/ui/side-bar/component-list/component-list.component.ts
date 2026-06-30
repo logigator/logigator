@@ -6,13 +6,13 @@ import {
   signal
 } from '@angular/core';
 import { FormsModule } from '@angular/forms';
-import { IconFieldModule } from 'primeng/iconfield';
-import { InputIconModule } from 'primeng/inputicon';
 import {
   LgAccordion,
   LgAccordionPanel,
   LgBadge,
   LgCard,
+  LgIconField,
+  LgInputIcon,
   LgInputText
 } from '@logigator/ui';
 import { TranslocoDirective, TranslocoService } from '@jsverse/transloco';
@@ -41,8 +41,8 @@ interface PaletteCategory {
   imports: [
     LgInputText,
     FormsModule,
-    IconFieldModule,
-    InputIconModule,
+    LgIconField,
+    LgInputIcon,
     LgAccordion,
     LgAccordionPanel,
     LgBadge,

@@ -6,8 +6,8 @@
     </span>
   </ng-template>
   <div class="flex flex-col gap-2">
-    <p-iconfield iconPosition="right">
-      <p-inputicon class="ph ph-magnifying-glass"></p-inputicon>
+    <lg-icon-field iconPosition="right">
+      <lg-input-icon class="ph ph-magnifying-glass"></lg-input-icon>
       <input
         lgInputText
         [placeholder]="t('sideBar.search')"
@@ -15,7 +15,7 @@
         [ngModel]="searchText()"
         (ngModelChange)="searchText.set($event)"
       />
-    </p-iconfield>
+    </lg-icon-field>
 
     <lg-accordion
       [multiple]="true"

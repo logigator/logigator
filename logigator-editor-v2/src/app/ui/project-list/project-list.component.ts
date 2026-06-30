@@ -16,12 +16,12 @@ import { FormsModule } from '@angular/forms';
 import {
   ConfirmationService,
   LgButton,
+  LgIconField,
+  LgInputIcon,
   LgInputText,
   LgPaginator,
   type LgPaginatorState
 } from '@logigator/ui';
-import { IconFieldModule } from 'primeng/iconfield';
-import { InputIconModule } from 'primeng/inputicon';
 import { TranslocoDirective, TranslocoService } from '@jsverse/transloco';
 
 export interface ProjectListItem {
@@ -41,8 +41,8 @@ const NAME_MAX_LENGTH = 20;
     FormsModule,
     LgButton,
     LgInputText,
-    IconFieldModule,
-    InputIconModule,
+    LgIconField,
+    LgInputIcon,
     LgPaginator,
     TranslocoDirective
   ],

@@ -1,8 +1,8 @@
 <div *transloco="let t">
   <!-- Search -->
   <div class="p-3 border-b border-border">
-    <p-iconfield class="w-full">
-      <p-inputicon class="ph ph-magnifying-glass" />
+    <lg-icon-field class="w-full">
+      <lg-input-icon class="ph ph-magnifying-glass" />
       <input
         lgInputText
         class="w-full"
@@ -11,7 +11,7 @@
         [(ngModel)]="searchQuery"
         (input)="onSearchInput()"
       />
-    </p-iconfield>
+    </lg-icon-field>
   </div>
 
   <!-- List -->
