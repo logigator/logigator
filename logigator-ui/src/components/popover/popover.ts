@@ -36,7 +36,9 @@ import {
   imports: [LgCaret],
   template: `
     <ng-template #content>
-      <div class="relative rounded-md bg-content p-1 shadow-lg">
+      <div
+        class="relative rounded-md border border-border bg-content p-1 shadow-lg"
+      >
         <ng-content></ng-content>
         <lg-caret [side]="side()" />
       </div>

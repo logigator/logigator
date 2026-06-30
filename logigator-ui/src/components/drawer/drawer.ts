@@ -48,6 +48,14 @@ const POSITION_HIDDEN: Record<DrawerPosition, string> = {
   bottom: 'translate-y-full'
 };
 
+// A border on the edge facing the content (the inner edge), matching Aura.
+const POSITION_BORDER: Record<DrawerPosition, string> = {
+  left: 'border-e border-border',
+  right: 'border-s border-border',
+  top: 'border-b border-border',
+  bottom: 'border-t border-border'
+};
+
 /**
  * A modal drawer (side / bottom sheet) pinned to a viewport edge. `visible` is
  * **one-way** like {@link LgDialog} — backdrop click, Escape, or the close
@@ -117,6 +125,7 @@ export class LgDrawer implements OnDestroy {
     return [
       'flex flex-col bg-content text-text shadow-xl',
       POSITION_SIZE[pos],
+      POSITION_BORDER[pos],
       'transition-transform duration-300 ease-out',
       this.modalOverlay.shown() ? POSITION_SHOWN[pos] : POSITION_HIDDEN[pos],
       this.styleClass()
