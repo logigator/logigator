@@ -71,6 +71,20 @@ Angular 21 standalone components + PixiJS 8 canvas.
 - Paste flow — `ClipboardService.paste()` deserializes clipboard snapshots into fresh `Component`/`Wire` instances (new IDs, positions shifted by `PASTE_OFFSET = 2` grid units), then delegates to `Project.startPasteSession()` → `FloatingLayer.startPasteSession()` → `PastePlacementSession`. Pasting is a non-modal drag session: elements appear as tinted ghosts in `_dragLayer`, follow the cursor, and check collision via `DragCollisionState`. `isDragging` stays false until the user clicks on one of the ghosts, at which point `beginDrag` locks in the anchor. Clicking off the ghost group commits at the started-at position; Escape cancels (destroys the fresh instances). `SelectionMoveSession` shares `DragCollisionState` for its own collision check.
 - `src/testing/` — shared test fakes (`FakeBrowserProjectStore`, `FakeBrowserComponentStore`). In-memory stand-ins for the IndexedDB-backed stores, extracted so both `persistence.service.spec` and `custom-component.service.spec` can use them without duplication.
 
+### UI Library (logigator-ui)
+
+`@logigator/ui` — in-house Angular 21 component library that replaced PrimeNG in editor-v2. Built on Angular CDK; theming is **colors-only** via `--lg-*` CSS variables. Path-mapped to source in dev (root `tsconfig.json` maps `@logigator/ui` → `logigator-ui/src/public-api.ts`), so the editor compiles it from TypeScript with no build step — it is *not* a `package.json` dependency of editor-v2. Detailed plan: `plans/logigator-ui.md`.
+
+**`logigator-ui/src/` layout** — one folder per component, all re-exported from `public-api.ts`:
+
+- Declarative components: `button/`, `divider/`, `tag/`, `badge/`, `avatar/`, `card/`, `ripple/`, `icon-field/` (`LgIconField` + `LgInputIcon`), `input-text/`, `textarea/`, `toggle-switch/`, `select-button/`, `input-number/`, `slider/`, `tooltip/`, `popover/`, `select/`, `dialog/`, `drawer/`, `accordion/`, `tabs/`, `panel-menu/`, `menu/` (`LgMenu` popup + `LgMenubar`), `paginator/`, `file-upload/`, `scroller/`.
+- Imperative services + their outlet components: `dynamic-dialog/` (`DialogService` → `DialogRef`/`DialogConfig`), `confirm/` (`ConfirmationService` + `LgConfirmDialog`/`LgConfirmPopup`), `toast/` (`MessageService` + `LgToast`; `danger` severity maps to `error`).
+- `internal/` — shared, non-exported plumbing: CDK-based `overlay`/`modal-overlay` foundation, `focus-trap`, `key-manager`, `after-paint`, `caret`, `icon`.
+- `tokens/` — shared types (`LgSeverity`, `LgSize`, form-field tokens).
+- `styles/theme.css` defines the `--lg-*` vars; `styles/theme.tw.css` maps them into Tailwind's `@theme` for editor-v2.
+
+Specs sit next to source (Vitest, `yarn test:ui`). Build is `ng build logigator-ui` (ng-packagr; publishing deferred).
+
 ### Backend (logigator-backend)
 
 Express with **routing-controllers** (decorators), **TypeDI** (DI), **TypeORM** (MySQL), **Passport.js** (auth), **Handlebars** (SSR).
