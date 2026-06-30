@@ -43,14 +43,12 @@ import { controlPadding, LgSize } from '../../tokens/size';
         (blur)="onBlur()"
       />
       @if (showButtons()) {
-        <div
-          class="flex flex-col border-s border-surface-300 dark:border-surface-600"
-        >
+        <div class="flex flex-col">
           <button
             type="button"
             tabindex="-1"
             aria-hidden="true"
-            class="flex flex-1 items-center justify-center border-b border-surface-300 px-2 text-xs leading-none text-muted hover:bg-content-hover hover:text-text disabled:opacity-40 disabled:pointer-events-none dark:border-surface-600"
+            class="flex flex-1 items-center justify-center px-2 text-xs leading-none text-muted hover:bg-content-hover hover:text-text disabled:opacity-40 disabled:pointer-events-none"
             [disabled]="disabled() || atMax()"
             (click)="stepBy(1)"
           >
