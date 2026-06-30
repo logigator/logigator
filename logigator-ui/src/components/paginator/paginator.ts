@@ -126,7 +126,7 @@ export class LgPaginator {
     return [
       'flex size-9 items-center justify-center rounded-md',
       active
-        ? 'bg-primary text-primary-contrast'
+        ? 'bg-primary-100 text-primary-800 dark:bg-primary/24 dark:text-text'
         : 'text-muted hover:bg-content-hover hover:text-text'
     ].join(' ');
   }
