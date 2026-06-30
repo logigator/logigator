@@ -3,21 +3,18 @@ import { ComponentFixture, TestBed } from '@angular/core/testing';
 
 import { ToolBarComponent } from './tool-bar.component';
 import { DialogService } from '@logigator/ui';
-import { appConfig } from '../../app.config';
+import { configureTestBed } from '../../../testing/configure-test-bed';
 import { WorkModeService } from '../../work-mode/work-mode.service';
 
 describe('ToolBarComponent', () => {
   let component: ToolBarComponent;
   let fixture: ComponentFixture<ToolBarComponent>;
 
-  beforeEach(async () => {
-    await TestBed.configureTestingModule({
-      imports: [ToolBarComponent],
-      providers: [
-        ...appConfig.providers,
-        { provide: DialogService, useValue: { open: () => null } }
-      ]
-    }).compileComponents();
+  beforeEach(() => {
+    configureTestBed(
+      [{ provide: DialogService, useValue: { open: () => null } }],
+      [ToolBarComponent]
+    );
 
     fixture = TestBed.createComponent(ToolBarComponent);
     component = fixture.componentInstance;

@@ -2,17 +2,14 @@ import { beforeEach, describe, expect, it } from 'vitest';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 
 import { PortsPanelComponent } from './ports-panel.component';
-import { appConfig } from '../../app.config';
+import { configureTestBed } from '../../../testing/configure-test-bed';
 
 describe('PortsPanelComponent', () => {
   let component: PortsPanelComponent;
   let fixture: ComponentFixture<PortsPanelComponent>;
 
-  beforeEach(async () => {
-    await TestBed.configureTestingModule({
-      imports: [PortsPanelComponent],
-      providers: appConfig.providers
-    }).compileComponents();
+  beforeEach(() => {
+    configureTestBed([], [PortsPanelComponent]);
 
     fixture = TestBed.createComponent(PortsPanelComponent);
     component = fixture.componentInstance;

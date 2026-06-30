@@ -2,16 +2,13 @@ import { beforeEach, describe, expect, it } from 'vitest';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { TextInputOptionInputComponent } from './text-input-option-input.component';
 import { TextInputComponentOption } from './text-input.component-option';
-import { appConfig } from '../../../app.config';
+import { configureTestBed } from '../../../../testing/configure-test-bed';
 
 describe('TextInputOptionInputComponent', () => {
   let fixture: ComponentFixture<TextInputOptionInputComponent>;
 
-  beforeEach(async () => {
-    await TestBed.configureTestingModule({
-      imports: [TextInputOptionInputComponent],
-      providers: appConfig.providers
-    }).compileComponents();
+  beforeEach(() => {
+    configureTestBed([], [TextInputOptionInputComponent]);
 
     fixture = TestBed.createComponent(TextInputOptionInputComponent);
     fixture.componentRef.setInput(

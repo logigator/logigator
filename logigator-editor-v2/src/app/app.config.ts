@@ -47,7 +47,13 @@ export const appConfig: ApplicationConfig = {
     }),
     provideAppInitializer(() => {
       const transloco = inject(TranslocoService);
-      return firstValueFrom(transloco.load(transloco.getActiveLang()));
+      // load() ends with takeUntilDestroyed: if the injector is torn down
+      // before the lazy language bundle resolves, the stream completes without
+      // emitting. defaultValue resolves that empty completion instead of
+      // rejecting; a genuine load error still propagates.
+      return firstValueFrom(transloco.load(transloco.getActiveLang()), {
+        defaultValue: undefined
+      });
     }),
     provideHttpClient()
   ]

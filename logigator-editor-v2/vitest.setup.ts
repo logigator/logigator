@@ -44,3 +44,33 @@ if (typeof window !== 'undefined' && typeof window.matchMedia !== 'function') {
       }) as unknown as MediaQueryList
   });
 }
+
+// jsdom implements neither the FontFace constructor nor document.fonts, so
+// PixiJS's loadWebFont parser (AssetsService.init -> Assets.load('Roboto'))
+// takes its unsupported branch and warns. Provide a no-op FontFace + font set
+// so the loader follows its success path silently.
+if (typeof globalThis.FontFace === 'undefined') {
+  globalThis.FontFace = class {
+    readonly family: string;
+    constructor(family: string) {
+      this.family = family;
+    }
+    load(): Promise<this> {
+      return Promise.resolve(this);
+    }
+  } as unknown as typeof FontFace;
+}
+if (typeof document !== 'undefined' && !document.fonts) {
+  Object.defineProperty(document, 'fonts', {
+    configurable: true,
+    value: {
+      add: () => {
+        /* empty */
+      },
+      delete: () => {
+        /* empty */
+      },
+      has: () => false
+    }
+  });
+}

@@ -2,6 +2,7 @@
 
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { TestBed } from '@angular/core/testing';
+import { of } from 'rxjs';
 import { ToastService } from '@logigator/ui';
 import { TranslocoService } from '@jsverse/transloco';
 import { configureTestBed } from '../../../testing/configure-test-bed';
@@ -81,7 +82,9 @@ describe('CircuitFileService', () => {
     vi.spyOn(console, 'warn').mockImplementation(() => {});
     vi.spyOn(console, 'error').mockImplementation(() => {});
     const translocoSpy = {
-      translate: vi.fn().mockName('TranslocoService.translate')
+      translate: vi.fn().mockName('TranslocoService.translate'),
+      getActiveLang: () => 'en',
+      load: () => of({})
     };
     translocoSpy.translate.mockImplementation((key: string) => key);
     configureTestBed([{ provide: TranslocoService, useValue: translocoSpy }]);

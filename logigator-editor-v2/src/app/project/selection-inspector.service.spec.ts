@@ -1,9 +1,8 @@
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
-import { ChangeDetectionStrategy, Component, Injector } from '@angular/core';
+import { ChangeDetectionStrategy, Component } from '@angular/core';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { Rectangle } from 'pixi.js';
-import { setStaticDIInjector } from '../utils/get-di';
-import { appConfig } from '../app.config';
+import { configureTestBed } from '../../testing/configure-test-bed';
 import { SelectionInspectorService } from './selection-inspector.service';
 import { ProjectService } from './project.service';
 import { ProjectMetadataStore } from '../persistence/project-metadata.store';
@@ -31,11 +30,7 @@ describe('SelectionInspectorService', () => {
   let component: AndComponent;
 
   beforeEach(() => {
-    TestBed.configureTestingModule({
-      imports: [TestHostComponent],
-      providers: appConfig.providers
-    });
-    setStaticDIInjector(TestBed.inject(Injector));
+    configureTestBed([], [TestHostComponent]);
     inspector = TestBed.inject(SelectionInspectorService);
     projectService = TestBed.inject(ProjectService);
     metadataStore = TestBed.inject(ProjectMetadataStore);

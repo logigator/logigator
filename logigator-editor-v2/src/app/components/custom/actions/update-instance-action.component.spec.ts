@@ -2,16 +2,13 @@ import { beforeEach, describe, expect, it } from 'vitest';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { UpdateInstanceActionComponent } from './update-instance-action.component';
 import { ComponentActionContext } from '../../component-action';
-import { appConfig } from '../../../app.config';
+import { configureTestBed } from '../../../../testing/configure-test-bed';
 
 describe('UpdateInstanceActionComponent', () => {
   let fixture: ComponentFixture<UpdateInstanceActionComponent>;
 
-  beforeEach(async () => {
-    await TestBed.configureTestingModule({
-      imports: [UpdateInstanceActionComponent],
-      providers: appConfig.providers
-    }).compileComponents();
+  beforeEach(() => {
+    configureTestBed([], [UpdateInstanceActionComponent]);
 
     fixture = TestBed.createComponent(UpdateInstanceActionComponent);
     fixture.componentRef.setInput('context', {

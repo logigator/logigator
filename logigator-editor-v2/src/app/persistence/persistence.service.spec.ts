@@ -2,7 +2,7 @@
 
 import type { Mock } from 'vitest';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import { firstValueFrom } from 'rxjs';
+import { firstValueFrom, of } from 'rxjs';
 import { Location } from '@angular/common';
 import { TestBed } from '@angular/core/testing';
 import { HttpTestingController } from '@angular/common/http/testing';
@@ -161,7 +161,9 @@ describe('PersistenceService', () => {
       {
         provide: TranslocoService,
         useValue: {
-          translate: vi.fn().mockName('TranslocoService.translate')
+          translate: vi.fn().mockName('TranslocoService.translate'),
+          getActiveLang: () => 'en',
+          load: () => of({})
         }
       }
     ]);
