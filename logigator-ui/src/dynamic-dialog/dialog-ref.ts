@@ -17,7 +17,8 @@ export class DialogRef<R = unknown> {
   private readonly childLoadedSubject = new ReplaySubject<unknown>(1);
   private settled = false;
 
-  readonly onClose: Observable<R | undefined> = this.closeSubject.asObservable();
+  readonly onClose: Observable<R | undefined> =
+    this.closeSubject.asObservable();
   readonly onChildComponentLoaded: Observable<unknown> =
     this.childLoadedSubject.asObservable();
 

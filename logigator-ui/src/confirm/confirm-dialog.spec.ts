@@ -56,7 +56,12 @@ describe('LgConfirmDialog', () => {
   it('runs accept and closes when the accept button is clicked', () => {
     const { f, service } = setup();
     const accept = vi.fn();
-    service.confirm({ message: 'm', acceptLabel: 'Yes', rejectLabel: 'No', accept });
+    service.confirm({
+      message: 'm',
+      acceptLabel: 'Yes',
+      rejectLabel: 'No',
+      accept
+    });
     f.detectChanges();
     // Footer buttons are reject then accept.
     const buttons = container()!.querySelectorAll('button');

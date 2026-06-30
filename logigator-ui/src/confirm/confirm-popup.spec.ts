@@ -73,7 +73,13 @@ describe('LgConfirmPopup', () => {
     const { f, anchor, service } = setup();
     const accept = vi.fn();
     const reject = vi.fn();
-    service.confirm({ key: 'inline', target: anchor, message: 'm', accept, reject });
+    service.confirm({
+      key: 'inline',
+      target: anchor,
+      message: 'm',
+      accept,
+      reject
+    });
     f.detectChanges();
     (document.querySelector('.cdk-overlay-backdrop') as HTMLElement).click();
     f.detectChanges();

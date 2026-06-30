@@ -12,8 +12,6 @@
     "start": "ng serve logigator-editor-v2",
     "build": "ng build logigator-editor-v2",
     "watch": "ng build logigator-editor-v2 --watch --configuration development",
-    "format": "prettier . -c",
-    "format:fix": "prettier . -lw",
     "lint": "ng lint logigator-editor-v2",
     "lint:fix": "ng lint logigator-editor-v2 --fix",
     "test": "ng test logigator-editor-v2"
@@ -55,7 +53,6 @@
     "eslint-config-prettier": "^10.1.8",
     "jsdom": "^29.1.1",
     "postcss": "^8.5.3",
-    "prettier": "^3.8.3",
     "tailwindcss": "^4.2.4",
     "typescript": "~5.9.3",
     "typescript-eslint": "^8.59.0",

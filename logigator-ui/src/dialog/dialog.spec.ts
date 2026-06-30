@@ -65,7 +65,9 @@ describe('LgDialog', () => {
     f.componentInstance.visible.set(true);
     f.detectChanges();
     expect(panel()).not.toBeNull();
-    expect(container()?.querySelector('h2')?.textContent).toContain('My Dialog');
+    expect(container()?.querySelector('h2')?.textContent).toContain(
+      'My Dialog'
+    );
     expect(container()?.querySelector('.body')?.textContent).toContain(
       'Body content'
     );

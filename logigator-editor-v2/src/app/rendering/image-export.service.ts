@@ -88,7 +88,9 @@ export class ImageExportService {
 
   public async exportImage(options: ImageExportOptions): Promise<void> {
     if (!this.snapshot.available) {
-      this.toast.error(this.transloco.translate('imageExport.error.unavailable'));
+      this.toast.error(
+        this.transloco.translate('imageExport.error.unavailable')
+      );
       return;
     }
 

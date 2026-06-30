@@ -1,9 +1,5 @@
 import { NgTemplateOutlet } from '@angular/common';
-import {
-  ConnectedPosition,
-  Overlay,
-  OverlayRef
-} from '@angular/cdk/overlay';
+import { ConnectedPosition, Overlay, OverlayRef } from '@angular/cdk/overlay';
 import { TemplatePortal } from '@angular/cdk/portal';
 import {
   ChangeDetectionStrategy,
@@ -37,7 +33,13 @@ const SUBMENU_POSITIONS: ConnectedPosition[] = [
     overlayY: 'bottom',
     offsetY: -4
   },
-  { originX: 'end', originY: 'bottom', overlayX: 'end', overlayY: 'top', offsetY: 4 }
+  {
+    originX: 'end',
+    originY: 'bottom',
+    overlayX: 'end',
+    overlayY: 'top',
+    offsetY: 4
+  }
 ];
 
 /** The interactive wrapper for one submenu row; the slot/default chrome fills it. */
@@ -88,7 +90,10 @@ const ITEM_CLASS =
           >
             @if (itemTemplate(); as tpl) {
               <ng-container
-                *ngTemplateOutlet="tpl; context: { $implicit: item, root: true }"
+                *ngTemplateOutlet="
+                  tpl;
+                  context: { $implicit: item, root: true }
+                "
               ></ng-container>
             } @else {
               <span class="flex items-center gap-1 px-3 py-2">
@@ -104,7 +109,9 @@ const ITEM_CLASS =
     </div>
 
     @if (endTemplate(); as tpl) {
-      <div class="ml-auto"><ng-container *ngTemplateOutlet="tpl"></ng-container></div>
+      <div class="ml-auto">
+        <ng-container *ngTemplateOutlet="tpl"></ng-container>
+      </div>
     }
 
     <ng-template #submenu>
@@ -157,7 +164,8 @@ export class LgMenubar implements OnDestroy {
     contentChild<TemplateRef<unknown>>('start');
   protected readonly endTemplate = contentChild<TemplateRef<unknown>>('end');
   protected readonly itemTemplate = contentChild<TemplateRef<unknown>>('item');
-  private readonly submenu = viewChild.required<TemplateRef<unknown>>('submenu');
+  private readonly submenu =
+    viewChild.required<TemplateRef<unknown>>('submenu');
 
   protected readonly itemClass = ITEM_CLASS;
   protected readonly openIndex = signal(-1);
@@ -213,7 +221,11 @@ export class LgMenubar implements OnDestroy {
     }
   }
 
-  protected onTopKeydown(i: number, item: MenuItem, event: KeyboardEvent): void {
+  protected onTopKeydown(
+    i: number,
+    item: MenuItem,
+    event: KeyboardEvent
+  ): void {
     switch (event.key) {
       case 'ArrowRight':
       case 'ArrowLeft': {
@@ -290,7 +302,10 @@ export class LgMenubar implements OnDestroy {
         next = current < 0 ? 0 : (current + 1) % items.length;
         break;
       case 'ArrowUp':
-        next = current < 0 ? items.length - 1 : (current - 1 + items.length) % items.length;
+        next =
+          current < 0
+            ? items.length - 1
+            : (current - 1 + items.length) % items.length;
         break;
       case 'Home':
         next = 0;

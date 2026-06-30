@@ -6660,7 +6660,6 @@ __metadata:
     ngxtension: "npm:^7.2.0"
     pixi.js: "npm:^8.18.1"
     postcss: "npm:^8.5.3"
-    prettier: "npm:^3.8.3"
     regexparam: "npm:^3.0.0"
     rxjs: "npm:~7.8.2"
     tailwindcss: "npm:^4.2.4"

@@ -70,7 +70,9 @@ describe('DialogService', () => {
   });
 
   it('applies inputValues via setInput before the child reads a required input', () => {
-    expect(() => open({ inputValues: { wordSize: 16, label: 'rom' } })).not.toThrow();
+    expect(() =>
+      open({ inputValues: { wordSize: 16, label: 'rom' } })
+    ).not.toThrow();
     expect(container()?.querySelector('.child')?.textContent).toBe('16/rom');
   });
 
@@ -123,7 +125,9 @@ describe('DialogService', () => {
     const ref = open({ header: 'X', inputValues: { wordSize: 1 } });
     const results: (string | undefined)[] = [];
     ref.onClose.subscribe((r) => results.push(r as string | undefined));
-    (container()?.querySelector('[aria-label=Close]') as HTMLButtonElement).click();
+    (
+      container()?.querySelector('[aria-label=Close]') as HTMLButtonElement
+    ).click();
     expect(results).toEqual([undefined]);
     expect(panel()).toBeNull();
   });
