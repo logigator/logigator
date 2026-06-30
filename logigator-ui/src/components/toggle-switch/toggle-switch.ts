@@ -40,7 +40,7 @@ import { ControlValueAccessor, NG_VALUE_ACCESSOR } from '@angular/forms';
     />
     <span
       aria-hidden="true"
-      class="pointer-events-none absolute inset-0 rounded-full bg-surface-300 transition-colors duration-200 dark:bg-surface-600 peer-checked:bg-primary peer-focus-visible:outline peer-focus-visible:outline-2 peer-focus-visible:outline-offset-2 peer-focus-visible:outline-primary peer-disabled:opacity-60"
+      class="pointer-events-none absolute inset-0 rounded-full bg-surface-300 transition-colors duration-200 dark:bg-surface-700 peer-checked:bg-primary peer-focus-visible:outline peer-focus-visible:outline-2 peer-focus-visible:outline-offset-2 peer-focus-visible:outline-primary peer-disabled:opacity-60"
     ></span>
     <span
       aria-hidden="true"
