@@ -120,7 +120,7 @@ let nextId = 0;
       <div
         role="listbox"
         [id]="listId"
-        class="max-h-60 overflow-auto rounded-md border border-border bg-content py-1 shadow-lg"
+        class="max-h-60 w-full overflow-auto rounded-md border border-border bg-content p-1 shadow-md"
       >
         @for (option of options(); track $index; let i = $index) {
           <button
@@ -129,9 +129,7 @@ let nextId = 0;
             tabindex="-1"
             [id]="optionId(i)"
             [attr.aria-selected]="isSelected(option)"
-            class="flex w-full cursor-pointer items-center gap-2 px-3 py-2 text-left"
-            [class.bg-content-hover]="i === activeIndex()"
-            [class.text-primary]="isSelected(option)"
+            [class]="optionClasses(i, isSelected(option))"
             (click)="selectOption(option)"
             (mouseenter)="activeIndex.set(i)"
           >
@@ -212,6 +210,25 @@ export class LgSelect implements ControlValueAccessor, OnDestroy {
 
   protected optionId(index: number): string {
     return `lg-select-${this.uid}-opt-${index}`;
+  }
+
+  /**
+   * Per-option classes. The selected row gets a primary-tinted highlight
+   * (Aura's `highlight`: primary-100/primary-800 in light, a translucent
+   * primary wash in dark); the keyboard/hover-active row that is *not* selected
+   * gets the neutral content-hover surface.
+   */
+  protected optionClasses(index: number, selected: boolean): string {
+    return [
+      'flex w-full cursor-pointer items-center gap-2 rounded px-3 py-2 text-left',
+      selected
+        ? 'bg-primary-100 text-primary-800 dark:bg-primary/24 dark:text-text'
+        : index === this.activeIndex()
+          ? 'bg-content-hover'
+          : ''
+    ]
+      .filter(Boolean)
+      .join(' ');
   }
 
   protected optionValueOf(option: unknown): unknown {
