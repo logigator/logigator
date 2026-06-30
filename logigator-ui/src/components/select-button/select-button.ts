@@ -120,9 +120,7 @@ export class LgSelectButton implements ControlValueAccessor {
 
   protected buttonClasses(selected: boolean): string {
     const pad =
-      this.size() === 'small'
-        ? 'px-2.5 py-0.5 text-sm'
-        : 'px-3 py-1 text-base';
+      this.size() === 'small' ? 'px-2.5 py-0.5 text-sm' : 'px-3 py-1 text-base';
     return [
       'inline-flex items-center justify-center gap-1 rounded',
       'transition-colors duration-200 cursor-pointer select-none',
