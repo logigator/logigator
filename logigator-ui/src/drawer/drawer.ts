@@ -22,12 +22,16 @@ let nextId = 0;
 
 type DrawerPosition = 'left' | 'right' | 'top' | 'bottom';
 
-/** Default cross-axis size per edge; `styleClass` (with `!`) overrides it. */
+// Default cross-axis size per edge. Side drawers fill the (dynamic) viewport
+// height at a fixed width; bottom/top sheets size to their content and only cap
+// at `calc(100dvh - 2.5rem)`, so a sheet whose content doesn't fill the screen
+// opens just as tall as it needs to. `styleClass` (with `!`) can still override.
+const SHEET_MAX = 'max-h-[calc(100dvh-2.5rem)]';
 const POSITION_SIZE: Record<DrawerPosition, string> = {
-  left: 'h-screen w-80',
-  right: 'h-screen w-80',
-  top: 'w-screen h-[50vh]',
-  bottom: 'w-screen h-[50vh]'
+  left: 'h-dvh w-80',
+  right: 'h-dvh w-80',
+  top: `w-screen ${SHEET_MAX}`,
+  bottom: `w-screen ${SHEET_MAX}`
 };
 
 const POSITION_SHOWN: Record<DrawerPosition, string> = {
@@ -49,8 +53,9 @@ const POSITION_HIDDEN: Record<DrawerPosition, string> = {
  * **one-way** like {@link LgDialog} — backdrop click, Escape, or the close
  * button emit `visibleChange(false)` for the parent to re-derive `visible`.
  * Edge-pinned over a `cdk/overlay` global overlay with focus trap + restore;
- * slides in from its edge. Default content is projected; `styleClass` is merged
- * onto the panel (e.g. `h-[90vh]!` to resize a bottom sheet).
+ * slides in from its edge. Bottom/top sheets size to their content (capped near
+ * the viewport height); default content is projected and `styleClass` is merged
+ * onto the panel for any further sizing.
  */
 @Component({
   selector: 'lg-drawer',
@@ -82,7 +87,9 @@ const POSITION_HIDDEN: Record<DrawerPosition, string> = {
             }
           </div>
         }
-        <div class="min-h-0 grow overflow-auto p-4"><ng-content></ng-content></div>
+        <div class="min-h-0 grow overflow-auto p-4">
+          <ng-content></ng-content>
+        </div>
       </div>
     </ng-template>
   `
@@ -124,14 +131,11 @@ export class LgDrawer implements OnDestroy {
         return;
       }
       if (open) {
-        this.modalOverlay.open(
-          new TemplatePortal(tpl, this.viewContainerRef),
-          {
-            placement: this.position() as LgOverlayPlacement,
-            dismissOnBackdrop: true,
-            onDismiss: () => this.requestClose()
-          }
-        );
+        this.modalOverlay.open(new TemplatePortal(tpl, this.viewContainerRef), {
+          placement: this.position() as LgOverlayPlacement,
+          dismissOnBackdrop: true,
+          onDismiss: () => this.requestClose()
+        });
       } else {
         this.modalOverlay.close();
       }

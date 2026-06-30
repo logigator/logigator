@@ -36,7 +36,9 @@ class HostComponent {
 
 function panelOptions(): HTMLElement[] {
   return Array.from(
-    document.querySelectorAll<HTMLElement>('.cdk-overlay-container [role=option]')
+    document.querySelectorAll<HTMLElement>(
+      '.cdk-overlay-container [role=option]'
+    )
   );
 }
 
@@ -157,5 +159,51 @@ describe('LgSelect', () => {
     });
     button.dispatchEvent(event);
     expect(event.defaultPrevented).toBe(true);
+  });
+});
+
+@Component({
+  changeDetection: ChangeDetectionStrategy.OnPush,
+  imports: [LgSelect, FormsModule],
+  template: `
+    <lg-select
+      [options]="options"
+      optionLabel="label"
+      optionValue="value"
+      optionIcon="icon"
+      [ngModel]="selected()"
+      (ngModelChange)="selected.set($event)"
+      [ngModelOptions]="{ standalone: true }"
+    />
+  `
+})
+class IconHostComponent {
+  readonly options = [
+    { label: 'Light', value: 'l', icon: 'ph ph-sun' },
+    { label: 'Dark', value: 'd', icon: 'ph ph-moon' }
+  ];
+  readonly selected = signal('l');
+}
+
+describe('LgSelect optionIcon', () => {
+  afterEach(() => {
+    document
+      .querySelectorAll('.cdk-overlay-container')
+      .forEach((el) => el.remove());
+  });
+
+  it('shows the option icon on the closed trigger and in each row', async () => {
+    const f = TestBed.createComponent(IconHostComponent);
+    f.detectChanges();
+    await f.whenStable();
+    f.detectChanges();
+    const button = f.nativeElement.querySelector('button') as HTMLButtonElement;
+    expect(button.querySelector('i')?.className).toContain('ph-sun');
+    button.click();
+    f.detectChanges();
+    expect(panelOptions().map((o) => o.querySelector('i')?.className)).toEqual([
+      expect.stringContaining('ph-sun'),
+      expect.stringContaining('ph-moon')
+    ]);
   });
 });

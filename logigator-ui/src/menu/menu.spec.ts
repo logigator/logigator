@@ -12,12 +12,13 @@ import { MenuItem } from './menu-item.model';
     <lg-menu
       #menu
       [model]="items()"
-      [popup]="true"
       (onShow)="open.set(true)"
       (onHide)="open.set(false)"
     >
       <ng-template #start><div class="start-block">START</div></ng-template>
-      <ng-template #item let-item><span class="row">{{ item.label }}</span></ng-template>
+      <ng-template #item let-item
+        ><span class="row">{{ item.label }}</span></ng-template
+      >
     </lg-menu>
   `
 })

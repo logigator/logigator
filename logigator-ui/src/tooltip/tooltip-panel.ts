@@ -1,10 +1,6 @@
-import {
-  ChangeDetectionStrategy,
-  Component,
-  computed,
-  input
-} from '@angular/core';
-import { caretClasses, LgOverlaySide } from '../internal/overlay';
+import { ChangeDetectionStrategy, Component, input } from '@angular/core';
+import { LgCaret } from '../internal/caret';
+import { LgOverlaySide } from '../internal/overlay';
 
 /**
  * The tooltip bubble rendered inside the overlay. `content`-background with a
@@ -14,22 +10,17 @@ import { caretClasses, LgOverlaySide } from '../internal/overlay';
 @Component({
   selector: 'lg-tooltip-panel',
   changeDetection: ChangeDetectionStrategy.OnPush,
+  imports: [LgCaret],
   template: `
     <div
       class="relative max-w-xs rounded-md bg-content px-2 py-1 text-sm text-text shadow-lg"
     >
       {{ text() }}
-      <span
-        aria-hidden="true"
-        class="absolute h-0 w-0"
-        [class]="caret()"
-      ></span>
+      <lg-caret [side]="side()" />
     </div>
   `
 })
 export class LgTooltipPanel {
   readonly text = input('');
   readonly side = input<LgOverlaySide>('right');
-
-  protected readonly caret = computed(() => caretClasses(this.side()));
 }

@@ -23,7 +23,7 @@
       (valueChange)="onPanelChange($event)"
     >
       @for (cat of categories(); track cat.key) {
-        <lg-accordion-panel [value]="cat.key" [class.border-b-0!]="$last">
+        <lg-accordion-panel [value]="cat.key">
           <ng-template #header>
             <span class="flex items-center gap-2 w-full font-semibold">
               {{ t(cat.labelKey) }}

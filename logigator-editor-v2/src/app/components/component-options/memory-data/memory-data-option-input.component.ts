@@ -45,8 +45,6 @@ export class MemoryDataOptionInputComponent implements ComponentOptionInput<stri
       modal: true,
       closable: true,
       dismissableMask: false,
-      draggable: false,
-      resizable: false,
       width: '64rem',
       style: { maxWidth: '100dvw', maxHeight: '100dvh' },
       inputValues: {

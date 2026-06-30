@@ -71,3 +71,40 @@ describe('LgSelectButton', () => {
     expect(f.componentInstance.value()).toBeUndefined();
   });
 });
+
+@Component({
+  changeDetection: ChangeDetectionStrategy.OnPush,
+  imports: [LgSelectButton, FormsModule],
+  template: `<lg-select-button
+    [options]="options"
+    optionLabel="label"
+    optionValue="value"
+    optionIcon="icon"
+    [ngModel]="value()"
+    (ngModelChange)="value.set($event)"
+  />`
+})
+class IconHostComponent {
+  readonly options = [
+    { label: 'Sun', value: 'light', icon: 'ph ph-sun' },
+    { label: 'Moon', value: 'dark' }
+  ];
+  readonly value = signal('light');
+}
+
+describe('LgSelectButton optionIcon', () => {
+  it('renders the option icon + label without an #item template', async () => {
+    const f = TestBed.createComponent(IconHostComponent);
+    f.detectChanges();
+    await f.whenStable();
+    f.detectChanges();
+    const buttons = Array.from(
+      f.nativeElement.querySelectorAll('button')
+    ) as HTMLButtonElement[];
+    expect(buttons[0].querySelector('i')?.className).toContain('ph-sun');
+    expect(buttons[0].textContent).toContain('Sun');
+    // an option without an icon field renders just its label
+    expect(buttons[1].querySelector('i')).toBeNull();
+    expect(buttons[1].textContent).toContain('Moon');
+  });
+});

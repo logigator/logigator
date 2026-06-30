@@ -1,12 +1,7 @@
 import { NgTemplateOutlet } from '@angular/common';
-import {
-  ConnectedPosition,
-  Overlay,
-  OverlayRef
-} from '@angular/cdk/overlay';
+import { ConnectedPosition, Overlay, OverlayRef } from '@angular/cdk/overlay';
 import { TemplatePortal } from '@angular/cdk/portal';
 import {
-  booleanAttribute,
   ChangeDetectionStrategy,
   Component,
   contentChild,
@@ -27,7 +22,13 @@ import { MenuItem } from './menu-item.model';
  * centre) — below/right-aligned first, then below/left, then the upward flips.
  */
 const MENU_POSITIONS: ConnectedPosition[] = [
-  { originX: 'end', originY: 'bottom', overlayX: 'end', overlayY: 'top', offsetY: 4 },
+  {
+    originX: 'end',
+    originY: 'bottom',
+    overlayX: 'end',
+    overlayY: 'top',
+    offsetY: 4
+  },
   {
     originX: 'start',
     originY: 'bottom',
@@ -35,7 +36,13 @@ const MENU_POSITIONS: ConnectedPosition[] = [
     overlayY: 'top',
     offsetY: 4
   },
-  { originX: 'end', originY: 'top', overlayX: 'end', overlayY: 'bottom', offsetY: -4 },
+  {
+    originX: 'end',
+    originY: 'top',
+    overlayX: 'end',
+    overlayY: 'bottom',
+    offsetY: -4
+  },
   {
     originX: 'start',
     originY: 'top',
@@ -110,8 +117,6 @@ const ITEM_CLASS =
 })
 export class LgMenu implements OnDestroy {
   readonly model = input<readonly MenuItem[]>([]);
-  /** Popup-only; accepted for call-site parity. */
-  readonly popup = input(true, { transform: booleanAttribute });
   readonly onShow = output<void>();
   readonly onHide = output<void>();
 
@@ -183,7 +188,10 @@ export class LgMenu implements OnDestroy {
         next = current < 0 ? 0 : (current + 1) % items.length;
         break;
       case 'ArrowUp':
-        next = current < 0 ? items.length - 1 : (current - 1 + items.length) % items.length;
+        next =
+          current < 0
+            ? items.length - 1
+            : (current - 1 + items.length) % items.length;
         break;
       case 'Home':
         next = 0;

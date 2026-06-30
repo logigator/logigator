@@ -72,7 +72,6 @@
       [visible]="mobileUi.activeSheet() === 'palette'"
       (visibleChange)="onSheetClosed($event)"
       position="bottom"
-      styleClass="h-[90vh]!"
       [header]="t('mobile.palette')"
     >
       <app-component-list></app-component-list>
@@ -82,7 +81,6 @@
       [visible]="mobileUi.activeSheet() === 'settings'"
       (visibleChange)="onSheetClosed($event)"
       position="bottom"
-      styleClass="h-[70vh]!"
       [header]="t('mobile.settings')"
     >
       <app-component-settings [floating]="false"></app-component-settings>

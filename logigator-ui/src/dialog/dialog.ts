@@ -82,7 +82,6 @@ export class LgDialog implements OnDestroy {
   readonly dismissableMask = input(false, { transform: booleanAttribute });
   readonly closable = input(true, { transform: booleanAttribute });
   readonly style = input<Record<string, string>>();
-  readonly styleClass = input<string>('');
   readonly visibleChange = output<boolean>();
 
   protected readonly footerTemplate =
@@ -101,8 +100,7 @@ export class LgDialog implements OnDestroy {
     [
       'flex max-h-[90vh] max-w-[90vw] flex-col rounded-lg bg-content text-text shadow-xl',
       'transition duration-200 ease-out',
-      this.modalOverlay.shown() ? 'scale-100 opacity-100' : 'scale-95 opacity-0',
-      this.styleClass()
+      this.modalOverlay.shown() ? 'scale-100 opacity-100' : 'scale-95 opacity-0'
     ].join(' ')
   );
 
@@ -114,15 +112,12 @@ export class LgDialog implements OnDestroy {
         return;
       }
       if (open) {
-        this.modalOverlay.open(
-          new TemplatePortal(tpl, this.viewContainerRef),
-          {
-            placement: 'center',
-            hasBackdrop: this.modal(),
-            dismissOnBackdrop: this.modal() && this.dismissableMask(),
-            onDismiss: () => this.requestClose()
-          }
-        );
+        this.modalOverlay.open(new TemplatePortal(tpl, this.viewContainerRef), {
+          placement: 'center',
+          hasBackdrop: this.modal(),
+          dismissOnBackdrop: this.modal() && this.dismissableMask(),
+          onDismiss: () => this.requestClose()
+        });
       } else {
         this.modalOverlay.close();
       }

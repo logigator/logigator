@@ -11,6 +11,7 @@ import {
   ViewContainerRef,
   viewChild
 } from '@angular/core';
+import { afterPaint } from '../internal/after-paint';
 import { DialogConfig } from './dialog-config';
 import { DialogRef } from './dialog-ref';
 
@@ -103,13 +104,7 @@ export class LgDynamicDialogContainer implements AfterViewInit {
     }
     this.ref.notifyChildLoaded(componentRef.instance);
 
-    // Two frames so the browser paints the scaled-down "from" state first.
-    if (typeof requestAnimationFrame === 'function') {
-      requestAnimationFrame(() =>
-        requestAnimationFrame(() => this.shown.set(true))
-      );
-    } else {
-      this.shown.set(true);
-    }
+    // Paint the scaled-down "from" state first, so the scale/fade-in runs.
+    afterPaint(() => this.shown.set(true));
   }
 }

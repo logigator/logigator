@@ -47,10 +47,8 @@
           {{ t('openProjectDialog.uploadPrompt') }}
         </p>
         <lg-file-upload
-          mode="basic"
           accept="application/json"
           [fileLimit]="1"
-          [customUpload]="true"
           [chooseLabel]="t('openProjectDialog.chooseFile')"
           chooseIcon="ph ph-cloud-arrow-up"
           (onSelect)="onFileSelect($event)"

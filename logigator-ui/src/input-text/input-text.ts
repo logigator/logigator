@@ -1,10 +1,5 @@
 import { booleanAttribute, Directive, computed, input } from '@angular/core';
-import {
-  FORM_FIELD_BASE,
-  FORM_FIELD_INVALID,
-  FORM_FIELD_PADDING,
-  FORM_FIELD_PADDING_SMALL
-} from '../tokens/form-field';
+import { formFieldClasses } from '../tokens/form-field';
 import { LgSize } from '../tokens/size';
 
 /**
@@ -26,12 +21,6 @@ export class LgInputText {
   readonly invalid = input(false, { transform: booleanAttribute });
 
   protected readonly classes = computed(() =>
-    [
-      FORM_FIELD_BASE,
-      this.size() === 'small' ? FORM_FIELD_PADDING_SMALL : FORM_FIELD_PADDING,
-      this.invalid() ? FORM_FIELD_INVALID : ''
-    ]
-      .filter(Boolean)
-      .join(' ')
+    formFieldClasses(this.size(), this.invalid())
   );
 }

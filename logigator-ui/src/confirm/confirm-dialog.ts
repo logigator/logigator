@@ -1,16 +1,8 @@
-import {
-  ChangeDetectionStrategy,
-  Component,
-  computed,
-  inject,
-  input,
-  signal
-} from '@angular/core';
-import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
+import { ChangeDetectionStrategy, Component } from '@angular/core';
 import { LgButton } from '../button/button';
 import { LgDialog } from '../dialog/dialog';
 import { Confirmation } from './confirmation';
-import { ConfirmationService } from './confirmation.service';
+import { LgConfirmOutlet } from './confirm-outlet';
 
 /**
  * The keyless modal outlet for {@link ConfirmationService}. Shows the active
@@ -51,51 +43,18 @@ import { ConfirmationService } from './confirmation.service';
     </lg-dialog>
   `
 })
-export class LgConfirmDialog {
-  readonly key = input<string>();
-  protected readonly current = signal<Confirmation | null>(null);
-
-  protected readonly acceptSeverity = computed(
-    () => this.current()?.acceptButtonProps?.severity
-  );
-  protected readonly acceptOutlined = computed(
-    () => this.current()?.acceptButtonProps?.outlined ?? false
-  );
-  protected readonly rejectSeverity = computed(
-    () => this.current()?.rejectButtonProps?.severity ?? 'secondary'
-  );
-  protected readonly rejectOutlined = computed(
-    () => this.current()?.rejectButtonProps?.outlined ?? false
-  );
-
-  constructor() {
-    inject(ConfirmationService)
-      .requireConfirmation$.pipe(takeUntilDestroyed())
-      .subscribe((c) => {
-        if ((c.key ?? undefined) === (this.key() ?? undefined)) {
-          this.current.set(c);
-        }
-      });
+export class LgConfirmDialog extends LgConfirmOutlet {
+  protected present(confirmation: Confirmation): void {
+    this.current.set(confirmation);
   }
 
-  protected accept(): void {
-    this.settle()?.accept?.();
-  }
-
-  protected reject(): void {
-    this.settle()?.reject?.();
-  }
+  // teardown() inherits the base no-op: the dialog's visibility derives from
+  // `current()`, which the base clears on settle.
 
   /** Escape / backdrop dismissal from the dialog rejects. */
   protected onVisibleChange(visible: boolean): void {
     if (!visible) {
       this.reject();
     }
-  }
-
-  private settle(): Confirmation | null {
-    const confirmation = this.current();
-    this.current.set(null);
-    return confirmation;
   }
 }

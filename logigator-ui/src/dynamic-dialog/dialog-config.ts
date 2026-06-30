@@ -5,8 +5,7 @@
  * `inject(DialogConfig).data`.
  *
  * `data` is typed `unknown` (the library forbids `any`); read sites narrow it
- * with a cast. `draggable`/`resizable` are accepted for call-site parity and are
- * intentional no-ops.
+ * with a cast.
  */
 export class DialogConfig<D = unknown> {
   header?: string;
@@ -16,7 +15,5 @@ export class DialogConfig<D = unknown> {
   data?: D;
   inputValues?: Record<string, unknown>;
   dismissableMask?: boolean;
-  draggable?: boolean;
-  resizable?: boolean;
   style?: Record<string, string>;
 }

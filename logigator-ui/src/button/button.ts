@@ -8,14 +8,17 @@ import {
 } from '@angular/core';
 import { IconSlot } from '../internal/icon';
 import { LgSeverity } from '../tokens/severity';
-import { LgSize } from '../tokens/size';
+import { controlPadding, LgSize } from '../tokens/size';
 
 type LgButtonVariant = 'solid' | 'outlined' | 'text';
 type SeverityKey = 'primary' | LgSeverity;
 
+// The inner button fills the host box (`size-full`) so any layout class the
+// caller puts on `<lg-button>` (e.g. `class="w-full"`) sizes the button too;
+// icon-only square sizing lives on the host (see the `size-*` host bindings).
 const BASE =
-  'inline-flex items-center justify-center gap-2 border border-transparent font-medium ' +
-  'transition-[color,background-color,border-color] duration-200 cursor-pointer select-none ' +
+  'inline-flex size-full items-center justify-center gap-2 border border-transparent font-medium ' +
+  'transition-colors duration-200 cursor-pointer select-none ' +
   'disabled:pointer-events-none disabled:opacity-60 focus:outline-none ' +
   'focus-visible:outline focus-visible:outline-1 focus-visible:outline-offset-2 focus-visible:outline-current';
 
@@ -59,13 +62,18 @@ const SEVERITY: Record<LgButtonVariant, Record<SeverityKey, string>> = {
  * A native `<button>` skin. Mirrors the slice of PrimeNG's `p-button` API the
  * editor uses: `label` (omit for an icon-only button), `icon` (an icon-font
  * class string), `severity`, `size`, `text`/`outlined`/`rounded`, `disabled`,
- * `loading`, `type`, `ariaLabel`, and `styleClass`. Emits `onClick` (kept on the
- * `on` prefix to match PrimeNG's event name).
+ * `loading`, `type`, and `ariaLabel`. Emits `onClick` (kept on the `on` prefix
+ * to match PrimeNG's event name). Layout classes go on the host (`<lg-button
+ * class="w-full">`); the inner button fills it.
  */
 @Component({
   selector: 'lg-button',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  host: { class: 'inline-flex' },
+  host: {
+    class: 'inline-flex',
+    '[class.size-8]': 'iconOnly() && size() === "small"',
+    '[class.size-10]': 'iconOnly() && size() !== "small"'
+  },
   template: `
     <button
       [type]="type()"
@@ -100,7 +108,6 @@ export class LgButton {
   readonly loading = input(false, { transform: booleanAttribute });
   readonly type = input<'button' | 'submit' | 'reset'>('button');
   readonly ariaLabel = input<string>();
-  readonly styleClass = input<string>();
 
   // Named `onClick` to match PrimeNG's event (see no-output-on-prefix off).
   readonly onClick = output<MouseEvent>();
@@ -110,6 +117,8 @@ export class LgButton {
     return l !== undefined && l !== '';
   });
 
+  protected readonly iconOnly = computed(() => !this.hasLabel());
+
   protected readonly buttonClasses = computed(() => {
     const variant: LgButtonVariant = this.text()
       ? 'text'
@@ -117,21 +126,18 @@ export class LgButton {
         ? 'outlined'
         : 'solid';
     const severityKey: SeverityKey = this.severity() ?? 'primary';
-    const iconOnly = !this.hasLabel();
-    const small = this.size() === 'small';
-    const sizing = iconOnly
-      ? small
-        ? 'h-8 w-8 text-sm'
-        : 'h-10 w-10 text-base'
-      : small
-        ? 'px-2.5 py-1.5 text-sm'
-        : 'px-3 py-2 text-base';
+    // Icon-only square sizing comes from the host; here the icon-only button
+    // only needs its text size, while a labelled button gets the shared padding.
+    const sizing = this.iconOnly()
+      ? this.size() === 'small'
+        ? 'text-sm'
+        : 'text-base'
+      : controlPadding(this.size());
     return [
       BASE,
-      this.rounded() ? 'rounded-[2rem]' : 'rounded-md',
+      this.rounded() ? 'rounded-4xl' : 'rounded-md',
       sizing,
-      SEVERITY[variant][severityKey],
-      this.styleClass() ?? ''
+      SEVERITY[variant][severityKey]
     ]
       .filter(Boolean)
       .join(' ');

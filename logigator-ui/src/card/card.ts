@@ -16,8 +16,7 @@ import {
   changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [NgTemplateOutlet],
   host: {
-    class:
-      'block rounded-xl bg-content p-5 text-text shadow-[0_1px_3px_0_rgba(0,0,0,0.1),0_1px_2px_-1px_rgba(0,0,0,0.1)]'
+    class: 'block rounded-xl bg-content p-5 text-text shadow-sm'
   },
   template: `
     @if (titleTpl()) {

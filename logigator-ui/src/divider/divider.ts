@@ -7,8 +7,8 @@ import {
 
 /**
  * A thin separator line. `layout="vertical"` draws a vertical rule (stretches
- * in a flex row); the default is a full-width horizontal rule. Consumer classes
- * merge onto the host for spacing (e.g. `class="mx-1!"`).
+ * in a flex row); the default is a full-width horizontal rule. The divider owns
+ * no outer margin — callers space it themselves (e.g. `class="mx-1"`).
  */
 @Component({
   selector: 'lg-divider',
@@ -25,7 +25,7 @@ export class LgDivider {
 
   protected readonly rootClass = computed(() =>
     this.layout() === 'vertical'
-      ? 'inline-block w-px self-stretch bg-border mx-2'
-      : 'block h-px w-full bg-border my-2'
+      ? 'inline-block w-px self-stretch bg-border'
+      : 'block h-px w-full bg-border'
   );
 }

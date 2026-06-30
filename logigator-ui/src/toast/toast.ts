@@ -7,6 +7,7 @@ import {
   signal
 } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
+import { afterPaint } from '../internal/after-paint';
 import { MessageService, ToastMessage } from './message.service';
 
 /** The themed severities (`danger` is normalized to `error`). */
@@ -91,7 +92,9 @@ export class LgToast {
   readonly position = input<string>('bottom-left');
 
   protected readonly atTop = computed(() => this.position().startsWith('top'));
-  protected readonly atRight = computed(() => this.position().endsWith('right'));
+  protected readonly atRight = computed(() =>
+    this.position().endsWith('right')
+  );
 
   protected readonly toasts = signal<ActiveToast[]>([]);
   private nextId = 0;
@@ -129,13 +132,7 @@ export class LgToast {
     ]);
 
     // Paint the off-screen "from" state first, then flip to play the enter.
-    if (typeof requestAnimationFrame === 'function') {
-      requestAnimationFrame(() =>
-        requestAnimationFrame(() => this.setShown(id))
-      );
-    } else {
-      this.setShown(id);
-    }
+    afterPaint(() => this.setShown(id));
 
     setTimeout(() => this.remove(id), message.life ?? DEFAULT_LIFE);
   }

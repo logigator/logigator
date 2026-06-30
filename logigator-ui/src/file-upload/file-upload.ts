@@ -41,12 +41,8 @@ export interface LgFileSelectEvent {
   `
 })
 export class LgFileUpload {
-  /** Only `'basic'` is implemented (the choose button). */
-  readonly mode = input<'basic'>('basic');
   readonly accept = input<string>();
   readonly fileLimit = input<number>();
-  /** Accepted for signature parity — selection never auto-uploads regardless. */
-  readonly customUpload = input(false);
   readonly chooseLabel = input<string>();
   readonly chooseIcon = input<IconSlot>();
 

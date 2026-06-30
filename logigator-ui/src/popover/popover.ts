@@ -7,7 +7,6 @@ import { TemplatePortal } from '@angular/cdk/portal';
 import {
   ChangeDetectionStrategy,
   Component,
-  computed,
   inject,
   OnDestroy,
   signal,
@@ -16,8 +15,8 @@ import {
   viewChild
 } from '@angular/core';
 import { Subscription } from 'rxjs';
+import { LgCaret } from '../internal/caret';
 import {
-  caretClasses,
   connectedPositions,
   createConnectedOverlay,
   LgOverlaySide,
@@ -34,15 +33,12 @@ import {
 @Component({
   selector: 'lg-popover',
   changeDetection: ChangeDetectionStrategy.OnPush,
+  imports: [LgCaret],
   template: `
     <ng-template #content>
       <div class="relative rounded-md bg-content p-1 shadow-lg">
         <ng-content></ng-content>
-        <span
-          aria-hidden="true"
-          class="absolute h-0 w-0"
-          [class]="arrow()"
-        ></span>
+        <lg-caret [side]="side()" />
       </div>
     </ng-template>
   `
@@ -57,7 +53,6 @@ export class LgPopover implements OnDestroy {
   private subscriptions: Subscription | null = null;
 
   protected readonly side = signal<LgOverlaySide>('bottom');
-  protected readonly arrow = computed(() => caretClasses(this.side()));
 
   /** Open anchored to the event target, or close if already open. */
   toggle(event: Event): void {

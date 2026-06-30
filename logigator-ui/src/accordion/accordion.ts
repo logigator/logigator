@@ -14,9 +14,9 @@ import {
 /**
  * A disclosure accordion. Open panels are tracked by their `value` keys in a
  * `model()` `string[]` (two-way bindable). `multiple` allows several open at
- * once; otherwise opening one closes the rest. Header/content padding are
- * exposed (the side-bar removes horizontal padding) and default to the editor's
- * flush values.
+ * once; otherwise opening one closes the rest. Panels are vertically padded and
+ * flush horizontally (the side-bar layout); a caller wanting different padding
+ * sets it on its own projected header/content.
  */
 @Component({
   selector: 'lg-accordion',
@@ -27,8 +27,6 @@ import {
 export class LgAccordion {
   readonly value = model<string[]>([]);
   readonly multiple = input(false, { transform: booleanAttribute });
-  readonly headerPadding = input('1.125rem 0');
-  readonly contentPadding = input('0 0 1.125rem 0');
 
   isOpen(panel: string): boolean {
     return this.value().includes(panel);
@@ -47,19 +45,18 @@ export class LgAccordion {
 /**
  * One panel of an {@link LgAccordion}. Identified by `value`; renders the
  * `#header` template in the clickable header (with a caret) and its projected
- * body in an animated height-collapsing region. Carries a bottom divider the
- * caller can suppress (e.g. `class="border-b-0!"` on the last panel).
+ * body in an animated height-collapsing region. A bottom divider separates
+ * panels; the last panel drops it automatically (`last:border-b-0`).
  */
 @Component({
   selector: 'lg-accordion-panel',
   changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [NgTemplateOutlet],
-  host: { class: 'block border-b border-border' },
+  host: { class: 'block border-b border-border last:border-b-0' },
   template: `
     <button
       type="button"
-      class="flex w-full items-center text-left"
-      [style.padding]="parent.headerPadding()"
+      class="flex w-full items-center py-4.5 text-left"
       [attr.aria-expanded]="open()"
       (click)="parent.toggle(value())"
     >
@@ -74,10 +71,7 @@ export class LgAccordion {
       class="grid transition-[grid-template-rows] duration-200"
       [style.grid-template-rows]="open() ? '1fr' : '0fr'"
     >
-      <div
-        class="min-h-0 overflow-hidden"
-        [style.padding]="parent.contentPadding()"
-      >
+      <div class="min-h-0 overflow-hidden pb-4.5">
         <ng-content></ng-content>
       </div>
     </div>

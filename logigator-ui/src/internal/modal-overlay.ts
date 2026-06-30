@@ -3,6 +3,7 @@ import { Overlay, OverlayRef } from '@angular/cdk/overlay';
 import { TemplatePortal } from '@angular/cdk/portal';
 import { signal } from '@angular/core';
 import { Subscription } from 'rxjs';
+import { afterPaint } from './after-paint';
 import { createGlobalOverlay, LgOverlayPlacement } from './overlay';
 import { LgFocusTrap } from './focus-trap';
 
@@ -74,15 +75,8 @@ export class ModalOverlay {
       })
     );
 
-    // Two frames so the browser paints the "from" state before flipping to the
-    // target state, which is what actually makes the CSS transition run.
-    if (typeof requestAnimationFrame === 'function') {
-      requestAnimationFrame(() =>
-        requestAnimationFrame(() => this.shown.set(true))
-      );
-    } else {
-      this.shown.set(true);
-    }
+    // Paint the "from" state before flipping, so the CSS enter transition runs.
+    afterPaint(() => this.shown.set(true));
   }
 
   /** Dispose the overlay and restore focus. Safe to call when already closed. */

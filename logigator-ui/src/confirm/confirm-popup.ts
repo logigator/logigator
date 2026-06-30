@@ -7,19 +7,16 @@ import { TemplatePortal } from '@angular/cdk/portal';
 import {
   ChangeDetectionStrategy,
   Component,
-  computed,
   inject,
-  input,
   OnDestroy,
   signal,
   TemplateRef,
   ViewContainerRef,
   viewChild
 } from '@angular/core';
-import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { Subscription } from 'rxjs';
+import { LgCaret } from '../internal/caret';
 import {
-  caretClasses,
   connectedPositions,
   createConnectedOverlay,
   LgOverlaySide,
@@ -27,7 +24,7 @@ import {
 } from '../internal/overlay';
 import { LgButton } from '../button/button';
 import { Confirmation } from './confirmation';
-import { ConfirmationService } from './confirmation.service';
+import { LgConfirmOutlet } from './confirm-outlet';
 
 /** PrimeNG's confirm-popup gutter between the anchor and the panel. */
 const POPUP_GAP = 10;
@@ -42,10 +39,12 @@ const POPUP_GAP = 10;
 @Component({
   selector: 'lg-confirm-popup',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [LgButton],
+  imports: [LgButton, LgCaret],
   template: `
     <ng-template #panel>
-      <div class="relative max-w-xs rounded-md bg-content p-3 text-text shadow-lg">
+      <div
+        class="relative max-w-xs rounded-md bg-content p-3 text-text shadow-lg"
+      >
         <p class="mb-3 text-sm">{{ current()?.message }}</p>
         <div class="flex justify-end gap-2">
           <lg-button
@@ -63,29 +62,13 @@ const POPUP_GAP = 10;
             (onClick)="accept()"
           />
         </div>
-        <span aria-hidden="true" class="absolute h-0 w-0" [class]="arrow()"></span>
+        <lg-caret [side]="side()" />
       </div>
     </ng-template>
   `
 })
-export class LgConfirmPopup implements OnDestroy {
-  readonly key = input<string>();
-  protected readonly current = signal<Confirmation | null>(null);
+export class LgConfirmPopup extends LgConfirmOutlet implements OnDestroy {
   protected readonly side = signal<LgOverlaySide>('bottom');
-  protected readonly arrow = computed(() => caretClasses(this.side()));
-
-  protected readonly acceptSeverity = computed(
-    () => this.current()?.acceptButtonProps?.severity
-  );
-  protected readonly acceptOutlined = computed(
-    () => this.current()?.acceptButtonProps?.outlined ?? false
-  );
-  protected readonly rejectSeverity = computed(
-    () => this.current()?.rejectButtonProps?.severity ?? 'secondary'
-  );
-  protected readonly rejectOutlined = computed(
-    () => this.current()?.rejectButtonProps?.outlined ?? false
-  );
 
   private readonly overlay = inject(Overlay);
   private readonly viewContainerRef = inject(ViewContainerRef);
@@ -94,22 +77,8 @@ export class LgConfirmPopup implements OnDestroy {
   private overlayRef: OverlayRef | null = null;
   private subscriptions: Subscription | null = null;
 
-  constructor() {
-    inject(ConfirmationService)
-      .requireConfirmation$.pipe(takeUntilDestroyed())
-      .subscribe((c) => {
-        if ((c.key ?? undefined) === (this.key() ?? undefined)) {
-          this.show(c);
-        }
-      });
-  }
-
-  ngOnDestroy(): void {
-    this.dispose();
-  }
-
-  private show(confirmation: Confirmation): void {
-    this.dispose();
+  protected present(confirmation: Confirmation): void {
+    this.teardown();
     const target = confirmation.target;
     if (!(target instanceof HTMLElement)) {
       return; // the popup needs an anchor element
@@ -146,25 +115,14 @@ export class LgConfirmPopup implements OnDestroy {
     );
   }
 
-  protected accept(): void {
-    this.settle()?.accept?.();
-  }
-
-  protected reject(): void {
-    this.settle()?.reject?.();
-  }
-
-  private settle(): Confirmation | null {
-    const confirmation = this.current();
-    this.dispose();
-    this.current.set(null);
-    return confirmation;
-  }
-
-  private dispose(): void {
+  protected override teardown(): void {
     this.subscriptions?.unsubscribe();
     this.subscriptions = null;
     this.overlayRef?.dispose();
     this.overlayRef = null;
+  }
+
+  ngOnDestroy(): void {
+    this.teardown();
   }
 }

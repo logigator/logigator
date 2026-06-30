@@ -11,14 +11,14 @@ import {
   TemplateRef
 } from '@angular/core';
 import { ControlValueAccessor, NG_VALUE_ACCESSOR } from '@angular/forms';
-import { LgSize } from '../tokens/size';
+import { controlPadding, LgSize } from '../tokens/size';
 
 /**
  * A segmented group of mutually-exclusive toggle buttons. `ControlValueAccessor`
  * (value = the selected option's `optionValue`, or the option itself when
- * `optionValue` is unset). Each option renders its `optionLabel`, or a projected
- * `#item` template (`$implicit` = the option) when the caller wants custom
- * content (icon + label).
+ * `optionValue` is unset). Each option renders its `optionIcon` + `optionLabel`
+ * by default, or a projected `#item` template (`$implicit` = the option) for
+ * fully custom content.
  *
  * `allowEmpty` defaults to **false**: clicking the active option does NOT clear
  * the selection (the editor's segmented toggles must always have a value).
@@ -54,7 +54,12 @@ import { LgSize } from '../tokens/size';
               "
             ></ng-container>
           } @else {
-            {{ label(option) }}
+            @if (iconOf(option); as ic) {
+              <i [class]="ic" aria-hidden="true"></i>
+            }
+            @if (label(option); as lbl) {
+              <span>{{ lbl }}</span>
+            }
           }
         </button>
       }
@@ -65,6 +70,7 @@ export class LgSelectButton implements ControlValueAccessor {
   readonly options = input<readonly unknown[]>([]);
   readonly optionLabel = input<string>();
   readonly optionValue = input<string>();
+  readonly optionIcon = input<string>();
   readonly allowEmpty = input(false, { transform: booleanAttribute });
   readonly fluid = input(false, { transform: booleanAttribute });
   readonly size = input<LgSize>();
@@ -85,7 +91,7 @@ export class LgSelectButton implements ControlValueAccessor {
     ].join(' ')
   );
 
-  protected value_(option: unknown): unknown {
+  protected resolveValue(option: unknown): unknown {
     const key = this.optionValue();
     return key ? (option as Record<string, unknown>)[key] : option;
   }
@@ -94,12 +100,19 @@ export class LgSelectButton implements ControlValueAccessor {
     const key = this.optionLabel();
     const raw = key
       ? (option as Record<string, unknown>)[key]
-      : this.value_(option);
+      : this.resolveValue(option);
     return raw == null ? '' : String(raw);
   }
 
+  /** The option's icon class (`optionIcon` field), or undefined for none. */
+  protected iconOf(option: unknown): string | undefined {
+    const key = this.optionIcon();
+    const raw = key ? (option as Record<string, unknown>)[key] : undefined;
+    return typeof raw === 'string' && raw !== '' ? raw : undefined;
+  }
+
   protected isSelected(option: unknown): boolean {
-    return this.value() === this.value_(option);
+    return this.value() === this.resolveValue(option);
   }
 
   protected buttonClasses(selected: boolean): string {
@@ -109,7 +122,7 @@ export class LgSelectButton implements ControlValueAccessor {
       'disabled:pointer-events-none disabled:opacity-60',
       'focus:outline-none focus-visible:outline focus-visible:outline-1 focus-visible:-outline-offset-1 focus-visible:outline-primary',
       this.fluid() ? 'flex-1' : '',
-      this.size() === 'small' ? 'px-2.5 py-1.5 text-sm' : 'px-3 py-2 text-base',
+      controlPadding(this.size()),
       selected
         ? 'bg-primary text-primary-contrast'
         : 'bg-content text-muted hover:bg-content-hover hover:text-text'
@@ -128,7 +141,7 @@ export class LgSelectButton implements ControlValueAccessor {
       }
       return;
     }
-    this.commit(this.value_(option));
+    this.commit(this.resolveValue(option));
   }
 
   private commit(value: unknown): void {

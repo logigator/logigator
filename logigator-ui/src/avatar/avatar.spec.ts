@@ -33,6 +33,6 @@ describe('LgAvatar', () => {
     f.detectChanges();
     const inner = f.nativeElement.querySelector('span') as HTMLElement;
     expect(inner.className).toContain('rounded-full');
-    expect(inner.className).toContain('h-16');
+    expect(inner.className).toContain('size-16');
   });
 });

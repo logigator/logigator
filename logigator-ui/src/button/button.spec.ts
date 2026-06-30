@@ -24,8 +24,8 @@ describe('LgButton', () => {
     f.detectChanges();
     expect(f.nativeElement.querySelector('span')).toBeNull();
     expect(f.nativeElement.querySelector('i')?.className).toContain('ph-trash');
-    // icon-only sizing
-    expect(button(f).className).toContain('w-10');
+    // icon-only square sizing lives on the host
+    expect((f.nativeElement as HTMLElement).className).toContain('size-10');
   });
 
   it('emits onClick when clicked', () => {
@@ -95,7 +95,7 @@ describe('LgButton', () => {
     f.componentRef.setInput('rounded', '');
     f.componentRef.setInput('text', 'true');
     f.detectChanges();
-    expect(button(f).className).toContain('rounded-[2rem]');
+    expect(button(f).className).toContain('rounded-4xl');
     expect(button(f).className).not.toContain('border-primary-200');
   });
 
@@ -108,11 +108,13 @@ describe('LgButton', () => {
     expect(button(f).getAttribute('aria-label')).toBe('Save project');
   });
 
-  it('merges styleClass onto the button', () => {
+  it('sizes an icon-only button on the host, not the inner button', () => {
     const f = create();
-    f.componentRef.setInput('label', 'X');
-    f.componentRef.setInput('styleClass', 'w-full');
+    f.componentRef.setInput('icon', 'ph ph-x');
     f.detectChanges();
-    expect(button(f).className).toContain('w-full');
+    expect((f.nativeElement as HTMLElement).className).toContain('size-10');
+    f.componentRef.setInput('label', 'X');
+    f.detectChanges();
+    expect((f.nativeElement as HTMLElement).className).not.toContain('size-10');
   });
 });

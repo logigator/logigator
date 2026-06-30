@@ -38,7 +38,7 @@ export class LgAvatar {
     [
       'inline-flex items-center justify-center overflow-hidden bg-border text-text',
       this.shape() === 'circle' ? 'rounded-full' : 'rounded-md',
-      this.size() === 'xlarge' ? 'h-16 w-16 text-2xl' : 'h-8 w-8 text-base'
+      this.size() === 'xlarge' ? 'size-16 text-2xl' : 'size-8 text-base'
     ].join(' ')
   );
 }

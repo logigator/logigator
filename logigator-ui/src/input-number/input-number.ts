@@ -7,7 +7,7 @@ import {
   signal
 } from '@angular/core';
 import { ControlValueAccessor, NG_VALUE_ACCESSOR } from '@angular/forms';
-import { LgSize } from '../tokens/size';
+import { controlPadding, LgSize } from '../tokens/size';
 
 /**
  * A numeric input with optional stacked +/- spinner buttons.
@@ -96,7 +96,7 @@ export class LgInputNumber implements ControlValueAccessor {
   protected readonly fieldClasses = computed(() =>
     [
       'w-full min-w-0 bg-transparent outline-none placeholder:text-muted',
-      this.size() === 'small' ? 'px-2.5 py-1.5 text-sm' : 'px-3 py-2 text-base'
+      controlPadding(this.size())
     ].join(' ')
   );
 

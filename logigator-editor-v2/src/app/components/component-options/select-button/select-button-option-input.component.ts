@@ -1,7 +1,6 @@
 import { ChangeDetectionStrategy, Component, input } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { LgSelectButton } from '@logigator/ui';
-import { NgTemplateOutlet } from '@angular/common';
 import { TranslocoDirective } from '@jsverse/transloco';
 import type { ComponentOptionInput } from '../../component-option';
 import type { SelectButtonComponentOption } from './select-button.component-option';
@@ -10,7 +9,7 @@ let nextId = 0;
 
 @Component({
   selector: 'app-select-button-option-input',
-  imports: [FormsModule, LgSelectButton, NgTemplateOutlet, TranslocoDirective],
+  imports: [FormsModule, LgSelectButton, TranslocoDirective],
   templateUrl: './select-button-option-input.component.html',
   changeDetection: ChangeDetectionStrategy.OnPush
 })

@@ -1,9 +1,5 @@
 import { NgTemplateOutlet } from '@angular/common';
-import {
-  ConnectedPosition,
-  Overlay,
-  OverlayRef
-} from '@angular/cdk/overlay';
+import { ConnectedPosition, Overlay, OverlayRef } from '@angular/cdk/overlay';
 import { TemplatePortal } from '@angular/cdk/portal';
 import {
   booleanAttribute,
@@ -25,7 +21,8 @@ import { ControlValueAccessor, NG_VALUE_ACCESSOR } from '@angular/forms';
 import { Subscription } from 'rxjs';
 import { createConnectedOverlay } from '../internal/overlay';
 import { createListKeyManager } from '../internal/key-manager';
-import { FORM_FIELD_BASE, FORM_FIELD_PADDING } from '../tokens/form-field';
+import { FORM_FIELD_BASE } from '../tokens/form-field';
+import { CONTROL_PADDING } from '../tokens/size';
 
 /** Edge-aligned (not centered) drop positions: below the trigger, flipping up. */
 const SELECT_POSITIONS: ConnectedPosition[] = [
@@ -98,7 +95,7 @@ let nextId = 0;
       (keyup.space)="$event.preventDefault()"
       (blur)="onTouched()"
     >
-      <span class="flex-1 truncate text-left">
+      <span class="flex flex-1 items-center gap-2 text-left">
         @if (selectedItemTemplate(); as tpl) {
           @if (selectedOption(); as opt) {
             <ng-container
@@ -106,7 +103,10 @@ let nextId = 0;
             ></ng-container>
           }
         } @else {
-          {{ selectedLabel() }}
+          @if (selectedIcon(); as ic) {
+            <i [class]="ic" aria-hidden="true"></i>
+          }
+          <span class="truncate">{{ selectedLabel() }}</span>
         }
       </span>
       <i
@@ -129,7 +129,7 @@ let nextId = 0;
             tabindex="-1"
             [id]="optionId(i)"
             [attr.aria-selected]="isSelected(option)"
-            class="flex w-full cursor-pointer items-center px-3 py-2 text-left"
+            class="flex w-full cursor-pointer items-center gap-2 px-3 py-2 text-left"
             [class.bg-content-hover]="i === activeIndex()"
             [class.text-primary]="isSelected(option)"
             (click)="selectOption(option)"
@@ -140,6 +140,9 @@ let nextId = 0;
                 *ngTemplateOutlet="tpl; context: { $implicit: option }"
               ></ng-container>
             } @else {
+              @if (iconOf(option); as ic) {
+                <i [class]="ic" aria-hidden="true"></i>
+              }
               {{ label(option) }}
             }
           </button>
@@ -152,6 +155,7 @@ export class LgSelect implements ControlValueAccessor, OnDestroy {
   readonly options = input<readonly unknown[]>([]);
   readonly optionLabel = input<string>();
   readonly optionValue = input<string>();
+  readonly optionIcon = input<string>();
   readonly inputId = input<string>();
   readonly ariaLabel = input<string>();
   readonly fluid = input(false, { transform: booleanAttribute });
@@ -180,14 +184,15 @@ export class LgSelect implements ControlValueAccessor, OnDestroy {
 
   protected readonly triggerClasses = [
     FORM_FIELD_BASE,
-    FORM_FIELD_PADDING,
+    CONTROL_PADDING,
     'inline-flex w-full cursor-pointer select-none items-center text-left'
   ].join(' ');
 
   private overlayRef: OverlayRef | null = null;
   private subscriptions: Subscription | null = null;
-  private keyManager: ReturnType<typeof createListKeyManager<OptionKey>> | null =
-    null;
+  private keyManager: ReturnType<
+    typeof createListKeyManager<OptionKey>
+  > | null = null;
 
   private onChange: (value: unknown) => void = () => undefined;
   protected onTouched: () => void = () => undefined;
@@ -199,6 +204,10 @@ export class LgSelect implements ControlValueAccessor, OnDestroy {
   protected readonly selectedLabel = computed(() => {
     const option = this.selectedOption();
     return option === null ? '' : this.label(option);
+  });
+  protected readonly selectedIcon = computed(() => {
+    const option = this.selectedOption();
+    return option === null ? undefined : this.iconOf(option);
   });
 
   protected optionId(index: number): string {
@@ -216,6 +225,13 @@ export class LgSelect implements ControlValueAccessor, OnDestroy {
       ? (option as Record<string, unknown>)[key]
       : this.optionValueOf(option);
     return raw == null ? '' : String(raw);
+  }
+
+  /** The option's icon class (`optionIcon` field), or undefined for none. */
+  protected iconOf(option: unknown): string | undefined {
+    const key = this.optionIcon();
+    const raw = key ? (option as Record<string, unknown>)[key] : undefined;
+    return typeof raw === 'string' && raw !== '' ? raw : undefined;
   }
 
   protected isSelected(option: unknown): boolean {
