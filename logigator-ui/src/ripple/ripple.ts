@@ -33,6 +33,10 @@ export class LgRipple {
       ripple.style.transform = 'scale(1)';
       ripple.style.opacity = '0';
     });
-    ripple.addEventListener('transitionend', () => ripple.remove());
+    // transitionend drives removal; a timeout guarantees cleanup when the
+    // transition never fires (reduced-motion / a `transition: none` override).
+    const remove = () => ripple.remove();
+    ripple.addEventListener('transitionend', remove, { once: true });
+    setTimeout(remove, 600);
   }
 }

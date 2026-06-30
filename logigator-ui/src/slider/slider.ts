@@ -156,7 +156,7 @@ export class LgSlider implements ControlValueAccessor {
 
   writeValue(value: number): void {
     if (typeof value === 'number' && Number.isFinite(value)) {
-      this.value.set(value);
+      this.value.set(Math.min(this.max(), Math.max(this.min(), value)));
     }
   }
 

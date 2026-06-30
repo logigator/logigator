@@ -26,9 +26,9 @@ import { LgTooltipPanel } from './tooltip-panel';
 
 /**
  * A hover/focus tooltip on any host element. The content is the `lgTooltip`
- * value; an **empty / null value is a no-op** (the editor's disable idiom). The
- * bubble is a `cdk/overlay` connected overlay with a caret tracking the anchor;
- * the directive never steals pointer or focus, and registers the text with
+ * value; an **empty / null value is a no-op** (renders no tooltip). The bubble
+ * is a `cdk/overlay` connected overlay with a caret tracking the anchor; the
+ * directive never steals pointer or focus, and registers the text with
  * `AriaDescriber` so it reaches screen readers via `aria-describedby`.
  */
 @Directive({
@@ -65,6 +65,20 @@ export class LgTooltip implements OnDestroy {
       if (text) {
         this.ariaDescriber.describe(el, text);
         onCleanup(() => this.ariaDescriber.removeDescription(el, text));
+      }
+    });
+
+    // Keep an already-visible bubble in sync when the content changes (a cleared
+    // value hides it, matching show()'s no-op-on-empty contract).
+    effect(() => {
+      const text = this.content();
+      if (!this.overlayRef) {
+        return;
+      }
+      if (text) {
+        this.panelRef?.setInput('text', text);
+      } else {
+        this.hide();
       }
     });
   }

@@ -15,7 +15,7 @@ import {
   viewChild
 } from '@angular/core';
 import { createConnectedOverlay } from '../internal/overlay';
-import { MenuItem } from './menu-item.model';
+import { MENU_ITEM_CLASS, MenuItem } from './menu-item.model';
 
 /** Submenu drop positions: below/left-aligned, flipping up, then right-aligned. */
 const SUBMENU_POSITIONS: ConnectedPosition[] = [
@@ -41,12 +41,6 @@ const SUBMENU_POSITIONS: ConnectedPosition[] = [
     offsetY: 4
   }
 ];
-
-/** The interactive wrapper for one submenu row; the slot/default chrome fills it. */
-const ITEM_CLASS =
-  'flex w-full text-left text-text hover:bg-content-hover ' +
-  'focus:bg-content-hover focus:outline-none ' +
-  'disabled:pointer-events-none disabled:opacity-50';
 
 /**
  * A horizontal menu bar with **one** level of pop-up submenu. `model` is the
@@ -167,7 +161,7 @@ export class LgMenubar implements OnDestroy {
   private readonly submenu =
     viewChild.required<TemplateRef<unknown>>('submenu');
 
-  protected readonly itemClass = ITEM_CLASS;
+  protected readonly itemClass = MENU_ITEM_CLASS;
   protected readonly openIndex = signal(-1);
   protected readonly submenuItems = signal<readonly MenuItem[]>([]);
 
@@ -210,7 +204,7 @@ export class LgMenubar implements OnDestroy {
   }
 
   protected onTopHover(i: number, event: Event): void {
-    if (this.openIndex() < 0) {
+    if (this.openIndex() < 0 || this.openIndex() === i) {
       return;
     }
     const item = this.model()[i];

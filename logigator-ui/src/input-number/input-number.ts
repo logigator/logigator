@@ -1,4 +1,5 @@
 import {
+  booleanAttribute,
   ChangeDetectionStrategy,
   Component,
   computed,
@@ -70,7 +71,7 @@ import { controlPadding, LgSize } from '../tokens/size';
 })
 export class LgInputNumber implements ControlValueAccessor {
   readonly inputId = input<string>();
-  readonly showButtons = input(false);
+  readonly showButtons = input(false, { transform: booleanAttribute });
   readonly min = input<number>();
   readonly max = input<number>();
   readonly step = input(1);

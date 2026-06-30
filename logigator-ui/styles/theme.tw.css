@@ -6,12 +6,11 @@
  * stylesheet.
  *
  * The split is deliberate and must be preserved: the primary + surface families
- * use `@theme inline` (exactly as `tailwindcss-primeui` did), the
- * content/text/border + state families use plain `@theme` (exactly as the app's
- * own `tailwind.css` did). This is what makes the `/NN` opacity modifiers
- * (`bg-primary-500/15`, `bg-content/80`, `bg-error/10`, `border-border/50`)
- * compile to the same `color-mix(...)` against the `var()` chain as before — the
- * single most likely silent regression at cutover. Don't merge the two blocks.
+ * use `@theme inline`, the content/text/border + state families use plain
+ * `@theme`. This is what makes the `/NN` opacity modifiers (`bg-primary-500/15`,
+ * `bg-content/80`, `bg-error/10`, `border-border/50`) compile to a
+ * `color-mix(...)` against the `var()` chain rather than dropping the variant.
+ * Don't merge the two blocks.
  */
 
 @theme inline {

@@ -39,7 +39,7 @@ let nextId = 0;
     <ng-template #panelTpl>
       <div
         role="dialog"
-        aria-modal="true"
+        [attr.aria-modal]="modal() ? 'true' : null"
         [attr.aria-labelledby]="header() ? headerId : null"
         [ngStyle]="style()"
         [class]="panelClasses()"

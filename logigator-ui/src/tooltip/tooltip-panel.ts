@@ -4,8 +4,7 @@ import { LgOverlaySide } from '../internal/overlay';
 
 /**
  * The tooltip bubble rendered inside the overlay. `content`-background with a
- * shadow (the editor's light-mode tooltip override, made the default) and a
- * caret that tracks the resolved {@link LgOverlaySide}.
+ * shadow and a caret that tracks the resolved {@link LgOverlaySide}.
  */
 @Component({
   selector: 'lg-tooltip-panel',

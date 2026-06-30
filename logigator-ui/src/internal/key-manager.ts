@@ -39,7 +39,7 @@ export function createListKeyManager<T extends ListKeyManagerOption>(
   if (options.homeAndEnd) {
     manager.withHomeAndEnd();
   }
-  if (options.typeAhead) {
+  if (options.typeAhead === true || typeof options.typeAhead === 'number') {
     manager.withTypeAhead(
       typeof options.typeAhead === 'number' ? options.typeAhead : undefined
     );

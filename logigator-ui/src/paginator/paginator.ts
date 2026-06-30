@@ -16,6 +16,10 @@ export interface LgPaginatorState {
 
 const MAX_LINKS = 5;
 
+const NAV_CLASS =
+  'flex size-9 items-center justify-center rounded-md text-muted ' +
+  'hover:bg-content-hover hover:text-text disabled:pointer-events-none disabled:opacity-40';
+
 /**
  * A page navigator: first/prev, a window of numbered links, next/last.
  * Stateless — driven by `first`/`rows`/`totalRecords` and emitting
@@ -30,7 +34,7 @@ const MAX_LINKS = 5;
     <div class="flex items-center justify-center gap-1" role="navigation">
       <button
         type="button"
-        [class]="navClass()"
+        [class]="navClass"
         [disabled]="currentPage() === 0"
         (click)="toPage(0)"
         aria-label="First page"
@@ -39,7 +43,7 @@ const MAX_LINKS = 5;
       </button>
       <button
         type="button"
-        [class]="navClass()"
+        [class]="navClass"
         [disabled]="currentPage() === 0"
         (click)="toPage(currentPage() - 1)"
         aria-label="Previous page"
@@ -60,7 +64,7 @@ const MAX_LINKS = 5;
 
       <button
         type="button"
-        [class]="navClass()"
+        [class]="navClass"
         [disabled]="currentPage() >= pageCount() - 1"
         (click)="toPage(currentPage() + 1)"
         aria-label="Next page"
@@ -69,7 +73,7 @@ const MAX_LINKS = 5;
       </button>
       <button
         type="button"
-        [class]="navClass()"
+        [class]="navClass"
         [disabled]="currentPage() >= pageCount() - 1"
         (click)="toPage(pageCount() - 1)"
         aria-label="Last page"
@@ -91,7 +95,13 @@ export class LgPaginator {
   );
 
   protected readonly currentPage = computed(() =>
-    Math.floor(this.first() / Math.max(1, this.rows()))
+    Math.max(
+      0,
+      Math.min(
+        Math.floor(this.first() / Math.max(1, this.rows())),
+        this.pageCount() - 1
+      )
+    )
   );
 
   // A window of up to MAX_LINKS page numbers centered on the current page.
@@ -110,11 +120,7 @@ export class LgPaginator {
     return result;
   });
 
-  protected readonly navClass = computed(
-    () =>
-      'flex size-9 items-center justify-center rounded-md text-muted ' +
-      'hover:bg-content-hover hover:text-text disabled:pointer-events-none disabled:opacity-40'
-  );
+  protected readonly navClass = NAV_CLASS;
 
   protected pageClass(active: boolean): string {
     return [

@@ -78,11 +78,11 @@ export class LgConfirmPopup extends LgConfirmOutlet implements OnDestroy {
   private subscriptions: Subscription | null = null;
 
   protected present(confirmation: Confirmation): void {
-    this.teardown();
     const target = confirmation.target;
     if (!(target instanceof HTMLElement)) {
       return; // the popup needs an anchor element
     }
+    this.teardown();
     this.current.set(confirmation);
     this.side.set('bottom');
     this.overlayRef = createConnectedOverlay(this.overlay, {

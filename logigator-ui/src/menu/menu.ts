@@ -15,7 +15,7 @@ import {
 } from '@angular/core';
 import { Subscription } from 'rxjs';
 import { createConnectedOverlay } from '../internal/overlay';
-import { MenuItem } from './menu-item.model';
+import { MENU_ITEM_CLASS, MenuItem } from './menu-item.model';
 
 /**
  * Edge-aligned drop positions (the panel hugs an edge of the trigger, not its
@@ -51,12 +51,6 @@ const MENU_POSITIONS: ConnectedPosition[] = [
     offsetY: -4
   }
 ];
-
-/** The interactive wrapper for one menu row; the slot/default chrome fills it. */
-const ITEM_CLASS =
-  'flex w-full text-left text-text hover:bg-content-hover ' +
-  'focus:bg-content-hover focus:outline-none ' +
-  'disabled:pointer-events-none disabled:opacity-50';
 
 /**
  * A popup menu over `cdk/overlay`. A trigger calls `toggle($event)` (anchors to
@@ -125,7 +119,7 @@ export class LgMenu implements OnDestroy {
   protected readonly itemTemplate = contentChild<TemplateRef<unknown>>('item');
   private readonly panel = viewChild.required<TemplateRef<unknown>>('panel');
 
-  protected readonly itemClass = ITEM_CLASS;
+  protected readonly itemClass = MENU_ITEM_CLASS;
 
   private readonly overlay = inject(Overlay);
   private readonly viewContainerRef = inject(ViewContainerRef);
@@ -157,6 +151,7 @@ export class LgMenu implements OnDestroy {
 
   protected run(item: MenuItem): void {
     this.hide();
+    this.trigger?.focus();
     item.command?.({ item });
   }
 

@@ -367,5 +367,8 @@ export class LgSelect implements ControlValueAccessor, OnDestroy {
 
   setDisabledState(isDisabled: boolean): void {
     this.cvaDisabled.set(isDisabled);
+    if (isDisabled) {
+      this.close();
+    }
   }
 }

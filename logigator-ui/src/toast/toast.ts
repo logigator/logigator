@@ -2,6 +2,7 @@ import {
   ChangeDetectionStrategy,
   Component,
   computed,
+  DestroyRef,
   inject,
   input,
   signal
@@ -68,7 +69,7 @@ function resolveSeverity(severity?: string): ResolvedSeverity {
   },
   template: `
     @for (toast of toasts(); track toast.id) {
-      <div role="alert" aria-live="polite" [class]="toastClasses(toast)">
+      <div role="alert" [class]="toastClasses(toast)">
         <div class="flex items-start gap-2">
           <i
             [class]="severityIcon(toast.severity)"
@@ -98,11 +99,16 @@ export class LgToast {
 
   protected readonly toasts = signal<ActiveToast[]>([]);
   private nextId = 0;
+  private readonly timers = new Set<ReturnType<typeof setTimeout>>();
 
   constructor() {
     inject(MessageService)
       .messageObserver.pipe(takeUntilDestroyed())
       .subscribe((message) => this.add(message));
+    inject(DestroyRef).onDestroy(() => {
+      this.timers.forEach((timer) => clearTimeout(timer));
+      this.timers.clear();
+    });
   }
 
   protected severityIcon(severity: ResolvedSeverity): string {
@@ -134,7 +140,11 @@ export class LgToast {
     // Paint the off-screen "from" state first, then flip to play the enter.
     afterPaint(() => this.setShown(id));
 
-    setTimeout(() => this.remove(id), message.life ?? DEFAULT_LIFE);
+    const timer = setTimeout(() => {
+      this.timers.delete(timer);
+      this.remove(id);
+    }, message.life ?? DEFAULT_LIFE);
+    this.timers.add(timer);
   }
 
   private setShown(id: number): void {

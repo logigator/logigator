@@ -37,8 +37,7 @@ module.exports = defineConfig([
         }
       ],
       '@angular-eslint/prefer-on-push-component-change-detection': 'error',
-      // Components mirror PrimeNG's event names (onClick, onSelect, onShow, …)
-      // so editor call sites are unchanged during the migration.
+      // Outputs use PrimeNG-style `on`-prefixed names (onClick, onSelect, …).
       '@angular-eslint/no-output-on-prefix': 'off',
       'no-console': 'error'
     }
