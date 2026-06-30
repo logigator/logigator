@@ -8,13 +8,9 @@ Three independent packages using **Yarn 4** (corepack) — no workspace manager:
 - `logigator-editor/` — Legacy Angular 17 editor (PixiJS 7), being replaced
 - `logigator-editor-v2/` — Angular 21 editor (PixiJS 8, Tailwind 4, PrimeNG), current focus
 
-All commands run inside Docker containers. Do not run yarn directly on the host.
-
 ## Dev Environment
 
 Backend config files must be created from `.example` files in `logigator-backend/config/`.
-
-Service names for exec: `editor` (logigator-editor-v2), `editor-old` (logigator-editor), `backend` (logigator-backend).
 
 ## Commands
 

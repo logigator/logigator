@@ -22,7 +22,7 @@ import {User} from '../../database/entities/user.entity';
 import {InjectRepository} from 'typeorm-typedi-extensions';
 import {ComponentRepository} from '../../database/repositories/component.repository';
 import {CreateComponent} from '../../models/request/shared/create-component';
-import {ProjectElement} from '../../models/request/api/project-element';
+import {buildDependencyResponse, parseStoredCircuit, serializeStoredCircuit, synthesizeMissingSnapshots} from '../../functions/circuit-content';
 import {classToPlain} from 'class-transformer';
 import {ComponentDependencyRepository} from '../../database/repositories/component-dependency.repository';
 import {ComponentFile} from '../../database/entities/component-file.entity';
@@ -76,12 +76,14 @@ export class ComponentController {
 		});
 
 		const contentBuffer = await component.elementsFile?.getFileContent();
-		const content: ProjectElement[] = contentBuffer?.length ? JSON.parse(contentBuffer.toString()) : [];
+		const {elements, snapshots} = parseStoredCircuit(contentBuffer);
+		const enriched = await synthesizeMissingSnapshots(dependencies, snapshots);
 
 		return {
 			...classToPlain(component),
-			dependencies,
-			elements: content ?? []
+			dependencies: buildDependencyResponse(dependencies, enriched),
+			elements,
+			newFormat: component.newFormat
 		};
 	}
 
@@ -93,10 +95,13 @@ export class ComponentController {
 		if (component.elementsFile && component.elementsFile.hash !== body.oldHash)
 			throw new BadRequestError('VersionMismatch');
 
+		const previous = parseStoredCircuit(await component.elementsFile?.getFileContent());
+
 		if (!component.elementsFile)
 			component.elementsFile = new ComponentFile();
 
-		component.elementsFile.setFileContent(JSON.stringify(body.elements));
+		component.elementsFile.setFileContent(serializeStoredCircuit(body.elements, body.dependencies, previous.snapshots));
+		component.newFormat = body.newFormat ?? false;
 		component.numInputs = body.numInputs;
 		component.numOutputs = body.numOutputs;
 		component.labels = body.labels;
@@ -105,6 +110,10 @@ export class ComponentController {
 		const deps = [];
 		const depSet = new Set<string>();
 		for (const mapping of body.dependencies) {
+			// Local-only customs (never uploaded to the library) carry no master
+			// id — they live solely in the embedded snapshot, so create no row.
+			if (!mapping.id)
+				continue;
 			const depComp = await this.componentRepo.getOwnedComponentOrThrow(mapping.id, user, `Component for mapping '${mapping.id}' not found.`);
 			const dep = this.componentDepRepo.create();
 			dep.dependency = depComp;

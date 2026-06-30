@@ -91,6 +91,15 @@
 		}
 	},
 	"POPUP": {
+		"NEW_EDITOR_FORMAT": {
+			"TITLE": "Project from the new editor",
+			"INTRO": "This project was created or last saved with the new Logigator editor.",
+			"UNSUPPORTED": "Some of its features — such as negated ports — are not supported here and will be missing.",
+			"SAVE_WARNING": "Saving from this editor will drop those unsupported features and may change how custom components are stored. This can degrade the project when it is opened again in the new editor.",
+			"OK": "Got it",
+			"SAVE_OK": "Save anyway",
+			"CANCEL": "Cancel"
+		},
 		"NEW_COMP": {
 			"TITLE": "New Component",
 			"NAME": "Name",

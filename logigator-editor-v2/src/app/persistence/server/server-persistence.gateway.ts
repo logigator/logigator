@@ -1,4 +1,5 @@
 import { inject, Injectable } from '@angular/core';
+import { TranslocoService } from '@jsverse/transloco';
 import { firstValueFrom, map, Observable, tap } from 'rxjs';
 import { HttpErrorResponse } from '@angular/common/http';
 import { ProjectApiService } from '../../api/services/project-api.service';
@@ -44,6 +45,7 @@ export class ServerPersistenceGateway {
   private readonly metadataStore = inject(ProjectMetadataStore);
   private readonly toast = inject(ToastService);
   private readonly logging = inject(LoggingService);
+  private readonly transloco = inject(TranslocoService);
   private readonly snapshot = inject(BoardSnapshotService);
 
   async loadProject(uuid: string): Promise<Project> {
@@ -62,6 +64,12 @@ export class ServerPersistenceGateway {
       isPublic: detail.public,
       link: detail.link
     });
+
+    if (!detail.newFormat) {
+      this.toast.warn(
+        this.transloco.translate('persistence.legacyProjectWarning')
+      );
+    }
 
     return project;
   }
@@ -98,7 +106,8 @@ export class ServerPersistenceGateway {
       this.projectApi.save(response.id, {
         oldHash: response.elementsFile?.hash ?? '',
         dependencies,
-        elements
+        elements,
+        newFormat: true
       })
     );
     this.metadataStore.updateHash(
@@ -148,7 +157,8 @@ export class ServerPersistenceGateway {
       this.projectApi.save(response.id, {
         oldHash: response.elementsFile?.hash ?? '',
         dependencies,
-        elements
+        elements,
+        newFormat: true
       })
     );
     this.metadataStore.updateHash(
@@ -460,7 +470,8 @@ export class ServerPersistenceGateway {
         this.projectApi.save(metadata.id, {
           oldHash: metadata.hash,
           dependencies,
-          elements
+          elements,
+          newFormat: true
         })
       );
 
@@ -562,7 +573,8 @@ export class ServerPersistenceGateway {
         elements,
         numInputs: summary.numInputs,
         numOutputs: summary.numOutputs,
-        labels: summary.labels
+        labels: summary.labels,
+        newFormat: true
       })
     );
   }

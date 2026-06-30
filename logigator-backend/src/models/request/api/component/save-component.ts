@@ -1,7 +1,9 @@
 import {
 	IsArray,
+	IsBoolean,
 	IsInt,
 	IsNotEmpty,
+	IsOptional,
 	IsString,
 	Length,
 	NotContains,
@@ -15,6 +17,11 @@ export class SaveComponent {
 	@IsString()
 	@IsNotEmpty()
 	oldHash: string;
+
+	/** Set by the new editor; absent for old clients (treated as legacy). */
+	@IsOptional()
+	@IsBoolean()
+	newFormat: boolean;
 
 	@IsArray()
 	@ValidateNested({each: true})

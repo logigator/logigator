@@ -143,6 +143,7 @@ export class ProjectSaveManagementService {
 			hash: projectData.data.elementsFile.hash,
 			public: projectData.data.public,
 			link: projectData.data.link,
+			newFormat: projectData.data.newFormat === true,
 			type
 		});
 		this._projectsCache.set(project.id, project);
@@ -646,14 +647,19 @@ export class ProjectSaveManagementService {
 		useLinkForUuid = false
 	): Map<number, number> {
 		const mappingsToApply = new Map<number, number>();
-		dependencies.forEach((dep) => {
-			const uuid = useLinkForUuid ? dep.dependency.link : dep.dependency.id;
-			if (this._mappings.hasKey(uuid)) {
-				mappingsToApply.set(dep.model, this._mappings.getValue(uuid));
-			} else {
-				this._mappings.set(uuid, dep.model);
-			}
-		});
+		// New-editor projects may carry snapshot-only dependencies (local custom
+		// components never uploaded to the library) that have no `dependency`. This
+		// editor cannot resolve them; skip so the rest of the project still loads.
+		dependencies
+			.filter((dep) => dep.dependency)
+			.forEach((dep) => {
+				const uuid = useLinkForUuid ? dep.dependency.link : dep.dependency.id;
+				if (this._mappings.hasKey(uuid)) {
+					mappingsToApply.set(dep.model, this._mappings.getValue(uuid));
+				} else {
+					this._mappings.set(uuid, dep.model);
+				}
+			});
 		return mappingsToApply;
 	}
 
@@ -662,19 +668,21 @@ export class ProjectSaveManagementService {
 		category: 'user' | 'local' | 'share',
 		useLinkForUuid = false
 	) {
-		const elements: Partial<ElementType>[] = components.map((comp) => {
-			return {
-				id: this._mappings.getValue(useLinkForUuid ? comp.link : comp.id),
-				description: comp.description,
-				name: comp.name,
-				minInputs: comp.numInputs,
-				maxInputs: comp.numInputs,
-				symbol: comp.symbol,
-				numInputs: comp.numInputs,
-				numOutputs: comp.numOutputs,
-				labels: comp.labels
-			};
-		});
+		const elements: Partial<ElementType>[] = components
+			.filter((comp) => comp)
+			.map((comp) => {
+				return {
+					id: this._mappings.getValue(useLinkForUuid ? comp.link : comp.id),
+					description: comp.description,
+					name: comp.name,
+					minInputs: comp.numInputs,
+					maxInputs: comp.numInputs,
+					symbol: comp.symbol,
+					numInputs: comp.numInputs,
+					numOutputs: comp.numOutputs,
+					labels: comp.labels
+				};
+			});
 		this.elementProvider.addElements(elements, category);
 	}
 
@@ -709,7 +717,38 @@ export class ProjectSaveManagementService {
 			mapped.push(element);
 		}
 
+		this.shiftIntoPositiveSpace(mapped);
+
 		return mapped;
+	}
+
+	/**
+	 * The chunk grid is indexed by non-negative coordinates, so a project
+	 * authored in the new editor's negative coordinate space crashes on load.
+	 * Translate every element by a uniform offset so the whole project sits in
+	 * positive space again. A pure translation preserves the circuit topology;
+	 * the shifted coordinates persist if the project is saved back.
+	 */
+	private shiftIntoPositiveSpace(elements: Element[]): void {
+		let minX = 0;
+		let minY = 0;
+		for (const element of elements) {
+			minX = Math.min(minX, element.pos.x, element.endPos?.x ?? element.pos.x);
+			minY = Math.min(minY, element.pos.y, element.endPos?.y ?? element.pos.y);
+		}
+
+		if (minX >= 0 && minY >= 0) return;
+
+		const offsetX = -Math.floor(minX);
+		const offsetY = -Math.floor(minY);
+		for (const element of elements) {
+			element.pos.x += offsetX;
+			element.pos.y += offsetY;
+			if (element.endPos) {
+				element.endPos.x += offsetX;
+				element.endPos.y += offsetY;
+			}
+		}
 	}
 
 	private convertElementsToSaveElements(elements: Element[]): {

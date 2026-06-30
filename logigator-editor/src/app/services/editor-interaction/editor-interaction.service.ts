@@ -10,6 +10,7 @@ import { PopupService } from '../popup/popup.service';
 import { NewComponentComponent } from '../../components/popup-contents/new-component/new-component.component';
 import { OpenProjectComponent } from '../../components/popup-contents/open/open-project.component';
 import { SaveAsComponent } from '../../components/popup-contents/save-as/save-as.component';
+import { NewEditorFormatComponent } from '../../components/popup-contents/new-editor-format/new-editor-format.component';
 import { ShareProjectComponent } from '../../components/popup-contents/share-project/share-project.component';
 import { ErrorHandlingService } from '../error-handling/error-handling.service';
 import { EditComponentPlugsComponent } from '../../components/popup-contents/edit-component-plugs/edit-component-plugs.component';
@@ -153,6 +154,15 @@ export class EditorInteractionService {
 		) {
 			this.projectsService.saveAllComponents();
 		} else if (this.projectsService.mainProject.source !== 'local') {
+			if (this.projectsService.mainProject.newFormat) {
+				const proceed = await this.popupService.showPopup(
+					NewEditorFormatComponent,
+					'POPUP.NEW_EDITOR_FORMAT.TITLE',
+					true,
+					'save'
+				);
+				if (!proceed) return;
+			}
 			this.projectsService.saveAllProjects();
 		} else {
 			const saveResp = await this.popupService.showPopup(

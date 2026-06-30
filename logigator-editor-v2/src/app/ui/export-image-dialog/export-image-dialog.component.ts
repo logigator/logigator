@@ -91,7 +91,9 @@ export class ExportImageDialogComponent {
 
   protected readonly dimensions = computed(() => {
     const project = this.project();
-    return project ? this.imageExport.previewSize(project, this.multiplier()) : null;
+    return project
+      ? this.imageExport.previewSize(project, this.multiplier())
+      : null;
   });
 
   protected get canExport(): boolean {
