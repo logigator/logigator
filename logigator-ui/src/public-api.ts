@@ -22,6 +22,8 @@ export { LgBadge } from './badge/badge';
 export { LgAvatar } from './avatar/avatar';
 export { LgCard } from './card/card';
 export { LgRipple } from './ripple/ripple';
+export { LgIconField } from './icon-field/icon-field';
+export { LgInputIcon } from './icon-field/input-icon';
 
 export { LgInputText } from './input-text/input-text';
 export { LgTextarea } from './textarea/textarea';
