@@ -13,8 +13,8 @@ import {
 } from '@angular/core';
 import { DatePipe } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { ConfirmationService } from 'primeng/api';
 import {
+  ConfirmationService,
   LgButton,
   LgInputText,
   LgPaginator,

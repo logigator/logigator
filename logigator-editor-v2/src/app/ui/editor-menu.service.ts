@@ -1,8 +1,8 @@
 import { inject, Injectable, Signal } from '@angular/core';
 import { toSignal } from '@angular/core/rxjs-interop';
 import { map } from 'rxjs/operators';
-import { MenuItem, ConfirmationService } from 'primeng/api';
-import { DialogService } from '@logigator/ui';
+import { MenuItem } from 'primeng/api';
+import { ConfirmationService, DialogService } from '@logigator/ui';
 import { TranslocoService } from '@jsverse/transloco';
 import { PersistenceService } from '../persistence/persistence.service';
 import { ProjectService } from '../project/project.service';

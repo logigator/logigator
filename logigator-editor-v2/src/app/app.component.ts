@@ -23,10 +23,13 @@ import { ComponentSettingsComponent } from './ui/component-settings/component-se
 import { ProjectService } from './project/project.service';
 import { PersistenceService } from './persistence/persistence.service';
 import { UnsavedChangesGuard } from './persistence/unsaved-changes.guard';
-import { ConfirmPopup } from 'primeng/confirmpopup';
-import { ConfirmDialog } from 'primeng/confirmdialog';
-import { Toast } from 'primeng/toast';
-import { LgDrawer, LgPanelMenu } from '@logigator/ui';
+import {
+  LgConfirmDialog,
+  LgConfirmPopup,
+  LgDrawer,
+  LgPanelMenu,
+  LgToast
+} from '@logigator/ui';
 import { TranslocoDirective } from '@jsverse/transloco';
 import { WorkMode } from './work-mode/work-mode.enum';
 import { WorkModeService } from './work-mode/work-mode.service';
@@ -56,9 +59,9 @@ import { UserSettingsComponent } from './ui/user-settings/user-settings.componen
     StatusBarComponent,
     BoardComponent,
     ComponentSettingsComponent,
-    ConfirmPopup,
-    ConfirmDialog,
-    Toast,
+    LgConfirmPopup,
+    LgConfirmDialog,
+    LgToast,
     LgDrawer,
     LgPanelMenu,
     TranslocoDirective,

@@ -7,13 +7,13 @@ import {
 } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import {
+  ConfirmationService,
   DialogConfig,
   DialogRef,
   LgButton,
   LgToggleSwitch,
   LgTooltip
 } from '@logigator/ui';
-import { ConfirmationService } from 'primeng/api';
 import { TranslocoDirective, TranslocoService } from '@jsverse/transloco';
 import { CustomComponentService } from '../../custom-component/custom-component.service';
 import { UserService } from '../../user/user.service';

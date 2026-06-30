@@ -1,5 +1,5 @@
-<p-confirmpopup key="inline" />
-<p-confirm-dialog />
+<lg-confirm-popup key="inline" />
+<lg-confirm-dialog />
 
 @if (layout.isCompact()) {
   <app-mobile-top-bar></app-mobile-top-bar>
@@ -23,7 +23,7 @@
         [project]="projectService.activeProject()"
         (cursorPositionChange)="cursorPosition.set($event)"
       ></app-board>
-      <p-toast position="bottom-left" class="absolute! -mb-4" />
+      <lg-toast position="bottom-left" class="absolute! -mb-4" />
 
       @if (!layout.isCompact()) {
         <app-component-settings></app-component-settings>

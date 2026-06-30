@@ -13,8 +13,8 @@ import {
 } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { TranslocoDirective, TranslocoService } from '@jsverse/transloco';
-import { ConfirmationService } from 'primeng/api';
 import {
+  ConfirmationService,
   LgButton,
   LgInputText,
   LgScroller,

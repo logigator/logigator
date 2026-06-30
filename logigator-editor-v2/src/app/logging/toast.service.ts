@@ -1,5 +1,5 @@
 import { inject, Injectable } from '@angular/core';
-import { MessageService } from 'primeng/api';
+import { MessageService } from '@logigator/ui';
 import { TranslocoService } from '@jsverse/transloco';
 
 /**
