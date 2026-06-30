@@ -2170,6 +2170,7 @@ __metadata:
   version: 0.0.0-use.local
   resolution: "@logigator/ui@workspace:logigator-ui"
   dependencies:
+    "@angular/cdk": "npm:^21.2.8"
     "@angular/compiler-cli": "npm:^21.2.10"
     ng-packagr: "npm:^21.2.0"
     tslib: "npm:^2.8.1"
