@@ -31,7 +31,7 @@ describe('LgTextarea', () => {
   it('applies the field skin and keeps consumer classes/attrs', () => {
     const { ta } = setup();
     expect(ta.className).toContain('w-full');
-    expect(ta.className).toContain('bg-content');
+    expect(ta.className).toContain('bg-surface-0');
     expect(ta.rows).toBe(12);
   });
 

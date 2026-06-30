@@ -34,8 +34,8 @@ describe('LgInputText', () => {
     // The foundation other skins ride on: the directive's host [class] binding
     // must not wipe the template-static `class`.
     expect(input.className).toContain('w-full');
-    expect(input.className).toContain('bg-content');
-    expect(input.className).toContain('border-border');
+    expect(input.className).toContain('bg-surface-0');
+    expect(input.className).toContain('border-surface-300');
   });
 
   it('uses the default padding and switches to small', () => {
