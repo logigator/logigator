@@ -650,14 +650,16 @@ export class ProjectSaveManagementService {
 		// New-editor projects may carry snapshot-only dependencies (local custom
 		// components never uploaded to the library) that have no `dependency`. This
 		// editor cannot resolve them; skip so the rest of the project still loads.
-		dependencies.filter((dep) => dep.dependency).forEach((dep) => {
-			const uuid = useLinkForUuid ? dep.dependency.link : dep.dependency.id;
-			if (this._mappings.hasKey(uuid)) {
-				mappingsToApply.set(dep.model, this._mappings.getValue(uuid));
-			} else {
-				this._mappings.set(uuid, dep.model);
-			}
-		});
+		dependencies
+			.filter((dep) => dep.dependency)
+			.forEach((dep) => {
+				const uuid = useLinkForUuid ? dep.dependency.link : dep.dependency.id;
+				if (this._mappings.hasKey(uuid)) {
+					mappingsToApply.set(dep.model, this._mappings.getValue(uuid));
+				} else {
+					this._mappings.set(uuid, dep.model);
+				}
+			});
 		return mappingsToApply;
 	}
 
@@ -666,19 +668,21 @@ export class ProjectSaveManagementService {
 		category: 'user' | 'local' | 'share',
 		useLinkForUuid = false
 	) {
-		const elements: Partial<ElementType>[] = components.filter((comp) => comp).map((comp) => {
-			return {
-				id: this._mappings.getValue(useLinkForUuid ? comp.link : comp.id),
-				description: comp.description,
-				name: comp.name,
-				minInputs: comp.numInputs,
-				maxInputs: comp.numInputs,
-				symbol: comp.symbol,
-				numInputs: comp.numInputs,
-				numOutputs: comp.numOutputs,
-				labels: comp.labels
-			};
-		});
+		const elements: Partial<ElementType>[] = components
+			.filter((comp) => comp)
+			.map((comp) => {
+				return {
+					id: this._mappings.getValue(useLinkForUuid ? comp.link : comp.id),
+					description: comp.description,
+					name: comp.name,
+					minInputs: comp.numInputs,
+					maxInputs: comp.numInputs,
+					symbol: comp.symbol,
+					numInputs: comp.numInputs,
+					numOutputs: comp.numOutputs,
+					labels: comp.labels
+				};
+			});
 		this.elementProvider.addElements(elements, category);
 	}
 
