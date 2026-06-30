@@ -34,9 +34,7 @@ import { ControlValueAccessor, NG_VALUE_ACCESSOR } from '@angular/forms';
     }
   ],
   template: `
-    <div
-      class="relative h-1.5 w-full rounded-full bg-surface-200 dark:bg-surface-700"
-    >
+    <div class="relative h-[3px] w-full rounded-full bg-border">
       <div
         class="absolute inset-y-0 left-0 rounded-full bg-primary"
         [style.width.%]="percent()"
@@ -49,11 +47,15 @@ import { ControlValueAccessor, NG_VALUE_ACCESSOR } from '@angular/forms';
         [attr.aria-valuemax]="max()"
         [attr.aria-valuenow]="value()"
         [attr.aria-disabled]="disabled() || null"
-        class="absolute top-1/2 size-4 -translate-x-1/2 -translate-y-1/2 rounded-full bg-primary shadow outline-none focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
+        class="absolute top-1/2 flex size-5 -translate-x-1/2 -translate-y-1/2 items-center justify-center rounded-full bg-border outline-none focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
         [style.left.%]="percent()"
         (keydown)="onKeydown($event)"
         (blur)="onTouched()"
-      ></div>
+      >
+        <span
+          class="size-4 rounded-full bg-surface-0 shadow-sm dark:bg-surface-950"
+        ></span>
+      </div>
     </div>
   `
 })
