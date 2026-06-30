@@ -1,4 +1,4 @@
-<p-menubar [model]="items()" [dt]="menuTheme" class="border-0!">
+<lg-menubar [model]="items()" class="bg-primary-400 text-surface-900">
   <ng-template #start>
     <a class="relative w-40 h-8" href="/" target="_blank">
       <img [ngSrc]="logoUrl" alt="Logo" fill priority />
@@ -26,4 +26,4 @@
   <ng-template #end>
     <app-user-settings />
   </ng-template>
-</p-menubar>
+</lg-menubar>

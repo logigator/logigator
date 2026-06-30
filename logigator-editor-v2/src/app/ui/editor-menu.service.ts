@@ -19,8 +19,8 @@ import { DebugMenuService } from './debug-menu.service';
 
 /**
  * Builds the File/Edit/View/Help menu model and owns the commands behind it.
- * Shared by the desktop title bar (a `p-menubar`) and the mobile top bar's menu
- * Drawer (a `p-menu`), so both surfaces always render the same items.
+ * Shared by the desktop title bar (an `lg-menubar`) and the mobile top bar's
+ * `lg-panel-menu`, so both surfaces always render the same items.
  */
 @Injectable({ providedIn: 'root' })
 export class EditorMenuService {

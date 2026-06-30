@@ -69,8 +69,8 @@ export class ExportImageDialogComponent {
   });
 
   // Options carry the array index (a primitive) rather than the Project itself:
-  // a Project is a deep, circular PixiJS Container, and p-select would run
-  // deepEquals over it for option matching.
+  // a Project is a deep, circular PixiJS Container, so binding the index keeps
+  // lg-select's by-value (===) option matching cheap and Project-free.
   protected readonly projectOptions = computed(() =>
     this._projects().map((project, index) => ({
       label: this._projectName(project),
