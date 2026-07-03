@@ -9,13 +9,19 @@ import {
   signal,
   viewChild
 } from '@angular/core';
-import { Rectangle } from 'pixi.js';
+import { Point, Rectangle } from 'pixi.js';
 import { debounceTime, merge, Subject, takeUntil } from 'rxjs';
 import { Project } from '../../../project/project';
 import { BoardSnapshotService } from '../../../rendering/board-snapshot.service';
 import { ThemingService } from '../../../theming/theming.service';
 import { environment } from '../../../../environments/environment';
-import { fitRegion, MapFit, mapViewportRect, nextFrame } from './minimap-frame';
+import {
+  fitRegion,
+  MapFit,
+  mapViewportRect,
+  nextFrame,
+  PanelRect
+} from './minimap-frame';
 
 /** Panel dimensions (CSS px). */
 const PANEL_WIDTH = 200;
@@ -53,9 +59,12 @@ export class MinimapComponent implements OnDestroy {
   public readonly project = input<Project | null>(null);
 
   protected readonly hasContent = signal(false);
+  protected readonly scrubbing = signal(false);
   protected readonly panelWidth = PANEL_WIDTH;
   protected readonly panelHeight = PANEL_HEIGHT;
 
+  private readonly mapRef =
+    viewChild.required<ElementRef<HTMLDivElement>>('map');
   private readonly canvasRef =
     viewChild.required<ElementRef<HTMLCanvasElement>>('canvas');
   private readonly rectRef =
@@ -69,6 +78,20 @@ export class MinimapComponent implements OnDestroy {
   private _fit: MapFit | null = null;
   private _renderFrameId: number | null = null;
   private _rectFrameId: number | null = null;
+
+  /** The rect as last drawn (panel CSS px) — the pointer-down hit target. */
+  private _lastRect: PanelRect | null = null;
+  /** First captured pointer of a scrub; later pointers are ignored. */
+  private _activePointerId: number | null = null;
+  /** Pointer + camera origin at scrub start; moves apply the map-px delta. */
+  private _scrubStart: {
+    pointerX: number;
+    pointerY: number;
+    originX: number;
+    originY: number;
+  } | null = null;
+  /** Cached at scrub start; the panel does not move mid-scrub. */
+  private _mapBounds: DOMRect | null = null;
 
   constructor() {
     this.projectChange$.pipe(takeUntil(this.destroy$)).subscribe((project) => {
@@ -189,9 +212,122 @@ export class MinimapComponent implements OnDestroy {
       MIN_RECT_SIZE_PX
     );
 
+    this._lastRect = rect;
     const style = this.rectRef().nativeElement.style;
     style.transform = `translate(${rect.x}px, ${rect.y}px)`;
     style.width = `${rect.width}px`;
     style.height = `${rect.height}px`;
+  }
+
+  /**
+   * Press-and-scrub, one code path for mouse and touch: pressing on the rect
+   * starts a relative drag (the grab offset is preserved), pressing anywhere
+   * else jumps the viewport to that point first — so the whole panel is the
+   * touch target and the rect never has to be hit precisely. A tap is the
+   * degenerate no-move case.
+   */
+  protected onPointerDown(event: PointerEvent): void {
+    const project = this.project();
+    if (!project || !this._frame || !this._fit) return;
+    if (this._activePointerId !== null) return;
+
+    const map = this.mapRef().nativeElement;
+    this._mapBounds = map.getBoundingClientRect();
+    const point = this._toPanelPoint(event);
+
+    if (!this._insideRect(point)) {
+      this._centerViewportOn(project, point);
+    }
+
+    const origin = project.viewportState.gridOrigin;
+    this._activePointerId = event.pointerId;
+    this._scrubStart = {
+      pointerX: point.x,
+      pointerY: point.y,
+      originX: origin.x,
+      originY: origin.y
+    };
+    map.setPointerCapture(event.pointerId);
+    this.scrubbing.set(true);
+    event.preventDefault();
+  }
+
+  protected onPointerMove(event: PointerEvent): void {
+    const project = this.project();
+    if (
+      !project ||
+      !this._fit ||
+      !this._scrubStart ||
+      event.pointerId !== this._activePointerId
+    ) {
+      return;
+    }
+
+    const point = this._toPanelPoint(event);
+    const originX =
+      this._scrubStart.originX +
+      (point.x - this._scrubStart.pointerX) / this._fit.scale;
+    const originY =
+      this._scrubStart.originY +
+      (point.y - this._scrubStart.pointerY) / this._fit.scale;
+    this._moveViewportTo(project, originX, originY);
+  }
+
+  protected onPointerUp(event: PointerEvent): void {
+    if (event.pointerId !== this._activePointerId) return;
+    this._activePointerId = null;
+    this._scrubStart = null;
+    this._mapBounds = null;
+    this.scrubbing.set(false);
+  }
+
+  private _toPanelPoint(event: PointerEvent): { x: number; y: number } {
+    const bounds =
+      this._mapBounds ?? this.mapRef().nativeElement.getBoundingClientRect();
+    return { x: event.clientX - bounds.left, y: event.clientY - bounds.top };
+  }
+
+  private _insideRect(point: { x: number; y: number }): boolean {
+    const rect = this._lastRect;
+    return (
+      !!rect &&
+      point.x >= rect.x &&
+      point.x <= rect.x + rect.width &&
+      point.y >= rect.y &&
+      point.y <= rect.y + rect.height
+    );
+  }
+
+  /** Centers the viewport on the grid point under a panel point. */
+  private _centerViewportOn(
+    project: Project,
+    point: { x: number; y: number }
+  ): void {
+    if (!this._frame || !this._fit) return;
+    const gridX =
+      this._frame.x + (point.x - this._fit.offsetX) / this._fit.scale;
+    const gridY =
+      this._frame.y + (point.y - this._fit.offsetY) / this._fit.scale;
+    const state = project.viewportState;
+    const pxPerUnit = state.scale * environment.gridSize;
+    this._moveViewportTo(
+      project,
+      gridX - state.viewportSize.x / (2 * pxPerUnit),
+      gridY - state.viewportSize.y / (2 * pxPerUnit)
+    );
+  }
+
+  /** Places the viewport's top-left at a grid origin and repaints the board. */
+  private _moveViewportTo(
+    project: Project,
+    gridOriginX: number,
+    gridOriginY: number
+  ): void {
+    const pxPerUnit = project.viewportState.scale * environment.gridSize;
+    project.setPosition(
+      new Point(-gridOriginX * pxPerUnit, -gridOriginY * pxPerUnit)
+    );
+    // setPosition alone doesn't tick the ticker; repaint while scrubbing.
+    project.triggerTicker('single');
   }
 }

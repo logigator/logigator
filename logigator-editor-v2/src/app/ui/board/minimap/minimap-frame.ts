@@ -62,7 +62,8 @@ export function nextFrame(
   if (
     current &&
     current.containsRect(region) &&
-    region.width * region.height >= MIN_COVERAGE * current.width * current.height
+    region.width * region.height >=
+      MIN_COVERAGE * current.width * current.height
   ) {
     return current;
   }
