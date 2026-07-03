@@ -18,6 +18,11 @@
  */
 
 :root {
+  /* The UA-level scheme rides along with the palette: it drives the default
+     text color, native scrollbars and form controls, so unstyled text is
+     readable on the scheme's surfaces without an explicit text class. */
+  color-scheme: light;
+
   /* primary scale — green; identical in light and dark */
   --lg-primary-50: #bbf0d2;
   --lg-primary-100: #a2eac1;
@@ -76,6 +81,8 @@
 }
 
 .dark-mode {
+  color-scheme: dark;
+
   /* primary roles — dark: color=400, hover=300, active=200, contrast=surface.900 */
   --lg-primary: #27ae60;
   --lg-primary-emphasis: #3ed47d;
