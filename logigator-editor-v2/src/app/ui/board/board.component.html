@@ -6,3 +6,6 @@
 @if (editorSettings.fpsCounter.value() && loaded()) {
   <app-fps-counter [ticker]="ticker" />
 }
+@if (loaded()) {
+  <app-minimap [project]="project()" />
+}

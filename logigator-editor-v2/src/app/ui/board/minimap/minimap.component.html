@@ -1,0 +1,15 @@
+<div
+  class="overflow-hidden rounded-lg border border-border bg-content/90 shadow-lg backdrop-blur"
+>
+  <div
+    class="relative touch-none select-none"
+    [style.width.px]="panelWidth"
+    [style.height.px]="panelHeight"
+  >
+    <canvas #canvas class="absolute inset-0 h-full w-full"></canvas>
+    <div
+      #rect
+      class="absolute left-0 top-0 rounded-xs border-[1.5px] border-primary bg-primary/10"
+    ></div>
+  </div>
+</div>
