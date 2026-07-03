@@ -34,13 +34,7 @@ const POSITION_SIZE: Record<DrawerPosition, string> = {
   bottom: `w-screen ${SHEET_MAX}`
 };
 
-const POSITION_SHOWN: Record<DrawerPosition, string> = {
-  left: 'translate-x-0',
-  right: 'translate-x-0',
-  top: 'translate-y-0',
-  bottom: 'translate-y-0'
-};
-
+// The slide-in "from" state per edge, handed to the overlay as `enterFrom`.
 const POSITION_HIDDEN: Record<DrawerPosition, string> = {
   left: '-translate-x-full',
   right: 'translate-x-full',
@@ -126,8 +120,6 @@ export class LgDrawer implements OnDestroy {
       'flex flex-col bg-content text-text shadow-xl',
       POSITION_SIZE[pos],
       POSITION_BORDER[pos],
-      'transition-transform duration-300 ease-out',
-      this.modalOverlay.shown() ? POSITION_SHOWN[pos] : POSITION_HIDDEN[pos],
       this.styleClass()
     ].join(' ');
   });
@@ -143,6 +135,8 @@ export class LgDrawer implements OnDestroy {
         this.modalOverlay.open(new TemplatePortal(tpl, this.viewContainerRef), {
           placement: this.position() as LgOverlayPlacement,
           dismissOnBackdrop: true,
+          enterFrom: [POSITION_HIDDEN[this.position()]],
+          enterTransition: ['transition-transform', 'duration-300', 'ease-out'],
           onDismiss: () => this.requestClose()
         });
       } else {

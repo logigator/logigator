@@ -2,6 +2,22 @@ import { Directive, ElementRef, inject } from '@angular/core';
 import { afterPaint } from './after-paint';
 
 /**
+ * Play an element in from a "from" state: both class sets go on immediately
+ * (call this while the element is not yet painted — construction / right after
+ * portal attach), so the very first paint shows the from state; after that
+ * paint the from classes lift and the CSS transition runs. The transition
+ * classes stay on.
+ */
+export function playEnterTransition(
+  el: HTMLElement,
+  fromClasses: string[],
+  transitionClasses: string[]
+): void {
+  el.classList.add(...transitionClasses, ...fromClasses);
+  afterPaint(() => el.classList.remove(...fromClasses));
+}
+
+/**
  * Fades its host in when it enters the DOM — the enter transition for the
  * non-modal overlay panels (Tooltip, Menu, Popover, ConfirmPopup, Select). The
  * classes
@@ -15,9 +31,11 @@ import { afterPaint } from './after-paint';
 @Directive({ selector: '[lgFadeIn]' })
 export class LgFadeIn {
   constructor() {
-    const el = inject<ElementRef<HTMLElement>>(ElementRef).nativeElement;
-    el.classList.add('opacity-0', 'transition-opacity', 'duration-200');
-    afterPaint(() => el.classList.remove('opacity-0'));
+    playEnterTransition(
+      inject<ElementRef<HTMLElement>>(ElementRef).nativeElement,
+      ['opacity-0'],
+      ['transition-opacity', 'duration-200']
+    );
   }
 }
 
@@ -31,14 +49,10 @@ export class LgFadeIn {
 @Directive({ selector: '[lgScaleIn]' })
 export class LgScaleIn {
   constructor() {
-    const el = inject<ElementRef<HTMLElement>>(ElementRef).nativeElement;
-    el.classList.add(
-      'opacity-0',
-      'scale-95',
-      'transition',
-      'duration-300',
-      'ease-out'
+    playEnterTransition(
+      inject<ElementRef<HTMLElement>>(ElementRef).nativeElement,
+      ['opacity-0', 'scale-95'],
+      ['transition', 'duration-300', 'ease-out']
     );
-    afterPaint(() => el.classList.remove('opacity-0', 'scale-95'));
   }
 }
