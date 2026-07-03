@@ -19,6 +19,7 @@ import {
 } from '@angular/core';
 import { ControlValueAccessor, NG_VALUE_ACCESSOR } from '@angular/forms';
 import { Subscription } from 'rxjs';
+import { LgFadeIn } from '../../internal/fade-in';
 import { createConnectedOverlay } from '../../internal/overlay';
 import { createListKeyManager } from '../../internal/key-manager';
 import { FORM_FIELD_BASE } from '../../tokens/form-field';
@@ -67,7 +68,7 @@ let nextId = 0;
 @Component({
   selector: 'lg-select',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [NgTemplateOutlet],
+  imports: [NgTemplateOutlet, LgFadeIn],
   host: { class: 'inline-flex', '[class.w-full]': 'fluid()' },
   providers: [
     {
@@ -124,6 +125,7 @@ let nextId = 0;
       <div
         role="listbox"
         [id]="listId"
+        lgFadeIn
         class="max-h-60 w-full overflow-auto rounded-md border border-border bg-content p-1 shadow-md"
       >
         @for (option of options(); track $index; let i = $index) {
