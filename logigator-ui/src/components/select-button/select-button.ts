@@ -120,17 +120,17 @@ export class LgSelectButton implements ControlValueAccessor {
 
   protected buttonClasses(selected: boolean): string {
     const pad =
-      this.size() === 'small' ? 'px-2.5 py-0.5 text-sm' : 'px-3 py-1 text-base';
+      this.size() === 'small' ? 'px-3 py-1 text-sm' : 'px-3 py-1 text-base';
     return [
-      'inline-flex items-center justify-center gap-1 rounded',
+      'inline-flex items-center justify-center gap-1 rounded-md font-medium',
       'transition-colors duration-200 cursor-pointer select-none',
       'disabled:pointer-events-none disabled:opacity-60',
       'focus:outline-none focus-visible:outline focus-visible:outline-1 focus-visible:-outline-offset-1 focus-visible:outline-primary',
       this.fluid() ? 'flex-1' : '',
       pad,
       selected
-        ? 'bg-surface-0 dark:bg-surface-800 text-surface-900 dark:text-text shadow-sm'
-        : 'text-muted hover:text-text'
+        ? 'bg-surface-0 dark:bg-surface-800 text-surface-900 dark:text-text shadow-xs'
+        : 'text-muted hover:text-surface-700 dark:hover:text-surface-300'
     ]
       .filter(Boolean)
       .join(' ');
