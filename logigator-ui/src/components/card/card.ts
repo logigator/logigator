@@ -20,7 +20,7 @@ import {
   },
   template: `
     @if (titleTpl()) {
-      <div class="mb-2 text-xl font-semibold">
+      <div class="mb-2 text-xl font-medium">
         <ng-container [ngTemplateOutlet]="titleTpl()!" />
       </div>
     }
