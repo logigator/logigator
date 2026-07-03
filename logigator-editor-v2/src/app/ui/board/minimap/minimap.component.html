@@ -1,22 +1,48 @@
-<div
-  class="overflow-hidden rounded-lg border border-border bg-content/90 shadow-lg backdrop-blur"
->
-  <div
-    #map
-    class="relative touch-none select-none"
-    [class.cursor-grabbing]="scrubbing()"
-    [style.width.px]="panelWidth"
-    [style.height.px]="panelHeight"
-    (pointerdown)="onPointerDown($event)"
-    (pointermove)="onPointerMove($event)"
-    (pointerup)="onPointerUp($event)"
-    (pointercancel)="onPointerUp($event)"
-  >
-    <canvas #canvas class="absolute inset-0 h-full w-full"></canvas>
+<ng-container *transloco="let t">
+  @if (collapsed()) {
+    <lg-button
+      icon="ph ph-map-trifold"
+      severity="secondary"
+      rounded
+      [class]="layout.isTouch() ? 'min-h-11 min-w-11' : ''"
+      [ariaLabel]="t('minimap.expand')"
+      (onClick)="toggleCollapsed()"
+    ></lg-button>
+  } @else {
     <div
-      #rect
-      class="absolute left-0 top-0 rounded-xs border-[1.5px] border-primary bg-primary/10"
-      [class.cursor-grab]="!scrubbing()"
-    ></div>
-  </div>
-</div>
+      class="relative overflow-hidden rounded-lg border border-border shadow-lg backdrop-blur hover:bg-content"
+      [class]="scrubbing() ? 'bg-content' : 'bg-content/90'"
+    >
+      <div
+        #map
+        class="relative touch-none select-none"
+        [class.cursor-grabbing]="scrubbing()"
+        [style.width.px]="panelSize().width"
+        [style.height.px]="panelSize().height"
+        (pointerdown)="onPointerDown($event)"
+        (pointermove)="onPointerMove($event)"
+        (pointerup)="onPointerUp($event)"
+        (pointercancel)="onPointerUp($event)"
+      >
+        <canvas #canvas class="absolute inset-0 h-full w-full"></canvas>
+        <div
+          #rect
+          class="absolute left-0 top-0 rounded-xs border-[1.5px] border-primary bg-primary/10"
+          [class.cursor-grab]="!scrubbing()"
+        ></div>
+      </div>
+      <lg-button
+        class="absolute right-1 top-1"
+        icon="ph ph-arrows-in-simple"
+        severity="secondary"
+        size="small"
+        text
+        rounded
+        [class.min-h-11]="layout.isTouch()"
+        [class.min-w-11]="layout.isTouch()"
+        [ariaLabel]="t('minimap.collapse')"
+        (onClick)="toggleCollapsed()"
+      ></lg-button>
+    </div>
+  }
+</ng-container>

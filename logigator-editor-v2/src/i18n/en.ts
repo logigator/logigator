@@ -30,6 +30,10 @@ const en = {
       showGrid: 'Show Grid'
     }
   },
+  minimap: {
+    expand: 'Show minimap',
+    collapse: 'Hide minimap'
+  },
   components: {
     category: {
       hidden: 'Hidden',

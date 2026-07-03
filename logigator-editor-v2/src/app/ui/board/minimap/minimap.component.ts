@@ -1,6 +1,7 @@
 import {
   ChangeDetectionStrategy,
   Component,
+  computed,
   effect,
   ElementRef,
   inject,
@@ -11,9 +12,12 @@ import {
 } from '@angular/core';
 import { Point, Rectangle } from 'pixi.js';
 import { debounceTime, merge, Subject, takeUntil } from 'rxjs';
+import { LgButton } from '@logigator/ui';
+import { TranslocoDirective } from '@jsverse/transloco';
 import { Project } from '../../../project/project';
 import { BoardSnapshotService } from '../../../rendering/board-snapshot.service';
 import { ThemingService } from '../../../theming/theming.service';
+import { LayoutService } from '../../../layout/layout.service';
 import { environment } from '../../../../environments/environment';
 import {
   fitRegion,
@@ -23,13 +27,18 @@ import {
   PanelRect
 } from './minimap-frame';
 
-/** Panel dimensions (CSS px). */
-const PANEL_WIDTH = 200;
-const PANEL_HEIGHT = 150;
+/** Panel dimensions (CSS px) per layout. Compact keeps the 4:3 aspect. */
+const PANEL_SIZE_REGULAR = { width: 200, height: 150 };
+const PANEL_SIZE_COMPACT = { width: 140, height: 105 };
 /** Quiet period after the last committed action before the map re-renders. */
 const CONTENT_DEBOUNCE_MS = 200;
 /** Minimum on-screen size of the viewport rectangle (CSS px). */
 const MIN_RECT_SIZE_PX = 8;
+/** Compact expansion is a peek: collapse this long after the last scrub. */
+const AUTO_COLLAPSE_MS = 3000;
+/** Desktop collapse is an explicit choice, so it persists (plain key, not an
+ *  `EditorSetting` — it's UI state, not a settings-page row). */
+const COLLAPSED_STORAGE_KEY = 'logigator.minimap.collapsed';
 
 /**
  * Always-available overview map in the board's corner: a shrunk render of the
@@ -42,33 +51,48 @@ const MIN_RECT_SIZE_PX = 8;
  * `minimap-frame.ts`), never from the camera, so panning can never force a
  * content re-render. Hidden while the project is empty — a map of nothing has
  * no navigation value.
+ *
+ * Collapsing pauses the whole pipeline (bounds tracking excepted) and
+ * expansion renders once. On compact layouts the panel starts collapsed, sits
+ * in the right-edge stack above the zoom FAB, and expansion is a transient
+ * peek: it auto-collapses shortly after a scrub and on any tap outside.
  */
 @Component({
   selector: 'app-minimap',
   templateUrl: './minimap.component.html',
+  imports: [LgButton, TranslocoDirective],
   changeDetection: ChangeDetectionStrategy.OnPush,
   host: {
-    class: 'absolute bottom-3 right-3',
-    '[style.display]': "hasContent() ? 'block' : 'none'"
+    '[class]': 'hostClasses()',
+    '[style.display]': "hasContent() ? 'block' : 'none'",
+    style: 'margin-bottom: env(safe-area-inset-bottom)'
   }
 })
 export class MinimapComponent implements OnDestroy {
   private readonly snapshots = inject(BoardSnapshotService);
   private readonly themingService = inject(ThemingService);
+  private readonly hostEl = inject<ElementRef<HTMLElement>>(ElementRef);
+  protected readonly layout = inject(LayoutService);
 
   public readonly project = input<Project | null>(null);
 
   protected readonly hasContent = signal(false);
   protected readonly scrubbing = signal(false);
-  protected readonly panelWidth = PANEL_WIDTH;
-  protected readonly panelHeight = PANEL_HEIGHT;
+  protected readonly collapsed = signal(true);
+  protected readonly panelSize = computed(() =>
+    this.layout.isCompact() ? PANEL_SIZE_COMPACT : PANEL_SIZE_REGULAR
+  );
+  /** Desktop: board corner. Compact: right-edge stack above the zoom FAB. */
+  protected readonly hostClasses = computed(() =>
+    this.layout.isCompact()
+      ? 'absolute right-3 bottom-52 mr-[env(safe-area-inset-right)]'
+      : 'absolute right-3 bottom-3'
+  );
 
-  private readonly mapRef =
-    viewChild.required<ElementRef<HTMLDivElement>>('map');
+  private readonly mapRef = viewChild<ElementRef<HTMLDivElement>>('map');
   private readonly canvasRef =
-    viewChild.required<ElementRef<HTMLCanvasElement>>('canvas');
-  private readonly rectRef =
-    viewChild.required<ElementRef<HTMLDivElement>>('rect');
+    viewChild<ElementRef<HTMLCanvasElement>>('canvas');
+  private readonly rectRef = viewChild<ElementRef<HTMLDivElement>>('rect');
 
   private readonly destroy$ = new Subject<void>();
   private readonly projectChange$ = new Subject<Project | null>();
@@ -92,6 +116,14 @@ export class MinimapComponent implements OnDestroy {
   } | null = null;
   /** Cached at scrub start; the panel does not move mid-scrub. */
   private _mapBounds: DOMRect | null = null;
+  private _autoCollapseTimer: ReturnType<typeof setTimeout> | null = null;
+
+  /** Collapses a compact peek when the user taps anywhere off the panel. */
+  private readonly _onDocumentPointerDown = (event: PointerEvent): void => {
+    if (!this.layout.isCompact() || this.collapsed()) return;
+    if (this.hostEl.nativeElement.contains(event.target as Node)) return;
+    this.collapsed.set(true);
+  };
 
   constructor() {
     this.projectChange$.pipe(takeUntil(this.destroy$)).subscribe((project) => {
@@ -124,13 +156,49 @@ export class MinimapComponent implements OnDestroy {
       this.themingService.currentTheme();
       this._scheduleRender();
     });
+
+    // Compact defaults to collapsed (expansion is a transient peek); desktop
+    // restores the user's persisted choice. Re-evaluated when the layout axis
+    // flips, e.g. on rotation.
+    effect(() => {
+      this.collapsed.set(
+        this.layout.isCompact()
+          ? true
+          : localStorage.getItem(COLLAPSED_STORAGE_KEY) === 'true'
+      );
+    });
+
+    // Expansion re-creates the canvas, so it always renders once — this is
+    // also what catches up after edits made while the pipeline was paused.
+    // Panel-size flips re-render through the same dependency chain.
+    effect(() => {
+      this.panelSize();
+      if (!this.collapsed()) this._scheduleRender();
+    });
+
+    document.addEventListener('pointerdown', this._onDocumentPointerDown, true);
   }
 
   ngOnDestroy(): void {
     this.destroy$.next();
     this.destroy$.complete();
+    document.removeEventListener(
+      'pointerdown',
+      this._onDocumentPointerDown,
+      true
+    );
+    if (this._autoCollapseTimer !== null) clearTimeout(this._autoCollapseTimer);
     if (this._renderFrameId !== null) cancelAnimationFrame(this._renderFrameId);
     if (this._rectFrameId !== null) cancelAnimationFrame(this._rectFrameId);
+  }
+
+  protected toggleCollapsed(): void {
+    const collapsed = !this.collapsed();
+    this.collapsed.set(collapsed);
+    this._clearAutoCollapse();
+    if (!this.layout.isCompact()) {
+      localStorage.setItem(COLLAPSED_STORAGE_KEY, String(collapsed));
+    }
   }
 
   /** Coalesces immediate-render triggers onto the next animation frame. */
@@ -143,7 +211,7 @@ export class MinimapComponent implements OnDestroy {
   }
 
   private _scheduleRectUpdate(): void {
-    if (this._rectFrameId !== null) return;
+    if (this.collapsed() || this._rectFrameId !== null) return;
     this._rectFrameId = requestAnimationFrame(() => {
       this._rectFrameId = null;
       this._updateRect();
@@ -152,25 +220,31 @@ export class MinimapComponent implements OnDestroy {
 
   private _renderContent(): void {
     const project = this.project();
-    if (!project || !this.snapshots.available) {
-      this.hasContent.set(false);
-      return;
-    }
-    if (!project.getContentBounds()) {
+    if (!project || !this.snapshots.available || !project.getContentBounds()) {
       this.hasContent.set(false);
       this._frame = null;
       this._fit = null;
       return;
     }
     this.hasContent.set(true);
+    // Paused while collapsed — expansion renders once (see the effect above).
+    if (this.collapsed()) return;
 
+    const canvas = this.canvasRef()?.nativeElement;
+    if (!canvas) {
+      // Just expanded: the panel isn't in the DOM until the next change
+      // detection pass. Retry on the following frame.
+      this._scheduleRender();
+      return;
+    }
+
+    const { width, height } = this.panelSize();
     this._frame = nextFrame(this._frame, this.snapshots.computeRegion(project));
-    this._fit = fitRegion(this._frame, this.panelWidth, this.panelHeight);
+    this._fit = fitRegion(this._frame, width, height);
 
     const dpr = window.devicePixelRatio || 1;
-    const canvas = this.canvasRef().nativeElement;
-    const backingWidth = Math.round(this.panelWidth * dpr);
-    const backingHeight = Math.round(this.panelHeight * dpr);
+    const backingWidth = Math.round(width * dpr);
+    const backingHeight = Math.round(height * dpr);
     if (canvas.width !== backingWidth) canvas.width = backingWidth;
     if (canvas.height !== backingHeight) canvas.height = backingHeight;
 
@@ -195,10 +269,12 @@ export class MinimapComponent implements OnDestroy {
 
   private _updateRect(): void {
     const project = this.project();
-    if (!project || !this._frame || !this._fit) return;
+    const rectEl = this.rectRef()?.nativeElement;
+    if (!project || !rectEl || !this._frame || !this._fit) return;
 
     const state = project.viewportState;
     const pxPerUnit = state.scale * environment.gridSize;
+    const { width, height } = this.panelSize();
     const rect = mapViewportRect(
       state.gridOrigin,
       {
@@ -207,16 +283,15 @@ export class MinimapComponent implements OnDestroy {
       },
       this._frame,
       this._fit,
-      this.panelWidth,
-      this.panelHeight,
+      width,
+      height,
       MIN_RECT_SIZE_PX
     );
 
     this._lastRect = rect;
-    const style = this.rectRef().nativeElement.style;
-    style.transform = `translate(${rect.x}px, ${rect.y}px)`;
-    style.width = `${rect.width}px`;
-    style.height = `${rect.height}px`;
+    rectEl.style.transform = `translate(${rect.x}px, ${rect.y}px)`;
+    rectEl.style.width = `${rect.width}px`;
+    rectEl.style.height = `${rect.height}px`;
   }
 
   /**
@@ -228,10 +303,11 @@ export class MinimapComponent implements OnDestroy {
    */
   protected onPointerDown(event: PointerEvent): void {
     const project = this.project();
-    if (!project || !this._frame || !this._fit) return;
+    const map = this.mapRef()?.nativeElement;
+    if (!project || !map || !this._frame || !this._fit) return;
     if (this._activePointerId !== null) return;
 
-    const map = this.mapRef().nativeElement;
+    this._clearAutoCollapse();
     this._mapBounds = map.getBoundingClientRect();
     const point = this._toPanelPoint(event);
 
@@ -279,11 +355,25 @@ export class MinimapComponent implements OnDestroy {
     this._scrubStart = null;
     this._mapBounds = null;
     this.scrubbing.set(false);
+    if (this.layout.isCompact()) {
+      this._autoCollapseTimer = setTimeout(() => {
+        this._autoCollapseTimer = null;
+        this.collapsed.set(true);
+      }, AUTO_COLLAPSE_MS);
+    }
+  }
+
+  private _clearAutoCollapse(): void {
+    if (this._autoCollapseTimer === null) return;
+    clearTimeout(this._autoCollapseTimer);
+    this._autoCollapseTimer = null;
   }
 
   private _toPanelPoint(event: PointerEvent): { x: number; y: number } {
     const bounds =
-      this._mapBounds ?? this.mapRef().nativeElement.getBoundingClientRect();
+      this._mapBounds ??
+      this.mapRef()?.nativeElement.getBoundingClientRect() ??
+      new DOMRect();
     return { x: event.clientX - bounds.left, y: event.clientY - bounds.top };
   }
 
