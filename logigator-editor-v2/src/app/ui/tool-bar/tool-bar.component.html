@@ -3,7 +3,8 @@
     <app-simulation-controls></app-simulation-controls>
     <div class="ml-auto flex flex-wrap gap-1">
       <lg-button
-        [lgTooltip]="exitSimTooltip()"
+        [lgTooltip]="t('toolBar.exitSim')"
+        [tooltipShortcut]="shortcutBinding(actions.TOGGLE_SIMULATION)"
         [ariaLabel]="t('toolBar.exitSim')"
         [label]="t('toolBar.exitSim')"
         (onClick)="exitSimulation()"
@@ -15,16 +16,18 @@
   } @else {
     <div class="flex flex-wrap gap-1">
       <lg-button
-        [lgTooltip]="saveTooltip()"
-        [ariaLabel]="saveTooltip()"
+        [lgTooltip]="t('toolBar.save')"
+        [tooltipShortcut]="shortcutBinding(actions.SAVE)"
+        [ariaLabel]="t('toolBar.save')"
         (onClick)="save()"
         tooltipPosition="bottom"
         icon="ph ph-floppy-disk"
         severity="secondary"
       ></lg-button>
       <lg-button
-        [lgTooltip]="openTooltip()"
-        [ariaLabel]="openTooltip()"
+        [lgTooltip]="t('toolBar.open')"
+        [tooltipShortcut]="shortcutBinding(actions.OPEN)"
+        [ariaLabel]="t('toolBar.open')"
         (onClick)="open()"
         tooltipPosition="bottom"
         icon="ph ph-folder-open"
@@ -41,32 +44,36 @@
     <lg-divider layout="vertical" class="mx-1"></lg-divider>
     <div class="flex flex-wrap gap-1">
       <lg-button
-        [lgTooltip]="copyTooltip()"
-        [ariaLabel]="copyTooltip()"
+        [lgTooltip]="t('toolBar.copy')"
+        [tooltipShortcut]="shortcutBinding(actions.COPY)"
+        [ariaLabel]="t('toolBar.copy')"
         (onClick)="copy()"
         tooltipPosition="bottom"
         icon="ph ph-copy"
         severity="secondary"
       ></lg-button>
       <lg-button
-        [lgTooltip]="cutTooltip()"
-        [ariaLabel]="cutTooltip()"
+        [lgTooltip]="t('toolBar.cut')"
+        [tooltipShortcut]="shortcutBinding(actions.CUT)"
+        [ariaLabel]="t('toolBar.cut')"
         (onClick)="cut()"
         tooltipPosition="bottom"
         icon="ph ph-scissors"
         severity="secondary"
       ></lg-button>
       <lg-button
-        [lgTooltip]="pasteTooltip()"
-        [ariaLabel]="pasteTooltip()"
+        [lgTooltip]="t('toolBar.paste')"
+        [tooltipShortcut]="shortcutBinding(actions.PASTE)"
+        [ariaLabel]="t('toolBar.paste')"
         (onClick)="paste()"
         tooltipPosition="bottom"
         icon="ph ph-clipboard"
         severity="secondary"
       ></lg-button>
       <lg-button
-        [lgTooltip]="deleteTooltip()"
-        [ariaLabel]="deleteTooltip()"
+        [lgTooltip]="t('toolBar.delete')"
+        [tooltipShortcut]="shortcutBinding(actions.DELETE)"
+        [ariaLabel]="t('toolBar.delete')"
         (onClick)="delete()"
         tooltipPosition="bottom"
         icon="ph ph-trash"
@@ -76,16 +83,18 @@
     <lg-divider layout="vertical" class="mx-1"></lg-divider>
     <div class="flex flex-wrap gap-1">
       <lg-button
-        [lgTooltip]="undoTooltip()"
-        [ariaLabel]="undoTooltip()"
+        [lgTooltip]="t('toolBar.undo')"
+        [tooltipShortcut]="shortcutBinding(actions.UNDO)"
+        [ariaLabel]="t('toolBar.undo')"
         (onClick)="undo()"
         tooltipPosition="bottom"
         icon="ph ph-arrow-u-up-left"
         severity="secondary"
       ></lg-button>
       <lg-button
-        [lgTooltip]="redoTooltip()"
-        [ariaLabel]="redoTooltip()"
+        [lgTooltip]="t('toolBar.redo')"
+        [tooltipShortcut]="shortcutBinding(actions.REDO)"
+        [ariaLabel]="t('toolBar.redo')"
         (onClick)="redo()"
         tooltipPosition="bottom"
         icon="ph ph-arrow-u-up-right"
@@ -95,16 +104,18 @@
     <lg-divider layout="vertical" class="mx-1"></lg-divider>
     <div class="flex flex-wrap gap-1">
       <lg-button
-        [lgTooltip]="zoomOutTooltip()"
-        [ariaLabel]="zoomOutTooltip()"
+        [lgTooltip]="t('toolBar.zoomOut')"
+        [tooltipShortcut]="shortcutBinding(actions.ZOOM_OUT)"
+        [ariaLabel]="t('toolBar.zoomOut')"
         (onClick)="zoomOut()"
         tooltipPosition="bottom"
         icon="ph ph-magnifying-glass-minus"
         severity="secondary"
       ></lg-button>
       <lg-button
-        [lgTooltip]="zoomInTooltip()"
-        [ariaLabel]="zoomInTooltip()"
+        [lgTooltip]="t('toolBar.zoomIn')"
+        [tooltipShortcut]="shortcutBinding(actions.ZOOM_IN)"
+        [ariaLabel]="t('toolBar.zoomIn')"
         (onClick)="zoomIn()"
         tooltipPosition="bottom"
         icon="ph ph-magnifying-glass-plus"
@@ -115,9 +126,8 @@
     <div class="flex flex-wrap gap-1">
       @for (tool of tools; track tool.id) {
         <lg-button
-          [lgTooltip]="
-            t(tool.labelKey) + ' (' + shortcutLabel(tool.shortcut) + ')'
-          "
+          [lgTooltip]="t(tool.labelKey)"
+          [tooltipShortcut]="shortcutBinding(tool.shortcut)"
           [ariaLabel]="t(tool.labelKey)"
           [outlined]="!tool.isActive()"
           (onClick)="tool.activate()"
@@ -129,7 +139,8 @@
     </div>
     <div class="ml-auto flex flex-wrap gap-1">
       <lg-button
-        [lgTooltip]="startSimTooltip()"
+        [lgTooltip]="t('toolBar.startSim')"
+        [tooltipShortcut]="shortcutBinding(actions.TOGGLE_SIMULATION)"
         [ariaLabel]="t('toolBar.startSim')"
         [label]="t('toolBar.startSim')"
         (onClick)="startSimulation()"
