@@ -1,3 +1,5 @@
+import { LgShortcutBinding } from '../shortcut/shortcut';
+
 /**
  * The menu model shared by the menu surfaces. A structural subset of PrimeNG's
  * `MenuItem`, so a PrimeNG `MenuItem[]` is assignable to it.
@@ -22,11 +24,10 @@ export interface MenuItem {
   visible?: boolean;
   styleClass?: string;
   /**
-   * Opaque per-item metadata the library carries but never renders itself; a
-   * consumer reads it in its own `#item` template. Typed `unknown` so consumers
-   * attach whatever shape they need.
+   * The item's key binding. The Menubar's default rows render it as
+   * {@link LgShortcut} chips; a custom `#item` template reads it itself.
    */
-  shortcut?: unknown;
+  shortcut?: LgShortcutBinding | null;
   expanded?: boolean;
 }
 

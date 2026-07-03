@@ -16,6 +16,8 @@ import {
 } from '@angular/core';
 import { LgFadeIn } from '../../internal/fade-in';
 import { createConnectedOverlay } from '../../internal/overlay';
+import { LgRipple } from '../ripple/ripple';
+import { LgShortcut } from '../shortcut/shortcut';
 import { MENU_ITEM_CLASS, MenuItem } from './menu-item.model';
 
 /**
@@ -51,8 +53,10 @@ const SUBMENU_POSITIONS: ConnectedPosition[] = [
  * Three optional content slots — `#start` / `#end` (free content pinned to the
  * bar's leading / trailing edge) and `#item` (each menu row, context
  * `{ $implicit: item, root }` where `root` distinguishes a top-level item from a
- * submenu item). The bar imposes no colour of its own (radius/padding are
- * internal); tint it by passing utility classes on the host.
+ * submenu item). The default rows render the label, the item's `shortcut` as
+ * {@link LgShortcut} chips, and a caret on top-level parents — item icons are a
+ * custom-`#item` concern. The bar imposes no colour of its own (radius/padding
+ * are internal); tint it by passing utility classes on the host.
  *
  * The submenu overlay deliberately has **no backdrop** so the other top-level
  * items stay hoverable/clickable. While a submenu is open the bar is *armed*:
@@ -64,7 +68,7 @@ const SUBMENU_POSITIONS: ConnectedPosition[] = [
 @Component({
   selector: 'lg-menubar',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [NgTemplateOutlet, LgFadeIn],
+  imports: [NgTemplateOutlet, LgFadeIn, LgRipple, LgShortcut],
   host: { class: 'flex items-center gap-2 p-1' },
   template: `
     @if (startTemplate(); as tpl) {
@@ -78,6 +82,7 @@ const SUBMENU_POSITIONS: ConnectedPosition[] = [
             type="button"
             role="menuitem"
             tabindex="-1"
+            lgRipple
             [attr.data-index]="i"
             [attr.aria-haspopup]="item.items?.length ? 'menu' : null"
             [attr.aria-expanded]="item.items?.length ? openIndex() === i : null"
@@ -94,8 +99,11 @@ const SUBMENU_POSITIONS: ConnectedPosition[] = [
                 "
               ></ng-container>
             } @else {
-              <span class="flex items-center gap-1 px-3 py-2">
-                <span>{{ item.label }}</span>
+              <span class="flex items-center gap-2 px-3 py-2">
+                <span class="mr-auto">{{ item.label }}</span>
+                @if (item.shortcut) {
+                  <lg-shortcut class="pl-4" [binding]="item.shortcut" />
+                }
                 @if (item.items?.length) {
                   <i class="ph ph-caret-down" aria-hidden="true"></i>
                 }
@@ -129,6 +137,7 @@ const SUBMENU_POSITIONS: ConnectedPosition[] = [
                 type="button"
                 role="menuitem"
                 tabindex="-1"
+                lgRipple
                 [class]="itemClass"
                 [disabled]="sub.disabled"
                 (click)="runSub(sub)"
@@ -142,10 +151,10 @@ const SUBMENU_POSITIONS: ConnectedPosition[] = [
                   ></ng-container>
                 } @else {
                   <span class="flex w-full items-center gap-2 px-3 py-2">
-                    @if (sub.icon) {
-                      <i [class]="sub.icon" aria-hidden="true"></i>
+                    <span class="mr-auto">{{ sub.label }}</span>
+                    @if (sub.shortcut) {
+                      <lg-shortcut class="pl-4" [binding]="sub.shortcut" />
                     }
-                    <span>{{ sub.label }}</span>
                   </span>
                 }
               </button>

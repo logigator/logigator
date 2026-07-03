@@ -143,6 +143,30 @@ describe('LgMenubar', () => {
     expect(openMenu()).toBeNull();
   });
 
+  it('renders an item shortcut as kbd chips in the default row', () => {
+    @Component({
+      changeDetection: ChangeDetectionStrategy.OnPush,
+      imports: [LgMenubar],
+      template: `<lg-menubar [model]="items" />`
+    })
+    class PlainHostComponent {
+      readonly items: MenuItem[] = [
+        {
+          label: 'Edit',
+          items: [{ label: 'Undo', shortcut: { key: 'z', ctrl: true } }]
+        }
+      ];
+    }
+    const f = TestBed.createComponent(PlainHostComponent);
+    f.detectChanges();
+    topButtons(f.nativeElement as HTMLElement)[0].click();
+    f.detectChanges();
+    const chips = Array.from(container()!.querySelectorAll('kbd')).map((k) =>
+      k.textContent?.trim()
+    );
+    expect(chips).toEqual(['Ctrl', 'Z']);
+  });
+
   it('stays armed across a leaf hover: the next parent opens on hover again', () => {
     const { f, host } = setup();
     const [edit, view, help] = topButtons(host);
