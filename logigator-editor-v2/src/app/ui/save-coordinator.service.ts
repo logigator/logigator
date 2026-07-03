@@ -1,6 +1,6 @@
 import { inject, Injectable } from '@angular/core';
 import { firstValueFrom } from 'rxjs';
-import { DialogService } from 'primeng/dynamicdialog';
+import { DialogService } from '@logigator/ui';
 import { TranslocoService } from '@jsverse/transloco';
 import { PersistenceService } from '../persistence/persistence.service';
 import { ProjectMetadataStore } from '../persistence/project-metadata.store';

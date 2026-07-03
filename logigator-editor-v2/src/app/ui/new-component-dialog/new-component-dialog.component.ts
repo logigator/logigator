@@ -5,16 +5,18 @@ import {
   signal
 } from '@angular/core';
 import { FormsModule } from '@angular/forms';
-import { DynamicDialogRef } from 'primeng/dynamicdialog';
-import { InputTextModule } from 'primeng/inputtext';
-import { ToggleSwitchModule } from 'primeng/toggleswitch';
-import { SelectButtonModule } from 'primeng/selectbutton';
-import { TooltipModule } from 'primeng/tooltip';
-import { Button } from 'primeng/button';
+import {
+  DialogRef,
+  LgButton,
+  LgInputText,
+  LgMessage,
+  LgSelectButton,
+  LgToggleSwitch,
+  LgTooltip
+} from '@logigator/ui';
 import { TranslocoDirective, TranslocoService } from '@jsverse/transloco';
 import { CustomComponentService } from '../../custom-component/custom-component.service';
 import { UserService } from '../../user/user.service';
-import { MessageComponent } from '../message/message.component';
 
 /**
  * Collects the metadata for a new custom component (name, symbol, description,
@@ -26,19 +28,19 @@ import { MessageComponent } from '../message/message.component';
   selector: 'app-new-component-dialog',
   imports: [
     FormsModule,
-    InputTextModule,
-    ToggleSwitchModule,
-    SelectButtonModule,
-    TooltipModule,
-    Button,
+    LgInputText,
+    LgToggleSwitch,
+    LgSelectButton,
+    LgTooltip,
+    LgButton,
     TranslocoDirective,
-    MessageComponent
+    LgMessage
   ],
   templateUrl: './new-component-dialog.component.html',
   changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class NewComponentDialogComponent {
-  private readonly ref = inject(DynamicDialogRef);
+  private readonly ref = inject(DialogRef);
   private readonly customComponentService = inject(CustomComponentService);
   private readonly transloco = inject(TranslocoService);
   protected readonly userService = inject(UserService);

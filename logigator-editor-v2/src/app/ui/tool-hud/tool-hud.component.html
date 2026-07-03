@@ -10,52 +10,52 @@
     class="flex items-center gap-1 rounded-full bg-content/95 px-1.5 py-1 shadow-lg backdrop-blur"
   >
     @for (tool of primaryTools; track tool.id) {
-      <p-button
+      <lg-button
         [icon]="tool.icon"
         severity="secondary"
         rounded
         [text]="!tool.isActive()"
         [ariaLabel]="t(tool.labelKey)"
         (onClick)="tool.activate()"
-      ></p-button>
+      ></lg-button>
     }
-    <p-button
+    <lg-button
       icon="ph ph-plus"
       severity="secondary"
       rounded
       [text]="!partsActive()"
       [ariaLabel]="t('toolBar.parts')"
       (onClick)="toggleParts()"
-    ></p-button>
-    <p-button
+    ></lg-button>
+    <lg-button
       icon="ph ph-dots-three"
       severity="secondary"
       rounded
       [text]="!moreActive()"
       [ariaLabel]="t('toolBar.more')"
       (onClick)="morePop.toggle($event)"
-    ></p-button>
+    ></lg-button>
   </div>
-  <p-popover #morePop>
+  <lg-popover #morePop>
     <div class="flex items-center gap-1">
       @for (tool of moreTools; track tool.id) {
-        <p-button
+        <lg-button
           [icon]="tool.icon"
           severity="secondary"
           [text]="!tool.isActive()"
           [ariaLabel]="t(tool.labelKey)"
           (onClick)="tool.activate(); morePop.hide()"
-        ></p-button>
+        ></lg-button>
       }
       @if (isEditingComponent()) {
-        <p-button
+        <lg-button
           icon="ph ph-plugs"
           severity="secondary"
           text
           [ariaLabel]="t('mobile.ports')"
           (onClick)="openPorts(); morePop.hide()"
-        ></p-button>
+        ></lg-button>
       }
     </div>
-  </p-popover>
+  </lg-popover>
 </div>

@@ -13,6 +13,11 @@ module.exports = defineConfig([
       tseslint.configs.stylistic,
       angular.configs.tsRecommended
     ],
+    languageOptions: {
+      parserOptions: {
+        tsconfigRootDir: __dirname
+      }
+    },
     processor: angular.processInlineTemplates,
     rules: {
       '@angular-eslint/directive-selector': [

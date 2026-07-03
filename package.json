@@ -1,0 +1,37 @@
+{
+  "name": "logigator-workspace",
+  "version": "0.0.0",
+  "description": "Logigator monorepo workspace (editor-v2 + @logigator/ui)",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/logigator/logigator.git"
+  },
+  "private": true,
+  "packageManager": "yarn@4.14.1",
+  "workspaces": [
+    "logigator-ui",
+    "logigator-editor-v2"
+  ],
+  "scripts": {
+    "ng": "ng",
+    "start": "ng serve logigator-editor-v2",
+    "build": "ng build logigator-editor-v2",
+    "build:ui": "ng build logigator-ui",
+    "watch": "ng build logigator-editor-v2 --watch --configuration development",
+    "test": "ng test logigator-editor-v2",
+    "test:ui": "ng test logigator-ui",
+    "lint": "ng lint",
+    "format": "prettier logigator-editor-v2 logigator-ui -c",
+    "format:fix": "prettier logigator-editor-v2 logigator-ui -lw"
+  },
+  "devDependencies": {
+    "@angular-eslint/builder": "^21.3.1",
+    "@angular/cli": "^21.2.8",
+    "@eslint/js": "^10.0.1",
+    "angular-eslint": "^21.3.1",
+    "eslint": "^10.2.1",
+    "prettier": "^3.8.3",
+    "typescript-eslint": "^8.59.0"
+  }
+}

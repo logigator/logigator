@@ -5,22 +5,14 @@ import {
   signal
 } from '@angular/core';
 import { FormsModule } from '@angular/forms';
-import { ButtonModule } from 'primeng/button';
-import { DialogModule } from 'primeng/dialog';
-import { Textarea } from 'primeng/textarea';
+import { LgButton, LgDialog, LgTextarea } from '@logigator/ui';
 import { TranslocoDirective } from '@jsverse/transloco';
 import type { ComponentOptionInput } from '../../component-option';
 import type { TextAreaComponentOption } from './text-area.component-option';
 
 @Component({
   selector: 'app-text-area-option-input',
-  imports: [
-    FormsModule,
-    ButtonModule,
-    DialogModule,
-    Textarea,
-    TranslocoDirective
-  ],
+  imports: [FormsModule, LgButton, LgDialog, LgTextarea, TranslocoDirective],
   templateUrl: './text-area-option-input.component.html',
   changeDetection: ChangeDetectionStrategy.OnPush
 })

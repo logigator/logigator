@@ -1,0 +1,9 @@
+/* Library unit-test config. Extends the workspace base tsconfig. */
+{
+  "extends": "../tsconfig.json",
+  "compilerOptions": {
+    "outDir": "../dist/out-tsc/spec",
+    "types": []
+  },
+  "include": ["src/**/*.spec.ts", "src/**/*.d.ts"]
+}

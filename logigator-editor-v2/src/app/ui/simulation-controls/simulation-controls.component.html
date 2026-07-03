@@ -8,47 +8,47 @@
 >
   <!-- Run controls come alive once the worker session reports ready. -->
   <div class="flex flex-wrap gap-1">
-    <p-button
-      [pTooltip]="t('toolBar.play')"
+    <lg-button
+      [lgTooltip]="t('toolBar.play')"
       [ariaLabel]="t('toolBar.play')"
       [disabled]="!isSimReady() || isSimRunning()"
       (onClick)="playSimulation()"
       tooltipPosition="bottom"
       icon="ph ph-play"
       severity="secondary"
-    ></p-button>
-    <p-button
-      [pTooltip]="t('toolBar.pause')"
+    ></lg-button>
+    <lg-button
+      [lgTooltip]="t('toolBar.pause')"
       [ariaLabel]="t('toolBar.pause')"
       [disabled]="!isSimRunning()"
       (onClick)="pauseSimulation()"
       tooltipPosition="bottom"
       icon="ph ph-pause"
       severity="secondary"
-    ></p-button>
-    <p-button
-      [pTooltip]="t('toolBar.step')"
+    ></lg-button>
+    <lg-button
+      [lgTooltip]="t('toolBar.step')"
       [ariaLabel]="t('toolBar.step')"
       [disabled]="!isSimReady() || isSimRunning()"
       (onClick)="stepSimulation()"
       tooltipPosition="bottom"
       icon="ph ph-skip-forward"
       severity="secondary"
-    ></p-button>
-    <p-button
-      [pTooltip]="t('toolBar.stopSim')"
+    ></lg-button>
+    <lg-button
+      [lgTooltip]="t('toolBar.stopSim')"
       [ariaLabel]="t('toolBar.stopSim')"
       [disabled]="!isSimReady()"
       (onClick)="stopSimulation()"
       tooltipPosition="bottom"
       icon="ph ph-stop"
       severity="secondary"
-    ></p-button>
+    ></lg-button>
   </div>
-  <p-divider layout="vertical" class="mx-1!"></p-divider>
+  <lg-divider layout="vertical" class="mx-1"></lg-divider>
   <div class="flex flex-wrap items-center gap-2">
-    <p-button
-      [pTooltip]="t('toolBar.targetMode')"
+    <lg-button
+      [lgTooltip]="t('toolBar.targetMode')"
       [ariaLabel]="t('toolBar.targetMode')"
       [disabled]="!isSimReady()"
       [outlined]="simMode() !== 'target'"
@@ -56,33 +56,33 @@
       tooltipPosition="bottom"
       icon="ph ph-gauge"
       severity="secondary"
-    ></p-button>
+    ></lg-button>
     <input
-      pInputText
+      lgInputText
       type="number"
       min="1"
       step="any"
       class="w-24"
       [disabled]="!isSimReady()"
-      [pTooltip]="t('toolBar.targetSpeed')"
+      [lgTooltip]="t('toolBar.targetSpeed')"
       [ariaLabel]="t('toolBar.targetSpeed')"
       tooltipPosition="bottom"
       [value]="targetValue()"
       (input)="onTargetValueInput($event)"
     />
-    <p-select
+    <lg-select
       [options]="targetUnitOptions"
       [ngModel]="targetUnit()"
       (ngModelChange)="onTargetUnitChange($event)"
       [disabled]="!isSimReady()"
       optionLabel="label"
       optionValue="value"
-      [pTooltip]="t('toolBar.targetUnit')"
+      [lgTooltip]="t('toolBar.targetUnit')"
       [ariaLabel]="t('toolBar.targetUnit')"
       tooltipPosition="bottom"
-    ></p-select>
-    <p-button
-      [pTooltip]="t('toolBar.syncToFrame')"
+    ></lg-select>
+    <lg-button
+      [lgTooltip]="t('toolBar.syncToFrame')"
       [ariaLabel]="t('toolBar.syncToFrame')"
       [disabled]="!isSimReady()"
       [outlined]="simMode() !== 'sync'"
@@ -90,7 +90,7 @@
       tooltipPosition="bottom"
       icon="ph ph-monitor-play"
       severity="secondary"
-    ></p-button>
+    ></lg-button>
     <span class="text-sm opacity-70 select-none">
       {{ t('toolBar.measuredHz', { hz: measuredHz() | si: 0 }) }}
       &middot;

@@ -1,12 +1,12 @@
 import {
+  BitmapText,
   Container,
   DestroyOptions,
   Graphics,
   GraphicsContext,
   Matrix,
   Point,
-  Rectangle,
-  Text
+  Rectangle
 } from 'pixi.js';
 import { Subject } from 'rxjs';
 import { ComponentConfig, ComponentConfigView } from './component-config.model';
@@ -29,11 +29,33 @@ import { SerializedComponent } from './serialized-component.model';
 import { Connectable } from '../rendering/grid-element';
 import { IdAllocator } from '../utils/id-allocator';
 import { Direction } from '../utils/direction';
+import { CANVAS_FONT_FAMILY, fitMonoFontSize } from '../utils/text-fit';
 
 export interface PortsChange {
   oldPorts: Point[];
   newPorts: Point[];
 }
+
+/**
+ * Port-label anchor per direction, keyed by the side the *input* edge faces
+ * (outputs use the opposite direction's entry). Labels are counter-rotated to
+ * stay horizontal, so they are axis-aligned on screen and the anchor picks the
+ * texture point that faces the body edge: left-centre when the edge is left
+ * (E), top-centre when it is on top (S), and so on. Anchoring to the edge —
+ * instead of rotating the label around its centre — keeps every label on an
+ * edge at the same fixed inset regardless of its text width (legacy-editor
+ * behavior).
+ */
+const LABEL_ANCHOR: Record<Direction, { x: number; y: number }> = {
+  [Direction.E]: { x: 0, y: 0.5 },
+  [Direction.S]: { x: 0.5, y: 0 },
+  [Direction.W]: { x: 1, y: 0.5 },
+  [Direction.N]: { x: 0.5, y: 1 }
+};
+
+const LABEL_FONT_SIZE = 0.4 / PX;
+const SYMBOL_FONT_SIZE = 1 / PX;
+const MIN_FONT_SIZE = 0.25 / PX;
 
 /** Which port group a negation index addresses (0-based within that group). */
 export type PortSide = 'in' | 'out';
@@ -186,6 +208,19 @@ export abstract class Component<
 
   protected abstract draw(): void;
 
+  /**
+   * Symbol rendered centred in the body — normally the config's sidebar
+   * symbol. Null (the default) for components whose body carries its own
+   * visual identity instead (button, lever, free text). Overrides must read a
+   * module-level config constant, not `this.config`: this is evaluated during
+   * the base constructor's draw, before the subclass `config` field is
+   * assigned.
+   */
+  // eslint-disable-next-line @typescript-eslint/class-literal-property-style
+  protected get symbol(): string | null {
+    return null;
+  }
+
   public get id(): number {
     return this._id;
   }
@@ -210,9 +245,9 @@ export abstract class Component<
       }
     });
 
-    if (environment.debug.showConnectionPoints) {
-      this._draw();
-    }
+    // Label anchors and the stub-thickness side both depend on the direction,
+    // so rebuild the visual tree for the new rotation.
+    this._draw();
 
     if (oldPorts) {
       this.portsChange$.next({ oldPorts, newPorts: this.connectionPoints });
@@ -313,17 +348,6 @@ export abstract class Component<
         scale
       )
     );
-  }
-
-  /**
-   * Keeps a Text's render resolution matched to zoom so glyphs stay crisp,
-   * refreshed in place on applyScale rather than by recreating the Text.
-   */
-  protected trackTextResolution(text: Text): Text {
-    this.onApplyScale(
-      (scale) => (text.resolution = scale * window.devicePixelRatio)
-    );
-    return text;
   }
 
   public override destroy(options?: DestroyOptions): void {
@@ -556,6 +580,7 @@ export abstract class Component<
     this._rescalers = [];
 
     this.draw();
+    this._drawSymbol();
 
     this._drawConnections(this._numInputs, 'inputs');
     this._drawConnections(this._numOutputs, 'outputs');
@@ -591,6 +616,67 @@ export abstract class Component<
     }
   }
 
+  private get _maxLabelLength(): number {
+    return Math.max(
+      ...this.inputLabels.map((l) => l.length),
+      ...this.outputLabels.map((l) => l.length)
+    );
+  }
+
+  /**
+   * Whether the body stands upright on screen (rotated S/N), swapping which
+   * of bodyGridWidth/bodyGridHeight spans the screen's horizontal axis.
+   */
+  private get _isVertical(): boolean {
+    return this._direction === Direction.S || this._direction === Direction.N;
+  }
+
+  /**
+   * Which local side of the port centre-line the stub's 1-px thickness hangs
+   * on so that, after the component's rotation, it lands on the same screen
+   * side as a connecting wire's thickness (below for horizontal, left for
+   * vertical).
+   */
+  private get _stubThicknessSign(): 1 | -1 {
+    return this._direction === Direction.W || this._direction === Direction.N
+      ? -1
+      : 1;
+  }
+
+  // Renders the symbol centred in the body, fitted to its slot with a 2-px
+  // clearance per side, kept upright across rotations.
+  private _drawSymbol(): void {
+    const symbol = this.symbol;
+    if (!symbol) {
+      return;
+    }
+    // The symbol is kept upright, so its horizontal room is the body's
+    // *screen* width: bodyGridWidth for E/W, bodyGridHeight for S/N. Port
+    // labels flank the symbol on its own line only in E/W and halve its room
+    // there; in S/N they sit above/below it, leaving the full width.
+    const symbolSlot = this._isVertical
+      ? this.bodyGridHeight / PX
+      : this.bodyGridWidth / (this._maxLabelLength > 0 ? 2 : 1) / PX;
+    const text = new BitmapText({
+      text: symbol,
+      style: {
+        fontFamily: CANVAS_FONT_FAMILY,
+        fontSize: fitMonoFontSize(
+          symbol,
+          symbolSlot - 4,
+          SYMBOL_FONT_SIZE,
+          MIN_FONT_SIZE
+        ),
+        fill: this.themingService.currentTheme().fontTint
+      },
+      anchor: { x: 0.5, y: 0.5 }
+    });
+    text.scale.set(PX);
+    text.position.set(this.bodyGridWidth / 2, this.bodyGridHeight / 2);
+    this.registerRotationCounterContainer(text);
+    this.addChild(text);
+  }
+
   private _drawConnections(n: number, type: 'inputs' | 'outputs'): void {
     const geometry = this.geometryService.getGraphicsContext(WireGraphics);
     const container = new Container();
@@ -602,8 +688,16 @@ export abstract class Component<
         this._poweredPorts.has(portIndex) ? this._stubContext(true) : geometry
       );
       wire.position.set(0, i + 0.5);
-      // Stub stays 1 screen pixel thick: scale.y compensates for zoom.
-      this.onApplyScale((scale) => wire.scale.set(0.5, PX / scale));
+      // Stub stays 1 screen pixel thick: scale.y compensates for zoom. The
+      // shared wire rect hangs its whole thickness on the +y side of the
+      // centre-line, and Wire renders it at 0° or +90°, so the pixel always
+      // lands below (horizontal) or left (vertical) of the line. The W/N
+      // rotations map +y to the opposite screen side, which would leave the
+      // stub one pixel off the wire it touches — mirror scale.y so the stub
+      // fills the same pixel as the wire.
+      this.onApplyScale((scale) =>
+        wire.scale.set(0.5, (PX / scale) * this._stubThicknessSign)
+      );
       this._portStubs[portIndex] = wire;
       container.addChild(wire);
 
@@ -624,31 +718,41 @@ export abstract class Component<
       }
 
       if (labels.length > i) {
-        const text = this.trackTextResolution(
-          new Text({
-            text: labels[i],
-            style: {
-              fontFamily: 'Roboto',
-              fontSize: 0.5 / PX,
-              fill: this.themingService.currentTheme().fontTint
-            },
-            anchor: { x: type === 'inputs' ? 0 : 1, y: 0.5 }
-          })
-        );
-
-        // naturalWidth is the pixel width before scale is applied.
-        // Pivot placed at the texture center so that the rotation counter
-        // (applied by registerRotationCounterContainer) rotates around the
-        // center, keeping the label anchored to the same grid point in all
-        // component directions.
-        const naturalWidth = text.width;
+        const anchorDirection =
+          type === 'inputs'
+            ? this._direction
+            : (((this._direction + 2) % 4) as Direction);
+        // The horizontal room a label may take before it collides with its
+        // neighbour: rotated S/N the labels sit side by side one grid pitch
+        // apart, in E/W the input and output label share the body row, each
+        // side keeping its 2-px inset plus clearance at the centre.
+        const labelSlot = this._isVertical
+          ? 1 / PX - 2
+          : this.bodyGridWidth / 2 / PX - 4;
+        const text = new BitmapText({
+          text: labels[i],
+          style: {
+            fontFamily: CANVAS_FONT_FAMILY,
+            fontSize: fitMonoFontSize(
+              labels[i],
+              labelSlot,
+              LABEL_FONT_SIZE,
+              MIN_FONT_SIZE
+            ),
+            fill: this.themingService.currentTheme().fontTint
+          },
+          anchor: LABEL_ANCHOR[anchorDirection]
+        });
         text.scale.set(PX);
-        text.pivot.set((naturalWidth / 2) * (type === 'inputs' ? 1 : -1), 0);
 
+        // The anchor point sits a fixed 2-px inset inward from the body edge
+        // on the port's centre-line; the counter-rotation (applied by
+        // registerRotationCounterContainer) turns about that point, so the
+        // label hangs inward from the edge in every direction.
         if (type === 'inputs') {
-          text.position.set(0.5 + (naturalWidth * PX) / 2 + 2 * PX, i + 0.5);
+          text.position.set(0.5 + 2 * PX, i + 0.5);
         } else {
-          text.position.set((-naturalWidth * PX) / 2 - 2 * PX, i + 0.5);
+          text.position.set(-2 * PX, i + 0.5);
         }
 
         this.registerRotationCounterContainer(text);

@@ -118,36 +118,3 @@ export const DEFAULT_SHORTCUTS: Record<ShortcutActionEnum, ShortcutBinding> = {
     alt: false
   }
 };
-
-const KEY_LABELS: Readonly<Record<string, string>> = {
-  Escape: 'Esc',
-  Delete: 'Del',
-  Backspace: '⌫',
-  ArrowUp: '↑',
-  ArrowDown: '↓',
-  ArrowLeft: '←',
-  ArrowRight: '→',
-  ' ': 'Space'
-};
-
-export function formatKey(key: string): string {
-  return KEY_LABELS[key] ?? (key.length === 1 ? key.toUpperCase() : key);
-}
-
-export function formatShortcutLabel(
-  binding: ShortcutBinding,
-  isMac: boolean
-): string {
-  const parts: string[] = [];
-  if (isMac) {
-    if (binding.alt) parts.push('⌥');
-    if (binding.shift) parts.push('⇧');
-    if (binding.ctrl) parts.push('⌘');
-  } else {
-    if (binding.ctrl) parts.push('Ctrl');
-    if (binding.shift) parts.push('Shift');
-    if (binding.alt) parts.push('Alt');
-  }
-  parts.push(formatKey(binding.key));
-  return isMac ? parts.join('') : parts.join('+');
-}

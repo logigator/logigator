@@ -13,12 +13,15 @@ import {
 } from '@angular/core';
 import { DatePipe } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { ConfirmationService } from 'primeng/api';
-import { Button } from 'primeng/button';
-import { InputTextModule } from 'primeng/inputtext';
-import { IconFieldModule } from 'primeng/iconfield';
-import { InputIconModule } from 'primeng/inputicon';
-import { Paginator, type PaginatorState } from 'primeng/paginator';
+import {
+  ConfirmationService,
+  LgButton,
+  LgIconField,
+  LgInputIcon,
+  LgInputText,
+  LgPaginator,
+  type LgPaginatorState
+} from '@logigator/ui';
 import { TranslocoDirective, TranslocoService } from '@jsverse/transloco';
 
 export interface ProjectListItem {
@@ -36,11 +39,11 @@ const NAME_MAX_LENGTH = 20;
   imports: [
     DatePipe,
     FormsModule,
-    Button,
-    InputTextModule,
-    IconFieldModule,
-    InputIconModule,
-    Paginator,
+    LgButton,
+    LgInputText,
+    LgIconField,
+    LgInputIcon,
+    LgPaginator,
     TranslocoDirective
   ],
   templateUrl: './project-list.component.html',
@@ -140,7 +143,7 @@ export class ProjectListComponent {
     });
   }
 
-  protected onPaginatorChange(state: PaginatorState): void {
+  protected onPaginatorChange(state: LgPaginatorState): void {
     this.pageChange.emit(state.page ?? 0);
   }
 }

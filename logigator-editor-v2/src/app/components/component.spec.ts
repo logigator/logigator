@@ -1,11 +1,20 @@
 import { beforeEach, describe, expect, it } from 'vitest';
 import { Injector } from '@angular/core';
 import { TestBed } from '@angular/core/testing';
+import { Container, BitmapText } from 'pixi.js';
 import { setStaticDIInjector } from '../utils/get-di';
 import { Component } from './component';
+import { ComponentConfig } from './component-config.model';
 import { andComponentConfig } from './component-types/and/and.config';
+import { romComponentConfig } from './component-types/rom/rom.config';
+import { PX } from '../utils/grid';
 import { Direction } from '../utils/direction';
-import { makeAnd } from '../../testing/factories';
+import {
+  makeAnd,
+  makeButton,
+  makeInput,
+  makeLever
+} from '../../testing/factories';
 import { AndComponent } from './component-types/and/and.component';
 import { configureTestBed } from '../../testing/configure-test-bed';
 import { GraphicsProviderService } from '../rendering/graphics-provider.service';
@@ -203,6 +212,169 @@ describe('Component.direction re-anchoring (legacy-editor behavior)', () => {
       expect(comp.position.x).toBeCloseTo(pivots[dir][0], 5);
       expect(comp.position.y).toBeCloseTo(pivots[dir][1], 5);
     }
+
+    comp.destroy({ children: true });
+  });
+});
+
+describe('Component port-stub pixel side', () => {
+  beforeEach(() => {
+    configureTestBed();
+  });
+
+  // The stub's 1-px thickness hangs on one side of the port centre-line; the
+  // W/N rotations must mirror it (scale.y < 0) so it rasterizes onto the same
+  // screen-side pixel as a connecting wire (below for horizontal, left for
+  // vertical).
+  it.each([
+    [Direction.E, 1],
+    [Direction.S, 1],
+    [Direction.W, -1],
+    [Direction.N, -1]
+  ])('hangs the stub on the wire-side pixel (direction %i)', (dir, sign) => {
+    const comp = makeAnd(2, dir);
+
+    expect(comp.portStubs.length).toBe(3);
+    for (const stub of comp.portStubs) {
+      expect(Math.sign(stub.scale.y)).toBe(sign);
+    }
+
+    comp.destroy({ children: true });
+  });
+
+  it('re-applies the stub side on a runtime rotation', () => {
+    const comp = makeAnd(2, Direction.E);
+
+    comp.direction = Direction.N;
+    for (const stub of comp.portStubs) {
+      expect(Math.sign(stub.scale.y)).toBe(-1);
+    }
+
+    comp.direction = Direction.S;
+    for (const stub of comp.portStubs) {
+      expect(Math.sign(stub.scale.y)).toBe(1);
+    }
+
+    comp.destroy({ children: true });
+  });
+});
+
+describe('Component port-label anchoring', () => {
+  beforeEach(() => {
+    configureTestBed();
+  });
+
+  function makeRom(direction: Direction): Component {
+    return Component.deserialize(
+      { pos: [0, 0], options: { direction } },
+      romComponentConfig as unknown as ComponentConfig
+    );
+  }
+
+  function labelText(comp: Component, label: string): BitmapText {
+    let found: BitmapText | undefined;
+    const walk = (c: Container): void => {
+      for (const child of c.children) {
+        if (child instanceof BitmapText && child.text === label) found = child;
+        else walk(child as Container);
+      }
+    };
+    walk(comp);
+    expect(found, `label ${label}`).toBeDefined();
+    return found!;
+  }
+
+  // Labels anchor to the body edge they sit on (edge-facing texture point,
+  // fixed inset), so every label on an edge keeps the same depth regardless
+  // of its text width — in every direction.
+  it.each([
+    [Direction.E, { x: 0, y: 0.5 }, { x: 1, y: 0.5 }],
+    [Direction.S, { x: 0.5, y: 0 }, { x: 0.5, y: 1 }],
+    [Direction.W, { x: 1, y: 0.5 }, { x: 0, y: 0.5 }],
+    [Direction.N, { x: 0.5, y: 1 }, { x: 0.5, y: 0 }]
+  ])(
+    'anchors labels edge-facing (direction %i)',
+    (direction, inAnchor, outAnchor) => {
+      const comp = makeRom(direction);
+
+      const input = labelText(comp, 'A1');
+      expect({ x: input.anchor.x, y: input.anchor.y }).toEqual(inAnchor);
+      expect(input.position.x).toBeCloseTo(0.5 + 2 * PX, 5);
+      expect(input.position.y).toBeCloseTo(0.5, 5);
+
+      const output = labelText(comp, 'O1');
+      expect({ x: output.anchor.x, y: output.anchor.y }).toEqual(outAnchor);
+      expect(output.position.x).toBeCloseTo(-2 * PX, 5);
+      expect(output.position.y).toBeCloseTo(0.5, 5);
+
+      comp.destroy({ children: true });
+    }
+  );
+
+  it('re-anchors labels on a runtime rotation', () => {
+    const comp = makeRom(Direction.E);
+
+    comp.direction = Direction.S;
+
+    const input = labelText(comp, 'A1');
+    expect({ x: input.anchor.x, y: input.anchor.y }).toEqual({ x: 0.5, y: 0 });
+
+    comp.destroy({ children: true });
+  });
+});
+
+describe('Component symbol rendering', () => {
+  beforeEach(() => {
+    configureTestBed();
+  });
+
+  function findText(comp: Component, value: string): BitmapText | undefined {
+    let found: BitmapText | undefined;
+    const walk = (c: Container): void => {
+      for (const child of c.children) {
+        if (child instanceof BitmapText && child.text === value) found = child;
+        else walk(child as Container);
+      }
+    };
+    walk(comp);
+    return found;
+  }
+
+  it('renders the config symbol centred in the body', () => {
+    const comp = makeAnd(2);
+
+    const symbol = findText(comp, '&');
+    expect(symbol).toBeDefined();
+    expect(symbol!.anchor.x).toBe(0.5);
+    expect(symbol!.anchor.y).toBe(0.5);
+    expect(symbol!.position.x).toBeCloseTo(1, 5);
+    expect(symbol!.position.y).toBeCloseTo(1, 5);
+
+    comp.destroy({ children: true });
+  });
+
+  it('renders no symbol on components with a dedicated body visual', () => {
+    for (const comp of [makeButton(), makeLever()]) {
+      let texts = 0;
+      const walk = (c: Container): void => {
+        for (const child of c.children) {
+          if (child instanceof BitmapText) texts++;
+          else walk(child as Container);
+        }
+      };
+      walk(comp);
+      expect(texts).toBe(0);
+      comp.destroy({ children: true });
+    }
+  });
+
+  it('fits plug symbols to the 1-grid body', () => {
+    const comp = makeInput();
+
+    const symbol = findText(comp, 'IN');
+    expect(symbol).toBeDefined();
+    // No labels → the full 1-grid body minus the clearance (12 px).
+    expect(symbol!.style.fontSize).toBeCloseTo(12 / (0.6 * 2), 5);
 
     comp.destroy({ children: true });
   });

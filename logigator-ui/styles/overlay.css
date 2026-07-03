@@ -1,0 +1,14 @@
+/*
+ * @logigator/ui — overlay structural overrides.
+ *
+ * Tweaks on top of CDK's prebuilt overlay stylesheet (overlay-prebuilt.css),
+ * which apps load first. Import this alongside it so the library's overlays
+ * (dialog, drawer, menu, …) render with the design's backdrop.
+ */
+
+@import '@angular/cdk/overlay-prebuilt.css';
+
+/* Deepen CDK's modal backdrop from its 0.32 default to the 0.6 the design uses. */
+.cdk-overlay-dark-backdrop {
+  background: rgb(0 0 0 / 0.6);
+}

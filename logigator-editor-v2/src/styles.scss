@@ -1,10 +1,11 @@
 @use '@phosphor-icons/web/regular';
-
 @import url('https://fonts.googleapis.com/css2?family=Roboto+Mono:ital,wght@0,100..700;1,100..700&family=Roboto:ital,wght@0,100..900;1,100..900&display=swap');
+@import './tailwind.css';
+
+@import '../../logigator-ui/styles/overlay.css';
 
 body {
-  font-family: 'Roboto', sans-serif;
-  margin: 0;
-  padding: 0;
-  overflow: hidden;
+  @apply bg-surface-0 dark:bg-surface-950;
+  @apply m-0 p-0;
+  @apply overflow-hidden;
 }

@@ -1,7 +1,6 @@
 import { ChangeDetectionStrategy, Component, input } from '@angular/core';
 import { FormsModule } from '@angular/forms';
-import { NgTemplateOutlet } from '@angular/common';
-import { SelectModule } from 'primeng/select';
+import { LgSelect } from '@logigator/ui';
 import { TranslocoDirective } from '@jsverse/transloco';
 import type { ComponentOptionInput } from '../../component-option';
 import type { SelectDropdownComponentOption } from './select-dropdown.component-option';
@@ -10,7 +9,7 @@ let nextId = 0;
 
 @Component({
   selector: 'app-select-dropdown-option-input',
-  imports: [FormsModule, SelectModule, NgTemplateOutlet, TranslocoDirective],
+  imports: [FormsModule, LgSelect, TranslocoDirective],
   templateUrl: './select-dropdown-option-input.component.html',
   changeDetection: ChangeDetectionStrategy.OnPush
 })

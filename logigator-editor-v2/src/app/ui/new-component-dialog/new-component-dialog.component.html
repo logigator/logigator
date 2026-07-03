@@ -2,7 +2,7 @@
   <div class="flex flex-col gap-1">
     <label for="new-component-name">{{ t('newComponentDialog.name') }}</label>
     <input
-      pInputText
+      lgInputText
       id="new-component-name"
       type="text"
       maxlength="20"
@@ -16,7 +16,7 @@
       t('newComponentDialog.symbol')
     }}</label>
     <input
-      pInputText
+      lgInputText
       id="new-component-symbol"
       type="text"
       maxlength="5"
@@ -30,7 +30,7 @@
       t('newComponentDialog.description')
     }}</label>
     <input
-      pInputText
+      lgInputText
       id="new-component-description"
       type="text"
       [ngModel]="description()"
@@ -40,7 +40,7 @@
   </div>
   <div class="flex flex-col gap-1">
     <span>{{ t('newComponentDialog.store') }}</span>
-    <p-selectButton
+    <lg-select-button
       [options]="sourceOptions"
       optionLabel="label"
       optionValue="value"
@@ -52,12 +52,12 @@
   </div>
   @if (source() === 'server') {
     @if (!userService.user()) {
-      <app-message severity="warn">
+      <lg-message severity="warn">
         {{ t('newComponentDialog.notLoggedIn') }}
-      </app-message>
+      </lg-message>
     } @else {
       <div class="flex gap-2 items-center">
-        <p-toggleswitch
+        <lg-toggle-switch
           inputId="new-component-public"
           [ngModel]="isPublic()"
           (ngModelChange)="isPublic.set($event)"
@@ -68,17 +68,17 @@
         }}</label>
         <i
           class="ph ph-info cursor-help text-surface-500"
-          [pTooltip]="t('newComponentDialog.publicInfo')"
+          [lgTooltip]="t('newComponentDialog.publicInfo')"
         ></i>
       </div>
     }
   } @else {
-    <app-message severity="info">
+    <lg-message severity="info">
       {{ t('newComponentDialog.browserWarning') }}
-    </app-message>
+    </lg-message>
   }
   <div class="flex justify-end">
-    <p-button
+    <lg-button
       type="submit"
       [label]="t('newComponentDialog.create')"
       [disabled]="!canCreate"

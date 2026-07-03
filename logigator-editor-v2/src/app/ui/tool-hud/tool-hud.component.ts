@@ -4,8 +4,7 @@ import {
   computed,
   inject
 } from '@angular/core';
-import { ButtonModule } from 'primeng/button';
-import { Popover } from 'primeng/popover';
+import { LgButton, LgPopover } from '@logigator/ui';
 import { TranslocoDirective } from '@jsverse/transloco';
 import { WorkModeService } from '../../work-mode/work-mode.service';
 import { WorkMode } from '../../work-mode/work-mode.enum';
@@ -29,7 +28,7 @@ const PRIMARY_IDS: readonly WorkModeToolId[] = ['pan', 'select', 'wire'];
  */
 @Component({
   selector: 'app-tool-hud',
-  imports: [ButtonModule, Popover, TranslocoDirective],
+  imports: [LgButton, LgPopover, TranslocoDirective],
   templateUrl: './tool-hud.component.html',
   changeDetection: ChangeDetectionStrategy.OnPush
 })

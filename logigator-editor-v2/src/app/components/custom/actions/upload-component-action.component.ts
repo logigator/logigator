@@ -5,9 +5,7 @@ import {
   inject,
   input
 } from '@angular/core';
-import { Button } from 'primeng/button';
-import { Tooltip } from 'primeng/tooltip';
-import { DialogService } from 'primeng/dynamicdialog';
+import { DialogService, LgButton, LgTooltip } from '@logigator/ui';
 import { TranslocoDirective, TranslocoService } from '@jsverse/transloco';
 import { ComponentActionContext } from '../../component-action';
 import { CustomComponentRegistry } from '../custom-component-registry.service';
@@ -28,16 +26,16 @@ import {
  */
 @Component({
   selector: 'app-upload-component-action',
-  imports: [Button, Tooltip, TranslocoDirective],
+  imports: [LgButton, LgTooltip, TranslocoDirective],
   template: `<ng-container *transloco="let t">
     @if (visible()) {
-      <p-button
+      <lg-button
         size="small"
         icon="ph ph-cloud-arrow-up"
         [label]="t('uploadComponent.button')"
         class="float-right"
         [disabled]="!authenticated()"
-        [pTooltip]="authenticated() ? '' : t('uploadComponent.signInTooltip')"
+        [lgTooltip]="authenticated() ? '' : t('uploadComponent.signInTooltip')"
         tooltipPosition="top"
         (onClick)="upload()"
       />
@@ -72,7 +70,10 @@ export class UploadComponentActionComponent {
     if (!resolved) return;
     const { masterTypeId, master } = resolved;
 
-    const ref = this.dialogService.open(UploadComponentDialogComponent, {
+    const ref = this.dialogService.open<
+      UploadComponentDialogComponent,
+      UploadComponentDialogResult
+    >(UploadComponentDialogComponent, {
       header: this.transloco.translate('uploadComponent.dialogHeader'),
       width: '28rem',
       modal: true,

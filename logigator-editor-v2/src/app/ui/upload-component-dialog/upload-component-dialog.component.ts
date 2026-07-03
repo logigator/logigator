@@ -6,15 +6,18 @@ import {
   signal
 } from '@angular/core';
 import { FormsModule } from '@angular/forms';
-import { DynamicDialogConfig, DynamicDialogRef } from 'primeng/dynamicdialog';
-import { ToggleSwitchModule } from 'primeng/toggleswitch';
-import { TooltipModule } from 'primeng/tooltip';
-import { Button } from 'primeng/button';
-import { ConfirmationService } from 'primeng/api';
+import {
+  ConfirmationService,
+  DialogConfig,
+  DialogRef,
+  LgButton,
+  LgMessage,
+  LgToggleSwitch,
+  LgTooltip
+} from '@logigator/ui';
 import { TranslocoDirective, TranslocoService } from '@jsverse/transloco';
 import { CustomComponentService } from '../../custom-component/custom-component.service';
 import { UserService } from '../../user/user.service';
-import { MessageComponent } from '../message/message.component';
 
 export interface UploadComponentDialogData {
   masterTypeId: number;
@@ -40,18 +43,18 @@ export interface UploadComponentDialogResult {
   selector: 'app-upload-component-dialog',
   imports: [
     FormsModule,
-    ToggleSwitchModule,
-    TooltipModule,
-    Button,
+    LgToggleSwitch,
+    LgTooltip,
+    LgButton,
     TranslocoDirective,
-    MessageComponent
+    LgMessage
   ],
   templateUrl: './upload-component-dialog.component.html',
   changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class UploadComponentDialogComponent {
-  private readonly ref = inject(DynamicDialogRef);
-  private readonly config = inject(DynamicDialogConfig);
+  private readonly ref = inject(DialogRef);
+  private readonly config = inject(DialogConfig);
   private readonly customComponentService = inject(CustomComponentService);
   private readonly confirmation = inject(ConfirmationService);
   private readonly transloco = inject(TranslocoService);

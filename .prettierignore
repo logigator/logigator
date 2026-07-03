@@ -1,0 +1,19 @@
+# Dependencies
+**/node_modules
+.yarn
+.pnp.*
+
+# Build output
+**/dist
+**/out-tsc
+**/.angular/cache
+
+# Test / coverage output
+**/coverage
+**/.nyc_output
+
+# Lockfiles & generated
+yarn.lock
+
+# Logs & misc
+*.log

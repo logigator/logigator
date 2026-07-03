@@ -6,9 +6,15 @@ import {
   OnInit,
   signal
 } from '@angular/core';
-import { DynamicDialogRef } from 'primeng/dynamicdialog';
-import { TabsModule } from 'primeng/tabs';
-import { type FileSelectEvent, FileUploadModule } from 'primeng/fileupload';
+import {
+  DialogRef,
+  LgFileUpload,
+  type LgFileSelectEvent,
+  LgMessage,
+  LgTab,
+  LgTabPanel,
+  LgTabs
+} from '@logigator/ui';
 import { TranslocoDirective } from '@jsverse/transloco';
 import {
   debounceTime,
@@ -25,7 +31,6 @@ import {
   ProjectListComponent,
   type ProjectListItem
 } from '../project-list/project-list.component';
-import { MessageComponent } from '../message/message.component';
 import type { BrowserProjectSummary } from '../../persistence/browser/browser-project.types';
 
 const PAGE_SIZE = 20;
@@ -33,17 +38,19 @@ const PAGE_SIZE = 20;
 @Component({
   selector: 'app-open-project-dialog',
   imports: [
-    TabsModule,
-    FileUploadModule,
+    LgTabs,
+    LgTab,
+    LgTabPanel,
+    LgFileUpload,
     TranslocoDirective,
     ProjectListComponent,
-    MessageComponent
+    LgMessage
   ],
   templateUrl: './open-project-dialog.component.html',
   changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class OpenProjectDialogComponent implements OnInit {
-  private readonly ref = inject(DynamicDialogRef);
+  private readonly ref = inject(DialogRef);
   private readonly persistenceService = inject(PersistenceService);
   private readonly toastService = inject(ToastService);
   private readonly loggingService = inject(LoggingService);
@@ -241,7 +248,7 @@ export class OpenProjectDialogComponent implements OnInit {
 
   // --- File import ---
 
-  protected onFileSelect(event: FileSelectEvent): void {
+  protected onFileSelect(event: LgFileSelectEvent): void {
     const file = event.files[0];
     if (!file) return;
 

@@ -1,7 +1,6 @@
 import { Component } from '../../component';
-import { DestroyOptions, Text } from 'pixi.js';
+import { DestroyOptions } from 'pixi.js';
 import { Subject, takeUntil } from 'rxjs';
-import { PX } from '../../../utils/grid';
 import { inputComponentConfig, InputOptions } from './input.config';
 
 export class InputComponent extends Component<InputOptions> {
@@ -39,26 +38,12 @@ export class InputComponent extends Component<InputOptions> {
     return 1;
   }
 
+  protected override get symbol(): string {
+    return inputComponentConfig.symbol;
+  }
+
   protected draw(): void {
     this.addBody(1, 1);
-
-    const symbol = this.trackTextResolution(
-      new Text({
-        // Use the module-level config, not `this.config`: `draw()` runs from
-        // the base constructor before the subclass `config` field is assigned.
-        text: inputComponentConfig.symbol,
-        style: {
-          fontFamily: 'Roboto',
-          fontSize: 0.35 / PX,
-          fill: this.themingService.currentTheme().fontTint
-        },
-        anchor: { x: 0.5, y: 0.5 }
-      })
-    );
-    symbol.scale.set(PX);
-    symbol.position.set(0.5, 0.5);
-    this.registerRotationCounterContainer(symbol);
-    this.addChild(symbol);
   }
 
   public override destroy(options?: DestroyOptions): void {

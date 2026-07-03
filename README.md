@@ -25,15 +25,16 @@ Logigator is a browser-based logic circuit editor and simulator. Users can place
 
 ## Repository layout
 
-Three independent packages — no workspace manager:
+The repo root is a **Yarn 4 + Angular CLI workspace** (managed via Corepack). Two of the four packages are workspace members; the other two are independent (their own `yarn.lock`, not part of the workspace):
 
-| Package | Description | Stack |
-|---|---|---|
-| `logigator-backend/` | REST API + server-rendered pages | Node.js, Express, TypeORM, Handlebars |
-| `logigator-editor-v2/` | Active canvas editor (**current focus**) | Angular 21, PixiJS 8, Tailwind 4, PrimeNG |
-| `logigator-editor/` | Legacy editor (being replaced) | Angular 17, PixiJS 7 |
+| Package | Workspace member | Description | Stack |
+|---|---|---|---|
+| `logigator-editor-v2/` | ✅ | Active canvas editor (**current focus**) | Angular 21, PixiJS 8, Tailwind 4, `@logigator/ui` |
+| `logigator-ui/` | ✅ | `@logigator/ui` — in-house component library (replaces PrimeNG) | Angular 21, Angular CDK |
+| `logigator-backend/` | — | REST API + server-rendered pages | Node.js, Express, TypeORM, Handlebars |
+| `logigator-editor/` | — | Legacy editor (being replaced) | Angular 17, PixiJS 7 |
 
-All packages use **Yarn 4** (managed via Corepack). Commands run inside Docker containers — do not run `yarn` directly on the host.
+In development the editor consumes `@logigator/ui` directly from its TypeScript source via workspace path mapping — there is no separate build step. Commands run inside Docker containers — do not run `yarn` directly on the host.
 
 ---
 
@@ -180,15 +181,19 @@ docker compose exec editor yarn <command>
 docker compose exec backend yarn <command>
 ```
 
-### Editor (`logigator-editor-v2`)
+### Workspace (`logigator-editor-v2` + `logigator-ui`)
+
+The `editor` container mounts the whole workspace root, so these root Yarn scripts run inside it:
 
 | Command | What it does |
 |---|---|
-| `yarn start` | Angular dev server with HMR |
-| `yarn build` | Production build + PurgeCSS tree-shaking |
-| `yarn test --watch=false` | Full Karma/Jasmine test suite (single run) |
-| `yarn lint` | Angular ESLint + TypeScript strict checks |
-| `yarn format:fix` | Prettier formatting |
+| `yarn start` | Angular dev server with HMR (editor-v2) |
+| `yarn build` | Editor production build (`ng build`) |
+| `yarn test --watch=false` | Full editor Vitest suite (single run) |
+| `yarn build:ui` | Build `@logigator/ui` with ng-packagr (publishing deferred) |
+| `yarn test:ui` | `@logigator/ui` Vitest suite |
+| `yarn lint` | `ng lint` across both projects |
+| `yarn format:fix` | Prettier formatting (both projects) |
 
 Run a single test file:
 
@@ -253,6 +258,12 @@ Key layers in `src/app/`:
 
 Detailed technical docs for each subsystem are in `logigator-editor-v2/docs/`:
 `actions-system.md`, `component-system.md`, `project.md`, `rendering.md`, `simulation.md`, `ui.md`, `wires.md`, `work-mode.md`.
+
+### UI library (`logigator-ui`)
+
+`@logigator/ui` is an in-house **Angular 21 + Angular CDK** component library that replaced PrimeNG in the editor. Each component lives in its own folder under `logigator-ui/src/` (`button/`, `dialog/`, `select/`, `menu/`, …) and is re-exported from `public-api.ts`. Imperative services — `DialogService` (dynamic dialogs), `ConfirmationService`, and `MessageService` (toasts) — sit alongside the declarative components, with shared overlay/focus plumbing in `internal/` and design tokens in `tokens/`.
+
+Theming is **colors-only** via `--lg-*` CSS variables: `styles/theme.css` defines them and `styles/theme.tw.css` maps them into Tailwind's `@theme`. The editor imports the library straight from TypeScript source through workspace path mapping (`@logigator/ui` → `logigator-ui/src/public-api.ts`), so it is *not* a `package.json` dependency of the editor and changes are picked up with no build step.
 
 ### Backend (`logigator-backend`)
 

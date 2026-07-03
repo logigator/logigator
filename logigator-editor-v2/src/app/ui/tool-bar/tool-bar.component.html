@@ -2,141 +2,152 @@
   @if (isSimulationMode()) {
     <app-simulation-controls></app-simulation-controls>
     <div class="ml-auto flex flex-wrap gap-1">
-      <p-button
-        [pTooltip]="exitSimTooltip()"
+      <lg-button
+        [lgTooltip]="t('toolBar.exitSim')"
+        [tooltipShortcut]="shortcutBinding(actions.TOGGLE_SIMULATION)"
         [ariaLabel]="t('toolBar.exitSim')"
         [label]="t('toolBar.exitSim')"
         (onClick)="exitSimulation()"
         tooltipPosition="bottom"
         icon="ph ph-sign-out"
         severity="secondary"
-      ></p-button>
+      ></lg-button>
     </div>
   } @else {
     <div class="flex flex-wrap gap-1">
-      <p-button
-        [pTooltip]="saveTooltip()"
-        [ariaLabel]="saveTooltip()"
+      <lg-button
+        [lgTooltip]="t('toolBar.save')"
+        [tooltipShortcut]="shortcutBinding(actions.SAVE)"
+        [ariaLabel]="t('toolBar.save')"
         (onClick)="save()"
         tooltipPosition="bottom"
         icon="ph ph-floppy-disk"
         severity="secondary"
-      ></p-button>
-      <p-button
-        [pTooltip]="openTooltip()"
-        [ariaLabel]="openTooltip()"
+      ></lg-button>
+      <lg-button
+        [lgTooltip]="t('toolBar.open')"
+        [tooltipShortcut]="shortcutBinding(actions.OPEN)"
+        [ariaLabel]="t('toolBar.open')"
         (onClick)="open()"
         tooltipPosition="bottom"
         icon="ph ph-folder-open"
         severity="secondary"
-      ></p-button>
-      <p-button
-        [pTooltip]="t('toolBar.newComp')"
+      ></lg-button>
+      <lg-button
+        [lgTooltip]="t('toolBar.newComp')"
         [ariaLabel]="t('toolBar.newComp')"
         tooltipPosition="bottom"
         icon="ph ph-cpu"
         severity="secondary"
-      ></p-button>
+      ></lg-button>
     </div>
-    <p-divider layout="vertical" class="mx-1!"></p-divider>
+    <lg-divider layout="vertical" class="mx-1"></lg-divider>
     <div class="flex flex-wrap gap-1">
-      <p-button
-        [pTooltip]="copyTooltip()"
-        [ariaLabel]="copyTooltip()"
+      <lg-button
+        [lgTooltip]="t('toolBar.copy')"
+        [tooltipShortcut]="shortcutBinding(actions.COPY)"
+        [ariaLabel]="t('toolBar.copy')"
         (onClick)="copy()"
         tooltipPosition="bottom"
         icon="ph ph-copy"
         severity="secondary"
-      ></p-button>
-      <p-button
-        [pTooltip]="cutTooltip()"
-        [ariaLabel]="cutTooltip()"
+      ></lg-button>
+      <lg-button
+        [lgTooltip]="t('toolBar.cut')"
+        [tooltipShortcut]="shortcutBinding(actions.CUT)"
+        [ariaLabel]="t('toolBar.cut')"
         (onClick)="cut()"
         tooltipPosition="bottom"
         icon="ph ph-scissors"
         severity="secondary"
-      ></p-button>
-      <p-button
-        [pTooltip]="pasteTooltip()"
-        [ariaLabel]="pasteTooltip()"
+      ></lg-button>
+      <lg-button
+        [lgTooltip]="t('toolBar.paste')"
+        [tooltipShortcut]="shortcutBinding(actions.PASTE)"
+        [ariaLabel]="t('toolBar.paste')"
         (onClick)="paste()"
         tooltipPosition="bottom"
         icon="ph ph-clipboard"
         severity="secondary"
-      ></p-button>
-      <p-button
-        [pTooltip]="deleteTooltip()"
-        [ariaLabel]="deleteTooltip()"
+      ></lg-button>
+      <lg-button
+        [lgTooltip]="t('toolBar.delete')"
+        [tooltipShortcut]="shortcutBinding(actions.DELETE)"
+        [ariaLabel]="t('toolBar.delete')"
         (onClick)="delete()"
         tooltipPosition="bottom"
         icon="ph ph-trash"
         severity="secondary"
-      ></p-button>
+      ></lg-button>
     </div>
-    <p-divider layout="vertical" class="mx-1!"></p-divider>
+    <lg-divider layout="vertical" class="mx-1"></lg-divider>
     <div class="flex flex-wrap gap-1">
-      <p-button
-        [pTooltip]="undoTooltip()"
-        [ariaLabel]="undoTooltip()"
+      <lg-button
+        [lgTooltip]="t('toolBar.undo')"
+        [tooltipShortcut]="shortcutBinding(actions.UNDO)"
+        [ariaLabel]="t('toolBar.undo')"
         (onClick)="undo()"
         tooltipPosition="bottom"
         icon="ph ph-arrow-u-up-left"
         severity="secondary"
-      ></p-button>
-      <p-button
-        [pTooltip]="redoTooltip()"
-        [ariaLabel]="redoTooltip()"
+      ></lg-button>
+      <lg-button
+        [lgTooltip]="t('toolBar.redo')"
+        [tooltipShortcut]="shortcutBinding(actions.REDO)"
+        [ariaLabel]="t('toolBar.redo')"
         (onClick)="redo()"
         tooltipPosition="bottom"
         icon="ph ph-arrow-u-up-right"
         severity="secondary"
-      ></p-button>
+      ></lg-button>
     </div>
-    <p-divider layout="vertical" class="mx-1!"></p-divider>
+    <lg-divider layout="vertical" class="mx-1"></lg-divider>
     <div class="flex flex-wrap gap-1">
-      <p-button
-        [pTooltip]="zoomOutTooltip()"
-        [ariaLabel]="zoomOutTooltip()"
+      <lg-button
+        [lgTooltip]="t('toolBar.zoomOut')"
+        [tooltipShortcut]="shortcutBinding(actions.ZOOM_OUT)"
+        [ariaLabel]="t('toolBar.zoomOut')"
         (onClick)="zoomOut()"
         tooltipPosition="bottom"
         icon="ph ph-magnifying-glass-minus"
         severity="secondary"
-      ></p-button>
-      <p-button
-        [pTooltip]="zoomInTooltip()"
-        [ariaLabel]="zoomInTooltip()"
+      ></lg-button>
+      <lg-button
+        [lgTooltip]="t('toolBar.zoomIn')"
+        [tooltipShortcut]="shortcutBinding(actions.ZOOM_IN)"
+        [ariaLabel]="t('toolBar.zoomIn')"
         (onClick)="zoomIn()"
         tooltipPosition="bottom"
         icon="ph ph-magnifying-glass-plus"
         severity="secondary"
-      ></p-button>
+      ></lg-button>
     </div>
-    <p-divider layout="vertical" class="mx-1!"></p-divider>
+    <lg-divider layout="vertical" class="mx-1"></lg-divider>
     <div class="flex flex-wrap gap-1">
       @for (tool of tools; track tool.id) {
-        <p-button
-          [pTooltip]="
-            t(tool.labelKey) + ' (' + shortcutLabel(tool.shortcut) + ')'
-          "
+        <lg-button
+          [lgTooltip]="t(tool.labelKey)"
+          [tooltipShortcut]="shortcutBinding(tool.shortcut)"
           [ariaLabel]="t(tool.labelKey)"
           [outlined]="!tool.isActive()"
           (onClick)="tool.activate()"
           tooltipPosition="bottom"
           [icon]="tool.icon"
           severity="secondary"
-        ></p-button>
+        ></lg-button>
       }
     </div>
     <div class="ml-auto flex flex-wrap gap-1">
-      <p-button
-        [pTooltip]="startSimTooltip()"
+      <lg-button
+        [lgTooltip]="t('toolBar.startSim')"
+        [tooltipShortcut]="shortcutBinding(actions.TOGGLE_SIMULATION)"
         [ariaLabel]="t('toolBar.startSim')"
         [label]="t('toolBar.startSim')"
         (onClick)="startSimulation()"
         tooltipPosition="bottom"
         icon="ph ph-play"
         severity="secondary"
-      ></p-button>
+      ></lg-button>
     </div>
   }
 </div>

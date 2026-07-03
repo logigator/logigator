@@ -5,8 +5,7 @@ import {
   input
 } from '@angular/core';
 import { TranslocoDirective, TranslocoService } from '@jsverse/transloco';
-import { ButtonModule } from 'primeng/button';
-import { DialogService } from 'primeng/dynamicdialog';
+import { DialogService, LgButton } from '@logigator/ui';
 import { ComponentOptionInput } from '../../component-option';
 import type { MemoryDataComponentOption } from './memory-data.component-option';
 import { HexEditorComponent } from '../../../ui/hex-editor/hex-editor.component';
@@ -26,7 +25,7 @@ import {
  */
 @Component({
   selector: 'app-memory-data-option-input',
-  imports: [TranslocoDirective, ButtonModule],
+  imports: [TranslocoDirective, LgButton],
   templateUrl: './memory-data-option-input.component.html',
   changeDetection: ChangeDetectionStrategy.OnPush
 })
@@ -46,8 +45,6 @@ export class MemoryDataOptionInputComponent implements ComponentOptionInput<stri
       modal: true,
       closable: true,
       dismissableMask: false,
-      draggable: false,
-      resizable: false,
       width: '64rem',
       style: { maxWidth: '100dvw', maxHeight: '100dvh' },
       inputValues: {
@@ -60,7 +57,8 @@ export class MemoryDataOptionInputComponent implements ComponentOptionInput<stri
 
     // The editor is decoupled from the dialog, so bridge its outputs here:
     // commit + trim on save, close on either save or cancel.
-    ref.onChildComponentLoaded.subscribe((editor: HexEditorComponent) => {
+    ref.onChildComponentLoaded.subscribe((instance) => {
+      const editor = instance as HexEditorComponent;
       editor.saved.subscribe((bytes) => {
         this.commit()(bytesToBase64(trimTrailingZeros(bytes)));
         ref.close();

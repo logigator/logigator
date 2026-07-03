@@ -2,7 +2,7 @@
   <div class="flex flex-col gap-1">
     <label for="save-project-name">{{ t('saveProjectDialog.name') }}</label>
     <input
-      pInputText
+      lgInputText
       id="save-project-name"
       type="text"
       [maxlength]="nameMaxLength"
@@ -13,7 +13,7 @@
   </div>
   <div class="flex flex-col gap-1">
     <span>{{ t('saveProjectDialog.destination') }}</span>
-    <p-selectButton
+    <lg-select-button
       [options]="destinationOptions"
       optionLabel="label"
       optionValue="value"
@@ -25,12 +25,12 @@
   </div>
   @if (destination() === 'server') {
     @if (!userService.user()) {
-      <app-message severity="warn">
+      <lg-message severity="warn">
         {{ t('saveProjectDialog.notLoggedIn') }}
-      </app-message>
+      </lg-message>
     } @else {
       <div class="flex gap-2 items-center">
-        <p-toggleswitch
+        <lg-toggle-switch
           inputId="save-project-public"
           [ngModel]="isPublic()"
           (ngModelChange)="isPublic.set($event)"
@@ -41,16 +41,16 @@
         }}</label>
         <i
           class="ph ph-info cursor-help text-surface-500"
-          [pTooltip]="t('saveProjectDialog.publicInfo')"
+          [lgTooltip]="t('saveProjectDialog.publicInfo')"
         ></i>
       </div>
     }
   } @else {
-    <app-message severity="info">
+    <lg-message severity="info">
       {{ t('saveProjectDialog.browserWarning') }}
-    </app-message>
+    </lg-message>
   }
   <div class="flex justify-end">
-    <p-button type="submit" [label]="t('common.save')" [disabled]="!canSave" />
+    <lg-button type="submit" [label]="t('common.save')" [disabled]="!canSave" />
   </div>
 </form>

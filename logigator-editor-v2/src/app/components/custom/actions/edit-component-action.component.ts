@@ -4,7 +4,7 @@ import {
   inject,
   input
 } from '@angular/core';
-import { Button } from 'primeng/button';
+import { LgButton } from '@logigator/ui';
 import { ComponentActionContext } from '../../component-action';
 import { CustomComponentRegistry } from '../custom-component-registry.service';
 import { CustomComponentService } from '../../../custom-component/custom-component.service';
@@ -16,8 +16,8 @@ import { CustomComponentService } from '../../../custom-component/custom-compone
  */
 @Component({
   selector: 'app-edit-component-action',
-  imports: [Button],
-  template: `<p-button
+  imports: [LgButton],
+  template: `<lg-button
     size="small"
     label="Edit component"
     class="float-right"

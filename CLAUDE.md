@@ -2,11 +2,16 @@
 
 ## Repository Layout
 
-Three independent packages using **Yarn 4** (corepack) — no workspace manager:
+The repo root is a **shared Angular CLI workspace** + **Yarn 4 workspace** (corepack). Two members:
+
+- `logigator-editor-v2/` — Angular 21 editor (PixiJS 8, Tailwind 4), current focus
+- `logigator-ui/` — `@logigator/ui`, in-house Angular component library replacing PrimeNG;
+  path-mapped to its TypeScript source in dev (no build step). See `plans/logigator-ui.md`.
+
+Two packages stay **independent** (own `yarn.lock`/`.yarnrc.yml`, *not* workspace members):
 
 - `logigator-backend/` — Node.js/Express (TypeScript, TypeORM, Handlebars)
 - `logigator-editor/` — Legacy Angular 17 editor (PixiJS 7), being replaced
-- `logigator-editor-v2/` — Angular 21 editor (PixiJS 8, Tailwind 4, PrimeNG), current focus
 
 ## Dev Environment
 
@@ -14,18 +19,21 @@ Backend config files must be created from `.example` files in `logigator-backend
 
 ## Commands
 
-All via `yarn <command>`.
+Editor + library: run **from the repo root** (Angular CLI targets / root Yarn scripts). The backend
+is independent: run its commands from `logigator-backend/`.
 
-### logigator-editor-v2
+### Workspace (editor-v2 + logigator-ui), from repo root
 ```bash
-yarn build                          # production build (ng build)
-yarn test --watch=false             # Vitest (full suite, single run)
+yarn build                          # ng build logigator-editor-v2 (production)
+yarn test --watch=false             # Vitest (full editor suite, single run)
 yarn test --watch=false --include='**/some.spec.ts'  # single test
-yarn lint                          # Angular ESLint + TypeScript strict
-yarn format:fix                    # Prettier
+yarn lint                           # ng lint (both projects)
+yarn format:fix                     # Prettier
+yarn build:ui                       # ng build logigator-ui (ng-packagr; publish deferred)
+yarn test:ui                        # Vitest (logigator-ui)
 ```
 
-### logigator-backend
+### logigator-backend (from logigator-backend/)
 ```bash
 yarn build                        # tsc + Gulp asset pipeline
 yarn lint:backend                 # ESLint on src/
@@ -62,6 +70,21 @@ Angular 21 standalone components + PixiJS 8 canvas.
 - Two serialization encodings: the **API** uses the legacy positional `ProjectElement[]` wire format (`t/p/q/r/i/o/n/s`) — *file-format v0 over HTTP*, decoded by the `v0ToV1` migration and encoded by the temporary `persistence/server/` codec; **local files** use a **native, versioned** format (named options, wires as `pos/direction/length`) under `persistence/file/`. Files have a `version` field (absent ⇒ legacy v0; native current = v1); a migration chain upgrades older files to the newest version on load, and only the newest version is ever saved. The built-in configs' `legacyV0Slots` descriptor is the single source of truth the v0 decode and encode share. `SerializedComponent`/`SerializedWire` are a *third*, separate in-memory snapshot used by undo/redo — not a persistence format.
 - Paste flow — `ClipboardService.paste()` deserializes clipboard snapshots into fresh `Component`/`Wire` instances (new IDs, positions shifted by `PASTE_OFFSET = 2` grid units), then delegates to `Project.startPasteSession()` → `FloatingLayer.startPasteSession()` → `PastePlacementSession`. Pasting is a non-modal drag session: elements appear as tinted ghosts in `_dragLayer`, follow the cursor, and check collision via `DragCollisionState`. `isDragging` stays false until the user clicks on one of the ghosts, at which point `beginDrag` locks in the anchor. Clicking off the ghost group commits at the started-at position; Escape cancels (destroys the fresh instances). `SelectionMoveSession` shares `DragCollisionState` for its own collision check.
 - `src/testing/` — shared test fakes (`FakeBrowserProjectStore`, `FakeBrowserComponentStore`). In-memory stand-ins for the IndexedDB-backed stores, extracted so both `persistence.service.spec` and `custom-component.service.spec` can use them without duplication.
+
+### UI Library (logigator-ui)
+
+`@logigator/ui` — in-house Angular 21 component library that replaced PrimeNG in editor-v2. Built on Angular CDK; theming is **colors-only** via `--lg-*` CSS variables. Path-mapped to source in dev (root `tsconfig.json` maps `@logigator/ui` → `logigator-ui/src/public-api.ts`), so the editor compiles it from TypeScript with no build step — it is *not* a `package.json` dependency of editor-v2. Detailed plan: `plans/logigator-ui.md`.
+
+**`logigator-ui/src/` layout** — one folder per component under `components/`, all re-exported from `public-api.ts`; shared helpers (`internal/`, `tokens/`) stay at `src/`:
+
+- `components/` — one folder per component:
+  - Declarative components: `button/`, `divider/`, `tag/`, `badge/`, `avatar/`, `card/`, `ripple/`, `icon-field/` (`LgIconField` + `LgInputIcon`), `input-text/`, `textarea/`, `toggle-switch/`, `select-button/`, `input-number/`, `slider/`, `tooltip/`, `popover/`, `select/`, `dialog/`, `drawer/`, `accordion/`, `tabs/`, `panel-menu/`, `menu/` (`LgMenu` popup + `LgMenubar`), `paginator/`, `file-upload/`, `scroller/`.
+  - Imperative services + their outlet components: `dynamic-dialog/` (`DialogService` → `DialogRef`/`DialogConfig`), `confirm/` (`ConfirmationService` + `LgConfirmDialog`/`LgConfirmPopup`), `toast/` (`ToastService` + `LgToast`; `danger` severity maps to `error`).
+- `internal/` — shared, non-exported plumbing: CDK-based `overlay`/`modal-overlay` foundation, `focus-trap`, `key-manager`, `after-paint`, `caret`, `icon`.
+- `tokens/` — shared types (`LgSeverity`, `LgSize`, form-field tokens).
+- `styles/theme.css` defines the `--lg-*` vars; `styles/theme.tw.css` maps them into Tailwind's `@theme` for editor-v2.
+
+Specs sit next to source (Vitest, `yarn test:ui`). Build is `ng build logigator-ui` (ng-packagr; publishing deferred).
 
 ### Backend (logigator-backend)
 

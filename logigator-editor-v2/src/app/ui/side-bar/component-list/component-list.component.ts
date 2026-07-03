@@ -5,13 +5,16 @@ import {
   inject,
   signal
 } from '@angular/core';
-import { InputTextModule } from 'primeng/inputtext';
 import { FormsModule } from '@angular/forms';
-import { IconFieldModule } from 'primeng/iconfield';
-import { InputIconModule } from 'primeng/inputicon';
-import { AccordionModule } from 'primeng/accordion';
-import { BadgeModule } from 'primeng/badge';
-import { Card } from 'primeng/card';
+import {
+  LgAccordion,
+  LgAccordionPanel,
+  LgBadge,
+  LgCard,
+  LgIconField,
+  LgInputIcon,
+  LgInputText
+} from '@logigator/ui';
 import { TranslocoDirective, TranslocoService } from '@jsverse/transloco';
 import { ComponentProviderService } from '../../../components/component-provider.service';
 import { ComponentListCategoryComponent } from '../component-list-category/component-list-category.component';
@@ -36,13 +39,14 @@ interface PaletteCategory {
 @Component({
   selector: 'app-component-list',
   imports: [
-    InputTextModule,
+    LgInputText,
     FormsModule,
-    IconFieldModule,
-    InputIconModule,
-    AccordionModule,
-    BadgeModule,
-    Card,
+    LgIconField,
+    LgInputIcon,
+    LgAccordion,
+    LgAccordionPanel,
+    LgBadge,
+    LgCard,
     ComponentListCategoryComponent,
     TranslocoDirective
   ],

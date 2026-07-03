@@ -2,22 +2,19 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 
 import { ToolBarComponent } from './tool-bar.component';
-import { DialogService } from 'primeng/dynamicdialog';
-import { appConfig } from '../../app.config';
+import { DialogService } from '@logigator/ui';
+import { configureTestBed } from '../../../testing/configure-test-bed';
 import { WorkModeService } from '../../work-mode/work-mode.service';
 
 describe('ToolBarComponent', () => {
   let component: ToolBarComponent;
   let fixture: ComponentFixture<ToolBarComponent>;
 
-  beforeEach(async () => {
-    await TestBed.configureTestingModule({
-      imports: [ToolBarComponent],
-      providers: [
-        ...appConfig.providers,
-        { provide: DialogService, useValue: { open: () => null } }
-      ]
-    }).compileComponents();
+  beforeEach(() => {
+    configureTestBed(
+      [{ provide: DialogService, useValue: { open: () => null } }],
+      [ToolBarComponent]
+    );
 
     fixture = TestBed.createComponent(ToolBarComponent);
     component = fixture.componentInstance;
@@ -30,7 +27,7 @@ describe('ToolBarComponent', () => {
     const el: HTMLElement = fixture.nativeElement;
     await vi.waitFor(() => {
       fixture.detectChanges();
-      expect(el.querySelector('p-button')).not.toBeNull();
+      expect(el.querySelector('lg-button')).not.toBeNull();
     });
     return el;
   }

@@ -1,15 +1,9 @@
-<p-select-button
+<lg-select-button
   [options]="themeOptions"
   [ngModel]="currentTheme()"
   (ngModelChange)="setTheme($event)"
   optionLabel="label"
   optionValue="value"
+  optionIcon="icon"
   fluid
->
-  <ng-template #item let-item>
-    <div class="flex items-center gap-1">
-      <i [class]="item.icon"></i>
-      <span>{{ item.label }}</span>
-    </div>
-  </ng-template>
-</p-select-button>
+/>

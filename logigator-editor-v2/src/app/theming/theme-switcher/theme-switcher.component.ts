@@ -1,12 +1,12 @@
 import { ChangeDetectionStrategy, Component, inject } from '@angular/core';
 import { FormsModule } from '@angular/forms';
-import { SelectButtonModule } from 'primeng/selectbutton';
+import { LgSelectButton } from '@logigator/ui';
 import { ThemingService } from '../theming.service';
 import { ThemeType } from '../theme-type.enum';
 
 @Component({
   selector: 'app-theme-switcher',
-  imports: [FormsModule, SelectButtonModule],
+  imports: [FormsModule, LgSelectButton],
   templateUrl: './theme-switcher.component.html',
   changeDetection: ChangeDetectionStrategy.OnPush
 })

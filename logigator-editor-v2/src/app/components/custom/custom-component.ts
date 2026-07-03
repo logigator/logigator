@@ -1,8 +1,7 @@
-import { DestroyOptions, Text } from 'pixi.js';
+import { DestroyOptions } from 'pixi.js';
 import { Subject, takeUntil } from 'rxjs';
 import { Component } from '../component';
 import { ComponentConfig } from '../component-config.model';
-import { PX } from '../../utils/grid';
 import { CustomComponentOptions } from './custom-component.config';
 import { CustomComponentDefinition } from './custom-component-definition.model';
 
@@ -64,30 +63,14 @@ export class CustomComponent extends Component<CustomComponentOptions> {
     return 3;
   }
 
+  // Null during the base constructor's draw — the constructor's redraw()
+  // adds the symbol once `_def` is assigned.
+  protected override get symbol(): string | null {
+    return this._def?.symbol ?? null;
+  }
+
   protected draw(): void {
     this.addBody(this.bodyGridWidth, this.bodyGridHeight);
-
-    // Runs once from the base constructor before `_def` exists — the box above
-    // is enough then; the symbol is added by the constructor's redraw().
-    const def = this._def;
-    if (!def) return;
-
-    const symbol = this.trackTextResolution(
-      new Text({
-        text: def.symbol,
-        style: {
-          fontFamily: 'Roboto',
-          fontSize: 0.5 / PX,
-          fill: this.themingService.currentTheme().fontTint
-        },
-        anchor: { x: 0.5, y: 0.5 }
-      })
-    );
-    symbol.scale.set(PX);
-    symbol.position.set(this.bodyGridWidth / 2, this.bodyGridHeight / 2);
-    // Keep the symbol upright regardless of the component's rotation.
-    this.registerRotationCounterContainer(symbol);
-    this.addChild(symbol);
   }
 
   public override destroy(options?: DestroyOptions): void {

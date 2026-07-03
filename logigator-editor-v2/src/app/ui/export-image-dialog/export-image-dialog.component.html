@@ -2,7 +2,7 @@
   @if (projectOptions().length > 1) {
     <div class="flex flex-col gap-1">
       <label for="export-project">{{ t('imageExport.project') }}</label>
-      <p-select
+      <lg-select
         inputId="export-project"
         [options]="projectOptions()"
         optionLabel="label"
@@ -15,7 +15,7 @@
   }
   <div class="flex flex-col gap-1">
     <span>{{ t('imageExport.format') }}</span>
-    <p-selectButton
+    <lg-select-button
       [options]="formatOptions"
       optionLabel="label"
       optionValue="value"
@@ -27,7 +27,7 @@
   </div>
   <div class="flex flex-col gap-1">
     <span>{{ t('imageExport.resolution') }}</span>
-    <p-selectButton
+    <lg-select-button
       [options]="resolutionOptions"
       optionLabel="label"
       optionValue="value"
@@ -46,7 +46,7 @@
     }
   </div>
   <div class="flex items-center gap-2">
-    <p-toggleswitch
+    <lg-toggle-switch
       inputId="export-background"
       [ngModel]="background()"
       (ngModelChange)="background.set($event)"
@@ -62,7 +62,7 @@
       <label for="export-quality"
         >{{ t('imageExport.quality') }} — {{ quality() }}%</label
       >
-      <p-slider
+      <lg-slider
         [min]="10"
         [max]="100"
         [ngModel]="quality()"
@@ -72,14 +72,14 @@
     </div>
   }
   <div class="flex justify-end gap-2">
-    <p-button
+    <lg-button
       type="button"
       severity="secondary"
       [outlined]="true"
       [label]="t('imageExport.cancel')"
       (onClick)="cancel()"
     />
-    <p-button
+    <lg-button
       type="submit"
       [label]="t('imageExport.export')"
       [disabled]="!canExport"

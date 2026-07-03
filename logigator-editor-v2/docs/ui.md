@@ -92,7 +92,7 @@ The PixiJS bridge. Hosts a single `<canvas>` element and owns the `Application` 
 
 **Initialization (`ngOnInit`)**
 
-1. Calls `AssetsService.init()` to preload the Roboto font via `pixi.js Assets`.
+1. Calls `AssetsService.init()` to load the Roboto Mono subset font and install the canvas bitmap-font atlas.
 2. Inside `NgZone.runOutsideAngular`, initializes the `Application` with:
    - `canvas` bound to `#canvas` (ViewChild, `static: true`)
    - `resizeTo` the host element, so it auto-resizes with the container
@@ -263,7 +263,7 @@ A thin loop rendered inside the floating `p-card` in `AppComponent` when a compo
 | `ClipboardService`         | `TitleBarComponent`, `ToolBarComponent`                                                              | Copy/cut/paste/delete operations; serializes selected elements and drives paste sessions. |
 | `ComponentProviderService` | `SideBarComponent`, `StatusBarComponent`                                                             | Registry lookup — provides component lists by category and config by type.                |
 | `ThemingService`           | `BoardComponent`                                                                                     | Supplies the background color for the PixiJS renderer at init time.                       |
-| `AssetsService`            | `BoardComponent`                                                                                     | Preloads PixiJS assets (Roboto font) before the application renders.                      |
+| `AssetsService`            | `BoardComponent`                                                                                     | Loads the canvas font and installs the bitmap-font atlas before the application renders.  |
 | `TranslocoService`         | `TitleBarComponent`                                                                                  | Imperative translation needed to build `MenuItem[]` objects for `p-menubar`.              |
 
 ---

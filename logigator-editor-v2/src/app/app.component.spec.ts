@@ -1,11 +1,10 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { TestBed } from '@angular/core/testing';
 import { Location } from '@angular/common';
-import { provideHttpClientTesting } from '@angular/common/http/testing';
 import { Rectangle } from 'pixi.js';
 import { AppComponent } from './app.component';
 import { PersistenceService } from './persistence/persistence.service';
-import { appConfig } from './app.config';
+import { configureTestBed } from '../testing/configure-test-bed';
 import { ProjectService } from './project/project.service';
 import { ProjectMetadataStore } from './persistence/project-metadata.store';
 import { MobileUiService } from './layout/mobile-ui.service';
@@ -28,12 +27,9 @@ function stubCompactMatchMedia(): void {
 }
 
 describe('AppComponent', () => {
-  beforeEach(async () => {
-    await TestBed.configureTestingModule({
-      imports: [AppComponent],
-      providers: [
-        ...appConfig.providers,
-        provideHttpClientTesting(),
+  beforeEach(() => {
+    configureTestBed(
+      [
         {
           provide: Location,
           useValue: {
@@ -53,8 +49,9 @@ describe('AppComponent', () => {
             registerOpenProject: vi.fn()
           }
         }
-      ]
-    }).compileComponents();
+      ],
+      [AppComponent]
+    );
   });
 
   it('should create the app', () => {

@@ -1,20 +1,16 @@
-/* eslint-disable @typescript-eslint/no-empty-function */
-
-import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { beforeEach, describe, expect, it } from 'vitest';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
-import { Injector } from '@angular/core';
 import { By } from '@angular/platform-browser';
 import { Rectangle } from 'pixi.js';
 
 import { ComponentSettingsComponent } from './component-settings.component';
-import { appConfig } from '../../app.config';
+import { configureTestBed } from '../../../testing/configure-test-bed';
 import { WorkModeService } from '../../work-mode/work-mode.service';
 import { BuiltInComponentType } from '../../components/component-type.enum';
 import { ProjectService } from '../../project/project.service';
 import { ProjectMetadataStore } from '../../persistence/project-metadata.store';
 import { Project } from '../../project/project';
 import { NumberOptionInputComponent } from '../../components/component-options/number/number-option-input.component';
-import { setStaticDIInjector } from '../../utils/get-di';
 import { WorkMode } from '../../work-mode/work-mode.enum';
 import { makeAnd } from '../../../testing/factories';
 
@@ -23,16 +19,8 @@ describe('ComponentSettingsComponent', () => {
   let fixture: ComponentFixture<ComponentSettingsComponent>;
   let workModeService: WorkModeService;
 
-  beforeEach(async () => {
-    // Suppress Transloco's "Missing translation for ..." warnings — the tests
-    // don't load translation files and the fallback keys are sufficient.
-    vi.spyOn(console, 'warn').mockImplementation(() => {});
-    await TestBed.configureTestingModule({
-      imports: [ComponentSettingsComponent],
-      providers: appConfig.providers
-    }).compileComponents();
-
-    setStaticDIInjector(TestBed.inject(Injector));
+  beforeEach(() => {
+    configureTestBed([], [ComponentSettingsComponent]);
     workModeService = TestBed.inject(WorkModeService);
     fixture = TestBed.createComponent(ComponentSettingsComponent);
     component = fixture.componentInstance;
@@ -45,7 +33,7 @@ describe('ComponentSettingsComponent', () => {
 
   it('renders no panel while nothing is being placed or selected', () => {
     const host = fixture.nativeElement as HTMLElement;
-    expect(host.querySelector('p-card')).toBeNull();
+    expect(host.querySelector('lg-card')).toBeNull();
   });
 
   it('omits inspector-hidden options from the rendered form', () => {
@@ -56,7 +44,7 @@ describe('ComponentSettingsComponent', () => {
     fixture.detectChanges();
 
     const host = fixture.nativeElement as HTMLElement;
-    expect(host.querySelector('p-card')).not.toBeNull();
+    expect(host.querySelector('lg-card')).not.toBeNull();
     expect(host.querySelector('app-text-input-option-input')).not.toBeNull();
     expect(host.querySelector('app-select-button-option-input')).not.toBeNull();
     expect(host.querySelector('app-number-option-input')).toBeNull();

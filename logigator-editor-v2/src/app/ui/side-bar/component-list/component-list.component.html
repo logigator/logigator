@@ -1,4 +1,4 @@
-<p-card *transloco="let t">
+<lg-card *transloco="let t">
   <ng-template #title>
     <span class="flex items-center gap-2 text-lg mb-2">
       <i class="ph ph-dresser text-primary"></i>
@@ -6,46 +6,40 @@
     </span>
   </ng-template>
   <div class="flex flex-col gap-2">
-    <p-iconfield iconPosition="right">
-      <p-inputicon class="ph ph-magnifying-glass"></p-inputicon>
+    <lg-icon-field iconPosition="left">
+      <lg-input-icon class="ph ph-magnifying-glass"></lg-input-icon>
       <input
-        pInputText
+        lgInputText
         [placeholder]="t('sideBar.search')"
         class="w-full"
         [ngModel]="searchText()"
         (ngModelChange)="searchText.set($event)"
       />
-    </p-iconfield>
+    </lg-icon-field>
 
-    <p-accordion
+    <lg-accordion
       [multiple]="true"
       [value]="openPanels()"
       (valueChange)="onPanelChange($event)"
-      [dt]="{
-        'content.padding': '0 0 1.125rem 0',
-        'header.padding': '1.125rem 0'
-      }"
     >
       @for (cat of categories(); track cat.key) {
-        <p-accordion-panel [value]="cat.key" [class.border-b-0!]="$last">
-          <p-accordion-header>
+        <lg-accordion-panel [value]="cat.key">
+          <ng-template #header>
             <span class="flex items-center gap-2 w-full font-semibold">
               {{ t(cat.labelKey) }}
-              <p-badge
-                [dt]="{ borderRadius: '9999px' }"
+              <lg-badge
+                rounded
                 class="ml-auto mr-2"
                 [value]="cat.components.length"
                 severity="secondary"
-              ></p-badge>
+              ></lg-badge>
             </span>
-          </p-accordion-header>
-          <p-accordion-content>
-            <app-component-list-category
-              [components]="cat.components"
-            ></app-component-list-category>
-          </p-accordion-content>
-        </p-accordion-panel>
+          </ng-template>
+          <app-component-list-category
+            [components]="cat.components"
+          ></app-component-list-category>
+        </lg-accordion-panel>
       }
-    </p-accordion>
+    </lg-accordion>
   </div>
-</p-card>
+</lg-card>

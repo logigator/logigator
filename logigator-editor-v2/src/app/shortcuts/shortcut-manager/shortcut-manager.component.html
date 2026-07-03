@@ -13,23 +13,23 @@
                 [binding]="shortcutService.binding(action)()"
                 (bindingChange)="onBindingChange(action, $event)"
               />
-              <p-button
+              <lg-button
                 icon="ph ph-arrow-counter-clockwise"
                 severity="secondary"
                 [text]="true"
                 size="small"
                 [disabled]="isDefault(action)"
-                [pTooltip]="t('shortcuts.manager.reset')"
+                [lgTooltip]="t('shortcuts.manager.reset')"
                 tooltipPosition="bottom"
                 (onClick)="shortcutService.resetBinding(action)"
               />
-              <p-button
+              <lg-button
                 icon="ph ph-trash"
                 severity="secondary"
                 [text]="true"
                 size="small"
                 [disabled]="!shortcutService.binding(action)()"
-                [pTooltip]="t('shortcuts.manager.unassign')"
+                [lgTooltip]="t('shortcuts.manager.unassign')"
                 tooltipPosition="bottom"
                 (onClick)="shortcutService.setBinding(action, null)"
               />
@@ -38,13 +38,13 @@
         }
       </div>
       @if (!last) {
-        <p-divider />
+        <lg-divider class="my-4" />
       }
     }
   </div>
 
   <div class="flex justify-end mt-4">
-    <p-button
+    <lg-button
       [label]="t('shortcuts.manager.resetAll')"
       severity="danger"
       [outlined]="true"

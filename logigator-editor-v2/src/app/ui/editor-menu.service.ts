@@ -1,8 +1,9 @@
-import { inject, Injectable, Signal } from '@angular/core';
-import { toSignal } from '@angular/core/rxjs-interop';
-import { map } from 'rxjs/operators';
-import { MenuItem, ConfirmationService } from 'primeng/api';
-import { DialogService } from 'primeng/dynamicdialog';
+import { computed, inject, Injectable, Signal } from '@angular/core';
+import {
+  ConfirmationService,
+  DialogService,
+  type MenuItem
+} from '@logigator/ui';
 import { TranslocoService } from '@jsverse/transloco';
 import { PersistenceService } from '../persistence/persistence.service';
 import { ProjectService } from '../project/project.service';
@@ -19,8 +20,8 @@ import { DebugMenuService } from './debug-menu.service';
 
 /**
  * Builds the File/Edit/View/Help menu model and owns the commands behind it.
- * Shared by the desktop title bar (a `p-menubar`) and the mobile top bar's menu
- * Drawer (a `p-menu`), so both surfaces always render the same items.
+ * Shared by the desktop title bar (an `lg-menubar`) and the mobile top bar's
+ * `lg-panel-menu`, so both surfaces always render the same items.
  */
 @Injectable({ providedIn: 'root' })
 export class EditorMenuService {
@@ -35,10 +36,15 @@ export class EditorMenuService {
   private readonly saveCoordinator = inject(SaveCoordinatorService);
   private readonly debugMenuService = inject(DebugMenuService);
 
-  /** Rebuilt whenever the active language changes so labels stay translated. */
-  public readonly items: Signal<MenuItem[]> = toSignal(
-    this.translocoService.events$.pipe(map(() => this.generateMenuItems())),
-    { initialValue: [] }
+  /**
+   * Rebuilt whenever the active language changes so labels stay translated.
+   * Driven by `selectTranslation()` rather than `events$`: that source replays
+   * the current language to late subscribers (this service is instantiated only
+   * once the title bar renders, after the initial load event has fired), so the
+   * menu is built immediately instead of waiting for the next language change.
+   */
+  public readonly items: Signal<MenuItem[]> = computed(() =>
+    this.generateMenuItems()
   );
 
   private generateMenuItems(): MenuItem[] {

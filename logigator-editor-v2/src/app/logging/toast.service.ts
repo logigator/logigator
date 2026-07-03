@@ -1,5 +1,5 @@
 import { inject, Injectable } from '@angular/core';
-import { MessageService } from 'primeng/api';
+import { ToastService as UiToastService } from '@logigator/ui';
 import { TranslocoService } from '@jsverse/transloco';
 
 /**
@@ -11,7 +11,7 @@ import { TranslocoService } from '@jsverse/transloco';
   providedIn: 'root'
 })
 export class ToastService {
-  private readonly messageService = inject(MessageService);
+  private readonly messageService = inject(UiToastService);
   private readonly translocoService = inject(TranslocoService);
 
   public error(message: string): void {

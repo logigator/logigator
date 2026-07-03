@@ -1,5 +1,5 @@
-<p-confirmpopup key="inline" />
-<p-confirm-dialog />
+<lg-confirm-popup key="inline" />
+<lg-confirm-dialog />
 
 @if (layout.isCompact()) {
   <app-mobile-top-bar></app-mobile-top-bar>
@@ -23,7 +23,7 @@
         [project]="projectService.activeProject()"
         (cursorPositionChange)="cursorPosition.set($event)"
       ></app-board>
-      <p-toast position="bottom-left" class="absolute! -mb-4" />
+      <lg-toast position="bottom-left" class="absolute! -mb-4" />
 
       @if (!layout.isCompact()) {
         <app-component-settings></app-component-settings>
@@ -68,38 +68,36 @@
 
 @if (layout.isCompact()) {
   <ng-container *transloco="let t">
-    <p-drawer
+    <lg-drawer
       [visible]="mobileUi.activeSheet() === 'palette'"
       (visibleChange)="onSheetClosed($event)"
       position="bottom"
-      styleClass="h-[90vh]!"
       [header]="t('mobile.palette')"
     >
       <app-component-list></app-component-list>
-    </p-drawer>
+    </lg-drawer>
 
-    <p-drawer
+    <lg-drawer
       [visible]="mobileUi.activeSheet() === 'settings'"
       (visibleChange)="onSheetClosed($event)"
       position="bottom"
-      styleClass="h-[70vh]!"
       [header]="t('mobile.settings')"
     >
       <app-component-settings [floating]="false"></app-component-settings>
-    </p-drawer>
+    </lg-drawer>
 
     @if (isEditingComponent()) {
-      <p-drawer
+      <lg-drawer
         [visible]="mobileUi.activeSheet() === 'ports'"
         (visibleChange)="onSheetClosed($event)"
         position="right"
         [header]="t('mobile.ports')"
       >
         <app-ports-panel></app-ports-panel>
-      </p-drawer>
+      </lg-drawer>
     }
 
-    <p-drawer
+    <lg-drawer
       [visible]="mobileUi.activeSheet() === 'menu'"
       (visibleChange)="onSheetClosed($event)"
       position="left"
@@ -109,8 +107,8 @@
         <div class="border-b border-border pb-1 mb-1">
           <app-user-settings></app-user-settings>
         </div>
-        <p-panel-menu [model]="menuItems()"></p-panel-menu>
+        <lg-panel-menu [model]="menuItems()"></lg-panel-menu>
       </div>
-    </p-drawer>
+    </lg-drawer>
   </ng-container>
 }

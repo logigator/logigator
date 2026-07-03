@@ -1,6 +1,6 @@
 import { ChangeDetectionStrategy, Component, input } from '@angular/core';
 import { FormsModule } from '@angular/forms';
-import { InputNumberModule } from 'primeng/inputnumber';
+import { LgInputNumber } from '@logigator/ui';
 import { TranslocoDirective } from '@jsverse/transloco';
 import type { ComponentOptionInput } from '../../component-option';
 import type { NumberComponentOption } from './number.component-option';
@@ -9,7 +9,7 @@ let nextId = 0;
 
 @Component({
   selector: 'app-number-option-input',
-  imports: [FormsModule, InputNumberModule, TranslocoDirective],
+  imports: [FormsModule, LgInputNumber, TranslocoDirective],
   templateUrl: './number-option-input.component.html',
   changeDetection: ChangeDetectionStrategy.OnPush
 })

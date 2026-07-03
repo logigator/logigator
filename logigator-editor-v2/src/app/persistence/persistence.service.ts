@@ -224,6 +224,7 @@ export class PersistenceService {
     });
 
     this._replaceMainProject(project);
+    this.location.go('/');
     return project;
   }
 

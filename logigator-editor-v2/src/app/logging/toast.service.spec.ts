@@ -1,13 +1,13 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { TestBed } from '@angular/core/testing';
-import { MessageService } from 'primeng/api';
+import { ToastService as UiToastService } from '@logigator/ui';
 import { TranslocoService } from '@jsverse/transloco';
 
 import { ToastService } from './toast.service';
 
 describe('ToastService', () => {
   let service: ToastService;
-  let messageService: MessageService;
+  let messageService: UiToastService;
 
   beforeEach(() => {
     vi.spyOn(console, 'error');
@@ -23,12 +23,12 @@ describe('ToastService', () => {
 
     TestBed.configureTestingModule({
       providers: [
-        MessageService,
+        UiToastService,
         { provide: TranslocoService, useValue: translocoSpy }
       ]
     });
     service = TestBed.inject(ToastService);
-    messageService = TestBed.inject(MessageService);
+    messageService = TestBed.inject(UiToastService);
 
     vi.spyOn(messageService, 'add');
   });

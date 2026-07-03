@@ -1,31 +1,31 @@
 import { ChangeDetectionStrategy, Component, inject } from '@angular/core';
-import { ButtonModule } from 'primeng/button';
+import { LgButton } from '@logigator/ui';
 import { TranslocoDirective } from '@jsverse/transloco';
 import { ProjectService } from '../../project/project.service';
 
 /** Compact +/- zoom pill — the discoverable touch fallback to pinch-zoom. */
 @Component({
   selector: 'app-zoom-fab',
-  imports: [ButtonModule, TranslocoDirective],
+  imports: [LgButton, TranslocoDirective],
   template: `
     <div
       *transloco="let t"
       class="flex flex-col gap-2 rounded-full bg-content/90 p-1 shadow-lg backdrop-blur"
     >
-      <p-button
+      <lg-button
         icon="ph ph-plus"
         severity="secondary"
         rounded
         [ariaLabel]="t('toolBar.zoomIn')"
         (onClick)="zoomIn()"
-      ></p-button>
-      <p-button
+      ></lg-button>
+      <lg-button
         icon="ph ph-minus"
         severity="secondary"
         rounded
         [ariaLabel]="t('toolBar.zoomOut')"
         (onClick)="zoomOut()"
-      ></p-button>
+      ></lg-button>
     </div>
   `,
   changeDetection: ChangeDetectionStrategy.OnPush

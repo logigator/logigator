@@ -8,27 +8,12 @@ import {
 import { firstValueFrom } from 'rxjs';
 import { provideTransloco, TranslocoService } from '@jsverse/transloco';
 import { TranslationLoaderService } from './translation/translation-loader.service';
-import { providePrimeNG } from 'primeng/config';
-import { ConfirmationService, MessageService } from 'primeng/api';
-import { DialogService } from 'primeng/dynamicdialog';
-import { AppTheme } from './app.theme';
 import { provideHttpClient } from '@angular/common/http';
 import { provideTranslocoPersistLang } from '@jsverse/transloco-persist-lang';
 
 export const appConfig: ApplicationConfig = {
   providers: [
     provideZonelessChangeDetection(),
-    providePrimeNG({
-      theme: {
-        preset: AppTheme,
-        options: {
-          darkModeSelector: '.dark-mode'
-        }
-      }
-    }),
-    ConfirmationService,
-    MessageService,
-    DialogService,
     provideTransloco({
       config: {
         defaultLang: 'en',
@@ -62,7 +47,13 @@ export const appConfig: ApplicationConfig = {
     }),
     provideAppInitializer(() => {
       const transloco = inject(TranslocoService);
-      return firstValueFrom(transloco.load(transloco.getActiveLang()));
+      // load() ends with takeUntilDestroyed: if the injector is torn down
+      // before the lazy language bundle resolves, the stream completes without
+      // emitting. defaultValue resolves that empty completion instead of
+      // rejecting; a genuine load error still propagates.
+      return firstValueFrom(transloco.load(transloco.getActiveLang()), {
+        defaultValue: undefined
+      });
     }),
     provideHttpClient()
   ]

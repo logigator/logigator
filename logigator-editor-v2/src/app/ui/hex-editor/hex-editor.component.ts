@@ -13,11 +13,13 @@ import {
 } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { TranslocoDirective, TranslocoService } from '@jsverse/transloco';
-import { ConfirmationService } from 'primeng/api';
-import { ButtonModule } from 'primeng/button';
-import { SelectButtonModule } from 'primeng/selectbutton';
-import { InputTextModule } from 'primeng/inputtext';
-import { Scroller, ScrollerModule } from 'primeng/scroller';
+import {
+  ConfirmationService,
+  LgButton,
+  LgInputText,
+  LgScroller,
+  LgSelectButton
+} from '@logigator/ui';
 import { LayoutService } from '../../layout/layout.service';
 import {
   maxWord,
@@ -66,10 +68,10 @@ const RADICES: Record<Radix, RadixSpec> = {
   imports: [
     FormsModule,
     TranslocoDirective,
-    ButtonModule,
-    SelectButtonModule,
-    InputTextModule,
-    ScrollerModule
+    LgButton,
+    LgSelectButton,
+    LgInputText,
+    LgScroller
   ],
   templateUrl: './hex-editor.component.html',
   changeDetection: ChangeDetectionStrategy.OnPush
@@ -94,7 +96,7 @@ export class HexEditorComponent {
   protected readonly isCompact = this.layout.isCompact;
   protected readonly isTouch = this.layout.isTouch;
 
-  private readonly scroller = viewChild(Scroller);
+  private readonly scroller = viewChild(LgScroller);
   /** The horizontal-scroll container and the header's column row, used to bring
    * a searched cell's column into view sideways (the header is always rendered
    * and column-aligned with the body, so it's a reliable measuring proxy). */

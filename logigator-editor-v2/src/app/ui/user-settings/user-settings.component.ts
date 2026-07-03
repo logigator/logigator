@@ -5,11 +5,7 @@ import {
   inject,
   signal
 } from '@angular/core';
-import { AvatarModule } from 'primeng/avatar';
-import { DividerModule } from 'primeng/divider';
-import { MenuModule } from 'primeng/menu';
-import { Ripple } from 'primeng/ripple';
-import { MenuItem } from 'primeng/api';
+import { LgAvatar, LgDivider, LgMenu, LgRipple, MenuItem } from '@logigator/ui';
 import { ThemeSwitcherComponent } from '../../theming/theme-switcher/theme-switcher.component';
 import { LanguageSwitcherComponent } from '../../translation/language-switcher/language-switcher.component';
 import { UserService } from '../../user/user.service';
@@ -18,10 +14,10 @@ import { SettingsComponent } from '../../settings/settings.component';
 @Component({
   selector: 'app-user-settings',
   imports: [
-    AvatarModule,
-    DividerModule,
-    MenuModule,
-    Ripple,
+    LgAvatar,
+    LgDivider,
+    LgMenu,
+    LgRipple,
     ThemeSwitcherComponent,
     LanguageSwitcherComponent,
     SettingsComponent

@@ -1,5 +1,6 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { TestBed } from '@angular/core/testing';
+import { of } from 'rxjs';
 import { TranslocoService } from '@jsverse/transloco';
 import { configureTestBed } from '../../../testing/configure-test-bed';
 import {
@@ -132,7 +133,9 @@ describe('server-circuit.codec', () => {
 
   beforeEach(() => {
     const translocoSpy = {
-      translate: vi.fn().mockName('TranslocoService.translate')
+      translate: vi.fn().mockName('TranslocoService.translate'),
+      getActiveLang: () => 'en',
+      load: () => of({})
     };
     translocoSpy.translate.mockImplementation((key: string) => key);
     configureTestBed([{ provide: TranslocoService, useValue: translocoSpy }]);

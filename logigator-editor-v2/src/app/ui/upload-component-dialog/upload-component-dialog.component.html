@@ -14,7 +14,7 @@
 
   @if (userService.user()) {
     <div class="flex gap-2 items-center">
-      <p-toggleswitch
+      <lg-toggle-switch
         inputId="upload-component-public"
         [ngModel]="isPublic()"
         (ngModelChange)="isPublic.set($event)"
@@ -25,29 +25,29 @@
       }}</label>
       <i
         class="ph ph-info cursor-help text-surface-500"
-        [pTooltip]="t('uploadComponent.publicInfo')"
+        [lgTooltip]="t('uploadComponent.publicInfo')"
       ></i>
     </div>
   } @else {
-    <app-message severity="warn">
+    <lg-message severity="warn">
       {{ t('uploadComponent.notLoggedIn') }}
-    </app-message>
+    </lg-message>
   }
 
   <div class="flex justify-end gap-2">
-    <p-button
+    <lg-button
       severity="secondary"
       [outlined]="true"
       [label]="t('uploadComponent.cancel')"
       (onClick)="cancel()"
     />
-    <p-button
+    <lg-button
       [label]="t('uploadComponent.upload')"
       [disabled]="!userService.user()"
       (onClick)="upload()"
     />
     @if (uploadableDependencies().length) {
-      <p-button
+      <lg-button
         icon="ph ph-stack"
         [label]="t('uploadComponent.uploadWithDeps')"
         [disabled]="!userService.user()"

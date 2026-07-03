@@ -1,17 +1,17 @@
 <div *transloco="let t">
   <!-- Search -->
   <div class="p-3 border-b border-border">
-    <p-iconfield class="w-full">
-      <p-inputicon class="ph ph-magnifying-glass" />
+    <lg-icon-field class="w-full">
+      <lg-input-icon class="ph ph-magnifying-glass" />
       <input
-        pInputText
+        lgInputText
         class="w-full"
         type="text"
         [placeholder]="t('openProjectDialog.searchPlaceholder')"
         [(ngModel)]="searchQuery"
         (input)="onSearchInput()"
       />
-    </p-iconfield>
+    </lg-icon-field>
   </div>
 
   <!-- List -->
@@ -36,7 +36,7 @@
             <span class="flex w-full items-center gap-2">
               <input
                 #renameInput
-                pInputText
+                lgInputText
                 class="w-full"
                 type="text"
                 [maxlength]="nameMaxLength"
@@ -47,7 +47,7 @@
                 (keydown.escape)="cancelRename($event)"
                 (blur)="commitRename($event, item)"
               />
-              <p-button
+              <lg-button
                 icon="ph ph-x"
                 severity="secondary"
                 [text]="true"
@@ -62,13 +62,13 @@
               <span class="text-sm text-muted">
                 {{ item.lastEdited | date: 'mediumDate' }}
               </span>
-              <p-button
+              <lg-button
                 icon="ph ph-pencil-simple"
                 [text]="true"
                 [ariaLabel]="t('openProjectDialog.renameProject')"
                 (click)="startRename($event, item)"
               />
-              <p-button
+              <lg-button
                 icon="ph ph-trash"
                 severity="danger"
                 [text]="true"
@@ -84,7 +84,7 @@
 
   <!-- Pagination -->
   @if (totalItems() > pageSize) {
-    <p-paginator
+    <lg-paginator
       [first]="paginatorFirst()"
       [rows]="pageSize"
       [totalRecords]="totalItems()"

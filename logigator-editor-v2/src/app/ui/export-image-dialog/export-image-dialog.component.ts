@@ -6,12 +6,14 @@ import {
   signal
 } from '@angular/core';
 import { FormsModule } from '@angular/forms';
-import { DynamicDialogRef } from 'primeng/dynamicdialog';
-import { SelectButtonModule } from 'primeng/selectbutton';
-import { SelectModule } from 'primeng/select';
-import { ToggleSwitchModule } from 'primeng/toggleswitch';
-import { SliderModule } from 'primeng/slider';
-import { Button } from 'primeng/button';
+import {
+  DialogRef,
+  LgButton,
+  LgSelect,
+  LgSelectButton,
+  LgSlider,
+  LgToggleSwitch
+} from '@logigator/ui';
 import { TranslocoDirective } from '@jsverse/transloco';
 import { ProjectService } from '../../project/project.service';
 import { ProjectMetadataStore } from '../../persistence/project-metadata.store';
@@ -33,18 +35,18 @@ const DEFAULT_QUALITY_PERCENT = 92;
   selector: 'app-export-image-dialog',
   imports: [
     FormsModule,
-    SelectButtonModule,
-    SelectModule,
-    ToggleSwitchModule,
-    SliderModule,
-    Button,
+    LgSelect,
+    LgSelectButton,
+    LgToggleSwitch,
+    LgSlider,
+    LgButton,
     TranslocoDirective
   ],
   templateUrl: './export-image-dialog.component.html',
   changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class ExportImageDialogComponent {
-  private readonly ref = inject(DynamicDialogRef);
+  private readonly ref = inject(DialogRef);
   private readonly projectService = inject(ProjectService);
   private readonly metadataStore = inject(ProjectMetadataStore);
   private readonly imageExport = inject(ImageExportService);
@@ -67,8 +69,8 @@ export class ExportImageDialogComponent {
   });
 
   // Options carry the array index (a primitive) rather than the Project itself:
-  // a Project is a deep, circular PixiJS Container, and p-select would run
-  // deepEquals over it for option matching.
+  // a Project is a deep, circular PixiJS Container, so binding the index keeps
+  // lg-select's by-value (===) option matching cheap and Project-free.
   protected readonly projectOptions = computed(() =>
     this._projects().map((project, index) => ({
       label: this._projectName(project),
