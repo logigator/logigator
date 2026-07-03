@@ -3,8 +3,9 @@ import { LgCaret } from '../../internal/caret';
 import { LgOverlaySide } from '../../internal/overlay';
 
 /**
- * The tooltip bubble rendered inside the overlay. `content`-background with a
- * shadow and a caret that tracks the resolved {@link LgOverlaySide}.
+ * The tooltip bubble rendered inside the overlay: a raised `surface-700` box
+ * with `surface-0` text in both schemes (dark-on-light / light-on-dark), plus a
+ * caret that tracks the resolved {@link LgOverlaySide}.
  */
 @Component({
   selector: 'lg-tooltip-panel',
@@ -12,10 +13,10 @@ import { LgOverlaySide } from '../../internal/overlay';
   imports: [LgCaret],
   template: `
     <div
-      class="relative max-w-xs rounded-md bg-content px-2 py-1 text-sm text-text shadow-lg"
+      class="relative max-w-50 rounded-md bg-surface-700 px-3 py-2 text-surface-0 shadow-md"
     >
       {{ text() }}
-      <lg-caret [side]="side()" />
+      <lg-caret [side]="side()" tone="tooltip" />
     </div>
   `
 })

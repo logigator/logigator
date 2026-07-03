@@ -80,19 +80,41 @@ export function connectedPositions(
 
 // CSS-triangle caret pointing toward the anchor, parked on the panel edge
 // nearest it. Keyed by the side the panel sits on relative to the anchor. The
-// triangle is `content`-colored; pair it with a `bg-content` panel.
+// pointing edge takes the panel's background color via the tone map below.
 const CARET: Record<LgOverlaySide, string> = {
-  top: 'bottom-[-6px] left-1/2 -translate-x-1/2 border-x-[6px] border-x-transparent border-t-[6px] border-t-content',
+  top: 'bottom-[-6px] left-1/2 -translate-x-1/2 border-x-[6px] border-x-transparent border-t-[6px]',
   bottom:
-    'top-[-6px] left-1/2 -translate-x-1/2 border-x-[6px] border-x-transparent border-b-[6px] border-b-content',
-  left: 'right-[-6px] top-1/2 -translate-y-1/2 border-y-[6px] border-y-transparent border-l-[6px] border-l-content',
+    'top-[-6px] left-1/2 -translate-x-1/2 border-x-[6px] border-x-transparent border-b-[6px]',
+  left: 'right-[-6px] top-1/2 -translate-y-1/2 border-y-[6px] border-y-transparent border-l-[6px]',
   right:
-    'left-[-6px] top-1/2 -translate-y-1/2 border-y-[6px] border-y-transparent border-r-[6px] border-r-content'
+    'left-[-6px] top-1/2 -translate-y-1/2 border-y-[6px] border-y-transparent border-r-[6px]'
+};
+
+/**
+ * The caret's fill per panel background: `content` pairs with a `bg-content`
+ * panel (Popover, ConfirmPopup), `tooltip` with the Tooltip's `bg-surface-700`
+ * bubble.
+ */
+export type LgCaretTone = 'content' | 'tooltip';
+
+const CARET_COLOR: Record<LgCaretTone, Record<LgOverlaySide, string>> = {
+  content: {
+    top: 'border-t-content',
+    bottom: 'border-b-content',
+    left: 'border-l-content',
+    right: 'border-r-content'
+  },
+  tooltip: {
+    top: 'border-t-surface-700',
+    bottom: 'border-b-surface-700',
+    left: 'border-l-surface-700',
+    right: 'border-r-surface-700'
+  }
 };
 
 /** Tailwind classes for a caret pointing at the anchor from the given side. */
-export function caretClasses(side: LgOverlaySide): string {
-  return CARET[side];
+export function caretClasses(side: LgOverlaySide, tone: LgCaretTone): string {
+  return `${CARET[side]} ${CARET_COLOR[tone][side]}`;
 }
 
 /** Which side a resolved {@link ConnectedPosition} placed the overlay on. */
