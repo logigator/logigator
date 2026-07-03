@@ -4,7 +4,13 @@ import {
   computed,
   inject
 } from '@angular/core';
-import { DialogService, LgButton, LgDivider, LgTooltip } from '@logigator/ui';
+import {
+  DialogService,
+  formatShortcutLabel,
+  LgButton,
+  LgDivider,
+  LgTooltip
+} from '@logigator/ui';
 import { TranslocoDirective, TranslocoService } from '@jsverse/transloco';
 import { WorkModeService } from '../../work-mode/work-mode.service';
 import { WorkMode } from '../../work-mode/work-mode.enum';
@@ -18,7 +24,6 @@ import { SaveCoordinatorService } from '../save-coordinator.service';
 import { OpenProjectDialogComponent } from '../open-project-dialog/open-project-dialog.component';
 import { ShortcutService } from '../../shortcuts/shortcut.service';
 import { ShortcutActionEnum } from '../../shortcuts/shortcut-action.enum';
-import { formatShortcutLabel } from '../../shortcuts/shortcut-binding.model';
 import { SimulationService } from '../../simulation/simulation.service';
 import { SimulationControlsComponent } from '../simulation-controls/simulation-controls.component';
 

@@ -8,15 +8,14 @@ import {
 } from '@angular/core';
 import { fromEvent, Subscription } from 'rxjs';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
-import { LgButton, LgTooltip } from '@logigator/ui';
+import { LgButton, LgShortcut, LgTooltip } from '@logigator/ui';
 import { TranslocoDirective } from '@jsverse/transloco';
-import { ShortcutDisplayComponent } from '../shortcut-display/shortcut-display.component';
 import { ShortcutBinding } from '../shortcut-binding.model';
 import { ShortcutService } from '../shortcut.service';
 
 @Component({
   selector: 'app-shortcut-edit',
-  imports: [LgButton, LgTooltip, TranslocoDirective, ShortcutDisplayComponent],
+  imports: [LgButton, LgShortcut, LgTooltip, TranslocoDirective],
   templateUrl: './shortcut-edit.component.html',
   changeDetection: ChangeDetectionStrategy.OnPush
 })

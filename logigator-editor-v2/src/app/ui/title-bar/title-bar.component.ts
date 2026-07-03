@@ -7,21 +7,14 @@ import {
 import { NgOptimizedImage } from '@angular/common';
 import logoUrl from '@assets/logo.svg';
 import { ProjectService } from '../../project/project.service';
-import { LgMenubar, LgRipple } from '@logigator/ui';
-import { ShortcutDisplayComponent } from '../../shortcuts/shortcut-display/shortcut-display.component';
+import { LgMenubar } from '@logigator/ui';
 import { UserSettingsComponent } from '../user-settings/user-settings.component';
 import { ProjectMetadataStore } from '../../persistence/project-metadata.store';
 import { EditorMenuService } from '../editor-menu.service';
 
 @Component({
   selector: 'app-title-bar',
-  imports: [
-    LgMenubar,
-    NgOptimizedImage,
-    LgRipple,
-    ShortcutDisplayComponent,
-    UserSettingsComponent
-  ],
+  imports: [LgMenubar, NgOptimizedImage, UserSettingsComponent],
   templateUrl: './title-bar.component.html',
   changeDetection: ChangeDetectionStrategy.OnPush
 })
