@@ -9,7 +9,12 @@ import { andComponentConfig } from './component-types/and/and.config';
 import { romComponentConfig } from './component-types/rom/rom.config';
 import { PX } from '../utils/grid';
 import { Direction } from '../utils/direction';
-import { makeAnd } from '../../testing/factories';
+import {
+  makeAnd,
+  makeButton,
+  makeInput,
+  makeLever
+} from '../../testing/factories';
 import { AndComponent } from './component-types/and/and.component';
 import { configureTestBed } from '../../testing/configure-test-bed';
 import { GraphicsProviderService } from '../rendering/graphics-provider.service';
@@ -313,6 +318,63 @@ describe('Component port-label anchoring', () => {
 
     const input = labelText(comp, 'A1');
     expect({ x: input.anchor.x, y: input.anchor.y }).toEqual({ x: 0.5, y: 0 });
+
+    comp.destroy({ children: true });
+  });
+});
+
+describe('Component symbol rendering', () => {
+  beforeEach(() => {
+    configureTestBed();
+  });
+
+  function findText(comp: Component, value: string): Text | undefined {
+    let found: Text | undefined;
+    const walk = (c: Container): void => {
+      for (const child of c.children) {
+        if (child instanceof Text && child.text === value) found = child;
+        else walk(child as Container);
+      }
+    };
+    walk(comp);
+    return found;
+  }
+
+  it('renders the config symbol centred in the body', () => {
+    const comp = makeAnd(2);
+
+    const symbol = findText(comp, '&');
+    expect(symbol).toBeDefined();
+    expect(symbol!.anchor.x).toBe(0.5);
+    expect(symbol!.anchor.y).toBe(0.5);
+    expect(symbol!.position.x).toBeCloseTo(1, 5);
+    expect(symbol!.position.y).toBeCloseTo(1, 5);
+
+    comp.destroy({ children: true });
+  });
+
+  it('renders no symbol on components with a dedicated body visual', () => {
+    for (const comp of [makeButton(), makeLever()]) {
+      let texts = 0;
+      const walk = (c: Container): void => {
+        for (const child of c.children) {
+          if (child instanceof Text) texts++;
+          else walk(child as Container);
+        }
+      };
+      walk(comp);
+      expect(texts).toBe(0);
+      comp.destroy({ children: true });
+    }
+  });
+
+  it('fits plug symbols to the 1-grid body', () => {
+    const comp = makeInput();
+
+    const symbol = findText(comp, 'IN');
+    expect(symbol).toBeDefined();
+    // No labels → the full 1-grid body minus the clearance (12 px).
+    expect(symbol!.style.fontSize).toBeCloseTo(12 / (0.6 * 2), 5);
 
     comp.destroy({ children: true });
   });

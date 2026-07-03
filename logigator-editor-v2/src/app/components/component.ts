@@ -54,7 +54,7 @@ const LABEL_ANCHOR: Record<Direction, { x: number; y: number }> = {
 };
 
 /** Port-label font size (half a grid unit) — shrunk per label to its slot. */
-const LABEL_FONT_SIZE = 0.5 / PX;
+const LABEL_FONT_SIZE = 0.45 / PX;
 
 /** Which port group a negation index addresses (0-based within that group). */
 export type PortSide = 'in' | 'out';
@@ -206,6 +206,23 @@ export abstract class Component<
   protected abstract get bodyGridWidth(): number;
 
   protected abstract draw(): void;
+
+  /**
+   * Symbol rendered centred in the body — normally the config's sidebar
+   * symbol. Null (the default) for components whose body carries its own
+   * visual identity instead (button, lever, free text). Overrides must read a
+   * module-level config constant, not `this.config`: this is evaluated during
+   * the base constructor's draw, before the subclass `config` field is
+   * assigned.
+   */
+  protected get symbol(): string | null {
+    return null;
+  }
+
+  /** Base symbol font size — shrunk to the body width. */
+  protected get symbolFontSize(): number {
+    return 1 / PX;
+  }
 
   public get id(): number {
     return this._id;
@@ -577,6 +594,7 @@ export abstract class Component<
     this._rescalers = [];
 
     this.draw();
+    this._drawSymbol();
 
     this._drawConnections(this._numInputs, 'inputs');
     this._drawConnections(this._numOutputs, 'outputs');
@@ -612,6 +630,18 @@ export abstract class Component<
     }
   }
 
+  private get _hasLabels(): boolean {
+    return this.inputLabels.length > 0 || this.outputLabels.length > 0;
+  }
+
+  /**
+   * Whether the body stands upright on screen (rotated S/N), swapping which
+   * of bodyGridWidth/bodyGridHeight spans the screen's horizontal axis.
+   */
+  private get _isVertical(): boolean {
+    return this._direction === Direction.S || this._direction === Direction.N;
+  }
+
   /**
    * Which local side of the port centre-line the stub's 1-px thickness hangs
    * on so that, after the component's rotation, it lands on the same screen
@@ -622,6 +652,42 @@ export abstract class Component<
     return this._direction === Direction.W || this._direction === Direction.N
       ? -1
       : 1;
+  }
+
+  // Renders the symbol centred in the body, fitted to its slot with a 2-px
+  // clearance per side, kept upright across rotations.
+  private _drawSymbol(): void {
+    const symbol = this.symbol;
+    if (!symbol) {
+      return;
+    }
+    // The symbol is kept upright, so its horizontal room is the body's
+    // *screen* width: bodyGridWidth for E/W, bodyGridHeight for S/N. Port
+    // labels flank the symbol on its own line only in E/W and halve its room
+    // there; in S/N they sit above/below it, leaving the full width.
+    const symbolSlot = this._isVertical
+      ? this.bodyGridHeight / PX
+      : this.bodyGridWidth / (this._hasLabels ? 2 : 1) / PX;
+    const text = this.trackTextResolution(
+      new Text({
+        text: symbol,
+        style: {
+          fontFamily: CANVAS_FONT_FAMILY,
+          fontSize: fitMonoFontSize(
+            symbol,
+            symbolSlot - 4,
+            this.symbolFontSize,
+            0.25 / PX
+          ),
+          fill: this.themingService.currentTheme().fontTint
+        },
+        anchor: { x: 0.5, y: 0.5 }
+      })
+    );
+    text.scale.set(PX);
+    text.position.set(this.bodyGridWidth / 2, this.bodyGridHeight / 2);
+    this.registerRotationCounterContainer(text);
+    this.addChild(text);
   }
 
   private _drawConnections(n: number, type: 'inputs' | 'outputs'): void {
@@ -673,10 +739,9 @@ export abstract class Component<
         // neighbour: rotated S/N the labels sit side by side one grid pitch
         // apart, in E/W the input and output label share the body row, each
         // side keeping its 2-px inset plus clearance at the centre.
-        const labelSlot =
-          this._direction === Direction.S || this._direction === Direction.N
-            ? 1 / PX - 2
-            : this.bodyGridWidth / 2 / PX - 4;
+        const labelSlot = this._isVertical
+          ? 1 / PX - 2
+          : this.bodyGridWidth / 2 / PX - 4;
         const text = this.trackTextResolution(
           new Text({
             text: labels[i],
@@ -686,7 +751,7 @@ export abstract class Component<
                 labels[i],
                 labelSlot,
                 LABEL_FONT_SIZE,
-                LABEL_FONT_SIZE / 2
+                0.25 / PX
               ),
               fill: this.themingService.currentTheme().fontTint
             },

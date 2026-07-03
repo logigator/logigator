@@ -24,6 +24,10 @@ export class AndComponent extends Component<AndOptions> {
       });
   }
 
+  protected override get symbol(): string {
+    return andComponentConfig.symbol;
+  }
+
   protected get inputLabels(): string[] {
     return [];
   }

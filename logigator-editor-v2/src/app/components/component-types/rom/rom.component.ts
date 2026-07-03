@@ -45,6 +45,11 @@ export class RomComponent extends Component<RomOptions> {
       });
   }
 
+  protected override get symbol(): string {
+    // Module-level config: evaluated before the `config` field is assigned.
+    return romComponentConfig.symbol;
+  }
+
   protected get inputLabels(): string[] {
     const labels = [];
     for (let i = 1; i <= this.numInputs; i++) {

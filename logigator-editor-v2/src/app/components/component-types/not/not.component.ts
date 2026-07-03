@@ -18,6 +18,11 @@ export class NotComponent extends Component<NotOptions> {
       });
   }
 
+  protected override get symbol(): string {
+    // Module-level config: evaluated before the `config` field is assigned.
+    return notComponentConfig.symbol;
+  }
+
   protected get inputLabels(): string[] {
     return [];
   }

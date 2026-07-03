@@ -131,7 +131,7 @@ describe('CustomComponent', () => {
 
   it('fits port labels to their slot: full size in E, shrunk to the grid pitch in S', () => {
     const master = registry.createMaster(
-      { symbol: 'CC', numInputs: 2, numOutputs: 1, labels: ['CLK', 'A', 'Q'] },
+      { symbol: 'CC', numInputs: 2, numOutputs: 1, labels: ['LONG', 'A', 'Q'] },
       'browser'
     );
     const instance = placeLatest(master);
@@ -141,36 +141,42 @@ describe('CustomComponent', () => {
       return found!;
     };
 
-    // E: half the 3-grid body minus insets (20 px) holds "CLK" at full size.
-    expect(label('CLK').style.fontFamily).toBe(CANVAS_FONT_FAMILY);
-    expect(label('CLK').style.fontSize).toBeCloseTo(0.5 / PX, 5);
+    // E: half the 3-grid body minus insets (20 px) holds "LONG" at the base
+    // 0.45-grid size.
+    expect(label('LONG').style.fontFamily).toBe(CANVAS_FONT_FAMILY);
+    expect(label('LONG').style.fontSize).toBeCloseTo(0.45 / PX, 5);
 
-    // S: the slot is the grid pitch minus clearance (14 px) — "CLK" at the
+    // S: the slot is the grid pitch minus clearance (14 px) — "LONG" at the
     // 0.6-em advance shrinks to exactly fill it, "A" keeps the base size.
     instance.direction = Direction.S;
-    expect(label('CLK').style.fontSize).toBeCloseTo(14 / (0.6 * 3), 5);
-    expect(label('A').style.fontSize).toBeCloseTo(0.5 / PX, 5);
+    expect(label('LONG').style.fontSize).toBeCloseTo(14 / (0.6 * 4), 5);
+    expect(label('A').style.fontSize).toBeCloseTo(0.45 / PX, 5);
 
     instance.destroy({ children: true });
   });
 
-  it('shrinks a long symbol to the body width', () => {
+  it('fits the symbol to the rotated screen width of the body', () => {
     const master = registry.createMaster(
       {
         symbol: 'COUNTER99XX',
-        numInputs: 1,
+        numInputs: 2,
         numOutputs: 1,
-        labels: ['A', 'Q']
+        labels: ['A', 'B', 'Q']
       },
       'browser'
     );
     const instance = placeLatest(master);
+    const symbol = (): Text =>
+      renderedTextNodes(instance).find((t) => t.text === 'COUNTER99XX')!;
 
-    const symbol = renderedTextNodes(instance).find(
-      (t) => t.text === 'COUNTER99XX'
-    )!;
-    // Body 3 grid (48 px) minus 2-px clearance each side → 44 px slot.
-    expect(symbol.style.fontSize).toBeCloseTo(44 / (0.6 * 11), 5);
+    // E: labels flank the symbol, so it gets half the 3-grid body minus the
+    // clearance (20 px) — far too little for 11 glyphs, so it floors.
+    expect(symbol().style.fontSize).toBeCloseTo(0.25 / PX, 5);
+
+    // S: the upright symbol spans the body's screen width, which is now the
+    // 2-grid body *height* minus the clearance (28 px).
+    instance.direction = Direction.S;
+    expect(symbol().style.fontSize).toBeCloseTo(28 / (0.6 * 11), 5);
 
     instance.destroy({ children: true });
   });
