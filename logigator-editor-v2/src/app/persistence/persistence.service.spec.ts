@@ -438,7 +438,7 @@ describe('PersistenceService', () => {
       const main = projectService.mainProject();
       expect(main).toBeDefined();
       expect(metadataStore.getMetadata(main!)?.source).toBe('browser');
-      expect(locationGo).not.toHaveBeenCalled();
+      expect(locationGo).toHaveBeenCalledWith('/');
     });
 
     it('stale loads are discarded with full cleanup (no metadata leak)', async () => {
