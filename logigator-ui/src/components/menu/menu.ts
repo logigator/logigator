@@ -14,6 +14,7 @@ import {
   viewChild
 } from '@angular/core';
 import { Subscription } from 'rxjs';
+import { LgFadeIn } from '../../internal/fade-in';
 import { createConnectedOverlay } from '../../internal/overlay';
 import { MENU_ITEM_CLASS, MenuItem } from './menu-item.model';
 
@@ -64,12 +65,13 @@ const MENU_POSITIONS: ConnectedPosition[] = [
 @Component({
   selector: 'lg-menu',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [NgTemplateOutlet],
+  imports: [NgTemplateOutlet, LgFadeIn],
   template: `
     <ng-template #panel>
       <div
         role="menu"
         tabindex="-1"
+        lgFadeIn
         class="min-w-48 rounded-md border border-border bg-content p-1 shadow-md focus:outline-none"
         (keydown)="onKeydown($event)"
       >

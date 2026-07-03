@@ -16,6 +16,7 @@ import {
 } from '@angular/core';
 import { Subscription } from 'rxjs';
 import { LgCaret } from '../../internal/caret';
+import { LgFadeIn } from '../../internal/fade-in';
 import {
   connectedPositions,
   createConnectedOverlay,
@@ -33,10 +34,11 @@ import {
 @Component({
   selector: 'lg-popover',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [LgCaret],
+  imports: [LgCaret, LgFadeIn],
   template: `
     <ng-template #content>
       <div
+        lgFadeIn
         class="relative rounded-md border border-border bg-content p-3 shadow-md"
       >
         <ng-content></ng-content>

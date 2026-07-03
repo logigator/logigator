@@ -14,6 +14,7 @@ import {
   ViewContainerRef,
   viewChild
 } from '@angular/core';
+import { LgFadeIn } from '../../internal/fade-in';
 import { createConnectedOverlay } from '../../internal/overlay';
 import { MENU_ITEM_CLASS, MenuItem } from './menu-item.model';
 
@@ -60,7 +61,7 @@ const SUBMENU_POSITIONS: ConnectedPosition[] = [
 @Component({
   selector: 'lg-menubar',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [NgTemplateOutlet],
+  imports: [NgTemplateOutlet, LgFadeIn],
   host: { class: 'flex items-center gap-2 p-1' },
   template: `
     @if (startTemplate(); as tpl) {
@@ -112,6 +113,7 @@ const SUBMENU_POSITIONS: ConnectedPosition[] = [
       <div
         role="menu"
         tabindex="-1"
+        lgFadeIn
         class="min-w-48 rounded-md border border-border bg-content p-1 shadow-md focus:outline-none"
         (keydown)="onSubmenuKeydown($event)"
       >

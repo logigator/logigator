@@ -16,6 +16,7 @@ import {
 } from '@angular/core';
 import { Subscription } from 'rxjs';
 import { LgCaret } from '../../internal/caret';
+import { LgFadeIn } from '../../internal/fade-in';
 import {
   connectedPositions,
   createConnectedOverlay,
@@ -39,10 +40,11 @@ const POPUP_GAP = 10;
 @Component({
   selector: 'lg-confirm-popup',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [LgButton, LgCaret],
+  imports: [LgButton, LgCaret, LgFadeIn],
   template: `
     <ng-template #panel>
       <div
+        lgFadeIn
         class="relative max-w-xs rounded-md border border-border bg-content p-3 text-text shadow-md"
       >
         <p class="mb-3 text-sm">{{ current()?.message }}</p>
