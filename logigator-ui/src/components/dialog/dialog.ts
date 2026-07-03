@@ -6,7 +6,6 @@ import {
   booleanAttribute,
   ChangeDetectionStrategy,
   Component,
-  computed,
   contentChild,
   effect,
   inject,
@@ -17,6 +16,7 @@ import {
   ViewContainerRef,
   viewChild
 } from '@angular/core';
+import { LgScaleIn } from '../../internal/fade-in';
 import { ModalOverlay } from '../../internal/modal-overlay';
 
 let nextId = 0;
@@ -34,15 +34,16 @@ let nextId = 0;
 @Component({
   selector: 'lg-dialog',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [NgStyle, NgTemplateOutlet],
+  imports: [NgStyle, NgTemplateOutlet, LgScaleIn],
   template: `
     <ng-template #panelTpl>
       <div
         role="dialog"
+        lgScaleIn
         [attr.aria-modal]="modal() ? 'true' : null"
         [attr.aria-labelledby]="header() ? headerId : null"
         [ngStyle]="style()"
-        [class]="panelClasses()"
+        class="flex max-h-[90vh] max-w-[90vw] flex-col rounded-xl border border-border bg-content text-text shadow-xl"
       >
         @if (header() || closable()) {
           <div class="flex shrink-0 items-center justify-between gap-4 p-5">
@@ -95,14 +96,6 @@ export class LgDialog implements OnDestroy {
   private readonly modalOverlay = new ModalOverlay(
     inject(Overlay),
     inject(ConfigurableFocusTrapFactory)
-  );
-
-  protected readonly panelClasses = computed(() =>
-    [
-      'flex max-h-[90vh] max-w-[90vw] flex-col rounded-xl border border-border bg-content text-text shadow-xl',
-      'transition duration-200 ease-out',
-      this.modalOverlay.shown() ? 'scale-100 opacity-100' : 'scale-95 opacity-0'
-    ].join(' ')
   );
 
   constructor() {

@@ -20,3 +20,25 @@ export class LgFadeIn {
     afterPaint(() => el.classList.remove('opacity-0'));
   }
 }
+
+/**
+ * Scale-and-fade sibling of {@link LgFadeIn} for the modal surfaces (Dialog,
+ * DynamicDialog): the panel starts transparent at 95% scale from the very
+ * first paint and plays in over a decelerating 300ms.
+ *
+ * Internal — not part of the public API.
+ */
+@Directive({ selector: '[lgScaleIn]' })
+export class LgScaleIn {
+  constructor() {
+    const el = inject<ElementRef<HTMLElement>>(ElementRef).nativeElement;
+    el.classList.add(
+      'opacity-0',
+      'scale-95',
+      'transition',
+      'duration-300',
+      'ease-out'
+    );
+    afterPaint(() => el.classList.remove('opacity-0', 'scale-95'));
+  }
+}

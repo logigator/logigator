@@ -33,7 +33,11 @@ export class ModalOverlay {
   private overlayRef: OverlayRef | null = null;
   private subscriptions: Subscription | null = null;
 
-  /** Drives the enter-transition class on the panel (off until painted, then on). */
+  /**
+   * Drives the enter-transition class on panels whose "from" state is dynamic
+   * (the Drawer's per-side slide-in); off until painted, then on. The Dialog's
+   * fixed scale/fade "from" state lives in the LgScaleIn directive instead.
+   */
   readonly shown = signal(false);
 
   constructor(

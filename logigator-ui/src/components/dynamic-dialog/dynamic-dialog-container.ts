@@ -6,12 +6,11 @@ import {
   computed,
   inject,
   InjectionToken,
-  signal,
   Type,
   ViewContainerRef,
   viewChild
 } from '@angular/core';
-import { afterPaint } from '../../internal/after-paint';
+import { LgScaleIn } from '../../internal/fade-in';
 import { DialogConfig } from './dialog-config';
 import { DialogRef } from './dialog-ref';
 
@@ -31,19 +30,20 @@ let nextId = 0;
  * the caller has subscribed to `onChildComponentLoaded` — and its `inputValues`
  * are applied via `setInput()` **before** the child's first change detection, so
  * `input.required` signals resolve. The real instance is then reported through
- * the ref. The scale/fade-in plays after a double rAF, like {@link LgDialog}.
+ * the ref. The panel scales/fades in, like {@link LgDialog}.
  */
 @Component({
   selector: 'lg-dynamic-dialog-container',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [NgStyle],
+  imports: [NgStyle, LgScaleIn],
   template: `
     <div
       role="dialog"
       aria-modal="true"
+      lgScaleIn
       [attr.aria-labelledby]="config.header ? headerId : null"
       [ngStyle]="panelStyle()"
-      [class]="panelClasses()"
+      class="flex max-h-[90vh] max-w-[90vw] flex-col rounded-xl border border-border bg-content text-text shadow-xl"
     >
       @if (config.header || config.closable !== false) {
         <div class="flex shrink-0 items-center justify-between gap-4 p-5">
@@ -80,20 +80,11 @@ export class LgDynamicDialogContainer implements AfterViewInit {
   });
 
   protected readonly headerId = `lg-dynamic-dialog-${++nextId}`;
-  private readonly shown = signal(false);
 
   protected readonly panelStyle = computed<Record<string, string>>(() => ({
     ...(this.config.width ? { width: this.config.width } : {}),
     ...(this.config.style ?? {})
   }));
-
-  protected readonly panelClasses = computed(() =>
-    [
-      'flex max-h-[90vh] max-w-[90vw] flex-col rounded-xl border border-border bg-content text-text shadow-xl',
-      'transition duration-200 ease-out',
-      this.shown() ? 'scale-100 opacity-100' : 'scale-95 opacity-0'
-    ].join(' ')
-  );
 
   ngAfterViewInit(): void {
     const componentRef = this.childHost().createComponent(this.component);
@@ -104,8 +95,5 @@ export class LgDynamicDialogContainer implements AfterViewInit {
       }
     }
     this.ref.notifyChildLoaded(componentRef.instance);
-
-    // Paint the scaled-down "from" state first, so the scale/fade-in runs.
-    afterPaint(() => this.shown.set(true));
   }
 }
