@@ -1,9 +1,13 @@
 import { beforeEach, describe, expect, it } from 'vitest';
 import { Injector } from '@angular/core';
 import { TestBed } from '@angular/core/testing';
+import { Container, Text } from 'pixi.js';
 import { setStaticDIInjector } from '../utils/get-di';
 import { Component } from './component';
+import { ComponentConfig } from './component-config.model';
 import { andComponentConfig } from './component-types/and/and.config';
+import { romComponentConfig } from './component-types/rom/rom.config';
+import { PX } from '../utils/grid';
 import { Direction } from '../utils/direction';
 import { makeAnd } from '../../testing/factories';
 import { AndComponent } from './component-types/and/and.component';
@@ -233,13 +237,10 @@ describe('Component port-stub pixel side', () => {
     comp.destroy({ children: true });
   });
 
-  it('re-applies the stub side on a runtime rotation, which does not redraw', () => {
+  it('re-applies the stub side on a runtime rotation', () => {
     const comp = makeAnd(2, Direction.E);
-    const stubsBefore = [...comp.portStubs];
 
     comp.direction = Direction.N;
-
-    expect([...comp.portStubs]).toEqual(stubsBefore);
     for (const stub of comp.portStubs) {
       expect(Math.sign(stub.scale.y)).toBe(-1);
     }
@@ -248,6 +249,70 @@ describe('Component port-stub pixel side', () => {
     for (const stub of comp.portStubs) {
       expect(Math.sign(stub.scale.y)).toBe(1);
     }
+
+    comp.destroy({ children: true });
+  });
+});
+
+describe('Component port-label anchoring', () => {
+  beforeEach(() => {
+    configureTestBed();
+  });
+
+  function makeRom(direction: Direction): Component {
+    return Component.deserialize(
+      { pos: [0, 0], options: { direction } },
+      romComponentConfig as unknown as ComponentConfig
+    );
+  }
+
+  function labelText(comp: Component, label: string): Text {
+    let found: Text | undefined;
+    const walk = (c: Container): void => {
+      for (const child of c.children) {
+        if (child instanceof Text && child.text === label) found = child;
+        else walk(child as Container);
+      }
+    };
+    walk(comp);
+    expect(found, `label ${label}`).toBeDefined();
+    return found!;
+  }
+
+  // Labels anchor to the body edge they sit on (edge-facing texture point,
+  // fixed inset), so every label on an edge keeps the same depth regardless
+  // of its text width — in every direction.
+  it.each([
+    [Direction.E, { x: 0, y: 0.5 }, { x: 1, y: 0.5 }],
+    [Direction.S, { x: 0.5, y: 0 }, { x: 0.5, y: 1 }],
+    [Direction.W, { x: 1, y: 0.5 }, { x: 0, y: 0.5 }],
+    [Direction.N, { x: 0.5, y: 1 }, { x: 0.5, y: 0 }]
+  ])(
+    'anchors labels edge-facing (direction %i)',
+    (direction, inAnchor, outAnchor) => {
+      const comp = makeRom(direction);
+
+      const input = labelText(comp, 'A1');
+      expect({ x: input.anchor.x, y: input.anchor.y }).toEqual(inAnchor);
+      expect(input.position.x).toBeCloseTo(0.5 + 2 * PX, 5);
+      expect(input.position.y).toBeCloseTo(0.5, 5);
+
+      const output = labelText(comp, 'O1');
+      expect({ x: output.anchor.x, y: output.anchor.y }).toEqual(outAnchor);
+      expect(output.position.x).toBeCloseTo(-2 * PX, 5);
+      expect(output.position.y).toBeCloseTo(0.5, 5);
+
+      comp.destroy({ children: true });
+    }
+  );
+
+  it('re-anchors labels on a runtime rotation', () => {
+    const comp = makeRom(Direction.E);
+
+    comp.direction = Direction.S;
+
+    const input = labelText(comp, 'A1');
+    expect({ x: input.anchor.x, y: input.anchor.y }).toEqual({ x: 0.5, y: 0 });
 
     comp.destroy({ children: true });
   });

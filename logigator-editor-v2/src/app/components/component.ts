@@ -35,6 +35,23 @@ export interface PortsChange {
   newPorts: Point[];
 }
 
+/**
+ * Port-label anchor per direction, keyed by the side the *input* edge faces
+ * (outputs use the opposite direction's entry). Labels are counter-rotated to
+ * stay horizontal, so they are axis-aligned on screen and the anchor picks the
+ * texture point that faces the body edge: left-centre when the edge is left
+ * (E), top-centre when it is on top (S), and so on. Anchoring to the edge —
+ * instead of rotating the label around its centre — keeps every label on an
+ * edge at the same fixed inset regardless of its text width (legacy-editor
+ * behavior).
+ */
+const LABEL_ANCHOR: Record<Direction, { x: number; y: number }> = {
+  [Direction.E]: { x: 0, y: 0.5 },
+  [Direction.S]: { x: 0.5, y: 0 },
+  [Direction.W]: { x: 1, y: 0.5 },
+  [Direction.N]: { x: 0.5, y: 1 }
+};
+
 /** Which port group a negation index addresses (0-based within that group). */
 export type PortSide = 'in' | 'out';
 
@@ -210,14 +227,9 @@ export abstract class Component<
       }
     });
 
-    // The stub-thickness side depends on the direction and lives in the
-    // rescalers — re-run them so a rotation without a redraw still lands the
-    // stubs on the wire-side pixel.
-    this.applyScale(this._appliedScale);
-
-    if (environment.debug.showConnectionPoints) {
-      this._draw();
-    }
+    // Label anchors and the stub-thickness side both depend on the direction,
+    // so rebuild the visual tree for the new rotation.
+    this._draw();
 
     if (oldPorts) {
       this.portsChange$.next({ oldPorts, newPorts: this.connectionPoints });
@@ -649,6 +661,10 @@ export abstract class Component<
       }
 
       if (labels.length > i) {
+        const anchorDirection =
+          type === 'inputs'
+            ? this._direction
+            : (((this._direction + 2) % 4) as Direction);
         const text = this.trackTextResolution(
           new Text({
             text: labels[i],
@@ -657,23 +673,19 @@ export abstract class Component<
               fontSize: 0.5 / PX,
               fill: this.themingService.currentTheme().fontTint
             },
-            anchor: { x: type === 'inputs' ? 0 : 1, y: 0.5 }
+            anchor: LABEL_ANCHOR[anchorDirection]
           })
         );
-
-        // naturalWidth is the pixel width before scale is applied.
-        // Pivot placed at the texture center so that the rotation counter
-        // (applied by registerRotationCounterContainer) rotates around the
-        // center, keeping the label anchored to the same grid point in all
-        // component directions.
-        const naturalWidth = text.width;
         text.scale.set(PX);
-        text.pivot.set((naturalWidth / 2) * (type === 'inputs' ? 1 : -1), 0);
 
+        // The anchor point sits a fixed 2-px inset inward from the body edge
+        // on the port's centre-line; the counter-rotation (applied by
+        // registerRotationCounterContainer) turns about that point, so the
+        // label hangs inward from the edge in every direction.
         if (type === 'inputs') {
-          text.position.set(0.5 + (naturalWidth * PX) / 2 + 2 * PX, i + 0.5);
+          text.position.set(0.5 + 2 * PX, i + 0.5);
         } else {
-          text.position.set((-naturalWidth * PX) / 2 - 2 * PX, i + 0.5);
+          text.position.set(-2 * PX, i + 0.5);
         }
 
         this.registerRotationCounterContainer(text);
