@@ -18,28 +18,28 @@ import { LgFadeIn } from '../../internal/fade-in';
 import { createConnectedOverlay } from '../../internal/overlay';
 import { MENU_ITEM_CLASS, MenuItem } from './menu-item.model';
 
-/** Submenu drop positions: below/left-aligned, flipping up, then right-aligned. */
+/**
+ * Submenu drop positions: flush below/left-aligned (the panel hugs the bar,
+ * like PrimeNG's menubar), flipping up, then right-aligned.
+ */
 const SUBMENU_POSITIONS: ConnectedPosition[] = [
   {
     originX: 'start',
     originY: 'bottom',
     overlayX: 'start',
-    overlayY: 'top',
-    offsetY: 4
+    overlayY: 'top'
   },
   {
     originX: 'start',
     originY: 'top',
     overlayX: 'start',
-    overlayY: 'bottom',
-    offsetY: -4
+    overlayY: 'bottom'
   },
   {
     originX: 'end',
     originY: 'bottom',
     overlayX: 'end',
-    overlayY: 'top',
-    offsetY: 4
+    overlayY: 'top'
   }
 ];
 
@@ -55,8 +55,11 @@ const SUBMENU_POSITIONS: ConnectedPosition[] = [
  * internal); tint it by passing utility classes on the host.
  *
  * The submenu overlay deliberately has **no backdrop** so the other top-level
- * items stay hoverable/clickable; dismissal is a document `pointerdown` outside
- * the bar or the panel, plus Escape.
+ * items stay hoverable/clickable. While a submenu is open the bar is *armed*:
+ * hovering another parent switches panels, and hovering a leaf closes the panel
+ * but keeps the bar armed so the next parent opens on hover again. Dismissal —
+ * a `pointerdown` outside the item strip and the panel (projected `#start`/
+ * `#end` content counts as outside), Escape, or running a command — disarms.
  */
 @Component({
   selector: 'lg-menubar',
@@ -172,48 +175,52 @@ export class LgMenubar implements OnDestroy {
   private readonly viewContainerRef = inject(ViewContainerRef);
 
   private overlayRef: OverlayRef | null = null;
+  private armed = false;
   private dismissAttached = false;
   private readonly onDocPointerDown = (event: Event): void => {
     const target = event.target as Node;
-    if (this.host.nativeElement.contains(target)) {
+    const strip = this.host.nativeElement.querySelector('[role=menubar]');
+    if (strip?.contains(target)) {
       return;
     }
     if (this.overlayRef?.overlayElement.contains(target)) {
       return;
     }
-    this.closeSubmenu();
+    this.dismiss();
   };
 
   protected topItemClass(active: boolean): string {
     return [
-      'flex cursor-pointer items-center transition-colors focus:outline-none',
-      'hover:bg-black/10 focus-visible:bg-black/10 dark:hover:bg-white/10 dark:focus-visible:bg-white/10',
-      active ? 'bg-black/10 dark:bg-white/10' : ''
+      'flex cursor-pointer items-center rounded-md transition-colors focus:outline-none',
+      'hover:bg-content-hover hover:text-text focus-visible:bg-content-hover focus-visible:text-text',
+      active ? 'bg-content-hover text-text' : ''
     ].join(' ');
   }
 
   protected onTopClick(i: number, item: MenuItem, event: Event): void {
     if (item.items?.length) {
       if (this.openIndex() === i) {
-        this.closeSubmenu();
+        this.dismiss();
       } else {
         this.openSubmenu(i, item, event.currentTarget as HTMLElement);
       }
     } else {
-      this.closeSubmenu();
+      this.dismiss();
       item.command?.({ item });
     }
   }
 
   protected onTopHover(i: number, event: Event): void {
-    if (this.openIndex() < 0 || this.openIndex() === i) {
+    if (!this.armed || this.openIndex() === i) {
       return;
     }
     const item = this.model()[i];
     if (item?.items?.length) {
       this.openSubmenu(i, item, event.currentTarget as HTMLElement);
     } else {
-      this.closeSubmenu();
+      // A leaf closes the open panel but keeps the bar armed, so the next
+      // parent item opens on hover again.
+      this.closeOverlay();
     }
   }
 
@@ -247,13 +254,13 @@ export class LgMenubar implements OnDestroy {
         }
         break;
       case 'Escape':
-        this.closeSubmenu();
+        this.dismiss();
         break;
     }
   }
 
   protected runSub(item: MenuItem): void {
-    this.closeSubmenu();
+    this.dismiss();
     item.command?.({ item });
   }
 
@@ -314,7 +321,7 @@ export class LgMenubar implements OnDestroy {
   }
 
   ngOnDestroy(): void {
-    this.closeSubmenu();
+    this.dismiss();
   }
 
   private openSubmenu(i: number, item: MenuItem, anchor: HTMLElement): void {
@@ -328,19 +335,27 @@ export class LgMenubar implements OnDestroy {
     this.overlayRef.attach(
       new TemplatePortal(this.submenu(), this.viewContainerRef)
     );
+    this.armed = true;
     this.addDismissListener();
   }
 
-  private closeSubmenu(): void {
+  /** Close the open panel but stay armed (leaf hovers / arrow roving). */
+  private closeOverlay(): void {
     this.disposeOverlay();
-    this.removeDismissListener();
     this.openIndex.set(-1);
     this.submenuItems.set([]);
   }
 
+  /** Close the open panel and leave menu mode. */
+  private dismiss(): void {
+    this.closeOverlay();
+    this.armed = false;
+    this.removeDismissListener();
+  }
+
   private closeAndFocusTop(): void {
     const index = this.openIndex();
-    this.closeSubmenu();
+    this.dismiss();
     this.topButton(index)?.focus();
   }
 
@@ -350,7 +365,7 @@ export class LgMenubar implements OnDestroy {
     if (item?.items?.length) {
       this.openSubmenu(index, item, button);
     } else {
-      this.closeSubmenu();
+      this.closeOverlay();
     }
   }
 

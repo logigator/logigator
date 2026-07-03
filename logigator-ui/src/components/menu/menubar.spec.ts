@@ -143,6 +143,32 @@ describe('LgMenubar', () => {
     expect(openMenu()).toBeNull();
   });
 
+  it('stays armed across a leaf hover: the next parent opens on hover again', () => {
+    const { f, host } = setup();
+    const [edit, view, help] = topButtons(host);
+    edit.click();
+    f.detectChanges();
+    help.dispatchEvent(new MouseEvent('mouseenter', { bubbles: true }));
+    f.detectChanges();
+    expect(openMenu()).toBeNull();
+    view.dispatchEvent(new MouseEvent('mouseenter', { bubbles: true }));
+    f.detectChanges();
+    expect(view.getAttribute('aria-expanded')).toBe('true');
+    expect(openMenu()).not.toBeNull();
+  });
+
+  it('dismisses on a pointerdown on projected #end content (outside the item strip)', () => {
+    const { f, host } = setup();
+    topButtons(host)[0].click();
+    f.detectChanges();
+    expect(openMenu()).not.toBeNull();
+    host
+      .querySelector('.user')!
+      .dispatchEvent(new PointerEvent('pointerdown', { bubbles: true }));
+    f.detectChanges();
+    expect(openMenu()).toBeNull();
+  });
+
   it('dismisses on an outside pointerdown (no backdrop intercepts the bar)', () => {
     const { f, host } = setup();
     topButtons(host)[0].click();
