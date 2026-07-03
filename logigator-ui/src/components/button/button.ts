@@ -44,11 +44,12 @@ const SEVERITY: Record<LgButtonVariant, Record<SeverityKey, string>> = {
   },
   outlined: {
     primary:
-      'text-primary border-primary-200 hover:bg-primary-50 active:bg-primary-100 dark:border-primary-700',
-    none: 'text-muted border-border hover:bg-surface-50 active:bg-surface-100 dark:hover:bg-surface-800',
+      'text-primary border-primary-200 hover:bg-primary-50 active:bg-primary-100 ' +
+      'dark:border-primary-700 dark:hover:bg-primary/4 dark:active:bg-primary/16',
+    none: 'text-muted border-border hover:bg-surface-50 active:bg-surface-100 dark:hover:bg-surface-800 dark:active:bg-surface-700',
     secondary:
       'text-surface-500 border-surface-200 hover:bg-surface-50 active:bg-surface-100 ' +
-      'dark:text-surface-400 dark:border-surface-700',
+      'dark:text-surface-400 dark:border-surface-700 dark:hover:bg-white/4 dark:active:bg-white/16',
     info: 'text-info border-info hover:bg-info/10 active:bg-info/20',
     success:
       'text-success border-success hover:bg-success/10 active:bg-success/20',
@@ -57,10 +58,10 @@ const SEVERITY: Record<LgButtonVariant, Record<SeverityKey, string>> = {
   },
   text: {
     primary:
-      'text-primary hover:bg-primary-50 active:bg-primary-100 dark:hover:bg-surface-800',
-    none: 'text-muted hover:bg-surface-50 active:bg-surface-100 dark:hover:bg-surface-800',
+      'text-primary hover:bg-primary-50 active:bg-primary-100 dark:hover:bg-primary/4 dark:active:bg-primary/16',
+    none: 'text-muted hover:bg-surface-50 active:bg-surface-100 dark:hover:bg-surface-800 dark:active:bg-surface-700',
     secondary:
-      'text-surface-500 hover:bg-surface-50 active:bg-surface-100 dark:text-surface-400 dark:hover:bg-surface-800',
+      'text-surface-500 hover:bg-surface-50 active:bg-surface-100 dark:text-surface-400 dark:hover:bg-surface-800 dark:active:bg-surface-700',
     info: 'text-info hover:bg-info/10 active:bg-info/20',
     success: 'text-success hover:bg-success/10 active:bg-success/20',
     warn: 'text-warn hover:bg-warn/10 active:bg-warn/20',
