@@ -16,8 +16,11 @@ type SeverityKey = 'primary' | LgSeverity;
 // The inner button fills the host box (`size-full`) so any layout class the
 // caller puts on `<lg-button>` (e.g. `class="w-full"`) sizes the button too;
 // icon-only square sizing lives on the host (see the `size-*` host bindings).
+// The border width lives here so every variant shares one box size; its color
+// comes from the variant (`border-transparent` would fight the outlined
+// severities' border colors at the stylesheet-order level).
 const BASE =
-  'inline-flex size-full items-center justify-center gap-2 border border-transparent font-medium ' +
+  'inline-flex size-full items-center justify-center gap-2 border font-medium ' +
   'transition-colors duration-200 cursor-pointer select-none ' +
   'disabled:pointer-events-none disabled:opacity-60 focus:outline-none ' +
   'focus-visible:outline focus-visible:outline-1 focus-visible:outline-offset-2 focus-visible:outline-current';
@@ -146,6 +149,7 @@ export class LgButton {
       : controlPadding(this.size());
     return [
       BASE,
+      variant === 'outlined' ? '' : 'border-transparent',
       this.rounded() ? 'rounded-4xl' : 'rounded-md',
       sizing,
       SEVERITY[variant][severityKey]
