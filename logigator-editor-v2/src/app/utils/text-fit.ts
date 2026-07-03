@@ -7,6 +7,18 @@
  */
 export const CANVAS_FONT_FAMILY = 'Roboto Mono';
 
+/**
+ * Glyphs baked into the canvas bitmap-font atlas: printable ASCII, Latin-1
+ * and Latin Extended-A. Characters outside this set are silently dropped by
+ * BitmapText. The subset woff2 in assets/ was generated for exactly this set,
+ * so the two must stay in sync.
+ */
+export const CANVAS_FONT_CHARS: string[][] = [
+  [' ', '~'],
+  ['\u00a0', '\u00ff'],
+  ['\u0100', '\u017f']
+];
+
 /** Roboto Mono glyph advance as a fraction of the font size. */
 export const MONO_ADVANCE = 0.6;
 

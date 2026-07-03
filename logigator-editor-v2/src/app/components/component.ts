@@ -1,12 +1,12 @@
 import {
+  BitmapText,
   Container,
   DestroyOptions,
   Graphics,
   GraphicsContext,
   Matrix,
   Point,
-  Rectangle,
-  Text
+  Rectangle
 } from 'pixi.js';
 import { Subject } from 'rxjs';
 import { ComponentConfig, ComponentConfigView } from './component-config.model';
@@ -53,7 +53,7 @@ const LABEL_ANCHOR: Record<Direction, { x: number; y: number }> = {
   [Direction.N]: { x: 0.5, y: 1 }
 };
 
-const LABEL_FONT_SIZE = 0.45 / PX;
+const LABEL_FONT_SIZE = 0.4 / PX;
 const SYMBOL_FONT_SIZE = 1 / PX;
 const MIN_FONT_SIZE = 0.25 / PX;
 
@@ -349,17 +349,6 @@ export abstract class Component<
     );
   }
 
-  /**
-   * Keeps a Text's render resolution matched to zoom so glyphs stay crisp,
-   * refreshed in place on applyScale rather than by recreating the Text.
-   */
-  protected trackTextResolution(text: Text): Text {
-    this.onApplyScale(
-      (scale) => (text.resolution = scale * window.devicePixelRatio)
-    );
-    return text;
-  }
-
   public override destroy(options?: DestroyOptions): void {
     this.portsChange$.complete();
     super.destroy(options);
@@ -626,8 +615,11 @@ export abstract class Component<
     }
   }
 
-  private get _hasLabels(): boolean {
-    return this.inputLabels.length > 0 || this.outputLabels.length > 0;
+  private get _maxLabelLength(): number {
+    return Math.max(
+      ...this.inputLabels.map((l) => l.length),
+      ...this.outputLabels.map((l) => l.length)
+    );
   }
 
   /**
@@ -663,23 +655,21 @@ export abstract class Component<
     // there; in S/N they sit above/below it, leaving the full width.
     const symbolSlot = this._isVertical
       ? this.bodyGridHeight / PX
-      : this.bodyGridWidth / (this._hasLabels ? 2 : 1) / PX;
-    const text = this.trackTextResolution(
-      new Text({
-        text: symbol,
-        style: {
-          fontFamily: CANVAS_FONT_FAMILY,
-          fontSize: fitMonoFontSize(
-            symbol,
-            symbolSlot - 4,
-            SYMBOL_FONT_SIZE,
-            MIN_FONT_SIZE
-          ),
-          fill: this.themingService.currentTheme().fontTint
-        },
-        anchor: { x: 0.5, y: 0.5 }
-      })
-    );
+      : this.bodyGridWidth / (this._maxLabelLength > 0 ? 2 : 1) / PX;
+    const text = new BitmapText({
+      text: symbol,
+      style: {
+        fontFamily: CANVAS_FONT_FAMILY,
+        fontSize: fitMonoFontSize(
+          symbol,
+          symbolSlot - 4,
+          SYMBOL_FONT_SIZE,
+          MIN_FONT_SIZE
+        ),
+        fill: this.themingService.currentTheme().fontTint
+      },
+      anchor: { x: 0.5, y: 0.5 }
+    });
     text.scale.set(PX);
     text.position.set(this.bodyGridWidth / 2, this.bodyGridHeight / 2);
     this.registerRotationCounterContainer(text);
@@ -738,22 +728,20 @@ export abstract class Component<
         const labelSlot = this._isVertical
           ? 1 / PX - 2
           : this.bodyGridWidth / 2 / PX - 4;
-        const text = this.trackTextResolution(
-          new Text({
-            text: labels[i],
-            style: {
-              fontFamily: CANVAS_FONT_FAMILY,
-              fontSize: fitMonoFontSize(
-                labels[i],
-                labelSlot,
-                LABEL_FONT_SIZE,
-                MIN_FONT_SIZE
-              ),
-              fill: this.themingService.currentTheme().fontTint
-            },
-            anchor: LABEL_ANCHOR[anchorDirection]
-          })
-        );
+        const text = new BitmapText({
+          text: labels[i],
+          style: {
+            fontFamily: CANVAS_FONT_FAMILY,
+            fontSize: fitMonoFontSize(
+              labels[i],
+              labelSlot,
+              LABEL_FONT_SIZE,
+              MIN_FONT_SIZE
+            ),
+            fill: this.themingService.currentTheme().fontTint
+          },
+          anchor: LABEL_ANCHOR[anchorDirection]
+        });
         text.scale.set(PX);
 
         // The anchor point sits a fixed 2-px inset inward from the body edge

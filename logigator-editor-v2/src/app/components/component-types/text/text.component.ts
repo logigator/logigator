@@ -3,7 +3,7 @@ import { textComponentConfig, TextOptions } from './text.config';
 import { Direction } from '../../../utils/direction';
 import { ConnectionPointGraphics } from '../../../rendering/graphics/connection-point.graphics';
 import { ConnectionPoint } from '../../../connection-points/connection-point';
-import { DestroyOptions, Graphics, Text } from 'pixi.js';
+import { BitmapText, DestroyOptions, Graphics } from 'pixi.js';
 import { Subject, takeUntil } from 'rxjs';
 import { PX } from '../../../utils/grid';
 import { CANVAS_FONT_FAMILY } from '../../../utils/text-fit';
@@ -64,16 +64,14 @@ export class TextComponent extends Component<TextOptions> {
 
     // fontSize is a user-set pixel value; scale.set(PX) converts the label
     // from pixel space to grid space so it can be positioned in grid units.
-    const label = this.trackTextResolution(
-      new Text({
-        text: this.options.text.value,
-        style: {
-          fontFamily: CANVAS_FONT_FAMILY,
-          fontSize: this.options.fontSize.value,
-          fill: this.themingService.currentTheme().fontTint
-        }
-      })
-    );
+    const label = new BitmapText({
+      text: this.options.text.value,
+      style: {
+        fontFamily: CANVAS_FONT_FAMILY,
+        fontSize: this.options.fontSize.value,
+        fill: this.themingService.currentTheme().fontTint
+      }
+    });
     label.scale.set(PX);
     // For W direction the component is rotated 180°, which would flip the glyphs upside-down.
     // Counter-rotating the label by π keeps glyphs upright; flipping the anchor mirrors

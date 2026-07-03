@@ -1,7 +1,7 @@
 import { beforeEach, describe, expect, it } from 'vitest';
 import { Injector } from '@angular/core';
 import { TestBed } from '@angular/core/testing';
-import { Container, Text } from 'pixi.js';
+import { Container, BitmapText } from 'pixi.js';
 import { setStaticDIInjector } from '../utils/get-di';
 import { Component } from './component';
 import { ComponentConfig } from './component-config.model';
@@ -271,11 +271,11 @@ describe('Component port-label anchoring', () => {
     );
   }
 
-  function labelText(comp: Component, label: string): Text {
-    let found: Text | undefined;
+  function labelText(comp: Component, label: string): BitmapText {
+    let found: BitmapText | undefined;
     const walk = (c: Container): void => {
       for (const child of c.children) {
-        if (child instanceof Text && child.text === label) found = child;
+        if (child instanceof BitmapText && child.text === label) found = child;
         else walk(child as Container);
       }
     };
@@ -328,11 +328,11 @@ describe('Component symbol rendering', () => {
     configureTestBed();
   });
 
-  function findText(comp: Component, value: string): Text | undefined {
-    let found: Text | undefined;
+  function findText(comp: Component, value: string): BitmapText | undefined {
+    let found: BitmapText | undefined;
     const walk = (c: Container): void => {
       for (const child of c.children) {
-        if (child instanceof Text && child.text === value) found = child;
+        if (child instanceof BitmapText && child.text === value) found = child;
         else walk(child as Container);
       }
     };
@@ -358,7 +358,7 @@ describe('Component symbol rendering', () => {
       let texts = 0;
       const walk = (c: Container): void => {
         for (const child of c.children) {
-          if (child instanceof Text) texts++;
+          if (child instanceof BitmapText) texts++;
           else walk(child as Container);
         }
       };

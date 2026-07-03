@@ -1,6 +1,6 @@
 import { beforeEach, describe, expect, it } from 'vitest';
 import { TestBed } from '@angular/core/testing';
-import { Container, Text } from 'pixi.js';
+import { Container, BitmapText } from 'pixi.js';
 import { PX } from '../../utils/grid';
 import { CANVAS_FONT_FAMILY } from '../../utils/text-fit';
 import { Direction } from '../../utils/direction';
@@ -11,12 +11,12 @@ import { Project } from '../../project/project';
 import { CustomComponentRegistry } from './custom-component-registry.service';
 import { CustomComponent } from './custom-component';
 
-/** All Text nodes rendered anywhere under `container` (symbol + port labels). */
-function renderedTextNodes(container: Container): Text[] {
-  const out: Text[] = [];
+/** All BitmapText nodes rendered anywhere under `container` (symbol + port labels). */
+function renderedTextNodes(container: Container): BitmapText[] {
+  const out: BitmapText[] = [];
   const walk = (c: Container): void => {
     for (const child of c.children) {
-      if (child instanceof Text) out.push(child);
+      if (child instanceof BitmapText) out.push(child);
       else walk(child as Container);
     }
   };
@@ -24,7 +24,7 @@ function renderedTextNodes(container: Container): Text[] {
   return out;
 }
 
-/** All Text strings rendered anywhere under `container` (symbol + port labels). */
+/** All BitmapText strings rendered anywhere under `container` (symbol + port labels). */
 function renderedTexts(container: Container): string[] {
   return renderedTextNodes(container).map((t) => t.text);
 }
@@ -135,7 +135,7 @@ describe('CustomComponent', () => {
       'browser'
     );
     const instance = placeLatest(master);
-    const label = (text: string): Text => {
+    const label = (text: string): BitmapText => {
       const found = renderedTextNodes(instance).find((t) => t.text === text);
       expect(found, `label ${text}`).toBeDefined();
       return found!;
@@ -166,7 +166,7 @@ describe('CustomComponent', () => {
       'browser'
     );
     const instance = placeLatest(master);
-    const symbol = (): Text =>
+    const symbol = (): BitmapText =>
       renderedTextNodes(instance).find((t) => t.text === 'COUNTER99XX')!;
 
     // E: labels flank the symbol, so it gets half the 3-grid body minus the

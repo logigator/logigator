@@ -356,9 +356,11 @@ Parameters: `size` (grid units), `scale`.
 
 **File:** `assets.service.ts`
 
-Angular `Injectable` (root-provided). Registers the Roboto woff2 font with PixiJS `Assets` in its constructor (with a cache-busting hash via `HashingService`), then loads it asynchronously in `init()`.
+Angular `Injectable` (root-provided). Registers the Roboto Mono subset woff2 with PixiJS `Assets` in its constructor, then in `init()` loads it and installs the canvas bitmap font via `BitmapFont.install` under the `CANVAS_FONT_FAMILY` name. All canvas text is `BitmapText` rendered from this one atlas — zoom only scales glyph quads, never re-rasterizes text. Glyphs are baked at 96 physical px (48 px × resolution 2), above the largest size built-in text reaches on screen, and cover printable ASCII, Latin-1 and Latin Extended-A (`CANVAS_FONT_CHARS`); characters outside that set are silently dropped. The atlas is baked white with `dynamicFill`, so a `BitmapText`'s `fill` acts as a per-instance tint for theme colors.
 
-`BoardComponent.ngOnInit` awaits `assetsService.init()` before initializing the PixiJS `Application`, guaranteeing the font is available for any `BitmapText` or `Text` objects created during scene construction.
+The FontFace is registered under a bake-only family name (`Roboto Mono Canvas`) rather than `Roboto Mono`: the Google Fonts stylesheet registers lazy same-named faces, and resolving the bake to a still-unloaded one would silently rasterize a fallback font into the atlas.
+
+`BoardComponent.ngOnInit` awaits `assetsService.init()` before initializing the PixiJS `Application`, guaranteeing the atlas exists before any `BitmapText` is created during scene construction.
 
 ---
 
