@@ -46,17 +46,15 @@ let nextId = 0;
       [class]="panelClasses()"
     >
       @if (config.header || config.closable !== false) {
-        <div
-          class="flex shrink-0 items-center justify-between gap-4 border-b border-border px-5 py-4"
-        >
-          <h2 [id]="headerId" class="text-lg font-semibold text-text">
+        <div class="flex shrink-0 items-center justify-between gap-4 p-5">
+          <h2 [id]="headerId" class="text-xl font-semibold text-text">
             {{ config.header }}
           </h2>
           @if (config.closable !== false) {
             <button
               type="button"
               aria-label="Close"
-              class="inline-flex size-8 items-center justify-center rounded text-muted transition-colors hover:bg-content-hover hover:text-text"
+              class="inline-flex size-10 items-center justify-center rounded-full text-muted transition-colors hover:bg-content-hover hover:text-text"
               (click)="ref.close()"
             >
               <i class="ph ph-x" aria-hidden="true"></i>
@@ -64,7 +62,10 @@ let nextId = 0;
           }
         </div>
       }
-      <div class="min-h-0 overflow-auto p-5">
+      <div
+        class="min-h-0 overflow-auto px-5 pb-5"
+        [class.pt-5]="!config.header && config.closable === false"
+      >
         <ng-container #childHost></ng-container>
       </div>
     </div>

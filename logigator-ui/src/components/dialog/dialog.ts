@@ -45,17 +45,15 @@ let nextId = 0;
         [class]="panelClasses()"
       >
         @if (header() || closable()) {
-          <div
-            class="flex shrink-0 items-center justify-between gap-4 border-b border-border px-5 py-4"
-          >
-            <h2 [id]="headerId" class="text-lg font-semibold text-text">
+          <div class="flex shrink-0 items-center justify-between gap-4 p-5">
+            <h2 [id]="headerId" class="text-xl font-semibold text-text">
               {{ header() }}
             </h2>
             @if (closable()) {
               <button
                 type="button"
                 aria-label="Close"
-                class="inline-flex size-8 items-center justify-center rounded text-muted transition-colors hover:bg-content-hover hover:text-text"
+                class="inline-flex size-10 items-center justify-center rounded-full text-muted transition-colors hover:bg-content-hover hover:text-text"
                 (click)="requestClose()"
               >
                 <i class="ph ph-x" aria-hidden="true"></i>
@@ -63,11 +61,14 @@ let nextId = 0;
             }
           </div>
         }
-        <div class="min-h-0 overflow-auto p-5"><ng-content></ng-content></div>
+        <div
+          class="min-h-0 overflow-auto px-5 pb-5"
+          [class.pt-5]="!header() && !closable()"
+        >
+          <ng-content></ng-content>
+        </div>
         @if (footerTemplate(); as tpl) {
-          <div
-            class="flex shrink-0 justify-end gap-2 border-t border-border px-5 py-4"
-          >
+          <div class="flex shrink-0 justify-end gap-2 px-5 pb-5">
             <ng-container *ngTemplateOutlet="tpl"></ng-container>
           </div>
         }
