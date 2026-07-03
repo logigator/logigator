@@ -11,7 +11,10 @@ export const LOGIGATOR_UI_VERSION = '0.0.0';
 export type { IconSlot } from './internal/icon';
 export type { LgSeverity } from './tokens/severity';
 export type { LgSize } from './tokens/size';
-export type { MenuItem, MenuItemCommandEvent } from './components/menu/menu-item.model';
+export type {
+  MenuItem,
+  MenuItemCommandEvent
+} from './components/menu/menu-item.model';
 export type { LgPaginatorState } from './components/paginator/paginator';
 export type { LgFileSelectEvent } from './components/file-upload/file-upload';
 
@@ -39,7 +42,10 @@ export { LgSelect } from './components/select/select';
 export { LgDialog } from './components/dialog/dialog';
 export { LgDrawer } from './components/drawer/drawer';
 
-export { LgAccordion, LgAccordionPanel } from './components/accordion/accordion';
+export {
+  LgAccordion,
+  LgAccordionPanel
+} from './components/accordion/accordion';
 export { LgTabs, LgTab, LgTabPanel } from './components/tabs/tabs';
 export { LgPanelMenu } from './components/panel-menu/panel-menu';
 export { LgMenu } from './components/menu/menu';
@@ -55,8 +61,14 @@ export { DialogConfig } from './components/dynamic-dialog/dialog-config';
 export { ConfirmationService } from './components/confirm/confirmation.service';
 export { LgConfirmDialog } from './components/confirm/confirm-dialog';
 export { LgConfirmPopup } from './components/confirm/confirm-popup';
-export type { Confirmation, ConfirmButtonProps } from './components/confirm/confirmation';
+export type {
+  Confirmation,
+  ConfirmButtonProps
+} from './components/confirm/confirmation';
 
 export { ToastService } from './components/toast/toast.service';
 export { LgToast } from './components/toast/toast';
-export type { ToastMessage, LgToastSeverity } from './components/toast/toast.service';
+export type {
+  ToastMessage,
+  LgToastSeverity
+} from './components/toast/toast.service';
