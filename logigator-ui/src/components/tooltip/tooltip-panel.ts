@@ -5,10 +5,11 @@ import { LgOverlaySide } from '../../internal/overlay';
 import { LgShortcut, LgShortcutBinding } from '../shortcut/shortcut';
 
 /**
- * The tooltip bubble rendered inside the overlay: a raised `surface-700` box
- * with `surface-0` text in both schemes (dark-on-light / light-on-dark), plus a
- * caret that tracks the resolved {@link LgOverlaySide}. An optional `shortcut`
- * renders as {@link LgShortcut} chips after the text. Fades in on attach.
+ * The tooltip bubble rendered inside the overlay: the content surface in light
+ * (white on white, carried by the shadow) and a raised `surface-700` box with
+ * `surface-0` text in dark, plus a caret that tracks the resolved
+ * {@link LgOverlaySide}. An optional `shortcut` renders as {@link LgShortcut}
+ * chips after the text. Fades in on attach.
  */
 @Component({
   selector: 'lg-tooltip-panel',
@@ -17,7 +18,7 @@ import { LgShortcut, LgShortcutBinding } from '../shortcut/shortcut';
   template: `
     <div
       lgFadeIn
-      class="relative flex max-w-50 items-center gap-2 rounded-md bg-surface-700 px-3 py-2 text-surface-0 shadow-md"
+      class="relative flex max-w-50 items-center gap-2 rounded-md bg-content px-3 py-2 text-text shadow-md dark:bg-surface-700 dark:text-surface-0"
     >
       {{ text() }}
       @if (shortcut(); as sc) {

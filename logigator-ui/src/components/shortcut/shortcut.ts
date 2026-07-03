@@ -67,19 +67,22 @@ export function formatShortcutLabel(
 
 /**
  * The chips' backdrop: `content` sits on a `bg-content` surface (menus,
- * dialogs), `raised` on the elevated `bg-surface-700` chrome (the tooltip
- * bubble), whose scheme-independent color gets a fixed one-step-lighter cap.
+ * dialogs), `raised` on the elevated chrome (the tooltip bubble) — the content
+ * surface in light, where the content caps apply as-is, and `surface-700` in
+ * dark, where the caps go one step lighter instead.
  */
 export type LgShortcutTone = 'content' | 'raised';
 
 const KBD_TONE: Record<LgShortcutTone, string> = {
   content: 'border-border bg-content-hover text-muted',
-  raised: 'border-surface-500 bg-surface-600 text-surface-100'
+  raised:
+    'border-border bg-content-hover text-muted ' +
+    'dark:border-surface-500 dark:bg-surface-600 dark:text-surface-100'
 };
 
 const JOINER_TONE: Record<LgShortcutTone, string> = {
   content: 'text-xs text-muted',
-  raised: 'text-xs text-surface-300'
+  raised: 'text-xs text-muted dark:text-surface-300'
 };
 
 /**

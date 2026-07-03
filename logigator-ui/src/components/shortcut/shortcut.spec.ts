@@ -72,8 +72,7 @@ describe('LgShortcut', () => {
     const f = TestBed.createComponent(RaisedHostComponent);
     f.detectChanges();
     const kbd = (f.nativeElement as HTMLElement).querySelector('kbd')!;
-    expect(kbd.className).toContain('bg-surface-600');
-    expect(kbd.className).not.toContain('bg-content-hover');
+    expect(kbd.className).toContain('dark:bg-surface-600');
   });
 
   it('formats special keys through the label map', () => {

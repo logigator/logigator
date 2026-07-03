@@ -92,8 +92,8 @@ const CARET: Record<LgOverlaySide, string> = {
 
 /**
  * The caret's fill per panel background: `content` pairs with a `bg-content`
- * panel (Popover, ConfirmPopup), `raised` with the elevated `bg-surface-700`
- * chrome (the Tooltip bubble).
+ * panel (Popover, ConfirmPopup), `raised` with the elevated chrome (the Tooltip
+ * bubble: the content surface in light, `surface-700` in dark).
  */
 export type LgCaretTone = 'content' | 'raised';
 
@@ -105,10 +105,10 @@ const CARET_COLOR: Record<LgCaretTone, Record<LgOverlaySide, string>> = {
     right: 'border-r-content'
   },
   raised: {
-    top: 'border-t-surface-700',
-    bottom: 'border-b-surface-700',
-    left: 'border-l-surface-700',
-    right: 'border-r-surface-700'
+    top: 'border-t-content dark:border-t-surface-700',
+    bottom: 'border-b-content dark:border-b-surface-700',
+    left: 'border-l-content dark:border-l-surface-700',
+    right: 'border-r-content dark:border-r-surface-700'
   }
 };
 
