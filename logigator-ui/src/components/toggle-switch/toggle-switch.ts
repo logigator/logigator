@@ -46,7 +46,7 @@ import { ControlValueAccessor, NG_VALUE_ACCESSOR } from '@angular/forms';
          surface-900 with the checked state, like Aura. -->
     <span
       aria-hidden="true"
-      class="pointer-events-none absolute top-1 left-1 size-4 rounded-full bg-surface-0 transition-all duration-200 peer-checked:translate-x-5 dark:bg-surface-400 dark:peer-checked:bg-surface-900 peer-disabled:opacity-60"
+      class="pointer-events-none absolute top-1 left-1 size-4 rounded-full bg-surface-0 transition-all duration-200 peer-checked:translate-x-4 dark:bg-surface-400 dark:peer-checked:bg-surface-900 peer-disabled:opacity-60"
     ></span>
   `
 })
