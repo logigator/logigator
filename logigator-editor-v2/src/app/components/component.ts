@@ -216,6 +216,7 @@ export abstract class Component<
    * the base constructor's draw, before the subclass `config` field is
    * assigned.
    */
+  // eslint-disable-next-line @typescript-eslint/class-literal-property-style
   protected get symbol(): string | null {
     return null;
   }

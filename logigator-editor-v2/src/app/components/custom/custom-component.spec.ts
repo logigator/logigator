@@ -142,15 +142,15 @@ describe('CustomComponent', () => {
     };
 
     // E: half the 3-grid body minus insets (20 px) holds "LONG" at the base
-    // 0.45-grid size.
+    // 0.4-grid size.
     expect(label('LONG').style.fontFamily).toBe(CANVAS_FONT_FAMILY);
-    expect(label('LONG').style.fontSize).toBeCloseTo(0.45 / PX, 5);
+    expect(label('LONG').style.fontSize).toBeCloseTo(0.4 / PX, 5);
 
     // S: the slot is the grid pitch minus clearance (14 px) — "LONG" at the
     // 0.6-em advance shrinks to exactly fill it, "A" keeps the base size.
     instance.direction = Direction.S;
     expect(label('LONG').style.fontSize).toBeCloseTo(14 / (0.6 * 4), 5);
-    expect(label('A').style.fontSize).toBeCloseTo(0.45 / PX, 5);
+    expect(label('A').style.fontSize).toBeCloseTo(0.4 / PX, 5);
 
     instance.destroy({ children: true });
   });
