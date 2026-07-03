@@ -62,7 +62,7 @@ export class LgAccordion {
     >
       <ng-container *ngTemplateOutlet="header() ?? null"></ng-container>
       <i
-        class="ph ph-caret-down ml-2 shrink-0 transition-transform duration-200"
+        class="ph ph-caret-down shrink-0 transition-transform duration-200"
         [class.rotate-180]="open()"
         aria-hidden="true"
       ></i>
