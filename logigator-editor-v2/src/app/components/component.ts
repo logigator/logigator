@@ -210,6 +210,11 @@ export abstract class Component<
       }
     });
 
+    // The stub-thickness side depends on the direction and lives in the
+    // rescalers — re-run them so a rotation without a redraw still lands the
+    // stubs on the wire-side pixel.
+    this.applyScale(this._appliedScale);
+
     if (environment.debug.showConnectionPoints) {
       this._draw();
     }
@@ -591,6 +596,18 @@ export abstract class Component<
     }
   }
 
+  /**
+   * Which local side of the port centre-line the stub's 1-px thickness hangs
+   * on so that, after the component's rotation, it lands on the same screen
+   * side as a connecting wire's thickness (below for horizontal, left for
+   * vertical).
+   */
+  private get _stubThicknessSign(): 1 | -1 {
+    return this._direction === Direction.W || this._direction === Direction.N
+      ? -1
+      : 1;
+  }
+
   private _drawConnections(n: number, type: 'inputs' | 'outputs'): void {
     const geometry = this.geometryService.getGraphicsContext(WireGraphics);
     const container = new Container();
@@ -602,8 +619,16 @@ export abstract class Component<
         this._poweredPorts.has(portIndex) ? this._stubContext(true) : geometry
       );
       wire.position.set(0, i + 0.5);
-      // Stub stays 1 screen pixel thick: scale.y compensates for zoom.
-      this.onApplyScale((scale) => wire.scale.set(0.5, PX / scale));
+      // Stub stays 1 screen pixel thick: scale.y compensates for zoom. The
+      // shared wire rect hangs its whole thickness on the +y side of the
+      // centre-line, and Wire renders it at 0° or +90°, so the pixel always
+      // lands below (horizontal) or left (vertical) of the line. The W/N
+      // rotations map +y to the opposite screen side, which would leave the
+      // stub one pixel off the wire it touches — mirror scale.y so the stub
+      // fills the same pixel as the wire.
+      this.onApplyScale((scale) =>
+        wire.scale.set(0.5, (PX / scale) * this._stubThicknessSign)
+      );
       this._portStubs[portIndex] = wire;
       container.addChild(wire);
 

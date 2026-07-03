@@ -208,6 +208,51 @@ describe('Component.direction re-anchoring (legacy-editor behavior)', () => {
   });
 });
 
+describe('Component port-stub pixel side', () => {
+  beforeEach(() => {
+    configureTestBed();
+  });
+
+  // The stub's 1-px thickness hangs on one side of the port centre-line; the
+  // W/N rotations must mirror it (scale.y < 0) so it rasterizes onto the same
+  // screen-side pixel as a connecting wire (below for horizontal, left for
+  // vertical).
+  it.each([
+    [Direction.E, 1],
+    [Direction.S, 1],
+    [Direction.W, -1],
+    [Direction.N, -1]
+  ])('hangs the stub on the wire-side pixel (direction %i)', (dir, sign) => {
+    const comp = makeAnd(2, dir);
+
+    expect(comp.portStubs.length).toBe(3);
+    for (const stub of comp.portStubs) {
+      expect(Math.sign(stub.scale.y)).toBe(sign);
+    }
+
+    comp.destroy({ children: true });
+  });
+
+  it('re-applies the stub side on a runtime rotation, which does not redraw', () => {
+    const comp = makeAnd(2, Direction.E);
+    const stubsBefore = [...comp.portStubs];
+
+    comp.direction = Direction.N;
+
+    expect([...comp.portStubs]).toEqual(stubsBefore);
+    for (const stub of comp.portStubs) {
+      expect(Math.sign(stub.scale.y)).toBe(-1);
+    }
+
+    comp.direction = Direction.S;
+    for (const stub of comp.portStubs) {
+      expect(Math.sign(stub.scale.y)).toBe(1);
+    }
+
+    comp.destroy({ children: true });
+  });
+});
+
 describe('Component port-count re-anchoring (legacy-editor behavior)', () => {
   beforeEach(() => {
     setStaticDIInjector(TestBed.inject(Injector));
