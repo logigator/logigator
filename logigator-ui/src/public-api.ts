@@ -17,7 +17,10 @@ export type {
 } from './components/menu/menu-item.model';
 export type { LgPaginatorState } from './components/paginator/paginator';
 export type { LgFileSelectEvent } from './components/file-upload/file-upload';
-export type { LgShortcutBinding } from './components/shortcut/shortcut';
+export type {
+  LgShortcutBinding,
+  LgShortcutTone
+} from './components/shortcut/shortcut';
 
 export { LgButton } from './components/button/button';
 export { LgDivider } from './components/divider/divider';

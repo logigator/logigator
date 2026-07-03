@@ -66,6 +66,23 @@ export function formatShortcutLabel(
 }
 
 /**
+ * The chips' backdrop: `content` sits on a `bg-content` surface (menus,
+ * dialogs), `raised` on the elevated `bg-surface-700` chrome (the tooltip
+ * bubble), whose scheme-independent color gets a fixed one-step-lighter cap.
+ */
+export type LgShortcutTone = 'content' | 'raised';
+
+const KBD_TONE: Record<LgShortcutTone, string> = {
+  content: 'border-border bg-content-hover text-muted',
+  raised: 'border-surface-500 bg-surface-600 text-surface-100'
+};
+
+const JOINER_TONE: Record<LgShortcutTone, string> = {
+  content: 'text-xs text-muted',
+  raised: 'text-xs text-surface-300'
+};
+
+/**
  * A key combination rendered as `<kbd>` chips — `Ctrl + S`, or the glyph run
  * `⇧ ⌘ Z` on mac (no separators there). A `null` binding renders an en dash,
  * the "unassigned" placeholder. `mac` defaults to the platform and exists as
@@ -77,24 +94,29 @@ export function formatShortcutLabel(
   host: { class: 'inline-flex items-center gap-1' },
   template: `
     @for (part of parts(); track $index) {
-      <kbd
-        class="inline-block rounded border border-border bg-content-hover px-1 font-mono text-xs leading-normal text-muted"
-        >{{ part }}</kbd
-      >
+      <kbd [class]="kbdClass()">{{ part }}</kbd>
       @if (!mac() && !$last) {
-        <span class="text-xs text-muted">+</span>
+        <span [class]="joinerClass()">+</span>
       }
     } @empty {
-      <span class="text-xs text-muted">–</span>
+      <span [class]="joinerClass()">–</span>
     }
   `
 })
 export class LgShortcut {
   readonly binding = input.required<LgShortcutBinding | null>();
+  readonly tone = input<LgShortcutTone>('content');
   readonly mac = input(IS_MAC);
 
   protected readonly parts = computed<string[]>(() => {
     const b = this.binding();
     return b ? shortcutParts(b, this.mac()) : [];
   });
+
+  protected readonly kbdClass = computed(
+    () =>
+      `inline-block rounded border px-1 font-mono text-xs leading-normal ${KBD_TONE[this.tone()]}`
+  );
+
+  protected readonly joinerClass = computed(() => JOINER_TONE[this.tone()]);
 }

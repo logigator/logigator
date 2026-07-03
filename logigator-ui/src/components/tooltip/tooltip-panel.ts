@@ -21,9 +21,9 @@ import { LgShortcut, LgShortcutBinding } from '../shortcut/shortcut';
     >
       {{ text() }}
       @if (shortcut(); as sc) {
-        <lg-shortcut [binding]="sc" />
+        <lg-shortcut [binding]="sc" tone="raised" />
       }
-      <lg-caret [side]="side()" tone="tooltip" />
+      <lg-caret [side]="side()" tone="raised" />
     </div>
   `
 })

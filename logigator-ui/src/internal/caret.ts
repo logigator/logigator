@@ -11,7 +11,8 @@ import { caretClasses, LgCaretTone, LgOverlaySide } from './overlay';
  * ConfirmPopup) parks on its edge to point at the anchor. Place it as the last
  * child of the panel's `relative` container; it positions itself from `side`
  * (the side the panel sits on relative to the anchor) and takes its fill from
- * `tone` — `content` for `bg-content` panels, `tooltip` for the tooltip bubble.
+ * `tone` — `content` for `bg-content` panels, `raised` for the elevated
+ * `bg-surface-700` chrome (the tooltip bubble).
  *
  * Internal — not part of the public API.
  */
