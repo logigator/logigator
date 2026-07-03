@@ -22,14 +22,17 @@ import {
   LgOverlaySide,
   sideOfPosition
 } from '../../internal/overlay';
+import { formatShortcutLabel, LgShortcutBinding } from '../shortcut/shortcut';
 import { LgTooltipPanel } from './tooltip-panel';
 
 /**
  * A hover/focus tooltip on any host element. The content is the `lgTooltip`
- * value; an **empty / null value is a no-op** (renders no tooltip). The bubble
+ * value; an **empty / null value is a no-op** (renders no tooltip). An optional
+ * `tooltipShortcut` binding renders as key chips after the text. The bubble
  * is a `cdk/overlay` connected overlay with a caret tracking the anchor; the
- * directive never steals pointer or focus, and registers the text with
- * `AriaDescriber` so it reaches screen readers via `aria-describedby`.
+ * directive never steals pointer or focus, and registers the text (plus the
+ * shortcut's plain label) with `AriaDescriber` so it reaches screen readers via
+ * `aria-describedby`.
  */
 @Directive({
   selector: '[lgTooltip]',
@@ -45,6 +48,7 @@ export class LgTooltip implements OnDestroy {
   readonly content = input<string | null | undefined>(undefined, {
     alias: 'lgTooltip'
   });
+  readonly tooltipShortcut = input<LgShortcutBinding | null>(null);
   readonly tooltipPosition = input<LgOverlaySide>('right');
 
   private readonly overlay = inject(Overlay);
@@ -63,8 +67,9 @@ export class LgTooltip implements OnDestroy {
       const text = this.content();
       const el = this.host.nativeElement;
       if (text) {
-        this.ariaDescriber.describe(el, text);
-        onCleanup(() => this.ariaDescriber.removeDescription(el, text));
+        const description = this.describedText(text);
+        this.ariaDescriber.describe(el, description);
+        onCleanup(() => this.ariaDescriber.removeDescription(el, description));
       }
     });
 
@@ -72,11 +77,13 @@ export class LgTooltip implements OnDestroy {
     // value hides it, matching show()'s no-op-on-empty contract).
     effect(() => {
       const text = this.content();
+      const shortcut = this.tooltipShortcut();
       if (!this.overlayRef) {
         return;
       }
       if (text) {
         this.panelRef?.setInput('text', text);
+        this.panelRef?.setInput('shortcut', shortcut);
       } else {
         this.hide();
       }
@@ -102,6 +109,7 @@ export class LgTooltip implements OnDestroy {
       new ComponentPortal(LgTooltipPanel, this.viewContainerRef)
     );
     this.panelRef.setInput('text', text);
+    this.panelRef.setInput('shortcut', this.tooltipShortcut());
     this.panelRef.setInput('side', side);
 
     const strategy = this.overlayRef.getConfig()
@@ -117,5 +125,11 @@ export class LgTooltip implements OnDestroy {
     this.overlayRef?.dispose();
     this.overlayRef = null;
     this.panelRef = null;
+  }
+
+  /** The screen-reader description: the text plus the shortcut's plain label. */
+  private describedText(text: string): string {
+    const shortcut = this.tooltipShortcut();
+    return shortcut ? `${text} (${formatShortcutLabel(shortcut)})` : text;
   }
 }
