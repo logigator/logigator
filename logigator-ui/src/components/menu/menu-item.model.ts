@@ -32,6 +32,6 @@ export interface MenuItem {
 
 /** The interactive wrapper for one menu / submenu row; chrome fills it. */
 export const MENU_ITEM_CLASS =
-  'flex w-full text-left text-text hover:bg-content-hover ' +
-  'focus:bg-content-hover focus:outline-none ' +
+  'flex w-full rounded text-left text-text hover:bg-content-hover ' +
+  'focus:outline-none focus-visible:bg-content-hover ' +
   'disabled:pointer-events-none disabled:opacity-50';

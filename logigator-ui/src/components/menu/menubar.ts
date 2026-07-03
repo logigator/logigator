@@ -61,7 +61,7 @@ const SUBMENU_POSITIONS: ConnectedPosition[] = [
   selector: 'lg-menubar',
   changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [NgTemplateOutlet],
-  host: { class: 'flex items-center' },
+  host: { class: 'flex items-center gap-2 p-1' },
   template: `
     @if (startTemplate(); as tpl) {
       <ng-container *ngTemplateOutlet="tpl"></ng-container>
@@ -112,7 +112,7 @@ const SUBMENU_POSITIONS: ConnectedPosition[] = [
       <div
         role="menu"
         tabindex="-1"
-        class="min-w-48 rounded-md border border-border bg-content py-1 shadow-lg focus:outline-none"
+        class="min-w-48 rounded-md border border-border bg-content p-1 shadow-md focus:outline-none"
         (keydown)="onSubmenuKeydown($event)"
       >
         @for (sub of submenuItems(); track $index) {

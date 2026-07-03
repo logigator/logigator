@@ -70,7 +70,7 @@ const MENU_POSITIONS: ConnectedPosition[] = [
       <div
         role="menu"
         tabindex="-1"
-        class="min-w-48 rounded-md border border-border bg-content py-1 shadow-lg focus:outline-none"
+        class="min-w-48 rounded-md border border-border bg-content p-1 shadow-md focus:outline-none"
         (keydown)="onKeydown($event)"
       >
         @if (startTemplate(); as tpl) {
