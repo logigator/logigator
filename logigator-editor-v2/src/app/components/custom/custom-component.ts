@@ -3,6 +3,7 @@ import { Subject, takeUntil } from 'rxjs';
 import { Component } from '../component';
 import { ComponentConfig } from '../component-config.model';
 import { PX } from '../../utils/grid';
+import { CANVAS_FONT_FAMILY, fitMonoFontSize } from '../../utils/text-fit';
 import { CustomComponentOptions } from './custom-component.config';
 import { CustomComponentDefinition } from './custom-component-definition.model';
 
@@ -76,8 +77,15 @@ export class CustomComponent extends Component<CustomComponentOptions> {
       new Text({
         text: def.symbol,
         style: {
-          fontFamily: 'Roboto',
-          fontSize: 0.5 / PX,
+          fontFamily: CANVAS_FONT_FAMILY,
+          // Shrinks a long symbol until it fits the body, minus a 2-px
+          // clearance on each side.
+          fontSize: fitMonoFontSize(
+            def.symbol,
+            this.bodyGridWidth / PX - 4,
+            0.5 / PX,
+            0.25 / PX
+          ),
           fill: this.themingService.currentTheme().fontTint
         },
         anchor: { x: 0.5, y: 0.5 }

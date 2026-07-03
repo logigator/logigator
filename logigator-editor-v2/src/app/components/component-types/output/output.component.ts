@@ -2,6 +2,7 @@ import { Component } from '../../component';
 import { DestroyOptions, Text } from 'pixi.js';
 import { Subject, takeUntil } from 'rxjs';
 import { PX } from '../../../utils/grid';
+import { CANVAS_FONT_FAMILY } from '../../../utils/text-fit';
 import { outputComponentConfig, OutputOptions } from './output.config';
 
 export class OutputComponent extends Component<OutputOptions> {
@@ -48,7 +49,7 @@ export class OutputComponent extends Component<OutputOptions> {
         // the base constructor before the subclass `config` field is assigned.
         text: outputComponentConfig.symbol,
         style: {
-          fontFamily: 'Roboto',
+          fontFamily: CANVAS_FONT_FAMILY,
           fontSize: 0.35 / PX,
           fill: this.themingService.currentTheme().fontTint
         },

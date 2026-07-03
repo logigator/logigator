@@ -6,6 +6,7 @@ import { ConnectionPoint } from '../../../connection-points/connection-point';
 import { DestroyOptions, Graphics, Text } from 'pixi.js';
 import { Subject, takeUntil } from 'rxjs';
 import { PX } from '../../../utils/grid';
+import { CANVAS_FONT_FAMILY } from '../../../utils/text-fit';
 
 export class TextComponent extends Component<TextOptions> {
   public readonly config = textComponentConfig;
@@ -67,7 +68,7 @@ export class TextComponent extends Component<TextOptions> {
       new Text({
         text: this.options.text.value,
         style: {
-          fontFamily: 'Roboto',
+          fontFamily: CANVAS_FONT_FAMILY,
           fontSize: this.options.fontSize.value,
           fill: this.themingService.currentTheme().fontTint
         }

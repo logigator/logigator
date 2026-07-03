@@ -29,6 +29,7 @@ import { SerializedComponent } from './serialized-component.model';
 import { Connectable } from '../rendering/grid-element';
 import { IdAllocator } from '../utils/id-allocator';
 import { Direction } from '../utils/direction';
+import { CANVAS_FONT_FAMILY, fitMonoFontSize } from '../utils/text-fit';
 
 export interface PortsChange {
   oldPorts: Point[];
@@ -51,6 +52,9 @@ const LABEL_ANCHOR: Record<Direction, { x: number; y: number }> = {
   [Direction.W]: { x: 1, y: 0.5 },
   [Direction.N]: { x: 0.5, y: 1 }
 };
+
+/** Port-label font size (half a grid unit) — shrunk per label to its slot. */
+const LABEL_FONT_SIZE = 0.5 / PX;
 
 /** Which port group a negation index addresses (0-based within that group). */
 export type PortSide = 'in' | 'out';
@@ -665,12 +669,25 @@ export abstract class Component<
           type === 'inputs'
             ? this._direction
             : (((this._direction + 2) % 4) as Direction);
+        // The horizontal room a label may take before it collides with its
+        // neighbour: rotated S/N the labels sit side by side one grid pitch
+        // apart, in E/W the input and output label share the body row, each
+        // side keeping its 2-px inset plus clearance at the centre.
+        const labelSlot =
+          this._direction === Direction.S || this._direction === Direction.N
+            ? 1 / PX - 2
+            : this.bodyGridWidth / 2 / PX - 4;
         const text = this.trackTextResolution(
           new Text({
             text: labels[i],
             style: {
-              fontFamily: 'Roboto',
-              fontSize: 0.5 / PX,
+              fontFamily: CANVAS_FONT_FAMILY,
+              fontSize: fitMonoFontSize(
+                labels[i],
+                labelSlot,
+                LABEL_FONT_SIZE,
+                LABEL_FONT_SIZE / 2
+              ),
               fill: this.themingService.currentTheme().fontTint
             },
             anchor: LABEL_ANCHOR[anchorDirection]

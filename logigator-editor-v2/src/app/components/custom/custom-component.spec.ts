@@ -1,6 +1,9 @@
 import { beforeEach, describe, expect, it } from 'vitest';
 import { TestBed } from '@angular/core/testing';
 import { Container, Text } from 'pixi.js';
+import { PX } from '../../utils/grid';
+import { CANVAS_FONT_FAMILY } from '../../utils/text-fit';
+import { Direction } from '../../utils/direction';
 import { configureTestBed } from '../../../testing/configure-test-bed';
 import { Component } from '../component';
 import { ComponentProviderService } from '../component-provider.service';
@@ -8,17 +11,22 @@ import { Project } from '../../project/project';
 import { CustomComponentRegistry } from './custom-component-registry.service';
 import { CustomComponent } from './custom-component';
 
-/** All Text strings rendered anywhere under `container` (symbol + port labels). */
-function renderedTexts(container: Container): string[] {
-  const out: string[] = [];
+/** All Text nodes rendered anywhere under `container` (symbol + port labels). */
+function renderedTextNodes(container: Container): Text[] {
+  const out: Text[] = [];
   const walk = (c: Container): void => {
     for (const child of c.children) {
-      if (child instanceof Text) out.push(child.text);
+      if (child instanceof Text) out.push(child);
       else walk(child as Container);
     }
   };
   walk(container);
   return out;
+}
+
+/** All Text strings rendered anywhere under `container` (symbol + port labels). */
+function renderedTexts(container: Container): string[] {
+  return renderedTextNodes(container).map((t) => t.text);
 }
 
 describe('CustomComponent', () => {
@@ -119,6 +127,52 @@ describe('CustomComponent', () => {
 
     before.destroy({ children: true });
     after.destroy({ children: true });
+  });
+
+  it('fits port labels to their slot: full size in E, shrunk to the grid pitch in S', () => {
+    const master = registry.createMaster(
+      { symbol: 'CC', numInputs: 2, numOutputs: 1, labels: ['CLK', 'A', 'Q'] },
+      'browser'
+    );
+    const instance = placeLatest(master);
+    const label = (text: string): Text => {
+      const found = renderedTextNodes(instance).find((t) => t.text === text);
+      expect(found, `label ${text}`).toBeDefined();
+      return found!;
+    };
+
+    // E: half the 3-grid body minus insets (20 px) holds "CLK" at full size.
+    expect(label('CLK').style.fontFamily).toBe(CANVAS_FONT_FAMILY);
+    expect(label('CLK').style.fontSize).toBeCloseTo(0.5 / PX, 5);
+
+    // S: the slot is the grid pitch minus clearance (14 px) — "CLK" at the
+    // 0.6-em advance shrinks to exactly fill it, "A" keeps the base size.
+    instance.direction = Direction.S;
+    expect(label('CLK').style.fontSize).toBeCloseTo(14 / (0.6 * 3), 5);
+    expect(label('A').style.fontSize).toBeCloseTo(0.5 / PX, 5);
+
+    instance.destroy({ children: true });
+  });
+
+  it('shrinks a long symbol to the body width', () => {
+    const master = registry.createMaster(
+      {
+        symbol: 'COUNTER99XX',
+        numInputs: 1,
+        numOutputs: 1,
+        labels: ['A', 'Q']
+      },
+      'browser'
+    );
+    const instance = placeLatest(master);
+
+    const symbol = renderedTextNodes(instance).find(
+      (t) => t.text === 'COUNTER99XX'
+    )!;
+    // Body 3 grid (48 px) minus 2-px clearance each side → 44 px slot.
+    expect(symbol.style.fontSize).toBeCloseTo(44 / (0.6 * 11), 5);
+
+    instance.destroy({ children: true });
   });
 
   it('integrates into a Project and is found by spatial queries', () => {
