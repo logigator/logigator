@@ -33,8 +33,10 @@ const SEVERITY: Record<LgButtonVariant, Record<SeverityKey, string>> = {
       'bg-primary text-primary-contrast hover:bg-primary-emphasis active:bg-primary-emphasis-alt',
     none: 'text-muted hover:bg-surface-100 active:bg-surface-200 dark:hover:bg-surface-800 dark:active:bg-surface-700',
     secondary:
-      'bg-surface-100 text-surface-600 hover:bg-surface-200 active:bg-surface-300 ' +
-      'dark:bg-surface-800 dark:text-surface-300 dark:hover:bg-surface-700 dark:active:bg-surface-600',
+      'bg-surface-100 text-surface-600 hover:bg-surface-200 hover:text-surface-700 ' +
+      'active:bg-surface-300 active:text-surface-800 ' +
+      'dark:bg-surface-800 dark:text-surface-300 dark:hover:bg-surface-700 dark:hover:text-surface-200 ' +
+      'dark:active:bg-surface-600 dark:active:text-surface-100',
     info: 'bg-info text-white hover:brightness-95 active:brightness-90',
     success: 'bg-success text-white hover:brightness-95 active:brightness-90',
     warn: 'bg-warn text-white hover:brightness-95 active:brightness-90',
@@ -48,7 +50,8 @@ const SEVERITY: Record<LgButtonVariant, Record<SeverityKey, string>> = {
       'text-surface-500 border-surface-200 hover:bg-surface-50 active:bg-surface-100 ' +
       'dark:text-surface-400 dark:border-surface-700',
     info: 'text-info border-info hover:bg-info/10 active:bg-info/20',
-    success: 'text-success border-success hover:bg-success/10 active:bg-success/20',
+    success:
+      'text-success border-success hover:bg-success/10 active:bg-success/20',
     warn: 'text-warn border-warn hover:bg-warn/10 active:bg-warn/20',
     danger: 'text-error border-error hover:bg-error/10 active:bg-error/20'
   },
