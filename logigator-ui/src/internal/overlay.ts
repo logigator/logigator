@@ -78,43 +78,34 @@ export function connectedPositions(
   return order.map((s) => positionForSide(s, gap));
 }
 
-// CSS-triangle caret pointing toward the anchor, parked on the panel edge
-// nearest it. Keyed by the side the panel sits on relative to the anchor. The
-// pointing edge takes the panel's background color via the tone map below.
-const CARET: Record<LgOverlaySide, string> = {
-  top: 'bottom-[-6px] left-1/2 -translate-x-1/2 border-x-[6px] border-x-transparent border-t-[6px]',
-  bottom:
-    'top-[-6px] left-1/2 -translate-x-1/2 border-x-[6px] border-x-transparent border-b-[6px]',
-  left: 'right-[-6px] top-1/2 -translate-y-1/2 border-y-[6px] border-y-transparent border-l-[6px]',
-  right:
-    'left-[-6px] top-1/2 -translate-y-1/2 border-y-[6px] border-y-transparent border-r-[6px]'
+// Diamond caret pointing toward the anchor: a rotated square parked
+// half-overlapping the panel edge nearest the anchor, so its inner half blends
+// into the panel and its outward corner shows the panel's border on the two
+// protruding edges. Keyed by the side the panel sits on relative to the
+// anchor; the entries pick which two edges carry the border width.
+const CARET_POSITION: Record<LgOverlaySide, string> = {
+  top: '-bottom-1.25 left-1/2 -translate-x-1/2 border-r border-b',
+  bottom: '-top-1.25 left-1/2 -translate-x-1/2 border-l border-t',
+  left: '-right-1.25 top-1/2 -translate-y-1/2 border-t border-r',
+  right: '-left-1.25 top-1/2 -translate-y-1/2 border-b border-l'
 };
 
 /**
- * The caret's fill per panel background: `content` pairs with a `bg-content`
- * panel (Popover, ConfirmPopup), `raised` with the elevated chrome (the Tooltip
- * bubble: the content surface in light, `surface-700` in dark).
+ * The caret's surface per panel background: `content` pairs with a
+ * `bg-content` panel (Popover, ConfirmPopup), `raised` with the elevated
+ * chrome (the Tooltip bubble: the bordered content surface in light, the
+ * borderless `surface-700` box in dark).
  */
 export type LgCaretTone = 'content' | 'raised';
 
-const CARET_COLOR: Record<LgCaretTone, Record<LgOverlaySide, string>> = {
-  content: {
-    top: 'border-t-content',
-    bottom: 'border-b-content',
-    left: 'border-l-content',
-    right: 'border-r-content'
-  },
-  raised: {
-    top: 'border-t-content dark:border-t-surface-700',
-    bottom: 'border-b-content dark:border-b-surface-700',
-    left: 'border-l-content dark:border-l-surface-700',
-    right: 'border-r-content dark:border-r-surface-700'
-  }
+const CARET_TONE: Record<LgCaretTone, string> = {
+  content: 'bg-content border-border',
+  raised: 'bg-content border-border dark:bg-surface-700 dark:border-transparent'
 };
 
 /** Tailwind classes for a caret pointing at the anchor from the given side. */
 export function caretClasses(side: LgOverlaySide, tone: LgCaretTone): string {
-  return `${CARET[side]} ${CARET_COLOR[tone][side]}`;
+  return `rotate-45 ${CARET_POSITION[side]} ${CARET_TONE[tone]}`;
 }
 
 /** Which side a resolved {@link ConnectedPosition} placed the overlay on. */
