@@ -43,7 +43,7 @@ const POPUP_GAP = 10;
   template: `
     <ng-template #panel>
       <div
-        class="relative max-w-xs rounded-md bg-content p-3 text-text shadow-lg"
+        class="relative max-w-xs rounded-md border border-border bg-content p-3 text-text shadow-md"
       >
         <p class="mb-3 text-sm">{{ current()?.message }}</p>
         <div class="flex justify-end gap-2">
