@@ -19,7 +19,7 @@ import { ControlValueAccessor, NG_VALUE_ACCESSOR } from '@angular/forms';
 @Component({
   selector: 'lg-toggle-switch',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  host: { class: 'relative inline-block h-6 w-11 shrink-0 align-middle' },
+  host: { class: 'relative inline-block h-6 w-10 shrink-0 align-middle' },
   providers: [
     {
       provide: NG_VALUE_ACCESSOR,
@@ -40,11 +40,13 @@ import { ControlValueAccessor, NG_VALUE_ACCESSOR } from '@angular/forms';
     />
     <span
       aria-hidden="true"
-      class="pointer-events-none absolute inset-0 rounded-full bg-surface-300 transition-colors duration-200 dark:bg-surface-700 peer-checked:bg-primary peer-focus-visible:outline peer-focus-visible:outline-2 peer-focus-visible:outline-offset-2 peer-focus-visible:outline-primary peer-disabled:opacity-60"
+      class="pointer-events-none absolute inset-0 rounded-full bg-surface-300 transition-colors duration-200 peer-hover:bg-surface-400 dark:bg-surface-700 dark:peer-hover:bg-surface-600 peer-checked:bg-primary peer-checked:peer-hover:bg-primary-emphasis peer-focus-visible:outline peer-focus-visible:outline-2 peer-focus-visible:outline-offset-2 peer-focus-visible:outline-primary peer-disabled:opacity-60"
     ></span>
+    <!-- 1rem handle, surface-0 in light; in dark it flips surface-400 →
+         surface-900 with the checked state, like Aura. -->
     <span
       aria-hidden="true"
-      class="pointer-events-none absolute top-0.5 left-0.5 size-5 rounded-full bg-white shadow transition-transform duration-200 peer-checked:translate-x-5 peer-disabled:opacity-60"
+      class="pointer-events-none absolute top-1 left-1 size-4 rounded-full bg-surface-0 transition-all duration-200 peer-checked:translate-x-5 dark:bg-surface-400 dark:peer-checked:bg-surface-900 peer-disabled:opacity-60"
     ></span>
   `
 })
