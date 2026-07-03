@@ -109,11 +109,15 @@ let nextId = 0;
           <span class="truncate">{{ selectedLabel() }}</span>
         }
       </span>
-      <i
-        class="ph ph-caret-down ml-2 transition-transform duration-200"
-        [class.rotate-180]="opened()"
+      <span
+        class="-my-2 -mr-3 inline-flex w-10 items-center justify-center self-stretch"
         aria-hidden="true"
-      ></i>
+      >
+        <i
+          class="ph ph-caret-down transition-transform duration-200"
+          [class.rotate-180]="opened()"
+        ></i>
+      </span>
     </button>
 
     <ng-template #panel>
