@@ -200,10 +200,6 @@ export class Project extends InteractionContainer {
     this._floatingLayer.abortActiveDrag();
   }
 
-  public get positionChange$(): Observable<Point> {
-    return this._viewport.positionChange$;
-  }
-
   public get viewportChange$(): Observable<ViewportState> {
     return this._viewport.viewportChange$;
   }

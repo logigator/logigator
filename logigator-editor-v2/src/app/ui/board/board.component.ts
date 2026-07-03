@@ -47,7 +47,6 @@ export class BoardComponent implements OnInit, OnDestroy {
   @ViewChild('canvas', { static: true })
   protected readonly canvas!: ElementRef<HTMLCanvasElement>;
 
-  public readonly positionChange = output<Point>();
   public readonly cursorPositionChange = output<Point>();
   public readonly project = input<Project | null>(null);
 
@@ -90,17 +89,6 @@ export class BoardComponent implements OnInit, OnDestroy {
 
       this.app.stage = project;
       this.app.ticker.update();
-
-      this.positionChange.emit(project.gridPosition);
-
-      project.positionChange$
-        .pipe(
-          takeUntil(merge(this.destroy$, this.projectChange$)),
-          throttleTime(33.33)
-        )
-        .subscribe((pos) => {
-          this.positionChange.emit(pos);
-        });
 
       project.cursorPosition$
         .pipe(

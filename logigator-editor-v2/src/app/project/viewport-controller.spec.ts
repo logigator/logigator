@@ -115,16 +115,6 @@ describe('ViewportController', () => {
       expect(container.position.x).toBe(15);
       expect(container.position.y).toBe(30);
     });
-
-    it('setPosition emits updated gridPosition via positionChange$', () => {
-      const emitted: Point[] = [];
-      viewport.positionChange$.subscribe((p) => emitted.push(p));
-      viewport.setPosition(new Point(100, 200));
-      expect(emitted.length).toBe(1);
-      // gridPosition = position / (scale * gridSize)
-      const expected = 100 / (1 * environment.gridSize);
-      expect(emitted[0].x).toBeCloseTo(expected, 5);
-    });
   });
 
   describe('gridPosition', () => {
@@ -190,24 +180,11 @@ describe('ViewportController', () => {
       expect(state.gridOrigin.y).toBeCloseTo(-container.position.y / factor, 5);
     });
 
-    it('zoom emits positionChange$ once, with the final gridPosition', () => {
-      const positions: Point[] = [];
-      viewport.positionChange$.subscribe((p) => positions.push(p));
-      viewport.resizeViewport(800, 600);
-      viewport.zoomIn();
-      expect(positions.length).toBe(1);
-      const factor = container.scale.x * environment.gridSize;
-      expect(positions[0].x).toBeCloseTo(container.position.x / factor, 5);
-    });
-
-    it('resizeViewport emits the new size without a positionChange$', () => {
-      const positions: Point[] = [];
-      viewport.positionChange$.subscribe((p) => positions.push(p));
+    it('resizeViewport emits one state carrying the new size', () => {
       viewport.resizeViewport(1024, 768);
       expect(emitted.length).toBe(1);
       expect(emitted[0].viewportSize.x).toBe(1024);
       expect(emitted[0].viewportSize.y).toBe(768);
-      expect(positions.length).toBe(0);
     });
 
     it('a zoom that hits the clamp emits nothing', () => {

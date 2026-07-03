@@ -30,7 +30,6 @@ export class ViewportController {
   private _scaleStep = 0;
 
   private _viewPortSize = new Point(0, 0);
-  private readonly _positionChange$ = new Subject<Point>();
   private readonly _viewportChange$ = new Subject<ViewportState>();
 
   constructor(
@@ -42,7 +41,6 @@ export class ViewportController {
   public resizeViewport(width: number, height: number): void {
     this._viewPortSize.set(width, height);
     this._grid.resizeViewport(this._viewPortSize);
-    // The grid position is untouched, so only the viewport state changes.
     this._viewportChange$.next(this.viewportState);
   }
 
@@ -52,7 +50,7 @@ export class ViewportController {
 
   public setPosition(point: Point): void {
     this._applyPosition(point);
-    this._emitChange();
+    this._viewportChange$.next(this.viewportState);
   }
 
   /** Moves the camera without emitting — `_updateScale` composes position and
@@ -60,11 +58,6 @@ export class ViewportController {
   private _applyPosition(point: Point): void {
     this._container.position.copyFrom(point);
     this._grid.updatePosition(this._container.position);
-  }
-
-  private _emitChange(): void {
-    this._positionChange$.next(this.gridPosition);
-    this._viewportChange$.next(this.viewportState);
   }
 
   public get zoomOutPossible(): boolean {
@@ -115,10 +108,6 @@ export class ViewportController {
     );
   }
 
-  public get positionChange$(): Observable<Point> {
-    return this._positionChange$.asObservable();
-  }
-
   public get viewportChange$(): Observable<ViewportState> {
     return this._viewportChange$.asObservable();
   }
@@ -142,7 +131,6 @@ export class ViewportController {
   }
 
   public dispose(): void {
-    this._positionChange$.complete();
     this._viewportChange$.complete();
   }
 
@@ -164,6 +152,6 @@ export class ViewportController {
     this._container.scale.set(scale);
     this._grid.updateScale(scale);
     this._onApplyScale(scale);
-    this._emitChange();
+    this._viewportChange$.next(this.viewportState);
   }
 }
