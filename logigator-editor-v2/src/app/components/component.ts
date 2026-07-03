@@ -53,8 +53,9 @@ const LABEL_ANCHOR: Record<Direction, { x: number; y: number }> = {
   [Direction.N]: { x: 0.5, y: 1 }
 };
 
-/** Port-label font size (half a grid unit) — shrunk per label to its slot. */
 const LABEL_FONT_SIZE = 0.45 / PX;
+const SYMBOL_FONT_SIZE = 1 / PX;
+const MIN_FONT_SIZE = 0.25 / PX;
 
 /** Which port group a negation index addresses (0-based within that group). */
 export type PortSide = 'in' | 'out';
@@ -217,11 +218,6 @@ export abstract class Component<
    */
   protected get symbol(): string | null {
     return null;
-  }
-
-  /** Base symbol font size — shrunk to the body width. */
-  protected get symbolFontSize(): number {
-    return 1 / PX;
   }
 
   public get id(): number {
@@ -676,8 +672,8 @@ export abstract class Component<
           fontSize: fitMonoFontSize(
             symbol,
             symbolSlot - 4,
-            this.symbolFontSize,
-            0.25 / PX
+            SYMBOL_FONT_SIZE,
+            MIN_FONT_SIZE
           ),
           fill: this.themingService.currentTheme().fontTint
         },
@@ -751,7 +747,7 @@ export abstract class Component<
                 labels[i],
                 labelSlot,
                 LABEL_FONT_SIZE,
-                0.25 / PX
+                MIN_FONT_SIZE
               ),
               fill: this.themingService.currentTheme().fontTint
             },
