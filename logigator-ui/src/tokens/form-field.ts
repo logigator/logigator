@@ -11,7 +11,8 @@
  * - hover strengthens the border one further step; focus switches it to `primary`
  * - **no visible focus ring** — the border-color change is the only focus cue
  * - placeholder = `muted`; disabled dims and blocks interaction
- * - 6px radius (`rounded-md`); padding comes from the shared `controlPadding`
+ * - 6px radius (`rounded-md`) with a hairline drop shadow (`shadow-xs`);
+ *   padding comes from the shared `controlPadding`
  *
  * These are plain class strings (no Angular) so directives and components can
  * compose them onto a native element or a wrapper.
@@ -21,7 +22,7 @@ import { controlPadding, LgSize } from './size';
 
 export const FORM_FIELD_BASE =
   'bg-surface-0 dark:bg-surface-950 text-text ' +
-  'border border-surface-300 dark:border-surface-600 rounded-md outline-none ' +
+  'border border-surface-300 dark:border-surface-600 rounded-md shadow-xs outline-none ' +
   'appearance-none transition-colors duration-200 ' +
   'placeholder:text-muted ' +
   'hover:border-surface-400 dark:hover:border-surface-500 focus:border-primary ' +

@@ -31,10 +31,10 @@ import { ChangeDetectionStrategy, Component, input } from '@angular/core';
       right: 0.75rem;
     }
     :host([data-icon-position='left']) ::ng-deep input {
-      padding-left: 2.25rem;
+      padding-left: 2.5rem;
     }
     :host([data-icon-position='right']) ::ng-deep input {
-      padding-right: 2.25rem;
+      padding-right: 2.5rem;
     }
   `
 })
