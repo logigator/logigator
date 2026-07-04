@@ -70,7 +70,7 @@ export class BoardSnapshotService {
 
   /** Whether a renderer is registered (false before the board has loaded). */
   public get available(): boolean {
-    return this.rendererHandle.available;
+    return this.rendererHandle.available();
   }
 
   /**

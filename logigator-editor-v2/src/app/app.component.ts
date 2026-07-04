@@ -18,10 +18,13 @@ import { SideBarComponent } from './ui/side-bar/side-bar.component';
 import { TabBarComponent } from './ui/tab-bar/tab-bar.component';
 import { StatusBarComponent } from './ui/status-bar/status-bar.component';
 import { BoardComponent } from './ui/board/board.component';
+import { MinimapComponent } from './ui/board/minimap/minimap.component';
 import { setStaticDIInjector } from './utils/get-di';
 import { ComponentSettingsComponent } from './ui/component-settings/component-settings.component';
 import { ProjectService } from './project/project.service';
 import { PersistenceService } from './persistence/persistence.service';
+import { EditorSettingsService } from './settings/editor-settings.service';
+import { RendererHandleService } from './rendering/renderer-handle.service';
 import { UnsavedChangesGuard } from './persistence/unsaved-changes.guard';
 import {
   LgConfirmDialog,
@@ -58,6 +61,7 @@ import { UserSettingsComponent } from './ui/user-settings/user-settings.componen
     TabBarComponent,
     StatusBarComponent,
     BoardComponent,
+    MinimapComponent,
     ComponentSettingsComponent,
     LgConfirmPopup,
     LgConfirmDialog,
@@ -89,6 +93,8 @@ export class AppComponent {
   private readonly workModeService = inject(WorkModeService);
   protected readonly layout = inject(LayoutService);
   protected readonly mobileUi = inject(MobileUiService);
+  protected readonly editorSettings = inject(EditorSettingsService);
+  protected readonly rendererHandle = inject(RendererHandleService);
   private readonly metadataStore = inject(ProjectMetadataStore);
   private readonly selectionInspector = inject(SelectionInspectorService);
 

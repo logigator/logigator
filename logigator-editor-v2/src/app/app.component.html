@@ -23,11 +23,24 @@
         [project]="projectService.activeProject()"
         (cursorPositionChange)="cursorPosition.set($event)"
       ></app-board>
-      <lg-toast position="bottom-left" class="absolute! -mb-4" />
-
       @if (!layout.isCompact()) {
+        <!-- Bottom-right overlay stack: toasts ride in normal flow above the
+             minimap, so a collapsed or hidden minimap simply lets them settle
+             into the corner. The wrapper owns placement + z-index and lets
+             pointer events fall through; each child re-enables its own. -->
+        <div
+          class="pointer-events-none absolute right-3 bottom-3 z-[1100] flex flex-col items-end"
+        >
+          <lg-toast [embedded]="true" position="bottom-right" />
+          @if (editorSettings.showMinimap.value() && rendererHandle.available()) {
+            <app-minimap [project]="projectService.activeProject()" />
+          }
+        </div>
+
         <app-component-settings></app-component-settings>
       } @else {
+        <lg-toast position="bottom-left" class="absolute! -mb-4" />
+
         <!-- Overlays: the container lets pointer events fall through to the
              canvas; each control re-enables them for itself. -->
         <div class="pointer-events-none absolute inset-0">
@@ -39,6 +52,9 @@
           <app-zoom-fab
             class="pointer-events-auto absolute bottom-24 right-3"
           ></app-zoom-fab>
+          @if (editorSettings.showMinimap.value() && rendererHandle.available()) {
+            <app-minimap [project]="projectService.activeProject()" />
+          }
           @if (!isSimulation()) {
             <app-selection-action-bar
               class="pointer-events-auto absolute bottom-20 left-1/2 -translate-x-1/2"

@@ -20,7 +20,6 @@ import { WorkModeService } from '../../work-mode/work-mode.service';
 import { TickerScheduler } from '../../rendering/ticker-scheduler';
 import { EditorSettingsService } from '../../settings/editor-settings.service';
 import { FpsCounterComponent } from './fps-counter/fps-counter.component';
-import { MinimapComponent } from './minimap/minimap.component';
 import { MultiTouchGesture } from '../../rendering/multi-touch-gesture';
 import { RendererHandleService } from '../../rendering/renderer-handle.service';
 
@@ -32,7 +31,7 @@ extensions.add(CullerPlugin);
 
 @Component({
   selector: 'app-board',
-  imports: [FpsCounterComponent, MinimapComponent],
+  imports: [FpsCounterComponent],
   templateUrl: './board.component.html',
   changeDetection: ChangeDetectionStrategy.OnPush,
   host: { class: 'relative' }

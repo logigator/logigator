@@ -82,15 +82,17 @@ export class MinimapComponent implements OnDestroy {
     this.layout.isCompact() ? PANEL_SIZE_COMPACT : PANEL_SIZE_REGULAR
   );
   /**
-   * Desktop: top-right — the only free board corner (the floating
-   * component-settings card owns the bottom-right, the FPS counter the
-   * top-left, toasts the bottom-left). Compact: right-edge stack above the
-   * zoom FAB, below the status pill.
+   * Desktop: in normal flow at the bottom of the app shell's bottom-right
+   * overlay stack, sitting below the toasts (the FPS counter owns the
+   * top-left, the floating component-settings card the bottom-left). The
+   * wrapper owns placement, so the host carries no inset of its own — only
+   * `pointer-events-auto` to re-enable input through the pass-through wrapper.
+   * Compact: right-edge stack above the zoom FAB, below the status pill.
    */
   protected readonly hostClasses = computed(() =>
     this.layout.isCompact()
-      ? 'absolute right-3 bottom-52 mr-[env(safe-area-inset-right)]'
-      : 'absolute right-3 top-3'
+      ? 'pointer-events-auto absolute right-3 bottom-52 mr-[env(safe-area-inset-right)]'
+      : 'pointer-events-auto'
   );
 
   private readonly mapRef = viewChild<ElementRef<HTMLDivElement>>('map');
