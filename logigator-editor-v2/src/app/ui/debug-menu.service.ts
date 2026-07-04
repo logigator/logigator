@@ -41,6 +41,7 @@ export class DebugMenuService {
           label: 'Print renderer mode',
           command: () => this.printRendererMode()
         },
+        { label: 'Spawn test toasts', command: () => this.spawnTestToasts() },
         { separator: true },
         { label: 'Generate dump', command: () => this.generateDump() },
         { label: 'Import dump', command: () => this.importDump() }
@@ -72,6 +73,14 @@ export class DebugMenuService {
     const mode = this.rendererMode(renderer);
     console.log('[debug] renderer mode:', mode, renderer);
     this.toast.info(`Renderer: ${mode}`);
+  }
+
+  /** Fires one toast of every severity to eyeball the stack and its styling. */
+  private spawnTestToasts(): void {
+    this.toast.success('A success toast.');
+    this.toast.info('An info toast.');
+    this.toast.warn('A warning toast.');
+    this.toast.error('An error toast.');
   }
 
   private generateDump(): void {
