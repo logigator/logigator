@@ -150,13 +150,15 @@
               @for (c of columnIndexes(); track c) {
                 @let idx = rowStart + c;
                 @if (readOnly()) {
+                  <!-- Focus (set by clicking too) drives the status box. -->
                   <div
-                    class="flex flex-1 items-center justify-center uppercase border-e border-b border-border/50"
+                    class="flex flex-1 items-center justify-center uppercase border-e border-b border-border/50 outline-none focus:bg-primary-500/15"
                     [class]="cellHighlight(idx)"
                     [class.opacity-0]="isPadCell(idx)"
                     [style.width.ch]="cellMinWidthCh()"
                     [style.min-width.ch]="cellMinWidthCh()"
-                    (click)="activeCell.set(isPadCell(idx) ? null : idx)"
+                    [attr.tabindex]="isPadCell(idx) ? null : 0"
+                    (focus)="activeCell.set(idx)"
                   >
                     {{ cellValue(idx) }}
                   </div>
