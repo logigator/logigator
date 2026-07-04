@@ -1,16 +1,18 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
-import { ApplicationRef, signal, Type } from '@angular/core';
+import { ApplicationRef, signal, Type, WritableSignal } from '@angular/core';
 import { TestBed } from '@angular/core/testing';
 import { Subject } from 'rxjs';
 import { configureTestBed } from '../../testing/configure-test-bed';
 import { Component } from '../components/component';
 import { ComponentInspection } from '../components/component-inspection';
+import { LayoutService } from '../layout/layout.service';
 import { Project } from '../project/project';
 import { ProjectService } from '../project/project.service';
 import { SimulationService } from '../simulation/simulation.service';
 import { WorkModeService } from '../work-mode/work-mode.service';
 import { InspectionService } from './inspection.service';
 import { OpenInspection } from './inspection-presenter';
+import { SheetInspectionPresenter } from './sheet-inspection.presenter';
 import { WindowInspectionPresenter } from './window-inspection.presenter';
 
 class TestInspection extends ComponentInspection {
@@ -59,8 +61,10 @@ function makeInspectable(inspection: TestInspection | null): Component {
 describe('InspectionService', () => {
   let service: InspectionService;
   let presenter: StubPresenter;
+  let sheetPresenter: StubPresenter;
   let frame$: Subject<void>;
   let workMode: WorkModeService;
+  let isCompact: WritableSignal<boolean>;
 
   function flushEffects(): void {
     TestBed.inject(ApplicationRef).tick();
@@ -68,10 +72,17 @@ describe('InspectionService', () => {
 
   beforeEach(() => {
     presenter = new StubPresenter();
+    sheetPresenter = new StubPresenter();
     frame$ = new Subject<void>();
+    isCompact = signal(false);
     configureTestBed([
       { provide: WindowInspectionPresenter, useValue: presenter },
-      { provide: SimulationService, useValue: { frame$ } }
+      { provide: SheetInspectionPresenter, useValue: sheetPresenter },
+      { provide: SimulationService, useValue: { frame$ } },
+      {
+        provide: LayoutService,
+        useValue: { isCompact, isTouch: signal(false) }
+      }
     ]);
     service = TestBed.inject(InspectionService);
     workMode = TestBed.inject(WorkModeService);
@@ -140,6 +151,36 @@ describe('InspectionService', () => {
     flushEffects();
     expect(service.open()).toHaveLength(0);
     expect(presenter.closed).toHaveLength(2);
+  });
+
+  it('routes to the sheet presenter on compact and re-homes on breakpoint flips', () => {
+    flushEffects(); // primes the re-homing effect with the desktop baseline
+    const inspection = new TestInspection();
+    service.openFor(makeInspectable(inspection));
+    expect(presenter.shown).toHaveLength(1);
+    expect(sheetPresenter.shown).toHaveLength(0);
+
+    // Flip to compact: the window view closes, the sheet takes over.
+    isCompact.set(true);
+    flushEffects();
+    expect(presenter.closed).toHaveLength(1);
+    expect(sheetPresenter.shown).toHaveLength(1);
+    expect(service.open()).toHaveLength(1);
+
+    // New inspections now go to the sheet.
+    service.openFor(makeInspectable(new TestInspection()));
+    expect(sheetPresenter.shown).toHaveLength(2);
+
+    // Flip back: everything returns to windows.
+    isCompact.set(false);
+    flushEffects();
+    expect(sheetPresenter.closed).toHaveLength(2);
+    expect(presenter.shown).toHaveLength(3);
+
+    // A dismissal from the re-homed window still reaches the service.
+    presenter.dismissers.get(presenter.shown[1])!();
+    expect(service.open()).toHaveLength(1);
+    expect(inspection.destroyed).toHaveBeenCalledTimes(1);
   });
 
   it('opens inspections from the active project inspect taps while simulating', () => {

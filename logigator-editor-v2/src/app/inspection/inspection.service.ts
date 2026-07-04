@@ -2,19 +2,22 @@ import { effect, inject, Injectable, signal, untracked } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { Subscription } from 'rxjs';
 import { Component } from '../components/component';
+import { LayoutService } from '../layout/layout.service';
 import { ProjectService } from '../project/project.service';
 import { SimulationService } from '../simulation/simulation.service';
 import { WorkMode } from '../work-mode/work-mode.enum';
 import { WorkModeService } from '../work-mode/work-mode.service';
 import { InspectionPresenter, OpenInspection } from './inspection-presenter';
+import { SheetInspectionPresenter } from './sheet-inspection.presenter';
 import { WindowInspectionPresenter } from './window-inspection.presenter';
 
 /**
  * Orchestrates live component inspections: while a simulation runs, tapping an
  * inspectable component (its config declares an `inspection` factory) opens a
  * live view of it — at most one per component instance; a second tap focuses
- * the existing one. Views are framed by an {@link InspectionPresenter}
- * (floating windows on desktop); leaving simulation mode closes everything.
+ * the existing one. Views are framed by an {@link InspectionPresenter} —
+ * floating windows on desktop, the shared bottom sheet on compact, re-homed
+ * live when the breakpoint flips. Leaving simulation mode closes everything.
  *
  * Live data is pull-based: {@link SimulationService.frame$} fires after each
  * applied snapshot and this service fans it out to every open inspection's
@@ -24,7 +27,9 @@ import { WindowInspectionPresenter } from './window-inspection.presenter';
 export class InspectionService {
   private readonly workModeService = inject(WorkModeService);
   private readonly projectService = inject(ProjectService);
+  private readonly layout = inject(LayoutService);
   private readonly windowPresenter = inject(WindowInspectionPresenter);
+  private readonly sheetPresenter = inject(SheetInspectionPresenter);
 
   private readonly _open = signal<readonly OpenInspection[]>([]);
   /** The open inspections, in opening order. */
@@ -43,6 +48,18 @@ export class InspectionService {
     effect(() => {
       const simulating = this.workModeService.mode() === WorkMode.SIMULATION;
       untracked(() => this._onSimulationToggled(simulating));
+    });
+
+    // Re-home open inspections when the breakpoint flips mid-session:
+    // windows become sheet tabs and back.
+    let wasCompact = this.layout.isCompact();
+    effect(() => {
+      const compact = this.layout.isCompact();
+      if (compact === wasCompact) {
+        return;
+      }
+      wasCompact = compact;
+      untracked(() => this._rehome(compact));
     });
   }
 
@@ -78,9 +95,18 @@ export class InspectionService {
     }
   }
 
-  /** Compact gets its own presenter with the inspection sheet. */
   private _presenter(): InspectionPresenter {
-    return this.windowPresenter;
+    return this.layout.isCompact() ? this.sheetPresenter : this.windowPresenter;
+  }
+
+  /** Moves every open inspection from the previous presenter to the new one. */
+  private _rehome(compact: boolean): void {
+    const from = compact ? this.windowPresenter : this.sheetPresenter;
+    const to = compact ? this.sheetPresenter : this.windowPresenter;
+    for (const entry of this._open()) {
+      from.close(entry);
+      to.show(entry, () => this._remove(entry));
+    }
   }
 
   private _onSimulationToggled(simulating: boolean): void {

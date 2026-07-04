@@ -90,6 +90,9 @@
 </div>
 
 @if (layout.isCompact()) {
+  <!-- Non-modal inspection sheet: floats over the running simulation. -->
+  <app-inspection-sheet />
+
   <ng-container *transloco="let t">
     <lg-drawer
       [visible]="mobileUi.activeSheet() === 'palette'"
