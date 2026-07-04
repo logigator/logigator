@@ -31,8 +31,10 @@ import {
   LgConfirmPopup,
   LgDrawer,
   LgPanelMenu,
-  LgToast
+  LgToast,
+  LgWindowOutlet
 } from '@logigator/ui';
+import { InspectionService } from './inspection/inspection.service';
 import { TranslocoDirective } from '@jsverse/transloco';
 import { WorkMode } from './work-mode/work-mode.enum';
 import { WorkModeService } from './work-mode/work-mode.service';
@@ -68,6 +70,7 @@ import { UserSettingsComponent } from './ui/user-settings/user-settings.componen
     LgToast,
     LgDrawer,
     LgPanelMenu,
+    LgWindowOutlet,
     TranslocoDirective,
     MobileTopBarComponent,
     ToolHudComponent,
@@ -97,6 +100,9 @@ export class AppComponent {
   protected readonly rendererHandle = inject(RendererHandleService);
   private readonly metadataStore = inject(ProjectMetadataStore);
   private readonly selectionInspector = inject(SelectionInspectorService);
+  // Injected for its side effects: nothing renders it, but it must live from
+  // startup to catch the first simulation session's inspect taps.
+  private readonly inspectionService = inject(InspectionService);
 
   protected readonly cursorPosition = signal<Point>(new Point(0, 0));
 

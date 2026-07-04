@@ -277,9 +277,10 @@ export class FloatingLayer extends Container {
   }
 
   /**
-   * Activates the button/lever whose body contains the grid-space point, if
-   * any. The simulation-mode tap handler — the only canvas interaction allowed
-   * while editing is locked.
+   * Activates the component whose body contains the grid-space point, if any:
+   * a button/lever emits user input, an inspectable component (its config
+   * declares an inspection) emits an inspect request. The simulation-mode tap
+   * handler — the only canvas interaction allowed while editing is locked.
    */
   private _emitUserInputAt(localPoint: Point): void {
     const queryRect = new Rectangle(
@@ -289,13 +290,19 @@ export class FloatingLayer extends Container {
       1
     );
     for (const comp of this.project.queryComponentsInRange(queryRect)) {
+      if (!comp.bodyGridBounds.contains(localPoint.x, localPoint.y)) {
+        continue;
+      }
       const type = comp.config.type;
       if (
-        (type === BuiltInComponentType.BUTTON ||
-          type === BuiltInComponentType.LEVER) &&
-        comp.bodyGridBounds.contains(localPoint.x, localPoint.y)
+        type === BuiltInComponentType.BUTTON ||
+        type === BuiltInComponentType.LEVER
       ) {
         this.project.emitUserInput(comp);
+        break;
+      }
+      if (comp.config.inspection) {
+        this.project.emitInspectRequest(comp);
         break;
       }
     }

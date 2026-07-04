@@ -1,5 +1,5 @@
 import { computed, inject, Injectable, signal } from '@angular/core';
-import { Subscription } from 'rxjs';
+import { Observable, Subject, Subscription } from 'rxjs';
 import { Component } from '../components/component';
 import { ButtonComponent } from '../components/component-types/button/button.component';
 import { LeverComponent } from '../components/component-types/lever/lever.component';
@@ -76,6 +76,13 @@ export class SimulationService {
   public readonly measuredHz = this.workerService.measuredHz;
   public readonly tick = this.workerService.tick;
 
+  // The per-snapshot frame hook, fanned out to live inspections. A plain
+  // Subject (not a signal): it marks "fresh engine state is on the components"
+  // rather than carrying a value, and fires at snapshot rate.
+  private readonly _frame$ = new Subject<void>();
+  /** Emits after each applied snapshot (and after a stop()'s visual reset). */
+  public readonly frame$: Observable<void> = this._frame$.asObservable();
+
   // Compiled artifacts live for one session: rebuilt on every enter(),
   // discarded on exit(). Editing is locked in between, so the mapping's live
   // object references stay valid.
@@ -144,6 +151,7 @@ export class SimulationService {
       .startSession(board.descriptor, {
         applier,
         repaint: () => this._project?.triggerTicker('single'),
+        onFrame: () => this._frame$.next(),
         onError: (message) => {
           this.toastService.error(message);
           this.exit();
@@ -239,6 +247,8 @@ export class SimulationService {
           }
           this._project.triggerTicker('single');
         }
+        // The reset changed port power without a snapshot; refresh inspections.
+        this._frame$.next();
       })
       .catch((err: Error) => this._onRunControlError(err));
   }

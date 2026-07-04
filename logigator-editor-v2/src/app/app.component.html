@@ -24,6 +24,9 @@
         (cursorPositionChange)="cursorPosition.set($event)"
       ></app-board>
       @if (!layout.isCompact()) {
+        <!-- Inspection windows float over the board, under the toast stack. -->
+        <lg-window-outlet class="z-[1000]" />
+
         <!-- Bottom-right overlay stack: toasts ride in normal flow above the
              minimap, so a collapsed or hidden minimap simply lets them settle
              into the corner. The wrapper owns placement + z-index and lets

@@ -52,6 +52,9 @@ export class Project extends InteractionContainer {
   // The model layer stays service-free: SimulationService subscribes while a
   // simulation is active.
   private readonly _userInput$ = new Subject<Component>();
+  // Inspectable components (config declares an inspection) tapped while in
+  // simulation mode; InspectionService subscribes while a simulation is active.
+  private readonly _inspectRequest$ = new Subject<Component>();
 
   private readonly _connectionPoints = new ConnectionPointManager(
     (rect) => this.queryWiresInRange(rect),
@@ -259,6 +262,14 @@ export class Project extends InteractionContainer {
 
   public emitUserInput(component: Component): void {
     this._userInput$.next(component);
+  }
+
+  public get inspectRequest$(): Observable<Component> {
+    return this._inspectRequest$.asObservable();
+  }
+
+  public emitInspectRequest(component: Component): void {
+    this._inspectRequest$.next(component);
   }
 
   public get gridPosition(): Point {
@@ -567,6 +578,7 @@ export class Project extends InteractionContainer {
     this._themeEffect?.destroy();
     this._cursorPosition$.complete();
     this._userInput$.complete();
+    this._inspectRequest$.complete();
     this.actionManager.destroy();
     for (const sub of this._portsChangeSubs.values()) {
       sub.unsubscribe();

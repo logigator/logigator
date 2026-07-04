@@ -46,6 +46,8 @@ export interface SimulationSessionHooks {
   applier: LinkStateApplier;
   /** Repaint request for snapshots applied while no run holds the ticker on. */
   repaint(): void;
+  /** Runs after each snapshot is applied; live inspections refresh on it. */
+  onFrame?(): void;
   /** Fatal worker failure; the owner must tear the session down. */
   onError(message: string): void;
 }
@@ -343,6 +345,7 @@ export class SimulationWorkerService {
           }
         }
         this._post({ kind: 'returnBuffer', buffer: msg.buffer }, [msg.buffer]);
+        this.hooks?.onFrame?.();
         if (this.runMode === 'idle') {
           this.hooks?.repaint();
         }

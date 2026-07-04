@@ -3,6 +3,7 @@ import { ComponentType } from './component-type.enum';
 import { TranslationKey } from '../translation/translation-key.model';
 import { ComponentOption } from './component-option';
 import { ComponentAction } from './component-action';
+import { ComponentInspection } from './component-inspection';
 import { Component } from './component';
 
 /**
@@ -72,6 +73,12 @@ export interface ComponentConfigView<
    * via its own renderer. Omitted by component types that contribute none.
    */
   actions?: ComponentAction[];
+  /**
+   * Builds the live inspection opened by tapping a placed instance during
+   * simulation ({@link InspectionService}). Component types without one are
+   * not inspectable.
+   */
+  inspection?(component: Component): ComponentInspection;
   /**
    * Legacy positional wire-slot descriptor — present on built-ins that exist in
    * the v0 format, absent on custom components (v0 has no customs). See
