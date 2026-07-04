@@ -128,7 +128,7 @@ export class LgToast {
 
   protected toastClasses(toast: ActiveToast): string {
     return [
-      'pointer-events-auto w-80 max-w-[80vw] rounded-md border p-3 shadow-lg',
+      'pointer-events-auto w-80 max-w-[80vw] rounded-md border p-3 shadow-lg backdrop-blur-md',
       'transition-all duration-300',
       SEVERITY_CLASS[toast.severity],
       toast.shown ? 'translate-y-0 opacity-100' : 'translate-y-2 opacity-0'
