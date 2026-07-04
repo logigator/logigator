@@ -2,9 +2,7 @@ import { computed, Injectable, signal } from '@angular/core';
 
 export type LayoutBreakpoint = 'compact' | 'regular';
 
-/** Below Tailwind's `md` (768px). Mobile chrome renders under this width. */
-const COMPACT_QUERY = '(max-width: 767.98px)';
-/** A finger / pen rather than a precise mouse pointer. */
+const COMPACT_QUERY = '(max-width: 64rem)';
 const COARSE_POINTER_QUERY = '(pointer: coarse)';
 
 /**
