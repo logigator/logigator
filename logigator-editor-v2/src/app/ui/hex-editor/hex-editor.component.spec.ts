@@ -209,4 +209,29 @@ describe('HexEditorComponent', () => {
     // Row 1 starts at cell 16 → hex address "10", not binary.
     expect(comp.addressLabel(16)).toBe('10');
   });
+
+  it('highlights the addressed word, mapped to its bytes in byte view', () => {
+    seed(8, 4);
+    fixture.componentRef.setInput('highlightIndex', 3);
+    expect(comp.cellHighlight(3)).not.toBe('');
+    expect(comp.cellHighlight(2)).toBe('');
+
+    // Word 3 of a 4-bit table occupies bits 12..15 — all inside byte 1.
+    comp.view.set('byte');
+    expect(comp.cellHighlight(1)).not.toBe('');
+    expect(comp.cellHighlight(0)).toBe('');
+
+    fixture.componentRef.setInput('highlightIndex', null);
+    expect(comp.cellHighlight(1)).toBe('');
+  });
+
+  it('spans the highlight across bytes for a straddling word', () => {
+    seed(4, 12); // word 1 occupies bits 12..23 → bytes 1 and 2
+    fixture.componentRef.setInput('highlightIndex', 1);
+    comp.view.set('byte');
+    expect(comp.cellHighlight(0)).toBe('');
+    expect(comp.cellHighlight(1)).not.toBe('');
+    expect(comp.cellHighlight(2)).not.toBe('');
+    expect(comp.cellHighlight(3)).toBe('');
+  });
 });

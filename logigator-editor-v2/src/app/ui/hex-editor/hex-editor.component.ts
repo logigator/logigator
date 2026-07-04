@@ -1,4 +1,5 @@
 import {
+  booleanAttribute,
   ChangeDetectionStrategy,
   Component,
   computed,
@@ -62,6 +63,12 @@ const RADICES: Record<Radix, RadixSpec> = {
  * grid (word- or byte-addressed), and emits the edited `Uint8Array` on save /
  * a bare event on cancel. The grid is virtualized so a large word count stays
  * responsive, and it adapts column count / sizing for compact and touch layouts.
+ *
+ * With `readOnly`, it doubles as a live memory *viewer* (the ROM inspection):
+ * cells render as plain text, the editing chrome (Clear, Save/Cancel) is
+ * hidden, and `highlightIndex` marks the currently addressed word — followed
+ * into view while the Follow toggle is on. The host sizes it: the default
+ * `scrollHeight` keeps the dialog layout, `100%` fills a flexed container.
  */
 @Component({
   selector: 'app-hex-editor',
@@ -87,6 +94,12 @@ export class HexEditorComponent {
   public readonly wordSize = input.required<number>();
   /** Number of addressable words. */
   public readonly wordCount = input.required<number>();
+  /** Viewer mode: no cell editing and no editing chrome (Clear, Save/Cancel). */
+  public readonly readOnly = input(false, { transform: booleanAttribute });
+  /** Word index highlighted as the currently addressed one (viewer mode). */
+  public readonly highlightIndex = input<number | null>(null);
+  /** Height of the virtualized grid viewport; `100%` fills a flexed host. */
+  public readonly scrollHeight = input('28rem');
 
   /** Emits the edited contents (packed buffer, table-sized) when the user saves. */
   public readonly saved = output<Uint8Array>();
@@ -118,6 +131,8 @@ export class HexEditorComponent {
   );
   /** Index of the focused cell, surfaced in the status box. */
   protected readonly activeCell = signal<number | null>(null);
+  /** Keep the highlighted cell scrolled into view (viewer mode). */
+  protected readonly follow = signal(true);
 
   protected readonly addressText =
     this.transloco.translate('hexEditor.address');
@@ -219,6 +234,21 @@ export class HexEditorComponent {
       this.wordCount();
       untracked(() => this.reset());
     });
+
+    // Track the highlighted word while Follow is on (and when the view
+    // switches, so the byte view lands on the same word).
+    effect(() => {
+      const word = this.highlightIndex();
+      const byteView = this.view() === 'byte';
+      if (!this.follow() || word === null) {
+        return;
+      }
+      const cell = byteView ? Math.floor((word * this.wordSize()) / 8) : word;
+      if (cell >= this.cellCount()) {
+        return;
+      }
+      untracked(() => this.scrollCellIntoView(cell));
+    });
   }
 
   private reset(): void {
@@ -239,6 +269,31 @@ export class HexEditorComponent {
 
   protected isPadCell(cellIndex: number): boolean {
     return cellIndex >= this.cellCount();
+  }
+
+  /** Extra classes marking the currently addressed word's cell(s). */
+  protected cellHighlight(cellIndex: number): string {
+    return this.isHighlighted(cellIndex)
+      ? 'bg-primary-500/20 font-semibold text-primary-700 dark:text-primary-300'
+      : '';
+  }
+
+  /**
+   * Whether a cell belongs to the highlighted word — the word itself in word
+   * view, any byte it touches in byte view.
+   */
+  private isHighlighted(cellIndex: number): boolean {
+    const word = this.highlightIndex();
+    if (word === null) {
+      return false;
+    }
+    if (this.view() === 'word') {
+      return cellIndex === word;
+    }
+    const wordSize = this.wordSize();
+    const first = Math.floor((word * wordSize) / 8);
+    const last = Math.floor(((word + 1) * wordSize - 1) / 8);
+    return cellIndex >= first && cellIndex <= last;
   }
 
   protected cellValue(cellIndex: number): string {
@@ -352,8 +407,13 @@ export class HexEditorComponent {
     const raw = this.gotoInput().replace(/[^0-9a-fA-F]/g, '');
     if (!raw) return;
     const cell = Math.min(Number(BigInt('0x' + raw)), this.cellCount() - 1);
+    this.scrollCellIntoView(cell, 'smooth');
+  }
+
+  /** Scrolls the cell's row and column into view. */
+  private scrollCellIntoView(cell: number, behavior?: ScrollBehavior): void {
     const cols = this.columns();
-    this.scroller()?.scrollToIndex(Math.floor(cell / cols), 'smooth');
+    this.scroller()?.scrollToIndex(Math.floor(cell / cols), behavior);
     this.scrollColumnIntoView(cell % cols);
   }
 

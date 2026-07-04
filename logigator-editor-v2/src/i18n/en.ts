@@ -22,6 +22,7 @@ const en = {
     noActiveCell: 'No cell selected',
     clear: 'Clear',
     copy: 'Copy',
+    follow: 'Follow',
     clearConfirm: 'Clear all memory contents?'
   },
   settings: {
