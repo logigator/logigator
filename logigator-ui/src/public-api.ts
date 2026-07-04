@@ -67,6 +67,15 @@ export { DialogService } from './components/dynamic-dialog/dialog.service';
 export { DialogRef } from './components/dynamic-dialog/dialog-ref';
 export { DialogConfig } from './components/dynamic-dialog/dialog-config';
 
+export { WindowService } from './components/window/window.service';
+export { WindowRef } from './components/window/window-ref';
+export { LgWindowOutlet } from './components/window/window-outlet';
+export type {
+  WindowConfig,
+  WindowSize,
+  WindowPoint
+} from './components/window/window-config';
+
 export { ConfirmationService } from './components/confirm/confirmation.service';
 export { LgConfirmDialog } from './components/confirm/confirm-dialog';
 export { LgConfirmPopup } from './components/confirm/confirm-popup';
