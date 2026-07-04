@@ -6,6 +6,7 @@ import { DirectionComponentOption } from '../../component-options/direction/dire
 import { NumberComponentOption } from '../../component-options/number/number.component-option';
 import { MemoryDataComponentOption } from '../../component-options/memory-data/memory-data.component-option';
 import { RomComponent } from './rom.component';
+import { RomInspection } from './rom-inspection';
 
 export interface RomOptions {
   [key: string]: ComponentOption;
@@ -42,5 +43,6 @@ export const romComponentConfig: ComponentConfig<RomOptions> = {
     data: new MemoryDataComponentOption('components.def.ROM.options.data')
   },
   legacyV0Slots: { r: 'direction', s: 'data', n: ['wordSize', 'addressSize'] },
+  inspection: (component) => new RomInspection(component as RomComponent),
   create: (options) => new RomComponent(options)
 };

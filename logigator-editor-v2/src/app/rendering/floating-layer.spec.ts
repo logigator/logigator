@@ -2,7 +2,12 @@ import 'pixi.js/math-extras';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { FederatedPointerEvent, Point } from 'pixi.js';
 import { configureTestBed } from '../../testing/configure-test-bed';
-import { makeAnd, makeButton, makeLever } from '../../testing/factories';
+import {
+  makeAnd,
+  makeButton,
+  makeLever,
+  makeRom
+} from '../../testing/factories';
 import { Component } from '../components/component';
 import { Project } from '../project/project';
 import { WorkMode } from '../work-mode/work-mode.enum';
@@ -61,6 +66,22 @@ describe('FloatingLayer in SIMULATION mode', () => {
     layer.emit('pointerup', moveEvent(0, 0));
 
     expect(emissions).toEqual([lever]);
+  });
+
+  it('emits inspectRequest$ for a tapped inspectable component', () => {
+    const rom = makeRom(2, 4, '', 2, 2);
+    project.addComponent(rom);
+    const inspections: Component[] = [];
+    project.inspectRequest$.subscribe((component) =>
+      inspections.push(component)
+    );
+    layer.mode = WorkMode.SIMULATION;
+
+    layer.emit('pointerdown', downEvent(3, 3)); // inside the ROM body
+    layer.emit('pointerup', moveEvent(0, 0));
+
+    expect(inspections).toEqual([rom]);
+    expect(emissions).toEqual([]); // an inspect tap is not user input
   });
 
   it('emits nothing for other components or empty canvas', () => {

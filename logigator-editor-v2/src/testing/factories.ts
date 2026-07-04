@@ -11,6 +11,8 @@ import { ButtonComponent } from '../app/components/component-types/button/button
 import { buttonComponentConfig } from '../app/components/component-types/button/button.config';
 import { LeverComponent } from '../app/components/component-types/lever/lever.component';
 import { leverComponentConfig } from '../app/components/component-types/lever/lever.config';
+import { RomComponent } from '../app/components/component-types/rom/rom.component';
+import { romComponentConfig } from '../app/components/component-types/rom/rom.config';
 import { Direction } from '../app/utils/direction';
 
 /** AndComponent with the given port count, rotation, and grid position. */
@@ -72,6 +74,24 @@ export function makeLever(px = 0, py = 0): LeverComponent {
   });
   lever.position.set(px, py);
   return lever;
+}
+
+/** RomComponent with the given table shape, contents blob, and grid position. */
+export function makeRom(
+  addressSize = 2,
+  wordSize = 4,
+  data = '',
+  px = 0,
+  py = 0
+): RomComponent {
+  const rom = new RomComponent({
+    direction: romComponentConfig.options.direction.clone(),
+    wordSize: romComponentConfig.options.wordSize.clone(wordSize),
+    addressSize: romComponentConfig.options.addressSize.clone(addressSize),
+    data: romComponentConfig.options.data.clone(data)
+  });
+  rom.position.set(px, py);
+  return rom;
 }
 
 /** Minimal FederatedPointerEvent stub whose getLocalPosition returns the given point. */

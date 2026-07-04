@@ -475,6 +475,15 @@ export abstract class Component<
     }
   }
 
+  /**
+   * Whether the link on a port is powered, as last applied by the simulation
+   * (`connectionPoints` order: inputs, then outputs). Live inspections read
+   * this on each frame.
+   */
+  public isPortPowered(portIndex: number): boolean {
+    return this._poweredPorts.has(portIndex);
+  }
+
   /** Resets all port stubs (and bubbles) to unpowered. */
   public clearPortPower(): void {
     this._poweredPorts.clear();
