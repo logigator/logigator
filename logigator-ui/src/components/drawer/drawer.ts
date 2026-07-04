@@ -51,13 +51,18 @@ const POSITION_BORDER: Record<DrawerPosition, string> = {
 };
 
 /**
- * A modal drawer (side / bottom sheet) pinned to a viewport edge. `visible` is
+ * A drawer (side / bottom sheet) pinned to a viewport edge. `visible` is
  * **one-way** like {@link LgDialog} — backdrop click, Escape, or the close
  * button emit `visibleChange(false)` for the parent to re-derive `visible`.
  * Edge-pinned over a `cdk/overlay` global overlay with focus trap + restore;
  * slides in from its edge. Bottom/top sheets size to their content (capped near
  * the viewport height); default content is projected and `styleClass` is merged
  * onto the panel for any further sizing.
+ *
+ * `modal` (default true) scrims the page behind a backdrop and traps focus.
+ * With `[modal]="false"` there is no backdrop and no focus trap: everything
+ * around the drawer stays visible and interactive — a live overlay panel,
+ * like the inspection sheet floating over a running simulation.
  */
 @Component({
   selector: 'lg-drawer',
@@ -66,7 +71,7 @@ const POSITION_BORDER: Record<DrawerPosition, string> = {
     <ng-template #panelTpl>
       <div
         role="dialog"
-        aria-modal="true"
+        [attr.aria-modal]="modal() ? 'true' : null"
         [attr.aria-labelledby]="header() ? headerId : null"
         [class]="panelClasses()"
       >
@@ -101,6 +106,7 @@ export class LgDrawer implements OnDestroy {
   readonly position = input<DrawerPosition>('left');
   readonly header = input<string>();
   readonly closable = input(true, { transform: booleanAttribute });
+  readonly modal = input(true, { transform: booleanAttribute });
   readonly styleClass = input<string>('');
   readonly visibleChange = output<boolean>();
 
@@ -134,6 +140,7 @@ export class LgDrawer implements OnDestroy {
       if (open) {
         this.modalOverlay.open(new TemplatePortal(tpl, this.viewContainerRef), {
           placement: this.position() as LgOverlayPlacement,
+          modal: this.modal(),
           dismissOnBackdrop: true,
           enterFrom: [POSITION_HIDDEN[this.position()]],
           enterTransition: ['transition-transform', 'duration-300', 'ease-out'],

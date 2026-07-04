@@ -9,7 +9,13 @@ import { LgFocusTrap } from './focus-trap';
 export interface ModalOpenOptions {
   placement: LgOverlayPlacement;
   panelClass?: string | string[];
-  /** Whether to render (and animate) a modal backdrop. Defaults to true. */
+  /**
+   * Non-modal (`false`) drops the backdrop and the focus trap, so the page
+   * behind the overlay stays visible and interactive — the panel floats over
+   * it (the editor's inspection sheet). Defaults to true.
+   */
+  modal?: boolean;
+  /** Whether to render (and animate) a modal backdrop. Defaults to `modal`. */
   hasBackdrop?: boolean;
   /** Dismiss when the backdrop is clicked. */
   dismissOnBackdrop?: boolean;
@@ -54,9 +60,10 @@ export class ModalOverlay {
     if (this.overlayRef) {
       return;
     }
+    const modal = options.modal ?? true;
     this.overlayRef = createGlobalOverlay(this.overlay, {
       placement: options.placement,
-      hasBackdrop: options.hasBackdrop ?? true,
+      hasBackdrop: options.hasBackdrop ?? modal,
       panelClass: options.panelClass
     });
     this.overlayRef.attach(portal);
@@ -70,7 +77,9 @@ export class ModalOverlay {
         );
       }
     }
-    this.focusTrap.trapFocus(this.overlayRef.overlayElement);
+    if (modal) {
+      this.focusTrap.trapFocus(this.overlayRef.overlayElement);
+    }
 
     this.subscriptions = new Subscription();
     if (options.dismissOnBackdrop) {

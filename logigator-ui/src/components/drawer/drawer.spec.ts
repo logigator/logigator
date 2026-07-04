@@ -1,5 +1,10 @@
 import { afterEach, describe, expect, it } from 'vitest';
-import { ChangeDetectionStrategy, Component, signal } from '@angular/core';
+import {
+  ChangeDetectionStrategy,
+  Component,
+  input,
+  signal
+} from '@angular/core';
 import { TestBed } from '@angular/core/testing';
 import { LgDrawer } from './drawer';
 
@@ -13,12 +18,14 @@ import { LgDrawer } from './drawer';
       position="bottom"
       header="Palette"
       styleClass="h-[90vh]!"
+      [modal]="modal()"
     >
       <div class="content">Drawer body</div>
     </lg-drawer>
   `
 })
 class HostComponent {
+  readonly modal = input(true);
   readonly visible = signal(false);
   readonly changes: boolean[] = [];
 
@@ -103,5 +110,19 @@ describe('LgDrawer', () => {
     close.click();
     f.detectChanges();
     expect(f.componentInstance.changes).toContain(false);
+  });
+
+  it('non-modal: no backdrop, no focus trap, no aria-modal', () => {
+    const previouslyFocused = document.activeElement;
+    const f = setup();
+    f.componentRef.setInput('modal', false);
+    f.componentInstance.visible.set(true);
+    f.detectChanges();
+
+    expect(panel()).not.toBeNull();
+    expect(document.querySelector('.cdk-overlay-backdrop')).toBeNull();
+    expect(panel()!.getAttribute('aria-modal')).toBeNull();
+    // Focus was not pulled into the drawer.
+    expect(document.activeElement).toBe(previouslyFocused);
   });
 });
