@@ -77,7 +77,4 @@ export type {
 
 export { ToastService } from './components/toast/toast.service';
 export { LgToast } from './components/toast/toast';
-export type {
-  ToastMessage,
-  LgToastSeverity
-} from './components/toast/toast.service';
+export type { ToastMessage } from './components/toast/toast.service';

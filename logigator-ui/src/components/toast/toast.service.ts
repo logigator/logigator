@@ -1,15 +1,11 @@
 import { Injectable } from '@angular/core';
 import { Observable, Subject } from 'rxjs';
-
-/**
- * Toast severity. `danger` is accepted for call-site parity (the editor passes
- * it) but is **not** a themed colour — {@link LgToast} normalizes it to `error`.
- */
-export type LgToastSeverity = 'success' | 'info' | 'warn' | 'error' | 'danger';
+import { LgSeverity } from '../../tokens/severity';
 
 /** A toast notification handed to {@link ToastService.add}. */
 export interface ToastMessage {
-  severity?: LgToastSeverity;
+  /** Severity → themed colour and icon; an omitted severity renders as `info`. */
+  severity?: LgSeverity;
   summary?: string;
   detail?: string;
   /** Auto-dismiss delay in ms. */
