@@ -5,7 +5,7 @@ import { Injector } from '@angular/core';
 import { TestBed } from '@angular/core/testing';
 import { Container, Point } from 'pixi.js';
 import { setStaticDIInjector } from '../utils/get-di';
-import { ViewportController } from './viewport-controller';
+import { ViewportController, ViewportState } from './viewport-controller';
 import { Grid } from '../rendering/grid';
 import { environment } from '../../environments/environment';
 
@@ -115,16 +115,6 @@ describe('ViewportController', () => {
       expect(container.position.x).toBe(15);
       expect(container.position.y).toBe(30);
     });
-
-    it('setPosition emits updated gridPosition via positionChange$', () => {
-      const emitted: Point[] = [];
-      viewport.positionChange$.subscribe((p) => emitted.push(p));
-      viewport.setPosition(new Point(100, 200));
-      expect(emitted.length).toBe(1);
-      // gridPosition = position / (scale * gridSize)
-      const expected = 100 / (1 * environment.gridSize);
-      expect(emitted[0].x).toBeCloseTo(expected, 5);
-    });
   });
 
   describe('gridPosition', () => {
@@ -141,6 +131,67 @@ describe('ViewportController', () => {
       const gp = viewport.gridPosition;
       expect(gp.x).toBeCloseTo(5, 5);
       expect(gp.y).toBeCloseTo(3, 5);
+    });
+  });
+
+  describe('viewportChange$ / viewportState', () => {
+    let emitted: ViewportState[];
+
+    beforeEach(() => {
+      emitted = [];
+      viewport.viewportChange$.subscribe((s) => emitted.push(s));
+    });
+
+    it('viewportState reflects the current camera without a subscription', () => {
+      viewport.resizeViewport(800, 600);
+      viewport.setPosition(new Point(environment.gridSize * 4, 0));
+      const state = viewport.viewportState;
+      // gridOrigin is the visible top-left corner: -position / (scale · gridSize).
+      expect(state.gridOrigin.x).toBeCloseTo(-4, 5);
+      expect(state.gridOrigin.y).toBeCloseTo(0, 5);
+      expect(state.scale).toBe(1);
+      expect(state.viewportSize.x).toBe(800);
+      expect(state.viewportSize.y).toBe(600);
+    });
+
+    it('setPosition emits one state with the updated gridOrigin', () => {
+      viewport.setPosition(new Point(environment.gridSize * 2, 0));
+      expect(emitted.length).toBe(1);
+      expect(emitted[0].gridOrigin.x).toBeCloseTo(-2, 5);
+      expect(emitted[0].scale).toBe(1);
+    });
+
+    it('pan emits the resulting state', () => {
+      viewport.pan(new Point(environment.gridSize, environment.gridSize));
+      expect(emitted.length).toBe(1);
+      expect(emitted[0].gridOrigin.x).toBeCloseTo(-1, 5);
+      expect(emitted[0].gridOrigin.y).toBeCloseTo(-1, 5);
+    });
+
+    it('zoomIn emits exactly one state, consistent with the final camera', () => {
+      viewport.resizeViewport(800, 600);
+      emitted.length = 0;
+      viewport.zoomIn();
+      expect(emitted.length).toBe(1);
+      const state = emitted[0];
+      expect(state.scale).toBeCloseTo(1.2, 10);
+      const factor = state.scale * environment.gridSize;
+      expect(state.gridOrigin.x).toBeCloseTo(-container.position.x / factor, 5);
+      expect(state.gridOrigin.y).toBeCloseTo(-container.position.y / factor, 5);
+    });
+
+    it('resizeViewport emits one state carrying the new size', () => {
+      viewport.resizeViewport(1024, 768);
+      expect(emitted.length).toBe(1);
+      expect(emitted[0].viewportSize.x).toBe(1024);
+      expect(emitted[0].viewportSize.y).toBe(768);
+    });
+
+    it('a zoom that hits the clamp emits nothing', () => {
+      for (let i = 0; i < 5; i++) viewport.zoomIn(new Point(0, 0));
+      emitted.length = 0;
+      viewport.zoomIn(new Point(0, 0));
+      expect(emitted.length).toBe(0);
     });
   });
 

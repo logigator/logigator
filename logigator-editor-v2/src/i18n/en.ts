@@ -27,8 +27,13 @@ const en = {
   settings: {
     options: {
       fpsCounter: 'FPS Counter',
-      showGrid: 'Show Grid'
+      showGrid: 'Show Grid',
+      showMinimap: 'Show Minimap'
     }
+  },
+  minimap: {
+    expand: 'Show minimap',
+    collapse: 'Hide minimap'
   },
   components: {
     category: {

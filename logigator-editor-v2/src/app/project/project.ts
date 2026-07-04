@@ -28,7 +28,7 @@ import {
   IntegrationOutput,
   WireIntegrator
 } from './wire-integrator';
-import { ViewportController } from './viewport-controller';
+import { ViewportController, ViewportState } from './viewport-controller';
 import { ConnectionPointManager } from '../connection-points/connection-point-manager';
 import { AddWiresAction } from '../actions/actions/add-wires.action';
 import { RemoveWiresAction } from '../actions/actions/remove-wires.action';
@@ -200,8 +200,12 @@ export class Project extends InteractionContainer {
     this._floatingLayer.abortActiveDrag();
   }
 
-  public get positionChange$(): Observable<Point> {
-    return this._viewport.positionChange$;
+  public get viewportChange$(): Observable<ViewportState> {
+    return this._viewport.viewportChange$;
+  }
+
+  public get viewportState(): ViewportState {
+    return this._viewport.viewportState;
   }
 
   public get components(): Iterable<Component> {

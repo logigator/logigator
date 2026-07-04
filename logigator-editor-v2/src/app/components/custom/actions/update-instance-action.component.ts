@@ -22,7 +22,7 @@ import { CustomComponentService } from '../../../custom-component/custom-compone
   imports: [LgButton],
   template: `@if (updatable()) {
     <lg-button
-      size="small"
+      size="sm"
       severity="warn"
       label="Update to latest"
       class="float-right"

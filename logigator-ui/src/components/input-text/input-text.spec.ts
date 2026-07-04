@@ -16,7 +16,7 @@ import { LgInputText } from './input-text';
   />`
 })
 class HostComponent {
-  readonly size = signal<'small' | undefined>(undefined);
+  readonly size = signal<'sm' | undefined>(undefined);
   readonly invalid = signal(false);
   value = 'hello';
 }
@@ -38,10 +38,10 @@ describe('LgInputText', () => {
     expect(input.className).toContain('border-surface-300');
   });
 
-  it('uses the default padding and switches to small', () => {
+  it('uses the default (md) padding and switches to sm', () => {
     const { f, input } = setup();
     expect(input.className).toContain('px-3');
-    f.componentInstance.size.set('small');
+    f.componentInstance.size.set('sm');
     f.detectChanges();
     expect(input.className).toContain('px-2.5');
     expect(input.className).not.toContain('px-3');

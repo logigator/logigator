@@ -1,5 +1,6 @@
 import { inject, Injectable } from '@angular/core';
 import {
+  BitmapText,
   Container,
   Graphics,
   Matrix,
@@ -14,6 +15,7 @@ import { GridGraphics } from './graphics/grid.graphics';
 import { ThemingService } from '../theming/theming.service';
 import { ThemeType } from '../theming/theme-type.enum';
 import { Project } from '../project/project';
+import { ZOOM_STEP_BASE, ZOOM_STEP_MIN } from '../project/viewport-controller';
 import { environment } from '../../environments/environment';
 
 export type SnapshotBackground = 'grid' | 'solid' | 'transparent';
@@ -25,6 +27,12 @@ export interface SnapshotOptions {
   background: SnapshotBackground;
   /** Margin around content, in grid units. Defaults to {@link EXPORT_MARGIN_GRID}. */
   marginGrid?: number;
+  /**
+   * Hides every text node (`Text` and `BitmapText`) during the content pass
+   * instead of re-tuning glyph resolution. For tiny outputs (minimap) where
+   * glyphs are sub-pixel smears — shapes carry the layout, text is noise.
+   */
+  hideText?: boolean;
 }
 
 /** Margin kept around the content bounds in a full-project snapshot. */
@@ -36,12 +44,13 @@ export const PREVIEW_SIZE = 1024;
 /** Grid units per export-grid chunk; matches the live {@link Grid}. */
 const GRID_CHUNK = 32;
 /**
- * The "100% zoom" scale the export renders content at. Decoupling the export
- * from the live zoom keeps it deterministic, and rendering at scale 1 lets the
- * output matrix scale line weights and grid dots up proportionally with the
- * multiplier instead of holding them screen-constant.
+ * The zoom-ladder step the content renders at for multipliers ≥ 1: the "100%
+ * zoom" look. Decoupling the render from the live zoom keeps snapshots
+ * deterministic, and rendering at scale 1 lets the output matrix scale line
+ * weights and grid dots up proportionally with the multiplier instead of
+ * holding them screen-constant.
  */
-const REFERENCE_SCALE = 1;
+const REFERENCE_STEP = 0;
 
 /**
  * Renders a project's content into an offscreen `RenderTexture`. The reusable
@@ -61,7 +70,7 @@ export class BoardSnapshotService {
 
   /** Whether a renderer is registered (false before the board has loaded). */
   public get available(): boolean {
-    return this.rendererHandle.available;
+    return this.rendererHandle.available();
   }
 
   /**
@@ -234,10 +243,10 @@ export class BoardSnapshotService {
 
     // Scale that drives line weights / grid-dot sizes. Capped at the 100%
     // reference so weights grow proportionally for multipliers ≥ 1, but for
-    // multipliers < 1 (capped huge boards, previews) it tracks the multiplier
-    // so strokes and dots never render thinner than they do at 100% zoom —
-    // otherwise they go sub-pixel and the thumbnail washes out.
-    const lineScale = Math.min(REFERENCE_SCALE, options.multiplier);
+    // multipliers < 1 (capped huge boards, previews, minimap) it tracks the
+    // multiplier so strokes and dots never render thinner than they do at
+    // 100% zoom — otherwise they go sub-pixel and the thumbnail washes out.
+    const lineScale = this._quantizeLineScale(options.multiplier);
 
     const texture = RenderTexture.create({
       width,
@@ -292,14 +301,15 @@ export class BoardSnapshotService {
     // proportionally with the multiplier (higher resolution = the same picture
     // with more pixels, not thinner lines) while the `lineScale` floor keeps
     // them visible below 1×. Text is a pre-rasterized texture, so its glyph
-    // resolution is bumped to the multiplier separately to stay crisp.
+    // resolution is bumped to the multiplier separately to stay crisp — or
+    // hidden outright (`hideText`) for outputs too small to render glyphs.
     // Everything is restored afterwards — no flicker, nothing renders on-screen
     // between the calls.
     const liveScale = project.scale.x;
-    const texts = this._collectTexts(project.gridSpace);
-    const textResolutions = texts.map((t) => t.resolution);
     this._applyContentScale(project, lineScale);
-    for (const text of texts) text.resolution = options.multiplier;
+    const restoreText = options.hideText
+      ? this._hideTextNodes(project.gridSpace)
+      : this._tuneTextResolution(project.gridSpace, options.multiplier);
     try {
       renderer.render({
         container: project.gridSpace,
@@ -311,12 +321,28 @@ export class BoardSnapshotService {
       });
     } finally {
       this._applyContentScale(project, liveScale);
-      texts.forEach((text, i) => (text.resolution = textResolutions[i]));
+      restoreText();
       project.setOverlayVisible(true);
       grid?.destroy({ children: true });
     }
 
     return texture;
+  }
+
+  /**
+   * Snaps a snapshot multiplier onto the live zoom ladder
+   * (`ZOOM_STEP_BASE^step`, step ∈ [{@link ZOOM_STEP_MIN}, 0]). Line weights
+   * only ever get re-tuned to scales the live zoom also produces, so the
+   * scale-keyed GraphicsContext cache is reused instead of growing a permanent
+   * entry per arbitrary multiplier (previews and minimap re-frames derive
+   * theirs from content size, a different float almost every time). The floor
+   * additionally keeps strokes on huge boards at the fully-zoomed-out weight
+   * instead of washing out.
+   */
+  private _quantizeLineScale(multiplier: number): number {
+    const step = Math.round(Math.log(multiplier) / Math.log(ZOOM_STEP_BASE));
+    const clamped = Math.min(REFERENCE_STEP, Math.max(ZOOM_STEP_MIN, step));
+    return Math.pow(ZOOM_STEP_BASE, clamped);
   }
 
   /**
@@ -354,15 +380,39 @@ export class BoardSnapshotService {
     project.connectionPoints.layer.applyScale(scale);
   }
 
-  /** Collects every `Text` node under a container (for glyph-resolution tuning). */
-  private _collectTexts(container: Container): Text[] {
-    const out: Text[] = [];
+  /** Collects every text node under a container. */
+  private _collectTextNodes(container: Container): (Text | BitmapText)[] {
+    const out: (Text | BitmapText)[] = [];
     const visit = (node: Container): void => {
-      if (node instanceof Text) out.push(node);
+      if (node instanceof Text || node instanceof BitmapText) out.push(node);
       for (const child of node.children) visit(child as Container);
     };
     visit(container);
     return out;
+  }
+
+  /** Hides every text node for the content pass; returns the restore. */
+  private _hideTextNodes(container: Container): () => void {
+    const nodes = this._collectTextNodes(container);
+    const renderable = nodes.map((n) => n.renderable);
+    for (const node of nodes) node.renderable = false;
+    return () => nodes.forEach((n, i) => (n.renderable = renderable[i]));
+  }
+
+  /**
+   * Bumps `Text` glyph resolution for the content pass; returns the restore.
+   * `BitmapText` draws from the shared atlas and has no per-node resolution.
+   */
+  private _tuneTextResolution(
+    container: Container,
+    resolution: number
+  ): () => void {
+    const nodes = this._collectTextNodes(container).filter(
+      (n): n is Text => n instanceof Text
+    );
+    const original = nodes.map((n) => n.resolution);
+    for (const node of nodes) node.resolution = resolution;
+    return () => nodes.forEach((n, i) => (n.resolution = original[i]));
   }
 
   private _uncull(container: Container): void {

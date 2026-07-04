@@ -29,9 +29,17 @@ export class EditorSettingsService {
     () => this.persist()
   );
 
+  public readonly showMinimap = new EditorSetting(
+    'showMinimap',
+    'settings.options.showMinimap',
+    this.stored['showMinimap'] ?? true,
+    () => this.persist()
+  );
+
   public readonly settings: readonly EditorSetting[] = [
     this.fpsCounter,
-    this.showGrid
+    this.showGrid,
+    this.showMinimap
   ];
 
   private load(): Record<string, boolean> {

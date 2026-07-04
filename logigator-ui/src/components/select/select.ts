@@ -23,7 +23,7 @@ import { LgFadeIn } from '../../internal/fade-in';
 import { createConnectedOverlay } from '../../internal/overlay';
 import { createListKeyManager } from '../../internal/key-manager';
 import { FORM_FIELD_BASE } from '../../tokens/form-field';
-import { CONTROL_PADDING } from '../../tokens/size';
+import { CONTROL_PADDING_MD } from '../../tokens/size';
 
 /** Edge-aligned (not centered) drop positions: below the trigger, flipping up. */
 const SELECT_POSITIONS: ConnectedPosition[] = [
@@ -188,7 +188,7 @@ export class LgSelect implements ControlValueAccessor, OnDestroy {
 
   protected readonly triggerClasses = [
     FORM_FIELD_BASE,
-    CONTROL_PADDING,
+    CONTROL_PADDING_MD,
     'inline-flex w-full cursor-pointer select-none items-center text-left'
   ].join(' ');
 

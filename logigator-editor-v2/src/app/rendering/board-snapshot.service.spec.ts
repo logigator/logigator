@@ -1,5 +1,6 @@
+import type { Mock } from 'vitest';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import { Renderer, RenderTexture } from 'pixi.js';
+import { BitmapText, Container, Renderer, RenderTexture } from 'pixi.js';
 import { TestBed } from '@angular/core/testing';
 import { configureTestBed } from '../../testing/configure-test-bed';
 import { Project } from '../project/project';
@@ -19,13 +20,25 @@ describe('BoardSnapshotService', () => {
   let project: Project;
   let service: BoardSnapshotService;
   let renderCalls: RenderCall[];
+  let renderer: Renderer;
+
+  function collectBitmapTexts(
+    node: Container,
+    out: BitmapText[] = []
+  ): BitmapText[] {
+    if (node instanceof BitmapText) out.push(node);
+    for (const child of node.children) {
+      collectBitmapTexts(child as Container, out);
+    }
+    return out;
+  }
 
   beforeEach(() => {
     configureTestBed();
     project = new Project();
 
     renderCalls = [];
-    const renderer = {
+    renderer = {
       render: vi.fn((opts: RenderCall) => renderCalls.push(opts)),
       extract: {
         canvas: () =>
@@ -123,7 +136,7 @@ describe('BoardSnapshotService', () => {
     texture.destroy(true);
   });
 
-  it('floors line weights at the multiplier when below 1× so they stay visible', () => {
+  it('quantizes sub-1 line scales onto the zoom ladder', () => {
     const comp = makeAnd(2);
     comp.position.set(0, 0);
     project.addComponent(comp);
@@ -134,9 +147,72 @@ describe('BoardSnapshotService', () => {
       background: 'solid'
     });
 
-    // Below 1× the weight scale tracks the multiplier (min(1, 0.5) = 0.5),
-    // keeping strokes ~1× px rather than going sub-pixel.
-    expect(spy.mock.calls.map((c) => c[0])).toContain(0.5);
+    // Below 1× the weight scale tracks the multiplier, snapped to the nearest
+    // ladder step (round(log₁.₂ 0.5) = -4) so the scale-keyed context cache
+    // sees only scales the live zoom also produces.
+    expect(spy.mock.calls.map((c) => c[0])).toContain(Math.pow(1.2, -4));
+    texture.destroy(true);
+  });
+
+  it('floors the line scale at the ladder minimum for tiny multipliers', () => {
+    const comp = makeAnd(2);
+    comp.position.set(0, 0);
+    project.addComponent(comp);
+    const spy = vi.spyOn(comp, 'applyScale');
+
+    const texture = service.renderProjectToTexture(project, {
+      multiplier: 0.001,
+      background: 'solid'
+    });
+
+    // Strokes never re-tune below the fully-zoomed-out weight.
+    expect(spy.mock.calls.map((c) => c[0])).toContain(Math.pow(1.2, -12));
+    texture.destroy(true);
+  });
+
+  it('hideText hides text nodes during the content pass and restores them', () => {
+    const comp = makeAnd(2);
+    comp.position.set(0, 0);
+    project.addComponent(comp);
+    const texts = collectBitmapTexts(project.gridSpace);
+    expect(texts.length).toBeGreaterThan(0);
+
+    let hiddenDuringRender = false;
+    (renderer.render as Mock).mockImplementation((opts: RenderCall) => {
+      renderCalls.push(opts);
+      hiddenDuringRender = texts.every((t) => !t.renderable);
+    });
+
+    const texture = service.renderProjectToTexture(project, {
+      multiplier: 0.1,
+      background: 'transparent',
+      hideText: true
+    });
+
+    expect(hiddenDuringRender).toBe(true);
+    expect(texts.every((t) => t.renderable)).toBe(true);
+    texture.destroy(true);
+  });
+
+  it('without hideText, text nodes stay renderable during the pass', () => {
+    const comp = makeAnd(2);
+    comp.position.set(0, 0);
+    project.addComponent(comp);
+    const texts = collectBitmapTexts(project.gridSpace);
+    expect(texts.length).toBeGreaterThan(0);
+
+    let renderableDuringRender = false;
+    (renderer.render as Mock).mockImplementation((opts: RenderCall) => {
+      renderCalls.push(opts);
+      renderableDuringRender = texts.every((t) => t.renderable);
+    });
+
+    const texture = service.renderProjectToTexture(project, {
+      multiplier: 2,
+      background: 'transparent'
+    });
+
+    expect(renderableDuringRender).toBe(true);
     texture.destroy(true);
   });
 

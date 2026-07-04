@@ -72,21 +72,32 @@ const SEVERITY: Record<LgButtonVariant, Record<SeverityKey, string>> = {
   }
 };
 
+/** Icon-only glyph text size, keyed by the same `LgSize` scale. */
+const ICON_ONLY_TEXT: Record<LgSize, string> = {
+  sm: 'text-sm',
+  md: 'text-base',
+  lg: 'text-lg',
+  xl: 'text-xl'
+};
+
 /**
  * A native `<button>` skin. Mirrors the slice of PrimeNG's `p-button` API the
  * editor uses: `label` (omit for an icon-only button), `icon` (an icon-font
  * class string), `severity`, `size`, `text`/`outlined`/`rounded`, `disabled`,
  * `loading`, `type`, and `ariaLabel`. Emits `onClick` (kept on the `on` prefix
  * to match PrimeNG's event name). Layout classes go on the host (`<lg-button
- * class="w-full">`); the inner button fills it.
+ * class="w-full">`); the inner button fills it. `styleClass` is merged onto
+ * the inner `<button>` alongside the variant/severity classes.
  */
 @Component({
   selector: 'lg-button',
   changeDetection: ChangeDetectionStrategy.OnPush,
   host: {
     class: 'inline-flex',
-    '[class.size-8]': 'iconOnly() && size() === "small"',
-    '[class.size-10]': 'iconOnly() && size() !== "small"'
+    '[class.size-8]': 'iconOnly() && resolvedSize() === "sm"',
+    '[class.size-10]': 'iconOnly() && resolvedSize() === "md"',
+    '[class.size-12]': 'iconOnly() && resolvedSize() === "lg"',
+    '[class.size-14]': 'iconOnly() && resolvedSize() === "xl"'
   },
   template: `
     <button
@@ -122,6 +133,7 @@ export class LgButton {
   readonly loading = input(false, { transform: booleanAttribute });
   readonly type = input<'button' | 'submit' | 'reset'>('button');
   readonly ariaLabel = input<string>();
+  readonly styleClass = input<string>('');
 
   // Named `onClick` to match PrimeNG's event (see no-output-on-prefix off).
   readonly onClick = output<MouseEvent>();
@@ -133,6 +145,8 @@ export class LgButton {
 
   protected readonly iconOnly = computed(() => !this.hasLabel());
 
+  protected readonly resolvedSize = computed(() => this.size() ?? 'md');
+
   protected readonly buttonClasses = computed(() => {
     const variant: LgButtonVariant = this.text()
       ? 'text'
@@ -143,16 +157,15 @@ export class LgButton {
     // Icon-only square sizing comes from the host; here the icon-only button
     // only needs its text size, while a labelled button gets the shared padding.
     const sizing = this.iconOnly()
-      ? this.size() === 'small'
-        ? 'text-sm'
-        : 'text-base'
+      ? ICON_ONLY_TEXT[this.resolvedSize()]
       : controlPadding(this.size());
     return [
       BASE,
       variant === 'outlined' ? '' : 'border-transparent',
       this.rounded() ? 'rounded-4xl' : 'rounded-md',
       sizing,
-      SEVERITY[variant][severityKey]
+      SEVERITY[variant][severityKey],
+      this.styleClass()
     ]
       .filter(Boolean)
       .join(' ');
