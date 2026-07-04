@@ -72,6 +72,14 @@ const SEVERITY: Record<LgButtonVariant, Record<SeverityKey, string>> = {
   }
 };
 
+/** Icon-only glyph text size, keyed by the same `LgSize` scale. */
+const ICON_ONLY_TEXT: Record<LgSize, string> = {
+  sm: 'text-sm',
+  md: 'text-base',
+  lg: 'text-lg',
+  xl: 'text-xl'
+};
+
 /**
  * A native `<button>` skin. Mirrors the slice of PrimeNG's `p-button` API the
  * editor uses: `label` (omit for an icon-only button), `icon` (an icon-font
@@ -86,8 +94,10 @@ const SEVERITY: Record<LgButtonVariant, Record<SeverityKey, string>> = {
   changeDetection: ChangeDetectionStrategy.OnPush,
   host: {
     class: 'inline-flex',
-    '[class.size-8]': 'iconOnly() && size() === "small"',
-    '[class.size-10]': 'iconOnly() && size() !== "small"'
+    '[class.size-8]': 'iconOnly() && resolvedSize() === "sm"',
+    '[class.size-10]': 'iconOnly() && resolvedSize() === "md"',
+    '[class.size-12]': 'iconOnly() && resolvedSize() === "lg"',
+    '[class.size-14]': 'iconOnly() && resolvedSize() === "xl"'
   },
   template: `
     <button
@@ -135,6 +145,8 @@ export class LgButton {
 
   protected readonly iconOnly = computed(() => !this.hasLabel());
 
+  protected readonly resolvedSize = computed(() => this.size() ?? 'md');
+
   protected readonly buttonClasses = computed(() => {
     const variant: LgButtonVariant = this.text()
       ? 'text'
@@ -145,9 +157,7 @@ export class LgButton {
     // Icon-only square sizing comes from the host; here the icon-only button
     // only needs its text size, while a labelled button gets the shared padding.
     const sizing = this.iconOnly()
-      ? this.size() === 'small'
-        ? 'text-sm'
-        : 'text-base'
+      ? ICON_ONLY_TEXT[this.resolvedSize()]
       : controlPadding(this.size());
     return [
       BASE,

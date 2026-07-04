@@ -11,7 +11,7 @@
         [ngModel]="view()"
         (ngModelChange)="view.set($event)"
         [ngModelOptions]="{ standalone: true }"
-        size="small"
+        size="sm"
       >
         <ng-template #item let-o>{{ t(o.label) }}</ng-template>
       </lg-select-button>
@@ -23,7 +23,7 @@
         [ngModel]="radix()"
         (ngModelChange)="radix.set($event)"
         [ngModelOptions]="{ standalone: true }"
-        size="small"
+        size="sm"
       >
         <ng-template #item let-o>{{ t(o.label) }}</ng-template>
       </lg-select-button>
@@ -33,7 +33,7 @@
     <div class="flex items-center gap-1 w-full md:w-auto md:ms-auto">
       <input
         lgInputText
-        size="small"
+        size="sm"
         type="text"
         spellcheck="false"
         autocomplete="off"
@@ -49,7 +49,7 @@
       <lg-button
         icon="ph ph-magnifying-glass"
         severity="secondary"
-        size="small"
+        size="sm"
         (onClick)="goto()"
         [attr.aria-label]="t('hexEditor.goto')"
       />
@@ -62,7 +62,7 @@
         icon="ph ph-copy"
         severity="secondary"
         [outlined]="true"
-        size="small"
+        size="sm"
         (onClick)="copyAll()"
       />
       <lg-button
@@ -70,7 +70,7 @@
         icon="ph ph-eraser"
         severity="secondary"
         [outlined]="true"
-        size="small"
+        size="sm"
         (onClick)="confirmClear($event)"
       />
     </div>

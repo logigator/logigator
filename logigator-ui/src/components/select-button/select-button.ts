@@ -13,6 +13,14 @@ import {
 import { ControlValueAccessor, NG_VALUE_ACCESSOR } from '@angular/forms';
 import { LgSize } from '../../tokens/size';
 
+/** Segment padding, keyed by size — tighter than `controlPadding` (a segmented toggle, not a text field). */
+const SEGMENT_PADDING: Record<LgSize, string> = {
+  sm: 'px-3 py-1 text-sm',
+  md: 'px-3 py-1 text-base',
+  lg: 'px-4 py-1.5 text-lg',
+  xl: 'px-5 py-2 text-xl'
+};
+
 /**
  * A segmented group of mutually-exclusive toggle buttons. `ControlValueAccessor`
  * (value = the selected option's `optionValue`, or the option itself when
@@ -120,8 +128,7 @@ export class LgSelectButton implements ControlValueAccessor {
   }
 
   protected buttonClasses(selected: boolean): string {
-    const pad =
-      this.size() === 'small' ? 'px-3 py-1 text-sm' : 'px-3 py-1 text-base';
+    const pad = SEGMENT_PADDING[this.size() ?? 'md'];
     return [
       'inline-flex items-center justify-center gap-1 rounded-md font-medium',
       'transition-colors duration-200 cursor-pointer select-none',

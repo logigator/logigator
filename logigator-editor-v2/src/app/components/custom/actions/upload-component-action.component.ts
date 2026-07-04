@@ -30,7 +30,7 @@ import {
   template: `<ng-container *transloco="let t">
     @if (visible()) {
       <lg-button
-        size="small"
+        size="sm"
         icon="ph ph-cloud-arrow-up"
         [label]="t('uploadComponent.button')"
         class="float-right"

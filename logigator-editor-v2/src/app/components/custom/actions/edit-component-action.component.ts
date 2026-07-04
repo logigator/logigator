@@ -18,7 +18,7 @@ import { CustomComponentService } from '../../../custom-component/custom-compone
   selector: 'app-edit-component-action',
   imports: [LgButton],
   template: `<lg-button
-    size="small"
+    size="sm"
     label="Edit component"
     class="float-right"
     (onClick)="edit()"

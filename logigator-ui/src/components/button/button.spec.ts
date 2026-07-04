@@ -57,13 +57,43 @@ describe('LgButton', () => {
     expect(f.nativeElement.querySelector('.animate-spin')).not.toBeNull();
   });
 
-  it('applies small-size classes', () => {
+  it('applies sm-size classes', () => {
     const f = create();
     f.componentRef.setInput('label', 'X');
-    f.componentRef.setInput('size', 'small');
+    f.componentRef.setInput('size', 'sm');
     f.detectChanges();
     expect(button(f).className).toContain('text-sm');
     expect(button(f).className).toContain('px-2.5');
+  });
+
+  it('applies lg- and xl-size classes', () => {
+    const f = create();
+    f.componentRef.setInput('label', 'X');
+    f.componentRef.setInput('size', 'lg');
+    f.detectChanges();
+    expect(button(f).className).toContain('text-lg');
+    expect(button(f).className).toContain('px-4');
+
+    f.componentRef.setInput('size', 'xl');
+    f.detectChanges();
+    expect(button(f).className).toContain('text-xl');
+    expect(button(f).className).toContain('px-5');
+  });
+
+  it('sizes an icon-only button per size on the host', () => {
+    const f = create();
+    f.componentRef.setInput('icon', 'ph ph-x');
+    f.componentRef.setInput('size', 'sm');
+    f.detectChanges();
+    expect((f.nativeElement as HTMLElement).className).toContain('size-8');
+
+    f.componentRef.setInput('size', 'lg');
+    f.detectChanges();
+    expect((f.nativeElement as HTMLElement).className).toContain('size-12');
+
+    f.componentRef.setInput('size', 'xl');
+    f.detectChanges();
+    expect((f.nativeElement as HTMLElement).className).toContain('size-14');
   });
 
   it('applies the secondary severity classes', () => {
