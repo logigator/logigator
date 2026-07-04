@@ -32,14 +32,16 @@
           class="pointer-events-none absolute right-3 bottom-3 z-[1100] flex flex-col items-end"
         >
           <lg-toast [embedded]="true" position="bottom-right" />
-          @if (editorSettings.showMinimap.value() && rendererHandle.available()) {
+          @if (
+            editorSettings.showMinimap.value() && rendererHandle.available()
+          ) {
             <app-minimap [project]="projectService.activeProject()" />
           }
         </div>
 
         <app-component-settings></app-component-settings>
       } @else {
-        <lg-toast position="bottom-left" class="absolute! -mb-4" />
+        <lg-toast position="bottom-left" />
 
         <!-- Overlays: the container lets pointer events fall through to the
              canvas; each control re-enables them for itself. -->
@@ -52,7 +54,9 @@
           <app-zoom-fab
             class="pointer-events-auto absolute bottom-24 right-3"
           ></app-zoom-fab>
-          @if (editorSettings.showMinimap.value() && rendererHandle.available()) {
+          @if (
+            editorSettings.showMinimap.value() && rendererHandle.available()
+          ) {
             <app-minimap [project]="projectService.activeProject()" />
           }
           @if (!isSimulation()) {
