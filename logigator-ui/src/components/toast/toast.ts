@@ -54,18 +54,28 @@ function resolveSeverity(severity?: string): ResolvedSeverity {
  * overlay). Each toast slides/fades in and auto-dismisses after its `life`. The
  * host carries the stack's position (corner from `position`); a consumer's own
  * `class` (e.g. `absolute! -mb-4`) merges and `!`-overrides as needed.
+ *
+ * With `embedded`, the host drops its own positioning (`fixed`, corner insets,
+ * z-index, padding) and lives in normal flow, so a parent container owns
+ * placement and stacking — e.g. a flex column where the toasts sit above
+ * another overlay. It collapses to zero footprint when empty and lifts what
+ * follows it by `mb-2` only while a toast is showing; `position` then only
+ * picks the horizontal alignment.
  */
 @Component({
   selector: 'lg-toast',
   changeDetection: ChangeDetectionStrategy.OnPush,
   host: {
-    class: 'pointer-events-none fixed z-[1100] flex flex-col gap-2 p-4',
-    '[class.top-0]': 'atTop()',
-    '[class.bottom-0]': '!atTop()',
-    '[class.right-0]': 'atRight()',
-    '[class.left-0]': '!atRight()',
+    class: 'pointer-events-none z-[1100] flex flex-col gap-2',
+    '[class.fixed]': '!embedded()',
+    '[class.p-4]': '!embedded()',
+    '[class.top-0]': '!embedded() && atTop()',
+    '[class.bottom-0]': '!embedded() && !atTop()',
+    '[class.right-0]': '!embedded() && atRight()',
+    '[class.left-0]': '!embedded() && !atRight()',
     '[class.items-end]': 'atRight()',
-    '[class.items-start]': '!atRight()'
+    '[class.items-start]': '!atRight()',
+    '[class.mb-2]': 'embedded() && !!toasts().length'
   },
   template: `
     @for (toast of toasts(); track toast.id) {
@@ -91,6 +101,7 @@ function resolveSeverity(severity?: string): ResolvedSeverity {
 })
 export class LgToast {
   readonly position = input<string>('bottom-left');
+  readonly embedded = input<boolean>(false);
 
   protected readonly atTop = computed(() => this.position().startsWith('top'));
   protected readonly atRight = computed(() =>
