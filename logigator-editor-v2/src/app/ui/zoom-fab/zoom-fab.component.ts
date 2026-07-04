@@ -10,7 +10,7 @@ import { ProjectService } from '../../project/project.service';
   template: `
     <div
       *transloco="let t"
-      class="flex flex-col gap-2 rounded-full bg-content/90 p-1 shadow-lg backdrop-blur"
+      class="flex flex-col gap-2 rounded-full bg-content p-1.5 shadow-lg"
     >
       <lg-button
         icon="ph ph-plus"

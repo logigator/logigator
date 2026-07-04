@@ -27,9 +27,8 @@ import {
   PanelRect
 } from './minimap-frame';
 
-/** Panel dimensions (CSS px) per layout. Compact keeps the 4:3 aspect. */
-const PANEL_SIZE_REGULAR = { width: 200, height: 150 };
-const PANEL_SIZE_COMPACT = { width: 140, height: 105 };
+const PANEL_SIZE_REGULAR = { width: 250, height: 250 };
+const PANEL_SIZE_COMPACT = { width: 200, height: 200 };
 /** Quiet period after the last committed action before the map re-renders. */
 const CONTENT_DEBOUNCE_MS = 200;
 /** Minimum on-screen size of the viewport rectangle (CSS px). */
@@ -72,7 +71,7 @@ export class MinimapComponent implements OnDestroy {
   private readonly snapshots = inject(BoardSnapshotService);
   private readonly themingService = inject(ThemingService);
   private readonly hostEl = inject<ElementRef<HTMLElement>>(ElementRef);
-  protected readonly layout = inject(LayoutService);
+  private readonly layout = inject(LayoutService);
 
   public readonly project = input<Project | null>(null);
 

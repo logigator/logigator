@@ -1,17 +1,18 @@
 <ng-container *transloco="let t">
   @if (collapsed()) {
-    <lg-button
-      icon="ph ph-map-trifold"
-      severity="secondary"
-      rounded
-      [class]="layout.isTouch() ? 'min-h-11 min-w-11' : ''"
-      [ariaLabel]="t('minimap.expand')"
-      (onClick)="toggleCollapsed()"
-    ></lg-button>
+    <div class="rounded-full bg-content p-1.5 shadow-lg">
+      <lg-button
+        icon="ph ph-map-trifold"
+        severity="secondary"
+        rounded
+        [ariaLabel]="t('minimap.expand')"
+        (onClick)="toggleCollapsed()"
+      ></lg-button>
+    </div>
   } @else {
     <div
-      class="relative overflow-hidden rounded-lg border border-border shadow-lg backdrop-blur hover:bg-content"
-      [class]="scrubbing() ? 'bg-content' : 'bg-content/90'"
+      class="relative overflow-hidden rounded-lg border border-border shadow-lg backdrop-blur-sm hover:bg-content transition-colors"
+      [class]="scrubbing() ? 'bg-content' : 'bg-content/50'"
     >
       <div
         #map
@@ -27,19 +28,17 @@
         <canvas #canvas class="absolute inset-0 h-full w-full"></canvas>
         <div
           #rect
-          class="absolute left-0 top-0 rounded-xs border-[1.5px] border-primary bg-primary/10"
+          class="absolute left-0 top-0 rounded-xs border border-primary bg-muted/10"
           [class.cursor-grab]="!scrubbing()"
         ></div>
       </div>
       <lg-button
-        class="absolute right-1 top-1"
+        class="absolute right-2 top-2"
+        styleClass="shadow-md"
         icon="ph ph-arrows-in-simple"
         severity="secondary"
         size="sm"
-        text
         rounded
-        [class.min-h-11]="layout.isTouch()"
-        [class.min-w-11]="layout.isTouch()"
         [ariaLabel]="t('minimap.collapse')"
         (onClick)="toggleCollapsed()"
       ></lg-button>
