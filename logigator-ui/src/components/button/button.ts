@@ -78,7 +78,8 @@ const SEVERITY: Record<LgButtonVariant, Record<SeverityKey, string>> = {
  * class string), `severity`, `size`, `text`/`outlined`/`rounded`, `disabled`,
  * `loading`, `type`, and `ariaLabel`. Emits `onClick` (kept on the `on` prefix
  * to match PrimeNG's event name). Layout classes go on the host (`<lg-button
- * class="w-full">`); the inner button fills it.
+ * class="w-full">`); the inner button fills it. `styleClass` is merged onto
+ * the inner `<button>` alongside the variant/severity classes.
  */
 @Component({
   selector: 'lg-button',
@@ -122,6 +123,7 @@ export class LgButton {
   readonly loading = input(false, { transform: booleanAttribute });
   readonly type = input<'button' | 'submit' | 'reset'>('button');
   readonly ariaLabel = input<string>();
+  readonly styleClass = input<string>('');
 
   // Named `onClick` to match PrimeNG's event (see no-output-on-prefix off).
   readonly onClick = output<MouseEvent>();
@@ -152,7 +154,8 @@ export class LgButton {
       variant === 'outlined' ? '' : 'border-transparent',
       this.rounded() ? 'rounded-4xl' : 'rounded-md',
       sizing,
-      SEVERITY[variant][severityKey]
+      SEVERITY[variant][severityKey],
+      this.styleClass()
     ]
       .filter(Boolean)
       .join(' ');

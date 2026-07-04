@@ -108,6 +108,14 @@ describe('LgButton', () => {
     expect(button(f).getAttribute('aria-label')).toBe('Save project');
   });
 
+  it('merges styleClass onto the inner button', () => {
+    const f = create();
+    f.componentRef.setInput('label', 'X');
+    f.componentRef.setInput('styleClass', 'my-custom-class');
+    f.detectChanges();
+    expect(button(f).className).toContain('my-custom-class');
+  });
+
   it('sizes an icon-only button on the host, not the inner button', () => {
     const f = create();
     f.componentRef.setInput('icon', 'ph ph-x');
