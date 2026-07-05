@@ -270,16 +270,16 @@ export class SubCircuitWatchComponent implements AfterViewInit, OnDestroy {
     return null;
   }
 
-  /** Sizes the canvas backing store (DPR) and the project viewport (CSS px). */
+  /**
+   * Sizes the project viewport to the canvas's CSS box. The backing store is
+   * owned by the watch renderer's cached CanvasSource and resized per render.
+   */
   private syncViewportSize(): void {
-    const canvas = this.canvas.nativeElement;
-    const rect = canvas.getBoundingClientRect();
-    const dpr = window.devicePixelRatio || 1;
-    const width = Math.max(1, Math.round(rect.width));
-    const height = Math.max(1, Math.round(rect.height));
-    canvas.width = Math.max(1, Math.round(width * dpr));
-    canvas.height = Math.max(1, Math.round(height * dpr));
-    this.project.resizeViewport(width, height);
+    const rect = this.canvas.nativeElement.getBoundingClientRect();
+    this.project.resizeViewport(
+      Math.max(1, Math.round(rect.width)),
+      Math.max(1, Math.round(rect.height))
+    );
   }
 
   /** Centers the content at a zoom that fits it, capped at 100%. */

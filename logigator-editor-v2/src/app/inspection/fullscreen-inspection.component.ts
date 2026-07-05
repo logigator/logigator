@@ -25,7 +25,7 @@ import { FullscreenInspectionPresenter } from './fullscreen-inspection.presenter
       <!-- Above the sheet/drawer overlays (z 1000), below toasts (z 1100). -->
       <div
         *transloco="let t"
-        class="bg-content fixed inset-0 z-[1050] flex flex-col"
+        class="bg-content fixed inset-0 z-1050 flex flex-col"
       >
         <div class="border-border flex h-12 items-center gap-1 border-b px-1">
           <lg-button

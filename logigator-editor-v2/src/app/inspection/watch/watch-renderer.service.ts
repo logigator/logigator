@@ -1,5 +1,10 @@
 import { inject, Injectable } from '@angular/core';
-import { autoDetectRenderer, Container, Matrix, Renderer } from 'pixi.js';
+import {
+  autoDetectRenderer,
+  Container,
+  getCanvasTexture,
+  Renderer
+} from 'pixi.js';
 import { Project } from '../../project/project';
 import { ThemingService } from '../../theming/theming.service';
 
@@ -90,18 +95,23 @@ export class WatchRendererService {
     // No CullerPlugin runs on manual renders — force the subtree visible so
     // stale `culled` bits can't hide content.
     this._uncull(project);
-    // The canvas backing store is DPR-scaled by its owner; the project's
-    // viewport transform is CSS-pixel based, so scale it up to match.
-    const resolution =
-      canvas.width / Math.max(1, canvas.clientWidth || canvas.width);
-    project.updateLocalTransform();
+    // pixi caches one CanvasSource per target canvas and writes *its* size
+    // back onto the element every render, so the backing store must be sized
+    // through the source (CSS size at the DPR resolution), never via
+    // canvas.width directly — that also keeps the cached render target in
+    // step. A no-op when nothing changed. The root projection divides by the
+    // source resolution, so render space stays in CSS pixels — the project's
+    // viewport transform applies as-is and the DPR only sharpens the backing
+    // store.
+    getCanvasTexture(canvas).source.resize(
+      Math.max(1, Math.round(canvas.clientWidth || 1)),
+      Math.max(1, Math.round(canvas.clientHeight || 1)),
+      window.devicePixelRatio || 1
+    );
     this._renderer.render({
       container: project,
       target: canvas,
-      clearColor: this.theming.currentTheme().background,
-      transform: new Matrix()
-        .scale(resolution, resolution)
-        .append(project.localTransform)
+      clearColor: this.theming.currentTheme().background
     });
   }
 
