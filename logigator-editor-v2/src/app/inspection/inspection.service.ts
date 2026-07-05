@@ -8,7 +8,6 @@ import { ProjectService } from '../project/project.service';
 import { SimulationService } from '../simulation/simulation.service';
 import { WorkMode } from '../work-mode/work-mode.enum';
 import { WorkModeService } from '../work-mode/work-mode.service';
-import { FullscreenInspectionPresenter } from './fullscreen-inspection.presenter';
 import { InspectionPresenter, OpenInspection } from './inspection-presenter';
 import { SheetInspectionPresenter } from './sheet-inspection.presenter';
 import { WindowInspectionPresenter } from './window-inspection.presenter';
@@ -33,7 +32,6 @@ export class InspectionService {
   private readonly toastService = inject(ToastService);
   private readonly windowPresenter = inject(WindowInspectionPresenter);
   private readonly sheetPresenter = inject(SheetInspectionPresenter);
-  private readonly fullscreenPresenter = inject(FullscreenInspectionPresenter);
 
   private readonly _open = signal<readonly OpenInspection[]>([]);
   /** The open inspections, in opening order. */
@@ -106,27 +104,35 @@ export class InspectionService {
   }
 
   /**
-   * The presenter framing an entry: floating windows on desktop; on compact,
-   * the shared sheet — or the fullscreen takeover for inspections that
-   * declare `compactPresentation: 'fullscreen'` (watches).
+   * The presenter framing an entry: windows on desktop; on compact, the
+   * shared sheet — except `compactPresentation: 'fullscreen'` inspections
+   * (watches), which stay windows everywhere (the compact window outlet
+   * renders them as fullscreen takeovers).
    */
   private _presenterFor(
     entry: OpenInspection,
     compact = this.layout.isCompact()
   ): InspectionPresenter {
-    if (!compact) {
+    if (!compact || entry.inspection.compactPresentation === 'fullscreen') {
       return this.windowPresenter;
     }
-    return entry.inspection.compactPresentation === 'fullscreen'
-      ? this.fullscreenPresenter
-      : this.sheetPresenter;
+    return this.sheetPresenter;
   }
 
-  /** Moves every open inspection from the previous presenter to the new one. */
+  /**
+   * Moves every open inspection from the previous presenter to the new one.
+   * Entries whose presenter doesn't change (watches — windows on both
+   * breakpoints) keep their window entry; only the outlet swaps around them.
+   */
   private _rehome(compact: boolean): void {
     for (const entry of this._open()) {
-      this._presenterFor(entry, !compact).close(entry);
-      this._presenterFor(entry, compact).show(entry, () => this._remove(entry));
+      const from = this._presenterFor(entry, !compact);
+      const to = this._presenterFor(entry, compact);
+      if (from === to) {
+        continue;
+      }
+      from.close(entry);
+      to.show(entry, () => this._remove(entry));
     }
   }
 

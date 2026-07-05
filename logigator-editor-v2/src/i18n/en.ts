@@ -326,9 +326,6 @@ const en = {
     settings: 'Settings',
     ports: 'Ports'
   },
-  inspection: {
-    back: 'Back'
-  },
   logging: {
     error: 'Error',
     warn: 'Warning',

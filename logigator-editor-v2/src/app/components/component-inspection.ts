@@ -33,17 +33,17 @@ export abstract class ComponentInspection {
   /** Live title for the hosting window / sheet tab. */
   public abstract readonly title: Signal<string>;
   /**
-   * Structured title segments (breadcrumbs). When present, the window / the
-   * fullscreen takeover render these in their header instead of the plain
-   * `title` — ancestor segments are clickable and navigate back. `title`
-   * stays the flat fallback (sheet tabs, aria labels).
+   * Structured title segments (breadcrumbs). When present, the window title
+   * bar renders these instead of the plain `title` — ancestor segments are
+   * clickable and navigate back. `title` stays the flat fallback (sheet
+   * tabs, aria labels).
    */
   public readonly titleParts?: Signal<readonly InspectionTitlePart[]>;
   /** Desktop window sizing; the presenter falls back to its defaults. */
   public readonly sizing?: ComponentInspectionSizing;
   /**
    * How the inspection presents on compact: the shared bottom sheet
-   * (default — the canvas stays visible above it) or a fullscreen takeover
+   * (default — the canvas stays visible above it) or a fullscreen window
    * with a back button (canvas-hosting views that need the space).
    */
   public readonly compactPresentation?: 'sheet' | 'fullscreen';

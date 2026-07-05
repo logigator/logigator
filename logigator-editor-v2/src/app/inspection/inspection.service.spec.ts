@@ -10,7 +10,6 @@ import { Project } from '../project/project';
 import { ProjectService } from '../project/project.service';
 import { SimulationService } from '../simulation/simulation.service';
 import { WorkModeService } from '../work-mode/work-mode.service';
-import { FullscreenInspectionPresenter } from './fullscreen-inspection.presenter';
 import { InspectionService } from './inspection.service';
 import { OpenInspection } from './inspection-presenter';
 import { SheetInspectionPresenter } from './sheet-inspection.presenter';
@@ -67,7 +66,6 @@ describe('InspectionService', () => {
   let service: InspectionService;
   let presenter: StubPresenter;
   let sheetPresenter: StubPresenter;
-  let fullscreenPresenter: StubPresenter;
   let frame$: Subject<void>;
   let workMode: WorkModeService;
   let isCompact: WritableSignal<boolean>;
@@ -79,13 +77,11 @@ describe('InspectionService', () => {
   beforeEach(() => {
     presenter = new StubPresenter();
     sheetPresenter = new StubPresenter();
-    fullscreenPresenter = new StubPresenter();
     frame$ = new Subject<void>();
     isCompact = signal(false);
     configureTestBed([
       { provide: WindowInspectionPresenter, useValue: presenter },
       { provide: SheetInspectionPresenter, useValue: sheetPresenter },
-      { provide: FullscreenInspectionPresenter, useValue: fullscreenPresenter },
       { provide: SimulationService, useValue: { frame$ } },
       {
         provide: LayoutService,
@@ -191,37 +187,39 @@ describe('InspectionService', () => {
     expect(inspection.destroyed).toHaveBeenCalledTimes(1);
   });
 
-  it('routes fullscreen inspections per entry on compact and when re-homing', () => {
+  it('keeps fullscreen inspections in windows on compact, skipping their re-home', () => {
     flushEffects();
     const sheetBound = new TestInspection();
     const fullscreenBound = new FullscreenTestInspection();
     service.openFor(makeInspectable(sheetBound));
     service.openFor(makeInspectable(fullscreenBound));
-    // Desktop: both are windows regardless of compact presentation.
     expect(presenter.shown).toHaveLength(2);
 
-    // Compact: each entry re-homes to its own presenter.
+    // Compact: only the sheet-bound entry re-homes; the fullscreen one keeps
+    // its window entry (the compact outlet renders it as a takeover).
     isCompact.set(true);
     flushEffects();
-    expect(presenter.closed).toHaveLength(2);
+    expect(presenter.closed.map((e) => e.inspection)).toEqual([sheetBound]);
     expect(sheetPresenter.shown.map((e) => e.inspection)).toEqual([sheetBound]);
-    expect(fullscreenPresenter.shown.map((e) => e.inspection)).toEqual([
-      fullscreenBound
-    ]);
+    expect(presenter.shown).toHaveLength(2);
 
-    // New fullscreen inspections open in the takeover; closes route there too.
+    // New fullscreen inspections open as windows on compact too.
     const another = new FullscreenTestInspection();
     service.openFor(makeInspectable(another));
-    expect(fullscreenPresenter.shown).toHaveLength(2);
+    expect(presenter.shown).toHaveLength(3);
     service.close(service.open()[2]);
-    expect(fullscreenPresenter.closed).toHaveLength(1);
+    expect(presenter.closed).toHaveLength(2);
 
-    // Back to desktop: everything returns to windows.
+    // Back to desktop: only the sheet-bound entry moves again.
     isCompact.set(false);
     flushEffects();
     expect(sheetPresenter.closed).toHaveLength(1);
-    expect(fullscreenPresenter.closed).toHaveLength(2);
-    expect(presenter.shown).toHaveLength(4);
+    expect(presenter.shown.map((e) => e.inspection)).toEqual([
+      sheetBound,
+      fullscreenBound,
+      another,
+      sheetBound
+    ]);
   });
 
   it('opens inspections from the active project inspect taps while simulating', () => {

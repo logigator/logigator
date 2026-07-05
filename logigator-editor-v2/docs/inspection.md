@@ -13,9 +13,10 @@ tap on canvas (FloatingLayer, SIMULATION mode)
   └► Project.inspectRequest$ ── InspectionService.openFor(component)
        config.inspection(component) ──► ComponentInspection (model)
        └► presenter (by breakpoint + compactPresentation)
-            desktop: WindowInspectionPresenter ────► WindowService (lg-window-outlet)
-            compact: SheetInspectionPresenter ─────► InspectionSheetComponent (lg-drawer, modal=false)
-            compact: FullscreenInspectionPresenter ► FullscreenInspectionComponent (takeover)
+            WindowInspectionPresenter ► WindowService (lg-window-outlet;
+              desktop: floating windows — compact: the fullscreen outlet
+              renders watches as takeovers)
+            compact: SheetInspectionPresenter ► InspectionSheetComponent (lg-drawer, modal=false)
 SimulationWorkerService onFrame ─► SimulationService.frame$ ─► inspection.onFrame()
 ```
 
@@ -39,12 +40,12 @@ The contract:
   (windows via `setInput`, the sheet via `*ngComponentOutlet` inputs).
 - `title: Signal<string>` — live window / sheet-tab title.
 - `titleParts?` — structured title segments (breadcrumbs); the window title
-  bar and the fullscreen takeover header render them instead of the plain
-  `title`, with `navigate`-carrying segments clickable. `title` stays the flat
-  fallback (sheet tabs, aria labels).
+  bar renders them instead of the plain `title`, with `navigate`-carrying
+  segments clickable. `title` stays the flat fallback (sheet tabs, aria
+  labels).
 - `sizing?` — desktop window size hints (initial/min/max).
 - `compactPresentation?` — how the inspection presents on compact: the shared
-  bottom sheet (default) or a fullscreen takeover (`'fullscreen'`, used by the
+  bottom sheet (default) or a fullscreen window (`'fullscreen'`, used by the
   watch — a canvas view needs the space).
 - `onFrame?()` — refresh hook, called after every applied snapshot (and after
   `stop()`'s visual reset). Inspections re-read main-thread state here and
@@ -75,10 +76,11 @@ renders it; it must live from startup). Responsibilities:
 - **Frame fan-out**: subscribes `SimulationService.frame$` once and calls
   every open inspection's `onFrame()`.
 - **Presenter routing**: per entry — desktop always uses windows; compact uses
-  the sheet, or the fullscreen takeover for `compactPresentation:
-'fullscreen'` entries. A breakpoint flip mid-session _re-homes_ each open
-  inspection live to its own target (window ⇄ sheet for data inspectors,
-  window ⇄ takeover for watches).
+  the sheet, except `compactPresentation: 'fullscreen'` entries (watches),
+  which stay windows on every breakpoint. A breakpoint flip mid-session
+  _re-homes_ only entries whose presenter changes (window ⇄ sheet for data
+  inspectors); watches keep their window entry and just get re-rendered by
+  the other outlet.
 
 ## Presenters
 
@@ -100,12 +102,15 @@ chrome), `focus`, `close` (view teardown without touching the inspection).
   running circuit above stays visible and interactive. One active view at a
   time, a tab row when several are open; closing the sheet dismisses all of
   them.
-- **Compact fullscreen** — `FullscreenInspectionPresenter` (state) +
-  `FullscreenInspectionComponent` (view): a full-viewport takeover above the
-  sheet overlays (`z-[1050]`, below the toast stack), framed by a header with
-  a back button and the live title. Takeovers stack — one visible at a time,
-  presenting another covers the current one (which stays open underneath);
-  back dismisses the visible entry, revealing the previous one or the board.
+- **Compact fullscreen** — the _same_ window presenter through a second,
+  `fullscreen` `lg-window-outlet`: the app template swaps the outlets under
+  `@if (layout.isCompact())` (exactly one is alive at a time — two live
+  outlets would instantiate every window's content twice), the compact one
+  wrapped `fixed inset-0 z-1050` — above the sheet overlays (z 1000), below
+  the toast stack (z 1100). A fullscreen outlet renders each window as an
+  outlet-filling takeover: no drag/resize/positioning, back button instead of
+  ✕. Opaque takeovers stack by z-index, so with several open only the topmost
+  is visible and back reveals the one beneath — or the board.
 
 ## The ROM Inspection
 

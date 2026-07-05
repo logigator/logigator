@@ -36,7 +36,6 @@ import {
 } from '@logigator/ui';
 import { InspectionService } from './inspection/inspection.service';
 import { InspectionSheetComponent } from './inspection/inspection-sheet.component';
-import { FullscreenInspectionComponent } from './inspection/fullscreen-inspection.component';
 import { TranslocoDirective } from '@jsverse/transloco';
 import { WorkMode } from './work-mode/work-mode.enum';
 import { WorkModeService } from './work-mode/work-mode.service';
@@ -74,7 +73,6 @@ import { UserSettingsComponent } from './ui/user-settings/user-settings.componen
     LgPanelMenu,
     LgWindowOutlet,
     InspectionSheetComponent,
-    FullscreenInspectionComponent,
     TranslocoDirective,
     MobileTopBarComponent,
     ToolHudComponent,
