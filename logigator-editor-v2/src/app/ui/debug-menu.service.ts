@@ -9,10 +9,6 @@ import { RendererHandleService } from '../rendering/renderer-handle.service';
 import { PersistenceService } from '../persistence/persistence.service';
 import { ToastService } from '../logging/toast.service';
 import { pickTextFile } from '../utils/file-picker';
-import {
-  runWatchRendererSpike,
-  SpikePreference
-} from '../inspection/watch/watch-renderer-spike';
 import { insertWatchDemoCircuit } from '../inspection/watch/watch-demo-circuit';
 
 /**
@@ -49,14 +45,6 @@ export class DebugMenuService {
         { label: 'Spawn test toasts', command: () => this.spawnTestToasts() },
         { separator: true },
         {
-          label: 'Watch renderer spike',
-          command: () => this.watchRendererSpike()
-        },
-        {
-          label: 'Watch renderer spike (canvas)',
-          command: () => this.watchRendererSpike('canvas')
-        },
-        {
           label: 'Insert watch demo circuit',
           command: () => this.insertWatchDemo()
         },
@@ -75,15 +63,6 @@ export class DebugMenuService {
     }
     insertWatchDemoCircuit(project);
     this.toast.info('Watch demo circuit inserted (Nest at 10,10).');
-  }
-
-  private watchRendererSpike(preference?: SpikePreference): void {
-    runWatchRendererSpike(preference)
-      .then((mode) => this.toast.info(`Watch renderer spike: ${mode}`))
-      .catch((err: unknown) => {
-        console.error('[debug] watch renderer spike failed', err);
-        this.toast.error('Watch renderer spike failed — see console.');
-      });
   }
 
   private printCompiledBoard(): void {
