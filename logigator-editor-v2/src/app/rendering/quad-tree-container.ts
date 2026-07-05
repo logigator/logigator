@@ -68,11 +68,9 @@ export class QuadTreeContainer<T extends GridElement> extends Container {
 
     if (environment.debug.showQuadTrees) {
       // zIndex keeps the overlay above the entries (expand() appends a new root
-      // on top of it); non-interactive so it never steals pointer events from
-      // the elements underneath.
+      // on top of it).
       this.sortableChildren = true;
       this._debugOverlay = super.addChild(new Graphics());
-      this._debugOverlay.eventMode = 'none';
       this._debugOverlay.zIndex = 1;
       this.onRender = () => {
         if (!this._debugDirty) return;

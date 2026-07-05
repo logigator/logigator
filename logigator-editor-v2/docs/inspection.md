@@ -9,7 +9,7 @@ highlighted) and the custom component's **watch** (a live canvas view of its
 inner circuit — see [The Custom-Component Watch](#the-custom-component-watch)).
 
 ```
-tap on canvas (FloatingLayer, SIMULATION mode)
+tap on canvas (WorkModeRouter, SIMULATION mode)
   └► Project.inspectRequest$ ── InspectionService.openFor(component)
        config.inspection(component) ──► ComponentInspection (model)
        └► presenter (by breakpoint + compactPresentation)
@@ -66,7 +66,7 @@ renders it; it must live from startup). Responsibilities:
 
 - **Open**: `openFor(component)` — at most one inspection per component
   instance; a second tap focuses the existing view. Components whose config
-  declares no `inspection` are ignored (the `FloatingLayer` already filters,
+  declares no `inspection` are ignored (the `WorkModeRouter` already filters,
   this is defense in depth). A factory that **throws** (a watch can
   legitimately fail to open when the definition no longer matches the compiled
   board) surfaces as an error toast instead of crashing the tap.
@@ -167,18 +167,16 @@ component layer and `inspection/watch/`:
   requests a full seed snapshot; the first full snapshot also poses copied
   levers from their output-link power. Construction **fails loudly** if the
   body shape disagrees with the index tables.
-- **`WatchRendererService`** — the single renderer shared by every watch
-  canvas (page total stays at two rendering contexts). Created lazily on the
-  first lease with the board's backend ladder (`webgpu` preference; the WebGL
-  branch adds `multiView: true`, an off-DOM master canvas blitted per target;
-  the canvas backend needs nothing), destroyed when the last lease releases.
-  `render(project, canvas)` force-unculls (no `CullerPlugin` runs on manual
-  renders) and scales the CSS-pixel viewport transform up to the canvas's
-  DPR-sized backing store.
+- Watch canvases lease the **app-wide shared renderer**
+  (`rendering/renderer.service.ts`, see `rendering.md`) — the same one the
+  board draws through, so the page runs a single rendering context no matter
+  how many watches are open. Each render force-unculls the watch project
+  (`uncullTree` — no cull pass runs on watch renders) and scales the CSS-pixel
+  viewport transform up to the canvas's DPR-sized backing store.
 - **`SubCircuitWatchComponent`** — the canvas; the breadcrumb trail renders in
   the hosting header (window title bar / takeover header) via the inspection's
   `titleParts` — ancestor segments are clickable and navigate back. Pointer
-  handling is **plain DOM** (the watch renderer has no event system): a press
+  handling is **plain DOM** (the shared renderer's event features are off): a press
   within the click threshold is a click (resolved against the watch project's
   quad tree), past it a pan; wheel steps the zoom; touch adds two-finger pan +
   pinch via `MultiTouchGesture`. Content is fit-and-centered when a level

@@ -1,22 +1,14 @@
-import {
-  Container,
-  DestroyOptions,
-  FederatedPointerEvent,
-  Point,
-  Rectangle
-} from 'pixi.js';
+import { Container, DestroyOptions, Point, Rectangle } from 'pixi.js';
 import { effect, EffectRef } from '@angular/core';
 
 import { Grid } from '../rendering/grid';
 import { ThemingService } from '../theming/theming.service';
 import { getStaticDI, getStaticInjector } from '../utils/get-di';
-import { ComponentConfig } from '../components/component-config.model';
-import { InteractionContainer } from '../rendering/interaction-container';
 import { Component } from '../components/component';
 import { Observable, Subject, Subscription } from 'rxjs';
 import { environment } from '../../environments/environment';
-import { WorkMode } from '../work-mode/work-mode.enum';
 import { FloatingLayer } from '../rendering/floating-layer';
+import { TickerSignal } from '../rendering/ticker-scheduler';
 import { ActionManager } from '../actions/action-manager';
 import { ActionContainer } from '../actions/action-container';
 import { SelectionManager } from './selection-manager';
@@ -34,7 +26,7 @@ import { AddWiresAction } from '../actions/actions/add-wires.action';
 import { RemoveWiresAction } from '../actions/actions/remove-wires.action';
 import { LoggingService } from '../logging/logging.service';
 
-export class Project extends InteractionContainer {
+export class Project extends Container {
   public readonly actionManager = new ActionManager(this);
   public readonly selectionManager = new SelectionManager(this);
 
@@ -44,11 +36,19 @@ export class Project extends InteractionContainer {
   // when environment.debug.showQuadTrees is on (cyan = wires, orange = components).
   private readonly _wires = new QuadTreeContainer<Wire>(0x00e5ff);
   private readonly _components = new QuadTreeContainer<Component>(0xff9100);
-  private readonly _floatingLayer = new FloatingLayer(this);
+  private readonly _floatingLayer = new FloatingLayer();
 
   private readonly _wireIntegrator = new WireIntegrator();
   private readonly _viewport: ViewportController;
-  private readonly _cursorPosition$ = new Subject<Point>();
+  // Render-loop signals for the hosting canvas (TickerScheduler on the board,
+  // the direct re-blit subscription on a watch).
+  private readonly _ticker$ = new Subject<TickerSignal>();
+  // Paste requests (ClipboardService → the WorkModeRouter, which opens the
+  // placement session in this project's floating layer).
+  private readonly _pasteRequest$ = new Subject<{
+    components: Component[];
+    wires: Wire[];
+  }>();
   // User-input components (button/lever) clicked while in simulation mode.
   // The model layer stays service-free: SimulationService subscribes while a
   // simulation is active.
@@ -75,14 +75,6 @@ export class Project extends InteractionContainer {
   constructor() {
     super();
 
-    this.boundsArea = new Rectangle(
-      -Number.MAX_VALUE / 2,
-      -Number.MAX_VALUE / 2,
-      Number.MAX_VALUE,
-      Number.MAX_VALUE
-    );
-    this.hitArea = this.boundsArea;
-
     this._gridSpace.scale.set(environment.gridSize);
 
     this.addChild(this._grid);
@@ -92,10 +84,6 @@ export class Project extends InteractionContainer {
     this._gridSpace.addChild(this._components);
     this._gridSpace.addChild(this._connectionPoints.layer);
     this._gridSpace.addChild(this._floatingLayer);
-
-    this.on('pointermove', (e: FederatedPointerEvent) => {
-      this._cursorPosition$.next(e.getLocalPosition(this._gridSpace));
-    });
 
     this._viewport = new ViewportController(this, this._grid, (scale) => {
       this._floatingLayer.updateScale(scale);
@@ -150,6 +138,19 @@ export class Project extends InteractionContainer {
     return this._gridSpace;
   }
 
+  /** The transient overlay (drag ghosts, negation preview) sessions render into. */
+  public get floatingLayer(): FloatingLayer {
+    return this._floatingLayer;
+  }
+
+  public get ticker$(): Observable<TickerSignal> {
+    return this._ticker$.asObservable();
+  }
+
+  public triggerTicker(value: TickerSignal): void {
+    this._ticker$.next(value);
+  }
+
   public get connectionPoints(): ConnectionPointManager {
     return this._connectionPoints;
   }
@@ -197,12 +198,6 @@ export class Project extends InteractionContainer {
   public zoomBy(factor: number, center?: Point): void {
     this._viewport.zoomBy(factor, center);
     this.triggerTicker('single');
-  }
-
-  /** Cancels any in-progress single-pointer drag (e.g. when a second finger
-   *  lands and the multi-touch gesture takes over). */
-  public abortActiveDrag(): void {
-    this._floatingLayer.abortActiveDrag();
   }
 
   public get viewportChange$(): Observable<ViewportState> {
@@ -254,10 +249,6 @@ export class Project extends InteractionContainer {
     this._floatingLayer.renderable = visible;
   }
 
-  public get cursorPosition$(): Observable<Point> {
-    return this._cursorPosition$.asObservable();
-  }
-
   public get userInput$(): Observable<Component> {
     return this._userInput$.asObservable();
   }
@@ -278,24 +269,15 @@ export class Project extends InteractionContainer {
     return this._viewport.gridPosition;
   }
 
-  public get mode(): WorkMode {
-    return this._floatingLayer.mode;
-  }
-
-  public set mode(mode: WorkMode) {
-    this._floatingLayer.mode = mode;
-  }
-
-  public get componentToPlace(): ComponentConfig | null {
-    return this._floatingLayer.componentToPlace;
-  }
-
-  public set componentToPlace(component: ComponentConfig | null) {
-    this._floatingLayer.componentToPlace = component;
+  public get pasteRequest$(): Observable<{
+    components: Component[];
+    wires: Wire[];
+  }> {
+    return this._pasteRequest$.asObservable();
   }
 
   public startPasteSession(components: Component[], wires: Wire[]): void {
-    this._floatingLayer.startPasteSession(components, wires);
+    this._pasteRequest$.next({ components, wires });
   }
 
   public addComponent(component: Component) {
@@ -600,7 +582,8 @@ export class Project extends InteractionContainer {
 
   public override destroy(options?: DestroyOptions): void {
     this._themeEffect?.destroy();
-    this._cursorPosition$.complete();
+    this._ticker$.complete();
+    this._pasteRequest$.complete();
     this._userInput$.complete();
     this._inspectRequest$.complete();
     this.actionManager.destroy();

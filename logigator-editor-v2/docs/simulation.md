@@ -305,7 +305,7 @@ main-thread from status-poll tick deltas), `tick`.
 
 ### User input
 
-In `SIMULATION` mode `FloatingLayer`'s `pointerdown` starts a `PanSession` (the
+In `SIMULATION` mode the `WorkModeRouter`'s `down` starts a `PanSession` (the
 same one-finger / left-drag pan as `WorkMode.PAN`), but editing stays locked:
 the session's tap callback — fired only when the press never crosses the pan
 threshold — hit-tests for a button/lever under the cursor and emits it on
@@ -348,7 +348,7 @@ already resolved through the watch index (`infoFor(path).unitIndexFor(i)`),
 2. Add its `BuiltInComponentType` id to `UNIT_TYPES` in
    `board-compiler.service.ts`.
 3. If it is a user input, handle it in `SimulationService._onUserInput` and emit
-   it on `Project.userInput$` from `FloatingLayer`'s simulation `pointerdown`
+   it on `Project.userInput$` from the `WorkModeRouter`'s simulation tap handler
    branch.
 4. Otherwise it emits as a plain unit; its pins map by `connectionPoints` order.
 5. If the type takes engine `ops` (per-type parameters), encode them in

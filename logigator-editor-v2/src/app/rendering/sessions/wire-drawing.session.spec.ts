@@ -10,7 +10,7 @@ import { textComponentConfig } from '../../components/component-types/text/text.
 import { TextComponent } from '../../components/component-types/text/text.component';
 import { andComponentConfig } from '../../components/component-types/and/and.config';
 import { AndComponent } from '../../components/component-types/and/and.component';
-import { makeMoveEvent } from '../../../testing/factories';
+import { makeMoveInput } from '../../../testing/factories';
 
 describe('WireDrawingSession + TextComponent (ignoresWireCollision)', () => {
   let project: Project;
@@ -40,7 +40,7 @@ describe('WireDrawingSession + TextComponent (ignoresWireCollision)', () => {
 
     // Start at (0,0), move right to (6,0) — passes through TEXT body at (3,0).
     session = new WireDrawingSession(project, dragLayer, new Point(0, 0));
-    session.onMove(makeMoveEvent(6, 0));
+    session.onMove(makeMoveInput(6, 0));
 
     expect(session.canEnd()).toBe(true);
   });
@@ -55,7 +55,7 @@ describe('WireDrawingSession + TextComponent (ignoresWireCollision)', () => {
 
     // AND body occupies (3,0)–(5,2); wire from (0,0)→(6,0) intersects it.
     session = new WireDrawingSession(project, dragLayer, new Point(0, 0));
-    session.onMove(makeMoveEvent(6, 0));
+    session.onMove(makeMoveInput(6, 0));
 
     expect(session.canEnd()).toBe(false);
   });

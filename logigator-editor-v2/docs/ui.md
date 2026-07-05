@@ -7,7 +7,7 @@ The `ui/` directory contains Angular component wrappers that frame the PixiJS ca
 ```
 src/app/ui/
 ├── board/
-│   ├── board.component.ts       # PixiJS Application host — the canvas bridge
+│   ├── board.component.ts       # Board canvas host — the Angular/PixiJS bridge
 │   └── board.component.html
 ├── component-settings/
 │   ├── component-settings.component.ts   # Dynamic option form for a selected component type
@@ -81,39 +81,35 @@ All UI components share these conventions:
 
 **File:** `board/board.component.ts`
 
-The PixiJS bridge. Hosts a single `<canvas>` element and owns the `Application` instance. All other UI components are Angular; this one straddles the Angular/PixiJS boundary.
+The PixiJS bridge. Hosts a single `<canvas>` element and blits the active project through the app-wide shared renderer (`RendererService`, see `rendering.md`). All other UI components are Angular; this one straddles the Angular/PixiJS boundary and owns only what is per-canvas: the render ticker, the cull pass, the viewport size and the input wiring.
 
 **Inputs / Outputs**
 
-| Name             | Direction | Type              | Purpose                                                                                    |
-| ---------------- | --------- | ----------------- | ------------------------------------------------------------------------------------------ |
-| `project`        | input     | `Project \| null` | The active project to display. Swapped into `app.stage` on change.                         |
-| `positionChange` | output    | `Point`           | Emits the current grid position whenever the viewport pans. Throttled to 33 ms (≈ 30 fps). |
+| Name                   | Direction | Type              | Purpose                                                                       |
+| ---------------------- | --------- | ----------------- | ----------------------------------------------------------------------------- |
+| `project`              | input     | `Project \| null` | The active project to display and render each frame.                          |
+| `cursorPositionChange` | output    | `Point`           | Emits the current grid position of the cursor. Throttled to 33 ms (≈ 30 fps). |
 
 **Initialization (`ngOnInit`)**
 
 1. Calls `AssetsService.init()` to load the Roboto Mono subset font and install the canvas bitmap-font atlas.
-2. Inside `NgZone.runOutsideAngular`, initializes the `Application` with:
-   - `canvas` bound to `#canvas` (ViewChild, `static: true`)
-   - `resizeTo` the host element, so it auto-resizes with the container
-   - `preference: 'webgpu'` (falls back to WebGL automatically)
-   - `antialias: true`, `autoStart: false`, `autoDensity: true`
-   - `resolution: window.devicePixelRatio || 1`
-   - `backgroundColor` from `ThemingService.currentTheme().background`
-   - `powerPreference: 'high-performance'`
-3. Sets `loaded` signal to `true`, making the canvas visible (it starts at `opacity-0` to avoid a flash before PixiJS is ready).
-4. Attaches a `renderer.on('resize')` listener that forwards the new dimensions to `project.resizeViewport()`.
+2. Acquires a `RendererService` lease (held until teardown) — this is what boots the shared renderer on app start.
+3. Measures the host and observes it with a `ResizeObserver`; resizes feed `project.resizeViewport()` and repaint one frame. The canvas fills the host via CSS, its backing store is sized per render.
+4. Creates the `PointerController` on the canvas (see `rendering.md`).
+5. Sets `loaded` signal to `true`, making the canvas visible (it starts at `opacity-0` to avoid a flash before PixiJS is ready).
+
+**Rendering**
+
+The component runs its own never-auto-started PixiJS `Ticker`. Each frame culls the active project against the viewport (`Culler.shared.cull`) and blits it via `lease.render(project, canvas)`, clearing to the theme background.
 
 **Project swapping**
 
 An Angular `effect` watches the `project` input and pushes changes into a `projectChange$` subject. On each new non-null project:
 
-- Calls `project.resizeViewport(renderer.width, renderer.height)`.
-- Assigns `app.stage = project` (the `Project` is a PixiJS `Container`).
-- Calls `app.ticker.update()` to force a single frame.
-- Emits the initial `positionChange`.
-- Subscribes to `project.positionChange$` for subsequent pan events.
-- Subscribes to `project.ticker$` to control the render loop:
+- Re-homes the `WorkModeRouter` via `setProject`.
+- Calls `project.resizeViewport()` with the measured host box.
+- Calls `ticker.update()` to force a single frame.
+- Creates a `TickerScheduler` over `project.ticker$` to control the render loop:
   - `'single'` — run one frame with `ticker.update()`
   - `'on'` — start the continuous ticker
   - `'off'` — run one final frame and stop
@@ -124,7 +120,7 @@ All subscriptions are scoped to `takeUntil(merge(destroy$, projectChange$))` so 
 
 **Cleanup (`ngOnDestroy`)**
 
-Completes `destroy$` and calls `app.destroy()` if the app was fully initialized.
+Completes `destroy$`, tears down the pointer controller, router, resize observer, scheduler and ticker, and releases the renderer lease (which destroys the shared renderer once no other canvas holds one).
 
 ---
 

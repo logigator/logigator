@@ -24,7 +24,7 @@ import { ComponentSettingsComponent } from './ui/component-settings/component-se
 import { ProjectService } from './project/project.service';
 import { PersistenceService } from './persistence/persistence.service';
 import { EditorSettingsService } from './settings/editor-settings.service';
-import { RendererHandleService } from './rendering/renderer-handle.service';
+import { RendererService } from './rendering/renderer.service';
 import { UnsavedChangesGuard } from './persistence/unsaved-changes.guard';
 import {
   LgConfirmDialog,
@@ -101,7 +101,7 @@ export class AppComponent {
   protected readonly layout = inject(LayoutService);
   protected readonly mobileUi = inject(MobileUiService);
   protected readonly editorSettings = inject(EditorSettingsService);
-  protected readonly rendererHandle = inject(RendererHandleService);
+  protected readonly rendererService = inject(RendererService);
   private readonly metadataStore = inject(ProjectMetadataStore);
   private readonly selectionInspector = inject(SelectionInspectorService);
   // Injected for its side effects: nothing renders it, but it must live from

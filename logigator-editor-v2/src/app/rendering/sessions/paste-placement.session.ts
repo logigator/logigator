@@ -1,5 +1,6 @@
-import { Container, FederatedPointerEvent, Point, Rectangle } from 'pixi.js';
+import { Container, Point, Rectangle } from 'pixi.js';
 import { DragSession } from '../drag-session';
+import { PointerInput } from '../interaction/pointer-input';
 import { Project } from '../../project/project';
 import { Component } from '../../components/component';
 import { Wire } from '../../wires/wire';
@@ -61,12 +62,9 @@ export class PastePlacementSession implements DragSession {
     this._collision.update();
   }
 
-  onMove(e: FederatedPointerEvent): void {
+  onMove(input: PointerInput): void {
     if (!this._isDragging) return;
-    const cursor = roundToGrid(
-      e.getLocalPosition(this._project.gridSpace),
-      true
-    );
+    const cursor = roundToGrid(input.grid, true);
     this._dragLayer.position.set(
       cursor.x - this._anchor!.x,
       cursor.y - this._anchor!.y

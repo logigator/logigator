@@ -5,7 +5,7 @@ import { RendererType, type Renderer, type WebGLRenderer } from 'pixi.js';
 import { environment } from '../../environments/environment';
 import { ProjectService } from '../project/project.service';
 import { BoardCompilerService } from '../simulation/compiler/board-compiler.service';
-import { RendererHandleService } from '../rendering/renderer-handle.service';
+import { RendererService } from '../rendering/renderer.service';
 import { PersistenceService } from '../persistence/persistence.service';
 import { ToastService } from '../logging/toast.service';
 import { pickTextFile } from '../utils/file-picker';
@@ -21,7 +21,7 @@ import { pickTextFile } from '../utils/file-picker';
 export class DebugMenuService {
   private readonly projectService = inject(ProjectService);
   private readonly boardCompiler = inject(BoardCompilerService);
-  private readonly rendererHandle = inject(RendererHandleService);
+  private readonly rendererService = inject(RendererService);
   private readonly persistence = inject(PersistenceService);
   private readonly toast = inject(ToastService);
 
@@ -65,7 +65,7 @@ export class DebugMenuService {
   }
 
   private printRendererMode(): void {
-    const renderer = this.rendererHandle.renderer;
+    const renderer = this.rendererService.renderer;
     if (!renderer) {
       this.toast.warn('Renderer is not ready yet.');
       return;

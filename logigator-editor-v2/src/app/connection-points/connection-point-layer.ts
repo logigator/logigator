@@ -4,9 +4,7 @@ import { ConnectionPoint } from './connection-point';
 export class ConnectionPointLayer extends Container<ConnectionPoint> {
   constructor() {
     super();
-    this.interactiveChildren = false;
     this.cullableChildren = false;
-    this.eventMode = 'none';
   }
 
   public applyScale(scale: number): void {
