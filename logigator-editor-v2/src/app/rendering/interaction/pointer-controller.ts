@@ -168,24 +168,23 @@ export class PointerController {
   }
 
   public onPointerUp(e: PointerEventLike): void {
-    if (e.pointerType === 'touch') {
-      this._gesture.onPointerUp(e.pointerId);
-    }
-    if (e.pointerId === this._panPointer) {
-      this._panPointer = null;
-      this._release(e.pointerId);
-      this.opts.nav.setActive(false);
-      return;
-    }
-    if (e.pointerId !== this._toolPointer) return;
-    this._toolPointer = null;
-    this._release(e.pointerId);
+    if (this._endPointer(e) !== 'tool') return;
     const project = this.opts.project();
     if (!project) return;
     this.opts.tool.up(this._input(e, this._localPosition(e), project));
   }
 
   public onPointerCancel(e: PointerEventLike): void {
+    if (this._endPointer(e) !== 'tool') return;
+    this.opts.tool.cancel();
+  }
+
+  /**
+   * Shared teardown for a lifted pointer (up and cancel): feeds the gesture,
+   * releases capture, and drops pan/tool ownership. Returns which stream the
+   * pointer owned so the caller can dispatch the final tool call.
+   */
+  private _endPointer(e: PointerEventLike): 'pan' | 'tool' | null {
     if (e.pointerType === 'touch') {
       this._gesture.onPointerUp(e.pointerId);
     }
@@ -193,12 +192,12 @@ export class PointerController {
       this._panPointer = null;
       this._release(e.pointerId);
       this.opts.nav.setActive(false);
-      return;
+      return 'pan';
     }
-    if (e.pointerId !== this._toolPointer) return;
+    if (e.pointerId !== this._toolPointer) return null;
     this._toolPointer = null;
     this._release(e.pointerId);
-    this.opts.tool.cancel();
+    return 'tool';
   }
 
   public onWheel(e: WheelEventLike): void {
