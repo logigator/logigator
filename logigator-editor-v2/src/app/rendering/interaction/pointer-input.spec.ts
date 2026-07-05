@@ -13,7 +13,10 @@ describe('canvasToGrid', () => {
   });
 
   it('subtracts the viewport pan offset before scaling', () => {
-    const viewport = { position: new Point(2 * gs, -gs), scale: new Point(1, 1) };
+    const viewport = {
+      position: new Point(2 * gs, -gs),
+      scale: new Point(1, 1)
+    };
     const grid = canvasToGrid(viewport, new Point(2 * gs, 0));
     expect(grid).toMatchObject({ x: 0, y: 1 });
   });

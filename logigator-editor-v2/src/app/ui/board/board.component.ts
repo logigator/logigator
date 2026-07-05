@@ -162,7 +162,12 @@ export class BoardComponent implements OnInit, OnDestroy {
       culler: { updateTransform: true },
       // The scene has no interactive nodes — the PointerController below owns
       // all canvas input. Keep PixiJS from hit-testing every pointer event.
-      eventFeatures: { move: false, click: false, wheel: false, globalMove: false }
+      eventFeatures: {
+        move: false,
+        click: false,
+        wheel: false,
+        globalMove: false
+      }
     });
 
     this.app.renderer.on('resize', (w, h) => {

@@ -164,10 +164,10 @@ A full-screen PixiJS `Container` that lives inside `_gridSpace` and sits above t
 
 ### Internal children
 
-| Field                 | Type                           | Purpose                                                                                                         |
-| --------------------- | ------------------------------ | --------------------------------------------------------------------------------------------------------------- |
-| `_dragLayer`          | `Container<Component \| Wire>` | Ghosts during placement/paste **and** detached selected elements during drag-move; exposed as `dragLayer`        |
-| `_negationHoverGhost` | `Graphics`                     | Lazily-created negation preview bubble, driven via `showNegationGhost(anchor)` / `hideNegationGhost()`           |
+| Field                 | Type                           | Purpose                                                                                                   |
+| --------------------- | ------------------------------ | --------------------------------------------------------------------------------------------------------- |
+| `_dragLayer`          | `Container<Component \| Wire>` | Ghosts during placement/paste **and** detached selected elements during drag-move; exposed as `dragLayer` |
+| `_negationHoverGhost` | `Graphics`                     | Lazily-created negation preview bubble, driven via `showNegationGhost(anchor)` / `hideNegationGhost()`    |
 
 `_selectRect` (`Graphics`) is a **transient** child added to and removed from `FloatingLayer` by `SelectRectSession`.
 

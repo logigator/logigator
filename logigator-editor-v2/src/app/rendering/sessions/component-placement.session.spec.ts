@@ -204,10 +204,9 @@ describe('ComponentPlacementSession collision', () => {
     // Wire at (0,0) horizontal length 5. TEXT placed at (1,0) — body inside wire.
     const wire = makeWire(0, 0, WireDirection.HORIZONTAL, 5);
     project.addWire(wire);
-    placeConfig =
-      textComponentConfig as unknown as ComponentConfig<
-        Record<string, ComponentOption>
-      >;
+    placeConfig = textComponentConfig as unknown as ComponentConfig<
+      Record<string, ComponentOption>
+    >;
     session = new ComponentPlacementSession(
       project,
       dragLayer,
@@ -222,10 +221,9 @@ describe('ComponentPlacementSession collision', () => {
     const existing = makeNot();
     existing.position.set(1, 0);
     project.addComponent(existing);
-    placeConfig =
-      textComponentConfig as unknown as ComponentConfig<
-        Record<string, ComponentOption>
-      >;
+    placeConfig = textComponentConfig as unknown as ComponentConfig<
+      Record<string, ComponentOption>
+    >;
     session = new ComponentPlacementSession(
       project,
       dragLayer,
