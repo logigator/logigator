@@ -20,12 +20,12 @@ import {
   },
   template: `
     @if (titleTpl()) {
-      <div class="mb-2 text-xl font-medium">
+      <div class="mb-2 text-xl font-medium wrap-break-word">
         <ng-container [ngTemplateOutlet]="titleTpl()!" />
       </div>
     }
     @if (subtitleTpl()) {
-      <div class="-mt-1 mb-3 text-muted">
+      <div class="-mt-1 mb-3 text-muted wrap-break-word">
         <ng-container [ngTemplateOutlet]="subtitleTpl()!" />
       </div>
     }
