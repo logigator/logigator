@@ -97,7 +97,6 @@ export class Wire extends Graphics implements Connectable {
   constructor(direction: WireDirection, gridLength?: number) {
     super();
 
-    this.interactiveChildren = false;
     this.context =
       this.graphicsProviderService.getGraphicsContext(WireGraphics);
 

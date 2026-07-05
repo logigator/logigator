@@ -17,7 +17,6 @@ export class Grid extends Container {
   constructor() {
     super();
 
-    this.interactiveChildren = false;
     // Grid chunks are repositioned every frame to fill the viewport, so they are
     // always on-screen — skip the Culler's per-chunk bounds checks.
     this.cullableChildren = false;
