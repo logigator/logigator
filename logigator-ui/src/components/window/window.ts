@@ -15,6 +15,7 @@ import {
 import { WindowSize } from './window-config';
 import { WindowRef } from './window-ref';
 import { OpenWindow } from './window.service';
+import { LgButton } from '@logigator/ui';
 
 interface Rect {
   x: number;
@@ -86,6 +87,7 @@ const CASCADE_WRAP = 8;
     '(pointercancel)': 'endDrag($event)',
     '(keydown.escape)': 'onEscape($event)'
   },
+  imports: [LgButton],
   template: `
     <div
       class="flex shrink-0 cursor-move touch-none items-center gap-2 border-b border-border px-3 py-1.5 select-none"
@@ -95,14 +97,13 @@ const CASCADE_WRAP = 8;
         {{ title() }}
       </h2>
       @if (closable()) {
-        <button
-          type="button"
+        <lg-button
           aria-label="Close"
-          class="inline-flex size-7 shrink-0 items-center justify-center rounded text-muted transition-colors hover:bg-content-hover hover:text-text"
+          icon="ph ph-x"
+          severity="none"
+          size="sm"
           (click)="entry().ref.close()"
-        >
-          <i class="ph ph-x" aria-hidden="true"></i>
-        </button>
+        ></lg-button>
       }
     </div>
     <div class="min-h-0 grow overflow-auto" [class]="bodyClass()">
