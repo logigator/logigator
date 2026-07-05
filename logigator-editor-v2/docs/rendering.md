@@ -1,13 +1,15 @@
 # Rendering Layer
 
-The rendering layer owns the PixiJS scene graph structure, viewport interaction, spatial indexing, shared graphics caching, and transient/floating UI elements. `Project` (a plain PixiJS `Container`) is the root of the scene and orchestrates all sub-layers. Canvas input never goes through PixiJS events — the `interaction/` layer listens to plain DOM pointer events (see below), and the board disables PixiJS's own canvas listeners via `eventFeatures` at `app.init`.
+The rendering layer owns the PixiJS renderer, the scene graph structure, viewport interaction, spatial indexing, shared graphics caching, and transient/floating UI elements. `Project` (a plain PixiJS `Container`) is the root of the scene and orchestrates all sub-layers. The whole app draws through **one** shared renderer (`RendererService`); every visible canvas — the board, each open watch — is a render _target_ of it, and offscreen consumers (minimap, image export, previews) render into textures on it. Canvas input never goes through PixiJS events — the `interaction/` layer listens to plain DOM pointer events (see below), and the shared renderer's own event features are disabled at creation.
 
 ## Directory Layout
 
 ```
 src/app/rendering/
 ├── assets.service.ts               # PixiJS Assets bootstrap (fonts)
-├── board-render-scheduler.ts       # Translates project ticker signals into Application renders
+├── board-snapshot.service.ts       # Offscreen render-to-texture (image export, previews, minimap)
+├── renderer.service.ts             # The single lease-counted renderer shared by every canvas
+├── ticker-scheduler.ts             # Translates project ticker signals into board frames
 ├── drag-collision.ts               # Shared collision detection for drag sessions
 ├── drag-session.ts                 # DragSession interface implemented by all session classes
 ├── floating-layer.ts               # Visual host: drag-session ghosts + negation hover preview
@@ -41,7 +43,7 @@ All circuit data is stored in **grid units**. The `_gridSpace` container in `Pro
 
 ### Ticker control
 
-The PixiJS `Application` is created with `autoStart: false` in `BoardComponent`. Rendering frames are emitted on demand via the `_ticker$` Subject exposed as `ticker$` on `Project`. Three signal values control the ticker: `'single'` fires one frame (for state changes that don't involve continuous motion), `'on'` starts continuous rendering (during pointer drags), and `'off'` fires one final frame then stops. `BoardRenderScheduler` (see below) consumes these signals and turns them into renders.
+`BoardComponent` owns a plain PixiJS `Ticker` (never auto-started) whose frame callback culls and blits the active project through the shared renderer. Rendering frames are emitted on demand via the `_ticker$` Subject exposed as `ticker$` on `Project`. Three signal values control the ticker: `'single'` fires one frame (for state changes that don't involve continuous motion), `'on'` starts continuous rendering (during pointer drags), and `'off'` fires one final frame then stops. `TickerScheduler` (see below) consumes these signals and turns them into renders.
 
 ### Scene graph order inside `Project`
 
@@ -55,13 +57,13 @@ Project (stage root)
     └── FloatingLayer
 ```
 
-`Project` is added directly as the PixiJS `app.stage`. The background grid is pixel-authored and stays a direct child of `Project`. All circuit content lives inside `_gridSpace` so that setting `position = (gx, gy)` on any circuit object automatically places it at the correct world-pixel location without conversion.
+`Project` is the render root the board blits each frame (`renderer.render({ container: project, target: canvas })`), so its own transform — the pan/zoom — applies at render time. The background grid is pixel-authored and stays a direct child of `Project`. All circuit content lives inside `_gridSpace` so that setting `position = (gx, gy)` on any circuit object automatically places it at the correct world-pixel location without conversion.
 
 ---
 
 ## `interaction/` — DOM input layer
 
-Canvas input is plain DOM: no scene node is interactive, and all element hit tests are manual quad-tree queries. The same two classes drive the board and every sub-circuit watch canvas (whose shared renderer has no event system at all).
+Canvas input is plain DOM: no scene node is interactive, and all element hit tests are manual quad-tree queries. The same two classes drive the board and every sub-circuit watch canvas — all targets of the one shared renderer, whose own event features are disabled.
 
 ### `PointerController`
 
@@ -93,23 +95,36 @@ Sessions receive `project.floatingLayer.dragLayer` (or the floating layer itself
 
 ---
 
-## `BoardRenderScheduler`
+## `TickerScheduler`
 
-**File:** `board-render-scheduler.ts`
+**File:** `ticker-scheduler.ts`
 
-Translates a project's `ticker$` signals into renders of the board's PixiJS `Application`. `BoardComponent` constructs one per project (passing `this.app` and `project.ticker$`) and `destroy()`s it on project switch and on component teardown, so a project's run-count and any queued frame never leak across stages.
+Translates a project's `ticker$` signals into frames of the board's render ticker. `BoardComponent` constructs one per project (passing its `Ticker` and `project.ticker$`) and `destroy()`s it on project switch and on component teardown, so a project's run-count and any queued frame never leak across stages.
 
-| Signal     | Effect                                                                                              |
-| ---------- | --------------------------------------------------------------------------------------------------- |
-| `'on'`     | Increments the run-count and `app.ticker.start()` — continuous rendering.                           |
-| `'off'`    | Decrements; at zero, cancels any queued single frame, fires one final `app.ticker.update()`, stops. |
-| `'single'` | While the run-count is zero, schedules one render (see coalescing below); otherwise a no-op.        |
+| Signal     | Effect                                                                                          |
+| ---------- | ----------------------------------------------------------------------------------------------- |
+| `'on'`     | Increments the run-count and `ticker.start()` — continuous rendering.                           |
+| `'off'`    | Decrements; at zero, cancels any queued single frame, fires one final `ticker.update()`, stops. |
+| `'single'` | While the run-count is zero, schedules one render (see coalescing below); otherwise a no-op.    |
 
 **Reference-counted run-count** — any number of concerns (a simulation run, a pan, a drag session) can hold the continuous ticker on at once via `'on'`/`'off'`; it stops only once the last one releases. Without this, a transient interaction's `'off'` (e.g. finishing a pan) would stop the ticker a running simulation still needs. While the run-count is non-zero the board already renders every frame, so `'single'` signals are ignored.
 
 **`'single'` coalescing** — a single user operation can emit many `'single'` signals synchronously (e.g. undoing a move re-positions N elements, each calling `triggerTicker('single')`); rendering once per signal would do N full-board renders for one frame's worth of change. The scheduler collapses them onto **one** `requestAnimationFrame`-driven render: the first `'single'` queues a frame, subsequent ones are no-ops until it fires, and the rAF callback re-checks the run-count (a run may have started while it was queued, in which case it already renders). The result is that we never draw more frames than the display can show, regardless of signal count — while preserving the stop-when-idle property (no always-running rAF loop).
 
 > Renders are therefore deferred to the next animation frame (≤ ~16 ms) rather than fully synchronous. For an interactive editor this is imperceptible, but code must not assume the canvas is visually up-to-date in the same synchronous tick as a `'single'` emit.
+
+---
+
+## `RendererService`
+
+**File:** `renderer.service.ts`
+
+Owns the app's **single** PixiJS renderer. Every canvas (board, watches) leases it via `acquire()` and blits through `lease.render(container, canvas)`; offscreen consumers (`BoardSnapshotService`, and the minimap through it) read the `renderer` getter directly and gate on the `available` signal instead of leasing — they only ever render while a canvas host is alive.
+
+- **Lifecycle** — created lazily on the first lease (`autoDetectRenderer`, `webgpu` → `webgl` → `canvas` ladder), destroyed when the last lease releases. In practice the board holds a lease for its whole lifetime, so the renderer lives as long as a board is mounted; `available` flips true once it boots.
+- **Multi-canvas** — WebGPU and Canvas drive multiple target canvases natively; the WebGL branch is created with `multiView` (an off-DOM master canvas sized to the largest target, blitted to each target canvas per render — one extra copy per frame on that backend only).
+- **`lease.render`** sizes the target's backing store through its cached `CanvasSource` (CSS box × device pixel ratio — never via `canvas.width`, which would desync pixi's cached render target), then renders with the theme background as clear color. Render space stays in CSS pixels; the DPR only sharpens the backing store.
+- **Culling is the caller's concern** — the board culls its project against its viewport before rendering; watch canvases and offscreen snapshots instead force their subtree visible via the exported `uncullTree` helper, since no cull pass runs for them and stale `culled` bits from another view would hide content.
 
 ---
 
@@ -356,42 +371,42 @@ Angular `Injectable` (root-provided). Registers the Roboto Mono subset woff2 wit
 
 The FontFace is registered under a bake-only family name (`Roboto Mono Canvas`) rather than `Roboto Mono`: the Google Fonts stylesheet registers lazy same-named faces, and resolving the bake to a still-unloaded one would silently rasterize a fallback font into the atlas.
 
-`BoardComponent.ngOnInit` awaits `assetsService.init()` before initializing the PixiJS `Application`, guaranteeing the atlas exists before any `BitmapText` is created during scene construction.
+`BoardComponent.ngOnInit` awaits `assetsService.init()` before acquiring the shared renderer, guaranteeing the atlas exists before any `BitmapText` is created during scene construction.
 
 ---
 
 ## Integration with the rest of the app
 
-| Rendering class           | Consumed by                                                | How                                                                              |
-| ------------------------- | ---------------------------------------------------------- | -------------------------------------------------------------------------------- |
-| `PointerController`       | `BoardComponent`, `SubCircuitWatchComponent`               | One per canvas; normalizes DOM pointer/wheel/touch input                         |
-| `WorkModeRouter`          | `BoardComponent`                                           | The board's tool target; dispatches modes into `DragSession`s                    |
-| `BoardRenderScheduler`    | `BoardComponent`                                           | One per project; turns `project.ticker$` signals into `Application` renders      |
-| `Grid`                    | `Project`                                                  | Instantiated privately; forwarded position/scale changes                         |
-| `FloatingLayer`           | `Project`, sessions (via `WorkModeRouter`)                 | Visual host for session ghosts and the negation hover preview                    |
-| `DragCollisionState`      | `PastePlacementSession`, `SelectionMoveSession`            | Shared component+wire collision detection against the project's quad trees       |
-| `QuadTreeContainer`       | `Project`                                                  | Used as `_wires` and `_components` inside `_gridSpace`                           |
-| `GraphicsProviderService` | `Wire`, `Grid` (via `getStaticDI`), any component subclass | Shared `GraphicsContext` deduplication                                           |
-| `AssetsService`           | `BoardComponent`                                           | Loaded before `Application` init                                                 |
-| `ComponentGraphics`       | Component subclasses                                       | Via `GraphicsProviderService.getGraphicsContext(ComponentGraphics, w, h, scale)` |
-| `WireGraphics`            | `Wire` constructor                                         | Via `GraphicsProviderService.getGraphicsContext(WireGraphics)`                   |
-| `GridGraphics`            | `Grid.draw()`                                              | Via `GraphicsProviderService.getGraphicsContext(GridGraphics, chunkSize, scale)` |
+| Rendering class           | Consumed by                                                                                                | How                                                                              |
+| ------------------------- | ---------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------- |
+| `PointerController`       | `BoardComponent`, `SubCircuitWatchComponent`                                                               | One per canvas; normalizes DOM pointer/wheel/touch input                         |
+| `WorkModeRouter`          | `BoardComponent`                                                                                           | The board's tool target; dispatches modes into `DragSession`s                    |
+| `RendererService`         | `BoardComponent`, `SubCircuitWatchComponent` (leases); `BoardSnapshotService`, `DebugMenuService` (direct) | The one shared renderer; leased per canvas, read directly for offscreen renders  |
+| `TickerScheduler`         | `BoardComponent`                                                                                           | One per project; turns `project.ticker$` signals into board ticker frames        |
+| `Grid`                    | `Project`                                                                                                  | Instantiated privately; forwarded position/scale changes                         |
+| `FloatingLayer`           | `Project`, sessions (via `WorkModeRouter`)                                                                 | Visual host for session ghosts and the negation hover preview                    |
+| `DragCollisionState`      | `PastePlacementSession`, `SelectionMoveSession`                                                            | Shared component+wire collision detection against the project's quad trees       |
+| `QuadTreeContainer`       | `Project`                                                                                                  | Used as `_wires` and `_components` inside `_gridSpace`                           |
+| `GraphicsProviderService` | `Wire`, `Grid` (via `getStaticDI`), any component subclass                                                 | Shared `GraphicsContext` deduplication                                           |
+| `AssetsService`           | `BoardComponent`                                                                                           | Loaded before the renderer lease is acquired                                     |
+| `ComponentGraphics`       | Component subclasses                                                                                       | Via `GraphicsProviderService.getGraphicsContext(ComponentGraphics, w, h, scale)` |
+| `WireGraphics`            | `Wire` constructor                                                                                         | Via `GraphicsProviderService.getGraphicsContext(WireGraphics)`                   |
+| `GridGraphics`            | `Grid.draw()`                                                                                              | Via `GraphicsProviderService.getGraphicsContext(GridGraphics, chunkSize, scale)` |
 
 ### `BoardComponent` wiring
 
-`BoardComponent` (`ui/board/board.component.ts`) is the Angular host. It:
+`BoardComponent` (`ui/board/board.component.ts`) is the Angular host. It owns only what is per-canvas — the render ticker, the cull pass, the viewport size, the input wiring — and draws through the shared renderer. It:
 
-1. Registers `CullerPlugin` (`extensions.add` at module load — see [Culling](#culling)).
-2. Awaits `AssetsService.init()`.
-3. Creates `Application` with `autoStart: false`, `preference: 'webgpu'`, `resolution: devicePixelRatio`, and `eventFeatures` fully disabled (no PixiJS canvas listeners or hit-testing).
-4. Sets `app.stage = project` when a `Project` input arrives, and re-homes the `WorkModeRouter` via `setProject`.
-5. Creates a `BoardRenderScheduler` per project (over `project.ticker$`) that translates `'single'`/`'on'`/`'off'` into `app.ticker.update()` / `.start()` / `.stop()`.
-6. Forwards renderer resize events to `project.resizeViewport`.
-7. Creates the `PointerController` on the canvas, with the router as tool target and the active project as navigation target; its `onCursorMove` feeds the throttled `cursorPositionChange` output.
+1. Awaits `AssetsService.init()`, then acquires a `RendererService` lease (held until teardown).
+2. Runs a never-auto-started `Ticker` whose frame callback culls the active project against the viewport (see [Culling](#culling)) and blits it via `lease.render(project, canvas)`.
+3. Re-homes the `WorkModeRouter` via `setProject` when a `Project` input arrives, and re-sizes the project's viewport to the host box.
+4. Creates a `TickerScheduler` per project (over `project.ticker$`) that translates `'single'`/`'on'`/`'off'` into `ticker.update()` / `.start()` / `.stop()`.
+5. Observes the host element with a `ResizeObserver`; resizes feed `project.resizeViewport` and repaint one frame. The canvas fills the host via CSS; its backing store follows per render.
+6. Creates the `PointerController` on the canvas, with the router as tool target and the active project as navigation target; its `onCursorMove` feeds the throttled `cursorPositionChange` output.
 
 ### Culling
 
-Off-screen scene nodes are skipped at render time via PixiJS's native `CullerPlugin`. The plugin patches `app.render` to run `Culler.shared.cull(stage, renderer.screen)` before each render; because it has a higher extension priority (10) than `TickerPlugin` (which captures the `app.render` reference at init), the cull pass runs on every ticker-driven render — including the demand-driven `'single'` frames. No extra render scheduling is needed: pan/zoom already re-render, so the cull rect stays current. `culler: { updateTransform: true }` is set in `app.init` so the cull pass recomputes transforms; otherwise it reads each node's previous-frame `worldTransform` and would drop the edge elements a pan/zoom just revealed until the next render.
+Off-screen scene nodes are skipped at render time via PixiJS's native `Culler`. The board's frame callback runs `Culler.shared.cull(project, view, false)` immediately before each blit, so the cull pass runs on every ticker-driven render — including the demand-driven `'single'` frames — against the host's CSS box as the view rect. No extra render scheduling is needed: pan/zoom already re-render, so the cull rect stays current. The `false` third argument makes the cull pass recompute transforms; otherwise it reads each node's previous-frame `worldTransform` and would drop the edge elements a pan/zoom just revealed until the next render.
 
 **Culling happens only at the quad-tree level — individual elements are never bounds-checked:**
 

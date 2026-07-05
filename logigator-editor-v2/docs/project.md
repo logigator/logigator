@@ -1,6 +1,6 @@
 # Project Layer
 
-The project layer is the central owner of all circuit state. `Project` is the root PixiJS scene node (the PixiJS `app.stage`) and the single source of truth for everything on the canvas. `ProjectService` is the Angular-managed wrapper that tracks which projects are currently loaded and which one is active.
+The project layer is the central owner of all circuit state. `Project` is the root PixiJS scene node (the container the board renders) and the single source of truth for everything on the canvas. `ProjectService` is the Angular-managed wrapper that tracks which projects are currently loaded and which one is active.
 
 ## Directory Layout
 
@@ -15,9 +15,9 @@ src/app/project/
 
 ## Core Concepts
 
-### Project as PixiJS stage
+### Project as render root
 
-`Project` extends PixiJS `Container`. An instance is created in `AppComponent` and passed as `app.stage` to the PixiJS `Application` inside `BoardComponent`. Everything rendered on the canvas is a descendant of `Project`.
+`Project` extends PixiJS `Container`. An instance is created in `AppComponent` and rendered as the root container by `BoardComponent` (`renderer.render({ container: project, target: canvas })` through the shared renderer). Everything rendered on the canvas is a descendant of `Project`.
 
 Canvas navigation (`pan`, `zoomIn`, `zoomOut`, `zoomBy`) is implemented through the `ViewportController`; the DOM `PointerController` (see `rendering.md`) calls these on right-drag, wheel, and touch gestures. `Project` itself listens to no pointer events.
 
@@ -174,7 +174,7 @@ Angular root-provided singleton. Tracks up to three states using Angular `signal
 | Consuming layer    | How it uses `Project` / `ProjectService`                                                                                                                                                                                                                                                                                      |
 | ------------------ | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `AppComponent`     | Creates the initial `Project` in its constructor (`new Project()`), calls `projectService.setMainProject`. Reads `activeProject()` to feed `BoardComponent`.                                                                                                                                                                  |
-| `BoardComponent`   | Receives `Project` as an `input()`. Sets it as `app.stage`. Subscribes to `ticker$` and `positionChange$`. Forwards work-mode signals via `effect`.                                                                                                                                                                           |
+| `BoardComponent`   | Receives `Project` as an `input()`. Renders it as the root container each frame. Subscribes to `ticker$` and `positionChange$`. Forwards work-mode signals via `effect`.                                                                                                                                                      |
 | `FloatingLayer`    | Holds a direct reference to its parent `Project`. Reads `project.mode`, `project.componentToPlace`, `project.scale`, `project.gridSpace`. Calls `project.actionManager.push(...)` on commit, `project.selectionManager.commit/clear/containsPoint` for selection, and `project.detachForDrag/reattachFromDrag` for drag-move. |
 | `ClipboardService` | Reads `project.selectionManager.selectedComponents`/`selectedWires` to serialize, calls `project.removeComponent`/`removeWire` for delete, calls `project.startPasteSession()` for paste, calls `project.actionManager.register()` and `project.selectionManager.claimPendingCut()`.                                          |
 | `ActionManager`    | Owned by `Project` as `project.actionManager`. All action `do`/`undo` implementations receive the `Project` and call `addComponent`, `removeComponent`, `addWire`, `removeWire`, `moveComponent`, or `moveWire`.                                                                                                              |
@@ -193,11 +193,11 @@ AppComponent constructor
 
 BoardComponent ngOnInit
   └── assetsService.init()               // loads fonts
-  └── app.init(...)                      // creates PixiJS Application (WebGPU preferred)
+  └── rendererService.acquire()          // leases the shared renderer (WebGPU preferred)
 
 BoardComponent effect (project input changes)
   └── project.resizeViewport(w, h)
-  └── app.stage = project
+  └── ticker.update()                    // renders the project to the board canvas
   └── subscribe project.ticker$
   └── subscribe project.positionChange$
 

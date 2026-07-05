@@ -24,13 +24,14 @@ import type {
   WatchLevel
 } from '../../components/custom/sub-circuit-watch';
 import {
-  WatchRendererLease,
-  WatchRendererService
-} from './watch-renderer.service';
+  RendererLease,
+  RendererService,
+  uncullTree
+} from '../../rendering/renderer.service';
 
 /**
  * Renderer for {@link SubCircuitWatch}: a canvas blitted through the shared
- * watch renderer, showing the active level's headless project (the breadcrumb
+ * app renderer, showing the active level's headless project (the breadcrumb
  * trail lives in the hosting header via the inspection's `titleParts`). Fits
  * the content when a level first shows, then pans/zooms through the project's
  * own viewport controller. Input runs through the shared PointerController
@@ -48,13 +49,13 @@ import {
 export class SubCircuitWatchComponent implements AfterViewInit, OnDestroy {
   public readonly inspection = input.required<SubCircuitWatch>();
 
-  private readonly watchRenderer = inject(WatchRendererService);
+  private readonly rendererService = inject(RendererService);
   private readonly injector = inject(Injector);
 
   @ViewChild('canvas', { static: true })
   private readonly canvas!: ElementRef<HTMLCanvasElement>;
 
-  private lease: WatchRendererLease | null = null;
+  private lease: RendererLease | null = null;
   private destroyed = false;
   private resizeObserver: ResizeObserver | null = null;
   private readonly subs = new Subscription();
@@ -115,7 +116,7 @@ export class SubCircuitWatchComponent implements AfterViewInit, OnDestroy {
       { injector: this.injector }
     );
 
-    void this.watchRenderer.acquire().then((lease) => {
+    void this.rendererService.acquire().then((lease) => {
       if (this.destroyed) {
         lease.release();
         return;
@@ -231,6 +232,9 @@ export class SubCircuitWatchComponent implements AfterViewInit, OnDestroy {
     if (this.destroyed || !this.lease) {
       return;
     }
+    // No cull pass runs on watch renders — force the subtree visible so stale
+    // `culled` bits can't hide content.
+    uncullTree(this.project);
     this.lease.render(this.project, this.canvas.nativeElement);
   }
 }

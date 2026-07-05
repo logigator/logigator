@@ -1,6 +1,6 @@
 <canvas
   #canvas
-  class="absolute touch-none transition-opacity duration-150 ease-out"
+  class="absolute inset-0 h-full w-full touch-none transition-opacity duration-150 ease-out"
   [class.opacity-0]="!loaded()"
 ></canvas>
 @if (editorSettings.fpsCounter.value() && loaded()) {

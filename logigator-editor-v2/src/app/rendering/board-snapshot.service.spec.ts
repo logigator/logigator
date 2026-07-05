@@ -6,7 +6,7 @@ import { configureTestBed } from '../../testing/configure-test-bed';
 import { Project } from '../project/project';
 import { makeAnd } from '../../testing/factories';
 import { BoardSnapshotService } from './board-snapshot.service';
-import { RendererHandleService } from './renderer-handle.service';
+import { RendererService } from './renderer.service';
 import { ThemingService } from '../theming/theming.service';
 
 interface RenderCall {
@@ -21,6 +21,7 @@ describe('BoardSnapshotService', () => {
   let service: BoardSnapshotService;
   let renderCalls: RenderCall[];
   let renderer: Renderer;
+  let rendererService: { renderer: Renderer | null; available(): boolean };
 
   function collectBitmapTexts(
     node: Container,
@@ -34,9 +35,6 @@ describe('BoardSnapshotService', () => {
   }
 
   beforeEach(() => {
-    configureTestBed();
-    project = new Project();
-
     renderCalls = [];
     renderer = {
       render: vi.fn((opts: RenderCall) => renderCalls.push(opts)),
@@ -47,7 +45,12 @@ describe('BoardSnapshotService', () => {
           }) as unknown as HTMLCanvasElement
       }
     } as unknown as Renderer;
-    TestBed.inject(RendererHandleService).set(renderer);
+    rendererService = {
+      renderer,
+      available: () => rendererService.renderer !== null
+    };
+    configureTestBed([{ provide: RendererService, useValue: rendererService }]);
+    project = new Project();
     service = TestBed.inject(BoardSnapshotService);
   });
 
@@ -55,9 +58,9 @@ describe('BoardSnapshotService', () => {
     project.destroy({ children: true });
   });
 
-  it('reports availability from the renderer handle', () => {
+  it('reports availability from the renderer service', () => {
     expect(service.available).toBe(true);
-    TestBed.inject(RendererHandleService).set(null);
+    rendererService.renderer = null;
     expect(service.available).toBe(false);
   });
 
@@ -217,7 +220,7 @@ describe('BoardSnapshotService', () => {
   });
 
   it('generatePreviews returns null without a renderer', async () => {
-    TestBed.inject(RendererHandleService).set(null);
+    rendererService.renderer = null;
     expect(await service.generatePreviews(project, 512)).toBeNull();
   });
 

@@ -9,7 +9,7 @@ import {
   Text,
   type ColorSource
 } from 'pixi.js';
-import { RendererHandleService } from './renderer-handle.service';
+import { RendererService, uncullTree } from './renderer.service';
 import { GraphicsProviderService } from './graphics-provider.service';
 import { GridGraphics } from './graphics/grid.graphics';
 import { ThemingService } from '../theming/theming.service';
@@ -64,13 +64,13 @@ const REFERENCE_STEP = 0;
   providedIn: 'root'
 })
 export class BoardSnapshotService {
-  private readonly rendererHandle = inject(RendererHandleService);
+  private readonly rendererService = inject(RendererService);
   private readonly graphicsProvider = inject(GraphicsProviderService);
   private readonly themingService = inject(ThemingService);
 
-  /** Whether a renderer is registered (false before the board has loaded). */
+  /** Whether a renderer is live (false before the board has loaded). */
   public get available(): boolean {
-    return this.rendererHandle.available();
+    return this.rendererService.available();
   }
 
   /**
@@ -207,9 +207,9 @@ export class BoardSnapshotService {
     region: Rectangle,
     options: SnapshotOptions
   ): HTMLCanvasElement {
-    const renderer = this.rendererHandle.renderer;
+    const renderer = this.rendererService.renderer;
     if (!renderer) {
-      throw new Error('BoardSnapshotService: no renderer registered');
+      throw new Error('BoardSnapshotService: no renderer available');
     }
     const texture = this.renderRegionToTexture(project, region, options);
     try {
@@ -232,9 +232,9 @@ export class BoardSnapshotService {
     region: Rectangle,
     options: SnapshotOptions
   ): RenderTexture {
-    const renderer = this.rendererHandle.renderer;
+    const renderer = this.rendererService.renderer;
     if (!renderer) {
-      throw new Error('BoardSnapshotService: no renderer registered');
+      throw new Error('BoardSnapshotService: no renderer available');
     }
 
     const gridSize = environment.gridSize;
@@ -289,11 +289,11 @@ export class BoardSnapshotService {
       .scale(pxPerUnit, pxPerUnit)
       .translate(tx, ty);
 
-    // The CullerPlugin only runs on the on-screen ticker render, never on a
-    // manual render-to-texture, so off-screen quad-tree entries keep last
+    // The board's cull pass only runs on the on-screen ticker render, never on
+    // a manual render-to-texture, so off-screen quad-tree entries keep last
     // frame's `culled` bit and would be missing here. Force the content subtree
     // visible; the next on-screen frame re-culls against the live viewport.
-    this._uncull(project.gridSpace);
+    uncullTree(project.gridSpace);
     project.setOverlayVisible(false);
 
     // Render the content at `lineScale`, independent of the live zoom, so the
@@ -413,12 +413,5 @@ export class BoardSnapshotService {
     const original = nodes.map((n) => n.resolution);
     for (const node of nodes) node.resolution = resolution;
     return () => nodes.forEach((n, i) => (n.resolution = original[i]));
-  }
-
-  private _uncull(container: Container): void {
-    container.culled = false;
-    for (const child of container.children) {
-      this._uncull(child as Container);
-    }
   }
 }
