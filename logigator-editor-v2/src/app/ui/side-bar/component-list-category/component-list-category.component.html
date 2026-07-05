@@ -1,4 +1,4 @@
-<div class="flex flex-wrap gap-2">
+<div class="flex flex-wrap gap-2 pt-1.5 pl-1.5">
   @for (comp of components(); track comp.type) {
     @let selected = selectedComponent() === comp.type;
     <button
@@ -18,9 +18,13 @@
         }
         @if (selected) {
           <span
-            class="absolute -top-1.5 -right-1.5 flex items-center justify-center w-4 h-4 rounded-full bg-primary text-surface-950"
+            class="absolute -top-px -right-px w-5 h-5 overflow-hidden rounded-tr-md"
           >
-            <i class="ph ph-check text-xs"></i>
+            <span
+              class="absolute inset-0 flex items-start justify-end pt-0.5 pr-0.5 bg-primary text-surface-950 [clip-path:polygon(100%_0,100%_100%,0_0)]"
+            >
+              <i class="ph ph-check text-[0.5rem]"></i>
+            </span>
           </span>
         }
       </span>
