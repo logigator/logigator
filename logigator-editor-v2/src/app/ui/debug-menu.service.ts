@@ -9,6 +9,10 @@ import { RendererHandleService } from '../rendering/renderer-handle.service';
 import { PersistenceService } from '../persistence/persistence.service';
 import { ToastService } from '../logging/toast.service';
 import { pickTextFile } from '../utils/file-picker';
+import {
+  runWatchRendererSpike,
+  SpikePreference
+} from '../inspection/watch/watch-renderer-spike';
 
 /**
  * Builds the title-bar "Debug" menu and owns its commands. Gated by
@@ -43,10 +47,28 @@ export class DebugMenuService {
         },
         { label: 'Spawn test toasts', command: () => this.spawnTestToasts() },
         { separator: true },
+        {
+          label: 'Watch renderer spike',
+          command: () => this.watchRendererSpike()
+        },
+        {
+          label: 'Watch renderer spike (canvas)',
+          command: () => this.watchRendererSpike('canvas')
+        },
+        { separator: true },
         { label: 'Generate dump', command: () => this.generateDump() },
         { label: 'Import dump', command: () => this.importDump() }
       ]
     };
+  }
+
+  private watchRendererSpike(preference?: SpikePreference): void {
+    runWatchRendererSpike(preference)
+      .then((mode) => this.toast.info(`Watch renderer spike: ${mode}`))
+      .catch((err: unknown) => {
+        console.error('[debug] watch renderer spike failed', err);
+        this.toast.error('Watch renderer spike failed — see console.');
+      });
   }
 
   private printCompiledBoard(): void {
