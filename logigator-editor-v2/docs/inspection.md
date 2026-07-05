@@ -1,19 +1,21 @@
 # Live Component Inspection
 
-Inspecting a component's data while the simulation runs: tapping an
-inspectable component in `SIMULATION` mode opens a live view of it — a
-floating, draggable window over the board on desktop, a shared non-modal
-bottom sheet on compact. The first (and currently only) inspectable type is
-the ROM, whose view is the read-only hex editor with the currently addressed
-word highlighted.
+Inspecting a component while the simulation runs: tapping an inspectable
+component in `SIMULATION` mode opens a live view of it — a floating, draggable
+window over the board on desktop; on compact, the shared non-modal bottom
+sheet or (for canvas-hosting views) a fullscreen takeover. Two content kinds
+exist: the ROM's **data inspector** (read-only hex editor, addressed word
+highlighted) and the custom component's **watch** (a live canvas view of its
+inner circuit — see [The Custom-Component Watch](#the-custom-component-watch)).
 
 ```
 tap on canvas (FloatingLayer, SIMULATION mode)
   └► Project.inspectRequest$ ── InspectionService.openFor(component)
        config.inspection(component) ──► ComponentInspection (model)
-       └► presenter (by breakpoint)
-            desktop: WindowInspectionPresenter ─► WindowService (lg-window-outlet)
-            compact: SheetInspectionPresenter ──► InspectionSheetComponent (lg-drawer, modal=false)
+       └► presenter (by breakpoint + compactPresentation)
+            desktop: WindowInspectionPresenter ────► WindowService (lg-window-outlet)
+            compact: SheetInspectionPresenter ─────► InspectionSheetComponent (lg-drawer, modal=false)
+            compact: FullscreenInspectionPresenter ► FullscreenInspectionComponent (takeover)
 SimulationWorkerService onFrame ─► SimulationService.frame$ ─► inspection.onFrame()
 ```
 
@@ -37,6 +39,9 @@ The contract:
   (windows via `setInput`, the sheet via `*ngComponentOutlet` inputs).
 - `title: Signal<string>` — live window / sheet-tab title.
 - `sizing?` — desktop window size hints (initial/min/max).
+- `compactPresentation?` — how the inspection presents on compact: the shared
+  bottom sheet (default) or a fullscreen takeover (`'fullscreen'`, used by the
+  watch — a canvas view needs the space).
 - `onFrame?()` — refresh hook, called after every applied snapshot (and after
   `stop()`'s visual reset). Inspections re-read main-thread state here and
   update their own signals; OnPush renderers pick the changes up.
@@ -57,15 +62,19 @@ renders it; it must live from startup). Responsibilities:
 - **Open**: `openFor(component)` — at most one inspection per component
   instance; a second tap focuses the existing view. Components whose config
   declares no `inspection` are ignored (the `FloatingLayer` already filters,
-  this is defense in depth).
+  this is defense in depth). A factory that **throws** (a watch can
+  legitimately fail to open when the definition no longer matches the compiled
+  board) surfaces as an error toast instead of crashing the tap.
 - **Session binding**: while `WorkModeService.mode()` is `SIMULATION` it
   subscribes to the active project's `inspectRequest$`; leaving simulation
   mode closes every inspection.
 - **Frame fan-out**: subscribes `SimulationService.frame$` once and calls
   every open inspection's `onFrame()`.
-- **Presenter routing**: `LayoutService.isCompact()` picks the presenter, and
-  a breakpoint flip mid-session _re-homes_ open inspections live — windows
-  become sheet tabs and back.
+- **Presenter routing**: per entry — desktop always uses windows; compact uses
+  the sheet, or the fullscreen takeover for `compactPresentation:
+'fullscreen'` entries. A breakpoint flip mid-session _re-homes_ each open
+  inspection live to its own target (window ⇄ sheet for data inspectors,
+  window ⇄ takeover for watches).
 
 ## Presenters
 
@@ -79,14 +88,20 @@ chrome), `focus`, `close` (view teardown without touching the inspection).
   `relative` container (`z-[1000]`, under the toast stack) and doubles as the
   drag/resize bounds. Windows are non-modal — no backdrop, no focus trap —
   stack without a count limit, raise on press, close on Escape, and report
-  resizes through `WindowRef.resized` (the future canvas watch re-renders on
-  it).
+  resizes through `WindowRef.resized` (the watch canvas observes its host size
+  directly instead, which covers every presenter).
 - **Compact** — `SheetInspectionPresenter` (state) +
   `InspectionSheetComponent` (view): every inspection shares one bottom
   `lg-drawer` with `[modal]="false"` — no scrim and no focus trap, so the
   running circuit above stays visible and interactive. One active view at a
   time, a tab row when several are open; closing the sheet dismisses all of
   them.
+- **Compact fullscreen** — `FullscreenInspectionPresenter` (state) +
+  `FullscreenInspectionComponent` (view): a full-viewport takeover above the
+  sheet overlays (`z-[1050]`, below the toast stack), framed by a header with
+  a back button and the live title. Takeovers stack — one visible at a time,
+  presenting another covers the current one (which stays open underneath);
+  back dismisses the visible entry, revealing the previous one or the board.
 
 ## The ROM Inspection
 
@@ -120,11 +135,48 @@ The renderer is just the hex editor (`ui/hex-editor/`) in viewer mode:
 Nothing else — the tap affordance, presenters, lifecycle, and frame fan-out
 all key off the config declaration.
 
+## The Custom-Component Watch
+
+Tapping a placed custom component opens a **live canvas view of its inner
+circuit** (`plans/custom-component-inspection.md`). Split between the
+component layer and `inspection/watch/`:
+
+- **`SubCircuitWatch`** (`components/custom/sub-circuit-watch.ts`) — the
+  `ComponentInspection`, declared by every custom config. It owns a
+  **breadcrumb stack** of `WatchLevel`s; the last level is visible. The title
+  is the joined level names (`Nest › Blink`). `activate(component)` routes a
+  click on the visible copy: a nested custom pushes a level, a lever/button
+  triggers its engine unit (`SimulationService.triggerUnitInput`, with the
+  unit index resolved through the watch index), and any other inspectable
+  opens its regular data inspector **on the watch copy** — tracked per level
+  and closed when its level (or the watch) goes away.
+- **`WatchSession`** (`inspection/watch/watch-session.ts`) — one per level: a
+  fresh headless `Project` from `instantiateBody` over the level's circuit
+  body, plus a sparse `LinkStateApplier` whose targets resolve through the
+  compiled board's watch index (`board.watch.infoFor(path)` — see
+  `simulation.md`). It registers with the simulation's snapshot fan-out and
+  requests a full seed snapshot; the first full snapshot also poses copied
+  levers from their output-link power. Construction **fails loudly** if the
+  body shape disagrees with the index tables.
+- **`WatchRendererService`** — the single renderer shared by every watch
+  canvas (page total stays at two rendering contexts). Created lazily on the
+  first lease with the board's backend ladder (`webgpu` preference; the WebGL
+  branch adds `multiView: true`, an off-DOM master canvas blitted per target;
+  the canvas backend needs nothing), destroyed when the last lease releases.
+  `render(project, canvas)` force-unculls (no `CullerPlugin` runs on manual
+  renders) and scales the CSS-pixel viewport transform up to the canvas's
+  DPR-sized backing store.
+- **`SubCircuitWatchComponent`** — breadcrumb header over the canvas. Pointer
+  handling is **plain DOM** (the watch renderer has no event system): a press
+  within the click threshold is a click (resolved against the watch project's
+  quad tree), past it a pan; wheel steps the zoom; touch adds two-finger pan +
+  pinch via `MultiTouchGesture`. Content is fit-and-centered when a level
+  first shows; re-blits ride on the model's `render$` (engine changes), the
+  project's `ticker$` (pan/zoom/theme), and host resizes.
+
+The Debug menu's "Insert watch demo circuit" places a nested
+oscillator + lever + ROM fixture for manual verification.
+
 ## Future Work (see `plans/inspection.md`)
 
-- **Custom-component watch**: a live canvas view of a custom instance's inner
-  circuit as a second content kind (desktop window / compact fullscreen). The
-  compiler's per-instance-path `LinkMapping` entries are the missing piece;
-  all watch canvases will share **one** WebGL context via a `multiView`
-  renderer.
 - **RAM / registers**: blocked on a `@logigator/sim` component-state read API.
