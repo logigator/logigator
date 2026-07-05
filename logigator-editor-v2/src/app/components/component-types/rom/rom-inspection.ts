@@ -1,9 +1,8 @@
-import { computed, signal, Signal } from '@angular/core';
+import { signal, Signal } from '@angular/core';
 import { TranslocoService } from '@jsverse/transloco';
 import {
   base64ToBytes,
   packedByteLength,
-  readWord,
   resizeBuffer
 } from '../../../utils/packed-buffer';
 import { getStaticDI } from '../../../utils/get-di';
@@ -35,10 +34,6 @@ export class RomInspection extends ComponentInspection {
   private readonly _address = signal(0);
   /** The currently addressed word index. */
   public readonly address = this._address.asReadonly();
-  /** The addressed word's value. */
-  public readonly value = computed(() =>
-    readWord(this.bytes, this.address(), this.wordSize)
-  );
 
   private readonly addressSize: number;
 

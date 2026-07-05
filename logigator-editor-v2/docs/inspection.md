@@ -96,13 +96,15 @@ decoded once. The only live part is the address: the engine addresses
 `Σ inᵢ << i`, so input port `i` (label `A(i+1)`) is address bit `i`, and
 `onFrame` folds `isPortPowered(0..addressSize-1)` into an `address` signal.
 
-The renderer shows an address/value readout above the hex editor
-(`ui/hex-editor/`) in viewer mode:
+The renderer is just the hex editor (`ui/hex-editor/`) in viewer mode:
 
 - `readOnly` — text cells (focusable, feeding the status box), no editing
   chrome (Clear, Save/Cancel).
-- `highlightIndex` — the addressed word, mapped to the byte cells it touches
-  in byte view; a **Follow** toggle keeps it scrolled into view.
+- `highlightIndex` — the addressed word: highlighted, mapped to the byte cells
+  it touches in byte view, and made the **active cell**, so the editor's own
+  status box reads out the live address and value (a click can activate
+  another cell until the address next changes). A **Follow** toggle keeps it
+  scrolled into view.
 - `scrollHeight` — `100%` fills the flexed window/sheet body (the `28rem`
   default keeps the settings-dialog layout).
 

@@ -225,6 +225,26 @@ describe('HexEditorComponent', () => {
     expect(comp.cellHighlight(1)).toBe('');
   });
 
+  it('makes the highlighted word the active cell for the status box', () => {
+    seed(4, 4, Uint8Array.from([0x21, 0x43]));
+    fixture.componentRef.setInput('readOnly', true);
+    fixture.componentRef.setInput('highlightIndex', 2);
+    fixture.detectChanges();
+    expect(comp.activeCell()).toBe(2);
+    expect(comp.active()).toEqual({ address: '02', value: '3', decimal: '3' });
+
+    // Byte view re-targets the word's first byte.
+    comp.view.set('byte');
+    fixture.detectChanges();
+    expect(comp.activeCell()).toBe(1);
+
+    // A click can activate another cell until the address next changes.
+    comp.activeCell.set(0);
+    fixture.componentRef.setInput('highlightIndex', 3);
+    fixture.detectChanges();
+    expect(comp.activeCell()).toBe(1); // word 3's byte
+  });
+
   it('spans the highlight across bytes for a straddling word', () => {
     seed(4, 12); // word 1 occupies bits 12..23 → bytes 1 and 2
     fixture.componentRef.setInput('highlightIndex', 1);

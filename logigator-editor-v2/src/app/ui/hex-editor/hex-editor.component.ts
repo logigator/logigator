@@ -66,9 +66,11 @@ const RADICES: Record<Radix, RadixSpec> = {
  *
  * With `readOnly`, it doubles as a live memory *viewer* (the ROM inspection):
  * cells render as plain text, the editing chrome (Clear, Save/Cancel) is
- * hidden, and `highlightIndex` marks the currently addressed word — followed
- * into view while the Follow toggle is on. The host sizes it: the default
- * `scrollHeight` keeps the dialog layout, `100%` fills a flexed container.
+ * hidden, and `highlightIndex` marks the currently addressed word — it becomes
+ * the active cell (so the status box reads out the live address and value)
+ * and is followed into view while the Follow toggle is on. The host sizes it:
+ * the default `scrollHeight` keeps the dialog layout, `100%` fills a flexed
+ * container.
  */
 @Component({
   selector: 'app-hex-editor',
@@ -235,19 +237,28 @@ export class HexEditorComponent {
       untracked(() => this.reset());
     });
 
-    // Track the highlighted word while Follow is on (and when the view
-    // switches, so the byte view lands on the same word).
+    // Track the highlighted word (and re-track when the view switches, so the
+    // byte view lands on the same word): it becomes the active cell — the
+    // status box shows its address and value — and, while Follow is on, stays
+    // scrolled into view. A click can still activate another cell until the
+    // address next changes.
     effect(() => {
       const word = this.highlightIndex();
       const byteView = this.view() === 'byte';
-      if (!this.follow() || word === null) {
+      if (word === null) {
         return;
       }
       const cell = byteView ? Math.floor((word * this.wordSize()) / 8) : word;
       if (cell >= this.cellCount()) {
         return;
       }
-      untracked(() => this.scrollCellIntoView(cell));
+      const follow = this.follow();
+      untracked(() => {
+        this.activeCell.set(cell);
+        if (follow) {
+          this.scrollCellIntoView(cell);
+        }
+      });
     });
   }
 

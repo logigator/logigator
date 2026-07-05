@@ -33,20 +33,17 @@ describe('RomInspection', () => {
   it('derives the address from input port power, LSB at port 0', () => {
     const inspection = new RomInspection(rom);
     expect(inspection.address()).toBe(0);
-    expect(inspection.value()).toBe(0x11n);
 
     // A1 (bit 0) and A2 (bit 1) powered → address 3.
     rom.setPortPowered(0, true);
     rom.setPortPowered(1, true);
     inspection.onFrame();
     expect(inspection.address()).toBe(3);
-    expect(inspection.value()).toBe(0n); // past the stored bytes → zero
 
     rom.setPortPowered(0, false);
     rom.setPortPowered(1, true);
     inspection.onFrame();
     expect(inspection.address()).toBe(2);
-    expect(inspection.value()).toBe(0x33n);
   });
 
   it('ignores output port power when reading the address', () => {
