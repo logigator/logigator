@@ -56,6 +56,11 @@ export {
   LgAccordionPanel
 } from './components/accordion/accordion';
 export { LgTabs, LgTab, LgTabPanel } from './components/tabs/tabs';
+export { LgTabStrip } from './components/tab-strip/tab-strip';
+export type {
+  LgTabStripItem,
+  LgTabReorder
+} from './components/tab-strip/tab-strip';
 export { LgPanelMenu } from './components/panel-menu/panel-menu';
 export { LgMenu } from './components/menu/menu';
 export { LgMenubar } from './components/menu/menubar';
