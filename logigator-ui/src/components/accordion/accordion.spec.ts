@@ -75,4 +75,36 @@ describe('LgAccordion', () => {
     f.detectChanges();
     expect(f.componentInstance.open()).toEqual([]);
   });
+
+  it('clips a closed panel body so the height collapse hides it', () => {
+    const { f } = setup();
+    const body = f.nativeElement.querySelector('.min-h-0') as HTMLElement;
+    expect(body.classList.contains('overflow-y-clip')).toBe(true);
+  });
+
+  it('leaves a panel that starts open unclipped', () => {
+    const f = TestBed.createComponent(HostComponent);
+    f.componentInstance.open.set(['a']);
+    f.detectChanges();
+    const body = f.nativeElement.querySelector('.min-h-0') as HTMLElement;
+    expect(body.classList.contains('overflow-y-clip')).toBe(false);
+  });
+
+  it('stops clipping the body once its open transition finishes', () => {
+    const { f, headers } = setup();
+    headers[0].click();
+    f.detectChanges();
+    const body = f.nativeElement.querySelector('.min-h-0') as HTMLElement;
+    // Clipped while the height transition is still running.
+    expect(body.classList.contains('overflow-y-clip')).toBe(true);
+
+    const end = new Event('transitionend') as Event & {
+      propertyName: string;
+    };
+    end.propertyName = 'grid-template-rows';
+    body.parentElement!.dispatchEvent(end);
+    f.detectChanges();
+
+    expect(body.classList.contains('overflow-y-clip')).toBe(false);
+  });
 });
