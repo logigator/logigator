@@ -10,6 +10,7 @@ import {
 import { instantiateBody } from '../../persistence/circuit-builder';
 import { encodeRomOps } from '../../components/component-types/rom/rom-data.codec';
 import { Project } from '../../project/project';
+import { Wire } from '../../wires/wire';
 import {
   BoardComponentDescriptor,
   CompiledBoard,
@@ -18,6 +19,12 @@ import {
 } from './compiled-board.model';
 import { CompileDiagnostic } from './compile-error';
 import { extractNets, Net, UnionFind } from './net-extractor';
+import {
+  WatchChildBridge,
+  WatchIndex,
+  WatchInstanceRecord,
+  WatchTemplateTables
+} from './watch-index';
 
 /** Component types emitted as simulator units, recognized by type id. */
 const UNIT_TYPES: ReadonlySet<number> = new Set([
@@ -73,7 +80,7 @@ function copyNegation(unit: EmittedUnit): {
  * `units`. Snapshots are frozen, so a cached template never invalidates.
  */
 interface CompiledTemplate {
-  /** Number of template-local nets referenced by units or plug bindings. */
+  /** Number of template-local nets (every net class, wire-only ones included). */
   netCount: number;
   units: EmittedUnit[];
   /** Local net id per input pin, in plug-index order. */
@@ -82,6 +89,17 @@ interface CompiledTemplate {
   outputBindings: number[];
   /** Instance paths relative to the template's own circuit. */
   diagnostics: CompileDiagnostic[];
+  /** Watch tables for live inner-circuit views, by body element index. */
+  watch: WatchTemplateTables;
+}
+
+/** One directly placed custom instance, recorded for the watch index. */
+interface EmittedInstance {
+  typeId: number;
+  /** The instance's node per template-local net, in this pass's node space. */
+  localNodes: number[];
+  /** Offset of the instance's units inside this pass's unit list. */
+  unitBase: number;
 }
 
 /** Mutable state of one compilation pass over a single node-id space. */
@@ -89,8 +107,10 @@ interface EmitContext {
   uf: UnionFind;
   units: EmittedUnit[];
   diagnostics: CompileDiagnostic[];
-  /** Set only for the top-level circuit: button/lever id → board index. */
-  userInputs?: Map<number, number>;
+  /** Directly emitted button/lever: component id → unit index in this pass. */
+  userInputs: Map<number, number>;
+  /** Directly placed custom instances, keyed by component id. */
+  instances: Map<number, EmittedInstance>;
 }
 
 function joinPath(parent: string, child: string): string {
@@ -164,7 +184,8 @@ export class BoardCompilerService {
       uf: new UnionFind(),
       units: [],
       diagnostics: [],
-      userInputs: new Map<number, number>()
+      userInputs: new Map<number, number>(),
+      instances: new Map<number, EmittedInstance>()
     };
 
     const nets = extractNets({
@@ -220,11 +241,30 @@ export class BoardCompilerService {
       targets[link].ports.push(...net.ports);
     });
 
+    // Watch records: resolve each top-level instance's local nets to global
+    // links (after link assignment; `-1` = wire-only class, never powered).
+    const instances = new Map<string, WatchInstanceRecord>();
+    for (const [id, instance] of ctx.instances) {
+      instances.set(String(id), {
+        typeId: instance.typeId,
+        unitBase: instance.unitBase,
+        linkOfLocalNet: Int32Array.from(
+          instance.localNodes,
+          (node) => linkOfClass.get(ctx.uf.find(node)) ?? -1
+        )
+      });
+    }
+    const templateTables = new Map<number, WatchTemplateTables>();
+    for (const [typeId, template] of this._templates) {
+      templateTables.set(typeId, template.watch);
+    }
+
     return {
       descriptor: { links, components: descriptorComponents },
       mapping: new Map([[TOP_LEVEL_PATH, targets]]),
-      userInputs: ctx.userInputs!,
-      diagnostics: ctx.diagnostics
+      userInputs: ctx.userInputs,
+      diagnostics: ctx.diagnostics,
+      watch: new WatchIndex(instances, templateTables)
     };
   }
 
@@ -244,12 +284,18 @@ export class BoardCompilerService {
     if (type >= CUSTOM_TYPE_ID_BASE) {
       const template = this._templateFor(type, path, component.id, ctx);
       if (template) {
-        this._instantiateTemplate(
+        const unitBase = ctx.units.length;
+        const localNodes = this._instantiateTemplate(
           template,
           pinNodes,
           joinPath(path, String(component.id)),
           ctx
         );
+        ctx.instances.set(component.id, {
+          typeId: type,
+          localNodes,
+          unitBase
+        });
       }
       return;
     }
@@ -258,7 +304,7 @@ export class BoardCompilerService {
       const isUserInput =
         type === BuiltInComponentType.BUTTON ||
         type === BuiltInComponentType.LEVER;
-      if (ctx.userInputs && isUserInput) {
+      if (isUserInput) {
         ctx.userInputs.set(component.id, ctx.units.length);
       }
       ctx.units.push({
@@ -296,14 +342,15 @@ export class BoardCompilerService {
    * Materializes a placed instance: a fresh global node per template-local
    * net, each plug-bound local net unioned with the outer net at the matching
    * instance pin. A plug wired straight to another plug thereby merges the
-   * two outer nets through the instance.
+   * two outer nets through the instance. Returns the instance's node per
+   * template-local net — the watch index's bridge into the inner circuit.
    */
   private _instantiateTemplate(
     template: CompiledTemplate,
     pinNodes: number[],
     path: string,
     ctx: EmitContext
-  ): void {
+  ): number[] {
     const localNodes = Array.from({ length: template.netCount }, () =>
       ctx.uf.makeSet()
     );
@@ -334,6 +381,7 @@ export class BoardCompilerService {
         instancePath: joinPath(path, diagnostic.instancePath)
       });
     }
+    return localNodes;
   }
 
   private _templateFor(
@@ -388,7 +436,9 @@ export class BoardCompilerService {
       const ctx: EmitContext = {
         uf: new UnionFind(),
         units: [],
-        diagnostics: []
+        diagnostics: [],
+        userInputs: new Map<number, number>(),
+        instances: new Map<number, EmittedInstance>()
       };
       const nets = extractNets({ components, wires });
       const netNodes = nets.map(() => ctx.uf.makeSet());
@@ -448,9 +498,11 @@ export class BoardCompilerService {
         (plug) => nodesOf(plug.component)[0]
       );
 
-      // Compress to canonical template-local net ids. Only classes referenced
-      // by a unit pin or a plug binding survive — inner wire-only nets are
-      // irrelevant until nested inspection materializes inner mappings.
+      // Compress to canonical template-local net ids. Every net class gets an
+      // id — unit pins and plug bindings first (their ids feed the engine
+      // emission and must stay deterministic), then the remaining classes so
+      // the watch can address inner wire-only nets too (those never gain an
+      // engine link and simply stay dark).
       const canonical = new Map<number, number>();
       const localId = (node: number): number => {
         const root = ctx.uf.find(node);
@@ -470,12 +522,41 @@ export class BoardCompilerService {
       const inputBindings = inputBindingNodes.map(localId);
       const outputBindings = outputBindingNodes.map(localId);
 
+      // Watch tables, keyed by element position in the instantiated body
+      // arrays (deterministic across instantiateBody runs; live ids are not).
+      const indexOfId = new Map(components.map((c, i) => [c.id, i]));
+      const netOfWire = new Map<Wire, number>();
+      nets.forEach((net, netIndex) => {
+        for (const wire of net.wires) netOfWire.set(wire, netIndex);
+      });
+      const wireNets = Int32Array.from(wires, (wire) =>
+        localId(netNodes[netOfWire.get(wire)!])
+      );
+      const watchPortNets = components.map((component) =>
+        Int32Array.from(portNets.get(component) ?? [], (netIndex) =>
+          localId(netNodes[netIndex])
+        )
+      );
+      const userInputs = new Map<number, number>();
+      for (const [id, unitIndex] of ctx.userInputs) {
+        userInputs.set(indexOfId.get(id)!, unitIndex);
+      }
+      const children = new Map<number, WatchChildBridge>();
+      for (const [id, instance] of ctx.instances) {
+        children.set(indexOfId.get(id)!, {
+          typeId: instance.typeId,
+          netMap: Int32Array.from(instance.localNodes, localId),
+          unitBase: instance.unitBase
+        });
+      }
+
       return {
         netCount: canonical.size,
         units,
         inputBindings,
         outputBindings,
-        diagnostics: ctx.diagnostics
+        diagnostics: ctx.diagnostics,
+        watch: { wireNets, portNets: watchPortNets, userInputs, children }
       };
     } finally {
       for (const component of components) {

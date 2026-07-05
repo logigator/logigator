@@ -1,6 +1,7 @@
 import { Component } from '../../components/component';
 import { Wire } from '../../wires/wire';
 import { CompileDiagnostic } from './compile-error';
+import { WatchIndex } from './watch-index';
 
 /** One simulator unit: link ids per pin, in the component's pin order. */
 export interface BoardComponentDescriptor {
@@ -51,8 +52,8 @@ export const TOP_LEVEL_PATH = '';
 /**
  * Per-circuit render targets, indexed by link id, keyed by instance path
  * (custom-instance component ids joined by `/`; `''` = top level). Only the
- * top-level entry is materialized now — inner paths come with the
- * nested-inspection follow-up.
+ * top-level entry is materialized — inner circuits resolve through the
+ * {@link WatchIndex}, whose render targets are built at watch-open time.
  */
 export type LinkMapping = ReadonlyMap<string, LinkRenderTargets[]>;
 
@@ -67,4 +68,6 @@ export interface CompiledBoard {
   /** Top-level button/lever `Component.id` → board submission index. */
   userInputs: ReadonlyMap<number, number>;
   diagnostics: CompileDiagnostic[];
+  /** Path-addressable watch data for live inner-circuit views. */
+  watch: WatchIndex;
 }
