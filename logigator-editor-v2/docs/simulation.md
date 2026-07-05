@@ -210,6 +210,10 @@ running, the `Project` ticker is already `'on'`; after a snapshot applied while
 idle (a step, or the settle pull after pause), it calls the session's
 `repaint()` hook, which pokes a single ticker frame.
 
+After every applied snapshot the bridge also invokes the session's optional
+`onFrame()` hook. `SimulationService` surfaces it as `frame$`, the pull signal
+live inspections refresh on — see `docs/inspection.md`.
+
 ---
 
 ## `SimulationService` — the Facade
