@@ -15,7 +15,7 @@ import {
 import { WindowSize } from './window-config';
 import { WindowRef } from './window-ref';
 import { OpenWindow } from './window.service';
-import { LgButton } from '@logigator/ui';
+import { LgButton } from '../button/button';
 
 interface Rect {
   x: number;
@@ -62,6 +62,12 @@ const CASCADE_WRAP = 8;
  * paint — leaves the window unclamped rather than collapsing it). Pressing
  * anywhere on the window raises it; Escape closes it when `closable`.
  *
+ * In `fullscreen` mode (set per outlet) the window fills the outlet instead:
+ * no positioning, dragging, resizing, or window chrome — the title bar shows
+ * a back button in place of the close ✕. Windows still stack by z-index, so
+ * with several open only the topmost is visible and back reveals the one
+ * beneath.
+ *
  * The content is created in `ngAfterViewInit` — after `open()` has returned —
  * with `inputValues` applied before its first change detection, and can inject
  * {@link WindowRef} to close itself (mirroring the DynamicDialog container).
@@ -74,12 +80,16 @@ const CASCADE_WRAP = 8;
     tabindex: '-1',
     '[attr.aria-label]': 'title()',
     class:
-      'pointer-events-auto absolute flex flex-col rounded-lg border border-border ' +
-      'bg-content text-text shadow-xl outline-none',
-    '[style.left.px]': 'rect().x',
-    '[style.top.px]': 'rect().y',
-    '[style.width.px]': 'rect().width',
-    '[style.height.px]': 'rect().height',
+      'pointer-events-auto absolute flex flex-col bg-content text-text outline-none',
+    '[class.rounded-lg]': '!fullscreen()',
+    '[class.border]': '!fullscreen()',
+    '[class.border-border]': '!fullscreen()',
+    '[class.shadow-xl]': '!fullscreen()',
+    '[class.inset-0]': 'fullscreen()',
+    '[style.left.px]': 'fullscreen() ? null : rect().x',
+    '[style.top.px]': 'fullscreen() ? null : rect().y',
+    '[style.width.px]': 'fullscreen() ? null : rect().width',
+    '[style.height.px]': 'fullscreen() ? null : rect().height',
     '[style.z-index]': 'entry().zIndex()',
     '(pointerdown)': 'raise()',
     '(pointermove)': 'onPointerMove($event)',
@@ -90,13 +100,48 @@ const CASCADE_WRAP = 8;
   imports: [LgButton],
   template: `
     <div
-      class="flex shrink-0 cursor-move touch-none items-center gap-2 border-b border-border px-3 py-1.5 select-none"
+      class="flex shrink-0 touch-none items-center gap-2 border-b border-border px-3 py-1.5 select-none"
+      [class.cursor-move]="!fullscreen()"
       (pointerdown)="beginMove($event)"
     >
-      <h2 class="grow truncate text-sm font-semibold text-text">
-        {{ title() }}
-      </h2>
-      @if (closable()) {
+      @if (fullscreen() && closable()) {
+        <lg-button
+          aria-label="Back"
+          icon="ph ph-arrow-left"
+          severity="none"
+          size="sm"
+          (click)="entry().ref.close()"
+        ></lg-button>
+      }
+      @if (titleParts(); as parts) {
+        <h2
+          class="flex min-w-0 grow flex-wrap items-center gap-1 text-sm font-semibold text-text"
+        >
+          @for (part of parts; track $index; let last = $last) {
+            @if (part.command; as command) {
+              <!-- stopPropagation: a click must not begin a title-bar move. -->
+              <button
+                type="button"
+                class="cursor-pointer truncate text-muted hover:text-text hover:underline"
+                (pointerdown)="$event.stopPropagation()"
+                (click)="command()"
+              >
+                {{ part.label }}
+              </button>
+            } @else {
+              <span class="truncate">{{ part.label }}</span>
+            }
+            @if (!last) {
+              <span class="text-muted">›</span>
+            }
+          }
+        </h2>
+      } @else {
+        <h2 class="grow truncate text-sm font-semibold text-text">
+          {{ title() }}
+        </h2>
+      }
+      @if (closable() && !fullscreen()) {
         <lg-button
           aria-label="Close"
           icon="ph ph-x"
@@ -110,45 +155,49 @@ const CASCADE_WRAP = 8;
       <ng-container #contentHost></ng-container>
     </div>
 
-    <!-- Resize zones. Corners come last so they win hit-testing over edges. -->
-    <div
-      class="absolute inset-x-2 top-0 h-1.5 cursor-ns-resize touch-none"
-      (pointerdown)="beginResize($event, 'n')"
-    ></div>
-    <div
-      class="absolute inset-x-2 bottom-0 h-1.5 cursor-ns-resize touch-none"
-      (pointerdown)="beginResize($event, 's')"
-    ></div>
-    <div
-      class="absolute inset-y-2 left-0 w-1.5 cursor-ew-resize touch-none"
-      (pointerdown)="beginResize($event, 'w')"
-    ></div>
-    <div
-      class="absolute inset-y-2 right-0 w-1.5 cursor-ew-resize touch-none"
-      (pointerdown)="beginResize($event, 'e')"
-    ></div>
-    <div
-      class="absolute top-0 left-0 size-2.5 cursor-nwse-resize touch-none"
-      (pointerdown)="beginResize($event, 'nw')"
-    ></div>
-    <div
-      class="absolute top-0 right-0 size-2.5 cursor-nesw-resize touch-none"
-      (pointerdown)="beginResize($event, 'ne')"
-    ></div>
-    <div
-      class="absolute bottom-0 left-0 size-2.5 cursor-nesw-resize touch-none"
-      (pointerdown)="beginResize($event, 'sw')"
-    ></div>
-    <div
-      class="absolute right-0 bottom-0 size-2.5 cursor-nwse-resize touch-none"
-      (pointerdown)="beginResize($event, 'se')"
-    ></div>
+    @if (!fullscreen()) {
+      <!-- Resize zones. Corners come last so they win hit-testing over edges. -->
+      <div
+        class="absolute inset-x-2 top-0 h-1.5 cursor-ns-resize touch-none"
+        (pointerdown)="beginResize($event, 'n')"
+      ></div>
+      <div
+        class="absolute inset-x-2 bottom-0 h-1.5 cursor-ns-resize touch-none"
+        (pointerdown)="beginResize($event, 's')"
+      ></div>
+      <div
+        class="absolute inset-y-2 left-0 w-1.5 cursor-ew-resize touch-none"
+        (pointerdown)="beginResize($event, 'w')"
+      ></div>
+      <div
+        class="absolute inset-y-2 right-0 w-1.5 cursor-ew-resize touch-none"
+        (pointerdown)="beginResize($event, 'e')"
+      ></div>
+      <div
+        class="absolute top-0 left-0 size-2.5 cursor-nwse-resize touch-none"
+        (pointerdown)="beginResize($event, 'nw')"
+      ></div>
+      <div
+        class="absolute top-0 right-0 size-2.5 cursor-nesw-resize touch-none"
+        (pointerdown)="beginResize($event, 'ne')"
+      ></div>
+      <div
+        class="absolute bottom-0 left-0 size-2.5 cursor-nesw-resize touch-none"
+        (pointerdown)="beginResize($event, 'sw')"
+      ></div>
+      <div
+        class="absolute right-0 bottom-0 size-2.5 cursor-nwse-resize touch-none"
+        (pointerdown)="beginResize($event, 'se')"
+      ></div>
+    }
   `
 })
 export class LgWindow implements AfterViewInit {
   readonly entry = input.required<OpenWindow>();
   /** The outlet's size; `0×0` means "not measured yet" and disables clamping. */
   readonly bounds = input.required<WindowSize>();
+  /** Fill the outlet as a takeover instead of floating (set per outlet). */
+  readonly fullscreen = input(false);
 
   private readonly host = inject<ElementRef<HTMLElement>>(ElementRef);
   private readonly injector = inject(Injector);
@@ -159,6 +208,12 @@ export class LgWindow implements AfterViewInit {
   protected readonly title = computed(() => {
     const title = this.entry().config.title;
     return isSignal(title) ? title() : (title ?? '');
+  });
+
+  /** Structured title segments, or `null` to fall back to the plain title. */
+  protected readonly titleParts = computed(() => {
+    const parts = this.entry().config.titleParts?.();
+    return parts && parts.length > 0 ? parts : null;
   });
 
   protected readonly closable = computed(
@@ -229,7 +284,7 @@ export class LgWindow implements AfterViewInit {
   }
 
   protected beginMove(event: PointerEvent): void {
-    if ((event.target as HTMLElement).closest('button')) {
+    if (this.fullscreen() || (event.target as HTMLElement).closest('button')) {
       return;
     }
     this.beginDrag(event, null);

@@ -1,6 +1,6 @@
 import { inject, Injectable, InjectionToken, signal } from '@angular/core';
 import { BoardDescriptor } from '../compiler/compiled-board.model';
-import { LinkStateApplier } from '../state/link-state-applier';
+import { SnapshotApplier } from '../state/link-state-applier';
 import {
   InputEventKind,
   MainRequest,
@@ -43,7 +43,7 @@ export interface FrameScheduler {
 export type SimulationRunMode = 'continuous' | 'target' | 'sync';
 
 export interface SimulationSessionHooks {
-  applier: LinkStateApplier;
+  applier: SnapshotApplier;
   /** Repaint request for snapshots applied while no run holds the ticker on. */
   repaint(): void;
   /** Runs after each snapshot is applied; live inspections refresh on it. */
@@ -86,6 +86,7 @@ export class SimulationWorkerService {
   private frameHandle: number | null = null;
   private statusTimer: ReturnType<typeof setInterval> | null = null;
   private snapshotInFlight = false;
+  private wantFullSnapshot = false;
   private lastStatus: { tick: number; at: number } | null = null;
 
   private readonly _measuredHz = signal(0);
@@ -133,6 +134,7 @@ export class SimulationWorkerService {
     this.resolveReady = null;
     this.runMode = 'idle';
     this.snapshotInFlight = false;
+    this.wantFullSnapshot = false;
     this.lastStatus = null;
     this._measuredHz.set(0);
     this._tick.set(0);
@@ -208,6 +210,21 @@ export class SimulationWorkerService {
   }
 
   /**
+   * Pulls one **full** snapshot — the engine answers with its complete
+   * current state whether running or paused. Seeds a freshly-registered
+   * watch applier, which would otherwise only see future deltas. If a
+   * snapshot is already in flight, the full request is carried over to the
+   * next one instead of being dropped.
+   */
+  public requestSnapshot(): void {
+    if (!this.worker) {
+      return;
+    }
+    this.wantFullSnapshot = true;
+    this._requestSnapshot();
+  }
+
+  /**
    * Forwards a user input to the engine; applied at the next tick boundary.
    * Fire-and-forget — failures surface through the session error hook.
    */
@@ -254,7 +271,9 @@ export class SimulationWorkerService {
       return;
     }
     this.snapshotInFlight = true;
-    this._post({ kind: 'requestSnapshot' });
+    const full = this.wantFullSnapshot;
+    this.wantFullSnapshot = false;
+    this._post({ kind: 'requestSnapshot', full });
   }
 
   private _startStatusPolling(): void {
@@ -348,6 +367,10 @@ export class SimulationWorkerService {
         this.hooks?.onFrame?.();
         if (this.runMode === 'idle') {
           this.hooks?.repaint();
+        }
+        // A full-snapshot request that arrived while this one was in flight.
+        if (this.wantFullSnapshot) {
+          this._requestSnapshot();
         }
         break;
       }

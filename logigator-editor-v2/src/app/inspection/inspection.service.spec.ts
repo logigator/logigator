@@ -30,6 +30,10 @@ class TestInspection extends ComponentInspection {
   }
 }
 
+class FullscreenTestInspection extends TestInspection {
+  override readonly compactPresentation = 'fullscreen' as const;
+}
+
 /** Records presenter calls and keeps the dismissed callbacks triggerable. */
 class StubPresenter {
   readonly shown: OpenInspection[] = [];
@@ -181,6 +185,41 @@ describe('InspectionService', () => {
     presenter.dismissers.get(presenter.shown[1])!();
     expect(service.open()).toHaveLength(1);
     expect(inspection.destroyed).toHaveBeenCalledTimes(1);
+  });
+
+  it('keeps fullscreen inspections in windows on compact, skipping their re-home', () => {
+    flushEffects();
+    const sheetBound = new TestInspection();
+    const fullscreenBound = new FullscreenTestInspection();
+    service.openFor(makeInspectable(sheetBound));
+    service.openFor(makeInspectable(fullscreenBound));
+    expect(presenter.shown).toHaveLength(2);
+
+    // Compact: only the sheet-bound entry re-homes; the fullscreen one keeps
+    // its window entry (the compact outlet renders it as a takeover).
+    isCompact.set(true);
+    flushEffects();
+    expect(presenter.closed.map((e) => e.inspection)).toEqual([sheetBound]);
+    expect(sheetPresenter.shown.map((e) => e.inspection)).toEqual([sheetBound]);
+    expect(presenter.shown).toHaveLength(2);
+
+    // New fullscreen inspections open as windows on compact too.
+    const another = new FullscreenTestInspection();
+    service.openFor(makeInspectable(another));
+    expect(presenter.shown).toHaveLength(3);
+    service.close(service.open()[2]);
+    expect(presenter.closed).toHaveLength(2);
+
+    // Back to desktop: only the sheet-bound entry moves again.
+    isCompact.set(false);
+    flushEffects();
+    expect(sheetPresenter.closed).toHaveLength(1);
+    expect(presenter.shown.map((e) => e.inspection)).toEqual([
+      sheetBound,
+      fullscreenBound,
+      another,
+      sheetBound
+    ]);
   });
 
   it('opens inspections from the active project inspect taps while simulating', () => {

@@ -92,6 +92,13 @@
 @if (layout.isCompact()) {
   <!-- Non-modal inspection sheet: floats over the running simulation. -->
   <app-inspection-sheet />
+  <!-- Watch inspections open as fullscreen windows on compact. The desktop
+       outlet lives in the board area's desktop-only branch, so exactly one
+       outlet is alive at a time; this one covers the whole viewport, above
+       the sheet overlays (z 1000) and below the toasts (z 1100). -->
+  <div class="pointer-events-none fixed inset-0 z-1050">
+    <lg-window-outlet fullscreen />
+  </div>
 
   <ng-container *transloco="let t">
     <lg-drawer

@@ -125,7 +125,7 @@ async function handle(msg: MainToWorkerMessage): Promise<void> {
       postMessage({ kind: 'ok', reqId: msg.reqId });
       break;
     case 'requestSnapshot':
-      sendSnapshot(msg.reqId);
+      sendSnapshot(msg.reqId, msg.full === true);
       break;
     case 'requestStatus': {
       const status = requireSim().getStatus();
@@ -199,8 +199,8 @@ function paceLoop(): void {
  * only until the next tick, and memory growth detaches JS views — hence the
  * fresh `Uint8Array` over `memory.buffer` per snapshot.
  */
-function sendSnapshot(reqId: number): void {
-  const view = requireSim().snapshot(true, DELTA_THRESHOLD);
+function sendSnapshot(reqId: number, full: boolean): void {
+  const view = requireSim().snapshot(!full, DELTA_THRESHOLD);
   try {
     const mem = new Uint8Array(memory!.buffer);
     // len / values_len are byte counts (delta ids are u32 LE, so 4 bytes each).

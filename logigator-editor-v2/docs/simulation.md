@@ -18,6 +18,7 @@ src/app/simulation/
 │   ├── net-extractor.ts           # Geometry → electrical nets (union-find)
 │   ├── board-compiler.service.ts  # Circuit → BoardDescriptor + link→render mapping
 │   ├── compiled-board.model.ts    # CompiledBoard / BoardDescriptor / LinkRenderTargets
+│   ├── watch-index.ts             # Retained inner-circuit tables for watches
 │   └── compile-error.ts           # CompileDiagnostic (blocking failures)
 ├── state/
 │   └── link-state-applier.ts      # Link states → wire/port "powered" visuals
@@ -101,6 +102,36 @@ stay permanently unpowered. The descriptor's `links` count and per-unit
 `inputs`/`outputs` (link ids) go to the engine; `LinkRenderTargets[]` (wires +
 ports per link) becomes the render mapping.
 
+### The watch index
+
+Compilation always retains a `WatchIndex` (`CompiledBoard.watch`) so a live
+view of any custom instance's inner circuit can open mid-simulation without a
+recompile (a recompile would restart the engine). It is **integer tables
+only** — render targets need live objects, and a watch creates those itself at
+open time from a fresh `instantiateBody` run:
+
+- **Per template** (cached with the compiled template, keyed by snapshot type
+  id), all keyed by **element position in the body arrays** (deterministic
+  across `instantiateBody` runs — the order contract is pinned by
+  `persistence/circuit-builder.spec.ts`; live ids are session-assigned and are
+  not): `wireNets` (wire index → template-local net id), `portNets` (component
+  index → per-port local net id), `userInputs` (direct lever/button index →
+  template-local unit index), and `children` (nested-custom index →
+  `WatchChildBridge { typeId, netMap, unitBase }`). To make every wire
+  addressable, template compression assigns local ids to **all** net classes —
+  unit pins and plug bindings first (their ids feed emission and stay
+  deterministic), then wire-only and child-internal classes.
+- **Per top-level instance** (keyed by the placed component's id):
+  `linkOfLocalNet` (local net id → global link id, `-1` = wire-only, never
+  powered) and `unitBase` (offset of the instance's units in the descriptor).
+
+`infoFor(path)` resolves a watch path — `"<componentId>"` descending by
+`"/<bodyIndex>"` per nested level — by folding child bridges into the
+top-level record (`linkOfLocalNet_child[n] = linkOfLocalNet_parent[netMap[n]]`,
+unit bases add). Pure integer composition, memoized, safe to hold for the
+session. `unitIndexFor(bodyIndex)` yields the global engine unit index of an
+inner lever/button — what `triggerUnitInput` sends.
+
 ### Custom-component flattening
 
 A custom instance is expanded by **template instantiation**:
@@ -159,6 +190,13 @@ with at most one snapshot request in flight (`snapshotInFlight`). A slow worker
 answers late rather than piling up a queue. Simulation rate and render rate are
 fully decoupled.
 
+`requestSnapshot()` additionally pulls one **forced-full** snapshot outside the
+frame loop (the protocol's `full` flag makes the worker bypass the delta
+threshold) — the seeding mechanism for a freshly-registered watch applier,
+which would otherwise only accumulate future deltas over darkness. If a
+snapshot is already in flight the full request carries over to the next one
+instead of being dropped.
+
 > The `SIMULATION_WORKER_FACTORY` and `FRAME_SCHEDULER` injection tokens exist
 > so specs can substitute a message-level fake worker and drive frames
 > deterministically (`src/testing/fake-simulation-worker.ts`).
@@ -204,6 +242,16 @@ touches links that actually changed:
 - `setLink` fans a change out to `wire.setPowered()` and
   `component.setPortPowered()` for every render target on that link.
 - `reset()` drives everything unpowered.
+- `isPowered(link)` / `consumeChanged()` — read-backs for watches: the lever
+  pose sync and the per-frame "did anything I target change" dirty flag that
+  drives on-demand watch re-renders.
+
+The worker bridge only sees the `SnapshotApplier` interface
+(`applyDelta`/`applyFull`). `SimulationService` hands it a **fan-out** wrapper:
+the board applier first, then every watch applier registered via
+`registerApplier()` (each a second `LinkStateApplier` over a sparse target
+array sized to the full link count — only the watched circuit's links carry
+targets). Registrations don't survive the session; `exit()` clears them.
 
 The bridge applies snapshots directly and owns no frame scheduling: while
 running, the `Project` ticker is already `'on'`; after a snapshot applied while
@@ -271,6 +319,12 @@ threshold — hit-tests for a button/lever under the cursor and emits it on
 
 The board index sent to the engine comes from `CompiledBoard.userInputs`
 (`Component.id` → board submission index).
+
+Inner levers/buttons clicked in a **watch** go through
+`triggerUnitInput(unitIndex, component, repaint)` instead: the unit index is
+already resolved through the watch index (`infoFor(path).unitIndexFor(i)`),
+`component` is the watch's fresh copy (its visuals toggle/flash), and
+`repaint` re-blits the watch canvas. Both paths share `_activate`.
 
 ---
 

@@ -34,7 +34,8 @@ export type MainToWorkerMessage =
       event: InputEventKind;
       state: boolean[];
     }
-  | { kind: 'requestSnapshot'; reqId: number }
+  /** `full` forces a full snapshot (seeds a freshly-registered watch applier). */
+  | { kind: 'requestSnapshot'; reqId: number; full?: boolean }
   | { kind: 'requestStatus'; reqId: number }
   /** Pool refill: hands a transferred snapshot buffer back to the worker. */
   | { kind: 'returnBuffer'; buffer: ArrayBuffer };

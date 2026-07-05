@@ -32,6 +32,13 @@ class TestWindowChild {
 })
 class Host {}
 
+@Component({
+  changeDetection: ChangeDetectionStrategy.OnPush,
+  imports: [LgWindowOutlet],
+  template: `<div class="relative"><lg-window-outlet fullscreen /></div>`
+})
+class FullscreenHost {}
+
 describe('WindowService + LgWindowOutlet', () => {
   function setup(): {
     fixture: ComponentFixture<Host>;
@@ -218,6 +225,32 @@ describe('WindowService + LgWindowOutlet', () => {
 
     expect(win.style.width).toBe('240px');
     expect(win.style.height).toBe('160px');
+  });
+
+  it('renders takeovers in a fullscreen outlet: no rect, no resize, back closes', () => {
+    const fixture = TestBed.createComponent(FullscreenHost);
+    fixture.detectChanges();
+    const service = TestBed.inject(WindowService);
+    const ref = service.open(TestWindowChild, {
+      title: 'Nest',
+      inputValues: { wordSize: 1 }
+    });
+    fixture.detectChanges();
+
+    const win = fixture.nativeElement.querySelector('lg-window') as HTMLElement;
+    // Fills the outlet instead of floating: no inline rect, no resize zones,
+    // no drag cursor, no ✕.
+    expect(win.style.left).toBe('');
+    expect(win.style.width).toBe('');
+    expect(win.classList.contains('inset-0')).toBe(true);
+    expect(win.querySelector('.cursor-nwse-resize')).toBeNull();
+    expect(win.querySelector('.cursor-move')).toBeNull();
+    expect(win.querySelector('[aria-label=Close]')).toBeNull();
+
+    let closed = false;
+    ref.onClose.subscribe(() => (closed = true));
+    (win.querySelector('[aria-label=Back]') as HTMLButtonElement).click();
+    expect(closed).toBe(true);
   });
 
   it('closeAll closes every window', () => {

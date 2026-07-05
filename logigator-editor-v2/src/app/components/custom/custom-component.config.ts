@@ -4,6 +4,7 @@ import { ComponentOption } from '../component-option';
 import { DirectionComponentOption } from '../component-options/direction/direction.component-option';
 import { CustomComponentDefinition } from './custom-component-definition.model';
 import { CustomComponent } from './custom-component';
+import { SubCircuitWatch } from './sub-circuit-watch';
 import { EditComponentAction } from './actions/edit-component.component-action';
 import { UpdateInstanceComponentAction } from './actions/update-instance.component-action';
 import { UploadComponentAction } from './actions/upload-component.component-action';
@@ -68,6 +69,10 @@ export function buildCustomComponentConfig(
       new UpdateInstanceComponentAction(),
       new UploadComponentAction()
     ],
+    // Tapping a placed instance during simulation opens a live watch of its
+    // inner circuit.
+    inspection: (component) =>
+      new SubCircuitWatch(component as CustomComponent),
     create: (options) => new CustomComponent(options, def, config)
   };
   return config;

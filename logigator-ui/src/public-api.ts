@@ -73,7 +73,8 @@ export { LgWindowOutlet } from './components/window/window-outlet';
 export type {
   WindowConfig,
   WindowSize,
-  WindowPoint
+  WindowPoint,
+  WindowTitlePart
 } from './components/window/window-config';
 
 export { ConfirmationService } from './components/confirm/confirmation.service';

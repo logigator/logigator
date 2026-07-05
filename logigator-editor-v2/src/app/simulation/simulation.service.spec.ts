@@ -15,6 +15,7 @@ import { ProjectService } from '../project/project.service';
 import { WorkMode } from '../work-mode/work-mode.enum';
 import { WorkModeService } from '../work-mode/work-mode.service';
 import { SimulationService } from './simulation.service';
+import { packSnapshot } from './worker/protocol';
 import {
   FRAME_SCHEDULER,
   SIMULATION_WORKER_FACTORY
@@ -285,6 +286,75 @@ describe('SimulationService', () => {
     } finally {
       vi.useRealTimers();
     }
+  });
+
+  it('fans snapshots out to registered watch appliers, seeded by a full one', async () => {
+    project.addComponent(makeLever());
+    await enterAndBoot();
+    const watch = { applyDelta: vi.fn(), applyFull: vi.fn() };
+
+    const unregister = service.registerApplier(watch);
+    service.requestSnapshot();
+
+    // The seed request forces a full snapshot.
+    const requests = fakeWorker.postedOfKind('requestSnapshot');
+    expect(requests).toHaveLength(1);
+    expect(requests[0].full).toBe(true);
+
+    fakeWorker.emit({
+      kind: 'snapshot',
+      reqId: 99,
+      tick: 1,
+      isDelta: false,
+      ...packSnapshot(undefined, null, new Uint8Array([0b1]))
+    });
+    expect(watch.applyFull).toHaveBeenCalledOnce();
+
+    fakeWorker.emit({
+      kind: 'snapshot',
+      reqId: 100,
+      tick: 2,
+      isDelta: true,
+      ...packSnapshot(
+        undefined,
+        new Uint8Array(new Uint32Array([0]).buffer),
+        new Uint8Array([0])
+      )
+    });
+    expect(watch.applyDelta).toHaveBeenCalledOnce();
+
+    unregister();
+    fakeWorker.emit({
+      kind: 'snapshot',
+      reqId: 101,
+      tick: 3,
+      isDelta: true,
+      ...packSnapshot(
+        undefined,
+        new Uint8Array(new Uint32Array([0]).buffer),
+        new Uint8Array([1])
+      )
+    });
+    expect(watch.applyDelta).toHaveBeenCalledOnce();
+  });
+
+  it('drops watch appliers on exit', async () => {
+    project.addComponent(makeLever());
+    await enterAndBoot();
+    const watch = { applyDelta: vi.fn(), applyFull: vi.fn() };
+    service.registerApplier(watch);
+
+    service.exit();
+    await enterAndBoot();
+    fakeWorker.emit({
+      kind: 'snapshot',
+      reqId: 99,
+      tick: 1,
+      isDelta: false,
+      ...packSnapshot(undefined, null, new Uint8Array([0b1]))
+    });
+
+    expect(watch.applyFull).not.toHaveBeenCalled();
   });
 
   it('exit resets sim state and restores PAN mode', async () => {

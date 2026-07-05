@@ -93,6 +93,31 @@ describe('LinkStateApplier', () => {
     expect(wires[1].setPowered).not.toHaveBeenCalled();
   });
 
+  it('reports link power state', () => {
+    const applier = new LinkStateApplier([target([stubWire()])]);
+
+    expect(applier.isPowered(0)).toBe(false);
+    applier.setLink(0, true);
+    expect(applier.isPowered(0)).toBe(true);
+    expect(applier.isPowered(99)).toBe(false);
+  });
+
+  it('flags changes on targeted links only, consumed per read', () => {
+    const wire = stubWire();
+    // Link 0 carries a target, link 1 is an empty sparse slot.
+    const applier = new LinkStateApplier([target([wire]), target([])]);
+
+    expect(applier.consumeChanged()).toBe(false);
+    applier.setLink(1, true);
+    expect(applier.consumeChanged()).toBe(false);
+    applier.setLink(0, true);
+    expect(applier.consumeChanged()).toBe(true);
+    // Consumed — no change since.
+    expect(applier.consumeChanged()).toBe(false);
+    applier.setLink(0, true);
+    expect(applier.consumeChanged()).toBe(false);
+  });
+
   it('resets every powered link to unpowered', () => {
     const wires = [stubWire(), stubWire()];
     const applier = new LinkStateApplier(wires.map((w) => target([w])));

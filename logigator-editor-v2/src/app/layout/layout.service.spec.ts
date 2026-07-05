@@ -3,7 +3,7 @@ import { TestBed } from '@angular/core/testing';
 import { configureTestBed } from '../../testing/configure-test-bed';
 import { LayoutService } from './layout.service';
 
-const COMPACT_QUERY = '(max-width: 767.98px)';
+const COMPACT_QUERY = '(max-width: 64rem)';
 const COARSE_QUERY = '(pointer: coarse)';
 
 interface FakeMql {

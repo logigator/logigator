@@ -3,6 +3,7 @@ import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { Subscription } from 'rxjs';
 import { Component } from '../components/component';
 import { LayoutService } from '../layout/layout.service';
+import { ToastService } from '../logging/toast.service';
 import { ProjectService } from '../project/project.service';
 import { SimulationService } from '../simulation/simulation.service';
 import { WorkMode } from '../work-mode/work-mode.enum';
@@ -28,6 +29,7 @@ export class InspectionService {
   private readonly workModeService = inject(WorkModeService);
   private readonly projectService = inject(ProjectService);
   private readonly layout = inject(LayoutService);
+  private readonly toastService = inject(ToastService);
   private readonly windowPresenter = inject(WindowInspectionPresenter);
   private readonly sheetPresenter = inject(SheetInspectionPresenter);
 
@@ -69,23 +71,29 @@ export class InspectionService {
       (entry) => entry.component === component
     );
     if (existing) {
-      this._presenter().focus(existing);
+      this._presenterFor(existing).focus(existing);
       return;
     }
     const factory = component.config.inspection;
     if (!factory) {
       return;
     }
-    const entry: OpenInspection = {
-      component,
-      inspection: factory(component)
-    };
+    let inspection;
+    try {
+      inspection = factory(component);
+    } catch (err) {
+      // A watch can legitimately fail to open (e.g. the definition no longer
+      // matches the compiled board) — surface it instead of crashing the tap.
+      this.toastService.error(err instanceof Error ? err.message : String(err));
+      return;
+    }
+    const entry: OpenInspection = { component, inspection };
     this._open.update((entries) => [...entries, entry]);
-    this._presenter().show(entry, () => this._remove(entry));
+    this._presenterFor(entry).show(entry, () => this._remove(entry));
   }
 
   public close(entry: OpenInspection): void {
-    this._presenter().close(entry);
+    this._presenterFor(entry).close(entry);
     this._remove(entry);
   }
 
@@ -95,15 +103,34 @@ export class InspectionService {
     }
   }
 
-  private _presenter(): InspectionPresenter {
-    return this.layout.isCompact() ? this.sheetPresenter : this.windowPresenter;
+  /**
+   * The presenter framing an entry: windows on desktop; on compact, the
+   * shared sheet — except `compactPresentation: 'fullscreen'` inspections
+   * (watches), which stay windows everywhere (the compact window outlet
+   * renders them as fullscreen takeovers).
+   */
+  private _presenterFor(
+    entry: OpenInspection,
+    compact = this.layout.isCompact()
+  ): InspectionPresenter {
+    if (!compact || entry.inspection.compactPresentation === 'fullscreen') {
+      return this.windowPresenter;
+    }
+    return this.sheetPresenter;
   }
 
-  /** Moves every open inspection from the previous presenter to the new one. */
+  /**
+   * Moves every open inspection from the previous presenter to the new one.
+   * Entries whose presenter doesn't change (watches — windows on both
+   * breakpoints) keep their window entry; only the outlet swaps around them.
+   */
   private _rehome(compact: boolean): void {
-    const from = compact ? this.windowPresenter : this.sheetPresenter;
-    const to = compact ? this.sheetPresenter : this.windowPresenter;
     for (const entry of this._open()) {
+      const from = this._presenterFor(entry, !compact);
+      const to = this._presenterFor(entry, compact);
+      if (from === to) {
+        continue;
+      }
       from.close(entry);
       to.show(entry, () => this._remove(entry));
     }

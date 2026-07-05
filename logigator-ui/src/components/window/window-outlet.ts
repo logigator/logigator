@@ -1,10 +1,12 @@
 import {
   afterNextRender,
+  booleanAttribute,
   ChangeDetectionStrategy,
   Component,
   DestroyRef,
   ElementRef,
   inject,
+  input,
   signal
 } from '@angular/core';
 import { WindowSize } from './window-config';
@@ -18,6 +20,13 @@ import { WindowService } from './window.service';
  * the editor's board area) — the host is pointer-transparent, each window
  * re-enables its own pointer events. Stacking against sibling overlays is the
  * consumer's business: pass a `z-*` class on the element.
+ *
+ * A `fullscreen` outlet renders every window as an outlet-filling takeover
+ * (back button, no drag/resize) instead — a compact-breakpoint alternative.
+ * Every outlet in the tree renders **all** open windows, so keep at most one
+ * outlet alive at a time (e.g. swap a floating and a fullscreen one under a
+ * breakpoint condition); two live outlets would instantiate every window's
+ * content twice.
  */
 @Component({
   selector: 'lg-window-outlet',
@@ -28,11 +37,18 @@ import { WindowService } from './window.service';
   },
   template: `
     @for (window of windows(); track window.id) {
-      <lg-window [entry]="window" [bounds]="bounds()" />
+      <lg-window
+        [entry]="window"
+        [bounds]="bounds()"
+        [fullscreen]="fullscreen()"
+      />
     }
   `
 })
 export class LgWindowOutlet {
+  /** Render windows as outlet-filling takeovers instead of floating panels. */
+  readonly fullscreen = input(false, { transform: booleanAttribute });
+
   protected readonly windows = inject(WindowService).windows;
 
   /** The host's measured size — the clamping bounds handed to each window. */

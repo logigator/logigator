@@ -12,7 +12,7 @@ import { WorkMode } from '../work-mode/work-mode.enum';
 import { WorkModeService } from '../work-mode/work-mode.service';
 import { BoardCompilerService } from './compiler/board-compiler.service';
 import { CompiledBoard, TOP_LEVEL_PATH } from './compiler/compiled-board.model';
-import { LinkStateApplier } from './state/link-state-applier';
+import { LinkStateApplier, SnapshotApplier } from './state/link-state-applier';
 import { INPUT_EVENT_CONT, INPUT_EVENT_PULSE } from './worker/protocol';
 import {
   SimulationRunMode,
@@ -90,6 +90,9 @@ export class SimulationService {
   private _applier: LinkStateApplier | null = null;
   private _project: Project | null = null;
   private _userInputSub?: Subscription;
+  // Watch appliers registered by open inner-circuit views; every snapshot the
+  // bridge applies to the board applier is fanned out to these too.
+  private readonly _watchAppliers = new Set<SnapshotApplier>();
 
   constructor() {
     const shortcutService = inject(ShortcutService);
@@ -111,6 +114,26 @@ export class SimulationService {
   /** The current session's compiled board. */
   public get board(): CompiledBoard | null {
     return this._board;
+  }
+
+  /**
+   * Registers a secondary applier (a watch over an inner circuit) to receive
+   * every snapshot alongside the board applier. Returns the unregister
+   * function. The registration does not survive the session — exit() clears
+   * all watch appliers.
+   */
+  public registerApplier(applier: SnapshotApplier): () => void {
+    this._watchAppliers.add(applier);
+    return () => this._watchAppliers.delete(applier);
+  }
+
+  /**
+   * Pulls one full snapshot from the engine (running or paused) — call after
+   * registering a watch applier so it starts from complete state instead of
+   * accumulating future deltas over darkness.
+   */
+  public requestSnapshot(): void {
+    this.workerService.requestSnapshot();
   }
 
   /**
@@ -149,7 +172,21 @@ export class SimulationService {
     this._state.set('starting');
     this.workerService
       .startSession(board.descriptor, {
-        applier,
+        // Fan-out: the board applier first, then every registered watch.
+        applier: {
+          applyDelta: (ids, values) => {
+            applier.applyDelta(ids, values);
+            for (const watch of this._watchAppliers) {
+              watch.applyDelta(ids, values);
+            }
+          },
+          applyFull: (bits) => {
+            applier.applyFull(bits);
+            for (const watch of this._watchAppliers) {
+              watch.applyFull(bits);
+            }
+          }
+        },
         repaint: () => this._project?.triggerTicker('single'),
         onFrame: () => this._frame$.next(),
         onError: (message) => {
@@ -179,6 +216,7 @@ export class SimulationService {
     this._userInputSub = undefined;
     this.workerService.endSession();
     this._state.set('inactive');
+    this._watchAppliers.clear();
 
     this._applier?.reset();
     if (this._project && !this._project.destroyed) {
@@ -315,26 +353,51 @@ export class SimulationService {
   }
 
   private _onUserInput(component: Component): void {
-    const boardIndex = this._board?.userInputs.get(component.id);
+    this._activate(component, this._board?.userInputs.get(component.id), () =>
+      this._project?.triggerTicker('single')
+    );
+  }
+
+  /**
+   * Activates a lever/button whose engine unit index is already resolved —
+   * the path for inner user inputs clicked in a watch, where `component` is
+   * the watch's fresh copy (its visuals toggle/flash) and `unitIndex` comes
+   * from the watch index (`infoFor(path).unitIndexFor(bodyIndex)`). `repaint`
+   * re-blits whatever canvas shows the component.
+   */
+  public triggerUnitInput(
+    unitIndex: number,
+    component: Component,
+    repaint: () => void
+  ): void {
+    this._activate(component, unitIndex, repaint);
+  }
+
+  /** Shared lever/button activation: visuals plus the engine input event. */
+  private _activate(
+    component: Component,
+    unitIndex: number | undefined,
+    repaint: () => void
+  ): void {
     if (component instanceof LeverComponent) {
       component.toggle();
-      if (boardIndex !== undefined) {
-        this.workerService.triggerInput(boardIndex, INPUT_EVENT_CONT, [
+      if (unitIndex !== undefined) {
+        this.workerService.triggerInput(unitIndex, INPUT_EVENT_CONT, [
           component.isOn
         ]);
       }
     } else if (component instanceof ButtonComponent) {
       component.setPressed(true);
-      if (boardIndex !== undefined) {
-        this.workerService.triggerInput(boardIndex, INPUT_EVENT_PULSE, [true]);
+      if (unitIndex !== undefined) {
+        this.workerService.triggerInput(unitIndex, INPUT_EVENT_PULSE, [true]);
       }
       setTimeout(() => {
         if (!component.destroyed) {
           component.setPressed(false);
-          this._project?.triggerTicker('single');
+          repaint();
         }
       }, BUTTON_FLASH_MS);
     }
-    this._project?.triggerTicker('single');
+    repaint();
   }
 }
