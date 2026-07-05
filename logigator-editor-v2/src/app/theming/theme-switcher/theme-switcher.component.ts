@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, inject } from '@angular/core';
+import { Component, inject } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { LgSelectButton } from '@logigator/ui';
 import { ThemingService } from '../theming.service';
@@ -7,8 +7,7 @@ import { ThemeType } from '../theme-type.enum';
 @Component({
   selector: 'app-theme-switcher',
   imports: [FormsModule, LgSelectButton],
-  templateUrl: './theme-switcher.component.html',
-  changeDetection: ChangeDetectionStrategy.OnPush
+  templateUrl: './theme-switcher.component.html'
 })
 export class ThemeSwitcherComponent {
   private readonly themingService = inject(ThemingService);

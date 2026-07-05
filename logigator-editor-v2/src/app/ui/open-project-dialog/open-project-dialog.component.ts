@@ -1,11 +1,4 @@
-import {
-  ChangeDetectionStrategy,
-  Component,
-  computed,
-  inject,
-  OnInit,
-  signal
-} from '@angular/core';
+import { Component, computed, inject, OnInit, signal } from '@angular/core';
 import {
   DialogRef,
   LgFileUpload,
@@ -46,8 +39,7 @@ const PAGE_SIZE = 20;
     ProjectListComponent,
     LgMessage
   ],
-  templateUrl: './open-project-dialog.component.html',
-  changeDetection: ChangeDetectionStrategy.OnPush
+  templateUrl: './open-project-dialog.component.html'
 })
 export class OpenProjectDialogComponent implements OnInit {
   private readonly ref = inject(DialogRef);

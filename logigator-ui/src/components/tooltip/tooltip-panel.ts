@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, input } from '@angular/core';
+import { Component, input } from '@angular/core';
 import { LgCaret } from '../../internal/caret';
 import { LgFadeIn } from '../../internal/fade-in';
 import { LgOverlaySide } from '../../internal/overlay';
@@ -13,7 +13,6 @@ import { LgShortcut, LgShortcutBinding } from '../shortcut/shortcut';
  */
 @Component({
   selector: 'lg-tooltip-panel',
-  changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [LgCaret, LgFadeIn, LgShortcut],
   template: `
     <div

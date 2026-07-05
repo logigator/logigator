@@ -1,10 +1,4 @@
-import {
-  booleanAttribute,
-  ChangeDetectionStrategy,
-  Component,
-  computed,
-  input
-} from '@angular/core';
+import { booleanAttribute, Component, computed, input } from '@angular/core';
 import { LgSeverity } from '../../tokens/severity';
 
 const BASE =
@@ -25,7 +19,6 @@ const SEVERITY: Record<'primary' | LgSeverity, string> = {
 /** A small status label. Subtle, tinted by `severity` (default primary). */
 @Component({
   selector: 'lg-tag',
-  changeDetection: ChangeDetectionStrategy.OnPush,
   host: { class: 'inline-flex' },
   template: `<span [class]="classes()">{{ value() }}</span>`
 })

@@ -1,5 +1,4 @@
 import {
-  ChangeDetectionStrategy,
   Component,
   computed,
   effect,
@@ -60,7 +59,6 @@ const COLLAPSED_STORAGE_KEY = 'logigator.minimap.collapsed';
   selector: 'app-minimap',
   templateUrl: './minimap.component.html',
   imports: [LgButton, TranslocoDirective],
-  changeDetection: ChangeDetectionStrategy.OnPush,
   host: {
     '[class]': 'hostClasses()',
     '[style.display]': "hasContent() ? 'block' : 'none'",

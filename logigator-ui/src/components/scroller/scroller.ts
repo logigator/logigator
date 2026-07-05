@@ -5,7 +5,6 @@ import {
   CdkVirtualScrollViewport
 } from '@angular/cdk/scrolling';
 import {
-  ChangeDetectionStrategy,
   Component,
   contentChild,
   input,
@@ -22,7 +21,6 @@ import {
  */
 @Component({
   selector: 'lg-scroller',
-  changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [
     CdkVirtualScrollViewport,
     CdkFixedSizeVirtualScroll,

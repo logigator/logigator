@@ -2,7 +2,6 @@ import { NgTemplateOutlet } from '@angular/common';
 import { ConnectedPosition, Overlay, OverlayRef } from '@angular/cdk/overlay';
 import { TemplatePortal } from '@angular/cdk/portal';
 import {
-  ChangeDetectionStrategy,
   Component,
   contentChild,
   inject,
@@ -64,7 +63,6 @@ const MENU_POSITIONS: ConnectedPosition[] = [
  */
 @Component({
   selector: 'lg-menu',
-  changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [NgTemplateOutlet, LgFadeIn],
   template: `
     <ng-template #panel>

@@ -1,11 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import {
-  ChangeDetectionStrategy,
-  Component,
-  inject,
-  input,
-  signal
-} from '@angular/core';
+import { Component, inject, input, signal } from '@angular/core';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { firstValueFrom } from 'rxjs';
 import { WindowSize } from './window-config';
@@ -15,7 +9,6 @@ import { WindowService } from './window.service';
 
 @Component({
   selector: 'lg-test-window-child',
-  changeDetection: ChangeDetectionStrategy.OnPush,
   template: `<p class="child">{{ wordSize() }}</p>
     <button class="self-close" (click)="ref.close('self')">close</button>`
 })
@@ -26,14 +19,12 @@ class TestWindowChild {
 }
 
 @Component({
-  changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [LgWindowOutlet],
   template: `<div class="relative"><lg-window-outlet /></div>`
 })
 class Host {}
 
 @Component({
-  changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [LgWindowOutlet],
   template: `<div class="relative"><lg-window-outlet fullscreen /></div>`
 })

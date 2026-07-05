@@ -1,10 +1,4 @@
-import {
-  booleanAttribute,
-  ChangeDetectionStrategy,
-  Component,
-  computed,
-  input
-} from '@angular/core';
+import { booleanAttribute, Component, computed, input } from '@angular/core';
 import { LgSeverity } from '../../tokens/severity';
 
 const BASE =
@@ -26,7 +20,6 @@ const SEVERITY: Record<'primary' | LgSeverity, string> = {
 /** A small count/label pill. `rounded` makes it a full pill (default rounded-md). */
 @Component({
   selector: 'lg-badge',
-  changeDetection: ChangeDetectionStrategy.OnPush,
   host: { class: 'inline-flex' },
   template: `<span [class]="classes()">{{ value() }}</span>`
 })

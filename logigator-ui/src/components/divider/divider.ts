@@ -1,9 +1,4 @@
-import {
-  ChangeDetectionStrategy,
-  Component,
-  computed,
-  input
-} from '@angular/core';
+import { Component, computed, input } from '@angular/core';
 
 /**
  * A thin separator line. `layout="vertical"` draws a vertical rule (stretches
@@ -12,7 +7,6 @@ import {
  */
 @Component({
   selector: 'lg-divider',
-  changeDetection: ChangeDetectionStrategy.OnPush,
   template: '',
   host: {
     role: 'separator',

@@ -1,11 +1,10 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import { ChangeDetectionStrategy, Component } from '@angular/core';
+import { Component } from '@angular/core';
 import { TestBed } from '@angular/core/testing';
 import { LgToast } from './toast';
 import { ToastService } from './toast.service';
 
 @Component({
-  changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [LgToast],
   template: `<lg-toast position="bottom-left" class="absolute! -mb-4" />`
 })

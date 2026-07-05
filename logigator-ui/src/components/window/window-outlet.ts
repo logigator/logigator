@@ -1,7 +1,6 @@
 import {
   afterNextRender,
   booleanAttribute,
-  ChangeDetectionStrategy,
   Component,
   DestroyRef,
   ElementRef,
@@ -30,7 +29,6 @@ import { WindowService } from './window.service';
  */
 @Component({
   selector: 'lg-window-outlet',
-  changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [LgWindow],
   host: {
     class: 'pointer-events-none absolute inset-0 block'

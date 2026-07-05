@@ -1,9 +1,4 @@
-import {
-  ChangeDetectionStrategy,
-  Component,
-  inject,
-  input
-} from '@angular/core';
+import { Component, inject, input } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import {
   LgButton,
@@ -37,8 +32,7 @@ import { SiPipe } from '../../utils/si/si.pipe';
     SiPipe,
     TranslocoDirective
   ],
-  templateUrl: './simulation-controls.component.html',
-  changeDetection: ChangeDetectionStrategy.OnPush
+  templateUrl: './simulation-controls.component.html'
 })
 export class SimulationControlsComponent {
   private readonly simulationService = inject(SimulationService);

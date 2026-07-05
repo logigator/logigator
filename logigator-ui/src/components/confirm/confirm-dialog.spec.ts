@@ -1,11 +1,10 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
-import { ChangeDetectionStrategy, Component } from '@angular/core';
+import { Component } from '@angular/core';
 import { TestBed } from '@angular/core/testing';
 import { LgConfirmDialog } from './confirm-dialog';
 import { ConfirmationService } from './confirmation.service';
 
 @Component({
-  changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [LgConfirmDialog],
   template: `<lg-confirm-dialog />`
 })

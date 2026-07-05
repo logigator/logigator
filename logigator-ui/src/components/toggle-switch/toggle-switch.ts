@@ -1,10 +1,4 @@
-import {
-  ChangeDetectionStrategy,
-  Component,
-  forwardRef,
-  input,
-  signal
-} from '@angular/core';
+import { Component, forwardRef, input, signal } from '@angular/core';
 import { ControlValueAccessor, NG_VALUE_ACCESSOR } from '@angular/forms';
 
 /**
@@ -18,7 +12,6 @@ import { ControlValueAccessor, NG_VALUE_ACCESSOR } from '@angular/forms';
  */
 @Component({
   selector: 'lg-toggle-switch',
-  changeDetection: ChangeDetectionStrategy.OnPush,
   host: { class: 'relative inline-block h-6 w-10 shrink-0 align-middle' },
   providers: [
     {

@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, inject } from '@angular/core';
+import { Component, inject } from '@angular/core';
 import { DialogRef, LgButton, LgDivider, LgTooltip } from '@logigator/ui';
 import { TranslocoDirective } from '@jsverse/transloco';
 import { ShortcutService } from '../shortcut.service';
@@ -21,8 +21,7 @@ interface ShortcutGroup {
     TranslocoDirective,
     ShortcutEditComponent
   ],
-  templateUrl: './shortcut-manager.component.html',
-  changeDetection: ChangeDetectionStrategy.OnPush
+  templateUrl: './shortcut-manager.component.html'
 })
 export class ShortcutManagerComponent {
   private readonly ref = inject(DialogRef);

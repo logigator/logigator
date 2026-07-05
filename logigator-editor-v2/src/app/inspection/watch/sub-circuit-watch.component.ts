@@ -1,6 +1,5 @@
 import {
   AfterViewInit,
-  ChangeDetectionStrategy,
   Component,
   effect,
   ElementRef,
@@ -42,7 +41,6 @@ import {
  */
 @Component({
   selector: 'app-sub-circuit-watch',
-  changeDetection: ChangeDetectionStrategy.OnPush,
   host: { class: 'block h-full' },
   template: `<canvas #canvas class="block h-full w-full touch-none"></canvas>`
 })

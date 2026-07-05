@@ -1,11 +1,10 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
-import { ChangeDetectionStrategy, Component, signal } from '@angular/core';
+import { Component, signal } from '@angular/core';
 import { TestBed } from '@angular/core/testing';
 import { LgMenubar } from './menubar';
 import { MenuItem } from './menu-item.model';
 
 @Component({
-  changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [LgMenubar],
   template: `
     <lg-menubar [model]="items()">
@@ -145,7 +144,6 @@ describe('LgMenubar', () => {
 
   it('renders an item shortcut as kbd chips in the default row', () => {
     @Component({
-      changeDetection: ChangeDetectionStrategy.OnPush,
       imports: [LgMenubar],
       template: `<lg-menubar [model]="items" />`
     })

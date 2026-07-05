@@ -1,9 +1,4 @@
-import {
-  ChangeDetectionStrategy,
-  Component,
-  computed,
-  inject
-} from '@angular/core';
+import { Component, computed, inject } from '@angular/core';
 import { LgButton, LgPopover } from '@logigator/ui';
 import { TranslocoDirective } from '@jsverse/transloco';
 import { WorkModeService } from '../../work-mode/work-mode.service';
@@ -29,8 +24,7 @@ const PRIMARY_IDS: readonly WorkModeToolId[] = ['pan', 'select', 'wire'];
 @Component({
   selector: 'app-tool-hud',
   imports: [LgButton, LgPopover, TranslocoDirective],
-  templateUrl: './tool-hud.component.html',
-  changeDetection: ChangeDetectionStrategy.OnPush
+  templateUrl: './tool-hud.component.html'
 })
 export class ToolHudComponent {
   private readonly workModeService = inject(WorkModeService);

@@ -1,10 +1,9 @@
 import { describe, expect, it } from 'vitest';
-import { ChangeDetectionStrategy, Component, signal } from '@angular/core';
+import { Component, signal } from '@angular/core';
 import { TestBed } from '@angular/core/testing';
 import { LgTabStripItem, LgTabStrip } from './tab-strip';
 
 @Component({
-  changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [LgTabStrip],
   template: `<lg-tab-strip
     [tabs]="tabs()"

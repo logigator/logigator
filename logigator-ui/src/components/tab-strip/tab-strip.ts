@@ -1,6 +1,5 @@
 import {
   booleanAttribute,
-  ChangeDetectionStrategy,
   Component,
   computed,
   input,
@@ -50,7 +49,6 @@ export interface LgTabReorder {
  */
 @Component({
   selector: 'lg-tab-strip',
-  changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [CdkDropList, CdkDrag, NgTemplateOutlet],
   host: { class: 'block' },
   template: `

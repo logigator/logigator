@@ -1,9 +1,4 @@
-import {
-  ChangeDetectionStrategy,
-  Component,
-  inject,
-  signal
-} from '@angular/core';
+import { Component, inject, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import {
   DialogRef,
@@ -36,8 +31,7 @@ import { UserService } from '../../user/user.service';
     TranslocoDirective,
     LgMessage
   ],
-  templateUrl: './new-component-dialog.component.html',
-  changeDetection: ChangeDetectionStrategy.OnPush
+  templateUrl: './new-component-dialog.component.html'
 })
 export class NewComponentDialogComponent {
   private readonly ref = inject(DialogRef);

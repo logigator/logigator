@@ -1,9 +1,4 @@
-import {
-  ChangeDetectionStrategy,
-  Component,
-  input,
-  signal
-} from '@angular/core';
+import { Component, input, signal } from '@angular/core';
 import { MenuItem } from '../menu/menu-item.model';
 
 const ROW =
@@ -18,7 +13,6 @@ const ROW =
  */
 @Component({
   selector: 'lg-panel-menu',
-  changeDetection: ChangeDetectionStrategy.OnPush,
   host: { class: 'block' },
   template: `
     @for (item of model(); track $index; let i = $index) {

@@ -1,10 +1,5 @@
 import { NgComponentOutlet } from '@angular/common';
-import {
-  ChangeDetectionStrategy,
-  Component,
-  computed,
-  inject
-} from '@angular/core';
+import { Component, computed, inject } from '@angular/core';
 import { LgDrawer } from '@logigator/ui';
 import { SheetInspectionPresenter } from './sheet-inspection.presenter';
 
@@ -17,7 +12,6 @@ import { SheetInspectionPresenter } from './sheet-inspection.presenter';
 @Component({
   selector: 'app-inspection-sheet',
   imports: [LgDrawer, NgComponentOutlet],
-  changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     <lg-drawer
       position="bottom"

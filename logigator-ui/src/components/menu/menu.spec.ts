@@ -1,11 +1,10 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
-import { ChangeDetectionStrategy, Component, signal } from '@angular/core';
+import { Component, signal } from '@angular/core';
 import { TestBed } from '@angular/core/testing';
 import { LgMenu } from './menu';
 import { MenuItem } from './menu-item.model';
 
 @Component({
-  changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [LgMenu],
   template: `
     <button (click)="menu.toggle($event)">trigger</button>

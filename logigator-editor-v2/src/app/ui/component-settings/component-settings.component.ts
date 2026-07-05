@@ -1,10 +1,4 @@
-import {
-  ChangeDetectionStrategy,
-  Component,
-  computed,
-  inject,
-  input
-} from '@angular/core';
+import { Component, computed, inject, input } from '@angular/core';
 import { NgComponentOutlet } from '@angular/common';
 import { WorkModeService } from '../../work-mode/work-mode.service';
 import { WorkMode } from '../../work-mode/work-mode.enum';
@@ -24,8 +18,7 @@ import { SourceIndicatorComponent } from '../source-indicator/source-indicator.c
 @Component({
   selector: 'app-component-settings',
   imports: [NgComponentOutlet, LgCard, SourceIndicatorComponent],
-  templateUrl: './component-settings.component.html',
-  changeDetection: ChangeDetectionStrategy.OnPush
+  templateUrl: './component-settings.component.html'
 })
 export class ComponentSettingsComponent {
   private readonly workModeService = inject(WorkModeService);

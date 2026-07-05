@@ -1,7 +1,6 @@
 import { NgTemplateOutlet } from '@angular/common';
 import {
   booleanAttribute,
-  ChangeDetectionStrategy,
   Component,
   computed,
   contentChild,
@@ -33,7 +32,6 @@ const SEGMENT_PADDING: Record<LgSize, string> = {
  */
 @Component({
   selector: 'lg-select-button',
-  changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [NgTemplateOutlet],
   host: { class: 'inline-flex', '[class.w-full]': 'fluid()' },
   providers: [

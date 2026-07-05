@@ -5,7 +5,6 @@ import {
 } from '@angular/cdk/overlay';
 import { TemplatePortal } from '@angular/cdk/portal';
 import {
-  ChangeDetectionStrategy,
   Component,
   inject,
   OnDestroy,
@@ -33,7 +32,6 @@ import {
  */
 @Component({
   selector: 'lg-popover',
-  changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [LgCaret, LgFadeIn],
   template: `
     <ng-template #content>

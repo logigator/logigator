@@ -1,11 +1,10 @@
 import { describe, expect, it } from 'vitest';
-import { ChangeDetectionStrategy, Component } from '@angular/core';
+import { Component } from '@angular/core';
 import { TestBed } from '@angular/core/testing';
 import { LgRipple } from './ripple';
 
 @Component({
   imports: [LgRipple],
-  changeDetection: ChangeDetectionStrategy.OnPush,
   template: `<a lgRipple>click</a>`
 })
 class HostComponent {}

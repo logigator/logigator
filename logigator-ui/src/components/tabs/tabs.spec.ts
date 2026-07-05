@@ -1,10 +1,9 @@
 import { describe, expect, it } from 'vitest';
-import { ChangeDetectionStrategy, Component, signal } from '@angular/core';
+import { Component, signal } from '@angular/core';
 import { TestBed } from '@angular/core/testing';
 import { LgTab, LgTabPanel, LgTabs } from './tabs';
 
 @Component({
-  changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [LgTabs, LgTab, LgTabPanel],
   template: `<lg-tabs [value]="active()" (valueChange)="active.set($event)">
     <lg-tab value="a">Tab A</lg-tab>

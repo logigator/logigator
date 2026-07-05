@@ -1,9 +1,4 @@
-import {
-  ChangeDetectionStrategy,
-  Component,
-  computed,
-  inject
-} from '@angular/core';
+import { Component, computed, inject } from '@angular/core';
 import { toObservable, toSignal } from '@angular/core/rxjs-interop';
 import {
   CdkDragDrop,
@@ -58,8 +53,7 @@ interface PlugRow {
     ComponentListCategoryComponent
   ],
   templateUrl: './ports-panel.component.html',
-  styleUrl: './ports-panel.component.scss',
-  changeDetection: ChangeDetectionStrategy.OnPush
+  styleUrl: './ports-panel.component.scss'
 })
 export class PortsPanelComponent {
   private readonly projectService = inject(ProjectService);

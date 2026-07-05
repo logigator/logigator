@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, inject } from '@angular/core';
+import { Component, inject } from '@angular/core';
 import { LgButton } from '@logigator/ui';
 import { TranslocoDirective } from '@jsverse/transloco';
 import { SelectionInspectorService } from '../../project/selection-inspector.service';
@@ -56,8 +56,7 @@ import { ProjectService } from '../../project/project.service';
         ></lg-button>
       </div>
     }
-  `,
-  changeDetection: ChangeDetectionStrategy.OnPush
+  `
 })
 export class SelectionActionBarComponent {
   protected readonly inspector = inject(SelectionInspectorService);

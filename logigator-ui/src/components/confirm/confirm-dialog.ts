@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component } from '@angular/core';
+import { Component } from '@angular/core';
 import { LgButton } from '../button/button';
 import { LgDialog } from '../dialog/dialog';
 import { Confirmation } from './confirmation';
@@ -14,7 +14,6 @@ import { LgConfirmOutlet } from './confirm-outlet';
  */
 @Component({
   selector: 'lg-confirm-dialog',
-  changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [LgDialog, LgButton],
   template: `
     <lg-dialog

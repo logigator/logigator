@@ -1,11 +1,4 @@
-import {
-  ChangeDetectionStrategy,
-  Component,
-  DestroyRef,
-  inject,
-  model,
-  signal
-} from '@angular/core';
+import { Component, DestroyRef, inject, model, signal } from '@angular/core';
 import { fromEvent, Subscription } from 'rxjs';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { LgButton, LgShortcut, LgTooltip } from '@logigator/ui';
@@ -16,8 +9,7 @@ import { ShortcutService } from '../shortcut.service';
 @Component({
   selector: 'app-shortcut-edit',
   imports: [LgButton, LgShortcut, LgTooltip, TranslocoDirective],
-  templateUrl: './shortcut-edit.component.html',
-  changeDetection: ChangeDetectionStrategy.OnPush
+  templateUrl: './shortcut-edit.component.html'
 })
 export class ShortcutEditComponent {
   private readonly destroyRef = inject(DestroyRef);

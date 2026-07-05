@@ -1,7 +1,6 @@
 import 'pixi.js/math-extras';
 
 import {
-  ChangeDetectionStrategy,
   Component,
   computed,
   effect,
@@ -85,8 +84,7 @@ import { UserSettingsComponent } from './ui/user-settings/user-settings.componen
     UserSettingsComponent
   ],
   templateUrl: './app.component.html',
-  styleUrl: './app.component.scss',
-  changeDetection: ChangeDetectionStrategy.OnPush
+  styleUrl: './app.component.scss'
 })
 export class AppComponent {
   private readonly injector = inject(Injector);

@@ -1,12 +1,11 @@
 import { describe, expect, it, vi } from 'vitest';
-import { ChangeDetectionStrategy, Component, signal } from '@angular/core';
+import { Component, signal } from '@angular/core';
 import { TestBed } from '@angular/core/testing';
 import { CdkVirtualScrollViewport } from '@angular/cdk/scrolling';
 import { By } from '@angular/platform-browser';
 import { LgScroller } from './scroller';
 
 @Component({
-  changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [LgScroller],
   template: `<lg-scroller
     [items]="items()"

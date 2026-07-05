@@ -1,6 +1,5 @@
 import {
   booleanAttribute,
-  ChangeDetectionStrategy,
   Component,
   computed,
   effect,
@@ -82,8 +81,7 @@ const RADICES: Record<Radix, RadixSpec> = {
     LgInputText,
     LgScroller
   ],
-  templateUrl: './hex-editor.component.html',
-  changeDetection: ChangeDetectionStrategy.OnPush
+  templateUrl: './hex-editor.component.html'
 })
 export class HexEditorComponent {
   private readonly layout = inject(LayoutService);

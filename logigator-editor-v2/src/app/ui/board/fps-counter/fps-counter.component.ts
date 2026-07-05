@@ -1,11 +1,4 @@
-import {
-  ChangeDetectionStrategy,
-  Component,
-  input,
-  OnDestroy,
-  OnInit,
-  signal
-} from '@angular/core';
+import { Component, input, OnDestroy, OnInit, signal } from '@angular/core';
 import { Ticker } from 'pixi.js';
 
 /**
@@ -22,8 +15,7 @@ import { Ticker } from 'pixi.js';
 @Component({
   selector: 'app-fps-counter',
   imports: [],
-  templateUrl: './fps-counter.component.html',
-  changeDetection: ChangeDetectionStrategy.OnPush
+  templateUrl: './fps-counter.component.html'
 })
 export class FpsCounterComponent implements OnInit, OnDestroy {
   private static readonly SAMPLE_INTERVAL_MS = 500;

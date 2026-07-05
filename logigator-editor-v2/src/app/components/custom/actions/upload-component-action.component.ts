@@ -1,10 +1,4 @@
-import {
-  ChangeDetectionStrategy,
-  Component,
-  computed,
-  inject,
-  input
-} from '@angular/core';
+import { Component, computed, inject, input } from '@angular/core';
 import { DialogService, LgButton, LgTooltip } from '@logigator/ui';
 import { TranslocoDirective, TranslocoService } from '@jsverse/transloco';
 import { ComponentActionContext } from '../../component-action';
@@ -40,8 +34,7 @@ import {
         (onClick)="upload()"
       />
     }
-  </ng-container>`,
-  changeDetection: ChangeDetectionStrategy.OnPush
+  </ng-container>`
 })
 export class UploadComponentActionComponent {
   public readonly context = input.required<ComponentActionContext>();

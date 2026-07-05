@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { ChangeDetectionStrategy, Component, signal } from '@angular/core';
+import { Component, signal } from '@angular/core';
 import { TestBed } from '@angular/core/testing';
 import {
   formatShortcutKey,
@@ -9,7 +9,6 @@ import {
 } from './shortcut';
 
 @Component({
-  changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [LgShortcut],
   template: `<lg-shortcut [binding]="binding()" [mac]="mac()" />`
 })
@@ -60,7 +59,6 @@ describe('LgShortcut', () => {
 
   it('skins the chips for a raised backdrop via tone', () => {
     @Component({
-      changeDetection: ChangeDetectionStrategy.OnPush,
       imports: [LgShortcut],
       template: `<lg-shortcut
         [binding]="{ key: 's', ctrl: true }"

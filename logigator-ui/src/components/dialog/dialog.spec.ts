@@ -1,10 +1,9 @@
 import { afterEach, describe, expect, it } from 'vitest';
-import { ChangeDetectionStrategy, Component, signal } from '@angular/core';
+import { Component, signal } from '@angular/core';
 import { TestBed } from '@angular/core/testing';
 import { LgDialog } from './dialog';
 
 @Component({
-  changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [LgDialog],
   template: `
     <lg-dialog

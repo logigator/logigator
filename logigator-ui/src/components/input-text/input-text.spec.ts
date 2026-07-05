@@ -1,11 +1,10 @@
 import { describe, expect, it } from 'vitest';
-import { ChangeDetectionStrategy, Component, signal } from '@angular/core';
+import { Component, signal } from '@angular/core';
 import { TestBed } from '@angular/core/testing';
 import { FormsModule } from '@angular/forms';
 import { LgInputText } from './input-text';
 
 @Component({
-  changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [LgInputText, FormsModule],
   template: `<input
     lgInputText

@@ -1,9 +1,4 @@
-import {
-  ChangeDetectionStrategy,
-  Component,
-  computed,
-  inject
-} from '@angular/core';
+import { Component, computed, inject } from '@angular/core';
 import { toSignal } from '@angular/core/rxjs-interop';
 import { TranslocoDirective, TranslocoService } from '@jsverse/transloco';
 import { LgTabReorder, LgTabStrip, LgTabStripItem } from '@logigator/ui';
@@ -30,8 +25,7 @@ import { Project } from '../../project/project';
 @Component({
   selector: 'app-tab-bar',
   imports: [LgTabStrip, TranslocoDirective],
-  templateUrl: './tab-bar.component.html',
-  changeDetection: ChangeDetectionStrategy.OnPush
+  templateUrl: './tab-bar.component.html'
 })
 export class TabBarComponent {
   private readonly projectService = inject(ProjectService);

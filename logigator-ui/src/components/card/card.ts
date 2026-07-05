@@ -1,10 +1,5 @@
 import { NgTemplateOutlet } from '@angular/common';
-import {
-  ChangeDetectionStrategy,
-  Component,
-  contentChild,
-  TemplateRef
-} from '@angular/core';
+import { Component, contentChild, TemplateRef } from '@angular/core';
 
 /**
  * A floating content panel. Projects an optional `#title` and `#subtitle`
@@ -13,7 +8,6 @@ import {
  */
 @Component({
   selector: 'lg-card',
-  changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [NgTemplateOutlet],
   host: {
     class: 'block rounded-xl bg-content p-5 text-text shadow-sm'

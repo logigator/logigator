@@ -1,7 +1,6 @@
 import { NgTemplateOutlet } from '@angular/common';
 import {
   booleanAttribute,
-  ChangeDetectionStrategy,
   Component,
   computed,
   contentChild,
@@ -22,7 +21,6 @@ import {
  */
 @Component({
   selector: 'lg-accordion',
-  changeDetection: ChangeDetectionStrategy.OnPush,
   host: { class: 'block' },
   template: '<ng-content></ng-content>'
 })
@@ -58,7 +56,6 @@ export class LgAccordion {
  */
 @Component({
   selector: 'lg-accordion-panel',
-  changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [NgTemplateOutlet],
   host: { class: 'block border-b border-border last:border-b-0' },
   template: `

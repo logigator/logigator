@@ -5,7 +5,6 @@ import {
 } from '@angular/cdk/overlay';
 import { TemplatePortal } from '@angular/cdk/portal';
 import {
-  ChangeDetectionStrategy,
   Component,
   inject,
   OnDestroy,
@@ -39,7 +38,6 @@ const POPUP_GAP = 10;
  */
 @Component({
   selector: 'lg-confirm-popup',
-  changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [LgButton, LgCaret, LgFadeIn],
   template: `
     <ng-template #panel>

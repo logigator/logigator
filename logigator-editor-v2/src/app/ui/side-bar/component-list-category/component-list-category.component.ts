@@ -1,10 +1,4 @@
-import {
-  ChangeDetectionStrategy,
-  Component,
-  computed,
-  inject,
-  input
-} from '@angular/core';
+import { Component, computed, inject, input } from '@angular/core';
 import {
   ComponentConfig,
   LocalizableText,
@@ -20,8 +14,7 @@ import { SourceIndicatorComponent } from '../../source-indicator/source-indicato
 @Component({
   selector: 'app-component-list-category',
   imports: [SourceIndicatorComponent],
-  templateUrl: './component-list-category.component.html',
-  changeDetection: ChangeDetectionStrategy.OnPush
+  templateUrl: './component-list-category.component.html'
 })
 export class ComponentListCategoryComponent {
   private readonly workModeService = inject(WorkModeService);

@@ -1,7 +1,6 @@
 import { NgStyle } from '@angular/common';
 import {
   AfterViewInit,
-  ChangeDetectionStrategy,
   Component,
   computed,
   inject,
@@ -34,7 +33,6 @@ let nextId = 0;
  */
 @Component({
   selector: 'lg-dynamic-dialog-container',
-  changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [NgStyle, LgScaleIn],
   template: `
     <div

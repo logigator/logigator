@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, input } from '@angular/core';
+import { Component, input } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { LgInputText } from '@logigator/ui';
 import { TranslocoDirective } from '@jsverse/transloco';
@@ -10,8 +10,7 @@ let nextId = 0;
 @Component({
   selector: 'app-text-input-option-input',
   imports: [FormsModule, LgInputText, TranslocoDirective],
-  templateUrl: './text-input-option-input.component.html',
-  changeDetection: ChangeDetectionStrategy.OnPush
+  templateUrl: './text-input-option-input.component.html'
 })
 export class TextInputOptionInputComponent implements ComponentOptionInput<string> {
   public readonly option = input.required<TextInputComponentOption>();
