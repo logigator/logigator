@@ -38,6 +38,10 @@ The contract:
   presenter passes the inspection itself as the renderer's `inspection` input
   (windows via `setInput`, the sheet via `*ngComponentOutlet` inputs).
 - `title: Signal<string>` — live window / sheet-tab title.
+- `titleParts?` — structured title segments (breadcrumbs); the window title
+  bar and the fullscreen takeover header render them instead of the plain
+  `title`, with `navigate`-carrying segments clickable. `title` stays the flat
+  fallback (sheet tabs, aria labels).
 - `sizing?` — desktop window size hints (initial/min/max).
 - `compactPresentation?` — how the inspection presents on compact: the shared
   bottom sheet (default) or a fullscreen takeover (`'fullscreen'`, used by the
@@ -166,7 +170,9 @@ component layer and `inspection/watch/`:
   `render(project, canvas)` force-unculls (no `CullerPlugin` runs on manual
   renders) and scales the CSS-pixel viewport transform up to the canvas's
   DPR-sized backing store.
-- **`SubCircuitWatchComponent`** — breadcrumb header over the canvas. Pointer
+- **`SubCircuitWatchComponent`** — the canvas; the breadcrumb trail renders in
+  the hosting header (window title bar / takeover header) via the inspection's
+  `titleParts` — ancestor segments are clickable and navigate back. Pointer
   handling is **plain DOM** (the watch renderer has no event system): a press
   within the click threshold is a click (resolved against the watch project's
   quad tree), past it a pan; wheel steps the zoom; touch adds two-finger pan +

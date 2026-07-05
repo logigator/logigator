@@ -30,49 +30,24 @@ import {
 const CLICK_MOVE_THRESHOLD = 5;
 
 /**
- * Renderer for {@link SubCircuitWatch}: a breadcrumb header over a canvas
- * blitted through the shared watch renderer, showing the active level's
- * headless project. Fits the content when a level first shows, then
- * pans/zooms through the project's own viewport controller — pointer handling
- * is plain DOM (the watch renderer has no event system on its target
- * canvases): a press that stays within a small threshold is a click, routed
- * to the model (inner input / drill-down / data inspector); past it, a pan.
- * Re-blits on engine changes (`render$`), viewport/theme changes (the
- * project's `ticker$`), and host resizes.
+ * Renderer for {@link SubCircuitWatch}: a canvas blitted through the shared
+ * watch renderer, showing the active level's headless project (the breadcrumb
+ * trail lives in the hosting header via the inspection's `titleParts`). Fits
+ * the content when a level first shows, then pans/zooms through the project's
+ * own viewport controller — pointer handling is plain DOM (the watch renderer
+ * has no event system on its target canvases): a press that stays within a
+ * small threshold is a click, routed to the model (inner input / drill-down /
+ * data inspector); past it, a pan. Re-blits on engine changes (`render$`),
+ * viewport/theme changes (the project's `ticker$`), and host resizes.
  */
 @Component({
   selector: 'app-sub-circuit-watch',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  host: { class: 'flex h-full flex-col' },
+  host: { class: 'block h-full' },
   template: `
-    @if (inspection().levels().length > 1) {
-      <div
-        class="border-border flex flex-wrap items-center gap-1 border-b px-2 py-1 text-sm"
-      >
-        @for (
-          level of inspection().levels();
-          track level.path;
-          let last = $last;
-          let index = $index
-        ) {
-          @if (!last) {
-            <button
-              type="button"
-              class="text-muted hover:text-primary hover:underline"
-              (click)="inspection().navigateTo(index)"
-            >
-              {{ level.name }}
-            </button>
-            <span class="text-muted">›</span>
-          } @else {
-            <span>{{ level.name }}</span>
-          }
-        }
-      </div>
-    }
     <canvas
       #canvas
-      class="block min-h-0 w-full flex-1 touch-none"
+      class="block h-full w-full touch-none"
       (pointerdown)="onPointerDown($event)"
       (pointermove)="onPointerMove($event)"
       (pointerup)="onPointerUp($event)"
@@ -164,7 +139,10 @@ export class SubCircuitWatchComponent implements AfterViewInit, OnDestroy {
     }
     // Left press: click-or-pan (past the threshold). Right press: pan only,
     // mirroring the board's right-drag pan.
-    if ((event.button !== 0 && event.button !== 2) || this.panPointer !== null) {
+    if (
+      (event.button !== 0 && event.button !== 2) ||
+      this.panPointer !== null
+    ) {
       return;
     }
     this.clickEligible = event.button === 0;

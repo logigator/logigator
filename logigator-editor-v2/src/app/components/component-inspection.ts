@@ -7,6 +7,13 @@ export interface ComponentInspectionSizing {
   max?: { width: number; height: number };
 }
 
+/** One segment of a structured inspection title (a breadcrumb level). */
+export interface InspectionTitlePart {
+  label: string;
+  /** Present on ancestor segments — navigates back to that level. */
+  navigate?: () => void;
+}
+
 /**
  * A live view into a component instance while the simulation runs — the
  * inspection analog of {@link ComponentOption} / {@link ComponentAction}. A
@@ -25,6 +32,13 @@ export abstract class ComponentInspection {
   public abstract readonly renderer: Type<unknown>;
   /** Live title for the hosting window / sheet tab. */
   public abstract readonly title: Signal<string>;
+  /**
+   * Structured title segments (breadcrumbs). When present, the window / the
+   * fullscreen takeover render these in their header instead of the plain
+   * `title` — ancestor segments are clickable and navigate back. `title`
+   * stays the flat fallback (sheet tabs, aria labels).
+   */
+  public readonly titleParts?: Signal<readonly InspectionTitlePart[]>;
   /** Desktop window sizing; the presenter falls back to its defaults. */
   public readonly sizing?: ComponentInspectionSizing;
   /**

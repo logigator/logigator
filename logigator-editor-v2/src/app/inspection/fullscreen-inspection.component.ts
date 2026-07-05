@@ -1,5 +1,10 @@
 import { NgComponentOutlet } from '@angular/common';
-import { ChangeDetectionStrategy, Component, inject } from '@angular/core';
+import {
+  ChangeDetectionStrategy,
+  Component,
+  computed,
+  inject
+} from '@angular/core';
 import { TranslocoDirective } from '@jsverse/transloco';
 import { LgButton } from '@logigator/ui';
 import { FullscreenInspectionPresenter } from './fullscreen-inspection.presenter';
@@ -30,9 +35,32 @@ import { FullscreenInspectionPresenter } from './fullscreen-inspection.presenter
             [ariaLabel]="t('inspection.back')"
             (onClick)="presenter.dismissVisible()"
           ></lg-button>
-          <span class="grow truncate px-1 font-semibold">
-            {{ active.inspection.title() }}
-          </span>
+          @if (activeParts(); as parts) {
+            <span
+              class="flex min-w-0 grow flex-wrap items-center gap-1 px-1 font-semibold"
+            >
+              @for (part of parts; track $index; let last = $last) {
+                @if (part.navigate; as navigate) {
+                  <button
+                    type="button"
+                    class="text-muted hover:text-text truncate hover:underline"
+                    (click)="navigate()"
+                  >
+                    {{ part.label }}
+                  </button>
+                } @else {
+                  <span class="truncate">{{ part.label }}</span>
+                }
+                @if (!last) {
+                  <span class="text-muted">›</span>
+                }
+              }
+            </span>
+          } @else {
+            <span class="grow truncate px-1 font-semibold">
+              {{ active.inspection.title() }}
+            </span>
+          }
         </div>
         <div class="min-h-0 grow">
           <ng-container
@@ -48,4 +76,10 @@ import { FullscreenInspectionPresenter } from './fullscreen-inspection.presenter
 })
 export class FullscreenInspectionComponent {
   protected readonly presenter = inject(FullscreenInspectionPresenter);
+
+  /** Breadcrumb segments of the visible inspection, `null` for plain titles. */
+  protected readonly activeParts = computed(() => {
+    const parts = this.presenter.visible()?.inspection.titleParts?.();
+    return parts && parts.length > 0 ? parts : null;
+  });
 }

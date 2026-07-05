@@ -1,7 +1,10 @@
 import { computed, signal, Signal } from '@angular/core';
 import { Observable, Subject } from 'rxjs';
 import { Component } from '../component';
-import { ComponentInspection } from '../component-inspection';
+import {
+  ComponentInspection,
+  InspectionTitlePart
+} from '../component-inspection';
 import { InspectionService } from '../../inspection/inspection.service';
 import { WatchSession } from '../../inspection/watch/watch-session';
 import { SubCircuitWatchComponent } from '../../inspection/watch/sub-circuit-watch.component';
@@ -84,6 +87,20 @@ export class SubCircuitWatch extends ComponentInspection {
         .join(' › ')
     );
   }
+
+  /**
+   * The breadcrumb trail for the hosting header: one segment per level,
+   * ancestors clickable (navigate back), the visible level plain.
+   */
+  public override readonly titleParts: Signal<readonly InspectionTitlePart[]> =
+    computed(() =>
+      this._levels().map((level, index, levels) => ({
+        label: level.name,
+        ...(index < levels.length - 1
+          ? { navigate: () => this.navigateTo(index) }
+          : {})
+      }))
+    );
 
   /** Routes a click on a component of the active level's fresh copy. */
   public activate(component: Component): void {

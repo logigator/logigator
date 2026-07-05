@@ -10,10 +10,24 @@ export interface WindowPoint {
   y: number;
 }
 
+/** One segment of a structured window title (e.g. a breadcrumb). */
+export interface WindowTitlePart {
+  label: string;
+  /** Makes the segment a clickable action (e.g. breadcrumb navigation). */
+  command?: () => void;
+}
+
 /** Configuration for a floating window ({@link WindowService.open}). */
 export interface WindowConfig {
   /** Title-bar text. A signal keeps the title live while the window is open. */
   title?: string | Signal<string>;
+  /**
+   * Structured title segments rendered as a breadcrumb trail (separated by
+   * `›`, segments with a `command` clickable). When present and non-empty it
+   * replaces the plain {@link title} in the title bar; `title` still feeds
+   * the window's aria-label.
+   */
+  titleParts?: Signal<readonly WindowTitlePart[]>;
   /**
    * Inputs applied to the content component via `setInput()` before its first
    * change detection, so `input.required` signals resolve.

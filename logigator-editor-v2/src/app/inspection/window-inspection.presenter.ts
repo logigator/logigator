@@ -1,5 +1,6 @@
-import { inject, Injectable } from '@angular/core';
-import { WindowRef, WindowService } from '@logigator/ui';
+import { computed, inject, Injectable, Signal } from '@angular/core';
+import { WindowRef, WindowService, WindowTitlePart } from '@logigator/ui';
+import { ComponentInspection } from '../components/component-inspection';
 import { InspectionPresenter, OpenInspection } from './inspection-presenter';
 
 /** Default window size for inspections that bring no sizing of their own. */
@@ -19,6 +20,7 @@ export class WindowInspectionPresenter implements InspectionPresenter {
     const { inspection } = entry;
     const ref = this.windowService.open(inspection.renderer, {
       title: inspection.title,
+      titleParts: this._titleParts(inspection),
       inputValues: { inspection },
       initialSize: inspection.sizing?.initial ?? DEFAULT_SIZE,
       minSize: inspection.sizing?.min,
@@ -42,5 +44,18 @@ export class WindowInspectionPresenter implements InspectionPresenter {
     const ref = this.refs.get(entry);
     this.refs.delete(entry);
     ref?.close();
+  }
+
+  /** Breadcrumb segments for the title bar (`navigate` → clickable). */
+  private _titleParts(
+    inspection: ComponentInspection
+  ): Signal<readonly WindowTitlePart[]> | undefined {
+    const parts = inspection.titleParts;
+    if (!parts) {
+      return undefined;
+    }
+    return computed(() =>
+      parts().map((part) => ({ label: part.label, command: part.navigate }))
+    );
   }
 }

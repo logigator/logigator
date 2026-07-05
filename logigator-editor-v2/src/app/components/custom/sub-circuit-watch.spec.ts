@@ -151,9 +151,15 @@ describe('SubCircuitWatch', () => {
     expect(watch.title()).toBe('Outer › LeverBox');
     const deepProject = watch.activeLevel().session.project;
 
-    watch.navigateTo(0);
+    // Header breadcrumbs: the ancestor navigates, the visible level doesn't.
+    const parts = watch.titleParts();
+    expect(parts.map((part) => part.label)).toEqual(['Outer', 'LeverBox']);
+    expect(parts[1].navigate).toBeUndefined();
+    parts[0].navigate!();
+
     expect(watch.levels()).toHaveLength(1);
     expect(watch.title()).toBe('Outer');
+    expect(watch.titleParts()).toHaveLength(1);
     expect(deepProject.destroyed).toBe(true);
 
     watch.destroy();

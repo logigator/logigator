@@ -93,9 +93,34 @@ const CASCADE_WRAP = 8;
       class="flex shrink-0 cursor-move touch-none items-center gap-2 border-b border-border px-3 py-1.5 select-none"
       (pointerdown)="beginMove($event)"
     >
-      <h2 class="grow truncate text-sm font-semibold text-text">
-        {{ title() }}
-      </h2>
+      @if (titleParts(); as parts) {
+        <h2
+          class="flex min-w-0 grow flex-wrap items-center gap-1 text-sm font-semibold text-text"
+        >
+          @for (part of parts; track $index; let last = $last) {
+            @if (part.command; as command) {
+              <!-- stopPropagation: a click must not begin a title-bar move. -->
+              <button
+                type="button"
+                class="cursor-pointer truncate text-muted hover:text-text hover:underline"
+                (pointerdown)="$event.stopPropagation()"
+                (click)="command()"
+              >
+                {{ part.label }}
+              </button>
+            } @else {
+              <span class="truncate">{{ part.label }}</span>
+            }
+            @if (!last) {
+              <span class="text-muted">›</span>
+            }
+          }
+        </h2>
+      } @else {
+        <h2 class="grow truncate text-sm font-semibold text-text">
+          {{ title() }}
+        </h2>
+      }
       @if (closable()) {
         <lg-button
           aria-label="Close"
@@ -159,6 +184,12 @@ export class LgWindow implements AfterViewInit {
   protected readonly title = computed(() => {
     const title = this.entry().config.title;
     return isSignal(title) ? title() : (title ?? '');
+  });
+
+  /** Structured title segments, or `null` to fall back to the plain title. */
+  protected readonly titleParts = computed(() => {
+    const parts = this.entry().config.titleParts?.();
+    return parts && parts.length > 0 ? parts : null;
   });
 
   protected readonly closable = computed(
