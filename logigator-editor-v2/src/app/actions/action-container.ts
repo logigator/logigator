@@ -1,9 +1,13 @@
 import { Action } from './action';
 import { Project } from '../project/project';
 import { SerializedAction } from './serialized-action.model';
+import { LoggingService } from '../logging/logging.service';
+import { getStaticDI } from '../utils/get-di';
 
 export class ActionContainer extends Action {
   private readonly actions: Action[];
+
+  private readonly logging = getStaticDI(LoggingService);
 
   constructor(...actions: Action[]) {
     super();
@@ -18,6 +22,10 @@ export class ActionContainer extends Action {
   }
 
   public do(project: Project): void {
+    this.logging.debug(
+      `do ${this.actions.length} grouped action(s)`,
+      'ActionContainer'
+    );
     for (const action of this.actions) {
       action.do(project);
     }

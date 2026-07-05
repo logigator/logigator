@@ -1,3 +1,6 @@
+import { LoggingService } from '../../logging/logging.service';
+import { getStaticDI } from '../../utils/get-di';
+
 /**
  * Watch data the compiler retains so a live view of a custom instance's inner
  * circuit can open at any point mid-simulation without recompiling. Integer
@@ -88,6 +91,10 @@ export class WatchIndex {
     const segments = path.split('/');
     const top = this.instances.get(segments[0]);
     if (!top) {
+      getStaticDI(LoggingService).debug(
+        `watch path "${path}" resolves to no top-level instance "${segments[0]}"`,
+        'WatchIndex'
+      );
       return null;
     }
 
@@ -98,6 +105,10 @@ export class WatchIndex {
       const tables = this.templates.get(typeId);
       const bridge = tables?.children.get(Number(segment));
       if (!bridge) {
+        getStaticDI(LoggingService).debug(
+          `watch path "${path}" has no child "${segment}" under type ${typeId}`,
+          'WatchIndex'
+        );
         return null;
       }
       const parentLinks = linkOfLocalNet;
@@ -110,6 +121,10 @@ export class WatchIndex {
 
     const tables = this.templates.get(typeId);
     if (!tables) {
+      getStaticDI(LoggingService).debug(
+        `watch path "${path}" targets type ${typeId} with no compiled template`,
+        'WatchIndex'
+      );
       return null;
     }
     const base = unitBase;

@@ -24,12 +24,14 @@ import { BuiltInComponentType } from '../components/component-type.enum';
 import { OpenProjectDialogComponent } from '../ui/open-project-dialog/open-project-dialog.component';
 import { NewComponentDialogComponent } from '../ui/new-component-dialog/new-component-dialog.component';
 import { ToastService } from '../logging/toast.service';
+import { LoggingService } from '../logging/logging.service';
 
 @Injectable({
   providedIn: 'root'
 })
 export class ShortcutService implements OnDestroy {
   private readonly toastService = inject(ToastService);
+  private readonly loggingService = inject(LoggingService);
   private readonly translocoService = inject(TranslocoService);
   private readonly projectService = inject(ProjectService);
   private readonly saveCoordinator = inject(SaveCoordinatorService);
@@ -88,6 +90,10 @@ export class ShortcutService implements OnDestroy {
         for (const [action, binding] of this._bindings.entries()) {
           if (binding && this._matchesBinding(binding, e)) {
             e.preventDefault();
+            this.loggingService.debug(
+              'Shortcut action fired: ' + action,
+              'ShortcutService'
+            );
             this._triggered$.next({ action, event: e });
             return;
           }
@@ -327,10 +333,12 @@ export class ShortcutService implements OnDestroy {
           this._bindings.set(action as ShortcutActionEnum, binding);
         }
       }
-    } catch {
+    } catch (err) {
       /* corrupted data — keep defaults */
       this.toastService.error(
-        this.translocoService.translate('shortcuts.toast.loadFailed')
+        this.translocoService.translate('shortcuts.toast.loadFailed'),
+        err,
+        'ShortcutService'
       );
     }
   }

@@ -9,6 +9,8 @@ import { RemoveWiresAction } from '../actions/actions/remove-wires.action';
 import { ActionContainer } from '../actions/action-container';
 import { SerializedWire } from '../wires/serialized-wire.model';
 import { ConnectionPoint } from '../connection-points/connection-point';
+import { getStaticDI } from '../utils/get-di';
+import { LoggingService } from '../logging/logging.service';
 import type { Project } from './project';
 
 interface PendingCut {
@@ -116,6 +118,10 @@ export class SelectionManager {
         newPieceIds: newPieces.map((p) => p.id),
         newPiecesSerialized
       };
+      getStaticDI(LoggingService).debug(
+        `staged tentative scissor cut: ${wiresToCut.length} wire(s) cut into ${newPieces.length} piece(s)`,
+        'SelectionManager'
+      );
     }
 
     for (const wire of wiresToKeep) {

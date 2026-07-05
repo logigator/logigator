@@ -1,7 +1,9 @@
-import { Injectable } from '@angular/core';
+import { inject, Injectable } from '@angular/core';
 import { Assets, BitmapFont, Cache } from 'pixi.js';
+import { TranslocoService } from '@jsverse/transloco';
 import robotoMonoUrl from '@assets/roboto-mono-regular-subset.woff2';
 import { CANVAS_FONT_CHARS, CANVAS_FONT_FAMILY } from '../utils/text-fit';
+import { ToastService } from '../logging/toast.service';
 
 /**
  * Family the subset woff2 is registered under for atlas baking. Deliberately
@@ -17,6 +19,9 @@ const BAKE_FONT_FAMILY = 'Roboto Mono Canvas';
   providedIn: 'root'
 })
 export class AssetsService {
+  private readonly toast = inject(ToastService);
+  private readonly transloco = inject(TranslocoService);
+
   constructor() {
     if (!Assets.resolver.hasKey(BAKE_FONT_FAMILY)) {
       Assets.add({
@@ -30,7 +35,16 @@ export class AssetsService {
   async init() {
     // The FontFace must be loaded before the install below rasterizes the
     // atlas, or the glyphs get baked from a fallback font.
-    await Assets.load([BAKE_FONT_FAMILY]);
+    try {
+      await Assets.load([BAKE_FONT_FAMILY]);
+    } catch (err) {
+      this.toast.error(
+        this.transloco.translate('editor.fontLoadFailed'),
+        err,
+        'AssetsService'
+      );
+      throw err;
+    }
 
     if (Cache.has(`${CANVAS_FONT_FAMILY}-bitmap`)) {
       return;

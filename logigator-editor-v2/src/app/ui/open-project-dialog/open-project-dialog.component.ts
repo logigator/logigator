@@ -15,7 +15,7 @@ import {
   LgTabPanel,
   LgTabs
 } from '@logigator/ui';
-import { TranslocoDirective } from '@jsverse/transloco';
+import { TranslocoDirective, TranslocoService } from '@jsverse/transloco';
 import {
   debounceTime,
   distinctUntilChanged,
@@ -25,7 +25,6 @@ import {
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { PersistenceService } from '../../persistence/persistence.service';
 import { ToastService } from '../../logging/toast.service';
-import { LoggingService } from '../../logging/logging.service';
 import { UserService } from '../../user/user.service';
 import {
   ProjectListComponent,
@@ -53,8 +52,10 @@ export class OpenProjectDialogComponent implements OnInit {
   private readonly ref = inject(DialogRef);
   private readonly persistenceService = inject(PersistenceService);
   private readonly toastService = inject(ToastService);
-  private readonly loggingService = inject(LoggingService);
+  private readonly transloco = inject(TranslocoService);
   protected readonly userService = inject(UserService);
+
+  private readonly ctx = 'OpenProjectDialogComponent';
 
   protected readonly activeTab = signal<string>('local');
   protected readonly importError = signal<string | null>(null);
@@ -120,12 +121,12 @@ export class OpenProjectDialogComponent implements OnInit {
         this.localAllItems.set(projects);
         this.loadingLocal.set(false);
       })
-      .catch(() => {
-        this.loggingService.error(
-          'Failed to list local projects',
-          'OpenProjectDialogComponent'
+      .catch((err: unknown) => {
+        this.toastService.error(
+          this.transloco.translate('openProjectDialog.errors.listLocal'),
+          err,
+          this.ctx
         );
-        this.toastService.error('Failed to list local projects');
         this.loadingLocal.set(false);
       });
   }
@@ -136,12 +137,12 @@ export class OpenProjectDialogComponent implements OnInit {
   }
 
   protected openLocalProject(id: string): void {
-    this.persistenceService.loadLocalProjectAsMain(id).catch(() => {
-      this.loggingService.error(
-        'Failed to open local project',
-        'OpenProjectDialogComponent'
+    this.persistenceService.loadLocalProjectAsMain(id).catch((err: unknown) => {
+      this.toastService.error(
+        this.transloco.translate('openProjectDialog.errors.openLocal'),
+        err,
+        this.ctx
       );
-      this.toastService.error('Failed to open local project');
     });
     this.ref.close();
   }
@@ -150,12 +151,12 @@ export class OpenProjectDialogComponent implements OnInit {
     this.persistenceService
       .deleteBrowserProject(item.id)
       .then(() => this.loadLocalProjects())
-      .catch(() => {
-        this.loggingService.error(
-          'Failed to delete local project',
-          'OpenProjectDialogComponent'
+      .catch((err: unknown) => {
+        this.toastService.error(
+          this.transloco.translate('openProjectDialog.errors.deleteLocal'),
+          err,
+          this.ctx
         );
-        this.toastService.error('Failed to delete local project');
       });
   }
 
@@ -163,12 +164,12 @@ export class OpenProjectDialogComponent implements OnInit {
     this.persistenceService
       .renameBrowserProject(change.id, change.name)
       .then(() => this.loadLocalProjects())
-      .catch(() => {
-        this.loggingService.error(
-          'Failed to rename local project',
-          'OpenProjectDialogComponent'
+      .catch((err: unknown) => {
+        this.toastService.error(
+          this.transloco.translate('openProjectDialog.errors.renameLocal'),
+          err,
+          this.ctx
         );
-        this.toastService.error('Failed to rename local project');
       });
   }
 
@@ -190,12 +191,12 @@ export class OpenProjectDialogComponent implements OnInit {
       this.serverTotal.set(result.total);
       this.serverPage.set(page);
       this.serverLoaded.set(true);
-    } catch {
-      this.loggingService.error(
-        'Failed to list server projects',
-        'OpenProjectDialogComponent'
+    } catch (err) {
+      this.toastService.error(
+        this.transloco.translate('openProjectDialog.errors.listServer'),
+        err,
+        this.ctx
       );
-      this.toastService.error('Failed to list server projects');
     } finally {
       this.loadingServer.set(false);
     }
@@ -210,12 +211,12 @@ export class OpenProjectDialogComponent implements OnInit {
   }
 
   protected openServerProject(id: string): void {
-    this.persistenceService.loadProjectAsMain(id).catch(() => {
-      this.loggingService.error(
-        'Failed to open server project',
-        'OpenProjectDialogComponent'
+    this.persistenceService.loadProjectAsMain(id).catch((err: unknown) => {
+      this.toastService.error(
+        this.transloco.translate('openProjectDialog.errors.openServer'),
+        err,
+        this.ctx
       );
-      this.toastService.error('Failed to open server project');
     });
     this.ref.close();
   }
@@ -223,12 +224,12 @@ export class OpenProjectDialogComponent implements OnInit {
   protected deleteServerConfirmed(item: ProjectListItem): void {
     firstValueFrom(this.persistenceService.deleteProject(item.id))
       .then(() => this.loadServerProjects(this.serverPage()))
-      .catch(() => {
-        this.loggingService.error(
-          'Failed to delete server project',
-          'OpenProjectDialogComponent'
+      .catch((err: unknown) => {
+        this.toastService.error(
+          this.transloco.translate('openProjectDialog.errors.deleteServer'),
+          err,
+          this.ctx
         );
-        this.toastService.error('Failed to delete server project');
       });
   }
 
@@ -237,12 +238,12 @@ export class OpenProjectDialogComponent implements OnInit {
       this.persistenceService.renameProject(change.id, change.name)
     )
       .then(() => this.loadServerProjects(this.serverPage()))
-      .catch(() => {
-        this.loggingService.error(
-          'Failed to rename server project',
-          'OpenProjectDialogComponent'
+      .catch((err: unknown) => {
+        this.toastService.error(
+          this.transloco.translate('openProjectDialog.errors.renameServer'),
+          err,
+          this.ctx
         );
-        this.toastService.error('Failed to rename server project');
       });
   }
 
@@ -262,16 +263,22 @@ export class OpenProjectDialogComponent implements OnInit {
         .then(() => this.ref.close())
         .catch((err: unknown) => {
           const message = err instanceof Error ? err.message : String(err);
-          this.loggingService.error(
-            `Failed to import file: ${message}`,
-            'OpenProjectDialogComponent'
+          this.toastService.error(
+            this.transloco.translate('openProjectDialog.errors.importFailed', {
+              detail: message
+            }),
+            err,
+            this.ctx
           );
-          this.toastService.error(`Failed to import file: ${message}`);
           this.importError.set(message);
         });
     };
     reader.onerror = () => {
-      this.importError.set('Failed to read file');
+      const message = this.transloco.translate(
+        'openProjectDialog.errors.readFailed'
+      );
+      this.toastService.error(message, reader.error, this.ctx);
+      this.importError.set(message);
     };
     reader.readAsText(file);
   }

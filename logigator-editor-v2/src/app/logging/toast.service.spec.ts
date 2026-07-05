@@ -1,21 +1,19 @@
+/* eslint-disable @typescript-eslint/no-empty-function */
+
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { TestBed } from '@angular/core/testing';
 import { ToastService as UiToastService } from '@logigator/ui';
 import { TranslocoService } from '@jsverse/transloco';
 
 import { ToastService } from './toast.service';
+import { LoggingService } from './logging.service';
 
 describe('ToastService', () => {
   let service: ToastService;
   let messageService: UiToastService;
+  let logging: LoggingService;
 
   beforeEach(() => {
-    vi.spyOn(console, 'error');
-    vi.spyOn(console, 'warn');
-    vi.spyOn(console, 'log');
-    vi.spyOn(console, 'info');
-    vi.spyOn(console, 'debug');
-
     const translocoSpy = {
       translate: vi.fn().mockName('TranslocoService.translate')
     };
@@ -29,8 +27,11 @@ describe('ToastService', () => {
     });
     service = TestBed.inject(ToastService);
     messageService = TestBed.inject(UiToastService);
+    logging = TestBed.inject(LoggingService);
 
     vi.spyOn(messageService, 'add');
+    vi.spyOn(logging, 'error').mockImplementation(() => {});
+    vi.spyOn(logging, 'warn').mockImplementation(() => {});
   });
 
   it('should be created', () => {
@@ -48,6 +49,17 @@ describe('ToastService', () => {
         })
       );
     });
+
+    it('mirrors the cause and context to the logging service', () => {
+      const cause = new Error('boom');
+      service.error('err-msg', cause, 'MyContext');
+      expect(logging.error).toHaveBeenCalledWith(cause, 'MyContext');
+    });
+
+    it('falls back to the message and default context when no cause is given', () => {
+      service.error('err-msg');
+      expect(logging.error).toHaveBeenCalledWith('err-msg', 'App');
+    });
   });
 
   describe('warn', () => {
@@ -61,6 +73,11 @@ describe('ToastService', () => {
         })
       );
     });
+
+    it('mirrors the cause and context to the logging service', () => {
+      service.warn('warn-msg', 'raw detail', 'MyContext');
+      expect(logging.warn).toHaveBeenCalledWith('raw detail', 'MyContext');
+    });
   });
 
   describe('success', () => {
@@ -73,6 +90,12 @@ describe('ToastService', () => {
           detail: 'success-msg'
         })
       );
+    });
+
+    it('does not mirror to the logging service', () => {
+      service.success('success-msg');
+      expect(logging.error).not.toHaveBeenCalled();
+      expect(logging.warn).not.toHaveBeenCalled();
     });
   });
 

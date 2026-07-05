@@ -122,11 +122,15 @@ export class ImageExportService {
       DEFAULT_NAME;
     downloadBlob(blob, `${name}.${EXTENSION[options.format]}`);
 
+    // A clamped export still succeeded; the clamp warning both confirms it and
+    // explains the reduced size, so it stands in for the success toast.
     if (clamped) {
       const { width, height } = this.snapshot.outputSize(region, effective);
       this.toast.warn(
         this.transloco.translate('imageExport.warn.clamped', { width, height })
       );
+    } else {
+      this.toast.success(this.transloco.translate('imageExport.success'));
     }
   }
 

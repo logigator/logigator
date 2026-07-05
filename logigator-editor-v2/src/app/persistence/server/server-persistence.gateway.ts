@@ -235,11 +235,11 @@ export class ServerPersistenceGateway {
     try {
       await firstValueFrom(this.userApi.get());
     } catch {
-      this.logging.error(
+      this.toast.error(
+        this.transloco.translate('persistence.shareAuthRequired'),
         `Cannot clone share ${linkId}: user not authenticated`,
-        'PersistenceService'
+        'ServerPersistenceGateway'
       );
-      this.toast.error(`Cannot clone share ${linkId}: user not authenticated`);
       throw new AuthRequiredError();
     }
 
@@ -416,8 +416,14 @@ export class ServerPersistenceGateway {
     let summaries;
     try {
       summaries = await firstValueFrom(this.componentApi.list());
-    } catch {
-      // Not authenticated (401) or offline — no cloud library to preload.
+    } catch (err) {
+      // Usually not authenticated (401) or offline — no cloud library to
+      // preload. Logged at debug so a genuine failure is still traceable
+      // without nagging signed-out users.
+      this.logging.debug(
+        `Server master preload skipped: ${formatHttpError(err)}`,
+        'ServerPersistenceGateway'
+      );
       return;
     }
 
@@ -479,21 +485,23 @@ export class ServerPersistenceGateway {
       if (this.metadataStore.dirtyVersion(project) === versionAtSnapshot) {
         this.metadataStore.clearDirty(project);
       }
-      this.toast.success('Project saved');
+      this.toast.success(this.transloco.translate('persistence.projectSaved'));
       void this._uploadPreview(project, metadata.id);
     } catch (err) {
       if (this._isVersionMismatch(err)) {
-        this.logging.error(
-          'Version mismatch — reload required',
-          'PersistenceService'
+        this.toast.error(
+          this.transloco.translate('persistence.versionMismatch'),
+          err,
+          'ServerPersistenceGateway'
         );
-        this.toast.error('Version mismatch — reload required');
       } else {
-        this.logging.error(
-          `Save failed: ${formatHttpError(err)}`,
-          'PersistenceService'
+        this.toast.error(
+          this.transloco.translate('persistence.saveFailed', {
+            detail: formatHttpError(err)
+          }),
+          err,
+          'ServerPersistenceGateway'
         );
-        this.toast.error(`Save failed: ${formatHttpError(err)}`);
       }
       throw err;
     }
@@ -530,20 +538,24 @@ export class ServerPersistenceGateway {
       if (this.metadataStore.dirtyVersion(project) === versionAtSnapshot) {
         this.metadataStore.clearDirty(project);
       }
-      this.toast.success('Component saved');
+      this.toast.success(
+        this.transloco.translate('persistence.componentSaved')
+      );
     } catch (err) {
       if (this._isVersionMismatch(err)) {
-        this.logging.error(
-          'Version mismatch — reload required',
-          'PersistenceService'
+        this.toast.error(
+          this.transloco.translate('persistence.versionMismatch'),
+          err,
+          'ServerPersistenceGateway'
         );
-        this.toast.error('Version mismatch — reload required');
       } else {
-        this.logging.error(
-          `Save failed: ${formatHttpError(err)}`,
-          'PersistenceService'
+        this.toast.error(
+          this.transloco.translate('persistence.saveFailed', {
+            detail: formatHttpError(err)
+          }),
+          err,
+          'ServerPersistenceGateway'
         );
-        this.toast.error(`Save failed: ${formatHttpError(err)}`);
       }
       throw err;
     }

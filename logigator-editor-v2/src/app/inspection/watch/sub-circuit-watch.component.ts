@@ -11,10 +11,12 @@ import {
   untracked,
   ViewChild
 } from '@angular/core';
+import { TranslocoService } from '@jsverse/transloco';
 import { Point, Rectangle } from 'pixi.js';
 import { Subscription } from 'rxjs';
 import { environment } from '../../../environments/environment';
 import { Component as CircuitComponent } from '../../components/component';
+import { ToastService } from '../../logging/toast.service';
 import { MultiTouchGesture } from '../../rendering/multi-touch-gesture';
 import { Project } from '../../project/project';
 import type {
@@ -62,6 +64,8 @@ export class SubCircuitWatchComponent implements AfterViewInit, OnDestroy {
 
   private readonly watchRenderer = inject(WatchRendererService);
   private readonly injector = inject(Injector);
+  private readonly toast = inject(ToastService);
+  private readonly transloco = inject(TranslocoService);
 
   @ViewChild('canvas', { static: true })
   private readonly canvas!: ElementRef<HTMLCanvasElement>;
@@ -110,14 +114,23 @@ export class SubCircuitWatchComponent implements AfterViewInit, OnDestroy {
       { injector: this.injector }
     );
 
-    void this.watchRenderer.acquire().then((lease) => {
-      if (this.destroyed) {
-        lease.release();
-        return;
-      }
-      this.lease = lease;
-      this.render();
-    });
+    void this.watchRenderer
+      .acquire()
+      .then((lease) => {
+        if (this.destroyed) {
+          lease.release();
+          return;
+        }
+        this.lease = lease;
+        this.render();
+      })
+      .catch((err) => {
+        this.toast.error(
+          this.transloco.translate('watch.rendererFailed'),
+          err,
+          'SubCircuitWatchComponent'
+        );
+      });
   }
 
   ngOnDestroy(): void {

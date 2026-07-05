@@ -15,6 +15,7 @@ import { CustomComponentRegistry } from '../../components/custom/custom-componen
 import { ComponentProviderService } from '../../components/component-provider.service';
 import { ProjectMetadataStore } from '../../persistence/project-metadata.store';
 import { ToastService } from '../../logging/toast.service';
+import { LoggingService } from '../../logging/logging.service';
 
 export class ComponentPlacementSession implements DragSession {
   private readonly _component: Component;
@@ -92,11 +93,19 @@ export class ComponentPlacementSession implements DragSession {
       action.add(new AddWiresAction(...toAdd));
     }
     this.project.actionManager.push(action);
+    getStaticDI(LoggingService).debug(
+      `committed placement: 1 component added, ${toAdd.length} wire(s) added, ${toRemove.length} wire(s) removed`,
+      'ComponentPlacementSession'
+    );
 
     this._component.destroy({ children: true });
   }
 
   onCancel(): void {
+    getStaticDI(LoggingService).debug(
+      'cancelled placement: nothing committed',
+      'ComponentPlacementSession'
+    );
     this._component.destroy({ children: true });
     this.dragLayer.position.set(0, 0);
   }

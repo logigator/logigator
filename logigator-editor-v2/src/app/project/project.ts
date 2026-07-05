@@ -32,6 +32,7 @@ import { ViewportController, ViewportState } from './viewport-controller';
 import { ConnectionPointManager } from '../connection-points/connection-point-manager';
 import { AddWiresAction } from '../actions/actions/add-wires.action';
 import { RemoveWiresAction } from '../actions/actions/remove-wires.action';
+import { LoggingService } from '../logging/logging.service';
 
 export class Project extends InteractionContainer {
   public readonly actionManager = new ActionManager(this);
@@ -64,6 +65,7 @@ export class Project extends InteractionContainer {
   private readonly _portsChangeSubs = new Map<number, Subscription>();
 
   private readonly _themingService = getStaticDI(ThemingService);
+  private readonly _logging = getStaticDI(LoggingService);
   // Theme colors are baked into cached GraphicsContexts, so a theme switch
   // requires re-fetching every context. Each project self-heals via this
   // effect — including inactive (background) tabs, which the stage swap never
@@ -318,6 +320,12 @@ export class Project extends InteractionContainer {
         const { toAdd, toRemove } = this.computeIntegration({
           movedComponentPorts: [{ oldPorts, newPorts }]
         });
+        if (toAdd.length > 0 || toRemove.length > 0) {
+          this._logging.debug(
+            `portsChange integration for component ${component.id} added ${toAdd.length} and removed ${toRemove.length} wire(s) (not undoable)`,
+            'Project'
+          );
+        }
         for (const w of toRemove) this.removeWire(w.id);
         for (const w of toAdd) this.addWire(w);
 
@@ -511,7 +519,13 @@ export class Project extends InteractionContainer {
       addedWires.push(Wire.merge(vWires[0], vWires[1]));
     }
 
-    if (addedWires.length === 0) return;
+    if (addedWires.length === 0) {
+      this._logging.debug(
+        `join at (${p.x}, ${p.y}) is a no-op: no collinear wire pair to merge`,
+        'Project'
+      );
+      return;
+    }
 
     const { toAdd, toRemove } = this.computeIntegration({
       addedWires,
@@ -529,6 +543,10 @@ export class Project extends InteractionContainer {
     };
 
     if (blocked) {
+      this._logging.debug(
+        `join at (${p.x}, ${p.y}) rejected: the merge would re-split at the same point`,
+        'Project'
+      );
       cleanup();
       return;
     }
@@ -554,7 +572,13 @@ export class Project extends InteractionContainer {
       else vWire = w;
     }
 
-    if (!hWire || !vWire) return;
+    if (!hWire || !vWire) {
+      this._logging.debug(
+        `split at (${p.x}, ${p.y}) is a no-op: needs both a horizontal and a vertical wire crossing the point`,
+        'Project'
+      );
+      return;
+    }
 
     const [hLeft, hRight] = Wire.split(hWire, p);
     const [vTop, vBottom] = Wire.split(vWire, p);

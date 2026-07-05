@@ -9,6 +9,8 @@ import { ActionContainer } from '../../actions/action-container';
 import { AddComponentsAction } from '../../actions/actions/add-components.action';
 import { AddWiresAction } from '../../actions/actions/add-wires.action';
 import { DragCollisionState } from './drag-collision';
+import { getStaticDI } from '../../utils/get-di';
+import { LoggingService } from '../../logging/logging.service';
 
 export class PastePlacementSession implements DragSession {
   private readonly _collision: DragCollisionState;
@@ -105,9 +107,17 @@ export class PastePlacementSession implements DragSession {
 
     // State already applied — register without calling do()
     this._project.actionManager.register(action);
+    getStaticDI(LoggingService).debug(
+      `committed paste: ${this._components.length} component(s) added, ${this._wires.length} wire(s) added`,
+      'PastePlacementSession'
+    );
   }
 
   onCancel(): void {
+    getStaticDI(LoggingService).debug(
+      `cancelled paste: ${this._components.length} component(s) and ${this._wires.length} wire(s) discarded`,
+      'PastePlacementSession'
+    );
     this._dragLayer.position.set(0, 0);
     this._dragLayer.tint = 0xffffff;
     for (const c of this._components) c.destroy({ children: true });

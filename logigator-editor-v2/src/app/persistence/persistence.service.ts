@@ -1,6 +1,7 @@
 import { inject, Injectable } from '@angular/core';
 import { Location } from '@angular/common';
 import { Observable } from 'rxjs';
+import { TranslocoService } from '@jsverse/transloco';
 import { CircuitFileService } from './file/circuit-file.service';
 import { BrowserProjectStore } from './browser/browser-project.store';
 import { BrowserComponentStore } from './browser/browser-component.store';
@@ -42,6 +43,7 @@ export class PersistenceService {
   private readonly projectService = inject(ProjectService);
   private readonly toast = inject(ToastService);
   private readonly logging = inject(LoggingService);
+  private readonly transloco = inject(TranslocoService);
   private readonly location = inject(Location);
   private readonly server = inject(ServerPersistenceGateway);
 
@@ -114,6 +116,7 @@ export class PersistenceService {
     );
     this._replaceMainProject(project);
     this.location.go(`/project/${id}`);
+    this.toast.success(this.transloco.translate('persistence.projectCreated'));
     return id;
   }
 
@@ -357,7 +360,7 @@ export class PersistenceService {
       wires.forEach((w, i) => (w.id = dump.wireIds[i]));
     } else {
       this.toast.warn(
-        'Project Dump element count changed on load — ids and action history were not restored.'
+        this.transloco.translate('persistence.dumpElementCountChanged')
       );
     }
 
@@ -385,17 +388,16 @@ export class PersistenceService {
         return;
       }
       this._replaceMainProject(project);
+      this.logging.info(`Loaded project ${uuid} (server)`, 'PersistenceService');
       if (!opts?.skipUrlUpdate) {
         this.location.go(`/project/${uuid}`);
       }
     } catch (e) {
       if (token === this._mainLoadToken) {
-        this.logging.error(
+        this.toast.error(
+          this.transloco.translate('persistence.loadFailed'),
           `Failed to load project ${uuid}: ${formatHttpError(e)}`,
           'PersistenceService'
-        );
-        this.toast.error(
-          `Failed to load project ${uuid}: ${formatHttpError(e)}`
         );
         if (!this.projectService.mainProject()) {
           this.createAndSetEmptyProject();
@@ -417,14 +419,13 @@ export class PersistenceService {
       } else {
         this._replaceMainProject(project);
       }
+      this.logging.info(`Loaded share ${linkId} (${type})`, 'PersistenceService');
     } catch (e) {
       if (token === this._shareLoadToken) {
-        this.logging.error(
+        this.toast.error(
+          this.transloco.translate('persistence.shareLoadFailed'),
           `Failed to load share ${linkId}: ${formatHttpError(e)}`,
           'PersistenceService'
-        );
-        this.toast.error(
-          `Failed to load share ${linkId}: ${formatHttpError(e)}`
         );
         if (!this.projectService.mainProject()) {
           this.createAndSetEmptyProject();
@@ -686,10 +687,17 @@ export class PersistenceService {
     }
 
     this.registry.promoteMaster(masterTypeId, newId, version);
+    this.logging.info(
+      `Promoted component ${oldId} -> ${newId} (v${version})`,
+      'PersistenceService'
+    );
     // If the master's own editor tab is open, flip its metadata to the new server
     // identity so a later save routes to the cloud instead of re-creating the
     // browser record that was just deleted.
     this._reconcilePromotedEditor(oldId, newId, newHash);
+    this.toast.success(
+      this.transloco.translate('persistence.componentUploaded')
+    );
   }
 
   /**
@@ -810,17 +818,19 @@ export class PersistenceService {
         project,
         new DefinitionBinding(project, masterTypeId, this.registry)
       );
+      this.logging.info(
+        `Loaded component ${uuid} (server)`,
+        'PersistenceService'
+      );
       if (!opts?.skipUrlUpdate) {
         this.location.go(`/component/${uuid}`);
       }
     } catch (e) {
       if (token === this._mainLoadToken) {
-        this.logging.error(
+        this.toast.error(
+          this.transloco.translate('persistence.componentLoadFailed'),
           `Failed to load component ${uuid}: ${formatHttpError(e)}`,
           'PersistenceService'
-        );
-        this.toast.error(
-          `Failed to load component ${uuid}: ${formatHttpError(e)}`
         );
         if (!this.projectService.mainProject()) {
           this.createAndSetEmptyProject();
@@ -843,17 +853,16 @@ export class PersistenceService {
         return;
       }
       this._replaceMainProject(project);
+      this.logging.info(`Loaded project ${id} (browser)`, 'PersistenceService');
       if (!opts?.skipUrlUpdate) {
         this.location.go(`/local/${id}`);
       }
     } catch (e) {
       if (token === this._mainLoadToken) {
-        this.logging.error(
+        this.toast.error(
+          this.transloco.translate('persistence.loadFailed'),
           `Failed to load browser project ${id}: ${formatHttpError(e)}`,
           'PersistenceService'
-        );
-        this.toast.error(
-          `Failed to load browser project ${id}: ${formatHttpError(e)}`
         );
         if (!this.projectService.mainProject()) {
           this.createAndSetEmptyProject();
@@ -970,7 +979,9 @@ export class PersistenceService {
     if (this.metadataStore.dirtyVersion(project) === versionAtSnapshot) {
       this.metadataStore.clearDirty(project);
     }
-    this.toast.success('Project saved to browser storage');
+    this.toast.success(
+      this.transloco.translate('persistence.projectSavedBrowser')
+    );
   }
 
   /**
@@ -1017,7 +1028,9 @@ export class PersistenceService {
     if (this.metadataStore.dirtyVersion(project) === versionAtSnapshot) {
       this.metadataStore.clearDirty(project);
     }
-    this.toast.success('Component saved to browser storage');
+    this.toast.success(
+      this.transloco.translate('persistence.componentSavedBrowser')
+    );
   }
 
   private _replaceMainProject(newProject: Project): void {

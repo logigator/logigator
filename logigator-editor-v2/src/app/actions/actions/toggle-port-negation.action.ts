@@ -2,6 +2,8 @@ import { Action } from '../action';
 import { Project } from '../../project/project';
 import { PortSide } from '../../components/component';
 import { SerializedAction } from '../serialized-action.model';
+import { LoggingService } from '../../logging/logging.service';
+import { getStaticDI } from '../../utils/get-di';
 
 /**
  * Toggles negation on a single component port. `negated` is the post-`do`
@@ -10,6 +12,8 @@ import { SerializedAction } from '../serialized-action.model';
  * survives undo across other edits.
  */
 export class TogglePortNegationAction extends Action {
+  private readonly logging = getStaticDI(LoggingService);
+
   constructor(
     private readonly componentId: number,
     private readonly side: PortSide,
@@ -38,8 +42,14 @@ export class TogglePortNegationAction extends Action {
   }
 
   private _set(project: Project, negated: boolean): void {
-    project
-      .getComponentById(this.componentId)
-      ?.setPortNegated(this.side, this.index, negated);
+    const component = project.getComponentById(this.componentId);
+    if (!component) {
+      this.logging.warn(
+        `no-op: component ${this.componentId} missing`,
+        'TogglePortNegationAction'
+      );
+      return;
+    }
+    component.setPortNegated(this.side, this.index, negated);
   }
 }

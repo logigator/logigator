@@ -22,6 +22,9 @@ import { EditorSettingsService } from '../../settings/editor-settings.service';
 import { FpsCounterComponent } from './fps-counter/fps-counter.component';
 import { MultiTouchGesture } from '../../rendering/multi-touch-gesture';
 import { RendererHandleService } from '../../rendering/renderer-handle.service';
+import { LoggingService } from '../../logging/logging.service';
+import { ToastService } from '../../logging/toast.service';
+import { TranslocoService } from '@jsverse/transloco';
 
 // Off-screen scene nodes (quad-tree branches, components, wires) are skipped at
 // render time when marked `cullable`. CullerPlugin (priority 10) initialises
@@ -42,6 +45,9 @@ export class BoardComponent implements OnInit, OnDestroy {
   private readonly assetsService = inject(AssetsService);
   private readonly workModeService = inject(WorkModeService);
   private readonly rendererHandle = inject(RendererHandleService);
+  private readonly loggingService = inject(LoggingService);
+  private readonly toastService = inject(ToastService);
+  private readonly translocoService = inject(TranslocoService);
   protected readonly editorSettings = inject(EditorSettingsService);
 
   @ViewChild('canvas', { static: true })
@@ -144,65 +150,81 @@ export class BoardComponent implements OnInit, OnDestroy {
   }
 
   async ngOnInit(): Promise<void> {
-    await this.assetsService.init();
+    try {
+      await this.assetsService.init();
 
-    this.canvas.nativeElement.addEventListener('pointerenter', () => {
-      this._pointerInsideCanvas = true;
-    });
-    this.canvas.nativeElement.addEventListener('pointerleave', () => {
-      this._pointerInsideCanvas = false;
-    });
+      this.canvas.nativeElement.addEventListener('pointerenter', () => {
+        this._pointerInsideCanvas = true;
+      });
+      this.canvas.nativeElement.addEventListener('pointerleave', () => {
+        this._pointerInsideCanvas = false;
+      });
 
-    await this.app.init({
-      canvas: this.canvas.nativeElement,
-      resizeTo: this.hostEl.nativeElement,
-      preference: 'webgpu',
-      antialias: true,
-      hello: false,
-      powerPreference: 'high-performance',
-      backgroundColor: this.themingService.currentTheme().background,
-      resolution: window.devicePixelRatio || 1,
-      autoDensity: true,
-      autoStart: false,
-      // Recompute transforms during the cull pass. The Culler runs before the
-      // render, so by default it reads each node's stale (previous-frame)
-      // worldTransform — after a pan/zoom the newly-revealed edge elements
-      // would be culled until the next render. updateTransform keeps culling
-      // in step with the current viewport.
-      culler: { updateTransform: true }
-    });
+      await this.app.init({
+        canvas: this.canvas.nativeElement,
+        resizeTo: this.hostEl.nativeElement,
+        preference: 'webgpu',
+        antialias: true,
+        hello: false,
+        powerPreference: 'high-performance',
+        backgroundColor: this.themingService.currentTheme().background,
+        resolution: window.devicePixelRatio || 1,
+        autoDensity: true,
+        autoStart: false,
+        // Recompute transforms during the cull pass. The Culler runs before the
+        // render, so by default it reads each node's stale (previous-frame)
+        // worldTransform — after a pan/zoom the newly-revealed edge elements
+        // would be culled until the next render. updateTransform keeps culling
+        // in step with the current viewport.
+        culler: { updateTransform: true }
+      });
 
-    this.app.renderer.on('resize', (w, h) => {
-      const project = this.project();
-      if (!project) {
-        return;
-      }
+      this.app.renderer.on('resize', (w, h) => {
+        const project = this.project();
+        if (!project) {
+          return;
+        }
 
-      project.resizeViewport(w, h);
-    });
+        project.resizeViewport(w, h);
+      });
 
-    // `resizeTo` only re-measures on window `resize` events, so layout changes
-    // that resize the host without resizing the window (e.g. the side bar
-    // disappearing in simulation mode) leave the canvas stale. Observe the host
-    // directly and let the plugin re-measure on the next frame.
-    this._resizeObserver = new ResizeObserver(() => this.app.queueResize());
-    this._resizeObserver.observe(this.hostEl.nativeElement);
+      // `resizeTo` only re-measures on window `resize` events, so layout changes
+      // that resize the host without resizing the window (e.g. the side bar
+      // disappearing in simulation mode) leave the canvas stale. Observe the host
+      // directly and let the plugin re-measure on the next frame.
+      this._resizeObserver = new ResizeObserver(() => this.app.queueResize());
+      this._resizeObserver.observe(this.hostEl.nativeElement);
 
-    // Wire the gesture listeners *after* app.init so PixiJS's federated
-    // pointerdown handler (registered during init, on the same canvas) runs
-    // before ours. On a second-finger-down that ordering matters: PixiJS sees
-    // the first finger's drag still active and its `if (_activeDrag) return`
-    // guard skips starting a session for the second finger; only then does our
-    // handler abort the first finger's drag and take over the gesture. Wiring
-    // earlier would invert that and leak a stray single-pointer session.
-    this._wireTouchGestures();
+      // Wire the gesture listeners *after* app.init so PixiJS's federated
+      // pointerdown handler (registered during init, on the same canvas) runs
+      // before ours. On a second-finger-down that ordering matters: PixiJS sees
+      // the first finger's drag still active and its `if (_activeDrag) return`
+      // guard skips starting a session for the second finger; only then does our
+      // handler abort the first finger's drag and take over the gesture. Wiring
+      // earlier would invert that and leak a stray single-pointer session.
+      this._wireTouchGestures();
 
-    // Expose the renderer for offscreen snapshots (image export, server
-    // previews). Cleared in ngOnDestroy before the app is destroyed.
-    this.rendererHandle.set(this.app.renderer);
+      // Expose the renderer for offscreen snapshots (image export, server
+      // previews). Cleared in ngOnDestroy before the app is destroyed.
+      this.rendererHandle.set(this.app.renderer);
 
-    this.appInitialized = true;
-    this.loaded.set(true);
+      this.appInitialized = true;
+      this.loaded.set(true);
+
+      // Records which backend (WebGPU/WebGL/Canvas) the renderer settled on.
+      this.loggingService.debug(
+        'Renderer initialized: ' + this.app.renderer.type,
+        'BoardComponent'
+      );
+    } catch (err) {
+      // The canvas otherwise silently never appears; keep `loaded` false so the
+      // board stays hidden rather than showing a dead surface.
+      this.toastService.error(
+        this.translocoService.translate('editor.rendererInitFailed'),
+        err,
+        'BoardComponent'
+      );
+    }
   }
 
   ngOnDestroy(): void {

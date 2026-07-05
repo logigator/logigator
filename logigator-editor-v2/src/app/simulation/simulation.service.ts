@@ -3,6 +3,7 @@ import { Observable, Subject, Subscription } from 'rxjs';
 import { Component } from '../components/component';
 import { ButtonComponent } from '../components/component-types/button/button.component';
 import { LeverComponent } from '../components/component-types/lever/lever.component';
+import { LoggingService } from '../logging/logging.service';
 import { ToastService } from '../logging/toast.service';
 import { Project } from '../project/project';
 import { ProjectService } from '../project/project.service';
@@ -49,6 +50,7 @@ export class SimulationService {
   private readonly compiler = inject(BoardCompilerService);
   private readonly workModeService = inject(WorkModeService);
   private readonly projectService = inject(ProjectService);
+  private readonly logging = inject(LoggingService);
   private readonly toastService = inject(ToastService);
   private readonly workerService = inject(SimulationWorkerService);
 
@@ -147,6 +149,7 @@ export class SimulationService {
     }
     const project = this.projectService.activeProject();
     if (!project) {
+      this.logging.info('enter skipped: no active project', 'SimulationService');
       return;
     }
 
@@ -190,18 +193,19 @@ export class SimulationService {
         repaint: () => this._project?.triggerTicker('single'),
         onFrame: () => this._frame$.next(),
         onError: (message) => {
-          this.toastService.error(message);
+          this.toastService.error(message, undefined, 'SimulationService');
           this.exit();
         }
       })
       .then(() => {
         if (this._state() === 'starting') {
           this._state.set('ready');
+          this.logging.info('engine ready', 'SimulationService');
         }
       })
       .catch((err: Error) => {
         if (this._state() === 'starting') {
-          this.toastService.error(err.message);
+          this.toastService.error(err.message, err, 'SimulationService');
           this.exit();
         }
       });
@@ -238,6 +242,10 @@ export class SimulationService {
       return;
     }
     this._state.set('running');
+    this.logging.info(
+      `run started: mode=${this._mode()}, target=${this.targetHz()} Hz`,
+      'SimulationService'
+    );
     this._project?.triggerTicker('on');
     this.workerService
       .start(this._mode(), this.targetHz())
@@ -250,6 +258,7 @@ export class SimulationService {
       return;
     }
     this._state.set('ready');
+    this.logging.info('run paused', 'SimulationService');
     this._project?.triggerTicker('off');
     this.workerService.pause().catch((err: Error) => {
       this._onRunControlError(err);
@@ -275,6 +284,7 @@ export class SimulationService {
       this._project?.triggerTicker('off');
     }
     this._state.set('ready');
+    this.logging.info('simulation reset to tick 0', 'SimulationService');
     this.workerService
       .reset()
       .then(() => {
@@ -345,7 +355,7 @@ export class SimulationService {
     if (!this.isReady()) {
       return;
     }
-    this.toastService.error(err.message);
+    this.toastService.error(err.message, err, 'SimulationService');
     if (this._state() === 'running') {
       this._state.set('ready');
       this._project?.triggerTicker('off');

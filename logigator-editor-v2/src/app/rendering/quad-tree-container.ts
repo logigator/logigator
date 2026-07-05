@@ -1,6 +1,8 @@
 import { Container, ContainerChild, Graphics, Rectangle } from 'pixi.js';
 import { GridElement } from './grid-element';
 import { environment } from '../../environments/environment';
+import { getStaticDI } from '../utils/get-di';
+import { LoggingService } from '../logging/logging.service';
 
 type Quadrant = 'nw' | 'ne' | 'sw' | 'se';
 
@@ -126,6 +128,10 @@ export class QuadTreeContainer<T extends GridElement> extends Container {
         this._items.set(element, entry);
         return;
       } else {
+        getStaticDI(LoggingService).error(
+          `insertElement reached an entry (size ${entry.size}) with neither branches nor leafItems; element bounds ${JSON.stringify(elBounds)}`,
+          'QuadTreeContainer'
+        );
         throw new Error(
           'PANIC: Invalid Quad Tree state: entry has no branches but is not a leaf'
         );
@@ -153,6 +159,10 @@ export class QuadTreeContainer<T extends GridElement> extends Container {
     } else if (entry.leafItems?.children.includes(element)) {
       entry.leafItems.removeChild(element);
     } else {
+      getStaticDI(LoggingService).error(
+        `removeElement found the element in _items but in neither branchItems nor leafItems of its entry (size ${entry.size})`,
+        'QuadTreeContainer'
+      );
       throw new Error(
         'PANIC: Invalid Quad Tree state: element was found in hashmap but not in tree'
       );
@@ -308,6 +318,10 @@ export class QuadTreeContainer<T extends GridElement> extends Container {
       const elBounds = element.gridBounds;
       const quadrant = this.getContainingQuadrant(entry.boundsArea, elBounds);
       if (!quadrant) {
+        getStaticDI(LoggingService).error(
+          `splitLeaf: leaf element with bounds ${JSON.stringify(elBounds)} is not contained in any quadrant of entry ${JSON.stringify(entry.boundsArea)}`,
+          'QuadTreeContainer'
+        );
         throw new Error(
           'PANIC: Invalid Quad Tree state: leaf element is not contained in any quadrant'
         );

@@ -23,7 +23,9 @@ const en = {
     clear: 'Clear',
     copy: 'Copy',
     follow: 'Follow',
-    clearConfirm: 'Clear all memory contents?'
+    clearConfirm: 'Clear all memory contents?',
+    copied: 'Copied to clipboard.',
+    copyFailed: 'Could not copy to clipboard.'
   },
   settings: {
     options: {
@@ -230,7 +232,19 @@ const en = {
     deleteReject: 'Cancel',
     searchPlaceholder: 'Search projects...',
     searchButton: 'Search',
-    noSearchResults: 'No projects found'
+    noSearchResults: 'No projects found',
+    errors: {
+      listLocal: 'Could not load your local projects.',
+      openLocal: 'Could not open the local project.',
+      deleteLocal: 'Could not delete the local project.',
+      renameLocal: 'Could not rename the local project.',
+      listServer: 'Could not load your server projects.',
+      openServer: 'Could not open the server project.',
+      deleteServer: 'Could not delete the server project.',
+      renameServer: 'Could not rename the server project.',
+      importFailed: 'Could not import the file: {{detail}}',
+      readFailed: 'Could not read the selected file.'
+    }
   },
   saveProjectDialog: {
     name: 'Name',
@@ -331,11 +345,70 @@ const en = {
     warn: 'Warning',
     success: 'Success',
     info: 'Info',
-    debug: 'Debug'
+    debug: 'Debug',
+    unexpectedError:
+      'Something went wrong. Some actions may not have completed — see the browser console for details.'
+  },
+  clipboard: {
+    nothingToCopy: 'Nothing selected to copy.',
+    nothingToCut: 'Nothing selected to cut.',
+    empty: 'Clipboard is empty.',
+    pastePartial:
+      'Some elements could not be pasted — their component type is no longer available.'
   },
   persistence: {
     legacyProjectWarning:
-      'This project was made with the old editor. Saving here converts it to the new format — reopening it in the old editor afterwards may drop or misrender custom components.'
+      'This project was made with the old editor. Saving here converts it to the new format — reopening it in the old editor afterwards may drop or misrender custom components.',
+    projectSaved: 'Project saved.',
+    projectSavedBrowser: 'Project saved to browser storage.',
+    componentSaved: 'Component saved.',
+    componentSavedBrowser: 'Component saved to browser storage.',
+    componentUploaded: 'Component uploaded to your cloud library.',
+    projectCreated: 'Project created.',
+    projectExported: 'Project exported to file.',
+    exportFailed: 'Could not export the project to a file.',
+    browserSaveFailed: 'Could not save the project to browser storage.',
+    browserComponentSaveFailed: 'Could not save the component to browser storage.',
+    saveFailed: 'Could not save: {{detail}}',
+    saveFailedGeneric: 'Could not save the project.',
+    createFailed: 'Could not create the project: {{detail}}',
+    versionMismatch:
+      'This project changed elsewhere — reload before saving again.',
+    loadFailed: 'Could not load the project.',
+    componentLoadFailed: 'Could not load the component.',
+    shareLoadFailed: 'Could not load the shared project.',
+    shareAuthRequired: 'Sign in to add this shared project to your account.',
+    dumpElementCountChanged:
+      'Project Dump element count changed on load — ids and action history were not restored.',
+    skippedCustomOne:
+      'A custom component could not be loaded — its definition is missing — and was skipped.',
+    skippedCustomMany:
+      '{{count}} custom components could not be loaded — their definitions are missing — and were skipped.'
+  },
+  editor: {
+    rendererInitFailed:
+      'Could not start the graphics renderer. Your browser or GPU may be unsupported.',
+    fontLoadFailed: 'Editor fonts failed to load — some labels may look wrong.',
+    eraseRestoreFailed: 'Some erased components could not be restored.'
+  },
+  simulation: {
+    workerMessageUnreadable:
+      'The simulation worker sent an unreadable message. Simulation stopped.'
+  },
+  watch: {
+    rendererFailed:
+      'Could not open the watch view — the renderer failed to start.',
+    noInnerCircuit: 'This component has no inner circuit to inspect.'
+  },
+  componentActions: {
+    sourceUnavailable:
+      "This component's source is unavailable and can't be opened for editing."
+  },
+  library: {
+    loadFailed: 'Some saved components could not be loaded.'
+  },
+  routing: {
+    notFound: 'That link could not be opened.'
   },
   imageExport: {
     title: 'Export image',
@@ -349,6 +422,7 @@ const en = {
     clampedHint: '(reduced to fit device limits)',
     export: 'Export',
     cancel: 'Cancel',
+    success: 'Image exported.',
     error: {
       unavailable: 'The editor is not ready yet. Try again in a moment.',
       failed: 'Image export failed.'

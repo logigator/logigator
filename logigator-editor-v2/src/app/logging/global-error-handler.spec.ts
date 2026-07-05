@@ -1,0 +1,65 @@
+import { beforeEach, afterEach, describe, expect, it, vi } from 'vitest';
+import { TestBed } from '@angular/core/testing';
+import { TranslocoService } from '@jsverse/transloco';
+
+import { GlobalErrorHandler } from './global-error-handler';
+import { LoggingService } from './logging.service';
+import { ToastService } from './toast.service';
+
+describe('GlobalErrorHandler', () => {
+  let handler: GlobalErrorHandler;
+  let logging: LoggingService;
+  let toast: ToastService;
+  let now: number;
+
+  beforeEach(() => {
+    now = 1000;
+    vi.spyOn(performance, 'now').mockImplementation(() => now);
+
+    const toastSpy = { error: vi.fn() };
+    const loggingSpy = { error: vi.fn() };
+    const translocoSpy = { translate: vi.fn((key: string) => key) };
+
+    TestBed.configureTestingModule({
+      providers: [
+        GlobalErrorHandler,
+        { provide: LoggingService, useValue: loggingSpy },
+        { provide: ToastService, useValue: toastSpy },
+        { provide: TranslocoService, useValue: translocoSpy }
+      ]
+    });
+    handler = TestBed.inject(GlobalErrorHandler);
+    logging = TestBed.inject(LoggingService);
+    toast = TestBed.inject(ToastService);
+  });
+
+  afterEach(() => {
+    vi.restoreAllMocks();
+  });
+
+  it('logs every error with full detail', () => {
+    const err = new Error('boom');
+    handler.handleError(err);
+    now += 10;
+    handler.handleError(err);
+    expect(logging.error).toHaveBeenCalledTimes(2);
+    expect(logging.error).toHaveBeenCalledWith(err, 'GlobalErrorHandler');
+  });
+
+  it('throttles repeated toasts within the cooldown window', () => {
+    handler.handleError(new Error('a'));
+    now += 100;
+    handler.handleError(new Error('b'));
+    now += 100;
+    handler.handleError(new Error('c'));
+    expect(toast.error).toHaveBeenCalledTimes(1);
+    expect(toast.error).toHaveBeenCalledWith('logging.unexpectedError');
+  });
+
+  it('toasts again once the cooldown has elapsed', () => {
+    handler.handleError(new Error('a'));
+    now += 6000;
+    handler.handleError(new Error('b'));
+    expect(toast.error).toHaveBeenCalledTimes(2);
+  });
+});

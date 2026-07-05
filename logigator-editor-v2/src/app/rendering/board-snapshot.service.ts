@@ -14,6 +14,7 @@ import { GraphicsProviderService } from './graphics-provider.service';
 import { GridGraphics } from './graphics/grid.graphics';
 import { ThemingService } from '../theming/theming.service';
 import { ThemeType } from '../theming/theme-type.enum';
+import { LoggingService } from '../logging/logging.service';
 import { Project } from '../project/project';
 import { ZOOM_STEP_BASE, ZOOM_STEP_MIN } from '../project/viewport-controller';
 import { environment } from '../../environments/environment';
@@ -67,6 +68,7 @@ export class BoardSnapshotService {
   private readonly rendererHandle = inject(RendererHandleService);
   private readonly graphicsProvider = inject(GraphicsProviderService);
   private readonly themingService = inject(ThemingService);
+  private readonly logging = inject(LoggingService);
 
   /** Whether a renderer is registered (false before the board has loaded). */
   public get available(): boolean {
@@ -209,6 +211,10 @@ export class BoardSnapshotService {
   ): HTMLCanvasElement {
     const renderer = this.rendererHandle.renderer;
     if (!renderer) {
+      this.logging.error(
+        'renderRegionToCanvas called with no renderer registered',
+        'BoardSnapshotService'
+      );
       throw new Error('BoardSnapshotService: no renderer registered');
     }
     const texture = this.renderRegionToTexture(project, region, options);
@@ -234,6 +240,10 @@ export class BoardSnapshotService {
   ): RenderTexture {
     const renderer = this.rendererHandle.renderer;
     if (!renderer) {
+      this.logging.error(
+        'renderRegionToTexture called with no renderer registered',
+        'BoardSnapshotService'
+      );
       throw new Error('BoardSnapshotService: no renderer registered');
     }
 

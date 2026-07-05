@@ -1,6 +1,10 @@
+import { LogLevel } from '../app/logging/log-level.enum';
+
 export interface Environment {
   apiUrl: string;
   gridSize: number;
+  /** Minimum severity printed to the console; messages below it are dropped. */
+  loggingVerbosity: LogLevel;
   debug: {
     showGridBorders: boolean;
     showHitboxes: boolean;

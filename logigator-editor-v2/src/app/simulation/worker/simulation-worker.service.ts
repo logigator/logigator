@@ -1,4 +1,6 @@
 import { inject, Injectable, InjectionToken, signal } from '@angular/core';
+import { TranslocoService } from '@jsverse/transloco';
+import { LoggingService } from '../../logging/logging.service';
 import { BoardDescriptor } from '../compiler/compiled-board.model';
 import { SnapshotApplier } from '../state/link-state-applier';
 import {
@@ -75,6 +77,8 @@ interface PendingRequest {
 export class SimulationWorkerService {
   private readonly createWorker = inject(SIMULATION_WORKER_FACTORY);
   private readonly frameScheduler = inject(FRAME_SCHEDULER);
+  private readonly logging = inject(LoggingService);
+  private readonly transloco = inject(TranslocoService);
 
   private worker: Worker | null = null;
   private hooks: SimulationSessionHooks | null = null;
@@ -87,6 +91,11 @@ export class SimulationWorkerService {
   private statusTimer: ReturnType<typeof setInterval> | null = null;
   private snapshotInFlight = false;
   private wantFullSnapshot = false;
+  // Whether the in-flight snapshot request asked for a full one — lets the
+  // handler tell a routine full (seed/reset) from an engine delta→full fallback.
+  private lastRequestedFull = false;
+  // Gates the one first-snapshot debug line per session (never per frame).
+  private loggedFirstSnapshot = false;
   private lastStatus: { tick: number; at: number } | null = null;
 
   private readonly _measuredHz = signal(0);
@@ -107,6 +116,7 @@ export class SimulationWorkerService {
   ): Promise<void> {
     this.endSession();
     this.hooks = hooks;
+    this.loggedFirstSnapshot = false;
     const worker = this.createWorker();
     this.worker = worker;
     const ready = new Promise<void>((resolve, reject) => {
@@ -117,6 +127,10 @@ export class SimulationWorkerService {
       this._onMessage(event.data);
     worker.onerror = (event: ErrorEvent) =>
       this._fail(event.message || 'Simulation worker crashed');
+    // A message that can't be deserialized never reaches onmessage — route it
+    // into the same failure path as onerror.
+    worker.onmessageerror = () =>
+      this._fail(this.transloco.translate('simulation.workerMessageUnreadable'));
     await ready;
     if (this.worker !== worker) {
       throw new Error('Simulation session ended');
@@ -273,6 +287,7 @@ export class SimulationWorkerService {
     this.snapshotInFlight = true;
     const full = this.wantFullSnapshot;
     this.wantFullSnapshot = false;
+    this.lastRequestedFull = full;
     this._post({ kind: 'requestSnapshot', full });
   }
 
@@ -302,7 +317,17 @@ export class SimulationWorkerService {
       this.pending.set(reqId, { resolve, reject });
     });
     this.worker.postMessage({ ...msg, reqId } as MainToWorkerMessage);
-    return promise;
+    this.logging.debug(`request ${msg.kind}`, 'SimulationWorker');
+    return promise.then(
+      () => this.logging.debug(`request ${msg.kind} ok`, 'SimulationWorker'),
+      (err: Error) => {
+        this.logging.debug(
+          `request ${msg.kind} failed: ${err.message}`,
+          'SimulationWorker'
+        );
+        throw err;
+      }
+    );
   }
 
   /** Sends without registering a response promise (still tracked by reqId). */
@@ -327,6 +352,7 @@ export class SimulationWorkerService {
   private _onMessage(msg: WorkerToMainMessage): void {
     switch (msg.kind) {
       case 'ready':
+        this.logging.debug('worker ready', 'SimulationWorker');
         this.pending.delete(0);
         this.resolveReady?.();
         this.resolveReady = null;
@@ -349,6 +375,20 @@ export class SimulationWorkerService {
       case 'snapshot': {
         this.snapshotInFlight = false;
         this._tick.set(msg.tick);
+        // Rate-limited debug only: the first snapshot of the session, and any
+        // engine delta→full fallback (a full arrived where a delta was asked).
+        if (!this.loggedFirstSnapshot) {
+          this.loggedFirstSnapshot = true;
+          this.logging.debug(
+            `first snapshot (isDelta=${msg.isDelta}, tick=${msg.tick})`,
+            'SimulationWorker'
+          );
+        } else if (!msg.isDelta && !this.lastRequestedFull) {
+          this.logging.debug(
+            `delta→full fallback at tick ${msg.tick}`,
+            'SimulationWorker'
+          );
+        }
         const applier = this.hooks?.applier;
         if (applier) {
           const { ids, values } = unpackSnapshot(msg);

@@ -1,11 +1,14 @@
 /* eslint-disable no-console, @typescript-eslint/no-empty-function */
 
-import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { TestBed } from '@angular/core/testing';
 import { LoggingService } from './logging.service';
+import { LogLevel } from './log-level.enum';
+import { environment } from '../../environments/environment';
 
 describe('LoggingService', () => {
   let service: LoggingService;
+  const originalVerbosity = environment.loggingVerbosity;
 
   beforeEach(() => {
     // Spy on console methods and suppress output — these tests assert on the spy
@@ -26,8 +29,15 @@ describe('LoggingService', () => {
       .mockImplementation(() => {})
       .mockClear();
 
+    // Print everything so the per-level assertions below aren't gated out.
+    environment.loggingVerbosity = LogLevel.Debug;
+
     TestBed.configureTestingModule({});
     service = TestBed.inject(LoggingService);
+  });
+
+  afterEach(() => {
+    environment.loggingVerbosity = originalVerbosity;
   });
 
   it('should be created', () => {
@@ -81,6 +91,45 @@ describe('LoggingService', () => {
         '[%s] %o',
         'debug-ctx',
         'debug-msg'
+      );
+    });
+  });
+
+  describe('verbosity gating', () => {
+    it('drops messages below the configured verbosity', () => {
+      environment.loggingVerbosity = LogLevel.Warn;
+
+      service.debug('d', 'ctx');
+      service.info('i', 'ctx');
+      service.log('l', 'ctx');
+      expect(console.debug).not.toHaveBeenCalled();
+      expect(console.info).not.toHaveBeenCalled();
+      expect(console.log).not.toHaveBeenCalled();
+
+      service.warn('w', 'ctx');
+      service.error('e', 'ctx');
+      expect(console.warn).toHaveBeenCalledOnce();
+      expect(console.error).toHaveBeenCalledOnce();
+    });
+
+    it('suppresses everything at Silent', () => {
+      environment.loggingVerbosity = LogLevel.Silent;
+      service.error('e', 'ctx');
+      service.warn('w', 'ctx');
+      expect(console.error).not.toHaveBeenCalled();
+      expect(console.warn).not.toHaveBeenCalled();
+    });
+  });
+
+  describe('time', () => {
+    it('logs the elapsed time at debug level when stopped', () => {
+      const stop = service.time('do work', 'ctx');
+      expect(console.debug).not.toHaveBeenCalled();
+      stop();
+      expect(console.debug).toHaveBeenCalledWith(
+        '[%s] %o',
+        'ctx',
+        expect.stringMatching(/^do work took [\d.]+ ms$/)
       );
     });
   });

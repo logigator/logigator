@@ -14,6 +14,8 @@ import { MoveEntry } from '../../actions/actions/move-entry.model';
 import { SerializedWire } from '../../wires/serialized-wire.model';
 import { WireSnapshot } from '../../wires/wire-snapshot.model';
 import { DragCollisionState } from './drag-collision';
+import { getStaticDI } from '../../utils/get-di';
+import { LoggingService } from '../../logging/logging.service';
 
 export class SelectionMoveSession implements DragSession {
   private readonly _components: Component[];
@@ -102,6 +104,10 @@ export class SelectionMoveSession implements DragSession {
     this.project.reattachFromDrag(this._components, this._wires);
 
     if (!hasMove) {
+      getStaticDI(LoggingService).debug(
+        'ended move with zero delta: nothing committed',
+        'SelectionMoveSession'
+      );
       this.project.connectionPoints.restoreDragCps(this._capturedCps);
       return;
     }
@@ -205,6 +211,12 @@ export class SelectionMoveSession implements DragSession {
       action.add(new MoveWiresAction(...wireEntries));
     }
 
+    getStaticDI(LoggingService).debug(
+      `committed move: ${this._components.length} component(s) and ${this._wires.length} wire(s) moved; ` +
+        `integration added ${toAdd.length} and removed ${toRemove.length} wire(s)`,
+      'SelectionMoveSession'
+    );
+
     if (action.length > 0) {
       if (pendingCut) {
         // Cut + move state is already fully materialized in the project
@@ -220,6 +232,10 @@ export class SelectionMoveSession implements DragSession {
   }
 
   onCancel(): void {
+    getStaticDI(LoggingService).debug(
+      `cancelled move: ${this._components.length} component(s) and ${this._wires.length} wire(s) reattached at their original positions`,
+      'SelectionMoveSession'
+    );
     this.dragLayer.position.set(0, 0);
     this.dragLayer.tint = 0xffffff;
     this.project.reattachFromDrag(this._components, this._wires);

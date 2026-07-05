@@ -1,8 +1,7 @@
 import type { MockedObject } from 'vitest';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import { Injector } from '@angular/core';
 import { TestBed } from '@angular/core/testing';
-import { setStaticDIInjector } from '../utils/get-di';
+import { configureTestBed } from '../../testing/configure-test-bed';
 import { ClipboardService } from './clipboard.service';
 import { Project } from '../project/project';
 import { Component } from '../components/component';
@@ -51,8 +50,8 @@ describe('ClipboardService', () => {
   let compsToDestroy: Component[];
 
   beforeEach(() => {
-    setStaticDIInjector(TestBed.inject(Injector));
-    service = new ClipboardService();
+    configureTestBed();
+    service = TestBed.inject(ClipboardService);
     compsToDestroy = [];
   });
 

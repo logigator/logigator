@@ -43,6 +43,10 @@ export function migrateToCurrent(
       throw new InvalidFileError(`No migration path from version ${version}`);
     }
     current = migration.migrate(current, ctx);
+    ctx.logging.info(
+      `Migrated circuit ${migration.from} -> ${migration.to}`,
+      'CircuitFileMigrator'
+    );
     version = migration.to;
   }
 
