@@ -3,6 +3,7 @@ import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { Subscription } from 'rxjs';
 import { Component } from '../components/component';
 import { LayoutService } from '../layout/layout.service';
+import { ToastService } from '../logging/toast.service';
 import { ProjectService } from '../project/project.service';
 import { SimulationService } from '../simulation/simulation.service';
 import { WorkMode } from '../work-mode/work-mode.enum';
@@ -28,6 +29,7 @@ export class InspectionService {
   private readonly workModeService = inject(WorkModeService);
   private readonly projectService = inject(ProjectService);
   private readonly layout = inject(LayoutService);
+  private readonly toastService = inject(ToastService);
   private readonly windowPresenter = inject(WindowInspectionPresenter);
   private readonly sheetPresenter = inject(SheetInspectionPresenter);
 
@@ -76,10 +78,16 @@ export class InspectionService {
     if (!factory) {
       return;
     }
-    const entry: OpenInspection = {
-      component,
-      inspection: factory(component)
-    };
+    let inspection;
+    try {
+      inspection = factory(component);
+    } catch (err) {
+      // A watch can legitimately fail to open (e.g. the definition no longer
+      // matches the compiled board) — surface it instead of crashing the tap.
+      this.toastService.error(err instanceof Error ? err.message : String(err));
+      return;
+    }
+    const entry: OpenInspection = { component, inspection };
     this._open.update((entries) => [...entries, entry]);
     this._presenter().show(entry, () => this._remove(entry));
   }

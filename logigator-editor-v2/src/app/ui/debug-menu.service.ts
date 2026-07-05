@@ -13,6 +13,7 @@ import {
   runWatchRendererSpike,
   SpikePreference
 } from '../inspection/watch/watch-renderer-spike';
+import { insertWatchDemoCircuit } from '../inspection/watch/watch-demo-circuit';
 
 /**
  * Builds the title-bar "Debug" menu and owns its commands. Gated by
@@ -55,11 +56,25 @@ export class DebugMenuService {
           label: 'Watch renderer spike (canvas)',
           command: () => this.watchRendererSpike('canvas')
         },
+        {
+          label: 'Insert watch demo circuit',
+          command: () => this.insertWatchDemo()
+        },
         { separator: true },
         { label: 'Generate dump', command: () => this.generateDump() },
         { label: 'Import dump', command: () => this.importDump() }
       ]
     };
+  }
+
+  private insertWatchDemo(): void {
+    const project = this.projectService.activeProject();
+    if (!project) {
+      this.toast.warn('No active project.');
+      return;
+    }
+    insertWatchDemoCircuit(project);
+    this.toast.info('Watch demo circuit inserted (Nest at 10,10).');
   }
 
   private watchRendererSpike(preference?: SpikePreference): void {

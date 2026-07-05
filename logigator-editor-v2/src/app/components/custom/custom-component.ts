@@ -46,6 +46,11 @@ export class CustomComponent extends Component<CustomComponentOptions> {
     this.redraw();
   }
 
+  /** The frozen snapshot definition this instance renders from. */
+  public get definition(): CustomComponentDefinition {
+    return this._def!;
+  }
+
   protected get inputLabels(): string[] {
     if (!this._def) return [];
     return this._def.labels.slice(0, this._def.numInputs);

@@ -126,7 +126,10 @@ describe('BoardCompilerService watch index', () => {
     );
     const plug0 = makeOutPlug(0, [10, 0]);
     const plug1 = makeOutPlug(1, [10, 6]);
-    const w0 = wireBetween(lever.connectionPoints[0], plug0.connectionPoints[0]);
+    const w0 = wireBetween(
+      lever.connectionPoints[0],
+      plug0.connectionPoints[0]
+    );
     const w1 = wireBetween(
       nested.connectionPoints[0],
       plug1.connectionPoints[0]
