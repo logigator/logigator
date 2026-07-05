@@ -174,9 +174,6 @@ component layer and `inspection/watch/`:
   first shows; re-blits ride on the model's `render$` (engine changes), the
   project's `ticker$` (pan/zoom/theme), and host resizes.
 
-The Debug menu's "Insert watch demo circuit" places a nested
-oscillator + lever + ROM fixture for manual verification.
-
 ## Future Work (see `plans/inspection.md`)
 
 - **RAM / registers**: blocked on a `@logigator/sim` component-state read API.

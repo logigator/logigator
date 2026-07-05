@@ -9,7 +9,6 @@ import { RendererHandleService } from '../rendering/renderer-handle.service';
 import { PersistenceService } from '../persistence/persistence.service';
 import { ToastService } from '../logging/toast.service';
 import { pickTextFile } from '../utils/file-picker';
-import { insertWatchDemoCircuit } from '../inspection/watch/watch-demo-circuit';
 
 /**
  * Builds the title-bar "Debug" menu and owns its commands. Gated by
@@ -44,25 +43,10 @@ export class DebugMenuService {
         },
         { label: 'Spawn test toasts', command: () => this.spawnTestToasts() },
         { separator: true },
-        {
-          label: 'Insert watch demo circuit',
-          command: () => this.insertWatchDemo()
-        },
-        { separator: true },
         { label: 'Generate dump', command: () => this.generateDump() },
         { label: 'Import dump', command: () => this.importDump() }
       ]
     };
-  }
-
-  private insertWatchDemo(): void {
-    const project = this.projectService.activeProject();
-    if (!project) {
-      this.toast.warn('No active project.');
-      return;
-    }
-    insertWatchDemoCircuit(project);
-    this.toast.info('Watch demo circuit inserted (Nest at 10,10).');
   }
 
   private printCompiledBoard(): void {
