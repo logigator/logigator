@@ -78,6 +78,7 @@ const CLICK_MOVE_THRESHOLD = 5;
       (pointerup)="onPointerUp($event)"
       (pointercancel)="onPointerCancel($event)"
       (wheel)="onWheel($event)"
+      (contextmenu)="$event.preventDefault()"
     ></canvas>
   `
 })
@@ -99,12 +100,13 @@ export class SubCircuitWatchComponent implements AfterViewInit, OnDestroy {
   private panPointer: number | null = null;
   private panLast = { x: 0, y: 0 };
   private panned = false;
+  // Only a primary-button press can become a click; a right-drag only pans.
+  private clickEligible = false;
 
   // Two-finger pan + pinch-zoom on touch. The second finger cancels any
-  // single-pointer press so a finger never both clicks and navigates;
-  // renders ride on the ticker events pan/zoomBy already emit.
+  // single-pointer press so a finger never both clicks and navigates.
   private readonly gesture = new MultiTouchGesture({
-    pan: (delta) => this.project.pan(delta),
+    pan: (delta) => this.pan(delta),
     zoomBy: (factor, center) => this.project.zoomBy(factor, center),
     abortActiveDrag: () => (this.panPointer = null),
     setActive: () => undefined
@@ -160,9 +162,12 @@ export class SubCircuitWatchComponent implements AfterViewInit, OnDestroy {
         return;
       }
     }
-    if (event.button !== 0 || this.panPointer !== null) {
+    // Left press: click-or-pan (past the threshold). Right press: pan only,
+    // mirroring the board's right-drag pan.
+    if ((event.button !== 0 && event.button !== 2) || this.panPointer !== null) {
       return;
     }
+    this.clickEligible = event.button === 0;
     this.panPointer = event.pointerId;
     this.panLast = { x: event.clientX, y: event.clientY };
     this.panned = false;
@@ -183,13 +188,16 @@ export class SubCircuitWatchComponent implements AfterViewInit, OnDestroy {
     const dx = event.clientX - this.panLast.x;
     const dy = event.clientY - this.panLast.y;
     if (!this.panned) {
-      if (dx * dx + dy * dy <= CLICK_MOVE_THRESHOLD * CLICK_MOVE_THRESHOLD) {
+      if (
+        this.clickEligible &&
+        dx * dx + dy * dy <= CLICK_MOVE_THRESHOLD * CLICK_MOVE_THRESHOLD
+      ) {
         return; // still within click tolerance — don't pan yet
       }
       this.panned = true;
     }
     this.panLast = { x: event.clientX, y: event.clientY };
-    this.project.pan(new Point(dx, dy));
+    this.pan(new Point(dx, dy));
   }
 
   protected onPointerUp(event: PointerEvent): void {
@@ -201,7 +209,7 @@ export class SubCircuitWatchComponent implements AfterViewInit, OnDestroy {
     }
     this.panPointer = null;
     this.canvas.nativeElement.releasePointerCapture(event.pointerId);
-    if (this.panned) {
+    if (this.panned || !this.clickEligible) {
       return;
     }
     const component = this.componentAt(this.gridPosition(event));
@@ -234,8 +242,8 @@ export class SubCircuitWatchComponent implements AfterViewInit, OnDestroy {
   /** Swaps the view to a level: ticker rewire, sizing, one-time fit. */
   private showLevel(level: WatchLevel): void {
     this.tickerSub?.unsubscribe();
-    // Fires on pan/zoom (viewport controller) and theme re-tints — anything
-    // that changed the project without an engine snapshot.
+    // Fires on zoom and theme re-tints — anything that changed the project
+    // without an engine snapshot. Panning renders directly (see pan()).
     this.tickerSub = level.session.project.ticker$.subscribe(() =>
       this.render()
     );
@@ -244,6 +252,15 @@ export class SubCircuitWatchComponent implements AfterViewInit, OnDestroy {
       level.needsFit = false;
       this.fitToContent();
     }
+    this.render();
+  }
+
+  /**
+   * Pans and re-blits directly: unlike the zooms, `Project.pan` emits no
+   * ticker event (the board pans with its ticker already running).
+   */
+  private pan(delta: Point): void {
+    this.project.pan(delta);
     this.render();
   }
 
