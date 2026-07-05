@@ -32,7 +32,7 @@ const PANEL_SIZE_COMPACT = { width: 200, height: 200 };
 /** Quiet period after the last committed action before the map re-renders. */
 const CONTENT_DEBOUNCE_MS = 200;
 /** Minimum on-screen size of the viewport rectangle (CSS px). */
-const MIN_RECT_SIZE_PX = 8;
+const MIN_RECT_SIZE_PX = 12;
 /** Compact expansion is a peek: collapse this long after the last scrub. */
 const AUTO_COLLAPSE_MS = 3000;
 /** Desktop collapse is an explicit choice, so it persists (plain key, not an
