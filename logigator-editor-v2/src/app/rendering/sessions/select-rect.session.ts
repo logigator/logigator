@@ -1,12 +1,7 @@
-import {
-  Container,
-  FederatedPointerEvent,
-  Graphics,
-  Point,
-  Rectangle
-} from 'pixi.js';
+import { Container, Graphics, Point, Rectangle } from 'pixi.js';
 
 import { DragSession } from '../drag-session';
+import { PointerInput } from '../interaction/pointer-input';
 import { Project } from '../../project/project';
 import { WorkMode } from '../../work-mode/work-mode.enum';
 
@@ -28,8 +23,8 @@ export class SelectRectSession implements DragSession {
     parent.addChild(this.selectRect);
   }
 
-  onMove(e: FederatedPointerEvent): void {
-    const current = e.getLocalPosition(this.project.gridSpace);
+  onMove(input: PointerInput): void {
+    const current = input.grid;
     this.selectRect.scale.set(
       current.x - this.startPos.x,
       current.y - this.startPos.y

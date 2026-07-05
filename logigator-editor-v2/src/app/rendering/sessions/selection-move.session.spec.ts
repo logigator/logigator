@@ -7,7 +7,7 @@ import { WireDirection } from '../../wires/wire-direction.enum';
 import { Component } from '../../components/component';
 import { SelectionMoveSession } from './selection-move.session';
 import { WorkMode } from '../../work-mode/work-mode.enum';
-import { makeAnd, makeMoveEvent, makeWire } from '../../../testing/factories';
+import { makeAnd, makeMoveInput, makeWire } from '../../../testing/factories';
 
 describe('SelectionMoveSession collision', () => {
   let project: Project;
@@ -46,7 +46,7 @@ describe('SelectionMoveSession collision', () => {
       );
 
       // Move selected component to (5,0) → overlaps stationary
-      session.onMove(makeMoveEvent(5, 0));
+      session.onMove(makeMoveInput(5, 0));
       expect(session.canEnd()).toBe(false);
     });
 
@@ -69,7 +69,7 @@ describe('SelectionMoveSession collision', () => {
         new Point(0, 0)
       );
 
-      session.onMove(makeMoveEvent(5, 0));
+      session.onMove(makeMoveInput(5, 0));
       expect(session.canEnd()).toBe(false);
       wire.destroy();
     });
@@ -91,7 +91,7 @@ describe('SelectionMoveSession collision', () => {
       );
 
       // Move to (0,10) — far from the wire
-      session.onMove(makeMoveEvent(0, 10));
+      session.onMove(makeMoveInput(0, 10));
       expect(session.canEnd()).toBe(true);
       wire.destroy();
     });
@@ -117,7 +117,7 @@ describe('SelectionMoveSession collision', () => {
         new Point(0, 0)
       );
 
-      session.onMove(makeMoveEvent(5, 0));
+      session.onMove(makeMoveInput(5, 0));
       expect(session.canEnd()).toBe(false);
     });
 
@@ -138,7 +138,7 @@ describe('SelectionMoveSession collision', () => {
       );
 
       // Move to (0,10) — clear of the component
-      session.onMove(makeMoveEvent(0, 10));
+      session.onMove(makeMoveInput(0, 10));
       expect(session.canEnd()).toBe(true);
     });
 
@@ -158,10 +158,10 @@ describe('SelectionMoveSession collision', () => {
         new Point(0, 0)
       );
 
-      session.onMove(makeMoveEvent(5, 0));
+      session.onMove(makeMoveInput(5, 0));
       expect(session.canEnd()).toBe(false);
 
-      session.onMove(makeMoveEvent(0, 10));
+      session.onMove(makeMoveInput(0, 10));
       expect(session.canEnd()).toBe(true);
     });
   });
@@ -207,7 +207,7 @@ describe('SelectionMoveSession collision', () => {
         new Point(5, 0)
       );
       // Move delta = (0, 5) — drag the inside piece down to a clear row.
-      session.onMove(makeMoveEvent(5, 5));
+      session.onMove(makeMoveInput(5, 5));
       expect(session.canEnd()).toBe(true);
       session.onEnd();
 
@@ -254,7 +254,7 @@ describe('SelectionMoveSession collision', () => {
       );
       // Move delta = (4, 1) so v ends up at (4.5, -4.5)→(4.5, 0.5).
       // v.end (4.5, 0.5) lands on long's interior.
-      session.onMove(makeMoveEvent(4, 0));
+      session.onMove(makeMoveInput(4, 0));
       expect(session.canEnd()).toBe(true);
       session.onEnd();
 

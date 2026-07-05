@@ -8,7 +8,7 @@ import { WireDirection } from '../../wires/wire-direction.enum';
 import { Direction } from '../../utils/direction';
 import { ConnectionPoint } from '../../connection-points/connection-point';
 import { PastePlacementSession } from './paste-placement.session';
-import { makeAnd, makeMoveEvent, makeWire } from '../../../testing/factories';
+import { makeAnd, makeMoveInput, makeWire } from '../../../testing/factories';
 
 function hasComponent(project: Project, comp: Component): boolean {
   return [...project.components].includes(comp);
@@ -99,7 +99,7 @@ describe('PastePlacementSession', () => {
       expect(session.canEnd()).toBe(false);
 
       session.beginDrag(new Point(0, 0)); // anchor = (0,0)
-      session.onMove(makeMoveEvent(10, 0)); // delta = (10,0) — clear of existing
+      session.onMove(makeMoveInput(10, 0)); // delta = (10,0) — clear of existing
       expect(session.canEnd()).toBe(true);
     });
   });
@@ -111,7 +111,7 @@ describe('PastePlacementSession', () => {
       const comp = makeAnd(2, Direction.E, 0, 0);
       session = new PastePlacementSession(project, dragLayer, [comp], []);
 
-      session.onMove(makeMoveEvent(4, 0));
+      session.onMove(makeMoveInput(4, 0));
 
       expect(dragLayer.position.x).toBe(0);
       expect(dragLayer.position.y).toBe(0);
@@ -122,7 +122,7 @@ describe('PastePlacementSession', () => {
       session = new PastePlacementSession(project, dragLayer, [comp], []);
 
       session.beginDrag(new Point(2, 0)); // anchor at (2,0)
-      session.onMove(makeMoveEvent(5, 3)); // delta = (3,3)
+      session.onMove(makeMoveInput(5, 3)); // delta = (3,3)
 
       expect(dragLayer.position.x).toBe(3);
       expect(dragLayer.position.y).toBe(3);
@@ -133,7 +133,7 @@ describe('PastePlacementSession', () => {
       session = new PastePlacementSession(project, dragLayer, [comp], []);
 
       session.beginDrag(new Point(0, 0)); // anchor = (0,0)
-      session.onMove(makeMoveEvent(2.7, 1.3));
+      session.onMove(makeMoveInput(2.7, 1.3));
 
       expect(dragLayer.position.x).toBe(3);
       expect(dragLayer.position.y).toBe(1);
@@ -157,7 +157,7 @@ describe('PastePlacementSession', () => {
       session = new PastePlacementSession(project, dragLayer, [comp], []);
 
       session.beginDrag(new Point(0, 0)); // anchor = (0,0)
-      session.onMove(makeMoveEvent(3, 0)); // delta = (3,0)
+      session.onMove(makeMoveInput(3, 0)); // delta = (3,0)
       session.onEnd();
       session = undefined;
 
@@ -171,7 +171,7 @@ describe('PastePlacementSession', () => {
       session = new PastePlacementSession(project, dragLayer, [], [wire]);
 
       session.beginDrag(new Point(0, 0)); // anchor = (0,0)
-      session.onMove(makeMoveEvent(2, 0)); // delta = (2,0)
+      session.onMove(makeMoveInput(2, 0)); // delta = (2,0)
       session.onEnd();
       session = undefined;
 
@@ -196,7 +196,7 @@ describe('PastePlacementSession', () => {
       session = new PastePlacementSession(project, dragLayer, [comp], []);
 
       session.beginDrag(new Point(0, 0));
-      session.onMove(makeMoveEvent(3, 3));
+      session.onMove(makeMoveInput(3, 3));
       session.onEnd();
       session = undefined;
 
@@ -294,7 +294,7 @@ describe('PastePlacementSession', () => {
       const comp = makeAnd(2, Direction.E, 0, 0);
       session = new PastePlacementSession(project, dragLayer, [comp], []);
       session.beginDrag(new Point(0, 0));
-      session.onMove(makeMoveEvent(4, 3));
+      session.onMove(makeMoveInput(4, 3));
       session.onCancel();
       session = undefined;
 

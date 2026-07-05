@@ -1,5 +1,6 @@
-import { FederatedPointerEvent, Point, Rectangle } from 'pixi.js';
+import { Point, Rectangle } from 'pixi.js';
 import { DragSession } from '../drag-session';
+import { PointerInput } from '../interaction/pointer-input';
 import { Project } from '../../project/project';
 import { WorkMode } from '../../work-mode/work-mode.enum';
 
@@ -7,25 +8,20 @@ import { WorkMode } from '../../work-mode/work-mode.enum';
 const CLICK_MOVE_THRESHOLD = 5;
 
 /**
- * One-pointer pan (the hand tool / WorkMode.PAN). Shared by mouse and touch.
+ * One-pointer pan (the hand tool / WorkMode.PAN). Shared by mouse and touch,
+ * and by the sub-circuit watch (tap-to-activate via `onTap`).
  *
- * Pans by the screen-space delta between successive pointer positions. It must
- * compute that delta itself rather than read `e.movement`: movementX/Y is
- * unreliable (often 0) for `pointerType === 'touch'` on some browsers (notably
- * iOS Safari), and this is the one-finger touch pan path. The right-drag pan in
- * InteractionContainer gets away with `e.movement` only because it is
- * mouse-only.
- *
- * `e.global` is screen space, which is exactly what `Project.pan` expects (it
- * adds the delta to the stage position). Do not convert to grid space here.
+ * Pans by the delta between successive `input.global` positions — canvas-local
+ * CSS pixels, which is exactly what `Project.pan` expects (it adds the delta
+ * to the stage position). Do not convert to grid space here.
  *
  * A press that never moves past a small threshold is treated as a click/tap.
  * By default it single-selects the element under it (clearing on empty space),
  * reusing SELECT mode's click path — so PAN stays navigate-first but a tap still
  * selects. The board does not move until the threshold is crossed, so a tap
  * never nudges it. Passing `onTap` overrides the tap action (simulation mode
- * uses it to activate a button/lever instead of selecting), keeping the same
- * drag-to-pan navigation.
+ * activates a button/lever, the watch drills into or actuates the tapped
+ * component), keeping the same drag-to-pan navigation.
  */
 export class PanSession implements DragSession {
   private readonly _lastGlobal: Point;
@@ -44,8 +40,8 @@ export class PanSession implements DragSession {
     this._clickPoint = clickPoint.clone();
   }
 
-  onMove(e: FederatedPointerEvent): void {
-    const g = e.global;
+  onMove(input: PointerInput): void {
+    const g = input.global;
     if (!this._moved) {
       const dx = g.x - this._startGlobal.x;
       const dy = g.y - this._startGlobal.y;

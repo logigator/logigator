@@ -1,5 +1,6 @@
-import { Container, FederatedPointerEvent, Point, Rectangle } from 'pixi.js';
+import { Container, Point, Rectangle } from 'pixi.js';
 import { DragSession } from '../drag-session';
+import { PointerInput } from '../interaction/pointer-input';
 import { Project } from '../../project/project';
 import { Component } from '../../components/component';
 import { ComponentConfig } from '../../components/component-config.model';
@@ -27,9 +28,9 @@ export class ComponentPlacementSession implements DragSession {
   constructor(
     private readonly project: Project,
     private readonly dragLayer: Container<Component | Wire | ConnectionPoint>,
-    startPos: Point
+    startPos: Point,
+    placeConfig: ComponentConfig
   ) {
-    const placeConfig = project.componentToPlace!;
     this._wouldCycle = ComponentPlacementSession._wouldCyclePlacement(
       project,
       placeConfig
@@ -51,10 +52,8 @@ export class ComponentPlacementSession implements DragSession {
     this._updateCollision();
   }
 
-  onMove(e: FederatedPointerEvent): void {
-    this.dragLayer.position.copyFrom(
-      roundToGrid(e.getLocalPosition(this.project.gridSpace), true)
-    );
+  onMove(input: PointerInput): void {
+    this.dragLayer.position.copyFrom(roundToGrid(input.grid, true));
     this._updateCollision();
   }
 
