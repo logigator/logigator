@@ -17,7 +17,6 @@ export class ConnectionPoint extends Graphics {
 
   constructor(position: Point) {
     super();
-    this.interactiveChildren = false;
     this.cullableChildren = false;
     this.context = this._graphicsProviderService.getGraphicsContext(
       ConnectionPointGraphics

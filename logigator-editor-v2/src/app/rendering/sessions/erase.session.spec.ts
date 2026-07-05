@@ -10,7 +10,7 @@ import { WireDirection } from '../../wires/wire-direction.enum';
 import { ActionContainer } from '../../actions/action-container';
 import type { Project } from '../../project/project';
 import type { ActionManager } from '../../actions/action-manager';
-import { makeAnd, makeMoveEvent } from '../../../testing/factories';
+import { makeAnd, makeMoveInput } from '../../../testing/factories';
 import { gen } from '../../../testing/vitest-helpers';
 import { AndComponent } from '../../components/component-types/and/and.component';
 
@@ -96,7 +96,7 @@ describe('EraseSession', () => {
       const session = new EraseSession(project, new Point(0, 0));
 
       project.queryWiresInRange.mockImplementation(() => gen(wire));
-      session.onMove(makeMoveEvent(5, 3));
+      session.onMove(makeMoveInput(5, 3));
 
       expect(project.removeWire).toHaveBeenCalledWith(wire.id);
       wire.destroy();
@@ -104,7 +104,7 @@ describe('EraseSession', () => {
 
     it('sweeps the AABB between previous and current positions', () => {
       const session = new EraseSession(project, new Point(2, 1));
-      session.onMove(makeMoveEvent(7, 4));
+      session.onMove(makeMoveInput(7, 4));
 
       expect(project.queryWiresInRange).toHaveBeenCalledWith(
         expect.objectContaining({ x: 2, y: 1, width: 6, height: 4 })
@@ -117,8 +117,8 @@ describe('EraseSession', () => {
 
       const session = new EraseSession(project, new Point(0, 0));
       // Wire already erased in constructor; subsequent moves should skip it
-      session.onMove(makeMoveEvent(3, 2));
-      session.onMove(makeMoveEvent(4, 2));
+      session.onMove(makeMoveInput(3, 2));
+      session.onMove(makeMoveInput(4, 2));
 
       expect(project.removeWire).toHaveBeenCalledTimes(1);
 
@@ -133,7 +133,7 @@ describe('EraseSession', () => {
 
       project.queryComponentsInRange.mockImplementation(() => gen(comp));
       project.queryWiresInRange.mockImplementation(() => gen(wire));
-      session.onMove(makeMoveEvent(3, 3));
+      session.onMove(makeMoveInput(3, 3));
 
       expect(project.removeComponent).toHaveBeenCalledWith(comp.id);
       expect(project.removeWire).toHaveBeenCalledWith(wire.id);

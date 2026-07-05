@@ -9,7 +9,7 @@ highlighted) and the custom component's **watch** (a live canvas view of its
 inner circuit — see [The Custom-Component Watch](#the-custom-component-watch)).
 
 ```
-tap on canvas (FloatingLayer, SIMULATION mode)
+tap on canvas (WorkModeRouter, SIMULATION mode)
   └► Project.inspectRequest$ ── InspectionService.openFor(component)
        config.inspection(component) ──► ComponentInspection (model)
        └► presenter (by breakpoint + compactPresentation)
@@ -66,7 +66,7 @@ renders it; it must live from startup). Responsibilities:
 
 - **Open**: `openFor(component)` — at most one inspection per component
   instance; a second tap focuses the existing view. Components whose config
-  declares no `inspection` are ignored (the `FloatingLayer` already filters,
+  declares no `inspection` are ignored (the `WorkModeRouter` already filters,
   this is defense in depth). A factory that **throws** (a watch can
   legitimately fail to open when the definition no longer matches the compiled
   board) surfaces as an error toast instead of crashing the tap.

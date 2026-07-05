@@ -1,6 +1,6 @@
 # Rendering Layer
 
-The rendering layer owns the PixiJS scene graph structure, viewport interaction, spatial indexing, shared graphics caching, and transient/floating UI elements. `Project` (which extends `InteractionContainer`) is the root of the scene and orchestrates all sub-layers.
+The rendering layer owns the PixiJS scene graph structure, viewport interaction, spatial indexing, shared graphics caching, and transient/floating UI elements. `Project` (a plain PixiJS `Container`) is the root of the scene and orchestrates all sub-layers. Canvas input never goes through PixiJS events — the `interaction/` layer listens to plain DOM pointer events (see below), and the board disables PixiJS's own canvas listeners via `eventFeatures` at `app.init`.
 
 ## Directory Layout
 
@@ -10,11 +10,14 @@ src/app/rendering/
 ├── board-render-scheduler.ts       # Translates project ticker signals into Application renders
 ├── drag-collision.ts               # Shared collision detection for drag sessions
 ├── drag-session.ts                 # DragSession interface implemented by all session classes
-├── floating-layer.ts               # Transient placement/wire-drawing/selection/paste overlay
+├── floating-layer.ts               # Visual host: drag-session ghosts + negation hover preview
 ├── graphics-provider.service.ts    # Shared GraphicsContext cache
 ├── grid.ts                         # Infinite-seeming background grid
-├── interaction-container.ts        # Abstract base: pan/zoom pointer handling
 ├── quad-tree-container.ts          # Spatial index for efficient range queries
+├── interaction/
+│   ├── pointer-input.ts            # PointerInput sample + canvasToGrid viewport mapping
+│   ├── pointer-controller.ts       # Per-canvas DOM listener: capture, buttons, wheel, gestures
+│   └── work-mode-router.ts         # Mode → DragSession dispatch + session lifecycle
 ├── graphics/
 │   ├── component.graphics.ts       # GraphicsContext for component body outline
 │   ├── connection-point.graphics.ts # GraphicsContext for a CP dot
@@ -38,12 +41,12 @@ All circuit data is stored in **grid units**. The `_gridSpace` container in `Pro
 
 ### Ticker control
 
-The PixiJS `Application` is created with `autoStart: false` in `BoardComponent`. Rendering frames are emitted on demand via the `_ticker$` Subject exposed as `ticker$` on `InteractionContainer`. Three signal values control the ticker: `'single'` fires one frame (for state changes that don't involve continuous motion), `'on'` starts continuous rendering (during pointer drags), and `'off'` fires one final frame then stops. `BoardRenderScheduler` (see below) consumes these signals and turns them into renders.
+The PixiJS `Application` is created with `autoStart: false` in `BoardComponent`. Rendering frames are emitted on demand via the `_ticker$` Subject exposed as `ticker$` on `Project`. Three signal values control the ticker: `'single'` fires one frame (for state changes that don't involve continuous motion), `'on'` starts continuous rendering (during pointer drags), and `'off'` fires one final frame then stops. `BoardRenderScheduler` (see below) consumes these signals and turns them into renders.
 
 ### Scene graph order inside `Project`
 
 ```
-Project (InteractionContainer root, stage)
+Project (stage root)
 ├── Grid                                    (pixel-authored, outside gridSpace)
 └── _gridSpace  (scale = gridSize)
     ├── QuadTreeContainer<Wire>  (_wires)
@@ -52,31 +55,41 @@ Project (InteractionContainer root, stage)
     └── FloatingLayer
 ```
 
-`Project` extends `InteractionContainer`, which is added directly as the PixiJS `app.stage`. The background grid is pixel-authored and stays a direct child of `Project`. All circuit content lives inside `_gridSpace` so that setting `position = (gx, gy)` on any circuit object automatically places it at the correct world-pixel location without conversion.
+`Project` is added directly as the PixiJS `app.stage`. The background grid is pixel-authored and stays a direct child of `Project`. All circuit content lives inside `_gridSpace` so that setting `position = (gx, gy)` on any circuit object automatically places it at the correct world-pixel location without conversion.
 
 ---
 
-## `InteractionContainer`
+## `interaction/` — DOM input layer
 
-**File:** `interaction-container.ts`
+Canvas input is plain DOM: no scene node is interactive, and all element hit tests are manual quad-tree queries. The same two classes drive the board and every sub-circuit watch canvas (whose shared renderer has no event system at all).
 
-Abstract PixiJS `Container` that handles viewport pan (right-drag) and zoom (wheel). Subclasses implement:
+### `PointerController`
 
-```ts
-abstract pan(delta: Point): void;
-abstract zoomIn(center: Point): void;
-abstract zoomOut(center: Point): void;
-```
+**File:** `interaction/pointer-controller.ts`
 
-Event binding:
+Per-canvas listener bundle (pointerdown/move/up/cancel, wheel, contextmenu — detached via one `AbortController` in `destroy()`). It normalizes every event into a `PointerInput` — `{ pointerId, pointerType, global, grid }`, where `global` is canvas-local CSS pixels (the space `Project.pan`/`zoomBy` expect) and `grid` is the same point mapped through `canvasToGrid` (reads `project.position`/`scale` directly; fresh even before the next render, and valid because `Project` sits at the stage root). Routing:
 
-- `rightdown` / `rightup` / `rightupoutside` — starts/stops pan; emits `'on'`/`'off'` on `_ticker$`.
-- `pointermove` during drag — calls `pan(e.movement)`.
-- `wheel` — calls `zoomIn` or `zoomOut`; emits `'single'`.
+- **Primary button** — captured via `setPointerCapture` (moves keep flowing when a drag leaves the canvas) and streamed to the `PointerToolTarget` (`down`/`move`/`up`/`cancel`); moves with no pressed pointer go to `hover`. Click-vs-drag semantics live in the sessions (`PanSession`'s 5 px threshold), not the controller.
+- **Right button** — pan-only drag by successive position deltas, bracketed by `nav.setActive(true/false)` (ticker on/off on the board). The canvas context menu is suppressed outright.
+- **Touch** — pointers feed the `MultiTouchGesture` first; when a second finger lands the gesture takes over (two-finger pan + pinch via `nav.pan`/`nav.zoomBy`) and the tool stream is cancelled, so a finger never both operates a tool and navigates.
+- **Wheel** — `nav.zoomIn/zoomOut` at the cursor; registered non-passive so `preventDefault` stops page scroll/zoom.
 
-Context menu suppression: a `window` `contextmenu` listener (via RxJS `fromEvent`) is activated during right-drag and cleared 1 ms after `rightup` to eat the browser context menu that fires after right-click without drag.
+The `PointerNavTarget` is supplied by the host: the board maps it straight onto the active project (+ ticker), the watch wraps `pan` to re-blit explicitly. An optional `onCursorMove` callback reports per-move grid positions (the board feeds its status-bar output from it). Handlers are public, so specs drive them with plain objects instead of synthesized DOM events.
 
-`ticker$` (public Observable) exposes the internal `_ticker$` Subject to consumers (e.g., `BoardComponent`).
+### `WorkModeRouter`
+
+**File:** `interaction/work-mode-router.ts`
+
+The board's `PointerToolTarget`. Owns the interaction state that used to live on `FloatingLayer`: the current `WorkMode`, the `componentToPlace` config, and the single `_activeDrag: DragSession | null`.
+
+- `down(input)` switches on the mode and starts the matching session (`PanSession`, `ComponentPlacementSession`, `WireDrawingSession`, `SelectRectSession`/`SelectionMoveSession`, `EraseSession`, `WireConnectionSession`), or performs the click actions that never become sessions (PORT_NEGATION toggling through the undo stack; SIMULATION taps route through a `PanSession` whose tap action activates a button/lever or requests inspection).
+- `move(input)` delegates to `_activeDrag.onMove`; with no session it falls through to `hover` (the negation-mode port preview keeps tracking during a press).
+- `up()` asks `session.canEnd()` first — `false` (collision) keeps the session alive; `true` commits via `onEnd()` and stops the drag ticker.
+- `cancel()` / Escape (a `ShortcutService` subscription) abort the session via `onCancel()`.
+- `setProject(project)` re-homes the router on tab switches: cancels any in-flight session on the old project, hides the negation ghost, resubscribes to the new project's `pasteRequest$`, and clears the new selection.
+- Paste: `ClipboardService` calls `Project.startPasteSession`, which emits on `pasteRequest$`; the router opens the `PastePlacementSession` in the project's floating layer.
+
+Sessions receive `project.floatingLayer.dragLayer` (or the floating layer itself for the select rect) to parent their ghosts; drag starts/stops emit `'on'`/`'off'` on the project ticker.
 
 ---
 
@@ -102,9 +115,9 @@ Translates a project's `ticker$` signals into renders of the board's PixiJS `App
 
 ## `Project`
 
-**File:** `project/project.ts` — extends `InteractionContainer`
+**File:** `project/project.ts` — extends `Container`
 
-Owns all circuit state and sub-layers. Not strictly part of `rendering/` but is the composition root that consumes every rendering class.
+Owns all circuit state and sub-layers. Not strictly part of `rendering/` but is the composition root that consumes every rendering class. Exposes `ticker$`/`triggerTicker` (render-loop signals) and `pasteRequest$` (consumed by the `WorkModeRouter`).
 
 Key behaviours relevant to rendering:
 
@@ -147,45 +160,28 @@ The pivot is set to `chunkSizePx` so the offset math lands on chunk boundaries c
 
 **File:** `floating-layer.ts`
 
-A full-screen PixiJS `Container` that lives inside `_gridSpace` and sits above the permanent circuit layers. It handles all in-progress user interactions: component placement, wire drawing, rectangle selection, and selection drag-move. Because it lives in `_gridSpace`, coordinates are in grid units automatically.
+A full-screen PixiJS `Container` that lives inside `_gridSpace` and sits above the permanent circuit layers. Purely visual: it hosts the transient overlay elements of in-progress interactions, while input routing and session lifecycle live in the `WorkModeRouter`. Because it lives in `_gridSpace`, coordinates are in grid units automatically.
 
-`interactiveChildren = false` — events are captured only on the layer itself. `hitArea` is set to the full coordinate range so pointer events are always received regardless of panning.
+### Internal children
 
-### Internal children (permanent)
-
-| Field          | Type                           | Purpose                                                                                                         |
-| -------------- | ------------------------------ | --------------------------------------------------------------------------------------------------------------- |
-| `_wirePreview` | `Container<Wire>`              | In-progress wires during wire drawing                                                                           |
-| `_dragLayer`   | `Container<Component \| Wire>` | Holds the ghost component during placement **and** detached selected elements during drag-move; empty when idle |
+| Field                 | Type                           | Purpose                                                                                                   |
+| --------------------- | ------------------------------ | --------------------------------------------------------------------------------------------------------- |
+| `_dragLayer`          | `Container<Component \| Wire>` | Ghosts during placement/paste **and** detached selected elements during drag-move; exposed as `dragLayer` |
+| `_negationHoverGhost` | `Graphics`                     | Lazily-created negation preview bubble, driven via `showNegationGhost(anchor)` / `hideNegationGhost()`    |
 
 `_selectRect` (`Graphics`) is a **transient** child added to and removed from `FloatingLayer` by `SelectRectSession`.
 
-### State machine
-
-`FloatingLayer` holds a single `_activeDrag: DragSession | null`. At most one session is active at a time.
-
-`FloatingLayer.mode` mirrors `project.mode` (a `WorkMode` enum value). Setting `mode`:
-
-1. If a session is active, calls `_activeDrag.onCancel()` then `_stopDrag()` — cancels whatever was in progress.
-2. Calls `project.selectionManager.clear()` — removes tints and empties the committed selection.
-
 ### Coordinate conversion
 
-All pointer-event positions are converted to grid units via `e.getLocalPosition(this.project.gridSpace)`. This returns a `Point` already in grid-unit space, which is then snapped with `roundToGrid` (full-grid) or `roundToHalfGrid` (half-grid) from `utils/grid.ts`.
+Sessions receive grid-space positions precomputed on the `PointerInput` (`input.grid`, mapped by `canvasToGrid`), snapped with `roundToGrid` (full-grid) or `roundToHalfGrid` (half-grid) from `utils/grid.ts`.
 
-### Drag dispatch
-
-`onPointerDown` creates the appropriate `DragSession` for the active mode and calls `_startDrag(session)`, which registers `pointerup`/`pointerupoutside`/`pointermove` listeners and starts the ticker. `onPointerMove` delegates to `_activeDrag.onMove(e)`. `onPointerUp` first calls `session.canEnd()` — if it returns `false` (collision), the pointer-up is silently ignored and the session stays live; listeners remain registered and the ghost/selection continues to follow the cursor. If `canEnd()` returns `true`, `session.onEnd()` is called then `_stopDrag()` (unregisters listeners, nulls session, fires ticker `'off'`).
-
-Escape key cancels any active session by calling `_activeDrag.onCancel()` followed by `_stopDrag()`. Cancel always works regardless of collision state.
-
-**Paste placement** is a special flow that bypasses the work-mode switch. `startPasteSession` is called directly by `Project` (via the `ClipboardService`), not through `onPointerDown`. It cancels any active session, clears the selection, then creates a `PastePlacementSession` in hover mode (`isDragging = false`). In hover mode, the ghosts do not follow the cursor — the pasted elements sit where they were placed (original clipboard position + `PASTE_OFFSET`). `onPointerDown` detects an active-but-non-dragging `PastePlacementSession`: if the click hits a ghost element's bounds, `beginDrag()` is called and subsequent `pointermove` events drag the group on a grid-snapped cursor. If the click falls outside the ghost group, the session ends immediately (committing at the initial position).
+**Paste placement** bypasses the work-mode switch: the router opens a `PastePlacementSession` in hover mode (`isDragging = false`) on a project's `pasteRequest$`. In hover mode, the ghosts do not follow the cursor — the pasted elements sit where they were placed (original clipboard position + `PASTE_OFFSET`). The router's `down` detects an active-but-non-dragging `PastePlacementSession`: if the click hits a ghost element's bounds, `beginDrag()` is called and subsequent moves drag the group on a grid-snapped cursor. If the click falls outside the ghost group, the session is cancelled (the fresh instances are destroyed).
 
 ### Session classes
 
-Each session lives in `rendering/sessions/` and implements `DragSession` (`onMove`, `onEnd`, `onCancel`, `canEnd`).
+Each session lives in `rendering/sessions/` and implements `DragSession` (`onMove(input: PointerInput)`, `onEnd`, `onCancel`, `canEnd`).
 
-**`DragSession.canEnd()`** — called by `FloatingLayer.onPointerUp` before committing. Return `false` to keep the session alive (collision block or silent-discard). `WireDrawingSession` and `SelectRectSession` always return `true`. Collision sessions return `!_hasCollision`.
+**`DragSession.canEnd()`** — called by `WorkModeRouter.up` before committing. Return `false` to keep the session alive (collision block or silent-discard). `WireDrawingSession` and `SelectRectSession` always return `true`. Collision sessions return `!_hasCollision`.
 
 **`ComponentPlacementSession`** — creates a ghost `Component` (tinted `0x888888`) in `_dragLayer`. `_dragLayer.position` tracks the grid-snapped pointer. On construction and on every `onMove`, calls `project.hasComponentCollision` with the ghost's world `gridBounds` (`dragLayer.position + component.gridBounds` offsets). Collision tints `_component` red (`0xff4444`); clearing restores `0x888888`. `canEnd()` returns `false` while colliding — `pointerup` is ignored and the ghost stays live. On `onEnd()`, the component's world position is set from `_dragLayer.position`, then `AddComponentsAction` is pushed (serializes the ghost) and the ghost is destroyed. `_dragLayer.position` is reset to zero.
 
@@ -368,10 +364,11 @@ The FontFace is registered under a bake-only family name (`Roboto Mono Canvas`) 
 
 | Rendering class           | Consumed by                                                | How                                                                              |
 | ------------------------- | ---------------------------------------------------------- | -------------------------------------------------------------------------------- |
-| `InteractionContainer`    | `Project`                                                  | Extends it; provides `_ticker$` and pan/zoom hooks                               |
+| `PointerController`       | `BoardComponent`, `SubCircuitWatchComponent`               | One per canvas; normalizes DOM pointer/wheel/touch input                         |
+| `WorkModeRouter`          | `BoardComponent`                                           | The board's tool target; dispatches modes into `DragSession`s                    |
 | `BoardRenderScheduler`    | `BoardComponent`                                           | One per project; turns `project.ticker$` signals into `Application` renders      |
 | `Grid`                    | `Project`                                                  | Instantiated privately; forwarded position/scale changes                         |
-| `FloatingLayer`           | `Project`, `ClipboardService` (via `Project`)              | Instantiated privately; receives `_ticker$`; commits via `project.actionManager` |
+| `FloatingLayer`           | `Project`, sessions (via `WorkModeRouter`)                 | Visual host for session ghosts and the negation hover preview                    |
 | `DragCollisionState`      | `PastePlacementSession`, `SelectionMoveSession`            | Shared component+wire collision detection against the project's quad trees       |
 | `QuadTreeContainer`       | `Project`                                                  | Used as `_wires` and `_components` inside `_gridSpace`                           |
 | `GraphicsProviderService` | `Wire`, `Grid` (via `getStaticDI`), any component subclass | Shared `GraphicsContext` deduplication                                           |
@@ -386,10 +383,11 @@ The FontFace is registered under a bake-only family name (`Roboto Mono Canvas`) 
 
 1. Registers `CullerPlugin` (`extensions.add` at module load — see [Culling](#culling)).
 2. Awaits `AssetsService.init()`.
-3. Creates `Application` with `autoStart: false`, `preference: 'webgpu'`, `resolution: devicePixelRatio`.
-4. Sets `app.stage = project` when a `Project` input arrives.
+3. Creates `Application` with `autoStart: false`, `preference: 'webgpu'`, `resolution: devicePixelRatio`, and `eventFeatures` fully disabled (no PixiJS canvas listeners or hit-testing).
+4. Sets `app.stage = project` when a `Project` input arrives, and re-homes the `WorkModeRouter` via `setProject`.
 5. Creates a `BoardRenderScheduler` per project (over `project.ticker$`) that translates `'single'`/`'on'`/`'off'` into `app.ticker.update()` / `.start()` / `.stop()`.
 6. Forwards renderer resize events to `project.resizeViewport`.
+7. Creates the `PointerController` on the canvas, with the router as tool target and the active project as navigation target; its `onCursorMove` feeds the throttled `cursorPositionChange` output.
 
 ### Culling
 
@@ -408,15 +406,14 @@ Culling sets only the PixiJS `culled` flag and never touches the quad tree's own
 
 ### Work-mode integration
 
-`WorkModeService.mode()` and `selectedComponentConfig()` (Angular signals) are mirrored onto `project.mode` and `project.componentToPlace` via an Angular `effect` in `BoardComponent`. `FloatingLayer` reads both of these from the `project` reference it holds, so work-mode changes take effect immediately on the next pointer interaction.
+`WorkModeService.mode()` and `selectedComponentConfig()` (Angular signals) are mirrored onto the `WorkModeRouter` via an Angular `effect` in `BoardComponent` (`setMode` cancels any active session and clears the selection). A second effect sets the canvas CSS cursor to `pointer` while in PORT_NEGATION mode.
 
 ---
 
 ## PixiJS-specific patterns
 
 - **`GraphicsContext` sharing** — all geometry is defined once and shared. `Graphics` instances are lightweight wrappers that apply a transform on top of a shared context. This is the PixiJS v8 equivalent of v7 `PIXI.Texture` sharing.
-- **`boundsArea` for infinite containers** — `FloatingLayer`, `InteractionContainer` (via `Project`), and `Grid` all set `boundsArea` to the full coordinate range. This prevents PixiJS from computing tight bounds from children and makes the container always receive hit tests.
-- **`eventMode: 'static'`** — used on containers that need pointer events but whose children do not (`interactiveChildren = false`). Reduces the event walk cost during each pointer event.
+- **No PixiJS events** — `eventFeatures` is disabled at `app.init`; no scene node sets `eventMode`/`hitArea`. All input arrives via the DOM `PointerController`, and element hits are manual quad-tree queries (`queryComponentsInRange` + `bodyGridBounds`/port-distance checks).
 - **Demand-driven render loop** — the ticker is stopped between interactions. `'single'` renders one frame for state changes (add/remove element); `'on'`/`'off'` bracket continuous drags. This avoids burning GPU cycles at 60 fps when the canvas is idle. `BoardRenderScheduler` coalesces bursts of `'single'` signals onto a single rAF-driven render so a multi-element operation (undo of a large move, paste, delete) costs one frame, not one per element.
 - **Scale-compensated stroke widths** — `ComponentGraphics` bakes `2 / scale` into its stroke width; `GridGraphics` uses `1 / scale` for dot size; `Wire.applyScale` sets `scale.y = 1 / (scale * gridSize)`. `Component` handles the `gridSize` factor via its `_visualSpace` counter-scaling; `Wire` extends `Graphics` directly and must compensate explicitly. On zoom, `Component.applyScale` swaps each scaled element to its correctly-scaled (shared, cached) `GraphicsContext` and updates stub/text scale **in place** — it never rebuilds the component or re-rasterizes a `Text`, so zoom stays cheap on large circuits (see `component-system.md`, "Build vs. rescale").
 - **`_visualSpace` counter-scaling** — `Component` owns a child `_visualSpace` with `scale = 1/gridSize`. Visual geometry (chamfers, stroke widths, text) is authored in pixels inside `_visualSpace`; the two scalings (`_gridSpace × gridSize` and `_visualSpace × 1/gridSize`) cancel so existing pixel formulas remain valid.

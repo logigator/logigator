@@ -1,12 +1,13 @@
 import { describe, expect, it, vi } from 'vitest';
-import { FederatedPointerEvent, Point } from 'pixi.js';
+import { Point } from 'pixi.js';
 import { PanSession } from './pan.session';
+import { PointerInput } from '../interaction/pointer-input';
 import { Project } from '../../project/project';
 import { WorkMode } from '../../work-mode/work-mode.enum';
 
-/** Minimal pointer-event stub exposing only the screen-space `global` point. */
-function makePanEvent(x: number, y: number): FederatedPointerEvent {
-  return { global: new Point(x, y) } as unknown as FederatedPointerEvent;
+/** Minimal pointer input exposing only the canvas-local `global` point. */
+function makePanEvent(x: number, y: number): PointerInput {
+  return { global: new Point(x, y) } as PointerInput;
 }
 
 function makeProject() {

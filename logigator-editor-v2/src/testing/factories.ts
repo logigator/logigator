@@ -1,4 +1,5 @@
-import { FederatedPointerEvent, Point } from 'pixi.js';
+import { Point } from 'pixi.js';
+import { PointerInput } from '../app/rendering/interaction/pointer-input';
 import { Wire } from '../app/wires/wire';
 import { WireDirection } from '../app/wires/wire-direction.enum';
 import { AndComponent } from '../app/components/component-types/and/and.component';
@@ -94,9 +95,12 @@ export function makeRom(
   return rom;
 }
 
-/** Minimal FederatedPointerEvent stub whose getLocalPosition returns the given point. */
-export function makeMoveEvent(x: number, y: number): FederatedPointerEvent {
+/** PointerInput sample at the given grid position (global mirrors it). */
+export function makeMoveInput(x: number, y: number): PointerInput {
   return {
-    getLocalPosition: () => new Point(x, y)
-  } as unknown as FederatedPointerEvent;
+    pointerId: 1,
+    pointerType: 'mouse',
+    global: new Point(x, y),
+    grid: new Point(x, y)
+  };
 }

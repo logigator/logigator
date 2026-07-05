@@ -12,7 +12,7 @@ import { ComponentOption } from '../../components/component-option';
 import { ComponentPlacementSession } from './component-placement.session';
 import {
   makeAnd,
-  makeMoveEvent,
+  makeMoveInput,
   makeNot,
   makeWire
 } from '../../../testing/factories';
@@ -23,12 +23,13 @@ describe('ComponentPlacementSession collision', () => {
   let project: Project;
   let dragLayer: Container<Component | Wire>;
   let session: ComponentPlacementSession;
+  let placeConfig: ComponentConfig;
 
   beforeEach(() => {
     configureTestBed();
     project = new Project();
     dragLayer = new Container<Component | Wire>();
-    project.componentToPlace = andComponentConfig as unknown as ComponentConfig<
+    placeConfig = andComponentConfig as unknown as ComponentConfig<
       Record<string, ComponentOption>
     >;
   });
@@ -43,7 +44,8 @@ describe('ComponentPlacementSession collision', () => {
     session = new ComponentPlacementSession(
       project,
       dragLayer,
-      new Point(0, 0)
+      new Point(0, 0),
+      placeConfig
     );
     expect(session.canEnd()).toBe(true);
   });
@@ -55,7 +57,8 @@ describe('ComponentPlacementSession collision', () => {
     session = new ComponentPlacementSession(
       project,
       dragLayer,
-      new Point(0, 0)
+      new Point(0, 0),
+      placeConfig
     );
     expect(session.canEnd()).toBe(false);
   });
@@ -68,7 +71,8 @@ describe('ComponentPlacementSession collision', () => {
     session = new ComponentPlacementSession(
       project,
       dragLayer,
-      new Point(5, 0)
+      new Point(5, 0),
+      placeConfig
     );
     expect(session.canEnd()).toBe(false);
     wire.destroy();
@@ -82,7 +86,8 @@ describe('ComponentPlacementSession collision', () => {
     session = new ComponentPlacementSession(
       project,
       dragLayer,
-      new Point(5, 0)
+      new Point(5, 0),
+      placeConfig
     );
     expect(session.canEnd()).toBe(true);
     wire.destroy();
@@ -94,11 +99,12 @@ describe('ComponentPlacementSession collision', () => {
     session = new ComponentPlacementSession(
       project,
       dragLayer,
-      new Point(5, 0)
+      new Point(5, 0),
+      placeConfig
     );
     expect(session.canEnd()).toBe(false);
 
-    session.onMove(makeMoveEvent(20, 0));
+    session.onMove(makeMoveInput(20, 0));
     expect(session.canEnd()).toBe(true);
     wire.destroy();
   });
@@ -109,11 +115,12 @@ describe('ComponentPlacementSession collision', () => {
     session = new ComponentPlacementSession(
       project,
       dragLayer,
-      new Point(0, 10)
+      new Point(0, 10),
+      placeConfig
     );
     expect(session.canEnd()).toBe(true);
 
-    session.onMove(makeMoveEvent(5, 0));
+    session.onMove(makeMoveInput(5, 0));
     expect(session.canEnd()).toBe(false);
     wire.destroy();
   });
@@ -129,7 +136,8 @@ describe('ComponentPlacementSession collision', () => {
     session = new ComponentPlacementSession(
       project,
       dragLayer,
-      new Point(4, 0)
+      new Point(4, 0),
+      placeConfig
     );
     expect(session.canEnd()).toBe(true);
     session.onEnd();
@@ -155,7 +163,7 @@ describe('ComponentPlacementSession collision', () => {
     existing.position.set(0, 0);
     project.addComponent(existing);
 
-    project.componentToPlace = {
+    placeConfig = {
       ...notComponentConfig,
       options: {
         direction: notComponentConfig.options.direction.clone(Direction.N)
@@ -164,7 +172,8 @@ describe('ComponentPlacementSession collision', () => {
     session = new ComponentPlacementSession(
       project,
       dragLayer,
-      new Point(2, 0)
+      new Point(2, 0),
+      placeConfig
     );
     expect(session.canEnd()).toBe(true);
   });
@@ -176,7 +185,7 @@ describe('ComponentPlacementSession collision', () => {
     existing.position.set(0, 0);
     project.addComponent(existing);
 
-    project.componentToPlace = {
+    placeConfig = {
       ...notComponentConfig,
       options: {
         direction: notComponentConfig.options.direction.clone(Direction.N)
@@ -185,7 +194,8 @@ describe('ComponentPlacementSession collision', () => {
     session = new ComponentPlacementSession(
       project,
       dragLayer,
-      new Point(2, 1)
+      new Point(2, 1),
+      placeConfig
     );
     expect(session.canEnd()).toBe(false);
   });
@@ -194,14 +204,14 @@ describe('ComponentPlacementSession collision', () => {
     // Wire at (0,0) horizontal length 5. TEXT placed at (1,0) — body inside wire.
     const wire = makeWire(0, 0, WireDirection.HORIZONTAL, 5);
     project.addWire(wire);
-    project.componentToPlace =
-      textComponentConfig as unknown as ComponentConfig<
-        Record<string, ComponentOption>
-      >;
+    placeConfig = textComponentConfig as unknown as ComponentConfig<
+      Record<string, ComponentOption>
+    >;
     session = new ComponentPlacementSession(
       project,
       dragLayer,
-      new Point(1, 0)
+      new Point(1, 0),
+      placeConfig
     );
     expect(session.canEnd()).toBe(true);
     wire.destroy();
@@ -211,14 +221,14 @@ describe('ComponentPlacementSession collision', () => {
     const existing = makeNot();
     existing.position.set(1, 0);
     project.addComponent(existing);
-    project.componentToPlace =
-      textComponentConfig as unknown as ComponentConfig<
-        Record<string, ComponentOption>
-      >;
+    placeConfig = textComponentConfig as unknown as ComponentConfig<
+      Record<string, ComponentOption>
+    >;
     session = new ComponentPlacementSession(
       project,
       dragLayer,
-      new Point(1, 0)
+      new Point(1, 0),
+      placeConfig
     );
     expect(session.canEnd()).toBe(false);
   });
@@ -231,7 +241,8 @@ describe('ComponentPlacementSession collision', () => {
     session = new ComponentPlacementSession(
       project,
       dragLayer,
-      new Point(4, 0)
+      new Point(4, 0),
+      placeConfig
     );
     session.onEnd();
 

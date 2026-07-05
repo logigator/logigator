@@ -159,7 +159,7 @@ A `GraphicsContext` subclass that draws a single 1×1 white rectangle filled wit
 `Project` owns a `QuadTreeContainer<Wire>` (`_wires`) inside `_gridSpace`:
 
 ```
-Project (InteractionContainer)
+Project (stage root)
 ├── Grid
 └── _gridSpace  (scale = gridSize)
     ├── _wires  ← QuadTreeContainer<Wire>
@@ -172,11 +172,11 @@ Project (InteractionContainer)
 
 ---
 
-## Wire Drawing Interaction (FloatingLayer)
+## Wire Drawing Interaction (WireDrawingSession)
 
-When `WorkMode.WIRE_DRAWING` is active, `FloatingLayer` handles the user drag gesture:
+When `WorkMode.WIRE_DRAWING` is active, the `WorkModeRouter` runs the drag through a `WireDrawingSession`:
 
-1. **`pointerdown`** — converts the event to grid-unit coordinates via `e.getLocalPosition(this.project.gridSpace)`, snaps to the half-grid with `roundToHalfGrid`, and sets `FloatingLayer.position` to this snapped point.
+1. **`pointerdown`** — the `WorkModeRouter` snaps the input's grid position to the half-grid with `roundToHalfGrid` and starts a `WireDrawingSession` at this snapped point.
 
 2. **`pointermove` → `handleMouseMoveWhilePlacingWire`** — on first non-zero mouse movement, the dominant axis is determined:
    - Movement on X first → `WireDirection.HORIZONTAL` locked.
@@ -187,7 +187,7 @@ When `WorkMode.WIRE_DRAWING` is active, `FloatingLayer` handles the user drag ge
    - The vertical wire's `position.y` tracks the topmost extent (`Math.min(0, mouseY)`).
    - The elbow of the L is placed at the cursor's axis-locked coordinate.
 
-3. **`pointerup` → `commitSelection`** — wires with `length > 0` are collected, their positions are converted from local → world grid-unit coordinates (adding `FloatingLayer.position`), and an `AddWiresAction` is pushed to the `ActionManager`. Zero-length wires are silently discarded.
+3. **`pointerup` → `onEnd`** — wires with `length > 0` are collected, run through `computeIntegration`, and an `AddWiresAction` is pushed to the `ActionManager`. Zero-length wires are silently discarded.
 
 4. **Mode change or abort** — `abortSelection` destroys the preview wires without committing.
 
@@ -212,7 +212,7 @@ Mirror of `AddWiresAction` with `do` and `undo` swapped.
 
 ### `ActionContainer`
 
-When a single user gesture places both components and wires (e.g., a component placement also lays connecting wires), the `FloatingLayer.commitSelection` wraps multiple actions in an `ActionContainer` so the whole operation undoes atomically.
+When a single user gesture places both components and wires (e.g., a component placement also lays connecting wires), the session's `onEnd` wraps multiple actions in an `ActionContainer` so the whole operation undoes atomically.
 
 ---
 

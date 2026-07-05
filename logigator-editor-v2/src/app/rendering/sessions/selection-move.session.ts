@@ -1,5 +1,6 @@
-import { Container, FederatedPointerEvent, Point } from 'pixi.js';
+import { Container, Point } from 'pixi.js';
 import { DragSession } from '../drag-session';
+import { PointerInput } from '../interaction/pointer-input';
 import { Project } from '../../project/project';
 import { Component } from '../../components/component';
 import { Wire } from '../../wires/wire';
@@ -51,11 +52,8 @@ export class SelectionMoveSession implements DragSession {
     );
   }
 
-  onMove(e: FederatedPointerEvent): void {
-    const gridPos = roundToGrid(
-      e.getLocalPosition(this.project.gridSpace),
-      true
-    );
+  onMove(input: PointerInput): void {
+    const gridPos = roundToGrid(input.grid, true);
     this.dragLayer.position.set(
       gridPos.x - this._pointerStart.x,
       gridPos.y - this._pointerStart.y

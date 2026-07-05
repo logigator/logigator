@@ -1,5 +1,6 @@
-import { FederatedPointerEvent, Point, Rectangle } from 'pixi.js';
+import { Point, Rectangle } from 'pixi.js';
 import { DragSession } from '../drag-session';
+import { PointerInput } from '../interaction/pointer-input';
 import { Project } from '../../project/project';
 import { Component } from '../../components/component';
 import { SerializedComponent } from '../../components/serialized-component.model';
@@ -30,8 +31,8 @@ export class EraseSession implements DragSession {
     this._eraseSweep(startPos, startPos);
   }
 
-  onMove(e: FederatedPointerEvent): void {
-    const local = e.getLocalPosition(this.project.gridSpace);
+  onMove(input: PointerInput): void {
+    const local = input.grid;
     this._eraseSweep(this._prevPos, local);
     this._prevPos = local.clone();
   }

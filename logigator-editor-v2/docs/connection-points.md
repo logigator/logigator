@@ -129,7 +129,7 @@ The screen size is one of two fixed values: `SCREEN_SIZE_PX_SMALL` (4 px) when z
 
 **File:** `connection-points/connection-point-layer.ts`
 
-Thin `Container<ConnectionPoint>` subclass with `interactiveChildren = false` and `eventMode = 'none'`. Forwards `applyScale(scale)` to every child. Exposed by `ConnectionPointManager.layer`.
+Thin `Container<ConnectionPoint>` subclass with `cullableChildren = false`. Forwards `applyScale(scale)` to every child. Exposed by `ConnectionPointManager.layer`.
 
 ---
 
@@ -249,7 +249,7 @@ Action `do`/`undo` implementations go through `Project.addWire` / `removeWire` /
 
 Users can click on a wire crossing to place or remove a CP junction:
 
-- **Pure 2-wire X crossing (no endpoints at the click point)**: `WorkMode.WIRE_CONNECTION` handles a pointer-down + up. `FloatingLayer` snaps the click position to the nearest half-grid point via `roundToHalfGrid`, then delegates to `WireConnectionSession`. On `onEnd`, it calls `Project.toggleConnectionAt(p)`. Because `hasCpAt(p)` is false, `_splitAt(p)` runs: both wires are split into two pieces each, the four new halves are run through `computeIntegration`, and an `ActionContainer(RemoveWiresAction, AddWiresAction)` is pushed to `ActionManager`. The CP rule then sees 4 terminations at `p` → CP appears.
+- **Pure 2-wire X crossing (no endpoints at the click point)**: `WorkMode.WIRE_CONNECTION` handles a pointer-down + up. The `WorkModeRouter` snaps the click position to the nearest half-grid point via `roundToHalfGrid`, then delegates to `WireConnectionSession`. On `onEnd`, it calls `Project.toggleConnectionAt(p)`. Because `hasCpAt(p)` is false, `_splitAt(p)` runs: both wires are split into two pieces each, the four new halves are run through `computeIntegration`, and an `ActionContainer(RemoveWiresAction, AddWiresAction)` is pushed to `ActionManager`. The CP rule then sees 4 terminations at `p` → CP appears.
 
 - **4-endpoint X junction (CP present at click point)**: `hasCpAt(p)` is true → `_joinAt(p)` runs. It finds the two H wire endpoints and the two V wire endpoints at `p`, builds a merged wire for each pair, runs integration, and checks if any output wire has an endpoint at `p` (which would indicate the integrator re-split because a third terminator blocked the merge). If not blocked, the action is pushed and the CP disappears.
 
@@ -260,7 +260,7 @@ Users can click on a wire crossing to place or remove a CP junction:
 | Layer                           | Detail                                                                        |
 | ------------------------------- | ----------------------------------------------------------------------------- |
 | `WorkMode.WIRE_CONNECTION`      | Enum value `'connWire'`, already in `work-mode.enum.ts`                       |
-| `FloatingLayer.onPointerDown`   | `case WorkMode.WIRE_CONNECTION` → `roundToHalfGrid` + `WireConnectionSession` |
+| `WorkModeRouter.down`           | `case WorkMode.WIRE_CONNECTION` → `roundToHalfGrid` + `WireConnectionSession` |
 | `WireConnectionSession`         | Minimal `DragSession`; `onEnd` calls `project.toggleConnectionAt(startPos)`   |
 | `Project.toggleConnectionAt(p)` | Dispatches to `_joinAt` or `_splitAt` based on `hasCpAt(p)`                   |
 | `Project._splitAt(p)`           | Splits both crossing wires at `p`, pushes action via `actionManager.push`     |
