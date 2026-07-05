@@ -6,7 +6,7 @@ The project layer is the central owner of all circuit state. `Project` is the ro
 
 ```
 src/app/project/
-├── project.ts              # Circuit root — extends InteractionContainer
+├── project.ts              # Circuit root — PixiJS Container owning all circuit state
 ├── project.service.ts      # Angular service — holds and exposes active project signals
 └── selection-manager.ts    # Committed selection state (tint, sets, observables)
 ```
@@ -17,9 +17,9 @@ src/app/project/
 
 ### Project as PixiJS stage
 
-`Project` extends `InteractionContainer` (which in turn extends PixiJS `Container`). An instance is created in `AppComponent` and passed as `app.stage` to the PixiJS `Application` inside `BoardComponent`. Everything rendered on the canvas is a descendant of `Project`.
+`Project` extends PixiJS `Container`. An instance is created in `AppComponent` and passed as `app.stage` to the PixiJS `Application` inside `BoardComponent`. Everything rendered on the canvas is a descendant of `Project`.
 
-Because `Project` extends `InteractionContainer`, it inherits right-drag panning and mouse-wheel zooming for free. It overrides the three abstract methods (`pan`, `zoomIn`, `zoomOut`) to implement canvas navigation.
+Canvas navigation (`pan`, `zoomIn`, `zoomOut`, `zoomBy`) is implemented through the `ViewportController`; the DOM `PointerController` (see `rendering.md`) calls these on right-drag, wheel, and touch gestures. `Project` itself listens to no pointer events.
 
 ### Scene graph layers
 
@@ -267,8 +267,7 @@ Plain TypeScript class. Constructed by `Project`; not an Angular service. Owns t
 
 ```
 PixiJS Container
-└── InteractionContainer (abstract)
-    └── Project
+└── Project
 
 SelectionManager  (plain class, owned by Project)
 ```

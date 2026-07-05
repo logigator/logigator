@@ -33,12 +33,12 @@ Seven string-valued enum members identify the available interaction modes:
 
 The string values are used as i18n key suffixes — `statusBar.modes.<value>` — so changing them is a breaking i18n change.
 
-> **SELECT vs SELECT_EXACT**: Both modes share the same rubber-band rectangle UI in `FloatingLayer`. They diverge in `SelectionManager.commit`:
+> **SELECT vs SELECT_EXACT**: Both modes share the same rubber-band rectangle UI (`SelectRectSession`). They diverge in `SelectionManager.commit`:
 >
 > - **SELECT** selects every component and wire whose `gridBounds` intersect the rect — the standard "touching" rule.
 > - **SELECT_EXACT** also selects every touching **component**, but for **wires** that extend past the rect boundary it scissors them at the boundary, keeps the inside portion selected, and leaves the outside portion(s) as separate, unselected wires. The cut is **tentative** — `SelectionManager` mutates the project directly but does not push to `ActionManager`. The cut becomes a real undo entry only when a move follows (`SelectionMoveSession` claims it via `claimPendingCut` and folds it into the move's `ActionContainer`, so cut + move revert with one Ctrl+Z). Any cancel path — selection clear, mode change, Escape, or Ctrl+Z while no move has happened — rolls the cut back, restoring the original wires. See `wires.md` § _Wire Scissor Cutting_ for the cut geometry and § _Tentative cut + commit on move_ for the lifecycle.
 
-> **SIMULATION**: `FloatingLayer`'s `pointerdown` branch starts a `PanSession` (one-finger / left-drag pan, like `WorkMode.PAN`); a tap that never crosses the pan threshold instead hit-tests for a user-input component (button/lever) and emits it on `Project.userInput$`, which `SimulationService` reacts to. Editing stays locked — no tool drag sessions; pan/zoom keep working.
+> **SIMULATION**: `WorkModeRouter`'s `down` branch starts a `PanSession` (one-finger / left-drag pan, like `WorkMode.PAN`); a tap that never crosses the pan threshold instead hit-tests for a user-input component (button/lever) and emits it on `Project.userInput$`, which `SimulationService` reacts to. Editing stays locked — no tool drag sessions; pan/zoom keep working.
 
 ---
 
@@ -80,32 +80,30 @@ The mode change that starts in the UI and reaches the canvas travels through sev
 UI (ToolBarComponent / ComponentListComponent)
   → WorkModeService.setMode() / setSelectedComponentType()
     → BoardComponent effect()
-      → project.mode = workModeService.mode()
-         project.componentToPlace = workModeService.selectedComponentConfig()
-        → FloatingLayer.mode setter (aborts in-progress interaction, pokes ticker)
-          → switch(project.mode) in FloatingLayer pointer handlers
+      → router.setMode(workModeService.mode())
+         router.componentToPlace = workModeService.selectedComponentConfig()
+        → WorkModeRouter.setMode (aborts in-progress session, pokes ticker)
+          → switch(mode) in WorkModeRouter.down on the next press
 ```
 
 **Step 1 — UI triggers the change**
 
 `ToolBarComponent` calls `workModeService.setMode(WorkMode.*)` directly for each tool button. When the user picks a component from the component palette, `ComponentListComponent.selectComponent()` calls both `setMode(WorkMode.COMPONENT_PLACEMENT)` and `setSelectedComponentType(component.type)`.
 
-**Step 2 — BoardComponent bridges Angular and PixiJS**
+**Step 2 — BoardComponent bridges Angular and the canvas**
 
-`BoardComponent` has an `effect()` that runs whenever `workModeService.mode()` or `workModeService.selectedComponentConfig()` changes. It writes both values straight onto the `Project` instance that is the PixiJS stage root:
+`BoardComponent` has an `effect()` that runs whenever `workModeService.mode()` or `workModeService.selectedComponentConfig()` changes. It writes both values onto the `WorkModeRouter`:
 
 ```ts
-project.mode = this.workModeService.mode();
-project.componentToPlace = this.workModeService.selectedComponentConfig();
+this._router.setMode(this.workModeService.mode());
+this._router.componentToPlace = this.workModeService.selectedComponentConfig();
 ```
 
-**Step 3 — Project delegates to FloatingLayer**
+`setMode` cancels any in-flight drag session, clears the selection, and emits a `'single'` ticker pulse to force one render frame.
 
-`Project.mode` is a pass-through property. Getting or setting it talks directly to `FloatingLayer.mode`. The setter calls `abortSelection()` (drops any ghost components or wire previews) and then emits a `'single'` ticker pulse to force one render frame.
+**Step 3 — WorkModeRouter acts on pointer input**
 
-**Step 4 — FloatingLayer acts on pointer events**
-
-`FloatingLayer` is the transparent PixiJS `Container` that sits in front of all circuit elements and receives all pointer input. Its three handlers — `onPointerDown`, `onPointerMove`, `onPointerUp` — each switch on `project.mode`:
+The `PointerController` (plain DOM listeners on the board canvas — see `rendering.md`) streams the primary pointer to the `WorkModeRouter`, whose `down` handler switches on the active mode:
 
 - **`COMPONENT_PLACEMENT`** — on `pointerdown`, snaps to grid and adds a ghost `Component` to the selection container. On `pointermove`, follows the pointer. On `pointerup`, calls `commitSelection()`, which wraps the placed components in an `AddComponentsAction` and pushes it to `ActionManager`.
 - **`WIRE_DRAWING`** — on `pointerdown`, snaps to half-grid (wire endpoints sit between grid cells). During `pointermove`, determines drag direction on first movement and updates two orthogonal `Wire` objects (one horizontal, one vertical) to create an L-shaped preview. On `pointerup`, commits non-zero-length wires via `AddWiresAction`.
@@ -116,11 +114,11 @@ project.componentToPlace = this.workModeService.selectedComponentConfig();
 
 ## Ticker Management
 
-`FloatingLayer` holds a reference to the shared `Subject<'on' | 'off' | 'single'>` from `InteractionContainer`. Pointer activity drives this ticker:
+`WorkModeRouter` drives the project's `ticker$` (`Subject<'on' | 'off' | 'single'>`) around session lifecycles:
 
-- `pointerdown` — emits `'on'` to start continuous rendering during interaction
-- `pointerup` — emits `'off'` to stop the ticker after committing or clearing
-- Mode setter — emits `'single'` for one render pass after an abort
+- session start — emits `'on'` to start continuous rendering during interaction
+- session end/cancel — emits `'off'` to stop the ticker after committing or clearing
+- `setMode` — emits `'single'` for one render pass after an abort
 
 `BoardComponent` subscribes to `project.ticker$` and relays the values to `app.ticker.start()`, `app.ticker.stop()`, or `app.ticker.update()` accordingly. The app normally runs with `autoStart: false` to avoid unnecessary GPU work when nothing is changing.
 
@@ -131,7 +129,7 @@ project.componentToPlace = this.workModeService.selectedComponentConfig();
 1. Add a value to `WorkMode`.
 2. Add a translation key under `statusBar.modes.<value>` in every locale file (`src/i18n/`).
 3. Add a toolbar button in `ToolBarComponent` that calls `setMode()`, plus a computed style signal for its active state.
-4. Add `case WorkMode.<NEW>:` branches to all three pointer handlers in `FloatingLayer` (`onPointerDown`, `onPointerMove`, `onPointerUp`).
+4. Add a `case WorkMode.<NEW>:` branch to `WorkModeRouter.down` (usually a new `DragSession` in `rendering/sessions/`).
 
 ---
 
@@ -143,11 +141,11 @@ WorkModeService
 ├── selectedComponentType: Signal<ComponentType | null>
 └── selectedComponentConfig: Signal<ComponentConfig | null>   (derived)
 
-BoardComponent  →  effect()  →  Project.mode / Project.componentToPlace
+BoardComponent  →  effect()  →  WorkModeRouter.setMode / .componentToPlace
                                   ↓
-                              FloatingLayer
-                              ├── mode setter  (aborts + ticks)
-                              └── pointer handlers  (switch on project.mode)
+                              WorkModeRouter
+                              ├── setMode  (aborts + ticks)
+                              └── down()  (switch on mode)
                                   ├── COMPONENT_PLACEMENT  →  AddComponentsAction
                                   ├── WIRE_DRAWING         →  AddWiresAction
                                   ├── ERASE                →  RemoveComponentsAction + RemoveWiresAction
