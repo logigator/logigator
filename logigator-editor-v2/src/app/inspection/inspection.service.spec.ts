@@ -10,6 +10,7 @@ import { Project } from '../project/project';
 import { ProjectService } from '../project/project.service';
 import { SimulationService } from '../simulation/simulation.service';
 import { WorkModeService } from '../work-mode/work-mode.service';
+import { FullscreenInspectionPresenter } from './fullscreen-inspection.presenter';
 import { InspectionService } from './inspection.service';
 import { OpenInspection } from './inspection-presenter';
 import { SheetInspectionPresenter } from './sheet-inspection.presenter';
@@ -28,6 +29,10 @@ class TestInspection extends ComponentInspection {
   override destroy(): void {
     this.destroyed();
   }
+}
+
+class FullscreenTestInspection extends TestInspection {
+  override readonly compactPresentation = 'fullscreen' as const;
 }
 
 /** Records presenter calls and keeps the dismissed callbacks triggerable. */
@@ -62,6 +67,7 @@ describe('InspectionService', () => {
   let service: InspectionService;
   let presenter: StubPresenter;
   let sheetPresenter: StubPresenter;
+  let fullscreenPresenter: StubPresenter;
   let frame$: Subject<void>;
   let workMode: WorkModeService;
   let isCompact: WritableSignal<boolean>;
@@ -73,11 +79,13 @@ describe('InspectionService', () => {
   beforeEach(() => {
     presenter = new StubPresenter();
     sheetPresenter = new StubPresenter();
+    fullscreenPresenter = new StubPresenter();
     frame$ = new Subject<void>();
     isCompact = signal(false);
     configureTestBed([
       { provide: WindowInspectionPresenter, useValue: presenter },
       { provide: SheetInspectionPresenter, useValue: sheetPresenter },
+      { provide: FullscreenInspectionPresenter, useValue: fullscreenPresenter },
       { provide: SimulationService, useValue: { frame$ } },
       {
         provide: LayoutService,
@@ -181,6 +189,39 @@ describe('InspectionService', () => {
     presenter.dismissers.get(presenter.shown[1])!();
     expect(service.open()).toHaveLength(1);
     expect(inspection.destroyed).toHaveBeenCalledTimes(1);
+  });
+
+  it('routes fullscreen inspections per entry on compact and when re-homing', () => {
+    flushEffects();
+    const sheetBound = new TestInspection();
+    const fullscreenBound = new FullscreenTestInspection();
+    service.openFor(makeInspectable(sheetBound));
+    service.openFor(makeInspectable(fullscreenBound));
+    // Desktop: both are windows regardless of compact presentation.
+    expect(presenter.shown).toHaveLength(2);
+
+    // Compact: each entry re-homes to its own presenter.
+    isCompact.set(true);
+    flushEffects();
+    expect(presenter.closed).toHaveLength(2);
+    expect(sheetPresenter.shown.map((e) => e.inspection)).toEqual([sheetBound]);
+    expect(fullscreenPresenter.shown.map((e) => e.inspection)).toEqual([
+      fullscreenBound
+    ]);
+
+    // New fullscreen inspections open in the takeover; closes route there too.
+    const another = new FullscreenTestInspection();
+    service.openFor(makeInspectable(another));
+    expect(fullscreenPresenter.shown).toHaveLength(2);
+    service.close(service.open()[2]);
+    expect(fullscreenPresenter.closed).toHaveLength(1);
+
+    // Back to desktop: everything returns to windows.
+    isCompact.set(false);
+    flushEffects();
+    expect(sheetPresenter.closed).toHaveLength(1);
+    expect(fullscreenPresenter.closed).toHaveLength(2);
+    expect(presenter.shown).toHaveLength(4);
   });
 
   it('opens inspections from the active project inspect taps while simulating', () => {

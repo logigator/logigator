@@ -92,6 +92,8 @@
 @if (layout.isCompact()) {
   <!-- Non-modal inspection sheet: floats over the running simulation. -->
   <app-inspection-sheet />
+  <!-- Fullscreen takeover for watch inspections. -->
+  <app-fullscreen-inspection />
 
   <ng-container *transloco="let t">
     <lg-drawer

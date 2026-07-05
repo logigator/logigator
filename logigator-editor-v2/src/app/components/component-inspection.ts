@@ -27,6 +27,12 @@ export abstract class ComponentInspection {
   public abstract readonly title: Signal<string>;
   /** Desktop window sizing; the presenter falls back to its defaults. */
   public readonly sizing?: ComponentInspectionSizing;
+  /**
+   * How the inspection presents on compact: the shared bottom sheet
+   * (default — the canvas stays visible above it) or a fullscreen takeover
+   * with a back button (canvas-hosting views that need the space).
+   */
+  public readonly compactPresentation?: 'sheet' | 'fullscreen';
 
   /** Refreshes the exposed state; runs after each applied snapshot. */
   public onFrame?(): void;

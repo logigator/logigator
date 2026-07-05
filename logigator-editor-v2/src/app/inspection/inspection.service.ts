@@ -8,6 +8,7 @@ import { ProjectService } from '../project/project.service';
 import { SimulationService } from '../simulation/simulation.service';
 import { WorkMode } from '../work-mode/work-mode.enum';
 import { WorkModeService } from '../work-mode/work-mode.service';
+import { FullscreenInspectionPresenter } from './fullscreen-inspection.presenter';
 import { InspectionPresenter, OpenInspection } from './inspection-presenter';
 import { SheetInspectionPresenter } from './sheet-inspection.presenter';
 import { WindowInspectionPresenter } from './window-inspection.presenter';
@@ -32,6 +33,7 @@ export class InspectionService {
   private readonly toastService = inject(ToastService);
   private readonly windowPresenter = inject(WindowInspectionPresenter);
   private readonly sheetPresenter = inject(SheetInspectionPresenter);
+  private readonly fullscreenPresenter = inject(FullscreenInspectionPresenter);
 
   private readonly _open = signal<readonly OpenInspection[]>([]);
   /** The open inspections, in opening order. */
@@ -71,7 +73,7 @@ export class InspectionService {
       (entry) => entry.component === component
     );
     if (existing) {
-      this._presenter().focus(existing);
+      this._presenterFor(existing).focus(existing);
       return;
     }
     const factory = component.config.inspection;
@@ -89,11 +91,11 @@ export class InspectionService {
     }
     const entry: OpenInspection = { component, inspection };
     this._open.update((entries) => [...entries, entry]);
-    this._presenter().show(entry, () => this._remove(entry));
+    this._presenterFor(entry).show(entry, () => this._remove(entry));
   }
 
   public close(entry: OpenInspection): void {
-    this._presenter().close(entry);
+    this._presenterFor(entry).close(entry);
     this._remove(entry);
   }
 
@@ -103,17 +105,28 @@ export class InspectionService {
     }
   }
 
-  private _presenter(): InspectionPresenter {
-    return this.layout.isCompact() ? this.sheetPresenter : this.windowPresenter;
+  /**
+   * The presenter framing an entry: floating windows on desktop; on compact,
+   * the shared sheet — or the fullscreen takeover for inspections that
+   * declare `compactPresentation: 'fullscreen'` (watches).
+   */
+  private _presenterFor(
+    entry: OpenInspection,
+    compact = this.layout.isCompact()
+  ): InspectionPresenter {
+    if (!compact) {
+      return this.windowPresenter;
+    }
+    return entry.inspection.compactPresentation === 'fullscreen'
+      ? this.fullscreenPresenter
+      : this.sheetPresenter;
   }
 
   /** Moves every open inspection from the previous presenter to the new one. */
   private _rehome(compact: boolean): void {
-    const from = compact ? this.windowPresenter : this.sheetPresenter;
-    const to = compact ? this.sheetPresenter : this.windowPresenter;
     for (const entry of this._open()) {
-      from.close(entry);
-      to.show(entry, () => this._remove(entry));
+      this._presenterFor(entry, !compact).close(entry);
+      this._presenterFor(entry, compact).show(entry, () => this._remove(entry));
     }
   }
 

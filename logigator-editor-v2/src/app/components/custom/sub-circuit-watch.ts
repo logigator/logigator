@@ -39,6 +39,9 @@ export class SubCircuitWatch extends ComponentInspection {
     initial: { width: 640, height: 480 },
     min: { width: 320, height: 240 }
   };
+  // The canvas needs the space — on compact the watch takes the screen over
+  // instead of sharing the bottom sheet.
+  public override readonly compactPresentation = 'fullscreen' as const;
 
   private readonly simulation = getStaticDI(SimulationService);
   private readonly board: CompiledBoard;

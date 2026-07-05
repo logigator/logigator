@@ -15,6 +15,7 @@ import { Point, Rectangle } from 'pixi.js';
 import { Subscription } from 'rxjs';
 import { environment } from '../../../environments/environment';
 import { Component as CircuitComponent } from '../../components/component';
+import { MultiTouchGesture } from '../../rendering/multi-touch-gesture';
 import { Project } from '../../project/project';
 import type {
   SubCircuitWatch,
@@ -99,6 +100,16 @@ export class SubCircuitWatchComponent implements AfterViewInit, OnDestroy {
   private panLast = { x: 0, y: 0 };
   private panned = false;
 
+  // Two-finger pan + pinch-zoom on touch. The second finger cancels any
+  // single-pointer press so a finger never both clicks and navigates;
+  // renders ride on the ticker events pan/zoomBy already emit.
+  private readonly gesture = new MultiTouchGesture({
+    pan: (delta) => this.project.pan(delta),
+    zoomBy: (factor, center) => this.project.zoomBy(factor, center),
+    abortActiveDrag: () => (this.panPointer = null),
+    setActive: () => undefined
+  });
+
   private get project(): Project {
     return this.inspection().activeLevel().session.project;
   }
@@ -142,6 +153,13 @@ export class SubCircuitWatchComponent implements AfterViewInit, OnDestroy {
   }
 
   protected onPointerDown(event: PointerEvent): void {
+    if (event.pointerType === 'touch') {
+      const local = this.pointerPosition(event);
+      this.gesture.onPointerDown(event.pointerId, local.x, local.y);
+      if (this.gesture.isActive) {
+        return;
+      }
+    }
     if (event.button !== 0 || this.panPointer !== null) {
       return;
     }
@@ -152,6 +170,13 @@ export class SubCircuitWatchComponent implements AfterViewInit, OnDestroy {
   }
 
   protected onPointerMove(event: PointerEvent): void {
+    if (event.pointerType === 'touch') {
+      const local = this.pointerPosition(event);
+      this.gesture.onPointerMove(event.pointerId, local.x, local.y);
+      if (this.gesture.isActive) {
+        return;
+      }
+    }
     if (event.pointerId !== this.panPointer) {
       return;
     }
@@ -168,6 +193,9 @@ export class SubCircuitWatchComponent implements AfterViewInit, OnDestroy {
   }
 
   protected onPointerUp(event: PointerEvent): void {
+    if (event.pointerType === 'touch') {
+      this.gesture.onPointerUp(event.pointerId);
+    }
     if (event.pointerId !== this.panPointer) {
       return;
     }
@@ -183,6 +211,9 @@ export class SubCircuitWatchComponent implements AfterViewInit, OnDestroy {
   }
 
   protected onPointerCancel(event: PointerEvent): void {
+    if (event.pointerType === 'touch') {
+      this.gesture.onPointerUp(event.pointerId);
+    }
     if (event.pointerId !== this.panPointer) {
       return;
     }
