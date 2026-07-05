@@ -6,6 +6,7 @@ import { CustomComponentRegistry } from '../../components/custom/custom-componen
 import { SerializedCircuitBody } from '../../persistence/serialized-circuit';
 import { Project } from '../../project/project';
 import { getStaticDI } from '../../utils/get-di';
+import { bytesToBase64 } from '../../utils/packed-buffer';
 import { Wire } from '../../wires/wire';
 import { WireDirection } from '../../wires/wire-direction.enum';
 
@@ -103,15 +104,30 @@ export function insertWatchDemoCircuit(project: Project): void {
     )
   });
 
-  // NEST: an inner lever and a nested BLINK, ANDed onto the single output.
+  // NEST: an inner lever and a nested BLINK, ANDed onto the single output,
+  // plus a ROM whose address input follows the BLINK (its hex inspector's
+  // addressed-word highlight flips live).
   const lever = place(BuiltInComponentType.LEVER, [0, 0]);
   const inner = place(blink, [0, 4]);
   const and = place(BuiltInComponentType.AND, [8, 0]);
   const nestOut = plug(BuiltInComponentType.OUTPUT, 0, [14, 0]);
+  const rom = Component.deserialize(
+    {
+      pos: [8, 4],
+      options: {
+        direction: 0,
+        addressSize: 1,
+        wordSize: 4,
+        data: bytesToBase64(Uint8Array.from([0x81]))
+      }
+    },
+    provider.getComponent(BuiltInComponentType.ROM)!
+  );
   const leverOut = lever.connectionPoints[0];
   const innerOut = inner.connectionPoints[0];
   const andIn0 = and.connectionPoints[0];
   const andIn1 = and.connectionPoints[1];
+  const romIn = rom.connectionPoints[0];
   const corner = new Point(innerOut.x + 1, innerOut.y);
   const nest = registry.registerSnapshot({
     kind: 'snapshot',
@@ -123,13 +139,14 @@ export function insertWatchDemoCircuit(project: Project): void {
     numOutputs: 1,
     labels: ['O'],
     circuit: liveToBody(
-      [lever, inner, and, nestOut],
+      [lever, inner, and, nestOut, rom],
       [
         wireBetween(leverOut, andIn0),
         wireBetween(innerOut, corner),
         wireBetween(corner, new Point(corner.x, andIn1.y)),
         wireBetween(new Point(corner.x, andIn1.y), andIn1),
-        wireBetween(and.connectionPoints[2], nestOut.connectionPoints[0])
+        wireBetween(and.connectionPoints[2], nestOut.connectionPoints[0]),
+        wireBetween(corner, romIn)
       ]
     )
   });

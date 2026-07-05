@@ -2,49 +2,89 @@ import {
   AfterViewInit,
   ChangeDetectionStrategy,
   Component,
+  effect,
   ElementRef,
   inject,
+  Injector,
   input,
   OnDestroy,
+  untracked,
   ViewChild
 } from '@angular/core';
-import { Point } from 'pixi.js';
+import { Point, Rectangle } from 'pixi.js';
 import { Subscription } from 'rxjs';
 import { environment } from '../../../environments/environment';
+import { Component as CircuitComponent } from '../../components/component';
 import { Project } from '../../project/project';
-import type { SubCircuitWatch } from '../../components/custom/sub-circuit-watch';
+import type {
+  SubCircuitWatch,
+  WatchLevel
+} from '../../components/custom/sub-circuit-watch';
 import {
   WatchRendererLease,
   WatchRendererService
 } from './watch-renderer.service';
 
+/** Press-to-release movement below this is a click, above it a pan (px). */
+const CLICK_MOVE_THRESHOLD = 5;
+
 /**
- * Renderer for {@link SubCircuitWatch}: a canvas blitted through the shared
- * watch renderer, showing the session's headless project. Fits the content on
- * open, then pans/zooms through the project's own viewport controller —
- * pointer handling is plain DOM (the watch renderer has no event system on
- * its target canvases). Re-blits on engine changes (`render$`), viewport/theme
- * changes (the project's `ticker$`), and host resizes.
+ * Renderer for {@link SubCircuitWatch}: a breadcrumb header over a canvas
+ * blitted through the shared watch renderer, showing the active level's
+ * headless project. Fits the content when a level first shows, then
+ * pans/zooms through the project's own viewport controller — pointer handling
+ * is plain DOM (the watch renderer has no event system on its target
+ * canvases): a press that stays within a small threshold is a click, routed
+ * to the model (inner input / drill-down / data inspector); past it, a pan.
+ * Re-blits on engine changes (`render$`), viewport/theme changes (the
+ * project's `ticker$`), and host resizes.
  */
 @Component({
   selector: 'app-sub-circuit-watch',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  host: { class: 'block h-full' },
-  template: `<canvas
-    #canvas
-    class="block h-full w-full touch-none"
-    (pointerdown)="onPointerDown($event)"
-    (pointermove)="onPointerMove($event)"
-    (pointerup)="onPointerUp($event)"
-    (pointercancel)="onPointerUp($event)"
-    (wheel)="onWheel($event)"
-  ></canvas>`
+  host: { class: 'flex h-full flex-col' },
+  template: `
+    @if (inspection().levels().length > 1) {
+      <div
+        class="border-border flex flex-wrap items-center gap-1 border-b px-2 py-1 text-sm"
+      >
+        @for (
+          level of inspection().levels();
+          track level.path;
+          let last = $last;
+          let index = $index
+        ) {
+          @if (!last) {
+            <button
+              type="button"
+              class="text-muted hover:text-primary hover:underline"
+              (click)="inspection().navigateTo(index)"
+            >
+              {{ level.name }}
+            </button>
+            <span class="text-muted">›</span>
+          } @else {
+            <span>{{ level.name }}</span>
+          }
+        }
+      </div>
+    }
+    <canvas
+      #canvas
+      class="block min-h-0 w-full flex-1 touch-none"
+      (pointerdown)="onPointerDown($event)"
+      (pointermove)="onPointerMove($event)"
+      (pointerup)="onPointerUp($event)"
+      (pointercancel)="onPointerCancel($event)"
+      (wheel)="onWheel($event)"
+    ></canvas>
+  `
 })
 export class SubCircuitWatchComponent implements AfterViewInit, OnDestroy {
   public readonly inspection = input.required<SubCircuitWatch>();
 
   private readonly watchRenderer = inject(WatchRendererService);
-  private readonly hostEl = inject(ElementRef<HTMLElement>);
+  private readonly injector = inject(Injector);
 
   @ViewChild('canvas', { static: true })
   private readonly canvas!: ElementRef<HTMLCanvasElement>;
@@ -53,41 +93,49 @@ export class SubCircuitWatchComponent implements AfterViewInit, OnDestroy {
   private destroyed = false;
   private resizeObserver: ResizeObserver | null = null;
   private readonly subs = new Subscription();
+  private tickerSub: Subscription | null = null;
 
   private panPointer: number | null = null;
   private panLast = { x: 0, y: 0 };
+  private panned = false;
 
   private get project(): Project {
-    return this.inspection().session.project;
+    return this.inspection().activeLevel().session.project;
   }
 
-  async ngAfterViewInit(): Promise<void> {
-    this.syncViewportSize();
-    this.fitToContent();
-
+  ngAfterViewInit(): void {
     this.subs.add(this.inspection().render$.subscribe(() => this.render()));
-    // Fires on pan/zoom (viewport controller) and theme re-tints — anything
-    // that changed the project without an engine snapshot.
-    this.subs.add(this.project.ticker$.subscribe(() => this.render()));
 
     this.resizeObserver = new ResizeObserver(() => {
       this.syncViewportSize();
       this.render();
     });
-    this.resizeObserver.observe(this.hostEl.nativeElement);
+    this.resizeObserver.observe(this.canvas.nativeElement);
 
-    this.lease = await this.watchRenderer.acquire();
-    if (this.destroyed) {
-      this.lease.release();
-      this.lease = null;
-      return;
-    }
-    this.render();
+    // Tracks breadcrumb navigation: rewires the ticker subscription and the
+    // viewport to whichever level is visible.
+    effect(
+      () => {
+        const level = this.inspection().activeLevel();
+        untracked(() => this.showLevel(level));
+      },
+      { injector: this.injector }
+    );
+
+    void this.watchRenderer.acquire().then((lease) => {
+      if (this.destroyed) {
+        lease.release();
+        return;
+      }
+      this.lease = lease;
+      this.render();
+    });
   }
 
   ngOnDestroy(): void {
     this.destroyed = true;
     this.subs.unsubscribe();
+    this.tickerSub?.unsubscribe();
     this.resizeObserver?.disconnect();
     this.lease?.release();
     this.lease = null;
@@ -99,6 +147,7 @@ export class SubCircuitWatchComponent implements AfterViewInit, OnDestroy {
     }
     this.panPointer = event.pointerId;
     this.panLast = { x: event.clientX, y: event.clientY };
+    this.panned = false;
     this.canvas.nativeElement.setPointerCapture(event.pointerId);
   }
 
@@ -106,15 +155,34 @@ export class SubCircuitWatchComponent implements AfterViewInit, OnDestroy {
     if (event.pointerId !== this.panPointer) {
       return;
     }
-    const delta = new Point(
-      event.clientX - this.panLast.x,
-      event.clientY - this.panLast.y
-    );
+    const dx = event.clientX - this.panLast.x;
+    const dy = event.clientY - this.panLast.y;
+    if (!this.panned) {
+      if (dx * dx + dy * dy <= CLICK_MOVE_THRESHOLD * CLICK_MOVE_THRESHOLD) {
+        return; // still within click tolerance — don't pan yet
+      }
+      this.panned = true;
+    }
     this.panLast = { x: event.clientX, y: event.clientY };
-    this.project.pan(delta);
+    this.project.pan(new Point(dx, dy));
   }
 
   protected onPointerUp(event: PointerEvent): void {
+    if (event.pointerId !== this.panPointer) {
+      return;
+    }
+    this.panPointer = null;
+    this.canvas.nativeElement.releasePointerCapture(event.pointerId);
+    if (this.panned) {
+      return;
+    }
+    const component = this.componentAt(this.gridPosition(event));
+    if (component) {
+      this.inspection().activate(component);
+    }
+  }
+
+  protected onPointerCancel(event: PointerEvent): void {
     if (event.pointerId !== this.panPointer) {
       return;
     }
@@ -132,16 +200,54 @@ export class SubCircuitWatchComponent implements AfterViewInit, OnDestroy {
     }
   }
 
+  /** Swaps the view to a level: ticker rewire, sizing, one-time fit. */
+  private showLevel(level: WatchLevel): void {
+    this.tickerSub?.unsubscribe();
+    // Fires on pan/zoom (viewport controller) and theme re-tints — anything
+    // that changed the project without an engine snapshot.
+    this.tickerSub = level.session.project.ticker$.subscribe(() =>
+      this.render()
+    );
+    this.syncViewportSize();
+    if (level.needsFit) {
+      level.needsFit = false;
+      this.fitToContent();
+    }
+    this.render();
+  }
+
   /** Pointer position in canvas-local CSS pixels (the viewport's space). */
   private pointerPosition(event: MouseEvent): Point {
     const rect = this.canvas.nativeElement.getBoundingClientRect();
     return new Point(event.clientX - rect.left, event.clientY - rect.top);
   }
 
+  /** Pointer position in the watch project's grid coordinates. */
+  private gridPosition(event: MouseEvent): Point {
+    const local = this.pointerPosition(event);
+    const project = this.project;
+    const factor = project.scale.x * environment.gridSize;
+    return new Point(
+      (local.x - project.position.x) / factor,
+      (local.y - project.position.y) / factor
+    );
+  }
+
+  /** The component whose body contains the grid-space point, if any. */
+  private componentAt(gridPoint: Point): CircuitComponent | null {
+    const queryRect = new Rectangle(gridPoint.x - 0.5, gridPoint.y - 0.5, 1, 1);
+    for (const component of this.project.queryComponentsInRange(queryRect)) {
+      if (component.bodyGridBounds.contains(gridPoint.x, gridPoint.y)) {
+        return component;
+      }
+    }
+    return null;
+  }
+
   /** Sizes the canvas backing store (DPR) and the project viewport (CSS px). */
   private syncViewportSize(): void {
     const canvas = this.canvas.nativeElement;
-    const rect = this.hostEl.nativeElement.getBoundingClientRect();
+    const rect = canvas.getBoundingClientRect();
     const dpr = window.devicePixelRatio || 1;
     const width = Math.max(1, Math.round(rect.width));
     const height = Math.max(1, Math.round(rect.height));
@@ -154,7 +260,7 @@ export class SubCircuitWatchComponent implements AfterViewInit, OnDestroy {
   private fitToContent(): void {
     const project = this.project;
     const bounds = project.getContentBounds();
-    const { width, height } = this.hostEl.nativeElement.getBoundingClientRect();
+    const { width, height } = this.canvas.nativeElement.getBoundingClientRect();
     if (!bounds || width <= 0 || height <= 0) {
       return;
     }
@@ -177,9 +283,9 @@ export class SubCircuitWatchComponent implements AfterViewInit, OnDestroy {
   }
 
   private render(): void {
-    if (this.destroyed) {
+    if (this.destroyed || !this.lease) {
       return;
     }
-    this.lease?.render(this.project, this.canvas.nativeElement);
+    this.lease.render(this.project, this.canvas.nativeElement);
   }
 }

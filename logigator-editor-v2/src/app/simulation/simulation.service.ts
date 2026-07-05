@@ -353,26 +353,51 @@ export class SimulationService {
   }
 
   private _onUserInput(component: Component): void {
-    const boardIndex = this._board?.userInputs.get(component.id);
+    this._activate(component, this._board?.userInputs.get(component.id), () =>
+      this._project?.triggerTicker('single')
+    );
+  }
+
+  /**
+   * Activates a lever/button whose engine unit index is already resolved —
+   * the path for inner user inputs clicked in a watch, where `component` is
+   * the watch's fresh copy (its visuals toggle/flash) and `unitIndex` comes
+   * from the watch index (`infoFor(path).unitIndexFor(bodyIndex)`). `repaint`
+   * re-blits whatever canvas shows the component.
+   */
+  public triggerUnitInput(
+    unitIndex: number,
+    component: Component,
+    repaint: () => void
+  ): void {
+    this._activate(component, unitIndex, repaint);
+  }
+
+  /** Shared lever/button activation: visuals plus the engine input event. */
+  private _activate(
+    component: Component,
+    unitIndex: number | undefined,
+    repaint: () => void
+  ): void {
     if (component instanceof LeverComponent) {
       component.toggle();
-      if (boardIndex !== undefined) {
-        this.workerService.triggerInput(boardIndex, INPUT_EVENT_CONT, [
+      if (unitIndex !== undefined) {
+        this.workerService.triggerInput(unitIndex, INPUT_EVENT_CONT, [
           component.isOn
         ]);
       }
     } else if (component instanceof ButtonComponent) {
       component.setPressed(true);
-      if (boardIndex !== undefined) {
-        this.workerService.triggerInput(boardIndex, INPUT_EVENT_PULSE, [true]);
+      if (unitIndex !== undefined) {
+        this.workerService.triggerInput(unitIndex, INPUT_EVENT_PULSE, [true]);
       }
       setTimeout(() => {
         if (!component.destroyed) {
           component.setPressed(false);
-          this._project?.triggerTicker('single');
+          repaint();
         }
       }, BUTTON_FLASH_MS);
     }
-    this._project?.triggerTicker('single');
+    repaint();
   }
 }
