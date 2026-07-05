@@ -15,7 +15,7 @@ import {
 import { WindowSize } from './window-config';
 import { WindowRef } from './window-ref';
 import { OpenWindow } from './window.service';
-import { LgButton } from '@logigator/ui';
+import { LgButton } from '../button/button';
 
 interface Rect {
   x: number;
