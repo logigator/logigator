@@ -421,18 +421,12 @@ export class HexEditorComponent {
       );
       return;
     }
-    void copied.then(
-      () =>
-        this.toastService.info(
-          this.transloco.translate('hexEditor.copied'),
-          'HexEditorComponent'
-        ),
-      (err: unknown) =>
-        this.toastService.warn(
-          this.transloco.translate('hexEditor.copyFailed'),
-          'HexEditorComponent',
-          err
-        )
+    void copied.catch((err: unknown) =>
+      this.toastService.warn(
+        this.transloco.translate('hexEditor.copyFailed'),
+        'HexEditorComponent',
+        err
+      )
     );
   }
 
