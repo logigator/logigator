@@ -347,6 +347,53 @@ describe('CircuitFileService', () => {
       expect(wires.length).toBe(0);
     });
 
+    it('loads a legacy file custom component from its inline definition', () => {
+      const warnSpy = vi.spyOn(logging, 'warn');
+      const toastSpy = vi.spyOn(messageService, 'add');
+      // The exact old-editor local-file shape: the sub-circuit definition lives
+      // in the top-level `components` array, and the body references it by id.
+      const legacy = JSON.stringify({
+        project: {
+          name: 'New Project',
+          elements: [
+            { t: 2, p: [15, 36], i: 2, o: 1 },
+            { t: 1003, p: [11, 36], o: 1 }
+          ]
+        },
+        components: [
+          {
+            info: {
+              id: 1003,
+              numInputs: 0,
+              numOutputs: 1,
+              labels: [],
+              description: 'dsaf',
+              name: 'sadf',
+              symbol: 'asdf'
+            },
+            elements: [
+              { t: 201, p: [19, 39], o: 1 },
+              { t: 101, p: [21, 39], i: 1 },
+              { t: 12, p: [21, 26], i: 4, o: 4, n: [4, 4] }
+            ]
+          }
+        ]
+      });
+
+      const { components } = service.fromJson(legacy);
+
+      // Both the AND and the custom instance load — nothing skipped.
+      expect(components.length).toBe(2);
+      expect(toastSpy).not.toHaveBeenCalled();
+      expect(warnSpy).not.toHaveBeenCalled();
+      const custom = components.find(
+        (c) => c.config.type >= CUSTOM_TYPE_ID_BASE
+      )!;
+      expect(custom).toBeTruthy();
+      expect(custom.numOutputs).toBe(1);
+      expect(custom.numInputs).toBe(0);
+    });
+
     it('throws InvalidFileError on malformed JSON', () => {
       expect(() => service.fromJson('{not json')).toThrowError(
         InvalidFileError

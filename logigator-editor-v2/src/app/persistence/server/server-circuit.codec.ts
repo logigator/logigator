@@ -47,6 +47,7 @@ import {
 import {
   legacyBodyHeight,
   legacyBodyWidth,
+  legacyCustomBodySize,
   pivotToLegacyAnchor
 } from '../legacy-anchor';
 import { ledMatrixShape } from '../../components/component-types/led-matrix/led-matrix.config';
@@ -109,6 +110,16 @@ export function serializeProject(
     elements.push(serializeWire(wire));
   }
 
+  // A nested custom inside a definition body carries no port counts of its own
+  // (Invariant A), so re-anchoring it needs the counts from its own definition,
+  // keyed by the file-local type id it references.
+  const customDims = new Map(
+    definitions.map((def) => [
+      def.type,
+      { numInputs: def.numInputs, numOutputs: def.numOutputs }
+    ])
+  );
+
   const dependencies: DependencyMapping[] = definitions.map((def) => ({
     // Provenance back to the library master; '' for a never-saved-to-library
     // local (promotion into the server library is a deferred follow-up).
@@ -122,7 +133,7 @@ export function serializeProject(
       numInputs: def.numInputs,
       numOutputs: def.numOutputs,
       labels: [...def.labels],
-      elements: encodeDefinitionElements(def, provider)
+      elements: encodeDefinitionElements(def, provider, customDims)
     }
   }));
 
@@ -163,14 +174,11 @@ function serializeComponent(
   // Every real config is a full ComponentConfig; the base only narrows it to
   // the view. The descriptor lives on the config, so widen back.
   const config = component.config as ComponentConfig;
-  // v0 anchors by the body's top-left, not the rotation pivot — for a live
-  // built-in that corner *is* `bodyGridBounds` (see legacy-anchor.ts). Customs
-  // keep `position` verbatim: the migration decodes them verbatim too, and
-  // re-anchoring rotated customs is a deferred follow-up.
-  const anchor =
-    config.type >= CUSTOM_TYPE_ID_BASE
-      ? component.position
-      : component.bodyGridBounds;
+  // v0 anchors by the body's top-left, not the rotation pivot; that corner *is*
+  // `bodyGridBounds` for any live component — built-in or custom (the custom's
+  // fixed width 3 / port-span height flow through the same generic bounds). The
+  // migration reverses it via legacyAnchorToPivot on decode.
+  const anchor = component.bodyGridBounds;
   const el: ProjectElement = {
     t: config.type,
     p: [anchor.x, anchor.y]
@@ -249,7 +257,8 @@ function serializeWire(wire: Wire): ProjectElement {
  */
 function encodeDefinitionElements(
   def: SnapshotDefinition,
-  provider: ComponentProviderService
+  provider: ComponentProviderService,
+  customDims: ReadonlyMap<number, { numInputs: number; numOutputs: number }>
 ): ProjectElement[] {
   const tunnelIds = legacyTunnelIds(
     def.components
@@ -258,7 +267,9 @@ function encodeDefinitionElements(
   );
   const elements: ProjectElement[] = [];
   for (const component of def.components) {
-    elements.push(encodeBodyComponent(component, provider, tunnelIds));
+    elements.push(
+      encodeBodyComponent(component, provider, tunnelIds, customDims)
+    );
   }
   for (const wire of def.wires) {
     elements.push(encodeBodyWire(wire));
@@ -269,7 +280,8 @@ function encodeDefinitionElements(
 function encodeBodyComponent(
   component: SerializedComponentBody,
   provider: ComponentProviderService,
-  tunnelIds: Map<string, number>
+  tunnelIds: Map<string, number>,
+  customDims: ReadonlyMap<number, { numInputs: number; numOutputs: number }>
 ): ProjectElement {
   const el: ProjectElement = {
     t: component.type,
@@ -281,6 +293,20 @@ function encodeBodyComponent(
     // instance's counts/labels come from its own definition on load (Inv. A).
     const dir = component.options['direction'];
     if (typeof dir === 'number' && dir !== 0) el.r = dir;
+    // Re-anchor pivot -> legacy top-left about the definition's body extent,
+    // the inverse of the migration's custom re-anchor.
+    const dim = customDims.get(component.type);
+    const { w, h } = legacyCustomBodySize(
+      dim?.numInputs ?? 0,
+      dim?.numOutputs ?? 0
+    );
+    el.p = pivotToLegacyAnchor(
+      component.pos[0],
+      component.pos[1],
+      el.r ?? 0,
+      w,
+      h
+    );
     return el;
   }
 

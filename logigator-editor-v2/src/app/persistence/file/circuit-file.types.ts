@@ -21,6 +21,7 @@ import {
   PersistedCircuitV1
 } from '../persisted-circuit.types';
 import { EmbeddedDependency } from '../../api/models/dependencies';
+import { ProjectElement } from '../../api/models/project-element';
 
 export const CURRENT_FILE_VERSION = 1;
 export type CurrentCircuitFile = CircuitFileV1;
@@ -36,12 +37,37 @@ export interface CircuitFileV1 extends PersistedCircuitV1 {
 
 export interface CircuitFileV0 extends PersistedCircuitV0 {
   project?: { name?: string; elements?: PersistedCircuitV0['elements'] };
-  /** Legacy sub-circuit definitions — preserved historically, ignored on import. */
-  components?: unknown[];
+  /**
+   * Old-editor *file* sub-circuit definitions: each pairs a component `info`
+   * header with its inner positional circuit. The `v0ToV1` migration revives
+   * these into `definitions[]` (`info.id` is the file-local type id the body's
+   * custom elements reference). The server transport uses `dependencies`
+   * instead; a given document carries one shape or the other.
+   */
+  components?: LegacyComponentDefinition[];
   /**
    * Server-transport only: the response `dependencies`, each carrying the
    * additive embedded `snapshot` (R14). Old-editor *files* never have this; the
    * `v0ToV1` migration revives present snapshots into `definitions[]`.
    */
   dependencies?: EmbeddedDependency[];
+}
+
+/**
+ * One old-editor sub-circuit definition as written to a local file: an `info`
+ * header (all fields optional — legacy saves may omit any) plus the inner
+ * circuit as a positional `ProjectElement[]`. `info.id` is the custom-range
+ * type id the outer body's instances reference.
+ */
+export interface LegacyComponentDefinition {
+  info?: {
+    id?: number;
+    name?: string;
+    description?: string;
+    symbol?: string;
+    numInputs?: number;
+    numOutputs?: number;
+    labels?: string[];
+  };
+  elements?: ProjectElement[];
 }

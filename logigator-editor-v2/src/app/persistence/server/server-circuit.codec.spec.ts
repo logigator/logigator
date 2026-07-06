@@ -318,9 +318,9 @@ describe('server-circuit.codec', () => {
       const customEl = elements.find((e) => e.t >= CUSTOM_TYPE_ID_BASE)!;
       expect(customEl.t).toBe(dep.model);
       expect(customEl.r).toBe(1); // direction round-trips
-      // Custom placed at (7,2): position is kept verbatim (not re-anchored via
-      // bodyGridBounds), symmetric with the migration's verbatim custom decode.
-      expect(customEl.p).toEqual([7, 2]);
+      // Custom (W=3, H=max(1,1,1)=1) rotated South at pivot [7,2] re-anchors to
+      // its legacy body top-left [6,2], reversing the migration's custom decode.
+      expect(customEl.p).toEqual([6, 2]);
 
       // The additive frozen snapshot: provenance, summary, and its circuit.
       expect(dep.snapshot).toBeDefined();
@@ -391,6 +391,69 @@ describe('server-circuit.codec', () => {
       expect(out.p).toEqual([6, 3]);
     });
 
+    it('re-anchors a rotated nested custom inside a snapshot body', () => {
+      // Custom B (2-in/3-out → W=3, H=max(1,2,3)=3) placed rotated West inside
+      // custom A's circuit at v1 pivot [5,3]. Encode reverses to legacy anchor
+      // [5-W, 3-H] = [2, 0]; decode maps it back to [5,3].
+      const innerB = registry.createMaster(
+        {
+          id: 'b-uuid',
+          version: 1,
+          name: 'B',
+          symbol: 'B',
+          numInputs: 2,
+          numOutputs: 3,
+          labels: [],
+          circuit: { components: [], wires: [] }
+        },
+        'server'
+      );
+      const outerA = registry.createMaster(
+        {
+          id: 'a-uuid',
+          version: 1,
+          name: 'A',
+          symbol: 'A',
+          numInputs: 0,
+          numOutputs: 1,
+          labels: [],
+          circuit: {
+            components: [
+              { type: innerB, pos: [5, 3], options: { direction: 2 } }
+            ],
+            wires: []
+          }
+        },
+        'server'
+      );
+      const config = provider.getComponent(registry.snapshot(outerA).typeId)!;
+      const project = new Project();
+      project.addComponent(
+        config.create({ direction: config.options['direction'].clone(0) })
+      );
+
+      // Encode: A's snapshot body carries B re-anchored to its legacy top-left.
+      const { elements, dependencies } = encode(project);
+      const aSnap = dependencies.find((d) => d.snapshot!.symbol === 'A')!;
+      const nested = aSnap.snapshot!.elements.find(
+        (e) => e.t >= CUSTOM_TYPE_ID_BASE
+      )!;
+      expect(nested.r).toBe(2);
+      expect(nested.p).toEqual([2, 0]);
+
+      // Decode: B's pivot inside A's circuit comes back to [5,3], symmetric.
+      const reopened = decode(elements, dependencies);
+      const aInstance = [...reopened.components].find(
+        (c) => c.config.type >= CUSTOM_TYPE_ID_BASE
+      )!;
+      const aDef = registry.getDefinition(aInstance.config.type)!;
+      const bInCircuit = aDef.circuit!.components.find(
+        (c) => c.type >= CUSTOM_TYPE_ID_BASE
+      )!;
+      expect(bInCircuit.pos).toEqual([5, 3]);
+      expect(bInCircuit.options['direction']).toBe(2);
+    });
+
     it('loads from the embedded snapshot — ports come from it (Inv. A)', () => {
       const encoded = encode(placeOneCustom(2).project);
       const reopened = decode(encoded.elements, encoded.dependencies);
@@ -402,6 +465,10 @@ describe('server-circuit.codec', () => {
       expect(instance.numInputs).toBe(1);
       expect(instance.numOutputs).toBe(1);
       expect(instance.direction).toBe(2); // direction survived the round-trip
+      // A rotated custom re-anchors on encode and back on decode: its pivot
+      // [7,2] (from placeOneCustom) survives the round-trip through the legacy
+      // top-left, proving encode/decode symmetry for customs.
+      expect([instance.position.x, instance.position.y]).toEqual([7, 2]);
 
       // Provenance survives so the editor can offer "update available".
       const def = registry.getDefinition(instance.config.type)!;

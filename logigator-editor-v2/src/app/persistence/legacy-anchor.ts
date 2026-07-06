@@ -121,6 +121,29 @@ export function legacyBodyHeight(
 }
 
 /**
+ * Custom-component body grid width — mirrors `CustomComponent.bodyGridWidth`
+ * (a fixed 3). Customs are not a fixed built-in type so they are absent from
+ * {@link LEGACY_BODY_WIDTHS}; this constant lets the re-anchor treat them
+ * uniformly with built-ins. FROZEN alongside the built-in widths.
+ */
+export const CUSTOM_BODY_GRID_WIDTH = 3;
+
+/**
+ * Unrotated body grid size of a custom instance — mirrors `CustomComponent`
+ * (fixed width 3, height by the port span). Port counts come from the resolved
+ * definition (Invariant A), so the two sides of the v0 boundary re-anchor a
+ * rotated custom about the same body extent. Shared by the `v0ToV1` decode and
+ * the server encoder, mirroring how they share {@link legacyBodyWidth} for
+ * built-ins.
+ */
+export function legacyCustomBodySize(
+  numInputs: number,
+  numOutputs: number
+): { w: number; h: number } {
+  return { w: CUSTOM_BODY_GRID_WIDTH, h: Math.max(1, numInputs, numOutputs) };
+}
+
+/**
  * Legacy body top-left → v2 rotation pivot (decode). `w`/`h` are the unrotated
  * body grid size; mirrors the corner of `Component.bodyGridBounds`
  * (`_rotatedBounds(0, w, h)`).
