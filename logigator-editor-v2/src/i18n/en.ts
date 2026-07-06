@@ -79,6 +79,11 @@ const en = {
           speed: 'Delay'
         }
       },
+      TUNNEL: {
+        name: 'Tunnel',
+        description:
+          'Works like a wire, but wireless: all tunnels carrying the same label are electrically connected.'
+      },
       HALF_ADDER: {
         name: 'Half Adder',
         description:

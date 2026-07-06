@@ -9,7 +9,10 @@ import {
 import { ProjectElement } from '../../../api/models/project-element';
 import { WireDirection } from '../../../wires/wire-direction.enum';
 import { ComponentConfig } from '../../../components/component-config.model';
-import { CUSTOM_TYPE_ID_BASE } from '../../../components/component-type.enum';
+import {
+  BuiltInComponentType,
+  CUSTOM_TYPE_ID_BASE
+} from '../../../components/component-type.enum';
 import { Direction } from '../../../utils/direction';
 import {
   LEGACY_BODY_WIDTHS,
@@ -108,6 +111,15 @@ function decodeElements(
     const width = LEGACY_BODY_WIDTHS[element.t] ?? 1;
     const height = legacyBodyHeight(element.t, element.i ?? 0, element.o ?? 0);
 
+    const options = decodeOptions(element, config);
+    if (element.t === BuiltInComponentType.TUNNEL) {
+      // Tunnel labels have no positional slot of their own: a v2 save carries
+      // the label additively in `s`, a legacy save only its numeric id in
+      // `n[0]` — which becomes the label so equal ids stay joined.
+      options['label'] =
+        typeof element.s === 'string' ? element.s : String(element.n?.[0] ?? 0);
+    }
+
     components.push({
       type: element.t,
       pos: legacyAnchorToPivot(
@@ -117,7 +129,7 @@ function decodeElements(
         width,
         height
       ),
-      options: decodeOptions(element, config),
+      options,
       ...decodeNegation(element)
     });
   }

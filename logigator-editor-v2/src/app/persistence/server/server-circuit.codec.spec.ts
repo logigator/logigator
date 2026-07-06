@@ -217,6 +217,33 @@ describe('server-circuit.codec', () => {
       expect(plug.numOutputs).toBe(1);
     });
 
+    it('maps tunnel labels to legacy numeric ids, digit labels keeping their value', () => {
+      // Tunnels write both slots: the grouped numeric id in n[0] for legacy
+      // clients, the label itself additively in s (so they can't join the
+      // fixture round-trip suite, whose inputs carry no s).
+      const project = decode([
+        { t: 8, p: [0, 0], i: 1, n: [3] }, // legacy numeric id → label "3"
+        { t: 8, p: [0, 5], i: 1, n: [3] },
+        { t: 8, p: [0, 10], i: 1, s: 'bus' }, // v2-written label wins over n
+        { t: 8, p: [0, 15], i: 1, s: 'bus' }
+      ]);
+      const labels = [...project.components].map(
+        (c) => c.options['label'].value
+      );
+      expect([...labels].sort()).toEqual(['3', '3', 'bus', 'bus']);
+
+      const tunnels = encode(project).elements.filter((e) => e.t === 8);
+      // Digit label keeps its value; the textual label gets the next id above.
+      expect(tunnels.filter((e) => e.s === '3').map((e) => e.n)).toEqual([
+        [3],
+        [3]
+      ]);
+      expect(tunnels.filter((e) => e.s === 'bus').map((e) => e.n)).toEqual([
+        [4],
+        [4]
+      ]);
+    });
+
     it('preserves ROM input/output mapping (addressSize → i, wordSize → o)', () => {
       // Regression: old editor had numInputs=addressSize, numOutputs=wordSize.
       const [rom] = [

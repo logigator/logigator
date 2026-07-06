@@ -7,6 +7,7 @@ import { orComponentConfig } from './component-types/or/or.config';
 import { xorComponentConfig } from './component-types/xor/xor.config';
 import { delayComponentConfig } from './component-types/delay/delay.config';
 import { clockComponentConfig } from './component-types/clock/clock.config';
+import { tunnelComponentConfig } from './component-types/tunnel/tunnel.config';
 import { halfAdderComponentConfig } from './component-types/half-adder/half-adder.config';
 import { fullAdderComponentConfig } from './component-types/full-adder/full-adder.config';
 import { romComponentConfig } from './component-types/rom/rom.config';
@@ -33,6 +34,7 @@ const BUILT_IN_COMPONENTS: ComponentConfig<any>[] = [
   xorComponentConfig,
   delayComponentConfig,
   clockComponentConfig,
+  tunnelComponentConfig,
   halfAdderComponentConfig,
   fullAdderComponentConfig,
   romComponentConfig,

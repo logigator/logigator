@@ -16,6 +16,7 @@ import { outputComponentConfig } from '../../components/component-types/output/o
 import { textComponentConfig } from '../../components/component-types/text/text.config';
 import { romComponentConfig } from '../../components/component-types/rom/rom.config';
 import { clockComponentConfig } from '../../components/component-types/clock/clock.config';
+import { tunnelComponentConfig } from '../../components/component-types/tunnel/tunnel.config';
 import { bytesToBase64 } from '../../utils/packed-buffer';
 import { SerializedCircuitBody } from '../../persistence/serialized-circuit';
 import { Project } from '../../project/project';
@@ -99,6 +100,15 @@ describe('BoardCompilerService', () => {
     const wire = wireBetween(a, b);
     project.addWire(wire);
     return wire;
+  }
+
+  function placeTunnel(label: string, pos: [number, number]): Component {
+    return place(
+      Component.deserialize(
+        { pos, options: { direction: 0, label } },
+        tunnelComponentConfig
+      )
+    );
   }
 
   function placeByType(typeId: number, pos: [number, number]): Component {
@@ -233,6 +243,38 @@ describe('BoardCompilerService', () => {
 
     expect(board.descriptor).toEqual({ links: 0, components: [] });
     expect(board.diagnostics).toEqual([]);
+  });
+
+  it('joins the nets of tunnels sharing a label without emitting units', () => {
+    const not = place(makeNot());
+    const and = makeAnd(2, undefined, 20, 20);
+    place(and);
+    const t1 = placeTunnel('bus', [6, 0]);
+    placeWire(not.connectionPoints[1], t1.connectionPoints[0]);
+    const t2 = placeTunnel('bus', [16, 20]);
+    placeWire(t2.connectionPoints[0], and.connectionPoints[0]);
+    // A third tunnel with a different label stays on its own net.
+    const lone = placeTunnel('other', [6, 30]);
+
+    const board = compiler.compile(project);
+
+    expect(board.diagnostics).toEqual([]);
+    const notUnit = board.descriptor.components.find((c) => c.type === 1)!;
+    const andUnit = board.descriptor.components.find((c) => c.type === 2)!;
+    expect(andUnit.inputs[0]).toBe(notUnit.outputs[0]);
+
+    // Both tunnel stubs render from the shared link; the lone tunnel's net
+    // has no unit pin, so it gets no link at all.
+    const targets = board.mapping.get('')!;
+    expect(targets[notUnit.outputs[0]].ports).toEqual(
+      expect.arrayContaining([
+        { component: t1, portIndex: 0 },
+        { component: t2, portIndex: 0 }
+      ])
+    );
+    expect(
+      targets.every((t) => t.ports.every((p) => p.component !== lone))
+    ).toBe(true);
   });
 
   it('emits a ROM unit with its contents bit-packed into ops', () => {

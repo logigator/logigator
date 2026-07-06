@@ -223,6 +223,7 @@ export class BoardCompilerService {
     // id so the submission order (and with it triggerInput comp ids and the
     // getOutputs layout) is reproducible.
     const components = [...project.components].sort((a, b) => a.id - b.id);
+    this._unionTunnelNets(components, portNets, netNodes, ctx.uf);
     for (const component of components) {
       const pinNodes = (portNets.get(component) ?? []).map(
         (netIndex) => netNodes[netIndex]
@@ -293,6 +294,35 @@ export class BoardCompilerService {
   }
 
   /**
+   * Electrically joins the nets of all tunnels sharing a label by unioning
+   * their nodes ("wireless wires"). Tunnels are scoped to their own circuit:
+   * this runs once per compilation pass (board and each template), so a label
+   * never leaks across a custom-component boundary — matching the legacy
+   * editor's per-sheet tunnel ids.
+   */
+  private _unionTunnelNets(
+    components: Component[],
+    portNets: Map<Component, number[]>,
+    netNodes: number[],
+    uf: UnionFind
+  ): void {
+    const firstNodeOfLabel = new Map<string, number>();
+    for (const component of components) {
+      if (component.config.type !== BuiltInComponentType.TUNNEL) continue;
+      const netIndex = portNets.get(component)?.[0];
+      if (netIndex === undefined) continue;
+      const label = component.options['label'].value as string;
+      const node = netNodes[netIndex];
+      const first = firstNodeOfLabel.get(label);
+      if (first === undefined) {
+        firstNodeOfLabel.set(label, node);
+      } else {
+        uf.union(first, node);
+      }
+    }
+  }
+
+  /**
    * Emits one component into the current node-id space: units directly,
    * custom instances by template instantiation. `pinNodes` are the nodes of
    * the nets at the component's ports, in `connectionPoints` order.
@@ -344,11 +374,14 @@ export class BoardCompilerService {
     // TEXT has no ports; top-level INPUT/OUTPUT plugs are inert decoration
     // (no board unit), but their nets are still mapped so their stubs light
     // up. Inside a template, plugs are collected before emission and never
-    // reach this point.
+    // reach this point. TUNNEL is handled entirely at the net level (see
+    // `_unionTunnelNets`) — no unit, but its joined net is mapped, so its
+    // stub lights up too.
     if (
       type === BuiltInComponentType.TEXT ||
       type === BuiltInComponentType.INPUT ||
-      type === BuiltInComponentType.OUTPUT
+      type === BuiltInComponentType.OUTPUT ||
+      type === BuiltInComponentType.TUNNEL
     ) {
       return;
     }
@@ -474,6 +507,7 @@ export class BoardCompilerService {
       const outputPlugs: { component: Component; index: number }[] = [];
 
       const sorted = [...components].sort((a, b) => a.id - b.id);
+      this._unionTunnelNets(sorted, portNets, netNodes, ctx.uf);
       for (const component of sorted) {
         const type = component.config.type;
         if (

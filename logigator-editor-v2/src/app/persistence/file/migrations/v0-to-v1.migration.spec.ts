@@ -112,6 +112,22 @@ describe('v0ToV1Migration', () => {
     );
   });
 
+  it('decodes tunnel labels from s, falling back to the legacy numeric id', () => {
+    const result = migrate({
+      project: {
+        elements: [
+          { t: 8, p: [0, 0], i: 1, n: [7] }, // legacy save: numeric id only
+          { t: 8, p: [0, 5], i: 1, n: [7], s: 'CLK' } // v2 save: label in s
+        ]
+      }
+    });
+
+    expect(result.components.map((c) => c.options['label'])).toEqual([
+      '7',
+      'CLK'
+    ]);
+  });
+
   it("defaults a missing project name to 'Untitled'", () => {
     const result = migrate({ project: { elements: [] } });
     expect(result.name).toBe('Untitled');
