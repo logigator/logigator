@@ -571,20 +571,41 @@ export abstract class Component<
     return container;
   }
 
+  // Connection points must land exactly on the half-grid lattice: wires, the
+  // net extractor, and the connection-point manager all match termination
+  // points by exact coordinates, so any drift disconnects the port logically
+  // while it still looks attached. Two consequences here:
+  //   - Ports sit at the nominal stub tips, never at getLocalBounds(): the
+  //     body stroke is screen-constant, so its grid-space extent grows as the
+  //     zoom shrinks and below ~18% zoom it pokes past the stub tip.
+  //   - Rotation is exact per-direction arithmetic (like _rotatedBounds), not
+  //     a trig Matrix: cos/sin of the quarter-turns carry ~1e-16 noise that
+  //     survives the final addition for components near the origin.
   private get _localConnectionPoints(): Point[] {
-    const matrix = Matrix.IDENTITY.rotate(this.rotation);
-
-    const bounds = this.getLocalBounds();
     const points: Point[] = [];
 
     for (let i = 0; i < this.numInputs; i++) {
-      points.push(matrix.apply(new Point(-0.5, i + 0.5)));
+      points.push(this._rotatedLocalPoint(-0.5, i + 0.5));
     }
     for (let i = 0; i < this.numOutputs; i++) {
-      points.push(matrix.apply(new Point(bounds.right, i + 0.5)));
+      points.push(this._rotatedLocalPoint(this.bodyGridWidth + 0.5, i + 0.5));
     }
 
     return points;
+  }
+
+  /** Rotates an unrotated-frame local point by the component's direction. */
+  private _rotatedLocalPoint(lx: number, ly: number): Point {
+    switch (this._direction) {
+      case Direction.E:
+        return new Point(lx, ly);
+      case Direction.S:
+        return new Point(-ly, lx);
+      case Direction.W:
+        return new Point(-lx, -ly);
+      case Direction.N:
+        return new Point(ly, -lx);
+    }
   }
 
   public redraw(): void {

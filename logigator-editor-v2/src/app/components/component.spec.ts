@@ -177,6 +177,49 @@ describe('Component.bodyGridBounds', () => {
   });
 });
 
+describe('Component.connectionPoints', () => {
+  beforeEach(() => {
+    configureTestBed();
+  });
+
+  it('places ports at the stub tips (inputs at -0.5, outputs at body width + 0.5)', () => {
+    const comp = makeAnd(2, Direction.E, 3, 5); // bodyGridWidth=2
+
+    expect(comp.connectionPoints.map((p) => `${p.x},${p.y}`)).toEqual([
+      '2.5,5.5',
+      '2.5,6.5',
+      '5.5,5.5'
+    ]);
+
+    comp.destroy({ children: true });
+  });
+
+  it('keeps ports at the stub tips at far zoom-out scales, where the screen-constant body stroke outgrows the stub tip', () => {
+    const comp = makeAnd(2, Direction.E, 3, 5);
+    const before = comp.connectionPoints.map((p) => `${p.x},${p.y}`);
+
+    comp.applyScale(Math.pow(1.2, -12));
+
+    expect(comp.connectionPoints.map((p) => `${p.x},${p.y}`)).toEqual(before);
+
+    comp.destroy({ children: true });
+  });
+
+  it('lands exactly on the half-grid lattice in every direction, even near the origin', () => {
+    // Near the origin the coordinates are small enough that trig-based
+    // rotation noise (~1e-16) would survive the position offset and produce
+    // off-lattice values like -0.4999999999999998.
+    for (const dir of [Direction.E, Direction.S, Direction.W, Direction.N]) {
+      const comp = makeAnd(2, dir, 1, 1);
+      for (const p of comp.connectionPoints) {
+        expect(Number.isInteger(p.x * 2)).toBe(true);
+        expect(Number.isInteger(p.y * 2)).toBe(true);
+      }
+      comp.destroy({ children: true });
+    }
+  });
+});
+
 describe('Component.direction re-anchoring (legacy-editor behavior)', () => {
   beforeEach(() => {
     setStaticDIInjector(TestBed.inject(Injector));
