@@ -17,7 +17,7 @@ export class ButtonGraphics extends GraphicsContext {
 
     this.rect(0, 0, 1, 1);
     this.fill(theme.background);
-    this.stroke({ color: theme.wire, width: (2 * PX) / scale });
+    this.stroke({ color: theme.wire, width: PX / scale });
 
     this.rect(inset, inset, 1 - 2 * inset, 1 - 2 * inset);
     if (pressed) {

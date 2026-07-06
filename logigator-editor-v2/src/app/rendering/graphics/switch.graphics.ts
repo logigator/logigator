@@ -18,7 +18,7 @@ export class SwitchGraphics extends GraphicsContext {
 
     this.rect(0, 0, 1, 1);
     this.fill(theme.background);
-    this.stroke({ color: theme.wire, width: (2 * PX) / scale });
+    this.stroke({ color: theme.wire, width: PX / scale });
 
     this.rect(0, on ? 0 : 1 - barHeight, 1, barHeight);
     if (on) {
