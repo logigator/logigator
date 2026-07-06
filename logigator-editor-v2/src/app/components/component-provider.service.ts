@@ -14,6 +14,8 @@ import { dFfComponentConfig } from './component-types/d-ff/d-ff.config';
 import { jkFfComponentConfig } from './component-types/jk-ff/jk-ff.config';
 import { srFfComponentConfig } from './component-types/sr-ff/sr-ff.config';
 import { rngComponentConfig } from './component-types/rng/rng.config';
+import { decoderComponentConfig } from './component-types/decoder/decoder.config';
+import { encoderComponentConfig } from './component-types/encoder/encoder.config';
 import { textComponentConfig } from './component-types/text/text.config';
 import { inputComponentConfig } from './component-types/input/input.config';
 import { outputComponentConfig } from './component-types/output/output.config';
@@ -35,6 +37,8 @@ const BUILT_IN_COMPONENTS: ComponentConfig<any>[] = [
   jkFfComponentConfig,
   srFfComponentConfig,
   rngComponentConfig,
+  decoderComponentConfig,
+  encoderComponentConfig,
   textComponentConfig,
   inputComponentConfig,
   outputComponentConfig,

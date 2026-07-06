@@ -120,6 +120,16 @@ const en = {
         description:
           'Generates random data on its outputs on every rising edge of CLK.'
       },
+      DECODER: {
+        name: 'Decoder',
+        description:
+          '1-of-n binary decoder. Drives exactly the one output whose index equals the binary value on the inputs.'
+      },
+      ENCODER: {
+        name: 'Encoder',
+        description:
+          '2^n-to-n binary encoder. Outputs the binary index of the highest powered input.'
+      },
       TEXT: {
         name: 'Text',
         description:
