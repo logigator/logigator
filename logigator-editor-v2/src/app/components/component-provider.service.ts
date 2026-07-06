@@ -14,6 +14,7 @@ import { dFfComponentConfig } from './component-types/d-ff/d-ff.config';
 import { jkFfComponentConfig } from './component-types/jk-ff/jk-ff.config';
 import { srFfComponentConfig } from './component-types/sr-ff/sr-ff.config';
 import { rngComponentConfig } from './component-types/rng/rng.config';
+import { ramComponentConfig } from './component-types/ram/ram.config';
 import { decoderComponentConfig } from './component-types/decoder/decoder.config';
 import { encoderComponentConfig } from './component-types/encoder/encoder.config';
 import { muxComponentConfig } from './component-types/mux/mux.config';
@@ -39,6 +40,7 @@ const BUILT_IN_COMPONENTS: ComponentConfig<any>[] = [
   jkFfComponentConfig,
   srFfComponentConfig,
   rngComponentConfig,
+  ramComponentConfig,
   decoderComponentConfig,
   encoderComponentConfig,
   muxComponentConfig,

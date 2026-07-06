@@ -120,6 +120,15 @@ const en = {
         description:
           'Generates random data on its outputs on every rising edge of CLK.'
       },
+      RAM: {
+        name: 'RAM',
+        description:
+          'Random access memory. On the rising edge of CLK it reads the addressed word onto the outputs — or, while WE is HIGH, stores the word on the data inputs at the current address instead.',
+        options: {
+          wordSize: 'Word Size',
+          addressSize: 'Address Size'
+        }
+      },
       DECODER: {
         name: 'Decoder',
         description:

@@ -14,6 +14,7 @@ export const enum BuiltInComponentType {
   JK_FF = 14,
   SR_FF = 15,
   RNG = 16,
+  RAM = 17,
   DECODER = 18,
   ENCODER = 19,
   MUX = 20,
