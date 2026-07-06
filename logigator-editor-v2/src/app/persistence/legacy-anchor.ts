@@ -35,6 +35,7 @@ export const LEGACY_BODY_WIDTHS: Record<number, number> = {
   [BuiltInComponentType.D_FF]: 3,
   [BuiltInComponentType.JK_FF]: 3,
   [BuiltInComponentType.SR_FF]: 3,
+  [BuiltInComponentType.RNG]: 3,
   [BuiltInComponentType.INPUT]: 1,
   [BuiltInComponentType.OUTPUT]: 1,
   [BuiltInComponentType.BUTTON]: 1,
@@ -47,7 +48,8 @@ export const LEGACY_BODY_WIDTHS: Record<number, number> = {
  * matching `bodyGridHeight` overrides. Absent types use the port span alone.
  */
 const LEGACY_MIN_BODY_HEIGHTS: Record<number, number> = {
-  [BuiltInComponentType.CLOCK]: 2
+  [BuiltInComponentType.CLOCK]: 2,
+  [BuiltInComponentType.RNG]: 2
 };
 
 /** Unrotated body height — mirrors `Component.bodyGridHeight` per type. */

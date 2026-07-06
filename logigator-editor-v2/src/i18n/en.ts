@@ -115,6 +115,11 @@ const en = {
         description:
           'Holds one bit of state. On the rising edge of CLK, a HIGH S sets and a HIGH R resets the state. Q carries the state and !Q its inverse.'
       },
+      RNG: {
+        name: 'Random Number Generator',
+        description:
+          'Generates random data on its outputs on every rising edge of CLK.'
+      },
       TEXT: {
         name: 'Text',
         description:

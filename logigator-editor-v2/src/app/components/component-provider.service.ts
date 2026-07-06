@@ -13,6 +13,7 @@ import { romComponentConfig } from './component-types/rom/rom.config';
 import { dFfComponentConfig } from './component-types/d-ff/d-ff.config';
 import { jkFfComponentConfig } from './component-types/jk-ff/jk-ff.config';
 import { srFfComponentConfig } from './component-types/sr-ff/sr-ff.config';
+import { rngComponentConfig } from './component-types/rng/rng.config';
 import { textComponentConfig } from './component-types/text/text.config';
 import { inputComponentConfig } from './component-types/input/input.config';
 import { outputComponentConfig } from './component-types/output/output.config';
@@ -33,6 +34,7 @@ const BUILT_IN_COMPONENTS: ComponentConfig<any>[] = [
   dFfComponentConfig,
   jkFfComponentConfig,
   srFfComponentConfig,
+  rngComponentConfig,
   textComponentConfig,
   inputComponentConfig,
   outputComponentConfig,

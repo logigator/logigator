@@ -39,6 +39,7 @@ const UNIT_TYPES: ReadonlySet<number> = new Set([
   BuiltInComponentType.D_FF,
   BuiltInComponentType.JK_FF,
   BuiltInComponentType.SR_FF,
+  BuiltInComponentType.RNG,
   BuiltInComponentType.BUTTON,
   BuiltInComponentType.LEVER,
   BuiltInComponentType.ROM
