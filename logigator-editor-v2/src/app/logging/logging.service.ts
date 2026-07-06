@@ -3,6 +3,16 @@ import { Injectable } from '@angular/core';
 import { environment } from '../../environments/environment';
 import { LogLevel } from './log-level.enum';
 
+/**
+ * Format string for the log line. `%c` applies {@link PREFIX_STYLE} to the
+ * bracketed context, `%s` substitutes the context safely (even if it contains
+ * a `%`). The message is always passed as the trailing *bare* argument so the
+ * console renders it natively — expandable object trees, and the interactive
+ * DOM view with hover-highlight for `HTMLElement`s.
+ */
+const PREFIX = '%c[%s]';
+const PREFIX_STYLE = 'color:#888';
+
 @Injectable({
   providedIn: 'root'
 })
@@ -13,27 +23,27 @@ export class LoggingService {
 
   public error(message: unknown, context: string): void {
     if (!this.enabled(LogLevel.Error)) return;
-    console.error('[%s] %o', context, message);
+    console.error(PREFIX, PREFIX_STYLE, context, message);
   }
 
   public warn(message: unknown, context: string): void {
     if (!this.enabled(LogLevel.Warn)) return;
-    console.warn('[%s] %o', context, message);
+    console.warn(PREFIX, PREFIX_STYLE, context, message);
   }
 
   public log(message: unknown, context: string): void {
     if (!this.enabled(LogLevel.Info)) return;
-    console.log('[%s] %o', context, message);
+    console.log(PREFIX, PREFIX_STYLE, context, message);
   }
 
   public info(message: unknown, context: string): void {
     if (!this.enabled(LogLevel.Info)) return;
-    console.info('[%s] %o', context, message);
+    console.info(PREFIX, PREFIX_STYLE, context, message);
   }
 
   public debug(message: unknown, context: string): void {
     if (!this.enabled(LogLevel.Debug)) return;
-    console.debug('[%s] %o', context, message);
+    console.debug(PREFIX, PREFIX_STYLE, context, message);
   }
 
   /**

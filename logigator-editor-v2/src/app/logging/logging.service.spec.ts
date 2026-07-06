@@ -48,7 +48,8 @@ describe('LoggingService', () => {
     it('passes the context and message to console.error', () => {
       service.error('err-msg', 'err-ctx');
       expect(console.error).toHaveBeenCalledWith(
-        '[%s] %o',
+        '%c[%s]',
+        'color:#888',
         'err-ctx',
         'err-msg'
       );
@@ -59,7 +60,8 @@ describe('LoggingService', () => {
     it('passes the context and message to console.warn', () => {
       service.warn('warn-msg', 'warn-ctx');
       expect(console.warn).toHaveBeenCalledWith(
-        '[%s] %o',
+        '%c[%s]',
+        'color:#888',
         'warn-ctx',
         'warn-msg'
       );
@@ -69,7 +71,12 @@ describe('LoggingService', () => {
   describe('log', () => {
     it('passes the context and message to console.log', () => {
       service.log('log-msg', 'log-ctx');
-      expect(console.log).toHaveBeenCalledWith('[%s] %o', 'log-ctx', 'log-msg');
+      expect(console.log).toHaveBeenCalledWith(
+        '%c[%s]',
+        'color:#888',
+        'log-ctx',
+        'log-msg'
+      );
     });
   });
 
@@ -77,7 +84,8 @@ describe('LoggingService', () => {
     it('passes the context and message to console.info', () => {
       service.info('info-msg', 'info-ctx');
       expect(console.info).toHaveBeenCalledWith(
-        '[%s] %o',
+        '%c[%s]',
+        'color:#888',
         'info-ctx',
         'info-msg'
       );
@@ -88,7 +96,8 @@ describe('LoggingService', () => {
     it('passes the context and message to console.debug', () => {
       service.debug('debug-msg', 'debug-ctx');
       expect(console.debug).toHaveBeenCalledWith(
-        '[%s] %o',
+        '%c[%s]',
+        'color:#888',
         'debug-ctx',
         'debug-msg'
       );
@@ -127,7 +136,8 @@ describe('LoggingService', () => {
       expect(console.debug).not.toHaveBeenCalled();
       stop();
       expect(console.debug).toHaveBeenCalledWith(
-        '[%s] %o',
+        '%c[%s]',
+        'color:#888',
         'ctx',
         expect.stringMatching(/^do work took [\d.]+ ms$/)
       );
