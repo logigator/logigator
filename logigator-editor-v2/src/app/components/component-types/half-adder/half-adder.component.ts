@@ -1,7 +1,10 @@
 import { Component } from '../../component';
 import { DestroyOptions } from 'pixi.js';
 import { Subject, takeUntil } from 'rxjs';
-import { halfAdderComponentConfig, HalfAdderOptions } from './half-adder.config';
+import {
+  halfAdderComponentConfig,
+  HalfAdderOptions
+} from './half-adder.config';
 
 export class HalfAdderComponent extends Component<HalfAdderOptions> {
   public readonly config = halfAdderComponentConfig;

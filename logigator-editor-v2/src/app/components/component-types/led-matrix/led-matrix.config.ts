@@ -22,8 +22,7 @@ export function ledMatrixShape(size: number): {
   numInputs: number;
   bodyCells: number;
 } {
-  const normalized: LedMatrixSize =
-    size === 8 ? 8 : size === 16 ? 16 : 4;
+  const normalized: LedMatrixSize = size === 8 ? 8 : size === 16 ? 16 : 4;
   const addressBits = normalized === 4 ? 2 : normalized === 8 ? 3 : 5;
   const dataBits = normalized < 8 ? 4 : 8;
   const bodyCells = normalized === 4 ? 7 : normalized === 8 ? 12 : 16;

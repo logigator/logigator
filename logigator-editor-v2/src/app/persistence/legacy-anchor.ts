@@ -112,12 +112,7 @@ export function legacyBodyHeight(
   if (type === BuiltInComponentType.LED_MATRIX) {
     return legacyMatrixCells(n?.[0]);
   }
-  return Math.max(
-    LEGACY_MIN_BODY_HEIGHTS[type] ?? 1,
-    1,
-    numInputs,
-    numOutputs
-  );
+  return Math.max(LEGACY_MIN_BODY_HEIGHTS[type] ?? 1, 1, numInputs, numOutputs);
 }
 
 /**

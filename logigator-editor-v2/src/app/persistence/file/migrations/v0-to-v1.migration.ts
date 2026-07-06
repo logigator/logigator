@@ -34,7 +34,10 @@ const WIRE_TYPE_ID = 0;
  * custom elements carry as `t` (`info.id` for a legacy file, `dep.model` for a
  * server response).
  */
-type CustomDims = ReadonlyMap<number, { numInputs: number; numOutputs: number }>;
+type CustomDims = ReadonlyMap<
+  number,
+  { numInputs: number; numOutputs: number }
+>;
 
 function legacyWireToBody(el: ProjectElement): SerializedWireBody {
   const [px, py] = el.p;

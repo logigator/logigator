@@ -41,11 +41,9 @@ export class LedMatrixComponent extends Component<LedMatrixOptions> {
         this.direction = this.options.direction.value;
       });
 
-    this.options.size.onChange$
-      .pipe(takeUntil(this.destroy$))
-      .subscribe(() => {
-        this.numInputs = ledMatrixShape(this.options.size.value).numInputs;
-      });
+    this.options.size.onChange$.pipe(takeUntil(this.destroy$)).subscribe(() => {
+      this.numInputs = ledMatrixShape(this.options.size.value).numInputs;
+    });
   }
 
   public override setPortPowered(portIndex: number, powered: boolean): void {

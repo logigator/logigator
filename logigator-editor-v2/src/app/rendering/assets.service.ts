@@ -65,7 +65,11 @@ export class AssetsService {
     // The woff2 outlines are inherently bold-italic; the faces are registered
     // with default descriptors, so the bake requests the default style too.
     this._install(SEGMENT_FONT_7, {
-      style: { fontFamily: BAKE_SEGMENT_7_FAMILY, fontSize: 48, fill: 0xffffff },
+      style: {
+        fontFamily: BAKE_SEGMENT_7_FAMILY,
+        fontSize: 48,
+        fill: 0xffffff
+      },
       chars: SEGMENT_FONT_CHARS
     });
     this._install(SEGMENT_FONT_14, {

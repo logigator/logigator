@@ -1,7 +1,10 @@
 import { Component } from '../../component';
 import { DestroyOptions } from 'pixi.js';
 import { Subject, takeUntil } from 'rxjs';
-import { fullAdderComponentConfig, FullAdderOptions } from './full-adder.config';
+import {
+  fullAdderComponentConfig,
+  FullAdderOptions
+} from './full-adder.config';
 
 export class FullAdderComponent extends Component<FullAdderOptions> {
   public readonly config = fullAdderComponentConfig;

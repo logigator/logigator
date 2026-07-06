@@ -26,7 +26,8 @@ export class MuxComponent extends Component<MuxOptions> {
       .pipe(takeUntil(this.destroy$))
       .subscribe(() => {
         this.numInputs =
-          this.options.selectLines.value + (1 << this.options.selectLines.value);
+          this.options.selectLines.value +
+          (1 << this.options.selectLines.value);
       });
   }
 

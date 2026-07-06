@@ -2,10 +2,7 @@ import { BitmapText, Container, DestroyOptions } from 'pixi.js';
 import { Subject, takeUntil } from 'rxjs';
 import { Component } from '../../component';
 import { PX } from '../../../utils/grid';
-import {
-  SEGMENT_FONT_7,
-  SEGMENT_FONT_14
-} from '../../../utils/segment-font';
+import { SEGMENT_FONT_7, SEGMENT_FONT_14 } from '../../../utils/segment-font';
 import {
   SegmentBase,
   segmentDisplayComponentConfig,
@@ -19,7 +16,10 @@ const BASE_FONT_SIZE = 0.4 / PX;
  * Digits the readout needs for the largest value `inputs` bits can carry —
  * the value is zero-padded to exactly this length.
  */
-export function segmentReadoutDigits(base: SegmentBase, inputs: number): number {
+export function segmentReadoutDigits(
+  base: SegmentBase,
+  inputs: number
+): number {
   switch (base) {
     case SegmentBase.HEX:
       return Math.ceil(inputs / 4);
@@ -62,11 +62,9 @@ export class SegmentDisplayComponent extends Component<SegmentDisplayOptions> {
       });
 
     // Base changes swap the readout font, digit count and body width.
-    this.options.base.onChange$
-      .pipe(takeUntil(this.destroy$))
-      .subscribe(() => {
-        this.redraw();
-      });
+    this.options.base.onChange$.pipe(takeUntil(this.destroy$)).subscribe(() => {
+      this.redraw();
+    });
   }
 
   public override setPortPowered(portIndex: number, powered: boolean): void {
@@ -99,7 +97,10 @@ export class SegmentDisplayComponent extends Component<SegmentDisplayOptions> {
     }
     return (
       2 +
-      segmentReadoutDigits(this.options.base.value, this.options.numInputs.value)
+      segmentReadoutDigits(
+        this.options.base.value,
+        this.options.numInputs.value
+      )
     );
   }
 
@@ -130,7 +131,8 @@ export class SegmentDisplayComponent extends Component<SegmentDisplayOptions> {
     this._readout = readout;
 
     const baseIndicator = new BitmapText({
-      text: base === SegmentBase.DEC ? '10' : base === SegmentBase.HEX ? '16' : '8',
+      text:
+        base === SegmentBase.DEC ? '10' : base === SegmentBase.HEX ? '16' : '8',
       style: {
         fontFamily: SEGMENT_FONT_7,
         fontSize: BASE_FONT_SIZE,
@@ -158,7 +160,8 @@ export class SegmentDisplayComponent extends Component<SegmentDisplayOptions> {
       value = (value << 1) | (this.isPortPowered(i) ? 1 : 0);
     }
     const base = this.options.base.value;
-    const radix = base === SegmentBase.HEX ? 16 : base === SegmentBase.OCT ? 8 : 10;
+    const radix =
+      base === SegmentBase.HEX ? 16 : base === SegmentBase.OCT ? 8 : 10;
     return value
       .toString(radix)
       .padStart(segmentReadoutDigits(base, this.numInputs), '0');
