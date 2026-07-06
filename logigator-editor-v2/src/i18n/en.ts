@@ -66,6 +66,11 @@ const en = {
         description:
           'An XOR gate is a digital logic gate that implements exclusive disjunction. A HIGH output (1) results if an odd number of inputs to the XOR gate are HIGH (1).'
       },
+      DELAY: {
+        name: 'Delay',
+        description:
+          'A buffer that passes its input through unchanged, adding one simulation tick of delay to the signal.'
+      },
       ROM: {
         name: 'ROM',
         description:

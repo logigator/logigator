@@ -53,13 +53,14 @@ describe('ComponentProviderService', () => {
 
   it('seeds the reactive category lists from the built-ins', () => {
     // TODO: vitest-migration: Verify this matches strict array content (multiset equality). Vitest's arrayContaining is a subset check.
-    expect(service.basicComponents().map((c) => c.type)).toHaveLength(4);
+    expect(service.basicComponents().map((c) => c.type)).toHaveLength(5);
     expect(service.basicComponents().map((c) => c.type)).toEqual(
       expect.arrayContaining([
         BuiltInComponentType.NOT,
         BuiltInComponentType.AND,
         BuiltInComponentType.OR,
-        BuiltInComponentType.XOR
+        BuiltInComponentType.XOR,
+        BuiltInComponentType.DELAY
       ])
     );
     expect(service.advancedComponents().map((c) => c.type)).toEqual([

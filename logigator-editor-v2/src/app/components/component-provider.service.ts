@@ -5,6 +5,7 @@ import { notComponentConfig } from './component-types/not/not.config';
 import { andComponentConfig } from './component-types/and/and.config';
 import { orComponentConfig } from './component-types/or/or.config';
 import { xorComponentConfig } from './component-types/xor/xor.config';
+import { delayComponentConfig } from './component-types/delay/delay.config';
 import { romComponentConfig } from './component-types/rom/rom.config';
 import { textComponentConfig } from './component-types/text/text.config';
 import { inputComponentConfig } from './component-types/input/input.config';
@@ -18,6 +19,7 @@ const BUILT_IN_COMPONENTS: ComponentConfig<any>[] = [
   andComponentConfig,
   orComponentConfig,
   xorComponentConfig,
+  delayComponentConfig,
   romComponentConfig,
   textComponentConfig,
   inputComponentConfig,
