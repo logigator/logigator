@@ -17,6 +17,7 @@ import { textComponentConfig } from '../../components/component-types/text/text.
 import { romComponentConfig } from '../../components/component-types/rom/rom.config';
 import { clockComponentConfig } from '../../components/component-types/clock/clock.config';
 import { tunnelComponentConfig } from '../../components/component-types/tunnel/tunnel.config';
+import { ledMatrixComponentConfig } from '../../components/component-types/led-matrix/led-matrix.config';
 import { bytesToBase64 } from '../../utils/packed-buffer';
 import { SerializedCircuitBody } from '../../persistence/serialized-circuit';
 import { Project } from '../../project/project';
@@ -316,6 +317,32 @@ describe('BoardCompilerService', () => {
     expect(board.descriptor).toEqual({
       links: 2,
       components: [{ type: 6, inputs: [0], outputs: [1], ops: [7] }]
+    });
+  });
+
+  it('emits an LED matrix with engine-only cell outputs mapped as pseudo-ports', () => {
+    const matrix = place(
+      Component.deserialize(
+        { pos: [0, 0], options: { direction: 0, size: 4 } },
+        ledMatrixComponentConfig
+      )
+    );
+
+    const board = compiler.compile(project);
+
+    expect(board.diagnostics).toEqual([]);
+    const unit = board.descriptor.components[0];
+    expect(unit.type).toBe(204);
+    expect(unit.inputs).toHaveLength(7); // A0,A1, D0..D3, CLK
+    expect(unit.outputs).toHaveLength(16); // 4×4 cells
+    expect(unit.ops).toEqual([4]); // data-bus width
+
+    // Every cell link renders back onto the component past the input range.
+    const targets = board.mapping.get('')!;
+    unit.outputs.forEach((link, cellIndex) => {
+      expect(targets[link].ports).toEqual([
+        { component: matrix, portIndex: matrix.numInputs + cellIndex }
+      ]);
     });
   });
 

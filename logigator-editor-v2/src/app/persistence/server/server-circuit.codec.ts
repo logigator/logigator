@@ -49,6 +49,7 @@ import {
   legacyBodyWidth,
   pivotToLegacyAnchor
 } from '../legacy-anchor';
+import { ledMatrixShape } from '../../components/component-types/led-matrix/led-matrix.config';
 import { PersistedCircuitV0 } from '../persisted-circuit.types';
 import { CircuitFileV0 } from '../file/circuit-file.types';
 import { collectSnapshots } from '../snapshots';
@@ -201,6 +202,14 @@ function serializeComponent(
     el.s = label;
   }
 
+  // The matrix's LED cells are engine-only in v2 (numOutputs is 0), but the
+  // legacy format records them as outputs — old clients rebuild their
+  // simulation unit from `o`.
+  if (config.type === BuiltInComponentType.LED_MATRIX) {
+    const { size } = ledMatrixShape(component.options['size'].value as number);
+    el.o = size * size;
+  }
+
   // Negation has no positional v0 slot — it rides as additive arrays (sorted,
   // in-range, omitted when empty), shared shape with the native body.
   Object.assign(el, Component.serializeNegations(component));
@@ -314,7 +323,7 @@ function encodeBodyComponent(
   // Reverse the v0→v1 pivot re-anchor (the snapshot body was decoded through
   // the same migration), so built-ins round-trip to their legacy top-left.
   const width = legacyBodyWidth(component.type, el.r ?? 0, el.i ?? 0, el.n);
-  const height = legacyBodyHeight(component.type, el.i ?? 0, el.o ?? 0);
+  const height = legacyBodyHeight(component.type, el.i ?? 0, el.o ?? 0, el.n);
   el.p = pivotToLegacyAnchor(
     component.pos[0],
     component.pos[1],

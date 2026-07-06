@@ -9,6 +9,7 @@ import {
 } from '../../components/component-type.enum';
 import { instantiateBody } from '../../persistence/circuit-builder';
 import { encodeRomOps } from '../../components/component-types/rom/rom-data.codec';
+import { ledMatrixShape } from '../../components/component-types/led-matrix/led-matrix.config';
 import { Project } from '../../project/project';
 import { Wire } from '../../wires/wire';
 import {
@@ -126,6 +127,13 @@ interface EmitContext {
   userInputs: Map<number, number>;
   /** Directly placed custom instances, keyed by component id. */
   instances: Map<number, EmittedInstance>;
+  /**
+   * LED matrices with their engine-only cell nodes (unit outputs that exist
+   * on no net). The top-level pass maps them back onto the component as
+   * pseudo-ports; inside a template they only feed the engine (an inner
+   * matrix simulates, but does not light up in a watch).
+   */
+  displays: { component: Component; nodes: number[] }[];
 }
 
 function joinPath(parent: string, child: string): string {
@@ -209,7 +217,8 @@ export class BoardCompilerService {
       units: [],
       diagnostics: [],
       userInputs: new Map<number, number>(),
-      instances: new Map<number, EmittedInstance>()
+      instances: new Map<number, EmittedInstance>(),
+      displays: []
     };
 
     const nets = extractNets({
@@ -265,6 +274,17 @@ export class BoardCompilerService {
       targets[link].wires.push(...net.wires);
       targets[link].ports.push(...net.ports);
     });
+    // LED-matrix cells: engine-only unit outputs, mapped back onto their
+    // component as pseudo-ports past the input range so the standard applier
+    // lights them (row-major cell order).
+    for (const { component, nodes } of ctx.displays) {
+      nodes.forEach((node, cellIndex) => {
+        targets[linkFor(node)].ports.push({
+          component,
+          portIndex: component.numInputs + cellIndex
+        });
+      });
+    }
 
     // Watch records: resolve each top-level instance's local nets to global
     // links (after link assignment; `-1` = wire-only class, never powered).
@@ -351,6 +371,26 @@ export class BoardCompilerService {
           unitBase
         });
       }
+      return;
+    }
+
+    if (type === BuiltInComponentType.LED_MATRIX) {
+      // The cells are unit outputs with no editor port: fresh nodes on no net.
+      // ops[0] is the data-bus width the engine derives the pin split from.
+      const { size, dataBits } = ledMatrixShape(
+        component.options['size'].value as number
+      );
+      const cellNodes = Array.from({ length: size * size }, () =>
+        ctx.uf.makeSet()
+      );
+      ctx.displays.push({ component, nodes: cellNodes });
+      ctx.units.push({
+        type,
+        inputs: pinNodes,
+        outputs: cellNodes,
+        ops: [dataBits],
+        ...this._negationFor(component)
+      });
       return;
     }
 
@@ -499,7 +539,8 @@ export class BoardCompilerService {
         units: [],
         diagnostics: [],
         userInputs: new Map<number, number>(),
-        instances: new Map<number, EmittedInstance>()
+        instances: new Map<number, EmittedInstance>(),
+        displays: []
       };
       const nets = extractNets({ components, wires });
       const netNodes = nets.map(() => ctx.uf.makeSet());

@@ -202,6 +202,14 @@ const en = {
         options: {
           base: 'Base'
         }
+      },
+      LED_MATRIX: {
+        name: 'LED Matrix',
+        description:
+          'A square grid of LEDs that displays an image. On the rising edge of CLK, the data inputs are latched into the row addressed by the address inputs.',
+        options: {
+          size: 'Width/Height'
+        }
       }
     },
     options: {

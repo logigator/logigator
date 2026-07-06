@@ -68,12 +68,20 @@ const LEGACY_MIN_BODY_HEIGHTS: Record<number, number> = {
  * readout (base in `n[0]`, digit count from the input count) when horizontal
  * and is a fixed 4 when standing upright.
  */
+/** LED-matrix square body side per size option — mirrors `ledMatrixShape`. */
+function legacyMatrixCells(size: number | undefined): number {
+  return size === 8 ? 12 : size === 16 ? 16 : 7;
+}
+
 export function legacyBodyWidth(
   type: number,
   direction: Direction,
   numInputs: number,
   n: readonly number[] | undefined
 ): number {
+  if (type === BuiltInComponentType.LED_MATRIX) {
+    return legacyMatrixCells(n?.[0]);
+  }
   if (type === BuiltInComponentType.SEGMENT_DISPLAY) {
     if (direction % 2 === 1) {
       return 4;
@@ -90,12 +98,20 @@ export function legacyBodyWidth(
   return LEGACY_BODY_WIDTHS[type] ?? 1;
 }
 
-/** Unrotated body height — mirrors `Component.bodyGridHeight` per type. */
+/**
+ * Unrotated body height — mirrors `Component.bodyGridHeight` per type. `n`
+ * are the raw v0 option slots; only the LED matrix (square, sized by `n[0]`)
+ * consults them.
+ */
 export function legacyBodyHeight(
   type: number,
   numInputs: number,
-  numOutputs: number
+  numOutputs: number,
+  n?: readonly number[]
 ): number {
+  if (type === BuiltInComponentType.LED_MATRIX) {
+    return legacyMatrixCells(n?.[0]);
+  }
   return Math.max(
     LEGACY_MIN_BODY_HEIGHTS[type] ?? 1,
     1,

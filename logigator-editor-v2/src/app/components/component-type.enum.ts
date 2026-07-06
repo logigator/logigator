@@ -27,7 +27,8 @@ export const enum BuiltInComponentType {
   BUTTON = 200,
   LEVER = 201,
   LED = 202,
-  SEGMENT_DISPLAY = 203
+  SEGMENT_DISPLAY = 203,
+  LED_MATRIX = 204
 }
 
 /** A runtime-allocated custom component type id ({@link CUSTOM_TYPE_ID_BASE}+). */

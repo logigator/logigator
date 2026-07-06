@@ -114,7 +114,12 @@ function decodeElements(
       element.i ?? 0,
       element.n
     );
-    const height = legacyBodyHeight(element.t, element.i ?? 0, element.o ?? 0);
+    const height = legacyBodyHeight(
+      element.t,
+      element.i ?? 0,
+      element.o ?? 0,
+      element.n
+    );
 
     const options = decodeOptions(element, config);
     if (element.t === BuiltInComponentType.TUNNEL) {
