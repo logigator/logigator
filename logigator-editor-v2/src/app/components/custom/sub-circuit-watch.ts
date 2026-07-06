@@ -173,7 +173,6 @@ export class SubCircuitWatch extends ComponentInspection {
     if (!definition.circuit) {
       getStaticDI(ToastService).warn(
         getStaticDI(TranslocoService).translate('watch.noInnerCircuit'),
-        undefined,
         'SubCircuitWatch'
       );
       return;

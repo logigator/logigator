@@ -116,8 +116,8 @@ export class OpenProjectDialogComponent implements OnInit {
       .catch((err: unknown) => {
         this.toastService.error(
           this.transloco.translate('openProjectDialog.errors.listLocal'),
-          err,
-          this.ctx
+          this.ctx,
+          err
         );
         this.loadingLocal.set(false);
       });
@@ -132,8 +132,8 @@ export class OpenProjectDialogComponent implements OnInit {
     this.persistenceService.loadLocalProjectAsMain(id).catch((err: unknown) => {
       this.toastService.error(
         this.transloco.translate('openProjectDialog.errors.openLocal'),
-        err,
-        this.ctx
+        this.ctx,
+        err
       );
     });
     this.ref.close();
@@ -146,8 +146,8 @@ export class OpenProjectDialogComponent implements OnInit {
       .catch((err: unknown) => {
         this.toastService.error(
           this.transloco.translate('openProjectDialog.errors.deleteLocal'),
-          err,
-          this.ctx
+          this.ctx,
+          err
         );
       });
   }
@@ -159,8 +159,8 @@ export class OpenProjectDialogComponent implements OnInit {
       .catch((err: unknown) => {
         this.toastService.error(
           this.transloco.translate('openProjectDialog.errors.renameLocal'),
-          err,
-          this.ctx
+          this.ctx,
+          err
         );
       });
   }
@@ -186,8 +186,8 @@ export class OpenProjectDialogComponent implements OnInit {
     } catch (err) {
       this.toastService.error(
         this.transloco.translate('openProjectDialog.errors.listServer'),
-        err,
-        this.ctx
+        this.ctx,
+        err
       );
     } finally {
       this.loadingServer.set(false);
@@ -206,8 +206,8 @@ export class OpenProjectDialogComponent implements OnInit {
     this.persistenceService.loadProjectAsMain(id).catch((err: unknown) => {
       this.toastService.error(
         this.transloco.translate('openProjectDialog.errors.openServer'),
-        err,
-        this.ctx
+        this.ctx,
+        err
       );
     });
     this.ref.close();
@@ -219,8 +219,8 @@ export class OpenProjectDialogComponent implements OnInit {
       .catch((err: unknown) => {
         this.toastService.error(
           this.transloco.translate('openProjectDialog.errors.deleteServer'),
-          err,
-          this.ctx
+          this.ctx,
+          err
         );
       });
   }
@@ -233,8 +233,8 @@ export class OpenProjectDialogComponent implements OnInit {
       .catch((err: unknown) => {
         this.toastService.error(
           this.transloco.translate('openProjectDialog.errors.renameServer'),
-          err,
-          this.ctx
+          this.ctx,
+          err
         );
       });
   }
@@ -259,8 +259,8 @@ export class OpenProjectDialogComponent implements OnInit {
             this.transloco.translate('openProjectDialog.errors.importFailed', {
               detail: message
             }),
-            err,
-            this.ctx
+            this.ctx,
+            err
           );
           this.importError.set(message);
         });
@@ -269,7 +269,7 @@ export class OpenProjectDialogComponent implements OnInit {
       const message = this.transloco.translate(
         'openProjectDialog.errors.readFailed'
       );
-      this.toastService.error(message, reader.error, this.ctx);
+      this.toastService.error(message, this.ctx, reader.error);
       this.importError.set(message);
     };
     reader.readAsText(file);

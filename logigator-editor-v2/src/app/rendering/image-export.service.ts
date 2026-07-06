@@ -89,7 +89,8 @@ export class ImageExportService {
   public async exportImage(options: ImageExportOptions): Promise<void> {
     if (!this.snapshot.available) {
       this.toast.error(
-        this.transloco.translate('imageExport.error.unavailable')
+        this.transloco.translate('imageExport.error.unavailable'),
+        'ImageExportService'
       );
       return;
     }
@@ -106,13 +107,19 @@ export class ImageExportService {
         background: this._backgroundMode(options)
       });
     } catch {
-      this.toast.error(this.transloco.translate('imageExport.error.failed'));
+      this.toast.error(
+        this.transloco.translate('imageExport.error.failed'),
+        'ImageExportService'
+      );
       return;
     }
 
     const blob = await this._toBlob(canvas, options);
     if (!blob) {
-      this.toast.error(this.transloco.translate('imageExport.error.failed'));
+      this.toast.error(
+        this.transloco.translate('imageExport.error.failed'),
+        'ImageExportService'
+      );
       return;
     }
 
@@ -127,10 +134,14 @@ export class ImageExportService {
     if (clamped) {
       const { width, height } = this.snapshot.outputSize(region, effective);
       this.toast.warn(
-        this.transloco.translate('imageExport.warn.clamped', { width, height })
+        this.transloco.translate('imageExport.warn.clamped', { width, height }),
+        'ImageExportService'
       );
     } else {
-      this.toast.success(this.transloco.translate('imageExport.success'));
+      this.toast.success(
+        this.transloco.translate('imageExport.success'),
+        'ImageExportService'
+      );
     }
   }
 

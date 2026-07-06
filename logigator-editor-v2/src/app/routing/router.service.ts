@@ -48,8 +48,8 @@ export class RouterService {
     if (!(await this.processPath(path))) {
       this.toast.error(
         this.transloco.translate('routing.notFound'),
-        `No route found for path: ${path}`,
-        'RouterService'
+        'RouterService',
+        `No route found for path: ${path}`
       );
       this.location.replaceState('/');
     }

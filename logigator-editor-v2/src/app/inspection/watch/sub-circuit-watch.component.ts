@@ -131,8 +131,8 @@ export class SubCircuitWatchComponent implements AfterViewInit, OnDestroy {
       .catch((err) => {
         this.toast.error(
           this.transloco.translate('watch.rendererFailed'),
-          err,
-          'SubCircuitWatchComponent'
+          'SubCircuitWatchComponent',
+          err
         );
       });
   }

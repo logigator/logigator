@@ -65,7 +65,8 @@ export class ComponentPlacementSession implements DragSession {
   onEnd(): void {
     if (this._wouldCycle) {
       getStaticDI(ToastService).warn(
-        'Cannot place this component here — it would create a circular dependency.'
+        'Cannot place this component here — it would create a circular dependency.',
+        'ComponentPlacementSession'
       );
       this._component.destroy({ children: true });
       this.dragLayer.position.set(0, 0);

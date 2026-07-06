@@ -159,7 +159,8 @@ export class SimulationService {
     const board = this.compiler.compile(project);
     if (board.diagnostics.length > 0) {
       this.toastService.error(
-        board.diagnostics.map((d) => d.message).join('\n')
+        board.diagnostics.map((d) => d.message).join('\n'),
+        'SimulationService'
       );
       return;
     }
@@ -196,7 +197,7 @@ export class SimulationService {
         repaint: () => this._project?.triggerTicker('single'),
         onFrame: () => this._frame$.next(),
         onError: (message) => {
-          this.toastService.error(message, undefined, 'SimulationService');
+          this.toastService.error(message, 'SimulationService');
           this.exit();
         }
       })
@@ -208,7 +209,7 @@ export class SimulationService {
       })
       .catch((err: Error) => {
         if (this._state() === 'starting') {
-          this.toastService.error(err.message, err, 'SimulationService');
+          this.toastService.error(err.message, 'SimulationService', err);
           this.exit();
         }
       });
@@ -358,7 +359,7 @@ export class SimulationService {
     if (!this.isReady()) {
       return;
     }
-    this.toastService.error(err.message, err, 'SimulationService');
+    this.toastService.error(err.message, 'SimulationService', err);
     if (this._state() === 'running') {
       this._state.set('ready');
       this._project?.triggerTicker('off');

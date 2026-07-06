@@ -59,7 +59,10 @@ export class CustomComponentService {
         this._openEditor(project, masterTypeId);
         return project;
       } catch (e) {
-        this.toast.error('Failed to create component');
+        this.toast.error(
+          'Failed to create component',
+          'CustomComponentService'
+        );
         throw e;
       }
     }
@@ -111,7 +114,7 @@ export class CustomComponentService {
           : await this.persistence.loadComponentForEdit(masterId);
       this._openEditor(project, masterTypeId);
     } catch {
-      this.toast.error('Failed to open component');
+      this.toast.error('Failed to open component', 'CustomComponentService');
     }
   }
 
@@ -222,16 +225,23 @@ export class CustomComponentService {
 
     if (this.user.user() === null) {
       this.toast.error(
-        this.transloco.translate('uploadComponent.signInRequired')
+        this.transloco.translate('uploadComponent.signInRequired'),
+        'CustomComponentService'
       );
       return;
     }
 
     try {
       await this.persistence.promoteComponentToServer(masterTypeId, isPublic);
-      this.toast.success(this.transloco.translate('uploadComponent.success'));
+      this.toast.success(
+        this.transloco.translate('uploadComponent.success'),
+        'CustomComponentService'
+      );
     } catch {
-      this.toast.error(this.transloco.translate('uploadComponent.failure'));
+      this.toast.error(
+        this.transloco.translate('uploadComponent.failure'),
+        'CustomComponentService'
+      );
     }
   }
 
@@ -255,7 +265,8 @@ export class CustomComponentService {
 
     if (this.user.user() === null) {
       this.toast.error(
-        this.transloco.translate('uploadComponent.signInRequired')
+        this.transloco.translate('uploadComponent.signInRequired'),
+        'CustomComponentService'
       );
       return;
     }
@@ -269,7 +280,10 @@ export class CustomComponentService {
     try {
       await this.persistence.promoteComponentToServer(masterTypeId, isPublic);
     } catch {
-      this.toast.error(this.transloco.translate('uploadComponent.failure'));
+      this.toast.error(
+        this.transloco.translate('uploadComponent.failure'),
+        'CustomComponentService'
+      );
       return;
     }
 
@@ -287,10 +301,14 @@ export class CustomComponentService {
         this.transloco.translate('uploadComponent.partialFailure', {
           failed,
           total: dependencyIds.length
-        })
+        }),
+        'CustomComponentService'
       );
     } else {
-      this.toast.success(this.transloco.translate('uploadComponent.success'));
+      this.toast.success(
+        this.transloco.translate('uploadComponent.success'),
+        'CustomComponentService'
+      );
     }
   }
 
@@ -307,7 +325,10 @@ export class CustomComponentService {
       await this.persistence.ensureServerMasterCircuit(masterTypeId);
       return true;
     } catch {
-      this.toast.error('Failed to load component from the cloud');
+      this.toast.error(
+        'Failed to load component from the cloud',
+        'CustomComponentService'
+      );
       return false;
     }
   }

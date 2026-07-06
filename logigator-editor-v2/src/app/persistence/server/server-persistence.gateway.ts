@@ -67,7 +67,8 @@ export class ServerPersistenceGateway {
 
     if (!detail.newFormat) {
       this.toast.warn(
-        this.transloco.translate('persistence.legacyProjectWarning')
+        this.transloco.translate('persistence.legacyProjectWarning'),
+        'ServerPersistenceGateway'
       );
     }
 
@@ -168,7 +169,7 @@ export class ServerPersistenceGateway {
     if (this.metadataStore.dirtyVersion(project) === versionAtSnapshot) {
       this.metadataStore.clearDirty(project);
     }
-    this.toast.success('Project saved');
+    this.toast.success('Project saved', 'ServerPersistenceGateway');
     void this._uploadPreview(project, response.id);
     return response.id;
   }
@@ -237,8 +238,8 @@ export class ServerPersistenceGateway {
     } catch {
       this.toast.error(
         this.transloco.translate('persistence.shareAuthRequired'),
-        `Cannot clone share ${linkId}: user not authenticated`,
-        'ServerPersistenceGateway'
+        'ServerPersistenceGateway',
+        `Cannot clone share ${linkId}: user not authenticated`
       );
       throw new AuthRequiredError();
     }
@@ -485,22 +486,25 @@ export class ServerPersistenceGateway {
       if (this.metadataStore.dirtyVersion(project) === versionAtSnapshot) {
         this.metadataStore.clearDirty(project);
       }
-      this.toast.success(this.transloco.translate('persistence.projectSaved'));
+      this.toast.success(
+        this.transloco.translate('persistence.projectSaved'),
+        'ServerPersistenceGateway'
+      );
       void this._uploadPreview(project, metadata.id);
     } catch (err) {
       if (this._isVersionMismatch(err)) {
         this.toast.error(
           this.transloco.translate('persistence.versionMismatch'),
-          err,
-          'ServerPersistenceGateway'
+          'ServerPersistenceGateway',
+          err
         );
       } else {
         this.toast.error(
           this.transloco.translate('persistence.saveFailed', {
             detail: formatHttpError(err)
           }),
-          err,
-          'ServerPersistenceGateway'
+          'ServerPersistenceGateway',
+          err
         );
       }
       throw err;
@@ -539,22 +543,23 @@ export class ServerPersistenceGateway {
         this.metadataStore.clearDirty(project);
       }
       this.toast.success(
-        this.transloco.translate('persistence.componentSaved')
+        this.transloco.translate('persistence.componentSaved'),
+        'ServerPersistenceGateway'
       );
     } catch (err) {
       if (this._isVersionMismatch(err)) {
         this.toast.error(
           this.transloco.translate('persistence.versionMismatch'),
-          err,
-          'ServerPersistenceGateway'
+          'ServerPersistenceGateway',
+          err
         );
       } else {
         this.toast.error(
           this.transloco.translate('persistence.saveFailed', {
             detail: formatHttpError(err)
           }),
-          err,
-          'ServerPersistenceGateway'
+          'ServerPersistenceGateway',
+          err
         );
       }
       throw err;

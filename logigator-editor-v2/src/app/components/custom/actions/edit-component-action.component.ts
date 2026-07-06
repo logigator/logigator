@@ -34,7 +34,6 @@ export class EditComponentActionComponent {
     if (id === undefined) {
       this.toast.error(
         this.transloco.translate('componentActions.sourceUnavailable'),
-        undefined,
         'EditComponentAction'
       );
       return;

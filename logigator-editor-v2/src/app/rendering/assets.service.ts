@@ -57,8 +57,8 @@ export class AssetsService {
     } catch (err) {
       this.toast.error(
         this.transloco.translate('editor.fontLoadFailed'),
-        err,
-        'AssetsService'
+        'AssetsService',
+        err
       );
       throw err;
     }

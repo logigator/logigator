@@ -35,7 +35,8 @@ export class UserService {
       next: (user) => this._user.set(user),
       error: () => {
         this.toastService.error(
-          'Failed to load user data. Please log in again.'
+          'Failed to load user data. Please log in again.',
+          'UserService'
         );
         this._user.set(null);
       }
@@ -52,10 +53,13 @@ export class UserService {
     this.userApi
       .logout()
       .then(() => {
-        this.toastService.success('Logged out successfully.');
+        this.toastService.success('Logged out successfully.', 'UserService');
       })
       .catch(() => {
-        this.toastService.error('Failed to log out. Please try again.');
+        this.toastService.error(
+          'Failed to log out. Please try again.',
+          'UserService'
+        );
       });
   }
 

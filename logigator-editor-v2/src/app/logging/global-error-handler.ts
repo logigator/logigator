@@ -41,7 +41,7 @@ export class GlobalErrorHandler implements ErrorHandler {
         'Something went wrong.';
       // The full error was already logged above; this only shows the throttled
       // generic toast (its own mirror re-logs the short message harmlessly).
-      toast?.error(message);
+      toast?.error(message, 'GlobalErrorHandler');
     } catch {
       // Never let error reporting throw and re-enter the handler.
     }

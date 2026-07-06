@@ -417,19 +417,21 @@ export class HexEditorComponent {
     if (!copied) {
       this.toastService.warn(
         this.transloco.translate('hexEditor.copyFailed'),
-        undefined,
         'HexEditorComponent'
       );
       return;
     }
     void copied.then(
       () =>
-        this.toastService.info(this.transloco.translate('hexEditor.copied')),
+        this.toastService.info(
+          this.transloco.translate('hexEditor.copied'),
+          'HexEditorComponent'
+        ),
       (err: unknown) =>
         this.toastService.warn(
           this.transloco.translate('hexEditor.copyFailed'),
-          err,
-          'HexEditorComponent'
+          'HexEditorComponent',
+          err
         )
     );
   }

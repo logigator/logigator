@@ -176,7 +176,8 @@ export class CircuitFileService {
           ? this.transloco.translate('persistence.skippedCustomOne')
           : this.transloco.translate('persistence.skippedCustomMany', {
               count: skippedCustom
-            })
+            }),
+        'CircuitFileService'
       );
     }
 

@@ -77,7 +77,6 @@ export class EraseSession implements DragSession {
     if (dropped > 0) {
       getStaticDI(ToastService).warn(
         getStaticDI(TranslocoService).translate('editor.eraseRestoreFailed'),
-        undefined,
         'EraseSession'
       );
     }

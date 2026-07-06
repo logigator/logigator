@@ -194,8 +194,8 @@ export class BoardComponent implements OnInit, OnDestroy {
       // board stays hidden rather than showing a dead surface.
       this.toastService.error(
         this.translocoService.translate('editor.rendererInitFailed'),
-        err,
-        'BoardComponent'
+        'BoardComponent',
+        err
       );
     }
   }

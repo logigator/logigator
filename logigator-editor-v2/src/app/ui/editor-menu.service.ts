@@ -261,13 +261,14 @@ export class EditorMenuService {
     try {
       this.persistenceService.exportProjectToFile(project);
       this.toastService.success(
-        this.translocoService.translate('persistence.projectExported')
+        this.translocoService.translate('persistence.projectExported'),
+        'EditorMenuService'
       );
     } catch (err) {
       this.toastService.error(
         this.translocoService.translate('persistence.exportFailed'),
-        err,
-        'EditorMenuService'
+        'EditorMenuService',
+        err
       );
     }
   }

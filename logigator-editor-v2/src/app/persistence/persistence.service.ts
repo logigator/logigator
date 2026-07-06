@@ -116,7 +116,10 @@ export class PersistenceService {
     );
     this._replaceMainProject(project);
     this.location.go(`/project/${id}`);
-    this.toast.success(this.transloco.translate('persistence.projectCreated'));
+    this.toast.success(
+      this.transloco.translate('persistence.projectCreated'),
+      'PersistenceService'
+    );
     return id;
   }
 
@@ -360,7 +363,8 @@ export class PersistenceService {
       wires.forEach((w, i) => (w.id = dump.wireIds[i]));
     } else {
       this.toast.warn(
-        this.transloco.translate('persistence.dumpElementCountChanged')
+        this.transloco.translate('persistence.dumpElementCountChanged'),
+        'PersistenceService'
       );
     }
 
@@ -399,8 +403,8 @@ export class PersistenceService {
       if (token === this._mainLoadToken) {
         this.toast.error(
           this.transloco.translate('persistence.loadFailed'),
-          `Failed to load project ${uuid}: ${formatHttpError(e)}`,
-          'PersistenceService'
+          'PersistenceService',
+          `Failed to load project ${uuid}: ${formatHttpError(e)}`
         );
         if (!this.projectService.mainProject()) {
           this.createAndSetEmptyProject();
@@ -430,8 +434,8 @@ export class PersistenceService {
       if (token === this._shareLoadToken) {
         this.toast.error(
           this.transloco.translate('persistence.shareLoadFailed'),
-          `Failed to load share ${linkId}: ${formatHttpError(e)}`,
-          'PersistenceService'
+          'PersistenceService',
+          `Failed to load share ${linkId}: ${formatHttpError(e)}`
         );
         if (!this.projectService.mainProject()) {
           this.createAndSetEmptyProject();
@@ -702,7 +706,8 @@ export class PersistenceService {
     // browser record that was just deleted.
     this._reconcilePromotedEditor(oldId, newId, newHash);
     this.toast.success(
-      this.transloco.translate('persistence.componentUploaded')
+      this.transloco.translate('persistence.componentUploaded'),
+      'PersistenceService'
     );
   }
 
@@ -835,8 +840,8 @@ export class PersistenceService {
       if (token === this._mainLoadToken) {
         this.toast.error(
           this.transloco.translate('persistence.componentLoadFailed'),
-          `Failed to load component ${uuid}: ${formatHttpError(e)}`,
-          'PersistenceService'
+          'PersistenceService',
+          `Failed to load component ${uuid}: ${formatHttpError(e)}`
         );
         if (!this.projectService.mainProject()) {
           this.createAndSetEmptyProject();
@@ -867,8 +872,8 @@ export class PersistenceService {
       if (token === this._mainLoadToken) {
         this.toast.error(
           this.transloco.translate('persistence.loadFailed'),
-          `Failed to load browser project ${id}: ${formatHttpError(e)}`,
-          'PersistenceService'
+          'PersistenceService',
+          `Failed to load browser project ${id}: ${formatHttpError(e)}`
         );
         if (!this.projectService.mainProject()) {
           this.createAndSetEmptyProject();
@@ -986,7 +991,8 @@ export class PersistenceService {
       this.metadataStore.clearDirty(project);
     }
     this.toast.success(
-      this.transloco.translate('persistence.projectSavedBrowser')
+      this.transloco.translate('persistence.projectSavedBrowser'),
+      'PersistenceService'
     );
   }
 
@@ -1035,7 +1041,8 @@ export class PersistenceService {
       this.metadataStore.clearDirty(project);
     }
     this.toast.success(
-      this.transloco.translate('persistence.componentSavedBrowser')
+      this.transloco.translate('persistence.componentSavedBrowser'),
+      'PersistenceService'
     );
   }
 

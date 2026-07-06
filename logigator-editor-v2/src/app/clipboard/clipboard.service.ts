@@ -103,7 +103,6 @@ export class ClipboardService {
     if (skipped > 0) {
       this.toast.warn(
         this.transloco.translate('clipboard.pastePartial'),
-        undefined,
         'ClipboardService'
       );
     }

@@ -58,8 +58,8 @@ export class SaveCoordinatorService {
     } catch (err) {
       this.toast.error(
         this.translocoService.translate('persistence.saveFailedGeneric'),
-        err,
-        'SaveCoordinatorService'
+        'SaveCoordinatorService',
+        err
       );
     }
   }

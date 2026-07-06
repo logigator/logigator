@@ -172,8 +172,8 @@ export class AppComponent {
       } catch (err) {
         this.toastService.warn(
           this.translocoService.translate('library.loadFailed'),
-          err,
-          'AppComponent'
+          'AppComponent',
+          err
         );
       }
     })();

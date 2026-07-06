@@ -145,7 +145,8 @@ export class ShortcutService implements OnDestroy {
           this.toastService.info(
             this.translocoService.translate('shortcuts.toast.reassignedFrom', {
               action: oldName
-            })
+            }),
+            'ShortcutService'
           );
           break;
         }
@@ -337,8 +338,8 @@ export class ShortcutService implements OnDestroy {
       /* corrupted data — keep defaults */
       this.toastService.error(
         this.translocoService.translate('shortcuts.toast.loadFailed'),
-        err,
-        'ShortcutService'
+        'ShortcutService',
+        err
       );
     }
   }
