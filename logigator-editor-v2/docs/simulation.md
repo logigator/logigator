@@ -83,17 +83,29 @@ The compiler walks components sorted **by id** (quad-tree iteration order is not
 stable; sorting makes the submission order — and with it `triggerInput` indices
 and the engine's output layout — reproducible). For each component:
 
-- **Unit types** (`NOT`, `AND`, `BUTTON`, `LEVER`, `ROM`) are emitted as one
-  `EmittedUnit` with its pins recorded as union-find node ids. `ROM` also
-  carries an `ops` blob — its contents bit-packed by `rom-data.codec.ts`
-  (`encodeRomOps`, over the generic `utils/packed-buffer.ts`) to the exact byte
-  table the engine reads (LSB-first; bit `address × wordSize + k`).
-  `ops` rides through node remapping and template flattening alongside the
-  negation fields (`copyNegation`).
+- **Unit types** (the gates, `DELAY`, `CLOCK`, the adders and flip-flops,
+  `RNG`, `RAM`, decoder/encoder, mux/demux, `BUTTON`, `LEVER`, `ROM` — the
+  `UNIT_TYPES` set) are emitted as one `EmittedUnit` with its pins recorded as
+  union-find node ids. Three types carry an `ops` blob: `ROM` (contents
+  bit-packed by `rom-data.codec.ts` — `encodeRomOps`, over the generic
+  `utils/packed-buffer.ts` — to the exact byte table the engine reads,
+  LSB-first; bit `address × wordSize + k`), `CLOCK` (its period in ticks) and
+  `MUX` (its select-line count). `ops` rides through node remapping and
+  template flattening alongside the negation fields (`copyNegation`).
+- **`LED_MATRIX`** emits a unit whose outputs (the LED cells) exist on no net:
+  fresh nodes are synthesized per cell, and the top-level pass maps their
+  links back onto the component as pseudo-ports past the input range
+  (row-major), so the standard applier lights the cells. An inner matrix
+  simulates but does not light up in a watch.
 - **Custom components** (`type >= CUSTOM_TYPE_ID_BASE`) are flattened — see
   [Custom-component flattening](#custom-component-flattening).
+- **`TUNNEL`** emits no unit: before emission, the nets of all tunnels sharing
+  a label are unioned (`_unionTunnelNets`), scoped per compilation pass so a
+  label never crosses a custom-component boundary.
 - `TEXT` has no ports; top-level `INPUT`/`OUTPUT` plugs are inert decoration
-  (no unit) but their nets are still mapped so their stubs light up.
+  (no unit) but their nets are still mapped so their stubs light up. `LED` and
+  `SEGMENT_DISPLAY` are displays: no unit either — they render the powered
+  state of their input nets through the same mapping.
 - Anything else produces a blocking `unsupported` diagnostic.
 
 After all expansion, classes referenced by ≥1 unit pin get **dense link ids**
