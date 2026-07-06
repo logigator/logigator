@@ -33,6 +33,7 @@ const UNIT_TYPES: ReadonlySet<number> = new Set([
   BuiltInComponentType.OR,
   BuiltInComponentType.XOR,
   BuiltInComponentType.DELAY,
+  BuiltInComponentType.CLOCK,
   BuiltInComponentType.BUTTON,
   BuiltInComponentType.LEVER,
   BuiltInComponentType.ROM
@@ -169,17 +170,24 @@ export class BoardCompilerService {
   }
 
   /**
-   * Per-type `ops` blob for the engine. Only ROM carries one: its contents are
-   * bit-packed to a byte table sized to `addressSize` × `wordSize` (the address
-   * and word pin counts), the exact format the engine reads — see
-   * `rom-data.codec.ts`.
+   * Per-type `ops` blob for the engine. ROM carries its contents bit-packed to
+   * a byte table sized to `addressSize` × `wordSize` (the address and word pin
+   * counts), the exact format the engine reads — see `rom-data.codec.ts`. The
+   * clock carries its period in ticks.
    */
   private _opsFor(component: Component): { ops?: number[] } {
-    if (component.config.type !== BuiltInComponentType.ROM) return {};
-    const contents = (component.options['data']?.value as string) ?? '';
-    return {
-      ops: encodeRomOps(contents, component.numInputs, component.numOutputs)
-    };
+    switch (component.config.type) {
+      case BuiltInComponentType.ROM: {
+        const contents = (component.options['data']?.value as string) ?? '';
+        return {
+          ops: encodeRomOps(contents, component.numInputs, component.numOutputs)
+        };
+      }
+      case BuiltInComponentType.CLOCK:
+        return { ops: [component.options['speed'].value as number] };
+      default:
+        return {};
+    }
   }
 
   public compile(project: Project): CompiledBoard {

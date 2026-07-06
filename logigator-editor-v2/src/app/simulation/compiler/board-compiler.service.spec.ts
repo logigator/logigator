@@ -15,6 +15,7 @@ import { inputComponentConfig } from '../../components/component-types/input/inp
 import { outputComponentConfig } from '../../components/component-types/output/output.config';
 import { textComponentConfig } from '../../components/component-types/text/text.config';
 import { romComponentConfig } from '../../components/component-types/rom/rom.config';
+import { clockComponentConfig } from '../../components/component-types/clock/clock.config';
 import { bytesToBase64 } from '../../utils/packed-buffer';
 import { SerializedCircuitBody } from '../../persistence/serialized-circuit';
 import { Project } from '../../project/project';
@@ -256,6 +257,23 @@ describe('BoardCompilerService', () => {
       components: [
         { type: 12, inputs: [0], outputs: [1, 2, 3, 4], ops: [0x81] }
       ]
+    });
+  });
+
+  it('emits a clock unit with its period in ops', () => {
+    place(
+      Component.deserialize(
+        { pos: [0, 0], options: { direction: 0, speed: 7 } },
+        clockComponentConfig
+      )
+    );
+
+    const board = compiler.compile(project);
+
+    expect(board.diagnostics).toEqual([]);
+    expect(board.descriptor).toEqual({
+      links: 2,
+      components: [{ type: 6, inputs: [0], outputs: [1], ops: [7] }]
     });
   });
 

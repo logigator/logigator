@@ -254,7 +254,7 @@ function encodeBodyComponent(
   // Reverse the v0→v1 pivot re-anchor (the snapshot body was decoded through
   // the same migration), so built-ins round-trip to their legacy top-left.
   const width = LEGACY_BODY_WIDTHS[component.type] ?? 1;
-  const height = legacyBodyHeight(el.i ?? 0, el.o ?? 0);
+  const height = legacyBodyHeight(component.type, el.i ?? 0, el.o ?? 0);
   el.p = pivotToLegacyAnchor(
     component.pos[0],
     component.pos[1],

@@ -71,6 +71,14 @@ const en = {
         description:
           'A buffer that passes its input through unchanged, adding one simulation tick of delay to the signal.'
       },
+      CLOCK: {
+        name: 'Clock',
+        description:
+          'Periodically emits a one-tick pulse on its output. The delay between pulses is configurable; driving the STP input HIGH pauses the clock.',
+        options: {
+          speed: 'Delay'
+        }
+      },
       ROM: {
         name: 'ROM',
         description:

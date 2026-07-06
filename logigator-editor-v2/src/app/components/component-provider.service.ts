@@ -6,6 +6,7 @@ import { andComponentConfig } from './component-types/and/and.config';
 import { orComponentConfig } from './component-types/or/or.config';
 import { xorComponentConfig } from './component-types/xor/xor.config';
 import { delayComponentConfig } from './component-types/delay/delay.config';
+import { clockComponentConfig } from './component-types/clock/clock.config';
 import { romComponentConfig } from './component-types/rom/rom.config';
 import { textComponentConfig } from './component-types/text/text.config';
 import { inputComponentConfig } from './component-types/input/input.config';
@@ -20,6 +21,7 @@ const BUILT_IN_COMPONENTS: ComponentConfig<any>[] = [
   orComponentConfig,
   xorComponentConfig,
   delayComponentConfig,
+  clockComponentConfig,
   romComponentConfig,
   textComponentConfig,
   inputComponentConfig,

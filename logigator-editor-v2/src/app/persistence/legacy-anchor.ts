@@ -27,6 +27,7 @@ export const LEGACY_BODY_WIDTHS: Record<number, number> = {
   [BuiltInComponentType.OR]: 2,
   [BuiltInComponentType.XOR]: 2,
   [BuiltInComponentType.DELAY]: 2,
+  [BuiltInComponentType.CLOCK]: 3,
   [BuiltInComponentType.TEXT]: 1,
   [BuiltInComponentType.ROM]: 3,
   [BuiltInComponentType.INPUT]: 1,
@@ -35,12 +36,27 @@ export const LEGACY_BODY_WIDTHS: Record<number, number> = {
   [BuiltInComponentType.LEVER]: 1
 };
 
-/** Unrotated body height — mirrors `Component.bodyGridHeight`. */
+/**
+ * Per-type minimum body height for the v0 built-ins whose body is taller than
+ * their port span (the old editor gave them room for the symbol), mirroring the
+ * matching `bodyGridHeight` overrides. Absent types use the port span alone.
+ */
+const LEGACY_MIN_BODY_HEIGHTS: Record<number, number> = {
+  [BuiltInComponentType.CLOCK]: 2
+};
+
+/** Unrotated body height — mirrors `Component.bodyGridHeight` per type. */
 export function legacyBodyHeight(
+  type: number,
   numInputs: number,
   numOutputs: number
 ): number {
-  return Math.max(1, numInputs, numOutputs);
+  return Math.max(
+    LEGACY_MIN_BODY_HEIGHTS[type] ?? 1,
+    1,
+    numInputs,
+    numOutputs
+  );
 }
 
 /**

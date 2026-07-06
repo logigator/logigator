@@ -106,7 +106,7 @@ function decodeElements(
 
     const direction: Direction = element.r ?? Direction.E;
     const width = LEGACY_BODY_WIDTHS[element.t] ?? 1;
-    const height = legacyBodyHeight(element.i ?? 0, element.o ?? 0);
+    const height = legacyBodyHeight(element.t, element.i ?? 0, element.o ?? 0);
 
     components.push({
       type: element.t,
