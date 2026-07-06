@@ -25,7 +25,8 @@ export const enum BuiltInComponentType {
   OUTPUT = 101,
   // User-input components driving a running simulation.
   BUTTON = 200,
-  LEVER = 201
+  LEVER = 201,
+  LED = 202
 }
 
 /** A runtime-allocated custom component type id ({@link CUSTOM_TYPE_ID_BASE}+). */

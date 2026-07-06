@@ -189,6 +189,11 @@ const en = {
         name: 'Lever',
         description:
           'A latching switch. While the simulation is running, clicking it toggles its output between on and off.'
+      },
+      LED: {
+        name: 'LED',
+        description:
+          'Lights up while the wire connected to its input is powered.'
       }
     },
     options: {

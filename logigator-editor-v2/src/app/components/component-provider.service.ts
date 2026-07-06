@@ -25,6 +25,7 @@ import { inputComponentConfig } from './component-types/input/input.config';
 import { outputComponentConfig } from './component-types/output/output.config';
 import { buttonComponentConfig } from './component-types/button/button.config';
 import { leverComponentConfig } from './component-types/lever/lever.config';
+import { ledComponentConfig } from './component-types/led/led.config';
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 const BUILT_IN_COMPONENTS: ComponentConfig<any>[] = [
@@ -51,7 +52,8 @@ const BUILT_IN_COMPONENTS: ComponentConfig<any>[] = [
   inputComponentConfig,
   outputComponentConfig,
   buttonComponentConfig,
-  leverComponentConfig
+  leverComponentConfig,
+  ledComponentConfig
 ];
 
 @Injectable({
