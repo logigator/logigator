@@ -1,11 +1,10 @@
 import { describe, expect, it } from 'vitest';
-import { ChangeDetectionStrategy, Component, signal } from '@angular/core';
+import { Component, signal } from '@angular/core';
 import { TestBed } from '@angular/core/testing';
 import { LgIconField } from './icon-field';
 import { LgInputIcon } from './input-icon';
 
 @Component({
-  changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [LgIconField, LgInputIcon],
   template: `
     <lg-icon-field [iconPosition]="position()">

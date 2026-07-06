@@ -35,7 +35,9 @@ All circuit data is stored in grid units. `Wire` lives inside `Project._gridSpac
 
 ### Constant-Width Stroke
 
-Wires must appear the same visual thickness regardless of zoom level. `Wire` extends `Graphics` directly and has no `_visualSpace` wrapper, so it must absorb the `gridSize` factor in `applyScale`. The formula is `scale.y = 1 / (scale * gridSize)`, which cancels out both the zoom scale (from `Project.scale.x`) and the gridSize scale (from `_gridSpace`). `applyScale(scale)` is called by `Project.updateScale` on every zoom change.
+Wires must appear the same visual thickness regardless of zoom level. `Wire` extends `Graphics` directly and has no `_visualSpace` wrapper, so it must absorb the `gridSize` factor in `applyScale`. The base formula is `scale.y = 1 / (scale * gridSize)`, which cancels out both the zoom scale (from `Project.scale.x`) and the gridSize scale (from `_gridSpace`). `applyScale(scale)` is called by `Project.updateScale` on every zoom change.
+
+During simulation a powered wire is `POWERED_WIRE_THICKNESS` (3) screen pixels thick. That state is **pure transform** on the same shared context: `setPowered(true)` multiplies `scale.y` by the thickness and sets `pivot.y = POWERED_WIRE_PIVOT` so the scale-up extends symmetrically around the unpowered pixel. It deliberately does _not_ swap to a thicker `GraphicsContext`: reassigning a `Graphics` context detaches/re-attaches listeners on the shared context (a linear scan over every attached wire and stub — quadratic across a blinking board) and flags the render group for a full instruction rebuild, whereas transform changes are patched into the existing batch in place. The same rule holds for port stubs (`Component.setPortPowered`), negation bubbles (alpha toggle) and LEDs (tint).
 
 ---
 
@@ -150,7 +152,7 @@ Build one with `Wire.snapshot(wire)`.
 
 **File:** `src/app/rendering/graphics/wire.graphics.ts`
 
-A `GraphicsContext` subclass that draws a single 1×1 white rectangle filled with the `wire` colour from `ThemingService`. All `Wire` instances share this context — it is cached by `GraphicsProviderService` the first time `WireGraphics` is requested, so theme changes that happen after construction are not reflected automatically.
+A `GraphicsContext` subclass that draws a single 1×1 rectangle filled with the `wire` colour from `ThemingService`. All `Wire` instances (and every component port stub) share this one context — it is cached by `GraphicsProviderService` the first time `WireGraphics` is requested, so theme changes that happen after construction are not reflected automatically. Powered thickness is expressed by the owning `Graphics`' cross-axis scale (see _Constant-Width Stroke_ above), never by a second, thicker context. The module also exports `POWERED_WIRE_THICKNESS` and `POWERED_WIRE_PIVOT`, the transform constants that scale-up uses.
 
 ---
 

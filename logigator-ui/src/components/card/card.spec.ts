@@ -1,11 +1,10 @@
 import { describe, expect, it } from 'vitest';
-import { ChangeDetectionStrategy, Component } from '@angular/core';
+import { Component } from '@angular/core';
 import { TestBed } from '@angular/core/testing';
 import { LgCard } from './card';
 
 @Component({
   imports: [LgCard],
-  changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     <lg-card>
       <ng-template #title>My title</ng-template>
@@ -31,7 +30,6 @@ describe('LgCard', () => {
   it('omits the title/subtitle slots when not provided', () => {
     @Component({
       imports: [LgCard],
-      changeDetection: ChangeDetectionStrategy.OnPush,
       template: `<lg-card>just body</lg-card>`
     })
     class BareHost {}

@@ -1,18 +1,13 @@
-import {
-  ChangeDetectionStrategy,
-  Component,
-  computed,
-  inject
-} from '@angular/core';
-import { CdkDragDrop, DragDropModule } from '@angular/cdk/drag-drop';
-import { TranslocoDirective } from '@jsverse/transloco';
+import { Component, computed, inject } from '@angular/core';
+import { toSignal } from '@angular/core/rxjs-interop';
+import { TranslocoDirective, TranslocoService } from '@jsverse/transloco';
+import { LgTabReorder, LgTabStrip, LgTabStripItem } from '@logigator/ui';
 import { ProjectService } from '../../project/project.service';
 import { ProjectMetadataStore } from '../../persistence/project-metadata.store';
 import { CustomComponentService } from '../../custom-component/custom-component.service';
 import { WorkMode } from '../../work-mode/work-mode.enum';
 import { WorkModeService } from '../../work-mode/work-mode.service';
 import { Project } from '../../project/project';
-import { LayoutService } from '../../layout/layout.service';
 
 /**
  * The tab strip above the board: the pinned main project plus one tab per open
@@ -21,47 +16,69 @@ import { LayoutService } from '../../layout/layout.service';
  * editor through {@link CustomComponentService.closeComponent}. The board already
  * renders whatever `activeProject()` is, so no board change is needed.
  *
- * The component tabs are reorderable via CDK drag-drop (horizontal, x-axis
- * locked); the main project stays pinned first and is not part of the drop
- * list. Reordering is session-only state held by {@link ProjectService}.
+ * Presentation and reordering (closable, draggable, dirty/icon tabs) live in the
+ * generic `LgTabStrip`; this component only maps projects onto its `tabs` model.
+ * The main project stays pinned first (`fixed`) and out of the reorder set.
  * Switching and reordering are both inert during simulation, which binds to the
  * active project.
  */
 @Component({
   selector: 'app-tab-bar',
-  imports: [DragDropModule, TranslocoDirective],
-  templateUrl: './tab-bar.component.html',
-  styleUrl: './tab-bar.component.scss',
-  changeDetection: ChangeDetectionStrategy.OnPush
+  imports: [LgTabStrip, TranslocoDirective],
+  templateUrl: './tab-bar.component.html'
 })
 export class TabBarComponent {
   private readonly projectService = inject(ProjectService);
   private readonly metadataStore = inject(ProjectMetadataStore);
   private readonly customComponentService = inject(CustomComponentService);
   private readonly workModeService = inject(WorkModeService);
-  private readonly layout = inject(LayoutService);
+  private readonly transloco = inject(TranslocoService);
 
-  /** A finger can't hover, so the tab close button can't hide behind hover. */
-  protected readonly isTouch = this.layout.isTouch;
+  // Re-derive tab labels when the active language changes.
+  private readonly lang = toSignal(this.transloco.langChanges$);
 
-  protected readonly mainProject = this.projectService.mainProject;
-  protected readonly openComponents = this.projectService.openComponents;
-  protected readonly activeProject = this.projectService.activeProject;
+  private readonly mainProject = this.projectService.mainProject;
+  private readonly openComponents = this.projectService.openComponents;
+  private readonly activeProject = this.projectService.activeProject;
 
   protected readonly isSimulation = computed(
     () => this.workModeService.mode() === WorkMode.SIMULATION
   );
 
-  protected isActive(project: Project): boolean {
-    return this.activeProject() === project;
-  }
+  protected readonly tabs = computed<LgTabStripItem<Project>[]>(() => {
+    this.lang();
+    const active = this.activeProject();
+    const tabs: LgTabStripItem<Project>[] = [];
 
-  protected name(project: Project): string {
+    const main = this.mainProject();
+    if (main) {
+      tabs.push({
+        data: main,
+        label: this.name(main),
+        icon: 'ph ph-house',
+        active: main === active,
+        dirty: this.metadataStore.isDirty(main),
+        fixed: true,
+        ariaLabel: `${this.transloco.translate('tabBar.mainProject')}: ${this.name(main)}`
+      });
+    }
+
+    for (const comp of this.openComponents()) {
+      tabs.push({
+        data: comp,
+        label: this.name(comp),
+        icon: 'ph ph-circuitry',
+        active: comp === active,
+        dirty: this.metadataStore.isDirty(comp),
+        closable: true
+      });
+    }
+
+    return tabs;
+  });
+
+  private name(project: Project): string {
     return this.metadataStore.getMetadata(project)?.name ?? 'Untitled';
-  }
-
-  protected isDirty(project: Project): boolean {
-    return this.metadataStore.isDirty(project);
   }
 
   // Tab switching is disabled while simulating — the simulation binds to the
@@ -71,13 +88,12 @@ export class TabBarComponent {
     this.projectService.setActiveProject(project);
   }
 
-  protected close(event: Event, project: Project): void {
-    event.stopPropagation();
+  protected close(project: Project): void {
     if (this.isSimulation()) return;
     this.customComponentService.closeComponent(project);
   }
 
-  protected drop(event: CdkDragDrop<Project[]>): void {
+  protected drop(event: LgTabReorder): void {
     this.projectService.reorderOpenComponents(
       event.previousIndex,
       event.currentIndex

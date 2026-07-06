@@ -1,10 +1,4 @@
-import {
-  ChangeDetectionStrategy,
-  Component,
-  computed,
-  inject,
-  signal
-} from '@angular/core';
+import { Component, computed, inject, signal } from '@angular/core';
 import { LgAvatar, LgDivider, LgMenu, LgRipple, MenuItem } from '@logigator/ui';
 import { ThemeSwitcherComponent } from '../../theming/theme-switcher/theme-switcher.component';
 import { LanguageSwitcherComponent } from '../../translation/language-switcher/language-switcher.component';
@@ -22,8 +16,7 @@ import { SettingsComponent } from '../../settings/settings.component';
     LanguageSwitcherComponent,
     SettingsComponent
   ],
-  templateUrl: './user-settings.component.html',
-  changeDetection: ChangeDetectionStrategy.OnPush
+  templateUrl: './user-settings.component.html'
 })
 export class UserSettingsComponent {
   protected readonly userService = inject(UserService);

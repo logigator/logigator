@@ -2,14 +2,14 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { TestBed } from '@angular/core/testing';
 import { Point } from 'pixi.js';
 import { configureTestBed } from '../../../testing/configure-test-bed';
-import { makeLever } from '../../../testing/factories';
+import { makeSwitch } from '../../../testing/factories';
 import {
   FakeSimulationWorker,
   ManualFrameScheduler
 } from '../../../testing/fake-simulation-worker';
 import { Component } from '../component';
 import { ComponentProviderService } from '../component-provider.service';
-import { LeverComponent } from '../component-types/lever/lever.component';
+import { SwitchComponent } from '../component-types/switch/switch.component';
 import { outputComponentConfig } from '../component-types/output/output.config';
 import { Project } from '../../project/project';
 import { ProjectService } from '../../project/project.service';
@@ -81,31 +81,31 @@ describe('SubCircuitWatch', () => {
     project.destroy({ children: true });
   });
 
-  /** LeverBox nested inside Outer; a placed Outer instance in the project. */
+  /** SwitchBox nested inside Outer; a placed Outer instance in the project. */
   async function placeNestedFixture(): Promise<CustomComponent> {
-    const lever = makeLever(0, 0);
+    const switchComp = makeSwitch(0, 0);
     const plug = Component.deserialize(
       { pos: [8, 0], options: { label: '', index: 0 } },
       outputComponentConfig
     );
-    const leverBox = registry.registerSnapshot({
+    const switchBox = registry.registerSnapshot({
       kind: 'snapshot',
       source: 'browser',
-      name: 'LeverBox',
+      name: 'SwitchBox',
       symbol: 'LB',
       description: '',
       numInputs: 0,
       numOutputs: 1,
       labels: ['O'],
       circuit: serializeBody(
-        [lever, plug],
-        [wireBetween(lever.connectionPoints[0], plug.connectionPoints[0])]
+        [switchComp, plug],
+        [wireBetween(switchComp.connectionPoints[0], plug.connectionPoints[0])]
       )
     });
 
     const inner = Component.deserialize(
       { pos: [0, 0], options: { direction: 0 } },
-      provider.getComponent(leverBox)!
+      provider.getComponent(switchBox)!
     );
     const outerPlug = Component.deserialize(
       { pos: [10, 0], options: { label: '', index: 0 } },
@@ -143,17 +143,17 @@ describe('SubCircuitWatch', () => {
     expect(watch.levels()).toHaveLength(1);
     expect(watch.title()).toBe('Outer');
 
-    // Body index 0 of Outer is the LeverBox copy.
+    // Body index 0 of Outer is the SwitchBox copy.
     const innerCopy = watch.activeLevel().session.components[0];
     watch.activate(innerCopy);
 
     expect(watch.levels()).toHaveLength(2);
-    expect(watch.title()).toBe('Outer › LeverBox');
+    expect(watch.title()).toBe('Outer › SwitchBox');
     const deepProject = watch.activeLevel().session.project;
 
     // Header breadcrumbs: the ancestor navigates, the visible level doesn't.
     const parts = watch.titleParts();
-    expect(parts.map((part) => part.label)).toEqual(['Outer', 'LeverBox']);
+    expect(parts.map((part) => part.label)).toEqual(['Outer', 'SwitchBox']);
     expect(parts[1].navigate).toBeUndefined();
     parts[0].navigate!();
 
@@ -165,19 +165,19 @@ describe('SubCircuitWatch', () => {
     watch.destroy();
   });
 
-  it('routes an inner lever click to its flattened engine unit', async () => {
+  it('routes an inner switch click to its flattened engine unit', async () => {
     const instance = await placeNestedFixture();
     const watch = instance.config.inspection!(instance) as SubCircuitWatch;
     watch.activate(watch.activeLevel().session.components[0]);
 
-    const leverCopy = watch.activeLevel().session.components[0];
-    expect(leverCopy).toBeInstanceOf(LeverComponent);
-    watch.activate(leverCopy);
+    const switchCopy = watch.activeLevel().session.components[0];
+    expect(switchCopy).toBeInstanceOf(SwitchComponent);
+    watch.activate(switchCopy);
 
-    expect((leverCopy as LeverComponent).isOn).toBe(true);
+    expect((switchCopy as SwitchComponent).isOn).toBe(true);
     const inputs = fakeWorker.postedOfKind('triggerInput');
     expect(inputs).toHaveLength(1);
-    // The flattened board's only unit is the inner lever — index 0.
+    // The flattened board's only unit is the inner switch — index 0.
     expect(inputs[0]).toMatchObject({
       componentIndex: 0,
       event: 0,

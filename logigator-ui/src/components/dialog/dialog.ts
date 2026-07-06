@@ -4,7 +4,6 @@ import { Overlay } from '@angular/cdk/overlay';
 import { TemplatePortal } from '@angular/cdk/portal';
 import {
   booleanAttribute,
-  ChangeDetectionStrategy,
   Component,
   contentChild,
   effect,
@@ -33,7 +32,6 @@ let nextId = 0;
  */
 @Component({
   selector: 'lg-dialog',
-  changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [NgStyle, NgTemplateOutlet, LgScaleIn],
   template: `
     <ng-template #panelTpl>

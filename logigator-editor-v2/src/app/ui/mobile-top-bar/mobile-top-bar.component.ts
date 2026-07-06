@@ -1,9 +1,4 @@
-import {
-  ChangeDetectionStrategy,
-  Component,
-  computed,
-  inject
-} from '@angular/core';
+import { Component, computed, inject } from '@angular/core';
 import { LgButton } from '@logigator/ui';
 import { TranslocoDirective } from '@jsverse/transloco';
 import { WorkModeService } from '../../work-mode/work-mode.service';
@@ -75,8 +70,7 @@ import { MobileUiService } from '../../layout/mobile-ui.service';
         ></lg-button>
       }
     </div>
-  `,
-  changeDetection: ChangeDetectionStrategy.OnPush
+  `
 })
 export class MobileTopBarComponent {
   private readonly workModeService = inject(WorkModeService);

@@ -1,7 +1,6 @@
 import { afterEach, describe, expect, it } from 'vitest';
 import {
   ApplicationRef,
-  ChangeDetectionStrategy,
   Component,
   inject,
   input,
@@ -15,7 +14,6 @@ import { DialogRef } from './dialog-ref';
 
 @Component({
   selector: 'lg-test-dialog-child',
-  changeDetection: ChangeDetectionStrategy.OnPush,
   template: `<p class="child">{{ wordSize() }}/{{ label() }}</p>`
 })
 class TestDialogChild {
@@ -28,7 +26,6 @@ class TestDialogChild {
 
 @Component({
   selector: 'lg-test-config-child',
-  changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     <span class="name">{{ name }}</span>
     <button class="self-close" (click)="ref.close()">close</button>

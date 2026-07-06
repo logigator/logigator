@@ -1,9 +1,4 @@
-import {
-  ChangeDetectionStrategy,
-  Component,
-  inject,
-  input
-} from '@angular/core';
+import { Component, inject, input } from '@angular/core';
 import { TranslocoDirective, TranslocoService } from '@jsverse/transloco';
 import { DialogService, LgButton } from '@logigator/ui';
 import { ComponentOptionInput } from '../../component-option';
@@ -26,8 +21,7 @@ import {
 @Component({
   selector: 'app-memory-data-option-input',
   imports: [TranslocoDirective, LgButton],
-  templateUrl: './memory-data-option-input.component.html',
-  changeDetection: ChangeDetectionStrategy.OnPush
+  templateUrl: './memory-data-option-input.component.html'
 })
 export class MemoryDataOptionInputComponent implements ComponentOptionInput<string> {
   private readonly dialogService = inject(DialogService);

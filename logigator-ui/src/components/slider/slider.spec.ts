@@ -1,11 +1,10 @@
 import { describe, expect, it } from 'vitest';
-import { ChangeDetectionStrategy, Component, signal } from '@angular/core';
+import { Component, signal } from '@angular/core';
 import { TestBed } from '@angular/core/testing';
 import { FormsModule } from '@angular/forms';
 import { LgSlider } from './slider';
 
 @Component({
-  changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [LgSlider, FormsModule],
   template: `<lg-slider
     [min]="0"

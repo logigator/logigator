@@ -1,6 +1,5 @@
 import {
   AfterViewInit,
-  ChangeDetectionStrategy,
   Component,
   computed,
   ElementRef,
@@ -74,7 +73,6 @@ const CASCADE_WRAP = 8;
  */
 @Component({
   selector: 'lg-window',
-  changeDetection: ChangeDetectionStrategy.OnPush,
   host: {
     role: 'dialog',
     tabindex: '-1',

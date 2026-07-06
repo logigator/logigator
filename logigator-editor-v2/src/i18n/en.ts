@@ -58,6 +58,44 @@ const en = {
         description:
           'A AND gate is a digital logic gate that implements logical conjunction. It behaves according to the truth table shown at right. A HIGH output (1) results only if both the inputs to the AND gate are HIGH (1). If neither or only one input to the AND gate is HIGH, a LOW output results.'
       },
+      OR: {
+        name: 'OR Gate',
+        description:
+          'An OR gate is a digital logic gate that implements logical disjunction. A HIGH output (1) results if at least one input to the OR gate is HIGH (1). Only if every input is LOW (0), a LOW output results.'
+      },
+      XOR: {
+        name: 'XOR Gate',
+        description:
+          'An XOR gate is a digital logic gate that implements exclusive disjunction. A HIGH output (1) results if an odd number of inputs to the XOR gate are HIGH (1).'
+      },
+      DELAY: {
+        name: 'Delay',
+        description:
+          'A buffer that passes its input through unchanged, adding one simulation tick of delay to the signal.'
+      },
+      CLOCK: {
+        name: 'Clock',
+        description:
+          'Periodically emits a one-tick pulse on its output. The delay between pulses is configurable; driving the STP input HIGH pauses the clock.',
+        options: {
+          speed: 'Delay'
+        }
+      },
+      TUNNEL: {
+        name: 'Tunnel',
+        description:
+          'Works like a wire, but wireless: all tunnels carrying the same label are electrically connected.'
+      },
+      HALF_ADDER: {
+        name: 'Half Adder',
+        description:
+          'Adds up two 1-bit numbers. S carries the sum bit and C the carry bit.'
+      },
+      FULL_ADDER: {
+        name: 'Full Adder',
+        description:
+          'Adds up three 1-bit numbers (two summands and a carry-in). S carries the sum bit and C the carry bit.'
+      },
       ROM: {
         name: 'ROM',
         description:
@@ -67,6 +105,61 @@ const en = {
           addressSize: 'Address Size',
           data: 'Edit contents',
           dataEditorTitle: 'Edit ROM contents'
+        }
+      },
+      D_FF: {
+        name: 'D Flip-Flop',
+        description:
+          'Holds one bit of state. The state on D is saved on the rising edge of CLK; Q carries the state and !Q its inverse.'
+      },
+      JK_FF: {
+        name: 'JK Flip-Flop',
+        description:
+          'Holds one bit of state. On the rising edge of CLK, a HIGH J sets and a HIGH K resets the state; both HIGH toggle it. Q carries the state and !Q its inverse.'
+      },
+      SR_FF: {
+        name: 'SR Flip-Flop',
+        description:
+          'Holds one bit of state. On the rising edge of CLK, a HIGH S sets and a HIGH R resets the state. Q carries the state and !Q its inverse.'
+      },
+      RNG: {
+        name: 'Random Number Generator',
+        description:
+          'Generates random data on its outputs on every rising edge of CLK.'
+      },
+      RAM: {
+        name: 'RAM',
+        description:
+          'Random access memory. On the rising edge of CLK it reads the addressed word onto the outputs — or, while WE is HIGH, stores the word on the data inputs at the current address instead.',
+        options: {
+          wordSize: 'Word Size',
+          addressSize: 'Address Size'
+        }
+      },
+      DECODER: {
+        name: 'Decoder',
+        description:
+          '1-of-n binary decoder. Drives exactly the one output whose index equals the binary value on the inputs.'
+      },
+      ENCODER: {
+        name: 'Encoder',
+        description:
+          '2^n-to-n binary encoder. Outputs the binary index of the highest powered input.'
+      },
+      MUX: {
+        name: 'Multiplexer',
+        description:
+          'Routes the data input addressed by the select lines to the single output.',
+        options: {
+          selectLines: 'Select lines'
+        }
+      },
+      DEMUX: {
+        name: 'Demultiplexer',
+        description:
+          'Routes the data input I to the output addressed by the select lines.',
+        options: {
+          selectLines: 'Select lines'
         }
       },
       TEXT: {
@@ -94,10 +187,31 @@ const en = {
         description:
           'A momentary push button. While the simulation is running, clicking it emits a single pulse on its output.'
       },
-      LEVER: {
-        name: 'Lever',
+      SWITCH: {
+        name: 'Switch',
         description:
           'A latching switch. While the simulation is running, clicking it toggles its output between on and off.'
+      },
+      LED: {
+        name: 'LED',
+        description:
+          'Lights up while the wire connected to its input is powered.'
+      },
+      SEGMENT_DISPLAY: {
+        name: 'Segment Display',
+        description:
+          'Displays the binary value on its inputs (input 0 is the least significant bit) as a number in the configured base.',
+        options: {
+          base: 'Base'
+        }
+      },
+      LED_MATRIX: {
+        name: 'LED Matrix',
+        description:
+          'A square grid of LEDs that displays an image. On the rising edge of CLK, the data inputs are latched into the row addressed by the address inputs.',
+        options: {
+          size: 'Width/Height'
+        }
       }
     },
     options: {

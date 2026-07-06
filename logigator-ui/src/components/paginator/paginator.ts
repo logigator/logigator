@@ -1,10 +1,4 @@
-import {
-  ChangeDetectionStrategy,
-  Component,
-  computed,
-  input,
-  output
-} from '@angular/core';
+import { Component, computed, input, output } from '@angular/core';
 
 /** Emitted on page change. Consumers typically read only `page`. */
 export interface LgPaginatorState {
@@ -28,7 +22,6 @@ const NAV_CLASS =
  */
 @Component({
   selector: 'lg-paginator',
-  changeDetection: ChangeDetectionStrategy.OnPush,
   host: { class: 'block' },
   template: `
     <div class="flex items-center justify-center gap-1" role="navigation">

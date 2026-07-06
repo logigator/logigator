@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, input } from '@angular/core';
+import { Component, input } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { LgInputNumber } from '@logigator/ui';
 import { TranslocoDirective } from '@jsverse/transloco';
@@ -10,8 +10,7 @@ let nextId = 0;
 @Component({
   selector: 'app-number-option-input',
   imports: [FormsModule, LgInputNumber, TranslocoDirective],
-  templateUrl: './number-option-input.component.html',
-  changeDetection: ChangeDetectionStrategy.OnPush
+  templateUrl: './number-option-input.component.html'
 })
 export class NumberOptionInputComponent implements ComponentOptionInput<number> {
   public readonly option = input.required<NumberComponentOption>();

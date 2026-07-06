@@ -1,10 +1,9 @@
 import { afterEach, describe, expect, it } from 'vitest';
-import { ChangeDetectionStrategy, Component } from '@angular/core';
+import { Component } from '@angular/core';
 import { TestBed } from '@angular/core/testing';
 import { LgPopover } from './popover';
 
 @Component({
-  changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [LgPopover],
   template: `<button (click)="pop.toggle($event)">open</button>
     <lg-popover #pop>POP CONTENT</lg-popover>`

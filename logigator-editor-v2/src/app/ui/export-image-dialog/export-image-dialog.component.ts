@@ -1,10 +1,4 @@
-import {
-  ChangeDetectionStrategy,
-  Component,
-  computed,
-  inject,
-  signal
-} from '@angular/core';
+import { Component, computed, inject, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import {
   DialogRef,
@@ -42,8 +36,7 @@ const DEFAULT_QUALITY_PERCENT = 92;
     LgButton,
     TranslocoDirective
   ],
-  templateUrl: './export-image-dialog.component.html',
-  changeDetection: ChangeDetectionStrategy.OnPush
+  templateUrl: './export-image-dialog.component.html'
 })
 export class ExportImageDialogComponent {
   private readonly ref = inject(DialogRef);

@@ -1,11 +1,4 @@
-import {
-  ChangeDetectionStrategy,
-  Component,
-  computed,
-  input,
-  output,
-  signal
-} from '@angular/core';
+import { Component, computed, input, output, signal } from '@angular/core';
 import { IconSlot } from '../../internal/icon';
 
 /** Emitted when the user picks file(s). */
@@ -27,7 +20,6 @@ export interface LgFileSelectEvent {
  */
 @Component({
   selector: 'lg-file-upload',
-  changeDetection: ChangeDetectionStrategy.OnPush,
   host: { class: 'block' },
   template: `
     <div

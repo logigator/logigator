@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, input } from '@angular/core';
+import { Component, input } from '@angular/core';
 import { HexEditorComponent } from '../../../ui/hex-editor/hex-editor.component';
 import type { RomInspection } from './rom-inspection';
 
@@ -11,7 +11,6 @@ import type { RomInspection } from './rom-inspection';
 @Component({
   selector: 'app-rom-inspection',
   imports: [HexEditorComponent],
-  changeDetection: ChangeDetectionStrategy.OnPush,
   host: { class: 'block h-full' },
   template: `
     <app-hex-editor

@@ -1,9 +1,4 @@
-import {
-  ChangeDetectionStrategy,
-  Component,
-  inject,
-  signal
-} from '@angular/core';
+import { Component, inject, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import {
   DialogConfig,
@@ -45,8 +40,7 @@ const NAME_MAX_LENGTH = 20;
     TranslocoDirective,
     LgMessage
   ],
-  templateUrl: './save-project-dialog.component.html',
-  changeDetection: ChangeDetectionStrategy.OnPush
+  templateUrl: './save-project-dialog.component.html'
 })
 export class SaveProjectDialogComponent {
   private readonly ref = inject(DialogRef);

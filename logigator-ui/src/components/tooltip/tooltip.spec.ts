@@ -1,10 +1,9 @@
 import { afterEach, describe, expect, it } from 'vitest';
-import { ChangeDetectionStrategy, Component, signal } from '@angular/core';
+import { Component, signal } from '@angular/core';
 import { TestBed } from '@angular/core/testing';
 import { LgTooltip } from './tooltip';
 
 @Component({
-  changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [LgTooltip],
   template: `<button [lgTooltip]="text()" tooltipPosition="bottom">x</button>`
 })
@@ -57,7 +56,6 @@ describe('LgTooltip', () => {
 
   it('renders a shortcut as kbd chips and describes it for screen readers', () => {
     @Component({
-      changeDetection: ChangeDetectionStrategy.OnPush,
       imports: [LgTooltip],
       template: `<button lgTooltip="Save" [tooltipShortcut]="shortcut">
         x

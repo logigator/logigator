@@ -20,7 +20,7 @@ const CLICK_MOVE_THRESHOLD = 5;
  * reusing SELECT mode's click path — so PAN stays navigate-first but a tap still
  * selects. The board does not move until the threshold is crossed, so a tap
  * never nudges it. Passing `onTap` overrides the tap action (simulation mode
- * activates a button/lever, the watch drills into or actuates the tapped
+ * activates a button/switch, the watch drills into or actuates the tapped
  * component), keeping the same drag-to-pan navigation.
  */
 export class PanSession implements DragSession {

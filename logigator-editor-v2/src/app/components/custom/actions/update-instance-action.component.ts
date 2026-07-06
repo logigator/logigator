@@ -1,10 +1,4 @@
-import {
-  ChangeDetectionStrategy,
-  Component,
-  computed,
-  inject,
-  input
-} from '@angular/core';
+import { Component, computed, inject, input } from '@angular/core';
 import { LgButton } from '@logigator/ui';
 import { ComponentActionContext } from '../../component-action';
 import { CustomComponent } from '../custom-component';
@@ -28,8 +22,7 @@ import { CustomComponentService } from '../../../custom-component/custom-compone
       class="float-right"
       (onClick)="update()"
     />
-  }`,
-  changeDetection: ChangeDetectionStrategy.OnPush
+  }`
 })
 export class UpdateInstanceActionComponent {
   public readonly context = input.required<ComponentActionContext>();

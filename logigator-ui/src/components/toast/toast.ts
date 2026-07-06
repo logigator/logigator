@@ -1,5 +1,4 @@
 import {
-  ChangeDetectionStrategy,
   Component,
   computed,
   DestroyRef,
@@ -86,7 +85,6 @@ const DEFAULT_SEVERITY: LgSeverity = 'info';
  */
 @Component({
   selector: 'lg-toast',
-  changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [LgButton],
   host: {
     class: 'pointer-events-none z-[1100] flex flex-col gap-2',

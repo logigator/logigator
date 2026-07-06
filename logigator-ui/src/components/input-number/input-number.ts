@@ -1,6 +1,5 @@
 import {
   booleanAttribute,
-  ChangeDetectionStrategy,
   Component,
   computed,
   forwardRef,
@@ -20,7 +19,6 @@ import { controlPadding, LgSize } from '../../tokens/size';
  */
 @Component({
   selector: 'lg-input-number',
-  changeDetection: ChangeDetectionStrategy.OnPush,
   host: { class: 'inline-flex' },
   providers: [
     {

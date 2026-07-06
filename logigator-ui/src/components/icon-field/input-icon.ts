@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component } from '@angular/core';
+import { Component } from '@angular/core';
 
 /**
  * A decorative icon placed inside an {@link LgIconField}. The icon glyph is
@@ -8,7 +8,6 @@ import { ChangeDetectionStrategy, Component } from '@angular/core';
  */
 @Component({
   selector: 'lg-input-icon',
-  changeDetection: ChangeDetectionStrategy.OnPush,
   host: { class: 'text-surface-400', 'aria-hidden': 'true' },
   template: ''
 })

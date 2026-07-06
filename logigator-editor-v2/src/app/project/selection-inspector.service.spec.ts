@@ -1,5 +1,5 @@
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
-import { ChangeDetectionStrategy, Component } from '@angular/core';
+import { Component } from '@angular/core';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { Rectangle } from 'pixi.js';
 import { configureTestBed } from '../../testing/configure-test-bed';
@@ -16,8 +16,7 @@ import { AndComponent } from '../components/component-types/and/and.component';
 // is live before the assertions run.
 @Component({
   selector: 'app-test-host',
-  template: '',
-  changeDetection: ChangeDetectionStrategy.OnPush
+  template: ''
 })
 class TestHostComponent {}
 

@@ -40,12 +40,17 @@ import type {
   SnapshotDefinition
 } from '../serialized-circuit';
 import { WireDirection } from '../../wires/wire-direction.enum';
-import { CUSTOM_TYPE_ID_BASE } from '../../components/component-type.enum';
 import {
-  LEGACY_BODY_WIDTHS,
+  BuiltInComponentType,
+  CUSTOM_TYPE_ID_BASE
+} from '../../components/component-type.enum';
+import {
   legacyBodyHeight,
+  legacyBodyWidth,
+  legacyCustomBodySize,
   pivotToLegacyAnchor
 } from '../legacy-anchor';
+import { ledMatrixShape } from '../../components/component-types/led-matrix/led-matrix.config';
 import { PersistedCircuitV0 } from '../persisted-circuit.types';
 import { CircuitFileV0 } from '../file/circuit-file.types';
 import { collectSnapshots } from '../snapshots';
@@ -88,9 +93,15 @@ export function serializeProject(
 ): ServerCircuitV0 {
   const { definitions, sessionToLocal } = collectSnapshots(project, registry);
 
+  const tunnelIds = legacyTunnelIds(
+    [...project.components]
+      .filter((c) => c.config.type === BuiltInComponentType.TUNNEL)
+      .map((c) => c.options['label'].value as string)
+  );
+
   const elements: ProjectElement[] = [];
   for (const component of project.components) {
-    const el = serializeComponent(component);
+    const el = serializeComponent(component, tunnelIds);
     const local = sessionToLocal.get(el.t);
     if (local !== undefined) el.t = local; // custom: session id -> file-local id
     elements.push(el);
@@ -98,6 +109,16 @@ export function serializeProject(
   for (const wire of project.wires) {
     elements.push(serializeWire(wire));
   }
+
+  // A nested custom inside a definition body carries no port counts of its own
+  // (Invariant A), so re-anchoring it needs the counts from its own definition,
+  // keyed by the file-local type id it references.
+  const customDims = new Map(
+    definitions.map((def) => [
+      def.type,
+      { numInputs: def.numInputs, numOutputs: def.numOutputs }
+    ])
+  );
 
   const dependencies: DependencyMapping[] = definitions.map((def) => ({
     // Provenance back to the library master; '' for a never-saved-to-library
@@ -112,25 +133,52 @@ export function serializeProject(
       numInputs: def.numInputs,
       numOutputs: def.numOutputs,
       labels: [...def.labels],
-      elements: encodeDefinitionElements(def, provider)
+      elements: encodeDefinitionElements(def, provider, customDims)
     }
   }));
 
   return { elements, dependencies };
 }
 
-function serializeComponent(component: Component): ProjectElement {
+/**
+ * Maps each distinct tunnel label to a legacy numeric id. Digit-only labels
+ * keep their numeric value (a legacy-saved id round-trips unchanged); all
+ * other labels get generated ids above the highest numeric one, in sorted
+ * order for determinism. Grouping — the only tunnel semantics the positional
+ * format carries — is thereby preserved for legacy clients; the label text
+ * itself rides in the additive `s` slot.
+ */
+function legacyTunnelIds(labels: Iterable<string>): Map<string, number> {
+  const ids = new Map<string, number>();
+  const textual: string[] = [];
+  let next = 0;
+  for (const label of new Set(labels)) {
+    if (/^\d+$/.test(label)) {
+      const value = Number(label);
+      ids.set(label, value);
+      next = Math.max(next, value + 1);
+    } else {
+      textual.push(label);
+    }
+  }
+  for (const label of textual.sort()) {
+    ids.set(label, next++);
+  }
+  return ids;
+}
+
+function serializeComponent(
+  component: Component,
+  tunnelIds: Map<string, number>
+): ProjectElement {
   // Every real config is a full ComponentConfig; the base only narrows it to
   // the view. The descriptor lives on the config, so widen back.
   const config = component.config as ComponentConfig;
-  // v0 anchors by the body's top-left, not the rotation pivot — for a live
-  // built-in that corner *is* `bodyGridBounds` (see legacy-anchor.ts). Customs
-  // keep `position` verbatim: the migration decodes them verbatim too, and
-  // re-anchoring rotated customs is a deferred follow-up.
-  const anchor =
-    config.type >= CUSTOM_TYPE_ID_BASE
-      ? component.position
-      : component.bodyGridBounds;
+  // v0 anchors by the body's top-left, not the rotation pivot; that corner *is*
+  // `bodyGridBounds` for any live component — built-in or custom (the custom's
+  // fixed width 3 / port-span height flow through the same generic bounds). The
+  // migration reverses it via legacyAnchorToPivot on decode.
+  const anchor = component.bodyGridBounds;
   const el: ProjectElement = {
     t: config.type,
     p: [anchor.x, anchor.y]
@@ -152,6 +200,22 @@ function serializeComponent(component: Component): ProjectElement {
   }
   if (slots?.s) {
     el.s = component.options[slots.s].value as string;
+  }
+
+  // Tunnel labels have no positional slot: legacy clients read the grouped
+  // numeric id from n[0], our own decode prefers the label in `s`.
+  if (config.type === BuiltInComponentType.TUNNEL) {
+    const label = component.options['label'].value as string;
+    el.n = [tunnelIds.get(label) ?? 0];
+    el.s = label;
+  }
+
+  // The matrix's LED cells are engine-only in v2 (numOutputs is 0), but the
+  // legacy format records them as outputs — old clients rebuild their
+  // simulation unit from `o`.
+  if (config.type === BuiltInComponentType.LED_MATRIX) {
+    const { size } = ledMatrixShape(component.options['size'].value as number);
+    el.o = size * size;
   }
 
   // Negation has no positional v0 slot — it rides as additive arrays (sorted,
@@ -193,11 +257,19 @@ function serializeWire(wire: Wire): ProjectElement {
  */
 function encodeDefinitionElements(
   def: SnapshotDefinition,
-  provider: ComponentProviderService
+  provider: ComponentProviderService,
+  customDims: ReadonlyMap<number, { numInputs: number; numOutputs: number }>
 ): ProjectElement[] {
+  const tunnelIds = legacyTunnelIds(
+    def.components
+      .filter((c) => c.type === BuiltInComponentType.TUNNEL)
+      .map((c) => c.options['label'] as string)
+  );
   const elements: ProjectElement[] = [];
   for (const component of def.components) {
-    elements.push(encodeBodyComponent(component, provider));
+    elements.push(
+      encodeBodyComponent(component, provider, tunnelIds, customDims)
+    );
   }
   for (const wire of def.wires) {
     elements.push(encodeBodyWire(wire));
@@ -207,7 +279,9 @@ function encodeDefinitionElements(
 
 function encodeBodyComponent(
   component: SerializedComponentBody,
-  provider: ComponentProviderService
+  provider: ComponentProviderService,
+  tunnelIds: Map<string, number>,
+  customDims: ReadonlyMap<number, { numInputs: number; numOutputs: number }>
 ): ProjectElement {
   const el: ProjectElement = {
     t: component.type,
@@ -219,6 +293,20 @@ function encodeBodyComponent(
     // instance's counts/labels come from its own definition on load (Inv. A).
     const dir = component.options['direction'];
     if (typeof dir === 'number' && dir !== 0) el.r = dir;
+    // Re-anchor pivot -> legacy top-left about the definition's body extent,
+    // the inverse of the migration's custom re-anchor.
+    const dim = customDims.get(component.type);
+    const { w, h } = legacyCustomBodySize(
+      dim?.numInputs ?? 0,
+      dim?.numOutputs ?? 0
+    );
+    el.p = pivotToLegacyAnchor(
+      component.pos[0],
+      component.pos[1],
+      el.r ?? 0,
+      w,
+      h
+    );
     return el;
   }
 
@@ -246,6 +334,13 @@ function encodeBodyComponent(
     if (v !== undefined) el.s = v as string;
   }
 
+  // Tunnel labels have no positional slot — same mapping as the document body.
+  if (component.type === BuiltInComponentType.TUNNEL) {
+    const label = component.options['label'] as string;
+    el.n = [tunnelIds.get(label) ?? 0];
+    el.s = label;
+  }
+
   // Built-ins inside a custom definition keep their negation (already sorted,
   // in-range from serializeComponentBody); copy it onto the v0 element.
   if (component.negInputs?.length) el.negInputs = [...component.negInputs];
@@ -253,8 +348,8 @@ function encodeBodyComponent(
 
   // Reverse the v0→v1 pivot re-anchor (the snapshot body was decoded through
   // the same migration), so built-ins round-trip to their legacy top-left.
-  const width = LEGACY_BODY_WIDTHS[component.type] ?? 1;
-  const height = legacyBodyHeight(el.i ?? 0, el.o ?? 0);
+  const width = legacyBodyWidth(component.type, el.r ?? 0, el.i ?? 0, el.n);
+  const height = legacyBodyHeight(component.type, el.i ?? 0, el.o ?? 0, el.n);
   el.p = pivotToLegacyAnchor(
     component.pos[0],
     component.pos[1],

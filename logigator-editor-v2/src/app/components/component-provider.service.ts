@@ -4,23 +4,61 @@ import { ComponentCategory } from './component-category.enum';
 import { LoggingService } from '../logging/logging.service';
 import { notComponentConfig } from './component-types/not/not.config';
 import { andComponentConfig } from './component-types/and/and.config';
+import { orComponentConfig } from './component-types/or/or.config';
+import { xorComponentConfig } from './component-types/xor/xor.config';
+import { delayComponentConfig } from './component-types/delay/delay.config';
+import { clockComponentConfig } from './component-types/clock/clock.config';
+import { tunnelComponentConfig } from './component-types/tunnel/tunnel.config';
+import { halfAdderComponentConfig } from './component-types/half-adder/half-adder.config';
+import { fullAdderComponentConfig } from './component-types/full-adder/full-adder.config';
 import { romComponentConfig } from './component-types/rom/rom.config';
+import { dFfComponentConfig } from './component-types/d-ff/d-ff.config';
+import { jkFfComponentConfig } from './component-types/jk-ff/jk-ff.config';
+import { srFfComponentConfig } from './component-types/sr-ff/sr-ff.config';
+import { rngComponentConfig } from './component-types/rng/rng.config';
+import { ramComponentConfig } from './component-types/ram/ram.config';
+import { decoderComponentConfig } from './component-types/decoder/decoder.config';
+import { encoderComponentConfig } from './component-types/encoder/encoder.config';
+import { muxComponentConfig } from './component-types/mux/mux.config';
+import { demuxComponentConfig } from './component-types/demux/demux.config';
 import { textComponentConfig } from './component-types/text/text.config';
 import { inputComponentConfig } from './component-types/input/input.config';
 import { outputComponentConfig } from './component-types/output/output.config';
 import { buttonComponentConfig } from './component-types/button/button.config';
-import { leverComponentConfig } from './component-types/lever/lever.config';
+import { switchComponentConfig } from './component-types/switch/switch.config';
+import { ledComponentConfig } from './component-types/led/led.config';
+import { segmentDisplayComponentConfig } from './component-types/segment-display/segment-display.config';
+import { ledMatrixComponentConfig } from './component-types/led-matrix/led-matrix.config';
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 const BUILT_IN_COMPONENTS: ComponentConfig<any>[] = [
   notComponentConfig,
   andComponentConfig,
+  orComponentConfig,
+  xorComponentConfig,
+  delayComponentConfig,
+  clockComponentConfig,
+  tunnelComponentConfig,
+  halfAdderComponentConfig,
+  fullAdderComponentConfig,
   romComponentConfig,
+  dFfComponentConfig,
+  jkFfComponentConfig,
+  srFfComponentConfig,
+  rngComponentConfig,
+  ramComponentConfig,
+  decoderComponentConfig,
+  encoderComponentConfig,
+  muxComponentConfig,
+  demuxComponentConfig,
   textComponentConfig,
   inputComponentConfig,
   outputComponentConfig,
   buttonComponentConfig,
-  leverComponentConfig
+  switchComponentConfig,
+  ledComponentConfig,
+  segmentDisplayComponentConfig,
+  ledMatrixComponentConfig
 ];
 
 @Injectable({

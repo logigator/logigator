@@ -1,9 +1,4 @@
-import {
-  ChangeDetectionStrategy,
-  Component,
-  computed,
-  input
-} from '@angular/core';
+import { Component, computed, input } from '@angular/core';
 import { caretClasses, LgCaretTone, LgOverlaySide } from './overlay';
 
 /**
@@ -19,7 +14,6 @@ import { caretClasses, LgCaretTone, LgOverlaySide } from './overlay';
  */
 @Component({
   selector: 'lg-caret',
-  changeDetection: ChangeDetectionStrategy.OnPush,
   template: '',
   host: { 'aria-hidden': 'true', '[class]': 'classes()' }
 })

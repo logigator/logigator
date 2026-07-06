@@ -1,9 +1,4 @@
-import {
-  ChangeDetectionStrategy,
-  Component,
-  computed,
-  input
-} from '@angular/core';
+import { Component, computed, input } from '@angular/core';
 
 /**
  * A modifier+key combination for display. A structural subset of the editor's
@@ -93,7 +88,6 @@ const JOINER_TONE: Record<LgShortcutTone, string> = {
  */
 @Component({
   selector: 'lg-shortcut',
-  changeDetection: ChangeDetectionStrategy.OnPush,
   host: { class: 'inline-flex items-center gap-1' },
   template: `
     @for (part of parts(); track $index) {

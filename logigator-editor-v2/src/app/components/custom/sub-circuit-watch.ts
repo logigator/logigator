@@ -31,7 +31,7 @@ export interface WatchLevel {
  * the inspection every custom config declares. Opens a fresh headless copy of
  * the instance's frozen snapshot circuit whose wires/ports light from the
  * running engine (via a {@link WatchSession} resolved through the compiled
- * board's watch index). Fully interactive: inner levers/buttons drive their
+ * board's watch index). Fully interactive: inner switches/buttons drive their
  * engine units, nested customs drill down as breadcrumb levels (parents kept
  * for back navigation), and inner inspectables (ROM) open their regular data
  * inspectors on the watch copies — tracked so they close when their level

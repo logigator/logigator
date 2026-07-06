@@ -44,7 +44,7 @@ CompiledBoard ── descriptor ─────────────► worke
    │                                                  │ snapshot (per frame, pulled)
    ├── mapping (link id → wires + ports) ──┐          ▼
    │                                       │   SimulationWorkerService
-   └── userInputs (button/lever → index)   │          │ applyDelta / applyFull
+   └── userInputs (button/switch → index)   │          │ applyDelta / applyFull
                                            ▼          ▼
                                     LinkStateApplier → wire.setPowered / component.setPortPowered
 ```
@@ -83,17 +83,29 @@ The compiler walks components sorted **by id** (quad-tree iteration order is not
 stable; sorting makes the submission order — and with it `triggerInput` indices
 and the engine's output layout — reproducible). For each component:
 
-- **Unit types** (`NOT`, `AND`, `BUTTON`, `LEVER`, `ROM`) are emitted as one
-  `EmittedUnit` with its pins recorded as union-find node ids. `ROM` also
-  carries an `ops` blob — its contents bit-packed by `rom-data.codec.ts`
-  (`encodeRomOps`, over the generic `utils/packed-buffer.ts`) to the exact byte
-  table the engine reads (LSB-first; bit `address × wordSize + k`).
-  `ops` rides through node remapping and template flattening alongside the
-  negation fields (`copyNegation`).
+- **Unit types** (the gates, `DELAY`, `CLOCK`, the adders and flip-flops,
+  `RNG`, `RAM`, decoder/encoder, mux/demux, `BUTTON`, `SWITCH`, `ROM` — the
+  `UNIT_TYPES` set) are emitted as one `EmittedUnit` with its pins recorded as
+  union-find node ids. Three types carry an `ops` blob: `ROM` (contents
+  bit-packed by `rom-data.codec.ts` — `encodeRomOps`, over the generic
+  `utils/packed-buffer.ts` — to the exact byte table the engine reads,
+  LSB-first; bit `address × wordSize + k`), `CLOCK` (its period in ticks) and
+  `MUX` (its select-line count). `ops` rides through node remapping and
+  template flattening alongside the negation fields (`copyNegation`).
+- **`LED_MATRIX`** emits a unit whose outputs (the LED cells) exist on no net:
+  fresh nodes are synthesized per cell, and the top-level pass maps their
+  links back onto the component as pseudo-ports past the input range
+  (row-major), so the standard applier lights the cells. An inner matrix
+  simulates but does not light up in a watch.
 - **Custom components** (`type >= CUSTOM_TYPE_ID_BASE`) are flattened — see
   [Custom-component flattening](#custom-component-flattening).
+- **`TUNNEL`** emits no unit: before emission, the nets of all tunnels sharing
+  a label are unioned (`_unionTunnelNets`), scoped per compilation pass so a
+  label never crosses a custom-component boundary.
 - `TEXT` has no ports; top-level `INPUT`/`OUTPUT` plugs are inert decoration
-  (no unit) but their nets are still mapped so their stubs light up.
+  (no unit) but their nets are still mapped so their stubs light up. `LED` and
+  `SEGMENT_DISPLAY` are displays: no unit either — they render the powered
+  state of their input nets through the same mapping.
 - Anything else produces a blocking `unsupported` diagnostic.
 
 After all expansion, classes referenced by ≥1 unit pin get **dense link ids**
@@ -115,7 +127,7 @@ open time from a fresh `instantiateBody` run:
   across `instantiateBody` runs — the order contract is pinned by
   `persistence/circuit-builder.spec.ts`; live ids are session-assigned and are
   not): `wireNets` (wire index → template-local net id), `portNets` (component
-  index → per-port local net id), `userInputs` (direct lever/button index →
+  index → per-port local net id), `userInputs` (direct switch/button index →
   template-local unit index), and `children` (nested-custom index →
   `WatchChildBridge { typeId, netMap, unitBase }`). To make every wire
   addressable, template compression assigns local ids to **all** net classes —
@@ -130,7 +142,7 @@ open time from a fresh `instantiateBody` run:
 top-level record (`linkOfLocalNet_child[n] = linkOfLocalNet_parent[netMap[n]]`,
 unit bases add). Pure integer composition, memoized, safe to hold for the
 session. `unitIndexFor(bodyIndex)` yields the global engine unit index of an
-inner lever/button — what `triggerUnitInput` sends.
+inner switch/button — what `triggerUnitInput` sends.
 
 ### Custom-component flattening
 
@@ -242,9 +254,18 @@ touches links that actually changed:
 - `setLink` fans a change out to `wire.setPowered()` and
   `component.setPortPowered()` for every render target on that link.
 - `reset()` drives everything unpowered.
-- `isPowered(link)` / `consumeChanged()` — read-backs for watches: the lever
+- `isPowered(link)` / `consumeChanged()` — read-backs for watches: the switch
   pose sync and the per-frame "did anything I target change" dirty flag that
   drives on-demand watch re-renders.
+
+Everything downstream of `setLink` renders powered state as **transform, tint
+or alpha only** (wire/stub cross-axis scale, LED tint, bubble alpha) — PixiJS
+patches those into the existing batches in place. Swapping a `GraphicsContext`,
+toggling `visible`/`renderable` or redrawing children here instead would churn
+the shared context's listener list (a linear scan per swap — quadratic across a
+blinking board) _and_ flag the render group for a full instruction rebuild
+every frame; that combination once dropped a circuit from 120 fps to 1 fps.
+See the _Constant-Width Stroke_ section of `wires.md`.
 
 The worker bridge only sees the `SnapshotApplier` interface
 (`applyDelta`/`applyFull`). `SimulationService` hands it a **fan-out** wrapper:
@@ -308,11 +329,11 @@ main-thread from status-poll tick deltas), `tick`.
 In `SIMULATION` mode the `WorkModeRouter`'s `down` starts a `PanSession` (the
 same one-finger / left-drag pan as `WorkMode.PAN`), but editing stays locked:
 the session's tap callback — fired only when the press never crosses the pan
-threshold — hit-tests for a button/lever under the cursor and emits it on
+threshold — hit-tests for a button/switch under the cursor and emits it on
 `Project.userInput$`. A drag pans instead of activating anything.
 `SimulationService._onUserInput` reacts:
 
-- **Lever** — toggles its visual state and forwards `INPUT_EVENT_CONT` (set and
+- **Switch** — toggles its visual state and forwards `INPUT_EVENT_CONT` (set and
   hold) with the new on/off value.
 - **Button** — sets pressed, forwards `INPUT_EVENT_PULSE` (one-tick), and clears
   the pressed visual after `BUTTON_FLASH_MS`.
@@ -320,7 +341,7 @@ threshold — hit-tests for a button/lever under the cursor and emits it on
 The board index sent to the engine comes from `CompiledBoard.userInputs`
 (`Component.id` → board submission index).
 
-Inner levers/buttons clicked in a **watch** go through
+Inner switches/buttons clicked in a **watch** go through
 `triggerUnitInput(unitIndex, component, repaint)` instead: the unit index is
 already resolved through the watch index (`infoFor(path).unitIndexFor(i)`),
 `component` is the watch's fresh copy (its visuals toggle/flash), and

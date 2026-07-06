@@ -5,7 +5,7 @@ import { configureTestBed } from '../../../testing/configure-test-bed';
 import {
   makeAnd,
   makeButton,
-  makeLever,
+  makeSwitch,
   makeRom
 } from '../../../testing/factories';
 import { Component } from '../../components/component';
@@ -57,15 +57,15 @@ describe('WorkModeRouter in SIMULATION mode', () => {
     expect(emissions).toEqual([button]);
   });
 
-  it('emits userInput$ for a tapped lever', () => {
-    const lever = makeLever(0, 0);
-    project.addComponent(lever);
+  it('emits userInput$ for a tapped switch', () => {
+    const switchComp = makeSwitch(0, 0);
+    project.addComponent(switchComp);
     router.setMode(WorkMode.SIMULATION);
 
     router.down(makeInput(0.5, 0.5));
     router.up();
 
-    expect(emissions).toEqual([lever]);
+    expect(emissions).toEqual([switchComp]);
   });
 
   it('emits inspectRequest$ for a tapped inspectable component', () => {

@@ -53,23 +53,45 @@ describe('ComponentProviderService', () => {
 
   it('seeds the reactive category lists from the built-ins', () => {
     // TODO: vitest-migration: Verify this matches strict array content (multiset equality). Vitest's arrayContaining is a subset check.
-    expect(service.basicComponents().map((c) => c.type)).toHaveLength(2);
+    expect(service.basicComponents().map((c) => c.type)).toHaveLength(7);
     expect(service.basicComponents().map((c) => c.type)).toEqual(
       expect.arrayContaining([
         BuiltInComponentType.NOT,
-        BuiltInComponentType.AND
+        BuiltInComponentType.AND,
+        BuiltInComponentType.OR,
+        BuiltInComponentType.XOR,
+        BuiltInComponentType.DELAY,
+        BuiltInComponentType.CLOCK,
+        BuiltInComponentType.TUNNEL
       ])
     );
-    expect(service.advancedComponents().map((c) => c.type)).toEqual([
-      BuiltInComponentType.ROM
-    ]);
+    expect(service.advancedComponents().map((c) => c.type)).toEqual(
+      expect.arrayContaining([
+        BuiltInComponentType.HALF_ADDER,
+        BuiltInComponentType.FULL_ADDER,
+        BuiltInComponentType.ROM,
+        BuiltInComponentType.D_FF,
+        BuiltInComponentType.JK_FF,
+        BuiltInComponentType.SR_FF,
+        BuiltInComponentType.RNG,
+        BuiltInComponentType.RAM,
+        BuiltInComponentType.DECODER,
+        BuiltInComponentType.ENCODER,
+        BuiltInComponentType.MUX,
+        BuiltInComponentType.DEMUX
+      ])
+    );
+    expect(service.advancedComponents().map((c) => c.type)).toHaveLength(12);
     expect(service.userComponents()).toEqual([]);
     // TODO: vitest-migration: Verify this matches strict array content (multiset equality). Vitest's arrayContaining is a subset check.
-    expect(service.ioComponents().map((c) => c.type)).toHaveLength(2);
+    expect(service.ioComponents().map((c) => c.type)).toHaveLength(5);
     expect(service.ioComponents().map((c) => c.type)).toEqual(
       expect.arrayContaining([
         BuiltInComponentType.BUTTON,
-        BuiltInComponentType.LEVER
+        BuiltInComponentType.SWITCH,
+        BuiltInComponentType.LED,
+        BuiltInComponentType.SEGMENT_DISPLAY,
+        BuiltInComponentType.LED_MATRIX
       ])
     );
     expect(service.portComponents().map((c) => c.type)).toHaveLength(2);

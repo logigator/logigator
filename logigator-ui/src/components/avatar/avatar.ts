@@ -1,9 +1,4 @@
-import {
-  ChangeDetectionStrategy,
-  Component,
-  computed,
-  input
-} from '@angular/core';
+import { Component, computed, input } from '@angular/core';
 import { IconSlot } from '../../internal/icon';
 
 /**
@@ -13,7 +8,6 @@ import { IconSlot } from '../../internal/icon';
  */
 @Component({
   selector: 'lg-avatar',
-  changeDetection: ChangeDetectionStrategy.OnPush,
   host: { class: 'inline-flex' },
   template: `
     <span [class]="classes()">

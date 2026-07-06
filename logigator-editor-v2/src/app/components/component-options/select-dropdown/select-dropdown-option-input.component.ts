@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, input } from '@angular/core';
+import { Component, input } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { LgSelect } from '@logigator/ui';
 import { TranslocoDirective } from '@jsverse/transloco';
@@ -10,8 +10,7 @@ let nextId = 0;
 @Component({
   selector: 'app-select-dropdown-option-input',
   imports: [FormsModule, LgSelect, TranslocoDirective],
-  templateUrl: './select-dropdown-option-input.component.html',
-  changeDetection: ChangeDetectionStrategy.OnPush
+  templateUrl: './select-dropdown-option-input.component.html'
 })
 export class SelectDropdownOptionInputComponent<
   T

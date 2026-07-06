@@ -228,7 +228,7 @@ export class WorkModeRouter implements PointerToolTarget {
       case WorkMode.SIMULATION: {
         // Editing stays structurally locked, but one-finger / left-drag pans
         // the viewport like the hand tool. A tap that never crosses the pan
-        // threshold instead activates a button/lever under the cursor.
+        // threshold instead activates a button/switch under the cursor.
         this._startDrag(
           new PanSession(project, input.global, input.grid, (clickPoint) =>
             this._emitUserInputAt(project, clickPoint)
@@ -302,7 +302,7 @@ export class WorkModeRouter implements PointerToolTarget {
 
   /**
    * Activates the component whose body contains the grid-space point, if any:
-   * a button/lever emits user input, an inspectable component (its config
+   * a button/switch emits user input, an inspectable component (its config
    * declares an inspection) emits an inspect request. The simulation-mode tap
    * handler — the only canvas interaction allowed while editing is locked.
    */
@@ -320,7 +320,7 @@ export class WorkModeRouter implements PointerToolTarget {
       const type = comp.config.type;
       if (
         type === BuiltInComponentType.BUTTON ||
-        type === BuiltInComponentType.LEVER
+        type === BuiltInComponentType.SWITCH
       ) {
         project.emitUserInput(comp);
         break;

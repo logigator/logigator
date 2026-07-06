@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, inject } from '@angular/core';
+import { Component, inject } from '@angular/core';
 import { LgButton } from '@logigator/ui';
 import { TranslocoDirective } from '@jsverse/transloco';
 import { ProjectService } from '../../project/project.service';
@@ -27,8 +27,7 @@ import { ProjectService } from '../../project/project.service';
         (onClick)="zoomOut()"
       ></lg-button>
     </div>
-  `,
-  changeDetection: ChangeDetectionStrategy.OnPush
+  `
 })
 export class ZoomFabComponent {
   private readonly projectService = inject(ProjectService);

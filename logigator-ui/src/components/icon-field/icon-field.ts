@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, input } from '@angular/core';
+import { Component, input } from '@angular/core';
 
 /**
  * Positions a single {@link LgInputIcon} over a padded form field. A pure CSS
@@ -9,7 +9,6 @@ import { ChangeDetectionStrategy, Component, input } from '@angular/core';
  */
 @Component({
   selector: 'lg-icon-field',
-  changeDetection: ChangeDetectionStrategy.OnPush,
   host: { '[attr.data-icon-position]': 'iconPosition()' },
   template: `<ng-content></ng-content>`,
   styles: `

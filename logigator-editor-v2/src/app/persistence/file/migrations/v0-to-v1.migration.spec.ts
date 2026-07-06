@@ -44,7 +44,7 @@ describe('v0ToV1Migration', () => {
 
     expect(result.version).toBe(1);
     expect(result.name).toBe('Legacy Circuit');
-    // Legacy files carry no native custom snapshots; sub-circuits are dropped.
+    // No top-level `components` array here, so no sub-circuit definitions.
     expect(result.definitions).toEqual([]);
 
     const and = result.components.find((c) => c.type === 2)!;
@@ -74,6 +74,98 @@ describe('v0ToV1Migration', () => {
     ]);
   });
 
+  it('revives an old-editor file sub-circuit into a snapshot definition', () => {
+    const result = migrate({
+      project: {
+        name: 'With Custom',
+        elements: [
+          { t: 2, p: [15, 36], i: 2, o: 1 }, // AND
+          { t: 1003, p: [11, 36], o: 1 } // custom instance
+        ]
+      },
+      components: [
+        {
+          info: {
+            id: 1003,
+            numInputs: 0,
+            numOutputs: 1,
+            labels: [],
+            description: 'dsaf',
+            name: 'sadf',
+            symbol: 'asdf'
+          },
+          elements: [
+            { t: 201, p: [19, 39], o: 1 }, // SWITCH
+            { t: 101, p: [21, 39], i: 1 }, // OUTPUT
+            { t: 12, p: [21, 26], i: 4, o: 4, n: [4, 4] } // ROM
+          ]
+        }
+      ]
+    });
+
+    // The custom instance survives in the body with its file-local type id.
+    expect(result.components.find((c) => c.type === 1003)).toBeTruthy();
+
+    expect(result.definitions.length).toBe(1);
+    const def = result.definitions[0];
+    expect(def.type).toBe(1003); // info.id becomes the file-local type
+    expect(def.name).toBe('sadf');
+    expect(def.symbol).toBe('asdf');
+    expect(def.description).toBe('dsaf');
+    expect(def.numInputs).toBe(0);
+    expect(def.numOutputs).toBe(1);
+    expect(def.labels).toEqual([]);
+    // Inner built-ins decode through the same positional-slot mapping.
+    expect(def.components.map((c) => c.type).sort((a, b) => a - b)).toEqual([
+      12, 101, 201
+    ]);
+    const rom = def.components.find((c) => c.type === 12)!;
+    expect(rom.options).toMatchObject({ wordSize: 4, addressSize: 4 });
+  });
+
+  it('re-anchors a rotated custom instance from body top-left to pivot', () => {
+    // A 0-in/1-out custom (W=3, H=max(1,0,1)=1) at legacy anchor [10,10] in
+    // each direction. Its body extent comes from the inline definition's port
+    // counts; the pivot offsets per that extent, exactly like a built-in.
+    const positions = [0, 1, 2, 3].map((r) => {
+      const result = migrate({
+        project: { elements: [{ t: 1003, p: [10, 10], o: 1, r }] },
+        components: [
+          {
+            info: { id: 1003, numInputs: 0, numOutputs: 1 },
+            elements: []
+          }
+        ]
+      });
+      return result.components[0].pos;
+    });
+
+    expect(positions).toEqual([
+      [10, 10], // E
+      [11, 10], // S: +H
+      [13, 11], // W: +W, +H
+      [10, 13] // N: +W
+    ]);
+  });
+
+  it('re-anchors a rotated custom from its own instance i/o when no definition', () => {
+    // No matching definition, so dims fall back to the instance's i/o. A
+    // 2-in/2-out custom (W=3, H=max(1,2,2)=2) rotated South at anchor [10,10]:
+    // pivot = [px + H, py] = [12, 10].
+    const result = migrate({
+      project: { elements: [{ t: 1003, p: [10, 10], i: 2, o: 2, r: 1 }] }
+    });
+    expect(result.components[0].pos).toEqual([12, 10]);
+  });
+
+  it('skips a legacy sub-circuit definition with no numeric info.id', () => {
+    const result = migrate({
+      project: { elements: [{ t: 1, p: [0, 0], i: 1, o: 1 }] },
+      components: [{ info: { name: 'orphan' }, elements: [] }]
+    });
+    expect(result.definitions).toEqual([]);
+  });
+
   it('re-anchors a rotated component from body top-left to rotation pivot', () => {
     // Same AND (type 2, W=2, H=max(1,3)=3) at legacy anchor [3,4] in each
     // direction. The legacy top-left is fixed; the v2 pivot offsets per the
@@ -98,7 +190,7 @@ describe('v0ToV1Migration', () => {
     const result = migrate({
       project: {
         elements: [
-          { t: 3, p: [0, 0] }, // OR — not supported in v1
+          { t: 98, p: [0, 0] }, // unassigned built-in id — unknown
           { t: 1, p: [5, 5], i: 1, o: 1 } // NOT — supported
         ]
       }
@@ -107,9 +199,25 @@ describe('v0ToV1Migration', () => {
     expect(result.components.length).toBe(1);
     expect(result.components[0].type).toBe(1);
     expect(warnSpy).toHaveBeenCalledWith(
-      expect.stringContaining('Unknown component type ID: 3'),
+      expect.stringContaining('Unknown component type ID: 98'),
       'v0ToV1Migration'
     );
+  });
+
+  it('decodes tunnel labels from s, falling back to the legacy numeric id', () => {
+    const result = migrate({
+      project: {
+        elements: [
+          { t: 8, p: [0, 0], i: 1, n: [7] }, // legacy save: numeric id only
+          { t: 8, p: [0, 5], i: 1, n: [7], s: 'CLK' } // v2 save: label in s
+        ]
+      }
+    });
+
+    expect(result.components.map((c) => c.options['label'])).toEqual([
+      '7',
+      'CLK'
+    ]);
   });
 
   it("defaults a missing project name to 'Untitled'", () => {

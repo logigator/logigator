@@ -1,5 +1,4 @@
 import {
-  ChangeDetectionStrategy,
   Component,
   computed,
   ElementRef,
@@ -19,7 +18,6 @@ import { ControlValueAccessor, NG_VALUE_ACCESSOR } from '@angular/forms';
  */
 @Component({
   selector: 'lg-slider',
-  changeDetection: ChangeDetectionStrategy.OnPush,
   host: {
     class: 'relative block w-full cursor-pointer touch-none select-none py-2',
     '(pointerdown)': 'onPointerDown($event)',

@@ -58,7 +58,7 @@ export class ButtonComponent extends Component<ButtonOptions> {
   }
 
   protected draw(): void {
-    this.addBody(1, 1);
+    // The square button body replaces the standard chamfered body entirely.
     this.addScaledGraphics((scale) =>
       this.geometryService.getGraphicsContext(
         ButtonGraphics,

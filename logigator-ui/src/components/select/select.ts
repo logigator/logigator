@@ -3,7 +3,6 @@ import { ConnectedPosition, Overlay, OverlayRef } from '@angular/cdk/overlay';
 import { TemplatePortal } from '@angular/cdk/portal';
 import {
   booleanAttribute,
-  ChangeDetectionStrategy,
   Component,
   computed,
   contentChild,
@@ -67,7 +66,6 @@ let nextId = 0;
  */
 @Component({
   selector: 'lg-select',
-  changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [NgTemplateOutlet, LgFadeIn],
   host: { class: 'inline-flex', '[class.w-full]': 'fluid()' },
   providers: [

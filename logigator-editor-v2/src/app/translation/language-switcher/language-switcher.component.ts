@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, inject } from '@angular/core';
+import { Component, inject } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { TranslocoService } from '@jsverse/transloco';
 import { LgSelect } from '@logigator/ui';
@@ -6,8 +6,7 @@ import { LgSelect } from '@logigator/ui';
 @Component({
   selector: 'app-language-switcher',
   imports: [FormsModule, LgSelect],
-  templateUrl: './language-switcher.component.html',
-  changeDetection: ChangeDetectionStrategy.OnPush
+  templateUrl: './language-switcher.component.html'
 })
 export class LanguageSwitcherComponent {
   private readonly translocoService = inject(TranslocoService);

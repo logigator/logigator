@@ -1,10 +1,4 @@
-import {
-  ChangeDetectionStrategy,
-  Component,
-  computed,
-  inject,
-  signal
-} from '@angular/core';
+import { Component, computed, inject, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import {
   ConfirmationService,
@@ -49,8 +43,7 @@ export interface UploadComponentDialogResult {
     TranslocoDirective,
     LgMessage
   ],
-  templateUrl: './upload-component-dialog.component.html',
-  changeDetection: ChangeDetectionStrategy.OnPush
+  templateUrl: './upload-component-dialog.component.html'
 })
 export class UploadComponentDialogComponent {
   private readonly ref = inject(DialogRef);

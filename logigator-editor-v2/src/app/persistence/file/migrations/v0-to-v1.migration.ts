@@ -1,5 +1,9 @@
 import { Migration, MigrationContext } from './migration';
-import { CircuitFileV0, CircuitFileV1 } from '../circuit-file.types';
+import {
+  CircuitFileV0,
+  CircuitFileV1,
+  LegacyComponentDefinition
+} from '../circuit-file.types';
 import { InvalidFileError } from '../circuit-file.errors';
 import {
   SerializedComponentBody,
@@ -9,16 +13,31 @@ import {
 import { ProjectElement } from '../../../api/models/project-element';
 import { WireDirection } from '../../../wires/wire-direction.enum';
 import { ComponentConfig } from '../../../components/component-config.model';
-import { CUSTOM_TYPE_ID_BASE } from '../../../components/component-type.enum';
+import {
+  BuiltInComponentType,
+  CUSTOM_TYPE_ID_BASE
+} from '../../../components/component-type.enum';
 import { Direction } from '../../../utils/direction';
 import {
-  LEGACY_BODY_WIDTHS,
   legacyAnchorToPivot,
-  legacyBodyHeight
+  legacyBodyHeight,
+  legacyBodyWidth,
+  legacyCustomBodySize
 } from '../../legacy-anchor';
 
 /** Old editor's ElementTypeId.WIRE — the canonical type ID for wires in the v0 format. */
 const WIRE_TYPE_ID = 0;
+
+/**
+ * File-local custom type id → its definition's port counts, used to re-anchor a
+ * rotated custom instance about its body extent. Keyed by the same id the body's
+ * custom elements carry as `t` (`info.id` for a legacy file, `dep.model` for a
+ * server response).
+ */
+type CustomDims = ReadonlyMap<
+  number,
+  { numInputs: number; numOutputs: number }
+>;
 
 function legacyWireToBody(el: ProjectElement): SerializedWireBody {
   const [px, py] = el.p;
@@ -70,12 +89,16 @@ function decodeOptions(
  * named options; custom-range elements (`t >= CUSTOM_TYPE_ID_BASE`, written by a
  * snapshot-bearing save) keep their file-local type id and round-trip only
  * `direction` — port counts/labels come from the resolved definition on load
- * (Invariant A), so no config lookup is needed. Unknown built-in types are
- * dropped with a warning, consistent with the editor's silent-drop behaviour.
+ * (Invariant A). A rotated custom is still re-anchored from the legacy body
+ * top-left to the v2 pivot like any other component; its body extent comes from
+ * {@link CustomDims} (the definition's port counts), falling back to the
+ * instance's own `i`/`o` when absent. Unknown built-in types are dropped with a
+ * warning, consistent with the editor's silent-drop behaviour.
  */
 function decodeElements(
   elements: ProjectElement[],
-  ctx: MigrationContext
+  ctx: MigrationContext,
+  customDims: CustomDims
 ): { components: SerializedComponentBody[]; wires: SerializedWireBody[] } {
   const components: SerializedComponentBody[] = [];
   const wires: SerializedWireBody[] = [];
@@ -87,10 +110,16 @@ function decodeElements(
     }
 
     if (element.t >= CUSTOM_TYPE_ID_BASE) {
+      const direction: Direction = element.r ?? Direction.E;
+      const dim = customDims.get(element.t);
+      const { w, h } = legacyCustomBodySize(
+        dim?.numInputs ?? element.i ?? 0,
+        dim?.numOutputs ?? element.o ?? 0
+      );
       components.push({
         type: element.t,
-        pos: [element.p[0], element.p[1]],
-        options: { direction: element.r ?? 0 }
+        pos: legacyAnchorToPivot(element.p[0], element.p[1], direction, w, h),
+        options: { direction }
       });
       continue;
     }
@@ -105,8 +134,27 @@ function decodeElements(
     }
 
     const direction: Direction = element.r ?? Direction.E;
-    const width = LEGACY_BODY_WIDTHS[element.t] ?? 1;
-    const height = legacyBodyHeight(element.i ?? 0, element.o ?? 0);
+    const width = legacyBodyWidth(
+      element.t,
+      direction,
+      element.i ?? 0,
+      element.n
+    );
+    const height = legacyBodyHeight(
+      element.t,
+      element.i ?? 0,
+      element.o ?? 0,
+      element.n
+    );
+
+    const options = decodeOptions(element, config);
+    if (element.t === BuiltInComponentType.TUNNEL) {
+      // Tunnel labels have no positional slot of their own: a v2 save carries
+      // the label additively in `s`, a legacy save only its numeric id in
+      // `n[0]` — which becomes the label so equal ids stay joined.
+      options['label'] =
+        typeof element.s === 'string' ? element.s : String(element.n?.[0] ?? 0);
+    }
 
     components.push({
       type: element.t,
@@ -117,7 +165,7 @@ function decodeElements(
         width,
         height
       ),
-      options: decodeOptions(element, config),
+      options,
       ...decodeNegation(element)
     });
   }
@@ -158,12 +206,17 @@ function decodeNegation(element: ProjectElement): {
  */
 function decodeDependencies(
   input: CircuitFileV0,
-  ctx: MigrationContext
+  ctx: MigrationContext,
+  customDims: CustomDims
 ): SnapshotDefinition[] {
   const definitions: SnapshotDefinition[] = [];
   for (const dep of input.dependencies ?? []) {
     if (!dep.snapshot) continue;
-    const { components, wires } = decodeElements(dep.snapshot.elements, ctx);
+    const { components, wires } = decodeElements(
+      dep.snapshot.elements,
+      ctx,
+      customDims
+    );
     const id = dep.id ?? dep.dependency?.id;
     definitions.push({
       type: dep.model,
@@ -183,6 +236,77 @@ function decodeDependencies(
 }
 
 /**
+ * Revives the old-editor *file* sub-circuit definitions (the top-level
+ * `components` array) into native {@link SnapshotDefinition}s. Each entry's
+ * `info.id` is the custom-range type id its instances reference in the body, so
+ * it becomes the definition's file-local `type` (kept verbatim, remapped to a
+ * session id on load). The inner circuit decodes through the same
+ * {@link decodeElements} as everything else, so nested customs stay file-local
+ * and resolve via the load-time two-pass remap. Entries without a numeric
+ * `info.id` can't be referenced and are skipped. `source` is left absent — a
+ * legacy file carries no library provenance, so these load as never-saved-to-
+ * library snapshots. Types already produced by {@link decodeDependencies} are
+ * skipped so the two sources never collide (in practice a document has one or
+ * the other).
+ */
+function decodeLegacyComponents(
+  components: LegacyComponentDefinition[] | undefined,
+  ctx: MigrationContext,
+  taken: ReadonlySet<number>,
+  customDims: CustomDims
+): SnapshotDefinition[] {
+  const definitions: SnapshotDefinition[] = [];
+  for (const component of components ?? []) {
+    const info = component.info ?? {};
+    if (typeof info.id !== 'number' || info.id < CUSTOM_TYPE_ID_BASE) continue;
+    if (taken.has(info.id)) continue;
+    const { components: innerComponents, wires } = decodeElements(
+      component.elements ?? [],
+      ctx,
+      customDims
+    );
+    definitions.push({
+      type: info.id,
+      name: info.name ?? '',
+      symbol: info.symbol ?? '',
+      description: info.description ?? '',
+      numInputs: info.numInputs ?? 0,
+      numOutputs: info.numOutputs ?? 0,
+      labels: Array.isArray(info.labels) ? [...info.labels] : [],
+      components: innerComponents,
+      wires
+    });
+  }
+  return definitions;
+}
+
+/**
+ * Indexes every custom definition's port counts by its file-local type id, so a
+ * custom instance in any body can be re-anchored about its true body extent.
+ * Pulls from both definition sources (legacy-file `components`, server
+ * `dependencies`); the two never share a type id in a real document.
+ */
+function collectCustomDims(input: CircuitFileV0): CustomDims {
+  const dims = new Map<number, { numInputs: number; numOutputs: number }>();
+  for (const dep of input.dependencies ?? []) {
+    if (!dep.snapshot) continue;
+    dims.set(dep.model, {
+      numInputs: dep.snapshot.numInputs,
+      numOutputs: dep.snapshot.numOutputs
+    });
+  }
+  for (const component of input.components ?? []) {
+    const info = component.info ?? {};
+    if (typeof info.id !== 'number') continue;
+    dims.set(info.id, {
+      numInputs: info.numInputs ?? 0,
+      numOutputs: info.numOutputs ?? 0
+    });
+  }
+  return dims;
+}
+
+/**
  * Converts the legacy `logigator-editor` file format (v0: no `version` field,
  * options packed positionally into the `t/p/q/r/i/o/n/s` wire format) into the
  * native v1 format with named options. This is a single v0→v1 step — the next
@@ -190,11 +314,11 @@ function decodeDependencies(
  *
  * Registry-backed (needs the component configs and their `legacyV0Slots`
  * descriptors to map positional slots to named options) but instantiates no
- * render objects. Legacy old-editor sub-circuit definitions (the inline
- * `components` array) are still dropped — reviving those is a separate, deferred
- * task. The server transport's additive embedded snapshots, however, ARE revived
- * into `definitions[]` (so a server load is self-contained and indistinguishable
- * from a file load downstream).
+ * render objects. Both sub-circuit-definition sources are revived into
+ * `definitions[]`: the old-editor *file*'s inline `components` array (via
+ * {@link decodeLegacyComponents}) and the server transport's additive embedded
+ * snapshots (via {@link decodeDependencies}). Either way the migrated document
+ * is self-contained and indistinguishable from a native file load downstream.
  */
 export const v0ToV1Migration: Migration<CircuitFileV0, CircuitFileV1> = {
   from: 0,
@@ -204,14 +328,28 @@ export const v0ToV1Migration: Migration<CircuitFileV0, CircuitFileV1> = {
       throw new InvalidFileError('Legacy file is missing project elements');
     }
 
-    const { components, wires } = decodeElements(input.project.elements, ctx);
+    const customDims = collectCustomDims(input);
+
+    const { components, wires } = decodeElements(
+      input.project.elements,
+      ctx,
+      customDims
+    );
+
+    const dependencyDefinitions = decodeDependencies(input, ctx, customDims);
+    const legacyDefinitions = decodeLegacyComponents(
+      input.components,
+      ctx,
+      new Set(dependencyDefinitions.map((d) => d.type)),
+      customDims
+    );
 
     return {
       version: 1,
       name: input.project.name ?? 'Untitled',
       components,
       wires,
-      definitions: decodeDependencies(input, ctx)
+      definitions: [...dependencyDefinitions, ...legacyDefinitions]
     };
   }
 };

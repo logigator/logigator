@@ -1,9 +1,4 @@
-import {
-  ChangeDetectionStrategy,
-  Component,
-  computed,
-  input
-} from '@angular/core';
+import { Component, computed, input } from '@angular/core';
 
 /**
  * Cloud/local provenance indicator for a custom component, in two variants:
@@ -43,8 +38,7 @@ import {
         <i [class]="isServer() ? 'ph ph-cloud' : 'ph ph-browser'"></i>
         {{ isServer() ? 'Cloud' : 'Local' }}
       </span>
-    }`,
-  changeDetection: ChangeDetectionStrategy.OnPush
+    }`
 })
 export class SourceIndicatorComponent {
   /** Which library the component lives in. */

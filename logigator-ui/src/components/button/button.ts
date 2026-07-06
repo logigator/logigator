@@ -1,6 +1,5 @@
 import {
   booleanAttribute,
-  ChangeDetectionStrategy,
   Component,
   computed,
   input,
@@ -91,7 +90,6 @@ const ICON_ONLY_TEXT: Record<LgSize, string> = {
  */
 @Component({
   selector: 'lg-button',
-  changeDetection: ChangeDetectionStrategy.OnPush,
   host: {
     class: 'inline-flex',
     '[class.size-8]': 'iconOnly() && resolvedSize() === "sm"',

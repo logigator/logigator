@@ -1,5 +1,4 @@
 import {
-  ChangeDetectionStrategy,
   Component,
   effect,
   ElementRef,
@@ -35,7 +34,6 @@ import {
   selector: 'app-board',
   imports: [FpsCounterComponent],
   templateUrl: './board.component.html',
-  changeDetection: ChangeDetectionStrategy.OnPush,
   host: { class: 'relative' }
 })
 export class BoardComponent implements OnInit, OnDestroy {

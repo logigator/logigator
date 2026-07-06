@@ -2,7 +2,6 @@ import { NgTemplateOutlet } from '@angular/common';
 import { ConnectedPosition, Overlay, OverlayRef } from '@angular/cdk/overlay';
 import { TemplatePortal } from '@angular/cdk/portal';
 import {
-  ChangeDetectionStrategy,
   Component,
   contentChild,
   ElementRef,
@@ -67,7 +66,6 @@ const SUBMENU_POSITIONS: ConnectedPosition[] = [
  */
 @Component({
   selector: 'lg-menubar',
-  changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [NgTemplateOutlet, LgFadeIn, LgRipple, LgShortcut],
   host: { class: 'flex items-center gap-2 p-1' },
   template: `

@@ -1,15 +1,9 @@
 import { afterEach, describe, expect, it } from 'vitest';
-import {
-  ChangeDetectionStrategy,
-  Component,
-  input,
-  signal
-} from '@angular/core';
+import { Component, input, signal } from '@angular/core';
 import { TestBed } from '@angular/core/testing';
 import { LgDrawer } from './drawer';
 
 @Component({
-  changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [LgDrawer],
   template: `
     <lg-drawer

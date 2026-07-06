@@ -1,5 +1,5 @@
 import { afterEach, describe, expect, it } from 'vitest';
-import { ChangeDetectionStrategy, Component, signal } from '@angular/core';
+import { Component, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { TestBed } from '@angular/core/testing';
 import { LgSelect } from './select';
@@ -10,7 +10,6 @@ interface Opt {
 }
 
 @Component({
-  changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [LgSelect, FormsModule],
   template: `
     <lg-select
@@ -163,7 +162,6 @@ describe('LgSelect', () => {
 });
 
 @Component({
-  changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [LgSelect, FormsModule],
   template: `
     <lg-select

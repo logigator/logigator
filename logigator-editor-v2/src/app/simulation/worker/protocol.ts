@@ -2,7 +2,7 @@ import { BoardDescriptor } from '../compiler/compiled-board.model';
 
 // The WASM package exports `InputEvent`/`SimState` as types only (no runtime
 // values), so the wire values live here.
-/** Set-and-hold input event (lever). */
+/** Set-and-hold input event (switchComp). */
 export const INPUT_EVENT_CONT = 0;
 /** One-tick pulse input event (button). */
 export const INPUT_EVENT_PULSE = 1;

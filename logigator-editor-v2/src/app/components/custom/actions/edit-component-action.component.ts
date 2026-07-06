@@ -1,9 +1,4 @@
-import {
-  ChangeDetectionStrategy,
-  Component,
-  inject,
-  input
-} from '@angular/core';
+import { Component, inject, input } from '@angular/core';
 import { LgButton } from '@logigator/ui';
 import { TranslocoService } from '@jsverse/transloco';
 import { ComponentActionContext } from '../../component-action';
@@ -24,8 +19,7 @@ import { ToastService } from '../../../logging/toast.service';
     label="Edit component"
     class="float-right"
     (onClick)="edit()"
-  />`,
-  changeDetection: ChangeDetectionStrategy.OnPush
+  />`
 })
 export class EditComponentActionComponent {
   public readonly context = input.required<ComponentActionContext>();

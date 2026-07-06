@@ -1,10 +1,4 @@
-import {
-  ChangeDetectionStrategy,
-  Component,
-  computed,
-  inject,
-  input
-} from '@angular/core';
+import { Component, computed, inject, input } from '@angular/core';
 import { Point } from 'pixi.js';
 import { TranslocoDirective, TranslocoService } from '@jsverse/transloco';
 import { WorkModeService } from '../../work-mode/work-mode.service';
@@ -33,8 +27,7 @@ import {
       <span class="opacity-50">&middot;</span>
       <span class="tabular-nums">{{ boardPositionFormatted() }}</span>
     </div>
-  `,
-  changeDetection: ChangeDetectionStrategy.OnPush
+  `
 })
 export class MobileStatusComponent {
   private readonly workModeService = inject(WorkModeService);

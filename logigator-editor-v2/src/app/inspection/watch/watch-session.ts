@@ -1,6 +1,6 @@
 import { Component } from '../../components/component';
 import { ComponentProviderService } from '../../components/component-provider.service';
-import { LeverComponent } from '../../components/component-types/lever/lever.component';
+import { SwitchComponent } from '../../components/component-types/switch/switch.component';
 import { LoggingService } from '../../logging/logging.service';
 import { LinkRenderTargets } from '../../simulation/compiler/compiled-board.model';
 import { WatchLevelInfo } from '../../simulation/compiler/watch-index';
@@ -39,7 +39,7 @@ export class WatchSession {
 
   private readonly applier: LinkStateApplier;
   private readonly unregister: () => void;
-  private needsLeverSync = false;
+  private needsSwitchSync = false;
 
   constructor(
     body: SerializedCircuitBody,
@@ -94,12 +94,12 @@ export class WatchSession {
 
     this.applier = new LinkStateApplier(targets);
     // Wrap the applier so the first *full* snapshot triggers the one-time
-    // lever pose sync — deltas arriving before the seed don't count.
+    // switch pose sync — deltas arriving before the seed don't count.
     const sessionApplier: SnapshotApplier = {
       applyDelta: (ids, values) => this.applier.applyDelta(ids, values),
       applyFull: (bits) => {
         this.applier.applyFull(bits);
-        this.needsLeverSync = true;
+        this.needsSwitchSync = true;
       }
     };
     this.unregister = simulation.registerApplier(sessionApplier);
@@ -109,14 +109,14 @@ export class WatchSession {
   /**
    * Per-frame pull (after each applied snapshot): returns whether the view
    * needs a re-render. The first full snapshot additionally poses the copied
-   * levers from their output-port power — a lever drives its output link
-   * directly, so the link state *is* the lever state.
+   * switches from their output-port power — a switch drives its output link
+   * directly, so the link state *is* the switch state.
    */
   public onFrame(): boolean {
     const changed = this.applier.consumeChanged();
-    if (this.needsLeverSync) {
-      this.needsLeverSync = false;
-      this._syncLevers();
+    if (this.needsSwitchSync) {
+      this.needsSwitchSync = false;
+      this._syncSwitches();
       return true;
     }
     return changed;
@@ -127,9 +127,9 @@ export class WatchSession {
     this.project.destroy({ children: true });
   }
 
-  private _syncLevers(): void {
+  private _syncSwitches(): void {
     this.components.forEach((component, index) => {
-      if (!(component instanceof LeverComponent)) {
+      if (!(component instanceof SwitchComponent)) {
         return;
       }
       const outputNet = this.info.tables.portNets[index][component.numInputs];

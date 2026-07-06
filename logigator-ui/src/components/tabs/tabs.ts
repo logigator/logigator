@@ -1,6 +1,5 @@
 import {
   booleanAttribute,
-  ChangeDetectionStrategy,
   Component,
   computed,
   ElementRef,
@@ -27,7 +26,6 @@ export abstract class LgTabsRef {
  */
 @Component({
   selector: 'lg-tab',
-  changeDetection: ChangeDetectionStrategy.OnPush,
   host: { class: 'contents' },
   template: `
     <button
@@ -70,7 +68,6 @@ export class LgTab {
  */
 @Component({
   selector: 'lg-tab-panel',
-  changeDetection: ChangeDetectionStrategy.OnPush,
   host: { role: 'tabpanel', '[hidden]': '!active()' },
   template: '<ng-content></ng-content>'
 })
@@ -90,7 +87,6 @@ export class LgTabPanel {
  */
 @Component({
   selector: 'lg-tabs',
-  changeDetection: ChangeDetectionStrategy.OnPush,
   host: { class: 'block' },
   providers: [{ provide: LgTabsRef, useExisting: forwardRef(() => LgTabs) }],
   template: `

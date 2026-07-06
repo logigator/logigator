@@ -84,7 +84,7 @@ The `PointerNavTarget` is supplied by the host: the board maps it straight onto 
 
 The board's `PointerToolTarget`. Owns the interaction state that used to live on `FloatingLayer`: the current `WorkMode`, the `componentToPlace` config, and the single `_activeDrag: DragSession | null`.
 
-- `down(input)` switches on the mode and starts the matching session (`PanSession`, `ComponentPlacementSession`, `WireDrawingSession`, `SelectRectSession`/`SelectionMoveSession`, `EraseSession`, `WireConnectionSession`), or performs the click actions that never become sessions (PORT_NEGATION toggling through the undo stack; SIMULATION taps route through a `PanSession` whose tap action activates a button/lever or requests inspection).
+- `down(input)` switches on the mode and starts the matching session (`PanSession`, `ComponentPlacementSession`, `WireDrawingSession`, `SelectRectSession`/`SelectionMoveSession`, `EraseSession`, `WireConnectionSession`), or performs the click actions that never become sessions (PORT_NEGATION toggling through the undo stack; SIMULATION taps route through a `PanSession` whose tap action activates a button/switch or requests inspection).
 - `move(input)` delegates to `_activeDrag.onMove`; with no session it falls through to `hover` (the negation-mode port preview keeps tracking during a press).
 - `up()` asks `session.canEnd()` first — `false` (collision) keeps the session alive; `true` commits via `onEnd()` and stops the drag ticker.
 - `cancel()` / Escape (a `ShortcutService` subscription) abort the session via `onCancel()`.

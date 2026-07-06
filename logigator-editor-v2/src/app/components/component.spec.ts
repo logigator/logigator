@@ -13,12 +13,13 @@ import {
   makeAnd,
   makeButton,
   makeInput,
-  makeLever
+  makeSwitch
 } from '../../testing/factories';
 import { AndComponent } from './component-types/and/and.component';
 import { configureTestBed } from '../../testing/configure-test-bed';
 import { GraphicsProviderService } from '../rendering/graphics-provider.service';
 import {
+  POWERED_WIRE_PIVOT,
   POWERED_WIRE_THICKNESS,
   WireGraphics
 } from '../rendering/graphics/wire.graphics';
@@ -354,7 +355,7 @@ describe('Component symbol rendering', () => {
   });
 
   it('renders no symbol on components with a dedicated body visual', () => {
-    for (const comp of [makeButton(), makeLever()]) {
+    for (const comp of [makeButton(), makeSwitch()]) {
       let texts = 0;
       const walk = (c: Container): void => {
         for (const child of c.children) {
@@ -427,25 +428,28 @@ describe('Component port power', () => {
     provider = TestBed.inject(GraphicsProviderService);
   });
 
-  function poweredContext() {
-    return provider.getGraphicsContext(WireGraphics, POWERED_WIRE_THICKNESS);
+  // Stub cross-axis scale for the default E facing (sign +1) at a zoom scale.
+  function stubScaleY(powered: boolean, scale = 1) {
+    return (PX / scale) * (powered ? POWERED_WIRE_THICKNESS : 1);
   }
 
-  function unpoweredContext() {
-    return provider.getGraphicsContext(WireGraphics);
-  }
-
-  it('swaps only the addressed stub to the powered context', () => {
+  it('thickens only the addressed stub, keeping the shared context', () => {
     const comp = makeAnd(2); // stubs 0,1 = inputs; 2 = output
+    const sharedContext = provider.getGraphicsContext(WireGraphics);
 
+    // The per-frame hot path: powered state must land as transform only — a
+    // context swap or redraw would force a render-group instruction rebuild.
     comp.setPortPowered(2, true);
 
-    expect(comp.portStubs[2].context).toBe(poweredContext());
-    expect(comp.portStubs[0].context).toBe(unpoweredContext());
-    expect(comp.portStubs[1].context).toBe(unpoweredContext());
+    expect(comp.portStubs[2].context).toBe(sharedContext);
+    expect(comp.portStubs[2].scale.y).toBeCloseTo(stubScaleY(true), 8);
+    expect(comp.portStubs[2].pivot.y).toBeCloseTo(POWERED_WIRE_PIVOT, 8);
+    expect(comp.portStubs[0].scale.y).toBeCloseTo(stubScaleY(false), 8);
+    expect(comp.portStubs[1].scale.y).toBeCloseTo(stubScaleY(false), 8);
 
     comp.setPortPowered(2, false);
-    expect(comp.portStubs[2].context).toBe(unpoweredContext());
+    expect(comp.portStubs[2].scale.y).toBeCloseTo(stubScaleY(false), 8);
+    expect(comp.portStubs[2].pivot.y).toBe(0);
 
     comp.destroy({ children: true });
   });
@@ -458,10 +462,22 @@ describe('Component port power', () => {
     comp.applyScale(2);
 
     // applyScale updates scale-dependent props in place rather than rebuilding,
-    // so the powered stub object and its context both survive untouched.
+    // so the powered stub object and its thickness both survive.
     expect(comp.portStubs[0]).toBe(stubBefore);
-    expect(comp.portStubs[0].context).toBe(poweredContext());
-    expect(comp.portStubs[1].context).toBe(unpoweredContext());
+    expect(comp.portStubs[0].scale.y).toBeCloseTo(stubScaleY(true, 2), 8);
+    expect(comp.portStubs[1].scale.y).toBeCloseTo(stubScaleY(false, 2), 8);
+
+    comp.destroy({ children: true });
+  });
+
+  it('re-applies powered thickness to the rebuilt stubs on redraw', () => {
+    const comp = makeAnd(2);
+
+    comp.setPortPowered(0, true);
+    comp.redraw();
+
+    expect(comp.portStubs[0].scale.y).toBeCloseTo(stubScaleY(true), 8);
+    expect(comp.portStubs[1].scale.y).toBeCloseTo(stubScaleY(false), 8);
 
     comp.destroy({ children: true });
   });
@@ -474,11 +490,12 @@ describe('Component port power', () => {
     comp.clearPortPower();
 
     for (const stub of comp.portStubs) {
-      expect(stub.context).toBe(unpoweredContext());
+      expect(stub.scale.y).toBeCloseTo(stubScaleY(false), 8);
+      expect(stub.pivot.y).toBe(0);
     }
     comp.applyScale(2);
     for (const stub of comp.portStubs) {
-      expect(stub.context).toBe(unpoweredContext());
+      expect(stub.scale.y).toBeCloseTo(stubScaleY(false, 2), 8);
     }
 
     comp.destroy({ children: true });
@@ -689,31 +706,53 @@ describe('Component negation bubble rendering', () => {
 
     comp.setPortNegated('in', 0, true);
     const bubbleBefore = comp.portBubbles.get(0);
+    const litBefore = comp.litPortBubbles.get(0);
     comp.applyScale(2);
 
     expect(comp.portBubbles.get(0)).toBe(bubbleBefore);
     expect(comp.portBubbles.get(0)!.context).toBe(bubbleContext(false));
+    expect(comp.litPortBubbles.get(0)).toBe(litBefore);
 
     comp.destroy({ children: true });
   });
 
-  it('tints the bubble with the gate-side value during simulation', () => {
-    // The bubble shows link XOR negated. A bubble exists only on a negated
-    // port, so the lit bubble is the inverse of the link's powered state.
+  it('stacks a hidden lit variant on the unlit base', () => {
     const comp = makeAnd(2);
 
     comp.setPortNegated('in', 0, true);
 
+    const base = comp.portBubbles.get(0)!;
+    const lit = comp.litPortBubbles.get(0)!;
+    expect(base.context).toBe(bubbleContext(false));
+    expect(lit.context).toBe(bubbleContext(true));
+    expect(lit.position.x).toBe(base.position.x);
+    expect(lit.position.y).toBe(base.position.y);
+    expect(lit.alpha).toBe(0);
+
+    comp.destroy({ children: true });
+  });
+
+  it('lights the bubble with the gate-side value during simulation', () => {
+    // The bubble shows link XOR negated. A bubble exists only on a negated
+    // port, so the lit bubble is the inverse of the link's powered state. The
+    // per-frame hot path toggles the lit variant's alpha only — a context
+    // swap would force a render-group instruction rebuild.
+    const comp = makeAnd(2);
+
+    comp.setPortNegated('in', 0, true);
+    const lit = comp.litPortBubbles.get(0)!;
+
     // Unpowered link → the gate consumes 1 → bubble lit.
     comp.setPortPowered(0, false);
-    expect(comp.portBubbles.get(0)!.context).toBe(bubbleContext(true));
+    expect(lit.alpha).toBe(1);
 
     // Powered link → the gate consumes 0 → bubble unlit.
     comp.setPortPowered(0, true);
-    expect(comp.portBubbles.get(0)!.context).toBe(bubbleContext(false));
+    expect(lit.alpha).toBe(0);
 
+    comp.setPortPowered(0, false);
     comp.clearPortPower();
-    expect(comp.portBubbles.get(0)!.context).toBe(bubbleContext(false));
+    expect(lit.alpha).toBe(0);
 
     comp.destroy({ children: true });
   });

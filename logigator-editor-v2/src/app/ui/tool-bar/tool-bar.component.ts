@@ -1,9 +1,4 @@
-import {
-  ChangeDetectionStrategy,
-  Component,
-  computed,
-  inject
-} from '@angular/core';
+import { Component, computed, inject } from '@angular/core';
 import { DialogService, LgButton, LgDivider, LgTooltip } from '@logigator/ui';
 import { TranslocoDirective, TranslocoService } from '@jsverse/transloco';
 import { WorkModeService } from '../../work-mode/work-mode.service';
@@ -31,8 +26,7 @@ import { SimulationControlsComponent } from '../simulation-controls/simulation-c
     TranslocoDirective,
     SimulationControlsComponent
   ],
-  templateUrl: './tool-bar.component.html',
-  changeDetection: ChangeDetectionStrategy.OnPush
+  templateUrl: './tool-bar.component.html'
 })
 export class ToolBarComponent {
   private readonly workModeService = inject(WorkModeService);

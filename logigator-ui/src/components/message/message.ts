@@ -1,10 +1,4 @@
-import {
-  booleanAttribute,
-  ChangeDetectionStrategy,
-  Component,
-  computed,
-  input
-} from '@angular/core';
+import { booleanAttribute, Component, computed, input } from '@angular/core';
 import { LgSeverity } from '../../tokens/severity';
 
 /**
@@ -51,8 +45,7 @@ const SEVERITY_ICONS: Record<LgSeverity, string> = {
   `,
   host: {
     class: 'block'
-  },
-  changeDetection: ChangeDetectionStrategy.OnPush
+  }
 })
 export class LgMessage {
   /** Visual severity; `none` (default) renders borderless with muted text. */

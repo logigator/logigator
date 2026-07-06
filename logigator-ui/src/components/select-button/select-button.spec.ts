@@ -1,11 +1,10 @@
 import { describe, expect, it } from 'vitest';
-import { ChangeDetectionStrategy, Component, signal } from '@angular/core';
+import { Component, signal } from '@angular/core';
 import { TestBed } from '@angular/core/testing';
 import { FormsModule } from '@angular/forms';
 import { LgSelectButton } from './select-button';
 
 @Component({
-  changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [LgSelectButton, FormsModule],
   template: `<lg-select-button
     [options]="options"
@@ -73,7 +72,6 @@ describe('LgSelectButton', () => {
 });
 
 @Component({
-  changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [LgSelectButton, FormsModule],
   template: `<lg-select-button
     [options]="options"

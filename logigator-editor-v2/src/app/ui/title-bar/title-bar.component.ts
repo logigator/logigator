@@ -1,9 +1,4 @@
-import {
-  ChangeDetectionStrategy,
-  Component,
-  computed,
-  inject
-} from '@angular/core';
+import { Component, computed, inject } from '@angular/core';
 import { NgOptimizedImage } from '@angular/common';
 import logoUrl from '@assets/logo.svg';
 import { ProjectService } from '../../project/project.service';
@@ -15,8 +10,7 @@ import { EditorMenuService } from '../editor-menu.service';
 @Component({
   selector: 'app-title-bar',
   imports: [LgMenubar, NgOptimizedImage, UserSettingsComponent],
-  templateUrl: './title-bar.component.html',
-  changeDetection: ChangeDetectionStrategy.OnPush
+  templateUrl: './title-bar.component.html'
 })
 export class TitleBarComponent {
   private readonly projectService = inject(ProjectService);

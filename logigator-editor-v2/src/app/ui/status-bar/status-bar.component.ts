@@ -1,10 +1,4 @@
-import {
-  ChangeDetectionStrategy,
-  Component,
-  computed,
-  inject,
-  input
-} from '@angular/core';
+import { Component, computed, inject, input } from '@angular/core';
 import { WorkModeService } from '../../work-mode/work-mode.service';
 import { TranslocoDirective, TranslocoService } from '@jsverse/transloco';
 import { TranslationKey } from '../../translation/translation-key.model';
@@ -20,8 +14,7 @@ import { ProjectService } from '../../project/project.service';
 @Component({
   selector: 'app-status-bar',
   imports: [TranslocoDirective],
-  templateUrl: './status-bar.component.html',
-  changeDetection: ChangeDetectionStrategy.OnPush
+  templateUrl: './status-bar.component.html'
 })
 export class StatusBarComponent {
   private readonly workModeService = inject(WorkModeService);

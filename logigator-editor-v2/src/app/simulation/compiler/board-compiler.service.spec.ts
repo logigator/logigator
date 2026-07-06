@@ -5,7 +5,7 @@ import { configureTestBed } from '../../../testing/configure-test-bed';
 import {
   makeAnd,
   makeButton,
-  makeLever,
+  makeSwitch,
   makeNot
 } from '../../../testing/factories';
 import { Component } from '../../components/component';
@@ -15,6 +15,9 @@ import { inputComponentConfig } from '../../components/component-types/input/inp
 import { outputComponentConfig } from '../../components/component-types/output/output.config';
 import { textComponentConfig } from '../../components/component-types/text/text.config';
 import { romComponentConfig } from '../../components/component-types/rom/rom.config';
+import { clockComponentConfig } from '../../components/component-types/clock/clock.config';
+import { tunnelComponentConfig } from '../../components/component-types/tunnel/tunnel.config';
+import { ledMatrixComponentConfig } from '../../components/component-types/led-matrix/led-matrix.config';
 import { bytesToBase64 } from '../../utils/packed-buffer';
 import { SerializedCircuitBody } from '../../persistence/serialized-circuit';
 import { Project } from '../../project/project';
@@ -98,6 +101,15 @@ describe('BoardCompilerService', () => {
     const wire = wireBetween(a, b);
     project.addWire(wire);
     return wire;
+  }
+
+  function placeTunnel(label: string, pos: [number, number]): Component {
+    return place(
+      Component.deserialize(
+        { pos, options: { direction: 0, label } },
+        tunnelComponentConfig
+      )
+    );
   }
 
   function placeByType(typeId: number, pos: [number, number]): Component {
@@ -234,6 +246,38 @@ describe('BoardCompilerService', () => {
     expect(board.diagnostics).toEqual([]);
   });
 
+  it('joins the nets of tunnels sharing a label without emitting units', () => {
+    const not = place(makeNot());
+    const and = makeAnd(2, undefined, 20, 20);
+    place(and);
+    const t1 = placeTunnel('bus', [6, 0]);
+    placeWire(not.connectionPoints[1], t1.connectionPoints[0]);
+    const t2 = placeTunnel('bus', [16, 20]);
+    placeWire(t2.connectionPoints[0], and.connectionPoints[0]);
+    // A third tunnel with a different label stays on its own net.
+    const lone = placeTunnel('other', [6, 30]);
+
+    const board = compiler.compile(project);
+
+    expect(board.diagnostics).toEqual([]);
+    const notUnit = board.descriptor.components.find((c) => c.type === 1)!;
+    const andUnit = board.descriptor.components.find((c) => c.type === 2)!;
+    expect(andUnit.inputs[0]).toBe(notUnit.outputs[0]);
+
+    // Both tunnel stubs render from the shared link; the lone tunnel's net
+    // has no unit pin, so it gets no link at all.
+    const targets = board.mapping.get('')!;
+    expect(targets[notUnit.outputs[0]].ports).toEqual(
+      expect.arrayContaining([
+        { component: t1, portIndex: 0 },
+        { component: t2, portIndex: 0 }
+      ])
+    );
+    expect(
+      targets.every((t) => t.ports.every((p) => p.component !== lone))
+    ).toBe(true);
+  });
+
   it('emits a ROM unit with its contents bit-packed into ops', () => {
     // 1-bit address, 4-bit word: addr0 → output 0 high (value 1), addr1 →
     // output 3 high (value 8) packs LSB-first to the single byte 0x81.
@@ -256,6 +300,49 @@ describe('BoardCompilerService', () => {
       components: [
         { type: 12, inputs: [0], outputs: [1, 2, 3, 4], ops: [0x81] }
       ]
+    });
+  });
+
+  it('emits a clock unit with its period in ops', () => {
+    place(
+      Component.deserialize(
+        { pos: [0, 0], options: { direction: 0, speed: 7 } },
+        clockComponentConfig
+      )
+    );
+
+    const board = compiler.compile(project);
+
+    expect(board.diagnostics).toEqual([]);
+    expect(board.descriptor).toEqual({
+      links: 2,
+      components: [{ type: 6, inputs: [0], outputs: [1], ops: [7] }]
+    });
+  });
+
+  it('emits an LED matrix with engine-only cell outputs mapped as pseudo-ports', () => {
+    const matrix = place(
+      Component.deserialize(
+        { pos: [0, 0], options: { direction: 0, size: 4 } },
+        ledMatrixComponentConfig
+      )
+    );
+
+    const board = compiler.compile(project);
+
+    expect(board.diagnostics).toEqual([]);
+    const unit = board.descriptor.components[0];
+    expect(unit.type).toBe(204);
+    expect(unit.inputs).toHaveLength(7); // A0,A1, D0..D3, CLK
+    expect(unit.outputs).toHaveLength(16); // 4×4 cells
+    expect(unit.ops).toEqual([4]); // data-bus width
+
+    // Every cell link renders back onto the component past the input range.
+    const targets = board.mapping.get('')!;
+    unit.outputs.forEach((link, cellIndex) => {
+      expect(targets[link].ports).toEqual([
+        { component: matrix, portIndex: matrix.numInputs + cellIndex }
+      ]);
     });
   });
 
@@ -430,13 +517,13 @@ describe('BoardCompilerService', () => {
     });
   });
 
-  it('emits button/lever units and registers them as user inputs', () => {
+  it('emits button/switch units and registers them as user inputs', () => {
     // The example-board shape (gate subset): user input feeding gates.
-    const lever = place(makeLever(0, 0));
+    const switchComp = place(makeSwitch(0, 0));
     const button = place(makeButton(0, 4));
     const and = makeAnd(2, undefined, 8, 0);
     place(and);
-    placeWire(lever.connectionPoints[0], and.connectionPoints[0]);
+    placeWire(switchComp.connectionPoints[0], and.connectionPoints[0]);
     const corner = new Point(
       button.connectionPoints[0].x,
       and.connectionPoints[1].y
@@ -447,8 +534,8 @@ describe('BoardCompilerService', () => {
     const board = compiler.compile(project);
 
     expect(board.diagnostics).toEqual([]);
-    // Both lever and button emit the engine's UserInput type (200); the engine
-    // rejects any other id. Button vs. lever is a triggerInput-time distinction.
+    // Both switch and button emit the engine's UserInput type (200); the engine
+    // rejects any other id. Button vs. switch is a triggerInput-time distinction.
     expect(board.descriptor).toEqual({
       links: 3,
       components: [
@@ -459,7 +546,7 @@ describe('BoardCompilerService', () => {
     });
     expect(board.userInputs).toEqual(
       new Map([
-        [lever.id, 0],
+        [switchComp.id, 0],
         [button.id, 1]
       ])
     );

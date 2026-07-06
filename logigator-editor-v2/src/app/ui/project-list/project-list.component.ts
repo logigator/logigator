@@ -1,6 +1,5 @@
 import {
   afterNextRender,
-  ChangeDetectionStrategy,
   Component,
   computed,
   ElementRef,
@@ -46,8 +45,7 @@ const NAME_MAX_LENGTH = 20;
     LgPaginator,
     TranslocoDirective
   ],
-  templateUrl: './project-list.component.html',
-  changeDetection: ChangeDetectionStrategy.OnPush
+  templateUrl: './project-list.component.html'
 })
 export class ProjectListComponent {
   private readonly confirmationService = inject(ConfirmationService);

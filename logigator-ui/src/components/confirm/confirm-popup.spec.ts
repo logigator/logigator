@@ -1,11 +1,10 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
-import { ChangeDetectionStrategy, Component } from '@angular/core';
+import { Component } from '@angular/core';
 import { TestBed } from '@angular/core/testing';
 import { LgConfirmPopup } from './confirm-popup';
 import { ConfirmationService } from './confirmation.service';
 
 @Component({
-  changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [LgConfirmPopup],
   template: `
     <button #anchor type="button">delete</button>

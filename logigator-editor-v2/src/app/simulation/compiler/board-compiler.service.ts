@@ -10,6 +10,7 @@ import {
 } from '../../components/component-type.enum';
 import { instantiateBody } from '../../persistence/circuit-builder';
 import { encodeRomOps } from '../../components/component-types/rom/rom-data.codec';
+import { ledMatrixShape } from '../../components/component-types/led-matrix/led-matrix.config';
 import { Project } from '../../project/project';
 import { Wire } from '../../wires/wire';
 import {
@@ -31,16 +32,31 @@ import {
 const UNIT_TYPES: ReadonlySet<number> = new Set([
   BuiltInComponentType.NOT,
   BuiltInComponentType.AND,
+  BuiltInComponentType.OR,
+  BuiltInComponentType.XOR,
+  BuiltInComponentType.DELAY,
+  BuiltInComponentType.CLOCK,
+  BuiltInComponentType.HALF_ADDER,
+  BuiltInComponentType.FULL_ADDER,
+  BuiltInComponentType.D_FF,
+  BuiltInComponentType.JK_FF,
+  BuiltInComponentType.SR_FF,
+  BuiltInComponentType.RNG,
+  BuiltInComponentType.RAM,
+  BuiltInComponentType.DECODER,
+  BuiltInComponentType.ENCODER,
+  BuiltInComponentType.MUX,
+  BuiltInComponentType.DEMUX,
   BuiltInComponentType.BUTTON,
-  BuiltInComponentType.LEVER,
+  BuiltInComponentType.SWITCH,
   BuiltInComponentType.ROM
 ]);
 
 /**
- * The simulator's UserInput type id. The editor's BUTTON and LEVER are both
+ * The simulator's UserInput type id. The editor's BUTTON and SWITCH are both
  * UserInputs to the engine and must emit this exact type — the engine rejects
  * any other id (it previously accepted the whole 200–299 block). Button vs.
- * lever behaviour is a `Pulse`/`Cont` distinction made at `triggerInput` time
+ * switch behaviour is a `Pulse`/`Cont` distinction made at `triggerInput` time
  * from the component instance, not from the descriptor type.
  */
 const ENGINE_USER_INPUT_TYPE = 200;
@@ -108,10 +124,17 @@ interface EmitContext {
   uf: UnionFind;
   units: EmittedUnit[];
   diagnostics: CompileDiagnostic[];
-  /** Directly emitted button/lever: component id → unit index in this pass. */
+  /** Directly emitted button/switch: component id → unit index in this pass. */
   userInputs: Map<number, number>;
   /** Directly placed custom instances, keyed by component id. */
   instances: Map<number, EmittedInstance>;
+  /**
+   * LED matrices with their engine-only cell nodes (unit outputs that exist
+   * on no net). The top-level pass maps them back onto the component as
+   * pseudo-ports; inside a template they only feed the engine (an inner
+   * matrix simulates, but does not light up in a watch).
+   */
+  displays: { component: Component; nodes: number[] }[];
 }
 
 function joinPath(parent: string, child: string): string {
@@ -168,17 +191,26 @@ export class BoardCompilerService {
   }
 
   /**
-   * Per-type `ops` blob for the engine. Only ROM carries one: its contents are
-   * bit-packed to a byte table sized to `addressSize` × `wordSize` (the address
-   * and word pin counts), the exact format the engine reads — see
-   * `rom-data.codec.ts`.
+   * Per-type `ops` blob for the engine. ROM carries its contents bit-packed to
+   * a byte table sized to `addressSize` × `wordSize` (the address and word pin
+   * counts), the exact format the engine reads — see `rom-data.codec.ts`. The
+   * clock carries its period in ticks.
    */
   private _opsFor(component: Component): { ops?: number[] } {
-    if (component.config.type !== BuiltInComponentType.ROM) return {};
-    const contents = (component.options['data']?.value as string) ?? '';
-    return {
-      ops: encodeRomOps(contents, component.numInputs, component.numOutputs)
-    };
+    switch (component.config.type) {
+      case BuiltInComponentType.ROM: {
+        const contents = (component.options['data']?.value as string) ?? '';
+        return {
+          ops: encodeRomOps(contents, component.numInputs, component.numOutputs)
+        };
+      }
+      case BuiltInComponentType.CLOCK:
+        return { ops: [component.options['speed'].value as number] };
+      case BuiltInComponentType.MUX:
+        return { ops: [component.options['selectLines'].value as number] };
+      default:
+        return {};
+    }
   }
 
   public compile(project: Project): CompiledBoard {
@@ -188,7 +220,8 @@ export class BoardCompilerService {
       units: [],
       diagnostics: [],
       userInputs: new Map<number, number>(),
-      instances: new Map<number, EmittedInstance>()
+      instances: new Map<number, EmittedInstance>(),
+      displays: []
     };
 
     const nets = extractNets({
@@ -202,6 +235,7 @@ export class BoardCompilerService {
     // id so the submission order (and with it triggerInput comp ids and the
     // getOutputs layout) is reproducible.
     const components = [...project.components].sort((a, b) => a.id - b.id);
+    this._unionTunnelNets(components, portNets, netNodes, ctx.uf);
     for (const component of components) {
       const pinNodes = (portNets.get(component) ?? []).map(
         (netIndex) => netNodes[netIndex]
@@ -243,6 +277,17 @@ export class BoardCompilerService {
       targets[link].wires.push(...net.wires);
       targets[link].ports.push(...net.ports);
     });
+    // LED-matrix cells: engine-only unit outputs, mapped back onto their
+    // component as pseudo-ports past the input range so the standard applier
+    // lights them (row-major cell order).
+    for (const { component, nodes } of ctx.displays) {
+      nodes.forEach((node, cellIndex) => {
+        targets[linkFor(node)].ports.push({
+          component,
+          portIndex: component.numInputs + cellIndex
+        });
+      });
+    }
 
     // Watch records: resolve each top-level instance's local nets to global
     // links (after link assignment; `-1` = wire-only class, never powered).
@@ -279,6 +324,35 @@ export class BoardCompilerService {
   }
 
   /**
+   * Electrically joins the nets of all tunnels sharing a label by unioning
+   * their nodes ("wireless wires"). Tunnels are scoped to their own circuit:
+   * this runs once per compilation pass (board and each template), so a label
+   * never leaks across a custom-component boundary — matching the legacy
+   * editor's per-sheet tunnel ids.
+   */
+  private _unionTunnelNets(
+    components: Component[],
+    portNets: Map<Component, number[]>,
+    netNodes: number[],
+    uf: UnionFind
+  ): void {
+    const firstNodeOfLabel = new Map<string, number>();
+    for (const component of components) {
+      if (component.config.type !== BuiltInComponentType.TUNNEL) continue;
+      const netIndex = portNets.get(component)?.[0];
+      if (netIndex === undefined) continue;
+      const label = component.options['label'].value as string;
+      const node = netNodes[netIndex];
+      const first = firstNodeOfLabel.get(label);
+      if (first === undefined) {
+        firstNodeOfLabel.set(label, node);
+      } else {
+        uf.union(first, node);
+      }
+    }
+  }
+
+  /**
    * Emits one component into the current node-id space: units directly,
    * custom instances by template instantiation. `pinNodes` are the nodes of
    * the nets at the component's ports, in `connectionPoints` order.
@@ -310,10 +384,30 @@ export class BoardCompilerService {
       return;
     }
 
+    if (type === BuiltInComponentType.LED_MATRIX) {
+      // The cells are unit outputs with no editor port: fresh nodes on no net.
+      // ops[0] is the data-bus width the engine derives the pin split from.
+      const { size, dataBits } = ledMatrixShape(
+        component.options['size'].value as number
+      );
+      const cellNodes = Array.from({ length: size * size }, () =>
+        ctx.uf.makeSet()
+      );
+      ctx.displays.push({ component, nodes: cellNodes });
+      ctx.units.push({
+        type,
+        inputs: pinNodes,
+        outputs: cellNodes,
+        ops: [dataBits],
+        ...this._negationFor(component)
+      });
+      return;
+    }
+
     if (UNIT_TYPES.has(type)) {
       const isUserInput =
         type === BuiltInComponentType.BUTTON ||
-        type === BuiltInComponentType.LEVER;
+        type === BuiltInComponentType.SWITCH;
       if (isUserInput) {
         ctx.userInputs.set(component.id, ctx.units.length);
       }
@@ -330,11 +424,18 @@ export class BoardCompilerService {
     // TEXT has no ports; top-level INPUT/OUTPUT plugs are inert decoration
     // (no board unit), but their nets are still mapped so their stubs light
     // up. Inside a template, plugs are collected before emission and never
-    // reach this point.
+    // reach this point. TUNNEL is handled entirely at the net level (see
+    // `_unionTunnelNets`) — no unit, but its joined net is mapped, so its
+    // stub lights up too. LED and SEGMENT_DISPLAY are displays: they render
+    // the powered state of their input nets through the same mapping, without
+    // an engine unit.
     if (
       type === BuiltInComponentType.TEXT ||
       type === BuiltInComponentType.INPUT ||
-      type === BuiltInComponentType.OUTPUT
+      type === BuiltInComponentType.OUTPUT ||
+      type === BuiltInComponentType.TUNNEL ||
+      type === BuiltInComponentType.LED ||
+      type === BuiltInComponentType.SEGMENT_DISPLAY
     ) {
       return;
     }
@@ -452,7 +553,8 @@ export class BoardCompilerService {
         units: [],
         diagnostics: [],
         userInputs: new Map<number, number>(),
-        instances: new Map<number, EmittedInstance>()
+        instances: new Map<number, EmittedInstance>(),
+        displays: []
       };
       const nets = extractNets({ components, wires });
       const netNodes = nets.map(() => ctx.uf.makeSet());
@@ -464,6 +566,7 @@ export class BoardCompilerService {
       const outputPlugs: { component: Component; index: number }[] = [];
 
       const sorted = [...components].sort((a, b) => a.id - b.id);
+      this._unionTunnelNets(sorted, portNets, netNodes, ctx.uf);
       for (const component of sorted) {
         const type = component.config.type;
         if (

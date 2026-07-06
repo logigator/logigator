@@ -1,10 +1,4 @@
-import {
-  ChangeDetectionStrategy,
-  Component,
-  computed,
-  inject,
-  signal
-} from '@angular/core';
+import { Component, computed, inject, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import {
   LgAccordion,
@@ -50,8 +44,7 @@ interface PaletteCategory {
     ComponentListCategoryComponent,
     TranslocoDirective
   ],
-  templateUrl: './component-list.component.html',
-  changeDetection: ChangeDetectionStrategy.OnPush
+  templateUrl: './component-list.component.html'
 })
 export class ComponentListComponent {
   private readonly componentProviderService = inject(ComponentProviderService);

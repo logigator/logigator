@@ -3,7 +3,6 @@ import { Overlay } from '@angular/cdk/overlay';
 import { TemplatePortal } from '@angular/cdk/portal';
 import {
   booleanAttribute,
-  ChangeDetectionStrategy,
   Component,
   computed,
   effect,
@@ -66,7 +65,6 @@ const POSITION_BORDER: Record<DrawerPosition, string> = {
  */
 @Component({
   selector: 'lg-drawer',
-  changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     <ng-template #panelTpl>
       <div

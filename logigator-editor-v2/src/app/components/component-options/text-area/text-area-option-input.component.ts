@@ -1,9 +1,4 @@
-import {
-  ChangeDetectionStrategy,
-  Component,
-  input,
-  signal
-} from '@angular/core';
+import { Component, input, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { LgButton, LgDialog, LgTextarea } from '@logigator/ui';
 import { TranslocoDirective } from '@jsverse/transloco';
@@ -13,8 +8,7 @@ import type { TextAreaComponentOption } from './text-area.component-option';
 @Component({
   selector: 'app-text-area-option-input',
   imports: [FormsModule, LgButton, LgDialog, LgTextarea, TranslocoDirective],
-  templateUrl: './text-area-option-input.component.html',
-  changeDetection: ChangeDetectionStrategy.OnPush
+  templateUrl: './text-area-option-input.component.html'
 })
 export class TextAreaOptionInputComponent implements ComponentOptionInput<string> {
   public readonly option = input.required<TextAreaComponentOption>();

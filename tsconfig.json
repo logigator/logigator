@@ -16,6 +16,7 @@
     "experimentalDecorators": true,
     "moduleResolution": "bundler",
     "importHelpers": true,
+    "ignoreDeprecations": "6.0",
     "baseUrl": "./",
     "paths": {
       "@logigator/ui": ["logigator-ui/src/public-api.ts"],
