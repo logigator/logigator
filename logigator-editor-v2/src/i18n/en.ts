@@ -194,6 +194,14 @@ const en = {
         name: 'LED',
         description:
           'Lights up while the wire connected to its input is powered.'
+      },
+      SEGMENT_DISPLAY: {
+        name: 'Segment Display',
+        description:
+          'Displays the binary value on its inputs (input 0 is the least significant bit) as a number in the configured base.',
+        options: {
+          base: 'Base'
+        }
       }
     },
     options: {

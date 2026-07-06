@@ -376,14 +376,16 @@ export class BoardCompilerService {
     // up. Inside a template, plugs are collected before emission and never
     // reach this point. TUNNEL is handled entirely at the net level (see
     // `_unionTunnelNets`) — no unit, but its joined net is mapped, so its
-    // stub lights up too. LED is a display: it renders the powered state of
-    // its input net through the same mapping, without an engine unit.
+    // stub lights up too. LED and SEGMENT_DISPLAY are displays: they render
+    // the powered state of their input nets through the same mapping, without
+    // an engine unit.
     if (
       type === BuiltInComponentType.TEXT ||
       type === BuiltInComponentType.INPUT ||
       type === BuiltInComponentType.OUTPUT ||
       type === BuiltInComponentType.TUNNEL ||
-      type === BuiltInComponentType.LED
+      type === BuiltInComponentType.LED ||
+      type === BuiltInComponentType.SEGMENT_DISPLAY
     ) {
       return;
     }

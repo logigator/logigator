@@ -20,8 +20,10 @@ import { BuiltInComponentType } from '../components/component-type.enum';
  * re-anchor run without instantiating a render object (which would consume a
  * global id and touch the texture cache). TEXT's body is a 1×1 anchor dot; its
  * floating label is decorative and excluded, matching the live `TextComponent`.
+ * SEGMENT_DISPLAY is absent here — its width is direction- and option-dependent
+ * (see {@link legacyBodyWidth}).
  */
-export const LEGACY_BODY_WIDTHS: Record<number, number> = {
+const LEGACY_BODY_WIDTHS: Record<number, number> = {
   [BuiltInComponentType.NOT]: 2,
   [BuiltInComponentType.AND]: 2,
   [BuiltInComponentType.OR]: 2,
@@ -56,8 +58,37 @@ export const LEGACY_BODY_WIDTHS: Record<number, number> = {
  */
 const LEGACY_MIN_BODY_HEIGHTS: Record<number, number> = {
   [BuiltInComponentType.CLOCK]: 2,
-  [BuiltInComponentType.RNG]: 2
+  [BuiltInComponentType.RNG]: 2,
+  [BuiltInComponentType.SEGMENT_DISPLAY]: 3
 };
+
+/**
+ * Unrotated body width — mirrors `Component.bodyGridWidth` per type. Only the
+ * segment display needs the extra context: its width tracks the zero-padded
+ * readout (base in `n[0]`, digit count from the input count) when horizontal
+ * and is a fixed 4 when standing upright.
+ */
+export function legacyBodyWidth(
+  type: number,
+  direction: Direction,
+  numInputs: number,
+  n: readonly number[] | undefined
+): number {
+  if (type === BuiltInComponentType.SEGMENT_DISPLAY) {
+    if (direction % 2 === 1) {
+      return 4;
+    }
+    switch (n?.[0] ?? 0) {
+      case 1: // HEX
+        return 2 + Math.ceil(numInputs / 4);
+      case 2: // OCT
+        return 2 + Math.ceil(numInputs / 3);
+      default: // DEC
+        return 2 + Math.ceil(Math.log10(2 ** numInputs + 1));
+    }
+  }
+  return LEGACY_BODY_WIDTHS[type] ?? 1;
+}
 
 /** Unrotated body height — mirrors `Component.bodyGridHeight` per type. */
 export function legacyBodyHeight(

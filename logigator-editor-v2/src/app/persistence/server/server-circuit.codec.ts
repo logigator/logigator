@@ -45,8 +45,8 @@ import {
   CUSTOM_TYPE_ID_BASE
 } from '../../components/component-type.enum';
 import {
-  LEGACY_BODY_WIDTHS,
   legacyBodyHeight,
+  legacyBodyWidth,
   pivotToLegacyAnchor
 } from '../legacy-anchor';
 import { PersistedCircuitV0 } from '../persisted-circuit.types';
@@ -313,7 +313,7 @@ function encodeBodyComponent(
 
   // Reverse the v0→v1 pivot re-anchor (the snapshot body was decoded through
   // the same migration), so built-ins round-trip to their legacy top-left.
-  const width = LEGACY_BODY_WIDTHS[component.type] ?? 1;
+  const width = legacyBodyWidth(component.type, el.r ?? 0, el.i ?? 0, el.n);
   const height = legacyBodyHeight(component.type, el.i ?? 0, el.o ?? 0);
   el.p = pivotToLegacyAnchor(
     component.pos[0],

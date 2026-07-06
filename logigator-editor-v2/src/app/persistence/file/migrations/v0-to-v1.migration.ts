@@ -15,9 +15,9 @@ import {
 } from '../../../components/component-type.enum';
 import { Direction } from '../../../utils/direction';
 import {
-  LEGACY_BODY_WIDTHS,
   legacyAnchorToPivot,
-  legacyBodyHeight
+  legacyBodyHeight,
+  legacyBodyWidth
 } from '../../legacy-anchor';
 
 /** Old editor's ElementTypeId.WIRE — the canonical type ID for wires in the v0 format. */
@@ -108,7 +108,12 @@ function decodeElements(
     }
 
     const direction: Direction = element.r ?? Direction.E;
-    const width = LEGACY_BODY_WIDTHS[element.t] ?? 1;
+    const width = legacyBodyWidth(
+      element.t,
+      direction,
+      element.i ?? 0,
+      element.n
+    );
     const height = legacyBodyHeight(element.t, element.i ?? 0, element.o ?? 0);
 
     const options = decodeOptions(element, config);
